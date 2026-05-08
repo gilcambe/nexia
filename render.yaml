@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: nexia-os-frontend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: bash start.sh
+    envVars:
+      - key: VITE_NEXIA_API_URL
+        value: https://nexia-os.onrender.com
+      - key: VITE_NEXIA_APP_URL
+        value: https://nexia-os.onrender.com
+      - key: NODE_VERSION
+        value: "20"
