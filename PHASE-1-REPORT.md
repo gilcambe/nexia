@@ -45,7 +45,11 @@ Execuções no commit `373815e` (revisão 1), todos os passos com `success`:
 | Playwright (servidor local) | success (48/48) | success (48/48) |
 | Log do servidor em caso de falha | skipped (só roda se algo falhar) | skipped |
 
-A revisão 2 acrescenta ao CI a suíte original do READDY e um teste no emulador (19). O resultado do CI da revisão 2 está no PR.
+Revisão 2: no commit `f0f8233` o passo "Testes unitários" falhou (o teste novo de `.html` legado esperava `out/` compilado, e no CI os unitários rodam antes do build); corrigido em `196ffe0`, que passou com todos os passos em `success`:
+- push: https://github.com/gilcambe/nexia/actions/runs/36954718605
+- pull_request: https://github.com/gilcambe/nexia/actions/runs/36954723133
+
+Contagens no log do CI (pull_request, `196ffe0`): unitários 12/12; emulador 19/19; build OK; Playwright regressão 48/48; READDY original 67 passam, 20 falham, 2 pulados, "Sem regressões em relação ao develop"; secret scan da árvore e dos commits do PR sem achados. Commits posteriores que só mudam documentação têm o CI no PR.
 
 ## 4. Testes locais da revisão 2
 | Verificação | Comando | Resultado |
