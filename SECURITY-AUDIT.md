@@ -89,6 +89,21 @@ Legenda de status: **FIXED / TESTED** (corrigido no código e coberto por teste 
 ### X3 — `/api/memory` · FIXED / TESTED
 - `cortex-memory.js` usava `assertTenantAccess` sem importar e respondia 500 sempre. Import adicionado; coberto pelos testes de operação legítima.
 
+## Fase 2 — Vault (`vault_*`)
+
+Nenhum achado anterior mudou de status. A Fase 2 acrescenta superfície nova, coberta assim:
+
+| ID | Tema | Controle | Teste |
+|---|---|---|---|
+| V1 | Secret gravado no Vault (spec §15) | `secret_refs` só com nome/store/ref; `detectSecret` em todo texto de todas as entidades; erro sem valor | `tests/unit/vault-schemas.test.js` (9 tipos × 3 campos); `tests/integration/vault-repository.test.js` teste 12 |
+| V2 | Escrita do Vault pelo cliente | `allow write: if false` em `vault_*` | `tests/integration/vault-rules.test.js` V4 (usuário, admin e master negados) |
+| V3 | Leitura por usuário comum / entre tenants | leitura só master ou admin do próprio tenant; consulta sem filtro de tenant negada | V1, V2, V3 |
+| V4 | Coleções internas expostas | `vault_idempotency` e `vault_unique` sem leitura | V5 |
+| V5 | Acesso cruzado na camada de servidor | `tenant_id` conferido em toda leitura/escrita; outro tenant = `NOT_FOUND`; referências de outro tenant rejeitadas | `vault-repository` testes 5 e 13 |
+| V6 | Vazamento por auditoria/log | auditoria só com nomes de campo, versão e hash; chave de idempotência só como hash | `vault-repository` testes 9 e 11 |
+
+As regras `vault_*` seguem **não publicadas**, como as da Fase 1. Com mutação das regras (leitura liberada a qualquer autenticado e escrita liberada), 4 dos 6 testes de regras do Vault falham (saída em `PHASE-2-REPORT.md`).
+
 ## Riscos remanescentes
 - Credenciais expostas continuam válidas até o dono rotacionar; histórico público ainda contém valores.
 - Correções só valem em produção depois de deploy e publicação das regras, que não fazem parte desta fase.
@@ -97,5 +112,6 @@ Legenda de status: **FIXED / TESTED** (corrigido no código e coberto por teste 
 - `sentinel-iot` (`/api/sentinel`) exige login, mas não valida o tenant nem papel; revisar na Fase 6 (Policy Engine).
 - Coleções `usage` e `audit_log` ainda aceitam escrita de membros (B1).
 - M1, M3, M4, M5, M6 abertos.
+- Vault: `detectSecret` é heurístico; um formato de secret desconhecido e de baixa entropia pode passar. A defesa principal é o schema não ter campo de valor.
 - Outras funções podem ainda devolver `e.message` em caminhos não cobertos; as tratadas estão listadas acima.
 - O Render roda `npm install` (instala também devDependencies); considerar `npm ci --omit=dev` numa fase de infraestrutura.
