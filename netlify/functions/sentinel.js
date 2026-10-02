@@ -187,36 +187,16 @@ Se canAutoFix=true, preencha firestoreOverride com dados para salvar no Firestor
     }
   } catch (e) {
     console.error('[Sentinel] diagnosisViaAI error:', e.message);
-    return { error: e.message };
+    return { error: 'Diagnóstico indisponível.' };
   }
 }
 
 // ─── AUTO-HEAL: FIRESTORE OVERRIDES ────────────────────────────────
-async function applyFirestoreOverrides(fixes) {
-  if (!db) return { applied: 0, errors: ['DB unavailable'] };
-  const applied = [];
-  const errors  = [];
-
-  for (const fix of fixes) {
-    if (!fix.canAutoFix || !fix.firestoreOverride) continue;
-    const { collection, doc, data } = fix.firestoreOverride;
-    if (!collection || !doc || !data) continue;
-
-    try {
-      await db.collection(collection).doc(doc).set({
-        ...data,
-        _sentinelApplied: true,
-        _appliedAt:       admin.firestore.FieldValue.serverTimestamp(),
-        _issue:           fix.issue,
-      }, { merge: true });
-
-      applied.push({ fix: fix.issue, collection, doc });
-    } catch (e) {
-      errors.push({ fix: fix.issue, error: e.message });
-    }
-  }
-
-  return { applied: applied.length, appliedFixes: applied, errors };
+// SEC Fase 1 (C4): a gravação de "overrides" sugeridos pela IA em coleções
+// arbitrárias do Firestore (com Admin SDK, ignorando as regras) foi desativada.
+// O diagnóstico continua disponível como sugestão; aplicar correções é ação humana.
+async function applyFirestoreOverrides(_fixes) {
+  return { applied: 0, disabled: true, reason: 'Aplicação automática de overrides desativada (Fase 1).' };
 }
 
 // ─── AUTO-HEAL: GITHUB ISSUE ────────────────────────────────────────
@@ -254,35 +234,17 @@ ${criticalFixes.map(f => `#### ${f.priority}: ${f.issue}\n- **Causa:** ${f.rootC
     const issue = await r.json();
     return { created: true, url: issue.html_url, number: issue.number };
   } catch (e) {
-    return { created: false, error: e.message };
+    console.error('[Sentinel] issue GitHub falhou:', e.message);
+    return { created: false, error: 'Falha ao abrir issue.' };
   }
 }
 
 // ─── AUTO-HEAL: RENDER DEPLOY HOOK ─────────────────────────────────
 // FIX: triggerRedeploy agora sempre é chamado após patches Firestore,
 // independente do número de overrides aplicados.
-async function triggerRedeploy(reason) {
-  if (!NBHOOK) {
-    console.warn('[Sentinel] RENDER_DEPLOY_HOOK não configurado — redeploy ignorado');
-    return { triggered: false, reason: 'RENDER_DEPLOY_HOOK não configurado' };
-  }
-
-  try {
-    // O Render Deploy Hook aceita POST sem body específico,
-    // mas o campo trigger_title aparece nos logs do deploy.
-    const r = await _fetchTimeout(NBHOOK, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ trigger_title: `Sentinel Auto-Heal v3.1: ${reason}` }),
-    }, 15_000);
-
-    const triggered = r.ok || r.status === 201;
-    console.info(`[Sentinel] Redeploy ${triggered ? 'acionado' : 'falhou'}: ${r.status} — ${reason}`);
-    return { triggered, status: r.status, reason };
-  } catch (e) {
-    console.error('[Sentinel] triggerRedeploy error:', e.message);
-    return { triggered: false, error: e.message };
-  }
+async function triggerRedeploy(_reason) {
+  // SEC Fase 1 (C4): redeploy automático de produção desativado. Deploy é ação humana.
+  return { triggered: false, reason: 'Redeploy automático desativado (Fase 1).' };
 }
 
 // ─── HANDLER PRINCIPAL ─────────────────────────────────────────────
@@ -315,15 +277,11 @@ exports.handler = async (event) => {
     };
   }
 
-  // Chamadas agendadas (cron do Render/Netlify) dispensam Bearer token
-  const isScheduled = event.headers?.['x-netlify-event'] === 'schedule';
-  if (!isScheduled) {
-    // FIX v49: requireBearerAuth sem role obrigatório — qualquer usuário autenticado
-    // pode acessar o Sentinel. O role 'admin' causava 403 quando o documento do
-    // usuário no Firestore não tinha o campo role preenchido (retornava 'user').
-    const authErr = await requireBearerAuth(event);
-    if (authErr) return authErr;
-  }
+  // SEC Fase 1 (C4): removido o bypass por cabeçalho `x-netlify-event: schedule`
+  // (qualquer cliente podia enviá-lo). Toda chamada POST exige token e papel admin.
+  const authErr = await requireBearerAuth(event, 'admin');
+  if (authErr) return authErr;
+  const isScheduled = false;
 
   let body = {};
   try { body = JSON.parse(event.body || '{}'); } catch {}
@@ -331,6 +289,11 @@ exports.handler = async (event) => {
 
   // ── MODO HEAL ─────────────────────────────────────────────────────
   if (mode === 'heal') {
+    // SEC Fase 1 (C4): modo heal desligado por padrão. Mesmo ligado, só gera
+    // diagnóstico/issue; não grava no Firestore nem dispara redeploy.
+    if (process.env.SENTINEL_HEAL_ENABLED !== 'true') {
+      return { statusCode: 403, headers: CORS, body: JSON.stringify({ error: 'Sentinel heal desativado nesta versão.' }) };
+    }
     const issues = body.issues || [];
     if (!issues.length) {
       return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'issues[] obrigatório' }) };
@@ -497,3 +460,7 @@ exports.handler = async (event) => {
     body:       JSON.stringify(report),
   };
 };
+
+// Exposto só para testes de regressão da Fase 1 (C4)
+exports._applyFirestoreOverrides = applyFirestoreOverrides;
+exports._triggerRedeploy = triggerRedeploy;

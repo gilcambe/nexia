@@ -22,6 +22,21 @@ async function _fetchTimeout(url, opts = {}, ms = 30000, _legacyOpts) {
  */
 
 const { guard, makeHeaders } = require('./middleware');
+const { admin, db } = require('./firebase-init');
+const { publicErrorBody } = require('../../lib/safe-error');
+
+// SEC Fase 1 (A1): desligado por padrão. Só funciona com AUTOCOMMIT_ENABLED=true,
+// nunca em branches protegidas, só com caminho relativo validado, e cada uso é auditado.
+const PROTECTED_BRANCHES = ['main', 'master', 'develop', 'production', 'prod', 'staging'];
+const SAFE_PATH = /^(?!.*(?:^|\/)\.)(?!.*\.\.)[A-Za-z0-9_\-./]+$/;
+const SAFE_BRANCH = /^[A-Za-z0-9._\-\/]{1,100}$/;
+
+async function audit(entry) {
+  if (!db) return;
+  try {
+    await db.collection('audit_log_global').add({ type: 'autocommit', ...entry, ts: admin.firestore.FieldValue.serverTimestamp() });
+  } catch (e) { console.error('[autocommit] audit log falhou:', e.message); }
+}
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const GITHUB_REPO  = process.env.GITHUB_REPO || 'SEU_USUARIO/nexiaos';
@@ -36,17 +51,26 @@ exports.handler = async (event) => {
   const authErr = await guard(event, 'autocommit', { requiredRole: 'master' });
   if (authErr) return authErr;
 
+  if (process.env.AUTOCOMMIT_ENABLED !== 'true') {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Autocommit desativado nesta versão.' }) };
+  }
+
   if (!GITHUB_TOKEN) return { statusCode: 400, headers, body: JSON.stringify({ error: 'GITHUB_TOKEN não configurado. Adicione no Render Dashboard → Environment.' }) };
 
   let body = {};
   try { body = JSON.parse(event.body || '{}'); } catch { return { statusCode: 400, headers, body: JSON.stringify({ error: 'JSON inválido' }) }; }
 
-  const { file, content, message = 'chore: auto-update via CORTEX', branch = 'main' } = body;
+  const { file, content, message = 'chore: auto-update via CORTEX', branch } = body;
 
-  if (!file || !content) return { statusCode: 400, headers, body: JSON.stringify({ error: 'file e content são obrigatórios' }) };
-
-  // Sanitize file path — prevent directory traversal
-  const safePath = file.replace(/\.\.\//g, '').replace(/^\//, '');
+  if (!file || !content || !branch) return { statusCode: 400, headers, body: JSON.stringify({ error: 'file, content e branch são obrigatórios' }) };
+  if (typeof file !== 'string' || !SAFE_PATH.test(file) || file.startsWith('/')) {
+    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Caminho de arquivo inválido.' }) };
+  }
+  if (typeof branch !== 'string' || !SAFE_BRANCH.test(branch) || branch.includes('..') || PROTECTED_BRANCHES.includes(branch.toLowerCase())) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Branch não permitida para autocommit.' }) };
+  }
+  const safePath = file;
+  await audit({ uid: event._uid, file: safePath, branch, stage: 'requested' });
 
   try {
     // 1. Get current file SHA (required for update)
@@ -87,6 +111,7 @@ exports.handler = async (event) => {
     }
 
     const result = await putRes.json();
+    await audit({ uid: event._uid, file: safePath, branch, stage: 'committed', commit: result.commit?.sha || null });
     return {
       statusCode: 200,
       headers,
@@ -101,6 +126,6 @@ exports.handler = async (event) => {
     };
 
   } catch (e) {
-    return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal error' }) };
+    return { statusCode: 500, headers, body: JSON.stringify(publicErrorBody('autocommit', e)) };
   }
 };

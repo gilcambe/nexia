@@ -20,6 +20,15 @@ try {
     const saRaw = process.env.FIREBASE_SERVICE_ACCOUNT;
     const saB64 = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
 
+    // Testes locais/CI: com os emuladores do Firebase ativos (variáveis definidas
+    // pelo `firebase emulators:exec`) e fora de produção, inicializa sem credencial.
+    // Em produção este ramo nunca é usado (NODE_ENV=production).
+    const emulator = process.env.FIRESTORE_EMULATOR_HOST && process.env.FIREBASE_AUTH_EMULATOR_HOST
+      && process.env.NODE_ENV !== 'production' && !saRaw && !saB64;
+    if (emulator) {
+      admin.initializeApp({ projectId: process.env.GCLOUD_PROJECT || 'demo-nexia' });
+    } else {
+
     if (!saRaw && !saB64) {
       throw new Error('FIREBASE_SERVICE_ACCOUNT ou FIREBASE_SERVICE_ACCOUNT_BASE64 não configurada');
     }
@@ -51,6 +60,7 @@ try {
       // Garante conexão com o projeto correto mesmo se a chave vier de outro ambiente
       projectId: parsed.project_id,
     });
+    }
   }
 
   db = admin.firestore();

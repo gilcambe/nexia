@@ -1,0 +1,73 @@
+// Regressão E2E da Fase 1 — derivada de READDY/nexia.test.js (seções 1, 10 e 11),
+// trocando as páginas /nexia/*.html (que não existem no nexia v60) pelas rotas atuais.
+const { test, expect } = require('@playwright/test');
+
+const SPA_ROUTES = ['/', '/login', '/cortex-app', '/sentinel', '/pipeline', '/codigo', '/docs',
+  '/swarm-control', '/qa-center', '/ces', '/bezsan', '/vp', '/splash', '/privacidade', '/termos', '/lgpd', '/cookies'];
+const TENANT_PAGES = ['/ces/landing', '/bezsan/landing', '/vp/landing', '/splash/landing', '/ces/admin', '/vp/guia'];
+
+test.describe('1. Navegação — rotas principais', () => {
+  for (const route of [...SPA_ROUTES, ...TENANT_PAGES]) {
+    test(`${route} — HTTP 200, sem crash JS`, async ({ page }) => {
+      const errors = [];
+      page.on('pageerror', e => errors.push(e.message));
+      const res = await page.goto(route, { waitUntil: 'domcontentloaded' });
+      expect(res.status(), `${route} status`).toBe(200);
+      await page.waitForTimeout(300);
+      // Erros de Firebase/rede são esperados sem credenciais locais; crash de sintaxe/referência não
+      const crashes = errors.filter(m => /SyntaxError|ReferenceError|is not a function|Cannot read properties of undefined/.test(m)
+        && !/firebase|fetch|network|Failed to fetch/i.test(m));
+      expect(crashes, `${route} crashou: ${crashes.join(' | ')}`).toEqual([]);
+    });
+  }
+});
+
+test.describe('10. APIs — sem crash e sempre JSON', () => {
+  const GET_APIS = ['/api/sentinel', '/api/observability', '/api/models', '/api/usage', '/api/notifications', '/api/audit', '/api/sentinel-qa?action=ping', '/api/tenant?tenantId=nexia'];
+  for (const ep of GET_APIS) {
+    test(`GET ${ep} sem crash`, async ({ request }) => {
+      const res = await request.get(ep);
+      // 503 é aceito quando o ambiente de teste roda sem Firebase; 500 (crash) não
+      expect([500, 502], `${ep} crashou`).not.toContain(res.status());
+      expect(res.headers()['content-type'] || '', `${ep} retornou HTML`).toContain('json');
+    });
+  }
+  const POST_APIS = [
+    ['/api/auth', { action: 'check' }], ['/api/logs', { level: 'info' }], ['/api/events', { type: 'test' }],
+    ['/api/tenant', { action: 'get' }], ['/api/cortex', { message: 'ping' }], ['/api/memory', { action: 'get' }],
+    ['/api/autocommit', { file: 'a.js', content: 'x', branch: 'main' }], ['/api/sentinel-qa', { mode: 'heal', issues: [{}] }],
+  ];
+  for (const [ep, data] of POST_APIS) {
+    test(`POST ${ep} sem token → erro JSON, sem crash`, async ({ request }) => {
+      const res = await request.post(ep, { data });
+      expect(res.status(), `${ep}`).toBeGreaterThanOrEqual(400);
+      expect([500, 502], `${ep} crashou`).not.toContain(res.status());
+      expect(res.headers()['content-type'] || '').toContain('json');
+    });
+  }
+});
+
+test.describe('Segurança — Fase 1', () => {
+  test('cabeçalho x-netlify-event não libera o Sentinel', async ({ request }) => {
+    const res = await request.post('/api/sentinel-qa', { data: { mode: 'heal', issues: [{ severity: 'CRITICAL' }] }, headers: { 'x-netlify-event': 'schedule' } });
+    expect(res.status()).toBe(401);
+  });
+  test('token qualquer não vira master (demo mode removido)', async ({ request }) => {
+    const res = await request.post('/api/autocommit', { data: { file: 'a.js', content: 'x', branch: 'x' }, headers: { authorization: 'Bearer demo' } });
+    expect(res.status()).toBe(401);
+  });
+  for (const p of ['/server.js', '/package.json', '/.env', '/netlify/functions/middleware.js', '/firestore.rules', '/core/%2e%2e/server.js']) {
+    test(`arquivo privado ${p} não é servido`, async ({ request }) => {
+      const res = await request.get(p);
+      expect(res.status()).toBeGreaterThanOrEqual(400);
+      const body = await res.text();
+      expect(body).not.toContain('require(');
+      expect(body).not.toContain('"dependencies"');
+    });
+  }
+  test('rota SPA inexistente cai no index.html', async ({ request }) => {
+    const res = await request.get('/rota-que-nao-existe');
+    expect(res.status()).toBe(200);
+    expect(await res.text()).toContain('<div id="root"');
+  });
+});

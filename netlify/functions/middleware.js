@@ -132,9 +132,37 @@ async function _cleanExpiredRateLimits() {
 }
 
 const _tenantCache = new Map();
+
+// Papéis que um documento de membro de tenant pode conceder. 'master' é global e
+// nunca vem de um tenant: só de custom claim ou de users/{uid}.role gravado pelo servidor.
+const TENANT_ROLES = ['user', 'member', 'manager', 'admin'];
+
+/**
+ * isConfiguredMasterEmail — SEC Fase 1 (C3): MASTER_EMAIL só eleva quando
+ * configurado explicitamente no ambiente (sem valor padrão) e com e-mail verificado.
+ */
+function isConfiguredMasterEmail(email, emailVerified) {
+  const masterEmail = (process.env.MASTER_EMAIL || '').trim().toLowerCase();
+  if (!masterEmail || !email || emailVerified !== true) return false;
+  return String(email).trim().toLowerCase() === masterEmail;
+}
+
+/**
+ * resolveRole — papel global a partir do token verificado e do perfil no Firestore.
+ * Ordem: custom claim → users/{uid}.role → MASTER_EMAIL verificado. Nenhuma promoção
+ * por tenant ('nexia') ou por e-mail não verificado.
+ */
+function resolveRole(decoded, profile) {
+  let role = (profile && profile.role) || 'user';
+  if (decoded && decoded.role) role = decoded.role;
+  if (decoded && isConfiguredMasterEmail(decoded.email, decoded.email_verified)) role = 'master';
+  return role;
+}
+
 async function validateTenant(userId, tenantId) {
   if (!userId || !tenantId) return { ok: false, reason: 'userId ou tenantId ausente' };
-  if (!db) return { ok: true, role: 'user' };
+  // SEC Fase 1: sem Firestore não há como validar pertença → fail-closed
+  if (!db) return { ok: false, reason: 'Serviço de autorização indisponível.' };
 
   const cacheKey = `${userId}:${tenantId}`;
   const cached = _tenantCache.get(cacheKey);
@@ -146,28 +174,19 @@ async function validateTenant(userId, tenantId) {
     const profile = userDoc.data();
     const userTenant = profile.tenantSlug || profile.tenant;
     const userRole = profile.role || 'user';
-    // FIX v57: MASTER_EMAIL auto-eleva independente do Firestore
-    const masterEmail = process.env.MASTER_EMAIL || 'admin@nexia.com';
-    if (profile.email === masterEmail || userTenant === 'nexia' || userRole === 'master') return { ok: true, role: 'master' };
-    // FIX v50: usuário 'guest' tentando acessar tenant 'nexia' → auto-repara se
-    // foi registrado antes do set-master-role ser executado. Verifica se é o
-    // único tenant existente (setup inicial) e eleva para member do nexia.
-    if (userTenant === 'guest' && tenantId === 'nexia') {
-      const nexiaSnap = await db.collection('tenants').doc('nexia').get().catch(() => null);
-      if (nexiaSnap && nexiaSnap.exists) {
-        // Repara o doc do usuário no Firestore silenciosamente
-        await db.collection('users').doc(userId).update({ tenantSlug: 'nexia', tenant: 'nexia' }).catch(() => {});
-        console.info(`[validateTenant] Auto-reparado: ${userId} guest → nexia`);
-        return { ok: true, role: 'user' };
-      }
-    }
+    // SEC Fase 1 (C3): removidas as promoções automáticas a master por
+    // MASTER_EMAIL padrão, por pertencer ao tenant 'nexia' e o "auto-reparo"
+    // guest → nexia. Master vem apenas de users/{uid}.role (protegido pelas regras).
+    if (userRole === 'master') return { ok: true, role: 'master' };
     if (userTenant !== tenantId) return { ok: false, reason: `Acesso negado ao tenant "${tenantId}"` };
     const memberDoc = await db.collection('tenants').doc(tenantId).collection('members').doc(userId).get().catch(() => null);
-    const result = { ok: true, role: memberDoc?.exists ? (memberDoc.data().role || userRole) : userRole };
+    const memberRole = memberDoc?.exists ? memberDoc.data().role : null;
+    const role = TENANT_ROLES.includes(memberRole) ? memberRole : (TENANT_ROLES.includes(userRole) ? userRole : 'user');
+    const result = { ok: true, role };
     _tenantCache.set(cacheKey, { result, ts: Date.now() });
     return result;
   } catch (e) {
-    console.error('[validateTenant] error:', 'Internal error');
+    console.error('[validateTenant] error:', e && e.message);
     return { ok: false, reason: 'Erro ao validar acesso. Tente novamente.' };
   }
 }
@@ -272,35 +291,27 @@ async function verifyBearerToken(event) {
     return { ok: false, reason: 'Token de autenticação ausente.' };
   }
   const idToken = authHeader.slice(7).trim();
-  // DEMO MODE: quando Firebase Admin não está configurado, aceita qualquer token não-vazio
-  // Isso permite que o QA e testes funcionem sem credenciais Firebase reais
-  if (!admin || !admin.auth) {
-    const isDemoToken = idToken && idToken.length > 0;
-    if (isDemoToken) {
-      return { ok: true, uid: 'demo-user', email: 'demo@nexia.os', role: 'master', tenantSlug: 'nexia', demo: true };
-    }
-    return { ok: false, reason: 'Firebase Admin não disponível.' };
+  if (!idToken) return { ok: false, reason: 'Token de autenticação ausente.' };
+  // SEC Fase 1 (A3): o antigo "DEMO MODE" (qualquer token vira master quando o
+  // Firebase Admin não está disponível) foi removido. Sem Admin SDK → 503/401.
+  if (!admin || !admin.apps || !admin.apps.length) {
+    return { ok: false, reason: 'Serviço de autenticação indisponível.' };
   }
+  let decoded;
   try {
-    if (!admin || !admin.auth) return { ok: false, reason: 'Firebase Admin não disponível.' };
-    const decoded = await admin.auth().verifyIdToken(idToken);
-    // Optionally check Firestore for role
-    let role = 'user';
-    if (db) {
-      try {
-        const userDoc = await db.collection('users').doc(decoded.uid).get();
-        if (userDoc.exists) role = userDoc.data().role || 'user';
-      } catch(e) { /* log only */ }
-    }
-    // FIX v57: Custom Claims do Firebase Auth têm prioridade sobre Firestore
-    if (decoded.role) role = decoded.role;
-    // FIX v57: MASTER_EMAIL no env → eleva automaticamente sem precisar rodar set-master-role.js
-    const masterEmail = process.env.MASTER_EMAIL || 'admin@nexia.com';
-    if (decoded.email && decoded.email === masterEmail) role = 'master';
-    return { ok: true, uid: decoded.uid, email: decoded.email, role, tenantSlug: decoded.tenantSlug || 'nexia' };
+    decoded = await admin.auth().verifyIdToken(idToken);
   } catch (e) {
-    return { ok: false, reason: `Token inválido: ${'Internal error'}` };
+    return { ok: false, reason: 'Token inválido ou expirado.' };
   }
+  let profile = null;
+  if (db) {
+    try {
+      const userDoc = await db.collection('users').doc(decoded.uid).get();
+      if (userDoc.exists) profile = userDoc.data();
+    } catch (e) { console.error('[verifyBearerToken] perfil:', e && e.message); }
+  }
+  const role = resolveRole(decoded, profile);
+  return { ok: true, uid: decoded.uid, email: decoded.email, role, tenantSlug: decoded.tenantSlug || (profile && profile.tenantSlug) || null };
 }
 
 /**
@@ -376,11 +387,12 @@ async function assertTenantAccess(event, tenantId, headers) {
   if (!uid || !tenantId) return null;          // sem tenant no body → skip
   if (role === 'master') return null;          // master acessa tudo
   const result = await validateTenant(uid, tenantId);
+  if (result.ok) event._tenantRole = result.role;
   if (!result.ok) {
     return { statusCode: 403, headers: headers || makeHeaders(event), body: JSON.stringify({ error: result.reason || 'Acesso negado ao tenant.' }) };
   }
   return null; // ok
 }
 
-module.exports = { guard, checkRateLimit, validateTenant, assertTenantAccess, sanitizePrompt, checkPermission, validateAIAction, verifyBearerToken, requireBearerAuth, HEADERS, makeHeaders, getCorsOrigin, ROLE_PERMISSIONS, handler: _handler };
+module.exports = { resolveRole, isConfiguredMasterEmail, guard, checkRateLimit, validateTenant, assertTenantAccess, sanitizePrompt, checkPermission, validateAIAction, verifyBearerToken, requireBearerAuth, HEADERS, makeHeaders, getCorsOrigin, ROLE_PERMISSIONS, handler: _handler };
 module.exports.handler = _handler;

@@ -25,6 +25,7 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 
 const { admin, db }                       = require('./firebase-init');
 const { guard, assertTenantAccess, sanitizePrompt, makeHeaders, HEADERS } = require('./middleware');
+const { publicErrorBody } = require('../../lib/safe-error');
 
 // FIX: helper centralizado para serverTimestamp — evita repetição
 const now = () => admin.firestore.FieldValue.serverTimestamp();
@@ -568,7 +569,7 @@ exports.handler = async (event) => {
     return {
       statusCode: 400,
       headers,
-      body: JSON.stringify({ ok: false, error: err.message || 'Requisição inválida' }),
+      body: JSON.stringify({ ok: false, ...publicErrorBody('cortex-agent', err, 'Requisição inválida.') }), // SEC Fase 1 (A5)
     };
   }
 };

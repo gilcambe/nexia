@@ -14,7 +14,7 @@ const { admin, db } = require('./firebase-init');
 const now = () => admin && admin.firestore
   ? admin.firestore.FieldValue.serverTimestamp()
   : new Date().toISOString();
-const { guard, makeHeaders} = require('./middleware');
+const { guard, assertTenantAccess, makeHeaders} = require('./middleware');
 
 // ── Planos disponíveis ─────────────────────────────────────────
 const PLANS = {
@@ -228,12 +228,18 @@ exports.handler = async (event) => {
   const guardErr = await guard(event, 'tenant-admin', { skipTenant: true });
   if (guardErr) return guardErr;
 
+  // SEC Fase 1: isolamento de tenant (antes qualquer usuário autenticado lia/alterava qualquer tenant)
+  const isMaster = event._role === 'master';
+  const deny = (msg = 'Permissão insuficiente.') => ({ statusCode: 403, headers, body: JSON.stringify({ error: msg }) });
+
   try {
     if (event.httpMethod === 'GET') {
       const qs = event.queryStringParameters || {};
 
       // ── PABX CRM Lookup por telefone (/api/crm/lookup?phone=...) ──
       if (qs.phone) {
+        // Busca por telefone varre clientes de TODOS os tenants → somente master
+        if (!isMaster) return deny();
         if (!db) return { statusCode: 503, headers, body: JSON.stringify({ error: 'Firebase indisponível' }) };
         const phone = qs.phone.replace(/\D/g, ''); // normaliza: só dígitos
         const snap = await db.collectionGroup('clients')
@@ -253,6 +259,8 @@ exports.handler = async (event) => {
       // ── Info completa do tenant (/api/tenant?tenantId=...) ──
       const { tenantId } = qs;
       if (!tenantId) throw new Error('tenantId obrigatório');
+      const tErr = await assertTenantAccess(event, tenantId, headers);
+      if (tErr) return tErr;
       const info = await getTenantInfo(tenantId);
       return { statusCode: 200, headers, body: JSON.stringify(info) };
     }
@@ -261,10 +269,27 @@ exports.handler = async (event) => {
   try { _parsed = JSON.parse(event.body || '{}'); } catch { return { statusCode: 400, headers: makeHeaders(event), body: JSON.stringify({ error: 'JSON inválido' }) }; }
   const { action, ...payload } = _parsed;
 
-    if (action === 'create')       return { statusCode: 200, headers, body: JSON.stringify(await createTenant(payload)) };
-    if (action === 'invite')       return { statusCode: 200, headers, body: JSON.stringify(await inviteMember(payload.tenantId, payload.email, payload.role, payload.invitedBy)) };
-    if (action === 'updatePlan')   return { statusCode: 200, headers, body: JSON.stringify(await updatePlan(payload.tenantId, payload.plan)) };
-    if (action === 'checkLimit')   return { statusCode: 200, headers, body: JSON.stringify(await checkLimit(payload.tenantId, payload.resource)) };
+    if (action === 'create') {
+      // Dono é sempre quem chama (exceto master); plano pago só via billing/master
+      const data = isMaster ? payload : { ...payload, ownerUid: event._uid, ownerEmail: event._email || payload.ownerEmail, plan: 'free' };
+      return { statusCode: 200, headers, body: JSON.stringify(await createTenant(data)) };
+    }
+    if (action === 'invite') {
+      const tErr = await assertTenantAccess(event, payload.tenantId, headers);
+      if (tErr) return tErr;
+      if (!isMaster && !['admin', 'manager'].includes(event._tenantRole)) return deny();
+      const role = ['member', 'user', 'manager'].includes(payload.role) || (payload.role === 'admin' && (isMaster || event._tenantRole === 'admin')) ? payload.role : 'member';
+      return { statusCode: 200, headers, body: JSON.stringify(await inviteMember(payload.tenantId, payload.email, role, event._uid)) };
+    }
+    if (action === 'updatePlan') {
+      if (!isMaster) return deny();
+      return { statusCode: 200, headers, body: JSON.stringify(await updatePlan(payload.tenantId, payload.plan)) };
+    }
+    if (action === 'checkLimit') {
+      const tErr = await assertTenantAccess(event, payload.tenantId, headers);
+      if (tErr) return tErr;
+      return { statusCode: 200, headers, body: JSON.stringify(await checkLimit(payload.tenantId, payload.resource)) };
+    }
 
     throw new Error(`Ação desconhecida: ${action}`);
   } catch (err) {

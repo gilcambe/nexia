@@ -109,10 +109,16 @@ exports.handler = async (event) => {
   const guardErr = await guard(event, 'notifications', { skipTenant: true });
   if (guardErr) return guardErr;
 
+  // SEC Fase 1: cada usuário só lê/marca as próprias notificações; enviar para
+  // outro usuário exige admin/master (antes userId vinha livre do body/query).
+  const isPrivileged = ['master', 'admin'].includes(event._role);
+  const forbidden = { statusCode: 403, headers, body: JSON.stringify({ error: 'Permissão insuficiente.' }) };
+
   try {
     if (event.httpMethod === 'GET') {
       const { userId, limit } = event.queryStringParameters || {};
       if (!userId) throw new Error('userId obrigatório');
+      if (userId !== event._uid && event._role !== 'master') return forbidden;
       const result = await list(userId, parseInt(limit) || 30);
       return { statusCode: 200, headers, body: JSON.stringify(result) };
     }
@@ -120,6 +126,8 @@ exports.handler = async (event) => {
     let _nb; try { _nb = JSON.parse(event.body || '{}'); } catch { return { statusCode: 400, headers, body: JSON.stringify({ error: 'JSON inválido' }) }; }
     const { action, userId, tenantId, title, body: bodyText, type, link, meta, notifId } = _nb;
     if (!userId) throw new Error('userId obrigatório');
+    if (action === 'send' && userId !== event._uid && !isPrivileged) return forbidden;
+    if (action !== 'send' && userId !== event._uid && event._role !== 'master') return forbidden;
 
     if (action === 'send')    return { statusCode: 200, headers, body: JSON.stringify(await send(userId, tenantId, title, bodyText, type, link, meta)) };
     if (action === 'read')    return { statusCode: 200, headers, body: JSON.stringify(await markRead(userId, notifId)) };

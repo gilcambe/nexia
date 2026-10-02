@@ -970,8 +970,8 @@ master: ilimitado (99999)
 
 | Credencial | Status | Ação |
 |-----------|--------|------|
-| GROQ_API_KEY (antiga gsk_lpYM...) | Exposta no v21 | Revogar em console.groq.com |
-| GROQ_API_KEY (atual gsk_hmA19I...) | No env do ZIP | Rotacionar após confirmar deploy |
+| GROQ_API_KEY (antiga gsk_[prefixo removido]) | Exposta no v21 | Revogar em console.groq.com |
+| GROQ_API_KEY (atual gsk_[prefixo removido]) | No env do ZIP | Rotacionar após confirmar deploy |
 | Firebase Service Account JSON | No ZIP docs | Rotacionar no Google Cloud Console |
 | MP_ACCESS_TOKEN | No ZIP docs | Rotacionar no Mercado Pago |
 | ANTHROPIC_API_KEY | Parcialmente visível | Verificar se exposta |
@@ -1084,7 +1084,7 @@ GET /health → {
 ```bash
 # Firebase Admin (server-side)
 FIREBASE_SERVICE_ACCOUNT_BASE64=<base64 do service-account JSON>
-FIREBASE_API_KEY=AIzaSyC9L592zKSUjx-YglmbGpxjv2hsXm_gbBM
+FIREBASE_API_KEY=<removido — configurar no Render; ver .env.example>
 FIREBASE_AUTH_DOMAIN=nexia-c8710.firebaseapp.com
 FIREBASE_PROJECT_ID=nexia-c8710
 FIREBASE_STORAGE_BUCKET=nexia-c8710.firebasestorage.app
@@ -1101,15 +1101,15 @@ PORT=3001
 
 ```bash
 GROQ_API_KEY=<chave atual — ROTACIONAR>
-GEMINI_API_KEY=AIzaSyBC4FTlXlXkBqcYhD3iKkAYqwDVVIsAtMw
+GEMINI_API_KEY=<removido — chave exposta, ROTACIONAR>
 ```
 
 ## 11.3 IA Providers (Pagos — opcionais)
 
 ```bash
-ANTHROPIC_API_KEY=sk-ant-api03-...
+ANTHROPIC_API_KEY=sk-ant-[prefixo removido]
 OPENAI_API_KEY=<não configurado>
-DEEPSEEK_API_KEY=sk-bbd7bc6b...
+DEEPSEEK_API_KEY=sk-[prefixo removido]
 ```
 
 ## 11.4 Providers Gratuitos (adicionar para expandir)
@@ -1128,8 +1128,8 @@ SAMBANOVA_API_KEY=<criar em cloud.sambanova.ai>
 
 ```bash
 # Mercado Pago
-MP_ACCESS_TOKEN=APP_USR-4962380209260627-...<ROTACIONAR>
-VITE_MP_PUBLIC_KEY=APP_USR-52cde8a3-dde3-4c74-8ee3-63560db594ed
+MP_ACCESS_TOKEN=<removido — token exposto, ROTACIONAR>
+VITE_MP_PUBLIC_KEY=<removido — configurar no ambiente>
 
 # EmailJS (notificações)
 VITE_EMAILJS_PUBLIC_KEY=LcS_kJi4Mf9_ExzCt
@@ -1435,7 +1435,7 @@ Status: Implementado no React, integra com `/api/actions`.
 1. **Rotacionar credenciais expostas** (GROQ, MP, Firebase SA)
 2. **Deploy v60** (server.js corrigido com rotas /core/ e admin)
 3. **Configurar TTL** no Firestore Console → coleção `rate_limits` → campo `ttl`
-4. **Verificar revogação** da GROQ key antiga (gsk_lpYM...)
+4. **Verificar revogação** da GROQ key antiga (gsk_[prefixo removido])
 5. **Implementar handlers** "Editar" e "Impersonate" no Master Admin
 6. **Configurar UptimeRobot** para ping externo
 

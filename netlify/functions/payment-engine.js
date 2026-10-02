@@ -213,7 +213,7 @@ exports.handler = async (event) => {
       if (!userDoc.exists) return { statusCode: 403, headers, body: JSON.stringify({ error: 'Usuário não encontrado' }) };
       const userTenant = userDoc.data().tenantSlug;
       const userRole = userDoc.data().role;
-      if (userTenant !== tenantId && userRole !== 'master' && userDoc.data().tenantSlug !== 'nexia') {
+      if (userTenant !== tenantId && userRole !== 'master') { // SEC Fase 1: sem bypass por tenant 'nexia'
         return { statusCode: 403, headers, body: JSON.stringify({ error: 'Acesso negado a este tenant' }) };
       }
 
@@ -240,7 +240,7 @@ exports.handler = async (event) => {
       if (!userDoc.exists) return { statusCode: 403, headers, body: JSON.stringify({ error: 'Usuário não encontrado' }) };
       const userTenant = userDoc.data().tenantSlug;
       const userRole = userDoc.data().role;
-      if (userTenant !== tenantId && userRole !== 'master' && userTenant !== 'nexia') {
+      if (userTenant !== tenantId && userRole !== 'master') { // SEC Fase 1: sem bypass por tenant 'nexia'
         return { statusCode: 403, headers, body: JSON.stringify({ error: 'Acesso negado' }) };
       }
 
