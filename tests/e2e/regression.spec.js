@@ -91,3 +91,13 @@ test.describe('NEXIA AI — Fase 3', () => {
     expect(post.status()).toBe(401);
   });
 });
+
+test.describe('NEXIA AI — Fase 5', () => {
+  test('/api/cortex e /api/models sem token respondem 401 em JSON (nenhum stream é aberto)', async ({ request }) => {
+    for (const ep of ['/api/cortex', '/api/models']) {
+      const res = await request.post(ep, { data: { message: 'oi', stream: true, action: 'list' } });
+      expect(res.status(), ep).toBe(401);
+      expect(res.headers()['content-type'] || '', ep).toContain('json');
+    }
+  });
+});

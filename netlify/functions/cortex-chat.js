@@ -1,18 +1,5 @@
 'use strict';
 
-// ── fetchWithTimeout helper — evita fetch() pendurado indefinidamente ──
-async function _fetchTimeout(url, opts = {}, ms = 30000, _legacyOpts) {
-  // Backward-compat: old call convention was _fetchTimeout(url, {}, ms, opts)
-  if (_legacyOpts && typeof _legacyOpts === 'object') opts = _legacyOpts;
-  const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), ms);
-  try {
-    return await fetch(url, { ...opts, signal: ctrl.signal });
-  } finally {
-    clearTimeout(tid);
-  }
-}
-
 /**
  * ╔══════════════════════════════════════════════════════════════════════╗
  * ║  NEXIA OS — CORTEX SUPREME v16.0                                     ║
@@ -166,274 +153,18 @@ const STATIC_AGENTS = {
   architect: { system: 'Você é o ARCHITECT AGENT — especialista em arquitetura de sistemas, microserviços, serverless, bancos de dados. Projete sistemas robustos. Responda em português.' },
 };
 
-// ═══ STREAMING ════════════════════════════════════════════════════════
-async function* streamAnthropic(system, messages, modelId, maxTok) {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) { yield '⚠️ **ANTHROPIC_API_KEY não configurada.** Configure no Render Dashboard → Environment.'; return; }
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
-      body: JSON.stringify({ model: modelId || 'claude-sonnet-4-6', max_tokens: maxTok || 16000, stream: true, system, messages: messages.filter(m => m.role !== 'system').map(m => ({ role: m.role, content: String(m.content) })) })
-    });
-    if (!res.ok) { const _b = await res.text().catch(() => ''); console.error('[CORTEX] Anthropic', res.status, _b.slice(0, 500)); yield `❌ Anthropic Error (${res.status})`; return; }
-    const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = '';
-    while (true) {
-      const { done, value } = await reader.read(); if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n'); buf = lines.pop() || '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const d = line.slice(6).trim(); if (d === '[DONE]') return;
-        try { const p = JSON.parse(d); if (p.type === 'content_block_delta' && p.delta?.type === 'text_delta') yield p.delta.text; } catch { }
-      }
-    }
-  } catch (e) { yield `❌ Erro Anthropic: ${'Internal error'}`; }
-}
-
-async function* streamOpenAI(system, messages, modelId, maxTok) {
-  const key = process.env.OPENAI_API_KEY;
-  if (!key) { yield '⚠️ **OPENAI_API_KEY não configurada.** Configure no Render Dashboard → Environment.'; return; }
-  try {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: modelId || 'gpt-4o', max_tokens: maxTok || 16000, stream: true, messages: [{ role: 'system', content: system }, ...messages] })
-    });
-    if (!res.ok) { const _b = await res.text().catch(() => ''); console.error('[CORTEX] OpenAI', res.status, _b.slice(0, 500)); yield `❌ OpenAI Error (${res.status})`; return; }
-    const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = '';
-    while (true) {
-      const { done, value } = await reader.read(); if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n'); buf = lines.pop() || '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const d = line.slice(6).trim(); if (d === '[DONE]') return;
-        try { const t = JSON.parse(d).choices?.[0]?.delta?.content; if (t) yield t; } catch { }
-      }
-    }
-  } catch (e) { yield `❌ Erro OpenAI: ${'Internal error'}`; }
-}
-
-async function* streamGroq(system, messages, modelId, maxTok) {
-  const key = process.env.GROQ_API_KEY;
-  if (!key) { yield '⚠️ **GROQ_API_KEY não configurada.**\n\nCadastre GRÁTIS em: https://console.groq.com\nConfigure no Render Dashboard → Environment.'; return; }
-  try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: modelId || 'llama-3.3-70b-versatile', max_tokens: Math.min(maxTok || 32768, 32768), stream: true, temperature: 0.4, messages: [{ role: 'system', content: system }, ...messages] })
-    });
-    if (!res.ok) { const _b = await res.text().catch(() => ''); console.error('[CORTEX] Groq', res.status, _b.slice(0, 500)); yield `❌ Groq Error (${res.status})`; return; }
-    const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = '';
-    while (true) {
-      const { done, value } = await reader.read(); if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n'); buf = lines.pop() || '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const d = line.slice(6).trim(); if (d === '[DONE]') return;
-        try { const t = JSON.parse(d).choices?.[0]?.delta?.content; if (t) yield t; } catch { }
-      }
-    }
-  } catch (e) { yield `❌ Erro Groq: ${'Internal error'}`; }
-}
-
-async function* streamGemini(system, messages, modelId, maxTok) {
-  const key = process.env.GEMINI_API_KEY;
-  if (!key) { yield '⚠️ **GEMINI_API_KEY não configurada.**\n\nCadastre GRÁTIS em: https://aistudio.google.com\nConfigure no Render Dashboard → Environment.'; return; }
-  try {
-    const gemMessages = messages.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: String(m.content) }] }));
-    const res = await _fetchTimeout(`https://generativelanguage.googleapis.com/v1beta/models/${modelId || 'gemini-2.0-flash'}:streamGenerateContent?key=${key}&alt=sse`, {}, 60000, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: gemMessages, generationConfig: { maxOutputTokens: maxTok || 8192 } })
-    });
-    if (!res.ok) { const _b = await res.text().catch(() => ''); console.error('[CORTEX] Gemini', res.status, _b.slice(0, 500)); yield `❌ Gemini Error (${res.status})`; return; }
-    const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = '';
-    while (true) {
-      const { done, value } = await reader.read(); if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n'); buf = lines.pop() || '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const d = line.slice(6).trim(); if (d === '[DONE]') return;
-        try { const t = JSON.parse(d).candidates?.[0]?.content?.parts?.[0]?.text; if (t) yield t; } catch { }
-      }
-    }
-  } catch (e) { yield `❌ Erro Gemini: ${'Internal error'}`; }
-}
-
-async function* streamCerebras(system, messages, modelId, maxTok) {
-  const key = process.env.CEREBRAS_API_KEY;
-  if (!key) { yield '⚠️ **CEREBRAS_API_KEY não configurada.**\n\nCadastre GRÁTIS (1M tokens/dia) em: https://cloud.cerebras.ai'; return; }
-  try {
-    const res = await fetch('https://api.cerebras.ai/v1/chat/completions', {
-      method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: modelId || 'llama3.3-70b', max_tokens: Math.min(maxTok || 32768, 32768), stream: true, messages: [{ role: 'system', content: system }, ...messages] })
-    });
-    if (!res.ok) { const _b = await res.text().catch(() => ''); console.error('[CORTEX] Cerebras', res.status, _b.slice(0, 500)); yield `❌ Cerebras Error (${res.status})`; return; }
-    const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = '';
-    while (true) {
-      const { done, value } = await reader.read(); if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n'); buf = lines.pop() || '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const d = line.slice(6).trim(); if (d === '[DONE]') return;
-        try { const t = JSON.parse(d).choices?.[0]?.delta?.content; if (t) yield t; } catch { }
-      }
-    }
-  } catch (e) { yield `❌ Erro Cerebras: ${'Internal error'}`; }
-}
-
-async function* streamOpenRouter(system, messages, modelId, maxTok) {
-  const key = process.env.OPENROUTER_API_KEY;
-  if (!key) { yield '⚠️ **OPENROUTER_API_KEY não configurada.**\n\nCadastre GRÁTIS (50+ modelos free) em: https://openrouter.ai/keys'; return; }
-  try {
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': process.env.NEXIA_APP_URL || 'https://nexia.com.br', 'X-Title': 'NEXIA OS' },
-      body: JSON.stringify({ model: modelId, max_tokens: maxTok || 8192, stream: true, messages: [{ role: 'system', content: system }, ...messages] })
-    });
-    if (!res.ok) { const _b = await res.text().catch(() => ''); console.error('[CORTEX] OpenRouter', res.status, _b.slice(0, 500)); yield `❌ OpenRouter Error (${res.status})`; return; }
-    const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = '';
-    while (true) {
-      const { done, value } = await reader.read(); if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n'); buf = lines.pop() || '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const d = line.slice(6).trim(); if (d === '[DONE]') return;
-        try { const t = JSON.parse(d).choices?.[0]?.delta?.content; if (t) yield t; } catch { }
-      }
-    }
-  } catch (e) { yield `❌ Erro OpenRouter: ${'Internal error'}`; }
-}
-
-async function* streamPerplexity(system, messages, modelId, maxTok) {
-  const key = process.env.PERPLEXITY_API_KEY;
-  if (!key) { yield '⚠️ **PERPLEXITY_API_KEY não configurada** para busca em tempo real.'; return; }
-  try {
-    const res = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: modelId || 'llama-3.1-sonar-large-128k-online', max_tokens: maxTok || 4096, stream: true, messages: [{ role: 'system', content: system }, ...messages] })
-    });
-    if (!res.ok) { yield `❌ Perplexity Error (${res.status})`; return; }
-    const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = '';
-    while (true) {
-      const { done, value } = await reader.read(); if (done) break;
-      buf += decoder.decode(value, { stream: true });
-      const lines = buf.split('\n'); buf = lines.pop() || '';
-      for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
-        const d = line.slice(6).trim(); if (d === '[DONE]') return;
-        try { const t = JSON.parse(d).choices?.[0]?.delta?.content; if (t) yield t; } catch { }
-      }
-    }
-  } catch (e) { yield `❌ Erro Perplexity: ${'Internal error'}`; }
-}
-
-// ═══ CHAMADAS SÍNCRONAS ═══════════════════════════════════════════════
-async function callFreeProvider(provider, model, system, messages, maxTok) {
-  const cfgs = {
-    mistral:     { url: 'https://api.mistral.ai/v1/chat/completions',                                            key: process.env.MISTRAL_API_KEY,    signup: 'https://console.mistral.ai' },
-    cohere:      { url: 'https://api.cohere.ai/v2/chat',                                                         key: process.env.COHERE_API_KEY,     signup: 'https://dashboard.cohere.com', cohere: true },
-    nvidia:      { url: 'https://integrate.api.nvidia.com/v1/chat/completions',                                  key: process.env.NVIDIA_API_KEY,     signup: 'https://build.nvidia.com' },
-    huggingface: { url: `https://router.huggingface.co/hf-inference/models/${model}/v1/chat/completions`,        key: process.env.HF_API_KEY,         signup: 'https://huggingface.co/settings/tokens' },
-    sambanova:   { url: 'https://api.sambanova.ai/v1/chat/completions',                                          key: process.env.SAMBANOVA_API_KEY,  signup: 'https://cloud.sambanova.ai' },
-    together:    { url: 'https://api.together.xyz/v1/chat/completions',                                          key: process.env.TOGETHER_API_KEY,   signup: 'https://api.together.xyz' },
-  };
-  const cfg = cfgs[provider];
-  if (!cfg) throw new Error(`Provider desconhecido: ${provider}`);
-  if (!cfg.key) throw new Error(`${provider.toUpperCase()}_API_KEY não configurada. Cadastre GRÁTIS em: ${cfg.signup}`);
-  const body = cfg.cohere
-    ? { model, messages: [{ role: 'system', content: system }, ...messages], max_tokens: maxTok || 4096 }
-    : { model, max_tokens: maxTok || 32768, messages: [{ role: 'system', content: system }, ...messages] };
-  const res = await fetch(cfg.url, { method: 'POST', headers: { 'Authorization': `Bearer ${cfg.key}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-  if (!res.ok) throw new Error(`${provider} ${res.status}: ${await res.text().catch(() => '')}`);
-  const d = await res.json();
-  if (cfg.cohere) return d.message?.content?.[0]?.text || d.text || '';
-  return d.choices?.[0]?.message?.content || '';
-}
+// ═══ CHAMADAS AOS MODELOS (NEXIA AI Fase 5: Model Router) ═════════════
+// Todas as chamadas passam por nexia-ai/model-router (SDK oficial no Claude, streaming
+// real, resumos da memória preservados). O AI_CATALOG acima continua sendo o catálogo
+// do cortex; o router recebe só { provider, model }. As funções stream*/callFreeProvider
+// anteriores foram substituídas pelos adapters do router (ADR-F5-02).
+const modelRouter = require('../../nexia-ai/model-router');
+const descOf = key => { const ai = AI_CATALOG[key] || AI_CATALOG.groq_llama3; return { provider: ai.provider, model: ai.model }; };
+const labelOf = (provider, model) => { const hit = Object.values(AI_CATALOG).find(a => a.provider === provider && a.model === model); return hit ? (hit.label || hit.model) : model; };
 
 async function callSync(system, messages, modelKey, maxTok) {
-  const ai = AI_CATALOG[modelKey] || AI_CATALOG.groq_llama3;
-  const { provider, model } = ai;
-  const tok = maxTok || 8192;
-
-  if (provider === 'anthropic') {
-    const key = process.env.ANTHROPIC_API_KEY; if (!key) throw new Error('ANTHROPIC_API_KEY ausente');
-    const res = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' }, body: JSON.stringify({ model, max_tokens: tok, system, messages: messages.filter(m => m.role !== 'system').map(m => ({ role: m.role, content: String(m.content) })) }) });
-    if (!res.ok) throw new Error(`Anthropic ${res.status}: ${await res.text()}`);
-    return (await res.json()).content?.[0]?.text || '';
-  }
-  if (provider === 'groq') {
-    const key = process.env.GROQ_API_KEY; if (!key) throw new Error('GROQ_API_KEY ausente');
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', { method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, max_tokens: Math.min(tok, 32768), temperature: 0.3, messages: [{ role: 'system', content: system }, ...messages] }) });
-    if (!res.ok) throw new Error(`Groq ${res.status}: ${await res.text()}`);
-    return (await res.json()).choices[0].message.content;
-  }
-  if (provider === 'openai') {
-    const key = process.env.OPENAI_API_KEY; if (!key) throw new Error('OPENAI_API_KEY ausente');
-    const res = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, max_tokens: tok, messages: [{ role: 'system', content: system }, ...messages] }) });
-    if (!res.ok) throw new Error(`OpenAI ${res.status}`);
-    return (await res.json()).choices[0].message.content;
-  }
-  if (provider === 'deepseek') {
-    const key = process.env.DEEPSEEK_API_KEY; if (!key) throw new Error('DEEPSEEK_API_KEY ausente');
-    const res = await fetch('https://api.deepseek.com/v1/chat/completions', { method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, max_tokens: Math.min(tok, 32768), temperature: 0.1, messages: [{ role: 'system', content: system }, ...messages] }) });
-    if (!res.ok) throw new Error(`DeepSeek ${res.status}`);
-    return (await res.json()).choices[0].message.content;
-  }
-  if (provider === 'gemini') {
-    const key = process.env.GEMINI_API_KEY; if (!key) throw new Error('GEMINI_API_KEY ausente — grátis em https://aistudio.google.com');
-    const gemMessages = messages.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] }));
-    const res = await _fetchTimeout(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {}, 60000, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: gemMessages, generationConfig: { maxOutputTokens: tok } }) });
-    if (!res.ok) throw new Error(`Gemini ${res.status}`);
-    return (await res.json()).candidates?.[0]?.content?.parts?.[0]?.text || '';
-  }
-  if (provider === 'xai') {
-    const key = process.env.XAI_API_KEY; if (!key) throw new Error('XAI_API_KEY ausente');
-    const res = await fetch('https://api.x.ai/v1/chat/completions', { method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, max_tokens: tok, messages: [{ role: 'system', content: system }, ...messages] }) });
-    if (!res.ok) throw new Error(`Grok ${res.status}`);
-    return (await res.json()).choices[0].message.content;
-  }
-  if (provider === 'perplexity') {
-    const key = process.env.PERPLEXITY_API_KEY; if (!key) throw new Error('PERPLEXITY_API_KEY ausente');
-    const res = await fetch('https://api.perplexity.ai/chat/completions', { method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, max_tokens: tok, messages: [{ role: 'system', content: system }, ...messages] }) });
-    if (!res.ok) throw new Error(`Perplexity ${res.status}`);
-    return (await res.json()).choices[0].message.content;
-  }
-  if (provider === 'cerebras') {
-    const key = process.env.CEREBRAS_API_KEY; if (!key) throw new Error('CEREBRAS_API_KEY ausente — grátis em https://cloud.cerebras.ai');
-    const res = await fetch('https://api.cerebras.ai/v1/chat/completions', { method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model, max_tokens: Math.min(tok, 32768), messages: [{ role: 'system', content: system }, ...messages] }) });
-    if (!res.ok) throw new Error(`Cerebras ${res.status}`);
-    return (await res.json()).choices[0].message.content;
-  }
-  if (provider === 'openrouter') {
-    const key = process.env.OPENROUTER_API_KEY; if (!key) throw new Error('OPENROUTER_API_KEY ausente — grátis em https://openrouter.ai/keys');
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', { method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': process.env.NEXIA_APP_URL || 'https://nexia.com.br', 'X-Title': 'NEXIA OS' }, body: JSON.stringify({ model, max_tokens: tok, messages: [{ role: 'system', content: system }, ...messages] }) });
-    if (!res.ok) throw new Error(`OpenRouter ${res.status}`);
-    return (await res.json()).choices[0].message.content;
-  }
-  if (['mistral','cohere','nvidia','huggingface','sambanova','together'].includes(provider)) {
-    return callFreeProvider(provider, model, system, messages, tok);
-  }
-
-  // Fallback chain gratuito
-  for (const { k, mk } of [
-    { k: 'GROQ_API_KEY', mk: 'groq_llama3' },
-    { k: 'DEEPSEEK_API_KEY', mk: 'deepseek_v3' },
-    { k: 'GEMINI_API_KEY', mk: 'gemini_20_flash' },
-    { k: 'OPENROUTER_API_KEY', mk: 'or_deepseek_v3' },
-    { k: 'CEREBRAS_API_KEY', mk: 'cerebras_llama3' },
-    { k: 'SAMBANOVA_API_KEY', mk: 'sambanova_llama3' },
-    { k: 'TOGETHER_API_KEY', mk: 'together_llama4' }
-  ]) {
-    if (process.env[k]) return callSync(system, messages, mk, Math.min(tok, 32768));
-  }
-  throw new Error('Nenhuma API key configurada. Adicione GROQ_API_KEY ou GEMINI_API_KEY no Render Dashboard → Environment.');
+  const out = await modelRouter.getRouter().chat(descOf(modelKey), { system, messages, maxTokens: maxTok || 8192 });
+  return out.text;
 }
 
 // ═══ IMAGEM ═══════════════════════════════════════════════════════════
@@ -512,18 +243,6 @@ function buildSystemPrompt(tenantId, plan, ragCtx, learningCtx) {
   const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
   // NEXIA: acesso sempre ILIMITADO, sem restrição de tamanho ou tokens
   return `Você é o CORTEX — IA Suprema do NEXIA OS, sistema operacional empresarial SaaS.\n\nTENANT: ${tenantId} | PLANO: ${plan.toUpperCase()} | ACESSO: 🔓 ILIMITADO | HORA BRT: ${now}\n\n## CAPACIDADES:\n- **Estratégia e Negócios**: SaaS, MRR, churn, pricing, vendas, marketing, valuation\n- **Desenvolvimento**: Firebase, Netlify Functions, JS/TS, React, Python — código COMPLETO\n- **Segurança**: OWASP, LGPD, Firebase Rules, pentest, auditoria\n- **CRM**: Criar tarefas, contatos, reuniões, lançamentos financeiros\n- **Jurídico**: Contratos, LGPD, editais de leilão, compliance\n- **Análise Financeira**: DRE, fluxo de caixa, precificação, projeções\n\n## REGRAS ABSOLUTAS:\n- Responda SEMPRE em português do Brasil\n- Use markdown rico (tabelas, código, listas) em respostas técnicas\n- Forneça código COMPLETO e INTEGRAL — NUNCA truncado, NUNCA use "..." para omitir\n- Seja direto e acionável — sem rodeios\n- Modo MASTER ativo: detalhamento máximo, sem limite de tamanho de resposta\n${learningCtx ? `\n## CONTEXTO DO USUÁRIO:\n${learningCtx}\n` : ''}${ragCtx ? `\n## DOCUMENTOS DE REFERÊNCIA:\n${ragCtx}\n` : ''}`;
-}
-
-function getStream(ai, system, messages, maxTok) {
-  const { provider, model } = ai;
-  if (provider === 'anthropic')  return streamAnthropic(system, messages, model, maxTok);
-  if (provider === 'openai')     return streamOpenAI(system, messages, model, maxTok);
-  if (provider === 'groq')       return streamGroq(system, messages, model, maxTok);
-  if (provider === 'perplexity') return streamPerplexity(system, messages, model, maxTok);
-  if (provider === 'gemini')     return streamGemini(system, messages, model, maxTok);
-  if (provider === 'cerebras')   return streamCerebras(system, messages, model, maxTok);
-  if (provider === 'openrouter') return streamOpenRouter(system, messages, model, maxTok);
-  return null; // outros providers usam callSync
 }
 
 async function cxLog(tenantId, userId, data) {
@@ -673,81 +392,52 @@ exports.handler = async (event) => {
       const tokLimit = maxTokens || 100000; // NEXIA: sem limite — máximo absoluto do modelo
 
       if (stream) {
-        // Fallback streaming: tenta providers em ordem até um funcionar
-        const streamProviderOrder = [
-          { key: resolvedKey, ai },
-          { key: 'deepseek_v3', ai: AI_CATALOG.deepseek_v3 },
-          { key: 'gemini_20_flash', ai: AI_CATALOG.gemini_20_flash },
-          { key: 'groq_llama3', ai: AI_CATALOG.groq_llama3 },
-          { key: 'gemini_25_flash', ai: AI_CATALOG.gemini_25_flash },
-        ];
-
-        let streamSuccess = false;
-        for (const sp of streamProviderOrder) {
-          const gen = getStream(sp.ai, systemPrompt, fullCtx.slice(-30), tokLimit);
-          if (!gen) continue;
-          const chunks = []; let fullText = ''; let firstToken = true; let isError = false;
+        // NEXIA AI (Fase 5): streaming real. Cada token vai para o cliente assim que o
+        // provedor o entrega (server.js escreve o `stream` em `res`). A troca de provedor
+        // só acontece antes do primeiro token, como no laço de fallback anterior.
+        const order = [resolvedKey, 'deepseek_v3', 'gemini_20_flash', 'groq_llama3', 'gemini_25_flash'].map(descOf);
+        const abort = new AbortController();
+        const sse = o => `data: ${JSON.stringify(o)}\n\n`;
+        async function* events() {
+          let fullText = '';
+          let used = modelUsed;
           try {
-            for await (const token of gen) {
-              // Se primeiro token é aviso de key ausente, tenta próximo provider
-              if (firstToken && (token.startsWith('⚠️') || token.startsWith('❌'))) {
-                isError = true; firstToken = false;
-                console.warn('[CORTEX] Provider', sp.key, 'indisponível, tentando próximo...');
-                break;
+            try {
+              for await (const ev of modelRouter.getRouter().streamWithFallback(order, { system: systemPrompt, messages: fullCtx.slice(-30), maxTokens: tokLimit, signal: abort.signal })) {
+                if (ev.type === 'model') {
+                  used = labelOf(ev.provider, ev.model);
+                  if (ev.attempts.length) console.warn('[CORTEX] Providers indisponíveis antes do stream:', ev.attempts.map(x => `${x.provider}:${x.code}`).join(', '));
+                } else if (ev.type === 'text') {
+                  fullText += ev.text;
+                  yield sse({ token: ev.text, done: false });
+                } else if (ev.type === 'error') {
+                  console.warn('[CORTEX] Stream interrompido:', ev.code);
+                  yield sse({ token: '\n\n❌ A resposta foi interrompida. Tente novamente.', done: false });
+                }
               }
-              firstToken = false;
-              chunks.push(`data: ${JSON.stringify({ token, done: false })}\n\n`);
-              fullText += token;
+            } catch (e) {
+              if (e && e.code === 'ABORTED') return;
+              // Nenhum streaming funcionou: chamada completa como último recurso (igual ao anterior)
+              let fallbackText = '';
+              for (const fm of ['deepseek_v3', 'gemini_20_flash', 'groq_llama3']) {
+                try { fallbackText = await callSync(systemPrompt, fullCtx.slice(-15), fm, 4096); break; } catch { }
+              }
+              if (!fallbackText) fallbackText = '❌ Todas as IAs estão indisponíveis. Verifique as API keys no Render Dashboard → Environment.';
+              yield sse({ token: fallbackText, done: false });
+              yield sse({ done: true, model: 'fallback' });
+              yield 'data: [DONE]\n\n';
+              return;
             }
-            if (isError) continue; // tenta próximo provider
-            modelUsed = sp.ai.label || sp.ai.model;
-            chunks.push(`data: ${JSON.stringify({ done: true, model: modelUsed, intent: decision.type, actions: execActions, swarm: swarmOut, usage: { calls: usage.calls, limit: usage.limit, unlimited: !!usage.unlimited }, ...(projectCtx.mode === 'context' ? { project: { project_id: projectCtx.project.project_id, confidence: projectCtx.project.confidence } } : {}) })}\n\n`);
-            chunks.push('data: [DONE]\n\n');
+            yield sse({ done: true, model: used, intent: decision.type, actions: execActions, swarm: swarmOut, usage: { calls: usage.calls, limit: usage.limit, unlimited: !!usage.unlimited }, ...(projectCtx.mode === 'context' ? { project: { project_id: projectCtx.project.project_id, confidence: projectCtx.project.confidence } } : {}) });
+            yield 'data: [DONE]\n\n';
             const nm = [{ role: 'user', content: message }, { role: 'assistant', content: fullText }];
             if (typeof memModule.save === 'function') memModule.save(userId, [...(mem.history || []), ...nm], mem.summaries, tenantId, memModule.extractEntities ? memModule.extractEntities(nm, mem.entities) : {}, conversationId).catch(() => {});
-            cxLog(tenantId, userId, { type: 'cortex_execution', conversationId, intent: decision.type, layer, ms: Date.now() - start, modelUsed, stream: true, plan: usage.plan }).catch(() => {});
-            streamSuccess = true;
-            return { statusCode: 200, headers: SSE_HEADERS, body: chunks.join('') };
-          } catch (err) {
-            console.warn('[CORTEX] Stream error on', sp.key, ':', 'Internal error');
-            continue; // tenta próximo
+            cxLog(tenantId, userId, { type: 'cortex_execution', conversationId, intent: decision.type, layer, ms: Date.now() - start, modelUsed: used, stream: true, plan: usage.plan }).catch(() => {});
+          } finally {
+            abort.abort();
           }
         }
-        if (!streamSuccess) {
-          // Nenhum streaming funcionou — tentar sync como último recurso
-          try {
-            for (const fm of ['deepseek_v3','gemini_20_flash','groq_llama3']) {
-              try { finalResponse = await callSync(systemPrompt, fullCtx.slice(-15), fm, 4096); modelUsed = `sync-fallback:${fm}`; break; } catch { }
-            }
-          } catch { }
-          if (!finalResponse) finalResponse = '❌ Todas as IAs estão indisponíveis. Verifique as API keys no Render Dashboard → Environment.';
-          return { statusCode: 200, headers: SSE_HEADERS, body: `data: ${JSON.stringify({ token: finalResponse, done: false })}\n\ndata: ${JSON.stringify({ done: true, model: 'fallback' })}\n\ndata: [DONE]\n\n` };
-        }
-        // código legado abaixo — provider sem streaming nativo
-        const gen_legacy = null;
-        if (gen_legacy) {
-          try { finalResponse = await callSync(systemPrompt, fullCtx.slice(-30), resolvedKey, tokLimit); }
-          catch (e) {
-            const fallbackChain2 = ['groq_llama4_scout','deepseek_v3','gemini_20_flash','groq_llama3','or_deepseek_v3'];
-            let fallbackDone = false;
-            for (const fm of fallbackChain2) {
-              try { finalResponse = await callSync(systemPrompt, fullCtx.slice(-15), fm, 4096); modelUsed = `fallback:${fm}`; fallbackDone = true; break; } catch { }
-            }
-            if (!fallbackDone) {
-              // Demo mode: nenhuma key configurada — resposta informativa em vez de erro
-              const hasAnyKey = !!(process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY);
-              if (!hasAnyKey) {
-                finalResponse = `🤖 **CORTEX em modo demo**\n\nNenhuma chave de IA configurada no servidor.\n\nPara ativar o CORTEX, configure no Render (Settings → Environment):\n\n• **GROQ_API_KEY** — gratuito em [console.groq.com](https://console.groq.com)\n• **GEMINI_API_KEY** — gratuito em [aistudio.google.com](https://aistudio.google.com)\n• **ANTHROPIC_API_KEY** — em [console.anthropic.com](https://console.anthropic.com)\n\nVocê disse: *${message}*`;
-                modelUsed = 'demo';
-              } else {
-                finalResponse = '❌ Todas as IAs falharam. Verifique as chaves configuradas no Render.';
-              }
-            }
-          }
-          const nm = [{ role: 'user', content: message }, { role: 'assistant', content: finalResponse }];
-          if (typeof memModule.save === 'function') memModule.save(userId, [...(mem.history || []), ...nm], mem.summaries, tenantId, {}, conversationId).catch(() => {});
-          return { statusCode: 200, headers: SSE_HEADERS, body: `data: ${JSON.stringify({ token: finalResponse, done: false })}\n\ndata: ${JSON.stringify({ done: true, model: modelUsed, intent: decision.type, actions: execActions, swarm: swarmOut, usage: { calls: usage.calls, limit: usage.limit, unlimited: !!usage.unlimited } })}\n\ndata: [DONE]\n\n` };
-        }
+        return { statusCode: 200, headers: SSE_HEADERS, stream: events() };
       } else {
         try { finalResponse = await callSync(systemPrompt, fullCtx.slice(-30), resolvedKey, tokLimit); }
         catch (e) {
@@ -768,7 +458,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200, headers,
-      body: JSON.stringify({ reply: finalResponse, type: decision.type, intent: decision.intent, actions: execActions, swarm: swarmOut, _meta: { layer, ms: Date.now() - start, modelUsed, version: 'v16.0', conversationId, plan: usage.plan, unlimited: !!usage.unlimited, usage: { calls: usage.calls, limit: usage.limit } } })
+      body: JSON.stringify({ reply: finalResponse, type: decision.type, intent: decision.intent, actions: execActions, swarm: swarmOut, _meta: { layer, ms: Date.now() - start, modelUsed, version: 'v16.0', conversationId, plan: usage.plan, unlimited: !!usage.unlimited, usage: { calls: usage.calls, limit: usage.limit }, ...(projectCtx.mode === 'context' ? { project: { project_id: projectCtx.project.project_id, confidence: projectCtx.project.confidence } } : {}) } })
     };
 
   } catch (err) {
@@ -777,4 +467,4 @@ exports.handler = async (event) => {
     const body = publicErrorBody('CORTEX v16', err, status === 429 ? 'Limite atingido.' : status === 403 ? 'Operação não permitida.' : 'Erro interno. Tente novamente.');
     return { statusCode: status, headers, body: JSON.stringify(body) };
   }
-};
+};exports.AI_CATALOG = AI_CATALOG; // NEXIA AI (Fase 5): teste de cobertura do catálogo pelo Model Router

@@ -15,6 +15,7 @@ const url    = require('url');
 const { execSync } = require('child_process');
 const { normalizeRequestPath, resolveStatic } = require('./lib/safe-static');
 const { publicErrorBody } = require('./lib/safe-error');
+const { isStreamResult, writeStream } = require('./lib/stream-response');
 
 const PORT = process.env.PORT || 3001;
 const ROOT = __dirname;
@@ -190,13 +191,15 @@ async function runFunction(fnName, req, res, body) {
   };
   try {
     const result = await fn.handler(event, {});
-    res.writeHead(result.statusCode || 200, {
+    const baseHeaders = {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': getCorsOrigin(req.headers),
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-Id',
-      ...(result.headers || {}),
-    });
+    };
+    // NEXIA AI (Fase 5): streaming real quando o handler devolve { stream }
+    if (isStreamResult(result)) return writeStream(req, res, result, baseHeaders);
+    res.writeHead(result.statusCode || 200, { ...baseHeaders, ...(result.headers || {}) });
     res.end(result.body || '');
   } catch (e) {
     // SEC Fase 1 (A5): detalhe só no log, cliente recebe correlationId
