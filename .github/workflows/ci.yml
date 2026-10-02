@@ -54,7 +54,10 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - name: Firebase Emulator (regras, autorização da API e Vault)
+      - name: Firebase Emulator (regras, autorização da API, Vault e /api/nexia)
+        env:
+          # Token efêmero do próprio Actions (contents: read), só para ler gilcambe/nexia no teste de onboarding
+          NEXIA_TEST_GITHUB_TOKEN: ${{ github.token }}
         run: npm run test:rules
       - name: Build
         run: npm run build

@@ -143,6 +143,7 @@ const API_ROUTES = {
   '/api/ads':             'ads-engine',
   '/api/recovery':        'account-recovery',
   '/api/strike':          'strike-engine',
+  '/api/nexia':           'nexia-api',      // NEXIA AI (Fase 3): nexia-ai/api
 };
 
 // ─── CARREGA FUNCTIONS ────────────────────────────────────────────
@@ -164,6 +165,9 @@ function loadFunctions() {
       console.warn('[FN] ✗', name, '-', e.message);
     }
   }
+  // NEXIA AI (Fase 3): módulo novo fora de netlify/functions, mesmo formato de handler
+  try { loadedFunctions['nexia-api'] = require(path.join(ROOT, 'nexia-ai', 'api')); console.log('[FN] ✓ nexia-api'); }
+  catch (e) { console.warn('[FN] ✗ nexia-api -', e.message); }
   console.log('[FN] Total:', Object.keys(loadedFunctions).length + '/' + files.length);
 }
 

@@ -3,7 +3,7 @@
 const { test, expect } = require('@playwright/test');
 
 const SPA_ROUTES = ['/', '/login', '/cortex-app', '/sentinel', '/pipeline', '/codigo', '/docs',
-  '/swarm-control', '/qa-center', '/ces', '/bezsan', '/vp', '/splash', '/privacidade', '/termos', '/lgpd', '/cookies'];
+  '/swarm-control', '/qa-center', '/projetos', '/ces', '/bezsan', '/vp', '/splash', '/privacidade', '/termos', '/lgpd', '/cookies'];
 const TENANT_PAGES = ['/ces/landing', '/bezsan/landing', '/vp/landing', '/splash/landing', '/ces/admin', '/vp/guia'];
 
 test.describe('1. Navegação — rotas principais', () => {
@@ -69,5 +69,25 @@ test.describe('Segurança — Fase 1', () => {
     const res = await request.get('/rota-que-nao-existe');
     expect(res.status()).toBe(200);
     expect(await res.text()).toContain('<div id="root"');
+  });
+});
+
+test.describe('NEXIA AI — Fase 3', () => {
+  test('/projetos sem login pede login e não chama o Vault', async ({ page }) => {
+    const calls = [];
+    page.on('request', r => { if (r.url().includes('/api/nexia/')) calls.push(r.url()); });
+    await page.goto('/projetos', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByTestId('projetos-title')).toHaveText('Projetos');
+    await expect(page.getByTestId('projetos-login')).toBeVisible({ timeout: 15000 });
+    expect(calls).toEqual([]);
+  });
+  test('/api/nexia/* sem token responde 401 em JSON', async ({ request }) => {
+    for (const ep of ['/api/nexia/me', '/api/nexia/clients', '/api/nexia/projects/prj_x/snapshot']) {
+      const res = await request.get(ep);
+      expect(res.status(), ep).toBe(401);
+      expect(res.headers()['content-type'] || '').toContain('json');
+    }
+    const post = await request.post('/api/nexia/clients', { data: { name: 'x', slug: 'xx', status: 'active' } });
+    expect(post.status()).toBe(401);
   });
 });

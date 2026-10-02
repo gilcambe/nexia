@@ -9,7 +9,7 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 | D1 | Repositório canônico = `gilcambe/nexia`, branch `develop` | **ACEITA** na Fase 1 (o PR da Fase 1 é aberto contra `develop`) |
 | D2 | Acesso ao repositório de produção `NEXIA_OS`/`NEXIA-OS` | PENDENTE (não acessível a esta sessão) |
 | D3 | Vault no Firestore `nexia-c8710`, coleções `vault_*` | **ACEITA** na Fase 2 (ADR-F2-01) |
-| D4 | Código novo em `nexia-ai/`, rotas `/api/nexia/*` | Pasta `nexia-ai/vault/` **ACEITA** na Fase 2; rotas `/api/nexia/*` PROPOSTA (não criadas) |
+| D4 | Código novo em `nexia-ai/`, rotas `/api/nexia/*` | **ACEITA**: `nexia-ai/vault/` (Fase 2); `nexia-ai/api/` e `nexia-ai/onboarding/` com rotas `/api/nexia/*` (Fase 3) |
 | D5 | NEXIA Bridge como servidor MCP local | PROPOSTA (Fase 7) |
 | D6 | SDK oficial da Anthropic atrás de `ModelProvider` | PROPOSTA (Fase 5) |
 | D7 | GitHub Actions no repo canônico | **ACEITA** (CI mínimo nesta fase) |
@@ -102,3 +102,21 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 ## ADR-F2-08 — Índices e documentação gerados dos schemas
 - **Status:** ACEITA.
 - **Decisão:** `nexia-ai/vault/indexes.js --write` mantém os 49 índices `vault_*` em `firestore.indexes.json` (listagens, dependentes por `array-contains`, histórico de auditoria) sem tocar nos índices legados; `nexia-ai/vault/schema-doc.js --write` gera `VAULT-SCHEMAS.md`. Testes unitários falham se os arquivos divergirem dos schemas.
+
+## ADR-F3-01 — Execução autônoma das Fases 3–11
+- **Status:** ACEITA (instrução do dono em 02/10/2026: "assuma o controle e vá enviando os próximos passos até finalizar, sem pedir permissão").
+- **Decisão:** cada fase segue com branch própria, PR contra `develop`, CI verde, relatório e merge, sem nova aprovação entre fases. Continuam exigindo a palavra do dono: deploy de produção, publicação de regras/índices do Firestore, uso ou rotação de credenciais reais, reescrita de histórico e qualquer ação irreversível. Quando uma fase depende disso, o restante é entregue e a pendência fica registrada no relatório da fase.
+
+## ADR-F3-02 — `/api/nexia/*` como um handler único carregado pelo `server.js`
+- **Status:** ACEITA.
+- **Decisão:** `nexia-ai/api/index.js` exporta `handler(event)` no mesmo formato das funções legadas. O `server.js` recebeu só a rota `/api/nexia` → `nexia-api` e o `require` do módulo (4 linhas). Recursos: `clients`, `projects`, `repos`, `environments` (listar, criar, ler, `PATCH`, `DELETE` = soft-delete, `restore`, `history`), `projects/{id}/onboard`, `projects/{id}/snapshot` e `me`.
+- **HTTP:** `ETag: "v{version}"`; `PATCH`/`DELETE`/`restore` exigem `If-Match` (428 sem, 412 em conflito); `Idempotency-Key` no `POST`; `X-Execution-Id` em toda escrita. Códigos: 400 validação, 422 secret/referência, 409 único/dependentes/excluído/idempotência, 404 não encontrado (inclusive outro tenant).
+- **Autorização:** igual às regras `vault_*`: master em qualquer tenant (`?tenant=` ou `X-Tenant-Id`); admin só no próprio tenant; demais papéis 403.
+- **Limitação:** o preflight CORS do `server.js` (legado) não lista `PATCH`, `If-Match` nem `Idempotency-Key`. A SPA é servida pela mesma origem, então não há preflight; um cliente de outra origem precisaria desse ajuste no `server.js` (registrado como pendência, não alterado para não mexer no legado).
+
+## ADR-F3-03 — Onboarding somente leitura (spec §20, autonomia 0)
+- **Status:** ACEITA.
+- **Decisão:** `nexia-ai/onboarding/` lê o repositório pela API do GitHub (público sem token; privado com o `GITHUB_TOKEN` já existente no servidor, nenhuma credencial nova) e detecta pelos arquivos: stack e frameworks (`package.json`), comandos (`scripts`), Node (`engines`), Firebase (`firebase.json`, `.firebaserc` ou config web pública embutida, ignorando valores de exemplo), Cloudflare (`wrangler.*`), hosting (`render.yaml`, `netlify.toml`, `vercel.json`), CI (`.github/workflows`), documentação (`*.md` da raiz e `docs/`) e nomes de variáveis (`.env.example`). Cada conclusão traz a evidência (arquivo).
+- Grava no Vault: Repository (se ainda não existir), Environments detectados que ainda não existem (nunca altera existentes; `secret_refs` só com nomes), um Artifact por documento (idempotente por caminho), um ProjectSnapshot novo a cada execução (com último deploy, erros abertos, tarefas abertas e decisões aceitas do Vault) e `primary_repository_id` se vazio.
+- Não executa nada do repositório: smoke tests (passo 12) ficam `not_run` até existir execução (Bridge/CI por projeto). Workspace local (passo 4) é campo do Project, editável pela API.
+- A fonte local (`createLocalSource`) usa só arquivos versionados (`git ls-files`), não segue symlink, não sai da raiz e nunca lê `.env*`, chaves ou JSON de service account.
