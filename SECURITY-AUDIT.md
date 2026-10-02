@@ -104,6 +104,17 @@ Nenhum achado anterior mudou de status. A Fase 2 acrescenta superfície nova, co
 
 As regras `vault_*` seguem **não publicadas**, como as da Fase 1. Com mutação das regras (leitura liberada a qualquer autenticado e escrita liberada), 4 dos 6 testes de regras do Vault falham (saída em `PHASE-2-REPORT.md`).
 
+## Fase 3 — API `/api/nexia/*` e onboarding
+
+| ID | Tema | Controle | Teste |
+|---|---|---|---|
+| N1 | Acesso à API do Vault | token Firebase obrigatório; master ou admin do próprio tenant; outros 403 | `tests/integration/nexia-api.test.js` A1; Playwright "NEXIA AI — Fase 3" (401 sem token) |
+| N2 | Acesso entre tenants pela API | admin não escolhe tenant; id de outro tenant → 404 | A1, A5 |
+| N3 | Escrita concorrente/repetida | `If-Match` obrigatório, `Idempotency-Key` | A2 |
+| N4 | Secret enviado pela API | 422 sem ecoar o valor | A3 |
+| N5 | Onboarding lendo arquivos sensíveis | fonte nunca lê `.env*`, `*.pem`, `*.key`, JSON de service account; só nomes de `.env.example` | `tests/unit/onboarding-detect.test.js` |
+| N6 | SSRF/injeção no onboarding | owner/repo/ref validados por regex antes de qualquer chamada; host fixo `api.github.com` | unitário "fonte GitHub: valida owner/repo/ref" |
+
 ## Riscos remanescentes
 - Credenciais expostas continuam válidas até o dono rotacionar; histórico público ainda contém valores.
 - Correções só valem em produção depois de deploy e publicação das regras, que não fazem parte desta fase.
