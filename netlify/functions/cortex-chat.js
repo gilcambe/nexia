@@ -32,6 +32,7 @@ try { ragModule = require('./rag-engine'); } catch { ragModule = { buildRAGConte
 
 const { guard, sanitizePrompt, validateAIAction, checkPermission, HEADERS, makeHeaders } = require('./middleware');
 const { publicErrorBody } = require('../../lib/safe-error');
+const nexiaCortex = require('../../nexia-ai/cortex'); // NEXIA AI (Fase 4): resolver + contexto do Vault
 
 const SSE_HEADERS = {
   'Content-Type': 'text/event-stream',
@@ -574,6 +575,21 @@ exports.handler = async (event) => {
 
     const fullCtx = [...context, { role: 'user', content: message }];
 
+    // NEXIA AI (Fase 4): com projeto em jogo, resolve o projeto e traz o contexto do Vault.
+    // Sem projeto em jogo (ou sem acesso ao Vault), o fluxo abaixo segue igual ao anterior.
+    let projectCtx = { mode: 'none' };
+    try {
+      projectCtx = await nexiaCortex.resolveForChat({ db, uid: event._uid, role: event._role, tenantId: body.tenantId, message, projectId: body.projectId, conversationId });
+    } catch (e) { console.warn('[CORTEX] NEXIA AI resolver indisponível:', e && e.code ? e.code : 'erro'); }
+    if (projectCtx.mode === 'ask') {
+      const clarification = { type: 'clarification', reply: projectCtx.question, candidates: projectCtx.candidates };
+      if (stream) {
+        return { statusCode: 200, headers: SSE_HEADERS, body: `data: ${JSON.stringify({ token: projectCtx.question, done: false })}\n\n`
+          + `data: ${JSON.stringify({ done: true, intent: 'clarification', clarification })}\n\ndata: [DONE]\n\n` };
+      }
+      return { statusCode: 200, headers, body: JSON.stringify(clarification) };
+    }
+
     let decision = { type: 'chat', intent: model !== 'auto' ? model : 'chat', response: '' };
     let layer = 0;
     if (model === 'auto') {
@@ -653,7 +669,7 @@ exports.handler = async (event) => {
       const ai = AI_CATALOG[resolvedKey] || AI_CATALOG.groq_llama3;
       modelUsed = ai.label || ai.model;
 
-      const systemPrompt = buildSystemPrompt(tenantId, usage.plan, ragCtx, learningCtx);
+      const systemPrompt = buildSystemPrompt(tenantId, usage.plan, ragCtx, learningCtx) + nexiaCortex.promptSection(projectCtx);
       const tokLimit = maxTokens || 100000; // NEXIA: sem limite — máximo absoluto do modelo
 
       if (stream) {
@@ -685,7 +701,7 @@ exports.handler = async (event) => {
             }
             if (isError) continue; // tenta próximo provider
             modelUsed = sp.ai.label || sp.ai.model;
-            chunks.push(`data: ${JSON.stringify({ done: true, model: modelUsed, intent: decision.type, actions: execActions, swarm: swarmOut, usage: { calls: usage.calls, limit: usage.limit, unlimited: !!usage.unlimited } })}\n\n`);
+            chunks.push(`data: ${JSON.stringify({ done: true, model: modelUsed, intent: decision.type, actions: execActions, swarm: swarmOut, usage: { calls: usage.calls, limit: usage.limit, unlimited: !!usage.unlimited }, ...(projectCtx.mode === 'context' ? { project: { project_id: projectCtx.project.project_id, confidence: projectCtx.project.confidence } } : {}) })}\n\n`);
             chunks.push('data: [DONE]\n\n');
             const nm = [{ role: 'user', content: message }, { role: 'assistant', content: fullText }];
             if (typeof memModule.save === 'function') memModule.save(userId, [...(mem.history || []), ...nm], mem.summaries, tenantId, memModule.extractEntities ? memModule.extractEntities(nm, mem.entities) : {}, conversationId).catch(() => {});

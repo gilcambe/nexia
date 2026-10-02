@@ -10,6 +10,8 @@ const { publicErrorBody } = require('../../lib/safe-error');
 const { createVault, createExecutionContext, VaultError, CODES } = require('../vault');
 const { onboardProject } = require('../onboarding');
 const { createGithubSource, SourceError } = require('../onboarding/sources');
+const { resolveProject } = require('../project-resolver');
+const { buildContext } = require('../context-engine');
 
 const RESOURCES = { clients: 'Client', projects: 'Project', repos: 'Repository', environments: 'Environment' };
 const TENANT_RE = /^[a-z0-9][a-z0-9_-]{0,62}$/;
@@ -79,6 +81,17 @@ function createHandler(deps = {}) {
         return json(event, 403, { error: 'Acesso ao Vault restrito a master ou admin do tenant.' });
       }
 
+      // Fase 4: Project Resolver e Context Engine
+      if (parts[0] === 'resolve' && parts.length === 1) {
+        if (method !== 'POST') return json(event, 405, { error: 'Método não permitido.' });
+        let b = {};
+        try { b = JSON.parse(event.body || '{}'); } catch { return json(event, 400, { error: 'JSON inválido.' }); }
+        const rctx = createExecutionContext({ tenantId: requested, actor: { type: 'user', id: auth.uid } });
+        const pc = await resolveProject({ vault: getVault(), ctx: rctx, message: typeof b.message === 'string' ? b.message.slice(0, 4000) : '',
+          selectedProjectId: b.selected_project_id, repository: b.repository, workspacePath: b.workspace_path,
+          conversationProjectId: b.conversation_project_id, recentProjectIds: Array.isArray(b.recent_project_ids) ? b.recent_project_ids : [] });
+        return json(event, 200, pc);
+      }
       const entity = RESOURCES[parts[0]];
       if (!entity || parts.length > 3) return json(event, 404, { error: 'Rota não encontrada.' });
       const v = getVault();
@@ -124,6 +137,12 @@ function createHandler(deps = {}) {
           const latest = snaps.sort((a, b) => b.generated_at.localeCompare(a.generated_at))[0];
           if (!latest) return json(event, 404, { error: 'Projeto sem snapshot. Rode o onboarding.' });
           return json(event, 200, { record: latest });
+        }
+        if (entity === 'Project' && sub === 'context' && method === 'GET') {
+          const budget = q.budget ? Number(q.budget) : undefined;
+          if (budget !== undefined && !(Number.isInteger(budget) && budget >= 200 && budget <= 8000)) return json(event, 400, { error: 'budget fora da faixa (200–8000).' });
+          const c = await buildContext({ vault: v, ctx, projectId: id, message: typeof q.message === 'string' ? q.message.slice(0, 4000) : '', budgetTokens: budget });
+          return json(event, 200, c);
         }
         if (entity === 'Project' && sub === 'onboard' && method === 'POST') {
           const r = body.repository || {};
