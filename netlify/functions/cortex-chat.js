@@ -31,6 +31,7 @@ try { autodevModule = require('./autodev-engine'); } catch { autodevModule = nul
 try { ragModule = require('./rag-engine'); } catch { ragModule = { buildRAGContext: async () => '' }; }
 
 const { guard, sanitizePrompt, validateAIAction, checkPermission, HEADERS, makeHeaders } = require('./middleware');
+const { publicErrorBody } = require('../../lib/safe-error');
 
 const SSE_HEADERS = {
   'Content-Type': 'text/event-stream',
@@ -174,7 +175,7 @@ async function* streamAnthropic(system, messages, modelId, maxTok) {
       headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
       body: JSON.stringify({ model: modelId || 'claude-sonnet-4-6', max_tokens: maxTok || 16000, stream: true, system, messages: messages.filter(m => m.role !== 'system').map(m => ({ role: m.role, content: String(m.content) })) })
     });
-    if (!res.ok) { yield `❌ Anthropic Error (${res.status}): ${await res.text().catch(() => '')}`; return; }
+    if (!res.ok) { const _b = await res.text().catch(() => ''); console.error('[CORTEX] Anthropic', res.status, _b.slice(0, 500)); yield `❌ Anthropic Error (${res.status})`; return; }
     const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = '';
     while (true) {
       const { done, value } = await reader.read(); if (done) break;
@@ -198,7 +199,7 @@ async function* streamOpenAI(system, messages, modelId, maxTok) {
       headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: modelId || 'gpt-4o', max_tokens: maxTok || 16000, stream: true, messages: [{ role: 'system', content: system }, ...messages] })
     });
-    if (!res.ok) { yield `❌ OpenAI Error (${res.status}): ${await res.text().catch(() => '')}`; return; }
+    if (!res.ok) { const _b = await res.text().catch(() => ''); console.error('[CORTEX] OpenAI', res.status, _b.slice(0, 500)); yield `❌ OpenAI Error (${res.status})`; return; }
     const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = '';
     while (true) {
       const { done, value } = await reader.read(); if (done) break;
@@ -222,7 +223,7 @@ async function* streamGroq(system, messages, modelId, maxTok) {
       headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: modelId || 'llama-3.3-70b-versatile', max_tokens: Math.min(maxTok || 32768, 32768), stream: true, temperature: 0.4, messages: [{ role: 'system', content: system }, ...messages] })
     });
-    if (!res.ok) { yield `❌ Groq Error (${res.status}): ${await res.text().catch(() => '')}`; return; }
+    if (!res.ok) { const _b = await res.text().catch(() => ''); console.error('[CORTEX] Groq', res.status, _b.slice(0, 500)); yield `❌ Groq Error (${res.status})`; return; }
     const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = '';
     while (true) {
       const { done, value } = await reader.read(); if (done) break;
@@ -246,7 +247,7 @@ async function* streamGemini(system, messages, modelId, maxTok) {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: gemMessages, generationConfig: { maxOutputTokens: maxTok || 8192 } })
     });
-    if (!res.ok) { yield `❌ Gemini Error (${res.status}): ${await res.text().catch(() => '')}`; return; }
+    if (!res.ok) { const _b = await res.text().catch(() => ''); console.error('[CORTEX] Gemini', res.status, _b.slice(0, 500)); yield `❌ Gemini Error (${res.status})`; return; }
     const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = '';
     while (true) {
       const { done, value } = await reader.read(); if (done) break;
@@ -269,7 +270,7 @@ async function* streamCerebras(system, messages, modelId, maxTok) {
       method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ model: modelId || 'llama3.3-70b', max_tokens: Math.min(maxTok || 32768, 32768), stream: true, messages: [{ role: 'system', content: system }, ...messages] })
     });
-    if (!res.ok) { yield `❌ Cerebras Error (${res.status}): ${await res.text().catch(() => '')}`; return; }
+    if (!res.ok) { const _b = await res.text().catch(() => ''); console.error('[CORTEX] Cerebras', res.status, _b.slice(0, 500)); yield `❌ Cerebras Error (${res.status})`; return; }
     const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = '';
     while (true) {
       const { done, value } = await reader.read(); if (done) break;
@@ -293,7 +294,7 @@ async function* streamOpenRouter(system, messages, modelId, maxTok) {
       headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json', 'HTTP-Referer': process.env.NEXIA_APP_URL || 'https://nexia.com.br', 'X-Title': 'NEXIA OS' },
       body: JSON.stringify({ model: modelId, max_tokens: maxTok || 8192, stream: true, messages: [{ role: 'system', content: system }, ...messages] })
     });
-    if (!res.ok) { yield `❌ OpenRouter Error (${res.status}): ${await res.text().catch(() => '')}`; return; }
+    if (!res.ok) { const _b = await res.text().catch(() => ''); console.error('[CORTEX] OpenRouter', res.status, _b.slice(0, 500)); yield `❌ OpenRouter Error (${res.status})`; return; }
     const reader = res.body.getReader(); const decoder = new TextDecoder(); let buf = '';
     while (true) {
       const { done, value } = await reader.read(); if (done) break;
@@ -755,8 +756,9 @@ exports.handler = async (event) => {
     };
 
   } catch (err) {
-    console.error('[CORTEX v16] ❌', err.message, err.stack);
     const status = err.message?.includes('Limite') ? 429 : err.message?.includes('não permitid') ? 403 : 500;
-    return { statusCode: status, headers, body: JSON.stringify({ error: err.message || 'Erro interno' }) };
+    // SEC Fase 1 (A5): detalhe só no log; cliente recebe mensagem segura + correlationId
+    const body = publicErrorBody('CORTEX v16', err, status === 429 ? 'Limite atingido.' : status === 403 ? 'Operação não permitida.' : 'Erro interno. Tente novamente.');
+    return { statusCode: status, headers, body: JSON.stringify(body) };
   }
 };

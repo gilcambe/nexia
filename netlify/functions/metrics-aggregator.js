@@ -19,11 +19,15 @@ exports.handler = async (event) => {
   const METRICS_SECRET = process.env.METRICS_SECRET;
   // FIX v48: sem METRICS_SECRET configurado → 401 (não expõe dados, não retorna 200)
   if (!METRICS_SECRET) {
-    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized — METRICS_SECRET não configurado no servidor.' }) };
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
   const authHeader = event.headers?.authorization || event.headers?.Authorization || '';
-  if (authHeader !== `Bearer ${METRICS_SECRET}`) {
-    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized — token de métricas inválido' }) };
+  // SEC Fase 1 (A2): comparação em tempo constante e segredo mínimo de 32 caracteres
+  const expected = Buffer.from(`Bearer ${METRICS_SECRET}`);
+  const given = Buffer.from(authHeader);
+  const okSecret = METRICS_SECRET.length >= 32 && given.length === expected.length && require('crypto').timingSafeEqual(given, expected);
+  if (!okSecret) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 
   if (!db) return { statusCode: 503, headers, body: JSON.stringify({ error: 'Firebase indisponível' }) };

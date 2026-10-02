@@ -1,0 +1,28 @@
+# Dependências e build
+node_modules/
+out/
+dist/
+
+# Segredos — nunca versionar (SEC Fase 1)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+serviceAccount*.json
+service-account*.json
+*-firebase-adminsdk-*.json
+download
+download/
+
+# Relatórios e logs de teste
+test-results/
+playwright-report/
+coverage/
+logs/
+*.log
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
+.firebase/

@@ -21,7 +21,7 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 
 
 const { admin, db } = require('./firebase-init');
-const { guard, makeHeaders} = require('./middleware');
+const { guard, assertTenantAccess, makeHeaders} = require('./middleware'); // SEC Fase 1: import faltante (antes /api/memory respondia 500)
 
 
 const MAX_RAW_MESSAGES  = 30;

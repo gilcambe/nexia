@@ -13,6 +13,8 @@ const fs     = require('fs');
 const path   = require('path');
 const url    = require('url');
 const { execSync } = require('child_process');
+const { normalizeRequestPath, resolveStatic } = require('./lib/safe-static');
+const { publicErrorBody } = require('./lib/safe-error');
 
 const PORT = process.env.PORT || 3001;
 const ROOT = __dirname;
@@ -20,7 +22,7 @@ const OUT  = path.join(ROOT, 'out');
 const MAX_BODY_SIZE = 1 * 1024 * 1024;
 
 // ─── AUTO-BUILD se out/ não existir ──────────────────────────────
-if (!fs.existsSync(path.join(OUT, 'index.html'))) {
+if (require.main === module && !fs.existsSync(path.join(OUT, 'index.html'))) {
   console.log('[NEXIA] Frontend não compilado — rodando build...');
   try {
     execSync('npm install && npm run build', { cwd: ROOT, stdio: 'inherit', timeout: 300000 });
@@ -58,7 +60,7 @@ function checkRateLimit(uid, plan) {
   entry.count++;
   return { allowed: true, remaining: limit - entry.count, limit };
 }
-setInterval(() => { const now = Date.now(); for (const [k, e] of RATE_STORE.entries()) if (now > e.reset) RATE_STORE.delete(k); }, 3600000);
+setInterval(() => { const now = Date.now(); for (const [k, e] of RATE_STORE.entries()) if (now > e.reset) RATE_STORE.delete(k); }, 3600000).unref();
 
 // ─── FIREBASE CONFIG endpoint ─────────────────────────────────────
 function serveFirebaseConfig(res) {
@@ -193,13 +195,22 @@ async function runFunction(fnName, req, res, body) {
     });
     res.end(result.body || '');
   } catch (e) {
-    console.error('[FN ERROR]', fnName, e.message);
+    // SEC Fase 1 (A5): detalhe só no log, cliente recebe correlationId
     res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': getCorsOrigin(req.headers) });
-    res.end(JSON.stringify({ error: 'Function error', detail: e.message }));
+    res.end(JSON.stringify(publicErrorBody('FN ' + fnName, e)));
   }
 }
 
 // ─── SERVE ARQUIVO ESTÁTICO ───────────────────────────────────────
+// Pastas do repositório que podem ser servidas publicamente (além de out/)
+const PUBLIC_DIRS = ['core', 'ces', 'bezsan', 'splash', 'viajante-pro'];
+
+function sendNotFound(res, status = 404) {
+  res.writeHead(status, { 'Content-Type': 'application/json', 'X-Content-Type-Options': 'nosniff' });
+  res.end(JSON.stringify({ error: status === 405 ? 'Method Not Allowed' : status === 400 ? 'Bad Request' : 'Not Found' }));
+}
+
+// serveFile recebe apenas caminhos já validados por resolveStatic()
 function serveFile(filePath, res) {
   try {
     const stat = fs.statSync(filePath);
@@ -279,58 +290,61 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // ─── Tenant HTML pages (landings + admins) ──────────────────────
+  // ─── ARQUIVOS ESTÁTICOS (SEC Fase 1, C1) ───────────────────────
+  // Só GET/HEAD; só raízes públicas explícitas; caminho decodificado,
+  // normalizado e com symlinks resolvidos precisa ficar dentro da raiz.
+  if (req.method !== 'GET' && req.method !== 'HEAD') return sendNotFound(res, 405);
+
+  const safePath = normalizeRequestPath(parsedUrl.pathname || '/');
+  if (safePath === null) return sendNotFound(res, 400);
+
+  // Tenant HTML pages (landings + admins)
   const tenantMap = {
     // Landings
-    '/ces/landing':              path.join(ROOT, 'ces', 'ces-landing.html'),
-    '/bezsan/landing':           path.join(ROOT, 'bezsan', 'bezsan-landing.html'),
-    '/vp/landing':               path.join(ROOT, 'viajante-pro', 'vp-landing.html'),
-    '/viajante-pro/landing':     path.join(ROOT, 'viajante-pro', 'vp-landing.html'),
-    '/splash/landing':           path.join(ROOT, 'splash', 'splash-landing.html'),
+    '/ces/landing':              ['ces', 'ces-landing.html'],
+    '/bezsan/landing':           ['bezsan', 'bezsan-landing.html'],
+    '/vp/landing':               ['viajante-pro', 'vp-landing.html'],
+    '/viajante-pro/landing':     ['viajante-pro', 'vp-landing.html'],
+    '/splash/landing':           ['splash', 'splash-landing.html'],
     // Admins
-    '/ces/admin':                path.join(ROOT, 'ces', 'ces-admin.html'),
-    '/bezsan/admin':             path.join(ROOT, 'bezsan', 'bezsan-admin.html'),
-    '/vp/admin':                 path.join(ROOT, 'viajante-pro', 'vp-admin.html'),
-    '/viajante-pro/admin':       path.join(ROOT, 'viajante-pro', 'vp-admin.html'),
-    '/splash/admin':             path.join(ROOT, 'splash', 'splash-admin.html'),
+    '/ces/admin':                ['ces', 'ces-admin.html'],
+    '/bezsan/admin':             ['bezsan', 'bezsan-admin.html'],
+    '/vp/admin':                 ['viajante-pro', 'vp-admin.html'],
+    '/viajante-pro/admin':       ['viajante-pro', 'vp-admin.html'],
+    '/splash/admin':             ['splash', 'splash-admin.html'],
     // Apps especiais
-    '/ces/checkin':              path.join(ROOT, 'ces', 'checkin.html'),
-    '/ces/executivo':            path.join(ROOT, 'ces', 'ces-app-executivo.html'),
-    '/vp/guia':                  path.join(ROOT, 'viajante-pro', 'vp-guide.html'),
-    '/vp/passageiro':            path.join(ROOT, 'viajante-pro', 'vp-passenger.html'),
+    '/ces/checkin':              ['ces', 'checkin.html'],
+    '/ces/executivo':            ['ces', 'ces-app-executivo.html'],
+    '/vp/guia':                  ['viajante-pro', 'vp-guide.html'],
+    '/vp/passageiro':            ['viajante-pro', 'vp-passenger.html'],
   };
-  if (tenantMap[pathname] && serveFile(tenantMap[pathname], res)) return;
-
-  // ─── Core JS/CSS (usados pelas páginas HTML tenant) ──────────────
-  // CRÍTICO: /core/*.js é referenciado pelas páginas HTML como path absoluto
-  if (pathname.startsWith('/core/')) {
-    const coreFile = path.join(ROOT, pathname);
-    if (serveFile(coreFile, res)) return;
+  const mapped = tenantMap[safePath.replace(/\/$/, '')];
+  if (mapped) {
+    const f = resolveStatic(path.join(ROOT, mapped[0]), mapped[1]);
+    if (f && serveFile(f, res)) return;
   }
 
-  // ─── Design system CSS (tenant-specific copies) ──────────────────
-  if (pathname.endsWith('nexia-design-system.css')) {
-    const dsFile = path.join(ROOT, pathname);
-    if (serveFile(dsFile, res)) return;
+  // Pastas públicas do legado: /core/*, /ces/*, /bezsan/*, /splash/*, /viajante-pro/*
+  const first = safePath.split('/')[1];
+  if (PUBLIC_DIRS.includes(first)) {
+    const f = resolveStatic(path.join(ROOT, first), safePath.slice(first.length + 2));
+    if (f && serveFile(f, res)) return;
   }
 
-  // ─── Service workers e manifests dos tenants ─────────────────────
-  if (pathname.match(/\/(sw-|.*-manifest\.json)/)) {
-    const swFile = path.join(ROOT, pathname);
-    if (serveFile(swFile, res)) return;
-  }
+  // Frontend React compilado (out/)
+  const fromOut = resolveStatic(OUT, safePath);
+  if (fromOut && serveFile(fromOut, res)) return;
 
-  // Assets do frontend React (out/)
-  if (pathname.startsWith('/assets/')) {
-    if (serveFile(path.join(OUT, pathname), res)) return;
-  }
+  // Caminho com extensão que não existe/é negado → 404 (sem SPA fallback).
+  // Exceção: .html inexistente cai no index.html do SPA, como antes da Fase 1
+  // (links legados como /nexia/observability.html); nunca serve o arquivo pedido.
+  const ext = path.extname(safePath).toLowerCase();
+  if (ext && ext !== '.html') return sendNotFound(res, 404);
 
-  // Arquivos estáticos diretos (favicon, etc) — tenta em out/ primeiro, depois ROOT
-  if (serveFile(path.join(OUT, pathname), res)) return;
-  if (serveFile(path.join(ROOT, pathname), res)) return;
-
-  // SPA fallback — todas as rotas React caem no index.html
-  serveFile(path.join(OUT, 'index.html'), res);
+  // SPA fallback — rotas React sem extensão (ou .html legado) caem no index.html
+  const indexFile = resolveStatic(OUT, 'index.html');
+  if (indexFile && serveFile(indexFile, res)) return;
+  return sendNotFound(res, 404);
 });
 
 // ─── KEEPALIVE ────────────────────────────────────────────────────
@@ -348,6 +362,8 @@ function startKeepalive() {
 
 // ─── START ────────────────────────────────────────────────────────
 loadFunctions();
+module.exports = { server, resolveFunctionName };
+if (require.main !== module) return;
 server.listen(PORT, () => {
   console.log('\n[NEXIA OS v60] Servidor unificado na porta', PORT);
   console.log('[NEXIA] Frontend React:', fs.existsSync(path.join(OUT, 'index.html')) ? '✓' : '✗ (build pendente)');

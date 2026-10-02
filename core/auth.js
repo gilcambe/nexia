@@ -29,7 +29,8 @@ const NexiaAuth = (() => {
                 if (!alreadyOnboarding) window.location.href = '/onboarding';
               }
             } else {
-              _userProfile = { uid: user.uid, email: user.email, displayName: user.displayName || user.email, tenantSlug: 'nexia', role: 'user', onboardingDone: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+              // SEC Fase 1 (C2/C3): novo perfil nasce como 'guest'; entrar num tenant é feito pelo servidor (onboarding/convite)
+              _userProfile = { uid: user.uid, email: user.email, displayName: user.displayName || user.email, tenantSlug: 'guest', role: 'user', onboardingDone: false, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
               await NEXIA.db.collection('users').doc(user.uid).set(_userProfile);
               // Novo usuário comum — manda para onboarding
               const isOnPage2 = p => window.location.pathname.startsWith(p);
@@ -64,13 +65,14 @@ const NexiaAuth = (() => {
     }
   }
 
-  async function register(email, password, displayName, tenantSlug = 'guest') {
+  // SEC Fase 1 (C2): o cliente não escolhe mais tenant nem se adiciona como membro;
+  // as regras do Firestore só aceitam perfil novo com tenantSlug 'guest' e role 'user'.
+  async function register(email, password, displayName) {
     if (!NEXIA.auth) throw new Error('Auth indisponível');
     const cred = await NEXIA.auth.createUserWithEmailAndPassword(email, password);
     const user = cred.user;
     await user.updateProfile({ displayName });
-    await NEXIA.db.collection('users').doc(user.uid).set({ uid: user.uid, email, displayName, tenantSlug, role: 'user', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-    await NEXIA.db.collection('tenants').doc(tenantSlug).collection('members').doc(user.uid).set({ uid: user.uid, email, displayName, role: 'user', joinedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await NEXIA.db.collection('users').doc(user.uid).set({ uid: user.uid, email, displayName, tenantSlug: 'guest', role: 'user', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
     return user;
   }
 

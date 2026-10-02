@@ -1,0 +1,71 @@
+# CI mínimo da Fase 1 (NEXIA AI). Não faz deploy: só valida.
+name: CI
+
+on:
+  push:
+    branches: [develop, main, 'nexia-ai/**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GITLEAKS_VERSION: 8.24.3
+  GITLEAKS_SHA256: 9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c
+
+jobs:
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Instalar gitleaks (checksum verificado)
+        run: |
+          curl -sSL -o gl.tgz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gl.tgz" | sha256sum -c -
+          tar -xzf gl.tgz gitleaks && rm gl.tgz
+      - name: Varrer a árvore atual
+        run: ./gitleaks dir . --config .gitleaks.toml --redact --no-banner -v
+      - name: Varrer os commits novos do PR
+        if: github.event_name == 'pull_request'
+        run: ./gitleaks git . --config .gitleaks.toml --redact --no-banner -v --log-opts="${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}"
+
+  build-test:
+    name: Typecheck, testes e build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Testes unitários
+        run: npm test
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Regras do Firestore e autorização da API (Firebase Emulator)
+        run: npm run test:rules
+      - name: Build
+        run: npm run build
+      - name: Playwright (servidor local, nunca produção; regressão + suíte original do READDY)
+        run: |
+          npx playwright install --with-deps chromium
+          PORT=3000 node server.js > server.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf -o /dev/null http://127.0.0.1:3000/ && break; sleep 1; done
+          BASE_URL=http://127.0.0.1:3000 npm run test:e2e
+          # Suíte original do READDY (89 testes): falha se surgir falha fora da lista conhecida
+          BASE_URL=http://127.0.0.1:3000 npm run test:e2e:readdy
+      - name: Log do servidor em caso de falha
+        if: failure()
+        run: tail -n 100 server.log || true

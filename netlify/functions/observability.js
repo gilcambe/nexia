@@ -1,6 +1,5 @@
 'use strict';
 /* GET /api/observability — real-time metrics from in-process store */
-const CORS = { 'Content-Type':'application/json','Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'Authorization,Content-Type' };
 
 // Fallback in-memory store for cold starts
 const _local = { reqs:0, errs:0, lats:[], byPath:{}, startedAt:Date.now() };
@@ -29,19 +28,33 @@ function calcMetrics(s) {
     uptimeMs: Date.now()-(s.startedAt||Date.now()), paths, ts: new Date().toISOString() };
 }
 
+const { requireBearerAuth, makeHeaders } = require('./middleware');
+const MAX_SAMPLES = 1000; // SEC Fase 1 (A2): limita memória por processo
+
+function pushCapped(arr, v) { arr.push(v); if (arr.length > MAX_SAMPLES) arr.splice(0, arr.length - MAX_SAMPLES); }
+
 exports.handler = async (event) => {
-  if (event.httpMethod==='OPTIONS') return {statusCode:204,headers:CORS,body:''};
+  const headers = makeHeaders(event);
+  if (event.httpMethod==='OPTIONS') return {statusCode:204,headers,body:''};
+  // SEC Fase 1 (A2): métricas internas exigem token e papel admin (antes eram públicas)
+  const authErr = await requireBearerAuth(event, 'admin');
+  if (authErr) return authErr;
   if (event.httpMethod==='POST') {
-    try {
-      const b = JSON.parse(event.body||'{}');
-      const s = _local;
-      s.reqs++; s.lats.push(b.ms||0);
-      if((b.status||200)>=500) s.errs++;
-      if(!s.byPath[b.path]) s.byPath[b.path]={count:0,errors:0,lats:[]};
-      s.byPath[b.path].count++; s.byPath[b.path].lats.push(b.ms||0);
-      if((b.status||200)>=500) s.byPath[b.path].errors++;
-      return {statusCode:200,headers:CORS,body:JSON.stringify({ok:true})};
-    } catch(e) { return {statusCode:400,headers:CORS,body:JSON.stringify({error:e.message})}; }
+    let b;
+    try { b = JSON.parse(event.body||'{}'); } catch { return {statusCode:400,headers,body:JSON.stringify({error:'JSON inválido'})}; }
+    const s = _local;
+    const ms = Number.isFinite(b.ms) ? b.ms : 0;
+    const status = Number.isFinite(b.status) ? b.status : 200;
+    const p = typeof b.path === 'string' ? b.path.slice(0, 200) : 'unknown';
+    s.reqs++; pushCapped(s.lats, ms);
+    if (status>=500) s.errs++;
+    if (!s.byPath[p]) {
+      if (Object.keys(s.byPath).length >= 200) return {statusCode:200,headers,body:JSON.stringify({ok:true})};
+      s.byPath[p]={count:0,errors:0,lats:[]};
+    }
+    s.byPath[p].count++; pushCapped(s.byPath[p].lats, ms);
+    if (status>=500) s.byPath[p].errors++;
+    return {statusCode:200,headers,body:JSON.stringify({ok:true})};
   }
-  return {statusCode:200,headers:CORS,body:JSON.stringify(calcMetrics(getStore()))};
+  return {statusCode:200,headers,body:JSON.stringify(calcMetrics(getStore()))};
 };

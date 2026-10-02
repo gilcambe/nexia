@@ -10,11 +10,16 @@
  * - Redeploy também é acionado mesmo sem override se há issues CRITICAL
  * - RENDER_DEPLOY_HOOK: POST correto com body JSON para o Render
  *
- * MODES:
- *   GET               → status da última execução (Firestore)
- *   POST {mode:scan}  → scan completo + diagnóstico IA
- *   POST {mode:heal}  → recebe issues, gera patches Firestore + redeploy
- *   Scheduled (05:00) → scan automático + heal se crítico
+ * MODES (após SEC Fase 1, C4):
+ *   GET ?action=ping  → health check sem auth
+ *   GET               → status da última execução (Firestore); 503 sem DB
+ *   POST {mode:scan}  → scan completo + diagnóstico IA (papel admin)
+ *   POST {mode:heal}  → só com SENTINEL_HEAL_ENABLED=true e papel admin:
+ *                       diagnóstico IA + issue no GitHub (se GITHUB_TOKEN/REPO);
+ *                       NÃO aplica overrides do LLM no Firestore e NÃO dispara
+ *                       o Deploy Hook do Render. Grava apenas o relatório em
+ *                       coleções fixas: sentinel_heals e system_status/last_heal.
+ *   Não há mais modo agendado sem token nem auto-heal no scan.
  */
 
 // ── fetchWithTimeout helper ──────────────────────────────────────────
@@ -39,7 +44,7 @@ const BASE   = process.env.NEXIA_APP_URL
             || 'https://nexia-os.onrender.com';
 const GHTKN  = process.env.GITHUB_TOKEN;
 const GHREPO = process.env.GITHUB_REPO;        // ex: "org/nexia-os"
-const NBHOOK = process.env.RENDER_DEPLOY_HOOK; // Deploy Hook URL do Render
+// RENDER_DEPLOY_HOOK não é mais lido aqui: redeploy automático desativado (SEC Fase 1, C4)
 
 // ─── ENDPOINTS MONITORADOS ──────────────────────────────────────────
 const ENDPOINTS = [
@@ -187,36 +192,16 @@ Se canAutoFix=true, preencha firestoreOverride com dados para salvar no Firestor
     }
   } catch (e) {
     console.error('[Sentinel] diagnosisViaAI error:', e.message);
-    return { error: e.message };
+    return { error: 'Diagnóstico indisponível.' };
   }
 }
 
 // ─── AUTO-HEAL: FIRESTORE OVERRIDES ────────────────────────────────
-async function applyFirestoreOverrides(fixes) {
-  if (!db) return { applied: 0, errors: ['DB unavailable'] };
-  const applied = [];
-  const errors  = [];
-
-  for (const fix of fixes) {
-    if (!fix.canAutoFix || !fix.firestoreOverride) continue;
-    const { collection, doc, data } = fix.firestoreOverride;
-    if (!collection || !doc || !data) continue;
-
-    try {
-      await db.collection(collection).doc(doc).set({
-        ...data,
-        _sentinelApplied: true,
-        _appliedAt:       admin.firestore.FieldValue.serverTimestamp(),
-        _issue:           fix.issue,
-      }, { merge: true });
-
-      applied.push({ fix: fix.issue, collection, doc });
-    } catch (e) {
-      errors.push({ fix: fix.issue, error: e.message });
-    }
-  }
-
-  return { applied: applied.length, appliedFixes: applied, errors };
+// SEC Fase 1 (C4): a gravação de "overrides" sugeridos pela IA em coleções
+// arbitrárias do Firestore (com Admin SDK, ignorando as regras) foi desativada.
+// O diagnóstico continua disponível como sugestão; aplicar correções é ação humana.
+async function applyFirestoreOverrides(_fixes) {
+  return { applied: 0, disabled: true, reason: 'Aplicação automática de overrides desativada (Fase 1).' };
 }
 
 // ─── AUTO-HEAL: GITHUB ISSUE ────────────────────────────────────────
@@ -254,35 +239,15 @@ ${criticalFixes.map(f => `#### ${f.priority}: ${f.issue}\n- **Causa:** ${f.rootC
     const issue = await r.json();
     return { created: true, url: issue.html_url, number: issue.number };
   } catch (e) {
-    return { created: false, error: e.message };
+    console.error('[Sentinel] issue GitHub falhou:', e.message);
+    return { created: false, error: 'Falha ao abrir issue.' };
   }
 }
 
 // ─── AUTO-HEAL: RENDER DEPLOY HOOK ─────────────────────────────────
-// FIX: triggerRedeploy agora sempre é chamado após patches Firestore,
-// independente do número de overrides aplicados.
-async function triggerRedeploy(reason) {
-  if (!NBHOOK) {
-    console.warn('[Sentinel] RENDER_DEPLOY_HOOK não configurado — redeploy ignorado');
-    return { triggered: false, reason: 'RENDER_DEPLOY_HOOK não configurado' };
-  }
-
-  try {
-    // O Render Deploy Hook aceita POST sem body específico,
-    // mas o campo trigger_title aparece nos logs do deploy.
-    const r = await _fetchTimeout(NBHOOK, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ trigger_title: `Sentinel Auto-Heal v3.1: ${reason}` }),
-    }, 15_000);
-
-    const triggered = r.ok || r.status === 201;
-    console.info(`[Sentinel] Redeploy ${triggered ? 'acionado' : 'falhou'}: ${r.status} — ${reason}`);
-    return { triggered, status: r.status, reason };
-  } catch (e) {
-    console.error('[Sentinel] triggerRedeploy error:', e.message);
-    return { triggered: false, error: e.message };
-  }
+async function triggerRedeploy(_reason) {
+  // SEC Fase 1 (C4): redeploy automático de produção desativado. Deploy é ação humana.
+  return { triggered: false, reason: 'Redeploy automático desativado (Fase 1).' };
 }
 
 // ─── HANDLER PRINCIPAL ─────────────────────────────────────────────
@@ -305,7 +270,8 @@ exports.handler = async (event) => {
     const authErrGet = await requireBearerAuth(event);
     if (authErrGet) return authErrGet;
 
-    if (!db) return { statusCode: 200, headers: CORS, body: JSON.stringify({ message: 'DB não configurado — modo demo', health: 'DEMO', version: 'v3.2' }) };
+    // SEC Fase 1: sem Firestore não há status a devolver → 503 explícito (antes: "modo demo")
+    if (!db) return { statusCode: 503, headers: CORS, body: JSON.stringify({ error: 'Sentinel indisponível: banco de dados não configurado.' }) };
 
     const snap = await db.collection('system_status').doc('sentinel').get().catch(() => null);
     return {
@@ -315,15 +281,10 @@ exports.handler = async (event) => {
     };
   }
 
-  // Chamadas agendadas (cron do Render/Netlify) dispensam Bearer token
-  const isScheduled = event.headers?.['x-netlify-event'] === 'schedule';
-  if (!isScheduled) {
-    // FIX v49: requireBearerAuth sem role obrigatório — qualquer usuário autenticado
-    // pode acessar o Sentinel. O role 'admin' causava 403 quando o documento do
-    // usuário no Firestore não tinha o campo role preenchido (retornava 'user').
-    const authErr = await requireBearerAuth(event);
-    if (authErr) return authErr;
-  }
+  // SEC Fase 1 (C4): removido o bypass por cabeçalho `x-netlify-event: schedule`
+  // (qualquer cliente podia enviá-lo). Toda chamada POST exige token e papel admin.
+  const authErr = await requireBearerAuth(event, 'admin');
+  if (authErr) return authErr;
 
   let body = {};
   try { body = JSON.parse(event.body || '{}'); } catch {}
@@ -331,6 +292,12 @@ exports.handler = async (event) => {
 
   // ── MODO HEAL ─────────────────────────────────────────────────────
   if (mode === 'heal') {
+    // SEC Fase 1 (C4): modo heal desligado por padrão. Mesmo ligado, só gera
+    // diagnóstico e issue; não aplica overrides do LLM em coleção alguma nem
+    // dispara redeploy. O único registro gravado é o relatório (coleções fixas).
+    if (process.env.SENTINEL_HEAL_ENABLED !== 'true') {
+      return { statusCode: 403, headers: CORS, body: JSON.stringify({ error: 'Sentinel heal desativado nesta versão.' }) };
+    }
     const issues = body.issues || [];
     if (!issues.length) {
       return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'issues[] obrigatório' }) };
@@ -341,11 +308,8 @@ exports.handler = async (event) => {
     // 1. Diagnóstico IA
     const diagnosis = await diagnosisViaAI(errorIssues, JSON.stringify(issues.slice(0, 10)));
 
-    // 2. Aplicar fixes via Firestore
-    let firestoreResult = { applied: 0 };
-    if (diagnosis?.fixes && db) {
-      firestoreResult = await applyFirestoreOverrides(diagnosis.fixes);
-    }
+    // 2. Overrides sugeridos pelo LLM NÃO são aplicados (C4); fica só o registro
+    const firestoreResult = await applyFirestoreOverrides(diagnosis?.fixes || []);
 
     // 3. Abrir GitHub issue se há críticos
     let githubResult = null;
@@ -353,22 +317,10 @@ exports.handler = async (event) => {
       githubResult = await openGitHubPR(diagnosis.fixes, { errorCount: errorIssues.length });
     }
 
-    // 4. FIX: triggerRedeploy é acionado se:
-    //    - Qualquer override foi aplicado no Firestore, OU
-    //    - Há issues CRITICAL mesmo sem override (requer redeploy manual)
-    //    Antes só acionava se firestoreResult.applied > 0.
-    let redeployResult = null;
-    const hasCritical  = errorIssues.some(i => i.severity === 'CRITICAL');
-    const shouldRedeploy = NBHOOK && (firestoreResult.applied > 0 || hasCritical);
+    // 4. Redeploy automático desativado (C4): o Deploy Hook do Render nunca é chamado daqui
+    const redeployResult = await triggerRedeploy('heal');
 
-    if (shouldRedeploy) {
-      const redeployReason = firestoreResult.applied > 0
-        ? `${firestoreResult.applied} override(s) aplicado(s) no Firestore`
-        : `${errorIssues.length} issue(s) CRITICAL detectado(s) — sem override disponível`;
-      redeployResult = await triggerRedeploy(redeployReason);
-    }
-
-    // 5. Salvar no Firestore
+    // 5. Registro do heal (coleções fixas, sem dados escolhidos pelo LLM como destino)
     const healReport = {
       timestamp:          new Date().toISOString(),
       issuesReceived:     issues.length,
@@ -408,26 +360,8 @@ exports.handler = async (event) => {
     diagnosis = await diagnosisViaAI(errors);
   }
 
-  // Auto-heal em chamadas agendadas com erros críticos
-  let autoHealResult = null;
-  const criticalErrors = errors.filter(e => e.status >= 500 || e.status === 0);
-
-  if (criticalErrors.length > 0 && isScheduled) {
-    const fakeIssues = criticalErrors.map(e => ({
-      type:     'SCAN_FAIL',
-      severity: 'CRITICAL',
-      route:    e.url,
-      detail:   e.error,
-    }));
-    autoHealResult = await diagnosisViaAI(fakeIssues);
-    if (autoHealResult?.fixes && db) {
-      const overrideResult = await applyFirestoreOverrides(autoHealResult.fixes);
-      // FIX: redeploy após scan automático também
-      if (NBHOOK && overrideResult.applied > 0) {
-        await triggerRedeploy(`Scan automático: ${overrideResult.applied} override(s) aplicado(s)`);
-      }
-    }
-  }
+  // SEC Fase 1 (C4): o auto-heal do scan agendado foi removido junto com o bypass por cabeçalho
+  const autoHealResult = null;
 
   const issues = errors.map(e => ({
     type:     e.status >= 500 || e.status === 0 ? 'DOWN' : 'DEGRADED',
@@ -497,3 +431,7 @@ exports.handler = async (event) => {
     body:       JSON.stringify(report),
   };
 };
+
+// Exposto só para testes de regressão da Fase 1 (C4)
+exports._applyFirestoreOverrides = applyFirestoreOverrides;
+exports._triggerRedeploy = triggerRedeploy;

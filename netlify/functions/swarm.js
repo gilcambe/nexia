@@ -8,7 +8,7 @@
 
 
 const { admin, db } = require('./firebase-init');
-const { guard, sanitizePrompt, HEADERS, makeHeaders } = require('./middleware');
+const { guard, assertTenantAccess, sanitizePrompt, HEADERS, makeHeaders } = require('./middleware');
 
 
 const AGENT_TIMEOUT_MS = 15000;
@@ -251,6 +251,10 @@ exports.handler = async (event) => {
     const { task: rawTask = '', tenantId = 'nexia', agents: forceAgents, mode: forceMode, userId } =
       JSON.parse(event.body || '{}');
 
+
+    // SEC Fase 1: isolamento de tenant (agentes e logs são por tenant)
+    const tErr = await assertTenantAccess(event, tenantId, headers);
+    if (tErr) return tErr;
 
     if (!rawTask.trim()) return { statusCode: 400, headers, body: JSON.stringify({ error: 'task é obrigatório' }) };
 

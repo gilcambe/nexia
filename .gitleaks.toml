@@ -1,0 +1,66 @@
+# Varredura de segredos (SEC Fase 1). Usa as regras padrão do gitleaks + regras locais.
+title = "nexia gitleaks"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "mercadopago-access-token"
+description = "Mercado Pago access token / public key"
+regex = '''\b(?:APP_USR|TEST)-[0-9a-f]{4,}-[0-9a-f-]{8,}\b'''
+keywords = ["app_usr", "test-"]
+
+[[rules]]
+id = "firebase-service-account"
+description = "Firebase/GCP service account JSON"
+regex = '''"type"\s*:\s*"service_account"'''
+keywords = ["service_account"]
+
+[[rules]]
+id = "service-account-base64"
+description = "Service account JSON em base64"
+regex = '''ewogICJ0eXBlIjogInNlcnZpY2VfYWNjb3VudC|eyJ0eXBlIjoic2VydmljZV9hY2NvdW50'''
+keywords = ["ewogicj0exbljogInnlcnzpy2vfywnjb3vudc", "eyj0exblijoic2vydmljzv9hy2nvdw50"]
+
+[[rules]]
+id = "dotenv-file"
+description = "Arquivo .env versionado"
+path = '''(^|/)\.env(\.[^/]*)?$'''
+[[rules.allowlists]]
+paths = ['''(^|/)\.env\.example$''']
+
+# Config web pública do Firebase (nexia-c8710), embutida em páginas legadas.
+# É pública por natureza; a proteção é restrição por referrer + App Check (ver SECURITY-AUDIT.md).
+# Liberada só na regra de chave GCP e só nestes três arquivos; em qualquer outro arquivo continua detectada.
+# Obs.: no gitleaks 8.24, [[allowlists]] globais são ignoradas quando a config estende a padrão;
+# por isso usamos allowlist por regra e a tabela [allowlist] única.
+[[rules]]
+id = "gcp-api-key"
+[[rules.allowlists]]
+paths = [
+  '''^bezsan/bezsan-admin\.html$''',
+  '''^ces/ces-app-executivo\.html$''',
+  '''^viajante-pro/vp-admin\.html$''',
+]
+
+# A mesma chave também casa com a regra genérica; liberada só quando o valor é uma chave web (AIza…) nesses arquivos.
+[[rules]]
+id = "generic-api-key"
+[[rules.allowlists]]
+condition = "AND"
+paths = [
+  '''^bezsan/bezsan-admin\.html$''',
+  '''^ces/ces-app-executivo\.html$''',
+  '''^viajante-pro/vp-admin\.html$''',
+]
+regexes = ['''^AIza[0-9A-Za-z_-]{35}$''']
+
+# Valores fictícios usados pelos testes (emulador e tokens inválidos de propósito).
+[allowlist]
+description = "Falsos positivos conhecidos"
+paths = ['''(^|/)package-lock\.json$''']
+regexes = [
+  '''fake-api-key''',
+  '''senha-forte-123''',
+  '''eyJhbGciOiJub25lIn0\.e30\.''',
+]
