@@ -190,3 +190,22 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 - **Status:** ACEITA.
 - **Decisão:** cada chamada vira uma linha em `<stateDir>/bridge-log.jsonl` com data, agente (nome do cliente MCP), ferramenta, projeto, caminho ou comando redigido, pasta, decisão, resultado, código de erro e duração. Nunca conteúdo de arquivo nem saída de comando.
 - **TEMPORÁRIO:** o log fica só na máquina do usuário. Motivo: enviar ao Vault exige credencial do Bridge para a API, que não existe ainda. Risco: auditoria central não vê operações locais. Remoção: Fase 10 (o Orchestrator registra a execução e o Bridge envia o resumo como `ToolCall`).
+
+## ADR-F8-01 — GitHub Adapter com GitHub App e tokens de instalação por operação
+- **Status:** ACEITA.
+- **Decisão:** `nexia-ai/github-adapter` é o único caminho do NEXIA para o GitHub (leitura e escrita), usado pelas ferramentas `github.*` do Tool Gateway. Escrita exige GitHub App (`GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY`, opcional `GITHUB_APP_INSTALLATION_ID`): o servidor assina um JWT RS256 de 9 min e troca por um token de instalação de 1 h restrito ao repositório da chamada e às permissões da operação (ex.: `contents: write` só para branch/commit; `pull_requests: write` só para PR). Tokens ficam em cache em memória até 5 min antes de expirar. Sem dependência nova (assinatura com `crypto` do Node).
+- Leitura aceita o `GITHUB_TOKEN` legado ou nenhum (repositório público).
+- **TEMPORÁRIO:** leitura com `GITHUB_TOKEN` (PAT de longa duração) quando a App não está configurada. Motivo: a App ainda não foi criada pelo dono; o PAT já existe no servidor. Risco: token amplo e de longa duração (já listado para rotação). Remoção: quando a App for instalada, apagar `GITHUB_TOKEN` do Render (pendência do dono).
+- **Pendência do dono:** criar a GitHub App do NEXIA (permissões: Contents R/W, Pull requests R/W, Actions R/W, Checks R, Issues R, Metadata R), instalar em `gilcambe/nexia` e configurar as três variáveis no Render. Nada foi criado nem configurado nesta fase.
+
+## ADR-F8-02 — Regras de escrita no GitHub e autonomia até o nível 3
+- **Status:** ACEITA.
+- **Decisão:** o NEXIA só escreve em branches com prefixo `nexia/` e nunca na branch padrão; o caminho até a branch padrão é sempre um PR (rascunho por padrão). Commit por Git Data API (um commit com vários arquivos, `force: false`, opcionalmente condicionado a `expected_head_sha`), até 20 arquivos de texto, 256 KB por arquivo e 600 KB no total (cabe na fila de aprovação do Firestore). Commit não apaga arquivo (exclusão é CRITICAL na spec §15). Arquivos sensíveis (`.env`, chaves, credenciais, `tfstate`) nunca são lidos nem escritos; conteúdo, mensagem de commit, título e corpo de PR com forma de secret são recusados; leitura redige secrets.
+- Riscos e autonomia mínima (spec §15 e §23): leituras LOW; `github.create_branch` MEDIUM nível 2; `github.commit_files` HIGH nível 2 (commit equivale a push); `github.create_pr` HIGH nível 3; `github.dispatch_workflow` HIGH nível 3. Abaixo do nível, a chamada vai para a fila de aprovação (Fase 6); em `production` tudo acima de LOW pede pessoa.
+- `github.dispatch_workflow` nunca dispara workflow cujo nome sugira deploy/produção (`deploy`, `prod`, `release`, `publish`) nem aceita input de ambiente: deploy é das Fases 9 e 11.
+- **TEMPORÁRIO:** a regra de deploy por nome do arquivo de workflow é heurística. Motivo: o adapter não conhece os environments do repositório. Risco: um workflow de deploy com nome neutro (ex.: `ci.yml` que também publica). Remoção: Fase 9 (workflow modelo com environment protegido; o dispatch passa a checar se o workflow usa `environment:`).
+
+## ADR-F8-03 — Remoção do `autocommit` legado
+- **Status:** ACEITA.
+- **Decisão:** `netlify/functions/autocommit.js` e a rota `/api/autocommit` foram removidos (agora 404). Ele gravava arquivo por arquivo pela Contents API com o PAT de `GITHUB_TOKEN`, num repositório fixo por variável de ambiente, e estava desligado desde a Fase 1 (A1). Não havia chamador no SPA nem nas funções. O substituto é `github.commit_files` + `github.create_pr` pelo Tool Gateway, com registro no Vault, política por projeto e aprovação humana.
+- `AUTOCOMMIT_ENABLED` saiu do `.env.example`. Os testes C3 que usavam o autocommit como endpoint só-master passaram a testar o `guard` com `requiredRole: 'master'` diretamente (mesmo código).

@@ -35,7 +35,7 @@ test.describe('10. APIs — sem crash e sempre JSON', () => {
   const POST_APIS = [
     ['/api/auth', { action: 'check' }], ['/api/logs', { level: 'info' }], ['/api/events', { type: 'test' }],
     ['/api/tenant', { action: 'get' }], ['/api/cortex', { message: 'ping' }], ['/api/memory', { action: 'get' }],
-    ['/api/autocommit', { file: 'a.js', content: 'x', branch: 'main' }], ['/api/sentinel-qa', { mode: 'heal', issues: [{}] }],
+    ['/api/nexia/tools/invoke', { project_id: 'prj_x', tool: 'github.create_pr', input: {} }], ['/api/sentinel-qa', { mode: 'heal', issues: [{}] }],
   ];
   for (const [ep, data] of POST_APIS) {
     test(`POST ${ep} sem token → erro JSON, sem crash`, async ({ request }) => {
@@ -53,7 +53,7 @@ test.describe('Segurança — Fase 1', () => {
     expect(res.status()).toBe(401);
   });
   test('token qualquer não vira master (demo mode removido)', async ({ request }) => {
-    const res = await request.post('/api/autocommit', { data: { file: 'a.js', content: 'x', branch: 'x' }, headers: { authorization: 'Bearer demo' } });
+    const res = await request.post('/api/nexia/tools/invoke', { data: { project_id: 'prj_x', tool: 'github.create_pr', input: {} }, headers: { authorization: 'Bearer demo' } });
     expect(res.status()).toBe(401);
   });
   for (const p of ['/server.js', '/package.json', '/.env', '/netlify/functions/middleware.js', '/firestore.rules', '/core/%2e%2e/server.js']) {
@@ -116,5 +116,17 @@ test.describe('NEXIA AI — Fase 6', () => {
       const res = await request[m](ep);
       expect(res.status(), ep).toBe(401);
     }
+  });
+});
+
+test.describe('NEXIA AI — Fase 8', () => {
+  test('autocommit legado removido: /api/autocommit responde 404 JSON', async ({ request }) => {
+    const res = await request.post('/api/autocommit', { data: { file: 'a.js', content: 'x', branch: 'nexia/x' } });
+    expect(res.status()).toBe(404);
+    expect(res.headers()['content-type'] || '').toContain('json');
+  });
+  test('ferramentas de escrita do GitHub exigem login', async ({ request }) => {
+    const res = await request.post('/api/nexia/tools/invoke', { data: { project_id: 'prj_x', tool: 'github.commit_files', input: { branch: 'nexia/x', message: 'm', files: [] } } });
+    expect(res.status()).toBe(401);
   });
 });

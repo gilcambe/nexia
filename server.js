@@ -140,7 +140,6 @@ const API_ROUTES = {
   '/api/financial':       'ai-financial',
   '/api/internal-agents': 'internal-agents',
   '/api/audit':           'audit-log',
-  '/api/autocommit':      'autocommit',
   '/api/ads':             'ads-engine',
   '/api/recovery':        'account-recovery',
   '/api/strike':          'strike-engine',

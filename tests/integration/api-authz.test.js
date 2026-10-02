@@ -63,32 +63,38 @@ test('C3: guest não é promovido ao chamar o tenant nexia (sem auto-reparo)', a
   assert.strictEqual(doc.tenantSlug, 'guest');
 });
 
+// Papel master verificado pelo guard (o autocommit legado, que era o endpoint master-only
+// usado aqui, foi removido na Fase 8; o guard é o mesmo para qualquer função).
+async function masterGuard(token) {
+  const { guard } = require('../../netlify/functions/middleware');
+  return guard({ httpMethod: 'POST', headers: { authorization: `Bearer ${token}` }, body: '{}' }, 'c3-master-check', { requiredRole: 'master' });
+}
+
 test('C3: pertencer ao tenant nexia, e-mail admin@nexia.com sem verificação ou papel master em members não dão master', async () => {
   for (const k of ['nexiaUser', 'fakeAdmin', 'alice']) {
-    const r = await call('/api/autocommit', tokens[k].idToken, { file: 'a.js', content: 'x', branch: 'feature/x' });
-    assert.strictEqual(r.status, 403, k);
+    const r = await masterGuard(tokens[k].idToken);
+    assert.strictEqual(r && r.statusCode, 403, k);
     assert.match(r.body, /Permissão insuficiente/, k);
   }
+  assert.strictEqual(await masterGuard(tokens.boss.idToken), null, 'master de verdade passa');
 });
 
 test('C3: MASTER_EMAIL só vale com e-mail verificado', async () => {
   process.env.MASTER_EMAIL = 'admin@nexia.com';
   try {
-    let r = await call('/api/autocommit', tokens.fakeAdmin.idToken, { file: 'a.js', content: 'x', branch: 'feature/x' });
-    assert.strictEqual(r.status, 403);
+    let r = await masterGuard(tokens.fakeAdmin.idToken);
+    assert.strictEqual(r && r.statusCode, 403);
     assert.match(r.body, /Permissão insuficiente/);
     await admin.auth().updateUser(tokens.fakeAdmin.uid, { emailVerified: true });
     const verified = await signIn('admin@nexia.com');
-    r = await call('/api/autocommit', verified, { file: 'a.js', content: 'x', branch: 'feature/x' });
-    assert.strictEqual(r.status, 403);
-    assert.match(r.body, /Autocommit desativado/, 'passa da checagem de papel e para na feature flag');
+    r = await masterGuard(verified);
+    assert.strictEqual(r, null, 'e-mail verificado em MASTER_EMAIL passa da checagem de papel');
   } finally { delete process.env.MASTER_EMAIL; }
 });
 
-test('A1: autocommit desligado por padrão, mesmo para master', async () => {
+test('A1 / Fase 8: o autocommit legado foi removido (escrita no GitHub só pelo Tool Gateway)', async () => {
   const r = await call('/api/autocommit', tokens.boss.idToken, { file: 'a.js', content: 'x', branch: 'main' });
-  assert.strictEqual(r.status, 403);
-  assert.match(r.body, /desativado/);
+  assert.strictEqual(r.status, 404);
 });
 
 test('C4: cabeçalho de agendamento não dá acesso e heal fica bloqueado', async () => {

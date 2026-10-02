@@ -9,6 +9,8 @@ on:
 permissions:
   contents: read
   checks: read   # Fase 6: teste do github.get_checks lê os checks de gilcambe/nexia
+  actions: read         # Fase 8: github.list_workflow_runs (teste GH7)
+  pull-requests: read   # Fase 8: github.list_pulls (teste GH7)
 
 concurrency:
   group: ci-${{ github.ref }}

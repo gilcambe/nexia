@@ -40,7 +40,7 @@ function checkInput(tool, input) {
 }
 
 /**
- * @param {{ db, vault, tools?, env?, fetchImpl?, now?: () => Date, approvalTtlMs?: number }} o
+ * @param {{ db, vault, tools?, env?, fetchImpl?, github?: (repo) => adapter, now?: () => Date, approvalTtlMs?: number }} o
  */
 function createGateway(o) {
   const { db, vault } = o;
@@ -65,7 +65,7 @@ function createGateway(o) {
   async function execute(ctx, call, tool, project, input) {
     const t0 = Date.now();
     try {
-      const result = await tool.run({ vault, ctx, project, env, fetchImpl }, input);
+      const result = await tool.run({ vault, ctx, project, env, fetchImpl, github: o.github }, input);
       const out = tool.summarizeOutput ? tool.summarizeOutput(result, input) : 'ok';
       const record = await vault.ToolCall.update(ctx, call.id, { status: 'succeeded', output_summary: safeText(out, 2000) || 'ok', duration_ms: Date.now() - t0 }, { expectedVersion: call.version });
       return { tool_call: record, status: 'succeeded', result };
