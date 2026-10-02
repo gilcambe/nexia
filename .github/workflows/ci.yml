@@ -48,13 +48,13 @@ jobs:
       - run: npm ci
       - name: Typecheck
         run: npm run typecheck
-      - name: Testes unitários
+      - name: Testes unitários (inclui schemas, secrets e índices do Vault)
         run: npm test
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
-      - name: Regras do Firestore e autorização da API (Firebase Emulator)
+      - name: Firebase Emulator (regras, autorização da API e Vault)
         run: npm run test:rules
       - name: Build
         run: npm run build

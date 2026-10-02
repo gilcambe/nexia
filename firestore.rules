@@ -234,6 +234,27 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // ── NEXIA AI Vault: /vault_* (Fase 2) ───────────────────────
+    // Escrita: somente o servidor (Admin SDK ignora estas regras). Nenhum cliente grava.
+    // Leitura: master (custom claim ou perfil) em qualquer tenant; admin do tenant
+    // apenas nos documentos do próprio tenant. Usuário comum não lê nada do Vault.
+    // vault_idempotency e vault_unique são internos: ninguém lê pelo cliente.
+    function isVaultMaster() {
+      return isAuthenticated() && (request.auth.token.role == 'master' || userRole() == 'master');
+    }
+
+    function canReadVault(tenantId) {
+      return isVaultMaster()
+        || (isAuthenticated() && userRole() == 'admin' && userTenantSlug() == tenantId);
+    }
+
+    match /{vaultCollection}/{vaultDocId} {
+      allow read: if vaultCollection.matches('^vault_.+')
+                  && !(vaultCollection in ['vault_idempotency', 'vault_unique'])
+                  && canReadVault(resource.data.tenant_id);
+      allow write: if false;
+    }
+
     // ── Default: deny everything else ───────────────────────────
     match /{document=**} {
       allow read, write: if false;

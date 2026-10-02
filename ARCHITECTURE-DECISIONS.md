@@ -8,8 +8,8 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 |---|---|---|
 | D1 | Repositório canônico = `gilcambe/nexia`, branch `develop` | **ACEITA** na Fase 1 (o PR da Fase 1 é aberto contra `develop`) |
 | D2 | Acesso ao repositório de produção `NEXIA_OS`/`NEXIA-OS` | PENDENTE (não acessível a esta sessão) |
-| D3 | Vault no Firestore `nexia-c8710`, coleções `vault_*` | PROPOSTA (Fase 2) |
-| D4 | Código novo em `nexia-ai/`, rotas `/api/nexia/*` | PROPOSTA (Fase 2+). **Nada foi criado na Fase 1** |
+| D3 | Vault no Firestore `nexia-c8710`, coleções `vault_*` | **ACEITA** na Fase 2 (ADR-F2-01) |
+| D4 | Código novo em `nexia-ai/`, rotas `/api/nexia/*` | Pasta `nexia-ai/vault/` **ACEITA** na Fase 2; rotas `/api/nexia/*` PROPOSTA (não criadas) |
 | D5 | NEXIA Bridge como servidor MCP local | PROPOSTA (Fase 7) |
 | D6 | SDK oficial da Anthropic atrás de `ModelProvider` | PROPOSTA (Fase 5) |
 | D7 | GitHub Actions no repo canônico | **ACEITA** (CI mínimo nesta fase) |
@@ -59,3 +59,46 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 ## ADR-F1-10 — Dependências sem saltos de versão maior
 - **Status:** ACEITA.
 - **Decisão:** `npm audit fix` sem `--force`, mais `express` 4.22.3 (patch dentro da faixa declarada) para corrigir `qs`. O que só se corrige com versão maior (`firebase-admin` 14, `vite` 6+, `firebase` cliente, `react-router-dom` 7) fica para uma fase própria, com teste de regressão.
+
+## ADR-F2-01 — Vault no Firestore existente, coleções `vault_*` de primeiro nível (D3)
+- **Status:** ACEITA.
+- **Decisão:** 16 coleções de domínio (`vault_clients`, `vault_projects`, `vault_repositories`, `vault_environments`, `vault_requirements`, `vault_decisions`, `vault_tasks`, `vault_artifacts`, `vault_conversations`, `vault_memories`, `vault_changes`, `vault_test_runs`, `vault_deployments`, `vault_errors`, `vault_integrations`, `vault_project_snapshots`) e 3 internas (`vault_audit`, `vault_idempotency`, `vault_unique`). Coleções de primeiro nível, não subcoleções de `tenants/{slug}`, para que as consultas por `project_id`/`client_id`/`status` sejam diretas e as regras fiquem num único `match`. Isolamento por `tenant_id` em todo documento.
+- **Consequência:** nenhum banco paralelo; mesma conta, mesmas regras versionadas, mesmo emulador. Nada no código legado foi alterado; o módulo ainda não é chamado por rota alguma.
+
+## ADR-F2-02 — Tenancy do Vault = tenant SaaS existente
+- **Status:** ACEITA.
+- **Decisão:** `tenant_id` é o slug de `tenants/{slug}`. Toda escrita confirma, dentro da transação, que o tenant existe. Leitura, atualização e exclusão de registro de outro tenant respondem `NOT_FOUND` (sem revelar existência). Entidade `Client` é o cliente do dono do tenant (spec §5), não o tenant.
+
+## ADR-F2-03 — Camada de acesso única (`nexia-ai/vault/repository.js`)
+- **Status:** ACEITA.
+- **Decisão:** `createVault({ db })` devolve um repositório por entidade com `create`, `get`, `list`, `update`, `softDelete`, `restore`, `history`. Toda escrita roda numa transação do Firestore que faz, nesta ordem: confere tenant, idempotência, unicidade e referências (leituras), depois grava documento, reservas de unicidade, idempotência e auditoria (escritas). Regras:
+  - IDs `{prefixo}_{32 hex}` gerados pelo servidor; id do documento = campo `id`.
+  - Metadados (`id`, `tenant_id`, `schemaVersion`, `version`, `created_at`, `updated_at`, `deleted_at`, `created_by`, `updated_by`, `last_execution_id`) só pelo servidor; enviados pelo chamador → `VALIDATION unknownField`.
+  - Timestamps com `FieldValue.serverTimestamp()`; leitura devolve ISO 8601.
+  - Concorrência otimista: `version` (inteiro, também é o etag) começa em 1; `update`/`softDelete`/`restore` exigem `expectedVersion`; divergência → `VERSION_CONFLICT`. A transação do Firestore garante que, em escritas simultâneas com a mesma versão esperada, só uma vence.
+  - Integridade referencial na escrita (inclusive `restore`): alvo existe, mesmo tenant, não excluído; mesmo projeto quando o alvo pertence a um projeto; projeto do mesmo cliente quando há `client_id` e `project_id`; auto-referência proibida.
+  - Soft-delete por `deleted_at`; bloqueado (`HAS_DEPENDENTS`) se existir registro ativo apontando para o alvo (mapa derivado dos campos `ref` dos schemas, inclusive arrays via `array-contains`). Não há exclusão física.
+  - Unicidade por tenant (`slug` de Client e Project; `provider+owner+repo`; `project_id+name` de Environment) com documentos em `vault_unique` cujo id é hash. A reserva continua após soft-delete (a identidade não é reaproveitada).
+  - `schemaVersion` diferente do suportado → `SCHEMA_VERSION` (falha fechada; não há migração na v1).
+  - Listagem: só ativos, `updated_at` desc, no máximo um filtro (`client_id`, `project_id` ou `status`), `limit` 1–200.
+
+## ADR-F2-04 — Idempotência de eventos
+- **Status:** ACEITA.
+- **Decisão:** `create(ctx, data, { idempotencyKey })`. Chave `[A-Za-z0-9_.:-]{8,128}`, escopo tenant + entidade, guardada só como hash (`vault_idempotency/{sha256}`) junto do hash canônico do conteúdo validado. Mesma chave e mesmo conteúdo → devolve o registro existente com `replayed: true`, sem nova escrita nem auditoria. Mesma chave e conteúdo diferente → `IDEMPOTENCY_CONFLICT`. Atualizações não usam chave: `expectedVersion` já torna a repetição segura (a segunda tentativa recebe `VERSION_CONFLICT`).
+
+## ADR-F2-05 — Execution ID e auditoria
+- **Status:** ACEITA.
+- **Decisão:** `createExecutionContext({ tenantId, actor, executionId? })` gera `exec_{32 hex}` (ou valida um recebido, para propagar entre chamadas). Toda escrita grava `last_execution_id` no documento e uma entrada em `vault_audit` na mesma transação, com: `tenant_id`, `execution_id`, `actor {type,id}`, `operation` (`create|update|soft_delete|restore`), `entity`, `entity_id`, `version`, `content_hash` (SHA-256 do JSON canônico dos campos de domínio), `changed_fields` (só nomes), `at` (servidor), `entity_schema_version`, `schemaVersion`. Nenhum valor de campo vai para a auditoria nem para mensagens de erro.
+
+## ADR-F2-06 — Secrets fora do Vault (spec §15)
+- **Status:** ACEITA.
+- **Decisão:** `Environment.secret_refs` e `Integration.secret_refs` só aceitam `{ name (formato de variável de ambiente), store (enum), ref (caminho no secret store), description }`; não existe campo para valor. Todo texto de qualquer entidade passa por `detectSecret` (PEM, service account, JWT, AWS, GitHub, GitLab, Groq, OpenAI/Anthropic, Stripe, Slack, Google API/OAuth, Mercado Pago, npm, URL com credencial, hex ≥ 40, atribuição `password=`/`token:` e alta entropia). Suspeita → `SECRET_DETECTED` com caminho e nome do detector, nunca o valor. Campos `sha` e `ref` são validados por formato e não passam pelo detector.
+- **Consequência:** falso positivo possível em texto com hash longo ou token aleatório legítimo; o chamador precisa reescrever o texto (risco aceito: preferimos rejeitar a gravar um secret).
+
+## ADR-F2-07 — Regras `vault_*`
+- **Status:** ACEITA no repositório. **Não publicada.**
+- **Decisão:** um `match /{vaultCollection}/{vaultDocId}` com `vaultCollection.matches('^vault_.+')`: escrita sempre negada a clientes (só o Admin SDK grava); leitura para master (custom claim `role == 'master'` ou `users/{uid}.role == 'master'`) em qualquer tenant e para admin do tenant (`users/{uid}.role == 'admin'` e `tenantSlug == tenant_id`) só no próprio tenant; usuário comum, `manager` e anônimo não leem; `vault_idempotency` e `vault_unique` ilegíveis no cliente.
+
+## ADR-F2-08 — Índices e documentação gerados dos schemas
+- **Status:** ACEITA.
+- **Decisão:** `nexia-ai/vault/indexes.js --write` mantém os 49 índices `vault_*` em `firestore.indexes.json` (listagens, dependentes por `array-contains`, histórico de auditoria) sem tocar nos índices legados; `nexia-ai/vault/schema-doc.js --write` gera `VAULT-SCHEMAS.md`. Testes unitários falham se os arquivos divergirem dos schemas.
