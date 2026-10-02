@@ -59,7 +59,6 @@ test('Sentinel: cabeçalho x-netlify-event não dispensa autenticação (C4)', a
 
 test('endpoints sensíveis exigem autenticação (A1, A2)', async () => {
   const cases = [
-    ['autocommit', ev({ body: JSON.stringify({ file: 'a.js', content: 'x', branch: 'main' }) })],
     ['observability', ev({ httpMethod: 'GET' })],
     ['observability', ev({ body: JSON.stringify({ path: '/x', ms: 1 }) })],
     ['cortex-chat', ev({ body: JSON.stringify({ message: 'oi' }) })],

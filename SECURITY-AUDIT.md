@@ -17,7 +17,7 @@ Legenda de status: **FIXED / TESTED** (corrigido no código e coberto por teste 
 | C3 | CRÍTICO | Promoção automática a `master` no backend | **FIXED / TESTED** |
 | C4 | CRÍTICO | Sentinel heal grava no Firestore via LLM e bypass por cabeçalho | **FIXED / TESTED** |
 | C5 | CRÍTICO | Secrets reais em repositórios públicos | **MITIGATED** no HEAD + varredura no CI; **OWNER ACTION** (rotação, histórico) |
-| A1 | ALTO | `autocommit` grava direto em `main` | **FIXED / TESTED** (desligado por flag) |
+| A1 | ALTO | `autocommit` grava direto em `main` | **FIXED / TESTED** (desligado por flag na Fase 1; **removido** na Fase 8) |
 | A2 | ALTO | `observability` sem auth e sem limite de memória | **FIXED / TESTED** |
 | A3 | ALTO | Modo demo de autenticação | **FIXED / TESTED** |
 | A4 | ALTO | Dependências vulneráveis | **MITIGATED** (0 críticas; 8 altas só com versão maior, listadas) |
@@ -156,6 +156,19 @@ As regras `vault_*` seguem **não publicadas**, como as da Fase 1. Com mutação
 
 Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claude Code sem restrição), o modelo poderia ler o stderr do Bridge nos logs de MCP do cliente e o próprio `stateDir`. As garantias do Bridge valem para o acesso feito **pelo Bridge**; o README orienta negar esses caminhos nas permissões do Claude Code ou usar o Claude Desktop.
 
+## Fase 8 — GitHub Adapter
+
+| ID | Tema | Controle | Teste |
+|---|---|---|---|
+| H1 | Credencial ampla/longa para escrever | escrita só com GitHub App; token de instalação de 1 h restrito ao repositório e à permissão da operação | `tests/unit/github-adapter.test.js` H1, H2; `tests/integration/github-tools.test.js` GH5 |
+| H2 | Agente escrevendo na branch padrão/protegida | só `nexia/...`, nunca a padrão; commit sem force; SHA esperado | H3, H4; GH3 |
+| H3 | Escrita sem autonomia | risco + autonomia mínima por ferramenta; abaixo disso, aprovação humana; produção sempre pede pessoa | GH1, GH2, GH4 |
+| H4 | `.env`/secret no repositório ou enviado ao modelo | arquivos sensíveis bloqueados na leitura e no commit; conteúdo, mensagem e PR com secret recusados; leitura e diff redigidos | H5; GH3 |
+| H5 | Deploy disparado por agente | `dispatch_workflow` recusa workflow/input de deploy ou produção e branch fora de `nexia/`/padrão | H7; GH3 |
+| H6 | Conteúdo de código no log de auditoria | Vault guarda só caminhos e hash; conteúdo só na fila do servidor até a decisão | GH2 |
+| H7 | Vazamento de token/chave em erro | erros com mensagem fixa ou mensagem curta e filtrada do GitHub | H8 |
+| H8 | Endpoint legado de commit | `autocommit` removido | `api-authz` A1/Fase 8; e2e Fase 8 |
+
 ## Riscos remanescentes
 - Credenciais expostas continuam válidas até o dono rotacionar; histórico público ainda contém valores.
 - Correções só valem em produção depois de deploy e publicação das regras, que não fazem parte desta fase.
@@ -169,3 +182,4 @@ Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claud
 - Seis funções legadas e o resumo do `cortex-memory` ainda chamam provedores de IA diretamente (ADR-F5-03); migram na Fase 10.
 - O Render roda `npm install` (instala também devDependencies); considerar `npm ci --omit=dev` numa fase de infraestrutura.
 - Bridge: com terminal livre no mesmo cliente, a aprovação local pode ser contornada (ver Fase 7); log local ainda não vai ao Vault.
+- GitHub: leitura ainda usa o `GITHUB_TOKEN` legado até a GitHub App ser criada (ADR-F8-01); bloqueio de workflow de deploy por nome é heurístico até a Fase 9.
