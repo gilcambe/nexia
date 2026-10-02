@@ -12,8 +12,11 @@ const { onboardProject } = require('../onboarding');
 const { createGithubSource, SourceError } = require('../onboarding/sources');
 const { resolveProject } = require('../project-resolver');
 const { buildContext } = require('../context-engine');
+const { createGateway, GatewayError } = require('../tool-gateway');
+const { HTTP_STATUS: GATEWAY_STATUS } = require('../tool-gateway/errors');
 
-const RESOURCES = { clients: 'Client', projects: 'Project', repos: 'Repository', environments: 'Environment' };
+const RESOURCES = { clients: 'Client', projects: 'Project', repos: 'Repository', environments: 'Environment', 'tool-policies': 'ToolPolicy' };
+const INVOKE_STATUS = { succeeded: 200, pending_approval: 202, denied: 403, failed: 422, rejected: 409, running: 202, expired: 409 };
 const TENANT_RE = /^[a-z0-9][a-z0-9_-]{0,62}$/;
 
 const STATUS_BY_CODE = {
@@ -56,6 +59,13 @@ function createHandler(deps = {}) {
   };
   const verify = deps.verify || (event => require('../../netlify/functions/middleware').verifyBearerToken(event));
   const sourceFactory = deps.sourceFactory || (o => createGithubSource(o));
+  let gateway = null;
+  const getGateway = () => {
+    if (gateway) return gateway;
+    const v = getVault();
+    gateway = createGateway({ db: deps.db || require('../../netlify/functions/firebase-init').db, vault: v, ...(deps.gateway || {}) });
+    return gateway;
+  };
 
   return async function handler(event) {
     if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: headersFor(event), body: '' };
@@ -91,6 +101,35 @@ function createHandler(deps = {}) {
           selectedProjectId: b.selected_project_id, repository: b.repository, workspacePath: b.workspace_path,
           conversationProjectId: b.conversation_project_id, recentProjectIds: Array.isArray(b.recent_project_ids) ? b.recent_project_ids : [] });
         return json(event, 200, pc);
+      }
+      // Fase 6: Tool Gateway e fila de aprovações
+      if (['tools', 'approvals', 'tool-calls'].includes(parts[0])) {
+        const gctx = createExecutionContext({ tenantId: requested, actor: { type: 'user', id: auth.uid } });
+        const gw = getGateway();
+        const gHeaders = { 'X-Execution-Id': gctx.executionId };
+        if (parts[0] === 'tools' && parts.length === 1 && method === 'GET') return json(event, 200, { items: gw.describe() });
+        if (parts[0] === 'tools' && parts[1] === 'invoke' && parts.length === 2 && method === 'POST') {
+          let b = {};
+          try { b = JSON.parse(event.body || '{}'); } catch { return json(event, 400, { error: 'JSON inválido.' }); }
+          const key = h['idempotency-key'] || h['Idempotency-Key'];
+          const r = await gw.invoke(gctx, { projectId: b.project_id, environment: b.environment, tool: b.tool, input: b.input, idempotencyKey: key });
+          return json(event, INVOKE_STATUS[r.status] || 200, r, { ...etag(r.tool_call), ...gHeaders });
+        }
+        if (parts[0] === 'approvals' && parts.length === 1 && method === 'GET') {
+          return json(event, 200, { items: await gw.pending(gctx, { projectId: q.project_id }) });
+        }
+        if (parts[0] === 'approvals' && parts.length === 3 && ['approve', 'reject'].includes(parts[2]) && method === 'POST') {
+          const ver = ifMatch(event);
+          if (ver === null) return json(event, 428, { error: 'If-Match obrigatório.' });
+          const r = await gw[parts[2]](gctx, parts[1], { expectedVersion: ver });
+          return json(event, INVOKE_STATUS[r.status] || 200, r, { ...etag(r.tool_call), ...gHeaders });
+        }
+        if (parts[0] === 'tool-calls' && parts.length === 1 && method === 'GET') {
+          if (!q.project_id) return json(event, 400, { error: 'project_id é obrigatório.' });
+          const limit = q.limit ? Number(q.limit) : 50;
+          return json(event, 200, { items: await gw.calls(gctx, { projectId: q.project_id, limit }) });
+        }
+        return json(event, 404, { error: 'Rota não encontrada.' });
       }
       const entity = RESOURCES[parts[0]];
       if (!entity || parts.length > 3) return json(event, 404, { error: 'Rota não encontrada.' });
@@ -172,6 +211,7 @@ function createHandler(deps = {}) {
         return json(event, STATUS_BY_CODE[e.code] || 400, { error: e.message, code: e.code, details: e.details || {} });
       }
       if (e instanceof SourceError) return json(event, SOURCE_STATUS[e.code] || 502, { error: e.message, code: `SOURCE_${e.code}` });
+      if (e instanceof GatewayError) return json(event, GATEWAY_STATUS[e.code] || 400, { error: e.message, code: e.code, details: e.details && e.details.problems ? { problems: e.details.problems } : {} });
       return json(event, 500, publicErrorBody('nexia-api', e));
     }
   };

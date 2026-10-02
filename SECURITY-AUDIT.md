@@ -126,6 +126,20 @@ As regras `vault_*` seguem **não publicadas**, como as da Fase 1. Com mutação
 | R5 | Dependência nova | `@anthropic-ai/sdk` com versão exata (0.131.0) no `package.json` e `package-lock.json` | CI (`npm ci`) |
 | R6 | Saída estruturada sem validação | `structuredOutput` valida contra o schema e falha com `INVALID_OUTPUT` | M8 |
 
+## Fase 6 — Tool Gateway e Policy Engine
+
+| ID | Tema | Controle | Teste |
+|---|---|---|---|
+| T1 | Ferramenta sem risco declarado ou desconhecida | registro valida nome e risco; desconhecida → `UNKNOWN_TOOL`/`forbidden` | `tests/unit/policy-engine.test.js` P3; `tests/integration/tool-gateway.test.js` G2 |
+| T2 | Ação de risco sem confirmação | matriz risco × autonomia × ambiente; CRITICAL e produção sempre pedem pessoa | P1, P2, P4 |
+| T3 | Agente aprovando a própria ação | aprovação só por ator `user`; master/admin do tenant na API | G3, G8 |
+| T4 | Execução dupla da mesma aprovação | `If-Match` + versão do `ToolCall`; segunda aprovação → `NOT_PENDING` | G3, G8 |
+| T5 | Ferramenta lendo dados de outro projeto | escopo por projeto em `vault.*`; GitHub só no repositório cadastrado do projeto | G2, G7 |
+| T6 | Entrada sensível gravada no log | Vault guarda só resumo + hash; entrada completa só na fila do servidor, apagada ao decidir | G3, G9 |
+| T7 | Política alterada depois do pedido | reavaliação na aprovação; proibida → rejeitada sem executar | G5 |
+| T8 | Forjar registro de chamada | `tool-calls` só leitura na API; `vault_tool_calls` sem escrita pelo cliente | G8, G9 |
+| T9 | Path traversal no `ref` do GitHub | `ref` validado (sem `..`) e codificado por segmento | G7 |
+
 ## Riscos remanescentes
 - Credenciais expostas continuam válidas até o dono rotacionar; histórico público ainda contém valores.
 - Correções só valem em produção depois de deploy e publicação das regras, que não fazem parte desta fase.

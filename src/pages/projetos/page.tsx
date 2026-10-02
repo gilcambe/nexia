@@ -102,7 +102,10 @@ export default function ProjetosPage() {
             </button>
             <h1 className="text-2xl font-bold" data-testid="projetos-title">Projetos</h1>
           </div>
-          {me && <span className="text-xs text-nexia-muted">{me.role} · {me.tenantSlug || "sem tenant"}</span>}
+          <div className="flex items-center gap-4">
+            <button onClick={() => navigate("/aprovacoes")} className="text-sm text-nexia-cyan underline cursor-pointer" data-testid="link-aprovacoes">Aprovações</button>
+            {me && <span className="text-xs text-nexia-muted">{me.role} · {me.tenantSlug || "sem tenant"}</span>}
+          </div>
         </div>
       </header>
 

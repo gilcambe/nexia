@@ -96,11 +96,21 @@ const valid = {
     last_deployment_id: ids.Deployment, recent_error_ids: [ids.Error], open_task_ids: [ids.Task],
     key_decision_ids: [ids.Decision],
   }),
+  ToolCall: ids => ({
+    project_id: ids.Project, environment: 'staging', tool: 'github.get_checks', risk: 'LOW', decision: 'auto',
+    decision_reason: 'Risco LOW (leitura/análise).', status: 'succeeded', requested_by: { type: 'agent', id: 'qa' },
+    requested_at: '2026-10-02T16:00:00.000Z', decided_by: { type: 'system', id: 'policy-engine' }, decided_at: '2026-10-02T16:00:00.000Z',
+    input_summary: 'ref develop', input_sha256: 'a'.repeat(64), output_summary: 'gilcambe/nexia: 2 check(s) (success 2)', duration_ms: 412,
+    execution_id: 'exe_teste',
+  }),
+  ToolPolicy: ids => ({
+    project_id: ids.Project, rules: [{ tool: 'github.*', environment: 'production', decision: 'forbidden' }, { tool: 'vault.*', decision: 'auto' }],
+  }),
 };
 
 // Ordem de criação que respeita as dependências.
 const ORDER = ['Client', 'Project', 'Repository', 'Environment', 'Requirement', 'Decision', 'Task', 'Artifact',
-  'Conversation', 'Memory', 'Change', 'TestRun', 'Deployment', 'Error', 'Integration', 'ProjectSnapshot'];
+  'Conversation', 'Memory', 'Change', 'TestRun', 'Deployment', 'Error', 'Integration', 'ProjectSnapshot', 'ToolCall', 'ToolPolicy'];
 
 // Um caso inválido por entidade (regra de schema específica da entidade).
 const invalid = {
@@ -120,6 +130,8 @@ const invalid = {
   Error: ids => ({ ...valid.Error(ids), status: 'resolved' }),                       // resolvido sem resolução
   Integration: ids => ({ ...valid.Integration(ids), provider: 'aws' }),              // enum
   ProjectSnapshot: ids => ({ ...valid.ProjectSnapshot(ids), firebase_project: 'Nexia C8710' }),
+  ToolCall: ids => ({ ...valid.ToolCall(ids), status: 'pending_approval' }),            // pendente exige decisão confirm
+  ToolPolicy: ids => ({ ...valid.ToolPolicy(ids), rules: [{ tool: 'GitHub/*', decision: 'auto' }] }), // padrão de nome
 };
 
 const expectedInvalidRule = {
@@ -127,6 +139,7 @@ const expectedInvalidRule = {
   Decision: 'required', Task: 'ref:Task', Artifact: 'pattern:https_or_repo_path', Conversation: 'ended_at>=started_at',
   Memory: 'approved_requires_approved_by', Change: 'type:sha', TestRun: 'min', Deployment: 'finished_at>=started_at',
   Error: 'resolved_requires_resolution', Integration: 'enum', ProjectSnapshot: 'pattern:firebase_project_id',
+  ToolCall: 'pending_requires_confirm', ToolPolicy: 'pattern:tool_pattern',
 };
 
 // Valores com forma de secret, montados em tempo de execução com bytes aleatórios
