@@ -27,6 +27,11 @@ const actorRef = t.object({
 
 const COMMIT = [40, 64];
 
+const RISK_LEVELS = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+const TOOL_DECISIONS = ['auto', 'confirm', 'forbidden'];
+const TOOL_NAME = /^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$/;
+const TOOL_PATTERN = /^(\*|[a-z][a-z0-9_]*(\.([a-z][a-z0-9_]*|\*))+)$/;
+
 const ordered = (a, b) => v => !(v[a] && v[b]) || v[a] <= v[b];
 
 const SCHEMAS = {
@@ -307,6 +312,53 @@ const SCHEMAS = {
       key_decision_ids: t.array(t.ref('Decision'), { max: 30, unique: true, default: () => [] }),
     },
   },
+
+  // Fase 6: Tool Gateway e Policy Engine (spec §15 "Níveis de risco", §16, §23).
+  // Registro de cada chamada de ferramenta. Guarda só um resumo da entrada definido pela
+  // própria ferramenta e o hash da entrada completa; nunca valores sensíveis.
+  ToolCall: {
+    collection: 'vault_tool_calls', idPrefix: 'tcl', schemaVersion: 1,
+    fields: {
+      project_id: t.ref('Project', { required: true, immutable: true }),
+      environment: t.enum(ENV_NAMES, { immutable: true }),
+      tool: t.string({ required: true, max: 100, pattern: TOOL_NAME, patternName: 'tool_name', immutable: true }),
+      risk: t.enum(RISK_LEVELS, { required: true, immutable: true }),
+      decision: t.enum(TOOL_DECISIONS, { required: true, immutable: true }),
+      decision_reason: t.string({ required: true, max: 300, immutable: true }),
+      status: t.enum(['pending_approval', 'running', 'succeeded', 'failed', 'rejected', 'denied', 'expired'], { required: true }),
+      requested_by: { ...actorRef, required: true, immutable: true },
+      requested_at: t.timestamp({ required: true, immutable: true }),
+      decided_by: actorRef,
+      decided_at: t.timestamp(),
+      input_summary: t.string({ max: 500 }),
+      input_sha256: t.sha([64], { required: true, immutable: true }),
+      output_summary: t.text({ max: 2000 }),
+      error_code: t.string({ max: 64, pattern: /^[A-Z0-9_]+$/, patternName: 'error_code' }),
+      duration_ms: t.int({ max: 86400000 }),
+      execution_id: t.string({ max: 128, pattern: /^[A-Za-z0-9_.:-]+$/, patternName: 'execution_id', immutable: true }),
+    },
+    checks: [
+      [v => v.status !== 'pending_approval' || v.decision === 'confirm', 'pending_requires_confirm'],
+      [v => v.status !== 'denied' || v.decision === 'forbidden', 'denied_requires_forbidden'],
+      [ordered('requested_at', 'decided_at'), 'decided_at>=requested_at'],
+    ],
+  },
+
+  // Política de ferramentas por projeto: regras que endurecem (ou, até HIGH fora de
+  // produção, afrouxam) a decisão padrão do Policy Engine.
+  ToolPolicy: {
+    collection: 'vault_tool_policies', idPrefix: 'pol', schemaVersion: 1,
+    fields: {
+      project_id: t.ref('Project', { required: true, immutable: true }),
+      rules: t.array(t.object({
+        tool: t.string({ required: true, max: 100, pattern: TOOL_PATTERN, patternName: 'tool_pattern' }),
+        environment: t.enum(ENV_NAMES),
+        decision: t.enum(TOOL_DECISIONS, { required: true }),
+      }), { max: 100, default: () => [] }),
+      notes: t.text({ max: 2000 }),
+    },
+    unique: [['project_id']],
+  },
 };
 
 for (const [entity, s] of Object.entries(SCHEMAS)) s.entity = entity;
@@ -314,4 +366,4 @@ for (const [entity, s] of Object.entries(SCHEMAS)) s.entity = entity;
 const ENTITY_NAMES = Object.keys(SCHEMAS);
 const idPattern = entity => new RegExp(`^${SCHEMAS[entity].idPrefix}_[0-9a-f]{32}$`);
 
-module.exports = { SCHEMAS, ENTITY_NAMES, idPattern, SECRET_STORES };
+module.exports = { SCHEMAS, ENTITY_NAMES, idPattern, SECRET_STORES, RISK_LEVELS, TOOL_DECISIONS, TOOL_NAME, ENV_NAMES };

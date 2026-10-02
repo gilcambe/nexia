@@ -13,6 +13,7 @@ const QACenter = lazy(() => import("../pages/qa-center/page"));
 const TenantPage = lazy(() => import("../pages/tenant/page"));
 const LoginPage = lazy(() => import("../pages/login/page"));
 const ProjetosPage = lazy(() => import("../pages/projetos/page"));
+const AprovacoesPage = lazy(() => import("../pages/aprovacoes/page"));
 const NotFound = lazy(() => import("../pages/NotFound"));
 const PrivacidadePage = lazy(() => import("../pages/legais/privacidade/page"));
 const TermosPage = lazy(() => import("../pages/legais/termos/page"));
@@ -30,6 +31,7 @@ const routes: RouteObject[] = [
   { path: "/qa-center", element: <QACenter /> },
   { path: "/login", element: <LoginPage /> },
   { path: "/projetos", element: <ProjetosPage /> },
+  { path: "/aprovacoes", element: <AprovacoesPage /> },
   { path: "/ces", element: <TenantPage tenant="ces" /> },
   { path: "/bezsan", element: <TenantPage tenant="bezsan" /> },
   { path: "/vp", element: <TenantPage tenant="vp" /> },

@@ -18,7 +18,7 @@
 | Entidade | Coleção | Prefixo do id | schemaVersion | Únicos por tenant | Referenciado por |
 |---|---|---|---|---|---|
 | Client | `vault_clients` | `cli_` | 1 | slug | Project.client_id, Memory.client_id |
-| Project | `vault_projects` | `prj_` | 1 | slug | Repository.project_id, Environment.project_id, Requirement.project_id, Decision.project_id, Task.project_id, Artifact.project_id, Conversation.project_id, Memory.project_id, Change.project_id, TestRun.project_id, Deployment.project_id, Error.project_id, Integration.project_id, ProjectSnapshot.project_id |
+| Project | `vault_projects` | `prj_` | 1 | slug | Repository.project_id, Environment.project_id, Requirement.project_id, Decision.project_id, Task.project_id, Artifact.project_id, Conversation.project_id, Memory.project_id, Change.project_id, TestRun.project_id, Deployment.project_id, Error.project_id, Integration.project_id, ProjectSnapshot.project_id, ToolCall.project_id, ToolPolicy.project_id |
 | Repository | `vault_repositories` | `repo_` | 1 | provider + owner + repo | Project.primary_repository_id, Artifact.repository_id, Change.repository_id, Integration.repository_id, ProjectSnapshot.repository_id |
 | Environment | `vault_environments` | `env_` | 1 | project_id + name | TestRun.environment_id, Deployment.environment_id, Integration.environment_id, ProjectSnapshot.environment_ids[] |
 | Requirement | `vault_requirements` | `req_` | 1 |  | Task.requirement_id |
@@ -33,6 +33,8 @@
 | Error | `vault_errors` | `err_` | 1 |  | ProjectSnapshot.recent_error_ids[] |
 | Integration | `vault_integrations` | `int_` | 1 |  |  |
 | ProjectSnapshot | `vault_project_snapshots` | `snp_` | 1 |  |  |
+| ToolCall | `vault_tool_calls` | `tcl_` | 1 |  |  |
+| ToolPolicy | `vault_tool_policies` | `pol_` | 1 | project_id |  |
 
 ## Client
 
@@ -340,3 +342,48 @@ Coleção `vault_project_snapshots`, id `snp_…`, schemaVersion 1.
 | `recent_error_ids` | array de ref → Error |  |  | [] | até 20 itens, sem repetição |
 | `open_task_ids` | array de ref → Task |  |  | [] | até 50 itens, sem repetição |
 | `key_decision_ids` | array de ref → Decision |  |  | [] | até 30 itens, sem repetição |
+
+## ToolCall
+
+Coleção `vault_tool_calls`, id `tcl_…`, schemaVersion 1.
+
+| Campo | Tipo | Obrigatório | Imutável | Padrão | Restrições |
+|---|---|---|---|---|---|
+| `project_id` | ref → Project | sim | sim |  |  |
+| `environment` | enum |  | sim |  | `development`, `staging`, `production`, `preview` |
+| `tool` | string (tool_name) | sim | sim |  | 1–100 caracteres |
+| `risk` | enum | sim | sim |  | `LOW`, `MEDIUM`, `HIGH`, `CRITICAL` |
+| `decision` | enum | sim | sim |  | `auto`, `confirm`, `forbidden` |
+| `decision_reason` | string | sim | sim |  | 1–300 caracteres |
+| `status` | enum | sim |  |  | `pending_approval`, `running`, `succeeded`, `failed`, `rejected`, `denied`, `expired` |
+| `requested_by` | objeto | sim | sim |  |  |
+| `requested_by.type` | enum | sim |  |  | `user`, `agent`, `system` |
+| `requested_by.id` | string (actor_id) | sim |  |  | 1–128 caracteres |
+| `requested_at` | timestamp | sim | sim |  |  |
+| `decided_by` | objeto |  |  |  |  |
+| `decided_by.type` | enum | sim |  |  | `user`, `agent`, `system` |
+| `decided_by.id` | string (actor_id) | sim |  |  | 1–128 caracteres |
+| `decided_at` | timestamp |  |  |  |  |
+| `input_summary` | string |  |  |  | 1–500 caracteres |
+| `input_sha256` | sha (64 hex) | sim | sim |  |  |
+| `output_summary` | string |  |  |  | 1–2000 caracteres |
+| `error_code` | string (error_code) |  |  |  | 1–64 caracteres |
+| `duration_ms` | int |  |  |  | 0–86400000 |
+| `execution_id` | string (execution_id) |  | sim |  | 1–128 caracteres |
+
+Regras: `pending_requires_confirm`, `denied_requires_forbidden`, `decided_at>=requested_at`.
+
+## ToolPolicy
+
+Coleção `vault_tool_policies`, id `pol_…`, schemaVersion 1.
+
+| Campo | Tipo | Obrigatório | Imutável | Padrão | Restrições |
+|---|---|---|---|---|---|
+| `project_id` | ref → Project | sim | sim |  |  |
+| `rules` | array de objeto |  |  | [] | até 100 itens |
+| `rules[].tool` | string (tool_pattern) | sim |  |  | 1–100 caracteres |
+| `rules[].environment` | enum |  |  |  | `development`, `staging`, `production`, `preview` |
+| `rules[].decision` | enum | sim |  |  | `auto`, `confirm`, `forbidden` |
+| `notes` | string |  |  |  | 1–2000 caracteres |
+
+Únicos por tenant: `project_id`.

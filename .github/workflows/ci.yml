@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  checks: read   # Fase 6: teste do github.get_checks lê os checks de gilcambe/nexia
 
 concurrency:
   group: ci-${{ github.ref }}

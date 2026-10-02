@@ -153,3 +153,21 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 ## ADR-F5-03 — Chamadas diretas a provedores fora do escopo desta fase
 - **Status:** ACEITA.
 - **Decisão:** `architect`, `autodev-engine`, `sentinel`, `dynamic-pricing`, `ai-sales-agent`, `takedown-gen` e o resumo do `cortex-memory` (Groq direto) ainda chamam provedores diretamente. O plano da Fase 5 cita só `cortex-chat` e `multi-model-engine`; os demais migram quando virarem agentes do Orchestrator (Fase 10), para não mexer em 6 funções legadas sem teste próprio.
+
+## ADR-F6-01 — Policy Engine: risco declarado × autonomia do projeto × ambiente
+- **Status:** ACEITA.
+- **Decisão:** `nexia-ai/policy-engine.decide` devolve `auto`, `confirm` ou `forbidden`. Padrão: LOW automático; MEDIUM automático a partir da autonomia 1; HIGH a partir da 3; cada ferramenta pode declarar `min_autonomy` próprio (ex.: criar branch = 2); CRITICAL sempre pede confirmação humana; em `production` tudo acima de LOW pede confirmação, em qualquer autonomia; ferramenta desconhecida ou sem risco é proibida.
+- A `ToolPolicy` do projeto (nova entidade do Vault) tem regras `{ tool, environment?, decision }` com curingas (`github.*`, `*`). `forbidden` em qualquer regra que case ganha de todas; depois vale a regra mais específica. Regra `auto` só libera até HIGH e fora de produção: CRITICAL e produção nunca ficam automáticos por regra.
+- Nível 5 da spec ("produção automática para projetos autorizados") **não** é implementado: produção continua exigindo pessoa (decisão do dono e plano da Fase 11).
+
+## ADR-F6-02 — Tool Gateway com registro no Vault e fila de aprovação
+- **Status:** ACEITA.
+- **Decisão:** `nexia-ai/tool-gateway.createGateway` é o único caminho para executar ferramentas. Cada chamada vira um `ToolCall` no Vault (`vault_tool_calls`), com risco, decisão, motivo, ator, Execution ID, resumo da entrada definido pela ferramenta, SHA-256 da entrada, resumo da saída, código de erro e duração. Sequências hex longas são encurtadas nos resumos. A entrada completa de uma chamada pendente fica em `nexia_tool_queue` (só servidor; o default-deny das regras bloqueia clientes) e é apagada ao aprovar, rejeitar ou expirar (24 h).
+- Aprovar exige ator `user` (agente não aprova) e `If-Match` com a versão do registro, o que impede execução dupla. Na aprovação a política é reavaliada: se o projeto passou a proibir a ferramenta, a chamada é rejeitada (`POLICY_FORBIDDEN`) sem executar.
+- Ferramentas iniciais, todas LOW e restritas ao projeto da chamada: `vault.get`, `vault.list`, `vault.history`, `vault.context`, `github.get_repo`, `github.get_checks`. As do GitHub só alcançam repositórios cadastrados para o projeto (owner/repo nunca vêm da entrada). A entrada é validada contra o `input_schema`, sem campos extras.
+- API: `GET /api/nexia/tools`, `POST /api/nexia/tools/invoke` (200 executada, 202 pendente, 403 negada, 422 falhou; aceita `Idempotency-Key`), `GET /api/nexia/approvals`, `POST /api/nexia/approvals/{id}/approve|reject` (com `If-Match`), `GET /api/nexia/tool-calls?project_id=` (só leitura) e CRUD de `tool-policies`. Painel: página `/aprovacoes` (link em `/projetos`).
+- **TEMPORÁRIO:** `ToolCall` referencia o projeto, então um projeto com chamadas registradas não pode ser removido (soft-delete bloqueado por dependentes). Motivo: o log de ferramentas é auditoria e não deve sumir com o projeto. Risco: projeto arquivado continua "vivo" para o Vault. Remoção: política de retenção do log (Fase 11).
+
+## ADR-F6-03 — Permissão `checks: read` no CI
+- **Status:** ACEITA.
+- **Decisão:** o workflow passa a pedir `checks: read` (além de `contents: read`) para o teste G10 ler os checks de `gilcambe/nexia` com o token efêmero do Actions. Continua sem nenhuma permissão de escrita.
