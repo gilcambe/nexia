@@ -73,7 +73,7 @@ const valid = {
     commit_sha: PHASE1_CI_COMMIT,
   }),
   Deployment: ids => ({
-    project_id: ids.Project, environment_id: ids.Environment, version: '59.0.0', commit_sha: PHASE1_MERGE,
+    project_id: ids.Project, environment_id: ids.Environment, release: '59.0.0', commit_sha: PHASE1_MERGE,
     provider: 'render', status: 'pending', started_at: '2026-10-02T03:01:18.000Z',
   }),
   Error: ids => ({

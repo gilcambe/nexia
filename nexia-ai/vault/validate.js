@@ -28,7 +28,7 @@ const ISO_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}
  */
 function checkField(def, value, path, ctx) {
   const issue = rule => { ctx.issues.push({ path, rule }); return undefined; };
-  const scan = s => { const d = detectSecret(s); if (d.length) ctx.secrets.push({ path, detectors: d }); };
+  const scan = s => { const d = detectSecret(s).filter(x => !(def.scanIgnore || []).includes(x)); if (d.length) ctx.secrets.push({ path, detectors: d }); };
 
   switch (def.kind) {
     case 'string': {

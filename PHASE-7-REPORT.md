@@ -74,4 +74,4 @@ READDY não foi rodado de novo: a fase não toca SPA, `server.js` nem funções.
 | Pedidos de confirmação em memória | Não gravar hash do código em disco | Reiniciar o Bridge descarta pedidos (nada executa sem aprovação) | Fase 10 |
 | `shell: true` para `npm/npx/pnpm/yarn` no Windows, com recusa de metacaracteres | Atalhos `.cmd` exigem shell no Node | Metacaractere não previsto | Fase 10 |
 | Aprovação contornável se o mesmo cliente tiver terminal livre | O Bridge não controla outras ferramentas do cliente | Modelo lê o código no log do cliente | Orientação no README; definitivo quando aprovação local usar a fila do Tool Gateway (Fase 10) |
-| Testes do Bridge rodam só em Linux no CI | CI é Ubuntu | Comportamento Windows (caminhos, `.cmd`) coberto só por testes de função | Quando houver runner Windows (Fase 9) |
+| Testes do Bridge rodam só em Linux no CI | CI é Ubuntu | Comportamento Windows (caminhos, `.cmd`) coberto só por testes de função | Fase 11 (piloto na máquina do dono; ver PHASE-9-REPORT) |

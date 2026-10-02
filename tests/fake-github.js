@@ -14,6 +14,7 @@ function createFakeGithub({ owner = 'gilcambe', repo = 'nexia', appId = '424242'
   const branches = new Map();
   const pulls = [];
   const dispatches = [];
+  const runs = []; // execuções do Actions criadas por workflow_dispatch
   const issued = new Map(); // token → { repositories, permissions }
   const calls = [];
   let n = 0;
@@ -130,13 +131,21 @@ function createFakeGithub({ owner = 'gilcambe', repo = 'nexia', appId = '424242'
       return json(201, pr);
     }
     if (method === 'POST' && /^\/actions\/workflows\/[^/]+\/dispatches$/.test(rest)) {
-      dispatches.push({ workflow: rest.split('/')[3], ...body });
+      const workflow = rest.split('/')[3];
+      dispatches.push({ workflow, ...body });
+      runs.push({ id: 9000 + runs.length, workflow, event: 'workflow_dispatch', head_branch: body.ref, head_sha: branches.get(body.ref) || body.ref,
+        status: 'queued', conclusion: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), html_url: `https://github.com/${owner}/${repo}/actions/runs/${9000 + runs.length}` });
       return json(204);
+    }
+    if (method === 'GET' && /^\/actions\/workflows\/[^/]+\/runs$/.test(rest)) {
+      const workflow = rest.split('/')[3];
+      const sha = u.searchParams.get('head_sha');
+      return json(200, { workflow_runs: runs.filter(r => r.workflow === workflow && (!sha || r.head_sha === sha)) });
     }
     return json(404, { message: 'Not Found' });
   }
 
-  return { fetchImpl, privatePem, appId, installationId, commits, branches, pulls, dispatches, issued, calls,
+  return { fetchImpl, privatePem, appId, installationId, commits, branches, pulls, dispatches, runs, issued, calls,
     env: { GITHUB_APP_ID: appId, GITHUB_APP_PRIVATE_KEY: privatePem.replace(/\n/g, '\\n') },
     fileAt: (branch, path) => commits.get(branches.get(branch)).tree[path] };
 }

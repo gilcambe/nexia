@@ -169,6 +169,19 @@ Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claud
 | H7 | Vazamento de token/chave em erro | erros com mensagem fixa ou mensagem curta e filtrada do GitHub | H8 |
 | H8 | Endpoint legado de commit | `autocommit` removido | `api-authz` A1/Fase 8; e2e Fase 8 |
 
+## Fase 9 — CI/CD, Firebase e Cloudflare
+
+| ID | Tema | Controle | Teste |
+|---|---|---|---|
+| D1 | Deploy improvisado pelo agente | deploy só pelo pipeline do Actions; `deploy.staging` dispara o workflow, produção não tem ferramenta nesta fase | `tests/integration/deploy-tools.test.js` D4 |
+| D2 | Staging sem autonomia | `deploy.staging` HIGH nível 4; nível 3 vai para aprovação; dispatch genérico do pipeline proibido | D4; `github-adapter` H7 |
+| D3 | Produção sem pessoa | job de produção no environment `production` (revisores no GitHub) e só por `target=production` manual | `cicd-integrations` C1 |
+| D4 | Credencial de outro tenant | nome `NEXIA_<PROVEDOR>_<TENANT>_*` obrigatório; `SCOPE` antes de chamar o provedor | C5; D2 |
+| D5 | Credencial com escrita | Firebase com escopos só de leitura; adapters sem método de escrita | C3 |
+| D6 | Segredo no pipeline gerado | segredos só como `${{ secrets.* }}` do environment; Firebase por OIDC; entradas do gerador validadas (sem injeção em `run`) | C1, C2 |
+| D7 | Dado sensível no DNS | conteúdo de TXT omitido | C4 |
+| D8 | Registro de deploy perdido | `Deployment.release` (antes colidia com o metadado `version`) | D4; `vault-schemas` |
+
 ## Riscos remanescentes
 - Credenciais expostas continuam válidas até o dono rotacionar; histórico público ainda contém valores.
 - Correções só valem em produção depois de deploy e publicação das regras, que não fazem parte desta fase.
@@ -183,3 +196,4 @@ Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claud
 - O Render roda `npm install` (instala também devDependencies); considerar `npm ci --omit=dev` numa fase de infraestrutura.
 - Bridge: com terminal livre no mesmo cliente, a aprovação local pode ser contornada (ver Fase 7); log local ainda não vai ao Vault.
 - GitHub: leitura ainda usa o `GITHUB_TOKEN` legado até a GitHub App ser criada (ADR-F8-01); bloqueio de workflow de deploy por nome é heurístico até a Fase 9.
+- Pipeline modelo: ações fixadas por versão major, não por SHA (ADR-F9-01); bloqueio de workflow de deploy no dispatch genérico continua heurístico para workflows que não são o modelo.
