@@ -140,6 +140,22 @@ As regras `vault_*` seguem **não publicadas**, como as da Fase 1. Com mutação
 | T8 | Forjar registro de chamada | `tool-calls` só leitura na API; `vault_tool_calls` sem escrita pelo cliente | G8, G9 |
 | T9 | Path traversal no `ref` do GitHub | `ref` validado (sem `..`) e codificado por segmento | G7 |
 
+## Fase 7 — NEXIA Bridge (máquina local)
+
+| ID | Tema | Controle | Teste |
+|---|---|---|---|
+| L1 | Path traversal (`..`, absoluto fora, UNC, drive relativo, byte nulo) | `resolveInRoots` contra as raízes do projeto | `tests/unit/bridge.test.js` W1 |
+| L2 | Symlink para fora do workspace | `realpath` do alvo (ou do ancestral existente) tem que estar dentro da raiz | W2 |
+| L3 | `.env`/credenciais enviados ao modelo | arquivos sensíveis nunca lidos, listados com marca, nem escritos, nem commitados; secrets em arquivo comum redigidos | W3, W9 |
+| L4 | Comando perigoso ou deploy pelo terminal | sem shell; classes read/test/write/dangerous/denied; deploy, privilégio e shell bloqueados ou com pessoa | W4, W8 |
+| L5 | Modelo aprovando a própria operação | elicitation ou código só no stderr do Bridge; pedido amarrado ao hash da operação, uso único, 15 min | W6, W12 |
+| L6 | Secrets no ambiente dos comandos | `childEnv` remove variáveis com nome de segredo | W8 |
+| L7 | Workspace amplo demais | config recusa raiz do disco, pasta do usuário e ancestrais, caminho relativo, `stateDir` dentro do workspace | W11 |
+| L8 | Operação sem rastro | log JSONL de cada chamada (agente, comando, pasta, resultado), sem conteúdo | W10 |
+| L9 | Commit parcial com arquivo sensível | stage inteiro é limpo e nada é commitado | W9 |
+
+Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claude Code sem restrição), o modelo poderia ler o stderr do Bridge nos logs de MCP do cliente e o próprio `stateDir`. As garantias do Bridge valem para o acesso feito **pelo Bridge**; o README orienta negar esses caminhos nas permissões do Claude Code ou usar o Claude Desktop.
+
 ## Riscos remanescentes
 - Credenciais expostas continuam válidas até o dono rotacionar; histórico público ainda contém valores.
 - Correções só valem em produção depois de deploy e publicação das regras, que não fazem parte desta fase.
@@ -152,3 +168,4 @@ As regras `vault_*` seguem **não publicadas**, como as da Fase 1. Com mutação
 - Outras funções podem ainda devolver `e.message` em caminhos não cobertos; as tratadas estão listadas acima.
 - Seis funções legadas e o resumo do `cortex-memory` ainda chamam provedores de IA diretamente (ADR-F5-03); migram na Fase 10.
 - O Render roda `npm install` (instala também devDependencies); considerar `npm ci --omit=dev` numa fase de infraestrutura.
+- Bridge: com terminal livre no mesmo cliente, a aprovação local pode ser contornada (ver Fase 7); log local ainda não vai ao Vault.

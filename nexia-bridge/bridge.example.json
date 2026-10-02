@@ -1,0 +1,13 @@
+{
+  "stateDir": "C:/Users/SEU_USUARIO/.nexia-bridge",
+  "projects": [
+    {
+      "project_id": "prj_coloque_o_id_do_vault",
+      "name": "NEXIA OS",
+      "roots": ["D:/Projetos/nexia"],
+      "mode": "write-confirm",
+      "commands": { "allow": [], "deny": [] },
+      "passEnv": []
+    }
+  ]
+}

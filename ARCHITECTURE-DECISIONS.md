@@ -171,3 +171,22 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 ## ADR-F6-03 — Permissão `checks: read` no CI
 - **Status:** ACEITA.
 - **Decisão:** o workflow passa a pedir `checks: read` (além de `contents: read`) para o teste G10 ler os checks de `gilcambe/nexia` com o token efêmero do Actions. Continua sem nenhuma permissão de escrita.
+
+## ADR-F7-01 — NEXIA Bridge como servidor MCP local por stdio, sem dependências
+- **Status:** ACEITA.
+- **Decisão:** `nexia-bridge/` é um servidor MCP (JSON-RPC 2.0 por stdio) que roda na máquina do usuário e é iniciado pelo próprio cliente (Claude Code ou Claude Desktop). Não abre porta, não recebe conexão de rede e não guarda credencial. Implementado só com o Node (sem SDK MCP), para não colocar dependência nova numa ferramenta que lê arquivos locais; suporta `initialize`, `tools/list`, `tools/call`, `ping` e `elicitation/create`.
+- Ferramentas (nomes com `_` porque nomes de ferramenta MCP no Claude não aceitam `.`): `bridge_projects`, `workspace_list/read/write/delete`, `terminal_run`, `git_status/diff/commit`. Equivalem a `workspace.*`, `terminal.run` e `git.*` da spec §13.
+- Cada projeto declara `project_id` do Vault, `roots` absolutos e `mode`. A configuração recusa raiz de disco, a pasta do usuário ou qualquer ancestral dela, caminho relativo e `stateDir` dentro de um workspace.
+
+## ADR-F7-02 — Modos e confirmação humana fora do alcance do modelo
+- **Status:** ACEITA.
+- **Decisão:** três modos (spec §8): `read-only` (só leitura), `write-confirm` (escrita, apagar, comandos que alteram arquivos e perigosos pedem pessoa; testes rodam) e `autonomous` (escrita de arquivo e commit diretos; apagar, comandos que alteram arquivos e perigosos ainda pedem pessoa). Comandos de deploy/publicação, privilégio, disco, rede remota e o próprio Bridge são negados em qualquer modo; deploy passa pelo pipeline (Fase 9) e pelas aprovações (Fase 6/11).
+- Confirmação: por `elicitation/create` quando o cliente suporta (a resposta vem da pessoa, não do modelo); senão, pedido pendente com código de uso único de 8 caracteres mostrado só no stderr do Bridge e aprovado com `nexia-bridge approve <id> <código>`. O pedido é amarrado ao hash da operação (mesma ferramenta, projeto e argumentos), vale 15 minutos e uma vez; código errado cancela.
+- Comandos rodam sem shell (`spawn` com lista de argumentos), com ambiente sem variáveis com nome de segredo (salvo `passEnv`), `cwd` preso ao workspace, saída limitada a 64 KB e redigida.
+- **TEMPORÁRIO:** pedidos pendentes ficam em memória; se o Bridge reiniciar, o pedido some e é preciso pedir de novo. Motivo: evitar arquivo com o hash do código em disco. Risco: só incômodo (nenhuma operação é executada sem aprovação). Remoção: Fase 10, quando a aprovação local passar a usar a fila de aprovações do Tool Gateway.
+- **TEMPORÁRIO:** no Windows, `npm`/`npx`/`pnpm`/`yarn` são atalhos `.cmd` e só rodam com `shell: true`; nesses quatro, qualquer argumento com metacaractere do `cmd.exe` é recusado. Motivo: limitação do Node no Windows. Risco: um metacaractere não previsto. Remoção: quando o Bridge resolver o caminho do `.js` do npm e chamar o Node direto (Fase 10).
+
+## ADR-F7-03 — Registro local; sincronização com o Vault fica para depois
+- **Status:** ACEITA.
+- **Decisão:** cada chamada vira uma linha em `<stateDir>/bridge-log.jsonl` com data, agente (nome do cliente MCP), ferramenta, projeto, caminho ou comando redigido, pasta, decisão, resultado, código de erro e duração. Nunca conteúdo de arquivo nem saída de comando.
+- **TEMPORÁRIO:** o log fica só na máquina do usuário. Motivo: enviar ao Vault exige credencial do Bridge para a API, que não existe ainda. Risco: auditoria central não vê operações locais. Remoção: Fase 10 (o Orchestrator registra a execução e o Bridge envia o resumo como `ToolCall`).
