@@ -51,9 +51,14 @@ test('server.js não serve arquivos fora das raízes públicas (C1)', async (t) 
   const landing = await rawRequest(srv.port, '/ces/landing');
   assert.strictEqual(landing.status, 200);
   // .html legado inexistente cai no SPA (paridade com o comportamento anterior), sem servir o arquivo pedido
+  // (com out/ compilado → 200 com o index do SPA; sem build → 404)
   const legacyHtml = await rawRequest(srv.port, '/nexia/observability.html');
-  assert.strictEqual(legacyHtml.status, 200);
-  assert.ok(/<div id="root"|<!doctype html/i.test(legacyHtml.body));
+  if (fs.existsSync(path.join(ROOT, 'out', 'index.html'))) {
+    assert.strictEqual(legacyHtml.status, 200);
+    assert.strictEqual(legacyHtml.body, fs.readFileSync(path.join(ROOT, 'out', 'index.html'), 'utf8'));
+  } else {
+    assert.strictEqual(legacyHtml.status, 404);
+  }
   const post = await rawRequest(srv.port, '/core/auth.js', { method: 'POST' });
   assert.strictEqual(post.status, 405);
 });
