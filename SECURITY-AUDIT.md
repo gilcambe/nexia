@@ -115,6 +115,17 @@ As regras `vault_*` seguem **não publicadas**, como as da Fase 1. Com mutação
 | N5 | Onboarding lendo arquivos sensíveis | fonte nunca lê `.env*`, `*.pem`, `*.key`, JSON de service account; só nomes de `.env.example` | `tests/unit/onboarding-detect.test.js` |
 | N6 | SSRF/injeção no onboarding | owner/repo/ref validados por regex antes de qualquer chamada; host fixo `api.github.com` | unitário "fonte GitHub: valida owner/repo/ref" |
 
+## Fase 5 — Model Router
+
+| ID | Tema | Controle | Teste |
+|---|---|---|---|
+| R1 | Chave de API na URL (Gemini) | chave no header `x-goog-api-key`; URL sem `key=` | `tests/unit/model-router.test.js` M5 |
+| R2 | Chamada sem chave configurada | `NO_API_KEY` antes de qualquer requisição de rede | M6 |
+| R3 | Vazamento de erro do provedor ao cliente | `ModelError` com mensagem curta (provedor + status); trecho do corpo só em `details.upstream`, nunca no SSE | M7; `tests/integration/cortex-stream.test.js` S4 |
+| R4 | Chamada que continua depois que o cliente sai | `writeStream` encerra o iterador no `close`, o que aborta a chamada ao provedor | M10 |
+| R5 | Dependência nova | `@anthropic-ai/sdk` com versão exata (0.131.0) no `package.json` e `package-lock.json` | CI (`npm ci`) |
+| R6 | Saída estruturada sem validação | `structuredOutput` valida contra o schema e falha com `INVALID_OUTPUT` | M8 |
+
 ## Riscos remanescentes
 - Credenciais expostas continuam válidas até o dono rotacionar; histórico público ainda contém valores.
 - Correções só valem em produção depois de deploy e publicação das regras, que não fazem parte desta fase.
@@ -125,4 +136,5 @@ As regras `vault_*` seguem **não publicadas**, como as da Fase 1. Com mutação
 - M1, M3, M4, M5, M6 abertos.
 - Vault: `detectSecret` é heurístico; um formato de secret desconhecido e de baixa entropia pode passar. A defesa principal é o schema não ter campo de valor.
 - Outras funções podem ainda devolver `e.message` em caminhos não cobertos; as tratadas estão listadas acima.
+- Seis funções legadas e o resumo do `cortex-memory` ainda chamam provedores de IA diretamente (ADR-F5-03); migram na Fase 10.
 - O Render roda `npm install` (instala também devDependencies); considerar `npm ci --omit=dev` numa fase de infraestrutura.

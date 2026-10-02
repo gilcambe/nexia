@@ -17,6 +17,7 @@
     "test:e2e:readdy": "playwright test -c tests/e2e/playwright.readdy.config.js; node tests/e2e/check-readdy-parity.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "0.131.0",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.2.1",

@@ -1,19 +1,5 @@
 'use strict';
 
-// ── fetchWithTimeout helper — evita fetch() pendurado indefinidamente ──
-async function _fetchTimeout(url, opts = {}, ms = 30000, _legacyOpts) {
-  // Backward-compat: old call convention was _fetchTimeout(url, {}, ms, opts)
-  if (_legacyOpts && typeof _legacyOpts === 'object') opts = _legacyOpts;
-  const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), ms);
-  try {
-    return await fetch(url, { ...opts, signal: ctrl.signal });
-  } finally {
-    clearTimeout(tid);
-  }
-}
-
-const _fetch = globalThis.fetch.bind(globalThis); // Node 20+ native fetch
 const { guard, HEADERS, makeHeaders } = require('./middleware');
 
 const MODELS = {
@@ -32,77 +18,21 @@ const MODELS = {
   claude_opus:       { id: 'claude-opus-4-5',              provider: 'anthropic' },
 };
 
-async function callModelAnthropic(modelId, messages, options = {}) {
-  const key = process.env.ANTHROPIC_API_KEY;
-  if (!key) throw new Error('ANTHROPIC_API_KEY não configurado. Adicione nas variáveis de ambiente da Netlify.');
-
-  const systemMsg = messages.find(m => m.role === 'system');
-  const userMessages = messages.filter(m => m.role !== 'system').map(m => ({
-    role: m.role, content: m.content
-  }));
-
-  const body = {
-    model: modelId,
-    max_tokens: options.max_tokens || 4096,
-    messages: userMessages
-  };
-  if (systemMsg) body.system = systemMsg.content;
-  if (options.temperature !== undefined) body.temperature = options.temperature;
-
-  const res = await _fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(body)
-  });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message || 'Anthropic API error');
-  return data.content?.[0]?.text || '';
-}
+// NEXIA AI (Fase 5): chamadas via Model Router (SDK oficial no Claude). Os padrões de
+// max_tokens/temperature anteriores foram mantidos: 4096 no Anthropic, 2000 e 0.7 nos demais.
+const modelRouter = require('../../nexia-ai/model-router');
 
 async function callModel(modelKey, messages, options = {}) {
   const model = MODELS[modelKey];
   if (!model) throw new Error(`Modelo desconhecido: "${modelKey}". Disponíveis: ${Object.keys(MODELS).join(', ')}`);
   const { provider, id } = model;
-
-  if (provider === 'anthropic') return callModelAnthropic(id, messages, options);
-
-  if (provider === 'gemini') {
-    const gemKey = process.env.GEMINI_API_KEY;
-    if (!gemKey) throw new Error('GEMINI_API_KEY não configurado.');
-    const gemUrl = `https://generativelanguage.googleapis.com/v1beta/models/${id}:generateContent?key=${gemKey}`;
-    const systemMsg = messages.find(m => m.role === 'system');
-    const userMessages = messages.filter(m => m.role !== 'system');
-    const bodyG = {
-      contents: userMessages.map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
-      generationConfig: { temperature: options.temperature ?? 0.7, maxOutputTokens: options.max_tokens ?? 2000 }
-    };
-    if (systemMsg) bodyG.systemInstruction = { parts: [{ text: systemMsg.content }] };
-    const res = await _fetch(gemUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bodyG) });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message || 'Gemini API error');
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-  }
-
-  let url, key;
-  if (provider === 'groq')     { url = 'https://api.groq.com/openai/v1/chat/completions';   key = process.env.GROQ_API_KEY; }
-  else if (provider === 'deepseek') { url = 'https://api.deepseek.com/v1/chat/completions'; key = process.env.DEEPSEEK_API_KEY; }
-  else if (provider === 'openai')   { url = 'https://api.openai.com/v1/chat/completions';   key = process.env.OPENAI_API_KEY; }
-  else if (provider === 'xai')      { url = 'https://api.x.ai/v1/chat/completions';         key = process.env.XAI_API_KEY; }
-  else throw new Error(`Provider desconhecido: ${provider}`);
-
-  if (!key) throw new Error(`Variável de ambiente ausente para provider "${provider}". Configure a chave na Netlify.`);
-  const res = await _fetch(url, {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: id, messages, temperature: options.temperature ?? 0.7, max_tokens: options.max_tokens ?? 2000 })
+  const anthropic = provider === 'anthropic';
+  const out = await modelRouter.getRouter().chat({ provider, model: id }, {
+    messages: Array.isArray(messages) ? messages : [],
+    maxTokens: options.max_tokens || (anthropic ? 4096 : 2000),
+    temperature: options.temperature !== undefined ? options.temperature : (anthropic ? undefined : 0.7),
   });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error.message || `${provider} API error`);
-  return data.choices[0].message.content;
+  return out.text;
 }
 
 exports.handler = async (event) => {
@@ -117,9 +47,15 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers, body: JSON.stringify({ reply, modelUsed: model }) };
     }
     if (action === 'list') {
-      return { statusCode: 200, headers, body: JSON.stringify({ models: Object.keys(MODELS) }) };
+      const router = modelRouter.getRouter();
+      const details = Object.fromEntries(Object.entries(MODELS).map(([k, m]) => {
+        const d = { provider: m.provider, model: m.id };
+        return [k, { ...d, capabilities: router.capabilities(d) }];
+      }));
+      return { statusCode: 200, headers, body: JSON.stringify({ models: Object.keys(MODELS), details }) };
     }
     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Invalid action' }) };
   } catch (err) { return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal error' }) }; }
 };
 exports.callModel = callModel;
+exports.MODELS = MODELS; // NEXIA AI (Fase 5): teste de cobertura do catálogo pelo Model Router
