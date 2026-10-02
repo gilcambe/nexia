@@ -261,7 +261,7 @@ Coleção `vault_deployments`, id `dpl_…`, schemaVersion 1.
 |---|---|---|---|---|---|
 | `project_id` | ref → Project | sim | sim |  |  |
 | `environment_id` | ref → Environment | sim | sim |  |  |
-| `version` | string | sim |  |  | 1–100 caracteres |
+| `release` | string | sim |  |  | 1–100 caracteres |
 | `commit_sha` | sha (40 ou 64 hex) | sim |  |  |  |
 | `provider` | enum | sim |  |  | `render`, `firebase`, `cloudflare`, `vercel`, `netlify`, `github_pages`, `local`, `other` |
 | `status` | enum | sim |  |  | `pending`, `in_progress`, `succeeded`, `failed`, `rolled_back` |

@@ -16,7 +16,7 @@ const { GatewayError, CODES } = require('./errors');
 
 const QUEUE_COLLECTION = 'nexia_tool_queue';
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000;
-const DEFAULT_TOOLS = [...require('./tools/vault'), ...require('./tools/github')];
+const DEFAULT_TOOLS = [...require('./tools/vault'), ...require('./tools/github'), ...require('./tools/integrations'), ...require('./tools/deploy')];
 
 /** Remove sequências hex longas (hashes, SHAs) dos resumos gravados no Vault. */
 const safeText = (s, max) => String(s == null ? '' : s).replace(/\b([0-9a-f]{7})[0-9a-f]{9,}\b/gi, '$1…').slice(0, max);

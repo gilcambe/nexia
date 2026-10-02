@@ -209,3 +209,26 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 - **Status:** ACEITA.
 - **Decisão:** `netlify/functions/autocommit.js` e a rota `/api/autocommit` foram removidos (agora 404). Ele gravava arquivo por arquivo pela Contents API com o PAT de `GITHUB_TOKEN`, num repositório fixo por variável de ambiente, e estava desligado desde a Fase 1 (A1). Não havia chamador no SPA nem nas funções. O substituto é `github.commit_files` + `github.create_pr` pelo Tool Gateway, com registro no Vault, política por projeto e aprovação humana.
 - `AUTOCOMMIT_ENABLED` saiu do `.env.example`. Os testes C3 que usavam o autocommit como endpoint só-master passaram a testar o `guard` com `requiredRole: 'master'` diretamente (mesmo código).
+
+## ADR-F9-01 — Pipeline modelo gerado por projeto; deploy só pelo GitHub Actions
+- **Status:** ACEITA.
+- **Decisão:** `nexia-ai/cicd/pipeline.js` gera `.github/workflows/nexia-pipeline.yml` para o repositório do cliente a partir dos ambientes do Vault (spec §11, §12): CI em push/PR (install, lint, testes, build, `npm audit --audit-level=high`, gitleaks com checksum); `workflow_dispatch` com `target=staging` (CI → deploy staging → smoke/health) ou `target=production` (CI → staging → smoke → produção no environment `production` → health check). Provedores suportados: Firebase Hosting (autenticação por OIDC/Workload Identity, sem chave), Cloudflare Pages (token no environment) e Render (deploy hook no environment). Segredos ficam nos environments do GitHub, separados por ambiente.
+- A ferramenta `cicd.render_pipeline` (LOW) só gera o texto; a entrega no repositório é por `github.commit_files` + `github.create_pr` (Fase 8), com as regras de autonomia de sempre. Este repositório (`gilcambe/nexia`) **não** recebeu o pipeline: nada de deploy foi ligado.
+- O YAML é emitido por um gerador próprio (sem dependência) e o teste C1 confere que o PyYAML lê exatamente o objeto gerado.
+- **TEMPORÁRIO:** ações do GitHub fixadas por versão major (`@v4`, `@v2`), não por SHA. Motivo: legibilidade do modelo para o cliente. Risco: tag movida por terceiro. Remoção: Fase 11 (fixar SHAs no modelo antes do piloto).
+
+## ADR-F9-02 — Firebase e Cloudflare somente leitura, por integração do projeto
+- **Status:** ACEITA.
+- **Decisão:** `nexia-ai/firebase-adapter` (service account → JWT RS256 → access token com escopos `firebase.readonly` e `cloud-platform.read-only`) e `nexia-ai/cloudflare-adapter` (API token) só leem. Ferramentas LOW: `firebase.get_project`, `firebase.get_status` (Hosting/último release, regras publicadas, bancos Firestore, Cloud Functions; produto sem acesso aparece como não usado), `cloudflare.get_deployment_status` (Pages com domínios customizados, ou Workers) e `cloudflare.list_dns` (conteúdo de TXT omitido). Cada uma só funciona com uma Integration ativa do provedor no projeto; a Integration Cloudflare aponta para um recurso (`pages:<conta>:<projeto>`, `workers:<conta>:<script>` ou `zone:<zona>`).
+- `cloudflare.deploy` (spec §13) não existe como ferramenta própria: deploy é sempre pelo pipeline (`deploy.staging` nesta fase; produção na Fase 11), conforme spec §12 ("não substituir o CI/CD por scripts improvisados no agente").
+- **TEMPORÁRIO:** App Check, Authentication e Storage não são consultados. Motivo: exigem APIs/escopos extras e não são necessários para status de deploy. Risco: visão parcial do projeto Firebase. Remoção: Fase 10, se algum agente precisar.
+
+## ADR-F9-03 — Credencial de integração presa ao tenant pelo nome
+- **Status:** ACEITA.
+- **Decisão:** o Vault guarda só o nome da variável (spec §15). Para um tenant não apontar a sua Integration para a credencial de outro (ex.: a service account do próprio NEXIA), o nome tem que ser `NEXIA_<PROVEDOR>_<TENANT>_<SUFIXO>`; fora disso a chamada falha com `SCOPE` antes de qualquer requisição. O dono cria a variável no Render; o valor nunca passa pelo Vault, pelo log nem pela resposta.
+- Ajuste no Vault: nomes de variável (`secret_refs[].name`) deixam de passar pelo detector heurístico de alta entropia (nomes longos como `NEXIA_CLOUDFLARE_<TENANT>_TOKEN` eram recusados); os detectores de formato (ex.: chave AWS) continuam valendo.
+
+## ADR-F9-04 — Staging automático no nível 4 e Deployment no Vault
+- **Status:** ACEITA.
+- **Decisão:** `deploy.staging` (HIGH, autonomia mínima 4, spec §23) dispara o pipeline modelo com `target=staging` na branch do ambiente staging (ou na padrão) e registra um `Deployment` `pending` no Vault com o SHA disparado. `deploy.sync_status` (LOW) acha a execução no Actions pelo SHA e espelha o estado (`in_progress`, `succeeded`, `failed`); estado final não muda depois de registrado. Abaixo do nível 4 vai para aprovação humana. `github.dispatch_workflow` (Fase 8) passa a recusar o `nexia-pipeline.yml` e inputs `target`/`environment`/`deploy`, para o nível 3 não chegar a staging por outro caminho. `target=production` não é aceito por nenhuma ferramenta nesta fase.
+- Correção no Vault: o campo `Deployment.version` colidia com o metadado `version` do registro (o valor informado era sobrescrito pelo número da versão). Passou a se chamar `release`; o Context Engine, que mostrava o número no "Último deploy", foi corrigido. Teste novo impede campo com nome de metadado. Sem migração: o Vault ainda não está em produção (regras/índices não publicados).

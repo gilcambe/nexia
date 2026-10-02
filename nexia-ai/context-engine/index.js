@@ -91,7 +91,7 @@ async function buildContext({ vault, ctx, projectId, message = '', budgetTokens 
     push('state', t.id, `Tarefa ${t.status} [${t.priority}]: ${clip(t.title, 160)}`);
   }
   const lastDeployment = deployments.slice().sort((a, b) => b.started_at.localeCompare(a.started_at))[0];
-  if (lastDeployment) push('state', lastDeployment.id, `Último deploy: ${lastDeployment.version} (${lastDeployment.commit_sha.slice(0, 7)}) ${lastDeployment.status} em ${lastDeployment.started_at.slice(0, 16)}`);
+  if (lastDeployment) push('state', lastDeployment.id, `Último deploy: ${lastDeployment.release} (${lastDeployment.commit_sha.slice(0, 7)}) ${lastDeployment.status} em ${lastDeployment.started_at.slice(0, 16)}`);
   for (const e of rank(errors.filter(x => OPEN_ERROR.includes(x.status)), message, x => x.message, x => x.last_seen_at).slice(0, 3)) {
     push('state', e.id, `Erro ${e.severity} ${e.status}: ${clip(e.message, 200)}`);
   }

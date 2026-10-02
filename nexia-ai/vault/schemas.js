@@ -14,7 +14,9 @@ const SECRET_STORES = ['env', 'render', 'github_actions', 'gcp_secret_manager', 
 
 // Referência a secret: só o NOME da variável e onde ele está guardado. Nunca o valor.
 const secretRef = t.object({
-  name: t.string({ required: true, max: 128, pattern: /^[A-Z][A-Z0-9_]*$/, patternName: 'env_var_name' }),
+  // Nome de variável longo (ex.: NEXIA_CLOUDFLARE_<TENANT>_TOKEN, Fase 9) parece "alta entropia";
+  // os detectores de formato (ex.: chave AWS) continuam valendo.
+  name: t.string({ required: true, max: 128, pattern: /^[A-Z][A-Z0-9_]*$/, patternName: 'env_var_name', scanIgnore: ['high_entropy'] }),
   store: t.enum(SECRET_STORES, { required: true }),
   ref: t.string({ max: 256, pattern: /^[A-Za-z0-9_./:@-]+$/, patternName: 'secret_store_path' }),
   description: t.string({ max: 300 }),
@@ -235,7 +237,8 @@ const SCHEMAS = {
     fields: {
       project_id: t.ref('Project', { required: true, immutable: true }),
       environment_id: t.ref('Environment', { required: true, immutable: true }),
-      version: t.string({ required: true, max: 100 }),
+      // Fase 9: era "version", que colidia com o metadado de versão do registro (o valor se perdia).
+      release: t.string({ required: true, max: 100 }),
       commit_sha: t.sha(COMMIT, { required: true }),
       provider: t.enum(HOSTING_PROVIDERS, { required: true }),
       status: t.enum(['pending', 'in_progress', 'succeeded', 'failed', 'rolled_back'], { required: true }),

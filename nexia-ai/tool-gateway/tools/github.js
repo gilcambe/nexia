@@ -102,3 +102,5 @@ module.exports = [
     ({ gh }, i) => gh.dispatchWorkflow(i),
     i => `workflow ${i.workflow} em ${i.ref || '(padrão)'}`, r => `${r.workflow} disparado em ${r.ref}`, { min_autonomy: 3 }),
 ];
+
+module.exports.adapterFor = adapterFor;

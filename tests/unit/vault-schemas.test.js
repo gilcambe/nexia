@@ -44,6 +44,13 @@ test('campos desconhecidos e metadados do servidor são rejeitados', () => {
   }
 });
 
+test('nenhuma entidade declara campo com nome de metadado do servidor (Fase 9: Deployment.version → release)', () => {
+  const { META_FIELDS } = require('../../nexia-ai/vault/repository');
+  for (const [name, schema] of Object.entries(SCHEMAS)) {
+    for (const f of Object.keys(schema.fields)) assert.ok(!META_FIELDS.includes(f), `${name}.${f}`);
+  }
+});
+
 test('tipos: string vazia, número em texto, data inválida, array duplicado', () => {
   assert.ok(v('Client', { ...valid.Client(ids), name: '   ' }).issues.some(i => i.rule === 'minLength'));
   assert.ok(v('Client', { ...valid.Client(ids), name: 42 }).issues.some(i => i.rule === 'type:string'));

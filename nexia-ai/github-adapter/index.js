@@ -21,6 +21,7 @@ const SHA_RE = /^[0-9a-f]{40}$/;
 const PATH_RE = /^(?![/\\])(?!.*(?:^|\/)\.\.?(?:\/|$))(?!.*\/\/)[^\0\\:*?"<>|]{1,400}$/;
 const WORKFLOW_RE = /^[A-Za-z0-9._-]{1,100}\.ya?ml$/;
 const DEPLOY_WORKFLOW_RE = /deploy|prod|release|publish/i;
+const PIPELINE_WORKFLOW = 'nexia-pipeline.yml'; // pipeline modelo da Fase 9: só deploy.* dispara
 const LIMITS = Object.freeze({ files: 20, fileBytes: 256 * 1024, totalBytes: 600 * 1024, readBytes: 512 * 1024, message: 1000, prBody: 20000 });
 
 const PERMS = Object.freeze({
@@ -235,18 +236,38 @@ function createGithubAdapter(o) {
     async dispatchWorkflow({ workflow, ref, inputs = {} }) {
       requireWrite();
       if (typeof workflow !== 'string' || !WORKFLOW_RE.test(workflow)) throw bad('workflow deve ser o nome do arquivo (ex.: ci.yml).');
-      if (DEPLOY_WORKFLOW_RE.test(workflow)) throw new GatewayError(CODES.FORBIDDEN, 'Workflow de deploy/produção não é disparado por esta ferramenta (Fases 9 e 11).');
+      if (DEPLOY_WORKFLOW_RE.test(workflow) || workflow === PIPELINE_WORKFLOW) throw new GatewayError(CODES.FORBIDDEN, 'Workflow de deploy/produção não é disparado por esta ferramenta (use deploy.staging; produção na Fase 11).');
       const def = await getDefaultBranch();
       const r = checkRef(ref || def);
       if (r !== def && !WORK_BRANCH_RE.test(r)) throw new GatewayError(CODES.FORBIDDEN, 'Só a branch padrão ou branches "nexia/...".');
       const keys = Object.keys(inputs);
       if (keys.length > 10 || keys.some(k => !/^[A-Za-z0-9_-]{1,50}$/.test(k) || typeof inputs[k] !== 'string' || inputs[k].length > 200)) throw bad('inputs inválidos.');
-      if (keys.some(k => DEPLOY_WORKFLOW_RE.test(inputs[k]) || /environment/i.test(k))) throw new GatewayError(CODES.FORBIDDEN, 'inputs de ambiente/deploy não são aceitos por esta ferramenta.');
+      if (keys.some(k => DEPLOY_WORKFLOW_RE.test(inputs[k]) || /environment|target|deploy/i.test(k))) throw new GatewayError(CODES.FORBIDDEN, 'inputs de ambiente/deploy não são aceitos por esta ferramenta.');
       checkText(JSON.stringify(inputs), 'Os inputs');
       await call('POST', `/actions/workflows/${encodeURIComponent(workflow)}/dispatches`, { body: { ref: r, inputs }, write: true, permissions: PERMS.writeActions });
       return { workflow, ref: r, dispatched: true };
     },
+
+    /** Pipeline modelo (Fase 9) com target=staging. Produção não passa por aqui (Fase 11). Devolve o SHA disparado. */
+    async dispatchPipeline({ ref, target }) {
+      requireWrite();
+      if (target !== 'staging') throw new GatewayError(CODES.FORBIDDEN, 'Só staging nesta fase; produção exige aprovação humana (Fase 11).');
+      const r = checkRef(ref || await getDefaultBranch());
+      const sha = SHA_RE.test(r) ? r : await headOf(r);
+      await call('POST', `/actions/workflows/${PIPELINE_WORKFLOW}/dispatches`, { body: { ref: r, inputs: { target } }, write: true, permissions: PERMS.writeActions });
+      return { workflow: PIPELINE_WORKFLOW, ref: r, sha, target };
+    },
+
+    /** Execução do pipeline modelo disparada para um commit (a mais recente criada a partir de `since`). */
+    async findPipelineRun({ sha, since }) {
+      if (!SHA_RE.test(String(sha))) throw bad('sha inválido.');
+      const d = await call('GET', `/actions/workflows/${PIPELINE_WORKFLOW}/runs?event=workflow_dispatch&head_sha=${sha}&per_page=20`, { permissions: PERMS.readActions });
+      const runs = (d.workflow_runs || []).filter(w => !since || Date.parse(w.created_at) >= Date.parse(since) - 60_000)
+        .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+      const w = runs[0];
+      return w ? { id: w.id, status: w.status, conclusion: w.conclusion, html_url: w.html_url, created_at: w.created_at, updated_at: w.updated_at } : null;
+    },
   };
 }
 
-module.exports = { createGithubAdapter, LIMITS, WORK_BRANCH_RE, PERMS };
+module.exports = { createGithubAdapter, LIMITS, WORK_BRANCH_RE, PERMS, PIPELINE_WORKFLOW };
