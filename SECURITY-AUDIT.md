@@ -20,7 +20,7 @@ Legenda de status: **FIXED / TESTED** (corrigido no código e coberto por teste 
 | A1 | ALTO | `autocommit` grava direto em `main` | **FIXED / TESTED** (desligado por flag) |
 | A2 | ALTO | `observability` sem auth e sem limite de memória | **FIXED / TESTED** |
 | A3 | ALTO | Modo demo de autenticação | **FIXED / TESTED** |
-| A4 | ALTO | Dependências vulneráveis | **MITIGATED** (sem saltos maiores; restantes listadas) |
+| A4 | ALTO | Dependências vulneráveis | **MITIGATED** (0 críticas; 8 altas só com versão maior, listadas) |
 | A5 | ALTO | Erro bruto de provedor/exceção repassado ao cliente | **FIXED / TESTED** |
 | M1 | MÉDIO | CORS cai para `*` | OPEN |
 | M2 | MÉDIO | Memória do Cortex legível por todo o tenant | **FIXED / TESTED** (regras) |
@@ -50,28 +50,32 @@ Legenda de status: **FIXED / TESTED** (corrigido no código e coberto por teste 
 - Testes: `tests/unit/auth-guards.test.js` (`resolveRole`) e `tests/integration/api-authz.test.js` (3 testes C3 com tokens reais do Auth Emulator).
 
 ### C4 — Sentinel heal · FIXED / TESTED
-- Correção (`netlify/functions/sentinel.js`): sem bypass por `x-netlify-event`; `POST` exige papel admin; `heal` desligado (`SENTINEL_HEAL_ENABLED`); a gravação de overrides no Firestore e o redeploy automático foram desativados (stubs que não escrevem nada). Não há bypass substituto.
-- Testes: unitário do cabeçalho; integração "cabeçalho de agendamento não dá acesso e heal fica bloqueado" e "overrides não gravam nada, mesmo com fix malicioso".
+- Correção (`netlify/functions/sentinel.js`): sem bypass por `x-netlify-event`; `POST` exige papel admin; `heal` desligado (`SENTINEL_HEAL_ENABLED`); a aplicação de overrides do LLM no Firestore e o redeploy automático foram desativados (funções que não escrevem nem chamam rede; `RENDER_DEPLOY_HOOK` não é mais lido); removidos o auto-heal do scan, a variável `isScheduled` e o "modo demo" do GET (sem DB → 503). Não há bypass substituto.
+- Com `SENTINEL_HEAL_ENABLED=true` o heal ainda: chama o LLM para diagnóstico; abre issue no GitHub se `GITHUB_TOKEN`/`GITHUB_REPO` existirem; grava o relatório em `sentinel_heals` e `system_status/last_heal` (coleções fixas, conteúdo inclui o texto do diagnóstico). Fluxo completo em `PHASE-1-REPORT.md` §6.
+- Testes: unitário do cabeçalho; integração "cabeçalho de agendamento não dá acesso e heal fica bloqueado", "overrides não gravam nada, mesmo com fix malicioso" e "heal LIGADO não aplica override do LLM nem chama o Deploy Hook" (com mock do LLM devolvendo overrides para `users` e `tenants`; prova de mutação: falha se a gravação antiga voltar).
 
 ### C5 — Secrets em repositórios públicos · MITIGATED + OWNER ACTION
 - No HEAD deste repo: removidos de `NEXIA_OS_MASTER_DOC_v61.md` os valores de quatro variáveis (tipos: chave web Firebase rotulada `FIREBASE_API_KEY`, chave Gemini, access token do Mercado Pago, public key do Mercado Pago) e prefixos parciais de chaves OpenAI/Groq. Correção ao relatório original: a linha que a auditoria atribuiu ao access token do Mercado Pago era a public key; o access token estava em linha adjacente, com valor parcial. Ambos foram removidos.
 - Proteção nova: `.gitignore` (antes inexistente) cobre `.env*`, chaves, JSON de service account, `download`, relatórios; `.env.example` só com placeholders; `.gitleaks.toml` + job de CI que bloqueia chaves privadas, tokens, API keys, service accounts e arquivos `.env`.
 - Mantido: config web pública do Firebase (`nexia-c8710`) em `bezsan/bezsan-admin.html`, `ces/ces-app-executivo.html`, `viajante-pro/vp-admin.html`. É pública por natureza (o próprio `/api/firebase-config` a entrega); removê-la quebraria as páginas legadas. Liberada no gitleaks só nesses arquivos.
 - Histórico do Git: **ainda contém valores antigos** (a varredura do histórico encontrou ocorrências). Não reescrito; exige autorização explícita.
-- OWNER ACTION (não executado por esta fase): rotacionar service account Firebase, Groq, Mercado Pago, Gemini e `METRICS_SECRET`; restringir a chave web por referrer e ativar App Check; decidir sobre tornar os repos privados e sobre reescrever o histórico.
+- **PENDÊNCIA DO DONO — chave web do Firebase:** as três chaves `AIza…` em `bezsan/bezsan-admin.html`, `ces/ces-app-executivo.html` e `viajante-pro/vp-admin.html` foram mantidas e estão na allowlist do gitleaks só nesses arquivos. A proteção delas depende de duas ações no console, **não executadas nesta fase**: (1) restringir a chave por HTTP referrer (domínios do app) e por API no Google Cloud; (2) ativar o Firebase App Check para Firestore/Storage/Auth.
+- Verificação do HEAD por `git grep`: nenhuma chave privada, `"private_key"`, service account JSON/base64, token Mercado Pago, Groq, OpenAI/Anthropic, GitHub, Slack ou AWS; únicos `AIza…` são as três chaves acima; único arquivo `.env*` é `.env.example`. Saída em `PHASE-1-REPORT.md` §10.
+- OWNER ACTION (não executado por esta fase): rotacionar service account Firebase, Groq, Mercado Pago, Gemini e `METRICS_SECRET`; restrição por referrer + App Check (acima); decidir sobre tornar os repos privados e sobre reescrever o histórico.
 
 ### A1 — autocommit · FIXED / TESTED
 - Desligado por padrão (`AUTOCOMMIT_ENABLED`); quando ligado: master, branch explícito e não protegido, caminho validado, trilha em `audit_log_global`. Teste: "autocommit desligado por padrão, mesmo para master".
 
 ### A2 — observability · FIXED / TESTED
 - Exige papel admin; amostras limitadas a 1000 por caminho e 200 caminhos; entrada validada. Testes unitário e de integração.
+- Nenhum emissor de POST no repositório (`server.js`, `src/`, `core/`, HTMLs de tenant); o SPA define `api.observe()` (GET) sem chamadas. Nenhum fluxo legítimo quebra. Evidência em `PHASE-1-REPORT.md` §8.
 
 ### A3 — modo demo · FIXED / TESTED
 - Removido. Sem Admin SDK inicializado, nenhum token é aceito. Teste unitário com tokens arbitrários e JWT `alg: none`.
 
 ### A4 — dependências · MITIGATED
-- Antes: 36 vulnerabilidades (1 crítica, 10 altas, 23 moderadas, 2 baixas). Depois de `npm audit fix` sem `--force`: 26 (0 críticas, 9 altas, 17 moderadas); 25 considerando só produção.
-- Restantes exigem versão maior: `firebase-admin` 14 (arrasta `node-forge`, `@google-cloud/*`, `google-gax`, `uuid`), `vite` 6+ (`esbuild`), SDK cliente `firebase` (arrasta `undici`, `@grpc/grpc-js`, `@firebase/*`), `react-router-dom` 7; `qs` e `gaxios` presos por faixas de `express` 4 e `google-auth-library`. `@firebase/rules-unit-testing` é só de desenvolvimento.
+- Antes: 36 vulnerabilidades (1 crítica, 10 altas, 23 moderadas, 2 baixas). Depois de `npm audit fix` sem `--force` e `express` 4.22.1 → 4.22.3 (patch, corrige `qs`): `npm audit --omit=dev` = 24 (0 críticas, 8 altas, 16 moderadas); com dev = 25.
+- Altas restantes, todas só com versão maior: `firebase-admin` (→14), `node-forge` (1.4.0 é a última publicada e segue afetada), SDK cliente `firebase` e `@firebase/firestore(-compat)`, `@grpc/grpc-js`, `undici` (fixados pelo SDK 10), `vite` (→8; falhas do servidor de desenvolvimento). Tabela em `PHASE-1-REPORT.md` §7. `@firebase/rules-unit-testing` é só de desenvolvimento.
 
 ### A5 — erros brutos · FIXED / TESTED
 - `lib/safe-error.js`: detalhe no log, cliente recebe `{ error, correlationId }`. Aplicado em `server.js`, `cortex-chat` (incluindo as mensagens de stream dos seis provedores), `cortex-agent`, `autocommit`, Sentinel. Testes unitários.

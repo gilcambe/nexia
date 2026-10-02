@@ -335,10 +335,13 @@ const server = http.createServer((req, res) => {
   const fromOut = resolveStatic(OUT, safePath);
   if (fromOut && serveFile(fromOut, res)) return;
 
-  // Caminho com extensão que não existe/é negado → 404 (sem SPA fallback)
-  if (path.extname(safePath)) return sendNotFound(res, 404);
+  // Caminho com extensão que não existe/é negado → 404 (sem SPA fallback).
+  // Exceção: .html inexistente cai no index.html do SPA, como antes da Fase 1
+  // (links legados como /nexia/observability.html); nunca serve o arquivo pedido.
+  const ext = path.extname(safePath).toLowerCase();
+  if (ext && ext !== '.html') return sendNotFound(res, 404);
 
-  // SPA fallback — rotas React sem extensão caem no index.html
+  // SPA fallback — rotas React sem extensão (ou .html legado) caem no index.html
   const indexFile = resolveStatic(OUT, 'index.html');
   if (indexFile && serveFile(indexFile, res)) return;
   return sendNotFound(res, 404);

@@ -9,7 +9,7 @@ const ROOT = path.join(__dirname, '..', '..');
 
 test('server.js não serve arquivos fora das raízes públicas (C1)', async (t) => {
   // Arquivos sensíveis plantados na raiz do repositório durante o teste
-  const planted = ['.env', '.env.local'].map(f => path.join(ROOT, f));
+  const planted = ['.env', '.env.local', 'zz-private.html'].map(f => path.join(ROOT, f));
   for (const f of planted) if (!fs.existsSync(f)) fs.writeFileSync(f, 'TEST_ONLY=1\n');
   const link = path.join(ROOT, 'core', 'zz-test-symlink.js');
   try { fs.symlinkSync('/etc/hostname', link); } catch {}
@@ -29,6 +29,7 @@ test('server.js não serve arquivos fora das raízes públicas (C1)', async (t) 
     '/core/%2e%2e/server.js', '/%252e%252e/server.js', '/..%2fserver.js', '/core/..%2f..%2fetc/passwd',
     '/..%5c..%5cetc/passwd', '//etc/passwd', '/etc/passwd', '/proc/self/environ',
     '/core/zz-test-symlink.js', '/.git/config', '/NEXIA_OS_MASTER_DOC_v61.md',
+    '/zz-private.html', '/core/../zz-private.html', '/%2e%2e/zz-private.html',
   ];
   const hostname = fs.readFileSync('/etc/hostname', 'utf8');
   for (const p of attacks) {
@@ -49,6 +50,10 @@ test('server.js não serve arquivos fora das raízes públicas (C1)', async (t) 
   assert.strictEqual(ok.status, 200);
   const landing = await rawRequest(srv.port, '/ces/landing');
   assert.strictEqual(landing.status, 200);
+  // .html legado inexistente cai no SPA (paridade com o comportamento anterior), sem servir o arquivo pedido
+  const legacyHtml = await rawRequest(srv.port, '/nexia/observability.html');
+  assert.strictEqual(legacyHtml.status, 200);
+  assert.ok(/<div id="root"|<!doctype html/i.test(legacyHtml.body));
   const post = await rawRequest(srv.port, '/core/auth.js', { method: 'POST' });
   assert.strictEqual(post.status, 405);
 });

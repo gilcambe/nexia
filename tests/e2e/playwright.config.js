@@ -1,5 +1,6 @@
 // @ts-check
-// Suíte E2E derivada do READDY (nexia.test.js), adaptada às rotas do nexia v60.
+// Suíte de regressão da Fase 1 (48 testes) sobre as rotas do nexia v60. A suíte original
+// do READDY (89 testes) roda sem alteração por playwright.readdy.config.js.
 // BASE_URL é OBRIGATÓRIO e não há fallback para produção.
 const { defineConfig } = require('@playwright/test');
 
@@ -10,7 +11,7 @@ if (!BASE_URL) {
 
 module.exports = defineConfig({
   testDir: __dirname,
-  testMatch: '*.spec.js',
+  testMatch: 'regression.spec.js',
   timeout: 30_000,
   retries: 0,
   workers: 2,

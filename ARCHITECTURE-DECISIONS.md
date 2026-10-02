@@ -18,7 +18,7 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 ## ADR-F1-01 — Estáticos servidos só de raízes públicas explícitas (C1)
 - **Status:** ACEITA.
 - **Contexto:** `server.js` juntava o caminho da URL com a raiz do repositório e servia qualquer arquivo (código, `.env`, arquivos do sistema).
-- **Decisão:** novo módulo `lib/safe-static.js`. O caminho é decodificado uma vez, rejeitado se tiver `%2f`/`%5c`, `\`, byte nulo, codificação dupla ou segmento iniciado por ponto; depois é resolvido com `path.resolve` e `realpath` (symlinks inclusos) e precisa ficar **dentro** da raiz. Raízes permitidas: `out/` e as pastas legadas `core`, `ces`, `bezsan`, `splash`, `viajante-pro`. Extensões em allowlist. Só `GET`/`HEAD`. Caminho com extensão que não resolve → 404 (sem fallback para a raiz do repo); rotas sem extensão → `out/index.html` (SPA).
+- **Decisão:** novo módulo `lib/safe-static.js`. O caminho é decodificado uma vez, rejeitado se tiver `%2f`/`%5c`, `\`, byte nulo, codificação dupla ou segmento iniciado por ponto; depois é resolvido com `path.resolve` e `realpath` (symlinks inclusos) e precisa ficar **dentro** da raiz. Raízes permitidas: `out/` e as pastas legadas `core`, `ces`, `bezsan`, `splash`, `viajante-pro`. Extensões em allowlist. Só `GET`/`HEAD`. Caminho com extensão que não resolve → 404 (sem fallback para a raiz do repo); rotas sem extensão e `.html` inexistente → `out/index.html` (SPA), mantendo o comportamento anterior para links legados como `/nexia/observability.html` sem servir o arquivo pedido.
 - **Consequência:** arquivos na raiz do repositório deixam de ser públicos. Todas as páginas legadas continuam servidas (cobertas pelos testes Playwright).
 
 ## ADR-F1-02 — Fonte do papel `master` (C2, C3, A3)
@@ -33,7 +33,7 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 
 ## ADR-F1-04 — Automação com credencial de administrador desligada por padrão (C4, A1)
 - **Status:** ACEITA.
-- **Decisão:** Sentinel: removido o bypass pelo cabeçalho `x-netlify-event`; `POST` exige token com papel admin; modo `heal` responde 403 salvo `SENTINEL_HEAL_ENABLED=true`, e mesmo ligado **não** grava no Firestore nem dispara redeploy (funções viraram stubs). `autocommit`: 403 salvo `AUTOCOMMIT_ENABLED=true`; quando ligado exige master, branch explícito e não protegido (`main`, `master`, `develop`, `production`, `prod`, `staging`), caminho validado por regex sem `..` nem dotfiles, e grava trilha em `audit_log_global`.
+- **Decisão:** Sentinel: removido o bypass pelo cabeçalho `x-netlify-event`; `POST` exige token com papel admin; modo `heal` responde 403 salvo `SENTINEL_HEAL_ENABLED=true`, e mesmo ligado **não** aplica overrides do LLM em coleção alguma nem dispara redeploy; grava só o relatório em `sentinel_heals` e `system_status/last_heal`. Removidos o auto-heal do scan, `isScheduled` e o "modo demo" (GET sem DB → 503). `autocommit`: 403 salvo `AUTOCOMMIT_ENABLED=true`; quando ligado exige master, branch explícito e não protegido (`main`, `master`, `develop`, `production`, `prod`, `staging`), caminho validado por regex sem `..` nem dotfiles, e grava trilha em `audit_log_global`.
 - **Consequência:** o substituto definitivo é o GitHub Adapter com branch + PR (Fase 8).
 
 ## ADR-F1-05 — Erros sem detalhe interno para o cliente (A5)
@@ -42,7 +42,7 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 
 ## ADR-F1-06 — Estratégia de testes
 - **Status:** ACEITA.
-- **Decisão:** `node:test` para unitários (`npm test`); Firebase Emulator (auth + firestore) com `@firebase/rules-unit-testing` para regras e autorização da API (`npm run test:rules`); Playwright (`npm run test:e2e`) com `BASE_URL` **obrigatório** e sem padrão de produção. O caminho de inicialização do Firebase Admin sem credencial só é usado quando os dois emuladores estão configurados e `NODE_ENV != production`.
+- **Decisão:** `node:test` para unitários (`npm test`); Firebase Emulator (auth + firestore) com `@firebase/rules-unit-testing` para regras e autorização da API (`npm run test:rules`); Playwright com `BASE_URL` **obrigatório** e sem padrão de produção: regressão nova (`npm run test:e2e`) e a suíte original do READDY sem alteração nos testes (`npm run test:e2e:readdy`), com checagem de paridade contra a lista de falhas já existentes no develop (`tests/e2e/readdy-known-failures.json`). O caminho de inicialização do Firebase Admin sem credencial só é usado quando os dois emuladores estão configurados e `NODE_ENV != production`.
 
 ## ADR-F1-07 — CI mínimo sem deploy
 - **Status:** ACEITA.
@@ -58,4 +58,4 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 
 ## ADR-F1-10 — Dependências sem saltos de versão maior
 - **Status:** ACEITA.
-- **Decisão:** `npm audit fix` sem `--force`. O que só se corrige com versão maior (`firebase-admin` 14, `vite` 6+, `firebase` cliente, `react-router-dom` 7) fica para uma fase própria, com teste de regressão.
+- **Decisão:** `npm audit fix` sem `--force`, mais `express` 4.22.3 (patch dentro da faixa declarada) para corrigir `qs`. O que só se corrige com versão maior (`firebase-admin` 14, `vite` 6+, `firebase` cliente, `react-router-dom` 7) fica para uma fase própria, com teste de regressão.
