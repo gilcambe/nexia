@@ -67,6 +67,7 @@ test.before(async () => {
   ids.project2 = await mk('Project', { client_id: ids.client2, name: 'Loja Beta', slug: 'loja-beta', type: 'web_app', status: 'active' });
   await mk('Repository', { project_id: ids.project, provider: 'github', owner: 'gilcambe', repo: 'nexia', default_branch: 'develop', url: 'https://github.com/gilcambe/nexia' });
   await mk('Environment', { project_id: ids.project, name: 'staging', provider: 'firebase', urls: ['https://staging.alfa.com.br'], branch: 'develop' });
+  await mk('Environment', { project_id: ids.project, name: 'production', provider: 'firebase', urls: ['https://alfa.com.br'], branch: 'develop' });
 });
 
 test('O1. pedido de mudança: análise → branch → commit → revisão → segurança → PR; só conclui quando o CI fica verde', async () => {
@@ -185,7 +186,7 @@ test('O5. orçamento estourado para a execução com BUDGET_EXCEEDED', async () 
   assert.strictEqual(exe.plan[2].status, 'running', 'parou no passo em que estourou');
 });
 
-test('O6. staging com CI verde e nível 4; produção nunca é executada', async () => {
+test('O6. staging com CI verde e nível 4; produção só depois de aprovação humana e do mesmo commit em staging', async () => {
   const o = orch(scriptedRouter({}));
   await setAutonomy(4);
   fake.checks.set('develop', [{ ...GREEN[0], conclusion: 'failure' }, GREEN[1], GREEN[2]]);
@@ -204,11 +205,26 @@ test('O6. staging com CI verde e nível 4; produção nunca é executada', async
   assert.strictEqual(done.status, 'succeeded', JSON.stringify(done.gates));
   assert.strictEqual((await vault.Deployment.get(user, exe.deployment_id)).status, 'succeeded');
 
+  await setAutonomy(4);
   const prod = await startAndRun(o, 'Publique o Site Alfa em produção');
-  assert.deepStrictEqual([prod.exe.intent, prod.exe.status], ['deploy_production', 'needs_input']);
-  assert.match(prod.exe.question, /aprovação humana/);
+  assert.deepStrictEqual([prod.exe.intent, prod.exe.status], ['deploy_production', 'waiting_approval']);
   assert.strictEqual(prod.exe.gates.find(g => g.gate === 11).status, 'pending');
-  assert.strictEqual(fake.dispatches.length, 1, 'nada disparado para produção');
+  assert.strictEqual(fake.dispatches.length, 1, 'nada disparado para produção sem pessoa');
+  const pending = prod.exe.plan[1].tool_call_ids.at(-1);
+  const tc = await vault.ToolCall.get(user, pending);
+  assert.deepStrictEqual([tc.tool, tc.risk, tc.environment, tc.decision], ['deploy.production', 'CRITICAL', 'production', 'confirm']);
+  const ok = await gateway().approve(user, pending, { expectedVersion: tc.version });
+  assert.strictEqual(ok.status, 'succeeded', JSON.stringify(ok.error));
+  const after = await o.resume(prod.ctx, prod.exe.id);
+  assert.strictEqual(after.status, 'running', `${after.error_code}: ${after.result_summary}`);
+  assert.deepStrictEqual(fake.dispatches.at(-1).inputs, { target: 'production' });
+  const dep = await vault.Deployment.get(user, after.deployment_id);
+  assert.deepStrictEqual([dep.release.startsWith('production-'), dep.approved_by.id, dep.commit_sha], [true, 'gilcambe', fake.branches.get('develop')]);
+  assert.deepStrictEqual(after.gates.filter(g => g.gate >= 9).map(g => g.status), ['passed', 'pending', 'pending']);
+  Object.assign(fake.runs.at(-1), { status: 'completed', conclusion: 'success', updated_at: new Date().toISOString() });
+  const live = await o.refresh(prod.ctx, prod.exe.id);
+  assert.strictEqual(live.status, 'succeeded', JSON.stringify(live.gates));
+  assert.match(live.gates.find(g => g.gate === 11).evidence, /aprovado por gilcambe/);
 });
 
 test('O7. pergunta: só leitura, conclui com a resposta do agente', async () => {
@@ -250,4 +266,29 @@ test('O8. API /api/nexia/executions: 202 e execução em segundo plano; pergunta
   assert.strictEqual((await api(h, 'POST', '/api/nexia/executions', { message: '' })).status, 400);
   assert.strictEqual((await api(mkHandler('admin', 'outro-tenant'), 'GET', `/api/nexia/executions?tenant=${T}`)).status, 403);
   assert.strictEqual((await api(mkHandler('user'), 'GET', '/api/nexia/executions')).status, 403);
+});
+
+test('O9. sweep retoma execução parada; /api/nexia/metrics agrega custo e auditoria do projeto', async () => {
+  await setAutonomy(0);
+  const ctx = newCtx();
+  const o1 = orch(scriptedRouter({ architect: [{ text: 'Resposta retomada.' }] }));
+  const s = await o1.start(ctx, { message: 'Quais branches o Site Alfa tem?', projectId: ids.project });
+  assert.strictEqual(s.execution.status, 'planned', 'processo "caiu" antes do run');
+  const fresh = await o1.sweep(newCtx());
+  assert.ok(!fresh.some(x => x.id === s.execution.id), 'recente: não mexe');
+  const later = createOrchestrator({ vault, gateway: gateway(), router: scriptedRouter({ architect: [{ text: 'Resposta retomada.' }] }), now: () => new Date(Date.now() + 3600e3) });
+  const swept = await later.sweep(newCtx());
+  const mine = swept.find(x => x.id === s.execution.id);
+  assert.deepStrictEqual([mine.action, mine.from, mine.to], ['run', 'planned', 'succeeded']);
+
+  const { createHandler } = require('../../nexia-ai/api');
+  const h = createHandler({ db, verify: async () => ({ ok: true, uid: 'gilcambe', role: 'admin', tenantSlug: T }), gateway: { env: fake.env, fetchImpl: fake.fetchImpl }, router: scriptedRouter({}) });
+  const get = async p => { const u = new URL(`http://x${p}`); const r = await h({ httpMethod: 'GET', path: u.pathname, headers: {}, queryStringParameters: Object.fromEntries(u.searchParams), body: null }); return { status: r.statusCode, body: JSON.parse(r.body) }; };
+  const m = await get(`/api/nexia/metrics?project_id=${ids.project}`);
+  assert.strictEqual(m.status, 200, JSON.stringify(m.body));
+  assert.ok(m.body.executions.total >= 8 && m.body.executions.by_status.succeeded >= 2);
+  assert.ok(m.body.tools['github.create_branch'].total >= 1 && m.body.deployments.by_environment.production.last.approved_by === 'gilcambe');
+  assert.ok(!JSON.stringify(m.body).includes('<button'), 'conteúdo de arquivo nunca aparece');
+  assert.strictEqual((await get('/api/nexia/metrics?since=ontem')).status, 400);
+  assert.strictEqual((await get(`/api/nexia/metrics?project_id=prj_${'0'.repeat(32)}`)).status, 404);
 });

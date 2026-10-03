@@ -3,7 +3,7 @@
 const { test, expect } = require('@playwright/test');
 
 const SPA_ROUTES = ['/', '/login', '/cortex-app', '/sentinel', '/pipeline', '/codigo', '/docs',
-  '/swarm-control', '/qa-center', '/projetos', '/aprovacoes', '/execucoes', '/ces', '/bezsan', '/vp', '/splash', '/privacidade', '/termos', '/lgpd', '/cookies'];
+  '/swarm-control', '/qa-center', '/projetos', '/aprovacoes', '/execucoes', '/auditoria', '/ces', '/bezsan', '/vp', '/splash', '/privacidade', '/termos', '/lgpd', '/cookies'];
 const TENANT_PAGES = ['/ces/landing', '/bezsan/landing', '/vp/landing', '/splash/landing', '/ces/admin', '/vp/guia'];
 
 test.describe('1. Navegação — rotas principais', () => {
@@ -142,6 +142,23 @@ test.describe('NEXIA AI — Fase 10', () => {
   });
   test('/api/nexia/executions sem token responde 401', async ({ request }) => {
     for (const [m, ep] of [['get', '/api/nexia/executions'], ['post', '/api/nexia/executions'], ['get', '/api/nexia/executions/exe_x'], ['post', '/api/nexia/executions/exe_x/refresh'], ['post', '/api/nexia/executions/exe_x/resume']]) {
+      const res = await request[m](ep);
+      expect(res.status(), ep).toBe(401);
+    }
+  });
+});
+
+test.describe('NEXIA AI — Fase 11', () => {
+  test('/auditoria sem login pede login e não chama a API', async ({ page }) => {
+    const calls = [];
+    page.on('request', r => { if (r.url().includes('/api/nexia/')) calls.push(r.url()); });
+    await page.goto('/auditoria', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByTestId('auditoria-title')).toHaveText('Auditoria e custos');
+    await expect(page.getByTestId('auditoria-login')).toBeVisible({ timeout: 15000 });
+    expect(calls).toEqual([]);
+  });
+  test('/api/nexia/metrics e sweep sem token respondem 401', async ({ request }) => {
+    for (const [m, ep] of [['get', '/api/nexia/metrics'], ['post', '/api/nexia/executions/sweep']]) {
       const res = await request[m](ep);
       expect(res.status(), ep).toBe(401);
     }

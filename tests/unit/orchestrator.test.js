@@ -23,7 +23,7 @@ test('U1. intenção por regras (spec §29) e especialista pelo assunto', () => 
     ['frontend', 'database', 'backend', 'coder']);
   assert.deepStrictEqual(planFor('change', 'botão').map(s => s.action),
     ['agent:analyze', 'create_branch', 'agent:implement', 'agent:review', 'agent:security', 'create_pr', 'checks']);
-  assert.deepStrictEqual(planFor('deploy_production', 'x').map(s => s.action), ['production_blocked']);
+  assert.deepStrictEqual(planFor('deploy_production', 'x').map(s => s.action), ['checks_before_deploy', 'deploy_production', 'sync_deploy']);
 });
 
 test('U2. gates: sem evidência fica pending; check falho reprova; obrigatório sem check nunca passa', () => {
@@ -43,7 +43,23 @@ test('U2. gates: sem evidência fica pending; check falho reprova; obrigatório 
   assert.strictEqual(verdict(evaluateGates({ ...base, checks: all, wantsStaging: true, deployment: { id: 'd', status: 'succeeded' } })), 'passed');
   assert.strictEqual(verdict(evaluateGates({ ...base, checks: all, wantsStaging: true, deployment: { id: 'd', status: 'failed' } })), 'failed');
   assert.strictEqual(verdict(evaluateGates({ ...base, checks: all, wantsProduction: true })), 'pending', 'produção nunca passa sozinha');
+  const prod = (d) => evaluateGates({ ...base, checks: all, wantsStaging: true, wantsProduction: true, deployment: d });
+  const user = { type: 'user', id: 'gilcambe' };
+  assert.strictEqual(verdict(prod({ id: 'd', status: 'pending', approved_by: user })), 'pending');
+  assert.strictEqual(verdict(prod({ id: 'd', status: 'succeeded', approved_by: user })), 'passed');
+  assert.match(prod({ id: 'd', status: 'succeeded', approved_by: user })[10].evidence, /aprovado por gilcambe/);
+  assert.strictEqual(verdict(prod({ id: 'd', status: 'succeeded', approved_by: { type: 'agent', id: 'devops' } })), 'failed', 'gate 11 exige pessoa');
+  assert.strictEqual(verdict(prod({ id: 'd', status: 'succeeded' })), 'failed');
+  assert.strictEqual(verdict(prod({ id: 'd', status: 'failed', approved_by: user })), 'failed');
   assert.strictEqual(evaluateGates({ checks: [] }).length, 11);
+  // Fase 11: mapa check→gate do projeto (nome exato; gate mapeado vira obrigatório)
+  const map = [{ gate: 3, check: 'ci / unit' }, { gate: 7, check: 'ci / e2e' }];
+  const named = [ok('ci / unit'), ok('Build'), ok('gitleaks'), ok('Unit tests (legado)')];
+  const g = evaluateGates({ ...base, checks: named, checkMap: map });
+  assert.deepStrictEqual([g[2].status, g[2].evidence, g[6].status], ['passed', 'check: ci / unit', 'pending'], 'E2E mapeado e ausente fica pendente');
+  assert.match(g[6].evidence, /check mapeado ausente: ci \/ e2e/);
+  assert.strictEqual(verdict(evaluateGates({ ...base, checks: [...named, { name: 'ci / e2e', status: 'completed', conclusion: 'failure' }], checkMap: map })), 'failed');
+  assert.strictEqual(evaluateGates({ ...base, checks: [ok('Unit tests'), ok('Build'), ok('gitleaks')], checkMap: [{ gate: 3, check: 'ci / unit' }] })[2].status, 'pending', 'com mapa, nome parecido não conta');
 });
 
 test('U3. orçamento: passos, ferramentas, tokens e tempo', () => {

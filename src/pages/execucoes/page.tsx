@@ -99,6 +99,16 @@ export default function ExecucoesPage() {
     catch (e) { setError(e instanceof Error ? e.message : "Falha"); }
   }, [call, loadList, projectId]);
 
+  // Fase 11: retoma execuções paradas há mais de 10 min (ex.: o servidor reiniciou no meio).
+  const sweep = useCallback(async () => {
+    setError(null);
+    try {
+      const r = await call<{ items: { id: string }[] }>("/executions/sweep", { method: "POST" });
+      setQuestion(r.items.length ? `${r.items.length} execução(ões) retomada(s).` : "Nenhuma execução parada.");
+      await loadList(projectId);
+    } catch (e) { setError(e instanceof Error ? e.message : "Falha"); }
+  }, [call, loadList, projectId]);
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white font-display antialiased">
       <header className="border-b border-nexia-border">
@@ -109,7 +119,11 @@ export default function ExecucoesPage() {
             </button>
             <h1 className="text-2xl font-bold" data-testid="execucoes-title">Execuções</h1>
           </div>
-          <button onClick={() => navigate("/aprovacoes")} className="text-sm text-nexia-cyan cursor-pointer">Aprovações</button>
+          <div className="flex gap-4">
+            {me?.canUseVault && <button onClick={sweep} className="text-sm text-nexia-muted hover:text-white cursor-pointer">Retomar paradas</button>}
+            <button onClick={() => navigate("/aprovacoes")} className="text-sm text-nexia-cyan cursor-pointer">Aprovações</button>
+            <button onClick={() => navigate("/auditoria")} className="text-sm text-nexia-cyan cursor-pointer">Auditoria</button>
+          </div>
         </div>
       </header>
 

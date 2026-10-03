@@ -215,7 +215,7 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 - **Decisão:** `nexia-ai/cicd/pipeline.js` gera `.github/workflows/nexia-pipeline.yml` para o repositório do cliente a partir dos ambientes do Vault (spec §11, §12): CI em push/PR (install, lint, testes, build, `npm audit --audit-level=high`, gitleaks com checksum); `workflow_dispatch` com `target=staging` (CI → deploy staging → smoke/health) ou `target=production` (CI → staging → smoke → produção no environment `production` → health check). Provedores suportados: Firebase Hosting (autenticação por OIDC/Workload Identity, sem chave), Cloudflare Pages (token no environment) e Render (deploy hook no environment). Segredos ficam nos environments do GitHub, separados por ambiente.
 - A ferramenta `cicd.render_pipeline` (LOW) só gera o texto; a entrega no repositório é por `github.commit_files` + `github.create_pr` (Fase 8), com as regras de autonomia de sempre. Este repositório (`gilcambe/nexia`) **não** recebeu o pipeline: nada de deploy foi ligado.
 - O YAML é emitido por um gerador próprio (sem dependência) e o teste C1 confere que o PyYAML lê exatamente o objeto gerado.
-- **TEMPORÁRIO:** ações do GitHub fixadas por versão major (`@v4`, `@v2`), não por SHA. Motivo: legibilidade do modelo para o cliente. Risco: tag movida por terceiro. Remoção: Fase 11 (fixar SHAs no modelo antes do piloto).
+- **TEMPORÁRIO:** ações do GitHub fixadas por versão major (`@v4`, `@v2`), não por SHA. Motivo: legibilidade do modelo para o cliente. Risco: tag movida por terceiro. Remoção: ~~Fase 11~~ parcial na Fase 11 (ADR-F11-05): o gerador aceita `action_pins` (SHA de 40 hex por ação); o padrão continua a major até o dono informar os SHAs no piloto.
 
 ## ADR-F9-02 — Firebase e Cloudflare somente leitura, por integração do projeto
 - **Status:** ACEITA.
@@ -246,17 +246,17 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 - **Status:** ACEITA.
 - **Decisão:** `orchestrator/gates.js` avalia os 11 gates da spec §22. Gates 1–7 vêm dos check runs do GitHub do commit/branch, por nome do check (um check pode cobrir vários gates). Testes unitários (3), build (5) e segurança (6) são obrigatórios: sem check correspondente ficam `pending`; os demais viram `not_applicable`. O gate 6 aceita o veredito do Security Agent quando o repositório não tem check de segurança. Gate 8 = veredito estruturado do Reviewer (`report_findings`); 9–10 = `Deployment` do Vault (o smoke do pipeline modelo é o health check); 11 = produção, sempre `pending` quando pedida.
 - Execução fica `running` enquanto houver gate pendente e só vira `succeeded` com todos `passed`/`not_applicable`; qualquer `failed` termina em `failed`. `refresh` reavalia quando o CI ou o staging terminam.
-- **TEMPORÁRIO:** a correspondência por nome do check é heurística. Motivo: cada repositório nomeia seus jobs de um jeito e o Vault ainda não guarda o mapa check→gate. Risco: um check com nome enganoso conta para o gate errado. Remoção: Fase 11, com mapa explícito por projeto no Vault.
+- **TEMPORÁRIO:** a correspondência por nome do check é heurística. Motivo: cada repositório nomeia seus jobs de um jeito e o Vault ainda não guarda o mapa check→gate. Risco: um check com nome enganoso conta para o gate errado. Remoção: Fase 11 (ADR-F11-04) — `Project.qa_checks` com nome exato tem precedência; a heurística vale só para gates sem mapa.
 
 ## ADR-F10-03 — Execução em segundo plano no próprio processo
 - **Status:** ACEITA.
 - **Decisão:** `POST /api/nexia/executions` cria a `Execution` e responde 202; o `run` continua no mesmo processo do `server.js` (Render). `GET` lista e mostra; `POST .../refresh` reavalia gates; `POST .../resume` continua depois de uma aprovação em `/aprovacoes`. Página nova `/execucoes` no SPA.
-- **TEMPORÁRIO:** sem fila durável. Motivo: o Render roda um único processo e a fase não introduz infraestrutura nova. Risco: se o processo reiniciar no meio, a execução fica parada em `running` até alguém chamar `resume`/`refresh` (o estado salvo por passo permite retomar sem refazer passos concluídos). Remoção: Fase 11 (fila durável ou job agendado que retoma execuções paradas).
+- **TEMPORÁRIO:** sem fila durável. Motivo: o Render roda um único processo e a fase não introduz infraestrutura nova. Risco: se o processo reiniciar no meio, a execução fica parada em `running` até alguém chamar `resume`/`refresh` (o estado salvo por passo permite retomar sem refazer passos concluídos). Remoção: parcial na Fase 11 (ADR-F11-03) — `sweep` retoma execuções paradas sob demanda; fila durável fica para depois do piloto.
 
 ## ADR-F10-04 — Intenção por regras e resultados de ferramenta como texto
 - **Status:** ACEITA.
 - **Decisão:** `classifyIntent` usa regras sobre o texto normalizado (produção > staging > pipeline > consulta > mudança > pergunta); o especialista (Frontend, Database, Backend ou Coder) também por palavras-chave. A escolha é auditável e testada (`tests/unit/orchestrator.test.js` U1).
-- **TEMPORÁRIO (1):** classificador por regras. Motivo: determinístico e sem custo; o Model Router ainda não tem classificação estruturada. Risco: pedido com palavras de duas intenções cai na primeira regra (ex.: "status do deploy em produção" vira `deploy_production`, que só pergunta — falha segura). Remoção: Fase 11, com classificação pelo modelo `fast` validada contra estas regras.
+- **TEMPORÁRIO (1):** classificador por regras. Motivo: determinístico e sem custo; o Model Router ainda não tem classificação estruturada. Risco: pedido com palavras de duas intenções cai na primeira regra (ex.: "status do deploy em produção" vira `deploy_production`, que só pergunta — falha segura). Revisão na Fase 11: **mantido** (ADR-F11-02).
 - **TEMPORÁRIO (2):** o resultado das ferramentas volta ao modelo como texto JSON numa mensagem de usuário (até 8 KB), porque o Model Router só aceita mensagens de texto (ADR-F5). Risco: conteúdo de arquivo lido pode tentar instruir o modelo (prompt injection); mitigação: o agente só tem as ferramentas da sua lista, o Policy Engine decide cada escrita e o Orchestrator confere o resultado pela ferramenta. Remoção: quando o Model Router suportar blocos `tool_result` nativos.
 - Resolução de projeto: no chat (Fase 4) o resolver só sugere; no Orchestrator ele é bloqueante — sem projeto com confiança suficiente não há execução.
 
@@ -264,4 +264,36 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 - **Status:** ACEITA. Fecha a ADR-F5-03.
 - **Decisão:** `architect`, `autodev-engine`, `sentinel`, `dynamic-pricing`, `ai-sales-agent`, `takedown-gen` e o resumo do `cortex-memory` chamam `modelRouter.getRouter().chat(...)`; nenhuma URL de provedor de IA fica nelas. Mudança mínima ("acrescentar ao lado"): formato de resposta de cada função mantido; erro HTTP do provedor vira texto vazio, como antes, e erro de configuração (sem chave) continua sendo erro.
 - O Bridge continua com o log local (ADR-F7-03, adiado para a Fase 11) e sem runner Windows no CI (Fase 11).
+
+## ADR-F11-01 — Produção só com aprovação humana e o mesmo commit validado em staging
+- **Status:** ACEITA.
+- **Decisão:** nova ferramenta `deploy.production` (CRITICAL). O Policy Engine sempre a põe na fila de aprovação, em qualquer autonomia — inclusive nível 5, que continua sem produção automática (decisão do dono, ADR-F6-01). Dentro da ferramenta, três travas a mais: (1) só executa com uma pessoa como ator, porque a chamada aprovada roda no contexto de quem aprovou; (2) o commit atual da branch de produção precisa ter um `Deployment` de staging `succeeded` no Vault (`STAGING_REQUIRED` senão); (3) o dispatch leva `expectedSha` e é recusado se a branch andou entre a checagem e o disparo (`CONFLICT`). O `Deployment` de produção guarda `approved_by`.
+- O GitHub Adapter só aceita `target=production` com `allowProduction: true`, que só essa ferramenta passa; nenhum agente tem `deploy.production` na lista (o Orchestrator chama a ferramenta como passo determinístico, que vai para `/aprovacoes`). O job de produção do pipeline continua no environment `production` do GitHub, com os revisores de lá: são duas aprovações humanas.
+- Gate 11 passa só com `approved_by` de pessoa e deploy concluído; sem aprovação registrada, falha.
+- Pipeline ganhou `run-name: nexia-pipeline target=...` e o `deploy.sync_status` filtra a execução pelo alvo, para não confundir a de staging com a de produção do mesmo commit.
+- **Não executado nesta fase:** nenhum deploy real de produção (nem de staging). Tudo contra o GitHub falso. Ligar de verdade é decisão e ação do dono (ver PILOT-RUNBOOK.md).
+
+## ADR-F11-02 — Intenção continua por regras
+- **Status:** ACEITA. Revê a ADR-F10-04 (1).
+- **Decisão:** o classificador por regras fica. Motivo: é determinístico, testado (U1) e falha para o lado seguro — pedido misto com "produção" vira `deploy_production`, que só pede aprovação. Um classificador por modelo acrescentaria custo e não-determinismo sem ganho de segurança. Reavaliar com dados do piloto (pedidos que caem em `question` por engano aparecem em `/auditoria`).
+
+## ADR-F11-03 — Retomada de execuções paradas (sweep)
+- **Status:** ACEITA. Mitiga a ADR-F10-03.
+- **Decisão:** `orchestrator.sweep(ctx)` e `POST /api/nexia/executions/sweep` (botão "Retomar paradas" em `/execucoes`) pegam execuções sem atualização há 10 min: `planned`/`running` com passo pendente → `run` (continua do primeiro passo não concluído; criação de branch reconhece a branch já registrada), `running` com todos os passos feitos → `refresh`, `waiting_approval` → `resume`. No máximo 20 por chamada.
+- **TEMPORÁRIO:** sweep sob demanda, sem agendador. Motivo: o Render roda um processo por instância e o sweep precisa do tenant. Risco: execução parada até alguém abrir a página e clicar. Remoção: depois do piloto, com um job agendado por tenant (Render Cron ou GitHub Actions agendado).
+
+## ADR-F11-04 — Mapa check→gate por projeto
+- **Status:** ACEITA. Resolve a ADR-F10-02 (TEMPORÁRIO).
+- **Decisão:** `Project.qa_checks: [{ gate: 1–7, check: "<nome exato do check>" }]`. Gate mapeado passa a ser obrigatório e só aceita os checks listados; gates sem mapa continuam com a correspondência por nome. O fallback do gate 6 pelo Security Agent só vale quando não há mapa.
+
+## ADR-F11-05 — Observabilidade, auditoria, custos e onboarding com integrações
+- **Status:** ACEITA.
+- **Decisão:** `nexia-ai/observability.collectMetrics` agrega do Vault (sem armazenamento novo): execuções por status/intenção, tokens, chamadas de ferramenta, custo estimado (e quantas execuções sem preço conhecido), taxa de sucesso e duração média; por ferramenta, total/sucesso/falha/negada e duração média; decisões da política; aprovações pendentes/aprovadas/rejeitadas/expiradas; deploys por ambiente com o último e quem aprovou. `GET /api/nexia/metrics?project_id=&since=` e página `/auditoria` (com a trilha de `ToolCall`). Recorte de até 200 registros por tipo, avisado com `truncated`.
+- Onboarding (spec §29 caso E) passa a registrar `Integration` `pending` para GitHub, Firebase (projeto detectado) e Cloudflare (wrangler), sem credencial; ativar exige o dono informar a referência no padrão `NEXIA_<PROVEDOR>_<TENANT>_...` (ADR-F9-03). Nunca altera integrações existentes.
+- Pipeline modelo aceita `action_pins` (SHA de 40 hex para `actions/checkout`, `actions/setup-node`, `google-github-actions/auth`); sem pin, continua na major.
+
+## ADR-F11-06 — O que fica para o piloto (fases 23–25 da spec)
+- **Status:** ACEITA.
+- Piloto com um cliente real, correções do piloto e aumento de autonomia são do dono (spec §30, fases 23–25) e dependem das pendências de credencial e publicação. Roteiro em `PILOT-RUNBOOK.md`.
+- Adiados para o piloto, com motivo: log do Bridge no Vault (ADR-F7-03; precisa de credencial do Bridge para a API, que não existe sem decisão do dono), runner Windows do Bridge (só na máquina do dono), SHAs das ações (o dono informa; esta sessão não lê repositórios de terceiros), agendador do sweep.
 

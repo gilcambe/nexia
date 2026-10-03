@@ -135,3 +135,20 @@ test('H8. erros não vazam token, chave nem corpo da requisição', async () => 
   await ok.createBranch({ branch: 'nexia/h8' });
   await assert.rejects(ok.createBranch({ branch: 'nexia/h8' }), e => e.code === 'CONFLICT' && /Reference already exists/.test(e.message) && !/ghs_/.test(e.message));
 });
+
+test('H9. pipeline (Fase 11): produção só com allowProduction e com o SHA validado; execução separada por alvo', async () => {
+  const { gh, a } = setup();
+  await code(a.dispatchPipeline({ target: 'production' }), 'FORBIDDEN');
+  await code(a.dispatchPipeline({ target: 'producao', allowProduction: true }), 'FORBIDDEN');
+  await code(a.dispatchPipeline({ target: 'production', allowProduction: 'true' }), 'FORBIDDEN');
+  await code(a.dispatchPipeline({ target: 'production', allowProduction: true, expectedSha: 'f'.repeat(40) }), 'CONFLICT');
+  assert.strictEqual(gh.dispatches.length, 0);
+  const head = gh.branches.get('develop');
+  const st = await a.dispatchPipeline({ target: 'staging' });
+  const pr = await a.dispatchPipeline({ target: 'production', allowProduction: true, expectedSha: head });
+  assert.deepStrictEqual([st.sha, pr.sha, gh.dispatches.map(d => d.inputs.target)], [head, head, ['staging', 'production']]);
+  gh.runs[0].status = 'completed'; gh.runs[0].conclusion = 'success';
+  const since = new Date(Date.now() - 1000).toISOString();
+  assert.strictEqual((await a.findPipelineRun({ sha: head, since, target: 'production' })).status, 'queued', 'staging concluído não conta como produção');
+  assert.strictEqual((await a.findPipelineRun({ sha: head, since, target: 'staging' })).conclusion, 'success');
+});

@@ -76,6 +76,9 @@ Coleção `vault_projects`, id `prj_…`, schemaVersion 1.
 | `workspace.machine_label` | string |  |  |  | 1–120 caracteres |
 | `primary_repository_id` | ref → Repository |  |  |  |  |
 | `autonomy_level` | int |  |  | 0 | 0–5 |
+| `qa_checks` | array de objeto |  |  | [] | até 50 itens |
+| `qa_checks[].gate` | int | sim |  |  | 1–7 |
+| `qa_checks[].check` | string | sim |  |  | 1–200 caracteres |
 
 Únicos por tenant: `slug`.
 

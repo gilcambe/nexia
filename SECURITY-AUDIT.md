@@ -195,6 +195,19 @@ Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claud
 | O7 | Acesso à API | `/api/nexia/executions` exige login, master ou admin do próprio tenant | O8; E2E Fase 10 |
 | O8 | Conteúdo de arquivo instruindo o modelo | ferramentas restritas por agente + política + verificação pela ferramenta (ADR-F10-04) | O1, O4 |
 
+## Fase 11 — Produção com aprovação, observabilidade e aceitação
+
+| ID | Tema | Controle | Teste |
+|---|---|---|---|
+| P1 | Produção sem pessoa | `deploy.production` CRITICAL (sempre fila, em qualquer autonomia); executa só com ator pessoa; agente que pede vai para a fila | `acceptance` G1, G2; `orchestrator` O6 |
+| P2 | Commit não validado em produção | exige `Deployment` de staging `succeeded` do mesmo SHA; `expectedSha` no dispatch | G1; `github-adapter` H9 |
+| P3 | Produção por outro caminho | adapter só aceita `target=production` com `allowProduction` (só a ferramenta passa); `dispatch_workflow` continua recusando o pipeline e inputs de deploy | H7, H9 |
+| P4 | Status trocado entre staging e produção | `run-name` com alvo e filtro por alvo no `sync_status` | H9; C6 |
+| P5 | Gate 11 sem evidência | passa só com `approved_by` de pessoa e deploy concluído | U2 |
+| P6 | Auditoria incompleta | métricas e trilha vêm só do Vault; nenhum conteúdo de entrada exposto | O9; Observabilidade |
+| P7 | Integração inventada | onboarding cria `pending` sem credencial; não altera existentes | E |
+| P8 | Ação de terceiro trocada (supply chain) | `action_pins` por SHA validado | C6 |
+
 ## Riscos remanescentes
 - Credenciais expostas continuam válidas até o dono rotacionar; histórico público ainda contém valores.
 - Correções só valem em produção depois de deploy e publicação das regras, que não fazem parte desta fase.
@@ -205,7 +218,8 @@ Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claud
 - M1, M3, M4, M5, M6 abertos.
 - Vault: `detectSecret` é heurístico; um formato de secret desconhecido e de baixa entropia pode passar. A defesa principal é o schema não ter campo de valor.
 - Outras funções podem ainda devolver `e.message` em caminhos não cobertos; as tratadas estão listadas acima.
-- Orchestrator: execução em segundo plano no próprio processo (ADR-F10-03) e gates por nome de check (ADR-F10-02) até a Fase 11.
+- Orchestrator: execução em segundo plano no próprio processo; retomada só sob demanda (ADR-F11-03). Gates por nome de check quando o projeto não tem `qa_checks` (ADR-F11-04).
+- Pipeline modelo com ações na major até o dono informar os SHAs (ADR-F11-05).
 - O Render roda `npm install` (instala também devDependencies); considerar `npm ci --omit=dev` numa fase de infraestrutura.
 - Bridge: com terminal livre no mesmo cliente, a aprovação local pode ser contornada (ver Fase 7); log local ainda não vai ao Vault.
 - GitHub: leitura ainda usa o `GITHUB_TOKEN` legado até a GitHub App ser criada (ADR-F8-01); bloqueio de workflow de deploy por nome é heurístico até a Fase 9.

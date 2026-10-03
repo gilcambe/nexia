@@ -21,6 +21,8 @@ const step = (name, o) => ({ name, ...o });
 const vars = k => `\${{ vars.${k} }}`;
 const secrets = k => `\${{ secrets.${k} }}`;
 
+const PINNABLE = ['actions/checkout', 'actions/setup-node', 'google-github-actions/auth'];
+
 function deploySteps(provider, target, outputDir) {
   if (provider === 'firebase') {
     return [
@@ -112,8 +114,20 @@ function buildPipeline(o) {
     jobs['deploy-production'] = deployJob('production', o.production, 'deploy-staging');
   }
 
+  // Fase 11: ações fixadas por SHA (commit de 40 hex) quando o projeto informa; senão, major tag.
+  const pins = o.actionPins || {};
+  for (const [name, sha] of Object.entries(pins)) {
+    if (!PINNABLE.includes(name) || !/^[0-9a-f]{40}$/.test(String(sha))) throw new GatewayError(CODES.INVALID_INPUT, `actionPins: ${name} inválido (use o SHA de 40 caracteres).`);
+  }
+  for (const job of Object.values(jobs)) {
+    for (const s of job.steps) if (s.uses && pins[s.uses.split('@')[0]]) s.uses = `${s.uses.split('@')[0]}@${pins[s.uses.split('@')[0]]}`;
+  }
+
   return {
     name: 'NEXIA Pipeline',
+    // Fase 11: o alvo aparece no título da execução, para o deploy.sync_status não confundir a
+    // execução de staging com a de produção do mesmo commit.
+    'run-name': "nexia-pipeline target=${{ inputs.target || 'none' }}",
     on: {
       pull_request: null,
       push: { branches: [o.defaultBranch] },
@@ -163,4 +177,4 @@ function renderPipeline(o) {
   return { path: PIPELINE_PATH, content: `${header}${toYaml(wf)}\n`, workflow: wf };
 }
 
-module.exports = { buildPipeline, renderPipeline, toYaml, PIPELINE_PATH, PROVIDERS };
+module.exports = { buildPipeline, renderPipeline, toYaml, PIPELINE_PATH, PROVIDERS, PINNABLE };
