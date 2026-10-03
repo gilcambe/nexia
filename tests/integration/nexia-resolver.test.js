@@ -52,7 +52,7 @@ test.before(async () => {
 
   // Contexto do CES para o Context Engine
   ids.snap = await mk('ProjectSnapshot', { project_id: ids.cesApp, generated_at: '2026-10-02T12:00:00.000Z', stack: ['html', 'firebase'],
-    frameworks: [], directory_structure: ['ces/'], deploy_target: 'render', firebase_project: 'nexia-c8710', architecture: 'Páginas HTML estáticas servidas pelo server.js a partir de ces/.' });
+    frameworks: [], directory_structure: ['ces/'], deploy_target: 'cloudflare', firebase_project: 'nexia-c8710', architecture: 'Páginas HTML estáticas servidas pelo server.js a partir de ces/.' });
   ids.dec = await mk('Decision', { project_id: ids.cesApp, title: 'Check-in servido como página estática', kind: 'technical',
     decision: 'Manter ces/checkin.html fora do SPA React.', rationale: 'Página legada já usada pelo cliente.', decided_at: '2026-10-01T10:00:00.000Z',
     author: { type: 'user', id: 'gilcambe' }, status: 'accepted' });
