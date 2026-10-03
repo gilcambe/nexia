@@ -8,6 +8,9 @@
 const { t } = require('./validate');
 
 const PRIORITY = ['low', 'medium', 'high', 'critical'];
+// Fase 10: agentes especializados (spec §7) e intenções do Orchestrator
+const AGENT_IDS = ['orchestrator', 'architect', 'coder', 'frontend', 'backend', 'database', 'qa', 'security', 'devops', 'reviewer'];
+const EXECUTION_INTENTS = ['question', 'status', 'change', 'review', 'pipeline', 'deploy_staging', 'deploy_production', 'unknown'];
 const ENV_NAMES = ['development', 'staging', 'production', 'preview'];
 const HOSTING_PROVIDERS = ['render', 'firebase', 'cloudflare', 'vercel', 'netlify', 'github_pages', 'local', 'other'];
 const SECRET_STORES = ['env', 'render', 'github_actions', 'gcp_secret_manager', 'firebase', 'cloudflare', 'vercel', 'netlify', 'local_env_file', 'other'];
@@ -362,6 +365,60 @@ const SCHEMAS = {
     },
     unique: [['project_id']],
   },
+
+  // Fase 10: Orchestrator (spec §7, §16, §22, §27). Uma execução por pedido: plano, estado
+  // de cada passo, gates de QA com evidência, uso e custo. execution_id = Execution ID do
+  // contexto (o mesmo gravado em ToolCall.execution_id).
+  Execution: {
+    collection: 'vault_executions', idPrefix: 'exe', schemaVersion: 1,
+    fields: {
+      // Só existe com projeto resolvido; pedido ambíguo vira pergunta sem execução (spec §29 caso B).
+      project_id: t.ref('Project', { required: true, immutable: true }),
+      client_id: t.ref('Client'),
+      conversation_id: t.ref('Conversation'),
+      execution_id: t.string({ required: true, max: 128, pattern: /^[A-Za-z0-9_.:-]+$/, patternName: 'execution_id', immutable: true }),
+      requested_by: { ...actorRef, required: true, immutable: true },
+      request_summary: t.string({ required: true, max: 500 }),
+      intent: t.enum(EXECUTION_INTENTS, { required: true }),
+      status: t.enum(['planned', 'running', 'waiting_approval', 'needs_input', 'succeeded', 'failed', 'cancelled'], { required: true }),
+      plan: t.array(t.object({
+        step: t.int({ required: true, min: 1, max: 50 }),
+        agent: t.enum(AGENT_IDS, { required: true }),
+        goal: t.string({ required: true, max: 300 }),
+        status: t.enum(['pending', 'running', 'done', 'failed', 'skipped', 'waiting_approval'], { required: true }),
+        model: t.string({ max: 100 }),
+        tool_call_ids: t.array(t.ref('ToolCall'), { max: 50, default: () => [] }),
+        attempts: t.int({ max: 10 }),
+        error_code: t.string({ max: 64, pattern: /^[A-Z0-9_]+$/, patternName: 'error_code' }),
+        summary: t.text({ max: 2000 }),
+      }), { max: 20, default: () => [] }),
+      gates: t.array(t.object({
+        gate: t.int({ required: true, min: 1, max: 11 }),
+        name: t.string({ required: true, max: 100 }),
+        status: t.enum(['passed', 'failed', 'pending', 'not_applicable'], { required: true }),
+        evidence: t.string({ max: 300 }),
+      }), { max: 11, default: () => [] }),
+      budget: t.object({ max_steps: t.int({ max: 200 }), max_tool_calls: t.int({ max: 500 }), max_tokens: t.int({ max: 10000000 }), max_ms: t.int({ max: 86400000 }) }),
+      usage: t.object({ tool_calls: t.int(), input_tokens: t.int(), output_tokens: t.int(), cost_usd_micros: t.int(), cost_known: t.bool(), duration_ms: t.int() }),
+      models: t.array(t.string({ max: 100 }), { max: 20, unique: true, default: () => [] }),
+      work_branch: t.string({ max: 255, pattern: /^nexia\/[A-Za-z0-9._/-]+$/, patternName: 'work_branch' }),
+      pull_request: t.int({ min: 1, max: 100000000 }),
+      deployment_id: t.ref('Deployment'),
+      review_verdict: t.enum(['approve', 'changes_requested']),
+      security_verdict: t.enum(['approve', 'changes_requested']),
+      question: t.text({ max: 2000 }),
+      result_summary: t.text({ max: 4000 }),
+      error_code: t.string({ max: 64, pattern: /^[A-Z0-9_]+$/, patternName: 'error_code' }),
+      started_at: t.timestamp({ required: true, immutable: true }),
+      finished_at: t.timestamp(),
+    },
+    unique: [['execution_id']],
+    checks: [
+      [ordered('started_at', 'finished_at'), 'finished_at>=started_at'],
+      [v => v.status !== 'needs_input' || !!v.question, 'needs_input_requires_question'],
+      [v => !['succeeded', 'failed', 'cancelled'].includes(v.status) || !!v.finished_at, 'final_requires_finished_at'],
+    ],
+  },
 };
 
 for (const [entity, s] of Object.entries(SCHEMAS)) s.entity = entity;
@@ -369,4 +426,4 @@ for (const [entity, s] of Object.entries(SCHEMAS)) s.entity = entity;
 const ENTITY_NAMES = Object.keys(SCHEMAS);
 const idPattern = entity => new RegExp(`^${SCHEMAS[entity].idPrefix}_[0-9a-f]{32}$`);
 
-module.exports = { SCHEMAS, ENTITY_NAMES, idPattern, SECRET_STORES, RISK_LEVELS, TOOL_DECISIONS, TOOL_NAME, ENV_NAMES };
+module.exports = { SCHEMAS, ENTITY_NAMES, idPattern, SECRET_STORES, RISK_LEVELS, TOOL_DECISIONS, TOOL_NAME, ENV_NAMES, AGENT_IDS, EXECUTION_INTENTS };

@@ -15,6 +15,7 @@ function createFakeGithub({ owner = 'gilcambe', repo = 'nexia', appId = '424242'
   const pulls = [];
   const dispatches = [];
   const runs = []; // execuções do Actions criadas por workflow_dispatch
+  const checks = new Map(); // ref (branch ou sha) → [{ name, status, conclusion }]
   const issued = new Map(); // token → { repositories, permissions }
   const calls = [];
   let n = 0;
@@ -121,8 +122,14 @@ function createFakeGithub({ owner = 'gilcambe', repo = 'nexia', appId = '424242'
       const a = commits.get(branches.get(from)); const b = commits.get(branches.get(to));
       if (!a || !b) return json(404, { message: 'Not Found' });
       const changed = Object.keys(b.tree).filter(k => a.tree[k] !== b.tree[k]);
-      return json(200, { status: 'ahead', ahead_by: 1, behind_by: 0, total_commits: 1, commits: [{ sha: b.sha, commit: { message: b.message } }],
+      const same = a.sha === b.sha;
+      return json(200, { status: same ? 'identical' : 'ahead', ahead_by: same ? 0 : 1, behind_by: 0, total_commits: same ? 0 : 1, commits: same ? [] : [{ sha: b.sha, commit: { message: b.message } }],
         files: changed.map(k => ({ filename: k, status: k in a.tree ? 'modified' : 'added', additions: 1, deletions: 0, patch: `+${b.tree[k]}` })) });
+    }
+    if (method === 'GET' && /^\/commits\/[^/]+\/check-runs$/.test(rest)) {
+      const ref = rest.split('/')[2];
+      const list = checks.get(ref) || checks.get([...branches].find(([, sha]) => sha === ref)?.[0]) || [];
+      return json(200, { total_count: list.length, check_runs: list });
     }
     if (method === 'POST' && rest === '/pulls') {
       if (!branches.has(body.head) || !branches.has(body.base)) return json(422, { message: 'Validation Failed' });
@@ -145,7 +152,7 @@ function createFakeGithub({ owner = 'gilcambe', repo = 'nexia', appId = '424242'
     return json(404, { message: 'Not Found' });
   }
 
-  return { fetchImpl, privatePem, appId, installationId, commits, branches, pulls, dispatches, runs, issued, calls,
+  return { fetchImpl, privatePem, appId, installationId, commits, branches, pulls, dispatches, runs, checks, issued, calls,
     env: { GITHUB_APP_ID: appId, GITHUB_APP_PRIVATE_KEY: privatePem.replace(/\n/g, '\\n') },
     fileAt: (branch, path) => commits.get(branches.get(branch)).tree[path] };
 }

@@ -16,6 +16,7 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 }
 
 const { admin, db } = require('./firebase-init');
+const modelRouter = require('../../nexia-ai/model-router'); // Fase 10: chamadas de IA via Model Router
 
 // FIX v41: import auth middleware — this endpoint was completely unauthenticated
 const { HEADERS, makeHeaders, requireBearerAuth } = require('./middleware');
@@ -25,33 +26,24 @@ const GROQ_KEY = process.env.GROQ_API_KEY;
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
 async function callGroq(systemPrompt, userMsg, model = 'llama-4-scout-17b-16e-instruct') {
-  const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${GROQ_KEY}` },
-    body: JSON.stringify({
-      model,
-      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }],
-      max_tokens: 8000,
+  // Sem chave ou erro HTTP → '' (como antes); erro de rede propaga.
+  const d = await modelRouter.getRouter().chat({ provider: 'groq', model }, {
+      system: systemPrompt,
+      messages: [{ role: 'user', content: userMsg }],
+      maxTokens: 8000,
       temperature: 0.3
-    })
-  });
-  const d = await r.json();
-  return d.choices?.[0]?.message?.content || '';
+  }).catch(e => { if (e && (e.code === 'NO_API_KEY' || (e.details && e.details.status))) return { text: '' }; throw e; });
+  return d.text || '';
 }
 
 async function callClaude(systemPrompt, userMsg) {
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 8000,
+  // Sem chave ou erro HTTP → '' (como antes); erro de rede propaga.
+  const d = await modelRouter.getRouter().chat({ provider: 'anthropic', model: 'claude-sonnet-4-20250514' }, {
+      maxTokens: 8000,
       system: systemPrompt,
       messages: [{ role: 'user', content: userMsg }]
-    })
-  });
-  const d = await r.json();
-  return d.content?.[0]?.text || '';
+  }).catch(e => { if (e && (e.code === 'NO_API_KEY' || (e.details && e.details.status))) return { text: '' }; throw e; });
+  return d.text || '';
 }
 
 // ── Actions do AutoDev ──────────────────────────────────────────

@@ -17,6 +17,7 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
  */
 
 const { admin, db } = require('./firebase-init');
+const modelRouter = require('../../nexia-ai/model-router'); // Fase 10: chamadas de IA via Model Router
 
 const { HEADERS, makeHeaders, requireBearerAuth } = require('./middleware');
 
@@ -123,36 +124,26 @@ async function callAI(messages, tenantConfig) {
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
 
   if (groqKey) {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
-        max_tokens: 600,
+    // Erro HTTP → tenta o próximo (como antes, res.ok falso); erro de rede propaga.
+    const data = await modelRouter.getRouter().chat({ provider: 'groq', model: 'llama-3.3-70b-versatile' }, {
+        maxTokens: 600,
         temperature: 0.7,
-        messages: [{ role: 'system', content: SALES_SYSTEM(tenantConfig) }, ...messages]
-      })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      return data.choices?.[0]?.message?.content || '';
+        system: SALES_SYSTEM(tenantConfig),
+        messages
+    }).catch(e => { if (e && e.details && e.details.status) return null; throw e; });
+    if (data) {
+      return data.text || '';
     }
   }
 
   if (anthropicKey) {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 600,
+    const data = await modelRouter.getRouter().chat({ provider: 'anthropic', model: 'claude-haiku-4-5-20251001' }, {
+        maxTokens: 600,
         system: SALES_SYSTEM(tenantConfig),
         messages
-      })
-    });
-    if (res.ok) {
-      const data = await res.json();
-      return data.content?.[0]?.text || '';
+    }).catch(e => { if (e && e.details && e.details.status) return null; throw e; });
+    if (data) {
+      return data.text || '';
     }
   }
 

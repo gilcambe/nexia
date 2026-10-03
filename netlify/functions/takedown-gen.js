@@ -16,6 +16,7 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
  * ╚══════════════════════════════════════════════════════╝
  */
 const { admin, db } = require('./firebase-init');
+const modelRouter = require('../../nexia-ai/model-router'); // Fase 10: chamadas de IA via Model Router
 
 
 const { requireBearerAuth, makeHeaders} = require('./middleware');
@@ -45,13 +46,9 @@ exports.handler = async (event) => {
 
 Inclua: 1) Identificação do titular, 2) Descrição da infração, 3) Declaração de boa-fé, 4) Pedido de remoção, 5) Assinatura eletrônica padrão.`;
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'x-api-key': ANTHROPIC_KEY, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 1500, messages: [{ role: 'user', content: prompt }] })
-    });
-    const data = await res.json();
-    const dossierText = data.content?.[0]?.text || '';
+    // Erro HTTP → dossiê vazio (como antes); erro de rede cai no catch ('Internal error').
+    const data = await modelRouter.getRouter().chat({ provider: 'anthropic', model: 'claude-haiku-4-5-20251001' }, { maxTokens: 1500, messages: [{ role: 'user', content: prompt }] }).catch(e => { if (e && e.details && e.details.status) return { text: '' }; throw e; });
+    const dossierText = data.text || '';
     const dossierId = `TK-${Date.now()}`;
 
     if (tenantId) {

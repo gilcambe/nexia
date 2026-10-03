@@ -13,10 +13,10 @@ const { valid, invalid, expectedInvalidRule, fakeSecrets } = require('../vault-f
 const ids = Object.fromEntries(ENTITY_NAMES.map(e => [e, `${SCHEMAS[e].idPrefix}_${crypto.randomBytes(16).toString('hex')}`]));
 const v = (entity, data, opts = {}) => validateEntity(SCHEMAS[entity], data, { refPattern: idPattern, ...opts });
 
-test('18 entidades (16 da Fase 2 + ToolCall e ToolPolicy da Fase 6), todas com coleção vault_*, prefixo de id e schemaVersion', () => {
+test('19 entidades (16 da Fase 2 + ToolCall e ToolPolicy da Fase 6 + Execution da Fase 10), todas com coleção vault_*, prefixo de id e schemaVersion', () => {
   assert.deepStrictEqual(ENTITY_NAMES, ['Client', 'Project', 'Repository', 'Environment', 'Requirement', 'Decision',
     'Task', 'Artifact', 'Conversation', 'Memory', 'Change', 'TestRun', 'Deployment', 'Error', 'Integration', 'ProjectSnapshot',
-    'ToolCall', 'ToolPolicy']);
+    'ToolCall', 'ToolPolicy', 'Execution']);
   const prefixes = new Set();
   for (const e of ENTITY_NAMES) {
     assert.match(SCHEMAS[e].collection, /^vault_[a-z_]+$/);
