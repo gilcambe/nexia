@@ -18,6 +18,7 @@ interface Metrics {
   approvals: { pending: number; approved: number; rejected: number; expired: number };
   deployments: { total: number; by_environment: Record<string, { total: number; by_status: Record<string, number>; last: { release: string; status: string; started_at: string; approved_by?: string } | null }> };
 }
+interface BridgeToken { id: string; label: string; created_at: string; last_used_at: string | null; revoked_at: string | null }
 interface ToolCall { id: string; tool: string; risk: string; decision: string; status: string; requested_by: { type: string; id: string };
   decided_by?: { type: string; id: string }; requested_at: string; input_summary?: string; output_summary?: string; error_code?: string; duration_ms?: number }
 
@@ -33,11 +34,14 @@ export default function AuditoriaPage() {
   const [m, setM] = useState<Metrics | null>(null);
   const [calls, setCalls] = useState<ToolCall[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [tokens, setTokens] = useState<BridgeToken[]>([]);
+  const [newToken, setNewToken] = useState<string | null>(null);
+  const [label, setLabel] = useState("");
 
-  const call = useCallback(async <T,>(path: string): Promise<T> => {
+  const call = useCallback(async <T,>(path: string, init: RequestInit = {}): Promise<T> => {
     const token = await getToken();
     if (!token) throw new Error("Faça login para continuar.");
-    const res = await fetch(apiPath(`/nexia${path}`), { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetch(apiPath(`/nexia${path}`), { ...init, headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
     return body as T;
@@ -53,9 +57,27 @@ export default function AuditoriaPage() {
         const p = await call<{ items: Project[] }>("/projects");
         setProjects(p.items);
         if (p.items[0]) setProjectId(p.items[0].id);
+        setTokens((await call<{ items: BridgeToken[] }>("/bridge-tokens")).items);
       } catch (e) { setError(e instanceof Error ? e.message : "Erro ao carregar"); }
     })();
   }, [authLoading, user, call]);
+
+  // ADR-F12-04: token do NEXIA Bridge para enviar o log local ao Vault (aparece uma vez)
+  const createToken = useCallback(async () => {
+    setError(null);
+    try {
+      const r = await call<{ token: string }>("/bridge-tokens", { method: "POST", body: JSON.stringify({ label: label || "Bridge" }) });
+      setNewToken(r.token); setLabel("");
+      setTokens((await call<{ items: BridgeToken[] }>("/bridge-tokens")).items);
+    } catch (e) { setError(e instanceof Error ? e.message : "Falha"); }
+  }, [call, label]);
+  const revokeToken = useCallback(async (id: string) => {
+    setError(null);
+    try {
+      await call(`/bridge-tokens/${id}`, { method: "DELETE" });
+      setTokens((await call<{ items: BridgeToken[] }>("/bridge-tokens")).items);
+    } catch (e) { setError(e instanceof Error ? e.message : "Falha"); }
+  }, [call]);
 
   useEffect(() => {
     if (!projectId) return;
@@ -128,6 +150,25 @@ export default function AuditoriaPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            <h2 className="text-lg font-semibold pt-2">NEXIA Bridge (log do seu computador)</h2>
+            <div className="rounded-xl border border-nexia-border bg-nexia-surface p-4 space-y-2 text-sm" data-testid="bridge-tokens">
+              <p className="text-xs text-nexia-muted">Crie um token, coloque-o na variável <code>NEXIA_BRIDGE_TOKEN</code> do computador onde o Bridge roda e informe <code>"vault": {"{"} "url": "{typeof window !== "undefined" ? window.location.origin : ""}" {"}"}</code> no <code>bridge.json</code>. O token aparece só uma vez.</p>
+              <div className="flex gap-2">
+                <input value={label} onChange={(e) => setLabel(e.target.value)} maxLength={80} placeholder="Nome (ex.: Notebook do Gil)" aria-label="Nome do token"
+                  className="flex-1 bg-[#0a0a0f] border border-nexia-border rounded-lg px-3 py-1 text-sm" />
+                <button onClick={createToken} className="px-3 py-1 text-xs border border-nexia-border rounded-lg cursor-pointer">Criar token</button>
+              </div>
+              {newToken && <div className="text-xs text-yellow-300 break-all" role="status">Copie agora (não aparece de novo): <code>{newToken}</code></div>}
+              {tokens.map((t) => (
+                <div key={t.id} className="text-xs flex flex-wrap gap-2 items-center border-t border-nexia-border pt-1">
+                  <span className="font-medium">{t.label}</span>
+                  <span className="text-nexia-muted">criado {new Date(t.created_at).toLocaleString("pt-BR")}{t.last_used_at ? ` · usado ${new Date(t.last_used_at).toLocaleString("pt-BR")}` : " · nunca usado"}</span>
+                  {t.revoked_at ? <span className="text-red-400">revogado</span>
+                    : <button onClick={() => revokeToken(t.id)} className="text-red-400 underline cursor-pointer">Revogar</button>}
+                </div>
+              ))}
             </div>
 
             <h2 className="text-lg font-semibold pt-2">Trilha de auditoria</h2>

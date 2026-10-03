@@ -45,5 +45,6 @@ Só **Cloudflare + Firebase + GitHub**. Não há Render.
 
 - Corrigir o que o piloto mostrar (cada correção como fase com PR, testes e relatório).
 - Só então considerar autonomia maior e outros clientes. Produção continua sempre com aprovação humana.
-- Pendente para essa etapa: log do Bridge no Vault (SHAs das ações, Bridge no Windows e retomada agendada já resolvidos, ADR-F12-01/02/03).
+- Itens técnicos adiados da Fase 11 já resolvidos: SHAs das ações, Bridge no Windows, retomada agendada e log do Bridge no Vault (ADR-F12-01 a 04).
+- **Bridge no seu computador (opcional):** para ver as operações locais em `/auditoria`, siga a seção 7 do `nexia-bridge/README.md` (token criado na própria tela).
 - Hospedagem: avaliar servir o site direto pelos assets do Worker (hoje passa pelo container) e mais de uma instância do container (hoje uma só, ADR-HOST-01).

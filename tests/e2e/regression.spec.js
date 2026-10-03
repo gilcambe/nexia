@@ -164,3 +164,14 @@ test.describe('NEXIA AI — Fase 11', () => {
     }
   });
 });
+
+test.describe('NEXIA AI — pendências finais (ADR-F12-03/04)', () => {
+  test('rotas do Bridge e do Cron sem credencial: 401 ou inexistente', async ({ request }) => {
+    expect((await request.get('/api/nexia/bridge-tokens')).status()).toBe(401);
+    expect((await request.post('/api/nexia/bridge/events', { data: { events: [] } })).status()).toBe(401);
+    // token com formato válido: 401 (ou 503 neste servidor de teste, que roda sem Firestore)
+    expect([401, 503]).toContain((await request.post('/api/nexia/bridge/events', { data: { events: [] }, headers: { Authorization: 'Bearer nxb_' + '0'.repeat(64) } })).status());
+    // Sem NEXIA_CRON_SECRET no servidor de teste, a rota interna não existe
+    expect((await request.post('/api/nexia/internal/sweep', { headers: { 'X-Nexia-Cron': 'x'.repeat(40) } })).status()).toBe(404);
+  });
+});
