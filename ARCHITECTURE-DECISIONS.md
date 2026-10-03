@@ -318,7 +318,7 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 
 ## ADR-F12-02 — Bridge testado no Windows
 - **Status:** ACEITA (2026-10-03). Resolve parte da ADR-F11-06.
-- **Decisão:** job `Bridge no Windows` no CI (`windows-latest`, Node 20) roda `tests/unit/bridge.test.js` (caminhos `D:\`, `npm.cmd`, processo MCP real). Continua sendo do dono testar na máquina dele com o `bridge.json` real.
+- **Decisão:** job `Bridge no Windows` no CI (`windows-latest`, Node 20) roda `tests/unit/bridge.test.js` (caminhos `D:\`, `npm.cmd`, processo MCP real). O primeiro run achou uma diferença real: no Windows o caminho aparecia com `\` nas confirmações e no registro; agora o caminho relativo é sempre normalizado para `/` (`nexia-bridge/lib/paths.js`). Continua sendo do dono testar na máquina dele com o `bridge.json` real.
 
 ## ADR-F12-03 — Retomada agendada de execuções (Cron do Cloudflare)
 - **Status:** ACEITA (2026-10-03). Resolve o TEMPORÁRIO da ADR-F11-03 (sweep só sob demanda) e mitiga a ADR-F10-03.

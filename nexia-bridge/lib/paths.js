@@ -49,7 +49,8 @@ function resolveInRoots(roots, input = '.') {
   const real = realpathLoose(abs);
   const root = realRoots.find(r => isInside(r, real));
   if (!root) throw new BridgeError('SYMLINK_ESCAPE', 'O caminho passa por um link simbólico que sai do workspace.');
-  return { abs: real, root, rel: nodePath.relative(root, real) || '.' };
+  // ADR-F12-02: caminho relativo sempre com '/', também no Windows (mensagens, log e git)
+  return { abs: real, root, rel: nodePath.relative(root, real).split(nodePath.sep).join('/') || '.' };
 }
 
 module.exports = { resolveInRoots, isInside, realpathLoose };
