@@ -14,6 +14,7 @@ const { resolveProject } = require('../project-resolver');
 const { buildContext } = require('../context-engine');
 const { createGateway, GatewayError } = require('../tool-gateway');
 const { HTTP_STATUS: GATEWAY_STATUS } = require('../tool-gateway/errors');
+const { createOrchestrator } = require('../orchestrator');
 
 const RESOURCES = { clients: 'Client', projects: 'Project', repos: 'Repository', environments: 'Environment', 'tool-policies': 'ToolPolicy' };
 const INVOKE_STATUS = { succeeded: 200, pending_approval: 202, denied: 403, failed: 422, rejected: 409, running: 202, expired: 409 };
@@ -66,6 +67,13 @@ function createHandler(deps = {}) {
     gateway = createGateway({ db: deps.db || require('../../netlify/functions/firebase-init').db, vault: v, ...(deps.gateway || {}) });
     return gateway;
   };
+
+  let orchestrator = null;
+  const getOrchestrator = () => orchestrator || (orchestrator = createOrchestrator({ vault: getVault(), gateway: getGateway(),
+    router: deps.router || require('../model-router').getRouter() }));
+  // TEMPORÁRIO (ADR-F10-03): a execução roda no próprio processo depois da resposta 202.
+  // Se o processo reiniciar no meio, a execução fica parada até um POST .../resume.
+  const background = deps.background || (fn => setImmediate(() => fn().catch(e => console.error('[nexia-orchestrator]', e && e.code, e && e.message))));
 
   return async function handler(event) {
     if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: headersFor(event), body: '' };
@@ -128,6 +136,37 @@ function createHandler(deps = {}) {
           if (!q.project_id) return json(event, 400, { error: 'project_id é obrigatório.' });
           const limit = q.limit ? Number(q.limit) : 50;
           return json(event, 200, { items: await gw.calls(gctx, { projectId: q.project_id, limit }) });
+        }
+        return json(event, 404, { error: 'Rota não encontrada.' });
+      }
+      // Fase 10: Orchestrator (execuções)
+      if (parts[0] === 'executions') {
+        const ectx = createExecutionContext({ tenantId: requested, actor: { type: 'user', id: auth.uid } });
+        const o = getOrchestrator();
+        const v = getVault();
+        if (parts.length === 1 && method === 'POST') {
+          let b = {};
+          try { b = JSON.parse(event.body || '{}'); } catch { return json(event, 400, { error: 'JSON inválido.' }); }
+          if (typeof b.message !== 'string' || !b.message.trim() || b.message.length > 4000) return json(event, 400, { error: 'message é obrigatório (até 4000 caracteres).' });
+          const key = h['idempotency-key'] || h['Idempotency-Key'];
+          const r = await o.start(ectx, { message: b.message, projectId: b.project_id, conversationProjectId: b.conversation_project_id,
+            recentProjectIds: Array.isArray(b.recent_project_ids) ? b.recent_project_ids.slice(0, 10) : [], repository: b.repository, budget: b.budget, idempotencyKey: key });
+          if (!r.execution) return json(event, 200, r);
+          if (!r.replayed) background(() => o.run(ectx, r.execution.id));
+          return json(event, r.replayed ? 200 : 202, r, { ...etag(r.execution), 'X-Execution-Id': ectx.executionId });
+        }
+        if (parts.length === 1 && method === 'GET') {
+          const where = {};
+          for (const k of ['project_id', 'status']) if (q[k]) where[k] = q[k];
+          return json(event, 200, { items: await v.Execution.list(ectx, { where, limit: q.limit ? Number(q.limit) : 50 }) });
+        }
+        if (parts.length === 2 && method === 'GET') {
+          const record = await v.Execution.get(ectx, parts[1]);
+          return json(event, 200, { record }, etag(record));
+        }
+        if (parts.length === 3 && ['refresh', 'resume'].includes(parts[2]) && method === 'POST') {
+          const record = await o[parts[2]](ectx, parts[1]);
+          return json(event, 200, { record }, etag(record));
         }
         return json(event, 404, { error: 'Rota não encontrada.' });
       }

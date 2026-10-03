@@ -179,6 +179,11 @@ function createOrchestrator(deps) {
             const v = r.report ? r.report.verdict : 'changes_requested';
             if (!r.report) steps[i] = { ...steps[i], summary: `sem veredito estruturado (tratado como changes_requested): ${steps[i].summary || ''}`.slice(0, 2000) };
             await commit(action === 'agent:review' ? { review_verdict: v } : { security_verdict: v });
+            if (v !== 'approve') {
+              // Sem PR com revisão reprovada: a branch fica para correção, nada vai para revisão humana.
+              stop = { status: 'failed', error_code: action === 'agent:review' ? 'REVIEW_CHANGES_REQUESTED' : 'SECURITY_CHANGES_REQUESTED',
+                result_summary: `${action === 'agent:review' ? 'Reviewer' : 'Security'} Agent pediu mudanças; PR não aberto (branch ${state.work_branch}). ${steps[i].summary || ''}`.slice(0, 4000) };
+            }
           }
         } else if (action === 'create_pr') {
           const r = await tool(ctx, state, plan[i].agent, 'github.create_pr', { head: state.work_branch,
@@ -186,8 +191,7 @@ function createOrchestrator(deps) {
             body: `Pedido: ${message}\n\nExecution: ${state.execution_id}\nReviewer: ${state.review_verdict || '—'} · Security: ${state.security_verdict || '—'}\n\nAberto pelo NEXIA AI (rascunho). O merge é de uma pessoa.` });
           if (handle(i, r, x => `PR #${x.number} ${x.html_url}`)) await commit({ pull_request: r.result.number });
         } else if (action === 'checks' || action === 'checks_before_deploy') {
-          const env = action === 'checks_before_deploy' ? (await vault.Environment.list(ctx, { where: { project_id: project.id }, limit: 20 })).find(e => e.name === 'staging') : null;
-          const ref = action === 'checks' ? state.work_branch : ((env && env.branch) || repo.default_branch);
+          const ref = action === 'checks' ? state.work_branch : await stagingRef(ctx, project.id);
           const c = await readChecks(i, ref);
           if (c) {
             checks = c.list;
@@ -221,7 +225,8 @@ function createOrchestrator(deps) {
           stop = { status: 'needs_input', question: 'Produção exige aprovação humana pelo fluxo de produção (Fase 11). Quer publicar em staging primeiro?',
             result_summary: 'Produção não foi tocada.' };
         }
-        await commit({ status: stop ? stop.status : 'running' });
+        // Estado final (com finished_at) só em finish(); aqui só os intermediários.
+        await commit({ status: stop && !FINAL.includes(stop.status) ? stop.status : 'running', ...(stop && stop.question ? { question: stop.question } : {}) });
       }
     } catch (e) {
       const code = e && e.code === 'BUDGET_EXCEEDED' ? 'BUDGET_EXCEEDED' : (e && /^[A-Z_]+$/.test(e.code || '') ? e.code : 'ORCHESTRATOR_ERROR');
@@ -232,10 +237,19 @@ function createOrchestrator(deps) {
     return finish(ctx, state, steps, meter, stop, checks, baseUsage);
   }
 
+  /** Ref que o staging publica: branch do ambiente staging ou a padrão do repositório (null = padrão). */
+  async function stagingRef(ctx, projectId) {
+    const env = (await vault.Environment.list(ctx, { where: { project_id: projectId }, limit: 20 })).find(e => e.name === 'staging');
+    if (env && env.branch) return env.branch;
+    const repo = (await vault.Repository.list(ctx, { where: { project_id: projectId }, limit: 1 }))[0];
+    return repo ? repo.default_branch : null;
+  }
+
   async function gateEvidence(ctx, exe, checks) {
     let ck = checks;
-    if (!ck && exe.work_branch && ['change', 'pipeline'].includes(exe.intent)) {
-      const r = await tool(ctx, exe, 'qa', 'github.get_checks', { ref: exe.work_branch });
+    const ref = ['change', 'pipeline'].includes(exe.intent) ? exe.work_branch : exe.intent === 'deploy_staging' ? await stagingRef(ctx, exe.project_id) : null;
+    if (!ck && ref) {
+      const r = await tool(ctx, exe, 'qa', 'github.get_checks', { ref });
       ck = r.status === 'succeeded' ? r.result.runs : null;
     }
     let deployment = null;
@@ -345,7 +359,7 @@ function createOrchestrator(deps) {
       plan[i] = { ...plan[i], status: action.startsWith('agent:') ? 'pending' : 'done', summary: `${call.tool} aprovado e executado (${call.output_summary || 'ok'})`.slice(0, 2000) };
       const patch = { plan, status: 'running' };
       if (call.tool === 'github.create_pr' && /PR #(\d+)/.test(call.output_summary || '')) patch.pull_request = Number(RegExp.$1);
-      if (call.tool === 'deploy.staging' && /→ (dpl_[0-9a-f]{32})/.test(call.output_summary || '')) patch.deployment_id = RegExp.$1;
+      if (call.tool === 'deploy.staging' && /→ (\S+)$/.test(call.output_summary || '')) patch.deployment_id = RegExp.$1;
       return advance(ctx, await save(ctx, exe, patch));
     }
     plan[i] = { ...plan[i], status: 'failed', error_code: call.error_code || call.status.toUpperCase() };

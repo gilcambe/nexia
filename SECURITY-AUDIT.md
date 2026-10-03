@@ -182,6 +182,19 @@ Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claud
 | D7 | Dado sensível no DNS | conteúdo de TXT omitido | C4 |
 | D8 | Registro de deploy perdido | `Deployment.release` (antes colidia com o metadado `version`) | D4; `vault-schemas` |
 
+## Fase 10 — Orchestrator, agentes e gates
+
+| ID | Tema | Controle | Teste |
+|---|---|---|---|
+| O1 | Agente se dá mais poder | cada agente só vê as ferramentas da sua lista (Architect, Reviewer e Security só leitura; só o DevOps abre PR e dispara staging; nenhum tem produção nem terminal local); o Policy Engine decide cada chamada | `tests/unit/orchestrator.test.js` U4; `tests/integration/orchestrator.test.js` O1 |
+| O2 | Falso sucesso | `succeeded` só com gates verdes por evidência de ferramenta; agente que diz "feito" sem commit falha com `NO_CHANGES`; revisão reprovada não abre PR | U2; O1, O4 |
+| O3 | Ação sem pessoa | ações acima da autonomia do projeto ficam em `/aprovacoes`; `resume` só segue com a `ToolCall` aprovada e executada; rejeição termina a execução | O3, O4 |
+| O4 | Produção pelo Orchestrator | intenção de produção não executa nada (`needs_input`, gate 11 pendente) | O6 |
+| O5 | Custo descontrolado | orçamento por execução (passos, ferramentas, tokens, tempo) | U3; O5 |
+| O6 | Projeto errado | pedido ambíguo pergunta e não cria execução | O2 |
+| O7 | Acesso à API | `/api/nexia/executions` exige login, master ou admin do próprio tenant | O8; E2E Fase 10 |
+| O8 | Conteúdo de arquivo instruindo o modelo | ferramentas restritas por agente + política + verificação pela ferramenta (ADR-F10-04) | O1, O4 |
+
 ## Riscos remanescentes
 - Credenciais expostas continuam válidas até o dono rotacionar; histórico público ainda contém valores.
 - Correções só valem em produção depois de deploy e publicação das regras, que não fazem parte desta fase.
@@ -192,7 +205,7 @@ Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claud
 - M1, M3, M4, M5, M6 abertos.
 - Vault: `detectSecret` é heurístico; um formato de secret desconhecido e de baixa entropia pode passar. A defesa principal é o schema não ter campo de valor.
 - Outras funções podem ainda devolver `e.message` em caminhos não cobertos; as tratadas estão listadas acima.
-- Seis funções legadas e o resumo do `cortex-memory` ainda chamam provedores de IA diretamente (ADR-F5-03); migram na Fase 10.
+- Orchestrator: execução em segundo plano no próprio processo (ADR-F10-03) e gates por nome de check (ADR-F10-02) até a Fase 11.
 - O Render roda `npm install` (instala também devDependencies); considerar `npm ci --omit=dev` numa fase de infraestrutura.
 - Bridge: com terminal livre no mesmo cliente, a aprovação local pode ser contornada (ver Fase 7); log local ainda não vai ao Vault.
 - GitHub: leitura ainda usa o `GITHUB_TOKEN` legado até a GitHub App ser criada (ADR-F8-01); bloqueio de workflow de deploy por nome é heurístico até a Fase 9.

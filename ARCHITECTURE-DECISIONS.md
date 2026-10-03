@@ -151,7 +151,7 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 - Mudanças de comportamento: as temperaturas fixas por provedor do `callSync` antigo (0,3 Groq, 0,1 DeepSeek) não são mais enviadas; vale o padrão do provedor. `multi-model-engine` mantém 4096/2000 tokens e temperatura 0,7 fora do Anthropic. `action: "list"` ganhou `details` com as capacidades de cada modelo (campo novo; `models` igual).
 
 ## ADR-F5-03 — Chamadas diretas a provedores fora do escopo desta fase
-- **Status:** ACEITA.
+- **Status:** SUPERADA pela ADR-F10-05 (Fase 10: as funções passaram a usar o Model Router).
 - **Decisão:** `architect`, `autodev-engine`, `sentinel`, `dynamic-pricing`, `ai-sales-agent`, `takedown-gen` e o resumo do `cortex-memory` (Groq direto) ainda chamam provedores diretamente. O plano da Fase 5 cita só `cortex-chat` e `multi-model-engine`; os demais migram quando virarem agentes do Orchestrator (Fase 10), para não mexer em 6 funções legadas sem teste próprio.
 
 ## ADR-F6-01 — Policy Engine: risco declarado × autonomia do projeto × ambiente
@@ -189,7 +189,7 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 ## ADR-F7-03 — Registro local; sincronização com o Vault fica para depois
 - **Status:** ACEITA.
 - **Decisão:** cada chamada vira uma linha em `<stateDir>/bridge-log.jsonl` com data, agente (nome do cliente MCP), ferramenta, projeto, caminho ou comando redigido, pasta, decisão, resultado, código de erro e duração. Nunca conteúdo de arquivo nem saída de comando.
-- **TEMPORÁRIO:** o log fica só na máquina do usuário. Motivo: enviar ao Vault exige credencial do Bridge para a API, que não existe ainda. Risco: auditoria central não vê operações locais. Remoção: Fase 10 (o Orchestrator registra a execução e o Bridge envia o resumo como `ToolCall`).
+- **TEMPORÁRIO:** o log fica só na máquina do usuário. Motivo: enviar ao Vault exige credencial do Bridge para a API, que não existe ainda. Risco: auditoria central não vê operações locais. Remoção: ~~Fase 10~~ Fase 11 (adiado na Fase 10: o Orchestrator registra as próprias execuções, mas o envio do log do Bridge exige credencial do Bridge para a API, que entra com o piloto na máquina do dono).
 
 ## ADR-F8-01 — GitHub Adapter com GitHub App e tokens de instalação por operação
 - **Status:** ACEITA.
@@ -232,3 +232,36 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 - **Status:** ACEITA.
 - **Decisão:** `deploy.staging` (HIGH, autonomia mínima 4, spec §23) dispara o pipeline modelo com `target=staging` na branch do ambiente staging (ou na padrão) e registra um `Deployment` `pending` no Vault com o SHA disparado. `deploy.sync_status` (LOW) acha a execução no Actions pelo SHA e espelha o estado (`in_progress`, `succeeded`, `failed`); estado final não muda depois de registrado. Abaixo do nível 4 vai para aprovação humana. `github.dispatch_workflow` (Fase 8) passa a recusar o `nexia-pipeline.yml` e inputs `target`/`environment`/`deploy`, para o nível 3 não chegar a staging por outro caminho. `target=production` não é aceito por nenhuma ferramenta nesta fase.
 - Correção no Vault: o campo `Deployment.version` colidia com o metadado `version` do registro (o valor informado era sobrescrito pelo número da versão). Passou a se chamar `release`; o Context Engine, que mostrava o número no "Último deploy", foi corrigido. Teste novo impede campo com nome de metadado. Sem migração: o Vault ainda não está em produção (regras/índices não publicados).
+
+## ADR-F10-01 — Orchestrator: plano por intenção, passos mecânicos sem modelo, Execution no Vault
+- **Status:** ACEITA.
+- **Decisão:** `nexia-ai/orchestrator` recebe o pedido, resolve o projeto (Project Resolver), classifica a intenção, monta o plano e registra uma `Execution` (entidade nova do Vault, `vault_executions`) com plano, agente e status de cada passo, ids das `ToolCall` que sustentam cada passo, gates, orçamento, uso, custo e modelos usados.
+- Passos que precisam de julgamento (analisar, implementar, revisar, responder) são de agentes (`runAgent`). Passos mecânicos (criar branch `nexia/...`, abrir PR rascunho, ler checks, gerar e commitar pipeline, disparar e acompanhar staging) são chamadas diretas ao Tool Gateway, sem modelo, para serem determinísticos. Toda escrita passa pelo Policy Engine; o Orchestrator não tem caminho próprio de escrita.
+- Pedido ambíguo (spec §29 caso B) devolve a pergunta e os candidatos **sem** criar `Execution`, porque `project_id` é obrigatório e imutável no Vault.
+- Confirmação pela ferramenta: depois do agente implementador, `github.compare` precisa mostrar commit à frente da branch padrão; senão a execução falha com `NO_CHANGES`, mesmo que o agente diga que terminou. Reviewer ou Security pedindo mudanças param a execução antes do PR (`REVIEW_CHANGES_REQUESTED` / `SECURITY_CHANGES_REQUESTED`).
+- Produção (`deploy_production`) não é executada: a execução fica `needs_input` com a pergunta, e o gate 11 fica `pending` (Fase 11).
+- Orçamento padrão por execução: 40 passos de modelo, 80 chamadas de ferramenta, 800 mil tokens, 20 minutos; estouro termina em `failed` com `BUDGET_EXCEEDED`.
+
+## ADR-F10-02 — Gates 1–11 só com evidência; "succeeded" só com todos verdes
+- **Status:** ACEITA.
+- **Decisão:** `orchestrator/gates.js` avalia os 11 gates da spec §22. Gates 1–7 vêm dos check runs do GitHub do commit/branch, por nome do check (um check pode cobrir vários gates). Testes unitários (3), build (5) e segurança (6) são obrigatórios: sem check correspondente ficam `pending`; os demais viram `not_applicable`. O gate 6 aceita o veredito do Security Agent quando o repositório não tem check de segurança. Gate 8 = veredito estruturado do Reviewer (`report_findings`); 9–10 = `Deployment` do Vault (o smoke do pipeline modelo é o health check); 11 = produção, sempre `pending` quando pedida.
+- Execução fica `running` enquanto houver gate pendente e só vira `succeeded` com todos `passed`/`not_applicable`; qualquer `failed` termina em `failed`. `refresh` reavalia quando o CI ou o staging terminam.
+- **TEMPORÁRIO:** a correspondência por nome do check é heurística. Motivo: cada repositório nomeia seus jobs de um jeito e o Vault ainda não guarda o mapa check→gate. Risco: um check com nome enganoso conta para o gate errado. Remoção: Fase 11, com mapa explícito por projeto no Vault.
+
+## ADR-F10-03 — Execução em segundo plano no próprio processo
+- **Status:** ACEITA.
+- **Decisão:** `POST /api/nexia/executions` cria a `Execution` e responde 202; o `run` continua no mesmo processo do `server.js` (Render). `GET` lista e mostra; `POST .../refresh` reavalia gates; `POST .../resume` continua depois de uma aprovação em `/aprovacoes`. Página nova `/execucoes` no SPA.
+- **TEMPORÁRIO:** sem fila durável. Motivo: o Render roda um único processo e a fase não introduz infraestrutura nova. Risco: se o processo reiniciar no meio, a execução fica parada em `running` até alguém chamar `resume`/`refresh` (o estado salvo por passo permite retomar sem refazer passos concluídos). Remoção: Fase 11 (fila durável ou job agendado que retoma execuções paradas).
+
+## ADR-F10-04 — Intenção por regras e resultados de ferramenta como texto
+- **Status:** ACEITA.
+- **Decisão:** `classifyIntent` usa regras sobre o texto normalizado (produção > staging > pipeline > consulta > mudança > pergunta); o especialista (Frontend, Database, Backend ou Coder) também por palavras-chave. A escolha é auditável e testada (`tests/unit/orchestrator.test.js` U1).
+- **TEMPORÁRIO (1):** classificador por regras. Motivo: determinístico e sem custo; o Model Router ainda não tem classificação estruturada. Risco: pedido com palavras de duas intenções cai na primeira regra (ex.: "status do deploy em produção" vira `deploy_production`, que só pergunta — falha segura). Remoção: Fase 11, com classificação pelo modelo `fast` validada contra estas regras.
+- **TEMPORÁRIO (2):** o resultado das ferramentas volta ao modelo como texto JSON numa mensagem de usuário (até 8 KB), porque o Model Router só aceita mensagens de texto (ADR-F5). Risco: conteúdo de arquivo lido pode tentar instruir o modelo (prompt injection); mitigação: o agente só tem as ferramentas da sua lista, o Policy Engine decide cada escrita e o Orchestrator confere o resultado pela ferramenta. Remoção: quando o Model Router suportar blocos `tool_result` nativos.
+- Resolução de projeto: no chat (Fase 4) o resolver só sugere; no Orchestrator ele é bloqueante — sem projeto com confiança suficiente não há execução.
+
+## ADR-F10-05 — Funções legadas migradas para o Model Router
+- **Status:** ACEITA. Fecha a ADR-F5-03.
+- **Decisão:** `architect`, `autodev-engine`, `sentinel`, `dynamic-pricing`, `ai-sales-agent`, `takedown-gen` e o resumo do `cortex-memory` chamam `modelRouter.getRouter().chat(...)`; nenhuma URL de provedor de IA fica nelas. Mudança mínima ("acrescentar ao lado"): formato de resposta de cada função mantido; erro HTTP do provedor vira texto vazio, como antes, e erro de configuração (sem chave) continua sendo erro.
+- O Bridge continua com o log local (ADR-F7-03, adiado para a Fase 11) e sem runner Windows no CI (Fase 11).
+

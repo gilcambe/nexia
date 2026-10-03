@@ -126,8 +126,8 @@ function createFakeGithub({ owner = 'gilcambe', repo = 'nexia', appId = '424242'
       return json(200, { status: same ? 'identical' : 'ahead', ahead_by: same ? 0 : 1, behind_by: 0, total_commits: same ? 0 : 1, commits: same ? [] : [{ sha: b.sha, commit: { message: b.message } }],
         files: changed.map(k => ({ filename: k, status: k in a.tree ? 'modified' : 'added', additions: 1, deletions: 0, patch: `+${b.tree[k]}` })) });
     }
-    if (method === 'GET' && /^\/commits\/[^/]+\/check-runs$/.test(rest)) {
-      const ref = rest.split('/')[2];
+    if (method === 'GET' && /^\/commits\/.+\/check-runs$/.test(rest)) {
+      const ref = rest.slice('/commits/'.length, -'/check-runs'.length);
       const list = checks.get(ref) || checks.get([...branches].find(([, sha]) => sha === ref)?.[0]) || [];
       return json(200, { total_count: list.length, check_runs: list });
     }
