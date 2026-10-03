@@ -14,4 +14,13 @@ function containerEnv(env) {
   return out;
 }
 
-module.exports = { containerEnv };
+/** Pedido interno da retomada agendada (ADR-F12-03); null sem segredo forte configurado. */
+function cronRequest(env) {
+  const secret = env && env.NEXIA_CRON_SECRET;
+  if (typeof secret !== 'string' || secret.length < 32) return null;
+  return new Request('http://nexia.internal/api/nexia/internal/sweep', {
+    method: 'POST', headers: { 'X-Nexia-Cron': secret, 'Content-Type': 'application/json' }, body: '{}',
+  });
+}
+
+module.exports = { containerEnv, cronRequest };

@@ -8,6 +8,8 @@
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
+  // ADR-F12-03: retomada de execuções paradas, de hora em hora (exige o segredo NEXIA_CRON_SECRET)
+  "triggers": { "crons": ["7 * * * *"] },
   "containers": [
     {
       "class_name": "NexiaBackend",

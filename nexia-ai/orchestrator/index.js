@@ -387,16 +387,18 @@ function createOrchestrator(deps) {
    * planned/running com passo pendente → run (continua do primeiro passo não concluído);
    * running com todos os passos concluídos → refresh (gates); waiting_approval → resume.
    */
-  async function sweep(ctx, { staleMs = 10 * 60 * 1000, max = 20 } = {}) {
+  // ADR-F12-03: `statuses` e `ctxFor` permitem a retomada agendada (sem pessoa) continuar só
+  // execuções em andamento, cada uma em nome de quem pediu.
+  async function sweep(ctx, { staleMs = 10 * 60 * 1000, max = 20, statuses = ['planned', 'running', 'waiting_approval'], ctxFor = () => ctx } = {}) {
     const cutoff = new Date(now().getTime() - staleMs).toISOString();
     const out = [];
-    for (const status of ['planned', 'running', 'waiting_approval']) {
+    for (const status of statuses) {
       const list = (await vault.Execution.list(ctx, { where: { status }, limit: 200 })).filter(x => (x.updated_at || x.started_at) <= cutoff);
       for (const x of list) {
         if (out.length >= max) return out;
         const action = status === 'waiting_approval' ? 'resume' : x.plan.every(s => s.status === 'done' || s.status === 'skipped') ? 'refresh' : 'run';
         try {
-          const r = await { resume, refresh, run }[action](ctx, x.id);
+          const r = await { resume, refresh, run }[action](ctxFor(x), x.id);
           out.push({ id: x.id, action, from: status, to: r.status });
         } catch (e) {
           out.push({ id: x.id, action, from: status, error: e && /^[A-Z_]+$/.test(e.code || '') ? e.code : 'ERROR' });

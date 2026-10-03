@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
-const { containerEnv } = require('../../cloudflare/env');
+const { containerEnv, cronRequest } = require('../../cloudflare/env');
 
 const ROOT = path.join(__dirname, '..', '..');
 
@@ -26,4 +26,13 @@ test('CF2. config do Cloudflare aponta para o container; sem Render no que é ex
   for (const f of ['server.js', 'src/config/env.ts', 'index.html', 'netlify/functions/sentinel.js', 'src/pages/tenant/page.tsx', 'ces/ces-app-executivo.html']) {
     assert.doesNotMatch(fs.readFileSync(path.join(ROOT, f), 'utf8'), /onrender\.com|RENDER_EXTERNAL_URL/, f);
   }
+});
+
+test('CF3. Cron do Worker: sem segredo forte não chama nada; com segredo, POST interno com o cabeçalho', async () => {
+  assert.strictEqual(cronRequest({}), null);
+  assert.strictEqual(cronRequest({ NEXIA_CRON_SECRET: 'curto' }), null);
+  const r = cronRequest({ NEXIA_CRON_SECRET: 'x'.repeat(40) });
+  assert.deepStrictEqual([r.method, new URL(r.url).pathname, r.headers.get('x-nexia-cron')], ['POST', '/api/nexia/internal/sweep', 'x'.repeat(40)]);
+  const wr = JSON.parse(fs.readFileSync(path.join(ROOT, 'wrangler.jsonc'), 'utf8').replace(/^\s*\/\/.*$/gm, ''));
+  assert.deepStrictEqual(wr.triggers.crons, ['7 * * * *']);
 });

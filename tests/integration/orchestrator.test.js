@@ -292,3 +292,30 @@ test('O9. sweep retoma execução parada; /api/nexia/metrics agrega custo e audi
   assert.strictEqual((await get('/api/nexia/metrics?since=ontem')).status, 400);
   assert.strictEqual((await get(`/api/nexia/metrics?project_id=prj_${'0'.repeat(32)}`)).status, 404);
 });
+
+test('O10. retomada agendada: só com o segredo do Cron; continua em nome de quem pediu; não toca em aprovações', async () => {
+  await setAutonomy(0);
+  const ctx = newCtx();
+  const s = await orch(scriptedRouter({})).start(ctx, { message: 'Quais branches o Site Alfa tem?', projectId: ids.project });
+  assert.strictEqual(s.execution.status, 'planned');
+  const { createHandler } = require('../../nexia-ai/api');
+  const secret = 'c'.repeat(40);
+  const mk = env => createHandler({ db, env, verify: async () => { throw new Error('cron não usa token de pessoa'); },
+    gateway: { env: fake.env, fetchImpl: fake.fetchImpl }, router: scriptedRouter({ architect: [{ text: 'Retomada pelo cron.' }] }),
+    now: () => new Date(Date.now() + 3600e3) });
+  const post = (h, headers = {}, method = 'POST') => h({ httpMethod: method, path: '/api/nexia/internal/sweep', headers, queryStringParameters: {}, body: '{}' })
+    .then(r => ({ status: r.statusCode, body: JSON.parse(r.body) }));
+  assert.strictEqual((await post(mk({}), { 'x-nexia-cron': secret })).status, 404, 'sem segredo configurado a rota não existe');
+  assert.strictEqual((await post(mk({ NEXIA_CRON_SECRET: 'curto' }), { 'x-nexia-cron': 'curto' })).status, 404, 'segredo fraco não liga a rota');
+  const h = mk({ NEXIA_CRON_SECRET: secret });
+  assert.strictEqual((await post(h)).status, 401);
+  assert.strictEqual((await post(h, { 'x-nexia-cron': 'd'.repeat(40) })).status, 401);
+  assert.strictEqual((await post(h, { 'x-nexia-cron': secret }, 'GET')).status, 405);
+  const r = await post(h, { 'x-nexia-cron': secret });
+  assert.strictEqual(r.status, 200, JSON.stringify(r.body));
+  const mine = r.body.items.find(x => x.id === s.execution.id);
+  assert.deepStrictEqual([mine.tenant, mine.action, mine.from, mine.to], [T, 'run', 'planned', 'succeeded']);
+  assert.ok(r.body.items.every(x => x.from !== 'waiting_approval'), 'aprovação pendente fica para a pessoa');
+  const calls = await vault.ToolCall.list(newCtx(), { where: { project_id: ids.project }, limit: 200 });
+  assert.ok(calls.every(c => c.requested_by.type !== 'system'), 'ferramentas nunca em nome do sistema');
+});

@@ -217,6 +217,7 @@ Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claud
 | H3 | Deploy acidental | workflow `Deploy Cloudflare` só manual, exige digitar `DEPLOY` e o environment `production` com revisor; roda `npm test` antes | CF2 |
 | H4 | Segredo no repositório ou na imagem | segredos só como secrets do Worker, passados ao container em tempo de execução; `.dockerignore` exclui `.env*`, testes e Bridge; imagem sem devDependencies | CF1; gitleaks |
 | H5 | Processo como root | container roda como usuário `node` | revisão do `Dockerfile` |
+| H6 | Rota interna da retomada agendada | só existe com `NEXIA_CRON_SECRET` de 32+ caracteres; comparação em tempo constante; não retoma aprovações; ferramentas em nome de quem pediu | O10; CF3 |
 
 ## Riscos remanescentes
 - Credenciais expostas continuam válidas até o dono rotacionar; histórico público ainda contém valores.
@@ -228,7 +229,7 @@ Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claud
 - M1, M3, M4, M5, M6 abertos.
 - Vault: `detectSecret` é heurístico; um formato de secret desconhecido e de baixa entropia pode passar. A defesa principal é o schema não ter campo de valor.
 - Outras funções podem ainda devolver `e.message` em caminhos não cobertos; as tratadas estão listadas acima.
-- Orchestrator: execução em segundo plano no próprio processo; retomada só sob demanda (ADR-F11-03). Gates por nome de check quando o projeto não tem `qa_checks` (ADR-F11-04).
+- Orchestrator: execução em segundo plano no próprio processo; retomada de hora em hora pelo Cron do Worker (ADR-F12-03) ou sob demanda. Gates por nome de check quando o projeto não tem `qa_checks` (ADR-F11-04).
 - Pipeline modelo e workflows do NEXIA com ações fixadas por SHA (ADR-F12-01); atualizar os SHAs a cada release nova.
 - Hospedagem (ADR-HOST-01): chave de serviço do Firebase como segredo do Worker; uma instância só do container. Render removido (o item antigo sobre `npm install` no Render deixa de valer; a imagem usa `npm ci --omit=dev`).
 - Bridge: com terminal livre no mesmo cliente, a aprovação local pode ser contornada (ver Fase 7); log local ainda não vai ao Vault.

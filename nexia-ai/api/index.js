@@ -71,14 +71,42 @@ function createHandler(deps = {}) {
 
   let orchestrator = null;
   const getOrchestrator = () => orchestrator || (orchestrator = createOrchestrator({ vault: getVault(), gateway: getGateway(),
-    router: deps.router || require('../model-router').getRouter() }));
+    router: deps.router || require('../model-router').getRouter(), now: deps.now }));
   // TEMPORÁRIO (ADR-F10-03): a execução roda no próprio processo depois da resposta 202.
   // Se o processo reiniciar no meio, a execução fica parada até um POST .../resume.
   const background = deps.background || (fn => setImmediate(() => fn().catch(e => console.error('[nexia-orchestrator]', e && e.code, e && e.message))));
 
+  async function cronSweep(event) {
+    const secret = (deps.env || process.env).NEXIA_CRON_SECRET || '';
+    if (secret.length < 32) return json(event, 404, { error: 'Rota não encontrada.' });
+    if (event.httpMethod !== 'POST') return json(event, 405, { error: 'Método não permitido.' });
+    const h = event.headers || {};
+    const given = String(h['x-nexia-cron'] || h['X-Nexia-Cron'] || '');
+    const a = Buffer.from(given), b = Buffer.from(secret);
+    if (a.length !== b.length || !require('crypto').timingSafeEqual(a, b)) return json(event, 401, { error: 'Não autenticado.' });
+    const db = deps.db || require('../../netlify/functions/firebase-init').db;
+    const tenants = (await db.collection('tenants').select().limit(200).get()).docs.map(d => d.id).filter(t => TENANT_RE.test(t));
+    const o = getOrchestrator();
+    const items = [];
+    for (const tenantId of tenants) {
+      const sys = createExecutionContext({ tenantId, actor: { type: 'system', id: 'cron-sweep' } });
+      // Aprovações (waiting_approval) ficam de fora: retomar depois de aprovar é ação de pessoa.
+      const done = await o.sweep(sys, { statuses: ['planned', 'running'], max: 20 - items.length,
+        ctxFor: x => createExecutionContext({ tenantId, actor: x.requested_by, executionId: x.execution_id || undefined }) });
+      for (const d of done) items.push({ tenant: tenantId, ...d });
+      if (items.length >= 20) break;
+    }
+    return json(event, 200, { tenants: tenants.length, items });
+  }
+
   return async function handler(event) {
     if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: headersFor(event), body: '' };
     try {
+      // ADR-F12-03: retomada agendada (Cron do Worker no Cloudflare). Sem token de pessoa;
+      // só com o segredo NEXIA_CRON_SECRET. Sem o segredo configurado, a rota não existe.
+      if ((event.path || '').replace(/\/+$/, '') === '/api/nexia/internal/sweep') {
+        return await cronSweep(event);
+      }
       const auth = await verify(event);
       if (!auth.ok) return json(event, 401, { error: auth.reason || 'Não autenticado.' });
 

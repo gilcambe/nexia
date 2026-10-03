@@ -21,7 +21,7 @@ Só **Cloudflare + Firebase + GitHub**. Não há Render.
    2. Crie um **API Token** em *My Profile → API Tokens → Create Token → modelo "Edit Cloudflare Workers"*.
 5. **Segredos do NEXIA no Cloudflare:** no seu computador, dentro da pasta do repositório, rode um comando por variável e cole o valor quando ele pedir (os nomes estão em `.env.example`):
    `npx wrangler secret put FIREBASE_SERVICE_ACCOUNT_BASE64`
-   Faça o mesmo para `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID`, `FIREBASE_STORAGE_BUCKET`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_APP_ID`, `MASTER_EMAIL`, `ANTHROPIC_API_KEY` e os demais que você usa. `NEXIA_APP_URL` só é preciso se outro domínio for chamar a API.
+   Faça o mesmo para `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID`, `FIREBASE_STORAGE_BUCKET`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_APP_ID`, `MASTER_EMAIL`, `ANTHROPIC_API_KEY` e os demais que você usa. `NEXIA_APP_URL` só é preciso se outro domínio for chamar a API. Para a retomada automática de execuções paradas (de hora em hora), crie também `NEXIA_CRON_SECRET` com um texto aleatório longo (por exemplo, o resultado de `openssl rand -hex 32`).
 6. **GitHub App:** crie a NEXIA GitHub App (passos no PHASE-8-REPORT), instale só no repositório do piloto e coloque `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY` e `GITHUB_APP_INSTALLATION_ID` como segredos do Worker (mesmo comando do passo 5).
 7. **Botão de deploy no GitHub:** em `gilcambe/nexia` → *Settings → Environments → New environment* `production`:
    1. Marque **Required reviewers** e coloque você.
@@ -45,5 +45,5 @@ Só **Cloudflare + Firebase + GitHub**. Não há Render.
 
 - Corrigir o que o piloto mostrar (cada correção como fase com PR, testes e relatório).
 - Só então considerar autonomia maior e outros clientes. Produção continua sempre com aprovação humana.
-- Pendentes para essa etapa: log do Bridge no Vault e agendador da retomada de execuções (SHAs das ações e teste do Bridge no Windows já resolvidos, ADR-F12-01/02).
+- Pendente para essa etapa: log do Bridge no Vault (SHAs das ações, Bridge no Windows e retomada agendada já resolvidos, ADR-F12-01/02/03).
 - Hospedagem: avaliar servir o site direto pelos assets do Worker (hoje passa pelo container) e mais de uma instância do container (hoje uma só, ADR-HOST-01).
