@@ -56,7 +56,7 @@ test('W1. path traversal: .., absoluto fora, UNC, drive relativo e byte nulo sã
   const bad = { '../fora/segredo.txt': 'OUTSIDE_WORKSPACE', 'src/../../fora': 'OUTSIDE_WORKSPACE', [path.join(OUTSIDE, 'segredo.txt')]: 'OUTSIDE_WORKSPACE', '/etc/passwd': 'OUTSIDE_WORKSPACE',
     '\\\\servidor\\share\\x': 'OUTSIDE_WORKSPACE', '//servidor/share': 'OUTSIDE_WORKSPACE', 'C:arquivo': 'INVALID_PATH', 'src/a\0b': 'INVALID_PATH' };
   for (const [p, code] of Object.entries(bad)) assert.throws(() => resolveInRoots([ROOT], p), e => e.code === code, p);
-  assert.strictEqual(resolveInRoots([ROOT], 'src/app.js').rel, path.join('src', 'app.js'));
+  assert.strictEqual(resolveInRoots([ROOT], 'src/app.js').rel, 'src/app.js', 'sempre com /, também no Windows');
   assert.strictEqual(resolveInRoots([ROOT], path.join(ROOT, 'src')).rel, 'src');
   assert.strictEqual(resolveInRoots([ROOT], 'src/novo/arquivo.ts').rel, path.join('src', 'novo', 'arquivo.ts'));
   // Windows: sem caixa e sem confundir prefixo de nome
