@@ -100,3 +100,16 @@ test('C5. credencial só com o nome do próprio tenant (NEXIA_<PROVEDOR>_<TENANT
   assert.throws(() => credentialFor({ env: {}, ctx }, it('NEXIA_FIREBASE_CLIENTE_ALFA_SA')), e => e.code === 'CREDENTIAL_MISSING' && !/valor/.test(e.message));
   assert.throws(() => credentialFor({ env, ctx }, { provider: 'firebase', secret_refs: [] }), e => e.code === 'INVALID_INPUT');
 });
+
+test('C6. pipeline (Fase 11): alvo no título da execução; ações fixadas por SHA quando informado', () => {
+  const sha = 'a'.repeat(40);
+  const wf = buildPipeline({ defaultBranch: 'main', staging: { provider: 'firebase' }, production: { provider: 'firebase' }, actionPins: { 'actions/checkout': sha, 'google-github-actions/auth': 'b'.repeat(40) } });
+  assert.strictEqual(wf['run-name'], "nexia-pipeline target=${{ inputs.target || 'none' }}");
+  const uses = Object.values(wf.jobs).flatMap(j => j.steps).map(s => s.uses).filter(Boolean);
+  assert.ok(uses.filter(u => u.startsWith('actions/checkout')).every(u => u === `actions/checkout@${sha}`));
+  assert.ok(uses.includes(`google-github-actions/auth@${'b'.repeat(40)}`));
+  assert.ok(uses.includes('actions/setup-node@v4'), 'sem pin, continua na major');
+  for (const bad of [{ 'actions/checkout': 'v4' }, { 'evil/action': sha }, { 'actions/checkout': 'A'.repeat(40) }]) {
+    assert.throws(() => buildPipeline({ defaultBranch: 'main', actionPins: bad }), e => e.code === 'INVALID_INPUT', JSON.stringify(bad));
+  }
+});

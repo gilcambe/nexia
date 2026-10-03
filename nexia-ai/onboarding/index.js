@@ -75,6 +75,24 @@ async function onboardProject({ vault, ctx, projectId, source, repositoryId }) {
   }
   steps.push({ step: 'environments', result: 'ok', created: envResult.created.length, existing: envResult.existing.length });
 
+  // Fase 11 (spec §29 caso E): integrações detectadas viram registros "pending" no Vault, sem
+  // credencial. Só cria a de um provedor que o projeto ainda não tem; nunca altera as existentes.
+  // Ativar exige o dono informar a referência da credencial (NEXIA_<PROVEDOR>_<TENANT>_...).
+  const integrations = await listAll(vault.Integration, ctx, { project_id: projectId });
+  const intResult = { created: [], existing: [] };
+  const wanted = [
+    { provider: 'github', repository_id: repository.id, external_ref: `${repository.owner}/${repository.repo}`, notes: 'Repositório do projeto (leitura pela GitHub App do NEXIA).' },
+    d.firebaseProject && { provider: 'firebase', external_ref: d.firebaseProject, notes: 'Detectado pelo onboarding. Para ativar: service account de leitura em NEXIA_FIREBASE_<TENANT>_SA.' },
+    d.cloudflareRef && { provider: 'cloudflare', notes: `Detectado pelo onboarding (wrangler: ${d.cloudflareRef}). Para ativar: external_ref pages:<conta>:<projeto>, workers:<conta>:<nome> ou zone:<id> e token em NEXIA_CLOUDFLARE_<TENANT>_TOKEN.` },
+  ].filter(Boolean);
+  for (const w of wanted) {
+    const found = integrations.find(x => x.provider === w.provider);
+    if (found) { intResult.existing.push(found.id); continue; }
+    const { record } = await vault.Integration.create(ctx, { project_id: projectId, status: 'pending', ...w });
+    intResult.created.push(record.id);
+  }
+  steps.push({ step: 'integrations', result: 'ok', created: intResult.created.length, existing: intResult.existing.length });
+
   // 10. Documentação: um Artifact por arquivo (idempotente por projeto + caminho)
   let docCount = 0;
   for (const p of d.docs) {
@@ -132,6 +150,7 @@ async function onboardProject({ vault, ctx, projectId, source, repositoryId }) {
     repository_id: repository.id,
     snapshot,
     environments: envResult,
+    integrations: intResult,
     detection: {
       languages: d.languages, node_engine: d.nodeEngine, firebase: d.firebase, workflows: d.workflows,
       docs: d.docs, secret_names: d.secretNames, evidence: d.evidence,

@@ -15,6 +15,7 @@ const { buildContext } = require('../context-engine');
 const { createGateway, GatewayError } = require('../tool-gateway');
 const { HTTP_STATUS: GATEWAY_STATUS } = require('../tool-gateway/errors');
 const { createOrchestrator } = require('../orchestrator');
+const { collectMetrics } = require('../observability');
 
 const RESOURCES = { clients: 'Client', projects: 'Project', repos: 'Repository', environments: 'Environment', 'tool-policies': 'ToolPolicy' };
 const INVOKE_STATUS = { succeeded: 200, pending_approval: 202, denied: 403, failed: 422, rejected: 409, running: 202, expired: 409 };
@@ -155,6 +156,10 @@ function createHandler(deps = {}) {
           if (!r.replayed) background(() => o.run(ectx, r.execution.id));
           return json(event, r.replayed ? 200 : 202, r, { ...etag(r.execution), 'X-Execution-Id': ectx.executionId });
         }
+        if (parts.length === 2 && parts[1] === 'sweep' && method === 'POST') {
+          // Fase 11: retoma execuções paradas (ver ADR-F11-03). Síncrono; no máximo 20 por chamada.
+          return json(event, 200, { items: await o.sweep(ectx) });
+        }
         if (parts.length === 1 && method === 'GET') {
           const where = {};
           for (const k of ['project_id', 'status']) if (q[k]) where[k] = q[k];
@@ -169,6 +174,13 @@ function createHandler(deps = {}) {
           return json(event, 200, { record }, etag(record));
         }
         return json(event, 404, { error: 'Rota não encontrada.' });
+      }
+      // Fase 11: observabilidade, auditoria e custos
+      if (parts[0] === 'metrics' && parts.length === 1 && method === 'GET') {
+        const mctx = createExecutionContext({ tenantId: requested, actor: { type: 'user', id: auth.uid } });
+        if (q.since && Number.isNaN(Date.parse(q.since))) return json(event, 400, { error: 'since inválido (use data ISO).' });
+        if (q.project_id) await getVault().Project.get(mctx, q.project_id);
+        return json(event, 200, await collectMetrics({ vault: getVault(), ctx: mctx, projectId: q.project_id, since: q.since ? new Date(q.since).toISOString() : undefined }));
       }
       const entity = RESOURCES[parts[0]];
       if (!entity || parts.length > 3) return json(event, 404, { error: 'Rota não encontrada.' });

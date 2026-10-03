@@ -21,9 +21,11 @@ const GATES = Object.freeze([
   { gate: 11, name: 'production policy' },
 ]);
 
-function fromChecks(def, checks) {
-  const hits = checks.filter(c => def.re.test(c.name));
-  if (!hits.length) return { status: def.required ? 'pending' : 'not_applicable', evidence: def.required ? 'nenhum check do CI corresponde a este gate' : 'sem check correspondente no CI' };
+function fromChecks(def, checks, mapped) {
+  // Mapa do projeto (Project.qa_checks) tem precedência: nome exato e gate obrigatório.
+  const required = def.required || !!mapped;
+  const hits = mapped ? checks.filter(c => mapped.includes(c.name)) : checks.filter(c => def.re.test(c.name));
+  if (!hits.length) return { status: required ? 'pending' : 'not_applicable', evidence: mapped ? `check mapeado ausente: ${mapped.slice(0, 3).join(', ')}` : required ? 'nenhum check do CI corresponde a este gate' : 'sem check correspondente no CI' };
   const names = hits.map(c => c.name).slice(0, 3).join(', ');
   if (hits.some(c => c.status === 'completed' && !['success', 'skipped', 'neutral'].includes(c.conclusion))) return { status: 'failed', evidence: `check: ${names}` };
   if (hits.every(c => c.status === 'completed')) return { status: 'passed', evidence: `check: ${names}` };
@@ -31,8 +33,8 @@ function fromChecks(def, checks) {
 }
 
 /**
- * @param {{ checks?: {name,status,conclusion}[]|null, ref?: string, review?: {verdict}|null, security?: {verdict}|null,
- *           wantsStaging?: boolean, deployment?: {id,status}|null, wantsProduction?: boolean }} ev
+ * @param {{ checks?: {name,status,conclusion}[]|null, checkMap?: {gate,check}[], ref?: string, review?: {verdict}|null, security?: {verdict}|null,
+ *           wantsStaging?: boolean, deployment?: {id,status,approved_by?}|null, wantsProduction?: boolean }} ev
  * @returns {{ gate, name, status, evidence }[]}
  */
 function evaluateGates(ev) {
@@ -42,21 +44,35 @@ function evaluateGates(ev) {
     if (def.gate <= 7) {
       if (!ev.checks) r = { status: 'pending', evidence: 'sem commit/PR para verificar' };
       else {
-        r = fromChecks(def, ev.checks);
+        const mapped = (ev.checkMap || []).filter(m => m.gate === def.gate).map(m => m.check);
+        r = fromChecks(def, ev.checks, mapped.length ? mapped : null);
         if (def.gate === 6 && r.status === 'pending' && /nenhum check/.test(r.evidence) && ev.security && ev.security.verdict === 'approve') r = { status: 'passed', evidence: 'Security Agent aprovou (sem check de dependências no CI)' };
         if (def.gate === 6 && r.status !== 'failed' && ev.security && ev.security.verdict === 'changes_requested') r = { status: 'failed', evidence: 'Security Agent apontou problemas' };
       }
     } else if (def.gate === 8) {
       r = !ev.review ? { status: 'pending', evidence: 'sem revisão' }
         : ev.review.verdict === 'approve' ? { status: 'passed', evidence: 'Reviewer Agent aprovou' } : { status: 'failed', evidence: 'Reviewer Agent pediu mudanças' };
+    } else if (def.gate === 9 && ev.wantsProduction) {
+      // Produção: o deploy.production só dispara o commit que já tem Deployment de staging succeeded.
+      r = ev.deployment ? { status: 'passed', evidence: `mesmo commit validado em staging (pré-condição de ${ev.deployment.id})` }
+        : { status: 'pending', evidence: 'produção ainda não disparada' };
     } else if (def.gate === 9 || def.gate === 10) {
       if (!ev.wantsStaging) r = { status: 'not_applicable', evidence: 'pedido sem publicação em staging' };
       else if (!ev.deployment) r = { status: 'pending', evidence: 'staging ainda não disparado' };
       else if (ev.deployment.status === 'succeeded') r = { status: 'passed', evidence: def.gate === 9 ? `Deployment ${ev.deployment.id}` : `smoke/health do pipeline (${ev.deployment.id})` };
       else if (ev.deployment.status === 'failed') r = { status: 'failed', evidence: `Deployment ${ev.deployment.id} falhou` };
       else r = { status: 'pending', evidence: `Deployment ${ev.deployment.id} ${ev.deployment.status}` };
+    } else if (!ev.wantsProduction) {
+      r = { status: 'not_applicable', evidence: 'pedido sem produção' };
     } else {
-      r = ev.wantsProduction ? { status: 'pending', evidence: 'produção exige aprovação humana' } : { status: 'not_applicable', evidence: 'pedido sem produção' };
+      // Gate 11 (Fase 11): produção só passa com aprovação de uma pessoa registrada no Deployment e deploy concluído.
+      const d = ev.deployment;
+      const approved = d && d.approved_by && d.approved_by.type === 'user';
+      r = !d ? { status: 'pending', evidence: 'produção exige aprovação humana' }
+        : !approved ? { status: 'failed', evidence: `Deployment ${d.id} sem aprovação humana registrada` }
+        : d.status === 'succeeded' ? { status: 'passed', evidence: `aprovado por ${d.approved_by.id}; Deployment ${d.id}` }
+        : d.status === 'failed' ? { status: 'failed', evidence: `Deployment ${d.id} falhou` }
+        : { status: 'pending', evidence: `aprovado por ${d.approved_by.id}; Deployment ${d.id} ${d.status}` };
     }
     out.push({ gate: def.gate, name: def.name, status: r.status, evidence: String(r.evidence).slice(0, 300) });
   }

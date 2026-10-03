@@ -248,21 +248,31 @@ function createGithubAdapter(o) {
       return { workflow, ref: r, dispatched: true };
     },
 
-    /** Pipeline modelo (Fase 9) com target=staging. Produção não passa por aqui (Fase 11). Devolve o SHA disparado. */
-    async dispatchPipeline({ ref, target }) {
+    /**
+     * Pipeline modelo (Fase 9) com target=staging ou, só pela ferramenta deploy.production (CRITICAL, sempre
+     * com aprovação humana; Fase 11), target=production. expectedSha: recusa se a branch andou (o commit
+     * disparado tem que ser o que passou em staging). Devolve o SHA disparado.
+     */
+    async dispatchPipeline({ ref, target, allowProduction = false, expectedSha }) {
       requireWrite();
-      if (target !== 'staging') throw new GatewayError(CODES.FORBIDDEN, 'Só staging nesta fase; produção exige aprovação humana (Fase 11).');
+      if (!(target === 'staging' || (target === 'production' && allowProduction === true))) {
+        throw new GatewayError(CODES.FORBIDDEN, 'Produção só pela ferramenta deploy.production, com aprovação humana.');
+      }
       const r = checkRef(ref || await getDefaultBranch());
       const sha = SHA_RE.test(r) ? r : await headOf(r);
+      if (expectedSha && sha !== expectedSha) throw new GatewayError(CODES.CONFLICT, `A branch ${r} mudou (${sha.slice(0, 7)}) desde o commit validado (${String(expectedSha).slice(0, 7)}).`);
       await call('POST', `/actions/workflows/${PIPELINE_WORKFLOW}/dispatches`, { body: { ref: r, inputs: { target } }, write: true, permissions: PERMS.writeActions });
       return { workflow: PIPELINE_WORKFLOW, ref: r, sha, target };
     },
 
     /** Execução do pipeline modelo disparada para um commit (a mais recente criada a partir de `since`). */
-    async findPipelineRun({ sha, since }) {
+    async findPipelineRun({ sha, since, target }) {
       if (!SHA_RE.test(String(sha))) throw bad('sha inválido.');
       const d = await call('GET', `/actions/workflows/${PIPELINE_WORKFLOW}/runs?event=workflow_dispatch&head_sha=${sha}&per_page=20`, { permissions: PERMS.readActions });
-      const runs = (d.workflow_runs || []).filter(w => !since || Date.parse(w.created_at) >= Date.parse(since) - 60_000)
+      // display_title vem do run-name do pipeline ("nexia-pipeline target=..."); pipelines antigos sem
+      // run-name não dizem o alvo e continuam valendo.
+      const other = w => target && /target=(\w+)/.test(w.display_title || '') && RegExp.$1 !== target;
+      const runs = (d.workflow_runs || []).filter(w => (!since || Date.parse(w.created_at) >= Date.parse(since) - 60_000) && !other(w))
         .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
       const w = runs[0];
       return w ? { id: w.id, status: w.status, conclusion: w.conclusion, html_url: w.html_url, created_at: w.created_at, updated_at: w.updated_at } : null;

@@ -78,6 +78,12 @@ const SCHEMAS = {
       }),
       primary_repository_id: t.ref('Repository'),
       autonomy_level: t.int({ min: 0, max: 5, default: 0 }), // spec §23; 0 = somente leitura
+      // Fase 11 (ADR-F11-04): nome exato do check do CI que é evidência de cada gate 1–7. Gate
+      // mapeado passa a ser obrigatório e só aceita esses checks (sem heurística por nome).
+      qa_checks: t.array(t.object({
+        gate: t.int({ required: true, min: 1, max: 7 }),
+        check: t.string({ required: true, max: 200 }),
+      }), { max: 50, default: () => [] }),
     },
     unique: [['slug']],
   },

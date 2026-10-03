@@ -140,7 +140,8 @@ function createFakeGithub({ owner = 'gilcambe', repo = 'nexia', appId = '424242'
     if (method === 'POST' && /^\/actions\/workflows\/[^/]+\/dispatches$/.test(rest)) {
       const workflow = rest.split('/')[3];
       dispatches.push({ workflow, ...body });
-      runs.push({ id: 9000 + runs.length, workflow, event: 'workflow_dispatch', head_branch: body.ref, head_sha: branches.get(body.ref) || body.ref,
+      runs.push({ id: 9000 + runs.length, workflow, event: 'workflow_dispatch', head_branch: body.ref,
+        display_title: workflow === 'nexia-pipeline.yml' ? `nexia-pipeline target=${(body.inputs || {}).target || 'none'}` : workflow, head_sha: branches.get(body.ref) || body.ref,
         status: 'queued', conclusion: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), html_url: `https://github.com/${owner}/${repo}/actions/runs/${9000 + runs.length}` });
       return json(204);
     }

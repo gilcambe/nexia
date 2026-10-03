@@ -71,7 +71,11 @@ function planFor(intent, message) {
       P('devops', 'Disparar o pipeline para staging', 'deploy_staging'),
       P('devops', 'Acompanhar o deploy e o health check', 'sync_deploy'),
     ];
-    case 'deploy_production': return [P('devops', 'Produção exige aprovação humana (Fase 11)', 'production_blocked')];
+    case 'deploy_production': return [
+      P('qa', 'Confirmar que o CI da branch de produção está verde (gates 1–7)', 'checks_before_deploy'),
+      P('devops', 'Pedir aprovação humana e disparar produção para o commit já validado em staging', 'deploy_production'),
+      P('devops', 'Acompanhar o deploy de produção e o health check', 'sync_deploy'),
+    ];
     default: return [P('architect', 'Responder ao pedido só com leitura do Vault e do GitHub', 'agent:answer')];
   }
 }
@@ -89,7 +93,7 @@ function createOrchestrator(deps) {
   async function save(ctx, exe, patch) {
     return vault.Execution.update(ctx, exe.id, patch, { expectedVersion: exe.version });
   }
-  const tool = (ctx, exe, agent, name, input) => gateway.invoke(agentCtx(ctx, agent), { projectId: exe.project_id, tool: name, input });
+  const tool = (ctx, exe, agent, name, input, environment) => gateway.invoke(agentCtx(ctx, agent), { projectId: exe.project_id, tool: name, input, ...(environment ? { environment } : {}) });
 
   /** Executa os passos a partir do primeiro não concluído. */
   async function advance(ctx, exe, req) {
@@ -157,10 +161,11 @@ function createOrchestrator(deps) {
             ? `Pedido do usuário: "${message}"\nResponda com base nas ferramentas de leitura. Cite as evidências (ids, arquivos, SHAs).`
             : `Pedido do usuário: "${message}"\nAnalise o repositório do projeto, localize os arquivos envolvidos e descreva a mudança mínima (arquivos e o que muda). Não altere nada.`);
         } else if (action === 'create_branch') {
+          const hadBranch = !!state.work_branch;   // retomada: a branch pode já ter sido criada
           const branch = state.work_branch || `nexia/${slug(message)}-${state.execution_id.slice(-6).toLowerCase().replace(/[^a-z0-9]/g, '')}`;
           if (!state.work_branch) await commit({ work_branch: branch });
           const r = await tool(ctx, state, plan[i].agent, 'github.create_branch', { branch });
-          const exists = r.status === 'failed' && r.error && r.error.code === 'CONFLICT' && (steps[i].attempts || 0) > 0;
+          const exists = r.status === 'failed' && r.error && r.error.code === 'CONFLICT' && ((steps[i].attempts || 0) > 0 || hadBranch);
           if (exists) stepDone(i, { tool_call_ids: addIds(i, ids(r)), summary: `${branch} já existia (retomada)` });
           else handle(i, r, x => `branch ${x.branch} criada de ${x.from}`);
         } else if (action === 'agent:implement') {
@@ -191,15 +196,15 @@ function createOrchestrator(deps) {
             body: `Pedido: ${message}\n\nExecution: ${state.execution_id}\nReviewer: ${state.review_verdict || '—'} · Security: ${state.security_verdict || '—'}\n\nAberto pelo NEXIA AI (rascunho). O merge é de uma pessoa.` });
           if (handle(i, r, x => `PR #${x.number} ${x.html_url}`)) await commit({ pull_request: r.result.number });
         } else if (action === 'checks' || action === 'checks_before_deploy') {
-          const ref = action === 'checks' ? state.work_branch : await stagingRef(ctx, project.id);
+          const ref = action === 'checks' ? state.work_branch : await deployRef(ctx, project.id, state.intent);
           const c = await readChecks(i, ref);
           if (c) {
             checks = c.list;
-            const g = evaluateGates({ checks }).filter(x => x.gate <= 7);
+            const g = evaluateGates({ checks, checkMap: project.qa_checks }).filter(x => x.gate <= 7);
             stepDone(i, { tool_call_ids: addIds(i, [c.id]), summary: g.map(x => `G${x.gate} ${x.status}`).join(', ') });
             if (action === 'checks_before_deploy' && verdict(g) !== 'passed') {
               stop = { status: verdict(g) === 'failed' ? 'failed' : 'running', error_code: verdict(g) === 'failed' ? 'GATES_FAILED' : undefined,
-                result_summary: `O CI de ${ref} não está verde (${g.filter(x => x.status !== 'passed' && x.status !== 'not_applicable').map(x => `${x.name}: ${x.status}`).join('; ')}); staging não foi disparado.` };
+                result_summary: `O CI de ${ref} não está verde (${g.filter(x => x.status !== 'passed' && x.status !== 'not_applicable').map(x => `${x.name}: ${x.status}`).join('; ')}); ${state.intent === 'deploy_production' ? 'produção' : 'staging'} não foi disparado.` };
             }
           }
         } else if (action === 'render_pipeline' || action === 'commit_pipeline') {
@@ -217,13 +222,13 @@ function createOrchestrator(deps) {
         } else if (action === 'deploy_staging') {
           const r = await tool(ctx, state, 'devops', 'deploy.staging', {});
           if (handle(i, r, x => `${x.workflow} em ${x.ref} → ${x.deployment_id}`)) await commit({ deployment_id: r.result.deployment_id });
+        } else if (action === 'deploy_production') {
+          // CRITICAL: sempre vai para /aprovacoes; resume() continua depois da decisão humana.
+          const r = await tool(ctx, state, 'devops', 'deploy.production', {}, 'production');
+          if (handle(i, r, x => `${x.workflow} em ${x.ref} → ${x.deployment_id}`)) await commit({ deployment_id: r.result.deployment_id });
         } else if (action === 'sync_deploy') {
           const r = await tool(ctx, state, 'devops', 'deploy.sync_status', { deployment_id: state.deployment_id });
           handle(i, r, x => `Deployment ${x.deployment_id}: ${x.status}`);
-        } else if (action === 'production_blocked') {
-          steps[i] = { ...steps[i], status: 'skipped', summary: 'Produção ainda não é executada pelo NEXIA; exige aprovação humana (Fase 11).' };
-          stop = { status: 'needs_input', question: 'Produção exige aprovação humana pelo fluxo de produção (Fase 11). Quer publicar em staging primeiro?',
-            result_summary: 'Produção não foi tocada.' };
         }
         // Estado final (com finished_at) só em finish(); aqui só os intermediários.
         await commit({ status: stop && !FINAL.includes(stop.status) ? stop.status : 'running', ...(stop && stop.question ? { question: stop.question } : {}) });
@@ -237,9 +242,10 @@ function createOrchestrator(deps) {
     return finish(ctx, state, steps, meter, stop, checks, baseUsage);
   }
 
-  /** Ref que o staging publica: branch do ambiente staging ou a padrão do repositório (null = padrão). */
-  async function stagingRef(ctx, projectId) {
-    const env = (await vault.Environment.list(ctx, { where: { project_id: projectId }, limit: 20 })).find(e => e.name === 'staging');
+  /** Ref que o deploy publica: branch do ambiente (staging ou production) ou a padrão do repositório. */
+  async function deployRef(ctx, projectId, intent) {
+    const name = intent === 'deploy_production' ? 'production' : 'staging';
+    const env = (await vault.Environment.list(ctx, { where: { project_id: projectId }, limit: 20 })).find(e => e.name === name);
     if (env && env.branch) return env.branch;
     const repo = (await vault.Repository.list(ctx, { where: { project_id: projectId }, limit: 1 }))[0];
     return repo ? repo.default_branch : null;
@@ -247,7 +253,7 @@ function createOrchestrator(deps) {
 
   async function gateEvidence(ctx, exe, checks) {
     let ck = checks;
-    const ref = ['change', 'pipeline'].includes(exe.intent) ? exe.work_branch : exe.intent === 'deploy_staging' ? await stagingRef(ctx, exe.project_id) : null;
+    const ref = ['change', 'pipeline'].includes(exe.intent) ? exe.work_branch : ['deploy_staging', 'deploy_production'].includes(exe.intent) ? await deployRef(ctx, exe.project_id, exe.intent) : null;
     if (!ck && ref) {
       const r = await tool(ctx, exe, 'qa', 'github.get_checks', { ref });
       ck = r.status === 'succeeded' ? r.result.runs : null;
@@ -255,14 +261,17 @@ function createOrchestrator(deps) {
     let deployment = null;
     if (exe.deployment_id) {
       const s = await tool(ctx, exe, 'devops', 'deploy.sync_status', { deployment_id: exe.deployment_id });
-      deployment = s.status === 'succeeded' ? { id: exe.deployment_id, status: s.result.status } : await vault.Deployment.get(ctx, exe.deployment_id);
+      const rec = await vault.Deployment.get(ctx, exe.deployment_id);
+      deployment = { id: rec.id, status: s.status === 'succeeded' ? s.result.status : rec.status, approved_by: rec.approved_by };
     }
     const isChange = exe.intent === 'change';
+    const project = await vault.Project.get(ctx, exe.project_id);
     return {
-      checks: ['change', 'pipeline', 'deploy_staging'].includes(exe.intent) ? ck : [],
+      checkMap: project.qa_checks || [],
+      checks: ['change', 'pipeline', 'deploy_staging', 'deploy_production'].includes(exe.intent) ? ck : [],
       review: isChange ? (exe.review_verdict ? { verdict: exe.review_verdict } : null) : { verdict: 'approve' },
       security: exe.security_verdict ? { verdict: exe.security_verdict } : null,
-      wantsStaging: exe.intent === 'deploy_staging', deployment,
+      wantsStaging: ['deploy_staging', 'deploy_production'].includes(exe.intent), deployment,
       wantsProduction: exe.intent === 'deploy_production',
     };
   }
@@ -284,8 +293,6 @@ function createOrchestrator(deps) {
       }
     } else if (!readOnly && stop.status !== 'needs_input') {
       gates = evaluateGates(await gateEvidence(ctx, exe, checks).catch(() => ({ checks: null })));
-    } else if (stop.status === 'needs_input') {
-      gates = evaluateGates({ checks: [], review: { verdict: 'approve' }, wantsProduction: exe.intent === 'deploy_production' });
     }
     const patch = {
       plan: steps, status, gates, usage: usageOf(meter, baseUsage),
@@ -359,7 +366,7 @@ function createOrchestrator(deps) {
       plan[i] = { ...plan[i], status: action.startsWith('agent:') ? 'pending' : 'done', summary: `${call.tool} aprovado e executado (${call.output_summary || 'ok'})`.slice(0, 2000) };
       const patch = { plan, status: 'running' };
       if (call.tool === 'github.create_pr' && /PR #(\d+)/.test(call.output_summary || '')) patch.pull_request = Number(RegExp.$1);
-      if (call.tool === 'deploy.staging' && /→ (\S+)$/.test(call.output_summary || '')) patch.deployment_id = RegExp.$1;
+      if (['deploy.staging', 'deploy.production'].includes(call.tool) && /→ (\S+)$/.test(call.output_summary || '')) patch.deployment_id = RegExp.$1;
       return advance(ctx, await save(ctx, exe, patch));
     }
     plan[i] = { ...plan[i], status: 'failed', error_code: call.error_code || call.status.toUpperCase() };
@@ -374,7 +381,32 @@ function createOrchestrator(deps) {
     return finish(ctx, exe, exe.plan, createMeter({ ...DEFAULT_BUDGET }), null, null);
   }
 
-  return { start, run, resume, refresh, classifyIntent, planFor };
+  /**
+   * Fase 11 (ADR-F11-03): retoma execuções paradas — o processo pode ter reiniciado no meio de
+   * um run em segundo plano. Só mexe nas que estão sem atualização há staleMs:
+   * planned/running com passo pendente → run (continua do primeiro passo não concluído);
+   * running com todos os passos concluídos → refresh (gates); waiting_approval → resume.
+   */
+  async function sweep(ctx, { staleMs = 10 * 60 * 1000, max = 20 } = {}) {
+    const cutoff = new Date(now().getTime() - staleMs).toISOString();
+    const out = [];
+    for (const status of ['planned', 'running', 'waiting_approval']) {
+      const list = (await vault.Execution.list(ctx, { where: { status }, limit: 200 })).filter(x => (x.updated_at || x.started_at) <= cutoff);
+      for (const x of list) {
+        if (out.length >= max) return out;
+        const action = status === 'waiting_approval' ? 'resume' : x.plan.every(s => s.status === 'done' || s.status === 'skipped') ? 'refresh' : 'run';
+        try {
+          const r = await { resume, refresh, run }[action](ctx, x.id);
+          out.push({ id: x.id, action, from: status, to: r.status });
+        } catch (e) {
+          out.push({ id: x.id, action, from: status, error: e && /^[A-Z_]+$/.test(e.code || '') ? e.code : 'ERROR' });
+        }
+      }
+    }
+    return out;
+  }
+
+  return { start, run, resume, refresh, sweep, classifyIntent, planFor };
 }
 
 function usageOf(meter, prev = {}) {
