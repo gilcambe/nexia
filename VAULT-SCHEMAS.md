@@ -17,24 +17,25 @@
 
 | Entidade | Coleção | Prefixo do id | schemaVersion | Únicos por tenant | Referenciado por |
 |---|---|---|---|---|---|
-| Client | `vault_clients` | `cli_` | 1 | slug | Project.client_id, Memory.client_id |
-| Project | `vault_projects` | `prj_` | 1 | slug | Repository.project_id, Environment.project_id, Requirement.project_id, Decision.project_id, Task.project_id, Artifact.project_id, Conversation.project_id, Memory.project_id, Change.project_id, TestRun.project_id, Deployment.project_id, Error.project_id, Integration.project_id, ProjectSnapshot.project_id, ToolCall.project_id, ToolPolicy.project_id |
+| Client | `vault_clients` | `cli_` | 1 | slug | Project.client_id, Memory.client_id, Execution.client_id |
+| Project | `vault_projects` | `prj_` | 1 | slug | Repository.project_id, Environment.project_id, Requirement.project_id, Decision.project_id, Task.project_id, Artifact.project_id, Conversation.project_id, Memory.project_id, Change.project_id, TestRun.project_id, Deployment.project_id, Error.project_id, Integration.project_id, ProjectSnapshot.project_id, ToolCall.project_id, ToolPolicy.project_id, Execution.project_id |
 | Repository | `vault_repositories` | `repo_` | 1 | provider + owner + repo | Project.primary_repository_id, Artifact.repository_id, Change.repository_id, Integration.repository_id, ProjectSnapshot.repository_id |
 | Environment | `vault_environments` | `env_` | 1 | project_id + name | TestRun.environment_id, Deployment.environment_id, Integration.environment_id, ProjectSnapshot.environment_ids[] |
 | Requirement | `vault_requirements` | `req_` | 1 |  | Task.requirement_id |
 | Decision | `vault_decisions` | `dec_` | 1 |  | Decision.supersedes_id, ProjectSnapshot.key_decision_ids[] |
 | Task | `vault_tasks` | `tsk_` | 1 |  | Task.depends_on[], Change.task_id, ProjectSnapshot.open_task_ids[] |
 | Artifact | `vault_artifacts` | `art_` | 1 |  |  |
-| Conversation | `vault_conversations` | `cnv_` | 1 |  | Memory.source_conversation_id |
+| Conversation | `vault_conversations` | `cnv_` | 1 |  | Memory.source_conversation_id, Execution.conversation_id |
 | Memory | `vault_memories` | `mem_` | 1 |  |  |
 | Change | `vault_changes` | `chg_` | 1 |  | TestRun.change_id |
 | TestRun | `vault_test_runs` | `trn_` | 1 |  | Error.test_run_id |
-| Deployment | `vault_deployments` | `dpl_` | 1 |  | Error.deployment_id, ProjectSnapshot.last_deployment_id |
+| Deployment | `vault_deployments` | `dpl_` | 1 |  | Error.deployment_id, ProjectSnapshot.last_deployment_id, Execution.deployment_id |
 | Error | `vault_errors` | `err_` | 1 |  | ProjectSnapshot.recent_error_ids[] |
 | Integration | `vault_integrations` | `int_` | 1 |  |  |
 | ProjectSnapshot | `vault_project_snapshots` | `snp_` | 1 |  |  |
 | ToolCall | `vault_tool_calls` | `tcl_` | 1 |  |  |
 | ToolPolicy | `vault_tool_policies` | `pol_` | 1 | project_id |  |
+| Execution | `vault_executions` | `exe_` | 1 | execution_id |  |
 
 ## Client
 
@@ -387,3 +388,61 @@ Coleção `vault_tool_policies`, id `pol_…`, schemaVersion 1.
 | `notes` | string |  |  |  | 1–2000 caracteres |
 
 Únicos por tenant: `project_id`.
+
+## Execution
+
+Coleção `vault_executions`, id `exe_…`, schemaVersion 1.
+
+| Campo | Tipo | Obrigatório | Imutável | Padrão | Restrições |
+|---|---|---|---|---|---|
+| `project_id` | ref → Project | sim | sim |  |  |
+| `client_id` | ref → Client |  |  |  |  |
+| `conversation_id` | ref → Conversation |  |  |  |  |
+| `execution_id` | string (execution_id) | sim | sim |  | 1–128 caracteres |
+| `requested_by` | objeto | sim | sim |  |  |
+| `requested_by.type` | enum | sim |  |  | `user`, `agent`, `system` |
+| `requested_by.id` | string (actor_id) | sim |  |  | 1–128 caracteres |
+| `request_summary` | string | sim |  |  | 1–500 caracteres |
+| `intent` | enum | sim |  |  | `question`, `status`, `change`, `review`, `pipeline`, `deploy_staging`, `deploy_production`, `unknown` |
+| `status` | enum | sim |  |  | `planned`, `running`, `waiting_approval`, `needs_input`, `succeeded`, `failed`, `cancelled` |
+| `plan` | array de objeto |  |  | [] | até 20 itens |
+| `plan[].step` | int | sim |  |  | 1–50 |
+| `plan[].agent` | enum | sim |  |  | `orchestrator`, `architect`, `coder`, `frontend`, `backend`, `database`, `qa`, `security`, `devops`, `reviewer` |
+| `plan[].goal` | string | sim |  |  | 1–300 caracteres |
+| `plan[].status` | enum | sim |  |  | `pending`, `running`, `done`, `failed`, `skipped`, `waiting_approval` |
+| `plan[].model` | string |  |  |  | 1–100 caracteres |
+| `plan[].tool_call_ids` | array de ref → ToolCall |  |  | [] | até 50 itens |
+| `plan[].attempts` | int |  |  |  | 0–10 |
+| `plan[].error_code` | string (error_code) |  |  |  | 1–64 caracteres |
+| `plan[].summary` | string |  |  |  | 1–2000 caracteres |
+| `gates` | array de objeto |  |  | [] | até 11 itens |
+| `gates[].gate` | int | sim |  |  | 1–11 |
+| `gates[].name` | string | sim |  |  | 1–100 caracteres |
+| `gates[].status` | enum | sim |  |  | `passed`, `failed`, `pending`, `not_applicable` |
+| `gates[].evidence` | string |  |  |  | 1–300 caracteres |
+| `budget` | objeto |  |  |  |  |
+| `budget.max_steps` | int |  |  |  | 0–200 |
+| `budget.max_tool_calls` | int |  |  |  | 0–500 |
+| `budget.max_tokens` | int |  |  |  | 0–10000000 |
+| `budget.max_ms` | int |  |  |  | 0–86400000 |
+| `usage` | objeto |  |  |  |  |
+| `usage.tool_calls` | int |  |  |  | 0–∞ |
+| `usage.input_tokens` | int |  |  |  | 0–∞ |
+| `usage.output_tokens` | int |  |  |  | 0–∞ |
+| `usage.cost_usd_micros` | int |  |  |  | 0–∞ |
+| `usage.cost_known` | bool |  |  |  |  |
+| `usage.duration_ms` | int |  |  |  | 0–∞ |
+| `models` | array de string |  |  | [] | até 20 itens, sem repetição |
+| `work_branch` | string (work_branch) |  |  |  | 1–255 caracteres |
+| `pull_request` | int |  |  |  | 1–100000000 |
+| `deployment_id` | ref → Deployment |  |  |  |  |
+| `review_verdict` | enum |  |  |  | `approve`, `changes_requested` |
+| `security_verdict` | enum |  |  |  | `approve`, `changes_requested` |
+| `question` | string |  |  |  | 1–2000 caracteres |
+| `result_summary` | string |  |  |  | 1–4000 caracteres |
+| `error_code` | string (error_code) |  |  |  | 1–64 caracteres |
+| `started_at` | timestamp | sim | sim |  |  |
+| `finished_at` | timestamp |  |  |  |  |
+
+Únicos por tenant: `execution_id`.
+Regras: `finished_at>=started_at`, `needs_input_requires_question`, `final_requires_finished_at`.

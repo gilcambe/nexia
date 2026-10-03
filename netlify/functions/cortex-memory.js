@@ -21,6 +21,7 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 
 
 const { admin, db } = require('./firebase-init');
+const modelRouter = require('../../nexia-ai/model-router'); // Fase 10: chamadas de IA via Model Router
 const { guard, assertTenantAccess, makeHeaders} = require('./middleware'); // SEC Fase 1: import faltante (antes /api/memory respondia 500)
 
 
@@ -38,13 +39,10 @@ async function summarizeHistory(oldMessages) {
       .join('\n');
 
 
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
+    // Sem chave / erro HTTP / rede → o Router lança e o catch devolve null (como antes).
+    const data = await modelRouter.getRouter().chat({ provider: 'groq', model: 'llama-3.1-8b-instant' }, {
         temperature: 0,
-        max_tokens: 500,
+        maxTokens: 500,
         messages: [
           {
             role: 'system',
@@ -52,13 +50,10 @@ async function summarizeHistory(oldMessages) {
           },
           { role: 'user', content: `HISTÓRICO:\n${text}\n\nRESUMO COMPRIMIDO:` }
         ]
-      })
     });
 
 
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.choices[0].message.content;
+    return data.text;
   } catch {
     return null;
   }

@@ -106,11 +106,21 @@ const valid = {
   ToolPolicy: ids => ({
     project_id: ids.Project, rules: [{ tool: 'github.*', environment: 'production', decision: 'forbidden' }, { tool: 'vault.*', decision: 'auto' }],
   }),
+  Execution: ids => ({
+    project_id: ids.Project, client_id: ids.Client, execution_id: 'exec_fixture_0001', requested_by: { type: 'user', id: 'gilcambe' },
+    request_summary: 'Corrija o formulário de contato e abra um PR', intent: 'change', status: 'waiting_approval',
+    plan: [{ step: 1, agent: 'architect', goal: 'Analisar o impacto', status: 'done', model: 'anthropic/claude-opus-5-5', tool_call_ids: [ids.ToolCall], attempts: 1, summary: 'Formulário em src/contato.js' },
+      { step: 2, agent: 'coder', goal: 'Implementar na branch nexia/', status: 'waiting_approval', attempts: 1 }],
+    gates: [{ gate: 1, name: 'typecheck', status: 'pending' }],
+    budget: { max_steps: 12, max_tool_calls: 40, max_tokens: 400000, max_ms: 900000 },
+    usage: { tool_calls: 3, input_tokens: 12000, output_tokens: 900, cost_usd_micros: 0, cost_known: false, duration_ms: 42000 },
+    models: ['anthropic/claude-opus-5-5'], started_at: '2026-10-02T17:00:00.000Z',
+  }),
 };
 
 // Ordem de criação que respeita as dependências.
 const ORDER = ['Client', 'Project', 'Repository', 'Environment', 'Requirement', 'Decision', 'Task', 'Artifact',
-  'Conversation', 'Memory', 'Change', 'TestRun', 'Deployment', 'Error', 'Integration', 'ProjectSnapshot', 'ToolCall', 'ToolPolicy'];
+  'Conversation', 'Memory', 'Change', 'TestRun', 'Deployment', 'Error', 'Integration', 'ProjectSnapshot', 'ToolCall', 'ToolPolicy', 'Execution'];
 
 // Um caso inválido por entidade (regra de schema específica da entidade).
 const invalid = {
@@ -132,6 +142,7 @@ const invalid = {
   ProjectSnapshot: ids => ({ ...valid.ProjectSnapshot(ids), firebase_project: 'Nexia C8710' }),
   ToolCall: ids => ({ ...valid.ToolCall(ids), status: 'pending_approval' }),            // pendente exige decisão confirm
   ToolPolicy: ids => ({ ...valid.ToolPolicy(ids), rules: [{ tool: 'GitHub/*', decision: 'auto' }] }), // padrão de nome
+  Execution: ids => ({ ...valid.Execution(ids), status: 'succeeded' }),                 // final sem finished_at
 };
 
 const expectedInvalidRule = {
@@ -139,7 +150,7 @@ const expectedInvalidRule = {
   Decision: 'required', Task: 'ref:Task', Artifact: 'pattern:https_or_repo_path', Conversation: 'ended_at>=started_at',
   Memory: 'approved_requires_approved_by', Change: 'type:sha', TestRun: 'min', Deployment: 'finished_at>=started_at',
   Error: 'resolved_requires_resolution', Integration: 'enum', ProjectSnapshot: 'pattern:firebase_project_id',
-  ToolCall: 'pending_requires_confirm', ToolPolicy: 'pattern:tool_pattern',
+  ToolCall: 'pending_requires_confirm', ToolPolicy: 'pattern:tool_pattern', Execution: 'final_requires_finished_at',
 };
 
 // Valores com forma de secret, montados em tempo de execução com bytes aleatórios

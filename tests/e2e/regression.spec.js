@@ -3,7 +3,7 @@
 const { test, expect } = require('@playwright/test');
 
 const SPA_ROUTES = ['/', '/login', '/cortex-app', '/sentinel', '/pipeline', '/codigo', '/docs',
-  '/swarm-control', '/qa-center', '/projetos', '/aprovacoes', '/ces', '/bezsan', '/vp', '/splash', '/privacidade', '/termos', '/lgpd', '/cookies'];
+  '/swarm-control', '/qa-center', '/projetos', '/aprovacoes', '/execucoes', '/ces', '/bezsan', '/vp', '/splash', '/privacidade', '/termos', '/lgpd', '/cookies'];
 const TENANT_PAGES = ['/ces/landing', '/bezsan/landing', '/vp/landing', '/splash/landing', '/ces/admin', '/vp/guia'];
 
 test.describe('1. Navegação — rotas principais', () => {
@@ -128,5 +128,22 @@ test.describe('NEXIA AI — Fase 8', () => {
   test('ferramentas de escrita do GitHub exigem login', async ({ request }) => {
     const res = await request.post('/api/nexia/tools/invoke', { data: { project_id: 'prj_x', tool: 'github.commit_files', input: { branch: 'nexia/x', message: 'm', files: [] } } });
     expect(res.status()).toBe(401);
+  });
+});
+
+test.describe('NEXIA AI — Fase 10', () => {
+  test('/execucoes sem login pede login e não chama a API', async ({ page }) => {
+    const calls = [];
+    page.on('request', r => { if (r.url().includes('/api/nexia/')) calls.push(r.url()); });
+    await page.goto('/execucoes', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByTestId('execucoes-title')).toHaveText('Execuções');
+    await expect(page.getByTestId('execucoes-login')).toBeVisible({ timeout: 15000 });
+    expect(calls).toEqual([]);
+  });
+  test('/api/nexia/executions sem token responde 401', async ({ request }) => {
+    for (const [m, ep] of [['get', '/api/nexia/executions'], ['post', '/api/nexia/executions'], ['get', '/api/nexia/executions/exe_x'], ['post', '/api/nexia/executions/exe_x/refresh'], ['post', '/api/nexia/executions/exe_x/resume']]) {
+      const res = await request[m](ep);
+      expect(res.status(), ep).toBe(401);
+    }
   });
 });

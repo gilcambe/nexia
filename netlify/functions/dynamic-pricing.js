@@ -14,6 +14,7 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 }
 
 const { admin, db } = require('./firebase-init');
+const modelRouter = require('../../nexia-ai/model-router'); // Fase 10: chamadas de IA via Model Router
 
 // ── Feriados nacionais brasileiros 2024-2026 ────────────────────
 const NATIONAL_HOLIDAYS = new Set([
@@ -372,16 +373,9 @@ exports.handler = async (event) => {
       }
 
       // Use Claude to analyze and suggest optimal rules
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': ANTHROPIC_KEY,
-          'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 600,
+      // Erro HTTP → '{}' (como antes); erro de rede cai no catch externo.
+      const aiData = await modelRouter.getRouter().chat({ provider: 'anthropic', model: 'claude-haiku-4-5-20251001' }, {
+          maxTokens: 600,
           messages: [{
             role: 'user',
             content: `Você é um especialista em yield management. Analise estes dados históricos de eventos e sugira as melhores regras de precificação dinâmica.
@@ -403,13 +397,11 @@ Retorne APENAS um JSON válido com estas chaves e valores numéricos:
   "explanation": "texto curto explicando as escolhas"
 }`
           }]
-        })
-      });
+      }).catch(e => { if (e && e.details && e.details.status) return { text: '' }; throw e; });
 
-      const aiData = await res.json();
       let suggested = {};
       try {
-        const raw = aiData.content?.[0]?.text || '{}';
+        const raw = aiData.text || '{}';
         suggested = JSON.parse(raw.replace(/```json|```/g, '').trim());
       } catch (e) {
         suggested = { explanation: 'Não foi possível gerar sugestão personalizada.' };

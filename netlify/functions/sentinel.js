@@ -37,6 +37,7 @@ async function _fetchTimeout(url, opts = {}, ms = 30000, _legacyOpts) {
 
 const { admin, db }          = require('./firebase-init');
 const { requireBearerAuth }  = require('./middleware');
+const modelRouter = require('../../nexia-ai/model-router'); // Fase 10: chamadas de IA via Model Router
 
 const BASE   = process.env.NEXIA_APP_URL
             || process.env.RENDER_EXTERNAL_URL
@@ -174,21 +175,13 @@ Se canAutoFix=true, preencha firestoreOverride com dados para salvar no Firestor
 
     let r, data;
     if (isAnthropic) {
-      r = await _fetchTimeout('https://api.anthropic.com/v1/messages', {
-        method:  'POST',
-        headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 2000, messages: [{ role: 'user', content: prompt }] }),
-      });
-      data = await r.json();
-      return JSON.parse((data.content?.[0]?.text || '{}').replace(/```json|```/g, '').trim());
+      // Erro HTTP → '{}' (como antes); timeout/rede cai no catch.
+      data = await modelRouter.getRouter().chat({ provider: 'anthropic', model: 'claude-haiku-4-5-20251001' }, { maxTokens: 2000, timeoutMs: 30000, messages: [{ role: 'user', content: prompt }] }).catch(e => { if (e && e.details && e.details.status) return { text: '' }; throw e; });
+      return JSON.parse((data.text || '{}').replace(/```json|```/g, '').trim());
     } else {
-      r = await _fetchTimeout('https://api.groq.com/openai/v1/chat/completions', {
-        method:  'POST',
-        headers: { 'Authorization': 'Bearer ' + key, 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 2000, temperature: 0, messages: [{ role: 'user', content: prompt }] }),
-      });
-      data = await r.json();
-      return JSON.parse((data.choices?.[0]?.message?.content || '{}').replace(/```json|```/g, '').trim());
+      // Erro HTTP → '{}' (como antes); timeout/rede cai no catch.
+      data = await modelRouter.getRouter().chat({ provider: 'groq', model: 'llama-3.3-70b-versatile' }, { maxTokens: 2000, temperature: 0, timeoutMs: 30000, messages: [{ role: 'user', content: prompt }] }).catch(e => { if (e && e.details && e.details.status) return { text: '' }; throw e; });
+      return JSON.parse((data.text || '{}').replace(/```json|```/g, '').trim());
     }
   } catch (e) {
     console.error('[Sentinel] diagnosisViaAI error:', e.message);

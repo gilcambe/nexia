@@ -14,6 +14,7 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 }
 
 const { admin, db } = require('./firebase-init');
+const modelRouter = require('../../nexia-ai/model-router'); // Fase 10: chamadas de IA via Model Router
 
 // ── Módulos por setor (mapeamento estratégico) ──────────────────
 const SECTOR_MODULES = {
@@ -215,16 +216,8 @@ async function detectSectorWithAI(description) {
   if (!ANTHROPIC_KEY) return fallbackSectorDetection(description);
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 50,
+    const data = await modelRouter.getRouter().chat({ provider: 'anthropic', model: 'claude-haiku-4-5-20251001' }, {
+        maxTokens: 50,
         messages: [{
           role: 'user',
           content: `Analise esta descrição de negócio e retorne APENAS uma palavra do seguinte conjunto: eventos, leiloes, turismo, saas, comercio, saude, educacao, logistica, financeiro.
@@ -233,10 +226,8 @@ Descrição: "${description}"
 
 Responda APENAS com uma palavra.`
         }]
-      })
     });
-    const data = await res.json();
-    const detected = data.content?.[0]?.text?.trim().toLowerCase().split('\n')[0];
+    const detected = data.text?.trim().toLowerCase().split('\n')[0];
     const valid = Object.keys(SECTOR_MODULES);
     return valid.includes(detected) ? detected : fallbackSectorDetection(description);
   } catch (e) {
@@ -260,16 +251,9 @@ async function generateRecommendationWithAI(sectorConfig, challenge, size, answe
   }
 
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 400,
+    // Erro HTTP do provedor → explicação vazia (como antes); erro de rede cai no catch.
+    const data = await modelRouter.getRouter().chat({ provider: 'anthropic', model: 'claude-haiku-4-5-20251001' }, {
+        maxTokens: 400,
         messages: [{
           role: 'user',
           content: `Você é o Arquiteto do NEXIA OS, um sistema SaaS multi-tenant.
@@ -285,10 +269,8 @@ Módulos prioritários sugeridos: ${basePriority.join(', ')}
 
 Escreva uma explicação CURTA (máximo 3 frases) em português do Brasil, no tom de um consultor de negócios experiente, explicando por que esses 3 módulos prioritários são os melhores para começar. Mencione benefícios concretos como tempo economizado ou receita gerada. Seja direto e objetivo.`
         }]
-      })
-    });
-    const data = await res.json();
-    const explanation = data.content?.[0]?.text?.trim() || '';
+    }).catch(e => { if (e && e.details && e.details.status) return { text: '' }; throw e; });
+    const explanation = data.text?.trim() || '';
 
     return { modules: baseModules, priority: basePriority, explanation };
   } catch (e) {
