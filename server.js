@@ -35,11 +35,12 @@ if (require.main === module && !fs.existsSync(path.join(OUT, 'index.html'))) {
 }
 
 // ─── CORS ─────────────────────────────────────────────────────────
-const ALLOWED_ORIGINS = (process.env.NEXIA_APP_URL || 'https://nexia-os.onrender.com')
+// ADR-HOST-01: sem NEXIA_APP_URL, só o próprio endereço (mesma origem dispensa CORS).
+const ALLOWED_ORIGINS = (process.env.NEXIA_APP_URL || '')
   .split(',').map(u => u.trim()).filter(Boolean);
 
 function getCorsOrigin(reqHeaders) {
-  if (!ALLOWED_ORIGINS.length) return '*';
+  if (!ALLOWED_ORIGINS.length) return '';
   const origin = (reqHeaders && (reqHeaders.origin || reqHeaders.Origin)) || '';
   return ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
 }
@@ -67,7 +68,7 @@ setInterval(() => { const now = Date.now(); for (const [k, e] of RATE_STORE.entr
 function serveFirebaseConfig(res) {
   if (!process.env.FIREBASE_API_KEY) {
     res.writeHead(503, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-    res.end(JSON.stringify({ error: 'Firebase config unavailable. Configure FIREBASE_API_KEY no Render.' }));
+    res.end(JSON.stringify({ error: 'Firebase config unavailable. Configure FIREBASE_API_KEY nos segredos do Worker (wrangler secret put).' }));
     return;
   }
   res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=300', 'Access-Control-Allow-Origin': '*' });

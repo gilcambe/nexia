@@ -21,6 +21,8 @@ const { guard, HEADERS, makeHeaders } = require('./middleware');
 
 const NETLIFY_TOKEN  = process.env.NETLIFY_API_TOKEN;
 const NETLIFY_SITE_ID = process.env.NETLIFY_SITE_ID;
+// ADR-HOST-01: destino do CNAME dos domínios de tenant (domínio do Worker no Cloudflare), sem Render
+const CNAME_TARGET = (process.env.NEXIA_CNAME_TARGET || '').trim().toLowerCase();
 
 async function netlifyRequest(method, path, body) {
   if (!NETLIFY_TOKEN) throw new Error('NETLIFY_API_TOKEN não configurado');
@@ -91,7 +93,7 @@ exports.handler = async (event) => {
           instructions: {
             type: 'CNAME',
             name: domain.startsWith('www.') ? 'www' : '@',
-            value: `${NETLIFY_SITE_ID || 'nexia-os'}.onrender.com`,
+            value: CNAME_TARGET || 'NEXIA_CNAME_TARGET não configurado',
             ttl: 3600,
             message: `Aponte o DNS do seu domínio conforme acima. A propagação leva até 24h. Use /api/tenant-domain com action:"verify" para verificar.`
           }
@@ -122,7 +124,7 @@ exports.handler = async (event) => {
             headers: { 'Accept': 'application/dns-json' }
           });
           const dns = await dnsRes.json();
-          verified = dns.Answer?.some(a => a.data?.includes('onrender.com')) || false;
+          verified = !!CNAME_TARGET && (dns.Answer?.some(a => String(a.data || '').toLowerCase().replace(/\.$/, '') === CNAME_TARGET) || false);
           netlifyStatus = verified ? 'active' : 'dns_not_propagated';
         } catch {}
       }

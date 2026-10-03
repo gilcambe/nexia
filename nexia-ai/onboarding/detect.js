@@ -155,7 +155,11 @@ async function detect(files, read) {
   for (const [file, provider] of hostingFiles) {
     if (has(file)) { deployTarget = deployTarget || provider; ev(`hosting:${provider}`, file); }
   }
-  if (!deployTarget && wrangler) deployTarget = 'cloudflare';
+  if (!deployTarget && wrangler) {
+    deployTarget = 'cloudflare';
+    // ADR-HOST-01: Worker do Cloudflare vira o ambiente de produção (URL vem do domínio, não do arquivo)
+    environments.push({ name: 'production', provider: 'cloudflare', urls: [], branch: null, source: wrangler });
+  }
   if (!deployTarget && firebase && firebase.services.includes('hosting')) deployTarget = 'firebase';
 
   // Padrões e CI

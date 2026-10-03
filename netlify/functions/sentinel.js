@@ -39,10 +39,10 @@ const { admin, db }          = require('./firebase-init');
 const { requireBearerAuth }  = require('./middleware');
 const modelRouter = require('../../nexia-ai/model-router'); // Fase 10: chamadas de IA via Model Router
 
+// ADR-HOST-01: sem Render; no container o próprio server.js responde em localhost
 const BASE   = process.env.NEXIA_APP_URL
-            || process.env.RENDER_EXTERNAL_URL
             || process.env.URL
-            || 'https://nexia-os.onrender.com';
+            || `http://127.0.0.1:${process.env.PORT || 3001}`;
 const GHTKN  = process.env.GITHUB_TOKEN;
 const GHREPO = process.env.GITHUB_REPO;        // ex: "org/nexia-os"
 // RENDER_DEPLOY_HOOK não é mais lido aqui: redeploy automático desativado (SEC Fase 1, C4)
@@ -127,7 +127,7 @@ async function scanEndpoint(ep) {
         name:   ep.name, url: ep.url, group: ep.group,
         status: 503, ms,
         ok:     false,
-        error:  'Render cold start — serviço inicializando (retente em 30s)',
+        error:  'Servidor inicializando (retente em 30s)',
       };
     }
 
@@ -143,7 +143,7 @@ async function scanEndpoint(ep) {
       ms:     Date.now() - start,
       ok:     false,
       error:  e.name === 'AbortError' || e.name === 'TimeoutError'
-                ? 'Timeout (>20s) — Render pode estar dormindo'
+                ? 'Timeout (>20s) — servidor pode estar iniciando'
                 : (e.message || 'Erro de rede'),
     };
   }
@@ -157,7 +157,7 @@ async function diagnosisViaAI(errors, context = '') {
   try {
     const isAnthropic = !!process.env.ANTHROPIC_API_KEY && !process.env.GROQ_API_KEY;
 
-    const prompt = `Você é um engenheiro DevOps sênior. Analise estes erros em produção no sistema NEXIA OS (Render + Firebase + HTML/JS):
+    const prompt = `Você é um engenheiro DevOps sênior. Analise estes erros em produção no sistema NEXIA OS (Cloudflare + Firebase + HTML/JS):
 
 ERROS:
 ${JSON.stringify(errors, null, 2)}

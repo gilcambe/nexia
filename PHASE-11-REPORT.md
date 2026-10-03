@@ -69,8 +69,8 @@ $ npm run test:e2e
 1. Rotacionar os secrets expostos (Fase 1) e restringir a chave Firebase por referrer + App Check.
 2. Restaurar os masters legítimos e só então publicar regras e índices do Firestore (inclui `vault_executions`).
 3. Decidir sobre o repositório NEXIA-OS e sobre reescrever o histórico do git.
-4. Criar e instalar a NEXIA GitHub App (Fase 8) e colocar `ANTHROPIC_API_KEY` e as variáveis da App no Render.
-5. Deploy desta versão no Render (depois dos itens 1 e 2).
+4. Criar e instalar a NEXIA GitHub App (Fase 8) e colocar `ANTHROPIC_API_KEY` e as variáveis da App como segredos do Worker no Cloudflare (ADR-HOST-01; o Render foi removido).
+5. Deploy desta versão no Cloudflare pelo workflow manual "Deploy Cloudflare" (depois dos itens 1 e 2).
 6. Piloto: seguir `PILOT-RUNBOOK.md`.
 
 ## TEMPORÁRIO / limitações

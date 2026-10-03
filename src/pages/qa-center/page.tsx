@@ -123,7 +123,7 @@ export default function QACenter() {
             <div>
               <p className="text-sm text-red-300 font-medium">Scan falhou</p>
               <p className="text-xs text-red-300/70 mt-0.5">{scanError}</p>
-              <p className="text-xs text-nexia-muted mt-1">O Render free tier pode estar dormindo. Aguarde 60s e tente novamente.</p>
+              <p className="text-xs text-nexia-muted mt-1">O servidor pode estar iniciando. Aguarde alguns segundos e tente novamente.</p>
             </div>
           </div>
         )}

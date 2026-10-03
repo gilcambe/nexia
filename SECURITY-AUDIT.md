@@ -208,6 +208,16 @@ Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claud
 | P7 | Integração inventada | onboarding cria `pending` sem credencial; não altera existentes | E |
 | P8 | Ação de terceiro trocada (supply chain) | `action_pins` por SHA validado | C6 |
 
+## Hospedagem — Cloudflare + Firebase + GitHub, sem Render (ADR-HOST-01)
+
+| ID | Tema | Controle | Teste |
+|---|---|---|---|
+| H1 | Endereço de terceiro fixo no código | removido `nexia-os.onrender.com` do frontend, `server.js`, Sentinel, `index.html` e CES; API no mesmo endereço do site | `cloudflare-host` CF2 |
+| H2 | CORS aberto por padrão | sem `NEXIA_APP_URL`, nenhuma outra origem é liberada (antes caía em `nexia-os.onrender.com`; lista vazia liberava `*`) | E2E (mesma origem) |
+| H3 | Deploy acidental | workflow `Deploy Cloudflare` só manual, exige digitar `DEPLOY` e o environment `production` com revisor; roda `npm test` antes | CF2 |
+| H4 | Segredo no repositório ou na imagem | segredos só como secrets do Worker, passados ao container em tempo de execução; `.dockerignore` exclui `.env*`, testes e Bridge; imagem sem devDependencies | CF1; gitleaks |
+| H5 | Processo como root | container roda como usuário `node` | revisão do `Dockerfile` |
+
 ## Riscos remanescentes
 - Credenciais expostas continuam válidas até o dono rotacionar; histórico público ainda contém valores.
 - Correções só valem em produção depois de deploy e publicação das regras, que não fazem parte desta fase.
@@ -220,7 +230,7 @@ Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claud
 - Outras funções podem ainda devolver `e.message` em caminhos não cobertos; as tratadas estão listadas acima.
 - Orchestrator: execução em segundo plano no próprio processo; retomada só sob demanda (ADR-F11-03). Gates por nome de check quando o projeto não tem `qa_checks` (ADR-F11-04).
 - Pipeline modelo com ações na major até o dono informar os SHAs (ADR-F11-05).
-- O Render roda `npm install` (instala também devDependencies); considerar `npm ci --omit=dev` numa fase de infraestrutura.
+- Hospedagem (ADR-HOST-01): chave de serviço do Firebase como segredo do Worker; uma instância só do container. Render removido (o item antigo sobre `npm install` no Render deixa de valer; a imagem usa `npm ci --omit=dev`).
 - Bridge: com terminal livre no mesmo cliente, a aprovação local pode ser contornada (ver Fase 7); log local ainda não vai ao Vault.
 - GitHub: leitura ainda usa o `GITHUB_TOKEN` legado até a GitHub App ser criada (ADR-F8-01); bloqueio de workflow de deploy por nome é heurístico até a Fase 9.
 - Pipeline modelo: ações fixadas por versão major, não por SHA (ADR-F9-01); bloqueio de workflow de deploy no dispatch genérico continua heurístico para workflows que não são o modelo.
