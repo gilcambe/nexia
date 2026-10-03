@@ -6,7 +6,7 @@
 // tenant não conseguir apontar para a credencial de outro, o nome tem que ser
 //   NEXIA_<PROVEDOR>_<TENANT>_<SUFIXO>     ex.: NEXIA_FIREBASE_NEXIA_SA, NEXIA_CLOUDFLARE_ALFA_TOKEN
 // com <TENANT> = slug do tenant em maiúsculas ("-" vira "_"). Quem cria a variável no
-// Render é o dono; o valor nunca passa pelo Vault, pelo log ou pela resposta.
+// Worker do Cloudflare (segredo) é o dono; o valor nunca passa pelo Vault, pelo log ou pela resposta.
 const { GatewayError, CODES } = require('../tool-gateway/errors');
 
 const tenantTag = tenantId => String(tenantId).toUpperCase().replace(/[^A-Z0-9]/g, '_');
@@ -33,7 +33,7 @@ async function integrationFor({ vault, ctx, project }, provider, integrationId) 
 /** Valor da credencial referenciada pela Integration, se o nome for do próprio tenant. */
 function credentialFor({ env, ctx }, integration) {
   const prefix = allowedPrefix(integration.provider, ctx.tenantId);
-  const ref = (integration.secret_refs || []).find(r => r.store === 'env' || r.store === 'render');
+  const ref = (integration.secret_refs || []).find(r => ['env', 'cloudflare', 'render'].includes(r.store));
   if (!ref) throw new GatewayError(CODES.INVALID_INPUT, `A integração não referencia credencial (secret_refs com store "env" e nome ${prefix}...).`);
   if (!ref.name.startsWith(prefix) || ref.name.length === prefix.length) {
     throw new GatewayError(CODES.SCOPE, `A credencial desta integração tem que se chamar ${prefix}<NOME>.`);

@@ -1,3 +1,4 @@
+import { NEXIA_APP_URL } from "@/config/env";
 export const qaEngines = [
   { id: "e2e", name: "E2E Playwright", status: "running", tests: 847, passed: 821, failed: 14, skipped: 12, lastRun: "2 min atrás", duration: "4m 23s", icon: "ri-global-line" },
   { id: "api", name: "API Tester", status: "running", tests: 312, passed: 312, failed: 0, skipped: 0, lastRun: "5 min atrás", duration: "1m 08s", icon: "ri-plug-line" },
@@ -22,7 +23,7 @@ export const recentFindings = [
 ];
 
 export const projectScan = {
-  name: "NEXIA OS", url: "https://nexia-os.onrender.com",
+  name: "NEXIA OS", url: NEXIA_APP_URL,
   techStack: ["React 18", "TypeScript", "TailwindCSS", "Vite", "i18next", "React Router"],
   totalFiles: 47, totalLines: 3847, testCoverage: 72.4, securityScore: 84, performanceScore: 78, a11yScore: 91,
   lastFullScan: "2026-05-03T14:30:00Z",

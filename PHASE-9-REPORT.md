@@ -50,7 +50,7 @@ $ npm run test:e2e
 
 1. No repositório do cliente: criar os environments `staging` e `production` (Settings → Environments) e colocar revisores obrigatórios em `production`.
 2. Configurar as variáveis/segredos do provedor em cada environment (Firebase: `GCP_WORKLOAD_IDENTITY_PROVIDER`, `GCP_SERVICE_ACCOUNT`, `FIREBASE_PROJECT_ID`; Cloudflare: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_PAGES_PROJECT`; Render: `RENDER_DEPLOY_HOOK`).
-3. No Render do NEXIA: credenciais só de leitura com o nome `NEXIA_<PROVEDOR>_<TENANT>_<SUFIXO>` para as consultas de Firebase/Cloudflare.
+3. Nos segredos do Worker do NEXIA no Cloudflare (ADR-HOST-01; antes dizia Render): credenciais só de leitura com o nome `NEXIA_<PROVEDOR>_<TENANT>_<SUFIXO>` para as consultas de Firebase/Cloudflare.
 
 ## TEMPORÁRIO / limitações
 

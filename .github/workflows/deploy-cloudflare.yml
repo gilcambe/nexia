@@ -1,0 +1,41 @@
+# NEXIA — deploy no Cloudflare (Worker + Container), ADR-HOST-01.
+# Só manual (botão "Run workflow"). Nunca roda em push. Exige os segredos
+# CLOUDFLARE_API_TOKEN e a variável CLOUDFLARE_ACCOUNT_ID no environment "production"
+# do GitHub (configure "Required reviewers" nele para exigir aprovação de uma pessoa).
+name: Deploy Cloudflare
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Digite DEPLOY para confirmar o deploy em produção'
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-cloudflare
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Worker + Container
+    if: github.event.inputs.confirm == 'DEPLOY'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Testes antes do deploy
+        run: npm test
+      - name: Deploy
+        run: npx -y wrangler@4 deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}

@@ -129,7 +129,7 @@ export default function SentinelPage() {
             <div>
               <p className="text-sm text-red-300 font-medium">Erro no scan</p>
               <p className="text-xs text-red-300/70 mt-0.5">{error}</p>
-              <p className="text-xs text-nexia-muted mt-1">O Render free tier pode estar dormindo — aguarde 60s e tente novamente.</p>
+              <p className="text-xs text-nexia-muted mt-1">O servidor pode estar iniciando — aguarde alguns segundos e tente novamente.</p>
             </div>
           </div>
         )}

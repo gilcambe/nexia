@@ -20,7 +20,7 @@ export const sourceFiles: SourceFile[] = [
     path: "src/config/env.ts",
     category: "config",
     description: "Configuração de URLs e helpers de path para a API",
-    content: `export const NEXIA_API_BASE = import.meta.env.VITE_NEXIA_API_URL || 'https://nexia-os.onrender.com';
+    content: `export const NEXIA_API_BASE = import.meta.env.VITE_NEXIA_API_URL || '';
 export function apiPath(route: string): string {
   return \`\${NEXIA_API_BASE}/api\${route.startsWith('/') ? route : '/' + route}\`;
 }
@@ -157,9 +157,9 @@ const PORT = process.env.PORT || 3001;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'out')));
 
-// API proxy → https://nexia-os.onrender.com
+// API proxy → NEXIA_BACKEND_URL
 app.use('/api', async (req, res) => {
-  const url = 'https://nexia-os.onrender.com/api' + req.path;
+  const url = process.env.NEXIA_BACKEND_URL + '/api' + req.path;
   const { default: fetch } = await import('node-fetch');
   const response = await fetch(url, { method: req.method, headers: { 'Content-Type': 'application/json' }, body: req.method !== 'GET' ? JSON.stringify(req.body) : undefined });
   res.status(response.status);

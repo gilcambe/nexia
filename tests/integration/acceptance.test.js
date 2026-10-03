@@ -120,11 +120,11 @@ test('E. projeto novo: onboarding cria snapshot e integrações (pendentes, sem 
   const r = await onboardProject({ vault, ctx, projectId: pid, source: createLocalSource(path.join(__dirname, '..', '..')), repositoryId: repo.id });
   assert.strictEqual(r.snapshot.project_id, pid);
   const ints = await vault.Integration.list(ctx, { where: { project_id: pid }, limit: 50 });
-  assert.deepStrictEqual(ints.map(i => [i.provider, i.status]).sort(), [['firebase', 'pending'], ['github', 'pending']]);
+  assert.deepStrictEqual(ints.map(i => [i.provider, i.status]).sort(), [['cloudflare', 'pending'], ['firebase', 'pending'], ['github', 'pending']]);
   assert.strictEqual(ints.find(i => i.provider === 'firebase').external_ref, 'nexia-c8710');
   assert.ok(ints.every(i => !i.secret_refs.length), 'nenhuma credencial inventada');
   const again = await onboardProject({ vault, ctx, projectId: pid, source: createLocalSource(path.join(__dirname, '..', '..')), repositoryId: repo.id });
-  assert.deepStrictEqual([again.integrations.created.length, again.integrations.existing.length], [0, 2], 'repetição não duplica');
+  assert.deepStrictEqual([again.integrations.created.length, again.integrations.existing.length], [0, 3], 'repetição não duplica');
 });
 
 test('F. falha: erro transitório é repetido com segurança; falha real não vira sucesso', async () => {

@@ -8,7 +8,7 @@ const steps = [
   { id: "redis", title: "4. Redis + BullMQ", icon: "ri-database-2-line", content: ["Redis sobe automaticamente via Docker Compose", "BullMQ gerencia 4 filas: analyze, test, fix, deploy", "Monitoramento: redis-cli MONITOR", "Workers com retry e backoff exponencial"] },
   { id: "ollama", title: "5. Ollama (IA Local)", icon: "ri-robot-2-line", content: ["docker compose exec ollama ollama pull mistral", "Ollama expõe API REST em http://localhost:11434", "Endpoint: POST /api/generate", "Mistral 7B processa ~2.1M tokens/min"] },
   { id: "workers", title: "6. Worker Pool", icon: "ri-cpu-line", content: ["4 workers Node.js paralelos", "Consomem jobs da fila Redis", "Sobem containers Docker Sandbox", "Playwright, k6 e ZAP rodam no container"] },
-  { id: "frontend", title: "7. Deploy do Frontend", icon: "ri-reactjs-line", content: ["npm run build", "Deploy no Render: conecte o repo GitHub", "Configure VITE_NEXIA_API_URL apontando para backend", "node server.js serve o build com SPA fallback"] },
+  { id: "frontend", title: "7. Deploy do Frontend", icon: "ri-reactjs-line", content: ["npm run build", "Deploy no Cloudflare: workflow manual \"Deploy Cloudflare\" no GitHub (Worker + Container)", "VITE_NEXIA_API_URL vazio: site e API no mesmo endereço", "node server.js serve o build com SPA fallback"] },
   { id: "test", title: "8. Testar o Pipeline", icon: "ri-test-tube-line", content: ["curl -X POST /api/sentinel-qa -d '{\"mode\":\"scan\"}'", "Acompanhe em /qa-center no frontend", "Logs em tempo real via SSE", "Relatório JSON disponível via /api/logs"] },
 ];
 
@@ -18,7 +18,7 @@ const envVars = [
   { var: "REDIS_URL", desc: "URL do Redis", example: "redis://localhost:6379" },
   { var: "JWT_SECRET", desc: "Chave para tokens JWT", example: "super-secret-key-123" },
   { var: "OLLAMA_URL", desc: "URL do Ollama", example: "http://localhost:11434" },
-  { var: "VITE_NEXIA_API_URL", desc: "URL do backend NEXIA_OS", example: "https://nexia-os.onrender.com" },
+  { var: "VITE_NEXIA_API_URL", desc: "URL do backend NEXIA_OS (vazio = mesmo endereço do site)", example: "" },
   { var: "GITHUB_TOKEN", desc: "Token para repos privados", example: "ghp_..." },
 ];
 

@@ -392,7 +392,7 @@ async function runAgentLoop(jobId, task, agentType, tenantId, userId) {
     await addStep('Iniciando agente', { agentType, task: task.slice(0, 200) });
 
     const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey) throw new Error('GROQ_API_KEY não configurada no Render');
+    if (!apiKey) throw new Error('GROQ_API_KEY não configurada nos segredos do servidor');
 
     // Loop de tool-use
     while (toolCalls < MAX_TOOL_CALLS) {
@@ -494,7 +494,7 @@ exports.handler = async (event) => {
       headers,
       body: JSON.stringify({
         ok:    false,
-        error: 'Firebase indisponível. Verifique FIREBASE_SERVICE_ACCOUNT_BASE64 no Render.',
+        error: 'Firebase indisponível. Verifique FIREBASE_SERVICE_ACCOUNT_BASE64 nos segredos do servidor.',
       }),
     };
   }

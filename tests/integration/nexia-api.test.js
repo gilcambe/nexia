@@ -150,14 +150,14 @@ test('A6. onboarding (módulo, fonte local = este repositório): repo, ambiente,
   const snap = r1.snapshot;
   assert.strictEqual(snap.repository_id, repo.id);
   assert.strictEqual(snap.default_branch, 'develop');
-  assert.strictEqual(snap.deploy_target, 'render');
+  assert.strictEqual(snap.deploy_target, 'cloudflare'); // ADR-HOST-01: wrangler.jsonc, sem Render
   assert.strictEqual(snap.firebase_project, 'nexia-c8710');
   assert.ok(snap.stack.includes('node') && snap.frameworks.includes('vite'));
   assert.strictEqual(snap.commands.build, 'npm run build');
   assert.deepStrictEqual(r1.environments.created.length, 1);
   const prod = await vault.Environment.get(ctx, r1.environments.created[0]);
-  assert.deepStrictEqual([prod.name, prod.provider, prod.urls], ['production', 'render', ['https://nexia-os.onrender.com']]);
-  assert.ok(prod.secret_refs.some(s => s.name === 'GROQ_API_KEY' && s.store === 'render'));
+  assert.deepStrictEqual([prod.name, prod.provider, prod.urls], ['production', 'cloudflare', []]);
+  assert.ok(prod.secret_refs.some(s => s.name === 'GROQ_API_KEY' && s.store === 'cloudflare'));
   assert.ok(snap.environment_ids.includes(prod.id) && snap.environment_ids.includes(ids.staging));
   const docs = await vault.Artifact.list(ctx, { where: { project_id: ids.project }, limit: 200 });
   assert.ok(docs.some(a => a.uri === 'ARCHITECTURE-DECISIONS.md'));
@@ -191,7 +191,8 @@ test('A7. onboarding HTTP lendo gilcambe/nexia no GitHub (projeto real cadastrad
     const repo = (await call('adminB', 'GET', `/repos/${r.body.repository_id}`)).body.record;
     assert.deepStrictEqual([repo.owner, repo.repo, repo.default_branch, repo.url], ['gilcambe', 'nexia', 'develop', 'https://github.com/gilcambe/nexia']);
     const snap = (await call('adminB', 'GET', `/projects/${p.body.record.id}/snapshot`)).body.record;
-    assert.strictEqual(snap.deploy_target, 'render');
+    // lê o develop do GitHub no momento do teste: 'render' antes do merge do ADR-HOST-01, 'cloudflare' depois
+    assert.ok(['cloudflare', 'render'].includes(snap.deploy_target), snap.deploy_target);
     assert.strictEqual(snap.firebase_project, 'nexia-c8710');
     assert.ok(snap.stack.includes('node'));
     const bad = await call('adminB', 'POST', `/projects/${p.body.record.id}/onboard`, { repository: { owner: 'gilcambe', repo: 'nao-existe-' + RUN } });

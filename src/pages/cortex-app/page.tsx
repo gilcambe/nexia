@@ -125,8 +125,8 @@ export default function CortexApp() {
       } else if (!fullText) {
         // No text received at all — cold start or network error
         setServerStarting(true);
-        setErrorBanner("Servidor inicializando (cold start do Render). Aguarde ~60s e tente novamente.");
-        fullText = "⏳ Servidor acordando... O Render free tier pode levar até 60s no primeiro acesso. Aguarde e envie sua mensagem novamente.";
+        setErrorBanner("Servidor inicializando. Aguarde alguns segundos e tente novamente.");
+        fullText = "⏳ Servidor acordando... O primeiro acesso pode levar alguns segundos. Aguarde e envie sua mensagem novamente.";
         modelUsed = "Offline";
       } else {
         setErrorBanner("Erro de streaming: " + msg);
@@ -219,7 +219,7 @@ export default function CortexApp() {
             <div className="mb-3 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <i className="ri-time-line text-amber-400 text-xs flex-shrink-0" />
-                <span className="text-xs text-amber-300">Servidor Render acordando... Primeiro acesso pode levar até 60s.</span>
+                <span className="text-xs text-amber-300">Servidor acordando... O primeiro acesso pode levar alguns segundos.</span>
               </div>
               <button onClick={() => setServerStarting(false)} className="text-amber-400/60 hover:text-amber-400 cursor-pointer flex-shrink-0">
                 <i className="ri-close-line text-xs" />

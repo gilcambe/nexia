@@ -54,13 +54,13 @@ export default function SwarmControl() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro";
       if (!msg.includes("abort")) {
-        setResult(fullText || "❌ Erro ao conectar ao backend: " + msg + "\n\nVerifique se o Render está online.");
+        setResult(fullText || "❌ Erro ao conectar ao backend: " + msg + "\n\nVerifique se o servidor está online.");
       }
     }
 
     // Always finalize
     if (!fullText) {
-      setResult("⏳ Sem resposta do servidor. O Render free tier pode estar dormindo — aguarde 60s e tente novamente.");
+      setResult("⏳ Sem resposta do servidor. O servidor pode estar iniciando — aguarde alguns segundos e tente novamente.");
     }
 
     setLoading(false);

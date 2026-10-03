@@ -370,7 +370,7 @@ const APP={
     const badges=document.getElementById('cred-badges');
     if(badges)badges.innerHTML='<span style="background:rgba(139,92,246,.12);color:#8B5CF6;border:1px solid rgba(139,92,246,.25);border-radius:20px;padding:4px 14px;font-size:10px;font-weight:700">✓ CES 2027</span><span style="background:rgba(0,232,122,.08);color:#00E87A;border:1px solid rgba(0,232,122,.2);border-radius:20px;padding:4px 14px;font-size:10px;font-weight:700">Missão Brasil</span>';
     if(this.user.ticketId){
-      const qrData=`https://nexia-os.onrender.com/ces/checkin?tk=${btoa(JSON.stringify({t:this.user.ticketId,n:TENANT_ID,e:'ces_2027',v:'1'}))}`;
+      const qrData=`${location.origin}/ces/checkin?tk=${btoa(JSON.stringify({t:this.user.ticketId,n:TENANT_ID,e:'ces_2027',v:'1'}))}`;
       const qrImg=document.getElementById('cred-qr-img');
       const qrLoad=document.getElementById('cred-qr-loading');
       if(qrImg){qrImg.src=`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrData)}`;qrImg.style.display='block';}

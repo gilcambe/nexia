@@ -422,7 +422,7 @@ exports.handler = async (event) => {
               for (const fm of ['deepseek_v3', 'gemini_20_flash', 'groq_llama3']) {
                 try { fallbackText = await callSync(systemPrompt, fullCtx.slice(-15), fm, 4096); break; } catch { }
               }
-              if (!fallbackText) fallbackText = '❌ Todas as IAs estão indisponíveis. Verifique as API keys no Render Dashboard → Environment.';
+              if (!fallbackText) fallbackText = '❌ Todas as IAs estão indisponíveis. Verifique as API keys nos segredos do Worker (Cloudflare).';
               yield sse({ token: fallbackText, done: false });
               yield sse({ done: true, model: 'fallback' });
               yield 'data: [DONE]\n\n';

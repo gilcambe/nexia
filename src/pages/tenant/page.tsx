@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/services/api";
+import { NEXIA_APP_URL } from "@/config/env";
 
 const TENANT_CONFIG: Record<string, { name: string; tagline: string; iframePath: string; accent: string; icon: string }> = {
   ces: { name: "CES 2027", tagline: "Missão Empresarial Brasileira — Conecte-se com os líderes de inovação global", iframePath: "/ces/landing", accent: "#3b82f6", icon: "ri-global-line" },
@@ -17,7 +18,7 @@ export default function TenantPage({ tenant }: { tenant?: string }) {
   const [error, setError] = useState<string | null>(null);
   const [tenantData, setTenantData] = useState<boolean>(false);
 
-  const iframeSrc = "https://nexia-os.onrender.com" + (config?.iframePath || "/") + (config?.iframePath?.includes("?") ? "&" : "?") + "embed=1";
+  const iframeSrc = NEXIA_APP_URL + (config?.iframePath || "/") + (config?.iframePath?.includes("?") ? "&" : "?") + "embed=1";
 
   useEffect(() => {
     if (!config) return;

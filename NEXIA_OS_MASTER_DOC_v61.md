@@ -1,3 +1,5 @@
+> **Aviso (2026-10-03, ADR-HOST-01):** o NEXIA não usa Render. As partes deste documento que falam de Render, `render.yaml`, `start.sh`, `nexia-os.onrender.com` e UptimeRobot estão **obsoletas**. A hospedagem é Cloudflare (Worker + Container) + Firebase + GitHub; ver `PILOT-RUNBOOK.md` e `ARCHITECTURE-DECISIONS.md`.
+
 # NEXIA OS — DOCUMENTAÇÃO MASTER ENTERPRISE
 ## Versão: v61 | Data: 07/05/2026 | Baseada em: análise direta do código v59 + handoff v60
 

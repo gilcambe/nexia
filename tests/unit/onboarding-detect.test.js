@@ -23,18 +23,20 @@ test('detecta stack, scripts, Firebase, hosting e documentação deste repositó
   assert.deepStrictEqual(d.firebase, { services: ['emulators', 'firestore', 'storage'] });
   assert.strictEqual(d.firebaseProject, 'nexia-c8710'); // config web pública nas páginas legadas
   assert.ok(d.evidence.some(e => e.what === 'firebase_project' && /\.html$/.test(e.file)));
-  assert.strictEqual(d.deployTarget, 'render');
-  assert.deepStrictEqual(d.environments, [{ name: 'production', provider: 'render', urls: ['https://nexia-os.onrender.com'], branch: null, source: 'render.yaml' }]);
-  assert.deepStrictEqual(d.workflows, ['.github/workflows/ci.yml']);
+  assert.strictEqual(d.deployTarget, 'cloudflare'); // ADR-HOST-01: sem Render
+  assert.deepStrictEqual(d.environments, [{ name: 'production', provider: 'cloudflare', urls: [], branch: null, source: 'wrangler.jsonc' }]);
+  assert.strictEqual(d.cloudflareRef, 'nexia');
+  assert.deepStrictEqual(d.workflows, ['.github/workflows/ci.yml', '.github/workflows/deploy-cloudflare.yml']);
   assert.ok(d.docs.includes('ARCHITECTURE-DECISIONS.md') && d.docs.includes('VAULT-SCHEMAS.md'));
   assert.ok(d.secretNames.includes('GROQ_API_KEY') && d.secretNames.includes('FIREBASE_SERVICE_ACCOUNT_BASE64'));
   assert.ok(d.directoryStructure.some(x => x.startsWith('netlify/ (')));
   assert.ok(!files.some(f => f.startsWith('node_modules/') || f.startsWith('out/')), 'só arquivos versionados');
-  assert.match(d.architecture, /Deploy: render\./);
+  assert.match(d.architecture, /Deploy: cloudflare\./);
 });
 
-test('render.yaml e .env.example: extrai serviços e só NOMES de variáveis', () => {
-  const services = parseRenderYaml(fs.readFileSync(path.join(ROOT, 'render.yaml'), 'utf8'));
+test('render.yaml (repositório de cliente) e .env.example: extrai serviços e só NOMES de variáveis', () => {
+  const yaml = 'services:\n  - type: web\n    name: nexia-os-frontend\n    envVars:\n      - key: VITE_NEXIA_API_URL\n        value: https://nexia-os.onrender.com\n';
+  const services = parseRenderYaml(yaml);
   assert.deepStrictEqual(services, [{ type: 'web', name: 'nexia-os-frontend', branch: null, urls: ['https://nexia-os.onrender.com'] }]);
   const names = envNames('A_KEY=valor-secreto\n# COMENTARIO=x\nexport B_TOKEN="x"\nminuscula=1\n');
   assert.deepStrictEqual(names, ['A_KEY', 'B_TOKEN']);

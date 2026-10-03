@@ -3,7 +3,7 @@ import { ScrollReveal } from "@/hooks/useScrollReveal";
 import { useNavigate } from "react-router-dom";
 
 const layers = [
-  { id: "front", title: "FRONT (React + Vite)", icon: "ri-reactjs-line", color: "#00d4aa", desc: "SPA com React 18, TypeScript, TailwindCSS, i18n, React Router. Deploy no Render.", status: "online", metrics: { uptime: "99.9%", latency: "45ms", requests: "2.4k/min" } },
+  { id: "front", title: "FRONT (React + Vite)", icon: "ri-reactjs-line", color: "#00d4aa", desc: "SPA com React 18, TypeScript, TailwindCSS, i18n, React Router. Deploy no Cloudflare (Worker + Container).", status: "online", metrics: { uptime: "99.9%", latency: "45ms", requests: "2.4k/min" } },
   { id: "gateway", title: "API GATEWAY", icon: "ri-server-line", color: "#3b82f6", desc: "Rate limiting, auth JWT, routing de jobs, webhook receivers. Node.js + Express.", status: "online", metrics: { uptime: "99.7%", latency: "12ms", requests: "850/min" } },
   { id: "orchestrator", title: "ORCHESTRATOR", icon: "ri-brain-line", color: "#f59e0b", desc: "Coordena filas, workers, containers e IA. Job lifecycle management. BullMQ.", status: "online", metrics: { jobs: "1.2k/day", avgQueue: "3s", workers: 8 } },
   { id: "queue", title: "JOB QUEUE (Redis)", icon: "ri-database-2-line", color: "#ef4444", desc: "BullMQ sobre Redis. Filas: analyze, fix, test, deploy. Retry com backoff.", status: "online", metrics: { pending: 12, processing: 4, completed: "8.4k" } },

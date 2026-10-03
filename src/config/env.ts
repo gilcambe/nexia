@@ -1,8 +1,9 @@
 export const NEXIA_API_BASE =
-  import.meta.env.VITE_NEXIA_API_URL || "https://nexia-os.onrender.com";
+  // ADR-HOST-01: vazio = API no mesmo endereço do site (Worker do Cloudflare → container).
+  import.meta.env.VITE_NEXIA_API_URL || "";
 
 export const NEXIA_APP_URL =
-  import.meta.env.VITE_NEXIA_APP_URL || NEXIA_API_BASE;
+  import.meta.env.VITE_NEXIA_APP_URL || NEXIA_API_BASE || (typeof window !== "undefined" ? window.location.origin : "");
 
 export function apiPath(route: string): string {
   const r = route.startsWith("/") ? route : "/" + route;

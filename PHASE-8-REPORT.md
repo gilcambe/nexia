@@ -63,8 +63,8 @@ GH7 roda contra o GitHub real (`gilcambe/nexia`) com token só de leitura: branc
 
 1. Criar a GitHub App do NEXIA com as permissões: Contents R/W, Pull requests R/W, Actions R/W, Checks R, Issues R, Metadata R.
 2. Instalar a App em `gilcambe/nexia`.
-3. Configurar no Render: `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY` e (opcional) `GITHUB_APP_INSTALLATION_ID`.
-4. Depois disso, apagar o `GITHUB_TOKEN` legado do Render (já está na lista de rotação).
+3. Configurar como segredos do Worker no Cloudflare (ADR-HOST-01; antes dizia Render): `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY` e (opcional) `GITHUB_APP_INSTALLATION_ID`.
+4. Depois disso, apagar o `GITHUB_TOKEN` legado dos segredos do Worker (já está na lista de rotação).
 
 Sem a App, a escrita no GitHub responde `GITHUB_APP_REQUIRED` e a leitura segue funcionando.
 
