@@ -3,7 +3,7 @@
 const test = require('node:test');
 const assert = require('node:assert');
 const { execFileSync } = require('child_process');
-const { buildPipeline, renderPipeline } = require('../../nexia-ai/cicd/pipeline');
+const { buildPipeline, renderPipeline, DEFAULT_PINS } = require('../../nexia-ai/cicd/pipeline');
 const { createFirebaseAdapter } = require('../../nexia-ai/firebase-adapter');
 const { createCloudflareAdapter, parseRef } = require('../../nexia-ai/cloudflare-adapter');
 const { credentialFor, allowedPrefix } = require('../../nexia-ai/integrations');
@@ -35,21 +35,22 @@ test('C1. pipeline modelo: CI em push/PR; staging e produção só por workflow_
   assert.strictEqual(pr.if, "github.event_name == 'workflow_dispatch' && inputs.target == 'production'");
   assert.strictEqual(pr.environment.url, '${{ vars.PRODUCTION_URL }}');
   assert.deepStrictEqual(st.permissions, { contents: 'read', 'id-token': 'write' }, 'Firebase por OIDC, sem chave');
-  assert.ok(st.steps.some(s => s.uses === 'google-github-actions/auth@v2'));
+  assert.ok(st.steps.some(s => s.uses === `google-github-actions/auth@${DEFAULT_PINS['google-github-actions/auth']}`));
   assert.ok(st.steps.at(-1).name.startsWith('Smoke') && st.steps.at(-1).env.HEALTH_PATH === '/health');
   assert.strictEqual(pr.concurrency['cancel-in-progress'], false);
 });
 
-test('C2. provedores: Cloudflare e Render com segredos do environment; entradas inválidas recusadas', () => {
-  const cf = buildPipeline({ defaultBranch: 'main', staging: { provider: 'cloudflare' }, production: { provider: 'render' }, outputDir: 'out', scripts: { lint: null } });
+test('C2. provedores: Cloudflare com segredos do environment; Render e entradas inválidas recusados', () => {
+  const cf = buildPipeline({ defaultBranch: 'main', staging: { provider: 'cloudflare' }, production: { provider: 'cloudflare' }, outputDir: 'out', scripts: { lint: null } });
   const st = cf.jobs['deploy-staging'].steps.find(s => /Cloudflare/.test(s.name));
   assert.match(st.run, /wrangler@3 pages deploy "out" .*--branch "staging"/);
   assert.deepStrictEqual(st.env, { CLOUDFLARE_API_TOKEN: '${{ secrets.CLOUDFLARE_API_TOKEN }}', CLOUDFLARE_ACCOUNT_ID: '${{ vars.CLOUDFLARE_ACCOUNT_ID }}' });
   assert.ok(!cf.jobs.ci.steps.some(s => s.name === 'Lint'), 'lint: null tira o passo');
-  assert.deepStrictEqual(cf.jobs['deploy-production'].steps.find(s => /Render/.test(s.name)).env, { RENDER_DEPLOY_HOOK: '${{ secrets.RENDER_DEPLOY_HOOK }}' });
+  assert.match(cf.jobs['deploy-production'].steps.find(s => /Cloudflare/.test(s.name)).run, /--branch "\$\{\{ vars.CLOUDFLARE_PRODUCTION_BRANCH \}\}"/);
+  assert.throws(() => buildPipeline({ defaultBranch: 'main', staging: { provider: 'render' } }), e => e.code === 'INVALID_INPUT', 'Render não é destino (ADR-HOST-01)');
   assert.deepStrictEqual(Object.keys(buildPipeline({ defaultBranch: 'main' }).jobs), ['ci'], 'sem ambientes, só CI');
   assert.throws(() => buildPipeline({ defaultBranch: 'main', staging: { provider: 'vercel' } }), e => e.code === 'INVALID_INPUT');
-  assert.throws(() => buildPipeline({ defaultBranch: 'main', production: { provider: 'render' } }), e => e.code === 'INVALID_INPUT' && /staging/.test(e.message));
+  assert.throws(() => buildPipeline({ defaultBranch: 'main', production: { provider: 'firebase' } }), e => e.code === 'INVALID_INPUT' && /staging/.test(e.message));
   for (const bad of [{ scripts: { test: 'test; curl evil' } }, { outputDir: '../etc' }, { healthPath: 'x"; rm' }, { node: '20; x' }, { defaultBranch: 'a b' }]) {
     assert.throws(() => buildPipeline({ defaultBranch: 'main', ...bad }), e => e.code === 'INVALID_INPUT', JSON.stringify(bad));
   }
@@ -108,7 +109,9 @@ test('C6. pipeline (Fase 11): alvo no título da execução; ações fixadas por
   const uses = Object.values(wf.jobs).flatMap(j => j.steps).map(s => s.uses).filter(Boolean);
   assert.ok(uses.filter(u => u.startsWith('actions/checkout')).every(u => u === `actions/checkout@${sha}`));
   assert.ok(uses.includes(`google-github-actions/auth@${'b'.repeat(40)}`));
-  assert.ok(uses.includes('actions/setup-node@v4'), 'sem pin, continua na major');
+  assert.ok(uses.includes(`actions/setup-node@${DEFAULT_PINS['actions/setup-node']}`), 'sem pin do projeto, usa o SHA padrão');
+  const plain = Object.values(buildPipeline({ defaultBranch: 'main', staging: { provider: 'firebase' } }).jobs).flatMap(j => j.steps).map(s => s.uses).filter(Boolean);
+  assert.ok(plain.length && plain.every(u => /@[0-9a-f]{40}$/.test(u)), 'nenhuma ação por tag: ' + plain.join(', '));
   for (const bad of [{ 'actions/checkout': 'v4' }, { 'evil/action': sha }, { 'actions/checkout': 'A'.repeat(40) }]) {
     assert.throws(() => buildPipeline({ defaultBranch: 'main', actionPins: bad }), e => e.code === 'INVALID_INPUT', JSON.stringify(bad));
   }

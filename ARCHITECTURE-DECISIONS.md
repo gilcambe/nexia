@@ -309,3 +309,13 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 - **TEMPORÁRIO:** uma instância só do container (`max_instances: 1`) e site servido pelo container (não pelos assets do Worker). Motivo: o `server.js` guarda estado em memória (rate limit, execuções em andamento) e serve também páginas estáticas fora de `out/`. Risco: sem redundância; o container dorme após 30 min sem tráfego e acorda em alguns segundos (execução interrompida é retomada pelo botão "Retomar paradas", ADR-F11-03). Remoção: depois do piloto, com estado no Firestore e assets no Worker.
 - **TEMPORÁRIO:** a chave de serviço do Firebase (`FIREBASE_SERVICE_ACCOUNT_BASE64`) vai como segredo do Worker. Motivo: fora do Google não há credencial automática. Risco: vazamento da chave dá acesso total ao projeto. Mitigação: só como segredo do Cloudflare, rotação no item 1 do runbook. Remoção: se a API migrar para Cloud Run ou com federação de identidade.
 - **Não executado:** nenhum deploy. O Worker foi empacotado com `wrangler deploy --dry-run` (o passo do container exige Docker, que o runner do GitHub tem) e a imagem foi simulada passo a passo (instalação, build, `/health` 200).
+
+## ADR-F12-01 — Ações fixadas por SHA por padrão; pipeline sem Render
+- **Status:** ACEITA (2026-10-03). Resolve o TEMPORÁRIO da ADR-F9-01 e da ADR-F11-05.
+- **Decisão:** o pipeline modelo usa sempre o commit da release (`DEFAULT_PINS` em `nexia-ai/cicd/pipeline.js`: `actions/checkout` v4.4.0, `actions/setup-node` v4.4.0, `google-github-actions/auth` v2.1.13), conferido com `git ls-remote` nos repositórios oficiais. `actionPins` do projeto continua podendo trocar. Os workflows do próprio NEXIA (`ci.yml`, `deploy-cloudflare.yml`) também passam a usar SHA, com a versão em comentário.
+- O pipeline modelo deixa de gerar deploy para Render (ADR-HOST-01): destinos aceitos são Firebase Hosting e Cloudflare. O Vault e o onboarding continuam reconhecendo `render` só como dado de repositório de terceiro (registros antigos e detecção), sem nenhuma ação.
+- **Manutenção:** atualizar os SHAs exige olhar a release nova e trocar os três valores (teste C6 garante que nenhuma ação fica por tag).
+
+## ADR-F12-02 — Bridge testado no Windows
+- **Status:** ACEITA (2026-10-03). Resolve parte da ADR-F11-06.
+- **Decisão:** job `Bridge no Windows` no CI (`windows-latest`, Node 20) roda `tests/unit/bridge.test.js` (caminhos `D:\`, `npm.cmd`, processo MCP real). Continua sendo do dono testar na máquina dele com o `bridge.json` real.

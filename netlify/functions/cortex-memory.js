@@ -206,7 +206,7 @@ exports.handler = async (event) => {
   const guardErr = await guard(event, 'cortex-memory', { skipTenant: true });
   if (guardErr) return guardErr;
 
-  if (!db) return { statusCode: 503, headers, body: JSON.stringify({ ok: false, error: 'Firebase indisponível — configure FIREBASE_SERVICE_ACCOUNT no Render.' }) };
+  if (!db) return { statusCode: 503, headers, body: JSON.stringify({ ok: false, error: 'Firebase indisponível — configure FIREBASE_SERVICE_ACCOUNT nos segredos do Worker.' }) };
 
 
   try {

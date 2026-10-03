@@ -1,14 +1,14 @@
 'use strict';
 
 /**
- * NEXIA OS — Sentinel v3.1 (RENDER REAL AUTO-HEAL)
+ * NEXIA OS — Sentinel v3.1 (AUTO-HEAL)
  * ──────────────────────────────────────────────────
  * FIXES v3.1:
  * - BUG CRÍTICO: sintaxe corrompida em scanEndpoint (url + ';) corrigida
  * - heal mode: triggerRedeploy agora dispara SEMPRE após aplicar qualquer
  *   patch no Firestore (não apenas se firestoreResult.applied > 0)
  * - Redeploy também é acionado mesmo sem override se há issues CRITICAL
- * - RENDER_DEPLOY_HOOK: POST correto com body JSON para o Render
+ * - (removido) deploy hook de hospedagem antiga; hoje o redeploy é só manual (ADR-HOST-01)
  *
  * MODES (após SEC Fase 1, C4):
  *   GET ?action=ping  → health check sem auth
@@ -17,7 +17,7 @@
  *   POST {mode:heal}  → só com SENTINEL_HEAL_ENABLED=true e papel admin:
  *                       diagnóstico IA + issue no GitHub (se GITHUB_TOKEN/REPO);
  *                       NÃO aplica overrides do LLM no Firestore e NÃO dispara
- *                       o Deploy Hook do Render. Grava apenas o relatório em
+ *                       o deploy hook da hospedagem. Grava apenas o relatório em
  *                       coleções fixas: sentinel_heals e system_status/last_heal.
  *   Não há mais modo agendado sem token nem auto-heal no scan.
  */
@@ -102,7 +102,7 @@ async function scanEndpoint(ep) {
   const start = Date.now();
   try {
     const url  = ep.url + (ep.params || '');
-    const opts = { method: ep.method, signal: AbortSignal.timeout(20_000) }; // 20s — cobre cold start Render
+    const opts = { method: ep.method, signal: AbortSignal.timeout(20_000) }; // 20s — cobre a partida do container
 
     if (ep.body) {
       opts.headers = { 'Content-Type': 'application/json' };
@@ -114,15 +114,14 @@ async function scanEndpoint(ep) {
     const expected = Array.isArray(ep.expect) ? ep.expect : [ep.expect];
     const ok       = expected.includes(r.status);
 
-    // Detecta "Render spinning up" — retorna 503 com body específico
+    // Detecta página de "servidor iniciando" — retorna 503 com body específico
     // ou resposta instantânea (<10ms com status 200) que é falsa
     let bodyText = '';
     try { bodyText = await r.text(); } catch {}
-    const isRenderSpinner = bodyText.includes('spinning up') ||
-                            bodyText.includes('Service Unavailable') ||
-                            bodyText.includes('render.com') && r.status !== 200;
+    const isStarting = bodyText.includes('spinning up') ||
+                       bodyText.includes('Service Unavailable') && r.status !== 200;
 
-    if (isRenderSpinner) {
+    if (isStarting) {
       return {
         name:   ep.name, url: ep.url, group: ep.group,
         status: 503, ms,
@@ -237,7 +236,7 @@ ${criticalFixes.map(f => `#### ${f.priority}: ${f.issue}\n- **Causa:** ${f.rootC
   }
 }
 
-// ─── AUTO-HEAL: RENDER DEPLOY HOOK ─────────────────────────────────
+// ─── AUTO-HEAL: DEPLOY HOOK (desativado) ─────────────────────────────────
 async function triggerRedeploy(_reason) {
   // SEC Fase 1 (C4): redeploy automático de produção desativado. Deploy é ação humana.
   return { triggered: false, reason: 'Redeploy automático desativado (Fase 1).' };
@@ -252,7 +251,7 @@ exports.handler = async (event) => {
 
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: CORS, body: '' };
 
-  // FIX v53: GET ?action=ping — health check sem auth (usado pelo Render e keepalive)
+  // FIX v53: GET ?action=ping — health check sem auth (usado por health checks)
   const qs = event.queryStringParameters || {};
   if (event.httpMethod === 'GET' && qs.action === 'ping') {
     return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true, ts: new Date().toISOString(), version: 'v3.2' }) };
@@ -310,7 +309,7 @@ exports.handler = async (event) => {
       githubResult = await openGitHubPR(diagnosis.fixes, { errorCount: errorIssues.length });
     }
 
-    // 4. Redeploy automático desativado (C4): o Deploy Hook do Render nunca é chamado daqui
+    // 4. Redeploy automático desativado (C4): nenhum deploy hook é chamado daqui
     const redeployResult = await triggerRedeploy('heal');
 
     // 5. Registro do heal (coleções fixas, sem dados escolhidos pelo LLM como destino)

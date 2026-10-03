@@ -92,7 +92,7 @@ const NexiaAuth = (() => {
       if (document.documentElement) document.documentElement.style.visibility = 'visible';
       if (document.body) document.body.style.visibility = 'visible';
     };
-    const _safetyTimer = setTimeout(_showBody, 15000); // FIX v53: 15s para suportar cold start do Render (era 8s — muito curto)
+    const _safetyTimer = setTimeout(_showBody, 15000); // FIX v53: 15s para suportar a partida do servidor (era 8s — muito curto)
     
     const waitCheck = (attempts) => {
       if (attempts > 100) { clearTimeout(_safetyTimer); _showBody(); return; } // max 10s
@@ -100,7 +100,7 @@ const NexiaAuth = (() => {
       if (!NEXIA.auth) { clearTimeout(_safetyTimer); _showBody(); return; }
 
       // FIX v48: aguarda Firebase restaurar sessão antes do primeiro check
-      // Render cold start pode demorar até 2s para o Firebase Client SDK restaurar onAuthStateChanged
+      // A partida do servidor pode demorar até 2s para o Firebase Client SDK restaurar onAuthStateChanged
       // Usamos um listener PERSISTENTE com timeout — não cancela na primeira chamada nula
       if (_authUnsubscribe) { _authUnsubscribe(); _authUnsubscribe = null; }
 
