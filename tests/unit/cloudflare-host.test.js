@@ -146,9 +146,22 @@ test('CF8. firebase-lite: valores do Firestore REST vão e voltam iguais', () =>
   assert.ok(FieldValue.serverTimestamp() && FieldValue.increment(1));
 });
 
-test('CF9. deploy copia ao Worker só os segredos que o NEXIA usa; nunca o token temporário do Actions nem o do Cloudflare', () => {
+test('CF9. deploy copia ao Worker só os nomes do .env.example com valor; nunca o token do Actions nem o do Cloudflare', () => {
   const { pickWorkerSecrets } = require('../../scripts/worker-secrets');
   const got = pickWorkerSecrets({ FIREBASE_SERVICE_ACCOUNT_BASE64: 'a', GEMINI_API_KEY: 'b', NEXIA_JOBS_TOKEN: 'c', MASTER_EMAIL: 'd',
-    github_token: 'e', GITHUB_TOKEN: 'f', CLOUDFLARE_API_TOKEN: 'g', RANDOM_THING: 'h', GITHUB_APP_ID: 'i', EMPTY_API_KEY: '' });
+    GITHUB_TOKEN: 'f', CLOUDFLARE_API_TOKEN: 'g', RANDOM_THING: 'h', GITHUB_APP_ID: 'i', OPENAI_API_KEY: '', PATH: '/bin' });
   assert.deepStrictEqual(Object.keys(got).sort(), ['FIREBASE_SERVICE_ACCOUNT_BASE64', 'GEMINI_API_KEY', 'GITHUB_APP_ID', 'MASTER_EMAIL', 'NEXIA_JOBS_TOKEN']);
+});
+
+test('CF10. workflows com segredos listam cada nome (sem toJSON(secrets), que o GitHub segura para aprovação)', () => {
+  const { NAMES } = require('../../scripts/worker-secrets');
+  const src = n => (n.startsWith('GITHUB_') ? `NEXIA_${n}` : n);
+  for (const f of ['nexia-jobs.yml', 'deploy-cloudflare.yml']) {
+    const y = fs.readFileSync(path.join(ROOT, '.github/workflows', f), 'utf8');
+    assert.doesNotMatch(y, /toJSON\(secrets\)/, f);
+    for (const n of NAMES) {
+      if (f === 'nexia-jobs.yml' && n === 'NEXIA_JOBS_TOKEN') { assert.ok(!y.includes('secrets.NEXIA_JOBS_TOKEN'), 'jobs não dispara jobs'); continue; }
+      assert.ok(y.includes(`${n}: \${{ secrets.${src(n)} }}`), `${f}: ${n}`);
+    }
+  }
 });
