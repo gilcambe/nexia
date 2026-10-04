@@ -174,7 +174,8 @@ test('CF11. assistente do Windows: grava só nomes do .env.example; deploy não 
   const gravados = [...ps.matchAll(/Gravar '([A-Z][A-Z0-9_]+)'/g)].map(m => m[1]);
   const usados = new Set([...ps.matchAll(/'((?:FIREBASE|MASTER|GEMINI|NEXIA)_[A-Z0-9_]+|MASTER_EMAIL)'/g)].map(m => m[1]));
   assert.ok(gravados.length >= 4);
-  for (const n of usados) assert.ok(NAMES.includes(n), n);
+  // No GitHub os GITHUB_* ficam como NEXIA_GITHUB_* (o deploy devolve o nome original).
+  for (const n of usados) assert.ok(NAMES.includes(n.replace(/^NEXIA_GITHUB_/, 'GITHUB_')), n);
   assert.doesNotMatch(ps, /Write-Host[^\n]*\$(valor|json|bloco)\b/, 'nunca mostra valor de segredo');
   assert.strictEqual(readWrangler().keep_vars, true);
 });
