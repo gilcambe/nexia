@@ -113,7 +113,7 @@ function createFakeLLM() {
   return {
     state,
     resetFirst,
-    async start() { await new Promise(r => server.listen(0, '127.0.0.1', r)); this.url = `http://127.0.0.1:${server.address().port}`; return this; },
+    async start(port = 0) { await new Promise(r => server.listen(port, '127.0.0.1', r)); this.url = `http://127.0.0.1:${server.address().port}`; return this; },
     close: () => new Promise(r => { server.closeAllConnections && server.closeAllConnections(); server.close(r); }),
     baseUrls() {
       return { anthropic: this.url, openai: `${this.url}/openai/chat/completions`, groq: `${this.url}/openai/chat/completions`, deepseek: `${this.url}/openai/chat/completions`, gemini: `${this.url}/gemini` };

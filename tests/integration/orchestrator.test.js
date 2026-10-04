@@ -22,7 +22,7 @@ function scriptedRouter(script) {
   const seen = [];
   return {
     seen,
-    capabilities: () => ({ available: true, tool_call: true }),
+    capabilities: d => ({ available: d.provider === 'anthropic', tool_call: true }), // só os 2 candidatos Anthropic de cada classe
     costEstimate: (d, u) => ({ known: true, usd: ((u.input_tokens || 0) + (u.output_tokens || 0)) / 1e6 }),
     async toolCall(desc, req) {
       const agent = Object.keys(AGENTS).find(k => req.system.includes(AGENTS[k].prompt));
@@ -266,6 +266,36 @@ test('O8. API /api/nexia/executions: 202 e execução em segundo plano; pergunta
   assert.strictEqual((await api(h, 'POST', '/api/nexia/executions', { message: '' })).status, 400);
   assert.strictEqual((await api(mkHandler('admin', 'outro-tenant'), 'GET', `/api/nexia/executions?tenant=${T}`)).status, 403);
   assert.strictEqual((await api(mkHandler('user'), 'GET', '/api/nexia/executions')).status, 403);
+});
+
+test('O8b. ADR-FREE-02: com a fila ligada, a API só registra e enfileira (só ids); o runner do Actions termina a execução', async () => {
+  const { createHandler } = require('../../nexia-ai/api');
+  const { runJob } = require('../../nexia-ai/jobs/runner');
+  await setAutonomy(0);
+  const queued = [];
+  const { validateJob } = require('../../nexia-ai/jobs');
+  const jobs = { enabled: true, dispatch: async j => { queued.push(validateJob(j)); return { queued: true, kind: j.kind }; } };
+  const h = createHandler({ db, jobs, verify: async () => ({ ok: true, uid: 'gilcambe', role: 'admin', tenantSlug: T }),
+    gateway: { env: fake.env, fetchImpl: fake.fetchImpl }, background: () => { throw new Error('não deveria rodar no processo da API'); } });
+  const api = async (method, path, body) => {
+    const r = await h({ httpMethod: method, path, headers: { 'content-type': 'application/json' }, queryStringParameters: {}, body: body ? JSON.stringify(body) : null });
+    return { status: r.statusCode, body: JSON.parse(r.body) };
+  };
+  const created = await api('POST', '/api/nexia/executions', { message: 'Quais branches o Site Alfa tem?', project_id: ids.project });
+  assert.strictEqual(created.status, 202, JSON.stringify(created.body));
+  assert.deepStrictEqual(created.body.job, { queued: true, kind: 'execution.run' });
+  assert.strictEqual(queued.length, 1);
+  assert.deepStrictEqual(Object.keys(queued[0]).sort(), ['actor', 'ctx_id', 'id', 'kind', 'tenant']);
+  assert.ok(!JSON.stringify(queued[0]).includes('Site Alfa'), 'a tarefa leva só ids (log público do Actions)');
+  const out = await runJob(queued[0], { db, orchestrator: orch(scriptedRouter({ architect: [{ text: 'O Site Alfa tem develop e main.' }] })) });
+  assert.deepStrictEqual(out, { kind: 'execution.run', id: created.body.execution.id, status: 'succeeded' });
+  const got = await api('GET', `/api/nexia/executions/${created.body.execution.id}`);
+  assert.deepStrictEqual([got.body.record.status, got.body.record.execution_id], ['succeeded', queued[0].ctx_id]);
+  const sw = await api('POST', '/api/nexia/executions/sweep');
+  assert.deepStrictEqual([sw.status, queued[1]], [202, { kind: 'sweep', tenant: T, actor: { type: 'user', id: 'gilcambe' } }]);
+  const ob = await api('POST', `/api/nexia/projects/${ids.project}/onboard`, { repository: { owner: 'gilcambe', repo: 'nexia' } });
+  assert.deepStrictEqual([ob.status, queued[2].kind, queued[2].repository], [202, 'project.onboard', { owner: 'gilcambe', repo: 'nexia' }]);
+  assert.strictEqual((await api('POST', `/api/nexia/projects/${ids.project}/onboard`, { repository: { owner: 'a/b' } })).status, 400);
 });
 
 test('O9. sweep retoma execução parada; /api/nexia/metrics agrega custo e auditoria do projeto', async () => {

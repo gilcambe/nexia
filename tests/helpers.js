@@ -17,6 +17,8 @@ function rawRequest(port, rawPath, { method = 'GET', headers = {}, body } = {}) 
 }
 
 async function startServer() {
+  // NEXIA_TEST_WORKER_PORT: roda os mesmos testes contra o Worker local (`wrangler dev`, ADR-FREE-01).
+  if (process.env.NEXIA_TEST_WORKER_PORT) return { port: Number(process.env.NEXIA_TEST_WORKER_PORT), close: async () => {} };
   const { server } = require('../server.js');
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   return { server, port: server.address().port, close: () => new Promise(r => server.close(r)) };

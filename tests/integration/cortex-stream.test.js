@@ -20,7 +20,7 @@ let fake, srv, db, user;
 test.before(async () => {
   assert.ok(AUTH && process.env.FIRESTORE_EMULATOR_HOST, 'rode via `npm run test:rules` (emuladores)');
   for (const k of KEYS) delete process.env[k];
-  fake = await createFakeLLM().start();
+  fake = await createFakeLLM().start(Number(process.env.NEXIA_TEST_FAKE_LLM_PORT || 0)); // fixo quando roda contra o Worker local
   process.env.ANTHROPIC_API_KEY = 'chave-de-teste-anthropic';
   process.env.ANTHROPIC_BASE_URL = fake.url;
   ({ db } = require('../../netlify/functions/firebase-init'));

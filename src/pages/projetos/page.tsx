@@ -4,8 +4,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiPath } from "@/config/env";
 
 // NEXIA AI — Fase 3: lista clientes e projetos do Vault e mostra o snapshot
-// mais recente de cada projeto. Somente leitura, exceto o botão de onboarding
-// (que lê o repositório no GitHub e grava no Vault).
+// mais recente de cada projeto. Permite cadastrar cliente/projeto e rodar o onboarding
+// (lê o repositório no GitHub e grava no Vault). No Worker grátis o onboarding vai para a
+// fila do GitHub Actions (ADR-FREE-02): a API responde 202 e a tela espera o snapshot.
+
+const PROJECT_TYPES = ["website", "web_app", "landing_page", "saas", "api", "mobile_app", "automation", "library", "other"];
+const slugify = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
+  .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 interface Me { uid: string; role: string; tenantSlug: string | null; canUseVault: boolean }
 interface Client { id: string; name: string; slug: string; status: string }
@@ -30,6 +36,10 @@ export default function ProjetosPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [repoInput, setRepoInput] = useState("");
+  const [info, setInfo] = useState<string | null>(null);
+  const [newClient, setNewClient] = useState("");
+  const [newProject, setNewProject] = useState("");
+  const [newType, setNewType] = useState("website");
 
   const call = useCallback(async <T,>(path: string, init: RequestInit = {}): Promise<T> => {
     const token = await getToken();
@@ -40,7 +50,7 @@ export default function ProjetosPage() {
     });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
-    return body as T;
+    return { ...body, _status: res.status } as T;
   }, [getToken]);
 
   const load = useCallback(async () => {
@@ -80,8 +90,20 @@ export default function ProjetosPage() {
     if (!owner || !repo) { setError("Informe o repositório como dono/nome."); return; }
     setBusy(true);
     setError(null);
+    setInfo(null);
     try {
-      await call(`/projects/${selected}/onboard`, { method: "POST", body: JSON.stringify({ repository: { owner, repo } }) });
+      const before = await call<{ record: Snapshot }>(`/projects/${selected}/snapshot`).then((s) => s.record.generated_at).catch(() => "");
+      const r = await call<{ _status: number; job?: { queued: boolean; error?: string } }>(`/projects/${selected}/onboard`, { method: "POST", body: JSON.stringify({ repository: { owner, repo } }) });
+      if (r._status === 202) {
+        // Fila do GitHub Actions: espera o snapshot novo (até ~5 min).
+        setInfo("Onboarding enviado para a fila. Esperando o resultado (pode levar alguns minutos)...");
+        for (let i = 0; i < 30; i++) {
+          await sleep(10000);
+          const s = await call<{ record: Snapshot }>(`/projects/${selected}/snapshot`).catch(() => null);
+          if (s && s.record.generated_at !== before) { setInfo("Onboarding concluído."); break; }
+          if (i === 29) setInfo("Ainda processando. Abra o projeto de novo daqui a pouco.");
+        }
+      }
       await openProject(selected);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Falha no onboarding");
@@ -89,6 +111,31 @@ export default function ProjetosPage() {
       setBusy(false);
     }
   }, [call, openProject, repoInput, selected]);
+
+  const createProject = useCallback(async () => {
+    const cName = newClient.trim(), pName = newProject.trim();
+    if (!cName || !pName || !slugify(cName) || !slugify(pName)) { setError("Informe o nome do cliente e do projeto."); return; }
+    setBusy(true);
+    setError(null);
+    setInfo(null);
+    try {
+      let client = clients.find((c) => c.slug === slugify(cName) || c.name.toLowerCase() === cName.toLowerCase());
+      if (!client) {
+        const c = await call<{ record: Client }>("/clients", { method: "POST", body: JSON.stringify({ name: cName, slug: slugify(cName), status: "active" }) });
+        client = c.record;
+      }
+      const p = await call<{ record: Project }>("/projects", { method: "POST", body: JSON.stringify({ client_id: client.id, name: pName, slug: slugify(pName), type: newType, status: "active" }) });
+      setNewClient("");
+      setNewProject("");
+      setInfo(`Projeto "${p.record.name}" criado. Agora informe o repositório e rode o onboarding.`);
+      await load();
+      await openProject(p.record.id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Falha ao criar o projeto");
+    } finally {
+      setBusy(false);
+    }
+  }, [call, clients, load, newClient, newProject, newType, openProject]);
 
   const clientName = (id: string) => clients.find((c) => c.id === id)?.name || id;
 
@@ -119,11 +166,28 @@ export default function ProjetosPage() {
         )}
         {me && !me.canUseVault && <p className="text-nexia-muted">Disponível só para master ou admin do tenant.</p>}
         {error && <p className="text-red-400 text-sm" role="alert">{error}</p>}
+        {info && <p className="text-nexia-cyan text-sm" role="status" data-testid="projetos-info">{info}</p>}
 
         {me?.canUseVault && (
           <div className="grid md:grid-cols-3 gap-5">
             <section className="md:col-span-1 space-y-2">
               <h2 className="text-sm uppercase text-nexia-muted">Clientes e projetos</h2>
+              <div className="p-3 rounded-lg border border-nexia-border bg-nexia-surface space-y-2" data-testid="novo-projeto">
+                <div className="text-xs text-nexia-muted">Novo projeto</div>
+                <input value={newClient} onChange={(e) => setNewClient(e.target.value)} placeholder="Cliente (ex.: CES)" list="nexia-clients"
+                  className="w-full px-3 py-2 rounded-lg bg-[#0a0a0f] border border-nexia-border text-sm" />
+                <datalist id="nexia-clients">{clients.map((c) => <option key={c.id} value={c.name} />)}</datalist>
+                <input value={newProject} onChange={(e) => setNewProject(e.target.value)} placeholder="Projeto (ex.: Site institucional)"
+                  className="w-full px-3 py-2 rounded-lg bg-[#0a0a0f] border border-nexia-border text-sm" />
+                <select value={newType} onChange={(e) => setNewType(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-[#0a0a0f] border border-nexia-border text-sm">
+                  {PROJECT_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <button onClick={createProject} disabled={busy}
+                  className="w-full px-4 py-2 text-sm font-medium bg-nexia-cyan text-[#0a0a0f] rounded-lg disabled:opacity-50 cursor-pointer">
+                  Criar projeto
+                </button>
+              </div>
               {projects.length === 0 && <p className="text-sm text-nexia-muted">Nenhum projeto cadastrado.</p>}
               {projects.map((p) => (
                 <button key={p.id} onClick={() => openProject(p.id)}
@@ -143,7 +207,7 @@ export default function ProjetosPage() {
                       className="px-3 py-2 rounded-lg bg-nexia-surface border border-nexia-border text-sm" />
                     <button onClick={onboard} disabled={busy}
                       className="px-4 py-2 text-sm font-medium bg-nexia-cyan text-[#0a0a0f] rounded-lg disabled:opacity-50 cursor-pointer">
-                      {busy ? "Lendo repositório..." : "Rodar onboarding (leitura)"}
+                      {busy ? "Processando..." : "Rodar onboarding (leitura)"}
                     </button>
                     {repos.map((r) => (
                       <a key={r.id} href={r.url} target="_blank" rel="noreferrer" className="text-xs text-nexia-cyan underline">

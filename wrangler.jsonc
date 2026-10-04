@@ -1,5 +1,5 @@
-// NEXIA — Cloudflare Worker + Container (ADR-HOST-01). Deploy só pelo workflow manual
-// "Deploy Cloudflare" ou por `npx wrangler deploy`, nunca automático.
+// NEXIA — Cloudflare Worker no plano GRÁTIS (ADR-FREE-01). Sem Container, sem Durable Object,
+// sem nada pago. Deploy só pelo workflow manual "Deploy Cloudflare" ou por `npx wrangler deploy`.
 // Segredos: `npx wrangler secret put NOME` (lista em .env.example). Nada de valor real aqui.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
@@ -8,18 +8,28 @@
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
-  // ADR-F12-03: retomada de execuções paradas, de hora em hora (exige o segredo NEXIA_CRON_SECRET)
-  "triggers": { "crons": ["7 * * * *"] },
-  "containers": [
-    {
-      "class_name": "NexiaBackend",
-      "image": "./Dockerfile",
-      "instance_type": "basic",
-      "max_instances": 1
-    }
-  ],
-  "durable_objects": {
-    "bindings": [{ "name": "NEXIA_BACKEND", "class_name": "NexiaBackend" }]
+  // Site React (out/) e pastas públicas do legado, montados por scripts/build-worker-assets.js.
+  // Os arquivos com hash de /assets/* saem direto do Cloudflare (não contam como pedido ao Worker);
+  // o resto passa pelo Worker, que aplica as mesmas regras do server.js.
+  "build": { "command": "npm run build:worker" },
+  "assets": {
+    "directory": "./.worker-assets",
+    "binding": "ASSETS",
+    "run_worker_first": ["/*", "!/assets/*"],
+    "html_handling": "none",
+    "not_found_handling": "none"
   },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["NexiaBackend"] }]
+  // ADR-FREE-02: tarefas longas (agentes, onboarding, retomada) rodam no GitHub Actions.
+  "vars": {
+    "NEXIA_JOBS": "github",
+    "NEXIA_JOBS_REPO": "gilcambe/nexia",
+    "NEXIA_JOBS_REF": "develop"
+  },
+  // ADR-F12-03: de hora em hora procura execuções paradas (cron é grátis no Worker).
+  "triggers": { "crons": ["7 * * * *"] },
+  // O deploy de 2026-10-04 (Container, ADR-HOST-01) pode ter criado esta classe; v2 a remove.
+  "migrations": [
+    { "tag": "v1", "new_sqlite_classes": ["NexiaBackend"] },
+    { "tag": "v2", "deleted_classes": ["NexiaBackend"] }
+  ]
 }
