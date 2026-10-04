@@ -162,6 +162,26 @@ const modelRouter = require('../../nexia-ai/model-router');
 const descOf = key => { const ai = AI_CATALOG[key] || AI_CATALOG.groq_llama3; return { provider: ai.provider, model: ai.model }; };
 const labelOf = (provider, model) => { const hit = Object.values(AI_CATALOG).find(a => a.provider === provider && a.model === model); return hit ? (hit.label || hit.model) : model; };
 
+// Só tenta modelos cujo provedor tem chave configurada: primeiro os pedidos, depois a lista grátis
+// padrão (ADR-FREE-03). Sem isso, o padrão "Groq" falhava em quem só cadastrou o Gemini.
+const CHAT_DEFAULTS = ['gemini_25_flash', 'gemini_25_pro', 'groq_llama3', 'cerebras_llama3', 'or_gpt_oss_120b', 'mistral_small', 'deepseek_v3', 'claude_haiku', 'claude'];
+function usable(key) {
+  if (!AI_CATALOG[key]) return false;
+  try { return modelRouter.getRouter().capabilities(descOf(key)).available !== false; } catch { return false; }
+}
+function chain(...keys) {
+  const out = [];
+  for (const k of [...keys, ...CHAT_DEFAULTS]) if (!out.includes(k) && usable(k)) out.push(k);
+  return out;
+}
+async function callChain(system, messages, keys, maxTok) {
+  let last;
+  for (const k of keys) {
+    try { return { text: await callSync(system, messages, k, maxTok), key: k }; } catch (e) { last = e; }
+  }
+  throw last || new Error('Nenhuma IA configurada.');
+}
+
 async function callSync(system, messages, modelKey, maxTok) {
   const out = await modelRouter.getRouter().chat(descOf(modelKey), { system, messages, maxTokens: maxTok || 8192 });
   return out.text;
@@ -187,14 +207,14 @@ async function runSwarm(agentNames, messages, dynAgents) {
   const results = await Promise.allSettled(names.map(async name => {
     const agent = all[name];
     const mk = name === 'dev' ? 'groq_deepseek_r1' : name === 'finance' ? 'groq_llama4_maverick' : 'groq_llama4_scout';
-    const reply = await callSync(agent.system, messages, mk, 3000);
+    const { text: reply } = await callChain(agent.system, messages, chain(mk), 3000);
     return { name, reply, ok: true };
   }));
   const outputs = results.map((r, i) => ({ name: names[i], reply: r.status === 'fulfilled' ? r.value.reply : `[${names[i]} indisponível]`, ok: r.status === 'fulfilled' }));
   if (outputs.filter(o => o.ok).length > 1) {
     const summaryInput = outputs.map(o => `### ${o.name.toUpperCase()}\n${o.reply}`).join('\n\n---\n\n');
     try {
-      const synthesis = await callSync('Consolide as análises dos especialistas em uma resposta executiva, estruturada com markdown, em português do Brasil. Seja direto e acionável.', [{ role: 'user', content: summaryInput }], 'groq_llama3', 4000);
+      const { text: synthesis } = await callChain('Consolide as análises dos especialistas em uma resposta executiva, estruturada com markdown, em português do Brasil. Seja direto e acionável.', [{ role: 'user', content: summaryInput }], chain('groq_llama3'), 4000);;
       return { outputs, synthesis };
     } catch { }
   }
@@ -207,7 +227,7 @@ function extractJSON(t) { const m = t.match(/\{[\s\S]*\}/); return m ? m[0] : nu
 async function parseOrchestrator(raw) {
   let d = safeJSON(raw); if (d) return { decision: d, layer: 1 };
   const ex = extractJSON(raw); if (ex) { d = safeJSON(ex); if (d) return { decision: d, layer: 2 }; }
-  try { const rep = await callSync('Retorne SOMENTE JSON válido. Zero texto fora do JSON.', [{ role: 'user', content: raw }], 'groq_llama3_fast', 600); d = safeJSON(rep) || safeJSON(extractJSON(rep) || ''); if (d) return { decision: d, layer: 3 }; } catch { }
+  try { const { text: rep } = await callChain('Retorne SOMENTE JSON válido. Zero texto fora do JSON.', [{ role: 'user', content: raw }], chain('groq_llama3_fast', 'gemini_25_flash'), 600); d = safeJSON(rep) || safeJSON(extractJSON(rep) || ''); if (d) return { decision: d, layer: 3 }; } catch { }
   return { decision: { type: 'chat', intent: 'chat', response: raw }, layer: 'fallback' };
 }
 
@@ -315,7 +335,7 @@ exports.handler = async (event) => {
       try {
         // Orchestrator com fallback multi-provider
         let orchRaw = null;
-        const orchModels = ['groq_llama3_fast','gemini_20_flash','deepseek_v3','groq_llama4_scout'];
+        const orchModels = chain('groq_llama3_fast', 'gemini_25_flash', 'deepseek_v3', 'groq_llama4_scout');
         for (const om of orchModels) {
           try {
             orchRaw = await callSync(STATIC_AGENTS.orchestrator.system, fullCtx.slice(-12), om, 600);
@@ -384,7 +404,9 @@ exports.handler = async (event) => {
     // 5. CHAT COM STREAMING
     if (!finalResponse.trim()) {
       const intentKey = decision.model_override || decision.intent || model || 'auto';
-      const resolvedKey = (intentKey === 'auto') ? 'groq_llama4_scout' : (INTENT_ROUTER[intentKey] || intentKey);
+      const wanted = (intentKey === 'auto') ? 'groq_llama4_scout' : (INTENT_ROUTER[intentKey] || intentKey);
+      const keys = chain(wanted, 'deepseek_v3', 'groq_llama3');
+      const resolvedKey = keys[0] || wanted;
       const ai = AI_CATALOG[resolvedKey] || AI_CATALOG.groq_llama3;
       modelUsed = ai.label || ai.model;
 
@@ -395,7 +417,7 @@ exports.handler = async (event) => {
         // NEXIA AI (Fase 5): streaming real. Cada token vai para o cliente assim que o
         // provedor o entrega (server.js escreve o `stream` em `res`). A troca de provedor
         // só acontece antes do primeiro token, como no laço de fallback anterior.
-        const order = [resolvedKey, 'deepseek_v3', 'gemini_20_flash', 'groq_llama3', 'gemini_25_flash'].map(descOf);
+        const order = (keys.length ? keys : [resolvedKey]).map(descOf);
         const abort = new AbortController();
         const sse = o => `data: ${JSON.stringify(o)}\n\n`;
         async function* events() {
@@ -419,9 +441,7 @@ exports.handler = async (event) => {
               if (e && e.code === 'ABORTED') return;
               // Nenhum streaming funcionou: chamada completa como último recurso (igual ao anterior)
               let fallbackText = '';
-              for (const fm of ['deepseek_v3', 'gemini_20_flash', 'groq_llama3']) {
-                try { fallbackText = await callSync(systemPrompt, fullCtx.slice(-15), fm, 4096); break; } catch { }
-              }
+              try { fallbackText = (await callChain(systemPrompt, fullCtx.slice(-15), keys, 4096)).text; } catch { }
               if (!fallbackText) fallbackText = '❌ Todas as IAs estão indisponíveis. Verifique as API keys nos segredos do Worker (Cloudflare).';
               yield sse({ token: fallbackText, done: false });
               yield sse({ done: true, model: 'fallback' });
@@ -439,14 +459,13 @@ exports.handler = async (event) => {
         }
         return { statusCode: 200, headers: SSE_HEADERS, stream: events() };
       } else {
-        try { finalResponse = await callSync(systemPrompt, fullCtx.slice(-30), resolvedKey, tokLimit); }
-        catch (e) {
-            const fallbackChain3 = ['groq_llama4_scout','deepseek_v3','gemini_20_flash','groq_llama3'];
-            let fallDone3 = false;
-            for (const fm of fallbackChain3) {
-              try { finalResponse = await callSync(systemPrompt, fullCtx.slice(-15), fm, 4096); modelUsed = `fallback:${fm}`; fallDone3 = true; break; } catch { }
-            }
-            if (!fallDone3) finalResponse = `❌ Falha ao chamar IA: ${'Internal error'}`;
+        try {
+          const r = await callChain(systemPrompt, fullCtx.slice(-30), keys, tokLimit);
+          finalResponse = r.text;
+          modelUsed = (AI_CATALOG[r.key] && AI_CATALOG[r.key].label) || r.key;
+        } catch (e) {
+          console.warn('[CORTEX] Nenhuma IA respondeu:', e && (e.code || e.message));
+          finalResponse = keys.length ? '❌ As IAs configuradas não responderam agora. Tente de novo em instantes.' : '❌ Nenhuma IA configurada. Cadastre GEMINI_API_KEY (grátis) nos segredos do repositório e publique de novo.';
         }
       }
     }
@@ -467,4 +486,4 @@ exports.handler = async (event) => {
     const body = publicErrorBody('CORTEX v16', err, status === 429 ? 'Limite atingido.' : status === 403 ? 'Operação não permitida.' : 'Erro interno. Tente novamente.');
     return { statusCode: status, headers, body: JSON.stringify(body) };
   }
-};exports.AI_CATALOG = AI_CATALOG; // NEXIA AI (Fase 5): teste de cobertura do catálogo pelo Model Router
+};exports.AI_CATALOG = AI_CATALOG; exports.chain = chain; // NEXIA AI (Fase 5): teste de cobertura do catálogo pelo Model Router
