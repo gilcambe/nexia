@@ -176,3 +176,19 @@ test('M10. server.js: resposta { stream } sai em trechos e o iterador é encerra
   assert.strictEqual(returned, true);
   await new Promise(r => srv.close(r));
 });
+
+test('M11. cortex-chat só tenta IAs com chave: só GEMINI_API_KEY → Gemini primeiro, mesmo pedindo Groq', () => {
+  const { chain } = require('../../netlify/functions/cortex-chat');
+  const keys = ['GEMINI_API_KEY', 'GROQ_API_KEY', 'DEEPSEEK_API_KEY', 'CEREBRAS_API_KEY', 'OPENROUTER_API_KEY', 'MISTRAL_API_KEY', 'ANTHROPIC_API_KEY'];
+  const saved = Object.fromEntries(keys.map(k => [k, process.env[k]]));
+  try {
+    for (const k of keys) delete process.env[k];
+    assert.deepStrictEqual(chain('groq_llama4_scout'), []);
+    process.env.GEMINI_API_KEY = 'x';
+    assert.deepStrictEqual(chain('groq_llama4_scout', 'deepseek_v3').slice(0, 2), ['gemini_25_flash', 'gemini_25_pro']);
+    process.env.GROQ_API_KEY = 'y';
+    assert.strictEqual(chain('groq_llama4_scout')[0], 'groq_llama4_scout');
+  } finally {
+    for (const [k, v] of Object.entries(saved)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+  }
+});
