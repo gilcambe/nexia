@@ -15,7 +15,7 @@ Só **Cloudflare + Firebase + GitHub**, todos no plano gratuito. Não há Render
 
 1. Abra https://github.com/gilcambe/nexia/blob/develop/scripts/configurar-nexia.bat e clique no botão de download (seta para baixo, "Download raw file").
 2. Dê dois cliques no arquivo baixado. Se o Windows avisar "O Windows protegeu o computador", clique em **Mais informações → Executar assim mesmo**.
-3. Responda às perguntas. Ele abre as páginas certas do Firebase, do Google e do GitHub no navegador, guarda tudo nos segredos do repositório, publica o NEXIA de novo e liga a sua aprovação nos próximos deploys.
+3. Responda às perguntas. Ele abre as páginas certas do Firebase, do Google e do GitHub no navegador, guarda tudo nos segredos do repositório, cria a GitHub App do Cortex em 1 clique (para ele escrever código e abrir PR), publica o NEXIA de novo e liga a sua aprovação nos próximos deploys.
 
 Ele pode ser rodado de novo quando quiser: o que já existe é pulado. Os passos abaixo são o mesmo processo feito à mão.
 
@@ -25,7 +25,7 @@ Ele pode ser rodado de novo quando quiser: o que já existe é pulado. Os passos
 2. **Masters:** restaure as contas master legítimas (custom claims). Só depois publique as regras e os índices:
    `npx firebase-tools deploy --only firestore:rules,firestore:indexes --project nexia-c8710`
 3. **Segredos do NEXIA, num lugar só:** em `gilcambe/nexia` → *Settings → Secrets and variables → Actions → New repository secret*. Crie um por nome (lista completa no `.env.example`):
-   1. `FIREBASE_SERVICE_ACCOUNT_BASE64`, `FIREBASE_API_KEY`, `FIREBASE_AUTH_DOMAIN`, `FIREBASE_PROJECT_ID`, `FIREBASE_STORAGE_BUCKET`, `FIREBASE_MESSAGING_SENDER_ID`, `FIREBASE_APP_ID`, `MASTER_EMAIL`.
+   1. `FIREBASE_SERVICE_ACCOUNT_BASE64` e `MASTER_EMAIL`. Os `FIREBASE_*` do site (`FIREBASE_API_KEY` etc.) são opcionais: sem eles o NEXIA lê a configuração do app da Web direto do Firebase com a chave de serviço.
    2. IA grátis: `GEMINI_API_KEY` (crie em aistudio.google.com, "Get API key"). Opcional: `GROQ_API_KEY`, `CEREBRAS_API_KEY`, `OPENROUTER_API_KEY`.
    3. `NEXIA_JOBS_TOKEN`: em GitHub → *Settings (da sua conta) → Developer settings → Fine-grained tokens → Generate*. Repositório: só `gilcambe/nexia`. Permissão: **Actions: Read and write**. Sem validade longa demais.
    4. Opcional: `NEXIA_GITHUB_TOKEN` (ler repositórios privados no onboarding).

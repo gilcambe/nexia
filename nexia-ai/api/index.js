@@ -139,13 +139,14 @@ function createHandler(deps = {}) {
       const isMaster = auth.role === 'master';
 
       if (parts[0] === 'me' && parts.length === 1 && method === 'GET') {
-        return json(event, 200, { uid: auth.uid, role: auth.role, tenantSlug: auth.tenantSlug || null,
+        return json(event, 200, { uid: auth.uid, role: auth.role, tenantSlug: auth.tenantSlug || (isMaster ? 'nexia' : null),
           canUseVault: isMaster || (auth.role === 'admin' && !!auth.tenantSlug) });
       }
 
       // Tenant: master escolhe (header X-Tenant-Id ou ?tenant=); admin só o próprio.
       const h = event.headers || {};
-      const requested = q.tenant || h['x-tenant-id'] || h['X-Tenant-Id'] || auth.tenantSlug;
+      // Master sem tenant no perfil usa o tenant padrão 'nexia' (o mesmo do Cortex e do site).
+      const requested = q.tenant || h['x-tenant-id'] || h['X-Tenant-Id'] || auth.tenantSlug || (isMaster ? 'nexia' : undefined);
       if (typeof requested !== 'string' || !TENANT_RE.test(requested)) return json(event, 400, { error: 'Tenant inválido.' });
       if (!isMaster && !(auth.role === 'admin' && auth.tenantSlug === requested)) {
         return json(event, 403, { error: 'Acesso ao Vault restrito a master ou admin do tenant.' });
