@@ -18,10 +18,29 @@ function Atualizar-Path {
   $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
 }
 
-function Ler-Secreto($t) {
-  $s = Read-Host "  $t" -AsSecureString
-  $b = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($s)
-  try { return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($b) } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($b) }
+# Le um segredo da area de transferencia (Ctrl+C no navegador e Enter aqui). Colar com Ctrl+V numa
+# entrada escondida do PowerShell 5.1 grava "^V" em vez da chave; por isso nada e digitado nem colado.
+# Confere o formato e testa o valor de verdade antes de guardar; tenta de novo se estiver errado.
+function Ler-DaCopia($t, $formato, $teste) {
+  for ($i = 0; $i -lt 3; $i++) {
+    Pergunta "$t e depois aperte Enter aqui (nao precisa colar)" | Out-Null
+    $v = ([string](Get-Clipboard -Raw)).Trim()
+    if (-not $v) { Aviso 'A area de transferencia esta vazia. Copie de novo.'; continue }
+    if ($v -notmatch $formato) { Aviso 'Isso nao parece ser o valor certo. Copie de novo (so o codigo, sem espacos).'; continue }
+    if (-not (& $teste $v)) { Aviso 'O servico recusou esse valor. Confira se copiou o codigo inteiro e tente de novo.'; continue }
+    Set-Clipboard -Value ' '
+    return $v
+  }
+  Aviso 'Pulei este item. Rode o assistente de novo quando quiser.'
+  return $null
+}
+
+function Testar-Gemini($v) {
+  try { Invoke-RestMethod -Uri 'https://generativelanguage.googleapis.com/v1beta/models?pageSize=1' -Headers @{ 'x-goog-api-key' = $v } | Out-Null; return $true } catch { return $false }
+}
+
+function Testar-TokenGithub($v) {
+  try { Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/actions/workflows" -Headers @{ Authorization = "Bearer $v"; 'User-Agent' = 'nexia-assistente' } | Out-Null; return $true } catch { return $false }
 }
 
 # Grava um segredo no GitHub pela entrada padrao (o valor nunca aparece na tela nem no comando).
@@ -102,7 +121,7 @@ Titulo '4/8 Inteligencia artificial gratis (Google Gemini)'
 if (Precisa @('GEMINI_API_KEY') 'Chave do Gemini') {
   Write-Host '  No navegador: entre com sua conta Google e clique em "Create API key". Copie a chave.'
   Start-Process 'https://aistudio.google.com/apikey'
-  Gravar 'GEMINI_API_KEY' (Ler-Secreto 'Cole a chave (ela nao aparece na tela)')
+  Gravar 'GEMINI_API_KEY' (Ler-DaCopia 'Copie a chave (botao de copiar ao lado dela)' '^AIza[0-9A-Za-z_-]{30,}$' ${function:Testar-Gemini})
 }
 
 # 5. Token da fila de tarefas
@@ -114,7 +133,7 @@ if (Precisa @('NEXIA_JOBS_TOKEN') 'Token da fila') {
   Write-Host '   - Permissions > Repository permissions > Actions: "Read and write"'
   Write-Host '   - Clique em "Generate token" e copie.'
   Start-Process 'https://github.com/settings/personal-access-tokens/new'
-  Gravar 'NEXIA_JOBS_TOKEN' (Ler-Secreto 'Cole o token (ele nao aparece na tela)')
+  Gravar 'NEXIA_JOBS_TOKEN' (Ler-DaCopia 'Copie o token (botao de copiar ao lado dele)' '^(github_pat_|ghp_)[0-9A-Za-z_]{20,}$' ${function:Testar-TokenGithub})
 }
 
 # 6. GitHub App do NEXIA: deixa o Cortex escrever codigo e abrir PR (gratis, criada em 1 clique)
