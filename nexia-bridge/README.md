@@ -91,3 +91,15 @@ Cada chamada vira uma linha em `<stateDir>/bridge-log.jsonl` com data, ferrament
 ```
 NEXIA_BRIDGE_CONFIG=... node nexia-bridge/bin/nexia-bridge.js log 50
 ```
+
+## 7. Enviar o registro para o NEXIA (opcional)
+
+Assim as operações do seu computador aparecem na tela **Auditoria** do NEXIA, junto com o resto.
+
+1. No NEXIA, abra **Auditoria**, escreva um nome (ex.: "Notebook do Gil") e clique em **Criar token**. Copie o token na hora: ele não aparece de novo.
+2. No computador onde o Bridge roda, crie a variável de ambiente `NEXIA_BRIDGE_TOKEN` com esse token. No Windows (PowerShell):
+   `[Environment]::SetEnvironmentVariable("NEXIA_BRIDGE_TOKEN", "cole-o-token-aqui", "User")`
+3. No `bridge.json`, acrescente o endereço do NEXIA: `"vault": { "url": "https://seu-dominio" }`.
+4. Reinicie o Claude. Dois segundos depois de cada operação o Bridge envia o que falta. Para enviar na mão: `node nexia-bridge/bin/nexia-bridge.js sync`.
+
+Se a internet cair, nada se perde: o envio continua de onde parou. Perdeu o computador? Clique em **Revogar** no token, na mesma tela.

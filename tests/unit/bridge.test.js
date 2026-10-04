@@ -282,3 +282,32 @@ test('W13. redação: SHAs do git ficam; tokens e senhas em URL somem', () => {
   assert.match(r.text, /https:\/\/user:\[REDACTED\]@host/);
   assert.ok(!/gsk_[0-9a-f]{10}/.test(r.text));
 });
+
+test('W14. envio do log ao Vault (ADR-F12-04): config só HTTPS, sem token não envia, id estável por linha', async () => {
+  const { createSync } = require('../../nexia-bridge/lib/sync');
+  const base = { stateDir: path.join(os.tmpdir(), `nexia-w14-${Date.now()}`), projects: [{ project_id: 'prj_x', roots: [ROOT], mode: 'read-only' }] };
+  assert.strictEqual(validateConfig(base).vault, null);
+  assert.deepStrictEqual(validateConfig({ ...base, vault: { url: 'https://nexia.example.com/qualquer' } }).vault, { url: 'https://nexia.example.com' });
+  for (const url of ['http://nexia.example.com', 'https://u:p@nexia.example.com', 'ftp://x', 'nada']) {
+    assert.throws(() => validateConfig({ ...base, vault: { url } }), e => e.code === 'CONFIG', url);
+  }
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'nexia-w14-'));
+  const file = path.join(dir, 'bridge-log.jsonl');
+  fs.writeFileSync(file, '{"tool":"git_status"}\n{"tool":"git_diff"}\n{"tool":"inco');
+  const seen = [];
+  const fetchImpl = async (u, o) => { seen.push({ u, auth: o.headers.Authorization, body: JSON.parse(o.body) }); return { ok: true, status: 200 }; };
+  assert.deepStrictEqual(await createSync({ stateDir: dir, logFile: file, url: 'https://x', token: 'errado', fetchImpl }).flush(), { sent: 0, skipped: 'not_configured' });
+  const token = 'nxb_' + 'a'.repeat(64);
+  const s = createSync({ stateDir: dir, logFile: file, url: 'https://x', token, fetchImpl });
+  assert.deepStrictEqual(await s.flush(), { sent: 2 }, 'linha incompleta espera');
+  assert.strictEqual(seen[0].u, 'https://x/api/nexia/bridge/events');
+  assert.strictEqual(seen[0].auth, `Bearer ${token}`);
+  const id1 = seen[0].body.events[0].id;
+  assert.match(id1, /^[0-9a-f]{32}$/);
+  fs.unlinkSync(path.join(dir, 'sync-state.json'));
+  await s.flush();
+  assert.strictEqual(seen[1].body.events[0].id, id1, 'mesmo id no reenvio');
+  const fail = createSync({ stateDir: dir, logFile: file, url: 'https://x', token, fetchImpl: async () => { throw Object.assign(new Error('x'), { code: 'ECONNREFUSED' }); } });
+  fs.unlinkSync(path.join(dir, 'sync-state.json'));
+  assert.deepStrictEqual(await fail.flush(), { sent: 0, error: 'ECONNREFUSED' });
+});

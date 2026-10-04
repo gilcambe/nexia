@@ -16,6 +16,7 @@ const { createGateway, GatewayError } = require('../tool-gateway');
 const { HTTP_STATUS: GATEWAY_STATUS } = require('../tool-gateway/errors');
 const { createOrchestrator } = require('../orchestrator');
 const { collectMetrics } = require('../observability');
+const { createBridgeTokens, ingestEvents, bearerOf, MAX_EVENTS } = require('../bridge-sync');
 
 const RESOURCES = { clients: 'Client', projects: 'Project', repos: 'Repository', environments: 'Environment', 'tool-policies': 'ToolPolicy' };
 const INVOKE_STATUS = { succeeded: 200, pending_approval: 202, denied: 403, failed: 422, rejected: 409, running: 202, expired: 409 };
@@ -76,6 +77,22 @@ function createHandler(deps = {}) {
   // Se o processo reiniciar no meio, a execução fica parada até um POST .../resume.
   const background = deps.background || (fn => setImmediate(() => fn().catch(e => console.error('[nexia-orchestrator]', e && e.code, e && e.message))));
 
+  const bridgeTokens = () => createBridgeTokens(deps.db || require('../../netlify/functions/firebase-init').db);
+
+  async function bridgeEvents(event) {
+    if (event.httpMethod !== 'POST') return json(event, 405, { error: 'Método não permitido.' });
+    if (!bearerOf(event)) return json(event, 401, { error: 'Token do Bridge ausente.' });
+    let tokens;
+    try { tokens = bridgeTokens(); } catch (e) { if (e.status) return json(event, e.status, { error: e.message }); throw e; }
+    const who = await tokens.authenticate(event);
+    if (!who) return json(event, 401, { error: 'Token do Bridge inválido ou revogado.' });
+    let b;
+    try { b = JSON.parse(event.body || '{}'); } catch { return json(event, 400, { error: 'JSON inválido.' }); }
+    if (!Array.isArray(b.events) || b.events.length > MAX_EVENTS) return json(event, 400, { error: `events: lista de até ${MAX_EVENTS} itens.` });
+    const r = await ingestEvents({ vault: getVault(), tenantId: who.tenantId, events: b.events });
+    return json(event, 200, r);
+  }
+
   async function cronSweep(event) {
     const secret = (deps.env || process.env).NEXIA_CRON_SECRET || '';
     if (secret.length < 32) return json(event, 404, { error: 'Rota não encontrada.' });
@@ -106,6 +123,10 @@ function createHandler(deps = {}) {
       // só com o segredo NEXIA_CRON_SECRET. Sem o segredo configurado, a rota não existe.
       if ((event.path || '').replace(/\/+$/, '') === '/api/nexia/internal/sweep') {
         return await cronSweep(event);
+      }
+      // ADR-F12-04: log do NEXIA Bridge (token do Bridge, não de pessoa)
+      if ((event.path || '').replace(/\/+$/, '') === '/api/nexia/bridge/events') {
+        return await bridgeEvents(event);
       }
       const auth = await verify(event);
       if (!auth.ok) return json(event, 401, { error: auth.reason || 'Não autenticado.' });
@@ -168,6 +189,25 @@ function createHandler(deps = {}) {
         }
         return json(event, 404, { error: 'Rota não encontrada.' });
       }
+      // ADR-F12-04: tokens do NEXIA Bridge (criar mostra o token uma vez; listar nunca mostra)
+      if (parts[0] === 'bridge-tokens') {
+        let bt;
+        try { bt = bridgeTokens(); } catch (e) { if (e.status) return json(event, e.status, { error: e.message }); throw e; }
+        const actor = { type: 'user', id: auth.uid };
+        if (parts.length === 1 && method === 'GET') return json(event, 200, { items: await bt.list(requested) });
+        if (parts.length === 1 && method === 'POST') {
+          let b = {};
+          try { b = JSON.parse(event.body || '{}'); } catch { return json(event, 400, { error: 'JSON inválido.' }); }
+          try { const { record, token } = await bt.create(requested, { label: b.label, actor }); return json(event, 201, { record, token }); }
+          catch (e) { if (e.status) return json(event, e.status, { error: e.message }); throw e; }
+        }
+        if (parts.length === 2 && method === 'DELETE') {
+          const record = await bt.revoke(requested, parts[1]);
+          return record ? json(event, 200, { record }) : json(event, 404, { error: 'Token não encontrado.' });
+        }
+        return json(event, 405, { error: 'Método não permitido.' });
+      }
+
       // Fase 10: Orchestrator (execuções)
       if (parts[0] === 'executions') {
         const ectx = createExecutionContext({ tenantId: requested, actor: { type: 'user', id: auth.uid } });

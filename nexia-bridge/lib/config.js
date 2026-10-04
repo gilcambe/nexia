@@ -9,7 +9,9 @@
 //     "mode": "write-confirm",                          // read-only | write-confirm | autonomous
 //     "commands": { "allow": [], "deny": [] },          // listas extras por executável
 //     "passEnv": []                                     // variáveis com cara de secret liberadas aos comandos
-//   }]
+//   }],
+//   "vault": { "url": "https://seu-dominio" }        // opcional (ADR-F12-04): envia o log ao Vault;
+//                                                     // o token vem só da variável NEXIA_BRIDGE_TOKEN
 // }
 const fs = require('fs');
 const os = require('os');
@@ -58,7 +60,17 @@ function validateConfig(raw) {
       throw new BridgeError('CONFIG', 'stateDir (log e aprovações) não pode ficar dentro de um workspace.');
     }
   }
-  return { stateDir, projects };
+  // ADR-F12-04: envio do log ao Vault (opcional). Só HTTPS, exceto localhost (testes).
+  let vault = null;
+  if (raw.vault && raw.vault.url) {
+    let u;
+    try { u = new URL(String(raw.vault.url)); } catch { throw new BridgeError('CONFIG', 'vault.url inválida.'); }
+    const local = ['127.0.0.1', 'localhost', '[::1]'].includes(u.hostname);
+    if (u.protocol !== 'https:' && !(local && u.protocol === 'http:')) throw new BridgeError('CONFIG', 'vault.url precisa ser https://.');
+    if (u.username || u.password) throw new BridgeError('CONFIG', 'vault.url não pode ter usuário ou senha; o token vai em NEXIA_BRIDGE_TOKEN.');
+    vault = { url: u.origin };
+  }
+  return { stateDir, projects, vault };
 }
 
 module.exports = { loadConfig, validateConfig, MODES };

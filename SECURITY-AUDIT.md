@@ -219,6 +219,16 @@ Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claud
 | H5 | Processo como root | container roda como usuário `node` | revisão do `Dockerfile` |
 | H6 | Rota interna da retomada agendada | só existe com `NEXIA_CRON_SECRET` de 32+ caracteres; comparação em tempo constante; não retoma aprovações; ferramentas em nome de quem pediu | O10; CF3 |
 
+## Pendências finais (ADR-F12-01 a 04)
+
+| ID | Tema | Controle | Teste |
+|---|---|---|---|
+| F1 | Ação de terceiro trocada | pipeline modelo e workflows do NEXIA com SHA | C6, C1 |
+| F2 | Bridge diferente no Windows | job `Bridge no Windows`; caminho relativo sempre com `/` | W1, W12 no runner Windows |
+| F3 | Credencial do Bridge vazada | token só com hash no servidor, mostrado uma vez, revogável, 20 por tenant; só grava `bridge.*` no próprio tenant | B1, B2 |
+| F4 | Registro duplicado ou perdido | id por linha + idempotência do Vault; ponto só avança após 200 | B2, W14 |
+| F5 | Token do Bridge exposto a comandos | variável com `TOKEN` no nome não passa para comandos | W8 |
+
 ## Riscos remanescentes
 - Credenciais expostas continuam válidas até o dono rotacionar; histórico público ainda contém valores.
 - Correções só valem em produção depois de deploy e publicação das regras, que não fazem parte desta fase.

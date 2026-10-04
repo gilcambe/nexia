@@ -242,6 +242,10 @@ function createTools(o) {
 
   /** Executa uma ferramenta e registra no log. Nunca lança: devolve { ok, result | error }. */
   async function call(name, args = {}) {
+    try { return await callInner(name, args); } finally { if (o.onLogged) o.onLogged(); }
+  }
+
+  async function callInner(name, args = {}) {
     const t0 = Date.now();
     const entry = { agent: agent(), tool: name, project_id: args.project_id || null };
     if (name === 'terminal_run') Object.assign(entry, { command: redact([args.command, ...(args.args || [])].join(' ')).text.slice(0, 300), cwd: args.cwd || '.' });
