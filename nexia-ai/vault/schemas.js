@@ -412,6 +412,9 @@ const SCHEMAS = {
       deployment_id: t.ref('Deployment'),
       review_verdict: t.enum(['approve', 'changes_requested']),
       security_verdict: t.enum(['approve', 'changes_requested']),
+      // Rodadas de correção pedidas por Reviewer/Security (ADR-Q-01) e o que pediram por último.
+      fix_rounds: t.int({ min: 0, max: 5 }),
+      fix_feedback: t.text({ max: 4000 }),
       question: t.text({ max: 2000 }),
       result_summary: t.text({ max: 4000 }),
       error_code: t.string({ max: 64, pattern: /^[A-Z0-9_]+$/, patternName: 'error_code' }),

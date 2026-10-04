@@ -92,6 +92,14 @@ module.exports = [
     i => `commit em ${i.branch}: ${(i.files || []).length} arquivo(s) (${(i.files || []).slice(0, 5).map(f => f.path).join(', ')})`,
     r => `${r.branch} → ${short(r.commit)} (${r.files.length} arquivo(s))`, { min_autonomy: 2 }),
 
+  tool('github.edit_files', 'HIGH', 'Edita arquivos existentes por trechos numa branch "nexia/..." (um commit): cada "find" precisa aparecer exatamente 1 vez no arquivo e vira "replace". Prefira a reescrever arquivos inteiros.',
+    { branch: STR, message: STR,
+      edits: { type: 'array', minItems: 1, maxItems: 40, items: { type: 'object', properties: { path: STR, find: STR, replace: STR }, required: ['path', 'find', 'replace'] } } },
+    ['branch', 'message', 'edits'],
+    ({ gh }, i) => gh.editFiles(i),
+    i => `edição em ${i.branch}: ${(i.edits || []).length} trecho(s) (${[...new Set((i.edits || []).map(e => e.path))].slice(0, 5).join(', ')})`,
+    r => `${r.branch} → ${short(r.commit)} (${r.files.length} arquivo(s))`, { min_autonomy: 2 }),
+
   tool('github.create_pr', 'HIGH', 'Abre um pull request (rascunho por padrão) de uma branch "nexia/..." para a branch padrão.',
     { head: STR, base: STR, title: STR, body: STR, draft: { type: 'boolean' } }, ['head', 'title'],
     ({ gh }, i) => gh.createPull(i),

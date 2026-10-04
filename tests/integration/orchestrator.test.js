@@ -156,9 +156,12 @@ test('O4. sem falso sucesso: agente sem commit, revisão reprovada e aprovação
   assert.ok(noCommit.exe.finished_at);
   assert.match(noCommit.exe.result_summary, /nada foi alterado/);
 
-  const rejected = await startAndRun(orch(scriptedRouter({ architect: [{ text: 'x' }], frontend: [commitStep('src/app.js'), { text: 'ok' }], reviewer: [report('changes_requested')] })),
+  // Revisão reprovada nas 3 vezes (a original e as 2 rodadas de correção, cada uma com commit novo).
+  const rejected = await startAndRun(orch(scriptedRouter({ architect: [{ text: 'x' }],
+    frontend: [commitStep('src/app.js'), { text: 'ok' }, commitStep('src/app2.js'), { text: 'ok' }, commitStep('src/app3.js'), { text: 'ok' }],
+    reviewer: [report('changes_requested'), report('changes_requested'), report('changes_requested')] })),
     'Altere o envio do formulário do Site Alfa');
-  assert.deepStrictEqual([rejected.exe.status, rejected.exe.error_code, rejected.exe.review_verdict], ['failed', 'REVIEW_CHANGES_REQUESTED', 'changes_requested']);
+  assert.deepStrictEqual([rejected.exe.status, rejected.exe.error_code, rejected.exe.review_verdict, rejected.exe.fix_rounds], ['failed', 'REVIEW_CHANGES_REQUESTED', 'changes_requested', 2]);
   assert.strictEqual(rejected.exe.plan[5].status, 'pending', 'PR não foi aberto');
   assert.strictEqual(fake.pulls.length, pulls);
   assert.strictEqual(rejected.exe.gates.find(g => g.gate === 8).status, 'failed');
@@ -175,6 +178,28 @@ test('O4. sem falso sucesso: agente sem commit, revisão reprovada e aprovação
   const after = await o.resume(w.ctx, w.exe.id);
   assert.deepStrictEqual([after.status, after.plan[5].status], ['failed', 'failed']);
   assert.match(after.result_summary, /não foi executada/);
+});
+
+test('O4b. ADR-Q-01: revisão pede mudança, o agente corrige na mesma branch e a revisão aprova; rodada sem commit novo falha', async () => {
+  await setAutonomy(3);
+  const router = scriptedRouter({
+    architect: [{ text: 'Mudar src/app.js.' }],
+    frontend: [commitStep('src/app.js'), { text: 'feito' }, req => ({ tool_calls: [call('github.edit_files', { branch: branchOf(req), message: 'Corrige o envio',
+      edits: [{ path: 'src/app.js', find: 'Enviar', replace: 'Enviar mensagem' }] })] }), { text: 'corrigido' }],
+    reviewer: [report('changes_requested'), report('approve')], security: [report('approve')],
+  });
+  const { exe } = await startAndRun(orch(router), 'Corrija o botão de enviar do Site Alfa');
+  assert.deepStrictEqual([exe.review_verdict, exe.security_verdict, exe.fix_rounds], ['approve', 'approve', 1]);
+  assert.ok(exe.pull_request, 'PR aberto depois da correção');
+  assert.strictEqual(fake.fileAt(exe.work_branch, 'src/app.js'), '<button type="submit">Enviar mensagem</button>\n', 'edição por trecho aplicada');
+  const fixGoal = router.seen.filter(s => s.agent === 'frontend').length;
+  assert.ok(fixGoal >= 3, 'o agente rodou de novo para corrigir');
+  assert.match(exe.fix_feedback, /quebra o envio/);
+
+  const lazy = await startAndRun(orch(scriptedRouter({ architect: [{ text: 'x' }], frontend: [commitStep('src/app.js'), { text: 'ok' }, { text: 'Já estava certo.' }],
+    reviewer: [report('changes_requested')] })), 'Ajuste o botão de enviar do Site Alfa');
+  assert.deepStrictEqual([lazy.exe.status, lazy.exe.error_code], ['failed', 'NO_CHANGES']);
+  assert.match(lazy.exe.result_summary, /rodada de correção terminou sem commit novo/);
 });
 
 test('O5. orçamento estourado para a execução com BUDGET_EXCEEDED', async () => {
