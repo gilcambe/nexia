@@ -22,7 +22,7 @@ function scriptedRouter(script) {
   const seen = [];
   return {
     seen,
-    capabilities: () => ({ available: true, tool_call: true }),
+    capabilities: d => ({ available: d.provider === 'anthropic', tool_call: true }), // só os 2 candidatos Anthropic de cada classe
     costEstimate: (d, u) => ({ known: true, usd: ((u.input_tokens || 0) + (u.output_tokens || 0)) / 1e6 }),
     async toolCall(desc, req) {
       const agent = Object.keys(AGENTS).find(k => req.system.includes(AGENTS[k].prompt));

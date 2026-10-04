@@ -44,10 +44,12 @@ test('CF1. config do Worker: plano grátis, sem Container/Durable Object, cron d
   }
 });
 
-test('CF2. populateProcessEnv copia só textos com nome válido', () => {
+test('CF2. populateProcessEnv copia só textos com nome válido e define NODE_ENV', () => {
   const before = { ...process.env };
   try {
+    delete process.env.NODE_ENV;
     populateProcessEnv({ CF_TEST_VAR: 'a', ASSETS: {}, 'bad-name': 'x', NUM: 3 });
+    assert.strictEqual(process.env.NODE_ENV, 'production');
     assert.strictEqual(process.env.CF_TEST_VAR, 'a');
     assert.strictEqual(process.env['bad-name'], undefined);
     assert.strictEqual(process.env.NUM, undefined);

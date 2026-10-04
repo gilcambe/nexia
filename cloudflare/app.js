@@ -33,6 +33,10 @@ function populateProcessEnv(env) {
   for (const [k, v] of Object.entries(env || {})) {
     if (typeof v === 'string' && /^[A-Z_][A-Z0-9_]*$/.test(k) && process.env[k] !== v) process.env[k] = v;
   }
+  // Padrão produção (no `wrangler dev`, NODE_ENV=development vem do .dev.vars). Chave em variável
+  // porque o build do wrangler troca `process.env.NODE_ENV` escrito por extenso por uma constante.
+  const NODE_ENV = 'NODE_ENV';
+  if (!process.env[NODE_ENV]) process.env[NODE_ENV] = 'production';
 }
 
 async function readBody(request) {
