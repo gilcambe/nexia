@@ -16,7 +16,10 @@ const { runAgent, createMeter } = require('./runtime');
 const { evaluateGates, verdict } = require('./gates');
 const { normalize } = require('../text');
 
-const DEFAULT_BUDGET = Object.freeze({ max_steps: 40, max_tool_calls: 80, max_tokens: 800000, max_ms: 20 * 60 * 1000 });
+const DEFAULT_BUDGET = Object.freeze({ max_steps: 80, max_tool_calls: 160, max_tokens: 2000000, max_ms: 30 * 60 * 1000 });
+// ADR-Q-01: quando Reviewer ou Security pedem mudanças, o agente que implementou corrige na mesma
+// branch e a revisão roda de novo, até este limite. Depois disso a execução falha como antes.
+const MAX_FIX_ROUNDS = 2;
 const FINAL = ['succeeded', 'failed', 'cancelled'];
 
 // ── Intenção ─────────────────────────────────────────────────────────────────
@@ -169,13 +172,20 @@ function createOrchestrator(deps) {
           if (exists) stepDone(i, { tool_call_ids: addIds(i, ids(r)), summary: `${branch} já existia (retomada)` });
           else handle(i, r, x => `branch ${x.branch} criada de ${x.from}`);
         } else if (action === 'agent:implement') {
-          await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).\nAnálise do Architect:\n${analysis}\n\nLeia os arquivos atuais com github.get_file (ref ${state.work_branch}) e faça UM commit com github.commit_files na branch ${state.work_branch}. Não mexa em outros arquivos.`);
+          const fix = state.fix_feedback
+            ? `\n\nRODADA DE CORREÇÃO ${state.fix_rounds}: a revisão pediu mudanças. Corrija TODOS os pontos abaixo na mesma branch, com um novo commit:\n${state.fix_feedback}`
+            : '';
+          const headOf = r => (r && r.status === 'succeeded' && r.result.commits.length ? r.result.commits[r.result.commits.length - 1].sha : null);
+          let before = null;   // rodada de correção: exige commit novo, não basta o da rodada anterior
+          if (fix) before = headOf(await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch }));
+          await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).\nAnálise do Architect:\n${analysis}${fix}\n\nLeia os arquivos atuais com github.get_file (ref ${state.work_branch}). Para arquivo existente use github.edit_files; para arquivo novo, github.commit_files. Tudo na branch ${state.work_branch}. Não mexa em arquivos que o pedido não envolve.`);
           if (!stop) {
             // Confirmação pela ferramenta: a branch tem que estar à frente da padrão.
             const c = await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch });
-            if (c.status !== 'succeeded' || !c.result.ahead_by) {
-              stepFail(i, { tool_call_ids: addIds(i, ids(c)), error_code: 'NO_CHANGES', summary: 'Nenhum commit na branch de trabalho; nada foi alterado.' });
-              stop = { status: 'failed', error_code: 'NO_CHANGES', result_summary: 'O agente terminou sem commit na branch de trabalho; nada foi alterado.' };
+            if (c.status !== 'succeeded' || !c.result.ahead_by || (before && headOf(c) === before)) {
+              const why = fix ? `A rodada de correção terminou sem commit novo; a revisão continua pedindo mudanças (branch ${state.work_branch}).` : 'O agente terminou sem commit na branch de trabalho; nada foi alterado.';
+              stepFail(i, { tool_call_ids: addIds(i, ids(c)), error_code: 'NO_CHANGES', summary: fix ? 'Sem commit novo na rodada de correção.' : 'Nenhum commit na branch de trabalho; nada foi alterado.' });
+              stop = { status: 'failed', error_code: 'NO_CHANGES', result_summary: why };
             } else steps[i] = { ...steps[i], tool_call_ids: addIds(i, ids(c)), summary: `${steps[i].summary || ''}\n${c.result.ahead_by} commit(s), ${c.result.files.length} arquivo(s): ${c.result.files.map(f => f.path).slice(0, 10).join(', ')}`.trim().slice(0, 2000) };
           }
         } else if (action === 'agent:review' || action === 'agent:security') {
@@ -184,6 +194,18 @@ function createOrchestrator(deps) {
             const v = r.report ? r.report.verdict : 'changes_requested';
             if (!r.report) steps[i] = { ...steps[i], summary: `sem veredito estruturado (tratado como changes_requested): ${steps[i].summary || ''}`.slice(0, 2000) };
             await commit(action === 'agent:review' ? { review_verdict: v } : { security_verdict: v });
+            const implIdx = plan.findIndex(p => p.action === 'agent:implement');
+            if (v !== 'approve' && (state.fix_rounds || 0) < MAX_FIX_ROUNDS && implIdx >= 0) {
+              // ADR-Q-01: volta para o agente que implementou, com o que a revisão pediu.
+              for (let k = implIdx; k < plan.length; k++) {
+                if (['agent:implement', 'agent:review', 'agent:security'].includes(plan[k].action) && k !== i) steps[k] = { ...steps[k], status: 'pending' };
+              }
+              const feedback = `${action === 'agent:review' ? 'Reviewer' : 'Security'}: ${steps[i].summary || ''}`.slice(0, 4000);
+              steps[i] = { ...steps[i], status: 'pending' };
+              await commit({ fix_rounds: (state.fix_rounds || 0) + 1, fix_feedback: feedback });
+              i = implIdx - 1;
+              continue;
+            }
             if (v !== 'approve') {
               // Sem PR com revisão reprovada: a branch fica para correção, nada vai para revisão humana.
               stop = { status: 'failed', error_code: action === 'agent:review' ? 'REVIEW_CHANGES_REQUESTED' : 'SECURITY_CHANGES_REQUESTED',

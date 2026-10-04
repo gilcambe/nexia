@@ -67,6 +67,22 @@ test('GH2. autonomia 2: branch e commit automáticos; PR ainda pede pessoa; cont
   assert.deepStrictEqual([done.status, done.result.draft, done.result.base], ['succeeded', true, 'develop']);
 });
 
+test('GH2b. edit_files: troca trechos exatos num commit; trecho ausente ou repetido falha sem commit', async () => {
+  await setAutonomy(2);
+  await invoke('github.create_branch', { branch: 'nexia/gh2b' });
+  await invoke('github.commit_files', { branch: 'nexia/gh2b', message: 'base', files: [{ path: 'src/a.js', content: 'const a = 1;\nconst b = 1;\n' }] });
+  const ok = await invoke('github.edit_files', { branch: 'nexia/gh2b', message: 'Ajusta a', edits: [{ path: 'src/a.js', find: 'const a = 1;', replace: 'const a = 2;' }] });
+  assert.strictEqual(ok.status, 'succeeded', JSON.stringify(ok.error));
+  assert.strictEqual(fake.fileAt('nexia/gh2b', 'src/a.js'), 'const a = 2;\nconst b = 1;\n');
+  const head = fake.branches.get('nexia/gh2b');
+  for (const find of ['const', 'nao existe']) {
+    const bad = await invoke('github.edit_files', { branch: 'nexia/gh2b', message: 'x', edits: [{ path: 'src/a.js', find, replace: 'y' }] });
+    assert.strictEqual(bad.status, 'failed');
+    assert.match(bad.error.message, /exatamente 1 vez/);
+  }
+  assert.strictEqual(fake.branches.get('nexia/gh2b'), head, 'nenhum commit nas falhas');
+});
+
 test('GH3. autonomia 3: PR e CI automáticos; deploy, branch padrão e arquivo sensível falham mesmo assim', async () => {
   await setAutonomy(3);
   await invoke('github.create_branch', { branch: 'nexia/gh3' });
@@ -115,7 +131,7 @@ test('GH6. catálogo: risco e autonomia mínima de cada ferramenta do GitHub em 
   assert.deepStrictEqual(tools, {
     'github.get_repo': 'LOW/-', 'github.list_branches': 'LOW/-', 'github.get_file': 'LOW/-', 'github.compare': 'LOW/-', 'github.list_commits': 'LOW/-',
     'github.list_issues': 'LOW/-', 'github.list_pulls': 'LOW/-', 'github.get_checks': 'LOW/-', 'github.list_workflow_runs': 'LOW/-',
-    'github.create_branch': 'MEDIUM/2', 'github.commit_files': 'HIGH/2', 'github.create_pr': 'HIGH/3', 'github.dispatch_workflow': 'HIGH/3',
+    'github.create_branch': 'MEDIUM/2', 'github.commit_files': 'HIGH/2', 'github.edit_files': 'HIGH/2', 'github.create_pr': 'HIGH/3', 'github.dispatch_workflow': 'HIGH/3',
   });
 });
 

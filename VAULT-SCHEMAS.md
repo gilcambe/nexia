@@ -441,6 +441,8 @@ Coleção `vault_executions`, id `exe_…`, schemaVersion 1.
 | `deployment_id` | ref → Deployment |  |  |  |  |
 | `review_verdict` | enum |  |  |  | `approve`, `changes_requested` |
 | `security_verdict` | enum |  |  |  | `approve`, `changes_requested` |
+| `fix_rounds` | int |  |  |  | 0–5 |
+| `fix_feedback` | string |  |  |  | 1–4000 caracteres |
 | `question` | string |  |  |  | 1–2000 caracteres |
 | `result_summary` | string |  |  |  | 1–4000 caracteres |
 | `error_code` | string (error_code) |  |  |  | 1–64 caracteres |

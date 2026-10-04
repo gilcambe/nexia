@@ -12,7 +12,9 @@ const { candidates } = require('./models');
 
 const RETRYABLE_TOOL = new Set(['UPSTREAM']);
 const RETRYABLE_MODEL = new Set(['UPSTREAM', 'ABORTED']);
-const RESULT_MAX = 8000;
+// Resultado de ferramenta que volta ao modelo. Grande o bastante para um arquivo de código inteiro
+// (cortar arquivo levava o agente a reescrever o que não leu); o orçamento de tokens segue valendo.
+const RESULT_MAX = 60000;
 const toModelName = n => n.replace(/\./g, '__');
 const fromModelName = n => String(n).replace(/__/g, '.');
 

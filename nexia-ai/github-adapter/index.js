@@ -22,7 +22,7 @@ const PATH_RE = /^(?![/\\])(?!.*(?:^|\/)\.\.?(?:\/|$))(?!.*\/\/)[^\0\\:*?"<>|]{1
 const WORKFLOW_RE = /^[A-Za-z0-9._-]{1,100}\.ya?ml$/;
 const DEPLOY_WORKFLOW_RE = /deploy|prod|release|publish/i;
 const PIPELINE_WORKFLOW = 'nexia-pipeline.yml'; // pipeline modelo da Fase 9: só deploy.* dispara
-const LIMITS = Object.freeze({ files: 20, fileBytes: 256 * 1024, totalBytes: 600 * 1024, readBytes: 512 * 1024, message: 1000, prBody: 20000 });
+const LIMITS = Object.freeze({ files: 20, edits: 40, fileBytes: 256 * 1024, totalBytes: 600 * 1024, readBytes: 512 * 1024, message: 1000, prBody: 20000 });
 
 const PERMS = Object.freeze({
   read: { metadata: 'read', contents: 'read' },
@@ -100,7 +100,7 @@ function createGithubAdapter(o) {
     return d.object.sha;
   }
 
-  return {
+  const api = {
     repo, auth,
     async getRepo() {
       const d = await call('GET', '');
@@ -277,7 +277,39 @@ function createGithubAdapter(o) {
       const w = runs[0];
       return w ? { id: w.id, status: w.status, conclusion: w.conclusion, html_url: w.html_url, created_at: w.created_at, updated_at: w.updated_at } : null;
     },
+
+    // Edição por trechos: lê cada arquivo na ponta da branch, troca cada "find" (que precisa
+    // aparecer exatamente uma vez) por "replace" e grava tudo num commit só. Assim o agente não
+    // reescreve arquivos inteiros (nem perde o que não leu). Arquivo com segredo redigido não é editado.
+    async editFiles({ branch, message, edits }) {
+      requireWrite();
+      checkWorkBranch({ default_branch: await getDefaultBranch() }, branch);
+      if (!Array.isArray(edits) || !edits.length || edits.length > LIMITS.edits) throw bad(`Envie de 1 a ${LIMITS.edits} trechos.`);
+      const byPath = new Map();
+      for (const e of edits) {
+        if (!e || typeof e.find !== 'string' || !e.find || typeof e.replace !== 'string') throw bad('Cada trecho precisa de path, find (não vazio) e replace.');
+        checkPath(e.path);
+        if (!byPath.has(e.path)) byPath.set(e.path, []);
+        byPath.get(e.path).push(e);
+      }
+      if (byPath.size > LIMITS.files) throw bad(`No máximo ${LIMITS.files} arquivos por commit.`);
+      const head = await headOf(branch);
+      const files = [];
+      for (const [path, list] of byPath) {
+        const f = await api.getFile({ path, ref: head });
+        if (f.redactions) throw bad(`${path} tem segredo redigido; não pode ser editado pelo NEXIA.`);
+        let text = f.content;
+        list.forEach((e, k) => {
+          const n = text.split(e.find).length - 1;
+          if (n !== 1) throw bad(`${path}: o trecho ${k + 1} aparece ${n} vez(es); precisa aparecer exatamente 1 vez (copie o texto exato do arquivo).`);
+          text = text.replace(e.find, () => e.replace);
+        });
+        files.push({ path, content: text });
+      }
+      return api.commitFiles({ branch, message, files, expected_head_sha: head });
+    },
   };
+  return api;
 }
 
 module.exports = { createGithubAdapter, LIMITS, WORK_BRANCH_RE, PERMS, PIPELINE_WORKFLOW };
