@@ -32,7 +32,39 @@ jobs:
         env:
           NODE_ENV: production
           NEXIA_JOB: ${{ inputs.job }}
-          # Todos os segredos do repositório (mascarados no log). O script usa só os que o código
-          # do NEXIA lê: Firebase, GitHub App, provedores de IA e NEXIA_<PROVEDOR>_<TENANT>_*.
-          NEXIA_SECRETS_JSON: ${{ toJSON(secrets) }}
+          # Segredos do repositório, um por nome (lista do .env.example; o teste CF10 confere).
+          # O GitHub não aceita segredo começando com GITHUB_: esses ficam como NEXIA_GITHUB_*.
+          # TEMPORÁRIO: segredos por cliente (NEXIA_<FIREBASE|CLOUDFLARE>_<TENANT>_*, Fase 9) precisam
+          # de uma linha aqui. Motivo: passando todos os segredos de uma vez, o GitHub parou os runs em "action_required" (2026-10-04).
+          NEXIA_APP_URL: ${{ secrets.NEXIA_APP_URL }}
+          NEXIA_CNAME_TARGET: ${{ secrets.NEXIA_CNAME_TARGET }}
+          NEXIA_CRON_SECRET: ${{ secrets.NEXIA_CRON_SECRET }}
+          NEXIA_GITHUB_TOKEN: ${{ secrets.NEXIA_GITHUB_TOKEN }}
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          MASTER_EMAIL: ${{ secrets.MASTER_EMAIL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          NEXIA_MODELS_CODING: ${{ secrets.NEXIA_MODELS_CODING }}
+          NEXIA_MODELS_REASONING: ${{ secrets.NEXIA_MODELS_REASONING }}
+          NEXIA_MODELS_FAST: ${{ secrets.NEXIA_MODELS_FAST }}
+          METRICS_SECRET: ${{ secrets.METRICS_SECRET }}
+          DUNNING_SECRET: ${{ secrets.DUNNING_SECRET }}
+          GITHUB_REPO: ${{ secrets.NEXIA_GITHUB_REPO }}
+          GITHUB_APP_ID: ${{ secrets.NEXIA_GITHUB_APP_ID }}
+          GITHUB_APP_PRIVATE_KEY: ${{ secrets.NEXIA_GITHUB_APP_PRIVATE_KEY }}
+          GITHUB_APP_INSTALLATION_ID: ${{ secrets.NEXIA_GITHUB_APP_INSTALLATION_ID }}
+          MP_ACCESS_TOKEN: ${{ secrets.MP_ACCESS_TOKEN }}
+          MP_WEBHOOK_SECRET: ${{ secrets.MP_WEBHOOK_SECRET }}
+          SENTINEL_HEAL_ENABLED: ${{ secrets.SENTINEL_HEAL_ENABLED }}
           NEXIA_DEFAULT_GITHUB_TOKEN: ${{ github.token }}

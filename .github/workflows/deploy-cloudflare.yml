@@ -42,10 +42,41 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       - name: Segredos do Worker (copiados dos segredos do repositório; só os nomes aparecem no log)
         run: |
-          node scripts/worker-secrets.js "$RUNNER_TEMP/worker-secrets.json"
-          if [ "$(cat "$RUNNER_TEMP/worker-secrets.json")" != "{}" ]; then npx -y wrangler@4 secret bulk "$RUNNER_TEMP/worker-secrets.json"; fi
+          if node scripts/worker-secrets.js "$RUNNER_TEMP/worker-secrets.json"; then npx -y wrangler@4 secret bulk "$RUNNER_TEMP/worker-secrets.json"; fi
           rm -f "$RUNNER_TEMP/worker-secrets.json"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          NEXIA_SECRETS_JSON: ${{ toJSON(secrets) }}
+          # Segredos do repositório, um por nome (lista do .env.example; o teste CF10 confere).
+          NEXIA_APP_URL: ${{ secrets.NEXIA_APP_URL }}
+          NEXIA_CNAME_TARGET: ${{ secrets.NEXIA_CNAME_TARGET }}
+          NEXIA_CRON_SECRET: ${{ secrets.NEXIA_CRON_SECRET }}
+          NEXIA_JOBS_TOKEN: ${{ secrets.NEXIA_JOBS_TOKEN }}
+          NEXIA_GITHUB_TOKEN: ${{ secrets.NEXIA_GITHUB_TOKEN }}
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          MASTER_EMAIL: ${{ secrets.MASTER_EMAIL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          NEXIA_MODELS_CODING: ${{ secrets.NEXIA_MODELS_CODING }}
+          NEXIA_MODELS_REASONING: ${{ secrets.NEXIA_MODELS_REASONING }}
+          NEXIA_MODELS_FAST: ${{ secrets.NEXIA_MODELS_FAST }}
+          METRICS_SECRET: ${{ secrets.METRICS_SECRET }}
+          DUNNING_SECRET: ${{ secrets.DUNNING_SECRET }}
+          GITHUB_REPO: ${{ secrets.NEXIA_GITHUB_REPO }}
+          GITHUB_APP_ID: ${{ secrets.NEXIA_GITHUB_APP_ID }}
+          GITHUB_APP_PRIVATE_KEY: ${{ secrets.NEXIA_GITHUB_APP_PRIVATE_KEY }}
+          GITHUB_APP_INSTALLATION_ID: ${{ secrets.NEXIA_GITHUB_APP_INSTALLATION_ID }}
+          MP_ACCESS_TOKEN: ${{ secrets.MP_ACCESS_TOKEN }}
+          MP_WEBHOOK_SECRET: ${{ secrets.MP_WEBHOOK_SECRET }}
+          SENTINEL_HEAL_ENABLED: ${{ secrets.SENTINEL_HEAL_ENABLED }}

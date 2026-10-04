@@ -22,7 +22,7 @@ Só **Cloudflare + Firebase + GitHub**, todos no plano gratuito. Não há Render
    3. `NEXIA_JOBS_TOKEN`: em GitHub → *Settings (da sua conta) → Developer settings → Fine-grained tokens → Generate*. Repositório: só `gilcambe/nexia`. Permissão: **Actions: Read and write**. Sem validade longa demais.
    4. Opcional: `NEXIA_GITHUB_TOKEN` (ler repositórios privados no onboarding).
    O deploy (passo 6) copia esses segredos para o Worker sozinho; o NEXIA Jobs usa os mesmos.
-4. **GitHub App:** crie a NEXIA GitHub App (passos no PHASE-8-REPORT), instale só no repositório do piloto e crie `GITHUB_APP_ID`, `GITHUB_APP_PRIVATE_KEY` e `GITHUB_APP_INSTALLATION_ID` como segredos do repositório (mesmo lugar do passo 3).
+4. **GitHub App:** crie a NEXIA GitHub App (passos no PHASE-8-REPORT), instale só no repositório do piloto e crie `NEXIA_GITHUB_APP_ID`, `NEXIA_GITHUB_APP_PRIVATE_KEY` e `NEXIA_GITHUB_APP_INSTALLATION_ID` como segredos do repositório (mesmo lugar do passo 3; o GitHub não aceita nomes começando com `GITHUB_`, e o NEXIA lê esses com o prefixo).
 5. **Botão de deploy:** em `gilcambe/nexia` → *Settings → Environments → production*:
    1. Marque **Required reviewers** e coloque você (hoje o deploy passa sem aprovação).
    2. `CLOUDFLARE_API_TOKEN` (segredo) e `CLOUDFLARE_ACCOUNT_ID` (variável) já existem. O token precisa só da permissão "Edit Cloudflare Workers"; nada pago.
