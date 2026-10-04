@@ -77,6 +77,9 @@ $fbNomes = 'FIREBASE_SERVICE_ACCOUNT_BASE64', 'FIREBASE_API_KEY', 'FIREBASE_AUTH
 if (Precisa $fbNomes 'Firebase') {
   Write-Host '  a) Chave de servico (um arquivo .json):'
   Write-Host '     No navegador: Configuracoes do projeto > Contas de servico > "Gerar nova chave privada".'
+  Write-Host '     Se ja tiver um .json dessa chave salvo no computador, pode usar ele (nao precisa gerar outra).'
+  Write-Host '     Se o Google disser que o limite de chaves foi atingido, apague UMA chave antiga em:'
+  Write-Host '     https://console.cloud.google.com/iam-admin/serviceaccounts > conta firebase-adminsdk > aba Chaves > lixeira'
   Start-Process 'https://console.firebase.google.com/project/_/settings/serviceaccounts/adminsdk'
   $arq = (Pergunta 'Arraste o arquivo .json baixado para esta janela e aperte Enter').Trim('"', ' ')
   if ($arq) {
