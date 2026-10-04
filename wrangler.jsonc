@@ -8,6 +8,9 @@
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
+  // Endereço público: https://nexia.gcbezerra.workers.dev. Sem URLs de prévia por versão.
+  "workers_dev": true,
+  "preview_urls": false,
   // Site React (out/) e pastas públicas do legado, montados por scripts/build-worker-assets.js.
   // Os arquivos com hash de /assets/* saem direto do Cloudflare (não contam como pedido ao Worker);
   // o resto passa pelo Worker, que aplica as mesmas regras do server.js.

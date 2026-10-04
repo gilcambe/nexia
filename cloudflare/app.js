@@ -105,7 +105,7 @@ async function runFunction(fnName, request, url, env, getFunction) {
 
 function firebaseConfig(env) {
   if (!env.FIREBASE_API_KEY) {
-    return json(503, { error: 'Firebase config unavailable. Configure FIREBASE_API_KEY nos segredos do Worker (wrangler secret put).' }, { 'Access-Control-Allow-Origin': '*' });
+    return json(503, { error: 'Firebase config unavailable. Cadastre FIREBASE_API_KEY nos segredos do repositório no GitHub e rode o Deploy Cloudflare de novo.' }, { 'Access-Control-Allow-Origin': '*' });
   }
   return json(200, {
     apiKey: env.FIREBASE_API_KEY,
