@@ -1,0 +1,43 @@
+# NEXIA — conferência do site no ar (só leitura, só curl; nunca Playwright contra produção).
+# Manual: informe o endereço do Worker. Não usa segredo nenhum.
+name: Smoke (site no ar)
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Endereço do NEXIA (ex.: https://nexia.<conta>.workers.dev)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Conferir site e API
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Conferir
+        env:
+          BASE: ${{ inputs.url }}
+        run: |
+          set -u
+          case "$BASE" in https://*) ;; *) echo "use https://"; exit 2;; esac
+          BASE="${BASE%/}"
+          fail=0
+          check() { # caminho, códigos aceitos, método
+            code=$(curl -s -o /tmp/body -w '%{http_code}' -X "${3:-GET}" "$BASE$1" || echo 000)
+            if echo " $2 " | grep -q " $code "; then r=OK; else r=FALHOU; fail=1; fi
+            echo "$r $code ${3:-GET} $1 $(head -c 160 /tmp/body | tr -d '\n')"
+          }
+          check /health 200
+          for p in / /projetos /execucoes /aprovacoes /auditoria /cortex-app /login /ces/landing; do check "$p" 200; done
+          check /api/firebase-config "200 503"
+          for p in /api/nexia/me /api/nexia/projects /api/nexia/executions /api/nexia/metrics; do check "$p" 401; done
+          check /api/cortex 401 POST
+          check /.env "400 404"
+          check /server.js 404
+          check /package.json 404
+          check / 405 POST
+          exit $fail
