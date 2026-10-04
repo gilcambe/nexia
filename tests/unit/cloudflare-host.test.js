@@ -143,3 +143,10 @@ test('CF8. firebase-lite: valores do Firestore REST vão e voltam iguais', () =>
   assert.deepStrictEqual({ ...back, obj: null }, { ...v, obj: null });
   assert.ok(FieldValue.serverTimestamp() && FieldValue.increment(1));
 });
+
+test('CF9. deploy copia ao Worker só os segredos que o NEXIA usa; nunca o token temporário do Actions nem o do Cloudflare', () => {
+  const { pickWorkerSecrets } = require('../../scripts/worker-secrets');
+  const got = pickWorkerSecrets({ FIREBASE_SERVICE_ACCOUNT_BASE64: 'a', GEMINI_API_KEY: 'b', NEXIA_JOBS_TOKEN: 'c', MASTER_EMAIL: 'd',
+    github_token: 'e', GITHUB_TOKEN: 'f', CLOUDFLARE_API_TOKEN: 'g', RANDOM_THING: 'h', GITHUB_APP_ID: 'i', EMPTY_API_KEY: '' });
+  assert.deepStrictEqual(Object.keys(got).sort(), ['FIREBASE_SERVICE_ACCOUNT_BASE64', 'GEMINI_API_KEY', 'GITHUB_APP_ID', 'MASTER_EMAIL', 'NEXIA_JOBS_TOKEN']);
+});

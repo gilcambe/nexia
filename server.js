@@ -4,7 +4,7 @@
  * Backend completo (v58) + Frontend React (v59)
  * - Serve o React SPA compilado em /out
  * - Expõe todas as APIs reais via netlify/functions
- * - Firebase Auth + Firestore via firebase-admin
+ * - Firebase Auth + Firestore pela API REST (lib/firebase-lite, ADR-FREE-01)
  * - Auto-build se out/ não existir
  */
 

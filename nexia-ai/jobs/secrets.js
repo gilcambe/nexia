@@ -3,7 +3,7 @@
 // (toJSON(secrets)); aqui entram em process.env só os nomes que o código do NEXIA usa.
 // Nada é impresso. Variável já definida não é sobrescrita.
 
-const ALLOWED = /^(FIREBASE_[A-Z0-9_]+|MASTER_EMAIL|GITHUB_APP_[A-Z_]+|GITHUB_TOKEN|NEXIA_GITHUB_TOKEN|NEXIA_(FIREBASE|CLOUDFLARE)_[A-Z0-9_]+|[A-Z]+_API_KEY|CLOUDFLARE_AI_TOKEN|CLOUDFLARE_ACCOUNT_ID)$/;
+const ALLOWED = /^(FIREBASE_[A-Z0-9_]+|MASTER_EMAIL|GITHUB_APP_[A-Z_]+|GITHUB_TOKEN|NEXIA_GITHUB_TOKEN|NEXIA_(FIREBASE|CLOUDFLARE)_[A-Z0-9_]+|[A-Z]+_API_KEY|CLOUDFLARE_AI_TOKEN|CLOUDFLARE_ACCOUNT_ID|NEXIA_MODELS_[A-Z]+)$/;
 
 function loadSecrets(env) {
   let all = {};

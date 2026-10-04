@@ -10,6 +10,8 @@ const { withTimeout, sseData } = require('../messages');
 // resposta longa num modelo que aceitaria mais. Remoção: catálogo com limites por
 // modelo vindos do provedor (Fase 11).
 const PROVIDERS = Object.freeze({
+  // Plano grátis do Google AI Studio (ADR-FREE-03): mesma chave GEMINI_API_KEY, endpoint compatível com OpenAI e com tool_call.
+  google:      { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', env: 'GEMINI_API_KEY', max_output: 65536, tools: true },
   openai:      { url: 'https://api.openai.com/v1/chat/completions', env: 'OPENAI_API_KEY', max_output: 16384, usage_option: true, tools: true },
   groq:        { url: 'https://api.groq.com/openai/v1/chat/completions', env: 'GROQ_API_KEY', max_output: 32768, tools: true },
   deepseek:    { url: 'https://api.deepseek.com/v1/chat/completions', env: 'DEEPSEEK_API_KEY', max_output: 8192, tools: true },

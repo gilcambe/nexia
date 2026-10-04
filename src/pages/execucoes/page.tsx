@@ -83,9 +83,11 @@ export default function ExecucoesPage() {
   const submit = useCallback(async () => {
     setBusy(true); setError(null); setQuestion(null);
     try {
-      const r = await call<{ status?: string; question?: string; execution?: Execution }>("/executions", {
+      const r = await call<{ status?: string; question?: string; execution?: Execution; job?: { queued: boolean; error?: string } }>("/executions", {
         method: "POST", body: JSON.stringify({ message, project_id: projectId || undefined }),
       });
+      // ADR-FREE-02: no Worker grátis a execução roda na fila do GitHub Actions.
+      if (r.job && !r.job.queued) setError(`Execução registrada, mas a fila recusou (${r.job.error || "erro"}). A retomada automática tenta de novo.`);
       if (r.execution) { setMessage(""); setOpen(r.execution.id); await loadList(r.execution.project_id); }
       else setQuestion(r.question || "Preciso de mais detalhes.");
     } catch (e) {
@@ -103,8 +105,9 @@ export default function ExecucoesPage() {
   const sweep = useCallback(async () => {
     setError(null);
     try {
-      const r = await call<{ items: { id: string }[] }>("/executions/sweep", { method: "POST" });
-      setQuestion(r.items.length ? `${r.items.length} execução(ões) retomada(s).` : "Nenhuma execução parada.");
+      const r = await call<{ items: { id: string }[]; job?: { queued: boolean; error?: string } }>("/executions/sweep", { method: "POST" });
+      if (r.job) setQuestion(r.job.queued ? "Retomada enviada para a fila. A lista atualiza sozinha." : `A fila recusou a retomada (${r.job.error || "erro"}).`);
+      else setQuestion(r.items.length ? `${r.items.length} execução(ões) retomada(s).` : "Nenhuma execução parada.");
       await loadList(projectId);
     } catch (e) { setError(e instanceof Error ? e.message : "Falha"); }
   }, [call, loadList, projectId]);

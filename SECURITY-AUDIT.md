@@ -245,3 +245,10 @@ Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claud
 - Bridge: com terminal livre no mesmo cliente, a aprovação local pode ser contornada (ver Fase 7); log local ainda não vai ao Vault.
 - GitHub: leitura ainda usa o `GITHUB_TOKEN` legado até a GitHub App ser criada (ADR-F8-01); bloqueio de workflow de deploy por nome é heurístico até a Fase 9.
 - Pipeline modelo: ações fixadas por SHA desde a ADR-F12-01; bloqueio de workflow de deploy no dispatch genérico continua heurístico para workflows que não são o modelo.
+
+## Plano grátis (ADR-FREE-01 a 03), 2026-10-04
+- **Logs públicos do Actions:** o workflow NEXIA Jobs roda em repositório público, então qualquer pessoa lê os logs. O pedido leva só ids (validados por `validateJob`, nada de texto do cliente), o script imprime só um resumo curto e o GitHub mascara os segredos. Quem pode disparar o workflow: só quem tem escrita no repositório e o `NEXIA_JOBS_TOKEN` do Worker.
+- **`NEXIA_JOBS_TOKEN`:** token fine-grained limitado a `gilcambe/nexia` com "Actions: Read and write". Vazado, permite disparar tarefas com ids existentes (que o próprio Vault valida por tenant e usuário), não ler código nem segredos.
+- **Segredos copiados no deploy:** só os nomes do `.env.example` e os do NEXIA Jobs (`scripts/worker-secrets.js`); nunca o `GITHUB_TOKEN` temporário do Actions nem o `CLOUDFLARE_API_TOKEN`. O arquivo intermediário tem permissão 600 e é apagado no mesmo passo.
+- **firebase-lite:** o ID token do Firebase é conferido pela assinatura (chaves públicas `securetoken`), `aud`, `iss`, `exp`, `iat` e `sub`. A conferência de assinatura só é pulada com os emuladores ligados fora de produção (mesma regra do `firebase-admin`).
+- **Chaves expostas da Fase 1:** o dono decidiu não trocá-las e assume o risco (2026-10-04).
