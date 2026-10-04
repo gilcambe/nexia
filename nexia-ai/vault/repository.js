@@ -82,7 +82,7 @@ function createVault({ db, FieldValue } = {}) {
   if (!db || typeof db.runTransaction !== 'function') {
     throw new VaultError(CODES.UNAVAILABLE, 'Firestore (Admin SDK) indisponível para o Vault.');
   }
-  const FV = FieldValue || require('firebase-admin/firestore').FieldValue;
+  const FV = FieldValue || require('../../lib/firebase-lite').FieldValue;
 
   function checkSchemaVersion(entity, data) {
     if (data.schemaVersion !== SCHEMAS[entity].schemaVersion) {

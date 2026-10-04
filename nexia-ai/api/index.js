@@ -17,6 +17,7 @@ const { HTTP_STATUS: GATEWAY_STATUS } = require('../tool-gateway/errors');
 const { createOrchestrator } = require('../orchestrator');
 const { collectMetrics } = require('../observability');
 const { createBridgeTokens, ingestEvents, bearerOf, MAX_EVENTS } = require('../bridge-sync');
+const { createJobs, sweepAllTenants, JobError } = require('../jobs');
 
 const RESOURCES = { clients: 'Client', projects: 'Project', repos: 'Repository', environments: 'Environment', 'tool-policies': 'ToolPolicy' };
 const INVOKE_STATUS = { succeeded: 200, pending_approval: 202, denied: 403, failed: 422, rejected: 409, running: 202, expired: 409 };
@@ -77,6 +78,17 @@ function createHandler(deps = {}) {
   // Se o processo reiniciar no meio, a execução fica parada até um POST .../resume.
   const background = deps.background || (fn => setImmediate(() => fn().catch(e => console.error('[nexia-orchestrator]', e && e.code, e && e.message))));
 
+  // ADR-FREE-02: no Worker grátis (NEXIA_JOBS=github) as tarefas longas vão para o GitHub Actions.
+  const jobs = deps.jobs || createJobs({ env: deps.env || process.env });
+  const queue = async job => {
+    try { return await jobs.dispatch(job); }
+    catch (e) {
+      // A execução fica registrada (planned/running); a retomada agendada tenta de novo.
+      console.error('[nexia-jobs]', e && e.code, e && e.message);
+      return { queued: false, error: e instanceof JobError ? e.code : 'DISPATCH_FAILED' };
+    }
+  };
+
   const bridgeTokens = () => createBridgeTokens(deps.db || require('../../netlify/functions/firebase-init').db);
 
   async function bridgeEvents(event) {
@@ -101,19 +113,9 @@ function createHandler(deps = {}) {
     const given = String(h['x-nexia-cron'] || h['X-Nexia-Cron'] || '');
     const a = Buffer.from(given), b = Buffer.from(secret);
     if (a.length !== b.length || !require('crypto').timingSafeEqual(a, b)) return json(event, 401, { error: 'Não autenticado.' });
+    if (jobs.enabled) return json(event, 202, await queue({ kind: 'sweep' }));
     const db = deps.db || require('../../netlify/functions/firebase-init').db;
-    const tenants = (await db.collection('tenants').select().limit(200).get()).docs.map(d => d.id).filter(t => TENANT_RE.test(t));
-    const o = getOrchestrator();
-    const items = [];
-    for (const tenantId of tenants) {
-      const sys = createExecutionContext({ tenantId, actor: { type: 'system', id: 'cron-sweep' } });
-      // Aprovações (waiting_approval) ficam de fora: retomar depois de aprovar é ação de pessoa.
-      const done = await o.sweep(sys, { statuses: ['planned', 'running'], max: 20 - items.length,
-        ctxFor: x => createExecutionContext({ tenantId, actor: x.requested_by, executionId: x.execution_id || undefined }) });
-      for (const d of done) items.push({ tenant: tenantId, ...d });
-      if (items.length >= 20) break;
-    }
-    return json(event, 200, { tenants: tenants.length, items });
+    return json(event, 200, await sweepAllTenants({ db, orchestrator: getOrchestrator() }));
   }
 
   return async function handler(event) {
@@ -221,11 +223,15 @@ function createHandler(deps = {}) {
           const r = await o.start(ectx, { message: b.message, projectId: b.project_id, conversationProjectId: b.conversation_project_id,
             recentProjectIds: Array.isArray(b.recent_project_ids) ? b.recent_project_ids.slice(0, 10) : [], repository: b.repository, budget: b.budget, idempotencyKey: key });
           if (!r.execution) return json(event, 200, r);
-          if (!r.replayed) background(() => o.run(ectx, r.execution.id));
+          if (!r.replayed) {
+            if (jobs.enabled) r.job = await queue({ kind: 'execution.run', tenant: requested, actor: ectx.actor, id: r.execution.id, ctx_id: ectx.executionId });
+            else background(() => o.run(ectx, r.execution.id));
+          }
           return json(event, r.replayed ? 200 : 202, r, { ...etag(r.execution), 'X-Execution-Id': ectx.executionId });
         }
         if (parts.length === 2 && parts[1] === 'sweep' && method === 'POST') {
           // Fase 11: retoma execuções paradas (ver ADR-F11-03). Síncrono; no máximo 20 por chamada.
+          if (jobs.enabled) return json(event, 202, { items: [], job: await queue({ kind: 'sweep', tenant: requested, actor: ectx.actor }) });
           return json(event, 200, { items: await o.sweep(ectx) });
         }
         if (parts.length === 1 && method === 'GET') {
@@ -238,6 +244,11 @@ function createHandler(deps = {}) {
           return json(event, 200, { record }, etag(record));
         }
         if (parts.length === 3 && ['refresh', 'resume'].includes(parts[2]) && method === 'POST') {
+          if (jobs.enabled) {
+            const current = await v.Execution.get(ectx, parts[1]);
+            const job = await queue({ kind: `execution.${parts[2]}`, tenant: requested, actor: ectx.actor, id: parts[1], ctx_id: current.execution_id || undefined });
+            return json(event, 202, { record: current, job }, etag(current));
+          }
           const record = await o[parts[2]](ectx, parts[1]);
           return json(event, 200, { record }, etag(record));
         }
@@ -304,6 +315,12 @@ function createHandler(deps = {}) {
         }
         if (entity === 'Project' && sub === 'onboard' && method === 'POST') {
           const r = body.repository || {};
+          if (jobs.enabled) {
+            await repo.get(ctx, id);
+            const job = await queue({ kind: 'project.onboard', tenant: requested, actor: ctx.actor, id, ctx_id: ctx.executionId,
+              repository: { owner: r.owner, repo: r.repo, ...(r.ref ? { ref: r.ref } : {}) }, ...(body.repository_id ? { repository_id: body.repository_id } : {}) });
+            return json(event, job.queued ? 202 : job.error === 'INVALID_JOB' ? 400 : 503, { queued: !!job.queued, job }, execHeader);
+          }
           const source = sourceFactory({ owner: r.owner, repo: r.repo, ref: r.ref });
           const result = await onboardProject({ vault: v, ctx, projectId: id, source, repositoryId: body.repository_id });
           return json(event, 201, result, execHeader);

@@ -1,0 +1,38 @@
+# NEXIA — fila de tarefas longas (ADR-FREE-02). O Worker grátis do Cloudflare não roda processos
+# longos; ele dispara este workflow com um pedido que leva só ids (nunca segredo nem conteúdo).
+# Roda o mesmo código da API em Node: execuções de agentes, onboarding e retomada.
+# Repositório público: minutos do Actions grátis. Os logs são públicos, por isso o script só
+# imprime um resumo curto.
+name: NEXIA Jobs
+
+on:
+  workflow_dispatch:
+    inputs:
+      job:
+        description: 'Tarefa (JSON só com ids), enviada pelo Worker'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    name: Tarefa NEXIA
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --omit=dev --ignore-scripts
+      - name: Rodar a tarefa
+        run: node scripts/nexia-job.js
+        env:
+          NODE_ENV: production
+          NEXIA_JOB: ${{ inputs.job }}
+          # Todos os segredos do repositório (mascarados no log). O script usa só os que o código
+          # do NEXIA lê: Firebase, GitHub App, provedores de IA e NEXIA_<PROVEDOR>_<TENANT>_*.
+          NEXIA_SECRETS_JSON: ${{ toJSON(secrets) }}
+          NEXIA_DEFAULT_GITHUB_TOKEN: ${{ github.token }}

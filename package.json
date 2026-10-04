@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:worker": "vite build && node scripts/build-worker-assets.js",
     "preview": "vite preview",
     "start": "node server.js",
     "typecheck": "tsc --noEmit -p .",

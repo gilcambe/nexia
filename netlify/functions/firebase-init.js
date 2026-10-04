@@ -14,7 +14,7 @@
 let admin, db;
 
 try {
-  admin = require('firebase-admin');
+  admin = require('../../lib/firebase-lite'); // ADR-FREE-01: sem firebase-admin (roda no Worker grátis)
 
   if (!admin.apps.length) {
     const saRaw = process.env.FIREBASE_SERVICE_ACCOUNT;
