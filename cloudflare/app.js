@@ -10,6 +10,7 @@ const { normalizeRequestPath } = require('../lib/safe-path');
 const { publicErrorBody } = require('../lib/safe-error');
 const { isStreamResult } = require('../lib/stream-response');
 const { TENANT_PAGES, resolveFunctionName } = require('../lib/routes');
+const { createTokenSource } = require('../lib/firebase-lite/google-auth');
 
 const MAX_BODY_SIZE = 1 * 1024 * 1024;
 const VERSION = '60.0.0';
@@ -103,9 +104,45 @@ async function runFunction(fnName, request, url, env, getFunction) {
   }
 }
 
-function firebaseConfig(env) {
+// Sem os 6 FIREBASE_* do site, lê a configuração pública do app da Web direto do Firebase
+// (Management API) com a própria chave de serviço; fica em memória enquanto o Worker vive.
+// Assim o dono só precisa cadastrar a chave de serviço. Valores do site são públicos por natureza.
+let webConfigCache = null;
+
+async function webConfigFromServiceAccount(env, fetchImpl) {
+  if (webConfigCache) return webConfigCache;
+  const sa = JSON.parse(Buffer.from(String(env.FIREBASE_SERVICE_ACCOUNT_BASE64), 'base64').toString('utf8'));
+  const token = await createTokenSource(sa, { fetchImpl }).getToken();
+  const api = `https://firebase.googleapis.com/v1beta1/projects/${encodeURIComponent(sa.project_id)}`;
+  const get = async (u) => {
+    const r = await fetchImpl(u, { headers: { Authorization: `Bearer ${token}` } });
+    if (!r.ok) throw new Error(`Firebase Management API ${r.status}`);
+    return r.json();
+  };
+  const apps = (await get(`${api}/webApps`)).apps || [];
+  const app = apps.find(a => a.state !== 'DELETED') || apps[0];
+  if (!app) throw new Error('Projeto Firebase sem app da Web.');
+  const c = await get(`${api}/webApps/${encodeURIComponent(app.appId)}/config`);
+  if (!c.apiKey) throw new Error('Configuração do app da Web sem apiKey.');
+  webConfigCache = {
+    apiKey: c.apiKey, authDomain: c.authDomain || `${sa.project_id}.firebaseapp.com`, projectId: c.projectId || sa.project_id,
+    storageBucket: c.storageBucket || '', messagingSenderId: c.messagingSenderId || '', appId: c.appId || app.appId,
+  };
+  return webConfigCache;
+}
+
+async function firebaseConfig(env, fetchImpl = (...a) => fetch(...a)) {
+  const cors = { 'Access-Control-Allow-Origin': '*' };
+  if (!env.FIREBASE_API_KEY && env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+    try {
+      const c = await webConfigFromServiceAccount(env, fetchImpl);
+      return json(200, c, { 'Cache-Control': 'public, max-age=300', ...cors });
+    } catch (e) {
+      console.error('[firebase-config] sem FIREBASE_API_KEY e a leitura automática falhou:', e && e.message);
+    }
+  }
   if (!env.FIREBASE_API_KEY) {
-    return json(503, { error: 'Firebase config unavailable. Cadastre FIREBASE_API_KEY nos segredos do repositório no GitHub e rode o Deploy Cloudflare de novo.' }, { 'Access-Control-Allow-Origin': '*' });
+    return json(503, { error: 'Firebase config unavailable. Cadastre FIREBASE_API_KEY nos segredos do repositório no GitHub e rode o Deploy Cloudflare de novo.' }, cors);
   }
   return json(200, {
     apiKey: env.FIREBASE_API_KEY,
@@ -114,8 +151,10 @@ function firebaseConfig(env) {
     storageBucket: env.FIREBASE_STORAGE_BUCKET || '',
     messagingSenderId: env.FIREBASE_MESSAGING_SENDER_ID || '',
     appId: env.FIREBASE_APP_ID || '',
-  }, { 'Cache-Control': 'public, max-age=300', 'Access-Control-Allow-Origin': '*' });
+  }, { 'Cache-Control': 'public, max-age=300', ...cors });
 }
+
+const _resetWebConfigCache = () => { webConfigCache = null; };
 
 const extOf = p => { const m = /\.[^./]+$/.exec(p); return m ? m[0].toLowerCase() : ''; };
 
@@ -180,4 +219,4 @@ async function handleRequest(request, env, { getFunction }) {
   return serveStatic(request, url, env);
 }
 
-module.exports = { handleRequest, populateProcessEnv, toEvent, MAX_BODY_SIZE };
+module.exports = { handleRequest, populateProcessEnv, toEvent, firebaseConfig, _resetWebConfigCache, MAX_BODY_SIZE };
