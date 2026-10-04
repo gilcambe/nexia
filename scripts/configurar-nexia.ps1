@@ -50,7 +50,7 @@ Write-Host 'NEXIA - assistente de configuracao' -ForegroundColor Cyan
 Write-Host 'Responda as perguntas. Para pular um item, deixe em branco e aperte Enter.'
 
 # 1. GitHub CLI (gratis, da propria GitHub)
-Titulo '1/7 Programa do GitHub'
+Titulo '1/8 Programa do GitHub'
 if (-not (Get-Command gh -ErrorAction SilentlyContinue)) {
   Aviso 'Instalando o GitHub CLI (programa oficial e gratis da GitHub)...'
   winget install --id GitHub.cli -e --accept-source-agreements --accept-package-agreements
@@ -71,11 +71,10 @@ Ok 'Conectado ao GitHub'
 $script:Existentes = @(gh secret list -R $Repo --json name --jq '.[].name')
 if ($LASTEXITCODE -ne 0) { throw "Sua conta nao tem acesso ao repositorio $Repo." }
 
-# 2. Firebase: chave de servico (1 segredo) e configuracao do site (6 segredos) = os 7 FIREBASE_*
-Titulo '2/7 Firebase (login e banco de dados)'
-$fbNomes = 'FIREBASE_SERVICE_ACCOUNT_BASE64', 'FIREBASE_API_KEY', 'FIREBASE_AUTH_DOMAIN', 'FIREBASE_PROJECT_ID', 'FIREBASE_STORAGE_BUCKET', 'FIREBASE_MESSAGING_SENDER_ID', 'FIREBASE_APP_ID'
-if (Precisa $fbNomes 'Firebase') {
-  Write-Host '  a) Chave de servico (um arquivo .json):'
+# 2. Firebase: so a chave de servico. O resto da configuracao do site o NEXIA busca sozinho no Firebase.
+Titulo '2/8 Firebase (login e banco de dados)'
+if (Precisa @('FIREBASE_SERVICE_ACCOUNT_BASE64') 'Firebase') {
+  Write-Host '  Chave de servico (um arquivo .json):'
   Write-Host '     No navegador: Configuracoes do projeto > Contas de servico > "Gerar nova chave privada".'
   Write-Host '     Se ja tiver um .json dessa chave salvo no computador, pode usar ele (nao precisa gerar outra).'
   Write-Host '     Se o Google disser que o limite de chaves foi atingido, apague UMA chave antiga em:'
@@ -89,31 +88,17 @@ if (Precisa $fbNomes 'Firebase') {
     Gravar 'FIREBASE_SERVICE_ACCOUNT_BASE64' ([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($json)))
     Aviso 'Pode apagar o arquivo .json do seu computador agora (ele ja esta guardado no GitHub).'
   }
-  Write-Host ''
-  Write-Host '  b) Configuracao do site:'
-  Write-Host '     No navegador: Configuracoes do projeto > Geral > "Seus apps" > app da Web > "Configuracao".'
-  Write-Host '     Copie o bloco inteiro que comeca com  const firebaseConfig = {'
-  Start-Process 'https://console.firebase.google.com/project/_/settings/general'
-  Write-Host '  Cole aqui e aperte Enter duas vezes:'
-  $linhas = @()
-  while ($true) { $l = Read-Host; if ([string]::IsNullOrWhiteSpace($l)) { if ($linhas.Count) { break } else { continue } }; $linhas += $l; if ($l -match '^\s*};?\s*$') { break } }
-  $bloco = $linhas -join "`n"
-  $campos = @{ apiKey = 'FIREBASE_API_KEY'; authDomain = 'FIREBASE_AUTH_DOMAIN'; projectId = 'FIREBASE_PROJECT_ID'; storageBucket = 'FIREBASE_STORAGE_BUCKET'; messagingSenderId = 'FIREBASE_MESSAGING_SENDER_ID'; appId = 'FIREBASE_APP_ID' }
-  foreach ($k in $campos.Keys) {
-    $m = [regex]::Match($bloco, "$k\s*:\s*[`"']([^`"']+)[`"']")
-    if ($m.Success) { Gravar $campos[$k] $m.Groups[1].Value } else { Aviso "Nao achei '$k' no bloco colado." }
-  }
 }
 
 # 3. Seu e-mail de administrador
-Titulo '3/7 Seu login no NEXIA'
+Titulo '3/8 Seu login no NEXIA'
 if (Precisa @('MASTER_EMAIL') 'E-mail de administrador') {
   Write-Host '  Use o e-mail da conta com que voce vai entrar no NEXIA (precisa estar verificado no Firebase).'
   Gravar 'MASTER_EMAIL' (Pergunta 'Seu e-mail')
 }
 
 # 4. IA gratis
-Titulo '4/7 Inteligencia artificial gratis (Google Gemini)'
+Titulo '4/8 Inteligencia artificial gratis (Google Gemini)'
 if (Precisa @('GEMINI_API_KEY') 'Chave do Gemini') {
   Write-Host '  No navegador: entre com sua conta Google e clique em "Create API key". Copie a chave.'
   Start-Process 'https://aistudio.google.com/apikey'
@@ -121,7 +106,7 @@ if (Precisa @('GEMINI_API_KEY') 'Chave do Gemini') {
 }
 
 # 5. Token da fila de tarefas
-Titulo '5/7 Permissao para o NEXIA rodar tarefas longas'
+Titulo '5/8 Permissao para o NEXIA rodar tarefas longas'
 if (Precisa @('NEXIA_JOBS_TOKEN') 'Token da fila') {
   Write-Host '  No navegador, na pagina de "Fine-grained token":'
   Write-Host '   - Token name: nexia-jobs   - Expiration: 1 year'
@@ -132,8 +117,61 @@ if (Precisa @('NEXIA_JOBS_TOKEN') 'Token da fila') {
   Gravar 'NEXIA_JOBS_TOKEN' (Ler-Secreto 'Cole o token (ele nao aparece na tela)')
 }
 
-# 6. Publicar de novo (copia os segredos para o Cloudflare)
-Titulo '6/7 Publicar o NEXIA'
+# 6. GitHub App do NEXIA: deixa o Cortex escrever codigo e abrir PR (gratis, criada em 1 clique)
+Titulo '6/8 Permitir que o Cortex escreva codigo no GitHub'
+if (Precisa @('NEXIA_GITHUB_APP_ID', 'NEXIA_GITHUB_APP_PRIVATE_KEY') 'GitHub App do NEXIA') {
+  Write-Host '  O navegador vai abrir uma pagina do GitHub ja preenchida. So clique no botao verde "Create GitHub App".'
+  $porta = 8765
+  $estado = [guid]::NewGuid().ToString('N')
+  $nomeApp = ('NEXIA-' + (gh api user --jq '.login') + '-' + $estado.Substring(0, 4))
+  if ($nomeApp.Length -gt 34) { $nomeApp = 'NEXIA-' + $estado.Substring(0, 8) }
+  $manifesto = @{
+    name = $nomeApp; url = $Site; public = $false
+    hook_attributes = @{ url = "$Site/api/nexia/github-webhook"; active = $false }
+    redirect_url = "http://localhost:$porta/pronto"
+    default_permissions = @{ contents = 'write'; pull_requests = 'write'; actions = 'write'; checks = 'read'; issues = 'read'; metadata = 'read' }
+  } | ConvertTo-Json -Depth 5 -Compress
+  $pagina = '<html><body><p>Abrindo o GitHub...</p><form id="f" method="post" action="https://github.com/settings/apps/new?state=' + $estado + '">' +
+    '<input type="hidden" name="manifest" value="' + [System.Net.WebUtility]::HtmlEncode($manifesto) + '"></form>' +
+    '<script>document.getElementById("f").submit()</script></body></html>'
+  $ouvinte = New-Object System.Net.HttpListener
+  $ouvinte.Prefixes.Add("http://localhost:$porta/")
+  $codigo = $null
+  try {
+    $ouvinte.Start()
+    Start-Process "http://localhost:$porta/"
+    $limite = (Get-Date).AddMinutes(10)
+    while (-not $codigo -and (Get-Date) -lt $limite) {
+      $espera = $ouvinte.BeginGetContext($null, $null)
+      if (-not $espera.AsyncWaitHandle.WaitOne(600000)) { break }
+      $ctx = $ouvinte.EndGetContext($espera)
+      $resposta = $pagina
+      if ($ctx.Request.Url.AbsolutePath -eq '/pronto') {
+        if ($ctx.Request.QueryString['state'] -eq $estado) { $codigo = $ctx.Request.QueryString['code'] }
+        $resposta = '<html><body><h2>Pronto! Pode fechar esta aba e voltar para a janela do assistente.</h2></body></html>'
+      }
+      $bytes = [Text.Encoding]::UTF8.GetBytes($resposta)
+      $ctx.Response.ContentType = 'text/html; charset=utf-8'
+      $ctx.Response.OutputStream.Write($bytes, 0, $bytes.Length)
+      $ctx.Response.Close()
+    }
+  } catch { Aviso ('Nao consegui abrir a pagina local: ' + $_.Exception.Message) }
+  finally { $ouvinte.Close() }
+  if ($codigo -and $codigo -match '^[A-Za-z0-9]+$') {
+    $app = gh api -X POST "app-manifests/$codigo/conversions" | ConvertFrom-Json
+    if ($LASTEXITCODE -ne 0 -or -not $app.id) { throw 'O GitHub nao confirmou a criacao da App.' }
+    Gravar 'NEXIA_GITHUB_APP_ID' ([string]$app.id)
+    Gravar 'NEXIA_GITHUB_APP_PRIVATE_KEY' $app.pem
+    Write-Host ''
+    Write-Host '  Agora instale a App: na pagina que vai abrir, escolha os repositorios que o Cortex pode mexer'
+    Write-Host '  (inclua gilcambe/nexia) e clique em "Install".'
+    Start-Process "https://github.com/apps/$($app.slug)/installations/new"
+    Pergunta 'Depois de instalar, aperte Enter aqui' | Out-Null
+  } else { Aviso 'A App nao foi criada (tempo esgotado ou cancelado). Rode o assistente de novo quando quiser.' }
+}
+
+# 7. Publicar de novo (copia os segredos para o Cloudflare)
+Titulo '7/8 Publicar o NEXIA'
 gh workflow run deploy-cloudflare.yml -R $Repo --ref develop -f confirm=DEPLOY | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Nao consegui iniciar a publicacao.' }
 Aviso 'Publicando (leva 2 a 3 minutos)...'
@@ -142,8 +180,8 @@ $run = gh run list -R $Repo --workflow deploy-cloudflare.yml --limit 1 --json da
 gh run watch $run -R $Repo --exit-status | Out-Null
 if ($LASTEXITCODE -eq 0) { Ok "Publicado em $Site" } else { Aviso "A publicacao falhou. Veja em https://github.com/$Repo/actions" }
 
-# 7. Aprovacao humana no deploy (voce aprova cada publicacao)
-Titulo '7/7 Aprovacao do deploy'
+# 8. Aprovacao humana no deploy (voce aprova cada publicacao)
+Titulo '8/8 Aprovacao do deploy'
 $eu = gh api user --jq '.id'
 @{ reviewers = @(@{ type = 'User'; id = [int64]$eu }); prevent_self_review = $false } | ConvertTo-Json -Depth 4 |
   gh api -X PUT "repos/$Repo/environments/production" --input - | Out-Null
