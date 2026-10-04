@@ -87,3 +87,10 @@ jobs:
           node-version: 20
       - name: Testes do Bridge
         run: node --test tests/unit/bridge.test.js
+      - name: Assistente de configuração (sintaxe no PowerShell do Windows)
+        shell: powershell
+        run: |
+          $erros = $null
+          [System.Management.Automation.Language.Parser]::ParseFile("$PWD\scripts\configurar-nexia.ps1", [ref]$null, [ref]$erros) | Out-Null
+          if ($erros) { $erros | ForEach-Object { Write-Host $_ }; exit 1 }
+          Write-Host 'configurar-nexia.ps1 sem erro de sintaxe'

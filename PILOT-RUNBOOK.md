@@ -11,6 +11,14 @@ Só **Cloudflare + Firebase + GitHub**, todos no plano gratuito. Não há Render
 - **Firebase (Spark):** login (Auth) e banco (Firestore), projeto `nexia-c8710`.
 - **IA:** sem custo com as chaves grátis (Gemini, Groq, Cerebras, OpenRouter `:free`). `ANTHROPIC_API_KEY` é paga por uso: só coloque se quiser pagar.
 
+## Jeito fácil (Windows): assistente de configuração
+
+1. Abra https://github.com/gilcambe/nexia/blob/develop/scripts/configurar-nexia.bat e clique no botão de download (seta para baixo, "Download raw file").
+2. Dê dois cliques no arquivo baixado. Se o Windows avisar "O Windows protegeu o computador", clique em **Mais informações → Executar assim mesmo**.
+3. Responda às perguntas. Ele abre as páginas certas do Firebase, do Google e do GitHub no navegador, guarda tudo nos segredos do repositório, publica o NEXIA de novo e liga a sua aprovação nos próximos deploys.
+
+Ele pode ser rodado de novo quando quiser: o que já existe é pulado. Os passos abaixo são o mesmo processo feito à mão.
+
 ## Antes (uma vez)
 
 1. **Firebase:** restrinja a chave web por referrer (o endereço do Worker) e ligue o App Check. O projeto pode ficar no plano Spark.

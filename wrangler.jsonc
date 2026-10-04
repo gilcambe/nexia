@@ -10,6 +10,8 @@
   "observability": { "enabled": true },
   // Endereço público: https://nexia.gcbezerra.workers.dev. Sem URLs de prévia por versão.
   "workers_dev": true,
+  // Não apagar variáveis de texto criadas no painel do Cloudflare a cada deploy (segredos já são mantidos).
+  "keep_vars": true,
   "preview_urls": false,
   // Site React (out/) e pastas públicas do legado, montados por scripts/build-worker-assets.js.
   // Os arquivos com hash de /assets/* saem direto do Cloudflare (não contam como pedido ao Worker);
