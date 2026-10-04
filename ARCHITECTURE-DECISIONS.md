@@ -319,3 +319,9 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 ## ADR-F12-02 — Bridge testado no Windows
 - **Status:** ACEITA (2026-10-03). Resolve parte da ADR-F11-06.
 - **Decisão:** job `Bridge no Windows` no CI (`windows-latest`, Node 20) roda `tests/unit/bridge.test.js` (caminhos `D:\`, `npm.cmd`, processo MCP real). O primeiro run achou uma diferença real: no Windows o caminho aparecia com `\` nas confirmações e no registro; agora o caminho relativo é sempre normalizado para `/` (`nexia-bridge/lib/paths.js`). Continua sendo do dono testar na máquina dele com o `bridge.json` real.
+
+## ADR-F12-03 — Retomada agendada de execuções (Cron do Cloudflare)
+- **Status:** ACEITA (2026-10-03). Resolve o TEMPORÁRIO da ADR-F11-03 (sweep só sob demanda) e mitiga a ADR-F10-03.
+- **Decisão:** o Worker tem um Cron Trigger (`7 * * * *`, de hora em hora) que chama `POST /api/nexia/internal/sweep` no container com o cabeçalho `X-Nexia-Cron`. A rota só existe se `NEXIA_CRON_SECRET` (segredo do Worker, 32+ caracteres) estiver configurado e compara em tempo constante. Percorre até 200 tenants e retoma até 20 execuções `planned`/`running` paradas há 10 min, cada uma em nome de quem a pediu (`requested_by`); a auditoria registra o sistema só como quem disparou a varredura.
+- **Fora de propósito:** execuções `waiting_approval` não são retomadas pelo cron: continuar depois de aprovar é ação de pessoa (botão "Retomar paradas" ou "Retomar após aprovação").
+- **Custo:** cada disparo acorda o container (que dorme após 30 min). Para mais frequência, trocar o cron em `wrangler.jsonc`.

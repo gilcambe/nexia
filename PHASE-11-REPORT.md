@@ -77,7 +77,7 @@ $ npm run test:e2e
 
 | Item | Motivo | Risco | Remoção |
 |---|---|---|---|
-| Retomada de execução só sob demanda (ADR-F11-03) | Sem agendador por tenant | Execução parada até alguém clicar | Depois do piloto |
+| ~~Retomada de execução só sob demanda (ADR-F11-03)~~ | Resolvido na ADR-F12-03 (Cron do Worker) | — | — |
 | ~~Ações do pipeline na major sem `action_pins` (ADR-F11-05)~~ | Resolvido na ADR-F12-01 (SHA padrão) | — | — |
 | Gates por nome de check sem `qa_checks` (ADR-F11-04) | Compatibilidade | Check com nome enganoso | Ao cadastrar `qa_checks` do projeto |
 | Log do Bridge fora do Vault (ADR-F11-06); runner Windows resolvido na ADR-F12-02 | Credencial do Bridge / máquina do dono | Auditoria local não centralizada | Piloto |
