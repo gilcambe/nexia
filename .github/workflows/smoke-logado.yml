@@ -1,0 +1,39 @@
+# NEXIA — teste do site no ar COM login, pela API (nunca Playwright contra produção).
+# Manual. Usa um usuário de teste temporário (apagado no fim). O log mostra só status e erros.
+name: Smoke com login
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Endereço do NEXIA'
+        required: true
+        default: 'https://nexia.gcbezerra.workers.dev'
+      task:
+        description: 'Tarefa para o Cortex executar no projeto de teste (vazio = não executa)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoke-logado
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Testar com login
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Testar
+        run: node scripts/smoke-logado.js
+        env:
+          BASE: ${{ inputs.url }}
+          TASK: ${{ inputs.task }}
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
