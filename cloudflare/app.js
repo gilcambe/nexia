@@ -33,7 +33,6 @@ function populateProcessEnv(env) {
   for (const [k, v] of Object.entries(env || {})) {
     if (typeof v === 'string' && /^[A-Z_][A-Z0-9_]*$/.test(k) && process.env[k] !== v) process.env[k] = v;
   }
-  if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 }
 
 async function readBody(request) {

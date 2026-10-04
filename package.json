@@ -25,7 +25,6 @@
     "autoprefixer": "^10.4.18",
     "express": "^4.22.1",
     "firebase": "^10.8.0",
-    "firebase-admin": "12.7.0",
     "i18next": "^23.7.6",
     "i18next-browser-languagedetector": "^7.2.0",
     "node-fetch": "^3.3.2",
@@ -39,7 +38,6 @@
     "vite": "^5.1.4"
   },
   "devDependencies": {
-    "@cloudflare/containers": "^0.3.7",
     "@firebase/rules-unit-testing": "3.0.4",
     "@playwright/test": "1.59.1"
   }
