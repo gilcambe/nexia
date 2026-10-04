@@ -229,8 +229,8 @@ Risco aceito: se o mesmo cliente tiver terminal livre na máquina (Bash do Claud
 - Vault: `detectSecret` é heurístico; um formato de secret desconhecido e de baixa entropia pode passar. A defesa principal é o schema não ter campo de valor.
 - Outras funções podem ainda devolver `e.message` em caminhos não cobertos; as tratadas estão listadas acima.
 - Orchestrator: execução em segundo plano no próprio processo; retomada só sob demanda (ADR-F11-03). Gates por nome de check quando o projeto não tem `qa_checks` (ADR-F11-04).
-- Pipeline modelo com ações na major até o dono informar os SHAs (ADR-F11-05).
+- Pipeline modelo e workflows do NEXIA com ações fixadas por SHA (ADR-F12-01); atualizar os SHAs a cada release nova.
 - Hospedagem (ADR-HOST-01): chave de serviço do Firebase como segredo do Worker; uma instância só do container. Render removido (o item antigo sobre `npm install` no Render deixa de valer; a imagem usa `npm ci --omit=dev`).
 - Bridge: com terminal livre no mesmo cliente, a aprovação local pode ser contornada (ver Fase 7); log local ainda não vai ao Vault.
 - GitHub: leitura ainda usa o `GITHUB_TOKEN` legado até a GitHub App ser criada (ADR-F8-01); bloqueio de workflow de deploy por nome é heurístico até a Fase 9.
-- Pipeline modelo: ações fixadas por versão major, não por SHA (ADR-F9-01); bloqueio de workflow de deploy no dispatch genérico continua heurístico para workflows que não são o modelo.
+- Pipeline modelo: ações fixadas por SHA desde a ADR-F12-01; bloqueio de workflow de deploy no dispatch genérico continua heurístico para workflows que não são o modelo.

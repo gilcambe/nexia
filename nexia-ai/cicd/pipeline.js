@@ -11,7 +11,8 @@
 const { GatewayError, CODES } = require('../tool-gateway/errors');
 
 const PIPELINE_PATH = '.github/workflows/nexia-pipeline.yml';
-const PROVIDERS = ['firebase', 'cloudflare', 'render'];
+// ADR-F12-01: só os destinos que o NEXIA usa (Firebase Hosting e Cloudflare); Render saiu (ADR-HOST-01)
+const PROVIDERS = ['firebase', 'cloudflare'];
 const GITLEAKS = { version: '8.24.3', sha256: '9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c' };
 const SCRIPT_RE = /^[A-Za-z0-9:_-]{1,50}$/;
 const DIR_RE = /^(?!\/)(?!.*\.\.)[A-Za-z0-9._/-]{1,100}$/;
@@ -22,6 +23,13 @@ const vars = k => `\${{ vars.${k} }}`;
 const secrets = k => `\${{ secrets.${k} }}`;
 
 const PINNABLE = ['actions/checkout', 'actions/setup-node', 'google-github-actions/auth'];
+// ADR-F12-01: SHA padrão de cada ação (commit da release indicada, conferido com `git ls-remote`
+// em 2026-10-03). `actionPins` do pedido continua podendo trocar por outro SHA.
+const DEFAULT_PINS = {
+  'actions/checkout': '11d5960a326750d5838078e36cf38b85af677262',           // v4.4.0
+  'actions/setup-node': '49933ea5288caeca8642d1e84afbd3f7d6820020',         // v4.4.0
+  'google-github-actions/auth': 'c200f3691d83b41bf9bbd8638997a462592937ed', // v2.1.13 (SHA de commit, não segredo) gitleaks:allow
+};
 
 function deploySteps(provider, target, outputDir) {
   if (provider === 'firebase') {
@@ -36,9 +44,6 @@ function deploySteps(provider, target, outputDir) {
       run: `npx -y wrangler@3 pages deploy "${outputDir}" --project-name "${vars('CLOUDFLARE_PAGES_PROJECT')}" --branch "${branch}"`,
       env: { CLOUDFLARE_API_TOKEN: secrets('CLOUDFLARE_API_TOKEN'), CLOUDFLARE_ACCOUNT_ID: vars('CLOUDFLARE_ACCOUNT_ID') },
     })];
-  }
-  if (provider === 'render') {
-    return [step(`Deploy Render (${target})`, { run: 'curl -fsS -X POST "$RENDER_DEPLOY_HOOK" -o /dev/null', env: { RENDER_DEPLOY_HOOK: secrets('RENDER_DEPLOY_HOOK') } })];
   }
   throw new GatewayError(CODES.INVALID_INPUT, `Provedor "${provider}" ainda não é suportado pelo pipeline modelo (${PROVIDERS.join(', ')}).`);
 }
@@ -114,8 +119,8 @@ function buildPipeline(o) {
     jobs['deploy-production'] = deployJob('production', o.production, 'deploy-staging');
   }
 
-  // Fase 11: ações fixadas por SHA (commit de 40 hex) quando o projeto informa; senão, major tag.
-  const pins = o.actionPins || {};
+  // Fase 11/ADR-F12-01: ações sempre fixadas por SHA (padrão DEFAULT_PINS; o projeto pode trocar).
+  const pins = { ...DEFAULT_PINS, ...(o.actionPins || {}) };
   for (const [name, sha] of Object.entries(pins)) {
     if (!PINNABLE.includes(name) || !/^[0-9a-f]{40}$/.test(String(sha))) throw new GatewayError(CODES.INVALID_INPUT, `actionPins: ${name} inválido (use o SHA de 40 caracteres).`);
   }
@@ -177,4 +182,4 @@ function renderPipeline(o) {
   return { path: PIPELINE_PATH, content: `${header}${toYaml(wf)}\n`, workflow: wf };
 }
 
-module.exports = { buildPipeline, renderPipeline, toYaml, PIPELINE_PATH, PROVIDERS, PINNABLE };
+module.exports = { buildPipeline, renderPipeline, toYaml, PIPELINE_PATH, PROVIDERS, PINNABLE, DEFAULT_PINS };

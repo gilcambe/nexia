@@ -45,5 +45,5 @@ Só **Cloudflare + Firebase + GitHub**. Não há Render.
 
 - Corrigir o que o piloto mostrar (cada correção como fase com PR, testes e relatório).
 - Só então considerar autonomia maior e outros clientes. Produção continua sempre com aprovação humana.
-- Pendentes para essa etapa: log do Bridge no Vault, Bridge no Windows, agendador da retomada de execuções, SHAs das ações no pipeline.
+- Pendentes para essa etapa: log do Bridge no Vault e agendador da retomada de execuções (SHAs das ações e teste do Bridge no Windows já resolvidos, ADR-F12-01/02).
 - Hospedagem: avaliar servir o site direto pelos assets do Worker (hoje passa pelo container) e mais de uma instância do container (hoje uma só, ADR-HOST-01).

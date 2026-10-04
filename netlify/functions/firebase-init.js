@@ -4,7 +4,7 @@
  * FIX: Decodificação Base64 robusta para chave RSA privada.
  *
  * Problemas corrigidos:
- * 1. Base64 com espaços/newlines do Render → trim() antes de decodificar
+ * 1. Base64 com espaços/newlines vindos do painel de segredos → trim() antes de decodificar
  * 2. Chave RSA com \\n literais (escaped) → converter para \n reais
  * 3. Proteção contra double-init em hot-reload
  * 4. Log de projeto para diagnóstico sem expor credenciais
@@ -39,7 +39,7 @@ try {
       // Variável já é JSON puro
       saJson = saRaw.trim();
     } else {
-      // FIX: trim() remove espaços/newlines que o Render pode injetar nos env vars
+      // FIX: trim() remove espaços/newlines que o painel de segredos pode injetar nos env vars
       const cleanB64 = saB64.trim().replace(/\s/g, '');
       saJson = Buffer.from(cleanB64, 'base64').toString('utf8');
     }
@@ -71,7 +71,7 @@ try {
   try {
     db.settings({ ignoreUndefinedProperties: true });
   } catch (_settingsErr) {
-    // Já configurado por outra instância — normal em ambiente compartilhado (Render)
+    // Já configurado por outra instância — normal em ambiente compartilhado
   }
 
   console.info('[NEXIA] Firestore conectado ✓');

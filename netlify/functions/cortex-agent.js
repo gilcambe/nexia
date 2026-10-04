@@ -1,6 +1,6 @@
 /**
  * ╔══════════════════════════════════════════════════════╗
- * ║  NEXIA OS — CORTEX AGENT v9.1 (RENDER REAL)         ║
+ * ║  NEXIA OS — CORTEX AGENT v9.1                      ║
  * ║  Agent Loop com Tool-Use real no Firestore           ║
  * ║                                                      ║
  * ║  FIXES v9.1:                                         ║
@@ -549,7 +549,7 @@ exports.handler = async (event) => {
 
     const jobId = jobRef.id;
 
-    // Fire-and-forget — executa em background dentro do timeout do Render
+    // Fire-and-forget — executa em background dentro do timeout do servidor
     runAgentLoop(jobId, task, agentType, tenantId, userId).catch(err => {
       console.error(`[CORTEX-AGENT] runAgentLoop error (job ${jobId}):`, err.message);
     });

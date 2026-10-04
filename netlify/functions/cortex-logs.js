@@ -74,7 +74,7 @@ exports.handler = async (event) => {
   const guardErr = await guard(event, 'cortex-logs', { skipTenant: true });
   if (guardErr) return guardErr;
   if (event.httpMethod !== 'GET') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
-  if (!db) return { statusCode: 503, headers, body: JSON.stringify({ ok: false, error: 'Firebase indisponível — configure FIREBASE_SERVICE_ACCOUNT no Render.' }) };
+  if (!db) return { statusCode: 503, headers, body: JSON.stringify({ ok: false, error: 'Firebase indisponível — configure FIREBASE_SERVICE_ACCOUNT nos segredos do Worker.' }) };
   try {
     const p = event.queryStringParameters || {};
     const tenantId = p.tenantId;

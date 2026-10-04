@@ -202,7 +202,7 @@ exports.handler = async (event) => {
       return { statusCode: 401, headers: makeHeaders(event), body: JSON.stringify({ ok: false, error: 'Token de autenticação ausente.' }) };
     }
   }
-  if (!db) return { statusCode: 503, headers: makeHeaders(event), body: JSON.stringify({ ok: false, error: 'Firebase indisponível — configure FIREBASE_SERVICE_ACCOUNT no Render.' }) };
+  if (!db) return { statusCode: 503, headers: makeHeaders(event), body: JSON.stringify({ ok: false, error: 'Firebase indisponível — configure FIREBASE_SERVICE_ACCOUNT nos segredos do Worker.' }) };
 
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: 'Method Not Allowed' };
 
