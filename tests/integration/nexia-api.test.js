@@ -48,7 +48,7 @@ test.before(async () => {
   const users = {
     adminA: { role: 'admin', tenantSlug: TA }, adminB: { role: 'admin', tenantSlug: TB },
     userA: { role: 'user', tenantSlug: TA }, managerA: { role: 'manager', tenantSlug: TA },
-    boss: { role: 'master', tenantSlug: 'nexia' },
+    boss: { role: 'master', tenantSlug: 'nexia' }, bossNoTenant: { role: 'master' },
   };
   for (const [k, profile] of Object.entries(users)) {
     const j = await signUp(`${k.toLowerCase()}-${RUN}@t.com`);
@@ -72,6 +72,9 @@ test('A1. autenticação e papel: sem token 401; usuário comum e manager 403; /
   assert.strictEqual((await call('adminA', 'GET', '/clients', undefined, { 'X-Tenant-Id': TB })).status, 403);
   assert.strictEqual((await call('boss', 'GET', `/clients?tenant=${TB}`)).status, 200);
   assert.strictEqual((await call('boss', 'GET', '/clients?tenant=../x')).status, 400);
+  // master sem tenant no perfil usa o tenant padrão 'nexia'
+  assert.strictEqual((await call('bossNoTenant', 'GET', '/me')).body.tenantSlug, 'nexia');
+  assert.strictEqual((await call('bossNoTenant', 'GET', '/clients')).status, 200);
 });
 
 let ids = {};
