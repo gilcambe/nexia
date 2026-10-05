@@ -20,9 +20,10 @@ async function vaultCtx() {
 }
 
 async function production(vault, ctx) {
-  const [repo] = await vault.Repository.list(ctx, { where: { owner: OWNER, repo: REPO }, limit: 1 });
+  // O Vault só filtra listagens por client_id, project_id ou status; o resto é filtrado aqui.
+  const repo = (await vault.Repository.list(ctx, { limit: 200 })).find(r => r.owner === OWNER && r.repo === REPO);
   if (!repo) throw new Error(`repositório ${OWNER}/${REPO} não está no Vault do tenant ${TENANT}`);
-  const [env] = await vault.Environment.list(ctx, { where: { project_id: repo.project_id, name: 'production' }, limit: 1 });
+  const env = (await vault.Environment.list(ctx, { where: { project_id: repo.project_id }, limit: 200 })).find(e => e.name === 'production');
   if (env) return { project_id: repo.project_id, env };
   const { record } = await vault.Environment.create(ctx, { project_id: repo.project_id, name: 'production', provider: 'cloudflare', urls: [URL_PROD], branch: 'develop',
     notes: 'Criado pelo deploy automático (ADR-AUTO-02).' });
