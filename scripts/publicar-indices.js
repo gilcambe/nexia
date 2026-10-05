@@ -22,7 +22,7 @@ async function main() {
   const existing = new Map();
   let pageToken = '';
   do {
-    const r = await fetch(`${base}/-/indexes?pageSize=500${pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : ''}`, { headers: H });
+    const r = await fetch(`${base}/-/indexes${pageToken ? `?pageToken=${encodeURIComponent(pageToken)}` : ''}`, { headers: H });
     const j = await r.json().catch(() => ({}));
     if (!r.ok) throw new Error(`Listar índices: ${r.status} ${(j.error && j.error.message) || ''}`);
     for (const ix of j.indexes || []) {
