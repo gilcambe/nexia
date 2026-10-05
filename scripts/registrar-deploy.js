@@ -41,7 +41,9 @@ async function main([cmd, a, b]) {
     console.log(`Vault: deploy ${record.id} registrado (em andamento)`);
   } else if (cmd === 'fim') {
     if (!/^dpl_[a-f0-9]{32}$/.test(a || '') || !['succeeded', 'failed', 'rolled_back'].includes(b)) throw new Error('uso: fim <id> <succeeded|failed|rolled_back>');
-    await vault.Deployment.update(ctx, a, { status: b, finished_at: new Date().toISOString() });
+    // O Vault exige a versão atual do registro (controle de concorrência otimista).
+    const atual = await vault.Deployment.get(ctx, a);
+    await vault.Deployment.update(ctx, a, { status: b, finished_at: new Date().toISOString() }, { expectedVersion: atual.version });
     console.log(`Vault: deploy ${a} → ${b}`);
   } else throw new Error('uso: inicio <sha> | fim <id> <status>');
 }
