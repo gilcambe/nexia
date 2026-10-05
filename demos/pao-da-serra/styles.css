@@ -222,3 +222,4 @@ footer {
   padding: var(--spacing-unit);
   font-size: .875rem;
 }
+.nav-list.is-open { display: flex; }

@@ -70,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     navToggle.addEventListener('click', () => {
       const expanded = navToggle.getAttribute('aria-expanded') === 'true' || false;
       navToggle.setAttribute('aria-expanded', !expanded);
-      navList.style.display = expanded ? 'none' : 'flex';
+      navList.classList.toggle('is-open', !expanded);
     });
   }
 });
