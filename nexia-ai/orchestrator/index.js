@@ -240,7 +240,7 @@ function createOrchestrator(deps) {
           const headOf = r => (r && r.status === 'succeeded' && r.result.commits.length ? r.result.commits[r.result.commits.length - 1].sha : null);
           let before = null;   // rodada de correção: exige commit novo, não basta o da rodada anterior
           if (fix) before = headOf(await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch }));
-          await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).\n${plan[0].agent === 'designer' ? 'Brief do Designer (siga fontes, paleta e use as fotos listadas)' : 'Análise do Architect'}:\n${analysis}${fix}\n\nLeia os arquivos atuais com github.get_file (ref ${state.work_branch}). Para arquivo existente use github.edit_files; para arquivo novo, github.commit_files. Tudo na branch ${state.work_branch}. Não mexa em arquivos que o pedido não envolve.`);
+          await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).\n${plan[0].agent === 'designer' ? 'Brief do Designer (siga fontes e paleta e use as fotos listadas; só chame media.search_* se faltar alguma)' : 'Análise do Architect'}:\n${analysis}${fix}\n\nLeia os arquivos atuais com github.get_file (ref ${state.work_branch}). Para arquivo existente use github.edit_files; para arquivo novo, github.commit_files. Tudo na branch ${state.work_branch}. Não mexa em arquivos que o pedido não envolve.`);
           if (!stop) {
             // Confirmação pela ferramenta: a branch tem que estar à frente da padrão.
             const c = await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch });

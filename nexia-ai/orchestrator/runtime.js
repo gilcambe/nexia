@@ -22,7 +22,9 @@ function retryAfterMs(text) {
   if (!m || (!m[1] && !m[2])) return 10000;
   return Math.ceil(((Number(m[1]) || 0) * 60 + (Number(m[2]) || 0)) * 1000) + 500;
 }
-const RATE_ROUNDS = 3;
+// Em plano grátis cada pedido grande gasta quase a cota do minuto: o agente espera quantas vezes precisar,
+// dentro do orçamento de tempo da execução (meter.check()).
+const RATE_ROUNDS = 20;
 const ANSWER_CODES = new Set(['NOT_FOUND', 'UPSTREAM_NOT_FOUND']);
 // Planos grátis limitam tokens por minuto: resultados de ferramenta antigos (já usados pelo
 // modelo) seguem só no começo; os 2 mais recentes vão inteiros.
@@ -132,7 +134,7 @@ async function runAgent(o) {
         // Todos na cota por minuto (planos grátis): espera a janela virar e recomeça pelo primeiro.
         if (d.status === 429 && rateRounds < RATE_ROUNDS) {
           rateRounds++;
-          await wait(Math.min(Math.max(retryAfterMs(d.upstream), 20000), 60000));
+          await wait(Math.min(Math.max(retryAfterMs(d.upstream), 5000), 60000));
           o.meter.check();
           mi = 0; attempt = -1; continue;
         }
