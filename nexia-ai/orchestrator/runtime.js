@@ -27,11 +27,14 @@ const ANSWER_CODES = new Set(['NOT_FOUND', 'UPSTREAM_NOT_FOUND']);
 // Planos grátis limitam tokens por minuto: resultados de ferramenta antigos (já usados pelo
 // modelo) seguem só no começo; os 2 mais recentes vão inteiros.
 const OLD_RESULT_MAX = 1500;
-function compact(messages) {
+function compact(messages, level = 0) {
+  // level 1+ (pedido grande demais para a cota do modelo): só o último resultado inteiro e resumos menores.
+  const keep = level ? 1 : 2;
+  const max = level ? Math.max(400, OLD_RESULT_MAX >> level) : OLD_RESULT_MAX;
   const idx = messages.map((m, i) => (m.role === 'user' && m.content.startsWith('RESULTADO DAS FERRAMENTAS') ? i : -1)).filter(i => i >= 0);
-  const old = new Set(idx.slice(0, -2));
-  return messages.map((m, i) => (old.has(i) && m.content.length > OLD_RESULT_MAX
-    ? { ...m, content: `${m.content.slice(0, OLD_RESULT_MAX)}…[resultado antigo resumido; peça de novo a ferramenta se precisar]` } : m));
+  const old = new Set(idx.slice(0, -keep));
+  return messages.map((m, i) => (old.has(i) && m.content.length > max
+    ? { ...m, content: `${m.content.slice(0, max)}…[resultado antigo resumido; peça de novo a ferramenta se precisar]` } : m));
 }
 const toModelName = n => n.replace(/\./g, '__');
 const fromModelName = n => String(n).replace(/__/g, '.');
@@ -104,6 +107,7 @@ async function runAgent(o) {
   let nudged = false;
   const modelErrors = [];
   let rateRounds = 0;
+  let shrink = 0;   // 0: 8192 tokens de resposta; 1: 4096; 2: 2048
 
   for (let turn = 0; turn < (agent.max_steps || 8); turn++) {
     o.meter.check();
@@ -111,13 +115,15 @@ async function runAgent(o) {
     for (let attempt = 0; ; attempt++) {
       const desc = models[mi];
       try {
-        out = await o.router.toolCall(desc, { system, messages: compact(messages), tools, maxTokens: 8192 });
+        out = await o.router.toolCall(desc, { system, messages: compact(messages, shrink), tools, maxTokens: Math.max(2048, 8192 >> shrink) });
         o.meter.usage.models.add(`${desc.provider}/${desc.model}`);
         break;
       } catch (e) {
         const code = e && e.code;
         const d = (e && e.details) || {};
         modelErrors.push(`${desc.provider}/${desc.model}: ${String((e && e.message) || code || 'erro')}${d.upstream ? ` ${String(d.upstream).replace(/\s+/g, ' ').slice(0, 160)}` : ''}`);
+        // 413 (pedido maior que a cota por minuto do plano grátis): menos tokens de resposta e histórico mais curto, mesmo modelo.
+        if (d.status === 413 && shrink < 2) { shrink++; attempt = -1; continue; }
         if (RETRYABLE_MODEL.has(code) && attempt === 0) {                         // mesmo modelo, uma vez
           if (d.status === 429) await wait(Math.min(retryAfterMs(d.upstream), 30000)); // cota por minuto: espera e repete
           continue;
