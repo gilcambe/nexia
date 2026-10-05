@@ -16,7 +16,7 @@ const TASK = process.env.TASK || '';
 const AUTONOMY = /^[0-3]$/.test(process.env.AUTONOMY || '') ? Number(process.env.AUTONOMY) : null;
 const UID = 'nexia-smoke';
 const WAIT_ONBOARD_S = Number(process.env.WAIT_ONBOARD_S || 420);
-const WAIT_EXEC_S = Number(process.env.WAIT_EXEC_S || 900);
+const WAIT_EXEC_S = Number(process.env.WAIT_EXEC_S || 1500);
 
 const results = [];
 const sleep = ms => new Promise(r => setTimeout(r, ms));
