@@ -1,0 +1,31 @@
+# TEMPORÁRIO: só nesta branch de exploração (nunca na develop). Abre o sistema que o dono criou no Readdy,
+# tela por tela, e guarda o resultado na branch explorar-readdy-resultado.
+name: Explorar sistema do Readdy (temporário)
+on:
+  push:
+    branches: [nexia/explorar-readdy]
+permissions:
+  contents: write
+jobs:
+  explorar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Navegador
+        run: |
+          npm i --no-save --no-audit --no-fund playwright@1.59.1
+          npx playwright install --with-deps chromium
+      - name: Explorar
+        env:
+          OUT: ${{ github.workspace }}/../explorar-out
+        run: node tmp-explorar/explorar.js || true
+      - name: Guardar resultado
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan explorar-readdy-resultado && git rm -rqf . && rm -rf tmp-explorar
+          cp -r ../explorar-out/* . && git add -A && git commit -qm "Exploração do sistema do Readdy" && git push -qf origin explorar-readdy-resultado
