@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agenda Clínica — Gerencie consultas, pacientes e profissionais de forma simples</title>
+  <meta name="description" content="Gerencie consultas, pacientes e profissionais de forma simples">
+  <meta name="theme-color" content="#2C7A7B">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
+</head>
+<body>
+  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
+      <div class="sidebar__brand">
+        <span class="logo" aria-hidden="true">A</span>
+        <span>Agenda Clínica</span>
+      </div>
+      <nav class="sidebar__nav" aria-label="Seções">
+        <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
+        <a href="#/consultas" data-route="consultas"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Consultas</span></a>
+        <a href="#/pacientes" data-route="pacientes"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Pacientes</span></a>
+        <a href="#/profissionais" data-route="profissionais"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Profissionais</span></a>
+      </nav>
+      <div class="sidebar__foot">
+        <p>Suporte: contato@clinicaexemplo.com.br</p>
+        <p>Dados salvos neste navegador.</p>
+      </div>
+    </aside>
+    <div class="backdrop" data-close-menu hidden></div>
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="topbar__title">
+          <h1 id="view-title">Painel</h1>
+          <p id="view-sub">Gerencie consultas, pacientes e profissionais de forma simples</p>
+        </div>
+        <label class="search">
+          <span class="sr-only">Buscar</span>
+          <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search" type="search" placeholder="Buscar..." autocomplete="off">
+        </label>
+        <button class="icon-btn" type="button" id="theme" aria-label="Alternar modo escuro"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </header>
+      <main id="conteudo" class="content">
+        <section id="view-painel" class="view" aria-labelledby="view-title">
+          <div class="kpis" id="kpis"></div>
+          <div class="grid2">
+            <article class="card">
+              <header class="card__head"><h2 id="chart-title">Resumo</h2></header>
+              <div class="chart-box"><canvas id="chart" aria-label="Gráfico do resumo" role="img"></canvas></div>
+            </article>
+            <article class="card">
+              <header class="card__head"><h2>Últimos cadastros</h2></header>
+              <ul class="recent" id="recent"></ul>
+            </article>
+          </div>
+        </section>
+        <section id="view-entity" class="view" hidden>
+          <div class="toolbar">
+            <p class="count" id="count"></p>
+            <div class="toolbar__actions">
+              <button class="btn btn--ghost" type="button" id="export"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Exportar CSV</button>
+              <button class="btn btn--primary" type="button" id="add"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> <span id="add-label">Novo</span></button>
+            </div>
+          </div>
+          <div class="card table-card">
+            <div class="table-wrap">
+              <table class="table">
+                <thead id="thead"></thead>
+                <tbody id="tbody"></tbody>
+              </table>
+            </div>
+            <div class="empty" id="empty" hidden>
+              <svg class="i" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg>
+              <h2>Nada por aqui ainda</h2>
+              <p>Clique em “Adicionar” para fazer o primeiro cadastro.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="modal" id="modal" aria-labelledby="modal-title">
+    <form id="form" novalidate>
+      <header class="modal__head">
+        <h2 id="modal-title">Novo</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </header>
+      <div class="modal__body" id="form-fields"></div>
+      <footer class="modal__foot">
+        <button class="btn btn--ghost" type="button" data-close>Cancelar</button>
+        <button class="btn btn--primary" type="submit">Salvar</button>
+      </footer>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="application/json" id="app-config">{"key":"nexia-app:demos/agenda-clinica","name":"Agenda Clínica","entities":[{"key":"consultas","label":"Consultas","singular":"Consulta","fields":[{"key":"paciente","label":"Paciente","type":"select","options":["Ana Souza","Bruno Lima","Carla Mendes"],"required":true},{"key":"profissional","label":"Profissional","type":"select","options":["Dr. Rafael Alves","Dra. Marina Costa","Dr. Felipe Duarte"],"required":true},{"key":"data","label":"Data","type":"date","options":[],"required":true},{"key":"hora","label":"Hora","type":"text","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Agendada","Confirmada","Concluída","Cancelada"],"required":true},{"key":"valor","label":"Valor","type":"money","options":[],"required":true},{"key":"observacoes","label":"Observações","type":"textarea","options":[],"required":false}],"sample":[{"paciente":"Ana Souza","profissional":"Dr. Rafael Alves","data":"2026-10-10","hora":"09:30","status":"Confirmada","valor":"350","observacoes":"Primeira consulta"},{"paciente":"Bruno Lima","profissional":"Dra. Marina Costa","data":"2026-10-11","hora":"14:00","status":"Agendada","valor":"250","observacoes":""},{"paciente":"Carla Mendes","profissional":"Dr. Felipe Duarte","data":"2026-10-12","hora":"11:15","status":"Cancelada","valor":"0","observacoes":"Paciente pediu reagendamento"}]},{"key":"pacientes","label":"Pacientes","singular":"Paciente","fields":[{"key":"nome","label":"Nome completo","type":"text","options":[],"required":true},{"key":"data_nascimento","label":"Data de Nascimento","type":"date","options":[],"required":true},{"key":"email","label":"E-mail","type":"email","options":[],"required":true},{"key":"telefone","label":"Telefone","type":"phone","options":[],"required":true},{"key":"genero","label":"Gênero","type":"select","options":["Feminino","Masculino","Outro"],"required":true},{"key":"cpf","label":"CPF","type":"text","options":[],"required":true},{"key":"endereco","label":"Endereço","type":"textarea","options":[],"required":true}],"sample":[{"nome":"Ana Souza","data_nascimento":"1990-05-12","email":"ana.souza@email.com","telefone":"(11) 98765-4321","genero":"Feminino","cpf":"123.456.789-00","endereco":"Rua das Flores, 123, São Paulo - SP"},{"nome":"Bruno Lima","data_nascimento":"1985-09-30","email":"bruno.lima@email.com","telefone":"(11) 97654-3210","genero":"Masculino","cpf":"987.654.321-00","endereco":"Avenida Paulista, 1000, São Paulo - SP"},{"nome":"Carla Mendes","data_nascimento":"1995-02-20","email":"carla.mendes@email.com","telefone":"(11) 96543-2109","genero":"Feminino","cpf":"321.654.987-00","endereco":"Rua da Saudade, 45, Rio de Janeiro - RJ"}]},{"key":"profissionais","label":"Profissionais","singular":"Profissional","fields":[{"key":"nome","label":"Nome completo","type":"text","options":[],"required":true},{"key":"especialidade","label":"Especialidade","type":"select","options":["Clínico Geral","Dermatologia","Pediatria","Ortopedia"],"required":true},{"key":"email","label":"E-mail","type":"email","options":[],"required":true},{"key":"telefone","label":"Telefone","type":"phone","options":[],"required":true},{"key":"registro","label":"CRM/CRP","type":"text","options":[],"required":true},{"key":"consultorio","label":"Consultório","type":"text","options":[],"required":true}],"sample":[{"nome":"Dr. Rafael Alves","especialidade":"Clínico Geral","email":"rafael.alves@clinica.com","telefone":"(11) 92345-6789","registro":"CRM 12345","consultorio":"Sala 01"},{"nome":"Dra. Marina Costa","especialidade":"Dermatologia","email":"marina.costa@clinica.com","telefone":"(11) 93456-7890","registro":"CRM 23456","consultorio":"Sala 02"},{"nome":"Dr. Felipe Duarte","especialidade":"Pediatria","email":"felipe.duarte@clinica.com","telefone":"(11) 94567-8901","registro":"CRM 34567","consultorio":"Sala 03"}]}]}</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
