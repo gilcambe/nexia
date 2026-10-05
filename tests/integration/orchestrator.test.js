@@ -39,7 +39,7 @@ function scriptedRouter(script) {
 const call = (name, input) => ({ id: `tc_${crypto.randomBytes(3).toString('hex')}`, name: name.replace(/\./g, '__'), input });
 const branchOf = req => /Branch de trabalho: (\S+)/.exec(req.messages[0].content)[1];
 const commitStep = path => req => ({ text: 'Vou commitar.', tool_calls: [call('github.commit_files', { branch: branchOf(req), message: 'Corrige o botão', files: [{ path, content: '<button type="submit">Enviar</button>\n' }] })] });
-const report = verdict => ({ tool_calls: [{ id: 'r1', name: 'report_findings', input: { verdict, findings: verdict === 'approve' ? [] : [{ severity: 'high', file: 'src/app.html', message: 'quebra o envio' }] } }] });
+const report = verdict => ({ tool_calls: [{ id: 'r1', name: 'report_findings', input: { verdict, findings: verdict === 'approve' ? [] : [{ severity: 'high', file: 'src/app.html', message: 'quebra o envio; use um telefone de exemplo real' }] } }] });
 const GREEN = [{ name: 'Testes', status: 'completed', conclusion: 'success' }, { name: 'Build', status: 'completed', conclusion: 'success' },
   { name: 'Secret scan (gitleaks)', status: 'completed', conclusion: 'success' }];
 
@@ -291,6 +291,40 @@ test('O4f. ADR-Q-04: site novo: a IA escreve só o spec (JSON), as fotos vêm da
   assert.ok(fake.fileAt(exe.work_branch, 'demos/pao/script.js').includes('IntersectionObserver'));
   assert.strictEqual(router.seen.filter(s => s.agent === 'designer').length, 2);
   assert.deepStrictEqual(router.seen.filter(s => ['frontend', 'security'].includes(s.agent)), [], 'código do kit: nem Frontend nem Security gastam modelo');
+});
+
+test('O4h. ADR-Q-04: foto que deixa de abrir é trocada sem modelo; correção pedida pela revisão muda o spec e o kit gera de novo', async () => {
+  await setAutonomy(3);
+  const { SITE_EXAMPLE } = require('../../nexia-ai/site-kit/prompt');
+  const spec = { ...SITE_EXAMPLE, name: 'Pão da Serra', folder: 'demos/pao2' };
+  const router = scriptedRouter({
+    designer: [{ text: JSON.stringify(spec) }, req => {
+      assert.match(req.messages[0].content, /Spec atual:/);
+      assert.match(req.messages[0].content, /telefone de exemplo/);
+      return { text: JSON.stringify({ ...spec, contact: { ...spec.contact, phone: '(24) 3333-4444' } }) };
+    }],
+    reviewer: [report('changes_requested'), report('approve')],
+  });
+  let n = 0;
+  const fetchImpl = async (url, opts) => {
+    if (/api\.openverse\.org/.test(url)) {
+      const results = Array.from({ length: 6 }, () => ({ url: `https://img.test/${n++}.jpg`, width: 1600, height: 1000, title: 'foto', creator: 'Ana', license: 'by', license_version: '4.0' }));
+      return { ok: true, status: 200, json: async () => ({ results }) };
+    }
+    if (/commons\.wikimedia|api\.pexels/.test(url)) return { ok: false, status: 404, json: async () => ({}) };
+    return fake.fetchImpl(url, opts);
+  };
+  // A foto 0 abre na busca e some depois (1ª checagem da revisão em diante).
+  const hits = {};
+  const reach = async url => { hits[url] = (hits[url] || 0) + 1; return { status: /\/0\.jpg$/.test(url) && hits[url] > 1 ? 404 : 206, body: null }; };
+  const gw = createGateway({ db, vault, env: fake.env, fetchImpl });
+  const { exe } = await startAndRun(orch(router, { gateway: gw, fetchImpl: reach }), 'Crie um site para a padaria Pão da Serra');
+  assert.ok(exe.pull_request, JSON.stringify([exe.status, exe.error_code, exe.result_summary, exe.plan.map(s => s.summary)]));
+  assert.strictEqual(exe.fix_rounds, 1);
+  const html = fake.fileAt(exe.work_branch, 'demos/pao2/index.html');
+  assert.ok(!/img\.test\/0\.jpg/.test(html), 'a foto que deixou de abrir saiu');
+  assert.match(html, /\(24\) 3333-4444/, 'a correção do spec chegou ao site');
+  assert.deepStrictEqual(router.seen.filter(s => ['frontend', 'security'].includes(s.agent)), []);
 });
 
 test('O4g. 413 (pedido maior que a cota por minuto): o mesmo modelo é chamado de novo com menos tokens', async () => {
