@@ -282,6 +282,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .topbar { padding: 12px 16px; flex-wrap: wrap; }
   .search { order: 3; min-width: 0; width: 100%; }
   .content { padding: 16px; }
+  .kpis { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .kpi { padding: 14px 16px; }
+  .kpi__value { font-size: 24px; }
+  .kpi::after { width: 70px; height: 70px; right: -20px; top: -20px; }
+  .chart-box { height: 240px; }
   .modal__body { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -484,8 +489,10 @@ const JS = `// Gerado pelo NEXIA Site Kit (ADR-Q-04). Dados salvos no navegador 
     drawChart();
   }
   function chartData() {
+    // Gráfico pelo campo que resume melhor (status, situação, tipo...); senão o primeiro de opções.
+    const pick = e => e.fields.find(x => x.type === 'select' && /status|situa|etapa|tipo|categoria|fase|prioridade/i.test(x.key + ' ' + x.label)) || e.fields.find(x => x.type === 'select');
     for (const e of cfg.entities) {
-      const f = e.fields.find(x => x.type === 'select');
+      const f = pick(e);
       if (f && db[e.key].length) {
         const labels = f.options.length ? f.options : Array.from(new Set(db[e.key].map(r => r[f.key]).filter(Boolean)));
         return { title: e.label + ' por ' + f.label.toLowerCase(), labels, values: labels.map(l => db[e.key].filter(r => r[f.key] === l).length) };
