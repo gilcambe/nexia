@@ -18,7 +18,7 @@
 | Entidade | Coleção | Prefixo do id | schemaVersion | Únicos por tenant | Referenciado por |
 |---|---|---|---|---|---|
 | Client | `vault_clients` | `cli_` | 1 | slug | Project.client_id, Memory.client_id, Execution.client_id |
-| Project | `vault_projects` | `prj_` | 1 | slug | Repository.project_id, Environment.project_id, Requirement.project_id, Decision.project_id, Task.project_id, Artifact.project_id, Conversation.project_id, Memory.project_id, Change.project_id, TestRun.project_id, Deployment.project_id, Error.project_id, Integration.project_id, ProjectSnapshot.project_id, ToolCall.project_id, ToolPolicy.project_id, Execution.project_id |
+| Project | `vault_projects` | `prj_` | 1 | slug | Repository.project_id, Environment.project_id, Requirement.project_id, Decision.project_id, Task.project_id, Artifact.project_id, Conversation.project_id, Memory.project_id, Change.project_id, TestRun.project_id, Deployment.project_id, Error.project_id, Integration.project_id, ProjectSnapshot.project_id, ToolCall.project_id, ToolPolicy.project_id, Execution.project_id, Robot.project_id |
 | Repository | `vault_repositories` | `repo_` | 1 | provider + owner + repo | Project.primary_repository_id, Artifact.repository_id, Change.repository_id, Integration.repository_id, ProjectSnapshot.repository_id |
 | Environment | `vault_environments` | `env_` | 1 | project_id + name | TestRun.environment_id, Deployment.environment_id, Integration.environment_id, ProjectSnapshot.environment_ids[] |
 | Requirement | `vault_requirements` | `req_` | 1 |  | Task.requirement_id |
@@ -36,6 +36,7 @@
 | ToolCall | `vault_tool_calls` | `tcl_` | 1 |  |  |
 | ToolPolicy | `vault_tool_policies` | `pol_` | 1 | project_id |  |
 | Execution | `vault_executions` | `exe_` | 1 | execution_id |  |
+| Robot | `vault_robots` | `rbt_` | 1 |  |  |
 
 ## Client
 
@@ -451,3 +452,36 @@ Coleção `vault_executions`, id `exe_…`, schemaVersion 1.
 
 Únicos por tenant: `execution_id`.
 Regras: `finished_at>=started_at`, `needs_input_requires_question`, `final_requires_finished_at`.
+
+## Robot
+
+Coleção `vault_robots`, id `rbt_…`, schemaVersion 1.
+
+| Campo | Tipo | Obrigatório | Imutável | Padrão | Restrições |
+|---|---|---|---|---|---|
+| `project_id` | ref → Project | sim |  |  |  |
+| `name` | string | sim |  |  | 1–100 caracteres |
+| `task` | string | sim |  |  | 1–4000 caracteres |
+| `template` | enum |  |  |  | `site_watch`, `pr_review`, `daily_report` |
+| `schedule` | objeto | sim |  |  |  |
+| `schedule.kind` | enum | sim |  |  | `hourly`, `interval`, `daily`, `weekly` |
+| `schedule.minute` | int |  |  |  | 0–59 |
+| `schedule.time` | string (hh_mm) |  |  |  | 1–5 caracteres |
+| `schedule.days` | array de int |  |  |  | até 7 itens, sem repetição |
+| `schedule.every_hours` | enum |  |  |  | `2`, `3`, `4`, `6`, `8`, `12` |
+| `timezone` | enum |  |  | "America/Sao_Paulo" | `America/Sao_Paulo`, `America/Bahia`, `America/Fortaleza`, `America/Recife`, `America/Belem`, `America/Manaus`, `America/Cuiaba`, `America/Campo_Grande`, `America/Porto_Velho`, `America/Boa_Vista`, `America/Rio_Branco`, `America/Noronha`, `UTC` |
+| `enabled` | bool | sim |  |  |  |
+| `owner` | objeto | sim | sim |  |  |
+| `owner.type` | enum | sim |  |  | `user`, `agent`, `system` |
+| `owner.id` | string (actor_id) | sim |  |  | 1–128 caracteres |
+| `next_run_at` | timestamp |  |  |  |  |
+| `last_run_at` | timestamp |  |  |  |  |
+| `last_run_execution_id` | string (execution_record_id) |  |  |  | 1–40 caracteres |
+| `recent_runs` | array de objeto |  |  | [] | até 10 itens |
+| `recent_runs[].at` | timestamp | sim |  |  |  |
+| `recent_runs[].trigger` | enum | sim |  |  | `schedule`, `manual` |
+| `recent_runs[].status` | enum | sim |  |  | `planned`, `running`, `waiting_approval`, `needs_input`, `succeeded`, `failed`, `cancelled`, `error` |
+| `recent_runs[].execution_id` | string (execution_record_id) |  |  |  | 1–40 caracteres |
+| `recent_runs[].error_code` | string (error_code) |  |  |  | 1–64 caracteres |
+
+Regras: `schedule_shape`, `enabled_requires_next_run_at`, `disabled_without_next_run_at`.

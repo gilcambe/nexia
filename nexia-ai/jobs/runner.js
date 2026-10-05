@@ -7,7 +7,7 @@ const { validateJob, contextFor, sweepAllTenants } = require('./index');
 
 /**
  * @param {object} rawJob  pedido vindo do workflow (JSON)
- * @param {{ db?, vault?, orchestrator?, sourceFactory? }} [deps]  injeção para testes
+ * @param {{ db?, vault?, orchestrator?, sourceFactory?, now? }} [deps]  injeção para testes
  */
 async function runJob(rawJob, deps = {}) {
   const job = validateJob(rawJob);
@@ -21,6 +21,13 @@ async function runJob(rawJob, deps = {}) {
     const gateway = createGateway({ db, vault });
     return createOrchestrator({ vault, gateway, router: require('../model-router').getRouter() });
   })();
+
+  // ADR-AUTO-01: robôs vencidos de todas as empresas (cada um em nome do próprio dono).
+  if (job.kind === 'robots.run') {
+    const { runDueRobots } = require('../robots');
+    const r = await runDueRobots({ db, vault, orchestrator, ...(deps.now ? { now: deps.now } : {}) });
+    return { kind: job.kind, due: r.due, claimed: r.claimed, started: r.started };
+  }
 
   if (job.kind === 'sweep') {
     if (!job.tenant) {

@@ -153,6 +153,7 @@ export default function ProjetosPage() {
             <button onClick={() => navigate("/execucoes")} className="text-sm text-nexia-cyan underline cursor-pointer" data-testid="link-execucoes">Execuções</button>
             <button onClick={() => navigate("/aprovacoes")} className="text-sm text-nexia-cyan underline cursor-pointer" data-testid="link-aprovacoes">Aprovações</button>
             <button onClick={() => navigate("/auditoria")} className="text-sm text-nexia-cyan underline cursor-pointer" data-testid="link-auditoria">Auditoria</button>
+            <button onClick={() => navigate("/robos")} className="text-sm text-nexia-cyan underline cursor-pointer" data-testid="link-robos">Robôs</button>
             {me && <span className="text-xs text-nexia-muted">{me.role} · {me.tenantSlug || "sem tenant"}</span>}
           </div>
         </div>
