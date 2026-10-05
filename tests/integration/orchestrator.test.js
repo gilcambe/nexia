@@ -24,9 +24,10 @@ function scriptedRouter(script) {
     seen,
     capabilities: d => ({ available: d.provider === 'anthropic', tool_call: true }), // só os 2 candidatos Anthropic de cada classe
     costEstimate: (d, u) => ({ known: true, usd: ((u.input_tokens || 0) + (u.output_tokens || 0)) / 1e6 }),
+    async chat(desc, req) { return this.toolCall(desc, { ...req, tools: [] }); },
     async toolCall(desc, req) {
-      const agent = Object.keys(AGENTS).find(k => req.system.includes(AGENTS[k].prompt));
-      seen.push({ agent, model: desc.model, tools: req.tools.map(t => t.name) });
+      const agent = Object.keys(AGENTS).find(k => req.system.includes(AGENTS[k].prompt)) || (req.system.includes('NEXIA Site Kit') ? 'designer' : undefined);
+      seen.push({ agent, model: desc.model, tools: req.tools.map(t => t.name), goal: req.messages[0].content });
       const next = (queues[agent] || []).shift();
       if (!next) return { text: `${agent}: nada a fazer`, tool_calls: [], usage: { input_tokens: 10, output_tokens: 5 } };
       const r = typeof next === 'function' ? next(req) : next;
@@ -250,35 +251,46 @@ test('O4e. ADR-Q-02: HTML quebrado volta ao agente pela checagem automática, se
   assert.strictEqual(router.seen.filter(s => s.agent === 'reviewer').length, 1, 'o Reviewer só rodou com o HTML já correto');
 });
 
-test('O4f. ADR-Q-03: site novo passa pelo Designer; página sem padrão visual ou com foto fora do ar volta para o agente', async () => {
+test('O4f. ADR-Q-04: site novo: a IA escreve só o spec (JSON), as fotos vêm das buscas e o NEXIA Site Kit gera o código', async () => {
   await setAutonomy(3);
-  const head = '<!DOCTYPE html><html lang="pt-BR"><head><meta name="viewport" content="width=device-width"><title>Pão</title><link href="https://fonts.googleapis.com/css2?family=Fraunces&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"></head>';
-  const imgs = n => Array.from({ length: n }, (_, k) => `<img src="https://img.test/${k}.jpg" alt="foto ${k}" width="4" height="3">`).join('');
-  const good = `${head}<body><header>P</header><main>${imgs(4)}</main><footer>Fotos: Ana (CC BY)</footer><script src="script.js"></script></body></html>`;
-  const css = ':root { --primary: #8a4b2a; }\nimg { transition: transform .3s; }\n@media (max-width: 700px) { main { display: block; } }';
-  const files = (html, n = 0) => req => ({ tool_calls: [call('github.commit_files', { branch: branchOf(req), message: `Site ${n}`, files: [
-    { path: 'demos/pao/index.html', content: html }, { path: 'demos/pao/styles.css', content: css }, { path: 'demos/pao/script.js', content: 'new IntersectionObserver(() => {});' }] })] });
-  const weak = `${head.replace(/<link href="https:\/\/fonts[^>]+>/, '')}<body><header>P</header><main>${imgs(1)}</main><footer>x</footer><script src="script.js"></script></body></html>`;
+  const { SITE_EXAMPLE } = require('../../nexia-ai/site-kit/prompt');
+  const spec = { ...SITE_EXAMPLE, name: 'Pão da Serra', folder: 'demos/pao' };
   const router = scriptedRouter({
-    designer: [{ text: 'Fontes Fraunces + DM Sans; paleta #8a4b2a; hero | https://img.test/0.jpg | pão | Ana (CC BY)' }],
-    frontend: [files(weak, 1), { text: 'feito' }, req => {
-      assert.match(req.messages[0].content, /Brief do Designer/);
-      assert.match(req.messages[0].content, /fonte da web/);
-      assert.match(req.messages[0].content, /pelo menos 4 fotos/);
-      return files(good.replace('https://img.test/3.jpg', 'https://img.test/morta.jpg'), 2)(req);
-    }, { text: 'corrigido' }, req => {
-      assert.match(req.messages[0].content, /morta\.jpg não abre/);
-      return files(good, 3)(req);
-    }, { text: 'ok' }],
-    reviewer: [report('approve')], security: [report('approve')],
+    designer: [{ text: 'Claro! {"name": "", "sections": []}' }, req => {
+      assert.match(req.messages[0].content, /problemas: .*name/, 'a 2ª chamada recebe os erros do spec');
+      return { text: `\`\`\`json\n${JSON.stringify(spec)}\n\`\`\`` };
+    }],
+    reviewer: [req => {
+      assert.match(req.messages[0].content, /demos\/pao\/nexia-spec\.json/);
+      assert.match(req.messages[0].content, /NÃO chame github\.compare/);
+      return report('approve');
+    }],
   });
-  const fetchImpl = async url => ({ status: /morta/.test(url) ? 404 : 206, body: null });
-  const { exe } = await startAndRun(orch(router, { fetchImpl }), 'Crie um site para a padaria Pão da Serra');
-  assert.strictEqual(exe.plan[0].agent, 'designer');
-  assert.ok(exe.pull_request, JSON.stringify([exe.status, exe.error_code, exe.result_summary]));
-  assert.strictEqual(exe.fix_rounds, 2);
-  assert.strictEqual(router.seen.filter(s => s.agent === 'reviewer').length, 1, 'o Reviewer só viu a versão completa');
-  assert.ok(router.seen.find(s => s.agent === 'designer').tools.includes('media__search_images'), 'o Designer pode buscar fotos');
+  // Openverse falso: cada busca devolve fotos distintas; uma delas está fora do ar e é trocada.
+  let n = 0;
+  const fetchImpl = async (url, opts) => {
+    if (/api\.openverse\.org/.test(url)) {
+      const results = Array.from({ length: 6 }, () => ({ url: `https://img.test/${n++}.jpg`, width: 1600, height: 1000, title: 'foto', creator: 'Ana', license: 'by', license_version: '4.0' }));
+      return { ok: true, status: 200, json: async () => ({ results }) };
+    }
+    if (/commons\.wikimedia|api\.pexels/.test(url)) return { ok: false, status: 404, json: async () => ({}) };
+    return fake.fetchImpl(url, opts);
+  };
+  const gw = createGateway({ db, vault, env: fake.env, fetchImpl });
+  const { exe } = await startAndRun(orch(router, { gateway: gw, fetchImpl: async url => ({ status: /\/1\.jpg/.test(url) ? 404 : 206, body: null }) }), 'Crie um site para a padaria Pão da Serra');
+  assert.deepStrictEqual(exe.plan.slice(0, 3).map(s => s.agent), ['coder', 'designer', 'frontend']);
+  assert.ok(exe.pull_request, JSON.stringify([exe.status, exe.error_code, exe.result_summary, exe.plan.map(s => s.summary)]));
+  assert.strictEqual(exe.fix_rounds || 0, 0);
+  assert.match(exe.plan[1].summary, /spec: demos\/pao\/nexia-spec\.json/);
+  const html = fake.fileAt(exe.work_branch, 'demos/pao/index.html');
+  assert.match(html, /Pão da Serra/);
+  assert.match(html, /fonts\.googleapis\.com/);
+  assert.ok(!html.includes('https://img.test/1.jpg'), 'foto fora do ar não entra');
+  assert.strictEqual(new Set(html.match(/https:\/\/img\.test\/\d+\.jpg/g)).size, html.match(/<img [^>]*src="https:\/\/img\.test/g).length, 'nenhuma foto repetida');
+  assert.ok(fake.fileAt(exe.work_branch, 'demos/pao/styles.css').includes(':root'));
+  assert.ok(fake.fileAt(exe.work_branch, 'demos/pao/script.js').includes('IntersectionObserver'));
+  assert.strictEqual(router.seen.filter(s => s.agent === 'designer').length, 2);
+  assert.deepStrictEqual(router.seen.filter(s => ['frontend', 'security'].includes(s.agent)), [], 'código do kit: nem Frontend nem Security gastam modelo');
 });
 
 test('O4g. 413 (pedido maior que a cota por minuto): o mesmo modelo é chamado de novo com menos tokens', async () => {

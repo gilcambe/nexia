@@ -203,4 +203,50 @@ async function runAgent(o) {
   return { status: 'failed', error_code: 'MAX_STEPS', text: `O agente ${agent.title} não terminou dentro do limite de passos.`, tool_call_ids: toolCallIds };
 }
 
-module.exports = { compact, runAgent, createMeter, BudgetError, toModelName, fromModelName, REPORT_TOOL };
+/**
+ * Uma resposta de texto, sem ferramentas (ex.: o spec JSON do Site Kit). Mesmas regras de troca de modelo,
+ * 413 (menos tokens de resposta) e 429 (espera a janela do minuto) do runAgent.
+ * @returns {Promise<{ status: 'done'|'failed', text: string, model?: string, error_code?: string }>}
+ */
+async function askModel(o) {
+  const agent = AGENTS[o.agentId];
+  const models = candidates(o.router, agent.model);
+  if (!models.length) return { status: 'failed', error_code: 'NO_MODEL', text: 'Nenhum modelo configurado.' };
+  const errors = [];
+  let mi = 0, rateRounds = 0, shrink = 0, retried = false;
+  for (;;) {
+    o.meter.check();
+    const desc = models[mi];
+    try {
+      const out = await o.router.chat(desc, { system: o.system, messages: [{ role: 'user', content: o.prompt }], maxTokens: Math.max(2048, (o.maxTokens || 6144) >> shrink) });
+      const u = out.usage || {};
+      o.meter.usage.steps++;
+      o.meter.usage.input_tokens += u.input_tokens || 0;
+      o.meter.usage.output_tokens += u.output_tokens || 0;
+      const cost = o.router.costEstimate ? o.router.costEstimate(desc, u) : { known: false };
+      if (cost && cost.known) o.meter.usage.cost_usd += cost.usd; else o.meter.usage.cost_known = false;
+      o.meter.usage.models.add(`${desc.provider}/${desc.model}`);
+      return { status: 'done', text: String(out.text || ''), model: `${desc.provider}/${desc.model}` };
+    } catch (e) {
+      const code = e && e.code;
+      const d = (e && e.details) || {};
+      errors.push(`${desc.provider}/${desc.model}: ${String((e && e.message) || code || 'erro')}${d.upstream ? ` ${String(d.upstream).replace(/\s+/g, ' ').slice(0, 160)}` : ''}`);
+      if (d.status === 413 && shrink < 2) { shrink++; continue; }
+      if (RETRYABLE_MODEL.has(code) && !retried) {
+        retried = true;
+        if (d.status === 429) await wait(Math.min(retryAfterMs(d.upstream), 30000));
+        continue;
+      }
+      retried = false;
+      if (mi + 1 < models.length) { mi++; continue; }
+      if (d.status === 429 && rateRounds < RATE_ROUNDS) {
+        rateRounds++;
+        await wait(Math.min(Math.max(retryAfterMs(d.upstream), 5000), 60000));
+        mi = 0; continue;
+      }
+      return { status: 'failed', error_code: code && /^[A-Z_]+$/.test(code) ? `MODEL_${code}` : 'MODEL_ERROR', text: `O modelo não respondeu. ${errors.slice(-3).join(' | ')}`.slice(0, 1500) };
+    }
+  }
+}
+
+module.exports = { askModel, compact, runAgent, createMeter, BudgetError, toModelName, fromModelName, REPORT_TOOL };

@@ -102,7 +102,7 @@ function checkHtml(path, html) {
   for (const f of fields) if (!f.labelled && !f.inLabel && !(f.id && labelsFor.has(f.id))) warn(f.at, 'campo de formulário sem <label> ligado a ele');
   for (const x of anchors) {
     if (x.href === '#' || x.href === '') warn(x.at, 'link vazio (href="#")');
-    else if (x.href.startsWith('#') && !ids.has(decodeURIComponent(x.href.slice(1)))) err(x.at, `link para ${x.href}, mas não existe elemento com esse id`);
+    else if (x.href.startsWith('#') && !/^#[/!]/.test(x.href) && !ids.has(decodeURIComponent(x.href.slice(1)))) err(x.at, `link para ${x.href}, mas não existe elemento com esse id`);
   }
   return { errors, warnings, refs, media, mediaCount, isPage: /<html[\s>]/i.test(src) };
 }
@@ -145,7 +145,7 @@ function checkDesign(page, files, kind) {
   if (!/:root\s*\{[^}]*--[\w-]+\s*:/.test(css)) err('sem variáveis de cor/medida no :root (--primary, --accent, --bg, --text...)');
   if (!/@media[^{]*\(\s*(max|min)-width/i.test(css)) err('sem @media (max-width/min-width): o layout não se adapta ao celular');
   if (!/\btransition\s*:|\banimation\s*:|@keyframes/i.test(css)) err('sem movimento: falta transition/animation/@keyframes (hover, entrada do topo, revelar ao rolar)');
-  if (!/IntersectionObserver/.test(js)) warnings.push({ file: page.path, message: 'nada aparece ao rolar a página (IntersectionObserver + .reveal)' });
+  if (kind === 'site' && !/IntersectionObserver/.test(js)) warnings.push({ file: page.path, message: 'nada aparece ao rolar a página (IntersectionObserver + .reveal)' });
   if (kind === 'site') {
     const imgs = page.mediaCount + files.filter(f => /\.css$/i.test(f.path)).reduce((n, f) => n + (f.check.mediaCount || 0), 0)
       + (page.content.match(/url\(\s*["']?https?:/gi) || []).length;

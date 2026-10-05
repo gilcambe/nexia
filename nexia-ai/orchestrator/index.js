@@ -12,7 +12,8 @@
 const crypto = require('crypto');
 const { resolveProject } = require('../project-resolver');
 const { buildContext } = require('../context-engine');
-const { runAgent, createMeter } = require('./runtime');
+const { runAgent, askModel, createMeter } = require('./runtime');
+const kit = require('../site-kit');
 const { WEB, checkWebFiles, fmt } = require('./web-check');
 const { evaluateGates, verdict } = require('./gates');
 const { normalize } = require('../text');
@@ -69,12 +70,15 @@ function planFor(intent, message) {
   const sp = specialistFor(message);
   const P = (agent, goal, action) => ({ agent, goal, action });
   switch (intent) {
+    // ADR-Q-04: site/sistema novo → o Designer escreve o spec (JSON) e o NEXIA Site Kit gera o código.
     case 'change': return [
-      buildKind(message)
-        ? P('designer', 'Definir fontes, cores, seções e buscar fotos/vídeos reais', 'agent:analyze')
-        : P('architect', 'Analisar o pedido, localizar arquivos e propor a mudança mínima', 'agent:analyze'),
-      P('coder', 'Criar a branch de trabalho "nexia/..."', 'create_branch'),
-      P(sp, 'Implementar a mudança na branch de trabalho', 'agent:implement'),
+      ...(buildKind(message)
+        ? [P('coder', 'Criar a branch de trabalho "nexia/..."', 'create_branch'),
+          P('designer', 'Escrever textos, fontes, cores e seções e buscar fotos reais (spec do Site Kit)', 'design_spec'),
+          P(sp, 'Gerar o código com o NEXIA Site Kit e salvar na branch', 'agent:implement')]
+        : [P('architect', 'Analisar o pedido, localizar arquivos e propor a mudança mínima', 'agent:analyze'),
+          P('coder', 'Criar a branch de trabalho "nexia/..."', 'create_branch'),
+          P(sp, 'Implementar a mudança na branch de trabalho', 'agent:implement')]),
       P('reviewer', 'Revisar o diff contra o pedido', 'agent:review'),
       P('security', 'Revisar o diff quanto a segurança', 'agent:security'),
       P('devops', 'Abrir o PR (rascunho) para a branch padrão', 'create_pr'),
@@ -206,6 +210,102 @@ function createOrchestrator(deps) {
       return { ...out, ids: idList };
     };
 
+    // ── ADR-Q-04: NEXIA Site Kit ──
+    const kitKind = plan.some(p => p.action === 'design_spec') ? buildKind(message) : null;
+    const specPathOf = () => { const d = steps.find((s, k) => plan[k] && plan[k].action === 'design_spec'); const m = d && /spec: (\S+nexia-spec\.json)/.exec(d.summary || ''); return m ? m[1] : null; };
+
+    /** Foto (ou vídeo) para cada lugar do spec: sem repetir, e só links que abrem de verdade. */
+    const resolveMedia = async spec => {
+      const media = {}, used = new Set(), cache = new Map(), idList = [];
+      const slots = kit.mediaQueries(spec);
+      const keyOf = s => `${s.kind || 'image'}|${s.query}|${s.orientation || ''}`;
+      const need = {};
+      slots.forEach(s => { need[keyOf(s)] = (need[keyOf(s)] || 0) + 1; });
+      const search = async s => {
+        const k = keyOf(s);
+        if (!cache.has(k)) {
+          const r = await tool(ctx, state, 'designer', s.kind === 'video' ? 'media.search_videos' : 'media.search_images',
+            { query: s.query, count: Math.min(need[k] + 2, 12), ...(s.orientation ? { orientation: s.orientation } : {}) });
+          idList.push(...ids(r));
+          cache.set(k, r.status === 'succeeded' ? (r.result.images || r.result.videos || []) : []);
+        }
+        return cache.get(k);
+      };
+      const fallback = slots.find(s => s.kind !== 'video');
+      let checks = 40;
+      for (const s of slots) {
+        let list = await search(s);
+        // Vídeo do Commons nem sempre combina com o negócio: vídeo de fundo só do Pexels; senão a foto do hero anima.
+        if (s.kind === 'video') list = list.filter(m => m.provider === 'pexels');
+        else if (!list.filter(m => !used.has(m.url)).length && fallback && fallback !== s) list = await search({ ...fallback, orientation: undefined });
+        for (const m of list) {
+          if (used.has(m.url)) continue;
+          used.add(m.url);
+          if (checks-- > 0 && !(await reachable(m.url))) continue;
+          media[s.slot] = m;
+          break;
+        }
+      }
+      return { media, ids: idList };
+    };
+
+    /** O modelo escreve o spec (JSON, uma chamada, sem ferramentas); fotos resolvidas aqui; spec salvo na branch. */
+    const designSpec = async i => {
+      steps[i] = { ...steps[i], status: 'running' };
+      await commit({ status: 'running' });
+      const base = kit.specPrompt({ message, kind: kitKind, project: project.name });
+      let spec = null, errs = [], model;
+      for (let attempt = 0; attempt < 2 && !spec; attempt++) {
+        const a = await askModel({ agentId: 'designer', system: kit.SPEC_SYSTEM, router, meter,
+          prompt: attempt ? `${base}\n\nSua resposta anterior teve estes problemas: ${errs.join('; ')}. Devolva o JSON completo corrigido.` : base });
+        if (a.status !== 'done') {
+          stepFail(i, { error_code: a.error_code, summary: a.text });
+          stop = { status: 'failed', error_code: a.error_code, result_summary: `O agente designer falhou: ${a.text}` };
+          return;
+        }
+        model = a.model;
+        const raw = kit.extractJson(a.text);
+        if (!raw) { errs = ['a resposta não era um objeto JSON válido']; continue; }
+        const n = kit.normalizeSpec(raw, { kind: kitKind, request: message });
+        if (n.spec) spec = n.spec; else errs = n.errors;
+      }
+      if (!spec) {
+        stepFail(i, { error_code: 'SPEC_INVALID', ...(model ? { model } : {}), summary: `Spec inválido: ${errs.join('; ')}`.slice(0, 2000) });
+        stop = { status: 'failed', error_code: 'SPEC_INVALID', result_summary: `O Designer não devolveu um spec válido: ${errs.join('; ')}`.slice(0, 4000) };
+        return;
+      }
+      const { media, ids: mediaIds } = await resolveMedia(spec);
+      const path = `${spec.folder}/nexia-spec.json`;
+      // Quem grava é o Frontend (o Designer só lê e busca fotos).
+      const r = await tool(ctx, state, 'frontend', 'github.commit_files', { branch: state.work_branch, message: `Spec do ${spec.kind === 'system' ? 'sistema' : 'site'} ${spec.name} (NEXIA Site Kit)`,
+        files: [{ path, content: `${JSON.stringify({ spec, media }, null, 2)}\n` }] });
+      steps[i] = { ...steps[i], tool_call_ids: addIds(i, mediaIds), ...(model ? { model } : {}) };
+      const providers = [...new Set(Object.values(media).map(m => m.provider))].join(', ');
+      handle(i, r, () => `${spec.name} (${spec.kind === 'system' ? 'sistema' : 'site'}): fontes ${spec.fonts.heading} + ${spec.fonts.body}; paleta ${spec.palette.primary}/${spec.palette.accent}; `
+        + (spec.kind === 'system' ? `cadastros: ${spec.entities.map(e => e.label).join(', ')}` : `seções: ${spec.sections.map(x => x.type).join(', ')}`)
+        + `; ${Object.keys(media).length} foto(s)/vídeo(s)${providers ? ` (${providers})` : ''}. spec: ${path}`);
+    };
+
+    /** Gera os arquivos com o kit a partir do spec salvo na branch e commita (determinístico). */
+    const kitRender = async i => {
+      steps[i] = { ...steps[i], status: 'running' };
+      await commit({ status: 'running' });
+      const path = specPathOf();
+      const g = path ? await tool(ctx, state, plan[i].agent, 'github.get_file', { path, ref: state.work_branch }) : null;
+      let data = null;
+      try { data = g && g.status === 'succeeded' ? JSON.parse(g.result.content) : null; } catch { data = null; }
+      const n = data && data.spec ? kit.normalizeSpec(data.spec, { kind: data.spec.kind }) : null;
+      if (!n || !n.spec) {
+        stepFail(i, { tool_call_ids: addIds(i, ids(g)), error_code: 'SPEC_INVALID', summary: `Não consegui ler o spec ${path || '(sem caminho)'} na branch.` });
+        stop = { status: 'failed', error_code: 'SPEC_INVALID', result_summary: `O spec do Site Kit não foi encontrado na branch ${state.work_branch}.` };
+        return;
+      }
+      steps[i] = { ...steps[i], tool_call_ids: addIds(i, ids(g)) };
+      const files = Object.entries(kit.render(n.spec, data.media || {})).map(([p, content]) => ({ path: p, content }));
+      const r = await tool(ctx, state, plan[i].agent, 'github.commit_files', { branch: state.work_branch, message: `Gera ${n.spec.name} com o NEXIA Site Kit`, files });
+      handle(i, r, x => `NEXIA Site Kit: ${files.map(f => f.path).join(', ')} (commit ${String(x.commit || '').slice(0, 7)})`);
+    };
+
     const readChecks = async (i, ref) => {
       const r = await tool(ctx, state, 'qa', 'github.get_checks', { ref });
       if (r.status !== 'succeeded') { handle(i, r); return null; }
@@ -216,7 +316,7 @@ function createOrchestrator(deps) {
       for (let i = 0; i < plan.length && !stop; i++) {
         if (steps[i].status === 'done' || steps[i].status === 'skipped') continue;
         const { action } = plan[i];
-        const analysis = (steps.find((s, k) => plan[k].action === 'agent:analyze') || {}).summary || '';
+        const analysis = (steps.find((s, k) => ['agent:analyze', 'design_spec'].includes(plan[k].action)) || {}).summary || '';
         const diffRef = `${repo ? repo.default_branch : 'main'}...${state.work_branch}`;
 
         if (action === 'agent:analyze' || action === 'agent:answer') {
@@ -225,6 +325,8 @@ function createOrchestrator(deps) {
             : plan[i].agent === 'designer'
               ? `Pedido do usuário: "${message}"\nTipo: ${buildKind(message) === 'system' ? 'sistema (interface de uso diário)' : 'site'}. Veja no repositório onde os arquivos vão ficar e devolva o BRIEF visual com fontes, paleta, seções e mídia real (busque fotos${buildKind(message) === 'site' ? ' — pelo menos 6' : ' se fizer sentido'}). Não altere nada.`
               : `Pedido do usuário: "${message}"\nAnalise o repositório do projeto, localize os arquivos envolvidos e descreva a mudança mínima (arquivos e o que muda). Não altere nada.`);
+        } else if (action === 'design_spec') {
+          await designSpec(i);
         } else if (action === 'create_branch') {
           const hadBranch = !!state.work_branch;   // retomada: a branch pode já ter sido criada
           const branch = state.work_branch || `nexia/${slug(message)}-${state.execution_id.slice(-6).toLowerCase().replace(/[^a-z0-9]/g, '')}`;
@@ -240,7 +342,10 @@ function createOrchestrator(deps) {
           const headOf = r => (r && r.status === 'succeeded' && r.result.commits.length ? r.result.commits[r.result.commits.length - 1].sha : null);
           let before = null;   // rodada de correção: exige commit novo, não basta o da rodada anterior
           if (fix) before = headOf(await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch }));
-          await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).\n${plan[0].agent === 'designer' ? 'Brief do Designer (siga fontes e paleta e use as fotos listadas; só chame media.search_* se faltar alguma)' : 'Análise do Architect'}:\n${analysis}${fix}\n\nLeia os arquivos atuais com github.get_file (ref ${state.work_branch}). Para arquivo existente use github.edit_files; para arquivo novo, github.commit_files. Tudo na branch ${state.work_branch}. Não mexa em arquivos que o pedido não envolve.`);
+          if (kitKind && !fix) await kitRender(i);
+          else {
+            await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).\n${kitKind ? 'Spec do Designer (o código foi gerado pelo NEXIA Site Kit: corrija só o que a revisão apontou, com github.edit_files, sem reescrever os arquivos inteiros)' : 'Análise do Architect'}:\n${analysis}${fix}\n\nLeia os arquivos atuais com github.get_file (ref ${state.work_branch}). Para arquivo existente use github.edit_files; para arquivo novo, github.commit_files. Tudo na branch ${state.work_branch}. Não mexa em arquivos que o pedido não envolve.`);
+          }
           if (!stop) {
             // Confirmação pela ferramenta: a branch tem que estar à frente da padrão.
             const c = await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch });
@@ -254,13 +359,20 @@ function createOrchestrator(deps) {
           // ADR-Q-02: checagem estática dos arquivos web antes da revisão por IA. Erro volta direto ao agente.
           const sc = action === 'agent:review' ? await webCheck(buildKind(message)) : null;
           let r;
-          if (sc && sc.errors.length) {
+          // Código do kit sem edição de agente: é sempre o mesmo código testado (unitários + checagem acima).
+          const kitPure = kitKind && !(state.fix_rounds > 0);
+          if (action === 'agent:security' && kitPure) {
+            stepDone(i, { summary: 'approve: código gerado pelo NEXIA Site Kit (HTML/CSS/JS estáticos testados, sem backend nem segredos; todo texto do spec é escapado). O secret scan do CI continua valendo.' });
+            r = { status: 'done', report: { verdict: 'approve', findings: [] } };
+          } else if (sc && sc.errors.length) {
             const findings = sc.errors.slice(0, 30).map(e => ({ severity: 'high', file: e.file, message: `${e.line ? `linha ${e.line}: ` : ''}${e.message}` }));
             stepDone(i, { tool_call_ids: addIds(i, sc.ids), summary: `changes_requested: checagem automática: ${fmt(sc.errors.slice(0, 30))}`.slice(0, 2000) });
             r = { status: 'done', report: { verdict: 'changes_requested', findings } };
           } else {
             const hint = sc && sc.warnings.length ? `\nA checagem automática deixou estes avisos; confira cada um e peça correção do que for problema real: ${fmt(sc.warnings.slice(0, 20))}` : '';
-            r = await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nRevise o diff ${diffRef} (github.compare com base ${repo.default_branch} e head ${state.work_branch}) e termine com report_findings.${hint}`);
+            r = await runA(i, plan[i].agent, kitPure && action === 'agent:review'
+              ? `Pedido do usuário: "${message}"\nO código foi gerado pelo NEXIA Site Kit (testado) e passou na checagem automática de HTML, CSS, JS, fontes, cores, animações e fotos. NÃO chame github.compare (o diff é grande demais). Leia só ${specPathOf()} com github.get_file (ref ${state.work_branch}) e confira se textos, seções, cadastros, contatos e pasta atendem ao pedido, sem erro de português nem conteúdo genérico. Termine com report_findings.${hint}`
+              : `Pedido do usuário: "${message}"\nRevise o diff ${diffRef} (github.compare com base ${repo.default_branch} e head ${state.work_branch}) e termine com report_findings.${hint}`);
           }
           if (r.status === 'done') {
             const v = r.report ? r.report.verdict : 'changes_requested';

@@ -114,7 +114,7 @@ test('U10. ADR-Q-03: "crie um site/sistema" passa pelo Designer; mudança num si
   assert.strictEqual(buildKind('Crie a página de contato do Site Alfa'), null);
   assert.strictEqual(buildKind('Corrija o botão de enviar do Site Alfa'), null);
   const plan = planFor('change', 'Crie um site para a padaria');
-  assert.deepStrictEqual([plan[0].agent, plan[2].agent], ['designer', 'frontend']);
+  assert.deepStrictEqual(plan.slice(0, 3).map(p => [p.agent, p.action]), [['coder', 'create_branch'], ['designer', 'design_spec'], ['frontend', 'agent:implement']]);
   assert.strictEqual(planFor('change', 'Corrija o rodapé do Site Alfa')[0].agent, 'architect');
   assert.ok(allowed('designer', 'media.search_images') && !allowed('designer', 'github.commit_files'));
   assert.ok(allowed('frontend', 'media.search_videos'));
