@@ -4,6 +4,7 @@ const { normalizeSpec, extractJson, mediaQueries, slugify, SECTION_TYPES, FIELD_
 const { renderSite } = require('./site');
 const { renderApp } = require('./app');
 const { SPEC_SYSTEM, specPrompt } = require('./prompt');
+const { qualityCheck, MIN: QUALITY_MIN } = require('./quality');
 
 /** Arquivos prontos (caminho completo dentro do repositório → conteúdo). */
 function render(spec, media = {}) {
@@ -11,4 +12,4 @@ function render(spec, media = {}) {
   return Object.fromEntries(Object.entries(files).map(([name, content]) => [`${spec.folder}/${name}`, content]));
 }
 
-module.exports = { SPEC_SYSTEM, specPrompt, render, renderSite, renderApp, normalizeSpec, extractJson, mediaQueries, slugify, SECTION_TYPES, FIELD_TYPES };
+module.exports = { qualityCheck, QUALITY_MIN, SPEC_SYSTEM, specPrompt, render, renderSite, renderApp, normalizeSpec, extractJson, mediaQueries, slugify, SECTION_TYPES, FIELD_TYPES };

@@ -4,6 +4,8 @@
 //   Fotos: Pexels (se PEXELS_API_KEY, grátis) → Openverse (sem chave, licenças CC de uso comercial)
 //          → Wikimedia Commons (sem chave).
 //   Vídeos: Pexels (se PEXELS_API_KEY) → Wikimedia Commons (webm/ogv).
+//   GIFs animados: Openverse (extension=gif) → Wikimedia Commons (image/gif), sem chave.
+//   Música e sons: Openverse áudio (Jamendo, Freesound, Wikimedia; licenças CC de uso comercial), sem chave.
 // O resultado inclui o crédito exigido pela licença; o agente põe os créditos no rodapé do site.
 const { GatewayError, CODES } = require('../errors');
 
@@ -81,9 +83,45 @@ async function pexelsVideos(deps, q, n, orientation) {
   }).filter(Boolean);
 }
 
+async function gifs(deps, q, n) {
+  const u = `https://api.openverse.org/v1/images/?q=${encodeURIComponent(q)}&page_size=${Math.min(n * 3, 20)}&license_type=commercial&mature=false&extension=gif`;
+  const d = await getJson(deps.fetchImpl, u);
+  let out = ((d && d.results) || []).filter(r => r.url && /\.gif(\?|$)/i.test(r.url) && (!r.width || r.width >= 320)).slice(0, n).map(r => ({
+    url: r.url, width: r.width || null, height: r.height || null, alt: stripHtml(r.title) || q, mime: 'image/gif',
+    license: `${String(r.license || '').toUpperCase()} ${r.license_version || ''}`.trim(),
+    credit: `${stripHtml(r.title) || 'GIF'} — ${stripHtml(r.creator) || 'autor desconhecido'} (${String(r.license || '').toUpperCase()} ${r.license_version || ''}, via Openverse)`.trim(),
+    source_page: r.foreign_landing_url || r.url, provider: 'openverse',
+  }));
+  if (out.length < n) {
+    const c = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&generator=search&gsrnamespace=6'
+      + `&gsrsearch=${encodeURIComponent(`${q} filemime:image/gif`)}&gsrlimit=${Math.min(n * 2, 20)}&prop=imageinfo&iiprop=url|size|extmetadata|mime`;
+    const cd = await getJson(deps.fetchImpl, c);
+    out = out.concat(Object.values((cd && cd.query && cd.query.pages) || {}).map(p => ({ p, ii: (p.imageinfo || [])[0] }))
+      .filter(({ ii }) => ii && ii.mime === 'image/gif' && ii.width >= 320 && ii.size < 8e6).slice(0, n - out.length).map(({ p, ii }) => {
+        const m = ii.extmetadata || {};
+        const lic = stripHtml(m.LicenseShortName && m.LicenseShortName.value) || 'ver página';
+        return { url: ii.url, width: ii.width, height: ii.height, mime: 'image/gif', alt: stripHtml(m.ImageDescription && m.ImageDescription.value) || p.title.replace(/^File:|\.\w+$/g, ''),
+          license: lic, credit: `${stripHtml(m.Artist && m.Artist.value) || 'Wikimedia Commons'} (${lic}, via Wikimedia Commons)`, source_page: ii.descriptionurl, provider: 'wikimedia' };
+      }));
+  }
+  return out;
+}
+
+async function audio(deps, q, n) {
+  const u = `https://api.openverse.org/v1/audio/?q=${encodeURIComponent(q)}&page_size=${Math.min(n * 3, 20)}&license_type=commercial&mature=false`;
+  const d = await getJson(deps.fetchImpl, u);
+  return ((d && d.results) || []).filter(r => r.url && /\.(mp3|ogg|oga|m4a|wav)(\?|$)/i.test(r.url) && (!r.duration || r.duration >= 20000)).slice(0, n).map(r => ({
+    url: r.url, title: stripHtml(r.title) || q, alt: stripHtml(r.title) || q, duration: r.duration ? Math.round(r.duration / 1000) : null,
+    mime: /\.og[ga]/i.test(r.url) ? 'audio/ogg' : /\.wav/i.test(r.url) ? 'audio/wav' : /\.m4a/i.test(r.url) ? 'audio/mp4' : 'audio/mpeg',
+    license: `${String(r.license || '').toUpperCase()} ${r.license_version || ''}`.trim(),
+    credit: `Música: ${stripHtml(r.title) || 'sem título'} — ${stripHtml(r.creator) || 'autor desconhecido'} (${String(r.license || '').toUpperCase()} ${r.license_version || ''}, via Openverse)`.trim(),
+    source_page: r.foreign_landing_url || r.url, provider: 'openverse',
+  }));
+}
+
 // O resultado vai inteiro para o modelo (cota de tokens): só o que ele usa no HTML.
 const slim = m => ({ url: m.url, width: m.width, height: m.height, alt: String(m.alt || '').slice(0, 80), credit: String(m.credit || '').slice(0, 110),
-  provider: m.provider, ...(m.poster ? { poster: m.poster } : {}), ...(m.mime ? { mime: m.mime } : {}) });
+  provider: m.provider, ...(m.title ? { title: String(m.title).slice(0, 80) } : {}), ...(m.duration ? { duration: m.duration } : {}), ...(m.poster ? { poster: m.poster } : {}), ...(m.mime ? { mime: m.mime } : {}) });
 
 const QUERY = { type: 'string', minLength: 2, maxLength: 100 };
 const ORIENT = { type: 'string', enum: ['landscape', 'portrait', 'square'] };
@@ -124,5 +162,34 @@ module.exports = [
       return { query: q, videos: videos.map(slim) };
     },
     summarizeOutput: r => `${r.videos.length} vídeo(s)`,
+  },
+  {
+    name: 'media.search_gifs', risk: 'LOW',
+    description: 'Busca GIFs animados grátis e com licença de uso comercial (Openverse, Wikimedia Commons). Busca em inglês. Devolve url, tamanho, alt e crédito.',
+    input_schema: { type: 'object', properties: { query: QUERY, count: COUNT }, required: ['query'] },
+    summarizeInput: i => `GIFs "${i.query}"`,
+    async run(deps, i) {
+      const q = String(i.query).trim();
+      if (!/[a-z]{2}/i.test(q)) throw new GatewayError(CODES.INVALID_INPUT, 'Escreva a busca em palavras, em inglês (ex.: "coffee pour").');
+      const list = await gifs(deps, q, Math.min(clampCount(i.count), 8));
+      if (!list.length) throw new GatewayError(CODES.UPSTREAM, 'Nenhum GIF encontrado agora; tente outra busca em inglês, mais simples.');
+      return { query: q, gifs: list.map(slim) };
+    },
+    summarizeOutput: r => `${r.gifs.length} GIF(s)`,
+  },
+  {
+    name: 'media.search_audio', risk: 'LOW',
+    description: 'Busca músicas e sons grátis com licença de uso comercial (Openverse: Jamendo, Freesound, Wikimedia). Busca em inglês (ex.: "calm acoustic guitar"). '
+      + 'Use num player com botão (nunca tocar sozinho) e ponha o crédito no rodapé.',
+    input_schema: { type: 'object', properties: { query: QUERY, count: COUNT }, required: ['query'] },
+    summarizeInput: i => `músicas "${i.query}"`,
+    async run(deps, i) {
+      const q = String(i.query).trim();
+      if (!/[a-z]{2}/i.test(q)) throw new GatewayError(CODES.INVALID_INPUT, 'Escreva a busca em palavras, em inglês (ex.: "calm piano").');
+      const list = await audio(deps, q, Math.min(clampCount(i.count), 8));
+      if (!list.length) throw new GatewayError(CODES.UPSTREAM, 'Nenhuma música encontrada agora; tente outra busca em inglês, mais simples.');
+      return { query: q, audio: list.map(slim) };
+    },
+    summarizeOutput: r => `${r.audio.length} música(s)`,
   },
 ];

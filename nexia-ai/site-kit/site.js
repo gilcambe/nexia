@@ -79,11 +79,49 @@ const sec = {
   },
   gallery(s, spec, media, si) {
     const imgs = s.image_queries.map((q, k) => media[`s${si}.g${k}`]).filter(Boolean);
+    // GIFs animados entram intercalados com as fotos (2º e 5º lugar).
+    (s.gif_queries || []).map((q, k) => media[`s${si}.gif${k}`]).filter(Boolean).forEach((g, k) => imgs.splice(Math.min(1 + k * 3, imgs.length), 0, g));
     if (!imgs.length) return '';
     return `<section class="section" id="${s.id}">
   <div class="container">
     ${head(s)}
     <div class="gallery">${imgs.map((m, k) => `<figure class="gallery__item reveal" style="--d:${(k % 4) * 0.06}s">${img(m, 'gallery__img', { sizes: '(max-width: 700px) 50vw, 25vw' })}</figure>`).join('')}</div>
+  </div>
+</section>`;
+  },
+  video(s, spec, media, si) {
+    const v = media[`s${si}.clip`];
+    if (!s.youtube && !v) return '';
+    const player = s.youtube
+      ? `<button class="yt" type="button" data-yt="${attr(s.youtube)}" aria-label="Assistir ao vídeo: ${attr(s.title || spec.name)}"><img src="https://i.ytimg.com/vi/${attr(s.youtube)}/hqdefault.jpg" alt="" width="480" height="360" loading="lazy" decoding="async"><span class="yt__play">${icon('play', 30)}</span></button>`
+      : `<video controls preload="metadata" playsinline${v.poster ? ` poster="${attr(v.poster)}"` : ''} width="${v.width || 1280}" height="${v.height || 720}"><source src="${attr(v.url)}" type="${attr(v.mime || 'video/mp4')}"></video>`;
+    return `<section class="section section--dark" id="${s.id}">
+  <div class="container">
+    ${head(s)}
+    <div class="player reveal">${player}</div>
+  </div>
+</section>`;
+  },
+  music(s, spec, media, si) {
+    const a = s.audio_url ? { url: s.audio_url, title: s.audio_title || s.title } : media[`s${si}.audio`];
+    if (!a) return '';
+    return `<section class="section section--alt" id="${s.id}">
+  <div class="container container--narrow">
+    ${head(s)}
+    <div class="audio reveal" data-audio>
+      <button class="audio__btn" type="button" aria-label="Tocar música">${icon('play', 22)}</button>
+      <div class="audio__info"><p class="audio__title">${icon('music', 16)} ${esc(a.title || s.audio_title || s.title || 'Música')}</p><div class="audio__bar"><span></span></div></div>
+      <span class="audio__eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+      <audio preload="none" src="${attr(a.url)}"></audio>
+    </div>
+  </div>
+</section>`;
+  },
+  links(s) {
+    return `<section class="section" id="${s.id}">
+  <div class="container container--narrow">
+    ${head(s)}
+    <div class="links">${s.items.map((l, k) => `<a class="links__item reveal" style="--d:${k * 0.05}s" href="${attr(l.url)}"${/^https?:/i.test(l.url) ? ' target="_blank" rel="noopener"' : ''}>${icon(l.icon, 22)}<span>${esc(l.label)}</span>${icon('arrow', 18)}</a>`).join('')}</div>
   </div>
 </section>`;
   },
@@ -157,7 +195,7 @@ const sec = {
   },
 };
 
-const NAV = { services: 'Serviços', about: 'Sobre', gallery: 'Galeria', team: 'Equipe', testimonials: 'Depoimentos', faq: 'Dúvidas', contact: 'Contato' };
+const NAV = { services: 'Serviços', about: 'Sobre', gallery: 'Galeria', video: 'Vídeo', music: 'Música', links: 'Links', team: 'Equipe', testimonials: 'Depoimentos', faq: 'Dúvidas', contact: 'Contato' };
 const navLabel = s => { const t = s.title.split(/[:—–-]/)[0].trim(); return t.length <= 16 ? t : NAV[s.type] || t.slice(0, 16); };
 
 function head(s) {
@@ -212,7 +250,7 @@ ${body}
     <div class="container footer__grid">
       <div><p class="brand brand--light">${esc(spec.name)}</p><p>${esc(spec.tagline)}</p></div>
       <div><h3>Contato</h3><ul>${[c.phone && `<li>${esc(c.phone)}</li>`, c.email && `<li>${esc(c.email)}</li>`, (c.address || c.city) && `<li>${esc([c.address, c.city].filter(Boolean).join(', '))}</li>`, c.hours && `<li>${esc(c.hours)}</li>`].filter(Boolean).join('')}</ul></div>
-      <div><h3>Redes</h3><p class="social">${c.instagram ? `<a href="https://instagram.com/${attr(c.instagram)}" target="_blank" rel="noopener" aria-label="Instagram">${icon('instagram')}</a>` : ''}${c.facebook ? `<a href="https://facebook.com/${attr(c.facebook)}" target="_blank" rel="noopener" aria-label="Facebook">${icon('facebook')}</a>` : ''}${c.whatsapp ? `<a href="${attr(waLink(spec))}" target="_blank" rel="noopener" aria-label="WhatsApp">${icon('whatsapp')}</a>` : ''}</p></div>
+      <div><h3>Redes</h3><p class="social">${c.instagram ? `<a href="https://instagram.com/${attr(c.instagram)}" target="_blank" rel="noopener" aria-label="Instagram">${icon('instagram')}</a>` : ''}${c.facebook ? `<a href="https://facebook.com/${attr(c.facebook)}" target="_blank" rel="noopener" aria-label="Facebook">${icon('facebook')}</a>` : ''}${c.youtube ? `<a href="${attr(c.youtube)}" target="_blank" rel="noopener" aria-label="YouTube">${icon('youtube')}</a>` : ''}${c.tiktok ? `<a href="https://www.tiktok.com/@${attr(c.tiktok)}" target="_blank" rel="noopener" aria-label="TikTok">${icon('tiktok')}</a>` : ''}${c.linkedin ? `<a href="${attr(c.linkedin)}" target="_blank" rel="noopener" aria-label="LinkedIn">${icon('linkedin')}</a>` : ''}${c.whatsapp ? `<a href="${attr(waLink(spec))}" target="_blank" rel="noopener" aria-label="WhatsApp">${icon('whatsapp')}</a>` : ''}</p></div>
     </div>
     <div class="container footer__bottom">
       <p>© <span data-year>${new Date().getFullYear()}</span> ${esc(spec.name)}. Todos os direitos reservados.</p>
@@ -401,6 +439,36 @@ p { margin: 0 0 1rem; }
 .reveal.is-visible { opacity: 1; transform: none; }
 .no-js .reveal { opacity: 1; transform: none; }
 
+/* Vídeo, música e links */
+.section--dark { background: var(--dark); color: #fff; }
+.section--dark h2, .section--dark .section__head p { color: #fff; }
+.player { border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow); aspect-ratio: 16 / 9; background: #000; }
+.player video, .player iframe, .yt { width: 100%; height: 100%; border: 0; }
+.player video { object-fit: cover; }
+.yt { position: relative; padding: 0; cursor: pointer; background: #000; display: block; }
+.yt img { width: 100%; height: 100%; object-fit: cover; opacity: .85; transition: opacity .3s, transform .6s var(--ease); }
+.yt:hover img { opacity: 1; transform: scale(1.03); }
+.yt__play { position: absolute; inset: 0; margin: auto; width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; background: var(--primary); color: #fff; box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 60%, transparent); animation: ring 2.4s infinite; }
+.audio { display: flex; align-items: center; gap: 1.1rem; padding: 1.1rem 1.4rem; border-radius: 999px; background: var(--surface); box-shadow: var(--shadow); }
+.audio__btn { flex: none; width: 56px; height: 56px; border-radius: 50%; border: 0; background: var(--primary); color: #fff; display: grid; place-items: center; cursor: pointer; transition: transform .25s var(--ease); }
+.audio__btn:hover { transform: scale(1.06); }
+.audio__info { flex: 1; min-width: 0; }
+.audio__title { margin: 0 0 .5rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: .4rem; }
+.audio__bar { height: 6px; border-radius: 6px; background: color-mix(in srgb, var(--primary) 15%, transparent); overflow: hidden; }
+.audio__bar span { display: block; height: 100%; width: 0; background: var(--primary); transition: width .3s linear; }
+.audio__eq { display: flex; align-items: flex-end; gap: 3px; height: 22px; }
+.audio__eq i { width: 4px; height: 30%; background: var(--accent); border-radius: 2px; }
+.audio.is-playing .audio__eq i { animation: eq .9s ease-in-out infinite alternate; }
+.audio.is-playing .audio__eq i:nth-child(2) { animation-delay: .2s; }
+.audio.is-playing .audio__eq i:nth-child(3) { animation-delay: .4s; }
+.audio.is-playing .audio__eq i:nth-child(4) { animation-delay: .1s; }
+.links { display: grid; gap: .9rem; }
+.links__item { display: flex; align-items: center; gap: 1rem; padding: 1.05rem 1.4rem; border-radius: var(--radius); background: var(--surface); color: var(--text); text-decoration: none; font-weight: 600; box-shadow: var(--shadow); transition: transform .25s var(--ease), background-color .25s, color .25s; }
+.links__item span { flex: 1; }
+.links__item:hover { transform: translateY(-3px); background: var(--primary); color: #fff; }
+@keyframes ring { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 60%, transparent); } 70% { box-shadow: 0 0 0 22px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+@keyframes eq { from { height: 20%; } to { height: 100%; } }
+
 @keyframes rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
 @keyframes zoom { from { transform: scale(1.12); } to { transform: scale(1); } }
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
@@ -510,6 +578,26 @@ const JS = `// Gerado pelo NEXIA Site Kit (ADR-Q-04). Sem dependências.
       form.reset();
     });
   }
+
+  // Vídeo do YouTube: só carrega o player quando a pessoa clica (página leve, sem cookies antes do clique)
+  $$('.yt').forEach(b => b.addEventListener('click', () => {
+    const f = document.createElement('iframe');
+    f.src = 'https://www.youtube-nocookie.com/embed/' + b.dataset.yt + '?autoplay=1&rel=0';
+    f.title = b.getAttribute('aria-label') || 'Vídeo';
+    f.allow = 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+    f.allowFullscreen = true;
+    b.replaceWith(f);
+  }));
+
+  // Player de música: nunca toca sozinho; botão play/pausa e barra de progresso
+  $$('[data-audio]').forEach(box => {
+    const a = $('audio', box), b = $('.audio__btn', box), bar = $('.audio__bar span', box);
+    const PLAY = b.innerHTML, PAUSE = ${JSON.stringify(icon('pause', 22))};
+    const sync = () => { const on = !a.paused; box.classList.toggle('is-playing', on); b.innerHTML = on ? PAUSE : PLAY; b.setAttribute('aria-label', on ? 'Pausar música' : 'Tocar música'); };
+    b.addEventListener('click', () => { if (a.paused) a.play().catch(() => {}); else a.pause(); });
+    a.addEventListener('play', sync); a.addEventListener('pause', sync); a.addEventListener('ended', sync);
+    a.addEventListener('timeupdate', () => { if (a.duration) bar.style.width = (a.currentTime / a.duration * 100) + '%'; });
+  });
 
   $$('[data-year]').forEach(el => { el.textContent = new Date().getFullYear(); });
 })();

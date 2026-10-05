@@ -242,16 +242,17 @@ function createOrchestrator(deps) {
         const k = keyOf(s);
         if (!cache.has(k)) {
           if (++searches > 30) return [];
-          const r = await tool(ctx, state, 'designer', s.kind === 'video' ? 'media.search_videos' : 'media.search_images',
-            { query: s.query, count: Math.min(need[k] + 2, 12), ...(s.orientation ? { orientation: s.orientation } : {}) });
+          const name = { video: 'media.search_videos', gif: 'media.search_gifs', audio: 'media.search_audio' }[s.kind] || 'media.search_images';
+          const r = await tool(ctx, state, 'designer', name,
+            { query: s.query, count: Math.min(need[k] + 2, 12), ...(s.orientation && !['gif', 'audio'].includes(s.kind) ? { orientation: s.orientation } : {}) });
           idList.push(...ids(r));
-          cache.set(k, r.status === 'succeeded' ? (r.result.images || r.result.videos || []) : []);
+          cache.set(k, r.status === 'succeeded' ? (r.result.images || r.result.videos || r.result.gifs || r.result.audio || []) : []);
         }
         return cache.get(k);
       };
       // Tema do site (ex.: "dentist dental"): foto sem relação com ele (paisagem, farmácia...) não entra.
       const words = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^a-z]+/).filter(w => w.length >= 4);
-      const hero = slots.find(s => s.kind !== 'video');
+      const hero = slots.find(s => !s.kind);
       const theme = spec.photo_theme || (hero ? words(hero.query).slice(0, 2).join(' ') : '');
       const roots = words(theme).map(w => w.slice(0, 5));
       const relevant = m => !roots.length || roots.some(r => words(`${m.alt} ${m.credit}`).some(w => w.startsWith(r)));
@@ -261,16 +262,17 @@ function createOrchestrator(deps) {
       for (const s of slots) {
         for (const q of variants(s)) {
           let list = await search({ ...s, query: q, orientation: q === s.query ? s.orientation : undefined });
-          // Vídeo do Commons nem sempre combina com o negócio: vídeo de fundo só do Pexels; senão a foto do hero anima.
-          if (s.kind === 'video') list = list.filter(m => m.provider === 'pexels');
+          // Vídeo do Commons nem sempre combina com o negócio: vídeo de FUNDO só do Pexels; senão a foto do hero anima.
+          if (s.kind === 'video' && /\.video$/.test(s.slot)) list = list.filter(m => m.provider === 'pexels');
           for (const m of list) {
-            if (used.has(m.url) || !relevant(m)) continue;
+            // Música não tem "tema" no título; foto, GIF e vídeo precisam ter a ver com o negócio.
+            if (used.has(m.url) || (s.kind !== 'audio' && !relevant(m))) continue;
             used.add(m.url);
             if (checks-- > 0 && !(await reachable(m.url))) continue;
             media[s.slot] = m;
             break;
           }
-          if (media[s.slot] || s.kind === 'video') break;
+          if (media[s.slot] || (s.kind === 'video' && /\.video$/.test(s.slot))) break;
         }
       }
       // Topo e "sobre" nunca ficam sem foto: usa outra foto boa já buscada ou empresta da galeria/serviços.
@@ -295,7 +297,8 @@ function createOrchestrator(deps) {
       await commit({ status: 'running' });
       const base = kit.specPrompt({ message, kind: kitKind, project: project.name });
       let spec = null, errs = [], model;
-      for (let attempt = 0; attempt < 2 && !spec; attempt++) {
+      // ADR-Q-05: o spec só passa se atingir o padrão mínimo de qualidade (até 3 tentativas do Designer).
+      for (let attempt = 0; attempt < 3 && !spec; attempt++) {
         const a = await askModel({ agentId: 'designer', system: kit.SPEC_SYSTEM, router, meter,
           prompt: attempt ? `${base}\n\nSua resposta anterior teve estes problemas: ${errs.join('; ')}. Devolva o JSON completo corrigido.` : base });
         if (a.status !== 'done') {
@@ -307,14 +310,27 @@ function createOrchestrator(deps) {
         const raw = kit.extractJson(a.text);
         if (!raw) { errs = ['a resposta não era um objeto JSON válido']; continue; }
         const n = kit.normalizeSpec(raw, { kind: kitKind, request: message });
-        if (n.spec) spec = n.spec; else errs = n.errors;
+        const q = n.spec ? kit.qualityCheck(n.spec, null) : null;
+        if (n.spec && !q.content.length) spec = n.spec; else errs = n.spec ? q.content : n.errors;
       }
       if (!spec) {
         stepFail(i, { error_code: 'SPEC_INVALID', ...(model ? { model } : {}), summary: `Spec inválido: ${errs.join('; ')}`.slice(0, 2000) });
         stop = { status: 'failed', error_code: 'SPEC_INVALID', result_summary: `O Designer não devolveu um spec válido: ${errs.join('; ')}`.slice(0, 4000) };
         return;
       }
-      const { media, ids: mediaIds } = await resolveMedia(spec);
+      let { media, ids: mediaIds } = await resolveMedia(spec);
+      // Faltou foto para o piso de qualidade: busca de novo só pelo tema do site, sem repetir as que já falharam.
+      let qm = kit.qualityCheck(spec, media).media;
+      if (qm.length) {
+        const again = await resolveMedia({ ...spec, sections: spec.sections.map(x => ({ ...x, image_query: '', image_queries: (x.image_queries || []).map(() => spec.photo_theme || spec.name) })) }, { keep: media });
+        media = again.media; mediaIds = [...mediaIds, ...again.ids];
+        qm = kit.qualityCheck(spec, media).media;
+      }
+      if (qm.length) {
+        stepFail(i, { tool_call_ids: addIds(i, mediaIds), error_code: 'QUALITY_BELOW_MIN', ...(model ? { model } : {}), summary: `Abaixo do padrão mínimo de qualidade: ${qm.join('; ')}`.slice(0, 2000) });
+        stop = { status: 'failed', error_code: 'QUALITY_BELOW_MIN', result_summary: `Não entreguei porque ficaria abaixo do padrão mínimo de qualidade do NEXIA: ${qm.join('; ')}. Tente de novo mais tarde (os bancos de fotos grátis podem estar fora) ou configure PEXELS_API_KEY (grátis).`.slice(0, 4000) };
+        return;
+      }
       const path = `${spec.folder}/nexia-spec.json`;
       // Quem grava é o Frontend (o Designer só lê e busca fotos).
       const r = await tool(ctx, state, 'frontend', 'github.commit_files', { branch: state.work_branch, message: `Spec do ${spec.kind === 'system' ? 'sistema' : 'site'} ${spec.name} (NEXIA Site Kit)`,
@@ -358,12 +374,14 @@ function createOrchestrator(deps) {
       }
       const raw = kit.extractJson(a.text);
       const n = raw ? kit.normalizeSpec({ ...raw, folder: cur.spec.folder }, { kind: kitKind, request: message }) : { errors: ['a resposta não era um objeto JSON válido'] };
-      const spec = n.spec || cur.spec;   // correção inválida: mantém o spec que já passou, e a revisão decide de novo
+      const below = n.spec ? kit.qualityCheck(n.spec, null).content : [];
+      if (below.length) n.errors = [`abaixo do padrão mínimo: ${below.join('; ')}`];
+      const spec = n.spec && !below.length ? n.spec : cur.spec;   // correção inválida ou pior: mantém o spec que já passou
       // Fotos: as que continuam no mesmo lugar ficam; o resto é buscado de novo.
       const { media, ids: mIds } = await resolveMedia(spec, { keep: spec === cur.spec ? cur.media : Object.fromEntries(kit.mediaQueries(spec).filter(q => cur.media[q.slot]).map(q => [q.slot, cur.media[q.slot]])) });
       steps[i] = { ...steps[i], tool_call_ids: addIds(i, mIds), model: a.model };
       const r = await kitSave(plan[i].agent, cur.path, spec, media, `Corrige ${spec.name} (spec revisado, NEXIA Site Kit)`);
-      handle(i, r, x => `Spec revisado${n.spec ? '' : ` (correção inválida: ${n.errors.join('; ')}; mantido o anterior)`} e código gerado de novo pelo kit (commit ${String(x.commit || '').slice(0, 7)})`);
+      handle(i, r, x => `Spec revisado${spec !== cur.spec ? '' : ` (correção inválida: ${n.errors.join('; ')}; mantido o anterior)`} e código gerado de novo pelo kit (commit ${String(x.commit || '').slice(0, 7)})`);
     };
 
     /** Foto que não abre no caminho do kit: troca por outra da busca e gera de novo, sem modelo. */

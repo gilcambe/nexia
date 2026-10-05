@@ -44,3 +44,19 @@ test('MD2. com PEXELS_API_KEY (grátis) a Pexels vem primeiro; vídeo escolhe mp
 test('MD3. nada encontrado (ou serviços fora): erro UPSTREAM com dica, nunca lista vazia como sucesso', async () => {
   await assert.rejects(images.run({ env: {}, fetchImpl: async () => { throw new Error('rede'); } }, { query: 'fresh bread' }), e => e.code === 'UPSTREAM');
 });
+
+test('MD5. GIFs (Openverse extension=gif) e músicas (Openverse áudio) grátis, com crédito', async () => {
+  const gifTool = tools.find(t => t.name === 'media.search_gifs');
+  const audioTool = tools.find(t => t.name === 'media.search_audio');
+  const f = fake([[/openverse\.org\/v1\/images.*extension=gif/, { results: [{ url: 'https://x.org/a.gif', width: 480, height: 270, title: 'Coffee pour', creator: 'Ana', license: 'by', license_version: '4.0' }, { url: 'https://x.org/b.jpg', width: 900 }] }],
+    [/openverse\.org\/v1\/audio/, { results: [{ url: 'https://cdn.x/song.mp3', title: 'Calm piano', creator: 'Rui', license: 'by', license_version: '3.0', duration: 125000 }, { url: 'https://cdn.x/beep.mp3', duration: 2000 }] }]]);
+  const g = await gifTool.run({ env: {}, fetchImpl: f.fetchImpl }, { query: 'coffee pour', count: 1 });
+  assert.strictEqual(g.gifs[0].url, 'https://x.org/a.gif');
+  assert.strictEqual(g.gifs[0].mime, 'image/gif');
+  assert.match(g.gifs[0].credit, /Ana .*BY 4\.0/);
+  const a = await audioTool.run({ env: {}, fetchImpl: f.fetchImpl }, { query: 'calm piano', count: 3 });
+  assert.deepStrictEqual(a.audio.map(x => x.url), ['https://cdn.x/song.mp3'], 'som curto (2 s) não serve de música');
+  assert.strictEqual(a.audio[0].duration, 125);
+  assert.match(a.audio[0].credit, /^Música: Calm piano — Rui/);
+  assert.ok(gifTool.risk === 'LOW' && audioTool.risk === 'LOW');
+});
