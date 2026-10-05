@@ -11,6 +11,9 @@ const BASE = String(process.env.BASE || '').replace(/\/+$/, '');
 const TENANT = process.env.TENANT || 'nexia';
 const REPO = process.env.REPO || 'gilcambe/nexia';
 const TASK = process.env.TASK || '';
+// Nível de autonomia do projeto de TESTE para a tarefa (vazio = não muda). 3 = o Cortex cria branch,
+// commit e PR sozinho; nunca faz merge nem deploy (deploy exige 4 e produção sempre pede aprovação).
+const AUTONOMY = /^[0-3]$/.test(process.env.AUTONOMY || '') ? Number(process.env.AUTONOMY) : null;
 const UID = 'nexia-smoke';
 const WAIT_ONBOARD_S = Number(process.env.WAIT_ONBOARD_S || 420);
 const WAIT_EXEC_S = Number(process.env.WAIT_EXEC_S || 900);
@@ -113,6 +116,13 @@ async function main() {
     report(cx.status === 200 && !!reply, 'Cortex: responder no chat', `${cx.status} ${cx.json ? (cx.json.error || `${(cx.json._meta || {}).modelUsed || ''}: ${reply}`) : cx.text}`);
 
     // Execução do orquestrador (opcional: a tarefa vem do input)
+    if (TASK && project && AUTONOMY !== null && project.autonomy_level !== AUTONOMY) {
+      const cur = await api(`/nexia/projects/${project.id}`);
+      const up = cur.json && cur.json.record
+        ? await api(`/nexia/projects/${project.id}`, { method: 'PATCH', body: { autonomy_level: AUTONOMY }, headers: { 'If-Match': `"v${cur.json.record.version}"` } })
+        : cur;
+      report(up.status === 200, 'Projeto de teste: autonomia', `${up.status} nível ${AUTONOMY}`);
+    }
     if (TASK && project) {
       const ex = await api('/nexia/executions', { method: 'POST', body: { message: TASK, project_id: project.id }, headers: { 'Idempotency-Key': `smoke-exec-${Date.now()}` } });
       const exec = ex.json && ex.json.execution;

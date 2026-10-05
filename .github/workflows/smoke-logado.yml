@@ -13,6 +13,10 @@ on:
         description: 'Tarefa para o Cortex executar no projeto de teste (vazio = não executa)'
         required: false
         default: ''
+      autonomia:
+        description: 'Autonomia do projeto de teste para a tarefa (0 a 3; vazio = não muda). 3 = cria branch, commit e PR sozinho, sem merge nem deploy'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -36,4 +40,5 @@ jobs:
         env:
           BASE: ${{ inputs.url }}
           TASK: ${{ inputs.task }}
+          AUTONOMY: ${{ inputs.autonomia }}
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
