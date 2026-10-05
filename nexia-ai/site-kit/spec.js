@@ -115,16 +115,18 @@ function normalizeSpec(raw, { kind: forcedKind, request = '' } = {}) {
 /** Lista de buscas de mídia do spec: [{ slot, query, orientation }] (o orquestrador resolve com media.search_*). */
 function mediaQueries(spec) {
   const out = [];
+  const fallback = `${spec.name} ${spec.tagline}`.trim();
+  const push = o => { const q = String(o.query || '').replace(/\s+/g, ' ').trim(); out.push({ ...o, query: (/[a-z]{2}/i.test(q) ? q : fallback || 'business').slice(0, 100) }); };
   if (spec.kind !== 'site') return out;
   for (const [si, s] of spec.sections.entries()) {
     if (s.type === 'hero') {
-      out.push({ slot: `s${si}.hero`, query: s.image_query || `${spec.name} ${spec.tagline}`.slice(0, 80), orientation: 'landscape' });
-      if (s.video_query) out.push({ slot: `s${si}.video`, query: s.video_query, kind: 'video', orientation: 'landscape' });
+      push({ slot: `s${si}.hero`, query: s.image_query || `${spec.name} ${spec.tagline}`.slice(0, 80), orientation: 'landscape' });
+      if (s.video_query) push({ slot: `s${si}.video`, query: s.video_query, kind: 'video', orientation: 'landscape' });
     }
-    if (s.type === 'about') out.push({ slot: `s${si}.about`, query: s.image_query || s.title, orientation: 'landscape' });
-    if (s.type === 'services') s.items.forEach((it, k) => out.push({ slot: `s${si}.item${k}`, query: it.image_query || it.title, orientation: 'landscape' }));
-    if (s.type === 'gallery') s.image_queries.forEach((q, k) => out.push({ slot: `s${si}.g${k}`, query: q }));
-    if (s.type === 'team') s.members.forEach((m, k) => m.image_query && out.push({ slot: `s${si}.m${k}`, query: m.image_query, orientation: 'portrait' }));
+    if (s.type === 'about') push({ slot: `s${si}.about`, query: s.image_query || s.title, orientation: 'landscape' });
+    if (s.type === 'services') s.items.forEach((it, k) => push({ slot: `s${si}.item${k}`, query: it.image_query || it.title, orientation: 'landscape' }));
+    if (s.type === 'gallery') s.image_queries.forEach((q, k) => push({ slot: `s${si}.g${k}`, query: q }));
+    if (s.type === 'team') s.members.forEach((m, k) => m.image_query && push({ slot: `s${si}.m${k}`, query: m.image_query, orientation: 'portrait' }));
   }
   return out;
 }

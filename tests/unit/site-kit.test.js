@@ -40,6 +40,8 @@ test('K3. mediaQueries: uma busca por foto do site; sistema não busca', () => {
   assert.ok(q.find(x => x.slot === 's0.hero'));
   assert.ok(q.find(x => x.slot === 's0.video' && x.kind === 'video'));
   assert.ok(q.filter(x => /\.g\d/.test(x.slot)).length === 4);
+  const long = kit.normalizeSpec({ ...SITE, sections: [{ type: 'hero', title: 'x' }, { type: 'about', title: 'Sobre '.repeat(30) }, { type: 'services', items: [{ title: '1' }] }, { type: 'faq' }] }, { kind: 'site' }).spec;
+  for (const x of kit.mediaQueries(long)) assert.ok(x.query.length >= 2 && x.query.length <= 100 && /[a-z]{2}/i.test(x.query), x.query);
   assert.deepStrictEqual(kit.mediaQueries(kit.normalizeSpec(SYSTEM, { kind: 'system' }).spec), []);
 });
 
