@@ -133,7 +133,14 @@ function createOrchestrator(deps) {
     if (Array.isArray(p.plan)) p.plan = p.plan.map(s => (typeof s.summary === 'string' ? { ...s, summary: redactSecrets(s.summary) } : s));
     return vault.Execution.update(ctx, exe.id, p, { expectedVersion: exe.version });
   }
-  const tool = (ctx, exe, agent, name, input, environment) => gateway.invoke(agentCtx(ctx, agent), { projectId: exe.project_id, tool: name, input, ...(environment ? { environment } : {}) });
+  // Entrada recusada pelo gateway (ex.: INVALID_INPUT) vira resultado "failed", como nos agentes; não derruba a execução.
+  const tool = async (ctx, exe, agent, name, input, environment) => {
+    try { return await gateway.invoke(agentCtx(ctx, agent), { projectId: exe.project_id, tool: name, input, ...(environment ? { environment } : {}) }); }
+    catch (e) {
+      if (!(e && /^[A-Z_]+$/.test(e.code || '')) || ['BUDGET_EXCEEDED', 'VERSION_CONFLICT'].includes(e.code)) throw e;
+      return { status: 'failed', error: { code: e.code, message: `${e.message}${e.details && e.details.problems ? ` ${JSON.stringify(e.details.problems).slice(0, 300)}` : ''}` } };
+    }
+  };
 
   /** Executa os passos a partir do primeiro não concluído. */
   async function advance(ctx, exe, req) {
@@ -148,6 +155,9 @@ function createOrchestrator(deps) {
     const baseUsage = exe.usage || {};   // uso acumulado antes desta rodada
     let state = { ...exe };
     let steps = exe.plan.map(s => ({ ...s }));
+    // O plano gravado pelo site (Worker) pode ser de uma versão anterior à do executor: antes do primeiro
+    // passo, os nomes de agente e objetivo seguem o plano que vai rodar de fato.
+    if (exe.status === 'planned' && steps.length === plan.length) steps = steps.map((s, k) => ({ ...s, agent: plan[k].agent, goal: plan[k].goal }));
     let stop = null;          // { status, error_code?, result_summary?, question? }
     let checks = null;
 
