@@ -216,6 +216,20 @@ test('O4c. resumo da IA com cara de secret (SHA de commit, "token: ...") é redi
   assert.match(exe.plan[0].summary, /\[redigido\]/);
 });
 
+test('O4d. agente que responde com o código em texto recebe um lembrete e salva na segunda vez', async () => {
+  await setAutonomy(3);
+  const router = scriptedRouter({
+    architect: [{ text: 'Mudar src/app.js.' }],
+    frontend: [{ text: 'Aqui está o código: <button type="submit">Enviar</button>' }, req => {
+      assert.match(req.messages.at(-1).content, /terminou sem salvar nada/);
+      return commitStep('src/app.js')(req);
+    }, { text: 'Salvo.' }],
+    reviewer: [report('approve')], security: [report('approve')],
+  });
+  const { exe } = await startAndRun(orch(router), 'Corrija o botão de enviar do Site Alfa');
+  assert.ok(exe.pull_request, JSON.stringify([exe.status, exe.error_code]));
+});
+
 test('O5. orçamento estourado para a execução com BUDGET_EXCEEDED', async () => {
   await setAutonomy(3);
   const { exe } = await startAndRun(orch(scriptedRouter({ architect: [{ text: 'x' }], coder: [commitStep('src/app.js')] })),
