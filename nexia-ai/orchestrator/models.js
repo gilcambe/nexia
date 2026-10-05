@@ -5,17 +5,19 @@
 //
 // ADR-FREE-03: o projeto não usa nada pago. O Claude (Anthropic) só entra se alguém configurar
 // ANTHROPIC_API_KEY (cobra por uso). Sem ela, valem as opções grátis, na ordem: Groq (GROQ_API_KEY),
-// Cerebras (CEREBRAS_API_KEY), Google Gemini (GEMINI_API_KEY, AI Studio) e modelos ":free" do
-// OpenRouter (OPENROUTER_API_KEY). Os nomes mudam com o tempo: NEXIA_MODELS_<CLASSE>
-// (ex.: NEXIA_MODELS_CODING="cerebras:gpt-oss-120b,groq:openai/gpt-oss-120b") troca a lista.
+// Google Gemini (GEMINI_API_KEY, AI Studio) e modelos ":free" do OpenRouter (OPENROUTER_API_KEY).
+// A Cerebras saiu: passou a pedir pagamento. Os nomes mudam com o tempo: NEXIA_MODELS_<CLASSE>
+// (ex.: NEXIA_MODELS_CODING="groq:openai/gpt-oss-120b,google:gemini-2.5-flash") troca a lista.
 const FREE = Object.freeze({
-  // Ordem pela cota grátis (out/2026): Groq e Cerebras dão centenas de pedidos por dia; o Gemini grátis
-  // dá só 20 por dia no 2.5 Flash e 0 no 3.x Pro, então fica de reserva (e para o chat).
-  reasoning: [{ provider: 'groq', model: 'openai/gpt-oss-120b' }, { provider: 'cerebras', model: 'gpt-oss-120b' },
-    { provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }],
-  coding: [{ provider: 'groq', model: 'openai/gpt-oss-120b' }, { provider: 'cerebras', model: 'gpt-oss-120b' },
-    { provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }],
-  fast: [{ provider: 'groq', model: 'openai/gpt-oss-20b' }, { provider: 'cerebras', model: 'gpt-oss-120b' },
+  // Ordem pela cota grátis (out/2026). Na Groq a cota é por modelo, então vários modelos dela
+  // somam cotas; o Gemini grátis dá só 20 pedidos por dia no 2.5 Flash, então fica de reserva.
+  reasoning: [{ provider: 'groq', model: 'openai/gpt-oss-120b' }, { provider: 'groq', model: 'moonshotai/kimi-k2-instruct-0905' },
+    { provider: 'groq', model: 'llama-3.3-70b-versatile' }, { provider: 'google', model: 'gemini-2.5-flash' },
+    { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }],
+  coding: [{ provider: 'groq', model: 'openai/gpt-oss-120b' }, { provider: 'groq', model: 'moonshotai/kimi-k2-instruct-0905' },
+    { provider: 'groq', model: 'llama-3.3-70b-versatile' }, { provider: 'google', model: 'gemini-2.5-flash' },
+    { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }],
+  fast: [{ provider: 'groq', model: 'openai/gpt-oss-20b' }, { provider: 'groq', model: 'llama-3.1-8b-instant' },
     { provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }],
 });
 
