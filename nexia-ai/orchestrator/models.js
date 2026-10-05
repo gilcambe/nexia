@@ -11,14 +11,15 @@
 const FREE = Object.freeze({
   // Ordem pela cota grátis (out/2026). Na Groq a cota é por modelo, então vários modelos dela
   // somam cotas; o Gemini grátis dá só 20 pedidos por dia no 2.5 Flash, então fica de reserva.
-  reasoning: [{ provider: 'groq', model: 'openai/gpt-oss-120b' }, { provider: 'groq', model: 'moonshotai/kimi-k2-instruct-0905' },
-    { provider: 'groq', model: 'llama-3.3-70b-versatile' }, { provider: 'google', model: 'gemini-2.5-flash' },
+  reasoning: [{ provider: 'groq', model: 'openai/gpt-oss-120b' }, { provider: 'groq', model: 'qwen/qwen3.8-27b' },
+    { provider: 'groq', model: 'openai/gpt-oss-20b' }, { provider: 'google', model: 'gemini-2.5-flash' },
     { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }],
-  coding: [{ provider: 'groq', model: 'openai/gpt-oss-120b' }, { provider: 'groq', model: 'moonshotai/kimi-k2-instruct-0905' },
-    { provider: 'groq', model: 'llama-3.3-70b-versatile' }, { provider: 'google', model: 'gemini-2.5-flash' },
+  coding: [{ provider: 'groq', model: 'openai/gpt-oss-120b' }, { provider: 'groq', model: 'qwen/qwen3.8-27b' },
+    { provider: 'groq', model: 'openai/gpt-oss-20b' }, { provider: 'google', model: 'gemini-2.5-flash' },
     { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }],
-  fast: [{ provider: 'groq', model: 'openai/gpt-oss-20b' }, { provider: 'groq', model: 'llama-3.1-8b-instant' },
-    { provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }],
+  fast: [{ provider: 'groq', model: 'openai/gpt-oss-20b' }, { provider: 'groq', model: 'qwen/qwen3.8-27b' },
+    { provider: 'groq', model: 'openai/gpt-oss-120b' }, { provider: 'google', model: 'gemini-2.5-flash' },
+    { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }],
 });
 
 const CLASSES = Object.freeze({
