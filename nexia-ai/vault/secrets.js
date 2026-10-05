@@ -50,4 +50,15 @@ function detectSecret(text) {
   return hits;
 }
 
-module.exports = { detectSecret, shannonEntropy, DETECTORS };
+/**
+ * Troca por "[redigido]" os trechos que parecem secrets. Para texto livre escrito por IA
+ * (resumos de etapas), onde recusar a gravação inteira derrubaria a execução.
+ */
+function redactSecrets(text) {
+  if (typeof text !== 'string' || !text) return text;
+  let out = text;
+  for (const [, re] of DETECTORS) out = out.replace(new RegExp(re.source, re.flags.includes('g') ? re.flags : `${re.flags}g`), '[redigido]');
+  return out.replace(/[A-Za-z0-9+/=_-]{32,}/g, tok => (looksHighEntropy(tok) ? '[redigido]' : tok));
+}
+
+module.exports = { detectSecret, redactSecrets, shannonEntropy, DETECTORS };

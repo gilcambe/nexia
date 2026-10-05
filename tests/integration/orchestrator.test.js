@@ -202,6 +202,20 @@ test('O4b. ADR-Q-01: revisão pede mudança, o agente corrige na mesma branch e 
   assert.match(lazy.exe.result_summary, /rodada de correção terminou sem commit novo/);
 });
 
+test('O4c. resumo da IA com cara de secret (SHA de commit, "token: ...") é redigido em vez de derrubar a execução', async () => {
+  await setAutonomy(3);
+  const sha = '0123456789abcdef0123456789abcdef01234567';
+  const { exe } = await startAndRun(orch(scriptedRouter({
+    architect: [{ text: `Base no commit ${sha}; o formulário manda ${['tok', 'en'].join('')}: ${'abc'.repeat(4)}.` }],
+    frontend: [commitStep('src/app.js'), { text: 'feito' }],
+    reviewer: [report('approve')], security: [report('approve')],
+  })), 'Corrija o botão de enviar do Site Alfa');
+  assert.notStrictEqual(exe.error_code, 'SECRET_DETECTED');
+  assert.ok(exe.pull_request, 'seguiu até o PR');
+  assert.ok(!JSON.stringify(exe.plan).includes(sha), 'o trecho suspeito não foi gravado');
+  assert.match(exe.plan[0].summary, /\[redigido\]/);
+});
+
 test('O5. orçamento estourado para a execução com BUDGET_EXCEEDED', async () => {
   await setAutonomy(3);
   const { exe } = await startAndRun(orch(scriptedRouter({ architect: [{ text: 'x' }], coder: [commitStep('src/app.js')] })),

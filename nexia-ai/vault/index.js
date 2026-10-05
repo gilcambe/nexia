@@ -9,10 +9,10 @@ const { createVault } = require('./repository');
 const { createExecutionContext, newExecutionId } = require('./execution');
 const { SCHEMAS, ENTITY_NAMES, SECRET_STORES, idPattern } = require('./schemas');
 const { VaultError, CODES } = require('./errors');
-const { detectSecret } = require('./secrets');
+const { detectSecret, redactSecrets } = require('./secrets');
 
 module.exports = {
   createVault, createExecutionContext, newExecutionId,
   SCHEMAS, ENTITY_NAMES, SECRET_STORES, idPattern,
-  VaultError, CODES, detectSecret,
+  VaultError, CODES, detectSecret, redactSecrets,
 };
