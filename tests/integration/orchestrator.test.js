@@ -270,7 +270,9 @@ test('O4f. ADR-Q-04: site novo: a IA escreve só o spec (JSON), as fotos vêm da
   let n = 0;
   const fetchImpl = async (url, opts) => {
     if (/api\.openverse\.org/.test(url)) {
-      const results = Array.from({ length: 6 }, () => ({ url: `https://img.test/${n++}.jpg`, width: 1600, height: 1000, title: 'foto', creator: 'Ana', license: 'by', license_version: '4.0' }));
+      const results = Array.from({ length: 6 }, (_, k) => (k === 5
+        ? { url: `https://img.test/beach${n++}.jpg`, width: 1600, height: 1000, title: 'beach landscape', creator: 'Ana', license: 'by', license_version: '4.0' }
+        : { url: `https://img.test/${n++}.jpg`, width: 1600, height: 1000, title: 'dental foto', creator: 'Ana', license: 'by', license_version: '4.0' }));
       return { ok: true, status: 200, json: async () => ({ results }) };
     }
     if (/commons\.wikimedia|api\.pexels/.test(url)) return { ok: false, status: 404, json: async () => ({}) };
@@ -286,6 +288,7 @@ test('O4f. ADR-Q-04: site novo: a IA escreve só o spec (JSON), as fotos vêm da
   assert.match(html, /Pão da Serra/);
   assert.match(html, /fonts\.googleapis\.com/);
   assert.ok(!html.includes('https://img.test/1.jpg'), 'foto fora do ar não entra');
+  assert.ok(!/img\.test\/beach/.test(html), 'foto sem relação com o tema do site não entra');
   assert.strictEqual(new Set(html.match(/https:\/\/img\.test\/\d+\.jpg/g)).size, html.match(/<img [^>]*src="https:\/\/img\.test/g).length, 'nenhuma foto repetida');
   assert.ok(fake.fileAt(exe.work_branch, 'demos/pao/styles.css').includes(':root'));
   assert.ok(fake.fileAt(exe.work_branch, 'demos/pao/script.js').includes('IntersectionObserver'));
@@ -308,7 +311,7 @@ test('O4h. ADR-Q-04: foto que deixa de abrir é trocada sem modelo; correção p
   let n = 0;
   const fetchImpl = async (url, opts) => {
     if (/api\.openverse\.org/.test(url)) {
-      const results = Array.from({ length: 6 }, () => ({ url: `https://img.test/${n++}.jpg`, width: 1600, height: 1000, title: 'foto', creator: 'Ana', license: 'by', license_version: '4.0' }));
+      const results = Array.from({ length: 6 }, () => ({ url: `https://img.test/${n++}.jpg`, width: 1600, height: 1000, title: 'dental foto', creator: 'Ana', license: 'by', license_version: '4.0' }));
       return { ok: true, status: 200, json: async () => ({ results }) };
     }
     if (/commons\.wikimedia|api\.pexels/.test(url)) return { ok: false, status: 404, json: async () => ({}) };

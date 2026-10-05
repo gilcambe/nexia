@@ -93,7 +93,7 @@ function normalizeSpec(raw, { kind: forcedKind, request = '' } = {}) {
     body: okFont(rf.body) ? rf.body.trim() : 'Inter' };
   const contact = r.contact && typeof r.contact === 'object' ? r.contact : {};
   const spec = {
-    kind, name, tagline: str(r.tagline, 160), description: str(r.description, 300) || str(r.tagline, 160),
+    kind, name, tagline: str(r.tagline, 160), photo_theme: str(r.photo_theme, 40), description: str(r.description, 300) || str(r.tagline, 160),
     folder: safeFolder([((request.match(/\b(?:pasta|diret[oó]rio|folder)\s+(?:nova\s+)?([A-Za-z0-9_-][A-Za-z0-9._-]*\/[A-Za-z0-9._/-]*)/i) || [])[1] || '').replace(/[./]+$/, ''), r.folder], name),
     fonts, palette: palette(r.palette), style: STYLES.includes(r.style) ? r.style : 'modern',
     contact: { whatsapp: str(contact.whatsapp, 20).replace(/\D/g, ''), phone: str(contact.phone, 30), email: str(contact.email, 80), address: str(contact.address, 160),

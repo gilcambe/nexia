@@ -370,6 +370,7 @@ p { margin: 0 0 1rem; }
 .field input:focus, .field textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 18%, transparent); }
 .field.is-invalid input, .field.is-invalid textarea { border-color: #c0392b; }
 .field__err { color: #c0392b; min-height: 1em; }
+[hidden] { display: none !important; }
 .form__ok { display: flex; gap: .5rem; align-items: center; color: var(--primary); font-weight: 600; margin: 0; animation: rise .5s var(--ease); }
 
 /* Rodapé */

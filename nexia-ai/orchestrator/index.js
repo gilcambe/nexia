@@ -237,9 +237,11 @@ function createOrchestrator(deps) {
       const keyOf = s => `${s.kind || 'image'}|${s.query}|${s.orientation || ''}`;
       const need = {};
       slots.forEach(s => { need[keyOf(s)] = (need[keyOf(s)] || 0) + 1; });
+      let searches = 0;
       const search = async s => {
         const k = keyOf(s);
         if (!cache.has(k)) {
+          if (++searches > 30) return [];
           const r = await tool(ctx, state, 'designer', s.kind === 'video' ? 'media.search_videos' : 'media.search_images',
             { query: s.query, count: Math.min(need[k] + 2, 12), ...(s.orientation ? { orientation: s.orientation } : {}) });
           idList.push(...ids(r));
@@ -247,19 +249,28 @@ function createOrchestrator(deps) {
         }
         return cache.get(k);
       };
-      const fallback = slots.find(s => s.kind !== 'video');
+      // Tema do site (ex.: "dentist dental"): foto sem relação com ele (paisagem, farmácia...) não entra.
+      const words = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(/[^a-z]+/).filter(w => w.length >= 4);
+      const hero = slots.find(s => s.kind !== 'video');
+      const theme = spec.photo_theme || (hero ? words(hero.query).slice(0, 2).join(' ') : '');
+      const roots = words(theme).map(w => w.slice(0, 5));
+      const relevant = m => !roots.length || roots.some(r => words(`${m.alt} ${m.credit}`).some(w => w.startsWith(r)));
+      // Busca curta acha mais: a frase inteira, depois as 3 e 2 primeiras palavras, depois o tema.
+      const variants = s => [...new Set([s.query, s.query.split(/\s+/).slice(0, 3).join(' '), s.query.split(/\s+/).slice(0, 2).join(' '), theme].filter(q => /[a-z]{2}/i.test(q || '')))];
       let checks = 40;
       for (const s of slots) {
-        let list = await search(s);
-        // Vídeo do Commons nem sempre combina com o negócio: vídeo de fundo só do Pexels; senão a foto do hero anima.
-        if (s.kind === 'video') list = list.filter(m => m.provider === 'pexels');
-        else if (!list.filter(m => !used.has(m.url)).length && fallback && fallback !== s) list = await search({ ...fallback, orientation: undefined });
-        for (const m of list) {
-          if (used.has(m.url)) continue;
-          used.add(m.url);
-          if (checks-- > 0 && !(await reachable(m.url))) continue;
-          media[s.slot] = m;
-          break;
+        for (const q of variants(s)) {
+          let list = await search({ ...s, query: q, orientation: q === s.query ? s.orientation : undefined });
+          // Vídeo do Commons nem sempre combina com o negócio: vídeo de fundo só do Pexels; senão a foto do hero anima.
+          if (s.kind === 'video') list = list.filter(m => m.provider === 'pexels');
+          for (const m of list) {
+            if (used.has(m.url) || !relevant(m)) continue;
+            used.add(m.url);
+            if (checks-- > 0 && !(await reachable(m.url))) continue;
+            media[s.slot] = m;
+            break;
+          }
+          if (media[s.slot] || s.kind === 'video') break;
         }
       }
       return { media, ids: idList };
