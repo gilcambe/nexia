@@ -156,6 +156,8 @@ async function firebaseConfig(env, fetchImpl = (...a) => fetch(...a)) {
 
 const _resetWebConfigCache = () => { webConfigCache = null; };
 
+const BODY_COACH_PREFIX = '/body-coach';
+
 const extOf = p => { const m = /\.[^./]+$/.exec(p); return m ? m[0].toLowerCase() : ''; };
 
 async function fromAssets(assets, url, path, method) {
@@ -187,6 +189,12 @@ async function serveStatic(request, url, env) {
   // Caminho com extensão que não existe → 404 (sem SPA fallback); .html legado cai no SPA.
   const ext = extOf(safePath);
   if (ext && ext !== '.html') return notFound(404);
+  // ADR-CLONE-02: NEXIA Body Coach é outro SPA, montado em /body-coach/ (apps/body-coach).
+  // Rotas dele (ex.: /body-coach/workout) caem no index.html dele, não no do site principal.
+  if (safePath === BODY_COACH_PREFIX || safePath.startsWith(BODY_COACH_PREFIX + '/')) {
+    const bc = await fromAssets(assets, url, BODY_COACH_PREFIX + '/index.html', request.method);
+    return bc || notFound(404);
+  }
   const index = await fromAssets(assets, url, '/index.html', request.method);
   return index || notFound(404);
 }

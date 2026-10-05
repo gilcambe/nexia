@@ -64,6 +64,8 @@ jobs:
         run: npm run test:rules
       - name: Build
         run: npm run build
+      - name: Build do NEXIA Body Coach (apps/body-coach, servido em /body-coach/)
+        run: npm run build:body-coach
       - name: Playwright (servidor local, nunca produção; regressão + suíte original do READDY)
         run: |
           npx playwright install --with-deps chromium

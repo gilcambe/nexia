@@ -10,6 +10,8 @@ const { DEFAULT_EXTENSIONS } = require('../lib/safe-path');
 
 const ROOT = path.join(__dirname, '..');
 const DEST = path.join(ROOT, '.worker-assets');
+// ADR-CLONE-02: NEXIA Body Coach (apps/body-coach), compilado em dist/ e servido em /body-coach/.
+const BODY_COACH_DIST = path.join(ROOT, 'apps', 'body-coach', 'dist');
 
 function copyTree(src, dest) {
   let n = 0;
@@ -32,6 +34,8 @@ function build() {
   fs.rmSync(DEST, { recursive: true, force: true });
   let total = copyTree(path.join(ROOT, 'out'), DEST);
   for (const dir of PUBLIC_DIRS) total += copyTree(path.join(ROOT, dir), path.join(DEST, dir));
+  if (!fs.existsSync(path.join(BODY_COACH_DIST, 'index.html'))) throw new Error('apps/body-coach/dist/index.html não existe: rode "npm run build:body-coach" antes.');
+  total += copyTree(BODY_COACH_DIST, path.join(DEST, 'body-coach'));
   return total;
 }
 
