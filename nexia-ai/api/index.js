@@ -18,6 +18,7 @@ const { createOrchestrator } = require('../orchestrator');
 const { collectMetrics } = require('../observability');
 const { createBridgeTokens, ingestEvents, bearerOf, MAX_EVENTS } = require('../bridge-sync');
 const { createJobs, sweepAllTenants, JobError } = require('../jobs');
+const { duplicateTenant } = require('../tenant-copy');
 
 const RESOURCES = { clients: 'Client', projects: 'Project', repos: 'Repository', environments: 'Environment', 'tool-policies': 'ToolPolicy' };
 const INVOKE_STATUS = { succeeded: 200, pending_approval: 202, denied: 403, failed: 422, rejected: 409, running: 202, expired: 409 };
@@ -141,6 +142,32 @@ function createHandler(deps = {}) {
       if (parts[0] === 'me' && parts.length === 1 && method === 'GET') {
         return json(event, 200, { uid: auth.uid, role: auth.role, tenantSlug: auth.tenantSlug || (isMaster ? 'nexia' : null),
           canUseVault: isMaster || (auth.role === 'admin' && !!auth.tenantSlug) });
+      }
+
+      // ADR-CLONE-01: duplicar tenant (só master). Copia configuração com ids novos; nunca segredos, pessoas,
+      // execuções, auditoria ou cobrança. { new_tenant, name?, include?: [...], dry_run?: true }
+      if (parts[0] === 'tenants' && parts.length === 3 && parts[2] === 'duplicate') {
+        if (method !== 'POST') return json(event, 405, { error: 'Método não permitido.' });
+        if (!isMaster) return json(event, 403, { error: 'Duplicar tenant é só para master.' });
+        let b = {};
+        try { b = JSON.parse(event.body || '{}'); } catch { return json(event, 400, { error: 'JSON inválido.' }); }
+        if (!b || typeof b !== 'object' || Array.isArray(b)) return json(event, 400, { error: 'Corpo inválido.' });
+        const dryRun = b.dry_run === true || ['1', 'true'].includes(String(q.dry_run || ''));
+        const actor = { type: 'user', id: auth.uid };
+        // No Worker grátis (NEXIA_JOBS=github), cria o tenant novo como "queued" e a cópia roda no GitHub Actions (ADR-FREE-02).
+        const stage = !dryRun && jobs.enabled ? 'prepare' : 'all';
+        const ddb = deps.db || require('../../netlify/functions/firebase-init').db;
+        // Fila que falhou ao disparar: repetir o pedido só reenfileira o tenant que já está "queued".
+        if (stage === 'prepare' && TENANT_RE.test(String(b.new_tenant || '')) && TENANT_RE.test(parts[1])) {
+          const cur = await ddb.collection('tenants').doc(b.new_tenant).get();
+          if (cur.exists && cur.data().duplicationStatus === 'queued' && cur.data().duplicatedFrom === parts[1]) {
+            return json(event, 202, { queued: true, requeued: true, target: b.new_tenant, job: await queue({ kind: 'tenant.duplicate', tenant: parts[1], actor, target: b.new_tenant }) });
+          }
+        }
+        const r = await duplicateTenant({ db: ddb, vault: getVault(), source: parts[1],
+          target: b.new_tenant, name: b.name, include: b.include, dryRun, stage, actor });
+        if (stage === 'prepare') return json(event, 202, { ...r, job: await queue({ kind: 'tenant.duplicate', tenant: parts[1], actor, target: r.target }) });
+        return json(event, dryRun ? 200 : 201, r, r.execution_id ? { 'X-Execution-Id': r.execution_id } : {});
       }
 
       // Tenant: master escolhe (header X-Tenant-Id ou ?tenant=); admin só o próprio.

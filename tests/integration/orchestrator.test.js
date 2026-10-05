@@ -331,6 +331,39 @@ test('O4h. ADR-Q-04: foto que deixa de abrir é trocada sem modelo; correção p
   assert.deepStrictEqual(router.seen.filter(s => ['frontend', 'security'].includes(s.agent)), []);
 });
 
+test('O4i. ADR-CLONE-01: "crie um site igual ao https://..." começa da base visual do site de referência (só design)', async () => {
+  await setAutonomy(3);
+  const { SITE_EXAMPLE } = require('../../nexia-ai/site-kit/prompt');
+  const spec = { ...SITE_EXAMPLE, name: 'Pão da Serra', folder: 'demos/pao-ref', photo_theme: 'bakery bread' };
+  const base = { source: { host: 'referencia.example' }, style: 'bold', fonts: { heading: 'Sora', body: 'DM Sans' },
+    palette: { primary: '#c0392b', accent: '#2980b9', bg: '#fffdf8', surface: '#ffffff', text: '#222222', muted: '#666666', dark: '#111111' },
+    sections: ['hero', 'testimonials', 'services', 'about', 'gallery', 'faq', 'contact'].map(type => ({ type })) };
+  const asked = [];
+  const designFetcher = async url => { asked.push(url); return { base, source: { host: 'referencia.example', url } }; };
+  const router = scriptedRouter({
+    designer: [req => {
+      assert.match(req.messages[0].content, /Base visual obrigatória/);
+      assert.match(req.messages[0].content, /NÃO copie textos/);
+      return { text: JSON.stringify(spec) };
+    }],
+    reviewer: [report('approve')],
+  });
+  const fetchImpl = async (url, opts) => (/api\.openverse\.org/.test(url)
+    ? { ok: true, status: 200, json: async () => ({ results: Array.from({ length: 12 }, (_, k) => ({ url: `https://img.test/r${k}-${Math.random()}.jpg`, width: 1600, height: 1000, title: 'bakery bread', creator: 'Ana', license: 'by', license_version: '4.0' })) }) }
+    : /commons\.wikimedia|api\.pexels/.test(url) ? { ok: false, status: 404, json: async () => ({}) } : fake.fetchImpl(url, opts));
+  const gw = createGateway({ db, vault, env: fake.env, fetchImpl });
+  const { exe } = await startAndRun(orch(router, { gateway: gw, designFetcher, fetchImpl: async () => ({ status: 206, body: null }) }),
+    'Crie um site igual ao https://referencia.example/ para a padaria Pão da Serra');
+  assert.deepStrictEqual(asked, ['https://referencia.example/']);
+  assert.ok(exe.pull_request, JSON.stringify([exe.status, exe.result_summary]));
+  assert.match(exe.plan[1].summary, /base visual de referencia\.example/);
+  const saved = JSON.parse(fake.fileAt(exe.work_branch, 'demos/pao-ref/nexia-spec.json')).spec;
+  assert.deepStrictEqual([saved.palette.primary, saved.fonts.heading, saved.style], ['#c0392b', 'Sora', 'bold']);
+  assert.deepStrictEqual(saved.sections.slice(0, 2).map(x => x.type), ['hero', 'testimonials'], 'ordem das seções do site de referência');
+  assert.strictEqual(saved.name, 'Pão da Serra', 'conteúdo é do pedido, não do site de referência');
+  assert.ok(fake.fileAt(exe.work_branch, 'demos/pao-ref/styles.css').includes('#c0392b'));
+});
+
 test('O4g. 413 (pedido maior que a cota por minuto): o mesmo modelo é chamado de novo com menos tokens', async () => {
   await setAutonomy(3);
   const big = Object.assign(new Error('groq 413'), { code: 'UPSTREAM', details: { status: 413, upstream: 'Request too large' } });

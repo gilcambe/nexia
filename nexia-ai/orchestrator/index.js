@@ -14,6 +14,7 @@ const { resolveProject } = require('../project-resolver');
 const { buildContext } = require('../context-engine');
 const { runAgent, askModel, createMeter } = require('./runtime');
 const kit = require('../site-kit');
+const cloner = require('../cloner');
 const { WEB, checkWebFiles, fmt } = require('./web-check');
 const { evaluateGates, verdict } = require('./gates');
 const { normalize } = require('../text');
@@ -34,8 +35,10 @@ const INTENT_RULES = [
   ['status', /\b(status|pendente|pendencias|o que mudou|ultimo deploy|quais|liste|mostre|compare|resuma)\b/],
   ['change', /\b(corrij\w*|corrigir|implement\w*|alter\w*|adicion\w*|crie|criar|remov\w*|aument\w*|diminu\w*|mud\w*|ajust\w*|consert\w*|refator\w*|troqu\w*|troca\w*|fix)\b/],
 ];
+// Endereços no pedido (ex.: site de referência) não contam: "https://x.com/workflow" não é pipeline nem "app.x.com" é sistema.
+const withoutUrls = message => String(message || '').replace(/\bhttps?:\/\/\S+|\bwww\.\S+/gi, ' ');
 function classifyIntent(message) {
-  const m = normalize(message || '');
+  const m = normalize(withoutUrls(message));
   for (const [intent, re] of INTENT_RULES) {
     // Criar site ou sistema ("desenvolva um sistema", "monte uma landing") é mudança, mesmo sem os verbos da regra.
     if (intent === 'status' && buildKind(message)) return 'change';
@@ -50,10 +53,11 @@ const wantsStaging = message => /\b(staging|homologa|publiqu\w*|publicar)\b/.tes
  * Esses pedidos passam pelo Designer e pela checagem visual obrigatória.
  */
 function buildKind(message) {
-  const m = normalize(message || '');
+  const m = normalize(withoutUrls(message));
   // O verbo precisa estar perto do substantivo ("crie um site", "desenvolva o novo painel"): "crie a página de
   // contato do Site Alfa" é mudança num site que já existe, não site novo.
-  const near = nouns => new RegExp(`\\b(cri\\w*|fa(c|z)\\w*|mont\\w*|constru\\w*|ger\\w*|desenvolv\\w*|refa(c|z)\\w*|redesenh\\w*)\\s+(\\S+\\s+){0,3}?(${nouns})\\b`).test(m);
+  // ADR-CLONE-01: "clone o site https://..." também cria site novo (só com o design do site de referência).
+  const near = nouns => new RegExp(`\\b(cri\\w*|fa(c|z)\\w*|mont\\w*|constru\\w*|ger\\w*|desenvolv\\w*|refa(c|z)\\w*|redesenh\\w*|clon\\w*|replic\\w*)\\s+(\\S+\\s+){0,3}?(${nouns})\\b`).test(m);
   if (near('sistema|painel|dashboard|admin|crm|erp|aplicativo|app|plataforma|portal')) return 'system';
   if (near('site|landing|loja virtual|e-?commerce|portfolio|hotsite')) return 'site';
   return null;
@@ -293,7 +297,11 @@ function createOrchestrator(deps) {
     const designSpec = async i => {
       steps[i] = { ...steps[i], status: 'running' };
       await commit({ status: 'running' });
-      const base = kit.specPrompt({ message, kind: kitKind, project: project.name });
+      // ADR-CLONE-01: "crie um site igual ao https://..." → base visual (cores, fontes, estilo, ordem das seções) do
+      // site de referência, lida sem navegador; nunca o conteúdo dele. Sem acesso ao site, segue sem base.
+      const refUrl = kitKind === 'site' ? cloner.designRequest(message) : null;
+      const ref = refUrl ? await (deps.designFetcher || cloner.fetchDesign)(refUrl, { fetchImpl }).catch(() => null) : null;
+      const base = kit.specPrompt({ message, kind: kitKind, project: project.name }) + (ref ? cloner.designPrompt(ref.base) : '');
       let spec = null, errs = [], model;
       for (let attempt = 0; attempt < 2 && !spec; attempt++) {
         const a = await askModel({ agentId: 'designer', system: kit.SPEC_SYSTEM, router, meter,
@@ -307,7 +315,7 @@ function createOrchestrator(deps) {
         const raw = kit.extractJson(a.text);
         if (!raw) { errs = ['a resposta não era um objeto JSON válido']; continue; }
         const n = kit.normalizeSpec(raw, { kind: kitKind, request: message });
-        if (n.spec) spec = n.spec; else errs = n.errors;
+        if (n.spec) spec = ref ? cloner.applyDesignBase(n.spec, ref.base) : n.spec; else errs = n.errors;
       }
       if (!spec) {
         stepFail(i, { error_code: 'SPEC_INVALID', ...(model ? { model } : {}), summary: `Spec inválido: ${errs.join('; ')}`.slice(0, 2000) });
@@ -323,7 +331,9 @@ function createOrchestrator(deps) {
       const providers = [...new Set(Object.values(media).map(m => m.provider))].join(', ');
       handle(i, r, () => `${spec.name} (${spec.kind === 'system' ? 'sistema' : 'site'}): fontes ${spec.fonts.heading} + ${spec.fonts.body}; paleta ${spec.palette.primary}/${spec.palette.accent}; `
         + (spec.kind === 'system' ? `cadastros: ${spec.entities.map(e => e.label).join(', ')}` : `seções: ${spec.sections.map(x => x.type).join(', ')}`)
-        + `; ${Object.keys(media).length} foto(s)/vídeo(s)${providers ? ` (${providers})` : ''}. spec: ${path}`);
+        + `; ${Object.keys(media).length} foto(s)/vídeo(s)${providers ? ` (${providers})` : ''}`
+        + (ref ? `; base visual de ${ref.source.host} (só design; textos de exemplo para trocar)` : refUrl ? '; site de referência não abriu, segui sem base visual' : '')
+        + `. spec: ${path}`);
     };
 
     const readSpec = async agent => {

@@ -12,6 +12,11 @@ const PROJECT_TYPES = ["website", "web_app", "landing_page", "saas", "api", "mob
 const slugify = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
   .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60);
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+// ADR-CLONE-01: o que pode ser copiado ao duplicar um tenant (segredos, pessoas, execuções e cobrança nunca vão).
+const DUP_OPTIONS: [string, string][] = [["settings", "Ajustes do tenant"], ["clients", "Clientes"], ["projects", "Projetos"], ["repositories", "Repositórios"],
+  ["environments", "Ambientes"], ["tool-policies", "Políticas de ferramentas"], ["robots", "Robôs"]];
+interface DupResult { dry_run: boolean; queued?: boolean; target: string; name: string; include: string[]; counts: Record<string, number>;
+  created?: Record<string, number>; omitted_fields: string[]; never_copied: string[]; job?: { queued: boolean } }
 
 interface Me { uid: string; role: string; tenantSlug: string | null; canUseVault: boolean }
 interface Client { id: string; name: string; slug: string; status: string }
@@ -40,6 +45,11 @@ export default function ProjetosPage() {
   const [newClient, setNewClient] = useState("");
   const [newProject, setNewProject] = useState("");
   const [newType, setNewType] = useState("website");
+  const [dupSource, setDupSource] = useState("");
+  const [dupTarget, setDupTarget] = useState("");
+  const [dupName, setDupName] = useState("");
+  const [dupInclude, setDupInclude] = useState<string[]>(DUP_OPTIONS.map(([k]) => k));
+  const [dupResult, setDupResult] = useState<DupResult | null>(null);
 
   const call = useCallback(async <T,>(path: string, init: RequestInit = {}): Promise<T> => {
     const token = await getToken();
@@ -137,6 +147,25 @@ export default function ProjetosPage() {
     }
   }, [call, clients, load, newClient, newProject, newType, openProject]);
 
+  const duplicate = useCallback(async (dryRun: boolean) => {
+    const source = (dupSource || me?.tenantSlug || "").trim();
+    if (!source || !dupTarget.trim()) { setError("Informe o tenant de origem e o id do tenant novo."); return; }
+    if (!dryRun && !window.confirm(`Duplicar a configuração de "${source}" para "${dupTarget.trim()}"? Segredos, usuários, execuções e cobrança não são copiados.`)) return;
+    setBusy(true);
+    setError(null);
+    setInfo(null);
+    try {
+      const r = await call<DupResult>(`/tenants/${encodeURIComponent(source)}/duplicate`, { method: "POST",
+        body: JSON.stringify({ new_tenant: dupTarget.trim(), name: dupName.trim() || undefined, include: dupInclude, dry_run: dryRun }) });
+      setDupResult(r);
+      setInfo(dryRun ? "Prévia pronta: nada foi gravado." : r.queued ? "Tenant criado; a cópia está na fila e termina em alguns minutos." : `Tenant "${r.target}" criado com a configuração copiada.`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Falha ao duplicar o tenant");
+    } finally {
+      setBusy(false);
+    }
+  }, [call, dupInclude, dupName, dupSource, dupTarget, me]);
+
   const clientName = (id: string) => clients.find((c) => c.id === id)?.name || id;
 
   return (
@@ -167,6 +196,46 @@ export default function ProjetosPage() {
         {me && !me.canUseVault && <p className="text-nexia-muted">Disponível só para master ou admin do tenant.</p>}
         {error && <p className="text-red-400 text-sm" role="alert">{error}</p>}
         {info && <p className="text-nexia-cyan text-sm" role="status" data-testid="projetos-info">{info}</p>}
+
+        {me?.role === "master" && (
+          <details className="rounded-xl border border-nexia-border bg-nexia-surface p-4 text-sm" data-testid="duplicar-tenant">
+            <summary className="cursor-pointer font-medium">Duplicar tenant (só master)</summary>
+            <p className="text-xs text-nexia-muted mt-2">
+              Copia a configuração para um tenant novo, com ids novos. Nunca copia segredos, usuários, execuções, auditoria, cobrança ou dados pessoais.
+            </p>
+            <div className="flex flex-wrap gap-2 mt-3">
+              <input value={dupSource} onChange={(e) => setDupSource(e.target.value)} placeholder={`Origem (ex.: ${me.tenantSlug || "nexia"})`}
+                className="px-3 py-2 rounded-lg bg-[#0a0a0f] border border-nexia-border text-sm" aria-label="Tenant de origem" />
+              <input value={dupTarget} onChange={(e) => setDupTarget(e.target.value.toLowerCase())} placeholder="Id do tenant novo (ex.: ces-2027)"
+                className="px-3 py-2 rounded-lg bg-[#0a0a0f] border border-nexia-border text-sm" aria-label="Id do tenant novo" />
+              <input value={dupName} onChange={(e) => setDupName(e.target.value)} placeholder="Nome (opcional)"
+                className="px-3 py-2 rounded-lg bg-[#0a0a0f] border border-nexia-border text-sm" aria-label="Nome do tenant novo" />
+            </div>
+            <div className="flex flex-wrap gap-3 mt-3">
+              {DUP_OPTIONS.map(([k, label]) => (
+                <label key={k} className="flex items-center gap-1 text-xs">
+                  <input type="checkbox" checked={dupInclude.includes(k)}
+                    onChange={(e) => setDupInclude((cur) => (e.target.checked ? [...cur, k] : cur.filter((x) => x !== k)))} />
+                  {label}
+                </label>
+              ))}
+            </div>
+            <div className="flex gap-2 mt-3">
+              <button onClick={() => duplicate(true)} disabled={busy}
+                className="px-4 py-2 text-sm rounded-lg border border-nexia-border disabled:opacity-50 cursor-pointer">Prévia</button>
+              <button onClick={() => duplicate(false)} disabled={busy}
+                className="px-4 py-2 text-sm font-medium bg-nexia-cyan text-[#0a0a0f] rounded-lg disabled:opacity-50 cursor-pointer">Duplicar</button>
+            </div>
+            {dupResult && (
+              <div className="mt-3 space-y-1 text-xs" data-testid="duplicar-resultado">
+                <Row label={dupResult.dry_run ? "Seria criado" : "Tenant novo"} value={`${dupResult.target} (${dupResult.name})`} />
+                <Row label={dupResult.created ? "Copiados" : "A copiar"} value={Object.entries(dupResult.created || dupResult.counts).map(([k, v]) => `${k}: ${v}`).join(" · ")} />
+                <Row label="Campos deixados de fora" value={dupResult.omitted_fields.slice(0, 12).join(", ") || "nenhum"} />
+                <Row label="Nunca copiado" value={dupResult.never_copied.join("; ")} />
+              </div>
+            )}
+          </details>
+        )}
 
         {me?.canUseVault && (
           <div className="grid md:grid-cols-3 gap-5">
