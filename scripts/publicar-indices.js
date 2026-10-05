@@ -38,16 +38,18 @@ async function main() {
   const building = [...existing.values()].filter(s => s === 'CREATING').length;
   if (building) console.log(`Em construção no Google: ${building}.`);
   if (dry) { for (const ix of missing) console.log(`  faltando: ${key(ix)}`); return; }
-  let ok = 0, fail = 0;
+  let ok = 0, fail = 0, skip = 0;
   for (const ix of missing) {
     const r = await fetch(`${base}/${encodeURIComponent(ix.collectionGroup)}/indexes`, {
       method: 'POST', headers: H, body: JSON.stringify({ queryScope: ix.queryScope || 'COLLECTION', fields: ix.fields }),
     });
     const j = await r.json().catch(() => ({}));
     if (r.ok || r.status === 409) ok++;
+    // Índice de um campo só: o Firestore já cria sozinho, não precisa publicar.
+    else if (r.status === 400 && /not necessary/i.test((j.error && j.error.message) || '')) skip++;
     else { fail++; console.log(`  FALHOU ${ix.collectionGroup}: ${r.status} ${(j.error && j.error.message || '').slice(0, 200)}`); }
   }
-  console.log(`Pedidos de criação aceitos: ${ok}. Falhas: ${fail}. Os índices ficam prontos em alguns minutos.`);
+  console.log(`Pedidos de criação aceitos: ${ok}. Automáticos (campo único): ${skip}. Falhas: ${fail}. Os índices ficam prontos em alguns minutos.`);
   if (fail) process.exit(1);
 }
 
