@@ -85,10 +85,10 @@ test('U4. agentes: os 10 da spec, só leitura onde deve, modelos por classe', ()
   assert.ok(allowed('devops', 'deploy.staging') && !allowed('devops', 'github.commit_files'));
   for (const a of Object.keys(AGENTS)) assert.ok(!allowed(a, 'deploy.production') && !allowed(a, 'local.terminal_run'), a);
   const router = { capabilities: d => ({ available: d.model !== 'claude-opus-5-5', tool_call: true }) };
-  assert.deepStrictEqual(candidates(router, 'reasoning', {}).map(d => d.model).slice(0, 2), ['claude-sonnet-5-5', 'gemini-3.1-pro-preview'], 'sem o primeiro, cai no próximo');
+  assert.deepStrictEqual(candidates(router, 'reasoning', {}).map(d => d.model).slice(0, 2), ['claude-sonnet-5-5', 'openai/gpt-oss-120b'], 'sem o primeiro, cai no próximo');
   // ADR-FREE-03: sem chave da Anthropic (paga), só os grátis que estiverem configurados
   const free = { capabilities: d => ({ available: ['google', 'groq'].includes(d.provider), tool_call: true }) };
-  assert.deepStrictEqual(candidates(free, 'coding', {}).map(d => `${d.provider}:${d.model}`), ['google:gemini-3.1-pro-preview', 'google:gemini-2.5-flash', 'groq:openai/gpt-oss-120b']);
+  assert.deepStrictEqual(candidates(free, 'coding', {}).map(d => `${d.provider}:${d.model}`), ['groq:openai/gpt-oss-120b', 'google:gemini-2.5-flash'], 'Groq primeiro (cota grátis maior); Gemini de reserva');
   const custom = candidates(free, 'coding', { NEXIA_MODELS_CODING: 'groq:moonshotai/kimi-k2, google:gemini-9, bad, x:y z' });
   assert.deepStrictEqual(custom.map(d => `${d.provider}:${d.model}`), ['groq:moonshotai/kimi-k2', 'google:gemini-9']);
   assert.deepStrictEqual(candidates({ capabilities: () => ({ available: false }) }, 'coding'), []);
