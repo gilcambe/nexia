@@ -13,6 +13,7 @@ const crypto = require('crypto');
 const { resolveProject } = require('../project-resolver');
 const { buildContext } = require('../context-engine');
 const { runAgent, createMeter } = require('./runtime');
+const { WEB, checkWebFiles, fmt } = require('./web-check');
 const { evaluateGates, verdict } = require('./gates');
 const { normalize } = require('../text');
 const { redactSecrets } = require('../vault/secrets');
@@ -153,6 +154,28 @@ function createOrchestrator(deps) {
       return r;
     };
 
+    // Lê os arquivos web alterados na branch e roda a checagem estática; referências locais que não
+    // estão no diff são conferidas na branch (só "não existe" vira erro).
+    const webCheck = async () => {
+      const c = await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch });
+      if (c.status !== 'succeeded') return null;
+      const idList = [...ids(c)];
+      const files = [];
+      for (const f of c.result.files.filter(x => x.status !== 'removed' && !x.sensitive && WEB.test(x.path)).slice(0, 15)) {
+        const g = await tool(ctx, state, 'qa', 'github.get_file', { path: f.path, ref: state.work_branch });
+        idList.push(...ids(g));
+        if (g.status === 'succeeded') files.push({ path: f.path, content: g.result.content });
+      }
+      if (!files.length) return null;
+      const out = checkWebFiles(files);
+      for (const m of out.missingCandidates.slice(0, 10)) {
+        const g = await tool(ctx, state, 'qa', 'github.get_file', { path: m.path, ref: state.work_branch });
+        idList.push(...ids(g));
+        if (g.status === 'failed' && g.error && /NOT_FOUND/.test(g.error.code || '')) out.errors.push({ file: m.file, line: m.line, message: `"${m.ref}" não existe na branch (crie o arquivo, use SVG/CSS no lugar ou remova a referência)` });
+      }
+      return { ...out, ids: idList };
+    };
+
     const readChecks = async (i, ref) => {
       const r = await tool(ctx, state, 'qa', 'github.get_checks', { ref });
       if (r.status !== 'succeeded') { handle(i, r); return null; }
@@ -196,7 +219,17 @@ function createOrchestrator(deps) {
             } else steps[i] = { ...steps[i], tool_call_ids: addIds(i, ids(c)), summary: `${steps[i].summary || ''}\n${c.result.ahead_by} commit(s), ${c.result.files.length} arquivo(s): ${c.result.files.map(f => f.path).slice(0, 10).join(', ')}`.trim().slice(0, 2000) };
           }
         } else if (action === 'agent:review' || action === 'agent:security') {
-          const r = await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nRevise o diff ${diffRef} (github.compare com base ${repo.default_branch} e head ${state.work_branch}) e termine com report_findings.`);
+          // ADR-Q-02: checagem estática dos arquivos web antes da revisão por IA. Erro volta direto ao agente.
+          const sc = action === 'agent:review' ? await webCheck() : null;
+          let r;
+          if (sc && sc.errors.length) {
+            const findings = sc.errors.slice(0, 30).map(e => ({ severity: 'high', file: e.file, message: `${e.line ? `linha ${e.line}: ` : ''}${e.message}` }));
+            stepDone(i, { tool_call_ids: addIds(i, sc.ids), summary: `changes_requested: checagem automática: ${fmt(sc.errors.slice(0, 30))}`.slice(0, 2000) });
+            r = { status: 'done', report: { verdict: 'changes_requested', findings } };
+          } else {
+            const hint = sc && sc.warnings.length ? `\nA checagem automática deixou estes avisos; confira cada um e peça correção do que for problema real: ${fmt(sc.warnings.slice(0, 20))}` : '';
+            r = await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nRevise o diff ${diffRef} (github.compare com base ${repo.default_branch} e head ${state.work_branch}) e termine com report_findings.${hint}`);
+          }
           if (r.status === 'done') {
             const v = r.report ? r.report.verdict : 'changes_requested';
             if (!r.report) steps[i] = { ...steps[i], summary: `sem veredito estruturado (tratado como changes_requested): ${steps[i].summary || ''}`.slice(0, 2000) };

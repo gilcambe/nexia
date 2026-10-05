@@ -26,6 +26,8 @@ const QUALITY = [
   '- Arquivo existente: use github.edit_files com trechos exatos copiados do arquivo. Arquivo novo: github.commit_files. Nunca reescreva um arquivo que você não leu inteiro.',
   '- Entregue completo e funcionando: sem "TODO", "lorem ipsum", "..." no lugar de código, links quebrados, imports que não existem nem dados inventados apresentados como reais.',
   '- Sites e telas: HTML semântico, responsivo (celular primeiro), acessível (textos alternativos, labels, contraste, foco visível, navegação por teclado), título e meta description, Open Graph, imagens com tamanho e lazy loading, sem bibliotecas desnecessárias.',
+  '- Visual de sites: paleta e fontes em variáveis CSS (:root), espaçamento consistente, estados de hover e foco, menu que funciona no celular, seções com hierarquia clara. Nada de imagem que não existe no repositório: use SVG inline, gradiente/ícone em CSS ou emoji. Botões e formulários funcionando de verdade (nunca começam desabilitados sem motivo).',
+  '- Antes de salvar HTML, confira que toda tag aberta foi fechada; o NEXIA roda uma checagem automática de HTML, CSS e JS e devolve o que estiver quebrado.',
   '- Sistemas e APIs: valide toda entrada, trate erros com mensagens claras, autentique e autorize no servidor, nunca exponha detalhes internos nem segredos.',
   '- Projeto novo: inclua README com como rodar, testar e publicar, e scripts de build/test quando houver package.json.',
   '- Se o projeto tem testes, crie ou ajuste testes para o que mudou.',
