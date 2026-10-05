@@ -61,6 +61,16 @@ function checkText(text, what) {
 /**
  * @param {{ repo: { owner, repo, default_branch? }, env?, fetchImpl?, apiBase?, now?, auth? }} o
  */
+/** Acha `find` em `text` ignorando diferenças de espaço em branco; só vale se houver exatamente 1 ocorrência. */
+function looseFind(text, find) {
+  const tokens = String(find).split(/\s+/).filter(Boolean);
+  if (!tokens.length || tokens.length > 4000) return null;
+  const re = new RegExp(tokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('\\s+'), 'g');
+  const found = [];
+  for (let m; (m = re.exec(text)) && found.length < 2;) found.push({ start: m.index, end: m.index + m[0].length });
+  return found.length === 1 ? found[0] : null;
+}
+
 function createGithubAdapter(o) {
   const repo = o.repo;
   const apiBase = o.apiBase || API;
@@ -301,8 +311,12 @@ function createGithubAdapter(o) {
         let text = f.content;
         list.forEach((e, k) => {
           const n = text.split(e.find).length - 1;
-          if (n !== 1) throw bad(`${path}: o trecho ${k + 1} aparece ${n} vez(es); precisa aparecer exatamente 1 vez (copie o texto exato do arquivo).`);
-          text = text.replace(e.find, () => e.replace);
+          if (n === 1) { text = text.replace(e.find, () => e.replace); return; }
+          // Modelos grátis erram espaço, tab ou quebra de linha ao copiar o trecho: sem cópia exata, aceita
+          // o trecho que só difere em espaços em branco, desde que ele apareça uma única vez.
+          const loose = n === 0 ? looseFind(text, e.find) : null;
+          if (!loose) throw bad(`${path}: o trecho ${k + 1} aparece ${n} vez(es); precisa aparecer exatamente 1 vez (copie o texto exato do arquivo).`);
+          text = text.slice(0, loose.start) + e.replace + text.slice(loose.end);
         });
         files.push({ path, content: text });
       }
@@ -312,4 +326,4 @@ function createGithubAdapter(o) {
   return api;
 }
 
-module.exports = { createGithubAdapter, LIMITS, WORK_BRANCH_RE, PERMS, PIPELINE_WORKFLOW };
+module.exports = { createGithubAdapter, looseFind, LIMITS, WORK_BRANCH_RE, PERMS, PIPELINE_WORKFLOW };

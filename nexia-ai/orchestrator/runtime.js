@@ -9,6 +9,7 @@
 // tenta o próximo modelo candidato. Nada é dado como feito sem confirmação da ferramenta.
 const { allowed, systemPrompt, AGENTS } = require('./agents');
 const { candidates } = require('./models');
+const { parseEditBlocks, FORMAT_HELP } = require('./edit-blocks');
 
 const RETRYABLE_TOOL = new Set(['UPSTREAM']);
 const RETRYABLE_MODEL = new Set(['UPSTREAM', 'ABORTED']);
@@ -27,16 +28,53 @@ function retryAfterMs(text) {
 const RATE_ROUNDS = 20;
 const ANSWER_CODES = new Set(['NOT_FOUND', 'UPSTREAM_NOT_FOUND']);
 // Planos grátis limitam tokens por minuto: resultados de ferramenta antigos (já usados pelo
-// modelo) seguem só no começo; os 2 mais recentes vão inteiros.
+// modelo) seguem só no começo. ADR-CORTEX-01: arquivos lidos são a exceção — o agente precisa do
+// texto exato para editar. Vale a leitura mais recente de cada caminho, inteira, até FILE_BUDGET
+// caracteres (metade a cada nível de 413); leituras repetidas e leituras anteriores a uma gravação
+// do mesmo arquivo viram uma nota curta. Sem isso o modelo perdia o arquivo e relia em loop.
 const OLD_RESULT_MAX = 1500;
+const FILE_BUDGET = 48000;   // ~12 mil tokens de arquivos inteiros no histórico
+const RESULT_HEAD = 'RESULTADO DAS FERRAMENTAS (JSON):\n';
+const capResult = body => (body.length > RESULT_MAX ? `${body.slice(0, RESULT_MAX)}…[cortado]` : body);
+const isFile = r => !!(r && r.ok && r.tool === 'github.get_file' && r.result && typeof r.result.content === 'string' && typeof r.result.path === 'string');
 function compact(messages, level = 0) {
-  // level 1+ (pedido grande demais para a cota do modelo): só o último resultado inteiro e resumos menores.
-  const keep = level ? 1 : 2;
   const max = level ? Math.max(400, OLD_RESULT_MAX >> level) : OLD_RESULT_MAX;
-  const idx = messages.map((m, i) => (m.role === 'user' && m.content.startsWith('RESULTADO DAS FERRAMENTAS') ? i : -1)).filter(i => i >= 0);
-  const old = new Set(idx.slice(0, -keep));
-  return messages.map((m, i) => (old.has(i) && m.content.length > max
-    ? { ...m, content: `${m.content.slice(0, max)}…[resultado antigo resumido; peça de novo a ferramenta se precisar]` } : m));
+  const idx = messages.map((m, i) => (m.role === 'user' && typeof m.content === 'string' && m.content.startsWith('RESULTADO DAS FERRAMENTAS') ? i : -1)).filter(i => i >= 0);
+  const last = idx[idx.length - 1];
+  // Histórico sem os resultados estruturados (formato antigo): os 2 mais recentes inteiros (1 no nível 1+).
+  const legacyOld = new Set(idx.filter(i => !Array.isArray(messages[i]._results)).slice(0, -(level ? 1 : 2)));
+  let budget = FILE_BUDGET >> level;
+  const seen = new Set();      // caminhos já mantidos numa leitura mais nova
+  const written = new Set();   // caminhos gravados depois (mais para baixo no histórico)
+  const out = messages.slice();
+  for (let j = idx.length - 1; j >= 0; j--) {
+    const i = idx[j];
+    const m = messages[i];
+    if (!Array.isArray(m._results)) {
+      if (legacyOld.has(i) && m.content.length > max) out[i] = { ...m, content: `${m.content.slice(0, max)}…[resultado antigo resumido; peça de novo a ferramenta se precisar]` };
+      continue;
+    }
+    const parts = new Array(m._results.length);
+    for (let k = m._results.length - 1; k >= 0; k--) {
+      const r = m._results[k];
+      if (r && r.ok && Array.isArray(r.paths)) for (const p of r.paths) written.add(p);
+      if (isFile(r)) {
+        const p = r.result.path;
+        const note = seen.has(p) ? '[mesmo arquivo lido de novo mais abaixo; use a leitura mais recente]'
+          : written.has(p) ? '[desatualizado: o arquivo foi alterado depois desta leitura; leia de novo na branch]' : null;
+        seen.add(p);
+        if (note) { parts[k] = { ...r, result: { ...r.result, content: note } }; continue; }
+        const len = r.result.content.length;
+        if (i === last || len <= budget) { budget -= len; parts[k] = r; continue; }
+        parts[k] = { ...r, result: { ...r.result, content: `${r.result.content.slice(0, max)}…[cortado para caber na cota; peça github.get_file de novo se precisar]` } };
+        continue;
+      }
+      const t = JSON.stringify(r);
+      parts[k] = i !== last && t.length > max ? { tool: r && r.tool, ok: r && r.ok, resumo: `${t.slice(0, max)}…[resultado antigo resumido]` } : r;
+    }
+    out[i] = { role: m.role, content: `${RESULT_HEAD}${capResult(JSON.stringify(parts))}` };
+  }
+  return out;
 }
 const toModelName = n => n.replace(/\./g, '__');
 const fromModelName = n => String(n).replace(/__/g, '.');
@@ -54,9 +92,28 @@ const REPORT_TOOL = {
 const REPORTING_AGENTS = new Set(['reviewer', 'security']);
 const WRITE_TOOLS = new Set(['github.commit_files', 'github.edit_files']);
 // Modelos grátis às vezes "respondem" com o código no texto e encerram sem salvar. Quem pode gravar
-// e ainda não gravou nada recebe um lembrete (uma vez) em vez de terminar vazio.
-const NUDGE_SAVE = 'Você terminou sem salvar nada na branch. Texto não conta: chame agora github.commit_files '
-  + '(arquivos novos) ou github.edit_files (arquivos existentes) com o conteúdo COMPLETO de cada arquivo.';
+// e ainda não gravou nada recebe até MAX_NUDGES lembretes com um exemplo concreto, e o texto com
+// blocos de edição é aplicado pelo runtime (ADR-CORTEX-01) em vez de terminar vazio.
+const MAX_NUDGES = 2;
+function nudgeSave(branch, n, cut) {
+  const b = branch || 'nexia/...';
+  const example = JSON.stringify({ branch: b, message: 'Descreve a mudança', edits: [{ path: 'caminho/do/arquivo.tsx', find: 'trecho exato copiado do arquivo', replace: 'trecho novo' }] });
+  return [
+    cut ? 'Sua resposta foi cortada pelo limite de tokens antes de terminar. Mande menos de cada vez: trechos "find" curtos e únicos, um arquivo por chamada.' : 'Você terminou sem salvar nada na branch. Texto solto não conta.',
+    `Chame agora github.edit_files (arquivo existente) assim: ${example}`,
+    'ou github.commit_files (arquivo novo, conteúdo completo).',
+    `${n > 1 ? 'Última chance: ' : ''}se a chamada de ferramenta falhar, responda SÓ com blocos neste formato (o NEXIA aplica por você na branch ${b}):\n${FORMAT_HELP}`,
+  ].join('\n');
+}
+/** Texto do resultado: começo e fim (o fim do Architect traz a lista de ARQUIVOS). */
+const clip = (t, n = 2000) => { const s = String(t || ''); return s.length <= n ? s : `${s.slice(0, Math.max(0, n - 520))}\n…\n${s.slice(-500)}`; };
+/** Argumentos que não eram JSON válido (o provedor devolve { _raw }): tenta limpar cercas e vírgulas sobrando. */
+function repairRaw(raw) {
+  const t = String(raw || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '').replace(/,\s*([}\]])/g, '$1');
+  try { const v = JSON.parse(t); return v && typeof v === 'object' && !Array.isArray(v) ? v : null; } catch { return null; }
+}
+const writtenPaths = (name, input) => (name === 'github.edit_files' ? (input.edits || []).map(e => e && e.path)
+  : name === 'github.commit_files' ? (input.files || []).map(f => f && f.path) : []).filter(p => typeof p === 'string');
 
 class BudgetError extends Error { constructor(what) { super(`Orçamento estourado: ${what}.`); this.code = 'BUDGET_EXCEEDED'; } }
 
@@ -89,6 +146,9 @@ function createMeter(budget, now = () => Date.now()) {
  * @param {object} o.ctx               contexto de execução (ator = o agente)
  * @param {string} o.projectId
  * @param {object} o.meter             createMeter(...)
+ * @param {string} [o.branch]          branch de trabalho "nexia/..." (blocos de edição em texto vão para ela)
+ * @param {string[]} [o.preload]       arquivos lidos pelo gateway antes do 1º turno (até 4)
+ * @param {string} [o.ref]             ref das leituras pré-carregadas
  * @returns {Promise<{ status: 'done'|'waiting_approval'|'failed', text?, report?, tool_call_ids, model?, error_code?, pending? }>}
  */
 async function runAgent(o) {
@@ -106,10 +166,91 @@ async function runAgent(o) {
   const failures = new Map();
   const canWrite = catalog.some(t => WRITE_TOOLS.has(t.name));
   let wrote = false;
-  let nudged = false;
+  let nudges = 0;
+  const applied = new Set();   // blocos de texto já enviados ao gateway
+  const branch = o.branch || ((/Branch de trabalho: (nexia\/\S+)/.exec(o.goal || '') || [])[1]) || null;
+  const localErrors = [];   // gravações recusadas (diagnóstico no resumo do passo quando nada foi gravado)
   const modelErrors = [];
   let rateRounds = 0;
   let shrink = 0;   // 0: 8192 tokens de resposta; 1: 4096; 2: 2048
+
+  const strike = (key, model, code, text) => {
+    const n = (failures.get(key) || 0) + 1;
+    failures.set(key, n);
+    return n >= 3 ? { stop: { status: 'failed', error_code: code, text, tool_call_ids: toolCallIds, model } } : null;
+  };
+  // Executa chamadas pelo Tool Gateway. Devolve { results } ou { stop } (fim do agente).
+  const runCalls = async (calls, out, model) => {
+    const results = [];
+    for (const call of calls) {
+      if (call.name === REPORT_TOOL.name && REPORTING_AGENTS.has(o.agentId)) {
+        const r = call.input || {};
+        if (!['approve', 'changes_requested'].includes(r.verdict) || !Array.isArray(r.findings)) { results.push({ tool: call.name, error: 'INVALID_INPUT' }); continue; }
+        return { stop: { status: 'done', report: { verdict: r.verdict, findings: r.findings.slice(0, 50) }, text: String(out.text || '').slice(0, 2000), tool_call_ids: toolCallIds, model } };
+      }
+      const name = fromModelName(call.name);
+      if (!allowed(o.agentId, name)) { results.push({ tool: name, error: 'TOOL_NOT_ALLOWED', message: `O agente ${agent.title} não usa ${name}.` }); continue; }
+      let input = call.input || {};
+      // Argumentos que não eram JSON (resposta cortada pelo limite de tokens, aspas sem escape): o erro
+      // volta ao modelo com o que fazer, em vez de um INVALID_INPUT sem explicação.
+      if (input && typeof input === 'object' && '_raw' in input) {
+        const fixed = repairRaw(input._raw);
+        if (fixed) input = fixed;
+        else {
+          const cut = out.stop_reason === 'length' || out.stop_reason === 'max_tokens';
+          results.push({ tool: name, ok: false, error: 'INVALID_JSON', message: `Os argumentos de ${name} não eram JSON válido${cut ? ' (a resposta foi cortada pelo limite de tokens)' : ''}. `
+            + `Mande menos trechos por chamada (find curto e único) e escape aspas e quebras de linha, ou responda com blocos de texto:\n${FORMAT_HELP}` });
+          localErrors.push(`${name}: INVALID_JSON`);
+          const s = strike(`${name}:INVALID_JSON`, model, 'INVALID_JSON', `A ferramenta ${name} recebeu JSON inválido 3 vezes.`);
+          if (s) return s;
+          continue;
+        }
+      }
+      o.meter.check();
+      let r;
+      for (let attempt = 0; attempt < 2; attempt++) {
+        o.meter.usage.tool_calls++;
+        try {
+          r = await o.gateway.invoke(o.ctx, { projectId: o.projectId, tool: name, input });
+        } catch (e) {
+          // Entrada recusada pelo schema antes do registro no Vault: o modelo precisa saber qual campo errou.
+          const problems = e && e.details && Array.isArray(e.details.problems) ? ` ${e.details.problems.slice(0, 5).join('; ')}` : '';
+          r = { status: 'failed', error: { code: (e && e.code) || 'TOOL_ERROR', message: `${(e && e.message) || 'erro'}${problems}` } };
+        }
+        if (r.tool_call) toolCallIds.push(r.tool_call.id);
+        if (r.status === 'failed' && RETRYABLE_TOOL.has(r.error && r.error.code) && attempt === 0) continue;
+        break;
+      }
+      if (r.status === 'pending_approval') {
+        return { stop: { status: 'waiting_approval', pending: { tool: name, tool_call_id: r.tool_call.id, reason: r.reason }, tool_call_ids: toolCallIds, model,
+          text: `Aguardando aprovação humana para ${name} (${r.reason}).` } };
+      }
+      if (r.status === 'succeeded') {
+        results.push({ tool: name, ok: true, result: r.result, ...(WRITE_TOOLS.has(name) ? { paths: writtenPaths(name, input) } : {}) });
+        if (WRITE_TOOLS.has(name)) wrote = true;
+        continue;
+      }
+      const code = (r.error && r.error.code) || (r.status === 'denied' ? 'POLICY_DENIED' : 'TOOL_ERROR');
+      results.push({ tool: name, ok: false, error: code, message: r.error ? r.error.message : r.reason });
+      if (WRITE_TOOLS.has(name)) localErrors.push(`${name}: ${code}${r.error && r.error.message ? ` (${String(r.error.message).slice(0, 160)})` : ''}`);
+      if (ANSWER_CODES.has(code)) continue;   // "não existe" é resposta (ex.: conferir se o arquivo novo já existe), não falha
+      const s = strike(`${name}:${code}`, model, code, `A ferramenta ${name} falhou 3 vezes (${code}).`);   // por ferramenta
+      if (s) return s;
+    }
+    return { results };
+  };
+  const pushResults = (assistantText, names, results) => {
+    messages.push({ role: 'assistant', content: `${assistantText ? `${assistantText}\n` : ''}[ferramentas pedidas: ${names.join(', ')}]` });
+    messages.push({ role: 'user', content: `${RESULT_HEAD}${capResult(JSON.stringify(results))}`, _results: results });
+  };
+
+  // Arquivos citados no pedido e na análise: lidos antes do 1º turno (economiza passos e cota).
+  if (Array.isArray(o.preload) && o.preload.length && allowed(o.agentId, 'github.get_file')) {
+    const calls = o.preload.slice(0, 4).map((p, k) => ({ id: `preload_${k}`, name: toModelName('github.get_file'), input: { path: p, ...(o.ref ? { ref: o.ref } : {}) } }));
+    const r = await runCalls(calls, {}, null);
+    if (r.stop) return r.stop;
+    pushResults('Lendo os arquivos citados no pedido (pré-carregados pelo NEXIA).', calls.map(() => 'github.get_file'), r.results);
+  }
 
   for (let turn = 0; turn < (agent.max_steps || 8); turn++) {
     o.meter.check();
@@ -150,55 +291,37 @@ async function runAgent(o) {
     if (cost && cost.known) o.meter.usage.cost_usd += cost.usd; else o.meter.usage.cost_known = false;
     const model = `${models[mi].provider}/${models[mi].model}`;
 
-    const calls = out.tool_calls || [];
-    if (!calls.length && canWrite && !wrote && !nudged) {
-      nudged = true;
+    let calls = out.tool_calls || [];
+    let viaText = false;
+    // ADR-CORTEX-01: sem chamada de ferramenta, blocos de edição no texto viram github.edit_files /
+    // github.commit_files na branch de trabalho, pelo gateway (política, Vault e aprovação valem igual).
+    if (!calls.length && canWrite && branch) {
+      const blocks = parseEditBlocks(out.text);
+      // O resumo final costuma repetir os blocos já aplicados: esses não vão de novo.
+      blocks.edits = blocks.edits.filter(e => !applied.has(JSON.stringify([e.path, e.find, e.replace])));
+      if (wrote) blocks.files = [];   // depois de gravar, arquivo inteiro no texto é só ilustração
+      const list = ps => [...new Set(ps)].slice(0, 3).join(', ');
+      if (blocks.edits.length) calls.push({ id: 'text_edit', name: toModelName('github.edit_files'), input: { branch, message: `${agent.title}: edição proposta em texto (${list(blocks.edits.map(e => e.path))})`, edits: blocks.edits.slice(0, 40) } });
+      if (blocks.files.length) calls.push({ id: 'text_commit', name: toModelName('github.commit_files'), input: { branch, message: `${agent.title}: arquivos propostos em texto (${list(blocks.files.map(f => f.path))})`, files: blocks.files.slice(0, 20) } });
+      calls = calls.filter(c => allowed(o.agentId, fromModelName(c.name)));
+      viaText = calls.length > 0;
+      if (!viaText && blocks.problems.length) localErrors.push(`texto: ${blocks.problems.slice(0, 2).join('; ')}`);
+    }
+    if (!calls.length && canWrite && !wrote && nudges < MAX_NUDGES) {
+      nudges++;
       messages.push({ role: 'assistant', content: String(out.text || '(sem texto)').slice(0, 4000) });
-      messages.push({ role: 'user', content: NUDGE_SAVE });
+      messages.push({ role: 'user', content: nudgeSave(branch, nudges, out.stop_reason === 'length' || out.stop_reason === 'max_tokens') });
       continue;
     }
-    if (!calls.length) return { status: 'done', text: String(out.text || '').slice(0, 2000), tool_call_ids: toolCallIds, model };
-
-    const results = [];
-    for (const call of calls) {
-      if (call.name === REPORT_TOOL.name && REPORTING_AGENTS.has(o.agentId)) {
-        const r = call.input || {};
-        if (!['approve', 'changes_requested'].includes(r.verdict) || !Array.isArray(r.findings)) { results.push({ tool: call.name, error: 'INVALID_INPUT' }); continue; }
-        return { status: 'done', report: { verdict: r.verdict, findings: r.findings.slice(0, 50) }, text: String(out.text || '').slice(0, 2000), tool_call_ids: toolCallIds, model };
-      }
-      const name = fromModelName(call.name);
-      if (!allowed(o.agentId, name)) { results.push({ tool: name, error: 'TOOL_NOT_ALLOWED', message: `O agente ${agent.title} não usa ${name}.` }); continue; }
-      o.meter.check();
-      let r;
-      for (let attempt = 0; attempt < 2; attempt++) {
-        o.meter.usage.tool_calls++;
-        try {
-          r = await o.gateway.invoke(o.ctx, { projectId: o.projectId, tool: name, input: call.input || {} });
-        } catch (e) {
-          r = { status: 'failed', error: { code: e.code || 'TOOL_ERROR', message: e.message } };
-        }
-        if (r.tool_call) toolCallIds.push(r.tool_call.id);
-        if (r.status === 'failed' && RETRYABLE_TOOL.has(r.error && r.error.code) && attempt === 0) continue;
-        break;
-      }
-      if (r.status === 'pending_approval') {
-        return { status: 'waiting_approval', pending: { tool: name, tool_call_id: r.tool_call.id, reason: r.reason }, tool_call_ids: toolCallIds, model,
-          text: `Aguardando aprovação humana para ${name} (${r.reason}).` };
-      }
-      if (r.status === 'succeeded') { results.push({ tool: name, ok: true, result: r.result }); if (WRITE_TOOLS.has(name)) wrote = true; }
-      else {
-        const code = (r.error && r.error.code) || (r.status === 'denied' ? 'POLICY_DENIED' : 'TOOL_ERROR');
-        results.push({ tool: name, ok: false, error: code, message: r.error ? r.error.message : r.reason });
-        if (ANSWER_CODES.has(code)) continue;   // "não existe" é resposta (ex.: conferir se o arquivo novo já existe), não falha
-        const key = `${name}:${code}`;   // por ferramenta: um erro de entrada numa não derruba as outras
-        const n = (failures.get(key) || 0) + 1;
-        failures.set(key, n);
-        if (n >= 3) return { status: 'failed', error_code: code, text: `A ferramenta ${name} falhou 3 vezes (${code}).`, tool_call_ids: toolCallIds, model };
-      }
+    if (!calls.length) {
+      const why = canWrite && !wrote && localErrors.length ? `\n[nada gravado; recusas: ${[...new Set(localErrors)].slice(-4).join(' | ')}]`.slice(0, 700) : '';
+      return { status: 'done', text: `${clip(out.text, 2000 - why.length)}${why}`, tool_call_ids: toolCallIds, model };
     }
-    messages.push({ role: 'assistant', content: `${out.text ? `${out.text}\n` : ''}[ferramentas pedidas: ${calls.map(c => fromModelName(c.name)).join(', ')}]` });
-    const body = JSON.stringify(results);
-    messages.push({ role: 'user', content: `RESULTADO DAS FERRAMENTAS (JSON):\n${body.length > RESULT_MAX ? `${body.slice(0, RESULT_MAX)}…[cortado]` : body}` });
+
+    const r = await runCalls(calls, out, model);
+    if (r.stop) return r.stop;
+    if (viaText) for (const e of (calls.find(c => c.id === 'text_edit') || { input: { edits: [] } }).input.edits) applied.add(JSON.stringify([e.path, e.find, e.replace]));
+    pushResults(viaText ? `${String(out.text || '').slice(0, 1500)}\n[o NEXIA aplicou os blocos de edição do texto]` : out.text, calls.map(c => fromModelName(c.name)), r.results);
   }
   return { status: 'failed', error_code: 'MAX_STEPS', text: `O agente ${agent.title} não terminou dentro do limite de passos.`, tool_call_ids: toolCallIds };
 }

@@ -76,6 +76,25 @@ function specialistFor(message) {
 
 const slug = s => normalize(s).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'tarefa';
 
+/**
+ * ADR-CORTEX-01: caminhos de arquivo citados no pedido e na análise do Architect (linha "ARQUIVOS:" primeiro).
+ * O agente que implementa começa com esses arquivos já lidos e com a lista explícita no objetivo.
+ */
+function filesIn(...texts) {
+  const out = [];
+  const add = p => {
+    const s = String(p || '').trim().replace(/^\.\//, '').replace(/[.,;:)]+$/, '');
+    if (s && !s.startsWith('/') && !s.split('/').includes('..') && /^[\w@.()[\]-]+(?:\/[\w@.()[\]-]+)+\.[A-Za-z0-9]{1,8}$/.test(s) && !out.includes(s)) out.push(s);
+  };
+  // Na ordem dos textos (pedido do usuário antes da análise); em cada um, a linha ARQUIVOS antes das menções soltas.
+  for (const t of texts) {
+    const line = /^\s*\**ARQUIVOS\**\s*:\s*(.+)$/im.exec(String(t || ''));
+    if (line) line[1].split(/[,\s]+/).map(x => x.replace(/[`*"']/g, '')).forEach(add);
+    for (const m of String(t || '').matchAll(/(?:^|[\s`'"(\[])((?:[\w@.()[\]-]+\/)+[\w@.()[\]-]+\.[A-Za-z0-9]{1,8})(?=$|[\s`'"),:;\]]|\.(?:\s|$))/gm)) add(m[1]);
+  }
+  return out.slice(0, 8);
+}
+
 // ── Planos por intenção ──────────────────────────────────────────────────────
 function planFor(intent, message) {
   const sp = specialistFor(message);
@@ -193,10 +212,10 @@ function createOrchestrator(deps) {
       return false;
     };
 
-    const runA = async (i, agentId, goal, extraCtx = '') => {
+    const runA = async (i, agentId, goal, extraCtx = '', opts = {}) => {
       steps[i] = { ...steps[i], status: 'running' };
       await commit({ status: 'running' });
-      const r = await runAgent({ agentId, goal, context: `${await getContext()}${extraCtx}`, router, gateway, ctx: agentCtx(ctx, agentId), projectId: project.id, meter });
+      const r = await runAgent({ agentId, goal, context: `${await getContext()}${extraCtx}`, router, gateway, ctx: agentCtx(ctx, agentId), projectId: project.id, meter, ...opts });
       const base = { tool_call_ids: addIds(i, r.tool_call_ids), ...(r.model ? { model: r.model } : {}) };
       if (r.status === 'done') { stepDone(i, { ...base, summary: r.report ? `${r.report.verdict}: ${r.report.findings.map(f => `[${f.severity}] ${f.file ? `${f.file}: ` : ''}${f.message}`).join(' | ') || 'sem problemas'}` : r.text }); return r; }
       if (r.status === 'waiting_approval') { stepWait(i, { ...base, summary: r.text }); stop = { status: 'waiting_approval', result_summary: `Aguardando aprovação humana em /aprovacoes: ${r.pending.tool}.` }; return r; }
@@ -446,7 +465,7 @@ function createOrchestrator(deps) {
             ? `Pedido do usuário: "${message}"\nResponda com base nas ferramentas de leitura. Cite as evidências (ids, arquivos, SHAs).`
             : plan[i].agent === 'designer'
               ? `Pedido do usuário: "${message}"\nTipo: ${buildKind(message) === 'system' ? 'sistema (interface de uso diário)' : 'site'}. Veja no repositório onde os arquivos vão ficar e devolva o BRIEF visual com fontes, paleta, seções e mídia real (busque fotos${buildKind(message) === 'site' ? ' — pelo menos 6' : ' se fizer sentido'}). Não altere nada.`
-              : `Pedido do usuário: "${message}"\nAnalise o repositório do projeto, localize os arquivos envolvidos e descreva a mudança mínima (arquivos e o que muda). Não altere nada.`);
+              : `Pedido do usuário: "${message}"\nAnalise o repositório do projeto, localize os arquivos envolvidos e descreva a mudança mínima (arquivos e o que muda). Não altere nada. Última linha: "ARQUIVOS: " e os caminhos completos de todos os arquivos a alterar, separados por vírgula.`);
         } else if (action === 'design_spec') {
           await designSpec(i);
         } else if (action === 'create_branch') {
@@ -467,14 +486,20 @@ function createOrchestrator(deps) {
           if (kitKind && !fix) await kitRender(i);
           else if (kitKind) await kitRevise(i, state.fix_feedback);
           else {
-            await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).\n${kitKind ? 'Spec do Designer (o código foi gerado pelo NEXIA Site Kit: corrija só o que a revisão apontou, com github.edit_files, sem reescrever os arquivos inteiros)' : 'Análise do Architect'}:\n${analysis}${fix}\n\nLeia os arquivos atuais com github.get_file (ref ${state.work_branch}). Para arquivo existente use github.edit_files; para arquivo novo, github.commit_files. Tudo na branch ${state.work_branch}. Não mexa em arquivos que o pedido não envolve.`);
+            // ADR-CORTEX-01: lista explícita de arquivos e os primeiros já lidos (economiza passos e cota do modelo grátis).
+            const files = filesIn(message, analysis, state.fix_feedback || '');
+            const listed = files.length ? `\nArquivos envolvidos (todos precisam ser conferidos; os primeiros já foram lidos abaixo): ${files.join(', ')}` : '';
+            await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).\n${kitKind ? 'Spec do Designer (o código foi gerado pelo NEXIA Site Kit: corrija só o que a revisão apontou, com github.edit_files, sem reescrever os arquivos inteiros)' : 'Análise do Architect'}:\n${analysis}${fix}${listed}\n\nLeia os arquivos atuais com github.get_file (ref ${state.work_branch}). Para arquivo existente use github.edit_files; para arquivo novo, github.commit_files. Tudo na branch ${state.work_branch}. Não mexa em arquivos que o pedido não envolve. Cumpra cada item do pedido em todos os arquivos citados antes de terminar.`,
+              '', { branch: state.work_branch, preload: files.slice(0, 4), ref: state.work_branch });
           }
           if (!stop) {
             // Confirmação pela ferramenta: a branch tem que estar à frente da padrão.
             const c = await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch });
             if (c.status !== 'succeeded' || !c.result.ahead_by || (before && headOf(c) === before)) {
               const why = fix ? `A rodada de correção terminou sem commit novo; a revisão continua pedindo mudanças (branch ${state.work_branch}).` : 'O agente terminou sem commit na branch de trabalho; nada foi alterado.';
-              stepFail(i, { tool_call_ids: addIds(i, ids(c)), error_code: 'NO_CHANGES', summary: fix ? 'Sem commit novo na rodada de correção.' : 'Nenhum commit na branch de trabalho; nada foi alterado.' });
+              // O que o agente disse (e as gravações recusadas) fica no passo para diagnóstico.
+              const said = steps[i].status === 'done' && steps[i].summary ? ` Agente: ${String(steps[i].summary).slice(0, 900)}` : '';
+              stepFail(i, { tool_call_ids: addIds(i, ids(c)), error_code: 'NO_CHANGES', summary: `${fix ? 'Sem commit novo na rodada de correção.' : 'Nenhum commit na branch de trabalho; nada foi alterado.'}${said}` });
               stop = { status: 'failed', error_code: 'NO_CHANGES', result_summary: why };
             } else steps[i] = { ...steps[i], tool_call_ids: addIds(i, ids(c)), summary: `${steps[i].summary || ''}\n${c.result.ahead_by} commit(s), ${c.result.files.length} arquivo(s): ${c.result.files.map(f => f.path).slice(0, 10).join(', ')}`.trim().slice(0, 2000) };
           }
@@ -774,4 +799,4 @@ function usageOf(meter, prev = {}) {
 }
 function clean(o) { return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== '')); }
 
-module.exports = { buildKind, createOrchestrator, classifyIntent, planFor, specialistFor, DEFAULT_BUDGET };
+module.exports = { buildKind, createOrchestrator, classifyIntent, filesIn, planFor, specialistFor, DEFAULT_BUDGET };

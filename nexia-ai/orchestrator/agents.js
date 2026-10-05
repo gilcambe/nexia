@@ -4,6 +4,7 @@
 // continua sendo o Policy Engine (risco × autonomia × ambiente): o agente só restringe
 // ainda mais o que pode pedir. O modelo não decide a própria autoridade (spec §14).
 const { matches } = require('../policy-engine');
+const { FORMAT_HELP } = require('./edit-blocks');
 
 const READ_TOOLS = ['vault.get', 'vault.list', 'vault.history', 'vault.context',
   'github.get_repo', 'github.list_branches', 'github.get_file', 'github.compare', 'github.list_commits',
@@ -48,6 +49,19 @@ const DESIGN = [
   '- Salve um arquivo por chamada de github.commit_files (HTML, depois CSS, depois JS) para não estourar o limite do modelo grátis.',
 ].join('\n');
 
+// ADR-CORTEX-01: como gravar. Modelos grátis erram JSON grande em chamada de ferramenta; o plano B é
+// texto com blocos SEARCH/REPLACE, que o runtime aplica pelo github.edit_files (mesmo gateway e política).
+const EDITING = [
+  'COMO GRAVAR (obrigatório):',
+  '- Leia o arquivo uma vez com github.get_file; o conteúdo continua disponível no histórico, não releia sem motivo.',
+  '- Arquivo existente: github.edit_files com {"branch","message","edits":[{"path","find","replace"}]}. "find" é um trecho curto copiado EXATAMENTE do arquivo e que aparece 1 vez; para apagar, "replace" vazio.',
+  '- Várias mudanças: vários itens em "edits" (pode mais de um arquivo). Arquivo novo: github.commit_files com o conteúdo completo.',
+  '- Se a chamada de ferramenta falhar (JSON inválido, resposta cortada), responda com blocos de texto; o NEXIA aplica por você na branch de trabalho:',
+  `  ${FORMAT_HELP.split('\n').join('\n  ')}`,
+  '  (vários blocos seguidos valem para o último ARQUIVO; arquivo novo: "ARQUIVO: caminho" e logo abaixo o conteúdo completo entre ```).',
+  '- Só termine depois que a ferramenta confirmar a gravação (commit).',
+].join('\n');
+
 const AGENTS = Object.freeze({
   orchestrator: { title: 'Orchestrator', model: 'fast', tools: [], prompt: 'Coordena; não codifica.' },
   designer: { title: 'Designer', model: 'reasoning', tools: [...READ_TOOLS, ...MEDIA_TOOLS], max_steps: 10,
@@ -56,15 +70,15 @@ const AGENTS = Object.freeze({
       + '1) link do Google Fonts e o par de fontes; 2) paleta em hex (primary, accent, bg, surface, text); 3) seções na ordem, com o texto principal de cada uma; '
       + `4) mídia, uma por linha: "papel | url | alt em português | crédito curto". Escolha fotos que combinem entre si e com o negócio.\n${DESIGN}` },
   architect: { title: 'Architect', model: 'reasoning', tools: READ_TOOLS, max_steps: 8,
-    prompt: 'Você é o Architect Agent: analisa o pedido, localiza os arquivos envolvidos, identifica impactos e propõe a mudança mínima. Não altera nada.' },
-  coder: { title: 'Coder', model: 'coding', tools: CODE_TOOLS, max_steps: 12,
-    prompt: `Você é o Coder Agent: implementa o pedido por completo na branch de trabalho "nexia/...", sem mexer no que o pedido não pede.\n${QUALITY}` },
-  frontend: { title: 'Frontend', model: 'coding', tools: [...CODE_TOOLS, ...MEDIA_TOOLS], max_steps: 16,
-    prompt: `Você é o Frontend Agent: UI, responsividade, acessibilidade, SEO, componentes e performance, na branch "nexia/...". O resultado deve ter aparência de agência profissional; em site existente, siga o visual que já existe.\n${QUALITY}\n${DESIGN}` },
-  backend: { title: 'Backend', model: 'coding', tools: CODE_TOOLS, max_steps: 12,
-    prompt: `Você é o Backend Agent: APIs, regras de negócio, autenticação, integrações e jobs, na branch "nexia/...".\n${QUALITY}` },
-  database: { title: 'Database', model: 'coding', tools: CODE_TOOLS, max_steps: 12,
-    prompt: `Você é o Database Agent: schema, migrations, índices, segurança e integridade. Nunca proponha migração destrutiva sem dizer que é CRITICAL.\n${QUALITY}` },
+    prompt: 'Você é o Architect Agent: analisa o pedido, localiza os arquivos envolvidos, identifica impactos e propõe a mudança mínima. Não altera nada. Abra (github.get_file) cada arquivo que vai mudar, inclusive os que o pedido cita. Termine SEMPRE com uma linha "ARQUIVOS: caminho/completo/1, caminho/completo/2" listando todos os arquivos a alterar.' },
+  coder: { title: 'Coder', model: 'coding', tools: CODE_TOOLS, max_steps: 16,
+    prompt: `Você é o Coder Agent: implementa o pedido por completo na branch de trabalho "nexia/...", sem mexer no que o pedido não pede.\n${QUALITY}\n${EDITING}` },
+  frontend: { title: 'Frontend', model: 'coding', tools: [...CODE_TOOLS, ...MEDIA_TOOLS], max_steps: 20,
+    prompt: `Você é o Frontend Agent: UI, responsividade, acessibilidade, SEO, componentes e performance, na branch "nexia/...". O resultado deve ter aparência de agência profissional; em site existente, siga o visual que já existe.\n${QUALITY}\n${EDITING}\n${DESIGN}` },
+  backend: { title: 'Backend', model: 'coding', tools: CODE_TOOLS, max_steps: 16,
+    prompt: `Você é o Backend Agent: APIs, regras de negócio, autenticação, integrações e jobs, na branch "nexia/...".\n${QUALITY}\n${EDITING}` },
+  database: { title: 'Database', model: 'coding', tools: CODE_TOOLS, max_steps: 16,
+    prompt: `Você é o Database Agent: schema, migrations, índices, segurança e integridade. Nunca proponha migração destrutiva sem dizer que é CRITICAL.\n${QUALITY}\n${EDITING}` },
   qa: { title: 'QA', model: 'coding', tools: [...READ_TOOLS, 'github.dispatch_workflow'], max_steps: 8,
     prompt: 'Você é o QA Agent: verifica os checks do CI (testes unitários, integração, E2E, build) do commit/PR e resume o que passou e o que falhou, com nomes dos checks.' },
   security: { title: 'Security', model: 'reasoning', tools: READ_TOOLS, max_steps: 8,
