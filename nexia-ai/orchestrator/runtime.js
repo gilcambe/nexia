@@ -22,6 +22,16 @@ function retryAfterMs(text) {
   if (!m || (!m[1] && !m[2])) return 10000;
   return Math.ceil(((Number(m[1]) || 0) * 60 + (Number(m[2]) || 0)) * 1000) + 500;
 }
+const RATE_ROUNDS = 3;
+// Planos grátis limitam tokens por minuto: resultados de ferramenta antigos (já usados pelo
+// modelo) seguem só no começo; os 2 mais recentes vão inteiros.
+const OLD_RESULT_MAX = 1500;
+function compact(messages) {
+  const idx = messages.map((m, i) => (m.role === 'user' && m.content.startsWith('RESULTADO DAS FERRAMENTAS') ? i : -1)).filter(i => i >= 0);
+  const old = new Set(idx.slice(0, -2));
+  return messages.map((m, i) => (old.has(i) && m.content.length > OLD_RESULT_MAX
+    ? { ...m, content: `${m.content.slice(0, OLD_RESULT_MAX)}…[resultado antigo resumido; peça de novo a ferramenta se precisar]` } : m));
+}
 const toModelName = n => n.replace(/\./g, '__');
 const fromModelName = n => String(n).replace(/__/g, '.');
 
@@ -92,6 +102,7 @@ async function runAgent(o) {
   let wrote = false;
   let nudged = false;
   const modelErrors = [];
+  let rateRounds = 0;
 
   for (let turn = 0; turn < (agent.max_steps || 8); turn++) {
     o.meter.check();
@@ -99,7 +110,7 @@ async function runAgent(o) {
     for (let attempt = 0; ; attempt++) {
       const desc = models[mi];
       try {
-        out = await o.router.toolCall(desc, { system, messages, tools, maxTokens: 8192 });
+        out = await o.router.toolCall(desc, { system, messages: compact(messages), tools, maxTokens: 8192 });
         o.meter.usage.models.add(`${desc.provider}/${desc.model}`);
         break;
       } catch (e) {
@@ -111,6 +122,13 @@ async function runAgent(o) {
           continue;
         }
         if (mi + 1 < models.length) { mi++; attempt = -1; continue; }           // próximo candidato
+        // Todos na cota por minuto (planos grátis): espera a janela virar e recomeça pelo primeiro.
+        if (d.status === 429 && rateRounds < RATE_ROUNDS) {
+          rateRounds++;
+          await wait(Math.min(Math.max(retryAfterMs(d.upstream), 20000), 60000));
+          o.meter.check();
+          mi = 0; attempt = -1; continue;
+        }
         return { status: 'failed', error_code: code && /^[A-Z_]+$/.test(code) ? `MODEL_${code}` : 'MODEL_ERROR',
           text: `O modelo não respondeu. ${modelErrors.slice(-3).join(' | ')}`.slice(0, 1500), tool_call_ids: toolCallIds };
       }
@@ -174,4 +192,4 @@ async function runAgent(o) {
   return { status: 'failed', error_code: 'MAX_STEPS', text: `O agente ${agent.title} não terminou dentro do limite de passos.`, tool_call_ids: toolCallIds };
 }
 
-module.exports = { runAgent, createMeter, BudgetError, toModelName, fromModelName, REPORT_TOOL };
+module.exports = { compact, runAgent, createMeter, BudgetError, toModelName, fromModelName, REPORT_TOOL };
