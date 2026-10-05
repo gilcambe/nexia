@@ -15,6 +15,7 @@ const { buildContext } = require('../context-engine');
 const { runAgent, createMeter } = require('./runtime');
 const { evaluateGates, verdict } = require('./gates');
 const { normalize } = require('../text');
+const { redactSecrets } = require('../vault/secrets');
 
 const DEFAULT_BUDGET = Object.freeze({ max_steps: 80, max_tool_calls: 160, max_tokens: 2000000, max_ms: 30 * 60 * 1000 });
 // ADR-Q-01: quando Reviewer ou Security pedem mudanças, o agente que implementou corrige na mesma
@@ -93,8 +94,14 @@ function createOrchestrator(deps) {
   const contextOf = deps.contextBuilder || buildContext;
   const agentCtx = (ctx, agent) => ({ ...ctx, actor: { type: 'agent', id: agent } });
 
+  // Texto livre vindo da IA (resumos, pergunta, feedback) pode citar algo com cara de secret
+  // (ex.: um SHA de commit ou "token: ..."). O Vault recusaria a gravação inteira; aqui o
+  // trecho suspeito vira "[redigido]" e a execução segue.
   async function save(ctx, exe, patch) {
-    return vault.Execution.update(ctx, exe.id, patch, { expectedVersion: exe.version });
+    const p = { ...patch };
+    for (const k of ['result_summary', 'question', 'fix_feedback']) if (typeof p[k] === 'string') p[k] = redactSecrets(p[k]);
+    if (Array.isArray(p.plan)) p.plan = p.plan.map(s => (typeof s.summary === 'string' ? { ...s, summary: redactSecrets(s.summary) } : s));
+    return vault.Execution.update(ctx, exe.id, p, { expectedVersion: exe.version });
   }
   const tool = (ctx, exe, agent, name, input, environment) => gateway.invoke(agentCtx(ctx, agent), { projectId: exe.project_id, tool: name, input, ...(environment ? { environment } : {}) });
 

@@ -5,7 +5,7 @@ const assert = require('node:assert');
 const crypto = require('crypto');
 const { SCHEMAS, ENTITY_NAMES, idPattern } = require('../../nexia-ai/vault/schemas');
 const { validateEntity } = require('../../nexia-ai/vault/validate');
-const { detectSecret } = require('../../nexia-ai/vault/secrets');
+const { detectSecret, redactSecrets } = require('../../nexia-ai/vault/secrets');
 const { createExecutionContext } = require('../../nexia-ai/vault/execution');
 const { mergedIndexFile, INDEX_FILE } = require('../../nexia-ai/vault/indexes');
 const { valid, invalid, expectedInvalidRule, fakeSecrets } = require('../vault-fixtures');
@@ -88,6 +88,14 @@ test('detectSecret: não acusa nomes de variável, URLs, ids e texto comum', () 
     'tokenização de texto', 'password reset flow']) {
     assert.deepStrictEqual(detectSecret(s), [], s);
   }
+});
+
+test('redactSecrets: troca só o trecho suspeito e o resultado passa no detector', () => {
+  const t = `Commit ${'ab12'.repeat(10)}, ${['tok', 'en'].join('')}: ${'seg'.repeat(3)}, chave ${'AIza' + 'x'.repeat(35)} e o texto comum fica.`;
+  const r = redactSecrets(t);
+  assert.deepStrictEqual(detectSecret(r), []);
+  assert.match(r, /o texto comum fica\./);
+  assert.strictEqual(redactSecrets('nada aqui'), 'nada aqui');
 });
 
 test('contexto de execução: Execution ID gerado, formato validado', () => {
