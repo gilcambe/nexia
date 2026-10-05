@@ -118,9 +118,10 @@ function createOrchestrator(deps) {
   /** Confere se uma foto/vídeo externo abre (só o primeiro byte). Erro de rede conta como fora do ar. */
   const reachable = async url => {
     try {
-      const res = await fetchImpl(url, { method: 'GET', headers: { Range: 'bytes=0-0', 'User-Agent': 'NEXIA-AI/1.0' }, redirect: 'follow', signal: AbortSignal.timeout(15000) });
+      const res = await fetchImpl(url, { method: 'GET', headers: { Range: 'bytes=0-0', 'User-Agent': 'NEXIA-AI/1.0 (https://github.com/gilcambe/nexia)' }, redirect: 'follow', signal: AbortSignal.timeout(15000) });
       if (res.body && res.body.cancel) res.body.cancel().catch(() => {});
-      return res.status < 400;
+      // 429: o servidor de fotos (ex.: Wikimedia gerando miniatura) pediu calma; a foto existe.
+      return res.status < 400 || res.status === 429;
     } catch { return false; }
   };
   const now = deps.now || (() => new Date());
@@ -229,9 +230,10 @@ function createOrchestrator(deps) {
     const specPathOf = () => { const d = steps.find((s, k) => plan[k] && plan[k].action === 'design_spec'); const m = d && /spec: (\S+nexia-spec\.json)/.exec(d.summary || ''); return m ? m[1] : null; };
 
     /** Foto (ou vídeo) para cada lugar do spec: sem repetir, e só links que abrem de verdade. */
-    const resolveMedia = async spec => {
-      const media = {}, used = new Set(), cache = new Map(), idList = [];
-      const slots = kit.mediaQueries(spec);
+    const resolveMedia = async (spec, { keep = {}, avoid = [] } = {}) => {
+      const media = {}, used = new Set(avoid), cache = new Map(), idList = [];
+      for (const [slot, m] of Object.entries(keep)) if (m && !used.has(m.url)) { media[slot] = m; used.add(m.url); }
+      const slots = kit.mediaQueries(spec).filter(s => !media[s.slot]);
       const keyOf = s => `${s.kind || 'image'}|${s.query}|${s.orientation || ''}`;
       const need = {};
       slots.forEach(s => { need[keyOf(s)] = (need[keyOf(s)] || 0) + 1; });
@@ -300,6 +302,56 @@ function createOrchestrator(deps) {
         + `; ${Object.keys(media).length} foto(s)/vídeo(s)${providers ? ` (${providers})` : ''}. spec: ${path}`);
     };
 
+    const readSpec = async agent => {
+      const path = specPathOf();
+      const g = path ? await tool(ctx, state, agent, 'github.get_file', { path, ref: state.work_branch }) : null;
+      let data = null;
+      try { data = g && g.status === 'succeeded' ? JSON.parse(g.result.content) : null; } catch { data = null; }
+      const n = data && data.spec ? kit.normalizeSpec(data.spec, { kind: data.spec.kind }) : null;
+      return { path, ids: ids(g), spec: n && n.spec, media: (data && data.media) || {} };
+    };
+    /** Spec + arquivos do kit num commit só. */
+    const kitSave = (agent, path, spec, media, message) => tool(ctx, state, agent, 'github.commit_files', { branch: state.work_branch, message,
+      files: [{ path, content: `${JSON.stringify({ spec, media }, null, 2)}\n` }, ...Object.entries(kit.render(spec, media)).map(([p, content]) => ({ path: p, content }))] });
+
+    /** Rodada de correção no caminho do kit: a IA corrige o SPEC (pequeno) e o kit gera tudo de novo; o código nunca é editado à mão. */
+    const kitRevise = async (i, feedback) => {
+      steps[i] = { ...steps[i], status: 'running' };
+      await commit({ status: 'running' });
+      const cur = await readSpec('designer');
+      steps[i] = { ...steps[i], tool_call_ids: addIds(i, cur.ids) };
+      if (!cur.spec) {
+        stepFail(i, { error_code: 'SPEC_INVALID', summary: 'Não consegui ler o spec na branch para corrigir.' });
+        stop = { status: 'failed', error_code: 'SPEC_INVALID', result_summary: `O spec do Site Kit não foi encontrado na branch ${state.work_branch}.` };
+        return;
+      }
+      const prompt = `${kit.specPrompt({ message, kind: kitKind, project: project.name }).split('\nFormato')[0]}\n\nSpec atual:\n${JSON.stringify(cur.spec)}\n\nA revisão pediu estas correções:\n${feedback.slice(0, 1500)}\n\nDevolva o JSON completo corrigido (mesmo formato).`;
+      const a = await askModel({ agentId: 'designer', system: kit.SPEC_SYSTEM, router, meter, prompt });
+      if (a.status !== 'done') {
+        stepFail(i, { error_code: a.error_code, summary: a.text });
+        stop = { status: 'failed', error_code: a.error_code, result_summary: `O agente designer falhou: ${a.text}` };
+        return;
+      }
+      const raw = kit.extractJson(a.text);
+      const n = raw ? kit.normalizeSpec({ ...raw, folder: cur.spec.folder }, { kind: kitKind, request: message }) : { errors: ['a resposta não era um objeto JSON válido'] };
+      const spec = n.spec || cur.spec;   // correção inválida: mantém o spec que já passou, e a revisão decide de novo
+      // Fotos: as que continuam no mesmo lugar ficam; o resto é buscado de novo.
+      const { media, ids: mIds } = await resolveMedia(spec, { keep: spec === cur.spec ? cur.media : Object.fromEntries(kit.mediaQueries(spec).filter(q => cur.media[q.slot]).map(q => [q.slot, cur.media[q.slot]])) });
+      steps[i] = { ...steps[i], tool_call_ids: addIds(i, mIds), model: a.model };
+      const r = await kitSave(plan[i].agent, cur.path, spec, media, `Corrige ${spec.name} (spec revisado, NEXIA Site Kit)`);
+      handle(i, r, x => `Spec revisado${n.spec ? '' : ` (correção inválida: ${n.errors.join('; ')}; mantido o anterior)`} e código gerado de novo pelo kit (commit ${String(x.commit || '').slice(0, 7)})`);
+    };
+
+    /** Foto que não abre no caminho do kit: troca por outra da busca e gera de novo, sem modelo. */
+    const kitRepairMedia = async (i, deadUrls) => {
+      const cur = await readSpec('designer');
+      if (!cur.spec) return null;
+      const keep = Object.fromEntries(Object.entries(cur.media).filter(([, m]) => m && !deadUrls.includes(m.url)));
+      const { media, ids: mIds } = await resolveMedia(cur.spec, { keep, avoid: deadUrls });
+      const r = await kitSave('frontend', cur.path, cur.spec, media, `Troca fotos que não abriam (${cur.spec.name}, NEXIA Site Kit)`);
+      return { ids: [...cur.ids, ...mIds, ...ids(r)], ok: r.status === 'succeeded' };
+    };
+
     /** Gera os arquivos com o kit a partir do spec salvo na branch e commita (determinístico). */
     const kitRender = async i => {
       steps[i] = { ...steps[i], status: 'running' };
@@ -357,6 +409,7 @@ function createOrchestrator(deps) {
           let before = null;   // rodada de correção: exige commit novo, não basta o da rodada anterior
           if (fix) before = headOf(await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch }));
           if (kitKind && !fix) await kitRender(i);
+          else if (kitKind) await kitRevise(i, state.fix_feedback);
           else {
             await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).\n${kitKind ? 'Spec do Designer (o código foi gerado pelo NEXIA Site Kit: corrija só o que a revisão apontou, com github.edit_files, sem reescrever os arquivos inteiros)' : 'Análise do Architect'}:\n${analysis}${fix}\n\nLeia os arquivos atuais com github.get_file (ref ${state.work_branch}). Para arquivo existente use github.edit_files; para arquivo novo, github.commit_files. Tudo na branch ${state.work_branch}. Não mexa em arquivos que o pedido não envolve.`);
           }
@@ -371,10 +424,21 @@ function createOrchestrator(deps) {
           }
         } else if (action === 'agent:review' || action === 'agent:security') {
           // ADR-Q-02: checagem estática dos arquivos web antes da revisão por IA. Erro volta direto ao agente.
-          const sc = action === 'agent:review' ? await webCheck(buildKind(message)) : null;
+          let sc = action === 'agent:review' ? await webCheck(buildKind(message)) : null;
+          // Kit: se o único problema são fotos que não abrem, troca as fotos e confere de novo (uma vez), sem modelo.
+          const DEAD = /^a mídia (\S+) não abre/;
+          if (kitKind && sc && sc.errors.length && sc.errors.every(e => DEAD.test(e.message))) {
+            const dead = sc.errors.map(e => DEAD.exec(e.message)[1]).map(u => (sc.externalMedia.find(m => m.url.startsWith(u)) || { url: u }).url);
+            const fixed = await kitRepairMedia(i, dead);
+            if (fixed && fixed.ok) {
+              const again = await webCheck(buildKind(message));
+              if (again) sc = { ...again, ids: [...sc.ids, ...fixed.ids, ...again.ids] };
+            }
+          }
           let r;
           // Código do kit sem edição de agente: é sempre o mesmo código testado (unitários + checagem acima).
-          const kitPure = kitKind && !(state.fix_rounds > 0);
+          // No caminho do kit o código nunca é editado por modelo: correções mudam o spec e o kit gera de novo.
+          const kitPure = !!kitKind;
           if (action === 'agent:security' && kitPure) {
             stepDone(i, { summary: 'approve: código gerado pelo NEXIA Site Kit (HTML/CSS/JS estáticos testados, sem backend nem segredos; todo texto do spec é escapado). O secret scan do CI continua valendo.' });
             r = { status: 'done', report: { verdict: 'approve', findings: [] } };

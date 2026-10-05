@@ -46,7 +46,7 @@ async function openverseImages(deps, q, n, orientation) {
 async function commons(deps, q, n, kind) {
   const search = kind === 'video' ? `${q} filetype:video` : `${q} filetype:bitmap`;
   const u = 'https://commons.wikimedia.org/w/api.php?action=query&format=json&generator=search&gsrnamespace=6'
-    + `&gsrsearch=${encodeURIComponent(search)}&gsrlimit=${Math.min(n * 2, 20)}&prop=imageinfo&iiprop=url|size|extmetadata|mime&iiurlwidth=1600`;
+    + `&gsrsearch=${encodeURIComponent(search)}&gsrlimit=${Math.min(n * 2, 20)}&prop=imageinfo&iiprop=url|size|extmetadata|mime&iiurlwidth=1280`;
   const d = await getJson(deps.fetchImpl, u);
   const pages = Object.values((d && d.query && d.query.pages) || {});
   return pages.map(p => ({ p, ii: (p.imageinfo || [])[0] })).filter(({ ii }) => ii && (kind === 'video' ? /^video\//.test(ii.mime) : /^image\/(jpeg|png|webp)/.test(ii.mime)))
