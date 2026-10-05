@@ -40,7 +40,7 @@ jobs:
       - name: Instalar o navegador
         working-directory: tools
         run: |
-          npm i --no-save --no-audit --no-fund playwright@1.47.2
+          npm i --no-save --no-audit --no-fund playwright@1.59.1
           npx playwright install --with-deps chromium
       - name: Tirar as fotos de tela
         working-directory: tools
