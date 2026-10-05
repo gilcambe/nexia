@@ -5,7 +5,7 @@
 const SITE_EXAMPLE = {
   kind: 'site', name: 'Sorriso Leve', tagline: 'Odontologia gentil para toda a família',
   description: 'Clínica odontológica em São Paulo com clareamento, implantes e ortodontia.',
-  folder: 'demos/sorriso-leve', style: 'soft',
+  folder: 'demos/sorriso-leve', style: 'soft', photo_theme: 'dentist dental',
   fonts: { heading: 'Fraunces', body: 'Inter' },
   palette: { primary: '#2a7f8e', accent: '#f4a259', bg: '#f7fbfb', surface: '#ffffff', text: '#16302f', muted: '#5b6f70', dark: '#0f2e33' },
   contact: { whatsapp: '5511999998888', phone: '(11) 99999-8888', email: 'contato@sorrisoleve.com.br', address: 'Rua das Flores, 120', city: 'São Paulo - SP', hours: 'Seg a sex, 8h às 19h', instagram: 'sorrisoleve' },
@@ -43,7 +43,8 @@ Regras:
 - fonts: famílias do Google Fonts que combinem (ex.: títulos Fraunces, Playfair Display, DM Serif Display, Sora, Outfit, Plus Jakarta Sans; texto Inter, DM Sans, Manrope, Nunito Sans).
 - palette: cores hex de 6 dígitos com bom contraste (texto escuro sobre bg claro; "dark" é o fundo do rodapé/menu).
 - style: elegant | modern | bold | soft.
-- *_query: buscas de foto EM INGLÊS, concretas e visuais (ex.: "artisan bread bakery counter"), uma por item; video_query só se um vídeo de fundo fizer sentido.
+- *_query: buscas de foto EM INGLÊS, curtas (2 a 4 palavras), concretas e visuais (ex.: "bakery bread counter"), uma por item; video_query só se um vídeo de fundo fizer sentido.
+- photo_theme: 1 a 3 palavras em inglês que toda foto do site precisa ter a ver (ex.: "bakery bread", "dentist dental", "gym fitness").
 - Se o pedido não traz contato, invente dados plausíveis e marcados como exemplo (ex.: "(11) 90000-0000").
 - folder: a pasta pedida pelo usuário; se não houver, "sites/<nome-curto>".`;
 

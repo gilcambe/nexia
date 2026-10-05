@@ -10,6 +10,12 @@ const { GatewayError, CODES } = require('../errors');
 const UA = 'NEXIA-AI/1.0 (https://github.com/gilcambe/nexia)';
 const IMG_EXT = /\.(jpe?g|png|webp)(\?|$)/i;
 const stripHtml = s => String(s || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim().slice(0, 120);
+// Original enorme do Wikimedia (4000+ px) deixa o site lento: usa a miniatura padrão de 1280 px.
+function commonsThumb(url, width, height) {
+  const m = /^https:\/\/upload\.wikimedia\.org\/wikipedia\/commons\/([0-9a-f])\/([0-9a-f]{2})\/([^/?#]+)$/.exec(url);
+  if (!m || !width || width <= 1600) return { url, width: width || null, height: height || null };
+  return { url: `https://upload.wikimedia.org/wikipedia/commons/thumb/${m[1]}/${m[2]}/${m[3]}/1280px-${m[3]}`, width: 1280, height: height ? Math.round(height * 1280 / width) : null };
+}
 const clampCount = n => Math.min(Math.max(Number(n) || 6, 1), 12);
 
 async function getJson(fetchImpl, url, headers = {}) {
@@ -36,7 +42,7 @@ async function openverseImages(deps, q, n, orientation) {
   const u = `https://api.openverse.org/v1/images/?q=${encodeURIComponent(q)}&page_size=${Math.min(n * 2, 20)}&license_type=commercial&mature=false&size=large${aspect}`;
   const d = await getJson(deps.fetchImpl, u);
   return ((d && d.results) || []).filter(r => r.url && IMG_EXT.test(r.url) && (!r.width || r.width >= 900)).slice(0, n).map(r => ({
-    url: r.url, width: r.width || null, height: r.height || null, alt: stripHtml(r.title) || q,
+    ...commonsThumb(r.url, r.width, r.height), alt: stripHtml(r.title) || q,
     license: `${String(r.license || '').toUpperCase()} ${r.license_version || ''}`.trim(),
     credit: `${stripHtml(r.title) || 'Foto'} — ${stripHtml(r.creator) || 'autor desconhecido'} (${String(r.license || '').toUpperCase()} ${r.license_version || ''}, via Openverse)`.trim(),
     source_page: r.foreign_landing_url || r.url, provider: 'openverse',
