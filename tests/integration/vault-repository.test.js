@@ -48,9 +48,9 @@ test.before(async () => {
   main = await seed(T1);
 });
 
-test('1. cria as 19 entidades com metadados do servidor, ids estáveis e Execution ID', async () => {
+test('1. cria as 20 entidades com metadados do servidor, ids estáveis e Execution ID', async () => {
   const { ctx, records } = main;
-  assert.strictEqual(Object.keys(records).length, 19);
+  assert.strictEqual(Object.keys(records).length, 20);
   for (const e of ENTITY_NAMES) {
     const r = records[e];
     assert.match(r.id, new RegExp(`^${SCHEMAS[e].idPrefix}_[0-9a-f]{32}$`), e);

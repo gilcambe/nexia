@@ -23,12 +23,12 @@ const FILES = { '/index.html': 'SPA', '/assets/app-1.js': 'js', '/ces/ces-landin
 const call = (url, init = {}, env = {}, getFunction = () => null) =>
   handleRequest(new Request('https://nexia.test' + url, init), { ASSETS: fakeAssets(FILES), ...env }, { getFunction });
 
-test('CF1. config do Worker: plano grátis, sem Container/Durable Object, cron de hora em hora, sem Render', () => {
+test('CF1. config do Worker: plano grátis, sem Container/Durable Object, cron a cada 5 min (ADR-AUTO-01), sem Render', () => {
   const wr = readWrangler();
   assert.strictEqual(wr.main, 'cloudflare/worker.js');
   assert.strictEqual(wr.containers, undefined, 'Container exige Workers Paid');
   assert.strictEqual(wr.durable_objects, undefined);
-  assert.deepStrictEqual(wr.triggers.crons, ['7 * * * *']);
+  assert.deepStrictEqual(wr.triggers.crons, ['*/5 * * * *']);
   assert.strictEqual(wr.assets.binding, 'ASSETS');
   assert.ok(!fs.existsSync(path.join(ROOT, 'Dockerfile')));
   assert.ok(!fs.existsSync(path.join(ROOT, 'render.yaml')));
@@ -122,14 +122,22 @@ test('CF6. fila de tarefas: valida só ids; despacha para o workflow com token; 
   assert.strictEqual(createJobs({ env: {} }).enabled, false);
 });
 
-test('CF7. cron do Worker só dispara a retomada quando há execução parada há mais de 10 min', async () => {
+test('CF7. cron do Worker só dispara a retomada (de hora em hora) quando há execução parada há mais de 10 min', async () => {
   const now = Date.parse('2026-10-04T12:00:00Z');
-  const fakeDb = rows => ({ collection: () => ({ where: () => ({ limit: () => ({ get: async () => ({ docs: rows.map(r => ({ data: () => r })) }) }) }) }) });
+  // Banco falso: execuções para a consulta de status; nenhum robô vencido.
+  const fakeDb = rows => ({ collection: name => {
+    const q = { where: () => q, orderBy: () => q, limit: () => q, select: () => q,
+      get: async () => ({ docs: (name === 'vault_executions' ? rows : []).map(r => ({ data: () => r })) }) };
+    return q;
+  } });
   const sent = [];
   const jobs = { enabled: true, dispatch: async j => { sent.push(j); return { queued: true }; } };
-  assert.deepStrictEqual(await scheduledSweep({ db: fakeDb([{ updated_at: '2026-10-04T11:55:00Z' }]), jobs, now: () => now }), { stale: 0 });
-  assert.deepStrictEqual(await scheduledSweep({ db: fakeDb([{ updated_at: Timestamp.fromMillis(now - 11 * 60000) }, { updated_at: '2026-10-04T10:00:00Z', deleted_at: 'x' }]), jobs, now: () => now }), { stale: 1, queued: true });
+  assert.deepStrictEqual(await scheduledSweep({ db: fakeDb([{ updated_at: '2026-10-04T11:55:00Z' }]), jobs, now: () => now }), { robots: 0, stale: 0 });
+  assert.deepStrictEqual(await scheduledSweep({ db: fakeDb([{ updated_at: Timestamp.fromMillis(now - 11 * 60000) }, { updated_at: '2026-10-04T10:00:00Z', deleted_at: 'x' }]), jobs, now: () => now }), { robots: 0, stale: 1, queued: true });
   assert.deepStrictEqual(sent, [{ kind: 'sweep' }]);
+  // Fora do primeiro tique da hora, nem consulta execuções.
+  assert.deepStrictEqual(await scheduledSweep({ db: fakeDb([{ updated_at: '2026-10-04T10:00:00Z' }]), jobs, now: () => now + 25 * 60000 }), { robots: 0 });
+  assert.strictEqual(sent.length, 1);
   assert.deepStrictEqual(await scheduledSweep({ jobs: { enabled: false } }), { skipped: 'NEXIA_JOBS desligado' });
 });
 

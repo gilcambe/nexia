@@ -3,7 +3,7 @@
 const { test, expect } = require('@playwright/test');
 
 const SPA_ROUTES = ['/', '/login', '/cortex-app', '/sentinel', '/pipeline', '/codigo', '/docs',
-  '/swarm-control', '/qa-center', '/projetos', '/aprovacoes', '/execucoes', '/auditoria', '/ces', '/bezsan', '/vp', '/splash', '/privacidade', '/termos', '/lgpd', '/cookies'];
+  '/swarm-control', '/qa-center', '/projetos', '/aprovacoes', '/execucoes', '/auditoria', '/robos', '/ces', '/bezsan', '/vp', '/splash', '/privacidade', '/termos', '/lgpd', '/cookies'];
 const TENANT_PAGES = ['/ces/landing', '/bezsan/landing', '/vp/landing', '/splash/landing', '/ces/admin', '/vp/guia'];
 
 test.describe('1. Navegação — rotas principais', () => {
@@ -173,5 +173,22 @@ test.describe('NEXIA AI — pendências finais (ADR-F12-03/04)', () => {
     expect([401, 503]).toContain((await request.post('/api/nexia/bridge/events', { data: { events: [] }, headers: { Authorization: 'Bearer nxb_' + '0'.repeat(64) } })).status());
     // Sem NEXIA_CRON_SECRET no servidor de teste, a rota interna não existe
     expect((await request.post('/api/nexia/internal/sweep', { headers: { 'X-Nexia-Cron': 'x'.repeat(40) } })).status()).toBe(404);
+  });
+});
+
+test.describe('NEXIA AI — Robôs (ADR-AUTO-01)', () => {
+  test('/robos sem login pede login e não chama a API', async ({ page }) => {
+    const calls = [];
+    page.on('request', r => { if (r.url().includes('/api/nexia/')) calls.push(r.url()); });
+    await page.goto('/robos', { waitUntil: 'domcontentloaded' });
+    await expect(page.getByTestId('robos-title')).toHaveText('Robôs NEXIA');
+    await expect(page.getByTestId('robos-login')).toBeVisible({ timeout: 15000 });
+    expect(calls).toEqual([]);
+  });
+  test('/api/nexia/robots sem token responde 401', async ({ request }) => {
+    for (const [m, ep] of [['get', '/api/nexia/robots'], ['post', '/api/nexia/robots'], ['get', '/api/nexia/robots/templates'], ['patch', '/api/nexia/robots/rbt_x'], ['post', '/api/nexia/robots/rbt_x/run']]) {
+      const res = await request[m](ep);
+      expect(res.status(), ep).toBe(401);
+    }
   });
 });

@@ -10,11 +10,13 @@ export default {
     return app.handleRequest(request, env, { getFunction: functions.getFunction });
   },
 
-  // ADR-F12-03 + ADR-FREE-02: de hora em hora procura execuções paradas; havendo alguma,
-  // dispara a retomada no GitHub Actions (sem processo longo dentro do Worker).
+  // ADR-F12-03 + ADR-FREE-02 + ADR-AUTO-01: a cada 5 min procura Robôs NEXIA vencidos e, de hora
+  // em hora, execuções paradas; havendo algo, dispara a tarefa no GitHub Actions (sem processo
+  // longo dentro do Worker). Sem nada vencido, não dispara nada.
   async scheduled(controller, env, ctx) {
     app.populateProcessEnv(env);
-    ctx.waitUntil(jobs.scheduledSweep({ env: process.env }).then(
+    const at = Number(controller && controller.scheduledTime) || Date.now();
+    ctx.waitUntil(jobs.scheduledSweep({ env: process.env, now: () => at }).then(
       r => console.log('[nexia-cron]', JSON.stringify(r).slice(0, 500)),
       e => console.error('[nexia-cron]', e && e.message),
     ));
