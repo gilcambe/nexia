@@ -1,16 +1,25 @@
 # NEXIA — deploy no Cloudflare Worker, plano GRÁTIS (ADR-FREE-01). Nada pago: sem Container.
-# Só manual (botão "Run workflow"). Nunca roda em push. Exige o segredo CLOUDFLARE_API_TOKEN
-# e a variável CLOUDFLARE_ACCOUNT_ID no environment "production" do GitHub (configure
-# "Required reviewers" nele para exigir aprovação de uma pessoa). Os segredos do app ficam nos
-# segredos do repositório e são copiados para o Worker a cada deploy (ADR-FREE-02).
+# ADR-AUTO-02 (confirmado pelo dono em 2026-10-05): AUTOMÁTICO. Todo push na develop que passa no CI
+# (testes, secret scan e Bridge) é publicado sozinho, sem botão de aprovar. No lugar da aprovação:
+# só a develop, só com CI verde, testes de novo antes, teste do site no ar depois e volta automática
+# para a versão anterior (wrangler rollback) se o site não responder. Cada deploy fica registrado no
+# Vault (Deployment) e os índices do Firestore que faltam são criados (nunca apaga).
+# O botão "Run workflow" continua para publicar na hora (digite DEPLOY).
+# Segredo CLOUDFLARE_API_TOKEN e variável CLOUDFLARE_ACCOUNT_ID ficam no environment "production"
+# do GitHub (SEM "Required reviewers", senão o GitHub volta a pedir aprovação). Os segredos do app ficam
+# nos segredos do repositório e são copiados para o Worker a cada deploy (ADR-FREE-02).
 name: Deploy Cloudflare
 
 on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Digite DEPLOY para confirmar o deploy em produção'
+        description: 'Digite DEPLOY para publicar agora'
         required: true
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [develop]
 
 permissions:
   contents: read
@@ -22,12 +31,18 @@ concurrency:
 jobs:
   deploy:
     name: Deploy Worker (grátis)
-    if: github.event.inputs.confirm == 'DEPLOY'
+    if: >-
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.confirm == 'DEPLOY') ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'develop')
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # Automático: exatamente o commit que passou no CI.
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '20'
@@ -35,6 +50,13 @@ jobs:
       - run: npm ci --ignore-scripts
       - name: Testes antes do deploy
         run: npm test
+      - name: Registrar o deploy no Vault (início)
+        id: vault
+        run: node scripts/registrar-deploy.js inicio "$(git rev-parse HEAD)"
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          NEXIA_APP_URL: ${{ secrets.NEXIA_APP_URL }}
       - name: Deploy
         run: npx -y wrangler@4 deploy
         env:
@@ -86,3 +108,37 @@ jobs:
           MP_ACCESS_TOKEN: ${{ secrets.MP_ACCESS_TOKEN }}
           MP_WEBHOOK_SECRET: ${{ secrets.MP_WEBHOOK_SECRET }}
           SENTINEL_HEAL_ENABLED: ${{ secrets.SENTINEL_HEAL_ENABLED }}
+      - name: Teste do site no ar (se falhar, volta para a versão anterior)
+        id: smoke
+        run: |
+          URL="${NEXIA_APP_URL:-https://nexia.gcbezerra.workers.dev}"
+          ok=0
+          for i in 1 2 3 4 5 6; do
+            sleep 10
+            a=$(curl -s -o /dev/null -w '%{http_code}' "$URL/health" || true)
+            b=$(curl -s -o /dev/null -w '%{http_code}' "$URL/" || true)
+            echo "tentativa $i: /health=$a /=$b"
+            if [ "$a" = "200" ] && [ "$b" = "200" ]; then ok=1; break; fi
+          done
+          if [ "$ok" != "1" ]; then
+            echo "::error::O site não respondeu depois do deploy; voltando para a versão anterior."
+            npx -y wrangler@4 rollback --message "NEXIA: volta automática (teste do site falhou)" --yes || true
+            echo "status=rolled_back" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          echo "status=succeeded" >> "$GITHUB_OUTPUT"
+        env:
+          NEXIA_APP_URL: ${{ secrets.NEXIA_APP_URL }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Índices do Firestore (cria só os que faltam; nunca apaga)
+        continue-on-error: true
+        run: node scripts/publicar-indices.js
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+      - name: Registrar o deploy no Vault (fim)
+        if: always() && steps.vault.outputs.deployment_id != ''
+        run: node scripts/registrar-deploy.js fim "${{ steps.vault.outputs.deployment_id }}" "${{ steps.smoke.outputs.status || 'failed' }}"
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
