@@ -180,8 +180,9 @@ async function runAgent(o) {
       else {
         const code = (r.error && r.error.code) || (r.status === 'denied' ? 'POLICY_DENIED' : 'TOOL_ERROR');
         results.push({ tool: name, ok: false, error: code, message: r.error ? r.error.message : r.reason });
-        const n = (failures.get(code) || 0) + 1;
-        failures.set(code, n);
+        const key = `${name}:${code}`;   // por ferramenta: um erro de entrada numa não derruba as outras
+        const n = (failures.get(key) || 0) + 1;
+        failures.set(key, n);
         if (n >= 3) return { status: 'failed', error_code: code, text: `A ferramenta ${name} falhou 3 vezes (${code}).`, tool_call_ids: toolCallIds, model };
       }
     }

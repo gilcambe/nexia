@@ -20,8 +20,10 @@ const short = s => String(s || '').replace(/^([0-9a-f]{7})[0-9a-f]{33}$/i, '$1�
 
 async function repoFor({ vault, ctx, project }, repositoryId) {
   let repo;
-  if (repositoryId) repo = await vault.Repository.get(ctx, repositoryId);
-  else if (project.primary_repository_id) repo = await vault.Repository.get(ctx, project.primary_repository_id);
+  // Modelos às vezes mandam "dono/repo" ou um id inventado: o que não é um registro válido cai no
+  // repositório padrão do projeto (o escopo abaixo continua valendo).
+  if (repositoryId) repo = await vault.Repository.get(ctx, repositoryId).catch(e => (['VALIDATION', 'NOT_FOUND'].includes(e && e.code) ? null : Promise.reject(e)));
+  if (repo) { /* id válido */ } else if (project.primary_repository_id) repo = await vault.Repository.get(ctx, project.primary_repository_id);
   else repo = (await vault.Repository.list(ctx, { where: { project_id: project.id }, limit: 1 }))[0];
   if (!repo) throw new GatewayError(CODES.INVALID_INPUT, 'Projeto sem repositório cadastrado.');
   if (repo.project_id !== project.id) throw new GatewayError(CODES.SCOPE, 'Repositório fora do projeto desta chamada.');
@@ -39,7 +41,11 @@ async function adapterFor(deps, repositoryId) {
 function tool(name, risk, description, properties, required, run, summarizeInput, summarizeOutput, extra = {}) {
   return { name, risk, description, input_schema: { type: 'object', properties: { repository_id: REPO_ID, ...properties }, ...(required ? { required } : {}) },
     summarizeInput, summarizeOutput, ...extra,
-    async run(deps, i) { const a = await adapterFor(deps, i.repository_id); return run(a, i); } };
+    async run(deps, i) {
+      // "819a177…" é como os resumos mostram um SHA; o GitHub aceita o prefixo sem as reticências.
+      if (typeof i.ref === 'string') i = { ...i, ref: i.ref.replace(/(?:…|\.\.\.)$/, '') };
+      const a = await adapterFor(deps, i.repository_id); return run(a, i);
+    } };
 }
 
 module.exports = [

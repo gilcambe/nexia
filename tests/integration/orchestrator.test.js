@@ -38,7 +38,7 @@ function scriptedRouter(script) {
 const call = (name, input) => ({ id: `tc_${crypto.randomBytes(3).toString('hex')}`, name: name.replace(/\./g, '__'), input });
 const branchOf = req => /Branch de trabalho: (\S+)/.exec(req.messages[0].content)[1];
 const commitStep = path => req => ({ text: 'Vou commitar.', tool_calls: [call('github.commit_files', { branch: branchOf(req), message: 'Corrige o botão', files: [{ path, content: '<button type="submit">Enviar</button>\n' }] })] });
-const report = verdict => ({ tool_calls: [{ id: 'r1', name: 'report_findings', input: { verdict, findings: verdict === 'approve' ? [] : [{ severity: 'high', file: 'src/app.js', message: 'quebra o envio' }] } }] });
+const report = verdict => ({ tool_calls: [{ id: 'r1', name: 'report_findings', input: { verdict, findings: verdict === 'approve' ? [] : [{ severity: 'high', file: 'src/app.html', message: 'quebra o envio' }] } }] });
 const GREEN = [{ name: 'Testes', status: 'completed', conclusion: 'success' }, { name: 'Build', status: 'completed', conclusion: 'success' },
   { name: 'Secret scan (gitleaks)', status: 'completed', conclusion: 'success' }];
 
@@ -73,8 +73,8 @@ test.before(async () => {
 test('O1. pedido de mudança: análise → branch → commit → revisão → segurança → PR; só conclui quando o CI fica verde', async () => {
   await setAutonomy(3);
   const router = scriptedRouter({
-    architect: [{ text: 'Mudar src/app.js: o botão precisa de type="submit".' }],
-    frontend: [commitStep('src/app.js'), { text: 'Commit feito em src/app.js.' }],
+    architect: [{ text: 'Mudar src/app.html: o botão precisa de type="submit".' }],
+    frontend: [commitStep('src/app.html'), { text: 'Commit feito em src/app.html.' }],
     reviewer: [report('approve')], security: [report('approve')],
   });
   const o = orch(router);
@@ -82,7 +82,7 @@ test('O1. pedido de mudança: análise → branch → commit → revisão → se
   assert.strictEqual(exe.intent, 'change');
   assert.deepStrictEqual(exe.plan.map(s => [s.agent, s.status]), [['architect', 'done'], ['coder', 'done'], ['frontend', 'done'], ['reviewer', 'done'], ['security', 'done'], ['devops', 'done'], ['qa', 'done']]);
   assert.match(exe.work_branch, /^nexia\/corrija-o-botao/);
-  assert.strictEqual(fake.fileAt(exe.work_branch, 'src/app.js'), '<button type="submit">Enviar</button>\n', 'o commit existe de verdade no GitHub');
+  assert.strictEqual(fake.fileAt(exe.work_branch, 'src/app.html'), '<button type="submit">Enviar</button>\n', 'o commit existe de verdade no GitHub');
   assert.deepStrictEqual([exe.pull_request, fake.pulls.at(-1).draft, fake.pulls.at(-1).base], [fake.pulls.length, true, 'develop']);
   assert.deepStrictEqual([exe.review_verdict, exe.security_verdict], ['approve', 'approve']);
   assert.strictEqual(exe.status, 'running', 'sem checks do CI não há sucesso');
@@ -158,7 +158,7 @@ test('O4. sem falso sucesso: agente sem commit, revisão reprovada e aprovação
 
   // Revisão reprovada nas 3 vezes (a original e as 2 rodadas de correção, cada uma com commit novo).
   const rejected = await startAndRun(orch(scriptedRouter({ architect: [{ text: 'x' }],
-    frontend: [commitStep('src/app.js'), { text: 'ok' }, commitStep('src/app2.js'), { text: 'ok' }, commitStep('src/app3.js'), { text: 'ok' }],
+    frontend: [commitStep('src/app.html'), { text: 'ok' }, commitStep('src/app2.html'), { text: 'ok' }, commitStep('src/app3.html'), { text: 'ok' }],
     reviewer: [report('changes_requested'), report('changes_requested'), report('changes_requested')] })),
     'Altere o envio do formulário do Site Alfa');
   assert.deepStrictEqual([rejected.exe.status, rejected.exe.error_code, rejected.exe.review_verdict, rejected.exe.fix_rounds], ['failed', 'REVIEW_CHANGES_REQUESTED', 'changes_requested', 2]);
@@ -171,7 +171,7 @@ test('O4. sem falso sucesso: agente sem commit, revisão reprovada e aprovação
   assert.deepStrictEqual([down.exe.status, down.exe.error_code], ['failed', 'MODEL_UPSTREAM'], 'modelo fora: repete, troca de modelo e falha');
 
   await setAutonomy(2);
-  const o = orch(scriptedRouter({ architect: [{ text: 'x' }], frontend: [commitStep('src/app.js'), { text: 'ok' }], reviewer: [report('approve')], security: [report('approve')] }));
+  const o = orch(scriptedRouter({ architect: [{ text: 'x' }], frontend: [commitStep('src/app.html'), { text: 'ok' }], reviewer: [report('approve')], security: [report('approve')] }));
   const w = await startAndRun(o, 'Mude a cor do botão do Site Alfa');
   const pending = w.exe.plan.find(s => s.status === 'waiting_approval').tool_call_ids.at(-1);
   await gateway().reject(user, pending, { expectedVersion: (await vault.ToolCall.get(user, pending)).version });
@@ -183,20 +183,20 @@ test('O4. sem falso sucesso: agente sem commit, revisão reprovada e aprovação
 test('O4b. ADR-Q-01: revisão pede mudança, o agente corrige na mesma branch e a revisão aprova; rodada sem commit novo falha', async () => {
   await setAutonomy(3);
   const router = scriptedRouter({
-    architect: [{ text: 'Mudar src/app.js.' }],
-    frontend: [commitStep('src/app.js'), { text: 'feito' }, req => ({ tool_calls: [call('github.edit_files', { branch: branchOf(req), message: 'Corrige o envio',
-      edits: [{ path: 'src/app.js', find: 'Enviar', replace: 'Enviar mensagem' }] })] }), { text: 'corrigido' }],
+    architect: [{ text: 'Mudar src/app.html.' }],
+    frontend: [commitStep('src/app.html'), { text: 'feito' }, req => ({ tool_calls: [call('github.edit_files', { branch: branchOf(req), message: 'Corrige o envio',
+      edits: [{ path: 'src/app.html', find: 'Enviar', replace: 'Enviar mensagem' }] })] }), { text: 'corrigido' }],
     reviewer: [report('changes_requested'), report('approve')], security: [report('approve')],
   });
   const { exe } = await startAndRun(orch(router), 'Corrija o botão de enviar do Site Alfa');
   assert.deepStrictEqual([exe.review_verdict, exe.security_verdict, exe.fix_rounds], ['approve', 'approve', 1]);
   assert.ok(exe.pull_request, 'PR aberto depois da correção');
-  assert.strictEqual(fake.fileAt(exe.work_branch, 'src/app.js'), '<button type="submit">Enviar mensagem</button>\n', 'edição por trecho aplicada');
+  assert.strictEqual(fake.fileAt(exe.work_branch, 'src/app.html'), '<button type="submit">Enviar mensagem</button>\n', 'edição por trecho aplicada');
   const fixGoal = router.seen.filter(s => s.agent === 'frontend').length;
   assert.ok(fixGoal >= 3, 'o agente rodou de novo para corrigir');
   assert.match(exe.fix_feedback, /quebra o envio/);
 
-  const lazy = await startAndRun(orch(scriptedRouter({ architect: [{ text: 'x' }], frontend: [commitStep('src/app.js'), { text: 'ok' }, { text: 'Já estava certo.' }],
+  const lazy = await startAndRun(orch(scriptedRouter({ architect: [{ text: 'x' }], frontend: [commitStep('src/app.html'), { text: 'ok' }, { text: 'Já estava certo.' }],
     reviewer: [report('changes_requested')] })), 'Ajuste o botão de enviar do Site Alfa');
   assert.deepStrictEqual([lazy.exe.status, lazy.exe.error_code], ['failed', 'NO_CHANGES']);
   assert.match(lazy.exe.result_summary, /rodada de correção terminou sem commit novo/);
@@ -207,7 +207,7 @@ test('O4c. resumo da IA com cara de secret (SHA de commit, "token: ...") é redi
   const sha = '0123456789abcdef0123456789abcdef01234567';
   const { exe } = await startAndRun(orch(scriptedRouter({
     architect: [{ text: `Base no commit ${sha}; o formulário manda ${['tok', 'en'].join('')}: ${'abc'.repeat(4)}.` }],
-    frontend: [commitStep('src/app.js'), { text: 'feito' }],
+    frontend: [commitStep('src/app.html'), { text: 'feito' }],
     reviewer: [report('approve')], security: [report('approve')],
   })), 'Corrija o botão de enviar do Site Alfa');
   assert.notStrictEqual(exe.error_code, 'SECRET_DETECTED');
@@ -219,10 +219,10 @@ test('O4c. resumo da IA com cara de secret (SHA de commit, "token: ...") é redi
 test('O4d. agente que responde com o código em texto recebe um lembrete e salva na segunda vez', async () => {
   await setAutonomy(3);
   const router = scriptedRouter({
-    architect: [{ text: 'Mudar src/app.js.' }],
+    architect: [{ text: 'Mudar src/app.html.' }],
     frontend: [{ text: 'Aqui está o código: <button type="submit">Enviar</button>' }, req => {
       assert.match(req.messages.at(-1).content, /terminou sem salvar nada/);
-      return commitStep('src/app.js')(req);
+      return commitStep('src/app.html')(req);
     }, { text: 'Salvo.' }],
     reviewer: [report('approve')], security: [report('approve')],
   });
@@ -230,9 +230,29 @@ test('O4d. agente que responde com o código em texto recebe um lembrete e salva
   assert.ok(exe.pull_request, JSON.stringify([exe.status, exe.error_code]));
 });
 
+test('O4e. ADR-Q-02: HTML quebrado volta ao agente pela checagem automática, sem gastar o Reviewer; corrigido, segue para o PR', async () => {
+  await setAutonomy(3);
+  const broken = '<!DOCTYPE html><html lang="pt-BR"><head><title>T</title><meta name="viewport" content="width=device-width"></head><body><form><div><input aria-label="x">\n"\n</form><img src="hero.jpg"></body></html>';
+  const fixed = '<!DOCTYPE html><html lang="pt-BR"><head><title>T</title><meta name="viewport" content="width=device-width"></head><body><form><div><input aria-label="x"></div></form></body></html>';
+  const put = content => req => ({ tool_calls: [call('github.commit_files', { branch: branchOf(req), message: 'Página', files: [{ path: 'demo/index.html', content }] })] });
+  const router = scriptedRouter({
+    architect: [{ text: 'Criar demo/index.html.' }],
+    frontend: [put(broken), { text: 'feito' }, req => {
+      assert.match(req.messages[0].content, /checagem automática/);
+      assert.match(req.messages[0].content, /hero\.jpg" não existe/);
+      return put(fixed)(req);
+    }, { text: 'corrigido' }],
+    reviewer: [report('approve')], security: [report('approve')],
+  });
+  const { exe } = await startAndRun(orch(router), 'Crie a página de contato do Site Alfa');
+  assert.ok(exe.pull_request, JSON.stringify([exe.status, exe.error_code, exe.result_summary]));
+  assert.strictEqual(exe.fix_rounds, 1);
+  assert.strictEqual(router.seen.filter(s => s.agent === 'reviewer').length, 1, 'o Reviewer só rodou com o HTML já correto');
+});
+
 test('O5. orçamento estourado para a execução com BUDGET_EXCEEDED', async () => {
   await setAutonomy(3);
-  const { exe } = await startAndRun(orch(scriptedRouter({ architect: [{ text: 'x' }], coder: [commitStep('src/app.js')] })),
+  const { exe } = await startAndRun(orch(scriptedRouter({ architect: [{ text: 'x' }], coder: [commitStep('src/app.html')] })),
     'Corrija o cabeçalho do Site Alfa', { budget: { max_steps: 1 } });
   assert.deepStrictEqual([exe.status, exe.error_code], ['failed', 'BUDGET_EXCEEDED']);
   assert.strictEqual(exe.budget.max_steps, 1);
