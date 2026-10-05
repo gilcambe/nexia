@@ -35,7 +35,7 @@ async function main() {
 
   if (!env.GEMINI_API_KEY) out(false, 'Gemini', 'GEMINI_API_KEY vazio');
   else {
-    for (const model of ['gemini-2.5-flash', 'gemini-3.1-pro-preview']) {
+    for (const model of ['gemini-2.5-flash']) {
       const r = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
         method: 'POST', headers: { Authorization: `Bearer ${env.GEMINI_API_KEY}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ model, messages: [{ role: 'user', content: 'Responda só OK.' }], max_tokens: 20 }),
