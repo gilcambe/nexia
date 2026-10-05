@@ -1,0 +1,237 @@
+{
+  "spec": {
+    "kind": "site",
+    "name": "Sorriso Leve",
+    "tagline": "Odontologia gentil para toda a família",
+    "photo_theme": "dentist dental",
+    "description": "Clínica odontológica em São Paulo especializada em clareamento, implantes, ortodontia e cuidados gerais.",
+    "folder": "demos/sorriso-leve-v2",
+    "fonts": {
+      "heading": "Fraunces",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2a7f8e",
+      "accent": "#f4a259",
+      "bg": "#f7fbfb",
+      "surface": "#ffffff",
+      "text": "#16302f",
+      "muted": "#5b6f70",
+      "dark": "#0f2e33"
+    },
+    "style": "soft",
+    "contact": {
+      "whatsapp": "5511999998888",
+      "phone": "(11) 99999-8888",
+      "email": "contato@sorrisoleve.com.br",
+      "address": "Rua das Flores, 120",
+      "city": "São Paulo - SP",
+      "hours": "Seg a Sex, 8h às 19h",
+      "instagram": "sorrisoleve",
+      "facebook": ""
+    },
+    "sections": [
+      {
+        "type": "hero",
+        "id": "sorriso-leve-cuide-do-seu-sorriso-com-qu",
+        "title": "Sorriso Leve – Cuide do seu sorriso com quem entende",
+        "subtitle": "Clareamento, implantes, ortodontia e cuidados gerais em um ambiente acolhedor.",
+        "eyebrow": "Clínica odontológica",
+        "cta": {
+          "label": "Marcar consulta",
+          "href": "whatsapp"
+        },
+        "cta2": {
+          "label": "Conheça nossos tratamentos",
+          "href": "#tratamentos"
+        },
+        "image_query": "smiling dentist patient",
+        "video_query": "dental clinic interior"
+      },
+      {
+        "type": "services",
+        "id": "tratamentos",
+        "title": "Nossos Tratamentos",
+        "subtitle": "Saúde e estética para o seu sorriso.",
+        "items": [
+          {
+            "title": "Clareamento",
+            "text": "Deixe seus dentes até 8 tons mais brancos com segurança.",
+            "price": "a partir de R$ 690",
+            "image_query": "teeth whitening"
+          },
+          {
+            "title": "Implantes",
+            "text": "Restauramos a funcionalidade e a estética com tecnologia avançada.",
+            "price": "sob consulta",
+            "image_query": "dental implant"
+          },
+          {
+            "title": "Ortodontia",
+            "text": "Correções discretas com aparelhos modernos ou alinhadores.",
+            "price": "sob consulta",
+            "image_query": "orthodontic braces"
+          },
+          {
+            "title": "Clínico geral",
+            "text": "Check‑up, prevenção e tratamentos restauradores.",
+            "price": "sob consulta",
+            "image_query": "dental checkup"
+          }
+        ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-a-sorriso-leve",
+        "title": "Sobre a Sorriso Leve",
+        "subtitle": "Com mais de 10 anos de experiência, a Sorriso Leve oferece um atendimento humanizado e tecnologia de ponta para pacientes de todas as idades. Nossa missão é transformar visitas ao dentista em momentos de conforto e confiança.",
+        "text": "Com mais de 10 anos de experiência, a Sorriso Leve oferece um atendimento humanizado e tecnologia de ponta para pacientes de todas as idades. Nossa missão é transformar visitas ao dentista em momentos de conforto e confiança.",
+        "image_query": "modern dental clinic interior",
+        "stats": [
+          {
+            "value": "10",
+            "label": "anos de história"
+          },
+          {
+            "value": "10k+",
+            "label": "pacientes atendidos"
+          },
+          {
+            "value": "5",
+            "label": "dentistas especializados"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "nosso-espaco",
+        "title": "Nosso Espaço",
+        "subtitle": "",
+        "image_queries": [
+          "dental office waiting area",
+          "dentist chair closeup",
+          "patient smiling after treatment",
+          "dental equipment modern",
+          "team dental professionals"
+        ]
+      },
+      {
+        "type": "testimonials",
+        "id": "depoimentos",
+        "title": "Depoimentos",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Carla M.",
+            "role": "",
+            "text": "Fiquei encantada com o clareamento – meus dentes nunca estiveram tão brancos!",
+            "rating": 5
+          },
+          {
+            "name": "Rafael S.",
+            "role": "",
+            "text": "O implante foi rápido e indolor. Recomendo a todos!",
+            "rating": 5
+          },
+          {
+            "name": "Mariana L.",
+            "role": "",
+            "text": "A ortodontia invisível mudou minha vida, sem comprometer meu estilo.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "duvidas-frequentes",
+        "title": "Dúvidas Frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Aceitam convênio?",
+            "a": "Sim, atendemos aos principais planos de saúde odontológicos."
+          },
+          {
+            "q": "Qual o prazo da primeira consulta?",
+            "a": "A primeira avaliação tem duração de 45 minutos e pode ser agendada em até 48h."
+          },
+          {
+            "q": "Quanto tempo dura o tratamento ortodôntico?",
+            "a": "Depende do caso, mas geralmente varia entre 12 e 24 meses."
+          },
+          {
+            "q": "O clareamento causa sensibilidade?",
+            "a": "Utilizamos protocolos que minimizam a sensibilidade, com acompanhamento personalizado."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "agende-sua-avaliacao",
+        "title": "Agende sua avaliação",
+        "subtitle": "Responderemos rapidamente pelo WhatsApp.",
+        "cta": {
+          "label": "Falar no WhatsApp",
+          "href": "whatsapp"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "fale-conosco",
+        "title": "Fale Conosco",
+        "subtitle": "",
+        "map": true
+      }
+    ]
+  },
+  "media": {
+    "s0.hero": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/20190202_GCC_%40_Moss_Dental_Clinic_-_32122740377.jpg/1280px-20190202_GCC_%40_Moss_Dental_Clinic_-_32122740377.jpg",
+      "width": 1280,
+      "height": 912,
+      "alt": "20190202 GCC @ Moss Dental Clinic - 32122740377",
+      "credit": "20190202 GCC @ Moss Dental Clinic - 32122740377 — Germanna CC (BY 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Preparing_Teeth_Whitening_Materials_for_Dental_Treatment.jpg/1280px-Preparing_Teeth_Whitening_Materials_for_Dental_Treatment.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "Preparing Teeth Whitening Materials for Dental Treatment",
+      "credit": "Preparing Teeth Whitening Materials for Dental Treatment — Jameswasswa (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/X-ray_of_root_analogue_dental_implant_two_rooted_left_lower_molar.jpg/1280px-X-ray_of_root_analogue_dental_implant_two_rooted_left_lower_molar.jpg",
+      "width": 1280,
+      "height": 1007,
+      "alt": "X-ray of root analogue dental implant two rooted left lower molar",
+      "credit": "X-ray of root analogue dental implant two rooted left lower molar — Logicwhatelse (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/During_COVID-19_Pandemic-Free_Dental_checkup_for_underprivileged_children_by_a_trust_-Kolkata_West_Bengal-September_2021_IMG_20210912_102705_1.jpg/1280px-During_COVID-19_Pandemic-Free_Dental_checkup_for_underprivileged_children_by_a_trust_-Kolkata_West_Bengal-September_2021_IMG_20210912_102705_1.jpg",
+      "width": 1280,
+      "height": 720,
+      "alt": "During COVID-19 Pandemic-Free Dental checkup for underprivileged children by a t",
+      "credit": "During COVID-19 Pandemic-Free Dental checkup for underprivileged children by a trust -Kolkata West Bengal-Sept",
+      "provider": "openverse"
+    },
+    "s3.g3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/7/79/Dental_treatment_room_featuring_equipment_and_a_chair_in_a_modern_clinic.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "width": 4016,
+      "height": 6016,
+      "alt": "Dental treatment room featuring equipment and a chair in a modern clinic",
+      "credit": "Dental treatment room featuring equipment and a chair in a modern clinic — Shixart1985 (BY 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g4": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/be/US%2C_Burundi_military_dental_professionals_team_up_during_medical_exercise_%288547470%29.jpg/1280px-US%2C_Burundi_military_dental_professionals_team_up_during_medical_exercise_%288547470%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 885,
+      "alt": "U.S. Army Maj. Frederick Dawson, a comprehensive dentist (63B) assigned to the 3",
+      "credit": "U.S. Army photo by 1st Lt. Katherine Sibilla (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    }
+  }
+}
