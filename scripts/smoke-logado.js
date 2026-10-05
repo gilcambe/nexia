@@ -140,6 +140,13 @@ async function main() {
         if (last.result_summary) console.log(`  resumo: ${short(last.result_summary)}`);
         for (const s of last.plan || []) console.log(`  etapa ${s.step} ${s.agent}: ${s.status}${s.error_code ? ` [${s.error_code}]` : ''}${s.model ? ` (${s.model})` : ''} ${short(s.summary || '')}`);
         if (last.work_branch || last.pull_request) console.log(`  resultado: ramo ${last.work_branch || '-'} PR #${last.pull_request || '-'}`);
+        if (last.status === 'failed') {
+          // Ferramentas que a execução usou (mais recentes primeiro), para achar a causa sem abrir o banco.
+          const tc = await api(`/nexia/tool-calls?project_id=${encodeURIComponent(project.id)}&limit=20`);
+          for (const c of ((tc.json && tc.json.items) || []).filter(c => !c.execution_id || c.execution_id === last.execution_id).slice(0, 20)) {
+            console.log(`  ferramenta ${c.tool}: ${c.status}${c.error_code ? ` [${c.error_code}]` : ''} ${short(c.input_summary || '')} → ${short(c.output_summary || '')}`);
+          }
+        }
       }
     }
 
