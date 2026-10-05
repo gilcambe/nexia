@@ -9,7 +9,7 @@ const READ_TOOLS = ['vault.get', 'vault.list', 'vault.history', 'vault.context',
   'github.get_repo', 'github.list_branches', 'github.get_file', 'github.compare', 'github.list_commits',
   'github.list_issues', 'github.list_pulls', 'github.get_checks', 'github.list_workflow_runs'];
 const CODE_TOOLS = [...READ_TOOLS, 'github.create_branch', 'github.edit_files', 'github.commit_files'];
-const MEDIA_TOOLS = ['media.search_images', 'media.search_videos'];
+const MEDIA_TOOLS = ['media.search_images', 'media.search_videos', 'media.search_gifs', 'media.search_audio'];
 
 const COMMON = [
   'Você é um agente do NEXIA AI e responde em português do Brasil.',
