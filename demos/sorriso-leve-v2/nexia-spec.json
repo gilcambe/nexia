@@ -24,7 +24,7 @@
       "whatsapp": "5511999998888",
       "phone": "(11) 99999-8888",
       "email": "contato@sorrisoleve.com.br",
-      "address": "Rua das Flores, 120",
+      "address": "Rua das Flores, 120 (Exemplo)",
       "city": "São Paulo - SP",
       "hours": "Seg a Sex, 8h às 19h",
       "instagram": "sorrisoleve",
@@ -70,13 +70,13 @@
             "title": "Ortodontia",
             "text": "Correções discretas com aparelhos modernos ou alinhadores.",
             "price": "sob consulta",
-            "image_query": "orthodontic braces"
+            "image_query": "clear aligners"
           },
           {
             "title": "Clínico geral",
-            "text": "Check‑up, prevenção e tratamentos restauradores.",
+            "text": "Check-up, prevenção e tratamentos restauradores.",
             "price": "sob consulta",
-            "image_query": "dental checkup"
+            "image_query": "modern dental checkup"
           }
         ]
       },
@@ -107,13 +107,7 @@
         "id": "nosso-espaco",
         "title": "Nosso Espaço",
         "subtitle": "",
-        "image_queries": [
-          "dental office waiting area",
-          "dentist chair closeup",
-          "patient smiling after treatment",
-          "dental equipment modern",
-          "team dental professionals"
-        ]
+        "image_queries": []
       },
       {
         "type": "testimonials",
@@ -123,20 +117,20 @@
         "items": [
           {
             "name": "Carla M.",
-            "role": "",
-            "text": "Fiquei encantada com o clareamento – meus dentes nunca estiveram tão brancos!",
+            "role": "Paciente de Clareamento",
+            "text": "Fiquei encantada com o clareamento – meus dentes nunca estiveram tão brancos! O atendimento foi super carinhoso.",
             "rating": 5
           },
           {
             "name": "Rafael S.",
-            "role": "",
-            "text": "O implante foi rápido e indolor. Recomendo a todos!",
+            "role": "Paciente de Implantes",
+            "text": "O implante foi rápido e indolor. Recomendo a todos que procuram segurança e qualidade técnica.",
             "rating": 5
           },
           {
             "name": "Mariana L.",
-            "role": "",
-            "text": "A ortodontia invisível mudou minha vida, sem comprometer meu estilo.",
+            "role": "Paciente de Orto",
+            "text": "A ortodontia invisível mudou minha vida, sem comprometer meu estilo. Vale cada centavo.",
             "rating": 5
           }
         ]
@@ -179,7 +173,7 @@
         "type": "contact",
         "id": "fale-conosco",
         "title": "Fale Conosco",
-        "subtitle": "",
+        "subtitle": "Estamos te esperando! Agende seu horário ou tire suas dúvidas.",
         "map": true
       }
     ]
@@ -216,22 +210,6 @@
       "alt": "During COVID-19 Pandemic-Free Dental checkup for underprivileged children by a t",
       "credit": "During COVID-19 Pandemic-Free Dental checkup for underprivileged children by a trust -Kolkata West Bengal-Sept",
       "provider": "openverse"
-    },
-    "s3.g3": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/7/79/Dental_treatment_room_featuring_equipment_and_a_chair_in_a_modern_clinic.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-      "width": 4016,
-      "height": 6016,
-      "alt": "Dental treatment room featuring equipment and a chair in a modern clinic",
-      "credit": "Dental treatment room featuring equipment and a chair in a modern clinic — Shixart1985 (BY 2.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s3.g4": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/be/US%2C_Burundi_military_dental_professionals_team_up_during_medical_exercise_%288547470%29.jpg/1280px-US%2C_Burundi_military_dental_professionals_team_up_during_medical_exercise_%288547470%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 885,
-      "alt": "U.S. Army Maj. Frederick Dawson, a comprehensive dentist (63B) assigned to the 3",
-      "credit": "U.S. Army photo by 1st Lt. Katherine Sibilla (Public domain, via Wikimedia Commons)",
-      "provider": "wikimedia"
     }
   }
 }
