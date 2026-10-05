@@ -1,0 +1,269 @@
+{
+  "spec": {
+    "kind": "site",
+    "name": "Sorriso Leve",
+    "tagline": "Odontologia gentil para toda a família",
+    "description": "Clínica odontológica em São Paulo especializada em clareamento, implantes, ortodontia e atendimento geral.",
+    "folder": "demos/sorriso-leve",
+    "fonts": {
+      "heading": "Fraunces",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2a7f8e",
+      "accent": "#f4a259",
+      "bg": "#f7fbfb",
+      "surface": "#ffffff",
+      "text": "#16302f",
+      "muted": "#5b6f70",
+      "dark": "#0f2e33"
+    },
+    "style": "soft",
+    "contact": {
+      "whatsapp": "5511999998888",
+      "phone": "(11) 99999-8888",
+      "email": "contato@sorrisoleve.com.br",
+      "address": "Rua das Flores, 120",
+      "city": "São Paulo - SP",
+      "hours": "Seg a Sex, 8h às 19h",
+      "instagram": "sorrisoleve",
+      "facebook": ""
+    },
+    "sections": [
+      {
+        "type": "hero",
+        "id": "seu-sorriso-merece-cuidado-sem-medo",
+        "title": "Seu sorriso merece cuidado sem medo",
+        "subtitle": "Tratamentos modernos e atendimento acolhedor para todas as idades.",
+        "eyebrow": "Clínica odontológica",
+        "cta": {
+          "label": "Agendar avaliação",
+          "href": "whatsapp"
+        },
+        "cta2": {
+          "label": "Conhecer serviços",
+          "href": "#servicos"
+        },
+        "image_query": "smiling woman dentist clinic",
+        "video_query": ""
+      },
+      {
+        "type": "services",
+        "id": "servicos",
+        "title": "Nossos Tratamentos",
+        "subtitle": "Saúde bucal e estética com tecnologia avançada.",
+        "items": [
+          {
+            "title": "Clareamento",
+            "text": "Ilumine seu sorriso em até 8 tons mais brancos.",
+            "price": "a partir de R$ 690",
+            "image_query": "teeth whitening"
+          },
+          {
+            "title": "Implantes",
+            "text": "Restauramos dentes perdidos com conforto e segurança.",
+            "price": "a partir de R$ 5.500",
+            "image_query": "dental implant"
+          },
+          {
+            "title": "Ortodontia",
+            "text": "Alinhamento estético com aparelhos modernos.",
+            "price": "a partir de R$ 3.200",
+            "image_query": "orthodontic braces"
+          },
+          {
+            "title": "Clínico Geral",
+            "text": "Prevenção, diagnóstico e tratamento de cáries e doenças gengivais.",
+            "price": "consulta a partir de R$ 150",
+            "image_query": "dental checkup"
+          }
+        ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-a-sorriso-leve",
+        "title": "Sobre a Sorriso Leve",
+        "subtitle": "Com mais de 12 anos de experiência, nossa clínica oferece um ambiente acolhedor e tecnologia de ponta para cuidar do sorriso de toda a família.",
+        "text": "Com mais de 12 anos de experiência, nossa clínica oferece um ambiente acolhedor e tecnologia de ponta para cuidar do sorriso de toda a família.",
+        "image_query": "modern dental office interior",
+        "stats": [
+          {
+            "value": "12",
+            "label": "anos de experiência"
+          },
+          {
+            "value": "8.000+",
+            "label": "pacientes atendidos"
+          },
+          {
+            "value": "5",
+            "label": "profissionais especializados"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "conheca-nosso-espaco",
+        "title": "Conheça nosso espaço",
+        "subtitle": "",
+        "image_queries": [
+          "dental office interior",
+          "dentist chair modern",
+          "happy patient smiling",
+          "dental equipment sterilization",
+          "reception area dental clinic",
+          "treatment room lighting"
+        ]
+      },
+      {
+        "type": "testimonials",
+        "id": "depoimentos",
+        "title": "Depoimentos",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Carla M.",
+            "role": "",
+            "text": "Perdi o medo de dentista! O atendimento foi incrível.",
+            "rating": 5
+          },
+          {
+            "name": "Rafael S.",
+            "role": "",
+            "text": "Meu clareamento ficou perfeito, recomendo a todos.",
+            "rating": 5
+          },
+          {
+            "name": "Mariana L.",
+            "role": "",
+            "text": "Ortodontia confortável e resultados visíveis em poucos meses.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "perguntas-frequentes",
+        "title": "Perguntas Frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Aceitam convênio?",
+            "a": "Sim, atendemos os principais planos de saúde dental."
+          },
+          {
+            "q": "Qual a duração do tratamento de clareamento?",
+            "a": "Geralmente de 1 a 2 sessões, dependendo do caso."
+          },
+          {
+            "q": "Os implantes são dolorosos?",
+            "a": "O procedimento é realizado com anestesia local, garantindo conforto."
+          },
+          {
+            "q": "Qual a idade mínima para iniciar o tratamento ortodôntico?",
+            "a": "A partir dos 7 anos, após avaliação do crescimento dental."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "agende-sua-avaliacao-agora",
+        "title": "Agende sua avaliação agora",
+        "subtitle": "Resposta rápida pelo WhatsApp, sem compromisso.",
+        "cta": {
+          "label": "Falar no WhatsApp",
+          "href": "whatsapp"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "fale-conosco",
+        "title": "Fale conosco",
+        "subtitle": "Estamos prontos para atender suas dúvidas e marcar sua consulta. Clique no botão abaixo para conversar via WhatsApp.",
+        "map": true
+      }
+    ]
+  },
+  "media": {
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/Man_demonstrating_the_results_of_teeth-whitening.jpg",
+      "width": 4272,
+      "height": 2848,
+      "alt": "Man demonstrating the results of teeth-whitening",
+      "credit": "Man demonstrating the results of teeth-whitening — Marcus Quigmire from Florida, USA (BY-SA 2.0, via Openverse",
+      "provider": "openverse"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/d4/X-ray_of_root_analogue_dental_implant_two_rooted_left_lower_molar.jpg",
+      "width": 1944,
+      "height": 1529,
+      "alt": "X-ray of root analogue dental implant two rooted left lower molar",
+      "credit": "X-ray of root analogue dental implant two rooted left lower molar — Logicwhatelse (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item2": {
+      "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZnJkZW50aXN0X29ydGhvZG9udGljc19kZW50YWxfcmFpbF8xLWltYWdlLWt5Y2hoZXo4LmpwZw.jpg",
+      "width": 4160,
+      "height": 3120,
+      "alt": "orthodontic braces",
+      "credit": "Foto — autor desconhecido (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s2.about": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f6/Pharmacy_%2827651099119%29.jpg/1920px-Pharmacy_%2827651099119%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1600,
+      "height": 1067,
+      "alt": "Opened in 2004 in the building where the old pharmacy La Reunión was located, th",
+      "credit": "Rob Oo from NL (CC BY 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g0": {
+      "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL2Zyb2ZmaWNlX2RlbnRpc3RfMTYzOTY3NS1pbWFnZS1reWJiMGZxci5qcGc.jpg",
+      "width": 3616,
+      "height": 2421,
+      "alt": "Dental clinic",
+      "credit": "Dental clinic — autor desconhecido (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/c/cf/WilliamGeorgeBeers.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1600,
+      "height": 2108,
+      "alt": "Picture of William George Beers, a noted Canadian dentist and patriot, who is re",
+      "credit": "William Notman (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g2": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/MEDREACH_11%2C_Dental_outreach%2C_Malawi%2C_May_2011_%285706739673%29.jpg/1920px-MEDREACH_11%2C_Dental_outreach%2C_Malawi%2C_May_2011_%285706739673%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1600,
+      "height": 1063,
+      "alt": "LILONGWE, Malawi - Malawian children stop on the way to school to say hi to the ",
+      "credit": "US Army Africa from Vicenza, Italy (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g3": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b5/US_Navy_100610-N-8539M-296_Sailors_sterilize_dental_equipment_during_a_Cooperation_Afloat_Readiness_and_Training_%28CARAT%29_Cambodia_2010_medical_civic_action_project.jpg/1920px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1600,
+      "height": 1143,
+      "alt": "PREY VEANG, Cambodia (June 10, 2010) Hospital Corpsmen 2nd Class Jared Meyers, l",
+      "credit": "U.S. Navy photo by Lt. Mike Morley (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g4": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/85/Seating_area_at_Reception.jpg/1920px-Seating_area_at_Reception.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1600,
+      "height": 1200,
+      "alt": "Seating area",
+      "credit": "AuliRaha (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g5": {
+      "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvcHgxMTAxMTc0LWltYWdlLWt3eXJicWNyLmpwZw.jpg",
+      "width": 3000,
+      "height": 4000,
+      "alt": "treatment room lighting",
+      "credit": "Foto — autor desconhecido (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    }
+  }
+}
