@@ -35,6 +35,9 @@ function shannonEntropy(s) {
 // Sequência longa, aleatória, com letras e dígitos: típica de token/chave.
 function looksHighEntropy(token) {
   if (token.length < 32) return false;
+  // Nome legível com separadores (branch "nexia/corrija-o-botao-a1b2c3", caminho de arquivo): palavras curtas, não chave.
+  const parts = token.split(/[-/_.]+/).filter(Boolean);
+  if (parts.length >= 3 && parts.every(p => p.length <= 16)) return false;
   if (!/[A-Za-z]/.test(token) || !/[0-9]/.test(token)) return false;
   return shannonEntropy(token) >= 4.2;
 }
