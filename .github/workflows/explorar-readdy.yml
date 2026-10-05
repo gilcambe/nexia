@@ -28,4 +28,4 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout --orphan explorar-readdy-resultado && git rm -rqf . && rm -rf tmp-explorar
-          cp -r ../explorar-out/* . && git add -A && git commit -qm "Exploração do sistema do Readdy" && git push -qf origin explorar-readdy-resultado
+          cp -r ../explorar-out/* . && echo node_modules > .gitignore && git add -A && git commit -qm "Exploração do sistema do Readdy" && git push -qf origin explorar-readdy-resultado
