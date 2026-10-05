@@ -104,6 +104,15 @@ function normalizeSpec(raw, { kind: forcedKind, request = '' } = {}) {
     if (!spec.sections.some(s => s.type === 'hero')) errors.push('falta a seção "hero"');
     if (spec.sections.length < 4) errors.push('o site precisa de pelo menos 4 seções');
     if (!spec.sections.some(s => s.type === 'contact')) spec.sections.push(section({ type: 'contact', title: 'Fale com a gente' }));
+    // Âncoras únicas e sem colidir com as fixas da página.
+    const taken = new Set(['topo', 'conteudo', 'menu', 'contato']);
+    for (const s of spec.sections) {
+      if (s.type === 'contact') continue;
+      let id = s.id, n = 2;
+      while (taken.has(id)) id = `${s.id}-${n++}`;
+      taken.add(id);
+      s.id = id;
+    }
   } else {
     spec.entities = arr(r.entities, 6).map(entity).filter(Boolean);
     if (!spec.entities.length) errors.push('o sistema precisa de pelo menos 1 entidade em "entities" com "fields"');

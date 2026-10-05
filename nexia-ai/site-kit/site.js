@@ -43,7 +43,7 @@ const sec = {
       ${s.cta2 ? `<a class="btn btn--ghost" href="${attr(href(spec, s.cta2.href))}">${esc(s.cta2.label)}</a>` : ''}
     </div>
   </div>
-  <a class="hero__scroll" href="#${attr(spec.sections[si + 1] ? spec.sections[si + 1].id : 'contato')}" aria-label="Rolar para a próxima seção"><span></span></a>
+  <a class="hero__scroll" href="#__NEXT__" aria-label="Rolar para a próxima seção"><span></span></a>
 </section>`;
   },
   services(s, spec, media, si) {
@@ -168,7 +168,11 @@ function head(s) {
 }
 
 function html(spec, media) {
-  const nav = spec.sections.filter(s => !['hero', 'cta'].includes(s.type) && s.title).slice(0, 6);
+  // Seção sem conteúdo (ex.: galeria sem nenhuma foto) não aparece; menu e "rolar" só apontam para o que existe.
+  const parts = spec.sections.map((s, si) => ({ s, out: sec[s.type](s, spec, media, si) })).filter(x => x.out);
+  const anchor = s => (s.type === 'contact' ? 'contato' : s.id);
+  const nav = parts.map(x => x.s).filter(s => !['hero', 'cta'].includes(s.type) && s.title).slice(0, 6);
+  const body = parts.map((x, k) => x.out.replace('#__NEXT__', `#${parts[k + 1] ? anchor(parts[k + 1].s) : 'contato'}`)).join('\n');
   const credits = Object.values(media).filter(m => m && m.credit).map(m => m.credit);
   const c = spec.contact;
   const ogImg = Object.values(media).find(Boolean);
@@ -196,13 +200,13 @@ function html(spec, media) {
       <a class="brand" href="#topo">${esc(spec.name)}</a>
       <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu" aria-label="Abrir menu">${icon('menu', 24)}</button>
       <nav id="menu" class="menu" aria-label="Menu principal">
-        ${nav.map(s => `<a href="#${s.type === 'contact' ? 'contato' : s.id}">${esc(navLabel(s))}</a>`).join('\n        ')}
+        ${nav.map(s => `<a href="#${anchor(s)}">${esc(navLabel(s))}</a>`).join('\n        ')}
         ${c.whatsapp ? `<a class="btn btn--primary btn--sm" href="${attr(waLink(spec, `Olá! Vim pelo site da ${spec.name}.`))}" target="_blank" rel="noopener">${icon('whatsapp', 18)} WhatsApp</a>` : ''}
       </nav>
     </div>
   </header>
   <main id="conteudo">
-${spec.sections.map((s, si) => sec[s.type](s, spec, media, si)).filter(Boolean).join('\n')}
+${body}
   </main>
   <footer class="footer">
     <div class="container footer__grid">
