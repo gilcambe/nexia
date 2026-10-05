@@ -1,0 +1,63 @@
+name: Fotos de tela de site gerado
+
+# Abre um site/sistema estático de uma branch no navegador (computador e celular) e guarda as fotos
+# de tela na branch "previews" (pasta = branch/pasta do site). Grátis: roda no GitHub Actions.
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch com o site (ex.: nexia/crie-um-site-...)'
+        required: true
+      folder:
+        description: 'Pasta do site dentro da branch (ex.: demos/sorriso-leve)'
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: preview-site
+  cancel-in-progress: false
+
+jobs:
+  preview:
+    name: Fotos de tela
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ inputs.branch }}
+          path: site
+          persist-credentials: false
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: develop
+          path: tools
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Instalar o navegador
+        working-directory: tools
+        run: |
+          npm i --no-save --no-audit --no-fund playwright@1.47.2
+          npx playwright install --with-deps chromium
+      - name: Tirar as fotos de tela
+        working-directory: tools
+        env:
+          PREVIEW_DIR: ${{ github.workspace }}/site/${{ inputs.folder }}
+          OUT: ${{ github.workspace }}/shots
+        run: node scripts/preview-site.js
+      - name: Guardar na branch previews
+        working-directory: tools
+        env:
+          DEST: ${{ inputs.branch }}/${{ inputs.folder }}
+        run: |
+          case "$DEST" in *..*|/*|*" "*) echo "pasta inválida"; exit 1;; esac
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch --depth 1 origin previews; then git checkout -B previews FETCH_HEAD; else git checkout --orphan previews && git rm -rqf .; fi
+          rm -rf "$DEST" && mkdir -p "$DEST" && cp "$GITHUB_WORKSPACE"/shots/* "$DEST"/
+          git add -f "$DEST"
+          git commit -qm "Fotos de tela: $DEST" || exit 0
+          git push -q origin previews
