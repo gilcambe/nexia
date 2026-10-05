@@ -23,6 +23,7 @@ function retryAfterMs(text) {
   return Math.ceil(((Number(m[1]) || 0) * 60 + (Number(m[2]) || 0)) * 1000) + 500;
 }
 const RATE_ROUNDS = 3;
+const ANSWER_CODES = new Set(['NOT_FOUND', 'UPSTREAM_NOT_FOUND']);
 // Planos grátis limitam tokens por minuto: resultados de ferramenta antigos (já usados pelo
 // modelo) seguem só no começo; os 2 mais recentes vão inteiros.
 const OLD_RESULT_MAX = 1500;
@@ -180,6 +181,7 @@ async function runAgent(o) {
       else {
         const code = (r.error && r.error.code) || (r.status === 'denied' ? 'POLICY_DENIED' : 'TOOL_ERROR');
         results.push({ tool: name, ok: false, error: code, message: r.error ? r.error.message : r.reason });
+        if (ANSWER_CODES.has(code)) continue;   // "não existe" é resposta (ex.: conferir se o arquivo novo já existe), não falha
         const key = `${name}:${code}`;   // por ferramenta: um erro de entrada numa não derruba as outras
         const n = (failures.get(key) || 0) + 1;
         failures.set(key, n);
