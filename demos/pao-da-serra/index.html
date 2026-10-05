@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Pão da Serra – Padaria artesanal que oferece pães fresquinhos, bolos e doces feitos com ingredientes locais. Visite nosso cardápio e faça seu pedido.">
+  <meta property="og:title" content="Pão da Serra – Padaria Artesanal">
+  <meta property="og:description" content="Pão da Serra – Padaria artesanal que oferece pães fresquinhos, bolos e doces feitos com ingredientes locais. Visite nosso cardápio e faça seu pedido.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://pao-da-serra.com/">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1517248135467-4c7edcadc54a?auto=format&fit=crop&w=1200&q=80">
+  <title>Pão da Serra – Padaria Artesanal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <header id="topo">
+    <nav aria-label="Menu principal">
+      <ul class="nav-list">
+        <li><a href="#topo">Início</a></li>
+        <li><a href="#destaque">Destaque</a></li>
+        <li><a href="#cardapio">Cardápio</a></li>
+        <li><a href="#sobre">Sobre</a></li>
+        <li><a href="#depoimentos">Depoimentos</a></li>
+        <li><a href="#contato">Contato</a></li>
+      </ul>
+    </nav>
+    <h1>Pão da Serra</h1>
+    <p>Sabores que fazem a diferença</p>
+    <a href="#cardapio" class="btn-primary">Veja Cardápio</a>
+  </header>
+
+  <section id="destaque" class="section">
+    <h2>Destaque</h2>
+    <p>Na Pão da Serra, cada pão é preparado com farinha selecionada, fermento natural e muito carinho. Nossos chefs artesãos trabalham de manhã cedo para garantir a melhor textura e sabor.</p>
+  </section>
+
+  <section id="cardapio" class="section">
+    <h2>Cardápio</h2>
+    <div class="menu-grid">
+      <article class="menu-item">
+        <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80" alt="Pão integral" loading="lazy" width="400" height="300">
+        <h3>Pão Integral</h3>
+        <p class="price">R$ 15,00</p>
+      </article>
+      <article class="menu-item">
+        <img src="https://images.unsplash.com/photo-1589308078050-4a7a8b3b0c97?auto=format&fit=crop&w=400&q=80" alt="Pão de queijo" loading="lazy" width="400" height="300">
+        <h3>Pão de Queijo</h3>
+        <p class="price">R$ 12,00</p>
+      </article>
+      <article class="menu-item">
+        <img src="https://images.unsplash.com/photo-1556912168-4e2a1a3e9b5e?auto=format&fit=crop&w=400&q=80" alt="Bolo de cenoura" loading="lazy" width="400" height="300">
+        <h3>Bolo de Cenoura</h3>
+        <p class="price">R$ 28,00</p>
+      </article>
+      <article class="menu-item">
+        <img src="https://images.unsplash.com/photo-1523986371879-3a3c5a3c9b6d?auto=format&fit=crop&w=400&q=80" alt="Pão de mel" loading="lazy" width="400" height="300">
+        <h3>Pão de Mel</h3>
+        <p class="price">R$ 20,00</p>
+      </article>
+      <article class="menu-item">
+        <img src="https://images.unsplash.com/photo-1599386232840-8c9bfa5d5c3c?auto=format&fit=crop&w=400&q=80" alt="Pão de alho" loading="lazy" width="400" height="300">
+        <h3>Pão de Alho</h3>
+        <p class="price">R$ 18,00</p>
+      </article>
+      <article class="menu-item">
+        <img src="https://images.unsplash.com/photo-1555435074-9e0c8a0f5a4e?auto=format&fit=crop&w=400&q=80" alt="Coxinha de frango" loading="lazy" width="400" height="300">
+        <h3>Coxinha de Frango</h3>
+        <p class="price">R$ 14,00</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="sobre" class="section">
+    <h2>Sobre Nós</h2>
+    <p>A Pão da Serra nasceu de um sonho em 2020, buscando trazer pão de qualidade para a comunidade local. Utilizamos ingredientes de pequenos produtores e técnicas tradicionais de fermentação. Visite-nos e experimente!</p>
+  </section>
+
+  <section id="depoimentos" class="section">
+    <h2>Depoimentos</h2>
+    <blockquote>
+      <p>“Os pães são incríveis! Sempre encontro algo novo e delicioso.”</p>
+      <cite>Maria S. – Cliente</cite>
+    </blockquote>
+    <blockquote>
+      <p>“A atmosfera é acolhedora e os produtos frescos fazem toda a diferença.”</p>
+      <cite>João P. – Cliente</cite>
+    </blockquote>
+    <blockquote>
+      <p>“Recomendo a todos que buscam qualidade e sabor.”</p>
+      <cite>Ana L. – Cliente</cite>
+    </blockquote>
+  </section>
+
+  <section id="contato" class="section">
+    <h2>Contato</h2>
+    <form id="contact-form" novalidate>
+      <div class="form-group">
+        <label for="name">Nome <span aria-hidden="true">*</span></label>
+        <input type="text" id="name" name="name" required>
+      </div>
+      <div class="form-group">
+        <label for="email">Email <span aria-hidden="true">*</span></label>
+        <input type="email" id="email" name="email" required>
+      </div>
+      <div class="form-group">
+        <label for="phone">Telefone</label>
+        <input type="tel" id="phone" name="phone">
+      </div>
+      <div class="form-group">
+        <label for="message">Mensagem <span aria-hidden="true">*</span></label>
+        <textarea id="message" name="message" rows="4" required></textarea>
+      </div>
+      <button type="submit" class="btn-primary">Enviar</button>
+      <p id="form-feedback" aria-live="polite"></p>
+    </form>
+  </section>
+
+  <footer>
+    <p>&copy; 2026 Pão da Serra. Todos os direitos reservados.</p>
+  </footer>
+</body>
+</html>

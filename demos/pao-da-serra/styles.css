@@ -1,0 +1,127 @@
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html {
+  font-size: 16px;
+  line-height: 1.5;
+}
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #222;
+  background: #f9f9f9;
+}
+/* Navegação */
+header#topo {
+  background: #e63946;
+  color: #fff;
+  padding: 1rem;
+  text-align: center;
+}
+.nav-list {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.nav-list a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: bold;
+}
+.nav-list a:focus, .nav-list a:hover {
+  text-decoration: underline;
+}
+.btn-primary {
+  display: inline-block;
+  background: #ff9f1c;
+  color: #222;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background 0.3s;
+}
+.btn-primary:hover, .btn-primary:focus {
+  background: #ffca3a;
+}
+/* Seções */
+.section {
+  padding: 2rem 1rem;
+}
+#destaque {
+  background: #fff;
+  text-align: center;
+}
+#cardapio .menu-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+.menu-item {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  width: 100%;
+  max-width: 300px;
+  text-align: center;
+}
+.menu-item img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.menu-item h3 {
+  margin: 0.5rem 0;
+}
+.menu-item .price {
+  color: #e63946;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+/* Formulário */
+form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+.form-group {
+  margin-bottom: 1rem;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+#form-feedback {
+  margin-top: 1rem;
+  color: #e63946;
+}
+footer {
+  background: #222;
+  color: #fff;
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.875rem;
+}
+/* Responsividade */
+@media (min-width: 600px) {
+  .menu-grid {
+    justify-content: flex-start;
+  }
+}
+@media (min-width: 768px) {
+  body {
+    background: #e0e0e0;
+  }
+}
