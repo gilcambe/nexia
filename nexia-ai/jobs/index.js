@@ -12,7 +12,7 @@
 const { createExecutionContext, EXECUTION_ID_RE } = require('../vault/execution');
 
 // ADR-AUTO-01: 'robots.run' roda os Robôs NEXIA vencidos de todas as empresas (sem tenant/actor/ids).
-const KINDS = ['execution.run', 'execution.resume', 'execution.refresh', 'project.onboard', 'sweep', 'robots.run'];
+const KINDS = ['execution.run', 'execution.resume', 'execution.refresh', 'project.onboard', 'sweep', 'robots.run', 'tenant.duplicate'];
 const GLOBAL_KINDS = ['robots.run'];
 const TENANT_RE = /^[a-z0-9][a-z0-9_-]{0,62}$/;
 const ID_RE = /^[a-z]{2,4}_[a-f0-9]{32}$/;
@@ -54,6 +54,11 @@ function validateJob(job) {
     if (r.ref !== undefined && !/^[A-Za-z0-9._/-]{1,255}$/.test(r.ref)) bad('repository.ref');
     out.repository = { owner: r.owner, repo: r.repo, ...(r.ref ? { ref: r.ref } : {}) };
     if (job.repository_id !== undefined) { if (!ID_RE.test(job.repository_id)) bad('repository_id'); out.repository_id = job.repository_id; }
+  }
+  if (job.kind === 'tenant.duplicate') {
+    // ADR-CLONE-01: tenant de origem em "tenant"; o novo em "target" (só o id; nome e include ficam no Firestore).
+    if (!TENANT_RE.test(job.target || '') || job.target === out.tenant) bad('target');
+    out.target = job.target;
   }
   return out;
 }

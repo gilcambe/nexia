@@ -1,0 +1,129 @@
+name: Clonar site
+
+# NEXIA Clone (ADR-CLONE-01). Grátis: roda no GitHub Actions do repositório público.
+#   design  (padrão, qualquer site público): só o design (cores, fontes, tamanhos, cantos, sombras, espaçamentos,
+#           variáveis CSS e ordem das seções) → branch "clones-design". As fotos de tela (375/768/1440) servem só para
+#           medir o layout e NÃO são publicadas (o repositório é público e a imagem é do site de outra pessoa).
+#           Nada de texto, imagem, logo ou código do site original vai para o resultado.
+#   espelho (cópia fiel): só com autorizado=SOU_DONO_OU_AUTORIZADO (quem pede declara ser dono do site ou ter
+#           autorização) e com o robots.txt permitindo → branch nova + PR em rascunho com clones/<host>/.
+# As entradas chegam ao script só por variável de ambiente (nunca coladas no comando). Log público: só host e contagens.
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Endereço do site (https://...)'
+        required: true
+      modo:
+        description: 'design (só o visual) ou espelho (cópia fiel, só do seu site)'
+        required: true
+        default: design
+        type: choice
+        options: [design, espelho]
+      autorizado:
+        description: 'Só para espelho: escreva SOU_DONO_OU_AUTORIZADO se o site é seu ou você tem autorização'
+        required: false
+        default: ''
+      pasta:
+        description: 'Pasta de destino (padrão: clones/<host>)'
+        required: false
+        default: ''
+      max_paginas:
+        description: 'Espelho: máximo de páginas (1 a 200)'
+        required: false
+        default: '20'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: clonar-site
+  cancel-in-progress: false
+
+jobs:
+  clonar:
+    name: Clonar site
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      CLONE_URL: ${{ inputs.url }}
+      MODO: ${{ inputs.modo }}
+      AUTORIZADO: ${{ inputs.autorizado }}
+      PASTA: ${{ inputs.pasta }}
+      MAX_PAGINAS: ${{ inputs.max_paginas }}
+      OUT: ${{ github.workspace }}/../clone-out
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Conferir o pedido
+        run: |
+          node -e '
+            const c = require("./nexia-ai/cloner");
+            const v = c.validateUrl(process.env.CLONE_URL);
+            if (!v.ok) { console.error("URL recusada: " + v.error); process.exit(1); }
+            if (process.env.MODO === "espelho" && !c.isAuthorized(process.env.AUTORIZADO)) {
+              console.error("Modo espelho exige autorizado=" + c.AUTH_TOKEN + " (o site é seu ou você tem autorização)."); process.exit(1);
+            }
+            const fs = require("fs");
+            fs.appendFileSync(process.env.GITHUB_ENV, "CLONE_HOST=" + v.host.replace(/[^a-z0-9.:-]/g, "") + "\n");
+            fs.appendFileSync(process.env.GITHUB_ENV, "DEST=" + c.targetFolder(process.env.PASTA, v.host) + "\n");
+          '
+      - name: Instalar o navegador
+        run: |
+          npm i --no-save --no-audit --no-fund playwright@1.59.1
+          npx playwright install --with-deps chromium
+      - name: Capturar o site
+        run: node scripts/clonar-site.js
+      - name: Guardar o design (branch clones-design)
+        if: inputs.modo == 'design'
+        run: |
+          case "$DEST" in *..*|/*|*" "*) echo "pasta inválida"; exit 1;; esac
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch --depth 1 origin clones-design; then git checkout -B clones-design FETCH_HEAD; else git checkout --orphan clones-design && git rm -rqf .; fi
+          rm -rf "$DEST" "$OUT/design/fotos" && mkdir -p "$DEST" && cp -r "$OUT"/design/* "$DEST"/
+          git add -f "$DEST"
+          git commit -qm "Design de referência: $CLONE_HOST" || exit 0
+          git push -q origin clones-design
+          {
+            echo "## Design de $CLONE_HOST"
+            echo "Só o design (tokens e ordem das seções); nenhum texto, imagem, logo ou código do site original."
+            echo "Arquivos na branch \`clones-design\`, pasta \`$DEST\`: \`design.json\` e \`spec-base.json\` (base do Designer do Cortex). Fotos de tela não são publicadas."
+            echo '```json'; cat "$OUT/resultado.json"; echo; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Abrir PR em rascunho com o espelho
+        if: inputs.modo == 'espelho'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          case "$DEST" in *..*|/*|*" "*) echo "pasta inválida"; exit 1;; esac
+          BRANCH="nexia/clone-$(echo "$CLONE_HOST" | tr -c 'a-zA-Z0-9.-' '-' | cut -c1-60)-${GITHUB_RUN_ID}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch -q origin develop
+          git checkout -q -b "$BRANCH" FETCH_HEAD
+          rm -rf "$DEST" && mkdir -p "$DEST" && cp -r "$OUT"/site/. "$DEST"/
+          git add -f "$DEST"
+          git commit -qm "Espelho autorizado de $CLONE_HOST (NEXIA Clone)"
+          git push -q origin "$BRANCH"
+          printf '%s\n\n%s\n\n%s\n' \
+            "Espelho de \`$CLONE_HOST\` em \`$DEST\`, feito pelo workflow Clonar site com a declaração de que o site é do solicitante ou ele tem autorização." \
+            "**Atenção:** este repositório é público; o espelho fica público ao ser publicado aqui. Formulários foram neutralizados (sem envio ao servidor original); nenhum cookie ou credencial foi usado." \
+            "Resumo: $(cat "$OUT/resultado.json")" > "$RUNNER_TEMP/pr.md"
+          if gh api "repos/$GITHUB_REPOSITORY/pulls" -f base=develop -f head="$BRANCH" -f title="Espelho de $CLONE_HOST (NEXIA Clone)" -F draft=true -F body=@"$RUNNER_TEMP/pr.md" --jq .html_url > "$RUNNER_TEMP/pr.txt"; then
+            PR="$(cat "$RUNNER_TEMP/pr.txt")"
+          else
+            PR="(não abriu: ative em Settings > Actions > General a opção 'Allow GitHub Actions to create and approve pull requests'; a branch $BRANCH já está no repositório)"
+          fi
+          {
+            echo "## Espelho de $CLONE_HOST"
+            echo "> **Atenção: o repositório é público, então o espelho fica público.** Só publique se o site é seu ou você tem autorização."
+            echo
+            echo "- Branch: \`$BRANCH\`, pasta \`$DEST\`"
+            echo "- PR em rascunho: $PR"
+            echo "- Formulários neutralizados (sem envio ao servidor original); nenhum cookie ou credencial foi usado."
+            echo '```json'; cat "$OUT/resultado.json"; echo; echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
