@@ -88,6 +88,11 @@ test('detectSecret: não acusa nomes de variável, URLs, ids e texto comum', () 
     'tokenização de texto', 'password reset flow']) {
     assert.deepStrictEqual(detectSecret(s), [], s);
   }
+  // Branch de trabalho com sufixo aleatório: ~1% delas era acusada como "alta entropia" e derrubava a execução.
+  for (let i = 0; i < 500; i++) {
+    const b = `criar nexia/corrija-o-cabecalho-do-site-alfa-${crypto.randomBytes(3).toString('hex')} de develop`;
+    assert.deepStrictEqual(detectSecret(b), [], b);
+  }
 });
 
 test('redactSecrets: troca só o trecho suspeito e o resultado passa no detector', () => {
