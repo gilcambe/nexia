@@ -2,7 +2,8 @@ name: Clonar site
 
 # NEXIA Clone (ADR-CLONE-01). Grátis: roda no GitHub Actions do repositório público.
 #   design  (padrão, qualquer site público): só o design (cores, fontes, tamanhos, cantos, sombras, espaçamentos,
-#           variáveis CSS e ordem das seções) + fotos de tela 375/768/1440 para referência → branch "clones-design".
+#           variáveis CSS e ordem das seções) → branch "clones-design". As fotos de tela (375/768/1440) servem só para
+#           medir o layout e NÃO são publicadas (o repositório é público e a imagem é do site de outra pessoa).
 #           Nada de texto, imagem, logo ou código do site original vai para o resultado.
 #   espelho (cópia fiel): só com autorizado=SOU_DONO_OU_AUTORIZADO (quem pede declara ser dono do site ou ter
 #           autorização) e com o robots.txt permitindo → branch nova + PR em rascunho com clones/<host>/.
@@ -83,14 +84,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if git fetch --depth 1 origin clones-design; then git checkout -B clones-design FETCH_HEAD; else git checkout --orphan clones-design && git rm -rqf .; fi
-          rm -rf "$DEST" && mkdir -p "$DEST" && cp -r "$OUT"/design/* "$DEST"/
+          rm -rf "$DEST" "$OUT/design/fotos" && mkdir -p "$DEST" && cp -r "$OUT"/design/* "$DEST"/
           git add -f "$DEST"
           git commit -qm "Design de referência: $CLONE_HOST" || exit 0
           git push -q origin clones-design
           {
             echo "## Design de $CLONE_HOST"
             echo "Só o design (tokens e ordem das seções); nenhum texto, imagem, logo ou código do site original."
-            echo "Arquivos na branch \`clones-design\`, pasta \`$DEST\`: \`design.json\`, \`spec-base.json\` (base do Designer do Cortex) e \`fotos/\` (referência)."
+            echo "Arquivos na branch \`clones-design\`, pasta \`$DEST\`: \`design.json\` e \`spec-base.json\` (base do Designer do Cortex). Fotos de tela não são publicadas."
             echo '```json'; cat "$OUT/resultado.json"; echo; echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
       - name: Abrir PR em rascunho com o espelho
