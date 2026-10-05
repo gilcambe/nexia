@@ -58,6 +58,7 @@ async function main() {
       const { FREE } = require('../nexia-ai/orchestrator/models');
       const wanted = [...new Set(Object.values(FREE).flat().filter(d => d.provider === 'groq').map(d => d.model))];
       for (const m of wanted) out(have.has(m), `Groq: modelo ${m}`, have.has(m) ? 'disponível' : 'não existe mais');
+      out(true, 'Groq: modelos de texto disponíveis', [...have].filter(id => !/whisper|tts|guard|orpheus|playai|distil/i.test(id)).sort().join(', '));
     }
     const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST', headers: auth,
