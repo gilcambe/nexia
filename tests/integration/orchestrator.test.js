@@ -289,6 +289,7 @@ test('O4f. ADR-Q-04: site novo: a IA escreve só o spec (JSON), as fotos vêm da
   assert.match(html, /fonts\.googleapis\.com/);
   assert.ok(!html.includes('https://img.test/1.jpg'), 'foto fora do ar não entra');
   assert.ok(!/img\.test\/beach/.test(html), 'foto sem relação com o tema do site não entra');
+  assert.match(html.split('hero__media')[1].slice(0, 300), /<img /, 'o topo tem foto');
   assert.strictEqual(new Set(html.match(/https:\/\/img\.test\/\d+\.jpg/g)).size, html.match(/<img [^>]*src="https:\/\/img\.test/g).length, 'nenhuma foto repetida');
   assert.ok(fake.fileAt(exe.work_branch, 'demos/pao/styles.css').includes(':root'));
   assert.ok(fake.fileAt(exe.work_branch, 'demos/pao/script.js').includes('IntersectionObserver'));

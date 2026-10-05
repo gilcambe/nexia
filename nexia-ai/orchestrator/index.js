@@ -273,6 +273,19 @@ function createOrchestrator(deps) {
           if (media[s.slot] || s.kind === 'video') break;
         }
       }
+      // Topo e "sobre" nunca ficam sem foto: usa outra foto boa já buscada ou empresta da galeria/serviços.
+      for (const s of slots.filter(x => /\.(hero|about)$/.test(x.slot) && !media[x.slot])) {
+        for (const m of [...cache.values()].flat()) {
+          if (used.has(m.url) || !relevant(m) || m.mime) continue;
+          used.add(m.url);
+          if (checks-- > 0 && !(await reachable(m.url))) continue;
+          media[s.slot] = m;
+          break;
+        }
+        if (media[s.slot]) continue;
+        const donor = Object.keys(media).reverse().find(k => /\.(g|item)\d+$/.test(k));
+        if (donor) { media[s.slot] = media[donor]; delete media[donor]; }
+      }
       return { media, ids: idList };
     };
 
