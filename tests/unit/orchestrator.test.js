@@ -4,7 +4,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const { classifyIntent, planFor, specialistFor } = require('../../nexia-ai/orchestrator');
 const { evaluateGates, verdict } = require('../../nexia-ai/orchestrator/gates');
-const { createMeter } = require('../../nexia-ai/orchestrator/runtime');
+const { createMeter, compact } = require('../../nexia-ai/orchestrator/runtime');
 const { AGENTS, allowed } = require('../../nexia-ai/orchestrator/agents');
 const { candidates } = require('../../nexia-ai/orchestrator/models');
 const { AGENT_IDS } = require('../../nexia-ai/vault/schemas');
@@ -92,4 +92,16 @@ test('U4. agentes: os 10 da spec, só leitura onde deve, modelos por classe', ()
   const custom = candidates(free, 'coding', { NEXIA_MODELS_CODING: 'groq:moonshotai/kimi-k2, google:gemini-9, bad, x:y z' });
   assert.deepStrictEqual(custom.map(d => `${d.provider}:${d.model}`), ['groq:moonshotai/kimi-k2', 'google:gemini-9']);
   assert.deepStrictEqual(candidates({ capabilities: () => ({ available: false }) }, 'coding'), []);
+});
+
+test('U9. compact: só os 2 resultados de ferramenta mais recentes vão inteiros (cota de tokens por minuto)', () => {
+  const big = n => `RESULTADO DAS FERRAMENTAS (JSON):\n${String(n).repeat(5000)}`;
+  const msgs = [{ role: 'user', content: 'pedido '.repeat(1000) }, { role: 'assistant', content: 'a' }, { role: 'user', content: big(1) },
+    { role: 'assistant', content: 'b' }, { role: 'user', content: big(2) }, { role: 'assistant', content: 'c' }, { role: 'user', content: big(3) }];
+  const out = compact(msgs);
+  assert.strictEqual(out[0].content, msgs[0].content, 'o pedido nunca é cortado');
+  assert.ok(out[2].content.length < 1700 && /resumido/.test(out[2].content));
+  assert.strictEqual(out[4].content, msgs[4].content);
+  assert.strictEqual(out[6].content, msgs[6].content);
+  assert.strictEqual(msgs[2].content.length, big(1).length, 'não altera o histórico original');
 });

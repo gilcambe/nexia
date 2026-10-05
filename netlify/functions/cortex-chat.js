@@ -46,15 +46,16 @@ const AI_CATALOG = {
   gpt4o:                { provider: 'openai',      model: 'gpt-4o',                                               label: '⚡ GPT-4o',                     free: false },
   gpt4o_mini:           { provider: 'openai',      model: 'gpt-4o-mini',                                          label: '⚡ GPT-4o Mini',                free: false },
 
-  // GROQ 🆓 — https://console.groq.com — GROQ_API_KEY
-  groq_llama4_scout:    { provider: 'groq',        model: 'meta-llama/llama-4-scout-17b-16e-instruct',            label: '🦙 Llama 4 Scout (Groq)',      free: true  },
-  groq_llama4_maverick: { provider: 'groq',        model: 'meta-llama/llama-4-maverick-17b-128e-instruct',        label: '🦙 Llama 4 Maverick (Groq)',   free: true  },
-  groq_llama3:          { provider: 'groq',        model: 'llama-3.3-70b-versatile',                                      label: '🦙 Llama 3 70B (Groq)',        free: true  },
-  groq_llama3_fast:     { provider: 'groq',        model: 'llama-3.1-8b-instant',                                 label: '🦙 Llama 3.1 8B Fast (Groq)', free: true  },
-  groq_mixtral:         { provider: 'groq',        model: 'mixtral-8x7b-32768',                                   label: '🔥 Mixtral 8x7B (Groq)',       free: true  },
-  groq_gemma2:          { provider: 'groq',        model: 'gemma2-9b-it',                                         label: '💎 Gemma 2 9B (Groq)',         free: true  },
-  groq_qwen:            { provider: 'groq',        model: 'qwen-qwq-32b',                                         label: '🐉 Qwen QwQ 32B (Groq)',       free: true  },
-  groq_deepseek_r1:     { provider: 'groq',        model: 'deepseek-r1-distill-llama-70b',                        label: '💻 DeepSeek R1 (Groq)',        free: true  },
+  // GROQ 🆓 — https://console.groq.com — GROQ_API_KEY. Out/2026 a Groq só oferece gpt-oss-120b, gpt-oss-20b e
+  // qwen3.8-27b; as chaves antigas (llama, mixtral...) foram mantidas e apontam para esses modelos.
+  groq_llama4_scout:    { provider: 'groq',        model: 'openai/gpt-oss-20b',            label: '⚡ GPT-OSS 20B (Groq)',      free: true  },
+  groq_llama4_maverick: { provider: 'groq',        model: 'openai/gpt-oss-120b',        label: '🧠 GPT-OSS 120B (Groq)',   free: true  },
+  groq_llama3:          { provider: 'groq',        model: 'openai/gpt-oss-120b',                                      label: '🧠 GPT-OSS 120B (Groq)',        free: true  },
+  groq_llama3_fast:     { provider: 'groq',        model: 'openai/gpt-oss-20b',                                 label: '⚡ GPT-OSS 20B Fast (Groq)', free: true  },
+  groq_mixtral:         { provider: 'groq',        model: 'openai/gpt-oss-20b',                                   label: '⚡ GPT-OSS 20B (Groq)',       free: true  },
+  groq_gemma2:          { provider: 'groq',        model: 'openai/gpt-oss-20b',                                         label: '⚡ GPT-OSS 20B (Groq)',         free: true  },
+  groq_qwen:            { provider: 'groq',        model: 'qwen/qwen3.8-27b',                                         label: '🐉 Qwen 3.8 27B (Groq)',       free: true  },
+  groq_deepseek_r1:     { provider: 'groq',        model: 'openai/gpt-oss-120b',                        label: '🧠 GPT-OSS 120B (Groq)',        free: true  },
 
   // GEMINI 🆓 — https://aistudio.google.com — GEMINI_API_KEY
   gemini_25_pro:        { provider: 'gemini',      model: 'gemini-3.1-pro-preview',                               label: '🌐 Gemini 3.1 Pro',            free: true  },
@@ -62,7 +63,7 @@ const AI_CATALOG = {
   gemini_20_flash:      { provider: 'gemini',      model: 'gemini-2.0-flash',                                     label: '🌐 Gemini 2.0 Flash',          free: true  },
   gemini_flash_lite:    { provider: 'gemini',      model: 'gemini-2.5-flash-lite',                                label: '🌐 Gemini Flash Lite',         free: true  },
 
-  // CEREBRAS 🆓 — https://cloud.cerebras.ai — CEREBRAS_API_KEY
+  // CEREBRAS — passou a cobrar (out/2026); fora das rotas padrão, só funciona se alguém configurar a chave
   cerebras_llama4:      { provider: 'cerebras',    model: 'llama-4-scout-17b-16e-instruct',                       label: '⚡ Llama 4 Scout (Cerebras)', free: true  },
   cerebras_llama3:      { provider: 'cerebras',    model: 'llama3.3-70b',                                         label: '⚡ Llama 3.3 70B (Cerebras)', free: true  },
   cerebras_qwen:        { provider: 'cerebras',    model: 'qwen-3-32b',                                           label: '⚡ Qwen 3 32B (Cerebras)',    free: true  },
@@ -125,7 +126,7 @@ const INTENT_ROUTER = {
   code:      'or_qwen3_coder',
   dev:       'groq_deepseek_r1',
   security:  'gemini_25_flash',
-  write:     'cerebras_llama4',
+  write:     'groq_llama4_maverick',
   legal:     'gemini_25_pro',
   analysis:  'gemini_25_flash',
   vision:    'gemini_20_flash',
@@ -134,7 +135,7 @@ const INTENT_ROUTER = {
   finance:   'groq_llama4_maverick',
   huge_doc:  'gemini_25_pro',
   realtime:  'grok3',
-  fast:      'cerebras_llama3',
+  fast:      'groq_llama3_fast',
   chat:      'groq_llama4_scout',
   swarm:     'or_qwen3_235b',
   action:    'groq_llama3_fast',
@@ -164,7 +165,7 @@ const labelOf = (provider, model) => { const hit = Object.values(AI_CATALOG).fin
 
 // Só tenta modelos cujo provedor tem chave configurada: primeiro os pedidos, depois a lista grátis
 // padrão (ADR-FREE-03). Sem isso, o padrão "Groq" falhava em quem só cadastrou o Gemini.
-const CHAT_DEFAULTS = ['gemini_25_flash', 'gemini_25_pro', 'groq_llama3', 'cerebras_llama3', 'or_gpt_oss_120b', 'mistral_small', 'deepseek_v3', 'claude_haiku', 'claude'];
+const CHAT_DEFAULTS = ['groq_llama3', 'groq_llama4_scout', 'groq_qwen', 'gemini_25_flash', 'gemini_25_pro', 'or_gpt_oss_120b', 'mistral_small', 'deepseek_v3', 'claude_haiku', 'claude'];
 function usable(key) {
   if (!AI_CATALOG[key]) return false;
   try { return modelRouter.getRouter().capabilities(descOf(key)).available !== false; } catch { return false; }
