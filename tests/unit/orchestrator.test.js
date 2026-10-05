@@ -111,6 +111,10 @@ test('U10. ADR-Q-03: "crie um site/sistema" passa pelo Designer; mudança num si
   assert.strictEqual(buildKind('Crie um site para a padaria Pão da Serra'), 'site');
   assert.strictEqual(buildKind('Faça uma landing page para minha academia'), 'site');
   assert.strictEqual(buildKind('Desenvolva um sistema de agendamento para clínica'), 'system');
+  const { classifyIntent } = require('../../nexia-ai/orchestrator');
+  assert.strictEqual(classifyIntent('Desenvolva um sistema de agendamento para clínica'), 'change');
+  assert.strictEqual(classifyIntent('Monte uma landing page para a academia'), 'change');
+  assert.strictEqual(classifyIntent('Crie um site e publique em produção'), 'deploy_production', 'deploy continua com prioridade');
   assert.strictEqual(buildKind('Crie a página de contato do Site Alfa'), null);
   assert.strictEqual(buildKind('Corrija o botão de enviar do Site Alfa'), null);
   const plan = planFor('change', 'Crie um site para a padaria');

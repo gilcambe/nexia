@@ -36,7 +36,11 @@ const INTENT_RULES = [
 ];
 function classifyIntent(message) {
   const m = normalize(message || '');
-  for (const [intent, re] of INTENT_RULES) if (re.test(m)) return intent;
+  for (const [intent, re] of INTENT_RULES) {
+    // Criar site ou sistema ("desenvolva um sistema", "monte uma landing") é mudança, mesmo sem os verbos da regra.
+    if (intent === 'status' && buildKind(message)) return 'change';
+    if (re.test(m)) return intent;
+  }
   return 'question';
 }
 const wantsStaging = message => /\b(staging|homologa|publiqu\w*|publicar)\b/.test(normalize(message || ''));
