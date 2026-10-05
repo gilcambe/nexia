@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Pão da Serra – Padaria Artesanal</title>
+  <meta name="description" content="Descubra os sabores artesanais da padaria Pão da Serra. Cardápio com pães frescos, depoimentos de clientes e contato.">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <nav aria-label="Menu principal">
+      <ul>
+        <li><a href="#destaque">Destaque</a></li>
+        <li><a href="#cardapio">Cardápio</a></li>
+        <li><a href="#sobre">Sobre</a></li>
+        <li><a href="#depoimentos">Depoimentos</a></li>
+        <li><a href="#contato">Contato</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="destaque" class="hero">
+      <h1>Pão da Serra</h1>
+      <p>O sabor da tradição nas montanhas.</p>
+      <img src="hero.jpg" alt="Pão artesanal recém-saído do forno" loading="lazy">
+    </section>
+
+    <section id="cardapio">
+      <h2>Cardápio</h2>
+      <ul class="menu">
+        <li><span class="item">Pão de Centeio</span><span class="price">R$ 6,00</span></li>
+        <li><span class="item">Pão Integral</span><span class="price">R$ 5,50</span></li>
+        <li><span class="item">Bolo de Milho</span><span class="price">R$ 8,00</span></li>
+        <li><span class="item">Croissant de Amêndoas</span><span class="price">R$ 9,50</span></li>
+        <li><span class="item">Torta de Maçã</span><span class="price">R$ 12,00</span></li>
+        <li><span class="item">Biscoitos de Aveia</span><span class="price">R$ 4,00</span></li>
+      </ul>
+    </section>
+
+    <section id="sobre">
+      <h2>Sobre Nós</h2>
+      <p>Fundada em 2015 nas serras de Minas, a Pão da Serra traz pães feitos com ingredientes locais, fermentação natural e muito carinho.</p>
+    </section>
+
+    <section id="depoimentos">
+      <h2>Depoimentos</h2>
+      <div class="testimonials">
+        <blockquote>
+          <p>“O melhor pão que já comi! Sabor inigualável.”</p>
+          <cite>Maria Silva</cite>
+        </blockquote>
+        <blockquote>
+          <p>“A crocância do croissant é perfeita para o café da manhã.”</p>
+          <cite>João Pereira</cite>
+        </blockquote>
+        <blockquote>
+          <p>“Ambiente acolhedor e produtos fresquinhos todos os dias.”</p>
+          <cite>Ana Costa</cite>
+        </blockquote>
+      </div>
+    </section>
+
+    <section id="contato">
+      <h2>Contato</h2>
+      <form id="contactForm" novalidate>
+        <div class="form-group">
+          <label for="name">Nome</label>
+          <input type="text" id="name" name="name" required aria-required="true">
+          <span class="error" aria-live="polite"></span>
+        </div>
+        <div class="form-group">
+          <label for="email">E‑mail</label>
+          <input type="email" id="email" name="email" required aria-required="true">
+          <span class="error" aria-live="polite"></span>
+        "
+        <div class="form-group">
+          <label for="message">Mensagem</label>
+          <textarea id="message" name="message" rows="4" required aria-required="true"></textarea>
+          <span class="error" aria-live="polite"></span>
+        </div>
+        <button type="submit" disabled>Enviar</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Pão da Serra. Todos os direitos reservados.</p>
+    <ul class="social">
+      <li><a href="#" aria-label="Instagram">Instagram</a></li>
+      <li><a href="#" aria-label="Facebook">Facebook</a></li>
+    </ul>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

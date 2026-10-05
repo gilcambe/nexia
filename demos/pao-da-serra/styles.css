@@ -1,0 +1,180 @@
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+  color: #111;
+  background-color: #fff;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+header {
+  background: #2c3e50;
+  color: #fff;
+}
+header nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  list-style: none;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem;
+}
+header nav a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+}
+header nav a:focus,
+header nav a:hover {
+  text-decoration: underline;
+  outline: 2px solid #fff;
+}
+
+.hero {
+  text-align: center;
+  padding: 2rem 1rem;
+  background: #f8f9fa;
+}
+.hero img {
+  max-width: 100%;
+  height: auto;
+  margin-top: 1rem;
+}
+
+section {
+  padding: 2rem 1rem;
+}
+section h2 {
+  margin-bottom: 1rem;
+  font-size: 1.75rem;
+  color: #2c3e50;
+}
+
+/* Cardápio */
+.menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  list-style: none;
+}
+.menu li {
+  background: #eaeaea;
+  padding: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  font-weight: 500;
+}
+
+/* Depoimentos */
+.testimonials {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+blockquote {
+  border-left: 4px solid #2c3e50;
+  padding-left: 1rem;
+  font-style: italic;
+}
+cite {
+  display: block;
+  margin-top: 0.5rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Formulário */
+form {
+  max-width: 600px;
+  margin: 0 auto;
+  display: grid;
+  gap: 1rem;
+}
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+label {
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+input, textarea {
+  padding: 0.5rem;
+  border: 2px solid #bbb;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+input:focus, textarea:focus {
+  border-color: #2c3e50;
+  outline: none;
+}
+.error {
+  color: #c0392b;
+  font-size: 0.875rem;
+  min-height: 1em;
+}
+button {
+  background: #2c3e50;
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+button:disabled {
+  background: #7f8c8d;
+  cursor: not-allowed;
+}
+
+footer {
+  margin-top: auto;
+  background: #2c3e50;
+  color: #fff;
+  text-align: center;
+  padding: 1rem;
+}
+footer .social {
+  list-style: none;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+footer .social a {
+  color: #fff;
+  text-decoration: none;
+}
+footer .social a:focus,
+footer .social a:hover {
+  text-decoration: underline;
+  outline: 2px solid #fff;
+}
+
+@media (min-width: 768px) {
+  header nav ul {
+    justify-content: flex-start;
+    padding-left: 2rem;
+  }
+  .hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3rem 2rem;
+  }
+  .hero img {
+    max-width: 40%;
+    margin: 0;
+  }
+}
