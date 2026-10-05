@@ -15,6 +15,13 @@ const RETRYABLE_MODEL = new Set(['UPSTREAM', 'ABORTED']);
 // Resultado de ferramenta que volta ao modelo. Grande o bastante para um arquivo de código inteiro
 // (cortar arquivo levava o agente a reescrever o que não leu); o orçamento de tokens segue valendo.
 const RESULT_MAX = 60000;
+const wait = ms => new Promise(r => setTimeout(r, ms));
+/** "Please try again in 7.5s" / "in 1m2s" (Groq, OpenRouter) → ms; sem dica, 10 s. */
+function retryAfterMs(text) {
+  const m = /try again in (?:(\d+)m)?([\d.]+)?s?/i.exec(String(text || ''));
+  if (!m || (!m[1] && !m[2])) return 10000;
+  return Math.ceil(((Number(m[1]) || 0) * 60 + (Number(m[2]) || 0)) * 1000) + 500;
+}
 const toModelName = n => n.replace(/\./g, '__');
 const fromModelName = n => String(n).replace(/__/g, '.');
 
@@ -29,6 +36,11 @@ const REPORT_TOOL = {
   } },
 };
 const REPORTING_AGENTS = new Set(['reviewer', 'security']);
+const WRITE_TOOLS = new Set(['github.commit_files', 'github.edit_files']);
+// Modelos grátis às vezes "respondem" com o código no texto e encerram sem salvar. Quem pode gravar
+// e ainda não gravou nada recebe um lembrete (uma vez) em vez de terminar vazio.
+const NUDGE_SAVE = 'Você terminou sem salvar nada na branch. Texto não conta: chame agora github.commit_files '
+  + '(arquivos novos) ou github.edit_files (arquivos existentes) com o conteúdo COMPLETO de cada arquivo.';
 
 class BudgetError extends Error { constructor(what) { super(`Orçamento estourado: ${what}.`); this.code = 'BUDGET_EXCEEDED'; } }
 
@@ -76,6 +88,10 @@ async function runAgent(o) {
   const messages = [{ role: 'user', content: o.goal }];
   let mi = 0;
   const failures = new Map();
+  const canWrite = catalog.some(t => WRITE_TOOLS.has(t.name));
+  let wrote = false;
+  let nudged = false;
+  const modelErrors = [];
 
   for (let turn = 0; turn < (agent.max_steps || 8); turn++) {
     o.meter.check();
@@ -88,9 +104,15 @@ async function runAgent(o) {
         break;
       } catch (e) {
         const code = e && e.code;
-        if (RETRYABLE_MODEL.has(code) && attempt === 0) continue;               // mesmo modelo, uma vez
+        const d = (e && e.details) || {};
+        modelErrors.push(`${desc.provider}/${desc.model}: ${String((e && e.message) || code || 'erro')}${d.upstream ? ` ${String(d.upstream).replace(/\s+/g, ' ').slice(0, 160)}` : ''}`);
+        if (RETRYABLE_MODEL.has(code) && attempt === 0) {                         // mesmo modelo, uma vez
+          if (d.status === 429) await wait(Math.min(retryAfterMs(d.upstream), 30000)); // cota por minuto: espera e repete
+          continue;
+        }
         if (mi + 1 < models.length) { mi++; attempt = -1; continue; }           // próximo candidato
-        return { status: 'failed', error_code: code && /^[A-Z_]+$/.test(code) ? `MODEL_${code}` : 'MODEL_ERROR', text: 'O modelo não respondeu.', tool_call_ids: toolCallIds };
+        return { status: 'failed', error_code: code && /^[A-Z_]+$/.test(code) ? `MODEL_${code}` : 'MODEL_ERROR',
+          text: `O modelo não respondeu. ${modelErrors.slice(-3).join(' | ')}`.slice(0, 1500), tool_call_ids: toolCallIds };
       }
     }
     o.meter.usage.steps++;
@@ -102,6 +124,12 @@ async function runAgent(o) {
     const model = `${models[mi].provider}/${models[mi].model}`;
 
     const calls = out.tool_calls || [];
+    if (!calls.length && canWrite && !wrote && !nudged) {
+      nudged = true;
+      messages.push({ role: 'assistant', content: String(out.text || '(sem texto)').slice(0, 4000) });
+      messages.push({ role: 'user', content: NUDGE_SAVE });
+      continue;
+    }
     if (!calls.length) return { status: 'done', text: String(out.text || '').slice(0, 2000), tool_call_ids: toolCallIds, model };
 
     const results = [];
@@ -130,7 +158,7 @@ async function runAgent(o) {
         return { status: 'waiting_approval', pending: { tool: name, tool_call_id: r.tool_call.id, reason: r.reason }, tool_call_ids: toolCallIds, model,
           text: `Aguardando aprovação humana para ${name} (${r.reason}).` };
       }
-      if (r.status === 'succeeded') results.push({ tool: name, ok: true, result: r.result });
+      if (r.status === 'succeeded') { results.push({ tool: name, ok: true, result: r.result }); if (WRITE_TOOLS.has(name)) wrote = true; }
       else {
         const code = (r.error && r.error.code) || (r.status === 'denied' ? 'POLICY_DENIED' : 'TOOL_ERROR');
         results.push({ tool: name, ok: false, error: code, message: r.error ? r.error.message : r.reason });
