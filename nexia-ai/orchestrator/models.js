@@ -5,13 +5,13 @@
 //
 // ADR-FREE-03: o projeto não usa nada pago. O Claude (Anthropic) só entra se alguém configurar
 // ANTHROPIC_API_KEY (cobra por uso). Sem ela, valem as opções grátis, na ordem: Google Gemini
-// (GEMINI_API_KEY, AI Studio), Groq (GROQ_API_KEY), Cerebras (CEREBRAS_API_KEY) e modelos
+// (GEMINI_API_KEY, AI Studio; o 2.5 Pro foi aposentado para contas novas em 2026-10), Groq (GROQ_API_KEY), Cerebras (CEREBRAS_API_KEY) e modelos
 // ":free" do OpenRouter (OPENROUTER_API_KEY). Os nomes mudam com o tempo: NEXIA_MODELS_<CLASSE>
-// (ex.: NEXIA_MODELS_CODING="google:gemini-2.5-pro,groq:openai/gpt-oss-120b") troca a lista.
+// (ex.: NEXIA_MODELS_CODING="google:gemini-3.1-pro-preview,groq:openai/gpt-oss-120b") troca a lista.
 const FREE = Object.freeze({
-  reasoning: [{ provider: 'google', model: 'gemini-2.5-pro' }, { provider: 'groq', model: 'openai/gpt-oss-120b' },
+  reasoning: [{ provider: 'google', model: 'gemini-3.1-pro-preview' }, { provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'groq', model: 'openai/gpt-oss-120b' },
     { provider: 'cerebras', model: 'gpt-oss-120b' }, { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }],
-  coding: [{ provider: 'google', model: 'gemini-2.5-pro' }, { provider: 'groq', model: 'openai/gpt-oss-120b' },
+  coding: [{ provider: 'google', model: 'gemini-3.1-pro-preview' }, { provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'groq', model: 'openai/gpt-oss-120b' },
     { provider: 'cerebras', model: 'gpt-oss-120b' }, { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }],
   fast: [{ provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'groq', model: 'openai/gpt-oss-20b' },
     { provider: 'cerebras', model: 'gpt-oss-120b' }, { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }],
