@@ -19,6 +19,7 @@ const { collectMetrics } = require('../observability');
 const { createBridgeTokens, ingestEvents, bearerOf, MAX_EVENTS } = require('../bridge-sync');
 const { createJobs, sweepAllTenants, JobError } = require('../jobs');
 const { duplicateTenant } = require('../tenant-copy');
+const robots = require('../robots');
 
 const RESOURCES = { clients: 'Client', projects: 'Project', repos: 'Repository', environments: 'Environment', 'tool-policies': 'ToolPolicy' };
 const INVOKE_STATUS = { succeeded: 200, pending_approval: 202, denied: 403, failed: 422, rejected: 409, running: 202, expired: 409 };
@@ -116,7 +117,85 @@ function createHandler(deps = {}) {
     if (a.length !== b.length || !require('crypto').timingSafeEqual(a, b)) return json(event, 401, { error: 'Não autenticado.' });
     if (jobs.enabled) return json(event, 202, await queue({ kind: 'sweep' }));
     const db = deps.db || require('../../netlify/functions/firebase-init').db;
-    return json(event, 200, await sweepAllTenants({ db, orchestrator: getOrchestrator() }));
+    const swept = await sweepAllTenants({ db, orchestrator: getOrchestrator() });
+    // ADR-AUTO-01: sem fila (server.js), os robôs vencidos rodam aqui mesmo.
+    const r = await robots.runDueRobots({ db, vault: getVault(), orchestrator: getOrchestrator() });
+    return json(event, 200, { ...swept, robots: { due: r.due, claimed: r.claimed, started: r.started } });
+  }
+
+  /** /robots: CRUD do robô + "rodar agora". Rodada agendada vem do Cron (jobs robots.run). */
+  async function robotRoutes(event, parts, method, q, h, requested, auth) {
+    const v = getVault();
+    const ctx = createExecutionContext({ tenantId: requested, actor: { type: 'user', id: auth.uid } });
+    const execHeader = { 'X-Execution-Id': ctx.executionId };
+    let body = {};
+    if (event.body) {
+      try { body = JSON.parse(event.body); } catch { return json(event, 400, { error: 'JSON inválido.' }); }
+    }
+    const [, id, sub] = parts;
+    if (parts.length > 3) return json(event, 404, { error: 'Rota não encontrada.' });
+    if (id === 'templates' && !sub) {
+      return method === 'GET' ? json(event, 200, { items: robots.TEMPLATES }) : json(event, 405, { error: 'Método não permitido.' });
+    }
+    if (!id) {
+      if (method === 'GET') {
+        const where = q.project_id ? { project_id: q.project_id } : {};
+        return json(event, 200, { items: await v.Robot.list(ctx, { where, limit: q.limit ? Number(q.limit) : 50 }) });
+      }
+      if (method === 'POST') {
+        if ((await v.Robot.list(ctx, { limit: 200 })).length >= robots.MAX_PER_TENANT) {
+          return json(event, 409, { error: `Limite de ${robots.MAX_PER_TENANT} robôs por empresa.`, code: 'ROBOT_LIMIT' });
+        }
+        const key = h['idempotency-key'] || h['Idempotency-Key'];
+        // Dono = quem criou: as rodadas agendadas usam o nome dele (autonomia e aprovações de sempre).
+        const input = { ...robots.prepareInput(body, null), owner: { type: 'user', id: auth.uid } };
+        const { record, replayed } = await v.Robot.create(ctx, input, key ? { idempotencyKey: key } : {});
+        return json(event, replayed ? 200 : 201, { record, replayed }, { ...etag(record), ...execHeader });
+      }
+      return json(event, 405, { error: 'Método não permitido.' });
+    }
+    if (sub === 'history' && method === 'GET') return json(event, 200, { items: await v.Robot.history(ctx, id) });
+    if (sub === 'restore' && method === 'POST') {
+      const ver = ifMatch(event);
+      if (ver === null) return json(event, 428, { error: 'If-Match obrigatório.' });
+      const record = await v.Robot.restore(ctx, id, { expectedVersion: ver });
+      return json(event, 200, { record }, { ...etag(record), ...execHeader });
+    }
+    if (sub === 'run' && method === 'POST') {
+      // Rodar agora: execução comum em nome de quem clicou; não mexe na agenda.
+      const robot = await v.Robot.get(ctx, id);
+      const at = new Date().toISOString();
+      const key = h['idempotency-key'] || h['Idempotency-Key'];
+      const r = await robots.startRun({ vault: v, orchestrator: getOrchestrator(), robot, ctx, trigger: 'manual', at,
+        ...(key ? { idempotencyKey: `robot-run:${String(key).slice(0, 100)}` } : {}) });
+      if (!r.execution) return json(event, 200, { status: r.status, error_code: r.error_code }, execHeader);
+      const o = getOrchestrator();
+      const done = (status, error_code) => robots.finishRun({ vault: v, robot, executionId: r.execution.id, status, error_code });
+      if (jobs.enabled) r.job = await queue({ kind: 'execution.run', tenant: requested, actor: ctx.actor, id: r.execution.id, ctx_id: ctx.executionId });
+      else background(async () => { try { await done((await o.run(ctx, r.execution.id)).status); } catch (e) { await done('error', 'ERROR'); throw e; } });
+      return json(event, 202, { execution: r.execution, ...(r.job ? { job: r.job } : {}) }, { ...etag(r.execution), ...execHeader });
+    }
+    if (sub) return json(event, 404, { error: 'Rota não encontrada.' });
+    if (method === 'GET') {
+      const record = await v.Robot.get(ctx, id);
+      return json(event, 200, { record }, etag(record));
+    }
+    if (method === 'PATCH' || method === 'DELETE') {
+      const ver = ifMatch(event);
+      if (ver === null) return json(event, 428, { error: 'If-Match obrigatório.' });
+      if (method === 'PATCH') {
+        const current = await v.Robot.get(ctx, id);
+        const record = await v.Robot.update(ctx, id, robots.prepareInput(body, current), { expectedVersion: ver });
+        return json(event, 200, { record }, { ...etag(record), ...execHeader });
+      }
+      // Excluir: desliga antes (sem next_run_at o Cron não o vê mais) e depois soft-delete.
+      let version = ver;
+      const current = await v.Robot.get(ctx, id);
+      if (current.enabled) version = (await v.Robot.update(ctx, id, { enabled: false, next_run_at: null }, { expectedVersion: ver })).version;
+      const record = await v.Robot.softDelete(ctx, id, { expectedVersion: version });
+      return json(event, 200, { record }, { ...etag(record), ...execHeader });
+    }
+    return json(event, 405, { error: 'Método não permitido.' });
   }
 
   return async function handler(event) {
@@ -282,6 +361,8 @@ function createHandler(deps = {}) {
         }
         return json(event, 404, { error: 'Rota não encontrada.' });
       }
+      // ADR-AUTO-01: Robôs NEXIA (pedido ao Orchestrator que se repete numa agenda)
+      if (parts[0] === 'robots') return await robotRoutes(event, parts, method, q, h, requested, auth);
       // Fase 11: observabilidade, auditoria e custos
       if (parts[0] === 'metrics' && parts.length === 1 && method === 'GET') {
         const mctx = createExecutionContext({ tenantId: requested, actor: { type: 'user', id: auth.uid } });

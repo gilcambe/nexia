@@ -11,7 +11,9 @@
 
 const { createExecutionContext, EXECUTION_ID_RE } = require('../vault/execution');
 
-const KINDS = ['execution.run', 'execution.resume', 'execution.refresh', 'project.onboard', 'sweep', 'tenant.duplicate'];
+// ADR-AUTO-01: 'robots.run' roda os Robôs NEXIA vencidos de todas as empresas (sem tenant/actor/ids).
+const KINDS = ['execution.run', 'execution.resume', 'execution.refresh', 'project.onboard', 'sweep', 'robots.run', 'tenant.duplicate'];
+const GLOBAL_KINDS = ['robots.run'];
 const TENANT_RE = /^[a-z0-9][a-z0-9_-]{0,62}$/;
 const ID_RE = /^[a-z]{2,4}_[a-f0-9]{32}$/;
 const ACTOR_ID_RE = /^[A-Za-z0-9:_.@-]{1,128}$/;
@@ -34,6 +36,10 @@ function validateJob(job) {
   if (job.actor !== undefined) {
     if (!job.actor || !['user', 'agent', 'system'].includes(job.actor.type) || !ACTOR_ID_RE.test(job.actor.id || '')) bad('actor');
     out.actor = { type: job.actor.type, id: job.actor.id };
+  }
+  if (GLOBAL_KINDS.includes(job.kind)) {
+    if (out.tenant || out.actor || job.id !== undefined || job.ctx_id !== undefined) bad('robots.run não leva tenant, actor nem ids');
+    return out;
   }
   if (job.kind !== 'sweep' && (!out.tenant || !out.actor)) bad('tenant/actor');
   if (job.kind === 'sweep' && (out.tenant ? !out.actor : out.actor)) bad('tenant e actor juntos');
@@ -109,22 +115,37 @@ async function sweepAllTenants({ db, orchestrator, max = 20 }) {
   return { tenants: tenants.length, items };
 }
 
+const toMs = t => (t && typeof t.toMillis === 'function' ? t.toMillis() : Date.parse(t));
+
 /**
- * Cron do Worker: uma consulta barata. Havendo execução parada há mais de 10 min, dispara
- * a tarefa "sweep" no Actions; senão, não gasta nada.
+ * Cron do Worker (a cada 5 min, ADR-AUTO-01). Consultas baratas; só dispara tarefa no Actions
+ * quando há o que fazer:
+ *  - robôs vencidos (next_run_at <= agora) → UMA tarefa "robots.run";
+ *  - no primeiro tique de cada hora: execução parada há mais de 10 min → tarefa "sweep".
  */
 async function scheduledSweep({ env = process.env, db, jobs, now = () => Date.now() } = {}) {
   const j = jobs || createJobs({ env });
   if (!j.enabled) return { skipped: 'NEXIA_JOBS desligado' };
   const database = db || require('../../netlify/functions/firebase-init').db;
   if (!database) return { skipped: 'Firestore indisponível' };
-  const snap = await database.collection('vault_executions').where('status', 'in', ['planned', 'running']).limit(50).get();
-  const cutoff = now() - STALE_MS;
-  const stale = snap.docs.map(d => d.data()).filter(x => !x.deleted_at)
-    .filter(x => { const t = x.updated_at || x.created_at; const ms = t && typeof t.toMillis === 'function' ? t.toMillis() : Date.parse(t); return ms <= cutoff; });
-  if (!stale.length) return { stale: 0 };
-  await j.dispatch({ kind: 'sweep' });
-  return { stale: stale.length, queued: true };
+  const t = now();
+  const out = {};
+  try {
+    const { findDueRobots } = require('../robots');
+    const due = await findDueRobots(database, t, { limit: 10, select: true });
+    out.robots = due.length;
+    if (due.length) { await j.dispatch({ kind: 'robots.run' }); out.robots_queued = true; }
+  } catch (e) { out.robots_error = (e && e.code) || 'ERROR'; }
+  // Retomada de execuções paradas: de hora em hora, como antes (minuto 0–4 de cada hora).
+  if (new Date(t).getUTCMinutes() < 5) {
+    const snap = await database.collection('vault_executions').where('status', 'in', ['planned', 'running']).limit(50).get();
+    const cutoff = t - STALE_MS;
+    const stale = snap.docs.map(d => d.data()).filter(x => !x.deleted_at)
+      .filter(x => toMs(x.updated_at || x.created_at) <= cutoff);
+    out.stale = stale.length;
+    if (stale.length) { await j.dispatch({ kind: 'sweep' }); out.queued = true; }
+  }
+  return out;
 }
 
 module.exports = { KINDS, JobError, validateJob, createJobs, contextFor, sweepAllTenants, scheduledSweep, WORKFLOW };
