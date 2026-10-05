@@ -39,7 +39,8 @@ test('K3. mediaQueries: uma busca por foto do site; sistema não busca', () => {
   const q = kit.mediaQueries(spec);
   assert.ok(q.find(x => x.slot === 's0.hero'));
   assert.ok(q.find(x => x.slot === 's0.video' && x.kind === 'video'));
-  assert.ok(q.filter(x => /\.g\d/.test(x.slot)).length === 4);
+  assert.strictEqual(q.filter(x => /\.g\d+$/.test(x.slot)).length, 6);
+  assert.ok(q.find(x => x.kind === 'gif') && q.find(x => x.slot.endsWith('.clip') && x.kind === 'video'));
   const long = kit.normalizeSpec({ ...SITE, sections: [{ type: 'hero', title: 'x' }, { type: 'about', title: 'Sobre '.repeat(30) }, { type: 'services', items: [{ title: '1' }] }, { type: 'faq' }] }, { kind: 'site' }).spec;
   for (const x of kit.mediaQueries(long)) assert.ok(x.query.length >= 2 && x.query.length <= 100 && /[a-z]{2}/i.test(x.query), x.query);
   assert.deepStrictEqual(kit.mediaQueries(kit.normalizeSpec(SYSTEM, { kind: 'system' }).spec), []);
@@ -90,4 +91,64 @@ test('K5. sistema gerado passa na checagem (menu, fontes, responsivo, animação
   const cfg = JSON.parse(/<script type="application\/json" id="app-config">([^<]*)<\/script>/.exec(html)[1]);
   assert.strictEqual(cfg.entities[0].sample[0].paciente, '</script><img src=x onerror=alert(1)>');
   assert.doesNotThrow(() => new Function(files['demos/agenda-clinica/app.js']));
+});
+
+test('K6. ADR-Q-05: padrão mínimo de qualidade (conteúdo e fotos); fontes fora da lista e contraste ruim são corrigidos', () => {
+  const full = JSON.parse(JSON.stringify(SITE));
+  const sec = t => full.sections.find(s => s.type === t);
+  sec('services').items = ['Clareamento', 'Implantes', 'Ortodontia'].map(t => ({ title: t, text: `${t} com tecnologia.`, image_query: 'dental care' }));
+  sec('testimonials').items = ['Carla', 'João', 'Bia'].map(n => ({ name: n, text: 'Atendimento excelente e sem dor.', rating: 5 }));
+  sec('faq').items = [1, 2, 3, 4].map(k => ({ q: `Vocês atendem aos sábados${'?'.repeat(k)}`, a: 'Sim, das 8h às 12h.' }));
+  const { spec } = kit.normalizeSpec(full, { kind: 'site' });
+  assert.deepStrictEqual(kit.qualityCheck(spec, null).content, []);
+  const media = {};
+  kit.mediaQueries(spec).forEach((q, k) => { if (!q.kind) media[q.slot] = photo(k); });
+  assert.ok(kit.qualityCheck(spec, media).ok);
+  delete media['s0.hero'];
+  assert.ok(kit.qualityCheck(spec, media).media.some(m => /topo/.test(m)));
+  const weak = kit.normalizeSpec({ ...full, sections: full.sections.filter(s => !['faq', 'gallery'].includes(s.type)) }, { kind: 'site' }).spec;
+  const c = kit.qualityCheck(weak, null).content;
+  assert.ok(c.some(m => /faq/.test(m)) && c.some(m => /gallery/.test(m)));
+  sec('services').items[0].title = 'Serviço 1';
+  assert.ok(kit.qualityCheck(kit.normalizeSpec(full, { kind: 'site' }).spec, null).content.some(m => /genérico/.test(m)));
+  // Fonte inventada vira o par do estilo; cor clara demais no botão escurece até ter contraste.
+  const f = kit.normalizeSpec({ ...SITE, style: 'bold', fonts: { heading: 'Comic Sans MS', body: 'Arial' }, palette: { primary: '#ffd166', text: '#999999', bg: '#ffffff' } }, { kind: 'site' }).spec;
+  assert.deepStrictEqual(f.fonts, { heading: 'Bricolage Grotesque', body: 'DM Sans' });
+  const { contrast } = require('../../nexia-ai/site-kit/spec');
+  assert.ok(contrast(f.palette.primary, '#ffffff') >= 4.5 && contrast(f.palette.text, f.palette.bg) >= 7);
+  const sys = kit.normalizeSpec({ ...SYSTEM, entities: [{ ...SYSTEM.entities[0], sample: SYSTEM.entities[0].sample.slice(0, 1) }] }, { kind: 'system' }).spec;
+  assert.ok(kit.qualityCheck(sys, null).content.some(m => /4 linhas/.test(m)));
+});
+
+test('K7. vídeo (YouTube e arquivo), GIF, música e links: renderizam, passam na checagem e nada toca sozinho', () => {
+  const raw = JSON.parse(JSON.stringify(SITE));
+  raw.contact.youtube = 'https://youtube.com/@sorrisoleve';
+  raw.contact.tiktok = '@sorrisoleve';
+  raw.sections.splice(5, 0,
+    { type: 'video', title: 'Tour', youtube: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=3' },
+    { type: 'music', title: 'Trilha', audio_query: 'calm piano' },
+    { type: 'links', title: 'Links', items: [{ label: 'Loja', url: 'https://loja.test', icon: 'cart' }, { label: 'ruim', url: 'javascript:alert(1)' }] });
+  const { spec } = kit.normalizeSpec(raw, { kind: 'site' });
+  const media = {};
+  kit.mediaQueries(spec).forEach((q, k) => {
+    if (q.kind === 'audio') media[q.slot] = { url: 'https://cdn.test/song.mp3', title: 'Calm piano', mime: 'audio/mpeg', credit: 'Música: X (CC BY)' };
+    else if (q.kind === 'gif') media[q.slot] = { ...photo(k), url: `https://img.test/${k}.gif`, mime: 'image/gif' };
+    else if (q.kind === 'video' && q.slot.endsWith('.clip')) media[q.slot] = { url: 'https://v.test/clip.mp4', mime: 'video/mp4', width: 1280, height: 720, poster: 'https://img.test/p.jpg', credit: 'Vídeo: Y / Pexels' };
+    else if (!q.kind) media[q.slot] = photo(k);
+  });
+  const files = kit.render(spec, media);
+  const html = files['demos/sorriso-leve/index.html'];
+  assert.match(html, /data-yt="dQw4w9WgXcQ"/);
+  assert.match(html, /<video controls preload="metadata"/);
+  assert.match(html, /\.gif"/);
+  assert.match(html, /<audio preload="none" src="https:\/\/cdn\.test\/song\.mp3">/);
+  assert.ok(!/<audio[^>]*autoplay/.test(html), 'música nunca toca sozinha');
+  assert.match(html, /href="https:\/\/loja\.test"/);
+  assert.ok(!/javascript:/.test(html));
+  assert.match(html, /tiktok\.com\/@sorrisoleve/);
+  assert.match(files['demos/sorriso-leve/script.js'], /youtube-nocookie\.com\/embed/);
+  const r = gate(files, 'site');
+  assert.deepStrictEqual(r.errors, []);
+  assert.deepStrictEqual(r.warnings, []);
+  assert.strictEqual(kit.normalizeSpec({ ...SITE, sections: [...SITE.sections, { type: 'video', title: 'sem nada' }] }, { kind: 'site' }).spec.sections.filter(s => s.type === 'video').length, 1);
 });
