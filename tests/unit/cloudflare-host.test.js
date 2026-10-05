@@ -37,8 +37,14 @@ test('CF1. config do Worker: plano grátis, sem Container/Durable Object, cron a
     assert.ok(!(pkg.dependencies || {})[dep] && !(pkg.devDependencies || {})[dep], dep);
   }
   const deploy = fs.readFileSync(path.join(ROOT, '.github/workflows/deploy-cloudflare.yml'), 'utf8');
-  assert.match(deploy, /^on:\n  workflow_dispatch:/m, 'deploy só manual');
-  assert.doesNotMatch(deploy, /^\s+(push|pull_request|schedule):/m);
+  // ADR-AUTO-02: automático só depois do CI verde num push da develop; nunca direto em push/PR.
+  assert.match(deploy, /^on:\n  workflow_dispatch:/m);
+  assert.match(deploy, /workflow_run:\n    workflows: \[CI\]\n    types: \[completed\]\n    branches: \[develop\]/);
+  assert.match(deploy, /workflow_run\.conclusion == 'success'/);
+  assert.match(deploy, /head_sha \|\| github\.sha/, 'publica exatamente o commit que passou no CI');
+  assert.match(deploy, /wrangler@4 rollback/, 'volta sozinho se o site não responder');
+  assert.match(deploy, /registrar-deploy\.js inicio/);
+  assert.doesNotMatch(deploy, /^\s+(push|pull_request|pull_request_target|schedule):/m);
   for (const f of ['server.js', 'src/config/env.ts', 'index.html', 'netlify/functions/sentinel.js', 'src/pages/tenant/page.tsx', 'ces/ces-app-executivo.html']) {
     assert.doesNotMatch(fs.readFileSync(path.join(ROOT, f), 'utf8'), /onrender\.com|RENDER_EXTERNAL_URL/, f);
   }
