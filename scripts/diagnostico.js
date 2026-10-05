@@ -5,8 +5,9 @@
 //   1. Firestore: uma listagem do Vault (mostra se falta índice composto).
 //   2. Fila de tarefas: dispara um "sweep" (inofensivo) com NEXIA_JOBS_TOKEN.
 //   3. Gemini: um pedido mínimo com GEMINI_API_KEY.
+//   4. Groq: quais modelos da lista do Cortex existem e um pedido mínimo com GROQ_API_KEY.
 const out = (ok, name, detail) => console.log(`${ok ? 'OK     ' : 'FALHOU '} ${name}${detail ? ` — ${String(detail).replace(/\s+/g, ' ').slice(0, 400)}` : ''}`);
-const redact = s => String(s || '').replace(/AIza[0-9A-Za-z_-]{20,}/g, '[chave]').replace(/gh[pousr]_[0-9A-Za-z]{20,}|github_pat_[0-9A-Za-z_]{20,}/g, '[token]');
+const redact = s => String(s || '').replace(/AIza[0-9A-Za-z_-]{20,}/g, '[chave]').replace(/gsk_[0-9A-Za-z]{20,}/g, '[chave]').replace(/gh[pousr]_[0-9A-Za-z]{20,}|github_pat_[0-9A-Za-z_]{20,}/g, '[token]');
 
 async function main() {
   const env = process.env;
@@ -44,6 +45,26 @@ async function main() {
       const msg = r.ok ? (j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) : (j.error && (j.error.message || j.error.status)) || (Array.isArray(j) && j[0] && j[0].error && j[0].error.message);
       out(r.ok, `Gemini ${model}`, `${r.status} ${redact(msg)}`);
     }
+  }
+
+  if (!env.GROQ_API_KEY) out(false, 'Groq', 'GROQ_API_KEY vazio');
+  else {
+    const auth = { Authorization: `Bearer ${env.GROQ_API_KEY}`, 'Content-Type': 'application/json' };
+    const list = await fetch('https://api.groq.com/openai/v1/models', { headers: auth });
+    const lj = await list.json().catch(() => ({}));
+    if (!list.ok) out(false, 'Groq: listar modelos', `${list.status} ${redact(lj.error && lj.error.message)}`);
+    else {
+      const have = new Set((lj.data || []).map(m => m.id));
+      const { FREE } = require('../nexia-ai/orchestrator/models');
+      const wanted = [...new Set(Object.values(FREE).flat().filter(d => d.provider === 'groq').map(d => d.model))];
+      for (const m of wanted) out(have.has(m), `Groq: modelo ${m}`, have.has(m) ? 'disponível' : 'não existe mais');
+    }
+    const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST', headers: auth,
+      body: JSON.stringify({ model: 'openai/gpt-oss-120b', messages: [{ role: 'user', content: 'Responda só OK.' }], max_tokens: 50 }),
+    });
+    const j = await r.json().catch(() => ({}));
+    out(r.ok, 'Groq openai/gpt-oss-120b', `${r.status} ${r.ok ? '' : redact(j.error && j.error.message)}`);
   }
 }
 main().catch(e => { console.error('ERRO:', redact(e && e.message)); process.exit(1); });

@@ -1,4 +1,4 @@
-# NEXIA — diagnóstico manual: Firestore (índices), fila de tarefas e Gemini. Só status no log.
+# NEXIA — diagnóstico manual: Firestore (índices), fila de tarefas, Gemini e Groq. Só status no log.
 name: Diagnóstico
 
 on:
@@ -25,3 +25,4 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
           NEXIA_JOBS_TOKEN: ${{ secrets.NEXIA_JOBS_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
