@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pão da Serra – Padaria Artesanal</title>
+  <meta name="description" content="Descubra os sabores artesanais da Padaria Pão da Serra. Pães frescos, doces caseiros e muito mais!" />
+  <!-- Open Graph -->
+  <meta property="og:title" content="Pão da Serra – Padaria Artesanal" />
+  <meta property="og:description" content="Descubra os sabores artesanais da Padaria Pão da Serra. Pães frescos, doces caseiros e muito mais!" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://example.com/demos/pao-da-serra/" />
+  <meta property="og:image" content="https://example.com/demos/pao-da-serra/hero.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <a href="#main" class="skip-link">Pular para o conteúdo</a>
+  <header>
+    <nav aria-label="Menu principal">
+      <button class="nav-toggle" aria-controls="menu" aria-expanded="false">☰ Menu</button>
+      <ul id="menu" class="nav-list">
+        <li><a href="#destaque">Início</a></li>
+        <li><a href="#cardapio">Cardápio</a></li>
+        <li><a href="#sobre">Sobre</a></li>
+        <li><a href="#depoimentos">Depoimentos</a></li>
+        <li><a href="#contato">Contato</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main id="main">
+    <!-- Destaque -->
+    <section id="destaque" class="hero">
+      <h1>Pão da Serra</h1>
+      <p class="tagline">Sabor artesanal, tradição da serra.</p>
+      <a href="#cardapio" class="btn-primary">Veja o Cardápio</a>
+      <!-- Hero illustration (inline SVG) -->
+      <svg aria-hidden="true" focusable="false" width="300" height="200" viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg">
+        <rect width="300" height="200" fill="var(--color-primary-light)" />
+        <text x="150" y="115" text-anchor="middle" font-size="48" fill="var(--color-primary)" font-family="sans-serif">🍞</text>
+      </svg>
+    </section>
+
+    <!-- Cardápio -->
+    <section id="cardapio" class="section">
+      <h2>Nosso Cardápio</h2>
+      <div class="grid">
+        <article class="card">
+          <h3>Pão Integral</h3>
+          <p class="price">R$ 8,90</p>
+        </article>
+        <article class="card">
+          <h3>Pão de Queijo</h3>
+          <p class="price">R$ 6,50</p>
+        </article>
+        <article class="card">
+          <h3>Bolo de Cenoura</h3>
+          <p class="price">R$ 12,00</p>
+        </article>
+        <article class="card">
+          <h3>Torta de Maçã</h3>
+          <p class="price">R$ 15,00</p>
+        </article>
+        <article class="card">
+          <h3>Croissant</h3>
+          <p class="price">R$ 9,30</p>
+        </article>
+        <article class="card">
+          <h3>Pão de Alho</h3>
+          <p class="price">R$ 7,80</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Sobre -->
+    <section id="sobre" class="section">
+      <h2>Sobre Nós</h2>
+      <p>Fundada em 2015 nas encostas da serra, a Padaria Pão da Serra traz o melhor da panificação artesanal, usando ingredientes locais e técnicas tradicionais.</p>
+    </section>
+
+    <!-- Depoimentos -->
+    <section id="depoimentos" class="section">
+      <h2>Depoimentos</h2>
+      <div class="grid">
+        <blockquote>
+          <p>"O melhor pão que já comi! Sabor e aroma incríveis."</p>
+          <cite>— Maria Silva</cite>
+        </blockquote>
+        <blockquote>
+          <p>"Os doces são perfeitos para acompanhar o café da tarde."</p>
+          <cite>— João Pereira</cite>
+        </blockquote>
+        <blockquote>
+          <p>"Atendimento acolhedor e produtos fresquinhos todo dia."</p>
+          <cite>— Ana Costa</cite>
+        </blockquote>
+      </div>
+    </section>
+
+    <!-- Contato -->
+    <section id="contato" class="section">
+      <h2>Fale Conosco</h2>
+      <form id="contact-form" novalidate>
+        <div class="form-group">
+          <label for="name">Nome</label>
+          <input type="text" id="name" name="name" required aria-required="true" />
+          <small class="error" aria-live="polite"></small>
+        </div>
+        <div class="form-group">
+          <label for="email">E‑mail</label>
+          <input type="email" id="email" name="email" required aria-required="true" />
+          <small class="error" aria-live="polite"></small>
+        </div>
+        <div class="form-group">
+          <label for="message">Mensagem</label>
+          <textarea id="message" name="message" rows="4" required aria-required="true"></textarea>
+          <small class="error" aria-live="polite"></small>
+        </div>
+        <button type="submit" class="btn-primary">Enviar</button>
+      </form>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2024 Pão da Serra. Todos os direitos reservados.</p>
+  </footer>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
