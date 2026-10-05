@@ -1,0 +1,28 @@
+# TEMPORÁRIO (branch de exploração, não vai para a develop): baixa as imagens do app Body Coach que o dono
+# criou no Readdy (autorizado por ele em 2026-10-05) e guarda no branch explorar-readdy-imagens.
+name: Imagens do Readdy (temporário)
+on:
+  push:
+    branches: [nexia/explorar-readdy]
+    paths: [tmp-explorar/imagens.txt, .github/workflows/readdy-imagens.yml]
+permissions:
+  contents: write
+jobs:
+  baixar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - name: Baixar imagens
+        run: |
+          mkdir -p ../imgs
+          while read -r u; do
+            n=$(echo "$u" | sed -E 's/.*seq=([a-z0-9-]+).*/\1/')
+            curl -sSL --retry 3 -o "../imgs/$n.img" "$u" && echo "$n $(file -b --mime-type ../imgs/$n.img) $(stat -c %s ../imgs/$n.img)"
+          done < tmp-explorar/imagens.txt
+      - name: Guardar resultado
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan explorar-readdy-imagens && git rm -rqf . && rm -rf tmp-explorar
+          cp ../imgs/* . && git add -A && git commit -qm "Imagens do app Body Coach (Readdy)" && git push -qf origin explorar-readdy-imagens
