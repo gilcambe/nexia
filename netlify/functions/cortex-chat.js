@@ -57,7 +57,7 @@ const AI_CATALOG = {
   groq_deepseek_r1:     { provider: 'groq',        model: 'deepseek-r1-distill-llama-70b',                        label: '💻 DeepSeek R1 (Groq)',        free: true  },
 
   // GEMINI 🆓 — https://aistudio.google.com — GEMINI_API_KEY
-  gemini_25_pro:        { provider: 'gemini',      model: 'gemini-2.5-pro',                                       label: '🌐 Gemini 2.5 Pro',            free: true  },
+  gemini_25_pro:        { provider: 'gemini',      model: 'gemini-3.1-pro-preview',                               label: '🌐 Gemini 3.1 Pro',            free: true  },
   gemini_25_flash:      { provider: 'gemini',      model: 'gemini-2.5-flash',                                     label: '🌐 Gemini 2.5 Flash',          free: true  },
   gemini_20_flash:      { provider: 'gemini',      model: 'gemini-2.0-flash',                                     label: '🌐 Gemini 2.0 Flash',          free: true  },
   gemini_flash_lite:    { provider: 'gemini',      model: 'gemini-2.5-flash-lite',                                label: '🌐 Gemini Flash Lite',         free: true  },
