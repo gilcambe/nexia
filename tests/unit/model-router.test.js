@@ -192,3 +192,16 @@ test('M11. cortex-chat só tenta IAs com chave: só GEMINI_API_KEY → Gemini pr
     for (const [k, v] of Object.entries(saved)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
   }
 });
+
+test('M12. ADR-FREE-04: GitHub Models (token do Actions) e Workers AI (conta grátis) usam o endpoint certo; sem chave, ficam de fora', async () => {
+  const calls = [];
+  const fetchImpl = async (url, init) => { calls.push({ url, auth: init.headers.Authorization }); return { ok: true, status: 200, json: async () => ({ choices: [{ message: { content: 'oi' } }], usage: {} }) }; };
+  const env = { GITHUB_MODELS_TOKEN: 'gh-t', CLOUDFLARE_AI_TOKEN: 'cf-t', CLOUDFLARE_AI_ACCOUNT_ID: 'abc123' };
+  const r = createRouter({ env, fetchImpl });
+  await r.chat({ provider: 'github', model: 'openai/gpt-4.1' }, { messages: [{ role: 'user', content: 'oi' }] });
+  await r.chat({ provider: 'cloudflare', model: '@cf/openai/gpt-oss-120b' }, { messages: [{ role: 'user', content: 'oi' }] });
+  assert.deepStrictEqual(calls.map(c => c.url), ['https://models.github.ai/inference/chat/completions', 'https://api.cloudflare.com/client/v4/accounts/abc123/ai/v1/chat/completions']);
+  assert.deepStrictEqual(calls.map(c => c.auth), ['Bearer gh-t', 'Bearer cf-t']);
+  const none = createRouter({ env: {}, fetchImpl });
+  assert.strictEqual(none.capabilities({ provider: 'github', model: 'openai/gpt-4.1' }).available, false);
+});

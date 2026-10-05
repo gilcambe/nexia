@@ -25,6 +25,11 @@ const PROVIDERS = Object.freeze({
   huggingface: { url: m => `https://router.huggingface.co/hf-inference/models/${m}/v1/chat/completions`, env: 'HF_API_KEY', max_output: 8192, tools: false },
   sambanova:   { url: 'https://api.sambanova.ai/v1/chat/completions', env: 'SAMBANOVA_API_KEY', max_output: 8192, tools: false },
   together:    { url: 'https://api.together.xyz/v1/chat/completions', env: 'TOGETHER_API_KEY', max_output: 8192, tools: true },
+  // ADR-FREE-04: grátis e sem cadastro novo. GitHub Models usa o próprio token do GitHub Actions
+  // (permissão models: read); Workers AI usa a conta grátis do Cloudflare (10 mil "neurons" por dia).
+  github:      { url: 'https://models.github.ai/inference/chat/completions', env: 'GITHUB_MODELS_TOKEN', max_output: 4096, tools: true },
+  cloudflare:  { url: (m, env) => `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(env.CLOUDFLARE_AI_ACCOUNT_ID || env.CLOUDFLARE_ACCOUNT_ID || 'sem-conta')}/ai/v1/chat/completions`,
+                 env: 'CLOUDFLARE_AI_TOKEN', max_output: 8192, tools: true },   // + CLOUDFLARE_AI_ACCOUNT_ID
 });
 
 const DEFAULT_TIMEOUT = 120000;
@@ -32,7 +37,7 @@ const DEFAULT_TIMEOUT = 120000;
 function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (...a) => fetch(...a), baseUrl } = {}) {
   const cfg = PROVIDERS[id];
   if (!cfg) throw new ModelError(CODES.UNKNOWN_PROVIDER, `Provedor desconhecido: ${id}`);
-  const urlFor = model => baseUrl || (typeof cfg.url === 'function' ? cfg.url(model) : cfg.url);
+  const urlFor = model => baseUrl || (typeof cfg.url === 'function' ? cfg.url(model, env) : cfg.url);
 
   const capabilities = () => ({ chat: true, streaming: true, tool_call: !!cfg.tools, structured_output: true, max_output_tokens: cfg.max_output });
 

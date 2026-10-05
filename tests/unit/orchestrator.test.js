@@ -88,7 +88,15 @@ test('U4. agentes: os 10 da spec, só leitura onde deve, modelos por classe', ()
   assert.deepStrictEqual(candidates(router, 'reasoning', {}).map(d => d.model).slice(0, 2), ['claude-sonnet-5-5', 'openai/gpt-oss-120b'], 'sem o primeiro, cai no próximo');
   // ADR-FREE-03: sem chave da Anthropic (paga), só os grátis que estiverem configurados
   const free = { capabilities: d => ({ available: ['google', 'groq'].includes(d.provider), tool_call: true }) };
-  assert.deepStrictEqual(candidates(free, 'coding', {}).map(d => `${d.provider}:${d.model}`), ['groq:openai/gpt-oss-120b', 'groq:qwen/qwen3.8-27b', 'groq:openai/gpt-oss-20b', 'google:gemini-2.5-flash'], 'Groq primeiro (cota grátis maior, por modelo); Gemini de reserva');
+  assert.deepStrictEqual(candidates(free, 'coding', {}).map(d => `${d.provider}:${d.model}`), ['groq:openai/gpt-oss-120b', 'groq:qwen/qwen3.8-27b', 'groq:openai/gpt-oss-20b', 'google:gemini-2.5-flash', 'google:gemini-2.5-flash-lite'], 'Groq primeiro (cota grátis maior, por modelo); Gemini de reserva');
+  // ADR-FREE-04: a lista grátis só tem provedores grátis e vários deles (cotas separadas).
+  const { FREE } = require('../../nexia-ai/orchestrator/models');
+  for (const cls of Object.keys(FREE)) {
+    const provs = new Set(FREE[cls].map(d => d.provider));
+    for (const p of provs) assert.ok(['groq', 'github', 'google', 'cloudflare', 'mistral', 'openrouter'].includes(p), `${cls}: ${p} não é grátis`);
+    assert.ok(provs.size >= 5, `${cls}: precisa de vários provedores grátis`);
+    assert.ok(FREE[cls].filter(d => d.provider === 'openrouter').every(d => d.model.endsWith(':free')));
+  }
   const custom = candidates(free, 'coding', { NEXIA_MODELS_CODING: 'groq:moonshotai/kimi-k2, google:gemini-9, bad, x:y z' });
   assert.deepStrictEqual(custom.map(d => `${d.provider}:${d.model}`), ['groq:moonshotai/kimi-k2', 'google:gemini-9']);
   assert.deepStrictEqual(candidates({ capabilities: () => ({ available: false }) }, 'coding'), []);

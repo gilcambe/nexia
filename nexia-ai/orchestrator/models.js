@@ -4,22 +4,28 @@
 // provedor está configurado e suporta tool_call.
 //
 // ADR-FREE-03: o projeto não usa nada pago. O Claude (Anthropic) só entra se alguém configurar
-// ANTHROPIC_API_KEY (cobra por uso). Sem ela, valem as opções grátis, na ordem: Groq (GROQ_API_KEY),
-// Google Gemini (GEMINI_API_KEY, AI Studio) e modelos ":free" do OpenRouter (OPENROUTER_API_KEY).
-// A Cerebras saiu: passou a pedir pagamento. Os nomes mudam com o tempo: NEXIA_MODELS_<CLASSE>
+// ANTHROPIC_API_KEY (cobra por uso). A Cerebras saiu: passou a pedir pagamento.
+// ADR-FREE-04 (regra do dono, 2026-10-05): o Cortex nunca para por falta de IA. A lista grátis tem
+// vários provedores com cotas separadas; esgotou um, vai para o próximo; esgotaram todos, a execução
+// espera a cota voltar e é retomada sozinha (nunca falha por cota). Ordem:
+//   Groq (GROQ_API_KEY; cota por modelo, então 3 modelos somam 3 cotas)
+//   → GitHub Models (token do próprio GitHub Actions, sem cadastro)
+//   → Google Gemini (GEMINI_API_KEY; 2.5 Flash, poucos pedidos por dia)
+//   → Cloudflare Workers AI (CLOUDFLARE_AI_TOKEN + CLOUDFLARE_ACCOUNT_ID; grátis por dia)
+//   → Mistral (MISTRAL_API_KEY, plano Experiment grátis) → OpenRouter ":free" (OPENROUTER_API_KEY).
+// Provedor sem chave é pulado na hora. Os nomes mudam com o tempo: NEXIA_MODELS_<CLASSE>
 // (ex.: NEXIA_MODELS_CODING="groq:openai/gpt-oss-120b,google:gemini-2.5-flash") troca a lista.
+const TAIL = [{ provider: 'github', model: 'openai/gpt-4.1' }, { provider: 'github', model: 'openai/gpt-4.1-mini' },
+  { provider: 'google', model: 'gemini-2.5-flash' }, { provider: 'google', model: 'gemini-2.5-flash-lite' },
+  { provider: 'cloudflare', model: '@cf/openai/gpt-oss-120b' }, { provider: 'mistral', model: 'mistral-small-latest' },
+  { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }, { provider: 'openrouter', model: 'openai/gpt-oss-120b:free' }];
 const FREE = Object.freeze({
-  // Ordem pela cota grátis (out/2026). Na Groq a cota é por modelo, então vários modelos dela
-  // somam cotas; o Gemini grátis dá só 20 pedidos por dia no 2.5 Flash, então fica de reserva.
   reasoning: [{ provider: 'groq', model: 'openai/gpt-oss-120b' }, { provider: 'groq', model: 'qwen/qwen3.8-27b' },
-    { provider: 'groq', model: 'openai/gpt-oss-20b' }, { provider: 'google', model: 'gemini-2.5-flash' },
-    { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }],
+    { provider: 'groq', model: 'openai/gpt-oss-20b' }, ...TAIL],
   coding: [{ provider: 'groq', model: 'openai/gpt-oss-120b' }, { provider: 'groq', model: 'qwen/qwen3.8-27b' },
-    { provider: 'groq', model: 'openai/gpt-oss-20b' }, { provider: 'google', model: 'gemini-2.5-flash' },
-    { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }],
+    { provider: 'groq', model: 'openai/gpt-oss-20b' }, ...TAIL],
   fast: [{ provider: 'groq', model: 'openai/gpt-oss-20b' }, { provider: 'groq', model: 'qwen/qwen3.8-27b' },
-    { provider: 'groq', model: 'openai/gpt-oss-120b' }, { provider: 'google', model: 'gemini-2.5-flash' },
-    { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }],
+    { provider: 'groq', model: 'openai/gpt-oss-120b' }, ...TAIL],
 });
 
 const CLASSES = Object.freeze({
