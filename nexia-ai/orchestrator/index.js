@@ -40,9 +40,23 @@ function classifyIntent(message) {
 }
 const wantsStaging = message => /\b(staging|homologa|publiqu\w*|publicar)\b/.test(normalize(message || ''));
 
+/**
+ * ADR-Q-03: pedido para CRIAR um site ou sistema com interface → 'site' | 'system' | null.
+ * Esses pedidos passam pelo Designer e pela checagem visual obrigatória.
+ */
+function buildKind(message) {
+  const m = normalize(message || '');
+  // O verbo precisa estar perto do substantivo ("crie um site", "desenvolva o novo painel"): "crie a página de
+  // contato do Site Alfa" é mudança num site que já existe, não site novo.
+  const near = nouns => new RegExp(`\\b(cri\\w*|fa(c|z)\\w*|mont\\w*|constru\\w*|ger\\w*|desenvolv\\w*|refa(c|z)\\w*|redesenh\\w*)\\s+(\\S+\\s+){0,3}?(${nouns})\\b`).test(m);
+  if (near('sistema|painel|dashboard|admin|crm|erp|aplicativo|app|plataforma|portal')) return 'system';
+  if (near('site|landing|loja virtual|e-?commerce|portfolio|hotsite')) return 'site';
+  return null;
+}
+
 function specialistFor(message) {
   const m = normalize(message || '');
-  if (/\b(botao|tela|css|layout|pagina|formulario|ui|responsiv\w*|componente|estilo|cor|fonte|seo|acessibilidade)\b/.test(m)) return 'frontend';
+  if (buildKind(message) || /\b(botao|tela|css|layout|pagina|formulario|ui|responsiv\w*|componente|estilo|cor|fonte|seo|acessibilidade)\b/.test(m)) return 'frontend';
   if (/\b(firestore|banco|indice|schema|migra\w*|colecao|regras)\b/.test(m)) return 'database';
   if (/\b(api|endpoint|funcao|autentica\w*|webhook|job|backend|servidor)\b/.test(m)) return 'backend';
   return 'coder';
@@ -56,7 +70,9 @@ function planFor(intent, message) {
   const P = (agent, goal, action) => ({ agent, goal, action });
   switch (intent) {
     case 'change': return [
-      P('architect', 'Analisar o pedido, localizar arquivos e propor a mudança mínima', 'agent:analyze'),
+      buildKind(message)
+        ? P('designer', 'Definir fontes, cores, seções e buscar fotos/vídeos reais', 'agent:analyze')
+        : P('architect', 'Analisar o pedido, localizar arquivos e propor a mudança mínima', 'agent:analyze'),
       P('coder', 'Criar a branch de trabalho "nexia/..."', 'create_branch'),
       P(sp, 'Implementar a mudança na branch de trabalho', 'agent:implement'),
       P('reviewer', 'Revisar o diff contra o pedido', 'agent:review'),
@@ -90,6 +106,15 @@ function planFor(intent, message) {
  */
 function createOrchestrator(deps) {
   const { vault, gateway, router } = deps;
+  const fetchImpl = deps.fetchImpl || ((...a) => fetch(...a));
+  /** Confere se uma foto/vídeo externo abre (só o primeiro byte). Erro de rede conta como fora do ar. */
+  const reachable = async url => {
+    try {
+      const res = await fetchImpl(url, { method: 'GET', headers: { Range: 'bytes=0-0', 'User-Agent': 'NEXIA-AI/1.0' }, redirect: 'follow', signal: AbortSignal.timeout(15000) });
+      if (res.body && res.body.cancel) res.body.cancel().catch(() => {});
+      return res.status < 400;
+    } catch { return false; }
+  };
   const now = deps.now || (() => new Date());
   const resolve = deps.resolver || resolveProject;
   const contextOf = deps.contextBuilder || buildContext;
@@ -156,7 +181,7 @@ function createOrchestrator(deps) {
 
     // Lê os arquivos web alterados na branch e roda a checagem estática; referências locais que não
     // estão no diff são conferidas na branch (só "não existe" vira erro).
-    const webCheck = async () => {
+    const webCheck = async kind => {
       const c = await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch });
       if (c.status !== 'succeeded') return null;
       const idList = [...ids(c)];
@@ -167,7 +192,12 @@ function createOrchestrator(deps) {
         if (g.status === 'succeeded') files.push({ path: f.path, content: g.result.content });
       }
       if (!files.length) return null;
-      const out = checkWebFiles(files);
+      const added = new Set(c.result.files.filter(x => x.status === 'added').map(x => x.path));
+      const out = checkWebFiles(files, { design: kind, added });
+      // Fotos e vídeos externos (hotlink) precisam abrir de verdade.
+      for (const u of out.externalMedia.slice(0, 12)) {
+        if (!(await reachable(u.url))) out.errors.push({ file: u.file, line: u.line, message: `a mídia ${u.url.slice(0, 120)} não abre (troque por outra de media.search_images)` });
+      }
       for (const m of out.missingCandidates.slice(0, 10)) {
         const g = await tool(ctx, state, 'qa', 'github.get_file', { path: m.path, ref: state.work_branch });
         idList.push(...ids(g));
@@ -192,7 +222,9 @@ function createOrchestrator(deps) {
         if (action === 'agent:analyze' || action === 'agent:answer') {
           await runA(i, plan[i].agent, action === 'agent:answer'
             ? `Pedido do usuário: "${message}"\nResponda com base nas ferramentas de leitura. Cite as evidências (ids, arquivos, SHAs).`
-            : `Pedido do usuário: "${message}"\nAnalise o repositório do projeto, localize os arquivos envolvidos e descreva a mudança mínima (arquivos e o que muda). Não altere nada.`);
+            : plan[i].agent === 'designer'
+              ? `Pedido do usuário: "${message}"\nTipo: ${buildKind(message) === 'system' ? 'sistema (interface de uso diário)' : 'site'}. Veja no repositório onde os arquivos vão ficar e devolva o BRIEF visual com fontes, paleta, seções e mídia real (busque fotos${buildKind(message) === 'site' ? ' — pelo menos 6' : ' se fizer sentido'}). Não altere nada.`
+              : `Pedido do usuário: "${message}"\nAnalise o repositório do projeto, localize os arquivos envolvidos e descreva a mudança mínima (arquivos e o que muda). Não altere nada.`);
         } else if (action === 'create_branch') {
           const hadBranch = !!state.work_branch;   // retomada: a branch pode já ter sido criada
           const branch = state.work_branch || `nexia/${slug(message)}-${state.execution_id.slice(-6).toLowerCase().replace(/[^a-z0-9]/g, '')}`;
@@ -208,7 +240,7 @@ function createOrchestrator(deps) {
           const headOf = r => (r && r.status === 'succeeded' && r.result.commits.length ? r.result.commits[r.result.commits.length - 1].sha : null);
           let before = null;   // rodada de correção: exige commit novo, não basta o da rodada anterior
           if (fix) before = headOf(await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch }));
-          await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).\nAnálise do Architect:\n${analysis}${fix}\n\nLeia os arquivos atuais com github.get_file (ref ${state.work_branch}). Para arquivo existente use github.edit_files; para arquivo novo, github.commit_files. Tudo na branch ${state.work_branch}. Não mexa em arquivos que o pedido não envolve.`);
+          await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).\n${plan[0].agent === 'designer' ? 'Brief do Designer (siga fontes, paleta e use as fotos listadas)' : 'Análise do Architect'}:\n${analysis}${fix}\n\nLeia os arquivos atuais com github.get_file (ref ${state.work_branch}). Para arquivo existente use github.edit_files; para arquivo novo, github.commit_files. Tudo na branch ${state.work_branch}. Não mexa em arquivos que o pedido não envolve.`);
           if (!stop) {
             // Confirmação pela ferramenta: a branch tem que estar à frente da padrão.
             const c = await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch });
@@ -220,7 +252,7 @@ function createOrchestrator(deps) {
           }
         } else if (action === 'agent:review' || action === 'agent:security') {
           // ADR-Q-02: checagem estática dos arquivos web antes da revisão por IA. Erro volta direto ao agente.
-          const sc = action === 'agent:review' ? await webCheck() : null;
+          const sc = action === 'agent:review' ? await webCheck(buildKind(message)) : null;
           let r;
           if (sc && sc.errors.length) {
             const findings = sc.errors.slice(0, 30).map(e => ({ severity: 'high', file: e.file, message: `${e.line ? `linha ${e.line}: ` : ''}${e.message}` }));
@@ -486,4 +518,4 @@ function usageOf(meter, prev = {}) {
 }
 function clean(o) { return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== '')); }
 
-module.exports = { createOrchestrator, classifyIntent, planFor, specialistFor, DEFAULT_BUDGET };
+module.exports = { buildKind, createOrchestrator, classifyIntent, planFor, specialistFor, DEFAULT_BUDGET };

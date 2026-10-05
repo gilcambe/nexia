@@ -43,7 +43,7 @@ const GREEN = [{ name: 'Testes', status: 'completed', conclusion: 'success' }, {
   { name: 'Secret scan (gitleaks)', status: 'completed', conclusion: 'success' }];
 
 const gateway = () => createGateway({ db, vault, env: fake.env, fetchImpl: fake.fetchImpl });
-const orch = router => createOrchestrator({ vault, gateway: gateway(), router });
+const orch = (router, extra = {}) => createOrchestrator({ vault, gateway: gateway(), router, ...extra });
 const setAutonomy = async (level, project = ids.project) => vault.Project.update(user, project, { autonomy_level: level }, { expectedVersion: (await vault.Project.get(user, project)).version });
 const newCtx = () => createExecutionContext({ tenantId: T, actor: { type: 'user', id: 'gilcambe' } });
 async function startAndRun(o, message, extra = {}) {
@@ -248,6 +248,37 @@ test('O4e. ADR-Q-02: HTML quebrado volta ao agente pela checagem automática, se
   assert.ok(exe.pull_request, JSON.stringify([exe.status, exe.error_code, exe.result_summary]));
   assert.strictEqual(exe.fix_rounds, 1);
   assert.strictEqual(router.seen.filter(s => s.agent === 'reviewer').length, 1, 'o Reviewer só rodou com o HTML já correto');
+});
+
+test('O4f. ADR-Q-03: site novo passa pelo Designer; página sem padrão visual ou com foto fora do ar volta para o agente', async () => {
+  await setAutonomy(3);
+  const head = '<!DOCTYPE html><html lang="pt-BR"><head><meta name="viewport" content="width=device-width"><title>Pão</title><link href="https://fonts.googleapis.com/css2?family=Fraunces&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"></head>';
+  const imgs = n => Array.from({ length: n }, (_, k) => `<img src="https://img.test/${k}.jpg" alt="foto ${k}" width="4" height="3">`).join('');
+  const good = `${head}<body><header>P</header><main>${imgs(4)}</main><footer>Fotos: Ana (CC BY)</footer><script src="script.js"></script></body></html>`;
+  const css = ':root { --primary: #8a4b2a; }\nimg { transition: transform .3s; }\n@media (max-width: 700px) { main { display: block; } }';
+  const files = (html, n = 0) => req => ({ tool_calls: [call('github.commit_files', { branch: branchOf(req), message: `Site ${n}`, files: [
+    { path: 'demos/pao/index.html', content: html }, { path: 'demos/pao/styles.css', content: css }, { path: 'demos/pao/script.js', content: 'new IntersectionObserver(() => {});' }] })] });
+  const weak = `${head.replace(/<link href="https:\/\/fonts[^>]+>/, '')}<body><header>P</header><main>${imgs(1)}</main><footer>x</footer><script src="script.js"></script></body></html>`;
+  const router = scriptedRouter({
+    designer: [{ text: 'Fontes Fraunces + DM Sans; paleta #8a4b2a; hero | https://img.test/0.jpg | pão | Ana (CC BY)' }],
+    frontend: [files(weak, 1), { text: 'feito' }, req => {
+      assert.match(req.messages[0].content, /Brief do Designer/);
+      assert.match(req.messages[0].content, /fonte da web/);
+      assert.match(req.messages[0].content, /pelo menos 4 fotos/);
+      return files(good.replace('https://img.test/3.jpg', 'https://img.test/morta.jpg'), 2)(req);
+    }, { text: 'corrigido' }, req => {
+      assert.match(req.messages[0].content, /morta\.jpg não abre/);
+      return files(good, 3)(req);
+    }, { text: 'ok' }],
+    reviewer: [report('approve')], security: [report('approve')],
+  });
+  const fetchImpl = async url => ({ status: /morta/.test(url) ? 404 : 206, body: null });
+  const { exe } = await startAndRun(orch(router, { fetchImpl }), 'Crie um site para a padaria Pão da Serra');
+  assert.strictEqual(exe.plan[0].agent, 'designer');
+  assert.ok(exe.pull_request, JSON.stringify([exe.status, exe.error_code, exe.result_summary]));
+  assert.strictEqual(exe.fix_rounds, 2);
+  assert.strictEqual(router.seen.filter(s => s.agent === 'reviewer').length, 1, 'o Reviewer só viu a versão completa');
+  assert.ok(router.seen.find(s => s.agent === 'designer').tools.includes('media__search_images'), 'o Designer pode buscar fotos');
 });
 
 test('O5. orçamento estourado para a execução com BUDGET_EXCEEDED', async () => {

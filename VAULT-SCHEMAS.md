@@ -410,7 +410,7 @@ Coleção `vault_executions`, id `exe_…`, schemaVersion 1.
 | `status` | enum | sim |  |  | `planned`, `running`, `waiting_approval`, `needs_input`, `succeeded`, `failed`, `cancelled` |
 | `plan` | array de objeto |  |  | [] | até 20 itens |
 | `plan[].step` | int | sim |  |  | 1–50 |
-| `plan[].agent` | enum | sim |  |  | `orchestrator`, `architect`, `coder`, `frontend`, `backend`, `database`, `qa`, `security`, `devops`, `reviewer` |
+| `plan[].agent` | enum | sim |  |  | `orchestrator`, `architect`, `coder`, `frontend`, `backend`, `database`, `qa`, `security`, `devops`, `reviewer`, `designer` |
 | `plan[].goal` | string | sim |  |  | 1–300 caracteres |
 | `plan[].status` | enum | sim |  |  | `pending`, `running`, `done`, `failed`, `skipped`, `waiting_approval` |
 | `plan[].model` | string |  |  |  | 1–100 caracteres |
