@@ -169,7 +169,8 @@ test('O4. sem falso sucesso: agente sem commit, revisão reprovada e aprovação
 
   const err = new Error('upstream'); err.code = 'UPSTREAM';
   const down = await startAndRun(orch(scriptedRouter({ architect: [err, err, err, err] })), 'Corrija o rodapé do Site Alfa');
-  assert.deepStrictEqual([down.exe.status, down.exe.error_code], ['failed', 'MODEL_UPSTREAM'], 'modelo fora: repete, troca de modelo e falha');
+  assert.deepStrictEqual([down.exe.status, down.exe.error_code], ['planned', 'WAITING_AI_QUOTA'], 'modelo fora: repete, troca de modelo e espera a cota (ADR-FREE-04), sem falso sucesso');
+  assert.ok(!down.exe.finished_at);
 
   await setAutonomy(2);
   const o = orch(scriptedRouter({ architect: [{ text: 'x' }], frontend: [commitStep('src/app.html'), { text: 'ok' }], reviewer: [report('approve')], security: [report('approve')] }));
@@ -342,6 +343,20 @@ test('O4g. 413 (pedido maior que a cota por minuto): o mesmo modelo é chamado d
   assert.deepStrictEqual(sizes, [8192, 4096]);
   assert.strictEqual(exe.status, 'succeeded', JSON.stringify([exe.error_code, exe.result_summary]));
   assert.strictEqual(new Set(router.seen.filter(s => s.agent === 'architect').map(s => s.model)).size, 1, 'não trocou de modelo');
+});
+
+test('O4i. ADR-FREE-04: sem cota em nenhuma IA grátis a execução não falha: espera (planned) e continua do mesmo passo', async () => {
+  await setAutonomy(3);
+  const down = () => Object.assign(new Error('groq 503'), { code: 'UPSTREAM', details: { status: 503, upstream: 'over capacity' } });
+  const router = scriptedRouter({ architect: [down(), down(), down(), down(), { text: 'A stack é HTML e Node.' }] });
+  const o = orch(router);
+  const { ctx, exe } = await startAndRun(o, 'Qual é a stack do Site Alfa?');
+  assert.deepStrictEqual([exe.status, exe.error_code], ['planned', 'WAITING_AI_QUOTA'], JSON.stringify(exe.result_summary));
+  assert.match(exe.result_summary, /continuo sozinho/);
+  assert.strictEqual(exe.plan[0].status, 'pending');
+  const again = await o.run(ctx, exe.id);
+  assert.strictEqual(again.status, 'succeeded', JSON.stringify([again.error_code, again.result_summary]));
+  assert.match(again.result_summary, /HTML e Node/);
 });
 
 test('O5. orçamento estourado para a execução com BUDGET_EXCEEDED', async () => {

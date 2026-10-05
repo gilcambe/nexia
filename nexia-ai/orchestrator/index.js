@@ -24,6 +24,9 @@ const DEFAULT_BUDGET = Object.freeze({ max_steps: 80, max_tool_calls: 160, max_t
 // branch e a revisão roda de novo, até este limite. Depois disso a execução falha como antes.
 const MAX_FIX_ROUNDS = 2;
 const FINAL = ['succeeded', 'failed', 'cancelled'];
+// ADR-FREE-04: erros de IA que são falta de cota/fora do ar (não configuração) e quantas esperas cabem.
+const AI_WAIT = /^MODEL_(UPSTREAM|ABORTED|ERROR|RATE_LIMIT\w*|OVERLOADED)$/;
+const AI_WAITS = 9;
 
 // ── Intenção ─────────────────────────────────────────────────────────────────
 // Classificador por regras (determinístico e auditável). Ordem importa.
@@ -603,6 +606,16 @@ function createOrchestrator(deps) {
   }
 
   async function finish(ctx, exe, steps, meter, stop, checks, baseUsage = exe.usage) {
+    // ADR-FREE-04: IA grátis sem cota agora (todos os provedores em 429/fora) não é falha: a execução
+    // volta para "planned" e a retomada agendada (cron do Worker) continua do mesmo passo depois.
+    if (stop && stop.status === 'failed' && AI_WAIT.test(stop.error_code || '')) {
+      const k = steps.findIndex(x => x.status === 'failed');
+      if (k >= 0 && (steps[k].attempts || 0) < AI_WAITS) {
+        steps[k] = { ...steps[k], status: 'pending', error_code: 'WAITING_AI_QUOTA' };
+        stop = { status: 'planned', error_code: 'WAITING_AI_QUOTA',
+          result_summary: `As IAs grátis estão sem cota agora. Nada foi perdido: continuo sozinho do passo ${k + 1} quando a cota voltar (tentativa ${steps[k].attempts || 1} de ${AI_WAITS}).` };
+      }
+    }
     const readOnly = ['question', 'status', 'unknown', 'review'].includes(exe.intent);
     let gates = [];
     let status = stop ? stop.status : 'running';

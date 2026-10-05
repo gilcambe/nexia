@@ -71,6 +71,9 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          CLOUDFLARE_AI_TOKEN: ${{ secrets.CLOUDFLARE_AI_TOKEN }}
+          CLOUDFLARE_AI_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_AI_ACCOUNT_ID }}
           NEXIA_MODELS_CODING: ${{ secrets.NEXIA_MODELS_CODING }}
           NEXIA_MODELS_REASONING: ${{ secrets.NEXIA_MODELS_REASONING }}
           NEXIA_MODELS_FAST: ${{ secrets.NEXIA_MODELS_FAST }}
