@@ -19,7 +19,7 @@ function fakeAssets(files) {
     return p in files ? new Response(files[p], { status: 200, headers: { 'Content-Type': 'text/html' } }) : new Response('nf', { status: 404 });
   } };
 }
-const FILES = { '/index.html': 'SPA', '/assets/app-1.js': 'js', '/ces/ces-landing.html': 'CES' };
+const FILES = { '/index.html': 'SPA', '/assets/app-1.js': 'js', '/ces/ces-landing.html': 'CES', '/body-coach/index.html': 'BC', '/body-coach/assets/bc-1.js': 'bcjs' };
 const call = (url, init = {}, env = {}, getFunction = () => null) =>
   handleRequest(new Request('https://nexia.test' + url, init), { ASSETS: fakeAssets(FILES), ...env }, { getFunction });
 
@@ -83,6 +83,21 @@ test('CF3. Worker: health, métodos, caminhos inválidos, páginas de tenant, SP
   assert.strictEqual((await call('/api/firebase-config')).status, 503);
   const cfg = await call('/api/firebase-config', {}, { FIREBASE_API_KEY: 'pub', FIREBASE_PROJECT_ID: 'demo' });
   assert.deepStrictEqual((({ apiKey, projectId }) => ({ apiKey, projectId }))(await cfg.json()), { apiKey: 'pub', projectId: 'demo' });
+});
+
+test('CF13. Worker: /body-coach/* serve o SPA do Body Coach (ADR-CLONE-02), sem tocar no SPA principal', async () => {
+  for (const p of ['/body-coach', '/body-coach/', '/body-coach/workout', '/body-coach/evolution/x']) {
+    assert.strictEqual(await (await call(p)).text(), 'BC', p);
+  }
+  assert.strictEqual(await (await call('/body-coach/assets/bc-1.js')).text(), 'bcjs');
+  assert.strictEqual((await call('/body-coach/assets/nao-existe.js')).status, 404);
+  assert.strictEqual(await (await call('/body-coachx')).text(), 'SPA');
+  assert.strictEqual((await call('/body-coach/workout', { method: 'POST' })).status, 405);
+  const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+  assert.match(pkg.scripts['build:worker'], /build:body-coach/);
+  assert.ok(fs.existsSync(path.join(ROOT, 'apps/body-coach/package-lock.json')), 'lock do sub-app versionado (npm ci)');
+  const bc = JSON.parse(fs.readFileSync(path.join(ROOT, 'apps/body-coach/package.json'), 'utf8'));
+  for (const dep of ['@supabase/supabase-js', '@stripe/react-stripe-js']) assert.ok(!bc.dependencies[dep], dep);
 });
 
 test('CF4. Worker: API vai para o handler Netlify; 404 sem função; 413 acima de 1 MB; erro sem detalhe interno', async () => {

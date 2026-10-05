@@ -115,8 +115,13 @@ async function detect(files, read) {
   }
   if (!firebaseProject) {
     // Config web do Firebase embutida no código (pública por natureza). Ignora valores de exemplo.
+    // Lê no máximo 60 arquivos, mas primeiro os que costumam ter a config (nome com
+    // firebase/config/env, depois HTML): assim um sub-app com muitos arquivos (ex.: apps/)
+    // não ocupa a cota e esconde a config das páginas (ADR-CLONE-02).
+    const rank = f => (/firebase|config|env/i.test(f.split('/').pop()) ? 0 : ext(f) === '.html' ? 1 : 2);
     const candidates = files.filter(f => ['.html', '.js', '.ts', '.tsx', '.jsx'].includes(ext(f))
-      && !/(^|\/)(node_modules|tests?|__tests__|dist|out|build|docs?)\//.test(f)).slice(0, 60);
+      && !/(^|\/)(node_modules|tests?|__tests__|dist|out|build|docs?)\//.test(f))
+      .map((f, i) => [f, i]).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map(x => x[0]).slice(0, 60);
     const votes = {};
     for (const f of candidates) {
       const text = await read(f);

@@ -255,6 +255,53 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── NEXIA Body Coach: /bodycoach_users/{uid}/** (ADR-CLONE-02) ──
+    // Cada atleta lê e grava só os próprios dados. Coleções fixas; documentos com
+    // tamanho limitado (fotos e PDFs pequenos vão como data URL dentro do documento,
+    // porque o Cloud Storage do Firebase exige plano pago).
+    function bodyCoachOwner(userId) {
+      return isAuthenticated() && uid() == userId;
+    }
+
+    function bodyCoachOptString(field, max) {
+      return !(field in request.resource.data)
+        || request.resource.data[field] == null
+        || (request.resource.data[field] is string && request.resource.data[field].size() <= max);
+    }
+
+    function bodyCoachOptNumber(field) {
+      return !(field in request.resource.data)
+        || request.resource.data[field] == null
+        || request.resource.data[field] is number;
+    }
+
+    function bodyCoachValid(coll) {
+      let d = request.resource.data;
+      return (!('user_id' in d) || d.user_id == uid())
+        && (
+          (coll == 'profile' && bodyCoachOptString('full_name', 200) && bodyCoachOptString('email', 320)
+            && bodyCoachOptNumber('height_cm') && bodyCoachOptNumber('goal_weight_kg') && bodyCoachOptNumber('goal_body_fat_pct')
+            && bodyCoachOptString('coach_notes', 5000))
+          || (coll == 'meals' && d.name is string && d.name.size() > 0 && d.name.size() <= 200
+            && d.calories is number && d.protein is number && d.carbs is number && d.fat is number
+            && bodyCoachOptNumber('fiber') && bodyCoachOptString('meal_time', 20))
+          || (coll == 'daily_readiness' && d.check_in_date is string && d.check_in_date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+            && bodyCoachOptNumber('readiness_score') && bodyCoachOptString('notes', 2000))
+          || (coll == 'progress_entries' && d.taken_at is string && bodyCoachOptNumber('weight_kg') && bodyCoachOptNumber('body_fat_pct')
+            && bodyCoachOptString('image_url', 900000) && bodyCoachOptString('notes', 2000))
+          || (coll == 'medical_exams' && d.title is string && d.title.size() > 0 && d.title.size() <= 300 && d.taken_at is string
+            && bodyCoachOptString('exam_type', 100) && bodyCoachOptString('file_url', 900000) && bodyCoachOptString('notes', 2000))
+        );
+    }
+
+    match /bodycoach_users/{userId}/{coll}/{docId} {
+      allow read, delete: if bodyCoachOwner(userId)
+        && coll in ['profile', 'meals', 'daily_readiness', 'progress_entries', 'medical_exams'];
+      allow create, update: if bodyCoachOwner(userId)
+        && coll in ['profile', 'meals', 'daily_readiness', 'progress_entries', 'medical_exams']
+        && bodyCoachValid(coll);
+    }
+
     // ── Default: deny everything else ───────────────────────────
     match /{document=**} {
       allow read, write: if false;
