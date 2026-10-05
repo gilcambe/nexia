@@ -1,0 +1,348 @@
+NEXIA
+
+BODY COACH AI
+
+Equipe de Especialistas
+
+Não é um coach — é uma equipe de alta performance inteira dentro do app. Cada profissional assume uma camada, e os que estão ativos estão "olhando" você agora, com o motivo do que monitoram.
+
+40 profissionais
+·
+18 ativos agora
+·
+Núcleo permanente + especialistas consultivos, acionados conforme a necessidade.
+Direção e integração
+
+Núcleo que integra e coordena toda a decisão de performance
+
+Performance Director
+
+Núcleo
+Ativo
+
+Integra a equipe e coordena as decisões de performance
+
+Prioriza a sessão do dia
+
+Head Coach
+
+Núcleo
+Ativo
+
+Estratégia e desenvolvimento esportivo
+
+Executa o treino de força
+
+Sports Scientist
+
+Núcleo
+Ativo
+
+Ciência aplicada ao treinamento e performance
+
+Gerencia carga e adaptação
+
+Performance/Data Analyst
+
+Núcleo
+Ativo
+
+Dados, métricas, tendências e modelagem
+
+Analisa prontidão e progresso
+
+Medicina
+
+Núcleo médico + especialistas acionados conforme necessidade
+
+Médico do Esporte
+
+Núcleo
+Ativo
+
+Médico principal do atleta
+
+Camada de segurança da sessão
+
+Ortopedista Esportivo
+
+Consultivo
+Ativo
+
+Lesões musculoesqueléticas
+
+Monitora o ombro direito
+
+Cardiologista Esportivo
+
+Consultivo
+
+Sistema cardiovascular e capacidade cardiorrespiratória
+
+Endocrinologista
+
+Consultivo
+
+Metabolismo e eixo hormonal
+
+Fisiatra
+
+Consultivo
+
+Medicina física e reabilitação
+
+Médico do Sono
+
+Consultivo
+Ativo
+
+Sono, recuperação e ritmo circadiano
+
+Sono 6h20 — abaixo do ideal
+
+Reabilitação e prevenção
+
+Prevenção de lesões e longevidade como componente central
+
+Head Physiotherapist
+
+Núcleo
+Ativo
+
+Coordenação da fisioterapia
+
+Revisa mobilidade antes do treino
+
+Fisioterapeuta Esportivo
+
+Núcleo
+Ativo
+
+Tratamento e prevenção
+
+Ombro direito sob observação
+
+Fisioterapeuta de Performance
+
+Núcleo
+
+Preparação física e movimento
+
+Sports Massage Therapist
+
+Consultivo
+
+Recuperação muscular
+
+Recovery Specialist
+
+Núcleo
+Ativo
+
+Estratégias de recuperação
+
+Recuperação ~18% abaixo da linha
+
+Performance física
+
+Força, potência, condicionamento e mobilidade
+
+Strength & Conditioning Coach
+
+Núcleo
+Ativo
+
+Força, potência e condicionamento
+
+Prescreve a carga do dia
+
+Strength Coach
+
+Núcleo
+Ativo
+
+Desenvolvimento de força
+
+Acompanha as séries pesadas
+
+Conditioning Specialist
+
+Núcleo
+
+Sistemas energéticos e resistência
+
+Speed & Power Coach
+
+Consultivo
+
+Velocidade, aceleração e potência
+
+Mobility/Movement Specialist
+
+Núcleo
+Ativo
+
+Mobilidade e qualidade de movimento
+
+Qualidade de execução no agachamento
+
+Técnica específica
+
+Técnica global, refinamento e análise competitiva
+
+Head Sport Coach
+
+Núcleo
+Ativo
+
+Técnica global
+
+Supervisiona a execução
+
+Technical Specialist
+
+Consultivo
+
+Refinamento técnico
+
+Video Analyst
+
+Consultivo
+
+Análise técnica por vídeo
+
+Tactical/Competition Analyst
+
+Consultivo
+
+Estratégia competitiva
+
+Opponent/Performance Analyst
+
+Consultivo
+
+Adversários e padrões competitivos
+
+Nutrição
+
+Nutrição como parte da performance, não como serviço à parte
+
+Sports Dietitian/Nutritionist
+
+Núcleo
+Ativo
+
+Estratégia nutricional
+
+Meta de proteína pendente hoje
+
+Performance Nutrition Specialist
+
+Núcleo
+Ativo
+
+Nutrição orientada à performance
+
+Ajusta macros do dia
+
+Supplement/Anti-Doping Specialist
+
+Consultivo
+
+Controle de suplementos e risco antidoping
+
+Psicologia e performance cognitiva
+
+A dimensão mental não é periférica
+
+Sport Psychologist
+
+Núcleo
+
+Performance psicológica
+
+Performance Mental Coach
+
+Consultivo
+
+Foco, concentração e preparação competitiva
+
+Neuro/Performance Specialist
+
+Consultivo
+
+Cognição, reação e tomada de decisão
+
+Biomecânica e ciência
+
+Análise do movimento e resposta fisiológica
+
+Biomechanist
+
+Consultivo
+
+Análise do movimento
+
+Exercise Physiologist
+
+Núcleo
+
+Resposta fisiológica ao exercício
+
+Human Performance Scientist
+
+Núcleo
+
+Integração fisiológica
+
+Testing & Assessment Specialist
+
+Consultivo
+
+Testes e avaliações
+
+Lab/Research Specialist
+
+Consultivo
+
+Pesquisa e protocolos avançados
+
+Dados e tecnologia
+
+O objetivo é criar o Digital Twin do atleta
+
+Sports Data Scientist
+
+Núcleo
+Ativo
+
+Modelagem e análise
+
+Modela risco de lesão e prontidão
+
+Performance Engineer/Analyst
+
+Núcleo
+
+Integração de sensores e métricas
+
+Technology Specialist
+
+Consultivo
+
+Wearables, plataformas e equipamentos
+
+AI/Performance Analytics Specialist
+
+Núcleo
+Ativo
+
+Modelos preditivos e detecção de padrões
+
+Digital Twin em evolução
+
+1
+This Website is Made with
+.
+You can also get one like this in minutes
+Get one for FREE

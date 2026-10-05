@@ -1,0 +1,58 @@
+tela 000-inicio-deslogado: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/auth
+tela 001-onboarding: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/onboarding
+tela 002-login: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/auth
+tela 003-criar-conta: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/auth
+depois do demo: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482
+tela 004-depois-login: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482
+tela 005-dashboard: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/
+botões em dashboard: ["INICIAR TREINO","Falar com o Coach","1","2","3","4","5","Métricas avançadas (wearable)","Atualizar check-in","Por quê?","Quanto ainda posso comer?","Ver tudo","Ouvir relatório"]
+tela 006-dashboard--Atualizar-check-in: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/
+tela 007-workout: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/workout
+botões em workout: ["INICIAR TREINO"]
+tela 008-workout--INICIAR-TREINO: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/workout
+tela 009-nutrition: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/nutrition
+botões em nutrition: ["+250 ml","+500 ml","+100 ml","Zerar"]
+tela 010-nutrition--250-ml: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/nutrition
+tela 011-nutrition--500-ml: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/nutrition
+tela 012-nutrition--100-ml: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/nutrition
+tela 013-evolution: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/evolution
+botões em evolution: ["Clique para enviar uma foto (frente)","Salvar progresso","Corpo IA","Foto real","Ombros","Peitoral","Cintura","Quadril","Coxas","Panturrilhas","Baixar imagem (PNG)","Fotorrealista","Render 3D","Frente","Lado","Costas","360°","Atual"]
+tela 014-evolution--Corpo-IA: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/evolution
+tela 015-evolution--Foto-real: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/evolution
+tela 016-evolution--Frente: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/evolution
+tela 017-evolution--Lado: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/evolution
+tela 018-evolution--Costas: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/evolution
+tela 019-plan: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/plan
+botões em plan: ["Hoje Segunda Alta Pernas — força / hipertrofia Qua","Terça Média Upper — peito / dorso Empurrar + puxar","Quarta Baixa Recuperação ativa Mobilidade + cardio","Quinta Média Pernas — volume Volume moderado Leg p","Sábado Alta PEITO / OMBRO Empurrar Supino reto com"]
+tela 020-profile: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/profile
+botões em profile: []
+tela 021-team: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/team
+botões em team: []
+tela 022-exams: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/exams
+botões em exams: ["Clique para enviar imagem ou PDF","Salvar exame","Interpretar marcadores"]
+tela 023-antidoping: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/antidoping
+botões em antidoping: ["Verificar","Whey protein isolado","Creatina monoidratada","Pré-treino explosivo","BCAA","Termogênico com DMAA","Tribulus terrestris","Multivitamínico","Cafeína 200mg","Anastrozol","Detox / diurético"]
+tela 024-antidoping--Whey-protein-isolado: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/antidoping
+tela 025-antidoping--Creatina-monoidratada: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/antidoping
+tela 026-antidoping--Pre-treino-explosivo: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/antidoping
+tela 027-antidoping--BCAA: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/antidoping
+tela 028-antidoping--Termoge-nico-com-DMAA: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/antidoping
+tela 029-antidoping--Tribulus-terrestris: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/antidoping
+tela 030-antidoping--Multivitami-nico: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/antidoping
+tela 031-antidoping--Cafei-na-200mg: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/antidoping
+tela 032-antidoping--Anastrozol: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/antidoping
+tela 033-antidoping--Detox-diure-tico: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/antidoping
+tela 034-code: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/code
+botões em code: ["Arquivos","Especificações","Cálculos","Copiar"]
+menu: ["Hoje -> /preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482","Nutrição -> /preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/nutrition","Evolução -> /preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/evolution","Plano -> /preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/plan","Equipe -> /preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/team","Saúde -> /preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/exams","Anti-Doping -> /preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/antidoping","Perfil -> /preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/profile","Código -> /preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/code","Iniciar treino -> ","Falar com o Coach -> ","Sair -> "]
+tela 035-celular-dashboard: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/
+tela 036-celular-workout: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/workout
+tela 037-celular-nutrition: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/nutrition
+tela 038-celular-evolution: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/evolution
+tela 039-celular-plan: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/plan
+tela 040-celular-profile: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/profile
+tela 041-celular-team: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/team
+tela 042-celular-exams: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/exams
+tela 043-celular-antidoping: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/antidoping
+tela 044-celular-code: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/code
+tela 045-celular-menu-aberto: https://readdy.cc/preview/41c6a956-2d1d-44f9-be36-37d640a665f3/14553482/code

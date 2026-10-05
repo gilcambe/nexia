@@ -1,0 +1,105 @@
+NEXIA
+
+BODY COACH AI
+
+AUDITORIA DO PROJETO
+Código & Especificações
+
+Aqui está a cópia fiel de todo o código-fonte e dos arquivos de configuração do projeto: cores, layout, tipografia, stack, parâmetros e as fórmulas dos cálculos usados no app — para você validar que tudo foi feito corretamente.
+
+82
+
+Arquivos mapeados
+
+9.958
+
+Linhas de código
+
+10
+
+Grupos
+
+Arquivos
+Especificações
+Cálculos
+Copiar tudo (todos os arquivos)
+CONFIG RAIZ
+.env
+route-element-jsx.js
+eslint.config.ts
+index.html
+package.json
+postcss.config.ts
+tailwind.config.ts
+tsconfig.app.json
+tsconfig.json
+tsconfig.node.json
+vite-env.d.ts
+vite.config.ts
+ROUTER
+config.tsx
+index.ts
+LIB
+localDemo.ts
+readinessEngine.ts
+supabaseClient.ts
+HOOKS
+useProgressData.ts
+COMPONENTS/BASE
+Card.tsx
+COMPONENTS/FEATURE
+AppShell.tsx
+AuthContext.tsx
+AuthGuard.tsx
+CoachContext.tsx
+CoachPanel.tsx
+NutritionContext.tsx
+ReadinessContext.tsx
+ReadinessRing.tsx
+PAGES
+NotFound.tsx
+MOCKS
+athlete.ts
+coach.ts
+evolution.ts
+localDemo.ts
+nutrition.ts
+plan.ts
+team.ts
+workout.ts
+I18N
+index.ts
+index.ts
+APP.TSX
+DOCUMENTACAO-IA.MD
+DOCUMENTACAO-TRANSPARENCIA.MD
+INDEX.CSS
+MAIN.TSX
+PAGES/ANTIDOPING
+PAGES/AUTH
+PAGES/CODE
+PAGES/EVOLUTION
+PAGES/EXAMS
+PAGES/HOME
+PAGES/NUTRITION
+PAGES/ONBOARDING
+PAGES/PLAN
+PAGES/PROFILE
+PAGES/TEAM
+PAGES/WORKOUT
+
+.env
+
+texto · 5 linhas · 0.2 KB
+
+Copiar
+1	# Variáveis de ambiente — chaves PÚBLICAS (já expostas ao navegador pelo Vite).
+2	 
+3	VITE_PUBLIC_SUPABASE_URL=https://qe662zrwwpuvnesvr6k0.helloreaddy.com/
+4	VITE_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_SXHjCj6be5XKKlGNAIHr8guhrhQWIjXp
+5	 
+1
+This Website is Made with
+.
+You can also get one like this in minutes
+Get one for FREE

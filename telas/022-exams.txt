@@ -1,0 +1,91 @@
+NEXIA
+
+BODY COACH AI
+
+Hoje
+Nutrição
+Evolução
+Plano
+Equipe
+Saúde
+Anti-Doping
+Perfil
+Código
+Iniciar treino
+Falar com o Coach
+
+Admin Demo
+
+admin
+
+Modo local (teste)
+Sair
+Saúde & Exames
+
+Seus exames de sangue, imagem e laudos em um só lugar, com interpretação dos marcadores e sugestões de vitaminas, suplementos e encaminhamentos.
+
+Você está no modo local (login de teste). Os exames exibidos são exemplos e os que você adicionar ficam salvos apenas neste navegador.
+Enviar exame
+
+Envie exames de sangue, raio-X, ressonância ou laudos. Ficam salvos no seu histórico, protegidos e com a data real.
+
+Clique para enviar imagem ou PDF
+Título
+Tipo de exame
+Sangue
+Raio-X
+Ressonância
+Ultrassom
+Laudo médico
+Outro
+Data (hoje)
+
+05 de outubro de 2026
+
+Observações (opcional)
+Salvar exame
+Meus exames
+3 enviado(s)
+
+Hemograma completo
+
+Hemograma
+
+27 de set. de 2026
+
+Ferritina no limite inferior — monitorar.
+
+Perfil lipídico
+
+Lipidograma
+
+09 de set. de 2026
+
+LDL controlado, HDL bom.
+
+Ressonância ombro direito
+
+Imagem
+
+19 de ago. de 2026
+
+Bursite em resolução, sem lesão estrutural.
+
+Marcadores de sangue
+
+Cole os valores do seu último exame de sangue. O app interpreta cada marcador e sugere vitaminas, suplementos e encaminhamentos.
+
+Vitamina D (25-OH) (ng/mL)
+Ferritina (estoque de ferro) (ng/mL)
+Testosterona total (ng/dL)
+TSH (tireoide) (mUI/L)
+Hemoglobina (g/dL)
+Cortisol matinal (µg/dL)
+Interpretar marcadores
+
+Isto é orientação de performance, não diagnóstico médico. Consulte sempre um profissional de saúde antes de suplementar.
+
+1
+This Website is Made with
+. You can also get one like this in minutes
+Get one for FREE
