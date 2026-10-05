@@ -281,6 +281,19 @@ test('O4f. ADR-Q-03: site novo passa pelo Designer; página sem padrão visual o
   assert.ok(router.seen.find(s => s.agent === 'designer').tools.includes('media__search_images'), 'o Designer pode buscar fotos');
 });
 
+test('O4g. 413 (pedido maior que a cota por minuto): o mesmo modelo é chamado de novo com menos tokens', async () => {
+  await setAutonomy(3);
+  const big = Object.assign(new Error('groq 413'), { code: 'UPSTREAM', details: { status: 413, upstream: 'Request too large' } });
+  const sizes = [];
+  const router = scriptedRouter({
+    architect: [req => { sizes.push(req.maxTokens); return big; }, req => { sizes.push(req.maxTokens); return { text: 'O que a pergunta pede.' }; }],
+  });
+  const { exe } = await startAndRun(orch(router), 'Qual é a stack do Site Alfa?');
+  assert.deepStrictEqual(sizes, [8192, 4096]);
+  assert.strictEqual(exe.status, 'succeeded', JSON.stringify([exe.error_code, exe.result_summary]));
+  assert.strictEqual(new Set(router.seen.filter(s => s.agent === 'architect').map(s => s.model)).size, 1, 'não trocou de modelo');
+});
+
 test('O5. orçamento estourado para a execução com BUDGET_EXCEEDED', async () => {
   await setAutonomy(3);
   const { exe } = await startAndRun(orch(scriptedRouter({ architect: [{ text: 'x' }], coder: [commitStep('src/app.html')] })),

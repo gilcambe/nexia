@@ -42,5 +42,5 @@ test('MD2. com PEXELS_API_KEY (grátis) a Pexels vem primeiro; vídeo escolhe mp
 });
 
 test('MD3. nada encontrado (ou serviços fora): erro UPSTREAM com dica, nunca lista vazia como sucesso', async () => {
-  await assert.rejects(images.run({ env: {}, fetchImpl: async () => { throw new Error('rede'); } }, { query: 'x y' }), e => e.code === 'UPSTREAM');
+  await assert.rejects(images.run({ env: {}, fetchImpl: async () => { throw new Error('rede'); } }, { query: 'fresh bread' }), e => e.code === 'UPSTREAM');
 });

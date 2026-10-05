@@ -75,6 +75,10 @@ async function pexelsVideos(deps, q, n, orientation) {
   }).filter(Boolean);
 }
 
+// O resultado vai inteiro para o modelo (cota de tokens): só o que ele usa no HTML.
+const slim = m => ({ url: m.url, width: m.width, height: m.height, alt: String(m.alt || '').slice(0, 80), credit: String(m.credit || '').slice(0, 110),
+  provider: m.provider, ...(m.poster ? { poster: m.poster } : {}), ...(m.mime ? { mime: m.mime } : {}) });
+
 const QUERY = { type: 'string', minLength: 2, maxLength: 100 };
 const ORIENT = { type: 'string', enum: ['landscape', 'portrait', 'square'] };
 const COUNT = { type: 'integer', minimum: 1, maximum: 12 };
@@ -89,11 +93,12 @@ module.exports = [
     async run(deps, i) {
       const n = clampCount(i.count);
       const q = String(i.query).trim();
+      if (!/[a-z]{2}/i.test(q)) throw new GatewayError(CODES.INVALID_INPUT, 'Escreva a busca em palavras, em inglês (ex.: "dental clinic").');
       let images = await pexelsImages(deps, q, n, i.orientation);
       if (images.length < n) images = images.concat(await openverseImages(deps, q, n - images.length, i.orientation));
       if (images.length < n) images = images.concat(await commons(deps, q, n - images.length, 'image'));
       if (!images.length) throw new GatewayError(CODES.UPSTREAM, 'Nenhuma foto encontrada agora; tente outra busca em inglês, mais simples.');
-      return { query: q, images };
+      return { query: q, images: images.map(slim) };
     },
     summarizeOutput: r => `${r.images.length} foto(s) (${[...new Set(r.images.map(x => x.provider))].join(', ')})`,
   },
@@ -106,10 +111,11 @@ module.exports = [
     async run(deps, i) {
       const n = Math.min(clampCount(i.count), 5);
       const q = String(i.query).trim();
+      if (!/[a-z]{2}/i.test(q)) throw new GatewayError(CODES.INVALID_INPUT, 'Escreva a busca em palavras, em inglês (ex.: "dental clinic").');
       let videos = await pexelsVideos(deps, q, n, i.orientation);
       if (videos.length < n) videos = videos.concat(await commons(deps, q, n - videos.length, 'video'));
       if (!videos.length) throw new GatewayError(CODES.UPSTREAM, 'Nenhum vídeo encontrado agora; use foto com animação CSS no lugar.');
-      return { query: q, videos };
+      return { query: q, videos: videos.map(slim) };
     },
     summarizeOutput: r => `${r.videos.length} vídeo(s)`,
   },
