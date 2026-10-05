@@ -64,6 +64,20 @@ test('K4. site gerado passa na checagem visual e estática sem erro nem aviso; t
   assert.match(html, /Créditos das imagens/);
 });
 
+test('K4b. seção sem foto some do menu e do "rolar"; âncoras repetidas viram únicas', () => {
+  const raw = JSON.parse(JSON.stringify(SITE));
+  raw.sections.splice(1, 0, { type: 'about', id: 'tratamentos', title: 'Outro' });
+  const { spec } = kit.normalizeSpec(raw, { kind: 'site' });
+  assert.strictEqual(new Set(spec.sections.map(s => s.id)).size, spec.sections.length);
+  const media = {};
+  kit.mediaQueries(spec).forEach((q, k) => { if (q.kind !== 'video' && !/\.g\d/.test(q.slot)) media[q.slot] = photo(k); });
+  const files = kit.render(spec, media);
+  const html = files['demos/sorriso-leve/index.html'];
+  const errs = gate(files, 'site').errors.filter(e => /link para/.test(e.message));
+  assert.deepStrictEqual(errs, []);
+  assert.ok(!/__NEXT__/.test(html));
+});
+
 test('K5. sistema gerado passa na checagem (menu, fontes, responsivo, animação) e embute a config com segurança', () => {
   const raw = JSON.parse(JSON.stringify(SYSTEM));
   raw.entities[0].sample[0].paciente = '</script><img src=x onerror=alert(1)>';
