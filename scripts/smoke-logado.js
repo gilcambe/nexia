@@ -125,7 +125,12 @@ async function main() {
         await sleep(20000);
       }
       report(!!last && ['succeeded', 'waiting_approval'].includes(last.status), 'Execução: terminou', last ? `${last.status} intent=${last.intent} modelos=${(last.models || []).join(',')}` : 'sem registro');
-      if (last) console.log('  etapas:', short(JSON.stringify((last.plan || []).map(s => [s.agent, s.status, s.error_code || '', s.summary || '']))));
+      if (last) {
+        if (last.error_code) console.log(`  erro da execução: ${last.error_code}`);
+        if (last.result_summary) console.log(`  resumo: ${short(last.result_summary)}`);
+        for (const s of last.plan || []) console.log(`  etapa ${s.step} ${s.agent}: ${s.status}${s.error_code ? ` [${s.error_code}]` : ''}${s.model ? ` (${s.model})` : ''} ${short(s.summary || '')}`);
+        if (last.work_branch || last.pull_request) console.log(`  resultado: ramo ${last.work_branch || '-'} PR #${last.pull_request || '-'}`);
+      }
     }
 
     const mt = await api('/nexia/metrics');
