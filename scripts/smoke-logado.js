@@ -21,6 +21,19 @@ const WAIT_EXEC_S = Number(process.env.WAIT_EXEC_S || 1500);
 const results = [];
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const short = v => String(v == null ? '' : v).replace(/\s+/g, ' ').slice(0, 220);
+// O log do Actions nem sempre é legível de fora (download bloqueado); o resumo também sai como
+// anotação do job (::notice), que a API de check-runs devolve. Só status, nada de segredo.
+const linhas = [];
+const logOriginal = console.log;
+console.log = (...a) => { linhas.push(a.join(' ')); logOriginal(...a); };
+const erroOriginal = console.error;
+console.error = (...a) => { linhas.push(a.join(' ')); erroOriginal(...a); };
+const anotar = () => {
+  const esc = t => t.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+  logOriginal(`::notice title=Resumo do smoke::${esc(linhas.join('\n').slice(-60000))}`);
+};
+process.on('exit', anotar);
+
 function report(ok, name, detail) {
   results.push({ ok, name });
   console.log(`${ok ? 'OK     ' : 'FALHOU '} ${name}${detail ? ` — ${short(detail)}` : ''}`);
