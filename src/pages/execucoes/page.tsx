@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiPath } from "@/config/env";
 
@@ -26,12 +26,14 @@ const ACTIVE = ["planned", "running"];
 
 export default function ExecucoesPage() {
   const navigate = useNavigate();
+  // Link dos Robôs NEXIA: ?projeto=<id>&abrir=<execução> já abre a execução certa.
+  const [search] = useSearchParams();
   const { user, loading: authLoading, getToken } = useAuth();
   const [me, setMe] = useState<Me | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectId, setProjectId] = useState("");
   const [items, setItems] = useState<Execution[]>([]);
-  const [open, setOpen] = useState<string | null>(null);
+  const [open, setOpen] = useState<string | null>(search.get("abrir"));
   const [message, setMessage] = useState("");
   const [question, setQuestion] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -64,12 +66,14 @@ export default function ExecucoesPage() {
         if (!m.canUseVault) return;
         const p = await call<{ items: Project[] }>("/projects");
         setProjects(p.items);
-        if (p.items[0]) setProjectId(p.items[0].id);
+        const wanted = search.get("projeto");
+        const pick = p.items.find((x) => x.id === wanted) || p.items[0];
+        if (pick) setProjectId(pick.id);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Erro ao carregar");
       }
     })();
-  }, [authLoading, user, call]);
+  }, [authLoading, user, call, search]);
 
   useEffect(() => { loadList(projectId).catch((e) => setError(e.message)); }, [projectId, loadList]);
 
@@ -126,6 +130,7 @@ export default function ExecucoesPage() {
             {me?.canUseVault && <button onClick={sweep} className="text-sm text-nexia-muted hover:text-white cursor-pointer">Retomar paradas</button>}
             <button onClick={() => navigate("/aprovacoes")} className="text-sm text-nexia-cyan cursor-pointer">Aprovações</button>
             <button onClick={() => navigate("/auditoria")} className="text-sm text-nexia-cyan cursor-pointer">Auditoria</button>
+            <button onClick={() => navigate("/robos")} className="text-sm text-nexia-cyan cursor-pointer">Robôs</button>
           </div>
         </div>
       </header>

@@ -116,11 +116,19 @@ const valid = {
     usage: { tool_calls: 3, input_tokens: 12000, output_tokens: 900, cost_usd_micros: 0, cost_known: false, duration_ms: 42000 },
     models: ['anthropic/claude-opus-5-5'], started_at: '2026-10-02T17:00:00.000Z',
   }),
+  // Robô desligado (sem next_run_at): o Cron nunca o encontra, nem nos testes de integração.
+  Robot: ids => ({
+    project_id: ids.Project, name: 'Relatório diário', template: 'daily_report',
+    task: 'Qual é o status do projeto? Resuma o que mudou nas últimas 24 horas.',
+    schedule: { kind: 'weekly', time: '18:00', days: [1, 3, 5] }, timezone: 'America/Sao_Paulo', enabled: false,
+    owner: { type: 'user', id: 'gilcambe' },
+    recent_runs: [{ at: '2026-10-02T21:00:00.000Z', trigger: 'schedule', status: 'succeeded', execution_id: 'exe_' + 'a'.repeat(32) }],
+  }),
 };
 
 // Ordem de criação que respeita as dependências.
 const ORDER = ['Client', 'Project', 'Repository', 'Environment', 'Requirement', 'Decision', 'Task', 'Artifact',
-  'Conversation', 'Memory', 'Change', 'TestRun', 'Deployment', 'Error', 'Integration', 'ProjectSnapshot', 'ToolCall', 'ToolPolicy', 'Execution'];
+  'Conversation', 'Memory', 'Change', 'TestRun', 'Deployment', 'Error', 'Integration', 'ProjectSnapshot', 'ToolCall', 'ToolPolicy', 'Execution', 'Robot'];
 
 // Um caso inválido por entidade (regra de schema específica da entidade).
 const invalid = {
@@ -143,6 +151,7 @@ const invalid = {
   ToolCall: ids => ({ ...valid.ToolCall(ids), status: 'pending_approval' }),            // pendente exige decisão confirm
   ToolPolicy: ids => ({ ...valid.ToolPolicy(ids), rules: [{ tool: 'GitHub/*', decision: 'auto' }] }), // padrão de nome
   Execution: ids => ({ ...valid.Execution(ids), status: 'succeeded' }),                 // final sem finished_at
+  Robot: ids => ({ ...valid.Robot(ids), enabled: true }),                               // ligado sem next_run_at
 };
 
 const expectedInvalidRule = {
@@ -151,6 +160,7 @@ const expectedInvalidRule = {
   Memory: 'approved_requires_approved_by', Change: 'type:sha', TestRun: 'min', Deployment: 'finished_at>=started_at',
   Error: 'resolved_requires_resolution', Integration: 'enum', ProjectSnapshot: 'pattern:firebase_project_id',
   ToolCall: 'pending_requires_confirm', ToolPolicy: 'pattern:tool_pattern', Execution: 'final_requires_finished_at',
+  Robot: 'enabled_requires_next_run_at',
 };
 
 // Valores com forma de secret, montados em tempo de execução com bytes aleatórios

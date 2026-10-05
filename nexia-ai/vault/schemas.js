@@ -6,6 +6,8 @@
 // updated_at, deleted_at, created_by, updated_by, last_execution_id) são
 // gravados pelo servidor e NÃO podem vir na entrada.
 const { t } = require('./validate');
+const { KINDS: SCHEDULE_KINDS, EVERY_HOURS, TIMEZONES, DEFAULT_TZ, scheduleProblem } = require('../robots/schedule');
+const { TEMPLATE_IDS } = require('../robots/templates');
 
 const PRIORITY = ['low', 'medium', 'high', 'critical'];
 // Fase 10: agentes especializados (spec §7) e intenções do Orchestrator
@@ -426,6 +428,45 @@ const SCHEMAS = {
       [ordered('started_at', 'finished_at'), 'finished_at>=started_at'],
       [v => v.status !== 'needs_input' || !!v.question, 'needs_input_requires_question'],
       [v => !['succeeded', 'failed', 'cancelled'].includes(v.status) || !!v.finished_at, 'final_requires_finished_at'],
+    ],
+  },
+
+  // ADR-AUTO-01: Robôs NEXIA. Um pedido ao Orchestrator que se repete numa agenda, em nome de
+  // quem criou (owner). next_run_at só existe com o robô ligado: o Cron acha os vencidos com uma
+  // consulta de campo único (next_run_at <= agora), sem índice composto.
+  Robot: {
+    collection: 'vault_robots', idPrefix: 'rbt', schemaVersion: 1,
+    fields: {
+      project_id: t.ref('Project', { required: true }),
+      name: t.string({ required: true, max: 100 }),
+      task: t.text({ required: true, max: 4000 }),
+      template: t.enum(TEMPLATE_IDS),
+      schedule: t.object({
+        kind: t.enum(SCHEDULE_KINDS, { required: true }),
+        minute: t.int({ min: 0, max: 59 }),
+        time: t.string({ max: 5, pattern: /^([01]\d|2[0-3]):[0-5]\d$/, patternName: 'hh_mm' }),
+        days: t.array(t.int({ min: 0, max: 6 }), { min: 1, max: 7, unique: true }),
+        every_hours: t.enum(EVERY_HOURS),
+      }, { required: true }),
+      timezone: t.enum(TIMEZONES, { default: DEFAULT_TZ }),
+      enabled: t.bool({ required: true }),
+      owner: { ...actorRef, required: true, immutable: true },
+      next_run_at: t.timestamp(),
+      last_run_at: t.timestamp(),
+      last_run_execution_id: t.string({ max: 40, pattern: /^exe_[0-9a-f]{32}$/, patternName: 'execution_record_id' }),
+      // Últimas execuções (mais recente primeiro), para a tela mostrar e linkar.
+      recent_runs: t.array(t.object({
+        at: t.timestamp({ required: true }),
+        trigger: t.enum(['schedule', 'manual'], { required: true }),
+        status: t.enum(['planned', 'running', 'waiting_approval', 'needs_input', 'succeeded', 'failed', 'cancelled', 'error'], { required: true }),
+        execution_id: t.string({ max: 40, pattern: /^exe_[0-9a-f]{32}$/, patternName: 'execution_record_id' }),
+        error_code: t.string({ max: 64, pattern: /^[A-Z0-9_]+$/, patternName: 'error_code' }),
+      }), { max: 10, default: () => [] }),
+    },
+    checks: [
+      [v => !v.schedule || scheduleProblem(v.schedule) === null, 'schedule_shape'],
+      [v => !v.enabled || !!v.next_run_at, 'enabled_requires_next_run_at'],
+      [v => v.enabled || !v.next_run_at, 'disabled_without_next_run_at'],
     ],
   },
 };

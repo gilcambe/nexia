@@ -30,8 +30,9 @@
     "NEXIA_JOBS_REPO": "gilcambe/nexia",
     "NEXIA_JOBS_REF": "develop"
   },
-  // ADR-F12-03: de hora em hora procura execuções paradas (cron é grátis no Worker).
-  "triggers": { "crons": ["7 * * * *"] },
+  // ADR-AUTO-01: a cada 5 min procura Robôs NEXIA vencidos; execuções paradas continuam de hora
+  // em hora (ADR-F12-03). Cron é grátis no Worker; 288 tiques por dia, uma consulta cada.
+  "triggers": { "crons": ["*/5 * * * *"] },
   // O deploy de 2026-10-04 (Container, ADR-HOST-01) pode ter criado esta classe; v2 a remove.
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["NexiaBackend"] },
