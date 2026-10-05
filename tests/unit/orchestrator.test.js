@@ -105,3 +105,17 @@ test('U9. compact: só os 2 resultados de ferramenta mais recentes vão inteiros
   assert.strictEqual(out[6].content, msgs[6].content);
   assert.strictEqual(msgs[2].content.length, big(1).length, 'não altera o histórico original');
 });
+
+test('U10. ADR-Q-03: "crie um site/sistema" passa pelo Designer; mudança num site existente não', () => {
+  const { buildKind, planFor } = require('../../nexia-ai/orchestrator');
+  assert.strictEqual(buildKind('Crie um site para a padaria Pão da Serra'), 'site');
+  assert.strictEqual(buildKind('Faça uma landing page para minha academia'), 'site');
+  assert.strictEqual(buildKind('Desenvolva um sistema de agendamento para clínica'), 'system');
+  assert.strictEqual(buildKind('Crie a página de contato do Site Alfa'), null);
+  assert.strictEqual(buildKind('Corrija o botão de enviar do Site Alfa'), null);
+  const plan = planFor('change', 'Crie um site para a padaria');
+  assert.deepStrictEqual([plan[0].agent, plan[2].agent], ['designer', 'frontend']);
+  assert.strictEqual(planFor('change', 'Corrija o rodapé do Site Alfa')[0].agent, 'architect');
+  assert.ok(allowed('designer', 'media.search_images') && !allowed('designer', 'github.commit_files'));
+  assert.ok(allowed('frontend', 'media.search_videos'));
+});
