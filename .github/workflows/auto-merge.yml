@@ -29,6 +29,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Sem checkout: nenhum código do PR roda aqui.
+      # Gate objetivo (autorizado pelo dono em 2026-10-06: "pense em algo que eu não precise ficar aprovando nada"):
+      # PR de branch nexia/ deste repositório recebe o rótulo sozinho quando NÃO mexe em nada sensível
+      # (regras do Firestore, workflows, scripts, segredos, autenticação, Worker/servidor) e não importa
+      # dados de exemplo (mocks). O que for sensível continua esperando a revisão da Claude. PR de demonstração
+      # (título com "demo" ou #50/#54/#57) nunca recebe o rótulo. Sem checkout: só lê a API.
+      - name: Rotular PRs seguros do Cortex
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -uo pipefail
+          prs=$(gh api "repos/$REPO/pulls?state=open&base=develop&per_page=50" \
+            --jq '.[] | select(all(.labels[]; .name != "automerge" and .name != "revisao-manual")) | select(.head.repo.full_name == env.REPO) | select(.head.ref | startswith("nexia/")) | select(.title | test("demo"; "i") | not) | .number')
+          for n in $prs; do
+            case "$n" in 50|54|57) continue;; esac
+            files=$(gh api "repos/$REPO/pulls/$n/files?per_page=100" --paginate --jq '.[].filename' || true)
+            [ -z "$files" ] && continue
+            if echo "$files" | grep -Eq '^(\.github/|scripts/|firestore\.rules|firestore\.indexes|cloudflare/|server\.js|lib/|nexia-ai/(policy-engine|tool-gateway|vault)/|package(-lock)?\.json|\.env|.*secret|.*credential|.*auth)'; then
+              echo "PR #$n: mexe em área sensível; espera a revisão da Claude."
+              continue
+            fi
+            if gh api "repos/$REPO/pulls/$n/files?per_page=100" --paginate --jq '.[]|select(.patch != null)|.patch' | grep -E "^\+.*(from ['\"]@/mocks/|from ['\"]\.\./mocks/)" >/dev/null; then
+              echo "PR #$n: importa dados de exemplo (mocks); espera a revisão da Claude."
+              continue
+            fi
+            gh api -X POST "repos/$REPO/issues/$n/labels" -f "labels[]=automerge" >/dev/null && echo "PR #$n: rótulo automerge posto pelo gate (nada sensível, sem mocks)."
+          done
+
       - name: Fazer merge dos PRs prontos
         env:
           GH_TOKEN: ${{ github.token }}
