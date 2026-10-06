@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/components/feature/AuthContext';
+import { setUserDoc } from '@/lib/userData';
 
 const steps = [
   { key: 'identity', title: 'Quem é você?', icon: 'ri-user-3-line' },
@@ -18,8 +20,10 @@ const days = [3, 4, 5, 6];
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Record<string, string | string[]>>({});
+  const [saving, setSaving] = useState(false);
 
   const current = steps[step];
   const isLast = step === steps.length - 1;
@@ -31,7 +35,14 @@ export default function Onboarding() {
     setVal(key, cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]);
   };
 
-  const finish = () => navigate('/');
+  const finish = async () => {
+    if (user) {
+      setSaving(true);
+      await setUserDoc(user.uid, { onboarding: form });
+      setSaving(false);
+    }
+    navigate('/');
+  };
 
   return (
     <div className="mx-auto flex min-h-screen max-w-3xl flex-col">
