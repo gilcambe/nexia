@@ -36,7 +36,7 @@ const INTENT_RULES = [
   ['deploy_staging', /\b(staging|homologa[cç][aã]o)\b/],
   ['pipeline', /\b(pipeline|ci ?\/ ?cd|github actions|workflow)\b/],
   ['status', /\b(status|pendente|pendencias|o que mudou|ultimo deploy|quais|liste|mostre|compare|resuma)\b/],
-  ['change', /\b(corrij\w*|corrigir|implement\w*|alter\w*|adicion\w*|crie|criar|remov\w*|aument\w*|diminu\w*|mud\w*|ajust\w*|consert\w*|refator\w*|troqu\w*|troca\w*|fix)\b/],
+  ['change', /\b(corrij\w*|corrigir|implement\w*|alter\w*|adicion\w*|crie|criar|remov\w*|aument\w*|diminu\w*|mud\w*|ajust\w*|consert\w*|refator\w*|troqu\w*|troca\w*|substitu\w*|apag\w*|exclu\w*|delet\w*|edit\w*|insir\w*|inclu\w*|fix)\b/],
 ];
 // Endereços no pedido (ex.: site de referência) não contam: "https://x.com/workflow" não é pipeline nem "app.x.com" é sistema.
 const withoutUrls = message => String(message || '').replace(/\bhttps?:\/\/\S+|\bwww\.\S+/gi, ' ');
