@@ -2,12 +2,8 @@ export default function Team() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="font-heading text-2xl font-bold text-foreground-950">Equipe de Especialistas</h1>
-        <p className="mt-1 max-w-2xl text-sm text-foreground-600">
-          Não é um coach — é uma equipe de alta performance inteira dentro do app. Cada
-          profissional assume uma camada, e os que estão <span className="font-semibold text-accent-700">ativos</span>{' '}
-          estão "olhando" você agora, com o motivo do que monitoram.
-        </p>
+        <h1 className="font-heading text-2xl font-bold text-foreground-950">Equipe</h1>
+        <p className="mt-1 max-w-2xl text-sm text-foreground-600">Os profissionais que acompanham você.</p>
       </header>
 
       <div className="flex items-start gap-3 rounded-lg border border-background-200 bg-background-50 px-3 py-2.5">
@@ -21,9 +17,6 @@ export default function Team() {
           </p>
         </div>
       </div>
-    </div>
-  );
-}
     </div>
   );
 }
