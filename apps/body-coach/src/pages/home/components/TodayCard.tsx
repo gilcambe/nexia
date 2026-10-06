@@ -3,18 +3,18 @@ import { useNavigate } from 'react-router-dom';
 import { useCoach } from '@/components/feature/CoachContext';
 import { useAuth } from '@/components/feature/AuthContext';
 import { getUserDoc } from '@/lib/userData';
-import { buildWeekPlan, todayPlanDay } from '@/lib/trainingPlan';
+import { buildWeekPlan, todayPlanDay, type Answers } from '@/lib/trainingPlan';
 import Card from '@/components/base/Card';
 
 export default function TodayCard() {
   const navigate = useNavigate();
   const { setOpen } = useCoach();
   const { user } = useAuth();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<{ onboarding?: Answers } | null>(null);
 
   useEffect(() => {
     if (!user?.id) return;
-    getUserDoc(user.id, 'profile', 'main')
+    getUserDoc<{ onboarding?: Answers }>(user.id, 'profile', 'main')
       .then((data) => {
         if (data) setProfile(data);
       })
@@ -24,10 +24,13 @@ export default function TodayCard() {
   const weekPlan = profile?.onboarding ? buildWeekPlan(profile.onboarding) : null;
   const day = weekPlan ? todayPlanDay(weekPlan) : null;
 
-  const title = day ? day.title : 'Treino de hoje';
+  const rest = !!weekPlan && !day;
+  const title = day ? day.title : rest ? 'Hoje é dia de descanso' : 'Treino de hoje';
   const subtitle = day
-    ? `${day.subtitle || ''} • ${day.durationMin || 45} min`
-    : 'Abra o treino do seu plano e registre as séries na academia.';
+    ? `${day.focus} · ${day.duration} min · ${day.exercises.length} exercícios`
+    : rest
+      ? 'Recupere bem: sono, água e alimentação.'
+      : 'Abra o treino do seu plano e registre as séries na academia.';
 
   return (
     <Card className="relative overflow-hidden" padding="p-6">
