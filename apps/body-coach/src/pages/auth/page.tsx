@@ -86,7 +86,7 @@ export default function Auth() {
             'Conta criada! Enviamos um link de confirmação para o seu e-mail. Confirme para começar.',
           );
         } else {
-          navigate('/');
+          navigate('/onboarding');
         }
       }
     } finally {
