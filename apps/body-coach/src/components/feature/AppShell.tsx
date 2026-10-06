@@ -5,6 +5,7 @@ import { NutritionProvider } from './NutritionContext';
 import { ReadinessProvider } from './ReadinessContext';
 import { useAuth } from './AuthContext';
 import CoachPanel from './CoachPanel';
+import InstallButton from './InstallButton';
 
 const navItems = [
   { to: '/', label: 'Hoje', icon: 'ri-sun-line' },
@@ -108,6 +109,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           Iniciar treino
         </button>
 
+        <InstallButton />
+
         <button
           onClick={() => setOpen(true)}
           className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground-600 transition hover:bg-background-100"
@@ -146,27 +149,30 @@ function Shell() {
   return (
     <div className="min-h-screen bg-background-50">
       {/* desktop sidebar */}
-      <aside className="fixed inset-y-0 left-0 hidden w-60 border-r border-background-200 bg-background-50 lg:block">
+      <aside className="fixed inset-y-0 left-0 hidden w-60 overflow-y-auto border-r border-background-200 bg-background-50 lg:block">
         <SidebarContent />
       </aside>
 
       {/* mobile top bar */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-background-200 bg-background-50/90 px-4 py-3 backdrop-blur lg:hidden">
         <BrandMark size="sm" />
-        <button
-          onClick={() => setMobileOpen(true)}
+        <div className="flex items-center gap-2">
+          <InstallButton compact />
+          <button
+            onClick={() => setMobileOpen(true)}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground-600 hover:bg-background-100"
           aria-label="Abrir menu"
         >
-          <i className="ri-menu-line text-xl"></i>
-        </button>
+            <i className="ri-menu-line text-xl"></i>
+          </button>
+        </div>
       </header>
 
       {/* mobile drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-foreground-950/30" onClick={() => setMobileOpen(false)} />
-          <aside className="absolute inset-y-0 left-0 w-72 bg-background-50">
+          <aside className="absolute inset-y-0 left-0 w-72 max-w-[85vw] overflow-y-auto bg-background-50">
             <button
               onClick={() => setMobileOpen(false)}
               className="absolute right-3 top-5 flex h-8 w-8 items-center justify-center rounded-full text-foreground-500 hover:bg-background-100"
