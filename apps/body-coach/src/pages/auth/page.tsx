@@ -42,7 +42,13 @@ export default function Auth() {
       await sendPasswordResetEmail(handles.auth, email.trim());
       setInfo('Enviamos um link de redefinição para o seu e-mail.');
     } catch (err: any) {
-      setError(err?.message || 'Erro ao enviar e-mail de redefinição.');
+      if (err?.code && (err.code.includes('user-not-found') || err.code.includes('invalid-email'))) {
+        setError('Confira o e-mail digitado.');
+      } else if (err?.code && err.code.includes('too-many-requests')) {
+        setError('Muitas tentativas. Tente de novo em alguns minutos.');
+      } else {
+        setError('Não foi possível enviar o e-mail de redefinição.');
+      }
     } finally {
       setSubmitting(false);
     }
