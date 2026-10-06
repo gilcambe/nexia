@@ -77,7 +77,7 @@ export default function Auth() {
         if (err) {
           setError(err);
         } else {
-          navigate('/');
+          navigate('/', { replace: true });
         }
       } else {
         const { error: err, needsEmailConfirm } = await signUp(
@@ -92,7 +92,7 @@ export default function Auth() {
             'Conta criada! Enviamos um link de confirmação para o seu e-mail. Confirme para começar.',
           );
         } else {
-          navigate('/onboarding');
+          navigate('/onboarding', { replace: true });
         }
       }
     } finally {
