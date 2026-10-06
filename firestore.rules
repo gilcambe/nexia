@@ -282,7 +282,7 @@ service cloud.firestore {
           (coll == 'profile' && bodyCoachOptString('full_name', 200) && bodyCoachOptString('email', 320)
             && bodyCoachOptNumber('height_cm') && bodyCoachOptNumber('goal_weight_kg') && bodyCoachOptNumber('goal_body_fat_pct')
             && bodyCoachOptString('coach_notes', 5000))
-          || (coll == 'workouts' && d.title is string && d.title.size() <= 200 && d.done_at is string
+          || (coll == 'workouts' && d.title is string && d.title.size() <= 200 && d.done_at is string)
           || (coll == 'meals' && d.name is string && d.name.size() > 0 && d.name.size() <= 200
             && d.calories is number && d.protein is number && d.carbs is number && d.fat is number
             && bodyCoachOptNumber('fiber') && bodyCoachOptString('meal_time', 20))
