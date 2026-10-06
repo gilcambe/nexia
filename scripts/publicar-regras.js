@@ -11,6 +11,7 @@ const { createTokenSource } = require('../lib/firebase-lite/google-auth');
 
 async function main() {
   const dry = process.argv.includes('--dry-run');
+  const soBodyCoach = process.argv.includes('--body-coach');
   const sa = JSON.parse(Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '', 'base64').toString('utf8') || '{}');
   if (!sa.project_id) throw new Error('Falta FIREBASE_SERVICE_ACCOUNT_BASE64.');
   const masterEmail = (process.env.MASTER_EMAIL || '').trim().toLowerCase();
@@ -23,6 +24,8 @@ async function main() {
     return { ok: r.ok, status: r.status, j };
   };
   const mask = uid => `${String(uid).slice(0, 4)}…`;
+
+  if (soBodyCoach) return publicarSoBodyCoach(p, call);
 
   // 1. Masters hoje (users/{uid}.role == 'master').
   const q = await call(`https://firestore.googleapis.com/v1/projects/${p}/databases/(default)/documents:runQuery`, 'POST', {
@@ -54,6 +57,37 @@ async function main() {
   if (rel.status === 404) rel = await call(`${rules}/releases`, 'POST', { name: release, rulesetName: rs.j.name });
   if (!rel.ok) throw new Error(`Publicar as regras: ${rel.status} ${(rel.j.error && rel.j.error.message) || ''}`);
   console.log(`Regras publicadas (${rs.j.name.split('/').pop()}).`);
+}
+
+// Só o Body Coach: pega as regras que estão no ar e acrescenta o bloco bodycoach_users (cada aluno lê e
+// grava só os próprios dados). Não mexe em nada do painel nem nos papéis, então ninguém perde acesso.
+async function publicarSoBodyCoach(p, call) {
+  const rules = `https://firebaserules.googleapis.com/v1/projects/${p}`;
+  const rel = await call(`${rules}/releases/cloud.firestore`, 'GET');
+  if (!rel.ok) throw new Error(`Ler as regras no ar: ${rel.status} ${(rel.j.error && rel.j.error.message) || ''}`);
+  const cur = await call(`https://firebaserules.googleapis.com/v1/${rel.j.rulesetName}`, 'GET');
+  if (!cur.ok) throw new Error(`Ler o conjunto no ar: ${cur.status}`);
+  const files = cur.j.source.files;
+  const live = files[0].content;
+  if (live.includes('bodycoach_users')) {
+    console.log('::notice title=Body Coach::as regras no ar já têm bodycoach_users; nada foi alterado.');
+    return;
+  }
+  const full = fs.readFileSync(path.join(__dirname, '..', 'firestore.rules'), 'utf8');
+  const ini = full.indexOf('    // ── NEXIA Body Coach');
+  const fim = full.indexOf('    // ── Default: deny');
+  if (ini < 0 || fim < ini) throw new Error('Bloco do Body Coach não encontrado em firestore.rules.');
+  const bloco = full.slice(ini, fim)
+    .replace('return isAuthenticated() && uid() == userId;', 'return request.auth != null && request.auth.uid == userId;')
+    .replace(/uid\(\)/g, 'request.auth.uid');
+  const ancora = /match \/databases\/\{database\}\/documents \{\n/;
+  if (!ancora.test(live)) throw new Error('Não achei o início das regras no ar. Nada foi publicado.');
+  const novo = live.replace(ancora, m => `${m}${bloco}\n`);
+  const rs = await call(`${rules}/rulesets`, 'POST', { source: { files: [{ name: files[0].name, content: novo }] } });
+  if (!rs.ok) throw new Error(`Criar o conjunto de regras: ${rs.status} ${(rs.j.error && rs.j.error.message) || ''}`);
+  const pub = await call(`${rules}/releases/cloud.firestore`, 'PATCH', { release: { name: `projects/${p}/releases/cloud.firestore`, rulesetName: rs.j.name } });
+  if (!pub.ok) throw new Error(`Publicar as regras: ${pub.status} ${(pub.j.error && pub.j.error.message) || ''}`);
+  console.log(`::notice title=Body Coach::regras do Body Coach publicadas (${rs.j.name.split('/').pop()}); antes: ${rel.j.rulesetName.split('/').pop()}.`);
 }
 
 main().catch(e => { console.error(`::error title=Regras do Firestore::${e.message}`); process.exit(1); });
