@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { session, sessionReview, type SetLog } from '@/mocks/workout';
+import { session, type SetLog } from '@/mocks/workout';
 import SetEntry, { type NewSet } from './components/SetEntry';
+import { setUserDoc } from '@/lib/userData';
+import { useAuth } from '@/components/feature/AuthContext';
 
 type Phase =
   | 'PRE_SESSION'
@@ -301,46 +303,79 @@ export default function Workout() {
           </div>
         )}
 
-        {phase === 'SESSION_REVIEW' && (
-          <div className="rounded-2xl border border-background-200 bg-background-50 p-6">
-            <h2 className="font-heading text-xl font-bold text-foreground-950">Resumo da sessão</h2>
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              {[
-                { label: 'Duração', value: `${sessionReview.duration} min`, icon: 'ri-time-line' },
-                { label: 'Exercícios', value: sessionReview.exercises, icon: 'ri-heart-pulse-line' },
-                { label: 'Séries', value: sessionReview.sets, icon: 'ri-list-unordered' },
-                { label: 'Volume', value: `${sessionReview.volumeKg.toLocaleString('pt-BR')} kg`, icon: 'ri-fire-line' },
-              ].map((s) => (
-                <div key={s.label} className="rounded-xl bg-background-100/70 p-3">
-                  <i className={`${s.icon} text-primary-500`}></i>
-                  <p className="mt-1 font-heading text-lg font-bold text-foreground-950">{s.value}</p>
-                  <p className="text-[11px] text-foreground-500">{s.label}</p>
+        {phase === 'SESSION_REVIEW' && (() => {
+          const durationMin = Math.max(1, Math.round((Date.now() - new Date(startedAt).getTime()) / 60000));
+          const allSets = Object.values(setsByEx).flat();
+          const totalSets = allSets.length;
+          const totalVolume = allSets.reduce((acc, s) => acc + (s.weight * s.reps), 0);
+          const exercisesCount = Object.keys(setsByEx).length;
+
+          const progressions = session.exercises.map((e) => {
+            const sets = setsByEx[e.id] ?? [];
+            if (sets.length === 0) return null;
+            const maxWeight = Math.max(...sets.map(s => s.weight));
+            const totalReps = sets.reduce((acc, s) => acc + s.reps, 0);
+            return {
+              name: e.name,
+              detail: `${maxWeight}${e.weightUnit === 'kg/lado' ? ' kg/lado' : ' kg'} · ${totalReps} reps totais`
+            };
+          }).filter(Boolean);
+
+          const handleFinishSession = async () => {
+            if (user?.uid) {
+              const workoutRecord = {
+                id: `workout-${Date.now()}`,
+                title: session.title,
+                startedAt,
+                endedAt: new Date().toISOString(),
+                durationMin,
+                totalSets,
+                totalVolume,
+                setsByEx,
+              };
+              await setUserDoc(user.uid, 'workouts', workoutRecord.id, workoutRecord).catch(() => {});
+            }
+            setPhase('SESSION_COMPLETE');
+          };
+
+          return (
+            <div className="rounded-2xl border border-background-200 bg-background-50 p-6">
+              <h2 className="font-heading text-xl font-bold text-foreground-950">Resumo da sessão</h2>
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[
+                  { label: 'Duração', value: `${durationMin} min`, icon: 'ri-time-line' },
+                  { label: 'Exercícios', value: exercisesCount, icon: 'ri-heart-pulse-line' },
+                  { label: 'Séries', value: totalSets, icon: 'ri-list-unordered' },
+                  { label: 'Volume', value: `${totalVolume.toLocaleString('pt-BR')} kg`, icon: 'ri-fire-line' },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-xl bg-background-100/70 p-3">
+                    <i className={`${s.icon} text-primary-500`}></i>
+                    <p className="mt-1 font-heading text-lg font-bold text-foreground-950">{s.value}</p>
+                    <p className="text-[11px] text-foreground-500">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {progressions.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground-400">Progressões</h3>
+                  {progressions.map((p) => p && (
+                    <div key={p.name} className="rounded-lg bg-accent-100/60 px-4 py-2.5 text-sm text-accent-800">
+                      <span className="font-semibold">{p.name}:</span> {p.detail}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              )}
 
-            <div className="mt-4 space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-foreground-400">Progressões</h3>
-              {sessionReview.progressions.map((p) => (
-                <div key={p.name} className="rounded-lg bg-accent-100/60 px-4 py-2.5 text-sm text-accent-800">
-                  <span className="font-semibold">{p.name}:</span> {p.detail}
-                </div>
-              ))}
+              <button
+                onClick={handleFinishSession}
+                className="mt-5 w-full rounded-xl bg-primary-500 px-6 py-3 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
+              >
+                FINALIZAR SESSÃO
+              </button>
             </div>
-
-            <div className="mt-4 rounded-xl bg-background-100/70 p-4 text-sm text-foreground-700">
-              <span className="font-semibold text-foreground-800">Alterações hoje:</span>{' '}
-              {sessionReview.changes.map((c) => `${c.made} (${c.reason})`).join(' · ')}
-            </div>
-
-            <button
-              onClick={() => setPhase('SESSION_COMPLETE')}
-              className="mt-5 w-full rounded-xl bg-primary-500 px-6 py-3 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
-            >
-              FINALIZAR SESSÃO
-            </button>
-          </div>
-        )}
+          );
+        })()}
 
         {phase === 'SESSION_COMPLETE' && (
           <div className="rounded-2xl border border-accent-200 bg-accent-100/50 p-8 text-center">
@@ -348,7 +383,7 @@ export default function Workout() {
               <i className="ri-check-line text-2xl"></i>
             </div>
             <h2 className="mt-4 font-heading text-2xl font-bold text-foreground-950">Sessão concluída!</h2>
-            <p className="mx-auto mt-2 max-w-md text-sm text-foreground-600">{sessionReview.nextRecommendation}</p>
+            <p className="mx-auto mt-2 max-w-md text-sm text-foreground-600">Excelente trabalho. Bom descanso e hidratação.</p>
             <p className="mt-3 text-xs text-foreground-400">Tudo foi salvo no seu diário mestre.</p>
             <button
               onClick={() => navigate('/')}
