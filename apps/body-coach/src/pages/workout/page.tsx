@@ -17,6 +17,8 @@ type Phase =
 
 export default function Workout() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const [startedAt] = useState(() => new Date().toISOString());
   const [phase, setPhase] = useState<Phase>('PRE_SESSION');
   const [exIndex, setExIndex] = useState(0);
   const [setsByEx, setSetsByEx] = useState<Record<string, SetLog[]>>({});
