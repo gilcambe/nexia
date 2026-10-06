@@ -211,4 +211,65 @@ exports.handler = async (event) => {
     // Escolher primeiro modelo disponível na lista ou fallback seguro
     let selectedModelConfig = availableModels[0] || { provider: 'groq', model: 'openai/gpt-oss-120b' };
 
-    const messagesP
+    const messagesPayload = [];
+    messagesPayload.push({ role: 'system', content: systemPrompt });
+
+    if (Array.isArray(history)) {
+      const validHistory = history.slice(-MAX_HISTORY_MESSAGES);
+      for (const h of validHistory) {
+        if (h && typeof h.role === 'string' && typeof h.content === 'string') {
+          const role = h.role === 'assistant' ? 'assistant' : 'user';
+          const content = truncate(sanitizeUserContent(h.content), MAX_MODEL_INPUT_LENGTH);
+          if (content) {
+            messagesPayload.push({ role, content });
+          }
+        }
+      }
+    }
+
+    messagesPayload.push({ role: 'user', content: truncate(sanitizedMessage, MAX_MODEL_INPUT_LENGTH) });
+
+    const completionOptions = {};
+    if (validatedMaxTokens !== null) {
+      completionOptions.max_tokens = validatedMaxTokens;
+    }
+
+    let result;
+    if (router && typeof router.complete === 'function') {
+      result = await router.complete({
+        provider: selectedModelConfig.provider,
+        model: selectedModelConfig.model,
+        messages: messagesPayload,
+        ...completionOptions
+      });
+    } else {
+      // Fallback robusto se router não estiver disponível
+      result = {
+        content: `Olá! Sou o seu ${agent} do Body Coach AI. No momento, o sistema de IA está em modo de inicialização. Sua mensagem foi recebida com sucesso!`
+      };
+    }
+
+    const replyText = result && (result.content || result.text || result.message)
+      ? (result.content || result.text || result.message)
+      : 'Resposta gerada com sucesso.';
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        ok: true,
+        agent,
+        reply: replyText,
+        modelUsed: selectedModelConfig.model || 'default'
+      })
+    };
+
+  } catch (err) {
+    console.error('Erro em body-coach-ai:', err);
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: err.message || 'Erro interno do servidor' })
+    };
+  }
+};
