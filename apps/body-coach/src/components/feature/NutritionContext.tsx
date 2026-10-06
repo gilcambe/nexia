@@ -7,7 +7,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
-import { nutritionTargets, waterGoal, initialWater, initialMeals, type MealFood } from '@/mocks/nutrition';
+import { initialWater, initialMeals, type MealFood } from '@/mocks/nutrition';
 import { listUserDocs, setUserDoc, deleteUserDoc } from '@/lib/userData';
 import { useAuth } from './AuthContext';
 
@@ -23,7 +23,12 @@ interface NutritionContextValue {
   meals: MealFood[];
   water: number;
   waterGoal: number;
-  targets: typeof nutritionTargets;
+  targets: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
   totals: NutritionTotals;
   loading: boolean;
   error: string | null;
@@ -56,7 +61,7 @@ export function useNutrition() {
 }
 
 export function NutritionProvider({ children }: { children: ReactNode }) {
-  const { user, isLocalDemo } = useAuth();
+  const { user, isLocalDemo, profile } = useAuth();
   const [meals, setMeals] = useState<MealFood[]>([]);
   const [water, setWater] = useState<number>(initialWater);
   const [loading, setLoading] = useState(true);
@@ -159,12 +164,34 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
     [meals],
   );
 
+  const { targets, waterGoal } = useMemo(() => {
+    const peso = Number((profile as any)?.onboarding?.weight) || 0;
+    let calories = 0;
+    let protein = 0;
+    let fat = 0;
+    let carbs = 0;
+    let waterGoal = 0;
+
+    if (peso > 0) {
+      calories = Math.round(peso * 33);
+      protein = Math.round(peso * 2);
+      fat = Math.round(peso * 0.9);
+      carbs = Math.round((calories - protein * 4 - fat * 9) / 4);
+      waterGoal = Math.round(peso * 0.033 * 10) / 10;
+    }
+
+    return {
+      targets: { calories, protein, fat, carbs },
+      waterGoal,
+    };
+  }, [profile]);
+
   const value = useMemo(
     () => ({
       meals,
       water,
       waterGoal,
-      targets: nutritionTargets,
+      targets,
       totals,
       loading,
       error,
@@ -174,7 +201,7 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
       addWater: (liters: number) => setWater((prev) => Math.round((prev + liters) * 100) / 100),
       resetWater: () => setWater(0),
     }),
-    [meals, water, totals, loading, error, reload, addMeal, removeMeal],
+    [meals, water, waterGoal, targets, totals, loading, error, reload, addMeal, removeMeal],
   );
 
   return <NutritionContext.Provider value={value}>{children}</NutritionContext.Provider>;
