@@ -3,7 +3,7 @@
 /**
  * ╔══════════════════════════════════════════════════════════════════════╗
  * ║  NEXIA OS — Body Coach AI Team                                       ║
- * ║  Equipe de IA especializada para o App Body Coach                    ║
+ * ║  Equipe de IA especializada para o App Body Coach                     ║
  * ╚══════════════════════════════════════════════════════════════════════╝
  */
 
@@ -18,13 +18,107 @@ const SYSTEM_PROMPTS = {
   coach: 'Você é o Head Coach de Alta Performance especialista em mentalidade, disciplina, constância e planejamento de metas para o app Body Coach. Responda de forma estratégica, motivadora e estruturada em português do Brasil.'
 };
 
-exports.handler = async (event) => {
-  const headers = makeHeaders(event);
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
+// ---- Limites de segurança alinhados ao Body Coach ----
+const MIN_MAX_TOKENS = 16;
+const MAX_MAX_TOKENS = 8192;
+const MAX_MESSAGE_LENGTH = 8000;
+const MAX_HISTORY_MESSAGES = 20;
+const MAX_MODEL_INPUT_LENGTH = 4000;
+
+/**
+ * Normaliza HTTP method aceitas (Netlify pode passar lowercase).
+ */
+function normalizeMethod(m) {
+  return typeof m === 'string' ? m.toUpperCase() : '';
+}
+
+/**
+ * Valida e normaliza maxTokens vindo do cliente.
+ * Retorna null se ausente (usar default) ou um número inteiro dentro de [MIN, MAX].
+ */
+function parseMaxTokens(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const n = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(n)) return null;
+  const int = Math.floor(n);
+  if (int < MIN_MAX_TOKENS || int > MAX_MAX_TOKENS) {
+    throw new Error(`maxTokens fora do intervalo permitido (${MIN_MAX_TOKENS}–${MAX_MAX_TOKENS})`);
+  }
+  return int;
+}
+
+/**
+ * Escape básico de caracteres especiais de prompt (HTML) para reduzir risco de prompt injection.
+ */
+function sanitizeUserContent(input) {
+  if (typeof input !== 'string') return '';
+  return input
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+    .replace(/`/g, '`')
+    .trim();
+}
+
+/**
+ * Trunca uma string para no máximo `limit` caracteres.
+ */
+function truncate(input, limit) {
+  const s = typeof input === 'string' ? input : '';
+  return s.length <= limit ? s : s.slice(0, limit);
+}
+
+/**
+ * Garante que os headers de resposta obrigatórios (CORS + headers críticos) estejam presentes.
+ * Mescla em headers existentes (case-insensitive) em vez de sobrescrever.
+ */
+function ensureResponseHeaders(evt) {
+  const headers = (makeHeaders && typeof makeHeaders === 'function')
+    ? (makeHeaders(evt) || {})
+    : {};
+
+  const existing = {};
+  for (const k of Object.keys(headers || {})) {
+    existing[String(k).toLowerCase()] = k;
   }
 
-  if (event.httpMethod !== 'POST') {
+  // Defaults seguros de CORS
+  const corsDefaults = {
+    'Access-Control-Allow-Origin': process.env.NEXIA_CORS_ORIGIN || '*',
+    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Tenant-Id',
+    'Access-Control-Max-Age': '86400',
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY'
+  };
+
+  for (const [name, value] of Object.entries(corsDefaults)) {
+    const lower = String(name).toLowerCase();
+    if (!existing[lower]) {
+      headers[name] = value;
+      existing[lower] = name;
+    }
+  }
+
+  return headers;
+}
+
+exports.handler = async (event) => {
+  const method = normalizeMethod(event.httpMethod);
+
+  // 0. Headers garantidos no OPTIONS (CORS preflight)
+  if (method === 'OPTIONS') {
+    const optsHeaders = ensureResponseHeaders(event);
+    return { statusCode: 200, headers: optsHeaders, body: '' };
+  }
+
+  // 0.1. Para demais métodos, usamos os headers que o middleware já aplica ao contexto do evento
+  const headers = makeHeaders
+    ? makeHeaders(event)
+    : ensureResponseHeaders(event);
+
+  if (method !== 'POST') {
     return {
       statusCode: 405,
       headers,
@@ -64,13 +158,47 @@ exports.handler = async (event) => {
       };
     }
 
-    const { agent = 'coach', message, history = [], maxTokens = 4096 } = body;
+    const {
+      agent = 'coach',
+      message,
+      history = [],
+      maxTokens = null
+    } = body;
 
     if (!message || typeof message !== 'string') {
       return {
         statusCode: 400,
         headers,
         body: JSON.stringify({ error: 'message é obrigatório e deve ser uma string' })
+      };
+    }
+
+    // Valida e normaliza maxTokens
+    let validatedMaxTokens;
+    try {
+      validatedMaxTokens = parseMaxTokens(maxTokens);
+    } catch (err) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: err.message })
+      };
+    }
+
+    // Sanitiza e limita o input do usuário
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: `message excede o tamanho máximo de ${MAX_MESSAGE_LENGTH} caracteres` })
+      };
+    }
+    const sanitizedMessage = sanitizeUserContent(message);
+    if (!sanitizedMessage) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: 'message contém apenas caracteres não válidos' })
       };
     }
 
@@ -83,42 +211,4 @@ exports.handler = async (event) => {
     // Escolher primeiro modelo disponível na lista ou fallback seguro
     let selectedModelConfig = availableModels[0] || { provider: 'groq', model: 'openai/gpt-oss-120b' };
 
-    const messages = [
-      ...(Array.isArray(history) ? history.slice(-20) : []),
-      { role: 'user', content: message }
-    ];
-
-    let aiResponse = '';
-    try {
-      const result = await router.chat(selectedModelConfig, {
-        system: systemPrompt,
-        messages,
-        maxTokens: Number(maxTokens) || 4096
-      });
-      aiResponse = result.text || '';
-    } catch (modelErr) {
-      console.warn('[BODY-COACH-AI] Erro ao chamar router, tentando fallback:', modelErr.message);
-      // Fallback para provedor alternativo se disponível
-      aiResponse = 'Desculpe, ocorreu uma instabilidade temporária na nossa IA. Por favor, tente novamente em instantes.';
-    }
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        ok: true,
-        agent,
-        reply: aiResponse,
-        model: selectedModelConfig.modelProvider || selectedModelConfig.model
-      })
-    };
-
-  } catch (err) {
-    console.error('[BODY-COACH-AI] Erro interno:', err);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: 'Erro interno ao processar requisição da equipe de IA.' })
-    };
-  }
-};
+    const messagesP
