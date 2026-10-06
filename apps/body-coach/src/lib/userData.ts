@@ -22,15 +22,14 @@ export type BodyCoachCollection =
   | 'progress_entries'
   | 'medical_exams';
 
+function chaveLocal(uid: string, coll: BodyCoachCollection, id: string): string {
+  return `bc_doc_${uid}_${coll}_${id}`;
+}
+
 async function db() {
   const fb = await getFirebase();
   if (!fb) throw new Error('Não consegui falar com o servidor agora. Tente novamente em instantes.');
   return fb.db;
-
-function chaveLocal(uid: string, coll: BodyCoachCollection, id: string) {
-  return `bc_doc_${uid}_${coll}_${id}`;
-}
-
 }
 
 // Lista os documentos de uma coleção do usuário, ordenados por um campo.
