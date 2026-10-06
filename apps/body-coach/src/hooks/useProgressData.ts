@@ -78,8 +78,9 @@ function withPhotoUrls(entries: ProgressEntry[]): ProgressEntry[] {
 export function useProgressData(userId: string | undefined): ProgressData {
   const { isLocalDemo } = useAuth();
   const [entries, setEntries] = useState<ProgressEntry[]>([]);
-  const [height, setHeight] = useState(178);
-  const [goalBodyFat, setGoalBodyFat] = useState(12);
+  // Sem dado do aluno: valores neutros (não os do atleta de exemplo).
+  const [height, setHeight] = useState(170);
+  const [goalBodyFat, setGoalBodyFat] = useState(15);
   const [goalWeight, setGoalWeight] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -117,6 +118,7 @@ export function useProgressData(userId: string | undefined): ProgressData {
             height_cm: number | null;
             goal_body_fat_pct: number | null;
             goal_weight_kg: number | null;
+            onboarding?: { height?: string };
           }>(userId, 'profile', 'main').catch(() => null),
         ]);
 
@@ -134,7 +136,9 @@ export function useProgressData(userId: string | undefined): ProgressData {
 
         if (profileData) {
           const p = profileData;
+          const obHeight = Number(p.onboarding?.height);
           if (p.height_cm) setHeight(p.height_cm);
+          else if (obHeight > 0) setHeight(obHeight);
           if (p.goal_body_fat_pct) setGoalBodyFat(p.goal_body_fat_pct);
           setGoalWeight(p.goal_weight_kg ?? null);
         }
