@@ -1,106 +1,101 @@
+// Plano de treino da semana montado a partir do questionário (dias, minutos e nível).
 import type { PlanDay } from '@/mocks/plan';
 import type { Session } from '@/mocks/workout';
 
 export type Answers = Record<string, string | string[] | undefined>;
 
+type Template = [day: string, title: string, focus: string, exercises: string[]];
+
+const SPLITS: Record<number, Template[]> = {
+  3: [
+    ['Segunda', 'Corpo inteiro A', 'Pernas, peito e costas', ['Agachamento livre', 'Supino reto', 'Remada curvada', 'Elevação pélvica']],
+    ['Quarta', 'Corpo inteiro B', 'Posteriores, ombros e costas', ['Levantamento terra romeno', 'Desenvolvimento com halteres', 'Puxada frontal', 'Prancha']],
+    ['Sexta', 'Corpo inteiro C', 'Pernas, peito e braços', ['Leg Press', 'Supino inclinado com halteres', 'Remada baixa', 'Rosca direta']],
+  ],
+  4: [
+    ['Segunda', 'Superior A', 'Peito e costas', ['Supino reto', 'Remada curvada', 'Desenvolvimento com halteres', 'Tríceps na polia']],
+    ['Terça', 'Inferior A', 'Quadríceps', ['Agachamento livre', 'Leg Press', 'Cadeira extensora', 'Panturrilha em pé']],
+    ['Quinta', 'Superior B', 'Costas e ombros', ['Puxada frontal', 'Supino inclinado com halteres', 'Elevação lateral', 'Rosca direta']],
+    ['Sexta', 'Inferior B', 'Posteriores e glúteos', ['Levantamento terra romeno', 'Elevação pélvica', 'Mesa flexora', 'Prancha']],
+  ],
+  5: [
+    ['Segunda', 'Peito e tríceps', 'Empurrar', ['Supino reto', 'Supino inclinado com halteres', 'Crucifixo', 'Tríceps na polia']],
+    ['Terça', 'Costas e bíceps', 'Puxar', ['Puxada frontal', 'Remada curvada', 'Remada baixa', 'Rosca direta']],
+    ['Quarta', 'Pernas', 'Quadríceps', ['Agachamento livre', 'Leg Press', 'Cadeira extensora', 'Panturrilha em pé']],
+    ['Quinta', 'Ombros e core', 'Ombros', ['Desenvolvimento com halteres', 'Elevação lateral', 'Face pull', 'Prancha']],
+    ['Sexta', 'Posteriores e glúteos', 'Posteriores', ['Levantamento terra romeno', 'Elevação pélvica', 'Mesa flexora', 'Abdução de quadril']],
+  ],
+  6: [
+    ['Segunda', 'Empurrar A', 'Peito, ombros e tríceps', ['Supino reto', 'Desenvolvimento com halteres', 'Elevação lateral', 'Tríceps na polia']],
+    ['Terça', 'Puxar A', 'Costas e bíceps', ['Puxada frontal', 'Remada curvada', 'Face pull', 'Rosca direta']],
+    ['Quarta', 'Pernas A', 'Quadríceps', ['Agachamento livre', 'Leg Press', 'Cadeira extensora', 'Panturrilha em pé']],
+    ['Quinta', 'Empurrar B', 'Peito e ombros', ['Supino inclinado com halteres', 'Crucifixo', 'Elevação lateral', 'Tríceps francês']],
+    ['Sexta', 'Puxar B', 'Costas', ['Remada baixa', 'Puxada frontal', 'Remada unilateral', 'Rosca martelo']],
+    ['Sábado', 'Pernas B', 'Posteriores e glúteos', ['Levantamento terra romeno', 'Elevação pélvica', 'Mesa flexora', 'Abdução de quadril']],
+  ],
+};
+
+const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+function dose(level: unknown): { sets: string; target: string; intensity: PlanDay['intensity'] } {
+  if (level === 'Iniciante') return { sets: '3 × 10–12', target: 'RIR 3', intensity: 'baixa' };
+  if (level === 'Avançado' || level === 'Alto desempenho') return { sets: '4 × 6–10', target: 'RIR 1', intensity: 'alta' };
+  return { sets: '3 × 8–12', target: 'RIR 2', intensity: 'media' };
+}
+
 export function buildWeekPlan(ob: Answers): PlanDay[] {
-  const daysCount = Number(ob['daysPerWeek'] ?? ob['days'] ?? 3);
-  const goal = String(ob['goal'] ?? ob['objective'] ?? 'hipertrofia');
-  const level = String(ob['level'] ?? 'intermediario');
+  const n = Number(ob.days);
+  const split = SPLITS[n] ?? SPLITS[3];
+  const duration = Number(ob.minutes) || 60;
+  const { sets, target, intensity } = dose(ob.level);
+  return split.map(([day, title, focus, names], i) => ({
+    id: `d${i}`,
+    day,
+    title,
+    focus,
+    duration,
+    intensity,
+    exercises: names.map((name) => ({ name, sets, target })),
+  }));
+}
 
-  const baseDays: PlanDay[] = [
-    {
-      id: 'mon',
-      day: 'Segunda',
-      title: 'Pernas — força / hipertrofia',
-      focus: 'Quadríceps + posteriores',
-      duration: 70,
-      intensity: 'alta',
-      exercises: [
-        { name: 'Leg Press', sets: '4 × 12–15', target: 'RIR 2' },
-        { name: 'Agachamento livre', sets: '3 × 8–10', target: 'RIR 2' },
-        { name: 'Mesa flexora', sets: '3 × 10–12', target: 'RIR 2' },
-        { name: 'Panturrilha em pé', sets: '3 × 15–20', target: 'RIR 2' },
-      ],
-      done: false,
-      next: true,
-    },
-    {
-      id: 'tue',
-      day: 'Terça',
-      title: 'Upper — peito / dorso',
-      focus: 'Empurrar + puxar',
-      duration: 75,
-      intensity: 'media',
-      exercises: [
-        { name: 'Supino inclinado com halteres', sets: '4 × 10–12', target: 'RIR 2' },
-        { name: 'Remada curvada', sets: '4 × 10–12', target: 'RIR 2' },
-        { name: 'Desenvolvimento com halteres', sets: '3 × 10–12', target: 'RIR 2' },
-        { name: 'Puxada frontal', sets: '3 × 12–15', target: 'RIR 2' },
-      ],
-    },
-    {
-      id: 'wed',
-      day: 'Quarta',
-      title: 'Recuperação ativa',
-      focus: 'Mobilidade + cardio leve',
-      duration: 30,
-      intensity: 'baixa',
-      exercises: [
-        { name: 'Caminhada inclinada', sets: '20 min', target: 'zona 2' },
-        { name: 'Mobilidade de quadril / ombro', sets: '10 min', target: 'amplitude' },
-      ],
-    },
-    {
-      id: 'thu',
-      day: 'Quinta',
-      title: 'Pernas — volume',
-      focus: 'Volume moderado',
-      duration: 72,
-      intensity: 'media',
-      exercises: [
-        { name: 'Leg press', sets: '4 × 12–15', target: 'RIR 2' },
-        { name: 'Cadeira extensora', sets: '3 × 15', target: 'RIR 2' },
-        { name: 'Stiff', sets: '3 × 10–12', target: 'RIR 2' },
-      ],
-    },
-    {
-      id: 'fri',
-      day: 'Sexta',
-      title: 'Upper — braços / ombros',
-      focus: 'Membros superiores',
-      duration: 60,
-      intensity: 'media',
-      exercises: [
-        { name: 'Rosca direta com barra', sets: '3 × 10–12', target: 'RIR 2' },
-        { name: 'Tríceps testa', sets: '3 × 10–12', target: 'RIR 2' },
-        { name: 'Elevação lateral', sets: '4 × 15', target: 'RIR 2' },
-      ],
-    },
-    {
-      id: 'sat',
-      day: 'Sábado',
-      title: 'PEITO / OMBRO',
-      focus: 'Empurrar',
-      duration: 65,
-      intensity: 'alta',
-      exercises: [
-        { name: 'Supino reto com barra', sets: '4 × 8–10', target: 'RIR 1' },
-        { name: 'Crucifixo na máquina', sets: '3 × 12–15', target: 'RIR 2' },
-        { name: 'Elevação lateral', sets: '3 × 15', target: 'RIR 2' },
-      ],
-    },
-    {
-      id: 'sun',
-      day: 'Domingo',
-      title: 'Descanso total',
-      focus: 'Recuperação',
-      duration: 0,
-      intensity: 'baixa',
-      exercises: [],
-    },
-  ];
+// Dia do plano que cai hoje, ou null em dia de descanso.
+export function todayPlanDay(plan: PlanDay[]): PlanDay | null {
+  const today = WEEKDAYS[new Date().getDay()];
+  return plan.find((d) => d.day === today) ?? null;
+}
 
-  const count = isNaN(daysCount) || daysCount <= 0 ? 3 : Math.min(Math.max(daysCount, 1), 7);
-  return baseDays.slice(0, count);
+const isoToday = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+export function buildSession(day: PlanDay): Session {
+  return {
+    id: `sess-${day.id}-${isoToday()}`,
+    title: day.title,
+    objective: day.focus,
+    estimatedMinutes: day.duration,
+    priority: 'media',
+    type: 'forca',
+    date: 'Hoje',
+    warmup: [
+      { name: 'Aquecimento leve (bike ou esteira)', durationSec: 300 },
+      { name: 'Mobilidade articular', durationSec: 180 },
+    ],
+    exercises: day.exercises.map((e) => ({
+      id: e.name.toLowerCase().replace(/\s+/g, '-'),
+      name: e.name,
+      muscleGroup: day.focus,
+      targetReps: e.sets.split('× ')[1] ?? e.sets,
+      targetSets: parseInt(e.sets, 10) || 3,
+      restSec: 90,
+      note: `Alvo ${e.target}.`,
+      minWeight: 0,
+      maxWeight: 200,
+      weightUnit: 'kg',
+      prevSession: { date: 'Sem registro anterior', sets: [] },
+      sets: [],
+    })),
+  };
 }
