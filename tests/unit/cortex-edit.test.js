@@ -263,3 +263,16 @@ test('CE10. prompts: quem grava aprende o formato de texto; o Architect termina 
   for (const a of ['reviewer', 'security', 'architect']) assert.ok(!AGENTS[a].prompt.includes('<<<<<<< SEARCH'), a);
   assert.match(AGENTS.architect.prompt, /ARQUIVOS:/);
 });
+
+test('CE12. revisor que termina só com texto: lembrete e veredito em JSON no texto valem (antes: changes_requested sem motivo)', async () => {
+  const router = fakeRouter([
+    { text: 'Revisão concluída: a linha foi removida e não há problemas.' },
+    req => {
+      assert.ok(userTexts(req).includes('report_findings'), 'lembrete pede o veredito');
+      return { text: 'Pronto:\n{"verdict":"approve","findings":[]}' };
+    },
+  ]);
+  const r = await run(router, fakeGateway(), { agentId: 'security' });
+  assert.strictEqual(r.status, 'done');
+  assert.deepStrictEqual(r.report, { verdict: 'approve', findings: [] });
+});

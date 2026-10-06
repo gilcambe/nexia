@@ -164,6 +164,25 @@ const REPORT_TOOL = {
   } },
 };
 const REPORTING_AGENTS = new Set(['reviewer', 'security']);
+const VERDICT_HELP = 'Você terminou a revisão sem o veredito. Chame agora report_findings com verdict e findings. '
+  + 'Se a chamada de ferramenta falhar, responda SÓ com este JSON: {"verdict":"approve","findings":[]} '
+  + '(ou "changes_requested" com cada problema em findings: {"severity":"high","file":"caminho","message":"o que corrigir"}).';
+/** Veredito em JSON escrito no texto ({"verdict": ..., "findings": [...]}), ou null. */
+function verdictInText(text) {
+  const t = String(text || '');
+  for (let i = t.indexOf('{'); i >= 0; i = t.indexOf('{', i + 1)) {
+    if (!/^\{\s*"verdict"/.test(t.slice(i))) continue;
+    for (let j = t.lastIndexOf('}'); j > i; j = t.lastIndexOf('}', j - 1)) {
+      try {
+        const v = JSON.parse(t.slice(i, j + 1));
+        if (v && ['approve', 'changes_requested'].includes(v.verdict) && Array.isArray(v.findings)) {
+          return { verdict: v.verdict, findings: v.findings.filter(f => f && typeof f.message === 'string').slice(0, 50) };
+        }
+      } catch { /* tenta um fecho mais curto */ }
+    }
+  }
+  return null;
+}
 const WRITE_TOOLS = new Set(['github.commit_files', 'github.edit_files']);
 // Modelos grátis às vezes "respondem" com o código no texto e encerram sem salvar. Quem pode gravar
 // e ainda não gravou nada recebe até MAX_NUDGES lembretes com um exemplo concreto, e o texto com
@@ -240,6 +259,7 @@ async function runAgent(o) {
   const canWrite = catalog.some(t => WRITE_TOOLS.has(t.name));
   let wrote = false;
   let nudges = 0;
+  let verdictNudges = 0;
   const applied = new Set();   // blocos de texto já enviados ao gateway
   const branch = o.branch || ((/Branch de trabalho: (nexia\/\S+)/.exec(o.goal || '') || [])[1]) || null;
   const localErrors = [];   // gravações recusadas (diagnóstico no resumo do passo quando nada foi gravado)
@@ -385,6 +405,18 @@ async function runAgent(o) {
       messages.push({ role: 'user', content: nudgeSave(branch, nudges, out.stop_reason === 'length' || out.stop_reason === 'max_tokens') });
       continue;
     }
+    // Reviewer/Security que terminam só com texto: o veredito pode vir em JSON no texto; se não vier,
+    // até 2 lembretes para chamar report_findings (antes, virava changes_requested sem motivo).
+    if (!calls.length && REPORTING_AGENTS.has(o.agentId)) {
+      const report = verdictInText(out.text);
+      if (report) return { status: 'done', report, text: clip(out.text, 2000), tool_call_ids: toolCallIds, model };
+      if (verdictNudges < MAX_NUDGES) {
+        verdictNudges++;
+        messages.push({ role: 'assistant', content: String(out.text || '(sem texto)').slice(0, 4000) });
+        messages.push({ role: 'user', content: VERDICT_HELP });
+        continue;
+      }
+    }
     if (!calls.length) {
       const why = canWrite && !wrote && localErrors.length ? `\n[nada gravado; recusas: ${[...new Set(localErrors)].slice(-4).join(' | ')}]`.slice(0, 700) : '';
       return { status: 'done', text: `${clip(out.text, 2000 - why.length)}${why}`, tool_call_ids: toolCallIds, model };
@@ -435,4 +467,4 @@ function usedModel(desc, out) {
   return `${desc.provider}/${real}`;
 }
 
-module.exports = { askModel, classify, compact, runAgent, createMeter, BudgetError, toModelName, fromModelName, REPORT_TOOL };
+module.exports = { askModel, verdictInText, classify, compact, runAgent, createMeter, BudgetError, toModelName, fromModelName, REPORT_TOOL };
