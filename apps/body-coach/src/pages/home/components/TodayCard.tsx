@@ -1,10 +1,33 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCoach } from '@/components/feature/CoachContext';
+import { useAuth } from '@/components/feature/AuthContext';
+import { getUserDoc } from '@/lib/userData';
+import { buildWeekPlan, todayPlanDay } from '@/lib/trainingPlan';
 import Card from '@/components/base/Card';
 
 export default function TodayCard() {
   const navigate = useNavigate();
   const { setOpen } = useCoach();
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<any>(null);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    getUserDoc(user.id, 'profile', 'main')
+      .then((data) => {
+        if (data) setProfile(data);
+      })
+      .catch(() => {});
+  }, [user?.id]);
+
+  const weekPlan = profile?.onboarding ? buildWeekPlan(profile.onboarding) : null;
+  const day = weekPlan ? todayPlanDay(weekPlan) : null;
+
+  const title = day ? day.title : 'Treino de hoje';
+  const subtitle = day
+    ? `${day.subtitle || ''} • ${day.durationMin || 45} min`
+    : 'Abra o treino do seu plano e registre as séries na academia.';
 
   return (
     <Card className="relative overflow-hidden" padding="p-6">
@@ -14,9 +37,9 @@ export default function TodayCard() {
         Hoje
       </div>
       <h1 className="mt-3 font-heading text-2xl font-bold leading-tight text-foreground-950 md:text-[28px]">
-        Treino de hoje
+        {title}
       </h1>
-      <p className="mt-2 text-sm text-foreground-600">Abra o treino do seu plano e registre as séries na academia.</p>
+      <p className="mt-2 text-sm text-foreground-600">{subtitle}</p>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <button
