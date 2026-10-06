@@ -7,6 +7,7 @@ import { useProgressData } from '@/hooks/useProgressData';
 import BodyTwin from './components/BodyTwin';
 import ProgressCompare from './components/ProgressCompare';
 import RegisterProgress from './components/RegisterProgress';
+import PeriodoEAnalise from './components/PeriodoEAnalise';
 
 export default function Evolution() {
   const { user } = useAuth();
@@ -47,6 +48,8 @@ export default function Evolution() {
         </div>
         <RegisterProgress userId={user?.id} onSaved={reload} />
       </Card>
+
+      <PeriodoEAnalise entries={entries} />
 
       {!measured ? (
         <Card padding="p-5" className="flex flex-col items-center justify-center gap-4 text-center min-h-[300px]">
