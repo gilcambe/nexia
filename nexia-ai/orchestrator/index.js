@@ -32,7 +32,8 @@ const AI_WAITS = 9;
 // ── Intenção ─────────────────────────────────────────────────────────────────
 // Classificador por regras (determinístico e auditável). Ordem importa.
 const INTENT_RULES = [
-  ['deploy_production', /\b(produc[aã]o|production|prod)\b/],
+  // Só com verbo de publicar antes: "import.meta.env.PROD" ou "app em produção real" num pedido de código não é deploy.
+  ['deploy_production', /\b(publi\w*|deploy\w*|sub\w*|lanc\w*|coloq\w*|coloc\w*|promov\w*|mand\w*|leve|levar|envi\w*)\b[^.!?\n]{0,40}\b(produc[aã]o|production|prod)\b/],
   ['deploy_staging', /\b(staging|homologa[cç][aã]o)\b/],
   ['pipeline', /\b(pipeline|ci ?\/ ?cd|github actions|workflow)\b/],
   ['status', /\b(status|pendente|pendencias|o que mudou|ultimo deploy|quais|liste|mostre|compare|resuma)\b/],
