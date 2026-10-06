@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { buildWeekPlan } from '@/lib/trainingPlan';
+import { Link, useNavigate } from 'react-router-dom';
+import { buildWeekPlan, todayPlanDay, type Answers } from '@/lib/trainingPlan';
 import { getUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import Card from '@/components/base/Card';
@@ -14,21 +14,37 @@ const intensityMeta = {
 export default function Plan() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [done, setDone] = useState<Record<string, boolean>>({});
-  const [onboarding, setOnboarding] = useState<any>(null);
+  const [onboarding, setOnboarding] = useState<Answers | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user?.id) {
-      getUserDoc(user.id, 'profile', 'main').then((res) => {
-        if (res && res.onboarding) {
-          setOnboarding(res.onboarding);
-        }
-      });
-    }
+    if (!user?.id) return;
+    getUserDoc<{ onboarding?: Answers }>(user.id, 'profile', 'main')
+      .then((res) => setOnboarding(res?.onboarding ?? null))
+      .catch(() => setOnboarding(null))
+      .finally(() => setLoading(false));
   }, [user?.id]);
 
-  const plan = buildWeekPlan(onboarding);
-  const { planWeek, phases, planNotes } = plan;
+  const planWeek = onboarding ? buildWeekPlan(onboarding) : [];
+  const todayId = todayPlanDay(planWeek)?.id;
+  const weekMinutes = planWeek.reduce((a, d) => a + d.duration, 0);
+
+  if (loading) return <p className="text-sm text-foreground-500">Carregando...</p>;
+
+  if (!onboarding) {
+    return (
+      <Card padding="p-5">
+        <h1 className="font-heading text-xl font-bold text-foreground-950">Responda o questionário para montar seu plano</h1>
+        <p className="mt-2 text-sm text-foreground-600">Com seus dias livres, nível e objetivo, o plano da semana é montado na hora.</p>
+        <Link
+          to="/onboarding"
+          className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
+        >
+          Responder agora <i className="ri-arrow-right-line"></i>
+        </Link>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -36,54 +52,24 @@ export default function Plan() {
         <div>
           <h1 className="font-heading text-2xl font-bold text-foreground-950">Plano de treino</h1>
           <p className="mt-1 text-sm text-foreground-600">
-            {planWeek.length} sessões por semana · adaptativo à sua recuperação
+            {planWeek.length} sessões por semana · montado pelo seu questionário
           </p>
         </div>
         <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent-100 px-3 py-1.5 text-xs font-semibold text-accent-700">
-          <i className="ri-arrow-up-line"></i>
-          236 min esta semana
+          <i className="ri-time-line"></i>
+          {weekMinutes} min esta semana
         </span>
       </header>
-
-      {/* phases */}
-      <Card padding="p-5">
-        <div className="mb-4 flex items-center gap-2">
-          <i className="ri-route-line text-lg text-primary-500"></i>
-          <h2 className="font-heading text-base font-semibold text-foreground-950">Fases do ciclo</h2>
-        </div>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          {phases.map((p) => (
-            <div
-              key={p.id}
-              className={`rounded-xl border p-4 transition ${
-                p.current ? 'border-primary-300 bg-primary-100/60' : 'border-background-200 bg-background-100/50'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <p className="font-heading text-sm font-semibold text-foreground-900">{p.name}</p>
-                {p.current && (
-                  <span className="rounded-full bg-primary-500 px-2.5 py-0.5 text-[10px] font-semibold text-background-50">atual</span>
-                )}
-              </div>
-              <p className="mt-1 text-xs text-foreground-400">{p.period}</p>
-              <p className="mt-2 text-xs text-foreground-600">{p.objective}</p>
-              <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-background-200">
-                <div className={`h-full rounded-full ${p.current ? 'bg-primary-500' : 'bg-background-300'}`} style={{ width: `${p.distance}%` }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
 
       {/* week */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
         {planWeek.map((day) => {
-          const isDone = done[day.id] ?? day.done ?? false;
-          const isNext = day.next;
+          const isDone = false;
+          const isNext = day.id === todayId;
           return (
             <button
               key={day.id}
-              onClick={() => !isNext && !isDone && navigate('/workout')}
+              onClick={() => isNext && navigate('/workout')}
               className={`relative flex flex-col rounded-2xl border p-4 text-left transition ${
                 isDone
                   ? 'border-accent-200 bg-accent-100/50'
@@ -127,15 +113,6 @@ export default function Plan() {
         })}
       </div>
 
-      <Card padding="p-5">
-        <div className="flex items-start gap-3">
-          <i className="ri-robot-2-line mt-0.5 text-primary-600"></i>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary-700">Como o plano se adapta</p>
-            <p className="mt-1 text-sm text-foreground-700">{planNotes}</p>
-          </div>
-        </div>
-      </Card>
     </div>
   );
 }
