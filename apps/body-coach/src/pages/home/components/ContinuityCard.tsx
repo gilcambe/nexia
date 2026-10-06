@@ -14,6 +14,7 @@ export default function ContinuityCard() {
   const { user } = useAuth();
 
   let lastWorkout: WorkoutRecord | null = null;
+  let total = 0;
   if (user?.id) {
     try {
       const stored = localStorage.getItem('bc_workouts_' + user.id);
@@ -21,6 +22,7 @@ export default function ContinuityCard() {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
           lastWorkout = parsed[parsed.length - 1];
+          total = parsed.length;
         }
       }
     } catch {
@@ -39,39 +41,34 @@ export default function ContinuityCard() {
 
       {lastWorkout ? (
         <div className="space-y-4">
-          <div className="rounded-xl bg-surface-100 p-4 dark:bg-surface-800">
+          <div className="rounded-xl bg-background-100/70 p-4">
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-medium text-foreground-950">{lastWorkout.title || 'Treino realizado'}</h3>
                 {lastWorkout.done_at && (
                   <p className="text-xs text-foreground-500 mt-0.5">
-                    {new Date(lastWorkout.done_at).toLocaleDateString()}
+                    {new Date(lastWorkout.done_at).toLocaleDateString('pt-BR')}
                   </p>
                 )}
               </div>
-              <Link
-                to="/history"
-                className="text-xs font-medium text-primary-500 hover:underline"
-              >
-                Ver histórico
-              </Link>
+              <span className="text-xs text-foreground-500">{total} {total === 1 ? 'treino' : 'treinos'}</span>
             </div>
             
             <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
               {lastWorkout.duration_min !== undefined && (
-                <div className="rounded-lg bg-surface-200/50 p-2 dark:bg-surface-700/50">
+                <div className="rounded-lg bg-background-50 p-2">
                   <span className="block text-foreground-500">Duração</span>
                   <span className="font-semibold text-foreground-900">{lastWorkout.duration_min} min</span>
                 </div>
               )}
               {lastWorkout.sets !== undefined && (
-                <div className="rounded-lg bg-surface-200/50 p-2 dark:bg-surface-700/50">
+                <div className="rounded-lg bg-background-50 p-2">
                   <span className="block text-foreground-500">Séries</span>
                   <span className="font-semibold text-foreground-900">{lastWorkout.sets}</span>
                 </div>
               )}
               {lastWorkout.volume_kg !== undefined && (
-                <div className="rounded-lg bg-surface-200/50 p-2 dark:bg-surface-700/50">
+                <div className="rounded-lg bg-background-50 p-2">
                   <span className="block text-foreground-500">Volume</span>
                   <span className="font-semibold text-foreground-900">{lastWorkout.volume_kg} kg</span>
                 </div>
