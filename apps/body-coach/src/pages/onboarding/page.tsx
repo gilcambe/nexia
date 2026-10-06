@@ -52,7 +52,7 @@ export default function Onboarding() {
       }
     }
     setSaving(false);
-    navigate('/');
+    navigate('/', { replace: true });
   };
 
   return (
