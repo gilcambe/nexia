@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { session, sessionReview, type SetLog } from '@/mocks/workout';
+import { Link } from 'react-router-dom';
+import { sessionReview, type SetLog, type Session } from '@/mocks/workout';
+import { buildWeekPlan, todaysSession } from '@/mocks/plan';
 import SetEntry, { type NewSet } from './components/SetEntry';
 
 type Phase =
@@ -21,6 +23,9 @@ export default function Workout() {
   const [restLeft, setRestLeft] = useState(0);
   const [resting, setResting] = useState(false);
   const [cardioDone, setCardioDone] = useState(false);
+
+  const weekPlan = buildWeekPlan();
+  const session: Session = todaysSession(weekPlan);
 
   const exercise = session.exercises[exIndex] ?? session.exercises[0];
 
