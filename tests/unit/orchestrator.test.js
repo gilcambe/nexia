@@ -20,6 +20,8 @@ test('U1. intenção por regras (spec §29) e especialista pelo assunto', () => 
     // Pedido de edição sem os verbos antigos (antes caía em "question" e nada era gravado).
     ['No app, edite só o arquivo AuthContext.tsx: apague o bloco do login de teste', 'change'],
     ['Substitua o texto do rodapé', 'change'], ['Exclua a página de código', 'change'],
+    // Verbo de mudança antes de "mostre"/"liste": é mudança (o questionário caía em status e nada era gravado).
+    ['Altere o questionário para salvar e mostre "Salvando..." no botão', 'change'], ['Liste os PRs e corrija o primeiro', 'status'],
     // "PROD" em código ou "produção" sem verbo de publicar não é deploy.
     ['Adicione o service worker só quando import.meta.env.PROD for verdadeiro', 'change'],
     ['Corrija o login para funcionar em produção real', 'change'],
