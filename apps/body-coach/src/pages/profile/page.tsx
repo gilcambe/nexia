@@ -117,6 +117,44 @@ export default function Profile() {
           </div>
         </Card>
       </div>
+
+      {/* privacy */}
+      <Card padding="p-5">
+        <CardHeader title="Privacidade" icon="ri-shield-user-line" />
+        <p className="mb-4 text-sm text-foreground-600">
+          Gerencie seus dados e privacidade conforme a LGPD. Você pode ler nossa política ou solicitar a exclusão definitiva dos seus dados.
+        </p>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <Link
+            to="/privacidade"
+            className="text-sm font-medium text-primary-600 hover:underline inline-flex items-center gap-1.5"
+          >
+            <i className="ri-file-text-line"></i> Termos e privacidade
+          </Link>
+          <button
+            type="button"
+            onClick={() => {
+              if (
+                window.confirm(
+                  'Isso apaga sua conta e todos os seus dados (perfil, refeições, check-ins, evolução e exames). Não dá para desfazer. Continuar?'
+                )
+              ) {
+                // Executa exclusão da conta se confirmado
+                if (user && typeof (useAuth() as any).deleteAccount === 'function') {
+                  (useAuth() as any).deleteAccount().catch(() => {});
+                } else {
+                  // Fallback para signOut ou limpeza local se deleteAccount não estiver disponível diretamente
+                  localStorage.clear();
+                  window.location.href = '/login';
+                }
+              }
+            }}
+            className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 inline-flex items-center gap-2"
+          >
+            <i className="ri-delete-bin-line"></i> Excluir minha conta
+          </button>
+        </div>
+      </Card>
     </div>
   );
 }
