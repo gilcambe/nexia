@@ -1,5 +1,19 @@
-import { athlete } from '@/mocks/athlete';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@/components/feature/AuthContext';
+import { getUserDoc } from '@/lib/userData';
 import Card, { CardHeader } from '@/components/base/Card';
+
+type Answers = Record<string, string | string[] | undefined>;
+interface SavedProfile {
+  full_name?: string | null;
+  email?: string | null;
+  height_cm?: number | null;
+  onboarding?: Answers;
+}
+
+const MISSING = 'Não informado';
+const text = (v: unknown, suffix = '') => (typeof v === 'string' && v.trim() ? `${v.trim()}${suffix}` : MISSING);
 
 function InfoRow({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
@@ -8,12 +22,35 @@ function InfoRow({ label, value, icon }: { label: string; value: string; icon: s
         <i className={`${icon} text-primary-500`}></i>
         {label}
       </span>
-      <span className="text-sm font-medium capitalize text-foreground-900">{value}</span>
+      <span className="text-sm font-medium text-foreground-900">{value}</span>
+    </div>
+  );
+}
+
+function TextBlock({ label, value }: { label: string; value: unknown }) {
+  return (
+    <div>
+      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">{label}</p>
+      <div className="rounded-lg bg-background-100/70 p-3 text-sm text-foreground-700">{text(value)}</div>
     </div>
   );
 }
 
 export default function Profile() {
+  const { user, profile } = useAuth();
+  // Lê o perfil salvo de novo ao abrir a página: o questionário pode ter acabado de gravar as respostas.
+  const [saved, setSaved] = useState<SavedProfile | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    getUserDoc<SavedProfile>(user.id, 'profile', 'main').then(setSaved).catch(() => {});
+  }, [user]);
+
+  const data: SavedProfile = { ...(profile ?? {}), ...(saved ?? {}) };
+  const ob: Answers = data.onboarding ?? {};
+  const name = data.full_name || (typeof ob.name === 'string' && ob.name.trim()) || user?.email || MISSING;
+  const height = data.height_cm ? `${data.height_cm} cm` : text(ob.height, ' cm');
+  const modality = Array.isArray(ob.modality) ? ob.modality : [];
+
   return (
     <div className="space-y-6">
       <header>
@@ -21,17 +58,28 @@ export default function Profile() {
         <p className="mt-1 text-sm text-foreground-600">Identidade, saúde e preferências do atleta.</p>
       </header>
 
+      {!data.onboarding && (
+        <Card padding="p-5">
+          <CardHeader title="Complete seu perfil" icon="ri-user-add-line" />
+          <p className="text-sm text-foreground-600">Responda o questionário inicial para o coach montar seu plano.</p>
+          <Link
+            to="/onboarding"
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
+          >
+            Responder agora <i className="ri-arrow-right-line"></i>
+          </Link>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* identity */}
         <Card padding="p-5">
           <CardHeader title="Identidade" icon="ri-user-3-line" />
           <div className="space-y-2">
-            <InfoRow icon="ri-user-3-line" label="Nome" value={athlete.name} />
-            <InfoRow icon="ri-calendar-line" label="Idade" value={`${athlete.age} anos`} />
-            <InfoRow icon="ri-arrow-up-line" label="Altura" value={`${athlete.height} cm`} />
-            <InfoRow icon="ri-scales-line" label="Peso" value={`${athlete.weight} kg`} />
-            <InfoRow icon="ri-drop-line" label="Cintura" value={`${athlete.waist} cm`} />
-            <InfoRow icon="ri-planet-line" label="País" value={athlete.country} />
+            <InfoRow icon="ri-user-3-line" label="Nome" value={name} />
+            <InfoRow icon="ri-calendar-line" label="Idade" value={text(ob.age, ' anos')} />
+            <InfoRow icon="ri-ruler-line" label="Altura" value={height} />
+            <InfoRow icon="ri-scales-3-line" label="Peso" value={text(ob.weight, ' kg')} />
           </div>
         </Card>
 
@@ -39,98 +87,33 @@ export default function Profile() {
         <Card padding="p-5">
           <CardHeader title="Objetivo &amp; treino" icon="ri-sword-line" />
           <div className="space-y-2">
-            <InfoRow icon="ri-trophy-line" label="Objetivo" value={athlete.goal} />
-            <InfoRow icon="ri-layout-grid-line" label="Nível" value={athlete.level} />
-            <InfoRow icon="ri-calendar-line" label="Disponibilidade" value={`${athlete.availabilityDays}x/semana`} />
-            <InfoRow icon="ri-time-line" label="Duração por sessão" value={`${athlete.sessionMinutes} min`} />
+            <InfoRow icon="ri-trophy-line" label="Objetivo" value={text(ob.goal)} />
+            <InfoRow icon="ri-bar-chart-line" label="Nível" value={text(ob.level)} />
+            <InfoRow icon="ri-calendar-check-line" label="Disponibilidade" value={text(ob.days, 'x/semana')} />
+            <InfoRow icon="ri-time-line" label="Duração" value={text(ob.minutes, ' min')} />
           </div>
           <div className="mt-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Modalidades</p>
-            <div className="flex flex-wrap gap-2">
-              {athlete.modality.map((m) => (
-                <span key={m} className="rounded-full bg-background-100 px-3 py-1.5 text-xs text-foreground-700">
-                  {m === 'musculacao' ? 'Musculação' : 'Powerlifting'}
-                </span>
-              ))}
-            </div>
-          </div>
-        </Card>
-
-        {/* preferences */}
-        <Card padding="p-5">
-          <CardHeader title="Preferências" icon="ri-fire-line" />
-          <div className="space-y-3">
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Exercícios preferidos</p>
+            {modality.length > 0 ? (
               <div className="flex flex-wrap gap-2">
-                {athlete.preferredExercises.map((e) => (
-                  <span key={e} className="rounded-full bg-accent-100 px-3 py-1.5 text-xs text-accent-800 capitalize">{e}</span>
+                {modality.map((m) => (
+                  <span key={m} className="rounded-full bg-background-100 px-3 py-1.5 text-xs text-foreground-700">{m}</span>
                 ))}
               </div>
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Exercícios evitados</p>
-              <div className="flex flex-wrap gap-2">
-                {athlete.avoidedExercises.map((e) => (
-                  <span key={e} className="rounded-full bg-primary-100 px-3 py-1.5 text-xs text-primary-700 capitalize">{e}</span>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Equipamentos</p>
-              <div className="flex flex-wrap gap-2">
-                {athlete.equipment.map((e) => (
-                  <span key={e} className="rounded-full bg-background-100 px-3 py-1.5 text-xs text-foreground-700 capitalize">{e === 'pesos_livres' ? 'Pesos livres' : 'Máquinas'}</span>
-                ))}
-              </div>
-            </div>
+            ) : (
+              <p className="text-sm text-foreground-500">{MISSING}</p>
+            )}
           </div>
         </Card>
 
         {/* health */}
         <Card padding="p-5">
           <CardHeader title="Saúde &amp; segurança" icon="ri-heart-pulse-line" />
-          <p className="mb-3 text-xs text-foreground-500">
-            Histórico e sintomas são armazenados separadamente, com status e data. O sistema não diagnostica e não altera medicamentos.
-          </p>
+          <p className="mb-3 text-xs text-foreground-500">O sistema não diagnostica e não altera medicamentos.</p>
           <div className="space-y-3">
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Histórico médico</p>
-              <div className="rounded-lg bg-background-100/70 p-3 text-sm text-foreground-700">
-                {athlete.medical.medicalHistory.join(' · ')}
-              </div>
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Lesões anteriores</p>
-              <div className="space-y-1.5">
-                {athlete.medical.pastInjuries.map((i) => (
-                  <div key={i.name} className="flex items-center justify-between rounded-lg bg-background-100/70 px-3 py-2">
-                    <span className="text-sm text-foreground-700">{i.name}</span>
-                    <span className="text-[11px] text-foreground-400">{i.date} · {i.status === 'estavel' ? 'estável' : i.status}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Limitações conhecidas</p>
-              <div className="flex flex-wrap gap-2">
-                {athlete.medical.knownLimitations.map((l) => (
-                  <span key={l} className="rounded-full bg-accent-100 px-3 py-1.5 text-xs text-accent-800">{l}</span>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Sintomas atuais</p>
-              <div className="rounded-lg bg-accent-100/60 p-3 text-sm text-accent-800">
-                {athlete.medical.currentSymptoms.join(' · ')}
-              </div>
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Medicamentos</p>
-              <div className="rounded-lg bg-background-100/70 p-3 text-sm text-foreground-700">
-                {athlete.medical.medications.length ? athlete.medical.medications.join(' · ') : 'Nenhum informado'}
-              </div>
-            </div>
+            <TextBlock label="Histórico médico" value={ob.history} />
+            <TextBlock label="Lesões anteriores" value={ob.injuries} />
+            <TextBlock label="Sintomas atuais" value={ob.symptoms} />
           </div>
         </Card>
       </div>
