@@ -11,7 +11,6 @@ import Profile from "../pages/profile/page";
 import Team from "../pages/team/page";
 import Exams from "../pages/exams/page";
 import AntiDoping from "../pages/antidoping/page";
-import CodePage from "../pages/code/page";
 import Onboarding from "../pages/onboarding/page";
 import Auth from "../pages/auth/page";
 
@@ -41,7 +40,6 @@ const routes: RouteObject[] = [
       { path: "team", element: <Team /> },
       { path: "exams", element: <Exams /> },
       { path: "antidoping", element: <AntiDoping /> },
-      { path: "code", element: <CodePage /> },
     ],
   },
   {
