@@ -497,8 +497,10 @@ function createOrchestrator(deps) {
             const c = await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch });
             if (c.status !== 'succeeded' || !c.result.ahead_by || (before && headOf(c) === before)) {
               const why = fix ? `A rodada de correção terminou sem commit novo; a revisão continua pedindo mudanças (branch ${state.work_branch}).` : 'O agente terminou sem commit na branch de trabalho; nada foi alterado.';
-              // O que o agente disse (e as gravações recusadas) fica no passo para diagnóstico.
-              const said = steps[i].status === 'done' && steps[i].summary ? ` Agente: ${String(steps[i].summary).slice(0, 900)}` : '';
+              // O que o agente disse (e as gravações recusadas) fica no passo para diagnóstico. As recusas
+              // ("[nada gravado; recusas: ...]") vêm no fim do texto: guarda começo e fim.
+              const sum = String(steps[i].summary || '');
+              const said = steps[i].status === 'done' && sum ? ` Agente: ${sum.length <= 1500 ? sum : `${sum.slice(0, 700)}\n…\n${sum.slice(-800)}`}` : '';
               stepFail(i, { tool_call_ids: addIds(i, ids(c)), error_code: 'NO_CHANGES', summary: `${fix ? 'Sem commit novo na rodada de correção.' : 'Nenhum commit na branch de trabalho; nada foi alterado.'}${said}` });
               stop = { status: 'failed', error_code: 'NO_CHANGES', result_summary: why };
             } else steps[i] = { ...steps[i], tool_call_ids: addIds(i, ids(c)), summary: `${steps[i].summary || ''}\n${c.result.ahead_by} commit(s), ${c.result.files.length} arquivo(s): ${c.result.files.map(f => f.path).slice(0, 10).join(', ')}`.trim().slice(0, 2000) };
