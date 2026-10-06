@@ -22,6 +22,10 @@ export type BodyCoachCollection =
   | 'progress_entries'
   | 'medical_exams';
 
+function chaveLocal(uid: string, coll: BodyCoachCollection, id: string): string {
+  return `bc_doc_${uid}_${coll}_${id}`;
+}
+
 async function db() {
   const fb = await getFirebase();
   if (!fb) throw new Error('Não consegui falar com o servidor agora. Tente novamente em instantes.');
@@ -40,9 +44,27 @@ export async function listUserDocs<T>(
   return snap.docs.map((d) => ({ ...(d.data() as T), _docId: d.id }));
 }
 
+// Cópia no aparelho do perfil (respostas do questionário): se o banco recusar ou estiver fora,
+// o app continua usando as respostas salvas no celular. Só o perfil, para não lotar o armazenamento com fotos.
+function lerLocal<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getUserDoc<T>(uid: string, coll: BodyCoachCollection, id: string): Promise<T | null> {
-  const snap = await getDoc(doc(await db(), 'bodycoach_users', uid, coll, id));
-  return snap.exists() ? (snap.data() as T) : null;
+  const key = chaveLocal(uid, coll, id);
+  try {
+    const snap = await getDoc(doc(await db(), 'bodycoach_users', uid, coll, id));
+    if (snap.exists()) return snap.data() as T;
+  } catch (err) {
+    if (coll !== 'profile') throw err;
+    console.warn('Banco indisponível; usando a cópia do aparelho.', err);
+  }
+  return coll === 'profile' ? lerLocal<T>(key) : null;
 }
 
 // Grava (cria ou substitui) um documento. Campos undefined viram null.
@@ -54,7 +76,21 @@ export async function setUserDoc(
   merge = false,
 ): Promise<void> {
   const clean = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v === undefined ? null : v]));
-  await setDoc(doc(await db(), 'bodycoach_users', uid, coll, id), clean, { merge });
+  if (coll === 'profile') {
+    const key = chaveLocal(uid, coll, id);
+    try {
+      const antes = merge ? lerLocal<Record<string, unknown>>(key) ?? {} : {};
+      localStorage.setItem(key, JSON.stringify({ ...antes, ...clean }));
+    } catch {
+      // Armazenamento cheio ou bloqueado: segue só com o banco.
+    }
+  }
+  try {
+    await setDoc(doc(await db(), 'bodycoach_users', uid, coll, id), clean, { merge });
+  } catch (err) {
+    if (coll !== 'profile') throw err;
+    console.warn('O banco recusou a gravação; o perfil ficou salvo no aparelho.', err);
+  }
 }
 
 export async function deleteUserDoc(uid: string, coll: BodyCoachCollection, id: string): Promise<void> {
