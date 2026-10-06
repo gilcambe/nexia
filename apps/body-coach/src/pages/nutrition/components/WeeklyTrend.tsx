@@ -5,17 +5,11 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/feature/AuthContext';
 import { listUserDocs } from '@/lib/userData';
 
-interface MealItem {
-  name: string;
-  calories: number;
-  protein: number;
-}
-
+// Refeição como é gravada em bodycoach_users/{uid}/meals (created_at em ISO).
 interface Meal {
-  created_at: {
-    toDate: () => Date;
-  };
-  items: MealItem[];
+  created_at?: string;
+  calories?: number;
+  protein?: number;
 }
 
 interface DailyData {
@@ -24,6 +18,10 @@ interface DailyData {
   protein: number;
 }
 
+const WEEKDAYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+const dayKey = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
 export default function WeeklyTrend() {
   const { user } = useAuth();
   const [weeklyData, setWeeklyData] = useState<DailyData[]>([]);
@@ -31,70 +29,59 @@ export default function WeeklyTrend() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchWeeklyMeals = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        setError("User not authenticated.");
-        return;
-      }
-
-      setLoading(true);
-      setError(null);
-      try {
-        const meals = await listUserDocs<Meal>(user.id, 'meals', 'created_at', 'asc');
-
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-        const filteredMeals = meals.filter(meal => meal.created_at.toDate() >= sevenDaysAgo);
-
-        const dailyAggregates: { [key: string]: { calories: number; protein: number } } = {};
-
-        filteredMeals.forEach(meal => {
-          const date = meal.created_at.toDate();
-          const dayLabel = date.toLocaleDateString('pt-BR', { weekday: 'short' });
-
-          if (!dailyAggregates[dayLabel]) {
-            dailyAggregates[dayLabel] = { calories: 0, protein: 0 };
-          }
-
-          meal.items.forEach(item => {
-            dailyAggregates[dayLabel].calories += item.calories;
-            dailyAggregates[dayLabel].protein += item.protein;
-          });
-        });
-
-        const last7Days: DailyData[] = [];
-        for (let i = 6; i >= 0; i--) {
-          const date = new Date();
-          date.setDate(date.getDate() - i);
-          const dayLabel = date.toLocaleDateString('pt-BR', { weekday: 'short' });
-          last7Days.push({
-            label: dayLabel,
-            calories: dailyAggregates[dayLabel]?.calories || 0,
-            protein: dailyAggregates[dayLabel]?.protein || 0,
-          });
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+    let active = true;
+    setLoading(true);
+    setError(null);
+    listUserDocs<Meal>(user.id, 'meals', 'created_at', 'asc')
+      .then((meals) => {
+        if (!active) return;
+        const byDay: Record<string, { calories: number; protein: number }> = {};
+        for (const m of meals) {
+          const k = typeof m.created_at === 'string' ? dayKey(new Date(m.created_at)) : null;
+          if (!k) continue;
+          byDay[k] ??= { calories: 0, protein: 0 };
+          byDay[k].calories += Number(m.calories) || 0;
+          byDay[k].protein += Number(m.protein) || 0;
         }
-        setWeeklyData(last7Days);
-      } catch (err) {
-        console.error("Failed to fetch weekly meals:", err);
-        setError("Failed to load weekly nutrition data.");
-      } finally {
-        setLoading(false);
-      }
+        const days: DailyData[] = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setDate(d.getDate() - i);
+          const v = byDay[dayKey(d)] ?? { calories: 0, protein: 0 };
+          days.push({ label: WEEKDAYS[d.getDay()], calories: Math.round(v.calories), protein: Math.round(v.protein) });
+        }
+        setWeeklyData(days);
+      })
+      .catch(() => {
+        if (active) setError('Não foi possível carregar a tendência da semana.');
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
     };
-
-    fetchWeeklyMeals();
   }, [user?.id]);
 
   if (loading) {
-    return <div className="h-56 w-full flex items-center justify-center">Carregando dados...</div>;
+    return <div className="flex h-56 w-full items-center justify-center text-sm text-foreground-500">Carregando...</div>;
   }
 
   if (error) {
-    return <div className="h-56 w-full flex items-center justify-center text-red-500">{error}</div>;
+    return <div className="flex h-56 w-full items-center justify-center text-sm text-red-600">{error}</div>;
   }
 
+  if (!weeklyData.some((d) => d.calories > 0 || d.protein > 0)) {
+    return (
+      <div className="flex h-56 w-full items-center justify-center px-4 text-center text-sm text-foreground-500">
+        Registre suas refeições para ver a tendência da semana.
+      </div>
+    );
+  }
 
   return (
     <div className="h-56 w-full">
