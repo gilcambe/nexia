@@ -16,15 +16,8 @@ import {
 } from 'firebase/auth';
 import { getFirebase } from '@/lib/firebaseClient';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
-import {
-  LOCAL_DEMO_EMAIL,
-  LOCAL_DEMO_PASSWORD,
-  LOCAL_DEMO_USER_ID,
-  isLocalDemoActive,
-  enableLocalDemo,
-  disableLocalDemo,
-} from '@/lib/localDemo';
-import { localDemoProfile } from '@/mocks/localDemo';
+
+
 
 export interface AthleteProfile {
   id: string;
@@ -45,18 +38,6 @@ export interface User {
   user_metadata: { full_name?: string | null };
 }
 
-// Usuário sintético usado no MODO LOCAL (sem backend).
-const localDemoUser: User = {
-  id: LOCAL_DEMO_USER_ID,
-  email: LOCAL_DEMO_EMAIL,
-  user_metadata: { full_name: localDemoProfile.full_name },
-};
-
-const localDemoAthleteProfile: AthleteProfile = {
-  id: LOCAL_DEMO_USER_ID,
-  ...localDemoProfile,
-};
-
 function toAppUser(u: FirebaseUser): User {
   return { id: u.uid, email: u.email, user_metadata: { full_name: u.displayName } };
 }
@@ -65,7 +46,6 @@ interface AuthContextValue {
   user: User | null;
   profile: AthleteProfile | null;
   loading: boolean;
-  isLocalDemo: boolean;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signUp: (
     email: string,
@@ -78,7 +58,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const OFFLINE_MESSAGE =
-  'Não consegui falar com o servidor agora. Verifique sua conexão e tente novamente — ou use o acesso de teste (admin / admin01).';
+  'Não consegui falar com o servidor agora. Verifique sua conexão e tente novamente.';
 
 // Normaliza erros do Firebase Auth para mensagens claras em português.
 function friendlyAuthError(err: unknown): string {
@@ -104,7 +84,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<AthleteProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [localDemo, setLocalDemo] = useState<boolean>(() => isLocalDemoActive());
 
   const fetchProfile = useCallback((uid: string) => {
     getUserDoc<Omit<AthleteProfile, 'id'>>(uid, 'profile', 'main')
@@ -114,18 +93,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-
-    // MODO LOCAL: nenhum acesso ao backend. Usamos um usuário/perfil de exemplo
-    // para liberar todas as telas e permitir testar a interface completa.
-    if (localDemo) {
-      setUser(localDemoUser);
-      setProfile(localDemoAthleteProfile);
-      setLoading(false);
-      return () => {
-        mounted = false;
-      };
-    }
-
     let unsubscribe: (() => void) | null = null;
     getFirebase()
       .then((fb) => {
@@ -155,20 +122,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       mounted = false;
       if (unsubscribe) unsubscribe();
     };
-  }, [fetchProfile, localDemo]);
+  }, [fetchProfile]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    // Acesso de teste local: admin / admin01 (não depende do backend).
-    const normalized = email.trim().toLowerCase();
-    if (normalized === LOCAL_DEMO_EMAIL && password === LOCAL_DEMO_PASSWORD) {
-      enableLocalDemo();
-      setLocalDemo(true);
-      setUser(localDemoUser);
-      setProfile(localDemoAthleteProfile);
-      setLoading(false);
-      return { error: null };
-    }
-
     try {
       const fb = await getFirebase();
       if (!fb) return { error: OFFLINE_MESSAGE };
@@ -218,13 +174,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const signOut = useCallback(async () => {
-    if (isLocalDemoActive()) {
-      disableLocalDemo();
-      setLocalDemo(false);
-      setUser(null);
-      setProfile(null);
-      return;
-    }
     const fb = await getFirebase();
     if (fb) await firebaseSignOut(fb.auth).catch(() => {});
     setUser(null);
@@ -233,7 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, isLocalDemo: localDemo, signIn, signUp, signOut }}
+      value={{ user, profile, loading, signIn, signUp, signOut }}
     >
       {children}
     </AuthContext.Provider>
