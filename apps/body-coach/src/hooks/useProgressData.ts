@@ -132,12 +132,7 @@ export function useProgressData(userId: string | undefined): ProgressData {
 
         setEntries(withSigned);
 
-        if (profileData) {
-          const p = profileData;
-          if (p.height_cm) setHeight(p.height_cm);
-          if (p.goal_body_fat_pct) setGoalBodyFat(p.goal_body_fat_pct);
-          setGoalWeight(p.goal_weight_kg ?? null);
-        }
+        const onboardingData = await getUserDoc<{\n          height?: string | number | null;\n        }>(userId, 'onboarding', 'main').catch(() => null);\n\n        if (!active) return;\n\n        setEntries(withSigned);\n\n        // Regras para height:\n        // 1. perfil quando existir (height_cm)\n        // 2. quando o perfil não tiver height_cm, use a altura do questionário Number(onboarding.height) se for maior que 0\n        // 3. só se nenhum existir use 170\n        let resolvedHeight = 170;\n        if (profileData && profileData.height_cm && Number(profileData.height_cm) > 0) {\n          resolvedHeight = Number(profileData.height_cm);\n        } else if (onboardingData && onboardingData.height != null && Number(onboardingData.height) > 0) {\n          resolvedHeight = Number(onboardingData.height);\n        }\n        setHeight(resolvedHeight);\n\n        // Regras para goalBodyFat:\n        // 1. perfil quando existir (goal_body_fat_pct)\n        // 2. quando não tiver goal_body_fat_pct use 15\n        let resolvedGoalBodyFat = 15;\n        if (profileData && profileData.goal_body_fat_pct != null && Number(profileData.goal_body_fat_pct) > 0) {\n          resolvedGoalBodyFat = Number(profileData.goal_body_fat_pct);\n        }\n        setGoalBodyFat(resolvedGoalBodyFat);\n\n        if (profileData) {\n          setGoalWeight(profileData.goal_weight_kg ?? null);\n        }
       } catch (err) {
         if (active) setError('Não foi possível carregar seus dados de progresso.');
       } finally {
