@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/components/feature/AuthContext';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { getFirebase } from '@/lib/firebaseClient';
 
 
 type Mode = 'login' | 'signup';
@@ -21,6 +23,29 @@ export default function Auth() {
     setMode(m);
     setError(null);
     setInfo(null);
+  };
+
+  const handleForgot = async () => {
+    setError(null);
+    setInfo(null);
+    if (!email.trim()) {
+      setError('Informe seu e-mail para recuperar a senha.');
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const handles = await getFirebase();
+      if (!handles) {
+        setError('Serviço de autenticação indisponível no momento.');
+        return;
+      }
+      await sendPasswordResetEmail(handles.auth, email.trim());
+      setInfo('Enviamos um link de redefinição para o seu e-mail.');
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao enviar e-mail de redefinição.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   
@@ -153,7 +178,18 @@ export default function Auth() {
             </label>
 
             <label className="flex flex-col gap-1.5">
-              <span className="text-sm font-medium text-foreground-600">Senha</span>
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-foreground-600">Senha</span>
+                {mode === 'login' && (
+                  <button
+                    type="button"
+                    onClick={handleForgot}
+                    className="text-xs text-primary-600 hover:underline"
+                  >
+                    Esqueci minha senha
+                  </button>
+                )}
+              </div>
               <input
                 type="password"
                 value={password}
