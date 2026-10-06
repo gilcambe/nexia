@@ -15,7 +15,7 @@ const navItems = [
   { to: '/exams', label: 'Saúde', icon: 'ri-stethoscope-line' },
   { to: '/antidoping', label: 'Anti-Doping', icon: 'ri-shield-check-line' },
   { to: '/profile', label: 'Perfil', icon: 'ri-user-3-line' },
-  { to: '/code', label: 'Código', icon: 'ri-code-s-slash-line' },
+
 ];
 
 function BrandMark({ size = 'md' }: { size?: 'md' | 'sm' }) {
