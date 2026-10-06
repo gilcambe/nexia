@@ -44,42 +44,27 @@ export async function listUserDocs<T>(
   return snap.docs.map((d) => ({ ...(d.data() as T), _docId: d.id }));
 }
 
+// Cópia no aparelho do perfil (respostas do questionário): se o banco recusar ou estiver fora,
+// o app continua usando as respostas salvas no celular. Só o perfil, para não lotar o armazenamento com fotos.
+function lerLocal<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getUserDoc<T>(uid: string, coll: BodyCoachCollection, id: string): Promise<T | null> {
   const key = chaveLocal(uid, coll, id);
   try {
     const snap = await getDoc(doc(await db(), 'bodycoach_users', uid, coll, id));
-    if (snap.exists()) {
-      const data = snap.data() as T;
-      try {
-        localStorage.setItem(key, JSON.stringify(data));
-      } catch {
-        // Ignora erro de localStorage
-      }
-      return data;
-    }
+    if (snap.exists()) return snap.data() as T;
   } catch (err) {
-    // Falha de rede ou banco: tenta o fallback local
-    const local = localStorage.getItem(key);
-    if (local) {
-      try {
-        return JSON.parse(local) as T;
-      } catch {
-        // JSON inválido
-      }
-    }
-    throw err;
+    if (coll !== 'profile') throw err;
+    console.warn('Banco indisponível; usando a cópia do aparelho.', err);
   }
-
-  // Se não existe no banco, tenta o cache local caso exista
-  const local = localStorage.getItem(key);
-  if (local) {
-    try {
-      return JSON.parse(local) as T;
-    } catch {
-      // JSON inválido
-    }
-  }
-  return null;
+  return coll === 'profile' ? lerLocal<T>(key) : null;
 }
 
 // Grava (cria ou substitui) um documento. Campos undefined viram null.
@@ -91,30 +76,20 @@ export async function setUserDoc(
   merge = false,
 ): Promise<void> {
   const clean = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v === undefined ? null : v]));
-  const key = chaveLocal(uid, coll, id);
-  
-  // Lê o que já existe em localStorage antes de atualizar
-  const existente = localStorage.getItem(key);
-  
-  // Guarda uma cópia no aparelho antes de gravar no banco
-  try {
-    localStorage.setItem(key, JSON.stringify(clean));
-  } catch {
-    // Ignora erro de localStorage cheio/indisponível
+  if (coll === 'profile') {
+    const key = chaveLocal(uid, coll, id);
+    try {
+      const antes = merge ? lerLocal<Record<string, unknown>>(key) ?? {} : {};
+      localStorage.setItem(key, JSON.stringify({ ...antes, ...clean }));
+    } catch {
+      // Armazenamento cheio ou bloqueado: segue só com o banco.
+    }
   }
-
   try {
     await setDoc(doc(await db(), 'bodycoach_users', uid, coll, id), clean, { merge });
   } catch (err) {
-    // Se o banco recusar ou falhar, restaura o dado anterior (se houver) ou mantém o salvo no localStorage
-    if (existente) {
-      try {
-        localStorage.setItem(key, existente);
-      } catch {
-        // Ignora
-      }
-    }
-    throw err;
+    if (coll !== 'profile') throw err;
+    console.warn('O banco recusou a gravação; o perfil ficou salvo no aparelho.', err);
   }
 }
 
