@@ -6,6 +6,7 @@ import MealList from './components/MealList';
 import WaterTracker from './components/WaterTracker';
 import WeeklyTrend from './components/WeeklyTrend';
 import AddMealModal from './components/AddMealModal';
+import CardapioDoDia from './components/CardapioDoDia';
 
 export default function Nutrition() {
   const { meals, water, waterGoal, targets, addMeal, removeMeal, addWater, resetWater, loading, error, reload } = useNutrition();
@@ -35,6 +36,8 @@ export default function Nutrition() {
       <Card padding="p-6">
         <MacroSummary meals={meals} targets={targets} />
       </Card>
+
+      <CardapioDoDia />
 
       {/* weekly trend */}
       <Card padding="p-5">
