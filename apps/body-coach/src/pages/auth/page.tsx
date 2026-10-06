@@ -230,7 +230,11 @@ export default function Auth() {
         </div>
 
         <p className="mt-6 text-center text-xs text-foreground-400">
-          Ao continuar, você concorda com nossos termos de uso e privacidade.
+          Ao continuar, você concorda com nossos{' '}
+          <Link to="/privacidade" className="underline">
+            termos de uso e privacidade
+          </Link>
+          .
         </p>
 
         <p className="mt-4 text-center">
