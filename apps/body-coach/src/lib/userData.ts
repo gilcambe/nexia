@@ -26,6 +26,11 @@ async function db() {
   const fb = await getFirebase();
   if (!fb) throw new Error('Não consegui falar com o servidor agora. Tente novamente em instantes.');
   return fb.db;
+
+function chaveLocal(uid: string, coll: BodyCoachCollection, id: string) {
+  return `bc_doc_${uid}_${coll}_${id}`;
+}
+
 }
 
 // Lista os documentos de uma coleção do usuário, ordenados por um campo.
@@ -54,6 +59,8 @@ export async function setUserDoc(
   merge = false,
 ): Promise<void> {
   const clean = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v === undefined ? null : v]));
+  const key = chaveLocal(uid, coll, id);
+  localStorage.setItem(key, JSON.stringify(clean));
   await setDoc(doc(await db(), 'bodycoach_users', uid, coll, id), clean, { merge });
 }
 
