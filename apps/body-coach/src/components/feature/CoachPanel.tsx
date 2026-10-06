@@ -20,7 +20,7 @@ export default function CoachPanel() {
 
   const [draft, setDraft] = useState('');
   const [listening, setListening] = useState(false);
-  const [voiceOn, setVoiceOn] = useState(true);
+  const [voiceOn, setVoiceOn] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
