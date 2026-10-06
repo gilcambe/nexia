@@ -37,10 +37,6 @@ export interface User {
   email: string | null;
   user_metadata: { full_name?: string | null };
 }
- (sem backend).
-
-
-
 
 function toAppUser(u: FirebaseUser): User {
   return { id: u.uid, email: u.email, user_metadata: { full_name: u.displayName } };
@@ -88,7 +84,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<AthleteProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  
 
   const fetchProfile = useCallback((uid: string) => {
     getUserDoc<Omit<AthleteProfile, 'id'>>(uid, 'profile', 'main')
@@ -98,8 +93,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-
-
     let unsubscribe: (() => void) | null = null;
     getFirebase()
       .then((fb) => {
@@ -132,7 +125,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchProfile]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-
     try {
       const fb = await getFirebase();
       if (!fb) return { error: OFFLINE_MESSAGE };
@@ -190,7 +182,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading,  signIn, signUp, signOut }}
+      value={{ user, profile, loading, signIn, signUp, signOut }}
     >
       {children}
     </AuthContext.Provider>
