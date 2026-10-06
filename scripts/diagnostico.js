@@ -6,6 +6,7 @@
 //   2. Fila de tarefas: dispara um "sweep" (inofensivo) com NEXIA_JOBS_TOKEN.
 //   3. Gemini: um pedido mínimo com GEMINI_API_KEY.
 //   4. Groq: quais modelos da lista do Cortex existem e um pedido mínimo com GROQ_API_KEY.
+//   5. Kilo Gateway (ADR-FREE-05, sem chave): modelos ":free" do catálogo e um pedido com ferramenta.
 const out = (ok, name, detail) => console.log(`${ok ? 'OK     ' : 'FALHOU '} ${name}${detail ? ` — ${String(detail).replace(/\s+/g, ' ').slice(0, 400)}` : ''}`);
 const redact = s => String(s || '').replace(/AIza[0-9A-Za-z_-]{20,}/g, '[chave]').replace(/gsk_[0-9A-Za-z]{20,}/g, '[chave]').replace(/gh[pousr]_[0-9A-Za-z]{20,}|github_pat_[0-9A-Za-z_]{20,}/g, '[token]');
 
@@ -67,5 +68,15 @@ async function main() {
     const j = await r.json().catch(() => ({}));
     out(r.ok, 'Groq openai/gpt-oss-120b', `${r.status} ${r.ok ? '' : redact(j.error && j.error.message)}`);
   }
+
+  try {
+    const { createKiloCatalog } = require('../nexia-ai/model-router/providers/kilo-catalog');
+    const { ids, source } = await createKiloCatalog({ fetchImpl: (...x) => fetch(...x), env }).list();
+    out(source === 'gateway', 'Kilo: catálogo de modelos grátis', `${source === 'gateway' ? 'do gateway' : 'consulta falhou, lista fixa'}: ${ids.slice(0, 8).join(', ')}`);
+    const { createRouter } = require('../nexia-ai/model-router');
+    const tool = { name: 'responder', description: 'Devolve a resposta.', input_schema: { type: 'object', properties: { ok: { type: 'boolean' } }, required: ['ok'] } };
+    const r = await createRouter({ env }).toolCall({ provider: 'kilo', model: 'auto:1' }, { messages: [{ role: 'user', content: 'Chame a ferramenta responder com ok=true.' }], tools: [tool], maxTokens: 200 });
+    out(r.tool_calls.length > 0, `Kilo ${r.model}: tool_call sem chave`, r.tool_calls.length ? 'ferramenta chamada' : `sem ferramenta: ${redact(r.text).slice(0, 120)}`);
+  } catch (e) { out(false, 'Kilo Gateway', redact(e && `${e.message} ${(e.details && e.details.upstream) || ''}`)); }
 }
 main().catch(e => { console.error('ERRO:', redact(e && e.message)); process.exit(1); });

@@ -381,7 +381,8 @@ test('O4g. 413 (pedido maior que a cota por minuto): o mesmo modelo é chamado d
 test('O4i. ADR-FREE-04: sem cota em nenhuma IA grátis a execução não falha: espera (planned) e continua do mesmo passo', async () => {
   await setAutonomy(3);
   const down = () => Object.assign(new Error('groq 503'), { code: 'UPSTREAM', details: { status: 503, upstream: 'over capacity' } });
-  const router = scriptedRouter({ architect: [down(), down(), down(), down(), { text: 'A stack é HTML e Node.' }] });
+  // ADR-FREE-05: 503 ("high demand") troca de modelo na hora, sem repetir o mesmo: 1 tentativa por candidato.
+  const router = scriptedRouter({ architect: [down(), down(), { text: 'A stack é HTML e Node.' }] });
   const o = orch(router);
   const { ctx, exe } = await startAndRun(o, 'Qual é a stack do Site Alfa?');
   assert.deepStrictEqual([exe.status, exe.error_code], ['planned', 'WAITING_AI_QUOTA'], JSON.stringify(exe.result_summary));

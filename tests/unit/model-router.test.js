@@ -202,6 +202,13 @@ test('M12. ADR-FREE-04: GitHub Models (token do Actions) e Workers AI (conta grÃ
   await r.chat({ provider: 'cloudflare', model: '@cf/openai/gpt-oss-120b' }, { messages: [{ role: 'user', content: 'oi' }] });
   assert.deepStrictEqual(calls.map(c => c.url), ['https://models.github.ai/inference/chat/completions', 'https://api.cloudflare.com/client/v4/accounts/abc123/ai/v1/chat/completions']);
   assert.deepStrictEqual(calls.map(c => c.auth), ['Bearer gh-t', 'Bearer cf-t']);
+  // ADR-FREE-05: Codestral (chave prÃ³pria) e NVIDIA NIM (agora com tool_call) nos endpoints certos.
+  const more = createRouter({ env: { CODESTRAL_API_KEY: 'cs-t', NVIDIA_API_KEY: 'nv-t' }, fetchImpl });
+  await more.chat({ provider: 'codestral', model: 'codestral-latest' }, { messages: [{ role: 'user', content: 'oi' }] });
+  await more.chat({ provider: 'nvidia', model: 'openai/gpt-oss-120b' }, { messages: [{ role: 'user', content: 'oi' }] });
+  assert.deepStrictEqual(calls.slice(2).map(c => [c.url, c.auth]), [['https://codestral.mistral.ai/v1/chat/completions', 'Bearer cs-t'], ['https://integrate.api.nvidia.com/v1/chat/completions', 'Bearer nv-t']]);
+  assert.strictEqual(more.capabilities({ provider: 'nvidia', model: 'openai/gpt-oss-120b' }).tool_call, true);
   const none = createRouter({ env: {}, fetchImpl });
   assert.strictEqual(none.capabilities({ provider: 'github', model: 'openai/gpt-4.1' }).available, false);
+  for (const p of ['codestral', 'nvidia', 'mistral', 'openrouter']) assert.strictEqual(none.capabilities({ provider: p, model: 'x' }).available, false, p);
 });
