@@ -37,8 +37,7 @@ export interface User {
   email: string | null;
   user_metadata: { full_name?: string | null };
 }
-
-// Usuário sintético usado no MODO LOCAL (sem backend).
+ (sem backend).
 
 
 
@@ -63,7 +62,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const OFFLINE_MESSAGE =
-  'Não consegui falar com o servidor agora. Verifique sua conexão e tente novamente — ou use o acesso de teste (admin / admin01).';
+  'Não consegui falar com o servidor agora. Verifique sua conexão e tente novamente.';
 
 // Normaliza erros do Firebase Auth para mensagens claras em português.
 function friendlyAuthError(err: unknown): string {
