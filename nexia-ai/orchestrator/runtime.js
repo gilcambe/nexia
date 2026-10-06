@@ -250,6 +250,19 @@ async function runAgent(o) {
     failures.set(key, n);
     return n >= 3 ? { stop: { status: 'failed', error_code: code, text, tool_call_ids: toolCallIds, model } } : null;
   };
+  // Depois de editar (ou de um trecho que não bateu), o modelo recebe o arquivo como está agora na
+  // branch: a cópia antiga no contexto deixa de valer e o próximo "find" sai do texto atual.
+  const refresh = async (input, results) => {
+    if (!allowed(o.agentId, 'github.get_file')) return;
+    const paths = [...new Set(writtenPaths('github.edit_files', input))].slice(0, 3);
+    for (const path of paths) {
+      try {
+        const g = await o.gateway.invoke(o.ctx, { projectId: o.projectId, tool: 'github.get_file', input: { path, ref: input.branch } });
+        if (g.tool_call) toolCallIds.push(g.tool_call.id);
+        if (g.status === 'succeeded') results.push({ tool: 'github.get_file', ok: true, result: g.result, note: 'Conteúdo atual do arquivo na branch, depois da edição. Copie os próximos "find" daqui.' });
+      } catch { /* sem cópia nova: o modelo ainda pode pedir github.get_file */ }
+    }
+  };
   // Executa chamadas pelo Tool Gateway. Devolve { results } ou { stop } (fim do agente).
   const runCalls = async (calls, out, model) => {
     const results = [];
@@ -299,10 +312,13 @@ async function runAgent(o) {
       if (r.status === 'succeeded') {
         results.push({ tool: name, ok: true, result: r.result, ...(WRITE_TOOLS.has(name) ? { paths: writtenPaths(name, input) } : {}) });
         if (WRITE_TOOLS.has(name)) wrote = true;
+        for (const k of [...failures.keys()]) if (k.startsWith(`${name}:`)) failures.delete(k);   // progresso zera as falhas da ferramenta
+        if (name === 'github.edit_files') await refresh(input, results);
         continue;
       }
       const code = (r.error && r.error.code) || (r.status === 'denied' ? 'POLICY_DENIED' : 'TOOL_ERROR');
       results.push({ tool: name, ok: false, error: code, message: r.error ? r.error.message : r.reason });
+      if (name === 'github.edit_files' && code === 'INVALID_INPUT') await refresh(input, results);
       if (WRITE_TOOLS.has(name)) localErrors.push(`${name}: ${code}${r.error && r.error.message ? ` (${String(r.error.message).slice(0, 160)})` : ''}`);
       if (ANSWER_CODES.has(code)) continue;   // "não existe" é resposta (ex.: conferir se o arquivo novo já existe), não falha
       const s = strike(`${name}:${code}`, model, code, `A ferramenta ${name} falhou 3 vezes (${code}).`);   // por ferramenta

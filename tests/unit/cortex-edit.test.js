@@ -121,7 +121,28 @@ test('CE2. o modelo continua vendo o arquivo depois de várias leituras e grava 
   const r = await run(router, gw);
   assert.strictEqual(r.status, 'done');
   assert.ok(!gw.state[PAGE].includes('Entrar como demo') && !gw.state[CTX].includes('admin01'));
-  assert.strictEqual(gw.calls.filter(c => c.tool === 'github.get_file' && c.input.path === PAGE).length, 1, 'leu uma vez só');
+  const antes = gw.calls.slice(0, gw.calls.findIndex(c => c.tool === 'github.edit_files'));
+  assert.strictEqual(antes.filter(c => c.tool === 'github.get_file' && c.input.path === PAGE).length, 1, 'leu uma vez só');
+});
+
+test('CE11. depois de editar, o modelo recebe o arquivo atual; acertos zeram as falhas da ferramenta', async () => {
+  const miss = { branch: BRANCH, message: 'm', edits: [{ path: PAGE, find: 'TEXTO QUE NAO EXISTE', replace: 'x' }] };
+  const router = fakeRouter([
+    { tool_calls: [call('github.edit_files', miss)] },
+    { tool_calls: [call('github.edit_files', { branch: BRANCH, message: 'm', edits: [{ path: PAGE, find: '<button>Entrar como demo</button>\n', replace: '' }] })] },
+    req => {
+      const t = userTexts(req);
+      assert.ok(t.includes('Copie os próximos'), 'arquivo atual veio junto do resultado da edição');
+      return { tool_calls: [call('github.edit_files', miss)] };
+    },
+    { tool_calls: [call('github.edit_files', miss)] },
+    { text: 'Pronto.' },
+  ]);
+  const gw = fakeGateway();
+  const r = await run(router, gw);
+  assert.strictEqual(r.status, 'done', 'falha, acerto, falha, falha não encerra o agente');
+  assert.ok(!gw.state[PAGE].includes('Entrar como demo'));
+  assert.ok(gw.calls.some(c => c.tool === 'github.get_file' && c.input.ref === BRANCH && c.input.path === PAGE));
 });
 
 test('CE3. lembretes: até 2, com exemplo concreto de edit_files e a branch; depois disso termina', async () => {
