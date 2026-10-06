@@ -14,7 +14,7 @@ const { createKiloCatalog, isFree } = require('./kilo-catalog');
 // pedido maior é recusado aqui (TOO_LARGE), sem gastar chamada, e o Cortex passa para o próximo modelo.
 const PROVIDERS = Object.freeze({
   // Plano grátis do Google AI Studio (ADR-FREE-03): mesma chave GEMINI_API_KEY, endpoint compatível com OpenAI e com tool_call.
-  google:      { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', env: 'GEMINI_API_KEY', max_output: 65536, tools: true },
+  google:      { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', env: 'GEMINI_API_KEY', max_output: 65536, tools: true, vision: true },
   openai:      { url: 'https://api.openai.com/v1/chat/completions', env: 'OPENAI_API_KEY', max_output: 16384, usage_option: true, tools: true },
   groq:        { url: 'https://api.groq.com/openai/v1/chat/completions', env: 'GROQ_API_KEY', max_output: 32768, tools: true },
   deepseek:    { url: 'https://api.deepseek.com/v1/chat/completions', env: 'DEEPSEEK_API_KEY', max_output: 8192, tools: true },
@@ -70,13 +70,22 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
     return real;
   }
 
-  const capabilities = () => ({ chat: true, streaming: true, tool_call: !!cfg.tools, structured_output: true, max_output_tokens: cfg.max_output });
+  const capabilities = () => ({ chat: true, streaming: true, tool_call: !!cfg.tools, structured_output: true, vision: !!cfg.vision, max_output_tokens: cfg.max_output });
+
+  // Imagens (req.images = [{ mime, data(base64) }]) vão na última mensagem do usuário, no formato image_url.
+  function withImages(messages, images) {
+    if (!cfg.vision || !Array.isArray(images) || !images.length) return messages;
+    const i = messages.map(m => m.role).lastIndexOf('user');
+    if (i < 0) return messages;
+    const parts = [{ type: 'text', text: messages[i].content }, ...images.map(im => ({ type: 'image_url', image_url: { url: `data:${im.mime};base64,${im.data}` } }))];
+    return messages.map((m, k) => (k === i ? { ...m, content: parts } : m));
+  }
 
   function body(model, req, stream) {
     const b = {
       model,
       max_tokens: Math.min(req.maxTokens || 4096, cfg.max_output),
-      messages: [...(req.system ? [{ role: 'system', content: req.system }] : []), ...req.messages],
+      messages: [...(req.system ? [{ role: 'system', content: req.system }] : []), ...withImages(req.messages, req.images)],
     };
     if (req.temperature !== undefined) b.temperature = req.temperature;
     if (stream) { b.stream = true; if (cfg.usage_option) b.stream_options = { include_usage: true }; }
