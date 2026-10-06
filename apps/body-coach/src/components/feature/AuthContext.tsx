@@ -17,11 +17,8 @@ import {
 import { getFirebase } from '@/lib/firebaseClient';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import {
-  LOCAL_DEMO_EMAIL,
-  LOCAL_DEMO_PASSWORD,
   LOCAL_DEMO_USER_ID,
   isLocalDemoActive,
-  enableLocalDemo,
   disableLocalDemo,
 } from '@/lib/localDemo';
 import { localDemoProfile } from '@/mocks/localDemo';
