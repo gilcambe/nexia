@@ -7,7 +7,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
-import { initialWater, initialMeals, type MealFood } from '@/mocks/nutrition';
+import { nutritionTargets, waterGoal as defaultWaterGoal, initialMeals, type MealFood } from '@/mocks/nutrition';
 import { listUserDocs, setUserDoc, deleteUserDoc } from '@/lib/userData';
 import { useAuth } from './AuthContext';
 
@@ -23,12 +23,7 @@ interface NutritionContextValue {
   meals: MealFood[];
   water: number;
   waterGoal: number;
-  targets: {
-    calories: number;
-    protein: number;
-    carbs: number;
-    fat: number;
-  };
+  targets: typeof nutritionTargets;
   totals: NutritionTotals;
   loading: boolean;
   error: string | null;
@@ -41,7 +36,15 @@ interface NutritionContextValue {
 
 const NutritionContext = createContext<NutritionContextValue | null>(null);
 
-function mapRow(row: any): MealFood {
+// Refeição com a data em que foi lançada (só as de hoje entram nos totais do dia).
+type DayMeal = MealFood & { created_at?: string };
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+const isToday = (m: DayMeal) => !m.created_at || m.created_at.slice(0, 10) === today();
+
+function mapRow(row: any): DayMeal {
   return {
     id: String(row._docId ?? row.id),
     name: row.name,
@@ -51,6 +54,7 @@ function mapRow(row: any): MealFood {
     carbs: Number(row.carbs ?? 0),
     fat: Number(row.fat ?? 0),
     fiber: Number(row.fiber ?? 0),
+    created_at: typeof row.created_at === 'string' ? row.created_at : undefined,
   };
 }
 
@@ -62,8 +66,25 @@ export function useNutrition() {
 
 export function NutritionProvider({ children }: { children: ReactNode }) {
   const { user, isLocalDemo, profile } = useAuth();
-  const [meals, setMeals] = useState<MealFood[]>([]);
-  const [water, setWater] = useState<number>(initialWater);
+  const [allMeals, setMeals] = useState<DayMeal[]>([]);
+  const meals = useMemo(() => allMeals.filter(isToday), [allMeals]);
+  // Água do dia guardada no navegador (por usuário e por data).
+  const waterKey = `bc_water_${user?.id ?? 'anon'}_${today()}`;
+  const [water, setWater] = useState<number>(0);
+  useEffect(() => {
+    try {
+      setWater(Number(localStorage.getItem(waterKey)) || 0);
+    } catch {
+      setWater(0);
+    }
+  }, [waterKey]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(waterKey, String(water));
+    } catch {
+      // Navegador sem armazenamento: a água só vale nesta sessão.
+    }
+  }, [waterKey, water]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -114,7 +135,7 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
       }
       // Firestore: bodycoach_users/{uid}/meals/{id} — o id já nasce no cliente.
       const newId = `m-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      setMeals((prev) => [...prev, { ...meal, id: newId }]);
+      setMeals((prev) => [...prev, { ...meal, id: newId, created_at: new Date().toISOString() }]);
       try {
         await setUserDoc(user.id, 'meals', newId, {
           user_id: user.id,
@@ -166,23 +187,14 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
 
   const { targets, waterGoal } = useMemo(() => {
     const peso = Number((profile as any)?.onboarding?.weight) || 0;
-    let calories = 0;
-    let protein = 0;
-    let fat = 0;
-    let carbs = 0;
-    let waterGoal = 0;
-
-    if (peso > 0) {
-      calories = Math.round(peso * 33);
-      protein = Math.round(peso * 2);
-      fat = Math.round(peso * 0.9);
-      carbs = Math.round((calories - protein * 4 - fat * 9) / 4);
-      waterGoal = Math.round(peso * 0.033 * 10) / 10;
-    }
-
+    if (!(peso > 0)) return { targets: nutritionTargets, waterGoal: defaultWaterGoal };
+    const calories = Math.round(peso * 33);
+    const protein = Math.round(peso * 2);
+    const fat = Math.round(peso * 0.9);
+    const carbs = Math.round((calories - protein * 4 - fat * 9) / 4);
     return {
-      targets: { calories, protein, fat, carbs },
-      waterGoal,
+      targets: { calories, protein, fat, carbs, fiber: 30 },
+      waterGoal: Math.round(peso * 0.035 * 10) / 10,
     };
   }, [profile]);
 
