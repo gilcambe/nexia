@@ -41,11 +41,17 @@ const INTENT_RULES = [
 ];
 // Endereços no pedido (ex.: site de referência) não contam: "https://x.com/workflow" não é pipeline nem "app.x.com" é sistema.
 const withoutUrls = message => String(message || '').replace(/\bhttps?:\/\/\S+|\bwww\.\S+/gi, ' ');
+const changeFirst = m => {
+  const c = m.search(INTENT_RULES.find(r => r[0] === 'change')[1]), q = m.search(INTENT_RULES.find(r => r[0] === 'status')[1]);
+  return c >= 0 && c < q;
+};
 function classifyIntent(message) {
   const m = normalize(withoutUrls(message));
   for (const [intent, re] of INTENT_RULES) {
     // Criar site ou sistema ("desenvolva um sistema", "monte uma landing") é mudança, mesmo sem os verbos da regra.
     if (intent === 'status' && buildKind(message)) return 'change';
+    // "Altere X ... e mostre 'Salvando...'" é mudança: palavra de consulta depois de um verbo de mudança não manda.
+    if (intent === 'status' && re.test(m) && changeFirst(m)) return 'change';
     if (re.test(m)) return intent;
   }
   return 'question';
