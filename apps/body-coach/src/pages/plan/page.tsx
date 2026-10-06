@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { planWeek, phases, planNotes } from '@/mocks/plan';
+import { buildWeekPlan } from '@/lib/trainingPlan';
+import { getUserDoc } from '@/lib/userData';
+import { useAuth } from '@/components/feature/AuthContext';
 import Card from '@/components/base/Card';
 
 const intensityMeta = {
@@ -11,7 +13,22 @@ const intensityMeta = {
 
 export default function Plan() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [done, setDone] = useState<Record<string, boolean>>({});
+  const [onboarding, setOnboarding] = useState<any>(null);
+
+  useEffect(() => {
+    if (user?.id) {
+      getUserDoc(user.id, 'profile', 'main').then((res) => {
+        if (res && res.onboarding) {
+          setOnboarding(res.onboarding);
+        }
+      });
+    }
+  }, [user?.id]);
+
+  const plan = buildWeekPlan(onboarding);
+  const { planWeek, phases, planNotes } = plan;
 
   return (
     <div className="space-y-6">
