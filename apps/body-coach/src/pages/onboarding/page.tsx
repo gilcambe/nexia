@@ -36,11 +36,22 @@ export default function Onboarding() {
   };
 
   const finish = async () => {
+    setSaving(true);
     if (user) {
-      setSaving(true);
-      await setUserDoc(user.uid, { onboarding: form });
-      setSaving(false);
+      const name = String(form.name ?? '').trim();
+      const height = Number(form.height);
+      try {
+        await setUserDoc(user.id, 'profile', 'main', {
+          ...(name ? { full_name: name } : {}),
+          ...(height > 0 ? { height_cm: height } : {}),
+          onboarding: form,
+          onboarding_done: true,
+        }, true);
+      } catch {
+        // Sem conexão ou sem permissão: o aluno segue e pode completar o perfil depois.
+      }
     }
+    setSaving(false);
     navigate('/');
   };
 
@@ -210,9 +221,10 @@ export default function Onboarding() {
           </button>
           <button
             onClick={() => (isLast ? finish() : setStep((s) => s + 1))}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600 disabled:opacity-60"
           >
-            {isLast ? 'Começar' : 'Continuar'}
+            {isLast ? (saving ? 'Salvando...' : 'Começar') : 'Continuar'}
             {!isLast && <i className="ri-arrow-right-line"></i>}
           </button>
         </div>
