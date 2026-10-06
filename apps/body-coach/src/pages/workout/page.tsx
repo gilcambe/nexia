@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { session, type SetLog } from '@/mocks/workout';
-import SetEntry, { type NewSet } from './components/SetEntry';
-import { setUserDoc } from '@/lib/userData';
+import { Link, useNavigate } from 'react-router-dom';
+import { type SetLog, type Session } from '@/mocks/workout';
+import { buildWeekPlan, todayPlanDay, buildSession, type Answers } from '@/lib/trainingPlan';
+import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
+import SetEntry, { type NewSet } from './components/SetEntry';
 
 type Phase =
   | 'PRE_SESSION'
@@ -16,6 +17,36 @@ type Phase =
   | 'SESSION_COMPLETE';
 
 export default function Workout() {
+  const { user } = useAuth();
+  const [session, setSession] = useState<Session | null>(null);
+  const [estado, setEstado] = useState<'loading' | 'rest' | 'no-plan' | 'ready'>('loading');
+  useEffect(() => {
+    if (!user) return;
+    getUserDoc<{ onboarding?: Answers }>(user.id, 'profile', 'main')
+      .then((p) => {
+        if (!p?.onboarding) return setEstado('no-plan');
+        const day = todayPlanDay(buildWeekPlan(p.onboarding));
+        if (!day) return setEstado('rest');
+        setSession(buildSession(day));
+        setEstado('ready');
+      })
+      .catch(() => setEstado('no-plan'));
+  }, [user]);
+  return estado === 'ready' && session ? <WorkoutFlow session={session} /> : <WorkoutEmpty estado={estado} />;
+}
+
+function WorkoutEmpty({ estado }: { estado: string }) {
+  if (estado === 'loading') return <p className="text-sm text-foreground-500">Carregando...</p>;
+  return (
+    <div className="rounded-2xl border border-background-200 bg-background-50 p-6">
+      <h1 className="font-heading text-xl font-bold text-foreground-950">{estado === 'rest' ? 'Hoje é dia de descanso' : 'Responda o questionário para montar seu treino'}</h1>
+      <p className="mt-2 text-sm text-foreground-600">{estado === 'rest' ? 'Recupere bem: sono, água e alimentação. Veja a semana no Plano.' : 'Com seus dias livres e seu nível, o treino do dia aparece aqui.'}</p>
+      <Link to={estado === 'rest' ? '/plan' : '/onboarding'} className="mt-4 inline-flex rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-background-50">{estado === 'rest' ? 'Ver plano' : 'Responder agora'}</Link>
+    </div>
+  );
+}
+
+function WorkoutFlow({ session }: { session: Session }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [startedAt] = useState(() => new Date().toISOString());
@@ -90,7 +121,7 @@ export default function Workout() {
           <div className="rounded-2xl border border-background-200 bg-background-50 p-6">
             <h2 className="font-heading text-xl font-bold text-foreground-950">Pronto para começar?</h2>
             <p className="mt-2 text-sm text-foreground-600">
-              {session.exercises.length} exercícios · {session.estimatedMinutes} min. Volume reduzido 20% hoje.
+              {session.exercises.length} exercícios · {session.estimatedMinutes} min.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               {session.exercises.map((e) => (
@@ -307,10 +338,10 @@ export default function Workout() {
 
         {phase === 'SESSION_REVIEW' && (() => {
           const durationMin = Math.max(1, Math.round((Date.now() - new Date(startedAt).getTime()) / 60000));
-          const allSets = Object.values(setsByEx).flat();
+          const allSets = Object.values(setsByEx).flat().filter((x) => x.completed);
           const totalSets = allSets.length;
           const totalVolume = allSets.reduce((acc, s) => acc + (s.weight * s.reps), 0);
-          const exercisesCount = Object.keys(setsByEx).length;
+          const exercisesCount = Object.values(setsByEx).filter((l) => l.some((x) => x.completed)).length;
 
           const progressions = session.exercises.map((e) => {
             const sets = setsByEx[e.id] ?? [];
@@ -324,18 +355,25 @@ export default function Workout() {
           }).filter(Boolean);
 
           const handleFinishSession = async () => {
-            if (user?.uid) {
-              const workoutRecord = {
-                id: `workout-${Date.now()}`,
+            if (user) {
+              // Campos que as regras do Firestore exigem: title e done_at (texto).
+              const w = {
+                user_id: user.id,
                 title: session.title,
-                startedAt,
-                endedAt: new Date().toISOString(),
-                durationMin,
-                totalSets,
-                totalVolume,
-                setsByEx,
+                done_at: new Date().toISOString(),
+                duration_min: durationMin,
+                exercises: exercisesCount,
+                sets: totalSets,
+                volume_kg: totalVolume,
               };
-              await setUserDoc(user.uid, 'workouts', workoutRecord.id, workoutRecord).catch(() => {});
+              try {
+                const key = `bc_workouts_${user.id}`;
+                const list = JSON.parse(localStorage.getItem(key) || '[]');
+                localStorage.setItem(key, JSON.stringify([...(Array.isArray(list) ? list : []), w]));
+              } catch {
+                // Sem armazenamento local: fica só no Firebase.
+              }
+              await setUserDoc(user.id, 'workouts', session.id, w).catch(() => {});
             }
             setPhase('SESSION_COMPLETE');
           };
