@@ -29,6 +29,22 @@ function resolveRef(fromPath, ref) {
   return parts.join('/');
 }
 
+/**
+ * Onde um caminho absoluto ("/favicon.svg", "/body-coach/icon.svg") pode estar de verdade num app com
+ * build (Vite, CRA): na pasta public/ ao lado do index.html, na própria pasta do app, ou na raiz.
+ * O prefixo do primeiro segmento (base do app, ex. "/body-coach/") também é tirado.
+ */
+function altPaths(fromPath, ref, resolved) {
+  const out = [resolved];
+  const clean = String(ref || '').trim().split(/[?#]/)[0];
+  const dir = fromPath.split('/').slice(0, -1).join('/');
+  if (!clean.startsWith('/') || !dir) return out;
+  const rel = clean.replace(/^\/+/, '');
+  const noBase = rel.includes('/') ? rel.split('/').slice(1).join('/') : null;
+  for (const r of [rel, noBase].filter(Boolean)) out.push(`${dir}/public/${r}`, `${dir}/${r}`);
+  return [...new Set(out)];
+}
+
 function checkHtml(path, html) {
   const errors = [], warnings = [], refs = [];
   const err = (i, msg) => errors.push({ file: path, line: lineAt(html, i), message: msg });
@@ -184,8 +200,10 @@ function checkWebFiles(files, opts = {}) {
   const missingCandidates = [];
   for (const r of refs) {
     const p = resolveRef(r.file, r.ref);
-    if (!p || have.has(p) || (r.page && !/\.[a-z0-9]+$/i.test(p))) continue;
-    if (!missingCandidates.some(x => x.path === p)) missingCandidates.push({ ...r, path: p });
+    if (!p || (r.page && !/\.[a-z0-9]+$/i.test(p))) continue;
+    const alts = altPaths(r.file, r.ref, p);
+    if (alts.some(a => have.has(a))) continue;
+    if (!missingCandidates.some(x => x.path === p)) missingCandidates.push({ ...r, path: p, alts });
   }
   return { errors, warnings, missingCandidates, externalMedia };
 }

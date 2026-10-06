@@ -77,3 +77,13 @@ test('W7. sistema novo precisa de menu (nav/aside), mas não de fotos', () => {
   const yes = checkWebFiles([{ path: 'a/index.html', content: page(`${fonts}<aside><nav>menu</nav></aside><main>x</main>`) }, css], { design: 'system', added: new Set(['a/index.html']) });
   assert.deepStrictEqual(yes.errors, []);
 });
+
+test('W8. app com build: "/favicon.svg" e "/body-coach/icon.svg" são procurados em public/ ao lado do index.html', () => {
+  const html = '<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>App</title>'
+    + '<link rel="icon" href="/favicon.svg"><link rel="manifest" href="/body-coach/manifest.webmanifest"></head><body><div id="root"></div></body></html>';
+  const files = [{ path: 'apps/app/index.html', content: html }, { path: 'apps/app/public/favicon.svg', content: '<svg/>' }];
+  const out = checkWebFiles(files, {});
+  assert.ok(!out.missingCandidates.some(m => m.ref === '/favicon.svg'), 'favicon em public/ conta como existente');
+  const man = out.missingCandidates.find(m => m.ref === '/body-coach/manifest.webmanifest');
+  assert.ok(man.alts.includes('apps/app/public/manifest.webmanifest'), 'base do app é tirada');
+});
