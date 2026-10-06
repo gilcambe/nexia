@@ -158,17 +158,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchProfile, localDemo]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    // Acesso de teste local: admin / admin01 (não depende do backend).
-    const normalized = email.trim().toLowerCase();
-    if (normalized === LOCAL_DEMO_EMAIL && password === LOCAL_DEMO_PASSWORD) {
-      enableLocalDemo();
-      setLocalDemo(true);
-      setUser(localDemoUser);
-      setProfile(localDemoAthleteProfile);
-      setLoading(false);
-      return { error: null };
-    }
-
     try {
       const fb = await getFirebase();
       if (!fb) return { error: OFFLINE_MESSAGE };
