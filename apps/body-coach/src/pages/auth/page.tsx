@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/components/feature/AuthContext';
-import { LOCAL_DEMO_EMAIL, LOCAL_DEMO_PASSWORD } from '@/lib/localDemo';
+
 
 type Mode = 'login' | 'signup';
 
