@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/components/feature/AuthContext';
+import { setUserDoc } from '@/lib/userData';
 
 const steps = [
   { key: 'identity', title: 'Quem é você?', icon: 'ri-user-3-line' },
@@ -18,8 +20,10 @@ const days = [3, 4, 5, 6];
 
 export default function Onboarding() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<Record<string, string | string[]>>({});
+  const [saving, setSaving] = useState(false);
 
   const current = steps[step];
   const isLast = step === steps.length - 1;
@@ -31,7 +35,25 @@ export default function Onboarding() {
     setVal(key, cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]);
   };
 
-  const finish = () => navigate('/');
+  const finish = async () => {
+    setSaving(true);
+    if (user) {
+      const name = String(form.name ?? '').trim();
+      const height = Number(form.height);
+      try {
+        await setUserDoc(user.id, 'profile', 'main', {
+          ...(name ? { full_name: name } : {}),
+          ...(height > 0 ? { height_cm: height } : {}),
+          onboarding: form,
+          onboarding_done: true,
+        }, true);
+      } catch {
+        // Sem conexão ou sem permissão: o aluno segue e pode completar o perfil depois.
+      }
+    }
+    setSaving(false);
+    navigate('/');
+  };
 
   return (
     <div className="mx-auto flex min-h-screen max-w-3xl flex-col">
@@ -199,9 +221,10 @@ export default function Onboarding() {
           </button>
           <button
             onClick={() => (isLast ? finish() : setStep((s) => s + 1))}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600 disabled:opacity-60"
           >
-            {isLast ? 'Começar' : 'Continuar'}
+            {isLast ? (saving ? 'Salvando...' : 'Começar') : 'Continuar'}
             {!isLast && <i className="ri-arrow-right-line"></i>}
           </button>
         </div>
