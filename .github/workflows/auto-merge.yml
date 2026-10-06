@@ -1,0 +1,64 @@
+name: Merge automático
+
+# ADR-OPS-02 (autorizado pelo dono em 2026-10-06): PRs com o rótulo "automerge" (branch nexia/...
+# deste repositório, para develop) entram sozinhos quando todo o CI do último commit passa. O Claude
+# põe o rótulo depois de revisar o PR (o dele ou o do Cortex); PR sem o rótulo nunca entra.
+# Depois do merge o CI roda em develop, e o deploy automático segue dele.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+  pull_request_target:
+    types: [labeled, ready_for_review, synchronize]
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: auto-merge
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    name: Merge automático
+    runs-on: ubuntu-latest
+    steps:
+      # Sem checkout: nenhum código do PR roda aqui.
+      - name: Fazer merge dos PRs prontos
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          merged=0
+          prs=$(gh api "repos/$REPO/pulls?state=open&base=develop&per_page=50" \
+            --jq '.[] | select(any(.labels[]; .name == "automerge")) | select(.head.repo.full_name == env.REPO) | select(.head.ref | startswith("nexia/")) | .number')
+          for n in $prs; do
+            pr=$(gh api "repos/$REPO/pulls/$n")
+            sha=$(jq -r .head.sha <<<"$pr")
+            # CI do último commit: tudo concluído e verde, e o job principal precisa existir.
+            runs=$(gh api "repos/$REPO/commits/$sha/check-runs?per_page=100" --jq '[.check_runs[] | select(.name != "Merge automático" and .name != "Testar com login")]')
+            if ! jq -e 'any(.[]; .name == "Typecheck, testes e build") and all(.[]; .status == "completed" and (.conclusion == "success" or .conclusion == "skipped" or .conclusion == "neutral"))' <<<"$runs" >/dev/null; then
+              echo "PR #$n: CI ainda não está verde em ${sha:0:7}; fica para a próxima."
+              continue
+            fi
+            if [ "$(jq -r .mergeable <<<"$pr")" != "true" ]; then
+              echo "PR #$n: com conflito ou ainda calculando; fica para a próxima."
+              continue
+            fi
+            if [ "$(jq -r .draft <<<"$pr")" = "true" ]; then gh pr ready "$n" --repo "$REPO"; fi
+            if gh api -X PUT "repos/$REPO/pulls/$n/merge" -f merge_method=merge -f sha="$sha" >/dev/null; then
+              echo "PR #$n: merge feito."
+              merged=1
+              gh api -X DELETE "repos/$REPO/git/refs/heads/$(jq -r .head.ref <<<"$pr")" >/dev/null || true
+            else
+              echo "PR #$n: o GitHub recusou o merge agora; fica para a próxima."
+            fi
+          done
+          # Merge feito com o token do Actions não dispara o CI de develop sozinho: dispara aqui.
+          if [ "$merged" = 1 ]; then gh workflow run ci.yml --repo "$REPO" --ref develop; fi
