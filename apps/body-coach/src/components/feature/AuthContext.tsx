@@ -78,7 +78,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const OFFLINE_MESSAGE =
-  'Não consegui falar com o servidor agora. Verifique sua conexão e tente novamente — ou use o acesso de teste (admin / admin01).';
+  'Não consegui falar com o servidor agora. Verifique sua conexão e tente novamente te';
 
 // Normaliza erros do Firebase Auth para mensagens claras em português.
 function friendlyAuthError(err: unknown): string {
@@ -158,17 +158,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [fetchProfile, localDemo]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    // Acesso de teste local: admin / admin01 (não depende do backend).
-    const normalized = email.trim().toLowerCase();
-    if (normalized === LOCAL_DEMO_EMAIL && password === LOCAL_DEMO_PASSWORD) {
-      enableLocalDemo();
-      setLocalDemo(true);
-      setUser(localDemoUser);
-      setProfile(localDemoAthleteProfile);
-      setLoading(false);
-      return { error: null };
-    }
-
     try {
       const fb = await getFirebase();
       if (!fb) return { error: OFFLINE_MESSAGE };
