@@ -1,4 +1,4 @@
-import { athlete } from '@/mocks/athlete';
+import { useAuth } from '@/components/feature/AuthContext';
 import Card, { CardHeader } from '@/components/base/Card';
 
 function InfoRow({ label, value, icon }: { label: string; value: string; icon: string }) {
@@ -13,7 +13,32 @@ function InfoRow({ label, value, icon }: { label: string; value: string; icon: s
   );
 }
 
+function calculateAge(birthDateStr?: string): string {
+  if (!birthDateStr) return '-';
+  const birthDate = new Date(birthDateStr);
+  if (isNaN(birthDate.getTime())) return '-';
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return `${age} anos`;
+}
+
 export default function Profile() {
+  const { user, profile } = useAuth();
+
+  const fullName = profile?.full_name || user?.displayName || user?.email || 'Atleta';
+  const email = profile?.email || user?.email || '-';
+  const heightCm = profile?.height_cm ? `${profile.height_cm} cm` : '-';
+  const birthDate = profile?.birth_date || '-';
+  const age = calculateAge(profile?.birth_date);
+  const gender = profile?.gender ? (profile.gender === 'male' ? 'Masculino' : profile.gender === 'female' ? 'Feminino' : profile.gender) : '-';
+  const goalWeight = profile?.goal_weight_kg ? `${profile.goal_weight_kg} kg` : '-';
+  const goalBodyFat = profile?.goal_body_fat_pct ? `${profile.goal_body_fat_pct}%` : '-';
+  const onboarding = profile?.onboarding || {};
+
   return (
     <div className="space-y-6">
       <header>
@@ -26,12 +51,14 @@ export default function Profile() {
         <Card padding="p-5">
           <CardHeader title="Identidade" icon="ri-user-3-line" />
           <div className="space-y-2">
-            <InfoRow icon="ri-user-3-line" label="Nome" value={athlete.name} />
-            <InfoRow icon="ri-calendar-line" label="Idade" value={`${athlete.age} anos`} />
-            <InfoRow icon="ri-arrow-up-line" label="Altura" value={`${athlete.height} cm`} />
-            <InfoRow icon="ri-scales-line" label="Peso" value={`${athlete.weight} kg`} />
-            <InfoRow icon="ri-drop-line" label="Cintura" value={`${athlete.waist} cm`} />
-            <InfoRow icon="ri-planet-line" label="País" value={athlete.country} />
+            <InfoRow icon="ri-user-3-line" label="Nome" value={fullName} />
+            <InfoRow icon="ri-mail-line" label="E-mail" value={email} />
+            <InfoRow icon="ri-calendar-line" label="Idade" value={age} />
+            <InfoRow icon="ri-cake-line" label="Data de Nascimento" value={birthDate} />
+            <InfoRow icon="ri-user-heart-line" label="Gênero" value={gender} />
+            <InfoRow icon="ri-arrow-up-line" label="Altura" value={heightCm} />
+            <InfoRow icon="ri-scales-line" label="Peso Meta" value={goalWeight} />
+            <InfoRow icon="ri-percent-line" label="Gordura Corporal Meta" value={goalBodyFat} />
           </div>
         </Card>
 
@@ -39,51 +66,62 @@ export default function Profile() {
         <Card padding="p-5">
           <CardHeader title="Objetivo &amp; treino" icon="ri-sword-line" />
           <div className="space-y-2">
-            <InfoRow icon="ri-trophy-line" label="Objetivo" value={athlete.goal} />
-            <InfoRow icon="ri-layout-grid-line" label="Nível" value={athlete.level} />
-            <InfoRow icon="ri-calendar-line" label="Disponibilidade" value={`${athlete.availabilityDays}x/semana`} />
-            <InfoRow icon="ri-time-line" label="Duração por sessão" value={`${athlete.sessionMinutes} min`} />
+            <InfoRow icon="ri-trophy-line" label="Objetivo" value={onboarding.goal || onboarding.objective || 'Hipertrofia / Condicionamento'} />
+            <InfoRow icon="ri-layout-grid-line" label="Nível" value={onboarding.level || onboarding.experience || 'Intermediário'} />
+            <InfoRow icon="ri-calendar-line" label="Disponibilidade" value={onboarding.availabilityDays ? `${onboarding.availabilityDays}x/semana` : (onboarding.daysPerWeek ? `${onboarding.daysPerWeek}x/semana` : '4x/semana')} />
+            <InfoRow icon="ri-time-line" label="Duração por sessão" value={onboarding.sessionMinutes ? `${onboarding.sessionMinutes} min` : '60 min'} />
           </div>
-          <div className="mt-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Modalidades</p>
-            <div className="flex flex-wrap gap-2">
-              {athlete.modality.map((m) => (
-                <span key={m} className="rounded-full bg-background-100 px-3 py-1.5 text-xs text-foreground-700">
-                  {m === 'musculacao' ? 'Musculação' : 'Powerlifting'}
-                </span>
-              ))}
+          {onboarding.modality && Array.isArray(onboarding.modality) && onboarding.modality.length > 0 && (
+            <div className="mt-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Modalidades</p>
+              <div className="flex flex-wrap gap-2">
+                {onboarding.modality.map((m: string) => (
+                  <span key={m} className="rounded-full bg-background-100 px-3 py-1.5 text-xs text-foreground-700 capitalize">
+                    {m}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </Card>
 
         {/* preferences */}
         <Card padding="p-5">
           <CardHeader title="Preferências" icon="ri-fire-line" />
           <div className="space-y-3">
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Exercícios preferidos</p>
-              <div className="flex flex-wrap gap-2">
-                {athlete.preferredExercises.map((e) => (
-                  <span key={e} className="rounded-full bg-accent-100 px-3 py-1.5 text-xs text-accent-800 capitalize">{e}</span>
-                ))}
+            {onboarding.preferredExercises && Array.isArray(onboarding.preferredExercises) && onboarding.preferredExercises.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Exercícios preferidos</p>
+                <div className="flex flex-wrap gap-2">
+                  {onboarding.preferredExercises.map((e: string) => (
+                    <span key={e} className="rounded-full bg-accent-100 px-3 py-1.5 text-xs text-accent-800 capitalize">{e}</span>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Exercícios evitados</p>
-              <div className="flex flex-wrap gap-2">
-                {athlete.avoidedExercises.map((e) => (
-                  <span key={e} className="rounded-full bg-primary-100 px-3 py-1.5 text-xs text-primary-700 capitalize">{e}</span>
-                ))}
+            )}
+            {onboarding.avoidedExercises && Array.isArray(onboarding.avoidedExercises) && onboarding.avoidedExercises.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Exercícios evitados</p>
+                <div className="flex flex-wrap gap-2">
+                  {onboarding.avoidedExercises.map((e: string) => (
+                    <span key={e} className="rounded-full bg-primary-100 px-3 py-1.5 text-xs text-primary-700 capitalize">{e}</span>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Equipamentos</p>
-              <div className="flex flex-wrap gap-2">
-                {athlete.equipment.map((e) => (
-                  <span key={e} className="rounded-full bg-background-100 px-3 py-1.5 text-xs text-foreground-700 capitalize">{e === 'pesos_livres' ? 'Pesos livres' : 'Máquinas'}</span>
-                ))}
+            )}
+            {onboarding.equipment && Array.isArray(onboarding.equipment) && onboarding.equipment.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Equipamentos</p>
+                <div className="flex flex-wrap gap-2">
+                  {onboarding.equipment.map((e: string) => (
+                    <span key={e} className="rounded-full bg-background-100 px-3 py-1.5 text-xs text-foreground-700 capitalize">{e}</span>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+            {(!onboarding.preferredExercises && !onboarding.avoidedExercises && !onboarding.equipment) && (
+              <p className="text-sm text-foreground-500">Nenhuma preferência específica informada no onboarding.</p>
+            )}
           </div>
         </Card>
 
@@ -97,38 +135,42 @@ export default function Profile() {
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Histórico médico</p>
               <div className="rounded-lg bg-background-100/70 p-3 text-sm text-foreground-700">
-                {athlete.medical.medicalHistory.join(' · ')}
+                {profile?.medicalHistory ? profile.medicalHistory : (onboarding.medicalHistory || 'Nenhum histórico restritivo informado.')}
               </div>
             </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Lesões anteriores</p>
-              <div className="space-y-1.5">
-                {athlete.medical.pastInjuries.map((i) => (
-                  <div key={i.name} className="flex items-center justify-between rounded-lg bg-background-100/70 px-3 py-2">
-                    <span className="text-sm text-foreground-700">{i.name}</span>
-                    <span className="text-[11px] text-foreground-400">{i.date} · {i.status === 'estavel' ? 'estável' : i.status}</span>
-                  </div>
-                ))}
+            {profile?.medical?.pastInjuries && Array.isArray(profile.medical.pastInjuries) && profile.medical.pastInjuries.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Lesões anteriores</p>
+                <div className="space-y-1.5">
+                  {profile.medical.pastInjuries.map((i: any) => (
+                    <div key={i.name || i} className="flex items-center justify-between rounded-lg bg-background-100/70 px-3 py-2">
+                      <span className="text-sm text-foreground-700">{i.name || i}</span>
+                      {i.date && <span className="text-[11px] text-foreground-400">{i.date} {i.status ? `· ${i.status}` : ''}</span>}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-            <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Limitações conhecidas</p>
-              <div className="flex flex-wrap gap-2">
-                {athlete.medical.knownLimitations.map((l) => (
-                  <span key={l} className="rounded-full bg-accent-100 px-3 py-1.5 text-xs text-accent-800">{l}</span>
-                ))}
+            )}
+            {onboarding.knownLimitations && Array.isArray(onboarding.knownLimitations) && onboarding.knownLimitations.length > 0 && (
+              <div>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Limitações conhecidas</p>
+                <div className="flex flex-wrap gap-2">
+                  {onboarding.knownLimitations.map((l: string) => (
+                    <span key={l} className="rounded-full bg-accent-100 px-3 py-1.5 text-xs text-accent-800">{l}</span>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Sintomas atuais</p>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Sintomas atuais / Observações</p>
               <div className="rounded-lg bg-accent-100/60 p-3 text-sm text-accent-800">
-                {athlete.medical.currentSymptoms.join(' · ')}
+                {profile?.currentSymptoms || onboarding.currentSymptoms || 'Nenhum sintoma relatado.'}
               </div>
             </div>
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Medicamentos</p>
               <div className="rounded-lg bg-background-100/70 p-3 text-sm text-foreground-700">
-                {athlete.medical.medications.length ? athlete.medical.medications.join(' · ') : 'Nenhum informado'}
+                {profile?.medications || onboarding.medications || 'Nenhum informado'}
               </div>
             </div>
           </div>
