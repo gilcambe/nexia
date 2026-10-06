@@ -61,4 +61,10 @@ jobs:
             fi
           done
           # Merge feito com o token do Actions não dispara o CI de develop sozinho: dispara aqui.
-          if [ "$merged" = 1 ]; then gh workflow run ci.yml --repo "$REPO" --ref develop; fi
+          # O CI disparado pelo token também não dispara o deploy (workflow_run ignora runs do GITHUB_TOKEN),
+          # então o deploy é disparado direto (autorizado pelo dono em 2026-10-06 12:59: "pode publicar").
+          # O deploy roda os testes antes, testa o site depois e volta sozinho se o site não responder.
+          if [ "$merged" = 1 ]; then
+            gh workflow run ci.yml --repo "$REPO" --ref develop
+            gh workflow run deploy-cloudflare.yml --repo "$REPO" --ref develop -f confirm=DEPLOY
+          fi
