@@ -45,8 +45,41 @@ export async function listUserDocs<T>(
 }
 
 export async function getUserDoc<T>(uid: string, coll: BodyCoachCollection, id: string): Promise<T | null> {
-  const snap = await getDoc(doc(await db(), 'bodycoach_users', uid, coll, id));
-  return snap.exists() ? (snap.data() as T) : null;
+  const key = chaveLocal(uid, coll, id);
+  try {
+    const snap = await getDoc(doc(await db(), 'bodycoach_users', uid, coll, id));
+    if (snap.exists()) {
+      const data = snap.data() as T;
+      try {
+        localStorage.setItem(key, JSON.stringify(data));
+      } catch {
+        // Ignora erro de localStorage
+      }
+      return data;
+    }
+  } catch (err) {
+    // Falha de rede ou banco: tenta o fallback local
+    const local = localStorage.getItem(key);
+    if (local) {
+      try {
+        return JSON.parse(local) as T;
+      } catch {
+        // JSON inválido
+      }
+    }
+    throw err;
+  }
+
+  // Se não existe no banco, tenta o cache local caso exista
+  const local = localStorage.getItem(key);
+  if (local) {
+    try {
+      return JSON.parse(local) as T;
+    } catch {
+      // JSON inválido
+    }
+  }
+  return null;
 }
 
 // Grava (cria ou substitui) um documento. Campos undefined viram null.
@@ -59,8 +92,30 @@ export async function setUserDoc(
 ): Promise<void> {
   const clean = Object.fromEntries(Object.entries(data).map(([k, v]) => [k, v === undefined ? null : v]));
   const key = chaveLocal(uid, coll, id);
-  localStorage.setItem(key, JSON.stringify(clean));
-  await setDoc(doc(await db(), 'bodycoach_users', uid, coll, id), clean, { merge });
+  
+  // Lê o que já existe em localStorage antes de atualizar
+  const existente = localStorage.getItem(key);
+  
+  // Guarda uma cópia no aparelho antes de gravar no banco
+  try {
+    localStorage.setItem(key, JSON.stringify(clean));
+  } catch {
+    // Ignora erro de localStorage cheio/indisponível
+  }
+
+  try {
+    await setDoc(doc(await db(), 'bodycoach_users', uid, coll, id), clean, { merge });
+  } catch (err) {
+    // Se o banco recusar ou falhar, restaura o dado anterior (se houver) ou mantém o salvo no localStorage
+    if (existente) {
+      try {
+        localStorage.setItem(key, existente);
+      } catch {
+        // Ignora
+      }
+    }
+    throw err;
+  }
 }
 
 export async function deleteUserDoc(uid: string, coll: BodyCoachCollection, id: string): Promise<void> {
