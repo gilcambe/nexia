@@ -90,105 +90,115 @@ export default function Evolution() {
         <RegisterProgress userId={user?.id} onSaved={reload} />
       </Card>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[340px_1fr]">
-        {/* Body Twin */}
-        <Card padding="p-5">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <i className="ri-body-scan-line text-lg text-primary-500"></i>
-              <h2 className="font-heading text-base font-semibold text-foreground-950">Body Twin</h2>
-            </div>
-            <span className="rounded-full bg-secondary-100 px-2.5 py-1 text-[11px] font-semibold text-secondary-700">IA + Foto</span>
-          </div>
-          <BodyTwin
-            selected={twinKey}
-            onSelect={(k) => {
-              const found = selRegions.find((r) => regionTwinKey[r.key] === k);
-              if (found) setSelected(found.key);
-            }}
-            currentWeight={currentWeight}
-            currentBodyFat={currentBodyFat}
-            currentHeight={height}
-            goalBodyFat={goalBodyFat}
-            goalWeight={goalWeight}
-          />
+      {entries.length === 0 ? (
+        <Card padding="p-5" className="flex flex-col items-center justify-center gap-4 text-center min-h-[300px]">
+          <i className="ri-body-scan-line text-4xl text-foreground-400"></i>
+          <h2 className="font-heading text-lg font-bold text-foreground-950">Body Twin</h2>
+          <p className="text-sm text-foreground-500">
+            Registre seu primeiro progresso para que o Body Twin possa ser gerado.
+          </p>
         </Card>
-
-        {/* detail */}
-        <Card padding="p-5">
-          {detail ? (
-            <div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-[340px_1fr]">
+          {/* Body Twin */}
+          <Card padding="p-5">
+            <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <i className={`${regionIcon[detail.key] ?? 'ri-heart-pulse-line'} text-xl text-primary-500`}></i>
-                <h2 className="font-heading text-lg font-bold text-foreground-950">{detail.label}</h2>
-                <span className={`ml-auto rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                  detail.source === 'estimado' ? 'bg-secondary-100 text-secondary-700' : 'bg-accent-100 text-accent-700'
-                }`}>
-                  {regionConfidenceTag(detail)}
-                </span>
+                <i className="ri-body-scan-line text-lg text-primary-500"></i>
+                <h2 className="font-heading text-base font-semibold text-foreground-950">Body Twin</h2>
               </div>
-              <div className="mt-4 flex items-end gap-6">
-                <div>
-                  <p className="text-xs text-foreground-500">Valor atual</p>
-                  <p className="font-heading text-4xl font-bold text-foreground-950">
-                    {detail.value}
-                    <span className="ml-1 text-lg font-medium text-foreground-400">{detail.unit}</span>
-                  </p>
-                </div>
-                <div className="pb-1">
-                  <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
-                    detail.delta > 0 ? 'bg-accent-100 text-accent-700' : detail.delta < 0 ? 'bg-primary-100 text-primary-700' : 'bg-background-200 text-foreground-500'
+              <span className="rounded-full bg-secondary-100 px-2.5 py-1 text-[11px] font-semibold text-secondary-700">IA + Foto</span>
+            </div>
+            <BodyTwin
+              selected={twinKey}
+              onSelect={(k) => {
+                const found = selRegions.find((r) => regionTwinKey[r.key] === k);
+                if (found) setSelected(found.key);
+              }}
+              currentWeight={currentWeight}
+              currentBodyFat={currentBodyFat}
+              currentHeight={height}
+              goalBodyFat={goalBodyFat}
+              goalWeight={goalWeight}
+            />
+          </Card>
+
+          {/* detail */}
+          <Card padding="p-5">
+            {detail ? (
+              <div>
+                <div className="flex items-center gap-2">
+                  <i className={`${regionIcon[detail.key] ?? 'ri-heart-pulse-line'} text-xl text-primary-500`}></i>
+                  <h2 className="font-heading text-lg font-bold text-foreground-950">{detail.label}</h2>
+                  <span className={`ml-auto rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                    detail.source === 'estimado' ? 'bg-secondary-100 text-secondary-700' : 'bg-accent-100 text-accent-700'
                   }`}>
-                    <i className={detail.delta > 0 ? 'ri-arrow-up-line' : detail.delta < 0 ? 'ri-arrow-down-line' : 'ri-arrow-right-line'}></i>
-                    {detail.delta > 0 ? '+' : ''}{detail.delta} {detail.unit} <span className="lowercase">em 6 sem</span>
+                    {regionConfidenceTag(detail)}
                   </span>
                 </div>
-              </div>
-
-              <div className="mt-5 space-y-3">
-                <p className="text-sm text-foreground-600">Dados associados a esta região:</p>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  {[
-                    { label: 'Volume de treino', value: '+12%', icon: 'ri-fire-line' },
-                    { label: 'Força', value: '+6%', icon: 'ri-line-chart-line' },
-                    { label: 'Tendência', value: 'melhorando', icon: 'ri-arrow-up-line' },
-                  ].map((s) => (
-                    <div key={s.label} className="rounded-xl bg-background-100/70 p-3">
-                      <i className={`${s.icon} text-primary-500`}></i>
-                      <p className="mt-1 font-heading text-base font-bold text-foreground-950">{s.value}</p>
-                      <p className="text-[11px] text-foreground-500">{s.label}</p>
-                    </div>
-                  ))}
+                <div className="mt-4 flex items-end gap-6">
+                  <div>
+                    <p className="text-xs text-foreground-500">Valor atual</p>
+                    <p className="font-heading text-4xl font-bold text-foreground-950">
+                      {detail.value}
+                      <span className="ml-1 text-lg font-medium text-foreground-400">{detail.unit}</span>
+                    </p>
+                  </div>
+                  <div className="pb-1">
+                    <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
+                      detail.delta > 0 ? 'bg-accent-100 text-accent-700' : detail.delta < 0 ? 'bg-primary-100 text-primary-700' : 'bg-background-200 text-foreground-500'
+                    }`}>
+                      <i className={detail.delta > 0 ? 'ri-arrow-up-line' : detail.delta < 0 ? 'ri-arrow-down-line' : 'ri-arrow-right-line'}></i>
+                      {detail.delta > 0 ? '+' : ''}{detail.delta} {detail.unit} <span className="lowercase">em 6 sem</span>
+                    </span>
+                  </div>
                 </div>
-                <p className="rounded-lg bg-background-100/70 p-3 text-xs text-foreground-500">
-                  Confiança: {detail.confidence} · Origem: {detail.source === 'medido' ? 'medida real' : 'estimado'} · Atualizado recentemente.
-                </p>
+
+                <div className="mt-5 space-y-3">
+                  <p className="text-sm text-foreground-600">Dados associados a esta região:</p>
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                    {[
+                      { label: 'Volume de treino', value: '+12%', icon: 'ri-fire-line' },
+                      { label: 'Força', value: '+6%', icon: 'ri-line-chart-line' },
+                      { label: 'Tendência', value: 'melhorando', icon: 'ri-arrow-up-line' },
+                    ].map((s) => (
+                      <div key={s.label} className="rounded-xl bg-background-100/70 p-3">
+                        <i className={`${s.icon} text-primary-500`}></i>
+                        <p className="mt-1 font-heading text-base font-bold text-foreground-950">{s.value}</p>
+                        <p className="text-[11px] text-foreground-500">{s.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="rounded-lg bg-background-100/70 p-3 text-xs text-foreground-500">
+                    Confiança: {detail.confidence} · Origem: {detail.source === 'medido' ? 'medida real' : 'estimado'} · Atualizado recentemente.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-foreground-500">Selecione uma região no Body Twin para ver detalhes.</p>
+            )}
+
+            {/* measurements list */}
+            <div className="mt-6 border-t border-background-200 pt-4">
+              <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-foreground-400">Medidas</h3>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                {selRegions.map((r) => (
+                  <button
+                    key={r.key}
+                    onClick={() => setSelected(r.key)}
+                    className={`rounded-xl border px-3 py-2 text-left transition ${
+                      selected === r.key ? 'border-primary-300 bg-primary-100/70' : 'border-background-200 bg-background-50 hover:bg-background-100'
+                    }`}
+                  >
+                    <p className="text-[11px] text-foreground-500">{r.label}</p>
+                    <p className="text-sm font-semibold text-foreground-900">{r.value} {r.unit}</p>
+                  </button>
+                ))}
               </div>
             </div>
-          ) : (
-            <p className="text-sm text-foreground-500">Selecione uma região no Body Twin para ver detalhes.</p>
-          )}
-
-          {/* measurements list */}
-          <div className="mt-6 border-t border-background-200 pt-4">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-foreground-400">Medidas</h3>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-              {selRegions.map((r) => (
-                <button
-                  key={r.key}
-                  onClick={() => setSelected(r.key)}
-                  className={`rounded-xl border px-3 py-2 text-left transition ${
-                    selected === r.key ? 'border-primary-300 bg-primary-100/70' : 'border-background-200 bg-background-50 hover:bg-background-100'
-                  }`}
-                >
-                  <p className="text-[11px] text-foreground-500">{r.label}</p>
-                  <p className="text-sm font-semibold text-foreground-900">{r.value} {r.unit}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-        </Card>
-      </div>
+          </Card>
+        </div>
+      )}
 
       {/* charts */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
