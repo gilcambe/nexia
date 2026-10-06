@@ -88,14 +88,22 @@ test('U4. agentes: os 10 da spec, só leitura onde deve, modelos por classe', ()
   assert.deepStrictEqual(candidates(router, 'reasoning', {}).map(d => d.model).slice(0, 2), ['claude-sonnet-5-5', 'openai/gpt-oss-120b'], 'sem o primeiro, cai no próximo');
   // ADR-FREE-03: sem chave da Anthropic (paga), só os grátis que estiverem configurados
   const free = { capabilities: d => ({ available: ['google', 'groq'].includes(d.provider), tool_call: true }) };
-  assert.deepStrictEqual(candidates(free, 'coding', {}).map(d => `${d.provider}:${d.model}`), ['groq:openai/gpt-oss-120b', 'groq:qwen/qwen3.8-27b', 'groq:openai/gpt-oss-20b', 'google:gemini-2.5-flash', 'google:gemini-2.5-flash-lite'], 'Groq primeiro (cota grátis maior, por modelo); Gemini de reserva');
+  assert.deepStrictEqual(candidates(free, 'coding', {}).map(d => `${d.provider}:${d.model}`), ['groq:openai/gpt-oss-120b', 'groq:qwen/qwen3.8-27b',
+    'groq:moonshotai/kimi-k2-instruct-0905', 'groq:llama-3.3-70b-versatile', 'groq:openai/gpt-oss-20b', 'groq:meta-llama/llama-4-scout-17b-16e-instruct',
+    'google:gemini-flash-latest', 'google:gemini-2.5-flash', 'google:gemini-flash-lite-latest', 'google:gemini-2.5-flash-lite'], 'Groq primeiro (cota grátis por modelo); Gemini de reserva (cota por modelo)');
   // ADR-FREE-04: a lista grátis só tem provedores grátis e vários deles (cotas separadas).
   const { FREE } = require('../../nexia-ai/orchestrator/models');
   for (const cls of Object.keys(FREE)) {
     const provs = new Set(FREE[cls].map(d => d.provider));
-    for (const p of provs) assert.ok(['groq', 'github', 'google', 'cloudflare', 'mistral', 'openrouter'].includes(p), `${cls}: ${p} não é grátis`);
-    assert.ok(provs.size >= 5, `${cls}: precisa de vários provedores grátis`);
+    // ADR-FREE-05: Cerebras fora (o "grátis" exige cartão); Kilo, Codestral e NVIDIA NIM entram.
+    for (const p of provs) assert.ok(['groq', 'github', 'google', 'codestral', 'nvidia', 'cloudflare', 'mistral', 'openrouter', 'kilo'].includes(p), `${cls}: ${p} não é grátis`);
+    assert.ok(provs.size >= 8, `${cls}: precisa de vários provedores grátis`);
     assert.ok(FREE[cls].filter(d => d.provider === 'openrouter').every(d => d.model.endsWith(':free')));
+    // A lista termina com vários modelos grátis do Kilo Gateway (sem chave: nunca fica sem candidato).
+    const tail = FREE[cls].slice(-5);
+    assert.ok(tail.every(d => d.provider === 'kilo' && /^auto:\d$/.test(d.model)), `${cls}: termina no Kilo`);
+    assert.strictEqual(FREE[cls].findIndex(d => d.provider === 'kilo'), FREE[cls].length - 5, `${cls}: Kilo só no fim`);
+    assert.ok(FREE[cls].filter(d => d.provider === 'groq').length >= 6, `${cls}: vários modelos Groq (cotas separadas)`);
   }
   const custom = candidates(free, 'coding', { NEXIA_MODELS_CODING: 'groq:moonshotai/kimi-k2, google:gemini-9, bad, x:y z' });
   assert.deepStrictEqual(custom.map(d => `${d.provider}:${d.model}`), ['groq:moonshotai/kimi-k2', 'google:gemini-9']);

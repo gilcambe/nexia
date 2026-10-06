@@ -3,12 +3,15 @@
 // (os mesmos endpoints que cortex-chat e multi-model-engine já usavam).
 const { ModelError, CODES } = require('../errors');
 const { withTimeout, sseData } = require('../messages');
+const { createKiloCatalog, isFree } = require('./kilo-catalog');
 
 // max_output: teto aplicado ao max_tokens pedido. Os chamadores legados pediam até
 // 100000 tokens, e vários provedores recusam com 400 acima do próprio limite.
 // TEMPORÁRIO: tetos conservadores por provedor (não por modelo). Risco: cortar uma
 // resposta longa num modelo que aceitaria mais. Remoção: catálogo com limites por
 // modelo vindos do provedor (Fase 11).
+// keyless: funciona sem chave (a chave em `env` é opcional). max_input: teto de tokens de ENTRADA por pedido;
+// pedido maior é recusado aqui (TOO_LARGE), sem gastar chamada, e o Cortex passa para o próximo modelo.
 const PROVIDERS = Object.freeze({
   // Plano grátis do Google AI Studio (ADR-FREE-03): mesma chave GEMINI_API_KEY, endpoint compatível com OpenAI e com tool_call.
   google:      { url: 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', env: 'GEMINI_API_KEY', max_output: 65536, tools: true },
@@ -21,23 +24,51 @@ const PROVIDERS = Object.freeze({
   openrouter:  { url: 'https://openrouter.ai/api/v1/chat/completions', env: 'OPENROUTER_API_KEY', max_output: 16384, tools: true,
                  extraHeaders: env => ({ 'HTTP-Referer': env.NEXIA_APP_URL || 'https://nexia.com.br', 'X-Title': 'NEXIA OS' }) },
   mistral:     { url: 'https://api.mistral.ai/v1/chat/completions', env: 'MISTRAL_API_KEY', max_output: 32768, tools: true },
-  nvidia:      { url: 'https://integrate.api.nvidia.com/v1/chat/completions', env: 'NVIDIA_API_KEY', max_output: 4096, tools: false },
+  // ADR-FREE-05: NVIDIA NIM (build.nvidia.com, grátis com verificação por telefone, 40 pedidos/min) aceita tool_call no formato OpenAI.
+  nvidia:      { url: 'https://integrate.api.nvidia.com/v1/chat/completions', env: 'NVIDIA_API_KEY', max_output: 4096, tools: true },
   huggingface: { url: m => `https://router.huggingface.co/hf-inference/models/${m}/v1/chat/completions`, env: 'HF_API_KEY', max_output: 8192, tools: false },
   sambanova:   { url: 'https://api.sambanova.ai/v1/chat/completions', env: 'SAMBANOVA_API_KEY', max_output: 8192, tools: false },
   together:    { url: 'https://api.together.xyz/v1/chat/completions', env: 'TOGETHER_API_KEY', max_output: 8192, tools: true },
   // ADR-FREE-04: grátis e sem cadastro novo. GitHub Models usa o próprio token do GitHub Actions
   // (permissão models: read); Workers AI usa a conta grátis do Cloudflare (10 mil "neurons" por dia).
-  github:      { url: 'https://models.github.ai/inference/chat/completions', env: 'GITHUB_MODELS_TOKEN', max_output: 4096, tools: true },
+  // Plano grátis do GitHub Models: ~8 mil tokens de entrada por pedido (acima disso, 413 tokens_limit_reached).
+  github:      { url: 'https://models.github.ai/inference/chat/completions', env: 'GITHUB_MODELS_TOKEN', max_output: 4096, max_input: 8000, tools: true },
   cloudflare:  { url: (m, env) => `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(env.CLOUDFLARE_AI_ACCOUNT_ID || env.CLOUDFLARE_ACCOUNT_ID || 'sem-conta')}/ai/v1/chat/completions`,
                  env: 'CLOUDFLARE_AI_TOKEN', max_output: 8192, tools: true },   // + CLOUDFLARE_AI_ACCOUNT_ID
+  // ADR-FREE-05: Codestral (codestral.mistral.ai) tem chave própria e grátis (30 pedidos/min, 2 mil por dia).
+  codestral:   { url: 'https://codestral.mistral.ai/v1/chat/completions', env: 'CODESTRAL_API_KEY', max_output: 32768, tools: true },
+  // ADR-FREE-05: Kilo Gateway. Sem chave, só modelos grátis (":free"; 200 pedidos/hora por IP). KILO_API_KEY é opcional.
+  // O modelo "auto:N" é o N-ésimo grátis do catálogo vivo do gateway (kilo-catalog.js); nunca chama modelo pago.
+  kilo:        { url: 'https://api.kilo.ai/api/gateway/chat/completions', env: 'KILO_API_KEY', keyless: true, free_only: true, catalog: true, max_output: 16384, tools: true },
 });
 
 const DEFAULT_TIMEOUT = 120000;
+
+const AUTO = /^auto:(\d{1,2})$/;
+/** Estimativa conservadora de tokens de entrada (~3,5 caracteres por token em português e código). */
+function estimateInputTokens(b) {
+  const chars = JSON.stringify(b.messages || []).length + (b.tools ? JSON.stringify(b.tools).length : 0);
+  return Math.ceil(chars / 3.5);
+}
 
 function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (...a) => fetch(...a), baseUrl } = {}) {
   const cfg = PROVIDERS[id];
   if (!cfg) throw new ModelError(CODES.UNKNOWN_PROVIDER, `Provedor desconhecido: ${id}`);
   const urlFor = model => baseUrl || (typeof cfg.url === 'function' ? cfg.url(model, env) : cfg.url);
+  const catalog = cfg.catalog ? createKiloCatalog({ fetchImpl, env }) : null;
+
+  /** "auto:N" → N-ésimo modelo grátis do catálogo; nome explícito passa direto (com a trava de ":free"). */
+  async function resolveModel(model) {
+    const m = catalog && AUTO.exec(model);
+    let real = model;
+    if (m) {
+      const { ids } = await catalog.list();
+      real = ids[Number(m[1]) - 1];
+      if (!real) throw new ModelError(CODES.UPSTREAM, `${id}: catálogo grátis sem o modelo ${model}`, { provider: id, status: 404, model });
+    }
+    if (cfg.free_only && !isFree(real)) throw new ModelError(CODES.UNSUPPORTED, `${id}: só modelos grátis (":free").`, { provider: id, model: real });
+    return real;
+  }
 
   const capabilities = () => ({ chat: true, streaming: true, tool_call: !!cfg.tools, structured_output: true, max_output_tokens: cfg.max_output });
 
@@ -57,16 +88,22 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
     return b;
   }
 
-  async function post(model, req, stream) {
+  async function post(asked, req, stream) {
     const key = env[cfg.env];
-    if (!key) throw new ModelError(CODES.NO_API_KEY, `${cfg.env} não configurada.`, { provider: id, env: cfg.env });
+    if (!key && !cfg.keyless) throw new ModelError(CODES.NO_API_KEY, `${cfg.env} não configurada.`, { provider: id, env: cfg.env });
+    const model = await resolveModel(asked);
+    const b = body(model, req, stream);
+    if (cfg.max_input) {
+      const est = estimateInputTokens(b);
+      if (est > cfg.max_input) throw new ModelError(CODES.TOO_LARGE, `${id}: pedido de ~${est} tokens passa do teto de ${cfg.max_input} por pedido`, { provider: id, model, status: 413, estimated: est, limit: cfg.max_input });
+    }
     const t = withTimeout(req.signal, req.timeoutMs || DEFAULT_TIMEOUT);
     let res;
     try {
       res = await fetchImpl(urlFor(model), {
         method: 'POST',
-        headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', ...(cfg.extraHeaders ? cfg.extraHeaders(env) : {}) },
-        body: JSON.stringify(body(model, req, stream)),
+        headers: { ...(key ? { Authorization: `Bearer ${key}` } : {}), 'Content-Type': 'application/json', ...(cfg.extraHeaders ? cfg.extraHeaders(env) : {}) },
+        body: JSON.stringify(b),
         signal: t.signal,
       });
     } catch (e) {
@@ -78,9 +115,9 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
     if (!res.ok) {
       const snippet = (await res.text().catch(() => '')).slice(0, 300);
       t.done();
-      throw new ModelError(CODES.UPSTREAM, `${id} ${res.status}`, { provider: id, status: res.status, upstream: snippet });
+      throw new ModelError(CODES.UPSTREAM, `${id} ${res.status}`, { provider: id, model, status: res.status, upstream: snippet });
     }
-    return { res, t };
+    return { res, t, model };
   }
 
   const usageOf = u => ({ input_tokens: (u && (u.prompt_tokens ?? u.input_tokens)) || 0, output_tokens: (u && (u.completion_tokens ?? u.output_tokens)) || 0 });
@@ -88,11 +125,11 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
   return {
     id,
     envKey: cfg.env,
-    available: () => !!env[cfg.env],
+    available: () => !!cfg.keyless || !!env[cfg.env],
     capabilities,
 
     async chat(model, req) {
-      const { res, t } = await post(model, req, false);
+      const { res, t, model: real } = await post(model, req, false);
       try {
         const d = await res.json();
         const msg = (d.choices && d.choices[0] && d.choices[0].message) || {};
@@ -101,7 +138,7 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
           try { input = JSON.parse(tc.function.arguments || '{}'); } catch { input = { _raw: String(tc.function.arguments || '') }; }
           return { id: tc.id, name: tc.function.name, input };
         });
-        return { provider: id, model: d.model || model, text: msg.content || '', tool_calls, usage: usageOf(d.usage), stop_reason: (d.choices && d.choices[0] && d.choices[0].finish_reason) || null };
+        return { provider: id, model: d.model || real, text: msg.content || '', tool_calls, usage: usageOf(d.usage), stop_reason: (d.choices && d.choices[0] && d.choices[0].finish_reason) || null };
       } catch (e) {
         throw new ModelError(CODES.UPSTREAM, `${id} resposta inválida`, { provider: id });
       } finally { t.done(); }
@@ -135,4 +172,4 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
   };
 }
 
-module.exports = { createOpenAICompatibleProvider, PROVIDERS };
+module.exports = { createOpenAICompatibleProvider, PROVIDERS, estimateInputTokens };

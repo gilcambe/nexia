@@ -17,6 +17,8 @@ const PRICES = [
 function priceFor(provider, model) {
   // Modelos ":free" do OpenRouter não cobram por token.
   if (provider === 'openrouter' && /:free$/.test(model)) return { input: 0, output: 0 };
+  // Kilo Gateway: o provedor só aceita modelos ":free" (ou "auto:N", resolvido para um ":free"), ADR-FREE-05.
+  if (provider === 'kilo') return { input: 0, output: 0 };
   if (!['anthropic', 'openai', 'deepseek', 'openrouter'].includes(provider)) return null;
   const hit = PRICES.find(([re]) => re.test(model));
   return hit ? hit[1] : null;

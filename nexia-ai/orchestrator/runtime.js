@@ -6,26 +6,100 @@
 //
 // Erros (spec §27): falha de ferramenta vira resultado estruturado para o modelo; erro
 // transitório (UPSTREAM) é repetido uma vez antes; erro de modelo repete uma vez e depois
-// tenta o próximo modelo candidato. Nada é dado como feito sem confirmação da ferramenta.
+// tenta o próximo modelo candidato (ADR-FREE-05: regra por tipo de falha em classify()). Nada é dado
+// como feito sem confirmação da ferramenta.
 const { allowed, systemPrompt, AGENTS } = require('./agents');
 const { candidates } = require('./models');
 const { parseEditBlocks, FORMAT_HELP } = require('./edit-blocks');
 
 const RETRYABLE_TOOL = new Set(['UPSTREAM']);
-const RETRYABLE_MODEL = new Set(['UPSTREAM', 'ABORTED']);
 // Resultado de ferramenta que volta ao modelo. Grande o bastante para um arquivo de código inteiro
 // (cortar arquivo levava o agente a reescrever o que não leu); o orçamento de tokens segue valendo.
 const RESULT_MAX = 60000;
 const wait = ms => new Promise(r => setTimeout(r, ms));
-/** "Please try again in 7.5s" / "in 1m2s" (Groq, OpenRouter) → ms; sem dica, 10 s. */
+/** "Please try again in 7.5s" / "in 1m2s" (Groq, OpenRouter) / "Please retry in 41s" (Google) → ms; sem dica, 10 s. */
 function retryAfterMs(text) {
-  const m = /try again in (?:(\d+)m)?([\d.]+)?s?/i.exec(String(text || ''));
+  const m = /(?:try again|retry) in (?:(\d+)m)?([\d.]+)?s?/i.exec(String(text || ''));
   if (!m || (!m[1] && !m[2])) return 10000;
   return Math.ceil(((Number(m[1]) || 0) * 60 + (Number(m[2]) || 0)) * 1000) + 500;
 }
 // Em plano grátis cada pedido grande gasta quase a cota do minuto: o agente espera quantas vezes precisar,
 // dentro do orçamento de tempo da execução (meter.check()).
 const RATE_ROUNDS = 20;
+
+/**
+ * ADR-FREE-05: tipo de falha de modelo → o que fazer.
+ *   too_large  pedido maior que o teto POR PEDIDO do modelo (GitHub Models "tokens_limit_reached"): pula o modelo
+ *   tpm        413 da Groq (pedido maior que a cota por MINUTO): encolhe a resposta e o histórico, mesmo modelo
+ *   rate       429 por minuto: espera e repete uma vez (no Kilo, cota por IP: vai direto ao próximo)
+ *   daily      429 da cota do DIA: pula o modelo nesta execução
+ *   busy       503 "high demand" / overloaded / 5xx: próximo modelo na hora, sem repetir
+ *   transient  rede ou tempo esgotado: repete uma vez
+ *   fatal      400/401/403/404 (modelo saiu, chave ruim): pula o modelo nesta execução
+ */
+function classify(e) {
+  const code = e && e.code;
+  const d = (e && e.details) || {};
+  const s = Number(d.status) || 0;
+  const up = String(d.upstream || '');
+  if (code === 'TOO_LARGE' || (s === 413 && /tokens_limit_reached|body too large|max(imum)? size/i.test(up))
+    || (s === 400 && /context.length|maximum context|too many tokens|tokens_limit_reached/i.test(up))) return 'too_large';
+  if (s === 413) return 'tpm';
+  if (s === 429) return /per.?day|\b(RPD|TPD)\b|daily/i.test(up) ? 'daily' : 'rate';
+  if (s >= 500 || /high demand|overloaded|over capacity|unavailable/i.test(up)) return 'busy';
+  if (s >= 400) return 'fatal';
+  if (code === 'UPSTREAM' || code === 'ABORTED') return 'transient';
+  return 'fatal';
+}
+const SKIP = new Set(['too_large', 'daily', 'fatal']);   // não adianta tentar de novo nesta execução
+
+/**
+ * Troca de modelo com as regras acima (runAgent e askModel). `fail(e)` devolve null quando é para tentar
+ * de novo (com `desc`/`shrink` atualizados) ou { code } quando todos falharam. Quando o fim da lista chega
+ * com algum 429 de cota por minuto, espera a janela virar e recomeça (até RATE_ROUNDS vezes).
+ */
+function createFailover(models, meter) {
+  let mi = 0, rounds = 0, tries = 0, shrink = 0, sawRate = false, hint = '', lastLive = null, lastCode = null;
+  const skip = new Set();
+  const errors = [];
+  const nextLive = from => { for (let i = from; i < models.length; i++) if (!skip.has(i)) return i; return -1; };
+  return {
+    errors,
+    get desc() { return models[mi]; },
+    get shrink() { return shrink; },
+    ok() { tries = 0; },
+    async fail(e) {
+      const desc = models[mi];
+      const code = e && e.code;
+      const d = (e && e.details) || {};
+      const real = d.model && d.model !== desc.model ? ` (${d.model})` : '';
+      errors.push(`${desc.provider}/${desc.model}${real}: ${String((e && e.message) || code || 'erro')}${d.upstream ? ` ${String(d.upstream).replace(/\s+/g, ' ').slice(0, 160)}` : ''}`);
+      const kind = classify(e);
+      lastCode = code;
+      if (!SKIP.has(kind)) lastLive = code;
+      if (kind === 'tpm' && shrink < 2) { shrink++; return null; }
+      if (kind === 'rate') {
+        sawRate = true; hint = d.upstream;
+        if (tries === 0 && desc.provider !== 'kilo') { tries++; await wait(Math.min(retryAfterMs(d.upstream), 30000)); return null; }
+      }
+      if (kind === 'transient' && tries === 0) { tries++; return null; }
+      if (SKIP.has(kind)) skip.add(mi);
+      tries = 0;
+      const n = nextLive(mi + 1);
+      if (n >= 0) { mi = n; return null; }
+      // Fim da lista com cota por minuto estourada (planos grátis): espera a janela e recomeça.
+      if (sawRate && rounds < RATE_ROUNDS) {
+        rounds++; sawRate = false;
+        await wait(Math.min(Math.max(retryAfterMs(hint), 5000), 60000));
+        meter.check();
+        const f = nextLive(0);
+        if (f >= 0) { mi = f; return null; }
+      }
+      const c = lastLive || lastCode;
+      return { code: c && /^[A-Z_]+$/.test(c) ? `MODEL_${c}` : 'MODEL_ERROR' };
+    },
+  };
+}
 const ANSWER_CODES = new Set(['NOT_FOUND', 'UPSTREAM_NOT_FOUND']);
 // Planos grátis limitam tokens por minuto: resultados de ferramenta antigos (já usados pelo
 // modelo) seguem só no começo. ADR-CORTEX-01: arquivos lidos são a exceção — o agente precisa do
@@ -162,7 +236,6 @@ async function runAgent(o) {
   if (REPORTING_AGENTS.has(o.agentId)) tools.push(REPORT_TOOL);
   const system = systemPrompt(o.agentId, o.context);
   const messages = [{ role: 'user', content: o.goal }];
-  let mi = 0;
   const failures = new Map();
   const canWrite = catalog.some(t => WRITE_TOOLS.has(t.name));
   let wrote = false;
@@ -170,9 +243,7 @@ async function runAgent(o) {
   const applied = new Set();   // blocos de texto já enviados ao gateway
   const branch = o.branch || ((/Branch de trabalho: (nexia\/\S+)/.exec(o.goal || '') || [])[1]) || null;
   const localErrors = [];   // gravações recusadas (diagnóstico no resumo do passo quando nada foi gravado)
-  const modelErrors = [];
-  let rateRounds = 0;
-  let shrink = 0;   // 0: 8192 tokens de resposta; 1: 4096; 2: 2048
+  const fo = createFailover(models, o.meter);   // shrink 0: 8192 tokens de resposta; 1: 4096; 2: 2048
 
   const strike = (key, model, code, text) => {
     const n = (failures.get(key) || 0) + 1;
@@ -255,41 +326,26 @@ async function runAgent(o) {
   for (let turn = 0; turn < (agent.max_steps || 8); turn++) {
     o.meter.check();
     let out;
-    for (let attempt = 0; ; attempt++) {
-      const desc = models[mi];
+    let desc;
+    for (;;) {
+      desc = fo.desc;
       try {
-        out = await o.router.toolCall(desc, { system, messages: compact(messages, shrink), tools, maxTokens: Math.max(2048, 8192 >> shrink) });
-        o.meter.usage.models.add(`${desc.provider}/${desc.model}`);
+        out = await o.router.toolCall(desc, { system, messages: compact(messages, fo.shrink), tools, maxTokens: Math.max(2048, 8192 >> fo.shrink) });
+        fo.ok();
         break;
       } catch (e) {
-        const code = e && e.code;
-        const d = (e && e.details) || {};
-        modelErrors.push(`${desc.provider}/${desc.model}: ${String((e && e.message) || code || 'erro')}${d.upstream ? ` ${String(d.upstream).replace(/\s+/g, ' ').slice(0, 160)}` : ''}`);
-        // 413 (pedido maior que a cota por minuto do plano grátis): menos tokens de resposta e histórico mais curto, mesmo modelo.
-        if (d.status === 413 && shrink < 2) { shrink++; attempt = -1; continue; }
-        if (RETRYABLE_MODEL.has(code) && attempt === 0) {                         // mesmo modelo, uma vez
-          if (d.status === 429) await wait(Math.min(retryAfterMs(d.upstream), 30000)); // cota por minuto: espera e repete
-          continue;
-        }
-        if (mi + 1 < models.length) { mi++; attempt = -1; continue; }           // próximo candidato
-        // Todos na cota por minuto (planos grátis): espera a janela virar e recomeça pelo primeiro.
-        if (d.status === 429 && rateRounds < RATE_ROUNDS) {
-          rateRounds++;
-          await wait(Math.min(Math.max(retryAfterMs(d.upstream), 5000), 60000));
-          o.meter.check();
-          mi = 0; attempt = -1; continue;
-        }
-        return { status: 'failed', error_code: code && /^[A-Z_]+$/.test(code) ? `MODEL_${code}` : 'MODEL_ERROR',
-          text: `O modelo não respondeu. ${modelErrors.slice(-3).join(' | ')}`.slice(0, 1500), tool_call_ids: toolCallIds };
+        const end = await fo.fail(e);
+        if (end) return { status: 'failed', error_code: end.code, text: `O modelo não respondeu. ${fo.errors.slice(-3).join(' | ')}`.slice(0, 1500), tool_call_ids: toolCallIds };
       }
     }
+    const model = usedModel(desc, out);
+    o.meter.usage.models.add(model);
     o.meter.usage.steps++;
     const u = out.usage || {};
     o.meter.usage.input_tokens += u.input_tokens || 0;
     o.meter.usage.output_tokens += u.output_tokens || 0;
-    const cost = o.router.costEstimate ? o.router.costEstimate(models[mi], u) : { known: false };
+    const cost = o.router.costEstimate ? o.router.costEstimate(desc, u) : { known: false };
     if (cost && cost.known) o.meter.usage.cost_usd += cost.usd; else o.meter.usage.cost_known = false;
-    const model = `${models[mi].provider}/${models[mi].model}`;
 
     let calls = out.tool_calls || [];
     let viaText = false;
@@ -335,41 +391,32 @@ async function askModel(o) {
   const agent = AGENTS[o.agentId];
   const models = candidates(o.router, agent.model);
   if (!models.length) return { status: 'failed', error_code: 'NO_MODEL', text: 'Nenhum modelo configurado.' };
-  const errors = [];
-  let mi = 0, rateRounds = 0, shrink = 0, retried = false;
+  const fo = createFailover(models, o.meter);
   for (;;) {
     o.meter.check();
-    const desc = models[mi];
+    const desc = fo.desc;
     try {
-      const out = await o.router.chat(desc, { system: o.system, messages: [{ role: 'user', content: o.prompt }], maxTokens: Math.max(2048, (o.maxTokens || 6144) >> shrink) });
+      const out = await o.router.chat(desc, { system: o.system, messages: [{ role: 'user', content: o.prompt }], maxTokens: Math.max(2048, (o.maxTokens || 6144) >> fo.shrink) });
       const u = out.usage || {};
       o.meter.usage.steps++;
       o.meter.usage.input_tokens += u.input_tokens || 0;
       o.meter.usage.output_tokens += u.output_tokens || 0;
       const cost = o.router.costEstimate ? o.router.costEstimate(desc, u) : { known: false };
       if (cost && cost.known) o.meter.usage.cost_usd += cost.usd; else o.meter.usage.cost_known = false;
-      o.meter.usage.models.add(`${desc.provider}/${desc.model}`);
-      return { status: 'done', text: String(out.text || ''), model: `${desc.provider}/${desc.model}` };
+      const model = usedModel(desc, out);
+      o.meter.usage.models.add(model);
+      return { status: 'done', text: String(out.text || ''), model };
     } catch (e) {
-      const code = e && e.code;
-      const d = (e && e.details) || {};
-      errors.push(`${desc.provider}/${desc.model}: ${String((e && e.message) || code || 'erro')}${d.upstream ? ` ${String(d.upstream).replace(/\s+/g, ' ').slice(0, 160)}` : ''}`);
-      if (d.status === 413 && shrink < 2) { shrink++; continue; }
-      if (RETRYABLE_MODEL.has(code) && !retried) {
-        retried = true;
-        if (d.status === 429) await wait(Math.min(retryAfterMs(d.upstream), 30000));
-        continue;
-      }
-      retried = false;
-      if (mi + 1 < models.length) { mi++; continue; }
-      if (d.status === 429 && rateRounds < RATE_ROUNDS) {
-        rateRounds++;
-        await wait(Math.min(Math.max(retryAfterMs(d.upstream), 5000), 60000));
-        mi = 0; continue;
-      }
-      return { status: 'failed', error_code: code && /^[A-Z_]+$/.test(code) ? `MODEL_${code}` : 'MODEL_ERROR', text: `O modelo não respondeu. ${errors.slice(-3).join(' | ')}`.slice(0, 1500) };
+      const end = await fo.fail(e);
+      if (end) return { status: 'failed', error_code: end.code, text: `O modelo não respondeu. ${fo.errors.slice(-3).join(' | ')}`.slice(0, 1500) };
     }
   }
 }
 
-module.exports = { askModel, compact, runAgent, createMeter, BudgetError, toModelName, fromModelName, REPORT_TOOL };
+/** "provedor/modelo" para o registro; no Kilo, "auto:N" vira o nome real que o gateway usou. */
+function usedModel(desc, out) {
+  const real = /^auto:\d+$/.test(desc.model) && out && typeof out.model === 'string' && out.model ? out.model : desc.model;
+  return `${desc.provider}/${real}`;
+}
+
+module.exports = { askModel, classify, compact, runAgent, createMeter, BudgetError, toModelName, fromModelName, REPORT_TOOL };

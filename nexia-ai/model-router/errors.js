@@ -9,6 +9,8 @@ const CODES = Object.freeze({
   ABORTED: 'ABORTED',
   INVALID_OUTPUT: 'INVALID_OUTPUT',
   ALL_FAILED: 'ALL_FAILED',
+  // Pedido maior que o teto por pedido do modelo (ex.: GitHub Models grátis, ~8 mil tokens de entrada).
+  TOO_LARGE: 'TOO_LARGE',
 });
 
 class ModelError extends Error {
