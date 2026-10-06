@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, NavLink, Outlet } from 'react-router-dom';
+import { useNavigate, useLocation, NavLink, Outlet } from 'react-router-dom';
 import { CoachProvider, useCoach } from './CoachContext';
 import { NutritionProvider } from './NutritionContext';
 import { ReadinessProvider } from './ReadinessContext';
@@ -145,6 +145,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
 function Shell() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <div className="min-h-screen bg-background-50">
@@ -155,7 +157,18 @@ function Shell() {
 
       {/* mobile top bar */}
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-background-200 bg-background-50/90 px-4 py-3 backdrop-blur lg:hidden">
-        <BrandMark size="sm" />
+        <div className="flex items-center gap-2">
+          {location.pathname !== '/' && (
+            <button
+              onClick={() => navigate(-1)}
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground-600 hover:bg-background-100"
+              aria-label="Voltar"
+            >
+              <i className="ri-arrow-left-line text-xl"></i>
+            </button>
+          )}
+          <BrandMark size="sm" />
+        </div>
         <div className="flex items-center gap-2">
           <InstallButton compact />
           <button
