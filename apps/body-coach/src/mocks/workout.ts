@@ -40,6 +40,7 @@ export interface Exercise {
   restSec: number;
   note: string;
   substituteNote?: string;
+  videoUrl?: string;
   minWeight: number;
   maxWeight: number;
   weightUnit: string;
