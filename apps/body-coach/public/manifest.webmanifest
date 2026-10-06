@@ -1,0 +1,32 @@
+{
+  "id": "/body-coach/",
+  "name": "NEXIA Body Coach AI",
+  "short_name": "Body Coach",
+  "description": "Treino, dieta e evolucao com seu coach de IA",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "/body-coach/",
+  "scope": "/body-coach/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fbfbf7",
+  "theme_color": "#059669",
+  "categories": ["health", "fitness", "productivity"],
+  "url": "/body-coach/",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%23059669'/><g fill='none' stroke='white' stroke-width='28' stroke-linecap='round' stroke-linejoin='round'><path d='M256 96c-44 0-80 36-80 80v48h160v-48c0-44-36-80-80-80z'/><path d='M176 224h160l-12 128c-2 20-18 36-38 36h-60c-20 0-36-16-38-36z'/><circle cx='256' cy='176' r='28'/></g></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' fill='%23059669'/><g fill='none' stroke='white' stroke-width='28' stroke-linecap='round' stroke-linejoin='round'><path d='M256 96c-44 0-80 36-80 80v48h160v-48c0-44-36-80-80-80z'/><path d='M176 224h160l-12 128c-2 20-18 36-38 36h-60c-20 0-36-16-38-36z'/><circle cx='256' cy='176' r='28'/></g></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": []
+}
