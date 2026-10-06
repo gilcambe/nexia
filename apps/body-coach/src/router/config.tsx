@@ -13,11 +13,16 @@ import Exams from "../pages/exams/page";
 import AntiDoping from "../pages/antidoping/page";
 import Onboarding from "../pages/onboarding/page";
 import Auth from "../pages/auth/page";
+import Privacy from "../pages/privacy/page";
 
 const routes: RouteObject[] = [
   {
     path: "/auth",
     element: <Auth />,
+  },
+  {
+    path: "/privacidade",
+    element: <Privacy />,
   },
   {
     path: "/onboarding",
