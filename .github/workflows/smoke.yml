@@ -33,6 +33,8 @@ jobs:
           }
           check /health 200
           for p in / /projetos /execucoes /aprovacoes /auditoria /cortex-app /login /ces/landing; do check "$p" 200; done
+          # Body Coach (app instalável): página, manifesto, service worker e ícone.
+          for p in /body-coach/ /body-coach/manifest.webmanifest /body-coach/sw.js /body-coach/icon.svg; do check "$p" 200; done
           check /api/firebase-config "200 503"
           for p in /api/nexia/me /api/nexia/projects /api/nexia/executions /api/nexia/metrics; do check "$p" 401; done
           check /api/cortex 401 POST
