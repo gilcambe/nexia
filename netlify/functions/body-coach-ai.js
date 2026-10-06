@@ -31,16 +31,24 @@ exports.handler = async (event) => {
   let body;
   try { body = JSON.parse(event.body || '{}'); } catch { return resposta(event, 400, { error: 'Pedido inválido.' }); }
   const message = typeof body.message === 'string' ? body.message.trim() : '';
-  if (message.length < 1 || message.length > 1000) return resposta(event, 400, { error: 'Escreva uma mensagem de até 1000 caracteres.' });
+  if (message.length < 1 || message.length > 3000) return resposta(event, 400, { error: 'Escreva uma mensagem de até 3000 caracteres.' });
   const role = Object.prototype.hasOwnProperty.call(PAPEIS, body.role) ? body.role : 'coach';
   const contexto = JSON.stringify(body.context && typeof body.context === 'object' ? body.context : {}).slice(0, 2000);
   const system = `${PAPEIS[role]}\nContexto do aluno: ${contexto}`;
+  // Foto de evolução (opcional): só modelos com visão (Gemini grátis) olham a imagem.
+  let images;
+  if (typeof body.image === 'string') {
+    const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(body.image);
+    if (!m || m[2].length > 900000) return resposta(event, 400, { error: 'Foto inválida ou grande demais.' });
+    images = [{ mime: m[1], data: m[2] }];
+  }
 
   const router = getRouter();
   for (const d of listFor('fast')) {
     try {
-      if (!router.capabilities(d).available) continue;
-      const out = await router.chat(d, { system, messages: [{ role: 'user', content: message }], maxTokens: 700 });
+      const cap = router.capabilities(d);
+      if (!cap.available || (images && !cap.vision)) continue;
+      const out = await router.chat(d, { system, messages: [{ role: 'user', content: message }], maxTokens: images ? 1200 : 700, ...(images ? { images } : {}) });
       if (out && out.text) return resposta(event, 200, { reply: out.text, role, model: d.model });
     } catch { /* tenta o próximo modelo */ }
   }
