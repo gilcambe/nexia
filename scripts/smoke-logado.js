@@ -151,7 +151,8 @@ async function main() {
       if (last) {
         if (last.error_code) console.log(`  erro da execução: ${last.error_code}`);
         if (last.result_summary) console.log(`  resumo: ${short(last.result_summary)}`);
-        for (const s of last.plan || []) console.log(`  etapa ${s.step} ${s.agent}: ${s.status}${s.error_code ? ` [${s.error_code}]` : ''}${s.model ? ` (${s.model})` : ''} ${short(s.summary || '')}`);
+        // Etapa que falhou: resumo inteiro (até 3000 caracteres), para achar a causa sem abrir o banco.
+        for (const s of last.plan || []) console.log(`  etapa ${s.step} ${s.agent}: ${s.status}${s.error_code ? ` [${s.error_code}]` : ''}${s.model ? ` (${s.model})` : ''} ${s.status === 'failed' ? String(s.summary || '').slice(0, 3000) : short(s.summary || '')}`);
         if (last.work_branch || last.pull_request) console.log(`  resultado: ramo ${last.work_branch || '-'} PR #${last.pull_request || '-'}`);
         if (last.status === 'failed') {
           // Ferramentas que a execução usou (mais recentes primeiro), para achar a causa sem abrir o banco.

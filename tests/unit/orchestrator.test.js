@@ -17,6 +17,9 @@ test('U1. intenção por regras (spec §29) e especialista pelo assunto', () => 
     ['Mostre o status do projeto', 'status'], ['O que mudou desde o último deploy?', 'status'],
     ['Crie o pipeline de CI/CD', 'pipeline'], ['Publique em staging', 'deploy_staging'],
     ['Publique em produção', 'deploy_production'], ['Como funciona o login?', 'question'],
+    // Pedido de edição sem os verbos antigos (antes caía em "question" e nada era gravado).
+    ['No app, edite só o arquivo AuthContext.tsx: apague o bloco do login de teste', 'change'],
+    ['Substitua o texto do rodapé', 'change'], ['Exclua a página de código', 'change'],
   ];
   for (const [m, want] of cases) assert.strictEqual(classifyIntent(m), want, m);
   assert.deepStrictEqual(['Mude a cor do botão', 'Crie um índice no Firestore', 'Ajuste o webhook da API', 'Corrija o cálculo'].map(specialistFor),

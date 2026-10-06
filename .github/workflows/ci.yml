@@ -5,6 +5,8 @@ on:
   push:
     branches: [develop, main, 'nexia-ai/**']
   pull_request:
+  # O merge automático (auto-merge.yml) dispara o CI de develop por aqui.
+  workflow_dispatch:
 
 permissions:
   contents: read
