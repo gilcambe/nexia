@@ -1,0 +1,19 @@
+{
+  "name": "NEXIA Body Coach AI",
+  "short_name": "Body Coach",
+  "description": "Treino, dieta e evolução com seu coach de IA",
+  "lang": "pt-BR",
+  "start_url": "/body-coach/",
+  "scope": "/body-coach/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
