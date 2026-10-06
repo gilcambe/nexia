@@ -1,275 +1,48 @@
 'use strict';
 
-/**
- * ╔══════════════════════════════════════════════════════════════════════╗
- * ║  NEXIA OS — Body Coach AI Team                                       ║
- * ║  Equipe de IA especializada para o App Body Coach                     ║
- * ╚══════════════════════════════════════════════════════════════════════╝
- */
+// NEXIA Body Coach — equipe de IA (coach, nutrólogo, personal, fisioterapeuta).
+// Só usuário autenticado (Bearer do Firebase). Usa a lista de modelos GRÁTIS do Model Router, na ordem,
+// e passa para o próximo quando um falha (cota, indisponível). Não registra o texto das mensagens.
 
 const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware');
 const { getRouter } = require('../../nexia-ai/model-router');
 const { listFor } = require('../../nexia-ai/orchestrator/models');
 
-const SYSTEM_PROMPTS = {
-  nutritionist: 'Você é a Nutricionista IA especialista em nutrição esportiva, cálculo de macronutrientes, dietas flexíveis e reeducação alimentar para o app Body Coach. Responda com empatia, clareza e precisão baseada em evidências científicas. Forneça planos práticos e acionáveis em português do Brasil.',
-  personal: 'Você é o Personal Trainer IA especialista em hipertrofia, emagrecimento, periodização de treinos e biomecânica para o app Body Coach. Responda com motivação, orientações de execução segura e progressão de carga estruturada em português do Brasil.',
-  physio: 'Você é o Fisioterapeuta IA especialista em prevenção de lesões, reabilitação funcional, mobilidade e liberação miofascial para o app Body Coach. Responda priorizando a segurança, saúde articular e dicas ergonômicas em português do Brasil.',
-  coach: 'Você é o Head Coach de Alta Performance especialista em mentalidade, disciplina, constância e planejamento de metas para o app Body Coach. Responda de forma estratégica, motivadora e estruturada em português do Brasil.'
+const COMUM = ' Responda em português do Brasil, em até 6 frases curtas e claras, usando os dados do aluno no contexto e sem inventar dados que não estão nele.';
+const PAPEIS = {
+  coach: 'Você é o coach do aluno no app NEXIA Body Coach: motivacional, conecta treino, dieta e rotina e ajuda a manter a constância.' + COMUM,
+  nutrologo: 'Você é um médico nutrólogo no app NEXIA Body Coach: orienta alimentação e metas de macros. Não diagnostique e não prescreva remédios; em sintomas, exames alterados ou doenças, mande procurar um médico presencial.' + COMUM,
+  personal: 'Você é um personal trainer no app NEXIA Body Coach: orienta carga, séries, técnica e progressão do treino.' + COMUM,
+  fisioterapeuta: 'Você é um fisioterapeuta no app NEXIA Body Coach: orienta mobilidade, dor leve e prevenção de lesão. Em dor forte, formigamento ou lesão, mande procurar atendimento presencial.' + COMUM,
 };
 
-// ---- Limites de segurança alinhados ao Body Coach ----
-const MIN_MAX_TOKENS = 16;
-const MAX_MAX_TOKENS = 8192;
-const MAX_MESSAGE_LENGTH = 8000;
-const MAX_HISTORY_MESSAGES = 20;
-const MAX_MODEL_INPUT_LENGTH = 4000;
-
-/**
- * Normaliza HTTP method aceitas (Netlify pode passar lowercase).
- */
-function normalizeMethod(m) {
-  return typeof m === 'string' ? m.toUpperCase() : '';
-}
-
-/**
- * Valida e normaliza maxTokens vindo do cliente.
- * Retorna null se ausente (usar default) ou um número inteiro dentro de [MIN, MAX].
- */
-function parseMaxTokens(value) {
-  if (value === undefined || value === null || value === '') return null;
-  const n = typeof value === 'number' ? value : Number(value);
-  if (!Number.isFinite(n)) return null;
-  const int = Math.floor(n);
-  if (int < MIN_MAX_TOKENS || int > MAX_MAX_TOKENS) {
-    throw new Error(`maxTokens fora do intervalo permitido (${MIN_MAX_TOKENS}–${MAX_MAX_TOKENS})`);
-  }
-  return int;
-}
-
-/**
- * Escape básico de caracteres especiais de prompt (HTML) para reduzir risco de prompt injection.
- */
-function sanitizeUserContent(input) {
-  if (typeof input !== 'string') return '';
-  return input
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;')
-    .replace(/`/g, '`')
-    .trim();
-}
-
-/**
- * Trunca uma string para no máximo `limit` caracteres.
- */
-function truncate(input, limit) {
-  const s = typeof input === 'string' ? input : '';
-  return s.length <= limit ? s : s.slice(0, limit);
-}
-
-/**
- * Garante que os headers de resposta obrigatórios (CORS + headers críticos) estejam presentes.
- * Mescla em headers existentes (case-insensitive) em vez de sobrescrever.
- */
-function ensureResponseHeaders(evt) {
-  const headers = (makeHeaders && typeof makeHeaders === 'function')
-    ? (makeHeaders(evt) || {})
-    : {};
-
-  const existing = {};
-  for (const k of Object.keys(headers || {})) {
-    existing[String(k).toLowerCase()] = k;
-  }
-
-  // Defaults seguros de CORS
-  const corsDefaults = {
-    'Access-Control-Allow-Origin': process.env.NEXIA_CORS_ORIGIN || '*',
-    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type,Authorization,X-Tenant-Id',
-    'Access-Control-Max-Age': '86400',
-    'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY'
-  };
-
-  for (const [name, value] of Object.entries(corsDefaults)) {
-    const lower = String(name).toLowerCase();
-    if (!existing[lower]) {
-      headers[name] = value;
-      existing[lower] = name;
-    }
-  }
-
-  return headers;
-}
+const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 
 exports.handler = async (event) => {
-  const method = normalizeMethod(event.httpMethod);
+  const method = String(event.httpMethod || '').toUpperCase();
+  if (method === 'OPTIONS') return { statusCode: 204, headers: makeHeaders(event), body: '' };
+  if (method !== 'POST') return resposta(event, 405, { error: 'Method Not Allowed' });
 
-  // 0. Headers garantidos no OPTIONS (CORS preflight)
-  if (method === 'OPTIONS') {
-    const optsHeaders = ensureResponseHeaders(event);
-    return { statusCode: 200, headers: optsHeaders, body: '' };
-  }
+  const auth = await verifyBearerToken(event);
+  if (!auth.ok) return resposta(event, 401, { error: 'Entre na sua conta para falar com a equipe.' });
+  const rl = await checkRateLimit(auth.uid, 'body-coach-ai');
+  if (!rl.ok) return resposta(event, 429, { error: 'Muitas mensagens seguidas. Aguarde um instante.' });
 
-  // 0.1. Para demais métodos, usamos os headers que o middleware já aplica ao contexto do evento
-  const headers = makeHeaders
-    ? makeHeaders(event)
-    : ensureResponseHeaders(event);
+  let body;
+  try { body = JSON.parse(event.body || '{}'); } catch { return resposta(event, 400, { error: 'Pedido inválido.' }); }
+  const message = typeof body.message === 'string' ? body.message.trim() : '';
+  if (message.length < 1 || message.length > 1000) return resposta(event, 400, { error: 'Escreva uma mensagem de até 1000 caracteres.' });
+  const role = Object.prototype.hasOwnProperty.call(PAPEIS, body.role) ? body.role : 'coach';
+  const contexto = JSON.stringify(body.context && typeof body.context === 'object' ? body.context : {}).slice(0, 2000);
+  const system = `${PAPEIS[role]}\nContexto do aluno: ${contexto}`;
 
-  if (method !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method Not Allowed' })
-    };
-  }
-
-  // 1. Autenticação por Bearer Token
-  const authResult = verifyBearerToken(event);
-  if (!authResult.ok) {
-    return {
-      statusCode: 401,
-      headers,
-      body: JSON.stringify({ error: authResult.error || 'Unauthorized' })
-    };
-  }
-
-  // 2. Rate Limiting por tenant/usuário
-  const rateLimitResult = checkRateLimit(authResult.tenantId || 'body-coach', authResult.uid || 'anon');
-  if (!rateLimitResult.ok) {
-    return {
-      statusCode: 429,
-      headers,
-      body: JSON.stringify({ error: rateLimitResult.error || 'Rate limit exceeded' })
-    };
-  }
-
-  try {
-    let body = {};
+  const router = getRouter();
+  for (const d of listFor('fast')) {
     try {
-      body = JSON.parse(event.body || '{}');
-    } catch {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'JSON inválido no body' })
-      };
-    }
-
-    const {
-      agent = 'coach',
-      message,
-      history = [],
-      maxTokens = null
-    } = body;
-
-    if (!message || typeof message !== 'string') {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'message é obrigatório e deve ser uma string' })
-      };
-    }
-
-    // Valida e normaliza maxTokens
-    let validatedMaxTokens;
-    try {
-      validatedMaxTokens = parseMaxTokens(maxTokens);
-    } catch (err) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: err.message })
-      };
-    }
-
-    // Sanitiza e limita o input do usuário
-    if (message.length > MAX_MESSAGE_LENGTH) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: `message excede o tamanho máximo de ${MAX_MESSAGE_LENGTH} caracteres` })
-      };
-    }
-    const sanitizedMessage = sanitizeUserContent(message);
-    if (!sanitizedMessage) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'message contém apenas caracteres não válidos' })
-      };
-    }
-
-    const systemPrompt = SYSTEM_PROMPTS[agent] || SYSTEM_PROMPTS.coach;
-
-    // Selecionar modelo adequado utilizando o orquestrador e router
-    const availableModels = listFor('chat') || [];
-    const router = getRouter();
-
-    // Escolher primeiro modelo disponível na lista ou fallback seguro
-    let selectedModelConfig = availableModels[0] || { provider: 'groq', model: 'openai/gpt-oss-120b' };
-
-    const messagesPayload = [];
-    messagesPayload.push({ role: 'system', content: systemPrompt });
-
-    if (Array.isArray(history)) {
-      const validHistory = history.slice(-MAX_HISTORY_MESSAGES);
-      for (const h of validHistory) {
-        if (h && typeof h.role === 'string' && typeof h.content === 'string') {
-          const role = h.role === 'assistant' ? 'assistant' : 'user';
-          const content = truncate(sanitizeUserContent(h.content), MAX_MODEL_INPUT_LENGTH);
-          if (content) {
-            messagesPayload.push({ role, content });
-          }
-        }
-      }
-    }
-
-    messagesPayload.push({ role: 'user', content: truncate(sanitizedMessage, MAX_MODEL_INPUT_LENGTH) });
-
-    const completionOptions = {};
-    if (validatedMaxTokens !== null) {
-      completionOptions.max_tokens = validatedMaxTokens;
-    }
-
-    let result;
-    if (router && typeof router.complete === 'function') {
-      result = await router.complete({
-        provider: selectedModelConfig.provider,
-        model: selectedModelConfig.model,
-        messages: messagesPayload,
-        ...completionOptions
-      });
-    } else {
-      // Fallback robusto se router não estiver disponível
-      result = {
-        content: `Olá! Sou o seu ${agent} do Body Coach AI. No momento, o sistema de IA está em modo de inicialização. Sua mensagem foi recebida com sucesso!`
-      };
-    }
-
-    const replyText = result && (result.content || result.text || result.message)
-      ? (result.content || result.text || result.message)
-      : 'Resposta gerada com sucesso.';
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({
-        ok: true,
-        agent,
-        reply: replyText,
-        modelUsed: selectedModelConfig.model || 'default'
-      })
-    };
-
-  } catch (err) {
-    console.error('Erro em body-coach-ai:', err);
-    return {
-      statusCode: 500,
-      headers,
-      body: JSON.stringify({ error: err.message || 'Erro interno do servidor' })
-    };
+      if (!router.capabilities(d).available) continue;
+      const out = await router.chat(d, { system, messages: [{ role: 'user', content: message }], maxTokens: 700 });
+      if (out && out.text) return resposta(event, 200, { reply: out.text, role, model: d.model });
+    } catch { /* tenta o próximo modelo */ }
   }
+  return resposta(event, 503, { error: 'A equipe está indisponível agora. Tente de novo em alguns minutos.' });
 };
