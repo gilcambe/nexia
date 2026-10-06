@@ -245,9 +245,14 @@ function createOrchestrator(deps) {
         if (!(await reachable(u.url))) out.errors.push({ file: u.file, line: u.line, message: `a mídia ${u.url.slice(0, 120)} não abre (troque por outra de media.search_images)` });
       }
       for (const m of out.missingCandidates.slice(0, 10)) {
-        const g = await tool(ctx, state, 'qa', 'github.get_file', { path: m.path, ref: state.work_branch });
-        idList.push(...ids(g));
-        if (g.status === 'failed' && g.error && /NOT_FOUND/.test(g.error.code || '')) out.errors.push({ file: m.file, line: m.line, message: `"${m.ref}" não existe na branch (crie o arquivo, use SVG/CSS no lugar ou remova a referência)` });
+        // Num app com build, "/x.svg" vem de public/ (ADR-Q-02): só é erro se não existir em nenhum lugar possível.
+        let missing = true;
+        for (const path of (m.alts || [m.path]).slice(0, 5)) {
+          const g = await tool(ctx, state, 'qa', 'github.get_file', { path, ref: state.work_branch });
+          idList.push(...ids(g));
+          if (!(g.status === 'failed' && g.error && /NOT_FOUND/.test(g.error.code || ''))) { missing = false; break; }
+        }
+        if (missing) out.errors.push({ file: m.file, line: m.line, message: `"${m.ref}" não existe na branch (crie o arquivo, use SVG/CSS no lugar ou remova a referência)` });
       }
       return { ...out, ids: idList };
     };
