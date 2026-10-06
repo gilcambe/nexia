@@ -17,6 +17,7 @@ import { getFirebase } from './firebaseClient';
 export type BodyCoachCollection =
   | 'profile'
   | 'meals'
+  | 'workouts'
   | 'daily_readiness'
   | 'progress_entries'
   | 'medical_exams';
@@ -124,5 +125,20 @@ export function dataUrlToObjectUrl(dataUrl: string | null | undefined): string |
     return URL.createObjectURL(new Blob([bytes], { type: mime }));
   } catch {
     return null;
+  }
+}
+
+// Apaga todos os dados do aluno (direito de exclusão da LGPD). Sem ordenação: pega até os docs sem data.
+export const ALL_COLLECTIONS: BodyCoachCollection[] = ['meals', 'workouts', 'daily_readiness', 'progress_entries', 'medical_exams', 'profile'];
+export async function deleteAllUserData(uid: string): Promise<void> {
+  const database = await db();
+  for (const coll of ALL_COLLECTIONS) {
+    try {
+      const snap = await getDocs(collection(database, 'bodycoach_users', uid, coll));
+      await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+    } catch (e) {
+      // 'workouts' pode ainda não estar nas regras publicadas: os treinos também ficam só no aparelho.
+      if (coll !== 'workouts') throw e;
+    }
   }
 }

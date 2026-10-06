@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/feature/AuthContext';
-import { getUserDoc } from '@/lib/userData';
+import { deleteUser } from 'firebase/auth';
+import { getUserDoc, deleteAllUserData } from '@/lib/userData';
+import { getFirebase } from '@/lib/firebaseClient';
 import Card, { CardHeader } from '@/components/base/Card';
 
 type Answers = Record<string, string | string[] | undefined>;
@@ -44,6 +46,37 @@ export default function Profile() {
     if (!user) return;
     getUserDoc<SavedProfile>(user.id, 'profile', 'main').then(setSaved).catch(() => {});
   }, [user]);
+
+  const navigate = useNavigate();
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteAccount = async () => {
+    if (!user) return;
+    if (!window.confirm('Isso apaga sua conta e todos os seus dados (perfil, refeições, check-ins, evolução e exames). Não dá para desfazer. Continuar?')) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const fb = await getFirebase();
+      if (!fb?.auth.currentUser) throw new Error('offline');
+      await deleteAllUserData(user.id);
+      try {
+        Object.keys(localStorage).filter((k) => k.includes(user.id)).forEach((k) => localStorage.removeItem(k));
+      } catch {
+        // Sem armazenamento local: nada a limpar.
+      }
+      await deleteUser(fb.auth.currentUser);
+      navigate('/auth');
+    } catch (e) {
+      const code = (e as { code?: string }).code ?? '';
+      setDeleteError(
+        code.includes('requires-recent-login')
+          ? 'Por segurança, saia e entre de novo e depois exclua a conta.'
+          : 'Não foi possível excluir a conta agora. Tente de novo.',
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   const data: SavedProfile = { ...(profile ?? {}), ...(saved ?? {}) };
   const ob: Answers = data.onboarding ?? {};
@@ -133,27 +166,14 @@ export default function Profile() {
           </Link>
           <button
             type="button"
-            onClick={() => {
-              if (
-                window.confirm(
-                  'Isso apaga sua conta e todos os seus dados (perfil, refeições, check-ins, evolução e exames). Não dá para desfazer. Continuar?'
-                )
-              ) {
-                // Executa exclusão da conta se confirmado
-                if (user && typeof (useAuth() as any).deleteAccount === 'function') {
-                  (useAuth() as any).deleteAccount().catch(() => {});
-                } else {
-                  // Fallback para signOut ou limpeza local se deleteAccount não estiver disponível diretamente
-                  localStorage.clear();
-                  window.location.href = '/login';
-                }
-              }
-            }}
-            className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 inline-flex items-center gap-2"
+            onClick={deleteAccount}
+            disabled={deleting}
+            className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 inline-flex items-center gap-2 disabled:opacity-60"
           >
-            <i className="ri-delete-bin-line"></i> Excluir minha conta
+            <i className="ri-delete-bin-line"></i> {deleting ? 'Excluindo...' : 'Excluir minha conta'}
           </button>
         </div>
+        {deleteError && <p className="mt-3 text-sm text-red-600">{deleteError}</p>}
       </Card>
     </div>
   );
