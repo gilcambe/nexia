@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/components/feature/AuthContext';
-import { LOCAL_DEMO_EMAIL, LOCAL_DEMO_PASSWORD } from '@/lib/localDemo';
+
 
 type Mode = 'login' | 'signup';
 
@@ -23,22 +23,7 @@ export default function Auth() {
     setInfo(null);
   };
 
-  // Acesso rápido de teste: um clique entra no modo local (admin / admin01).
-  const handleDemoLogin = async () => {
-    setError(null);
-    setInfo(null);
-    setSubmitting(true);
-    try {
-      const { error: err } = await signIn(LOCAL_DEMO_EMAIL, LOCAL_DEMO_PASSWORD);
-      if (err) {
-        setError(err);
-      } else {
-        navigate('/');
-      }
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -134,30 +119,9 @@ export default function Auth() {
               : 'Crie sua conta e tenha seus próprios dados de evolução.'}
           </p>
 
-          {mode === 'login' && (
-            <div className="mt-5 flex items-start gap-2 rounded-lg border border-secondary-200 bg-secondary-100/60 px-3 py-2.5 text-xs text-secondary-900">
-              <i className="ri-key-2-line mt-0.5 text-secondary-700"></i>
-              <span>
-                <strong className="font-semibold">Acesso de teste (sem backend):</strong> use o usuário{' '}
-                <code className="rounded bg-background-50 px-1.5 py-0.5 font-mono text-foreground-800">admin</code>{' '}
-                e a senha{' '}
-                <code className="rounded bg-background-50 px-1.5 py-0.5 font-mono text-foreground-800">admin01</code>{' '}
-                para abrir todas as telas e testar o app.
-              </span>
-            </div>
-          )}
+          
 
-          {mode === 'login' && (
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              disabled={submitting}
-              className="mt-3 flex w-full cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-secondary-300 bg-secondary-100 px-4 py-2.5 text-sm font-semibold text-secondary-900 transition hover:bg-secondary-200 disabled:opacity-60"
-            >
-              <i className="ri-flashlight-line"></i>
-              Entrar como demo (1 clique)
-            </button>
-          )}
+          
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {mode === 'signup' && (
@@ -182,7 +146,7 @@ export default function Auth() {
                 name="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="voce@exemplo.com ou admin"
+                placeholder="voce@exemplo.com"
                 autoComplete="username"
                 className="rounded-lg border border-background-200 bg-background-50 px-3 py-2.5 text-sm outline-none focus:border-primary-300"
               />
