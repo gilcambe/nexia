@@ -80,8 +80,11 @@ async function publicarSoBodyCoach(p, call) {
   const bloco = full.slice(ini, fim)
     .replace('return isAuthenticated() && uid() == userId;', 'return request.auth != null && request.auth.uid == userId;')
     .replace(/uid\(\)/g, 'request.auth.uid');
-  const ancora = /match \/databases\/\{database\}\/documents \{\n/;
-  if (!ancora.test(live)) throw new Error('Não achei o início das regras no ar. Nada foi publicado.');
+  const ancora = /match\s+\/databases\/\{[^}]+\}\/documents\s*\{[ \t]*\r?\n/;
+  if (!ancora.test(live)) {
+    console.log(`::notice title=Regras no ar::${files.length} arquivo(s), ${live.length} caracteres; começo: ${JSON.stringify(live.slice(0, 160))}`);
+    throw new Error('Não achei o início das regras no ar. Nada foi publicado.');
+  }
   const novo = live.replace(ancora, m => `${m}${bloco}\n`);
   const rs = await call(`${rules}/rulesets`, 'POST', { source: { files: [{ name: files[0].name, content: novo }] } });
   if (!rs.ok) throw new Error(`Criar o conjunto de regras: ${rs.status} ${(rs.j.error && rs.j.error.message) || ''}`);
