@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { session } from '@/mocks/workout';
 import { useCoach } from '@/components/feature/CoachContext';
 import Card from '@/components/base/Card';
 
@@ -15,22 +14,22 @@ export default function TodayCard() {
         Hoje
       </div>
       <h1 className="mt-3 font-heading text-2xl font-bold leading-tight text-foreground-950 md:text-[28px]">
-        {session.title}
+        Nenhum treino agendado para hoje
       </h1>
-      <p className="mt-2 text-sm text-foreground-600">{session.objective}</p>
+      <p className="mt-2 text-sm text-foreground-600">Aproveite para descansar ou escolha um treino livre para iniciar.</p>
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-background-100 px-3 py-1.5 text-xs font-medium text-foreground-700">
           <i className="ri-time-line text-accent-600"></i>
-          {session.estimatedMinutes} min
+          0 min
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-background-100 px-3 py-1.5 text-xs font-medium text-foreground-700">
           <i className="ri-fire-line text-primary-500"></i>
-          Prioridade alta
+          Livre
         </span>
         <span className="inline-flex items-center gap-1.5 rounded-full bg-background-100 px-3 py-1.5 text-xs font-medium text-foreground-700">
           <i className="ri-heart-pulse-line text-accent-600"></i>
-          {session.exercises.length} exercícios
+          0 exercícios
         </span>
       </div>
 
