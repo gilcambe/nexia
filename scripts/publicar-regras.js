@@ -39,6 +39,7 @@ async function main() {
   const ownerIsMaster = masters.includes(owner.localId);
   const others = masters.filter(u => u !== owner.localId && u !== 'nexia-smoke');
   console.log(`Conta do dono: ${ownerIsMaster ? 'é master' : 'NÃO é master'} (uid ${mask(owner.localId)}${owner.emailVerified ? '' : ', e-mail não verificado'}).`);
+  console.log(`::notice title=Masters::dono ${ownerIsMaster ? 'é master' : 'NÃO é master'}; outros ${others.length}`);
   console.log(`Outros masters: ${others.length}${others.length ? ` (${others.map(mask).join(', ')}): confira se são legítimos` : ''}.`);
 
   const source = fs.readFileSync(path.join(__dirname, '..', 'firestore.rules'), 'utf8');
@@ -55,4 +56,4 @@ async function main() {
   console.log(`Regras publicadas (${rs.j.name.split('/').pop()}).`);
 }
 
-main().catch(e => { console.error(`FALHOU: ${e.message}`); process.exit(1); });
+main().catch(e => { console.error(`::error title=Regras do Firestore::${e.message}`); process.exit(1); });
