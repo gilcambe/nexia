@@ -1,75 +1,80 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-export default function InstallButton() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isStandalone, setIsStandalone] = useState<boolean>(false);
+// O Chrome pode disparar o evento antes de a tela montar: guarda já ao carregar o módulo.
+let saved: BeforeInstallPromptEvent | null = null;
+const listeners = new Set<() => void>();
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    saved = e as BeforeInstallPromptEvent;
+    listeners.forEach((fn) => fn());
+  });
+  window.addEventListener('appinstalled', () => {
+    saved = null;
+    listeners.forEach((fn) => fn());
+  });
+}
+
+const isStandalone = () =>
+  window.matchMedia('(display-mode: standalone)').matches || (navigator as { standalone?: boolean }).standalone === true;
+const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+export default function InstallButton({ compact = false }: { compact?: boolean }) {
+  const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(saved);
+  const [help, setHelp] = useState(false);
 
   useEffect(() => {
-    // Verifica se já está em modo standalone (instalado)
-    const mediaQuery = window.matchMedia('(display-mode: standalone)');
-    if (mediaQuery.matches || (window.navigator as any).standalone) {
-      setIsStandalone(true);
-    }
-
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-
-    const handleAppInstalled = () => {
-      setDeferredPrompt(null);
-      setIsStandalone(true);
-    };
-
-    window.addEventListener('appinstalled', handleAppInstalled);
-
+    const update = () => setPrompt(saved);
+    listeners.add(update);
     return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-      window.removeEventListener('appinstalled', handleAppInstalled);
+      listeners.delete(update);
     };
   }, []);
 
-  if (isStandalone || !deferredPrompt) {
-    return null;
-  }
+  if (isStandalone() || (!prompt && !isIos())) return null;
 
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const choiceResult = await deferredPrompt.userChoice;
-    if (choiceResult.outcome === 'accepted') {
-      setDeferredPrompt(null);
+  const onClick = async () => {
+    if (prompt) {
+      await prompt.prompt();
+      const choice = await prompt.userChoice.catch(() => null);
+      if (choice?.outcome === 'accepted') {
+        saved = null;
+        setPrompt(null);
+      }
+      return;
     }
+    setHelp((h) => !h);
   };
 
   return (
-    <button
-      onClick={handleInstallClick}
-      className="fixed bottom-4 right-4 z-50 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 py-3 rounded-full shadow-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-      aria-label="Instalar app no celular"
-    >
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-5 h-5"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        strokeWidth={2}
+    <div className={compact ? 'relative' : ''}>
+      <button
+        onClick={onClick}
+        className={
+          compact
+            ? 'flex items-center gap-1.5 rounded-lg bg-primary-500 px-3 py-2 text-xs font-semibold text-background-50 transition hover:bg-primary-600'
+            : 'mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground-600 transition hover:bg-background-100'
+        }
       >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-        />
-      </svg>
-      <span>Instalar app</span>
-    </button>
+        <i className={`ri-download-2-line ${compact ? 'text-base' : 'text-lg'}`}></i>
+        Instalar app
+      </button>
+      {help && (
+        <p
+          className={
+            compact
+              ? 'absolute right-0 top-11 z-40 w-64 rounded-xl border border-background-200 bg-background-50 p-3 text-xs text-foreground-700 shadow-lg'
+              : 'mx-3 mt-1 rounded-lg bg-background-100 p-3 text-xs text-foreground-700'
+          }
+        >
+          No Safari, toque em Compartilhar <i className="ri-share-box-line"></i> e depois em "Adicionar à Tela de Início".
+        </p>
+      )}
+    </div>
   );
 }
