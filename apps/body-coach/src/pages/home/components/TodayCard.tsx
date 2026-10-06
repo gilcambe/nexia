@@ -14,24 +14,9 @@ export default function TodayCard() {
         Hoje
       </div>
       <h1 className="mt-3 font-heading text-2xl font-bold leading-tight text-foreground-950 md:text-[28px]">
-        Nenhum treino agendado para hoje
+        Treino de hoje
       </h1>
-      <p className="mt-2 text-sm text-foreground-600">Aproveite para descansar ou escolha um treino livre para iniciar.</p>
-
-      <div className="mt-5 flex flex-wrap items-center gap-3">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-background-100 px-3 py-1.5 text-xs font-medium text-foreground-700">
-          <i className="ri-time-line text-accent-600"></i>
-          0 min
-        </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-background-100 px-3 py-1.5 text-xs font-medium text-foreground-700">
-          <i className="ri-fire-line text-primary-500"></i>
-          Livre
-        </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-background-100 px-3 py-1.5 text-xs font-medium text-foreground-700">
-          <i className="ri-heart-pulse-line text-accent-600"></i>
-          0 exercícios
-        </span>
-      </div>
+      <p className="mt-2 text-sm text-foreground-600">Abra o treino do seu plano e registre as séries na academia.</p>
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <button
