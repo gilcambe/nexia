@@ -114,7 +114,39 @@ function parseEditBlocks(text) {
   // Mesmo arquivo como inteiro e por trechos: o arquivo inteiro já tem tudo.
   const whole = new Set(out.files.map(x => x.path));
   out.edits = out.edits.filter(e => !whole.has(e.path));
+  if (!out.edits.length && !out.files.length) {
+    const j = parseJsonEdits(text);
+    if (j.edits.length || j.files.length) return j;
+  }
   return out;
 }
 
-module.exports = { parseEditBlocks, safePath, FORMAT_HELP };
+/**
+ * Modelos grátis às vezes escrevem a chamada da ferramenta como JSON no texto ({"edits":[...]} ou
+ * {"files":[...]}) em vez de chamá-la. Se o JSON está completo e válido, vale como edição.
+ */
+function parseJsonEdits(text) {
+  const out = { edits: [], files: [], problems: [] };
+  const src = String(text || '');
+  const cands = [];
+  const fence = /```(?:json)?\s*\n([\s\S]*?)\n\s*```/gi;
+  let m;
+  while ((m = fence.exec(src))) cands.push(m[1]);
+  if (!cands.length) { const a = src.indexOf('{'), b = src.lastIndexOf('}'); if (a >= 0 && b > a) cands.push(src.slice(a, b + 1)); }
+  for (const c of cands) {
+    let o;
+    try { o = JSON.parse(c); } catch { continue; }
+    o = o && o.input && typeof o.input === 'object' ? o.input : o;
+    for (const e of Array.isArray(o && o.edits) ? o.edits : []) {
+      const path = safePath(e && e.path);
+      if (path && typeof e.find === 'string' && e.find.trim() && typeof e.replace === 'string') out.edits.push({ path, find: e.find, replace: e.replace });
+    }
+    for (const f of Array.isArray(o && o.files) ? o.files : []) {
+      const path = safePath(f && f.path);
+      if (path && typeof f.content === 'string' && f.content.trim() && !PLACEHOLDER.test(f.content)) out.files.push({ path, content: f.content });
+    }
+  }
+  return out;
+}
+
+module.exports = { parseEditBlocks, parseJsonEdits, safePath, FORMAT_HELP };

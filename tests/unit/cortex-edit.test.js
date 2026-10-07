@@ -284,3 +284,12 @@ test('CE-aspas. aspas escapadas pelo modelo (\\") são desfeitas quando o arquiv
   assert.strictEqual(r.replace, '<p className="y">');
   assert.strictEqual(desescapaAspas('const s = "a\\"b";', e), e, 'arquivo que já tem \\" fica como veio');
 });
+
+test('CE-json. chamada escrita como JSON no texto vira edição', () => {
+  const { parseEditBlocks } = require('../../nexia-ai/orchestrator/edit-blocks');
+  const txt = 'Vamos lá!\n```json\n' + JSON.stringify({ branch: 'nexia/x', message: 'm', edits: [{ path: 'apps/a/b.tsx', find: 'a', replace: 'b' }] }) + '\n```';
+  const r = parseEditBlocks(txt);
+  assert.deepStrictEqual(r.edits, [{ path: 'apps/a/b.tsx', find: 'a', replace: 'b' }]);
+  assert.strictEqual(parseEditBlocks('```json\n{"edits":[{"path":"../x","find":"a","replace":"b"}]}\n```').edits.length, 0, 'caminho inseguro recusado');
+  assert.strictEqual(parseEditBlocks('```json\n{"edits":[{"path":"a/b.ts","find":"a"').edits.length, 0, 'JSON cortado é ignorado');
+});
