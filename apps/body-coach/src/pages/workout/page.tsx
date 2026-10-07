@@ -3,12 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { type SetLog, type Session } from '@/mocks/workout';
 import type { Answers } from '@/lib/trainingPlan';
 import { montarTreinoDoDia, type TreinoDoDia, trocarExercicio } from '@/lib/dayPlan';
+import { moverExercicio } from '@/lib/ordemTreino';
 import { alternativas, videoDeExecucao, lesoesDoTexto, type Lesao } from '@/lib/exerciseDb';
 import PreTreino from './components/PreTreino';
 import { dicaAoVivo } from '@/lib/liveCoach';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
+import { useCoach } from '@/components/feature/CoachContext';
 
 type Phase =
   | 'PRE_SESSION'
@@ -63,6 +65,7 @@ function WorkoutEmpty({ estado }: { estado: string }) {
 function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Session; lesoes?: Lesao[]; onSessionChange?: (s: Session) => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { setOpen } = useCoach();
   const [startedAt] = useState(() => new Date().toISOString());
   const [phase, setPhase] = useState<Phase>('PRE_SESSION');
   const [exIndex, setExIndex] = useState(0);
@@ -212,8 +215,8 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
               {exercise.note}
             </p>
 
-            {/* ver como fazer & trocar exercício */}
-            <div className="mt-3 flex flex-wrap gap-2">
+            {/* ver como fazer & trocar exercício & reordenar */}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setShowVideo(true)}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-primary-100 px-3 py-1.5 text-xs font-semibold text-primary-700 hover:bg-primary-200 transition"
@@ -228,6 +231,36 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
                 <i className="ri-refresh-line"></i>
                 Trocar exercício
               </button>
+              <div className="flex items-center gap-1 bg-background-200/70 p-1 rounded-lg">
+                <button
+                  onClick={() => {
+                    const novaSessao = moverExercicio(session, exIndex, exIndex - 1);
+                    if (novaSessao !== session) {
+                      onSessionChange?.(novaSessao);
+                      setExIndex((i) => Math.max(0, i - 1));
+                    }
+                  }}
+                  disabled={exIndex === 0}
+                  title="Subir exercício"
+                  className="inline-flex items-center justify-center p-1 rounded text-foreground-700 hover:bg-background-300 disabled:opacity-40 transition"
+                >
+                  <i className="ri-arrow-up-line text-sm"></i>
+                </button>
+                <button
+                  onClick={() => {
+                    const novaSessao = moverExercicio(session, exIndex, exIndex + 1);
+                    if (novaSessao !== session) {
+                      onSessionChange?.(novaSessao);
+                      setExIndex((i) => Math.min(session.exercises.length - 1, i + 1));
+                    }
+                  }}
+                  disabled={exIndex === session.exercises.length - 1}
+                  title="Descer exercício"
+                  className="inline-flex items-center justify-center p-1 rounded text-foreground-700 hover:bg-background-300 disabled:opacity-40 transition"
+                >
+                  <i className="ri-arrow-down-line text-sm"></i>
+                </button>
+              </div>
             </div>
 
             {/* modal vídeo */}
@@ -381,6 +414,13 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
               {exIndex < session.exercises.length - 1
                 ? 'CONCLUIR EXERCÍCIO → PRÓXIMO'
                 : 'FINALIZAR FORÇA'}
+            </button>
+            <button
+              onClick={() => setOpen(true)}
+              className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-background-50 shadow-lg transition hover:bg-primary-600"
+              aria-label="Falar com o coach"
+            >
+              <i className="ri-chat-3-line text-2xl"></i>
             </button>
           </div>
         )}
