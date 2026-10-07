@@ -309,7 +309,10 @@ function createGithubAdapter(o) {
         const f = await api.getFile({ path, ref: head });
         if (f.redactions) throw bad(`${path} tem segredo redigido; não pode ser editado pelo NEXIA.`);
         let text = f.content;
-        list.forEach((e, k) => {
+        // Modelos grátis escapam aspas (\") dentro do trecho como se fosse JSON: se o arquivo não tem \",
+        // desfaz o escape no find e no replace para não gravar barras invertidas no código.
+        list.forEach((e0, k) => {
+          const e = desescapaAspas(text, e0);
           const n = text.split(e.find).length - 1;
           if (n === 1) { text = text.replace(e.find, () => e.replace); return; }
           // Modelos grátis erram espaço, tab ou quebra de linha ao copiar o trecho: sem cópia exata, aceita
@@ -326,4 +329,9 @@ function createGithubAdapter(o) {
   return api;
 }
 
-module.exports = { createGithubAdapter, looseFind, LIMITS, WORK_BRANCH_RE, PERMS, PIPELINE_WORKFLOW };
+function desescapaAspas(text, e) {
+  if (text.includes('\\"')) return e;
+  return { ...e, find: e.find.replace(/\\"/g, '"'), replace: e.replace.replace(/\\"/g, '"') };
+}
+
+module.exports = { createGithubAdapter, looseFind, desescapaAspas, LIMITS, WORK_BRANCH_RE, PERMS, PIPELINE_WORKFLOW };
