@@ -44,10 +44,8 @@ export default function Team() {
         // Adicione outros campos relevantes e não sensíveis
       });
 
-      // Sanitização básica da pergunta para evitar prompt injection simples no cliente
-      const sanitizedPergunta = pergunta.replace(/[";']/g, ''); // Remove aspas e ponto e vírgula
-
-      const res = await perguntar(papel, sanitizedPergunta, contexto);
+      // Nota: A sanitização robusta da pergunta para evitar prompt injection deve ser realizada no servidor.
+      const res = await perguntar(papel, pergunta, contexto);
       setResposta(res);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ocorreu um erro inesperado.');
@@ -131,10 +129,10 @@ export default function Team() {
         </button>
 
         {error && (
-          <div className="rounded-md bg-red-50 p-4">
+          <div className="rounded-md bg-red-50 p-4" aria-live="polite">
             <div className="flex">
               <div className="flex-shrink-0">
-                <i className="ri-error-warning-line text-red-400"></i>
+                <i className="ri-error-warning-line text-red-400" aria-hidden="true"></i>
               </div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-red-800">Erro:</h3>
@@ -147,10 +145,10 @@ export default function Team() {
         )}
 
         {resposta && (
-          <div className="rounded-md bg-green-50 p-4">
+          <div className="rounded-md bg-green-50 p-4" aria-live="polite">
             <div className="flex">
               <div className="flex-shrink-0">
-                <i className="ri-check-line text-green-400"></i>
+                <i className="ri-check-line text-green-400" aria-hidden="true"></i>
               </div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-green-800">Resposta do Coach:</h3>
