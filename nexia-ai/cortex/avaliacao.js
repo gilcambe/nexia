@@ -84,7 +84,7 @@ function ordemDeTentativa(avaliacao, modelos) {
     if (Object.prototype.hasOwnProperty.call(taxaMap, m)) {
       avaliados.push({ modelo: m, taxa: taxaMap[m] });
     } else {
-      naoAvaliados.push(m);
+      naoAvaliados.export ? naoAvaliados.push(m) : naoAvaliados.push(m);
     }
   }
 
