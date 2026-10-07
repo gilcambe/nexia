@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { type SetLog, type Session } from '@/mocks/workout';
 import type { Answers } from '@/lib/trainingPlan';
-import { montarTreinoDoDia, type TreinoDoDia, trocarExercicio } from '@/lib/dayPlan';
-import { alternativas, videoDeExecucao, lesoesDoTexto } from '@/lib/exerciseDb';
+import { montarTreinoDoDia, trocarExercicio, type TreinoDoDia } from '@/lib/dayPlan';
+import { alternativas, videoDeExecucao, type Lesao } from '@/lib/exerciseDb';
 import PreTreino from './components/PreTreino';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
@@ -45,7 +45,7 @@ export default function Workout() {
       />
     );
   }
-  return <WorkoutFlow session={treino.sessao} onTreinoChange={setTreino} />;
+  return <WorkoutFlow session={treino.sessao} lesoes={treino.lesoes} onSessionChange={(sessao) => setTreino({ ...treino, sessao })} />;
 }
 
 function WorkoutEmpty({ estado }: { estado: string }) {
@@ -59,7 +59,7 @@ function WorkoutEmpty({ estado }: { estado: string }) {
   );
 }
 
-function WorkoutFlow({ session, onTreinoChange }: { session: Session; onTreinoChange?: (t: TreinoDoDia) => void }) {
+function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Session; lesoes?: Lesao[]; onSessionChange?: (s: Session) => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [startedAt] = useState(() => new Date().toISOString());
@@ -224,13 +224,15 @@ function WorkoutFlow({ session, onTreinoChange }: { session: Session; onTreinoCh
                       <i className="ri-close-line text-xl"></i>
                     </button>
                   </div>
-                  <div className="mt-4 overflow-hidden rounded-xl bg-background-900 aspect-video flex items-center justify-center text-background-50">
-                    <div className="text-center p-4">
-                      <i className="ri-movie-line text-4xl text-primary-400 mb-2"></i>
-                      <p className="text-sm font-medium">{videoDeExecucao(exercise.name)}</p>
-                      <p className="text-xs text-background-400 mt-1">Vídeo demonstrativo de postura e movimento</p>
-                    </div>
-                  </div>
+                  <a
+                    href={exercise.videoUrl || videoDeExecucao(exercise.name)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 flex items-center gap-3 rounded-xl bg-background-100 p-4 text-sm font-medium text-foreground-800 hover:bg-background-200"
+                  >
+                    <i className="ri-movie-line text-3xl text-primary-500"></i>
+                    <span>Abrir vídeos de execução correta de {exercise.name}</span>
+                  </a>
                   <div className="mt-5 flex justify-end">
                     <button
                       onClick={() => setShowVideo(false)}
@@ -255,31 +257,22 @@ function WorkoutFlow({ session, onTreinoChange }: { session: Session; onTreinoCh
                   </div>
                   <p className="mt-2 text-sm text-foreground-600">Escolha uma alternativa compatível para {exercise.name}:</p>
                   <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
-                    {alternativas(exercise.name).map((alt) => (
+                    {alternativas(exercise.id, new Set(lesoes), [], session.exercises.map((e) => e.id)).map((alt) => (
                       <button
-                        key={alt}
+                        key={alt.id}
                         onClick={() => {
-                          if (onTreinoChange) {
-                            // atualiza o treino atual trocando o exercício no índice exIndex
-                            const newExercises = [...session.exercises];
-                            newExercises[exIndex] = {
-                              ...newExercises[exIndex],
-                              name: alt,
-                              id: alt.toLowerCase().replace(/\\s+/g, '-')
-                            };
-                            onTreinoChange({
-                              ...session,
-                              exercises: newExercises
-                            } as any);
-                          }
+                          onSessionChange?.(trocarExercicio(session, exercise.id, alt.id));
                           setShowSwapModal(false);
                         }}
                         className="w-full text-left rounded-xl border border-background-200 bg-background-100/60 p-3 text-sm font-medium text-foreground-800 hover:bg-primary-50 hover:border-primary-300 transition flex items-center justify-between"
                       >
-                        <span>{alt}</span>
+                        <span>{alt.nome}</span>
                         <i className="ri-arrow-right-s-line text-foreground-400"></i>
                       </button>
                     ))}
+                    {alternativas(exercise.id, new Set(lesoes), [], session.exercises.map((e) => e.id)).length === 0 && (
+                      <p className="text-sm text-foreground-500">Sem alternativa compatível para este exercício.</p>
+                    )}
                   </div>
                   <div className="mt-5 flex justify-end">
                     <button
