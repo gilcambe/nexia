@@ -13,9 +13,11 @@ async function runJob(rawJob, deps = {}) {
   const job = validateJob(rawJob);
   const db = deps.db || require('../../netlify/functions/firebase-init').db;
   if (!db) throw new Error('Firestore indisponível (FIREBASE_SERVICE_ACCOUNT_BASE64).');
+  // Vault/Cortex podem viver em um segundo projeto grátis (FIREBASE_SERVICE_ACCOUNT_B); sem ele, é o mesmo banco.
+  const vdb = deps.db || require('../../netlify/functions/firebase-vault').vaultDb();
   const { createVault } = require('../vault');
   const auditSink = require('../vault/audit-file').createFileAuditSink(process.env.NEXIA_AUDIT_FILE);
-  const vault = deps.vault || createVault({ db, ...(auditSink ? { auditSink } : {}) });
+  const vault = deps.vault || createVault({ db: vdb, ...(auditSink ? { auditSink } : {}) });
   // ADR-CLONE-01: duplicar tenant (cópia preparada pela API; aqui só ids, resumo só com contagens)
   if (job.kind === 'tenant.duplicate') {
     const { duplicateTenant } = require('../tenant-copy');
@@ -26,7 +28,7 @@ async function runJob(rawJob, deps = {}) {
   const orchestrator = deps.orchestrator || (() => {
     const { createGateway } = require('../tool-gateway');
     const { createOrchestrator } = require('../orchestrator');
-    const gateway = createGateway({ db, vault });
+    const gateway = createGateway({ db: vdb, vault });
     return createOrchestrator({ vault, gateway, router: require('../model-router').getRouter() });
   })();
 

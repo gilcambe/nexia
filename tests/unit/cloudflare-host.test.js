@@ -116,7 +116,7 @@ test('CF4. Worker: API vai para o handler Netlify; 404 sem função; 413 acima d
 
 test('CF5. lista de handlers do Worker bate com netlify/functions/ (o bundle não segue require dinâmico)', () => {
   const files = fs.readdirSync(path.join(ROOT, 'netlify/functions'))
-    .filter(f => f.endsWith('.js') && !['firebase-init.js', 'middleware.js'].includes(f)).map(f => f.slice(0, -3));
+    .filter(f => f.endsWith('.js') && !['firebase-init.js', 'firebase-vault.js', 'middleware.js'].includes(f)).map(f => f.slice(0, -3));
   assert.deepStrictEqual(Object.keys(LOADERS).filter(k => k !== 'nexia-api').sort(), files.sort());
   assert.ok(LOADERS['nexia-api']);
 });
