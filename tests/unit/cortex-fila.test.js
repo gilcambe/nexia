@@ -29,12 +29,10 @@ test('CF4. na última tentativa trava e avisa', () => {
   assert.equal(a[0].tipo, 'travar');
 });
 
-test('CF5. respeita a espera crescente entre tentativas e as pistas ocupadas', () => {
+test('CF5. tarefa que falhou é despachada na hora (sem espera de horário), respeitando pistas', () => {
   const issues = [issue(1, ['tentativa-2']), issue(2, ['cortex-rodando', 'pista-1']), issue(3)];
-  const cedo = decidir({ issues, runs: [run(1, 'completed', 'failure', 10), run(2, 'in_progress', null)], agora: AGORA });
-  assert.deepEqual(cedo.map(x => [x.numero, x.pista]), [[3, 2]]);
-  const tarde = decidir({ issues, runs: [run(1, 'completed', 'failure', 31), run(2, 'in_progress', null)], agora: AGORA });
-  assert.deepEqual(tarde.map(x => [x.numero, x.pista]), [[1, 2], [3, 3]]);
+  const a = decidir({ issues, runs: [run(1, 'completed', 'failure', 1), run(2, 'in_progress', null)], agora: AGORA });
+  assert.deepEqual(a.map(x => [x.numero, x.pista]), [[1, 2], [3, 3]]);
 });
 
 test('CF6. "rodando" sem execução por mais de 20 minutos volta para a fila', () => {
@@ -42,13 +40,11 @@ test('CF6. "rodando" sem execução por mais de 20 minutos volta para a fila', (
   assert.equal(a[0].tipo, 'reenfileirar');
 });
 
-test('CF-cota. falha por cota do banco não gasta tentativa e pausa até 07:05 UTC', () => {
+test('CF-cota. falha por cota do banco não gasta tentativa e a fila NÃO pausa por horário', () => {
   const r = { ...run(1, 'completed', 'failure', 5), cota: true };
   const a = decidir({ issues: [issue(1, ['cortex-rodando', 'pista-1', 'tentativa-2']), issue(2)], runs: [r], agora: AGORA });
   assert.deepEqual([a[0].tipo, a[0].tentativa], ['reenfileirar', 2]);
-  assert.equal(a.some(x => x.tipo === 'despachar'), false);
-  const depois = decidir({ issues: [issue(2)], runs: [r], agora: Date.parse('2026-10-08T07:06:00Z') });
-  assert.equal(depois[0].tipo, 'despachar');
+  assert.equal(a.some(x => x.tipo === 'despachar' && x.numero === 2), true);
 });
 
 test('CF-teste-final. fila vazia depois de entregas sem teste novo dispara o teste de pessoa', () => {
