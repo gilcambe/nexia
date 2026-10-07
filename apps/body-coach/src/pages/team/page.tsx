@@ -3,27 +3,17 @@ import { perguntar, type Papel } from '@/lib/coachAI';
 import { getUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 
-// Função para sanitizar texto para exibição em HTML
-const sanitizeText = (text: string): string => {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/\"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-};
-
 export default function Team() {
   const { user, profile, loading } = useAuth();
   const [pergunta, setPergunta] = useState('');
   const [resposta, setResposta] = useState('');
-  const [papel, setPapel] = useState<Papel>('coach'); // Default válido para Papel ('coach' | 'nutrologo' | 'personal' | 'fisioterapeuta')
+  const [papel, setPapel] = useState<Papel>('coach');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handlePerguntar = async () => {
-    if (!user || !profile || !pergunta.trim()) {
-      setError('Por favor, faça uma pergunta.');
+    if (!user || !pergunta.trim()) {
+      setError('Por favor, digite uma pergunta.');
       return;
     }
 
@@ -32,19 +22,20 @@ export default function Team() {
     setResposta('');
 
     try {
-      const userData = await getUserDoc(user.id, 'profile', 'profile');
-      const contexto = JSON.stringify({
-        age: userData?.age,
-        gender: userData?.gender,
-        weight: userData?.weight,
-        height: userData?.height,
-        goals: userData?.goals,
-      });
+      let contexto = '';
+      try {
+        const userData = await getUserDoc(user.id, 'profile');
+        if (userData) {
+          contexto = JSON.stringify(userData);
+        }
+      } catch (e) {
+        // Ignora erro ao buscar contexto se não existir
+      }
 
       const res = await perguntar(papel, pergunta, contexto);
       setResposta(res);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Ocorreu um erro inesperado.');
+    } catch (err: any) {
+      setError(err?.message || 'Ocorreu um erro ao consultar o coach.');
     } finally {
       setIsLoading(false);
     }
@@ -52,108 +43,79 @@ export default function Team() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <header>
-          <h1 className="font-heading text-2xl font-bold text-foreground-950">Equipe</h1>
-          <p className="mt-1 max-w-2xl text-sm text-foreground-600">Carregando informações do usuário...</p>
-        </header>
+      <div className="p-6 text-center text-foreground-600">
+        Carregando...
       </div>
     );
   }
 
-  if (!user || !profile) {
+  if (!user) {
     return (
-      <div className="space-y-6">
-        <header>
-          <h1 className="font-heading text-2xl font-bold text-foreground-950">Equipe</h1>
-          <p className="mt-1 max-w-2xl text-sm text-foreground-600">
-            Você precisa estar logado e ter um perfil para interagir com o Coach AI.
-          </p>
-        </header>
+      <div className="p-6 text-center text-foreground-600">
+        Você precisa estar conectado para acessar a equipe de IA.
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="font-heading text-2xl font-bold text-foreground-950">Seu Coach AI</h1>
-        <p className="mt-1 max-w-2xl text-sm text-foreground-600">
-          Faça perguntas ao seu coach virtual e obtenha respostas baseadas nos seus dados.
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <div className="bg-white shadow rounded-lg p-6 space-y-4">
+        <h1 className="text-2xl font-bold text-foreground-900">Equipe de IA</h1>
+        <p className="text-sm text-foreground-600">
+          Consulte nossa equipe de especialistas virtuais para tirar dúvidas sobre seus treinos, nutrição e saúde.
         </p>
-      </header>
 
-      <div className="flex flex-col gap-4">
-        <div>
-          <label htmlFor="papel-select" className="block text-sm font-medium text-foreground-700">
-            Selecione o papel do Coach:
-          </label>
-          <select
-            id="papel-select"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border"
-            value={papel}
-            onChange={(e) => setPapel(e.target.value as Papel)}
-            disabled={isLoading}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-foreground-700 mb-1">
+              Especialista (Papel)
+            </label>
+            <select
+              value={papel}
+              onChange={(e) => setPapel(e.target.value as Papel)}
+              className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              disabled={isLoading}
+            >
+              <option value="coach">Coach</option>
+              <option value="nutrologo">Nutrólogo</option>
+              <option value="personal">Personal</option>
+              <option value="fisioterapeuta">Fisioterapeuta</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-foreground-700 mb-1">
+              Sua pergunta
+            </label>
+            <textarea
+              rows={4}
+              value={pergunta}
+              onChange={(e) => setPergunta(e.target.value)}
+              placeholder="Digite sua dúvida aqui..."
+              className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              disabled={isLoading}
+            />
+          </div>
+
+          <button
+            onClick={handlePerguntar}
+            disabled={isLoading || !pergunta.trim()}
+            className="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 transition disabled:opacity-50 text-sm font-medium"
           >
-            <option value="coach">Coach</option>
-            <option value="nutrologo">Nutrólogo</option>
-            <option value="personal">Personal</option>
-            <option value="fisioterapeuta">Fisioterapeuta</option>
-          </select>
+            {isLoading ? 'Consultando especialista...' : 'Enviar Pergunta'}
+          </button>
         </div>
-
-        <div>
-          <label htmlFor="pergunta-input" className="block text-sm font-medium text-foreground-700">
-            Sua pergunta:
-          </label>
-          <textarea
-            id="pergunta-input"
-            rows={4}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border"
-            value={pergunta}
-            onChange={(e) => setPergunta(e.target.value)}
-            placeholder="Ex: Quais alimentos devo comer para ganhar massa muscular?"
-            disabled={isLoading}
-          ></textarea>
-        </div>
-
-        <button
-          onClick={handlePerguntar}
-          disabled={isLoading || !pergunta.trim()}
-          className="inline-flex justify-center rounded-md border border-transparent bg-primary-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50"
-        >
-          {isLoading ? 'Enviando...' : 'Perguntar ao Coach'}
-        </button>
 
         {error && (
-          <div className="rounded-md bg-red-50 p-4" aria-live="polite">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <i className="ri-error-warning-line text-red-400" aria-hidden="true"></i>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">Erro:</h3>
-                <div className="mt-2 text-sm text-red-700">
-                  <p>{sanitizeText(error)}</p>
-                </div>
-              </div>
-            </div>
+          <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
+            {error}
           </div>
         )}
 
         {resposta && (
-          <div className="rounded-md bg-green-50 p-4" aria-live="polite">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <i className="ri-check-line text-green-400" aria-hidden="true"></i>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-green-800">Resposta do Coach:</h3>
-                <div className="mt-2 text-sm text-green-700 whitespace-pre-wrap">
-                  <p>{sanitizeText(resposta)}</p>
-                </div>
-              </div>
-            </div>
+          <div className="mt-6 p-4 bg-gray-50 border border-gray-200 rounded-md space-y-2">
+            <h3 className="text-sm font-semibold text-foreground-800">Resposta do Especialista:</h3>
+            <p className="text-sm text-foreground-700 whitespace-pre-wrap">{resposta}</p>
           </div>
         )}
       </div>
