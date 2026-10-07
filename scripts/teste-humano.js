@@ -19,6 +19,14 @@ const PERIGOSO = /excluir|apagar|deletar|remover conta|sair|logout|delete|encerr
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.woff': 'font/woff', '.webmanifest': 'application/manifest+json', '.txt': 'text/plain' };
 
 const server = http.createServer((req, res) => {
+  // a configuração pública do Firebase vem do Worker (só leitura); o resto de /api não é repassado
+  if (req.url.split('?')[0] === '/api/firebase-config' && process.env.CONFIG_URL) {
+    require('https').get(process.env.CONFIG_URL, { headers: { Accept: 'application/json' } }, up => {
+      res.writeHead(up.statusCode || 502, { 'Content-Type': up.headers['content-type'] || 'application/json' });
+      up.pipe(res);
+    }).on('error', () => { res.writeHead(502); res.end(); });
+    return;
+  }
   let rel = decodeURIComponent(req.url.split('?')[0]);
   if (BASE !== '/' && rel.startsWith(BASE)) rel = '/' + rel.slice(BASE.length);
   else if (BASE !== '/' && rel + '/' === BASE) rel = '/';

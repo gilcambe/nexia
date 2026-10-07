@@ -67,6 +67,7 @@ jobs:
           ROOT: ${{ inputs.folder }}
           BASE: ${{ inputs.base }}
           OUT: ${{ github.workspace }}/relatorio
+          CONFIG_URL: https://nexia.gcbezerra.workers.dev/api/firebase-config
         run: node scripts/teste-humano.js
       - name: Apagar conta de teste
         if: ${{ always() && inputs.conta == 'sim' }}
