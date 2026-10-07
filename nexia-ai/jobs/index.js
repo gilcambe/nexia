@@ -115,6 +115,24 @@ async function sweepAllTenants({ db, orchestrator, max = 20 }) {
   return { tenants: tenants.length, items };
 }
 
+/**
+ * Batimento extra da fila do Cortex: o agendamento do GitHub Actions pode ficar horas sem rodar, então o
+ * cron do Worker (grátis, a cada 5 min) acorda o workflow "Fila do Cortex" a cada 15 min. Não usa o banco.
+ */
+async function acordarFila({ env = process.env, now = Date.now, fetchImpl = (...a) => fetch(...a) } = {}) {
+  if (env.NEXIA_JOBS !== 'github' || !env.NEXIA_JOBS_TOKEN) return { fila: 'desligada' };
+  if (new Date(now()).getUTCMinutes() % 15 >= 5) return { fila: 'fora_do_tique' };
+  const repo = env.NEXIA_JOBS_REPO || 'gilcambe/nexia';
+  if (!REPO_RE.test(repo)) return { fila: 'repo_invalido' };
+  const r = await fetchImpl(`https://api.github.com/repos/${repo}/actions/workflows/fila-cortex.yml/dispatches`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${env.NEXIA_JOBS_TOKEN}`, Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28', 'User-Agent': 'nexia-jobs', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ref: env.NEXIA_JOBS_REF || 'develop' }),
+  });
+  return { fila: r.status === 204 ? 'acordada' : `recusada_${r.status}` };
+}
+
 const toMs = t => (t && typeof t.toMillis === 'function' ? t.toMillis() : Date.parse(t));
 
 /**
@@ -125,11 +143,13 @@ const toMs = t => (t && typeof t.toMillis === 'function' ? t.toMillis() : Date.p
  */
 async function scheduledSweep({ env = process.env, db, jobs, now = () => Date.now() } = {}) {
   const j = jobs || createJobs({ env });
-  if (!j.enabled) return { skipped: 'NEXIA_JOBS desligado' };
+  let fila = {};
+  try { const f = await acordarFila({ env, now }); if (!['desligada', 'fora_do_tique'].includes(f.fila)) fila = f; } catch { fila = { fila: 'erro' }; }
+  if (!j.enabled) return { skipped: 'NEXIA_JOBS desligado', ...fila };
   const database = db || require('../../netlify/functions/firebase-init').db;
   if (!database) return { skipped: 'Firestore indisponível' };
   const t = now();
-  const out = {};
+  const out = { ...fila };
   try {
     const { findDueRobots } = require('../robots');
     const due = await findDueRobots(database, t, { limit: 10, select: true });
@@ -148,4 +168,4 @@ async function scheduledSweep({ env = process.env, db, jobs, now = () => Date.no
   return out;
 }
 
-module.exports = { KINDS, JobError, validateJob, createJobs, contextFor, sweepAllTenants, scheduledSweep, WORKFLOW };
+module.exports = { acordarFila, KINDS, JobError, validateJob, createJobs, contextFor, sweepAllTenants, scheduledSweep, WORKFLOW };
