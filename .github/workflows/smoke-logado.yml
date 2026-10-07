@@ -33,6 +33,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 concurrency:
   group: smoke-logado-${{ github.run_id }}
@@ -57,3 +58,15 @@ jobs:
           PISTA: ${{ inputs.pista }}
           RAPIDO: ${{ inputs.modo == 'economico' && '1' || '' }}
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+  acordar:
+    name: Acordar a fila do Cortex
+    needs: smoke
+    if: always() && inputs.tarefa_id != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      # A fila não espera relógio: ao fim de cada execução ela roda de novo e reenvia/continua as tarefas na hora.
+      - run: sleep 5 && gh workflow run fila-cortex.yml --ref develop
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
