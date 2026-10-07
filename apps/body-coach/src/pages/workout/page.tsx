@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { type SetLog, type Session } from '@/mocks/workout';
 import type { Answers } from '@/lib/trainingPlan';
-import { montarTreinoDoDia, type TreinoDoDia, trocarExercicio } from '@/lib/dayPlan';
+import { montarTreinoDoDia, type TreinoDoDia, trocarExercicio } from '@/lib/dayPlan';\nimport { moverExercicio } from '@/lib/ordemTreino';
 import { alternativas, videoDeExecucao, lesoesDoTexto, type Lesao } from '@/lib/exerciseDb';
 import PreTreino from './components/PreTreino';
 import { dicaAoVivo } from '@/lib/liveCoach';
@@ -212,8 +212,8 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
               {exercise.note}
             </p>
 
-            {/* ver como fazer & trocar exercício */}
-            <div className="mt-3 flex flex-wrap gap-2">
+            {/* ver como fazer, trocar exercício & reordenar */}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               <button
                 onClick={() => setShowVideo(true)}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-primary-100 px-3 py-1.5 text-xs font-semibold text-primary-700 hover:bg-primary-200 transition"
@@ -227,6 +227,36 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
               >
                 <i className="ri-refresh-line"></i>
                 Trocar exercício
+              </button>
+              <button
+                disabled={exIndex === 0}
+                onClick={() => {
+                  if (exIndex > 0) {
+                    const novaSessao = moverExercicio(session, exIndex, exIndex - 1);
+                    onSessionChange?.(novaSessao);
+                    setExIndex(exIndex - 1);
+                  }
+                }}
+                className="inline-flex items-center gap-1 rounded-lg bg-background-200 px-2.5 py-1.5 text-xs font-semibold text-foreground-700 hover:bg-background-300 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                title="Subir exercício"
+              >
+                <i className="ri-arrow-up-line"></i>
+                Subir
+              </button>
+              <button
+                disabled={exIndex === session.exercises.length - 1}
+                onClick={() => {
+                  if (exIndex < session.exercises.length - 1) {
+                    const novaSessao = moverExercicio(session, exIndex, exIndex + 1);
+                    onSessionChange?.(novaSessao);
+                    setExIndex(exIndex + 1);
+                  }
+                }}
+                className="inline-flex items-center gap-1 rounded-lg bg-background-200 px-2.5 py-1.5 text-xs font-semibold text-foreground-700 hover:bg-background-300 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                title="Descer exercício"
+              >
+                <i className="ri-arrow-down-line"></i>
+                Descer
               </button>
             </div>
 
