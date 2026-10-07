@@ -14,7 +14,8 @@ async function runJob(rawJob, deps = {}) {
   const db = deps.db || require('../../netlify/functions/firebase-init').db;
   if (!db) throw new Error('Firestore indisponível (FIREBASE_SERVICE_ACCOUNT_BASE64).');
   const { createVault } = require('../vault');
-  const vault = deps.vault || createVault({ db });
+  const auditSink = require('../vault/audit-file').createFileAuditSink(process.env.NEXIA_AUDIT_FILE);
+  const vault = deps.vault || createVault({ db, ...(auditSink ? { auditSink } : {}) });
   // ADR-CLONE-01: duplicar tenant (cópia preparada pela API; aqui só ids, resumo só com contagens)
   if (job.kind === 'tenant.duplicate') {
     const { duplicateTenant } = require('../tenant-copy');
