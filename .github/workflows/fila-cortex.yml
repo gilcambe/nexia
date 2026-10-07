@@ -6,6 +6,9 @@ name: Fila do Cortex
 on:
   schedule:
     - cron: '*/15 * * * *'
+  workflow_run:
+    workflows: ['Smoke com login']
+    types: [completed]
   workflow_dispatch:
 
 permissions:

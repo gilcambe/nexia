@@ -1,7 +1,8 @@
 'use strict';
 // Fila fixa do Cortex: as tarefas são Issues do GitHub com o rótulo "cortex-fila" (grátis, sem Firestore).
-// A cada 15 minutos o workflow "Fila do Cortex" roda este script: conclui o que terminou, reenfileira o que
-// falhou (com espera crescente), alerta quando uma tarefa trava e despacha as próximas em até 3 pistas.
+// REGRA DO DONO: o Cortex nunca espera horário para a fila voltar. O workflow roda a cada 15 min E logo que cada execução termina.
+// O workflow "Fila do Cortex" roda este script: conclui o que terminou, reenfileira o que
+// falhou (na hora, sem esperar horário), alerta quando uma tarefa trava e despacha as próximas em até 3 pistas.
 const REPO = process.env.REPO || 'gilcambe/nexia';
 const BASE_URL = process.env.NEXIA_URL || 'https://nexia.gcbezerra.workers.dev';
 const PISTAS = 3;
@@ -15,13 +16,6 @@ const numeroDe = (labels, prefixo) => {
   return m ? Number(m[1]) : 0;
 };
 const minutos = (agora, iso) => (agora - new Date(iso).getTime()) / 60000;
-
-// A cota grátis do Firestore volta todo dia às 07:00 UTC. Depois de uma falha por cota, a fila
-// espera até 07:05 UTC em vez de gastar tentativas (e cota) à toa.
-function voltaDaCota(iso) {
-  const d = new Date(iso); const v = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 7, 5);
-  return d.getTime() < v ? v : v + 86400000;
-}
 
 // Função pura: recebe issues e execuções e devolve a lista de ações. Fácil de testar.
 function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
@@ -54,14 +48,8 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
   const fila = validas
     .filter(i => { const ls = nomes(i); return !ls.includes(L.rodando) && !ls.includes(L.feito) && !ls.includes(L.travado); })
     .sort((a, b) => a.number - b.number);
-  const ultimaCota = runs.filter(r => r.cota && r.status === 'completed').map(r => voltaDaCota(r.updated_at || r.created_at)).sort((a, b) => b - a)[0] || 0;
-  if (agora < ultimaCota) return acoes; // pausa: cota do banco esgotada, volta às 07:05 UTC
   for (const i of fila) {
     if (ativas >= pistas) break;
-    const t = numeroDe(nomes(i), 'tentativa');
-    const run = ultimaRun(i.number);
-    const espera = Math.min(120, 15 * t);
-    if (run && run.status === 'completed' && minutos(agora, run.updated_at || run.created_at) < espera) continue; // espera crescente entre tentativas
     let pista = 1; while (pistasEmUso.has(pista)) pista++;
     pistasEmUso.add(pista); ativas++;
     acoes.push({ tipo: 'despachar', numero: i.number, pista, tarefa: String(i.body || '').trim() });
