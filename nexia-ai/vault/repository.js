@@ -78,7 +78,7 @@ function throwIfInvalid(entity, result) {
  * Cria a camada de acesso.
  * @param {{ db: FirebaseFirestore.Firestore, FieldValue?: any }} deps  db do Admin SDK
  */
-function createVault({ db, FieldValue, auditSink } = {}) {
+function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
   if (!db || typeof db.runTransaction !== 'function') {
     throw new VaultError(CODES.UNAVAILABLE, 'Firestore (Admin SDK) indisponível para o Vault.');
   }
@@ -118,7 +118,8 @@ function createVault({ db, FieldValue, auditSink } = {}) {
   const tenantOk = new Map();
   async function assertTenant(tx, tenantId) {
     if ((tenantOk.get(tenantId) || 0) > Date.now()) return;
-    const t = await tx.get(db.collection('tenants').doc(tenantId));
+    // Banco B (cota grátis extra): o cadastro de tenants continua só no banco principal, validado lá (leitura, sem criar nada).
+    const t = tenantDb ? await tenantDb.collection('tenants').doc(tenantId).get() : await tx.get(db.collection('tenants').doc(tenantId));
     if (t.exists) { tenantOk.set(tenantId, Date.now() + 10 * 60 * 1000); return; }
     if (!t.exists) throw new VaultError(CODES.TENANT_NOT_FOUND, 'Tenant do contexto não existe.');
   }

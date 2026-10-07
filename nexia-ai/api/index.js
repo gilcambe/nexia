@@ -60,7 +60,7 @@ function createHandler(deps = {}) {
     if (vault) return vault;
     const db = deps.db || require('../../netlify/functions/firebase-vault').vaultDb();
     if (!db) throw new VaultError(CODES.UNAVAILABLE, 'Firestore indisponível.');
-    vault = createVault({ db });
+    vault = createVault({ db, ...(!deps.db && process.env.FIREBASE_SERVICE_ACCOUNT_B ? { tenantDb: require('../../netlify/functions/firebase-init').db } : {}) });
     return vault;
   };
   const verify = deps.verify || (event => require('../../netlify/functions/middleware').verifyBearerToken(event));
