@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { alternativas, videoDeExecucao, lesoesDoTexto } from '@/lib/exerciseDb';
+import { trocarExercicio } from '@/lib/dayPlan';
 import { type SetLog, type Session } from '@/mocks/workout';
 import { buildWeekPlan, todayPlanDay, buildSession, type Answers } from '@/lib/trainingPlan';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
@@ -32,7 +34,21 @@ export default function Workout() {
       })
       .catch(() => setEstado('no-plan'));
   }, [user]);
-  return estado === 'ready' && session ? <WorkoutFlow session={session} /> : <WorkoutEmpty estado={estado} />;
+  return estado === 'ready' && session ? <WorkoutFlow
+        session={session}
+        alternativas={alternativas(exercise.id)}
+        video={videoDeExecucao(exercise.id)}
+        lesoes={lesoesDoTexto(exercise.id)}
+        onTrocarExercicio={async () => {
+          if (!user) return;
+          const day = await trocarExercicio(user.id, session.id, exercise.id);
+          if (!day) return setEstado('no-plan');
+          setSession(buildSession(day));
+          setExIndex(0);
+          setSetsByEx({});
+          setPhase('PRE_SESSION');
+        }}
+      /> : <WorkoutEmpty estado={estado} />;
 }
 
 function WorkoutEmpty({ estado }: { estado: string }) {
