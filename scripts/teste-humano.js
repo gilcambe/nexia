@@ -64,6 +64,8 @@ async function testarPagina(browser, base, rota, viewport, fila, vistos) {
     await page.waitForTimeout(800);
     const texto = (await page.evaluate(() => document.body.innerText || '')).trim();
     if (texto.length < 5) nota(tela, onde, 'tela em branco');
+    const larga = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth).catch(() => 0);
+    if (larga > 2) nota(tela, onde, `a tela é ${larga}px mais larga que o aparelho (rolagem lateral / conteúdo cortado)`);
     const nome = `${viewport.nome}-${rota.replace(/[^a-z0-9]+/gi, '_') || 'inicio'}`.slice(0, 80);
     await page.screenshot({ path: path.join(OUT, `${nome}.png`), fullPage: true }).catch(() => {});
 
@@ -119,6 +121,56 @@ async function testarPagina(browser, base, rota, viewport, fila, vistos) {
   await ctx.close();
 }
 
+// Cenário de aluno de verdade: entra, monta o treino do dia, começa e usa os botões do exercício
+// (trocar de verdade, mudar a ordem, ver execução, chat do coach) conferindo o CONTEÚDO, não só se a tela abre.
+async function cenarioTreino(browser, base, viewport) {
+  const tela = `${viewport.nome} treino`;
+  const ctx = await browser.newContext({ viewport: { width: viewport.w, height: viewport.h } });
+  const page = await ctx.newPage();
+  let onde = 'login';
+  page.on('pageerror', e => nota(tela, onde, `erro de JavaScript: ${e.message.slice(0, 160)}`));
+  try {
+    await page.goto(base + 'auth', { waitUntil: 'networkidle', timeout: 45000 });
+    await page.locator('input[type=email], input[type=text]').first().fill(process.env.LOGIN_USER, { timeout: 3000 });
+    await page.locator('input[type=password]').first().fill(process.env.LOGIN_PASS || '', { timeout: 3000 });
+    await page.locator('button[type=submit]').first().click({ timeout: 3000 });
+    await page.waitForTimeout(2000);
+    onde = 'abrir o treino';
+    await page.goto(base + 'workout', { waitUntil: 'networkidle', timeout: 45000 });
+    await page.getByRole('button', { name: /Montar Treino de Hoje/i }).click({ timeout: 8000 });
+    await page.getByRole('button', { name: /INICIAR TREINO/i }).click({ timeout: 8000 });
+    await page.getByRole('button', { name: /COMEÇAR EXERCÍCIOS/i }).click({ timeout: 8000 });
+    const largura = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    if ((await largura()) > 2) nota(tela, 'exercício ativo', 'a tela do exercício é mais larga que o aparelho (rolagem lateral)');
+    const corpo = await page.evaluate(() => document.body.innerText);
+    if (/https?:\/\/\S{40,}/.test(corpo)) nota(tela, 'exercício ativo', 'aparece uma URL gigante na tela');
+    const nomeAntes = (await page.locator('h2, h3').filter({ hasText: /\S/ }).nth(1).innerText().catch(() => '')).trim();
+    onde = 'botão "Trocar exercício"';
+    await page.getByRole('button', { name: /Trocar exercício/i }).click({ timeout: 5000 });
+    await page.waitForTimeout(500);
+    const opcoes = page.locator('.fixed .space-y-2 button');
+    const n = await opcoes.count();
+    if (n < 1) nota(tela, onde, 'o modal de trocar exercício abriu SEM nenhuma opção');
+    else {
+      await opcoes.first().click();
+      await page.waitForTimeout(500);
+      const depois = (await page.locator('h2, h3').filter({ hasText: /\S/ }).nth(1).innerText().catch(() => '')).trim();
+      if (nomeAntes && depois === nomeAntes) nota(tela, onde, 'escolhi uma opção e o exercício não mudou');
+    }
+    onde = 'botão "Ver execução"';
+    if (!(await page.getByRole('button', { name: /Ver execução/i }).count())) nota(tela, onde, 'não existe o botão Ver execução');
+    onde = 'ícone do chat do coach';
+    if (!(await page.getByRole('button', { name: /coach/i }).count())) nota(tela, onde, 'não existe o ícone/botão do chat do coach na tela do treino');
+    onde = 'mudar a ordem dos exercícios';
+    if (!(await page.getByRole('button', { name: /Descer|Subir/i }).count())) nota(tela, onde, 'não existe como mudar a ordem dos exercícios');
+    await page.screenshot({ path: path.join(OUT, `${viewport.nome}-treino-ativo.png`), fullPage: true }).catch(() => {});
+    feitos.push(`${tela}: montou o treino, iniciou, trocou exercício (${n} opções), conferiu botões`);
+  } catch (e) {
+    nota(tela, onde, `o cenário do treino parou: ${e.message.slice(0, 160)}`);
+  }
+  await ctx.close();
+}
+
 (async () => {
   await new Promise(r => server.listen(0, r));
   const base = `http://127.0.0.1:${server.address().port}${BASE}`;
@@ -129,6 +181,7 @@ async function testarPagina(browser, base, rota, viewport, fila, vistos) {
     const vistos = new Set(['/']);
     const fila = ['/'];
     while (fila.length) await testarPagina(browser, base, fila.shift(), v, fila, vistos);
+    if (process.env.LOGIN_USER && /body-coach/.test(BASE)) await cenarioTreino(browser, base, v);
   }
   await browser.close();
   server.close();

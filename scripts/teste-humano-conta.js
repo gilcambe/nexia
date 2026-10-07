@@ -24,6 +24,10 @@ async function main() {
     const r = await fetch(`${auth}/accounts`, { method: 'POST', headers: h, body: JSON.stringify({ email, password: senha, emailVerified: true, displayName: 'Teste Humano' }) });
     const j = await r.json();
     if (!r.ok) throw new Error(`não criou a conta de teste: ${r.status} ${j.error && j.error.message}`);
+    // Perfil já respondido: a pessoa de teste cai direto no treino (como um aluno que já fez o questionário).
+    const campos = { daysPerWeek: '4', level: 'intermediario', goal: 'hipertrofia', injuries: '' };
+    const onboarding = { mapValue: { fields: Object.fromEntries(Object.entries(campos).map(([k, v]) => [k, { stringValue: v }])) } };
+    await fetch(`${fsb}/bodycoach_users/${j.localId}/profile/main`, { method: 'PATCH', headers: h, body: JSON.stringify({ fields: { onboarding } }) });
     console.log(`::add-mask::${senha}`);
     if (env) fs.appendFileSync(env, `LOGIN_USER=${email}\nLOGIN_PASS=${senha}\nTESTE_UID=${j.localId}\n`);
     console.log(`Conta de teste criada: ${email}`);
