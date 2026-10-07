@@ -166,7 +166,8 @@ async function cenarioTreino(browser, base, viewport) {
     await page.screenshot({ path: path.join(OUT, `${viewport.nome}-treino-ativo.png`), fullPage: true }).catch(() => {});
     feitos.push(`${tela}: montou o treino, iniciou, trocou exercício (${n} opções), conferiu botões`);
   } catch (e) {
-    nota(tela, onde, `o cenário do treino parou: ${e.message.slice(0, 160)}`);
+    const vi = await page.evaluate(() => (document.body.innerText || '').replace(/\s+/g, ' ').slice(0, 220)).catch(() => '');
+    nota(tela, onde, `o cenário do treino parou: ${e.message.slice(0, 90)} | tela: ${vi} | endereço: ${page.url().slice(-40)}`);
   }
   await ctx.close();
 }
