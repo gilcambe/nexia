@@ -1,6 +1,5 @@
 /**
  * Módulo de Avaliação de Modelos do Cortex (CommonJS)
- * Verificado e confirmado.
  */
 
 /**
