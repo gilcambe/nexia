@@ -19,6 +19,14 @@ const PERIGOSO = /excluir|apagar|deletar|remover conta|sair|logout|delete|encerr
 const TYPES = { '.html': 'text/html; charset=utf-8', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.ico': 'image/x-icon', '.woff2': 'font/woff2', '.woff': 'font/woff', '.webmanifest': 'application/manifest+json', '.txt': 'text/plain' };
 
 const server = http.createServer((req, res) => {
+  // a configuração pública do Firebase vem do Worker (só leitura); o resto de /api não é repassado
+  if (req.url.split('?')[0] === '/api/firebase-config' && process.env.CONFIG_URL) {
+    require('https').get(process.env.CONFIG_URL, { headers: { Accept: 'application/json' } }, up => {
+      res.writeHead(up.statusCode || 502, { 'Content-Type': up.headers['content-type'] || 'application/json' });
+      up.pipe(res);
+    }).on('error', () => { res.writeHead(502); res.end(); });
+    return;
+  }
   let rel = decodeURIComponent(req.url.split('?')[0]);
   if (BASE !== '/' && rel.startsWith(BASE)) rel = '/' + rel.slice(BASE.length);
   else if (BASE !== '/' && rel + '/' === BASE) rel = '/';
@@ -37,7 +45,7 @@ const server = http.createServer((req, res) => {
 
 const falhas = [];
 const feitos = [];
-const nota = (tela, onde, msg) => { const f = `${tela} · ${onde}: ${msg}`; if (!falhas.includes(f)) falhas.push(f); };
+const nota = (tela, onde, msg) => { const f = `${tela} · ${onde}: ${msg}`.replace(/\s+/g, ' '); if (!falhas.includes(f)) falhas.push(f); };
 
 async function testarPagina(browser, base, rota, viewport, fila, vistos) {
   const tela = `${viewport.nome} ${rota}`;
@@ -60,10 +68,13 @@ async function testarPagina(browser, base, rota, viewport, fila, vistos) {
     await page.waitForTimeout(1500);
   }
   try {
-    await page.goto(base + rota.replace(/^\//, ''), { waitUntil: 'networkidle', timeout: 45000 });
+    await page.goto(base + rota.replace(/^\//, ''), { waitUntil: 'load', timeout: 45000 });
+    await page.waitForTimeout(1500);
     await page.waitForTimeout(800);
     const texto = (await page.evaluate(() => document.body.innerText || '')).trim();
     if (texto.length < 5) nota(tela, onde, 'tela em branco');
+    const larga = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth).catch(() => 0);
+    if (larga > 2) nota(tela, onde, `a tela é ${larga}px mais larga que o aparelho (rolagem lateral / conteúdo cortado)`);
     const nome = `${viewport.nome}-${rota.replace(/[^a-z0-9]+/gi, '_') || 'inicio'}`.slice(0, 80);
     await page.screenshot({ path: path.join(OUT, `${nome}.png`), fullPage: true }).catch(() => {});
 
@@ -119,6 +130,63 @@ async function testarPagina(browser, base, rota, viewport, fila, vistos) {
   await ctx.close();
 }
 
+// Cenário de aluno de verdade: entra, monta o treino do dia, começa e usa os botões do exercício
+// (trocar de verdade, mudar a ordem, ver execução, chat do coach) conferindo o CONTEÚDO, não só se a tela abre.
+async function cenarioTreino(browser, base, viewport) {
+  const tela = `${viewport.nome} treino`;
+  const ctx = await browser.newContext({ viewport: { width: viewport.w, height: viewport.h } });
+  const page = await ctx.newPage();
+  let onde = 'login';
+  page.on('pageerror', e => nota(tela, onde, `erro de JavaScript: ${e.message.slice(0, 160)}`));
+  try {
+    await page.goto(base + 'auth', { waitUntil: 'load', timeout: 45000 });
+    await page.locator('input[type=email], input[type=text]').first().fill(process.env.LOGIN_USER, { timeout: 3000 });
+    await page.locator('input[type=password]').first().fill(process.env.LOGIN_PASS || '', { timeout: 3000 });
+    await page.locator('button[type=submit]').first().click({ timeout: 3000 });
+    await page.waitForFunction(() => !/\/auth/.test(location.pathname), null, { timeout: 20000 }).catch(() => {});
+    if (/\/auth/.test(new URL(page.url()).pathname)) {
+      const msg = await page.evaluate(() => (document.body.innerText || '').replace(/\s+/g, ' ').slice(0, 300)).catch(() => '');
+      nota(tela, 'login', `não consegui entrar com a conta de teste | tela: ${msg}`);
+      await ctx.close();
+      return;
+    }
+    onde = 'abrir o treino';
+    await page.goto(base + 'workout', { waitUntil: 'load', timeout: 45000 });
+    await page.getByRole('button', { name: /Montar Treino de Hoje/i }).click({ timeout: 8000 });
+    await page.getByRole('button', { name: /^\s*INICIAR TREINO/i }).last().click({ timeout: 8000 });
+    await page.getByRole('button', { name: /COMEÇAR EXERCÍCIOS/i }).click({ timeout: 8000 });
+    const largura = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    if ((await largura()) > 2) nota(tela, 'exercício ativo', 'a tela do exercício é mais larga que o aparelho (rolagem lateral)');
+    const corpo = await page.evaluate(() => document.body.innerText);
+    if (/https?:\/\/\S{40,}/.test(corpo)) nota(tela, 'exercício ativo', 'aparece uma URL gigante na tela');
+    const nomeAntes = (await page.locator('h2, h3').filter({ hasText: /\S/ }).nth(1).innerText().catch(() => '')).trim();
+    onde = 'botão "Trocar exercício"';
+    await page.getByRole('button', { name: /Trocar exercício/i }).click({ timeout: 5000 });
+    await page.waitForTimeout(500);
+    const opcoes = page.locator('.fixed .space-y-2 button');
+    const n = await opcoes.count();
+    if (n < 1) nota(tela, onde, 'o modal de trocar exercício abriu SEM nenhuma opção');
+    else {
+      await opcoes.first().click();
+      await page.waitForTimeout(500);
+      const depois = (await page.locator('h2, h3').filter({ hasText: /\S/ }).nth(1).innerText().catch(() => '')).trim();
+      if (nomeAntes && depois === nomeAntes) nota(tela, onde, 'escolhi uma opção e o exercício não mudou');
+    }
+    onde = 'botão "Ver execução"';
+    if (!(await page.getByRole('button', { name: /Ver execução/i }).count())) nota(tela, onde, 'não existe o botão Ver execução');
+    onde = 'ícone do chat do coach';
+    if (!(await page.getByRole('button', { name: /coach/i }).count())) nota(tela, onde, 'não existe o ícone/botão do chat do coach na tela do treino');
+    onde = 'mudar a ordem dos exercícios';
+    if (!(await page.locator('button[title*="Subir"], button[title*="Descer"], button[aria-label*="Subir"], button[aria-label*="Descer"]').count())) nota(tela, onde, 'não existe como mudar a ordem dos exercícios | botões: ' + (await page.evaluate(() => [...document.querySelectorAll('button')].map(b => (b.getAttribute('aria-label') || b.title || b.innerText || '?').trim().slice(0, 25)).join(' / ')).catch(() => '')).slice(0, 400));
+    await page.screenshot({ path: path.join(OUT, `${viewport.nome}-treino-ativo.png`), fullPage: true }).catch(() => {});
+    feitos.push(`${tela}: montou o treino, iniciou, trocou exercício (${n} opções), conferiu botões`);
+  } catch (e) {
+    const vi = await page.evaluate(() => (document.body.innerText || '').replace(/\s+/g, ' ').slice(0, 220)).catch(() => '');
+    nota(tela, onde, `o cenário do treino parou: ${e.message.slice(0, 90)} | tela: ${vi} | endereço: ${page.url().slice(-40)}`);
+  }
+  await ctx.close();
+}
+
 (async () => {
   await new Promise(r => server.listen(0, r));
   const base = `http://127.0.0.1:${server.address().port}${BASE}`;
@@ -129,6 +197,7 @@ async function testarPagina(browser, base, rota, viewport, fila, vistos) {
     const vistos = new Set(['/']);
     const fila = ['/'];
     while (fila.length) await testarPagina(browser, base, fila.shift(), v, fila, vistos);
+    if (process.env.LOGIN_USER && /body-coach/.test(BASE)) await cenarioTreino(browser, base, v);
   }
   await browser.close();
   server.close();
