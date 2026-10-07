@@ -8,7 +8,7 @@ const { runAgent, compact, createMeter } = require('../../nexia-ai/orchestrator/
 const { parseEditBlocks } = require('../../nexia-ai/orchestrator/edit-blocks');
 const { filesIn } = require('../../nexia-ai/orchestrator');
 const { AGENTS } = require('../../nexia-ai/orchestrator/agents');
-const { createGithubAdapter, looseFind } = require('../../nexia-ai/github-adapter');
+const { createGithubAdapter, looseFind, desescapaAspas } = require('../../nexia-ai/github-adapter');
 const { createFakeGithub } = require('../fake-github');
 
 const BRANCH = 'nexia/login-real-abc123';
@@ -275,4 +275,12 @@ test('CE12. revisor que termina só com texto: lembrete e veredito em JSON no te
   const r = await run(router, fakeGateway(), { agentId: 'security' });
   assert.strictEqual(r.status, 'done');
   assert.deepStrictEqual(r.report, { verdict: 'approve', findings: [] });
+});
+
+test('CE-aspas. aspas escapadas pelo modelo (\\") são desfeitas quando o arquivo não as tem', () => {
+  const e = { path: 'a.tsx', find: '<p className=\\"x\\">', replace: '<p className=\\"y\\">' };
+  const r = desescapaAspas('<p className="x">', e);
+  assert.strictEqual(r.find, '<p className="x">');
+  assert.strictEqual(r.replace, '<p className="y">');
+  assert.strictEqual(desescapaAspas('const s = "a\\"b";', e), e, 'arquivo que já tem \\" fica como veio');
 });
