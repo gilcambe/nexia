@@ -7,7 +7,7 @@ export function treinoDiferente(planejado: string, escolhido: string): boolean {
       .trim();
 
   const gruposPorRotulo: Record<string, string[]> = {
-    pernas: ['pernas', 'legs', 'quadriceps', 'quadríceps', 'quadriceps', 'isquiotibiais', 'gluteos', 'glúteos', 'panturrilha', 'panturrilhas'],
+    pernas: ['pernas', 'legs', 'quadriceps', 'isquiotibiais', 'gluteos', 'glúteos', 'panturrilha', 'panturrilhas'],
     'costas e biceps': ['costas', 'costas e biceps', 'costas e bíceps', 'pull', 'dorsal', 'dorsais', 'trapezio', 'trapézio', 'romboide', 'romboides'],
     'peito e triceps': ['peito', 'peito e triceps', 'peito e tríceps', 'push', 'peitoral', 'peitorais', 'triceps', 'tríceps'],
     'corpo inteiro': ['corpo inteiro', 'full body', 'corpo todo'],
@@ -24,6 +24,8 @@ export function treinoDiferente(planejado: string, escolhido: string): boolean {
     sinonimos.some((s) => normalizar(s) === planejadoNormalizado)
   )?.[1];
 
+  // Fallback: se algum rótulo não está no mapeamento, considera treinos diferentes
+  // quando as strings normalizadas forem distintas (comportamento conservador).
   if (!gruposEscolhido || !gruposPlanejado) {
     return rotuloNormalizado !== planejadoNormalizado;
   }
