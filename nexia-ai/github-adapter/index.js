@@ -71,6 +71,30 @@ function looseFind(text, find) {
   return found.length === 1 ? found[0] : null;
 }
 
+/** Último recurso: o trecho tem várias linhas e o modelo errou o meio. Se a primeira e a última linha (sem espaços
+ * nas pontas) aparecem uma única vez no arquivo, nessa ordem, troca tudo que está entre elas. */
+function anchorFind(text, find) {
+  const ls = String(find).split('\n').map(x => x.trim()).filter(Boolean);
+  if (ls.length < 2) return null;
+  const lines = text.split('\n'); const first = ls[0], last = ls[ls.length - 1];
+  const a = lines.map((x, i) => (x.trim() === first ? i : -1)).filter(i => i >= 0);
+  if (a.length !== 1) return null;
+  const b = lines.map((x, i) => (i > a[0] && x.trim() === last ? i : -1)).filter(i => i >= 0);
+  if (b.length !== 1 || b[0] - a[0] > ls.length * 3 + 10) return null;
+  const start = lines.slice(0, a[0]).reduce((n, x) => n + x.length + 1, 0);
+  const end = lines.slice(0, b[0] + 1).reduce((n, x) => n + x.length + 1, 0) - 1;
+  return { start, end };
+}
+
+/** Dica para o modelo: as linhas do arquivo mais parecidas com a primeira linha do trecho que ele pediu. */
+function dicaTrecho(text, find) {
+  const first = String(find).split('\n').map(x => x.trim()).find(Boolean) || '';
+  const key = first.slice(0, 25);
+  if (!key) return '';
+  const lines = text.split('\n'); const i = lines.findIndex(x => x.includes(key));
+  return i < 0 ? '' : ` Trecho parecido no arquivo (linha ${i + 1}): ${lines.slice(i, i + 3).join(' ⏎ ').slice(0, 300)}`;
+}
+
 function createGithubAdapter(o) {
   const repo = o.repo;
   const apiBase = o.apiBase || API;
@@ -317,8 +341,8 @@ function createGithubAdapter(o) {
           if (n === 1) { text = text.replace(e.find, () => e.replace); return; }
           // Modelos grátis erram espaço, tab ou quebra de linha ao copiar o trecho: sem cópia exata, aceita
           // o trecho que só difere em espaços em branco, desde que ele apareça uma única vez.
-          const loose = n === 0 ? looseFind(text, e.find) : null;
-          if (!loose) throw bad(`${path}: o trecho ${k + 1} aparece ${n} vez(es); precisa aparecer exatamente 1 vez (copie o texto exato do arquivo).`);
+          const loose = n === 0 ? (looseFind(text, e.find) || anchorFind(text, e.find)) : null;
+          if (!loose) throw bad(`${path}: o trecho ${k + 1} aparece ${n} vez(es); precisa aparecer exatamente 1 vez (copie o texto exato do arquivo).${n === 0 ? dicaTrecho(text, e.find) : ''}`);
           text = text.slice(0, loose.start) + e.replace + text.slice(loose.end);
         });
         files.push({ path, content: text });
@@ -334,4 +358,4 @@ function desescapaAspas(text, e) {
   return { ...e, find: e.find.replace(/\\"/g, '"'), replace: e.replace.replace(/\\"/g, '"') };
 }
 
-module.exports = { createGithubAdapter, looseFind, desescapaAspas, LIMITS, WORK_BRANCH_RE, PERMS, PIPELINE_WORKFLOW };
+module.exports = { createGithubAdapter, looseFind, anchorFind, desescapaAspas, LIMITS, WORK_BRANCH_RE, PERMS, PIPELINE_WORKFLOW };

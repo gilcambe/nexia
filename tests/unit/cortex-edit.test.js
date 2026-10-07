@@ -293,3 +293,11 @@ test('CE-json. chamada escrita como JSON no texto vira edição', () => {
   assert.strictEqual(parseEditBlocks('```json\n{"edits":[{"path":"../x","find":"a","replace":"b"}]}\n```').edits.length, 0, 'caminho inseguro recusado');
   assert.strictEqual(parseEditBlocks('```json\n{"edits":[{"path":"a/b.ts","find":"a"').edits.length, 0, 'JSON cortado é ignorado');
 });
+
+test('CE-ancora. acha trecho de varias linhas pela primeira e última linha quando o meio está errado', () => {
+  const { anchorFind } = require('../../nexia-ai/github-adapter');
+  const t = 'a\nfunction x() {\n  um();\n  dois();\n}\nb';
+  const r = anchorFind(t, 'function x() {\n  errado();\n}');
+  assert.equal(t.slice(r.start, r.end), 'function x() {\n  um();\n  dois();\n}');
+  assert.equal(anchorFind(t, 'function y() {\n}'), null);
+});
