@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { type SetLog, type Session } from '@/mocks/workout';
-import { buildWeekPlan, todayPlanDay, buildSession, type Answers } from '@/lib/trainingPlan';
+import type { Answers } from '@/lib/trainingPlan';
+import { montarTreinoDoDia, type TreinoDoDia } from '@/lib/dayPlan';
+import PreTreino from './components/PreTreino';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
@@ -18,21 +20,31 @@ type Phase =
 
 export default function Workout() {
   const { user } = useAuth();
-  const [session, setSession] = useState<Session | null>(null);
+  const [respostas, setRespostas] = useState<Record<string, unknown> | null>(null);
+  const [treino, setTreino] = useState<TreinoDoDia | null>(null);
   const [estado, setEstado] = useState<'loading' | 'rest' | 'no-plan' | 'ready'>('loading');
+
   useEffect(() => {
     if (!user) return;
     getUserDoc<{ onboarding?: Answers }>(user.id, 'profile', 'main')
       .then((p) => {
         if (!p?.onboarding) return setEstado('no-plan');
-        const day = todayPlanDay(buildWeekPlan(p.onboarding));
-        if (!day) return setEstado('rest');
-        setSession(buildSession(day));
+        setRespostas(p.onboarding as unknown as Record<string, unknown>);
         setEstado('ready');
       })
       .catch(() => setEstado('no-plan'));
   }, [user]);
-  return estado === 'ready' && session ? <WorkoutFlow session={session} /> : <WorkoutEmpty estado={estado} />;
+
+  if (estado !== 'ready' || !respostas) return <WorkoutEmpty estado={estado} />;
+  if (!treino) {
+    return (
+      <PreTreino
+        respostas={respostas}
+        onStart={(cfg) => setTreino(montarTreinoDoDia({ respostas, ...cfg, variacao: Date.now() % 1000 }))}
+      />
+    );
+  }
+  return <WorkoutFlow session={treino.sessao} />;
 }
 
 function WorkoutEmpty({ estado }: { estado: string }) {
