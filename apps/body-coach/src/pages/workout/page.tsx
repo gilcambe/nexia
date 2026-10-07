@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { type SetLog, type Session } from '@/mocks/workout';
 import type { Answers } from '@/lib/trainingPlan';
 import { montarTreinoDoDia, type TreinoDoDia, trocarExercicio } from '@/lib/dayPlan';
-import { alternativas, videoDeExecucao, lesoesDoTexto } from '@/lib/exerciseDb';
+import { alternativas, videoDeExecucao, lesoesDoTexto, type Lesao } from '@/lib/exerciseDb';
 import PreTreino from './components/PreTreino';
 import { dicaAoVivo } from '@/lib/liveCoach';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
@@ -46,7 +46,7 @@ export default function Workout() {
       />
     );
   }
-  return <WorkoutFlow session={treino.sessao} onTreinoChange={setTreino} />;
+  return <WorkoutFlow session={treino.sessao} lesoes={treino.lesoes} onSessionChange={(sessao) => setTreino({ ...treino, sessao })} />;
 }
 
 function WorkoutEmpty({ estado }: { estado: string }) {
@@ -60,7 +60,7 @@ function WorkoutEmpty({ estado }: { estado: string }) {
   );
 }
 
-function WorkoutFlow({ session, onTreinoChange }: { session: Session; onTreinoChange?: (t: TreinoDoDia) => void }) {
+function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Session; lesoes?: Lesao[]; onSessionChange?: (s: Session) => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [startedAt] = useState(() => new Date().toISOString());
@@ -271,28 +271,16 @@ function WorkoutFlow({ session, onTreinoChange }: { session: Session; onTreinoCh
                   </div>
                   <p className="mt-2 text-sm text-foreground-600">Escolha uma alternativa compatível para {exercise.name}:</p>
                   <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
-                    {alternativas(exercise.name).map((alt) => (
+                    {alternativas(exercise.id, new Set(lesoes), [], session.exercises.map((e) => e.id)).map((alt) => (
                       <button
-                        key={alt}
+                        key={alt.id}
                         onClick={() => {
-                          if (onTreinoChange) {
-                            // atualiza o treino atual trocando o exercício no índice exIndex
-                            const newExercises = [...session.exercises];
-                            newExercises[exIndex] = {
-                              ...newExercises[exIndex],
-                              name: alt,
-                              id: alt.toLowerCase().replace(/\\s+/g, '-')
-                            };
-                            onTreinoChange({
-                              ...session,
-                              exercises: newExercises
-                            } as any);
-                          }
+                          onSessionChange?.(trocarExercicio(session, exercise.id, alt.id));
                           setShowSwapModal(false);
                         }}
                         className="w-full text-left rounded-xl border border-background-200 bg-background-100/60 p-3 text-sm font-medium text-foreground-800 hover:bg-primary-50 hover:border-primary-300 transition flex items-center justify-between"
                       >
-                        <span>{alt}</span>
+                        <span>{alt.nome}</span>
                         <i className="ri-arrow-right-s-line text-foreground-400"></i>
                       </button>
                     ))}
