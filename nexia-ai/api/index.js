@@ -58,7 +58,7 @@ function createHandler(deps = {}) {
   let vault = null;
   const getVault = () => {
     if (vault) return vault;
-    const db = deps.db || require('../../netlify/functions/firebase-init').db;
+    const db = deps.db || require('../../netlify/functions/firebase-vault').vaultDb();
     if (!db) throw new VaultError(CODES.UNAVAILABLE, 'Firestore indisponível.');
     vault = createVault({ db });
     return vault;
@@ -69,7 +69,7 @@ function createHandler(deps = {}) {
   const getGateway = () => {
     if (gateway) return gateway;
     const v = getVault();
-    gateway = createGateway({ db: deps.db || require('../../netlify/functions/firebase-init').db, vault: v, ...(deps.gateway || {}) });
+    gateway = createGateway({ db: deps.db || require('../../netlify/functions/firebase-vault').vaultDb(), vault: v, ...(deps.gateway || {}) });
     return gateway;
   };
 
@@ -91,7 +91,7 @@ function createHandler(deps = {}) {
     }
   };
 
-  const bridgeTokens = () => createBridgeTokens(deps.db || require('../../netlify/functions/firebase-init').db);
+  const bridgeTokens = () => createBridgeTokens(deps.db || require('../../netlify/functions/firebase-vault').vaultDb());
 
   async function bridgeEvents(event) {
     if (event.httpMethod !== 'POST') return json(event, 405, { error: 'Método não permitido.' });

@@ -146,7 +146,7 @@ async function scheduledSweep({ env = process.env, db, jobs, now = () => Date.no
   let fila = {};
   try { const f = await acordarFila({ env, now }); if (!['desligada', 'fora_do_tique'].includes(f.fila)) fila = f; } catch { fila = { fila: 'erro' }; }
   if (!j.enabled) return { skipped: 'NEXIA_JOBS desligado', ...fila };
-  const database = db || require('../../netlify/functions/firebase-init').db;
+  const database = db || require('../../netlify/functions/firebase-vault').vaultDb();
   if (!database) return { skipped: 'Firestore indisponível' };
   const t = now();
   const out = { ...fila };
