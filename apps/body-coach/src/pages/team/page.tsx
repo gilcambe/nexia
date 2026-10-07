@@ -3,6 +3,16 @@ import { perguntar, type Papel } from '@/lib/coachAI';
 import { getUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 
+// Função para sanitizar texto para exibição em HTML
+const sanitizeText = (text: string): string => {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+};
+
 export default function Team() {
   const { user, profile, loading } = useAuth();
   const [pergunta, setPergunta] = useState('');
@@ -12,7 +22,10 @@ export default function Team() {
   const [error, setError] = useState('');
 
   const handlePerguntar = async () => {
-    if (!user || !profile || !pergunta.trim()) return;
+    if (!user || !profile || !pergunta.trim()) {
+      setError('Por favor, faça uma pergunta.');
+      return;
+    }
 
     setIsLoading(true);
     setError('');
@@ -20,9 +33,21 @@ export default function Team() {
 
     try {
       const userData = await getUserDoc(user.id, 'profile', 'main');
-      const contexto = JSON.stringify(userData); // Usar os dados do perfil como contexto
+      // Filtrar dados sensíveis ou irrelevantes para a IA
+      // Exemplo: criar um objeto de contexto mais restrito
+      const contexto = JSON.stringify({
+        age: userData?.age,
+        gender: userData?.gender,
+        weight: userData?.weight,
+        height: userData?.height,
+        goals: userData?.goals,
+        // Adicione outros campos relevantes e não sensíveis
+      });
 
-      const res = await perguntar(papel, pergunta, contexto);
+      // Sanitização básica da pergunta para evitar prompt injection simples no cliente
+      const sanitizedPergunta = pergunta.replace(/[";']/g, ''); // Remove aspas e ponto e vírgula
+
+      const res = await perguntar(papel, sanitizedPergunta, contexto);
       setResposta(res);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Ocorreu um erro inesperado.');
@@ -114,7 +139,7 @@ export default function Team() {
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-red-800">Erro:</h3>
                 <div className="mt-2 text-sm text-red-700">
-                  <p>{error}</p>
+                  <p>{sanitizeText(error)}</p> {/* Sanitiza a mensagem de erro */}
                 </div>
               </div>
             </div>
@@ -130,7 +155,7 @@ export default function Team() {
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-green-800">Resposta do Coach:</h3>
                 <div className="mt-2 text-sm text-green-700">
-                  <p>{resposta}</p>
+                  <p>{sanitizeText(resposta)}</p> {/* Sanitiza a resposta da IA */}
                 </div>
               </div>
             </div>
