@@ -12,7 +12,6 @@ function dividirTarefa(texto, max = 600) {
   }
 
   // Tentar dividir por linhas ou itens numerados / marcadores / frases
-  // Dividir em parágrafos ou linhas primeiro
   const linhas = texto.split(/\r?\n/);
   const passos = [];
   let atual = '';
