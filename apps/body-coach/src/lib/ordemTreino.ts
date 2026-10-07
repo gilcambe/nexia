@@ -2,7 +2,7 @@ import { Session } from '@/mocks/workout';
 
 /**
  * Move um exercício de um índice para outro na sessão, de forma imutável.
- * Se os índices estiverem fora dos limites, retorna a sessão original (ou cópia rasa/profunda sem alteração).
+ * Se os índices estiverem fora dos limites, retorna a sessão original (sem alteração).
  */
 export function moverExercicio(session: Session, de: number, para: number): Session {
   const exercises = [...session.exercises];
