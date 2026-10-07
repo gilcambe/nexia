@@ -47,6 +47,10 @@ async function publicar(sa, dry) {
 
   const missing = wanted.filter(ix => !existing.has(key(ix)));
   console.log(`Índices no arquivo: ${wanted.length}. Já no Firestore: ${wanted.length - missing.length}. A criar: ${missing.length}.`);
+  const porEstado = {};
+  for (const st of existing.values()) porEstado[st] = (porEstado[st] || 0) + 1;
+  // ::notice:: aparece nas anotações do GitHub, que são legíveis mesmo sem os logs do job.
+  console.log(`::notice::Índices do projeto ${sa.project_id}: ${JSON.stringify(porEstado)}; faltando ${missing.length}`);
   const building = [...existing.values()].filter(s => s === 'CREATING').length;
   if (building) console.log(`Em construção no Google: ${building}.`);
   if (dry) { for (const ix of missing) console.log(`  faltando: ${key(ix)}`); return; }
