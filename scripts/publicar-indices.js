@@ -63,7 +63,7 @@ async function publicar(sa, dry) {
     if (r.ok || r.status === 409) ok++;
     // Índice de um campo só: o Firestore já cria sozinho, não precisa publicar.
     else if (r.status === 400 && /not necessary/i.test((j.error && j.error.message) || '')) skip++;
-    else { fail++; console.log(`  FALHOU ${ix.collectionGroup}: ${r.status} ${(j.error && j.error.message || '').slice(0, 200)}`); }
+    else { fail++; console.log(`::warning::Índice ${ix.collectionGroup} (${sa.project_id}): ${r.status} ${(j.error && j.error.message || '').slice(0, 160)}`); console.log(`  FALHOU ${ix.collectionGroup}: ${r.status} ${(j.error && j.error.message || '').slice(0, 200)}`); }
   }
   console.log(`Pedidos de criação aceitos: ${ok}. Automáticos (campo único): ${skip}. Falhas: ${fail}. Os índices ficam prontos em alguns minutos.`);
   if (fail) process.exit(1);
