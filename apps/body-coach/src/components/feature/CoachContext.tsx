@@ -10,6 +10,7 @@ import {
 } from 'react';
 import type { CoachMessage } from '@/mocks/coach';
 import { useAuth } from './AuthContext';
+import { perguntar } from '@/lib/coachAI';
 
 export interface CoachContextSnapshot {
   name: string;
@@ -81,6 +82,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(1);
   const [messages, setMessages] = useState<CoachMessage[]>([]);
+  const [loadingAI, setLoadingAI] = useState(false);
 
   const firstName =
     profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'atleta';
@@ -103,47 +105,46 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     if (v) setUnread(0);
   }, []);
 
-  const send = useCallback((text: string, snapshot?: CoachContextSnapshot) => {
+  const send = useCallback(async (text: string, snapshot?: CoachContextSnapshot) => {
     const trimmed = text.trim();
-    if (!trimmed) return;
+    if (!trimmed || loadingAI) return;
 
     setMessages((prev) => [
       ...prev,
       { id: `u-${Date.now()}`, speaker: 'user', text: trimmed, time: 'agora' },
     ]);
 
-    const lower = trimmed.toLowerCase();
-    const name = snapshot?.name ?? 'atleta';
+    setLoadingAI(true);
+    try {
+      const contextData = {
+        name: snapshot?.name ?? profile?.full_name ?? 'atleta',
+        readinessScore: snapshot?.readinessScore ?? null,
+        readinessStatus: snapshot?.readinessStatus ?? null,
+        latestWeight: snapshot?.latestWeight ?? null,
+        calories: snapshot?.calories ?? null,
+        caloriesTarget: snapshot?.caloriesTarget ?? null,
+        protein: snapshot?.protein ?? null,
+        proteinTarget: snapshot?.proteinTarget ?? null,
+      };
 
-    let reply: string;
+      const reply = await perguntar('coach', trimmed, contextData);
 
-    if (/resumo|readiness|prontidão|como estou|como vai|meu dia/i.test(lower)) {
-      reply = buildReadinessReply(snapshot);
-    } else if (/quanto ainda posso comer|ainda posso comer|posso comer|kcal|caloria|proteína/i.test(lower)) {
-      reply = buildNutritionReply(snapshot);
-    } else if (/quanto eu peso|meu peso|peso atual/i.test(lower)) {
-      reply = buildWeightReply(snapshot);
-    } else if (/cansad|fadig|sem energia|pesado/i.test(lower)) {
-      reply =
-        'Entendido. Seu cansaço está alto hoje — não vamos cancelar, apenas rodar com menos volume e intensidade. Se a dor ou o cansaço subirem durante a série, me avise que encurtamos.';
-    } else if (/dor|desconforto|ombro|joelho/i.test(lower)) {
-      reply =
-        'Registrado o desconforto. Vou reduzir a sobrecarga nessa região nesta sessão e monitorar. Se a dor piorar ou houver perda de função, paramos e encaminhamos para avaliação — isso é precaução, não diagnóstico.';
-    } else if (/^\d+\s*(kg|k)?/i.test(trimmed) || /x\s*\d+/i.test(trimmed)) {
-      reply =
-        'Registrado. Carga e repetições dentro do alvo. Mantenha a carga e busque a faixa de repetições prevista na próxima série. Execução acima do ego.';
-    } else {
-      reply = `Entendido, ${name}. Registrei o contexto e sigo acompanhando sua sessão. Me diga o que fez (ex.: "fiz 12 com 70") ou como está se sentindo.`;
-    }
-
-    setTimeout(() => {
       setMessages((prev) => [
         ...prev,
-        { id: `c-${Date.now()}`, speaker: 'coach', text: reply, time: 'agora' },
+        { id: `c-${Date.now()}`, speaker: 'coach', text: reply || 'Entendido. Como posso ajudar mais?', time: 'agora' },
       ]);
       if (!openRef.current) setUnread((u) => u + 1);
-    }, 550);
-  }, []);
+    } catch (err: any) {
+      const errorMsg = err?.message || 'Desculpe, tive um problema ao processar sua mensagem. Pode repetir?';
+      setMessages((prev) => [
+        ...prev,
+        { id: `c-${Date.now()}`, speaker: 'coach', text: errorMsg, time: 'agora' },
+      ]);
+      if (!openRef.current) setUnread((u) => u + 1);
+    } finally {
+      setLoadingAI(false);
+    }
+  }, [loadingAI, profile]);
 
   const value = useMemo(
     () => ({ open, setOpen: setOpenSafe, messages, send, unread }),
