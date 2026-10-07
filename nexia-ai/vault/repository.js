@@ -118,8 +118,9 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
   const tenantOk = new Map();
   async function assertTenant(tx, tenantId) {
     if ((tenantOk.get(tenantId) || 0) > Date.now()) return;
-    // Banco B (cota grátis extra): o cadastro de tenants continua só no banco principal, validado lá (leitura, sem criar nada).
-    const t = tenantDb ? await tenantDb.collection('tenants').doc(tenantId).get() : await tx.get(db.collection('tenants').doc(tenantId));
+    let t = await tx.get(db.collection('tenants').doc(tenantId));
+    // Não está no banco B: confere no banco principal (leitura).
+    if (!t.exists && tenantDb) t = await tenantDb.collection('tenants').doc(tenantId).get();
     if (t.exists) { tenantOk.set(tenantId, Date.now() + 10 * 60 * 1000); return; }
     if (!t.exists) throw new VaultError(CODES.TENANT_NOT_FOUND, 'Tenant do contexto não existe.');
   }
