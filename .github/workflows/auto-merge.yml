@@ -54,7 +54,24 @@ jobs:
               echo "PR #$n: importa dados de exemplo (mocks); espera a revisão da Claude."
               continue
             fi
-            gh api -X POST "repos/$REPO/issues/$n/labels" -f "labels[]=automerge" >/dev/null && echo "PR #$n: rótulo automerge posto pelo gate (nada sensível, sem mocks)."
+            # Portão de qualidade (melhoria 3 da análise do Cortex, 2026-10-07): sinais objetivos de entrega fora do pedido.
+            # Qualquer um deles manda o PR para a revisão da Claude em vez de entrar sozinho.
+            meta=$(gh api "repos/$REPO/pulls/$n" --jq '"\(.changed_files) \(.additions) \(.deletions)"')
+            read -r nfiles nadd ndel <<<"$meta"
+            if [ "$nfiles" -gt 30 ] || [ "$nadd" -gt 1500 ]; then
+              echo "PR #$n: grande demais ($nfiles arquivos, +$nadd); espera a revisão da Claude."
+              continue
+            fi
+            added=$(gh api "repos/$REPO/pulls/$n/files?per_page=100" --paginate --jq '.[]|select(.patch != null)|.patch' | grep -E '^\+' || true)
+            if grep -Eiq 'router\.complete\(|lorem ipsum|TODO[: ]|FIXME|not implemented|process\.env\.[A-Z_]*(KEY|SECRET|TOKEN)' <<<"$added"; then
+              echo "PR #$n: código com marca de inacabado ou API inventada; espera a revisão da Claude."
+              continue
+            fi
+            if echo "$files" | grep -Eq '^tests/' && [ "$ndel" -gt "$nadd" ]; then
+              echo "PR #$n: apaga mais do que acrescenta com testes no meio; espera a revisão da Claude."
+              continue
+            fi
+            gh api -X POST "repos/$REPO/issues/$n/labels" -f "labels[]=automerge" >/dev/null && echo "PR #$n: rótulo automerge posto pelo gate (nada sensível, sem mocks, passou no portão de qualidade)."
           done
 
       - name: Fazer merge dos PRs prontos
