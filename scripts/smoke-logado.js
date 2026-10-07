@@ -11,6 +11,8 @@ const BASE = String(process.env.BASE || '').replace(/\/+$/, '');
 const TENANT = process.env.TENANT || 'nexia';
 const REPO = process.env.REPO || 'gilcambe/nexia';
 const TASK = process.env.TASK || '';
+// Pista: cada pista usa seu próprio cliente/projeto de teste, para tarefas rodarem ao mesmo tempo.
+const PISTA = /^[1-9]$/.test(process.env.PISTA || '') ? `-p${process.env.PISTA}` : '';
 // Nível de autonomia do projeto de TESTE para a tarefa (vazio = não muda). 3 = o Cortex cria branch,
 // commit e PR sozinho; nunca faz merge nem deploy (deploy exige 4 e produção sempre pede aprovação).
 const AUTONOMY = /^[0-3]$/.test(process.env.AUTONOMY || '') ? Number(process.env.AUTONOMY) : null;
@@ -90,14 +92,14 @@ async function main() {
     report(me.status === 200 && me.json.role === 'master' && me.json.canUseVault, 'Quem sou eu (/me)', `${me.status} ${me.json && me.json.role}`);
 
     // Vault: cliente e projeto de teste (idempotentes: rodar de novo reaproveita)
-    const cl = await api('/nexia/clients', { method: 'POST', body: { name: 'Teste automático NEXIA', slug: 'teste-automatico', status: 'active' }, headers: { 'Idempotency-Key': 'smoke-client-v1' } });
+    const cl = await api('/nexia/clients', { method: 'POST', body: { name: 'Teste automático NEXIA', slug: `teste-automatico${PISTA}`, status: 'active' }, headers: { 'Idempotency-Key': `smoke-client-v1${PISTA}` } });
     let client = cl.json && cl.json.record;
-    if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === 'teste-automatico');
+    if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === `teste-automatico${PISTA}`);
     report(!!client, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')}`);
 
-    const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client && client.id, name: 'Site de teste do Cortex', slug: 'site-teste-cortex', type: 'website', status: 'active' }, headers: { 'Idempotency-Key': 'smoke-project-v1' } });
+    const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client && client.id, name: `Site de teste do Cortex${PISTA}`, slug: `site-teste-cortex${PISTA}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PISTA}` } });
     let project = pr.json && pr.json.record;
-    if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === 'site-teste-cortex');
+    if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PISTA}`);
     report(!!project, 'Vault: criar projeto', `${pr.status} ${pr.json && (pr.json.error || '')}`);
 
     const list = await api('/nexia/projects');
