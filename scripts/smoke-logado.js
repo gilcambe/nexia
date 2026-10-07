@@ -14,11 +14,14 @@ const TASK = process.env.TASK || '';
 // Pista: cada pista usa seu próprio cliente/projeto de teste, para tarefas rodarem ao mesmo tempo.
 // Modo econômico: pula as checagens de painel/chat e só refaz o onboarding se o projeto ainda não tem snapshot (poupa a cota grátis do Firestore).
 const RAPIDO = process.env.RAPIDO === '1' && !!process.env.TASK;
+// Todas as pistas usam o MESMO cliente e projeto de teste (-p1): o repositório só pode estar ligado a um projeto
+// por tenant (UNIQUE), então projetos separados por pista não conseguiam fazer o onboarding. A pista só separa as chaves da execução.
 const PISTA = /^[1-9]$/.test(process.env.PISTA || '') ? `-p${process.env.PISTA}` : '';
 // Nível de autonomia do projeto de TESTE para a tarefa (vazio = não muda). 3 = o Cortex cria branch,
 // commit e PR sozinho; nunca faz merge nem deploy (deploy exige 4 e produção sempre pede aprovação).
 const AUTONOMY = /^[0-3]$/.test(process.env.AUTONOMY || '') ? Number(process.env.AUTONOMY) : null;
 const UID = 'nexia-smoke';
+const PROJ = PISTA ? '-p1' : '';
 const WAIT_ONBOARD_S = Number(process.env.WAIT_ONBOARD_S || 420);
 const WAIT_EXEC_S = Number(process.env.WAIT_EXEC_S || 1500);
 
@@ -94,14 +97,14 @@ async function main() {
     report(me.status === 200 && me.json.role === 'master' && me.json.canUseVault, 'Quem sou eu (/me)', `${me.status} ${me.json && me.json.role}`);
 
     // Vault: cliente e projeto de teste (idempotentes: rodar de novo reaproveita)
-    const cl = await api('/nexia/clients', { method: 'POST', body: { name: 'Teste automático NEXIA', slug: `teste-automatico${PISTA}`, status: 'active' }, headers: { 'Idempotency-Key': `smoke-client-v1${PISTA}` } });
+    const cl = await api('/nexia/clients', { method: 'POST', body: { name: 'Teste automático NEXIA', slug: `teste-automatico${PROJ}`, status: 'active' }, headers: { 'Idempotency-Key': `smoke-client-v1${PROJ}` } });
     let client = cl.json && cl.json.record;
-    if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === `teste-automatico${PISTA}`);
+    if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === `teste-automatico${PROJ}`);
     report(!!client, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
 
-    const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client && client.id, name: `Site de teste do Cortex${PISTA}`, slug: `site-teste-cortex${PISTA}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PISTA}` } });
+    const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client && client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
     let project = pr.json && pr.json.record;
-    if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PISTA}`);
+    if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PROJ}`);
     report(!!project, 'Vault: criar projeto', `${pr.status} ${pr.json && (pr.json.error || '')}`);
 
     const list = await api('/nexia/projects');
