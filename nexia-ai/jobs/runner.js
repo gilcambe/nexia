@@ -17,7 +17,7 @@ async function runJob(rawJob, deps = {}) {
   const vdb = deps.db || require('../../netlify/functions/firebase-vault').vaultDb();
   const { createVault } = require('../vault');
   const auditSink = require('../vault/audit-file').createFileAuditSink(process.env.NEXIA_AUDIT_FILE);
-  const vault = deps.vault || createVault({ db: vdb, ...(auditSink ? { auditSink } : {}) });
+  const vault = deps.vault || createVault({ db: vdb, ...(!deps.db && process.env.FIREBASE_SERVICE_ACCOUNT_B ? { tenantDb: db } : {}), ...(auditSink ? { auditSink } : {}) });
   // ADR-CLONE-01: duplicar tenant (cópia preparada pela API; aqui só ids, resumo só com contagens)
   if (job.kind === 'tenant.duplicate') {
     const { duplicateTenant } = require('../tenant-copy');
