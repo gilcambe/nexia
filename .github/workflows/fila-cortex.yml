@@ -1,0 +1,34 @@
+# NEXIA — fila fixa do Cortex. As tarefas são Issues com o rótulo "cortex-fila" (grátis, sem Firestore).
+# A cada 15 minutos: conclui o que terminou, reenfileira o que falhou (espera crescente), alerta quando trava
+# e despacha as próximas em até 3 pistas. Só Issues de dono, membro ou colaborador contam.
+name: Fila do Cortex
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  actions: write
+
+concurrency:
+  group: fila-cortex
+  cancel-in-progress: false
+
+jobs:
+  fila:
+    name: Rodar a fila
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Processar a fila
+        run: node scripts/cortex-fila.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
