@@ -27,3 +27,4 @@ jobs:
         run: node scripts/publicar-indices.js ${{ inputs.confirm == 'PUBLICAR' && ' ' || '--dry-run' }}
         env:
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          FIREBASE_SERVICE_ACCOUNT_B: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_B }}

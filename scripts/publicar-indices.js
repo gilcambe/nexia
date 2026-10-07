@@ -14,6 +14,18 @@ async function main() {
   const dry = process.argv.includes('--dry-run');
   const sa = JSON.parse(Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '', 'base64').toString('utf8') || '{}');
   if (!sa.project_id) throw new Error('Falta FIREBASE_SERVICE_ACCOUNT_BASE64.');
+  await publicar(sa, dry);
+  // Segundo projeto grátis do Vault/Cortex (FIREBASE_SERVICE_ACCOUNT_B): mesmos índices.
+  const raw = (process.env.FIREBASE_SERVICE_ACCOUNT_B || '').trim();
+  if (raw) {
+    const b = JSON.parse(raw);
+    if (typeof b.private_key === 'string' && b.private_key.includes('\\n')) b.private_key = b.private_key.replace(/\\n/g, '\n');
+    console.log(`--- Projeto B (${b.project_id}) ---`);
+    await publicar(b, dry);
+  }
+}
+
+async function publicar(sa, dry) {
   const wanted = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'firestore.indexes.json'), 'utf8')).indexes;
   const token = await createTokenSource(sa).getToken();
   const base = `https://firestore.googleapis.com/v1/projects/${sa.project_id}/databases/(default)/collectionGroups`;

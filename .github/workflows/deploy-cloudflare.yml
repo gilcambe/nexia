@@ -140,6 +140,7 @@ jobs:
         run: node scripts/publicar-indices.js
         env:
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          FIREBASE_SERVICE_ACCOUNT_B: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_B }}
       - name: Registrar o deploy no Vault (fim)
         if: always() && steps.vault.outputs.deployment_id != ''
         run: node scripts/registrar-deploy.js fim "${{ steps.vault.outputs.deployment_id }}" "${{ steps.smoke.outputs.status || 'failed' }}"
