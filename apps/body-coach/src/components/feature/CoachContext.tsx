@@ -11,6 +11,8 @@ import {
 import type { CoachMessage } from '@/mocks/coach';
 import { useAuth } from './AuthContext';
 import { perguntar } from '@/lib/coachAI';
+import { cargasDoTexto } from '@/lib/cargasDoTexto';
+import { temExercicioAtivo, getExercicioAtivo } from '@/lib/treinoAtivo';
 
 export interface CoachContextSnapshot {
   name: string;
@@ -109,6 +111,18 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     const trimmed = text.trim();
     if (!trimmed || loadingAI) return;
 
+    // Processa cargas se o texto contém séries e há exercício ativo
+    let cargasProcessadas: { reps: number; weight: number }[] | null = null;
+    if (trimmed.toLowerCase().includes('série') || trimmed.toLowerCase().includes('series') || trimmed.toLowerCase().includes('x')) {
+      const cargas = cargasDoTexto(trimmed);
+      if (cargas && cargas.length > 0 && temExercicioAtivo()) {
+        cargasProcessadas = cargas;
+        const exercicio = getExercicioAtivo();
+        console.log('[Coach] Cargas detectadas para', exercicio, ':', cargasProcessadas);
+        // Aqui poderia salvar no Firestore, atualizar treino, etc.
+      }
+    }
+
     setMessages((prev) => [
       ...prev,
       { id: `u-${Date.now()}`, speaker: 'user', text: trimmed, time: 'agora' },
@@ -125,6 +139,8 @@ export function CoachProvider({ children }: { children: ReactNode }) {
         caloriesTarget: snapshot?.caloriesTarget ?? null,
         protein: snapshot?.protein ?? null,
         proteinTarget: snapshot?.proteinTarget ?? null,
+        exercicioAtivo: getExercicioAtivo(),
+        cargasDetectadas: cargasProcessadas,
       };
 
       const reply = await perguntar('coach', trimmed, contextData);
