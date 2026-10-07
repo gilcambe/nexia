@@ -68,7 +68,8 @@ async function testarPagina(browser, base, rota, viewport, fila, vistos) {
     await page.waitForTimeout(1500);
   }
   try {
-    await page.goto(base + rota.replace(/^\//, ''), { waitUntil: 'networkidle', timeout: 45000 });
+    await page.goto(base + rota.replace(/^\//, ''), { waitUntil: 'load', timeout: 45000 });
+    await page.waitForTimeout(1500);
     await page.waitForTimeout(800);
     const texto = (await page.evaluate(() => document.body.innerText || '')).trim();
     if (texto.length < 5) nota(tela, onde, 'tela em branco');
@@ -138,7 +139,7 @@ async function cenarioTreino(browser, base, viewport) {
   let onde = 'login';
   page.on('pageerror', e => nota(tela, onde, `erro de JavaScript: ${e.message.slice(0, 160)}`));
   try {
-    await page.goto(base + 'auth', { waitUntil: 'networkidle', timeout: 45000 });
+    await page.goto(base + 'auth', { waitUntil: 'load', timeout: 45000 });
     await page.locator('input[type=email], input[type=text]').first().fill(process.env.LOGIN_USER, { timeout: 3000 });
     await page.locator('input[type=password]').first().fill(process.env.LOGIN_PASS || '', { timeout: 3000 });
     await page.locator('button[type=submit]').first().click({ timeout: 3000 });
@@ -150,7 +151,7 @@ async function cenarioTreino(browser, base, viewport) {
       return;
     }
     onde = 'abrir o treino';
-    await page.goto(base + 'workout', { waitUntil: 'networkidle', timeout: 45000 });
+    await page.goto(base + 'workout', { waitUntil: 'load', timeout: 45000 });
     await page.getByRole('button', { name: /Montar Treino de Hoje/i }).click({ timeout: 8000 });
     await page.getByRole('button', { name: /INICIAR TREINO/i }).click({ timeout: 8000 });
     await page.getByRole('button', { name: /COMEÇAR EXERCÍCIOS/i }).click({ timeout: 8000 });
