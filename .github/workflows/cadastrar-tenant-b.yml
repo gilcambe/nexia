@@ -1,0 +1,29 @@
+# NEXIA — cadastra um tenant no banco B (Vault/Cortex). Manual; só cria se não existir.
+name: Cadastrar tenant no banco B
+
+on:
+  workflow_dispatch:
+    inputs:
+      tenant:
+        description: 'Slug do tenant (ex.: nexia)'
+        required: true
+        default: 'nexia'
+
+permissions:
+  contents: read
+
+jobs:
+  tenant:
+    name: Cadastrar tenant
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Cadastrar
+        run: node scripts/cadastrar-tenant-b.js
+        env:
+          TENANT: ${{ inputs.tenant }}
+          FIREBASE_SERVICE_ACCOUNT_B: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_B }}
