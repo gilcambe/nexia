@@ -4,7 +4,7 @@ import { type SetLog, type Session } from '@/mocks/workout';
 import type { Answers } from '@/lib/trainingPlan';
 import { montarTreinoDoDia, type TreinoDoDia, trocarExercicio } from '@/lib/dayPlan';
 import { alternativas, videoDeExecucao, lesoesDoTexto } from '@/lib/exerciseDb';
-import PreTreino from './components/PreTreino';
+import PreTreino from './components/PreTreino';\nimport { dicaAoVivo } from '@/lib/liveCoach';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
@@ -112,6 +112,21 @@ function WorkoutFlow({ session, onTreinoChange }: { session: Session; onTreinoCh
   };
 
   const currentSets = setsByEx[exercise.id] ?? [];
+
+  // Extrair faixa de repetições alvo do exercício (ex: "8-12 reps" -> [8, 12])
+  const parseReps = (target: string): [number, number] => {
+    const match = target.match(/(\d+)\s*-\s*(\d+)/);
+    if (match) return [parseInt(match[1], 10), parseInt(match[2], 10)];
+    return [8, 12];
+  };
+
+  const dica = dicaAoVivo({
+    exercicio: exercise.name,
+    repsAlvo: parseReps(exercise.targetReps || '8-12'),
+    seriesPlanejadas: 3,
+    feitas: currentSets.map(s => ({ carga: s.weight, reps: s.reps, rir: s.rir ?? undefined })),
+    descansoSeg: exercise.restSec || 90
+  });
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -338,6 +353,17 @@ function WorkoutFlow({ session, onTreinoChange }: { session: Session; onTreinoCh
               </div>
             )}
 
+            {/* live coach tip */}
+            {dica && dica.texto && (
+              <div className={`mt-5 rounded-xl p-4 text-sm flex items-start gap-3 ${dica.alerta ? 'bg-primary-100/80 text-primary-900 border border-primary-200' : 'bg-background-100/80 text-foreground-800'}`}>
+                <i className={`ri-lightbulb-line text-lg shrink-0 mt-0.5 ${dica.alerta ? 'text-primary-600' : 'text-accent-600'}`}></i>
+                <div>
+                  <p className="font-semibold text-xs uppercase tracking-wide opacity-75 mb-0.5">Dica do Coach ao Vivo</p>
+                  <p>{dica.texto}</p>
+                </div>
+              </div>
+            )}
+
             {/* add set */}
             <div className="mt-5 border-t border-background-200 pt-4">
               <p className="mb-2 text-xs font-semibold text-foreground-500">Registrar série</p>
@@ -346,7 +372,12 @@ function WorkoutFlow({ session, onTreinoChange }: { session: Session; onTreinoCh
                 maxWeight={exercise.maxWeight}
                 weightUnit={exercise.weightUnit}
                 targetReps={exercise.targetReps}
-                onSubmit={addSet}
+                onSubmit={(s) => {
+                  addSet(s);
+                  if (dica && dica.descansoSeg) {
+                    startRest(dica.descansoSeg);
+                  }
+                }}
               />
             </div>
 
