@@ -27,7 +27,7 @@ test('detecta stack, scripts, Firebase, hosting e documentação deste repositó
   assert.deepStrictEqual(d.environments, [{ name: 'production', provider: 'cloudflare', urls: [], branch: null, source: 'wrangler.jsonc' }]);
   assert.strictEqual(d.cloudflareRef, 'nexia');
   assert.deepStrictEqual(d.workflows, ['.github/workflows/auto-merge.yml', '.github/workflows/ci.yml', '.github/workflows/clonar-site.yml', '.github/workflows/deploy-cloudflare.yml', '.github/workflows/diagnostico-firestore.yml',
-    '.github/workflows/diagnostico.yml', '.github/workflows/nexia-jobs.yml', '.github/workflows/preview-site.yml', '.github/workflows/publicar-indices.yml', '.github/workflows/publicar-regras.yml', '.github/workflows/smoke-logado.yml', '.github/workflows/smoke.yml']);
+    '.github/workflows/diagnostico.yml', '.github/workflows/nexia-jobs.yml', '.github/workflows/preview-site.yml', '.github/workflows/publicar-indices.yml', '.github/workflows/publicar-regras.yml', '.github/workflows/smoke-logado.yml', '.github/workflows/smoke.yml', '.github/workflows/teste-humano.yml']);
   assert.ok(d.docs.includes('ARCHITECTURE-DECISIONS.md') && d.docs.includes('VAULT-SCHEMAS.md'));
   assert.ok(d.secretNames.includes('GROQ_API_KEY') && d.secretNames.includes('FIREBASE_SERVICE_ACCOUNT_BASE64'));
   assert.ok(d.directoryStructure.some(x => x.startsWith('netlify/ (')));
