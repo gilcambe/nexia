@@ -2,4 +2,80 @@
  * Módulo de divisão de tarefas em CommonJS
  */
 
-function dividirTarefa(texto, max = 600) {\n  if (!texto || typeof texto !== 'string') {\n    return [''];\n  }\n\n  if (texto.length <= max) {\n    return [texto];\n  }\n\n  // Tentar dividir por linhas ou itens numerados / marcadores / frases\n  const linhas = texto.split(/\r?\n/);\n  const passos = [];\n  let atual = '';\n\n  function adicionarOuFlush(trecho) {\n    if (!trecho.trim()) return;\n    \n    // Se o trecho isolado for maior que max, precisamos dividi-lo em pedaços menores (por frases ou tamanho)\n    if (trecho.length > max) {\n      if (atual) {\n        passos.push(atual.trim());\n        atual = '';\n      }\n      // Dividir por frases (. ! ?) ou pedaços de tamanho max\n      const partes = trecho.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [trecho];\n      for (const parte of partes) {\n        if ((atual + ' ' + parte).trim().length <= max) {\n          atual = (atual ? atuak + ' ' : '') + parte;\n        } else {\n          if (atual) {\n            passos.push(atual.trim());\n          }\n          // Se uma única parte for maior que max, quebrar por tamanho fixo\n          if (parte.length > max) {\n            for (let i = 0; i < parte.length; i += max) {\n              passos.push(parte.slice(i, i + max).trim());\n            }\n            atual = '';\n          } else {\n            atual = parte;\n          }\n        }\n      }\n      return;\n    }\n\n    const testar = (atual ? atual + '\n' : '') + trecho;\n    if (testar.length <= max) {\n      atual = testar;\n    } else {\n      if (atual) {\n        passos.push(atual.trim());\n      }\n      atual = trecho;\n    }\n  }\n\n  for (const linha of linhas) {\n    // Detectar se é item numerado (1., 2., etc) ou marcador (-)\n    const ehItem = /^(\d+\.|\-|\*)\s+/.test(linha.trim());\n    if (ehItem && atual) {\n      passos.push(atual.trim());\n      atual = '';\n    }\n    adicionarOuFlush(linha);\n  }\n\n  if (atual) {\n    passos.push(atual.trim());\n  }\n\n  return passos.length > 0 ? passos : [texto];\n}\n\nmodule.exports = {\n  dividirTarefa\n};\n
+function dividirTarefa(texto, max = 600) {
+  if (!texto || typeof texto !== 'string') {
+    return [''];
+  }
+
+  if (texto.length <= max) {
+    return [texto];
+  }
+
+  // Tentar dividir por linhas ou itens numerados / marcadores / frases
+  const linhas = texto.split(/\r?\n/);
+  const passos = [];
+  let atual = '';
+
+  function adicionarOuFlush(trecho) {
+    if (!trecho.trim()) return;
+    
+    // Se o trecho isolado for maior que max, precisamos dividi-lo em pedaços menores (por frases ou tamanho)
+    if (trecho.length > max) {
+      if (atual) {
+        passos.push(atual.trim());
+        atual = '';
+      }
+      // Dividir por frases (. ! ?) ou pedaços de tamanho max
+      const partes = trecho.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) || [trecho];
+      for (const parte of partes) {
+        if ((atual + ' ' + parte).trim().length <= max) {
+          atual = (atual ? atual + ' ' : '') + parte;
+        } else {
+          if (atual) {
+            passos.push(atual.trim());
+          }
+          // Se uma única parte for maior que max, quebrar por tamanho fixo
+          if (parte.length > max) {
+            for (let i = 0; i < parte.length; i += max) {
+              passos.push(parte.slice(i, i + max).trim());
+            }
+            atual = '';
+          } else {
+            atual = parte;
+          }
+        }
+      }
+      return;
+    }
+
+    const testar = (atual ? atual + '\n' : '') + trecho;
+    if (testar.length <= max) {
+      atual = testar;
+    } else {
+      if (atual) {
+        passos.push(atual.trim());
+      }
+      atual = trecho;
+    }
+  }
+
+  for (const linha of linhas) {
+    // Detectar se é item numerado (1., 2., etc) ou marcador (-)
+    const ehItem = /^(\d+\.|\-|\*)\s+/.test(linha.trim());
+    if (ehItem && atual) {
+      passos.push(atual.trim());
+      atual = '';
+    }
+    adicionarOuFlush(linha);
+  }
+
+  if (atual) {
+    passos.push(atual.trim());
+  }
+
+  return passos.length > 0 ? passos : [texto];
+}
+
+module.exports = {
+  dividirTarefa
+};\n
