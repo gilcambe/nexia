@@ -1,0 +1,75 @@
+# NEXIA — teste de pessoa: um robô abre o site/app em celular e computador, passa por todas as páginas,
+# clica em cada botão e link e preenche cada formulário; anota tudo que quebra. Roda numa porta local do
+# runner (nunca contra o site em produção). Com "conta" ligada, cria uma conta de teste real e temporária no
+# Firebase, entra com ela e apaga a conta e os dados no fim. Obrigatório ao fim de todo projeto do Cortex.
+name: Teste de pessoa
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch a testar'
+        required: false
+        default: 'develop'
+      build:
+        description: 'Comando para compilar (vazio = site estático, sem compilar). Ex.: cd apps/body-coach && npm ci && npm run build'
+        required: false
+        default: 'cd apps/body-coach && npm ci && npm run build'
+      folder:
+        description: 'Pasta servida (a compilada ou a do site estático)'
+        required: false
+        default: 'apps/body-coach/dist'
+      base:
+        description: 'Prefixo do endereço onde o site vive'
+        required: false
+        default: '/body-coach/'
+      conta:
+        description: 'Entrar com uma conta de teste real e temporária? (sim/não)'
+        required: false
+        default: 'sim'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: teste-humano
+  cancel-in-progress: false
+
+jobs:
+  testar:
+    name: Testar como uma pessoa
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: ${{ inputs.branch }}
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Compilar
+        if: ${{ inputs.build != '' }}
+        env:
+          COMANDO: ${{ inputs.build }}
+        run: bash -c "$COMANDO"
+      - name: Instalar o navegador
+        run: |
+          npm i --no-save --no-audit --no-fund playwright@1.59.1
+          npx playwright install --with-deps chromium
+      - name: Criar conta de teste
+        if: ${{ inputs.conta == 'sim' }}
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+        run: node scripts/teste-humano-conta.js criar
+      - name: Testar
+        env:
+          ROOT: ${{ inputs.folder }}
+          BASE: ${{ inputs.base }}
+          OUT: ${{ github.workspace }}/relatorio
+        run: node scripts/teste-humano.js
+      - name: Apagar conta de teste
+        if: ${{ always() && inputs.conta == 'sim' }}
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+        run: node scripts/teste-humano-conta.js apagar
