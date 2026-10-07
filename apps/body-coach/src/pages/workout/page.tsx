@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { type SetLog, type Session } from '@/mocks/workout';
-import { buildWeekPlan, todayPlanDay, buildSession, type Answers } from '@/lib/trainingPlan';
+import type { Answers } from '@/lib/trainingPlan';
+import { montarTreinoDoDia, type TreinoDoDia } from '@/lib/dayPlan';
+import PreTreino from './components/PreTreino';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
@@ -18,21 +20,29 @@ type Phase =
 
 export default function Workout() {
   const { user } = useAuth();
-  const [session, setSession] = useState<Session | null>(null);
+  const [treino, setTreino] = useState<TreinoDoDia | null>(null);
   const [estado, setEstado] = useState<'loading' | 'rest' | 'no-plan' | 'ready'>('loading');
+  const [preTreinoPronto, setPreTreinoPronto] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     getUserDoc<{ onboarding?: Answers }>(user.id, 'profile', 'main')
-      .then((p) => {
+      .then(async (p) => {
         if (!p?.onboarding) return setEstado('no-plan');
-        const day = todayPlanDay(buildWeekPlan(p.onboarding));
-        if (!day) return setEstado('rest');
-        setSession(buildSession(day));
+        const res = await montarTreinoDoDia(user.id);
+        if (!res) return setEstado('rest');
+        setTreino(res);
         setEstado('ready');
       })
       .catch(() => setEstado('no-plan'));
   }, [user]);
-  return estado === 'ready' && session ? <WorkoutFlow session={session} /> : <WorkoutEmpty estado={estado} />;
+
+  if (estado === 'loading') return <p className=\"text-sm text-foreground-500\">Carregando...</p>;
+  if (estado !== 'ready' || !treino) return <WorkoutEmpty estado={estado} />;
+  if (!preTreinoPronto) {
+    return <PreTreino treino={treino} onStart={() => setPreTreinoPronto(true)} />;
+  }
+  return <WorkoutFlow session={treino as unknown as Session} />;
 }
 
 function WorkoutEmpty({ estado }: { estado: string }) {
