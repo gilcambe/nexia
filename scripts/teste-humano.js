@@ -177,7 +177,7 @@ async function cenarioTreino(browser, base, viewport) {
     onde = 'ícone do chat do coach';
     if (!(await page.getByRole('button', { name: /coach/i }).count())) nota(tela, onde, 'não existe o ícone/botão do chat do coach na tela do treino');
     onde = 'mudar a ordem dos exercícios';
-    if (!(await page.getByRole('button', { name: /Descer|Subir/i }).count())) nota(tela, onde, 'não existe como mudar a ordem dos exercícios');
+    if (!(await page.getByRole('button', { name: /Descer|Subir/i }).count())) nota(tela, onde, 'não existe como mudar a ordem dos exercícios | botões: ' + (await page.evaluate(() => [...document.querySelectorAll('button')].map(b => (b.getAttribute('aria-label') || b.title || b.innerText || '?').trim().slice(0, 25)).join(' / ')).catch(() => '')).slice(0, 400));
     await page.screenshot({ path: path.join(OUT, `${viewport.nome}-treino-ativo.png`), fullPage: true }).catch(() => {});
     feitos.push(`${tela}: montou o treino, iniciou, trocou exercício (${n} opções), conferiu botões`);
   } catch (e) {
