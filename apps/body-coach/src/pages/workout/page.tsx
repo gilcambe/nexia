@@ -20,29 +20,31 @@ type Phase =
 
 export default function Workout() {
   const { user } = useAuth();
+  const [respostas, setRespostas] = useState<Record<string, unknown> | null>(null);
   const [treino, setTreino] = useState<TreinoDoDia | null>(null);
   const [estado, setEstado] = useState<'loading' | 'rest' | 'no-plan' | 'ready'>('loading');
-  const [preTreinoPronto, setPreTreinoPronto] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     getUserDoc<{ onboarding?: Answers }>(user.id, 'profile', 'main')
-      .then(async (p) => {
+      .then((p) => {
         if (!p?.onboarding) return setEstado('no-plan');
-        const res = await montarTreinoDoDia(user.id);
-        if (!res) return setEstado('rest');
-        setTreino(res);
+        setRespostas(p.onboarding as unknown as Record<string, unknown>);
         setEstado('ready');
       })
       .catch(() => setEstado('no-plan'));
   }, [user]);
 
-  if (estado === 'loading') return <p className=\"text-sm text-foreground-500\">Carregando...</p>;
-  if (estado !== 'ready' || !treino) return <WorkoutEmpty estado={estado} />;
-  if (!preTreinoPronto) {
-    return <PreTreino treino={treino} onStart={() => setPreTreinoPronto(true)} />;
+  if (estado !== 'ready' || !respostas) return <WorkoutEmpty estado={estado} />;
+  if (!treino) {
+    return (
+      <PreTreino
+        respostas={respostas}
+        onStart={(cfg) => setTreino(montarTreinoDoDia({ respostas, ...cfg, variacao: Date.now() % 1000 }))}
+      />
+    );
   }
-  return <WorkoutFlow session={treino as unknown as Session} />;
+  return <WorkoutFlow session={treino.sessao} />;
 }
 
 function WorkoutEmpty({ estado }: { estado: string }) {
