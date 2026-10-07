@@ -16,6 +16,13 @@ const numeroDe = (labels, prefixo) => {
 };
 const minutos = (agora, iso) => (agora - new Date(iso).getTime()) / 60000;
 
+// A cota grátis do Firestore volta todo dia às 07:00 UTC. Depois de uma falha por cota, a fila
+// espera até 07:05 UTC em vez de gastar tentativas (e cota) à toa.
+function voltaDaCota(iso) {
+  const d = new Date(iso); const v = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 7, 5);
+  return d.getTime() < v ? v : v + 86400000;
+}
+
 // Função pura: recebe issues e execuções e devolve a lista de ações. Fácil de testar.
 function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
   const acoes = [];
@@ -32,6 +39,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
     const pista = numeroDe(ls, 'pista');
     if (run && run.status === 'completed') {
       if (run.conclusion === 'success') { acoes.push({ tipo: 'concluir', numero: i.number, run: run.id }); continue; }
+      if (run.cota) { acoes.push({ tipo: 'reenfileirar', numero: i.number, tentativa: numeroDe(ls, 'tentativa'), run: run.id, conclusao: 'cota do banco' }); continue; }
       const t = numeroDe(ls, 'tentativa') + 1;
       acoes.push(t >= MAX_TENTATIVAS
         ? { tipo: 'travar', numero: i.number, tentativas: t, run: run.id }
@@ -46,6 +54,8 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
   const fila = validas
     .filter(i => { const ls = nomes(i); return !ls.includes(L.rodando) && !ls.includes(L.feito) && !ls.includes(L.travado); })
     .sort((a, b) => a.number - b.number);
+  const ultimaCota = runs.filter(r => r.cota && r.status === 'completed').map(r => voltaDaCota(r.updated_at || r.created_at)).sort((a, b) => b - a)[0] || 0;
+  if (agora < ultimaCota) return acoes; // pausa: cota do banco esgotada, volta às 07:05 UTC
   for (const i of fila) {
     if (ativas >= pistas) break;
     const t = numeroDe(nomes(i), 'tentativa');
@@ -101,6 +111,16 @@ async function main() {
   for (const l of Object.values(L)) await gh(token, 'POST', '/labels', { name: l, color: '1d76db' });
   const issues = (await gh(token, 'GET', `/issues?state=open&labels=${L.fila}&per_page=50`)).json || [];
   const runs = ((await gh(token, 'GET', '/actions/workflows/smoke-logado.yml/runs?per_page=60')).json || {}).workflow_runs || [];
+  // Marca as falhas causadas pela cota do banco (o resumo do smoke traz o código do Firestore).
+  for (const r of runs.filter(x => x.status === 'completed' && x.conclusion !== 'success' && /^Cortex #/.test(x.name || '')).slice(0, 6)) {
+    try {
+      const jobs = ((await gh(token, 'GET', `/actions/runs/${r.id}/jobs`)).json || {}).jobs || [];
+      for (const j of jobs) {
+        const an = (await gh(token, 'GET', `/check-runs/${j.id}/annotations?per_page=50`)).json || [];
+        if (an.some(a => /RESOURCE_EXHAUSTED/.test(`${a.message || ''}`))) r.cota = true;
+      }
+    } catch { /* sem anotação: segue como falha comum */ }
+  }
   const acoes = decidir({ issues, runs });
   for (const a of acoes) { console.log(`${a.tipo} #${a.numero}${a.pista ? ` pista ${a.pista}` : ''}${a.tentativa ? ` tentativa ${a.tentativa}` : ''}`); await executar(token, a); }
   console.log(`${issues.length} na fila, ${acoes.length} ação(ões).`);

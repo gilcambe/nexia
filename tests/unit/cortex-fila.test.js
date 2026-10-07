@@ -41,3 +41,12 @@ test('CF6. "rodando" sem execução por mais de 20 minutos volta para a fila', (
   const a = decidir({ issues: [issue(1, ['cortex-rodando'], { updated_at: '2026-10-07T09:30:00Z' })], runs: [], agora: AGORA });
   assert.equal(a[0].tipo, 'reenfileirar');
 });
+
+test('CF-cota. falha por cota do banco não gasta tentativa e pausa até 07:05 UTC', () => {
+  const r = { ...run(1, 'completed', 'failure', 5), cota: true };
+  const a = decidir({ issues: [issue(1, ['cortex-rodando', 'pista-1', 'tentativa-2']), issue(2)], runs: [r], agora: AGORA });
+  assert.deepEqual([a[0].tipo, a[0].tentativa], ['reenfileirar', 2]);
+  assert.equal(a.some(x => x.tipo === 'despachar'), false);
+  const depois = decidir({ issues: [issue(2)], runs: [r], agora: Date.parse('2026-10-08T07:06:00Z') });
+  assert.equal(depois[0].tipo, 'despachar');
+});
