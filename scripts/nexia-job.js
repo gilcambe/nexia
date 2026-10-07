@@ -14,7 +14,10 @@ loadSecrets(process.env);
     const r = await runJob(job);
     console.log('[nexia-job] ok', JSON.stringify(r));
   } catch (e) {
-    console.error('[nexia-job] falhou', e && (e.code || e.name), e && e.message ? String(e.message).slice(0, 300) : '');
+    const msg = `${e && (e.code || e.name)} ${e && e.message ? String(e.message).slice(0, 300) : ''}`.replace(/[\r\n%]+/g, ' ');
+    console.error('[nexia-job] falhou', msg);
+    // Anotação legível pela API de check-runs (o log do Actions não é): só código e mensagem curta.
+    console.log(`::error title=Falha da tarefa::${msg}`);
     process.exit(1);
   }
 })();
