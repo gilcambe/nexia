@@ -7,6 +7,8 @@ import PreTreino from './components/PreTreino';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
+import { alternativas, videoDeExecucao, lesoesDoTexto } from '@/lib/exerciseDb';
+import { trocarExercicio } from '@/lib/dayPlan';
 
 type Phase =
   | 'PRE_SESSION'
@@ -44,7 +46,7 @@ export default function Workout() {
       />
     );
   }
-  return <WorkoutFlow session={treino.sessao} />;
+  return <WorkoutFlow session={treino.sessao} respostas={respostas} setTreino={setTreino} />;
 }
 
 function WorkoutEmpty({ estado }: { estado: string }) {
@@ -58,7 +60,7 @@ function WorkoutEmpty({ estado }: { estado: string }) {
   );
 }
 
-function WorkoutFlow({ session }: { session: Session }) {
+function WorkoutFlow({ session, respostas, setTreino }: { session: Session; respostas: Records; setTreino: any }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [startedAt] = useState(() => new Date().toISOString());
@@ -68,6 +70,8 @@ function WorkoutFlow({ session }: { session: Session }) {
   const [restLeft, setRestLeft] = useState(0);
   const [resting, setResting] = useState(false);
   const [cardioDone, setCardioDone] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const [showSwapModal, setShowSwapModal] = useState(false);
 
   const exercise = session.exercises[exIndex] ?? session.exercises[0];
 
@@ -208,6 +212,39 @@ function WorkoutFlow({ session }: { session: Session }) {
                 ))}
               </div>
             </div>
+
+            {/* Ver vídeo e trocar exercício */}
+            <div className=\"mt-4 flex flex-wrap gap-2\">
+              <button
+                onClick={() => setShowVideo(true)}
+                className=\"inline-flex items-center gap-1.5 rounded-xl bg-background-100 px-3.5 py-2 text-xs font-semibold text-foreground-800 transition hover:bg-background-200\"
+              >
+                <i className=\"ri-play-circle-line text-primary-500 text-base\"></i>
+                Ver como fazer
+              </button>
+              <button
+                onClick={() => setShowSwapModal(true)}
+                className=\"inline-flex items-center gap-1.5 rounded-xl bg-background-100 px-3.5 py-2 text-xs font-semibold text-foreground-800 transition hover:bg-background-200\"
+              >
+                <i className=\"ri-exchange-line text-accent-600 text-base\"></i>
+                Trocar exercício
+              </button>
+            </div>
+
+            {/* Modal de Vídeo */}
+            {showVideo && (
+              <div className=\"fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4\">
+                <div className=\"w-full max-w-lg rounded-2xl bg-background-50 p-6 shadow-xl\">
+                  <div className=\"flex items-center justify-between\">\n                    <h3 className=\"font-heading text-lg font-bold text-foreground-950\">Execução: {exercise.name}</h3>\n                    <button onClick={() => setShowVideo(false)} className=\"rounded-lg p-1 text-foreground-500 hover:bg-background-100\">\n                      <i className=\"ri-close-line text-xl\"></i>\n                    </button>\n                  </div>
+                  <div className=\"mt-4 aspect-video w-full overflow-hidden rounded-xl bg-background-900 flex items-center justify-center text-background-50\">\n                    <div className=\"text-center p-4\">\n                      <i className=\"ri-play-circle-fill text-5xl text-primary-400 mb-2 inline-block\"></i>\n                      <p className=\"text-sm font-medium\">Vídeo demonstrativo: {videoDeExecucao(exercise.name)}</p>\n                      <p className=\"text-xs text-foreground-400 mt-1\">Foque na amplitude completa e controle excêntrico.</p>\n                    </div>\n                  </div>\n                  <div className=\"mt-4 rounded-xl bg-background-100 p-3 text-xs text-foreground-700\">\n                    <p className=\"font-semibold text-foreground-900 mb-1\">Orientações:</p>\n                    <p>{exercise.note || 'Mantenha a postura estável e respira de forma rítmica.'}</p>\n                  </div>
+                  <button
+                    onClick={() => setShowVideo(false)}
+                    className=\"mt-5 w-full rounded-xl bg-primary-500 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600\"\n                  >\n                    Fechar\n                  </button>\n                </div>\n              </div>\n            )}
+
+            {/* Modal de Troca de Exercício */}
+            {showSwapModal && (
+              <div className=\"fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4\">
+                <div className=\"w-full max-w-lg rounded-2xl bg-background-50 p-6 shadow-xl\">\n                  <div className=\"flex items-center justify-between\">\n                    <h3 className=\"font-heading text-lg font-bold text-foreground-950\">Trocar Exercício</h3>\n                    <button onClick={() => setShowSwapModal(false)} className=\"rounded-lg p-1 text-foreground-500 hover:bg-background-100\">\n                      <i className=\"ri-close-line text-xl\"></i>\n                    </button>\n                  </div>\n                  <p className=\"mt-1 text-xs text-foreground-500\">Escolha uma alternativa compatível para {exercise.name}:</p>\n                  <div className=\"mt-4 max-h-60 overflow-y-auto space-y-2\">\n                    {alternativas(exercise.name).map((alt) => (\n                      <button\n                        key={alt}\n                        onClick={() => {\n                          const novoSessao = trocarExercicio(session, exercise.id, alt);\n                          setTreino({ sessao: novoSessao, id: session.id, title: session.title, estimatedMinutes: session.estimatedMinutes, warmup: session.warmup, cardio: session.cardio });\n                          setShowSwapModal(false);\n                        }}\n                        className=\"w-full text-left rounded-xl border border-background-200 bg-background-100/50 p-3 text-sm font-medium text-foreground-800 transition hover:bg-primary-50 hover:border-primary-300 hover:text-primary-900 flex items-center justify-between\"\n                      >\n                        <span>{alt}</span>\n                        <i className=\"ri-arrow-right-s-line text-foreground-400\"></i>\n                      </button>\n                    ))}\n                  </div>\n                  <button\n                    onClick={() => setShowSwapModal(false)}\n                    className=\"mt-5 w-full rounded-xl border border-background-200 bg-background-50 py-2.5 text-sm font-medium text-foreground-700 transition hover:bg-background-100\"\n                  >\n                    Cancelar\n                  </button>\n                </div>\n              </div>\n            )}
 
             {/* current sets */}
             {currentSets.length > 0 && (
