@@ -11,6 +11,8 @@ import {
 import type { CoachMessage } from '@/mocks/coach';
 import { useAuth } from './AuthContext';
 import { perguntar } from '@/lib/coachAI';
+import { cargasDoTexto } from '@/lib/cargasDoTexto';
+import { getTreinoAtivo } from '@/lib/treinoAtivo';
 
 export interface CoachContextSnapshot {
   name: string;
@@ -126,6 +128,21 @@ export function CoachProvider({ children }: { children: ReactNode }) {
         protein: snapshot?.protein ?? null,
         proteinTarget: snapshot?.proteinTarget ?? null,
       };
+
+      const series = cargasDoTexto(trimmed);
+      if (series && series.length > 0) {
+        const exercicioAtivo = getTreinoAtivo();
+        if (exercicioAtivo) {
+          const key = `bodycoach_sets_${exercicioAtivo.id || exercicioAtivo.name}`;
+          try {
+            const rawSets = localStorage.getItem(key);
+            const currentSets = rawSets ? JSON.parse(rawSets) : [];
+            const newSets = [...currentSets, ...series];
+            localStorage.setItem(key, JSON.stringify(newSets));
+            window.dispatchEvent(new Event('treino-ativo-changed'));
+          } catch {}
+        }
+      }
 
       const reply = await perguntar('coach', trimmed, contextData);
 
