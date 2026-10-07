@@ -17,6 +17,10 @@ on:
         description: 'Autonomia do projeto de teste para a tarefa (0 a 3; vazio = não muda). 3 = cria branch, commit e PR sozinho, sem merge nem deploy'
         required: false
         default: ''
+      pista:
+        description: 'Pista (1 a 9) para rodar tarefas ao mesmo tempo, cada pista com seu projeto de teste; vazio = pista única'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -41,4 +45,5 @@ jobs:
           BASE: ${{ inputs.url }}
           TASK: ${{ inputs.task }}
           AUTONOMY: ${{ inputs.autonomia }}
+          PISTA: ${{ inputs.pista }}
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
