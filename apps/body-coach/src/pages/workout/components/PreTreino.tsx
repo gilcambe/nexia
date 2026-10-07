@@ -53,7 +53,7 @@ export default function PreTreino({ respostas, onStart }: PreTreinoProps) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: import('react').FormEvent) => {
     e.preventDefault();
     onStart({
       divisao,
