@@ -30,6 +30,12 @@ function canonical(v) {
 
 function checkInput(tool, input) {
   if (input === undefined || input === null) input = {};
+  // Modelos grátis costumam mandar null ou "" em campos opcionais (ex.: ref): isso equivale a "não informado".
+  if (typeof input === 'object' && !Array.isArray(input)) {
+    const required = new Set(tool.input_schema.required || []);
+    const props = tool.input_schema.properties || {};
+    input = Object.fromEntries(Object.entries(input).filter(([k, v]) => required.has(k) || !(k in props) || !(v === null || v === '')));
+  }
   const problems = validate(tool.input_schema, input);
   if (!problems.length && input && typeof input === 'object' && !Array.isArray(input)) {
     const allowed = Object.keys(tool.input_schema.properties || {});
