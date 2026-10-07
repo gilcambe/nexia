@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { type SetLog, type Session } from '@/mocks/workout';
 import type { Answers } from '@/lib/trainingPlan';
-import { montarTreinoDoDia, type TreinoDoDia } from '@/lib/dayPlan';
+import { montarTreinoDoDia, type TreinoDoDia, trocarExercicio } from '@/lib/dayPlan';
+import { alternativas, videoDeExecucao, lesoesDoTexto } from '@/lib/exerciseDb';
 import PreTreino from './components/PreTreino';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
@@ -44,7 +45,7 @@ export default function Workout() {
       />
     );
   }
-  return <WorkoutFlow session={treino.sessao} />;
+  return <WorkoutFlow session={treino.sessao} onTreinoChange={setTreino} />;
 }
 
 function WorkoutEmpty({ estado }: { estado: string }) {
@@ -58,7 +59,7 @@ function WorkoutEmpty({ estado }: { estado: string }) {
   );
 }
 
-function WorkoutFlow({ session }: { session: Session }) {
+function WorkoutFlow({ session, onTreinoChange }: { session: Session; onTreinoChange?: (t: TreinoDoDia) => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [startedAt] = useState(() => new Date().toISOString());
@@ -68,6 +69,8 @@ function WorkoutFlow({ session }: { session: Session }) {
   const [restLeft, setRestLeft] = useState(0);
   const [resting, setResting] = useState(false);
   const [cardioDone, setCardioDone] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
+  const [showSwapModal, setShowSwapModal] = useState(false);
 
   const exercise = session.exercises[exIndex] ?? session.exercises[0];
 
@@ -192,6 +195,103 @@ function WorkoutFlow({ session }: { session: Session }) {
               <i className="ri-information-line mr-1 text-primary-500"></i>
               {exercise.note}
             </p>
+
+            {/* ver como fazer & trocar exercício */}
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                onClick={() => setShowVideo(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary-100 px-3 py-1.5 text-xs font-semibold text-primary-700 hover:bg-primary-200 transition"
+              >
+                <i className="ri-play-circle-line"></i>
+                Ver como fazer
+              </button>
+              <button
+                onClick={() => setShowSwapModal(true)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-background-200 px-3 py-1.5 text-xs font-semibold text-foreground-700 hover:bg-background-300 transition"
+              >
+                <i className="ri-refresh-line"></i>
+                Trocar exercício
+              </button>
+            </div>
+
+            {/* modal vídeo */}
+            {showVideo && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+                <div className="w-full max-w-md rounded-2xl bg-background-50 p-6 shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-heading text-lg font-bold text-foreground-950">Como executar: {exercise.name}</h3>
+                    <button onClick={() => setShowVideo(false)} className="rounded-lg p-1 text-foreground-400 hover:bg-background-200">
+                      <i className="ri-close-line text-xl"></i>
+                    </button>
+                  </div>
+                  <div className="mt-4 overflow-hidden rounded-xl bg-background-900 aspect-video flex items-center justify-center text-background-50">
+                    <div className="text-center p-4">
+                      <i className="ri-movie-line text-4xl text-primary-400 mb-2"></i>
+                      <p className="text-sm font-medium">{videoDeExecucao(exercise.name)}</p>
+                      <p className="text-xs text-background-400 mt-1">Vídeo demonstrativo de postura e movimento</p>
+                    </div>
+                  </div>
+                  <div className="mt-5 flex justify-end">
+                    <button
+                      onClick={() => setShowVideo(false)}
+                      className="rounded-xl bg-primary-500 px-5 py-2 text-sm font-semibold text-background-50 hover:bg-primary-600"
+                    >
+                      Entendido
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* modal trocar exercício */}
+            {showSwapModal && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+                <div className="w-full max-w-md rounded-2xl bg-background-50 p-6 shadow-xl">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-heading text-lg font-bold text-foreground-950">Trocar exercício</h3>
+                    <button onClick={() => setShowSwapModal(false)} className="rounded-lg p-1 text-foreground-400 hover:bg-background-200">
+                      <i className="ri-close-line text-xl"></i>
+                    </button>
+                  </div>
+                  <p className="mt-2 text-sm text-foreground-600">Escolha uma alternativa compatível para {exercise.name}:</p>
+                  <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
+                    {alternativas(exercise.name).map((alt) => (
+                      <button
+                        key={alt}
+                        onClick={() => {
+                          if (onTreinoChange) {
+                            // atualiza o treino atual trocando o exercício no índice exIndex
+                            const newExercises = [...session.exercises];
+                            newExercises[exIndex] = {
+                              ...newExercises[exIndex],
+                              name: alt,
+                              id: alt.toLowerCase().replace(/\\s+/g, '-')
+                            };
+                            onTreinoChange({
+                              ...session,
+                              exercises: newExercises
+                            } as any);
+                          }
+                          setShowSwapModal(false);
+                        }}
+                        className="w-full text-left rounded-xl border border-background-200 bg-background-100/60 p-3 text-sm font-medium text-foreground-800 hover:bg-primary-50 hover:border-primary-300 transition flex items-center justify-between"
+                      >
+                        <span>{alt}</span>
+                        <i className="ri-arrow-right-s-line text-foreground-400"></i>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-5 flex justify-end">
+                    <button
+                      onClick={() => setShowSwapModal(false)}
+                      className="rounded-xl border border-background-200 bg-background-50 px-4 py-2 text-sm font-medium text-foreground-700 hover:bg-background-100"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* memory */}
             <div className="mt-4">
