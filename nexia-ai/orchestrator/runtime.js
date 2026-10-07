@@ -341,7 +341,7 @@ async function runAgent(o) {
       if (name === 'github.edit_files' && code === 'INVALID_INPUT') await refresh(input, results);
       if (WRITE_TOOLS.has(name)) localErrors.push(`${name}: ${code}${r.error && r.error.message ? ` (${String(r.error.message).slice(0, 160)})` : ''}`);
       if (ANSWER_CODES.has(code)) continue;   // "não existe" é resposta (ex.: conferir se o arquivo novo já existe), não falha
-      const s = strike(`${name}:${code}`, model, code, `A ferramenta ${name} falhou 3 vezes (${code}).`);   // por ferramenta
+      const s = strike(`${name}:${code}`, model, code, `A ferramenta ${name} falhou 3 vezes (${code}${r.error && r.error.message ? `: ${String(r.error.message).slice(0, 200)}` : ''}).`);   // por ferramenta
       if (s) return s;
     }
     return { results };
