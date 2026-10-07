@@ -11,6 +11,8 @@ import {
 import type { CoachMessage } from '@/mocks/coach';
 import { useAuth } from './AuthContext';
 import { perguntar } from '@/lib/coachAI';
+import { cargasDoTexto } from '@/lib/cargasDoTexto';
+import { getTreinoAtivo, registrarSerieNoTreinoAtivo } from '@/lib/treinoAtivo';
 
 export interface CoachContextSnapshot {
   name: string;
@@ -105,18 +107,17 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     if (v) setUnread(0);
   }, []);
 
-import { cargasDoTexto } from '@/lib/cargasDoTexto';
-import { getTreinoAtivo } from '@/lib/treinoAtivo';
-
   const send = useCallback(async (text: string, snapshot?: CoachContextSnapshot) => {
     const trimmed = text.trim();
     if (!trimmed || loadingAI) return;
 
     const parsedCargas = cargasDoTexto(trimmed);
-    if (parsedCargas && parsedCargas.length > 0) {
+    if (parsedCargas && parsedCargas.series && parsedCargas.series.length > 0) {
       const activeWorkout = getTreinoAtivo();
-      if (activeWorkout && activeWorkout.exercicioAtivoId) {
-        activeWorkout.adicionarSeries(activeWorkout.exercicioAtivoId, parsedCargas);
+      if (activeWorkout) {
+        for (const serie of parsedCargas.series) {
+          registrarSerieNoTreinoAtivo(serie);
+        }
       }
     }
 
