@@ -134,7 +134,13 @@ async function cenarioTreino(browser, base, viewport) {
     await page.locator('input[type=email], input[type=text]').first().fill(process.env.LOGIN_USER, { timeout: 3000 });
     await page.locator('input[type=password]').first().fill(process.env.LOGIN_PASS || '', { timeout: 3000 });
     await page.locator('button[type=submit]').first().click({ timeout: 3000 });
-    await page.waitForTimeout(2000);
+    await page.waitForFunction(() => !/\/auth/.test(location.pathname), null, { timeout: 20000 }).catch(() => {});
+    if (/\/auth/.test(new URL(page.url()).pathname)) {
+      const msg = await page.evaluate(() => (document.body.innerText || '').replace(/\s+/g, ' ').slice(0, 300)).catch(() => '');
+      nota(tela, 'login', `não consegui entrar com a conta de teste | tela: ${msg}`);
+      await ctx.close();
+      return;
+    }
     onde = 'abrir o treino';
     await page.goto(base + 'workout', { waitUntil: 'networkidle', timeout: 45000 });
     await page.getByRole('button', { name: /Montar Treino de Hoje/i }).click({ timeout: 8000 });
