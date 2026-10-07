@@ -50,3 +50,12 @@ test('CF-cota. falha por cota do banco não gasta tentativa e pausa até 07:05 U
   const depois = decidir({ issues: [issue(2)], runs: [r], agora: Date.parse('2026-10-08T07:06:00Z') });
   assert.equal(depois[0].tipo, 'despachar');
 });
+
+test('CF-teste-final. fila vazia depois de entregas sem teste novo dispara o teste de pessoa', () => {
+  const { precisaTesteFinal } = require('../../scripts/cortex-fila');
+  assert.strictEqual(precisaTesteFinal({ abertas: 1, feitoEm: '2026-10-07T10:00:00Z', testeEm: null }), false, 'ainda há tarefas');
+  assert.strictEqual(precisaTesteFinal({ abertas: 0, feitoEm: null, testeEm: null }), false, 'nada foi entregue');
+  assert.strictEqual(precisaTesteFinal({ abertas: 0, feitoEm: '2026-10-07T10:00:00Z', testeEm: null }), true);
+  assert.strictEqual(precisaTesteFinal({ abertas: 0, feitoEm: '2026-10-07T10:00:00Z', testeEm: '2026-10-07T09:00:00Z' }), true, 'teste é anterior à entrega');
+  assert.strictEqual(precisaTesteFinal({ abertas: 0, feitoEm: '2026-10-07T10:00:00Z', testeEm: '2026-10-07T11:00:00Z' }), false, 'já testado');
+});

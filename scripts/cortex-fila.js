@@ -70,6 +70,13 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
   return acoes;
 }
 
+// Regra do dono: todo projeto termina com teste de pessoa. Fila vazia + trabalho concluído depois do último
+// teste = dispara o workflow "Teste de pessoa" (uma vez por rodada de entregas).
+function precisaTesteFinal({ abertas, feitoEm, testeEm }) {
+  if (abertas > 0 || !feitoEm) return false;
+  return !testeEm || new Date(testeEm).getTime() < new Date(feitoEm).getTime();
+}
+
 async function gh(token, method, path, body) {
   const r = await fetch(`https://api.github.com/repos/${REPO}${path}`, {
     method, headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' },
@@ -124,7 +131,15 @@ async function main() {
   const acoes = decidir({ issues, runs });
   for (const a of acoes) { console.log(`${a.tipo} #${a.numero}${a.pista ? ` pista ${a.pista}` : ''}${a.tentativa ? ` tentativa ${a.tentativa}` : ''}`); await executar(token, a); }
   console.log(`${issues.length} na fila, ${acoes.length} ação(ões).`);
+  if (!issues.length) {
+    const feitas = ((await gh(token, 'GET', `/issues?state=closed&labels=${L.feito}&sort=updated&direction=desc&per_page=5`)).json || []).filter(i => !i.pull_request);
+    const testes = ((await gh(token, 'GET', '/actions/workflows/teste-humano.yml/runs?per_page=1')).json || {}).workflow_runs || [];
+    if (precisaTesteFinal({ abertas: 0, feitoEm: feitas[0] && feitas[0].closed_at, testeEm: testes[0] && testes[0].created_at })) {
+      const r = await gh(token, 'POST', '/actions/workflows/teste-humano.yml/dispatches', { ref: 'develop' });
+      console.log(`fila vazia: teste de pessoa disparado (${r.status}).`);
+    }
+  }
 }
 
-module.exports = { decidir, MAX_TENTATIVAS };
+module.exports = { decidir, precisaTesteFinal, MAX_TENTATIVAS };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
