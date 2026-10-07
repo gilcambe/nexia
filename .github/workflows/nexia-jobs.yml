@@ -33,6 +33,7 @@ jobs:
         env:
           NODE_ENV: production
           NEXIA_JOB: ${{ inputs.job }}
+          NEXIA_AUDIT_FILE: ${{ runner.temp }}/auditoria.jsonl
           # Segredos do repositório, um por nome (lista do .env.example; o teste CF10 confere).
           # O GitHub não aceita segredo começando com GITHUB_: esses ficam como NEXIA_GITHUB_*.
           # TEMPORÁRIO: segredos por cliente (NEXIA_<FIREBASE|CLOUDFLARE>_<TENANT>_*, Fase 9) precisam
@@ -77,3 +78,9 @@ jobs:
           SENTINEL_HEAL_ENABLED: ${{ secrets.SENTINEL_HEAL_ENABLED }}
           NEXIA_DEFAULT_GITHUB_TOKEN: ${{ github.token }}
           GITHUB_MODELS_TOKEN: ${{ github.token }}
+      # Trilha de auditoria do Vault (só metadados, sem valores): vai para o resumo do job, não para o Firestore.
+      - name: Guardar auditoria no resumo
+        if: always()
+        run: |
+          f="$RUNNER_TEMP/auditoria.jsonl"
+          if [ -s "$f" ]; then { echo '### Auditoria do Vault (JSONL)'; echo '```'; tail -c 900000 "$f"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"; fi

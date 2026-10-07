@@ -78,11 +78,27 @@ function throwIfInvalid(entity, result) {
  * Cria a camada de acesso.
  * @param {{ db: FirebaseFirestore.Firestore, FieldValue?: any }} deps  db do Admin SDK
  */
-function createVault({ db, FieldValue } = {}) {
+function createVault({ db, FieldValue, auditSink } = {}) {
   if (!db || typeof db.runTransaction !== 'function') {
     throw new VaultError(CODES.UNAVAILABLE, 'Firestore (Admin SDK) indisponível para o Vault.');
   }
   const FV = FieldValue || require('../../lib/firebase-lite').FieldValue;
+
+  // Economia de cota (autorizado pelo dono em 2026-10-07): com auditSink, a trilha de auditoria sai do
+  // Firestore (1 escrita a menos por operação) e vai para o destino grátis (arquivo do Actions, resumo do job).
+  // Sem auditSink, continua na MESMA transação do Firestore (spec §16).
+  const auditBags = new WeakMap();
+  async function runTx(fn) {
+    if (!auditSink) return db.runTransaction(fn);
+    let bag = [];
+    const out = await db.runTransaction(async tx => { bag = []; auditBags.set(tx, bag); return fn(tx); });
+    for (const e of bag) await auditSink.append(e);
+    return out;
+  }
+  function emitAudit(tx, entry) {
+    if (!auditSink) return tx.create(db.collection(AUDIT_COLLECTION).doc(newId('aud')), entry);
+    auditBags.get(tx).push({ ...entry, id: newId('aud'), at: new Date().toISOString() });
+  }
 
   function checkSchemaVersion(entity, data) {
     if (data.schemaVersion !== SCHEMAS[entity].schemaVersion) {
@@ -229,7 +245,7 @@ function createVault({ db, FieldValue } = {}) {
       const requestHash = sha256(canonical(value));
       const uniques = uniqueKeys(ctx, entity, value);
 
-      const outcome = await db.runTransaction(async tx => {
+      const outcome = await runTx(async tx => {
         // Todas as leituras antes das escritas (exigência do Firestore).
         await assertTenant(tx, ctx.tenantId);
         let idemRef = null;
@@ -269,8 +285,7 @@ function createVault({ db, FieldValue } = {}) {
           tx.create(idemRef, { tenant_id: ctx.tenantId, entity, entity_id: id, request_hash: requestHash,
             execution_id: ctx.executionId, created_at: FV.serverTimestamp() });
         }
-        tx.create(db.collection(AUDIT_COLLECTION).doc(newId('aud')),
-          auditEntry(ctx, { operation: 'create', entity, id, version: 1, value, changed: Object.keys(value).sort() }));
+        emitAudit(tx, auditEntry(ctx, { operation: 'create', entity, id, version: 1, value, changed: Object.keys(value).sort() }));
         return { id };
       });
 
@@ -328,7 +343,7 @@ function createVault({ db, FieldValue } = {}) {
         throw new VaultError(CODES.VALIDATION, `${entity}: nada para atualizar.`, { issues: [{ path: '', rule: 'empty_patch' }] });
       }
 
-      await db.runTransaction(async tx => {
+      await runTx(async tx => {
         await assertTenant(tx, ctx.tenantId);
         const { ref, current } = await loadForWrite(tx, ctx, entity, id, expectedVersion);
         if (current.deleted_at) throw new VaultError(CODES.DELETED, `${entity}: registro está excluído (soft-delete).`);
@@ -370,8 +385,7 @@ function createVault({ db, FieldValue } = {}) {
           tx.create(db.collection(UNIQUE_COLLECTION).doc(u.key),
             { tenant_id: ctx.tenantId, entity, fields: u.fields, entity_id: id, created_at: FV.serverTimestamp() });
         });
-        tx.create(db.collection(AUDIT_COLLECTION).doc(newId('aud')),
-          auditEntry(ctx, { operation: 'update', entity, id, version, value, changed }));
+        emitAudit(tx, auditEntry(ctx, { operation: 'update', entity, id, version, value, changed }));
       });
       return get(ctx, id);
     }
@@ -381,7 +395,7 @@ function createVault({ db, FieldValue } = {}) {
       assertContext(ctx);
       assertId(entity, id);
       assertExpectedVersion(expectedVersion);
-      await db.runTransaction(async tx => {
+      await runTx(async tx => {
         await assertTenant(tx, ctx.tenantId);
         const { ref, current } = await loadForWrite(tx, ctx, entity, id, expectedVersion);
         if (current.deleted_at) throw new VaultError(CODES.DELETED, `${entity}: registro já está excluído.`);
@@ -394,8 +408,7 @@ function createVault({ db, FieldValue } = {}) {
           updated_by: { type: ctx.actor.type, id: ctx.actor.id },
           last_execution_id: ctx.executionId,
         });
-        tx.create(db.collection(AUDIT_COLLECTION).doc(newId('aud')),
-          auditEntry(ctx, { operation: 'soft_delete', entity, id, version, value: domainOf(schema, current), changed: ['deleted_at'] }));
+        emitAudit(tx, auditEntry(ctx, { operation: 'soft_delete', entity, id, version, value: domainOf(schema, current), changed: ['deleted_at'] }));
       });
       return get(ctx, id, { includeDeleted: true });
     }
@@ -405,7 +418,7 @@ function createVault({ db, FieldValue } = {}) {
       assertContext(ctx);
       assertId(entity, id);
       assertExpectedVersion(expectedVersion);
-      await db.runTransaction(async tx => {
+      await runTx(async tx => {
         await assertTenant(tx, ctx.tenantId);
         const { ref, current } = await loadForWrite(tx, ctx, entity, id, expectedVersion);
         if (!current.deleted_at) {
@@ -423,8 +436,7 @@ function createVault({ db, FieldValue } = {}) {
           updated_by: { type: ctx.actor.type, id: ctx.actor.id },
           last_execution_id: ctx.executionId,
         });
-        tx.create(db.collection(AUDIT_COLLECTION).doc(newId('aud')),
-          auditEntry(ctx, { operation: 'restore', entity, id, version, value, changed: ['deleted_at'] }));
+        emitAudit(tx, auditEntry(ctx, { operation: 'restore', entity, id, version, value, changed: ['deleted_at'] }));
       });
       return get(ctx, id);
     }
