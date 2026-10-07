@@ -12,6 +12,8 @@ const TENANT = process.env.TENANT || 'nexia';
 const REPO = process.env.REPO || 'gilcambe/nexia';
 const TASK = process.env.TASK || '';
 // Pista: cada pista usa seu próprio cliente/projeto de teste, para tarefas rodarem ao mesmo tempo.
+// Modo econômico: pula as checagens de painel/chat e só refaz o onboarding se o projeto ainda não tem snapshot (poupa a cota grátis do Firestore).
+const RAPIDO = process.env.RAPIDO === '1' && !!process.env.TASK;
 const PISTA = /^[1-9]$/.test(process.env.PISTA || '') ? `-p${process.env.PISTA}` : '';
 // Nível de autonomia do projeto de TESTE para a tarefa (vazio = não muda). 3 = o Cortex cria branch,
 // commit e PR sozinho; nunca faz merge nem deploy (deploy exige 4 e produção sempre pede aprovação).
@@ -105,7 +107,7 @@ async function main() {
     const list = await api('/nexia/projects');
     report(list.status === 200 && (list.json.items || []).some(p => project && p.id === project.id), 'Vault: listar projetos', `${list.status} ${(list.json.items || []).length} projeto(s)`);
 
-    if (project) {
+    if (project && !RAPIDO) {
       const hist = await api(`/nexia/projects/${project.id}/history`);
       report(hist.status === 200, 'Vault: histórico do projeto', `${hist.status} ${(hist.json.items || []).length} versão(ões)`);
 
@@ -125,10 +127,25 @@ async function main() {
       report(ctx.status === 200, 'Contexto do projeto para a IA', `${ctx.status}`);
     }
 
+    if (project && RAPIDO) {
+      const [owner, repo] = REPO.split('/');
+      const sn = await api(`/nexia/projects/${project.id}/snapshot`);
+      if (sn.status !== 200) {
+        const ob = await api(`/nexia/projects/${project.id}/onboard`, { method: 'POST', body: { repository: { owner, repo } } });
+        report([201, 202].includes(ob.status), 'Onboarding: pedido aceito', `${ob.status}`);
+        for (let t = 0; t < WAIT_ONBOARD_S && [201, 202].includes(ob.status); t += 15) {
+          if ((await api(`/nexia/projects/${project.id}/snapshot`)).status === 200) break;
+          await sleep(15000);
+        }
+      }
+    }
+
     // Cortex (chat), sem streaming
+    if (!RAPIDO) {
     const cx = await api('/cortex', { method: 'POST', body: { message: 'Responda só com a palavra OK.', tenantId: TENANT, stream: false } });
     const reply = cx.json && cx.json.reply;
     report(cx.status === 200 && !!reply, 'Cortex: responder no chat', `${cx.status} ${cx.json ? (cx.json.error || `${(cx.json._meta || {}).modelUsed || ''}: ${reply}`) : cx.text}`);
+    }
 
     // Execução do orquestrador (opcional: a tarefa vem do input)
     if (TASK && project && AUTONOMY !== null && project.autonomy_level !== AUTONOMY) {
@@ -166,12 +183,14 @@ async function main() {
       }
     }
 
+    if (!RAPIDO) {
     const mt = await api('/nexia/metrics');
     report(mt.status === 200, 'Página central: métricas', `${mt.status}`);
     const ap = await api('/nexia/approvals');
     report(ap.status === 200, 'Aprovações pendentes', `${ap.status} ${(ap.json && ap.json.items || []).length}`);
     const ec = await api('/nexia/executions?limit=5');
     report(ec.status === 200, 'Execuções recentes', `${ec.status} ${(ec.json && ec.json.items || []).length}`);
+    }
   } finally {
     report(await deleteTestUser(sa).catch(() => false), 'Apagar usuário de teste');
   }
