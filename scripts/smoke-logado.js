@@ -95,7 +95,7 @@ async function main() {
     const cl = await api('/nexia/clients', { method: 'POST', body: { name: 'Teste automático NEXIA', slug: `teste-automatico${PISTA}`, status: 'active' }, headers: { 'Idempotency-Key': `smoke-client-v1${PISTA}` } });
     let client = cl.json && cl.json.record;
     if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === `teste-automatico${PISTA}`);
-    report(!!client, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')}`);
+    report(!!client, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
 
     const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client && client.id, name: `Site de teste do Cortex${PISTA}`, slug: `site-teste-cortex${PISTA}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PISTA}` } });
     let project = pr.json && pr.json.record;
