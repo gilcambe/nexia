@@ -457,7 +457,9 @@ function createHandler(deps = {}) {
       }
       if (e instanceof SourceError) return json(event, SOURCE_STATUS[e.code] || 502, { error: e.message, code: `SOURCE_${e.code}` });
       if (e instanceof GatewayError) return json(event, GATEWAY_STATUS[e.code] || 400, { error: e.message, code: e.code, details: e.details && e.details.problems ? { problems: e.details.problems } : {} });
-      return json(event, 500, publicErrorBody('nexia-api', e));
+      // 'causa' = só o código do Firestore (ex.: RESOURCE_EXHAUSTED), sem texto interno, para achar a causa sem abrir o log.
+      const causa = e && typeof e.status === 'string' && /^[A-Z_]{3,30}$/.test(e.status) ? { causa: e.status } : {};
+      return json(event, 500, { ...publicErrorBody('nexia-api', e), ...causa });
     }
   };
 }
