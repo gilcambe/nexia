@@ -20,7 +20,7 @@ export function cargasDoTexto(texto: string): CargaRep[] | null {
   const results: CargaRep[] = [];
 
   // 1. Padrão composto com múltiplas cargas progressivas: "4 x 12 .. 15/20/25/30" ou "4x12: 10/15/20/25"
-  const patternProgressive = /^(\d+)\s*[xX]\s*(\d+)\s*(?:\.\.|[:\-–])\s*([\d\/\s,\.]+)/;
+  const patternProgressive = /^(\d+)\s*[xX]\s*(\d+)\s*(?:\.\.|[:\-])\s*([\d\/\s,\.]+)/;
   const matchProg = t.match(patternProgressive);
   if (matchProg) {
     const numSets = parseInt(matchProg[1], 10);
