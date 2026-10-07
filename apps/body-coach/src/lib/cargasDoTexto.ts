@@ -19,18 +19,13 @@ export function cargasDoTexto(texto: string): CargaRep[] | null {
 
   const results: CargaRep[] = [];
 
-  // Remove acentos comuns ou palavras irrelevantes mantendo números, x, /, .., e vírgulas
-  // Mas podemos manter a lógica limpa procurando padrões comuns.
-
   // 1. Padrão composto com múltiplas cargas progressivas: "4 x 12 .. 15/20/25/30" ou "4x12: 10/15/20/25"
-  // Ex: "4 x 12 .. 15/20/25/30" -> sets = 4, reps = 12, weights = [15, 20, 25, 30]
   const patternProgressive = /^(\d+)\s*[xX]\s*(\d+)\s*(?:\.\.|[:\-–])\s*([\d\/\s,\.]+)/;
   const matchProg = t.match(patternProgressive);
   if (matchProg) {
     const numSets = parseInt(matchProg[1], 10);
     const reps = parseInt(matchProg[2], 10);
     const weightPart = matchProg[3];
-    // extrai todos os números da parte de peso
     const weightStrs = weightPart.match(/\d+(?:[,\.]\d+)?/g);
     if (weightStrs && weightStrs.length > 0) {
       const weights = weightStrs.map(w => parseFloat(w.replace(',', '.')));
@@ -42,7 +37,7 @@ export function cargasDoTexto(texto: string): CargaRep[] | null {
     }
   }
 
-  // 2. Padrão múltiplo separado por vírgula: "12x20, 10x25" ou "12x20 e 10x25"
+  // 2. Padrão múltiplo separado por vírgula ou "e": "12x20, 10x25" ou "12x20 e 10x25"
   if (t.includes(',') || t.includes(' e ')) {
     const parts = t.split(/,| e /);
     let validCount = 0;
@@ -58,8 +53,7 @@ export function cargasDoTexto(texto: string): CargaRep[] | null {
     }
   }
 
-  // 3. Padrão simples repetido: "3x10 40kg" ou "3 x 10 de 40kg" ou "3x10x40"
-  // Ex: 3 séries de 10 com 40kg
+  // 3. Padrão simples repetido: "3x10 40kg" ou "3 x 10 de 40kg"
   const patternRepeat = /^(\d+)\s*[xX]\s*(\d+)(?:\s*(?:kg|quilos?|com|de|\:)?\s*(\d+(?:[,\.]\d+)?)\s*(?:kg|quilos?)?)?/;
   const matchRep = t.match(patternRepeat);
   if (matchRep && matchRep[3]) {
@@ -73,10 +67,8 @@ export function cargasDoTexto(texto: string): CargaRep[] | null {
       return results;
     }
   } else if (matchRep && !matchRep[3]) {
-    // Apenas séries x reps sem peso explícito ou peso em outro lugar
     const numSets = parseInt(matchRep[1], 10);
     const reps = parseInt(matchRep[2], 10);
-    // Tenta achar peso no restante do texto
     const weightMatch = t.match(/(?:com|peso|de)?\s*(\d+(?:[,\.]\d+)?)\s*kg/);
     const weight = weightMatch ? parseFloat(weightMatch[1].replace(',', '.')) : 0;
     if (!isNaN(numSets) && !isNaN(reps)) {
@@ -99,10 +91,9 @@ export function cargasDoTexto(texto: string): CargaRep[] | null {
     }
   }
 
-  // Fallback geral: extrai quaisquer pares de números (reps, peso)
+  // Fallback geral: extrai quaisquer pares de números
   const allNums = t.match(/\d+(?:[,\.]\d+)?/g);
   if (allNums && allNums.length >= 2) {
-    // Se temos exatamente 2 números, ex: "12 70" ou "12x70"
     if (allNums.length === 2) {
       return [{ reps: parseFloat(allNums[0]), weight: parseFloat(allNums[1].replace(',', '.')) }];
     }
