@@ -1,7 +1,7 @@
 # NEXIA — teste do site no ar COM login, pela API (nunca Playwright contra produção).
 # Manual. Usa um usuário de teste temporário (apagado no fim). O log mostra só status e erros.
 name: Smoke com login
-run-name: ${{ inputs.tarefa_id && format('Cortex #{0}', inputs.tarefa_id) || 'Smoke com login' }}
+run-name: "${{ inputs.tarefa_id && format('Cortex #{0}', inputs.tarefa_id) || 'Smoke com login' }}"
 
 on:
   workflow_dispatch:
