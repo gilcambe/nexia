@@ -23,13 +23,7 @@ export function moverExercicio(session: Session, de: number, para: number): Sess
 }
 
 /**
- * Reordena os exercícios para que o exercício com o ID fornecido (ou índice, dependendo do uso, 
- * aqui assumindo ID ou nome/índice conforme comum, mas tipicamente ID ou índice. 
- * Vamos aceitar string (id) ou number (índice) ou string para procurar pelo id/name, 
- * ou reescrever para acomodar ambos se necessário. O pedido diz: 
- * "comecarPor(session: Session, e..."). Vamos verificar o padrão ou suportar id (string) ou índice (number)).
- * Aguarde, o texto do prompt cortou em "comecarPor(session: Session, e". Geralmente é comecarPor(session: Session, exerciseId: string) ou comecarPor(session: Session, index: number).
- * Vamos suportar tanto string (id) quanto number (índice) para máxima robustez, ou buscar pelo id do exercício.
+ * Reordena os exercícios para que o exercício especificado por ID ou índice vá para o início da sessão.
  */
 export function comecarPor(session: Session, exercicioIdOrIndex: string | number): Session {
   const exercises = [...session.exercises];
