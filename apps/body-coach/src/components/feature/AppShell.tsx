@@ -149,7 +149,7 @@ function Shell() {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-background-50">
+    <div className="min-h-screen overflow-x-hidden bg-background-50">
       {/* desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 hidden w-60 overflow-y-auto border-r border-background-200 bg-background-50 lg:block">
         <SidebarContent />
@@ -199,7 +199,7 @@ function Shell() {
       )}
 
       {/* main */}
-      <main className="min-h-screen lg:pl-60">
+      <main className="min-h-screen min-w-0 break-words lg:pl-60">
         <div className="mx-auto max-w-6xl px-4 py-6 md:px-6 md:py-8">
           <Outlet />
         </div>

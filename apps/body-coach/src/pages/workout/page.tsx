@@ -219,7 +219,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
                 className="inline-flex items-center gap-1.5 rounded-lg bg-primary-100 px-3 py-1.5 text-xs font-semibold text-primary-700 hover:bg-primary-200 transition"
               >
                 <i className="ri-play-circle-line"></i>
-                Ver como fazer
+                Ver execução
               </button>
               <button
                 onClick={() => setShowSwapModal(true)}
@@ -233,7 +233,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
             {/* modal vídeo */}
             {showVideo && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                <div className="w-full max-w-md rounded-2xl bg-background-50 p-6 shadow-xl">
+                <div className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl bg-background-50 p-6 shadow-xl">
                   <div className="flex items-center justify-between">
                     <h3 className="font-heading text-lg font-bold text-foreground-950">Como executar: {exercise.name}</h3>
                     <button onClick={() => setShowVideo(false)} className="rounded-lg p-1 text-foreground-400 hover:bg-background-200">
