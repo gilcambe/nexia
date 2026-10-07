@@ -31,7 +31,7 @@ export function cargasDoTexto(texto: string): CargaRep[] | null {
       const weights = weightStrs.map(w => parseFloat(w.replace(',', '.')));
       for (let i = 0; i < numSets; i++) {
         const w = weights[i < weights.length ? i : weights.length - 1];
-        results.pushe({ reps, weight: !isNaN(w) ? w : 0 }); // correcao
+        results.push({ reps, weight: !isNaN(w) ? w : 0 });
       }
       return results.length > 0 ? results : null;
     }
