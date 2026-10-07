@@ -105,9 +105,20 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     if (v) setUnread(0);
   }, []);
 
+import { cargasDoTexto } from '@/lib/cargasDoTexto';
+import { getTreinoAtivo } from '@/lib/treinoAtivo';
+
   const send = useCallback(async (text: string, snapshot?: CoachContextSnapshot) => {
     const trimmed = text.trim();
     if (!trimmed || loadingAI) return;
+
+    const parsedCargas = cargasDoTexto(trimmed);
+    if (parsedCargas && parsedCargas.length > 0) {
+      const activeWorkout = getTreinoAtivo();
+      if (activeWorkout && activeWorkout.exercicioAtivoId) {
+        activeWorkout.adicionarSeries(activeWorkout.exercicioAtivoId, parsedCargas);
+      }
+    }
 
     setMessages((prev) => [
       ...prev,
