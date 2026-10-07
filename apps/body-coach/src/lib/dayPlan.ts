@@ -116,7 +116,7 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
     targetReps: x.composto ? base.reps : '12–15',
     targetSets: x.composto ? series : Math.max(2, series),
     restSec: x.composto ? base.descanso : 75,
-    note: `Alvo RIR ${rir}. Vídeo: ${videoDeExecucao(x.nome)}`,
+    note: `Alvo RIR ${rir}.`,
     videoUrl: videoDeExecucao(x.nome),
     minWeight: 0,
     maxWeight: 300,
@@ -155,7 +155,7 @@ export function trocarExercicio(s: Session, idAtual: string, idNovo: string): Se
   return {
     ...s,
     exercises: s.exercises.map((x) => (x.id === idAtual
-      ? { ...x, id: novo.id, name: novo.nome, muscleGroup: novo.grupo, videoUrl: videoDeExecucao(novo.nome), note: x.note.split(' Vídeo:')[0] + ` Vídeo: ${videoDeExecucao(novo.nome)}`, sets: [] }
+      ? { ...x, id: novo.id, name: novo.nome, muscleGroup: novo.grupo, videoUrl: videoDeExecucao(novo.nome), note: x.note.split(' Vídeo:')[0], sets: [] }
       : x)),
   };
 }
