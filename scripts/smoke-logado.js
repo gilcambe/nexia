@@ -106,6 +106,14 @@ async function main() {
     let project = pr.json && pr.json.record;
     if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PROJ}`);
     report(!!project, 'Vault: criar projeto', `${pr.status} ${pr.json && (pr.json.error || '')}`);
+    // Em pista, usa o projeto que já tem o repositório (ele só pode estar ligado a UM projeto por tenant).
+    if (PISTA) {
+      const [ow, rp] = REPO.split('/');
+      const rs = (await api('/nexia/repos')).json;
+      const hit = ((rs && rs.items) || []).find(r => String(r.owner).toLowerCase() === ow.toLowerCase() && String(r.repo).toLowerCase() === rp.toLowerCase());
+      const pj = hit && (await api(`/nexia/projects/${hit.project_id}`)).json;
+      if (pj && pj.record) { project = pj.record; console.log(`  projeto com o repositório: ${project.slug}`); }
+    }
 
     const list = await api('/nexia/projects');
     report(list.status === 200 && (list.json.items || []).some(p => project && p.id === project.id), 'Vault: listar projetos', `${list.status} ${(list.json.items || []).length} projeto(s)`);
