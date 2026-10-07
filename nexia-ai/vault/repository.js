@@ -24,7 +24,6 @@ const AUDIT_COLLECTION = 'vault_audit';
 const IDEMPOTENCY_COLLECTION = 'vault_idempotency';
 const UNIQUE_COLLECTION = 'vault_unique';
 const AUDIT_SCHEMA_VERSION = 1;
-const NO_AUDIT = new Set(['ToolCall']);
 const IDEMPOTENCY_KEY_RE = /^[A-Za-z0-9_.:-]{8,128}$/;
 const LIST_FILTERS = ['client_id', 'project_id', 'status'];
 const LIST_MAX = 200;
@@ -270,11 +269,8 @@ function createVault({ db, FieldValue } = {}) {
           tx.create(idemRef, { tenant_id: ctx.tenantId, entity, entity_id: id, request_hash: requestHash,
             execution_id: ctx.executionId, created_at: FV.serverTimestamp() });
         }
-        // ToolCall já é o próprio registro de auditoria da ferramenta: sem cópia (economiza 1 escrita por chamada).
-        if (!NO_AUDIT.has(entity)) {
-          tx.create(db.collection(AUDIT_COLLECTION).doc(newId('aud')),
-            auditEntry(ctx, { operation: 'create', entity, id, version: 1, value, changed: Object.keys(value).sort() }));
-        }
+        tx.create(db.collection(AUDIT_COLLECTION).doc(newId('aud')),
+          auditEntry(ctx, { operation: 'create', entity, id, version: 1, value, changed: Object.keys(value).sort() }));
         return { id };
       });
 
@@ -374,10 +370,8 @@ function createVault({ db, FieldValue } = {}) {
           tx.create(db.collection(UNIQUE_COLLECTION).doc(u.key),
             { tenant_id: ctx.tenantId, entity, fields: u.fields, entity_id: id, created_at: FV.serverTimestamp() });
         });
-        if (!NO_AUDIT.has(entity)) {
-          tx.create(db.collection(AUDIT_COLLECTION).doc(newId('aud')),
-            auditEntry(ctx, { operation: 'update', entity, id, version, value, changed }));
-        }
+        tx.create(db.collection(AUDIT_COLLECTION).doc(newId('aud')),
+          auditEntry(ctx, { operation: 'update', entity, id, version, value, changed }));
       });
       return get(ctx, id);
     }
