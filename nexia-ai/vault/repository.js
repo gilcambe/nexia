@@ -98,8 +98,12 @@ function createVault({ db, FieldValue } = {}) {
     return toPlain(data);
   }
 
+  // Economia de cota (Firestore grátis): tenant que existe fica 10 min em memória, sem reler a cada escrita.
+  const tenantOk = new Map();
   async function assertTenant(tx, tenantId) {
+    if ((tenantOk.get(tenantId) || 0) > Date.now()) return;
     const t = await tx.get(db.collection('tenants').doc(tenantId));
+    if (t.exists) { tenantOk.set(tenantId, Date.now() + 10 * 60 * 1000); return; }
     if (!t.exists) throw new VaultError(CODES.TENANT_NOT_FOUND, 'Tenant do contexto não existe.');
   }
 
