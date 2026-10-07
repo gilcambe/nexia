@@ -37,7 +37,7 @@ const server = http.createServer((req, res) => {
 
 const falhas = [];
 const feitos = [];
-const nota = (tela, onde, msg) => { const f = `${tela} · ${onde}: ${msg}`; if (!falhas.includes(f)) falhas.push(f); };
+const nota = (tela, onde, msg) => { const f = `${tela} · ${onde}: ${msg}`.replace(/\s+/g, ' '); if (!falhas.includes(f)) falhas.push(f); };
 
 async function testarPagina(browser, base, rota, viewport, fila, vistos) {
   const tela = `${viewport.nome} ${rota}`;
