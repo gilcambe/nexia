@@ -9,6 +9,7 @@ import { dicaAoVivo } from '@/lib/liveCoach';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
+import { useCoach } from '@/components/feature/CoachContext';
 
 type Phase =
   | 'PRE_SESSION'
@@ -63,6 +64,7 @@ function WorkoutEmpty({ estado }: { estado: string }) {
 function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Session; lesoes?: Lesao[]; onSessionChange?: (s: Session) => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { setOpen } = useCoach();
   const [startedAt] = useState(() => new Date().toISOString());
   const [phase, setPhase] = useState<Phase>('PRE_SESSION');
   const [exIndex, setExIndex] = useState(0);
@@ -381,6 +383,13 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
               {exIndex < session.exercises.length - 1
                 ? 'CONCLUIR EXERCÍCIO → PRÓXIMO'
                 : 'FINALIZAR FORÇA'}
+            </button>
+            <button
+              onClick={() => setOpen(true)}
+              className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-background-50 shadow-lg transition hover:bg-primary-600"
+              aria-label="Falar com o coach"
+            >
+              <i className="ri-chat-3-line text-2xl"></i>
             </button>
           </div>
         )}
