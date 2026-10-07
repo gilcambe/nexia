@@ -31,13 +31,17 @@ export function moverExercicio(session: Session, de: number, para: number): Sess
  * Aguarde, o texto do prompt cortou em "comecarPor(session: Session, e". Geralmente é comecarPor(session: Session, exerciseId: string) ou comecarPor(session: Session, index: number).
  * Vamos suportar tanto string (id) quanto number (índice) para máxima robustez, ou buscar pelo id do exercício.
  */
-export function comecarPor(session: Session, target: string | number): Session {
+export function comecarPor(session: Session, exercicioIdOrIndex: string | number): Session {
   const exercises = [...session.exercises];
   let index = -1;
-  if (typeof target === 'number') {
-    index = target;
+  if (typeof exercicioIdOrIndex === 'number') {
+    index = exercicioIdOrIndex;
   } else {
-    index = exercises.findIndex((ex) => ex.id === target || ex.name.toLowerCase() === target.toLowerCase());
+    index = exercises.findIndex(
+      (ex) =>
+        ex.id === exercicioIdOrIndex ||
+        ex.name.toLowerCase() === exercicioIdOrIndex.toLowerCase()
+    );
   }
 
   if (index < 0 || index >= exercises.length) {
