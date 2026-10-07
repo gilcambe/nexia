@@ -22,12 +22,10 @@ export default function Team() {
     setResposta('');
 
     try {
-      let contexto = '';
+      let contexto: Record<string, unknown> = {};
       try {
-        const userData = await getUserDoc(user.id, 'profile');
-        if (userData) {
-          contexto = JSON.stringify(userData);
-        }
+        const userData = await getUserDoc<Record<string, unknown>>(user.id, 'profile', 'main');
+        if (userData) contexto = userData;
       } catch (e) {
         // Ignora erro ao buscar contexto se não existir
       }
