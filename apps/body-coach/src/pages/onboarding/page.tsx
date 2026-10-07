@@ -193,18 +193,12 @@ export default function Onboarding() {
 
           {step === 6 && (
             <div className="space-y-3">
-              <div className="rounded-xl border border-background-200 bg-background-100/60 p-4">
-                <p className="text-sm font-semibold text-foreground-800">Histórico ≠ sintoma atual.</p>
-                <p className="mt-1 text-sm text-foreground-600">"Bursite antiga" é diferente de "dor atual". Guardamos ambos com status e data.</p>
-              </div>
               {[
-                { k: 'history', label: 'Histórico médico / condições' },
-                { k: 'injuries', label: 'Lesões anteriores' },
-                { k: 'symptoms', label: 'Sintomas atuais' },
+                { k: 'injuries', label: 'Histórico de lesões, condições ou sintomas' },
               ].map((f) => (
                 <label key={f.k} className="flex flex-col gap-1">
                   <span className="text-sm font-medium text-foreground-600">{f.label}</span>
-                  <input type="text" placeholder="Ex.: bursite (estável, 2023)" value={(form[f.k] as string) ?? ''} onChange={(e) => setVal(f.k, e.target.value)} className="rounded-lg border border-background-200 bg-background-50 px-3 py-2.5 text-sm outline-none focus:border-primary-300" />
+                  <input type="text" placeholder="Ex.: bursite (estável, 2023) ou dor atual" value={(form[f.k] as string) ?? ''} onChange={(e) => setVal(f.k, e.target.value)} className="rounded-lg border border-background-200 bg-background-50 px-3 py-2.5 text-sm outline-none focus:border-primary-300" />
                 </label>
               ))}
               <p className="text-xs text-foreground-400">Isso não é diagnóstico. Você pode completar depois.</p>
