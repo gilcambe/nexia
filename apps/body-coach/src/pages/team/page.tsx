@@ -9,7 +9,7 @@ const sanitizeText = (text: string): string => {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
+    .replace(/\"/g, '&quot;')
     .replace(/'/g, '&#039;');
 };
 
@@ -17,7 +17,7 @@ export default function Team() {
   const { user, profile, loading } = useAuth();
   const [pergunta, setPergunta] = useState('');
   const [resposta, setResposta] = useState('');
-  const [papel, setPapel] = useState<Papel>('nutricionista'); // Default
+  const [papel, setPapel] = useState<Papel>('coach'); // Default válido para Papel ('coach' | 'nutrologo' | 'personal' | 'fisioterapeuta')
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -32,19 +32,15 @@ export default function Team() {
     setResposta('');
 
     try {
-      const userData = await getUserDoc(user.id, 'profile', 'main');
-      // Filtrar dados sensíveis ou irrelevantes para a IA
-      // Exemplo: criar um objeto de contexto mais restrito
+      const userData = await getUserDoc(user.id, 'profile', 'profile');
       const contexto = JSON.stringify({
         age: userData?.age,
         gender: userData?.gender,
         weight: userData?.weight,
         height: userData?.height,
         goals: userData?.goals,
-        // Adicione outros campos relevantes e não sensíveis
       });
 
-      // Nota: A sanitização robusta da pergunta para evitar prompt injection deve ser realizada no servidor.
       const res = await perguntar(papel, pergunta, contexto);
       setResposta(res);
     } catch (err) {
@@ -94,14 +90,15 @@ export default function Team() {
           </label>
           <select
             id="papel-select"
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border"
             value={papel}
             onChange={(e) => setPapel(e.target.value as Papel)}
             disabled={isLoading}
           >
-            <option value="nutricionista">Nutricionista</option>
-            <option value="treinador">Treinador</option>
-            <option value="medico">Médico</option>
+            <option value="coach">Coach</option>
+            <option value="nutrologo">Nutrólogo</option>
+            <option value="personal">Personal</option>
+            <option value="fisioterapeuta">Fisioterapeuta</option>
           </select>
         </div>
 
@@ -112,7 +109,7 @@ export default function Team() {
           <textarea
             id="pergunta-input"
             rows={4}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm p-2 border"
             value={pergunta}
             onChange={(e) => setPergunta(e.target.value)}
             placeholder="Ex: Quais alimentos devo comer para ganhar massa muscular?"
@@ -137,7 +134,7 @@ export default function Team() {
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-red-800">Erro:</h3>
                 <div className="mt-2 text-sm text-red-700">
-                  <p>{sanitizeText(error)}</p> {/* Sanitiza a mensagem de erro */}
+                  <p>{sanitizeText(error)}</p>
                 </div>
               </div>
             </div>
@@ -152,8 +149,8 @@ export default function Team() {
               </div>
               <div className="ml-3">
                 <h3 className="text-sm font-medium text-green-800">Resposta do Coach:</h3>
-                <div className="mt-2 text-sm text-green-700">
-                  <p>{sanitizeText(resposta)}</p> {/* Sanitiza a resposta da IA */}
+                <div className="mt-2 text-sm text-green-700 whitespace-pre-wrap">
+                  <p>{sanitizeText(resposta)}</p>
                 </div>
               </div>
             </div>
