@@ -21,6 +21,10 @@ on:
         description: 'Pista (1 a 9) para rodar tarefas ao mesmo tempo, cada pista com seu projeto de teste; vazio = pista única'
         required: false
         default: ''
+      modo:
+        description: 'economico = só executa a tarefa (poupa a cota grátis do Firestore); vazio = teste completo'
+        required: false
+        default: ''
 
 permissions:
   contents: read
@@ -46,4 +50,5 @@ jobs:
           TASK: ${{ inputs.task }}
           AUTONOMY: ${{ inputs.autonomia }}
           PISTA: ${{ inputs.pista }}
+          RAPIDO: ${{ inputs.modo == 'economico' && '1' || '' }}
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
