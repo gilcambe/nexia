@@ -234,3 +234,16 @@ test('CF12. /api/firebase-config sem FIREBASE_API_KEY lê a config do app da Web
   assert.strictEqual(fail.status, 503);
   _resetWebConfigCache();
 });
+
+test('CF-fila. o cron do Worker acorda a Fila do Cortex a cada 15 min, sem usar o banco', async () => {
+  const { acordarFila } = require('../../nexia-ai/jobs');
+  const env = { NEXIA_JOBS: 'github', NEXIA_JOBS_TOKEN: 'x', NEXIA_JOBS_REPO: 'gilcambe/nexia' };
+  const calls = [];
+  const fetchImpl = async (url, init) => { calls.push([url, init.method]); return { status: 204 }; };
+  const tique = Date.parse('2026-10-07T07:15:00Z');
+  assert.deepStrictEqual(await acordarFila({ env, now: () => tique, fetchImpl }), { fila: 'acordada' });
+  assert.match(calls[0][0], /actions\/workflows\/fila-cortex\.yml\/dispatches$/);
+  assert.deepStrictEqual(await acordarFila({ env, now: () => Date.parse('2026-10-07T07:20:00Z'), fetchImpl }), { fila: 'fora_do_tique' });
+  assert.deepStrictEqual(await acordarFila({ env: {}, now: () => tique, fetchImpl }), { fila: 'desligada' });
+  assert.strictEqual(calls.length, 1);
+});
