@@ -5,6 +5,8 @@ import { buildWeekPlan, todayPlanDay, buildSession, type Answers } from '@/lib/t
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
+import { alternativas, videoDeExecucao, lesoesDoTexto } from '@/lib/exerciseDb';
+import { trocarExercicio } from '@/lib/dayPlan';
 
 type Phase =
   | 'PRE_SESSION'
