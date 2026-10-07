@@ -63,6 +63,8 @@ const EDITING = [
   '- Só termine depois que a ferramenta confirmar a gravação (commit).',
 ].join('\n');
 
+const { TEXTO: LICOES } = require('./licoes');
+
 const AGENTS = Object.freeze({
   orchestrator: { title: 'Orchestrator', model: 'fast', tools: [], prompt: 'Coordena; não codifica.' },
   designer: { title: 'Designer', model: 'reasoning', tools: [...READ_TOOLS, ...MEDIA_TOOLS], max_steps: 10,
@@ -94,7 +96,8 @@ const AGENTS = Object.freeze({
 const allowed = (agentId, toolName) => (AGENTS[agentId].tools || []).some(p => matches(p, toolName));
 
 function systemPrompt(agentId, context) {
-  return `${COMMON}\n\n${AGENTS[agentId].prompt}${context ? `\n\nCONTEXTO DO PROJETO (Vault):\n${context}` : ''}`;
+  const licoes = (AGENTS[agentId].tools || []).some(t => /commit_files|edit_files/.test(t)) ? `\n\n${LICOES}` : '';
+  return `${COMMON}\n\n${AGENTS[agentId].prompt}${licoes}${context ? `\n\nCONTEXTO DO PROJETO (Vault):\n${context}` : ''}`;
 }
 
 module.exports = { AGENTS, allowed, systemPrompt, READ_TOOLS, CODE_TOOLS, MEDIA_TOOLS, QUALITY, DESIGN };
