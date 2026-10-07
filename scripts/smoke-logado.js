@@ -177,7 +177,7 @@ async function main() {
         if (last && ['succeeded', 'failed', 'cancelled', 'waiting_approval', 'needs_input'].includes(last.status)) break;
         await sleep(20000);
       }
-      report(!!last && ['succeeded', 'waiting_approval'].includes(last.status), 'Execução: terminou', last ? `${last.status} intent=${last.intent} modelos=${(last.models || []).join(',')}` : 'sem registro');
+      report(!!last && ['succeeded', 'waiting_approval'].includes(last.status), 'Execução: terminou', last ? `${last.status} intent=${last.intent} codigo=${last.error_code || '-'} resumo=${String(last.result_summary || '').slice(0, 160)} modelos=${(last.models || []).join(',')}` : 'sem registro');
       if (last) {
         if (last.error_code) console.log(`  erro da execução: ${last.error_code}`);
         if (last.result_summary) console.log(`  resumo: ${short(last.result_summary)}`);
