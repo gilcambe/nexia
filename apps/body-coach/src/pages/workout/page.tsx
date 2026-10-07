@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { type SetLog, type Session } from '@/mocks/workout';
-import { buildWeekPlan, todayPlanDay, buildSession, type Answers } from '@/lib/trainingPlan';
+import type { Answers } from '@/lib/trainingPlan';
+import { montarTreinoDoDia, type TreinoDoDia } from '@/lib/dayPlan';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
