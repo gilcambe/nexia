@@ -9,41 +9,8 @@ export interface ExercicioAtivo {
 
 const TREINOS_ATIVO_KEY = 'bodycoach_treino_ativo';
 
-export function getTreinoAtivo(): ExercicioAtivo | null {
-  try {
-    const raw = localStorage.getItem(TREINOS_ATIVO_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
+export function getTreinoAtivo(): ExercicioAtivo | null {\n  try {\n    const raw = localStorage.getItem(TREINOS_ATIVO_KEY);\n    if (!raw) return null;\n    return JSON.parse(raw);\n  } catch {\n    return null;\n  }\n}\n
 
-export function setTreinoAtivo(exercicio: ExercicioAtivo | null) {
-  try {
-    if (!exercicio) {
-      localStorage.removeItem(TREINOS_ATIVO_KEY);
-    } else {
-      localStorage.setItem(TREINOS_ATIVO_KEY, JSON.stringify(exercicio));
-    }
-    window.dispatchEvent(new Event('treino-ativo-changed'));
-  } catch {}
-}
+export function setTreinoAtivo(exercicio: ExercicioAtivo | null) {\n  try {\n    if (!exercicio) {\n      localStorage.removeItem(TREINOS_ATIVO_KEY);\n    } else {\n      localStorage.setItem(TREINOS_ATIVO_KEY, JSON.stringify(exercicio));\n    }\n    window.dispatchEvent(new Event('treino-ativo-changed'));\n  } catch {}\n}\n
 
-export function useTreinoAtivo() {
-  const [exercicio, setExercicio] = useState<ExercicioAtivo | null>(getTreinoAtivo());
-
-  useEffect(() => {
-    function handleStorage() {
-      setExercicio(getTreinoAtivo());
-    }
-    window.addEventListener('storage', handleStorage);
-    window.addEventListener('treino-ativo-changed', handleStorage);
-    return () => {
-      window.removeEventListener('storage', handleStorage);
-      window.removeEventListener('treino-ativo-changed', handleStorage);
-    };
-  }, []);
-
-  return [exercicio, setTreinoAtivo] as const;
-}
+export function useTreinoAtivo() {\n  const [exercicio, setExercicio] = useState<ExercicioAtivo | null>(getTreinoAtivo());\n\n  useEffect(() => {\n    function handleStorage() {\n      setExercicio(getTreinoAtivo());\n    }\n    window.addEventListener('storage', handleStorage);\n    window.addEventListener('treino-ativo-changed', handleStorage);\n    return () => {\n      window.removeEventListener('storage', handleStorage);\n      window.removeEventListener('treino-ativo-changed', handleStorage);\n    };\n  }, []);\n\n  return [exercicio, setTreinoAtivo] as const;\n}\n
