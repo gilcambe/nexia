@@ -5,11 +5,12 @@ import { DIVISOES, montarTreinoDoDia, type Divisao } from '@/lib/dayPlan';
 import { fichaDoPerfil, type Ficha } from '@/lib/ficha';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
+import Lembretes from './components/Lembretes';
 import Card from '@/components/base/Card';
 
 export default function Plan() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [onboarding, setOnboarding] = useState<Answers | null>(null);
   const [fichaSalva, setFichaSalva] = useState<Partial<Ficha> | undefined>(undefined);
   const [loading, setLoading] = useState(true);
@@ -99,6 +100,8 @@ export default function Plan() {
           );
         })}
       </div>
+
+      <Lembretes diasPorSemana={Number((onboarding as unknown as Record<string, unknown>).daysPerWeek ?? 4)} apelido={profile?.nickname || profile?.full_name?.split(' ')[0] || null} />
     </div>
   );
 }
