@@ -117,7 +117,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     ]);
 
     const series = cargasDoTexto(trimmed);
-    if (series && series.length > 0) {
+    if (series.length > 0) {
       try {
         const aviso = registrarSeries(series);
         if (aviso) {
