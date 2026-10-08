@@ -22,18 +22,7 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
     if (!isRunning || segundos <= 0) return;
 
     intervalRef.current = setInterval(() => {
-      setSegundos((s) => {
-        const next = s - 1;
-        if (next <= 0) {
-          // Vibra ao zerar
-          if (navigator.vibrate) {
-            navigator.vibrate([200, 100, 200]);
-          }
-          onFinish();
-          return 0;
-        }
-        return next;
-      });
+      setSegundos((s) => Math.max(0, s - 1));
     }, 1000);
 
     return () => {
