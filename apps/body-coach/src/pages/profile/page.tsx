@@ -5,6 +5,7 @@ import { deleteUser } from 'firebase/auth';
 import { getUserDoc, deleteAllUserData } from '@/lib/userData';
 import { getFirebase } from '@/lib/firebaseClient';
 import Card, { CardHeader } from '@/components/base/Card';
+import SobreVoce from './components/SobreVoce';
 
 type Answers = Record<string, string | string[] | undefined>;
 interface SavedProfile {
@@ -103,6 +104,8 @@ export default function Profile() {
           </Link>
         </Card>
       )}
+
+      <SobreVoce />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* identity */}

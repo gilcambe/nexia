@@ -95,8 +95,9 @@ export function CoachProvider({ children }: { children: ReactNode }) {
   const [messages, setMessages] = useState<CoachMessage[]>([]);
   const [loadingAI, setLoadingAI] = useState(false);
 
+  // O coach chama o aluno pelo apelido que ele escolheu no Perfil.
   const firstName =
-    profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'atleta';
+    profile?.nickname?.trim() || profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'atleta';
 
   const openRef = useRef(open);
   useEffect(() => {
@@ -141,8 +142,14 @@ export function CoachProvider({ children }: { children: ReactNode }) {
 
     setLoadingAI(true);
     try {
+      const ob = profile?.onboarding ?? {};
       const contextData = {
-        name: snapshot?.name ?? profile?.full_name ?? 'atleta',
+        apelido: firstName,
+        objetivo: ob.goal ?? null,
+        modalidades: ob.modality ?? null,
+        nivel: ob.level ?? null,
+        limitacoes: [...(profile?.mobility ?? []), ...(typeof ob.injuries === 'string' && ob.injuries ? [ob.injuries] : [])],
+        name: firstName,
         readinessScore: snapshot?.readinessScore ?? null,
         readinessStatus: snapshot?.readinessStatus ?? null,
         latestWeight: snapshot?.latestWeight ?? null,
@@ -170,7 +177,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoadingAI(false);
     }
-  }, [loadingAI, profile]);
+  }, [loadingAI, profile, firstName]);
 
   const value = useMemo(
     () => ({ open, setOpen: setOpenSafe, messages, send, unread, typing: loadingAI }),
