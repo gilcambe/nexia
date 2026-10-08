@@ -31,6 +31,6 @@ jobs:
       - name: Enviar aviso
         run: node scripts/notificar-telegram.js
         env:
-          MENSAGEM: ${{ github.event_name == 'workflow_dispatch' && inputs.mensagem || format('Entrou na develop: #{0} {1}', github.event.pull_request.number, github.event.pull_request.title) }}
+          MENSAGEM: ${{ github.event_name == 'workflow_dispatch' && inputs.mensagem || format('Entrou na develop: PR {0} - {1}', github.event.pull_request.number, github.event.pull_request.title) }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
