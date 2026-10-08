@@ -68,3 +68,14 @@ test('BCC4. vídeo do aluno chega só ao coach; demo do coach aparece para o alu
   assert.equal((await executar({ acao: 'demo_ver', exercicio: 'agachamento' }, 'aluna1', db))[1].video, v);
   assert.equal((await executar({ acao: 'demo_ver', exercicio: 'agachamento' }, 'bob', db))[1].video, null);
 });
+
+test('BCC5. resumo da semana junta treinos e variação de peso', () => {
+  const { resumirSemana } = require('../../netlify/functions/body-coach-chat.js');
+  const dia = 86400000, agora = Date.now(), iso = (d) => new Date(agora - d * dia).toISOString();
+  const r = resumirSemana({
+    treinos: [{ done_at: iso(1), title: 'A', duration_min: 50, volume_kg: 4000 }, { done_at: iso(3), title: 'B', duration_min: 40, volume_kg: 3000 }, { done_at: iso(12), title: 'Velho', duration_min: 60, volume_kg: 9999 }],
+    pesos: [{ taken_at: iso(2), weight_kg: 79.5 }, { taken_at: iso(9), weight_kg: 80 }],
+  }, agora - 7 * dia, { nome: 'Ana' });
+  assert.equal(r.treinos, 2); assert.equal(r.minutos, 90); assert.equal(r.volumeKg, 7000);
+  assert.equal(r.pesoAtual, 79.5); assert.equal(r.variacaoPeso, -0.5); assert.equal(r.aluno, 'Ana');
+});
