@@ -1,33 +1,43 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { buildWeekPlan, todayPlanDay, type Answers } from '@/lib/trainingPlan';
-import { getUserDoc } from '@/lib/userData';
+import { type Answers } from '@/lib/trainingPlan';
+import { DIVISOES, montarTreinoDoDia, type Divisao } from '@/lib/dayPlan';
+import { fichaDoPerfil, type Ficha } from '@/lib/ficha';
+import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import Card from '@/components/base/Card';
-
-const intensityMeta = {
-  media: { label: 'Média', cls: 'bg-secondary-100 text-secondary-700' },
-  baixa: { label: 'Baixa', cls: 'bg-accent-100 text-accent-700' },
-  alta: { label: 'Alta', cls: 'bg-primary-100 text-primary-700' },
-} as const;
 
 export default function Plan() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [onboarding, setOnboarding] = useState<Answers | null>(null);
+  const [fichaSalva, setFichaSalva] = useState<Partial<Ficha> | undefined>(undefined);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user?.id) return;
-    getUserDoc<{ onboarding?: Answers }>(user.id, 'profile', 'main')
-      .then((res) => setOnboarding(res?.onboarding ?? null))
+    getUserDoc<{ onboarding?: Answers; ficha?: Partial<Ficha> }>(user.id, 'profile', 'main')
+      .then((res) => { setOnboarding(res?.onboarding ?? null); setFichaSalva(res?.ficha); })
       .catch(() => setOnboarding(null))
       .finally(() => setLoading(false));
   }, [user?.id]);
 
-  const planWeek = onboarding ? buildWeekPlan(onboarding) : [];
-  const todayId = todayPlanDay(planWeek)?.id;
-  const weekMinutes = planWeek.reduce((a, d) => a + d.duration, 0);
+  const ficha = fichaDoPerfil({ ficha: fichaSalva, onboarding: onboarding as unknown as Record<string, unknown> | undefined });
+  const dias = DIVISOES[ficha.divisao].dias;
+  const previa = (i: number): string[] => {
+    try {
+      const t = montarTreinoDoDia({
+        respostas: onboarding as unknown as Record<string, unknown>, divisao: ficha.divisao, diaDaDivisao: i, enfase: [],
+        estado: { sono: 'bom', alimentacao: 'comi_bem', energia: 4, tempoMin: 60, dores: '', indisponiveis: [] }, variacao: 0,
+      });
+      return t.sessao.exercises.map((e) => e.name);
+    } catch { return []; }
+  };
+  const escolher = (d: Divisao) => {
+    const nova = { divisao: d, proximoDia: 0 };
+    setFichaSalva(nova);
+    if (user?.id) void setUserDoc(user.id, 'profile', 'main', { ficha: nova }, true).catch(() => {});
+  };
 
   if (loading) return <p className="text-sm text-foreground-500">Carregando...</p>;
 
@@ -48,71 +58,47 @@ export default function Plan() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="font-heading text-2xl font-bold text-foreground-950">Plano de treino</h1>
-          <p className="mt-1 text-sm text-foreground-600">
-            {planWeek.length} sessões por semana · montado pelo seu questionário
-          </p>
-        </div>
-        <span className="inline-flex w-fit items-center gap-1.5 rounded-full bg-accent-100 px-3 py-1.5 text-xs font-semibold text-accent-700">
-          <i className="ri-time-line"></i>
-          {weekMinutes} min esta semana
-        </span>
+      <header>
+        <h1 className="font-heading text-2xl font-bold text-foreground-950">Ficha de treino</h1>
+        <p className="mt-1 text-sm text-foreground-600">
+          Escolha como o seu treino é dividido. O app segue esse ciclo, um dia depois do outro, e ajusta cada treino ao seu dia.
+        </p>
       </header>
 
-      {/* week */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
-        {planWeek.map((day) => {
-          const isDone = false;
-          const isNext = day.id === todayId;
-          return (
+      <Card padding="p-5">
+        <h2 className="font-heading text-base font-semibold text-foreground-950">Divisão do treino</h2>
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {(Object.keys(DIVISOES) as Divisao[]).map((d) => (
             <button
-              key={day.id}
-              onClick={() => isNext && navigate('/workout')}
-              className={`relative flex flex-col rounded-2xl border p-4 text-left transition ${
-                isDone
-                  ? 'border-accent-200 bg-accent-100/50'
-                  : isNext
-                    ? 'border-primary-300 bg-primary-100/50'
-                    : 'border-background-200 bg-background-50 hover:border-background-300'
-              }`}
+              key={d}
+              onClick={() => escolher(d)}
+              className={`rounded-xl border p-3.5 text-left transition ${ficha.divisao === d ? 'border-primary-400 bg-primary-100/60 ring-2 ring-primary-200' : 'border-background-200 bg-background-50 hover:border-background-300'}`}
             >
-              {isNext && (
-                <span className="absolute right-3 top-3 rounded-full bg-primary-500 px-2 py-0.5 text-[10px] font-semibold text-background-50">
-                  Hoje
-                </span>
-              )}
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-foreground-400">{day.day}</span>
-                <span className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-semibold ${intensityMeta[day.intensity].cls}`}>
-                  {intensityMeta[day.intensity].label}
-                </span>
-              </div>
-              <p className="mt-2 font-heading text-base font-semibold leading-snug text-foreground-950">{day.title}</p>
-              <p className="mt-1 text-xs text-foreground-500">{day.focus}</p>
-              <div className="mt-3 space-y-1">
-                {day.exercises.slice(0, 3).map((e) => (
-                  <p key={e.name} className="truncate text-[11px] text-foreground-500">
-                    <i className="ri-heart-pulse-line mr-1 text-accent-600"></i>
-                    {e.name} · {e.sets}
-                  </p>
-                ))}
-              </div>
-              <div className="mt-auto flex items-center gap-2 pt-3 text-xs">
-                <i className="ri-time-line text-foreground-400"></i>
-                <span className="text-foreground-500">{day.duration} min</span>
-                {isDone && (
-                  <span className="ml-auto inline-flex items-center gap-1 text-[11px] font-semibold text-accent-700">
-                    <i className="ri-check-line"></i>concluído
-                  </span>
-                )}
-              </div>
+              <span className="block text-sm font-semibold text-foreground-950">{DIVISOES[d].nome}</span>
+              <span className="block text-xs text-foreground-500">{DIVISOES[d].dias.length} {DIVISOES[d].dias.length === 1 ? 'dia' : 'dias'} por ciclo</span>
             </button>
+          ))}
+        </div>
+      </Card>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {dias.map((d, i) => {
+          const proximo = i === ficha.proximoDia;
+          const lista = previa(i);
+          return (
+            <div key={d.titulo} className={`relative rounded-2xl border p-4 ${proximo ? 'border-primary-300 bg-primary-100/50' : 'border-background-200 bg-background-50'}`}>
+              {proximo && <span className="absolute right-3 top-3 rounded-full bg-primary-500 px-2 py-0.5 text-[10px] font-semibold text-background-50">Próximo</span>}
+              <p className="pr-16 font-heading text-base font-semibold leading-snug text-foreground-950">{d.titulo}</p>
+              <ul className="mt-3 space-y-1">
+                {lista.map((n) => <li key={n} className="truncate text-xs text-foreground-600"><i className="ri-checkbox-circle-line mr-1 text-accent-600"></i>{n}</li>)}
+              </ul>
+              {proximo && (
+                <button onClick={() => navigate('/workout')} className="mt-4 w-full rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-semibold text-background-50 hover:bg-primary-600">Treinar agora</button>
+              )}
+            </div>
           );
         })}
       </div>
-
     </div>
   );
 }

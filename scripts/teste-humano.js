@@ -113,14 +113,15 @@ async function testarPagina(browser, base, rota, viewport, fila, vistos) {
     const total = Math.min(await botoes.count(), MAX_CLIQUES);
     for (let i = 0; i < total; i++) {
       const b = botoes.nth(i);
-      const rotulo = (((await b.innerText().catch(() => '')) || (await b.getAttribute('aria-label').catch(() => '')) || '') + '').trim().slice(0, 40);
-      if (PERIGOSO.test(rotulo) || !(await b.isEnabled().catch(() => false))) continue;
+      if (!(await b.count().catch(() => 0))) continue; // o botão sumiu (a tela mudou): não espera 30 s por ele
+      const rotulo = (((await b.innerText({ timeout: 1500 }).catch(() => '')) || (await b.getAttribute('aria-label', { timeout: 1500 }).catch(() => '')) || '') + '').trim().slice(0, 40);
+      if (PERIGOSO.test(rotulo) || !(await b.isEnabled({ timeout: 1500 }).catch(() => false))) continue;
       onde = `botão "${rotulo || i + 1}"`;
       await b.click({ timeout: 2000 }).catch(() => {});
       await page.waitForTimeout(400);
       const vivo = (await page.evaluate(() => (document.body.innerText || '').trim().length).catch(() => 0)) > 5;
       if (!vivo) nota(tela, onde, 'a tela ficou em branco depois do clique');
-      if (new URL(page.url()).origin !== new URL(base).origin) await page.goto(base + rota.replace(/^\//, ''), { waitUntil: 'networkidle' }).catch(() => {});
+      if (new URL(page.url()).origin !== new URL(base).origin || new URL(page.url()).pathname !== new URL(base + rota.replace(/^\//, '')).pathname) await page.goto(base + rota.replace(/^\//, ''), { waitUntil: 'networkidle' }).catch(() => {});
       await page.keyboard.press('Escape').catch(() => {});
     }
     feitos.push(`${tela}: ${nForms} formulário(s), ${total} botão(ões)`);
@@ -152,7 +153,7 @@ async function cenarioTreino(browser, base, viewport) {
     }
     onde = 'abrir o treino';
     await page.goto(base + 'workout', { waitUntil: 'load', timeout: 45000 });
-    await page.getByRole('button', { name: /Montar Treino de Hoje/i }).click({ timeout: 8000 });
+    await page.getByRole('button', { name: /Montar Treino de Hoje|Come[cç]ar treino de hoje/i }).click({ timeout: 8000 });
     await page.getByRole('button', { name: /^\s*INICIAR TREINO/i }).last().click({ timeout: 8000 });
     await page.getByRole('button', { name: /COMEÇAR EXERCÍCIOS/i }).click({ timeout: 8000 });
     const largura = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
