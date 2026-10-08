@@ -71,7 +71,7 @@ function BottomTabs({ onMore }: { onMore: () => void }) {
       <div className="mx-auto flex max-w-md items-end px-1">
         <NavLink to="/" end className={tab}><i className="ri-sun-line text-xl"></i>Hoje</NavLink>
         <NavLink to="/nutrition" className={tab}><i className="ri-restaurant-line text-xl"></i>Nutrição</NavLink>
-        <button onClick={() => navigate('/workout')} className="-mt-5 flex flex-1 flex-col items-center gap-0.5 text-[11px] font-semibold text-primary-700 active:scale-95" aria-label="Iniciar treino">
+        <button onClick={() => navigate('/workout')} className="-mt-5 flex flex-1 flex-col items-center gap-0.5 text-[11px] font-semibold text-primary-700 active:scale-95" aria-label="Ir para o treino">
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-background-50 shadow-lg ring-4 ring-background-50"><i className="ri-play-fill text-2xl"></i></span>
           Treino
         </button>
