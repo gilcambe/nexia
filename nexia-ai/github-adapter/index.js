@@ -272,6 +272,8 @@ function createGithubAdapter(o) {
       // Issue #225: PR sem nenhuma mudança não é aberto; a execução falha e a fila tenta outro modelo.
       const diff = await call('GET', `/compare/${enc(into)}...${enc(head)}`);
       if (!diff.ahead_by || !(diff.files || []).length) throw new GatewayError(CODES.EMPTY_DIFF, `A branch ${head} não tem mudanças em relação a ${into}; PR não aberto.`);
+      // PRs #243/#244: diff que só acrescenta imports não liga nada na UI; não abre PR.
+      if (isImportOnlyDiff(diff.files)) throw new GatewayError(CODES.IMPORT_ONLY_DIFF, `A branch ${head} só acrescenta imports (nada é usado); PR não aberto.`);
       const d = await call('POST', '/pulls', { body: { title, head, base: into, body, draft: draft !== false }, write: true, permissions: PERMS.writePulls });
       return { number: d.number, html_url: d.html_url, head, base: into, draft: !!d.draft, state: d.state };
     },
@@ -369,4 +371,21 @@ function desescapaAspas(text, e) {
   return { ...e, find: e.find.replace(/\\"/g, '"'), replace: e.replace.replace(/\\"/g, '"') };
 }
 
-module.exports = { createGithubAdapter, looseFind, anchorFind, desescapaAspas, LIMITS, WORK_BRANCH_RE, PERMS, PIPELINE_WORKFLOW };
+/** Verdadeiro quando todas as mudanças do diff são linhas de import acrescentadas (sem remoções). */
+function isImportOnlyDiff(files) {
+  if (!Array.isArray(files) || !files.length) return false;
+  let added = 0;
+  for (const f of files) {
+    if (f.deletions || typeof f.patch !== 'string') return false;
+    for (const line of f.patch.split('\n')) {
+      if (!line.startsWith('+') || line.startsWith('+++')) continue;
+      const t = line.slice(1).trim();
+      if (!t) continue;
+      if (!/^import\b/.test(t)) return false;
+      added++;
+    }
+  }
+  return added > 0;
+}
+
+module.exports = { createGithubAdapter, looseFind, anchorFind, desescapaAspas, LIMITS, WORK_BRANCH_RE, PERMS, PIPELINE_WORKFLOW, isImportOnlyDiff };
