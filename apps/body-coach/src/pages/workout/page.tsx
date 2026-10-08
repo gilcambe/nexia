@@ -437,15 +437,6 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
           </div>
         )}
 
-        {/* rest overlay */}
-        {resting && restLeft > 0 && (
-          <DescansoTimer
-            segundos={restLeft}
-            onFinish={() => setResting(false)}
-            onSkip={() => setResting(false)}
-          />
-        )}
-
         {phase === 'STRENGTH_COMPLETE' && (
           <div className="rounded-2xl border border-background-200 bg-background-50 p-6">
             <h2 className="font-heading text-xl font-bold text-foreground-950">Força concluída 💪</h2>
