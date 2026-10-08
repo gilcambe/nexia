@@ -9,6 +9,7 @@ export interface Conversa {
   id: string;
   titulo: string;
   atualizadaEm: number;
+  projetoId?: string;
   mensagens: MensagemSalva[];
 }
 
