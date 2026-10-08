@@ -152,7 +152,14 @@ function createGithubAdapter(o) {
       checkPath(path);
       if (ref !== undefined) checkRef(ref);
       const d = await call('GET', `/contents/${enc(path)}${ref ? `?ref=${encodeURIComponent(ref)}` : ''}`);
-      if (Array.isArray(d) || d.type !== 'file') throw bad('O caminho não é um arquivo.');
+      // Modelos grátis pedem get_file numa pasta (ex.: "apps/body-coach"): em vez de erro (que gastava
+      // passos em repetição), devolve a listagem com a dica de abrir um arquivo dela.
+      if (Array.isArray(d)) {
+        const entries = d.slice(0, 200).map(e => ({ name: e.name, path: e.path, type: e.type === 'dir' ? 'dir' : 'file' }));
+        return { path: String(path).replace(/\/+$/, ''), type: 'dir', entries, truncated: d.length > entries.length,
+          hint: 'Isto é uma pasta, não um arquivo. Chame github.get_file com o caminho de um arquivo desta lista (ex.: o "path" de uma entrada type "file").' };
+      }
+      if (d.type !== 'file') throw bad('O caminho não é um arquivo.');
       if (d.size > LIMITS.readBytes || d.encoding !== 'base64') throw bad(`Arquivo grande demais para ler pelo NEXIA (limite ${LIMITS.readBytes / 1024} KB).`);
       const text = Buffer.from(d.content, 'base64').toString('utf8');
       const r = redactSecrets(text);
@@ -334,6 +341,7 @@ function createGithubAdapter(o) {
       const files = [];
       for (const [path, list] of byPath) {
         const f = await api.getFile({ path, ref: head });
+        if (f.type === 'dir') throw bad(`${path} é uma pasta; edite um arquivo dela.`);
         if (f.redactions) throw bad(`${path} tem segredo redigido; não pode ser editado pelo NEXIA.`);
         let text = f.content;
         // Modelos grátis escapam aspas (\") dentro do trecho como se fosse JSON: se o arquivo não tem \",
