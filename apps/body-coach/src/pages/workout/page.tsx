@@ -4,7 +4,7 @@ import { type SetLog, type Session } from '@/mocks/workout';
 import type { Answers } from '@/lib/trainingPlan';
 import { montarTreinoDoDia, type TreinoDoDia, trocarExercicio } from '@/lib/dayPlan';
 import { moverExercicio } from '@/lib/ordemTreino';
-import { alternativas, videoDeExecucao, lesoesDoTexto, type Lesao } from '@/lib/exerciseDb';
+import { alternativas, videoDeExecucao, lesoesDoTexto, POR_ID, type Lesao } from '@/lib/exerciseDb';
 import PreTreino from './components/PreTreino';
 import { dicaAoVivo } from '@/lib/liveCoach';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
@@ -12,6 +12,7 @@ import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
 import DescansoTimer from './components/DescansoTimer';
 import { CardioEntry } from './components/CardioEntry';
+import type { CardioAtividade } from '@/lib/cardioDoTexto';
 import { useCoach } from '@/components/feature/CoachContext';
 import { setTreinoAtivo } from '@/lib/treinoAtivo';
 
@@ -76,6 +77,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
   const [restLeft, setRestLeft] = useState(0);
   const [resting, setResting] = useState(false);
   const [cardioDone, setCardioDone] = useState(false);
+  const [cardioFeito, setCardioFeito] = useState<CardioAtividade[]>([]);
   const [showVideo, setShowVideo] = useState(false);
   const [showSwapModal, setShowSwapModal] = useState(false);
 
@@ -120,11 +122,31 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
 
   const currentSets = setsByEx[exercise.id] ?? [];
 
+  // Cargas ditas no chat do coach caem direto na ficha do exercício atual.
   useEffect(() => {
     if (phase !== 'EXERCISE_ACTIVE') {
       setTreinoAtivo(null);
+      return;
     }
-  }, [phase]);
+    setTreinoAtivo((series) => {
+      setSetsByEx((v) => {
+        const prev = v[exercise.id] ?? [];
+        const novas: SetLog[] = series.map((s, i) => ({
+          id: `${exercise.id}-chat-${Date.now()}-${i}`,
+          set: prev.length + i + 1,
+          weight: s.weight,
+          reps: s.reps,
+          rir: null,
+          rpe: null,
+          restSec: exercise.restSec,
+          completed: true,
+        }));
+        return { ...v, [exercise.id]: [...prev, ...novas] };
+      });
+      return `Anotei ${series.length} série(s) em ${exercise.name}.`;
+    });
+    return () => setTreinoAtivo(null);
+  }, [phase, exercise]);
 
   // Extrair faixa de repetições alvo do exercício (ex: "8-12 reps" -> [8, 12])
   const parseReps = (target: string): [number, number] => {
@@ -485,7 +507,8 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
             <h2 className="font-heading text-xl font-bold text-foreground-950">Cardio</h2>
             <p className="mt-1 mb-4 text-sm text-foreground-600">{session.cardio?.type} · {session.cardio?.note}</p>
             <CardioEntry
-              onSubmit={(atividades, fotoNome) => {
+              onSubmit={(atividades) => {
+                setCardioFeito(atividades);
                 setCardioDone(true);
                 setPhase('SESSION_REVIEW');
               }}
@@ -511,6 +534,13 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
             };
           }).filter(Boolean);
 
+          const seriesPorGrupo: Record<string, number> = {};
+          session.exercises.forEach((e) => {
+            const g = POR_ID[e.id]?.grupo;
+            const n = (setsByEx[e.id] ?? []).filter((x) => x.completed).length;
+            if (g && n > 0) seriesPorGrupo[g] = (seriesPorGrupo[g] ?? 0) + n;
+          });
+
           const handleFinishSession = async () => {
             if (user) {
               // Campos que as regras do Firestore exigem: title e done_at (texto).
@@ -522,6 +552,8 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
                 exercises: exercisesCount,
                 sets: totalSets,
                 volume_kg: totalVolume,
+                series_por_grupo: seriesPorGrupo,
+                cardio: cardioFeito.map((c) => ({ tipo: c.tipo, minutos: c.minutos, km: c.distanciaKm ?? null, kcal: c.kcal ?? null })),
               };
               try {
                 const key = `bc_workouts_${user.id}`;

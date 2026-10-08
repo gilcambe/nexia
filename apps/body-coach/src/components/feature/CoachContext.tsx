@@ -117,9 +117,15 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     ]);
 
     const series = cargasDoTexto(trimmed);
-    if (series.length > 0) {
+    if (series && series.length > 0) {
       try {
         const aviso = registrarSeries(series);
+        if (aviso) {
+          setMessages((prev) => [
+            ...prev,
+            { id: `a-${Date.now()}`, speaker: 'coach', text: aviso, time: 'agora' },
+          ]);
+        }
       } catch (err) {
         console.error('Erro ao registrar séries:', err);
       }
