@@ -127,10 +127,10 @@ async function main() {
       const ob = await api(`/nexia/projects/${project.id}/onboard`, { method: 'POST', body: { repository: { owner, repo } } });
       report([201, 202].includes(ob.status), 'Onboarding: pedido aceito', `${ob.status} ${ob.json && (ob.json.error || JSON.stringify(ob.json.job || ''))}`);
       let snap = null;
-      for (let t = 0; t < WAIT_ONBOARD_S && [201, 202].includes(ob.status); t += 15) {
+      for (let t = 0; t < WAIT_ONBOARD_S && [201, 202].includes(ob.status); t += 30) {
         const s = await api(`/nexia/projects/${project.id}/snapshot`);
         if (s.status === 200) { snap = s.json.record; break; }
-        await sleep(15000);
+        await sleep(30000);
       }
       report(!!snap, 'Onboarding: snapshot do repositório no Vault', snap ? `stack: ${(snap.stack || []).join(', ')}` : 'sem snapshot no tempo limite');
 
@@ -144,9 +144,9 @@ async function main() {
       if (sn.status !== 200) {
         const ob = await api(`/nexia/projects/${project.id}/onboard`, { method: 'POST', body: { repository: { owner, repo } } });
         report([201, 202].includes(ob.status), 'Onboarding: pedido aceito', `${ob.status}`);
-        for (let t = 0; t < WAIT_ONBOARD_S && [201, 202].includes(ob.status); t += 15) {
+        for (let t = 0; t < WAIT_ONBOARD_S && [201, 202].includes(ob.status); t += 30) {
           if ((await api(`/nexia/projects/${project.id}/snapshot`)).status === 200) break;
-          await sleep(15000);
+          await sleep(30000);
         }
       }
     }
@@ -171,11 +171,12 @@ async function main() {
       const exec = ex.json && ex.json.execution;
       report([200, 202].includes(ex.status) && !!exec, 'Execução: pedido aceito', `${ex.status} ${ex.json && (ex.json.error || (exec && exec.status) || ex.json.decision || '')}`);
       let last = exec;
-      for (let t = 0; exec && t < WAIT_EXEC_S; t += 20) {
+      // Economia da cota grátis do Firestore: o intervalo cresce (20 s -> 60 s) em vez de ler a cada 20 s.
+      for (let t = 0, passo = 20; exec && t < WAIT_EXEC_S; t += passo, passo = Math.min(60, passo + 10)) {
         const g = await api(`/nexia/executions/${exec.id}`);
         last = g.json && g.json.record;
         if (last && ['succeeded', 'failed', 'cancelled', 'waiting_approval', 'needs_input'].includes(last.status)) break;
-        await sleep(20000);
+        await sleep(passo * 1000);
       }
       report(!!last && ['succeeded', 'waiting_approval'].includes(last.status), 'Execução: terminou', last ? `${last.status} intent=${last.intent} codigo=${last.error_code || '-'} resumo=${String(last.result_summary || '').slice(0, 160)} modelos=${(last.models || []).join(',')}` : 'sem registro');
       if (last) {
