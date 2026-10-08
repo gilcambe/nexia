@@ -148,3 +148,13 @@ test('U10. ADR-Q-03: "crie um site/sistema" passa pelo Designer; mudança num si
   assert.ok(allowed('designer', 'media.search_images') && !allowed('designer', 'github.commit_files'));
   assert.ok(allowed('frontend', 'media.search_videos'));
 });
+
+test('U11. sem commit na 1ª volta: o lembrete manda editar e ligar o arquivo que já existe', () => {
+  const { noCommitNudge } = require('../../nexia-ai/orchestrator');
+  const t = noCommitNudge(['apps/body-coach/src/lib/recorde.ts']);
+  assert.match(t, /SEM nenhum commit/);
+  assert.match(t, /apps\/body-coach\/src\/lib\/recorde\.ts/);
+  assert.match(t, /github\.edit_files/);
+  assert.match(t, /import e uso/);
+  assert.doesNotMatch(noCommitNudge([]), /\(\)/);
+});
