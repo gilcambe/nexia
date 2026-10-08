@@ -10,6 +10,7 @@ import { dicaAoVivo } from '@/lib/liveCoach';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
+import DescansoTimer from './components/DescansoTimer';
 import { useCoach } from '@/components/feature/CoachContext';
 
 type Phase =
@@ -403,6 +404,17 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
               />
             </div>
 
+            {/* DescansoTimer inline logo após registrar */}
+            {resting && restLeft > 0 && (
+              <div className="mt-5">
+                <DescansoTimer
+                  segundos={restLeft}
+                  onFinish={() => setResting(false)}
+                  onSkip={() => setResting(false)}
+                />
+              </div>
+            )}
+
             <button
               onClick={finishExercise}
               className={`mt-5 w-full rounded-xl px-6 py-3 text-sm font-semibold transition whitespace-nowrap ${
@@ -427,16 +439,11 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
 
         {/* rest overlay */}
         {resting && restLeft > 0 && (
-          <div className="rounded-2xl border border-background-200 bg-background-100/80 p-6 text-center">
-            <p className="text-sm font-semibold text-foreground-500">Descanso</p>
-            <p className="font-heading text-5xl font-bold text-foreground-950">{restLeft}s</p>
-            <button
-              onClick={() => setResting(false)}
-              className="mt-3 rounded-full bg-background-50 border border-background-200 px-4 py-2 text-sm font-medium text-foreground-700 hover:bg-background-200"
-            >
-              Pular descanso
-            </button>
-          </div>
+          <DescansoTimer
+            segundos={restLeft}
+            onFinish={() => setResting(false)}
+            onSkip={() => setResting(false)}
+          />
         )}
 
         {phase === 'STRENGTH_COMPLETE' && (
