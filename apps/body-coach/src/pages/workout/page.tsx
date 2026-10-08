@@ -70,7 +70,7 @@ export default function Workout() {
     const nova = avancarFicha(ficha);
     setFicha(nova);
     setSeguiuFicha(false);
-    void setUserDoc(user.id, 'profile', 'main', { ficha: nova }).catch(() => {});
+    void setUserDoc(user.id, 'profile', 'main', { ficha: nova }, true).catch(() => {});
   };
   return <WorkoutFlow session={treino.sessao} lesoes={treino.lesoes} onSessionChange={(sessao) => setTreino({ ...treino, sessao })} onSaved={treinoSalvo} />;
 }

@@ -36,7 +36,7 @@ export default function Plan() {
   const escolher = (d: Divisao) => {
     const nova = { divisao: d, proximoDia: 0 };
     setFichaSalva(nova);
-    if (user?.id) void setUserDoc(user.id, 'profile', 'main', { ficha: nova }).catch(() => {});
+    if (user?.id) void setUserDoc(user.id, 'profile', 'main', { ficha: nova }, true).catch(() => {});
   };
 
   if (loading) return <p className="text-sm text-foreground-500">Carregando...</p>;
