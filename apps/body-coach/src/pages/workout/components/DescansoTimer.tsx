@@ -1,22 +1,34 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 
 interface DescansoTimerProps {
   segundos: number;
   onSkip: () => void;
   onChange?: (segundos: number) => void;
+  onComplete?: () => void;
 }
 
-export default function DescansoTimer({ segundos: initialSegundos, onSkip, onChange }: DescansoTimerProps) {
+export default function DescansoTimer({ segundos: initialSegundos, onSkip, onChange, onComplete }: DescansoTimerProps) {
   const [segundos, setSegundos] = useState(initialSegundos);
   const [progress, setProgress] = useState(100);
 
+  // Refs para o tempo atual e total, evitando recriar o intervalo
+  const segundosRef = useRef(segundos);
+  const totalRef = useRef(initialSegundos);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Atualiza refs quando estado muda
   useEffect(() => {
-    setSegundos(initialSegundos);
-    setProgress(100);
-  }, [initialSegundos]);
+    segundosRef.current = segundos;
+  }, [segundos]);
 
   useEffect(() => {
+    totalRef.current = initialSegundos;
+  }, [initialSegundos]);
+
+  // Efeito do intervalo - roda uma vez e usa refs internamente
+  useEffect(() => {
     if (segundos <= 0) return;
+
     const interval = setInterval(() => {
       setSegundos((s) => {
         const next = s - 1;
@@ -24,24 +36,59 @@ export default function DescansoTimer({ segundos: initialSegundos, onSkip, onCha
           if (navigator.vibrate) {
             navigator.vibrate([200, 100, 200]);
           }
+          // Chama onComplete quando zera naturalmente
+          onComplete?.();
         }
         return next;
       });
     }, 1000);
+
+    intervalRef.current = interval;
     return () => clearInterval(interval);
+  }, []); // array vazio: intervalo criado uma vez
+
+  // Atualiza progresso baseado no total atual (ref)
+  useEffect(() => {
+    const total = totalRef.current;
+    if (total > 0) {
+      setProgress((segundos / total) * 100);
+    }
   }, [segundos]);
 
+  // Reinicia intervalo quando initialSegundos muda (ex: reset externo)
   useEffect(() => {
-    if (initialSegundos > 0) {
-      setProgress((segundos / initialSegundos) * 100);
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
     }
-  }, [segundos, initialSegundos]);
+    setSegundos(initialSegundos);
+    setProgress(100);
+    if (initialSegundos > 0) {
+      const interval = setInterval(() => {
+        setSegundos((s) => {
+          const next = s - 1;
+          if (next <= 0) {
+            if (navigator.vibrate) {
+              navigator.vibrate([200, 100, 200]);
+            }
+            onComplete?.();
+          }
+          return next;
+        });
+      }, 1000);
+      intervalRef.current = interval;
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [initialSegundos]);
 
-  const addTime = (delta: number) => {
-    const next = Math.max(0, segundos + delta);
-    setSegundos(next);
-    onChange?.(next);
-  };
+  const addTime = useCallback((delta: number) => {
+    setSegundos((s) => {
+      const next = Math.max(0, s + delta);
+      onChange?.(next);
+      return next;
+    });
+  }, [onChange]);
 
   if (segundos <= 0) return null;
 
@@ -68,7 +115,7 @@ export default function DescansoTimer({ segundos: initialSegundos, onSkip, onCha
       <div className="mt-3 flex items-center justify-center gap-2">
         <button
           onClick={() => addTime(-15)}
-          disabled={segundos <= 15}
+          disabled={segundos <= 0}
           className="inline-flex items-center gap-1.5 rounded-lg bg-background-50 border border-background-200 px-3 py-1.5 text-xs font-semibold text-foreground-700 hover:bg-background-200 disabled:opacity-40 disabled:cursor-not-allowed transition"
           aria-label="Remover 15 segundos"
         >
