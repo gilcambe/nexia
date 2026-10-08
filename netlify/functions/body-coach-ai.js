@@ -8,7 +8,7 @@ const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware
 const { getRouter } = require('../../nexia-ai/model-router');
 const { listFor } = require('../../nexia-ai/orchestrator/models');
 
-const COMUM = ' Responda em português do Brasil, em até 6 frases curtas e claras, usando os dados do aluno no contexto e sem inventar dados que não estão nele. Se o contexto trouxer "apelido", chame o aluno por ele. Personalize tudo ao objetivo, às modalidades, ao nível e às limitações do contexto: quem corre recebe dicas de corrida, quem luta recebe dicas de luta, quem nada, de natação; cadeirante nunca recebe exercício em pé, perna em pé nem esteira; respeite lesões e condições.';
+const COMUM = ' Responda em português do Brasil como numa conversa de WhatsApp com UMA pessoa que você conhece: calorosa, natural e curta (1 a 3 frases na maioria das respostas; só passe disso se a pessoa pedir um plano ou uma explicação). Responda ao que a pessoa acabou de dizer, levando em conta as mensagens anteriores da conversa; nunca repita o que já foi dito e nunca despeje dicas, números ou listas que ninguém pediu. Se a pessoa só cumprimentar ("oi", "olá", "bom dia"), cumprimente de volta pelo apelido e pergunte UMA coisa simples sobre o dia dela (como dormiu, como está de energia ou se vai treinar hoje), usando o contexto só se ajudar. Se o contexto trouxer "apelido", chame a pessoa por ele. Use os dados do contexto só quando forem relevantes ao que foi perguntado e sem inventar nada que não esteja nele. Quando der conselho, personalize ao objetivo, às modalidades, ao nível e às limitações: quem corre recebe dicas de corrida, quem luta, de luta, quem nada, de natação; cadeirante nunca recebe exercício em pé, perna em pé nem esteira; respeite lesões e condições. Faça no máximo uma pergunta por mensagem. Não use listas nem títulos.';
 const PAPEIS = {
   coach: 'Você é o coach do aluno no app NEXIA Body Coach: motivacional, conecta treino, dieta e rotina e ajuda a manter a constância.' + COMUM,
   nutrologo: 'Você é um médico nutrólogo no app NEXIA Body Coach: orienta alimentação e metas de macros. Não diagnostique e não prescreva remédios; em sintomas, exames alterados ou doenças, mande procurar um médico presencial.' + COMUM,
@@ -35,6 +35,9 @@ exports.handler = async (event) => {
   const role = Object.prototype.hasOwnProperty.call(PAPEIS, body.role) ? body.role : 'coach';
   const contexto = JSON.stringify(body.context && typeof body.context === 'object' ? body.context : {}).slice(0, 2000);
   const system = `${PAPEIS[role]}\nContexto do aluno: ${contexto}`;
+  // Últimas mensagens da conversa (até 10), para o coach lembrar o que o aluno já disse.
+  const historico = Array.isArray(body.history) ? body.history.slice(-10).filter((h) => h && (h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string' && h.content.trim()).map((h) => ({ role: h.role, content: h.content.trim().slice(0, 600) })) : [];
+  const mensagens = [...historico, { role: 'user', content: message }];
   // Foto de evolução (opcional): só modelos com visão (Gemini grátis) olham a imagem.
   let images;
   if (typeof body.image === 'string') {
@@ -49,7 +52,7 @@ exports.handler = async (event) => {
       const cap = router.capabilities(d);
       if (!cap.available || (images && !cap.vision)) continue;
       // Cada modelo tem 12 s; se demorar, passa logo para o próximo (nunca deixa o aluno esperando no vazio).
-      const out = await Promise.race([router.chat(d, { system, messages: [{ role: 'user', content: message }], maxTokens: images ? 1200 : 700, ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
+      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: images ? 1200 : 700, ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
       if (out && out.text) return resposta(event, 200, { reply: out.text, role, model: d.model });
     } catch { /* tenta o próximo modelo */ }
   }

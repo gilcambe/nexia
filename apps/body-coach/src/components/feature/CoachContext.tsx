@@ -10,7 +10,7 @@ import {
 } from 'react';
 import type { CoachMessage } from '@/mocks/coach';
 import { useAuth } from './AuthContext';
-import { perguntar } from '@/lib/coachAI';
+import { perguntar, type TurnoConversa } from '@/lib/coachAI';
 import { cargasDoTexto } from '@/lib/cargasDoTexto';
 import { registrarSeries } from '@/lib/treinoAtivo';
 
@@ -99,6 +99,24 @@ export function CoachProvider({ children }: { children: ReactNode }) {
   const firstName =
     profile?.nickname?.trim() || profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'atleta';
 
+  // A conversa fica guardada neste aparelho: ao sair da página (ou fechar o app) e voltar, o histórico continua.
+  const chave = user?.id ? `bc_coach_${user.id}` : null;
+  const carregado = useRef<string | null>(null);
+  useEffect(() => {
+    if (!chave || carregado.current === chave) return;
+    carregado.current = chave;
+    try {
+      const salvo = JSON.parse(localStorage.getItem(chave) || '[]');
+      if (Array.isArray(salvo) && salvo.length) setMessages(salvo.slice(-60));
+    } catch { /* sem histórico guardado */ }
+  }, [chave]);
+  useEffect(() => {
+    if (!chave || carregado.current !== chave || messages.length === 0) return;
+    try { localStorage.setItem(chave, JSON.stringify(messages.slice(-60))); } catch { /* sem armazenamento */ }
+  }, [messages, chave]);
+  const mensagensRef = useRef<CoachMessage[]>([]);
+  useEffect(() => { mensagensRef.current = messages; }, [messages]);
+
   const openRef = useRef(open);
   useEffect(() => {
     openRef.current = open;
@@ -159,7 +177,12 @@ export function CoachProvider({ children }: { children: ReactNode }) {
         proteinTarget: snapshot?.proteinTarget ?? null,
       };
 
-      const reply = await perguntar('coach', trimmed, contextData);
+      // As últimas mensagens vão junto: o coach lembra o que já foi dito e responde ao que o aluno acabou de falar.
+      const historico: TurnoConversa[] = mensagensRef.current
+        .filter((m) => m.id !== 'c-greet' && m.text)
+        .slice(-10)
+        .map((m) => ({ role: m.speaker === 'user' ? 'user' as const : 'assistant' as const, content: m.text }));
+      const reply = await perguntar('coach', trimmed, contextData, undefined, historico);
 
       setMessages((prev) => [
         ...prev,
