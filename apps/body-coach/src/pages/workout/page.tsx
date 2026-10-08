@@ -11,6 +11,7 @@ import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
 import DescansoTimer from './components/DescansoTimer';
+import { CardioEntry } from './components/CardioEntry';
 import { useCoach } from '@/components/feature/CoachContext';
 
 type Phase =
