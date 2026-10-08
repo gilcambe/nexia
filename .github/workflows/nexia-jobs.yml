@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: read
+  issues: write  # fallback grátis: pedido guardado em Issue "nexia-job-pendente" quando os 2 bancos estão sem cota
   models: read   # ADR-FREE-04: GitHub Models grátis com o próprio token do Actions
 
 jobs:
@@ -34,6 +35,7 @@ jobs:
           NODE_ENV: production
           NEXIA_JOB: ${{ inputs.job }}
           NEXIA_AUDIT_FILE: ${{ runner.temp }}/auditoria.jsonl
+          NEXIA_PENDING_FILE: ${{ runner.temp }}/pendente.json
           # Segredos do repositório, um por nome (lista do .env.example; o teste CF10 confere).
           # O GitHub não aceita segredo começando com GITHUB_: esses ficam como NEXIA_GITHUB_*.
           # TEMPORÁRIO: segredos por cliente (NEXIA_<FIREBASE|CLOUDFLARE>_<TENANT>_*, Fase 9) precisam
@@ -85,3 +87,10 @@ jobs:
         run: |
           f="$RUNNER_TEMP/auditoria.jsonl"
           if [ -s "$f" ]; then { echo '### Auditoria do Vault (JSONL)'; echo '```'; tail -c 900000 "$f"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"; fi
+      - name: Guardar o pedido se os dois bancos estiverem sem cota
+        if: failure()
+        run: node scripts/nexia-job-pendente.js guardar
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          NEXIA_PENDING_FILE: ${{ runner.temp }}/pendente.json

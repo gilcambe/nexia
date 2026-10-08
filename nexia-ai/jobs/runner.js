@@ -21,10 +21,18 @@ async function runJob(rawJob, deps = {}) {
     return await runWith(job, deps, db, vdb);
   } catch (e) {
     // Cota grátis do banco B (Vault/Cortex) esgotada: na hora, roda de novo no banco principal (outro projeto grátis).
-    if (!isQuota(e) || vdb === db || deps.vault) throw e;
+    if (!isQuota(e)) throw e;
+    if (vdb === db || deps.vault) throw bothExhausted(e);
     console.warn('[nexia-job] cota do banco B esgotada; usando o banco principal');
-    return runWith(job, deps, db, db);
+    try { return await runWith(job, deps, db, db); } catch (e2) { throw isQuota(e2) ? bothExhausted(e2) : e2; }
   }
+}
+
+// Os dois projetos grátis sem cota: a tarefa não se perde. O workflow guarda o pedido (só ids) numa
+// Issue "nexia-job-pendente" e a "Fila do Cortex" despacha de novo quando a cota voltar (grátis, sem Firestore).
+function bothExhausted(e) {
+  return Object.assign(new Error(`QUOTA_BOTH: cota grátis do Firestore esgotada nos dois bancos (${String(e && e.message || '').slice(0, 120)})`),
+    { code: 'QUOTA_BOTH', cause: e });
 }
 
 async function runWith(job, deps, db, vdb) {
@@ -55,7 +63,7 @@ async function runWith(job, deps, db, vdb) {
 
   if (job.kind === 'sweep') {
     if (!job.tenant) {
-      const r = await sweepAllTenants({ db, orchestrator });
+      const r = await sweepAllTenants({ db, vdb, orchestrator });
       return { kind: job.kind, tenants: r.tenants, resumed: r.items.length };
     }
     const items = await orchestrator.sweep(contextFor(job));
@@ -77,4 +85,4 @@ async function runWith(job, deps, db, vdb) {
   return { kind: job.kind, id: job.id, snapshot: !!(r && r.snapshot) };
 }
 
-module.exports = { runJob, isQuota };
+module.exports = { runJob, isQuota, bothExhausted };

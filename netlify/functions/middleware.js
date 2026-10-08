@@ -119,8 +119,12 @@ async function checkRateLimit(userId, functionName) {
   } catch (e) { console.error('[rateLimit] Firestore error:', e.message); return { ok: true, remaining: -1 }; }
 }
 
+// Economia de cota (Firestore grátis): a limpeza lia o banco a CADA pedido; agora no máximo 1 vez a cada 10 min por instância.
+let _lastRLClean = 0;
 async function _cleanExpiredRateLimits() {
   if (!db) return;
+  if (Date.now() - _lastRLClean < 600_000) return;
+  _lastRLClean = Date.now();
   try {
     const now = Date.now();
     const expired = await db.collection('rate_limits').where('ttl', '<', now).limit(50).get();
@@ -132,6 +136,7 @@ async function _cleanExpiredRateLimits() {
 }
 
 const _tenantCache = new Map();
+const _profileCache = new Map();
 
 // Papéis que um documento de membro de tenant pode conceder. 'master' é global e
 // nunca vem de um tenant: só de custom claim ou de users/{uid}.role gravado pelo servidor.
@@ -306,8 +311,15 @@ async function verifyBearerToken(event) {
   let profile = null;
   if (db) {
     try {
-      const userDoc = await db.collection('users').doc(decoded.uid).get();
-      if (userDoc.exists) profile = userDoc.data();
+      // Economia de cota: o perfil fica 60 s em memória (antes: 1 leitura do Firestore por pedido autenticado).
+      const hit = _profileCache.get(decoded.uid);
+      if (hit && Date.now() - hit.ts < 60_000) profile = hit.profile;
+      else {
+        const userDoc = await db.collection('users').doc(decoded.uid).get();
+        if (userDoc.exists) profile = userDoc.data();
+        if (_profileCache.size > 500) _profileCache.clear();
+        _profileCache.set(decoded.uid, { profile, ts: Date.now() });
+      }
     } catch (e) { console.error('[verifyBearerToken] perfil:', e && e.message); }
   }
   const role = resolveRole(decoded, profile);

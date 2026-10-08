@@ -32,3 +32,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
+      - name: Reenviar tarefas guardadas por falta de cota do Firestore
+        if: always()
+        run: node scripts/nexia-job-pendente.js reenviar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
