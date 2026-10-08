@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { streamCortex } from "@/services/api";
+import { listarProjetos, obterProjeto, salvarProjeto, apagarProjeto, montarPrompt, type ProjetoCortex } from "@/lib/projetosCortex";
 import { novaConversaId, salvarConversa, listarConversas, obterConversa, apagarConversa, type Conversa } from "@/lib/conversasCortex";
 
 interface Message {
@@ -55,6 +56,9 @@ export default function CortexApp() {
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const [historicoAberto, setHistoricoAberto] = useState(false);
   const [conversas, setConversas] = useState<Conversa[]>(() => listarConversas());
+  const [projetos, setProjetos] = useState<ProjetoCortex[]>(() => listarProjetos());
+  const [projetoId, setProjetoId] = useState<string>("");
+  const [editando, setEditando] = useState<{ id?: string; nome: string; instrucoes: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -70,10 +74,11 @@ export default function CortexApp() {
       id: conversaId,
       titulo: primeira.slice(0, 60),
       atualizadaEm: Date.now(),
+      projetoId: projetoId || undefined,
       mensagens: messages.filter((m) => m.id !== "welcome").map(({ id, role, text, model }) => ({ id, role, text, model })),
     });
     setConversas(listarConversas());
-  }, [messages, loading, conversaId]);
+  }, [messages, loading, conversaId, projetoId]);
 
   const novaConversa = useCallback(() => {
     if (loading) return;
@@ -87,6 +92,7 @@ export default function CortexApp() {
     const c = obterConversa(id);
     if (!c) return;
     setConversaId(c.id);
+    setProjetoId(c.projetoId && obterProjeto(c.projetoId) ? c.projetoId : "");
     setMessages([BOAS_VINDAS, ...c.mensagens]);
     setHistoricoAberto(false);
   }, [loading]);
@@ -130,7 +136,15 @@ export default function CortexApp() {
 
     try {
       const gen = streamCortex(
-        { message: text, model: selectedModel, tenantId: "nexia" },
+        {
+          message: montarPrompt({
+            pergunta: text,
+            instrucoes: obterProjeto(projetoId)?.instrucoes,
+            anteriores: messages.filter((m) => m.id !== "welcome" && !m.streaming),
+          }),
+          model: selectedModel,
+          tenantId: "nexia",
+        },
         abortRef.current.signal
       );
 
@@ -182,7 +196,7 @@ export default function CortexApp() {
 
     setLoading(false);
     abortRef.current = null;
-  }, [loading, selectedModel, finalizeMessage]);
+  }, [loading, selectedModel, finalizeMessage, messages, projetoId]);
 
   const stopStream = useCallback(() => {
     abortRef.current?.abort();
@@ -229,6 +243,43 @@ export default function CortexApp() {
       {historicoAberto && (
         <div className="border-b border-nexia-border bg-nexia-surface max-h-64 overflow-y-auto">
           <div className="max-w-6xl mx-auto px-4 md:px-8 py-3 space-y-1">
+            <div className="flex flex-wrap items-center gap-2 pb-2">
+              <span className="text-[10px] uppercase tracking-wider text-nexia-muted">Projeto</span>
+              <select value={projetoId} onChange={(e) => setProjetoId(e.target.value)}
+                className="px-2 py-1 text-xs bg-nexia-surface2 border border-nexia-border rounded-lg text-white outline-none">
+                <option value="">Sem projeto</option>
+                {projetos.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
+              </select>
+              <button onClick={() => setEditando({ nome: "", instrucoes: "" })} className="px-2 py-1 text-xs rounded-lg border border-nexia-border text-nexia-muted hover:text-white cursor-pointer">
+                <i className="ri-folder-add-line" /> Novo projeto
+              </button>
+              {projetoId && obterProjeto(projetoId) && (
+                <>
+                  <button onClick={() => { const p = obterProjeto(projetoId); if (p) setEditando({ id: p.id, nome: p.nome, instrucoes: p.instrucoes }); }}
+                    className="px-2 py-1 text-xs rounded-lg border border-nexia-border text-nexia-muted hover:text-white cursor-pointer">
+                    <i className="ri-edit-line" /> Editar
+                  </button>
+                  <button onClick={() => { apagarProjeto(projetoId); setProjetoId(""); setProjetos(listarProjetos()); }}
+                    className="px-2 py-1 text-xs rounded-lg border border-nexia-border text-nexia-muted hover:text-red-400 cursor-pointer">
+                    <i className="ri-delete-bin-line" /> Apagar projeto
+                  </button>
+                </>
+              )}
+            </div>
+            {editando && (
+              <div className="rounded-lg border border-nexia-cyan/30 p-3 mb-2 space-y-2">
+                <input value={editando.nome} onChange={(e) => setEditando({ ...editando, nome: e.target.value })} placeholder="Nome do projeto"
+                  className="w-full px-3 py-2 text-sm bg-nexia-surface2 border border-nexia-border rounded-lg text-white outline-none" />
+                <textarea value={editando.instrucoes} onChange={(e) => setEditando({ ...editando, instrucoes: e.target.value })} rows={4}
+                  placeholder="Instruções que valem para todas as conversas deste projeto (ex.: responda sempre em português, o site é de uma clínica...)"
+                  className="w-full px-3 py-2 text-sm bg-nexia-surface2 border border-nexia-border rounded-lg text-white outline-none" />
+                <div className="flex gap-2">
+                  <button onClick={() => { const p = salvarProjeto(editando); setProjetos(listarProjetos()); setProjetoId(p.id); setEditando(null); }}
+                    className="px-3 py-1.5 text-xs rounded-lg bg-nexia-cyan text-[#0a0a0f] cursor-pointer">Salvar projeto</button>
+                  <button onClick={() => setEditando(null)} className="px-3 py-1.5 text-xs rounded-lg border border-nexia-border text-nexia-muted cursor-pointer">Cancelar</button>
+                </div>
+              </div>
+            )}
             {conversas.length === 0 && <p className="text-xs text-nexia-muted">Nenhuma conversa salva ainda.</p>}
             {conversas.map((c) => (
               <div key={c.id} className={`flex items-center gap-2 rounded-lg px-3 py-2 border ${c.id === conversaId ? "border-nexia-cyan/40" : "border-nexia-border"}`}>
