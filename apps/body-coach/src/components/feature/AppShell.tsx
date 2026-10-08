@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation, NavLink, Outlet } from 'react-router-dom';
 import { CoachProvider, useCoach } from './CoachContext';
 import { NutritionProvider } from './NutritionContext';
@@ -180,6 +180,10 @@ function Shell() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  // Veio de um link de convite do coach: depois do login/cadastro, vai para a conversa que conclui a entrada na equipe.
+  useEffect(() => {
+    try { if (localStorage.getItem('bc_convite') && location.pathname !== '/chat') navigate('/chat', { replace: true }); } catch { /* sem armazenamento */ }
+  }, [location.pathname, navigate]);
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background-50">

@@ -45,7 +45,10 @@ async function executar(body, uid, db) {
     const papel = body.papel === 'coach' ? 'coach' : 'aluno';
     const nome = limpa(body.nome, 60) || 'Sem nome';
     const atual = eu || {};
-    const novo = { papel: atual.papel || papel, nome, foto: typeof body.foto === 'string' && body.foto.length < 40000 ? body.foto : (atual.foto || ''), coachUid: atual.coachUid || '', codigo: atual.codigo || (papel === 'coach' ? codigoNovo() : '') };
+    // quem escolheu aluno por engano pode virar coach enquanto ainda não entrou na equipe de ninguém
+    const virar = atual.papel === 'aluno' && !atual.coachUid && papel === 'coach';
+    const papelFinal = virar ? 'coach' : (atual.papel || papel);
+    const novo = { papel: papelFinal, nome, foto: typeof body.foto === 'string' && body.foto.length < 40000 ? body.foto : (atual.foto || ''), coachUid: atual.coachUid || '', codigo: atual.codigo || (papelFinal === 'coach' ? codigoNovo() : '') };
     await dir.doc(uid).set(novo, { merge: true });
     return [200, { perfil: novo }];
   }

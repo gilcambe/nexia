@@ -60,14 +60,32 @@ export default function Chat() {
   const carregarContatos = useCallback(async () => {
     try {
       const r = await chatApi<Contatos>({ acao: 'contatos' });
-      setLista(r); setPapel(r.papel); setErro('');
+      setLista(r); setPapel(r.papel);
       if (r.papel === 'aluno' && r.contatos[0]) setAberto((a) => a ?? r.contatos[0]);
     } catch (e) {
       const m = (e as Error).message;
       if (/escolha se você/i.test(m)) setPapel(null); else { setPapel(null); setErro(m); }
     }
   }, []);
-  useEffect(() => { if (user) void carregarContatos(); }, [user, carregarContatos]);
+  useEffect(() => {
+    if (!user) return;
+    let vivo = true;
+    (async () => {
+      // Link de convite do coach: entra na equipe sozinho (cria o perfil de aluno se for a primeira vez).
+      let codigoConvite = '';
+      try { codigoConvite = localStorage.getItem('bc_convite') ?? ''; } catch { /* sem armazenamento */ }
+      if (codigoConvite) {
+        try {
+          try { await chatApi({ acao: 'contatos' }); }
+          catch (e) { if (/escolha se você/i.test((e as Error).message)) await chatApi({ acao: 'perfil', papel: 'aluno', nome, foto: profile?.photo_data ?? '' }); else throw e; }
+          await chatApi({ acao: 'vincular', codigo: codigoConvite });
+        } catch (e) { if (vivo) setErro((e as Error).message); }
+        try { localStorage.removeItem('bc_convite'); } catch { /* sem armazenamento */ }
+      }
+      if (vivo) await carregarContatos();
+    })();
+    return () => { vivo = false; };
+  }, [user, carregarContatos]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const ler = useCallback(async () => {
     if (!aberto) return;
