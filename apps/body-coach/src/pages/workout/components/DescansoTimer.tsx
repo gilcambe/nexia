@@ -6,6 +6,26 @@ export interface DescansoTimerProps {
   onSkip: () => void;
 }
 
+// Bip curto e vibração: o aluno percebe o fim do descanso sem olhar para a tela.
+function avisar() {
+  try { navigator.vibrate?.([200, 100, 200]); } catch { /* sem vibração */ }
+  try {
+    const AC = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AC) return;
+    const ctx = new AC();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.4, ctx.currentTime + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.6);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.65);
+    osc.onended = () => { void ctx.close(); };
+  } catch { /* sem áudio */ }
+}
+
 export default function DescansoTimer({ segundos: initialSegundos, onFinish, onSkip }: DescansoTimerProps) {
   const [segundos, setSegundos] = useState(initialSegundos);
   const [isRunning, setIsRunning] = useState(true);
@@ -30,9 +50,10 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
     };
   }, [isRunning, segundos]);
 
-  // Dispara onFinish quando segundos chegam a 0
+  // Dispara onFinish quando segundos chegam a 0 (com bip e vibração, para quem está de olho no aparelho)
   useEffect(() => {
     if (segundos <= 0) {
+      avisar();
       if (intervalRef.current) clearInterval(intervalRef.current);
       onFinish();
     }

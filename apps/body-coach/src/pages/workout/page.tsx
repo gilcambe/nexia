@@ -4,6 +4,7 @@ import { type SetLog, type Session } from '@/mocks/workout';
 import type { Answers } from '@/lib/trainingPlan';
 import { montarTreinoDoDia, type TreinoDoDia, trocarExercicio } from '@/lib/dayPlan';
 import { moverExercicio } from '@/lib/ordemTreino';
+import { useWakeLock } from '@/lib/useWakeLock';
 import DemoExecucao from '@/components/feature/DemoExecucao';
 import { alternativas, lesoesDoTexto, POR_ID, type Lesao } from '@/lib/exerciseDb';
 import PreTreino from './components/PreTreino';
@@ -74,6 +75,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
   const { setOpen } = useCoach();
   const [startedAt] = useState(() => new Date().toISOString());
   const [phase, setPhase] = useState<Phase>('PRE_SESSION');
+  useWakeLock(phase !== 'PRE_SESSION' && phase !== 'SESSION_COMPLETE');
   const [exIndex, setExIndex] = useState(0);
   const [setsByEx, setSetsByEx] = useState<Record<string, SetLog[]>>({});
   const [restLeft, setRestLeft] = useState(0);
@@ -438,6 +440,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
                 maxWeight={exercise.maxWeight}
                 weightUnit={exercise.weightUnit}
                 targetReps={exercise.targetReps}
+                ultima={(() => { const l = exercise.sets[exercise.sets.length - 1]; return l ? { weight: l.weight, reps: l.reps } : null; })()}
                 onSubmit={(s) => {
                   addSet(s);
                   if (dica && dica.descansoSeg) {

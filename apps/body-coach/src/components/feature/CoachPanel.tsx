@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCoach, type CoachContextSnapshot } from './CoachContext';
 import { useAuth } from './AuthContext';
 import { useReadiness } from './ReadinessContext';
@@ -14,6 +15,7 @@ function getRecognition(): any | null {
 export default function CoachPanel() {
   const { open, setOpen, messages, send, typing } = useCoach();
   const { profile, user } = useAuth();
+  const navigate = useNavigate();
   const { result } = useReadiness();
   const { totals, targets } = useNutrition();
   const { latest } = useProgressData(user?.id);
@@ -103,7 +105,20 @@ export default function CoachPanel() {
     setDraft('');
   };
 
-  const suggestions = ['Como estou hoje?', 'Quanto ainda posso comer?', 'Estou muito cansado', 'Fiz 12 com 70'];
+  // Sugestões mudam conforme a última pergunta; ações levam direto à tela certa.
+  const ultimaDoAluno = [...messages].reverse().find((m) => m.speaker === 'user')?.text.toLowerCase() ?? '';
+  const suggestions = /comer|caloria|prote|dieta|refei/.test(ultimaDoAluno)
+    ? ['Sugira um jantar', 'Quanto de proteína falta?', 'Posso comer doce hoje?', 'Como estou hoje?']
+    : /dor|les[aã]o|machuc/.test(ultimaDoAluno)
+      ? ['Onde dói?', 'Posso treinar mesmo assim?', 'Alongamento para aliviar', 'Como estou hoje?']
+      : /treino|perna|peito|costas|carga|fiz/.test(ultimaDoAluno)
+        ? ['Fiz 12 com 70', 'Aumento a carga?', 'Estou muito cansado', 'Quanto ainda posso comer?']
+        : ['Como estou hoje?', 'Quanto ainda posso comer?', 'Estou muito cansado', 'Fiz 12 com 70'];
+  const acoes = [
+    { rotulo: 'Iniciar treino', icone: 'ri-play-circle-line', ir: '/workout' },
+    { rotulo: 'Registrar refeição', icone: 'ri-restaurant-line', ir: '/nutrition' },
+    { rotulo: 'Ver evolução', icone: 'ri-line-chart-line', ir: '/evolution' },
+  ];
 
   return (
     <div className="fixed inset-0 z-[60] flex justify-end">
@@ -194,6 +209,19 @@ export default function CoachPanel() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* ações rápidas */}
+        <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-2">
+          {acoes.map((a) => (
+            <button
+              key={a.ir}
+              onClick={() => { setOpen(false); navigate(a.ir); }}
+              className="shrink-0 whitespace-nowrap rounded-full bg-primary-100 px-3 py-2 text-xs font-semibold text-primary-700 transition active:scale-95 hover:bg-primary-200"
+            >
+              <i className={`${a.icone} mr-1`}></i>{a.rotulo}
+            </button>
+          ))}
         </div>
 
         {/* suggestion chips */}
