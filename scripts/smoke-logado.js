@@ -85,7 +85,7 @@ async function main() {
     const r = await fetch(`${BASE}/api${path}`, {
       method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}`, 'X-Tenant-Id': TENANT, ...headers },
       body: body === undefined ? undefined : JSON.stringify(body),
-    });
+    }).catch((e) => { throw new Error(`${method} ${path}: ${e && e.message} (${e && e.cause && (e.cause.code || e.cause.message)})`); });
     const text = await r.text();
     let json = null;
     try { json = JSON.parse(text); } catch { /* SSE ou texto */ }
