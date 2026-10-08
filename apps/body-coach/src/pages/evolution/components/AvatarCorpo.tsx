@@ -15,7 +15,6 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
   const [hoveredMuscle, setHoveredMuscle] = useState<string | null>(null);
 
   // Calcula cor com base no volume (séries por semana)
-  // Ex: 0 = cinza/neutro, 1-10 = azul/verde suave, 10-20 = amarelo/laranja, 20+ = vermelho/intenso
   const getMuscleColor = (muscleKey: string) => {
     const count = volume[muscleKey] || 0;
     if (count === 0) return '#e2e8f0'; // slate-200
@@ -90,11 +89,11 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
           {view === 'front' ? (
             /* VISTA FRONTAL */
             <g id="body-front">
-              {/* Cabeça / Pescoço (Silhueta base inativa) */}
+              {/* Cabeça / Pescoço */}
               <circle cx="100" cy="35" r="22" fill="#cbd5e1" opacity="0.6" />
               <path d="M92 55 L108 55 L112 70 L88 70 Z" fill="#cbd5e1" opacity="0.6" />
 
-              {/* Ombros (Esquerdo e Direito) */}
+              {/* Ombros */}
               <g
                 id="ombros-front"
                 className="cursor-pointer transition-transform hover:scale-[1.02]"
@@ -191,7 +190,7 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
                 <line x1="80" y1="147" x2="120" y2="147" stroke="#fff" strokeWidth="1" opacity="0.4" />
               </g>
 
-              {/* Antebraços / Mãos (base inativa) */}
+              {/* Antebraços */}
               <path d="M48 140 L40 190 L52 190 L58 140 Z" fill="#cbd5e1" opacity="0.5" />
               <path d="M152 140 L160 190 L148 190 L142 140 Z" fill="#cbd5e1" opacity="0.5" />
 
@@ -219,7 +218,7 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
                 />
               </g>
 
-              {/* Panturrilha (Frente / Tibial) */}
+              {/* Panturrilha */}
               <g
                 id="panturrilha-front"
                 className="cursor-pointer transition-transform hover:scale-[1.02]"
@@ -250,11 +249,10 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
           ) : (
             /* VISTA TRASEIRA */
             <g id="body-back">
-              {/* Cabeça / Pescoço costas */}
               <circle cx="100" cy="35" r="22" fill="#cbd5e1" opacity="0.6" />
               <path d="M90 52 L110 52 L112 68 L88 68 Z" fill="#cbd5e1" opacity="0.6" />
 
-              {/* Ombros / Trapézio Costas */}
+              {/* Ombros / Trapézio */}
               <g
                 id="ombros-back"
                 className="cursor-pointer transition-transform hover:scale-[1.02]"
@@ -272,7 +270,7 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
                 />
               </g>
 
-              {/* Costas (Dorsais / Lats) */}
+              {/* Costas */}
               <g
                 id="costas"
                 className="cursor-pointer transition-transform hover:scale-[1.02]"
@@ -314,7 +312,6 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
                 />
               </g>
 
-              {/* Lombar / Parte inferior costas */}
               <path d="M74 148 L126 148 L122 175 L78 175 Z" fill={getMuscleColor('costas')} stroke={getStrokeColor('costas')} strokeWidth="1.5" />
 
               {/* Glúteos */}
@@ -341,7 +338,7 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
                 />
               </g>
 
-              {/* Posterior de Coxa */}
+              {/* Posterior */}
               <g
                 id="posterior"
                 className="cursor-pointer transition-transform hover:scale-[1.02]"
@@ -365,7 +362,7 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
                 />
               </g>
 
-              {/* Panturrilha (Costas) */}
+              {/* Panturrilha */}
               <g
                 id="panturrilha"
                 className="cursor-pointer transition-transform hover:scale-[1.02]"
@@ -389,7 +386,6 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
                 />
               </g>
 
-              {/* Calcanhares / Pés */}
               <path d="M68 352 L94 352 L95 368 L67 368 Z" fill="#cbd5e1" opacity="0.6" />
               <path d="M132 352 L106 352 L105 368 L133 368 Z" fill="#cbd5e1" opacity="0.6" />
             </g>
@@ -397,7 +393,7 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
         </svg>
       </div>
 
-      {/* Legenda de Volume / Indicador do músculo selecionado ou em hover */}
+      {/* Legenda */}
       <div className="w-full mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 text-center">
         {activeMuscle && musclesInfo[activeMuscle] ? (
           <div className="flex flex-col items-center animate-fade-in">
@@ -414,32 +410,13 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
           </span>
         )}
 
-        {/* Legenda de cores */}
         <div className="flex items-center justify-center gap-2 mt-4 text-[10px] text-slate-500">
-          <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-slate-200 inline-block"></span>
-            <span>0</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-300 inline-block"></span>
-            <span>1-5</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block"></span>
-            <span>6-11</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block"></span>
-            <span>12-17</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block"></span>
-            <span>18-24</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span>
-            <span>25+</span>
-          </div>
+          <div className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-slate-200 inline-block"></span><span>0</span></div>
+          <div className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-300 inline-block"></span><span>1-5</span></div>
+          <div className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block"></span><span>6-11</span></div>
+          <div className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block"></span><span>12-17</span></div>
+          <div className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block"></span><span>18-24</span></div>
+          <div className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-red-400 inline-block"></span><span>25+</span></div>
         </div>
       </div>
     </div>
