@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { streamCortex } from "@/services/api";
 import { listarProjetos, obterProjeto, salvarProjeto, apagarProjeto, montarPrompt, type ProjetoCortex } from "@/lib/projetosCortex";
+import { verificarConexoes, type Conexao } from "@/lib/conexoesCortex";
 import { novaConversaId, salvarConversa, listarConversas, obterConversa, apagarConversa, type Conversa } from "@/lib/conversasCortex";
 
 interface Message {
@@ -58,6 +59,8 @@ export default function CortexApp() {
   const [conversas, setConversas] = useState<Conversa[]>(() => listarConversas());
   const [projetos, setProjetos] = useState<ProjetoCortex[]>(() => listarProjetos());
   const [projetoId, setProjetoId] = useState<string>("");
+  const [conexoesAberto, setConexoesAberto] = useState(false);
+  const [conexoes, setConexoes] = useState<Conexao[]>([]);
   const [editando, setEditando] = useState<{ id?: string; nome: string; instrucoes: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -79,6 +82,12 @@ export default function CortexApp() {
     });
     setConversas(listarConversas());
   }, [messages, loading, conversaId, projetoId]);
+
+  useEffect(() => {
+    if (!conexoesAberto) return;
+    setConexoes([]);
+    verificarConexoes().then(setConexoes);
+  }, [conexoesAberto]);
 
   const novaConversa = useCallback(() => {
     if (loading) return;
@@ -234,11 +243,40 @@ export default function CortexApp() {
               className="px-2.5 py-1.5 text-xs rounded-lg bg-nexia-surface border border-nexia-border text-nexia-muted hover:text-white cursor-pointer">
               <i className="ri-history-line" /> Histórico ({conversas.length})
             </button>
+            <button onClick={() => setConexoesAberto((v) => !v)} title="Conexões com outros apps"
+              className="px-2.5 py-1.5 text-xs rounded-lg bg-nexia-surface border border-nexia-border text-nexia-muted hover:text-white cursor-pointer">
+              <i className="ri-plug-line" /> Conexões
+            </button>
             <span className={`w-2 h-2 rounded-full ${loading ? "bg-amber-400 animate-pulse" : "bg-nexia-cyan animate-pulse"}`} />
             <span className="text-xs text-nexia-cyan">{loading ? "Processando..." : "Online"}</span>
           </div>
         </div>
       </header>
+
+      {conexoesAberto && (
+        <div className="border-b border-nexia-border bg-nexia-surface">
+          <div className="max-w-6xl mx-auto px-4 md:px-8 py-3 space-y-2">
+            {conexoes.length === 0 && <p className="text-xs text-nexia-muted">Verificando...</p>}
+            {conexoes.map((c) => (
+              <div key={c.id} className="flex items-center gap-3 rounded-lg border border-nexia-border px-3 py-2">
+                <span className={`w-2 h-2 rounded-full ${c.estado === "ativa" ? "bg-emerald-400" : "bg-red-400"}`} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-white">{c.nome} <span className="text-[10px] text-nexia-muted">{c.estado === "ativa" ? "ativa" : "fora do ar"} · {c.detalhe}</span></p>
+                  <p className="text-[11px] text-nexia-muted">{c.descricao}</p>
+                </div>
+              </div>
+            ))}
+            <div className="rounded-lg border border-nexia-border px-3 py-2">
+              <p className="text-sm text-white"><i className="ri-telegram-line text-nexia-cyan" /> Telegram (avisos no seu celular)</p>
+              <p className="text-[11px] text-nexia-muted mt-1">
+                Para ligar: no Telegram, fale com @BotFather, crie um bot e copie o token; mande uma mensagem ao bot e pegue o número da sua conversa (@userinfobot).
+                Depois salve os dois no GitHub, em Settings &gt; Secrets and variables &gt; Actions: TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID.
+                Pronto: cada mudança que entrar no sistema avisa você.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {historicoAberto && (
         <div className="border-b border-nexia-border bg-nexia-surface max-h-64 overflow-y-auto">
