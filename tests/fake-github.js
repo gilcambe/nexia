@@ -113,7 +113,14 @@ function createFakeGithub({ owner = 'gilcambe', repo = 'nexia', appId = '424242'
       const path = rest.slice('/contents/'.length);
       const ref = u.searchParams.get('ref') || 'develop';
       const c = commits.get(branches.get(ref) || ref);
-      if (!c || !(path in c.tree)) return json(404, { message: 'Not Found' });
+      if (!c) return json(404, { message: 'Not Found' });
+      if (!(path in c.tree)) {
+        // Diretório: a API devolve a lista de entradas (arquivos e subpastas imediatos).
+        const pre = `${decodeURIComponent(path).replace(/\/$/, '')}/`;
+        const seen = new Map();
+        for (const k of Object.keys(c.tree)) if (k.startsWith(pre)) { const [name, ...more] = k.slice(pre.length).split('/'); if (!seen.has(name)) seen.set(name, { type: more.length ? 'dir' : 'file', name, path: pre + name, size: more.length ? 0 : Buffer.byteLength(c.tree[k]) }); }
+        return seen.size ? json(200, [...seen.values()]) : json(404, { message: 'Not Found' });
+      }
       const buf = Buffer.from(c.tree[path]);
       return json(200, { type: 'file', path, sha: sha1(buf), size: buf.length, encoding: 'base64', content: buf.toString('base64') });
     }

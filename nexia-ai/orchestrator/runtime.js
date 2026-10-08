@@ -198,6 +198,7 @@ const WRITE_TOOLS = new Set(['github.commit_files', 'github.edit_files']);
 // e ainda não gravou nada recebe até MAX_NUDGES lembretes com um exemplo concreto, e o texto com
 // blocos de edição é aplicado pelo runtime (ADR-CORTEX-01) em vez de terminar vazio.
 const MAX_NUDGES = 2;
+const LAST_STEPS = branch => `ATENÇÃO: restam 2 passos. Pare de ler arquivos e grave agora o que já tem com github.edit_files (ou github.commit_files) na branch ${branch}; uma mudança parcial gravada vale mais que nenhuma.`;
 function nudgeSave(branch, n, cut) {
   const b = branch || 'nexia/...';
   const example = JSON.stringify({ branch: b, message: 'Descreve a mudança', edits: [{ path: 'caminho/do/arquivo.tsx', find: 'trecho exato copiado do arquivo', replace: 'trecho novo' }] });
@@ -450,6 +451,9 @@ async function runAgent(o) {
     const r = await runCalls(calls, out, model);
     if (r.stop) return r.stop;
     if (viaText) for (const e of (calls.find(c => c.id === 'text_edit') || { input: { edits: [] } }).input.edits) applied.add(JSON.stringify([e.path, e.find, e.replace]));
+    // Perto do limite de passos sem nada gravado (MAX_STEPS/NO_CHANGES): pede para gravar já o que tem.
+    const maxSteps = agent.max_steps || 8;
+    if (canWrite && branch && !wrote && maxSteps >= 4 && turn === maxSteps - 3) r.results.push({ tool: 'nexia.aviso', ok: true, note: LAST_STEPS(branch) });
     pushResults(viaText ? `${String(out.text || '').slice(0, 1500)}\n[o NEXIA aplicou os blocos de edição do texto]` : out.text, calls.map(c => fromModelName(c.name)), r.results);
   }
   return { status: 'failed', error_code: 'MAX_STEPS', text: `O agente ${agent.title} não terminou dentro do limite de passos.`, tool_call_ids: toolCallIds };
