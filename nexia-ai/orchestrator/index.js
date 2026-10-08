@@ -102,6 +102,14 @@ function filesIn(...texts) {
   return out.slice(0, 8);
 }
 
+/** Lembrete da 2ª volta do implement quando a 1ª terminou sem commit (arquivo "novo" que já existe, ou só texto). */
+function noCommitNudge(files) {
+  const list = (files || []).length ? ` (${files.join(', ')})` : '';
+  return `ATENÇÃO: a volta anterior terminou SEM nenhum commit na branch. Se um arquivo que o pedido manda criar já existe${list}, ` +
+    'não pare: a regra "não edite existente" não vale para ele. Leia-o com github.get_file, ajuste-o com github.edit_files ao que o pedido pede ' +
+    'e ligue-o na tela onde ele deve aparecer (import e uso). Se nada existe, crie com github.commit_files. Termine só depois de um commit.';
+}
+
 // ── Planos por intenção ──────────────────────────────────────────────────────
 function planFor(intent, message) {
   const sp = specialistFor(message);
@@ -503,6 +511,15 @@ function createOrchestrator(deps) {
             const listed = files.length ? `\nArquivos envolvidos (todos precisam ser conferidos; os primeiros já foram lidos abaixo): ${files.join(', ')}` : '';
             await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).\n${kitKind ? 'Spec do Designer (o código foi gerado pelo NEXIA Site Kit: corrija só o que a revisão apontou, com github.edit_files, sem reescrever os arquivos inteiros)' : 'Análise do Architect'}:\n${analysis}${fix}${listed}\n\nLeia os arquivos atuais com github.get_file (ref ${state.work_branch}). Para arquivo existente use github.edit_files; para arquivo novo, github.commit_files. Tudo na branch ${state.work_branch}. Não mexa em arquivos que o pedido não envolve. Cumpra cada item do pedido em todos os arquivos citados antes de terminar.`,
               '', { branch: state.work_branch, preload: files.slice(0, 4), ref: state.work_branch });
+            // Sem commit (ex.: o arquivo pedido como "novo" já existe): uma segunda volta mandando editar/ligar o existente.
+            if (!stop) {
+              const c0 = await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch });
+              if (c0.status === 'succeeded' && (!c0.result.ahead_by || (before && headOf(c0) === before))) {
+                steps[i] = { ...steps[i], status: 'running', tool_call_ids: addIds(i, ids(c0)) };
+                await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).${fix}${listed}\n\n${noCommitNudge(files)}`,
+                  '', { branch: state.work_branch, preload: files.slice(0, 4), ref: state.work_branch });
+              }
+            }
           }
           if (!stop) {
             // Confirmação pela ferramenta: a branch tem que estar à frente da padrão.
@@ -820,4 +837,4 @@ function usageOf(meter, prev = {}) {
 }
 function clean(o) { return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== '')); }
 
-module.exports = { buildKind, createOrchestrator, classifyIntent, filesIn, planFor, specialistFor, DEFAULT_BUDGET };
+module.exports = { buildKind, createOrchestrator, classifyIntent, filesIn, noCommitNudge, planFor, specialistFor, DEFAULT_BUDGET };
