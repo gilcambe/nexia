@@ -12,6 +12,7 @@ export default function SetEntry({
   weightUnit,
   targetReps,
   ultima,
+  sugestao,
   onSubmit,
 }: {
   minWeight: number;
@@ -19,6 +20,7 @@ export default function SetEntry({
   weightUnit: string;
   targetReps: string;
   ultima?: { weight: number; reps: number } | null;
+  sugestao?: { weight: number; reps: number; motivo: string } | null;
   onSubmit: (set: NewSet) => void;
 }) {
   const [weight, setWeight] = useState('');
@@ -45,6 +47,13 @@ export default function SetEntry({
 
   return (
     <div>
+      {sugestao && (
+        <div className="mb-3 rounded-xl border border-primary-200 bg-primary-50 p-3">
+          <p className="text-xs font-semibold text-primary-700"><i className="ri-line-chart-line mr-1"></i>Sugestão de hoje: {sugestao.weight} {weightUnit} × {sugestao.reps}</p>
+          <p className="mt-0.5 text-xs text-foreground-600">{sugestao.motivo}</p>
+          <button type="button" onClick={() => { setWeight(String(sugestao.weight)); setReps(String(sugestao.reps)); }} className="mt-2 rounded-full bg-primary-500 px-3 py-1.5 text-xs font-semibold text-background-50 active:scale-95">Usar a sugestão</button>
+        </div>
+      )}
       <div className="mb-3 flex flex-wrap gap-2">
         {ultima && (
           <button type="button" onClick={() => onSubmit({ weight: ultima.weight, reps: ultima.reps, rir: 2 })} className="rounded-full bg-primary-500 px-4 py-2 text-xs font-semibold text-background-50 active:scale-95 hover:bg-primary-600">
