@@ -6,6 +6,7 @@ import { montarTreinoDoDia, type TreinoDoDia, trocarExercicio } from '@/lib/dayP
 import { moverExercicio } from '@/lib/ordemTreino';
 import { fichaDoPerfil, avancarFicha, type Ficha } from '@/lib/ficha';
 import { useWakeLock } from '@/lib/useWakeLock';
+import { sugerirCarga } from '@/lib/cargaSugerida';
 import DemoExecucao from '@/components/feature/DemoExecucao';
 import { alternativas, lesoesDoTexto, POR_ID, type Lesao } from '@/lib/exerciseDb';
 import PreTreino from './components/PreTreino';
@@ -457,6 +458,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
                 maxWeight={exercise.maxWeight}
                 weightUnit={exercise.weightUnit}
                 targetReps={exercise.targetReps}
+                sugestao={exercise.sets.length === 0 ? sugerirCarga(historicoSeries[exercise.name], exercise.targetReps) : null}
                 ultima={(() => { const l = exercise.sets[exercise.sets.length - 1]; return l ? { weight: l.weight, reps: l.reps } : null; })()}
                 onSubmit={(s) => {
                   addSet(s);
