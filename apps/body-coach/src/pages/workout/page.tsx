@@ -13,6 +13,7 @@ import SetEntry, { type NewSet } from './components/SetEntry';
 import DescansoTimer from './components/DescansoTimer';
 import { CardioEntry } from './components/CardioEntry';
 import { useCoach } from '@/components/feature/CoachContext';
+import { setTreinoAtivo } from '@/lib/treinoAtivo';
 
 type Phase =
   | 'PRE_SESSION'
@@ -118,6 +119,12 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
   };
 
   const currentSets = setsByEx[exercise.id] ?? [];
+
+  useEffect(() => {
+    if (phase !== 'EXERCISE_ACTIVE') {
+      setTreinoAtivo(nu
+    }
+  }, [phase]);
 
   // Extrair faixa de repetições alvo do exercício (ex: "8-12 reps" -> [8, 12])
   const parseReps = (target: string): [number, number] => {
