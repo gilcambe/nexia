@@ -19,9 +19,15 @@ export default function DescansoTimer({ segundos: initialSegundos, onSkip, onFin
     setIsRunning(true);
   }, [initialSegundos]);
 
+  // Ref para valor atual de segundos (evita recriar interval a cada segundo)
+  const segundosRef = useRef(segundos);
+  useEffect(() => {
+    segundosRef.current = segundos;
+  }, [segundos]);
+
   // Countdown com setInterval e limpeza
   useEffect(() => {
-    if (!isRunning || segundos <= 0) return;
+    if (!isRunning) return;
 
     intervalRef.current = setInterval(() => {
       setSegundos((s) => {
@@ -42,7 +48,7 @@ export default function DescansoTimer({ segundos: initialSegundos, onSkip, onFin
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isRunning, segundos]);
+  }, [isRunning]);
 
   const addTime = (delta: number) => {
     setSegundos((s) => Math.max(0, s + delta));
