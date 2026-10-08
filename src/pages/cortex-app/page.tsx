@@ -37,28 +37,68 @@ const CHIPS = [
   "Previsão de churn SaaS",
 ];
 
+const BOAS_VINDAS: Message = {
+  id: "welcome",
+  role: "assistant",
+  text: "Olá! Sou o CORTEX v16 — orquestrador universal de IA com 50+ providers. Posso rotear sua requisição entre Claude, GPT-4o, Gemini, DeepSeek, Grok, Groq, Cerebras e mais — com streaming real token-a-token. O que você precisa?",
+  model: "CORTEX v16",
+};
+
 export default function CortexApp() {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "welcome",
-      role: "assistant",
-      text: "Olá! Sou o CORTEX v16 — orquestrador universal de IA com 50+ providers. Posso rotear sua requisição entre Claude, GPT-4o, Gemini, DeepSeek, Grok, Groq, Cerebras e mais — com streaming real token-a-token. O que você precisa?",
-      model: "CORTEX v16",
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([BOAS_VINDAS]);
   const [input, setInput] = useState("");
   const [conversaId, setConversaId] = useState(() => novaConversaId());
   const [loading, setLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState("auto");
   const [serverStarting, setServerStarting] = useState(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
+  const [historicoAberto, setHistoricoAberto] = useState(false);
+  const [conversas, setConversas] = useState<Conversa[]>(() => listarConversas());
   const bottomRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Salva a conversa sempre que uma resposta termina (nada de salvar no meio do streaming)
+  useEffect(() => {
+    if (loading || !messages.some((m) => m.role === "user")) return;
+    const primeira = messages.find((m) => m.role === "user")?.text || "Conversa";
+    salvarConversa({
+      id: conversaId,
+      titulo: primeira.slice(0, 60),
+      atualizadaEm: Date.now(),
+      mensagens: messages.filter((m) => m.id !== "welcome").map(({ id, role, text, model }) => ({ id, role, text, model })),
+    });
+    setConversas(listarConversas());
+  }, [messages, loading, conversaId]);
+
+  const novaConversa = useCallback(() => {
+    if (loading) return;
+    setConversaId(novaConversaId());
+    setMessages([BOAS_VINDAS]);
+    setHistoricoAberto(false);
+  }, [loading]);
+
+  const abrirConversa = useCallback((id: string) => {
+    if (loading) return;
+    const c = obterConversa(id);
+    if (!c) return;
+    setConversaId(c.id);
+    setMessages([BOAS_VINDAS, ...c.mensagens]);
+    setHistoricoAberto(false);
+  }, [loading]);
+
+  const excluirConversa = useCallback((id: string) => {
+    apagarConversa(id);
+    setConversas(listarConversas());
+    if (id === conversaId) {
+      setConversaId(novaConversaId());
+      setMessages([BOAS_VINDAS]);
+    }
+  }, [conversaId]);
 
   const finalizeMessage = useCallback((id: string, text: string, model: string) => {
     setMessages((prev) =>
@@ -172,11 +212,38 @@ export default function CortexApp() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button onClick={novaConversa} disabled={loading} title="Nova conversa"
+              className="px-2.5 py-1.5 text-xs rounded-lg bg-nexia-surface border border-nexia-border text-nexia-muted hover:text-white cursor-pointer disabled:opacity-40">
+              <i className="ri-add-line" /> Nova
+            </button>
+            <button onClick={() => { setConversas(listarConversas()); setHistoricoAberto((v) => !v); }} title="Histórico de conversas"
+              className="px-2.5 py-1.5 text-xs rounded-lg bg-nexia-surface border border-nexia-border text-nexia-muted hover:text-white cursor-pointer">
+              <i className="ri-history-line" /> Histórico ({conversas.length})
+            </button>
             <span className={`w-2 h-2 rounded-full ${loading ? "bg-amber-400 animate-pulse" : "bg-nexia-cyan animate-pulse"}`} />
             <span className="text-xs text-nexia-cyan">{loading ? "Processando..." : "Online"}</span>
           </div>
         </div>
       </header>
+
+      {historicoAberto && (
+        <div className="border-b border-nexia-border bg-nexia-surface max-h-64 overflow-y-auto">
+          <div className="max-w-6xl mx-auto px-4 md:px-8 py-3 space-y-1">
+            {conversas.length === 0 && <p className="text-xs text-nexia-muted">Nenhuma conversa salva ainda.</p>}
+            {conversas.map((c) => (
+              <div key={c.id} className={`flex items-center gap-2 rounded-lg px-3 py-2 border ${c.id === conversaId ? "border-nexia-cyan/40" : "border-nexia-border"}`}>
+                <button onClick={() => abrirConversa(c.id)} className="flex-1 text-left text-sm text-white truncate cursor-pointer">
+                  {c.titulo}
+                  <span className="block text-[10px] text-nexia-muted">{new Date(c.atualizadaEm).toLocaleString("pt-BR")}</span>
+                </button>
+                <button onClick={() => excluirConversa(c.id)} title="Apagar conversa" className="text-nexia-muted hover:text-red-400 cursor-pointer">
+                  <i className="ri-delete-bin-line" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <main className="flex-1 flex flex-col max-w-6xl mx-auto w-full overflow-hidden">
         {/* Messages */}
