@@ -25,28 +25,6 @@ export default function DescansoTimer({ segundos: initialSegundos, onSkip, onCha
     totalRef.current = initialSegundos;
   }, [initialSegundos]);
 
-  // Efeito do intervalo - roda uma vez e usa refs internamente
-  useEffect(() => {
-    if (segundos <= 0) return;
-
-    const interval = setInterval(() => {
-      setSegundos((s) => {
-        const next = s - 1;
-        if (next <= 0) {
-          if (navigator.vibrate) {
-            navigator.vibrate([200, 100, 200]);
-          }
-          // Chama onComplete quando zera naturalmente
-          onComplete?.();
-        }
-        return next;
-      });
-    }, 1000);
-
-    intervalRef.current = interval;
-    return () => clearInterval(interval);
-  }, []); // array vazio: intervalo criado uma vez
-
   // Atualiza progresso baseado no total atual (ref)
   useEffect(() => {
     const total = totalRef.current;
@@ -55,7 +33,7 @@ export default function DescansoTimer({ segundos: initialSegundos, onSkip, onCha
     }
   }, [segundos]);
 
-  // Reinicia intervalo quando initialSegundos muda (ex: reset externo)
+  // Intervalo de contagem regressiva - observa initialSegundos para reiniciar quando muda externamente
   useEffect(() => {
     if (intervalRef.current) {
       clearInterval(intervalRef.current);
