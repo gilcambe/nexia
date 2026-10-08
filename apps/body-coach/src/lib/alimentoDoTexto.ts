@@ -1,4 +1,5 @@
-export interface Nutriente {
+export interface AlimentoItem {
+  nome: string;
   gramas: number;
   kcal: number;
   proteina: number;
@@ -6,363 +7,147 @@ export interface Nutriente {
   gordura: number;
 }
 
-export interface AlimentoInfo {
-  nome: string;
-  nutrientes: Nutriente;
-}
-
-export function alimentoDoTexto(texto: string): AlimentoInfo[] {
+export function alimentoDoTexto(texto: string): AlimentoItem[] {
   if (!texto || !texto.trim()) {
     return [];
   }
 
   const lower = texto.toLowerCase();
-  const alimentos: AlimentoInfo[] = [];
+  const itens: AlimentoItem[] = [];
 
-  // Arroz branco (100g)
-  if (lower.includes('arroz')) {
-    alimentos.push({
-      nome: 'Arroz branco',
-      nutrientes: { gramas: 100, kcal: 130, proteina: 2.7, carbo: 28, gordura: 0.3 }
-    });
+  const add = (nome: string, g: number, kcal: number, p: number, c: number, f: number) => {
+    itens.push({ nome, gramas: g, kcal, proteina: p, carbo: c, gordura: f });
+  };
+
+  if (/\barroz\b/.test(lower)) {
+    add('Arroz branco', 100, 130, 2.7, 28, 0.3);
+  }
+  if (/\bfeijão\b|\bfeijao\b/.test(lower)) {
+    add('Feijão preto', 100, 341, 21, 60, 1.5);
+  }
+  if (/\bfrango\b/.test(lower) && !/\bcarne\b/.test(lower)) {
+    add('Frango grelhado', 100, 165, 31, 0, 3.6);
+  }
+  if (/\bovo\b|\bovos\b/.test(lower)) {
+    add('Ovo', 50, 78, 6.3, 0.6, 5.3);
+  }
+  if (/\bpão\b|\bpao\b/.test(lower)) {
+    add('Pão francês', 40, 90, 3, 15, 1);
+  }
+  if (/\bbanana\b/.test(lower)) {
+    add('Banana', 100, 89, 1.1, 23, 0.3);
+  }
+  if (/\baveia\b/.test(lower)) {
+    add('Aveia', 100, 389, 16.9, 66.3, 6.9);
+  }
+  if (/\bbatata\s+doce\b/.test(lower)) {
+    add('Batata doce', 100, 86, 1.6, 20, 0.1);
+  }
+  if (/\balface\b/.test(lower)) {
+    add('Alface', 100, 12, 1.1, 2.5, 0.2);
+  }
+  if (/\btomate\b/.test(lower)) {
+    add('Tomate', 100, 18, 0.9, 3.9, 0.2);
+  }
+  if (/\bcarne\b/.test(lower) && !/\bfrango\b/.test(lower)) {
+    add('Carne bovina', 100, 250, 26, 0, 15);
+  }
+  if (/\blentilha\b/.test(lower)) {
+    add('Lentilha', 100, 116, 9, 20, 0.4);
+  }
+  if (/\bleite\b/.test(lower)) {
+    add('Leite', 200, 120, 6.4, 10, 6);
+  }
+  if (/\biogurte\b/.test(lower)) {
+    add('Iogurte natural', 150, 80, 4.5, 6, 2);
+  }
+  if (/\bamendoim\b/.test(lower)) {
+    add('Manteiga de amendoim', 20, 113, 4, 3, 10);
+  }
+  if (/\bqueijo\b/.test(lower)) {
+    add('Queijo mussarela', 30, 85, 6, 0.6, 6.5);
+  }
+  if (/\blaranja\b/.test(lower)) {
+    add('Laranja', 130, 47, 0.9, 11.8, 0.1);
+  }
+  if (/\bmaçã\b|\bmaca\b/.test(lower)) {
+    add('Maçã', 150, 78, 0.4, 20, 0.3);
+  }
+  if (/\buva\b/.test(lower)) {
+    add('Uva', 100, 69, 0.6, 18, 0.4);
+  }
+  if (/\babacate\b/.test(lower)) {
+    add('Abacate', 100, 160, 2, 9, 15);
+  }
+  if (/\bmanga\b/.test(lower)) {
+    add('Manga', 100, 60, 0.8, 15, 0.4);
+  }
+  if (/\bberinjela\b/.test(lower)) {
+    add('Berinjela', 100, 24, 1, 6, 0.3);
+  }
+  if (/\bpepino\b/.test(lower)) {
+    add('Pepino', 100, 16, 0.8, 3.6, 0.1);
+  }
+  if (/\bcenoura\b/.test(lower)) {
+    add('Cenoura', 100, 41, 0.9, 9.6, 0.2);
+  }
+  if (/\bbrócolis\b|\bbrocolis\b|\bbroccoli\b/.test(lower)) {
+    add('Brócolis', 100, 34, 2.8, 6.6, 0.4);
+  }
+  if (/\bespinafre\b/.test(lower)) {
+    add('Espinafre', 100, 23, 2.9, 3.6, 0.4);
+  }
+  if (/\bervilha\b/.test(lower)) {
+    add('Ervilha', 100, 81, 5.4, 14, 0.4);
+  }
+  if (/\bmilho\b/.test(lower)) {
+    add('Milho', 100, 86, 3.2, 18, 1.2);
+  }
+  if (/\bbatata\b/.test(lower) && !/\bbatata\s+doce\b/.test(lower) && !/\bfrita\b/.test(lower)) {
+    add('Batata branca', 100, 77, 2, 18, 0.1);
+  }
+  if (/\bsoja\b/.test(lower)) {
+    add('Soja', 100, 446, 36.5, 30, 20);
+  }
+  if (/\bquinoa\b/.test(lower)) {
+    add('Quinoa', 100, 222, 4.4, 39, 3.9);
+  }
+  if (/\bfarofa\b/.test(lower)) {
+    add('Farofa', 100, 450, 5, 50, 20);
+  }
+  if (/\bpizza\b/.test(lower)) {
+    add('Pizza', 100, 280, 12, 30, 10);
+  }
+  if (/\bhambúrguer\b|\bhamburguer\b/.test(lower)) {
+    add('Hambúrguer', 100, 250, 15, 25, 12);
+  }
+  if (/\bsushi\b/.test(lower)) {
+    add('Sushi', 100, 200, 6, 28, 8);
+  }
+  if (/\bfeijoada\b/.test(lower)) {
+    add('Feijoada', 150, 280, 14, 15, 20);
+  }
+  if (/\bcostela\b|\blinguiça\b|\bchurrasco\b/.test(lower)) {
+    add('Churrasco', 100, 280, 20, 2, 20);
+  }
+  if (/\bbatata\s+frita\b/.test(lower)) {
+    add('Batata frita', 100, 312, 3.5, 41, 15);
+  }
+  if (/\brefrigerante\b|\bcoca\b|\bpepsi\b/.test(lower)) {
+    add('Refrigerante', 350, 140, 0, 35, 0);
+  }
+  if (/\bcerveja\b/.test(lower)) {
+    add('Cerveja', 350, 150, 1.5, 13, 0);
+  }
+  if (/\bchocolate\b/.test(lower)) {
+    add('Chocolate ao leite', 20, 110, 1.5, 13, 7);
+  }
+  if (/\b(açúcar|acucar)\b/.test(lower)) {
+    add('Açúcar', 10, 40, 0, 10, 0);
+  }
+  if (/\bsal\b/.test(lower)) {
+    add('Sal', 1, 0, 0, 0, 0);
   }
 
-  // Feijão preto (100g)
-  if (lower.includes('feijão')) {
-    alimentos.push({
-      nome: 'Feijão preto',
-      nutrientes: { gramas: 100, kcal: 341, proteina: 21, carbo: 60, gordura: 1.5 }
-    });
-  }
-
-  // Frango grelhado (100g)
-  if (lower.includes('frango') && !lower.includes('carne') || lower.includes('peito de frango')) {
-    alimentos.push({
-      nome: 'Frango grelhado',
-      nutrientes: { gramas: 100, kcal: 165, proteina: 31, carbo: 0, gordura: 3.6 }
-    });
-  }
-
-  // Ovo (1 unid média)
-  if (lower.includes('ovo')) {
-    alimentos.push({
-      nome: 'Ovo',
-      nutrientes: { gramas: 50, kcal: 78, proteina: 6.3, carbo: 0.6, gordura: 5.3 }
-    });
-  }
-
-  // Pão francês (1 uni média)
-  if (lower.includes('pão francês') || lower.includes('pão')) {
-    alimentos.push({
-      nome: 'Pão francês',
-      nutrientes: { gramas: 40, kcal: 90, proteina: 3, carbo: 15, gordura: 1 }
-    });
-  }
-
-  // Banana (1 unidade média)
-  if (lower.includes('banana')) {
-    alimentos.push({
-      nome: 'Banana',
-      nutrientes: { gramas: 100, kcal: 89, proteina: 1.1, carbo: 23, gordura: 0.3 }
-    });
-  }
-
-  // Aveia (100g)
-  if (lower.includes('aveia')) {
-    alimentos.push({
-      nome: 'Aveia',
-      nutrientes: { gramas: 100, kcal: 389, proteina: 16.9, carbo: 66.3, gordura: 6.9 }
-    });
-  }
-
-  // Batata doce (100g)
-  if (lower.includes('batata doce')) {
-    alimentos.push({
-      nome: 'Batata doce',
-      nutrientes: { gramas: 100, kcal: 86, proteina: 1.6, carbo: 20, gordura: 0.1 }
-    });
-  }
-
-  // Alface (100g)
-  if (lower.includes('alface')) {
-    alimentos.push({
-      nome: 'Alface',
-      nutrientes: { gramas: 100, kcal: 12, proteina: 1.1, carbo: 2.5, gordura: 0.2 }
-    });
-  }
-
-  // Tomate (100g)
-  if (lower.includes('tomate')) {
-    alimentos.push({
-      nome: 'Tomate',
-      nutrientes: { gramas: 100, kcal: 18, proteina: 0.9, carbo: 3.9, gordura: 0.2 }
-    });
-  }
-
-  // Carne bovina (100g)
-  if (lower.includes('carne') && !lower.includes('frango')) {
-    alimentos.push({
-      nome: 'Carne bovina',
-      nutrientes: { gramas: 100, kcal: 250, proteina: 26, carbo: 0, gordura: 15 }
-    });
-  }
-
-  // Lentilha (100g)
-  if (lower.includes('lentilha')) {
-    alimentos.push({
-      nome: 'Lentilha',
-      nutrientes: { gramas: 100, kcal: 116, proteina: 9, carbo: 20, gordura: 0.4 }
-    });
-  }
-
-  // Leite (200ml)
-  if (lower.includes('leite')) {
-    alimentos.push({
-      nome: 'Leite',
-      nutrientes: { gramas: 200, kcal: 120, proteina: 6.4, carbo: 10, gordura: 6 }
-    });
-  }
-
-  // Iogurte natural (150g)
-  if (lower.includes('iogurte')) {
-    alimentos.push({
-      nome: 'Iogurte natural',
-      nutrientes: { gramas: 150, kcal: 80, proteina: 4.5, carbo: 6, gordura: 2 }
-    });
-  }
-
-  // Manteiga de amendoim (20g)
-  if (lower.includes('amendoim') || lower.includes('manteiga de amendoim')) {
-    alimentos.push({
-      nome: 'Manteiga de amendoim',
-      nutrientes: { gramas: 20, kcal: 113, proteina: 4, carbo: 3, gordura: 10 }
-    });
-  }
-
-  // Queijo mussarela (30g)
-  if (lower.includes('queijo')) {
-    alimentos.push({
-      nome: 'Queijo mussarela',
-      nutrientes: { gramas: 30, kcal: 85, proteina: 6, carbo: 0.6, gordura: 6.5 }
-    });
-  }
-
-  // Laranja (1 unidade média)
-  if (lower.includes('laranja')) {
-    alimentos.push({
-      nome: 'Laranja',
-      nutrientes: { gramas: 130, kcal: 47, proteina: 0.9, carbo: 11.8, gordura: 0.1 }
-    });
-  }
-
-  // Maçã (1 unidade média)
-  if (lower.includes('maçã')) {
-    alimentos.push({
-      nome: 'Maçã',
-      nutrientes: { gramas: 150, kcal: 78, proteina: 0.4, carbo: 20, gordura: 0.3 }
-    });
-  }
-
-  // Uva (100g)
-  if (lower.includes('uva')) {
-    alimentos.push({
-      nome: 'Uva',
-      nutrientes: { gramas: 100, kcal: 69, proteina: 0.6, carbo: 18, gordura: 0.4 }
-    });
-  }
-
-  // Abacate (100g)
-  if (lower.includes('abacate')) {
-    alimentos.push({
-      nome: 'Abacate',
-      nutrientes: { gramas: 100, kcal: 160, proteina: 2, carbo: 9, gordura: 15 }
-    });
-  }
-
-  // Manga (100g)
-  if (lower.includes('manga')) {
-    alimentos.push({
-      nome: 'Manga',
-      nutrientes: { gramas: 100, kcal: 60, proteina: 0.8, carbo: 15, gordura: 0.4 }
-    });
-  }
-
-  // Berinjela (100g)
-  if (lower.includes('berinjela')) {
-    alimentos.push({
-      nome: 'Berinjela',
-      nutrientes: { gramas: 100, kcal: 24, proteina: 1, carbo: 6, gordura: 0.3 }
-    });
-  }
-
-  // Pepino (100g)
-  if (lower.includes('pepino')) {
-    alimentos.push({
-      nome: 'Pepino',
-      nutrientes: { gramas: 100, kcal: 16, proteina: 0.8, carbo: 3.6, gordura: 0.1 }
-    });
-  }
-
-  // Cenoura (100g)
-  if (lower.includes('cenoura')) {
-    alimentos.push({
-      nome: 'Cenoura',
-      nutrientes: { gramas: 100, kcal: 41, proteina: 0.9, carbo: 9.6, gordura: 0.2 }
-    });
-  }
-
-  // Brócolis (100g)
-  if (lower.includes('brócolis') || lower.includes('broccoli')) {
-    alimentos.push({
-      nome: 'Brócolis',
-      nutrientes: { gramas: 100, kcal: 34, proteina: 2.8, carbo: 6.6, gordura: 0.4 }
-    });
-  }
-
-  // Espinafre (100g)
-  if (lower.includes('espinafre')) {
-    alimentos.push({
-      nome: 'Espinafre',
-      nutrientes: { gramas: 100, kcal: 23, proteina: 2.9, carbo: 3.6, gordura: 0.4 }
-    });
-  }
-
-  // Ervilha (100g)
-  if (lower.includes('ervilha')) {
-    alimentos.push({
-      nome: 'Ervilha',
-      nutrientes: { gramas: 100, kcal: 81, proteina: 5.4, carbo: 14, gordura: 0.4 }
-    });
-  }
-
-  // Milho (100g)
-  if (lower.includes('milho')) {
-    alimentos.push({
-      nome: 'Milho',
-      nutrientes: { gramas: 100, kcal: 86, proteina: 3.2, carbo: 18, gordura: 1.2 }
-    });
-  }
-
-  // Batata branca (100g)
-  if (lower.includes('batata') && !lower.includes('doce')) {
-    alimentos.push({
-      nome: 'Batata branca',
-      nutrientes: { gramas: 100, kcal: 77, proteina: 2, carbo: 18, gordura: 0.1 }
-    });
-  }
-
-  // Soja (100g)
-  if (lower.includes('soja')) {
-    alimentos.push({
-      nome: 'Soja',
-      nutrientes: { gramas: 100, kcal: 446, proteina: 36.5, carbo: 30, gordura: 20 }
-    });
-  }
-
-  // Quinoa (100g)
-  if (lower.includes('quinoa')) {
-    alimentos.push({
-      nome: 'Quinoa',
-      nutrientes: { gramas: 100, kcal: 222, proteina: 4.4, carbo: 39, gordura: 3.9 }
-    });
-  }
-
-  // Aveia em flocos (100g) - already covered
-  // Farofa (100g)
-  if (lower.includes('farofa')) {
-    alimentos.push({
-      nome: 'Farofa',
-      nutrientes: { gramas: 100, kcal: 450, proteina: 5, carbo: 50, gordura: 20 }
-    });
-  }
-
-  // Pizza (1 fatia)
-  if (lower.includes('pizza')) {
-    alimentos.push({
-      nome: 'Pizza',
-      nutrientes: { gramas: 100, kcal: 280, proteina: 12, carbo: 30, gordura: 10 }
-    });
-  }
-
-  // Hambúrguer (1 unidade)
-  if (lower.includes('hambúrguer') || lower.includes('hamburger')) {
-    alimentos.push({
-      nome: 'Hambúrguer',
-      nutrientes: { gramas: 100, kcal: 250, proteina: 15, carbo: 25, gordura: 12 }
-    });
-  }
-
-  // Sushi (6 unidades)
-  if (lower.includes('sushi')) {
-    alimentos.push({
-      nome: 'Sushi',
-      nutrientes: { gramas: 100, kcal: 200, proteina: 6, carbo: 28, gordura: 8 }
-    });
-  }
-
-  // Feijoada (porção)
-  if (lower.includes('feijoada')) {
-    alimentos.push({
-      nome: 'Feijoada',
-      nutrientes: { gramas: 150, kcal: 280, proteina: 14, carbo: 15, gordura: 20 }
-    });
-  }
-
-  // Churrasco (100g)
-  if (lower.includes('pork') || lower.includes('costela') || lower.includes('linguiça')) {
-    alimentos.push({
-      nome: 'Churrasco',
-      nutrientes: { gramas: 100, kcal: 280, proteina: 20, carbo: 2, gordura: 20 }
-    });
-  }
-
-  // Batata frita (100g)
-  if (lower.includes('batata frita')) {
-    alimentos.push({
-      nome: 'Batata frita',
-      nutrientes: { gramas: 100, kcal: 312, proteina: 3.5, carbo: 41, gordura: 15 }
-    });
-  }
-
-  // refrigerante (350ml)
-  if (lower.includes('refrigerante') || lower.includes('coca') || lower.includes('pepsi')) {
-    alimentos.push({
-      nome: 'Refrigerante',
-      nutrientes: { gramas: 350, kcal: 140, proteina: 0, carbo: 35, gordura: 0 }
-    });
-  }
-
-  // Cerveja (350ml)
-  if (lower.includes('cerveja')) {
-    alimentos.push({
-      nome: 'Cerveja',
-      nutrientes: { gramas: 350, kcal: 150, proteina: 1.5, carbo: 13, gordura: 0 }
-    });
-  }
-
-  // Chocolate ao leite (20g)
-  if (lower.includes('chocolate') && !lower.includes('cacau')) {
-    alimentos.push({
-      nome: 'Chocolate ao leite',
-      nutrientes: { gramas: 20, kcal: 110, proteina: 1.5, carbo: 13, gordura: 7 }
-    });
-  }
-
-  // Açúcar (10g)
-  if (lower.includes('açúcar')) {
-    alimentos.push({
-      nome: 'Açúcar',
-      nutrientes: { gramas: 10, kcal: 40, proteina: 0, carbo: 10, gordura: 0 }
-    });
-  }
-
-  // Sal (1g)
-  if (lower.includes('sal')) {
-    alimentos.push({
-      nome: 'Sal',
-      nutrientes: { gramas: 1, kcal: 0, proteina: 0, carbo: 0, gordura: 0 }
-    });
-  }
-
-  return alimentos;
+  return itens;
 }
