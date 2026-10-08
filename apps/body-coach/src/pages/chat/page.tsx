@@ -87,14 +87,23 @@ export default function Chat() {
     return () => { vivo = false; };
   }, [user, carregarContatos]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const ler = useCallback(async () => {
+  // Conferência barata: só pede o que chegou depois da última mensagem (poupa a cota do banco grátis).
+  const ultimaEm = useRef(0);
+  const ler = useCallback(async (completo = false) => {
     if (!aberto) return;
-    try { setMsgs((await chatApi<{ mensagens: Mensagem[] }>({ acao: 'ler', com: aberto.uid })).mensagens); } catch { /* tenta de novo no próximo ciclo */ }
+    try {
+      const depois = completo ? 0 : ultimaEm.current;
+      const r = (await chatApi<{ mensagens: Mensagem[] }>({ acao: 'ler', com: aberto.uid, ...(depois ? { depois } : {}) })).mensagens;
+      if (!depois) setMsgs(r);
+      else if (r.length) setMsgs((m) => [...m, ...r.filter((x) => !m.some((y) => y.id === x.id))]);
+    } catch { /* tenta de novo no próximo ciclo */ }
   }, [aberto]);
+  useEffect(() => { ultimaEm.current = msgs.length ? msgs[msgs.length - 1].em : 0; }, [msgs]);
   useEffect(() => {
     if (!aberto) return;
-    void ler();
-    const t = setInterval(() => { if (document.visibilityState === 'visible') void ler(); }, 6000);
+    ultimaEm.current = 0; setMsgs([]);
+    void ler(true);
+    const t = setInterval(() => { if (document.visibilityState === 'visible') void ler(); }, 8000);
     return () => clearInterval(t);
   }, [aberto, ler]);
   useEffect(() => { fim.current?.scrollIntoView({ block: 'end' }); }, [msgs.length, aberto]);

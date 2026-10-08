@@ -36,7 +36,7 @@ function resumirSemana({ treinos, pesos }, desde, perfilAluno) {
   };
 }
 
-async function executar(body, uid, db) {
+async function executar(body, uid, db, ctx = {}) {
   const dir = db.collection('bc_diretorio');
   const eu = (await dir.doc(uid).get()).data?.() || null;
   const acao = body.acao;
@@ -51,6 +51,18 @@ async function executar(body, uid, db) {
     const novo = { papel: papelFinal, nome, foto: typeof body.foto === 'string' && body.foto.length < 40000 ? body.foto : (atual.foto || ''), coachUid: atual.coachUid || '', codigo: atual.codigo || (papelFinal === 'coach' ? codigoNovo() : '') };
     await dir.doc(uid).set(novo, { merge: true });
     return [200, { perfil: novo }];
+  }
+  if (acao === 'feedback_enviar') {
+    const texto = limpa(body.texto, 2000);
+    if (texto.length < 3) return [400, { error: 'Escreva o seu comentário.' }];
+    const tipo = ['bug', 'ideia', 'elogio'].includes(body.tipo) ? body.tipo : 'ideia';
+    await db.collection('bc_feedback').add({ uid, nome: (eu && eu.nome) || '', tipo, texto, tela: limpa(body.tela, 60), em: Date.now() });
+    return [200, { ok: true }];
+  }
+  if (acao === 'feedback_ver') {
+    if (!ctx.master) return [403, { error: 'Só o administrador vê os comentários.' }];
+    const snap = await db.collection('bc_feedback').orderBy('em', 'desc').limit(100).get();
+    return [200, { itens: snap.docs.map((d) => ({ id: d.id, ...d.data() })) }];
   }
   if (!eu) return [409, { error: 'Antes, escolha se você é aluno ou coach.' }];
 
@@ -135,8 +147,12 @@ async function executar(body, uid, db) {
     return [200, { mensagem: { id: r.id, ...m } }];
   }
   if (acao === 'ler') {
-    const snap = await msgs.orderBy('em', 'desc').limit(100).get();
-    return [200, { mensagens: snap.docs.map((d) => ({ id: d.id, ...d.data() })).reverse() }];
+    // com "depois" devolve só o que chegou depois dessa hora (a tela confere a cada poucos segundos sem gastar a cota do banco grátis)
+    const depois = Number(body.depois) || 0;
+    const q = depois ? msgs.where('em', '>', depois).orderBy('em', 'asc').limit(100) : msgs.orderBy('em', 'desc').limit(100);
+    const snap = await q.get();
+    const lista = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return [200, { mensagens: depois ? lista : lista.reverse() }];
   }
   return [400, { error: 'Pedido inválido.' }];
 }
@@ -153,14 +169,14 @@ exports.handler = async (event) => {
   let body;
   try { body = JSON.parse(event.body || '{}'); } catch { return resposta(event, 400, { error: 'Pedido inválido.' }); }
   // leituras (a tela confere a cada poucos segundos) não gastam o limite nem a cota do banco grátis
-  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar'].includes(body.acao)) {
+  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar'].includes(body.acao)) {
     const rl = await checkRateLimit(auth.uid, 'body-coach-chat');
     if (!rl.ok) return resposta(event, 429, { error: 'Muitos pedidos seguidos. Aguarde um instante.' });
   }
   try {
     const { db } = require('./firebase-init');
     if (!db) return resposta(event, 503, { error: 'Conversa indisponível agora.' });
-    const [status, out] = await executar(body, auth.uid, db);
+    const [status, out] = await executar(body, auth.uid, db, { master: auth.role === 'master' });
     return resposta(event, status, out);
   } catch {
     return resposta(event, 503, { error: 'Conversa indisponível agora. Tente de novo.' });
