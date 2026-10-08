@@ -17,6 +17,12 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
     initialRef.current = initialSegundos;
   }, [initialSegundos]);
 
+  // Reinicia contagem quando a prop segundos muda (novo período de descanso)
+  useEffect(() => {
+    setSegundos(initialSegundos);
+    setIsRunning(true);
+  }, [initialSegundos]);
+
   // Contagem regressiva com setInterval e limpeza
   useEffect(() => {
     if (!isRunning || segundos <= 0) return;
