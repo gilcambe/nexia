@@ -121,6 +121,12 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
   const currentSets = setsByEx[exercise.id] ?? [];
 
   useEffect(() => {
+    if (phase === 'EXERCISE_ACTIVE') {
+      setTreinoAtivo({ exercise, sets: currentSets });
+    }
+  }, [phase, exercise, currentSets]);
+
+  useEffect(() => {
     if (phase !== 'EXERCISE_ACTIVE') {
       setTreinoAtivo(null);
     }
