@@ -106,5 +106,11 @@ export function alternativas(id: string, lesoes: Set<Lesao>, indisponiveis: stri
     .sort((a, b) => Number(b.composto === base.composto) - Number(a.composto === base.composto));
 }
 
-// Vídeo de execução: busca pronta no YouTube (grátis, sem chave).
-export const videoDeExecucao = (nome: string) => `https://www.youtube.com/results?search_query=${encodeURIComponent(`como fazer ${nome} execução correta`)}`;
+// Demonstração própria (banco no repositório, em public/exercicios): dois quadros que alternam como um vídeo curto.
+// Fotos do free-exercise-db (domínio público). Sem YouTube, sem gasto de internet com vídeo pesado.
+export const IDS_COM_DEMO = new Set(['abdominal-na-maquina','abdominal-na-polia','abducao-de-quadril-na-maquina','afundo-com-halteres','agachamento-goblet','agachamento-livre','agachamento-no-smith','agachamento-sumo-com-halter','barra-fixa','cadeira-extensora','cadeira-flexora','coice-na-polia','crossover-na-polia','crucifixo-inverso-na-maquina','crucifixo-na-maquina','dead-bug','desenvolvimento-com-halteres','desenvolvimento-na-maquina','elevacao-de-pernas','elevacao-lateral','elevacao-lateral-no-cabo','elevacao-pelvica-com-barra','elevacao-pelvica-no-solo','encolhimento-com-halteres','face-pull','flexao-de-bracos','flexora-em-pe','hack-machine','leg-press-45','levantamento-terra','mergulho-no-banco','mesa-flexora','panturrilha-em-pe-na-maquina','panturrilha-no-leg-press','panturrilha-sentado','prancha','pulldown-com-bracos-estendidos','puxada-frontal','remada-baixa-no-cabo','remada-curvada-com-barra','remada-na-maquina','remada-unilateral-com-halter','rosca-alternada-com-halteres','rosca-direta-com-barra','rosca-martelo','rosca-no-cabo','stiff-com-barra','stiff-com-halteres','supino-inclinado-com-halteres','supino-na-maquina','supino-reto-com-barra','supino-reto-com-halteres','triceps-corda-na-polia','triceps-frances-com-halter','triceps-na-polia-com-barra']);
+export const demoDoExercicio = (id: string): [string, string] | null => {
+  if (!IDS_COM_DEMO.has(id)) return null;
+  const b = `${import.meta.env.BASE_URL}exercicios/${id}`;
+  return [`${b}-0.webp`, `${b}-1.webp`];
+};

@@ -30,6 +30,7 @@ interface CoachContextValue {
   setOpen: (v: boolean) => void;
   messages: CoachMessage[];
   send: (text: string, snapshot?: CoachContextSnapshot) => void;
+  typing: boolean;
   unread: number;
 }
 
@@ -78,6 +79,14 @@ function buildWeightReply(s?: CoachContextSnapshot): string {
   return `Seu último registro de peso é ${s.latestWeight.toFixed(1).replace('.', ',')} kg. Posso acompanhar a tendência conforme você registra novos dados em Evolução.`;
 }
 
+function respostaLocal(texto: string, s?: CoachContextSnapshot): string {
+  const t = texto.toLowerCase();
+  if (/comer|caloria|kcal|prote[ií]na|dieta|fome/.test(t)) return buildNutritionReply(s);
+  if (/peso|balan[cç]a|gordura/.test(t)) return buildWeightReply(s);
+  if (/hoje|pront|readiness|cansad|recupera|treino|perna|peito|costas|bra[cç]o|ombro/.test(t)) return buildReadinessReply(s);
+  return 'Estou com dificuldade de conectar à IA agora, mas continuo aqui. Pergunte "Como estou hoje?" ou "Quanto ainda posso comer?" que respondo com os seus dados.';
+}
+
 export function CoachProvider({ children }: { children: ReactNode }) {
   const { profile, user } = useAuth();
 
@@ -95,11 +104,10 @@ export function CoachProvider({ children }: { children: ReactNode }) {
   }, [open]);
 
   // Reinicia a saudação quando o nome real do atleta é resolvido
+  // Só troca o texto da saudação; a conversa em andamento nunca é apagada.
   useEffect(() => {
-    setMessages([
-      { id: 'c-greet', speaker: 'coach', text: buildGreeting(firstName), time: 'agora' },
-    ]);
-    setUnread(1);
+    const greet: CoachMessage = { id: 'c-greet', speaker: 'coach', text: buildGreeting(firstName), time: 'agora' };
+    setMessages((prev) => (prev.length === 0 || prev[0].id === 'c-greet' ? [greet, ...prev.slice(1)] : prev));
   }, [firstName]);
 
   const setOpenSafe = useCallback((v: boolean) => {
@@ -116,7 +124,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
       { id: `u-${Date.now()}`, speaker: 'user', text: trimmed, time: 'agora' },
     ]);
 
-    const series = cargasDoTexto(trimmed);
+    const series = cargasDoTexto(trimmed) ?? [];
     if (series.length > 0) {
       try {
         const aviso = registrarSeries(series);
@@ -152,10 +160,11 @@ export function CoachProvider({ children }: { children: ReactNode }) {
       ]);
       if (!openRef.current) setUnread((u) => u + 1);
     } catch (err: any) {
-      const errorMsg = err?.message || 'Desculpe, tive um problema ao processar sua mensagem. Pode repetir?';
+      // Plano B: a IA falhou, mas o coach nunca fica mudo — responde com os dados que já tem do aluno.
+      const aviso = err?.message ? `${err.message}\n\n` : '';
       setMessages((prev) => [
         ...prev,
-        { id: `c-${Date.now()}`, speaker: 'coach', text: errorMsg, time: 'agora' },
+        { id: `c-${Date.now()}`, speaker: 'coach', text: aviso + respostaLocal(trimmed, snapshot), time: 'agora' },
       ]);
       if (!openRef.current) setUnread((u) => u + 1);
     } finally {
@@ -164,8 +173,8 @@ export function CoachProvider({ children }: { children: ReactNode }) {
   }, [loadingAI, profile]);
 
   const value = useMemo(
-    () => ({ open, setOpen: setOpenSafe, messages, send, unread }),
-    [open, setOpenSafe, messages, send, unread],
+    () => ({ open, setOpen: setOpenSafe, messages, send, unread, typing: loadingAI }),
+    [open, setOpenSafe, messages, send, unread, loadingAI],
   );
 
   return <CoachContext.Provider value={value}>{children}</CoachContext.Provider>;

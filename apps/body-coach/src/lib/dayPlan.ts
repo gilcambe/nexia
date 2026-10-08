@@ -1,7 +1,7 @@
 // Treino do dia personalizado: junta o que o aluno respondeu no cadastro (nível, lesões, objetivo),
 // a divisão e a ênfase que ele escolheu e como ele está HOJE (sono, comida, dor, tempo, equipamento).
 import type { Exercise, Session } from '@/mocks/workout';
-import { EXERCICIOS, POR_ID, lesoesDoTexto, permitido, videoDeExecucao, type Exercicio, type Grupo, type Lesao } from './exerciseDb';
+import { EXERCICIOS, POR_ID, lesoesDoTexto, permitido, demoDoExercicio, type Exercicio, type Grupo, type Lesao } from './exerciseDb';
 
 export type Divisao = 'abc' | 'abcd' | 'ppl' | 'upper_lower' | 'fullbody';
 export const DIVISOES: Record<Divisao, { nome: string; dias: { titulo: string; grupos: Grupo[] }[] }> = {
@@ -117,7 +117,7 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
     targetSets: x.composto ? series : Math.max(2, series),
     restSec: x.composto ? base.descanso : 75,
     note: `Alvo RIR ${rir}.`,
-    videoUrl: videoDeExecucao(x.nome),
+    videoUrl: demoDoExercicio(x.id)?.[0] ?? '',
     minWeight: 0,
     maxWeight: 300,
     weightUnit: 'kg',
@@ -155,7 +155,7 @@ export function trocarExercicio(s: Session, idAtual: string, idNovo: string): Se
   return {
     ...s,
     exercises: s.exercises.map((x) => (x.id === idAtual
-      ? { ...x, id: novo.id, name: novo.nome, muscleGroup: novo.grupo, videoUrl: videoDeExecucao(novo.nome), note: x.note.split(' Vídeo:')[0], sets: [] }
+      ? { ...x, id: novo.id, name: novo.nome, muscleGroup: novo.grupo, videoUrl: demoDoExercicio(novo.id)?.[0] ?? '', note: x.note.split(' Vídeo:')[0], sets: [] }
       : x)),
   };
 }

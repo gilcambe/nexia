@@ -10,11 +10,22 @@ export async function perguntar(papel: Papel, message: string, context: Record<s
   const fb = await getFirebase();
   const token = await fb?.auth.currentUser?.getIdToken();
   if (!token) throw new Error('Entre na sua conta para falar com a equipe.');
-  const res = await fetch(`${API_BASE}/api/body-coach-ai`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ message, role: papel, context, ...(image ? { image } : {}) }),
-  });
+  // Nunca fica esperando para sempre: passou de 30 s, aborta e o app responde com o plano B.
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 30000);
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}/api/body-coach-ai`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ message, role: papel, context, ...(image ? { image } : {}) }),
+      signal: ctrl.signal,
+    });
+  } catch {
+    throw new Error('A equipe demorou demais para responder. Tente de novo em instantes.');
+  } finally {
+    clearTimeout(timer);
+  }
   const data = (await res.json().catch(() => ({}))) as { reply?: string; error?: string };
   if (!res.ok) throw new Error(data.error || 'Não consegui falar com a equipe agora.');
   return data.reply ?? '';

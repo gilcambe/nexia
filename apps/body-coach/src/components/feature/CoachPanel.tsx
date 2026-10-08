@@ -12,7 +12,7 @@ function getRecognition(): any | null {
 }
 
 export default function CoachPanel() {
-  const { open, setOpen, messages, send } = useCoach();
+  const { open, setOpen, messages, send, typing } = useCoach();
   const { profile, user } = useAuth();
   const { result } = useReadiness();
   const { totals, targets } = useNutrition();
@@ -49,7 +49,7 @@ export default function CoachPanel() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages, open]);
+  }, [messages, open, typing]);
 
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 150);
@@ -112,7 +112,7 @@ export default function CoachPanel() {
         onClick={() => setOpen(false)}
         aria-hidden="true"
       />
-      <aside className="relative z-10 flex h-full w-full max-w-md flex-col border-l border-background-200 bg-background-50">
+      <aside className="relative z-10 flex h-[100dvh] w-full max-w-md flex-col border-l border-background-200 bg-background-50">
         {/* header */}
         <div className="flex items-center justify-between border-b border-background-200 bg-background-50 px-5 py-4">
           <div className="flex items-center gap-3">
@@ -185,15 +185,24 @@ export default function CoachPanel() {
               </div>
             </div>
           ))}
+          {typing && (
+            <div className="flex justify-start">
+              <div className="flex items-center gap-1 rounded-2xl rounded-bl-md border border-background-200 bg-background-100 px-4 py-3" aria-label="Coach digitando">
+                {[0, 150, 300].map((d) => (
+                  <span key={d} className="h-2 w-2 animate-bounce rounded-full bg-foreground-400" style={{ animationDelay: `${d}ms` }}></span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* suggestion chips */}
-        <div className="flex flex-wrap gap-2 px-5 pb-2">
+        <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-2">
           {suggestions.map((s) => (
             <button
               key={s}
               onClick={() => send(s, snapshot)}
-              className="whitespace-nowrap rounded-full border border-background-200 bg-background-50 px-3 py-1.5 text-xs text-foreground-600 transition hover:bg-background-100"
+              className="shrink-0 whitespace-nowrap rounded-full border border-background-200 bg-background-50 px-3 py-2 text-xs text-foreground-600 transition hover:bg-background-100"
             >
               {s}
             </button>
