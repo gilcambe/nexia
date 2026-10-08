@@ -17,6 +17,7 @@ const AprovacoesPage = lazy(() => import("../pages/aprovacoes/page"));
 const ExecucoesPage = lazy(() => import("../pages/execucoes/page"));
 const AuditoriaPage = lazy(() => import("../pages/auditoria/page"));
 const RobosPage = lazy(() => import("../pages/robos/page"));
+const LeadsPage = lazy(() => import("../pages/leads/page"));
 const NotFound = lazy(() => import("../pages/NotFound"));
 const PrivacidadePage = lazy(() => import("../pages/legais/privacidade/page"));
 const TermosPage = lazy(() => import("../pages/legais/termos/page"));
@@ -38,6 +39,7 @@ const routes: RouteObject[] = [
   { path: "/execucoes", element: <ExecucoesPage /> },
   { path: "/auditoria", element: <AuditoriaPage /> },
   { path: "/robos", element: <RobosPage /> },
+  { path: "/leads", element: <LeadsPage /> },
   { path: "/ces", element: <TenantPage tenant="ces" /> },
   { path: "/bezsan", element: <TenantPage tenant="bezsan" /> },
   { path: "/vp", element: <TenantPage tenant="vp" /> },
