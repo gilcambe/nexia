@@ -6,6 +6,8 @@ const { icon } = require('./icons');
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const attr = esc;
+// Formulário de contato dos sites também grava o lead no painel /leads da NEXIA (grátis).
+const LEADS_API = 'https://nexia.gcbezerra.workers.dev/api/leads';
 const initials = n => String(n || '?').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0].toUpperCase()).join('');
 const fontsHref = f => `https://fonts.googleapis.com/css2?family=${encodeURIComponent(f.heading).replace(/%20/g, '+')}:wght@500;600;700;800&family=${encodeURIComponent(f.body).replace(/%20/g, '+')}:wght@400;500;600&display=swap`;
 
@@ -182,11 +184,13 @@ const sec = {
       <ul class="contact__list">${items}</ul>
       ${s.map && where ? `<div class="map"><iframe title="Mapa: ${attr(where)}" src="https://maps.google.com/maps?q=${encodeURIComponent(where)}&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>` : ''}
     </div>
-    <form class="form reveal" style="--d:.1s" novalidate data-whatsapp="${attr(c.whatsapp)}" data-email="${attr(c.email)}" data-name="${attr(spec.name)}">
+    <form class="form reveal" style="--d:.1s" novalidate data-whatsapp="${attr(c.whatsapp)}" data-email="${attr(c.email)}" data-name="${attr(spec.name)}" data-leads="${attr(LEADS_API)}">
       <div class="field"><label for="f-nome">Nome</label><input id="f-nome" name="nome" autocomplete="name" required minlength="2"><small class="field__err" aria-live="polite"></small></div>
       <div class="field"><label for="f-tel">Telefone / WhatsApp</label><input id="f-tel" name="telefone" type="tel" autocomplete="tel" inputmode="tel" required pattern="[0-9()+\\-\\s]{10,}"><small class="field__err" aria-live="polite"></small></div>
       <div class="field"><label for="f-email">E-mail <span class="opt">(opcional)</span></label><input id="f-email" name="email" type="email" autocomplete="email"><small class="field__err" aria-live="polite"></small></div>
       <div class="field"><label for="f-msg">Mensagem</label><textarea id="f-msg" name="mensagem" rows="4" required minlength="10"></textarea><small class="field__err" aria-live="polite"></small></div>
+      <div class="field field--check"><input id="f-ok" type="checkbox" name="consentimento" required><label for="f-ok">Aceito receber contato sobre este assunto.</label><small class="field__err" aria-live="polite"></small></div>
+      <div class="hp" aria-hidden="true"><input name="site_url" tabindex="-1" autocomplete="off" aria-label="Não preencha"></div>
       <button class="btn btn--primary btn--block" type="submit">Enviar mensagem ${icon('arrow', 18)}</button>
       <p class="form__ok" role="status" hidden>${icon('check', 18)} Recebemos sua mensagem! Vamos responder em breve.</p>
     </form>
@@ -412,6 +416,11 @@ p { margin: 0 0 1rem; }
 .field input:focus, .field textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 18%, transparent); }
 .field.is-invalid input, .field.is-invalid textarea { border-color: #c0392b; }
 .field__err { color: #c0392b; min-height: 1em; }
+.field--check { grid-template-columns: auto 1fr; align-items: start; column-gap: .6rem; }
+.field--check label { font-weight: 400; font-size: .9rem; }
+.field--check input { width: auto; margin-top: .25rem; }
+.field--check .field__err { grid-column: 1 / -1; }
+.hp { position: absolute; left: -9999px; height: 0; overflow: hidden; }
 [hidden] { display: none !important; }
 .form__ok { display: flex; gap: .5rem; align-items: center; color: var(--primary); font-weight: 600; margin: 0; animation: rise .5s var(--ease); }
 
@@ -561,16 +570,24 @@ const JS = `// Gerado pelo NEXIA Site Kit (ADR-Q-04). Sem dependências.
       const v = input.validity;
       const key = Object.keys(msgs).find(k => v[k]);
       field.classList.toggle('is-invalid', !!key);
-      err.textContent = key ? msgs[key] : '';
+      err.textContent = key ? (input.type === 'checkbox' ? 'Marque para continuar.' : msgs[key]) : '';
       return !key;
     };
-    $$('input, textarea', form).forEach(i => i.addEventListener('blur', () => check(i)));
+    $$('.field input, .field textarea', form).forEach(i => i.addEventListener('blur', () => check(i)));
     form.addEventListener('submit', e => {
       e.preventDefault();
-      const ok = $$('input, textarea', form).map(check).every(Boolean);
+      const ok = $$('.field input, .field textarea', form).map(check).every(Boolean);
       if (!ok) { const bad = $('.is-invalid input, .is-invalid textarea', form); if (bad) bad.focus(); return; }
       const d = Object.fromEntries(new FormData(form));
       const text = \`Olá! Sou \${d.nome} (\${d.telefone}\${d.email ? ', ' + d.email : ''}).\\n\${d.mensagem}\`;
+      // Guarda o contato no painel de leads da NEXIA (não trava o envio se a rede falhar).
+      if (form.dataset.leads) {
+        const q = new URLSearchParams(location.search), utm = {};
+        ['source', 'medium', 'campaign', 'content', 'term'].forEach(k => { const v = q.get('utm_' + k); if (v) utm[k] = v; });
+        fetch(form.dataset.leads, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+          body: JSON.stringify({ nome: d.nome, whatsapp: d.telefone, email: d.email, mensagem: d.mensagem, consentimento: true, site_url: d.site_url || '',
+            produto: 'site', site: location.hostname, pagina: location.pathname, utm }) }).catch(() => {});
+      }
       const ok2 = $('.form__ok', form);
       if (ok2) ok2.hidden = false;
       if (form.dataset.whatsapp) window.open('https://wa.me/' + form.dataset.whatsapp + '?text=' + encodeURIComponent(text), '_blank', 'noopener');

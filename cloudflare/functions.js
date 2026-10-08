@@ -26,6 +26,7 @@ const LOADERS = {
   'dynamic-pricing': () => require('../netlify/functions/dynamic-pricing.js'),
   'event-processor': () => require('../netlify/functions/event-processor.js'),
   'internal-agents': () => require('../netlify/functions/internal-agents.js'),
+  'leads': () => require('../netlify/functions/leads.js'),
   'kpi-engine': () => require('../netlify/functions/kpi-engine.js'),
   'metrics-aggregator': () => require('../netlify/functions/metrics-aggregator.js'),
   'multi-model-engine': () => require('../netlify/functions/multi-model-engine.js'),

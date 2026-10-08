@@ -33,6 +33,7 @@ export interface AthleteProfile {
   nickname?: string | null;
   photo_data?: string | null;
   mobility?: string[];
+  ajuste_kcal?: number;
   onboarding?: Record<string, string | string[] | undefined>;
 }
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import BuscaAlimento from './BuscaAlimento';
 import { quickFoods, type MealFood, type QuickFood } from '@/mocks/nutrition';
 
 export default function AddMealModal({
@@ -64,6 +65,10 @@ export default function AddMealModal({
             <i className="ri-close-line text-lg"></i>
           </button>
         </div>
+
+        <BuscaAlimento onAdd={onAdd} onClose={onClose} />
+
+        <div className="my-4 border-t border-background-200" />
 
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Adicionar rápido</p>
         <div className="grid grid-cols-2 gap-2">

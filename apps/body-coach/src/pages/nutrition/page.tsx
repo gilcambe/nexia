@@ -7,6 +7,7 @@ import WaterTracker from './components/WaterTracker';
 import WeeklyTrend from './components/WeeklyTrend';
 import AddMealModal from './components/AddMealModal';
 import CardapioDoDia from './components/CardapioDoDia';
+import AjusteSemanal from './components/AjusteSemanal';
 import { RefeicaoRapida } from './components/RefeicaoRapida';
 
 export default function Nutrition() {
@@ -38,6 +39,7 @@ export default function Nutrition() {
         <MacroSummary meals={meals} targets={targets} />
       </Card>
 
+      <AjusteSemanal />
       <CardapioDoDia />
       <RefeicaoRapida />
 
