@@ -10,6 +10,7 @@ import Plan from "../pages/plan/page";
 import Profile from "../pages/profile/page";
 import Team from "../pages/team/page";
 import Chat from "../pages/chat/page";
+import Respirar from "../pages/breathe/page";
 import Exams from "../pages/exams/page";
 import AntiDoping from "../pages/antidoping/page";
 import Onboarding from "../pages/onboarding/page";
@@ -45,6 +46,7 @@ const routes: RouteObject[] = [
       { path: "profile", element: <Profile /> },
       { path: "team", element: <Team /> },
       { path: "chat", element: <Chat /> },
+      { path: "respirar", element: <Respirar /> },
       { path: "exams", element: <Exams /> },
       { path: "antidoping", element: <AntiDoping /> },
     ],
