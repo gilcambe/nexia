@@ -13,6 +13,7 @@ const navItems = [
   { to: '/evolution', label: 'Evolução', icon: 'ri-line-chart-line' },
   { to: '/plan', label: 'Ficha de treino', icon: 'ri-calendar-line' },
   { to: '/chat', label: 'Conversa', icon: 'ri-chat-3-line' },
+  { to: '/respirar', label: 'Respirar', icon: 'ri-lungs-line' },
   { to: '/team', label: 'Equipe', icon: 'ri-group-line' },
   { to: '/exams', label: 'Saúde', icon: 'ri-stethoscope-line' },
   { to: '/antidoping', label: 'Anti-Doping', icon: 'ri-shield-check-line' },
