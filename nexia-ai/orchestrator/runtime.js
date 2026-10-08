@@ -68,6 +68,16 @@ function createFailover(models, meter) {
     get desc() { return models[mi]; },
     get shrink() { return shrink; },
     ok() { tries = 0; },
+    /** Troca já para o próximo modelo vivo (de preferência de outro provedor); false se não houver outro. */
+    switchModel() {
+      const cur = models[mi];
+      skip.add(mi);
+      let n = -1;
+      for (let k = 1; k < models.length; k++) { const j = (mi + k) % models.length; if (!skip.has(j) && models[j].provider !== cur.provider) { n = j; break; } }
+      if (n < 0) n = nextLive(0);
+      if (n < 0) { skip.delete(mi); return false; }
+      mi = n; tries = 0; return true;
+    },
     async fail(e) {
       const desc = models[mi];
       const code = e && e.code;
@@ -265,6 +275,7 @@ async function runAgent(o) {
   const localErrors = [];   // gravações recusadas (diagnóstico no resumo do passo quando nada foi gravado)
   const fo = createFailover(models, o.meter);   // shrink 0: 8192 tokens de resposta; 1: 4096; 2: 2048
 
+  const lastToolFail = { model: null, tool: null, n: 0 };
   const strike = (key, model, code, text) => {
     const n = (failures.get(key) || 0) + 1;
     failures.set(key, n);
@@ -332,7 +343,8 @@ async function runAgent(o) {
       if (r.status === 'succeeded') {
         results.push({ tool: name, ok: true, result: r.result, ...(WRITE_TOOLS.has(name) ? { paths: writtenPaths(name, input) } : {}) });
         if (WRITE_TOOLS.has(name)) wrote = true;
-        for (const k of [...failures.keys()]) if (k.startsWith(`${name}:`)) failures.delete(k);   // progresso zera as falhas da ferramenta
+        for (const k of [...failures.keys()]) if (k.startsWith(`${name}:`)) failures.delete(k);
+        if (lastToolFail.tool === name) lastToolFail.n = 0;   // progresso zera as falhas da ferramenta
         if (name === 'github.edit_files') await refresh(input, results);
         continue;
       }
@@ -341,6 +353,15 @@ async function runAgent(o) {
       if (name === 'github.edit_files' && code === 'INVALID_INPUT') await refresh(input, results);
       if (WRITE_TOOLS.has(name)) localErrors.push(`${name}: ${code}${r.error && r.error.message ? ` (${String(r.error.message).slice(0, 160)})` : ''}`);
       if (ANSWER_CODES.has(code)) continue;   // "não existe" é resposta (ex.: conferir se o arquivo novo já existe), não falha
+      // Issue #221: o mesmo modelo errando a mesma ferramenta 2 vezes seguidas troca já de provedor grátis.
+      if (model && lastToolFail.model === model && lastToolFail.tool === name) lastToolFail.n++;
+      else Object.assign(lastToolFail, { model, tool: name, n: 1 });
+      if (model && lastToolFail.n >= 2 && fo.switchModel()) {
+        Object.assign(lastToolFail, { model: null, tool: null, n: 0 });
+        failures.delete(`${name}:${code}`);
+        results.push({ tool: name, ok: false, error: 'MODEL_SWITCHED', message: `${name} falhou 2 vezes seguidas com ${model}; o NEXIA trocou de modelo.` });
+        continue;
+      }
       const s = strike(`${name}:${code}`, model, code, `A ferramenta ${name} falhou 3 vezes (${code}${r.error && r.error.message ? `: ${String(r.error.message).slice(0, 200)}` : ''}).`);   // por ferramenta
       if (s) return s;
     }

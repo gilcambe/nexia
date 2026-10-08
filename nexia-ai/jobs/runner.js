@@ -9,15 +9,28 @@ const { validateJob, contextFor, sweepAllTenants } = require('./index');
  * @param {object} rawJob  pedido vindo do workflow (JSON)
  * @param {{ db?, vault?, orchestrator?, sourceFactory?, now? }} [deps]  injeção para testes
  */
+const isQuota = e => !!e && (e.code === 8 || e.code === 'RESOURCE_EXHAUSTED' || /RESOURCE_EXHAUSTED|Quota exceeded/i.test(String(e.message || '')));
+
 async function runJob(rawJob, deps = {}) {
   const job = validateJob(rawJob);
   const db = deps.db || require('../../netlify/functions/firebase-init').db;
   if (!db) throw new Error('Firestore indisponível (FIREBASE_SERVICE_ACCOUNT_BASE64).');
   // Vault/Cortex podem viver em um segundo projeto grátis (FIREBASE_SERVICE_ACCOUNT_B); sem ele, é o mesmo banco.
-  const vdb = deps.db || require('../../netlify/functions/firebase-vault').vaultDb();
+  const vdb = deps.vdb || (deps.db ? deps.db : require('../../netlify/functions/firebase-vault').vaultDb());
+  try {
+    return await runWith(job, deps, db, vdb);
+  } catch (e) {
+    // Cota grátis do banco B (Vault/Cortex) esgotada: na hora, roda de novo no banco principal (outro projeto grátis).
+    if (!isQuota(e) || vdb === db || deps.vault) throw e;
+    console.warn('[nexia-job] cota do banco B esgotada; usando o banco principal');
+    return runWith(job, deps, db, db);
+  }
+}
+
+async function runWith(job, deps, db, vdb) {
   const { createVault } = require('../vault');
   const auditSink = require('../vault/audit-file').createFileAuditSink(process.env.NEXIA_AUDIT_FILE);
-  const vault = deps.vault || createVault({ db: vdb, ...(!deps.db && process.env.FIREBASE_SERVICE_ACCOUNT_B ? { tenantDb: db } : {}), ...(auditSink ? { auditSink } : {}) });
+  const vault = deps.vault || createVault({ db: vdb, ...(vdb !== db ? { tenantDb: db } : {}), ...(auditSink ? { auditSink } : {}) });
   // ADR-CLONE-01: duplicar tenant (cópia preparada pela API; aqui só ids, resumo só com contagens)
   if (job.kind === 'tenant.duplicate') {
     const { duplicateTenant } = require('../tenant-copy');
@@ -25,7 +38,8 @@ async function runJob(rawJob, deps = {}) {
     return { kind: job.kind, created: r.created };
   }
 
-  const orchestrator = deps.orchestrator || (() => {
+  // deps.orchestrator pode ser uma fábrica ({ vdb, vault }) => orquestrador (testes da troca de banco).
+  const orchestrator = typeof deps.orchestrator === 'function' ? deps.orchestrator({ vdb, vault }) : deps.orchestrator || (() => {
     const { createGateway } = require('../tool-gateway');
     const { createOrchestrator } = require('../orchestrator');
     const gateway = createGateway({ db: vdb, vault });
@@ -63,4 +77,4 @@ async function runJob(rawJob, deps = {}) {
   return { kind: job.kind, id: job.id, snapshot: !!(r && r.snapshot) };
 }
 
-module.exports = { runJob };
+module.exports = { runJob, isQuota };

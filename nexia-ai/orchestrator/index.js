@@ -570,10 +570,17 @@ function createOrchestrator(deps) {
             }
           }
         } else if (action === 'create_pr') {
+          // Issue #225: sem diff contra a base, nada de PR vazio: falha já, para a fila tentar outro modelo grátis.
+          const cmp = await tool(ctx, state, plan[i].agent, 'github.compare', { base: repo.default_branch, head: state.work_branch });
+          if (cmp.status === 'succeeded' && !(cmp.result.files || []).length) {
+            stepFail(i, { tool_call_ids: addIds(i, ids(cmp)), error_code: 'EMPTY_DIFF', summary: `A branch ${state.work_branch} não tem mudanças; PR não aberto.` });
+            stop = { status: 'failed', error_code: 'EMPTY_DIFF', result_summary: `Nenhum arquivo mudou na branch ${state.work_branch}; PR vazio não foi aberto.` };
+          } else {
           const r = await tool(ctx, state, plan[i].agent, 'github.create_pr', { head: state.work_branch,
             title: `NEXIA: ${message}`.slice(0, 120),
             body: `Pedido: ${message}\n\nExecution: ${state.execution_id}\nReviewer: ${state.review_verdict || '—'} · Security: ${state.security_verdict || '—'}\n\nAberto pelo NEXIA AI (rascunho). O merge é de uma pessoa.` });
           if (handle(i, r, x => `PR #${x.number} ${x.html_url}`)) await commit({ pull_request: r.result.number });
+          }
         } else if (action === 'checks' || action === 'checks_before_deploy') {
           const ref = action === 'checks' ? state.work_branch : await deployRef(ctx, project.id, state.intent);
           const c = await readChecks(i, ref);
