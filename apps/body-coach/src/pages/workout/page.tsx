@@ -12,6 +12,7 @@ import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
 import DescansoTimer from './components/DescansoTimer';
 import { useCoach } from '@/components/feature/CoachContext';
+import CardioEntry, { type CardioAtividade } from './components/CardioEntry';
 
 type Phase =
   | 'PRE_SESSION'
@@ -76,6 +77,8 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
   const [cardioDone, setCardioDone] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [showSwapModal, setShowSwapModal] = useState(false);
+  const [cardioAtividades, setCardioAtividades] = useState<CardioAtividade[]>([]);
+  const [cardioFotoNome, setCardioFotoNome] = useState<string | null>(null);
 
   const exercise = session.exercises[exIndex] ?? session.exercises[0];
 
@@ -476,33 +479,14 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
           <div className="rounded-2xl border border-background-200 bg-background-50 p-6">
             <h2 className="font-heading text-xl font-bold text-foreground-950">Cardio</h2>
             <p className="mt-1 text-sm text-foreground-600">{session.cardio?.type} · {session.cardio?.note}</p>
-            <div className="mt-4 grid grid-cols-2 gap-3">
-              <label className="flex flex-col gap-1">
-                <span className="text-[11px] font-medium text-foreground-500">Duração (min)</span>
-                <input defaultValue="12" className="rounded-lg border border-background-200 bg-background-50 px-3 py-2 text-sm" />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="text-[11px] font-medium text-foreground-500">Inclinação (%)</span>
-                <input defaultValue="8" className="rounded-lg border border-background-200 bg-background-50 px-3 py-2 text-sm" />
-              </label>
-            </div>
-            <p className="mt-3 text-xs text-foreground-400">
-              As calorias da máquina são tratadas como estimativa, não como verdade absoluta. Você pode fotografar a máquina e validar depois.
-            </p>
-            <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-              <button
-                onClick={() => { setCardioDone(true); setPhase('SESSION_REVIEW'); }}
-                className="flex-1 rounded-xl bg-primary-500 px-6 py-3 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
-              >
-                CONCLUIR
-              </button>
-              <button
-                onClick={() => { setCardioDone(true); setPhase('SESSION_REVIEW'); }}
-                className="flex-1 rounded-xl border border-background-200 bg-background-50 px-6 py-3 text-sm font-medium text-foreground-700 transition hover:bg-background-100"
-              >
-                ENCERRAR
-              </button>
-            </div>
+            <CardioEntry
+              onSubmit={(atividades, fotoNome) => {
+                setCardioAtividades(atividades);
+                setCardioFotoNome(fotoNome);
+                setCardioDone(true);
+                setPhase('SESSION_REVIEW');
+              }}
+            />
           </div>
         )}
 
