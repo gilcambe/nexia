@@ -11,6 +11,16 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
   const [isRunning, setIsRunning] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const initialRef = useRef(initialSegundos);
+  const onFinishRef = useRef(onFinish);
+  const onSkipRef = useRef(onSkip);
+
+  useEffect(() => {
+    onFinishRef.current = onFinish;
+  }, [onFinish]);
+
+  useEffect(() => {
+    onSkipRef.current = onSkip;
+  }, [onSkip]);
 
   // Atualiza initialRef se o prop inicial mudar (ex: quando muda de exercício)
   useEffect(() => {
