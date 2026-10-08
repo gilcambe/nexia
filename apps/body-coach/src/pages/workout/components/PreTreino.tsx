@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { DIVISOES, divisaoSugerida, type Divisao, type EstadoDoDia } from '@/lib/dayPlan';
 import type { Grupo } from '@/lib/exerciseDb';
 import { treinoDiferente } from '@/lib/treinoDiferente';
-import { treinoDiferente } from '@/lib/treinoDiferente';
 
 interface PreTreinoProps {
   respostas: Record<string, unknown>;
