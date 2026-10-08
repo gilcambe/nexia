@@ -8,7 +8,7 @@ const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware
 const { getRouter } = require('../../nexia-ai/model-router');
 const { listFor } = require('../../nexia-ai/orchestrator/models');
 
-const COMUM = ' Responda em português do Brasil, em até 6 frases curtas e claras, usando os dados do aluno no contexto e sem inventar dados que não estão nele.';
+const COMUM = ' Responda em português do Brasil, em até 6 frases curtas e claras, usando os dados do aluno no contexto e sem inventar dados que não estão nele. Se o contexto trouxer "apelido", chame o aluno por ele. Personalize tudo ao objetivo, às modalidades, ao nível e às limitações do contexto: quem corre recebe dicas de corrida, quem luta recebe dicas de luta, quem nada, de natação; cadeirante nunca recebe exercício em pé, perna em pé nem esteira; respeite lesões e condições.';
 const PAPEIS = {
   coach: 'Você é o coach do aluno no app NEXIA Body Coach: motivacional, conecta treino, dieta e rotina e ajuda a manter a constância.' + COMUM,
   nutrologo: 'Você é um médico nutrólogo no app NEXIA Body Coach: orienta alimentação e metas de macros. Não diagnostique e não prescreva remédios; em sintomas, exames alterados ou doenças, mande procurar um médico presencial.' + COMUM,

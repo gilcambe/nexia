@@ -16,6 +16,7 @@ import {
 } from 'firebase/auth';
 import { getFirebase } from '@/lib/firebaseClient';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
+import { definirPerfilIA } from '@/lib/coachAI';
 
 
 
@@ -29,6 +30,10 @@ export interface AthleteProfile {
   goal_weight_kg: number | null;
   goal_body_fat_pct: number | null;
   coach_notes: string | null;
+  nickname?: string | null;
+  photo_data?: string | null;
+  mobility?: string[];
+  onboarding?: Record<string, string | string[] | undefined>;
 }
 
 // Usuário do app (mesmo formato que as telas do original usam: id, email, user_metadata).
@@ -53,6 +58,7 @@ interface AuthContextValue {
     fullName: string,
   ) => Promise<{ error: string | null; needsEmailConfirm: boolean }>;
   signOut: () => Promise<void>;
+  refreshProfile: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -87,7 +93,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = useCallback((uid: string) => {
     getUserDoc<Omit<AthleteProfile, 'id'>>(uid, 'profile', 'main')
-      .then((data) => setProfile(data ? { id: uid, ...data } : null))
+      .then((data) => {
+        setProfile(data ? { id: uid, ...data } : null);
+        const ob = data?.onboarding ?? {};
+        definirPerfilIA({
+          apelido: data?.nickname || data?.full_name?.split(' ')[0] || null,
+          objetivo: ob.goal ?? null,
+          modalidades: ob.modality ?? null,
+          nivel: ob.level ?? null,
+          limitacoes: [...(data?.mobility ?? []), ...(typeof ob.injuries === 'string' && ob.injuries ? [ob.injuries] : [])],
+        });
+      })
       .catch(() => setProfile(null));
   }, []);
 
@@ -182,7 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, signIn, signUp, signOut }}
+      value={{ user, profile, loading, signIn, signUp, signOut, refreshProfile: () => { if (user) fetchProfile(user.id); } }}
     >
       {children}
     </AuthContext.Provider>

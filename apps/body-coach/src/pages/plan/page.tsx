@@ -16,8 +16,8 @@ export default function Plan() {
 
   useEffect(() => {
     if (!user?.id) return;
-    getUserDoc<{ onboarding?: Answers; ficha?: Partial<Ficha> }>(user.id, 'profile', 'main')
-      .then((res) => { setOnboarding(res?.onboarding ?? null); setFichaSalva(res?.ficha); })
+    getUserDoc<{ onboarding?: Answers; ficha?: Partial<Ficha>; mobility?: string[] }>(user.id, 'profile', 'main')
+      .then((res) => { setOnboarding(res?.onboarding ? { ...res.onboarding, mobility: res.mobility ?? [] } as unknown as Answers : null); setFichaSalva(res?.ficha); })
       .catch(() => setOnboarding(null))
       .finally(() => setLoading(false));
   }, [user?.id]);
