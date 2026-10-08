@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { alimentoDoTexto, NutrientesTotais } from '@/lib/alimentoDoTexto';
+import { perguntar } from '@/lib/coachAI';
 
 export const RefeicaoRapida: React.FC = () => {
   const [texto, setTexto] = useState('');
   const [imagemPreview, setImagemPreview] = useState<string | null>(null);
   const [totais, setTotais] = useState<NutrientesTotais | null>(null);
+  const [veredito, setVeredito] = useState<string | null>(null);
+  const [carregandoVeredito, setCarregandoVeredito] = useState(false);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -17,9 +20,23 @@ export const RefeicaoRapida: React.FC = () => {
     }
   };
 
-  const handleCalcular = () => {
+  const handleCalcular = async () => {
     const resultado = alimentoDoTexto(texto);
     setTotais(resultado);
+
+    if (imagemPreview || texto.trim()) {
+      try {
+        setCarregandoVeredito(true);
+        setVeredito(null);
+        const prompt = `Analise a seguinte refeição e dê um veredito nutricional detalhado e construtivo. Descrição: "${texto}". ${imagemPreview ? 'O usuário anexou uma foto da refeição.' : ''}`;
+        const resposta = await perguntar(prompt, { imagem: imagemPreview || undefined });
+        setVeredito(resposta || 'Refeição analisada com sucesso!');
+      } catch (err) {
+        setVeredito('Não foi possível obter o veredito da IA no momento. Tente novamente.');
+      } finally {
+        setCarregandoVeredito(false);
+      }
+    }
   };
 
   return (
@@ -82,26 +99,45 @@ export const RefeicaoRapida: React.FC = () => {
         )}
 
         {totais && (
-          <div className="mt-6 pt-4 border-t border-zinc-100 dark:border-zinc-800">
-            <h4 className="text-sm font-medium text-zinc-900 dark:text-white mb-3">Totais Calculados:</h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/50">
-                <span className="block text-xs text-emerald-600 dark:text-emerald-400 font-medium">Calorias</span>
-                <span className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{totais.calorias} kcal</span>
-              </div>
-              <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-xl border border-blue-100 dark:border-blue-900/50">
-                <span className="block text-xs text-blue-600 dark:text-blue-400 font-medium">Proteínas</span>
-                <span className="text-lg font-bold text-blue-700 dark:text-blue-300">{totais.proteinas}g</span>
-              </div>
-              <div className="bg-amber-50 dark:bg-amber-950/30 p-3 rounded-xl border border-amber-100 dark:border-amber-900/50">
-                <span className="block text-xs text-amber-600 dark:text-amber-400 font-medium">Carboidratos</span>
-                <span className="text-lg font-bold text-amber-700 dark:text-amber-300">{totais.carboidratos}g</span>
-              </div>
-              <div className="bg-purple-50 dark:bg-purple-950/30 p-3 rounded-xl border border-purple-100 dark:border-purple-900/50">
-                <span className="block text-xs text-purple-600 dark:text-purple-400 font-medium">Gorduras</span>
-                <span className="text-lg font-bold text-purple-700 dark:text-purple-300">{totais.gorduras}g</span>
+          <div className="mt-6 pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-4">
+            <div>
+              <h4 className="text-sm font-medium text-zinc-900 dark:text-white mb-3">Totais Calculados:</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/50">
+                  <span className="block text-xs text-emerald-600 dark:text-emerald-400 font-medium">Calorias</span>
+                  <span className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{totais.calorias} kcal</span>
+                </div>
+                <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-xl border border-blue-100 dark:border-blue-950/50">
+                  <span className="block text-xs text-blue-600 dark:text-blue-400 font-medium">Proteínas</span>
+                  <span className="text-lg font-bold text-blue-700 dark:text-blue-300">{totais.proteinas}g</span>
+                </div>
+                <div className="bg-amber-50 dark:bg-amber-950/30 p-3 rounded-xl border border-amber-100 dark:border-amber-900/50">
+                  <span className="block text-xs text-amber-600 dark:text-amber-400 font-medium">Carboidratos</span>
+                  <span className="text-lg font-bold text-amber-700 dark:text-amber-300">{totais.carboidratos}g</span>
+                </div>
+                <div className="bg-purple-50 dark:bg-purple-950/30 p-3 rounded-xl border border-purple-100 dark:border-purple-900/50">
+                  <span className="block text-xs text-purple-600 dark:text-purple-400 font-medium">Gorduras</span>
+                  <span className="text-lg font-bold text-purple-700 dark:text-purple-300">{totais.gorduras}g</span>
+                </div>
               </div>
             </div>
+
+            {(carregandoVeredito || veredito) && (
+              <div className="bg-emerald-50/50 dark:bg-emerald-950/10 rounded-xl p-4 border border-emerald-200/60 dark:border-emerald-900/30">
+                <div className="flex items-center gap-2 mb-2">
+                  <i className="ri-ai-generate text-emerald-600 dark:text-emerald-400 text-lg"></i>
+                  <h4 className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">Veredito do Coach</h4>
+                </div>
+                {carregandoVeredito ? (
+                  <div className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300 py-2">
+                    <i className="ri-loader-4-line animate-spin text-base"></i>
+                    Analisando sua refeição e foto...
+                  </div>
+                ) : (
+                  <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-line leading-relaxed">\n                    {veredito}\n                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
