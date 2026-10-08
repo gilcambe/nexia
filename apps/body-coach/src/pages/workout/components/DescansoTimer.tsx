@@ -22,24 +22,21 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
     if (!isRunning || segundos <= 0) return;
 
     intervalRef.current = setInterval(() => {
-      setSegundos((s) => {
-        const next = s - 1;
-        if (next <= 0) {
-          // Vibra ao zerar
-          if (navigator.vibrate) {
-            navigator.vibrate([200, 100, 200]);
-          }
-          onFinish();
-          return 0;
-        }
-        return next;
-      });
+      setSegundos((s) => Math.max(0, s - 1));
     }, 1000);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isRunning, segundos, onFinish]);
+  }, [isRunning, segundos]);
+
+  // Dispara onFinish quando segundos chegam a 0
+  useEffect(() => {
+    if (segundos <= 0) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      onFinish();
+    }
+  }, [segundos, onFinish]);
 
   const handleAdd15 = () => setSegundos((s) => s + 15);
   const handleSub15 = () => setSegundos((s) => Math.max(0, s - 15));
