@@ -42,7 +42,7 @@ export default function DescansoTimer({ segundos: initialSegundos, onSkip, onFin
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isRunning, segundos, onFinish]);
+  }, [isRunning, segundos]);
 
   const addTime = (delta: number) => {
     setSegundos((s) => Math.max(0, s + delta));
