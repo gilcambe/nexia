@@ -11,6 +11,7 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
   const [isRunning, setIsRunning] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const initialRef = useRef(initialSegundos);
+  const mountedRef = useRef(false);
 
   // Atualiza initialRef quando initialSegundos muda (para reset corretamente)
   useEffect(() => {
@@ -18,7 +19,12 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
   }, [initialSegundos]);
 
   // Reinicia contagem quando a prop segundos muda (novo período de descanso)
+  // Evita disparar na montagem inicial usando mountedRef
   useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
     setSegundos(initialSegundos);
     setIsRunning(true);
   }, [initialSegundos]);
