@@ -17,6 +17,7 @@ const navItems = [
   { to: '/team', label: 'Equipe', icon: 'ri-group-line' },
   { to: '/exams', label: 'Saúde', icon: 'ri-stethoscope-line' },
   { to: '/antidoping', label: 'Anti-Doping', icon: 'ri-shield-check-line' },
+  { to: '/feedback', label: 'Enviar feedback', icon: 'ri-feedback-line' },
   { to: '/profile', label: 'Perfil', icon: 'ri-user-3-line' },
 ];
 

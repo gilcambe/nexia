@@ -11,6 +11,8 @@ import Profile from "../pages/profile/page";
 import Team from "../pages/team/page";
 import Chat from "../pages/chat/page";
 import Convite from "../pages/chat/Convite";
+import Feedback from "../pages/feedback/page";
+import Termos from "../pages/privacy/Termos";
 import Respirar from "../pages/breathe/page";
 import Exams from "../pages/exams/page";
 import AntiDoping from "../pages/antidoping/page";
@@ -26,6 +28,10 @@ const routes: RouteObject[] = [
   {
     path: "/convite/:codigo",
     element: <Convite />,
+  },
+  {
+    path: "/termos",
+    element: <Termos />,
   },
   {
     path: "/privacidade",
@@ -51,6 +57,7 @@ const routes: RouteObject[] = [
       { path: "profile", element: <Profile /> },
       { path: "team", element: <Team /> },
       { path: "chat", element: <Chat /> },
+      { path: "feedback", element: <Feedback /> },
       { path: "respirar", element: <Respirar /> },
       { path: "exams", element: <Exams /> },
       { path: "antidoping", element: <AntiDoping /> },

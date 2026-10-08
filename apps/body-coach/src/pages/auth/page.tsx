@@ -237,9 +237,9 @@ export default function Auth() {
 
         <p className="mt-6 text-center text-xs text-foreground-400">
           Ao continuar, você concorda com nossos{' '}
-          <Link to="/privacidade" className="underline">
-            termos de uso e privacidade
-          </Link>
+          <Link to="/termos" className="underline">termos de uso</Link>
+          {' '}e{' '}
+          <Link to="/privacidade" className="underline">política de privacidade</Link>
           .
         </p>
 

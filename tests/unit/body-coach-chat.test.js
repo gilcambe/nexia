@@ -14,7 +14,7 @@ function fakeDb() {
       collection: (sub) => col(`${path}/${id}/${sub}`),
     }),
     add: async (v) => { const id = `m${++n}`; (dados[path] ||= {})[id] = v; return { id }; },
-    where: (campo, _op, val) => ({ limit: () => ({ get: async () => ({ docs: Object.entries(dados[path] || {}).filter(([, d]) => d[campo] === val).map(([id, d]) => ({ id, data: () => d })) }) }) }),
+    where: (campo, op, val) => op === '>' ? ({ orderBy: () => ({ limit: () => ({ get: async () => ({ docs: Object.entries(dados[path] || {}).filter(([, d]) => d[campo] > val).map(([id, d]) => ({ id, data: () => d })).sort((a, b) => a.data().em - b.data().em) }) }) }) }) : ({ limit: () => ({ get: async () => ({ docs: Object.entries(dados[path] || {}).filter(([, d]) => d[campo] === val).map(([id, d]) => ({ id, data: () => d })) }) }) }),
     orderBy: () => ({ limit: () => ({ get: async () => ({ docs: Object.entries(dados[path] || {}).map(([id, d]) => ({ id, data: () => d })).sort((a, b) => b.data().em - a.data().em) }) }) }),
   });
   return { collection: col };
@@ -96,4 +96,20 @@ test('BCC6. aluno sem coach pode virar coach; aluno com coach não; alunos não 
   await executar({ acao: 'perfil', papel: 'aluno', nome: 'Cris' }, 'cris', db);
   const [, v] = await executar({ acao: 'perfil', papel: 'coach', nome: 'Cris' }, 'cris', db);
   assert.equal(v.perfil.papel, 'coach'); assert.match(v.perfil.codigo, /^[A-Z2-9]{6}$/);
+});
+
+test('BCC7. ler só o que chegou depois; feedback entra para todos e só o master lê', async () => {
+  const db = fakeDb();
+  const [, c] = await executar({ acao: 'perfil', papel: 'coach', nome: 'Gil' }, 'coach1', db);
+  await executar({ acao: 'perfil', papel: 'aluno', nome: 'Ana' }, 'ana', db);
+  await executar({ acao: 'vincular', codigo: c.perfil.codigo }, 'ana', db);
+  const [, m1] = await executar({ acao: 'enviar', com: 'coach1', texto: 'um' }, 'ana', db);
+  await new Promise((r) => setTimeout(r, 3));
+  await executar({ acao: 'enviar', com: 'ana', texto: 'dois' }, 'coach1', db);
+  const [, novos] = await executar({ acao: 'ler', com: 'ana', depois: m1.mensagem.em }, 'coach1', db);
+  assert.deepEqual(novos.mensagens.map((m) => m.texto), ['dois']);
+  assert.equal((await executar({ acao: 'feedback_enviar', texto: 'oi' }, 'ana', db))[0], 400);
+  assert.equal((await executar({ acao: 'feedback_enviar', texto: 'o botão não abre', tipo: 'bug' }, 'ana', db))[0], 200);
+  assert.equal((await executar({ acao: 'feedback_ver' }, 'ana', db, { master: false }))[0], 403);
+  assert.equal((await executar({ acao: 'feedback_ver' }, 'ana', db, { master: true }))[1].itens.length, 1);
 });
