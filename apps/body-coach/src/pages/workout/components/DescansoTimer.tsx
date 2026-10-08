@@ -15,9 +15,11 @@ export default function DescansoTimer({
 }: DescansoTimerProps) {
   const [segundos, setSegundos] = useState(initialSegundos);
   const [running, setRunning] = useState(true);
+  const [totalSegundos, setTotalSegundos] = useState(initialSegundos);
 
   useEffect(() => {
     setSegundos(initialSegundos);
+    setTotalSegundos(initialSegundos);
     setRunning(true);
   }, [initialSegundos]);
 
