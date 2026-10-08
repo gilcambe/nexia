@@ -32,7 +32,7 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [segundos, initialSegundos, onFinish]);
+  }, [initialSegundos, onFinish]);
 
   const addTime = (delta: number) => {
     setSegundos((s) => {
@@ -61,7 +61,7 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
       <div className="mt-4 flex items-center justify-center gap-3">
         <button
           onClick={() => addTime(-15)}
-          disabled={segundos <= 15}
+          disabled={segundos <= 0}
           className="inline-flex items-center gap-1.5 rounded-lg bg-background-50 border border-background-200 px-3 py-2 text-sm font-medium text-foreground-700 hover:bg-background-200 disabled:opacity-40 disabled:cursor-not-allowed transition"
         >
           <i className="ri-subtract-line"></i>
