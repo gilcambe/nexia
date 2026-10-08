@@ -15,7 +15,6 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
   const [hoveredMuscle, setHoveredMuscle] = useState<string | null>(null);
 
   // Calcula cor com base no volume (séries por semana)
-  // Ex: 0 = cinza/neutro, 1-10 = azul/verde suave, 10-20 = amarelo/laranja, 20+ = vermelho/intenso
   const getMuscleColor = (muscleKey: string) => {
     const count = volume[muscleKey] || 0;
     if (count === 0) return '#e2e8f0'; // slate-200
