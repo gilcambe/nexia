@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { alimentoDoTexto, NutrientesTotais } from '@/lib/alimentoDoTexto';
+import { perguntar } from '@/lib/coachAI';
 
 export const RefeicaoRapida: React.FC = () => {
   const [texto, setTexto] = useState('');
   const [imagemPreview, setImagemPreview] = useState<string | null>(null);
   const [totais, setTotais] = useState<NutrientesTotais | null>(null);
+  const [veredito, setVeredito] = useState<string | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
