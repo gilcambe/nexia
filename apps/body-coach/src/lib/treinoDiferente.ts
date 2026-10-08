@@ -1,47 +1,44 @@
+const normalizar = (texto: string): string =>
+  texto
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+
+const rotulos = [
+  'pernas',
+  'costas e biceps',
+  'peito e triceps',
+  'push',
+  'pull',
+  'legs',
+  'corpo inteiro',
+] as const;
+
+const mapaGrupos: Record<string, string> = {
+  pernas: 'pernas',
+  'costas e biceps': 'costas e biceps',
+  'peito e triceps': 'peito e triceps',
+  push: 'peito e triceps',
+  pull: 'costas e biceps',
+  legs: 'pernas',
+  'corpo inteiro': 'corpo inteiro',
+};
+
 export function treinoDiferente(planejado: string, escolhido: string): boolean {
-  const normalizar = (texto: string): string =>
-    texto
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim();
-
-  const rotulos = [
-    'pernas',
-    'costas e biceps',
-    'peito e triceps',
-    'push',
-    'pull',
-    'legs',
-    'corpo inteiro',
-  ];
-
-  const mapaGrupos: Record<string, string> = {
-    pernas: 'pernas',
-    'costas e biceps': 'costas e biceps',
-    'peito e triceps': 'peito e triceps',
-    push: 'peito e triceps',
-    pull: 'costas e biceps',
-    legs: 'pernas',
-    'corpo inteiro': 'corpo inteiro',
-  };
-
-  const normalizarESearch = (texto: string): string =>
-    texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-
-  const normalizarPlanejado = normalizarESearch(planejado);
-  const normalizadoEscolhido = normalizarESearch(escolhido);
+  const normalizadoPlanejado = normalizar(planejado);
+  const normalizadoEscolhido = normalizar(escolhido);
 
   // Se ambos os rótulos já estão normalizados e são iguais, não são diferentes
-  if (normalizarPlanejado === normalizadoEscolhido) return false;
+  if (normalizadoPlanejado === normalizadoEscolhido) return false;
 
   // Busca o grupo para cada rótulo
-  const grupoPlanejado = mapaGrupo(normalizarPlanejado);
+  const grupoPlanejado = mapaGrupo(normalizadoPlanejado);
   const grupoEscolhido = mapaGrupo(normalizadoEscolhido);
 
   // Se algum não foi encontrado no mapa, compara as strings normalizadas diretamente
   if (!grupoPlanejado || !grupoEscolhido) {
-    return normalizarPlanejado !== normalizadoEscolhido;
+    return normalizadoPlanejado !== normalizadoEscolhido;
   }
 
   // Treinos diferentes se estiverem em grupos musculares distintos
