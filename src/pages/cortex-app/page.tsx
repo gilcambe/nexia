@@ -66,10 +66,17 @@ export default function CortexApp() {
     );
   }, []);
 
-  const send = useCallback(async (text: string) => {
+      const send = useCallback(async (text: string) => {
     if (!text.trim() || loading) return;
     setErrorBanner(null);
     setServerStarting(false);
+
+    // Cria ID da conversa se não existir
+    let currentConversaId = conversaId;
+    if (!currentConversaId) {
+      currentConversaId = novaConversaId();
+      setConversaId(currentConversaId);
+    }
 
     const userMsg: Message = { id: "u-" + Date.now(), role: "user", text };
     const assistantId = "a-" + Date.now();
