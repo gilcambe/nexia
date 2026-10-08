@@ -158,3 +158,12 @@ test('U11. sem commit na 1ª volta: o lembrete manda editar e ligar o arquivo qu
   assert.match(t, /import e uso/);
   assert.doesNotMatch(noCommitNudge([]), /\(\)/);
 });
+
+test('U12. soCriaArquivos: só pedido de arquivo novo que proíbe editar existentes', () => {
+  const { soCriaArquivos } = require('../../nexia-ai/orchestrator');
+  assert.ok(soCriaArquivos('CRIE (arquivo novo, não edite nenhum existente) apps/body-coach/src/lib/recorde.ts que exporta ehRecorde. Não mexa em mais nada.'));
+  assert.ok(!soCriaArquivos('CRIE (arquivo novo) apps/x/CardioEntry.tsx. Depois, em apps/x/page.tsx use github.edit_files para mostrar o CardioEntry.'), 'também edita: não');
+  assert.ok(!soCriaArquivos('Crie (arquivo novo, não edite nenhum existente) a.ts e importe-o em b.tsx'), 'pede ligar: não');
+  assert.ok(!soCriaArquivos('Corrija o rodapé do Site Alfa'));
+  assert.ok(!soCriaArquivos(''));
+});

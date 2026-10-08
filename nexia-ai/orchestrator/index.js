@@ -110,6 +110,18 @@ function noCommitNudge(files) {
     'e ligue-o na tela onde ele deve aparecer (import e uso). Se nada existe, crie com github.commit_files. Termine só depois de um commit.';
 }
 
+/**
+ * Pedido que só manda CRIAR arquivo(s) novo(s) e proíbe editar os existentes (ex.: "CRIE (arquivo novo, não edite
+ * nenhum existente) a/b.ts"). Se todos esses arquivos já existem na branch padrão, não há o que fazer: a tarefa já
+ * foi entregue antes. Sem isso, cada nova tentativa termina em NO_CHANGES e a fila repete a mesma tarefa.
+ */
+function soCriaArquivos(message) {
+  const t = String(message || '');
+  return /\bcri(?:e|ar)\b/i.test(t) && /arquivo novo/i.test(t) &&
+    /n[ãa]o (?:edite|altere) nenhum (?:arquivo )?existente|n[ãa]o mexa em mais nada/i.test(t) &&
+    !/\b(?:edit_files|edite (?:s[óo] )?o arquivo|importe|renderize|ligue)\b/i.test(t);
+}
+
 // ── Planos por intenção ──────────────────────────────────────────────────────
 function planFor(intent, message) {
   const sp = specialistFor(message);
@@ -526,7 +538,19 @@ function createOrchestrator(deps) {
           if (!stop) {
             // Confirmação pela ferramenta: a branch tem que estar à frente da padrão.
             const c = await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch });
-            if (c.status !== 'succeeded' || !c.result.ahead_by || (before && headOf(c) === before)) {
+            const novos = !fix && c.status === 'succeeded' && !c.result.ahead_by && soCriaArquivos(message) ? filesIn(message) : [];
+            let existem = novos.length > 0;
+            for (const path of novos) {
+              if (!existem) break;
+              const g = await tool(ctx, state, 'qa', 'github.get_file', { path, ref: repo.default_branch });
+              existem = g.status === 'succeeded';
+            }
+            if (existem) {
+              // Pedido só de arquivo novo e o arquivo já está na branch padrão: tarefa já entregue, sem PR vazio.
+              const why = `Nada a fazer: ${novos.join(', ')} já existe(m) em ${repo.default_branch} e o pedido só manda criar, sem editar existentes.`;
+              stepDone(i, { tool_call_ids: addIds(i, ids(c)), summary: why });
+              stop = { status: 'succeeded', error_code: 'ALREADY_DONE', result_summary: why };
+            } else if (c.status !== 'succeeded' || !c.result.ahead_by || (before && headOf(c) === before)) {
               const why = fix ? `A rodada de correção terminou sem commit novo; a revisão continua pedindo mudanças (branch ${state.work_branch}).` : 'O agente terminou sem commit na branch de trabalho; nada foi alterado.';
               // O que o agente disse (e as gravações recusadas) fica no passo para diagnóstico. As recusas
               // ("[nada gravado; recusas: ...]") vêm no fim do texto: guarda começo e fim.
@@ -844,4 +868,4 @@ function usageOf(meter, prev = {}) {
 function clip(t, n) { const s = String(t); return s.length <= n ? s : `${s.slice(0, n - 1)}…`; }
 function clean(o) { return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== '')); }
 
-module.exports = { buildKind, createOrchestrator, classifyIntent, filesIn, noCommitNudge, planFor, specialistFor, DEFAULT_BUDGET };
+module.exports = { buildKind, createOrchestrator, classifyIntent, filesIn, noCommitNudge, soCriaArquivos, planFor, specialistFor, DEFAULT_BUDGET };
