@@ -1,5 +1,6 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
 import { cardioDoTexto, CardioAtividade } from '@/lib/cardioDoTexto';
+import { perguntar } from '@/lib/coachAI';
 
 export interface CardioEntryProps {
   onSubmit?: (atividades: CardioAtividade[], fotoNome?: string) => void;
@@ -10,6 +11,7 @@ export function CardioEntry({ onSubmit }: CardioEntryProps) {
   const [fotoNome, setFotoNome] = useState<string | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleTextoChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setTexto(e.target.value);
@@ -28,24 +30,48 @@ export function CardioEntry({ onSubmit }: CardioEntryProps) {
     }
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!texto.trim() && !fotoNome) return;
 
     setLoading(true);
-    const atividades = cardioDoTexto(texto);
-    onSubmit?.(atividades, fotoNome || undefined);
-    setLoading(false);
+    setError(null);
+    try {
+      let textoParaProcessar = texto;
+      if (!texto.trim() && fotoPreview) {
+        const respostaIa = await perguntar({
+          prompt: 'Extraia os dados de cardio deste painel (tipo de atividade, duração em minutos, calorias e distância se houver) e descreva em formato de texto simples como por exemplo: "30 min de esteira". Retorne apenas o texto descritivo.',
+          image: fotoPreview
+        });
+        if (respostaIa && typeof respostaIa === 'string') {
+          textoParaProcessar = respostaIa;
+        } else if (respostaIa && typeof respostaIa === 'object' && 'resposta' in respostaIa && typeof (respostaIa as any).resposta === 'string') {
+          textoParaProcessar = (respostaIa as any).resposta;
+        }
+      }
 
-    // Reset form after submit
-    setTexto('');
-    setFotoNome(null);
-    setFotoPreview(null);
+      const atividades = cardioDoTexto(textoParaProcessar);
+      onSubmit?.(atividades, fotoNome || undefined);
+
+      // Reset form after submit
+      setTexto('');
+      setFotoNome(null);
+      setFotoPreview(null);
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao processar a foto do painel');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
       <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div className="p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-600 dark:text-red-400">
+            {error}
+          </div>
+        )}
         <div>
           <label htmlFor="cardio-texto" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Cardio
