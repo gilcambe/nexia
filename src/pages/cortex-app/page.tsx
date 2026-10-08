@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { streamCortex } from "@/services/api";
 import { listarProjetos, obterProjeto, salvarProjeto, apagarProjeto, montarPrompt, type ProjetoCortex } from "@/lib/projetosCortex";
+import { lerConfigGoogle, salvarConfigGoogle, testarGoogle, listarAgenda, criarEvento, buscarDrive, lerDrive, textoAgenda, parecePerguntaDeAgenda, lerComandoAgendar, urlImagem, type ConfigGoogle } from "@/lib/googleCortex";
 import { verificarConexoes, type Conexao } from "@/lib/conexoesCortex";
 import { novaConversaId, salvarConversa, listarConversas, obterConversa, apagarConversa, type Conversa } from "@/lib/conversasCortex";
 
@@ -11,6 +12,7 @@ interface Message {
   text: string;
   model?: string;
   streaming?: boolean;
+  imagem?: string;
 }
 
 const MODEL_OPTIONS = [
@@ -60,6 +62,9 @@ export default function CortexApp() {
   const [projetos, setProjetos] = useState<ProjetoCortex[]>(() => listarProjetos());
   const [projetoId, setProjetoId] = useState<string>("");
   const [conexoesAberto, setConexoesAberto] = useState(false);
+  const [google, setGoogle] = useState<ConfigGoogle | null>(() => lerConfigGoogle());
+  const [googleForm, setGoogleForm] = useState<ConfigGoogle>(() => lerConfigGoogle() || { url: "", segredo: "" });
+  const [googleMsg, setGoogleMsg] = useState("");
   const [conexoes, setConexoes] = useState<Conexao[]>([]);
   const [editando, setEditando] = useState<{ id?: string; nome: string; instrucoes: string } | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -78,7 +83,7 @@ export default function CortexApp() {
       titulo: primeira.slice(0, 60),
       atualizadaEm: Date.now(),
       projetoId: projetoId || undefined,
-      mensagens: messages.filter((m) => m.id !== "welcome").map(({ id, role, text, model }) => ({ id, role, text, model })),
+      mensagens: messages.filter((m) => m.id !== "welcome").map(({ id, role, text, model, imagem }) => ({ id, role, text, model, imagem })),
     });
     setConversas(listarConversas());
   }, [messages, loading, conversaId, projetoId]);
@@ -121,10 +126,65 @@ export default function CortexApp() {
     );
   }, []);
 
+  // Comandos locais (/agenda, /agendar, /drive, /imagem): não gastam IA nem cota; falam direto com a ponte Google ou o gerador de imagem.
+  const comando = useCallback(async (nome: string, args: string, textoOriginal: string) => {
+    const id = Date.now();
+    setMessages((prev) => [...prev, { id: "u-" + id, role: "user", text: textoOriginal }]);
+    setInput("");
+    let resposta: Message = { id: "a-" + id, role: "assistant", text: "", model: "CORTEX · comando" };
+    try {
+      if (nome === "imagem") {
+        if (!args) throw new Error("Escreva o que quer ver. Ex.: /imagem um gato astronauta, estilo ilustração");
+        resposta = { ...resposta, text: `Imagem gerada para: ${args}\n(gerador grátis; se não aparecer, tente de novo em alguns segundos)`, imagem: urlImagem(args), model: "Imagem grátis" };
+      } else if (["agenda", "agendar", "drive"].includes(nome)) {
+        if (!google) throw new Error("O Google ainda não está conectado. Abra Conexões > Google e siga os passos.");
+        if (nome === "agenda") {
+          const dias = Math.min(Math.max(parseInt(args, 10) || 7, 1), 60);
+          resposta.text = `Seus compromissos nos próximos ${dias} dia(s):\n${textoAgenda(await listarAgenda(google, dias))}`;
+        } else if (nome === "agendar") {
+          const c = lerComandoAgendar(args);
+          if (!c) throw new Error("Use: /agendar 2026-10-10 15:00 | Título do compromisso");
+          const ev = await criarEvento(google, c);
+          resposta.text = `Compromisso criado: ${ev.titulo}, ${new Date(ev.inicio).toLocaleString("pt-BR")}.`;
+        } else {
+          if (!args) throw new Error("Diga o que procurar. Ex.: /drive contrato");
+          const arqs = await buscarDrive(google, args);
+          if (!arqs.length) resposta.text = "Não achei nada no seu Drive com esse termo.";
+          else {
+            let texto = "Achei no seu Drive:\n" + arqs.map((a) => `• ${a.nome} (${new Date(a.atualizado).toLocaleDateString("pt-BR")}) ${a.link}`).join("\n");
+            try {
+              const conteudo = await lerDrive(google, arqs[0].id);
+              texto += `\n\nComeço de "${arqs[0].nome}":\n${conteudo.slice(0, 800)}`;
+            } catch { /* primeiro arquivo não é texto: só lista */ }
+            resposta.text = texto;
+          }
+        }
+        resposta.model = "Google";
+      } else {
+        throw new Error("Comandos: /imagem, /agenda, /agendar, /drive");
+      }
+    } catch (err) {
+      resposta.text = "⚠️ " + (err instanceof Error ? err.message : "Não consegui fazer isso agora.");
+    }
+    setMessages((prev) => [...prev, resposta]);
+  }, [google]);
+
   const send = useCallback(async (text: string) => {
     if (!text.trim() || loading) return;
     setErrorBanner(null);
     setServerStarting(false);
+    const cmd = text.trim().match(/^\/(\w+)\s*([\s\S]*)$/);
+    if (cmd) {
+      await comando(cmd[1].toLowerCase(), cmd[2].trim(), text.trim());
+      return;
+    }
+    // Pergunta sobre agenda com o Google conectado: a agenda real vai junto para o Cortex responder com dados de verdade.
+    let extra = "";
+    if (google && parecePerguntaDeAgenda(text)) {
+      try {
+        extra = `[Agenda real do usuário, próximos 7 dias]\n${textoAgenda(await listarAgenda(google, 7))}`;
+      } catch { /* sem agenda agora: responde sem ela */ }
+    }
 
     const userMsg: Message = { id: "u-" + Date.now(), role: "user", text };
     const assistantId = "a-" + Date.now();
@@ -148,7 +208,7 @@ export default function CortexApp() {
         {
           message: montarPrompt({
             pergunta: text,
-            instrucoes: obterProjeto(projetoId)?.instrucoes,
+            instrucoes: [obterProjeto(projetoId)?.instrucoes, extra].filter(Boolean).join("\n\n"),
             anteriores: messages.filter((m) => m.id !== "welcome" && !m.streaming),
           }),
           model: selectedModel,
@@ -205,7 +265,7 @@ export default function CortexApp() {
 
     setLoading(false);
     abortRef.current = null;
-  }, [loading, selectedModel, finalizeMessage, messages, projetoId]);
+  }, [loading, selectedModel, finalizeMessage, messages, projetoId, google, comando]);
 
   const stopStream = useCallback(() => {
     abortRef.current?.abort();
@@ -266,13 +326,40 @@ export default function CortexApp() {
                 </div>
               </div>
             ))}
-            <div className="rounded-lg border border-nexia-border px-3 py-2">
-              <p className="text-sm text-white"><i className="ri-telegram-line text-nexia-cyan" /> Telegram (avisos no seu celular)</p>
-              <p className="text-[11px] text-nexia-muted mt-1">
-                Para ligar: no Telegram, fale com @BotFather, crie um bot e copie o token; mande uma mensagem ao bot e pegue o número da sua conversa (@userinfobot).
-                Depois salve os dois no GitHub, em Settings &gt; Secrets and variables &gt; Actions: TELEGRAM_BOT_TOKEN e TELEGRAM_CHAT_ID.
-                Pronto: cada mudança que entrar no sistema avisa você.
+            <div className="rounded-lg border border-nexia-border px-3 py-2 space-y-2">
+              <p className="text-sm text-white">
+                <i className="ri-google-line text-nexia-cyan" /> Google (Agenda e Drive){" "}
+                <span className="text-[10px] text-nexia-muted">{google ? "conectado" : "não conectado"}</span>
               </p>
+              <p className="text-[11px] text-nexia-muted">
+                Grátis, na sua conta. Passo a passo no arquivo google/LEIA-ME.md do projeto. Depois de conectar, use: /agenda, /agendar 2026-10-10 15:00 | Título, /drive termo. Perguntas como "o que tenho amanhã?" já usam a sua agenda de verdade.
+              </p>
+              <input value={googleForm.url} onChange={(e) => setGoogleForm({ ...googleForm, url: e.target.value })} placeholder="Endereço da ponte (termina em /exec)"
+                className="w-full px-3 py-2 text-xs bg-nexia-surface2 border border-nexia-border rounded-lg text-white outline-none" />
+              <input type="password" value={googleForm.segredo} onChange={(e) => setGoogleForm({ ...googleForm, segredo: e.target.value })} placeholder="Senha da ponte"
+                className="w-full px-3 py-2 text-xs bg-nexia-surface2 border border-nexia-border rounded-lg text-white outline-none" />
+              <div className="flex flex-wrap items-center gap-2">
+                <button onClick={async () => {
+                  setGoogleMsg("Testando...");
+                  try {
+                    const quem = await testarGoogle(googleForm);
+                    salvarConfigGoogle(googleForm);
+                    setGoogle({ url: googleForm.url.trim(), segredo: googleForm.segredo.trim() });
+                    setGoogleMsg("Conectado como " + quem + ".");
+                  } catch (err) {
+                    setGoogleMsg("⚠️ " + (err instanceof Error ? err.message : "Falhou."));
+                  }
+                }} className="px-3 py-1.5 text-xs rounded-lg bg-nexia-cyan text-[#0a0a0f] cursor-pointer">Testar e salvar</button>
+                {google && (
+                  <button onClick={() => { salvarConfigGoogle(null); setGoogle(null); setGoogleForm({ url: "", segredo: "" }); setGoogleMsg("Desconectado."); }}
+                    className="px-3 py-1.5 text-xs rounded-lg border border-nexia-border text-nexia-muted hover:text-red-400 cursor-pointer">Desconectar</button>
+                )}
+                {googleMsg && <span className="text-[11px] text-nexia-muted">{googleMsg}</span>}
+              </div>
+            </div>
+            <div className="rounded-lg border border-nexia-border px-3 py-2">
+              <p className="text-sm text-white"><i className="ri-image-line text-nexia-cyan" /> Imagens grátis</p>
+              <p className="text-[11px] text-nexia-muted mt-1">Digite /imagem e a descrição (ex.: /imagem um cachorro surfando, estilo desenho). O gerador é grátis e sem cadastro.</p>
             </div>
           </div>
         </div>
@@ -352,6 +439,11 @@ export default function CortexApp() {
                   </div>
                 )}
                 <div className="whitespace-pre-wrap break-words">{msg.text}</div>
+                {msg.imagem && (
+                  <a href={msg.imagem} target="_blank" rel="noreferrer">
+                    <img src={msg.imagem} alt="Imagem gerada" className="mt-2 rounded-lg max-w-full" loading="lazy" />
+                  </a>
+                )}
                 {msg.streaming && msg.text && (
                   <div className="mt-2 flex items-center gap-1.5 border-t border-nexia-border/50 pt-2">
                     <i className="ri-loader-4-line animate-spin text-nexia-cyan text-xs" />

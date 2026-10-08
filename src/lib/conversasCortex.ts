@@ -3,6 +3,7 @@ export interface MensagemSalva {
   role: "user" | "assistant";
   text: string;
   model?: string;
+  imagem?: string;
 }
 
 export interface Conversa {
