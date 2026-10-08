@@ -121,10 +121,16 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
   const currentSets = setsByEx[exercise.id] ?? [];
 
   useEffect(() => {
+    if (phase === 'EXERCISE_ACTIVE') {
+      setTreinoAtivo(exercise);
+    }
+  }, [phase, exercise]);
+
+  useEffect(() => {
     if (phase !== 'EXERCISE_ACTIVE') {
       setTreinoAtivo(null);
     }
-  }, [phase]);
+  }, [phase, exercise]);
 
   // Extrair faixa de repetições alvo do exercício (ex: "8-12 reps" -> [8, 12])
   const parseReps = (target: string): [number, number] => {
