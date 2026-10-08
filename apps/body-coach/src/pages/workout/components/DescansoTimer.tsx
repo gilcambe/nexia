@@ -22,7 +22,7 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
     if (!isRunning || segundos <= 0) return;
 
     intervalRef.current = setInterval(() => {
-      setSegundos((s) => Math.max(0, s - 1));
+      setSegundos((s) => s - 1);
     }, 1000);
 
     return () => {
