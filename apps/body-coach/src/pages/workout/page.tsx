@@ -40,11 +40,11 @@ export default function Workout() {
 
   useEffect(() => {
     if (!user) return;
-    getUserDoc<{ onboarding?: Answers; ficha?: Partial<Ficha> }>(user.id, 'profile', 'main')
+    getUserDoc<{ onboarding?: Answers; ficha?: Partial<Ficha>; mobility?: string[] }>(user.id, 'profile', 'main')
       .then((p) => {
         if (!p?.onboarding) return setEstado('no-plan');
         setFicha(fichaDoPerfil(p as Parameters<typeof fichaDoPerfil>[0]));
-        setRespostas(p.onboarding as unknown as Record<string, unknown>);
+        setRespostas({ ...(p.onboarding as unknown as Record<string, unknown>), mobility: p.mobility ?? [] });
         setEstado('ready');
       })
       .catch(() => setEstado('no-plan'));

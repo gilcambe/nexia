@@ -150,7 +150,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
       <div className="px-4 py-4">
         <div className="rounded-xl border border-background-200 bg-background-100/60 p-3">
-          <p className="truncate text-xs font-semibold text-foreground-700">{displayName}</p>
+          <div className="flex items-center gap-2">
+            {profile?.photo_data ? <img src={profile.photo_data} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" /> : <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-700">{displayName.charAt(0).toUpperCase()}</span>}
+            <p className="truncate text-xs font-semibold text-foreground-700">{profile?.nickname || displayName}</p>
+          </div>
           <p className="mt-0.5 text-[11px] text-foreground-400">{user?.email}</p>
           <div className="mt-2 flex items-center gap-1.5">
             <span className={`h-1.5 w-1.5 rounded-full ${isLocalDemo ? 'bg-secondary-500' : 'bg-accent-500'}`}></span>

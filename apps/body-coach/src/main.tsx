@@ -38,3 +38,23 @@ if ('serviceWorker' in navigator && !import.meta.env.DEV) {
   });
   document.addEventListener('visibilitychange', () => { void conferirAtualizacao(); });
 }
+
+// Abertura NEXIA (assinatura da marca): logo e nome por ~1,6 s, uma vez a cada abertura do app.
+// Não bloqueia toques e some sozinha; respeita quem pediu menos animação.
+(() => {
+  try {
+    if (sessionStorage.getItem('nexia_splash')) return;
+    sessionStorage.setItem('nexia_splash', '1');
+  } catch { /* sem armazenamento: mostra mesmo assim */ }
+  const calmo = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const el = document.createElement('div');
+  el.setAttribute('aria-hidden', 'true');
+  el.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:#0f1a14;color:#fff;pointer-events:none;transition:opacity .4s ease;font-family:system-ui,sans-serif';
+  el.innerHTML = '<div style="width:72px;height:72px;border-radius:20px;background:#2f9e6a;display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:800;' + (calmo ? '' : 'animation:nx-pop .7s cubic-bezier(.2,1.4,.4,1) both;') + '">N</div><div style="letter-spacing:.42em;font-weight:700;font-size:22px;padding-left:.42em;' + (calmo ? '' : 'animation:nx-pop .7s .15s cubic-bezier(.2,1.4,.4,1) both;') + '">NEXIA</div>';
+  const st = document.createElement('style');
+  st.textContent = '@keyframes nx-pop{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}';
+  document.head.appendChild(st);
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; }, 1300);
+  setTimeout(() => { el.remove(); st.remove(); }, 1750);
+})();
