@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { streamCortex } from "@/services/api";
+import { novaConversaId, salvarConversa, listarConversas, obterConversa, apagarConversa, type Conversa } from "@/lib/conversasCortex";
 
 interface Message {
   id: string;
@@ -38,6 +39,7 @@ const CHIPS = [
 
 export default function CortexApp() {
   const navigate = useNavigate();
+  const [conversaId, setConversaId] = useState(() => novaConversaId());
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
