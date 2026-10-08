@@ -257,8 +257,10 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
               {/* Ombros / Trapézio Costas */}
               <g
                 id="ombros-back"
-                className="cursor-pointer"
+                className="cursor-pointer transition-transform hover:scale-[1.02]"
                 onClick={() => onSelectMuscle?.('ombros')}
+                role="button"
+                aria-label={musclesInfo.ombros.label}
                 onMouseEnter={() => setHoveredMuscle('ombros')}
                 onMouseLeave={() => setHoveredMuscle(null)}
               >
@@ -273,8 +275,10 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
               {/* Costas (Dorsais / Lats) */}
               <g
                 id="costas"
-                className="cursor-pointer"
+                className="cursor-pointer transition-transform hover:scale-[1.02]"
                 onClick={() => onSelectMuscle?.('costas')}
+                role="button"
+                aria-label={musclesInfo.costas.label}
                 onMouseEnter={() => setHoveredMuscle('costas')}
                 onMouseLeave={() => setHoveredMuscle(null)}
               >
@@ -289,8 +293,10 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
               {/* Tríceps */}
               <g
                 id="triceps"
-                className="cursor-pointer"
+                className="cursor-pointer transition-transform hover:scale-[1.02]"
                 onClick={() => onSelectMuscle?.('triceps')}
+                role="button"
+                aria-label={musclesInfo.triceps.label}
                 onMouseEnter={() => setHoveredMuscle('triceps')}
                 onMouseLeave={() => setHoveredMuscle(null)}
               >
@@ -314,8 +320,10 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
               {/* Glúteos */}
               <g
                 id="gluteos"
-                className="cursor-pointer"
+                className="cursor-pointer transition-transform hover:scale-[1.02]"
                 onClick={() => onSelectMuscle?.('gluteos')}
+                role="button"
+                aria-label={musclesInfo.gluteos.label}
                 onMouseEnter={() => setHoveredMuscle('gluteos')}
                 onMouseLeave={() => setHoveredMuscle(null)}
               >
@@ -336,8 +344,10 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
               {/* Posterior de Coxa */}
               <g
                 id="posterior"
-                className="cursor-pointer"
+                className="cursor-pointer transition-transform hover:scale-[1.02]"
                 onClick={() => onSelectMuscle?.('posterior')}
+                role="button"
+                aria-label={musclesInfo.posterior.label}
                 onMouseEnter={() => setHoveredMuscle('posterior')}
                 onMouseLeave={() => setHoveredMuscle(null)}
               >
@@ -358,8 +368,10 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
               {/* Panturrilha (Costas) */}
               <g
                 id="panturrilha"
-                className="cursor-pointer"
+                className="cursor-pointer transition-transform hover:scale-[1.02]"
                 onClick={() => onSelectMuscle?.('panturrilha')}
+                role="button"
+                aria-label={musclesInfo.panturrilha.label}
                 onMouseEnter={() => setHoveredMuscle('panturrilha')}
                 onMouseLeave={() => setHoveredMuscle(null)}
               >
