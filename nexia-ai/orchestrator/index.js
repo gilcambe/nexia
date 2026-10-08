@@ -643,7 +643,7 @@ function createOrchestrator(deps) {
       // Issue #234: a causa (mensagem e onde) fica gravada na execução para diagnóstico.
       const cause = `${(e && e.message) || String(e)}${e && e.stack ? ` @ ${String(e.stack).split('\n').slice(1, 2).join('').trim()}` : ''}`.slice(0, 600);
       const at = steps.findIndex(s => s.status === 'running');
-      if (at >= 0) steps[at] = { ...steps[at], status: 'failed', error_code: code, summary: clip(`Erro: ${cause}`, 2000) };
+      if (at >= 0 && code === 'ORCHESTRATOR_ERROR') steps[at] = { ...steps[at], status: 'failed', error_code: code, summary: clip(`Erro: ${cause}`, 2000) };
       stop = { status: 'failed', error_code: code, result_summary: code === 'BUDGET_EXCEEDED' ? e.message : `Erro interno do Orchestrator (${code}): ${cause}. Nada foi dado como concluído.` };
       if (code === 'ORCHESTRATOR_ERROR') console.error('[orchestrator]', e && e.stack);
     }
