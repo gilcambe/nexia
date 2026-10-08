@@ -432,7 +432,7 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
             <span>12-17</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-orange-400 inkline-block"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block"></span>
             <span>18-24</span>
           </div>
           <div className="flex items-center gap-1">
