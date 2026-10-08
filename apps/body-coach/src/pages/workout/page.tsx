@@ -4,6 +4,7 @@ import { type SetLog, type Session } from '@/mocks/workout';
 import type { Answers } from '@/lib/trainingPlan';
 import { montarTreinoDoDia, type TreinoDoDia, trocarExercicio } from '@/lib/dayPlan';
 import { moverExercicio } from '@/lib/ordemTreino';
+import { fichaDoPerfil, avancarFicha, type Ficha } from '@/lib/ficha';
 import { useWakeLock } from '@/lib/useWakeLock';
 import DemoExecucao from '@/components/feature/DemoExecucao';
 import { alternativas, lesoesDoTexto, POR_ID, type Lesao } from '@/lib/exerciseDb';
@@ -33,13 +34,16 @@ export default function Workout() {
   const { user } = useAuth();
   const [respostas, setRespostas] = useState<Record<string, unknown> | null>(null);
   const [treino, setTreino] = useState<TreinoDoDia | null>(null);
+  const [ficha, setFicha] = useState<Ficha | null>(null);
+  const [seguiuFicha, setSeguiuFicha] = useState(false);
   const [estado, setEstado] = useState<'loading' | 'rest' | 'no-plan' | 'ready'>('loading');
 
   useEffect(() => {
     if (!user) return;
-    getUserDoc<{ onboarding?: Answers }>(user.id, 'profile', 'main')
+    getUserDoc<{ onboarding?: Answers; ficha?: Partial<Ficha> }>(user.id, 'profile', 'main')
       .then((p) => {
         if (!p?.onboarding) return setEstado('no-plan');
+        setFicha(fichaDoPerfil(p as Parameters<typeof fichaDoPerfil>[0]));
         setRespostas(p.onboarding as unknown as Record<string, unknown>);
         setEstado('ready');
       })
@@ -51,11 +55,24 @@ export default function Workout() {
     return (
       <PreTreino
         respostas={respostas}
-        onStart={(cfg) => setTreino(montarTreinoDoDia({ respostas, ...cfg, variacao: Date.now() % 1000 }))}
+        divisaoInicial={ficha?.divisao}
+        diaInicial={ficha?.proximoDia}
+        onStart={(cfg) => {
+          setSeguiuFicha(!!ficha && cfg.divisao === ficha.divisao && cfg.diaDaDivisao === ficha.proximoDia);
+          setTreino(montarTreinoDoDia({ respostas, ...cfg, variacao: Date.now() % 1000 }));
+        }}
       />
     );
   }
-  return <WorkoutFlow session={treino.sessao} lesoes={treino.lesoes} onSessionChange={(sessao) => setTreino({ ...treino, sessao })} />;
+  // Treino da ficha concluído: o ciclo avança para o próximo dia (treino "só por hoje" não mexe na ficha).
+  const treinoSalvo = () => {
+    if (!user || !ficha || !seguiuFicha) return;
+    const nova = avancarFicha(ficha);
+    setFicha(nova);
+    setSeguiuFicha(false);
+    void setUserDoc(user.id, 'profile', 'main', { ficha: nova }).catch(() => {});
+  };
+  return <WorkoutFlow session={treino.sessao} lesoes={treino.lesoes} onSessionChange={(sessao) => setTreino({ ...treino, sessao })} onSaved={treinoSalvo} />;
 }
 
 function WorkoutEmpty({ estado }: { estado: string }) {
@@ -63,13 +80,13 @@ function WorkoutEmpty({ estado }: { estado: string }) {
   return (
     <div className="rounded-2xl border border-background-200 bg-background-50 p-6">
       <h1 className="font-heading text-xl font-bold text-foreground-950">{estado === 'rest' ? 'Hoje é dia de descanso' : 'Responda o questionário para montar seu treino'}</h1>
-      <p className="mt-2 text-sm text-foreground-600">{estado === 'rest' ? 'Recupere bem: sono, água e alimentação. Veja a semana no Plano.' : 'Com seus dias livres e seu nível, o treino do dia aparece aqui.'}</p>
-      <Link to={estado === 'rest' ? '/plan' : '/onboarding'} className="mt-4 inline-flex rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-background-50">{estado === 'rest' ? 'Ver plano' : 'Responder agora'}</Link>
+      <p className="mt-2 text-sm text-foreground-600">{estado === 'rest' ? 'Recupere bem: sono, água e alimentação. Veja a sua ficha de treino.' : 'Com seus dias livres e seu nível, o treino do dia aparece aqui.'}</p>
+      <Link to={estado === 'rest' ? '/plan' : '/onboarding'} className="mt-4 inline-flex rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-background-50">{estado === 'rest' ? 'Ver ficha' : 'Responder agora'}</Link>
     </div>
   );
 }
 
-function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Session; lesoes?: Lesao[]; onSessionChange?: (s: Session) => void }) {
+function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { session: Session; lesoes?: Lesao[]; onSessionChange?: (s: Session) => void; onSaved?: () => void }) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { setOpen } = useCoach();
@@ -585,6 +602,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
                 // Sem armazenamento local: fica só no Firebase.
               }
               await setUserDoc(user.id, 'workouts', session.id, w).catch(() => {});
+              onSaved?.();
             }
             setPhase('SESSION_COMPLETE');
           };

@@ -5,6 +5,8 @@ import { treinoDiferente } from '@/lib/treinoDiferente';
 
 interface PreTreinoProps {
   respostas: Record<string, unknown>;
+  divisaoInicial?: Divisao; // divisão da ficha do aluno
+  diaInicial?: number; // próximo dia do ciclo da ficha
   onStart: (config: {
     divisao: Divisao;
     diaDaDivisao: number;
@@ -26,12 +28,13 @@ const GRUPOS_DISPONIVEIS: { id: Grupo; label: string }[] = [
   { id: 'abdomen', label: 'Abdômen' },
 ];
 
-export default function PreTreino({ respostas, onStart }: PreTreinoProps) {
+export default function PreTreino({ respostas, divisaoInicial, diaInicial, onStart }: PreTreinoProps) {
   const diasSemana = Number(respostas.daysPerWeek ?? 4);
-  const divisaoPadrao = divisaoSugerida(diasSemana);
+  const divisaoPadrao = divisaoInicial ?? divisaoSugerida(diasSemana);
 
   const [divisao, setDivisao] = useState<Divisao>(divisaoPadrao);
-  const [diaDaDivisao, setDiaDaDivisao] = useState<number>(0);
+  const [diaDaDivisao, setDiaDaDivisao] = useState<number>(diaInicial ?? 0);
+  const [mudando, setMudando] = useState(false);
   const [enfase, setEnfase] = useState<Grupo[]>([]);
   
   const [sono, setSono] = useState<EstadoDoDia['sono']>('bom');
@@ -77,109 +80,23 @@ export default function PreTreino({ respostas, onStart }: PreTreinoProps) {
         <span className="inline-block px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full mb-2">
           Antes de Treinar
         </span>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Como vai ser o treino de hoje?</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Treino de hoje</h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Ajustamos os exercícios, cargas e volume conforme a sua disposição e o seu dia.
+          Seguindo a sua ficha. Conte como você está hoje: o treino se ajusta ao seu sono, alimentação, energia, tempo e dores.
         </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Escolha da Divisão */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
-          <h2 className="text-base font-semibold flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">1</span>
-            Divisão de Treino
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {(Object.keys(DIVISOES) as Divisao[]).map((key) => {
-              const item = DIVISOES[key];
-              const isSelected = divisao === key;
-              return (
-                <button
-                  type="button"
-                  key={key}
-                  onClick={() => {
-                    setDivisao(key);
-                    setDiaDaDivisao(0);
-                  }}
-                  className={`text-left p-3.5 rounded-xl border transition-all ${
-                    isSelected
-                      ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 ring-2 ring-emerald-500/20'
-                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-transparent'
-                  }`}
-                >
-                  <div className="font-semibold text-sm">{item.nome}</div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {item.dias.length} {item.dias.length === 1 ? 'dia' : 'dias'} por ciclo
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Seleção do dia específico dentro da divisão */}
-          <div className="pt-2">
-            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
-              Qual treino do ciclo é hoje?
-            </label>
-            <select
-              value={diaDaDivisao}
-              onChange={(e) => setDiaDaDivisao(Number(e.target.value))}
-              className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            >
-              {diasDaDivisaoAtual.map((d, index) => (
-                <option key={index} value={index}>
-                  {d.titulo}
-                </option>
-              ))}
-            </select>
-            {diaDaDivisao !== 0 && diasDaDivisaoAtual[0] && treinoDiferente(diasDaDivisaoAtual[0].titulo, diasDaDivisaoAtual[diaDaDivisao].titulo) && (
-              <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                Este treino tem foco muscular diferente do dia 1 do ciclo ({diasDaDivisaoAtual[0].titulo}).
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Ênfase */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
-          <div>
-            <h2 className="text-base font-semibold flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">2</span>
-              Ênfase opcional (até 2)
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Quer focar em algum grupo muscular específico hoje? Ganha mais um exercício na rotina.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {GRUPOS_DISPONIVEIS.map((g) => {
-              const ativo = enfase.includes(g.id);
-              return (
-                <button
-                  type="button"
-                  key={g.id}
-                  onClick={() => toggleEnfase(g.id)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
-                    ativo
-                      ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {g.label}
-                </button>
-              );
-            })}
-          </div>
+        {/* Treino da ficha */}
+        <div className="bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900 rounded-2xl p-5 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Na sua ficha ({DIVISOES[divisao].nome})</p>
+          <p className="mt-1 text-lg font-bold">{diasDaDivisaoAtual[diaDaDivisao]?.titulo ?? diasDaDivisaoAtual[0].titulo}</p>
+          {mudando && <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">Treino diferente só por hoje. A sua ficha continua a mesma.</p>}
         </div>
 
         {/* Como você está hoje */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-6">
           <h2 className="text-base font-semibold flex items-center gap-2">
-            <span className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold">3</span>
             Como você está HOJE?
           </h2>
 
@@ -302,16 +219,117 @@ export default function PreTreino({ respostas, onStart }: PreTreinoProps) {
           </div>
         </div>
 
-        {/* Botão de avançar/gerar */}
-        <button
-          type="submit"
-          className="w-full py-4 px-6 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold rounded-2xl shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
-        >
-          <span>Montar Treino de Hoje</span>
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
-          </svg>
-        </button>
+        {mudando && (
+          <>
+        {/* Escolha da Divisão */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+          <h2 className="text-base font-semibold flex items-center gap-2">
+            Divisão só para hoje
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {(Object.keys(DIVISOES) as Divisao[]).map((key) => {
+              const item = DIVISOES[key];
+              const isSelected = divisao === key;
+              return (
+                <button
+                  type="button"
+                  key={key}
+                  onClick={() => {
+                    setDivisao(key);
+                    setDiaDaDivisao(0);
+                  }}
+                  className={`text-left p-3.5 rounded-xl border transition-all ${
+                    isSelected
+                      ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 ring-2 ring-emerald-500/20'
+                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-transparent'
+                  }`}
+                >
+                  <div className="font-semibold text-sm">{item.nome}</div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    {item.dias.length} {item.dias.length === 1 ? 'dia' : 'dias'} por ciclo
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Seleção do dia específico dentro da divisão */}
+          <div className="pt-2">
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+              Qual treino do ciclo você quer fazer hoje?
+            </label>
+            <select
+              value={diaDaDivisao}
+              onChange={(e) => setDiaDaDivisao(Number(e.target.value))}
+              className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            >
+              {diasDaDivisaoAtual.map((d, index) => (
+                <option key={index} value={index}>
+                  {d.titulo}
+                </option>
+              ))}
+            </select>
+            {diaDaDivisao !== 0 && diasDaDivisaoAtual[0] && treinoDiferente(diasDaDivisaoAtual[0].titulo, diasDaDivisaoAtual[diaDaDivisao].titulo) && (
+              <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                Este treino tem foco muscular diferente do dia 1 do ciclo ({diasDaDivisaoAtual[0].titulo}).
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Ênfase */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+          <div>
+            <h2 className="text-base font-semibold flex items-center gap-2">
+              Ênfase opcional (até 2)
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Quer focar em algum grupo muscular específico hoje? Ganha mais um exercício na rotina.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {GRUPOS_DISPONIVEIS.map((g) => {
+              const ativo = enfase.includes(g.id);
+              return (
+                <button
+                  type="button"
+                  key={g.id}
+                  onClick={() => toggleEnfase(g.id)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                    ativo
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {g.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+          </>
+        )}
+
+        {/* Botões */}
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <button
+            type="submit"
+            className="flex-1 py-4 px-6 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold rounded-2xl shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
+          >
+            <span>Começar treino de hoje</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => { if (mudando) { setDivisao(divisaoPadrao); setDiaDaDivisao(diaInicial ?? 0); setEnfase([]); } setMudando((v) => !v); }}
+            className="py-4 px-6 rounded-2xl border border-slate-300 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+          >
+            {mudando ? 'Voltar para a ficha' : 'Mudar treino de hoje'}
+          </button>
+        </div>
       </form>
     </div>
   );
