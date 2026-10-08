@@ -117,9 +117,9 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     ]);
 
     const series = cargasDoTexto(trimmed);
-    if (series.length > 0 && user?.uid) {
+    if (series.length > 0) {
       try {
-        await registrarSeries(user.uid, series);
+        const aviso = registrarSeries(series);
       } catch (err) {
         console.error('Erro ao registrar séries:', err);
       }
