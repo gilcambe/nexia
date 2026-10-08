@@ -175,8 +175,10 @@ function createOrchestrator(deps) {
   // trecho suspeito vira "[redigido]" e a execução segue.
   async function save(ctx, exe, patch) {
     const p = { ...patch };
-    for (const k of ['result_summary', 'question', 'fix_feedback']) if (typeof p[k] === 'string') p[k] = redactSecrets(p[k]);
-    if (Array.isArray(p.plan)) p.plan = p.plan.map(s => (typeof s.summary === 'string' ? { ...s, summary: redactSecrets(s.summary) } : s));
+    for (const k of ['result_summary', 'question', 'fix_feedback']) if (typeof p[k] === 'string') p[k] = clip(redactSecrets(p[k]), k === 'question' ? 2000 : 4000);
+    // Issue #234: o resumo de um passo (ex.: achados longos do Reviewer) passava de 2000 caracteres,
+    // o Vault recusava a gravação e a volta de correção caía em ORCHESTRATOR_ERROR.
+    if (Array.isArray(p.plan)) p.plan = p.plan.map(s => (typeof s.summary === 'string' ? { ...s, summary: clip(redactSecrets(s.summary), 2000) } : s));
     return vault.Execution.update(ctx, exe.id, p, { expectedVersion: exe.version });
   }
   // Entrada recusada pelo gateway (ex.: INVALID_INPUT) vira resultado "failed", como nos agentes; não derruba a execução.
@@ -510,7 +512,7 @@ function createOrchestrator(deps) {
             const files = filesIn(message, analysis, state.fix_feedback || '');
             const listed = files.length ? `\nArquivos envolvidos (todos precisam ser conferidos; os primeiros já foram lidos abaixo): ${files.join(', ')}` : '';
             await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).\n${kitKind ? 'Spec do Designer (o código foi gerado pelo NEXIA Site Kit: corrija só o que a revisão apontou, com github.edit_files, sem reescrever os arquivos inteiros)' : 'Análise do Architect'}:\n${analysis}${fix}${listed}\n\nLeia os arquivos atuais com github.get_file (ref ${state.work_branch}). Para arquivo existente use github.edit_files; para arquivo novo, github.commit_files. Tudo na branch ${state.work_branch}. Não mexa em arquivos que o pedido não envolve. Cumpra cada item do pedido em todos os arquivos citados antes de terminar.`,
-              '', { branch: state.work_branch, preload: files.slice(0, 4), ref: state.work_branch });
+              '', { branch: state.work_branch, preload: files.slice(0, 4), ref: state.work_branch, rotate: Math.max(0, (state.fix_rounds || 0) - 1) });
             // Sem commit (ex.: o arquivo pedido como "novo" já existe): uma segunda volta mandando editar/ligar o existente.
             if (!stop) {
               const c0 = await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch });
@@ -638,7 +640,11 @@ function createOrchestrator(deps) {
       }
     } catch (e) {
       const code = e && e.code === 'BUDGET_EXCEEDED' ? 'BUDGET_EXCEEDED' : (e && /^[A-Z_]+$/.test(e.code || '') ? e.code : 'ORCHESTRATOR_ERROR');
-      stop = { status: 'failed', error_code: code, result_summary: code === 'BUDGET_EXCEEDED' ? e.message : 'Erro interno do Orchestrator; nada foi dado como concluído.' };
+      // Issue #234: a causa (mensagem e onde) fica gravada na execução para diagnóstico.
+      const cause = `${(e && e.message) || String(e)}${e && e.stack ? ` @ ${String(e.stack).split('\n').slice(1, 2).join('').trim()}` : ''}`.slice(0, 600);
+      const at = steps.findIndex(s => s.status === 'running');
+      if (at >= 0) steps[at] = { ...steps[at], status: 'failed', error_code: code, summary: clip(`Erro: ${cause}`, 2000) };
+      stop = { status: 'failed', error_code: code, result_summary: code === 'BUDGET_EXCEEDED' ? e.message : `Erro interno do Orchestrator (${code}): ${cause}. Nada foi dado como concluído.` };
       if (code === 'ORCHESTRATOR_ERROR') console.error('[orchestrator]', e && e.stack);
     }
 
@@ -835,6 +841,7 @@ function usageOf(meter, prev = {}) {
     duration_ms: (prev.duration_ms || 0) + meter.elapsed(),
   };
 }
+function clip(t, n) { const s = String(t); return s.length <= n ? s : `${s.slice(0, n - 1)}…`; }
 function clean(o) { return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== '')); }
 
 module.exports = { buildKind, createOrchestrator, classifyIntent, filesIn, noCommitNudge, planFor, specialistFor, DEFAULT_BUDGET };
