@@ -28,7 +28,15 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isRunning, segundos, onFinish]);
+  }, [isRunning, segundos]);
+
+  // Dispara onFinish quando segundos chegam a 0
+  useEffect(() => {
+    if (segundos <= 0) {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      onFinish();
+    }
+  }, [segundos, onFinish]);
 
   const handleAdd15 = () => setSegundos((s) => s + 15);
   const handleSub15 = () => setSegundos((s) => Math.max(0, s - 15));
