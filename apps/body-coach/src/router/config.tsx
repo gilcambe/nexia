@@ -9,6 +9,7 @@ import Nutrition from "../pages/nutrition/page";
 import Plan from "../pages/plan/page";
 import Profile from "../pages/profile/page";
 import Team from "../pages/team/page";
+import Chat from "../pages/chat/page";
 import Exams from "../pages/exams/page";
 import AntiDoping from "../pages/antidoping/page";
 import Onboarding from "../pages/onboarding/page";
@@ -43,6 +44,7 @@ const routes: RouteObject[] = [
       { path: "plan", element: <Plan /> },
       { path: "profile", element: <Profile /> },
       { path: "team", element: <Team /> },
+      { path: "chat", element: <Chat /> },
       { path: "exams", element: <Exams /> },
       { path: "antidoping", element: <AntiDoping /> },
     ],
