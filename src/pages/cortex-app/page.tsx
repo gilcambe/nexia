@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { streamCortex } from "@/services/api";
-import { novaConversaId, salvarConversa, listarConversas, obterConversa, apagarConversa, type Conversa } from "@/lib/conversasCortex";
+import { novaConversaId, salvarConversa } from "@/lib/conversasCortex";
 
 interface Message {
   id: string;
