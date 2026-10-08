@@ -4,6 +4,10 @@ import { getFirebase } from './firebaseClient';
 
 export type Papel = 'coach' | 'nutrologo' | 'personal' | 'fisioterapeuta';
 
+// Dados de personalização do aluno (apelido, objetivo, modalidades, limitações): entram em TODA pergunta à equipe.
+let perfilIA: Record<string, unknown> = {};
+export function definirPerfilIA(p: Record<string, unknown>) { perfilIA = p; }
+
 const API_BASE: string = (import.meta.env.VITE_NEXIA_API_URL as string | undefined) || '';
 
 export async function perguntar(papel: Papel, message: string, context: Record<string, unknown>, image?: string): Promise<string> {
@@ -18,7 +22,7 @@ export async function perguntar(papel: Papel, message: string, context: Record<s
     res = await fetch(`${API_BASE}/api/body-coach-ai`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ message, role: papel, context, ...(image ? { image } : {}) }),
+      body: JSON.stringify({ message, role: papel, context: { ...perfilIA, ...context }, ...(image ? { image } : {}) }),
       signal: ctrl.signal,
     });
   } catch {

@@ -30,7 +30,7 @@ export default function CoachPanel() {
 
   const snapshot: CoachContextSnapshot = useMemo(
     () => ({
-      name: profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'atleta',
+      name: profile?.nickname?.trim() || profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'atleta',
       readinessScore: result?.score ?? null,
       readinessStatus: result?.status ?? null,
       latestWeight: latest?.weight_kg ?? null,

@@ -52,6 +52,7 @@ async function testarPagina(browser, base, rota, viewport, fila, vistos) {
   const ctx = await browser.newContext({ viewport: { width: viewport.w, height: viewport.h }, deviceScaleFactor: 1 });
   if (process.env.STORAGE) await ctx.addInitScript(kv => { for (const [k, v] of Object.entries(kv)) try { window.localStorage.setItem(k, v); } catch { /* sem armazenamento */ } }, JSON.parse(process.env.STORAGE));
   const page = await ctx.newPage();
+  page.setDefaultTimeout(5000); // nenhuma ação espera os 30 s padrão
   let onde = 'ao abrir';
   page.on('pageerror', e => nota(tela, onde, `erro de JavaScript: ${e.message.slice(0, 160)}`));
   page.on('console', m => { if (m.type() === 'error' && !/favicon|Failed to load resource/.test(m.text())) nota(tela, onde, `erro no console: ${m.text().slice(0, 160)}`); });
@@ -137,6 +138,7 @@ async function cenarioTreino(browser, base, viewport) {
   const tela = `${viewport.nome} treino`;
   const ctx = await browser.newContext({ viewport: { width: viewport.w, height: viewport.h } });
   const page = await ctx.newPage();
+  page.setDefaultTimeout(8000);
   let onde = 'login';
   page.on('pageerror', e => nota(tela, onde, `erro de JavaScript: ${e.message.slice(0, 160)}`));
   try {
