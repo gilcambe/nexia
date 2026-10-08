@@ -3,7 +3,7 @@
 // NEXIA Body Coach — conversa direta entre coach/personal e aluno (como um WhatsApp interno).
 // Tudo passa por aqui (login do Firebase + banco no servidor), então não precisa abrir regras do Firestore
 // e um aluno nunca lê conversa de outra pessoa. Só texto curto; sem armazenamento pago.
-// ações: perfil, vincular, contatos, enviar, ler, video_enviar, video_ver, demo_salvar, demo_ver
+// ações: perfil, vincular, contatos, enviar, ler, resumo, video_enviar, video_ver, demo_salvar, demo_ver
 // Vídeos: clipes curtos (até ~10 s, gravados já comprimidos no celular) guardados como texto no próprio banco grátis.
 
 const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware');
@@ -14,6 +14,27 @@ const limpa = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const VIDEO_MAX = 700000; // caracteres do data URL (cabe no limite de 1 MiB do documento)
 const videoOk = (v) => typeof v === 'string' && v.length < VIDEO_MAX && /^data:video\/(webm|mp4)(;codecs=[^;,]+)?;base64,[A-Za-z0-9+/=]+$/.test(v);
 const codigoNovo = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 31)]).join('');
+
+// Junta o que o aluno fez nos últimos 7 dias em números simples para o coach.
+function resumirSemana({ treinos, pesos }, desde, perfilAluno) {
+  const t = (v) => { const n = new Date(v).getTime(); return Number.isFinite(n) ? n : 0; };
+  const semana = treinos.filter((w) => t(w.done_at) >= desde);
+  const kgs = pesos.filter((p) => p.weight_kg > 0).sort((a, b) => t(b.taken_at) - t(a.taken_at));
+  const recente = kgs.find((p) => t(p.taken_at) >= desde);
+  const anterior = kgs.find((p) => t(p.taken_at) < desde);
+  const dias = Math.round((Date.now() - (semana.length ? Math.min(...semana.map((w) => t(w.done_at))) : Date.now())) / 86400000);
+  return {
+    aluno: perfilAluno && perfilAluno.nome,
+    treinos: semana.length,
+    minutos: Math.round(semana.reduce((a, w) => a + (Number(w.duration_min) || 0), 0)),
+    volumeKg: Math.round(semana.reduce((a, w) => a + (Number(w.volume_kg) || 0), 0)),
+    ultimoTreino: treinos[0] ? treinos[0].done_at : null,
+    titulos: semana.slice(0, 7).map((w) => String(w.title || '').slice(0, 60)),
+    pesoAtual: recente ? recente.weight_kg : (kgs[0] ? kgs[0].weight_kg : null),
+    variacaoPeso: recente && anterior ? Math.round((recente.weight_kg - anterior.weight_kg) * 10) / 10 : null,
+    diasDesdeOPrimeiro: semana.length ? dias : null,
+  };
+}
 
 async function executar(body, uid, db) {
   const dir = db.collection('bc_diretorio');
@@ -88,6 +109,21 @@ async function executar(body, uid, db) {
     const ref = await msgs.add(m);
     return [200, { mensagem: { id: ref.id, ...m } }];
   }
+  if (acao === 'resumo') {
+    // Revisão da semana do aluno, só para o coach vinculado (lê os dados do aluno pelo servidor; nada de regras novas)
+    if (eu.papel !== 'coach') return [403, { error: 'Só o coach vê o resumo do aluno.' }];
+    const base = db.collection('bodycoach_users').doc(outro);
+    const desde = Date.now() - 7 * 86400000;
+    const lista = async (colecao, campo) => {
+      const snap = await base.collection(colecao).orderBy(campo, 'desc').limit(30).get();
+      return snap.docs.map((d) => d.data());
+    };
+    const [treinos, pesos, prontidao, refeicoes] = await Promise.all([
+      lista('workouts', 'done_at').catch(() => []), lista('progress_entries', 'taken_at').catch(() => []),
+      lista('daily_readiness', 'date').catch(() => []), lista('meals', 'time').catch(() => []),
+    ]);
+    return [200, { resumo: resumirSemana({ treinos, pesos, prontidao, refeicoes }, desde, dOutro) }];
+  }
   if (acao === 'video_enviar') {
     if (!videoOk(body.video)) return [400, { error: 'Vídeo inválido ou grande demais (máximo ~10 segundos).' }];
     const ref = await db.collection('bc_videos').add({ de: uid, para: outro, video: body.video, em: Date.now() });
@@ -103,6 +139,7 @@ async function executar(body, uid, db) {
 }
 
 exports.executar = executar;
+exports.resumirSemana = resumirSemana;
 
 exports.handler = async (event) => {
   const method = String(event.httpMethod || '').toUpperCase();

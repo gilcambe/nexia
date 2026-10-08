@@ -14,6 +14,33 @@ function BolhaVideo({ id }: { id: string }) {
 }
 
 type Papel = 'coach' | 'aluno';
+interface Resumo { aluno?: string; treinos: number; minutos: number; volumeKg: number; ultimoTreino: string | null; titulos: string[]; pesoAtual: number | null; variacaoPeso: number | null }
+
+function ResumoSemana({ uid }: { uid: string }) {
+  const [r, setR] = useState<Resumo | null>(null);
+  const [erro, setErro] = useState('');
+  const [carregando, setCarregando] = useState(false);
+  useEffect(() => { setR(null); setErro(''); }, [uid]);
+  const ver = async () => {
+    setCarregando(true); setErro('');
+    try { setR((await chatApi<{ resumo: Resumo }>({ acao: 'resumo', com: uid })).resumo); }
+    catch (e) { setErro((e as Error).message); }
+    finally { setCarregando(false); }
+  };
+  if (!r) return <div><button onClick={() => void ver()} disabled={carregando} className="text-sm font-semibold text-primary-600 hover:underline"><i className="ri-bar-chart-2-line mr-1"></i>{carregando ? 'Carregando…' : 'Ver resumo da semana'}</button>{erro && <p role="alert" className="text-sm text-red-600">{erro}</p>}</div>;
+  const v = r.variacaoPeso;
+  return (
+    <div className="rounded-xl border border-primary-200 bg-primary-50 p-3 text-sm text-foreground-800">
+      <p className="font-semibold text-primary-700">Semana de {r.aluno ?? 'aluno'}</p>
+      <ul className="mt-1 space-y-0.5 text-xs">
+        <li>{r.treinos === 0 ? 'Nenhum treino nos últimos 7 dias.' : `${r.treinos} treino(s), ${r.minutos} min, ${r.volumeKg.toLocaleString('pt-BR')} kg de volume.`}</li>
+        {r.titulos.length > 0 && <li>Treinos: {r.titulos.join(' · ')}</li>}
+        <li>{r.pesoAtual != null ? `Peso: ${r.pesoAtual.toString().replace('.', ',')} kg${v != null ? ` (${v > 0 ? '+' : ''}${v.toString().replace('.', ',')} kg na semana)` : ''}` : 'Sem peso registrado.'}</li>
+      </ul>
+      <button onClick={() => setR(null)} className="mt-2 text-xs text-foreground-500 hover:underline">Fechar</button>
+    </div>
+  );
+}
 interface Contatos { papel: Papel; codigo?: string; contatos: Contato[] }
 
 export default function Chat() {
@@ -123,6 +150,7 @@ export default function Chat() {
       {aberto && (
         <div className="flex h-[60vh] flex-col overflow-hidden rounded-2xl border border-background-200 bg-background-100/50">
           <div className="border-b border-background-200 bg-background-50 px-4 py-2 text-sm font-semibold text-foreground-800">{aberto.nome}</div>
+          {papel === 'coach' && <div className="border-b border-background-200 bg-background-50 px-4 py-2"><ResumoSemana uid={aberto.uid} /></div>}
           <div className="flex-1 space-y-2 overflow-y-auto p-3" aria-live="polite">
             {!msgs.length && <p className="py-8 text-center text-sm text-foreground-400">Nenhuma mensagem ainda. Diga um oi!</p>}
             {msgs.map((m) => (
