@@ -6,6 +6,7 @@ import DailyCheckIn from './components/DailyCheckIn';
 import TodayCard from './components/TodayCard';
 import ReadinessCard from './components/ReadinessCard';
 import ContinuityCard from './components/ContinuityCard';
+import StreakCard from './components/StreakCard';
 import NutritionCard from './components/NutritionCard';
 import EvolutionMini from './components/EvolutionMini';
 import WeeklyReport from './components/WeeklyReport';
@@ -49,6 +50,7 @@ export default function Home() {
       </header>
 
       <TodayCard />
+      <StreakCard />
 
       <DailyCheckIn />
 
