@@ -108,6 +108,14 @@ export function CoachProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const send = useCallback(async (text: string, snapshot?: CoachContextSnapshot) => {
+    const series = cargasDoTexto(text);
+    if (series.length > 0 && user?.uid) {
+      try {
+        await registrarSeries(user.uid, series);
+      } catch (err) {
+        console.error('Erro ao registrar séries:', err);
+      }
+    }
     const trimmed = text.trim();
     if (!trimmed || loadingAI) return;
 
