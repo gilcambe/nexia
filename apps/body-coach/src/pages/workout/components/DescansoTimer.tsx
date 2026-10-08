@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 interface DescansoTimerProps {
   segundos: number;
@@ -8,15 +8,24 @@ interface DescansoTimerProps {
 
 export default function DescansoTimer({ segundos: initialSegundos, onFinish, onSkip }: DescansoTimerProps) {
   const [segundos, setSegundos] = useState(initialSegundos);
+  const [totalSegundos, setTotalSegundos] = useState(initialSegundos);
   const [progress, setProgress] = useState(100);
+  const [finished, setFinished] = useState(false);
+  const onFinishRef = useRef(onFinish);
+  const finishedRef = useRef(false);
+
+  onFinishRef.current = onFinish;
 
   useEffect(() => {
     setSegundos(initialSegundos);
+    setTotalSegundos(initialSegundos);
     setProgress(100);
+    setFinished(false);
+    finishedRef.current = false;
   }, [initialSegundos]);
 
   useEffect(() => {
-    if (segundos <= 0) return;
+    if (segundos <= 0 || finished) return;
     const interval = setInterval(() => {
       setSegundos((s) => {
         const next = s - 1;
@@ -24,20 +33,28 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
           if ('vibrate' in navigator) {
             navigator.vibrate([200, 100, 200]);
           }
-          onFinish();
+          finishedRef.current = true;
+          setFinished(true);
+          onFinishRef.current();
           return 0;
         }
-        setProgress((next / initialSegundos) * 100);
+        setProgress((next / totalSegundos) * 100);
         return next;
       });
     }, 1000);
     return () => clearInterval(interval);
-  }, [initialSegundos, onFinish]);
+  }, [segundos, totalSegundos, finished]);
 
   const addTime = (delta: number) => {
     setSegundos((s) => {
       const next = Math.max(0, s + delta);
-      setProgress((next / initialSegundos) * 100);
+      setTotalSegundos((t) => Math.max(t, next));
+      setProgress((next / Math.max(totalSegundos, next)) * 100);
+      if (next <= 0 && !finishedRef.current) {
+        finishedRef.current = true;
+        setFinished(true);
+        onFinishRef.current();
+      }
       return next;
     });
   };
@@ -49,7 +66,8 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
   };
 
   return (
-    <div className="rounded-2xl border border-background-200 bg-background-100/80 p-6 text-center">
+    <div className="rounded-2xl border border-background-200 bg-background-100/80 p-6 text-center" role="timer" aria-live="polite" aria-label={`Descanso: ${formatTime(segundos)}`}>
+      <div aria-live="polite" className="sr-only">{formatTime(segundos)}</div>
       <p className="text-sm font-semibold text-foreground-500">Descanso</p>
       <p className="font-heading text-5xl font-bold text-foreground-950">{formatTime(segundos)}</p>
       <div className="mt-4 h-3 w-full overflow-hidden rounded-full bg-background-200">
@@ -61,7 +79,7 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
       <div className="mt-4 flex items-center justify-center gap-3">
         <button
           onClick={() => addTime(-15)}
-          disabled={segundos <= 0}
+          disabled={finished}
           className="inline-flex items-center gap-1.5 rounded-lg bg-background-50 border border-background-200 px-3 py-2 text-sm font-medium text-foreground-700 hover:bg-background-200 disabled:opacity-40 disabled:cursor-not-allowed transition"
         >
           <i className="ri-subtract-line"></i>
@@ -76,7 +94,8 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
         </button>
         <button
           onClick={() => addTime(15)}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-background-50 border border-background-200 px-3 py-2 text-sm font-medium text-foreground-700 hover:bg-background-200 transition"
+          disabled={finished}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-background-50 border border-background-200 px-3 py-2 text-sm font-medium text-foreground-700 hover:bg-background-200 disabled:opacity-40 disabled:cursor-not-allowed transition"
         >
           <i className="ri-add-line"></i>
           +15s
