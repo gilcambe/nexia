@@ -127,11 +127,21 @@ export const RefeicaoRapida: React.FC = () => {
             </div>
 
             {analisando && (
-              <div className="flex items-center gap-2 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-sm">\n                <i className="ri-loader-4-line animate-spin text-emerald-500 text-lg"></i>\n                <span>Coach analisando a foto da sua refeição...</span>\n              </div>
+              <div className="flex items-center gap-2 p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 text-sm">
+                <i className="ri-loader-4-line animate-spin text-emerald-500 text-lg"></i>
+                <span>Coach analisando a foto da sua refeição...</span>
+              </div>
             )}
 
             {veredito && !analisando && (
-              <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50">\n                <div className="flex items-center gap-2 mb-2">\n                  <i className="ri-robot-2-line text-emerald-600 dark:text-emerald-400 text-lg"></i>\n                  <h4 className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">Veredito do Coach</h4>\n                </div>\n                <p className="text-sm text-emerald-800 dark:text-emerald-300 whitespace-pre-line leading-relaxed">{veredito}</p>\n              </div>\n            )}
+              <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/50">
+                <div className="flex items-center gap-2 mb-2">
+                  <i className="ri-robot-2-line text-emerald-600 dark:text-emerald-400 text-lg"></i>
+                  <h4 className="text-sm font-semibold text-emerald-900 dark:text-emerald-200">Veredito do Coach</h4>
+                </div>
+                <p className="text-sm text-emerald-800 dark:text-emerald-300 whitespace-pre-line leading-relaxed">{veredito}</p>
+              </div>
+            )}
           </div>
         )}
       </div>
