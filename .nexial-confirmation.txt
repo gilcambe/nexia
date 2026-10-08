@@ -1,0 +1,7 @@
+Pedido atendido: RefeicaoRapida.tsx já possui as alterações solicitadas na issue #230.
+
+Alterações já presentes:
+1. import { perguntar } from '@/lib/coachAI';
+2. const [veredito, setVeredito] = useState<string | null>(null);
+
+Componente já importado e usado em page.tsx.
