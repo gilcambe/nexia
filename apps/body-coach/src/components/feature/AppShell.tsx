@@ -47,7 +47,7 @@ function CoachFab() {
   return (
     <button
       onClick={() => setOpen(true)}
-      className="fixed bottom-6 right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-background-50 shadow-none transition hover:bg-primary-600"
+      className="fixed bottom-6 right-6 z-40 hidden h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-background-50 shadow-none transition hover:bg-primary-600 lg:flex"
       aria-label="Abrir coach"
     >
       <i className="ri-robot-2-line text-2xl"></i>
@@ -57,6 +57,34 @@ function CoachFab() {
         </span>
       )}
     </button>
+  );
+}
+
+// Barra de abas do celular (como app nativo): as telas principais ficam a um toque.
+function BottomTabs({ onMore }: { onMore: () => void }) {
+  const { setOpen, unread } = useCoach();
+  const navigate = useNavigate();
+  const tab = ({ isActive }: { isActive: boolean }) =>
+    `flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition active:scale-95 ${isActive ? 'text-primary-600' : 'text-foreground-500'}`;
+  return (
+    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-background-200 bg-background-50/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden" aria-label="Navegação principal">
+      <div className="mx-auto flex max-w-md items-end px-1">
+        <NavLink to="/" end className={tab}><i className="ri-sun-line text-xl"></i>Hoje</NavLink>
+        <NavLink to="/nutrition" className={tab}><i className="ri-restaurant-line text-xl"></i>Nutrição</NavLink>
+        <button onClick={() => navigate('/workout')} className="-mt-5 flex flex-1 flex-col items-center gap-0.5 text-[11px] font-semibold text-primary-700 active:scale-95" aria-label="Ir para o treino">
+          <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-background-50 shadow-lg ring-4 ring-background-50"><i className="ri-play-fill text-2xl"></i></span>
+          Treino
+        </button>
+        <NavLink to="/evolution" className={tab}><i className="ri-line-chart-line text-xl"></i>Evolução</NavLink>
+        <button onClick={() => setOpen(true)} className="relative flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium text-foreground-500 active:scale-95" aria-label="Abrir coach">
+          <span className="relative"><i className="ri-robot-2-line text-xl"></i>{unread > 0 && <span className="absolute -right-2 -top-1 h-2.5 w-2.5 rounded-full bg-accent-500"></span>}</span>
+          Coach
+        </button>
+        <button onClick={onMore} className="flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium text-foreground-500 active:scale-95" aria-label="Mais opções">
+          <i className="ri-menu-line text-xl"></i>Mais
+        </button>
+      </div>
+    </nav>
   );
 }
 
@@ -200,12 +228,13 @@ function Shell() {
 
       {/* main */}
       <main className="min-h-screen min-w-0 break-words lg:pl-60">
-        <div className="mx-auto max-w-6xl px-4 py-6 md:px-6 md:py-8">
+        <div className="mx-auto max-w-6xl px-4 pb-28 pt-6 md:px-6 md:py-8 lg:pb-8">
           <Outlet />
         </div>
       </main>
 
       <CoachFab />
+      <BottomTabs onMore={() => setMobileOpen(true)} />
       <CoachPanel />
     </div>
   );

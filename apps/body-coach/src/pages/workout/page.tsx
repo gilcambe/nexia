@@ -4,7 +4,8 @@ import { type SetLog, type Session } from '@/mocks/workout';
 import type { Answers } from '@/lib/trainingPlan';
 import { montarTreinoDoDia, type TreinoDoDia, trocarExercicio } from '@/lib/dayPlan';
 import { moverExercicio } from '@/lib/ordemTreino';
-import { alternativas, videoDeExecucao, lesoesDoTexto, POR_ID, type Lesao } from '@/lib/exerciseDb';
+import DemoExecucao from '@/components/feature/DemoExecucao';
+import { alternativas, lesoesDoTexto, POR_ID, type Lesao } from '@/lib/exerciseDb';
 import PreTreino from './components/PreTreino';
 import { dicaAoVivo } from '@/lib/liveCoach';
 import { getUserDoc, setUserDoc, listUserDocs } from '@/lib/userData';
@@ -256,6 +257,8 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
               </span>
             </div>
 
+            <DemoExecucao id={exercise.id} nome={exercise.name} className="mt-4 aspect-[4/3] w-full rounded-xl sm:max-w-sm" />
+
             <p className="mt-4 rounded-xl bg-background-100/70 p-3 text-sm text-foreground-700">
               <i className="ri-information-line mr-1 text-primary-500"></i>
               {exercise.note}
@@ -319,13 +322,8 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
                       <i className="ri-close-line text-xl"></i>
                     </button>
                   </div>
-                  <div className="mt-4 overflow-hidden rounded-xl bg-background-900 aspect-video flex items-center justify-center text-background-50">
-                    <div className="text-center p-4">
-                      <i className="ri-movie-line text-4xl text-primary-400 mb-2"></i>
-                      <p className="text-sm font-medium">{videoDeExecucao(exercise.name)}</p>
-                      <p className="text-xs text-background-400 mt-1">Vídeo demonstrativo de postura e movimento</p>
-                    </div>
-                  </div>
+                  <DemoExecucao id={exercise.id} nome={exercise.name} className="mt-4 aspect-square w-full rounded-xl" />
+                  <p className="mt-2 text-xs text-foreground-500">Posição inicial e final do movimento. Capriche na postura e controle a descida.</p>
                   <div className="mt-5 flex justify-end">
                     <button
                       onClick={() => setShowVideo(false)}
