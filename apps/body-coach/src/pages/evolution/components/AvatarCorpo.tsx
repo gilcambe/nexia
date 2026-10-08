@@ -99,6 +99,8 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
                 id="ombros-front"
                 className="cursor-pointer transition-transform hover:scale-[1.02]"
                 onClick={() => onSelectMuscle?.('ombros')}
+                role="button"
+                aria-label={musclesInfo.ombros.label}
                 onMouseEnter={() => setHoveredMuscle('ombros')}
                 onMouseLeave={() => setHoveredMuscle(null)}
               >
