@@ -1,13 +1,8 @@
-export interface Serie {
-  weight: number;
-  reps: number;
-}
-
-export function estimar1RM(serie: Serie): number {
+export function estimar1RM(serie: {weight:number;reps:number}): number {
   return serie.weight * (1 + serie.reps / 30);
 }
 
-export function ehRecorde(historico: Serie[], nova: Serie): boolean {
+export function ehRecorde(historico: {weight:number;reps:number}[], nova: {weight:number;reps:number}): boolean {
   if (historico.length === 0) {
     return true;
   }
