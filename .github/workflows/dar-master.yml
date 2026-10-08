@@ -1,0 +1,28 @@
+# NEXIA — dá master para a conta que o dono nomeou por escrito (gcbezerra@gmail.com, 2026-10-08).
+# Manual. "conferir" só olha; "DAR" grava o papel. O script só aceita esse e-mail.
+name: Dar master ao dono
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'conferir (só olha) ou DAR (grava o papel master)'
+        required: true
+        default: 'conferir'
+
+permissions:
+  contents: read
+
+jobs:
+  master:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Conferir ou dar master
+        run: node scripts/dar-master.js gcbezerra@gmail.com ${{ inputs.confirm == 'DAR' && ' ' || '--dry-run' }}
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
