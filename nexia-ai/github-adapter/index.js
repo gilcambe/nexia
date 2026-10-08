@@ -262,6 +262,9 @@ function createGithubAdapter(o) {
       if (typeof title !== 'string' || !title.trim() || title.length > 256) throw bad('Título inválido.');
       if (typeof body !== 'string' || body.length > LIMITS.prBody) throw bad('Descrição grande demais.');
       checkText(`${title}\n${body}`, 'O PR');
+      // Issue #225: PR sem nenhuma mudança não é aberto; a execução falha e a fila tenta outro modelo.
+      const diff = await call('GET', `/compare/${enc(into)}...${enc(head)}`);
+      if (!diff.ahead_by || !(diff.files || []).length) throw new GatewayError(CODES.EMPTY_DIFF, `A branch ${head} não tem mudanças em relação a ${into}; PR não aberto.`);
       const d = await call('POST', '/pulls', { body: { title, head, base: into, body, draft: draft !== false }, write: true, permissions: PERMS.writePulls });
       return { number: d.number, html_url: d.html_url, head, base: into, draft: !!d.draft, state: d.state };
     },
