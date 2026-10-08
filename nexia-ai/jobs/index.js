@@ -101,8 +101,14 @@ function contextFor(job) {
  * Retomada de todas as empresas (cron): até 20 execuções paradas, cada uma em nome de quem pediu.
  * Usada pelo processo Node (server.js ou Actions); o Worker só verifica e despacha.
  */
-async function sweepAllTenants({ db, orchestrator, max = 20 }) {
-  const tenants = (await db.collection('tenants').select().limit(200).get()).docs.map(d => d.id).filter(t => TENANT_RE.test(t));
+async function sweepAllTenants({ db, vdb, orchestrator, max = 20 }) {
+  // Economia de cota (2026-10-08): com o banco do Vault (vdb), as empresas saem das próprias execuções
+  // paradas (1 consulta no banco B) em vez de ler 'tenants' no banco principal, cuja cota esgotada
+  // derrubava a retomada de hora em hora. Só visita empresas que têm algo a retomar.
+  const tenants = vdb
+    ? [...new Set((await vdb.collection('vault_executions').where('status', 'in', ['planned', 'running']).limit(50).get())
+      .docs.map(d => d.data()).filter(x => !x.deleted_at).map(x => x.tenant_id))].filter(t => typeof t === 'string' && TENANT_RE.test(t))
+    : (await db.collection('tenants').select().limit(200).get()).docs.map(d => d.id).filter(t => TENANT_RE.test(t));
   const items = [];
   for (const tenantId of tenants) {
     const sys = createExecutionContext({ tenantId, actor: { type: 'system', id: 'cron-sweep' } });

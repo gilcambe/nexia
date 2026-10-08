@@ -18,6 +18,10 @@ loadSecrets(process.env);
     console.error('[nexia-job] falhou', msg);
     // Anotação legível pela API de check-runs (o log do Actions não é): só código e mensagem curta.
     console.log(`::error title=Falha da tarefa::${msg}`);
+    // Os dois bancos sem cota: guarda o pedido (só ids) para a Issue "nexia-job-pendente" (passo seguinte do workflow).
+    if (e && e.code === 'QUOTA_BOTH' && process.env.NEXIA_PENDING_FILE) {
+      try { require('fs').writeFileSync(process.env.NEXIA_PENDING_FILE, JSON.stringify(job)); } catch { /* sem arquivo, sem Issue */ }
+    }
     process.exit(1);
   }
 })();
