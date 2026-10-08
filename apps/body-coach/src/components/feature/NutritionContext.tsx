@@ -1,3 +1,4 @@
+import { calcularMetas } from '@/lib/metas';
 import {
   createContext,
   useContext,
@@ -188,12 +189,8 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
   const { targets, waterGoal } = useMemo(() => {
     const peso = Number((profile as any)?.onboarding?.weight) || 0;
     if (!(peso > 0)) return { targets: nutritionTargets, waterGoal: defaultWaterGoal };
-    const calories = Math.round(peso * 33);
-    const protein = Math.round(peso * 2);
-    const fat = Math.round(peso * 0.9);
-    const carbs = Math.round((calories - protein * 4 - fat * 9) / 4);
     return {
-      targets: { calories, protein, fat, carbs, fiber: 30 },
+      targets: calcularMetas(peso, (profile as any)?.onboarding?.goal, Number((profile as any)?.ajuste_kcal) || 0),
       waterGoal: Math.round(peso * 0.035 * 10) / 10,
     };
   }, [profile]);
