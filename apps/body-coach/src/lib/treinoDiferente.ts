@@ -6,35 +6,53 @@ export function treinoDiferente(planejado: string, escolhido: string): boolean {
       .replace(/[\u0300-\u036f]/g, '')
       .trim();
 
-  const gruposPorRotulo: Record<string, string[]> = {
-    pernas: ['pernas', 'legs', 'quadriceps', 'isquiotibiais', 'gluteos', 'glúteos', 'panturrilha', 'panturrilhas'],
-    'costas e biceps': ['costas', 'costas e biceps', 'costas e bíceps', 'pull', 'dorsal', 'dorsais', 'trapezio', 'trapézio', 'romboide', 'romboides'],
-    'peito e triceps': ['peito', 'peito e triceps', 'peito e tríceps', 'push', 'peitoral', 'peitorais', 'triceps', 'tríceps'],
-    'corpo inteiro': ['corpo inteiro', 'full body', 'corpo todo'],
+  const rotulos = [
+    'pernas',
+    'costas e biceps',
+    'peito e triceps',
+    'push',
+    'pull',
+    'legs',
+    'corpo inteiro',
+  ];
+
+  const mapaGrupos: Record<string, string> = {
+    pernas: 'pernas',
+    'costas e biceps': 'costas e biceps',
+    'peito e triceps': 'peito e triceps',
+    push: 'peito e triceps',
+    pull: 'costas e biceps',
+    legs: 'pernas',
+    'corpo inteiro': 'corpo inteiro',
   };
 
-  const rotuloNormalizado = normalizar(escolhido);
-  const planejadoNormalizado = normalizar(planejado);
+  const normalizarESearch = (texto: string): string =>
+    texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
 
-  const gruposEscolhido = Object.entries(gruposPorRotulo).find(([_, sinonimos]) =>
-    sinonimos.some((s) => normalizar(s) === rotuloNormalizado)
-  )?.[1];
+  const normalizarPlanejado = normalizarESearch(planejado);
+  const normalizadoEscolhido = normalizarESearch(escolhido);
 
-  const gruposPlanejado = Object.entries(gruposPorRotulo).find(([_, sinonimos]) =>
-    sinonimos.some((s) => normalizar(s) === planejadoNormalizado)
-  )?.[1];
+  // Se ambos os rótulos já estão normalizados e são iguais, não são diferentes
+  if (normalizarPlanejado === normalizadoEscolhido) return false;
 
-  // Fallback: se algum rótulo não está no mapeamento, considera treinos diferentes
-  // quando as strings normalizadas forem distintas (comportamento conservador).
-  if (!gruposEscolhido || !gruposPlanejado) {
-    return rotuloNormalizado !== planejadoNormalizado;
+  // Busca o grupo para cada rótulo
+  const grupoPlanejado = mapaGrupo(normalizarPlanejado);
+  const grupoEscolhido = mapaGrupo(normalizadoEscolhido);
+
+  // Se algum não foi encontrado no mapa, compara as strings normalizadas diretamente
+  if (!grupoPlanejado || !grupoEscolhido) {
+    return normalizarPlanejado !== normalizadoEscolhido;
   }
 
-  const conjuntoEscolhido = new Set(gruposEscolhido.map(normalizar));
-  const conjuntoPlanejado = new Set(gruposPlanejado.map(normalizar));
+  // Treinos diferentes se estiverem em grupos musculares distintos
+  return grupoPlanejado !== grupoEscolhido;
+}
 
-  for (const g of conjuntoEscolhido) {
-    if (conjuntoPlanejado.has(g)) return false;
+function mapaGrupo(rotulo: string): string | undefined {
+  for (const r of rotulos) {
+    if (rotulo === r || rotulo.includes(r) || r.includes(rotulo)) {
+      return mapaGrupos[r];
+    }
   }
-  return true;
+  return undefined;
 }
