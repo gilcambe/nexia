@@ -1,5 +1,6 @@
 import { useState, ChangeEvent, FormEvent } from 'react';
 import { cardioDoTexto, CardioAtividade } from '@/lib/cardioDoTexto';
+import { perguntar } from '@/lib/coachAI';
 
 export interface CardioEntryProps {
   onSubmit?: (atividades: CardioAtividade[], fotoNome?: string) => void;
@@ -10,6 +11,7 @@ export function CardioEntry({ onSubmit }: CardioEntryProps) {
   const [fotoNome, setFotoNome] = useState<string | null>(null);
   const [fotoPreview, setFotoPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fotoBase64, setFotoBase64] = useState<string | null>(null);
 
   const handleTextoChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     setTexto(e.target.value);
@@ -20,27 +22,50 @@ export function CardioEntry({ onSubmit }: CardioEntryProps) {
     if (file) {
       setFotoNome(file.name);
       const reader = new FileReader();
-      reader.onload = () => setFotoPreview(reader.result as string);
+      reader.onload = () => {
+        const result = reader.result as string;
+        setFotoPreview(result);
+        setFotoBase64(result);
+      };
       reader.readAsDataURL(file);
     } else {
       setFotoNome(null);
       setFotoPreview(null);
+      setFotoBase64(null);
     }
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!texto.trim() && !fotoNome) return;
 
     setLoading(true);
-    const atividades = cardioDoTexto(texto);
-    onSubmit?.(atividades, fotoNome || undefined);
-    setLoading(false);
+    try {
+      let textoAtual = texto;
+      if (!textoAtual.trim() && fotoBase64) {
+        const respostaIa = await perguntar({
+          pergunta: 'Extraia os dados de cardio (exercício, tempo em minutos, calorias se houver) desta foto do painel do aparelho e retorne em formato de texto descritivo.',
+          imagem: fotoBase64
+        });
+        if (respostaIa) {
+          textoAtual = respostaIa;
+          setTexto(respostaIa);
+        }
+      }
 
-    // Reset form after submit
-    setTexto('');
-    setFotoNome(null);
-    setFotoPreview(null);
+      const atividades = cardioDoTexto(textoAtual);
+      onSubmit?.(atividades, fotoNome || undefined);
+
+      // Reset form after submit
+      setTexto('');
+      setFotoNome(null);
+      setFotoPreview(null);
+      setFotoBase64(null);
+    } catch (err) {
+      console.error('Erro ao processar cardio:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -97,6 +122,7 @@ export function CardioEntry({ onSubmit }: CardioEntryProps) {
                 onClick={() => {
                   setFotoNome(null);
                   setFotoPreview(null);
+                  setFotoBase64(null);
                 }}
                 className="absolute top-2 right-2 p-1.5 bg-black/50 text-white rounded-full hover:bg-black/70 transition-colors"
                 aria-label="Remover foto"
