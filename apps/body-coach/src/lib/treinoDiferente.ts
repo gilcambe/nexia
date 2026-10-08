@@ -5,26 +5,34 @@ const normalizar = (texto: string): string =>
     .replace(/[\u0300-\u036f]/g, '')
     .trim();
 
-const rotulos = [
-  'pernas',
-  'costas e biceps',
-  'peito e triceps',
-  'push',
-  'pull',
-  'legs',
-  'corpo inteiro',
-] as const;
-
-const mapaGrupos: Record<string, string> = {
-  pernas: 'pernas',
-  'costas e biceps': 'costas e biceps',
-  'peito e triceps': 'peito e triceps',
-  push: 'peito e triceps',
-  pull: 'costas e biceps',
-  legs: 'pernas',
-  'corpo inteiro': 'corpo inteiro',
+// Mapeamento de rótulo normalizado -> grupos musculares (array de sinônimos por grupo)
+const mapaGrupos: Record<string, readonly string[]> = {
+  pernas: ['pernas', 'quadriceps', 'quadríceps', 'posterior de coxa', 'gluteos', 'glúteos', 'panturrilha'],
+  'costas e biceps': ['costas', 'dorsal', 'trapezio', 'trapézio', 'biceps', 'bíceps', 'antebraco', 'antebraço'],
+  'peito e triceps': ['peito', 'peitoral', 'triceps', 'tríceps', 'ombro', 'deltoide'],
+  push: ['peito', 'peitoral', 'triceps', 'tríceps', 'ombro', 'deltoide'],
+  pull: ['costas', 'dorsal', 'trapezio', 'trapézio', 'biceps', 'bíceps', 'antebraco', 'antebraço'],
+  legs: ['pernas', 'quadriceps', 'quadríceps', 'posterior de coxa', 'gluteos', 'glúteos', 'panturrilha'],
+  'corpo inteiro': ['corpo inteiro', 'full body', 'todo o corpo'],
+  'full body': ['corpo inteiro', 'full body', 'todo o corpo'],
 };
 
+// Lista de rótulos válidos derivada das chaves do mapa (evita divergência)
+const rotulos = Object.keys(mapaGrupos) as const;
+
+/**
+ * Mapeia um rótulo normalizado para seu grupo muscular.
+ * Retorna undefined se o rótulo não for reconhecido.
+ */
+function mapaGrupo(rotulo: string): readonly string[] | undefined {
+  return mapaGrupos[rotulo];
+}
+
+/**
+ * Verifica se dois treinos são de grupos musculares diferentes.
+ * Normaliza (minúsculas, sem acento) e compara via grupos musculares.
+ * Fallback conservador: se algum rótulo não estiver no mapa, compara strings normalizadas.
+ */
 export function treinoDiferente(planejado: string, escolhido: string): boolean {
   const normalizadoPlanejado = normalizar(planejado);
   const normalizadoEscolhido = normalizar(escolhido);
@@ -32,24 +40,18 @@ export function treinoDiferente(planejado: string, escolhido: string): boolean {
   // Se ambos os rótulos já estão normalizados e são iguais, não são diferentes
   if (normalizadoPlanejado === normalizadoEscolhido) return false;
 
-  // Busca o grupo para cada rótulo
+  // Busca o grupo para cada rótulo (matching exato via chave do mapa)
   const grupoPlanejado = mapaGrupo(normalizadoPlanejado);
   const grupoEscolhido = mapaGrupo(normalizadoEscolhido);
 
-  // Se algum não foi encontrado no mapa, compara as strings normalizadas diretamente
+  // Se algum não foi encontrado no mapa, fallback conservador: strings diferentes = treinos diferentes
   if (!grupoPlanejado || !grupoEscolhido) {
     return normalizadoPlanejado !== normalizadoEscolhido;
   }
 
-  // Treinos diferentes se estiverem em grupos musculares distintos
-  return grupoPlanejado !== grupoEscolhido;
-}
+  // Verifica interseção entre os grupos musculares
+  const temIntersecao = grupoPlanejado.some((g) => grupoEscolhido.includes(g));
 
-function mapaGrupo(rotulo: string): string | undefined {
-  for (const r of rotulos) {
-    if (rotulo === r || rotulo.includes(r) || r.includes(rotulo)) {
-      return mapaGrupos[r];
-    }
-  }
-  return undefined;
+  // Treinos diferentes se NÃO houver interseção entre os grupos musculares
+  return !temIntersecao;
 }
