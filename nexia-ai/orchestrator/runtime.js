@@ -252,11 +252,15 @@ function createMeter(budget, now = () => Date.now()) {
  * @param {string} [o.branch]          branch de trabalho "nexia/..." (blocos de edição em texto vão para ela)
  * @param {string[]} [o.preload]       arquivos lidos pelo gateway antes do 1º turno (até 4)
  * @param {string} [o.ref]             ref das leituras pré-carregadas
+ * @param {number} [o.rotate]          começa pelo n-ésimo modelo candidato (troca de modelo grátis em falha repetida)
  * @returns {Promise<{ status: 'done'|'waiting_approval'|'failed', text?, report?, tool_call_ids, model?, error_code?, pending? }>}
  */
 async function runAgent(o) {
   const agent = AGENTS[o.agentId];
-  const models = candidates(o.router, agent.model);
+  // o.rotate: rodada de correção repetida (issue #234) começa por outro modelo grátis da lista.
+  const all = candidates(o.router, agent.model);
+  const rot = all.length ? (Math.max(0, o.rotate | 0) % all.length) : 0;
+  const models = [...all.slice(rot), ...all.slice(0, rot)];
   const toolCallIds = [];
   if (!models.length) return { status: 'failed', error_code: 'NO_MODEL', text: 'Nenhum modelo com tool_call configurado (ex.: ANTHROPIC_API_KEY).', tool_call_ids: toolCallIds };
 
