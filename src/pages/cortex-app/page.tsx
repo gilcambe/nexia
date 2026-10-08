@@ -51,6 +51,7 @@ export default function CortexApp() {
   const [conversaId, setConversaId] = useState(() => novaConversaId());
   const [loading, setLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState("auto");
+  const [conversaId, setConversaId] = useState(() => novaConversaId());
   const [serverStarting, setServerStarting] = useState(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
