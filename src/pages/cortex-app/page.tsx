@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { streamCortex } from "@/services/api";
+import { novaConversaId, salvarConversa, listarConversas, obterConversa, apagarConversa, type Conversa } from "@/lib/conversasCortex";
 
 interface Message {
   id: string;
@@ -49,6 +50,7 @@ export default function CortexApp() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState("auto");
+  const [conversaId, setConversaId] = useState(() => novaConversaId());
   const [serverStarting, setServerStarting] = useState(false);
   const [errorBanner, setErrorBanner] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
