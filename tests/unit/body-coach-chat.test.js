@@ -50,3 +50,21 @@ test('BCC3. quem não é vinculado não lê nem escreve', async () => {
   assert.equal((await executar({ acao: 'enviar', com: 'coach1', texto: 'x' }, 'bob', db))[0], 403);
   assert.equal((await executar({ acao: 'contatos' }, 'semperfil', db))[0], 409);
 });
+
+test('BCC4. vídeo do aluno chega só ao coach; demo do coach aparece para o aluno', async () => {
+  const db = fakeDb();
+  const v = 'data:video/webm;codecs=vp8;base64,QUJD';
+  const [, c] = await executar({ acao: 'perfil', papel: 'coach', nome: 'Gil' }, 'coach1', db);
+  await executar({ acao: 'perfil', papel: 'aluno', nome: 'Ana' }, 'aluna1', db);
+  await executar({ acao: 'perfil', papel: 'aluno', nome: 'Bob' }, 'bob', db);
+  await executar({ acao: 'vincular', codigo: c.perfil.codigo }, 'aluna1', db);
+  assert.equal((await executar({ acao: 'video_enviar', com: 'coach1', video: 'http://x' }, 'aluna1', db))[0], 400);
+  const [st, env] = await executar({ acao: 'video_enviar', com: 'coach1', video: v, texto: 'meu agachamento' }, 'aluna1', db);
+  assert.equal(st, 200);
+  assert.equal((await executar({ acao: 'video_ver', id: env.mensagem.video }, 'coach1', db))[1].video, v);
+  assert.equal((await executar({ acao: 'video_ver', id: env.mensagem.video }, 'bob', db))[0], 404);
+  assert.equal((await executar({ acao: 'demo_salvar', exercicio: 'agachamento', video: v }, 'aluna1', db))[0], 403);
+  await executar({ acao: 'demo_salvar', exercicio: 'agachamento', video: v }, 'coach1', db);
+  assert.equal((await executar({ acao: 'demo_ver', exercicio: 'agachamento' }, 'aluna1', db))[1].video, v);
+  assert.equal((await executar({ acao: 'demo_ver', exercicio: 'agachamento' }, 'bob', db))[1].video, null);
+});

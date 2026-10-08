@@ -4,7 +4,7 @@ import { getFirebase } from './firebaseClient';
 const API_BASE: string = (import.meta.env.VITE_NEXIA_API_URL as string | undefined) || '';
 
 export interface Contato { uid: string; nome: string; foto: string }
-export interface Mensagem { id: string; de: string; texto: string; em: number }
+export interface Mensagem { id: string; de: string; texto: string; em: number; video?: string }
 
 export async function chatApi<T>(corpo: Record<string, unknown>): Promise<T> {
   const fb = await getFirebase();

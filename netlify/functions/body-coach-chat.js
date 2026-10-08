@@ -3,13 +3,16 @@
 // NEXIA Body Coach — conversa direta entre coach/personal e aluno (como um WhatsApp interno).
 // Tudo passa por aqui (login do Firebase + banco no servidor), então não precisa abrir regras do Firestore
 // e um aluno nunca lê conversa de outra pessoa. Só texto curto; sem armazenamento pago.
-// ações: perfil, vincular, contatos, enviar, ler
+// ações: perfil, vincular, contatos, enviar, ler, video_enviar, video_ver, demo_salvar, demo_ver
+// Vídeos: clipes curtos (até ~10 s, gravados já comprimidos no celular) guardados como texto no próprio banco grátis.
 
 const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware');
 
 const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 const par = (a, b) => [a, b].sort().join('__');
 const limpa = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+const VIDEO_MAX = 700000; // caracteres do data URL (cabe no limite de 1 MiB do documento)
+const videoOk = (v) => typeof v === 'string' && v.length < VIDEO_MAX && /^data:video\/(webm|mp4)(;codecs=[^;,]+)?;base64,[A-Za-z0-9+/=]+$/.test(v);
 const codigoNovo = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 31)]).join('');
 
 async function executar(body, uid, db) {
@@ -48,6 +51,28 @@ async function executar(body, uid, db) {
     return [200, { papel: 'aluno', contatos: [{ uid: eu.coachUid, nome: c.nome || 'Seu coach', foto: c.foto || '' }] }];
   }
 
+  // Vídeo de demonstração do coach para um exercício (o aluno vê o do coach vinculado a ele)
+  if (acao === 'demo_salvar') {
+    if (eu.papel !== 'coach') return [403, { error: 'Só o coach grava demonstrações.' }];
+    const ex = limpa(body.exercicio, 80).replace(/[^a-zA-Z0-9_-]/g, '');
+    if (!ex) return [400, { error: 'Exercício inválido.' }];
+    if (!videoOk(body.video)) return [400, { error: 'Vídeo inválido ou grande demais (máximo ~10 segundos).' }];
+    await db.collection('bc_demos').doc(`${uid}__${ex}`).set({ coachUid: uid, exercicio: ex, video: body.video, em: Date.now() });
+    return [200, { ok: true }];
+  }
+  if (acao === 'demo_ver') {
+    const dono = eu.papel === 'coach' ? uid : eu.coachUid;
+    const ex = limpa(body.exercicio, 80).replace(/[^a-zA-Z0-9_-]/g, '');
+    if (!dono || !ex) return [200, { video: null }];
+    const d = (await db.collection('bc_demos').doc(`${dono}__${ex}`).get()).data?.();
+    return [200, { video: d ? d.video : null }];
+  }
+  if (acao === 'video_ver') {
+    const v = (await db.collection('bc_videos').doc(limpa(body.id, 60)).get()).data?.();
+    if (!v || (v.de !== uid && v.para !== uid)) return [404, { error: 'Vídeo não encontrado.' }];
+    return [200, { video: v.video }];
+  }
+
   // enviar / ler: só entre coach e aluno vinculados
   const outro = limpa(body.com, 128);
   if (!outro) return [400, { error: 'Escolha com quem falar.' }];
@@ -62,6 +87,13 @@ async function executar(body, uid, db) {
     const m = { de: uid, texto, em: Date.now() };
     const ref = await msgs.add(m);
     return [200, { mensagem: { id: ref.id, ...m } }];
+  }
+  if (acao === 'video_enviar') {
+    if (!videoOk(body.video)) return [400, { error: 'Vídeo inválido ou grande demais (máximo ~10 segundos).' }];
+    const ref = await db.collection('bc_videos').add({ de: uid, para: outro, video: body.video, em: Date.now() });
+    const m = { de: uid, texto: limpa(body.texto, 300), video: ref.id, em: Date.now() };
+    const r = await msgs.add(m);
+    return [200, { mensagem: { id: r.id, ...m } }];
   }
   if (acao === 'ler') {
     const snap = await msgs.orderBy('em', 'desc').limit(100).get();
@@ -81,7 +113,7 @@ exports.handler = async (event) => {
   let body;
   try { body = JSON.parse(event.body || '{}'); } catch { return resposta(event, 400, { error: 'Pedido inválido.' }); }
   // leituras (a tela confere a cada poucos segundos) não gastam o limite nem a cota do banco grátis
-  if (['enviar', 'perfil', 'vincular'].includes(body.acao)) {
+  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar'].includes(body.acao)) {
     const rl = await checkRateLimit(auth.uid, 'body-coach-chat');
     if (!rl.ok) return resposta(event, 429, { error: 'Muitos pedidos seguidos. Aguarde um instante.' });
   }

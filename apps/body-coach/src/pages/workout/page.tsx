@@ -7,6 +7,7 @@ import { moverExercicio } from '@/lib/ordemTreino';
 import { fichaDoPerfil, avancarFicha, type Ficha } from '@/lib/ficha';
 import { useWakeLock } from '@/lib/useWakeLock';
 import DemoExecucao from '@/components/feature/DemoExecucao';
+import VideoDoCoach from '@/components/feature/VideoDoCoach';
 import { alternativas, lesoesDoTexto, POR_ID, type Lesao } from '@/lib/exerciseDb';
 import PreTreino from './components/PreTreino';
 import { dicaAoVivo } from '@/lib/liveCoach';
@@ -277,6 +278,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
             </div>
 
             <DemoExecucao id={exercise.id} nome={exercise.name} className="mt-4 aspect-[4/3] w-full rounded-xl sm:max-w-sm" />
+            <VideoDoCoach id={exercise.id} nome={exercise.name} />
 
             <p className="mt-4 rounded-xl bg-background-100/70 p-3 text-sm text-foreground-700">
               <i className="ri-information-line mr-1 text-primary-500"></i>
@@ -342,6 +344,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
                     </button>
                   </div>
                   <DemoExecucao id={exercise.id} nome={exercise.name} className="mt-4 aspect-square w-full rounded-xl" />
+            <VideoDoCoach id={exercise.id} nome={exercise.name} />
                   <p className="mt-2 text-xs text-foreground-500">Posição inicial e final do movimento. Capriche na postura e controle a descida.</p>
                   <div className="mt-5 flex justify-end">
                     <button

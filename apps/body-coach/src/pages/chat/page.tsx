@@ -1,6 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/components/feature/AuthContext';
 import { chatApi, type Contato, type Mensagem } from '@/lib/chat';
+import GravadorVideo from '@/components/feature/GravadorVideo';
+
+function BolhaVideo({ id }: { id: string }) {
+  const [src, setSrc] = useState('');
+  const [erro, setErro] = useState('');
+  const abrir = async () => {
+    try { setSrc((await chatApi<{ video: string }>({ acao: 'video_ver', id })).video); } catch (e) { setErro((e as Error).message); }
+  };
+  if (src) return <video src={src} controls autoPlay playsInline className="mb-1 w-56 rounded-lg bg-black" aria-label="Vídeo recebido" />;
+  return <button onClick={() => void abrir()} className="mb-1 flex items-center gap-1 rounded-lg bg-black/20 px-3 py-2 text-xs font-semibold"><i className="ri-play-circle-line text-base"></i>{erro || 'Ver vídeo'}</button>;
+}
 
 type Papel = 'coach' | 'aluno';
 interface Contatos { papel: Papel; codigo?: string; contatos: Contato[] }
@@ -15,6 +26,7 @@ export default function Chat() {
   const [codigo, setCodigo] = useState('');
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [gravando, setGravando] = useState(false);
   const fim = useRef<HTMLDivElement>(null);
   const nome = profile?.nickname || profile?.full_name || user?.email?.split('@')[0] || 'Aluno';
 
@@ -116,6 +128,7 @@ export default function Chat() {
             {msgs.map((m) => (
               <div key={m.id} className={`flex ${m.de === user?.id ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm ${m.de === user?.id ? 'bg-primary-500 text-background-50' : 'bg-background-50 text-foreground-800 border border-background-200'}`}>
+                  {m.video && <BolhaVideo id={m.video} />}
                   {m.texto}
                   <span className="mt-0.5 block text-right text-[10px] opacity-70">{new Date(m.em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
@@ -124,10 +137,18 @@ export default function Chat() {
             <div ref={fim} />
           </div>
           <form onSubmit={(e) => { e.preventDefault(); void enviar(); }} className="flex gap-2 border-t border-background-200 bg-background-50 p-2">
+            <button type="button" onClick={() => setGravando(true)} aria-label="Gravar e enviar vídeo" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-background-200 text-foreground-600"><i className="ri-video-add-line"></i></button>
             <input value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={1500} placeholder="Escreva uma mensagem" aria-label="Mensagem" className="min-w-0 flex-1 rounded-full border border-background-200 bg-background-50 px-4 py-2 text-sm outline-none focus:border-primary-300" />
             <button type="submit" disabled={!texto.trim() || enviando} aria-label="Enviar mensagem" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-500 text-background-50 disabled:opacity-40"><i className="ri-send-plane-fill"></i></button>
           </form>
         </div>
+      )}
+      {gravando && aberto && (
+        <GravadorVideo
+          titulo={`Vídeo para ${aberto.nome}`}
+          onFechar={() => setGravando(false)}
+          onEnviar={async (v) => { const r = await chatApi<{ mensagem: Mensagem }>({ acao: 'video_enviar', com: aberto.uid, video: v }); setMsgs((m) => [...m, r.mensagem]); }}
+        />
       )}
       {erro && <p role="alert" className="text-sm text-red-600">{erro}</p>}
     </div>
