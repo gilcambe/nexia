@@ -10,6 +10,7 @@ import Plan from "../pages/plan/page";
 import Profile from "../pages/profile/page";
 import Team from "../pages/team/page";
 import Chat from "../pages/chat/page";
+import Convite from "../pages/chat/Convite";
 import Respirar from "../pages/breathe/page";
 import Exams from "../pages/exams/page";
 import AntiDoping from "../pages/antidoping/page";
@@ -21,6 +22,10 @@ const routes: RouteObject[] = [
   {
     path: "/auth",
     element: <Auth />,
+  },
+  {
+    path: "/convite/:codigo",
+    element: <Convite />,
   },
   {
     path: "/privacidade",

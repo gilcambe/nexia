@@ -6,6 +6,7 @@ import { getUserDoc, deleteAllUserData } from '@/lib/userData';
 import { getFirebase } from '@/lib/firebaseClient';
 import Card, { CardHeader } from '@/components/base/Card';
 import SobreVoce from './components/SobreVoce';
+import ConviteCoach from './components/ConviteCoach';
 
 type Answers = Record<string, string | string[] | undefined>;
 interface SavedProfile {
@@ -106,6 +107,7 @@ export default function Profile() {
       )}
 
       <SobreVoce />
+      <ConviteCoach />
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* identity */}

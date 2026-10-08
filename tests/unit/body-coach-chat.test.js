@@ -79,3 +79,21 @@ test('BCC5. resumo da semana junta treinos e variação de peso', () => {
   assert.equal(r.treinos, 2); assert.equal(r.minutos, 90); assert.equal(r.volumeKg, 7000);
   assert.equal(r.pesoAtual, 79.5); assert.equal(r.variacaoPeso, -0.5); assert.equal(r.aluno, 'Ana');
 });
+
+test('BCC6. aluno sem coach pode virar coach; aluno com coach não; alunos não veem uns aos outros', async () => {
+  const db = fakeDb();
+  const [, c1] = await executar({ acao: 'perfil', papel: 'coach', nome: 'Gil' }, 'coach1', db);
+  await executar({ acao: 'perfil', papel: 'aluno', nome: 'Ana' }, 'ana', db);
+  await executar({ acao: 'perfil', papel: 'aluno', nome: 'Bob' }, 'bob', db);
+  await executar({ acao: 'vincular', codigo: c1.perfil.codigo }, 'ana', db);
+  await executar({ acao: 'vincular', codigo: c1.perfil.codigo }, 'bob', db);
+  const [, lista] = await executar({ acao: 'contatos' }, 'coach1', db);
+  assert.equal(lista.contatos.length, 2);
+  assert.deepEqual((await executar({ acao: 'contatos' }, 'ana', db))[1].contatos.map((x) => x.uid), ['coach1']);
+  assert.equal((await executar({ acao: 'ler', com: 'bob' }, 'ana', db))[0], 403);
+  assert.equal((await executar({ acao: 'resumo', com: 'bob' }, 'ana', db))[0], 403);
+  assert.equal((await executar({ acao: 'perfil', papel: 'coach', nome: 'Ana' }, 'ana', db))[1].perfil.papel, 'aluno');
+  await executar({ acao: 'perfil', papel: 'aluno', nome: 'Cris' }, 'cris', db);
+  const [, v] = await executar({ acao: 'perfil', papel: 'coach', nome: 'Cris' }, 'cris', db);
+  assert.equal(v.perfil.papel, 'coach'); assert.match(v.perfil.codigo, /^[A-Z2-9]{6}$/);
+});
