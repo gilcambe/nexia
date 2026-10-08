@@ -204,6 +204,19 @@ test('O4b. ADR-Q-01: revisão pede mudança, o agente corrige na mesma branch e 
   assert.match(lazy.exe.result_summary, /rodada de correção terminou sem commit novo/);
 });
 
+test('O4j. pedido só de arquivo novo que já existe na branch padrão: conclui sem PR vazio; se não existe, NO_CHANGES', async () => {
+  await setAutonomy(3);
+  const pulls = fake.pulls.length;
+  const talk = () => ({ architect: [{ text: 'x' }], coder: [{ text: 'Já existe.' }, { text: 'Já existe.' }], frontend: [{ text: 'Já existe.' }, { text: 'Já existe.' }] });
+  const done = await startAndRun(orch(scriptedRouter(talk())), 'Crie (arquivo novo, não edite nenhum existente) src/app.js do Site Alfa com um console.log. Não mexa em mais nada.');
+  assert.deepStrictEqual([done.exe.status, done.exe.error_code], ['succeeded', 'ALREADY_DONE'], done.exe.result_summary);
+  assert.match(done.exe.result_summary, /src\/app\.js já existe/);
+  assert.strictEqual(fake.pulls.length, pulls, 'sem PR vazio');
+
+  const missing = await startAndRun(orch(scriptedRouter(talk())), 'Crie (arquivo novo, não edite nenhum existente) src/novo.js do Site Alfa com um console.log. Não mexa em mais nada.');
+  assert.deepStrictEqual([missing.exe.status, missing.exe.error_code], ['failed', 'NO_CHANGES']);
+});
+
 test('O4c. resumo da IA com cara de secret (SHA de commit, "token: ...") é redigido em vez de derrubar a execução', async () => {
   await setAutonomy(3);
   const sha = '0123456789abcdef0123456789abcdef01234567';
