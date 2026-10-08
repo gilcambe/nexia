@@ -404,6 +404,17 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
               />
             </div>
 
+            {/* DescansoTimer inline logo após registrar */}
+            {resting && restLeft > 0 && (
+              <div className="mt-5">
+                <DescansoTimer
+                  segundos={restLeft}
+                  onFinish={() => setResting(false)}
+                  onSkip={() => setResting(false)}
+                />
+              </div>
+            )}
+
             <button
               onClick={finishExercise}
               className={`mt-5 w-full rounded-xl px-6 py-3 text-sm font-semibold transition whitespace-nowrap ${
