@@ -158,6 +158,13 @@ async function main() {
     report(cx.status === 200 && !!reply, 'Cortex: responder no chat', `${cx.status} ${cx.json ? (cx.json.error || `${(cx.json._meta || {}).modelUsed || ''}: ${reply}`) : cx.text}`);
     }
 
+    // Body Coach: a equipe de IA do aluno (coach) responde?
+    if (!RAPIDO) {
+      const t0 = Date.now();
+      const bc = await api('/body-coach-ai', { method: 'POST', body: { message: 'Como estou hoje?', role: 'coach', context: { name: 'Teste', readinessScore: 70 } } });
+      report(bc.status === 200 && !!(bc.json && bc.json.reply), 'Body Coach: coach responde', `${bc.status} ${Math.round((Date.now() - t0) / 1000)}s ${bc.json ? (bc.json.error || `${bc.json.model || ''}: ${bc.json.reply}`) : bc.text}`);
+    }
+
     // Execução do orquestrador (opcional: a tarefa vem do input)
     if (TASK && project && AUTONOMY !== null && project.autonomy_level !== AUTONOMY) {
       const cur = await api(`/nexia/projects/${project.id}`);
