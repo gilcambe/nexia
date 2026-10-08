@@ -7,7 +7,7 @@ import { moverExercicio } from '@/lib/ordemTreino';
 import { alternativas, videoDeExecucao, lesoesDoTexto, POR_ID, type Lesao } from '@/lib/exerciseDb';
 import PreTreino from './components/PreTreino';
 import { dicaAoVivo } from '@/lib/liveCoach';
-import { getUserDoc, setUserDoc } from '@/lib/userData';
+import { getUserDoc, setUserDoc, listUserDocs } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
 import DescansoTimer from './components/DescansoTimer';
@@ -15,6 +15,7 @@ import { CardioEntry } from './components/CardioEntry';
 import type { CardioAtividade } from '@/lib/cardioDoTexto';
 import { useCoach } from '@/components/feature/CoachContext';
 import { setTreinoAtivo } from '@/lib/treinoAtivo';
+import { ehRecorde } from '@/lib/recorde';
 
 type Phase =
   | 'PRE_SESSION'
@@ -78,6 +79,20 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
   const [resting, setResting] = useState(false);
   const [cardioDone, setCardioDone] = useState(false);
   const [cardioFeito, setCardioFeito] = useState<CardioAtividade[]>([]);
+  // Melhores séries de treinos anteriores, por nome de exercício (para o selo de recorde).
+  const [historicoSeries, setHistoricoSeries] = useState<Record<string, { weight: number; reps: number }[]>>({});
+  useEffect(() => {
+    if (!user?.id) return;
+    listUserDocs<{ melhores?: Record<string, { weight: number; reps: number }> }>(user.id, 'workouts', 'done_at', 'desc')
+      .then((lista) => {
+        const h: Record<string, { weight: number; reps: number }[]> = {};
+        for (const w of lista) {
+          for (const [nome, m] of Object.entries(w.melhores ?? {})) (h[nome] ??= []).push(m);
+        }
+        setHistoricoSeries(h);
+      })
+      .catch(() => setHistoricoSeries({}));
+  }, [user?.id]);
   const [showVideo, setShowVideo] = useState(false);
   const [showSwapModal, setShowSwapModal] = useState(false);
 
@@ -523,13 +538,18 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
           const totalVolume = allSets.reduce((acc, s) => acc + (s.weight * s.reps), 0);
           const exercisesCount = Object.values(setsByEx).filter((l) => l.some((x) => x.completed)).length;
 
+          const melhores: Record<string, { weight: number; reps: number }> = {};
           const progressions = session.exercises.map((e) => {
             const sets = setsByEx[e.id] ?? [];
             if (sets.length === 0) return null;
             const maxWeight = Math.max(...sets.map(s => s.weight));
             const totalReps = sets.reduce((acc, s) => acc + s.reps, 0);
+            const melhor = sets.reduce((a, b) => (b.weight > a.weight || (b.weight === a.weight && b.reps > a.reps) ? b : a));
+            melhores[e.name] = { weight: melhor.weight, reps: melhor.reps };
+            const antes = historicoSeries[e.name] ?? [];
             return {
               name: e.name,
+              recorde: antes.length > 0 && ehRecorde(antes, melhores[e.name]),
               detail: `${maxWeight}${e.weightUnit === 'kg/lado' ? ' kg/lado' : ' kg'} · ${totalReps} reps totais`
             };
           }).filter(Boolean);
@@ -553,6 +573,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
                 sets: totalSets,
                 volume_kg: totalVolume,
                 series_por_grupo: seriesPorGrupo,
+                melhores,
                 cardio: cardioFeito.map((c) => ({ tipo: c.tipo, minutos: c.minutos, km: c.distanciaKm ?? null, kcal: c.kcal ?? null })),
               };
               try {
@@ -591,6 +612,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
                   {progressions.map((p) => p && (
                     <div key={p.name} className="rounded-lg bg-accent-100/60 px-4 py-2.5 text-sm text-accent-800">
                       <span className="font-semibold">{p.name}:</span> {p.detail}
+                      {p.recorde && <span className="ml-2 rounded-full bg-amber-200 px-2 py-0.5 text-xs font-bold text-amber-900">🏆 Recorde</span>}
                     </div>
                   ))}
                 </div>
