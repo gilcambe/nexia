@@ -41,10 +41,11 @@ export default function DescansoTimer({
     return () => clearInterval(id);
   }, [running, onFinish, onChange]);
 
-  const progress = initialSegundos > 0 ? ((initialSegundos - segundos) / initialSegundos) * 100 : 0;
+  const progress = totalSegundos > 0 ? ((totalSegundos - segundos) / totalSegundos) * 100 : 0;
 
   const add = (delta: number) => {
     setSegundos((s) => Math.max(0, s + delta));
+    setTotalSegundos((t) => Math.max(0, t + delta));
   };
 
   const handleSkip = () => {
