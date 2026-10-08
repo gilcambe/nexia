@@ -13,8 +13,6 @@ import { useAuth } from './AuthContext';
 import { perguntar } from '@/lib/coachAI';
 import { cargasDoTexto } from '@/lib/cargasDoTexto';
 import { registrarSeries } from '@/lib/treinoAtivo';
-import { cargasDoTexto } from '@/lib/cargasDoTexto';
-import { registrarSeries } from '@/lib/treinoAtivo';
 
 export interface CoachContextSnapshot {
   name: string;
@@ -126,23 +124,14 @@ export function CoachProvider({ children }: { children: ReactNode }) {
       { id: `u-${Date.now()}`, speaker: 'user', text: trimmed, time: 'agora' },
     ]);
 
-    const series = cargasDoTexto(trimmed);
-    if (series.length > 0 && user?.uid) {
-      try {
-        await registrarSeries(user.uid, series);
-      } catch (err) {
-        console.error('Erro ao registrar séries:', err);
+          const series = cargasDoTexto(trimmed);
+      if (series.length > 0 && user?.uid) {
+        try {
+          await registrarSeries(user.uid, series);
+        } catch (err) {
+          console.error('Erro ao registrar séries:', err);
+        }
       }
-    }
-
-    const series = cargasDoTexto(trimmed);
-    if (series.length > 0 && user?.uid) {
-      try {
-        await registrarSeries(user.uid, series);
-      } catch (err) {
-        console.error('Erro ao registrar séries:', err);
-      }
-    }
 
     setLoadingAI(true);
     try {
