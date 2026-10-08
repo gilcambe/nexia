@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
+type TimerId = ReturnType<typeof setInterval>;
+
 interface DescansoTimerProps {
   segundos: number;
   onFinish: () => void;
@@ -9,7 +11,7 @@ interface DescansoTimerProps {
 export default function DescansoTimer({ segundos: initialSegundos, onFinish, onSkip }: DescansoTimerProps) {
   const [segundos, setSegundos] = useState(initialSegundos);
   const [isRunning, setIsRunning] = useState(true);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const intervalRef = useRef<TimerId | null>(null);
   const initialRef = useRef(initialSegundos);
   const onFinishRef = useRef(onFinish);
   const onSkipRef = useRef(onSkip);
@@ -39,7 +41,7 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
           if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
             navigator.vibrate([200, 100, 200]);
           }
-          onFinish();
+          onFinishRef.current();
           return 0;
         }
         return next;
@@ -49,7 +51,7 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isRunning, segundos, onFinish]);
+  }, [isRunning]);
 
   const addTime = (delta: number) => {
     setSegundos((s) => Math.max(0, s + delta));
