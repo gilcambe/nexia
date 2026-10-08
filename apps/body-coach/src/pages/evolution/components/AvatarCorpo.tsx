@@ -15,7 +15,6 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
   const [hoveredMuscle, setHoveredMuscle] = useState<string | null>(null);
 
   // Calcula cor com base no volume (séries por semana)
-  // Ex: 0 = cinza/neutro, 1-10 = azul/verde suave, 10-20 = amarelo/laranja, 20+ = vermelho/intenso
   const getMuscleColor = (muscleKey: string) => {
     const count = volume[muscleKey] || 0;
     if (count === 0) return '#e2e8f0'; // slate-200
@@ -433,7 +432,7 @@ export const AvatarCorpo: React.FC<AvatarCorpoProps> = ({
             <span>12-17</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="w-2.5 h-2.5 rounded-full bg-orange-400 inline-block"></span>
+            <span className="w-2.5 h-2.5 rounded-full bg-orange-400 inkline-block"></span>
             <span>18-24</span>
           </div>
           <div className="flex items-center gap-1">
