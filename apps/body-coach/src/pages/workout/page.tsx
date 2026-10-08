@@ -122,7 +122,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange }: { session: Sessi
 
   useEffect(() => {
     if (phase !== 'EXERCISE_ACTIVE') {
-      setTreinoAtivo(nu
+      setTreinoAtivo(null);
     }
   }, [phase]);
 
