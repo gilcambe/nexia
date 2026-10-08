@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid,
 } from 'recharts';
@@ -8,12 +9,32 @@ import BodyTwin from './components/BodyTwin';
 import ProgressCompare from './components/ProgressCompare';
 import RegisterProgress from './components/RegisterProgress';
 import PeriodoEAnalise from './components/PeriodoEAnalise';
+import { AvatarCorpo } from './components/AvatarCorpo';
+import { listUserDocs } from '@/lib/userData';
 
 export default function Evolution() {
   const { user } = useAuth();
   const {
     entries, loading, error, reload, height, goalBodyFat, goalWeight, weightTrend,
   } = useProgressData(user?.id);
+
+  // Séries por grupo muscular nos últimos 7 dias, a partir dos treinos salvos.
+  const [volumeSemana, setVolumeSemana] = useState<Record<string, number>>({});
+  const [musculo, setMusculo] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user?.id) return;
+    listUserDocs<{ done_at?: string; series_por_grupo?: Record<string, number> }>(user.id, 'workouts', 'done_at', 'desc')
+      .then((lista) => {
+        const corte = Date.now() - 7 * 24 * 3600 * 1000;
+        const soma: Record<string, number> = {};
+        for (const w of lista) {
+          if (!w.done_at || new Date(w.done_at).getTime() < corte || !w.series_por_grupo) continue;
+          for (const [g, n] of Object.entries(w.series_por_grupo)) soma[g] = (soma[g] ?? 0) + Number(n || 0);
+        }
+        setVolumeSemana(soma);
+      })
+      .catch(() => setVolumeSemana({}));
+  }, [user?.id]);
 
   // Body Twin só com medição real: a mais recente que tem peso e % de gordura.
   const measured = [...entries].reverse().find((e) => e.weight_kg != null && e.body_fat_pct != null) ?? null;
@@ -50,6 +71,17 @@ export default function Evolution() {
       </Card>
 
       <PeriodoEAnalise entries={entries} />
+
+      <Card padding="p-5">
+        <div className="mb-3 flex items-center gap-2">
+          <i className="ri-body-scan-line text-lg text-primary-500"></i>
+          <h2 className="font-heading text-base font-semibold text-foreground-950">Músculos treinados (7 dias)</h2>
+        </div>
+        <AvatarCorpo volume={volumeSemana} selectedMuscle={musculo} onSelectMuscle={setMusculo} />
+        <p className="mt-3 text-center text-sm text-foreground-600">
+          {musculo ? `${musculo}: ${volumeSemana[musculo] ?? 0} séries na semana` : Object.keys(volumeSemana).length ? 'Toque num músculo para ver as séries.' : 'Faça um treino para o boneco acender.'}
+        </p>
+      </Card>
 
       {!measured ? (
         <Card padding="p-5" className="flex flex-col items-center justify-center gap-4 text-center min-h-[300px]">
