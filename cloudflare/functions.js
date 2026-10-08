@@ -15,6 +15,7 @@ const LOADERS = {
   'autodev-engine': () => require('../netlify/functions/autodev-engine.js'),
   'billing': () => require('../netlify/functions/billing.js'),
   'body-coach-ai': () => require('../netlify/functions/body-coach-ai.js'),
+  'body-coach-chat': () => require('../netlify/functions/body-coach-chat.js'),
   'churn-predictor': () => require('../netlify/functions/churn-predictor.js'),
   'cortex-agent': () => require('../netlify/functions/cortex-agent.js'),
   'cortex-chat': () => require('../netlify/functions/cortex-chat.js'),
