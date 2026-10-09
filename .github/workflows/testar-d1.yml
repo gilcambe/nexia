@@ -1,6 +1,6 @@
 name: Testar banco de reserva (Cloudflare D1)
 # Cria o banco D1 "nexia-cortex" se não existir e testa gravar/ler/consultar/transação/Vault nele.
-# Usa o token da Cloudflare do environment "production" (o mesmo do deploy). Precisa da permissão D1 Edit.
+# Usa o token próprio NEXIA_D1_TOKEN (só D1 Edit) e NEXIA_D1_ACCOUNT_ID.
 on:
   workflow_dispatch:
 permissions:
@@ -8,7 +8,6 @@ permissions:
 jobs:
   d1:
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
@@ -16,5 +15,5 @@ jobs:
           node-version: 20
       - run: node scripts/diag-d1.js
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          NEXIA_D1_TOKEN: ${{ secrets.NEXIA_D1_TOKEN }}
+          NEXIA_D1_ACCOUNT_ID: ${{ secrets.NEXIA_D1_ACCOUNT_ID }}
