@@ -258,6 +258,7 @@ ${body}
     </div>
     <div class="container footer__bottom">
       <p>© <span data-year>${new Date().getFullYear()}</span> ${esc(spec.name)}. Todos os direitos reservados.</p>
+      <a class="selo-nexia" href="https://nexia.gcbezerra.workers.dev" target="_blank" rel="noopener">Feito com NEXIA</a>
       ${credits.length ? `<details class="credits"><summary>Créditos das imagens</summary><ul>${credits.map(x => `<li>${esc(x)}</li>`).join('')}</ul></details>` : ''}
     </div>
   </footer>
@@ -434,6 +435,8 @@ p { margin: 0 0 1rem; }
 .social a { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: rgba(255,255,255,.08); transition: background-color .25s, transform .25s var(--ease); }
 .social a:hover { background: var(--primary); transform: translateY(-3px); }
 .footer__bottom { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,.12); display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between; font-size: .9rem; }
+.selo-nexia { color: rgba(255,255,255,.6); text-decoration: none; font-size: .85rem; letter-spacing: .04em; }
+.selo-nexia:hover { color: #fff; }
 .credits summary { cursor: pointer; }
 .credits ul { margin-top: .75rem; font-size: .8rem; max-width: 640px; }
 
