@@ -99,6 +99,14 @@ async function sondarCota(env = process.env, fetchImpl = (...a) => fetch(...a), 
     if (typeof sa.private_key === 'string' && sa.private_key.includes('\\n')) sa.private_key = sa.private_key.replace(/\\n/g, '\n');
     const token = tokenImpl ? await tokenImpl(sa) : await require('../lib/firebase-lite/google-auth').createTokenSource(sa).getToken();
     const url = `https://firestore.googleapis.com/v1/projects/${sa.project_id}/databases/(default)/documents/diag_tmp/sonda-fila`;
+    const h = { Authorization: `Bearer ${token}` };
+    // A cota de LEITURA costuma acabar antes da de escrita: testa as duas.
+    const rl = await fetchImpl(url, { method: 'GET', headers: h });
+    if (!rl.ok && rl.status !== 404) {
+      const c = await rl.text();
+      if (rl.status === 429 || /RESOURCE_EXHAUSTED/.test(c)) return { ok: false, motivo: 'limite grátis de leitura do banco acabou' };
+      return { ok: true, motivo: `sonda inconclusiva (${rl.status})` };
+    }
     const r = await fetchImpl(url, { method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: { t: { stringValue: new Date().toISOString() } } }) });
     if (r.ok) return { ok: true };
     const corpo = await r.text();

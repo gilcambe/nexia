@@ -91,6 +91,8 @@ test('CF-Q1. sonda de cota: sem conta segue; 429/RESOURCE_EXHAUSTED segura; outr
   const tok = async () => 't';
   assert.equal((await sondarCota(env, async () => ({ ok: false, status: 429, text: async () => 'RESOURCE_EXHAUSTED' }), tok)).ok, false);
   assert.equal((await sondarCota(env, async () => ({ ok: true }), tok)).ok, true);
+  const soLeituraEsgotada = async (u, o) => (o.method === 'GET' ? { ok: false, status: 429, text: async () => 'RESOURCE_EXHAUSTED' } : { ok: true });
+  assert.equal((await sondarCota(env, soLeituraEsgotada, tok)).ok, false, 'leitura esgotada com escrita ok também segura');
   assert.equal((await sondarCota(env, async () => ({ ok: false, status: 500, text: async () => 'erro' }), tok)).ok, true, 'erro desconhecido não trava a fila');
   assert.equal((await sondarCota(env, async () => { throw new Error('rede'); }, tok)).ok, true);
 });
