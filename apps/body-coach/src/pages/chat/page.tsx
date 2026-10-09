@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/components/feature/AuthContext';
 import { chatApi, type Contato, type Mensagem } from '@/lib/chat';
+import DesafioCard from './Desafio';
 import GravadorVideo from '@/components/feature/GravadorVideo';
 
 function BolhaVideo({ id }: { id: string }) {
@@ -164,6 +165,7 @@ export default function Chat() {
           <span className="block text-xs text-foreground-500">Eles abrem “Conversa”, escolhem “Sou aluno” e digitam o código.</span>
         </div>
       )}
+      <DesafioCard papel={papel} />
       {papel === 'coach' && !lista?.contatos.length && <p className="text-sm text-foreground-500">Ainda não entrou nenhum aluno.</p>}
       {papel === 'coach' && !!lista?.contatos.length && (
         <div className="flex gap-2 overflow-x-auto pb-1">
