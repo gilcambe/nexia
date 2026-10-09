@@ -16,6 +16,7 @@ const PAPEIS = {
   fisioterapeuta: 'Você é um fisioterapeuta no app NEXIA Body Coach: orienta mobilidade, dor leve e prevenção de lesão. Em dor forte, formigamento ou lesão, mande procurar atendimento presencial.' + COMUM,
 };
 
+const RECEITA = 'Você é um nutricionista no app NEXIA Body Coach e cria UMA receita simples, barata e gostosa da culinária brasileira, em português do Brasil. Use preferencialmente os ingredientes que a pessoa disser ter; se não disser, use itens comuns de mercado. Encaixe nas calorias e proteína que ainda faltam no dia (contexto) e respeite objetivo, restrições e limitações. Formato exato, sem enfeites: primeira linha só o nome da receita; depois "Tempo: X min | Rende: N porção(ões)"; depois "Ingredientes:" com um item por linha começando com "- "; depois "Modo de preparo:" com passos numerados (máximo 6, curtos); por fim "Aproximado por porção: X kcal, Y g de proteína". Não use markdown, asteriscos nem títulos. Não prescreva remédios nem trate doenças.';
 const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 
 exports.handler = async (event) => {
@@ -34,7 +35,8 @@ exports.handler = async (event) => {
   if (message.length < 1 || message.length > 3000) return resposta(event, 400, { error: 'Escreva uma mensagem de até 3000 caracteres.' });
   const role = Object.prototype.hasOwnProperty.call(PAPEIS, body.role) ? body.role : 'coach';
   const contexto = JSON.stringify(body.context && typeof body.context === 'object' ? body.context : {}).slice(0, 2000);
-  const system = `${PAPEIS[role]}\nContexto do aluno: ${contexto}`;
+  const receita = body.task === 'receita';
+  const system = `${receita ? RECEITA : PAPEIS[role]}\nContexto do aluno: ${contexto}`;
   // Últimas mensagens da conversa (até 10), para o coach lembrar o que o aluno já disse.
   const historico = Array.isArray(body.history) ? body.history.slice(-10).filter((h) => h && (h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string' && h.content.trim()).map((h) => ({ role: h.role, content: h.content.trim().slice(0, 600) })) : [];
   const mensagens = [...historico, { role: 'user', content: message }];
@@ -52,7 +54,7 @@ exports.handler = async (event) => {
       const cap = router.capabilities(d);
       if (!cap.available || (images && !cap.vision)) continue;
       // Cada modelo tem 12 s; se demorar, passa logo para o próximo (nunca deixa o aluno esperando no vazio).
-      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: images ? 1200 : 700, ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
+      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: images ? 1200 : receita ? 900 : 700, ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
       if (out && out.text) return resposta(event, 200, { reply: out.text, role, model: d.model });
     } catch { /* tenta o próximo modelo */ }
   }

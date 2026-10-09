@@ -8,6 +8,7 @@ import WeeklyTrend from './components/WeeklyTrend';
 import AddMealModal from './components/AddMealModal';
 import CardapioDoDia from './components/CardapioDoDia';
 import AjusteSemanal from './components/AjusteSemanal';
+import ReceitaIA from './components/ReceitaIA';
 import { RefeicaoRapida } from './components/RefeicaoRapida';
 
 export default function Nutrition() {
@@ -42,6 +43,7 @@ export default function Nutrition() {
       <AjusteSemanal />
       <CardapioDoDia />
       <RefeicaoRapida />
+      <ReceitaIA />
 
       {/* weekly trend */}
       <Card padding="p-5">

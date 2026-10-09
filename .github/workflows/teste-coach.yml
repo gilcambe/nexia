@@ -11,6 +11,10 @@ on:
         description: 'Frases do aluno separadas por | (vazio = padrão)'
         required: false
         default: ''
+      tarefa:
+        description: 'receita = testa a receita pela IA (vazio = conversa do coach)'
+        required: false
+        default: ''
 permissions:
   contents: read
 jobs:
@@ -28,5 +32,6 @@ jobs:
         env:
           BASE: ${{ inputs.url }}
           FRASES: ${{ inputs.frases }}
+          TASK: ${{ inputs.tarefa }}
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
         run: node scripts/teste-coach-ao-vivo.js

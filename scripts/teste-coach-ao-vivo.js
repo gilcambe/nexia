@@ -7,6 +7,7 @@ const { createTokenSource, signRS256, b64url } = require('../lib/firebase-lite/g
 
 const BASE = String(process.env.BASE || '').replace(/\/+$/, '');
 const UID = 'nexia-coach-teste';
+const TASK = process.env.TASK === 'receita' ? 'receita' : '';
 const FRASES = (process.env.FRASES ? process.env.FRASES.split('|') : [
   'Olá', 'Tudo bem e vc?', 'hoje tô meio cansado', 'vou treinar perna daqui a pouco', 'Quanta proteína eu preciso comer?',
 ]);
@@ -31,7 +32,7 @@ async function main() {
     for (const frase of FRASES) {
       const r = await fetch(`${BASE}/api/body-coach-ai`, { method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${lj.idToken}` },
-        body: JSON.stringify({ message: frase, role: 'coach', context: contexto, history: historico.slice(-10) }) });
+        body: JSON.stringify({ message: frase, role: TASK ? 'nutrologo' : 'coach', ...(TASK ? { task: TASK } : {}), context: contexto, history: historico.slice(-10) }) });
       const j = await r.json().catch(() => ({}));
       const resposta = j.reply || `(sem resposta: ${r.status} ${j.error || ''})`;
       linhas.push(`ALUNO: ${frase}\nCOACH: ${resposta}\n`);
