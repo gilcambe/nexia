@@ -249,7 +249,9 @@ function createGithubAdapter(o) {
       if (total > LIMITS.totalBytes) throw bad(`Commit acima de ${LIMITS.totalBytes / 1024} KB.`);
       if (expected_head_sha !== undefined && !SHA_RE.test(expected_head_sha)) throw bad('expected_head_sha inválido.');
 
-      const w = { write: true, permissions: PERMS.writeContents };
+      // Arquivos em .github/workflows exigem a permissão "workflows" também no token da instalação (a do app sozinha não basta).
+      const mexeEmWorkflow = files.some(f => /^\.github\/workflows\//.test(f.path));
+      const w = { write: true, permissions: mexeEmWorkflow ? { ...PERMS.writeContents, workflows: 'write' } : PERMS.writeContents };
       const head = await headOf(branch);
       if (expected_head_sha && expected_head_sha !== head) throw new GatewayError(CODES.CONFLICT, 'A branch andou desde o pedido; leia de novo e refaça o commit.', { head });
       const parent = await call('GET', `/git/commits/${head}`);

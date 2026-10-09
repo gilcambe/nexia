@@ -152,3 +152,13 @@ test('H9. pipeline (Fase 11): produção só com allowProduction e com o SHA val
   assert.strictEqual((await a.findPipelineRun({ sha: head, since, target: 'production' })).status, 'queued', 'staging concluído não conta como produção');
   assert.strictEqual((await a.findPipelineRun({ sha: head, since, target: 'staging' })).conclusion, 'success');
 });
+
+test('H-WF. commit em .github/workflows pede também a permissão "workflows" no token; os demais não', async () => {
+  const { gh, a } = setup();
+  await a.createBranch({ branch: 'nexia/hwf' });
+  await a.commitFiles({ branch: 'nexia/hwf', message: 'comum', files: [{ path: 'docs/a.txt', content: 'a' }] });
+  await a.commitFiles({ branch: 'nexia/hwf', message: 'workflow', files: [{ path: '.github/workflows/novo.yml', content: 'name: x\non: workflow_dispatch\njobs: {}\n' }] });
+  const perms = [...gh.issued.values()].map(g => g.permissions);
+  assert.ok(perms.some(p => p.workflows === 'write'), 'token com workflows para o arquivo de workflow');
+  assert.ok(perms.some(p => p.contents === 'write' && p.workflows === undefined), 'commit comum segue sem workflows');
+});
