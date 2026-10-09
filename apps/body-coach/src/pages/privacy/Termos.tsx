@@ -13,7 +13,7 @@ const itens: [string, string][] = [
 
 export default function Termos() {
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8">
+    <div className="mx-auto max-w-2xl px-4 py-6 sm:py-8">
       <Link to="/auth" className="text-sm text-primary-600 hover:underline">← Voltar</Link>
       <h1 className="mt-3 font-heading text-2xl font-bold text-foreground-950">Termos de uso</h1>
       <div className="mt-4 space-y-4">

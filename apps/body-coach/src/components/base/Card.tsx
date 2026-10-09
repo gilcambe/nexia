@@ -9,8 +9,10 @@ export default function Card({
   className?: string;
   padding?: string;
 }) {
+  // Mobile first: no celular o espaço interno é menor; a partir de 640 px volta ao pedido.
+  const pad = /^p-([5-9]|1[0-9])$/.test(padding) ? `p-4 sm:${padding}` : padding;
   return (
-    <div className={`rounded-2xl border border-background-200 bg-background-50 ${padding} ${className}`}>
+    <div className={`rounded-2xl border border-background-200 bg-background-50 ${pad} ${className}`}>
       {children}
     </div>
   );

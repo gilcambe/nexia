@@ -75,7 +75,7 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
   };
 
   return (
-    <div className="rounded-2xl border border-background-200 bg-background-100/80 p-6 text-center" role="timer" aria-live="polite">
+    <div className="rounded-2xl border border-background-200 bg-background-100/80 p-4 sm:p-6 text-center" role="timer" aria-live="polite">
       <p className="text-sm font-semibold text-foreground-500">Descanso</p>
       <p className="font-heading text-5xl font-bold text-foreground-950 tabular-nums">{formatTime(segundos)}</p>
 

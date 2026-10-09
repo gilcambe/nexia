@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { DIVISOES, divisaoSugerida, type Divisao, type EstadoDoDia } from '@/lib/dayPlan';
 import type { Grupo } from '@/lib/exerciseDb';
 import { treinoDiferente } from '@/lib/treinoDiferente';
+import { diasPorSemana, tempoDoPerfil } from '@/lib/ficha';
 
 interface PreTreinoProps {
   respostas: Record<string, unknown>;
@@ -29,7 +30,7 @@ const GRUPOS_DISPONIVEIS: { id: Grupo; label: string }[] = [
 ];
 
 export default function PreTreino({ respostas, divisaoInicial, diaInicial, onStart }: PreTreinoProps) {
-  const diasSemana = Number(respostas.daysPerWeek ?? 4);
+  const diasSemana = diasPorSemana(respostas);
   const divisaoPadrao = divisaoInicial ?? divisaoSugerida(diasSemana);
 
   const [divisao, setDivisao] = useState<Divisao>(divisaoPadrao);
@@ -40,7 +41,7 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
   const [sono, setSono] = useState<EstadoDoDia['sono']>('bom');
   const [alimentacao, setAlimentacao] = useState<EstadoDoDia['alimentacao']>('comi_bem');
   const [energia, setEnergia] = useState<EstadoDoDia['energia']>(4);
-  const [tempoMin, setTempoMin] = useState<number>(60);
+  const [tempoMin, setTempoMin] = useState<number>(tempoDoPerfil(respostas));
   const [dores, setDores] = useState<string>('');
 
   const diasDaDivisaoAtual = DIVISOES[divisao].dias;
@@ -75,8 +76,8 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
   };
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 text-slate-800 dark:text-slate-100">
-      <div className="mb-8">
+    <div className="max-w-2xl mx-auto sm:px-4 sm:py-6 text-slate-800 dark:text-slate-100">
+      <div className="mb-6 sm:mb-8">
         <span className="inline-block px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full mb-2">
           Antes de Treinar
         </span>
@@ -86,16 +87,16 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-8">
         {/* Treino da ficha */}
-        <div className="bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900 rounded-2xl p-5 shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900 rounded-2xl p-4 sm:p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Na sua ficha ({DIVISOES[divisao].nome})</p>
           <p className="mt-1 text-lg font-bold">{diasDaDivisaoAtual[diaDaDivisao]?.titulo ?? diasDaDivisaoAtual[0].titulo}</p>
           {mudando && <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">Treino diferente só por hoje. A sua ficha continua a mesma.</p>}
         </div>
 
         {/* Como você está hoje */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-6">
           <h2 className="text-base font-semibold flex items-center gap-2">
             Como você está HOJE?
           </h2>
@@ -114,7 +115,7 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
                     type="button"
                     key={item.id}
                     onClick={() => setSono(item.id as EstadoDoDia['sono'])}
-                    className={`py-2 px-3 text-xs font-medium rounded-xl border text-center transition-all ${
+                    className={`py-2.5 px-1.5 text-xs font-medium rounded-xl border text-center transition-all ${
                       sono === item.id
                         ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 font-semibold'
                         : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-600 dark:text-slate-300'
@@ -139,7 +140,7 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
                     type="button"
                     key={item.id}
                     onClick={() => setAlimentacao(item.id as EstadoDoDia['alimentacao'])}
-                    className={`py-2 px-2 text-xs font-medium rounded-xl border text-center transition-all ${
+                    className={`py-2.5 px-1.5 text-xs font-medium rounded-xl border text-center transition-all ${
                       alimentacao === item.id
                         ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 font-semibold'
                         : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-600 dark:text-slate-300'
@@ -170,7 +171,7 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
                   type="button"
                   key={n}
                   onClick={() => setEnergia(n)}
-                  className={`py-2 text-xs font-semibold rounded-xl border transition-all ${
+                  className={`py-2.5 text-xs font-semibold rounded-xl border transition-all ${
                     energia === n
                       ? 'border-emerald-500 bg-emerald-500 text-white shadow-sm'
                       : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-700 dark:text-slate-300'
@@ -222,7 +223,7 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
         {mudando && (
           <>
         {/* Escolha da Divisão */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
           <h2 className="text-base font-semibold flex items-center gap-2">
             Divisão só para hoje
           </h2>
@@ -280,7 +281,7 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
         </div>
 
         {/* Ênfase */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4">
           <div>
             <h2 className="text-base font-semibold flex items-center gap-2">
               Ênfase opcional (até 2)

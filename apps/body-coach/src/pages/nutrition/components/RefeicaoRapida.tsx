@@ -40,7 +40,7 @@ export const RefeicaoRapida: React.FC = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
+    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-4 sm:p-6 shadow-sm border border-zinc-100 dark:border-zinc-800">
       <div className="flex items-center gap-2 mb-4">
         <i className="ri-restaurant-line text-emerald-500 text-xl"></i>
         <h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Refeição Rápida</h3>
