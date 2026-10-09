@@ -27,6 +27,12 @@ function criarBancoB(env = process.env) {
   const { createTokenSource } = require('../../lib/firebase-lite/google-auth');
   const bancos = contas.map(sa => { const tokens = createTokenSource(sa); return { projectId: sa.project_id, getToken: () => tokens.getToken() }; });
   const db = new Firestore({ projectId: bancos[0].projectId, getToken: bancos[0].getToken });
+  // Último recurso fora do Firebase: Cloudflare D1 (grátis). Só entra se o token e a conta da Cloudflare estiverem no ambiente.
+  if (env.CLOUDFLARE_API_TOKEN && env.CLOUDFLARE_ACCOUNT_ID) {
+    const { createD1Backend, createD1Driver } = require('../../lib/firebase-lite/d1-backend');
+    const backend = createD1Backend({ driver: createD1Driver({ token: env.CLOUDFLARE_API_TOKEN, accountId: env.CLOUDFLARE_ACCOUNT_ID, databaseName: env.NEXIA_D1_NAME || 'nexia-cortex' }) });
+    bancos.push({ projectId: backend.projectId, getToken: async () => '', backend });
+  }
   db.enableFailover(bancos);
   try { db.settings({ ignoreUndefinedProperties: true }); } catch { /* opcional */ }
   return db;
