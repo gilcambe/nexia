@@ -153,8 +153,12 @@ export function CoachProvider({ children }: { children: ReactNode }) {
             { id: `a-${Date.now()}`, speaker: 'coach', text: aviso, time: 'agora' },
           ]);
         }
-      } catch (err) {
-        console.error('Erro ao registrar séries:', err);
+      } catch (e: any) {
+        const errorMsg = e?.message || 'Erro ao registrar séries.';
+        setMessages((prev) => [
+          ...prev,
+          { id: `a-${Date.now()}`, speaker: 'coach', text: errorMsg, time: 'agora' },
+        ]);
       }
     }
 
