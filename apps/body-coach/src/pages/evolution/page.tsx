@@ -5,6 +5,7 @@ import {
 import Card from '@/components/base/Card';
 import { useAuth } from '@/components/feature/AuthContext';
 import { useProgressData } from '@/hooks/useProgressData';
+import AvatarCorpo from './components/AvatarCorpo';
 import BodyTwin from './components/BodyTwin';
 import ProgressCompare from './components/ProgressCompare';
 import RegisterProgress from './components/RegisterProgress';
@@ -43,6 +44,10 @@ export default function Evolution() {
         <h1 className="font-heading text-2xl font-bold text-foreground-950">Evolução</h1>
         <p className="mt-1 text-sm text-foreground-600">Seu peso, medidas e fotos ao longo do tempo.</p>
       </header>
+
+      <Card padding="p-5">
+        <AvatarCorpo volume={volumeSemana} />
+      </Card>
 
       {error && (
         <div className="flex items-center justify-between rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
