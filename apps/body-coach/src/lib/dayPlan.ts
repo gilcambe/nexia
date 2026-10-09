@@ -115,6 +115,7 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
 
   // Escolha por grupo: compostos primeiro, ênfase ganha um exercício a mais.
   const escolhidos: Exercicio[] = [];
+  const sobras: Exercicio[][] = [];
   let grupos = dia.grupos;
   let tituloDia = dia.titulo;
   if (cadeirante) {
@@ -131,6 +132,12 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
     const ordem = [...compostos.slice(e.variacao % Math.max(compostos.length, 1)), ...compostos.slice(0, e.variacao % Math.max(compostos.length, 1)),
       ...isolados.slice(e.variacao % Math.max(isolados.length, 1)), ...isolados.slice(0, e.variacao % Math.max(isolados.length, 1))];
     escolhidos.push(...ordem.slice(0, quantos));
+    sobras.push(ordem.slice(quantos));
+  }
+  // Sobrou tempo: completa com mais exercícios dos mesmos grupos, um grupo por vez (até 8 no total).
+  const alvo = Math.min(maxExercicios, 8);
+  for (let rodada = 0; escolhidos.length < alvo && sobras.some((l) => l.length > rodada); rodada++) {
+    for (const l of sobras) if (escolhidos.length < alvo && l[rodada]) escolhidos.push(l[rodada]);
   }
   if (e.enfase.length) avisos.push(`Dei prioridade a: ${e.enfase.join(', ')}.`);
 

@@ -65,7 +65,7 @@ export default function Nutrition() {
             <span className="text-xs text-foreground-400">{mealCount} registradas</span>
           </div>
           {error && !loading ? (
-            <div className="rounded-lg bg-primary-100/70 p-6 text-center">
+            <div className="rounded-lg bg-primary-100/70 p-4 sm:p-6 text-center">
               <p className="text-sm text-foreground-700">{error}</p>
               <button
                 onClick={reload}
@@ -83,7 +83,7 @@ export default function Nutrition() {
           ) : meals.length > 0 ? (
             <MealList meals={meals} onRemove={removeMeal} />
           ) : (
-            <p className="rounded-lg bg-background-100/70 p-6 text-center text-sm text-foreground-500">
+            <p className="rounded-lg bg-background-100/70 p-4 sm:p-6 text-center text-sm text-foreground-500">
               Nenhuma refeição registrada ainda. Adicione a primeira!
             </p>
           )}

@@ -3,34 +3,40 @@ import { useNavigate } from 'react-router-dom';
 import { useCoach } from '@/components/feature/CoachContext';
 import { useAuth } from '@/components/feature/AuthContext';
 import { getUserDoc } from '@/lib/userData';
-import { buildWeekPlan, todayPlanDay, type Answers } from '@/lib/trainingPlan';
+import { DIVISOES } from '@/lib/dayPlan';
+import { fichaDoPerfil, treinoDaFicha, type Ficha } from '@/lib/ficha';
 import Card from '@/components/base/Card';
 
 export default function TodayCard() {
   const navigate = useNavigate();
   const { setOpen } = useCoach();
   const { user } = useAuth();
-  const [profile, setProfile] = useState<{ onboarding?: Answers } | null>(null);
+  const [profile, setProfile] = useState<{ onboarding?: Record<string, unknown>; ficha?: Partial<Ficha>; mobility?: string[] } | null>(null);
 
   useEffect(() => {
     if (!user?.id) return;
-    getUserDoc<{ onboarding?: Answers }>(user.id, 'profile', 'main')
+    getUserDoc<{ onboarding?: Record<string, unknown>; ficha?: Partial<Ficha>; mobility?: string[] }>(user.id, 'profile', 'main')
       .then((data) => {
         if (data) setProfile(data);
       })
       .catch(() => {});
   }, [user?.id]);
 
-  const weekPlan = profile?.onboarding ? buildWeekPlan(profile.onboarding) : null;
-  const day = weekPlan ? todayPlanDay(weekPlan) : null;
+  // Mesmo treino que a ficha e o botão INICIAR TREINO abrem: o próximo dia do ciclo da ficha.
+  const ficha = profile?.onboarding ? fichaDoPerfil(profile) : null;
+  const respostas = profile?.onboarding ? { ...profile.onboarding, mobility: profile.mobility ?? [] } : null;
+  let treino: ReturnType<typeof treinoDaFicha> | null = null;
+  try {
+    treino = ficha && respostas ? treinoDaFicha(respostas, ficha.divisao, ficha.proximoDia) : null;
+  } catch {
+    treino = null;
+  }
+  const dia = ficha ? DIVISOES[ficha.divisao].dias[ficha.proximoDia] : null;
 
-  const rest = !!weekPlan && !day;
-  const title = day ? day.title : rest ? 'Hoje é dia de descanso' : 'Treino de hoje';
-  const subtitle = day
-    ? `${day.focus} · ${day.duration} min · ${day.exercises.length} exercícios`
-    : rest
-      ? 'Recupere bem: sono, água e alimentação.'
-      : 'Abra o treino do seu plano e registre as séries na academia.';
+  const title = dia ? dia.titulo : 'Treino de hoje';
+  const subtitle = treino && ficha
+    ? `Ficha ${DIVISOES[ficha.divisao].nome} · ${treino.sessao.estimatedMinutes} min · ${treino.sessao.exercises.length} exercícios`
+    : 'Responda o questionário e o treino do seu plano aparece aqui.';
 
   return (
     <Card className="relative overflow-hidden" padding="p-6">

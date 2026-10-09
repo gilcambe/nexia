@@ -116,7 +116,7 @@ export default function Auth() {
           </p>
         </div>
 
-        <div className="rounded-2xl border border-background-200 bg-background-50 p-6">
+        <div className="rounded-2xl border border-background-200 bg-background-50 p-4 sm:p-6">
           {/* segmented control */}
           <div className="flex rounded-full bg-background-100 p-1">
             <button

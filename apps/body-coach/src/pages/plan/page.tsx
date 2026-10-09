@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { type Answers } from '@/lib/trainingPlan';
-import { DIVISOES, montarTreinoDoDia, type Divisao } from '@/lib/dayPlan';
-import { fichaDoPerfil, type Ficha } from '@/lib/ficha';
+import { DIVISOES, type Divisao } from '@/lib/dayPlan';
+import { fichaDoPerfil, treinoDaFicha, diasPorSemana, type Ficha } from '@/lib/ficha';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import Lembretes from './components/Lembretes';
@@ -27,10 +27,7 @@ export default function Plan() {
   const dias = DIVISOES[ficha.divisao].dias;
   const previa = (i: number): string[] => {
     try {
-      const t = montarTreinoDoDia({
-        respostas: onboarding as unknown as Record<string, unknown>, divisao: ficha.divisao, diaDaDivisao: i, enfase: [],
-        estado: { sono: 'bom', alimentacao: 'comi_bem', energia: 4, tempoMin: 60, dores: '', indisponiveis: [] }, variacao: 0,
-      });
+      const t = treinoDaFicha(onboarding as unknown as Record<string, unknown>, ficha.divisao, i);
       return t.sessao.exercises.map((e) => e.name);
     } catch { return []; }
   };
@@ -101,7 +98,7 @@ export default function Plan() {
         })}
       </div>
 
-      <Lembretes diasPorSemana={Number((onboarding as unknown as Record<string, unknown>).daysPerWeek ?? 4)} apelido={profile?.nickname || profile?.full_name?.split(' ')[0] || null} />
+      <Lembretes diasPorSemana={diasPorSemana(onboarding as unknown as Record<string, unknown>)} apelido={profile?.nickname || profile?.full_name?.split(' ')[0] || null} />
     </div>
   );
 }

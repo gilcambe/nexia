@@ -363,7 +363,7 @@ export default function BodyTwin({
               draggable={false}
             />
           ) : (
-            <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-background-300 p-6 text-center">
+            <div className="flex h-full w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-background-300 p-4 sm:p-6 text-center">
               <i className="ri-camera-line text-3xl text-foreground-400"></i>
               <p className="text-xs text-foreground-500">
                 Adicione uma foto do ângulo <span className="font-semibold">{ANGLE_LABEL[angle]}</span> para ver seu corpo real.

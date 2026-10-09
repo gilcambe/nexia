@@ -21,7 +21,7 @@ export default function ExamList({
 }) {
   if (exams.length === 0) {
     return (
-      <p className="rounded-lg bg-background-100/70 p-6 text-center text-sm text-foreground-500">
+      <p className="rounded-lg bg-background-100/70 p-4 sm:p-6 text-center text-sm text-foreground-500">
         Nenhum exame enviado ainda. Envie o primeiro acima.
       </p>
     );

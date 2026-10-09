@@ -57,7 +57,7 @@ export default function Team() {
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
-      <div className="bg-white shadow rounded-lg p-6 space-y-4">
+      <div className="bg-white shadow rounded-lg p-4 sm:p-6 space-y-4">
         <h1 className="text-2xl font-bold text-foreground-900">Equipe de IA</h1>
         <p className="text-sm text-foreground-600">
           Consulte nossa equipe de especialistas virtuais para tirar dúvidas sobre seus treinos, nutrição e saúde.

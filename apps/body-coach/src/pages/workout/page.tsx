@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { type SetLog, type Session } from '@/mocks/workout';
 import type { Answers } from '@/lib/trainingPlan';
-import { montarTreinoDoDia, type TreinoDoDia, trocarExercicio } from '@/lib/dayPlan';
+import { type TreinoDoDia, trocarExercicio } from '@/lib/dayPlan';
 import { moverExercicio } from '@/lib/ordemTreino';
-import { fichaDoPerfil, avancarFicha, type Ficha } from '@/lib/ficha';
+import { fichaDoPerfil, avancarFicha, treinoDaFicha, type Ficha } from '@/lib/ficha';
 import { useWakeLock } from '@/lib/useWakeLock';
 import { sugerirCarga } from '@/lib/cargaSugerida';
 import DemoExecucao from '@/components/feature/DemoExecucao';
@@ -61,7 +61,7 @@ export default function Workout() {
         diaInicial={ficha?.proximoDia}
         onStart={(cfg) => {
           setSeguiuFicha(!!ficha && cfg.divisao === ficha.divisao && cfg.diaDaDivisao === ficha.proximoDia);
-          setTreino(montarTreinoDoDia({ respostas, ...cfg, variacao: Date.now() % 1000 }));
+          setTreino(treinoDaFicha(respostas, cfg.divisao, cfg.diaDaDivisao, cfg.estado, cfg.enfase));
         }}
       />
     );
@@ -80,7 +80,7 @@ export default function Workout() {
 function WorkoutEmpty({ estado }: { estado: string }) {
   if (estado === 'loading') return <p className="text-sm text-foreground-500">Carregando...</p>;
   return (
-    <div className="rounded-2xl border border-background-200 bg-background-50 p-6">
+    <div className="rounded-2xl border border-background-200 bg-background-50 p-4 sm:p-6">
       <h1 className="font-heading text-xl font-bold text-foreground-950">{estado === 'rest' ? 'Hoje é dia de descanso' : 'Responda o questionário para montar seu treino'}</h1>
       <p className="mt-2 text-sm text-foreground-600">{estado === 'rest' ? 'Recupere bem: sono, água e alimentação. Veja a sua ficha de treino.' : 'Com seus dias livres e seu nível, o treino do dia aparece aqui.'}</p>
       <Link to={estado === 'rest' ? '/plan' : '/onboarding'} className="mt-4 inline-flex rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-background-50">{estado === 'rest' ? 'Ver ficha' : 'Responder agora'}</Link>
@@ -220,7 +220,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
 
       <div className="space-y-4">
         {phase === 'PRE_SESSION' && (
-          <div className="rounded-2xl border border-background-200 bg-background-50 p-6">
+          <div className="rounded-2xl border border-background-200 bg-background-50 p-4 sm:p-6">
             <h2 className="font-heading text-xl font-bold text-foreground-950">Pronto para começar?</h2>
             <p className="mt-2 text-sm text-foreground-600">
               {session.exercises.length} exercícios · {session.estimatedMinutes} min.
@@ -243,7 +243,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
         )}
 
         {phase === 'WARMUP' && (
-          <div className="rounded-2xl border border-background-200 bg-background-50 p-6">
+          <div className="rounded-2xl border border-background-200 bg-background-50 p-4 sm:p-6">
             <h2 className="font-heading text-xl font-bold text-foreground-950">Aquecimento</h2>
             <p className="mt-1 text-sm text-foreground-600">Prepare o corpo antes de carregar peso.</p>
             <div className="mt-4 space-y-2">
@@ -264,13 +264,13 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
         )}
 
         {phase === 'EXERCISE_ACTIVE' && (
-          <div className="rounded-2xl border border-background-200 bg-background-50 p-6">
+          <div className="rounded-2xl border border-background-200 bg-background-50 p-4 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-primary-600">
                   Exercício {exIndex + 1}
                 </p>
-                <h2 className="mt-1 font-heading text-2xl font-bold text-foreground-950">{exercise.name}</h2>
+                <h2 className="mt-1 font-heading text-xl font-bold leading-tight sm:text-2xl text-foreground-950">{exercise.name}</h2>
                 <p className="mt-1 text-sm text-foreground-500">{exercise.muscleGroup}</p>
               </div>
               <span className="rounded-full bg-secondary-100 px-3 py-1.5 text-xs font-semibold text-secondary-800">
@@ -337,7 +337,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
             {/* modal vídeo */}
             {showVideo && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                <div className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl bg-background-50 p-6 shadow-xl">
+                <div className="w-full max-w-md max-h-[85vh] overflow-y-auto rounded-2xl bg-background-50 p-4 sm:p-6 shadow-xl">
                   <div className="flex items-center justify-between">
                     <h3 className="font-heading text-lg font-bold text-foreground-950">Como executar: {exercise.name}</h3>
                     <button onClick={() => setShowVideo(false)} className="rounded-lg p-1 text-foreground-400 hover:bg-background-200">
@@ -362,7 +362,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
             {/* modal trocar exercício */}
             {showSwapModal && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                <div className="w-full max-w-md rounded-2xl bg-background-50 p-6 shadow-xl">
+                <div className="w-full max-w-md rounded-2xl bg-background-50 p-4 sm:p-6 shadow-xl">
                   <div className="flex items-center justify-between">
                     <h3 className="font-heading text-lg font-bold text-foreground-950">Trocar exercício</h3>
                     <button onClick={() => setShowSwapModal(false)} className="rounded-lg p-1 text-foreground-400 hover:bg-background-200">
@@ -497,7 +497,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
             </button>
             <button
               onClick={() => setOpen(true)}
-              className="fixed bottom-24 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-background-50 shadow-lg transition hover:bg-primary-600"
+              className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-3 z-40 flex h-12 w-12 sm:h-14 sm:w-14 lg:bottom-24 items-center justify-center rounded-full bg-primary-500 text-background-50 shadow-lg transition hover:bg-primary-600"
               aria-label="Falar com o coach"
             >
               <i className="ri-chat-3-line text-2xl"></i>
@@ -506,7 +506,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
         )}
 
         {phase === 'STRENGTH_COMPLETE' && (
-          <div className="rounded-2xl border border-background-200 bg-background-50 p-6">
+          <div className="rounded-2xl border border-background-200 bg-background-50 p-4 sm:p-6">
             <h2 className="font-heading text-xl font-bold text-foreground-950">Força concluída 💪</h2>
             <p className="mt-1 text-sm text-foreground-600">Nenhum desconforto relevante relatado.</p>
             <div className="mt-5 space-y-2">
@@ -541,7 +541,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
         )}
 
         {phase === 'CARDIO' && (
-          <div className="rounded-2xl border border-background-200 bg-background-50 p-6">
+          <div className="rounded-2xl border border-background-200 bg-background-50 p-4 sm:p-6">
             <h2 className="font-heading text-xl font-bold text-foreground-950">Cardio</h2>
             <p className="mt-1 mb-4 text-sm text-foreground-600">{session.cardio?.type} · {session.cardio?.note}</p>
             <CardioEntry
@@ -613,7 +613,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
           };
 
           return (
-            <div className="rounded-2xl border border-background-200 bg-background-50 p-6">
+            <div className="rounded-2xl border border-background-200 bg-background-50 p-4 sm:p-6">
               <h2 className="font-heading text-xl font-bold text-foreground-950">Resumo da sessão</h2>
               <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 {[
@@ -653,7 +653,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
         })()}
 
         {phase === 'SESSION_COMPLETE' && (
-          <div className="rounded-2xl border border-accent-200 bg-accent-100/50 p-8 text-center">
+          <div className="rounded-2xl border border-accent-200 bg-accent-100/50 p-5 text-center sm:p-8">
             <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-accent-500 text-background-50">
               <i className="ri-check-line text-2xl"></i>
             </div>
