@@ -35,17 +35,17 @@ async function buildContext({ vault, ctx, projectId, message = '', budgetTokens 
   const where = { project_id: projectId };
   const [snaps, decisions, tasks, errors, deployments, memoriesP, conversations, artifacts, envs, repos] = await Promise.all([
     vault.ProjectSnapshot.list(ctx, { where, limit: 20 }),
-    vault.Decision.list(ctx, { where, limit: 100 }),
-    vault.Task.list(ctx, { where, limit: 200 }),
-    vault.Error.list(ctx, { where, limit: 100 }),
+    vault.Decision.list(ctx, { where, limit: 40 }),
+    vault.Task.list(ctx, { where, limit: 60 }),
+    vault.Error.list(ctx, { where, limit: 40 }),
     vault.Deployment.list(ctx, { where, limit: 50 }),
-    vault.Memory.list(ctx, { where, limit: 200 }),
+    vault.Memory.list(ctx, { where, limit: 60 }),
     vault.Conversation.list(ctx, { where, limit: 50 }),
-    vault.Artifact.list(ctx, { where, limit: 200 }),
+    vault.Artifact.list(ctx, { where, limit: 60 }),
     vault.Environment.list(ctx, { where, limit: 20 }),
     vault.Repository.list(ctx, { where, limit: 20 }),
   ]);
-  const memoriesC = client ? await vault.Memory.list(ctx, { where: { client_id: client.id }, limit: 200 }) : [];
+  const memoriesC = client ? await vault.Memory.list(ctx, { where: { client_id: client.id }, limit: 60 }) : [];
   const nowIso = now.toISOString();
   const usableMemory = m => m.status === 'approved' && (!m.expires_at || m.expires_at > nowIso);
   const memories = [...new Map([...memoriesP, ...memoriesC].filter(usableMemory).map(m => [m.id, m])).values()];

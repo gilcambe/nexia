@@ -369,7 +369,13 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         uSnaps.forEach((s, i) => {
           if (s.exists) throw new VaultError(CODES.UNIQUE, `${entity}: já existe registro com o mesmo valor.`, { fields: moved[i].fields });
         });
-        await checkRefs(tx, ctx, entity, id, value, full.refs);
+        // Economia de cota: se nenhuma referência mudou, elas já foram conferidas quando o registro foi criado
+        // (e um registro referenciado não pode ser excluído enquanto tem dependentes), então não lê tudo de novo.
+        const refKey = r => `${r.entity}/${r.id}`;
+        let oldRefs = null;
+        try { oldRefs = new Set(validateEntity(schema, before, { refPattern }).refs.map(refKey)); } catch { oldRefs = null; }
+        const refsChanged = !oldRefs || full.refs.some(r => !oldRefs.has(refKey(r)));
+        if (refsChanged) await checkRefs(tx, ctx, entity, id, value, full.refs);
 
         const version = current.version + 1;
         const meta = Object.fromEntries(META_FIELDS.filter(k => current[k] !== undefined).map(k => [k, current[k]]));
