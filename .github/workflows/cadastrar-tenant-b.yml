@@ -27,3 +27,4 @@ jobs:
         env:
           TENANT: ${{ inputs.tenant }}
           FIREBASE_SERVICE_ACCOUNT_B: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_B }}
+          FIREBASE_SERVICE_ACCOUNT_C: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_C }}

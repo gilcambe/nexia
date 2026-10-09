@@ -79,6 +79,7 @@ jobs:
           NEXIA_GITHUB_TOKEN: ${{ secrets.NEXIA_GITHUB_TOKEN }}
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
           FIREBASE_SERVICE_ACCOUNT_B: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_B }}
+          FIREBASE_SERVICE_ACCOUNT_C: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_C }}
           FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
           FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
@@ -143,6 +144,7 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
           FIREBASE_SERVICE_ACCOUNT_B: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_B }}
+          FIREBASE_SERVICE_ACCOUNT_C: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_C }}
       - name: Registrar o deploy no Vault (fim)
         if: always() && steps.vault.outputs.deployment_id != ''
         run: node scripts/registrar-deploy.js fim "${{ steps.vault.outputs.deployment_id }}" "${{ steps.smoke.outputs.status || 'failed' }}"

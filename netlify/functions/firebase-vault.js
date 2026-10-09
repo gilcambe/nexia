@@ -8,24 +8,26 @@
  */
 const primary = require('./firebase-init');
 
-function lerConta(env) {
-  const raw = env.FIREBASE_SERVICE_ACCOUNT_B && String(env.FIREBASE_SERVICE_ACCOUNT_B).trim();
-  const b64 = env.FIREBASE_SERVICE_ACCOUNT_BASE64_B && String(env.FIREBASE_SERVICE_ACCOUNT_BASE64_B).replace(/\s/g, '');
+function lerConta(env, letra = 'B') {
+  const raw = env[`FIREBASE_SERVICE_ACCOUNT_${letra}`] && String(env[`FIREBASE_SERVICE_ACCOUNT_${letra}`]).trim();
+  const b64 = env[`FIREBASE_SERVICE_ACCOUNT_BASE64_${letra}`] && String(env[`FIREBASE_SERVICE_ACCOUNT_BASE64_${letra}`]).replace(/\s/g, '');
   let txt = raw || (b64 ? Buffer.from(b64, 'base64').toString('utf8') : '');
   if (!txt) return null;
   const sa = JSON.parse(txt);
   if (typeof sa.private_key === 'string' && sa.private_key.includes('\\n')) sa.private_key = sa.private_key.replace(/\\n/g, '\n');
-  if (!sa.client_email || !sa.private_key || !sa.project_id) throw new Error('FIREBASE_SERVICE_ACCOUNT_B incompleta.');
+  if (!sa.client_email || !sa.private_key || !sa.project_id) throw new Error(`FIREBASE_SERVICE_ACCOUNT_${letra} incompleta.`);
   return sa;
 }
 
+// Bancos grátis do Vault em ordem (B, depois C): o primeiro é o ativo e, se a cota dele acabar, passa para o próximo.
 function criarBancoB(env = process.env) {
-  const sa = lerConta(env);
-  if (!sa) return null;
+  const contas = ['B', 'C'].map(l => lerConta(env, l)).filter(Boolean);
+  if (!contas.length) return null;
   const { Firestore } = require('../../lib/firebase-lite/firestore');
   const { createTokenSource } = require('../../lib/firebase-lite/google-auth');
-  const tokens = createTokenSource(sa);
-  const db = new Firestore({ projectId: sa.project_id, getToken: () => tokens.getToken() });
+  const bancos = contas.map(sa => { const tokens = createTokenSource(sa); return { projectId: sa.project_id, getToken: () => tokens.getToken() }; });
+  const db = new Firestore({ projectId: bancos[0].projectId, getToken: bancos[0].getToken });
+  db.enableFailover(bancos);
   try { db.settings({ ignoreUndefinedProperties: true }); } catch { /* opcional */ }
   return db;
 }
