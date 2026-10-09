@@ -89,16 +89,20 @@ function precisaTesteFinal({ abertas, feitoEm, testeEm }) {
 
 // Sonda do banco do Cortex: UMA escrita pequena. Se o limite grátis do dia acabou, a fila não despacha tarefas novas
 // (cada tentativa só queimaria mais escritas); volta sozinha no ciclo seguinte em que a sonda passar. Não é espera por horário.
-async function sondarCota(env = process.env, fetchImpl = (...a) => fetch(...a), tokenImpl = null) {
+async function sondarUm(txt, fetchImpl, tokenImpl) {
   try {
-    const raw = (env.FIREBASE_SERVICE_ACCOUNT_B || '').trim();
-    const b64 = (env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '').replace(/\s/g, '');
-    const txt = raw || (b64 ? Buffer.from(b64, 'base64').toString('utf8') : '');
-    if (!txt) return { ok: true, motivo: 'sem conta configurada' };
     const sa = JSON.parse(txt);
     if (typeof sa.private_key === 'string' && sa.private_key.includes('\\n')) sa.private_key = sa.private_key.replace(/\\n/g, '\n');
     const token = tokenImpl ? await tokenImpl(sa) : await require('../lib/firebase-lite/google-auth').createTokenSource(sa).getToken();
     const url = `https://firestore.googleapis.com/v1/projects/${sa.project_id}/databases/(default)/documents/diag_tmp/sonda-fila`;
+    const h = { Authorization: `Bearer ${token}` };
+    // A cota de LEITURA costuma acabar antes da de escrita: testa as duas.
+    const rl = await fetchImpl(url, { method: 'GET', headers: h });
+    if (!rl.ok && rl.status !== 404) {
+      const c = await rl.text();
+      if (rl.status === 429 || /RESOURCE_EXHAUSTED/.test(c)) return { ok: false, motivo: 'limite grátis de leitura do banco acabou' };
+      return { ok: true, motivo: `sonda inconclusiva (${rl.status})` };
+    }
     const r = await fetchImpl(url, { method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: { t: { stringValue: new Date().toISOString() } } }) });
     if (r.ok) return { ok: true };
     const corpo = await r.text();
@@ -107,6 +111,23 @@ async function sondarCota(env = process.env, fetchImpl = (...a) => fetch(...a), 
   } catch (e) {
     return { ok: true, motivo: `sonda falhou (${e.message})` };
   }
+}
+
+// Vale se QUALQUER banco do rodízio (B, C) ainda tem cota de leitura e escrita.
+async function sondarCota(env = process.env, fetchImpl = (...a) => fetch(...a), tokenImpl = null) {
+  const textos = ['B', 'C'].map(l => (env[`FIREBASE_SERVICE_ACCOUNT_${l}`] || '').trim()).filter(Boolean);
+  if (!textos.length) {
+    const b64 = (env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '').replace(/\s/g, '');
+    if (!b64) return { ok: true, motivo: 'sem conta configurada' };
+    textos.push(Buffer.from(b64, 'base64').toString('utf8'));
+  }
+  let ultimo = null;
+  for (const txt of textos) {
+    const r = await sondarUm(txt, fetchImpl, tokenImpl);
+    if (r.ok) return r;
+    ultimo = r;
+  }
+  return ultimo;
 }
 
 async function gh(token, method, path, body) {

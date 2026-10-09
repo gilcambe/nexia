@@ -15,12 +15,13 @@ async function main() {
   const sa = JSON.parse(Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '', 'base64').toString('utf8') || '{}');
   if (!sa.project_id) throw new Error('Falta FIREBASE_SERVICE_ACCOUNT_BASE64.');
   await publicar(sa, dry);
-  // Segundo projeto grátis do Vault/Cortex (FIREBASE_SERVICE_ACCOUNT_B): mesmos índices.
-  const raw = (process.env.FIREBASE_SERVICE_ACCOUNT_B || '').trim();
-  if (raw) {
+  // Projetos grátis extras do Vault/Cortex (B e C): mesmos índices.
+  for (const letra of ['B', 'C']) {
+    const raw = (process.env[`FIREBASE_SERVICE_ACCOUNT_${letra}`] || '').trim();
+    if (!raw) continue;
     const b = JSON.parse(raw);
     if (typeof b.private_key === 'string' && b.private_key.includes('\\n')) b.private_key = b.private_key.replace(/\\n/g, '\n');
-    console.log(`--- Projeto B (${b.project_id}) ---`);
+    console.log(`--- Projeto ${letra} (${b.project_id}) ---`);
     await publicar(b, dry);
   }
 }
