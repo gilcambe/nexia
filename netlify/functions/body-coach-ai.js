@@ -54,7 +54,7 @@ exports.handler = async (event) => {
       const cap = router.capabilities(d);
       if (!cap.available || (images && !cap.vision)) continue;
       // Cada modelo tem 12 s; se demorar, passa logo para o próximo (nunca deixa o aluno esperando no vazio).
-      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: images ? 1200 : receita ? 900 : 700, ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
+      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: images ? 1200 : receita ? 2000 : 700, ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
       if (out && out.text) return resposta(event, 200, { reply: out.text, role, model: d.model });
     } catch { /* tenta o próximo modelo */ }
   }
