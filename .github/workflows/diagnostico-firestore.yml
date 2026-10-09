@@ -20,3 +20,9 @@ jobs:
         run: node scripts/diag-firestore.js
         env:
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+      - name: Testar o Vault no banco B
+        if: always()
+        run: node scripts/diag-vault-b.js
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          FIREBASE_SERVICE_ACCOUNT_B: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_B }}
