@@ -1,103 +1,29 @@
-/**
- * Módulo de Avaliação de Modelos do Cortex (CommonJS)
- */
+'use strict';
+// Avaliação semanal das IAs grátis: quem acerta mais é tentado primeiro.
+const MIN_EXECUCOES = 3;
 
-/**
- * Avalia uma lista de execuções de modelos.
- * @param {Array<{modelo: string, ok: boolean}>} execucoes - Lista de execuções.
- * @returns {Array<{modelo: string, total: number, acertos: number, taxa: number}>} Lista ordenada do melhor para o pior.
- */
+/** execucoes: [{ modelo, ok }] → [{ modelo, total, acertos, taxa }] do melhor para o pior (mín. 3 execuções por modelo). */
 function avaliarModelos(execucoes) {
-  if (!Array.isArray(execucoes)) {
-    return [];
+  const porModelo = new Map();
+  for (const e of Array.isArray(execucoes) ? execucoes : []) {
+    if (!e || !e.modelo) continue;
+    const m = porModelo.get(e.modelo) || { modelo: e.modelo, total: 0, acertos: 0 };
+    m.total += 1;
+    if (e.ok) m.acertos += 1;
+    porModelo.set(e.modelo, m);
   }
-
-  const map = {};
-
-  for (const exec of execucoes) {
-    if (!exec || !exec.modelo) continue;
-    const nome = exec.modelo;
-    if (!map[nome]) {
-      map[nome] = { modelo: nome, total: 0, acertos: 0 };
-    }
-    map[nome].total += 1;
-    if (exec.ok === true) {
-      map[nome].acertos += 1;
-    }
-  }
-
-  const resultados = [];
-  for (const nome in map) {
-    const item = map[nome];
-    // Ignorar modelos com menos de 3 execuções
-    if (item.total < 3) {
-      continue;
-    }
-    const taxa = item.total > 0 ? item.acertos / item.total : 0;
-    resultados.push({
-      modelo: item.modelo,
-      total: item.total,
-      acertos: item.acertos,
-      taxa
-    });
-  }
-
-  // Ordenar do melhor para o pior: taxa decrescente, desempate por total decrescente
-  resultados.sort((a, b) => {
-    if (b.taxa !== a.taxa) {
-      return b.taxa - a.taxa;
-    }
-    return b.total - a.total;
-  });
-
-  return resultados;
+  return [...porModelo.values()]
+    .filter(m => m.total >= MIN_EXECUCOES)
+    .map(m => ({ ...m, taxa: m.acertos / m.total }))
+    .sort((a, b) => b.taxa - a.taxa || b.total - a.total);
 }
 
-/**
- * Reordena uma lista de modelos com base na avaliação prévia.
- * Modelos sem avaliação ficam no fim.
- * @param {Array<{modelo: string, taxa: number}>} avaliacao - Lista de resultados de avaliação.
- * @param {Array<string>} modelos - Lista completa de modelos disponíveis.
- * @returns {Array<string>} Modelos reordenados.
- */
+/** Reordena `modelos` pela taxa da avaliação; sem avaliação ficam no fim, na ordem original. */
 function ordemDeTentativa(avaliacao, modelos) {
-  if (!Array.isArray(modelos)) {
-    return [];
-  }
-  if (!Array.isArray(avaliacao)) {
-    return [...modelos];
-  }
-
-  // Mapear taxas conhecidas
-  const taxaMap = {};
-  for (const item of avaliacao) {
-    if (item && item.modelo) {
-      taxaMap[item.modelo] = typeof item.taxa === 'number' ? item.taxa : -1;
-    }
-  }
-
-  // Separar modelos avaliados dos não avaliados
-  const avaliados = [];
-  const naoAvaliados = [];
-
-  for (const m of modelos) {
-    if (Object.prototype.hasOwnProperty.call(taxaMap, m)) {
-      avaliados.push({ modelo: m, taxa: taxaMap[m] });
-    } else {
-      naoAvaliados.push(m);
-    }
-  }
-
-  // Ordenar avaliados pela taxa (decrescente)
-  avaliados.sort((a, b) => b.taxa - a.taxa);
-
-  return [
-    ...avaliados.map(item => item.modelo),
-    ...naoAvaliados
-  ];
+  const lista = Array.isArray(modelos) ? modelos : [];
+  const pos = new Map((Array.isArray(avaliacao) ? avaliacao : []).map((a, i) => [a.modelo, i]));
+  const avaliados = lista.filter(m => pos.has(m)).sort((x, y) => pos.get(x) - pos.get(y));
+  return [...avaliados, ...lista.filter(m => !pos.has(m))];
 }
 
-module.exports = {
-    avaliarModelos,
-    ordemDeTentativa
-};
+module.exports = { avaliarModelos, ordemDeTentativa, MIN_EXECUCOES };
