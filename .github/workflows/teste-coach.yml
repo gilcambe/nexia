@@ -1,0 +1,32 @@
+# NEXIA — conversa de teste com o coach do Body Coach no site no ar (só API). Manual.
+name: Testar conversa do coach
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Endereço do NEXIA'
+        required: true
+        default: 'https://nexia.gcbezerra.workers.dev'
+      frases:
+        description: 'Frases do aluno separadas por | (vazio = padrão)'
+        required: false
+        default: ''
+permissions:
+  contents: read
+jobs:
+  coach:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Conversar com o coach
+        env:
+          BASE: ${{ inputs.url }}
+          FRASES: ${{ inputs.frases }}
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+        run: node scripts/teste-coach-ao-vivo.js
