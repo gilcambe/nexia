@@ -12,6 +12,7 @@ permissions:
   contents: read
   issues: write
   actions: write
+  models: read
 
 concurrency:
   group: fila-cortex
@@ -32,6 +33,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
+          # Divisor de tarefas grandes: só modelos grátis (rodízio). Um segredo por linha (o GitHub exige).
+          GITHUB_MODELS_TOKEN: ${{ github.token }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          CODESTRAL_API_KEY: ${{ secrets.CODESTRAL_API_KEY }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          KILO_API_KEY: ${{ secrets.KILO_API_KEY }}
+          CLOUDFLARE_AI_TOKEN: ${{ secrets.CLOUDFLARE_AI_TOKEN }}
+          CLOUDFLARE_AI_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_AI_ACCOUNT_ID }}
+          NEXIA_MODELS_FAST: ${{ secrets.NEXIA_MODELS_FAST }}
       - name: Reenviar tarefas guardadas por falta de cota do Firestore
         if: always()
         run: node scripts/nexia-job-pendente.js reenviar
