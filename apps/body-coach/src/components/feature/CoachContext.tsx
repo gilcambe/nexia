@@ -118,14 +118,22 @@ export function CoachProvider({ children }: { children: ReactNode }) {
 
     const series = cargasDoTexto(trimmed);
     if (series.length > 0) {
-  const aviso = registrarSeries(series);
-  if (aviso) {
-    setMessages((prev) => [
-      ...prev,
-      { id: `a-${Date.now()}`, speaker: 'coach', text: aviso, time: 'agora' },
-    ]);
-  }
-}
+      try {
+        const aviso = registrarSeries(series);
+        if (aviso) {
+          setMessages((prev) => [
+            ...prev,
+            { id: `a-${Date.now()}`, speaker: 'coach', text: aviso, time: 'agora' },
+          ]);
+        }
+      } catch (e: any) {
+        const errorMsg = e?.message || 'Erro ao registrar séries.';
+        setMessages((prev) => [
+          ...prev,
+          { id: `a-${Date.now()}`, speaker: 'coach', text: errorMsg, time: 'agora' },
+        ]);
+      }
+    }
 
     setLoadingAI(true);
     try {
