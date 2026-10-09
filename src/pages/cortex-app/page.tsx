@@ -52,7 +52,7 @@ export default function CortexApp() {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([BOAS_VINDAS]);
   const [input, setInput] = useState("");
-  const [conversaId, setConvers
+  const [conversaId, setConversaId] = useState(() => novaConversaId());
   const [loading, setLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState("auto");
   const [serverStarting, setServerStarting] = useState(false);
