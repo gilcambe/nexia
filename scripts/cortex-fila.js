@@ -115,6 +115,7 @@ async function sondarUm(txt, fetchImpl, tokenImpl) {
 
 // Vale se QUALQUER banco do rodízio (B, C) ainda tem cota de leitura e escrita.
 async function sondarCota(env = process.env, fetchImpl = (...a) => fetch(...a), tokenImpl = null) {
+  if (env.NEXIA_D1_TOKEN && env.NEXIA_D1_ACCOUNT_ID) return { ok: true, motivo: 'banco de reserva D1 ativo' }; // o Vault cai nele sozinho quando o Firebase estoura
   const textos = ['B', 'C'].map(l => (env[`FIREBASE_SERVICE_ACCOUNT_${l}`] || '').trim()).filter(Boolean);
   if (!textos.length) {
     const b64 = (env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '').replace(/\s/g, '');

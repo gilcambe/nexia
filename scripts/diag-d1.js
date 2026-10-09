@@ -9,7 +9,7 @@ async function passo(nome, fn) {
 }
 
 async function main() {
-  const token = process.env.CLOUDFLARE_API_TOKEN, accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const token = process.env.NEXIA_D1_TOKEN || process.env.CLOUDFLARE_API_TOKEN, accountId = process.env.NEXIA_D1_ACCOUNT_ID || process.env.CLOUDFLARE_ACCOUNT_ID;
   console.log(`token: ${token ? 'presente' : 'AUSENTE'}; conta: ${accountId ? 'presente' : 'AUSENTE'}`);
   const backend = createD1Backend({ driver: createD1Driver({ token, accountId, databaseName: process.env.NEXIA_D1_NAME || 'nexia-cortex' }) });
   const db = new Firestore({ projectId: backend.projectId, getToken: async () => '' });
