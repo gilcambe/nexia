@@ -56,6 +56,7 @@ function createAuth({ env, fetchImpl, apiBase, now = () => Date.now() }) {
       });
     } catch { throw new GatewayError(CODES.UPSTREAM, 'GitHub indisponível.'); }
     if (r.status === 404) throw new GatewayError(CODES.GITHUB_AUTH, 'A GitHub App não está instalada neste repositório.');
+    if (r.status === 422 && body && body.permissions) throw new GatewayError(CODES.GITHUB_AUTH, `GitHub recusou as permissões pedidas pela App (422): a instalação ainda não aceitou ${Object.keys(body.permissions).join(', ')}. Aprove em github.com/settings/installations.`);
     if (!r.ok) throw new GatewayError(CODES.GITHUB_AUTH, `GitHub recusou a autenticação da App (${r.status}).`);
     return r.json();
   }
