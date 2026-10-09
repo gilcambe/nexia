@@ -2,7 +2,7 @@
 // Fila fixa do Cortex: decisões puras (sem rede).
 const test = require('node:test');
 const assert = require('node:assert');
-const { decidir, MAX_TENTATIVAS } = require('../../scripts/cortex-fila');
+const { decidir, MAX_TENTATIVAS, precisaDividir, paisConcluidos, dividirComIA } = require('../../scripts/cortex-fila');
 
 const AGORA = Date.parse('2026-10-07T10:00:00Z');
 const issue = (n, labels = [], extra = {}) => ({ number: n, body: `tarefa ${n}`, author_association: 'OWNER', updated_at: '2026-10-07T09:59:00Z', labels: ['cortex-fila', ...labels].map(name => ({ name })), ...extra });
@@ -54,4 +54,32 @@ test('CF-teste-final. fila vazia depois de entregas sem teste novo dispara o tes
   assert.strictEqual(precisaTesteFinal({ abertas: 0, feitoEm: '2026-10-07T10:00:00Z', testeEm: null }), true);
   assert.strictEqual(precisaTesteFinal({ abertas: 0, feitoEm: '2026-10-07T10:00:00Z', testeEm: '2026-10-07T09:00:00Z' }), true, 'teste é anterior à entrega');
   assert.strictEqual(precisaTesteFinal({ abertas: 0, feitoEm: '2026-10-07T10:00:00Z', testeEm: '2026-10-07T11:00:00Z' }), false, 'já testado');
+});
+
+test('CF-D1. tarefa grande é dividida (não despachada); pequena segue; parte e já dividida nunca se dividem de novo', () => {
+  const grande = issue(1, [], { body: 'x'.repeat(2600) });
+  const muitosArquivos = issue(2, [], { body: 'Edite a.js, b.js, c.js, d.js e e.js' });
+  const pequena = issue(3, []);
+  const parte = issue(4, ['cortex-parte'], { body: 'y'.repeat(2600) });
+  const a = decidir({ issues: [grande, muitosArquivos, pequena, parte], runs: [], agora: AGORA });
+  assert.deepEqual(a.map(x => [x.tipo, x.numero]), [['dividir', 1], ['dividir', 2], ['despachar', 3], ['despachar', 4]]);
+  assert.equal(precisaDividir(issue(5, ['cortex-sem-divisao'], { body: 'z'.repeat(3000) })), false);
+  assert.equal(decidir({ issues: [issue(6, ['cortex-dividido'])], runs: [], agora: AGORA }).length, 0, 'pai dividido não é despachado');
+});
+
+test('CF-D2. pai é concluído só quando todas as partes estão feitas', () => {
+  const pais = [{ number: 10, labels: ['cortex-dividido'] }];
+  const parte = (k, estado, feito) => ({ title: `[Parte ${k}/2 de #10] x`, state: estado, labels: feito ? ['cortex-parte', 'cortex-feito'] : ['cortex-parte'] });
+  assert.deepEqual(paisConcluidos({ pais, partes: [parte(1, 'closed', true), parte(2, 'open', false)] }), []);
+  assert.deepEqual(paisConcluidos({ pais, partes: [parte(1, 'closed', true), parte(2, 'closed', true)] }), [10]);
+  assert.deepEqual(paisConcluidos({ pais, partes: [] }), []);
+});
+
+test('CF-D3. divisor aceita só 2 a 5 partes completas e tenta o próximo modelo', async () => {
+  const resp = textos => ({ capabilities: () => ({ available: true }), chat: async () => ({ text: textos }) });
+  const boa = JSON.stringify(['Parte um com texto bem completo do arquivo a.js', 'Parte dois com texto bem completo do arquivo b.js']);
+  assert.equal(await dividirComIA('t', resp('sem json'), [{}]), null);
+  assert.equal(await dividirComIA('t', resp('["curta"]'), [{}]), null);
+  const r = { capabilities: d => ({ available: d.ok }), chat: async () => ({ text: boa }) };
+  assert.equal((await dividirComIA('t', r, [{ ok: false }, { ok: true }])).length, 2);
 });
