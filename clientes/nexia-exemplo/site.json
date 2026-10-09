@@ -1,0 +1,197 @@
+{
+  "kind": "site",
+  "name": "Sorriso Leve",
+  "tagline": "Odontologia gentil para toda a família",
+  "description": "Clínica odontológica em São Paulo com clareamento, implantes e ortodontia.",
+  "folder": "demos/sorriso-leve",
+  "style": "soft",
+  "photo_theme": "dentist dental",
+  "fonts": {
+    "heading": "Fraunces",
+    "body": "Inter"
+  },
+  "palette": {
+    "primary": "#2a7f8e",
+    "accent": "#f4a259",
+    "bg": "#f7fbfb",
+    "surface": "#ffffff",
+    "text": "#16302f",
+    "muted": "#5b6f70",
+    "dark": "#0f2e33"
+  },
+  "contact": {
+    "whatsapp": "5511999998888",
+    "phone": "(11) 99999-8888",
+    "email": "contato@sorrisoleve.com.br",
+    "address": "Rua das Flores, 120",
+    "city": "São Paulo - SP",
+    "hours": "Seg a sex, 8h às 19h",
+    "instagram": "sorrisoleve",
+    "youtube": "",
+    "tiktok": "",
+    "linkedin": ""
+  },
+  "sections": [
+    {
+      "type": "hero",
+      "eyebrow": "Clínica odontológica",
+      "title": "Seu sorriso merece cuidado sem medo",
+      "subtitle": "Tratamentos modernos e atendimento acolhedor.",
+      "cta": {
+        "label": "Agendar avaliação",
+        "href": "whatsapp"
+      },
+      "cta2": {
+        "label": "Ver tratamentos",
+        "href": "#tratamentos"
+      },
+      "image_query": "smiling woman dentist clinic",
+      "video_query": "dentist"
+    },
+    {
+      "type": "services",
+      "id": "tratamentos",
+      "title": "Tratamentos",
+      "subtitle": "Do check-up à estética.",
+      "items": [
+        {
+          "title": "Clareamento",
+          "text": "Até 8 tons mais brancos.",
+          "price": "a partir de R$ 690",
+          "image_query": "teeth whitening"
+        },
+        {
+          "title": "Implantes",
+          "text": "Dente fixo com segurança.",
+          "image_query": "dental implant"
+        },
+        {
+          "title": "Ortodontia",
+          "text": "Aparelhos fixos e invisíveis.",
+          "image_query": "dental braces"
+        }
+      ]
+    },
+    {
+      "type": "about",
+      "title": "Sobre a clínica",
+      "text": "Há 12 anos cuidando de famílias.",
+      "image_query": "modern dental office",
+      "stats": [
+        {
+          "value": "12",
+          "label": "anos"
+        },
+        {
+          "value": "8000+",
+          "label": "pacientes"
+        }
+      ]
+    },
+    {
+      "type": "gallery",
+      "title": "Nosso espaço",
+      "image_queries": [
+        "dental office interior",
+        "dentist chair",
+        "happy patient smile",
+        "dental tools",
+        "dental hygiene",
+        "smiling family"
+      ],
+      "gif_queries": [
+        "tooth brushing"
+      ]
+    },
+    {
+      "type": "video",
+      "title": "Conheça a clínica",
+      "subtitle": "Um minuto por dentro do nosso consultório.",
+      "youtube": "",
+      "video_query": "dentist patient"
+    },
+    {
+      "type": "team",
+      "title": "Equipe",
+      "members": [
+        {
+          "name": "Dra. Ana Lima",
+          "role": "Ortodontista",
+          "image_query": "female dentist portrait"
+        }
+      ]
+    },
+    {
+      "type": "testimonials",
+      "title": "Depoimentos",
+      "items": [
+        {
+          "name": "Carla M.",
+          "text": "Perdi o medo de dentista!",
+          "rating": 5
+        },
+        {
+          "name": "João P.",
+          "text": "Implante perfeito, sem dor.",
+          "rating": 5
+        },
+        {
+          "name": "Bia R.",
+          "text": "Equipe atenciosa demais.",
+          "rating": 5
+        }
+      ]
+    },
+    {
+      "type": "links",
+      "title": "Links rápidos",
+      "items": [
+        {
+          "label": "Agendar pelo WhatsApp",
+          "url": "https://wa.me/5511999998888",
+          "icon": "whatsapp"
+        },
+        {
+          "label": "Instagram",
+          "url": "https://instagram.com/sorrisoleve",
+          "icon": "instagram"
+        }
+      ]
+    },
+    {
+      "type": "faq",
+      "title": "Dúvidas frequentes",
+      "items": [
+        {
+          "q": "Aceitam convênio?",
+          "a": "Sim, os principais planos."
+        },
+        {
+          "q": "Atendem aos sábados?",
+          "a": "Sim, das 8h às 12h."
+        },
+        {
+          "q": "Clareamento dói?",
+          "a": "Pode dar sensibilidade leve por 1 a 2 dias."
+        },
+        {
+          "q": "Parcelam?",
+          "a": "Em até 12x no cartão."
+        }
+      ]
+    },
+    {
+      "type": "cta",
+      "title": "Agende sua avaliação",
+      "subtitle": "Resposta rápida pelo WhatsApp.",
+      "cta": {
+        "label": "Chamar no WhatsApp",
+        "href": "whatsapp"
+      }
+    },
+    {
+      "type": "contact",
+      "title": "Fale com a gente"
+    }
+  ]
+}
