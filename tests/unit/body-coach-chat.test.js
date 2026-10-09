@@ -113,3 +113,31 @@ test('BCC7. ler só o que chegou depois; feedback entra para todos e só o maste
   assert.equal((await executar({ acao: 'feedback_ver' }, 'ana', db, { master: false }))[0], 403);
   assert.equal((await executar({ acao: 'feedback_ver' }, 'ana', db, { master: true }))[1].itens.length, 1);
 });
+
+test('BCC8. desafio: coach cria, aluno marca o dia, só o coach vê todos', async () => {
+  const db = fakeDb();
+  await executar({ acao: 'perfil', papel: 'coach', nome: 'Gil' }, 'coach1', db);
+  const [, c] = await executar({ acao: 'perfil', papel: 'coach', nome: 'Gil' }, 'coach1', db);
+  await executar({ acao: 'perfil', papel: 'aluno', nome: 'Ana' }, 'aluna1', db);
+  await executar({ acao: 'perfil', papel: 'aluno', nome: 'Bob' }, 'bob', db);
+  await executar({ acao: 'vincular', codigo: c.perfil.codigo }, 'aluna1', db);
+  assert.equal((await executar({ acao: 'desafio_criar', titulo: '7 dias', dias: 7 }, 'aluna1', db))[0], 403);
+  assert.equal((await executar({ acao: 'desafio_criar', titulo: 'x', dias: 7 }, 'coach1', db))[0], 400);
+  assert.equal((await executar({ acao: 'desafio_criar', titulo: '7 dias treinando', dias: 1 }, 'coach1', db))[0], 400);
+  assert.equal((await executar({ acao: 'desafio_checkin' }, 'aluna1', db))[0], 404);
+  assert.equal((await executar({ acao: 'desafio_criar', titulo: '7 dias treinando', dias: 7 }, 'coach1', db))[0], 200);
+  const [, v0] = await executar({ acao: 'desafio_ver' }, 'aluna1', db);
+  assert.equal(v0.desafio.titulo, '7 dias treinando');
+  assert.deepEqual(v0.datas, []);
+  const [s1, m1] = await executar({ acao: 'desafio_checkin' }, 'aluna1', db);
+  assert.equal(s1, 200);
+  const [, m2] = await executar({ acao: 'desafio_checkin' }, 'aluna1', db);
+  assert.equal(m2.datas.length, 1, 'marcar duas vezes no mesmo dia conta uma só');
+  assert.deepEqual(m1.datas, m2.datas);
+  assert.equal((await executar({ acao: 'desafio_checkin' }, 'bob', db))[0], 403, 'aluno sem coach não marca');
+  const [, cv] = await executar({ acao: 'desafio_ver' }, 'coach1', db);
+  assert.equal(cv.alunos.length, 1);
+  assert.equal(cv.alunos[0].feitos, 1);
+  const [, bv] = await executar({ acao: 'desafio_ver' }, 'bob', db);
+  assert.equal(bv.desafio, null, 'aluno de ninguém não vê desafio');
+});

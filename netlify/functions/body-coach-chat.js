@@ -66,6 +66,47 @@ async function executar(body, uid, db, ctx = {}) {
   }
   if (!eu) return [409, { error: 'Antes, escolha se você é aluno ou coach.' }];
 
+  // Desafio da equipe: o coach cria um (ex.: "7 dias treinando"); cada aluno marca o seu dia. Um aluno nunca vê o progresso de outro.
+  const hojeBR = () => new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10);
+  if (acao === 'desafio_criar') {
+    if (eu.papel !== 'coach') return [403, { error: 'Só o coach cria desafios.' }];
+    const titulo = limpa(body.titulo, 60);
+    const dias = Math.round(Number(body.dias));
+    if (titulo.length < 3) return [400, { error: 'Dê um nome ao desafio.' }];
+    if (!(dias >= 3 && dias <= 60)) return [400, { error: 'O desafio dura de 3 a 60 dias.' }];
+    const desafio = { id: String(Date.now()), titulo, dias, inicio: hojeBR() };
+    await dir.doc(uid).set({ desafio }, { merge: true });
+    return [200, { desafio }];
+  }
+  if (acao === 'desafio_encerrar') {
+    if (eu.papel !== 'coach') return [403, { error: 'Só o coach encerra desafios.' }];
+    await dir.doc(uid).set({ desafio: null }, { merge: true });
+    return [200, { ok: true }];
+  }
+  if (acao === 'desafio_ver') {
+    if (eu.papel === 'coach') {
+      const alunos = await dir.where('coachUid', '==', uid).limit(100).get();
+      const d = eu.desafio || null;
+      return [200, { desafio: d, alunos: d ? alunos.docs.map((a) => ({ uid: a.id, nome: a.data().nome, feitos: a.data().checkins && a.data().checkins.id === d.id ? a.data().checkins.datas.length : 0 })) : [] }];
+    }
+    const c = eu.coachUid ? ((await dir.doc(eu.coachUid).get()).data?.() || {}) : {};
+    const d = c.desafio || null;
+    const datas = d && eu.checkins && eu.checkins.id === d.id ? eu.checkins.datas : [];
+    return [200, { desafio: d, datas, hoje: hojeBR() }];
+  }
+  if (acao === 'desafio_checkin') {
+    if (eu.papel !== 'aluno' || !eu.coachUid) return [403, { error: 'Só o aluno de um coach marca o desafio.' }];
+    const d = ((await dir.doc(eu.coachUid).get()).data?.() || {}).desafio;
+    if (!d) return [404, { error: 'O seu coach não tem desafio ativo.' }];
+    const hoje = hojeBR();
+    const fim = new Date(new Date(`${d.inicio}T00:00:00Z`).getTime() + (d.dias - 1) * 86400000).toISOString().slice(0, 10);
+    if (hoje < d.inicio || hoje > fim) return [409, { error: 'Este desafio já terminou.' }];
+    const datas = eu.checkins && eu.checkins.id === d.id ? eu.checkins.datas.slice() : [];
+    if (!datas.includes(hoje)) datas.push(hoje);
+    await dir.doc(uid).set({ checkins: { id: d.id, datas } }, { merge: true });
+    return [200, { datas, hoje }];
+  }
+
   if (acao === 'vincular') {
     if (eu.papel !== 'aluno') return [403, { error: 'Só aluno entra pelo código do coach.' }];
     const codigo = limpa(body.codigo, 10).toUpperCase();
@@ -169,7 +210,7 @@ exports.handler = async (event) => {
   let body;
   try { body = JSON.parse(event.body || '{}'); } catch { return resposta(event, 400, { error: 'Pedido inválido.' }); }
   // leituras (a tela confere a cada poucos segundos) não gastam o limite nem a cota do banco grátis
-  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar'].includes(body.acao)) {
+  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar', 'desafio_criar', 'desafio_checkin'].includes(body.acao)) {
     const rl = await checkRateLimit(auth.uid, 'body-coach-chat');
     if (!rl.ok) return resposta(event, 429, { error: 'Muitos pedidos seguidos. Aguarde um instante.' });
   }
