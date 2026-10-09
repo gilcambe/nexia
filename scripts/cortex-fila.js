@@ -87,6 +87,28 @@ function precisaTesteFinal({ abertas, feitoEm, testeEm }) {
   return !testeEm || new Date(testeEm).getTime() < new Date(feitoEm).getTime();
 }
 
+// Sonda do banco do Cortex: UMA escrita pequena. Se o limite grátis do dia acabou, a fila não despacha tarefas novas
+// (cada tentativa só queimaria mais escritas); volta sozinha no ciclo seguinte em que a sonda passar. Não é espera por horário.
+async function sondarCota(env = process.env, fetchImpl = (...a) => fetch(...a), tokenImpl = null) {
+  try {
+    const raw = (env.FIREBASE_SERVICE_ACCOUNT_B || '').trim();
+    const b64 = (env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '').replace(/\s/g, '');
+    const txt = raw || (b64 ? Buffer.from(b64, 'base64').toString('utf8') : '');
+    if (!txt) return { ok: true, motivo: 'sem conta configurada' };
+    const sa = JSON.parse(txt);
+    if (typeof sa.private_key === 'string' && sa.private_key.includes('\\n')) sa.private_key = sa.private_key.replace(/\\n/g, '\n');
+    const token = tokenImpl ? await tokenImpl(sa) : await require('../lib/firebase-lite/google-auth').createTokenSource(sa).getToken();
+    const url = `https://firestore.googleapis.com/v1/projects/${sa.project_id}/databases/(default)/documents/diag_tmp/sonda-fila`;
+    const r = await fetchImpl(url, { method: 'PATCH', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ fields: { t: { stringValue: new Date().toISOString() } } }) });
+    if (r.ok) return { ok: true };
+    const corpo = await r.text();
+    if (r.status === 429 || /RESOURCE_EXHAUSTED/.test(corpo)) return { ok: false, motivo: 'limite grátis de escrita do banco acabou' };
+    return { ok: true, motivo: `sonda inconclusiva (${r.status})` };
+  } catch (e) {
+    return { ok: true, motivo: `sonda falhou (${e.message})` };
+  }
+}
+
 async function gh(token, method, path, body) {
   const r = await fetch(`https://api.github.com/repos/${REPO}${path}`, {
     method, headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json', 'X-GitHub-Api-Version': '2022-11-28' },
@@ -170,7 +192,13 @@ async function main() {
       }
     } catch { /* sem anotação: segue como falha comum */ }
   }
-  const acoes = decidir({ issues, runs });
+  let acoes = decidir({ issues, runs });
+  // Sem escrita disponível no banco, despachar só queima mais cota: segura as tarefas novas (o resto segue).
+  if (acoes.some(a => a.tipo === 'despachar')) {
+    const sonda = await sondarCota();
+    if (!sonda.ok) { console.log(`cota esgotada (${sonda.motivo}): ${acoes.filter(a => a.tipo === 'despachar').length} tarefa(s) esperam na fila sem despachar.`); acoes = acoes.filter(a => a.tipo !== 'despachar'); }
+    else if (sonda.motivo) console.log(`sonda: ${sonda.motivo}`);
+  }
   // Pais divididos: quando todas as partes terminam, o pai é concluído.
   const pais = issues.filter(i => !i.pull_request && nomes(i).includes(L.dividido));
   if (pais.length) {
@@ -197,5 +225,5 @@ async function main() {
   }
 }
 
-module.exports = { decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
+module.exports = { sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
