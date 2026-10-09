@@ -2,7 +2,7 @@
 // Fila fixa do Cortex: decisões puras (sem rede).
 const test = require('node:test');
 const assert = require('node:assert');
-const { decidir, MAX_TENTATIVAS, precisaDividir, paisConcluidos, dividirComIA } = require('../../scripts/cortex-fila');
+const { decidir, MAX_TENTATIVAS, precisaDividir, paisConcluidos, dividirComIA, sondarCota } = require('../../scripts/cortex-fila');
 
 const AGORA = Date.parse('2026-10-07T10:00:00Z');
 const issue = (n, labels = [], extra = {}) => ({ number: n, body: `tarefa ${n}`, author_association: 'OWNER', updated_at: '2026-10-07T09:59:00Z', labels: ['cortex-fila', ...labels].map(name => ({ name })), ...extra });
@@ -82,4 +82,15 @@ test('CF-D3. divisor aceita só 2 a 5 partes completas e tenta o próximo modelo
   assert.equal(await dividirComIA('t', resp('["curta"]'), [{}]), null);
   const r = { capabilities: d => ({ available: d.ok }), chat: async () => ({ text: boa }) };
   assert.equal((await dividirComIA('t', r, [{ ok: false }, { ok: true }])).length, 2);
+});
+
+test('CF-Q1. sonda de cota: sem conta segue; 429/RESOURCE_EXHAUSTED segura; outro erro não trava a fila', async () => {
+  assert.equal((await sondarCota({}, async () => { throw new Error('não deveria chamar'); })).ok, true);
+  const sa = { project_id: 'p', client_email: 'a@b.c', private_key: 'x' };
+  const env = { FIREBASE_SERVICE_ACCOUNT_B: JSON.stringify(sa) };
+  const tok = async () => 't';
+  assert.equal((await sondarCota(env, async () => ({ ok: false, status: 429, text: async () => 'RESOURCE_EXHAUSTED' }), tok)).ok, false);
+  assert.equal((await sondarCota(env, async () => ({ ok: true }), tok)).ok, true);
+  assert.equal((await sondarCota(env, async () => ({ ok: false, status: 500, text: async () => 'erro' }), tok)).ok, true, 'erro desconhecido não trava a fila');
+  assert.equal((await sondarCota(env, async () => { throw new Error('rede'); }, tok)).ok, true);
 });

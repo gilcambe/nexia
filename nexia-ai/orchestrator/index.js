@@ -243,7 +243,7 @@ function createOrchestrator(deps) {
 
     const runA = async (i, agentId, goal, extraCtx = '', opts = {}) => {
       steps[i] = { ...steps[i], status: 'running' };
-      await commit({ status: 'running' });
+      /* economia de escrita: o 'running' do passo vai junto com o commit do fim do passo */
       const r = await runAgent({ agentId, goal, context: `${await getContext()}${extraCtx}`, router, gateway, ctx: agentCtx(ctx, agentId), projectId: project.id, meter, ...opts });
       const base = { tool_call_ids: addIds(i, r.tool_call_ids), ...(r.model ? { model: r.model } : {}) };
       if (r.status === 'done') { stepDone(i, { ...base, summary: r.report ? `${r.report.verdict}: ${r.report.findings.map(f => `[${f.severity}] ${f.file ? `${f.file}: ` : ''}${f.message}`).join(' | ') || 'sem problemas'}` : r.text }); return r; }
@@ -354,7 +354,7 @@ function createOrchestrator(deps) {
     /** O modelo escreve o spec (JSON, uma chamada, sem ferramentas); fotos resolvidas aqui; spec salvo na branch. */
     const designSpec = async i => {
       steps[i] = { ...steps[i], status: 'running' };
-      await commit({ status: 'running' });
+      /* idem */
       // ADR-CLONE-01: "crie um site igual ao https://..." → base visual (cores, fontes, estilo, ordem das seções) do
       // site de referência, lida sem navegador; nunca o conteúdo dele. Sem acesso ao site, segue sem base.
       const refUrl = kitKind === 'site' ? cloner.designRequest(message) : null;
@@ -424,7 +424,7 @@ function createOrchestrator(deps) {
     /** Rodada de correção no caminho do kit: a IA corrige o SPEC (pequeno) e o kit gera tudo de novo; o código nunca é editado à mão. */
     const kitRevise = async (i, feedback) => {
       steps[i] = { ...steps[i], status: 'running' };
-      await commit({ status: 'running' });
+      /* idem */
       const cur = await readSpec('designer');
       steps[i] = { ...steps[i], tool_call_ids: addIds(i, cur.ids) };
       if (!cur.spec) {
@@ -464,7 +464,7 @@ function createOrchestrator(deps) {
     /** Gera os arquivos com o kit a partir do spec salvo na branch e commita (determinístico). */
     const kitRender = async i => {
       steps[i] = { ...steps[i], status: 'running' };
-      await commit({ status: 'running' });
+      /* idem */
       const path = specPathOf();
       const g = path ? await tool(ctx, state, plan[i].agent, 'github.get_file', { path, ref: state.work_branch }) : null;
       let data = null;
