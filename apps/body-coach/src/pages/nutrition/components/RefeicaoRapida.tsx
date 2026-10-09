@@ -29,7 +29,7 @@ export const RefeicaoRapida: React.FC = () => {
         setCarregandoVeredito(true);
         setVeredito(null);
         const prompt = `Analise a seguinte refeição e dê um veredito nutricional detalhado e construtivo. Descrição: "${texto}". ${imagemPreview ? 'O usuário anexou uma foto da refeição.' : ''}`;
-        const resposta = await perguntar('nutrologo', prompt, {}, imagemPreview || undefined); // updated
+        const resposta = await perguntar('nutricionista', prompt, {}, imagemPreview || undefined);
         setVeredito(resposta || 'Refeição analisada com sucesso!');
       } catch (err) {
         setVeredito('Não foi possível obter o veredito da IA no momento. Tente novamente.');
