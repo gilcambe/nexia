@@ -12,6 +12,7 @@ import LembretesRefeicoes from './components/LembretesRefeicoes';
 import AjusteSemanal from './components/AjusteSemanal';
 import ReceitaIA from './components/ReceitaIA';
 import { RefeicaoRapida } from './components/RefeicaoRapida';
+import AjudaRefeicao from './components/AjudaRefeicao';
 
 export default function Nutrition() {
   const { meals, water, waterGoal, targets, addMeal, removeMeal, addWater, resetWater, loading, error, reload } = useNutrition();
@@ -42,6 +43,7 @@ export default function Nutrition() {
         <MacroSummary meals={meals} targets={targets} />
       </Card>
 
+      <AjudaRefeicao />
       <AjusteSemanal />
       <PlanoNutricionista />
       <CardapioDoDia />

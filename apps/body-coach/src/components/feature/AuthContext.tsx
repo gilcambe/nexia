@@ -46,6 +46,9 @@ export interface AthleteProfile {
   suplementos?: { nome: string; dose: string; hora: string }[];
   ciclo?: { inicio: string; duracao: number } | null; // ciclo menstrual (opcional)
   indicado_por?: string | null; // código de quem indicou o app
+  periodizacao?: { objetivo: 'hipertrofia' | 'forca' | 'emagrecimento' | 'resistencia'; semanas: number; inicio: string } | null;
+  sinais?: { data: string; sistolica?: number | null; diastolica?: number | null; glicemia?: number | null; fc_repouso?: number | null; jejum?: boolean }[];
+  marcadores_hist?: { data: string; valores: Record<string, number> }[];
 }
 
 export interface TrocaFixa { chave: string; nome: string; porcao: string }
