@@ -1,6 +1,7 @@
 name: Testar agenda no ar
 # NEXIA Agenda: testa a agenda publicada (API + site + painel) como uma pessoa, no celular.
-# Usa só a agenda de teste para criar/cancelar horários; no site do cliente só confere que serviços e horários aparecem.
+# Usa só a agenda de teste para criar/cancelar horários (o site e o painel publicados são apontados para ela);
+# na agenda real do cliente só confere que serviços e horários aparecem.
 # As fotos de tela vão para a branch "previews" (pasta agenda-ao-vivo/<slug>).
 on:
   workflow_dispatch:
@@ -42,7 +43,14 @@ jobs:
         run: |
           npm i --no-save --no-audit --no-fund playwright@1.59.1
           npx playwright install --with-deps chromium
-      - name: Testar
+      # Primeiro o cenário inteiro (cliente + dona, todos os botões, na agenda de teste); depois a conferência
+      # do site e do painel reais do cliente.
+      - name: Testar o cenário completo
+        env:
+          SITE: ${{ inputs.site }}
+        run: node tests/e2e/agenda-cenario-completo.js "$SITE" "$RUNNER_TEMP/shots"
+      - name: Testar o site do cliente
+        if: always()
         env:
           SITE: ${{ inputs.site }}
         run: node tests/e2e/agenda-ao-vivo.js "$SITE" "$RUNNER_TEMP/shots"
