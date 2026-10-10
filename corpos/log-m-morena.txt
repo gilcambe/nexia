@@ -1,0 +1,54 @@
+m-morena-magro-frente t1 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-magro-frente t2 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-magro-frente t3 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-magro-lado t1 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-magro-lado t2 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-magro-lado t3 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-magro-costas t1 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-magro-costas t2 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-magro-costas t3 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-medio-frente t1 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-medio-frente t2 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-medio-frente t3 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-medio-lado t1 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-medio-lado t2 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-medio-lado t3 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-medio-costas t1 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-medio-costas t2 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-medio-costas t3 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-alto-frente t1 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-alto-frente t2 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-alto-frente t3 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-alto-lado t1 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-alto-lado t2 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-alto-lado t3 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-alto-costas t1 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-alto-costas t2 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+m-morena-alto-costas t3 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
