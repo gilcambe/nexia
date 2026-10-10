@@ -24,6 +24,8 @@
     "html_handling": "none",
     "not_found_handling": "none"
   },
+  // Workers AI (plano grátis, 10 mil neurônios por dia): fotos do corpo realista do Body Coach.
+  "ai": { "binding": "AI" },
   // ADR-FREE-02: tarefas longas (agentes, onboarding, retomada) rodam no GitHub Actions.
   "vars": {
     "NEXIA_JOBS": "github",
