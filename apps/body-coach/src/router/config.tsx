@@ -24,6 +24,7 @@ import Compartilhado from "../pages/compartilhado/page";
 import AlunosEvolucao from "../pages/coach/AlunosEvolucao";
 import AlunoEvolucao from "../pages/coach/AlunoEvolucao";
 import RelatorioAluno from "../pages/coach/RelatorioAluno";
+import Demonstracoes from "../pages/coach/Demonstracoes";
 import Ferramentas from "../pages/ferramentas/page";
 
 const routes: RouteObject[] = [
@@ -84,6 +85,7 @@ const routes: RouteObject[] = [
       { path: "team", element: <Team /> },
       { path: "chat", element: <Chat /> },
       { path: "coach/evolucao", element: <AlunosEvolucao /> },
+      { path: "coach/demonstracoes", element: <Demonstracoes /> },
       { path: "coach/evolucao/:uid", element: <AlunoEvolucao /> },
       { path: "feedback", element: <Feedback /> },
       { path: "respirar", element: <Respirar /> },

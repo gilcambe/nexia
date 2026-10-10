@@ -5,8 +5,8 @@ import { APPS_MUSICA, ESTILOS, buscaTreino, linkPlaylist } from '@/lib/musica';
 
 // Música do treino: abre o app de música escolhido por cima do NEXIA; a música continua
 // tocando enquanto o aluno volta para registrar as séries.
-// variante "cartao": destaque antes de começar (um toque já toca); "flutuante": botão redondo fixo durante o treino.
-export default function MusicaTreino({ variante = 'cartao' }: { variante?: 'cartao' | 'flutuante' }) {
+// variante "cartao": destaque antes de começar (um toque já toca); "pilula": botão pequeno na barra do treino (não cobre nada).
+export default function MusicaTreino({ variante = 'cartao' }: { variante?: 'cartao' | 'pilula' }) {
   const { user, profile, refreshProfile } = useAuth();
   const pref = profile?.musica ?? {};
   const [aberto, setAberto] = useState(false);
@@ -40,10 +40,9 @@ export default function MusicaTreino({ variante = 'cartao' }: { variante?: 'cart
 
   return (
     <>
-      {variante === 'flutuante' ? (
-        <button type="button" onClick={() => setAberto(true)} className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-3 z-40 flex h-14 w-14 flex-col items-center justify-center rounded-full bg-gradient-to-br from-[#1f2226] to-black text-white shadow-lg ring-2 ring-primary-500 lg:bottom-24 lg:left-auto lg:right-24" aria-label="Música do treino" data-testid="musica-botao">
-          <i className="ri-headphone-fill text-2xl leading-none"></i>
-          <span className="text-[9px] font-semibold leading-tight">Música</span>
+      {variante === 'pilula' ? (
+        <button type="button" onClick={() => setAberto(true)} className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-[#1f2226] to-black px-3 py-2 text-xs font-semibold text-white shadow-sm" aria-label="Música do treino" data-testid="musica-botao">
+          <i className="ri-headphone-fill text-base text-primary-400"></i>Música
         </button>
       ) : (
         <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#1f2226] via-[#121315] to-black p-4 text-white" data-testid="musica-cartao">

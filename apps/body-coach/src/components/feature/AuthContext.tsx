@@ -41,6 +41,7 @@ export interface AthleteProfile {
   trocas_plano?: TrocaFixa[]; // trocas do plano do nutricionista que valem todo dia
   horarios_refeicoes?: Record<string, string>; // nome da refeição -> "HH:MM"
   musica?: { app?: string; link?: string; estilo?: string };
+  entretenimento?: { app?: string; serie?: string };
   jejum?: { inicio: number; horas: number } | null; // jejum intermitente em andamento (opcional)
   suplementos?: { nome: string; dose: string; hora: string }[];
   ciclo?: { inicio: string; duracao: number } | null; // ciclo menstrual (opcional)

@@ -165,6 +165,7 @@ export default function Chat() {
           Passe este código para os seus alunos: <strong className="ml-1 text-lg tracking-widest text-primary-700">{lista?.codigo}</strong>
           <span className="block text-xs text-foreground-500">Eles abrem “Conversa”, escolhem “Sou aluno” e digitam o código.</span>
           <Link to="/coach/evolucao" className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-semibold text-background-50 dark:text-foreground-950"><i className="ri-line-chart-line"></i>Evolução dos alunos</Link>
+          <Link to="/coach/demonstracoes" className="ml-2 mt-2 inline-flex items-center gap-1 rounded-lg border border-primary-300 px-3 py-1.5 text-xs font-semibold text-primary-700"><i className="ri-video-add-line"></i>Gravar demonstrações</Link>
         </div>
       )}
       <DesafioCard papel={papel} />

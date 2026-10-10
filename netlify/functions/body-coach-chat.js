@@ -3,7 +3,7 @@
 // NEXIA Body Coach — conversa direta entre coach/personal e aluno (como um WhatsApp interno).
 // Tudo passa por aqui (login do Firebase + banco no servidor), então não precisa abrir regras do Firestore
 // e um aluno nunca lê conversa de outra pessoa. Só texto curto; sem armazenamento pago.
-// ações: perfil, vincular, contatos, enviar, ler, resumo, video_enviar, video_ver, demo_salvar, demo_ver
+// ações: perfil, vincular, contatos, enviar, ler, resumo, video_enviar, video_ver, demo_salvar, demo_ver, demo_listar
 // Evolução: alunos_evolucao, aluno_evolucao, agendar_avaliacao, comentar (coach); evolucao_info, evolucao_config (aluno);
 // compartilhar_criar / compartilhar_revogar (dono da avaliação) e compartilhado_ver (link público que vence sozinho).
 // Vídeos: clipes curtos (até ~10 s, gravados já comprimidos no celular) guardados como texto no próprio banco grátis.
@@ -239,7 +239,16 @@ async function executar(body, uid, db, ctx = {}) {
     if (!ex) return [400, { error: 'Exercício inválido.' }];
     if (!videoOk(body.video)) return [400, { error: 'Vídeo inválido ou grande demais (máximo ~10 segundos).' }];
     await db.collection('bc_demos').doc(`${uid}__${ex}`).set({ coachUid: uid, exercicio: ex, video: body.video, em: Date.now() });
+    // Índice leve (sem os vídeos) para a tela "Minhas demonstrações" do coach.
+    const idx = db.collection('bc_demos_idx').doc(uid);
+    const lista = ((await idx.get()).data?.() || {}).lista || [];
+    await idx.set({ lista: [...lista.filter((e) => e !== ex), ex].slice(-300), em: Date.now() });
     return [200, { ok: true }];
+  }
+  if (acao === 'demo_listar') {
+    if (eu.papel !== 'coach') return [200, { lista: [] }];
+    const d = (await db.collection('bc_demos_idx').doc(uid).get()).data?.();
+    return [200, { lista: d && Array.isArray(d.lista) ? d.lista : [] }];
   }
   if (acao === 'demo_ver') {
     const dono = eu.papel === 'coach' ? uid : eu.coachUid;
