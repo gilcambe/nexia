@@ -417,7 +417,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
                   </div>
                   <p className="mt-2 text-sm text-foreground-600">Escolha uma alternativa compatível para {exercise.name}:</p>
                   <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
-                    {alternativas(exercise.id, new Set(lesoes), [], session.exercises.map((e) => e.id)).map((alt) => (
+                    {alternativas(exercise.id, new Set(lesoes), [], session.exercises.map((e) => e.id), exercise.muscleGroup).map(({ ex: alt, aviso }) => (
                       <button
                         key={alt.id}
                         onClick={() => {
@@ -426,7 +426,10 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
                         }}
                         className="w-full text-left rounded-xl border border-background-200 bg-background-100/60 p-3 text-sm font-medium text-foreground-800 hover:bg-primary-50 hover:border-primary-300 transition flex items-center justify-between"
                       >
-                        <span>{alt.nome}</span>
+                        <span>
+                          {alt.nome}
+                          {aviso && <span className="mt-0.5 block text-xs font-normal text-amber-700">{aviso}</span>}
+                        </span>
                         <i className="ri-arrow-right-s-line text-foreground-400"></i>
                       </button>
                     ))}
