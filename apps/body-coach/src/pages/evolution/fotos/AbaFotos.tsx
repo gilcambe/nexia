@@ -9,6 +9,7 @@ import type { ItemSerie } from '@/lib/avaliacao/serie';
 import type { ProgressEntry } from '@/hooks/useProgressData';
 import CameraGuia from './CameraGuia';
 import Silhueta from './Silhueta';
+import Postura from './Postura';
 
 const fmt = (n: number | undefined, u: string) => (n == null ? null : `${n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} ${u}`);
 
@@ -243,6 +244,8 @@ export default function AbaFotos({
           </>
         )}
       </Card>
+
+      <Postura serie={serie} />
 
       {camera && (
         <CameraGuia

@@ -11,6 +11,7 @@ import ResumoEvolucao from './ResumoEvolucao';
 import AbaAvaliacoes from './avaliacao/AbaAvaliacoes';
 import GraficosEvolucao from './avaliacao/GraficosEvolucao';
 import AbaFotos from './fotos/AbaFotos';
+import TreinoDietaCorpo from './avaliacao/TreinoDietaCorpo';
 
 type Aba = 'resumo' | 'avaliacoes' | 'fotos' | 'graficos';
 const ABAS: { id: Aba; label: string; icone: string }[] = [
@@ -85,7 +86,7 @@ export default function Evolution() {
 
       {aba === 'resumo' && (
         <>
-          <ResumoEvolucao serie={serie} perfil={perfil} volume={volumeSemana} metaGordura={goalBodyFat || null} metaPeso={goalWeight} irPara={irPara} />
+          <ResumoEvolucao uid={user?.id} serie={serie} perfil={perfil} volume={volumeSemana} metaGordura={goalBodyFat || null} metaPeso={goalWeight} irPara={irPara} />
 
           <Card padding="p-5">
             <button type="button" onClick={() => setRapido((r) => !r)} className="flex w-full items-center gap-2 text-left" aria-expanded={rapido}>
@@ -131,7 +132,12 @@ export default function Evolution() {
 
       {aba === 'avaliacoes' && <AbaAvaliacoes uid={user?.id} perfil={perfil} entries={entries} serie={serie} onMudou={reload} />}
       {aba === 'fotos' && <AbaFotos uid={user?.id} entries={entries} serie={serie} onMudou={reload} />}
-      {aba === 'graficos' && <GraficosEvolucao serie={serie} metaGordura={goalBodyFat || null} metaPeso={goalWeight} />}
+      {aba === 'graficos' && (
+        <>
+          <GraficosEvolucao serie={serie} metaGordura={goalBodyFat || null} metaPeso={goalWeight} />
+          <TreinoDietaCorpo uid={user?.id} serie={serie} />
+        </>
+      )}
     </div>
   );
 }

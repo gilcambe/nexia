@@ -7,12 +7,14 @@ import { compartilharArquivo } from '@/lib/avaliacao/imagens';
 import { gerarIcsReavaliacao } from '@/lib/lembretes';
 import PainelCorpo from './corpo3d/PainelCorpo';
 import CoachEvolucao from './CoachEvolucao';
+import MetasCorpo, { useMetas } from './MetasCorpo';
 
 const fmt = (n: number | undefined | null, c = 1) => (n == null ? '—' : n.toLocaleString('pt-BR', { maximumFractionDigits: c }));
 
 export default function ResumoEvolucao({
-  serie, perfil, volume, metaGordura, metaPeso, irPara,
+  uid, serie, perfil, volume, metaGordura, metaPeso, irPara,
 }: {
+  uid: string | undefined;
   serie: ItemSerie[];
   perfil: PerfilAvaliacao;
   volume: Record<string, number>;
@@ -21,6 +23,7 @@ export default function ResumoEvolucao({
   irPara: (aba: 'avaliacoes' | 'fotos' | 'graficos') => void;
 }) {
   const navigate = useNavigate();
+  const { metas, fotoMeta, salvar } = useMetas(uid);
   const ult = serie[serie.length - 1] ?? null;
   const ant = serie.length > 1 ? serie[serie.length - 2] : null;
   const pts = serie.map((s) => ({ data: s.data, m: s.m }));
@@ -50,7 +53,7 @@ export default function ResumoEvolucao({
   return (
     <div className="space-y-4">
       <Card padding="p-4">
-        <PainelCorpo serie={serie} perfil={perfil} volume={volume} />
+        <PainelCorpo serie={serie} perfil={perfil} volume={volume} metas={metas} />
       </Card>
 
       <Card padding="p-5">
@@ -90,6 +93,8 @@ export default function ResumoEvolucao({
           </>
         )}
       </Card>
+
+      <MetasCorpo key={fotoMeta ?? 'sem'} serie={serie} metas={metas} fotoMeta={fotoMeta} salvar={salvar} />
 
       <CoachEvolucao />
 
