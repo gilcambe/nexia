@@ -61,6 +61,7 @@ async function lerPdf(arquivo: File, aviso: Progresso): Promise<Importado> {
   return lerTextoLivre(await ocr(telas, aviso), arquivo.name);
 }
 
+// Só referência: o seletor não filtra, porque Android/iPhone apagam o .mht quando há filtro.
 export const ACEITOS = '.pdf,.mht,.mhtml,.html,.htm,.csv,.txt,image/*,application/pdf,text/csv,text/html';
 
 export async function lerArquivo(arquivo: File, aviso: Progresso = () => {}): Promise<Importado> {
