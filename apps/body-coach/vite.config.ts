@@ -69,6 +69,13 @@ export default defineConfig({
   build: {
     sourcemap: isPreview,
     outDir: 'dist',
+    rolldownOptions: {
+      output: {
+        // O Worker do Cloudflare só publica extensões conhecidas: o worker do pdf.js (.mjs) sai como .js.
+        assetFileNames: (info: { names?: string[]; name?: string }) =>
+          /\.mjs$/.test(info.names?.[0] ?? info.name ?? '') ? 'assets/[name]-[hash].js' : 'assets/[name]-[hash][extname]',
+      },
+    },
   },
   resolve: {
     alias: {
