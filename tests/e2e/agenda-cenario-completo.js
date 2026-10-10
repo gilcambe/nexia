@@ -43,6 +43,7 @@ const semana = d => new Date(d + 'T12:00:00Z').getUTCDay();
   const { chromium } = require('playwright');
   const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
   let livres1 = [];
+  let cli = null, car = null;
   try {
   const erros = [];
   const abrir = async () => {
@@ -67,8 +68,8 @@ const semana = d => new Date(d + 'T12:00:00Z').getUTCDay();
   let nFoto = 0;
   const foto = async (p, n) => { if (FOTOS) await p.screenshot({ path: path.join(FOTOS, String(++nFoto).padStart(2, '0') + '-' + n + '.png') }); };
 
-  const cli = await abrir();
-  const car = await abrir();
+  cli = await abrir();
+  car = await abrir();
 
   // ---------- Site (cliente) ----------
   const abrirForm = async () => {
@@ -362,7 +363,7 @@ const semana = d => new Date(d + 'T12:00:00Z').getUTCDay();
   } catch (e) {
     confere(false, 'o teste parou: ' + String(e.message || e).split('\n')[0]);
     // Para entender a parada: o que o painel e o site mostravam.
-    for (const [p, nome] of [[car, 'erro-painel'], [cli, 'erro-site']]) {
+    for (const [p, nome] of [[car, 'erro-painel'], [cli, 'erro-site']].filter(x => x[0])) {
       try { await foto(p, nome); console.log(`  ${nome}: ` + (await p.evaluate(() => [...document.querySelectorAll('.msg:not(.oculto), #toast:not(.oculto), [role=alert]:not(.oculto)')].map(x => x.textContent.trim()).filter(Boolean).join(' | ')))); } catch (er) {}
     }
   }
