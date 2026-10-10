@@ -1,0 +1,61 @@
+name: Testar agenda no ar
+# NEXIA Agenda: testa a agenda publicada (API + site + painel) como uma pessoa, no celular.
+# Usa só a agenda de teste para criar/cancelar horários; no site do cliente só confere que serviços e horários aparecem.
+# As fotos de tela vão para a branch "previews" (pasta agenda-ao-vivo/<slug>).
+on:
+  workflow_dispatch:
+    inputs:
+      site:
+        description: 'Endereço do site do cliente (ex.: https://studiolima.pages.dev)'
+        required: true
+        default: 'https://studiolima.pages.dev'
+      slug:
+        description: 'Nome curto do site (pasta das fotos)'
+        required: true
+        default: 'studiolima'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: testar-agenda
+  cancel-in-progress: false
+
+jobs:
+  testar:
+    name: Testar agenda no ar
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Validar entradas
+        env:
+          SITE: ${{ inputs.site }}
+          SLUG: ${{ inputs.slug }}
+        run: |
+          echo "$SLUG" | grep -Eq '^[a-z0-9-]{3,40}$' || { echo "::error::slug inválido"; exit 1; }
+          echo "$SITE" | grep -Eq '^https://[a-z0-9.-]+(/[a-zA-Z0-9._/-]*)?$' || { echo "::error::endereço inválido"; exit 1; }
+      - name: Instalar o navegador
+        run: |
+          npm i --no-save --no-audit --no-fund playwright@1.59.1
+          npx playwright install --with-deps chromium
+      - name: Testar
+        env:
+          SITE: ${{ inputs.site }}
+        run: node tests/e2e/agenda-ao-vivo.js "$SITE" "$RUNNER_TEMP/shots"
+      - name: Guardar fotos na branch previews
+        if: always()
+        env:
+          DEST: agenda-ao-vivo/${{ inputs.slug }}
+        run: |
+          [ -d "$RUNNER_TEMP/shots" ] || exit 0
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git fetch --depth 1 origin previews; then git checkout -B previews FETCH_HEAD; else git checkout --orphan previews && git rm -rqf .; fi
+          rm -rf "$DEST" && mkdir -p "$DEST" && cp "$RUNNER_TEMP"/shots/* "$DEST"/
+          git add -f "$DEST"
+          git commit -qm "Fotos de tela: $DEST" || exit 0
+          git push -q origin previews
