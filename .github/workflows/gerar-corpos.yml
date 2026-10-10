@@ -12,9 +12,10 @@ jobs:
   gerar:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    environment: production
     strategy:
       fail-fast: false
-      max-parallel: 2
+      max-parallel: 1
       matrix:
         s: [m, f]
         p: [clara, media, morena, negra]
@@ -24,8 +25,8 @@ jobs:
         env:
           S: '${{ matrix.s }}'
           P: '${{ matrix.p }}'
-          CF_TOKEN: ${{ secrets.CLOUDFLARE_AI_TOKEN }}
-          CF_CONTA: ${{ secrets.CLOUDFLARE_AI_ACCOUNT_ID }}
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_AI_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
+          CF_CONTA: ${{ secrets.CLOUDFLARE_AI_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID || secrets.NEXIA_D1_ACCOUNT_ID }}
         shell: bash
         run: |
           set +e
