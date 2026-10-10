@@ -49,12 +49,14 @@ export function formaDoCorpo(valores: Record<string, number>, sexo: Sexo | null 
 }
 
 // Quanto esticar a linha y (0 = topo, 1 = pé). A cabeça quase não muda; entre as partes, transição suave.
-export function escalaNaAltura(forma: FormaCorpo, y: number): number {
+// `alturas`: onde cada parte fica nesta foto (medido com detecção de pose); sem ela, usa a média.
+export function escalaNaAltura(forma: FormaCorpo, y: number, alturas: Record<ParteCorpo, number> = ALTURA_NA_FOTO): number {
   const pts = (Object.keys(ALTURA_NA_FOTO) as ParteCorpo[])
-    .map((p) => ({ y: ALTURA_NA_FOTO[p], f: forma.partes[p].fator * forma.geral }))
+    .map((p) => ({ y: alturas[p], f: forma.partes[p].fator * forma.geral }))
     .sort((a, b) => a.y - b.y);
   const cabeca = 1 + (forma.geral - 1) * 0.25;
-  const ancoras = [{ y: 0, f: cabeca }, { y: 0.15, f: cabeca }, ...pts, { y: 1, f: pts[pts.length - 1].f }];
+  const pescoco = Math.max(0.05, pts[0].y - 0.07);
+  const ancoras = [{ y: 0, f: cabeca }, { y: pescoco, f: cabeca }, ...pts, { y: 1, f: pts[pts.length - 1].f }];
   for (let i = 0; i < ancoras.length - 1; i += 1) {
     const a = ancoras[i];
     const b = ancoras[i + 1];

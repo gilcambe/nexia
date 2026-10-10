@@ -12,14 +12,14 @@ const SRC = path.join(__dirname, '../../apps/body-coach/src/lib/avaliacao');
 
 async function carregar() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bc-aval-'));
-  for (const f of ['campos.ts', 'calculos.ts', 'importar.ts', 'metas.ts', 'semanas.ts', 'postura.ts', 'corpo.ts', 'corpoRealista.ts']) {
+  for (const f of ['campos.ts', 'calculos.ts', 'importar.ts', 'metas.ts', 'semanas.ts', 'postura.ts', 'corpo.ts', 'corpoRealista.ts', 'avatar.ts']) {
     const out = ts.transpileModule(fs.readFileSync(path.join(SRC, f), 'utf8'), {
       compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
     }).outputText.replace(/from '\.\/(\w+)\.ts'/g, "from './$1.mjs'");
     fs.writeFileSync(path.join(dir, f.replace(/\.ts$/, '.mjs')), out);
   }
   const imp = (f) => import(pathToFileURL(path.join(dir, f)).href);
-  return { campos: await imp('campos.mjs'), calc: await imp('calculos.mjs'), imp: await imp('importar.mjs'), metas: await imp('metas.mjs'), semanas: await imp('semanas.mjs'), postura: await imp('postura.mjs'), realista: await imp('corpoRealista.mjs') };
+  return { campos: await imp('campos.mjs'), calc: await imp('calculos.mjs'), imp: await imp('importar.mjs'), metas: await imp('metas.mjs'), semanas: await imp('semanas.mjs'), postura: await imp('postura.mjs'), realista: await imp('corpoRealista.mjs'), avatar: await imp('avatar.mjs') };
 }
 
 const mods = carregar();
@@ -257,4 +257,27 @@ test('corpo realista: medidas maiores que o típico alargam a faixa; sem medida 
   const cab = realista.escalaNaAltura(f, 0.05);
   assert.ok(Math.abs(cab - 1) < Math.abs(f.geral - 1), 'cabeça muda pouco');
   assert.ok(Math.abs(realista.escalaNaAltura(f, realista.ALTURA_NA_FOTO.cintura) - f.geral * f.partes.cintura.fator) < 1e-9);
+});
+
+test('corpo escolhido: biotipo pela gordura, leitura segura do perfil e nome da imagem', async () => {
+  const { avatar, realista } = await mods;
+  assert.equal(avatar.biotipoPelaGordura('m', 10), 'magro');
+  assert.equal(avatar.biotipoPelaGordura('m', 18), 'medio');
+  assert.equal(avatar.biotipoPelaGordura('m', 28), 'alto');
+  assert.equal(avatar.biotipoPelaGordura('f', 20), 'magro');
+  assert.equal(avatar.biotipoPelaGordura('f', 26), 'medio');
+  assert.equal(avatar.biotipoPelaGordura('f', 35), 'alto');
+  assert.deepEqual(avatar.lerAvatar(null, 'F'), { sexo: 'f', pele: 'media', biotipo: 'auto' });
+  assert.deepEqual(avatar.lerAvatar({ sexo: 'x', pele: 'roxa', biotipo: 'gigante' }, 'M'), { sexo: 'm', pele: 'media', biotipo: 'auto' });
+  assert.deepEqual(avatar.lerAvatar({ sexo: 'f', pele: 'negra', biotipo: 'magro' }, 'M'), { sexo: 'f', pele: 'negra', biotipo: 'magro' });
+  assert.equal(avatar.chaveImagem({ sexo: 'm', pele: 'clara', biotipo: 'auto' }, 7.7, 'frente'), 'm-clara-magro-frente');
+  assert.equal(avatar.chaveImagem({ sexo: 'f', pele: 'morena', biotipo: 'alto' }, 10, 'costas'), 'f-morena-alto-costas');
+  const tem = (k) => k !== 'm-negra-medio-frente';
+  assert.equal(avatar.chaveDisponivel({ sexo: 'm', pele: 'negra', biotipo: 'medio' }, 18, 'frente', tem), 'm-negra-magro-frente');
+  assert.equal(avatar.chaveDisponivel({ sexo: 'f', pele: 'clara', biotipo: 'auto' }, 35, 'lado', tem), 'f-clara-alto-lado');
+  assert.equal(avatar.chaveDisponivel({ sexo: 'f', pele: 'clara', biotipo: 'alto' }, 35, 'lado', () => false), null);
+  // Com as alturas de outra foto, a faixa da cintura estica naquela altura.
+  const f = realista.formaDoCorpo({ altura: 168, peso: 84.7, cintura: 95 }, 'M', 168);
+  const alturas = { ombro: 0.2, torax: 0.27, cintura: 0.4, quadril: 0.5, coxa: 0.65, panturrilha: 0.82 };
+  assert.ok(Math.abs(realista.escalaNaAltura(f, 0.4, alturas) - f.geral * f.partes.cintura.fator) < 1e-9);
 });
