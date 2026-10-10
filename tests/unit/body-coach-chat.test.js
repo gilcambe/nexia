@@ -67,6 +67,8 @@ test('BCC4. vídeo do aluno chega só ao coach; demo do coach aparece para o alu
   await executar({ acao: 'demo_salvar', exercicio: 'agachamento', video: v }, 'coach1', db);
   assert.equal((await executar({ acao: 'demo_ver', exercicio: 'agachamento' }, 'aluna1', db))[1].video, v);
   assert.equal((await executar({ acao: 'demo_ver', exercicio: 'agachamento' }, 'bob', db))[1].video, null);
+  assert.deepEqual((await executar({ acao: 'demo_listar' }, 'coach1', db))[1].lista, ['agachamento']);
+  assert.deepEqual((await executar({ acao: 'demo_listar' }, 'aluna1', db))[1].lista, []);
 });
 
 test('BCC5. resumo da semana junta treinos e variação de peso', () => {

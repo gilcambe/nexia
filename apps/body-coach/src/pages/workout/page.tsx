@@ -7,11 +7,12 @@ import { moverExercicio } from '@/lib/ordemTreino';
 import { fichaDoPerfil, avancarFicha, treinoDaFicha, type Ficha } from '@/lib/ficha';
 import { useWakeLock } from '@/lib/useWakeLock';
 import { sugerirCarga } from '@/lib/cargaSugerida';
-import DemoExecucao from '@/components/feature/DemoExecucao';
 import VideoDoCoach from '@/components/feature/VideoDoCoach';
 import { alternativas, lesoesDoTexto, POR_ID, type Lesao } from '@/lib/exerciseDb';
 import PreTreino from './components/PreTreino';
 import MusicaTreino from './components/MusicaTreino';
+import EntretenimentoTreino from './components/EntretenimentoTreino';
+import { minutosDoTexto } from '@/lib/entretenimento';
 import GravarParaCoach from '@/components/feature/GravarParaCoach';
 import { dicaAoVivo } from '@/lib/liveCoach';
 import { getUserDoc, setUserDoc, listUserDocs } from '@/lib/userData';
@@ -220,7 +221,16 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
         </div>
       </div>
 
-      {phase !== 'PRE_SESSION' && phase !== 'SESSION_COMPLETE' && <MusicaTreino variante="flutuante" />}
+      {/* barra de música/entretenimento/coach: fica no fluxo da página, nunca por cima dos botões */}
+      {phase !== 'PRE_SESSION' && phase !== 'SESSION_COMPLETE' && (
+        <div className="-mt-2 mb-4 flex flex-wrap items-center gap-2" data-testid="barra-treino">
+          <MusicaTreino variante="pilula" />
+          <EntretenimentoTreino variante="pilula" />
+          <button type="button" onClick={() => setOpen(true)} className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-3 py-2 text-xs font-semibold text-background-50 shadow-sm" aria-label="Falar com o coach">
+            <i className="ri-chat-3-line text-base"></i>Coach
+          </button>
+        </div>
+      )}
       <div className="space-y-4">
         {phase === 'PRE_SESSION' && <MusicaTreino variante="cartao" />}
         {phase === 'PRE_SESSION' && (
@@ -282,8 +292,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
               </span>
             </div>
 
-            <DemoExecucao id={exercise.id} nome={exercise.name} className="mt-4 aspect-[4/3] w-full rounded-xl sm:max-w-sm" />
-            <VideoDoCoach id={exercise.id} nome={exercise.name} />
+            <VideoDoCoach id={exercise.id} nome={exercise.name} className="aspect-[4/3] w-full rounded-xl sm:max-w-sm" />
             <GravarParaCoach exercicio={exercise.name} detalhe={(() => { const s = setsByEx[exercise.id] ?? []; const u = s[s.length - 1]; return u ? `${u.weight} kg x ${u.reps}` : undefined; })()} />
 
             <p className="mt-4 rounded-xl bg-background-100/70 p-3 text-sm text-foreground-700">
@@ -349,8 +358,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
                       <i className="ri-close-line text-xl"></i>
                     </button>
                   </div>
-                  <DemoExecucao id={exercise.id} nome={exercise.name} className="mt-4 aspect-square w-full rounded-xl" />
-            <VideoDoCoach id={exercise.id} nome={exercise.name} />
+                  <VideoDoCoach id={exercise.id} nome={exercise.name} className="aspect-square w-full rounded-xl" gravar={false} />
                   <p className="mt-2 text-xs text-foreground-500">Posição inicial e final do movimento. Capriche na postura e controle a descida.</p>
                   <div className="mt-5 flex justify-end">
                     <button
@@ -500,13 +508,6 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
                 ? 'CONCLUIR EXERCÍCIO → PRÓXIMO'
                 : 'FINALIZAR FORÇA'}
             </button>
-            <button
-              onClick={() => setOpen(true)}
-              className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] right-3 z-40 flex h-12 w-12 sm:h-14 sm:w-14 lg:bottom-24 items-center justify-center rounded-full bg-primary-500 text-background-50 shadow-lg transition hover:bg-primary-600"
-              aria-label="Falar com o coach"
-            >
-              <i className="ri-chat-3-line text-2xl"></i>
-            </button>
           </div>
         )}
 
@@ -548,7 +549,8 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
         {phase === 'CARDIO' && (
           <div className="rounded-2xl border border-background-200 bg-background-50 p-4 sm:p-6">
             <h2 className="font-heading text-xl font-bold text-foreground-950">Cardio</h2>
-            <p className="mt-1 mb-4 text-sm text-foreground-600">{session.cardio?.type} · {session.cardio?.note}</p>
+            {session.cardio && <p className="mt-1 text-sm text-foreground-600">{session.cardio.type} · {session.cardio.note}</p>}
+            <div className="mb-4 mt-4"><EntretenimentoTreino variante="cartao" minutosSugeridos={minutosDoTexto(session.cardio?.note)} /></div>
             <CardioEntry
               onSubmit={(atividades) => {
                 setCardioFeito(atividades);

@@ -41,6 +41,7 @@ export interface AthleteProfile {
   trocas_plano?: TrocaFixa[]; // trocas do plano do nutricionista que valem todo dia
   horarios_refeicoes?: Record<string, string>; // nome da refeição -> "HH:MM"
   musica?: { app?: string; link?: string; estilo?: string };
+  entretenimento?: { app?: string; serie?: string };
 }
 
 export interface TrocaFixa { chave: string; nome: string; porcao: string }
