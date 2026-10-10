@@ -12,14 +12,14 @@ const SRC = path.join(__dirname, '../../apps/body-coach/src/lib/avaliacao');
 
 async function carregar() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bc-aval-'));
-  for (const f of ['campos.ts', 'calculos.ts', 'importar.ts']) {
+  for (const f of ['campos.ts', 'calculos.ts', 'importar.ts', 'metas.ts', 'semanas.ts', 'postura.ts']) {
     const out = ts.transpileModule(fs.readFileSync(path.join(SRC, f), 'utf8'), {
       compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
     }).outputText.replace(/from '\.\/(\w+)\.ts'/g, "from './$1.mjs'");
     fs.writeFileSync(path.join(dir, f.replace(/\.ts$/, '.mjs')), out);
   }
   const imp = (f) => import(pathToFileURL(path.join(dir, f)).href);
-  return { campos: await imp('campos.mjs'), calc: await imp('calculos.mjs'), imp: await imp('importar.mjs') };
+  return { campos: await imp('campos.mjs'), calc: await imp('calculos.mjs'), imp: await imp('importar.mjs'), metas: await imp('metas.mjs'), semanas: await imp('semanas.mjs'), postura: await imp('postura.mjs') };
 }
 
 const mods = carregar();
@@ -196,4 +196,51 @@ test('simetria entre os lados', async () => {
     ['Coxa medial', 0.4, false, 'esquerdo'],
     ['Músculo da perna', 0.6, true, 'esquerdo'],
   ]);
+});
+
+test('metas por medida: quanto falta e corpo da meta', async () => {
+  const { metas } = await mods;
+  const pts = [{ m: { cintura: 90, braco_contraido: 36, peso: 85 } }, { m: { cintura: 86, braco_contraido: 37 } }];
+  const p = metas.progressoMetas(pts, { cintura: 80, braco_contraido: 36.5, gordura: 12 });
+  const c = p.find((x) => x.key === 'cintura');
+  assert.deepEqual([c.inicio, c.atual, c.falta, c.pct, c.chegou], [90, 86, -6, 40, false]);
+  const b = p.find((x) => x.key === 'braco_contraido');
+  assert.equal(b.chegou, true);
+  assert.equal(p.find((x) => x.key === 'gordura').atual, null);
+  const v = metas.valoresDaMeta({ cintura: 86, braco_relaxado: 34, peso: 85 }, { cintura: 80, braco_contraido: 40, gordura: 10 });
+  assert.deepEqual(v, { cintura: 80, peso: 85, braco_contraido: 40, braco_contraido_d: 40 });
+});
+
+test('treino, dieta e corpo por semana', async () => {
+  const { semanas } = await mods;
+  const agora = Date.parse('2026-10-08T12:00:00Z'); // quinta
+  const s = semanas.semanasTreinoDieta(
+    [{ done_at: '2026-10-05T10:00:00Z' }, { done_at: '2026-10-07T10:00:00Z' }, { done_at: '2026-09-29T10:00:00Z' }],
+    [{ created_at: '2026-10-05T08:00:00Z', protein: 50 }, { created_at: '2026-10-05T13:00:00Z', protein: 70 }, { created_at: '2026-10-06T13:00:00Z', protein: 100 }],
+    [{ data: '2026-09-30', m: { gordura: 15, peso: 80 } }, { data: '2026-10-06', m: { gordura: 14.5, peso: 79.5 } }],
+    3, agora,
+  );
+  assert.deepEqual(s.map((x) => [x.rotulo, x.treinos, x.proteina, x.gordura]), [['21/09', 0, null, null], ['28/09', 1, null, 15], ['05/10', 2, 110, 14.5]]);
+  assert.match(semanas.leituraSemanas(s, 80), /gordura caiu 0,5/);
+});
+
+test('postura: ombro caído e cabeça à frente', async () => {
+  const { postura } = await mods;
+  const pts = Array.from({ length: 33 }, () => ({ x: 0.5, y: 0.5, visibility: 0.9 }));
+  // foto de frente 300x400: ombro esquerdo da pessoa (à direita da imagem) 12 px mais baixo
+  pts[11] = { x: 0.65, y: 0.33, visibility: 0.9 }; pts[12] = { x: 0.35, y: 0.30, visibility: 0.9 };
+  pts[23] = { x: 0.6, y: 0.55, visibility: 0.9 }; pts[24] = { x: 0.4, y: 0.55, visibility: 0.9 };
+  pts[7] = { x: 0.55, y: 0.15, visibility: 0.9 }; pts[8] = { x: 0.45, y: 0.15, visibility: 0.9 };
+  const f = postura.analisarPostura('frente', pts, 300, 400);
+  const o = f.find((a) => a.id === 'ombros');
+  assert.equal(o.ok, false); assert.match(o.titulo, /esquerdo mais baixo/);
+  assert.equal(f.find((a) => a.id === 'quadril').ok, true);
+  // de lado, olhando para a direita da imagem: orelha bem à frente do ombro
+  const l = Array.from({ length: 33 }, () => ({ x: 0.5, y: 0.5, visibility: 0.2 }));
+  l[0] = { x: 0.62, y: 0.14, visibility: 0.9 }; l[7] = { x: 0.56, y: 0.15, visibility: 0.9 };
+  l[11] = { x: 0.48, y: 0.3, visibility: 0.9 }; l[23] = { x: 0.48, y: 0.55, visibility: 0.9 };
+  const d = postura.analisarPostura('direita', l, 300, 400);
+  assert.equal(d.find((a) => a.id === 'cabeca_frente').ok, false);
+  assert.equal(d.find((a) => a.id === 'ombros_frente').ok, true);
+  assert.equal(postura.resumoPostura([...f, ...d])[0].ok, false);
 });

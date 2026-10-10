@@ -1,5 +1,6 @@
 import { lazy, Suspense, useMemo, useState, Component, type ReactNode } from 'react';
 import { mapaMelhora, mapaVolume, medidasDoCorpo, type Regiao } from '@/lib/avaliacao/corpo';
+import { valoresDaMeta, type MetasMedidas } from '@/lib/avaliacao/metas';
 import { dataBr } from '@/lib/avaliacao/calculos';
 import type { PerfilAvaliacao } from '@/lib/avaliacao/dados';
 import type { ItemSerie } from '@/lib/avaliacao/serie';
@@ -30,7 +31,7 @@ type Modo = 'treino' | 'melhora';
 
 // Corpo 3D do aluno: montado com as medidas da última avaliação (não é escaneamento da câmera).
 // Duas leituras de cor: músculos treinados na semana ou o que melhorou desde a avaliação anterior.
-export default function PainelCorpo({ serie, perfil, volume, nome }: { serie: ItemSerie[]; perfil: PerfilAvaliacao; volume: Record<string, number>; nome?: string }) {
+export default function PainelCorpo({ serie, perfil, volume, nome, metas }: { serie: ItemSerie[]; perfil: PerfilAvaliacao; volume: Record<string, number>; nome?: string; metas?: MetasMedidas | null }) {
   const comMedidas = serie.filter((s) => s.m.peso != null || s.m.cintura != null);
   const ultima = comMedidas[comMedidas.length - 1] ?? null;
   const anterior = comMedidas.length > 1 ? comMedidas[comMedidas.length - 2] : null;
@@ -39,7 +40,8 @@ export default function PainelCorpo({ serie, perfil, volume, nome }: { serie: It
   const modo: Modo = modoEscolhido ?? (anterior ? 'melhora' : 'treino');
   const [pose, setPose] = useState<PoseCorpo>('relaxado');
   const [girar, setGirar] = useState(true);
-  const [comparar, setComparar] = useState(false);
+  const [comparar, setComparar] = useState<null | 'anterior' | 'meta'>(null);
+  const temMeta = !!metas && Object.keys(metas).some((k) => k !== 'gordura');
   const webgl = useMemo(temWebGL, []);
 
   const medidas = useMemo(
@@ -47,8 +49,10 @@ export default function PainelCorpo({ serie, perfil, volume, nome }: { serie: It
     [ultima, perfil.sexo, perfil.altura],
   );
   const fantasma = useMemo(
-    () => (comparar && anterior ? medidasDoCorpo(anterior.av.valores, anterior.av.sexo ?? perfil.sexo, perfil.altura) : null),
-    [comparar, anterior, perfil.sexo, perfil.altura],
+    () => (comparar === 'anterior' && anterior ? medidasDoCorpo(anterior.av.valores, anterior.av.sexo ?? perfil.sexo, perfil.altura)
+      : comparar === 'meta' && metas ? medidasDoCorpo(valoresDaMeta(ultima?.av.valores ?? {}, metas), ultima?.av.sexo ?? perfil.sexo, perfil.altura)
+        : null),
+    [comparar, anterior, ultima, metas, perfil.sexo, perfil.altura],
   );
   const cores = useMemo(() => {
     const out: Partial<Record<Regiao, string>> = {};
@@ -91,8 +95,13 @@ export default function PainelCorpo({ serie, perfil, volume, nome }: { serie: It
             <i className={girar ? 'ri-pause-line' : 'ri-refresh-line'}></i>
           </button>
           {anterior && (
-            <button type="button" onClick={() => setComparar((c) => !c)} className={`rounded-full px-2.5 py-1 text-[11px] font-semibold backdrop-blur ${comparar ? 'bg-primary-500 text-white' : 'bg-background-50/80 text-foreground-700'}`}>
+            <button type="button" onClick={() => setComparar((c) => (c === 'anterior' ? null : 'anterior'))} className={`rounded-full px-2.5 py-1 text-[11px] font-semibold backdrop-blur ${comparar === 'anterior' ? 'bg-primary-500 text-white' : 'bg-background-50/80 text-foreground-700'}`}>
               Comparar com {dataBr(anterior.data).slice(0, 5)}
+            </button>
+          )}
+          {temMeta && ultima && (
+            <button type="button" onClick={() => setComparar((c) => (c === 'meta' ? null : 'meta'))} className={`rounded-full px-2.5 py-1 text-[11px] font-semibold backdrop-blur ${comparar === 'meta' ? 'bg-primary-500 text-white' : 'bg-background-50/80 text-foreground-700'}`}>
+              Como vou ficar na meta
             </button>
           )}
         </div>
@@ -108,6 +117,7 @@ export default function PainelCorpo({ serie, perfil, volume, nome }: { serie: It
           <span>Quanto mais azul, mais séries na semana. Arraste o dedo para girar.</span>
         )}
       </div>
+      {comparar && <p className="mt-1 text-[11px] font-medium text-foreground-600">Contorno em linhas: {comparar === 'meta' ? 'você com as medidas da meta' : `você em ${dataBr(anterior!.data)}`}.</p>}
       <p className="mt-1 text-[11px] text-foreground-400">
         Montado com as {nome ? 'medidas da avaliação' : 'suas medidas'}{medidas.estimadas.length ? ` (estimei ${medidas.estimadas.length} que faltam pela altura e peso)` : ''}. Quanto mais medidas na avaliação, mais parecido fica.
       </p>
