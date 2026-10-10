@@ -202,11 +202,13 @@ test('AG8. cadastro: hash do código bate, sem código em texto; painel e cópia
   const raiz = path.join(__dirname, '../..');
   const base = fs.readFileSync(path.join(raiz, 'nexia-ai/site-kit/agenda/painel.html'), 'utf8');
   const copia = fs.readFileSync(path.join(raiz, 'sites/studiolima/agenda/index.html'), 'utf8');
-  const normal = s => s.replace(/<meta name="agenda-site" content="[^"]*">/, '').replace(/<title>[^<]*<\/title>/, '');
+  const normal = s => s.replace(/<meta name="agenda-site" content="[^"]*">/, '').replace(/<meta name="agenda-site-url" content="[^"]*">/, '').replace(/<title>[^<]*<\/title>/, '');
   assert.equal(normal(copia), normal(base), 'a cópia do painel no site do Studio Lima saiu do modelo: copie de novo');
   assert.match(copia, /<meta name="agenda-site" content="studiolima">/);
   const landing = fs.readFileSync(path.join(raiz, 'sites/studiolima/index.html'), 'utf8');
-  assert.match(landing, /const AG_SITE = 'studiolima'/);
+  assert.match(landing, /const NX_SITE = 'studiolima'/);
+  assert.match(landing, /const AG_SITE = NX_SITE/);
+  assert.match(copia, /<meta name="agenda-site-url" content="..\/">/, 'painel do Studio Lima tem a aba Site');
   assert.ok(!/fetch\('\/api\/studiolima/.test(landing), 'nada aponta para a API antiga');
 });
 
@@ -219,4 +221,62 @@ test('AG9. codigo_sempre (só a agenda de teste): o código refaz o primeiro ace
   assert.equal((await post({ acao: 'primeiro-acesso', codigo: 'TESTEAGENDA', senha_nova: 'lirio2026' })).statusCode, 200);
   assert.equal((await post({ acao: 'entrar', senha: 'lirio2026' })).statusCode, 200);
   assert.equal((await post({ acao: 'primeiro-acesso', codigo: 'ERRADO', senha_nova: 'rosa2026' })).statusCode, 401);
+});
+
+test('AG10. editor do site: conteúdo público, salvar só logado, limpeza de campos e endereços', async () => {
+  const a = montar();
+  assert.equal((await a.get({ conteudo: '1' })).json.conteudo, null, 'sem nada editado');
+  assert.equal((await a.post({ acao: 'site-salvar', conteudo: {} })).statusCode, 401, 'precisa estar logado');
+  const token = await logar(a);
+  const r = await a.post({ acao: 'site-salvar', token, conteudo: {
+    textos: { 'inicio-2': 'Novo título', 'Mal Chave': 'x', 'sobre-1': '<b>ok</b>' },
+    links: { 'inicio-5': 'javascript:alert(1)', 'agendamento-4': 'https://wa.me/5511999998888', 'rodape-9': 'tel:+5511999998888' },
+    imagens: { 'procedimentos-foto-1': { url: 'https://exemplo.com/a.webp', posX: 300 }, 'x-1': { url: 'http://inseguro.com/a.png' } },
+    ocultos: { 'secao-journal': true, 'inicio-7': 'sim' },
+    listas: {
+      procedimentos: [{ nome: 'Peeling', categoria: 'Facial', descricao: 'd', beneficios: ['a', '', 'b'], imagem: 'https://exemplo.com/p.webp', oculto: true }, { nome: '' }],
+      galeria: [{ url: 'https://exemplo.com/g.webp', alt: 'Sala', tamanho: 'enorme' }, { url: 'data:image/png;base64,AAA' }],
+      journal: [{ titulo: 'T', link: 'javascript:x' }],
+      hero: ['https://exemplo.com/h.webp'],
+      bio: { titulo: 'Carol', tags: ['a', 'b'], foto: { url: 'https://exemplo.com/c.webp' } },
+      outra: [1, 2],
+    },
+    extra: 'não guarda',
+  } });
+  assert.equal(r.statusCode, 200, r.body);
+  const c = (await a.get({ conteudo: '1' })).json.conteudo;
+  assert.deepEqual(c.textos, { 'inicio-2': 'Novo título', 'sobre-1': '<b>ok</b>' }, 'chave inválida some; texto vira texto (o site escapa)');
+  assert.deepEqual(c.links, { 'agendamento-4': 'https://wa.me/5511999998888', 'rodape-9': 'tel:+5511999998888' }, 'javascript: não passa');
+  assert.deepEqual(c.imagens, { 'procedimentos-foto-1': { url: 'https://exemplo.com/a.webp', posX: 100, posY: 50 } }, 'só https');
+  assert.deepEqual(c.ocultos, { 'secao-journal': true });
+  assert.deepEqual(c.listas.procedimentos, [{ nome: 'Peeling', categoria: 'Facial', descricao: 'd', beneficios: ['a', 'b'], imagem: { url: 'https://exemplo.com/p.webp', posX: 50, posY: 50 }, oculto: true }]);
+  assert.deepEqual(c.listas.galeria, [{ url: 'https://exemplo.com/g.webp', posX: 50, posY: 50, alt: 'Sala', tamanho: 'normal' }]);
+  assert.equal(c.listas.journal[0].link, '');
+  assert.equal(c.listas.hero.length, 1);
+  assert.equal(c.listas.bio.titulo, 'Carol');
+  assert.equal(c.listas.outra, undefined);
+  assert.equal(c.extra, undefined);
+  assert.equal(c.listas.cuidados, undefined, 'lista não enviada continua a padrão do site');
+});
+
+test('AG11. fotos: confere que é foto, limite de tamanho, serve com cache longo', async () => {
+  const a = montar();
+  const token = await logar(a);
+  const jpg = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(2000, 7)]);
+  assert.equal((await a.post({ acao: 'foto-enviar', dados: jpg.toString('base64'), tipo: 'image/jpeg' })).statusCode, 401);
+  assert.equal((await a.post({ acao: 'foto-enviar', token, dados: Buffer.from('<svg onload=x>').toString('base64'), tipo: 'image/jpeg' })).statusCode, 400, 'não é foto');
+  assert.equal((await a.post({ acao: 'foto-enviar', token, dados: jpg.toString('base64'), tipo: 'image/svg+xml' })).statusCode, 400, 'tipo não aceito');
+  const grande = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff]), Buffer.alloc(700 * 1024)]);
+  assert.match((await a.post({ acao: 'foto-enviar', token, dados: grande.toString('base64'), tipo: 'image/jpeg' })).json.error, /grande/);
+  const ok = await a.post({ acao: 'foto-enviar', token, dados: jpg.toString('base64'), tipo: 'image/jpeg' });
+  assert.equal(ok.statusCode, 201, ok.body);
+  assert.match(ok.json.id, /^[a-f0-9]{24}$/);
+  const h = await a.h({ httpMethod: 'GET', headers: {}, queryStringParameters: { site: 'agenda-teste', foto: ok.json.id } });
+  assert.equal(h.statusCode, 200);
+  assert.equal(h.isBase64Encoded, true);
+  assert.equal(h.headers['Content-Type'], 'image/jpeg');
+  assert.match(h.headers['Cache-Control'], /immutable/);
+  assert.deepEqual(Buffer.from(h.body, 'base64'), jpg);
+  assert.equal((await a.h({ httpMethod: 'GET', headers: {}, queryStringParameters: { site: 'agenda-teste', foto: '../x' } })).statusCode, 400);
+  assert.equal((await a.h({ httpMethod: 'GET', headers: {}, queryStringParameters: { site: 'agenda-teste', foto: 'a'.repeat(24) } })).statusCode, 404);
 });

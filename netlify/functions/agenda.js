@@ -11,6 +11,11 @@
 //   primeiro-acesso { codigo, senha_nova } · entrar { senha } · sair · trocar-senha { senha_atual, senha_nova }
 //   listar { de, ate } · criar { data, inicio, servico, nome, whatsapp, obs } · status { id, status }
 //   bloquear { data, inicio?, fim?, motivo } · desbloquear { id } · config { config }
+//   site-salvar { conteudo } · foto-enviar { dados (base64), tipo }   (editor do site, ver abaixo)
+//
+// Editor do site (a dona muda textos, fotos, procedimentos e seções da página dela pelo painel):
+//   GET  /api/agenda?site=<slug>&conteudo=1   → o que ela mudou (o site junta com o conteúdo padrão dele)
+//   GET  /api/agenda?site=<slug>&foto=<id>    → foto enviada por ela (guardada no Firestore, grátis)
 //   O master da NEXIA (login Firebase, Authorization: Bearer) também entra em qualquer agenda, para suporte.
 //
 // O corpo vai como text/plain com JSON (sem "preflight"), igual ao /api/leads.
@@ -20,6 +25,8 @@
 //            agenda_contas/<slug>/itens/<id>    agendamentos e bloqueios
 //            agenda_contas/<slug>/ocupado/<data>_<HHMM>  trava de cada fatia de horário (impede dois no mesmo horário)
 //            agenda_contas/<slug>/sessoes/<hash do token>
+//            agenda_contas/<slug>/site/conteudo   textos, fotos, listas e seções editados no painel
+//            agenda_contas/<slug>/fotos/<id>      fotos enviadas (base64; até 600 KB cada, já reduzidas no celular)
 
 const COLLECTION = 'agenda_contas';
 const STATUS = ['pendente', 'confirmado', 'cancelado', 'concluido', 'faltou'];
@@ -55,7 +62,7 @@ function agoraBr(now = Date.now()) {
 function limparServicos(lista) {
   const out = [];
   const ids = new Set();
-  for (const s of Array.isArray(lista) ? lista.slice(0, 30) : []) {
+  for (const s of Array.isArray(lista) ? lista.slice(0, 60) : []) {
     const nome = str(s && s.nome, 80);
     if (!nome) continue;
     let id = str(s.id, 40).toLowerCase().replace(/[^a-z0-9-]/g, '') || nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'servico';
@@ -181,6 +188,86 @@ function limparPessoa(body, { exigirContato }) {
   return { pessoa: { nome, whatsapp, obs: str(body.obs, 500) } };
 }
 
+// ── Editor do site ─────────────────────────────────────────────────────────
+
+const FOTO_MAX_BYTES = 600 * 1024;
+const FOTOS_MAX = 300;
+const CONTEUDO_MAX = 300 * 1024;
+const CHAVE_RE = /^[a-z0-9-]{1,40}$/;
+const FOTO_ID_RE = /^[a-f0-9]{24}$/;
+const TIPOS_FOTO = { 'image/webp': [0x52, 0x49, 0x46, 0x46], 'image/jpeg': [0xff, 0xd8, 0xff], 'image/png': [0x89, 0x50, 0x4e, 0x47] };
+
+const texto = (v, max) => (typeof v === 'string' ? v.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '').trim().slice(0, max) : '');
+function urlSegura(v, { link = false } = {}) {
+  const u = texto(v, 600);
+  if (/^https:\/\/[^\s"'<>]+$/i.test(u)) return u;
+  if (link && /^(tel:\+?[0-9]{8,15}|mailto:[^\s"'<>@]+@[^\s"'<>]+|#[a-z0-9-]{1,40})$/i.test(u)) return u;
+  return '';
+}
+function limparImagem(v) {
+  const o = typeof v === 'string' ? { url: v } : (v && typeof v === 'object' ? v : {});
+  const url = urlSegura(o.url);
+  if (!url) return null;
+  const pos = n => Math.min(Math.max(Math.round(Number(n ?? 50)), 0), 100);
+  return { url, posX: pos(o.posX), posY: pos(o.posY) };
+}
+const lista = (v, max, f) => (Array.isArray(v) ? v.slice(0, max).map(f).filter(Boolean) : undefined);
+
+/** Só guarda o que o site sabe mostrar, com tamanho limitado e endereços seguros. */
+function limparConteudo(c) {
+  c = c && typeof c === 'object' && !Array.isArray(c) ? c : {};
+  const mapa = (v, f, max = 400) => {
+    const out = {};
+    if (!v || typeof v !== 'object' || Array.isArray(v)) return out;
+    for (const [k, val] of Object.entries(v).slice(0, max)) { if (!CHAVE_RE.test(k)) continue; const x = f(val); if (x !== null && x !== '' && x !== undefined) out[k] = x; }
+    return out;
+  };
+  const out = {
+    textos: mapa(c.textos, v => texto(v, 3000)),
+    links: mapa(c.links, v => urlSegura(v, { link: true })),
+    imagens: mapa(c.imagens, limparImagem),
+    ocultos: mapa(c.ocultos, v => (v === true ? true : null)),
+  };
+  const L = c.listas && typeof c.listas === 'object' ? c.listas : {};
+  const listas = {
+    procedimentos: lista(L.procedimentos, 60, p => (p && texto(p.nome, 80) ? {
+      nome: texto(p.nome, 80), categoria: texto(p.categoria, 40), descricao: texto(p.descricao, 1500),
+      beneficios: (Array.isArray(p.beneficios) ? p.beneficios : []).slice(0, 8).map(b => texto(b, 120)).filter(Boolean),
+      imagem: limparImagem(p.imagem), oculto: p.oculto === true,
+    } : null)),
+    galeria: lista(L.galeria, 40, g => { const i = limparImagem(g && (g.imagem || g)); return i ? { ...i, alt: texto(g.alt, 120), tamanho: ['normal', 'alto', 'largo', 'grande'].includes(g.tamanho) ? g.tamanho : 'normal' } : null; }),
+    journal: lista(L.journal, 30, j => (j && texto(j.titulo, 160) ? { categoria: texto(j.categoria, 40), titulo: texto(j.titulo, 160), resumo: texto(j.resumo, 600), link: urlSegura(j.link, { link: true }), imagem: limparImagem(j.imagem) } : null)),
+    cuidados: lista(L.cuidados, 20, x => (x && texto(x.titulo, 120) ? { titulo: texto(x.titulo, 120), descricao: texto(x.descricao, 800) } : null)),
+    hero: lista(L.hero, 10, limparImagem),
+  };
+  if (L.bio && typeof L.bio === 'object') {
+    listas.bio = { foto: limparImagem(L.bio.foto), titulo: texto(L.bio.titulo, 120), texto1: texto(L.bio.texto1, 1500), texto2: texto(L.bio.texto2, 1500), tags: (Array.isArray(L.bio.tags) ? L.bio.tags : []).slice(0, 12).map(t => texto(t, 60)).filter(Boolean) };
+  }
+  out.listas = Object.fromEntries(Object.entries(listas).filter(([, v]) => v !== undefined));
+  return out;
+}
+
+/** Confere que o arquivo é mesmo uma foto (pelos primeiros bytes) e cabe no limite. */
+function lerFoto(dados, tipo) {
+  const assinatura = TIPOS_FOTO[tipo];
+  if (!assinatura || typeof dados !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(dados)) return { error: 'Envie uma foto (JPG, PNG ou WebP).' };
+  const buf = Buffer.from(dados, 'base64');
+  if (!buf.length) return { error: 'Foto vazia.' };
+  if (buf.length > FOTO_MAX_BYTES) return { error: 'Foto grande demais. Tente outra.' };
+  if (!assinatura.every((b, i) => buf[i] === b)) return { error: 'Este arquivo não é uma foto.' };
+  return { base64: buf.toString('base64'), bytes: buf.length };
+}
+
+// Fotos já lidas ficam em memória enquanto o Worker vive (menos leituras no Firestore grátis).
+const _fotos = new Map();
+let _fotosBytes = 0;
+function guardarFotoEmMemoria(k, v) {
+  if (_fotos.has(k)) return;
+  _fotos.set(k, v);
+  _fotosBytes += v.base64.length;
+  while (_fotosBytes > 30 * 1024 * 1024 && _fotos.size) { const [k0, v0] = _fotos.entries().next().value; _fotos.delete(k0); _fotosBytes -= v0.base64.length; }
+}
+
 function createHandler(deps = {}) {
   const getDb = deps.getDb || (() => require('./firebase-init').db);
   const getMw = deps.getMw || (() => require('./middleware'));
@@ -229,6 +316,25 @@ function createHandler(deps = {}) {
       const lote = db.batch();
       for (const f of fatias(item.inicio, item.fim, cfg.intervalo)) lote.delete(conta.collection('ocupado').doc(`${item.data}_${f}`));
       await lote.commit();
+    }
+
+    // ── Público: conteúdo e fotos do site ──
+    if (method === 'GET' && q.foto !== undefined) {
+      const id = str(q.foto, 40);
+      if (!FOTO_ID_RE.test(id)) return res(400, { error: 'Foto inválida.' });
+      const k = slug + '/' + id;
+      let f = _fotos.get(k);
+      if (!f) {
+        const snap = await conta.collection('fotos').doc(id).get();
+        if (!snap.exists) return res(404, { error: 'Foto não encontrada.' });
+        f = { tipo: snap.data().tipo, base64: snap.data().dados };
+        guardarFotoEmMemoria(k, f);
+      }
+      return { statusCode: 200, isBase64Encoded: true, body: f.base64, headers: { ...cors, 'Content-Type': f.tipo, 'Cache-Control': 'public, max-age=31536000, immutable' } };
+    }
+    if (method === 'GET' && q.conteudo !== undefined) {
+      const snap = await conta.collection('site').doc('conteudo').get();
+      return res(200, { conteudo: snap.exists ? limparConteudo(snap.data()) : null });
     }
 
     // ── Público: ver horários ──
@@ -428,6 +534,23 @@ function createHandler(deps = {}) {
       return res(200, { ok: true, config: final });
     }
 
+    if (acao === 'site-salvar') {
+      const conteudo = limparConteudo(body.conteudo);
+      if (JSON.stringify(conteudo).length > CONTEUDO_MAX) return res(413, { error: 'Conteúdo grande demais.' });
+      await conta.collection('site').doc('conteudo').set({ ...conteudo, atualizado_em: new Date(now()).toISOString() });
+      return res(200, { ok: true, conteudo });
+    }
+
+    if (acao === 'foto-enviar') {
+      const { base64, bytes, error } = lerFoto(body.dados, str(body.tipo, 20));
+      if (error) return res(400, { error });
+      if ((Number(dados.fotos_n) || 0) >= FOTOS_MAX) return res(400, { error: 'Limite de fotos atingido. Fale com o suporte NEXIA.' });
+      const id = aleatorio(12);
+      await conta.collection('fotos').doc(id).set({ tipo: str(body.tipo, 20), dados: base64, bytes, criado_em: new Date(now()).toISOString() });
+      await conta.set({ fotos_n: (Number(dados.fotos_n) || 0) + 1 }, { merge: true });
+      return res(201, { ok: true, id });
+    }
+
     return res(400, { error: 'Ação desconhecida.' });
   };
 }
@@ -440,3 +563,4 @@ exports.hashSenha = hashSenha;
 exports.fatias = fatias;
 exports.agoraBr = agoraBr;
 exports.COLLECTION = COLLECTION;
+exports.limparConteudo = limparConteudo;

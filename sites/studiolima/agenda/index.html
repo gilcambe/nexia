@@ -4,10 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex, nofollow">
-<!-- NEXIA Agenda: painel da dona. Cada site muda só estas 3 linhas (o resto é igual para todos). -->
+<!-- NEXIA Agenda: painel da dona. Cada site muda só as linhas meta abaixo e o título (o resto é igual para todos). -->
 <meta name="agenda-site" content="studiolima">
 <meta name="agenda-cor" content="#825c4e">
 <meta name="agenda-api" content="https://nexia.gcbezerra.workers.dev/api/agenda">
+<!-- Endereço da página do site (para a aba "Site", que edita a página tocando nela). Vazio = sem aba Site. -->
+<meta name="agenda-site-url" content="../">
 <meta name="theme-color" content="#825c4e">
 <title>Agenda · Studio Lima</title>
 <style>
@@ -94,6 +96,15 @@
   .login h1 { font-size: 24px; margin: 0 0 4px; }
   .login p { color: var(--suave); margin: 0; }
   a.link { color: var(--cor); }
+  .dica { font-size: 14px; color: var(--suave); margin: 0; }
+  #site-quadro { display: block; width: 100%; height: calc(100vh - 250px); min-height: 440px; border: 1px solid var(--linha); border-radius: 16px; background: #fff; margin-top: 12px; }
+  .previa { display: block; width: 100%; max-height: 260px; object-fit: cover; border-radius: 14px; background: var(--neutro-f); margin-top: 8px; }
+  .arquivo { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .mini { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: center; margin-top: 10px; }
+  .mini img { width: 96px; height: 72px; object-fit: cover; border-radius: 10px; background: var(--neutro-f); }
+  .proc { display: flex; align-items: center; gap: 10px; background: #fff; border: 1px solid var(--linha); border-radius: 14px; padding: 8px 10px; margin-top: 8px; }
+  .proc .check { margin: 0; flex: 1; min-width: 0; }
+  .proc input[type=checkbox] { width: 22px; height: 22px; min-height: 0; flex: none; }
 </style>
 </head>
 <body>
@@ -149,6 +160,15 @@
       <div id="lista-dia"></div>
     </section>
 
+    <!-- SITE: cópia da página para tocar e editar -->
+    <section id="pag-site" class="oculto">
+      <h2>Seu site</h2>
+      <p class="dica">Toque em qualquer texto, foto, procedimento ou seção do site abaixo para mudar ou excluir. Cada mudança já vale para quem abrir o site.</p>
+      <div class="acoes"><button type="button" class="btn pequeno" id="site-procs">Procedimentos que você oferece</button><a class="btn pequeno claro" id="site-ver" target="_blank" rel="noopener">Ver o site</a></div>
+      <div id="site-msg" class="msg aviso oculto" role="status"></div>
+      <iframe id="site-quadro" title="Cópia do seu site para editar"></iframe>
+    </section>
+
     <!-- AJUSTES -->
     <section id="pag-ajustes" class="oculto">
       <form id="form-config">
@@ -190,6 +210,7 @@
   <button class="fab" id="fab" type="button" aria-label="Novo">+</button>
   <nav class="baixo">
     <button type="button" class="ativa" id="nav-agenda">Agenda<span class="badge oculto" id="nav-pend"></span></button>
+    <button type="button" id="nav-site" class="oculto">Site</button>
     <button type="button" id="nav-ajustes">Ajustes</button>
   </nav>
 </div>
@@ -232,6 +253,52 @@
   </form>
 </div></div>
 
+<!-- FOLHA: texto do site -->
+<div class="folha oculto" id="folha-texto"><div class="caixa">
+  <div class="titulo"><h2>Mudar texto</h2><button class="fechar" type="button" data-fechar aria-label="Fechar">×</button></div>
+  <form id="form-texto">
+    <label for="t-valor">Texto</label><textarea id="t-valor" maxlength="3000"></textarea>
+    <div id="t-link-caixa" class="oculto"><label for="t-link">Para onde o botão leva (link)</label><input id="t-link" inputmode="url" maxlength="600"></div>
+    <button class="btn largo" type="submit">Salvar</button>
+    <div class="acoes"><button type="button" class="btn claro pequeno" id="t-esconder">Esconder do site</button><button type="button" class="btn claro pequeno" id="t-original">Voltar ao original</button></div>
+    <div id="erro-texto" class="msg erro oculto" role="alert"></div>
+  </form>
+</div></div>
+
+<!-- FOLHA: foto do site -->
+<div class="folha oculto" id="folha-foto"><div class="caixa">
+  <div class="titulo"><h2>Mudar foto</h2><button class="fechar" type="button" data-fechar aria-label="Fechar">×</button></div>
+  <img id="f-previa" class="previa" alt="">
+  <label class="check"><input type="checkbox" id="f-autorizo"> Tenho o direito de usar a foto nova. Se aparece uma cliente, ela autorizou por escrito.</label>
+  <label class="btn largo" for="f-arquivo" id="f-escolher">Escolher outra foto</label><input id="f-arquivo" class="arquivo" type="file" accept="image/*">
+  <div class="acoes"><button type="button" class="btn claro pequeno" id="f-esconder">Esconder do site</button><button type="button" class="btn claro pequeno" id="f-original">Voltar ao original</button></div>
+  <div id="erro-foto" class="msg erro oculto" role="alert"></div>
+</div></div>
+
+<!-- FOLHA: item de uma lista do site (procedimento, foto da galeria, artigo, cuidado, "Sobre", fotos do topo) -->
+<div class="folha oculto" id="folha-item"><div class="caixa">
+  <div class="titulo"><h2 id="i-titulo">Editar</h2><button class="fechar" type="button" data-fechar aria-label="Fechar">×</button></div>
+  <form id="form-item">
+    <div id="i-campos"></div>
+    <button class="btn largo" type="submit" id="i-salvar">Salvar</button>
+    <div class="acoes" id="i-acoes">
+      <button type="button" class="btn claro pequeno" id="i-subir">↑ Subir</button>
+      <button type="button" class="btn claro pequeno" id="i-descer">↓ Descer</button>
+      <button type="button" class="btn vermelho pequeno" id="i-excluir">Excluir</button>
+      <button type="button" class="btn claro pequeno" id="i-padrao">Voltar a lista original</button>
+    </div>
+    <div id="erro-item" class="msg erro oculto" role="alert"></div>
+  </form>
+</div></div>
+
+<!-- FOLHA: procedimentos oferecidos -->
+<div class="folha oculto" id="folha-procs"><div class="caixa">
+  <div class="titulo"><h2>Procedimentos que você oferece</h2><button class="fechar" type="button" data-fechar aria-label="Fechar">×</button></div>
+  <p class="dica">Os marcados aparecem no site e na agenda. Desmarque o que você não faz mais.</p>
+  <div id="p-lista"></div>
+  <button type="button" class="btn largo claro" id="p-novo">+ Novo procedimento</button>
+</div></div>
+
 <div class="toast oculto" id="toast" role="status"></div>
 
 <script>
@@ -241,6 +308,7 @@
   var qs = new URLSearchParams(location.search);
   var SITE = (qs.get('site') || meta('agenda-site') || '').toLowerCase();
   var API = qs.get('api') || meta('agenda-api');
+  var SITE_URL = meta('agenda-site-url');
   var COR = meta('agenda-cor');
   if (/^#[0-9a-f]{6}$/i.test(COR)) { document.documentElement.style.setProperty('--cor', COR); }
   var CHAVE = 'nexia_agenda_' + SITE;
@@ -429,7 +497,7 @@
   });
 
   // ── Folhas ──
-  function abrirFolha(id) { ['folha-menu', 'folha-novo', 'folha-bloq'].forEach(function (f) { mostrar($(f), f === id); }); }
+  function abrirFolha(id) { ['folha-menu', 'folha-novo', 'folha-bloq', 'folha-texto', 'folha-foto', 'folha-item', 'folha-procs'].forEach(function (f) { mostrar($(f), f === id); }); }
   document.querySelectorAll('[data-fechar]').forEach(function (b) { b.onclick = function () { abrirFolha(''); }; });
   document.querySelectorAll('.folha').forEach(function (f) { f.addEventListener('click', function (e) { if (e.target === f) abrirFolha(''); }); });
   $('fab').onclick = function () { abrirFolha('folha-menu'); };
@@ -488,13 +556,15 @@
 
   // ── Navegação de baixo ──
   function pagina(qual) {
-    mostrar($('pag-agenda'), qual === 'agenda'); mostrar($('pag-ajustes'), qual === 'ajustes'); mostrar($('fab'), qual === 'agenda');
-    $('nav-agenda').classList.toggle('ativa', qual === 'agenda'); $('nav-ajustes').classList.toggle('ativa', qual === 'ajustes');
+    mostrar($('pag-agenda'), qual === 'agenda'); mostrar($('pag-ajustes'), qual === 'ajustes'); mostrar($('pag-site'), qual === 'site'); mostrar($('fab'), qual === 'agenda');
+    $('nav-agenda').classList.toggle('ativa', qual === 'agenda'); $('nav-ajustes').classList.toggle('ativa', qual === 'ajustes'); $('nav-site').classList.toggle('ativa', qual === 'site');
     if (qual === 'ajustes') preencherAjustes();
+    if (qual === 'site') abrirSite();
     window.scrollTo(0, 0);
   }
   $('nav-agenda').onclick = function () { pagina('agenda'); };
   $('nav-ajustes').onclick = function () { pagina('ajustes'); };
+  $('nav-site').onclick = function () { pagina('site'); };
 
   // ── Ajustes ──
   function linhaServico(s) {
@@ -557,6 +627,314 @@
     });
   };
 
+
+  // ── Site: a dona edita a página tocando nela (a página avisa o que foi tocado por postMessage) ──
+  var site = { aberto: false, pronto: false, padroes: null, conteudo: null, alvo: null, item: null };
+  var copia = function (o) { return JSON.parse(JSON.stringify(o)); };
+  var minusc = function (s) { return String(s || '').trim().toLowerCase(); };
+  var URL_LINK = /^(https:\/\/\S+|tel:\+?[0-9]{8,15}|mailto:\S+@\S+)$/i;
+
+  function abrirSite() {
+    if (site.aberto) return;
+    site.aberto = true;
+    $('site-ver').href = SITE_URL;
+    var msg = $('site-msg'); msg.textContent = 'Abrindo a cópia do seu site…'; mostrar(msg, true);
+    fetch(API + '?site=' + encodeURIComponent(SITE) + '&conteudo=1').then(function (r) { return r.json(); }).then(function (j) {
+      site.conteudo = j.conteudo || null;
+      $('site-quadro').src = SITE_URL + (SITE_URL.indexOf('?') >= 0 ? '&' : '?') + 'editar=1';
+      setTimeout(function () { if (!site.pronto) { msg.textContent = 'Não consegui abrir a cópia do site. Confira a internet e toque em Site de novo.'; site.aberto = false; } }, 20000);
+    }).catch(function () { msg.textContent = 'Sem internet. Confira a conexão e toque em Site de novo.'; site.aberto = false; });
+  }
+  function quadro() { return $('site-quadro').contentWindow; }
+  function enviarAoQuadro() { if (site.pronto) quadro().postMessage({ nx: 'aplicar', conteudo: site.conteudo }, location.origin); }
+  function conteudoAtual() {
+    var c = copia(site.conteudo || {});
+    ['textos', 'links', 'imagens', 'ocultos', 'listas'].forEach(function (k) { if (!c[k] || typeof c[k] !== 'object') c[k] = {}; });
+    return c;
+  }
+  function listaAtual(nome) { var c = site.conteudo && site.conteudo.listas && site.conteudo.listas[nome]; return copia(c || site.padroes[nome]); }
+  function salvarSite(c, aviso) {
+    return chamar({ acao: 'site-salvar', conteudo: c }).then(function (j) {
+      if (!j.ok) { toast(j.error || 'Não deu certo. Tente de novo.'); return false; }
+      site.conteudo = j.conteudo; enviarAoQuadro(); toast(aviso || 'Salvo. Já está no site.'); return true;
+    });
+  }
+
+  window.addEventListener('message', function (e) {
+    if (e.origin !== location.origin || !e.data || !e.data.nx || e.source !== quadro()) return;
+    if (e.data.nx === 'pronto') { site.pronto = true; site.padroes = e.data.padroes; mostrar($('site-msg'), false); enviarAoQuadro(); }
+    if (e.data.nx === 'tocar') tocou(e.data);
+  });
+
+  function tocou(d) {
+    site.alvo = d;
+    if (d.tipo === 'texto') {
+      erro('erro-texto', '');
+      var oculto = !!(site.conteudo && site.conteudo.ocultos && site.conteudo.ocultos[d.chave]);
+      $('t-valor').value = d.atual;
+      mostrar($('t-link-caixa'), d.link !== null && d.link !== undefined); $('t-link').value = d.link || '';
+      $('t-esconder').textContent = oculto ? 'Mostrar no site' : 'Esconder do site';
+      abrirFolha('folha-texto');
+    } else if (d.tipo === 'foto') {
+      erro('erro-foto', '');
+      var oc = !!(site.conteudo && site.conteudo.ocultos && site.conteudo.ocultos[d.chave]);
+      $('f-previa').src = d.atual; $('f-autorizo').checked = false; $('f-arquivo').value = '';
+      $('f-esconder').textContent = oc ? 'Mostrar no site' : 'Esconder do site';
+      abrirFolha('folha-foto');
+    } else if (d.tipo === 'secao') {
+      var c = conteudoAtual(); var k = 'secao-' + d.id;
+      if (c.ocultos[k]) { delete c.ocultos[k]; salvarSite(c, 'A seção ' + d.nome + ' voltou para o site.'); }
+      else if (confirm('Esconder a seção ' + d.nome + ' do site? Dá para mostrar de novo quando quiser.')) { c.ocultos[k] = true; salvarSite(c, 'Seção ' + d.nome + ' escondida.'); }
+    } else if (d.tipo === 'lista') {
+      if (d.lista === 'hero') abrirHero();
+      else abrirItem(d.lista, d.i === 'novo' || d.i === '' ? -1 : Number(d.i));
+    }
+  }
+
+  // Texto
+  $('form-texto').onsubmit = function (e) {
+    e.preventDefault(); var d = site.alvo; var c = conteudoAtual();
+    var v = $('t-valor').value.trim();
+    if (!v) return erro('erro-texto', 'Escreva o texto ou use "Esconder do site".');
+    if (v === d.original) delete c.textos[d.chave]; else c.textos[d.chave] = v;
+    if (d.link !== null && d.link !== undefined) {
+      var l = $('t-link').value.trim();
+      if (l && !URL_LINK.test(l)) return erro('erro-texto', 'O link precisa começar com https:// (ou tel: para telefone).');
+      if (!l || l === d.linkOriginal) delete c.links[d.chave]; else c.links[d.chave] = l;
+    }
+    salvarSite(c).then(function (ok) { if (ok) abrirFolha(''); });
+  };
+  function alternarOculto(chave, folha) {
+    var c = conteudoAtual();
+    if (c.ocultos[chave]) delete c.ocultos[chave]; else c.ocultos[chave] = true;
+    var escondeu = !!c.ocultos[chave];
+    salvarSite(c, escondeu ? 'Escondido do site.' : 'Voltou para o site.').then(function (ok) { if (ok) abrirFolha(''); });
+  }
+  $('t-esconder').onclick = function () { alternarOculto(site.alvo.chave); };
+  $('f-esconder').onclick = function () { alternarOculto(site.alvo.chave); };
+  function voltarOriginal() {
+    var k = site.alvo.chave; var c = conteudoAtual();
+    delete c.textos[k]; delete c.links[k]; delete c.imagens[k]; delete c.ocultos[k];
+    salvarSite(c, 'Voltou ao original.').then(function (ok) { if (ok) abrirFolha(''); });
+  }
+  $('t-original').onclick = voltarOriginal;
+  $('f-original').onclick = voltarOriginal;
+
+  // Fotos: reduz no celular (até 1600 px) e envia; ficam guardadas na NEXIA (grátis).
+  function reduzirFoto(arquivo) {
+    return new Promise(function (ok, falha) {
+      if (!arquivo || !/^image\//.test(arquivo.type || 'image/')) return falha(new Error('Escolha uma foto.'));
+      var img = new Image(); var u = URL.createObjectURL(arquivo);
+      img.onload = function () {
+        var f = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+        var cv = document.createElement('canvas'); cv.width = Math.round(img.naturalWidth * f); cv.height = Math.round(img.naturalHeight * f);
+        cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height); URL.revokeObjectURL(u);
+        var tipo = cv.toDataURL('image/webp').indexOf('data:image/webp') === 0 ? 'image/webp' : 'image/jpeg';
+        var q = 0.82, d;
+        do { d = cv.toDataURL(tipo, q); q -= 0.12; } while (d.length * 0.75 > 560 * 1024 && q > 0.3);
+        ok({ tipo: tipo, dados: d.slice(d.indexOf(',') + 1) });
+      };
+      img.onerror = function () { URL.revokeObjectURL(u); falha(new Error('Não consegui abrir esta foto. Tente outra.')); };
+      img.src = u;
+    });
+  }
+  function enviarFoto(arquivo) {
+    return reduzirFoto(arquivo).then(function (f) { return chamar({ acao: 'foto-enviar', dados: f.dados, tipo: f.tipo }); }).then(function (j) {
+      if (!j.ok) throw new Error(j.error || 'Não consegui enviar a foto.');
+      return API + '?site=' + encodeURIComponent(SITE) + '&foto=' + j.id;
+    });
+  }
+  $('f-arquivo').onchange = function () {
+    var arq = this.files[0]; if (!arq) return;
+    erro('erro-foto', '');
+    if (!$('f-autorizo').checked) { this.value = ''; return erro('erro-foto', 'Marque a autorização antes de escolher a foto.'); }
+    var k = site.alvo.chave; $('f-escolher').textContent = 'Enviando…';
+    enviarFoto(arq).then(function (url) {
+      var c = conteudoAtual(); c.imagens[k] = { url: url, posX: 50, posY: 50 }; delete c.ocultos[k];
+      return salvarSite(c, 'Foto trocada. Já está no site.');
+    }).then(function (ok) { if (ok) abrirFolha(''); }).catch(function (er) { erro('erro-foto', er.message); })
+      .then(function () { $('f-escolher').textContent = 'Escolher outra foto'; $('f-arquivo').value = ''; });
+  };
+
+  // Listas
+  var NOMES_LISTA = { procedimentos: 'procedimento', galeria: 'foto da galeria', journal: 'artigo', cuidados: 'cuidado', bio: '"Sobre"' };
+  function campoFoto(img) {
+    return '<label>Foto</label><img class="previa" data-previa src="' + esc(img && img.url || '') + '" alt="">' +
+      '<label class="check"><input type="checkbox" data-autorizo> Tenho o direito de usar a foto nova. Se aparece uma cliente, ela autorizou por escrito.</label>' +
+      '<label class="btn claro pequeno" style="margin-top:8px">Trocar foto<input type="file" accept="image/*" class="arquivo" data-arquivo></label>';
+  }
+  var campo = function (id, rot, v, tipo) {
+    if (tipo === 'area') return '<label for="' + id + '">' + rot + '</label><textarea id="' + id + '">' + esc(v || '') + '</textarea>';
+    return '<label for="' + id + '">' + rot + '</label><input id="' + id + '" value="' + esc(v || '') + '"' + (tipo === 'url' ? ' inputmode="url"' : '') + '>';
+  };
+  function abrirItem(lista, i) {
+    erro('erro-item', '');
+    var itens = lista === 'bio' ? null : listaAtual(lista);
+    var it = lista === 'bio' ? listaAtual('bio') : (i >= 0 ? itens[i] : null);
+    var novo = lista !== 'bio' && !it;
+    if (novo) it = { procedimentos: { nome: '', categoria: 'Facial', descricao: '', beneficios: [], imagem: null, oculto: false }, galeria: { url: '', alt: '', tamanho: 'normal' }, journal: { categoria: '', titulo: '', resumo: '', link: '', imagem: null }, cuidados: { titulo: '', descricao: '' } }[lista];
+    site.item = { lista: lista, i: novo ? -1 : i, it: copia(it), nomeAntes: it.nome || '' };
+    $('i-titulo').textContent = (novo ? 'Novo ' : 'Editar ') + (NOMES_LISTA[lista] || 'item');
+    var h = '';
+    if (lista === 'procedimentos') {
+      h = '<label class="check"><input type="checkbox" id="i-oferece"' + (it.oculto ? '' : ' checked') + '> Ofereço este procedimento (aparece no site e na agenda)</label>' +
+        campo('i-nome', 'Nome', it.nome) +
+        '<label for="i-cat">Tipo</label><select id="i-cat"><option>Facial</option><option>Corporal</option></select>' +
+        campo('i-desc', 'Descrição', it.descricao, 'area') + campo('i-benef', 'Benefícios (um por linha)', (it.beneficios || []).join('\n'), 'area') + campoFoto(it.imagem);
+    } else if (lista === 'galeria') {
+      h = campoFoto(it) + campo('i-alt', 'Legenda (descreve a foto)', it.alt) +
+        '<label for="i-tam">Tamanho na galeria</label><select id="i-tam"><option value="normal">Normal</option><option value="alto">Alta</option><option value="largo">Larga</option><option value="grande">Grande</option></select>';
+    } else if (lista === 'journal') {
+      h = campo('i-titulo2', 'Título', it.titulo) + campo('i-cat2', 'Assunto', it.categoria) + campo('i-resumo', 'Resumo', it.resumo, 'area') + campo('i-link', 'Link do artigo (https://...)', it.link, 'url') + campoFoto(it.imagem);
+    } else if (lista === 'cuidados') {
+      h = campo('i-titulo3', 'Título', it.titulo) + campo('i-desc3', 'Texto', it.descricao, 'area');
+    } else if (lista === 'bio') {
+      h = campoFoto(it.foto) + campo('i-btitulo', 'Nome', it.titulo) + campo('i-btexto1', 'Texto 1', it.texto1, 'area') + campo('i-btexto2', 'Texto 2', it.texto2, 'area') + campo('i-btags', 'Destaques (um por linha)', (it.tags || []).join('\n'), 'area');
+    }
+    $('i-campos').innerHTML = h;
+    if ($('i-cat')) $('i-cat').value = it.categoria === 'Corporal' ? 'Corporal' : 'Facial';
+    if ($('i-tam')) $('i-tam').value = it.tamanho || 'normal';
+    mostrar($('i-salvar'), true);
+    mostrar($('i-acoes'), lista !== 'bio');
+    mostrar($('i-subir'), !novo); mostrar($('i-descer'), !novo); mostrar($('i-excluir'), !novo);
+    mostrar($('i-padrao'), !!(site.conteudo && site.conteudo.listas && site.conteudo.listas[lista]));
+    abrirFolha('folha-item');
+  }
+  // Foto dentro de um item: envia na hora e guarda no item até "Salvar".
+  $('i-campos').addEventListener('change', function (e) {
+    var inp = e.target.closest('[data-arquivo]'); if (!inp || !inp.files[0]) return;
+    erro('erro-item', '');
+    var box = $('i-campos');
+    if (!box.querySelector('[data-autorizo]').checked) { inp.value = ''; return erro('erro-item', 'Marque a autorização antes de escolher a foto.'); }
+    var rot = inp.parentNode; rot.firstChild.textContent = 'Enviando…';
+    enviarFoto(inp.files[0]).then(function (url) {
+      if (site.item.lista === 'hero') return heroAdicionar(url);
+      site.item.foto = { url: url, posX: 50, posY: 50 };
+      box.querySelector('[data-previa]').src = url;
+      toast('Foto enviada. Toque em Salvar.');
+    }).catch(function (er) { erro('erro-item', er.message); }).then(function () { rot.firstChild.textContent = site.item.lista === 'hero' ? '+ Adicionar foto' : 'Trocar foto'; inp.value = ''; });
+  });
+  function linhas(id) { return $(id).value.split('\n').map(function (x) { return x.trim(); }).filter(Boolean); }
+  function salvarLista(lista, itens, aviso, renomes) {
+    var c = conteudoAtual(); var antes = listaAtual(lista);
+    c.listas[lista] = itens;
+    return salvarSite(c, aviso).then(function (ok) {
+      if (ok && lista === 'procedimentos') return sincronizarServicos(antes, itens, renomes).then(function () { return ok; });
+      return ok;
+    });
+  }
+  $('form-item').onsubmit = function (e) {
+    e.preventDefault(); erro('erro-item', '');
+    var s = site.item, it = s.it, foto = s.foto;
+    if (s.lista === 'procedimentos') {
+      it.nome = $('i-nome').value.trim(); if (!it.nome) return erro('erro-item', 'Escreva o nome do procedimento.');
+      it.categoria = $('i-cat').value; it.descricao = $('i-desc').value.trim(); it.beneficios = linhas('i-benef'); it.oculto = !$('i-oferece').checked;
+      if (foto) it.imagem = foto;
+    } else if (s.lista === 'galeria') {
+      if (foto) { it.url = foto.url; it.posX = 50; it.posY = 50; }
+      if (!it.url) return erro('erro-item', 'Escolha a foto.');
+      it.alt = $('i-alt').value.trim(); it.tamanho = $('i-tam').value;
+    } else if (s.lista === 'journal') {
+      it.titulo = $('i-titulo2').value.trim(); if (!it.titulo) return erro('erro-item', 'Escreva o título.');
+      it.categoria = $('i-cat2').value.trim(); it.resumo = $('i-resumo').value.trim(); it.link = $('i-link').value.trim();
+      if (it.link && !URL_LINK.test(it.link)) return erro('erro-item', 'O link precisa começar com https://');
+      if (foto) it.imagem = foto;
+    } else if (s.lista === 'cuidados') {
+      it.titulo = $('i-titulo3').value.trim(); if (!it.titulo) return erro('erro-item', 'Escreva o título.');
+      it.descricao = $('i-desc3').value.trim();
+    } else if (s.lista === 'bio') {
+      if (foto) it.foto = foto;
+      it.titulo = $('i-btitulo').value.trim(); it.texto1 = $('i-btexto1').value.trim(); it.texto2 = $('i-btexto2').value.trim(); it.tags = linhas('i-btags');
+      var c = conteudoAtual(); c.listas.bio = it;
+      return salvarSite(c).then(function (ok) { if (ok) abrirFolha(''); });
+    }
+    var itens = listaAtual(s.lista);
+    if (s.i >= 0) itens[s.i] = it; else itens.push(it);
+    var renomes = s.lista === 'procedimentos' && s.nomeAntes && s.nomeAntes !== it.nome ? [[s.nomeAntes, it.nome]] : [];
+    salvarLista(s.lista, itens, s.i >= 0 ? 'Salvo. Já está no site.' : 'Adicionado ao site.', renomes).then(function (ok) { if (ok) { abrirFolha(''); if (!$('folha-procs').classList.contains('oculto')) desenharProcs(); } });
+  };
+  function mover(delta) {
+    var s = site.item; var itens = listaAtual(s.lista); var j = s.i + delta;
+    if (j < 0 || j >= itens.length) return toast(delta < 0 ? 'Já é o primeiro.' : 'Já é o último.');
+    var x = itens[s.i]; itens[s.i] = itens[j]; itens[j] = x;
+    salvarLista(s.lista, itens, 'Ordem trocada.').then(function (ok) { if (ok) s.i = j; });
+  }
+  $('i-subir').onclick = function () { mover(-1); };
+  $('i-descer').onclick = function () { mover(1); };
+  $('i-excluir').onclick = function () {
+    var s = site.item;
+    if (!confirm('Excluir este ' + (NOMES_LISTA[s.lista] || 'item') + ' do site?')) return;
+    var itens = listaAtual(s.lista); itens.splice(s.i, 1);
+    salvarLista(s.lista, itens, 'Excluído do site.').then(function (ok) { if (ok) abrirFolha(''); });
+  };
+  $('i-padrao').onclick = function () {
+    var s = site.item;
+    if (!confirm('Voltar esta lista para como era no começo? As mudanças nela se perdem.')) return;
+    var c = conteudoAtual(); var antes = listaAtual(s.lista); delete c.listas[s.lista];
+    salvarSite(c, 'Lista original de volta.').then(function (ok) {
+      if (ok && s.lista === 'procedimentos') sincronizarServicos(antes, site.padroes.procedimentos, []);
+      if (ok) abrirFolha('');
+    });
+  };
+
+  // Fotos do topo (várias, trocam sozinhas)
+  function abrirHero() {
+    erro('erro-item', '');
+    site.item = { lista: 'hero' };
+    $('i-titulo').textContent = 'Fotos do topo';
+    var itens = listaAtual('hero');
+    $('i-campos').innerHTML = '<p class="dica">As fotos se revezam no topo do site.</p>' + itens.map(function (h, k) {
+      return '<div class="mini"><img src="' + esc(h.url) + '" alt=""><div class="acoes" style="margin:0"><button type="button" class="btn claro pequeno" data-h="' + k + '" data-d="-1">↑</button><button type="button" class="btn claro pequeno" data-h="' + k + '" data-d="1">↓</button><button type="button" class="btn vermelho pequeno" data-h="' + k + '" data-d="x">Excluir</button></div></div>';
+    }).join('') + '<label class="check"><input type="checkbox" data-autorizo> Tenho o direito de usar a foto nova. Se aparece uma cliente, ela autorizou por escrito.</label>' +
+      '<label class="btn largo claro">+ Adicionar foto<input type="file" accept="image/*" class="arquivo" data-arquivo></label>';
+    mostrar($('i-salvar'), false); mostrar($('i-acoes'), false);
+    abrirFolha('folha-item');
+  }
+  function salvarHero(itens, aviso) { var c = conteudoAtual(); c.listas.hero = itens; return salvarSite(c, aviso).then(function (ok) { if (ok) abrirHero(); }); }
+  function heroAdicionar(url) { var itens = listaAtual('hero'); itens.push({ url: url, posX: 50, posY: 50 }); return salvarHero(itens, 'Foto adicionada ao topo.'); }
+  $('i-campos').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-h]'); if (!b || !site.item || site.item.lista !== 'hero') return;
+    var itens = listaAtual('hero'); var k = Number(b.dataset.h);
+    if (b.dataset.d === 'x') {
+      if (itens.length <= 1) return toast('Deixe pelo menos uma foto no topo.');
+      if (!confirm('Excluir esta foto do topo?')) return;
+      itens.splice(k, 1); return salvarHero(itens, 'Foto excluída.');
+    }
+    var j = k + Number(b.dataset.d); if (j < 0 || j >= itens.length) return;
+    var x = itens[k]; itens[k] = itens[j]; itens[j] = x; salvarHero(itens, 'Ordem trocada.');
+  });
+
+  // Procedimentos oferecidos (marca/desmarca) e a agenda acompanha.
+  function desenharProcs() {
+    var itens = listaAtual('procedimentos');
+    $('p-lista').innerHTML = itens.map(function (p, k) {
+      return '<div class="proc"><label class="check"><input type="checkbox" data-p="' + k + '"' + (p.oculto ? '' : ' checked') + '> ' + esc(p.nome) + '</label><button type="button" class="btn claro pequeno" data-p-editar="' + k + '">Editar</button></div>';
+    }).join('');
+  }
+  $('site-procs').onclick = function () { if (!site.pronto) return toast('Espere a cópia do site abrir.'); desenharProcs(); abrirFolha('folha-procs'); };
+  $('p-lista').addEventListener('change', function (e) {
+    var cb = e.target.closest('[data-p]'); if (!cb) return;
+    var itens = listaAtual('procedimentos'); var p = itens[Number(cb.dataset.p)];
+    p.oculto = !cb.checked;
+    salvarLista('procedimentos', itens, cb.checked ? p.nome + ' voltou para o site e a agenda.' : p.nome + ' saiu do site e da agenda.');
+  });
+  $('p-lista').addEventListener('click', function (e) { var b = e.target.closest('[data-p-editar]'); if (b) abrirItem('procedimentos', Number(b.dataset.pEditar)); });
+  $('p-novo').onclick = function () { abrirItem('procedimentos', -1); };
+
+  // Serviços da agenda = procedimentos marcados (os que não são procedimento, como "Avaliação", ficam).
+  function sincronizarServicos(antes, depois, renomes) {
+    if (!estado.cfg) return Promise.resolve();
+    var serv = estado.cfg.servicos.map(function (s) { return { id: s.id, nome: s.nome, duracao: s.duracao, preco: s.preco }; });
+    (renomes || []).forEach(function (r) { serv.forEach(function (s) { if (minusc(s.nome) === minusc(r[0])) s.nome = r[1]; }); });
+    var todos = {}; antes.concat(depois, site.padroes.procedimentos).forEach(function (p) { todos[minusc(p.nome)] = true; });
+    var vis = {}; depois.forEach(function (p) { if (!p.oculto) vis[minusc(p.nome)] = p.nome; });
+    var nova = serv.filter(function (s) { return !todos[minusc(s.nome)] || vis[minusc(s.nome)]; });
+    Object.keys(vis).forEach(function (k) { if (!nova.some(function (s) { return minusc(s.nome) === k; })) nova.push({ nome: vis[k], duracao: 60 }); });
+    var igual = nova.length === estado.cfg.servicos.length && nova.every(function (s, k) { return s.nome === estado.cfg.servicos[k].nome; });
+    if (igual || !nova.length) return Promise.resolve();
+    return chamar({ acao: 'config', config: { servicos: nova } }).then(function (j) { if (j.ok) estado.cfg = j.config; });
+  }
+
   // Novos pedidos aparecem sozinhos.
   setInterval(function () { if (estado.token && !document.hidden && $('folha-novo').classList.contains('oculto')) carregar(false); }, 60000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden && estado.token) carregar(false); });
@@ -564,6 +942,7 @@
   // Início
   if (!SITE) { document.body.innerHTML = '<p style="padding:24px">Agenda não configurada.</p>'; return; }
   fetch(API + '?site=' + encodeURIComponent(SITE)).then(function (r) { return r.json(); }).then(function (j) { if (j.nome) $('login-nome').textContent = j.nome; }).catch(function () {});
+  if (SITE_URL) mostrar($('nav-site'), true);
   if (estado.token) abrirApp(); else telaLogin();
 })();
 </script>

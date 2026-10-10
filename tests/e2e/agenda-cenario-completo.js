@@ -54,7 +54,7 @@ const semana = d => new Date(d + 'T12:00:00Z').getUTCDay();
       let body = req.postData();
       if (body) { try { const j = JSON.parse(body); j.site = SLUG; body = JSON.stringify(j); } catch (e) {} }
       const r = await fetch(url, { method: req.method(), headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: body || undefined });
-      await route.fulfill({ status: r.status, headers: { 'content-type': 'application/json; charset=utf-8', 'access-control-allow-origin': '*' }, body: await r.text() });
+      await route.fulfill({ status: r.status, headers: { 'content-type': r.headers.get('content-type') || 'application/json', 'access-control-allow-origin': '*' }, body: Buffer.from(await r.arrayBuffer()) });
     });
     // Só para rodar fora da internet (teste local): o Tailwind do site vem de um arquivo.
     if (process.env.TAILWIND_LOCAL_JS) await ctx.route('https://cdn.tailwindcss.com/**', r => r.fulfill({ contentType: 'text/javascript', body: fs.readFileSync(process.env.TAILWIND_LOCAL_JS, 'utf8') }));
@@ -283,7 +283,51 @@ const semana = d => new Date(d + 'T12:00:00Z').getUTCDay();
   await car.waitForSelector('#msg-config.ok', { timeout: 15000 });
   confere(!(await horasNoSite(D1).then(() => cli.textContent('#ag-procedimento'))).includes('Escova'), 'remover serviço: some do site');
 
-  console.log('\n8. Senha e sair');
+  console.log('\n8. Editar o site pelo painel (aba Site)');
+  const fotoArq = path.join(require('os').tmpdir(), 'nexia-foto-teste-' + RUN + '.png');
+  await cli.setContent('<body style="margin:0;background:linear-gradient(45deg,#c99,#fed)"><h1 style="font:60px serif;margin:40px">Foto ' + RUN + '</h1></body>');
+  fs.writeFileSync(fotoArq, await cli.screenshot({ clip: { x: 0, y: 0, width: 390, height: 300 } }));
+  const siteCarregado = async () => { await cli.goto(SITE_URL + '/', { waitUntil: 'networkidle' }); await cli.waitForFunction(() => !document.documentElement.classList.contains('nx-carregando')); };
+  await car.click('#nav-site');
+  await car.waitForSelector('#site-msg.oculto', { state: 'attached', timeout: 30000 });
+  confere(true, 'aba Site abre a cópia do site para tocar');
+  const q = car.frameLocator('#site-quadro');
+  await foto(car, 'painel-site');
+  await q.locator('[data-ed="inicio-2"]').click();
+  await car.waitForSelector('#folha-texto:not(.oculto)');
+  confere((await car.inputValue('#t-valor')).replace(/\s+/g, ' ').trim().length > 0, 'tocar no título abre o texto atual');
+  await car.fill('#t-valor', 'Título ' + RUN);
+  await car.click('#form-texto button[type=submit]');
+  await car.waitForSelector('#folha-texto.oculto', { state: 'attached', timeout: 15000 });
+  await siteCarregado();
+  confere((await cli.textContent('[data-ed="inicio-2"]')).includes('Título ' + RUN), 'cliente vê o título novo no site');
+  await q.locator('[data-ed="procedimentos-foto-1"]').click();
+  await car.waitForSelector('#folha-foto:not(.oculto)');
+  await car.check('#f-autorizo');
+  await car.setInputFiles('#f-arquivo', fotoArq);
+  await car.waitForSelector('#folha-foto.oculto', { state: 'attached', timeout: 30000 });
+  await siteCarregado();
+  await cli.locator('[data-ed="procedimentos-foto-1"]').scrollIntoViewIfNeeded();
+  const fotoOk = await cli.waitForFunction(() => { const im = document.querySelector('[data-ed="procedimentos-foto-1"]'); return /foto=/.test(im.src) && im.complete && im.naturalWidth > 100; }, null, { timeout: 15000 }).then(() => true, () => false);
+  confere(fotoOk, 'foto enviada pelo celular aparece no site (guardada grátis na NEXIA)');
+  await car.click('#site-procs');
+  await car.waitForSelector('#folha-procs:not(.oculto)');
+  const nomeProc = (await car.locator('#p-lista .proc').nth(1).locator('label').textContent()).trim();
+  await car.locator('#p-lista .proc').nth(1).locator('input').uncheck();
+  await car.waitForSelector('#toast:has-text("saiu do site")', { timeout: 15000 });
+  await foto(car, 'procedimentos-oferecidos');
+  await car.click('#folha-procs [data-fechar]');
+  await siteCarregado();
+  confere(!(await cli.textContent('#procedures-grid')).includes(nomeProc), `desmarcar "${nomeProc}": some do site`);
+  const servAgora = (await get({})).servicos.map(s => s.nome);
+  confere(!servAgora.includes(nomeProc) && servAgora.length > 5, 'e some da agenda (os outros procedimentos viram serviços da agenda)');
+  await q.locator('[data-secao-botao="journal"]').click();
+  await car.waitForFunction(() => /mostrar/.test(document.querySelector('#site-quadro').contentDocument.querySelector('[data-secao-botao="journal"]').textContent), null, { timeout: 15000 });
+  await siteCarregado();
+  confere(await cli.isHidden('#journal'), 'esconder a seção Journal: some do site');
+  await foto(cli, 'site-editado');
+
+  console.log('\n9. Senha e sair');
   await car.click('#nav-ajustes');
   await car.fill('#s-atual', 'errada-123'); await car.fill('#s-nova', SENHA_TEMP);
   await car.click('#form-senha button');
@@ -306,7 +350,7 @@ const semana = d => new Date(d + 'T12:00:00Z').getUTCDay();
   await car.waitForSelector('#app:not(.oculto)', { timeout: 15000 });
   confere(true, 'reabrir a página continua logado');
 
-  console.log('\n9. Telas');
+  console.log('\n10. Telas');
   for (const [p, nome] of [[cli, 'site'], [car, 'painel']]) {
     await p.setViewportSize({ width: 360, height: 740 });
     confere(await p.evaluate(() => document.documentElement.scrollWidth) <= 360, nome + ': sem rolagem de lado em celular pequeno');
@@ -330,8 +374,10 @@ const semana = d => new Date(d + 'T12:00:00Z').getUTCDay();
     else if (['confirmado', 'pendente', 'concluido', 'faltou'].includes(it.status)) await post({ acao: 'status', token: tokenApi, id: it.id, status: 'cancelado' });
   }
   await post({ acao: 'config', token: tokenApi, config: original });
+  await post({ acao: 'site-salvar', token: tokenApi, conteudo: {} });
   await post({ acao: 'sair', token: tokenApi });
   const depois = await get({});
+  confere(!(await get({ conteudo: '1' })).conteudo.textos['inicio-2'], 'limpeza: site de teste sem edições');
   confere(JSON.stringify(depois.servicos) === JSON.stringify(pub0.servicos) && (await get({ data: D1 })).horarios.length >= livres1.length - 1, 'limpeza: agenda de teste voltou como estava');
 
   console.log(falhas.length ? `\n${falhas.length} falha(s):\n - ${falhas.join('\n - ')}` : '\nCenário completo certo no ar.');

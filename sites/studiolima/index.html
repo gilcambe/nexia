@@ -40,6 +40,13 @@
   ::-webkit-scrollbar-thumb { background: #d8c7ba; border-radius: 6px; }
   html { scroll-behavior: smooth; }
 </style>
+<style>
+  /* NEXIA: conteúdo editado pela Carolina no painel (ver "CONTEÚDO EDITÁVEL" no script). */
+  .nx-oculto { display: none !important; }
+  html.nx-carregando body { opacity: 0; }
+  body { transition: opacity .2s; }
+</style>
+<script>document.documentElement.classList.add('nx-carregando'); setTimeout(function () { document.documentElement.classList.remove('nx-carregando'); }, 3000);</script>
 </head>
 <body class="font-sans antialiased">
 
@@ -78,34 +85,34 @@
 </header>
 
 <!-- ===== HERO ===== -->
-<section id="inicio" class="relative min-h-[100svh] flex items-center overflow-hidden bg-background-100">
+<section data-secao="inicio" id="inicio" class="relative min-h-[100svh] flex items-center overflow-hidden bg-background-100">
   <div id="hero-slides" class="absolute inset-0 z-0"></div>
   <div class="absolute inset-0 z-[1] bg-gradient-to-t from-ink-900/70 via-ink-900/20 to-ink-900/50"></div>
   <span class="pointer-events-none select-none absolute -right-10 -top-6 md:right-6 md:top-10 font-display italic text-[18vw] md:text-[10vw] leading-none text-background-50/10 z-[1]">SL</span>
 
   <div class="relative z-10 max-w-7xl mx-auto px-5 md:px-8 w-full">
-    <p class="font-label text-xs md:text-sm uppercase tracking-[0.3em] text-background-50/80 mb-6">Estética Avançada</p>
-    <h1 class="font-display font-light text-background-50 leading-[0.95]" style="font-size:clamp(3rem,9vw,4.5rem)">
+    <p data-ed="inicio-1" class="font-label text-xs md:text-sm uppercase tracking-[0.3em] text-background-50/80 mb-6">Estética Avançada</p>
+    <h1 data-ed="inicio-2" class="font-display font-light text-background-50 leading-[0.95]" style="font-size:clamp(3rem,9vw,4.5rem)">
       Studio<br>Lima
     </h1>
-    <p class="mt-6 max-w-xl text-background-50/90 text-base md:text-lg leading-relaxed">
+    <p data-ed="inicio-3" class="mt-6 max-w-xl text-background-50/90 text-base md:text-lg leading-relaxed">
       Estética avançada com atendimento personalizado. Tecnologia, cuidado e resultados que realçam a sua beleza natural.
     </p>
     <div class="mt-9 flex flex-wrap gap-4">
-      <a href="#agendamento" class="btn-primary inline-flex items-center gap-2 px-7 py-4 bg-primary-600 text-background-50 font-label text-sm tracking-wide rounded-full hover:bg-primary-950 transition-colors">Agendar Meu Horário</a>
-      <a href="#procedimentos" class="inline-flex items-center gap-2 px-7 py-4 border border-background-50/50 text-background-50 font-label text-sm tracking-wide rounded-full hover:bg-background-50/10 transition-colors">Conhecer Procedimentos</a>
+      <a data-ed="inicio-4" href="#agendamento" class="btn-primary inline-flex items-center gap-2 px-7 py-4 bg-primary-600 text-background-50 font-label text-sm tracking-wide rounded-full hover:bg-primary-950 transition-colors">Agendar Meu Horário</a>
+      <a data-ed="inicio-5" href="#procedimentos" class="inline-flex items-center gap-2 px-7 py-4 border border-background-50/50 text-background-50 font-label text-sm tracking-wide rounded-full hover:bg-background-50/10 transition-colors">Conhecer Procedimentos</a>
     </div>
-    <p class="mt-10 font-label text-[11px] uppercase tracking-[0.2em] text-background-50/70">Profissional responsável — Carolina Martins</p>
+    <p data-ed="inicio-6" class="mt-10 font-label text-[11px] uppercase tracking-[0.2em] text-background-50/70">Profissional responsável — Carolina Martins</p>
   </div>
 
   <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 text-background-50/70">
-    <span class="font-label text-[10px] uppercase tracking-[0.3em]">Scroll</span>
+    <span data-ed="inicio-7" class="font-label text-[10px] uppercase tracking-[0.3em]">Scroll</span>
     <span class="w-px h-10 bg-background-50/50 animate-pulse"></span>
   </div>
 </section>
 
 <!-- ===== SOBRE CAROLINA ===== -->
-<section id="sobre" class="section-padding bg-background-50">
+<section data-secao="sobre" id="sobre" class="section-padding bg-background-50">
   <div class="max-w-7xl mx-auto px-5 md:px-8 grid md:grid-cols-2 gap-14 items-center">
     <div class="relative fade-in">
       <div class="aspect-[4/5] rounded-[2rem] overflow-hidden shadow-xl">
@@ -113,7 +120,7 @@
       </div>
     </div>
     <div class="fade-in">
-      <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Sobre Carolina</p>
+      <p data-ed="sobre-1" class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Sobre Carolina</p>
       <h2 id="bio-titulo" class="font-display font-light text-ink-900 mb-6" style="font-size:clamp(2rem,4vw,3rem)">Carolina Martins</h2>
       <p id="bio-texto1" class="text-ink-600 leading-relaxed mb-4">Carolina Martins é a proprietária e profissional responsável pelos procedimentos do Studio Lima. Com dedicação e cuidado, oferece tratamentos personalizados e resultados naturais, sempre priorizando a saúde e a autoestima de cada cliente.</p>
       <p id="bio-texto2" class="text-ink-600 leading-relaxed mb-8">No Studio Lima, cada detalhe é pensado para realçar a sua beleza natural, promover saúde e autoestima, com segurança, tecnologia e resultados reais.</p>
@@ -124,29 +131,29 @@
         <span class="px-4 py-2 bg-background-100 rounded-full text-xs font-label uppercase tracking-wide text-ink-600">Pós-operatório</span>
       </div>
       <div class="flex flex-wrap gap-4">
-        <a href="#agendamento" class="inline-flex items-center gap-2 px-7 py-4 bg-primary-600 text-background-50 font-label text-sm tracking-wide rounded-full hover:bg-primary-950 transition-colors">Agendar Meu Horário</a>
-        <a href="https://instagram.com/caroliina.maar" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-7 py-4 border border-primary-950/20 text-ink-900 font-label text-sm tracking-wide rounded-full hover:bg-background-100 transition-colors">Conhecer Instagram</a>
+        <a data-ed="sobre-2" href="#agendamento" class="inline-flex items-center gap-2 px-7 py-4 bg-primary-600 text-background-50 font-label text-sm tracking-wide rounded-full hover:bg-primary-950 transition-colors">Agendar Meu Horário</a>
+        <a data-ed="sobre-3" href="https://instagram.com/caroliina.maar" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-7 py-4 border border-primary-950/20 text-ink-900 font-label text-sm tracking-wide rounded-full hover:bg-background-100 transition-colors">Conhecer Instagram</a>
       </div>
     </div>
   </div>
 </section>
 
 <!-- ===== TRATAMENTOS ===== -->
-<section id="procedimentos" class="section-padding bg-background-100">
+<section data-secao="procedimentos" id="procedimentos" class="section-padding bg-background-100">
   <div class="max-w-7xl mx-auto px-5 md:px-8">
     <div class="max-w-2xl mx-auto text-center mb-14 fade-in">
       <div class="w-56 md:w-64 aspect-[4/5] mx-auto mb-8 rounded-[1.75rem] overflow-hidden shadow-xl border-4 border-background-50">
-        <img src="https://static.readdy.ai/image/9d63808badb705f7bbaf3187824d8db2/acbcdf996da771c0f892a9e1e0b4e223.png" alt="Carolina Martins realizando um procedimento" class="w-full h-full object-cover" loading="lazy">
+        <img data-ed="procedimentos-foto-1" src="https://static.readdy.ai/image/9d63808badb705f7bbaf3187824d8db2/acbcdf996da771c0f892a9e1e0b4e223.png" alt="Carolina Martins realizando um procedimento" class="w-full h-full object-cover" loading="lazy">
       </div>
-      <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Tratamentos</p>
-      <h2 class="font-display font-light text-ink-900 mb-5" style="font-size:clamp(2rem,4vw,3rem)">Procedimentos especializados</h2>
-      <p class="text-ink-600 leading-relaxed">Tecnologias avançadas e protocolos personalizados para cada necessidade. Cada tratamento é pensado para realçar a sua beleza natural com segurança e resultados reais.</p>
+      <p data-ed="procedimentos-1" class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Tratamentos</p>
+      <h2 data-ed="procedimentos-2" class="font-display font-light text-ink-900 mb-5" style="font-size:clamp(2rem,4vw,3rem)">Procedimentos especializados</h2>
+      <p data-ed="procedimentos-3" class="text-ink-600 leading-relaxed">Tecnologias avançadas e protocolos personalizados para cada necessidade. Cada tratamento é pensado para realçar a sua beleza natural com segurança e resultados reais.</p>
     </div>
 
     <div class="flex flex-wrap justify-center gap-3 mb-12">
-      <button data-filter="Todos" class="filter-btn px-5 py-2.5 rounded-full font-label text-xs uppercase tracking-wide bg-primary-600 text-background-50">Todos</button>
-      <button data-filter="Facial" class="filter-btn px-5 py-2.5 rounded-full font-label text-xs uppercase tracking-wide bg-background-50 text-ink-600 hover:bg-primary-600 hover:text-background-50 transition-colors">Tratamentos Faciais</button>
-      <button data-filter="Corporal" class="filter-btn px-5 py-2.5 rounded-full font-label text-xs uppercase tracking-wide bg-background-50 text-ink-600 hover:bg-primary-600 hover:text-background-50 transition-colors">Tratamentos Corporais</button>
+      <button data-ed="procedimentos-4" data-filter="Todos" class="filter-btn px-5 py-2.5 rounded-full font-label text-xs uppercase tracking-wide bg-primary-600 text-background-50">Todos</button>
+      <button data-ed="procedimentos-5" data-filter="Facial" class="filter-btn px-5 py-2.5 rounded-full font-label text-xs uppercase tracking-wide bg-background-50 text-ink-600 hover:bg-primary-600 hover:text-background-50 transition-colors">Tratamentos Faciais</button>
+      <button data-ed="procedimentos-6" data-filter="Corporal" class="filter-btn px-5 py-2.5 rounded-full font-label text-xs uppercase tracking-wide bg-background-50 text-ink-600 hover:bg-primary-600 hover:text-background-50 transition-colors">Tratamentos Corporais</button>
     </div>
 
     <div id="procedures-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
@@ -154,101 +161,101 @@
 </section>
 
 <!-- ===== CUIDADOS ===== -->
-<section id="cuidados" class="section-padding bg-background-50">
+<section data-secao="cuidados" id="cuidados" class="section-padding bg-background-50">
   <div class="max-w-6xl mx-auto px-5 md:px-8">
     <div class="max-w-2xl mx-auto text-center mb-14 fade-in">
-      <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Cuidados Estéticos</p>
-      <h2 class="font-display font-light text-ink-900 mb-5" style="font-size:clamp(2rem,4vw,3rem)">Cuidados para a sua pele</h2>
-      <p class="text-ink-600 leading-relaxed">Pequenos hábitos fazem toda a diferença na saúde e na aparência da pele. Conteúdo educativo para cuidar de você no dia a dia, sempre com acompanhamento profissional.</p>
+      <p data-ed="cuidados-1" class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Cuidados Estéticos</p>
+      <h2 data-ed="cuidados-2" class="font-display font-light text-ink-900 mb-5" style="font-size:clamp(2rem,4vw,3rem)">Cuidados para a sua pele</h2>
+      <p data-ed="cuidados-3" class="text-ink-600 leading-relaxed">Pequenos hábitos fazem toda a diferença na saúde e na aparência da pele. Conteúdo educativo para cuidar de você no dia a dia, sempre com acompanhamento profissional.</p>
     </div>
     <div id="cuidados-grid" class="grid md:grid-cols-2 gap-x-12 gap-y-10"></div>
   </div>
 </section>
 
 <!-- ===== JOURNAL ===== -->
-<section id="journal" class="section-padding bg-background-100">
+<section data-secao="journal" id="journal" class="section-padding bg-background-100">
   <div class="max-w-7xl mx-auto px-5 md:px-8">
     <div class="max-w-2xl mx-auto text-center mb-14 fade-in">
-      <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Journal Studio Lima</p>
-      <h2 class="font-display font-light text-ink-900 mb-5" style="font-size:clamp(2rem,4vw,3rem)">Cuidados &amp; conhecimento</h2>
-      <p class="text-ink-600 leading-relaxed">Conteúdo sobre skincare, preparação para procedimentos e rotina de beleza — curado de fontes especializadas para você cuidar da sua pele com informação.</p>
+      <p data-ed="journal-1" class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Journal Studio Lima</p>
+      <h2 data-ed="journal-2" class="font-display font-light text-ink-900 mb-5" style="font-size:clamp(2rem,4vw,3rem)">Cuidados &amp; conhecimento</h2>
+      <p data-ed="journal-3" class="text-ink-600 leading-relaxed">Conteúdo sobre skincare, preparação para procedimentos e rotina de beleza — curado de fontes especializadas para você cuidar da sua pele com informação.</p>
     </div>
     <div id="journal-grid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
-    <p class="text-center text-xs text-ink-600 mt-10 font-label uppercase tracking-wide">Conteúdos de fontes especializadas em dermatologia e estética · Links externos</p>
+    <p data-ed="journal-4" class="text-center text-xs text-ink-600 mt-10 font-label uppercase tracking-wide">Conteúdos de fontes especializadas em dermatologia e estética · Links externos</p>
   </div>
 </section>
 
 <!-- ===== EXPERIÊNCIA (galeria) ===== -->
-<section id="experiencia" class="section-padding bg-background-50">
+<section data-secao="experiencia" id="experiencia" class="section-padding bg-background-50">
   <div class="max-w-7xl mx-auto px-5 md:px-8">
     <div class="max-w-2xl mx-auto text-center mb-14 fade-in">
-      <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">A Experiência</p>
-      <h2 class="font-display font-light text-ink-900" style="font-size:clamp(2rem,4vw,3rem)">A Experiência Studio Lima</h2>
+      <p data-ed="experiencia-1" class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">A Experiência</p>
+      <h2 data-ed="experiencia-2" class="font-display font-light text-ink-900" style="font-size:clamp(2rem,4vw,3rem)">A Experiência Studio Lima</h2>
     </div>
     <div id="gallery-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[160px] md:auto-rows-[200px]"></div>
   </div>
 </section>
 
 <!-- ===== REDES SOCIAIS ===== -->
-<section class="section-padding bg-background-100">
+<section data-secao="instagram" id="instagram" class="section-padding bg-background-100">
   <div class="max-w-4xl mx-auto px-5 md:px-8 text-center fade-in">
-    <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Redes Sociais</p>
-    <h2 class="font-display font-light text-ink-900 mb-3" style="font-size:clamp(2rem,4vw,3rem)">Acompanhe o Studio Lima</h2>
-    <p class="text-ink-600 mb-10">Conheça Nosso Instagram</p>
+    <p data-ed="instagram-1" class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Redes Sociais</p>
+    <h2 data-ed="instagram-2" class="font-display font-light text-ink-900 mb-3" style="font-size:clamp(2rem,4vw,3rem)">Acompanhe o Studio Lima</h2>
+    <p data-ed="instagram-3" class="text-ink-600 mb-10">Conheça Nosso Instagram</p>
     <div class="bg-background-50 rounded-[2rem] p-8 md:p-10 shadow-lg flex flex-col md:flex-row items-center gap-8 text-left">
-      <img src="https://storage.helloreaddy.io/project_files/0fd7e600-9644-49aa-85e1-864f26edba21/5508285e-650e-4480-8d9c-59cafec94bc7_compressed_studio_lima.estetica.webp" alt="@studio_lima.estetica" class="w-24 h-24 rounded-full object-cover border-2 border-accent-600 shrink-0">
+      <img data-ed="instagram-foto-1" src="https://storage.helloreaddy.io/project_files/0fd7e600-9644-49aa-85e1-864f26edba21/5508285e-650e-4480-8d9c-59cafec94bc7_compressed_studio_lima.estetica.webp" alt="@studio_lima.estetica" class="w-24 h-24 rounded-full object-cover border-2 border-accent-600 shrink-0">
       <div class="flex-1">
-        <p class="font-display text-xl text-ink-900">@studio_lima.estetica</p>
-        <p class="font-label text-[11px] uppercase tracking-wide text-ink-600 mb-3">Studio Lima · Estética Avançada</p>
-        <p class="text-ink-600 text-sm mb-5">Acompanhe nossas novidades, antes e depois de procedimentos, dicas de cuidados com a pele e muito mais no perfil oficial do Studio Lima.</p>
-        <a href="https://instagram.com/studio_lima.estetica" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-background-50 font-label text-xs uppercase tracking-wide rounded-full hover:bg-primary-950 transition-colors">Abrir @studio_lima.estetica</a>
+        <p data-ed="instagram-4" class="font-display text-xl text-ink-900">@studio_lima.estetica</p>
+        <p data-ed="instagram-5" class="font-label text-[11px] uppercase tracking-wide text-ink-600 mb-3">Studio Lima · Estética Avançada</p>
+        <p data-ed="instagram-6" class="text-ink-600 text-sm mb-5">Acompanhe nossas novidades, antes e depois de procedimentos, dicas de cuidados com a pele e muito mais no perfil oficial do Studio Lima.</p>
+        <a data-ed="instagram-7" href="https://instagram.com/studio_lima.estetica" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-background-50 font-label text-xs uppercase tracking-wide rounded-full hover:bg-primary-950 transition-colors">Abrir @studio_lima.estetica</a>
       </div>
     </div>
-    <p class="text-xs text-ink-600 mt-6 font-label uppercase tracking-wide">Conteúdo atualizado com novidades e dicas de beleza · @caroliina.maar — Carolina Lima</p>
+    <p data-ed="instagram-8" class="text-xs text-ink-600 mt-6 font-label uppercase tracking-wide">Conteúdo atualizado com novidades e dicas de beleza · @caroliina.maar — Carolina Lima</p>
   </div>
 </section>
 
 <!-- ===== LOCALIZAÇÃO ===== -->
-<section id="localizacao" class="section-padding bg-background-50">
+<section data-secao="localizacao" id="localizacao" class="section-padding bg-background-50">
   <div class="max-w-6xl mx-auto px-5 md:px-8 grid md:grid-cols-2 gap-14 items-center">
     <div class="fade-in">
-      <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Localização</p>
-      <h2 class="font-display font-light text-ink-900 mb-8" style="font-size:clamp(2rem,4vw,3rem)">Encontre o Studio Lima</h2>
+      <p data-ed="localizacao-1" class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Localização</p>
+      <h2 data-ed="localizacao-2" class="font-display font-light text-ink-900 mb-8" style="font-size:clamp(2rem,4vw,3rem)">Encontre o Studio Lima</h2>
       <dl class="space-y-6">
         <div>
-          <dt class="font-label text-[11px] uppercase tracking-wide text-accent-600 mb-1">Endereço</dt>
-          <dd class="text-ink-900">Av. Martin Francisco 337 - Sal, São Paulo — SP</dd>
+          <dt data-ed="localizacao-3" class="font-label text-[11px] uppercase tracking-wide text-accent-600 mb-1">Endereço</dt>
+          <dd data-ed="localizacao-4" class="text-ink-900">Av. Martin Francisco 337 - Sal, São Paulo — SP</dd>
         </div>
         <div>
-          <dt class="font-label text-[11px] uppercase tracking-wide text-accent-600 mb-1">WhatsApp</dt>
-          <dd class="text-ink-900">(11) 96032-4530</dd>
+          <dt data-ed="localizacao-5" class="font-label text-[11px] uppercase tracking-wide text-accent-600 mb-1">WhatsApp</dt>
+          <dd data-ed="localizacao-6" class="text-ink-900">(11) 96032-4530</dd>
         </div>
         <div>
-          <dt class="font-label text-[11px] uppercase tracking-wide text-accent-600 mb-1">Instagram</dt>
-          <dd class="text-ink-900">@studio_lima.estetica</dd>
+          <dt data-ed="localizacao-7" class="font-label text-[11px] uppercase tracking-wide text-accent-600 mb-1">Instagram</dt>
+          <dd data-ed="localizacao-8" class="text-ink-900">@studio_lima.estetica</dd>
         </div>
         <div>
-          <dt class="font-label text-[11px] uppercase tracking-wide text-accent-600 mb-1">Horário de atendimento</dt>
-          <dd class="text-ink-900">Segunda a Sábado — consulte disponibilidade</dd>
+          <dt data-ed="localizacao-9" class="font-label text-[11px] uppercase tracking-wide text-accent-600 mb-1">Horário de atendimento</dt>
+          <dd data-ed="localizacao-10" class="text-ink-900">Segunda a Sábado — consulte disponibilidade</dd>
         </div>
       </dl>
-      <a href="https://www.google.com/maps/search/?api=1&query=Av.+Martin+Francisco+337+-+Sal,+São+Paulo+-+SP" target="_blank" rel="noopener" class="inline-flex items-center gap-2 mt-9 px-7 py-4 bg-primary-600 text-background-50 font-label text-sm tracking-wide rounded-full hover:bg-primary-950 transition-colors">Como Chegar</a>
+      <a data-ed="localizacao-11" href="https://www.google.com/maps/search/?api=1&query=Av.+Martin+Francisco+337+-+Sal,+São+Paulo+-+SP" target="_blank" rel="noopener" class="inline-flex items-center gap-2 mt-9 px-7 py-4 bg-primary-600 text-background-50 font-label text-sm tracking-wide rounded-full hover:bg-primary-950 transition-colors">Como Chegar</a>
     </div>
     <div class="fade-in aspect-[4/3] rounded-[2rem] overflow-hidden shadow-lg">
-      <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=900&h=700&fit=crop&auto=format&q=80" alt="Studio Lima" class="w-full h-full object-cover" loading="lazy">
+      <img data-ed="localizacao-foto-1" src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=900&h=700&fit=crop&auto=format&q=80" alt="Studio Lima" class="w-full h-full object-cover" loading="lazy">
     </div>
   </div>
 </section>
 
 <!-- ===== AGENDAMENTO ===== -->
-<section id="agendamento" class="relative py-24 md:py-32 overflow-hidden bg-background-100">
+<section data-secao="agendamento" id="agendamento" class="relative py-24 md:py-32 overflow-hidden bg-background-100">
   <div class="max-w-3xl mx-auto px-5 md:px-8 text-center fade-in">
-    <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Agendamento</p>
-    <h2 class="font-display font-light text-ink-900 mb-6" style="font-size:clamp(2rem,4vw,3rem)">Agende seu horário</h2>
-    <p class="text-ink-600 leading-relaxed mb-10">Escolha o procedimento desejado, a data e o horário que melhor se encaixam na sua rotina. Estamos prontas para cuidar de você.</p>
+    <p data-ed="agendamento-1" class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Agendamento</p>
+    <h2 data-ed="agendamento-2" class="font-display font-light text-ink-900 mb-6" style="font-size:clamp(2rem,4vw,3rem)">Agende seu horário</h2>
+    <p data-ed="agendamento-3" class="text-ink-600 leading-relaxed mb-10">Escolha o procedimento desejado, a data e o horário que melhor se encaixam na sua rotina. Estamos prontas para cuidar de você.</p>
     <div class="flex flex-wrap justify-center gap-4">
       <button id="btn-agendar" class="inline-flex items-center gap-2 px-8 py-4 bg-primary-600 text-background-50 font-label text-sm tracking-wide rounded-full hover:bg-primary-950 transition-colors">Agendar Meu Horário</button>
-      <a href="https://wa.me/5511960324530" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-8 py-4 border border-primary-950/20 text-ink-900 font-label text-sm tracking-wide rounded-full hover:bg-background-50 transition-colors">Falar pelo WhatsApp</a>
+      <a data-ed="agendamento-4" href="https://wa.me/5511960324530" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-8 py-4 border border-primary-950/20 text-ink-900 font-label text-sm tracking-wide rounded-full hover:bg-background-50 transition-colors">Falar pelo WhatsApp</a>
     </div>
     <p id="agendar-nota" class="hidden mt-6 text-xs text-ink-600 font-label uppercase tracking-wide">Não consegui abrir a agenda agora. Fale pelo WhatsApp que a Carolina marca seu horário.</p>
   </div>
@@ -315,30 +322,30 @@
 </div>
 
 <!-- ===== FOOTER ===== -->
-<footer class="bg-primary-950 text-background-100 pt-16 md:pt-20 pb-10">
+<footer data-secao="rodape" class="bg-primary-950 text-background-100 pt-16 md:pt-20 pb-10">
   <div class="max-w-7xl mx-auto px-5 md:px-8 grid md:grid-cols-3 gap-10 mb-12">
     <div>
       <div class="flex items-center gap-3 mb-4">
-        <span class="font-display text-2xl border border-background-100/40 rounded-full w-10 h-10 flex items-center justify-center">SL</span>
-        <span class="font-display text-lg">Studio Lima</span>
+        <span data-ed="rodape-1" class="font-display text-2xl border border-background-100/40 rounded-full w-10 h-10 flex items-center justify-center">SL</span>
+        <span data-ed="rodape-2" class="font-display text-lg">Studio Lima</span>
       </div>
-      <p class="text-background-100/70 text-sm leading-relaxed">Sua beleza é valorizada. Seu bem-estar é prioridade.</p>
+      <p data-ed="rodape-3" class="text-background-100/70 text-sm leading-relaxed">Sua beleza é valorizada. Seu bem-estar é prioridade.</p>
     </div>
     <div>
-      <p class="font-label text-[11px] uppercase tracking-wide text-background-100/50 mb-4">Navegação</p>
+      <p data-ed="rodape-4" class="font-label text-[11px] uppercase tracking-wide text-background-100/50 mb-4">Navegação</p>
       <ul class="space-y-2 text-sm text-background-100/80">
-        <li><a href="#sobre" class="hover:text-background-50">Sobre Carolina</a></li>
-        <li><a href="#procedimentos" class="hover:text-background-50">Procedimentos</a></li>
-        <li><a href="#cuidados" class="hover:text-background-50">Cuidados</a></li>
-        <li><a href="#journal" class="hover:text-background-50">Journal</a></li>
+        <li><a data-ed="rodape-5" href="#sobre" class="hover:text-background-50">Sobre Carolina</a></li>
+        <li><a data-ed="rodape-6" href="#procedimentos" class="hover:text-background-50">Procedimentos</a></li>
+        <li><a data-ed="rodape-7" href="#cuidados" class="hover:text-background-50">Cuidados</a></li>
+        <li><a data-ed="rodape-8" href="#journal" class="hover:text-background-50">Journal</a></li>
       </ul>
     </div>
     <div>
-      <p class="font-label text-[11px] uppercase tracking-wide text-background-100/50 mb-4">Contato</p>
+      <p data-ed="rodape-9" class="font-label text-[11px] uppercase tracking-wide text-background-100/50 mb-4">Contato</p>
       <ul class="space-y-2 text-sm text-background-100/80">
-        <li>Av. Martin Francisco 337 - Sal, São Paulo — SP</li>
-        <li>(11) 96032-4530</li>
-        <li>@studio_lima.estetica</li>
+        <li data-ed="rodape-10">Av. Martin Francisco 337 - Sal, São Paulo — SP</li>
+        <li data-ed="rodape-11">(11) 96032-4530</li>
+        <li data-ed="rodape-12">@studio_lima.estetica</li>
       </ul>
     </div>
   </div>
@@ -349,6 +356,10 @@
 </footer>
 
 <script>
+/* Endereço da API da NEXIA (agenda + conteúdo editável deste site). */
+const NX_API = 'https://nexia.gcbezerra.workers.dev/api/agenda';
+const NX_SITE = 'studiolima';
+
 /* ================= DADOS =================
    Estes arrays (fonte: JSON exportado do Readdy em 2026-08-28) são o
    conteúdo do site (o CMS antigo em /api/studiolima/conteudo não existe neste endereço; ex:
@@ -386,7 +397,7 @@ const DEFAULT_BIO = {
   tags: ['Rejuvenescimento facial', 'Flacidez', 'Gordura localizada', 'Pós-operatório']
 };
 
-const CUIDADOS = [
+const DEFAULT_CUIDADOS = [
   {numero:"01",titulo:"Proteção solar diária",descricao:"Aplicar protetor solar diariamente é um dos hábitos mais importantes para manter a saúde e a aparência da pele, mesmo em dias nublados ou em ambientes fechados."},
   {numero:"02",titulo:"Hidratação constante",descricao:"Uma pele bem hidratada tem mais viço, elasticidade e conforto. A hidratação deve fazer parte da sua rotina de cuidados, de manhã e à noite, com produtos adequados ao seu tipo de pele."},
   {numero:"03",titulo:"Rotina consistente",descricao:"Constância é a chave. Uma rotina simples e regular — limpeza, hidratação e proteção — costuma trazer resultados muito melhores do que cuidados esporádicos ou excessivos."},
@@ -416,13 +427,17 @@ const DEFAULT_HERO_SLIDES = [
   "https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=1920&h=1080&fit=crop&auto=format&q=80"
 ];
 
-/* Conteúdo "de verdade" (CMS): começa igual ao fallback, é substituído por
-   um CMS futuro, se existir. */
+/* Conteúdo em uso: começa com o padrão acima e é trocado pelo que a Carolina editou no painel. */
 let PROCEDURES = DEFAULT_PROCEDURES;
 let GALLERY = DEFAULT_GALLERY;
 let JOURNAL = DEFAULT_JOURNAL;
+let CUIDADOS = DEFAULT_CUIDADOS;
 let HERO_SLIDES = DEFAULT_HERO_SLIDES.map(url => ({ url, posX: 50, posY: 50 }));
 let BIO = DEFAULT_BIO;
+let FILTRO = 'Todos';
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const escUrl = u => (/^(https:\/\/|#|tel:|mailto:)/i.test(String(u || '')) ? esc(u) : '#');
 
 // Normaliza imagem: aceita tanto string (fallback antigo) quanto
 // {url,posX,posY} (formato do CMS) — assim o resto do código nunca precisa
@@ -438,21 +453,22 @@ const SPAN_POR_TAMANHO = { normal: '', alto: 'row-span-2', largo: 'col-span-2', 
 /* ================= RENDER ================= */
 function renderProcedures(filter) {
   const grid = document.getElementById('procedures-grid');
+  FILTRO = filter;
   const items = filter === 'Todos' ? PROCEDURES : PROCEDURES.filter(p => p.categoria === filter);
   grid.innerHTML = items.map(p => {
     const img = imgOf(p.imagem);
     return `
-    <div class="fade-in visible bg-background-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow flex flex-col">
+    <div class="fade-in visible bg-background-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow flex flex-col${p.oculto ? ' nx-escondido' : ''}" data-lista="procedimentos" data-i="${p.__i ?? ''}">
       <div class="relative aspect-[4/5]">
-        <img src="${img.url}" alt="${p.nome}" class="w-full h-full object-cover" style="${posStyle(img)}" loading="lazy">
-        <span class="absolute top-4 left-4 px-3 py-1.5 bg-background-50/90 backdrop-blur-sm text-foreground-800 font-label text-[10px] uppercase tracking-[0.18em] rounded-full">${p.categoria}</span>
+        <img src="${escUrl(img.url)}" alt="${esc(p.nome)}" class="w-full h-full object-cover" style="${posStyle(img)}" loading="lazy">
+        <span class="absolute top-4 left-4 px-3 py-1.5 bg-background-50/90 backdrop-blur-sm text-foreground-800 font-label text-[10px] uppercase tracking-[0.18em] rounded-full">${esc(p.categoria)}</span>
         <span class="absolute bottom-4 left-4 px-4 py-1.5 bg-primary-600/95 text-background-50 font-label text-xs tracking-wide rounded-full">Consultar</span>
       </div>
       <div class="flex flex-col flex-1 p-6">
-        <h3 class="font-display text-xl text-ink-900 mb-2">${p.nome}</h3>
-        <p class="text-sm text-ink-600 leading-relaxed mb-4">${p.descricao}</p>
+        <h3 class="font-display text-xl text-ink-900 mb-2">${esc(p.nome)}</h3>
+        <p class="text-sm text-ink-600 leading-relaxed mb-4">${esc(p.descricao)}</p>
         <ul class="text-xs text-ink-600 space-y-1 mb-5">
-          ${p.beneficios.map(b => `<li class="flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-accent-600 shrink-0"></span>${b}</li>`).join('')}
+          ${(p.beneficios || []).map(b => `<li class="flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-accent-600 shrink-0"></span>${esc(b)}</li>`).join('')}
         </ul>
         <a href="#agendamento" class="mt-auto inline-flex items-center justify-center px-5 py-3 border border-primary-950/15 rounded-full font-label text-xs uppercase tracking-wide text-ink-900 hover:bg-primary-600 hover:text-background-50 hover:border-primary-600 transition-colors">Agendar este procedimento</a>
       </div>
@@ -464,39 +480,39 @@ function renderProcedures(filter) {
 function renderBio() {
   const foto = imgOf(BIO.foto);
   const fotoEl = document.getElementById('bio-foto');
-  fotoEl.src = foto.url;
+  fotoEl.src = escUrl(foto.url) === '#' ? '' : foto.url;
   fotoEl.setAttribute('style', posStyle(foto));
   document.getElementById('bio-titulo').textContent = BIO.titulo;
   document.getElementById('bio-texto1').textContent = BIO.texto1;
   document.getElementById('bio-texto2').textContent = BIO.texto2;
   document.getElementById('bio-tags').innerHTML = (BIO.tags || [])
-    .map(t => `<span class="px-4 py-2 bg-background-100 rounded-full text-xs font-label uppercase tracking-wide text-ink-600">${t}</span>`).join('');
+    .map(t => `<span class="px-4 py-2 bg-background-100 rounded-full text-xs font-label uppercase tracking-wide text-ink-600">${esc(t)}</span>`).join('');
 }
 
 function renderGallery() {
-  document.getElementById('gallery-grid').innerHTML = GALLERY.map(g => {
-    const img = imgOf(g);
+  document.getElementById('gallery-grid').innerHTML = GALLERY.map((g, i) => {
+    const img = imgOf(g.url ? g : g.src);
     const span = g.tamanho ? (SPAN_POR_TAMANHO[g.tamanho] || '') : (g.span || '');
     return `
-    <div class="fade-in visible ${span} rounded-2xl overflow-hidden">
-      <img src="${img.url}" alt="${g.alt || 'Studio Lima'}" class="w-full h-full object-cover" style="${posStyle(img)}" loading="lazy">
+    <div class="fade-in visible ${span} rounded-2xl overflow-hidden" data-lista="galeria" data-i="${i}">
+      <img src="${escUrl(img.url)}" alt="${esc(g.alt || 'Studio Lima')}" class="w-full h-full object-cover" style="${posStyle(img)}" loading="lazy">
     </div>
   `;
   }).join('');
 }
 
 function renderJournal() {
-  document.getElementById('journal-grid').innerHTML = JOURNAL.map(j => {
+  document.getElementById('journal-grid').innerHTML = JOURNAL.map((j, i) => {
     const img = imgOf(j.imagem);
     return `
-    <a href="${j.link}" target="_blank" rel="noopener" class="fade-in visible group block bg-background-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow">
+    <a href="${escUrl(j.link)}" target="_blank" rel="noopener" class="fade-in visible group block bg-background-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow" data-lista="journal" data-i="${i}">
       <div class="aspect-[4/3] overflow-hidden">
-        <img src="${img.url}" alt="${j.titulo}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" style="${posStyle(img)}" loading="lazy">
+        <img src="${escUrl(img.url)}" alt="${esc(j.titulo)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" style="${posStyle(img)}" loading="lazy">
       </div>
       <div class="p-5">
-        <p class="font-label text-[10px] uppercase tracking-wide text-accent-600 mb-2">${j.categoria}</p>
-        <h3 class="font-display text-base text-ink-900 leading-snug mb-2">${j.titulo}</h3>
-        <p class="text-xs text-ink-600 leading-relaxed mb-3">${j.resumo}</p>
+        <p class="font-label text-[10px] uppercase tracking-wide text-accent-600 mb-2">${esc(j.categoria)}</p>
+        <h3 class="font-display text-base text-ink-900 leading-snug mb-2">${esc(j.titulo)}</h3>
+        <p class="text-xs text-ink-600 leading-relaxed mb-3">${esc(j.resumo)}</p>
         <span class="text-xs font-label uppercase tracking-wide text-primary-600 group-hover:text-primary-950">Ler artigo completo →</span>
       </div>
     </a>
@@ -507,36 +523,162 @@ function renderJournal() {
 function renderHeroSlides() {
   document.getElementById('hero-slides').innerHTML = HERO_SLIDES.map((s, i) => {
     const img = imgOf(s);
-    return `<img src="${img.url}" class="hero-slide absolute inset-0 w-full h-full object-cover" style="opacity:${i === 0 ? 1 : 0};${posStyle(img)}" data-i="${i}">`;
+    return `<img src="${escUrl(img.url)}" class="hero-slide absolute inset-0 w-full h-full object-cover" style="opacity:${i === 0 ? 1 : 0};${posStyle(img)}" data-i="${i}">`;
   }).join('');
 }
 
-document.getElementById('cuidados-grid').innerHTML = CUIDADOS.map(c => `
-  <div class="fade-in visible flex gap-5">
-    <span class="font-display text-4xl md:text-5xl font-light text-accent-600 leading-none shrink-0 w-14">${c.numero}</span>
+function renderCuidados() {
+  document.getElementById('cuidados-grid').innerHTML = CUIDADOS.map((c, i) => `
+  <div class="fade-in visible flex gap-5" data-lista="cuidados" data-i="${i}">
+    <span class="font-display text-4xl md:text-5xl font-light text-accent-600 leading-none shrink-0 w-14">${String(i + 1).padStart(2, '0')}</span>
     <div>
-      <h3 class="font-display text-xl text-ink-900 mb-2">${c.titulo}</h3>
-      <p class="text-sm text-ink-600 leading-relaxed">${c.descricao}</p>
+      <h3 class="font-display text-xl text-ink-900 mb-2">${esc(c.titulo)}</h3>
+      <p class="text-sm text-ink-600 leading-relaxed">${esc(c.descricao)}</p>
     </div>
   </div>
 `).join('');
+}
 
 document.getElementById('ano').textContent = new Date().getFullYear();
 
+/* ================= CONTEÚDO EDITÁVEL (NEXIA) =================
+   A Carolina muda o site pelo painel (/agenda → Site): textos e fotos marcados com data-ed, seções
+   (data-secao) e as listas (procedimentos, galeria, journal, cuidados, fotos do topo, "Sobre").
+   O que ela mudou vem da API; o que ela não mexeu continua como está neste arquivo.
+   Com ?editar=1 dentro do painel, a página vira a "cópia para tocar e editar". */
+const NX = { editar: new URLSearchParams(location.search).has('editar') && window.parent !== window, originais: {}, conteudo: null };
+const NX_SECOES = { inicio: 'Topo', sobre: 'Sobre', procedimentos: 'Procedimentos', cuidados: 'Cuidados', journal: 'Journal', experiencia: 'Galeria', instagram: 'Instagram', localizacao: 'Localização', agendamento: 'Agendamento', rodape: 'Rodapé' };
+const TAMANHO_POR_SPAN = { '': 'normal', 'row-span-2': 'alto', 'col-span-2': 'largo', 'col-span-2 row-span-2': 'grande' };
+
+function nxLerTexto(el) {
+  let t = '';
+  el.childNodes.forEach(n => { t += n.nodeName === 'BR' ? '\n' : n.textContent.replace(/\s+/g, ' '); });
+  return t.split('\n').map(x => x.trim()).join('\n').trim();
+}
+function nxEscreverTexto(el, t) {
+  if (nxLerTexto(el) === t) return;
+  el.replaceChildren(...String(t).split('\n').flatMap((linha, i) => (i ? [document.createElement('br'), linha] : [linha])));
+}
+function nxGuardarOriginais() {
+  document.querySelectorAll('[data-ed]').forEach(el => {
+    if (el.tagName === 'IMG') NX.originais[el.dataset.ed] = { img: el.getAttribute('src'), pos: el.style.objectPosition || '' };
+    else NX.originais[el.dataset.ed] = { txt: nxLerTexto(el), href: el.tagName === 'A' ? el.getAttribute('href') : null };
+  });
+}
+function nxListasPadrao() {
+  return {
+    procedimentos: DEFAULT_PROCEDURES.map(p => ({ nome: p.nome, categoria: p.categoria, descricao: p.descricao, beneficios: p.beneficios || [], imagem: imgOf(p.imagem), oculto: false })),
+    galeria: DEFAULT_GALLERY.map(g => ({ ...imgOf(g.src), alt: g.alt || '', tamanho: TAMANHO_POR_SPAN[g.span || ''] || 'normal' })),
+    journal: DEFAULT_JOURNAL.map(j => ({ categoria: j.categoria, titulo: j.titulo, resumo: j.resumo, link: j.link, imagem: imgOf(j.imagem) })),
+    cuidados: DEFAULT_CUIDADOS.map(c => ({ titulo: c.titulo, descricao: c.descricao })),
+    hero: DEFAULT_HERO_SLIDES.map(imgOf),
+    bio: { foto: imgOf(DEFAULT_BIO.foto), titulo: DEFAULT_BIO.titulo, texto1: DEFAULT_BIO.texto1, texto2: DEFAULT_BIO.texto2, tags: DEFAULT_BIO.tags.slice() },
+  };
+}
+function nxAplicar(c) {
+  NX.conteudo = c || null;
+  const L = (c && c.listas) || {};
+  const P = nxListasPadrao();
+  const listas = {}; for (const k of Object.keys(P)) listas[k] = L[k] || P[k];
+  PROCEDURES = listas.procedimentos.map((p, i) => ({ ...p, __i: i })).filter(p => NX.editar || !p.oculto);
+  GALLERY = listas.galeria; JOURNAL = listas.journal; CUIDADOS = listas.cuidados; HERO_SLIDES = listas.hero; BIO = listas.bio;
+  const ocultos = (c && c.ocultos) || {};
+  const classe = NX.editar ? 'nx-escondido' : 'nx-oculto';
+  document.querySelectorAll('[data-ed]').forEach(el => {
+    const k = el.dataset.ed, o = NX.originais[k];
+    if (!o) return;
+    el.classList.toggle(classe, !!ocultos[k]);
+    if (o.img !== undefined) {
+      const im = c && c.imagens && c.imagens[k];
+      el.setAttribute('src', im ? im.url : o.img);
+      el.style.objectPosition = im ? `${im.posX}% ${im.posY}%` : o.pos;
+    } else {
+      nxEscreverTexto(el, c && c.textos && k in c.textos ? c.textos[k] : o.txt);
+      if (o.href !== null) el.setAttribute('href', (c && c.links && c.links[k]) || o.href);
+    }
+  });
+  document.querySelectorAll('[data-secao]').forEach(sec => sec.classList.toggle(classe, !!ocultos['secao-' + sec.dataset.secao]));
+  renderHeroSlides(); renderBio(); renderProcedures(FILTRO); renderGallery(); renderJournal(); renderCuidados();
+  if (NX.editar) nxMarcarEdicao();
+}
+
+// ── Modo edição (dentro do painel) ──
+function nxMarcarEdicao() {
+  const raiz = document.documentElement;
+  if (!raiz.classList.contains('nx-ed')) {
+    raiz.classList.add('nx-ed');
+    document.head.insertAdjacentHTML('beforeend', `<style>
+      .nx-ed [data-ed], .nx-ed [data-lista] { outline: 2px dashed rgba(130,92,78,.6); outline-offset: 3px; cursor: pointer; }
+      .nx-ed .nx-escondido { opacity: .35; }
+      .nx-ed .fade-in { opacity: 1; transform: none; }
+      .nx-chip { position: absolute; z-index: 40; top: 10px; left: 10px; background: #291410; color: #fff; font: 600 13px/1 system-ui, sans-serif; padding: 9px 12px; border-radius: 999px; border: 0; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+      .nx-add { display: block; margin: 20px auto 0; background: #825c4e; color: #fff; font: 600 14px system-ui, sans-serif; padding: 12px 20px; border-radius: 999px; border: 0; }
+      .nx-ed #modal-agendar { display: none !important; }
+      .nx-ed #site-header { display: none; }
+    </style>`);
+  }
+  for (const id of ['bio-foto', 'bio-titulo', 'bio-texto1', 'bio-texto2', 'bio-tags']) { const el = document.getElementById(id); if (el) el.dataset.lista = 'bio'; }
+  const ocultos = (NX.conteudo && NX.conteudo.ocultos) || {};
+  document.querySelectorAll('[data-secao]').forEach(sec => {
+    const id = sec.dataset.secao;
+    if (id === 'rodape') return;
+    if (getComputedStyle(sec).position === 'static') sec.style.position = 'relative';
+    let chip = sec.querySelector(':scope > .nx-chip[data-secao-botao]');
+    if (!chip) { chip = document.createElement('button'); chip.type = 'button'; chip.className = 'nx-chip'; chip.dataset.secaoBotao = id; sec.prepend(chip); }
+    chip.textContent = ocultos['secao-' + id] ? `Seção ${NX_SECOES[id] || id} escondida · mostrar` : `Seção ${NX_SECOES[id] || id} · esconder`;
+  });
+  const hero = document.getElementById('inicio');
+  if (hero && !hero.querySelector('[data-lista="hero"]')) hero.insertAdjacentHTML('beforeend', '<button type="button" class="nx-chip" style="top:auto;left:auto;right:10px;bottom:24px" data-lista="hero">Trocar fotos do topo</button>');
+  for (const [grade, lista, nome] of [['procedures-grid', 'procedimentos', 'procedimento'], ['gallery-grid', 'galeria', 'foto'], ['journal-grid', 'journal', 'artigo'], ['cuidados-grid', 'cuidados', 'cuidado']]) {
+    const g = document.getElementById(grade);
+    if (g && !(g.nextElementSibling && g.nextElementSibling.classList.contains('nx-add'))) g.insertAdjacentHTML('afterend', `<button type="button" class="nx-add" data-lista="${lista}" data-i="novo">+ Adicionar ${nome}</button>`);
+  }
+}
+function nxSecoes() { return [...document.querySelectorAll('[data-secao]')].map(s => ({ id: s.dataset.secao, nome: NX_SECOES[s.dataset.secao] || s.dataset.secao })); }
+if (NX.editar) {
+  document.addEventListener('click', e => {
+    const alvo = e.target.closest('[data-secao-botao],[data-lista],[data-ed]');
+    e.preventDefault(); e.stopPropagation();
+    if (!alvo) return;
+    let msg;
+    if (alvo.dataset.secaoBotao) msg = { tipo: 'secao', id: alvo.dataset.secaoBotao, nome: NX_SECOES[alvo.dataset.secaoBotao] };
+    else if (alvo.dataset.lista) msg = { tipo: 'lista', lista: alvo.dataset.lista, i: alvo.dataset.i || '' };
+    else {
+      const k = alvo.dataset.ed, o = NX.originais[k];
+      msg = o.img !== undefined
+        ? { tipo: 'foto', chave: k, atual: alvo.getAttribute('src'), original: o.img }
+        : { tipo: 'texto', chave: k, atual: nxLerTexto(alvo), original: o.txt, link: o.href && /^(https:|tel:|mailto:)/.test(o.href) ? alvo.getAttribute('href') : null, linkOriginal: o.href };
+    }
+    parent.postMessage({ nx: 'tocar', ...msg }, location.origin);
+  }, true);
+  window.addEventListener('message', e => {
+    if (e.origin !== location.origin || !e.data || e.data.nx !== 'aplicar') return;
+    nxAplicar(e.data.conteudo);
+  });
+}
+
 async function iniciarConteudo() {
-  renderHeroSlides();
-  renderBio();
-  renderProcedures('Todos');
-  renderGallery();
-  renderJournal();
+  nxGuardarOriginais();
+  let c = null;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 2500);
+    const r = await fetch(NX_API + '?site=' + NX_SITE + '&conteudo=1', { signal: ctrl.signal });
+    clearTimeout(t);
+    c = (await r.json()).conteudo || null;
+  } catch (e) { c = null; } // fora do ar: mostra o conteúdo padrão deste arquivo
+  nxAplicar(c);
+  document.documentElement.classList.remove('nx-carregando');
+  if (NX.editar) parent.postMessage({ nx: 'pronto', padroes: nxListasPadrao(), secoes: nxSecoes() }, location.origin);
 }
 iniciarConteudo();
 
 /* ================= INTERAÇÕES ================= */
 document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.filter-btn').forEach(b => b.className = 'filter-btn px-5 py-2.5 rounded-full font-label text-xs uppercase tracking-wide bg-background-50 text-ink-600 hover:bg-primary-600 hover:text-background-50 transition-colors');
-    btn.className = 'filter-btn px-5 py-2.5 rounded-full font-label text-xs uppercase tracking-wide bg-primary-600 text-background-50';
+    const extra = b => ['nx-oculto', 'nx-escondido'].filter(c => b.classList.contains(c)).map(c => ' ' + c).join(''); // mantém o que a Carolina escondeu
+    document.querySelectorAll('.filter-btn').forEach(b => b.className = 'filter-btn px-5 py-2.5 rounded-full font-label text-xs uppercase tracking-wide bg-background-50 text-ink-600 hover:bg-primary-600 hover:text-background-50 transition-colors' + extra(b));
+    btn.className = 'filter-btn px-5 py-2.5 rounded-full font-label text-xs uppercase tracking-wide bg-primary-600 text-background-50' + extra(btn);
     renderProcedures(btn.dataset.filter);
   });
 });
@@ -566,8 +708,8 @@ setInterval(() => {
 /* ================= AGENDAMENTO REAL (NEXIA Agenda) =================
    Os horários livres vêm prontos do servidor (já sem os ocupados e bloqueados).
    O pedido chega na hora no painel da Carolina (/agenda), que confirma ou recusa. */
-const AG_API = 'https://nexia.gcbezerra.workers.dev/api/agenda';
-const AG_SITE = 'studiolima';
+const AG_API = NX_API;
+const AG_SITE = NX_SITE;
 let AG_CONFIG = null;
 
 async function carregarConfigAgendamento() {
