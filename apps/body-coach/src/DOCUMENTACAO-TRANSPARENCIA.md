@@ -75,7 +75,9 @@ O corpo "na meta" é outra imagem gerada por IA com o prompt alterado para "corp
 | Medidas exatas do corpo | **São estimativas.** O valor real (ex.: cintura 84 cm) é mock. A nova "estimativa automática" usa a largura da silhueta em pixels ÷ altura conhecida, convertida em cm — é uma **aproximação geométrica**, não uma medição médica. |
 | "16% gordura" | **Número inventado** (mock), não medido. |
 
-### 3.5 Como funciona a "estimativa automática de medidas" (novidade)
+### 3.5 "Estimativa automática de medidas" (DESLIGADA em 10/10/2026)
+
+O botão foi retirado do app: comparando com a avaliação real de um aluno, as medidas saíam muito erradas (a silhueta pega o fundo da foto). As medidas agora vêm só da fita/avaliação ou do aluno tocando no + do corpo realista. O texto abaixo descreve como funcionava.
 
 Quando você sobe uma foto e clica em "Estimar medidas automaticamente":
 

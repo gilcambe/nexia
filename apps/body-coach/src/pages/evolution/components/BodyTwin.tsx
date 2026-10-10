@@ -3,7 +3,7 @@ import { pickBodyImage } from './bodyImages';
 import AjustarFoto from '../fotos/AjustarFoto';
 import EditarMedida from './EditarMedida';
 import {
-  estimateMeasurements, exportBodyTwinImage, type EstimatedMeasurements,
+  exportBodyTwinImage,
 } from './bodyAnalysis';
 
 export type RegionKey = 'pecs' | 'deltoides' | 'abdomen' | 'gluteos' | 'quadriceps' | 'panturrilhas';
@@ -112,8 +112,6 @@ export default function BodyTwin({
   const [markerPos, setMarkerPos] = useState(INITIAL_POS);
   const [measurePoints, setMeasurePoints] = useState<{ x: number; y: number }[]>([]);
   const [measureCm, setMeasureCm] = useState<number | null>(null);
-  const [estimated, setEstimated] = useState<EstimatedMeasurements | null>(null);
-  const [estimating, setEstimating] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
 
@@ -260,38 +258,6 @@ export default function BodyTwin({
           };
         })()
       : null;
-
-  // Estima medidas automaticamente a partir da foto (pixels → cm via silhueta).
-  const runAutoEstimate = async () => {
-    const src = photos[angle];
-    if (!src) return;
-    setEstimating(true);
-    setEstimated(null);
-    try {
-      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const el = new Image();
-        el.onload = () => resolve(el);
-        el.onerror = () => reject(new Error('load'));
-        el.src = src;
-      });
-      const result = estimateMeasurements(img, currentHeight);
-      if (result) {
-        setEstimated(result);
-        // reposiciona os marcadores nas alturas estimadas (ombro/cintura/quadril)
-        setMarkerPos((prev) => ({
-          ...prev,
-          deltoides: { ...prev.deltoides, y: 17 },
-          pecs: { ...prev.pecs, y: 27 },
-          abdomen: { ...prev.abdomen, y: 48 },
-          gluteos: { ...prev.gluteos, y: 59 },
-        }));
-      }
-    } catch {
-      setExportMsg('Não foi possível analisar esta foto. Tente uma imagem com fundo mais uniforme.');
-    } finally {
-      setEstimating(false);
-    }
-  };
 
   // Exporta a imagem do Body Twin com medidas marcadas por cima.
   const runExport = async () => {
@@ -707,46 +673,6 @@ export default function BodyTwin({
             </button>
           </div>
 
-          {/* auto estimate */}
-          <div className="space-y-2">
-            <button
-              onClick={runAutoEstimate}
-              disabled={!photos[angle] || estimating}
-              className="flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-secondary-500 px-3 py-2 text-sm font-semibold text-background-50 transition hover:bg-secondary-600 disabled:opacity-50 dark:text-foreground-950"
-            >
-              <i className="ri-magic-line"></i>
-              {estimating ? 'Analisando...' : 'Estimar medidas automaticamente'}
-            </button>
-            {estimated && (
-              <div className="rounded-xl border border-secondary-200 bg-secondary-100/60 p-3">
-                <div className="mb-2 flex items-center justify-between">
-                  <p className="text-xs font-semibold text-secondary-900">Medidas estimadas (a partir da foto)</p>
-                  <span className="rounded-full bg-secondary-500 px-2 py-0.5 text-[10px] font-semibold text-background-50 dark:text-foreground-950">IA</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { label: 'Ombros', value: estimated.ombro },
-                    { label: 'Cintura', value: estimated.cintura },
-                    { label: 'Quadril', value: estimated.quadril },
-                    { label: 'Pescoço', value: estimated.pescoco },
-                  ].map((m) => (
-                    <div key={m.label} className="rounded-lg bg-background-50 px-3 py-2">
-                      <p className="text-[10px] text-foreground-500">{m.label}</p>
-                      <p className="text-sm font-semibold text-foreground-900">{m.value} cm</p>
-                    </div>
-                  ))}
-                </div>
-                {estimated.bodyFatPct !== null && (
-                  <p className="mt-2 text-[11px] text-foreground-600">
-                    Gordura corporal estimada (método Navy): <span className="font-semibold text-foreground-900">{estimated.bodyFatPct}%</span>
-                  </p>
-                )}
-                <p className="mt-1 text-[10px] text-foreground-400">
-                  Estimativa geométrica a partir da silhueta — não substitui medição com fita métrica.
-                </p>
-              </div>
-            )}
-          </div>
         </div>
       )}
 

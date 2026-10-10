@@ -54,7 +54,7 @@ export default function Evolution() {
     <div className="space-y-4">
       <header>
         <h1 className="font-heading text-2xl font-bold text-foreground-950">Evolução</h1>
-        <p className="mt-1 text-sm text-foreground-600">Avaliações, fotos, gráficos e o seu corpo em 3D.</p>
+        <p className="mt-1 text-sm text-foreground-600">Avaliações, fotos, gráficos e o seu corpo realista.</p>
       </header>
 
       <nav className="sticky top-0 z-20 -mx-1 grid grid-cols-4 gap-1 rounded-2xl border border-background-200 bg-background-50/95 p-1 backdrop-blur" aria-label="Seções da evolução">
