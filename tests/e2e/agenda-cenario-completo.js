@@ -361,6 +361,10 @@ const semana = d => new Date(d + 'T12:00:00Z').getUTCDay();
   confere(erros.length === 0, 'nenhum erro de JavaScript' + (erros.length ? ': ' + erros.join(' | ') : ''));
   } catch (e) {
     confere(false, 'o teste parou: ' + String(e.message || e).split('\n')[0]);
+    // Para entender a parada: o que o painel e o site mostravam.
+    for (const [p, nome] of [[car, 'erro-painel'], [cli, 'erro-site']]) {
+      try { await foto(p, nome); console.log(`  ${nome}: ` + (await p.evaluate(() => [...document.querySelectorAll('.msg:not(.oculto), #toast:not(.oculto), [role=alert]:not(.oculto)')].map(x => x.textContent.trim()).filter(Boolean).join(' | ')))); } catch (er) {}
+    }
   }
   await browser.close();
 
