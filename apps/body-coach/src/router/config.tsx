@@ -20,6 +20,10 @@ import Onboarding from "../pages/onboarding/page";
 import Auth from "../pages/auth/page";
 import Privacy from "../pages/privacy/page";
 import RelatorioAvaliacao from "../pages/evolution/relatorio/page";
+import Compartilhado from "../pages/compartilhado/page";
+import AlunosEvolucao from "../pages/coach/AlunosEvolucao";
+import AlunoEvolucao from "../pages/coach/AlunoEvolucao";
+import RelatorioAluno from "../pages/coach/RelatorioAluno";
 
 const routes: RouteObject[] = [
   {
@@ -51,6 +55,18 @@ const routes: RouteObject[] = [
     ),
   },
   {
+    path: "/compartilhado/:token",
+    element: <Compartilhado />,
+  },
+  {
+    path: "/coach/evolucao/:uid/relatorio/:id",
+    element: (
+      <AuthGuard>
+        <RelatorioAluno />
+      </AuthGuard>
+    ),
+  },
+  {
     path: "/",
     element: (
       <AuthGuard>
@@ -66,6 +82,8 @@ const routes: RouteObject[] = [
       { path: "profile", element: <Profile /> },
       { path: "team", element: <Team /> },
       { path: "chat", element: <Chat /> },
+      { path: "coach/evolucao", element: <AlunosEvolucao /> },
+      { path: "coach/evolucao/:uid", element: <AlunoEvolucao /> },
       { path: "feedback", element: <Feedback /> },
       { path: "respirar", element: <Respirar /> },
       { path: "exams", element: <Exams /> },

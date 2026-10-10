@@ -1,11 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import Card from '@/components/base/Card';
-import { alertas, dataBr, prever, recordes } from '@/lib/avaliacao/calculos';
+import { alertas, dataBr, prever, recordes, simetria } from '@/lib/avaliacao/calculos';
 import type { PerfilAvaliacao } from '@/lib/avaliacao/dados';
 import type { ItemSerie } from '@/lib/avaliacao/serie';
 import { compartilharArquivo } from '@/lib/avaliacao/imagens';
 import { gerarIcsReavaliacao } from '@/lib/lembretes';
 import PainelCorpo from './corpo3d/PainelCorpo';
+import CoachEvolucao from './CoachEvolucao';
 
 const fmt = (n: number | undefined | null, c = 1) => (n == null ? '—' : n.toLocaleString('pt-BR', { maximumFractionDigits: c }));
 
@@ -29,6 +30,7 @@ export default function ResumoEvolucao({
   const prevGordura = prever(pontosGordura.slice(-6), metaGordura);
   const pontosPeso = serie.filter((s) => s.m.peso != null).map((s) => ({ data: s.data, valor: s.m.peso }));
   const prevPeso = prever(pontosPeso.slice(-6), metaPeso);
+  const lados = ult ? simetria(ult.av.valores, ult.av.segmental).filter((l) => l.atencao) : [];
   const diasDesde = ult ? Math.floor((Date.now() - new Date(`${ult.data}T12:00:00`).getTime()) / 86400000) : null;
 
   const kpis = ([
@@ -89,7 +91,9 @@ export default function ResumoEvolucao({
         )}
       </Card>
 
-      {(avisos.length > 0 || recs.length > 0 || prevGordura || prevPeso) && (
+      <CoachEvolucao />
+
+      {(avisos.length > 0 || recs.length > 0 || prevGordura || prevPeso || lados.length > 0) && (
         <Card padding="p-5">
           <h2 className="mb-3 font-heading text-base font-semibold text-foreground-950">Destaques</h2>
           <ul className="space-y-2 text-sm">
@@ -98,6 +102,9 @@ export default function ResumoEvolucao({
             ))}
             {avisos.map((a) => (
               <li key={a.texto} className={`flex gap-2 rounded-lg px-3 py-2 ${a.nivel === 'atencao' ? 'bg-red-50 text-red-700' : 'bg-accent-50 text-accent-800'}`}><span>{a.nivel === 'atencao' ? '⚠️' : '✅'}</span><span>{a.texto}</span></li>
+            ))}
+            {lados.map((l) => (
+              <li key={l.label} className="flex gap-2 rounded-lg bg-secondary-50 px-3 py-2 text-secondary-900"><span>↔️</span><span>{l.label}: lado {l.menor} {fmt(l.diferenca)} {l.unidade} menor. Vale um pouco mais de volume desse lado.</span></li>
             ))}
             {prevGordura?.semanas != null && prevGordura.dataMeta && (
               <li className="flex gap-2 rounded-lg bg-background-100 px-3 py-2 text-foreground-800"><span>🎯</span><span>No ritmo atual você chega a <b>{metaGordura}% de gordura</b> em cerca de {prevGordura.semanas} semanas ({dataBr(prevGordura.dataMeta)}).</span></li>

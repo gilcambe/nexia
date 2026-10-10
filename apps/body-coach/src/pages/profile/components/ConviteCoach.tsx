@@ -38,6 +38,7 @@ export default function ConviteCoach() {
             <button onClick={() => void copiar()} className="rounded-xl bg-primary-500 px-4 py-2 text-sm font-semibold text-background-50"><i className="ri-file-copy-line mr-1"></i>Copiar link</button>
             {typeof navigator.share === 'function' && <button onClick={() => void compartilhar()} className="rounded-xl border border-primary-300 px-4 py-2 text-sm font-semibold text-primary-700"><i className="ri-share-line mr-1"></i>Compartilhar</button>}
             <Link to="/chat" className="rounded-xl border border-background-200 px-4 py-2 text-sm font-medium text-foreground-700">Ver meus alunos ({info.alunos.length})</Link>
+            <Link to="/coach/evolucao" className="rounded-xl border border-background-200 px-4 py-2 text-sm font-medium text-foreground-700">Evolução dos alunos</Link>
           </div>
           <p className="mt-2 text-xs text-foreground-500">Código: <strong>{info.codigo}</strong></p>
         </>

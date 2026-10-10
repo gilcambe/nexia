@@ -187,3 +187,13 @@ test('previsão, recordes e alertas', async () => {
   const rec = calc.recordes(serie);
   assert.ok(rec.find((r) => r.key === 'cintura' && r.valor === 90 && r.novo));
 });
+
+test('simetria entre os lados', async () => {
+  const { calc } = await mods;
+  const s = calc.simetria({ braco_contraido: 38, braco_contraido_d: 39.5, coxa_medial: 58, coxa_medial_d: 58.4, panturrilha: 37 }, { musculo_kg: { perna_e: 10, perna_d: 10.6 } });
+  assert.deepEqual(s.map((x) => [x.label, x.diferenca, x.atencao, x.menor]), [
+    ['Braço contraído', 1.5, true, 'esquerdo'],
+    ['Coxa medial', 0.4, false, 'esquerdo'],
+    ['Músculo da perna', 0.6, true, 'esquerdo'],
+  ]);
+});

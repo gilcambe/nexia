@@ -364,3 +364,28 @@ export function alertas(serie: { data: string; m: Record<string, number> }[]): A
 
 const fmt = (n: number) => (Math.round(n * 10) / 10).toLocaleString('pt-BR');
 export const dataBr = (d: string) => `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(0, 4)}`;
+
+// Simetria entre os lados: circunferências (esq. x dir.) e massa muscular por segmento da balança.
+// Diferença de até 1 cm (ou 3% no músculo) é normal; acima disso vale reforçar o lado menor.
+export interface ItemSimetria { label: string; esquerdo: number; direito: number; unidade: string; diferenca: number; pct: number; atencao: boolean; menor: 'esquerdo' | 'direito' | null }
+
+export function simetria(valores: Record<string, number>, segmental?: Segmental | null): ItemSimetria[] {
+  const out: ItemSimetria[] = [];
+  const add = (label: string, e: number | undefined, d: number | undefined, unidade: string, limite: (dif: number, pct: number) => boolean) => {
+    if (e == null || d == null || !(e > 0) || !(d > 0)) return;
+    const diferenca = Math.round(Math.abs(e - d) * 10) / 10;
+    const pct = Math.round((diferenca / Math.max(e, d)) * 1000) / 10;
+    out.push({ label, esquerdo: e, direito: d, unidade, diferenca, pct, atencao: limite(diferenca, pct), menor: diferenca === 0 ? null : e < d ? 'esquerdo' : 'direito' });
+  };
+  const pares: [string, string][] = [
+    ['braco_relaxado', 'Braço relaxado'], ['braco_contraido', 'Braço contraído'], ['antebraco', 'Antebraço'],
+    ['coxa_proximal', 'Coxa proximal'], ['coxa_medial', 'Coxa medial'], ['coxa_distal', 'Coxa distal'], ['panturrilha', 'Panturrilha'],
+  ];
+  for (const [k, l] of pares) add(l, valores[k], valores[`${k}_d`], 'cm', (dif) => dif > 1);
+  const m = segmental?.musculo_kg;
+  if (m) {
+    add('Músculo do braço', m.braco_e, m.braco_d, 'kg', (_, pct) => pct > 3);
+    add('Músculo da perna', m.perna_e, m.perna_d, 'kg', (_, pct) => pct > 3);
+  }
+  return out;
+}
