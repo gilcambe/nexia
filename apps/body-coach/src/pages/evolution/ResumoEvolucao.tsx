@@ -51,10 +51,13 @@ export default function ResumoEvolucao({
     ['mlg', 'Massa magra', 'kg', 1],
     ['cintura', 'Cintura', 'cm', -1],
   ] as const).map(([k, l, u, sentido]) => {
-    const v = ult?.m[k];
-    const a = ant?.m[k];
+    // Cada número vem da avaliação mais recente que tem esse dado (uma medida solta não apaga o resto).
+    const com = comMedidas.filter((s) => s.m[k] != null);
+    const v = com[com.length - 1]?.m[k];
+    const a = com.length > 1 ? com[com.length - 2].m[k] : undefined;
+    const desde = com.length > 1 ? com[com.length - 2].data : null;
     const d = v != null && a != null ? Math.round((v - a) * 10) / 10 : null;
-    return { k, l, u, v, d, bom: d && sentido ? Math.sign(d) === sentido : null };
+    return { k, l, u, v, d, desde, bom: d && sentido ? Math.sign(d) === sentido : null };
   });
 
   // Medida mais recente de cada parte (para os pontos do Body Twin), com a variação desde a anterior.
@@ -66,6 +69,19 @@ export default function ResumoEvolucao({
     const a = com.length > 1 ? v(com[com.length - 2]) : null;
     const d = a != null ? Math.round((v(u) - a) * 10) / 10 : 0;
     return `${fmt(v(u))} cm${d ? ` (${d > 0 ? '+' : ''}${fmt(d)})` : ''} em ${dataBr(u.data).slice(0, 5)}`;
+  };
+  const CAMPO_REGIAO: Record<RegionKey, string[]> = {
+    deltoides: ['ombro'], pecs: ['torax'], abdomen: ['cintura', 'abdomen'], gluteos: ['quadril'], quadriceps: ['coxa_medial', 'coxa_proximal'], panturrilhas: ['panturrilha'],
+  };
+  const ultimaMedida = (ks: string[]) => [...serie].reverse().map((s) => ks.map((k) => s.av.valores[k]).find((x) => x != null)).find((x) => x != null);
+  const salvarMedida = async (campo: string, cm: number) => {
+    if (!uid) throw new Error('entre na sua conta');
+    await salvarAvaliacao(uid, { data: hojeIso(), valores: { [campo]: cm }, fonte: 'Manual' }, { existentes: serie.map((s) => s.registro) });
+    onMudou?.();
+  };
+  const medidaTwin = {
+    atual: Object.fromEntries((Object.keys(CAMPO_REGIAO) as RegionKey[]).map((r) => [r, ultimaMedida(CAMPO_REGIAO[r])])) as Partial<Record<RegionKey, number>>,
+    salvar: (r: RegionKey, cm: number) => salvarMedida(CAMPO_REGIAO[r][0], cm),
   };
   const medidasRegiao: Partial<Record<RegionKey, string>> = {
     deltoides: medidaDe('ombro'), pecs: medidaDe('torax'), abdomen: medidaDe('cintura', 'abdomen'),
@@ -108,6 +124,7 @@ export default function ResumoEvolucao({
           goalWeight={metaPeso}
           onSalvarFoto={salvarFoto}
           medidasRegiao={medidasRegiao}
+          onSalvarMedida={medidaTwin}
           fotosReais={comFotos ? { frente: comFotos.fotos.frente, lado: comFotos.fotos.direita ?? comFotos.fotos.esquerda, costas: comFotos.fotos.costas } : undefined}
         />
       </Card>
@@ -132,7 +149,7 @@ export default function ResumoEvolucao({
                   <p className="font-heading text-lg font-bold text-foreground-950">{fmt(x.v)} <span className="text-xs font-medium text-foreground-500">{x.u}</span></p>
                   {x.d ? (
                     <p className={`text-[11px] font-semibold ${x.bom == null ? 'text-foreground-500' : x.bom ? 'text-accent-600' : 'text-red-500'}`}>
-                      {x.d > 0 ? '↑ +' : '↓ '}{fmt(x.d)} {x.u} <span className="font-normal text-foreground-400">desde {dataBr(ant!.data).slice(0, 5)}</span>
+                      {x.d > 0 ? '↑ +' : '↓ '}{fmt(x.d)} {x.u} <span className="font-normal text-foreground-400">desde {dataBr(x.desde!).slice(0, 5)}</span>
                     </p>
                   ) : <p className="text-[11px] text-foreground-400">&nbsp;</p>}
                 </div>
@@ -151,7 +168,7 @@ export default function ResumoEvolucao({
       </Card>
 
       <Card padding="p-4">
-        <PainelCorpo serie={serie} perfil={perfil} volume={volume} metas={metas} />
+        <PainelCorpo serie={serie} perfil={perfil} volume={volume} metas={metas} onSalvarMedida={salvarMedida} />
       </Card>
 
       <MetasCorpo key={fotoMeta ?? 'sem'} serie={serie} metas={metas} fotoMeta={fotoMeta} salvar={salvar} />
