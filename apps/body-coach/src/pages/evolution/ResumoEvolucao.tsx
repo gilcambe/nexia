@@ -28,6 +28,7 @@ export default function ResumoEvolucao({
   const { metas, fotoMeta, salvar } = useMetas(uid);
   const ult = serie[serie.length - 1] ?? null;
   const medido = [...serie].reverse().find((s) => s.m.peso != null && s.m.gordura != null) ?? null;
+  const comFotos = [...serie].reverse().find((s) => s.fotos.frente || s.fotos.costas) ?? null;
   const ant = serie.length > 1 ? serie[serie.length - 2] : null;
   const pts = serie.map((s) => ({ data: s.data, m: s.m }));
   const avisos = alertas(pts);
@@ -77,6 +78,7 @@ export default function ResumoEvolucao({
           currentHeight={medido?.av.valores.altura ?? altura}
           goalBodyFat={metaGordura ?? 15}
           goalWeight={metaPeso}
+          fotosReais={comFotos ? { frente: comFotos.fotos.frente, lado: comFotos.fotos.direita ?? comFotos.fotos.esquerda, costas: comFotos.fotos.costas } : undefined}
         />
       </Card>
 

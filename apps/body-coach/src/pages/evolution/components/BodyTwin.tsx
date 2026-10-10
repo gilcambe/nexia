@@ -63,6 +63,7 @@ export default function BodyTwin({
   currentHeight,
   goalBodyFat,
   goalWeight,
+  fotosReais,
 }: {
   selected: string | null;
   onSelect: (key: string) => void;
@@ -71,6 +72,8 @@ export default function BodyTwin({
   currentHeight: number;
   goalBodyFat: number;
   goalWeight: number | null;
+  // Últimas fotos da aba Fotos: aparecem em "Foto real" sem precisar enviar de novo.
+  fotosReais?: Partial<Record<Angle, string | null>>;
 }) {
   const [mode, setMode] = useState<Mode>('ia');
   const [style, setStyle] = useState<Style>('realista');
@@ -80,11 +83,16 @@ export default function BodyTwin({
   const [comparePos, setComparePos] = useState(50);
   const [autoRotate, setAutoRotate] = useState(false);
   const [tool, setTool] = useState<Tool>('select');
-  const [photos, setPhotos] = useState<Record<Angle, string | null>>({
+  const [enviadas, setPhotos] = useState<Record<Angle, string | null>>({
     frente: null,
     lado: null,
     costas: null,
   });
+  const photos: Record<Angle, string | null> = {
+    frente: enviadas.frente ?? fotosReais?.frente ?? null,
+    lado: enviadas.lado ?? fotosReais?.lado ?? null,
+    costas: enviadas.costas ?? fotosReais?.costas ?? null,
+  };
   const [markerPos, setMarkerPos] = useState(INITIAL_POS);
   const [measurePoints, setMeasurePoints] = useState<{ x: number; y: number }[]>([]);
   const [measureCm, setMeasureCm] = useState<number | null>(null);
