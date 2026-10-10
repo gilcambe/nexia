@@ -10,6 +10,7 @@ import StreakCard from './components/StreakCard';
 import NutritionCard from './components/NutritionCard';
 import EvolutionMini from './components/EvolutionMini';
 import WeeklyReport from './components/WeeklyReport';
+import NuncaFalhe from './components/NuncaFalhe';
 
 export default function Home() {
   const { setOpen } = useCoach();
@@ -52,6 +53,7 @@ export default function Home() {
       </header>
 
       <TodayCard />
+      <NuncaFalhe />
       <StreakCard />
 
       <DailyCheckIn />
