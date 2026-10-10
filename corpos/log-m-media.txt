@@ -1,4 +1,0 @@
-ok m-media-magro-frente 30528
-falhou m-media-magro-lado t0 HTTP Error 402: Payment Required
-falhou m-media-magro-lado t1 HTTP Error 402: Payment Required
-falhou m-media-magro-lado t2 HTTP Error 402: Payment Required
