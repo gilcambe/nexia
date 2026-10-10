@@ -98,12 +98,44 @@ export function lesoesDoTexto(...textos: unknown[]): Set<Lesao> {
 export const permitido = (e: Exercicio, lesoes: Set<Lesao>, indisponiveis: string[] = []) =>
   !e.evita.some((l) => lesoes.has(l)) && !indisponiveis.includes(e.id);
 
-// Opções para trocar um exercício: mesmo grupo, respeitando lesões, sem repetir os que já estão no treino.
-export function alternativas(id: string, lesoes: Set<Lesao>, indisponiveis: string[], jaNoTreino: string[]): Exercicio[] {
+// Grupos que treinam junto/substituem quando o grupo do exercício não tem mais opção.
+const GRUPOS_VIZINHOS: Record<Grupo, Grupo[]> = {
+  peito: ['triceps', 'ombros'], costas: ['biceps', 'ombros'], ombros: ['peito', 'costas'], biceps: ['costas'], triceps: ['peito'],
+  quadriceps: ['gluteos', 'posterior'], posterior: ['gluteos', 'quadriceps'], gluteos: ['posterior', 'quadriceps'],
+  panturrilha: ['quadriceps'], abdomen: ['gluteos'],
+};
+
+export interface Alternativa { ex: Exercicio; aviso?: string }
+
+const NOME_GRUPO: Record<Grupo, string> = { peito: 'peito', costas: 'costas', ombros: 'ombros', biceps: 'bíceps', triceps: 'tríceps', quadriceps: 'quadríceps', posterior: 'posterior de coxa', gluteos: 'glúteos', panturrilha: 'panturrilha', abdomen: 'abdômen' };
+
+const NOME_LESAO: Record<Lesao, string> = { ombro: 'ombro', cotovelo: 'cotovelo', punho: 'punho', lombar: 'lombar', joelho: 'joelho', quadril: 'quadril', tornozelo: 'tornozelo', pescoco: 'pescoço' };
+
+// Opções para trocar um exercício. A lista nunca fica vazia:
+// 1) mesmo grupo, sem agravar lesões e fora do treino; 2) mesmo grupo que pode incomodar uma lesão (com aviso);
+// 3) grupos vizinhos (com aviso). Exercício fora do banco usa o grupo muscular informado.
+export function alternativas(id: string, lesoes: Set<Lesao>, indisponiveis: string[], jaNoTreino: string[], grupoInformado?: string): Alternativa[] {
   const base = POR_ID[id];
-  if (!base) return [];
-  return EXERCICIOS.filter((e) => e.grupo === base.grupo && e.id !== id && !jaNoTreino.includes(e.id) && permitido(e, lesoes, indisponiveis))
-    .sort((a, b) => Number(b.composto === base.composto) - Number(a.composto === base.composto));
+  const grupo = (base?.grupo ?? grupoInformado) as Grupo | undefined;
+  if (!grupo || !(grupo in GRUPOS_VIZINHOS)) return [];
+  const livre = (e: Exercicio) => e.id !== id && !jaNoTreino.includes(e.id) && !indisponiveis.includes(e.id);
+  const parecido = (a: Exercicio, b: Exercicio) =>
+    Number(b.composto === base?.composto) - Number(a.composto === base?.composto) || Number(b.equip === base?.equip) - Number(a.equip === base?.equip);
+  const doGrupo = EXERCICIOS.filter((e) => e.grupo === grupo && livre(e)).sort(parecido);
+  const out: Alternativa[] = doGrupo.filter((e) => permitido(e, lesoes)).map((ex) => ({ ex }));
+  if (out.length < 2) {
+    for (const ex of doGrupo.filter((e) => !permitido(e, lesoes))) {
+      out.push({ ex, aviso: `Cuidado: pode incomodar ${ex.evita.filter((l) => lesoes.has(l)).map((l) => NOME_LESAO[l]).join(' e ')}` });
+    }
+  }
+  if (out.filter((a) => !a.aviso).length < 2) {
+    for (const g of GRUPOS_VIZINHOS[grupo]) {
+      for (const ex of EXERCICIOS.filter((e) => e.grupo === g && livre(e) && permitido(e, lesoes)).sort(parecido).slice(0, 3)) {
+        out.push({ ex, aviso: `Outro músculo: ${NOME_GRUPO[g]}` });
+      }
+    }
+  }
+  return out;
 }
 
 // Demonstração própria (banco no repositório, em public/exercicios): dois quadros que alternam como um vídeo curto.
