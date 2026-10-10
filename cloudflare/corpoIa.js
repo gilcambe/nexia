@@ -16,12 +16,6 @@ const VISTA = {
 };
 const CHAVE = /^(m|f)-(clara|media|morena|negra)-(magro|medio|alto)-(frente|lado|costas)$/;
 
-function semente(texto) {
-  let h = 2166136261;
-  for (const c of texto) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
-  return (h >>> 0) % 100000;
-}
-
 export async function corpoIa(request, env) {
   const chave = new URL(request.url).searchParams.get('k') || '';
   const m = CHAVE.exec(chave);
@@ -33,7 +27,7 @@ export async function corpoIa(request, env) {
     + 'to the feet is visible, small in the frame with empty space above the head and below the feet, centered. Plain light gray seamless '
     + 'studio background, soft even lighting, natural realistic skin texture, sharp focus, DSLR photo, 85mm lens.';
   try {
-    const r = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', { prompt, steps: 8, seed: semente(`${s}${p}${n}`) });
+    const r = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', { prompt, steps: 8 });
     const bin = Uint8Array.from(atob(r.image), (c) => c.charCodeAt(0));
     return new Response(bin, { headers: { 'content-type': 'image/jpeg', 'cache-control': 'public, max-age=31536000' } });
   } catch (e) {
