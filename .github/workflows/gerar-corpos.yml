@@ -11,7 +11,7 @@ concurrency: { group: gerar-corpos, cancel-in-progress: false }
 jobs:
   gerar:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       max-parallel: 2
@@ -20,36 +20,48 @@ jobs:
         p: [clara, media, morena, negra]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Gerar imagens
-        env: { S: '${{ matrix.s }}', P: '${{ matrix.p }}' }
+      - name: Gerar imagens (Workers AI, plano grátis)
+        env:
+          S: '${{ matrix.s }}'
+          P: '${{ matrix.p }}'
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_AI_TOKEN }}
+          CF_CONTA: ${{ secrets.CLOUDFLARE_AI_ACCOUNT_ID }}
+        shell: bash
         run: |
-          set -u
-          mkdir -p corpos
-          log="corpos/log-$S-$P.txt"; : > "$log"
-          sexo_txt() { [ "$1" = m ] && echo "man" || echo "woman"; }
-          roupa() { [ "$1" = m ] && echo "wearing only plain black athletic shorts, shirtless" || echo "wearing a plain black sports bra and plain black athletic shorts"; }
-          pele_txt() { case "$1" in clara) echo "fair white skin";; media) echo "light brown tan skin";; morena) echo "brown skin, latino";; negra) echo "dark black skin, african descent";; esac; }
-          nivel_txt() { case "$1" in magro) echo "very lean muscular athletic physique with visible abs, about 10 percent body fat";; medio) echo "fit average physique, slightly soft, about 18 percent body fat";; alto) echo "overweight physique with belly fat, about 28 percent body fat";; esac; }
-          vista_txt() { case "$1" in frente) echo "facing the camera, front view";; lado) echo "standing in strict side profile facing right, side view";; costas) echo "seen from behind, back view, facing away from the camera";; esac; }
-          for n in magro medio alto; do
-            seed=$(( $(printf '%s' "$S$P$n" | cksum | cut -d' ' -f1) % 100000 ))
-            for v in frente lado costas; do
-              out="corpos/$S-$P-$n-$v.jpg"
-              prompt="full body studio photograph of an adult $(sexo_txt $S), $(pele_txt $P), $(nivel_txt $n), $(roupa $S), barefoot, standing straight and relaxed with arms hanging slightly away from the body, $(vista_txt $v), entire body from head to feet visible and centered, plain light gray seamless studio background, soft even lighting, photorealistic, ultra realistic skin texture, sharp focus, 85mm"
-              q=$(python3 -c 'import sys,urllib.parse;print(urllib.parse.quote(sys.argv[1]))' "$prompt")
-              for t in 1 2 3; do
-                code=$(curl -sL --max-time 100 -o "$out.tmp" -w '%{http_code}' "https://image.pollinations.ai/prompt/$q?width=592&height=800&nologo=true&model=flux&seed=$seed") || true
-                tipo=$(file -b "$out.tmp" 2>/dev/null | cut -c1-40)
-                echo "$out t$t http=$code $tipo" | tee -a "$log"
-                if echo "$tipo" | grep -qiE 'jpeg|png|webp'; then
-                  convert "$out.tmp" -resize 592x800^ -gravity center -extent 592x800 -quality 82 "$out"; rm -f "$out.tmp"; break
-                fi
-                [ "$t" = 1 ] && head -c 300 "$out.tmp" >> "$log" 2>/dev/null; echo >> "$log"
-                sleep $((t*8))
-              done
-              rm -f "$out.tmp"; sleep 2
-            done
-          done
+          set +e
+          rm -rf corpos; mkdir -p corpos
+          python3 - <<'PY'
+          import base64, json, os, time, urllib.request, zlib
+          S, P = os.environ['S'], os.environ['P']
+          url = f"https://api.cloudflare.com/client/v4/accounts/{os.environ['CF_CONTA']}/ai/run/@cf/black-forest-labs/flux-1-schnell"
+          sexo = {'m': 'man', 'f': 'woman'}[S]
+          roupa = {'m': 'wearing only plain black athletic shorts, shirtless', 'f': 'wearing a plain black sports bra and plain black athletic shorts'}[S]
+          pele = {'clara': 'fair white skin', 'media': 'light olive tan skin, brazilian', 'morena': 'brown skin, latino', 'negra': 'dark black skin, african descent'}[P]
+          nivel = {'magro': 'lean muscular athletic body with visible abs, low body fat', 'medio': 'average fit body, slightly soft belly, moderate body fat', 'alto': 'overweight body with a round belly and love handles, high body fat'}
+          vista = {'frente': 'facing the camera, front view', 'lado': 'in strict side profile facing right, side view', 'costas': 'seen from behind, back view, facing away from the camera'}
+          log = open(f'corpos/log-{S}-{P}.txt', 'w')
+          for n in nivel:
+              seed = zlib.crc32(f'{S}{P}{n}'.encode()) % 100000
+              for v in vista:
+                  prompt = (f'full length studio photograph of an adult {sexo}, {pele}, {nivel[n]}, {roupa}, barefoot, '
+                            f'standing straight and relaxed with arms slightly away from the body, {vista[v]}, '
+                            'whole body from the top of the head to the feet visible with empty space above and below, centered, small in frame, '
+                            'plain light gray seamless studio background, soft even lighting, photorealistic, realistic skin texture, sharp focus, DSLR')
+                  for t in range(3):
+                      try:
+                          req = urllib.request.Request(url, data=json.dumps({'prompt': prompt, 'steps': 6, 'seed': seed}).encode(),
+                                                       headers={'Authorization': f"Bearer {os.environ['CF_TOKEN']}", 'Content-Type': 'application/json'})
+                          r = json.load(urllib.request.urlopen(req, timeout=120))
+                          img = base64.b64decode(r['result']['image'])
+                          open(f'corpos/{S}-{P}-{n}-{v}.jpg', 'wb').write(img)
+                          print(f'ok {S}-{P}-{n}-{v} {len(img)}', file=log, flush=True)
+                          break
+                      except Exception as e:
+                          msg = getattr(e, 'read', lambda: b'')()[:300]
+                          print(f'falhou {S}-{P}-{n}-{v} t{t} {e} {msg!r}', file=log, flush=True)
+                          time.sleep(5 * (t + 1))
+          PY
+          cat corpos/log-*.txt
       - name: Gravar no branch
         if: always()
         run: |
