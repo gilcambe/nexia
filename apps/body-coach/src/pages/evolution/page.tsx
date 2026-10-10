@@ -23,7 +23,7 @@ const ABAS: { id: Aba; label: string; icone: string }[] = [
 
 export default function Evolution() {
   const { user } = useAuth();
-  const { entries, loading, error, reload, goalBodyFat, goalWeight, perfil } = useProgressData(user?.id);
+  const { entries, loading, error, reload, goalBodyFat, goalWeight, perfil, height } = useProgressData(user?.id);
   const serie = useMemo(() => montarSerie(entries, perfil), [entries, perfil]);
   const [params, setParams] = useSearchParams();
   const aba = (ABAS.find((a) => a.id === params.get('aba'))?.id ?? 'resumo') as Aba;
@@ -86,7 +86,7 @@ export default function Evolution() {
 
       {aba === 'resumo' && (
         <>
-          <ResumoEvolucao uid={user?.id} serie={serie} perfil={perfil} volume={volumeSemana} metaGordura={goalBodyFat || null} metaPeso={goalWeight} irPara={irPara} />
+          <ResumoEvolucao uid={user?.id} altura={height} serie={serie} perfil={perfil} volume={volumeSemana} metaGordura={goalBodyFat || null} metaPeso={goalWeight} irPara={irPara} />
 
           <Card padding="p-5">
             <button type="button" onClick={() => setRapido((r) => !r)} className="flex w-full items-center gap-2 text-left" aria-expanded={rapido}>

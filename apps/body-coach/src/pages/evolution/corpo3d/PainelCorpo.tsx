@@ -4,7 +4,6 @@ import { valoresDaMeta, type MetasMedidas } from '@/lib/avaliacao/metas';
 import { dataBr } from '@/lib/avaliacao/calculos';
 import type { PerfilAvaliacao } from '@/lib/avaliacao/dados';
 import type { ItemSerie } from '@/lib/avaliacao/serie';
-import AvatarCorpo from '../components/AvatarCorpo';
 import type { PoseCorpo } from './Corpo3D';
 
 const Corpo3D = lazy(() => import('./Corpo3D'));
@@ -64,7 +63,7 @@ export default function PainelCorpo({ serie, perfil, volume, nome, metas }: { se
     return out;
   }, [modo, volume, ultima, anterior]);
 
-  const reserva = <AvatarCorpo volume={volume} />;
+  const reserva = <p className="px-6 text-center text-sm text-foreground-500">Este aparelho não mostra 3D. Veja suas medidas e o Body Twin acima.</p>;
 
   return (
     <div>
