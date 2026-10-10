@@ -6,7 +6,7 @@ import { htmlDoMht, lerCsv, lerHtml, lerItens, lerTextoLivre, unirPorData, type 
 
 type Progresso = (msg: string) => void;
 
-async function pdfjs() {
+export async function pdfjs() {
   const lib = await import('pdfjs-dist/legacy/build/pdf.mjs');
   const worker = await import('pdfjs-dist/legacy/build/pdf.worker.min.mjs?url');
   lib.GlobalWorkerOptions.workerSrc = worker.default;

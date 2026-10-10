@@ -8,7 +8,7 @@ import { montarCardapio } from '@/lib/dietPlan';
 // Cardápio sugerido do dia: calculado das metas do aluno e das respostas do questionário.
 export default function CardapioDoDia() {
   const { targets } = useNutrition();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [onboarding, setOnboarding] = useState<Record<string, unknown> | null | undefined>(undefined);
 
   useEffect(() => {
@@ -23,7 +23,8 @@ export default function CardapioDoDia() {
     [onboarding, targets],
   );
 
-  if (onboarding === undefined) return null;
+  // Com o plano do nutricionista, ele substitui o cardápio automático.
+  if (onboarding === undefined || profile?.plano_nutri) return null;
   if (!onboarding) {
     return (
       <div className="rounded-2xl border border-background-200 bg-background-50 p-4">

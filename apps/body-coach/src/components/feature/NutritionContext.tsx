@@ -1,4 +1,5 @@
 import { calcularMetas } from '@/lib/metas';
+import { metasDoPlano } from '@/lib/planoAlimentar';
 import {
   createContext,
   useContext,
@@ -188,6 +189,10 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
 
   const { targets, waterGoal } = useMemo(() => {
     const peso = Number((profile as any)?.onboarding?.weight) || 0;
+    // Plano do nutricionista importado: as metas do dia são as dele.
+    const doPlano = metasDoPlano(profile?.plano_nutri);
+    const agua = peso > 0 ? Math.round(peso * 0.035 * 10) / 10 : defaultWaterGoal;
+    if (doPlano) return { targets: { ...nutritionTargets, ...doPlano }, waterGoal: agua };
     if (!(peso > 0)) return { targets: nutritionTargets, waterGoal: defaultWaterGoal };
     return {
       targets: calcularMetas(peso, (profile as any)?.onboarding?.goal, Number((profile as any)?.ajuste_kcal) || 0),

@@ -17,6 +17,7 @@ import {
 import { getFirebase } from '@/lib/firebaseClient';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { definirPerfilIA } from '@/lib/coachAI';
+import type { PlanoAlimentar } from '@/lib/planoAlimentar';
 
 
 
@@ -35,6 +36,7 @@ export interface AthleteProfile {
   mobility?: string[];
   ajuste_kcal?: number;
   onboarding?: Record<string, string | string[] | undefined>;
+  plano_nutri?: PlanoAlimentar | null;
 }
 
 // Usuário do app (mesmo formato que as telas do original usam: id, email, user_metadata).

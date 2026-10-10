@@ -7,6 +7,7 @@ import WaterTracker from './components/WaterTracker';
 import WeeklyTrend from './components/WeeklyTrend';
 import AddMealModal from './components/AddMealModal';
 import CardapioDoDia from './components/CardapioDoDia';
+import PlanoNutricionista from './components/PlanoNutricionista';
 import AjusteSemanal from './components/AjusteSemanal';
 import ReceitaIA from './components/ReceitaIA';
 import { RefeicaoRapida } from './components/RefeicaoRapida';
@@ -41,6 +42,7 @@ export default function Nutrition() {
       </Card>
 
       <AjusteSemanal />
+      <PlanoNutricionista />
       <CardapioDoDia />
       <RefeicaoRapida />
       <ReceitaIA />
