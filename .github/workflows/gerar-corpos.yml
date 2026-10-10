@@ -12,7 +12,6 @@ jobs:
   gerar:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment: production
     strategy:
       fail-fast: false
       max-parallel: 1
@@ -21,20 +20,15 @@ jobs:
         p: [clara, media, morena, negra]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Gerar imagens (Workers AI, plano grátis)
-        env:
-          S: '${{ matrix.s }}'
-          P: '${{ matrix.p }}'
-          CF_TOKEN: ${{ secrets.CLOUDFLARE_AI_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
-          CF_CONTA: ${{ secrets.CLOUDFLARE_AI_ACCOUNT_ID || vars.CLOUDFLARE_ACCOUNT_ID || secrets.NEXIA_D1_ACCOUNT_ID }}
+      - name: Gerar imagens (Pollinations, sem chave)
+        env: { S: '${{ matrix.s }}', P: '${{ matrix.p }}' }
         shell: bash
         run: |
           set +e
           rm -rf corpos; mkdir -p corpos
           python3 - <<'PY'
-          import base64, json, os, time, urllib.request, zlib
+          import os, time, urllib.parse, urllib.request, zlib
           S, P = os.environ['S'], os.environ['P']
-          url = f"https://api.cloudflare.com/client/v4/accounts/{os.environ['CF_CONTA']}/ai/run/@cf/black-forest-labs/flux-1-schnell"
           sexo = {'m': 'man', 'f': 'woman'}[S]
           roupa = {'m': 'wearing only plain black athletic shorts, shirtless', 'f': 'wearing a plain black sports bra and plain black athletic shorts'}[S]
           pele = {'clara': 'fair white skin', 'media': 'light olive tan skin, brazilian', 'morena': 'brown skin, latino', 'negra': 'dark black skin, african descent'}[P]
@@ -44,23 +38,22 @@ jobs:
           for n in nivel:
               seed = zlib.crc32(f'{S}{P}{n}'.encode()) % 100000
               for v in vista:
-                  prompt = (f'full length studio photograph of an adult {sexo}, {pele}, {nivel[n]}, {roupa}, barefoot, '
-                            f'standing straight and relaxed with arms slightly away from the body, {vista[v]}, '
-                            'whole body from the top of the head to the feet visible with empty space above and below, centered, small in frame, '
-                            'plain light gray seamless studio background, soft even lighting, photorealistic, realistic skin texture, sharp focus, DSLR')
+                  prompt = (f'RAW photo, full length studio photograph of an adult {sexo}, {pele}, {nivel[n]}, {roupa}, barefoot, standing straight and relaxed, '
+                            f'arms slightly away from the body, {vista[v]}, whole body from the top of the head to the feet, feet fully visible on the floor with empty floor below, '
+                            'centered, plain light gray seamless studio background, soft even lighting, photorealistic, detailed natural skin texture, sharp focus, 85mm DSLR')
+                  url = 'https://image.pollinations.ai/prompt/' + urllib.parse.quote(prompt) + f'?width=768&height=1152&nologo=true&model=flux&seed={seed}'
                   for t in range(3):
                       try:
-                          req = urllib.request.Request(url, data=json.dumps({'prompt': prompt, 'steps': 6, 'seed': seed}).encode(),
-                                                       headers={'Authorization': f"Bearer {os.environ['CF_TOKEN']}", 'Content-Type': 'application/json'})
-                          r = json.load(urllib.request.urlopen(req, timeout=120))
-                          img = base64.b64decode(r['result']['image'])
-                          open(f'corpos/{S}-{P}-{n}-{v}.jpg', 'wb').write(img)
-                          print(f'ok {S}-{P}-{n}-{v} {len(img)}', file=log, flush=True)
-                          break
+                          img = urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'nexia-bodycoach'}), timeout=120).read()
+                          if img[:3] == b'\xff\xd8\xff' or img[:4] == b'\x89PNG':
+                              open(f'corpos/{S}-{P}-{n}-{v}.jpg', 'wb').write(img)
+                              print(f'ok {S}-{P}-{n}-{v} {len(img)}', file=log, flush=True)
+                              break
+                          print(f'nao-imagem {S}-{P}-{n}-{v} {img[:120]!r}', file=log, flush=True)
                       except Exception as e:
-                          msg = getattr(e, 'read', lambda: b'')()[:300]
-                          print(f'falhou {S}-{P}-{n}-{v} t{t} {e} {msg!r}', file=log, flush=True)
-                          time.sleep(5 * (t + 1))
+                          print(f'falhou {S}-{P}-{n}-{v} t{t} {e}', file=log, flush=True)
+                      time.sleep(10 * (t + 1))
+                  time.sleep(3)
           PY
           cat corpos/log-*.txt
       - name: Gravar no branch

@@ -1,2 +1,0 @@
-falhou f-media-magro-frente t0 HTTP Error 404: Not Found b'{"result":null,"success":false,"errors":[{"code":7003,"message":"Could not route to /client/v4/accounts/ai/run/@cf/black-forest-labs/flux-1-schnell, perhaps your object identifier is invalid?"}],"messages":[]}'
-falhou f-media-magro-frente t1 HTTP Error 404: Not Found b'{"result":null,"success":false,"errors":[{"code":7003,"message":"Could not route to /client/v4/accounts/ai/run/@cf/black-forest-labs/flux-1-schnell, perhaps your object identifier is invalid?"}],"messages":[]}'
