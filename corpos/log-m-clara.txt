@@ -1,0 +1,17 @@
+ok m-clara-magro-frente 25520
+falhou m-clara-magro-lado t0 HTTP Error 402: Payment Required
+falhou m-clara-magro-lado t1 HTTP Error 402: Payment Required
+falhou m-clara-magro-lado t2 HTTP Error 402: Payment Required
+ok m-clara-magro-costas 27518
+falhou m-clara-medio-frente t0 HTTP Error 402: Payment Required
+falhou m-clara-medio-frente t1 HTTP Error 402: Payment Required
+falhou m-clara-medio-frente t2 HTTP Error 402: Payment Required
+ok m-clara-medio-lado 31682
+falhou m-clara-medio-costas t0 HTTP Error 402: Payment Required
+falhou m-clara-medio-costas t1 HTTP Error 402: Payment Required
+falhou m-clara-medio-costas t2 HTTP Error 402: Payment Required
+ok m-clara-alto-frente 51190
+falhou m-clara-alto-lado t0 HTTP Error 402: Payment Required
+falhou m-clara-alto-lado t1 HTTP Error 402: Payment Required
+falhou m-clara-alto-lado t2 HTTP Error 402: Payment Required
+ok m-clara-alto-costas 32613
