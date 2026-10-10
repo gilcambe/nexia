@@ -2,7 +2,7 @@ import { useRef, useState, type ChangeEvent } from 'react';
 import { CAMPO_POR_KEY } from '@/lib/avaliacao/campos';
 import { calcular, dataBr, type Avaliacao } from '@/lib/avaliacao/calculos';
 import { completar, salvarAvaliacao, avaliacaoDoRegistro, type PerfilAvaliacao } from '@/lib/avaliacao/dados';
-import { ACEITOS, lerArquivos } from '@/lib/avaliacao/lerArquivo';
+import { lerArquivos } from '@/lib/avaliacao/lerArquivo';
 import { setUserDoc } from '@/lib/userData';
 import type { ProgressEntry } from '@/hooks/useProgressData';
 import AvaliacaoForm from './AvaliacaoForm';
@@ -90,7 +90,7 @@ export default function ImportarAvaliacao({
           </span>
         </span>
       </button>
-      <input ref={ref} type="file" multiple accept={ACEITOS} className="hidden" onChange={escolher} data-testid="importar-arquivo" />
+      <input ref={ref} type="file" multiple className="hidden" onChange={escolher} data-testid="importar-arquivo" />
 
       {erro && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p>}
       {avisos.map((a) => <p key={a} className="mt-2 rounded-lg bg-secondary-50 px-3 py-2 text-xs text-secondary-800">{a}</p>)}
