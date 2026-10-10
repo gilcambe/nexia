@@ -5,10 +5,11 @@ import type { PerfilAvaliacao } from '@/lib/avaliacao/dados';
 import type { ItemSerie } from '@/lib/avaliacao/serie';
 import Fotos360 from './Fotos360';
 import CorpoRealista from './CorpoRealista';
+import type { Avatar } from '@/lib/avaliacao/avatar';
 
 // Corpo do aluno: o corpo realista moldado com as medidas ou as fotos dele girando.
 // O boneco 3D cinza saiu (o aluno pediu só o corpo realista).
-export default function PainelCorpo({ serie, perfil, nome, onSalvarMedida }: { serie: ItemSerie[]; perfil: PerfilAvaliacao; volume?: Record<string, number>; nome?: string; metas?: MetasMedidas | null; onSalvarMedida?: (campo: string, cm: number) => Promise<void> }) {
+export default function PainelCorpo({ serie, perfil, nome, onSalvarMedida, avatar, onMudarAvatar }: { serie: ItemSerie[]; perfil: PerfilAvaliacao; volume?: Record<string, number>; nome?: string; metas?: MetasMedidas | null; onSalvarMedida?: (campo: string, cm: number) => Promise<void>; avatar?: unknown; onMudarAvatar?: (a: Avatar) => Promise<void> }) {
   const comMedidas = serie.filter((s) => s.m.peso != null || s.m.cintura != null);
   const ultima = comMedidas[comMedidas.length - 1] ?? null;
   const comFotos = [...serie].reverse().find((s) => Object.values(s.fotos).filter(Boolean).length >= 2) ?? null;
@@ -41,7 +42,7 @@ export default function PainelCorpo({ serie, perfil, nome, onSalvarMedida }: { s
           <p className="mt-1 text-[11px] text-foreground-400">Suas fotos de {dataBr(comFotos.data)}. Para comparar com outras datas, use a aba Fotos.</p>
         </>
       ) : (
-        <CorpoRealista valores={recentes} sexo={ultima?.av.sexo ?? perfil.sexo} altura={perfil.altura} gordura={gordura} onSalvarMedida={nome ? undefined : onSalvarMedida} />
+        <CorpoRealista valores={recentes} sexo={ultima?.av.sexo ?? perfil.sexo} altura={perfil.altura} gordura={gordura} onSalvarMedida={nome ? undefined : onSalvarMedida} avatar={avatar} onMudarAvatar={nome ? undefined : onMudarAvatar} />
       )}
     </div>
   );

@@ -3,7 +3,9 @@ import Card from '@/components/base/Card';
 import { alertas, dataBr, prever, recordes, simetria } from '@/lib/avaliacao/calculos';
 import { MAX_FOTO_BYTES, salvarAvaliacao, type PerfilAvaliacao } from '@/lib/avaliacao/dados';
 import { hojeIso } from '@/lib/avaliacao/importar';
-import { compressImageToDataUrl } from '@/lib/userData';
+import { compressImageToDataUrl, setUserDoc } from '@/lib/userData';
+import { useAuth } from '@/components/feature/AuthContext';
+import type { Avatar } from '@/lib/avaliacao/avatar';
 import type { ItemSerie } from '@/lib/avaliacao/serie';
 import { compartilharArquivo } from '@/lib/avaliacao/imagens';
 import { gerarIcsReavaliacao } from '@/lib/lembretes';
@@ -28,6 +30,7 @@ export default function ResumoEvolucao({
   onMudou?: () => void;
 }) {
   const navigate = useNavigate();
+  const { profile, refreshProfile } = useAuth();
   const { metas, fotoMeta, salvar } = useMetas(uid);
   // Registros só com fotos não contam como avaliação (senão a última aparece toda em branco).
   const comMedidas = serie.filter((s) => Object.keys(s.av.valores).some((k) => k !== 'altura' && k !== 'idade'));
@@ -78,6 +81,12 @@ export default function ResumoEvolucao({
     if (!uid) throw new Error('entre na sua conta');
     await salvarAvaliacao(uid, { data: hojeIso(), valores: { [campo]: cm }, fonte: 'Manual' }, { existentes: serie.map((s) => s.registro) });
     onMudou?.();
+  };
+  // Corpo realista escolhido pelo aluno (sexo, pele, biotipo) fica no perfil.
+  const mudarAvatar = async (a: Avatar) => {
+    if (!uid) return;
+    await setUserDoc(uid, 'profile', 'main', { avatar: a }, true);
+    refreshProfile();
   };
   const medidaTwin = {
     atual: Object.fromEntries((Object.keys(CAMPO_REGIAO) as RegionKey[]).map((r) => [r, ultimaMedida(CAMPO_REGIAO[r])])) as Partial<Record<RegionKey, number>>,
@@ -168,7 +177,7 @@ export default function ResumoEvolucao({
       </Card>
 
       <Card padding="p-4">
-        <PainelCorpo serie={serie} perfil={perfil} volume={volume} metas={metas} onSalvarMedida={salvarMedida} />
+        <PainelCorpo serie={serie} perfil={perfil} volume={volume} metas={metas} onSalvarMedida={salvarMedida} avatar={profile?.avatar} onMudarAvatar={mudarAvatar} />
       </Card>
 
       <MetasCorpo key={fotoMeta ?? 'sem'} serie={serie} metas={metas} fotoMeta={fotoMeta} salvar={salvar} />

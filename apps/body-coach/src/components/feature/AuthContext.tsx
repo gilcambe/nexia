@@ -49,6 +49,7 @@ export interface AthleteProfile {
   periodizacao?: { objetivo: 'hipertrofia' | 'forca' | 'emagrecimento' | 'resistencia'; semanas: number; inicio: string } | null;
   sinais?: { data: string; sistolica?: number | null; diastolica?: number | null; glicemia?: number | null; fc_repouso?: number | null; jejum?: boolean }[];
   marcadores_hist?: { data: string; valores: Record<string, number> }[];
+  avatar?: { sexo?: string; pele?: string; biotipo?: string }; // corpo realista escolhido (Evolução)
 }
 
 export interface TrocaFixa { chave: string; nome: string; porcao: string }
