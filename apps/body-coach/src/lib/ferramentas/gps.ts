@@ -1,7 +1,7 @@
 // Corrida/caminhada com o GPS do celular: distância (fórmula de Haversine), ritmo e gasto estimado.
 export interface Ponto { lat: number; lon: number; t: number; acc?: number }
 
-export function distanciaKm(a: Ponto, b: Ponto): number {
+export function distanciaKm(a: Pick<Ponto, 'lat' | 'lon'>, b: Pick<Ponto, 'lat' | 'lon'>): number {
   const R = 6371;
   const rad = (x: number) => (x * Math.PI) / 180;
   const dLat = rad(b.lat - a.lat);

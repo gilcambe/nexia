@@ -4,6 +4,7 @@ import { useAuth } from '@/components/feature/AuthContext';
 import CompartilharCartao from '@/components/feature/CompartilharCartao';
 import MonitorCardiaco from '@/components/feature/MonitorCardiaco';
 import { setUserDoc } from '@/lib/userData';
+import { avisarTreinoFeito } from '@/lib/ferramentas/social';
 import { useWakeLock } from '@/lib/useWakeLock';
 import { estadoFC, zerarSessaoFC } from '@/lib/ferramentas/frequencia';
 import { CATEGORIAS_PRONTOS, PLANOS_CORRIDA, TREINOS_PRONTOS, duracaoMin, kcalTreinoPronto, type TreinoPronto } from '@/lib/ferramentas/treinosProntos';
@@ -40,7 +41,7 @@ function bip(agudo: boolean, ligado: boolean) {
 }
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
-function Player({ treino, onSair }: { treino: TreinoPronto; onSair: () => void }) {
+export function Player({ treino, onSair }: { treino: TreinoPronto; onSair: () => void }) {
   const { user, profile } = useAuth();
   const peso = Number(profile?.onboarding?.weight) || 70;
   const [idx, setIdx] = useState(0);
@@ -75,6 +76,7 @@ function Player({ treino, onSair }: { treino: TreinoPronto; onSair: () => void }
       localStorage.setItem(key, JSON.stringify([...(Array.isArray(list) ? list : []), w]));
     } catch { /* sem armazenamento */ }
     await setUserDoc(user.id, 'workouts', `pronto-${Date.now()}`, w).catch(() => {});
+    avisarTreinoFeito(min, kcal);
   };
 
   useEffect(() => {

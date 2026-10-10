@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { falar, fraseDescanso, FRASE_FIM_DESCANSO } from '@/lib/ferramentas/vozCoach';
 
 export interface DescansoTimerProps {
   segundos: number;
@@ -52,8 +53,14 @@ export default function DescansoTimer({ segundos: initialSegundos, onFinish, onS
 
   // Dispara onFinish quando segundos chegam a 0 (com bip e vibração, para quem está de olho no aparelho)
   useEffect(() => {
+    const f = fraseDescanso(segundos);
+    if (f) falar(f);
+  }, [segundos]);
+
+  useEffect(() => {
     if (segundos <= 0) {
       avisar();
+      falar(FRASE_FIM_DESCANSO);
       if (intervalRef.current) clearInterval(intervalRef.current);
       onFinish();
     }

@@ -28,6 +28,8 @@ import CompartilharCartao from '@/components/feature/CompartilharCartao';
 import MonitorCardiaco from '@/components/feature/MonitorCardiaco';
 import { estadoFC, kcalMusculacao, zerarSessaoFC } from '@/lib/ferramentas/frequencia';
 import type { DadosCartao } from '@/lib/ferramentas/cartao';
+import { definirVoz, falar, fraseExercicio, fraseFim, fraseSerie, vozDisponivel, vozLigada } from '@/lib/ferramentas/vozCoach';
+import { avisarTreinoFeito, duplaAtual, enviarStatusDupla } from '@/lib/ferramentas/social';
 
 type Phase =
   | 'PRE_SESSION'
@@ -130,6 +132,17 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
 
   const exercise = session.exercises[exIndex] ?? session.exercises[0];
 
+  // Coach por voz: anuncia cada exercício com a carga sugerida (liga e desliga na barra do treino).
+  const [voz, setVoz] = useState(vozLigada);
+  useEffect(() => {
+    if (phase !== 'EXERCISE_ACTIVE') return;
+    const sug = sugerirCarga(historicoSeries[exercise.name], exercise.targetReps);
+    falar(fraseExercicio(exercise.name, exercise.targetSets || 3, exercise.targetReps || '8-12', sug));
+    void enviarStatusDupla({ exercicio: exercise.name, series: (setsByEx[exercise.id] ?? []).length, bpm: estadoFC().bpm || 0 }, true);
+    // só ao trocar de exercício
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, exIndex, voz]);
+
   // rest countdown
   useEffect(() => {
     if (!resting || restLeft <= 0) return;
@@ -156,6 +169,10 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
     };
     setSetsByEx((v) => ({ ...v, [exercise.id]: [...prev, setLog] }));
     startRest(exercise.restSec);
+    const antes = historicoSeries[exercise.name] ?? [];
+    const recorde = antes.length > 0 && ehRecorde(antes, { weight: newSet.weight, reps: newSet.reps });
+    falar(fraseSerie(setLog.set, exercise.targetSets || 3, newSet.weight, newSet.reps, recorde, exercise.restSec));
+    void enviarStatusDupla({ exercicio: exercise.name, series: setLog.set, bpm: estadoFC().bpm || 0, recado: recorde ? 'Recorde! 🏆' : '' }, true);
   };
 
   const finishExercise = () => {
@@ -233,6 +250,14 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
         <div className="-mt-2 mb-4 flex flex-wrap items-center gap-2" data-testid="barra-treino">
           <MusicaTreino variante="pilula" />
           <EntretenimentoTreino variante="pilula" />
+          {vozDisponivel() && (
+            <button type="button" onClick={() => { const n = !voz; definirVoz(n); setVoz(n); if (n) falar('Coach por voz ligado.', true); else window.speechSynthesis?.cancel(); }} aria-pressed={voz} className={`inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold ${voz ? 'bg-accent-500 text-background-50' : 'border border-background-200 bg-background-50 text-foreground-700'}`} aria-label={voz ? 'Desligar coach por voz' : 'Ligar coach por voz'}>
+              <i className={voz ? 'ri-volume-up-line text-base' : 'ri-volume-mute-line text-base'}></i>Voz
+            </button>
+          )}
+          {duplaAtual() && (
+            <Link to="/ferramentas/dupla" className="inline-flex items-center gap-1.5 rounded-full border border-background-200 bg-background-50 px-3 py-2 text-xs font-semibold text-foreground-700"><i className="ri-team-line text-base"></i>Dupla</Link>
+          )}
           <button type="button" onClick={() => setOpen(true)} className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-primary-500 px-3 py-2 text-xs font-semibold text-background-50 shadow-sm" aria-label="Falar com o coach">
             <i className="ri-chat-3-line text-base"></i>Coach
           </button>
@@ -628,6 +653,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
                 // Sem armazenamento local: fica só no Firebase.
               }
               await setUserDoc(user.id, 'workouts', session.id, w).catch(() => {});
+              avisarTreinoFeito(durationMin, kcalTreino);
               onSaved?.();
             }
             const rec = progressions.find((p) => p && p.recorde);
@@ -642,6 +668,8 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
               ],
               destaque: rec ? `Novo recorde: ${rec.name}` : undefined,
             });
+            falar(fraseFim(durationMin, kcalTreino));
+            void enviarStatusDupla({ exercicio: 'Treino concluído', series: totalSets, recado: 'Terminei! 💪' }, true);
             setPhase('SESSION_COMPLETE');
           };
 

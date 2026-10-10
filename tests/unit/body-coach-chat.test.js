@@ -218,3 +218,72 @@ test('BCC11. link público da avaliação: abre sem login, esconde fotos se pedi
   const r = await handler({ httpMethod: 'POST', headers: {}, body: JSON.stringify({ acao: 'compartilhado_ver', token: 'x'.repeat(30) }) });
   assert.notEqual(r.statusCode, 401, 'o link público não pede login');
 });
+
+test('BCC20. treino feito conta no ranking e marca o desafio; só aparece quem quis participar', async () => {
+  const db = fakeDb();
+  const [, c] = await executar({ acao: 'perfil', papel: 'coach', nome: 'Gil' }, 'coach1', db);
+  for (const [u, n] of [['ana', 'Ana'], ['bob', 'Bob']]) {
+    await executar({ acao: 'perfil', papel: 'aluno', nome: n }, u, db);
+    await executar({ acao: 'vincular', codigo: c.perfil.codigo }, u, db);
+  }
+  await executar({ acao: 'desafio_criar', titulo: '7 dias treinando', dias: 7 }, 'coach1', db);
+  const [st, r] = await executar({ acao: 'treino_feito', minutos: 50, kcal: 400 }, 'ana', db);
+  assert.equal(st, 200);
+  assert.equal(r.semana.treinos, 1);
+  assert.equal(r.desafioMarcado, true);
+  await executar({ acao: 'treino_feito', minutos: 30 }, 'ana', db);
+  await executar({ acao: 'treino_feito', minutos: 20 }, 'bob', db);
+  // Bob não quis participar: Ana vê só ela mesma
+  let [, v] = await executar({ acao: 'ranking_ver' }, 'ana', db);
+  assert.deepEqual(v.lista.map((x) => x.nome), ['Ana']);
+  await executar({ acao: 'ranking_config', participar: true, apelido: 'Bobão' }, 'bob', db);
+  [, v] = await executar({ acao: 'ranking_ver' }, 'ana', db);
+  assert.deepEqual(v.lista.map((x) => x.nome), ['Ana', 'Bobão']);
+  assert.equal(v.lista[0].treinos, 2);
+  assert.equal(v.lista[0].dias, 1);
+  const [, vc] = await executar({ acao: 'ranking_ver' }, 'coach1', db);
+  assert.equal(vc.lista.length, 2);
+});
+
+test('BCC21. treino em dupla: cria, o amigo entra, um vê o outro; terceiro fica de fora', async () => {
+  const db = fakeDb();
+  const [, s] = await executar({ acao: 'dupla_criar', nome: 'Ana' }, 'ana', db);
+  assert.match(s.codigo, /^[A-Z2-9]{6}$/);
+  assert.equal((await executar({ acao: 'dupla_entrar', codigo: 'XXXXXX' }, 'bob', db))[0], 404);
+  const [st] = await executar({ acao: 'dupla_entrar', codigo: s.codigo, nome: 'Bob' }, 'bob', db);
+  assert.equal(st, 200);
+  assert.equal((await executar({ acao: 'dupla_entrar', codigo: s.codigo }, 'eve', db))[0], 409);
+  assert.equal((await executar({ acao: 'dupla_ver', codigo: s.codigo }, 'eve', db))[0], 403);
+  await executar({ acao: 'dupla_status', codigo: s.codigo, exercicio: 'Supino', series: 3, bpm: 140, recado: 'Bora!' }, 'bob', db);
+  const [, v] = await executar({ acao: 'dupla_ver', codigo: s.codigo }, 'ana', db);
+  assert.equal(v.sala.status.bob.exercicio, 'Supino');
+  assert.equal(v.sala.status.bob.bpm, 140);
+  assert.equal(v.sala.nomes.bob, 'Bob');
+  await executar({ acao: 'dupla_sair', codigo: s.codigo }, 'ana', db);
+  assert.equal((await executar({ acao: 'dupla_ver', codigo: s.codigo }, 'bob', db))[0], 404);
+});
+
+test('BCC22. Pix: coach cadastra a chave, aluno vê e avisa, coach marca pago; outro coach não mexe', async () => {
+  const db = fakeDb();
+  const [, c] = await executar({ acao: 'perfil', papel: 'coach', nome: 'Gil' }, 'coach1', db);
+  await executar({ acao: 'perfil', papel: 'coach', nome: 'Outro' }, 'coach2', db);
+  await executar({ acao: 'perfil', papel: 'aluno', nome: 'Ana' }, 'ana', db);
+  await executar({ acao: 'vincular', codigo: c.perfil.codigo }, 'ana', db);
+  assert.equal((await executar({ acao: 'pix_config', tipo: 'email', chave: 'a@b.com', nome: 'Gil', cidade: 'Recife', valor: 99.9 }, 'ana', db))[0], 403);
+  assert.equal((await executar({ acao: 'pix_config', tipo: 'xx', chave: 'a@b.com', nome: 'Gil', cidade: 'Recife' }, 'coach1', db))[0], 400);
+  assert.equal((await executar({ acao: 'pix_config', tipo: 'email', chave: 'gil@pix.com', nome: 'Gil Coach', cidade: 'Recife', valor: 99.9, vencimento: 5 }, 'coach1', db))[0], 200);
+  let [, a] = await executar({ acao: 'pix_ver' }, 'ana', db);
+  assert.equal(a.pix.chave, 'gil@pix.com');
+  assert.equal(a.valor, 99.9);
+  assert.equal(a.pago, false);
+  await executar({ acao: 'pagamento_avisar' }, 'ana', db);
+  let [, co] = await executar({ acao: 'pix_ver' }, 'coach1', db);
+  assert.equal(co.alunos[0].avisou, true);
+  assert.equal((await executar({ acao: 'pagamento_marcar', aluno: 'ana', mes: co.mes, pago: true }, 'coach2', db))[0], 403);
+  await executar({ acao: 'pagamento_marcar', aluno: 'ana', mes: co.mes, pago: true, valor: 80 }, 'coach1', db);
+  [, a] = await executar({ acao: 'pix_ver' }, 'ana', db);
+  assert.equal(a.pago, true);
+  assert.equal(a.valor, 80);
+  const [, l] = await executar({ acao: 'ler', com: 'coach1' }, 'ana', db);
+  assert.match(l.mensagens[0].texto, /Paguei a mensalidade/);
+});

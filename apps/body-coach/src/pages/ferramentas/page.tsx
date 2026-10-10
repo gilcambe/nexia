@@ -18,6 +18,11 @@ import Dicas from './Dicas';
 import Saude from './Saude';
 import Loja from './Loja';
 import MeusDados from './MeusDados';
+import Dupla from './Dupla';
+import Ranking from './Ranking';
+import Mapa from './Mapa';
+import ModoViagem from './ModoViagem';
+import Mensalidade from './Mensalidade';
 
 // Ferramentas extras do Body Coach, todas grátis e feitas no próprio aparelho.
 export const FERRAMENTAS = [
@@ -26,9 +31,13 @@ export const FERRAMENTAS = [
   { id: 'relogio', grupo: 'Treino', nome: 'Relógio e batimentos', desc: 'Cinta/relógio ao vivo e importar treino (GPX/TCX)', icone: 'ri-heart-pulse-line', el: Relogio },
   { id: 'corrida', grupo: 'Treino', nome: 'Corrida com GPS', desc: 'Distância, ritmo e percurso pelo celular', icone: 'ri-run-line', el: Corrida },
   { id: 'periodizacao', grupo: 'Treino', nome: 'Periodização', desc: 'Seu ciclo de 4 a 16 semanas com descarga', icone: 'ri-stack-line', el: Periodizacao },
+  { id: 'dupla', grupo: 'Treino', nome: 'Treino em dupla ao vivo', desc: 'Treine com um amigo e veja a série e os batimentos dele', icone: 'ri-team-line', el: Dupla },
+  { id: 'viagem', grupo: 'Treino', nome: 'Modo viagem', desc: 'Treino no hotel com o tempo e o que tiver, guiado por voz', icone: 'ri-suitcase-3-line', el: ModoViagem },
+  { id: 'mapa', grupo: 'Treino', nome: 'Onde treinar perto', desc: 'Academias, parques, pistas e aparelhos ao ar livre', icone: 'ri-map-2-line', el: Mapa },
   { id: 'calculadoras', grupo: 'Treino', nome: 'Calculadoras', desc: '1RM, anilhas, zonas cardíacas, ritmo, gasto e água', icone: 'ri-calculator-line', el: Calculadoras },
   { id: 'evolucao-carga', grupo: 'Evolução', nome: 'Evolução de carga', desc: 'Gráfico e recordes de cada exercício', icone: 'ri-line-chart-line', el: EvolucaoCarga },
   { id: 'conquistas', grupo: 'Evolução', nome: 'Conquistas e nível', desc: 'Medalhas, XP e sequência de treinos', icone: 'ri-trophy-line', el: Conquistas },
+  { id: 'ranking', grupo: 'Evolução', nome: 'Ranking e desafios', desc: 'Pontos da semana na equipe do seu coach', icone: 'ri-medal-line', el: Ranking },
   { id: 'retrospectiva', grupo: 'Evolução', nome: 'Retrospectiva do mês', desc: 'Seus números do mês, prontos para postar', icone: 'ri-movie-2-line', el: Retrospectiva },
   { id: 'lista-compras', grupo: 'Nutrição', nome: 'Lista de compras', desc: 'Tudo da sua dieta para a semana', icone: 'ri-shopping-cart-2-line', el: ListaCompras },
   { id: 'jejum', grupo: 'Nutrição', nome: 'Jejum intermitente', desc: 'Cronômetro 12:12 até 20:4 (opcional)', icone: 'ri-hourglass-line', el: Jejum },
@@ -37,6 +46,7 @@ export const FERRAMENTAS = [
   { id: 'dicas', grupo: 'Saúde', nome: 'Dicas de saúde', desc: 'Sono, água, comida, treino, mente e postura', icone: 'ri-lightbulb-flash-line', el: Dicas },
   { id: 'ciclo', grupo: 'Saúde', nome: 'Ciclo menstrual', desc: 'Treino e dieta ajustados à fase (opcional)', icone: 'ri-drop-line', el: Ciclo },
   { id: 'loja', grupo: 'Loja e comunidade', nome: 'Loja', desc: 'Suplementos, acessórios e tênis recomendados para você', icone: 'ri-store-2-line', el: Loja },
+  { id: 'mensalidade', grupo: 'Loja e comunidade', nome: 'Mensalidade por Pix', desc: 'Aluno paga o personal direto, sem taxa; o coach marca quem pagou', icone: 'ri-qr-code-line', el: Mensalidade },
   { id: 'indique', grupo: 'Loja e comunidade', nome: 'Indique e compartilhe', desc: 'Seu link, cartão do treino e embaixador', icone: 'ri-gift-line', el: Indique },
   { id: 'planos', grupo: 'Loja e comunidade', nome: 'Planos', desc: 'Grátis, Premium e para personais', icone: 'ri-vip-crown-line', el: Planos },
   { id: 'meus-dados', grupo: 'Conta', nome: 'Meus dados', desc: 'Baixar uma cópia de tudo (LGPD)', icone: 'ri-download-cloud-line', el: MeusDados },
