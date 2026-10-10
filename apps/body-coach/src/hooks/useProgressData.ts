@@ -3,6 +3,8 @@ import { listUserDocs, getUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import { readLocalList, localIso, LOCAL_PROGRESS_KEY } from '@/lib/localDemo';
 import { localProgressSeed, localDemoProfile } from '@/mocks/localDemo';
+import type { Avaliacao, Sexo } from '@/lib/avaliacao/calculos';
+import type { Fotos, PerfilAvaliacao } from '@/lib/avaliacao/dados';
 
 export interface ProgressEntry {
   id: number;
@@ -13,6 +15,9 @@ export interface ProgressEntry {
   notes: string | null;
   taken_at: string;
   signedUrl: string | null;
+  // Avaliação completa (antropometria/bioimpedância) e as 4 fotos, quando houver.
+  avaliacao?: Avaliacao | null;
+  fotos?: Fotos | null;
 }
 
 export interface WeightTrendPoint {
@@ -31,6 +36,7 @@ interface ProgressData {
   goalBodyFat: number;
   goalWeight: number | null;
   weightTrend: WeightTrendPoint[];
+  perfil: PerfilAvaliacao;
 }
 
 function formatShortDate(iso: string): string {
@@ -39,6 +45,10 @@ function formatShortDate(iso: string): string {
 }
 
 interface LocalProgressRecord {
+  id?: number;
+  avaliacao?: Avaliacao | null;
+  fotos?: Fotos | null;
+  image_url?: string | null;
   offset?: number;
   taken_at?: string;
   weight_kg: number | null;
@@ -56,14 +66,16 @@ function buildLocalEntries(): ProgressEntry[] {
       const takenAt = r.taken_at ?? localIso(r.offset ?? 0);
       const measurements = r.measurements ?? (r.waist != null ? { cintura: r.waist } : {});
       const entry: ProgressEntry = {
-        id: new Date(takenAt).getTime(),
+        id: r.id ?? new Date(takenAt).getTime(),
         weight_kg: r.weight_kg,
         body_fat_pct: r.body_fat_pct,
         measurements,
-        image_url: null,
+        image_url: r.image_url ?? null,
         notes: r.notes,
         taken_at: takenAt,
-        signedUrl: null,
+        signedUrl: r.fotos?.frente ?? r.image_url ?? null,
+        avaliacao: r.avaliacao ?? null,
+        fotos: r.fotos ?? null,
       };
       return entry;
     })
@@ -72,7 +84,7 @@ function buildLocalEntries(): ProgressEntry[] {
 
 // No Firestore a foto já vem dentro do documento (data URL): não há URL assinada.
 function withPhotoUrls(entries: ProgressEntry[]): ProgressEntry[] {
-  return entries.map((e) => ({ ...e, signedUrl: e.image_url || null }));
+  return entries.map((e) => ({ ...e, signedUrl: e.fotos?.frente || e.image_url || null }));
 }
 
 export function useProgressData(userId: string | undefined): ProgressData {
@@ -82,6 +94,7 @@ export function useProgressData(userId: string | undefined): ProgressData {
   const [height, setHeight] = useState(170);
   const [goalBodyFat, setGoalBodyFat] = useState(15);
   const [goalWeight, setGoalWeight] = useState<number | null>(null);
+  const [perfil, setPerfil] = useState<PerfilAvaliacao>({ sexo: null, idade: null, altura: null, nome: null });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -103,6 +116,7 @@ export function useProgressData(userId: string | undefined): ProgressData {
         setHeight(localDemoProfile.height_cm);
         setGoalBodyFat(localDemoProfile.goal_body_fat_pct);
         setGoalWeight(localDemoProfile.goal_weight_kg);
+        setPerfil({ sexo: 'M', idade: 30, altura: localDemoProfile.height_cm, nome: 'Atleta de teste' });
         setError(null);
         setLoading(false);
         return;
@@ -118,7 +132,10 @@ export function useProgressData(userId: string | undefined): ProgressData {
             height_cm: number | null;
             goal_body_fat_pct: number | null;
             goal_weight_kg: number | null;
-            onboarding?: { height?: string };
+            full_name?: string | null;
+            apelido?: string | null;
+            sexo?: Sexo | null;
+            onboarding?: { height?: string; age?: string; name?: string };
           }>(userId, 'profile', 'main').catch(() => null),
         ]);
 
@@ -141,6 +158,13 @@ export function useProgressData(userId: string | undefined): ProgressData {
           else if (obHeight > 0) setHeight(obHeight);
           if (p.goal_body_fat_pct) setGoalBodyFat(p.goal_body_fat_pct);
           setGoalWeight(p.goal_weight_kg ?? null);
+          const idade = Number(p.onboarding?.age);
+          setPerfil({
+            sexo: p.sexo === 'M' || p.sexo === 'F' ? p.sexo : null,
+            idade: idade > 0 ? idade : null,
+            altura: p.height_cm || (obHeight > 0 ? obHeight : null),
+            nome: p.full_name || p.onboarding?.name || p.apelido || null,
+          });
         }
       } catch (err) {
         if (active) setError('Não foi possível carregar seus dados de progresso.');
@@ -176,5 +200,6 @@ export function useProgressData(userId: string | undefined): ProgressData {
     goalBodyFat,
     goalWeight,
     weightTrend,
+    perfil,
   };
 }

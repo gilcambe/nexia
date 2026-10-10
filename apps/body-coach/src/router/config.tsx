@@ -19,6 +19,7 @@ import AntiDoping from "../pages/antidoping/page";
 import Onboarding from "../pages/onboarding/page";
 import Auth from "../pages/auth/page";
 import Privacy from "../pages/privacy/page";
+import RelatorioAvaliacao from "../pages/evolution/relatorio/page";
 
 const routes: RouteObject[] = [
   {
@@ -40,6 +41,14 @@ const routes: RouteObject[] = [
   {
     path: "/onboarding",
     element: <Onboarding />,
+  },
+  {
+    path: "/evolution/relatorio/:id",
+    element: (
+      <AuthGuard>
+        <RelatorioAvaliacao />
+      </AuthGuard>
+    ),
   },
   {
     path: "/",

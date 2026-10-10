@@ -155,7 +155,7 @@ export default function RegisterProgress({
       <p className="mb-4 text-sm text-foreground-600">
         Registre uma nova foto de progresso com peso e medidas. Tudo é salvo no seu histórico
         com a <span className="font-semibold text-foreground-900">data real de hoje</span> e
-        alimenta automaticamente o gráfico de evolução e o Body Twin.
+        alimenta automaticamente os gráficos e o corpo 3D.
       </p>
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-[220px_1fr]">

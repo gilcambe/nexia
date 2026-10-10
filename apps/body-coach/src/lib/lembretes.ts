@@ -45,3 +45,21 @@ export function gerarIcs(opts: { dias: string[]; hora: string; apelido?: string 
   linhas.push('END:VCALENDAR');
   return linhas.join('\r\n') + '\r\n';
 }
+
+// Lembrete mensal de reavaliação (fotos nas 4 posições + medidas), sempre no mesmo dia do mês.
+export function gerarIcsReavaliacao(agora: Date = new Date(), hora = 8): string {
+  const dia = Math.min(28, agora.getDate());
+  const prox = new Date(agora.getFullYear(), agora.getMonth() + 1, dia, hora, 0);
+  const q = (d: Date) => `${d.getFullYear()}${dois(d.getMonth() + 1)}${dois(d.getDate())}T${dois(d.getHours())}${dois(d.getMinutes())}00`;
+  const fim = new Date(prox.getTime() + 20 * 60000);
+  const carimbo = `${agora.getUTCFullYear()}${dois(agora.getUTCMonth() + 1)}${dois(agora.getUTCDate())}T${dois(agora.getUTCHours())}${dois(agora.getUTCMinutes())}00Z`;
+  const titulo = 'Reavaliação do mês: fotos e medidas';
+  const texto = 'Abra o NEXIA Body Coach > Evolução: tire as fotos nas 4 posições (frente, costas, lado direito e esquerdo) e registre as medidas ou importe o laudo da balança.';
+  return [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//NEXIA Body Coach//PT-BR//', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'BEGIN:VEVENT', 'UID:reavaliacao@nexia-body-coach', `DTSTAMP:${carimbo}`, `DTSTART:${q(prox)}`, `DTEND:${q(fim)}`,
+    `RRULE:FREQ=MONTHLY;BYMONTHDAY=${dia}`, `SUMMARY:${escapa(titulo)}`, `DESCRIPTION:${escapa(texto)}`,
+    'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${escapa(titulo)}`, 'TRIGGER:-PT10M', 'END:VALARM', 'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n') + '\r\n';
+}

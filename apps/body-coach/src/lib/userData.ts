@@ -113,7 +113,7 @@ function readAsDataUrl(file: Blob): Promise<string> {
 
 // Reduz a imagem (lado maior até maxSide px) e gera JPEG em data URL, baixando a
 // qualidade até caber no limite do documento.
-export async function compressImageToDataUrl(file: File, maxSide = 1000): Promise<string> {
+export async function compressImageToDataUrl(file: File | Blob, maxSide = 1000, maxBytes = MAX_INLINE_BYTES): Promise<string> {
   const src = await readAsDataUrl(file);
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const el = new Image();
@@ -132,7 +132,7 @@ export async function compressImageToDataUrl(file: File, maxSide = 1000): Promis
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     for (const q of [0.82, 0.7, 0.55]) {
       const out = canvas.toDataURL('image/jpeg', q);
-      if (out.length <= MAX_INLINE_BYTES) return out;
+      if (out.length <= maxBytes) return out;
     }
     side = Math.round(side * 0.75);
   }
