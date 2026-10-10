@@ -1,4 +1,4 @@
-# Temporário: gera as imagens do corpo realista (Body Coach) pela rota /api/corpo-ia do Worker (Workers AI grátis)
+# Temporário: gera as imagens do corpo realista (Body Coach) pela rota /api/corpo-ia do Worker (Workers AI grátis) (v2)
 # e grava neste mesmo branch. Não vai para o develop. Autorizado pelo usuário em 10/10/2026.
 name: Gerar corpos realistas
 on:
