@@ -4,9 +4,11 @@
 import app from './app.js';
 import functions from './functions.js';
 import jobs from '../nexia-ai/jobs/index.js';
+import { corpoIa } from './corpoIa.js';
 
 export default {
   async fetch(request, env) {
+    if (new URL(request.url).pathname === '/api/corpo-ia') return corpoIa(request, env);
     return app.handleRequest(request, env, { getFunction: functions.getFunction });
   },
 
