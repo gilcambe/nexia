@@ -5,14 +5,20 @@ function fakeDb() {
   let n = 0;
   const snap = (p) => ({ id: p.split('/').pop(), exists: docs.has(p), data: () => (docs.has(p) ? { ...docs.get(p) } : undefined) });
   const err = () => Object.assign(new Error('6 ALREADY_EXISTS: Document already exists'), { code: 6 });
+  // Igual ao Firestore de verdade: lista dentro de lista é recusada.
+  const semListaDeLista = (v) => {
+    if (Array.isArray(v)) { if (v.some(Array.isArray)) throw new Error('3 INVALID_ARGUMENT: Nested arrays are not allowed'); v.forEach(semListaDeLista); }
+    else if (v && typeof v === 'object') Object.values(v).forEach(semListaDeLista);
+    return v;
+  };
   function docRef(p) {
     return {
       id: p.split('/').pop(), path: p,
       collection: (c) => colRef(`${p}/${c}`),
       get: async () => snap(p),
-      set: async (d, o) => { docs.set(p, o && o.merge ? { ...(docs.get(p) || {}), ...d } : { ...d }); },
-      create: async (d) => { if (docs.has(p)) throw err(); docs.set(p, { ...d }); },
-      update: async (d) => { if (!docs.has(p)) throw new Error('5 NOT_FOUND'); docs.set(p, { ...docs.get(p), ...d }); },
+      set: async (d, o) => { semListaDeLista(d); docs.set(p, o && o.merge ? { ...(docs.get(p) || {}), ...d } : { ...d }); },
+      create: async (d) => { semListaDeLista(d); if (docs.has(p)) throw err(); docs.set(p, { ...d }); },
+      update: async (d) => { semListaDeLista(d); if (!docs.has(p)) throw new Error('5 NOT_FOUND'); docs.set(p, { ...docs.get(p), ...d }); },
       delete: async () => { docs.delete(p); },
     };
   }
