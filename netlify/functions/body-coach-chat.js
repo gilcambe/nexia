@@ -4,6 +4,8 @@
 // Tudo passa por aqui (login do Firebase + banco no servidor), então não precisa abrir regras do Firestore
 // e um aluno nunca lê conversa de outra pessoa. Só texto curto; sem armazenamento pago.
 // ações: perfil, vincular, contatos, enviar, ler, resumo, video_enviar, video_ver, demo_salvar, demo_ver, demo_listar
+// Novos: treino_feito, ranking_ver, ranking_config (ranking da equipe); dupla_* (treino em dupla ao vivo);
+// pix_config, pix_ver, pagamento_marcar, pagamento_avisar (mensalidade por Pix, sem gateway).
 // Evolução: alunos_evolucao, aluno_evolucao, agendar_avaliacao, comentar (coach); evolucao_info, evolucao_config (aluno);
 // compartilhar_criar / compartilhar_revogar (dono da avaliação) e compartilhado_ver (link público que vence sozinho).
 // Vídeos: clipes curtos (até ~10 s, gravados já comprimidos no celular) guardados como texto no próprio banco grátis.
@@ -16,6 +18,54 @@ const limpa = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const VIDEO_MAX = 700000; // caracteres do data URL (cabe no limite de 1 MiB do documento)
 const videoOk = (v) => typeof v === 'string' && v.length < VIDEO_MAX && /^data:video\/(webm|mp4)(;codecs=[^;,]+)?;base64,[A-Za-z0-9+/=]+$/.test(v);
 const codigoNovo = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 31)]).join('');
+
+// Segunda-feira da semana, no horário de Brasília (o ranking zera toda segunda).
+function inicioSemanaBR(agora = Date.now()) {
+  const d = new Date(agora - 3 * 3600000);
+  const dia = (d.getUTCDay() + 6) % 7;
+  return new Date(d.getTime() - dia * 86400000).toISOString().slice(0, 10);
+}
+
+const DUPLA_HORAS = 4;
+async function dupla(body, uid, db, eu) {
+  const salas = db.collection('bc_duplas');
+  const nome = (eu && eu.nome) || limpa(body.nome, 40) || 'Parceiro';
+  const acao = body.acao;
+  if (acao === 'dupla_criar') {
+    const codigo = codigoNovo();
+    const sala = { a: uid, b: '', nomes: { [uid]: nome }, status: {}, criado: Date.now(), expira: Date.now() + DUPLA_HORAS * 3600000 };
+    await salas.doc(codigo).set(sala);
+    return [200, { codigo, sala: { ...sala, souA: true } }];
+  }
+  const codigo = limpa(body.codigo, 10).toUpperCase();
+  if (codigo.length < 4) return [400, { error: 'Digite o código do treino em dupla.' }];
+  const ref = salas.doc(codigo);
+  const sala = (await ref.get()).data?.();
+  if (!sala || sala.expira < Date.now()) return [404, { error: 'Esse treino em dupla não existe ou já acabou.' }];
+  if (acao === 'dupla_entrar') {
+    if (sala.a !== uid && sala.b && sala.b !== uid) return [409, { error: 'Essa dupla já está completa.' }];
+    if (sala.a !== uid && !sala.b) {
+      sala.b = uid;
+      sala.nomes = { ...sala.nomes, [uid]: nome };
+      await ref.set({ b: uid, nomes: sala.nomes }, { merge: true });
+    }
+    return [200, { codigo, sala: { ...sala, souA: sala.a === uid } }];
+  }
+  if (sala.a !== uid && sala.b !== uid) return [403, { error: 'Você não está nessa dupla.' }];
+  if (acao === 'dupla_status') {
+    const num = (v, max) => Math.min(max, Math.max(0, Math.round(Number(v) || 0)));
+    const st = { exercicio: limpa(body.exercicio, 60), series: num(body.series, 99), bpm: num(body.bpm, 240), kcal: num(body.kcal, 5000), recado: limpa(body.recado, 40), em: Date.now() };
+    sala.status = { ...(sala.status || {}), [uid]: st };
+    await ref.set({ status: sala.status }, { merge: true });
+    return [200, { codigo, sala: { ...sala, souA: sala.a === uid } }];
+  }
+  if (acao === 'dupla_ver') return [200, { codigo, sala: { ...sala, souA: sala.a === uid } }];
+  if (acao === 'dupla_sair') {
+    await ref.set({ expira: 0 }, { merge: true });
+    return [200, { ok: true }];
+  }
+  return [400, { error: 'Pedido inválido.' }];
+}
 
 // Junta o que o aluno fez nos últimos 7 dias em números simples para o coach.
 function resumirSemana({ treinos, pesos }, desde, perfilAluno) {
@@ -146,6 +196,10 @@ async function executar(body, uid, db, ctx = {}) {
     const c = (await dir.doc(eu.coachUid).get()).data?.() || {};
     return [200, { coach: { uid: eu.coachUid, nome: c.nome || 'Seu coach', foto: c.foto || '' }, partilha: partilha(eu), proximaAvaliacao: eu.proximaAvaliacao || null }];
   }
+  // Treino em dupla ao vivo: um cria o código, o amigo entra, e cada um vê a série e os batimentos do outro.
+  // Não depende de coach nem de equipe; a sala some sozinha em 4 horas.
+  if (acao && acao.startsWith('dupla_')) return dupla(body, uid, db, eu);
+
   if (!eu) return [409, { error: 'Antes, escolha se você é aluno ou coach.' }];
 
   // ── Evolução: o lado do aluno ──
@@ -209,6 +263,107 @@ async function executar(body, uid, db, ctx = {}) {
     if (!datas.includes(hoje)) datas.push(hoje);
     await dir.doc(uid).set({ checkins: { id: d.id, datas } }, { merge: true });
     return [200, { datas, hoje }];
+  }
+
+  // Treino feito: conta a semana para o ranking da equipe e marca o desafio do dia sozinho.
+  if (acao === 'treino_feito') {
+    const min = Math.min(300, Math.max(0, Math.round(Number(body.minutos) || 0)));
+    const kcal = Math.min(3000, Math.max(0, Math.round(Number(body.kcal) || 0)));
+    const sem = inicioSemanaBR();
+    const s = eu.semana && eu.semana.inicio === sem ? eu.semana : { inicio: sem, treinos: 0, minutos: 0, kcal: 0 };
+    const semana = { inicio: sem, treinos: s.treinos + 1, minutos: s.minutos + min, kcal: (s.kcal || 0) + kcal };
+    const novo = { semana };
+    let desafioMarcado = false;
+    if (eu.papel === 'aluno' && eu.coachUid) {
+      const d = ((await dir.doc(eu.coachUid).get()).data?.() || {}).desafio;
+      const hoje = hojeBR();
+      if (d) {
+        const fim = new Date(new Date(`${d.inicio}T00:00:00Z`).getTime() + (d.dias - 1) * 86400000).toISOString().slice(0, 10);
+        if (hoje >= d.inicio && hoje <= fim) {
+          const datas = eu.checkins && eu.checkins.id === d.id ? eu.checkins.datas.slice() : [];
+          if (!datas.includes(hoje)) { datas.push(hoje); desafioMarcado = true; }
+          novo.checkins = { id: d.id, datas };
+        }
+      }
+    }
+    await dir.doc(uid).set(novo, { merge: true });
+    return [200, { semana, desafioMarcado }];
+  }
+  if (acao === 'ranking_config') {
+    const apelido = limpa(body.apelido, 30);
+    await dir.doc(uid).set({ ranking: !!body.participar, apelido }, { merge: true });
+    return [200, { ranking: !!body.participar, apelido }];
+  }
+  if (acao === 'ranking_ver') {
+    // Só aparece quem escolheu participar; o coach vê a equipe inteira.
+    const dono = eu.papel === 'coach' ? uid : eu.coachUid;
+    if (!dono) return [200, { lista: [], participo: !!eu.ranking, apelido: eu.apelido || '', semEquipe: true }];
+    const sem = inicioSemanaBR();
+    const c = eu.papel === 'coach' ? eu : ((await dir.doc(dono).get()).data?.() || {});
+    const d = c.desafio || null;
+    const alunos = await dir.where('coachUid', '==', dono).limit(100).get();
+    const lista = alunos.docs
+      .map((a) => ({ id: a.id, ...a.data() }))
+      .filter((a) => eu.papel === 'coach' || a.ranking || a.id === uid)
+      .map((a) => {
+        const s = a.semana && a.semana.inicio === sem ? a.semana : { treinos: 0, minutos: 0 };
+        const dias = d && a.checkins && a.checkins.id === d.id ? a.checkins.datas.length : 0;
+        return { nome: (a.ranking && a.apelido) || a.nome || 'Aluno', eu: a.id === uid, visivel: !!a.ranking, treinos: s.treinos, minutos: s.minutos, dias, pontos: s.treinos * 10 + Math.floor(s.minutos / 10) + dias * 5 };
+      })
+      .sort((a, b) => b.pontos - a.pontos || b.minutos - a.minutos);
+    return [200, { lista, desafio: d, semana: sem, papel: eu.papel, participo: !!eu.ranking, apelido: eu.apelido || '' }];
+  }
+
+  // Mensalidade por Pix, sem gateway nem taxa: o coach cadastra a chave dele, o aluno paga pelo banco
+  // e avisa; o coach marca quem pagou. O dinheiro vai direto de um para o outro.
+  if (acao === 'pix_config') {
+    if (eu.papel !== 'coach') return [403, { error: 'Só o coach cadastra a chave Pix.' }];
+    const tipo = ['cpf', 'cnpj', 'telefone', 'email', 'aleatoria'].includes(body.tipo) ? body.tipo : '';
+    const chave = limpa(body.chave, 77);
+    const nome = limpa(body.nome, 60);
+    const cidade = limpa(body.cidade, 40);
+    const valor = Math.round((Number(body.valor) || 0) * 100) / 100;
+    const vencimento = Math.min(28, Math.max(1, Math.round(Number(body.vencimento) || 10)));
+    if (!tipo || chave.length < 5) return [400, { error: 'Informe o tipo e a chave Pix.' }];
+    if (nome.length < 3 || cidade.length < 2) return [400, { error: 'Informe o seu nome e a sua cidade (aparecem no banco do aluno).' }];
+    if (!(valor >= 0 && valor <= 100000)) return [400, { error: 'Valor inválido.' }];
+    const pix = { tipo, chave, nome, cidade, valor, vencimento };
+    await dir.doc(uid).set({ pix }, { merge: true });
+    return [200, { pix }];
+  }
+  if (acao === 'pix_ver') {
+    const mes = limpa(body.mes, 7) || hojeBR().slice(0, 7);
+    if (!/^\d{4}-\d{2}$/.test(mes)) return [400, { error: 'Mês inválido.' }];
+    if (eu.papel === 'coach') {
+      const alunos = await dir.where('coachUid', '==', uid).limit(100).get();
+      return [200, { papel: 'coach', mes, pix: eu.pix || null, alunos: alunos.docs.map((a) => { const p = (a.data().pagamentos || {})[mes] || {}; return { uid: a.id, nome: a.data().nome, pago: !!p.pago, avisou: !!p.avisou, valor: a.data().valorMensal ?? null }; }) }];
+    }
+    if (!eu.coachUid) return [200, { papel: 'aluno', mes, pix: null }];
+    const c = (await dir.doc(eu.coachUid).get()).data?.() || {};
+    const p = (eu.pagamentos || {})[mes] || {};
+    return [200, { papel: 'aluno', mes, pix: c.pix || null, coach: c.nome || 'Seu coach', valor: eu.valorMensal ?? (c.pix ? c.pix.valor : null), pago: !!p.pago, avisou: !!p.avisou }];
+  }
+  if (acao === 'pagamento_marcar') {
+    if (eu.papel !== 'coach') return [403, { error: 'Só o coach marca pagamentos.' }];
+    const aluno = limpa(body.aluno, 128);
+    const mes = limpa(body.mes, 7);
+    if (!/^\d{4}-\d{2}$/.test(mes)) return [400, { error: 'Mês inválido.' }];
+    const a = (await dir.doc(aluno).get()).data?.();
+    if (!a || a.coachUid !== uid) return [403, { error: 'Esse aluno não é da sua equipe.' }];
+    const pagamentos = { ...(a.pagamentos || {}), [mes]: { ...((a.pagamentos || {})[mes] || {}), pago: !!body.pago, em: Date.now() } };
+    const novo = { pagamentos };
+    if (body.valor !== undefined) { const v = Math.round((Number(body.valor) || 0) * 100) / 100; if (v >= 0 && v <= 100000) novo.valorMensal = v; }
+    await dir.doc(aluno).set(novo, { merge: true });
+    return [200, { ok: true }];
+  }
+  if (acao === 'pagamento_avisar') {
+    if (eu.papel !== 'aluno' || !eu.coachUid) return [403, { error: 'Só o aluno de um coach avisa o pagamento.' }];
+    const mes = hojeBR().slice(0, 7);
+    const pagamentos = { ...(eu.pagamentos || {}), [mes]: { ...((eu.pagamentos || {})[mes] || {}), avisou: true, avisouEm: Date.now() } };
+    await dir.doc(uid).set({ pagamentos }, { merge: true });
+    const [ano, m] = mes.split('-');
+    await db.collection('bc_conversas').doc(par(uid, eu.coachUid)).collection('mensagens').add({ de: uid, texto: `💸 Paguei a mensalidade de ${m}/${ano} pelo Pix. Pode conferir?`, em: Date.now() });
+    return [200, { ok: true }];
   }
 
   if (acao === 'vincular') {
@@ -376,7 +531,7 @@ exports.handler = async (event) => {
   const auth = await verifyBearerToken(event);
   if (!auth.ok) return resposta(event, 401, { error: 'Entre na sua conta para conversar.' });
   // leituras (a tela confere a cada poucos segundos) não gastam o limite nem a cota do banco grátis
-  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar', 'desafio_criar', 'desafio_checkin', 'comentar', 'agendar_avaliacao', 'compartilhar_criar'].includes(body.acao)) {
+  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar', 'desafio_criar', 'desafio_checkin', 'comentar', 'agendar_avaliacao', 'compartilhar_criar', 'dupla_criar', 'dupla_entrar', 'pix_config', 'pagamento_avisar', 'ranking_config', 'treino_feito'].includes(body.acao)) {
     const rl = await checkRateLimit(auth.uid, 'body-coach-chat');
     if (!rl.ok) return resposta(event, 429, { error: 'Muitos pedidos seguidos. Aguarde um instante.' });
   }
