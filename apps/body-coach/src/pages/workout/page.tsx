@@ -11,6 +11,7 @@ import DemoExecucao from '@/components/feature/DemoExecucao';
 import VideoDoCoach from '@/components/feature/VideoDoCoach';
 import { alternativas, lesoesDoTexto, POR_ID, type Lesao } from '@/lib/exerciseDb';
 import PreTreino from './components/PreTreino';
+import MusicaTreino from './components/MusicaTreino';
 import { dicaAoVivo } from '@/lib/liveCoach';
 import { getUserDoc, setUserDoc, listUserDocs } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
@@ -206,8 +207,9 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
       <div className="mb-6">
         <div className="flex items-center justify-between text-sm">
           <span className="font-heading font-semibold text-foreground-950">{session.title}</span>
-          <span className="text-foreground-500">
-            {exIndex + 1}/{session.exercises.length} exercícios
+          <span className="flex items-center gap-2 text-foreground-500">
+            <MusicaTreino compacto />
+            {exIndex + 1}/{session.exercises.length}
           </span>
         </div>
         <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-background-200">

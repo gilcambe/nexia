@@ -74,10 +74,10 @@ export default function WeeklyReport() {
       if (readinessDelta != null) {
         const d = deltaLabel(readinessDelta, ' pts');
         lines.push(
-          `Seu Readiness médio foi ${avgThis} (${d.tone === 'up' ? 'subiu' : d.tone === 'down' ? 'caiu' : 'ficou estável'} ${d.text.replace('+', '')} vs a semana passada).`,
+          `Sua Prontidão média foi ${avgThis} (${d.tone === 'up' ? 'subiu' : d.tone === 'down' ? 'caiu' : 'ficou estável'} ${d.text.replace('+', '')} vs a semana passada).`,
         );
       } else {
-        lines.push(`Seu Readiness médio foi ${avgThis}.`);
+        lines.push(`Sua Prontidão média foi ${avgThis}.`);
       }
     }
 
@@ -165,11 +165,11 @@ export default function WeeklyReport() {
               <p className="font-heading text-lg font-bold text-foreground-950">{report.checkIns}/7</p>
             </div>
             <div className="rounded-lg bg-background-100/70 p-3">
-              <p className="text-[11px] text-foreground-500">Readiness médio</p>
+              <p className="text-[11px] text-foreground-500">Prontidão média</p>
               <p className="font-heading text-lg font-bold text-foreground-950">{report.avgThis ?? '—'}</p>
             </div>
             <div className="rounded-lg bg-background-100/70 p-3">
-              <p className="text-[11px] text-foreground-500">Var. Readiness</p>
+              <p className="text-[11px] text-foreground-500">Var. Prontidão</p>
               <p className={`font-heading text-lg font-bold ${report.readinessDelta == null ? 'text-foreground-950' : report.readinessDelta >= 0 ? 'text-accent-600' : 'text-primary-600'}`}>
                 {report.readinessDelta == null ? '—' : `${report.readinessDelta > 0 ? '+' : ''}${report.readinessDelta}`}
               </p>

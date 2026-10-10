@@ -8,6 +8,7 @@ import WeeklyTrend from './components/WeeklyTrend';
 import AddMealModal from './components/AddMealModal';
 import CardapioDoDia from './components/CardapioDoDia';
 import PlanoNutricionista from './components/PlanoNutricionista';
+import LembretesRefeicoes from './components/LembretesRefeicoes';
 import AjusteSemanal from './components/AjusteSemanal';
 import ReceitaIA from './components/ReceitaIA';
 import { RefeicaoRapida } from './components/RefeicaoRapida';
@@ -44,6 +45,7 @@ export default function Nutrition() {
       <AjusteSemanal />
       <PlanoNutricionista />
       <CardapioDoDia />
+      <LembretesRefeicoes />
       <RefeicaoRapida />
       <ReceitaIA />
 
