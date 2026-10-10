@@ -1,0 +1,11 @@
+f-media-magro-frente t1 http=200 235595
+f-media-magro-lado t1 http=200 257816
+f-media-magro-costas t1 http=502 49
+falhou: 8007: Input prompt contains NSFW content.
+f-media-magro-costas t2 http=200 247070
+f-media-medio-frente t1 http=200 166801
+f-media-medio-lado t1 http=200 268273
+f-media-medio-costas t1 http=200 392516
+f-media-alto-frente t1 http=200 378737
+f-media-alto-lado t1 http=200 279744
+f-media-alto-costas t1 http=200 254048
