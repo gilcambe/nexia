@@ -10,7 +10,7 @@ const { fakeDb } = require('../helpers/agenda-fake-db.js');
 
 // 2026-10-12 (segunda) 09:00 em Brasília = 12:00 UTC.
 const SEG_9H = Date.parse('2026-10-12T12:00:00Z');
-const CADASTRO = AGENDAS['agenda-teste'];
+const { codigo_sempre: _sempre, ...CADASTRO } = AGENDAS['agenda-teste'];
 const mw = role => ({ verifyBearerToken: async (e) => (e.headers.authorization ? { ok: true, uid: 'm', role } : { ok: false }) });
 function montar(opts = {}) {
   const db = opts.db || fakeDb();
@@ -198,6 +198,7 @@ test('AG8. cadastro: hash do código bate, sem código em texto; painel e cópia
     assert.ok(montarConfig(c).servicos.length > 0);
   }
   assert.equal(montarConfig(AGENDAS.studiolima).semana[0][0][0], '06:00');
+  for (const [slug, c] of Object.entries(AGENDAS)) if (slug !== 'agenda-teste') assert.equal(c.codigo_sempre, undefined, slug + ': código de cliente vale uma vez só');
   const raiz = path.join(__dirname, '../..');
   const base = fs.readFileSync(path.join(raiz, 'nexia-ai/site-kit/agenda/painel.html'), 'utf8');
   const copia = fs.readFileSync(path.join(raiz, 'sites/studiolima/agenda/index.html'), 'utf8');
@@ -207,4 +208,15 @@ test('AG8. cadastro: hash do código bate, sem código em texto; painel e cópia
   const landing = fs.readFileSync(path.join(raiz, 'sites/studiolima/index.html'), 'utf8');
   assert.match(landing, /const AG_SITE = 'studiolima'/);
   assert.ok(!/fetch\('\/api\/studiolima/.test(landing), 'nada aponta para a API antiga');
+});
+
+test('AG9. codigo_sempre (só a agenda de teste): o código refaz o primeiro acesso mesmo com senha criada', async () => {
+  const db = fakeDb();
+  const h = createHandler({ getDb: () => db, getMw: () => mw('user'), getCadastro: () => AGENDAS['agenda-teste'], now: () => SEG_9H });
+  let ip = 0;
+  const post = b => h({ httpMethod: 'POST', headers: { 'cf-connecting-ip': '10.9.0.' + (++ip) }, body: JSON.stringify({ site: 'agenda-teste', ...b }) }).then(r => ({ ...r, json: JSON.parse(r.body || '{}') }));
+  assert.equal((await post({ acao: 'primeiro-acesso', codigo: 'TESTEAGENDA', senha_nova: 'flor2026' })).statusCode, 200);
+  assert.equal((await post({ acao: 'primeiro-acesso', codigo: 'TESTEAGENDA', senha_nova: 'lirio2026' })).statusCode, 200);
+  assert.equal((await post({ acao: 'entrar', senha: 'lirio2026' })).statusCode, 200);
+  assert.equal((await post({ acao: 'primeiro-acesso', codigo: 'ERRADO', senha_nova: 'rosa2026' })).statusCode, 401);
 });
