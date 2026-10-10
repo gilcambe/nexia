@@ -7,7 +7,7 @@ const PELE = { clara: 'fair white skin', media: 'light olive tan skin, brazilian
 const NIVEL = {
   magro: 'lean muscular athletic body with visible abs, low body fat',
   medio: 'average fit body, slightly soft belly, moderate body fat',
-  alto: 'overweight body with a round belly and love handles, high body fat',
+  alto: 'slightly overweight body with a soft belly and some love handles, about 25 percent body fat, not obese',
 };
 const VISTA = {
   frente: 'facing the camera, front view',
@@ -22,9 +22,9 @@ export async function corpoIa(request, env) {
   if (!m) return new Response('chave inválida', { status: 400 });
   if (!env.AI) return new Response('Workers AI indisponível', { status: 503 });
   const [, s, p, n, v] = m;
-  const prompt = `Ultra realistic full length studio photograph of one adult ${SEXO[s]}, ${PELE[p]}, ${NIVEL[n]}, ${ROUPA[s]}, barefoot, `
+  const prompt = `Wide full body shot, camera far away. Ultra realistic full length studio photograph of one adult ${SEXO[s]}, ${PELE[p]}, ${NIVEL[n]}, ${ROUPA[s]}, barefoot, `
     + `standing straight and relaxed with arms hanging slightly away from the body, ${VISTA[v]}. The whole body from the top of the head `
-    + 'to the feet is visible, small in the frame with empty space above the head and below the feet, centered. Plain light gray seamless '
+    + 'to the feet is visible and nothing is cut off, the person fills only the middle 70 percent of the frame height with empty space above the head and below the feet, centered. Plain light gray seamless '
     + 'studio background, soft even lighting, natural realistic skin texture, sharp focus, DSLR photo, 85mm lens.';
   try {
     const r = await env.AI.run('@cf/black-forest-labs/flux-1-schnell', { prompt, steps: 8 });
