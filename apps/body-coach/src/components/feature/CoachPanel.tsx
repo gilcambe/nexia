@@ -168,7 +168,7 @@ export default function CoachPanel() {
         <div className="no-scrollbar flex items-center gap-2 overflow-x-auto border-b border-background-200 bg-background-100/60 px-5 py-2.5">
           <span className="shrink-0 whitespace-nowrap rounded-full border border-background-200 bg-background-50 px-2.5 py-1 text-xs text-foreground-600">
             <i className="ri-heart-pulse-line mr-1 align-middle text-accent-600"></i>
-            Readiness {result ? result.score : '—'}
+            Prontidão {result ? result.score : '—'}
           </span>
           {latest?.weight_kg != null && (
             <span className="shrink-0 whitespace-nowrap rounded-full border border-background-200 bg-background-50 px-2.5 py-1 text-xs text-foreground-600">

@@ -12,7 +12,7 @@ export default function ReadinessCard() {
     return (
       <Card padding="p-5">
         <div className="flex h-40 items-center justify-center text-sm text-foreground-400">
-          Carregando readiness...
+          Carregando prontidão...
         </div>
       </Card>
     );
@@ -23,14 +23,14 @@ export default function ReadinessCard() {
       <Card padding="p-5">
         <div className="mb-4 flex items-center gap-2">
           <i className="ri-heart-pulse-line text-lg text-accent-600"></i>
-          <h2 className="font-heading text-base font-semibold text-foreground-950">Readiness</h2>
+          <h2 className="font-heading text-base font-semibold text-foreground-950">Prontidão para treinar</h2>
         </div>
         <div className="flex flex-col items-center gap-3 py-8 text-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-100 text-accent-700">
             <i className="ri-heart-pulse-line text-2xl"></i>
           </div>
           <p className="text-sm text-foreground-600">
-            Faça seu primeiro check-in diário acima para calcular seu Readiness.
+            Faça seu primeiro check-in diário acima para calcular sua Prontidão (nota de 0 a 100 de quão pronto seu corpo está para treinar hoje).
           </p>
         </div>
       </Card>
@@ -44,7 +44,7 @@ export default function ReadinessCard() {
       <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <i className="ri-heart-pulse-line text-lg text-accent-600"></i>
-          <h2 className="font-heading text-base font-semibold text-foreground-950">Readiness</h2>
+          <h2 className="font-heading text-base font-semibold text-foreground-950">Prontidão para treinar</h2>
         </div>
         <div className="flex items-center gap-2">
           {streak > 0 && (
@@ -62,7 +62,7 @@ export default function ReadinessCard() {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="flex shrink-0 justify-center">
-          <ReadinessRing score={result.score} size={120} stroke={9} label="readiness" statusColor={meta.color} />
+          <ReadinessRing score={result.score} size={120} stroke={9} label="prontidão" statusColor={meta.color} />
         </div>
         <div className="flex-1 space-y-2">
           {result.metrics.slice(0, 4).map((m) => (

@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DIVISOES, divisaoSugerida, type Divisao, type EstadoDoDia } from '@/lib/dayPlan';
 import type { Grupo } from '@/lib/exerciseDb';
 import { treinoDiferente } from '@/lib/treinoDiferente';
 import { diasPorSemana, tempoDoPerfil } from '@/lib/ficha';
+import { useReadiness } from '@/components/feature/ReadinessContext';
+import { statusMeta } from '@/lib/readinessEngine';
 
 interface PreTreinoProps {
   respostas: Record<string, unknown>;
@@ -38,9 +40,28 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
   const [mudando, setMudando] = useState(false);
   const [enfase, setEnfase] = useState<Grupo[]>([]);
   
-  const [sono, setSono] = useState<EstadoDoDia['sono']>('bom');
+  // O check-in de Prontidão de hoje já responde sono e energia (o aluno pode mudar aqui).
+  const { today, result: prontidao } = useReadiness();
+  const sonoDoCheckin = (): EstadoDoDia['sono'] => {
+    if (!today || today.sleep_hours == null) return 'bom';
+    const h = today.sleep_hours, q = today.sleep_quality ?? 3;
+    return h < 6 || q <= 2 ? 'ruim' : h < 7 || q === 3 ? 'regular' : 'bom';
+  };
+  const energiaDoCheckin = (): EstadoDoDia['energia'] => {
+    if (!today || today.energy == null) return 4;
+    let e = Math.min(5, Math.max(1, Math.ceil(today.energy / 2)));
+    if (prontidao?.status === 'reduzir') e = Math.min(e, 2);
+    return e as EstadoDoDia['energia'];
+  };
+  const [sono, setSono] = useState<EstadoDoDia['sono']>(sonoDoCheckin);
   const [alimentacao, setAlimentacao] = useState<EstadoDoDia['alimentacao']>('comi_bem');
-  const [energia, setEnergia] = useState<EstadoDoDia['energia']>(4);
+  const [energia, setEnergia] = useState<EstadoDoDia['energia']>(energiaDoCheckin);
+  useEffect(() => {
+    if (!today) return;
+    setSono(sonoDoCheckin());
+    setEnergia(energiaDoCheckin());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [today?.check_in_date, today?.readiness_score]);
   const [tempoMin, setTempoMin] = useState<number>(tempoDoPerfil(respostas));
   const [dores, setDores] = useState<string>('');
 
@@ -100,6 +121,11 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
           <h2 className="text-base font-semibold flex items-center gap-2">
             Como você está HOJE?
           </h2>
+          {today && prontidao && (
+            <p className="-mt-3 text-xs text-slate-500 dark:text-slate-400" data-testid="pre-prontidao">
+              Preenchido com seu check-in de hoje: Prontidão {prontidao.score} ({statusMeta[prontidao.status].label}). {prontidao.decision}
+            </p>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Sono */}

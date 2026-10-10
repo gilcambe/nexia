@@ -19,6 +19,8 @@ export default function Home() {
   const now = new Date();
   const dateStr = now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
   const firstName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Atleta';
+  const hora = new Date().getHours();
+  const saudacao = hora < 5 ? 'Boa noite' : hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
 
   const statusLabel = result
     ? statusMeta[result.status].label
@@ -30,13 +32,13 @@ export default function Home() {
         <div>
           <p className="text-sm font-medium capitalize text-foreground-500">{dateStr}</p>
           <h1 className="mt-1 font-heading text-2xl font-bold capitalize text-foreground-950">
-            Bom dia, {firstName}
+            {saudacao}, {firstName}
           </h1>
         </div>
         <div className="flex items-center gap-2">
           <span className="inline-flex items-center gap-2 rounded-full border border-background-200 bg-background-100 px-3 py-1.5 text-xs font-medium text-foreground-700">
             <i className="ri-heart-pulse-line text-accent-600"></i>
-            Readiness{' '}
+            Prontidão{' '}
             <span className="font-bold">{result ? result.score : '—'}</span>
           </span>
           <button

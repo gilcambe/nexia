@@ -82,3 +82,36 @@ export function gerarIcsAvaliacaoMarcada(data: string, hora: string | null, coac
     'END:VCALENDAR',
   ].join('\r\n') + '\r\n';
 }
+
+// Lembretes das refeições: um evento por refeição, todo dia, com aviso na hora (e água a cada 2 h, se pedir).
+export function gerarIcsRefeicoes(refeicoes: { nome: string; hora: string }[], opts: { agua?: boolean; antecedenciaMin?: number; agora?: Date } = {}): string {
+  const agora = opts.agora ?? new Date();
+  const ant = Math.max(0, Math.round(opts.antecedenciaMin ?? 0));
+  const q = (d: Date) => `${d.getFullYear()}${dois(d.getMonth() + 1)}${dois(d.getDate())}T${dois(d.getHours())}${dois(d.getMinutes())}00`;
+  const carimbo = `${agora.getUTCFullYear()}${dois(agora.getUTCMonth() + 1)}${dois(agora.getUTCDate())}T${dois(agora.getUTCHours())}${dois(agora.getUTCMinutes())}00Z`;
+  const linhas = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//NEXIA Body Coach//PT-BR//', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
+  const evento = (uid: string, titulo: string, texto: string, hora: string, duracao: number) => {
+    const [h, m] = hora.split(':').map(Number);
+    const ini = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), Number.isFinite(h) ? h : 12, Number.isFinite(m) ? m : 0);
+    const fim = new Date(ini.getTime() + duracao * 60000);
+    linhas.push(
+      'BEGIN:VEVENT', `UID:${uid}@nexia-body-coach`, `DTSTAMP:${carimbo}`, `DTSTART:${q(ini)}`, `DTEND:${q(fim)}`,
+      'RRULE:FREQ=DAILY', `SUMMARY:${escapa(titulo)}`, `DESCRIPTION:${escapa(texto)}`,
+      'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${escapa(titulo)}`, `TRIGGER:${ant ? `-PT${ant}M` : 'PT0M'}`, 'END:VALARM', 'END:VEVENT',
+    );
+  };
+  refeicoes.forEach((r, i) => evento(`refeicao-${i}-${r.nome.normalize('NFD').replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}`, `${r.nome}: hora de comer`, 'Abra o NEXIA Body Coach > Nutrição para ver o que comer (e trocar algum alimento, se quiser).', r.hora, 20));
+  if (opts.agua) for (const hora of ['09:00', '11:00', '15:00', '17:00', '19:00']) evento(`agua-${hora.replace(':', '')}`, 'Beber água', 'Um copo de água agora. Marque no NEXIA Body Coach > Nutrição.', hora, 5);
+  linhas.push('END:VCALENDAR');
+  return linhas.join('\r\n') + '\r\n';
+}
+
+// Link do Google Agenda para criar um lembrete diário (funciona no Android sem baixar arquivo).
+export function linkGoogleAgenda(titulo: string, hora: string, texto = '', agora: Date = new Date()): string {
+  const [h, m] = hora.split(':').map(Number);
+  const ini = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), h || 0, m || 0);
+  const fim = new Date(ini.getTime() + 20 * 60000);
+  const q = (d: Date) => `${d.getFullYear()}${dois(d.getMonth() + 1)}${dois(d.getDate())}T${dois(d.getHours())}${dois(d.getMinutes())}00`;
+  const p = new URLSearchParams({ action: 'TEMPLATE', text: titulo, dates: `${q(ini)}/${q(fim)}`, details: texto, recur: 'RRULE:FREQ=DAILY' });
+  return `https://calendar.google.com/calendar/render?${p.toString()}`;
+}

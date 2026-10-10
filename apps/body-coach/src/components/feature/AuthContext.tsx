@@ -37,7 +37,13 @@ export interface AthleteProfile {
   ajuste_kcal?: number;
   onboarding?: Record<string, string | string[] | undefined>;
   plano_nutri?: PlanoAlimentar | null;
+  alimentos_evitar?: string[]; // ids da tabela que o aluno tirou do cardápio automático
+  trocas_plano?: TrocaFixa[]; // trocas do plano do nutricionista que valem todo dia
+  horarios_refeicoes?: Record<string, string>; // nome da refeição -> "HH:MM"
+  musica?: { app?: string; link?: string; estilo?: string };
 }
+
+export interface TrocaFixa { chave: string; nome: string; porcao: string }
 
 // Usuário do app (mesmo formato que as telas do original usam: id, email, user_metadata).
 export interface User {

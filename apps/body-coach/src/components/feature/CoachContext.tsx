@@ -48,7 +48,7 @@ function buildGreeting(name: string): string {
 
 function buildReadinessReply(s?: CoachContextSnapshot): string {
   if (s?.readinessScore == null) {
-    return 'Ainda não tenho seu check-in de hoje. Faça o check-in diário para eu calcular seu Readiness e ajustar o treino na hora.';
+    return 'Ainda não tenho seu check-in de hoje. Faça o check-in diário para eu calcular sua Prontidão e ajustar o treino na hora.';
   }
   const label =
     s.readinessStatus === 'pronto'
@@ -56,7 +56,7 @@ function buildReadinessReply(s?: CoachContextSnapshot): string {
       : s.readinessStatus === 'reduzir'
         ? 'em dia de recuperação'
         : 'com atenção — treinar com ajustes';
-  return `Seu Readiness hoje é ${s.readinessScore}/100. Você está ${label}. Se quiser saber o porquê, é só perguntar "por quê?".`;
+  return `Sua Prontidão hoje é ${s.readinessScore}/100. Você está ${label}. Se quiser saber o porquê, é só perguntar "por quê?".`;
 }
 
 function buildNutritionReply(s?: CoachContextSnapshot): string {

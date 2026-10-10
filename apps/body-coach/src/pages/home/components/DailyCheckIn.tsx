@@ -104,7 +104,7 @@ export default function DailyCheckIn() {
       setMessage(error);
     } else {
       setMessageKind('ok');
-      setMessage('Check-in registrado! Seu Readiness de hoje foi atualizado.');
+      setMessage('Check-in registrado! Sua Prontidão de hoje foi atualizada.');
     }
   };
 
@@ -122,7 +122,7 @@ export default function DailyCheckIn() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-foreground-500">Readiness agora:</span>
+          <span className="text-xs text-foreground-500">Prontidão agora:</span>
           <span className={`inline-flex items-center gap-1.5 rounded-full bg-background-100 px-3 py-1 text-xs font-semibold ${meta.text}`}>
             <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: meta.color }}></span>
             {preview.score} · {meta.label}
@@ -132,7 +132,7 @@ export default function DailyCheckIn() {
 
       {hasCheckedToday && today && (
         <div className="mb-4 rounded-xl bg-accent-100/60 px-4 py-2.5 text-sm text-accent-800">
-          Você já fez o check-in de hoje (Readiness {today.readiness_score}). Ajuste abaixo para atualizar.
+          Você já fez o check-in de hoje (Prontidão {today.readiness_score}). Ajuste abaixo para atualizar.
         </div>
       )}
 

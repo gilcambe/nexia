@@ -3,6 +3,10 @@ import { useAuth } from '@/components/feature/AuthContext';
 import { useNutrition } from '@/components/feature/NutritionContext';
 import { setUserDoc } from '@/lib/userData';
 import type { PlanoAlimentar, RefeicaoPlano } from '@/lib/planoAlimentar';
+import { identificar, quantidadeDoTexto, trocasDoNutri, equivalentes } from '@/lib/trocas';
+import { useTrocasDoDia, type Troca } from '@/lib/useTrocasDoDia';
+import type { TrocaFixa } from '@/components/feature/AuthContext';
+import TrocaAlimento from './TrocaAlimento';
 
 const minutos = (h: string | null) => (h ? Number(h.slice(0, 2)) * 60 + Number(h.slice(3, 5)) : null);
 const fmt = (n: number) => n.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
@@ -16,8 +20,20 @@ function proxima(refeicoes: RefeicaoPlano[], agora = new Date()): number {
   return (depois[0] ?? comHora.sort((a, b) => a.t - b.t)[0]).i;
 }
 
-function Refeicao({ r, destaque }: { r: RefeicaoPlano; destaque: boolean }) {
+type Trocas = {
+  hoje: Record<string, Troca>;
+  fixas: TrocaFixa[];
+  definirHoje: (chave: string, t: Troca | null) => void;
+  definirFixa: (chave: string, t: Troca | null) => void;
+};
+
+function Refeicao({ r, idx, destaque, trocas }: { r: RefeicaoPlano; idx: number; destaque: boolean; trocas: Trocas }) {
   const [aberta, setAberta] = useState(destaque);
+  const [trocando, setTrocando] = useState<{ chave: string; nome: string; qtd: string } | null>(null);
+  const [sempre, setSempre] = useState(false);
+  const trocaDe = (chave: string): Troca | null => trocas.hoje[chave] ?? trocas.fixas.find((f) => f.chave === chave) ?? null;
+  const base = trocando ? identificar(trocando.nome) : null;
+  const qtdBase = trocando && base ? quantidadeDoTexto(trocando.qtd, base) : null;
   const { meals, addMeal } = useNutrition();
   const feita = meals.some((m) => m.name === `${r.nome} (plano)`);
   const registrar = () => r.macros && addMeal({
@@ -36,13 +52,41 @@ function Refeicao({ r, destaque }: { r: RefeicaoPlano; destaque: boolean }) {
         {r.macros && r.macros.kcal > 0 && <span className="ml-auto shrink-0 text-xs text-foreground-500">{fmt(r.macros.kcal)} kcal</span>}
       </div>
       <ul className="mt-1.5 space-y-0.5 text-sm text-foreground-700">
-        {r.itens.map((i) => (
-          <li key={i.nome + i.qtd} className="flex justify-between gap-3">
-            <span>{i.nome}</span>
-            <span className="shrink-0 text-right text-foreground-500">{i.qtd}</span>
-          </li>
-        ))}
+        {r.itens.map((i, k) => {
+          const chave = `${idx}|${k}|${i.nome}`;
+          const t = trocaDe(chave);
+          return (
+            <li key={chave}>
+              <button type="button" onClick={() => { setSempre(!!trocas.fixas.find((f) => f.chave === chave)); setTrocando({ chave, nome: i.nome, qtd: i.qtd }); }} className="flex w-full items-center justify-between gap-3 rounded-lg py-1 text-left active:bg-primary-50" data-testid="plano-item">
+                <span>
+                  {t ? t.nome : i.nome}
+                  {t && <span className="ml-1 rounded-full bg-primary-100 px-1.5 py-0.5 text-[10px] font-semibold text-primary-700">trocado</span>}
+                </span>
+                <span className="flex shrink-0 items-center gap-1.5 text-right text-foreground-500">
+                  {t ? t.porcao : i.qtd}
+                  <i className="ri-arrow-left-right-line text-primary-500" aria-hidden="true"></i>
+                </span>
+              </button>
+            </li>
+          );
+        })}
       </ul>
+      {trocando && (
+        <TrocaAlimento
+          item={{ nome: trocando.nome, porcao: trocando.qtd }}
+          doNutri={trocasDoNutri(trocando.nome, r.trocas)}
+          doApp={base && qtdBase ? equivalentes(base.id, qtdBase, { limite: 6 }) : []}
+          trocado={!!trocaDe(trocando.chave)}
+          onFechar={() => setTrocando(null)}
+          onDesfazer={() => { trocas.definirHoje(trocando.chave, null); trocas.definirFixa(trocando.chave, null); setTrocando(null); }}
+          onEscolher={(o) => {
+            if (sempre) { trocas.definirFixa(trocando.chave, o); trocas.definirHoje(trocando.chave, null); }
+            else { trocas.definirFixa(trocando.chave, null); trocas.definirHoje(trocando.chave, o); }
+            setTrocando(null);
+          }}
+          extra={{ label: 'Usar esta troca todos os dias', marcado: sempre, onMudar: setSempre }}
+        />
+      )}
       {r.macros && r.macros.kcal > 0 && (
         <p className="mt-1 text-[11px] text-foreground-500">Proteína {fmt(r.macros.proteina)} g · Carbo {fmt(r.macros.carbo)} g · Gordura {fmt(r.macros.gordura)} g</p>
       )}
@@ -83,6 +127,15 @@ export default function PlanoNutricionista() {
   const [lendo, setLendo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [verExtras, setVerExtras] = useState(false);
+  const { trocas: hoje, definir: definirHoje } = useTrocasDoDia(user?.id, 'plano');
+  const fixas = profile?.trocas_plano ?? [];
+  const definirFixa = (chave: string, t: Troca | null) => {
+    if (!user) return;
+    const atual = fixas.filter((f) => f.chave !== chave);
+    if (!t && atual.length === fixas.length) return;
+    const nova = t ? [...atual, { chave, nome: t.nome, porcao: t.porcao }] : atual;
+    void setUserDoc(user.id, 'profile', 'main', { trocas_plano: nova }, true).then(refreshProfile);
+  };
 
   const salvar = async (p: PlanoAlimentar | null) => {
     if (!user) return;
@@ -130,7 +183,8 @@ export default function PlanoNutricionista() {
     );
   }
 
-  const prox = proxima(plano.refeicoes);
+  const horarios = profile?.horarios_refeicoes ?? {};
+  const prox = proxima(plano.refeicoes.map((r) => (horarios[r.nome] ? { ...r, horario: horarios[r.nome] } : r)));
   const t = plano.totais;
   return (
     <div className="rounded-2xl border border-background-200 bg-background-50 p-4" data-testid="plano-nutri">
@@ -138,7 +192,7 @@ export default function PlanoNutricionista() {
         <i className="ri-file-list-3-line text-lg text-primary-500"></i>
         <h2 className="font-heading text-lg font-bold text-foreground-950">Plano do nutricionista</h2>
       </div>
-      <p className="mt-0.5 text-xs text-foreground-500">Todos os dias · importado em {new Date(plano.importado_em).toLocaleDateString('pt-BR')}</p>
+      <p className="mt-0.5 text-xs text-foreground-500">Todos os dias · importado em {new Date(plano.importado_em).toLocaleDateString('pt-BR')} · toque em um alimento para trocar</p>
       {t && t.kcal > 0 && (
         <div className="mt-3 grid grid-cols-4 gap-1.5 text-center">
           {([['kcal', fmt(t.kcal)], ['Proteína', `${fmt(t.proteina)} g`], ['Carbo', `${fmt(t.carbo)} g`], ['Gordura', `${fmt(t.gordura)} g`]] as const).map(([l, v]) => (
@@ -150,7 +204,7 @@ export default function PlanoNutricionista() {
         </div>
       )}
       <div className="mt-3 space-y-2">
-        {plano.refeicoes.map((r, i) => <Refeicao key={`${r.nome}-${i}`} r={r} destaque={i === prox} />)}
+        {plano.refeicoes.map((r, i) => <Refeicao key={`${r.nome}-${i}`} r={horarios[r.nome] ? { ...r, horario: horarios[r.nome] } : r} idx={i} destaque={i === prox} trocas={{ hoje, fixas, definirHoje, definirFixa }} />)}
       </div>
       {plano.extras.length > 0 && (
         <div className="mt-3">
