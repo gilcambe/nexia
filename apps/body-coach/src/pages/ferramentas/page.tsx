@@ -1,28 +1,32 @@
 import { Link, useParams } from 'react-router-dom';
-import Conquistas from './Conquistas';
-import Calculadoras from './Calculadoras';
-import Corrida from './Corrida';
-import Jejum from './Jejum';
-import Suplementos from './Suplementos';
-import Ciclo from './Ciclo';
-import ListaCompras from './ListaCompras';
-import Indique from './Indique';
-import Planos from './Planos';
-import Relogio from './Relogio';
-import TreinosProntos from './TreinosProntos';
-import ContadorReps from './ContadorReps';
-import EvolucaoCarga from './EvolucaoCarga';
-import Periodizacao from './Periodizacao';
-import Retrospectiva from './Retrospectiva';
-import Dicas from './Dicas';
-import Saude from './Saude';
-import Loja from './Loja';
-import MeusDados from './MeusDados';
-import Dupla from './Dupla';
-import Ranking from './Ranking';
-import Mapa from './Mapa';
-import ModoViagem from './ModoViagem';
-import Mensalidade from './Mensalidade';
+import { carregar } from '@/router/carregar';
+
+// Cada ferramenta só baixa quando o aluno abre (app mais leve).
+const Conquistas = carregar(() => import('./Conquistas'));
+const Calculadoras = carregar(() => import('./Calculadoras'));
+const Corrida = carregar(() => import('./Corrida'));
+const Jejum = carregar(() => import('./Jejum'));
+const Suplementos = carregar(() => import('./Suplementos'));
+const Ciclo = carregar(() => import('./Ciclo'));
+const ListaCompras = carregar(() => import('./ListaCompras'));
+const Indique = carregar(() => import('./Indique'));
+const Planos = carregar(() => import('./Planos'));
+const Relogio = carregar(() => import('./Relogio'));
+const TreinosProntos = carregar(() => import('./TreinosProntos'));
+const ContadorReps = carregar(() => import('./ContadorReps'));
+const EvolucaoCarga = carregar(() => import('./EvolucaoCarga'));
+const Periodizacao = carregar(() => import('./Periodizacao'));
+const Retrospectiva = carregar(() => import('./Retrospectiva'));
+const Dicas = carregar(() => import('./Dicas'));
+const Saude = carregar(() => import('./Saude'));
+const Loja = carregar(() => import('./Loja'));
+const MeusDados = carregar(() => import('./MeusDados'));
+const Dupla = carregar(() => import('./Dupla'));
+const Ranking = carregar(() => import('./Ranking'));
+const Mapa = carregar(() => import('./Mapa'));
+const ModoViagem = carregar(() => import('./ModoViagem'));
+const Mensalidade = carregar(() => import('./Mensalidade'));
+const Resumo = carregar(() => import('./Resumo'));
 
 // Ferramentas extras do Body Coach, todas grátis e feitas no próprio aparelho.
 export const FERRAMENTAS = [
@@ -35,6 +39,7 @@ export const FERRAMENTAS = [
   { id: 'viagem', grupo: 'Treino', nome: 'Modo viagem', desc: 'Treino no hotel com o tempo e o que tiver, guiado por voz', icone: 'ri-suitcase-3-line', el: ModoViagem },
   { id: 'mapa', grupo: 'Treino', nome: 'Onde treinar perto', desc: 'Academias, parques, pistas e aparelhos ao ar livre', icone: 'ri-map-2-line', el: Mapa },
   { id: 'calculadoras', grupo: 'Treino', nome: 'Calculadoras', desc: '1RM, anilhas, zonas cardíacas, ritmo, gasto e água', icone: 'ri-calculator-line', el: Calculadoras },
+  { id: 'resumo', grupo: 'Evolução', nome: 'Resumo da semana', desc: 'Sequência, prontidão, último treino, peso e relatório semanal', icone: 'ri-dashboard-line', el: Resumo },
   { id: 'evolucao-carga', grupo: 'Evolução', nome: 'Evolução de carga', desc: 'Gráfico e recordes de cada exercício', icone: 'ri-line-chart-line', el: EvolucaoCarga },
   { id: 'conquistas', grupo: 'Evolução', nome: 'Conquistas e nível', desc: 'Medalhas, XP e sequência de treinos', icone: 'ri-trophy-line', el: Conquistas },
   { id: 'ranking', grupo: 'Evolução', nome: 'Ranking e desafios', desc: 'Pontos da semana na equipe do seu coach', icone: 'ri-medal-line', el: Ranking },
@@ -50,6 +55,16 @@ export const FERRAMENTAS = [
   { id: 'indique', grupo: 'Loja e comunidade', nome: 'Indique e compartilhe', desc: 'Seu link, cartão do treino e embaixador', icone: 'ri-gift-line', el: Indique },
   { id: 'planos', grupo: 'Loja e comunidade', nome: 'Planos', desc: 'Grátis, Premium e para personais', icone: 'ri-vip-crown-line', el: Planos },
   { id: 'meus-dados', grupo: 'Conta', nome: 'Meus dados', desc: 'Baixar uma cópia de tudo (LGPD)', icone: 'ri-download-cloud-line', el: MeusDados },
+] as const;
+
+// Telas que saíram do menu principal (para ele ficar simples) e continuam a um toque daqui.
+export const MAIS_TELAS = [
+  { to: '/plan', nome: 'Ficha de treino', desc: 'Divisão da semana, dias e lembretes', icone: 'ri-calendar-line' },
+  { to: '/respirar', nome: 'Respirar', desc: 'Respiração guiada para relaxar ou focar', icone: 'ri-lungs-line' },
+  { to: '/team', nome: 'Equipe', desc: 'Seu coach, nutricionista e equipe', icone: 'ri-group-line' },
+  { to: '/exams', nome: 'Exames', desc: 'Exames de sangue e marcadores', icone: 'ri-stethoscope-line' },
+  { to: '/antidoping', nome: 'Anti-Doping', desc: 'Confira remédios e suplementos', icone: 'ri-shield-check-line' },
+  { to: '/feedback', nome: 'Enviar feedback', desc: 'Conte o que não funcionou ou uma ideia', icone: 'ri-feedback-line' },
 ] as const;
 
 export default function Ferramentas() {
@@ -97,6 +112,21 @@ export default function Ferramentas() {
           </div>
         </section>
       ))}
+      <section>
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Mais telas</h2>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {MAIS_TELAS.map((f) => (
+            <Link key={f.to} to={f.to} className="flex items-center gap-3 rounded-2xl border border-background-200 bg-background-50 p-3.5 transition active:scale-[0.99] hover:border-primary-300">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-xl text-primary-700"><i className={f.icone}></i></span>
+              <span className="min-w-0 flex-1">
+                <span className="block font-semibold text-foreground-950">{f.nome}</span>
+                <span className="block text-xs text-foreground-500">{f.desc}</span>
+              </span>
+              <i className="ri-arrow-right-s-line text-xl text-foreground-400"></i>
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { useNutrition } from '@/components/feature/NutritionContext';
 import Card from '@/components/base/Card';
@@ -15,7 +16,7 @@ function Bar({ current, target }: { current: number; target: number }) {
 }
 
 export default function NutritionCard() {
-  const { meals, water, waterGoal, totals, targets } = useNutrition();
+  const { water, waterGoal, totals, targets, addWater } = useNutrition();
   const [showRemaining, setShowRemaining] = useState(false);
 
   const macroList = [
@@ -35,7 +36,7 @@ export default function NutritionCard() {
           <i className="ri-restaurant-line text-lg text-secondary-500"></i>
           <h2 className="font-heading text-base font-semibold text-foreground-950">Nutrição do dia</h2>
         </div>
-        <span className="text-xs text-foreground-400">{meals.length} refeições</span>
+        <Link to="/nutrition" className="text-xs font-semibold text-primary-700">Ver dieta ›</Link>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -60,8 +61,17 @@ export default function NutritionCard() {
           <i className="ri-drop-line text-accent-600"></i>
           <span>Água</span>
         </div>
-        <span className="text-sm font-medium text-foreground-900">
-          {water.toFixed(1)} / {waterGoal.toFixed(1)} L
+        <span className="flex items-center gap-2">
+          <span className="text-sm font-medium text-foreground-900">
+            {water.toFixed(1)} / {waterGoal.toFixed(1)} L
+          </span>
+          <button
+            onClick={() => addWater(0.25)}
+            className="rounded-full bg-accent-500 px-3 py-1.5 text-xs font-semibold text-background-50 active:scale-95"
+            aria-label="Bebi um copo de água (250 ml)"
+          >
+            + copo
+          </button>
         </span>
       </div>
 

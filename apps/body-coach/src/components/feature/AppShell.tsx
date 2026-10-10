@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useLocation, NavLink, Outlet } from 'react-router-dom';
+import { useNavigate, useLocation, Link, NavLink, Outlet } from 'react-router-dom';
 import { CoachProvider, useCoach } from './CoachContext';
 import { NutritionProvider } from './NutritionContext';
 import { ReadinessProvider } from './ReadinessContext';
@@ -9,6 +9,7 @@ import InstallButton from './InstallButton';
 import { setUserDoc } from '@/lib/userData';
 import { codigoIndicacao } from '@/lib/ferramentas/cartao';
 
+// Menu enxuto: só as telas principais. As outras (Respirar, Equipe, Exames, Anti-Doping...) ficam em Ferramentas.
 const navItems = [
   { to: '/', label: 'Hoje', icon: 'ri-sun-line' },
   { to: '/nutrition', label: 'Nutrição', icon: 'ri-restaurant-line' },
@@ -16,13 +17,35 @@ const navItems = [
   { to: '/plan', label: 'Ficha de treino', icon: 'ri-calendar-line' },
   { to: '/chat', label: 'Conversa', icon: 'ri-chat-3-line' },
   { to: '/ferramentas', label: 'Ferramentas', icon: 'ri-apps-2-line' },
-  { to: '/respirar', label: 'Respirar', icon: 'ri-lungs-line' },
-  { to: '/team', label: 'Equipe', icon: 'ri-group-line' },
-  { to: '/exams', label: 'Saúde', icon: 'ri-stethoscope-line' },
-  { to: '/antidoping', label: 'Anti-Doping', icon: 'ri-shield-check-line' },
-  { to: '/feedback', label: 'Enviar feedback', icon: 'ri-feedback-line' },
   { to: '/profile', label: 'Perfil', icon: 'ri-user-3-line' },
 ];
+
+// Botão de feedback sempre à mão (piloto com os primeiros alunos): leva a tela de onde veio.
+function FeedbackLink({ onNavigate, compact = false }: { onNavigate?: () => void; compact?: boolean }) {
+  const location = useLocation();
+  if (location.pathname === '/feedback') return null;
+  return compact ? (
+    <Link
+      to="/feedback"
+      state={{ de: location.pathname }}
+      className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground-600 hover:bg-background-100"
+      aria-label="Enviar feedback"
+      title="Enviar feedback"
+    >
+      <i className="ri-feedback-line text-xl"></i>
+    </Link>
+  ) : (
+    <Link
+      to="/feedback"
+      state={{ de: location.pathname }}
+      onClick={onNavigate}
+      className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground-600 transition hover:bg-background-100"
+    >
+      <i className="ri-feedback-line text-lg"></i>
+      Enviar feedback
+    </Link>
+  );
+}
 
 function BrandMark({ size = 'md' }: { size?: 'md' | 'sm' }) {
   return (
@@ -152,6 +175,8 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           <i className="ri-mic-line text-lg"></i>
           Falar com o Coach
         </button>
+
+        <FeedbackLink onNavigate={onNavigate} />
       </nav>
 
       <div className="px-4 py-4">
@@ -223,6 +248,7 @@ function Shell() {
         </div>
         <div className="flex items-center gap-2">
           <InstallButton compact />
+          <FeedbackLink compact />
           <button
             onClick={() => setMobileOpen(true)}
           className="flex h-9 w-9 items-center justify-center rounded-lg text-foreground-600 hover:bg-background-100"
