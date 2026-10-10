@@ -1,0 +1,6 @@
+f-morena-magro-frente t1 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+f-morena-magro-frente t2 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
+f-morena-magro-frente t3 http=502 84
+falhou: 5006: Error: Additional or unevaluated properties '/seed' at '/' not allowed
