@@ -6,14 +6,16 @@ import type { ItemSerie } from '@/lib/avaliacao/serie';
 import { compartilharArquivo } from '@/lib/avaliacao/imagens';
 import { gerarIcsReavaliacao } from '@/lib/lembretes';
 import PainelCorpo from './corpo3d/PainelCorpo';
+import BodyTwin from './components/BodyTwin';
 import CoachEvolucao from './CoachEvolucao';
 import MetasCorpo, { useMetas } from './MetasCorpo';
 
 const fmt = (n: number | undefined | null, c = 1) => (n == null ? '—' : n.toLocaleString('pt-BR', { maximumFractionDigits: c }));
 
 export default function ResumoEvolucao({
-  uid, serie, perfil, volume, metaGordura, metaPeso, irPara,
+  uid, serie, perfil, volume, metaGordura, metaPeso, altura, irPara,
 }: {
+  altura: number;
   uid: string | undefined;
   serie: ItemSerie[];
   perfil: PerfilAvaliacao;
@@ -25,6 +27,7 @@ export default function ResumoEvolucao({
   const navigate = useNavigate();
   const { metas, fotoMeta, salvar } = useMetas(uid);
   const ult = serie[serie.length - 1] ?? null;
+  const medido = [...serie].reverse().find((s) => s.m.peso != null && s.m.gordura != null) ?? null;
   const ant = serie.length > 1 ? serie[serie.length - 2] : null;
   const pts = serie.map((s) => ({ data: s.data, m: s.m }));
   const avisos = alertas(pts);
@@ -52,8 +55,29 @@ export default function ResumoEvolucao({
 
   return (
     <div className="space-y-4">
-      <Card padding="p-4">
-        <PainelCorpo serie={serie} perfil={perfil} volume={volume} metas={metas} />
+      {/* Body Twin (corpo realista): mantido como estava; usa a medição real mais recente (peso + % de gordura). */}
+      <Card padding="p-5">
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <i className="ri-body-scan-line text-lg text-primary-500"></i>
+            <h2 className="font-heading text-base font-semibold text-foreground-950">Body Twin</h2>
+          </div>
+          <span className="rounded-full bg-secondary-100 px-2.5 py-1 text-[11px] font-semibold text-secondary-700">IA + Foto</span>
+        </div>
+        {!medido && (
+          <p className="mb-3 rounded-lg bg-secondary-50 px-3 py-2 text-xs text-secondary-800">
+            Corpo de exemplo. Registre peso e gordura corporal para ele virar o seu.
+          </p>
+        )}
+        <BodyTwin
+          selected={null}
+          onSelect={() => {}}
+          currentWeight={medido?.m.peso ?? 75}
+          currentBodyFat={medido?.m.gordura ?? 16}
+          currentHeight={medido?.av.valores.altura ?? altura}
+          goalBodyFat={metaGordura ?? 15}
+          goalWeight={metaPeso}
+        />
       </Card>
 
       <Card padding="p-5">
@@ -92,6 +116,10 @@ export default function ResumoEvolucao({
             </div>
           </>
         )}
+      </Card>
+
+      <Card padding="p-4">
+        <PainelCorpo serie={serie} perfil={perfil} volume={volume} metas={metas} />
       </Card>
 
       <MetasCorpo key={fotoMeta ?? 'sem'} serie={serie} metas={metas} fotoMeta={fotoMeta} salvar={salvar} />
