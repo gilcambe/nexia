@@ -38,6 +38,7 @@ const AGENDAS = {
     versao: 1,
     codigo_salt: '00498ea74d1b0d70b4f350cf4a62acba',
     codigo_hash: '54ec012b8a1e2da7e86198c870f455099e36609e64a23c62bdeab1534f8b70e7',
+    codigo_sempre: true, // só aqui: o teste no ar refaz o "Primeiro acesso" toda vez
     config: {
       nome: 'Agenda de Teste',
       whatsapp: '5511999998888',

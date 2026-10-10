@@ -285,7 +285,8 @@ function createHandler(deps = {}) {
       if (!ipPermitido('entrar', ip, now())) return res(429, { error: 'Muitas tentativas. Espere 10 minutos e tente de novo.' });
       const dados = await lerConta();
       const versao = Number(cadastro.versao) || 1;
-      const codigoValido = !dados.senha_hash || (Number(dados.versao) || 1) < versao;
+      // codigo_sempre: só na agenda de teste (código público), para o teste no ar repetir o primeiro acesso.
+      const codigoValido = cadastro.codigo_sempre === true || !dados.senha_hash || (Number(dados.versao) || 1) < versao;
       if (acao === 'primeiro-acesso') {
         if (!codigoValido) return res(400, { error: 'Esta agenda já tem senha. Use "Entrar".' });
         const codigo = str(body.codigo, 40).toUpperCase().replace(/[^A-Z0-9]/g, '');
