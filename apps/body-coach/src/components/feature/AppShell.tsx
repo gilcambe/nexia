@@ -6,6 +6,8 @@ import { ReadinessProvider } from './ReadinessContext';
 import { useAuth } from './AuthContext';
 import CoachPanel from './CoachPanel';
 import InstallButton from './InstallButton';
+import { setUserDoc } from '@/lib/userData';
+import { codigoIndicacao } from '@/lib/ferramentas/cartao';
 
 const navItems = [
   { to: '/', label: 'Hoje', icon: 'ri-sun-line' },
@@ -13,6 +15,7 @@ const navItems = [
   { to: '/evolution', label: 'Evolução', icon: 'ri-line-chart-line' },
   { to: '/plan', label: 'Ficha de treino', icon: 'ri-calendar-line' },
   { to: '/chat', label: 'Conversa', icon: 'ri-chat-3-line' },
+  { to: '/ferramentas', label: 'Ferramentas', icon: 'ri-apps-2-line' },
   { to: '/respirar', label: 'Respirar', icon: 'ri-lungs-line' },
   { to: '/team', label: 'Equipe', icon: 'ri-group-line' },
   { to: '/exams', label: 'Saúde', icon: 'ri-stethoscope-line' },
@@ -182,6 +185,17 @@ function Shell() {
   const navigate = useNavigate();
   const location = useLocation();
   // Veio de um link de convite do coach: depois do login/cadastro, vai para a conversa que conclui a entrada na equipe.
+  // Entrou por um link de indicação: grava no perfil quem indicou (uma vez só, nunca a si mesmo).
+  const { user, profile } = useAuth();
+  useEffect(() => {
+    if (!user || !profile || profile.indicado_por) return;
+    let ref: string | null = null;
+    try { ref = localStorage.getItem('bc_indicado_por'); } catch { /* sem armazenamento */ }
+    if (!ref) return;
+    try { localStorage.removeItem('bc_indicado_por'); } catch { /* sem armazenamento */ }
+    if (ref === codigoIndicacao(user.id)) return;
+    void setUserDoc(user.id, 'profile', 'main', { indicado_por: ref, indicado_em: new Date().toISOString() }, true).catch(() => {});
+  }, [user, profile]);
   useEffect(() => {
     try { if (localStorage.getItem('bc_convite') && location.pathname !== '/chat') navigate('/chat', { replace: true }); } catch { /* sem armazenamento */ }
   }, [location.pathname, navigate]);

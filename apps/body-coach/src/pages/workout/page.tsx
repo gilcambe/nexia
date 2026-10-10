@@ -23,6 +23,10 @@ import type { CardioAtividade } from '@/lib/cardioDoTexto';
 import { useCoach } from '@/components/feature/CoachContext';
 import { setTreinoAtivo } from '@/lib/treinoAtivo';
 import { ehRecorde } from '@/lib/recorde';
+import CompartilharCartao from '@/components/feature/CompartilharCartao';
+import MonitorCardiaco from '@/components/feature/MonitorCardiaco';
+import { estadoFC, kcalMusculacao, zerarSessaoFC } from '@/lib/ferramentas/frequencia';
+import type { DadosCartao } from '@/lib/ferramentas/cartao';
 
 type Phase =
   | 'PRE_SESSION'
@@ -92,11 +96,14 @@ function WorkoutEmpty({ estado }: { estado: string }) {
 
 function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { session: Session; lesoes?: Lesao[]; onSessionChange?: (s: Session) => void; onSaved?: () => void }) {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const pesoAluno = Number(profile?.onboarding?.weight) || 70;
   const { setOpen } = useCoach();
   const [startedAt] = useState(() => new Date().toISOString());
   const [phase, setPhase] = useState<Phase>('PRE_SESSION');
   useWakeLock(phase !== 'PRE_SESSION' && phase !== 'SESSION_COMPLETE');
+  // Cartão do treino para o story (Instagram/WhatsApp), montado ao finalizar.
+  const [cartao, setCartao] = useState<Omit<DadosCartao, 'nome' | 'link'> | null>(null);
   const [exIndex, setExIndex] = useState(0);
   const [setsByEx, setSetsByEx] = useState<Record<string, SetLog[]>>({});
   const [restLeft, setRestLeft] = useState(0);
@@ -223,6 +230,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
       {phase !== 'PRE_SESSION' && phase !== 'SESSION_COMPLETE' && <MusicaTreino variante="flutuante" />}
       <div className="space-y-4">
         {phase === 'PRE_SESSION' && <MusicaTreino variante="cartao" />}
+        {phase !== 'SESSION_COMPLETE' && phase !== 'SESSION_REVIEW' && <MonitorCardiaco compacto />}
         {phase === 'PRE_SESSION' && (
           <div className="rounded-2xl border border-background-200 bg-background-50 p-4 sm:p-6">
             <h2 className="font-heading text-xl font-bold text-foreground-950">Pronto para começar?</h2>
@@ -238,7 +246,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
               ))}
             </div>
             <button
-              onClick={() => setPhase('WARMUP')}
+              onClick={() => { zerarSessaoFC(); setPhase('WARMUP'); }}
               className="mt-6 w-full rounded-xl bg-primary-500 px-6 py-3 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
             >
               INICIAR TREINO
@@ -565,6 +573,9 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
           const totalSets = allSets.length;
           const totalVolume = allSets.reduce((acc, s) => acc + (s.weight * s.reps), 0);
           const exercisesCount = Object.values(setsByEx).filter((l) => l.some((x) => x.completed)).length;
+          // Calorias: pelos batimentos se um relógio/cinta ficou conectado; senão, estimativa por MET.
+          const fcSessao = estadoFC();
+          const kcalTreino = fcSessao.kcal > 1 ? Math.round(fcSessao.kcal) : kcalMusculacao(durationMin, pesoAluno);
 
           const melhores: Record<string, { weight: number; reps: number }> = {};
           const progressions = session.exercises.map((e) => {
@@ -600,6 +611,9 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
                 exercises: exercisesCount,
                 sets: totalSets,
                 volume_kg: totalVolume,
+                kcal: kcalTreino,
+                fc_media: fcSessao.media || null,
+                fc_maxima: fcSessao.maxima || null,
                 series_por_grupo: seriesPorGrupo,
                 melhores,
                 cardio: cardioFeito.map((c) => ({ tipo: c.tipo, minutos: c.minutos, km: c.distanciaKm ?? null, kcal: c.kcal ?? null })),
@@ -614,6 +628,18 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
               await setUserDoc(user.id, 'workouts', session.id, w).catch(() => {});
               onSaved?.();
             }
+            const rec = progressions.find((p) => p && p.recorde);
+            setCartao({
+              titulo: session.title,
+              data: new Date(),
+              itens: [
+                { rotulo: 'minutos', valor: String(durationMin) },
+                { rotulo: 'séries', valor: String(totalSets) },
+                { rotulo: 'kg levantados', valor: totalVolume.toLocaleString('pt-BR') },
+                { rotulo: fcSessao.media ? `kcal · FC média ${fcSessao.media}` : 'kcal (estimado)', valor: String(kcalTreino) },
+              ],
+              destaque: rec ? `Novo recorde: ${rec.name}` : undefined,
+            });
             setPhase('SESSION_COMPLETE');
           };
 
@@ -634,6 +660,11 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
                   </div>
                 ))}
               </div>
+
+              <p className="mt-3 flex items-center gap-2 rounded-xl bg-primary-50 px-3 py-2 text-sm text-foreground-800">
+                <i className="ri-fire-fill text-primary-500"></i>
+                <span><b>{kcalTreino} kcal</b> {fcSessao.media ? `pelos batimentos (média ${fcSessao.media}, máx. ${fcSessao.maxima} bpm)` : 'estimadas pelo tempo e seu peso'}</span>
+              </p>
 
               {progressions.length > 0 && (
                 <div className="mt-4 space-y-2">
@@ -665,6 +696,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
             <h2 className="mt-4 font-heading text-2xl font-bold text-foreground-950">Sessão concluída!</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-foreground-600">Excelente trabalho. Bom descanso e hidratação.</p>
             <p className="mt-3 text-xs text-foreground-400">Tudo foi salvo no seu diário mestre.</p>
+            {cartao && <div className="mx-auto mt-5 max-w-xs"><CompartilharCartao dados={cartao} /></div>}
             <button
               onClick={() => navigate('/')}
               className="mt-6 rounded-xl bg-primary-500 px-6 py-3 text-sm font-semibold text-background-50 transition hover:bg-primary-600"

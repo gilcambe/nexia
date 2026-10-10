@@ -3,6 +3,10 @@ import { AppRoutes } from "./router";
 import { I18nextProvider } from "react-i18next";
 import i18n from "./i18n";
 import { AuthProvider } from "./components/feature/AuthContext";
+import { capturarIndicacao } from "./lib/ferramentas/cartao";
+
+// Link de indicação (?ref=): guarda quem indicou antes do cadastro.
+capturarIndicacao();
 
 
 function App() {
