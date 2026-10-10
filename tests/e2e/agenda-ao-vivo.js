@@ -3,6 +3,8 @@
 // NEXIA Agenda: teste no ar. 1) Fluxo completo na agenda de teste (dados de mentira) contra a API publicada.
 // 2) Abre o site do Studio Lima publicado no celular e confere que o formulário mostra serviços e horários
 //    de verdade, sem enviar pedido (para não sujar a agenda da Carolina), e que o painel abre.
+// 3) Como cliente: pede horário pelo site publicado (apontado para a agenda de teste), Carolina recusa um e
+//    confirma outro no painel publicado, e o site volta a mostrar o horário recusado.
 // Uso: node tests/e2e/agenda-ao-vivo.js [https://<site>.pages.dev] [pasta-para-fotos]
 const fs = require('fs');
 const path = require('path');
@@ -74,6 +76,89 @@ const get = async q => { const r = await fetch(API + '?' + new URLSearchParams({
   await page.waitForSelector('#tela-login:not(.oculto)', { timeout: 15000 });
   confere((await page.textContent('#login-nome')).includes('Studio Lima'), 'painel /agenda abre com o nome do estúdio');
   await foto('03-painel-entrar');
+
+  // 3) Como cliente de verdade: o site publicado, só que apontando para a agenda de teste (para não sujar a da Carolina).
+  console.log('Cliente pelo site publicado + Carolina no painel publicado (agenda de teste)');
+  const ctx = page.context();
+  await ctx.route(u => u.href.startsWith(API), async route => {
+    const req = route.request();
+    const url = req.url().replace(/([?&]site=)[^&]*/, '$1agenda-teste');
+    let postData = req.postData();
+    if (postData) { try { const j = JSON.parse(postData); j.site = 'agenda-teste'; postData = JSON.stringify(j); } catch (e) {} }
+    await route.continue(postData ? { url, postData } : { url });
+  });
+  page.on('dialog', d => d.accept());
+  const pedir = async (nome, fone) => {
+    await page.goto(SITE_URL + '/', { waitUntil: 'networkidle' });
+    await page.click('#btn-agendar');
+    await page.waitForSelector('#modal-agendar:not(.hidden)');
+    await page.fill('#ag-data', dia);
+    await page.dispatchEvent('#ag-data', 'change');
+    await page.waitForFunction(() => document.querySelectorAll('#ag-horario option').length > 1, null, { timeout: 15000 });
+    const livres = await page.$$eval('#ag-horario option', os => os.map(o => o.value).filter(Boolean));
+    const hh = livres[0];
+    await page.selectOption('#ag-horario', hh);
+    await page.fill('#ag-nome', nome);
+    await page.fill('#ag-telefone', fone);
+    await page.check('#ag-consentimento');
+    await page.click('#ag-submit');
+    await page.waitForSelector('#ag-sucesso:not(.hidden)', { timeout: 15000 });
+    return { hh, livres };
+  };
+  const horasDoSite = async () => {
+    await page.goto(SITE_URL + '/', { waitUntil: 'networkidle' });
+    await page.click('#btn-agendar');
+    await page.waitForSelector('#modal-agendar:not(.hidden)');
+    await page.fill('#ag-data', dia);
+    await page.dispatchEvent('#ag-data', 'change');
+    await page.waitForFunction(() => document.querySelectorAll('#ag-horario option').length > 1, null, { timeout: 15000 });
+    return page.$$eval('#ag-horario option', os => os.map(o => o.value).filter(Boolean));
+  };
+  const p1 = await pedir('Cliente Recusa', '11 97777-0001');
+  confere((await page.textContent('#ag-sucesso-detalhe')).includes(p1.hh), `cliente pede ${p1.hh} pelo site e vê "pedido enviado"`);
+  await foto('04-cliente-pedido-enviado');
+  const p2 = await pedir('Cliente Confirma', '11 97777-0002');
+  confere(p2.hh !== p1.hh, `segunda cliente pede ${p2.hh} (o horário da primeira já não aparece)`);
+
+  // Carolina abre o painel publicado e responde
+  await page.goto(SITE_URL + '/agenda/?site=agenda-teste', { waitUntil: 'networkidle' });
+  await page.waitForSelector('#tela-login:not(.oculto)');
+  await page.fill('#senha', SENHA_TESTE);
+  await page.click('#form-entrar button');
+  await page.waitForSelector('#caixa-pendentes:not(.oculto)', { timeout: 15000 });
+  const pend = await page.textContent('#lista-pendentes');
+  confere(pend.includes('Cliente Recusa') && pend.includes('Cliente Confirma'), 'os dois pedidos aparecem em "Pedidos para responder"');
+  await foto('05-painel-pedidos');
+  await page.locator('#lista-pendentes .item', { hasText: 'Cliente Recusa' }).locator('button[data-status="cancelado"]').click();
+  await page.waitForFunction(() => !document.querySelector('#lista-pendentes').textContent.includes('Cliente Recusa'), null, { timeout: 15000 });
+  confere(true, 'Carolina toca em Recusar e o pedido sai da lista');
+  await page.locator('#lista-pendentes .item', { hasText: 'Cliente Confirma' }).locator('button[data-status="confirmado"]').click();
+  await page.waitForSelector('#caixa-pendentes.oculto', { state: 'attached', timeout: 15000 });
+  confere(true, 'Carolina toca em Confirmar no outro pedido');
+  await page.click(`#faixa-dias [data-dia="${dia}"]`);
+  await page.waitForFunction(() => document.querySelector('#lista-dia .item.cancelado') && document.querySelector('#lista-dia .item.confirmado'), null, { timeout: 15000 });
+  const zapRec = decodeURIComponent(await page.locator('#lista-dia .item.cancelado', { hasText: 'Cliente Recusa' }).locator('a').getAttribute('href'));
+  confere(zapRec.startsWith('https://wa.me/5511977770001') && zapRec.includes('não vou conseguir atender'), 'recusado: botão WhatsApp abre a conversa da cliente com o aviso pronto');
+  const zapOk = decodeURIComponent(await page.locator('#lista-dia .item.confirmado', { hasText: 'Cliente Confirma' }).locator('a').getAttribute('href'));
+  confere(zapOk.startsWith('https://wa.me/5511977770002') && zapOk.includes('está confirmado'), 'confirmado: botão WhatsApp abre a conversa com a confirmação pronta');
+  await foto('06-painel-recusado-e-confirmado');
+
+  // De volta ao site: o horário recusado voltou a ficar livre, o confirmado continua ocupado
+  const depois = await horasDoSite();
+  confere(depois.includes(p1.hh), `horário recusado (${p1.hh}) volta a aparecer no site`);
+  confere(!depois.includes(p2.hh), `horário confirmado (${p2.hh}) continua ocupado no site`);
+  await foto('07-site-horario-liberado');
+
+  // Limpa: cancela o confirmado e sai do painel
+  await page.goto(SITE_URL + '/agenda/?site=agenda-teste', { waitUntil: 'networkidle' });
+  await page.waitForSelector('#pag-agenda', { timeout: 15000 });
+  await page.waitForFunction(() => document.querySelector('#faixa-dias [data-dia]'), null, { timeout: 15000 });
+  await page.click(`#faixa-dias [data-dia="${dia}"]`);
+  await page.waitForSelector('#lista-dia .item.confirmado', { timeout: 15000 });
+  await page.locator('#lista-dia .item.confirmado', { hasText: 'Cliente Confirma' }).locator('button[data-status="cancelado"]').click();
+  await page.waitForFunction(() => !document.querySelector('#lista-dia .item.confirmado'), null, { timeout: 15000 });
+  confere(true, 'limpeza: horário de teste cancelado');
+
   confere(erros.length === 0, 'sem erro de JavaScript' + (erros.length ? ': ' + erros.join(' | ') : ''));
   await browser.close();
   console.log(falhas.length ? `\n${falhas.length} falha(s)` : '\nTudo certo no ar.');
