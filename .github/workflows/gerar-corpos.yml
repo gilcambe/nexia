@@ -1,5 +1,5 @@
-# Temporário: gera as imagens do corpo realista (Body Coach) com IA de imagem grátis (Pollinations)
-# e grava neste mesmo branch. Não vai para o develop.
+# Temporário: gera as imagens do corpo realista (Body Coach) com a cota grátis do Gemini
+# e grava neste mesmo branch. Não vai para o develop. Autorizado pelo usuário em 10/10/2026.
 name: Gerar corpos realistas
 on:
   push:
@@ -7,11 +7,11 @@ on:
     paths: [.github/workflows/gerar-corpos.yml]
 permissions:
   contents: write
-concurrency: { group: gerar-corpos, cancel-in-progress: false }
+concurrency: { group: gerar-corpos, cancel-in-progress: true }
 jobs:
   gerar:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     strategy:
       fail-fast: false
       max-parallel: 1
@@ -20,42 +20,63 @@ jobs:
         p: [clara, media, morena, negra]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Gerar imagens (Pollinations, sem chave)
-        env: { S: '${{ matrix.s }}', P: '${{ matrix.p }}' }
+      - name: Gerar imagens (Gemini, cota grátis)
+        env:
+          S: '${{ matrix.s }}'
+          P: '${{ matrix.p }}'
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         shell: bash
         run: |
           set +e
           rm -rf corpos; mkdir -p corpos
           python3 - <<'PY'
-          import os, time, urllib.parse, urllib.request, zlib
-          S, P = os.environ['S'], os.environ['P']
+          import base64, json, os, time, urllib.request
+          S, P, K = os.environ['S'], os.environ['P'], os.environ['GEMINI_API_KEY']
+          MODELOS = ['gemini-2.5-flash-image', 'gemini-2.0-flash-preview-image-generation', 'gemini-2.0-flash-exp-image-generation']
           sexo = {'m': 'man', 'f': 'woman'}[S]
           roupa = {'m': 'wearing only plain black athletic shorts, shirtless', 'f': 'wearing a plain black sports bra and plain black athletic shorts'}[S]
           pele = {'clara': 'fair white skin', 'media': 'light olive tan skin, brazilian', 'morena': 'brown skin, latino', 'negra': 'dark black skin, african descent'}[P]
           nivel = {'magro': 'lean muscular athletic body with visible abs, low body fat', 'medio': 'average fit body, slightly soft belly, moderate body fat', 'alto': 'overweight body with a round belly and love handles, high body fat'}
-          vista = {'frente': 'facing the camera, front view', 'lado': 'in strict side profile facing right, side view', 'costas': 'seen from behind, back view, facing away from the camera'}
           log = open(f'corpos/log-{S}-{P}.txt', 'w')
-          for n in nivel:
-              seed = zlib.crc32(f'{S}{P}{n}'.encode()) % 100000
-              for v in vista:
-                  prompt = (f'RAW photo, full length studio photograph of an adult {sexo}, {pele}, {nivel[n]}, {roupa}, barefoot, standing straight and relaxed, '
-                            f'arms slightly away from the body, {vista[v]}, whole body from the top of the head to the feet, feet fully visible on the floor with empty floor below, '
-                            'centered, plain light gray seamless studio background, soft even lighting, photorealistic, detailed natural skin texture, sharp focus, 85mm DSLR')
-                  url = 'https://image.pollinations.ai/prompt/' + urllib.parse.quote(prompt) + f'?width=768&height=1152&nologo=true&model=flux&seed={seed}'
-                  for t in range(3):
+          def gerar(partes, nome):
+              for t in range(4):
+                  for m in MODELOS:
+                      cfg = {'responseModalities': ['TEXT', 'IMAGE']}
+                      if m.startswith('gemini-2.5'): cfg['imageConfig'] = {'aspectRatio': '3:4'}
+                      body = {'contents': [{'parts': partes}], 'generationConfig': cfg}
                       try:
-                          img = urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'nexia-bodycoach'}), timeout=120).read()
-                          if img[:3] == b'\xff\xd8\xff' or img[:4] == b'\x89PNG':
-                              open(f'corpos/{S}-{P}-{n}-{v}.jpg', 'wb').write(img)
-                              print(f'ok {S}-{P}-{n}-{v} {len(img)}', file=log, flush=True)
-                              break
-                          print(f'nao-imagem {S}-{P}-{n}-{v} {img[:120]!r}', file=log, flush=True)
+                          req = urllib.request.Request(f'https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent',
+                                                       data=json.dumps(body).encode(), headers={'x-goog-api-key': K, 'Content-Type': 'application/json'})
+                          r = json.load(urllib.request.urlopen(req, timeout=180))
+                          for c in r.get('candidates', []):
+                              for p in c.get('content', {}).get('parts', []):
+                                  if 'inlineData' in p:
+                                      img = base64.b64decode(p['inlineData']['data'])
+                                      open(f'corpos/{nome}.png', 'wb').write(img)
+                                      print(f'ok {nome} {m} {len(img)}', file=log, flush=True)
+                                      return img
+                          print(f'sem imagem {nome} {m} {json.dumps(r)[:200]}', file=log, flush=True)
                       except Exception as e:
-                          print(f'falhou {S}-{P}-{n}-{v} t{t} {e}', file=log, flush=True)
-                      time.sleep(10 * (t + 1))
-                  time.sleep(3)
+                          msg = getattr(e, 'read', lambda: b'')()[:250]
+                          print(f'falhou {nome} {m} t{t} {e} {msg!r}', file=log, flush=True)
+                  time.sleep(20 * (t + 1))
+              return None
+          base = ('Ultra realistic full length studio photograph of one adult {sexo}, {pele}, {nivel}, {roupa}, barefoot, '
+                  'standing straight and relaxed, arms hanging slightly away from the body, {vista}. The whole body from the top of the head '
+                  'to the feet is visible with a little empty space above the head and below the feet, centered. Plain light gray seamless studio '
+                  'background, soft even lighting, natural realistic skin texture, sharp focus, shot on a DSLR with an 85mm lens. No text, no watermark.')
+          for n in nivel:
+              frente = gerar([{'text': base.format(sexo=sexo, pele=pele, nivel=nivel[n], roupa=roupa, vista='facing the camera, front view')}], f'{S}-{P}-{n}-frente')
+              time.sleep(7)
+              for v, txt in [('lado', 'standing in strict side profile facing right (side view)'), ('costas', 'seen from behind (back view), facing away from the camera')]:
+                  partes = [{'text': base.format(sexo=sexo, pele=pele, nivel=nivel[n], roupa=roupa, vista=txt)}]
+                  if frente:
+                      partes = [{'text': f'This is the same exact person as in the photo: same body, same skin tone, same clothes, same studio and lighting, now {txt}. Same framing, whole body from head to feet. ' + partes[0]['text']},
+                                {'inlineData': {'mimeType': 'image/png', 'data': base64.b64encode(frente).decode()}}]
+                  gerar(partes, f'{S}-{P}-{n}-{v}')
+                  time.sleep(7)
           PY
-          cat corpos/log-*.txt
+          cut -c1-200 corpos/log-*.txt
       - name: Gravar no branch
         if: always()
         run: |
