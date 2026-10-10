@@ -1,46 +1,38 @@
-# Temporário: gera as imagens do corpo realista (Body Coach) pela rota /api/corpo-ia do Worker (Workers AI grátis) (v2)
-# e grava neste mesmo branch. Não vai para o develop. Autorizado pelo usuário em 10/10/2026.
+# Temporário: gera de novo as fotos listadas em corpos-pedidos.txt pela rota /api/corpo-ia do
+# Worker (Workers AI grátis), duas versões de cada, e grava neste branch. Não vai para o develop.
 name: Gerar corpos realistas
 on:
   push:
     branches: [nexia/gerar-corpos]
-    paths: [.github/workflows/gerar-corpos.yml]
+    paths: [.github/workflows/gerar-corpos.yml, corpos-pedidos.txt]
 permissions:
   contents: write
 concurrency: { group: gerar-corpos, cancel-in-progress: true }
 jobs:
   gerar:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-    strategy:
-      fail-fast: false
-      max-parallel: 4
-      matrix:
-        s: [m, f]
-        p: [clara, media, morena, negra]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Gerar imagens (Workers AI grátis, pelo Worker publicado)
-        env: { S: '${{ matrix.s }}', P: '${{ matrix.p }}' }
+      - name: Gerar imagens
         shell: bash
         run: |
           set +e
-          rm -rf corpos; mkdir -p corpos; log="corpos/log-$S-$P.txt"
-          for n in magro medio alto; do for v in frente lado costas; do
-            k="$S-$P-$n-$v"
+          rm -rf corpos; mkdir -p corpos; log=corpos/log.txt
+          for k in $(cat corpos-pedidos.txt); do for n in 1 2; do
             for t in 1 2 3; do
-              code=$(curl -s --max-time 90 -o "corpos/$k.jpg" -w '%{http_code}' "https://nexia.gcbezerra.workers.dev/api/corpo-ia?k=$k")
-              echo "$k t$t http=$code $(stat -c %s corpos/$k.jpg 2>/dev/null)" >> "$log"
+              code=$(curl -s --max-time 90 -o "corpos/${k}__$n.jpg" -w '%{http_code}' "https://nexia.gcbezerra.workers.dev/api/corpo-ia?k=$k&v=$n$t$RANDOM")
+              echo "$k $n t$t http=$code" >> $log
               [ "$code" = 200 ] && break
-              head -c 200 "corpos/$k.jpg" >> "$log"; echo >> "$log"; rm -f "corpos/$k.jpg"; sleep $((t*5))
+              rm -f "corpos/${k}__$n.jpg"; sleep $((t*5))
             done
           done; done
-          cat "$log"
+          grep -c http=200 $log
       - name: Gravar no branch
         if: always()
         run: |
           git config user.name "nexia-bot"
           git config user.email "nexia-bot@users.noreply.github.com"
           git add corpos
-          git commit -m "chore: corpos ${{ matrix.s }}-${{ matrix.p }} (temporário)" || exit 0
+          git commit -m "chore: corpos refeitos (temporário)" || exit 0
           for i in 1 2 3 4 5; do git pull --rebase -q origin nexia/gerar-corpos && git push origin HEAD:nexia/gerar-corpos && break; sleep $((i*5)); done
