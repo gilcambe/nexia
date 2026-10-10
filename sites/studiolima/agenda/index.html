@@ -1,0 +1,571 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<!-- NEXIA Agenda: painel da dona. Cada site muda só estas 3 linhas (o resto é igual para todos). -->
+<meta name="agenda-site" content="studiolima">
+<meta name="agenda-cor" content="#825c4e">
+<meta name="agenda-api" content="https://nexia.gcbezerra.workers.dev/api/agenda">
+<meta name="theme-color" content="#825c4e">
+<title>Agenda · Studio Lima</title>
+<style>
+  :root { --cor: #825c4e; --cor-escura: #291410; --fundo: #f7f4ef; --cartao: #fff; --texto: #1e1311; --suave: #6b5f5b; --linha: #e8e1d8; --ok: #2f7d4f; --ok-f: #e6f4ea; --alerta: #a5620c; --alerta-f: #fdf1de; --erro: #b3261e; --erro-f: #fdeceb; --neutro-f: #eeeae5; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--fundo); color: var(--texto); font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  .oculto { display: none !important; }
+  .tela { max-width: 640px; margin: 0 auto; padding: 0 16px calc(96px + env(safe-area-inset-bottom)); }
+  header.topo { position: sticky; top: 0; z-index: 5; background: var(--cor); color: #fff; padding: calc(12px + env(safe-area-inset-top)) 16px 12px; }
+  header.topo .linha { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+  header.topo h1 { font-size: 18px; margin: 0; flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ico { background: rgba(255,255,255,.16); border: 0; color: #fff; border-radius: 999px; min-width: 44px; height: 44px; padding: 0 14px; font-size: 15px; }
+  .cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: 16px; padding: 16px; margin-top: 12px; }
+  h2 { font-size: 17px; margin: 20px 0 4px; }
+  label { display: block; font-size: 14px; color: var(--suave); margin: 12px 0 4px; }
+  input, select, textarea { width: 100%; min-width: 0; border: 1px solid var(--linha); border-radius: 12px; padding: 12px; background: #fff; min-height: 48px; }
+  textarea { min-height: 96px; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border: 0; border-radius: 999px; min-height: 48px; padding: 0 20px; background: var(--cor); color: #fff; font-weight: 600; }
+  .btn.largo { width: 100%; margin-top: 16px; }
+  .btn.claro { background: var(--neutro-f); color: var(--texto); }
+  .btn.verde { background: var(--ok); }
+  .btn.vermelho { background: var(--erro-f); color: var(--erro); }
+  .btn.pequeno { min-height: 40px; padding: 0 14px; font-size: 14px; }
+  .btn:disabled { opacity: .55; }
+  .msg { border-radius: 12px; padding: 10px 12px; font-size: 14px; margin-top: 12px; }
+  .msg.erro { background: var(--erro-f); color: var(--erro); }
+  .msg.ok { background: var(--ok-f); color: var(--ok); }
+  .msg.aviso { background: var(--alerta-f); color: var(--alerta); }
+  .abas { display: flex; gap: 8px; margin-top: 16px; }
+  .abas button { flex: 1; border: 1px solid var(--linha); background: #fff; border-radius: 999px; min-height: 44px; }
+  .abas button.ativa { background: var(--cor); color: #fff; border-color: var(--cor); }
+  .dias { display: flex; gap: 6px; overflow-x: auto; padding: 12px 0 4px; scrollbar-width: none; }
+  .dias::-webkit-scrollbar { display: none; }
+  .dia { flex: 0 0 auto; width: 56px; border: 1px solid var(--linha); background: #fff; border-radius: 14px; padding: 6px 0; text-align: center; }
+  .dia small { display: block; font-size: 11px; color: var(--suave); text-transform: uppercase; }
+  .dia b { display: block; font-size: 19px; }
+  .dia i { display: block; font-style: normal; font-size: 11px; color: var(--cor); min-height: 14px; }
+  .dia.ativo { background: var(--cor); border-color: var(--cor); color: #fff; }
+  .dia.ativo small, .dia.ativo i { color: #fff; }
+  .navdia { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+  .navdia h2 { flex: 1; margin: 0; text-align: center; text-transform: capitalize; }
+  .navdia button { width: 44px; height: 44px; border-radius: 999px; border: 1px solid var(--linha); background: #fff; font-size: 18px; }
+  .item { background: var(--cartao); border: 1px solid var(--linha); border-left: 5px solid var(--cor); border-radius: 14px; padding: 12px 14px; margin-top: 10px; }
+  .item.pendente { border-left-color: var(--alerta); }
+  .item.confirmado { border-left-color: var(--ok); }
+  .item.cancelado, .item.faltou { border-left-color: #b9b0aa; opacity: .75; }
+  .item.concluido { border-left-color: var(--cor); }
+  .item.bloqueio { border-left-color: #6b5f5b; background: repeating-linear-gradient(135deg, #fff, #fff 10px, #f3efea 10px, #f3efea 20px); }
+  .item .cab { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .item .hora { font-weight: 700; font-size: 17px; }
+  .item .nome { font-weight: 600; flex: 1; min-width: 40%; }
+  .item .det { font-size: 14px; color: var(--suave); margin-top: 2px; word-break: break-word; }
+  .chip { font-size: 12px; border-radius: 999px; padding: 3px 10px; background: var(--neutro-f); }
+  .chip.pendente { background: var(--alerta-f); color: var(--alerta); }
+  .chip.confirmado { background: var(--ok-f); color: var(--ok); }
+  .chip.cancelado, .chip.faltou { background: var(--erro-f); color: var(--erro); }
+  .acoes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .vazio { text-align: center; color: var(--suave); padding: 28px 8px; }
+  .fab { position: fixed; right: 16px; bottom: calc(76px + env(safe-area-inset-bottom)); width: 60px; height: 60px; border-radius: 999px; border: 0; background: var(--cor); color: #fff; font-size: 30px; box-shadow: 0 6px 18px rgba(0,0,0,.22); z-index: 6; }
+  nav.baixo { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--linha); display: flex; padding-bottom: env(safe-area-inset-bottom); z-index: 6; }
+  nav.baixo button { flex: 1; border: 0; background: none; min-height: 60px; font-size: 14px; color: var(--suave); position: relative; }
+  nav.baixo button.ativa { color: var(--cor); font-weight: 700; }
+  .badge { display: inline-block; min-width: 20px; height: 20px; line-height: 20px; border-radius: 999px; background: var(--erro); color: #fff; font-size: 12px; padding: 0 6px; margin-left: 4px; }
+  .folha { position: fixed; inset: 0; z-index: 10; background: rgba(20,10,8,.45); display: flex; align-items: flex-end; justify-content: center; }
+  .folha .caixa { background: var(--fundo); width: 100%; max-width: 640px; max-height: 92vh; overflow-y: auto; border-radius: 20px 20px 0 0; padding: 16px 16px calc(24px + env(safe-area-inset-bottom)); }
+  .folha .caixa .titulo { display: flex; align-items: center; justify-content: space-between; }
+  .folha .caixa .titulo h2 { margin: 0; }
+  .fechar { width: 44px; height: 44px; border-radius: 999px; border: 0; background: var(--neutro-f); font-size: 20px; }
+  .grade2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+  .horas { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .horas button { border: 1px solid var(--linha); background: #fff; border-radius: 999px; min-height: 42px; padding: 0 14px; }
+  .horas button.sel { background: var(--cor); color: #fff; border-color: var(--cor); }
+  .linha-dia { display: grid; grid-template-columns: 72px minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; margin-top: 8px; }
+  .linha-dia input[type=time] { padding: 10px 8px; }
+  .linha-dia label { margin: 0; display: flex; align-items: center; gap: 6px; color: var(--texto); }
+  .linha-dia input[type=checkbox], .check input { width: 22px; height: 22px; min-height: 0; }
+  .check { display: flex; align-items: center; gap: 10px; margin-top: 12px; color: var(--texto); font-size: 15px; }
+  .serv { display: grid; grid-template-columns: minmax(0, 1fr) 76px 44px; gap: 8px; margin-top: 8px; align-items: center; }
+  .serv .preco { grid-column: 1 / 3; }
+  .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(148px + env(safe-area-inset-bottom)); background: var(--texto); color: #fff; padding: 12px 18px; border-radius: 999px; font-size: 14px; z-index: 20; max-width: calc(100% - 32px); text-align: center; }
+  .login { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; }
+  .login h1 { font-size: 24px; margin: 0 0 4px; }
+  .login p { color: var(--suave); margin: 0; }
+  a.link { color: var(--cor); }
+</style>
+</head>
+<body>
+
+<!-- ENTRAR -->
+<section id="tela-login" class="tela login oculto">
+  <h1 id="login-nome">Minha agenda</h1>
+  <p>Área só da dona do estúdio.</p>
+  <div class="abas">
+    <button type="button" id="aba-entrar" class="ativa">Entrar</button>
+    <button type="button" id="aba-primeiro">Primeiro acesso</button>
+  </div>
+  <form id="form-entrar" class="cartao" autocomplete="on">
+    <label for="senha">Senha</label>
+    <input id="senha" type="password" autocomplete="current-password" required>
+    <button class="btn largo" type="submit">Entrar</button>
+    <div id="erro-entrar" class="msg erro oculto" role="alert"></div>
+  </form>
+  <form id="form-primeiro" class="cartao oculto" autocomplete="off">
+    <p style="font-size:14px">Use o código que você recebeu e crie sua senha.</p>
+    <label for="codigo">Código de acesso</label>
+    <input id="codigo" autocapitalize="characters" required>
+    <label for="nova1">Crie uma senha (mínimo 6)</label>
+    <input id="nova1" type="password" autocomplete="new-password" required>
+    <label for="nova2">Repita a senha</label>
+    <input id="nova2" type="password" autocomplete="new-password" required>
+    <button class="btn largo" type="submit">Criar senha e entrar</button>
+    <div id="erro-primeiro" class="msg erro oculto" role="alert"></div>
+  </form>
+</section>
+
+<!-- APP -->
+<div id="app" class="oculto">
+  <header class="topo"><div class="linha">
+    <h1 id="titulo">Minha agenda</h1>
+    <button class="ico" id="btn-atualizar" type="button" aria-label="Atualizar">↻</button>
+  </div></header>
+
+  <main class="tela">
+    <!-- AGENDA -->
+    <section id="pag-agenda">
+      <div id="caixa-pendentes" class="oculto">
+        <h2>Pedidos para responder <span class="badge" id="n-pend"></span></h2>
+        <div id="lista-pendentes"></div>
+      </div>
+      <div class="navdia">
+        <button type="button" id="dia-ant" aria-label="Dia anterior">‹</button>
+        <h2 id="dia-titulo"></h2>
+        <button type="button" id="dia-prox" aria-label="Próximo dia">›</button>
+      </div>
+      <div class="dias" id="faixa-dias"></div>
+      <div style="text-align:center;margin-top:6px"><button type="button" class="btn claro pequeno" id="btn-hoje">Hoje</button></div>
+      <div id="lista-dia"></div>
+    </section>
+
+    <!-- AJUSTES -->
+    <section id="pag-ajustes" class="oculto">
+      <form id="form-config">
+        <h2>Seu estúdio</h2>
+        <div class="cartao">
+          <label for="cfg-nome">Nome que aparece</label><input id="cfg-nome" maxlength="80">
+          <label for="cfg-whats">Seu WhatsApp (com DDD)</label><input id="cfg-whats" inputmode="tel">
+          <label for="cfg-aviso">Aviso para quem agenda (ex.: política de cancelamento)</label><textarea id="cfg-aviso" maxlength="300"></textarea>
+        </div>
+        <h2>Dias e horários de atendimento</h2>
+        <div class="cartao">
+          <div id="cfg-semana"></div>
+          <div class="grade2">
+            <div><label for="cfg-intervalo">Horários de</label>
+              <select id="cfg-intervalo"><option value="15">15 em 15 min</option><option value="20">20 em 20 min</option><option value="30">30 em 30 min</option><option value="45">45 em 45 min</option><option value="60">1 em 1 hora</option></select></div>
+            <div><label for="cfg-antec">Antecedência mínima</label>
+              <select id="cfg-antec"><option value="0">Nenhuma</option><option value="1">1 hora</option><option value="2">2 horas</option><option value="4">4 horas</option><option value="12">12 horas</option><option value="24">1 dia</option></select></div>
+          </div>
+        </div>
+        <h2>Serviços</h2>
+        <p style="font-size:14px;color:var(--suave);margin:0">Nome, duração em minutos e preço (opcional).</p>
+        <div class="cartao"><div id="cfg-servicos"></div>
+          <button type="button" class="btn claro pequeno" id="add-serv" style="margin-top:12px">+ Adicionar serviço</button></div>
+        <button class="btn largo" type="submit">Salvar ajustes</button>
+        <div id="msg-config" class="msg oculto" role="status"></div>
+      </form>
+      <h2>Senha</h2>
+      <form id="form-senha" class="cartao">
+        <label for="s-atual">Senha atual</label><input id="s-atual" type="password" autocomplete="current-password" required>
+        <label for="s-nova">Nova senha</label><input id="s-nova" type="password" autocomplete="new-password" required>
+        <button class="btn largo claro" type="submit">Trocar senha</button>
+        <div id="msg-senha" class="msg oculto" role="status"></div>
+      </form>
+      <button class="btn largo vermelho" type="button" id="btn-sair">Sair deste aparelho</button>
+      <p style="text-align:center;font-size:12px;color:var(--suave);margin-top:24px">Feito com NEXIA</p>
+    </section>
+  </main>
+
+  <button class="fab" id="fab" type="button" aria-label="Novo">+</button>
+  <nav class="baixo">
+    <button type="button" class="ativa" id="nav-agenda">Agenda<span class="badge oculto" id="nav-pend"></span></button>
+    <button type="button" id="nav-ajustes">Ajustes</button>
+  </nav>
+</div>
+
+<!-- FOLHA: escolher -->
+<div class="folha oculto" id="folha-menu"><div class="caixa">
+  <div class="titulo"><h2>O que você quer fazer?</h2><button class="fechar" type="button" data-fechar aria-label="Fechar">×</button></div>
+  <button class="btn largo" type="button" id="abrir-novo">Marcar um horário</button>
+  <button class="btn largo claro" type="button" id="abrir-bloq">Bloquear horário ou dia</button>
+</div></div>
+
+<!-- FOLHA: novo agendamento -->
+<div class="folha oculto" id="folha-novo"><div class="caixa">
+  <div class="titulo"><h2>Marcar horário</h2><button class="fechar" type="button" data-fechar aria-label="Fechar">×</button></div>
+  <form id="form-novo">
+    <label for="n-nome">Nome da cliente</label><input id="n-nome" required maxlength="80" autocomplete="off">
+    <label for="n-whats">WhatsApp (opcional)</label><input id="n-whats" inputmode="tel" autocomplete="off">
+    <label for="n-serv">Serviço</label><select id="n-serv"></select>
+    <label for="n-data">Dia</label><input id="n-data" type="date" required>
+    <label>Horário livre</label><div class="horas" id="n-horas"></div>
+    <label for="n-obs">Observação (opcional)</label><textarea id="n-obs" maxlength="500"></textarea>
+    <button class="btn largo" type="submit" id="n-salvar">Marcar</button>
+    <div id="erro-novo" class="msg erro oculto" role="alert"></div>
+  </form>
+</div></div>
+
+<!-- FOLHA: bloquear -->
+<div class="folha oculto" id="folha-bloq"><div class="caixa">
+  <div class="titulo"><h2>Bloquear horário</h2><button class="fechar" type="button" data-fechar aria-label="Fechar">×</button></div>
+  <form id="form-bloq">
+    <label for="b-data">Dia</label><input id="b-data" type="date" required>
+    <label class="check"><input type="checkbox" id="b-todo" checked> O dia todo</label>
+    <div class="grade2 oculto" id="b-horas">
+      <div><label for="b-ini">Das</label><input id="b-ini" type="time" value="12:00"></div>
+      <div><label for="b-fim">Até</label><input id="b-fim" type="time" value="13:00"></div>
+    </div>
+    <label for="b-motivo">Motivo (só você vê)</label><input id="b-motivo" maxlength="120" placeholder="Ex.: folga, feriado, almoço">
+    <button class="btn largo" type="submit">Bloquear</button>
+    <div id="erro-bloq" class="msg erro oculto" role="alert"></div>
+  </form>
+</div></div>
+
+<div class="toast oculto" id="toast" role="status"></div>
+
+<script>
+(function () {
+  'use strict';
+  var meta = function (n) { var m = document.querySelector('meta[name="' + n + '"]'); return m ? m.content : ''; };
+  var qs = new URLSearchParams(location.search);
+  var SITE = (qs.get('site') || meta('agenda-site') || '').toLowerCase();
+  var API = qs.get('api') || meta('agenda-api');
+  var COR = meta('agenda-cor');
+  if (/^#[0-9a-f]{6}$/i.test(COR)) { document.documentElement.style.setProperty('--cor', COR); }
+  var CHAVE = 'nexia_agenda_' + SITE;
+  var DIAS_SEM = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
+  var DIAS_LONGO = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+  var STATUS_NOME = { pendente: 'Esperando você', confirmado: 'Confirmado', cancelado: 'Cancelado', concluido: 'Atendido', faltou: 'Faltou' };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var mostrar = function (el, sim) { el.classList.toggle('oculto', !sim); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var lerToken = function () { try { return localStorage.getItem(CHAVE) || ''; } catch (e) { return ''; } };
+  var gravarToken = function (t) { try { if (t) localStorage.setItem(CHAVE, t); else localStorage.removeItem(CHAVE); } catch (e) {} };
+  var somaDias = function (d, n) { return new Date(Date.parse(d + 'T12:00:00Z') + n * 86400000).toISOString().slice(0, 10); };
+  var dataBr = function (d) { return d.slice(8, 10) + '/' + d.slice(5, 7); };
+  var semanaDe = function (d) { return new Date(d + 'T12:00:00Z').getUTCDay(); };
+
+  var estado = { token: lerToken(), hoje: '', dia: '', cfg: null, itens: [], pendentes: [], carregando: false, de: '', ate: '' };
+
+  function toast(t) { var el = $('toast'); el.textContent = t; mostrar(el, true); clearTimeout(toast._t); toast._t = setTimeout(function () { mostrar(el, false); }, 3200); }
+
+  function chamar(corpo) {
+    corpo.site = SITE;
+    if (estado.token && !corpo.token) corpo.token = estado.token;
+    return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(corpo) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { j._status = r.status; return j; }); })
+      .catch(function () { return { _status: 0, error: 'Sem internet. Confira a conexão e tente de novo.' }; })
+      .then(function (j) {
+        if (j._status === 401 && j.sair) { sair(true); }
+        return j;
+      });
+  }
+
+  // ── Entrar ──
+  function telaLogin() { mostrar($('app'), false); mostrar($('tela-login'), true); }
+  function trocarAba(primeiro) {
+    $('aba-entrar').classList.toggle('ativa', !primeiro); $('aba-primeiro').classList.toggle('ativa', primeiro);
+    mostrar($('form-entrar'), !primeiro); mostrar($('form-primeiro'), primeiro);
+  }
+  $('aba-entrar').onclick = function () { trocarAba(false); };
+  $('aba-primeiro').onclick = function () { trocarAba(true); };
+  function erro(id, t) { var el = $(id); el.textContent = t || ''; mostrar(el, !!t); }
+
+  $('form-entrar').onsubmit = function (e) {
+    e.preventDefault(); erro('erro-entrar', '');
+    var b = e.submitter || this.querySelector('button'); b.disabled = true;
+    chamar({ acao: 'entrar', senha: $('senha').value, token: '-' }).then(function (j) {
+      b.disabled = false;
+      if (j.ok) { estado.token = j.token; gravarToken(j.token); $('senha').value = ''; abrirApp(); }
+      else { erro('erro-entrar', j.error || 'Não deu certo. Tente de novo.'); if (j.primeiro_acesso) trocarAba(true); }
+    });
+  };
+  $('form-primeiro').onsubmit = function (e) {
+    e.preventDefault(); erro('erro-primeiro', '');
+    if ($('nova1').value !== $('nova2').value) return erro('erro-primeiro', 'As duas senhas não são iguais.');
+    var b = this.querySelector('button'); b.disabled = true;
+    chamar({ acao: 'primeiro-acesso', codigo: $('codigo').value, senha_nova: $('nova1').value, token: '-' }).then(function (j) {
+      b.disabled = false;
+      if (j.ok) { estado.token = j.token; gravarToken(j.token); abrirApp(); toast('Senha criada. Bem-vinda!'); }
+      else erro('erro-primeiro', j.error || 'Não deu certo. Tente de novo.');
+    });
+  };
+
+  function sair(expirou) {
+    if (!expirou && estado.token) chamar({ acao: 'sair' });
+    estado.token = ''; gravarToken('');
+    trocarAba(false);
+    telaLogin();
+    if (expirou) erro('erro-entrar', 'Por segurança, entre de novo.');
+  }
+  $('btn-sair').onclick = function () { if (confirm('Sair deste aparelho?')) sair(false); };
+
+  // ── Agenda ──
+  function abrirApp() {
+    mostrar($('tela-login'), false); mostrar($('app'), true);
+    carregar(true);
+  }
+
+  function carregar(primeira) {
+    if (estado.carregando) return;
+    estado.carregando = true;
+    var base = estado.dia || '';
+    var de = base ? somaDias(base, -3) : '';
+    var corpo = { acao: 'listar' };
+    if (de) { corpo.de = de; corpo.ate = somaDias(base, 10); }
+    chamar(corpo).then(function (j) {
+      estado.carregando = false;
+      if (!j.itens) { if (j._status !== 401) toast(j.error || 'Não consegui carregar a agenda.'); return; }
+      estado.hoje = j.hoje; estado.cfg = j.config; estado.itens = j.itens; estado.pendentes = j.pendentes || [];
+      estado.de = j.de; estado.ate = j.ate;
+      if (!estado.dia) estado.dia = j.hoje;
+      if (primeira && !base) { carregar(false); return; } // busca de novo com a janela ao redor de hoje
+      desenhar();
+    });
+  }
+
+  function itensDoDia(d) { return estado.itens.filter(function (i) { return i.data === d; }); }
+
+  function zap(numero, texto) {
+    var n = String(numero || '').replace(/\D/g, '');
+    if (!n) return '';
+    if (n.length <= 11) n = '55' + n;
+    return 'https://wa.me/' + n + '?text=' + encodeURIComponent(texto);
+  }
+  function textoZap(it) {
+    var nome = estado.cfg ? estado.cfg.nome : '';
+    var quando = DIAS_LONGO[semanaDe(it.data)].toLowerCase() + ', ' + dataBr(it.data) + ' às ' + it.inicio;
+    if (it.status === 'confirmado') return 'Olá, ' + it.nome + '! Seu horário de ' + it.servico_nome + ' no ' + nome + ' está confirmado: ' + quando + '. Até lá!';
+    if (it.status === 'cancelado') return 'Olá, ' + it.nome + '. Infelizmente não vou conseguir atender ' + quando + ' (' + it.servico_nome + '). Quer escolher outro horário?';
+    return 'Olá, ' + it.nome + '! Aqui é do ' + nome + ', sobre seu horário de ' + it.servico_nome + ' (' + quando + ').';
+  }
+
+  function cartao(it, comData) {
+    if (it.tipo === 'bloqueio') {
+      return '<div class="item bloqueio"><div class="cab"><span class="hora">' + (it.dia_todo ? 'Dia todo' : esc(it.inicio) + '–' + esc(it.fim)) + '</span><span class="nome">Bloqueado</span></div>' +
+        (it.motivo ? '<div class="det">' + esc(it.motivo) + '</div>' : '') +
+        '<div class="acoes"><button type="button" class="btn claro pequeno" data-acao="desbloquear" data-id="' + esc(it.id) + '">Desbloquear</button></div></div>';
+    }
+    var a = [];
+    if (it.status === 'pendente') { a.push(['status', 'confirmado', 'Confirmar', 'verde']); a.push(['status', 'cancelado', 'Recusar', 'vermelho']); }
+    if (it.status === 'confirmado') { a.push(['status', 'concluido', 'Atendido', 'claro']); a.push(['status', 'faltou', 'Faltou', 'claro']); a.push(['status', 'cancelado', 'Cancelar', 'vermelho']); }
+    if (['cancelado', 'concluido', 'faltou'].indexOf(it.status) >= 0) a.push(['status', 'confirmado', 'Voltar para confirmado', 'claro']);
+    var link = zap(it.whatsapp, textoZap(it));
+    return '<div class="item ' + esc(it.status) + '"><div class="cab"><span class="hora">' + (comData ? esc(dataBr(it.data)) + ' · ' : '') + esc(it.inicio) + '</span><span class="nome">' + esc(it.nome) + '</span><span class="chip ' + esc(it.status) + '">' + esc(STATUS_NOME[it.status] || it.status) + '</span></div>' +
+      '<div class="det">' + esc(it.servico_nome) + ' · até ' + esc(it.fim) + (it.origem === 'site' ? ' · pelo site' : '') + '</div>' +
+      (it.whatsapp ? '<div class="det">WhatsApp: ' + esc(it.whatsapp) + '</div>' : '') +
+      (it.obs ? '<div class="det">“' + esc(it.obs) + '”</div>' : '') +
+      '<div class="acoes">' + a.map(function (x) { return '<button type="button" class="btn pequeno ' + x[3] + '" data-acao="' + x[0] + '" data-status="' + x[1] + '" data-id="' + esc(it.id) + '">' + x[2] + '</button>'; }).join('') +
+      (link ? '<a class="btn pequeno claro" target="_blank" rel="noopener" href="' + esc(link) + '">WhatsApp</a>' : '') + '</div></div>';
+  }
+
+  function desenhar() {
+    var cfg = estado.cfg;
+    document.title = (estado.pendentes.length ? '(' + estado.pendentes.length + ') ' : '') + 'Agenda · ' + cfg.nome;
+    $('titulo').textContent = cfg.nome;
+    // Pendentes
+    var np = estado.pendentes.length;
+    mostrar($('caixa-pendentes'), np > 0);
+    $('n-pend').textContent = np;
+    $('lista-pendentes').innerHTML = estado.pendentes.map(function (i) { return cartao(i, true); }).join('');
+    mostrar($('nav-pend'), np > 0); $('nav-pend').textContent = np;
+    // Faixa de dias
+    var d = estado.dia;
+    var t = d === estado.hoje ? 'Hoje' : (d === somaDias(estado.hoje, 1) ? 'Amanhã' : DIAS_LONGO[semanaDe(d)]);
+    $('dia-titulo').textContent = t + ', ' + dataBr(d);
+    var html = '';
+    for (var k = -3; k <= 10; k++) {
+      var dd = somaDias(d, k);
+      var n = itensDoDia(dd).filter(function (i) { return i.tipo === 'agendamento' && ['pendente', 'confirmado', 'concluido'].indexOf(i.status) >= 0; }).length;
+      var fechado = !((cfg.semana[semanaDe(dd)] || []).length);
+      html += '<button type="button" class="dia' + (dd === d ? ' ativo' : '') + '" data-dia="' + dd + '"><small>' + DIAS_SEM[semanaDe(dd)] + '</small><b>' + dd.slice(8, 10) + '</b><i>' + (n ? n + (n > 1 ? ' marc.' : ' marc.') : (fechado ? 'fechado' : '')) + '</i></button>';
+    }
+    $('faixa-dias').innerHTML = html;
+    var ativo = $('faixa-dias').querySelector('.ativo'); if (ativo) ativo.scrollIntoView({ inline: 'center', block: 'nearest' });
+    // Lista do dia
+    var lista = itensDoDia(d);
+    var faixas = (cfg.semana[semanaDe(d)] || []).map(function (f) { return f[0] + '–' + f[1]; }).join(' e ');
+    $('lista-dia').innerHTML = (faixas ? '<p class="det" style="text-align:center;color:var(--suave);font-size:14px;margin:10px 0 0">Atendimento ' + esc(faixas) + '</p>' : '<p class="det" style="text-align:center;color:var(--suave);font-size:14px;margin:10px 0 0">Dia sem atendimento</p>') +
+      (lista.length ? lista.map(function (i) { return cartao(i, false); }).join('') : '<div class="vazio">Nada marcado neste dia.<br>Toque em + para marcar ou bloquear.</div>');
+  }
+
+  function irPara(d) {
+    estado.dia = d;
+    if (d < estado.de || d > estado.ate || somaDias(d, -3) < estado.de || somaDias(d, 10) > estado.ate) { desenhar(); carregar(false); }
+    else desenhar();
+  }
+  $('dia-ant').onclick = function () { irPara(somaDias(estado.dia, -1)); };
+  $('dia-prox').onclick = function () { irPara(somaDias(estado.dia, 1)); };
+  $('btn-hoje').onclick = function () { irPara(estado.hoje); };
+  $('faixa-dias').onclick = function (e) { var b = e.target.closest('[data-dia]'); if (b) irPara(b.dataset.dia); };
+  $('btn-atualizar').onclick = function () { carregar(false); toast('Agenda atualizada'); };
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-acao]');
+    if (!b) return;
+    var corpo = { acao: b.dataset.acao, id: b.dataset.id };
+    if (b.dataset.status) corpo.status = b.dataset.status;
+    if (corpo.status === 'cancelado' && !confirm('Cancelar este horário? Ele volta a ficar livre no site.')) return;
+    if (corpo.acao === 'desbloquear' && !confirm('Liberar este horário de novo?')) return;
+    b.disabled = true;
+    chamar(corpo).then(function (j) {
+      if (!j.ok) { b.disabled = false; toast(j.error || 'Não deu certo.'); return; }
+      var msg = { confirmado: 'Confirmado. Avise a cliente pelo WhatsApp.', cancelado: 'Cancelado. O horário ficou livre.', concluido: 'Marcado como atendido.', faltou: 'Marcado como falta.' }[corpo.status] || 'Horário liberado.';
+      toast(msg);
+      carregar(false);
+    });
+  });
+
+  // ── Folhas ──
+  function abrirFolha(id) { ['folha-menu', 'folha-novo', 'folha-bloq'].forEach(function (f) { mostrar($(f), f === id); }); }
+  document.querySelectorAll('[data-fechar]').forEach(function (b) { b.onclick = function () { abrirFolha(''); }; });
+  document.querySelectorAll('.folha').forEach(function (f) { f.addEventListener('click', function (e) { if (e.target === f) abrirFolha(''); }); });
+  $('fab').onclick = function () { abrirFolha('folha-menu'); };
+
+  var horaEscolhida = '';
+  function carregarHoras() {
+    var box = $('n-horas'); horaEscolhida = '';
+    box.innerHTML = '<span class="det">Procurando horários…</span>';
+    chamar({ acao: 'horarios', data: $('n-data').value, servico: $('n-serv').value }).then(function (j) {
+      if (!j.horarios) { box.innerHTML = '<span class="det">' + esc(j.error || 'Não consegui ver os horários.') + '</span>'; return; }
+      box.innerHTML = j.horarios.length ? j.horarios.map(function (h) { return '<button type="button" data-h="' + h + '">' + h + '</button>'; }).join('') : '<span class="det">Sem horário livre neste dia para este serviço.</span>';
+    });
+  }
+  $('n-horas').onclick = function (e) {
+    var b = e.target.closest('[data-h]'); if (!b) return;
+    horaEscolhida = b.dataset.h;
+    this.querySelectorAll('button').forEach(function (x) { x.classList.toggle('sel', x === b); });
+  };
+  $('abrir-novo').onclick = function () {
+    $('form-novo').reset(); erro('erro-novo', '');
+    $('n-serv').innerHTML = estado.cfg.servicos.map(function (s) { return '<option value="' + esc(s.id) + '">' + esc(s.nome) + ' (' + s.duracao + ' min)</option>'; }).join('');
+    $('n-data').value = estado.dia < estado.hoje ? estado.hoje : estado.dia;
+    abrirFolha('folha-novo'); carregarHoras();
+  };
+  $('n-data').onchange = carregarHoras; $('n-serv').onchange = carregarHoras;
+  $('form-novo').onsubmit = function (e) {
+    e.preventDefault(); erro('erro-novo', '');
+    if (!horaEscolhida) return erro('erro-novo', 'Escolha um horário livre.');
+    var b = $('n-salvar'); b.disabled = true;
+    var dia = $('n-data').value;
+    chamar({ acao: 'criar', nome: $('n-nome').value, whatsapp: $('n-whats').value, servico: $('n-serv').value, data: dia, inicio: horaEscolhida, obs: $('n-obs').value }).then(function (j) {
+      b.disabled = false;
+      if (!j.ok) return erro('erro-novo', j.error || 'Não deu certo.');
+      abrirFolha(''); toast('Horário marcado.'); estado.dia = dia; carregar(false);
+    });
+  };
+
+  $('abrir-bloq').onclick = function () {
+    $('form-bloq').reset(); erro('erro-bloq', '');
+    $('b-data').value = estado.dia < estado.hoje ? estado.hoje : estado.dia;
+    mostrar($('b-horas'), false);
+    abrirFolha('folha-bloq');
+  };
+  $('b-todo').onchange = function () { mostrar($('b-horas'), !this.checked); };
+  $('form-bloq').onsubmit = function (e) {
+    e.preventDefault(); erro('erro-bloq', '');
+    var corpo = { acao: 'bloquear', data: $('b-data').value, motivo: $('b-motivo').value };
+    if (!$('b-todo').checked) { corpo.inicio = $('b-ini').value; corpo.fim = $('b-fim').value; }
+    var b = this.querySelector('button[type=submit]'); b.disabled = true;
+    chamar(corpo).then(function (j) {
+      b.disabled = false;
+      if (!j.ok) return erro('erro-bloq', j.error || 'Não deu certo.');
+      abrirFolha(''); toast(j.aviso || 'Bloqueado. Ninguém consegue marcar nesse horário.'); estado.dia = corpo.data; carregar(false);
+    });
+  };
+
+  // ── Navegação de baixo ──
+  function pagina(qual) {
+    mostrar($('pag-agenda'), qual === 'agenda'); mostrar($('pag-ajustes'), qual === 'ajustes'); mostrar($('fab'), qual === 'agenda');
+    $('nav-agenda').classList.toggle('ativa', qual === 'agenda'); $('nav-ajustes').classList.toggle('ativa', qual === 'ajustes');
+    if (qual === 'ajustes') preencherAjustes();
+    window.scrollTo(0, 0);
+  }
+  $('nav-agenda').onclick = function () { pagina('agenda'); };
+  $('nav-ajustes').onclick = function () { pagina('ajustes'); };
+
+  // ── Ajustes ──
+  function linhaServico(s) {
+    var d = document.createElement('div'); d.className = 'serv';
+    d.innerHTML = '<input class="s-nome" placeholder="Nome do serviço" maxlength="80" value="' + esc(s.nome || '') + '" aria-label="Nome do serviço">' +
+      '<input class="s-dur" type="number" min="10" max="480" step="5" value="' + esc(s.duracao || 60) + '" aria-label="Minutos">' +
+      '<button type="button" class="fechar s-del" aria-label="Remover serviço">×</button>' +
+      '<input class="s-preco preco" placeholder="Preço (opcional)" maxlength="40" value="' + esc(s.preco || '') + '" aria-label="Preço">';
+    d.dataset.id = s.id || '';
+    d.querySelector('.s-del').onclick = function () { d.remove(); };
+    return d;
+  }
+  function preencherAjustes() {
+    var c = estado.cfg; if (!c) return;
+    $('cfg-nome').value = c.nome; $('cfg-whats').value = c.whatsapp; $('cfg-aviso').value = c.aviso || '';
+    $('cfg-intervalo').value = String(c.intervalo); $('cfg-antec').value = String(c.antecedencia_horas);
+    if (!$('cfg-antec').value) $('cfg-antec').value = '2';
+    var h = '';
+    for (var d = 1; d <= 7; d++) {
+      var w = d % 7; var f = (c.semana[w] || [])[0];
+      h += '<div class="linha-dia" data-w="' + w + '"><label><input type="checkbox" class="d-on"' + (f ? ' checked' : '') + '> ' + DIAS_LONGO[w].slice(0, 3) + '</label>' +
+        '<input type="time" class="d-ini" value="' + (f ? f[0] : '09:00') + '" aria-label="Início ' + DIAS_LONGO[w] + '">' +
+        '<input type="time" class="d-fim" value="' + (f ? f[1] : '18:00') + '" aria-label="Fim ' + DIAS_LONGO[w] + '"></div>';
+    }
+    $('cfg-semana').innerHTML = h;
+    var box = $('cfg-servicos'); box.innerHTML = '';
+    c.servicos.forEach(function (s) { box.appendChild(linhaServico(s)); });
+    erro('msg-config', '');
+  }
+  $('add-serv').onclick = function () { var l = linhaServico({}); $('cfg-servicos').appendChild(l); l.querySelector('.s-nome').focus(); };
+  $('form-config').onsubmit = function (e) {
+    e.preventDefault();
+    var semana = {};
+    document.querySelectorAll('#cfg-semana .linha-dia').forEach(function (l) {
+      var w = l.dataset.w; var on = l.querySelector('.d-on').checked;
+      semana[w] = on ? [[l.querySelector('.d-ini').value, l.querySelector('.d-fim').value]] : [];
+    });
+    var servicos = [];
+    document.querySelectorAll('#cfg-servicos .serv').forEach(function (l) {
+      var nome = l.querySelector('.s-nome').value.trim();
+      if (nome) servicos.push({ id: l.dataset.id, nome: nome, duracao: Number(l.querySelector('.s-dur').value) || 60, preco: l.querySelector('.s-preco').value });
+    });
+    var el = $('msg-config');
+    if (!servicos.length) { el.className = 'msg erro'; el.textContent = 'Deixe pelo menos um serviço.'; return; }
+    var b = this.querySelector('button[type=submit]'); b.disabled = true;
+    chamar({ acao: 'config', config: { nome: $('cfg-nome').value, whatsapp: $('cfg-whats').value, aviso: $('cfg-aviso').value, intervalo: Number($('cfg-intervalo').value), antecedencia_horas: Number($('cfg-antec').value), semana: semana, servicos: servicos } }).then(function (j) {
+      b.disabled = false;
+      if (!j.ok) { el.className = 'msg erro'; el.textContent = j.error || 'Não deu certo.'; return; }
+      estado.cfg = j.config; preencherAjustes(); desenhar();
+      el.className = 'msg ok'; el.textContent = 'Ajustes salvos. O site já mostra os horários novos.';
+    });
+  };
+  $('form-senha').onsubmit = function (e) {
+    e.preventDefault();
+    var el = $('msg-senha'); var b = this.querySelector('button'); b.disabled = true;
+    chamar({ acao: 'trocar-senha', senha_atual: $('s-atual').value, senha_nova: $('s-nova').value }).then(function (j) {
+      b.disabled = false;
+      el.className = 'msg ' + (j.ok ? 'ok' : 'erro'); el.textContent = j.ok ? 'Senha trocada.' : (j.error || 'Não deu certo.');
+      if (j.ok) { $('s-atual').value = ''; $('s-nova').value = ''; }
+    });
+  };
+
+  // Novos pedidos aparecem sozinhos.
+  setInterval(function () { if (estado.token && !document.hidden && $('folha-novo').classList.contains('oculto')) carregar(false); }, 60000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && estado.token) carregar(false); });
+
+  // Início
+  if (!SITE) { document.body.innerHTML = '<p style="padding:24px">Agenda não configurada.</p>'; return; }
+  fetch(API + '?site=' + encodeURIComponent(SITE)).then(function (r) { return r.json(); }).then(function (j) { if (j.nome) $('login-nome').textContent = j.nome; }).catch(function () {});
+  if (estado.token) abrirApp(); else telaLogin();
+})();
+</script>
+</body>
+</html>
