@@ -13,12 +13,14 @@ import Silhueta from './Silhueta';
 const fmt = (n: number | undefined, u: string) => (n == null ? null : `${n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} ${u}`);
 
 export default function AbaFotos({
-  uid, entries, serie, onMudou,
+  uid, entries, serie, onMudou, somenteComparar = false,
 }: {
   uid: string | undefined;
   entries: ProgressEntry[];
   serie: ItemSerie[];
   onMudou: () => void;
+  // Coach vendo as fotos do aluno: só compara, sem tirar fotos novas.
+  somenteComparar?: boolean;
 }) {
   // ── nova sessão de fotos ──
   const [data, setData] = useState(hojeIso());
@@ -122,7 +124,7 @@ export default function AbaFotos({
 
   return (
     <div className="space-y-4">
-      <Card padding="p-5">
+      {!somenteComparar && <Card padding="p-5">
         <h2 className="font-heading text-base font-semibold text-foreground-950">Fotos de evolução</h2>
         <p className="mb-3 text-sm text-foreground-600">Sempre as 4 posições, no mesmo lugar e com a mesma luz. A câmera mostra o contorno e a sua foto anterior para alinhar.</p>
         <label className="mb-3 block max-w-[200px]">
@@ -160,7 +162,7 @@ export default function AbaFotos({
         )}
         {msg && <p className="mt-3 rounded-lg bg-accent-100 px-3 py-2 text-sm text-accent-700">{msg}</p>}
         {erro && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p>}
-      </Card>
+      </Card>}
 
       <Card padding="p-5">
         <h2 className="mb-3 font-heading text-base font-semibold text-foreground-950">Antes e depois</h2>

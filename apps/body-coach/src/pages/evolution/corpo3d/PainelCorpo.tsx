@@ -30,11 +30,13 @@ type Modo = 'treino' | 'melhora';
 
 // Corpo 3D do aluno: montado com as medidas da última avaliação (não é escaneamento da câmera).
 // Duas leituras de cor: músculos treinados na semana ou o que melhorou desde a avaliação anterior.
-export default function PainelCorpo({ serie, perfil, volume }: { serie: ItemSerie[]; perfil: PerfilAvaliacao; volume: Record<string, number> }) {
+export default function PainelCorpo({ serie, perfil, volume, nome }: { serie: ItemSerie[]; perfil: PerfilAvaliacao; volume: Record<string, number>; nome?: string }) {
   const comMedidas = serie.filter((s) => s.m.peso != null || s.m.cintura != null);
   const ultima = comMedidas[comMedidas.length - 1] ?? null;
   const anterior = comMedidas.length > 1 ? comMedidas[comMedidas.length - 2] : null;
-  const [modo, setModo] = useState<Modo>(anterior ? 'melhora' : 'treino');
+  // Sem escolha do usuário, segue os dados (que chegam depois do primeiro desenho).
+  const [modoEscolhido, setModo] = useState<Modo | null>(null);
+  const modo: Modo = modoEscolhido ?? (anterior ? 'melhora' : 'treino');
   const [pose, setPose] = useState<PoseCorpo>('relaxado');
   const [girar, setGirar] = useState(true);
   const [comparar, setComparar] = useState(false);
@@ -64,7 +66,7 @@ export default function PainelCorpo({ serie, perfil, volume }: { serie: ItemSeri
     <div>
       <div className="mb-2 flex items-center gap-2">
         <i className="ri-body-scan-line text-lg text-primary-500"></i>
-        <h2 className="font-heading text-base font-semibold text-foreground-950">Seu corpo em 3D</h2>
+        <h2 className="font-heading text-base font-semibold text-foreground-950">{nome ? `Corpo de ${nome} em 3D` : 'Seu corpo em 3D'}</h2>
         {ultima && <span className="ml-auto text-[11px] text-foreground-500">medidas de {dataBr(ultima.data)}</span>}
       </div>
       <div className="mb-2 grid grid-cols-2 gap-1 rounded-xl bg-background-100 p-1">
@@ -107,7 +109,7 @@ export default function PainelCorpo({ serie, perfil, volume }: { serie: ItemSeri
         )}
       </div>
       <p className="mt-1 text-[11px] text-foreground-400">
-        Montado com as suas medidas{medidas.estimadas.length ? ` (estimei ${medidas.estimadas.length} que faltam pela sua altura e peso)` : ''}. Quanto mais medidas na avaliação, mais parecido fica.
+        Montado com as {nome ? 'medidas da avaliação' : 'suas medidas'}{medidas.estimadas.length ? ` (estimei ${medidas.estimadas.length} que faltam pela altura e peso)` : ''}. Quanto mais medidas na avaliação, mais parecido fica.
       </p>
     </div>
   );

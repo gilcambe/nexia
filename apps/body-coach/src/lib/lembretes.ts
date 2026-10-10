@@ -63,3 +63,22 @@ export function gerarIcsReavaliacao(agora: Date = new Date(), hora = 8): string 
     'END:VCALENDAR',
   ].join('\r\n') + '\r\n';
 }
+
+// Avaliação marcada pelo coach: um evento único, com as dicas de preparo e aviso na véspera.
+export function gerarIcsAvaliacaoMarcada(data: string, hora: string | null, coach: string, preparo: string[], agora: Date = new Date()): string {
+  const [hh, mm] = (hora ?? '08:00').split(':').map(Number);
+  const [a, m, d] = data.split('-').map(Number);
+  const ini = new Date(a, m - 1, d, hh || 0, mm || 0);
+  const fim = new Date(ini.getTime() + 45 * 60000);
+  const q = (x: Date) => `${x.getFullYear()}${dois(x.getMonth() + 1)}${dois(x.getDate())}T${dois(x.getHours())}${dois(x.getMinutes())}00`;
+  const carimbo = `${agora.getUTCFullYear()}${dois(agora.getUTCMonth() + 1)}${dois(agora.getUTCDate())}T${dois(agora.getUTCHours())}${dois(agora.getUTCMinutes())}00Z`;
+  const titulo = `Avaliação física com ${coach}`;
+  const texto = `Como se preparar: ${preparo.join(' ')}`;
+  return [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//NEXIA Body Coach//PT-BR//', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'BEGIN:VEVENT', `UID:avaliacao-${data}@nexia-body-coach`, `DTSTAMP:${carimbo}`, `DTSTART:${q(ini)}`, `DTEND:${q(fim)}`,
+    `SUMMARY:${escapa(titulo)}`, `DESCRIPTION:${escapa(texto)}`,
+    'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${escapa(titulo)}`, 'TRIGGER:-PT12H', 'END:VALARM', 'END:VEVENT',
+    'END:VCALENDAR',
+  ].join('\r\n') + '\r\n';
+}

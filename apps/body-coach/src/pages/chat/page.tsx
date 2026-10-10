@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/components/feature/AuthContext';
 import { chatApi, type Contato, type Mensagem } from '@/lib/chat';
 import DesafioCard from './Desafio';
@@ -163,6 +164,7 @@ export default function Chat() {
         <div className="rounded-xl border border-primary-200 bg-primary-50 p-3 text-sm text-foreground-700">
           Passe este código para os seus alunos: <strong className="ml-1 text-lg tracking-widest text-primary-700">{lista?.codigo}</strong>
           <span className="block text-xs text-foreground-500">Eles abrem “Conversa”, escolhem “Sou aluno” e digitam o código.</span>
+          <Link to="/coach/evolucao" className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-semibold text-background-50 dark:text-foreground-950"><i className="ri-line-chart-line"></i>Evolução dos alunos</Link>
         </div>
       )}
       <DesafioCard papel={papel} />
@@ -186,6 +188,11 @@ export default function Chat() {
               <div key={m.id} className={`flex ${m.de === user?.id ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm ${m.de === user?.id ? 'bg-primary-500 text-background-50' : 'bg-background-50 text-foreground-800 border border-background-200'}`}>
                   {m.video && <BolhaVideo id={m.video} />}
+                  {m.ref && (
+                    <Link to={papel === 'coach' ? `/coach/evolucao/${aberto.uid}/relatorio/${m.ref.entrada}` : `/evolution/relatorio/${m.ref.entrada}`} className="mb-1 block text-[11px] font-semibold underline opacity-80">
+                      💬 Comentário na avaliação{m.ref.data ? ` de ${m.ref.data.split('-').reverse().join('/')}` : ''}
+                    </Link>
+                  )}
                   {m.texto}
                   <span className="mt-0.5 block text-right text-[10px] opacity-70">{new Date(m.em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
