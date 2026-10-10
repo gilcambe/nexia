@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import { pickBodyImage } from './bodyImages';
+import AjustarFoto from '../fotos/AjustarFoto';
 import {
   estimateMeasurements, exportBodyTwinImage, type EstimatedMeasurements,
 } from './bodyAnalysis';
 
-type RegionKey = 'pecs' | 'deltoides' | 'abdomen' | 'gluteos' | 'quadriceps' | 'panturrilhas';
+export type RegionKey = 'pecs' | 'deltoides' | 'abdomen' | 'gluteos' | 'quadriceps' | 'panturrilhas';
 type Mode = 'ia' | 'foto';
 type Style = 'realista' | 'render';
-type Angle = 'frente' | 'lado' | 'costas';
+export type Angle = 'frente' | 'lado' | 'costas';
 type Tool = 'select' | 'move' | 'measure';
 
 const ANGLE_ORDER: Angle[] = ['frente', 'lado', 'costas'];
@@ -64,6 +65,8 @@ export default function BodyTwin({
   goalBodyFat,
   goalWeight,
   fotosReais,
+  onSalvarFoto,
+  medidasRegiao,
 }: {
   selected: string | null;
   onSelect: (key: string) => void;
@@ -74,8 +77,17 @@ export default function BodyTwin({
   goalWeight: number | null;
   // Últimas fotos da aba Fotos: aparecem em "Foto real" sem precisar enviar de novo.
   fotosReais?: Partial<Record<Angle, string | null>>;
+  // Grava a foto enviada aqui junto com as fotos de evolução (ângulo, imagem já ajustada).
+  onSalvarFoto?: (angle: Angle, foto: Blob) => Promise<void>;
+  // Texto da medida de cada região, mostrado ao tocar no ponto (ex.: "78 cm · −3 cm").
+  medidasRegiao?: Partial<Record<RegionKey, string>>;
 }) {
-  const [mode, setMode] = useState<Mode>('ia');
+  // Com fotos do aluno, abre direto nelas: o Body Twin passa a ser ele de verdade.
+  const [modoEscolhido, setMode] = useState<Mode | null>(null);
+  const mode: Mode = modoEscolhido ?? (fotosReais?.frente ? 'foto' : 'ia');
+  const [regiao, setRegiao] = useState<RegionKey | null>(null);
+  const [ajustar, setAjustar] = useState<File | null>(null);
+  const [salvandoFoto, setSalvandoFoto] = useState<string | null>(null);
   const [style, setStyle] = useState<Style>('realista');
   const [angle, setAngle] = useState<Angle>('frente');
   const [goalMode, setGoalMode] = useState(false);
@@ -145,13 +157,26 @@ export default function BodyTwin({
   };
 
   const handleFile = (file: File | undefined) => {
-    if (!file) return;
+    if (file) setAjustar(file);
+  };
+
+  const usarFoto = async (foto: Blob) => {
+    setAjustar(null);
+    const a = angle;
     const reader = new FileReader();
     reader.onload = () => {
-      setPhotos((prev) => ({ ...prev, [angle]: reader.result as string }));
+      setPhotos((prev) => ({ ...prev, [a]: reader.result as string }));
       setMarkerPos(INITIAL_POS);
     };
-    reader.readAsDataURL(file);
+    reader.readAsDataURL(foto);
+    if (!onSalvarFoto) return;
+    setSalvandoFoto('Salvando a foto...');
+    try {
+      await onSalvarFoto(a, foto);
+      setSalvandoFoto('Foto salva na sua evolução de hoje.');
+    } catch (e) {
+      setSalvandoFoto(`Não consegui salvar a foto: ${e instanceof Error ? e.message : 'erro'}. Tente de novo.`);
+    }
   };
 
   // IA turntable drag
@@ -367,7 +392,7 @@ export default function BodyTwin({
             <img
               src={currentImage}
               alt={`Body Twin de ${currentHeight}cm, ${currentWeight}kg — ${goalMode ? 'corpo na meta' : ANGLE_LABEL[angle].toLowerCase()}`}
-              className="h-full w-full select-none object-cover object-top"
+              className={`h-full w-full select-none ${mode === 'foto' ? 'object-contain' : 'object-cover object-top'}`}
               draggable={false}
             />
           ) : (
@@ -406,19 +431,21 @@ export default function BodyTwin({
             <>
               {MARKERS.map((m) => {
                 const pos = markerPos[m.key];
-                const active = selected === m.key;
+                const active = (regiao ?? selected) === m.key;
                 return (
                   <button
                     key={m.key}
                     onClick={() => {
-                      if (tool === 'select') onSelect(m.key);
+                      if (tool !== 'select') return;
+                      setRegiao((r) => (r === m.key ? null : m.key));
+                      onSelect(m.key);
                     }}
                     onPointerDown={startMarkerDrag(m.key)}
                     onPointerMove={onMarkerMove}
                     onPointerUp={onMarkerUp}
                     className="group absolute -translate-x-1/2 -translate-y-1/2"
                     style={{ left: `${pos.x}%`, top: `${pos.y}%`, cursor: tool === 'move' ? 'move' : 'pointer' }}
-                    aria-label={`Selecionar região ${m.label}`}
+                    aria-label={`Ver medida: ${m.label}`}
                   >
                     <span
                       className={`flex h-5 w-5 items-center justify-center rounded-full border-2 transition ${
@@ -434,7 +461,7 @@ export default function BodyTwin({
                         active ? 'bg-primary-500 text-background-50' : 'bg-black/70 text-background-50 opacity-0 group-hover:opacity-100'
                       }`}
                     >
-                      {m.label}
+                      {m.label}{active ? ` · ${medidasRegiao?.[m.key] ?? 'sem medida'}` : ''}
                     </span>
                   </button>
                 );
@@ -583,6 +610,10 @@ export default function BodyTwin({
         </div>
       )}
 
+      {showMarkers && currentImage && !compareMode && (
+        <p className="-mt-2 text-center text-[11px] text-foreground-500">Toque nos pontos para ver a medida de cada parte do corpo.</p>
+      )}
+
       {/* foto controls */}
       {mode === 'foto' && (
         <div className="space-y-3">
@@ -600,18 +631,6 @@ export default function BodyTwin({
                 </button>
               ))}
             </div>
-            {photos[angle] && (
-              <button
-                onClick={() => {
-                  setPhotos((prev) => ({ ...prev, [angle]: null }));
-                  setMarkerPos(INITIAL_POS);
-                }}
-                className="flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium text-foreground-500 transition hover:bg-background-100"
-              >
-                <i className="ri-delete-bin-line"></i>
-                Remover
-              </button>
-            )}
           </div>
 
           <button
@@ -621,6 +640,8 @@ export default function BodyTwin({
             <i className="ri-upload-cloud-2-line"></i>
             {photos[angle] ? 'Trocar foto' : `Enviar foto (${ANGLE_LABEL[angle]})`}
           </button>
+          {salvandoFoto && <p className={`rounded-lg px-3 py-2 text-xs ${salvandoFoto.startsWith('Não') ? 'bg-red-50 text-red-600' : 'bg-accent-100 text-accent-700'}`}>{salvandoFoto}</p>}
+          {ajustar && <AjustarFoto arquivo={ajustar} titulo={ANGLE_LABEL[angle]} onCancelar={() => setAjustar(null)} onPronto={(b) => void usarFoto(b)} />}
           <input
             ref={fileRef}
             type="file"

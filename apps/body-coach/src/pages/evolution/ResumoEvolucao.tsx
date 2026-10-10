@@ -1,19 +1,21 @@
 import { useNavigate } from 'react-router-dom';
 import Card from '@/components/base/Card';
 import { alertas, dataBr, prever, recordes, simetria } from '@/lib/avaliacao/calculos';
-import type { PerfilAvaliacao } from '@/lib/avaliacao/dados';
+import { MAX_FOTO_BYTES, salvarAvaliacao, type PerfilAvaliacao } from '@/lib/avaliacao/dados';
+import { hojeIso } from '@/lib/avaliacao/importar';
+import { compressImageToDataUrl } from '@/lib/userData';
 import type { ItemSerie } from '@/lib/avaliacao/serie';
 import { compartilharArquivo } from '@/lib/avaliacao/imagens';
 import { gerarIcsReavaliacao } from '@/lib/lembretes';
 import PainelCorpo from './corpo3d/PainelCorpo';
-import BodyTwin from './components/BodyTwin';
+import BodyTwin, { type Angle, type RegionKey } from './components/BodyTwin';
 import CoachEvolucao from './CoachEvolucao';
 import MetasCorpo, { useMetas } from './MetasCorpo';
 
 const fmt = (n: number | undefined | null, c = 1) => (n == null ? '—' : n.toLocaleString('pt-BR', { maximumFractionDigits: c }));
 
 export default function ResumoEvolucao({
-  uid, serie, perfil, volume, metaGordura, metaPeso, altura, irPara,
+  uid, serie, perfil, volume, metaGordura, metaPeso, altura, irPara, onMudou,
 }: {
   altura: number;
   uid: string | undefined;
@@ -23,13 +25,16 @@ export default function ResumoEvolucao({
   metaGordura: number | null;
   metaPeso: number | null;
   irPara: (aba: 'avaliacoes' | 'fotos' | 'graficos') => void;
+  onMudou?: () => void;
 }) {
   const navigate = useNavigate();
   const { metas, fotoMeta, salvar } = useMetas(uid);
-  const ult = serie[serie.length - 1] ?? null;
+  // Registros só com fotos não contam como avaliação (senão a última aparece toda em branco).
+  const comMedidas = serie.filter((s) => Object.keys(s.av.valores).some((k) => k !== 'altura' && k !== 'idade'));
+  const ult = comMedidas[comMedidas.length - 1] ?? null;
   const medido = [...serie].reverse().find((s) => s.m.peso != null && s.m.gordura != null) ?? null;
   const comFotos = [...serie].reverse().find((s) => s.fotos.frente || s.fotos.costas) ?? null;
-  const ant = serie.length > 1 ? serie[serie.length - 2] : null;
+  const ant = comMedidas.length > 1 ? comMedidas[comMedidas.length - 2] : null;
   const pts = serie.map((s) => ({ data: s.data, m: s.m }));
   const avisos = alertas(pts);
   const recs = recordes(pts).filter((r) => r.novo);
@@ -51,6 +56,29 @@ export default function ResumoEvolucao({
     const d = v != null && a != null ? Math.round((v - a) * 10) / 10 : null;
     return { k, l, u, v, d, bom: d && sentido ? Math.sign(d) === sentido : null };
   });
+
+  // Medida mais recente de cada parte (para os pontos do Body Twin), com a variação desde a anterior.
+  const medidaDe = (...chaves: string[]) => {
+    const com = serie.filter((s) => chaves.some((c) => s.av.valores[c] != null));
+    const v = (s: ItemSerie) => chaves.map((c) => s.av.valores[c]).find((x) => x != null)!;
+    const u = com[com.length - 1];
+    if (!u) return undefined;
+    const a = com.length > 1 ? v(com[com.length - 2]) : null;
+    const d = a != null ? Math.round((v(u) - a) * 10) / 10 : 0;
+    return `${fmt(v(u))} cm${d ? ` (${d > 0 ? '+' : ''}${fmt(d)})` : ''} em ${dataBr(u.data).slice(0, 5)}`;
+  };
+  const medidasRegiao: Partial<Record<RegionKey, string>> = {
+    deltoides: medidaDe('ombro'), pecs: medidaDe('torax'), abdomen: medidaDe('cintura', 'abdomen'),
+    gluteos: medidaDe('quadril'), quadriceps: medidaDe('coxa_medial', 'coxa_proximal'), panturrilhas: medidaDe('panturrilha'),
+  };
+
+  const POSE_DO_ANGULO: Record<Angle, 'frente' | 'direita' | 'costas'> = { frente: 'frente', lado: 'direita', costas: 'costas' };
+  const salvarFoto = async (a: Angle, foto: Blob) => {
+    if (!uid) throw new Error('entre na sua conta');
+    const url = await compressImageToDataUrl(foto, 900, MAX_FOTO_BYTES);
+    await salvarAvaliacao(uid, { data: hojeIso(), valores: {}, fonte: 'Fotos' }, { fotos: { [POSE_DO_ANGULO[a]]: url }, existentes: serie.map((s) => s.registro) });
+    onMudou?.();
+  };
 
   const lembrete = () => void compartilharArquivo(new Blob([gerarIcsReavaliacao()], { type: 'text/calendar;charset=utf-8' }), 'reavaliacao-mensal.ics');
 
@@ -78,6 +106,8 @@ export default function ResumoEvolucao({
           currentHeight={medido?.av.valores.altura ?? altura}
           goalBodyFat={metaGordura ?? 15}
           goalWeight={metaPeso}
+          onSalvarFoto={salvarFoto}
+          medidasRegiao={medidasRegiao}
           fotosReais={comFotos ? { frente: comFotos.fotos.frente, lado: comFotos.fotos.direita ?? comFotos.fotos.esquerda, costas: comFotos.fotos.costas } : undefined}
         />
       </Card>

@@ -86,7 +86,7 @@ export default function Evolution() {
 
       {aba === 'resumo' && (
         <>
-          <ResumoEvolucao uid={user?.id} altura={height} serie={serie} perfil={perfil} volume={volumeSemana} metaGordura={goalBodyFat || null} metaPeso={goalWeight} irPara={irPara} />
+          <ResumoEvolucao uid={user?.id} altura={height} serie={serie} perfil={perfil} volume={volumeSemana} metaGordura={goalBodyFat || null} metaPeso={goalWeight} irPara={irPara} onMudou={reload} />
 
           <Card padding="p-5">
             <button type="button" onClick={() => setRapido((r) => !r)} className="flex w-full items-center gap-2 text-left" aria-expanded={rapido}>

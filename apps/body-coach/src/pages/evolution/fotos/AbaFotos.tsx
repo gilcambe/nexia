@@ -10,6 +10,7 @@ import type { ProgressEntry } from '@/hooks/useProgressData';
 import CameraGuia from './CameraGuia';
 import Silhueta from './Silhueta';
 import Postura from './Postura';
+import AjustarFoto from './AjustarFoto';
 
 const fmt = (n: number | undefined, u: string) => (n == null ? null : `${n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} ${u}`);
 
@@ -31,6 +32,7 @@ export default function AbaFotos({
   const [msg, setMsg] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const galeria = useRef<HTMLInputElement>(null);
+  const [ajustar, setAjustar] = useState<{ pose: Pose; arquivo: Blob } | null>(null);
   const poseGaleria = useRef<Pose>('frente');
 
   const ultimaFoto = (p: Pose) => [...serie].reverse().find((s) => s.fotos[p])?.fotos[p] ?? null;
@@ -45,10 +47,10 @@ export default function AbaFotos({
     }
   };
 
-  const daGaleria = async (e: ChangeEvent<HTMLInputElement>) => {
+  const daGaleria = (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     e.target.value = '';
-    if (f) await guardar(poseGaleria.current, f);
+    if (f) setAjustar({ pose: poseGaleria.current, arquivo: f });
   };
 
   const salvar = async () => {
@@ -155,6 +157,14 @@ export default function AbaFotos({
           ))}
         </div>
         <input ref={galeria} type="file" accept="image/*" className="hidden" onChange={daGaleria} data-testid="galeria-pose" />
+        {ajustar && (
+          <AjustarFoto
+            arquivo={ajustar.arquivo}
+            titulo={POSES.find((x) => x.id === ajustar.pose)?.label ?? ''}
+            onCancelar={() => setAjustar(null)}
+            onPronto={(b) => { const pz = ajustar.pose; setAjustar(null); void guardar(pz, b); }}
+          />
+        )}
         {Object.keys(novas).length > 0 && (
           <button type="button" disabled={salvando} onClick={() => void salvar()} className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-background-50 disabled:opacity-50 dark:text-foreground-950">
             <i className={salvando ? 'ri-loader-4-line animate-spin' : 'ri-save-line'}></i>

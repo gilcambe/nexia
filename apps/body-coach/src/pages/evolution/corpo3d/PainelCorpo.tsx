@@ -5,6 +5,7 @@ import { dataBr } from '@/lib/avaliacao/calculos';
 import type { PerfilAvaliacao } from '@/lib/avaliacao/dados';
 import type { ItemSerie } from '@/lib/avaliacao/serie';
 import type { PoseCorpo } from './Corpo3D';
+import Fotos360 from './Fotos360';
 
 const Corpo3D = lazy(() => import('./Corpo3D'));
 
@@ -42,6 +43,10 @@ export default function PainelCorpo({ serie, perfil, volume, nome, metas }: { se
   const [comparar, setComparar] = useState<null | 'anterior' | 'meta'>(null);
   const temMeta = !!metas && Object.keys(metas).some((k) => k !== 'gordura');
   const webgl = useMemo(temWebGL, []);
+  // Com as fotos do aluno, o padrão é ele de verdade girando; o boneco 3D fica como segunda opção.
+  const comFotos = [...serie].reverse().find((s) => Object.values(s.fotos).filter(Boolean).length >= 2) ?? null;
+  const [vistaEscolhida, setVista] = useState<'fotos' | 'boneco' | null>(null);
+  const vista = vistaEscolhida ?? (comFotos && !nome ? 'fotos' : 'boneco');
 
   const medidas = useMemo(
     () => medidasDoCorpo(ultima?.av.valores ?? {}, ultima?.av.sexo ?? perfil.sexo, perfil.altura),
@@ -72,6 +77,18 @@ export default function PainelCorpo({ serie, perfil, volume, nome, metas }: { se
         <h2 className="font-heading text-base font-semibold text-foreground-950">{nome ? `Corpo de ${nome} em 3D` : 'Seu corpo em 3D'}</h2>
         {ultima && <span className="ml-auto text-[11px] text-foreground-500">medidas de {dataBr(ultima.data)}</span>}
       </div>
+      {comFotos && (
+        <div className="mb-2 grid grid-cols-2 gap-1 rounded-xl bg-background-100 p-1">
+          <button type="button" onClick={() => setVista('fotos')} className={`rounded-lg py-1.5 text-xs font-semibold ${vista === 'fotos' ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>{nome ? 'Fotos' : 'Você'} em 360°</button>
+          <button type="button" onClick={() => setVista('boneco')} className={`rounded-lg py-1.5 text-xs font-semibold ${vista === 'boneco' ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>Boneco das medidas</button>
+        </div>
+      )}
+      {vista === 'fotos' && comFotos ? (
+        <>
+          <Fotos360 fotos={comFotos.fotos} />
+          <p className="mt-1 text-[11px] text-foreground-400">Suas fotos de {dataBr(comFotos.data)}. Para comparar com outras datas, use a aba Fotos.</p>
+        </>
+      ) : (<>
       <div className="mb-2 grid grid-cols-2 gap-1 rounded-xl bg-background-100 p-1">
         <button type="button" onClick={() => setModo('melhora')} disabled={!anterior} className={`rounded-lg py-1.5 text-xs font-semibold disabled:opacity-40 ${modo === 'melhora' ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>O que melhorou</button>
         <button type="button" onClick={() => setModo('treino')} className={`rounded-lg py-1.5 text-xs font-semibold ${modo === 'treino' ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>Treino da semana</button>
@@ -120,6 +137,7 @@ export default function PainelCorpo({ serie, perfil, volume, nome, metas }: { se
       <p className="mt-1 text-[11px] text-foreground-400">
         Montado com as {nome ? 'medidas da avaliação' : 'suas medidas'}{medidas.estimadas.length ? ` (estimei ${medidas.estimadas.length} que faltam pela altura e peso)` : ''}. Quanto mais medidas na avaliação, mais parecido fica.
       </p>
+      </>)}
     </div>
   );
 }
