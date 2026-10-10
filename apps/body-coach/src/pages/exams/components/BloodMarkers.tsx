@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { Line, LineChart, ReferenceArea, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { useAuth } from '@/components/feature/AuthContext';
+import { setUserDoc } from '@/lib/userData';
 import { markers, interpretMarker, type MarkerResult } from './markerRules';
 
 const statusStyle: Record<MarkerResult['status'], string> = {
@@ -16,6 +19,26 @@ const statusLabel: Record<MarkerResult['status'], string> = {
 export default function BloodMarkers() {
   const [values, setValues] = useState<Record<string, string>>({});
   const [results, setResults] = useState<MarkerResult[]>([]);
+  const { user, profile, refreshProfile } = useAuth();
+  const hist = [...(profile?.marcadores_hist ?? [])].sort((a, b) => a.data.localeCompare(b.data));
+  const [dataExame, setDataExame] = useState(new Date().toISOString().slice(0, 10));
+  const [salvo, setSalvo] = useState(false);
+  const [graf, setGraf] = useState<string | null>(null);
+
+  // Guarda os valores com a data do exame: vira histórico com gráfico por marcador.
+  const salvarHistorico = () => {
+    if (!user) return;
+    const valores: Record<string, number> = {};
+    markers.forEach((m) => {
+      const n = parseFloat((values[m.key] ?? '').replace(',', '.'));
+      if (Number.isFinite(n)) valores[m.key] = n;
+    });
+    if (!Object.keys(valores).length) return;
+    const novo = [...hist.filter((h) => h.data !== dataExame), { data: dataExame, valores }].sort((a, b) => a.data.localeCompare(b.data)).slice(-40);
+    void setUserDoc(user.id, 'profile', 'main', { marcadores_hist: novo }, true).then(refreshProfile).catch(() => {});
+    setSalvo(true);
+  };
+  const comHistorico = markers.filter((m) => hist.some((h) => h.valores[m.key] != null));
 
   const handleInterpret = () => {
     const parsed: MarkerResult[] = [];
@@ -65,6 +88,18 @@ export default function BloodMarkers() {
       </button>
 
       {results.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-end gap-2 rounded-xl bg-background-100/70 p-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-foreground-600">Data do exame</span>
+            <input type="date" value={dataExame} onChange={(e) => { setDataExame(e.target.value); setSalvo(false); }} className="rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-sm" />
+          </label>
+          <button type="button" onClick={salvarHistorico} disabled={salvo} className="rounded-lg bg-foreground-900 px-4 py-2.5 text-sm font-semibold text-background-50 disabled:opacity-60">
+            <i className={`${salvo ? 'ri-check-line' : 'ri-save-line'} mr-1`}></i>{salvo ? 'Salvo no histórico' : 'Salvar no histórico'}
+          </button>
+        </div>
+      )}
+
+      {results.length > 0 && (
         <div className="mt-5 space-y-3">
           {results.map((r) => (
             <div key={r.label} className="rounded-xl border border-background-200 bg-background-50 p-4">
@@ -86,6 +121,46 @@ export default function BloodMarkers() {
               </p>
             </div>
           ))}
+        </div>
+      )}
+
+      {comHistorico.length > 0 && (
+        <div className="mt-6">
+          <p className="text-xs font-semibold uppercase tracking-wide text-foreground-400">Histórico ({hist.length} {hist.length === 1 ? 'exame' : 'exames'})</p>
+          <div className="mt-2 space-y-2">
+            {comHistorico.map((m) => {
+              const pts = hist.filter((h) => h.valores[m.key] != null).map((h) => ({ data: h.data, v: h.valores[m.key] }));
+              const ult = pts[pts.length - 1];
+              const st = interpretMarker(m.key, ult.v)?.status ?? 'normal';
+              const aberto = graf === m.key;
+              return (
+                <div key={m.key} className="rounded-xl border border-background-200 bg-background-50">
+                  <button type="button" onClick={() => setGraf(aberto ? null : m.key)} className="flex w-full items-center justify-between gap-2 p-3 text-left">
+                    <span className="text-sm font-semibold text-foreground-900">{m.label}</span>
+                    <span className="flex items-center gap-2">
+                      {pts.length > 1 && <span className="text-xs text-foreground-500">{pts[pts.length - 2].v} → </span>}
+                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusStyle[st]}`}>{ult.v} {m.unit}</span>
+                      <i className={`ri-arrow-${aberto ? 'up' : 'down'}-s-line text-foreground-400`}></i>
+                    </span>
+                  </button>
+                  {aberto && (
+                    <div className="h-40 px-1 pb-2">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={pts.map((p) => ({ dia: p.data.slice(5).split('-').reverse().join('/') + '/' + p.data.slice(2, 4), v: p.v }))} margin={{ top: 8, right: 12, left: -14, bottom: 0 }}>
+                          <ReferenceArea y1={m.low} y2={m.high} fill="oklch(var(--secondary-200))" fillOpacity={0.35} />
+                          <XAxis dataKey="dia" tick={{ fontSize: 10 }} />
+                          <YAxis tick={{ fontSize: 10 }} domain={['auto', 'auto']} />
+                          <Tooltip formatter={(v) => [`${v} ${m.unit}`, m.label]} />
+                          <Line type="monotone" dataKey="v" stroke="oklch(var(--primary-500))" strokeWidth={2.5} dot={{ r: 3 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                      <p className="px-2 text-[11px] text-foreground-500">Faixa verde: ideal ({m.low}–{m.high} {m.unit}).</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>

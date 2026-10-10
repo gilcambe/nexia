@@ -9,19 +9,37 @@ import ListaCompras from './ListaCompras';
 import Indique from './Indique';
 import Planos from './Planos';
 import Relogio from './Relogio';
+import TreinosProntos from './TreinosProntos';
+import ContadorReps from './ContadorReps';
+import EvolucaoCarga from './EvolucaoCarga';
+import Periodizacao from './Periodizacao';
+import Retrospectiva from './Retrospectiva';
+import Dicas from './Dicas';
+import Saude from './Saude';
+import Loja from './Loja';
+import MeusDados from './MeusDados';
 
 // Ferramentas extras do Body Coach, todas grátis e feitas no próprio aparelho.
 export const FERRAMENTAS = [
-  { id: 'conquistas', grupo: 'Motivação', nome: 'Conquistas e nível', desc: 'Medalhas, XP e sequência de treinos', icone: 'ri-trophy-line', el: Conquistas },
+  { id: 'treinos-prontos', grupo: 'Treino', nome: 'Treinos prontos', desc: 'HIIT, abdômen, yoga, alongamento, casa e corrida, guiados por voz', icone: 'ri-play-circle-line', el: TreinosProntos },
+  { id: 'contador', grupo: 'Treino', nome: 'Contador por câmera', desc: 'A câmera conta suas repetições e avisa a amplitude', icone: 'ri-camera-lens-line', el: ContadorReps },
   { id: 'relogio', grupo: 'Treino', nome: 'Relógio e batimentos', desc: 'Cinta/relógio ao vivo e importar treino (GPX/TCX)', icone: 'ri-heart-pulse-line', el: Relogio },
   { id: 'corrida', grupo: 'Treino', nome: 'Corrida com GPS', desc: 'Distância, ritmo e percurso pelo celular', icone: 'ri-run-line', el: Corrida },
+  { id: 'periodizacao', grupo: 'Treino', nome: 'Periodização', desc: 'Seu ciclo de 4 a 16 semanas com descarga', icone: 'ri-stack-line', el: Periodizacao },
   { id: 'calculadoras', grupo: 'Treino', nome: 'Calculadoras', desc: '1RM, anilhas, zonas cardíacas, ritmo, gasto e água', icone: 'ri-calculator-line', el: Calculadoras },
+  { id: 'evolucao-carga', grupo: 'Evolução', nome: 'Evolução de carga', desc: 'Gráfico e recordes de cada exercício', icone: 'ri-line-chart-line', el: EvolucaoCarga },
+  { id: 'conquistas', grupo: 'Evolução', nome: 'Conquistas e nível', desc: 'Medalhas, XP e sequência de treinos', icone: 'ri-trophy-line', el: Conquistas },
+  { id: 'retrospectiva', grupo: 'Evolução', nome: 'Retrospectiva do mês', desc: 'Seus números do mês, prontos para postar', icone: 'ri-movie-2-line', el: Retrospectiva },
   { id: 'lista-compras', grupo: 'Nutrição', nome: 'Lista de compras', desc: 'Tudo da sua dieta para a semana', icone: 'ri-shopping-cart-2-line', el: ListaCompras },
   { id: 'jejum', grupo: 'Nutrição', nome: 'Jejum intermitente', desc: 'Cronômetro 12:12 até 20:4 (opcional)', icone: 'ri-hourglass-line', el: Jejum },
   { id: 'suplementos', grupo: 'Nutrição', nome: 'Suplementos', desc: 'Lista, horários, lembrete e check do dia', icone: 'ri-capsule-line', el: Suplementos },
+  { id: 'saude', grupo: 'Saúde', nome: 'Pressão, glicemia e check-up', desc: 'Registro com gráfico e lembretes de exames', icone: 'ri-heart-add-line', el: Saude },
+  { id: 'dicas', grupo: 'Saúde', nome: 'Dicas de saúde', desc: 'Sono, água, comida, treino, mente e postura', icone: 'ri-lightbulb-flash-line', el: Dicas },
   { id: 'ciclo', grupo: 'Saúde', nome: 'Ciclo menstrual', desc: 'Treino e dieta ajustados à fase (opcional)', icone: 'ri-drop-line', el: Ciclo },
-  { id: 'indique', grupo: 'Comunidade', nome: 'Indique e compartilhe', desc: 'Seu link, cartão do treino e embaixador', icone: 'ri-gift-line', el: Indique },
-  { id: 'planos', grupo: 'Comunidade', nome: 'Planos', desc: 'Grátis, Premium e para personais', icone: 'ri-vip-crown-line', el: Planos },
+  { id: 'loja', grupo: 'Loja e comunidade', nome: 'Loja', desc: 'Suplementos, acessórios e tênis recomendados para você', icone: 'ri-store-2-line', el: Loja },
+  { id: 'indique', grupo: 'Loja e comunidade', nome: 'Indique e compartilhe', desc: 'Seu link, cartão do treino e embaixador', icone: 'ri-gift-line', el: Indique },
+  { id: 'planos', grupo: 'Loja e comunidade', nome: 'Planos', desc: 'Grátis, Premium e para personais', icone: 'ri-vip-crown-line', el: Planos },
+  { id: 'meus-dados', grupo: 'Conta', nome: 'Meus dados', desc: 'Baixar uma cópia de tudo (LGPD)', icone: 'ri-download-cloud-line', el: MeusDados },
 ] as const;
 
 export default function Ferramentas() {
