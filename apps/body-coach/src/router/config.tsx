@@ -3,29 +3,32 @@ import NotFound from "../pages/NotFound";
 import AppShell from "../components/feature/AppShell";
 import AuthGuard from "../components/feature/AuthGuard";
 import Home from "../pages/home/page";
-import Workout from "../pages/workout/page";
-import Evolution from "../pages/evolution/page";
-import Nutrition from "../pages/nutrition/page";
-import Plan from "../pages/plan/page";
-import Profile from "../pages/profile/page";
-import Team from "../pages/team/page";
-import Chat from "../pages/chat/page";
-import Convite from "../pages/chat/Convite";
-import Feedback from "../pages/feedback/page";
-import Termos from "../pages/privacy/Termos";
-import Respirar from "../pages/breathe/page";
-import Exams from "../pages/exams/page";
-import AntiDoping from "../pages/antidoping/page";
-import Onboarding from "../pages/onboarding/page";
 import Auth from "../pages/auth/page";
-import Privacy from "../pages/privacy/page";
-import RelatorioAvaliacao from "../pages/evolution/relatorio/page";
-import Compartilhado from "../pages/compartilhado/page";
-import AlunosEvolucao from "../pages/coach/AlunosEvolucao";
-import AlunoEvolucao from "../pages/coach/AlunoEvolucao";
-import RelatorioAluno from "../pages/coach/RelatorioAluno";
-import Demonstracoes from "../pages/coach/Demonstracoes";
-import Ferramentas from "../pages/ferramentas/page";
+import { carregar } from "./carregar";
+
+// Telas carregadas só quando o aluno abre (app abre mais rápido no 4G). Hoje e Entrar vêm junto.
+const Workout = carregar(() => import("../pages/workout/page"));
+const Evolution = carregar(() => import("../pages/evolution/page"));
+const Nutrition = carregar(() => import("../pages/nutrition/page"));
+const Plan = carregar(() => import("../pages/plan/page"));
+const Profile = carregar(() => import("../pages/profile/page"));
+const Team = carregar(() => import("../pages/team/page"));
+const Chat = carregar(() => import("../pages/chat/page"));
+const Convite = carregar(() => import("../pages/chat/Convite"));
+const Feedback = carregar(() => import("../pages/feedback/page"));
+const Termos = carregar(() => import("../pages/privacy/Termos"));
+const Respirar = carregar(() => import("../pages/breathe/page"));
+const Exams = carregar(() => import("../pages/exams/page"));
+const AntiDoping = carregar(() => import("../pages/antidoping/page"));
+const Onboarding = carregar(() => import("../pages/onboarding/page"));
+const Privacy = carregar(() => import("../pages/privacy/page"));
+const RelatorioAvaliacao = carregar(() => import("../pages/evolution/relatorio/page"));
+const Compartilhado = carregar(() => import("../pages/compartilhado/page"));
+const AlunosEvolucao = carregar(() => import("../pages/coach/AlunosEvolucao"));
+const AlunoEvolucao = carregar(() => import("../pages/coach/AlunoEvolucao"));
+const RelatorioAluno = carregar(() => import("../pages/coach/RelatorioAluno"));
+const Demonstracoes = carregar(() => import("../pages/coach/Demonstracoes"));
+const Ferramentas = carregar(() => import("../pages/ferramentas/page"));
 
 const routes: RouteObject[] = [
   {
