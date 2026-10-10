@@ -1,4 +1,4 @@
-# Temporário: gera as imagens do corpo realista (Body Coach) com a cota grátis do Gemini
+# Temporário: gera as imagens do corpo realista (Body Coach) pela rota /api/corpo-ia do Worker (Workers AI grátis)
 # e grava neste mesmo branch. Não vai para o develop. Autorizado pelo usuário em 10/10/2026.
 name: Gerar corpos realistas
 on:
@@ -11,72 +11,31 @@ concurrency: { group: gerar-corpos, cancel-in-progress: true }
 jobs:
   gerar:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 20
     strategy:
       fail-fast: false
-      max-parallel: 1
+      max-parallel: 4
       matrix:
         s: [m, f]
         p: [clara, media, morena, negra]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Gerar imagens (Gemini, cota grátis)
-        env:
-          S: '${{ matrix.s }}'
-          P: '${{ matrix.p }}'
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      - name: Gerar imagens (Workers AI grátis, pelo Worker publicado)
+        env: { S: '${{ matrix.s }}', P: '${{ matrix.p }}' }
         shell: bash
         run: |
           set +e
-          rm -rf corpos; mkdir -p corpos
-          python3 - <<'PY'
-          import base64, json, os, time, urllib.request
-          S, P, K = os.environ['S'], os.environ['P'], os.environ['GEMINI_API_KEY']
-          MODELOS = ['gemini-2.5-flash-image', 'gemini-2.0-flash-preview-image-generation', 'gemini-2.0-flash-exp-image-generation']
-          sexo = {'m': 'man', 'f': 'woman'}[S]
-          roupa = {'m': 'wearing only plain black athletic shorts, shirtless', 'f': 'wearing a plain black sports bra and plain black athletic shorts'}[S]
-          pele = {'clara': 'fair white skin', 'media': 'light olive tan skin, brazilian', 'morena': 'brown skin, latino', 'negra': 'dark black skin, african descent'}[P]
-          nivel = {'magro': 'lean muscular athletic body with visible abs, low body fat', 'medio': 'average fit body, slightly soft belly, moderate body fat', 'alto': 'overweight body with a round belly and love handles, high body fat'}
-          log = open(f'corpos/log-{S}-{P}.txt', 'w')
-          def gerar(partes, nome):
-              for t in range(4):
-                  for m in MODELOS:
-                      cfg = {'responseModalities': ['TEXT', 'IMAGE']}
-                      if m.startswith('gemini-2.5'): cfg['imageConfig'] = {'aspectRatio': '3:4'}
-                      body = {'contents': [{'parts': partes}], 'generationConfig': cfg}
-                      try:
-                          req = urllib.request.Request(f'https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent',
-                                                       data=json.dumps(body).encode(), headers={'x-goog-api-key': K, 'Content-Type': 'application/json'})
-                          r = json.load(urllib.request.urlopen(req, timeout=180))
-                          for c in r.get('candidates', []):
-                              for p in c.get('content', {}).get('parts', []):
-                                  if 'inlineData' in p:
-                                      img = base64.b64decode(p['inlineData']['data'])
-                                      open(f'corpos/{nome}.png', 'wb').write(img)
-                                      print(f'ok {nome} {m} {len(img)}', file=log, flush=True)
-                                      return img
-                          print(f'sem imagem {nome} {m} {json.dumps(r)[:200]}', file=log, flush=True)
-                      except Exception as e:
-                          msg = getattr(e, 'read', lambda: b'')()[:250]
-                          print(f'falhou {nome} {m} t{t} {e} {msg!r}', file=log, flush=True)
-                  time.sleep(20 * (t + 1))
-              return None
-          base = ('Ultra realistic full length studio photograph of one adult {sexo}, {pele}, {nivel}, {roupa}, barefoot, '
-                  'standing straight and relaxed, arms hanging slightly away from the body, {vista}. The whole body from the top of the head '
-                  'to the feet is visible with a little empty space above the head and below the feet, centered. Plain light gray seamless studio '
-                  'background, soft even lighting, natural realistic skin texture, sharp focus, shot on a DSLR with an 85mm lens. No text, no watermark.')
-          for n in nivel:
-              frente = gerar([{'text': base.format(sexo=sexo, pele=pele, nivel=nivel[n], roupa=roupa, vista='facing the camera, front view')}], f'{S}-{P}-{n}-frente')
-              time.sleep(7)
-              for v, txt in [('lado', 'standing in strict side profile facing right (side view)'), ('costas', 'seen from behind (back view), facing away from the camera')]:
-                  partes = [{'text': base.format(sexo=sexo, pele=pele, nivel=nivel[n], roupa=roupa, vista=txt)}]
-                  if frente:
-                      partes = [{'text': f'This is the same exact person as in the photo: same body, same skin tone, same clothes, same studio and lighting, now {txt}. Same framing, whole body from head to feet. ' + partes[0]['text']},
-                                {'inlineData': {'mimeType': 'image/png', 'data': base64.b64encode(frente).decode()}}]
-                  gerar(partes, f'{S}-{P}-{n}-{v}')
-                  time.sleep(7)
-          PY
-          cut -c1-200 corpos/log-*.txt
+          rm -rf corpos; mkdir -p corpos; log="corpos/log-$S-$P.txt"
+          for n in magro medio alto; do for v in frente lado costas; do
+            k="$S-$P-$n-$v"
+            for t in 1 2 3; do
+              code=$(curl -s --max-time 90 -o "corpos/$k.jpg" -w '%{http_code}' "https://nexia.gcbezerra.workers.dev/api/corpo-ia?k=$k")
+              echo "$k t$t http=$code $(stat -c %s corpos/$k.jpg 2>/dev/null)" >> "$log"
+              [ "$code" = 200 ] && break
+              head -c 200 "corpos/$k.jpg" >> "$log"; echo >> "$log"; rm -f "corpos/$k.jpg"; sleep $((t*5))
+            done
+          done; done
+          cat "$log"
       - name: Gravar no branch
         if: always()
         run: |
