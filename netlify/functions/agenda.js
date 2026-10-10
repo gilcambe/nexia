@@ -79,6 +79,7 @@ function limparSemana(semana) {
   for (let d = 0; d <= 6; d++) {
     const faixas = semana && Array.isArray(semana[d]) ? semana[d] : [];
     out[d] = faixas.slice(0, 4)
+      .map(f => (typeof f === 'string' ? f.split('-') : f)) // no Firestore cada faixa fica "09:00-18:00"
       .filter(f => Array.isArray(f) && HORA_RE.test(f[0]) && HORA_RE.test(f[1]) && min(f[0]) < min(f[1]))
       .map(f => [f[0], f[1]])
       .sort((a, b) => min(a[0]) - min(b[0]));
@@ -530,7 +531,9 @@ function createHandler(deps = {}) {
       const salvar = {};
       for (const k of ['nome', 'whatsapp', 'endereco', 'servicos', 'semana', 'intervalo', 'antecedencia_horas', 'dias_a_frente', 'aviso']) if (novo[k] !== undefined) salvar[k] = novo[k];
       const final = montarConfig(cadastro, { ...(dados.config || {}), ...salvar });
-      await conta.set({ config: final }, { merge: true });
+      // O Firestore não aceita lista dentro de lista: as faixas de horário vão como texto "09:00-18:00".
+      const semanaTexto = Object.fromEntries(Object.entries(final.semana).map(([d, fs]) => [d, fs.map(f => f[0] + '-' + f[1])]));
+      await conta.set({ config: { ...final, semana: semanaTexto } }, { merge: true });
       return res(200, { ok: true, config: final });
     }
 
