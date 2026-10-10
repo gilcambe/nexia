@@ -1,31 +1,23 @@
 import { useEffect, useState } from 'react';
 import { chatApi } from '@/lib/chat';
+import { papelEContatos, papelSalvo } from '@/lib/papelCoach';
 import GravadorVideo from './GravadorVideo';
 
 // Abaixo da demonstração do exercício: o aluno vê o vídeo que o SEU coach gravou; o coach grava/troca o dele.
 // Só aparece para quem já entrou na conversa com o coach (senão fica invisível e não faz chamadas repetidas).
 const cache = new Map<string, string | null>();
-let papelConhecido: 'coach' | 'aluno' | 'nenhum' | undefined;
-let papelPromessa: Promise<void> | undefined;
-function descobrirPapel() {
-  papelPromessa ??= chatApi<{ papel: 'coach' | 'aluno'; contatos: unknown[] }>({ acao: 'contatos' })
-    .then((r) => { papelConhecido = r.papel === 'aluno' && !r.contatos.length ? 'nenhum' : r.papel; })
-    .catch(() => { papelConhecido = 'nenhum'; });
-  return papelPromessa;
-}
-
 export default function VideoDoCoach({ id, nome }: { id: string; nome: string }) {
-  const [papel, setPapel] = useState(papelConhecido);
+  const [papel, setPapel] = useState(papelSalvo());
   const [video, setVideo] = useState<string | null>(cache.get(id) ?? null);
   const [gravando, setGravando] = useState(false);
   const [aberto, setAberto] = useState(false);
 
   useEffect(() => {
     let vivo = true;
-    void descobrirPapel().then(async () => {
+    void papelEContatos().then(async ({ papel: p }) => {
       if (!vivo) return;
-      setPapel(papelConhecido);
-      if (papelConhecido === 'nenhum' || cache.has(id)) return;
+      setPapel(p);
+      if (p === 'nenhum' || cache.has(id)) return;
       try { const r = await chatApi<{ video: string | null }>({ acao: 'demo_ver', exercicio: id }); cache.set(id, r.video); if (vivo) setVideo(r.video); } catch { /* sem vídeo */ }
     });
     return () => { vivo = false; };

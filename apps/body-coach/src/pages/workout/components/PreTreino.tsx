@@ -5,6 +5,7 @@ import { treinoDiferente } from '@/lib/treinoDiferente';
 import { diasPorSemana, tempoDoPerfil } from '@/lib/ficha';
 import { useReadiness } from '@/components/feature/ReadinessContext';
 import { statusMeta } from '@/lib/readinessEngine';
+import MusicaTreino from './MusicaTreino';
 
 interface PreTreinoProps {
   respostas: Record<string, unknown>;
@@ -107,6 +108,8 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
           Seguindo a sua ficha. Conte como você está hoje: o treino se ajusta ao seu sono, alimentação, energia, tempo e dores.
         </p>
       </div>
+
+      <div className="mb-5 sm:mb-8"><MusicaTreino variante="cartao" /></div>
 
       <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-8">
         {/* Treino da ficha */}

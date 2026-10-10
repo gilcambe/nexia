@@ -3,9 +3,10 @@ import { useAuth } from '@/components/feature/AuthContext';
 import { setUserDoc } from '@/lib/userData';
 import { APPS_MUSICA, ESTILOS, buscaTreino, linkPlaylist } from '@/lib/musica';
 
-// Botão "Música" do treino: abre o app de música escolhido por cima do NEXIA; a música continua
+// Música do treino: abre o app de música escolhido por cima do NEXIA; a música continua
 // tocando enquanto o aluno volta para registrar as séries.
-export default function MusicaTreino({ compacto = false }: { compacto?: boolean }) {
+// variante "cartao": destaque antes de começar (um toque já toca); "flutuante": botão redondo fixo durante o treino.
+export default function MusicaTreino({ variante = 'cartao' }: { variante?: 'cartao' | 'flutuante' }) {
   const { user, profile, refreshProfile } = useAuth();
   const pref = profile?.musica ?? {};
   const [aberto, setAberto] = useState(false);
@@ -29,11 +30,43 @@ export default function MusicaTreino({ compacto = false }: { compacto?: boolean 
     abrir(l.url);
   };
 
+  // Um toque no app: toca a playlist do aluno se ela for desse app; senão abre playlists de treino do estilo dele.
+  const tocarNoApp = (id: string) => {
+    setApp(id);
+    salvar({ app: id });
+    const minha = pref.link ? linkPlaylist(pref.link) : null;
+    abrir(minha && minha.app === id ? minha.url : buscaTreino(id, estilo));
+  };
+
   return (
     <>
-      <button type="button" onClick={() => setAberto(true)} className={`inline-flex items-center gap-1.5 rounded-full border border-background-200 bg-background-50 font-semibold text-foreground-700 ${compacto ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm'}`} data-testid="musica-botao">
-        <i className="ri-music-2-line text-primary-500"></i>Música
-      </button>
+      {variante === 'flutuante' ? (
+        <button type="button" onClick={() => setAberto(true)} className="fixed bottom-[calc(6rem+env(safe-area-inset-bottom))] left-3 z-40 flex h-14 w-14 flex-col items-center justify-center rounded-full bg-gradient-to-br from-[#1f2226] to-black text-white shadow-lg ring-2 ring-primary-500 lg:bottom-24 lg:left-auto lg:right-24" aria-label="Música do treino" data-testid="musica-botao">
+          <i className="ri-headphone-fill text-2xl leading-none"></i>
+          <span className="text-[9px] font-semibold leading-tight">Música</span>
+        </button>
+      ) : (
+        <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#1f2226] via-[#121315] to-black p-4 text-white" data-testid="musica-cartao">
+          <div className="flex items-center gap-3">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-500"><i className="ri-headphone-fill text-2xl"></i></span>
+            <div className="min-w-0 flex-1">
+              <p className="font-heading text-base font-bold">Treine com a sua música</p>
+              <p className="text-xs text-white/70">{pref.link ? 'Sua playlist está salva. Um toque e ela começa.' : `Playlists de treino de ${estilo.toLowerCase()}. Toque no seu app.`}</p>
+            </div>
+          </div>
+          <div className="mt-3 grid grid-cols-4 gap-2">
+            {APPS_MUSICA.map((a) => (
+              <button key={a.id} type="button" onClick={() => tocarNoApp(a.id)} className={`flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-[11px] font-medium ${app === a.id ? 'bg-white/15 ring-1 ring-white/40' : 'bg-white/5'}`} aria-label={`Tocar no ${a.nome}`}>
+                <i className={`${a.icone} text-2xl`} style={{ color: a.cor }}></i>
+                {a.nome.replace(' Music', '')}
+              </button>
+            ))}
+          </div>
+          <button type="button" onClick={() => setAberto(true)} className="mt-2 w-full rounded-xl border border-white/20 px-3 py-2 text-xs font-semibold text-white/90" data-testid="musica-botao">
+            <i className="ri-equalizer-line mr-1"></i>{pref.link ? 'Trocar playlist ou estilo' : 'Escolher estilo ou colar minha playlist'}
+          </button>
+        </div>
+      )}
       {aberto && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/40 sm:items-center" onClick={() => setAberto(false)} role="dialog" aria-modal="true" aria-label="Música no treino">
           <div className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-background-50 p-4 pb-8 sm:rounded-2xl" onClick={(e) => e.stopPropagation()}>

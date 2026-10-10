@@ -12,6 +12,7 @@ import VideoDoCoach from '@/components/feature/VideoDoCoach';
 import { alternativas, lesoesDoTexto, POR_ID, type Lesao } from '@/lib/exerciseDb';
 import PreTreino from './components/PreTreino';
 import MusicaTreino from './components/MusicaTreino';
+import GravarParaCoach from '@/components/feature/GravarParaCoach';
 import { dicaAoVivo } from '@/lib/liveCoach';
 import { getUserDoc, setUserDoc, listUserDocs } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
@@ -207,9 +208,8 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
       <div className="mb-6">
         <div className="flex items-center justify-between text-sm">
           <span className="font-heading font-semibold text-foreground-950">{session.title}</span>
-          <span className="flex items-center gap-2 text-foreground-500">
-            <MusicaTreino compacto />
-            {exIndex + 1}/{session.exercises.length}
+          <span className="text-foreground-500">
+            {exIndex + 1}/{session.exercises.length} exercícios
           </span>
         </div>
         <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-background-200">
@@ -220,7 +220,9 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
         </div>
       </div>
 
+      {phase !== 'PRE_SESSION' && phase !== 'SESSION_COMPLETE' && <MusicaTreino variante="flutuante" />}
       <div className="space-y-4">
+        {phase === 'PRE_SESSION' && <MusicaTreino variante="cartao" />}
         {phase === 'PRE_SESSION' && (
           <div className="rounded-2xl border border-background-200 bg-background-50 p-4 sm:p-6">
             <h2 className="font-heading text-xl font-bold text-foreground-950">Pronto para começar?</h2>
@@ -282,6 +284,7 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
 
             <DemoExecucao id={exercise.id} nome={exercise.name} className="mt-4 aspect-[4/3] w-full rounded-xl sm:max-w-sm" />
             <VideoDoCoach id={exercise.id} nome={exercise.name} />
+            <GravarParaCoach exercicio={exercise.name} detalhe={(() => { const s = setsByEx[exercise.id] ?? []; const u = s[s.length - 1]; return u ? `${u.weight} kg x ${u.reps}` : undefined; })()} />
 
             <p className="mt-4 rounded-xl bg-background-100/70 p-3 text-sm text-foreground-700">
               <i className="ri-information-line mr-1 text-primary-500"></i>
