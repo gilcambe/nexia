@@ -61,6 +61,7 @@ const semana = d => new Date(d + 'T12:00:00Z').getUTCDay();
     if (process.env.TAILWIND_LOCAL_JS) await ctx.route('https://cdn.tailwindcss.com/**', r => r.fulfill({ contentType: 'text/javascript', body: fs.readFileSync(process.env.TAILWIND_LOCAL_JS, 'utf8') }));
     const p = await ctx.newPage();
     p.on('pageerror', e => erros.push(e.message));
+    p.on('response', async r => { if (r.url().startsWith(API_PROD) && r.status() >= 400) console.log(`    (API respondeu ${r.status()}: ${(await r.text().catch(() => '')).slice(0, 200)})`); });
     p.on('dialog', d => d.accept());
     return p;
   };
@@ -364,7 +365,7 @@ const semana = d => new Date(d + 'T12:00:00Z').getUTCDay();
     confere(false, 'o teste parou: ' + String(e.message || e).split('\n')[0]);
     // Para entender a parada: o que o painel e o site mostravam.
     for (const [p, nome] of [[car, 'erro-painel'], [cli, 'erro-site']].filter(x => x[0])) {
-      try { await foto(p, nome); console.log(`  ${nome}: ` + (await p.evaluate(() => [...document.querySelectorAll('.msg:not(.oculto), #toast:not(.oculto), [role=alert]:not(.oculto)')].map(x => x.textContent.trim()).filter(Boolean).join(' | ')))); } catch (er) {}
+      try { if (FOTOS) await p.screenshot({ path: path.join(FOTOS, '99-' + nome + '.png') }); console.log(`  ${nome}: ` + (await p.evaluate(() => [...document.querySelectorAll('.msg:not(.oculto), #toast:not(.oculto), [role=alert]:not(.oculto)')].map(x => x.textContent.trim()).filter(Boolean).join(' | ')))); } catch (er) {}
     }
   }
   await browser.close();
@@ -382,7 +383,7 @@ const semana = d => new Date(d + 'T12:00:00Z').getUTCDay();
   await post({ acao: 'site-salvar', token: tokenApi, conteudo: {} });
   await post({ acao: 'sair', token: tokenApi });
   const depois = await get({});
-  confere(!(await get({ conteudo: '1' })).conteudo.textos['inicio-2'], 'limpeza: site de teste sem edições');
+  confere(!(((await get({ conteudo: '1' })).conteudo || {}).textos || {})['inicio-2'], 'limpeza: site de teste sem edições');
   confere(JSON.stringify(depois.servicos) === JSON.stringify(pub0.servicos) && (await get({ data: D1 })).horarios.length >= livres1.length - 1, 'limpeza: agenda de teste voltou como estava');
 
   console.log(falhas.length ? `\n${falhas.length} falha(s):\n - ${falhas.join('\n - ')}` : '\nCenário completo certo no ar.');
