@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Studio Lima — Estética Avançada | Carolina Martins</title>
+<meta name="description" content="No Studio Lima, cada detalhe é pensado para realçar a sua beleza natural, promover saúde e autoestima, com segurança, tecnologia e resultados reais.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          background: { 50: '#fcfaf6', 100: '#f9f5ee' },
+          foreground: { 800: '#463a36' },
+          primary: { 600: '#825c4e', 950: '#291410' },
+          accent: { 600: '#ca9252' },
+          ink: { 900: '#1e1311', 600: '#615551' }
+        },
+        fontFamily: {
+          sans: ['Inter', 'sans-serif'],
+          display: ['"Cormorant Garamond"', 'serif']
+        }
+      }
+    }
+  };
+</script>
+<style>
+  body { background: #fcfaf6; color: #1e1311; }
+  .section-padding { padding: 6rem 1.25rem; }
+  @media (min-width: 768px) { .section-padding { padding: 8rem 2rem; } }
+  .font-label { font-family: Inter, sans-serif; letter-spacing: .14em; }
+  .hero-slide { transition: opacity 1.4s ease-in-out; }
+  .fade-in { opacity: 0; transform: translateY(16px); transition: opacity .8s ease, transform .8s ease; }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-thumb { background: #d8c7ba; border-radius: 6px; }
+  html { scroll-behavior: smooth; }
+</style>
+</head>
+<body class="font-sans antialiased">
+
+<!-- ===== HEADER ===== -->
+<header id="site-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-500 bg-transparent py-5">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 flex items-center justify-between">
+    <a href="#inicio" class="flex items-center gap-3">
+      <span class="font-display text-2xl text-primary-950 border border-primary-950/40 rounded-full w-10 h-10 flex items-center justify-center">SL</span>
+      <span class="leading-tight">
+        <span class="block font-display text-lg text-ink-900">Studio Lima</span>
+        <span class="block font-label text-[10px] uppercase text-ink-600">Estética Avançada</span>
+      </span>
+    </a>
+    <nav class="hidden md:flex items-center gap-8 font-label text-sm uppercase text-ink-600">
+      <a href="#inicio" class="hover:text-primary-600 transition-colors">Início</a>
+      <a href="#sobre" class="hover:text-primary-600 transition-colors">Sobre</a>
+      <a href="#procedimentos" class="hover:text-primary-600 transition-colors">Procedimentos</a>
+      <a href="#cuidados" class="hover:text-primary-600 transition-colors">Cuidados</a>
+      <a href="#journal" class="hover:text-primary-600 transition-colors">Journal</a>
+      <a href="#localizacao" class="hover:text-primary-600 transition-colors">Localização</a>
+    </nav>
+    <a href="#agendamento" class="hidden md:inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-background-50 font-label text-xs uppercase tracking-wide rounded-full hover:bg-primary-950 transition-colors">
+      Agendar Meu Horário
+    </a>
+    <button id="menu-btn" class="md:hidden text-ink-900 text-2xl leading-none">&#9776;</button>
+  </div>
+  <div id="mobile-menu" class="hidden md:hidden bg-background-50 border-t border-primary-950/10 px-5 py-6 flex flex-col gap-4 font-label text-sm uppercase text-ink-600">
+    <a href="#inicio">Início</a>
+    <a href="#sobre">Sobre</a>
+    <a href="#procedimentos">Procedimentos</a>
+    <a href="#cuidados">Cuidados</a>
+    <a href="#journal">Journal</a>
+    <a href="#localizacao">Localização</a>
+    <a href="#agendamento" class="inline-flex justify-center px-6 py-3 bg-primary-600 text-background-50 rounded-full">Agendar Meu Horário</a>
+  </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<section id="inicio" class="relative min-h-[100svh] flex items-center overflow-hidden bg-background-100">
+  <div id="hero-slides" class="absolute inset-0 z-0"></div>
+  <div class="absolute inset-0 z-[1] bg-gradient-to-t from-ink-900/70 via-ink-900/20 to-ink-900/50"></div>
+  <span class="pointer-events-none select-none absolute -right-10 -top-6 md:right-6 md:top-10 font-display italic text-[18vw] md:text-[10vw] leading-none text-background-50/10 z-[1]">SL</span>
+
+  <div class="relative z-10 max-w-7xl mx-auto px-5 md:px-8 w-full">
+    <p class="font-label text-xs md:text-sm uppercase tracking-[0.3em] text-background-50/80 mb-6">Estética Avançada</p>
+    <h1 class="font-display font-light text-background-50 leading-[0.95]" style="font-size:clamp(3rem,9vw,4.5rem)">
+      Studio<br>Lima
+    </h1>
+    <p class="mt-6 max-w-xl text-background-50/90 text-base md:text-lg leading-relaxed">
+      Estética avançada com atendimento personalizado. Tecnologia, cuidado e resultados que realçam a sua beleza natural.
+    </p>
+    <div class="mt-9 flex flex-wrap gap-4">
+      <a href="#agendamento" class="btn-primary inline-flex items-center gap-2 px-7 py-4 bg-primary-600 text-background-50 font-label text-sm tracking-wide rounded-full hover:bg-primary-950 transition-colors">Agendar Meu Horário</a>
+      <a href="#procedimentos" class="inline-flex items-center gap-2 px-7 py-4 border border-background-50/50 text-background-50 font-label text-sm tracking-wide rounded-full hover:bg-background-50/10 transition-colors">Conhecer Procedimentos</a>
+    </div>
+    <p class="mt-10 font-label text-[11px] uppercase tracking-[0.2em] text-background-50/70">Profissional responsável — Carolina Martins</p>
+  </div>
+
+  <div class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 text-background-50/70">
+    <span class="font-label text-[10px] uppercase tracking-[0.3em]">Scroll</span>
+    <span class="w-px h-10 bg-background-50/50 animate-pulse"></span>
+  </div>
+</section>
+
+<!-- ===== SOBRE CAROLINA ===== -->
+<section id="sobre" class="section-padding bg-background-50">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 grid md:grid-cols-2 gap-14 items-center">
+    <div class="relative fade-in">
+      <div class="aspect-[4/5] rounded-[2rem] overflow-hidden shadow-xl">
+        <img id="bio-foto" src="https://storage.helloreaddy.io/project_files/0fd7e600-9644-49aa-85e1-864f26edba21/ffa96175-efb6-4d77-b75c-727d56461c09_compressed_CAROLINA-LIMA-2.webp" alt="Carolina Martins" class="w-full h-full object-cover" style="object-position:50% 0%" loading="lazy">
+      </div>
+    </div>
+    <div class="fade-in">
+      <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Sobre Carolina</p>
+      <h2 id="bio-titulo" class="font-display font-light text-ink-900 mb-6" style="font-size:clamp(2rem,4vw,3rem)">Carolina Martins</h2>
+      <p id="bio-texto1" class="text-ink-600 leading-relaxed mb-4">Carolina Martins é a proprietária e profissional responsável pelos procedimentos do Studio Lima. Com dedicação e cuidado, oferece tratamentos personalizados e resultados naturais, sempre priorizando a saúde e a autoestima de cada cliente.</p>
+      <p id="bio-texto2" class="text-ink-600 leading-relaxed mb-8">No Studio Lima, cada detalhe é pensado para realçar a sua beleza natural, promover saúde e autoestima, com segurança, tecnologia e resultados reais.</p>
+      <div id="bio-tags" class="flex flex-wrap gap-2 mb-9">
+        <span class="px-4 py-2 bg-background-100 rounded-full text-xs font-label uppercase tracking-wide text-ink-600">Rejuvenescimento facial</span>
+        <span class="px-4 py-2 bg-background-100 rounded-full text-xs font-label uppercase tracking-wide text-ink-600">Flacidez</span>
+        <span class="px-4 py-2 bg-background-100 rounded-full text-xs font-label uppercase tracking-wide text-ink-600">Gordura localizada</span>
+        <span class="px-4 py-2 bg-background-100 rounded-full text-xs font-label uppercase tracking-wide text-ink-600">Pós-operatório</span>
+      </div>
+      <div class="flex flex-wrap gap-4">
+        <a href="#agendamento" class="inline-flex items-center gap-2 px-7 py-4 bg-primary-600 text-background-50 font-label text-sm tracking-wide rounded-full hover:bg-primary-950 transition-colors">Agendar Meu Horário</a>
+        <a href="https://instagram.com/caroliina.maar" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-7 py-4 border border-primary-950/20 text-ink-900 font-label text-sm tracking-wide rounded-full hover:bg-background-100 transition-colors">Conhecer Instagram</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== TRATAMENTOS ===== -->
+<section id="procedimentos" class="section-padding bg-background-100">
+  <div class="max-w-7xl mx-auto px-5 md:px-8">
+    <div class="max-w-2xl mx-auto text-center mb-14 fade-in">
+      <div class="w-56 md:w-64 aspect-[4/5] mx-auto mb-8 rounded-[1.75rem] overflow-hidden shadow-xl border-4 border-background-50">
+        <img src="https://static.readdy.ai/image/9d63808badb705f7bbaf3187824d8db2/acbcdf996da771c0f892a9e1e0b4e223.png" alt="Carolina Martins realizando um procedimento" class="w-full h-full object-cover" loading="lazy">
+      </div>
+      <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Tratamentos</p>
+      <h2 class="font-display font-light text-ink-900 mb-5" style="font-size:clamp(2rem,4vw,3rem)">Procedimentos especializados</h2>
+      <p class="text-ink-600 leading-relaxed">Tecnologias avançadas e protocolos personalizados para cada necessidade. Cada tratamento é pensado para realçar a sua beleza natural com segurança e resultados reais.</p>
+    </div>
+
+    <div class="flex flex-wrap justify-center gap-3 mb-12">
+      <button data-filter="Todos" class="filter-btn px-5 py-2.5 rounded-full font-label text-xs uppercase tracking-wide bg-primary-600 text-background-50">Todos</button>
+      <button data-filter="Facial" class="filter-btn px-5 py-2.5 rounded-full font-label text-xs uppercase tracking-wide bg-background-50 text-ink-600 hover:bg-primary-600 hover:text-background-50 transition-colors">Tratamentos Faciais</button>
+      <button data-filter="Corporal" class="filter-btn px-5 py-2.5 rounded-full font-label text-xs uppercase tracking-wide bg-background-50 text-ink-600 hover:bg-primary-600 hover:text-background-50 transition-colors">Tratamentos Corporais</button>
+    </div>
+
+    <div id="procedures-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-8"></div>
+  </div>
+</section>
+
+<!-- ===== CUIDADOS ===== -->
+<section id="cuidados" class="section-padding bg-background-50">
+  <div class="max-w-6xl mx-auto px-5 md:px-8">
+    <div class="max-w-2xl mx-auto text-center mb-14 fade-in">
+      <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Cuidados Estéticos</p>
+      <h2 class="font-display font-light text-ink-900 mb-5" style="font-size:clamp(2rem,4vw,3rem)">Cuidados para a sua pele</h2>
+      <p class="text-ink-600 leading-relaxed">Pequenos hábitos fazem toda a diferença na saúde e na aparência da pele. Conteúdo educativo para cuidar de você no dia a dia, sempre com acompanhamento profissional.</p>
+    </div>
+    <div id="cuidados-grid" class="grid md:grid-cols-2 gap-x-12 gap-y-10"></div>
+  </div>
+</section>
+
+<!-- ===== JOURNAL ===== -->
+<section id="journal" class="section-padding bg-background-100">
+  <div class="max-w-7xl mx-auto px-5 md:px-8">
+    <div class="max-w-2xl mx-auto text-center mb-14 fade-in">
+      <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Journal Studio Lima</p>
+      <h2 class="font-display font-light text-ink-900 mb-5" style="font-size:clamp(2rem,4vw,3rem)">Cuidados &amp; conhecimento</h2>
+      <p class="text-ink-600 leading-relaxed">Conteúdo sobre skincare, preparação para procedimentos e rotina de beleza — curado de fontes especializadas para você cuidar da sua pele com informação.</p>
+    </div>
+    <div id="journal-grid" class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+    <p class="text-center text-xs text-ink-600 mt-10 font-label uppercase tracking-wide">Conteúdos de fontes especializadas em dermatologia e estética · Links externos</p>
+  </div>
+</section>
+
+<!-- ===== EXPERIÊNCIA (galeria) ===== -->
+<section id="experiencia" class="section-padding bg-background-50">
+  <div class="max-w-7xl mx-auto px-5 md:px-8">
+    <div class="max-w-2xl mx-auto text-center mb-14 fade-in">
+      <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">A Experiência</p>
+      <h2 class="font-display font-light text-ink-900" style="font-size:clamp(2rem,4vw,3rem)">A Experiência Studio Lima</h2>
+    </div>
+    <div id="gallery-grid" class="grid grid-cols-2 lg:grid-cols-4 gap-4 auto-rows-[160px] md:auto-rows-[200px]"></div>
+  </div>
+</section>
+
+<!-- ===== REDES SOCIAIS ===== -->
+<section class="section-padding bg-background-100">
+  <div class="max-w-4xl mx-auto px-5 md:px-8 text-center fade-in">
+    <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Redes Sociais</p>
+    <h2 class="font-display font-light text-ink-900 mb-3" style="font-size:clamp(2rem,4vw,3rem)">Acompanhe o Studio Lima</h2>
+    <p class="text-ink-600 mb-10">Conheça Nosso Instagram</p>
+    <div class="bg-background-50 rounded-[2rem] p-8 md:p-10 shadow-lg flex flex-col md:flex-row items-center gap-8 text-left">
+      <img src="https://storage.helloreaddy.io/project_files/0fd7e600-9644-49aa-85e1-864f26edba21/5508285e-650e-4480-8d9c-59cafec94bc7_compressed_studio_lima.estetica.webp" alt="@studio_lima.estetica" class="w-24 h-24 rounded-full object-cover border-2 border-accent-600 shrink-0">
+      <div class="flex-1">
+        <p class="font-display text-xl text-ink-900">@studio_lima.estetica</p>
+        <p class="font-label text-[11px] uppercase tracking-wide text-ink-600 mb-3">Studio Lima · Estética Avançada</p>
+        <p class="text-ink-600 text-sm mb-5">Acompanhe nossas novidades, antes e depois de procedimentos, dicas de cuidados com a pele e muito mais no perfil oficial do Studio Lima.</p>
+        <a href="https://instagram.com/studio_lima.estetica" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-background-50 font-label text-xs uppercase tracking-wide rounded-full hover:bg-primary-950 transition-colors">Abrir @studio_lima.estetica</a>
+      </div>
+    </div>
+    <p class="text-xs text-ink-600 mt-6 font-label uppercase tracking-wide">Conteúdo atualizado com novidades e dicas de beleza · @caroliina.maar — Carolina Lima</p>
+  </div>
+</section>
+
+<!-- ===== LOCALIZAÇÃO ===== -->
+<section id="localizacao" class="section-padding bg-background-50">
+  <div class="max-w-6xl mx-auto px-5 md:px-8 grid md:grid-cols-2 gap-14 items-center">
+    <div class="fade-in">
+      <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Localização</p>
+      <h2 class="font-display font-light text-ink-900 mb-8" style="font-size:clamp(2rem,4vw,3rem)">Encontre o Studio Lima</h2>
+      <dl class="space-y-6">
+        <div>
+          <dt class="font-label text-[11px] uppercase tracking-wide text-accent-600 mb-1">Endereço</dt>
+          <dd class="text-ink-900">Av. Martin Francisco 337 - Sal, São Paulo — SP</dd>
+        </div>
+        <div>
+          <dt class="font-label text-[11px] uppercase tracking-wide text-accent-600 mb-1">WhatsApp</dt>
+          <dd class="text-ink-900">(11) 96032-4530</dd>
+        </div>
+        <div>
+          <dt class="font-label text-[11px] uppercase tracking-wide text-accent-600 mb-1">Instagram</dt>
+          <dd class="text-ink-900">@studio_lima.estetica</dd>
+        </div>
+        <div>
+          <dt class="font-label text-[11px] uppercase tracking-wide text-accent-600 mb-1">Horário de atendimento</dt>
+          <dd class="text-ink-900">Segunda a Sábado — consulte disponibilidade</dd>
+        </div>
+      </dl>
+      <a href="https://www.google.com/maps/search/?api=1&query=Av.+Martin+Francisco+337+-+Sal,+São+Paulo+-+SP" target="_blank" rel="noopener" class="inline-flex items-center gap-2 mt-9 px-7 py-4 bg-primary-600 text-background-50 font-label text-sm tracking-wide rounded-full hover:bg-primary-950 transition-colors">Como Chegar</a>
+    </div>
+    <div class="fade-in aspect-[4/3] rounded-[2rem] overflow-hidden shadow-lg">
+      <img src="https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=900&h=700&fit=crop&auto=format&q=80" alt="Studio Lima" class="w-full h-full object-cover" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<!-- ===== AGENDAMENTO ===== -->
+<section id="agendamento" class="relative py-24 md:py-32 overflow-hidden bg-background-100">
+  <div class="max-w-3xl mx-auto px-5 md:px-8 text-center fade-in">
+    <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-4">Agendamento</p>
+    <h2 class="font-display font-light text-ink-900 mb-6" style="font-size:clamp(2rem,4vw,3rem)">Agende seu horário</h2>
+    <p class="text-ink-600 leading-relaxed mb-10">Escolha o procedimento desejado, a data e o horário que melhor se encaixam na sua rotina. Estamos prontas para cuidar de você.</p>
+    <div class="flex flex-wrap justify-center gap-4">
+      <button id="btn-agendar" class="inline-flex items-center gap-2 px-8 py-4 bg-primary-600 text-background-50 font-label text-sm tracking-wide rounded-full hover:bg-primary-950 transition-colors">Agendar Meu Horário</button>
+      <a href="https://wa.me/5511960324530" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-8 py-4 border border-primary-950/20 text-ink-900 font-label text-sm tracking-wide rounded-full hover:bg-background-50 transition-colors">Falar pelo WhatsApp</a>
+    </div>
+    <p id="agendar-nota" class="hidden mt-6 text-xs text-ink-600 font-label uppercase tracking-wide">Não consegui abrir a agenda agora. Fale pelo WhatsApp que a Carolina marca seu horário.</p>
+  </div>
+</section>
+
+<!-- ===== MODAL DE AGENDAMENTO (real — grava no backend) ===== -->
+<div id="modal-agendar" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div id="modal-agendar-overlay" class="absolute inset-0 bg-primary-950/50"></div>
+  <div class="relative bg-background-50 rounded-[1.5rem] max-w-md w-full max-h-[90vh] overflow-y-auto p-7 md:p-9 shadow-2xl">
+    <button id="modal-agendar-fechar" class="absolute top-5 right-5 text-ink-600 hover:text-ink-900 text-xl leading-none">&times;</button>
+    <p class="font-label text-xs uppercase tracking-[0.25em] text-accent-600 mb-3">Agendamento</p>
+    <h3 class="font-display text-2xl text-ink-900 mb-6">Agendar meu horário</h3>
+
+    <form id="form-agendar" class="space-y-4">
+      <div>
+        <label class="text-xs uppercase tracking-wide text-ink-600 block mb-1.5">Procedimento</label>
+        <select id="ag-procedimento" required class="w-full border border-primary-950/15 rounded-xl px-3 py-2.5 text-sm bg-background-50"></select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-xs uppercase tracking-wide text-ink-600 block mb-1.5">Data</label>
+          <input type="date" id="ag-data" required class="w-full border border-primary-950/15 rounded-xl px-3 py-2.5 text-sm bg-background-50">
+        </div>
+        <div>
+          <label class="text-xs uppercase tracking-wide text-ink-600 block mb-1.5">Horário (Brasília)</label>
+          <select id="ag-horario" required class="w-full border border-primary-950/15 rounded-xl px-3 py-2.5 text-sm bg-background-50">
+            <option value="">Escolha a data</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs uppercase tracking-wide text-ink-600 block mb-1.5">Seu nome</label>
+        <input type="text" id="ag-nome" required class="w-full border border-primary-950/15 rounded-xl px-3 py-2.5 text-sm bg-background-50">
+      </div>
+      <div>
+        <label class="text-xs uppercase tracking-wide text-ink-600 block mb-1.5">WhatsApp / telefone</label>
+        <input type="tel" id="ag-telefone" required placeholder="11 9XXXX-XXXX" class="w-full border border-primary-950/15 rounded-xl px-3 py-2.5 text-sm bg-background-50">
+      </div>
+
+      <div>
+        <label class="text-xs uppercase tracking-wide text-ink-600 block mb-1.5">Observação (opcional)</label>
+        <textarea id="ag-obs" maxlength="500" rows="2" class="w-full border border-primary-950/15 rounded-xl px-3 py-2.5 text-sm bg-background-50"></textarea>
+      </div>
+      <input type="text" id="ag-site-url" name="site_url" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+      <label class="flex items-start gap-2 text-xs text-ink-600 leading-relaxed">
+        <input type="checkbox" id="ag-consentimento" required class="mt-0.5 w-4 h-4">
+        <span>Aceito que o Studio Lima use meu nome e WhatsApp para falar sobre este agendamento.</span>
+      </label>
+
+      <p id="ag-politica" class="text-xs text-ink-600 leading-relaxed"></p>
+      <p id="ag-erro" class="hidden text-xs text-red-700 bg-red-50 rounded-lg px-3 py-2"></p>
+
+      <button type="submit" id="ag-submit" class="w-full inline-flex items-center justify-center gap-2 px-6 py-3.5 bg-primary-600 text-background-50 font-label text-sm tracking-wide rounded-full hover:bg-primary-950 transition-colors disabled:opacity-50">Pedir este horário</button>
+    </form>
+
+    <div id="ag-sucesso" class="hidden text-center py-4">
+      <p class="font-display text-xl text-ink-900 mb-3">Pedido enviado!</p>
+      <p id="ag-sucesso-detalhe" class="text-sm text-ink-600 leading-relaxed mb-4"></p>
+      <p id="ag-sucesso-politica" class="text-xs text-ink-600 leading-relaxed mb-4"></p>
+      <a id="ag-sucesso-zap" href="#" target="_blank" rel="noopener" class="hidden mb-4 mx-auto w-fit items-center justify-center px-6 py-3 bg-primary-600 text-background-50 rounded-full font-label text-xs uppercase tracking-wide">Avisar a Carolina no WhatsApp</a>
+      <button id="ag-sucesso-fechar" class="px-6 py-3 border border-primary-950/20 rounded-full font-label text-xs uppercase tracking-wide text-ink-900 hover:bg-background-100">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer class="bg-primary-950 text-background-100 pt-16 md:pt-20 pb-10">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 grid md:grid-cols-3 gap-10 mb-12">
+    <div>
+      <div class="flex items-center gap-3 mb-4">
+        <span class="font-display text-2xl border border-background-100/40 rounded-full w-10 h-10 flex items-center justify-center">SL</span>
+        <span class="font-display text-lg">Studio Lima</span>
+      </div>
+      <p class="text-background-100/70 text-sm leading-relaxed">Sua beleza é valorizada. Seu bem-estar é prioridade.</p>
+    </div>
+    <div>
+      <p class="font-label text-[11px] uppercase tracking-wide text-background-100/50 mb-4">Navegação</p>
+      <ul class="space-y-2 text-sm text-background-100/80">
+        <li><a href="#sobre" class="hover:text-background-50">Sobre Carolina</a></li>
+        <li><a href="#procedimentos" class="hover:text-background-50">Procedimentos</a></li>
+        <li><a href="#cuidados" class="hover:text-background-50">Cuidados</a></li>
+        <li><a href="#journal" class="hover:text-background-50">Journal</a></li>
+      </ul>
+    </div>
+    <div>
+      <p class="font-label text-[11px] uppercase tracking-wide text-background-100/50 mb-4">Contato</p>
+      <ul class="space-y-2 text-sm text-background-100/80">
+        <li>Av. Martin Francisco 337 - Sal, São Paulo — SP</li>
+        <li>(11) 96032-4530</li>
+        <li>@studio_lima.estetica</li>
+      </ul>
+    </div>
+  </div>
+  <div class="max-w-7xl mx-auto px-5 md:px-8 pt-8 border-t border-background-100/10 text-xs text-background-100/50 text-center">
+    © <span id="ano"></span> Studio Lima — Estética Avançada. Todos os direitos reservados.
+    <span class="block mt-3"><a href="agenda/" class="underline hover:text-background-50">Área da Carolina</a> · <a href="https://nexia.gcbezerra.workers.dev" target="_blank" rel="noopener" class="hover:text-background-50">Feito com NEXIA</a></span>
+  </div>
+</footer>
+
+<script>
+/* ================= DADOS =================
+   Estes arrays (fonte: JSON exportado do Readdy em 2026-08-28) são o
+   conteúdo do site (o CMS antigo em /api/studiolima/conteudo não existe neste endereço; ex:
+   HTML aberto sozinho, sem o backend). Assim que a API responde, o
+   conteúdo de verdade — o que a Carolina edita no painel — substitui estes
+   valores por completo. As variáveis PROCEDURES/GALLERY/JOURNAL/HERO_SLIDES/BIO
+   usadas pelo resto do script são as de baixo (não as DEFAULT_*). */
+const DEFAULT_PROCEDURES = [
+  {nome:"Limpeza de Pele",categoria:"Facial",descricao:"Tratamento essencial para remover impurezas, células mortas e excesso de sebo, deixando a pele renovada e luminosa.",beneficios:["Pele profundamente limpa","Poros minimizados","Controle da oleosidade"],imagem:"https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Hidratação Facial",categoria:"Facial",descricao:"Reposição intensa de água e nutrientes para peles desidratadas, restaurando o viço e a elasticidade natural.",beneficios:["Pele hidratada e macia","Redução de linhas finas","Viço natural"],imagem:"https://images.unsplash.com/photo-1643684391140-c5056cfd3436?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Microagulhamento",categoria:"Facial",descricao:"Técnica de estimulação colagênica através de microperfurações controladas, promovendo rejuvenescimento natural.",beneficios:["Estimulação de colágeno","Redução de cicatrizes","Melhora da textura"],imagem:"https://images.unsplash.com/photo-1706795033728-9232ef548a16?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Jato de Plasma",categoria:"Facial",descricao:"Tecnologia avançada para tratamento de manchas, sinais e flacidez através do plasma ionizado.",beneficios:["Ação antissinais","Tratamento de manchas","Efeito lifting"],imagem:"https://images.unsplash.com/photo-1761718209708-9ab9ba1c7252?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Radiofrequência Facial",categoria:"Facial",descricao:"Tratamento que utiliza ondas eletromagnéticas para aquecer as camadas profundas da pele, estimulando o colágeno.",beneficios:["Firmeza facial","Redução de flacidez","Contorno facial definido"],imagem:"https://images.unsplash.com/photo-1761718210089-ba3bb5ccb54f?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"HIFU - Ultrassom Microfocado",categoria:"Facial",descricao:"Ultrassom de alta intensidade focado para lifting não cirúrgico, atingindo camadas profundas da pele.",beneficios:["Lifting sem cirurgia","Redução de rugas","Estimulação profunda"],imagem:"https://images.unsplash.com/photo-1731514721772-329626f84c8b?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Ultrassom Facial - Rejuvenescimento",categoria:"Facial",descricao:"Tecnologia de ultrassom para estimulação celular, melhora da circulação e rejuvenescimento facial.",beneficios:["Rejuvenescimento natural","Melhora da circulação","Pele revitalizada"],imagem:"https://images.unsplash.com/photo-1552693673-1bf958298935?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Peeling Químico",categoria:"Facial",descricao:"Renovação celular através de ácidos específicos, promovendo esfoliação controlada e pele nova.",beneficios:["Renovação celular","Uniformização do tom","Redução de manchas"],imagem:"https://images.unsplash.com/photo-1713085085470-fba013d67e65?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Toxina Botulínica",categoria:"Facial",descricao:"Tratamento injetável para suavizar linhas de expressão e prevenir a formação de novas rugas.",beneficios:["Suavização de rugas","Prevenção anti-idade","Resultados naturais"],imagem:"https://images.unsplash.com/photo-1531299244174-d247dd4e5a66?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Hidragloss",categoria:"Facial",descricao:"Hidratação intensa com brilho natural, deixando a pele com aspecto saudável e luminoso.",beneficios:["Brilho natural","Hidratação profunda","Pele com aspecto saudável"],imagem:"https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Drenagem Linfática / Pós Operatório",categoria:"Corporal",descricao:"Massagem terapêutica para estimular o sistema linfático, reduzir edemas e acelerar a recuperação pós-operatória.",beneficios:["Redução de edemas","Eliminação de toxinas","Recuperação acelerada"],imagem:"https://images.unsplash.com/photo-1702312721918-62235a0b77d2?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Radiofrequência Corporal",categoria:"Corporal",descricao:"Tratamento para flacidez corporal, estimulando o colágeno e melhorando a sustentação da pele.",beneficios:["Redução de flacidez","Pele mais firme","Melhora da textura"],imagem:"https://images.unsplash.com/photo-1643685276743-1b52832c58d5?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Carboxiterapia",categoria:"Corporal",descricao:"Aplicação de gás carbônico medicinal para melhorar a circulação, reduzir celulite e flacidez.",beneficios:["Melhora da circulação","Redução de celulite","Oxigenação dos tecidos"],imagem:"https://images.unsplash.com/photo-1683408640631-2c99fff964d7?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Hidrolipoclasia",categoria:"Corporal",descricao:"Técnica minimamente invasiva para redução de gordura localizada através de solução injetável.",beneficios:["Redução de gordura","Contorno definido","Resultados progressivos"],imagem:"https://images.unsplash.com/photo-1630595271375-5073a6c0638b?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Criolipólise",categoria:"Corporal",descricao:"Tecnologia de congelamento controlado para eliminar células de gordura de forma não invasiva.",beneficios:["Redução de gordura","Procedimento não invasivo","Resultados duradouros"],imagem:"https://images.unsplash.com/photo-1647004692483-c1956e5da321?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Ultrassom Macrofocado",categoria:"Corporal",descricao:"Ultrassom de alta intensidade para tratamento de gordura localizada e flacidez corporal.",beneficios:["Redução de gordura","Flacidez corporal","Contorno corporal"],imagem:"https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Tonificação Muscular",categoria:"Corporal",descricao:"Estimulação elétrica para fortalecimento e tonificação muscular, definindo o contorno corporal.",beneficios:["Fortalecimento muscular","Definição corporal","Melhora do tônus"],imagem:"https://images.unsplash.com/photo-1643684460412-76908d5c3e25?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Ventosaterapia",categoria:"Corporal",descricao:"Técnica milenar com ventosas para melhorar a circulação, reduzir dores e modelar o corpo.",beneficios:["Melhora da circulação","Redução de dores","Modelagem corporal"],imagem:"https://images.unsplash.com/photo-1713824096348-c1956e6da321?w=800&h=1000&fit=crop&auto=format&q=80"},
+  {nome:"Fototerapia",categoria:"Corporal",descricao:"Tratamento com luz LED para estimular células, melhorar a pele e promover bem-estar.",beneficios:["Estimulação celular","Melhora da pele","Bem-estar"],imagem:"https://images.unsplash.com/photo-1761718209835-c8586b7dcac0?w=800&h=1000&fit=crop&auto=format&q=80"}
+];
+
+const DEFAULT_BIO = {
+  foto: { url: 'https://storage.helloreaddy.io/project_files/0fd7e600-9644-49aa-85e1-864f26edba21/ffa96175-efb6-4d77-b75c-727d56461c09_compressed_CAROLINA-LIMA-2.webp', posX: 50, posY: 0 },
+  titulo: 'Carolina Martins',
+  texto1: 'Carolina Martins é a proprietária e profissional responsável pelos procedimentos do Studio Lima. Com dedicação e cuidado, oferece tratamentos personalizados e resultados naturais, sempre priorizando a saúde e a autoestima de cada cliente.',
+  texto2: 'No Studio Lima, cada detalhe é pensado para realçar a sua beleza natural, promover saúde e autoestima, com segurança, tecnologia e resultados reais.',
+  tags: ['Rejuvenescimento facial', 'Flacidez', 'Gordura localizada', 'Pós-operatório']
+};
+
+const CUIDADOS = [
+  {numero:"01",titulo:"Proteção solar diária",descricao:"Aplicar protetor solar diariamente é um dos hábitos mais importantes para manter a saúde e a aparência da pele, mesmo em dias nublados ou em ambientes fechados."},
+  {numero:"02",titulo:"Hidratação constante",descricao:"Uma pele bem hidratada tem mais viço, elasticidade e conforto. A hidratação deve fazer parte da sua rotina de cuidados, de manhã e à noite, com produtos adequados ao seu tipo de pele."},
+  {numero:"03",titulo:"Rotina consistente",descricao:"Constância é a chave. Uma rotina simples e regular — limpeza, hidratação e proteção — costuma trazer resultados muito melhores do que cuidados esporádicos ou excessivos."},
+  {numero:"04",titulo:"Avaliação profissional",descricao:"Cada pele é única. Uma avaliação profissional ajuda a identificar suas necessidades reais e a escolher os tratamentos e produtos mais adequados para você."}
+];
+
+const DEFAULT_JOURNAL = [
+  {categoria:"Skincare",titulo:"Rotina de skincare: passo a passo para uma pele saudável",resumo:"Entenda os passos essenciais de uma rotina de skincare simples e eficaz — limpeza, hidratação e proteção solar — para manter a pele limpa e radiante no dia a dia.",imagem:"https://images.unsplash.com/photo-1581182815808-b6eb627a8798?w=800&h=600&fit=crop&auto=format&q=80",link:"https://www.dermaclub.com.br/blog/rosto/rotina-de-skincare-matinal.html"},
+  {categoria:"Proteção Solar",titulo:"Por que usar protetor solar todos os dias?",resumo:"A proteção solar é um dos hábitos mais importantes para a saúde da pele. Aprenda por que ela deve ser usada diariamente — mesmo em dias nublados ou em ambientes fechados.",imagem:"https://images.unsplash.com/photo-1620916297397-a4a5402a3c6c?w=800&h=600&fit=crop&auto=format&q=80",link:"https://www.tuasaude.com/news/2026/07/13/como-usar-protetor-solar-do-jeito-certo-para-proteger-a-pele-sem-prejudicar-sua-saude/"},
+  {categoria:"Avaliação",titulo:"O que esperar de uma avaliação estética profissional",resumo:"Uma avaliação profissional é o primeiro passo para entender sua pele e escolher o tratamento mais adequado às suas necessidades específicas. Saiba o que acontece durante a consulta.",imagem:"https://images.unsplash.com/photo-1555820585-c5ae44394b79?w=800&h=600&fit=crop&auto=format&q=80",link:"https://www.minhavida.com.br/materias/materia-17840"},
+  {categoria:"Hidratação",titulo:"Hidratação facial: o segredo da pele com viço",resumo:"Manter a pele hidratada é essencial para a saúde e a aparência. Descubra como a hidratação correta transforma o aspecto da sua pele e quais ativos procurar nos produtos.",imagem:"https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=800&h=600&fit=crop&auto=format&q=80",link:"https://www.dermaclub.com.br/blog/todos-os-temas/vicosidade.html"}
+];
+
+const DEFAULT_GALLERY = [
+  {src:"https://images.unsplash.com/photo-1552693673-1bf958298935?w=1200&h=800&fit=crop&auto=format&q=80",alt:"Tratamento facial exclusivo",span:"col-span-2 row-span-2"},
+  {src:"https://images.unsplash.com/photo-1713085085470-fba013d67e65?w=800&h=1000&fit=crop&auto=format&q=80",alt:"Profissional realizando peeling",span:"row-span-2"},
+  {src:"https://images.unsplash.com/photo-1573461160327-b450ce3d8e7f?w=800&h=800&fit=crop&auto=format&q=80",alt:"Produtos cosméticos premium",span:""},
+  {src:"https://images.unsplash.com/photo-1585945037805-5fd82c2e60b1?w=800&h=800&fit=crop&auto=format&q=80",alt:"Creme cosmético de alta qualidade",span:""},
+  {src:"https://images.unsplash.com/photo-1731514721772-329626f84c8b?w=1200&h=800&fit=crop&auto=format&q=80",alt:"Sala de atendimento sofisticada",span:"col-span-2"},
+  {src:"https://images.unsplash.com/photo-1683408640631-2c99fff964d7?w=800&h=1000&fit=crop&auto=format&q=80",alt:"Relaxamento e bem-estar",span:"row-span-2"}
+];
+
+const DEFAULT_HERO_SLIDES = [
+  "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?w=1920&h=1080&fit=crop&auto=format&q=80",
+  "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?w=1920&h=1080&fit=crop&auto=format&q=80",
+  "https://images.unsplash.com/photo-1600334089648-b0d9d1328fe1?w=1920&h=1080&fit=crop&auto=format&q=80",
+  "https://images.unsplash.com/photo-1515377905703-c4788e51af15?w=1920&h=1080&fit=crop&auto=format&q=80"
+];
+
+/* Conteúdo "de verdade" (CMS): começa igual ao fallback, é substituído por
+   um CMS futuro, se existir. */
+let PROCEDURES = DEFAULT_PROCEDURES;
+let GALLERY = DEFAULT_GALLERY;
+let JOURNAL = DEFAULT_JOURNAL;
+let HERO_SLIDES = DEFAULT_HERO_SLIDES.map(url => ({ url, posX: 50, posY: 50 }));
+let BIO = DEFAULT_BIO;
+
+// Normaliza imagem: aceita tanto string (fallback antigo) quanto
+// {url,posX,posY} (formato do CMS) — assim o resto do código nunca precisa
+// checar qual dos dois formatos está recebendo.
+function imgOf(v) {
+  if (typeof v === 'string') return { url: v, posX: 50, posY: 50 };
+  return { url: v?.url || '', posX: v?.posX ?? 50, posY: v?.posY ?? 50 };
+}
+function posStyle(img) { return `object-position:${img.posX}% ${img.posY}%`; }
+
+const SPAN_POR_TAMANHO = { normal: '', alto: 'row-span-2', largo: 'col-span-2', grande: 'col-span-2 row-span-2' };
+
+/* ================= RENDER ================= */
+function renderProcedures(filter) {
+  const grid = document.getElementById('procedures-grid');
+  const items = filter === 'Todos' ? PROCEDURES : PROCEDURES.filter(p => p.categoria === filter);
+  grid.innerHTML = items.map(p => {
+    const img = imgOf(p.imagem);
+    return `
+    <div class="fade-in visible bg-background-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow flex flex-col">
+      <div class="relative aspect-[4/5]">
+        <img src="${img.url}" alt="${p.nome}" class="w-full h-full object-cover" style="${posStyle(img)}" loading="lazy">
+        <span class="absolute top-4 left-4 px-3 py-1.5 bg-background-50/90 backdrop-blur-sm text-foreground-800 font-label text-[10px] uppercase tracking-[0.18em] rounded-full">${p.categoria}</span>
+        <span class="absolute bottom-4 left-4 px-4 py-1.5 bg-primary-600/95 text-background-50 font-label text-xs tracking-wide rounded-full">Consultar</span>
+      </div>
+      <div class="flex flex-col flex-1 p-6">
+        <h3 class="font-display text-xl text-ink-900 mb-2">${p.nome}</h3>
+        <p class="text-sm text-ink-600 leading-relaxed mb-4">${p.descricao}</p>
+        <ul class="text-xs text-ink-600 space-y-1 mb-5">
+          ${p.beneficios.map(b => `<li class="flex items-center gap-2"><span class="w-1 h-1 rounded-full bg-accent-600 shrink-0"></span>${b}</li>`).join('')}
+        </ul>
+        <a href="#agendamento" class="mt-auto inline-flex items-center justify-center px-5 py-3 border border-primary-950/15 rounded-full font-label text-xs uppercase tracking-wide text-ink-900 hover:bg-primary-600 hover:text-background-50 hover:border-primary-600 transition-colors">Agendar este procedimento</a>
+      </div>
+    </div>
+  `;
+  }).join('');
+}
+
+function renderBio() {
+  const foto = imgOf(BIO.foto);
+  const fotoEl = document.getElementById('bio-foto');
+  fotoEl.src = foto.url;
+  fotoEl.setAttribute('style', posStyle(foto));
+  document.getElementById('bio-titulo').textContent = BIO.titulo;
+  document.getElementById('bio-texto1').textContent = BIO.texto1;
+  document.getElementById('bio-texto2').textContent = BIO.texto2;
+  document.getElementById('bio-tags').innerHTML = (BIO.tags || [])
+    .map(t => `<span class="px-4 py-2 bg-background-100 rounded-full text-xs font-label uppercase tracking-wide text-ink-600">${t}</span>`).join('');
+}
+
+function renderGallery() {
+  document.getElementById('gallery-grid').innerHTML = GALLERY.map(g => {
+    const img = imgOf(g);
+    const span = g.tamanho ? (SPAN_POR_TAMANHO[g.tamanho] || '') : (g.span || '');
+    return `
+    <div class="fade-in visible ${span} rounded-2xl overflow-hidden">
+      <img src="${img.url}" alt="${g.alt || 'Studio Lima'}" class="w-full h-full object-cover" style="${posStyle(img)}" loading="lazy">
+    </div>
+  `;
+  }).join('');
+}
+
+function renderJournal() {
+  document.getElementById('journal-grid').innerHTML = JOURNAL.map(j => {
+    const img = imgOf(j.imagem);
+    return `
+    <a href="${j.link}" target="_blank" rel="noopener" class="fade-in visible group block bg-background-50 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow">
+      <div class="aspect-[4/3] overflow-hidden">
+        <img src="${img.url}" alt="${j.titulo}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" style="${posStyle(img)}" loading="lazy">
+      </div>
+      <div class="p-5">
+        <p class="font-label text-[10px] uppercase tracking-wide text-accent-600 mb-2">${j.categoria}</p>
+        <h3 class="font-display text-base text-ink-900 leading-snug mb-2">${j.titulo}</h3>
+        <p class="text-xs text-ink-600 leading-relaxed mb-3">${j.resumo}</p>
+        <span class="text-xs font-label uppercase tracking-wide text-primary-600 group-hover:text-primary-950">Ler artigo completo →</span>
+      </div>
+    </a>
+  `;
+  }).join('');
+}
+
+function renderHeroSlides() {
+  document.getElementById('hero-slides').innerHTML = HERO_SLIDES.map((s, i) => {
+    const img = imgOf(s);
+    return `<img src="${img.url}" class="hero-slide absolute inset-0 w-full h-full object-cover" style="opacity:${i === 0 ? 1 : 0};${posStyle(img)}" data-i="${i}">`;
+  }).join('');
+}
+
+document.getElementById('cuidados-grid').innerHTML = CUIDADOS.map(c => `
+  <div class="fade-in visible flex gap-5">
+    <span class="font-display text-4xl md:text-5xl font-light text-accent-600 leading-none shrink-0 w-14">${c.numero}</span>
+    <div>
+      <h3 class="font-display text-xl text-ink-900 mb-2">${c.titulo}</h3>
+      <p class="text-sm text-ink-600 leading-relaxed">${c.descricao}</p>
+    </div>
+  </div>
+`).join('');
+
+document.getElementById('ano').textContent = new Date().getFullYear();
+
+async function iniciarConteudo() {
+  renderHeroSlides();
+  renderBio();
+  renderProcedures('Todos');
+  renderGallery();
+  renderJournal();
+}
+iniciarConteudo();
+
+/* ================= INTERAÇÕES ================= */
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.className = 'filter-btn px-5 py-2.5 rounded-full font-label text-xs uppercase tracking-wide bg-background-50 text-ink-600 hover:bg-primary-600 hover:text-background-50 transition-colors');
+    btn.className = 'filter-btn px-5 py-2.5 rounded-full font-label text-xs uppercase tracking-wide bg-primary-600 text-background-50';
+    renderProcedures(btn.dataset.filter);
+  });
+});
+
+document.getElementById('menu-btn').addEventListener('click', () => {
+  document.getElementById('mobile-menu').classList.toggle('hidden');
+});
+document.querySelectorAll('#mobile-menu a').forEach(a => a.addEventListener('click', () => document.getElementById('mobile-menu').classList.add('hidden')));
+
+// header solidifica ao rolar
+const header = document.getElementById('site-header');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 60) header.classList.add('bg-background-50/95', 'backdrop-blur-sm', 'shadow-sm');
+  else header.classList.remove('bg-background-50/95', 'backdrop-blur-sm', 'shadow-sm');
+});
+
+// hero slideshow
+let heroIdx = 0;
+setInterval(() => {
+  const slides = document.querySelectorAll('.hero-slide');
+  if (!slides.length) return;
+  slides[heroIdx].style.opacity = 0;
+  heroIdx = (heroIdx + 1) % slides.length;
+  slides[heroIdx].style.opacity = 1;
+}, 6000);
+
+/* ================= AGENDAMENTO REAL (NEXIA Agenda) =================
+   Os horários livres vêm prontos do servidor (já sem os ocupados e bloqueados).
+   O pedido chega na hora no painel da Carolina (/agenda), que confirma ou recusa. */
+const AG_API = 'https://nexia.gcbezerra.workers.dev/api/agenda';
+const AG_SITE = 'studiolima';
+let AG_CONFIG = null;
+
+async function carregarConfigAgendamento() {
+  try {
+    const resp = await fetch(AG_API + '?site=' + AG_SITE);
+    const json = await resp.json();
+    AG_CONFIG = resp.ok && Array.isArray(json.servicos) ? json : null;
+  } catch (e) {
+    AG_CONFIG = null; // fora do ar: o botão cai no aviso + WhatsApp
+  }
+}
+const AG_CONFIG_PROMISE = carregarConfigAgendamento();
+
+let AG_REQ_ID = 0; // ignora respostas antigas se a cliente trocar a data rápido
+
+async function atualizarHorariosDisponiveis() {
+  const dataStr = document.getElementById('ag-data').value;
+  const selHorario = document.getElementById('ag-horario');
+  if (!dataStr) { selHorario.innerHTML = '<option value="">Escolha a data</option>'; return; }
+  const meuReqId = ++AG_REQ_ID;
+  selHorario.innerHTML = '<option value="">Carregando horários…</option>';
+  let json;
+  try {
+    const servico = document.getElementById('ag-procedimento').value;
+    const resp = await fetch(AG_API + '?site=' + AG_SITE + '&data=' + encodeURIComponent(dataStr) + '&servico=' + encodeURIComponent(servico));
+    json = await resp.json();
+  } catch (e) {
+    json = {};
+  }
+  if (meuReqId !== AG_REQ_ID) return;
+  if (!Array.isArray(json.horarios)) {
+    selHorario.innerHTML = '<option value="">Não consegui carregar os horários. Tente de novo.</option>';
+    return;
+  }
+  selHorario.innerHTML = json.horarios.length
+    ? '<option value="">Escolha o horário</option>' + json.horarios.map(s => `<option value="${s}">${s}</option>`).join('')
+    : '<option value="">Sem horários livres neste dia</option>';
+}
+
+function abrirModalAgendar(procedimento) {
+  const sel = document.getElementById('ag-procedimento');
+  sel.innerHTML = AG_CONFIG.servicos.map(s => `<option value="${s.id}">${s.nome}</option>`).join('');
+  if (procedimento) {
+    const achou = AG_CONFIG.servicos.find(s => s.nome.toLowerCase() === procedimento.toLowerCase());
+    if (achou) sel.value = achou.id;
+  }
+  const hoje = new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10);
+  const dataEl = document.getElementById('ag-data');
+  dataEl.min = hoje;
+  dataEl.max = AG_CONFIG.dias && AG_CONFIG.dias.length ? AG_CONFIG.dias[AG_CONFIG.dias.length - 1] : '';
+  dataEl.value = '';
+  document.getElementById('ag-horario').innerHTML = '<option value="">Escolha a data</option>';
+  document.getElementById('ag-erro').classList.add('hidden');
+  document.getElementById('form-agendar').classList.remove('hidden');
+  document.getElementById('ag-sucesso').classList.add('hidden');
+  document.getElementById('ag-politica').textContent = AG_CONFIG.aviso || '';
+  document.getElementById('modal-agendar').classList.remove('hidden');
+}
+function fecharModalAgendar() {
+  document.getElementById('modal-agendar').classList.add('hidden');
+}
+
+async function pedirAgendamento(procedimento) {
+  await AG_CONFIG_PROMISE;
+  if (!AG_CONFIG) await carregarConfigAgendamento(); // tenta mais uma vez
+  if (AG_CONFIG) abrirModalAgendar(procedimento);
+  else document.getElementById('agendar-nota').classList.remove('hidden');
+}
+
+document.getElementById('btn-agendar').addEventListener('click', () => pedirAgendamento(''));
+// "Agendar este procedimento" nos cartões abre o formulário já com o procedimento escolhido.
+document.getElementById('procedures-grid').addEventListener('click', (e) => {
+  const a = e.target.closest('a[href="#agendamento"]');
+  if (!a) return;
+  e.preventDefault();
+  const card = a.closest('div.flex.flex-col');
+  const nome = card ? (card.querySelector('h3') || {}).textContent || '' : '';
+  pedirAgendamento(nome.trim());
+});
+document.getElementById('modal-agendar-fechar').addEventListener('click', fecharModalAgendar);
+document.getElementById('modal-agendar-overlay').addEventListener('click', fecharModalAgendar);
+document.getElementById('ag-sucesso-fechar').addEventListener('click', fecharModalAgendar);
+document.getElementById('ag-data').addEventListener('change', atualizarHorariosDisponiveis);
+document.getElementById('ag-procedimento').addEventListener('change', atualizarHorariosDisponiveis);
+
+document.getElementById('form-agendar').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('ag-submit');
+  const erroEl = document.getElementById('ag-erro');
+  erroEl.classList.add('hidden');
+  btn.disabled = true;
+  try {
+    const dataStr = document.getElementById('ag-data').value;
+    const horaStr = document.getElementById('ag-horario').value;
+    if (!dataStr || !horaStr) throw new Error('Escolha a data e o horário.');
+    const resp = await fetch(AG_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, // sem "preflight": funciona de qualquer domínio
+      body: JSON.stringify({
+        acao: 'agendar',
+        site: AG_SITE,
+        servico: document.getElementById('ag-procedimento').value,
+        data: dataStr,
+        inicio: horaStr,
+        nome: document.getElementById('ag-nome').value.trim(),
+        whatsapp: document.getElementById('ag-telefone').value.trim(),
+        obs: document.getElementById('ag-obs').value.trim(),
+        consentimento: document.getElementById('ag-consentimento').checked,
+        site_url: document.getElementById('ag-site-url').value
+      })
+    });
+    const json = await resp.json().catch(() => ({}));
+    if (!resp.ok || !json.ok) {
+      if (resp.status === 409) atualizarHorariosDisponiveis();
+      throw new Error(json.error || 'Não foi possível agendar. Tente outro horário.');
+    }
+    document.getElementById('form-agendar').classList.add('hidden');
+    document.getElementById('ag-sucesso').classList.remove('hidden');
+    const quando = `${dataStr.split('-').reverse().join('/')} às ${horaStr}`;
+    document.getElementById('ag-sucesso-detalhe').textContent = `${json.servico || ''}, ${quando}. A Carolina vai confirmar pelo WhatsApp.`;
+    document.getElementById('ag-sucesso-politica').textContent = AG_CONFIG.aviso || '';
+    const zap = document.getElementById('ag-sucesso-zap');
+    if (json.whatsapp) {
+      const nome = document.getElementById('ag-nome').value.trim();
+      const num = String(json.whatsapp).length <= 11 ? '55' + json.whatsapp : json.whatsapp;
+      zap.href = 'https://wa.me/' + num + '?text=' + encodeURIComponent(`Olá, Carolina! Sou ${nome} e acabei de pedir ${json.servico} para ${quando} pelo site.`);
+      zap.classList.remove('hidden'); zap.classList.add('flex');
+    }
+    document.getElementById('form-agendar').reset();
+  } catch (err) {
+    erroEl.textContent = err.message;
+    erroEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+// scrollreveal simples
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, {threshold: .12});
+document.querySelectorAll('.fade-in').forEach(el => io.observe(el));
+</script>
+</body>
+</html>
