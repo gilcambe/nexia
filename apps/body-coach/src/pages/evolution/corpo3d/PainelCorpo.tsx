@@ -6,6 +6,7 @@ import type { PerfilAvaliacao } from '@/lib/avaliacao/dados';
 import type { ItemSerie } from '@/lib/avaliacao/serie';
 import type { PoseCorpo } from './Corpo3D';
 import Fotos360 from './Fotos360';
+import CorpoRealista from './CorpoRealista';
 
 const Corpo3D = lazy(() => import('./Corpo3D'));
 
@@ -31,7 +32,7 @@ type Modo = 'treino' | 'melhora';
 
 // Corpo 3D do aluno: montado com as medidas da última avaliação (não é escaneamento da câmera).
 // Duas leituras de cor: músculos treinados na semana ou o que melhorou desde a avaliação anterior.
-export default function PainelCorpo({ serie, perfil, volume, nome, metas }: { serie: ItemSerie[]; perfil: PerfilAvaliacao; volume: Record<string, number>; nome?: string; metas?: MetasMedidas | null }) {
+export default function PainelCorpo({ serie, perfil, volume, nome, metas, onSalvarMedida }: { serie: ItemSerie[]; perfil: PerfilAvaliacao; volume: Record<string, number>; nome?: string; metas?: MetasMedidas | null; onSalvarMedida?: (campo: string, cm: number) => Promise<void> }) {
   const comMedidas = serie.filter((s) => s.m.peso != null || s.m.cintura != null);
   const ultima = comMedidas[comMedidas.length - 1] ?? null;
   const anterior = comMedidas.length > 1 ? comMedidas[comMedidas.length - 2] : null;
@@ -45,8 +46,15 @@ export default function PainelCorpo({ serie, perfil, volume, nome, metas }: { se
   const webgl = useMemo(temWebGL, []);
   // Com as fotos do aluno, o padrão é ele de verdade girando; o boneco 3D fica como segunda opção.
   const comFotos = [...serie].reverse().find((s) => Object.values(s.fotos).filter(Boolean).length >= 2) ?? null;
-  const [vistaEscolhida, setVista] = useState<'fotos' | 'boneco' | null>(null);
-  const vista = vistaEscolhida ?? (comFotos && !nome ? 'fotos' : 'boneco');
+  const [vistaEscolhida, setVista] = useState<'fotos' | 'realista' | 'boneco' | null>(null);
+  const vista = vistaEscolhida ?? 'realista';
+  // A medida mais recente de cada parte (a última avaliação pode ter só algumas).
+  const recentes = useMemo(() => {
+    const v: Record<string, number> = {};
+    for (const s of serie) for (const [k, n] of Object.entries(s.av.valores)) if (n != null && Number.isFinite(n)) v[k] = n;
+    return v;
+  }, [serie]);
+  const gordura = [...serie].reverse().find((s) => s.m.gordura != null)?.m.gordura ?? null;
 
   const medidas = useMemo(
     () => medidasDoCorpo(ultima?.av.valores ?? {}, ultima?.av.sexo ?? perfil.sexo, perfil.altura),
@@ -74,16 +82,17 @@ export default function PainelCorpo({ serie, perfil, volume, nome, metas }: { se
     <div>
       <div className="mb-2 flex items-center gap-2">
         <i className="ri-body-scan-line text-lg text-primary-500"></i>
-        <h2 className="font-heading text-base font-semibold text-foreground-950">{nome ? `Corpo de ${nome} em 3D` : 'Seu corpo em 3D'}</h2>
+        <h2 className="font-heading text-base font-semibold text-foreground-950">{nome ? `Corpo de ${nome}` : 'Seu corpo'}</h2>
         {ultima && <span className="ml-auto text-[11px] text-foreground-500">medidas de {dataBr(ultima.data)}</span>}
       </div>
-      {comFotos && (
-        <div className="mb-2 grid grid-cols-2 gap-1 rounded-xl bg-background-100 p-1">
-          <button type="button" onClick={() => setVista('fotos')} className={`rounded-lg py-1.5 text-xs font-semibold ${vista === 'fotos' ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>{nome ? 'Fotos' : 'Você'} em 360°</button>
-          <button type="button" onClick={() => setVista('boneco')} className={`rounded-lg py-1.5 text-xs font-semibold ${vista === 'boneco' ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>Boneco das medidas</button>
-        </div>
-      )}
-      {vista === 'fotos' && comFotos ? (
+      <div className={`mb-2 grid ${comFotos ? 'grid-cols-3' : 'grid-cols-2'} gap-1 rounded-xl bg-background-100 p-1`}>
+        <button type="button" onClick={() => setVista('realista')} className={`rounded-lg py-1.5 text-xs font-semibold ${vista === 'realista' ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>Corpo realista</button>
+        {comFotos && <button type="button" onClick={() => setVista('fotos')} className={`rounded-lg py-1.5 text-xs font-semibold ${vista === 'fotos' ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>{nome ? 'Fotos' : 'Você'} 360°</button>}
+        <button type="button" onClick={() => setVista('boneco')} className={`rounded-lg py-1.5 text-xs font-semibold ${vista === 'boneco' ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>Mapa 3D</button>
+      </div>
+      {vista === 'realista' ? (
+        <CorpoRealista valores={recentes} sexo={ultima?.av.sexo ?? perfil.sexo} altura={perfil.altura} gordura={gordura} onSalvarMedida={nome ? undefined : onSalvarMedida} />
+      ) : vista === 'fotos' && comFotos ? (
         <>
           <Fotos360 fotos={comFotos.fotos} />
           <p className="mt-1 text-[11px] text-foreground-400">Suas fotos de {dataBr(comFotos.data)}. Para comparar com outras datas, use a aba Fotos.</p>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type MouseEvent as ReactMouseEvent } from 'react';
 import { pickBodyImage } from './bodyImages';
 import AjustarFoto from '../fotos/AjustarFoto';
+import EditarMedida from './EditarMedida';
 import {
   estimateMeasurements, exportBodyTwinImage, type EstimatedMeasurements,
 } from './bodyAnalysis';
@@ -67,6 +68,7 @@ export default function BodyTwin({
   fotosReais,
   onSalvarFoto,
   medidasRegiao,
+  onSalvarMedida,
 }: {
   selected: string | null;
   onSelect: (key: string) => void;
@@ -81,6 +83,8 @@ export default function BodyTwin({
   onSalvarFoto?: (angle: Angle, foto: Blob) => Promise<void>;
   // Texto da medida de cada região, mostrado ao tocar no ponto (ex.: "78 cm · −3 cm").
   medidasRegiao?: Partial<Record<RegionKey, string>>;
+  // Ao tocar no ponto, permite digitar a medida da região (cm). Recebe a região e o valor.
+  onSalvarMedida?: { atual: Partial<Record<RegionKey, number>>; salvar: (r: RegionKey, cm: number) => Promise<void> };
 }) {
   // Com fotos do aluno, abre direto nelas: o Body Twin passa a ser ele de verdade.
   const [modoEscolhido, setMode] = useState<Mode | null>(null);
@@ -611,7 +615,17 @@ export default function BodyTwin({
       )}
 
       {showMarkers && currentImage && !compareMode && (
-        <p className="-mt-2 text-center text-[11px] text-foreground-500">Toque nos pontos para ver a medida de cada parte do corpo.</p>
+        regiao && onSalvarMedida ? (
+          <EditarMedida
+            key={regiao}
+            nome={MARKERS.find((m) => m.key === regiao)?.label ?? ''}
+            atual={onSalvarMedida.atual[regiao] ?? null}
+            onFechar={() => setRegiao(null)}
+            onSalvar={(cm) => onSalvarMedida.salvar(regiao, cm)}
+          />
+        ) : (
+          <p className="-mt-2 text-center text-[11px] text-foreground-500">Toque no + para ver ou colocar a medida de cada parte do corpo.</p>
+        )
       )}
 
       {/* foto controls */}

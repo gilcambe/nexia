@@ -12,14 +12,14 @@ const SRC = path.join(__dirname, '../../apps/body-coach/src/lib/avaliacao');
 
 async function carregar() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bc-aval-'));
-  for (const f of ['campos.ts', 'calculos.ts', 'importar.ts', 'metas.ts', 'semanas.ts', 'postura.ts']) {
+  for (const f of ['campos.ts', 'calculos.ts', 'importar.ts', 'metas.ts', 'semanas.ts', 'postura.ts', 'corpo.ts', 'corpoRealista.ts']) {
     const out = ts.transpileModule(fs.readFileSync(path.join(SRC, f), 'utf8'), {
       compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
     }).outputText.replace(/from '\.\/(\w+)\.ts'/g, "from './$1.mjs'");
     fs.writeFileSync(path.join(dir, f.replace(/\.ts$/, '.mjs')), out);
   }
   const imp = (f) => import(pathToFileURL(path.join(dir, f)).href);
-  return { campos: await imp('campos.mjs'), calc: await imp('calculos.mjs'), imp: await imp('importar.mjs'), metas: await imp('metas.mjs'), semanas: await imp('semanas.mjs'), postura: await imp('postura.mjs') };
+  return { campos: await imp('campos.mjs'), calc: await imp('calculos.mjs'), imp: await imp('importar.mjs'), metas: await imp('metas.mjs'), semanas: await imp('semanas.mjs'), postura: await imp('postura.mjs'), realista: await imp('corpoRealista.mjs') };
 }
 
 const mods = carregar();
@@ -243,4 +243,18 @@ test('postura: ombro caído e cabeça à frente', async () => {
   assert.equal(d.find((a) => a.id === 'cabeca_frente').ok, false);
   assert.equal(d.find((a) => a.id === 'ombros_frente').ok, true);
   assert.equal(postura.resumoPostura([...f, ...d])[0].ok, false);
+});
+
+test('corpo realista: medidas maiores que o típico alargam a faixa; sem medida fica igual', async () => {
+  const { realista } = await mods;
+  const f = realista.formaDoCorpo({ altura: 168, peso: 84.7, cintura: 78, ombro: 130 }, 'M', 168);
+  assert.ok(f.geral > 1.05 && f.geral <= 1.25);
+  assert.equal(f.partes.cintura.medida, 78);
+  assert.ok(f.partes.cintura.fator < 1, 'cintura fina para o peso');
+  assert.ok(f.partes.ombro.fator > 1, 'ombros largos');
+  assert.equal(f.partes.coxa.fator, 1);
+  assert.equal(f.partes.coxa.medida, null);
+  const cab = realista.escalaNaAltura(f, 0.05);
+  assert.ok(Math.abs(cab - 1) < Math.abs(f.geral - 1), 'cabeça muda pouco');
+  assert.ok(Math.abs(realista.escalaNaAltura(f, realista.ALTURA_NA_FOTO.cintura) - f.geral * f.partes.cintura.fator) < 1e-9);
 });
