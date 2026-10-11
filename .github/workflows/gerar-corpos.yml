@@ -18,6 +18,8 @@ jobs:
         shell: bash
         run: |
           set +e
+          curl -s --max-time 90 -o /tmp/t.bin -w 'diag http=%{http_code} type=%{content_type}\n' "https://nexia.gcbezerra.workers.dev/api/corpo-ia?k=m-clara-medio-frente&v=diag$RANDOM"
+          head -c 400 /tmp/t.bin | tr -c '[:print:]\n' '.'; echo
           rm -rf corpos; mkdir -p corpos; log=corpos/log.txt
           for k in $(cat corpos-pedidos.txt); do for n in 1 2; do
             for t in 1 2 3; do
