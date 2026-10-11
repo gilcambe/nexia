@@ -390,7 +390,7 @@
           (i.anexos && i.anexos.length ? '<div class="det">Documentos: ' + esc(i.anexos.map(function (a) { return a.nome; }).join(', ')) + '</div>' : '') +
           '<div class="acoes"><button class="btn pequeno" type="button">Analisar</button>' + (linkSeguro(i.link) ? '<a class="btn pequeno claro" target="_blank" rel="noopener" href="' + esc(i.link) + '">Ver no site do leilão</a>' : '') + '</div>';
         d.querySelector('button').onclick = function () {
-          abrirImovel(null, { origem: 'leiloesjudiciais', lote_id: i.lote_id, endereco: i.titulo, cidade: i.cidade, uf: i.uf, modalidade: i.judicial ? 'Leilão judicial' : 'Leilão', link: i.link, descricao: i.descricao.slice(0, 3000), lance: i.lance, avaliacao: i.avaliacao, processo: i.processo, anexos: i.anexos, comissao_pct: 5 });
+          abrirImovel(null, { origem: 'leiloesjudiciais', lote_id: i.lote_id, endereco: '', titulo_lote: i.titulo, cidade: i.cidade, uf: i.uf, modalidade: i.judicial ? 'Leilão judicial' : 'Leilão', link: i.link, descricao: i.descricao.slice(0, 3000), lance: i.lance, avaliacao: i.avaliacao, processo: i.processo, anexos: i.anexos, comissao_pct: 5 });
         };
         $('a-lista').appendChild(d);
       });
@@ -478,7 +478,7 @@
       var pc = P.montar(im, r);
       var p = E.progresso(im.etapas);
       var d = document.createElement('div'); d.className = 'item n' + pc.nivel;
-      d.innerHTML = '<div class="cab"><span class="nome">' + esc(im.endereco || 'Imóvel sem endereço') + '</span><span class="chip n' + pc.nivel + '">Nota ' + pc.nota + '</span></div>' +
+      d.innerHTML = '<div class="cab"><span class="nome">' + esc(im.endereco || im.titulo_lote || 'Imóvel sem endereço') + '</span><span class="chip n' + pc.nivel + '">Nota ' + pc.nota + '</span></div>' +
         '<div class="det"><b>' + esc(pc.veredito) + '</b></div>' +
         '<div class="det">' + esc([im.cidade, im.uf].filter(Boolean).join(' - ')) + ' · lance ' + reais(r.custos.lance) + ' · lucro ' + reais(r.resultado.lucro_liquido) + '</div>' +
         '<div class="barra"><i style="width:' + p.pct + '%"></i></div><div class="det">' + p.feitos + ' de ' + p.total + ' passos' + (p.proximo ? ' · próximo: ' + esc(p.proximo.titulo) : '') + '</div>' +
@@ -521,7 +521,7 @@
     if (atual.parecer) { $('im-parecer').textContent = atual.parecer; mostrar($('im-parecer'), true); } else mostrar($('im-parecer'), false);
     mostrar($('im-doc-msg'), false); mostrar($('im-colar'), false);
     mostrar($('im-apagar'), !!atualId);
-    $('im-titulo').textContent = atual.endereco || 'Novo imóvel';
+    $('im-titulo').textContent = atual.endereco || atual.titulo_lote || 'Novo imóvel';
     desenharEtapas(); guiaIptu(); recalcular();
     pagina('imovel');
   }
@@ -806,7 +806,7 @@
     var atuais = $('im-alertas').value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
     riscos.forEach(function (r) { if (atuais.indexOf(r) < 0) atuais.push(r); });
     $('im-alertas').value = atuais.slice(0, 30).join('\n');
-    $('im-titulo').textContent = $('im-endereco').value || 'Imóvel';
+    $('im-titulo').textContent = $('im-endereco').value || atual.titulo_lote || 'Imóvel';
     guiaIptu(); recalcular();
   }
   function lista(titulo, itens) { itens = (itens || []).filter(Boolean); return itens.length ? '<p style="margin:8px 0 0"><b>' + titulo + '</b></p><ul class="lista-ia">' + itens.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul>' : ''; }
