@@ -24,4 +24,3 @@ f-negra-alto-lado
 f-negra-alto-costas
 m-negra-medio-frente
 f-morena-medio-costas
-f-negra-magro-frente
