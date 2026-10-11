@@ -1,71 +1,60 @@
-(function (root, factory) {
-  if (typeof define === 'function' && define.amd) {
-    // AMD
-    define([], factory);
-  } else if (typeof module === 'object' && module.exports) {
-    // Node, CommonJS
-    module.exports = factory();
-  } else {
-    // Browser globals (root is window)
-    root.BezsanFontes = factory();
-  }
-}(this, function () {
+/* NEXIA · Bezsan — onde procurar imóveis de leilão (bancos, leiloeiros, tribunal) e como consultar o IPTU.
+   Usado pela Central de Leilões (navegador, window.BezsanFontes) e pelos testes (Node). Sem dependências e sem rede. */
+(function (raiz, fabrica) {
+  if (typeof module === 'object' && module.exports) module.exports = fabrica();
+  else raiz.BezsanFontes = fabrica();
+})(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
-  // Portais de leilões suportados
-  const PORTAIS = {
-    caixa: { url: 'https://www.caixa.gov.br/Leiloes', tipo: 'Leilão/Venda Direta' },
-    bb: { url: 'https://www.bb.com.br/pt-br/empresas/leiloes', tipo: 'Leilão' },
-    santander: { url: 'https://www.santander.com.br/empresas/leiloes', tipo: 'Leilão' },
-    itau: { url: 'https://www.itau.com.br/servicos/leiloes', tipo: 'Leilão' },
-    bradesco: { url: 'https://www.bradesco.com.br/servicos/leiloes', tipo: 'Leilão' },
-    zuk: { url: 'https://www.zuk.com.br/leiloes', tipo: 'Leilão' },
-    megaLeiloes: { url: 'https://www.megaleiloes.com.br', tipo: 'Leilão' },
-    sold: { url: 'https://www.sold.com.br/leiloes', tipo: 'Leilão' },
-    frazao: { url: 'https://www.frazao.com.br/leiloes', tipo: 'Leilão' },
-    biasi: { url: 'https://www.biasi.com.br/leiloes', tipo: 'Leilão' },
-    lanceJudicial: { url: 'https://www.lancejudicial.com.br', tipo: 'Leilão' },
-    tjsp: { url: 'https://www.tjsp.jus.br/consulta-leilao', tipo: 'Consulta' }
-  };
-
-  // Lista de Unidades Federativas (Estados) do Brasil
-  const UFS = [
-    'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'
+  var PORTAIS = [
+    { nome: 'Caixa — Venda de Imóveis', url: 'https://venda-imoveis.caixa.gov.br/sistema/busca-imovel.asp', tipo: 'banco', dica: 'Imóveis da Caixa: venda direta, licitação aberta e leilões SFI.' },
+    { nome: 'Banco do Brasil — Imóveis à venda', url: 'https://www.bb.com.br/site/pra-voce/imoveis/', tipo: 'banco', dica: 'Imóveis retomados pelo Banco do Brasil, com venda direta e leilão.' },
+    { nome: 'Santander Imóveis', url: 'https://www.santanderimoveis.com.br/', tipo: 'banco', dica: 'Imóveis do Santander em leilão e venda direta.' },
+    { nome: 'Itaú — Imóveis à venda', url: 'https://www.itau.com.br/imoveis-itau', tipo: 'banco', dica: 'Imóveis retomados pelo Itaú, muitos com financiamento.' },
+    { nome: 'Bradesco — Imóveis', url: 'https://www.bradescoimoveis.com.br/', tipo: 'banco', dica: 'Imóveis do Bradesco em leilão e venda direta.' },
+    { nome: 'Zuk', url: 'https://www.portalzuk.com.br/', tipo: 'leiloeiro', dica: 'Leilões de bancos e judiciais em todo o Brasil.' },
+    { nome: 'Mega Leilões', url: 'https://www.megaleiloes.com.br/', tipo: 'leiloeiro', dica: 'Leilões judiciais e extrajudiciais de imóveis.' },
+    { nome: 'Sold Leilões', url: 'https://www.sold.com.br/', tipo: 'leiloeiro', dica: 'Leilões de imóveis, veículos e bens de empresas.' },
+    { nome: 'Frazão Leilões', url: 'https://www.frazaoleiloes.com.br/', tipo: 'leiloeiro', dica: 'Leilões judiciais e de bancos, forte em São Paulo.' },
+    { nome: 'Biasi Leilões', url: 'https://www.biasileiloes.com.br/', tipo: 'leiloeiro', dica: 'Leilões judiciais e extrajudiciais de imóveis.' },
+    { nome: 'Lance Judicial', url: 'https://www.lancejudicial.com.br/', tipo: 'leiloeiro', dica: 'Leilões judiciais de imóveis em vários estados.' },
+    { nome: 'TJSP — Leilões judiciais (e-SAJ consulta de processos)', url: 'https://esaj.tjsp.jus.br/cpopg/open.do', tipo: 'tribunal', dica: 'Confira o processo do leilão judicial pelo número.' }
   ];
 
-  /**
-   * Retorna a URL da página de leilões da Caixa para a UF informada.
-   * @param {string} uf - Sigla da Unidade Federativa (ex.: 'SP')
-   * @returns {string} URL completa
-   */
+  var UFS = ['AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO'];
+
+  function sigla(uf) { var s = String(uf || '').trim().toUpperCase(); return UFS.indexOf(s) >= 0 ? s : null; }
+  function simples(t) { return String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase(); }
+
+  // Planilha oficial da Caixa com todos os imóveis à venda no estado.
   function listaCaixa(uf) {
-    const base = PORTAIS.caixa.url;
-    if (!uf) return base;
-    const sigla = uf.trim().toUpperCase();
-    if (!UFS.includes(sigla)) return base;
-    return `${base}/${sigla.toLowerCase()}`;
+    var s = sigla(uf);
+    return s ? 'https://venda-imoveis.caixa.gov.br/listaweb/Lista_imoveis_' + s + '.csv' : null;
   }
 
-  /**
-   * Monta a URL de consulta de IPTU para a cidade e UF informadas.
-   * @param {string} cidade - Nome da cidade
-   * @param {string} uf - Sigla da UF
-   * @returns {string} URL de consulta IPTU
-   */
-  function consultaIptu(cidade, uf) {
-    if (!cidade || !uf) return '';
-    const sigla = uf.trim().toUpperCase();
-    if (!UFS.includes(sigla)) return '';
-    const city = encodeURIComponent(cidade.trim());
-    const base = PORTAIS.caixa.url;
-    return `${base}/iptu/${sigla.toLowerCase()}/${city}`;
-  }
-
-  // Exporta o objeto esperado
-  return {
-    PORTAIS,
-    listaCaixa,
-    UFS,
-    consultaIptu
+  var CIDADES = {
+    'sao paulo|SP': {
+      url: 'https://www.prefeitura.sp.gov.br/cidade/secretarias/fazenda/servicos/iptu/',
+      passos: ['Abra a página da Prefeitura de São Paulo.', 'Escolha emitir certidão de débitos ou 2ª via do IPTU.', 'Digite o número do contribuinte (SQL) que está no edital ou na matrícula.', 'Anote o total em aberto e digite na Central.']
+    },
+    'rio de janeiro|RJ': {
+      url: 'https://carioca.rio/servicos/certidao-de-situacao-fiscal-e-enfiteutica-do-imovel/',
+      passos: ['Abra a página da Prefeitura do Rio (Carioca Digital).', 'Peça a certidão de situação fiscal do imóvel.', 'Digite a inscrição imobiliária que está no edital ou no carnê.', 'Anote o total em aberto e digite na Central.']
+    },
+    'belo horizonte|MG': {
+      url: 'https://prefeitura.pbh.gov.br/fazenda/iptu',
+      passos: ['Abra a página do IPTU da Prefeitura de Belo Horizonte.', 'Escolha certidão de débitos ou 2ª via do IPTU.', 'Digite o índice cadastral do imóvel que está no edital ou no carnê.', 'Anote o total em aberto e digite na Central.']
+    }
   };
-}));
+
+  function consultaIptu(cidade, uf) {
+    var conhecida = CIDADES[simples(cidade) + '|' + String(uf || '').trim().toUpperCase()];
+    if (conhecida) return { url: conhecida.url, passos: conhecida.passos.slice() };
+    return {
+      url: 'https://www.google.com/search?q=' + encodeURIComponent('certidão negativa de débitos IPTU prefeitura ' + String(cidade || '').trim() + ' ' + String(uf || '').trim()),
+      passos: ['Abra o site da prefeitura da cidade do imóvel.', 'Procure "certidão de débitos imobiliários" ou "2ª via do IPTU".', 'Use o número de inscrição do imóvel (está no edital, no carnê ou na matrícula).', 'Anote o total em aberto e digite na Central.']
+    };
+  }
+
+  return { PORTAIS: PORTAIS, listaCaixa: listaCaixa, UFS: UFS, consultaIptu: consultaIptu };
+});
