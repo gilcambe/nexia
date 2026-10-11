@@ -106,6 +106,23 @@ São Paulo, 1º de outubro de 2026.`;
   const robots = await (await fetch(SITE_URL + '/robots.txt')).text();
   confere(robots.includes('Disallow: /leiloes/'), 'robots.txt esconde a Central dos buscadores');
 
+  // A Central só existe dentro do painel: a página pública (landing) não leva até ela e nada abre sem login.
+  const landing = await (await fetch(SITE_URL + '/')).text();
+  confere(!/href="[^"]*leiloes/i.test(landing), 'a página pública (landing) não tem link para a Central de Leilões');
+  const sitemap = await (await fetch(SITE_URL + '/sitemap.xml')).text();
+  confere(!/leiloes/i.test(sitemap), 'o mapa do site para buscadores não lista a Central');
+  const central = await (await fetch(SITE_URL + '/leiloes/')).text();
+  confere(/<meta name="robots" content="noindex, nofollow">/.test(central), 'a Central pede aos buscadores para não aparecer (noindex)');
+  const anonimo = await browser.newContext();
+  const pa = await anonimo.newPage();
+  const pedidosAnon = [];
+  pa.on('request', r => { if (/\/api\/leilao/.test(r.url())) pedidosAnon.push(r.url()); });
+  await pa.goto(SITE_URL + '/leiloes/?site=bezsan', { waitUntil: 'load' });
+  await pa.waitForSelector('#tela-sem-login:not(.oculto)', { timeout: 20000 }).catch(() => {});
+  confere(await pa.isVisible('#tela-sem-login') && !(await pa.isVisible('#app')), 'sem login, a Central só mostra "Entre pelo painel" e nada da ferramenta');
+  confere(pedidosAnon.length === 0, 'sem login, a Central não chama o motor de leilões');
+  await anonimo.close();
+
   // Usa a sessão aberta no passo 1 (o "entrar" tem limite por IP e o cenário completo já entrou várias vezes).
   await pg.goto(SITE_URL + '/robots.txt');
   await pg.evaluate(t => localStorage.setItem('nexia_agenda_agenda-teste', t), token);
