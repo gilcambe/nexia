@@ -609,9 +609,19 @@
     ['comercio', 'Bancos, restaurantes e comércio', '[amenity~"^(bank|restaurant|cafe|fast_food)$"]'],
   ];
   function semAcento(t) { return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim(); }
-  function jsonGet(url, opcoes) { return fetch(url, opcoes).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
+  // Serviços grátis de mapa às vezes demoram minutos (ou dão 504): cada pergunta tem 10 s, e o mapa todo 25 s.
+  // Passou disso, a região aparece sem o mapa (IBGE e Banco Central já chegaram) e a página avisa.
+  function jsonGet(url, opcoes) {
+    var c = window.AbortController ? new AbortController() : null, t = c && setTimeout(function () { c.abort(); }, 10000);
+    var op = Object.assign({}, opcoes || {}); if (c) op.signal = c.signal;
+    return fetch(url, op).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }).then(function (j) { clearTimeout(t); return j; });
+  }
   function mapaNoNavegador(g) {
     if (!g || g.servicos || !atual.endereco) return Promise.resolve(g);
+    var copia = JSON.parse(JSON.stringify(g));
+    return Promise.race([mapaNoNavegadorSemLimite(copia), new Promise(function (ok) { setTimeout(function () { ok(g); }, 25000); })]);
+  }
+  function mapaNoNavegadorSemLimite(g) {
     var cidade = semAcento(g.municipio.nome);
     var rua = String(atual.endereco)
       .replace(/[,\s-]*\b(apto|apt|ap|apartamento|bloco|bl|sala|conjunto|conj|cj|unidade|torre|loja|box|vaga|casa)\b\.?\s*(n[º°o.]?\s*)?(?:[\w-]*\d[\w-]*|[A-Za-z]\b)/gi, '')
