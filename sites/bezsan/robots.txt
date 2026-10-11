@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Disallow: /agenda/
+Sitemap: https://bezsan.pages.dev/sitemap.xml
