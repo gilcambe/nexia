@@ -11,9 +11,10 @@ jobs:
     steps:
       - name: Sondar
         run: |
+          set +e
           UA="NEXIA-Bezsan/1.0 (contato gcbezerra@gmail.com)"
           o=saida.txt
-          t(){ echo "=== $1" >> $o; curl -s -m 25 -A "$UA" -H "Origin: https://bezsan.pages.dev" -D h.txt -o b.txt "${@:2}"; head -1 h.txt >> $o; grep -i '^access-control' h.txt >> $o; head -c 1500 b.txt >> $o; echo >> $o; }
+          t(){ echo "=== $1" >> $o; curl -s -m 25 -A "$UA" -H "Origin: https://bezsan.pages.dev" -D h.txt -o b.txt "${@:2}" || echo "curl falhou $?" >> $o; head -1 h.txt >> $o; grep -i '^access-control' h.txt >> $o; head -c 1500 b.txt >> $o; echo >> $o; }
           t nominatim "https://nominatim.openstreetmap.org/search?q=Rua+Augusta,+Sao+Paulo,+SP&format=json&limit=1&countrycodes=br&addressdetails=1"
           t ibge-mun "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?nome=Campinas"
           t ibge-mun-id "https://servicodados.ibge.gov.br/api/v1/localidades/estados/SP/municipios" 
@@ -32,6 +33,7 @@ jobs:
           t photon "https://photon.komoot.io/api/?q=Rua+Augusta+Sao+Paulo&limit=1"
       - name: Publicar
         run: |
+          set +e
           git config user.name nexia-bot; git config user.email bot@nexia.invalid
           git checkout -b sondas-parecer-${{ github.run_id }}
           git add saida.txt; git commit -qm sonda; git push -q origin sondas-parecer-${{ github.run_id }}
