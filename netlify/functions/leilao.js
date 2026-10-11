@@ -174,6 +174,15 @@ const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://maps.mail.
 // Endereço → ponto no mapa. Nominatim primeiro; o Photon (komoot, também OpenStreetMap) quando o Nominatim recusa
 // ou só acha a cidade. Só aceita resultado no nível da rua e dentro da cidade do imóvel.
 const NIVEL_RUA = /^(road|house|building|place|amenity|street|residential|highway|neighbourhood|quarter)$/;
+// Endereço do edital -> texto que o mapa entende: tira apto/bloco/sala e "nº", e a cidade/UF repetida no fim
+function enderecoParaMapa(e) {
+  return String(e || '')
+    .replace(/[,\s-]*\b(apto|apt|ap|apartamento|bloco|bl|sala|conjunto|conj|cj|unidade|torre|loja|box|vaga|casa)\b\.?\s*(n[º°o.]?\s*)?(?:[\w-]*\d[\w-]*|[A-Za-z]\b)/gi, '')
+    .replace(/\bn[º°o]\.?\s*(?=\d)|\bn\.\s*(?=\d)/gi, '')
+    .replace(/[,\s-]+[A-Za-zÀ-ú' ]+\s*[\/-]\s*[A-Z]{2}\s*$/, '')
+    .replace(/\s+,/g, ',').replace(/,\s*,+/g, ',').replace(/\s{2,}/g, ' ').replace(/^[,\s]+|[,\s]+$/g, '');
+}
+
 async function localizar(fetchFn, q, cidadeNorm) {
   const nom = await jsonDe(fetchFn, `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&addressdetails=1&q=${encodeURIComponent(q)}`, { headers: { 'Accept-Language': 'pt-BR' } });
   const n = Array.isArray(nom) && nom[0];
@@ -203,7 +212,7 @@ async function analisarRegiao(fetchFn, { endereco, cidade, uf }, now) {
   const fontes = ['IBGE (Censo 2010 e 2022, estimativas de população, PIB dos municípios, salário médio)'];
 
   // 2) Em paralelo: indicadores do município, índice de preço de imóveis do Banco Central e o endereço no mapa
-  const q = [endereco, cidade, uf, 'Brasil'].filter(Boolean).join(', ');
+  const q = [enderecoParaMapa(endereco), cidade, uf, 'Brasil'].filter(Boolean).join(', ');
   const [ind, ivgr, selic, geo] = await Promise.all([
     emCache('ind:' + id6, DIA, now, () => jsonDe(fetchFn, `https://servicodados.ibge.gov.br/api/v1/pesquisas/indicadores/96385%7C29171%7C47001%7C29765/resultados/${id6}`)),
     emCache('ivgr', DIA, now, () => jsonDe(fetchFn, 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.21340/dados/ultimos/13?formato=json')),
@@ -524,5 +533,6 @@ exports.handler = createHandler();
 exports.createHandler = createHandler;
 exports.tribunalDoProcesso = tribunalDoProcesso;
 exports.extrairJson = extrairJson;
+exports.enderecoParaMapa = enderecoParaMapa;
 exports.modelosGratis = modelosGratis;
 exports.loteParaImovel = loteParaImovel;
