@@ -14,9 +14,13 @@ jobs:
           mkdir -p /tmp/s && cd /tmp/s
           M=https://www.leiloesjudiciais.com.br/api/mcp/messages
           p() { echo "===== $1" >> saida.txt; curl -sS -m 40 -X POST "$M" -H 'Content-Type: application/json' -H 'Accept: application/json, text/event-stream' -A "NexiaBezsan/1.0" -d "$2" -w "\nHTTP %{http_code} %{content_type}\n" > r.txt 2>&1; head -c ${3:-30000} r.txt >> saida.txt; echo >> saida.txt; }
-          p init '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"nexia-bezsan","version":"1.0"}}}' 4000
-          p tools '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' 40000
-          p resources '{"jsonrpc":"2.0","id":3,"method":"resources/list","params":{}}' 4000
+          p busca '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"search_leiloes","arguments":{"query":"apartamento","estado":"SP","categoria":"imoveis"}}}' 12000
+          id=$(grep -oE '\\"(id|leilaoId|loteId)\\": ?\\"?[0-9A-Za-z_-]+' r.txt | head -1 | grep -oE '[0-9A-Za-z_-]+$')
+          echo "ID=$id" >> saida.txt
+          p detalhe "{\"jsonrpc\":\"2.0\",\"id\":5,\"method\":\"tools/call\",\"params\":{\"name\":\"get_leilao_details\",\"arguments\":{\"leilaoId\":\"$id\"}}}" 12000
+          p busca2 '{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"search_leiloes","arguments":{"query":"casa","estado":"MG","categoria":"imoveis"}}}' 3000
+          # CORS: pode ser chamada direto do navegador?
+          curl -sS -m 20 -i -X OPTIONS "$M" -H 'Origin: https://bezsan.pages.dev' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type' | head -20 >> saida.txt
           curl -sS -m 20 https://www.leiloesjudiciais.com.br/api/health >> saida.txt; echo >> saida.txt
           cp r.txt ultimo.txt
       - name: Guardar saída
