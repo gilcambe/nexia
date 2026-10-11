@@ -190,9 +190,9 @@ export default function PlanoNutricionista() {
     <div className="rounded-2xl border border-background-200 bg-background-50 p-4" data-testid="plano-nutri">
       <div className="flex items-center gap-2">
         <i className="ri-file-list-3-line text-lg text-primary-500"></i>
-        <h2 className="font-heading text-lg font-bold text-foreground-950">Plano do nutricionista</h2>
+        <h2 className="font-heading text-lg font-bold text-foreground-950">{plano.do_coach ? plano.arquivo : 'Plano do nutricionista'}</h2>
       </div>
-      <p className="mt-0.5 text-xs text-foreground-500">Todos os dias · importado em {new Date(plano.importado_em).toLocaleDateString('pt-BR')} · toque em um alimento para trocar</p>
+      <p className="mt-0.5 text-xs text-foreground-500">Todos os dias · {plano.do_coach ? 'enviado' : 'importado'} em {new Date(plano.importado_em).toLocaleDateString('pt-BR')} · toque em um alimento para trocar</p>
       {t && t.kcal > 0 && (
         <div className="mt-3 grid grid-cols-4 gap-1.5 text-center">
           {([['kcal', fmt(t.kcal)], ['Proteína', `${fmt(t.proteina)} g`], ['Carbo', `${fmt(t.carbo)} g`], ['Gordura', `${fmt(t.gordura)} g`]] as const).map(([l, v]) => (

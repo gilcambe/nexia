@@ -4,6 +4,7 @@
 // Tudo passa por aqui (login do Firebase + banco no servidor), então não precisa abrir regras do Firestore
 // e um aluno nunca lê conversa de outra pessoa. Só texto curto; sem armazenamento pago.
 // ações: perfil, vincular, contatos, enviar, ler, resumo, video_enviar, video_ver, demo_salvar, demo_ver, demo_listar
+// Coach monta treino e dieta do aluno: alunos_painel, prescricao_ver, ficha_salvar, dieta_salvar.
 // Novos: treino_feito, ranking_ver, ranking_config (ranking da equipe); dupla_* (treino em dupla ao vivo);
 // pix_config, pix_ver, pagamento_marcar, pagamento_avisar (mensalidade por Pix, sem gateway).
 // Evolução: alunos_evolucao, aluno_evolucao, agendar_avaliacao, comentar (coach); evolucao_info, evolucao_config (aluno);
@@ -127,6 +128,80 @@ const ID_OK = /^[A-Za-z0-9_-]{1,40}$/;
 const ALVOS = ['geral', 'medidas', ...POSES];
 const dataBR = (iso) => iso.split('-').reverse().join('/');
 
+// ── Ficha e dieta montadas pelo coach (gravadas no perfil do aluno pelo servidor) ──
+const numEntre = (v, min, max, padrao) => { const n = Math.round(Number(v)); return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : padrao; };
+const HHMM = /^([01]?\d|2[0-3]):[0-5]\d$/;
+
+// Confere e limpa a ficha que o coach mandou. Devolve null se não der para usar.
+function fichaLimpa(f) {
+  if (!f || typeof f !== 'object' || !Array.isArray(f.dias)) return null;
+  const dias = f.dias.slice(0, 7).map((d, i) => ({
+    titulo: limpa(d && d.titulo, 60) || `Treino ${'ABCDEFG'[i]}`,
+    exercicios: (Array.isArray(d && d.exercicios) ? d.exercicios : []).slice(0, 15).map((x) => ({
+      id: limpa(x && x.id, 60).replace(/[^a-zA-Z0-9_-]/g, ''),
+      nome: limpa(x && x.nome, 80),
+      grupo: limpa(x && x.grupo, 30),
+      series: numEntre(x && x.series, 1, 10, 3),
+      reps: limpa(x && x.reps, 12) || '8–12',
+      descanso: numEntre(x && x.descanso, 0, 600, 90),
+      carga: limpa(x && x.carga, 16),
+      obs: limpa(x && x.obs, 200),
+    })).filter((x) => x.nome),
+  })).filter((d) => d.exercicios.length);
+  if (!dias.length) return null;
+  return { nome: limpa(f.nome, 60) || 'Ficha do coach', obs: limpa(f.obs, 500), dias };
+}
+
+function macrosLimpos(m) {
+  if (!m || typeof m !== 'object') return null;
+  const n = (v) => Math.min(20000, Math.max(0, Math.round((Number(v) || 0) * 10) / 10));
+  const out = { proteina: n(m.proteina), gordura: n(m.gordura), carbo: n(m.carbo), kcal: n(m.kcal) };
+  return out.kcal || out.proteina || out.carbo || out.gordura ? out : null;
+}
+
+// Mesmo formato do plano importado do PDF da nutricionista (o app do aluno já sabe mostrar).
+function planoLimpo(p, coachNome) {
+  if (!p || typeof p !== 'object' || !Array.isArray(p.refeicoes)) return null;
+  const refeicoes = p.refeicoes.slice(0, 10).map((r) => ({
+    horario: r && HHMM.test(String(r.horario || '')) ? String(r.horario).padStart(5, '0') : null,
+    nome: limpa(r && r.nome, 40) || 'Refeição',
+    itens: (Array.isArray(r && r.itens) ? r.itens : []).slice(0, 20).map((it) => ({ nome: limpa(it && it.nome, 80), qtd: limpa(it && it.qtd, 40) })).filter((it) => it.nome),
+    trocas: (Array.isArray(r && r.trocas) ? r.trocas : []).slice(0, 20).map((t) => ({ de: limpa(t && t.de, 80), por: (Array.isArray(t && t.por) ? t.por : []).slice(0, 5).map((x) => limpa(x, 80)).filter(Boolean) })).filter((t) => t.de && t.por.length),
+    obs: (Array.isArray(r && r.obs) ? r.obs : []).slice(0, 5).map((x) => limpa(x, 200)).filter(Boolean),
+    macros: macrosLimpos(r && r.macros),
+  })).filter((r) => r.itens.length);
+  if (!refeicoes.length) return null;
+  const extras = (Array.isArray(p.extras) ? p.extras : []).slice(0, 5).map((e) => ({ titulo: limpa(e && e.titulo, 60), texto: (Array.isArray(e && e.texto) ? e.texto : []).slice(0, 10).map((x) => limpa(x, 300)).filter(Boolean) })).filter((e) => e.titulo && e.texto.length);
+  return { arquivo: `Plano de ${coachNome || 'seu coach'}`, importado_em: new Date().toISOString(), refeicoes, totais: macrosLimpos(p.totais), extras, do_coach: true };
+}
+
+// Linha do painel "Meus alunos": treinou hoje? quantos dias sem treinar? comeu? pagou?
+async function linhaDoPainel(db, id, d, mes, hoje, sem) {
+  const base = db.collection('bodycoach_users').doc(id);
+  let ultimo = Number(d.ultimoTreino) || 0;
+  if (!ultimo) {
+    const w = await base.collection('workouts').orderBy('done_at', 'desc').limit(1).get().catch(() => null);
+    ultimo = w && w.docs[0] ? tempo(w.docs[0].data().done_at) : 0;
+  }
+  const m = await base.collection('meals').orderBy('created_at', 'desc').limit(10).get().catch(() => null);
+  const diaBR = (ms) => new Date(ms - 3 * 3600000).toISOString().slice(0, 10);
+  const refeicoesHoje = m ? m.docs.filter((x) => { const t = tempo(x.data().created_at); return t && diaBR(t) === hoje; }).length : 0;
+  const perfil = (await base.collection('profile').doc('main').get().catch(() => null))?.data?.() || {};
+  const s = d.semana && d.semana.inicio === sem ? d.semana : { treinos: 0 };
+  const p = (d.pagamentos || {})[mes] || {};
+  return {
+    uid: id, nome: d.nome || 'Aluno', foto: d.foto || '',
+    ultimoTreino: ultimo || null,
+    treinouHoje: !!ultimo && diaBR(ultimo) === hoje,
+    diasSemTreinar: ultimo ? Math.floor((tempo(`${hoje}T12:00:00-03:00`) - tempo(`${diaBR(ultimo)}T12:00:00-03:00`)) / 86400000) : null,
+    treinosSemana: s.treinos || 0,
+    refeicoesHoje,
+    temFicha: !!(perfil.ficha_coach && Array.isArray(perfil.ficha_coach.dias) && perfil.ficha_coach.dias.length),
+    temDieta: !!(perfil.plano_nutri && Array.isArray(perfil.plano_nutri.refeicoes) && perfil.plano_nutri.refeicoes.length),
+    pago: !!p.pago, avisou: !!p.avisou,
+  };
+}
+
 // Link público de uma avaliação (sem login). Vence sozinho; o dono pode revogar antes.
 async function verCompartilhado(body, db) {
   const token = limpa(body.token, 64);
@@ -224,6 +299,17 @@ async function executar(body, uid, db, ctx = {}) {
     return [200, { alunos: lista }];
   }
 
+  // Painel "Meus alunos": quem treinou hoje, quem sumiu, quem comeu, quem pagou, quem tem ficha e dieta.
+  if (acao === 'alunos_painel') {
+    if (eu.papel !== 'coach') return [403, { error: 'Só o coach vê o painel dos alunos.' }];
+    const hoje = new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10);
+    const mes = hoje.slice(0, 7);
+    const sem = inicioSemanaBR();
+    const alunos = await dir.where('coachUid', '==', uid).limit(100).get();
+    const lista = await Promise.all(alunos.docs.map((a) => linhaDoPainel(db, a.id, a.data(), mes, hoje, sem)));
+    return [200, { alunos: lista, hoje, mes, cobra: !!eu.pix }];
+  }
+
   // Desafio da equipe: o coach cria um (ex.: "7 dias treinando"); cada aluno marca o seu dia. Um aluno nunca vê o progresso de outro.
   const hojeBR = () => new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10);
   if (acao === 'desafio_criar') {
@@ -272,7 +358,9 @@ async function executar(body, uid, db, ctx = {}) {
     const sem = inicioSemanaBR();
     const s = eu.semana && eu.semana.inicio === sem ? eu.semana : { inicio: sem, treinos: 0, minutos: 0, kcal: 0 };
     const semana = { inicio: sem, treinos: s.treinos + 1, minutos: s.minutos + min, kcal: (s.kcal || 0) + kcal };
-    const novo = { semana };
+    // feitoEm: treino salvo sem internet e enviado depois conta no dia em que foi feito
+    const feito = Number(body.feitoEm);
+    const novo = { semana, ultimoTreino: feito > 0 && feito <= Date.now() && feito > Date.now() - 7 * 86400000 ? Math.max(feito, Number(eu.ultimoTreino) || 0) : Date.now() };
     let desafioMarcado = false;
     if (eu.papel === 'aluno' && eu.coachUid) {
       const d = ((await dir.doc(eu.coachUid).get()).data?.() || {}).desafio;
@@ -474,6 +562,39 @@ async function executar(body, uid, db, ctx = {}) {
     const r = await msgs.add(m);
     return [200, { mensagem: { id: r.id, ...m } }];
   }
+  // Ficha e dieta do aluno montadas pelo coach: o coach lê o questionário do aluno e grava no perfil dele.
+  if (acao === 'prescricao_ver') {
+    if (eu.papel !== 'coach') return [403, { error: 'Só o coach monta a ficha do aluno.' }];
+    const p = (await db.collection('bodycoach_users').doc(outro).collection('profile').doc('main').get().catch(() => null))?.data?.() || {};
+    return [200, {
+      nome: dOutro.nome || 'Aluno',
+      foto: dOutro.foto || '',
+      respostas: { ...(p.onboarding || {}), mobility: Array.isArray(p.mobility) ? p.mobility : [] },
+      ficha: p.ficha_coach || null,
+      fichaDia: Number(p.ficha_coach_dia) || 0,
+      plano: p.plano_nutri || null,
+    }];
+  }
+  if (acao === 'ficha_salvar' || acao === 'dieta_salvar') {
+    if (eu.papel !== 'coach') return [403, { error: 'Só o coach monta a ficha do aluno.' }];
+    const perfilRef = db.collection('bodycoach_users').doc(outro).collection('profile').doc('main');
+    const ficha = acao === 'ficha_salvar';
+    if (body.remover) {
+      await perfilRef.set(ficha ? { ficha_coach: null, ficha_coach_dia: 0 } : { plano_nutri: null }, { merge: true });
+      return [200, { ok: true }];
+    }
+    const valor = ficha ? fichaLimpa(body.ficha) : planoLimpo(body.plano, eu.nome);
+    if (!valor) return [400, { error: ficha ? 'Coloque pelo menos um exercício na ficha.' : 'Coloque pelo menos um alimento no plano.' }];
+    if (JSON.stringify(valor).length > 60000) return [400, { error: 'Ficou grande demais. Tire alguns itens.' }];
+    const agora = Date.now();
+    await perfilRef.set(ficha ? { ficha_coach: { ...valor, coach: eu.nome || 'Seu coach', em: agora }, ficha_coach_dia: 0 } : { plano_nutri: valor }, { merge: true });
+    const texto = ficha
+      ? `📋 Montei a sua ficha de treino "${valor.nome}" (${valor.dias.length} treino${valor.dias.length > 1 ? 's' : ''}). Já está no seu app: é só abrir Treino.`
+      : `🍽️ Montei o seu plano alimentar (${valor.refeicoes.length} refeições). Já está na aba Nutrição do seu app.`;
+    const m = { de: uid, texto, em: agora };
+    const r = await msgs.add(m);
+    return [200, { ok: true, mensagem: { id: r.id, ...m } }];
+  }
   if (acao === 'resumo') {
     // Revisão da semana do aluno, só para o coach vinculado (lê os dados do aluno pelo servidor; nada de regras novas)
     if (eu.papel !== 'coach') return [403, { error: 'Só o coach vê o resumo do aluno.' }];
@@ -485,7 +606,7 @@ async function executar(body, uid, db, ctx = {}) {
     };
     const [treinos, pesos, prontidao, refeicoes] = await Promise.all([
       lista('workouts', 'done_at').catch(() => []), lista('progress_entries', 'taken_at').catch(() => []),
-      lista('daily_readiness', 'date').catch(() => []), lista('meals', 'time').catch(() => []),
+      lista('daily_readiness', 'date').catch(() => []), lista('meals', 'created_at').catch(() => []),
     ]);
     return [200, { resumo: resumirSemana({ treinos, pesos, prontidao, refeicoes }, desde, dOutro) }];
   }
@@ -531,7 +652,7 @@ exports.handler = async (event) => {
   const auth = await verifyBearerToken(event);
   if (!auth.ok) return resposta(event, 401, { error: 'Entre na sua conta para conversar.' });
   // leituras (a tela confere a cada poucos segundos) não gastam o limite nem a cota do banco grátis
-  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar', 'desafio_criar', 'desafio_checkin', 'comentar', 'agendar_avaliacao', 'compartilhar_criar', 'dupla_criar', 'dupla_entrar', 'pix_config', 'pagamento_avisar', 'ranking_config', 'treino_feito'].includes(body.acao)) {
+  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar', 'desafio_criar', 'desafio_checkin', 'comentar', 'agendar_avaliacao', 'compartilhar_criar', 'dupla_criar', 'dupla_entrar', 'pix_config', 'pagamento_avisar', 'ranking_config', 'treino_feito', 'ficha_salvar', 'dieta_salvar'].includes(body.acao)) {
     const rl = await checkRateLimit(auth.uid, 'body-coach-chat');
     if (!rl.ok) return resposta(event, 429, { error: 'Muitos pedidos seguidos. Aguarde um instante.' });
   }

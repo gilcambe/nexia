@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/components/feature/AuthContext';
 import { chatApi, type Contato, type Mensagem } from '@/lib/chat';
 import DesafioCard from './Desafio';
@@ -57,6 +57,8 @@ export default function Chat() {
   const [enviando, setEnviando] = useState(false);
   const [gravando, setGravando] = useState(false);
   const fim = useRef<HTMLDivElement>(null);
+  const [params] = useSearchParams();
+  const comParam = params.get('com');
   const nome = profile?.nickname || profile?.full_name || user?.email?.split('@')[0] || 'Aluno';
 
   const carregarContatos = useCallback(async () => {
@@ -64,11 +66,14 @@ export default function Chat() {
       const r = await chatApi<Contatos>({ acao: 'contatos' });
       setLista(r); setPapel(r.papel);
       if (r.papel === 'aluno' && r.contatos[0]) setAberto((a) => a ?? r.contatos[0]);
+      // veio de "Meus alunos" (?com=uid): já abre a conversa com esse aluno
+      const pedido = r.papel === 'coach' && comParam ? r.contatos.find((c) => c.uid === comParam) : undefined;
+      if (pedido) setAberto((a) => a ?? pedido);
     } catch (e) {
       const m = (e as Error).message;
       if (/escolha se você/i.test(m)) setPapel(null); else { setPapel(null); setErro(m); }
     }
-  }, []);
+  }, [comParam]);
   useEffect(() => {
     if (!user) return;
     let vivo = true;
@@ -159,11 +164,12 @@ export default function Chat() {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-3">
-      <h1 className="font-heading text-2xl font-bold text-foreground-950">{papel === 'coach' ? 'Meus alunos' : 'Conversa com o coach'}</h1>
+      <h1 className="font-heading text-2xl font-bold text-foreground-950">{papel === 'coach' ? 'Conversa com os alunos' : 'Conversa com o coach'}</h1>
       {papel === 'coach' && (
         <div className="rounded-xl border border-primary-200 bg-primary-50 p-3 text-sm text-foreground-700">
           Passe este código para os seus alunos: <strong className="ml-1 text-lg tracking-widest text-primary-700">{lista?.codigo}</strong>
           <span className="block text-xs text-foreground-500">Eles abrem “Conversa”, escolhem “Sou aluno” e digitam o código.</span>
+          <Link to="/coach/alunos" className="mr-2 mt-2 inline-flex items-center gap-1 rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-semibold text-background-50 dark:text-foreground-950"><i className="ri-team-line"></i>Meus alunos: ficha e dieta</Link>
           <Link to="/coach/evolucao" className="mt-2 inline-flex items-center gap-1 rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-semibold text-background-50 dark:text-foreground-950"><i className="ri-line-chart-line"></i>Evolução dos alunos</Link>
           <Link to="/coach/demonstracoes" className="ml-2 mt-2 inline-flex items-center gap-1 rounded-lg border border-primary-300 px-3 py-1.5 text-xs font-semibold text-primary-700"><i className="ri-video-add-line"></i>Gravar demonstrações</Link>
         </div>

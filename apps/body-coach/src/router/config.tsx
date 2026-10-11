@@ -28,6 +28,8 @@ const AlunosEvolucao = carregar(() => import("../pages/coach/AlunosEvolucao"));
 const AlunoEvolucao = carregar(() => import("../pages/coach/AlunoEvolucao"));
 const RelatorioAluno = carregar(() => import("../pages/coach/RelatorioAluno"));
 const Demonstracoes = carregar(() => import("../pages/coach/Demonstracoes"));
+const MeusAlunos = carregar(() => import("../pages/coach/MeusAlunos"));
+const AlunoPlano = carregar(() => import("../pages/coach/AlunoPlano"));
 const Ferramentas = carregar(() => import("../pages/ferramentas/page"));
 
 const routes: RouteObject[] = [
@@ -87,6 +89,8 @@ const routes: RouteObject[] = [
       { path: "profile", element: <Profile /> },
       { path: "team", element: <Team /> },
       { path: "chat", element: <Chat /> },
+      { path: "coach/alunos", element: <MeusAlunos /> },
+      { path: "coach/alunos/:uid", element: <AlunoPlano /> },
       { path: "coach/evolucao", element: <AlunosEvolucao /> },
       { path: "coach/demonstracoes", element: <Demonstracoes /> },
       { path: "coach/evolucao/:uid", element: <AlunoEvolucao /> },
