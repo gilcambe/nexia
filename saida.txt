@@ -1,0 +1,65 @@
+SP 200 18419 text/html; charset=UTF-8
+/tmp/SP.csv: JavaScript source, Unicode text, UTF-8 text, with very long lines (12063)
+<head>
+  <title>Radware Bot Manager CAPTCHA</title><script type="text/javascript">
+	window.SSJSInternal = 48397;
+
+	var __uzdbm_1 = "bed962fc-dca8-4234-82ba-3f0532f384fd";
+	var __uzdbm_2 = "Y2FhYTdmNTMtYzRvMy00OTI1LTgwNzUtMzBmNjdkZjhjMjE0JDUyLjI0Mi4yNDMuMQ==";
+	
+	(function(w, d, e, u, c, g, a, b){
+		w["SSJSConnectorObj"] = w["SSJSConnectorObj"] || {ss_cid : c, domain_info: g};
+		a = d.createElement(e);
+		a.async = true;
+		a.src = u;
+		b = d.getElementsByTagName(e)[0];
+		b.parentNode.insertBefore(a, b);
+	})(window,document,"script","https://cdn.perfdrive.com/aperture/aperture.js","b8c3","auto");
+</script>
+
+<script type="text/javascript">
+function _0x147a(){var _0x2ec979=['ecb5e100e5a9a3e7f6d1fd97512215282','mousemove','toGMTString','0xcvd','1976572igpWBa','touches','1993290amMtaY','block','2128497rXvxFu','Udr9HvhYUw','getTime','style','parentElement','5876928iktpYv',';\x20path=/','8QVQoCR','height','6mLcKVK','mouseup','cssl','div','className','Enyf7MTcBK','27LqzsxS','cbfcl','DOMContentLoaded','indexOf','tagName','charCodeAt','display','8tqwifW','complete','substring','hsol','ssi','1114395tUAPUj','floor','cf_input','cbfm','length','hidden','outerHTML','cbfer','mousedown','split','opacity','83604qtrwiD','interactive','00000','csil','visible','value','random','touchmove','toString','vbe','trim','cbft','blk','location','csol','iid','clientY','join','changedTouches','visibility','Bdr9HvhYUw','Unyf7MTcBK','hcaptcha',';\x20expires=','264VNJZSS','186838SghUiN','querySelector','splice',
+197 /tmp/SP.csv
+MG 200 18419 text/html; charset=UTF-8
+/tmp/MG.csv: JavaScript source, Unicode text, UTF-8 text, with very long lines (12063)
+<head>
+  <title>Radware Bot Manager CAPTCHA</title><script type="text/javascript">
+	window.SSJSInternal = 48397;
+
+	var __uzdbm_1 = "9769eb82-e49e-4597-9e02-40983071fcc6";
+	var __uzdbm_2 = "NDI4YzBkZWItYzRvMy00NGVmLThhNmUtYzczNGU4MGQzYjAyJDUyLjI0Mi4yNDMuMQ==";
+	
+	(function(w, d, e, u, c, g, a, b){
+		w["SSJSConnectorObj"] = w["SSJSConnectorObj"] || {ss_cid : c, domain_info: g};
+		a = d.createElement(e);
+		a.async = true;
+		a.src = u;
+		b = d.getElementsByTagName(e)[0];
+		b.parentNode.insertBefore(a, b);
+	})(window,document,"script","https://cdn.perfdrive.com/aperture/aperture.js","b8c3","auto");
+</script>
+
+<script type="text/javascript">
+function _0x147a(){var _0x2ec979=['ecb5e100e5a9a3e7f6d1fd97512215282','mousemove','toGMTString','0xcvd','1976572igpWBa','touches','1993290amMtaY','block','2128497rXvxFu','Udr9HvhYUw','getTime','style','parentElement','5876928iktpYv',';\x20path=/','8QVQoCR','height','6mLcKVK','mouseup','cssl','div','className','Enyf7MTcBK','27LqzsxS','cbfcl','DOMContentLoaded','indexOf','tagName','charCodeAt','display','8tqwifW','complete','substring','hsol','ssi','1114395tUAPUj','floor','cf_input','cbfm','length','hidden','outerHTML','cbfer','mousedown','split','opacity','83604qtrwiD','interactive','00000','csil','visible','value','random','touchmove','toString','vbe','trim','cbft','blk','location','csol','iid','clientY','join','changedTouches','visibility','Bdr9HvhYUw','Unyf7MTcBK','hcaptcha',';\x20expires=','264VNJZSS','186838SghUiN','querySelector','splice',
+197 /tmp/MG.csv
+imovel 
+matricula 404 4902 text/html; charset=utf-8
+/tmp/m.pdf: HTML document, ASCII text, with very long lines (365)
+detalhe 200 18347
+<head>
+  <title>Radware Bot Manager CAPTCHA</title><script type="text/javascript">
+	window.SSJSInternal = 48397;
+
+	var __uzdbm_1 = "c565df40-7d95-4474-bebe-a7617b56e047";
+	var __uzdbm_2 = "MjUxOGNhMDMtYzRvMy00N2Y0LWJmNmItZjYyNjMzYmY5NmU0JDUyLjI0Mi4yNDMuMQ==";
+	
+	(function(w, d, e, u, c, g, a, b){
+		w["SSJSConnectorObj"] = w["SSJSConnectorObj"] || {ss_cid : c, domain_info: g};
+		a = d.createElement(e);
+		a.async = true;
+		a.src = u;
+		b = d.getElementsByTagName(e)[0];
+		b.parentNode.insertBefore(a, b);
+	})(window,document,"script","https://cdn.perfdrive.com/aperture/aperture.js","b8c3","auto");
+:11383,"dataHora":"2017-07-18T16:13:21.000Z","nome":"Ato ordinatório","orgaoJulgador":{"codigo":"10605","nome":"Juízo Titular I - 41ª Vara Cível - Foro Central Cível"}},{"codigo":85,"dataHora":"2017-07-13T05:20:04.000Z","nome":"Petição","orgaoJulgador":{"codigo":"10605","nome":"Juízo Titular I - 41ª Vara Cível - Foro Central Cível"}},{"codigo":11383,"dataHora":"2017-07-03T15:45:57.000Z","nome":"Ato ordinatório","orgaoJulgador":{"codigo":"10605","nome":"Juízo Titular I - 41ª Vara Cível - Foro Central Cível"}},{"codigo":11010,"dataHora":"2017-06-05T15:23:16.000Z","nome":"Mero expediente","orgaoJulgador":{"codigo":"10605","nome":"Juízo Titular I - 41ª Vara Cível - Foro Central Cível"}},{"codigo":85,"dataHora":"2017-05-26T06:55:29.000Z","nome":"Petição","orgaoJulgador":{"codigo":"10605","nome":"Juízo Titular I - 41ª Vara Cível - Foro Central Cível"}},{"codigo":11383,"dataHora":"2017-05-08T10:39:33.000Z","nome":"Ato ordinatório","orgaoJulgador":{"codigo":"10605","nome":"Juízo Titular I - 41ª Vara Cível - Foro Central Cível"}},{"codigo":11383,"dataHora":"2017-05-03T15:47:05.000Z","nome":"Ato ordinatório","orgaoJulgador":{"codigo":"10605","nome":"Juízo Titular I - 41ª Vara Cível - Foro Central Cível"}},{"codigo":12164,"dataHora":"2017-02-08T16:37:52.000Z","nome":"Outras Decisões","orgaoJulgador":{"codigo":"10605","nome":"Juízo Titular I - 41ª Vara Cível - Foro Central Cível"}}],"assuntos":[{"codigo":4972,"nome":"Duplicata"}]}}]}}
+DATAJUD 200
