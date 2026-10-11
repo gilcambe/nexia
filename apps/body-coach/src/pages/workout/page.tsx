@@ -739,7 +739,7 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
               }
               // Sem internet, fica guardado no celular e vai sozinho quando a conexão voltar.
               const foi = await gravarOuGuardar(user.id, 'workouts', session.id, w).catch(() => true);
-              const avisou = await apiOuGuardar(user.id, { acao: 'treino_feito', minutos: durationMin, kcal: kcalTreino, feitoEm: Date.now(), titulo: session.title, notas, esforco: esforco || undefined, comentario: comentario.trim() || undefined });
+              const avisou = await apiOuGuardar(user.id, { acao: 'treino_feito', minutos: durationMin, kcal: kcalTreino, feitoEm: Date.now(), titulo: session.title, notas, esforco: esforco || undefined, comentario: comentario.trim() || undefined, melhores: session.exercises.filter((e) => melhores[e.name]).map((e) => ({ ex: e.name, grupo: POR_ID[e.id]?.grupo ?? '', kg: melhores[e.name].weight, reps: melhores[e.name].reps })) });
               setFicouNoCelular(!foi || !avisou);
               onSaved?.();
             }
@@ -830,6 +830,7 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
               ? <p className="mx-auto mt-3 max-w-md rounded-lg bg-secondary-50 px-3 py-2 text-xs text-secondary-900" role="status"><i className="ri-wifi-off-line mr-1"></i>Sem internet agora: o treino ficou guardado no celular e vai sozinho para o seu histórico quando a conexão voltar.</p>
               : <p className="mt-3 text-xs text-foreground-400">Tudo foi salvo no seu diário mestre.</p>}
             {cartao && <div className="mx-auto mt-5 max-w-xs"><CompartilharCartao dados={cartao} /></div>}
+            {cartao && <PostarNoFeed cartao={cartao} />}
             <button
               onClick={() => navigate('/')}
               className="mt-6 rounded-xl bg-primary-500 px-6 py-3 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
@@ -840,5 +841,19 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
         )}
       </div>
     </div>
+  );
+}
+// Depois do treino: posta o resumo no feed da equipe com um toque (só aparece para quem tem equipe).
+function PostarNoFeed({ cartao }: { cartao: { titulo: string; itens: { rotulo: string; valor: string }[]; destaque?: string } }) {
+  const [estado, setEstado] = useState<'' | 'enviando' | 'ok' | 'sem'>('');
+  if (estado === 'sem') return null;
+  const texto = `💪 Terminei: ${cartao.titulo}\n${cartao.itens.map((i) => `${i.valor} ${i.rotulo}`).join(' · ')}${cartao.destaque ? `\n🏆 ${cartao.destaque}` : ''}`;
+  return (
+    <button type="button" disabled={estado !== ''} onClick={async () => {
+      setEstado('enviando');
+      try { const { postar } = await import('@/lib/comunidade'); await postar(texto, undefined, 'treino'); setEstado('ok'); } catch { setEstado('sem'); }
+    }} className="mx-auto mt-3 block rounded-xl border border-background-200 bg-background-50 px-4 py-2.5 text-sm font-semibold text-foreground-800 disabled:opacity-70">
+      {estado === 'ok' ? '✅ Postado no feed da equipe' : estado === 'enviando' ? 'Postando...' : <><i className="ri-group-line mr-1"></i>Postar no feed da equipe</>}
+    </button>
   );
 }

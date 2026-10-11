@@ -11,6 +11,7 @@ import { listUserDocs, setUserDoc } from '@/lib/userData';
 import { useAuth } from './AuthContext';
 import { localDateKey } from '@/lib/localDemo';
 import { localReadinessSeed } from '@/mocks/localDemo';
+import { marcarPontos } from '@/lib/comunidade';
 import {
   computeReadiness,
   type ReadinessResult,
@@ -209,6 +210,7 @@ export function ReadinessProvider({ children }: { children: ReactNode }) {
         .then(() => null)
         .catch((e: unknown) => (e instanceof Error ? e : new Error('Falha ao salvar o check-in.')));
       if (err) return { error: err.message };
+      if (!existing) marcarPontos('checkin');
       reload();
       return { error: null };
     },

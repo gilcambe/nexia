@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { nutritionTargets, waterGoal as defaultWaterGoal, initialMeals, type MealFood } from '@/mocks/nutrition';
 import { listUserDocs, setUserDoc, deleteUserDoc } from '@/lib/userData';
+import { marcarPontos } from '@/lib/comunidade';
 import { useAuth } from './AuthContext';
 
 interface NutritionTotals {
@@ -150,6 +151,7 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
           fiber: meal.fiber,
           created_at: new Date().toISOString(),
         });
+        marcarPontos('refeicao');
       } catch {
         setMeals((prev) => prev.filter((m) => m.id !== newId));
         setError('Falha ao salvar a refeição.');
