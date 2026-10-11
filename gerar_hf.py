@@ -16,15 +16,19 @@ def prompt(k):
             'to the feet is visible and nothing is cut off, the person fills only the middle 70 percent of the frame height with empty space above the head and below the feet, centered. Plain light gray seamless '
             'studio background, soft even lighting, natural realistic skin texture, sharp focus, DSLR photo, 85mm lens.')
 os.makedirs('corpos', exist_ok=True)
-log = open('corpos/log-hf.txt', 'a')
+log = open(f"corpos/log-hf-{os.environ.get('PARTE', 0)}.txt", 'a')
 spaces = ['black-forest-labs/FLUX.1-schnell']
 client = None
 for sp in spaces:
     try: client = Client(sp); break
     except Exception as e: print(sp, 'erro', e, file=log, flush=True)
 if not client: sys.exit(0)
-for k in open('corpos-hf.txt').read().split():
-    for n in (1, 2):
+ks = open('corpos-hf.txt').read().split()
+parte, total = int(os.environ.get('PARTE', 0)), int(os.environ.get('TOTAL', 1))
+ks = ks[parte::total]
+for n in (1, 2):
+    for k in ks:
+        if os.path.exists(f'corpos/{k}__{n}.webp'): continue
         try:
             img, seed = client.predict(prompt(k), 0, True, 1024, 1024, 4, api_name='/infer')
             shutil.copy(img, f'corpos/{k}__{n}.webp'); print(k, n, 'ok', file=log, flush=True)
