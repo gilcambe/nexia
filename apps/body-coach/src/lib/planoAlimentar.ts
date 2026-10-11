@@ -20,6 +20,7 @@ export interface PlanoAlimentar {
   refeicoes: RefeicaoPlano[];
   totais: Macros | null;
   extras: { titulo: string; texto: string[] }[];
+  do_coach?: boolean; // montado pelo coach no app (não veio de PDF)
 }
 
 const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();

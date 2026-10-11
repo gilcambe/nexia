@@ -5,17 +5,20 @@ import { useAuth } from '@/components/feature/AuthContext';
 import { getUserDoc } from '@/lib/userData';
 import { DIVISOES } from '@/lib/dayPlan';
 import { fichaDoPerfil, treinoDaFicha, type Ficha } from '@/lib/ficha';
+import { diaDaFichaCoach, sessaoDaFichaCoach, temFichaCoach } from '@/lib/coach/fichaCoach';
+import { lerAndamento, seriesFeitas } from '@/lib/treinoAndamento';
 import Card from '@/components/base/Card';
 
 export default function TodayCard() {
   const navigate = useNavigate();
   const { setOpen } = useCoach();
   const { user } = useAuth();
-  const [profile, setProfile] = useState<{ onboarding?: Record<string, unknown>; ficha?: Partial<Ficha>; mobility?: string[] } | null>(null);
+  const [profile, setProfile] = useState<{ onboarding?: Record<string, unknown>; ficha?: Partial<Ficha>; mobility?: string[]; ficha_coach?: unknown; ficha_coach_dia?: number } | null>(null);
+  const andamento = user?.id ? lerAndamento(user.id) : null;
 
   useEffect(() => {
     if (!user?.id) return;
-    getUserDoc<{ onboarding?: Record<string, unknown>; ficha?: Partial<Ficha>; mobility?: string[] }>(user.id, 'profile', 'main')
+    getUserDoc<{ onboarding?: Record<string, unknown>; ficha?: Partial<Ficha>; mobility?: string[]; ficha_coach?: unknown; ficha_coach_dia?: number }>(user.id, 'profile', 'main')
       .then((data) => {
         if (data) setProfile(data);
       })
@@ -33,10 +36,18 @@ export default function TodayCard() {
   }
   const dia = ficha ? DIVISOES[ficha.divisao].dias[ficha.proximoDia] : null;
 
-  const title = dia ? dia.titulo : 'Treino de hoje';
-  const subtitle = treino && ficha
-    ? `Ficha ${DIVISOES[ficha.divisao].nome} · ${treino.sessao.estimatedMinutes} min · ${treino.sessao.exercises.length} exercícios`
-    : 'Responda o questionário e o treino do seu plano aparece aqui.';
+  // A ficha que o coach montou vem antes da automática.
+  const fc = temFichaCoach(profile?.ficha_coach) ? profile.ficha_coach : null;
+  const sessaoCoach = fc ? sessaoDaFichaCoach(fc, diaDaFichaCoach(fc, profile?.ficha_coach_dia)) : null;
+
+  const title = andamento ? andamento.session.title : sessaoCoach ? sessaoCoach.title : dia ? dia.titulo : 'Treino de hoje';
+  const subtitle = andamento
+    ? `Treino em andamento · ${seriesFeitas(andamento)} séries anotadas. Continue de onde parou.`
+    : sessaoCoach && fc
+      ? `Ficha do coach${fc.coach ? ` ${fc.coach}` : ''} · ${sessaoCoach.exercises.length} exercícios · ~${sessaoCoach.estimatedMinutes} min`
+      : treino && ficha
+        ? `Ficha ${DIVISOES[ficha.divisao].nome} · ${treino.sessao.estimatedMinutes} min · ${treino.sessao.exercises.length} exercícios`
+        : 'Responda o questionário e o treino do seu plano aparece aqui.';
 
   return (
     <Card className="relative overflow-hidden" padding="p-6">
@@ -56,7 +67,7 @@ export default function TodayCard() {
           className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-500 px-6 py-3 text-sm font-semibold text-background-50 transition hover:bg-primary-600 whitespace-nowrap"
         >
           <i className="ri-play-circle-line text-lg"></i>
-          INICIAR TREINO
+          {andamento ? 'CONTINUAR TREINO' : 'INICIAR TREINO'}
         </button>
         <button
           onClick={() => setOpen(true)}

@@ -59,7 +59,12 @@ export async function getUserDoc<T>(uid: string, coll: BodyCoachCollection, id: 
   const key = chaveLocal(uid, coll, id);
   try {
     const snap = await getDoc(doc(await db(), 'bodycoach_users', uid, coll, id));
-    if (snap.exists()) return snap.data() as T;
+    if (snap.exists()) {
+      const data = snap.data() as T;
+      // Atualiza a cópia do aparelho (sem internet na academia, a ficha do coach continua lá).
+      if (coll === 'profile') { try { localStorage.setItem(key, JSON.stringify(data)); } catch { /* cheio: segue sem cópia */ } }
+      return data;
+    }
   } catch (err) {
     if (coll !== 'profile') throw err;
     console.warn('Banco indisponível; usando a cópia do aparelho.', err);

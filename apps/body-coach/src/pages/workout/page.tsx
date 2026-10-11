@@ -9,13 +9,17 @@ import { useWakeLock } from '@/lib/useWakeLock';
 import { sugerirCarga } from '@/lib/cargaSugerida';
 import VideoDoCoach from '@/components/feature/VideoDoCoach';
 import { alternativas, lesoesDoTexto, POR_ID, type Lesao } from '@/lib/exerciseDb';
+import { diaDaFichaCoach, sessaoDaFichaCoach, temFichaCoach, type FichaCoach } from '@/lib/coach/fichaCoach';
+import { guardarAndamento, lerAndamento, limparAndamento, seriesFeitas, type Origem, type TreinoAndamento } from '@/lib/treinoAndamento';
+import { apiOuGuardar, gravarOuGuardar } from '@/lib/pendentes';
+import PreTreinoCoach from './components/PreTreinoCoach';
 import PreTreino from './components/PreTreino';
 import MusicaTreino from './components/MusicaTreino';
 import EntretenimentoTreino from './components/EntretenimentoTreino';
 import { minutosDoTexto } from '@/lib/entretenimento';
 import GravarParaCoach from '@/components/feature/GravarParaCoach';
 import { dicaAoVivo } from '@/lib/liveCoach';
-import { getUserDoc, setUserDoc, listUserDocs } from '@/lib/userData';
+import { getUserDoc, listUserDocs } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
 import DescansoTimer from './components/DescansoTimer';
@@ -29,7 +33,7 @@ import MonitorCardiaco from '@/components/feature/MonitorCardiaco';
 import { estadoFC, kcalMusculacao, zerarSessaoFC } from '@/lib/ferramentas/frequencia';
 import type { DadosCartao } from '@/lib/ferramentas/cartao';
 import { definirVoz, falar, fraseExercicio, fraseFim, fraseSerie, vozDisponivel, vozLigada } from '@/lib/ferramentas/vozCoach';
-import { avisarTreinoFeito, duplaAtual, enviarStatusDupla } from '@/lib/ferramentas/social';
+import { duplaAtual, enviarStatusDupla } from '@/lib/ferramentas/social';
 
 type Phase =
   | 'PRE_SESSION'
@@ -46,14 +50,21 @@ export default function Workout() {
   const [respostas, setRespostas] = useState<Record<string, unknown> | null>(null);
   const [treino, setTreino] = useState<TreinoDoDia | null>(null);
   const [ficha, setFicha] = useState<Ficha | null>(null);
-  const [seguiuFicha, setSeguiuFicha] = useState(false);
+  const [fichaCoach, setFichaCoach] = useState<{ ficha: FichaCoach; dia: number } | null>(null);
+  const [usarApp, setUsarApp] = useState(false);
+  const [origem, setOrigem] = useState<Origem>({ tipo: 'livre' });
+  const [andamento, setAndamento] = useState<TreinoAndamento | null>(() => (user ? lerAndamento(user.id) : null));
+  const [retomado, setRetomado] = useState<TreinoAndamento | null>(null);
   const [estado, setEstado] = useState<'loading' | 'rest' | 'no-plan' | 'ready'>('loading');
 
   useEffect(() => {
     if (!user) return;
-    getUserDoc<{ onboarding?: Answers; ficha?: Partial<Ficha>; mobility?: string[] }>(user.id, 'profile', 'main')
+    setAndamento(lerAndamento(user.id));
+    getUserDoc<{ onboarding?: Answers; ficha?: Partial<Ficha>; mobility?: string[]; ficha_coach?: unknown; ficha_coach_dia?: number }>(user.id, 'profile', 'main')
       .then((p) => {
-        if (!p?.onboarding) return setEstado('no-plan');
+        // Com ficha do coach, treina mesmo sem ter respondido o questionário.
+        if (temFichaCoach(p?.ficha_coach)) setFichaCoach({ ficha: p.ficha_coach, dia: diaDaFichaCoach(p.ficha_coach, p.ficha_coach_dia) });
+        if (!p?.onboarding) return setEstado(temFichaCoach(p?.ficha_coach) ? 'ready' : 'no-plan');
         setFicha(fichaDoPerfil(p as Parameters<typeof fichaDoPerfil>[0]));
         setRespostas({ ...(p.onboarding as unknown as Record<string, unknown>), mobility: p.mobility ?? [] });
         setEstado('ready');
@@ -61,7 +72,45 @@ export default function Workout() {
       .catch(() => setEstado('no-plan'));
   }, [user]);
 
-  if (estado !== 'ready' || !respostas) return <WorkoutEmpty estado={estado} />;
+  // Treino concluído: o ciclo da ficha (do app ou do coach) avança para o próximo dia. Treino "só por hoje" não mexe.
+  const treinoSalvo = (o: Origem) => {
+    if (!user) return;
+    if (o.tipo === 'ficha') {
+      const nova = avancarFicha(o.ficha);
+      setFicha(nova);
+      void gravarOuGuardar(user.id, 'profile', 'main', { ficha: nova }, true).catch(() => {});
+    } else if (o.tipo === 'coach') {
+      const dia = (o.dia + 1) % Math.max(1, o.dias);
+      setFichaCoach((f) => (f ? { ...f, dia } : f));
+      void gravarOuGuardar(user.id, 'profile', 'main', { ficha_coach_dia: dia }, true).catch(() => {});
+    }
+    setOrigem({ tipo: 'livre' });
+  };
+
+  if (!treino && andamento) {
+    return (
+      <ContinuarTreino
+        t={andamento}
+        onContinuar={() => { setRetomado(andamento); setOrigem(andamento.origem); setTreino({ sessao: andamento.session, avisos: [], lesoes: andamento.lesoes }); setAndamento(null); }}
+        onDescartar={() => { if (user) limparAndamento(user.id); setAndamento(null); }}
+      />
+    );
+  }
+  if (estado !== 'ready') return <WorkoutEmpty estado={estado} />;
+  if (!treino && fichaCoach && (!usarApp || !respostas)) {
+    return (
+      <PreTreinoCoach
+        ficha={fichaCoach.ficha}
+        diaInicial={fichaCoach.dia}
+        onUsarApp={() => (respostas ? setUsarApp(true) : undefined)}
+        onStart={(dia) => {
+          setOrigem({ tipo: 'coach', dia, dias: fichaCoach.ficha.dias.length });
+          setTreino({ sessao: sessaoDaFichaCoach(fichaCoach.ficha, dia), avisos: [], lesoes: respostas ? [...lesoesDoTexto(respostas.injuries, respostas.symptoms, respostas.history)] : [] });
+        }}
+      />
+    );
+  }
+  if (!respostas) return <WorkoutEmpty estado="no-plan" />;
   if (!treino) {
     return (
       <PreTreino
@@ -69,21 +118,35 @@ export default function Workout() {
         divisaoInicial={ficha?.divisao}
         diaInicial={ficha?.proximoDia}
         onStart={(cfg) => {
-          setSeguiuFicha(!!ficha && cfg.divisao === ficha.divisao && cfg.diaDaDivisao === ficha.proximoDia);
+          const daFicha = !!ficha && cfg.divisao === ficha.divisao && cfg.diaDaDivisao === ficha.proximoDia;
+          setOrigem(daFicha && ficha ? { tipo: 'ficha', ficha } : { tipo: 'livre' });
           setTreino(treinoDaFicha(respostas, cfg.divisao, cfg.diaDaDivisao, cfg.estado, cfg.enfase));
         }}
       />
     );
   }
-  // Treino da ficha concluído: o ciclo avança para o próximo dia (treino "só por hoje" não mexe na ficha).
-  const treinoSalvo = () => {
-    if (!user || !ficha || !seguiuFicha) return;
-    const nova = avancarFicha(ficha);
-    setFicha(nova);
-    setSeguiuFicha(false);
-    void setUserDoc(user.id, 'profile', 'main', { ficha: nova }, true).catch(() => {});
-  };
-  return <WorkoutFlow session={treino.sessao} lesoes={treino.lesoes} onSessionChange={(sessao) => setTreino({ ...treino, sessao })} onSaved={treinoSalvo} />;
+  return <WorkoutFlow session={treino.sessao} lesoes={treino.lesoes} origem={origem} inicial={retomado} onSessionChange={(sessao) => setTreino({ ...treino, sessao })} onSaved={() => treinoSalvo(origem)} />;
+}
+
+// Treino que ficou pela metade (saiu da tela, fechou o app, acabou a bateria): continuar ou começar outro.
+function ContinuarTreino({ t, onContinuar, onDescartar }: { t: TreinoAndamento; onContinuar: () => void; onDescartar: () => void }) {
+  const feitas = seriesFeitas(t);
+  const min = Math.max(1, Math.round((Date.now() - new Date(t.startedAt).getTime()) / 60000));
+  return (
+    <div className="mx-auto max-w-3xl rounded-2xl border border-primary-200 bg-primary-50 p-4 sm:p-6" data-testid="continuar-treino">
+      <p className="text-xs font-semibold uppercase tracking-wide text-primary-700"><i className="ri-history-line mr-1"></i>Treino em andamento</p>
+      <h1 className="mt-1 font-heading text-xl font-bold text-foreground-950">{t.session.title}</h1>
+      <p className="mt-2 text-sm text-foreground-700">
+        Você parou no exercício {Math.min(t.exIndex + 1, t.session.exercises.length)} de {t.session.exercises.length}, com {feitas} série{feitas === 1 ? '' : 's'} anotada{feitas === 1 ? '' : 's'}. Começou há {min} min. Nada foi perdido.
+      </p>
+      <button type="button" onClick={onContinuar} className="mt-4 w-full rounded-xl bg-primary-500 px-6 py-3 text-sm font-semibold text-background-50 hover:bg-primary-600">
+        <i className="ri-play-circle-line mr-1"></i>CONTINUAR DE ONDE PAREI
+      </button>
+      <button type="button" onClick={() => { if (window.confirm('Apagar o treino em andamento e começar outro?')) onDescartar(); }} className="mt-3 w-full rounded-xl border border-background-200 bg-background-50 px-6 py-2.5 text-sm font-medium text-foreground-700">
+        Descartar e começar outro
+      </button>
+    </div>
+  );
 }
 
 function WorkoutEmpty({ estado }: { estado: string }) {
@@ -97,22 +160,31 @@ function WorkoutEmpty({ estado }: { estado: string }) {
   );
 }
 
-function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { session: Session; lesoes?: Lesao[]; onSessionChange?: (s: Session) => void; onSaved?: () => void }) {
+function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, onSaved }: { session: Session; lesoes?: Lesao[]; origem: Origem; inicial?: TreinoAndamento | null; onSessionChange?: (s: Session) => void; onSaved?: () => void }) {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const pesoAluno = Number(profile?.onboarding?.weight) || 70;
   const { setOpen } = useCoach();
-  const [startedAt] = useState(() => new Date().toISOString());
-  const [phase, setPhase] = useState<Phase>('PRE_SESSION');
+  const [startedAt] = useState(() => inicial?.startedAt ?? new Date().toISOString());
+  const [phase, setPhase] = useState<Phase>(() => (inicial?.phase as Phase | undefined) ?? 'PRE_SESSION');
+  const [ficouNoCelular, setFicouNoCelular] = useState(false);
   useWakeLock(phase !== 'PRE_SESSION' && phase !== 'SESSION_COMPLETE');
   // Cartão do treino para o story (Instagram/WhatsApp), montado ao finalizar.
   const [cartao, setCartao] = useState<Omit<DadosCartao, 'nome' | 'link'> | null>(null);
-  const [exIndex, setExIndex] = useState(0);
-  const [setsByEx, setSetsByEx] = useState<Record<string, SetLog[]>>({});
+  const [exIndex, setExIndex] = useState(() => inicial?.exIndex ?? 0);
+  const [setsByEx, setSetsByEx] = useState<Record<string, SetLog[]>>(() => inicial?.setsByEx ?? {});
   const [restLeft, setRestLeft] = useState(0);
   const [resting, setResting] = useState(false);
   const [cardioDone, setCardioDone] = useState(false);
-  const [cardioFeito, setCardioFeito] = useState<CardioAtividade[]>([]);
+  const [cardioFeito, setCardioFeito] = useState<CardioAtividade[]>(() => inicial?.cardioFeito ?? []);
+
+  // Guarda o treino no celular a cada mudança: sair da tela ou fechar o app não perde nada.
+  useEffect(() => {
+    if (!user?.id) return;
+    if (phase === 'PRE_SESSION') return;
+    if (phase === 'SESSION_COMPLETE') { limparAndamento(user.id); return; }
+    guardarAndamento(user.id, { startedAt, phase, exIndex, session, lesoes, setsByEx, cardioFeito, origem });
+  }, [user?.id, phase, exIndex, session, lesoes, setsByEx, cardioFeito, origem, startedAt]);
   // Melhores séries de treinos anteriores, por nome de exercício (para o selo de recorde).
   const [historicoSeries, setHistoricoSeries] = useState<Record<string, { weight: number; reps: number }[]>>({});
   useEffect(() => {
@@ -655,8 +727,10 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
               } catch {
                 // Sem armazenamento local: fica só no Firebase.
               }
-              await setUserDoc(user.id, 'workouts', session.id, w).catch(() => {});
-              avisarTreinoFeito(durationMin, kcalTreino);
+              // Sem internet, fica guardado no celular e vai sozinho quando a conexão voltar.
+              const foi = await gravarOuGuardar(user.id, 'workouts', session.id, w).catch(() => true);
+              const avisou = await apiOuGuardar(user.id, { acao: 'treino_feito', minutos: durationMin, kcal: kcalTreino, feitoEm: Date.now() });
+              setFicouNoCelular(!foi || !avisou);
               onSaved?.();
             }
             const rec = progressions.find((p) => p && p.recorde);
@@ -728,7 +802,9 @@ function WorkoutFlow({ session, lesoes = [], onSessionChange, onSaved }: { sessi
             </div>
             <h2 className="mt-4 font-heading text-2xl font-bold text-foreground-950">Sessão concluída!</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-foreground-600">Excelente trabalho. Bom descanso e hidratação.</p>
-            <p className="mt-3 text-xs text-foreground-400">Tudo foi salvo no seu diário mestre.</p>
+            {ficouNoCelular
+              ? <p className="mx-auto mt-3 max-w-md rounded-lg bg-secondary-50 px-3 py-2 text-xs text-secondary-900" role="status"><i className="ri-wifi-off-line mr-1"></i>Sem internet agora: o treino ficou guardado no celular e vai sozinho para o seu histórico quando a conexão voltar.</p>
+              : <p className="mt-3 text-xs text-foreground-400">Tudo foi salvo no seu diário mestre.</p>}
             {cartao && <div className="mx-auto mt-5 max-w-xs"><CompartilharCartao dados={cartao} /></div>}
             <button
               onClick={() => navigate('/')}

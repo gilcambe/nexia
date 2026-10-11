@@ -8,6 +8,8 @@ import CoachPanel from './CoachPanel';
 import InstallButton from './InstallButton';
 import { setUserDoc } from '@/lib/userData';
 import { codigoIndicacao } from '@/lib/ferramentas/cartao';
+import { papelEContatos } from '@/lib/papelCoach';
+import { enviarPendentes } from '@/lib/pendentes';
 
 // Menu enxuto: só as telas principais. As outras (Respirar, Equipe, Exames, Anti-Doping...) ficam em Ferramentas.
 const navItems = [
@@ -123,6 +125,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { profile, user, signOut, isLocalDemo } = useAuth();
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Atleta';
+  // Coach ganha o atalho "Meus alunos" no menu (o papel é descoberto uma vez por abertura do app).
+  const [souCoach, setSouCoach] = useState(false);
+  useEffect(() => { if (user) void papelEContatos().then((r) => setSouCoach(r.papel === 'coach')); }, [user]);
+  const itens = souCoach ? [navItems[0], { to: '/coach/alunos', label: 'Meus alunos', icon: 'ri-team-line' }, ...navItems.slice(1)] : navItems;
 
   const handleSignOut = async () => {
     await signOut();
@@ -136,7 +142,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <nav className="flex-1 px-3 space-y-1">
-        {navItems.map((item) => (
+        {itens.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
@@ -221,6 +227,14 @@ function Shell() {
     if (ref === codigoIndicacao(user.id)) return;
     void setUserDoc(user.id, 'profile', 'main', { indicado_por: ref, indicado_em: new Date().toISOString() }, true).catch(() => {});
   }, [user, profile]);
+  // Treinos salvos sem internet vão sozinhos quando a conexão volta.
+  useEffect(() => {
+    if (!user) return;
+    const enviar = () => { void enviarPendentes(user.id); };
+    enviar();
+    window.addEventListener('online', enviar);
+    return () => window.removeEventListener('online', enviar);
+  }, [user]);
   useEffect(() => {
     try { if (localStorage.getItem('bc_convite') && location.pathname !== '/chat') navigate('/chat', { replace: true }); } catch { /* sem armazenamento */ }
   }, [location.pathname, navigate]);
