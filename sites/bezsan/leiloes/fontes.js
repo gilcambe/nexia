@@ -14,18 +14,18 @@
 
   // Portais de leilões suportados
   const PORTAIS = {
-    caixa: 'https://www.caixa.gov.br/Leiloes',
-    bb: 'https://www.bb.com.br/pt-br/empresas/leiloes',
-    santander: 'https://www.santander.com.br/empresas/leiloes',
-    itau: 'https://www.itau.com.br/servicos/leiloes',
-    bradesco: 'https://www.bradesco.com.br/servicos/leiloes',
-    zuk: 'https://www.zuk.com.br/leiloes',
-    megaLeiloes: 'https://www.megaleiloes.com.br',
-    sold: 'https://www.sold.com.br/leiloes',
-    frazao: 'https://www.frazao.com.br/leiloes',
-    biasi: 'https://www.biasi.com.br/leiloes',
-    lanceJudicial: 'https://www.lancejudicial.com.br',
-    tjsp: 'https://www.tjsp.jus.br/consulta-leilao'
+    caixa: { url: 'https://www.caixa.gov.br/Leiloes', tipo: 'Leilão/Venda Direta' },
+    bb: { url: 'https://www.bb.com.br/pt-br/empresas/leiloes', tipo: 'Leilão' },
+    santander: { url: 'https://www.santander.com.br/empresas/leiloes', tipo: 'Leilão' },
+    itau: { url: 'https://www.itau.com.br/servicos/leiloes', tipo: 'Leilão' },
+    bradesco: { url: 'https://www.bradesco.com.br/servicos/leiloes', tipo: 'Leilão' },
+    zuk: { url: 'https://www.zuk.com.br/leiloes', tipo: 'Leilão' },
+    megaLeiloes: { url: 'https://www.megaleiloes.com.br', tipo: 'Leilão' },
+    sold: { url: 'https://www.sold.com.br/leiloes', tipo: 'Leilão' },
+    frazao: { url: 'https://www.frazao.com.br/leiloes', tipo: 'Leilão' },
+    biasi: { url: 'https://www.biasi.com.br/leiloes', tipo: 'Leilão' },
+    lanceJudicial: { url: 'https://www.lancejudicial.com.br', tipo: 'Leilão' },
+    tjsp: { url: 'https://www.tjsp.jus.br/consulta-leilao', tipo: 'Consulta' }
   };
 
   // Lista de Unidades Federativas (Estados) do Brasil
@@ -39,10 +39,11 @@
    * @returns {string} URL completa
    */
   function listaCaixa(uf) {
-    if (!uf) return PORTAIS.caixa;
+    const base = PORTAIS.caixa.url;
+    if (!uf) return base;
     const sigla = uf.trim().toUpperCase();
-    if (!UFS.includes(sigla)) return PORTAIS.caixa;
-    return `${PORTAIS.caixa}/${sigla.toLowerCase()}`;
+    if (!UFS.includes(sigla)) return base;
+    return `${base}/${sigla.toLowerCase()}`;
   }
 
   /**
@@ -56,7 +57,8 @@
     const sigla = uf.trim().toUpperCase();
     if (!UFS.includes(sigla)) return '';
     const city = encodeURIComponent(cidade.trim());
-    return `${PORTAIS.caixa}/iptu/${sigla.toLowerCase()}/${city}`;
+    const base = PORTAIS.caixa.url;
+    return `${base}/iptu/${sigla.toLowerCase()}/${city}`;
   }
 
   // Exporta o objeto esperado
