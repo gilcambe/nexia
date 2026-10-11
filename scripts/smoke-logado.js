@@ -119,8 +119,9 @@ async function main() {
     let project = pr.json && pr.json.record;
     if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PROJ}`);
     report(!!project, 'Vault: criar projeto', `${pr.status} ${pr.json && (pr.json.error || '')}`);
-    // Em pista, usa o projeto que já tem o repositório (ele só pode estar ligado a UM projeto por tenant).
-    if (PISTA) {
+    // Usa o projeto que já tem o repositório (ele só pode estar ligado a UM projeto por tenant;
+    // sem isso o onboarding do teste completo falha com UNIQUE quando uma pista ligou o repositório antes).
+    {
       const [ow, rp] = REPO.split('/');
       const rs = (await api('/nexia/repos')).json;
       const hit = ((rs && rs.items) || []).find(r => String(r.owner).toLowerCase() === ow.toLowerCase() && String(r.repo).toLowerCase() === rp.toLowerCase());
