@@ -613,7 +613,12 @@
   function mapaNoNavegador(g) {
     if (!g || g.servicos || !atual.endereco) return Promise.resolve(g);
     var cidade = semAcento(g.municipio.nome);
-    var q = [atual.endereco, g.municipio.nome, g.municipio.uf, 'Brasil'].join(', ');
+    var rua = String(atual.endereco)
+      .replace(/[,\s-]*\b(apto|apt|ap|apartamento|bloco|bl|sala|conjunto|conj|cj|unidade|torre|loja|box|vaga|casa)\b\.?\s*(n[º°o.]?\s*)?(?:[\w-]*\d[\w-]*|[A-Za-z]\b)/gi, '')
+      .replace(/\bn[º°o]\.?\s*(?=\d)|\bn\.\s*(?=\d)/gi, '')
+      .replace(/[,\s-]+[A-Za-zÀ-ú' ]+\s*[\/-]\s*[A-Z]{2}\s*$/, '')
+      .replace(/\s+,/g, ',').replace(/,\s*,+/g, ',').replace(/\s{2,}/g, ' ').replace(/^[,\s]+|[,\s]+$/g, '');
+    var q = [rua, g.municipio.nome, g.municipio.uf, 'Brasil'].join(', ');
     var RUA = /^(road|house|building|place|amenity|street|residential|highway|neighbourhood|quarter)$/;
     function nominatim() {
       return jsonGet('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&addressdetails=1&q=' + encodeURIComponent(q), { headers: { 'Accept-Language': 'pt-BR' } }).then(function (j) {

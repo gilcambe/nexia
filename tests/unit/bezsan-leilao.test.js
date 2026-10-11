@@ -341,3 +341,11 @@ test('LE19 leilao: edital com resposta ilegível de um modelo vai para o próxim
   assert.equal(r.json.dados.endereco, 'Rua B, 10');
   assert.equal(r.json.modelo, 'google:gem');
 });
+
+test('LE20 leilao: endereço do edital é limpo antes de ir ao mapa (apto, bloco, nº, cidade repetida)', () => {
+  const { enderecoParaMapa: f } = require('../../netlify/functions/leilao.js');
+  assert.equal(f('Rua Frei Antônio de Guadalupe, nº 67, apto 21, Vila Prudente, São Paulo/SP'), 'Rua Frei Antônio de Guadalupe, 67, Vila Prudente');
+  assert.equal(f('Av. Paulista, 1000, Bloco B, Apto 52 - Bela Vista'), 'Av. Paulista, 1000 - Bela Vista');
+  assert.equal(f('Rua Voluntários, 40, Casa Verde'), 'Rua Voluntários, 40, Casa Verde');
+  assert.equal(f(''), '');
+});
