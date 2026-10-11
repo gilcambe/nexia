@@ -1,0 +1,28 @@
+name: Sondar fontes de leilão (temporário)
+on:
+  push:
+    branches: [nexia/bezsan-leilao]
+    paths: ['.github/workflows/sondar-leilao.yml']
+permissions:
+  contents: read
+jobs:
+  sondar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Caixa CSV
+        run: |
+          for uf in SP MG; do
+            curl -sS -L -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36" -o /tmp/$uf.csv -w "$uf %{http_code} %{size_download} %{content_type}\n" "https://venda-imoveis.caixa.gov.br/listaweb/Lista_imoveis_$uf.csv" || true
+            file /tmp/$uf.csv; head -c 1500 /tmp/$uf.csv | iconv -f latin1 -t utf-8 || true; echo; wc -l /tmp/$uf.csv
+          done
+      - name: Caixa matrícula e página do imóvel
+        run: |
+          n=$(iconv -f latin1 -t utf-8 /tmp/SP.csv | grep -oE '^ ?[0-9]{10,}' | head -1 | tr -d ' ')
+          echo "imovel $n"
+          curl -sS -L -A "Mozilla/5.0" -o /tmp/m.pdf -w "matricula %{http_code} %{size_download} %{content_type}\n" "https://venda-imoveis.caixa.gov.br/editais/matricula/SP/$n.pdf" || true
+          file /tmp/m.pdf
+          curl -sS -L -A "Mozilla/5.0" -o /tmp/p.html -w "detalhe %{http_code} %{size_download}\n" "https://venda-imoveis.caixa.gov.br/sistema/detalhe-imovel.asp?hdnOrigem=index&hdnimovel=$n" || true
+          head -c 600 /tmp/p.html; echo
+      - name: DataJud
+        run: |
+          curl -sS -X POST "https://api-publica.datajud.cnj.jus.br/api_publica_tjsp/_search" -H "Authorization: APIKey cDZHYzlZa0JadVREZDJCendQbXY6SkJlTzNjLV9TRENyQk1RdnFKZGRQdw==" -H "Content-Type: application/json" -d '{"size":1,"query":{"match_all":{}}}' -w "\nDATAJUD %{http_code}\n" | tail -c 1500
