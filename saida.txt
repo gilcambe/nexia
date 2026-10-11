@@ -1,0 +1,13 @@
+===== init
+{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-03-26","capabilities":{"tools":{"listChanged":false},"resources":{"subscribe":false,"listChanged":false},"prompts":{"listChanged":false}},"serverInfo":{"name":"Leilões Judiciais MCP Server","version":"1.0.0"}}}
+HTTP 200 application/json
+
+===== tools
+{"jsonrpc":"2.0","id":2,"result":{"tools":[{"name":"search_leiloes","description":"Busca leilões judiciais e extrajudiciais por palavra-chave, estado ou categoria.","inputSchema":{"type":"object","properties":{"query":{"type":"string","description":"Termo de busca"},"estado":{"type":"string","description":"Sigla da UF (ex: SP, PR)"},"categoria":{"type":"string","description":"Segmento ou subcategoria da navegação (imoveis, veiculos, animais, maquinas-e-equipamentos, joias-e-metais-preciosos, informatica-e-eletronicos, bicicletas, todos-os-leiloes)"}},"required":["query"]}},{"name":"get_leilao_details","description":"Obtém informações detalhadas e edital de um lote.","inputSchema":{"type":"object","properties":{"leilaoId":{"type":"string","description":"ID do leilão ou lote"}},"required":["leilaoId"]}}]}}
+HTTP 200 application/json
+
+===== resources
+{"jsonrpc":"2.0","id":3,"result":{"resources":[]}}
+HTTP 200 application/json
+
+{"status":"ok","service":"leiloesjudiciais-api","timestamp":"2026-10-11T01:33:01.689Z"}
