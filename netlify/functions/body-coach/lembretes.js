@@ -4,6 +4,7 @@
 // hora do treino (só se ainda não treinou hoje) e beber água. Lê só quem tem lembrete neste horário.
 
 const { avisar, prefsLimpas, horariosDe, slot } = require('./push');
+const { rodarCobrancas } = require('./negocio');
 
 const agoraBR = (t) => new Date(t - 3 * 3600000);
 const diaBR = (t) => agoraBR(t).toISOString().slice(0, 10);
@@ -13,6 +14,8 @@ async function rodarLembretes(db, t = Date.now()) {
   const s = slot(`${String(br.getUTCHours()).padStart(2, '0')}:${String(br.getUTCMinutes()).padStart(2, '0')}`);
   const hoje = diaBR(t);
   const marca = `${hoje} ${s}`;
+  // Mensalidade: uma vez por dia, às 09:00 de Brasília.
+  const cobrancas = s === '09:00' ? await rodarCobrancas(db, t).catch((e) => ({ erro: e.message })) : undefined;
   const snap = await db.collection('bc_push').where('horarios', 'array-contains', s).limit(300).get();
   let enviados = 0;
   for (const doc of snap.docs) {
@@ -31,7 +34,7 @@ async function rodarLembretes(db, t = Date.now()) {
     }
     if (prefs.agua.ativo && horariosDe({ ...prefs, treino: { ativo: false } }).includes(s)) enviados += await avisar(db, doc.id, { titulo: 'Hora de beber água 💧', corpo: 'Um copo agora. Toque para marcar.', url: 'nutrition', tag: 'agua' }, 'agua');
   }
-  return { slot: s, pessoas: snap.docs.length, enviados };
+  return { slot: s, pessoas: snap.docs.length, enviados, cobrancas };
 }
 
 module.exports = { rodarLembretes };

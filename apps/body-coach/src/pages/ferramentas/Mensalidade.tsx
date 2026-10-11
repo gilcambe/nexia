@@ -5,7 +5,7 @@ import Card from '@/components/base/Card';
 import { chatApi } from '@/lib/chat';
 import { TIPOS_CHAVE, chaveValida, codigoPix, mesAtual, nomeMes, reais, type TipoChave } from '@/lib/ferramentas/pix';
 
-interface Pix { tipo: TipoChave; chave: string; nome: string; cidade: string; valor: number; vencimento: number }
+interface Pix { tipo: TipoChave; chave: string; nome: string; cidade: string; valor: number; vencimento: number; lembrete?: boolean }
 interface AlunoPag { uid: string; nome: string; pago: boolean; avisou: boolean; valor: number | null }
 type Resposta =
   | { papel: 'coach'; mes: string; pix: Pix | null; alunos: AlunoPag[] }
@@ -98,6 +98,7 @@ function Coach({ r, mes, setMes, recarregar }: { r: Extract<Resposta, { papel: '
               <label className="text-xs text-foreground-500">Mensalidade (R$)<input type="number" inputMode="decimal" min={0} step="0.01" value={f.valor || ''} onChange={(e) => setF({ ...f, valor: Number(e.target.value) })} className={`${input} mt-1`} /></label>
               <label className="text-xs text-foreground-500">Vence no dia<input type="number" min={1} max={28} value={f.vencimento} onChange={(e) => setF({ ...f, vencimento: Number(e.target.value) })} className={`${input} mt-1`} /></label>
             </div>
+            <label className="flex items-center gap-2 text-sm text-foreground-700"><input type="checkbox" checked={f.lembrete !== false} onChange={(e) => setF({ ...f, lembrete: e.target.checked })} className="h-4 w-4 accent-primary-500" />Lembrar os alunos sozinho (3 dias antes, no dia e 3 dias depois)</label>
           </div>
           {erro && <p className="mt-2 text-sm text-red-600" role="alert">{erro}</p>}
           <button type="button" disabled={ocupado} onClick={() => void salvar()} className="mt-3 w-full rounded-xl bg-primary-500 px-4 py-3 text-sm font-semibold text-background-50 disabled:opacity-60">Salvar chave Pix</button>
@@ -114,6 +115,7 @@ function Coach({ r, mes, setMes, recarregar }: { r: Extract<Resposta, { papel: '
           </div>
         </Card>
       )}
+      <Link to="/coach/financeiro" className="block rounded-2xl border border-primary-200 bg-primary-50 p-3 text-sm font-semibold text-primary-800"><i className="ri-bar-chart-2-line mr-1"></i>Financeiro completo: 12 meses, cobrança e vendas de programas<i className="ri-arrow-right-s-line float-right text-lg"></i></Link>
       <Card>
         <div className="flex items-center justify-between">
           <button type="button" onClick={() => setMes(mesesAntes(mes, 1))} aria-label="Mês anterior" className="rounded-lg p-2"><i className="ri-arrow-left-s-line text-xl"></i></button>

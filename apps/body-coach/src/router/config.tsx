@@ -35,6 +35,9 @@ const Modelos = carregar(() => import("../pages/coach/Modelos"));
 const ModeloEditar = carregar(() => import("../pages/coach/ModeloEditar"));
 const Anamnese = carregar(() => import("../pages/anamnese/page"));
 const Avisos = carregar(() => import("../pages/avisos/page"));
+const Financeiro = carregar(() => import("../pages/coach/Financeiro"));
+const Programas = carregar(() => import("../pages/coach/Programas"));
+const Loja = carregar(() => import("../pages/loja/page"));
 const Ferramentas = carregar(() => import("../pages/ferramentas/page"));
 
 const routes: RouteObject[] = [
@@ -71,6 +74,10 @@ const routes: RouteObject[] = [
     element: <Compartilhado />,
   },
   {
+    path: "/loja/:codigo",
+    element: <Loja />,
+  },
+  {
     path: "/coach/evolucao/:uid/relatorio/:id",
     element: (
       <AuthGuard>
@@ -101,6 +108,8 @@ const routes: RouteObject[] = [
       { path: "coach/modelos/:id", element: <ModeloEditar /> },
       { path: "anamnese", element: <Anamnese /> },
       { path: "avisos", element: <Avisos /> },
+      { path: "coach/financeiro", element: <Financeiro /> },
+      { path: "coach/programas", element: <Programas /> },
       { path: "coach/evolucao", element: <AlunosEvolucao /> },
       { path: "coach/demonstracoes", element: <Demonstracoes /> },
       { path: "coach/evolucao/:uid", element: <AlunoEvolucao /> },
