@@ -5,3 +5,5 @@ f-clara-alto-frente 2 erro You have exceeded your ZeroGPU quota (90s requested v
 2 1 erro 'NoneType' object has no attribute 'groups'
 f-clara-alto-frente 2 ok
 2 2 erro 'NoneType' object has no attribute 'groups'
+m-media-alto-lado 3 ok
+m-media-alto-lado 4 ok
