@@ -1,0 +1,37 @@
+name: Sonda parecer (temporaria)
+on:
+  push:
+    branches: [nexia/bezsan-parecer-completo]
+    paths: [.github/workflows/sonda-parecer.yml]
+permissions:
+  contents: write
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sondar
+        run: |
+          UA="NEXIA-Bezsan/1.0 (contato gcbezerra@gmail.com)"
+          o=saida.txt
+          t(){ echo "=== $1" >> $o; curl -s -m 25 -A "$UA" -H "Origin: https://bezsan.pages.dev" -D h.txt -o b.txt "${@:2}"; head -1 h.txt >> $o; grep -i '^access-control' h.txt >> $o; head -c 1500 b.txt >> $o; echo >> $o; }
+          t nominatim "https://nominatim.openstreetmap.org/search?q=Rua+Augusta,+Sao+Paulo,+SP&format=json&limit=1&countrycodes=br&addressdetails=1"
+          t ibge-mun "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?nome=Campinas"
+          t ibge-mun-id "https://servicodados.ibge.gov.br/api/v1/localidades/estados/SP/municipios" 
+          t ibge-pop-agregado "https://servicodados.ibge.gov.br/api/v3/agregados/6579/periodos/2018|2019|2020|2021|2024/variaveis/9324?localidades=N6[3509502]"
+          t ibge-censo2022 "https://servicodados.ibge.gov.br/api/v3/agregados/4709/periodos/2010|2022/variaveis/93?localidades=N6[3509502]"
+          t ibge-pib "https://servicodados.ibge.gov.br/api/v3/agregados/5938/periodos/2017|2021/variaveis/37?localidades=N6[3509502]"
+          t ibge-pesquisa "https://servicodados.ibge.gov.br/api/v1/pesquisas/indicadores/29171|29765|60037/resultados/3509502"
+          t overpass -X POST --data-urlencode 'data=[out:json][timeout:20];(node(around:1000,-23.5558,-46.6620)[amenity~"school|hospital|clinic|pharmacy|bank|supermarket"];node(around:1000,-23.5558,-46.6620)[shop=supermarket];node(around:1000,-23.5558,-46.6620)[public_transport=station];node(around:1000,-23.5558,-46.6620)[railway=station];);out count;' https://overpass-api.de/api/interpreter
+          t overpass-kumi -X POST --data-urlencode 'data=[out:json][timeout:20];node(around:800,-23.5558,-46.6620)[amenity];out count;' https://overpass.kumi.systems/api/interpreter
+          t bcb-ivgr "https://api.bcb.gov.br/dados/serie/bcdata.sgs.21340/dados/ultimos/13?formato=json"
+          t bcb-ipca "https://api.bcb.gov.br/dados/serie/bcdata.sgs.433/dados/ultimos/12?formato=json"
+          t bcb-selic "https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/1?formato=json"
+          t fipezap "https://www.fipe.org.br/pt-br/indices/fipezap/"
+          t viacep "https://viacep.com.br/ws/01310100/json/"
+          t brasilapi-cep "https://brasilapi.com.br/api/cep/v2/01310100"
+          t photon "https://photon.komoot.io/api/?q=Rua+Augusta+Sao+Paulo&limit=1"
+      - name: Publicar
+        run: |
+          git config user.name nexia-bot; git config user.email bot@nexia.invalid
+          git checkout -b sondas-parecer-${{ github.run_id }}
+          git add saida.txt; git commit -qm sonda; git push -q origin sondas-parecer-${{ github.run_id }}
