@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/components/feature/AuthContext';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { getFirebase } from '@/lib/firebaseClient';
@@ -10,6 +10,9 @@ type Mode = 'login' | 'signup';
 export default function Auth() {
   const navigate = useNavigate();
   const { signIn, signUp } = useAuth();
+  // Volta para onde a pessoa estava (ex.: a loja de um coach) depois de entrar.
+  const voltar = (useLocation().state as { from?: string } | null)?.from;
+  const destino = voltar && voltar.startsWith('/') && voltar !== '/auth' ? voltar : null;
 
   const [mode, setMode] = useState<Mode>('login');
   const [name, setName] = useState('');
@@ -77,7 +80,7 @@ export default function Auth() {
         if (err) {
           setError(err);
         } else {
-          navigate('/', { replace: true });
+          navigate(destino ?? '/', { replace: true });
         }
       } else {
         const { error: err, needsEmailConfirm } = await signUp(
@@ -92,7 +95,7 @@ export default function Auth() {
             'Conta criada! Enviamos um link de confirmação para o seu e-mail. Confirme para começar.',
           );
         } else {
-          navigate('/onboarding', { replace: true });
+          navigate(destino?.startsWith('/loja/') ? destino : '/onboarding', { replace: true });
         }
       }
     } finally {

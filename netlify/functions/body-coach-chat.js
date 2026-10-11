@@ -15,6 +15,7 @@
 const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware');
 const { equipe, textoDoTreino, situacaoAnamnese } = require('./body-coach/equipe');
 const { acoesPush, avisarConversa } = require('./body-coach/push');
+const { negocio, lojaVer } = require('./body-coach/negocio');
 
 const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 const par = (a, b) => [a, b].sort().join('__');
@@ -281,6 +282,9 @@ async function executar(body, uid, db, ctx = {}) {
   // Avisos no celular (Web Push grátis): ligar, desligar, escolher lembretes, testar.
   if (acao && acao.startsWith('push_')) { const r = await acoesPush(body, uid, db); if (r) return r; }
 
+  // Comprar um programa na loja de um coach: quem compra pode ainda não ter escolhido aluno/coach.
+  if (['compra_criar', 'compra_avisar', 'compras_minhas'].includes(acao)) return negocio(body, uid, db, eu || {}, {});
+
   if (!eu) return [409, { error: 'Antes, escolha se você é aluno ou coach.' }];
 
   // Grava a ficha ou a dieta no perfil do aluno e avisa na conversa (usado ao montar para um aluno e ao aplicar um modelo).
@@ -299,6 +303,8 @@ async function executar(body, uid, db, ctx = {}) {
   };
   const daEquipe = await equipe(body, uid, db, eu, { fichaLimpa, planoLimpo, gravarPrescricao });
   if (daEquipe) return daEquipe;
+  const doNegocio = await negocio(body, uid, db, eu, { gravarPrescricao, situacaoAnamnese });
+  if (doNegocio) return doNegocio;
 
   // ── Evolução: o lado do aluno ──
   if (acao === 'evolucao_config') {
@@ -444,7 +450,7 @@ async function executar(body, uid, db, ctx = {}) {
     if (!tipo || chave.length < 5) return [400, { error: 'Informe o tipo e a chave Pix.' }];
     if (nome.length < 3 || cidade.length < 2) return [400, { error: 'Informe o seu nome e a sua cidade (aparecem no banco do aluno).' }];
     if (!(valor >= 0 && valor <= 100000)) return [400, { error: 'Valor inválido.' }];
-    const pix = { tipo, chave, nome, cidade, valor, vencimento };
+    const pix = { tipo, chave, nome, cidade, valor, vencimento, lembrete: body.lembrete !== false };
     await dir.doc(uid).set({ pix }, { merge: true });
     return [200, { pix }];
   }
@@ -658,6 +664,7 @@ async function executar(body, uid, db, ctx = {}) {
 
 exports.executar = executar;
 exports.verCompartilhado = verCompartilhado;
+exports.lojaVer = lojaVer;
 exports.resumirSemana = resumirSemana;
 
 exports.handler = async (event) => {
@@ -667,6 +674,17 @@ exports.handler = async (event) => {
   let body;
   try { body = JSON.parse(event.body || '{}'); } catch { return resposta(event, 400, { error: 'Pedido inválido.' }); }
   // Link público de avaliação: o único pedido sem login (o token aleatório é a chave, e vence sozinho).
+  // Loja pública do coach (vitrine dos programas): sem login, só dados públicos.
+  if (body && body.acao === 'loja_ver') {
+    try {
+      const { db } = require('./firebase-init');
+      if (!db) return resposta(event, 503, { error: 'Indisponível agora.' });
+      const [status, out] = await lojaVer(body, db);
+      return resposta(event, status, out);
+    } catch {
+      return resposta(event, 503, { error: 'Indisponível agora. Tente de novo.' });
+    }
+  }
   if (body && body.acao === 'compartilhado_ver') {
     try {
       const { db } = require('./firebase-init');
@@ -680,7 +698,7 @@ exports.handler = async (event) => {
   const auth = await verifyBearerToken(event);
   if (!auth.ok) return resposta(event, 401, { error: 'Entre na sua conta para conversar.' });
   // leituras (a tela confere a cada poucos segundos) não gastam o limite nem a cota do banco grátis
-  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar', 'desafio_criar', 'desafio_checkin', 'comentar', 'agendar_avaliacao', 'compartilhar_criar', 'dupla_criar', 'dupla_entrar', 'pix_config', 'pagamento_avisar', 'ranking_config', 'treino_feito', 'ficha_salvar', 'dieta_salvar', 'anamnese_salvar', 'anamnese_responder', 'modelo_salvar', 'modelo_apagar', 'modelo_aplicar', 'push_assinar', 'push_prefs', 'push_testar'].includes(body.acao)) {
+  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar', 'desafio_criar', 'desafio_checkin', 'comentar', 'agendar_avaliacao', 'compartilhar_criar', 'dupla_criar', 'dupla_entrar', 'pix_config', 'pagamento_avisar', 'ranking_config', 'treino_feito', 'ficha_salvar', 'dieta_salvar', 'anamnese_salvar', 'anamnese_responder', 'modelo_salvar', 'modelo_apagar', 'modelo_aplicar', 'push_assinar', 'push_prefs', 'push_testar', 'pagamento_lembrar', 'programa_salvar', 'compra_criar', 'compra_avisar', 'compra_confirmar'].includes(body.acao)) {
     const rl = await checkRateLimit(auth.uid, 'body-coach-chat');
     if (!rl.ok) return resposta(event, 429, { error: 'Muitos pedidos seguidos. Aguarde um instante.' });
   }

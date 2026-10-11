@@ -38,6 +38,8 @@ export default function MeusAlunos() {
         <p className="mt-1 text-sm text-foreground-600">Quem treinou, quem sumiu e quem pagou. Toque no aluno para montar a ficha de treino e a dieta.</p>
       </header>
       <div className="grid grid-cols-2 gap-2">
+        <Link to="/coach/financeiro" className="rounded-xl border border-background-200 bg-background-50 px-3 py-2.5 text-sm font-semibold text-foreground-800"><i className="ri-money-dollar-circle-line mr-1 text-primary-600"></i>Financeiro</Link>
+        <Link to="/coach/programas" className="rounded-xl border border-background-200 bg-background-50 px-3 py-2.5 text-sm font-semibold text-foreground-800"><i className="ri-store-2-line mr-1 text-primary-600"></i>Programas</Link>
         <Link to="/coach/modelos" className="rounded-xl border border-background-200 bg-background-50 px-3 py-2.5 text-sm font-semibold text-foreground-800"><i className="ri-stack-line mr-1 text-primary-600"></i>Modelos</Link>
         <Link to="/coach/anamnese" className="rounded-xl border border-background-200 bg-background-50 px-3 py-2.5 text-sm font-semibold text-foreground-800"><i className="ri-survey-line mr-1 text-primary-600"></i>Anamnese</Link>
       </div>
