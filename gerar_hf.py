@@ -29,7 +29,7 @@ if not client: sys.exit(0)
 ks = open('corpos-hf.txt').read().split()
 parte, total = int(os.environ.get('PARTE', 0)), int(os.environ.get('TOTAL', 1))
 ks = ks[parte::total]
-for n in (3, 4):
+for n in (5, 6):
     for k in ks:
         if os.path.exists(f'corpos/{k}__{n}.webp'): continue
         try:

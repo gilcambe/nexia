@@ -1,12 +1,1 @@
-m-clara-alto-lado
-m-media-alto-lado
-m-morena-alto-lado
-m-negra-alto-lado
-f-clara-alto-lado
-f-media-alto-lado
-f-morena-alto-lado
-f-negra-alto-lado
 m-clara-alto-frente
-m-morena-alto-frente
-f-clara-alto-frente
-f-clara-alto-costas
