@@ -54,6 +54,12 @@ jobs:
         env:
           SITE: ${{ inputs.site }}
         run: node tests/e2e/agenda-ao-vivo.js "$SITE" "$RUNNER_TEMP/shots"
+      # Bezsan: Central de Leilões no ar (IA grátis e CNJ de verdade, na agenda de teste).
+      - name: Testar a Central de Leilões
+        if: always() && inputs.slug == 'bezsan'
+        env:
+          SITE: ${{ inputs.site }}
+        run: node tests/e2e/leiloes-ao-vivo.js "$SITE" "$RUNNER_TEMP/shots"
       - name: Guardar fotos na branch previews
         if: always()
         env:

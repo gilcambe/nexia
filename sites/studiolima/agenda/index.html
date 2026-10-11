@@ -10,6 +10,8 @@
 <meta name="agenda-api" content="https://nexia.gcbezerra.workers.dev/api/agenda">
 <!-- Endereço da página do site (para a aba "Site", que edita a página tocando nela). Vazio = sem aba Site. -->
 <meta name="agenda-site-url" content="../">
+<!-- Botão extra no menu de baixo, "Nome|endereço" (ex.: "Leilões|../leiloes/"). Vazio = sem botão. -->
+<meta name="agenda-extra" content="">
 <meta name="theme-color" content="#825c4e">
 <title>Agenda · Studio Lima</title>
 <style>
@@ -211,6 +213,7 @@
   <nav class="baixo">
     <button type="button" class="ativa" id="nav-agenda">Agenda<span class="badge oculto" id="nav-pend"></span></button>
     <button type="button" id="nav-site" class="oculto">Site</button>
+    <button type="button" id="nav-extra" class="oculto"></button>
     <button type="button" id="nav-ajustes">Ajustes</button>
   </nav>
 </div>
@@ -943,6 +946,12 @@
   if (!SITE) { document.body.innerHTML = '<p style="padding:24px">Agenda não configurada.</p>'; return; }
   fetch(API + '?site=' + encodeURIComponent(SITE)).then(function (r) { return r.json(); }).then(function (j) { if (j.nome) $('login-nome').textContent = j.nome; }).catch(function () {});
   if (SITE_URL) mostrar($('nav-site'), true);
+  var EXTRA = (meta('agenda-extra') || '').split('|');
+  if (EXTRA.length === 2 && EXTRA[0] && /^(\.\.?\/|\/)[A-Za-z0-9._\/-]*$/.test(EXTRA[1])) {
+    $('nav-extra').textContent = EXTRA[0];
+    $('nav-extra').onclick = function () { location.href = EXTRA[1]; };
+    mostrar($('nav-extra'), true);
+  }
   if (estado.token) abrirApp(); else telaLogin();
 })();
 </script>

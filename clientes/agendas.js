@@ -36,6 +36,7 @@ const AGENDAS = {
   bezsan: {
     nome: 'Bezsan Leilões',
     versao: 1,
+    leilao: true, // Central de Leilões no painel (/api/leilao)
     codigo_salt: 'd4bc03fcaef5ec73e56a884c7fb9096a',
     codigo_hash: 'ed6b4ba3caa2f400ebb4562d895ffc27fdd260676563b77bcd8002ff2c0108b4',
     config: {
@@ -62,6 +63,7 @@ const AGENDAS = {
     codigo_salt: '00498ea74d1b0d70b4f350cf4a62acba',
     codigo_hash: '54ec012b8a1e2da7e86198c870f455099e36609e64a23c62bdeab1534f8b70e7',
     codigo_sempre: true, // só aqui: o teste no ar refaz o "Primeiro acesso" toda vez
+    leilao: true, // o teste no ar também passa pela Central de Leilões
     config: {
       nome: 'Agenda de Teste',
       whatsapp: '5511999998888',
