@@ -4,7 +4,7 @@ name: Gerar corpos realistas
 on:
   push:
     branches: [nexia/gerar-corpos]
-    paths: [.github/workflows/gerar-corpos.yml, corpos-pedidos.txt]
+    paths: [corpos-pedidos.txt]
 permissions:
   contents: write
 concurrency: { group: gerar-corpos, cancel-in-progress: true }
@@ -18,19 +18,13 @@ jobs:
         shell: bash
         run: |
           set +e
-          curl -s --max-time 90 -o /tmp/t.bin -w 'diag http=%{http_code} type=%{content_type}\n' "https://nexia.gcbezerra.workers.dev/api/corpo-ia?k=m-clara-medio-frente&v=diag$RANDOM"
-          rm -rf corpos; mkdir -p corpos
-          for k in m-clara-medio-frente m-clara-alto-frente f-media-alto-costas m-negra-medio-frente; do
-            curl -s --max-time 90 -o /tmp/t.bin -w "$k http=%{http_code} type=%{content_type}\n" "https://nexia.gcbezerra.workers.dev/api/corpo-ia?k=$k&v=d$RANDOM" >> corpos/diag.txt
-            case "$(file -b /tmp/t.bin)" in JPEG*) echo jpeg >> corpos/diag.txt;; *) head -c 400 /tmp/t.bin | tr -c '[:print:]\n' '.' >> corpos/diag.txt; echo >> corpos/diag.txt;; esac
-          done
-          exit 0
           rm -rf corpos; mkdir -p corpos; log=corpos/log.txt
           for k in $(cat corpos-pedidos.txt); do for n in 1 2; do
             for t in 1 2 3; do
               code=$(curl -s --max-time 90 -o "corpos/${k}__$n.jpg" -w '%{http_code}' "https://nexia.gcbezerra.workers.dev/api/corpo-ia?k=$k&v=$n$t$RANDOM")
               echo "$k $n t$t http=$code" >> $log
               [ "$code" = 200 ] && break
+              if grep -q 4006 "corpos/${k}__$n.jpg" 2>/dev/null; then echo "cota do dia acabou" >> $log; rm -f "corpos/${k}__$n.jpg"; break 3; fi
               rm -f "corpos/${k}__$n.jpg"; sleep $((t*5))
             done
           done; done
