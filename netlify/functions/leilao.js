@@ -47,6 +47,17 @@ function tribunalDoProcesso(numero) {
   else if (j === '5' && Number(tr) >= 1 && Number(tr) <= 24) alias = 'trt' + Number(tr);
   return alias ? { numero: d, alias } : null;
 }
+// Movimentações que pesam para quem arremata (procura em todas, não só nas últimas).
+const SINAIS_RE = /embargo|agravo|apela|recurso|suspens|sobrest|nulidade|anula|impugna|arremata|adjudica|remi[cç]|acordo|homologa|extin|arquiv|cancel|desist/i;
+function sinaisDoProcesso(movs) {
+  const vistos = new Map();
+  for (const m of movs) {
+    const nome = str(m && m.nome, 120);
+    if (!nome || !SINAIS_RE.test(nome) || vistos.has(nome)) continue;
+    vistos.set(nome, { data: m.dataHora, nome });
+  }
+  return [...vistos.values()].slice(0, 20);
+}
 function resumirProcesso(src) {
   const movs = Array.isArray(src.movimentos) ? src.movimentos.slice() : [];
   movs.sort((a, b) => String(b.dataHora || '').localeCompare(String(a.dataHora || '')));
@@ -59,6 +70,7 @@ function resumirProcesso(src) {
     ajuizado_em: src.dataAjuizamento,
     atualizado_em: src.dataHoraUltimaAtualizacao,
     movimentos: movs.slice(0, 15).map(m => ({ data: m.dataHora, nome: m.nome })),
+    sinais: sinaisDoProcesso(movs),
   };
 }
 
@@ -116,14 +128,141 @@ async function buscarLeiloesJudiciais(fetchFn, { busca, uf }, now) {
   return lista;
 }
 
+// ── Região: só fontes públicas e grátis (IBGE, Banco Central, OpenStreetMap/Nominatim/Overpass) ──
+const UA = 'NEXIA-Bezsan-Leiloes/1.0 (+https://bezsan.pages.dev)';
+const DIA = 24 * 60 * 60 * 1000;
+const _cacheRegiao = new Map();
+const semAcento = s => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+async function emCache(chave, ms, now, fn) {
+  const c = _cacheRegiao.get(chave);
+  if (c && now() - c.em < ms) return c.valor;
+  const valor = await fn();
+  if (valor !== null && valor !== undefined) {
+    if (_cacheRegiao.size > 500) _cacheRegiao.clear();
+    _cacheRegiao.set(chave, { em: now(), valor });
+  }
+  return valor;
+}
+async function jsonDe(fetchFn, url, opcoes = {}, ms = 12000) {
+  const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+  const t = ctl ? setTimeout(() => ctl.abort(), ms) : null;
+  try {
+    const r = await fetchFn(url, { ...opcoes, headers: { 'User-Agent': UA, Accept: 'application/json', ...(opcoes.headers || {}) }, signal: ctl ? ctl.signal : undefined });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch { return null; } finally { if (t) clearTimeout(t); }
+}
+const SERVICOS = [
+  ['educacao', 'Escolas e faculdades', 'nwr(around:@)[amenity~"^(school|kindergarten|college|university)$"];'],
+  ['saude', 'Saúde (hospital, posto, farmácia)', 'nwr(around:@)[amenity~"^(hospital|clinic|doctors|pharmacy)$"];'],
+  ['mercado', 'Mercados e padarias', 'nwr(around:@)[shop~"^(supermarket|convenience|bakery|greengrocer)$"];'],
+  ['transporte', 'Ônibus, metrô e trem', 'nwr(around:@)[highway=bus_stop];nwr(around:@)[railway~"^(station|subway_entrance|tram_stop)$"];'],
+  ['lazer', 'Praças e parques', 'nwr(around:@)[leisure~"^(park|playground|sports_centre|pitch)$"];'],
+  ['comercio', 'Bancos, restaurantes e comércio', 'nwr(around:@)[amenity~"^(bank|restaurant|cafe|fast_food)$"];'],
+];
+function numIbge(v) { const n = Number(String(v == null ? '' : v).replace(',', '.')); return Number.isFinite(n) ? n : null; }
+function serieIbge(lista, id) {
+  const ind = (Array.isArray(lista) ? lista : []).find(x => x && Number(x.id) === id);
+  const res = ind && Array.isArray(ind.res) && ind.res[0] && ind.res[0].res;
+  if (!res || typeof res !== 'object') return [];
+  return Object.keys(res).map(a => ({ ano: Number(a), valor: numIbge(res[a]) })).filter(x => x.ano > 1900 && x.valor !== null).sort((a, b) => a.ano - b.ano);
+}
+function taxaAnual(ini, fim, anos) { return ini > 0 && fim > 0 && anos > 0 ? Math.pow(fim / ini, 1 / anos) - 1 : null; }
+const arred1 = n => (n === null || n === undefined ? null : Math.round(n * 1000) / 10); // fração → % com 1 casa
+
+async function analisarRegiao(fetchFn, { endereco, cidade, uf }, now) {
+  // 1) Município no IBGE (lista oficial do estado, guardada por um dia)
+  const municipios = await emCache('mun:' + uf, DIA, now, () => jsonDe(fetchFn, `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`));
+  if (!Array.isArray(municipios)) return { erro: 'O IBGE não respondeu. Tente de novo.' };
+  const alvo = semAcento(cidade);
+  const mun = municipios.find(m => semAcento(m.nome) === alvo);
+  if (!mun) return { erro: `Não achei a cidade "${cidade}" em ${uf} no IBGE. Confira o nome da cidade.` };
+  const id6 = String(mun.id).slice(0, 6);
+  const fontes = ['IBGE (Censo 2010 e 2022, estimativas de população, PIB dos municípios, salário médio)'];
+
+  // 2) Em paralelo: indicadores do município, índice de preço de imóveis do Banco Central e o endereço no mapa
+  const q = [endereco, cidade, uf, 'Brasil'].filter(Boolean).join(', ');
+  const [ind, ivgr, selic, geo] = await Promise.all([
+    emCache('ind:' + id6, DIA, now, () => jsonDe(fetchFn, `https://servicodados.ibge.gov.br/api/v1/pesquisas/indicadores/96385%7C29171%7C47001%7C29765/resultados/${id6}`)),
+    emCache('ivgr', DIA, now, () => jsonDe(fetchFn, 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.21340/dados/ultimos/13?formato=json')),
+    emCache('selic', DIA, now, () => jsonDe(fetchFn, 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/1?formato=json')),
+    endereco ? emCache('geo:' + semAcento(q), 7 * DIA, now, () => jsonDe(fetchFn, `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&addressdetails=1&q=${encodeURIComponent(q)}`, { headers: { 'Accept-Language': 'pt-BR' } })) : null,
+  ]);
+
+  const censo = serieIbge(ind, 96385);
+  const estim = serieIbge(ind, 29171);
+  const pib = serieIbge(ind, 47001);
+  const sal = serieIbge(ind, 29765);
+  const c10 = censo.find(x => x.ano === 2010), c22 = censo.find(x => x.ano === 2022);
+  const crescPop = c10 && c22 ? taxaAnual(c10.valor, c22.valor, 12) : null;
+  const pibUlt = pib[pib.length - 1] || null;
+  const pibIni = pibUlt ? pib.find(x => x.ano === pibUlt.ano - 5) : null;
+  const crescPib = pibUlt && pibIni ? taxaAnual(pibIni.valor, pibUlt.valor, 5) : null;
+
+  let mercado = null;
+  if (Array.isArray(ivgr) && ivgr.length >= 13) {
+    const a = numIbge(ivgr[0].valor), b = numIbge(ivgr[ivgr.length - 1].valor);
+    if (a && b) mercado = { ivgr_12m_pct: arred1(b / a - 1), ivgr_ate: String(ivgr[ivgr.length - 1].data || '').slice(3) };
+  }
+  if (Array.isArray(selic) && selic[0] && numIbge(selic[0].valor) !== null) mercado = { ...(mercado || {}), selic_pct: numIbge(selic[0].valor) };
+  if (mercado) fontes.push('Banco Central (índice IVG-R de preço de imóveis residenciais e taxa Selic)');
+
+  // 3) Serviços a até 1 km (OpenStreetMap). Só quando o endereço foi achado no mapa.
+  let local = null, servicos = null;
+  const g = Array.isArray(geo) && geo[0];
+  if (g && Number.isFinite(Number(g.lat)) && Number.isFinite(Number(g.lon))) {
+    const lat = Number(Number(g.lat).toFixed(5)), lon = Number(Number(g.lon).toFixed(5));
+    const ad = g.address || {};
+    const naCidade = semAcento(ad.city || ad.town || ad.village || ad.municipality || '') === alvo;
+    local = { lat, lon, endereco: str(g.display_name, 200), bairro: str(ad.suburb || ad.neighbourhood || ad.city_district || '', 80), preciso: g.addresstype === 'place' || g.class === 'building' || g.type === 'house', na_cidade: naCidade };
+    if (naCidade) {
+      fontes.push('OpenStreetMap (Nominatim para o endereço e Overpass para os serviços perto)');
+      const corpo = '[out:json][timeout:20];' + SERVICOS.map(s => '(' + s[2].split('around:@').join(`around:1000,${lat},${lon}`) + ');out count;').join('');
+      const op = await emCache('osm:' + lat + ',' + lon, 7 * DIA, now, async () => {
+        for (const url of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']) {
+          const j = await jsonDe(fetchFn, url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(corpo) }, 22000);
+          if (j && Array.isArray(j.elements) && j.elements.length === SERVICOS.length) return j.elements.map(e => Number(e && e.tags && e.tags.total) || 0);
+        }
+        return null;
+      });
+      if (op) servicos = SERVICOS.map((s, i) => ({ id: s[0], nome: s[1], qtd: op[i] }));
+    }
+  }
+
+  return {
+    municipio: { id: mun.id, nome: mun.nome, uf },
+    local,
+    servicos,
+    populacao: {
+      censo_2010: c10 ? c10.valor : null,
+      censo_2022: c22 ? c22.valor : null,
+      cresc_anual_pct: arred1(crescPop),
+      estimada: estim.length ? estim[estim.length - 1] : null,
+    },
+    pib_per_capita: pibUlt ? { ano: pibUlt.ano, valor: pibUlt.valor, cresc_anual_pct: arred1(crescPib) } : null,
+    salario_medio_sm: sal.length ? sal[sal.length - 1] : null,
+    mercado,
+    fontes,
+  };
+}
+
 // ── IA grátis ──
 const PEDIDO_EDITAL = `Você é um advogado especialista em leilões de imóveis no Brasil. Leia o EDITAL abaixo e devolva SÓ um JSON (sem texto antes ou depois, sem markdown) com estes campos, usando null quando o edital não disser:
-{"tipo_leilao":"judicial|extrajudicial|venda_direta","processo":"número CNJ ou null","vara":"","leiloeiro":"","site_leilao":"","endereco":"","cidade":"","uf":"","descricao":"","area_m2":null,"matricula":"","cartorio":"","inscricao_iptu":"","praca1_data":"AAAA-MM-DD","praca1_valor":0,"praca2_data":"AAAA-MM-DD","praca2_valor":0,"avaliacao":0,"comissao_pct":0,"pagamento":"à vista, parcelado, FGTS, financiamento","ocupado":true,"debitos_iptu":"quem paga e quanto","debitos_condominio":"quem paga e quanto","onus":["penhoras, hipotecas, usufruto, indisponibilidade, ações"],"prazos":["prazos importantes"],"riscos":["riscos concretos para quem compra"],"resumo":"3 frases simples"}
-Valores em reais como número (ex.: 250000.5). Não invente nada que não esteja no texto.`;
+{"tipo_leilao":"judicial|extrajudicial|venda_direta","processo":"número CNJ ou null","vara":"","leiloeiro":"","site_leilao":"","endereco":"","cidade":"","uf":"","descricao":"","area_m2":null,"matricula":"","cartorio":"","inscricao_iptu":"","praca1_data":"AAAA-MM-DD","praca1_valor":0,"praca2_data":"AAAA-MM-DD","praca2_valor":0,"avaliacao":0,"comissao_pct":0,"pagamento":"à vista, parcelado, FGTS, financiamento","tipo_imovel":"apartamento|casa|terreno|comercial|rural|outro","executado":"nome do devedor/executado","ocupado":true,"ocupante":"quem ocupa: devedor, inquilino, terceiro ou null","debitos_iptu":"quem paga e quanto","debitos_condominio":"quem paga e quanto","iptu_quem_paga":"preco|arrematante|nao_informado","condominio_quem_paga":"preco|arrematante|nao_informado","onus":["penhoras, hipotecas, usufruto, indisponibilidade, ações"],"prazos":["prazos importantes"],"riscos":["riscos concretos para quem compra"],"resumo":"3 frases simples"}
+Valores em reais como número (ex.: 250000.5). "preco" quer dizer que a dívida é paga com o dinheiro do próprio leilão (sub-roga no preço, art. 130 do CTN ou art. 908 do CPC); "arrematante" quer dizer que quem compra paga. Não invente nada que não esteja no texto.`;
 const PEDIDO_MATRICULA = `Você é um advogado especialista em registro de imóveis no Brasil. Leia a MATRÍCULA abaixo (certidão do cartório) e devolva SÓ um JSON (sem texto antes ou depois, sem markdown):
 {"matricula":"","cartorio":"","endereco":"","descricao":"","area_m2":null,"proprietarios":["dono atual"],"onus":["cada registro/averbação AINDA ativo: penhora, hipoteca, alienação fiduciária, usufruto, indisponibilidade, ação, arrolamento"],"cancelados":["ônus já cancelados"],"alertas":["riscos para quem arremata: dono diferente do executado, penhora de terceiros, indisponibilidade, área divergente, falta de averbação da construção"],"resumo":"3 frases simples"}
 Não invente nada que não esteja no texto.`;
-const PEDIDO_PARECER = 'Você é o analista de leilões da Bezsan. Com os dados do imóvel e a conta de viabilidade (JSON), escreva um parecer em português do Brasil, simples, para um investidor: 1) se vale a pena ou não e por quê, 2) os 3 maiores riscos, 3) o lance máximo recomendado, 4) o que conferir antes de dar lance. Até 12 linhas, frases curtas, sem markdown, sem inventar dados que não estejam no JSON. Termine com: "Análise automática: confirme com um advogado antes de dar lance."';
+const PEDIDO_PARECER = `Você é o consultor de leilões da Bezsan. Recebe em JSON o imóvel, a conta de viabilidade, a nota do motor de análise (campo "motor": pilares com pontos ok, atenção e grave) e os dados públicos da região. Escreva um PARECER DE CONSULTORIA em português do Brasil, simples, para um investidor leigo, com estes títulos, cada um sozinho numa linha e nesta ordem:
+VEREDITO
+O IMÓVEL E OS VALORES
+REGIÃO E VALORIZAÇÃO
+PARTE JURÍDICA
+POSSE (OCUPAÇÃO)
+DÍVIDAS (IPTU, CONDOMÍNIO E MATRÍCULA)
+ATÉ QUANTO DAR DE LANCE
+ANTES DE DAR O LANCE
+Em cada título escreva de 1 a 4 frases curtas. Use só os dados do JSON: nunca invente números, leis, datas ou fatos. Quando faltar um dado, diga o que falta conferir. O veredito e o lance limite têm de ser os mesmos do motor (motor.veredito e motor.lance_limite). Sem markdown (sem asteriscos, sem #, sem listas com traço). Termine com a frase: "Análise automática: confirme com um advogado antes de dar lance."`;
 
 function extrairJson(texto) {
   const t = String(texto || '').replace(/```(?:json)?/gi, '');
@@ -272,6 +411,16 @@ function createHandler(deps = {}) {
       } catch { return res(502, { error: 'A busca automática não respondeu agora. Tente de novo ou use os links dos leiloeiros.' }); }
     }
 
+    if (acao === 'regiao') {
+      const uf = str(body.uf, 2).toUpperCase();
+      const cidade = str(body.cidade, 80);
+      if (!UFS.includes(uf) || cidade.length < 2) return res(400, { error: 'Preencha a cidade e o estado do imóvel.' });
+      if (!iaPermitida(slug + ':' + quem, now())) return res(429, { error: 'Muitas análises nesta hora. Espere um pouco e tente de novo.' });
+      const r = await analisarRegiao(fetchFn, { endereco: str(body.endereco, 160), cidade, uf }, now).catch(() => ({ erro: 'As fontes públicas não responderam. Tente de novo.' }));
+      if (r.erro) return res(502, { error: r.erro });
+      return res(200, { ok: true, regiao: r });
+    }
+
     if (acao === 'arquivo') {
       const url = str(body.url, 300);
       if (!ANEXO_RE.test(url)) return res(400, { error: 'Arquivo não permitido.' });
@@ -308,8 +457,8 @@ function createHandler(deps = {}) {
       const router = getRouter();
       const FREE = getFree();
       if (acao === 'parecer') {
-        const dados = JSON.stringify({ imovel: limparValor(body.imovel), conta: limparValor(body.conta) }).slice(0, 20000);
-        const out = await perguntarIa({ router, FREE, system: PEDIDO_PARECER, conteudo: dados, maxTokens: 900, now });
+        const dados = JSON.stringify({ imovel: limparValor(body.imovel), conta: limparValor(body.conta), motor: limparValor(body.motor), regiao: limparValor(body.regiao) }).slice(0, 30000);
+        const out = await perguntarIa({ router, FREE, system: PEDIDO_PARECER, conteudo: dados, maxTokens: 1600, now });
         if (!out) return res(503, { error: 'A IA grátis está ocupada agora. Tente de novo em instantes.' });
         return res(200, { ok: true, texto: out.texto.trim(), modelo: out.modelo });
       }

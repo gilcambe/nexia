@@ -14,6 +14,8 @@ const agenda = require('../../netlify/functions/agenda.js');
 const leilao = require('../../netlify/functions/leilao.js');
 const { AGENDAS } = require('../../clientes/agendas.js');
 const { fakeDb } = require('../helpers/agenda-fake-db.js');
+const { fetchRegiao } = require('../helpers/regiao-fake.js');
+const regiao = fetchRegiao();
 
 const RAIZ = path.join(__dirname, '../../sites/bezsan');
 const FOTOS = process.argv[2] || '';
@@ -31,6 +33,7 @@ const router = {
   capabilities: () => ({ available: true, vision: true }),
   chat: async (d, o) => {
     pedidosIa.push(o);
+    if (/PARECER DE CONSULTORIA/.test(o.system)) return { text: 'VEREDITO\nVale só com cuidado. Lance máximo recomendado conforme a conta.\nANTES DE DAR O LANCE\nLeia a matrícula.\nAnálise automática: confirme com um advogado antes de dar lance.' };
     if (/EDITAL/.test(o.system)) return { text: JSON.stringify({ tipo_leilao: 'judicial', processo: '1000123-45.2023.8.26.0100', endereco: 'Rua das Palmeiras, 200, apto 31', cidade: 'São Paulo', uf: 'SP', praca1_data: '2026-11-10', praca1_valor: 420000, praca2_data: '2026-11-24', praca2_valor: 210000, avaliacao: 420000, comissao_pct: 5, ocupado: true, pagamento: 'À vista ou 25% de entrada e 30 parcelas', debitos_iptu: 'Sub-rogam no preço (art. 130 do CTN)', onus: ['Penhora do Banco X (R.5)'], riscos: ['Imóvel ocupado pelo executado'], resumo: 'Leilão judicial de apartamento ocupado.' }) };
     if (/MATRÍCULA/.test(o.system)) return { text: '```json\n' + JSON.stringify({ matricula: '123.456', cartorio: '5º RI de São Paulo', proprietarios: ['João Executado'], onus: ['Hipoteca da Caixa (R.3)'], alertas: ['Indisponibilidade de bens (AV.6)'], resumo: 'Matrícula com hipoteca e indisponibilidade.' }) + '\n```' };
     return { text: 'Atenção: o desconto é bom, mas o imóvel está ocupado e há indisponibilidade na matrícula. Lance máximo recomendado conforme a conta. Análise automática: confirme com um advogado antes de dar lance.' };
@@ -47,6 +50,7 @@ const fetchCnj = async (url, o) => {
     return { ok: true, json: async () => ({ result: { content: [{ type: 'text', text: JSON.stringify({ totalResults: 1, results: args.query === 'nada' ? [] : [lote] }) }] } }) };
   }
   if (url === ANEXO) return { ok: true, arrayBuffer: async () => EDITAL_LOTE };
+  if (/ibge\.gov\.br|bcb\.gov\.br|nominatim|overpass/.test(url)) return regiao.fn(url, o);
   datajud.push({ url, corpo: JSON.parse(o.body) });
   return { ok: true, json: async () => ({ hits: { hits: [{ _source: { numeroProcesso: '10001234520238260100', tribunal: 'TJSP', classe: { nome: 'Cumprimento de sentença' }, orgaoJulgador: { nome: '41ª Vara Cível - Foro Central' }, assuntos: [{ nome: 'Condomínio' }], movimentos: [{ dataHora: '2026-09-01T10:00:00Z', nome: 'Designada hasta pública' }, { dataHora: '2025-03-01T10:00:00Z', nome: 'Penhora' }] } }] } }) };
 };
@@ -208,7 +212,7 @@ const CSV = Buffer.from([
   console.log('6. Imóvel de leiloeiro: edital e matrícula em PDF');
   await pg.click('#nav-imoveis');
   await pg.waitForSelector('#lista-imoveis .item');
-  confere((await pg.locator('#lista-imoveis .item').count()) === 1 && (await pg.textContent('#lista-imoveis')).includes('Vale a pena'), 'lista "Imóveis" mostra o imóvel salvo e o veredito');
+  confere((await pg.locator('#lista-imoveis .item').count()) === 1 && /Nota \d+/.test(await pg.textContent('#lista-imoveis')) && /Vale|Não vale|Faltam/.test(await pg.textContent('#lista-imoveis')), 'lista "Imóveis" mostra o imóvel salvo, a nota e o veredito do parecer');
   await pg.click('#novo-imovel');
   await pg.waitForSelector('#pg-imovel:not(.oculto)');
   confere((await pg.inputValue('#im-endereco')) === '' && await pg.isHidden('#im-apagar'), '"Imóvel de outro site" abre em branco');
@@ -245,6 +249,29 @@ const CSV = Buffer.from([
   confere(datajud[0] && /api_publica_tjsp/.test(datajud[0].url) && datajud[0].corpo.query.match.numeroProcesso === '10001234520238260100', 'consulta vai ao TJSP no DataJud com o número limpo');
   confere((await pg.textContent('#im-processo-res')).includes('Designada hasta pública'), 'mostra a última movimentação do processo');
 
+  console.log('8b. Região e parecer completo');
+  confere(/Nota|\d+/.test(await pg.textContent('#pc-nota')) && (await pg.textContent('#pc-pilares')).includes('Parte jurídica'), 'parecer completo aparece no topo com os pilares');
+  confere(/grave/.test(await pg.getAttribute('#pc-pilares [data-pilar="juridico"] li.grave', 'class')) && (await pg.textContent('#pc-pilares [data-pilar="juridico"]')).includes('indisponibilidade'), 'indisponibilidade da matrícula vira ponto grave no jurídico');
+  confere(!/^Vale a pena/.test(await pg.textContent('#pc-veredito')), 'com ponto grave o parecer não diz "Vale a pena": ' + await pg.textContent('#pc-veredito'));
+  confere((await pg.textContent('#pc-pilares [data-pilar="posse"]')).includes('3 a 12 meses'), 'posse: ocupado em leilão judicial mostra o caminho e o prazo');
+  confere((await pg.textContent('#pc-pilares [data-pilar="dividas"]')).includes('art. 130'), 'dívidas: IPTU sub-roga no preço (lido do edital)');
+  confere((await pg.textContent('#pc-pilares [data-pilar="regiao"]')).includes('sem dados'), 'região sem análise fica "sem dados"');
+  await abrirSecao('Região e valorização');
+  await pg.click('#im-regiao-btn');
+  await pg.waitForFunction(() => /Região analisada/.test(document.querySelector('#im-regiao-res').textContent), null, { timeout: 15000 });
+  const rg = await pg.textContent('#im-regiao-res');
+  confere(rg.includes('11.451.245') && rg.includes('Santa Cecília') && rg.includes('Escolas e faculdades: 26'), 'região: população do Censo, bairro no mapa e serviços a 1 km');
+  confere((await pg.getAttribute('#im-regiao-res a', 'href')).startsWith('https://www.openstreetmap.org/?mlat=-23.55274'), '"Ver no mapa" abre o OpenStreetMap no endereço');
+  confere(/\d+\/100/.test(await pg.textContent('#pc-pilares [data-pilar="regiao"] .cab')) && (await pg.textContent('#pc-pilares [data-pilar="regiao"]')).includes('IVG-R'), 'pilar região ganha nota e a valorização do Banco Central');
+  confere((await pg.getAttribute('#im-m2-busca', 'href')).includes(encodeURIComponent('Santa Cecília')), '"Ver anúncios parecidos" pesquisa no bairro do imóvel');
+  await pg.fill('#im-area', '65');
+  await pg.fill('#im-m2', '9.000');
+  confere((await pg.textContent('#pc-pilares [data-pilar="financeiro"]')).includes('R$ 585.000'), 'área × preço do m² dá o valor de mercado (R$ 585.000)');
+  confere(/^Vale|^Não vale/.test(await pg.textContent('#pc-veredito')) && (await pg.textContent('#pc-resumo')).includes('Nota'), 'veredito e resumo com nota e lance limite');
+  await abrirSecao('O que conferir antes do lance');
+  confere((await pg.locator('#pc-conferir li').count()) >= 3, 'lista do que conferir antes do lance: ' + await pg.locator('#pc-conferir li').count() + ' itens');
+  await foto('parecer-completo');
+
   console.log('9. Dívidas e conta');
   await abrirSecao('Dívidas de IPTU e condomínio');
   confere((await pg.getAttribute('#im-iptu-link', 'href')).startsWith('https://') && (await pg.locator('#im-iptu-passos li').count()) >= 3, 'IPTU: link da prefeitura e passo a passo');
@@ -264,7 +291,7 @@ const CSV = Buffer.from([
   await pg.click('#im-parecer-btn');
   await pg.waitForFunction(() => /advogado/.test(document.querySelector('#im-parecer').textContent), null, { timeout: 10000 });
   confere(true, 'parecer da IA aparece');
-  confere(pedidosIa.some(o => /parecer/.test(o.system) && o.messages[0].content.includes('lance_maximo')), 'o parecer recebeu a conta completa');
+  confere(pedidosIa.some(o => /PARECER DE CONSULTORIA/.test(o.system) && o.messages[0].content.includes('lance_maximo') && o.messages[0].content.includes('lance_limite') && o.messages[0].content.includes('Santa Cecília')), 'o parecer recebeu a conta, o motor e a região');
   await abrirSecao('Passo a passo deste imóvel');
   await pg.check('[data-etapa="busca-perfil"]');
   await pg.check('[data-etapa="busca-portais"]');
@@ -280,13 +307,14 @@ const CSV = Buffer.from([
   confere((await pg.inputValue('#im-debitos-cond')) === '18.500' && (await pg.inputValue('#im-alvo')) === '10', 'reabrir mantém dívidas e percentuais');
   confere(await pg.isChecked('[data-etapa="busca-portais"]') && (await pg.textContent('#im-processo-res')).includes('Designada'), 'reabrir mantém passos marcados e o processo');
   confere((await pg.textContent('#im-parecer')).includes('advogado') && (await pg.textContent('#im-edital-res')).includes('Edital lido'), 'reabrir mantém parecer e leitura do edital');
+  confere((await pg.textContent('#im-regiao-res')).includes('Região analisada') && (await pg.inputValue('#im-m2')) === '9.000' && /\d+\/100/.test(await pg.textContent('#pc-pilares [data-pilar="regiao"] .cab')), 'reabrir mantém a região, o preço do m² e a nota da região');
 
   console.log('11. Relatório em PDF');
   await pg.evaluate(() => { window.print = () => { window.__imprimiu = true; }; });
   await pg.click('#im-relatorio');
   confere(await pg.evaluate(() => window.__imprimiu === true), '"Relatório em PDF" abre a impressão');
   const rel = await pg.textContent('#relatorio');
-  confere(rel.includes('Relatório de leilão') && rel.includes('Lance máximo recomendado') && rel.includes('Cumprimento de sentença') && rel.includes('advogado'), 'relatório tem veredito, números, processo e parecer');
+  confere(rel.includes('Relatório de leilão') && rel.includes('Lance máximo recomendado') && rel.includes('Cumprimento de sentença') && rel.includes('advogado') && rel.includes('Parecer completo') && rel.includes('Parte jurídica') && rel.includes('Região analisada') && rel.includes('Lance limite'), 'relatório tem parecer completo, pilares, região, números, processo e parecer da IA');
   await pg.emulateMedia({ media: 'print' });
   if (FOTOS) await pg.screenshot({ path: path.join(FOTOS, String(++n).padStart(2, '0') + '-relatorio.png'), fullPage: true });
   confere(await pg.isVisible('#relatorio') && await pg.isHidden('header.topo'), 'na impressão só o relatório aparece');
