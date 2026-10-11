@@ -609,7 +609,11 @@
     ['comercio', 'Bancos, restaurantes e comércio', '[amenity~"^(bank|restaurant|cafe|fast_food)$"]'],
   ];
   function semAcento(t) { return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim(); }
-  function jsonGet(url, opcoes) { return fetch(url, opcoes).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
+  // Serviços grátis de mapa às vezes ficam pendurados: cada pedido desiste em 12 s.
+  function jsonGet(url, opcoes) {
+    var ctl = window.AbortController ? new AbortController() : null, t = ctl && setTimeout(function () { ctl.abort(); }, 12000);
+    return fetch(url, Object.assign({}, opcoes, ctl ? { signal: ctl.signal } : {})).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }).then(function (j) { clearTimeout(t); return j; });
+  }
   function mapaNoNavegador(g) {
     if (!g || g.servicos || !atual.endereco) return Promise.resolve(g);
     var cidade = semAcento(g.municipio.nome);
@@ -634,7 +638,10 @@
         return { lat: c[1], lon: c[0], endereco: [p.name, p.housenumber, p.district, p.city, p.state].filter(Boolean).join(', '), bairro: p.district || p.locality, fonte: 'Photon' };
       });
     }
-    function tentar() { return nominatim().then(function (a) { return a || photon(); }); }
+    function tentar() {
+      if (g.local && g.local.lat != null) return Promise.resolve({ lat: g.local.lat, lon: g.local.lon, endereco: g.local.endereco, bairro: g.local.bairro, fonte: g.local.fonte || 'servidor', jaTinha: true });
+      return nominatim().then(function (a) { return a || photon(); });
+    }
     return tentar().then(function (a) {
       if (!a) return g;
       var lat = Number(Number(a.lat).toFixed(5)), lon = Number(Number(a.lon).toFixed(5));
@@ -646,7 +653,7 @@
       function overpass(i) { return i >= espelhos.length ? Promise.resolve(null) : jsonGet(espelhos[i], corpo).then(function (j) { return j && j.elements && j.elements.length === SERVICOS.length ? j : overpass(i + 1); }); }
       return overpass(0).then(function (j) {
         if (j) g.servicos = SERVICOS.map(function (sv, i) { return { id: sv[0], nome: sv[1], qtd: Number(j.elements[i].tags && j.elements[i].tags.total) || 0 }; });
-        g.fontes = (g.fontes || []).concat('OpenStreetMap (' + a.fonte + ' para o endereço' + (j ? ' e Overpass para os serviços perto' : '') + ')');
+        if (!a.jaTinha || j) g.fontes = (g.fontes || []).concat('OpenStreetMap (' + a.fonte + ' para o endereço' + (j ? ' e Overpass para os serviços perto' : '') + ')');
         return g;
       });
     });
@@ -661,8 +668,12 @@
     var b = this; lerCampos();
     if (!atual.cidade || !atual.uf) { $('im-regiao-res').innerHTML = '<div class="msg erro">Preencha a cidade e o estado do imóvel (em "Dados do imóvel").</div>'; return; }
     b.disabled = true; $('im-regiao-res').innerHTML = '<div class="msg aviso">Consultando IBGE, Banco Central e o mapa…</div>';
-    api({ acao: 'regiao', endereco: atual.endereco, cidade: atual.cidade, uf: atual.uf }).then(function (j) { return mapaNoNavegador(j.regiao); }).then(function (g) {
-      atual.regiao = g; $('im-regiao-res').innerHTML = resumoRegiao(g); linkAnuncios(); recalcular();
+    var mostrar = function (g) { atual.regiao = g; $('im-regiao-res').innerHTML = resumoRegiao(g); linkAnuncios(); recalcular(); };
+    var esse = atual;
+    api({ acao: 'regiao', endereco: atual.endereco, cidade: atual.cidade, uf: atual.uf }).then(function (j) {
+      // Mostra na hora o que o servidor trouxe; o mapa pelo navegador completa depois, se conseguir.
+      mostrar(j.regiao);
+      if (j.regiao && !j.regiao.servicos && atual.endereco) mapaNoNavegador(JSON.parse(JSON.stringify(j.regiao))).then(function (g) { if (g && g.servicos && atual === esse && atual.regiao === j.regiao) mostrar(g); });
     }).catch(function (e) { $('im-regiao-res').innerHTML = '<div class="msg erro">' + esc(e.message) + '</div>'; }).then(function () { b.disabled = false; });
   };
   $('pg-imovel').addEventListener('input', function (ev) { if (ev.target.matches('[data-campo], #im-alertas')) { recalcular(); if (ev.target.id === 'im-cidade' || ev.target.id === 'im-uf') guiaIptu(); } });
