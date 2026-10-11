@@ -1,0 +1,36 @@
+name: Sondar sites de leilão (temporário)
+on:
+  push:
+    branches: [nexia/bezsan-agregadores]
+    paths: ['.github/workflows/sondar-agregadores.yml']
+permissions:
+  contents: write
+jobs:
+  sondar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sondar
+        run: |
+          UA="Mozilla/5.0 (compatible; NexiaBezsan/1.0; +https://bezsan.pages.dev)"
+          mkdir -p /tmp/s && cd /tmp/s
+          for d in www.leilaoimovel.com.br www.imovelleilao.com.br imovelleilao.com.br www.resale.com.br www.portalzuk.com.br www.megaleiloes.com.br www.sold.com.br www.superbid.net www.frazaoleiloes.com.br www.biasileiloes.com.br www.lancejudicial.com.br www.leiloesjudiciais.com.br www.spleiloes.com.br www.leilaovip.com.br www.santanderimoveis.com.br www.zukerman.com.br www.emgea.gov.br www.bb.com.br; do
+            echo "===== $d" >> saida.txt
+            curl -sS -L -m 25 -A "$UA" -o home.html -w "home %{http_code} %{size_download} %{url_effective}\n" "https://$d/" >> saida.txt 2>&1 || echo "home ERRO" >> saida.txt
+            grep -oiE "captcha|cf-chl|cloudflare|radware|perfdrive|incapsula|akamai|datadome" home.html | sort | uniq -c | head -5 >> saida.txt
+            grep -oiE '<title>[^<]{0,120}' home.html | head -1 >> saida.txt
+            grep -oiE 'application/(rss|atom)\+xml[^>]{0,200}' home.html | head -3 >> saida.txt
+            grep -oiE '"@type" *: *"(Product|Offer|RealEstateListing|Residence|Apartment|House|Event)"' home.html | sort | uniq -c | head >> saida.txt
+            grep -oiE 'https?://[^"'"'"' ]*/api/[^"'"'"' ]{0,120}' home.html | sort -u | head -8 >> saida.txt
+            echo "-- robots" >> saida.txt
+            curl -sS -L -m 20 -A "$UA" "https://$d/robots.txt" 2>&1 | head -c 1500 >> saida.txt; echo >> saida.txt
+            sm=$(curl -sS -L -m 20 -A "$UA" "https://$d/robots.txt" 2>/dev/null | grep -i '^sitemap:' | head -1 | awk '{print $2}' | tr -d '\r')
+            [ -z "$sm" ] && sm="https://$d/sitemap.xml"
+            echo "-- sitemap $sm" >> saida.txt
+            curl -sS -L -m 25 -A "$UA" "$sm" 2>&1 | head -c 1200 >> saida.txt; echo >> saida.txt
+            cp home.html "home-$d.html" 2>/dev/null || true
+          done
+      - name: Guardar saída
+        if: always()
+        run: |
+          cd /tmp/s && git init -q && git add -A && git -c user.name=nexia -c user.email=nexia@users.noreply.github.com commit -qm sonda
+          git push "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" HEAD:refs/heads/sondas-agreg-${{ github.run_id }}
