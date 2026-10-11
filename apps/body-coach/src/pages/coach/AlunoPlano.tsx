@@ -12,8 +12,10 @@ import type { AnamneseDoAluno } from '@/lib/coach/equipe';
 export default function AlunoPlano() {
   const { uid = '' } = useParams();
   const [params, setParams] = useSearchParams();
-  const aba = params.get('aba') === 'dieta' ? 'dieta' : 'treino';
   const [p, setP] = useState<Prescricao | null>(null);
+  // parceiro abre direto na parte dele (a nutricionista cai na Dieta)
+  const aba = params.get('aba') === 'dieta' || (!params.get('aba') && p?.pode && !p.pode.ficha && p.pode.dieta) ? 'dieta' : 'treino';
+  const pode = p?.pode ?? { ficha: true, dieta: true };
   const [erro, setErro] = useState('');
   const [salvando, setSalvando] = useState(false);
   const [ok, setOk] = useState('');
@@ -60,11 +62,19 @@ export default function AlunoPlano() {
         <Link to={`/coach/evolucao/${uid}`} className="rounded-lg border border-background-200 px-3 py-1.5 font-semibold text-foreground-700"><i className="ri-line-chart-line mr-1"></i>Evolução</Link>
       </div>
 
+      {p?.equipe && (
+        <p className="rounded-lg bg-primary-50 px-3 py-2 text-xs text-primary-800" data-testid="aviso-equipe">
+          <i className="ri-team-line mr-1"></i>
+          {p.equipe.principal
+            ? `Você atende ${nome} junto com ${p.equipe.nome} (coach principal). Você cuida d${p.equipe.parte === 'treino' ? 'o treino' : 'a alimentação'}; o resto você só vê.`
+            : `${p.equipe.nome} cuida d${p.equipe.parte === 'treino' ? 'o treino' : 'a alimentação'} de ${nome}. Você vê, mas quem muda é ele(a).`}
+        </p>
+      )}
       {p?.anamnese && <RespostasAnamnese a={p.anamnese} nome={nome} />}
 
       <div className="grid grid-cols-2 gap-1 rounded-xl bg-background-100 p-1" role="tablist">
         {([['treino', 'Ficha de treino'], ['dieta', 'Dieta']] as const).map(([id, l]) => (
-          <button key={id} type="button" role="tab" aria-selected={aba === id} onClick={() => { setOk(''); setParams(id === 'dieta' ? { aba: 'dieta' } : {}, { replace: true }); }} className={`rounded-lg py-2 text-sm font-semibold ${aba === id ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>{l}</button>
+          <button key={id} type="button" role="tab" aria-selected={aba === id} onClick={() => { setOk(''); setParams({ aba: id }, { replace: true }); }} className={`rounded-lg py-2 text-sm font-semibold ${aba === id ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>{l}</button>
         ))}
       </div>
 
@@ -72,7 +82,9 @@ export default function AlunoPlano() {
       {erro && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p>}
       {!p && !erro && <p className="text-center text-sm text-foreground-500"><i className="ri-loader-4-line mr-2 animate-spin"></i>Carregando...</p>}
 
-      {p && aba === 'treino' && (
+      {p && aba === 'treino' && !pode.ficha && <FichaLeitura ficha={p.ficha} quem={p.equipe?.nome ?? 'o outro profissional'} />}
+      {p && aba === 'dieta' && !pode.dieta && <DietaLeitura plano={p.plano} quem={p.equipe?.nome ?? 'o outro profissional'} />}
+      {p && aba === 'treino' && pode.ficha && (
         <FichaEditor
           key={`f${versao}`}
           nomeAluno={nome}
@@ -86,7 +98,7 @@ export default function AlunoPlano() {
           onRemover={() => void enviar(() => salvarFicha(uid, null), 'Ficha tirada. O app volta a montar o treino sozinho.', (x) => ({ ...x, ficha: null }))}
         />
       )}
-      {p && aba === 'dieta' && (
+      {p && aba === 'dieta' && pode.dieta && (
         <DietaEditor
           key={`d${versao}`}
           nomeAluno={nome}
@@ -126,6 +138,36 @@ function RespostasAnamnese({ a, nome }: { a: AnamneseDoAluno; nome: string }) {
           ))}
         </dl>
       )}
+    </div>
+  );
+}
+
+// Parte que é do outro profissional: só leitura.
+function FichaLeitura({ ficha, quem }: { ficha: FichaCoach | null; quem: string }) {
+  if (!ficha) return <p className="rounded-xl border border-dashed border-background-300 px-4 py-6 text-center text-sm text-foreground-500" data-testid="so-leitura">{quem} ainda não montou a ficha de treino.</p>;
+  return (
+    <div className="space-y-3" data-testid="so-leitura">
+      <p className="text-sm font-semibold text-foreground-900">{ficha.nome} <span className="font-normal text-foreground-500">· montada por {quem}</span></p>
+      {ficha.dias.map((d, i) => (
+        <div key={i} className="rounded-xl border border-background-200 bg-background-50 p-3">
+          <p className="text-sm font-semibold text-foreground-900">{d.titulo}</p>
+          <ul className="mt-1 space-y-0.5 text-xs text-foreground-700">{d.exercicios.map((x, j) => <li key={j}>{x.nome} · {x.series}×{x.reps}{x.carga ? ` · ${x.carga}` : ''}</li>)}</ul>
+        </div>
+      ))}
+    </div>
+  );
+}
+function DietaLeitura({ plano, quem }: { plano: Prescricao['plano']; quem: string }) {
+  if (!plano) return <p className="rounded-xl border border-dashed border-background-300 px-4 py-6 text-center text-sm text-foreground-500" data-testid="so-leitura">{quem} ainda não montou a dieta.</p>;
+  return (
+    <div className="space-y-3" data-testid="so-leitura">
+      <p className="text-sm font-semibold text-foreground-900">Plano alimentar <span className="font-normal text-foreground-500">· montado por {quem}</span></p>
+      {plano.refeicoes.map((r, i) => (
+        <div key={i} className="rounded-xl border border-background-200 bg-background-50 p-3">
+          <p className="text-sm font-semibold text-foreground-900">{r.horario ? `${r.horario} · ` : ''}{r.nome}</p>
+          <ul className="mt-1 space-y-0.5 text-xs text-foreground-700">{r.itens.map((it, j) => <li key={j}>{it.nome}{it.qtd ? ` · ${it.qtd}` : ''}</li>)}</ul>
+        </div>
+      ))}
     </div>
   );
 }

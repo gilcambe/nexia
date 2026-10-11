@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/components/feature/AuthContext';
+import { esquecerPapel } from '@/lib/papelCoach';
 import { chatApi, type Contato, type Mensagem } from '@/lib/chat';
 import DesafioCard from './Desafio';
 import GravadorVideo from '@/components/feature/GravadorVideo';
@@ -65,10 +66,10 @@ export default function Chat() {
     try {
       const r = await chatApi<Contatos>({ acao: 'contatos' });
       setLista(r); setPapel(r.papel);
-      if (r.papel === 'aluno' && r.contatos[0]) setAberto((a) => a ?? r.contatos[0]);
-      // veio de "Meus alunos" (?com=uid): já abre a conversa com esse aluno
-      const pedido = r.papel === 'coach' && comParam ? r.contatos.find((c) => c.uid === comParam) : undefined;
+      // veio de "Meus alunos" ou "Minha equipe" (?com=uid): já abre a conversa com essa pessoa
+      const pedido = comParam ? r.contatos.find((c) => c.uid === comParam) : undefined;
       if (pedido) setAberto((a) => a ?? pedido);
+      if (r.papel === 'aluno' && r.contatos[0]) setAberto((a) => a ?? r.contatos[0]);
     } catch (e) {
       const m = (e as Error).message;
       if (/escolha se você/i.test(m)) setPapel(null); else { setPapel(null); setErro(m); }
@@ -80,14 +81,16 @@ export default function Chat() {
     (async () => {
       // Link de convite do coach: entra na equipe sozinho (cria o perfil de aluno se for a primeira vez).
       let codigoConvite = '';
-      try { codigoConvite = localStorage.getItem('bc_convite') ?? ''; } catch { /* sem armazenamento */ }
+      let extra: Record<string, string> = {};
+      try { codigoConvite = localStorage.getItem('bc_convite') ?? ''; extra = JSON.parse(localStorage.getItem('bc_convite_extra') ?? '{}') as Record<string, string>; } catch { /* sem armazenamento */ }
       if (codigoConvite) {
         try {
           try { await chatApi({ acao: 'contatos' }); }
           catch (e) { if (/escolha se você/i.test((e as Error).message)) await chatApi({ acao: 'perfil', papel: 'aluno', nome, foto: profile?.photo_data ?? '' }); else throw e; }
-          await chatApi({ acao: 'vincular', codigo: codigoConvite });
+          await chatApi({ acao: 'vincular', codigo: codigoConvite, ...extra });
+          esquecerPapel();
         } catch (e) { if (vivo) setErro((e as Error).message); }
-        try { localStorage.removeItem('bc_convite'); } catch { /* sem armazenamento */ }
+        try { localStorage.removeItem('bc_convite'); localStorage.removeItem('bc_convite_extra'); } catch { /* sem armazenamento */ }
       }
       if (vivo) await carregarContatos();
     })();
@@ -122,7 +125,7 @@ export default function Chat() {
   };
   const entrar = async () => {
     setErro('');
-    try { await chatApi({ acao: 'vincular', codigo }); setCodigo(''); await carregarContatos(); }
+    try { await chatApi({ acao: 'vincular', codigo }); esquecerPapel(); setCodigo(''); await carregarContatos(); }
     catch (e) { setErro((e as Error).message); }
   };
   const enviar = async () => {
@@ -164,7 +167,7 @@ export default function Chat() {
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-3">
-      <h1 className="font-heading text-2xl font-bold text-foreground-950">{papel === 'coach' ? 'Conversa com os alunos' : 'Conversa com o coach'}</h1>
+      <h1 className="font-heading text-2xl font-bold text-foreground-950">{papel === 'coach' ? 'Conversa com os alunos' : (lista?.contatos.length ?? 0) > 1 ? 'Conversa com a sua equipe' : 'Conversa com o coach'}</h1>
       {papel === 'coach' && (
         <div className="rounded-xl border border-primary-200 bg-primary-50 p-3 text-sm text-foreground-700">
           Passe este código para os seus alunos: <strong className="ml-1 text-lg tracking-widest text-primary-700">{lista?.codigo}</strong>
@@ -176,11 +179,12 @@ export default function Chat() {
       )}
       <DesafioCard papel={papel} />
       {papel === 'coach' && !lista?.contatos.length && <p className="text-sm text-foreground-500">Ainda não entrou nenhum aluno.</p>}
-      {papel === 'coach' && !!lista?.contatos.length && (
+      {(papel === 'coach' ? !!lista?.contatos.length : (lista?.contatos.length ?? 0) > 1) && lista && (
         <div className="flex gap-2 overflow-x-auto pb-1">
           {lista.contatos.map((c) => (
             <button key={c.uid} onClick={() => setAberto(c)} className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium ${aberto?.uid === c.uid ? 'border-primary-500 bg-primary-100 text-primary-700' : 'border-background-200 bg-background-50 text-foreground-700'}`}>
               {c.foto ? <img src={c.foto} alt="" className="h-6 w-6 rounded-full object-cover" /> : <i className="ri-user-3-line"></i>}{c.nome}
+              {c.parte && <span className="rounded-full bg-background-100 px-1.5 text-[10px] font-semibold text-foreground-600">{c.parte === 'dieta' ? (papel === 'coach' ? 'dieta' : 'nutri') : (papel === 'coach' ? 'treino' : 'personal')}</span>}
             </button>
           ))}
         </div>

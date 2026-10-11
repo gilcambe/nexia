@@ -18,6 +18,8 @@ import { getFirebase } from '@/lib/firebaseClient';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { definirPerfilIA } from '@/lib/coachAI';
 import type { PlanoAlimentar } from '@/lib/planoAlimentar';
+import { aplicarMarca } from '@/lib/coach/profissionais';
+import { esquecerPapel } from '@/lib/papelCoach';
 
 
 
@@ -210,6 +212,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     const fb = await getFirebase();
     if (fb) await firebaseSignOut(fb.auth).catch(() => {});
+    aplicarMarca(null); esquecerPapel(); // a próxima conta não herda a cor do coach desta
     setUser(null);
     setProfile(null);
   }, []);

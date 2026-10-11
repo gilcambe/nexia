@@ -25,10 +25,10 @@ export default function MeusAlunos() {
     hoje: alunos.filter((a) => a.treinouHoje).length,
     sumiram: alunos.filter(sumiu).length,
     semficha: alunos.filter((a) => !a.temFicha).length,
-    naopagou: alunos.filter((a) => !a.pago).length,
+    naopagou: alunos.filter((a) => !a.pago && a.vinculo !== 'parceiro').length,
   };
   const lista = alunos
-    .filter((a) => filtro === 'todos' || (filtro === 'sumiram' ? sumiu(a) : filtro === 'semficha' ? !a.temFicha : !a.pago))
+    .filter((a) => filtro === 'todos' || (filtro === 'sumiram' ? sumiu(a) : filtro === 'semficha' ? !a.temFicha : !a.pago && a.vinculo !== 'parceiro'))
     .sort((x, y) => Number(sumiu(y)) - Number(sumiu(x)) || (y.diasSemTreinar ?? 999) - (x.diasSemTreinar ?? 999) || x.nome.localeCompare(y.nome));
 
   return (
@@ -42,13 +42,15 @@ export default function MeusAlunos() {
         <Link to="/coach/programas" className="rounded-xl border border-background-200 bg-background-50 px-3 py-2.5 text-sm font-semibold text-foreground-800"><i className="ri-store-2-line mr-1 text-primary-600"></i>Programas</Link>
         <Link to="/coach/modelos" className="rounded-xl border border-background-200 bg-background-50 px-3 py-2.5 text-sm font-semibold text-foreground-800"><i className="ri-stack-line mr-1 text-primary-600"></i>Modelos</Link>
         <Link to="/coach/anamnese" className="rounded-xl border border-background-200 bg-background-50 px-3 py-2.5 text-sm font-semibold text-foreground-800"><i className="ri-survey-line mr-1 text-primary-600"></i>Anamnese</Link>
+        <Link to="/coach/convites" className="rounded-xl border border-background-200 bg-background-50 px-3 py-2.5 text-sm font-semibold text-foreground-800"><i className="ri-user-add-line mr-1 text-primary-600"></i>Convidar alunos</Link>
+        <Link to="/coach/marca" className="rounded-xl border border-background-200 bg-background-50 px-3 py-2.5 text-sm font-semibold text-foreground-800"><i className="ri-palette-line mr-1 text-primary-600"></i>Minha marca</Link>
       </div>
 
       {p == null && !erro && <p className="text-center text-sm text-foreground-500"><i className="ri-loader-4-line mr-2 animate-spin"></i>Carregando...</p>}
       {erro && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p>}
 
       {p && alunos.length === 0 && (
-        <Card padding="p-5"><p className="text-sm text-foreground-600">Nenhum aluno ainda. Passe o seu código em <Link to="/chat" className="font-semibold text-primary-600">Conversa</Link>.</p></Card>
+        <Card padding="p-5"><p className="text-sm text-foreground-600">Nenhum aluno ainda. Passe o seu código em <Link to="/chat" className="font-semibold text-primary-600">Conversa</Link> ou traga a sua lista em <Link to="/coach/convites" className="font-semibold text-primary-600">Convidar alunos</Link>.</p></Card>
       )}
 
       {alunos.length > 0 && (
@@ -87,7 +89,9 @@ export default function MeusAlunos() {
                   {a.temDieta ? <span className="rounded-full bg-accent-50 px-2 py-0.5 text-accent-800">🥗 dieta</span> : <span className="rounded-full bg-background-100 px-2 py-0.5 text-foreground-500">sem dieta</span>}
                   {a.anamnese === 'pendente' && <span className="rounded-full bg-secondary-50 px-2 py-0.5 text-secondary-800">📝 anamnese pendente</span>}
                   {a.anamnese === 'respondida' && <span className="rounded-full bg-accent-50 px-2 py-0.5 text-accent-800">📝 anamnese</span>}
-                  {p?.cobra && (a.pago ? <span className="rounded-full bg-accent-50 px-2 py-0.5 text-accent-800">💸 pago</span> : a.avisou ? <span className="rounded-full bg-secondary-50 px-2 py-0.5 text-secondary-800">💸 disse que pagou</span> : <span className="rounded-full bg-red-50 px-2 py-0.5 text-red-700">💸 não pagou</span>)}
+                  {a.vinculo === 'parceiro' && <span className="rounded-full bg-primary-50 px-2 py-0.5 text-primary-700">🤝 você cuida d{a.equipe?.parte === 'treino' ? 'o treino' : 'a alimentação'} · coach: {a.equipe?.nome}</span>}
+                  {a.vinculo !== 'parceiro' && a.equipe && <span className="rounded-full bg-primary-50 px-2 py-0.5 text-primary-700">🤝 {a.equipe.nome} cuida d{a.equipe.parte === 'treino' ? 'o treino' : 'a alimentação'}</span>}
+                  {p?.cobra && a.vinculo !== 'parceiro' && (a.pago ? <span className="rounded-full bg-accent-50 px-2 py-0.5 text-accent-800">💸 pago</span> : a.avisou ? <span className="rounded-full bg-secondary-50 px-2 py-0.5 text-secondary-800">💸 disse que pagou</span> : <span className="rounded-full bg-red-50 px-2 py-0.5 text-red-700">💸 não pagou</span>)}
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2">
                   <Link to={`/coach/alunos/${a.uid}`} className="rounded-lg bg-primary-500 px-2 py-2 text-center text-xs font-semibold text-background-50 dark:text-foreground-950">Ficha e dieta</Link>

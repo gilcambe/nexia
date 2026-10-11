@@ -18,6 +18,7 @@ const { acoesPush, avisarConversa } = require('./body-coach/push');
 const { negocio, lojaVer } = require('./body-coach/negocio');
 const { comunidade, registrarCargas, pontosDe } = require('./body-coach/comunidade');
 const { inicioSemanaBR } = require('./body-coach/tempo');
+const { profissionais, vinculoDe, podeEditar, meusAlunos, marcaLimpa, marcarConvite } = require('./body-coach/profissionais');
 
 const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 const par = (a, b) => [a, b].sort().join('__');
@@ -176,7 +177,10 @@ function planoLimpo(p, coachNome) {
 }
 
 // Linha do painel "Meus alunos": treinou hoje? quantos dias sem treinar? comeu? pagou?
-async function linhaDoPainel(db, id, d, mes, hoje, sem, coach) {
+async function linhaDoPainel(db, id, d, mes, hoje, sem, coach, uid) {
+  const v = vinculoDe(uid, d) || { tipo: 'principal' };
+  const outroProf = v.tipo === 'parceiro' ? d.coachUid : d.parceiroUid;
+  const nomeOutro = outroProf ? (((await db.collection('bc_diretorio').doc(outroProf).get().catch(() => null))?.data?.() || {}).nome || 'Profissional') : '';
   const base = db.collection('bodycoach_users').doc(id);
   let ultimo = Number(d.ultimoTreino) || 0;
   if (!ultimo) {
@@ -199,7 +203,10 @@ async function linhaDoPainel(db, id, d, mes, hoje, sem, coach) {
     temFicha: !!(perfil.ficha_coach && Array.isArray(perfil.ficha_coach.dias) && perfil.ficha_coach.dias.length),
     temDieta: !!(perfil.plano_nutri && Array.isArray(perfil.plano_nutri.refeicoes) && perfil.plano_nutri.refeicoes.length),
     pago: !!p.pago, avisou: !!p.avisou,
-    anamnese: situacaoAnamnese(coach, d),
+    anamnese: v.tipo === 'parceiro' ? null : situacaoAnamnese(coach, d),
+    vinculo: v.tipo,
+    // equipe: o parceiro deste aluno (para o principal) ou o principal (para o parceiro), e a parte de quem é parceiro
+    equipe: outroProf ? { nome: nomeOutro, parte: d.parceiroParte } : null,
   };
 }
 
@@ -303,6 +310,8 @@ async function executar(body, uid, db, ctx = {}) {
   if (doNegocio) return doNegocio;
   const daComunidade = await comunidade(body, uid, db, eu);
   if (daComunidade) return daComunidade;
+  const dosProfissionais = await profissionais(body, uid, db, eu);
+  if (dosProfissionais) return dosProfissionais;
 
   // ── Evolução: o lado do aluno ──
   if (acao === 'evolucao_config') {
@@ -314,8 +323,8 @@ async function executar(body, uid, db, ctx = {}) {
   // ── Evolução: o painel do coach ──
   if (acao === 'alunos_evolucao') {
     if (eu.papel !== 'coach') return [403, { error: 'Só o coach vê a evolução dos alunos.' }];
-    const alunos = await dir.where('coachUid', '==', uid).limit(100).get();
-    const lista = await Promise.all(alunos.docs.map(async (a) => {
+    const alunos = await meusAlunos(db, uid);
+    const lista = await Promise.all(alunos.map(async (a) => {
       const d = a.data();
       const p = partilha(d);
       const base = { uid: a.id, nome: d.nome, foto: d.foto || '', partilha: p, proximaAvaliacao: d.proximaAvaliacao || null };
@@ -332,8 +341,8 @@ async function executar(body, uid, db, ctx = {}) {
     const hoje = new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10);
     const mes = hoje.slice(0, 7);
     const sem = inicioSemanaBR();
-    const alunos = await dir.where('coachUid', '==', uid).limit(100).get();
-    const lista = await Promise.all(alunos.docs.map((a) => linhaDoPainel(db, a.id, a.data(), mes, hoje, sem, eu)));
+    const alunos = await meusAlunos(db, uid);
+    const lista = await Promise.all(alunos.map((a) => linhaDoPainel(db, a.id, a.data(), mes, hoje, sem, eu, uid)));
     return [200, { alunos: lista, hoje, mes, cobra: !!eu.pix }];
   }
 
@@ -406,8 +415,11 @@ async function executar(body, uid, db, ctx = {}) {
     // Notas por série, "até a falha", esforço e comentário vão para a conversa com o coach.
     const nota = eu.papel === 'aluno' && eu.coachUid ? textoDoTreino(body) : '';
     if (nota) {
-      await db.collection('bc_conversas').doc(par(uid, eu.coachUid)).collection('mensagens').add({ de: uid, texto: nota, em: Date.now(), tipo: 'treino' });
-      await avisarConversa(db, eu.coachUid, eu.nome, nota);
+      // o personal parceiro (quem cuida do treino) também recebe
+      for (const para of [eu.coachUid, eu.parceiroParte === 'treino' && eu.parceiroUid].filter(Boolean)) {
+        await db.collection('bc_conversas').doc(par(uid, para)).collection('mensagens').add({ de: uid, texto: nota, em: Date.now(), tipo: 'treino' });
+        await avisarConversa(db, para, eu.nome, nota);
+      }
     }
     return [200, { semana, desafioMarcado, coachAvisado: !!nota }];
   }
@@ -496,18 +508,26 @@ async function executar(body, uid, db, ctx = {}) {
     const achados = await dir.where('codigo', '==', codigo).limit(1).get();
     const doc = achados.docs && achados.docs[0];
     if (!doc || doc.data().papel !== 'coach') return [404, { error: 'Não achei esse código. Confira com o seu coach.' }];
+    // Já tem coach e veio pelo link de um parceiro (nutricionista ou personal): entra como segundo profissional.
+    if (eu.coachUid && eu.coachUid !== doc.id && ['treino', 'dieta'].includes(body.parte)) return profissionais({ acao: 'parceiro_entrar', codigo, parte: body.parte }, uid, db, eu);
     await dir.doc(uid).set({ coachUid: doc.id }, { merge: true });
+    await marcarConvite(db, doc.id, uid, body.convite, ctx.email).catch(() => {});
     return [200, { coach: { uid: doc.id, nome: doc.data().nome, foto: doc.data().foto || '' } }];
   }
 
   if (acao === 'contatos') {
     if (eu.papel === 'coach') {
-      const alunos = await dir.where('coachUid', '==', uid).limit(100).get();
-      return [200, { papel: 'coach', codigo: eu.codigo, eu: { nome: eu.nome, foto: eu.foto || '' }, contatos: alunos.docs.map((d) => ({ uid: d.id, nome: d.data().nome, foto: d.data().foto || '' })) }];
+      const alunos = await meusAlunos(db, uid);
+      return [200, { papel: 'coach', codigo: eu.codigo, eu: { nome: eu.nome, foto: eu.foto || '' }, marca: marcaLimpa(eu.marca), contatos: alunos.map((d) => ({ uid: d.id, nome: d.data().nome, foto: d.data().foto || '', ...(d.data().coachUid === uid ? {} : { parte: d.data().parceiroParte }) })) }];
     }
     if (!eu.coachUid) return [200, { papel: 'aluno', contatos: [] }];
     const c = (await dir.doc(eu.coachUid).get()).data?.() || {};
-    return [200, { papel: 'aluno', contatos: [{ uid: eu.coachUid, nome: c.nome || 'Seu coach', foto: c.foto || '' }] }];
+    const contatos = [{ uid: eu.coachUid, nome: c.nome || 'Seu coach', foto: c.foto || '' }];
+    if (eu.parceiroUid) {
+      const pc = (await dir.doc(eu.parceiroUid).get()).data?.() || {};
+      contatos.push({ uid: eu.parceiroUid, nome: pc.nome || 'Profissional', foto: pc.foto || '', parte: eu.parceiroParte });
+    }
+    return [200, { papel: 'aluno', marca: marcaLimpa(c.marca), contatos }];
   }
 
   // Vídeo de demonstração do coach para um exercício (o aluno vê o do coach vinculado a ele)
@@ -545,7 +565,7 @@ async function executar(body, uid, db, ctx = {}) {
   const outro = limpa(body.com, 128);
   if (!outro) return [400, { error: 'Escolha com quem falar.' }];
   const dOutro = (await dir.doc(outro).get()).data?.() || null;
-  const vinculados = dOutro && ((eu.papel === 'aluno' && eu.coachUid === outro && dOutro.papel === 'coach') || (eu.papel === 'coach' && dOutro.coachUid === uid));
+  const vinculados = dOutro && ((eu.papel === 'aluno' && (eu.coachUid === outro || eu.parceiroUid === outro) && dOutro.papel === 'coach') || (eu.papel === 'coach' && !!vinculoDe(uid, dOutro)));
   if (!vinculados) return [403, { error: 'Você só conversa com o seu coach ou com os seus alunos.' }];
   const msgs = db.collection('bc_conversas').doc(par(uid, outro)).collection('mensagens');
 
@@ -604,19 +624,27 @@ async function executar(body, uid, db, ctx = {}) {
   if (acao === 'prescricao_ver') {
     if (eu.papel !== 'coach') return [403, { error: 'Só o coach monta a ficha do aluno.' }];
     const p = (await db.collection('bodycoach_users').doc(outro).collection('profile').doc('main').get().catch(() => null))?.data?.() || {};
+    // O parceiro vê a anamnese do coach principal (saúde, lesões) e só edita a parte dele.
+    const v = vinculoDe(uid, dOutro);
+    const principal = v.tipo === 'parceiro' ? ((await dir.doc(dOutro.coachUid).get()).data?.() || {}) : eu;
+    const outroProf = v.tipo === 'parceiro' ? principal : (dOutro.parceiroUid ? ((await dir.doc(dOutro.parceiroUid).get()).data?.() || {}) : null);
     return [200, {
+      vinculo: v.tipo,
+      pode: { ficha: podeEditar(uid, dOutro, 'ficha'), dieta: podeEditar(uid, dOutro, 'dieta') },
+      equipe: outroProf ? { nome: outroProf.nome || 'Profissional', parte: dOutro.parceiroParte, principal: v.tipo === 'parceiro' } : null,
       nome: dOutro.nome || 'Aluno',
       foto: dOutro.foto || '',
       respostas: { ...(p.onboarding || {}), mobility: Array.isArray(p.mobility) ? p.mobility : [] },
       ficha: p.ficha_coach || null,
       fichaDia: Number(p.ficha_coach_dia) || 0,
       plano: p.plano_nutri || null,
-      anamnese: eu.anamnese ? { perguntas: eu.anamnese.perguntas, respostas: (dOutro.anamneseResp && dOutro.anamneseResp.respostas) || {}, em: (dOutro.anamneseResp && dOutro.anamneseResp.em) || null, situacao: situacaoAnamnese(eu, dOutro) } : null,
+      anamnese: principal.anamnese ? { perguntas: principal.anamnese.perguntas, respostas: (dOutro.anamneseResp && dOutro.anamneseResp.respostas) || {}, em: (dOutro.anamneseResp && dOutro.anamneseResp.em) || null, situacao: situacaoAnamnese(principal, dOutro) } : null,
     }];
   }
   if (acao === 'ficha_salvar' || acao === 'dieta_salvar') {
     if (eu.papel !== 'coach') return [403, { error: 'Só o coach monta a ficha do aluno.' }];
     const ficha = acao === 'ficha_salvar';
+    if (!podeEditar(uid, dOutro, ficha ? 'ficha' : 'dieta')) return [403, { error: ficha ? 'O treino deste aluno é com o outro profissional da equipe.' : 'A alimentação deste aluno é com o outro profissional da equipe.' }];
     if (body.remover) {
       await db.collection('bodycoach_users').doc(outro).collection('profile').doc('main').set(ficha ? { ficha_coach: null, ficha_coach_dia: 0 } : { plano_nutri: null }, { merge: true });
       return [200, { ok: true }];
@@ -697,14 +725,14 @@ exports.handler = async (event) => {
   const auth = await verifyBearerToken(event);
   if (!auth.ok) return resposta(event, 401, { error: 'Entre na sua conta para conversar.' });
   // leituras (a tela confere a cada poucos segundos) não gastam o limite nem a cota do banco grátis
-  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar', 'desafio_criar', 'desafio_checkin', 'comentar', 'agendar_avaliacao', 'compartilhar_criar', 'dupla_criar', 'dupla_entrar', 'pix_config', 'pagamento_avisar', 'ranking_config', 'treino_feito', 'ficha_salvar', 'dieta_salvar', 'anamnese_salvar', 'anamnese_responder', 'modelo_salvar', 'modelo_apagar', 'modelo_aplicar', 'push_assinar', 'push_prefs', 'push_testar', 'pagamento_lembrar', 'programa_salvar', 'compra_criar', 'compra_avisar', 'compra_confirmar', 'feed_postar', 'feed_curtir'].includes(body.acao)) {
+  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar', 'desafio_criar', 'desafio_checkin', 'comentar', 'agendar_avaliacao', 'compartilhar_criar', 'dupla_criar', 'dupla_entrar', 'pix_config', 'pagamento_avisar', 'ranking_config', 'treino_feito', 'ficha_salvar', 'dieta_salvar', 'anamnese_salvar', 'anamnese_responder', 'modelo_salvar', 'modelo_apagar', 'modelo_aplicar', 'push_assinar', 'push_prefs', 'push_testar', 'pagamento_lembrar', 'programa_salvar', 'compra_criar', 'compra_avisar', 'compra_confirmar', 'feed_postar', 'feed_curtir', 'parceiro_entrar', 'marca_salvar', 'convites_importar'].includes(body.acao)) {
     const rl = await checkRateLimit(auth.uid, 'body-coach-chat');
     if (!rl.ok) return resposta(event, 429, { error: 'Muitos pedidos seguidos. Aguarde um instante.' });
   }
   try {
     const { db } = require('./firebase-init');
     if (!db) return resposta(event, 503, { error: 'Conversa indisponível agora.' });
-    const [status, out] = await executar(body, auth.uid, db, { master: auth.role === 'master' });
+    const [status, out] = await executar(body, auth.uid, db, { master: auth.role === 'master', email: auth.email });
     return resposta(event, status, out);
   } catch {
     return resposta(event, 503, { error: 'Conversa indisponível agora. Tente de novo.' });

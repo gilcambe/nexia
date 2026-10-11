@@ -39,6 +39,9 @@ const Financeiro = carregar(() => import("../pages/coach/Financeiro"));
 const Programas = carregar(() => import("../pages/coach/Programas"));
 const Loja = carregar(() => import("../pages/loja/page"));
 const Feed = carregar(() => import("../pages/feed/page"));
+const Equipe = carregar(() => import("../pages/equipe/page"));
+const Convites = carregar(() => import("../pages/coach/Convites"));
+const MarcaCoach = carregar(() => import("../pages/coach/Marca"));
 const Ferramentas = carregar(() => import("../pages/ferramentas/page"));
 
 const routes: RouteObject[] = [
@@ -106,6 +109,9 @@ const routes: RouteObject[] = [
       { path: "coach/alunos/:uid", element: <AlunoPlano /> },
       { path: "coach/anamnese", element: <AnamneseCoach /> },
       { path: "coach/modelos", element: <Modelos /> },
+      { path: "coach/convites", element: <Convites /> },
+      { path: "coach/marca", element: <MarcaCoach /> },
+      { path: "equipe", element: <Equipe /> },
       { path: "coach/modelos/:id", element: <ModeloEditar /> },
       { path: "anamnese", element: <Anamnese /> },
       { path: "avisos", element: <Avisos /> },

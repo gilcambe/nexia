@@ -3,15 +3,19 @@ import { chatApi } from '../chat';
 import type { PlanoAlimentar } from '../planoAlimentar';
 import type { FichaCoach } from './fichaCoach';
 import type { AnamneseDoAluno, Situacao } from './equipe';
+import type { Parte } from './profissionais';
 
 export interface LinhaAluno {
   uid: string; nome: string; foto: string;
   ultimoTreino: number | null; treinouHoje: boolean; diasSemTreinar: number | null; treinosSemana: number;
   refeicoesHoje: number; temFicha: boolean; temDieta: boolean; pago: boolean; avisou: boolean;
   anamnese: Situacao;
+  vinculo?: 'principal' | 'parceiro';
+  equipe?: { nome: string; parte: Parte } | null;
 }
 export interface Painel { alunos: LinhaAluno[]; hoje: string; mes: string; cobra: boolean }
-export interface Prescricao { nome: string; foto: string; respostas: Record<string, unknown>; ficha: FichaCoach | null; fichaDia: number; plano: PlanoAlimentar | null; anamnese: AnamneseDoAluno | null }
+export interface Prescricao { nome: string; foto: string; respostas: Record<string, unknown>; ficha: FichaCoach | null; fichaDia: number; plano: PlanoAlimentar | null; anamnese: AnamneseDoAluno | null;
+  vinculo?: 'principal' | 'parceiro'; pode?: { ficha: boolean; dieta: boolean }; equipe?: { nome: string; parte: Parte; principal: boolean } | null }
 
 export const painelAlunos = () => chatApi<Painel>({ acao: 'alunos_painel' });
 export const prescricaoDo = (aluno: string) => chatApi<Prescricao>({ acao: 'prescricao_ver', com: aluno });
