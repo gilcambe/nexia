@@ -6,6 +6,7 @@
 // textoDoTreino: o resumo do treino (notas por série, "até a falha", esforço, comentário) que vai para a conversa do coach.
 
 const { avisarConversa } = require('./push');
+const { podeEditar } = require('./profissionais');
 
 const limpa = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const par = (a, b) => [a, b].sort().join('__');
@@ -162,7 +163,7 @@ async function equipe(body, uid, db, eu, util) {
     const recusados = [];
     for (const a of alunos) {
       const d = (await dir.doc(a).get()).data?.();
-      if (!d || d.coachUid !== uid) { recusados.push(a); continue; }
+      if (!d || !podeEditar(uid, d, m.tipo)) { recusados.push(a); continue; }
       await util.gravarPrescricao(a, m.tipo, m.tipo === 'ficha' ? { ...m.dados } : { ...m.dados, arquivo: `Plano de ${eu.nome || 'seu coach'}`, importado_em: new Date().toISOString(), do_coach: true });
       aplicados += 1;
     }

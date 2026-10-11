@@ -10,6 +10,7 @@ import { setUserDoc } from '@/lib/userData';
 import { codigoIndicacao } from '@/lib/ferramentas/cartao';
 import { papelEContatos } from '@/lib/papelCoach';
 import { enviarPendentes } from '@/lib/pendentes';
+import { marcaGuardada, type Marca } from '@/lib/coach/profissionais';
 
 // Menu enxuto: só as telas principais. As outras (Respirar, Equipe, Exames, Anti-Doping...) ficam em Ferramentas.
 const navItems = [
@@ -51,24 +52,35 @@ function FeedbackLink({ onNavigate, compact = false }: { onNavigate?: () => void
   );
 }
 
+// Marca no topo: a do coach (logo, nome e cor) quando ele configurou; senão a do NEXIA.
+function useMarca() {
+  const [m, setM] = useState<Marca | null>(() => marcaGuardada());
+  useEffect(() => {
+    const ouvir = (e: Event) => setM((e as CustomEvent<Marca | null>).detail ?? null);
+    window.addEventListener('bc-marca', ouvir);
+    return () => window.removeEventListener('bc-marca', ouvir);
+  }, []);
+  return m;
+}
+
 function BrandMark({ size = 'md' }: { size?: 'md' | 'sm' }) {
+  const marca = useMarca();
+  const caixa = size === 'md' ? 'h-9 w-9 rounded-xl' : 'h-8 w-8 rounded-lg';
   return (
-    <div className="flex items-center gap-2.5">
-      <div
-        className={
-          size === 'md'
-            ? 'flex h-9 w-9 items-center justify-center rounded-xl bg-primary-500 text-background-50'
-            : 'flex h-8 w-8 items-center justify-center rounded-lg bg-primary-500 text-background-50'
-        }
-      >
-        <i className="ri-heart-3-line text-lg"></i>
-      </div>
-      <div className="leading-none">
-        <p className="font-heading font-bold tracking-tight text-foreground-950">
-          NEXIA
+    <div className="flex items-center gap-2.5" data-testid="marca-topo">
+      {marca?.logo ? (
+        <img src={marca.logo} alt="" className={`${caixa} object-contain`} />
+      ) : (
+        <div className={`flex items-center justify-center bg-primary-500 text-background-50 ${caixa}`}>
+          <i className="ri-heart-3-line text-lg"></i>
+        </div>
+      )}
+      <div className="min-w-0 leading-none">
+        <p className="max-w-[11rem] truncate font-heading font-bold tracking-tight text-foreground-950">
+          {marca?.nome || 'NEXIA'}
         </p>
         <p className="mt-0.5 text-[10px] font-medium tracking-[0.18em] text-foreground-400 uppercase">
-          Body Coach AI
+          {marca?.nome ? 'com NEXIA Body Coach' : 'Body Coach AI'}
         </p>
       </div>
     </div>
@@ -128,9 +140,11 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Atleta';
   // Coach ganha o atalho "Meus alunos" no menu (o papel é descoberto uma vez por abertura do app).
-  const [souCoach, setSouCoach] = useState(false);
-  useEffect(() => { if (user) void papelEContatos().then((r) => setSouCoach(r.papel === 'coach')); }, [user]);
-  const itens = souCoach ? [navItems[0], { to: '/coach/alunos', label: 'Meus alunos', icon: 'ri-team-line' }, ...navItems.slice(1)] : navItems;
+  const [papel, setPapel] = useState<'coach' | 'aluno' | 'nenhum'>('nenhum');
+  useEffect(() => { if (user) void papelEContatos().then((r) => setPapel(r.papel)); }, [user]);
+  const itens = papel === 'coach'
+    ? [navItems[0], { to: '/coach/alunos', label: 'Meus alunos', icon: 'ri-team-line' }, ...navItems.slice(1)]
+    : papel === 'aluno' ? [...navItems.slice(0, 5), { to: '/equipe', label: 'Minha equipe', icon: 'ri-user-heart-line' }, ...navItems.slice(5)] : navItems;
 
   const handleSignOut = async () => {
     await signOut();

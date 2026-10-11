@@ -2,7 +2,9 @@ import { useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import type { Macros, PlanoAlimentar, RefeicaoPlano } from '@/lib/planoAlimentar';
 
 export type Plano = Pick<PlanoAlimentar, 'refeicoes' | 'totais' | 'extras'>;
-const campo = 'w-full rounded-lg border border-background-200 bg-background-50 px-2.5 py-2 text-sm text-foreground-900 outline-none focus:border-primary-300';
+// sem largura: quem usa escolhe (w-full na maioria; na linha do alimento o nome estica e a quantidade fica fixa)
+const caixa = 'rounded-lg border border-background-200 bg-background-50 px-2.5 py-2 text-sm text-foreground-900 outline-none focus:border-primary-300';
+const campo = `w-full ${caixa}`;
 const refeicao = (nome: string, horario: string): RefeicaoPlano => ({ nome, horario, itens: [{ nome: '', qtd: '' }], trocas: [], obs: [], macros: null });
 const MODELO: RefeicaoPlano[] = [
   refeicao('Café da manhã', '07:00'), refeicao('Lanche da manhã', '10:00'), refeicao('Almoço', '12:30'),
@@ -94,8 +96,8 @@ export default function DietaEditor({ nomeAluno, inicial, salvando, onSalvar, on
             <ul className="mt-2 space-y-1.5">
               {r.itens.map((it, j) => (
                 <li key={j} className="flex gap-1.5">
-                  <input value={it.nome} onChange={(e) => mudarRef(i, { itens: r.itens.map((x, k) => (k === j ? { ...x, nome: e.target.value } : x)) })} maxLength={80} placeholder="Alimento (ex.: ovo cozido)" aria-label={`Alimento ${j + 1} de ${r.nome}`} className={`${campo} flex-1`} />
-                  <input value={it.qtd} onChange={(e) => mudarRef(i, { itens: r.itens.map((x, k) => (k === j ? { ...x, qtd: e.target.value } : x)) })} maxLength={40} placeholder="Qtd. (2 un)" aria-label={`Quantidade ${j + 1} de ${r.nome}`} className={`${campo} w-28`} />
+                  <input value={it.nome} onChange={(e) => mudarRef(i, { itens: r.itens.map((x, k) => (k === j ? { ...x, nome: e.target.value } : x)) })} maxLength={80} placeholder="Alimento (ex.: ovo cozido)" aria-label={`Alimento ${j + 1} de ${r.nome}`} className={`${caixa} min-w-0 flex-1`} />
+                  <input value={it.qtd} onChange={(e) => mudarRef(i, { itens: r.itens.map((x, k) => (k === j ? { ...x, qtd: e.target.value } : x)) })} maxLength={40} placeholder="Qtd. (2 un)" aria-label={`Quantidade ${j + 1} de ${r.nome}`} className={`${caixa} w-24 shrink-0`} />
                   <button type="button" onClick={() => mudarRef(i, { itens: r.itens.filter((_, k) => k !== j) })} aria-label={`Tirar alimento ${j + 1}`} className="px-1 text-foreground-400"><i className="ri-close-line"></i></button>
                 </li>
               ))}

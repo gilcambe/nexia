@@ -4,6 +4,10 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 import { mostrarAbertura } from './abertura'
+import { aplicarMarca, marcaGuardada } from './lib/coach/profissionais'
+
+// abre já com a cor do coach (a marca guardada da última vez), sem piscar o laranja padrão
+aplicarMarca(marcaGuardada())
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
