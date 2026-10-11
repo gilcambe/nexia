@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /agenda/
+Disallow: /leiloes/
 Sitemap: https://bezsan.pages.dev/sitemap.xml
