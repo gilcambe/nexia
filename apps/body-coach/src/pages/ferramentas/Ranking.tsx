@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '@/components/base/Card';
 import { chatApi } from '@/lib/chat';
+import { rankingCarga, type ExCarga, type LinhaCarga } from '@/lib/comunidade';
 
-interface Linha { nome: string; eu: boolean; visivel: boolean; treinos: number; minutos: number; dias: number; pontos: number }
+interface Linha { nome: string; eu: boolean; visivel: boolean; treinos: number; minutos: number; dias: number; pontos: number; refeicoes?: number; checkins?: number; feedbacks?: number }
 interface Resposta { lista: Linha[]; desafio?: { titulo: string; dias: number } | null; participo: boolean; apelido: string; semEquipe?: boolean; papel?: string }
 
 const MEDALHA = ['🥇', '🥈', '🥉'];
@@ -15,6 +16,7 @@ export default function Ranking() {
   const [erro, setErro] = useState('');
   const [apelido, setApelido] = useState('');
   const [ocupado, setOcupado] = useState(false);
+  const [aba, setAba] = useState<'semana' | 'carga'>('semana');
 
   const carregar = useCallback(async () => {
     try {
@@ -49,8 +51,18 @@ export default function Ranking() {
     );
   }
 
+  const abas = (
+    <div className="grid grid-cols-2 gap-1 rounded-xl bg-background-100 p-1" role="tablist">
+      {([['semana', 'Pontos da semana'], ['carga', 'Evolução de carga']] as const).map(([id, l]) => (
+        <button key={id} type="button" role="tab" aria-selected={aba === id} onClick={() => setAba(id)} className={`rounded-lg py-2 text-sm font-semibold ${aba === id ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>{l}</button>
+      ))}
+    </div>
+  );
+  if (aba === 'carga') return <div className="space-y-3">{abas}<RankingCarga /></div>;
+
   return (
     <div className="space-y-3">
+      {abas}
       {r.desafio && (
         <div className="rounded-2xl bg-gradient-to-r from-primary-500 to-accent-500 p-4 text-background-50">
           <p className="text-xs font-semibold uppercase opacity-80">Desafio do coach</p>
@@ -67,13 +79,13 @@ export default function Ranking() {
               <span className="w-7 text-center font-heading text-lg font-bold">{MEDALHA[i] ?? i + 1}</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-semibold text-foreground-950">{l.nome}{l.eu && ' (você)'}{!l.visivel && <span className="ml-1 text-[11px] font-normal text-foreground-400">· oculto para a equipe</span>}</span>
-                <span className="block text-xs text-foreground-500">{l.treinos} treinos · {l.minutos} min{r.desafio ? ` · ${l.dias} dias de desafio` : ''}</span>
+                <span className="block text-xs text-foreground-500">{l.treinos} treinos · {l.minutos} min{l.refeicoes ? ` · ${l.refeicoes} refeições` : ''}{l.checkins ? ` · ${l.checkins} check-ins` : ''}{r.desafio ? ` · ${l.dias} dias de desafio` : ''}</span>
               </span>
               <span className="font-heading text-lg font-bold text-primary-700">{l.pontos}</span>
             </li>
           ))}
         </ol>
-        <p className="mt-2 px-1 text-[11px] text-foreground-400">10 pontos por treino, 1 a cada 10 minutos e 5 por dia de desafio. Zera toda segunda.</p>
+        <p className="mt-2 px-1 text-[11px] text-foreground-400">10 pontos por treino, 1 a cada 10 minutos, 5 por dia de desafio, 2 por refeição registrada (até 5 por dia), 2 pelo check-in do dia e 3 por treino com retorno para o coach. Zera toda segunda.</p>
       </Card>
       {r.papel === 'coach' && <p className="px-1 text-xs text-foreground-500">Como coach, você vê toda a equipe. Cada aluno escolhe se aparece para os colegas. Crie desafios na conversa da equipe.</p>}
       {r.papel !== 'coach' && <Card>
@@ -87,5 +99,37 @@ export default function Ranking() {
       </Card>}
       {erro && <p className="text-sm text-red-600" role="alert">{erro}</p>}
     </div>
+  );
+}
+
+// Quem mais evoluiu a carga desde a primeira vez (1RM estimado), por exercício ou na média.
+function RankingCarga() {
+  const [ex, setEx] = useState('');
+  const [d, setD] = useState<{ exercicios: ExCarga[]; lista: LinhaCarga[]; semEquipe?: boolean } | null>(null);
+  const [erro, setErro] = useState('');
+  useEffect(() => { setD(null); rankingCarga(ex || undefined).then(setD).catch((e: Error) => setErro(e.message)); }, [ex]);
+  if (erro) return <p className="text-sm text-red-600" role="alert">{erro}</p>;
+  if (!d) return <p className="text-sm text-foreground-500">Carregando…</p>;
+  return (
+    <Card padding="p-3">
+      <div className="flex gap-1.5 overflow-x-auto pb-2" data-testid="carga-exercicios">
+        <button type="button" onClick={() => setEx('')} aria-pressed={!ex} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${!ex ? 'bg-primary-500 text-background-50' : 'bg-background-100 text-foreground-700'}`}>Geral</button>
+        {d.exercicios.map((x) => <button key={x.id} type="button" onClick={() => setEx(x.id)} aria-pressed={ex === x.id} className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold ${ex === x.id ? 'bg-primary-500 text-background-50' : 'bg-background-100 text-foreground-700'}`}>{x.nome}</button>)}
+      </div>
+      {d.lista.length === 0 && <p className="px-1 py-2 text-sm text-foreground-500">Ainda sem evolução para comparar. Treine o mesmo exercício mais de uma vez e a sua carga aparece aqui.</p>}
+      <ol className="space-y-1.5">
+        {d.lista.map((l, i) => (
+          <li key={`${l.nome}-${i}`} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${l.eu ? 'bg-primary-50 ring-1 ring-primary-300' : 'bg-background-100/60'}`}>
+            <span className="w-7 text-center font-heading text-lg font-bold">{MEDALHA[i] ?? i + 1}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-semibold text-foreground-950">{l.nome}{l.eu && ' (você)'}</span>
+              <span className="block text-xs text-foreground-500">{ex ? (l.kg ? `melhor: ${l.kg} kg × ${l.reps} · 1RM ${l.de} → ${l.para} kg` : '') : `média de ${l.exercicios} exercício${l.exercicios === 1 ? '' : 's'}`}</span>
+            </span>
+            <span className={`font-heading text-lg font-bold ${l.ganho > 0 ? 'text-accent-700' : 'text-foreground-500'}`}>{l.ganho > 0 ? '+' : ''}{Math.round(l.ganho)}%</span>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-2 px-1 text-[11px] text-foreground-400">Quanto a carga subiu desde a primeira vez que você fez o exercício no app (1RM estimado pelas suas melhores séries).</p>
+    </Card>
   );
 }

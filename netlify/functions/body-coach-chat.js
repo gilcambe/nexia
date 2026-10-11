@@ -16,6 +16,8 @@ const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware
 const { equipe, textoDoTreino, situacaoAnamnese } = require('./body-coach/equipe');
 const { acoesPush, avisarConversa } = require('./body-coach/push');
 const { negocio, lojaVer } = require('./body-coach/negocio');
+const { comunidade, registrarCargas, pontosDe } = require('./body-coach/comunidade');
+const { inicioSemanaBR } = require('./body-coach/tempo');
 
 const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 const par = (a, b) => [a, b].sort().join('__');
@@ -24,12 +26,6 @@ const VIDEO_MAX = 700000; // caracteres do data URL (cabe no limite de 1 MiB do 
 const videoOk = (v) => typeof v === 'string' && v.length < VIDEO_MAX && /^data:video\/(webm|mp4)(;codecs=[^;,]+)?;base64,[A-Za-z0-9+/=]+$/.test(v);
 const codigoNovo = () => Array.from({ length: 6 }, () => 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random() * 31)]).join('');
 
-// Segunda-feira da semana, no horário de Brasília (o ranking zera toda segunda).
-function inicioSemanaBR(agora = Date.now()) {
-  const d = new Date(agora - 3 * 3600000);
-  const dia = (d.getUTCDay() + 6) % 7;
-  return new Date(d.getTime() - dia * 86400000).toISOString().slice(0, 10);
-}
 
 const DUPLA_HORAS = 4;
 async function dupla(body, uid, db, eu) {
@@ -305,6 +301,8 @@ async function executar(body, uid, db, ctx = {}) {
   if (daEquipe) return daEquipe;
   const doNegocio = await negocio(body, uid, db, eu, { gravarPrescricao, situacaoAnamnese });
   if (doNegocio) return doNegocio;
+  const daComunidade = await comunidade(body, uid, db, eu);
+  if (daComunidade) return daComunidade;
 
   // ── Evolução: o lado do aluno ──
   if (acao === 'evolucao_config') {
@@ -386,10 +384,11 @@ async function executar(body, uid, db, ctx = {}) {
     const kcal = Math.min(3000, Math.max(0, Math.round(Number(body.kcal) || 0)));
     const sem = inicioSemanaBR();
     const s = eu.semana && eu.semana.inicio === sem ? eu.semana : { inicio: sem, treinos: 0, minutos: 0, kcal: 0 };
-    const semana = { inicio: sem, treinos: s.treinos + 1, minutos: s.minutos + min, kcal: (s.kcal || 0) + kcal };
+    const temRetorno = eu.papel === 'aluno' && !!eu.coachUid && !!textoDoTreino(body);
+    const semana = { ...s, inicio: sem, treinos: s.treinos + 1, minutos: s.minutos + min, kcal: (s.kcal || 0) + kcal, feedbacks: (s.feedbacks || 0) + (temRetorno ? 1 : 0) };
     // feitoEm: treino salvo sem internet e enviado depois conta no dia em que foi feito
     const feito = Number(body.feitoEm);
-    const novo = { semana, ultimoTreino: feito > 0 && feito <= Date.now() && feito > Date.now() - 7 * 86400000 ? Math.max(feito, Number(eu.ultimoTreino) || 0) : Date.now() };
+    const novo = { semana, progressao: registrarCargas(eu, body.melhores), ultimoTreino: feito > 0 && feito <= Date.now() && feito > Date.now() - 7 * 86400000 ? Math.max(feito, Number(eu.ultimoTreino) || 0) : Date.now() };
     let desafioMarcado = false;
     if (eu.papel === 'aluno' && eu.coachUid) {
       const d = ((await dir.doc(eu.coachUid).get()).data?.() || {}).desafio;
@@ -431,7 +430,7 @@ async function executar(body, uid, db, ctx = {}) {
       .map((a) => {
         const s = a.semana && a.semana.inicio === sem ? a.semana : { treinos: 0, minutos: 0 };
         const dias = d && a.checkins && a.checkins.id === d.id ? a.checkins.datas.length : 0;
-        return { nome: (a.ranking && a.apelido) || a.nome || 'Aluno', eu: a.id === uid, visivel: !!a.ranking, treinos: s.treinos, minutos: s.minutos, dias, pontos: s.treinos * 10 + Math.floor(s.minutos / 10) + dias * 5 };
+        return { nome: (a.ranking && a.apelido) || a.nome || 'Aluno', eu: a.id === uid, visivel: !!a.ranking, treinos: s.treinos, minutos: s.minutos, dias, refeicoes: s.refeicoes || 0, checkins: s.checkins || 0, feedbacks: s.feedbacks || 0, pontos: pontosDe(s, dias) };
       })
       .sort((a, b) => b.pontos - a.pontos || b.minutos - a.minutos);
     return [200, { lista, desafio: d, semana: sem, papel: eu.papel, participo: !!eu.ranking, apelido: eu.apelido || '' }];
@@ -698,7 +697,7 @@ exports.handler = async (event) => {
   const auth = await verifyBearerToken(event);
   if (!auth.ok) return resposta(event, 401, { error: 'Entre na sua conta para conversar.' });
   // leituras (a tela confere a cada poucos segundos) não gastam o limite nem a cota do banco grátis
-  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar', 'desafio_criar', 'desafio_checkin', 'comentar', 'agendar_avaliacao', 'compartilhar_criar', 'dupla_criar', 'dupla_entrar', 'pix_config', 'pagamento_avisar', 'ranking_config', 'treino_feito', 'ficha_salvar', 'dieta_salvar', 'anamnese_salvar', 'anamnese_responder', 'modelo_salvar', 'modelo_apagar', 'modelo_aplicar', 'push_assinar', 'push_prefs', 'push_testar', 'pagamento_lembrar', 'programa_salvar', 'compra_criar', 'compra_avisar', 'compra_confirmar'].includes(body.acao)) {
+  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar', 'desafio_criar', 'desafio_checkin', 'comentar', 'agendar_avaliacao', 'compartilhar_criar', 'dupla_criar', 'dupla_entrar', 'pix_config', 'pagamento_avisar', 'ranking_config', 'treino_feito', 'ficha_salvar', 'dieta_salvar', 'anamnese_salvar', 'anamnese_responder', 'modelo_salvar', 'modelo_apagar', 'modelo_aplicar', 'push_assinar', 'push_prefs', 'push_testar', 'pagamento_lembrar', 'programa_salvar', 'compra_criar', 'compra_avisar', 'compra_confirmar', 'feed_postar', 'feed_curtir'].includes(body.acao)) {
     const rl = await checkRateLimit(auth.uid, 'body-coach-chat');
     if (!rl.ok) return resposta(event, 429, { error: 'Muitos pedidos seguidos. Aguarde um instante.' });
   }

@@ -38,6 +38,7 @@ const Avisos = carregar(() => import("../pages/avisos/page"));
 const Financeiro = carregar(() => import("../pages/coach/Financeiro"));
 const Programas = carregar(() => import("../pages/coach/Programas"));
 const Loja = carregar(() => import("../pages/loja/page"));
+const Feed = carregar(() => import("../pages/feed/page"));
 const Ferramentas = carregar(() => import("../pages/ferramentas/page"));
 
 const routes: RouteObject[] = [
@@ -110,6 +111,7 @@ const routes: RouteObject[] = [
       { path: "avisos", element: <Avisos /> },
       { path: "coach/financeiro", element: <Financeiro /> },
       { path: "coach/programas", element: <Programas /> },
+      { path: "feed", element: <Feed /> },
       { path: "coach/evolucao", element: <AlunosEvolucao /> },
       { path: "coach/demonstracoes", element: <Demonstracoes /> },
       { path: "coach/evolucao/:uid", element: <AlunoEvolucao /> },
