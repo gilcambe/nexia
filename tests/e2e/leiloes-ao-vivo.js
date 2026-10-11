@@ -97,8 +97,10 @@ São Paulo, 1º de outubro de 2026.`;
   const robots = await (await fetch(SITE_URL + '/robots.txt')).text();
   confere(robots.includes('Disallow: /leiloes/'), 'robots.txt esconde a Central dos buscadores');
 
+  // Usa a sessão aberta no passo 1 (o "entrar" tem limite por IP e o cenário completo já entrou várias vezes).
+  await pg.goto(SITE_URL + '/robots.txt');
+  await pg.evaluate(t => localStorage.setItem('nexia_agenda_agenda-teste', t), token);
   await pg.goto(SITE_URL + '/agenda/?site=agenda-teste', { waitUntil: 'load' });
-  await pg.fill('#senha', SENHA); await pg.click('#form-entrar button');
   await pg.waitForSelector('#app:not(.oculto)', { timeout: 20000 });
   confere(await pg.isVisible('#nav-extra'), 'painel no ar mostra "Leilões"');
   await pg.goto(SITE_URL + '/leiloes/?site=agenda-teste', { waitUntil: 'load' });
