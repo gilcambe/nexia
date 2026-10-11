@@ -1,0 +1,48 @@
+=== https://overpass-api.de/api/interpreter try 1
+HTTP/1.1 406 Not Acceptable
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"><html><head><title>406 Not Acceptable</title></head><body><h1>Not Acceptable</h1><p>An appropriate representation of the requested resource could not be found on this server.</p><hr><address>Apache/2.4.68 (Debian) Server at overpass-api.de Port 443</address></body></html>
+=== https://overpass-api.de/api/interpreter try 2
+HTTP/1.1 406 Not Acceptable
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"><html><head><title>406 Not Acceptable</title></head><body><h1>Not Acceptable</h1><p>An appropriate representation of the requested resource could not be found on this server.</p><hr><address>Apache/2.4.68 (Debian) Server at overpass-api.de Port 443</address></body></html>
+=== https://overpass-api.de/api/interpreter OPTIONS
+HTTP/1.1 406 Not Acceptable
+=== https://overpass.kumi.systems/api/interpreter try 1
+HTTP/1.1 500 Internal Server Error
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"><html><head><title>500 Internal Server Error</title></head><body><h1>Internal Server Error</h1><p>The server encountered an internal error ormisconfiguration and was unable to completeyour request.</p><p>Please contact the server administrator at  webmaster@localhost to inform them of the time this e
+=== https://overpass.kumi.systems/api/interpreter try 2
+HTTP/1.1 500 Internal Server Error
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"><html><head><title>500 Internal Server Error</title></head><body><h1>Internal Server Error</h1><p>The server encountered an internal error ormisconfiguration and was unable to completeyour request.</p><p>Please contact the server administrator at  webmaster@localhost to inform them of the time this e
+=== https://overpass.kumi.systems/api/interpreter OPTIONS
+HTTP/1.1 500 Internal Server Error
+=== https://maps.mail.ru/osm/tools/overpass/api/interpreter try 1
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"><html><head><title>500 Internal Server Error</title></head><body><h1>Internal Server Error</h1><p>The server encountered an internal error ormisconfiguration and was unable to completeyour request.</p><p>Please contact the server administrator at  webmaster@localhost to inform them of the time this e
+=== https://maps.mail.ru/osm/tools/overpass/api/interpreter try 2
+HTTP/1.1 504 Gateway Time-out
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Credentials: true
+Access-Control-Allow-Headers: Authorization, Content-Type, X-Maps-Platform, X-Maps-Access-Token
+Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT
+<html><head><title>504 Gateway Time-out</title></head><body><center><h1>504 Gateway Time-out</h1></center><hr><center>nginx</center></body></html>
+=== https://maps.mail.ru/osm/tools/overpass/api/interpreter OPTIONS
+HTTP/1.1 200 OK
+Access-Control-Allow-Headers: Authorization, Content-Type, X-Maps-Platform, X-Maps-Access-Token
+Access-Control-Allow-Origin: *
+Access-Control-Max-Age: 600
+Access-Control-Allow-Methods: GET, POST, OPTIONS, PUT
+Access-Control-Allow-Credentials: true
+=== https://overpass.private.coffee/api/interpreter try 1
+HTTP/1.1 500 Internal Server Error
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"><html><head><title>500 Internal Server Error</title></head><body><h1>Internal Server Error</h1><p>The server encountered an internal error ormisconfiguration and was unable to completeyour request.</p><p>Please contact the server administrator at  webmaster@localhost to inform them of the time this e
+=== https://overpass.private.coffee/api/interpreter try 2
+HTTP/1.1 500 Internal Server Error
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"><html><head><title>500 Internal Server Error</title></head><body><h1>Internal Server Error</h1><p>The server encountered an internal error ormisconfiguration and was unable to completeyour request.</p><p>Please contact the server administrator at  webmaster@localhost to inform them of the time this e
+=== https://overpass.private.coffee/api/interpreter OPTIONS
+HTTP/1.1 500 Internal Server Error
+=== nominatim q=Rua+Frei+Ant%C3%B4nio+de+Guadalupe%2C+67%2C+Vila+Prudente%2C+S%C3%A3o+Paulo%2C+SP%2C+Brasil
+Access denied. See https://operations.osmfoundation.org/policies/nominatim/
+=== nominatim street=67+Rua+Frei+Ant%C3%B4nio+de+Guadalupe&city=S%C3%A3o+Paulo&state=SP&country=Brasil
+Access denied. See https://operations.osmfoundation.org/policies/nominatim/
+=== nominatim q=Rua+Frei+Ant%C3%B4nio+de+Guadalupe%2C+S%C3%A3o+Paulo
+Access denied. See https://operations.osmfoundation.org/policies/nominatim/
+=== photon
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"osm_type":"W","osm_id":942739019,"osm_key":"highway","osm_value":"residential","type":"street","name":"Rua Frei Antônio de Guadalupe","district":"Vila Prudente","city":"São Paulo","state":"São Paulo","country":"Brasil","postcode":"03141-020","countrycode":"BR","extent":[-46.5740746,-23.5880926,-46.574051,-23.5882766]},"geometry":{"type":"Point","coordinates":[-46.5740628,-23.5881846]}}]}
