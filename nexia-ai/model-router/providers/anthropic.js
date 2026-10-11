@@ -2,7 +2,10 @@
 // Adapter Claude com o SDK oficial (@anthropic-ai/sdk).
 // chat() também usa messages.stream(...).finalMessage(): o SDK recusa chamadas não
 // streaming com max_tokens alto, e o streaming evita timeout em respostas longas.
-const Anthropic = require('@anthropic-ai/sdk');
+// O SDK só carrega quando há chave (é pago e quase nunca é usado): a fila do Cortex roda sem `npm ci`
+// e não pode cair por falta deste pacote.
+let _Anthropic = null;
+const carregarSdk = () => (_Anthropic = _Anthropic || require('@anthropic-ai/sdk'));
 const { ModelError, CODES } = require('../errors');
 
 const ENV_KEY = 'ANTHROPIC_API_KEY';
@@ -32,6 +35,7 @@ function createAnthropicProvider({ env = process.env, clientOptions = {} } = {})
     const key = env[ENV_KEY];
     if (!key) throw new ModelError(CODES.NO_API_KEY, `${ENV_KEY} não configurada.`, { provider: 'anthropic', env: ENV_KEY });
     if (!client || clientKey !== key) {
+      const Anthropic = carregarSdk();
       client = new Anthropic({ apiKey: key, maxRetries: 1, ...(env.ANTHROPIC_BASE_URL ? { baseURL: env.ANTHROPIC_BASE_URL } : {}), ...clientOptions });
       clientKey = key;
     }
