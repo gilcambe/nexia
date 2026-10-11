@@ -19,8 +19,12 @@ jobs:
         run: |
           set +e
           curl -s --max-time 90 -o /tmp/t.bin -w 'diag http=%{http_code} type=%{content_type}\n' "https://nexia.gcbezerra.workers.dev/api/corpo-ia?k=m-clara-medio-frente&v=diag$RANDOM"
-          mkdir -p corpos; { curl -s --max-time 90 -o /tmp/t.bin -w 'diag http=%{http_code} type=%{content_type}\n' "https://nexia.gcbezerra.workers.dev/api/corpo-ia?k=m-clara-medio-frente&v=diag2$RANDOM"; head -c 600 /tmp/t.bin | tr -c '[:print:]\n' '.'; echo; } > /tmp/diag.txt
-          if ! grep -q 'http=200' /tmp/diag.txt; then rm -rf corpos; mkdir -p corpos; cp /tmp/diag.txt corpos/diag.txt; exit 0; fi
+          rm -rf corpos; mkdir -p corpos
+          for k in m-clara-medio-frente m-clara-alto-frente f-media-alto-costas m-negra-medio-frente; do
+            curl -s --max-time 90 -o /tmp/t.bin -w "$k http=%{http_code} type=%{content_type}\n" "https://nexia.gcbezerra.workers.dev/api/corpo-ia?k=$k&v=d$RANDOM" >> corpos/diag.txt
+            case "$(file -b /tmp/t.bin)" in JPEG*) echo jpeg >> corpos/diag.txt;; *) head -c 400 /tmp/t.bin | tr -c '[:print:]\n' '.' >> corpos/diag.txt; echo >> corpos/diag.txt;; esac
+          done
+          exit 0
           rm -rf corpos; mkdir -p corpos; log=corpos/log.txt
           for k in $(cat corpos-pedidos.txt); do for n in 1 2; do
             for t in 1 2 3; do
