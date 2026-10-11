@@ -1,3 +1,5 @@
 m-negra-alto-costas 1 ok
 f-morena-medio-costas 2 ok
 m-negra-alto-costas 2 ok
+rodada 1 erro 'NoneType' object has no attribute 'groups'
+rodada 2 erro 'NoneType' object has no attribute 'groups'
