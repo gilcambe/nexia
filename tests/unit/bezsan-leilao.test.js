@@ -296,13 +296,20 @@ test('LE17 leilao: região com IBGE, Banco Central, mapa e serviços perto; sina
   assert.match(decodeURIComponent(f.pedidos.find(p => /overpass/.test(p.url)).o.body), /around:1000,-23\.55274,-46\.65395/);
   assert.equal((await a.post({ acao: 'regiao', cidade: 'Cidade Que Não Existe', uf: 'SP' })).statusCode, 502);
   assert.equal((await a.post({ acao: 'regiao', cidade: 'X', uf: 'ZZ' })).statusCode, 400);
-  // Endereço fora da cidade no mapa: não conta serviços de outro lugar
+  // Nominatim acha outra cidade (ou recusa): tenta o Photon; se nenhum achar a rua na cidade, não conta serviços de outro lugar
   const fora = fetchRegiao({ cidade: 'Outra Cidade Teste', id: 3599902 });
-  const b = montarLeilao({ fetch: async (u, o) => (/nominatim/.test(u) ? { ok: true, json: async () => [{ lat: '-1', lon: '-1', address: { city: 'Longe' } }] } : fora.fn(u, o)) });
+  const photon = { features: [{ properties: { name: 'Rua X', type: 'street', district: 'Centro', city: 'Outra Cidade Teste', state: 'Rio de Janeiro' }, geometry: { coordinates: [-43.1, -22.9] } }] };
+  const b = montarLeilao({ fetch: async (u, o) => (/nominatim/.test(u) ? { ok: true, json: async () => [{ lat: '-1', lon: '-1', addresstype: 'road', address: { city: 'Longe' } }] } : /photon/.test(u) ? { ok: true, json: async () => photon } : fora.fn(u, o)) });
   const r2 = await b.post({ acao: 'regiao', endereco: 'Rua X', cidade: 'Outra Cidade Teste', uf: 'RJ' });
   assert.equal(r2.statusCode, 200, r2.body);
-  assert.equal(r2.json.regiao.servicos, null);
-  assert.equal(r2.json.regiao.local.na_cidade, false);
+  assert.equal(r2.json.regiao.local.fonte, 'Photon');
+  assert.deepEqual([r2.json.regiao.local.lat, r2.json.regiao.local.lon, r2.json.regiao.local.bairro], [-22.9, -43.1, 'Centro']);
+  assert.equal(r2.json.regiao.servicos.length, 6);
+  const c2 = montarLeilao({ fetch: async (u, o) => (/nominatim/.test(u) ? { ok: true, json: async () => [{ lat: '-1', lon: '-1', addresstype: 'city', address: { city: 'Terceira Cidade Teste' } }] } : /photon/.test(u) ? { ok: false } : fetchRegiao({ cidade: 'Terceira Cidade Teste', id: 3599903 }).fn(u, o)) });
+  const r3 = await c2.post({ acao: 'regiao', endereco: 'Rua Y', cidade: 'Terceira Cidade Teste', uf: 'MG' });
+  assert.equal(r3.statusCode, 200, r3.body);
+  assert.equal(r3.json.regiao.local, null, 'só a cidade no mapa não serve: não conta serviços');
+  assert.equal(r3.json.regiao.servicos, null);
   // Sinais: procura em todas as movimentações do processo
   const movs = Array.from({ length: 30 }, (_, i) => ({ dataHora: `2026-01-${String(i + 1).padStart(2, '0')}T00:00:00Z`, nome: i === 0 ? 'Embargos à Execução' : 'Juntada de Petição' }));
   const c = montarLeilao({ fetch: async () => ({ ok: true, json: async () => ({ hits: { hits: [{ _source: { numeroProcesso: '1', movimentos: movs } }] } }) }) });

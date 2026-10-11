@@ -347,7 +347,7 @@
     corpo.site = SITE; corpo.token = token;
     // Nunca fica "carregando" para sempre: a IA tem até 70 s, o resto 25 s.
     var ctl = window.AbortController ? new AbortController() : null;
-    var limite = setTimeout(function () { if (ctl) ctl.abort(); }, /analisar|parecer|arquivo/.test(corpo.acao) ? 70000 : 25000);
+    var limite = setTimeout(function () { if (ctl) ctl.abort(); }, /analisar|parecer|arquivo|regiao/.test(corpo.acao) ? 70000 : 25000);
     return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(corpo), signal: ctl ? ctl.signal : undefined })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { j._status = r.status; return j; }); })
       .catch(function (e) { return { _status: 0, error: e && e.name === 'AbortError' ? 'Demorou demais para responder. Tente de novo.' : 'Sem internet. Tente de novo.' }; })
@@ -593,7 +593,7 @@
     var serv = (g.servicos || []).map(function (sv) { return sv.nome + ': ' + sv.qtd; });
     var mapa = l && typeof l.lat === 'number' ? 'https://www.openstreetmap.org/?mlat=' + l.lat + '&mlon=' + l.lon + '#map=16/' + l.lat + '/' + l.lon : '';
     return '<div class="cartao"><h3>Região analisada</h3>' + linhas.map(function (t) { return '<div class="det">' + esc(t) + '</div>'; }).join('') +
-      (serv.length ? lista('A até 1 km (OpenStreetMap)', serv) : '<div class="det">' + esc(l ? 'Endereço achado só de forma aproximada; serviços perto não contados.' : 'Endereço não achado no mapa; serviços perto não contados.') + '</div>') +
+      (serv.length ? lista('A até 1 km (OpenStreetMap)', serv) : '<div class="det">' + esc(l ? 'Endereço achado no mapa, mas o mapa de serviços não respondeu agora. Toque em "Analisar a região" de novo mais tarde.' : 'Endereço não achado no mapa; serviços perto não contados.') + '</div>') +
       (l && l.endereco ? '<div class="det">No mapa: ' + esc(l.endereco) + '</div>' : '') +
       (mapa ? '<div class="acoes"><a class="btn pequeno claro" target="_blank" rel="noopener" href="' + esc(mapa) + '">Ver no mapa</a></div>' : '') +
       '<p class="dica">Fontes: ' + esc((g.fontes || []).join('; ')) + '.</p></div>';
@@ -613,28 +613,35 @@
   function mapaNoNavegador(g) {
     if (!g || g.servicos || !atual.endereco) return Promise.resolve(g);
     var cidade = semAcento(g.municipio.nome);
-    var rua = atual.endereco.split(/,|\s-\s/).slice(0, 2).join(',').replace(/\b(apto?|apartamento|casa|bloco|lote)\b.*$/i, '').trim();
-    var base = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&addressdetails=1';
-    var tentativas = [base + '&q=' + encodeURIComponent([atual.endereco, g.municipio.nome, g.municipio.uf, 'Brasil'].join(', ')),
-      base + '&street=' + encodeURIComponent(rua) + '&city=' + encodeURIComponent(g.municipio.nome) + '&state=' + encodeURIComponent(g.municipio.uf) + '&country=Brasil'];
-    function tentar(i) {
-      if (i >= tentativas.length) return Promise.resolve(null);
-      return jsonGet(tentativas[i], { headers: { 'Accept-Language': 'pt-BR' } }).then(function (j) {
+    var q = [atual.endereco, g.municipio.nome, g.municipio.uf, 'Brasil'].join(', ');
+    var RUA = /^(road|house|building|place|amenity|street|residential|highway|neighbourhood|quarter)$/;
+    function nominatim() {
+      return jsonGet('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&addressdetails=1&q=' + encodeURIComponent(q), { headers: { 'Accept-Language': 'pt-BR' } }).then(function (j) {
         var a = j && j[0], ad = a && a.address || {};
-        if (a && semAcento(ad.city || ad.town || ad.village || ad.municipality) === cidade) return a;
-        return tentar(i + 1);
+        if (!a || semAcento(ad.city || ad.town || ad.village || ad.municipality) !== cidade || !(RUA.test(a.addresstype || '') || RUA.test(a.class || ''))) return null;
+        return { lat: a.lat, lon: a.lon, endereco: a.display_name, bairro: ad.suburb || ad.neighbourhood || ad.city_district, fonte: 'Nominatim' };
       });
     }
-    return tentar(0).then(function (a) {
+    function photon() {
+      return jsonGet('https://photon.komoot.io/api/?limit=1&q=' + encodeURIComponent(q)).then(function (j) {
+        var f = j && j.features && j.features[0], p = f && f.properties, c = f && f.geometry && f.geometry.coordinates;
+        if (!p || !c || semAcento(p.city || p.county) !== cidade || !/^(street|house)$/.test(p.type || '')) return null;
+        return { lat: c[1], lon: c[0], endereco: [p.name, p.housenumber, p.district, p.city, p.state].filter(Boolean).join(', '), bairro: p.district || p.locality, fonte: 'Photon' };
+      });
+    }
+    function tentar() { return nominatim().then(function (a) { return a || photon(); }); }
+    return tentar().then(function (a) {
       if (!a) return g;
-      var lat = Number(Number(a.lat).toFixed(5)), lon = Number(Number(a.lon).toFixed(5)), ad = a.address || {};
-      g.local = { lat: lat, lon: lon, endereco: String(a.display_name || '').slice(0, 200), bairro: String(ad.suburb || ad.neighbourhood || ad.city_district || '').slice(0, 80), na_cidade: true };
+      var lat = Number(Number(a.lat).toFixed(5)), lon = Number(Number(a.lon).toFixed(5));
+      g.local = { lat: lat, lon: lon, endereco: String(a.endereco || '').slice(0, 200), bairro: String(a.bairro || '').slice(0, 80), na_cidade: true, fonte: a.fonte };
       var perto = 'nwr(around:1000,' + lat + ',' + lon + ')';
       var q = '[out:json][timeout:20];' + SERVICOS.map(function (sv) { return '(' + sv.slice(2).map(function (f) { return perto + f + ';'; }).join('') + ');out count;'; }).join('');
       var corpo = { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(q) };
-      return jsonGet('https://overpass-api.de/api/interpreter', corpo).then(function (j) { return j && j.elements ? j : jsonGet('https://overpass.kumi.systems/api/interpreter', corpo); }).then(function (j) {
-        if (j && j.elements && j.elements.length === SERVICOS.length) g.servicos = SERVICOS.map(function (sv, i) { return { id: sv[0], nome: sv[1], qtd: Number(j.elements[i].tags && j.elements[i].tags.total) || 0 }; });
-        g.fontes = (g.fontes || []).concat('OpenStreetMap (Nominatim para o endereço e Overpass para os serviços perto)');
+      var espelhos = ['https://overpass-api.de/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+      function overpass(i) { return i >= espelhos.length ? Promise.resolve(null) : jsonGet(espelhos[i], corpo).then(function (j) { return j && j.elements && j.elements.length === SERVICOS.length ? j : overpass(i + 1); }); }
+      return overpass(0).then(function (j) {
+        if (j) g.servicos = SERVICOS.map(function (sv, i) { return { id: sv[0], nome: sv[1], qtd: Number(j.elements[i].tags && j.elements[i].tags.total) || 0 }; });
+        g.fontes = (g.fontes || []).concat('OpenStreetMap (' + a.fonte + ' para o endereço' + (j ? ' e Overpass para os serviços perto' : '') + ')');
         return g;
       });
     });

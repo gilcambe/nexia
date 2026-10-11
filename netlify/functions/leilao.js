@@ -170,6 +170,28 @@ function serieIbge(lista, id) {
 function taxaAnual(ini, fim, anos) { return ini > 0 && fim > 0 && anos > 0 ? Math.pow(fim / ini, 1 / anos) - 1 : null; }
 const arred1 = n => (n === null || n === undefined ? null : Math.round(n * 1000) / 10); // fração → % com 1 casa
 
+const OVERPASS = ['https://overpass-api.de/api/interpreter', 'https://maps.mail.ru/osm/tools/overpass/api/interpreter', 'https://overpass.kumi.systems/api/interpreter'];
+// Endereço → ponto no mapa. Nominatim primeiro; o Photon (komoot, também OpenStreetMap) quando o Nominatim recusa
+// ou só acha a cidade. Só aceita resultado no nível da rua e dentro da cidade do imóvel.
+const NIVEL_RUA = /^(road|house|building|place|amenity|street|residential|highway|neighbourhood|quarter)$/;
+async function localizar(fetchFn, q, cidadeNorm) {
+  const nom = await jsonDe(fetchFn, `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&addressdetails=1&q=${encodeURIComponent(q)}`, { headers: { 'Accept-Language': 'pt-BR' } });
+  const n = Array.isArray(nom) && nom[0];
+  if (n && Number.isFinite(Number(n.lat))) {
+    const ad = n.address || {};
+    const c = semAcento(ad.city || ad.town || ad.village || ad.municipality || '');
+    if (c === cidadeNorm && (NIVEL_RUA.test(n.addresstype || '') || NIVEL_RUA.test(n.class || '')))
+      return { lat: Number(Number(n.lat).toFixed(5)), lon: Number(Number(n.lon).toFixed(5)), endereco: str(n.display_name, 200), bairro: str(ad.suburb || ad.neighbourhood || ad.city_district || '', 80), na_cidade: true, fonte: 'Nominatim' };
+  }
+  const ph = await jsonDe(fetchFn, `https://photon.komoot.io/api/?limit=1&q=${encodeURIComponent(q)}`);
+  const f = ph && Array.isArray(ph.features) && ph.features[0];
+  const pr = f && f.properties, co = f && f.geometry && f.geometry.coordinates;
+  if (pr && Array.isArray(co) && semAcento(pr.city || pr.county || '') === cidadeNorm && /^(street|house)$/.test(pr.type || '')) {
+    return { lat: Number(Number(co[1]).toFixed(5)), lon: Number(Number(co[0]).toFixed(5)), endereco: str([pr.name, pr.housenumber, pr.district, pr.city, pr.state].filter(Boolean).join(', '), 200), bairro: str(pr.district || pr.locality || '', 80), na_cidade: true, fonte: 'Photon' };
+  }
+  return null;
+}
+
 async function analisarRegiao(fetchFn, { endereco, cidade, uf }, now) {
   // 1) Município no IBGE (lista oficial do estado, guardada por um dia)
   const municipios = await emCache('mun:' + uf, DIA, now, () => jsonDe(fetchFn, `https://servicodados.ibge.gov.br/api/v1/localidades/estados/${uf}/municipios`));
@@ -186,7 +208,7 @@ async function analisarRegiao(fetchFn, { endereco, cidade, uf }, now) {
     emCache('ind:' + id6, DIA, now, () => jsonDe(fetchFn, `https://servicodados.ibge.gov.br/api/v1/pesquisas/indicadores/96385%7C29171%7C47001%7C29765/resultados/${id6}`)),
     emCache('ivgr', DIA, now, () => jsonDe(fetchFn, 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.21340/dados/ultimos/13?formato=json')),
     emCache('selic', DIA, now, () => jsonDe(fetchFn, 'https://api.bcb.gov.br/dados/serie/bcdata.sgs.432/dados/ultimos/1?formato=json')),
-    endereco ? emCache('geo:' + semAcento(q), 7 * DIA, now, () => jsonDe(fetchFn, `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&addressdetails=1&q=${encodeURIComponent(q)}`, { headers: { 'Accept-Language': 'pt-BR' } })) : null,
+    endereco ? emCache('geo:' + semAcento(q), 7 * DIA, now, () => localizar(fetchFn, q, alvo)) : null,
   ]);
 
   const censo = serieIbge(ind, 96385);
@@ -209,18 +231,16 @@ async function analisarRegiao(fetchFn, { endereco, cidade, uf }, now) {
 
   // 3) Serviços a até 1 km (OpenStreetMap). Só quando o endereço foi achado no mapa.
   let local = null, servicos = null;
-  const g = Array.isArray(geo) && geo[0];
-  if (g && Number.isFinite(Number(g.lat)) && Number.isFinite(Number(g.lon))) {
-    const lat = Number(Number(g.lat).toFixed(5)), lon = Number(Number(g.lon).toFixed(5));
-    const ad = g.address || {};
-    const naCidade = semAcento(ad.city || ad.town || ad.village || ad.municipality || '') === alvo;
-    local = { lat, lon, endereco: str(g.display_name, 200), bairro: str(ad.suburb || ad.neighbourhood || ad.city_district || '', 80), preciso: g.addresstype === 'place' || g.class === 'building' || g.type === 'house', na_cidade: naCidade };
+  if (geo) {
+    const { lat, lon } = geo;
+    const naCidade = geo.na_cidade;
+    local = geo;
     if (naCidade) {
-      fontes.push('OpenStreetMap (Nominatim para o endereço e Overpass para os serviços perto)');
+      fontes.push(`OpenStreetMap (${geo.fonte} para o endereço e Overpass para os serviços perto)`);
       const corpo = '[out:json][timeout:20];' + SERVICOS.map(s => '(' + s[2].split('around:@').join(`around:1000,${lat},${lon}`) + ');out count;').join('');
       const op = await emCache('osm:' + lat + ',' + lon, 7 * DIA, now, async () => {
-        for (const url of ['https://overpass-api.de/api/interpreter', 'https://overpass.kumi.systems/api/interpreter']) {
-          const j = await jsonDe(fetchFn, url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(corpo) }, 22000);
+        for (const url of OVERPASS) {
+          const j = await jsonDe(fetchFn, url, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(corpo) }, 15000);
           if (j && Array.isArray(j.elements) && j.elements.length === SERVICOS.length) return j.elements.map(e => Number(e && e.tags && e.tags.total) || 0);
         }
         return null;
