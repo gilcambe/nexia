@@ -19,7 +19,8 @@ jobs:
         run: |
           set +e
           curl -s --max-time 90 -o /tmp/t.bin -w 'diag http=%{http_code} type=%{content_type}\n' "https://nexia.gcbezerra.workers.dev/api/corpo-ia?k=m-clara-medio-frente&v=diag$RANDOM"
-          head -c 400 /tmp/t.bin | tr -c '[:print:]\n' '.'; echo
+          mkdir -p corpos; { curl -s --max-time 90 -o /tmp/t.bin -w 'diag http=%{http_code} type=%{content_type}\n' "https://nexia.gcbezerra.workers.dev/api/corpo-ia?k=m-clara-medio-frente&v=diag2$RANDOM"; head -c 600 /tmp/t.bin | tr -c '[:print:]\n' '.'; echo; } > /tmp/diag.txt
+          if ! grep -q 'http=200' /tmp/diag.txt; then rm -rf corpos; mkdir -p corpos; cp /tmp/diag.txt corpos/diag.txt; exit 0; fi
           rm -rf corpos; mkdir -p corpos; log=corpos/log.txt
           for k in $(cat corpos-pedidos.txt); do for n in 1 2; do
             for t in 1 2 3; do
