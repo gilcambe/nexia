@@ -1,0 +1,33 @@
+{
+  "site": {
+    "slug": "achados-nexia",
+    "nome": "Achados do Dia",
+    "frase": "As melhores ofertas da Shopee, do Mercado Livre e da Amazon, conferidas várias vezes por dia.",
+    "cor": "#ee4d2d"
+  },
+  "categorias": [
+    { "id": "casa", "nome": "Casa e cozinha", "buscas": ["organizador cozinha", "utensilios cozinha", "decoração casa", "air fryer acessorios"] },
+    { "id": "beleza", "nome": "Beleza", "buscas": ["skincare", "maquiagem", "secador cabelo", "perfume"] },
+    { "id": "fitness", "nome": "Fitness", "buscas": ["garrafa academia", "elastico exercicio", "luva academia", "roupa academia"] },
+    { "id": "eletronicos", "nome": "Eletrônicos", "buscas": ["fone bluetooth", "carregador turbo", "smartwatch", "caixa de som bluetooth"] },
+    { "id": "bebe", "nome": "Bebê e crianças", "buscas": ["brinquedo educativo", "roupa bebe", "mochila infantil"] },
+    { "id": "pet", "nome": "Pet", "buscas": ["brinquedo cachorro", "caminha pet", "comedouro gato"] }
+  ],
+  "filtros": {
+    "nota_minima": 4.6,
+    "vendas_minimas": 100,
+    "comissao_minima": 0.03,
+    "preco_maximo": 500,
+    "por_busca": 15,
+    "maximo_no_site": 240,
+    "dias_no_site": 3
+  },
+  "divulgacao": {
+    "posts_por_rodada": 1,
+    "posts_por_dia": 6,
+    "horas_entre_posts": 2,
+    "dias_sem_repetir": 7,
+    "hora_inicio": 8,
+    "hora_fim": 22
+  }
+}

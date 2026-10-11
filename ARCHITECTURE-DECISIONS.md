@@ -468,3 +468,10 @@ Cada decisão tem status: **ACEITA** (em vigor neste branch), **PROPOSTA** (agua
 - **Decisão:** `.github/workflows/auto-merge.yml` faz o merge em develop dos PRs abertos com o rótulo `automerge`, de branch `nexia/...` deste repositório, quando todo o CI do último commit está verde e não há conflito (rascunho vira pronto antes). O Claude só põe o rótulo depois de revisar o diff. Depois do merge o workflow dispara o CI em develop (merge pelo token do Actions não dispara push), e o deploy automático (ADR-AUTO-02) aceita CI vindo de `workflow_dispatch`.
 - **Garantia:** sem checkout (nenhum código do PR roda com permissão de escrita); PR sem rótulo, vermelho ou com conflito nunca entra; roda também a cada 30 min como rede de segurança.
 - **Custo:** zero (Actions em repositório público).
+
+## ADR-AFI-01 — Robô de ofertas com link de afiliado
+- **Status:** ACEITA (2026-10-11, pedido do dono: "algo que faça tudo sozinho... inclusive as divulgações").
+- **Contexto:** o dono quer ganhar comissão de afiliado (Shopee, Mercado Livre e outras) sem trabalho manual, sem nada pago.
+- **Decisão:** `afiliados/robo.js` roda a cada 2 h no GitHub Actions (`afiliados.yml`): busca ofertas pela API oficial de afiliados da Shopee (GraphQL assinada), junta os produtos colados à mão (Mercado Livre e Amazon não têm API pública de afiliado), gera um site estático em `https://<slug>.pages.dev` (vitrine, página por produto, sitemap, RSS, mensagem pronta para WhatsApp, aviso de afiliado) e posta nas redes ligadas pelas APIs oficiais (Pinterest, Facebook, Instagram, X, Bluesky, canal do Telegram). Estado na branch `afiliados-dados`.
+- **Limites de propósito:** WhatsApp nunca é automático (os termos proíbem robôs; o número é banido). No máximo 6 posts por rede por dia, 2 h entre posts, das 8h às 22h de Brasília, sem repetir produto em 7 dias, sempre com "#publi"/"link de afiliado" e "preço conferido às HH:MM". Textos só por modelo fixo, sem IA, para nunca inventar característica. Logs públicos: nunca escreve segredo nem ganho. Site sem ofertas não é publicado.
+- **Custo:** zero (Actions em repositório público, Cloudflare Pages grátis, APIs grátis).
