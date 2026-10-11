@@ -13,21 +13,33 @@ jobs:
         run: |
           UA="Mozilla/5.0 (compatible; NexiaBezsan/1.0; +https://bezsan.pages.dev)"
           mkdir -p /tmp/s && cd /tmp/s
-          for d in www.leilaoimovel.com.br www.imovelleilao.com.br imovelleilao.com.br www.resale.com.br www.portalzuk.com.br www.megaleiloes.com.br www.sold.com.br www.superbid.net www.frazaoleiloes.com.br www.biasileiloes.com.br www.lancejudicial.com.br www.leiloesjudiciais.com.br www.spleiloes.com.br www.leilaovip.com.br www.santanderimoveis.com.br www.zukerman.com.br www.emgea.gov.br www.bb.com.br; do
-            echo "===== $d" >> saida.txt
-            curl -sS -L -m 25 -A "$UA" -o home.html -w "home %{http_code} %{size_download} %{url_effective}\n" "https://$d/" >> saida.txt 2>&1 || echo "home ERRO" >> saida.txt
-            grep -oiE "captcha|cf-chl|cloudflare|radware|perfdrive|incapsula|akamai|datadome" home.html | sort | uniq -c | head -5 >> saida.txt
-            grep -oiE '<title>[^<]{0,120}' home.html | head -1 >> saida.txt
-            grep -oiE 'application/(rss|atom)\+xml[^>]{0,200}' home.html | head -3 >> saida.txt
-            grep -oiE '"@type" *: *"(Product|Offer|RealEstateListing|Residence|Apartment|House|Event)"' home.html | sort | uniq -c | head >> saida.txt
-            grep -oiE 'https?://[^"'"'"' ]*/api/[^"'"'"' ]{0,120}' home.html | sort -u | head -8 >> saida.txt
-            echo "-- robots" >> saida.txt
-            curl -sS -L -m 20 -A "$UA" "https://$d/robots.txt" 2>&1 | head -c 1500 >> saida.txt; echo >> saida.txt
-            sm=$(curl -sS -L -m 20 -A "$UA" "https://$d/robots.txt" 2>/dev/null | grep -i '^sitemap:' | head -1 | awk '{print $2}' | tr -d '\r')
-            [ -z "$sm" ] && sm="https://$d/sitemap.xml"
-            echo "-- sitemap $sm" >> saida.txt
-            curl -sS -L -m 25 -A "$UA" "$sm" 2>&1 | head -c 1200 >> saida.txt; echo >> saida.txt
-            cp home.html "home-$d.html" 2>/dev/null || true
+          g() { echo "===== $1" >> saida.txt; curl -sS -L -m 30 -A "$UA" -H "Accept: ${2:-*/*}" -o "$3" -w "%{http_code} %{size_download} %{content_type} %{url_effective}\n" "$1" >> saida.txt 2>&1; head -c ${4:-3000} "$3" >> saida.txt; echo >> saida.txt; }
+          g https://www.leiloesjudiciais.com.br/api/openapi.json application/json lj-openapi.json 20000
+          g https://www.leiloesjudiciais.com.br/auth.md text/plain lj-auth.md 4000
+          g https://www.leiloesjudiciais.com.br/.well-known/mcp.json application/json lj-mcp.json 3000
+          g https://www.leiloesjudiciais.com.br/llms.txt text/plain lj-llms.txt 6000
+          g https://www.leiloesjudiciais.com.br/imoveis text/html lj-imoveis.html 1500
+          grep -oE '"@type":"[A-Za-z]+"' lj-imoveis.html | sort | uniq -c >> saida.txt
+          grep -o '__NEXT_DATA__' lj-imoveis.html | head -1 >> saida.txt
+          g https://www.frazaoleiloes.com.br/sitemap-lotes.xml application/xml fz-lotes.xml 2500
+          lote=$(grep -oE '<loc>[^<]+' fz-lotes.xml | sed 's/<loc>//' | head -1)
+          g "$lote" text/html fz-lote.html 800
+          grep -oE '<script type="application/ld\+json">.{0,1500}' fz-lote.html | head -2 >> saida.txt
+          grep -oiE 'og:(title|description)" content="[^"]{0,200}' fz-lote.html >> saida.txt
+          g https://www.megaleiloes.com.br/imoveis text/html mg-imoveis.html 600
+          grep -oE '<script type="application/ld\+json">.{0,1500}' mg-imoveis.html | head -2 >> saida.txt
+          grep -oE 'class="card[^"]{0,60}"' mg-imoveis.html | sort | uniq -c | head >> saida.txt
+          grep -oE 'href="https://www.megaleiloes.com.br/imoveis/[^"]{10,160}"' mg-imoveis.html | sort -u | head -5 >> saida.txt
+          g https://www.portalzuk.com.br/leilao-de-imoveis text/html zk.html 600
+          grep -oE '<script type="application/ld\+json">.{0,1500}' zk.html | head -2 >> saida.txt
+          grep -oE 'href="https://www.portalzuk.com.br/imovel/[^"]{10,160}"' zk.html | sort -u | head -5 >> saida.txt
+          g https://www.resale.com.br/busca text/html rs.html 600
+          grep -o '__NEXT_DATA__' rs.html | head -1 >> saida.txt
+          grep -oE 'https://[a-z0-9.-]*resale[a-z0-9.-]*/api[^"]{0,100}' rs.html | sort -u | head >> saida.txt
+          grep -oE '"(price|preco|valor)[A-Za-z]*":[^,]{0,30}' rs.html | head -5 >> saida.txt
+          for t in https://www.resale.com.br/termos https://www.megaleiloes.com.br/termos-de-uso https://www.portalzuk.com.br/termos-de-uso; do
+            echo "===== termos $t" >> saida.txt
+            curl -sS -L -m 30 -A "$UA" "$t" | sed 's/<[^>]*>/ /g' | tr -s ' \n' ' ' | grep -oiE '.{0,250}(robô|robo|rob[oô]s|scraping|automatizad|extra[cç][aã]o|reprodu[cç][aã]o|copiar).{0,250}' | head -4 >> saida.txt
           done
       - name: Guardar saída
         if: always()
