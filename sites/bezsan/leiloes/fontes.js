@@ -41,6 +41,7 @@
   function listaCaixa(uf) {
     if (!uf) return PORTAIS.caixa;
     const sigla = uf.trim().toUpperCase();
+    if (!UFS.includes(sigla)) return PORTAIS.caixa;
     return `${PORTAIS.caixa}/${sigla.toLowerCase()}`;
   }
 
@@ -53,6 +54,7 @@
   function consultaIptu(cidade, uf) {
     if (!cidade || !uf) return '';
     const sigla = uf.trim().toUpperCase();
+    if (!UFS.includes(sigla)) return '';
     const city = encodeURIComponent(cidade.trim());
     return `${PORTAIS.caixa}/iptu/${sigla.toLowerCase()}/${city}`;
   }
