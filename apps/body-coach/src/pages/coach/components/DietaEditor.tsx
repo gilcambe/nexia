@@ -1,7 +1,7 @@
-import { useRef, useState, type ChangeEvent } from 'react';
+import { useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import type { Macros, PlanoAlimentar, RefeicaoPlano } from '@/lib/planoAlimentar';
 
-type Plano = Pick<PlanoAlimentar, 'refeicoes' | 'totais' | 'extras'>;
+export type Plano = Pick<PlanoAlimentar, 'refeicoes' | 'totais' | 'extras'>;
 const campo = 'w-full rounded-lg border border-background-200 bg-background-50 px-2.5 py-2 text-sm text-foreground-900 outline-none focus:border-primary-300';
 const refeicao = (nome: string, horario: string): RefeicaoPlano => ({ nome, horario, itens: [{ nome: '', qtd: '' }], trocas: [], obs: [], macros: null });
 const MODELO: RefeicaoPlano[] = [
@@ -10,12 +10,16 @@ const MODELO: RefeicaoPlano[] = [
 ];
 
 // Coach monta (ou importa do PDF da nutricionista) o plano alimentar do aluno, no mesmo formato que o app do aluno já mostra.
-export default function DietaEditor({ nomeAluno, inicial, salvando, onSalvar, onRemover }: {
+export default function DietaEditor({ nomeAluno, inicial, salvando, onSalvar, onRemover, rotuloEnviar, podeRemover = !!inicial, extraVazio, extraRodape }: {
   nomeAluno: string;
-  inicial: PlanoAlimentar | null;
+  inicial: Plano | null;
   salvando: boolean;
   onSalvar: (p: Plano) => void;
   onRemover: () => void;
+  rotuloEnviar?: string;
+  podeRemover?: boolean;
+  extraVazio?: ReactNode;
+  extraRodape?: (p: Plano) => ReactNode;
 }) {
   const [plano, setPlano] = useState<Plano | null>(inicial ? { refeicoes: inicial.refeicoes, totais: inicial.totais, extras: inicial.extras ?? [] } : null);
   const [lendo, setLendo] = useState(false);
@@ -43,7 +47,8 @@ export default function DietaEditor({ nomeAluno, inicial, salvando, onSalvar, on
   if (!plano) {
     return (
       <div className="space-y-3" data-testid="dieta-vazia">
-        <p className="text-sm text-foreground-600">{nomeAluno} ainda não tem plano alimentar. Sem plano, o app sugere um cardápio pelas metas do aluno.</p>
+        {nomeAluno && <p className="text-sm text-foreground-600">{nomeAluno} ainda não tem plano alimentar. Sem plano, o app sugere um cardápio pelas metas do aluno.</p>}
+        {extraVazio}
         <button type="button" onClick={() => setPlano({ refeicoes: MODELO, totais: null, extras: [] })} className="w-full rounded-xl bg-primary-500 px-4 py-3 text-sm font-semibold text-background-50 dark:text-foreground-950">
           <i className="ri-restaurant-line mr-1"></i>Montar com 5 refeições
         </button>
@@ -109,14 +114,15 @@ export default function DietaEditor({ nomeAluno, inicial, salvando, onSalvar, on
 
       {semItens > 0 && <p className="text-xs text-secondary-800">Refeição sem alimento não vai para o aluno ({semItens}).</p>}
       <button type="button" disabled={salvando || semItens === plano.refeicoes.length} onClick={() => onSalvar(plano)} className="w-full rounded-xl bg-primary-500 px-4 py-3 text-sm font-semibold text-background-50 disabled:opacity-50 dark:text-foreground-950">
-        <i className={salvando ? 'ri-loader-4-line mr-1 animate-spin' : 'ri-send-plane-line mr-1'}></i>{salvando ? 'Enviando...' : `Enviar dieta para ${nomeAluno}`}
+        <i className={salvando ? 'ri-loader-4-line mr-1 animate-spin' : 'ri-send-plane-line mr-1'}></i>{salvando ? 'Enviando...' : rotuloEnviar ?? `Enviar dieta para ${nomeAluno}`}
       </button>
       <div className="flex gap-2">
         <button type="button" onClick={() => arquivo.current?.click()} disabled={lendo} className="flex-1 rounded-xl border border-background-200 px-3 py-2 text-xs font-semibold text-foreground-600">{lendo ? 'Lendo...' : 'Trocar pelo PDF'}</button>
-        {inicial && <button type="button" onClick={() => { if (window.confirm(`Tirar o plano alimentar de ${nomeAluno}?`)) onRemover(); }} className="flex-1 rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-600">Tirar dieta do aluno</button>}
+        {podeRemover && <button type="button" onClick={() => { if (window.confirm(`Tirar o plano alimentar de ${nomeAluno}?`)) onRemover(); }} className="flex-1 rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-600">Tirar dieta do aluno</button>}
       </div>
       {erro && <p role="alert" className="text-sm text-red-600">{erro}</p>}
       {entrada}
+      {extraRodape?.(plano)}
     </div>
   );
 }

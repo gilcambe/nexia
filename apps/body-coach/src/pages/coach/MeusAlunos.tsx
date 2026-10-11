@@ -37,6 +37,10 @@ export default function MeusAlunos() {
         <h1 className="font-heading text-2xl font-bold text-foreground-950">Meus alunos</h1>
         <p className="mt-1 text-sm text-foreground-600">Quem treinou, quem sumiu e quem pagou. Toque no aluno para montar a ficha de treino e a dieta.</p>
       </header>
+      <div className="grid grid-cols-2 gap-2">
+        <Link to="/coach/modelos" className="rounded-xl border border-background-200 bg-background-50 px-3 py-2.5 text-sm font-semibold text-foreground-800"><i className="ri-stack-line mr-1 text-primary-600"></i>Modelos</Link>
+        <Link to="/coach/anamnese" className="rounded-xl border border-background-200 bg-background-50 px-3 py-2.5 text-sm font-semibold text-foreground-800"><i className="ri-survey-line mr-1 text-primary-600"></i>Anamnese</Link>
+      </div>
 
       {p == null && !erro && <p className="text-center text-sm text-foreground-500"><i className="ri-loader-4-line mr-2 animate-spin"></i>Carregando...</p>}
       {erro && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p>}
@@ -79,6 +83,8 @@ export default function MeusAlunos() {
                   <span className="rounded-full bg-background-100 px-2 py-0.5 text-foreground-700">🍽️ {a.refeicoesHoje} refeiç{a.refeicoesHoje === 1 ? 'ão' : 'ões'} hoje</span>
                   {a.temFicha ? <span className="rounded-full bg-accent-50 px-2 py-0.5 text-accent-800">📋 ficha do coach</span> : <span className="rounded-full bg-secondary-50 px-2 py-0.5 text-secondary-800">sem ficha</span>}
                   {a.temDieta ? <span className="rounded-full bg-accent-50 px-2 py-0.5 text-accent-800">🥗 dieta</span> : <span className="rounded-full bg-background-100 px-2 py-0.5 text-foreground-500">sem dieta</span>}
+                  {a.anamnese === 'pendente' && <span className="rounded-full bg-secondary-50 px-2 py-0.5 text-secondary-800">📝 anamnese pendente</span>}
+                  {a.anamnese === 'respondida' && <span className="rounded-full bg-accent-50 px-2 py-0.5 text-accent-800">📝 anamnese</span>}
                   {p?.cobra && (a.pago ? <span className="rounded-full bg-accent-50 px-2 py-0.5 text-accent-800">💸 pago</span> : a.avisou ? <span className="rounded-full bg-secondary-50 px-2 py-0.5 text-secondary-800">💸 disse que pagou</span> : <span className="rounded-full bg-red-50 px-2 py-0.5 text-red-700">💸 não pagou</span>)}
                 </div>
                 <div className="mt-3 grid grid-cols-3 gap-2">

@@ -168,6 +168,8 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
   const [startedAt] = useState(() => inicial?.startedAt ?? new Date().toISOString());
   const [phase, setPhase] = useState<Phase>(() => (inicial?.phase as Phase | undefined) ?? 'PRE_SESSION');
   const [ficouNoCelular, setFicouNoCelular] = useState(false);
+  const [esforco, setEsforco] = useState(0); // 1 a 5, opcional
+  const [comentario, setComentario] = useState('');
   useWakeLock(phase !== 'PRE_SESSION' && phase !== 'SESSION_COMPLETE');
   // Cartão do treino para o story (Instagram/WhatsApp), montado ao finalizar.
   const [cartao, setCartao] = useState<Omit<DadosCartao, 'nome' | 'link'> | null>(null);
@@ -238,6 +240,8 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
       rpe: null,
       restSec: exercise.restSec,
       completed: true,
+      ...(newSet.falha ? { falha: true } : {}),
+      ...(newSet.nota ? { nota: newSet.nota } : {}),
     };
     setSetsByEx((v) => ({ ...v, [exercise.id]: [...prev, setLog] }));
     startRest(exercise.restSec);
@@ -550,7 +554,8 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
                       </span>
                       <span className="text-sm font-medium text-foreground-900">
                         {s.weight}{exercise.weightUnit === 'kg/lado' ? ' kg/lado' : ' kg'} × {s.reps}
-                        <span className="ml-2 text-xs text-foreground-400">RIR {s.rir}</span>
+                        <span className="ml-2 text-xs text-foreground-400">{s.falha ? 'falha' : `RIR ${s.rir}`}</span>
+                        {s.nota && <span className="block text-right text-[11px] font-normal text-primary-700"><i className="ri-sticky-note-line mr-0.5"></i>{s.nota}</span>}
                       </span>
                       {delta !== null && (
                         <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${delta > 0 ? 'bg-accent-100 text-accent-700' : delta < 0 ? 'bg-primary-100 text-primary-700' : 'bg-background-200 text-foreground-500'}`}>
@@ -702,6 +707,8 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
             if (g && n > 0) seriesPorGrupo[g] = (seriesPorGrupo[g] ?? 0) + n;
           });
 
+          // Séries com "até a falha" ou nota: vão no treino salvo e na conversa com o coach.
+          const notas = session.exercises.flatMap((e) => (setsByEx[e.id] ?? []).filter((x) => x.falha || x.nota).map((x) => ({ ex: e.name, serie: x.set, falha: !!x.falha, nota: x.nota ?? '', carga: x.weight, reps: x.reps })));
           const handleFinishSession = async () => {
             if (user) {
               // Campos que as regras do Firestore exigem: title e done_at (texto).
@@ -719,6 +726,9 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
                 series_por_grupo: seriesPorGrupo,
                 melhores,
                 cardio: cardioFeito.map((c) => ({ tipo: c.tipo, minutos: c.minutos, km: c.distanciaKm ?? null, kcal: c.kcal ?? null })),
+                notas,
+                esforco: esforco || null,
+                comentario: comentario.trim() || null,
               };
               try {
                 const key = `bc_workouts_${user.id}`;
@@ -729,7 +739,7 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
               }
               // Sem internet, fica guardado no celular e vai sozinho quando a conexão voltar.
               const foi = await gravarOuGuardar(user.id, 'workouts', session.id, w).catch(() => true);
-              const avisou = await apiOuGuardar(user.id, { acao: 'treino_feito', minutos: durationMin, kcal: kcalTreino, feitoEm: Date.now() });
+              const avisou = await apiOuGuardar(user.id, { acao: 'treino_feito', minutos: durationMin, kcal: kcalTreino, feitoEm: Date.now(), titulo: session.title, notas, esforco: esforco || undefined, comentario: comentario.trim() || undefined });
               setFicouNoCelular(!foi || !avisou);
               onSaved?.();
             }
@@ -784,6 +794,20 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
                   ))}
                 </div>
               )}
+
+              <div className="mt-5 rounded-xl border border-background-200 p-3" data-testid="como-foi">
+                <p className="text-sm font-semibold text-foreground-900">Como foi o treino?</p>
+                <div className="mt-2 grid grid-cols-5 gap-1.5" role="radiogroup" aria-label="Esforço do treino">
+                  {(['😌', '🙂', '💪', '😮‍💨', '🥵'] as const).map((emo, i) => (
+                    <button key={i} type="button" role="radio" aria-checked={esforco === i + 1} aria-label={['Muito leve', 'Leve', 'Na medida', 'Pesado', 'No limite'][i]} onClick={() => setEsforco(esforco === i + 1 ? 0 : i + 1)} className={`rounded-lg border py-1.5 text-center ${esforco === i + 1 ? 'border-primary-400 bg-primary-100' : 'border-background-200'}`}>
+                      <span className="block text-lg">{emo}</span>
+                      <span className="block text-[10px] text-foreground-500">{['Muito leve', 'Leve', 'Na medida', 'Pesado', 'No limite'][i]}</span>
+                    </button>
+                  ))}
+                </div>
+                <textarea value={comentario} onChange={(e) => setComentario(e.target.value)} maxLength={500} rows={2} placeholder="Recado para o coach (opcional): dor, cansaço, o que mudou..." aria-label="Recado para o coach" className="mt-2 w-full rounded-lg border border-background-200 bg-background-50 px-3 py-2 text-sm outline-none focus:border-primary-300" />
+                {notas.length > 0 && <p className="mt-1 text-[11px] text-foreground-500"><i className="ri-sticky-note-line mr-0.5"></i>{notas.length} série{notas.length > 1 ? 's' : ''} com nota ou até a falha: o seu coach vê.</p>}
+              </div>
 
               <button
                 onClick={handleFinishSession}

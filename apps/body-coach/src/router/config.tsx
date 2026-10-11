@@ -30,6 +30,10 @@ const RelatorioAluno = carregar(() => import("../pages/coach/RelatorioAluno"));
 const Demonstracoes = carregar(() => import("../pages/coach/Demonstracoes"));
 const MeusAlunos = carregar(() => import("../pages/coach/MeusAlunos"));
 const AlunoPlano = carregar(() => import("../pages/coach/AlunoPlano"));
+const AnamneseCoach = carregar(() => import("../pages/coach/AnamneseCoach"));
+const Modelos = carregar(() => import("../pages/coach/Modelos"));
+const ModeloEditar = carregar(() => import("../pages/coach/ModeloEditar"));
+const Anamnese = carregar(() => import("../pages/anamnese/page"));
 const Ferramentas = carregar(() => import("../pages/ferramentas/page"));
 
 const routes: RouteObject[] = [
@@ -91,6 +95,10 @@ const routes: RouteObject[] = [
       { path: "chat", element: <Chat /> },
       { path: "coach/alunos", element: <MeusAlunos /> },
       { path: "coach/alunos/:uid", element: <AlunoPlano /> },
+      { path: "coach/anamnese", element: <AnamneseCoach /> },
+      { path: "coach/modelos", element: <Modelos /> },
+      { path: "coach/modelos/:id", element: <ModeloEditar /> },
+      { path: "anamnese", element: <Anamnese /> },
       { path: "coach/evolucao", element: <AlunosEvolucao /> },
       { path: "coach/demonstracoes", element: <Demonstracoes /> },
       { path: "coach/evolucao/:uid", element: <AlunoEvolucao /> },

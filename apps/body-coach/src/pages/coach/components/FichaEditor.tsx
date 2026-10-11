@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { DIVISOES, type Divisao } from '@/lib/dayPlan';
 import { EXERCICIOS, type Grupo } from '@/lib/exerciseDb';
 import { idDoNome, novoExercicio, rascunhoDaFicha, type ExercicioCoach, type FichaCoach } from '@/lib/coach/fichaCoach';
@@ -14,13 +14,17 @@ const norm = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCa
 const campo = 'w-full rounded-lg border border-background-200 bg-background-50 px-2.5 py-2 text-sm text-foreground-900 outline-none focus:border-primary-300';
 
 // Coach monta a ficha do aluno: rascunho automático pelo questionário do aluno, depois ajusta tudo à mão.
-export default function FichaEditor({ nomeAluno, respostas, inicial, salvando, onSalvar, onRemover }: {
+export default function FichaEditor({ nomeAluno, respostas, inicial, salvando, onSalvar, onRemover, rotuloEnviar, podeRemover = !!inicial, extraVazio, extraRodape }: {
   nomeAluno: string;
   respostas: Record<string, unknown>;
   inicial: FichaCoach | null;
   salvando: boolean;
   onSalvar: (f: FichaCoach) => void;
   onRemover: () => void;
+  rotuloEnviar?: string;
+  podeRemover?: boolean;
+  extraVazio?: ReactNode; // ex.: "Usar um modelo"
+  extraRodape?: (f: FichaCoach) => ReactNode; // ex.: salvar como modelo, PDF, WhatsApp
 }) {
   const [ficha, setFicha] = useState<FichaCoach | null>(inicial);
   const [dia, setDia] = useState(0);
@@ -30,7 +34,8 @@ export default function FichaEditor({ nomeAluno, respostas, inicial, salvando, o
   if (!ficha) {
     return (
       <div className="space-y-4" data-testid="ficha-vazia">
-        <p className="text-sm text-foreground-600">{nomeAluno} ainda não tem ficha montada por você. Enquanto isso, o app monta o treino sozinho.</p>
+        {nomeAluno && <p className="text-sm text-foreground-600">{nomeAluno} ainda não tem ficha montada por você. Enquanto isso, o app monta o treino sozinho.</p>}
+        {extraVazio}
         <div className="rounded-2xl border border-primary-200 bg-primary-50 p-4">
           <h3 className="font-heading text-base font-bold text-foreground-950"><i className="ri-magic-line mr-1 text-primary-600"></i>Rascunho automático</h3>
           <p className="mt-1 text-sm text-foreground-700">
@@ -154,12 +159,13 @@ export default function FichaEditor({ nomeAluno, respostas, inicial, salvando, o
 
       {vazios > 0 && <p className="text-xs text-secondary-800">Treino sem exercício não vai para o aluno ({vazios}).</p>}
       <button type="button" disabled={salvando || ficha.dias.every((x) => !x.exercicios.length)} onClick={() => onSalvar(ficha)} className="w-full rounded-xl bg-primary-500 px-4 py-3 text-sm font-semibold text-background-50 disabled:opacity-50 dark:text-foreground-950">
-        <i className={salvando ? 'ri-loader-4-line mr-1 animate-spin' : 'ri-send-plane-line mr-1'}></i>{salvando ? 'Enviando...' : `Enviar ficha para ${nomeAluno}`}
+        <i className={salvando ? 'ri-loader-4-line mr-1 animate-spin' : 'ri-send-plane-line mr-1'}></i>{salvando ? 'Enviando...' : rotuloEnviar ?? `Enviar ficha para ${nomeAluno}`}
       </button>
       <div className="flex gap-2">
         <button type="button" onClick={() => { if (window.confirm('Descartar o que mudou aqui?')) { setFicha(inicial); setDia(0); } }} className="flex-1 rounded-xl border border-background-200 px-3 py-2 text-xs font-semibold text-foreground-600">Desfazer mudanças</button>
-        {inicial && <button type="button" onClick={() => { if (window.confirm(`Tirar a ficha de ${nomeAluno}? O app volta a montar o treino sozinho.`)) onRemover(); }} className="flex-1 rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-600">Tirar ficha do aluno</button>}
+        {podeRemover && <button type="button" onClick={() => { if (window.confirm(`Tirar a ficha de ${nomeAluno}? O app volta a montar o treino sozinho.`)) onRemover(); }} className="flex-1 rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-600">Tirar ficha do aluno</button>}
       </div>
+      {extraRodape?.(ficha)}
     </div>
   );
 }

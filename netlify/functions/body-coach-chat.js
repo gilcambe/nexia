@@ -5,6 +5,7 @@
 // e um aluno nunca lê conversa de outra pessoa. Só texto curto; sem armazenamento pago.
 // ações: perfil, vincular, contatos, enviar, ler, resumo, video_enviar, video_ver, demo_salvar, demo_ver, demo_listar
 // Coach monta treino e dieta do aluno: alunos_painel, prescricao_ver, ficha_salvar, dieta_salvar.
+// Anamnese do coach e modelos de ficha/dieta para vários alunos: anamnese_*, modelo_* (em body-coach/equipe.js).
 // Novos: treino_feito, ranking_ver, ranking_config (ranking da equipe); dupla_* (treino em dupla ao vivo);
 // pix_config, pix_ver, pagamento_marcar, pagamento_avisar (mensalidade por Pix, sem gateway).
 // Evolução: alunos_evolucao, aluno_evolucao, agendar_avaliacao, comentar (coach); evolucao_info, evolucao_config (aluno);
@@ -12,6 +13,7 @@
 // Vídeos: clipes curtos (até ~10 s, gravados já comprimidos no celular) guardados como texto no próprio banco grátis.
 
 const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware');
+const { equipe, textoDoTreino, situacaoAnamnese } = require('./body-coach/equipe');
 
 const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 const par = (a, b) => [a, b].sort().join('__');
@@ -176,7 +178,7 @@ function planoLimpo(p, coachNome) {
 }
 
 // Linha do painel "Meus alunos": treinou hoje? quantos dias sem treinar? comeu? pagou?
-async function linhaDoPainel(db, id, d, mes, hoje, sem) {
+async function linhaDoPainel(db, id, d, mes, hoje, sem, coach) {
   const base = db.collection('bodycoach_users').doc(id);
   let ultimo = Number(d.ultimoTreino) || 0;
   if (!ultimo) {
@@ -199,6 +201,7 @@ async function linhaDoPainel(db, id, d, mes, hoje, sem) {
     temFicha: !!(perfil.ficha_coach && Array.isArray(perfil.ficha_coach.dias) && perfil.ficha_coach.dias.length),
     temDieta: !!(perfil.plano_nutri && Array.isArray(perfil.plano_nutri.refeicoes) && perfil.plano_nutri.refeicoes.length),
     pago: !!p.pago, avisou: !!p.avisou,
+    anamnese: situacaoAnamnese(coach, d),
   };
 }
 
@@ -277,6 +280,22 @@ async function executar(body, uid, db, ctx = {}) {
 
   if (!eu) return [409, { error: 'Antes, escolha se você é aluno ou coach.' }];
 
+  // Grava a ficha ou a dieta no perfil do aluno e avisa na conversa (usado ao montar para um aluno e ao aplicar um modelo).
+  const gravarPrescricao = async (aluno, tipo, valor) => {
+    const agora = Date.now();
+    const ficha = tipo === 'ficha';
+    await db.collection('bodycoach_users').doc(aluno).collection('profile').doc('main')
+      .set(ficha ? { ficha_coach: { ...valor, coach: eu.nome || 'Seu coach', em: agora }, ficha_coach_dia: 0 } : { plano_nutri: valor }, { merge: true });
+    const texto = ficha
+      ? `📋 Montei a sua ficha de treino "${valor.nome}" (${valor.dias.length} treino${valor.dias.length > 1 ? 's' : ''}). Já está no seu app: é só abrir Treino.`
+      : `🍽️ Montei o seu plano alimentar (${valor.refeicoes.length} refeições). Já está na aba Nutrição do seu app.`;
+    const m = { de: uid, texto, em: agora };
+    const r = await db.collection('bc_conversas').doc(par(uid, aluno)).collection('mensagens').add(m);
+    return { id: r.id, ...m };
+  };
+  const daEquipe = await equipe(body, uid, db, eu, { fichaLimpa, planoLimpo, gravarPrescricao });
+  if (daEquipe) return daEquipe;
+
   // ── Evolução: o lado do aluno ──
   if (acao === 'evolucao_config') {
     if (eu.papel !== 'aluno') return [403, { error: 'Só o aluno escolhe o que compartilha.' }];
@@ -306,7 +325,7 @@ async function executar(body, uid, db, ctx = {}) {
     const mes = hoje.slice(0, 7);
     const sem = inicioSemanaBR();
     const alunos = await dir.where('coachUid', '==', uid).limit(100).get();
-    const lista = await Promise.all(alunos.docs.map((a) => linhaDoPainel(db, a.id, a.data(), mes, hoje, sem)));
+    const lista = await Promise.all(alunos.docs.map((a) => linhaDoPainel(db, a.id, a.data(), mes, hoje, sem, eu)));
     return [200, { alunos: lista, hoje, mes, cobra: !!eu.pix }];
   }
 
@@ -375,7 +394,10 @@ async function executar(body, uid, db, ctx = {}) {
       }
     }
     await dir.doc(uid).set(novo, { merge: true });
-    return [200, { semana, desafioMarcado }];
+    // Notas por série, "até a falha", esforço e comentário vão para a conversa com o coach.
+    const nota = eu.papel === 'aluno' && eu.coachUid ? textoDoTreino(body) : '';
+    if (nota) await db.collection('bc_conversas').doc(par(uid, eu.coachUid)).collection('mensagens').add({ de: uid, texto: nota, em: Date.now(), tipo: 'treino' });
+    return [200, { semana, desafioMarcado, coachAvisado: !!nota }];
   }
   if (acao === 'ranking_config') {
     const apelido = limpa(body.apelido, 30);
@@ -573,27 +595,21 @@ async function executar(body, uid, db, ctx = {}) {
       ficha: p.ficha_coach || null,
       fichaDia: Number(p.ficha_coach_dia) || 0,
       plano: p.plano_nutri || null,
+      anamnese: eu.anamnese ? { perguntas: eu.anamnese.perguntas, respostas: (dOutro.anamneseResp && dOutro.anamneseResp.respostas) || {}, em: (dOutro.anamneseResp && dOutro.anamneseResp.em) || null, situacao: situacaoAnamnese(eu, dOutro) } : null,
     }];
   }
   if (acao === 'ficha_salvar' || acao === 'dieta_salvar') {
     if (eu.papel !== 'coach') return [403, { error: 'Só o coach monta a ficha do aluno.' }];
-    const perfilRef = db.collection('bodycoach_users').doc(outro).collection('profile').doc('main');
     const ficha = acao === 'ficha_salvar';
     if (body.remover) {
-      await perfilRef.set(ficha ? { ficha_coach: null, ficha_coach_dia: 0 } : { plano_nutri: null }, { merge: true });
+      await db.collection('bodycoach_users').doc(outro).collection('profile').doc('main').set(ficha ? { ficha_coach: null, ficha_coach_dia: 0 } : { plano_nutri: null }, { merge: true });
       return [200, { ok: true }];
     }
     const valor = ficha ? fichaLimpa(body.ficha) : planoLimpo(body.plano, eu.nome);
     if (!valor) return [400, { error: ficha ? 'Coloque pelo menos um exercício na ficha.' : 'Coloque pelo menos um alimento no plano.' }];
     if (JSON.stringify(valor).length > 60000) return [400, { error: 'Ficou grande demais. Tire alguns itens.' }];
-    const agora = Date.now();
-    await perfilRef.set(ficha ? { ficha_coach: { ...valor, coach: eu.nome || 'Seu coach', em: agora }, ficha_coach_dia: 0 } : { plano_nutri: valor }, { merge: true });
-    const texto = ficha
-      ? `📋 Montei a sua ficha de treino "${valor.nome}" (${valor.dias.length} treino${valor.dias.length > 1 ? 's' : ''}). Já está no seu app: é só abrir Treino.`
-      : `🍽️ Montei o seu plano alimentar (${valor.refeicoes.length} refeições). Já está na aba Nutrição do seu app.`;
-    const m = { de: uid, texto, em: agora };
-    const r = await msgs.add(m);
-    return [200, { ok: true, mensagem: { id: r.id, ...m } }];
+    const mensagem = await gravarPrescricao(outro, ficha ? 'ficha' : 'dieta', valor);
+    return [200, { ok: true, mensagem }];
   }
   if (acao === 'resumo') {
     // Revisão da semana do aluno, só para o coach vinculado (lê os dados do aluno pelo servidor; nada de regras novas)
@@ -652,7 +668,7 @@ exports.handler = async (event) => {
   const auth = await verifyBearerToken(event);
   if (!auth.ok) return resposta(event, 401, { error: 'Entre na sua conta para conversar.' });
   // leituras (a tela confere a cada poucos segundos) não gastam o limite nem a cota do banco grátis
-  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar', 'desafio_criar', 'desafio_checkin', 'comentar', 'agendar_avaliacao', 'compartilhar_criar', 'dupla_criar', 'dupla_entrar', 'pix_config', 'pagamento_avisar', 'ranking_config', 'treino_feito', 'ficha_salvar', 'dieta_salvar'].includes(body.acao)) {
+  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar', 'desafio_criar', 'desafio_checkin', 'comentar', 'agendar_avaliacao', 'compartilhar_criar', 'dupla_criar', 'dupla_entrar', 'pix_config', 'pagamento_avisar', 'ranking_config', 'treino_feito', 'ficha_salvar', 'dieta_salvar', 'anamnese_salvar', 'anamnese_responder', 'modelo_salvar', 'modelo_apagar', 'modelo_aplicar'].includes(body.acao)) {
     const rl = await checkRateLimit(auth.uid, 'body-coach-chat');
     if (!rl.ok) return resposta(event, 429, { error: 'Muitos pedidos seguidos. Aguarde um instante.' });
   }

@@ -4,6 +4,8 @@ export interface NewSet {
   weight: number;
   reps: number;
   rir: number;
+  falha?: boolean;
+  nota?: string;
 }
 
 export default function SetEntry({
@@ -26,16 +28,22 @@ export default function SetEntry({
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
   const [rir, setRir] = useState('2');
+  const [falha, setFalha] = useState(false);
+  const [nota, setNota] = useState('');
+  const [anotando, setAnotando] = useState(false);
 
   const canSubmit = weight !== '' && reps !== '';
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    onSubmit({ weight: Number(weight), reps: Number(reps), rir: Number(rir) });
+    onSubmit({ weight: Number(weight), reps: Number(reps), rir: falha ? 0 : Number(rir), falha, nota: nota.trim() || undefined });
     setWeight('');
     setReps('');
     setRir('2');
+    setFalha(false);
+    setNota('');
+    setAnotando(false);
   };
 
   const ajustar = (campo: 'weight' | 'reps', delta: number) => {
@@ -56,7 +64,7 @@ export default function SetEntry({
       )}
       <div className="mb-3 flex flex-wrap gap-2">
         {ultima && (
-          <button type="button" onClick={() => onSubmit({ weight: ultima.weight, reps: ultima.reps, rir: 2 })} className="rounded-full bg-primary-500 px-4 py-2 text-xs font-semibold text-background-50 active:scale-95 hover:bg-primary-600">
+          <button type="button" onClick={() => { onSubmit({ weight: ultima.weight, reps: ultima.reps, rir: falha ? 0 : 2, falha, nota: nota.trim() || undefined }); setFalha(false); setNota(''); setAnotando(false); }} className="rounded-full bg-primary-500 px-4 py-2 text-xs font-semibold text-background-50 active:scale-95 hover:bg-primary-600">
             <i className="ri-repeat-line mr-1"></i>Repetir {ultima.weight} × {ultima.reps}
           </button>
         )}
@@ -65,6 +73,17 @@ export default function SetEntry({
         <button type="button" onClick={() => ajustar('reps', -1)} className={chip} aria-label="Menos uma repetição">−1 rep</button>
         <button type="button" onClick={() => ajustar('reps', 1)} className={chip} aria-label="Mais uma repetição">+1 rep</button>
       </div>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <button type="button" onClick={() => setFalha(!falha)} aria-pressed={falha} className={`rounded-full border px-3 py-2 text-xs font-semibold active:scale-95 ${falha ? 'border-red-300 bg-red-50 text-red-700' : 'border-background-200 bg-background-50 text-foreground-700'}`}>
+          <i className="ri-fire-line mr-1"></i>{falha ? 'Até a falha ✓' : 'Até a falha'}
+        </button>
+        <button type="button" onClick={() => setAnotando(!anotando)} aria-pressed={anotando || !!nota} className={`rounded-full border px-3 py-2 text-xs font-semibold active:scale-95 ${nota ? 'border-primary-300 bg-primary-50 text-primary-700' : 'border-background-200 bg-background-50 text-foreground-700'}`}>
+          <i className="ri-sticky-note-line mr-1"></i>{nota ? 'Nota ✓' : 'Anotar para o coach'}
+        </button>
+      </div>
+      {anotando && (
+        <input value={nota} onChange={(e) => setNota(e.target.value)} maxLength={200} placeholder="Ex.: senti o ombro, pegada escorregou..." aria-label="Nota desta série" className="mb-3 w-full rounded-lg border border-background-200 bg-background-50 px-3 py-2 text-sm text-foreground-900 outline-none focus:border-primary-300" autoFocus />
+      )}
     <form onSubmit={submit} className="grid grid-cols-2 gap-2 sm:grid-cols-[1fr_1fr_auto_auto]">
       <label className="flex flex-col gap-1">
         <span className="text-[11px] font-medium text-foreground-500">Carga ({weightUnit})</span>

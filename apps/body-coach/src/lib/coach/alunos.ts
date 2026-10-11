@@ -2,14 +2,16 @@
 import { chatApi } from '../chat';
 import type { PlanoAlimentar } from '../planoAlimentar';
 import type { FichaCoach } from './fichaCoach';
+import type { AnamneseDoAluno, Situacao } from './equipe';
 
 export interface LinhaAluno {
   uid: string; nome: string; foto: string;
   ultimoTreino: number | null; treinouHoje: boolean; diasSemTreinar: number | null; treinosSemana: number;
   refeicoesHoje: number; temFicha: boolean; temDieta: boolean; pago: boolean; avisou: boolean;
+  anamnese: Situacao;
 }
 export interface Painel { alunos: LinhaAluno[]; hoje: string; mes: string; cobra: boolean }
-export interface Prescricao { nome: string; foto: string; respostas: Record<string, unknown>; ficha: FichaCoach | null; fichaDia: number; plano: PlanoAlimentar | null }
+export interface Prescricao { nome: string; foto: string; respostas: Record<string, unknown>; ficha: FichaCoach | null; fichaDia: number; plano: PlanoAlimentar | null; anamnese: AnamneseDoAluno | null }
 
 export const painelAlunos = () => chatApi<Painel>({ acao: 'alunos_painel' });
 export const prescricaoDo = (aluno: string) => chatApi<Prescricao>({ acao: 'prescricao_ver', com: aluno });
