@@ -292,3 +292,37 @@ test('AG11. fotos: confere que é foto, limite de tamanho, serve com cache longo
   assert.equal((await a.h({ httpMethod: 'GET', headers: {}, queryStringParameters: { site: 'agenda-teste', foto: '../x' } })).statusCode, 400);
   assert.equal((await a.h({ httpMethod: 'GET', headers: {}, queryStringParameters: { site: 'agenda-teste', foto: 'a'.repeat(24) } })).statusCode, 404);
 });
+
+test('AG12. suporte NEXIA: só o master lista as agendas e abre sessão de suporte (8 h, registrada)', async () => {
+  const lista = { 'agenda-teste': AGENDAS['agenda-teste'], studiolima: AGENDAS.studiolima, bezsan: AGENDAS.bezsan };
+  const fazer = (role) => {
+    const db = fakeDb();
+    let agora = SEG_9H;
+    const h = createHandler({ getDb: () => db, getMw: () => mw(role), getCadastro: s => (s === 'agenda-teste' ? CADASTRO : undefined), getLista: () => lista, now: () => agora });
+    const call = (ev) => h(ev).then(r => ({ ...r, json: JSON.parse(r.body || '{}') }));
+    return { db, call, setAgora: t => { agora = t; } };
+  };
+  const auth = { authorization: 'Bearer x' };
+  // Dona logada ou visitante: não vê a lista nem abre suporte.
+  const u = fazer('user');
+  assert.equal((await u.call({ httpMethod: 'GET', headers: auth, queryStringParameters: { suporte: 'lista' } })).statusCode, 403);
+  assert.equal((await u.call({ httpMethod: 'GET', headers: {}, queryStringParameters: { suporte: 'lista' } })).statusCode, 403);
+  assert.equal((await u.call({ httpMethod: 'POST', headers: auth, body: JSON.stringify({ acao: 'suporte', site: 'agenda-teste' }) })).statusCode, 403);
+  // Master: lista sem a agenda de teste automático, com o endereço do painel.
+  const m = fazer('master');
+  const l = await m.call({ httpMethod: 'GET', headers: auth, queryStringParameters: { suporte: 'lista' } });
+  assert.equal(l.statusCode, 200);
+  assert.deepEqual(l.json.agendas.map(a => [a.site, a.painel, a.leilao]), [['studiolima', 'https://studiolima.pages.dev/agenda/', false], ['bezsan', 'https://bezsan.pages.dev/agenda/', true]]);
+  // Master abre suporte: o token entra no painel como uma sessão normal, sem a senha da dona.
+  const s = await m.call({ httpMethod: 'POST', headers: auth, body: JSON.stringify({ acao: 'suporte', site: 'agenda-teste' }) });
+  assert.equal(s.statusCode, 200, s.body);
+  assert.match(s.json.token, /^[a-f0-9]{64}$/);
+  assert.equal(s.json.horas, 8);
+  const listar = () => m.call({ httpMethod: 'POST', headers: {}, body: JSON.stringify({ acao: 'listar', site: 'agenda-teste', token: s.json.token, de: '2026-10-12', ate: '2026-10-19' }) });
+  assert.equal((await listar()).statusCode, 200);
+  const reg = await m.db.collection(COLLECTION).doc('agenda-teste').collection('suporte').get();
+  assert.equal(reg.docs.length, 1);
+  // Depois de 8 h a sessão de suporte vence.
+  m.setAgora(SEG_9H + 8 * 3600000 + 1000);
+  assert.equal((await listar()).statusCode, 401);
+});

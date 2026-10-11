@@ -96,6 +96,19 @@ async function main() {
     const me = await api('/nexia/me');
     report(me.status === 200 && me.json.role === 'master' && me.json.canUseVault, 'Quem sou eu (/me)', `${me.status} ${me.json && me.json.role}`);
 
+    // Suporte NEXIA (só no teste completo, não em cada tarefa do Cortex): o master lista os clientes e abre
+    // uma sessão de suporte na agenda de teste (nunca na de um cliente de verdade).
+    if (!TASK) {
+      const ag = (q, init = {}) => fetch(`${BASE}/api/agenda${q}`, { ...init, headers: { 'Content-Type': 'text/plain;charset=UTF-8', Authorization: `Bearer ${idToken}` } }).then(async r => ({ status: r.status, json: await r.json().catch(() => ({})) }));
+      const lista = await ag('?suporte=lista');
+      const sites = ((lista.json && lista.json.agendas) || []).map(a => a.site);
+      report(lista.status === 200 && sites.includes('studiolima') && sites.includes('bezsan'), 'Suporte NEXIA: lista de clientes', `${lista.status} ${sites.join(',')}`);
+      const sup = await ag('', { method: 'POST', body: JSON.stringify({ acao: 'suporte', site: 'agenda-teste' }) });
+      const ok = sup.status === 200 && /^[a-f0-9]{64}$/.test(sup.json.token || '');
+      const dentro = ok ? await ag('', { method: 'POST', body: JSON.stringify({ acao: 'sair', site: 'agenda-teste', token: sup.json.token }) }) : { status: 0 };
+      report(ok && dentro.status === 200, 'Suporte NEXIA: entrar e sair do painel da agenda de teste', `${sup.status} ${dentro.status}`);
+    }
+
     // Vault: cliente e projeto de teste (idempotentes: rodar de novo reaproveita)
     const cl = await api('/nexia/clients', { method: 'POST', body: { name: 'Teste automático NEXIA', slug: `teste-automatico${PROJ}`, status: 'active' }, headers: { 'Idempotency-Key': `smoke-client-v1${PROJ}` } });
     let client = cl.json && cl.json.record;

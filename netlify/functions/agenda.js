@@ -18,6 +18,11 @@
 //   GET  /api/agenda?site=<slug>&foto=<id>    → foto enviada por ela (guardada no Firestore, grátis)
 //   O master da NEXIA (login Firebase, Authorization: Bearer) também entra em qualquer agenda, para suporte.
 //
+// Suporte NEXIA (só master, Authorization: Bearer do Firebase):
+//   GET  /api/agenda?suporte=lista              → todas as agendas de clientes (nome, painel, central de leilões)
+//   POST /api/agenda  { acao:'suporte', site }  → sessão de suporte de 8 h nessa agenda; o painel abre com
+//        <painel>#suporte=<token> e entra sem a senha da dona. Fica registrado em agenda_contas/<slug>/suporte.
+//
 // O corpo vai como text/plain com JSON (sem "preflight"), igual ao /api/leads.
 // Cadastro de uma agenda nova: clientes/agendas.js (código do primeiro acesso guardado só como hash).
 //
@@ -33,6 +38,7 @@ const STATUS = ['pendente', 'confirmado', 'cancelado', 'concluido', 'faltou'];
 const ATIVOS = ['pendente', 'confirmado', 'concluido'];
 const TZ_OFFSET_MIN = -180; // Brasília (sem horário de verão desde 2019)
 const SESSAO_DIAS = 30;
+const SUPORTE_HORAS = 8;
 const PBKDF2_ITER = 100000; // limite do Cloudflare Workers
 const LIMITES = { agendar: { max: 6, windowMs: 60_000 }, entrar: { max: 8, windowMs: 10 * 60_000 } };
 
@@ -199,6 +205,12 @@ const FOTO_ID_RE = /^[a-f0-9]{24}$/;
 const TIPOS_FOTO = { 'image/webp': [0x52, 0x49, 0x46, 0x46], 'image/jpeg': [0xff, 0xd8, 0xff], 'image/png': [0x89, 0x50, 0x4e, 0x47] };
 
 const texto = (v, max) => (typeof v === 'string' ? v.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, '').trim().slice(0, max) : '');
+/** Endereço do painel da dona: https://<slug>.pages.dev/agenda/ (ou "painel" no cadastro). */
+function painelDe(slug, cadastro = {}) {
+  const p = typeof cadastro.painel === 'string' && /^https:\/\/[a-z0-9.-]+\//.test(cadastro.painel) ? cadastro.painel : `https://${slug}.pages.dev/agenda/`;
+  return p;
+}
+
 function urlSegura(v, { link = false } = {}) {
   const u = texto(v, 600);
   if (/^https:\/\/[^\s"'<>]+$/i.test(u)) return u;
@@ -273,6 +285,7 @@ function createHandler(deps = {}) {
   const getDb = deps.getDb || (() => require('./firebase-init').db);
   const getMw = deps.getMw || (() => require('./middleware'));
   const getCadastro = deps.getCadastro || (slug => require('../../clientes/agendas.js').AGENDAS[slug]);
+  const getLista = deps.getLista || (() => require('../../clientes/agendas.js').AGENDAS);
   const now = deps.now || (() => Date.now());
 
   return async (event) => {
@@ -287,6 +300,17 @@ function createHandler(deps = {}) {
     if (method === 'POST' && event.body) { try { body = JSON.parse(event.body); } catch { return res(400, { error: 'Pedido inválido.' }); } }
     if (!body || typeof body !== 'object' || Array.isArray(body)) body = {};
     const q = event.queryStringParameters || {};
+
+    // ── Suporte NEXIA: lista de todas as agendas (só master) ──
+    if (method === 'GET' && q.suporte === 'lista') {
+      const auth = headers.authorization ? await getMw().verifyBearerToken(event) : { ok: false };
+      if (!auth.ok || auth.role !== 'master') return res(403, { error: 'Só o administrador da NEXIA vê esta lista.' });
+      const lista = Object.entries(getLista())
+        .filter(([, c]) => !c.codigo_sempre) // a agenda de teste automático não aparece
+        .map(([s, c]) => ({ site: s, nome: c.nome || s, painel: painelDe(s, c), leilao: c.leilao === true }));
+      return res(200, { agendas: lista });
+    }
+
     const slug = str(method === 'GET' ? q.site : body.site, 40).toLowerCase();
     if (!SLUG_RE.test(slug)) return res(400, { error: 'Agenda inválida.' });
     const cadastro = getCadastro(slug);
@@ -407,6 +431,18 @@ function createHandler(deps = {}) {
       if (!dados.senha_hash) return res(400, { error: 'Primeiro acesso: use o código que você recebeu para criar sua senha.', primeiro_acesso: true });
       if (typeof body.senha !== 'string' || !iguais(await hashSenha(body.senha.slice(0, 100), dados.senha_salt), dados.senha_hash)) return res(401, { error: 'Senha errada.' });
       return res(200, { ok: true, token: await novaSessao() });
+    }
+
+    // ── Suporte NEXIA: o master entra no painel de qualquer cliente sem a senha da dona ──
+    if (acao === 'suporte') {
+      const auth = headers.authorization ? await getMw().verifyBearerToken(event) : { ok: false };
+      if (!auth.ok || auth.role !== 'master') return res(403, { error: 'Só o administrador da NEXIA entra como suporte.' });
+      const token = aleatorio(32);
+      const quando = new Date(now()).toISOString();
+      const por = str(auth.email || auth.uid || 'master', 120);
+      await conta.collection('sessoes').doc(await sha256(token)).set({ expira: now() + SUPORTE_HORAS * 3600000, criado_em: quando, suporte: true, por });
+      await conta.collection('suporte').add({ por, em: quando });
+      return res(200, { ok: true, token, painel: painelDe(slug, cadastro), horas: SUPORTE_HORAS });
     }
 
     // ── Painel: daqui para baixo precisa estar logado ──

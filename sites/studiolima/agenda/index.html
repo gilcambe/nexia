@@ -24,6 +24,7 @@
   .tela { max-width: 640px; margin: 0 auto; padding: 0 16px calc(96px + env(safe-area-inset-bottom)); }
   header.topo { position: sticky; top: 0; z-index: 5; background: var(--cor); color: #fff; padding: calc(12px + env(safe-area-inset-top)) 16px 12px; }
   header.topo .linha { max-width: 640px; margin: 0 auto; display: flex; align-items: center; gap: 12px; }
+  .faixa-suporte { background: #fff4d6; color: #5c4300; font-size: 13px; text-align: center; padding: 6px 16px; }
   header.topo h1 { font-size: 18px; margin: 0; flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ico { background: rgba(255,255,255,.16); border: 0; color: #fff; border-radius: 999px; min-width: 44px; height: 44px; padding: 0 14px; font-size: 15px; }
   .cartao { background: var(--cartao); border: 1px solid var(--linha); border-radius: 16px; padding: 16px; margin-top: 12px; }
@@ -144,6 +145,7 @@
     <h1 id="titulo">Minha agenda</h1>
     <button class="ico" id="btn-atualizar" type="button" aria-label="Atualizar">↻</button>
   </div></header>
+  <div class="faixa-suporte oculto" id="faixa-suporte">Você está no painel como suporte NEXIA (acesso de 8 horas).</div>
 
   <main class="tela">
     <!-- AGENDA -->
@@ -324,6 +326,8 @@
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var lerToken = function () { try { return localStorage.getItem(CHAVE) || ''; } catch (e) { return ''; } };
   var gravarToken = function (t) { try { if (t) localStorage.setItem(CHAVE, t); else localStorage.removeItem(CHAVE); } catch (e) {} };
+  var marcarSuporte = function (sim) { try { if (sim) localStorage.setItem(CHAVE + '_suporte', '1'); else localStorage.removeItem(CHAVE + '_suporte'); } catch (e) {} };
+  var emSuporte = function () { try { return localStorage.getItem(CHAVE + '_suporte') === '1'; } catch (e) { return false; } };
   var somaDias = function (d, n) { return new Date(Date.parse(d + 'T12:00:00Z') + n * 86400000).toISOString().slice(0, 10); };
   var dataBr = function (d) { return d.slice(8, 10) + '/' + d.slice(5, 7); };
   var semanaDe = function (d) { return new Date(d + 'T12:00:00Z').getUTCDay(); };
@@ -376,7 +380,7 @@
 
   function sair(expirou) {
     if (!expirou && estado.token) chamar({ acao: 'sair' });
-    estado.token = ''; gravarToken('');
+    estado.token = ''; gravarToken(''); marcarSuporte(false);
     trocarAba(false);
     telaLogin();
     if (expirou) erro('erro-entrar', 'Por segurança, entre de novo.');
@@ -952,6 +956,14 @@
     $('nav-extra').onclick = function () { location.href = EXTRA[1]; };
     mostrar($('nav-extra'), true);
   }
+  // Suporte NEXIA: o administrador abre este painel pelo link <painel>#suporte=<token> (sessão de 8 h criada
+  // pelo master na NEXIA). O token sai do endereço na hora, para não ficar no histórico nem ser compartilhado.
+  var mSup = /^#suporte=([a-f0-9]{64})$/.exec(location.hash);
+  if (mSup) {
+    estado.token = mSup[1]; gravarToken(mSup[1]); marcarSuporte(true);
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { location.hash = ''; }
+  }
+  mostrar($('faixa-suporte'), emSuporte());
   if (estado.token) abrirApp(); else telaLogin();
 })();
 </script>
