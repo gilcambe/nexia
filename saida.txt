@@ -1,0 +1,106 @@
+=== pop6579
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, POST, OPTIONS
+[{"id":"9324","variavel":"População residente estimada","unidade":"Pessoas","resultados":[{"classificacoes":[],"series":[{"localidade":{"id":"3509502","nivel":{"id":"N6","nome":"Município"},"nome":"Campinas (SP)"},"serie":{"2015":"1164098","2021":"1223237","2024":"1185977","2025":"1187974"}}]}]}]
+=== censo4709
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, POST, OPTIONS
+[{"id":"93","variavel":"População residente","unidade":"Pessoas","resultados":[{"classificacoes":[],"series":[{"localidade":{"id":"3509502","nivel":{"id":"N6","nome":"Município"},"nome":"Campinas (SP)"},"serie":{"2022":"1139047"}}]}]},{"id":"10605","variavel":"Taxa de crescimento geométrico","unidade":"%","resultados":[{"classificacoes":[],"series":[{"localidade":{"id":"3509502","nivel":{"id":"N6","nome":"Município"},"nome":"Campinas (SP)"},"serie":{"2022":"0.43"}}]}]}]
+=== pib5938
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, POST, OPTIONS
+[{"id":"37","variavel":"Produto Interno Bruto a preços correntes","unidade":"Mil Reais","resultados":[{"classificacoes":[],"series":[{"localidade":{"id":"3509502","nivel":{"id":"N6","nome":"Município"},"nome":"Campinas (SP)"},"serie":{"2016":"57778152","2021":"72946910"}}]}]}]
+=== ind
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, POST, OPTIONS
+[{"id":29765,"res":[{"localidade":"350950","res":{"2006":"4,9","2007":"4.5","2008":"4.5","2009":"4.4","2010":"4.2","2011":"4.3","2012":"4.0","2013":"3.9","2014":"4.0","2015":"4.0","2016":"3.8","2017":"3.8","2018":"3.9","2019":"3.7","2020":"3.6","2021":"3.8"},"notas":{"2006":null,"2007":null,"2008":null,"2009":null,"2010":null,"2011":null,"2012":null,"2013":null,"2014":null,"2015":null,"2016":null,"2017":null,"2018":null,"2019":null,"2020":null,"2021":null}}]},{"id":47001,"res":[{"localidade":"350950","res":{"2010":"35333.08","2011":"40915.55","2012":"44090.07","2013":"47485.07","2014":"47322.20","2015":"49097.70","2016":"49241.20","2017":"49448.67","2018":"51410.15","2019":"54678.79","2020":"53681.67","2021":"59634.32","2022":"70847.71","2023":"80741.47"},"notas":{"2010":null,"2011":null,"2012":null,"2013":null,"2014":null,"2015":null,"2016":null,"2017":null,"2018":null,"2019":null,"2020":null,"2021":null,"2022":null,"2023":null}}]},{"id":96385,"res":[{"localidade":"350950","res":{"2010":"1080113","2022":"1139047"},"notas":{"2010":null,"2022":null}}]},{"id":60032,"res":[{"localidade":"350950","res":{"2012":"14.4","2013":"12.4","2014":"15.7","2015":"15.1","2016":"14.2","2017":"12.1","2018":"11.4","2019":"12.1","2020":"5.2","2021":"8.4","2022":"11.1","2024":"12.6"},"notas":{"2012":null,"2013":null,"2014":null,"2015":null,"2016":null,"2017":null,"2018":null,"2019":null,"2020":null,"2021":null,"2022":null,"2024":null}}]},{"id":60036,"res":[{"localidade":"350950","res":{"2014":"43
+=== indmeta
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+Access-Control-Allow-Methods: GET, POST, OPTIONS
+[{"id":29167,"pesquisa_id":33,"posicao":"3","indicador":"Área da unidade territorial","classe":"I","unidade":{"id":"km²","classe":"N","multiplicador":1},"children":[],"nota":[{"periodo":"2016","notas":["Disponível em: <http://www.ibge.gov.br/home/geociencias/cartografia/default_territ_area.shtm>. Acesso em: jun. 2017"]}],"fonte":[{"periodo":"2020","fontes":["Área territorial brasileira 2020. Rio de Janeiro: IBGE, 2021"]},{"periodo":"2016","fontes":["Área territorial brasileira. Rio de Janeiro: IBGE, 2017"]},{"periodo":"2017","fontes":["Área territorial brasileira. Rio de Janeiro: IBGE, 2018"]},{"periodo":"2018","fontes":["Área territorial brasileira. Rio de Janeiro: IBGE, 2019"]},{"periodo":"2019","fontes":["Área territorial brasileira. Rio de Janeiro: IBGE, 2020"]},{"periodo":"2021","fontes":["Área territorial brasileira 2021. Rio de Janeiro: IBGE, 2022"]},{"periodo":"2022","fontes":["Área territorial brasileira 2022. Rio de Janeiro: IBGE, 2023"]},{"periodo":"2023","fontes":["Área territorial brasileira 2023. Rio de Janeiro: IBGE, 2024"]}]},{"id":29171,"pesquisa_id":33,"posicao":"1","indicador":"População estimada","classe":"I","unidade":{"id":"pessoas","classe":"N","multiplicador":1},"children":[],"nota":[{"periodo":"2020","notas":["Para \"dúvidas e contestações\" [clique aqui](https://www.ibge.gov.br/estatisticas/sociais/populacao/9103-estimativas-de-populacao.html)"]},{"periodo":"2019","notas":["Para \"dúvidas e contestações\" [clique aqui](https://www.
+=== overpass-cats
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: *
+Access-Control-Max-Age: 600
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-10-11T03:22:51Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "count",
+  "id": 0,
+  "tags": {
+    "nodes": "10",
+    "ways": "16",
+    "relations": "0",
+    "total": "26"
+  }
+},
+{
+  "type": "count",
+  "id": 0,
+  "tags": {
+    "nodes": "28",
+    "ways": "9",
+    "relations": "0",
+    "total": "37"
+  }
+},
+{
+  "type": "count",
+  "id": 0,
+  "tags": {
+    "nodes": "25",
+    "ways": "3",
+    "relations": "0",
+    "total": "28"
+  }
+},
+{
+  "type": "count",
+  "id": 0,
+  "tags": {
+    "nodes": "47",
+    "ways": "7",
+    "relations": "0",
+    "total": "54"
+  }
+},
+{
+  "type": "count",
+  "id": 0,
+  "tags": {
+    "nodes": "2",
+    "ways": "27",
+    "relations": "0",
+    "total": "29"
+  }
+},
+{
+  "type": "count",
+  "id": 0,
+  "tags": {
+    "nodes": "65",
+    "ways": "3",
+    "relations": "0",
+    "total": "68"
+  }
+}
+
+  ]
+}
+
+=== nominatim2
+HTTP/2 200 
+access-control-allow-origin: *
+[{"place_id":9233212,"licence":"Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright","osm_type":"way","osm_id":1030163721,"lat":"-22.9056951","lon":"-47.0583412","class":"place","type":"house","place_rank":30,"importance":9.99999999995449e-06,"addresstype":"place","name":"","display_name":"1000, Rua Barão de Jaguará, Vila Itapura, Centro, Campinas, São Paulo, Região Sudeste, 13015-201, Brasil","boundingbox":["-22.9057451","-22.9056451","-47.0583912","-47.0582912"]}]
