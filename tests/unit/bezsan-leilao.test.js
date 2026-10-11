@@ -310,3 +310,19 @@ test('LE17 leilao: região com IBGE, Banco Central, mapa e serviços perto; sina
   assert.equal(pr.json.processo.movimentos.length, 15);
   assert.deepEqual(pr.json.processo.sinais.map(s => s.nome), ['Embargos à Execução']);
 });
+
+test('LE18 leilao: parecer cortado pela IA vai para o próximo modelo grátis; se todos cortarem, avisa', async () => {
+  const completo = 'VEREDITO\nVale só com cuidado.\n' + 'Texto. '.repeat(70) + '\nANTES DE DAR O LANCE\nLeia a matrícula.\n**Análise automática: confirme com um advogado antes de dar lance.**';
+  const a = montarLeilao({ respostas: ['VEREDITO\nVale só com cuidado.\nO IMÓVEL E OS VALORES\nO lance mínimo é 75', completo] });
+  const r = await a.post({ acao: 'parecer', imovel: { endereco: 'Rua A' }, conta: {}, motor: { nota: 60, lance_limite: 100000 } });
+  assert.equal(r.statusCode, 200, r.body);
+  assert.equal(r.json.completo, true);
+  assert.equal(r.json.modelo, 'google:gem');
+  assert.ok(!/\*/.test(r.json.texto), 'sem markdown');
+  assert.equal(a.chamadas[0].o.maxTokens, 4000);
+  assert.match(a.chamadas[0].o.messages[0].content, /"lance_limite":100000/);
+  const b = montarLeilao({ respostas: ['VEREDITO\ncortado', 'VEREDITO\ncortado de novo e maior'] });
+  const r2 = await b.post({ acao: 'parecer', imovel: {}, conta: {} });
+  assert.equal(r2.json.completo, false);
+  assert.match(r2.json.texto, /cortado de novo e maior[\s\S]*veio cortado pela IA grátis[\s\S]*confirme com um advogado/);
+});
