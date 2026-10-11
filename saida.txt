@@ -1,0 +1,199 @@
+===== https://www.leiloesjudiciais.com.br/api/openapi.json
+200 1155 application/json https://www.leiloesjudiciais.com.br/api/openapi.json
+{"openapi":"3.0.3","info":{"title":"Leilões Judiciais & Extrajudiciais API","description":"API pública para consulta e busca de lotes de leilões no Brasil. Acesso público, sem autenticação.","version":"1.0.0"},"servers":[{"url":"https://www.leiloesjudiciais.com.br","description":"Servidor"}],"paths":{"/api/health":{"get":{"summary":"Verificação de integridade da API","responses":{"200":{"description":"Serviço operacional"}}}},"/api/mcp/messages":{"post":{"summary":"MCP Streamable HTTP endpoint","description":"Endpoint JSON-RPC 2.0 para o Model Context Protocol. Suporta métodos: initialize, tools/list, tools/call. Para integração programática, esta é a via recomendada.","requestBody":{"required":true,"content":{"application/json":{"schema":{"type":"object","properties":{"jsonrpc":{"type":"string","enum":["2.0"]},"id":{"type":"integer"},"method":{"type":"string","enum":["initialize","tools/list","tools/call","resources/list","prompts/list"]},"params":{"type":"object"}},"required":["jsonrpc","method"]}}}},"responses":{"200":{"description":"Resposta JSON-RPC 2.0","content":{"application/json":{"schema":{"type":"object"}}}}}}}}}
+===== https://www.leiloesjudiciais.com.br/auth.md
+500 2304 text/html;charset=utf-8 https://www.leiloesjudiciais.com.br/auth.md
+<!DOCTYPE html><html  lang="pt" data-capo=""><head><style type="text/css" data-primevue-style-id="layer-order" >@layer reset,primeflex,primevue</style><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, minimum-scale=1">
+<title>Página não encontrada - Leilões Judiciais</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" media="print" onload="this.media='all'">
+<style>:root{font-family:Inter var,sans-serif;font-feature-settings:"cv02","cv03","cv04","cv11";font-variation-settings:normal;--font-family:"Inter var",sans-serif;--font-feature-settings:"cv02","cv03","cv04","cv11";--text-color:#334155;--text-color-secondary:#64748b;--primary-color:#10b981;--primary-color-text:#fff;--surface-0:#fff;--surface-50:#f8fafc;--surface-100:#f1f5f9;--surface-200:#e2e8f0;--surface-300:#cbd5e1;--surface-400:#94a3b8;--surface-500:#64748b;--surface-600:#475569;--surface-700:#334155;--surface-800:#1e293b;--surface-900:#0f172a;--surface-950:#020617;--gray-0:#fff;--gray-50:#f8fafc;--gray-100:#f1f5f9;--gray-200:#e2e8f0;--gray-300:#cbd5e1;--gray-400:#94a3b8;--gray-500:#64748b;--gray-600:#475569;--gray-700:#334155;--gray-800:#1e293b;--gray-900:#0f172a;--gray-950:#020617;--content-padding:1.125rem;--inline-spacing:.5rem;--border-radius:6px;--surface-ground:#f8fafc;--surface-section:#fff;--surface-card:#fff;--surface-overlay:#fff;--surface-border:#e2e8f0;--surface-hover:#f1f5f9;--focus-ring:none;--maskbg:rgba(0,0,0,.4);--highlight-bg:#ecfdf5;--highlight-text-color:#047857;--p-anchor-gutter:2px;color-scheme:light;--p-focus-ring-color:var(--primary-color);--blue-50:#f5f9ff;--blue-100:#d0e1fd;--blue-200:#abc9fb;--blue-300:#85b2f9;--blue-400:#609af8;--blue-500:#3b82f6;--blue-600:#326fd1;--blue-700:#295bac;--blue-800:#204887;--blue-900:#183462;--green-50:#f4fcf7;--green-100:#caf1d8;--green-200:#a0e6ba;--green-300:#76db9b;--green-400:#4cd07d;--green-500:#22c55e;--green-600:#1da750;--gree
+===== https://www.leiloesjudiciais.com.br/.well-known/mcp.json
+404 137 application/json https://www.leiloesjudiciais.com.br/.well-known/mcp.json
+{"url":"/.well-known/mcp.json","statusCode":404,"statusMessage":"Página não encontrada","message":"Página não encontrada","stack":""}
+===== https://www.leiloesjudiciais.com.br/llms.txt
+500 860 text/html;charset=utf-8 https://www.leiloesjudiciais.com.br/llms.txt
+<!DOCTYPE html><html  lang="pt" data-capo=""><head><style type="text/css" data-primevue-style-id="layer-order" >@layer reset,primeflex,primevue</style><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, minimum-scale=1">
+<title>Página não encontrada - Leilões Judiciais</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" media="print" onload="this.media='all'">
+<style>:root{font-family:Inter var,sans-serif;font-feature-settings:"cv02","c
+===== https://www.leiloesjudiciais.com.br/imoveis
+200 1998920 text/html;charset=utf-8 https://www.leiloesjudiciais.com.br/imoveis
+<!DOCTYPE html><html  lang="pt" data-capo=""><head><style type="text/css" data-primevue-style-id="layer-order" >@layer reset,primeflex,primevue</style><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, minimum-scale=1">
+<title>Leilão de imóveis com até 50% de desconto - Leilões Judiciais</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://www.google.com/recaptcha/api.js?render=explicit" async defer></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" media="print" onload="this.media='all'">
+<style>:root{font-family:Inter var,sans-serif;font-feature-settings:"cv02","cv03","cv04","cv11";font-variation-settings:normal;--font-family:"Inter var",sans-serif;--font-feature-settings:"cv02","cv03","cv04","cv11";--text-color:#334155;--text-color-secondary:#64748b;--primary-color:#10b981;--primary-color-text:#fff;--surface-0:#fff;--surface-50:#f8fafc;--surface-100:#f1f5f9;--surface-200:#e2e8f0;--surface-300:#cbd5e1;--surface-400:#94a3b8;--surface-500:#64748b;--surface-600:#475569;--surface-700:#334155;--surface-800:#1e293b;--surface-900:#0f172a;--surface-950:#020617;--gray-0:#fff;--gray-50:#f8f
+      4 "@type":"Answer"
+      1 "@type":"BreadcrumbList"
+      1 "@type":"ContactPoint"
+      1 "@type":"FAQPage"
+      2 "@type":"ListItem"
+      1 "@type":"Organization"
+      4 "@type":"Question"
+===== https://www.frazaoleiloes.com.br/sitemap-lotes.xml
+200 60630 application/xml https://www.frazaoleiloes.com.br/sitemap-lotes.xml
+<?xml version="1.0" encoding="utf-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43051-casa-padrao-0-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43047-casa-padrao-1-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43046-casa-padrao-2-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43044-casa-padrao-1-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43043-apartamento-padrao-0-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43042-casa-padrao-2-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43041-apartamento-padrao-1-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43040-casa-em-condominio-1-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43039-casa-padrao-1-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43038-casa-padrao-1-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43037-casa-em-condominio-0-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43036-casa-padrao-0-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43035-casa-padrao-1-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43034-casa-padrao-1-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43032-casa-em-condominio-1-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaoleiloes.com.br/lote/43031-casa-em-condominio-1-vagas-de-garagem</loc>
+    <lastmod>2026-10-09</lastmod>
+  </url>
+  <url>
+    <loc>https://www.frazaole
+===== https://www.frazaoleiloes.com.br/lote/43051-casa-padrao-0-vagas-de-garagem
+200 120600 text/html; charset=utf-8 https://www.frazaoleiloes.com.br/lote/43051-casa-padrao-0-vagas-de-garagem
+
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+        <meta name="description" content="Rua 17, 108, Guarani, Cap&#227;o da Canoa, RS" />
+            <meta name="robots" content="index, follow" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="canonical" href="https://www.frazaoleiloes.com.br/lote/43051-casa-padrao-0-vagas-de-garagem" />
+    <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="/apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="/apple-icon-76x76.png">
+og:title" content="Casa em Guarani, Cap&#227;o Da Canoa, RS
+og:description" content="Rua 17, 108, Guarani, Cap&#227;o da Canoa, RS
+===== https://www.megaleiloes.com.br/imoveis
+200 235569 text/html; charset=utf-8 https://www.megaleiloes.com.br/imoveis
+<!DOCTYPE html>
+<!--
+ ██████  ████████ ██   ██ ██ ███████ 
+██    ██    ██    ██   ██ ██ ██      
+██    ██    ██    ███████ ██ ███████ 
+██    ██    ██    ██   ██ ██      ██ 
+██████     ██    ██   ██ ██ ███████ 
+
+Desenvolvido por Othis desde 2011.
+-->
+<html lang="pt-BR">
+
+<head>
+    <meta http-equ
+     48 class="card open"
+     48 class="card-bank"
+     48 class="card-batch-number"
+     48 class="card-content"
+     30 class="card-down"
+     48 class="card-first-instance-date"
+     48 class="card-gavet-link"
+     48 class="card-image lazyload"
+     48 class="card-instance"
+     48 class="card-instance-info"
+href="https://www.megaleiloes.com.br/imoveis/apartamentos"
+href="https://www.megaleiloes.com.br/imoveis/casa-em-terreno-para-incorporacoes"
+href="https://www.megaleiloes.com.br/imoveis/deposito-de-garagem"
+href="https://www.megaleiloes.com.br/imoveis/galpoes--industriais"
+href="https://www.megaleiloes.com.br/imoveis/imoveis-comerciais"
+===== https://www.portalzuk.com.br/leilao-de-imoveis
+200 833680 text/html; charset=UTF-8 https://www.portalzuk.com.br/leilao-de-imoveis
+<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBKAf73d_xTAxHKE-BFWedePaPaGds680k&loading=async&callback=initMapFake"></script>
+
+
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <script type="text/javascript">
+  var asseturl = "https://cdn.portalzuk.com.br/";
+    dataLayer=[{
+            'userId':'',
+            'emailHash':'',
+            'phoneHash':'',
+            'userProvidedData': {
+                'sha256_email_address': '',
+                'sha256_phone_number': ''
+            },
+            'pageType':'Pesquisa',
+            'leilaoId':'',
+         
+<script type="application/ld+json">
+href="https://www.portalzuk.com.br/imovel/ac/rio-branco/portal-da-amazonia/rua-arueira-528/37682-235574"
+href="https://www.portalzuk.com.br/imovel/es/vargem-alta/prosperidade/rua-principal-s-n/37735-235907"
+href="https://www.portalzuk.com.br/imovel/go/goiania/jardim-america/rua-c_138-s-n/37735-235708"
+href="https://www.portalzuk.com.br/imovel/go/jatai/centro/rua-elter-pedrosa-silva-s-n/37550-234732"
+href="https://www.portalzuk.com.br/imovel/mg/brazopolis/luminosa/estrada-municipal-adolfo-rodrigues-simoes-s-n/37696-235614"
+===== https://www.resale.com.br/busca
+200 13440 text/html https://www.resale.com.br/busca
+<!doctype html><html lang="pt-br"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><meta http-equiv="X-UA-Compatible" content="ie=edge"/><link rel="preconnect" href="https://images.resale.com.br"/><link rel="preconnect" href="https://www.google-analytics.com"/><link rel="preconnect" href="https://www.google.com"/><link rel="preconnect" href="https://www.facebook.com"/><link rel="preconnect" href="https://www.googleadservices.com"/><link rel="preconnect" href="https://googleads.g.doubleclick.net"/><link rel="preconnect" href="https://www.google.co
+===== termos https://www.resale.com.br/termos
+.Text_font-medium__xE0vG{font-size:16px}.Text_bold__1gzy0{font-weight:600}b{padding-left:2.5px}.svg_primaryColor__3WNAW{fill:#7896ff}svg{cursor:unset!important;cursor:pointer}*,html{font-family:Titillium Web,-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif,Apple Color Emoji,Segoe UI Emoji,Segoe UI Symbol}html{font-size:100%;color:#23355a}.BaseLayout_background-white__25eHs{background-color:#fff;padding-bottom:50px;overflow-x:hidden}.BaseLayout_fixedTop__3N_ut{position:stic
+ devem seguir ao acessar e/ou utilizar o Site e a Plataforma. O acesso do usuário ao Site e/ou à Plataforma implica na irrestrita concordância de todas as condições estabelecidas nestes Termos e Condições de Uso. 2.2 - É vedado ao usuário modificar, copiar, distribuir, transmitir, exibir, realizar, reproduzir, publicar, disponibilizar, licenciar ou criar obras derivadas a partir das informações acessadas no Site e/ou na Plataforma, bem como transferir ou utilizar para fins comerciais tais informações,
+cativos, softwares, produtos ou serviços, sob pena de violação do presente termo e infração legal. 2.3 - O Site e a Plataforma estão disponíveis apenas para uso pessoal e não comercial do usuário. Portanto, não é permitido vender, fazer links, usar, copiar, monitorar (ex. spider, scrap), exibir, baixar ou reproduzir qualquer conteúdo ou informação, software, reservas, tickets, passes, produtos ou serviços ali disponíveis para quaisquer atividades de propósito comercial ou competitivo. 3 - Dos Imóveis 
+===== termos https://www.megaleiloes.com.br/termos-de-uso
+===== termos https://www.portalzuk.com.br/termos-de-uso
