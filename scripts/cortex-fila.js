@@ -37,12 +37,18 @@ function paisConcluidos({ pais, partes }) {
   return pais.filter(x => { const ps = porPai.get(x.number) || []; return ps.length > 0 && ps.every(p => p.state === 'closed' && nomes(p).includes(L.feito)); }).map(x => x.number);
 }
 const minutos = (agora, iso) => (agora - new Date(iso).getTime()) / 60000;
+// As partes de uma tarefa dividida são criadas pela própria fila (conta github-actions[bot], que o GitHub marca
+// como CONTRIBUTOR). Elas contam como confiáveis: só quem tem acesso ao repositório consegue pôr rótulos.
+const ROBO = 'github-actions[bot]';
+const confiavel = i => CONFIAVEIS.includes(i.author_association) || ((i.user || {}).login === ROBO && nomes(i).includes(L.parte));
+// "[Parte 2/3 de #359] ..." -> { pai: 359, k: 2 }
+const parteDe = i => { const m = /^\[Parte (\d+)\/\d+ de #(\d+)\]/.exec(i.title || ''); return m ? { k: Number(m[1]), pai: Number(m[2]) } : null; };
 
 // Função pura: recebe issues e execuções e devolve a lista de ações. Fácil de testar.
 function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
   const acoes = [];
   const ultimaRun = n => runs.filter(r => r.name === `Cortex #${n}`).sort((a, b) => b.id - a.id)[0] || null;
-  const validas = issues.filter(i => !i.pull_request && CONFIAVEIS.includes(i.author_association) && nomes(i).includes(L.fila));
+  const validas = issues.filter(i => !i.pull_request && confiavel(i) && nomes(i).includes(L.fila));
   const pistasEmUso = new Set();
   let ativas = 0;
 
@@ -69,7 +75,13 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
   const fila = validas
     .filter(i => { const ls = nomes(i); return !ls.includes(L.rodando) && !ls.includes(L.feito) && !ls.includes(L.travado) && !ls.includes(L.dividido); })
     .sort((a, b) => a.number - b.number);
+  // Partes da mesma tarefa rodam em ordem: a parte 2 só sai quando a 1 terminou (uma costuma usar o arquivo da outra).
+  const esperaAnterior = i => {
+    const p = parteDe(i);
+    return !!p && validas.some(o => o !== i && !nomes(o).includes(L.feito) && (x => x && x.pai === p.pai && x.k < p.k)(parteDe(o)));
+  };
   for (const i of fila) {
+    if (esperaAnterior(i)) continue;
     if (precisaDividir(i)) { acoes.push({ tipo: 'dividir', numero: i.number, titulo: i.title || '', tarefa: String(i.body || '').trim() }); continue; }
     if (ativas >= pistas) break;
     let pista = 1; while (pistasEmUso.has(pista)) pista++;
@@ -237,6 +249,8 @@ async function main() {
   }
   for (const a of acoes) { console.log(`${a.tipo} #${a.numero}${a.pista ? ` pista ${a.pista}` : ''}${a.tentativa ? ` tentativa ${a.tentativa}` : ''}`); await executar(token, a, dividir); }
   console.log(`${issues.length} na fila, ${acoes.length} ação(ões).`);
+  const ignoradas = issues.filter(i => !i.pull_request && !confiavel(i));
+  if (ignoradas.length) console.log(`ignoradas (autor sem acesso): ${ignoradas.map(i => `#${i.number}`).join(', ')}`);
   if (!issues.length) {
     const feitas = ((await gh(token, 'GET', `/issues?state=closed&labels=${L.feito}&sort=updated&direction=desc&per_page=5`)).json || []).filter(i => !i.pull_request);
     const testes = ((await gh(token, 'GET', '/actions/workflows/teste-humano.yml/runs?per_page=1')).json || {}).workflow_runs || [];
