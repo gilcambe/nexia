@@ -464,14 +464,18 @@ function createHandler(deps = {}) {
       const t = tribunalDoProcesso(body.numero);
       if (!t) return res(400, { error: 'Número de processo inválido. Use o formato 0000000-00.0000.0.00.0000 (de tribunal estadual, federal ou do trabalho).' });
       const chave = str(env.DATAJUD_API_KEY, 200) || DATAJUD_CHAVE;
-      let r;
-      try {
-        r = await fetchFn(`https://api-publica.datajud.cnj.jus.br/api_publica_${t.alias}/_search`, {
-          method: 'POST',
-          headers: { Authorization: 'APIKey ' + chave, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ size: 1, query: { match: { numeroProcesso: t.numero } } }),
-        });
-      } catch { return res(502, { error: 'A consulta do CNJ não respondeu. Tente de novo.' }); }
+      // O DataJud às vezes falha uma vez e responde na seguinte: tenta duas vezes antes de desistir.
+      let r = null;
+      for (let tentativa = 0; tentativa < 2 && !(r && r.ok); tentativa++) {
+        try {
+          r = await fetchFn(`https://api-publica.datajud.cnj.jus.br/api_publica_${t.alias}/_search`, {
+            method: 'POST',
+            headers: { Authorization: 'APIKey ' + chave, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ size: 1, query: { match: { numeroProcesso: t.numero } } }),
+          });
+        } catch { r = null; }
+      }
+      if (!r) return res(502, { error: 'A consulta do CNJ não respondeu. Tente de novo.' });
       if (!r.ok) return res(502, { error: 'A consulta do CNJ não respondeu. Tente de novo.' });
       const j = await r.json().catch(() => ({}));
       const hit = j && j.hits && Array.isArray(j.hits.hits) && j.hits.hits[0];

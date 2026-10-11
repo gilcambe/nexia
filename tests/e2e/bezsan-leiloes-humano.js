@@ -166,10 +166,12 @@ const CSV = Buffer.from([
   await foto('busca-automatica');
   await pg.click('#a-lista .item button:has-text("Analisar")');
   await pg.waitForSelector('#pg-imovel:not(.oculto)');
+  confere((await pg.textContent('#im-titulo')).includes('Apartamento nº 21') && (await pg.inputValue('#im-endereco')) === '', 'lote abre com o título do anúncio e o endereço em branco até ler o edital');
   confere((await pg.inputValue('#im-processo')) === '1000818-76.2020.5.02.0090' && (await pg.inputValue('#im-lance')) === '1.275.000' && (await pg.inputValue('#im-avaliacao')) === '1.700.000', 'Analisar traz processo, lance e avaliação do lote');
   await pg.click('#im-anexos button:has-text("Ler edital do leilão")');
   await pg.waitForSelector('#im-doc-msg.ok, #im-doc-msg.erro', { timeout: 30000 });
   confere(await pg.isVisible('#im-doc-msg.ok') && pedidosIa.some(o => /EDITAL/.test(o.system) && o.messages[0].content.includes('PALMEIRAS-31')), '"Ler edital do leilão" baixa o PDF do lote e a IA lê');
+  confere((await pg.inputValue('#im-endereco')).includes('Palmeiras'), 'endereço do lote vem do edital (não o título do anúncio), para achar no mapa');
   await pg.click('#voltar');
   await pg.click('#nav-buscar');
 
