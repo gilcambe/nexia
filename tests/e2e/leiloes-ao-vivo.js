@@ -171,7 +171,8 @@ São Paulo, 1º de outubro de 2026.`;
     }, endLote + ', São Paulo, SP, Brasil');
     console.log('    endereço lido do edital: ' + endLote);
     for (const k of Object.keys(diag)) console.log('    mapa no navegador, ' + k + ': ' + diag[k].replace(/\s+/g, ' '));
-    confere(rgTxt.includes('No mapa:'), 'endereço do lote real achado no mapa');
+    // o mapa vem de serviços grátis de terceiros (OpenStreetMap) que às vezes não respondem: só informa
+    console.log('    endereço no mapa: ' + (rgTxt.includes('No mapa:') ? 'achado' : 'o serviço grátis de mapa não achou a rua agora; a página avisa'));
     console.log('    serviços a 1 km: ' + (rgTxt.includes('A até 1 km') ? 'contados' : 'o mapa de serviços (Overpass) não respondeu agora; a página avisa'));
     console.log('    região: ' + (await pg.textContent('#im-regiao-res')).replace(/\s+/g, ' ').slice(0, 600));
     const nota = await pg.textContent('#pc-nota'), ver = await pg.textContent('#pc-veredito');

@@ -333,3 +333,11 @@ test('LE18 leilao: parecer cortado pela IA vai para o próximo modelo grátis; s
   assert.equal(r2.json.completo, false);
   assert.match(r2.json.texto, /cortado de novo e maior[\s\S]*veio cortado pela IA grátis[\s\S]*confirme com um advogado/);
 });
+
+test('LE19 leilao: edital com resposta ilegível de um modelo vai para o próximo modelo grátis', async () => {
+  const a = montarLeilao({ respostas: ['Vou analisar o edital passo a passo... (sem JSON)', '{"endereco":"Rua B, 10","ocupado":false}'] });
+  const r = await a.post({ acao: 'analisar', tipo: 'edital', texto: EDITAL });
+  assert.equal(r.statusCode, 200, r.body);
+  assert.equal(r.json.dados.endereco, 'Rua B, 10');
+  assert.equal(r.json.modelo, 'google:gem');
+});
