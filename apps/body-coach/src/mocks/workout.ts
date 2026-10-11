@@ -22,6 +22,8 @@ export interface SetLog {
   rpe: number | null;
   restSec: number;
   completed: boolean;
+  falha?: boolean; // foi até a falha
+  nota?: string; // anotação para o coach
 }
 
 export interface PrevSet {

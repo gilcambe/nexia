@@ -6,6 +6,7 @@ import type { PlanoAlimentar, RefeicaoPlano } from '@/lib/planoAlimentar';
 import { identificar, quantidadeDoTexto, trocasDoNutri, equivalentes } from '@/lib/trocas';
 import { useTrocasDoDia, type Troca } from '@/lib/useTrocasDoDia';
 import type { TrocaFixa } from '@/components/feature/AuthContext';
+import ExportarPlano from '@/components/feature/ExportarPlano';
 import TrocaAlimento from './TrocaAlimento';
 
 const minutos = (h: string | null) => (h ? Number(h.slice(0, 2)) * 60 + Number(h.slice(3, 5)) : null);
@@ -227,6 +228,7 @@ export default function PlanoNutricionista() {
           Remover
         </button>
       </div>
+      <div className="mt-3"><ExportarPlano plano={plano} aluno={profile?.full_name || undefined} coach={plano.do_coach ? plano.arquivo.replace(/^Plano de /, '') : undefined} /></div>
       {erro && <p className="mt-2 text-sm text-red-600">{erro}</p>}
       {entrada}
     </div>

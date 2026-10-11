@@ -7,6 +7,7 @@ import { getUserDoc, setUserDoc } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import Lembretes from './components/Lembretes';
 import Card from '@/components/base/Card';
+import ExportarPlano from '@/components/feature/ExportarPlano';
 import { diaDaFichaCoach, temFichaCoach, type FichaCoach } from '@/lib/coach/fichaCoach';
 
 export default function Plan() {
@@ -118,6 +119,7 @@ function FichaDoCoach({ ficha, dia, onTreinar }: { ficha: FichaCoach; dia: numbe
         </p>
         {ficha.obs && <p className="mt-2 rounded-lg bg-background-100 px-3 py-2 text-sm text-foreground-700">{ficha.obs}</p>}
       </header>
+      <ExportarPlano ficha={ficha} />
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {ficha.dias.map((d, i) => {
           const proximo = i === dia;
