@@ -19,6 +19,7 @@ const navItems = [
   { to: '/plan', label: 'Ficha de treino', icon: 'ri-calendar-line' },
   { to: '/chat', label: 'Conversa', icon: 'ri-chat-3-line' },
   { to: '/ferramentas', label: 'Ferramentas', icon: 'ri-apps-2-line' },
+  { to: '/avisos', label: 'Avisos no celular', icon: 'ri-notification-3-line' },
   { to: '/profile', label: 'Perfil', icon: 'ri-user-3-line' },
 ];
 

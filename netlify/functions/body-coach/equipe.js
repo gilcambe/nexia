@@ -5,6 +5,8 @@
 // modelo_salvar / modelo_listar / modelo_ver / modelo_apagar / modelo_aplicar: fichas e dietas prontas para vários alunos.
 // textoDoTreino: o resumo do treino (notas por série, "até a falha", esforço, comentário) que vai para a conversa do coach.
 
+const { avisarConversa } = require('./push');
+
 const limpa = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 const par = (a, b) => [a, b].sort().join('__');
 const conversa = (db, a, b) => db.collection('bc_conversas').doc(par(a, b)).collection('mensagens');
@@ -98,7 +100,9 @@ async function equipe(body, uid, db, eu, util) {
     if (erro) return [400, { error: erro }];
     const primeira = !(eu.anamneseResp && eu.anamneseResp.versao);
     await dir.doc(uid).set({ anamneseResp: { versao: c.anamnese.versao, respostas, em: Date.now() } }, { merge: true });
-    await conversa(db, uid, eu.coachUid).add({ de: uid, texto: primeira ? '📝 Respondi a sua anamnese. Já dá para ver em Meus alunos.' : '📝 Atualizei as respostas da anamnese.', em: Date.now(), tipo: 'anamnese' });
+    const texto = primeira ? '📝 Respondi a sua anamnese. Já dá para ver em Meus alunos.' : '📝 Atualizei as respostas da anamnese.';
+    await conversa(db, uid, eu.coachUid).add({ de: uid, texto, em: Date.now(), tipo: 'anamnese' });
+    await avisarConversa(db, eu.coachUid, eu.nome, texto);
     return [200, { ok: true, situacao: 'respondida' }];
   }
 
