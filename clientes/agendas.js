@@ -32,6 +32,29 @@ const AGENDAS = {
     },
   },
 
+  // Bezsan Leilões: o investidor pede no site um horário de reunião (apresentação confidencial).
+  bezsan: {
+    nome: 'Bezsan Leilões',
+    versao: 1,
+    codigo_salt: 'd4bc03fcaef5ec73e56a884c7fb9096a',
+    codigo_hash: 'ed6b4ba3caa2f400ebb4562d895ffc27fdd260676563b77bcd8002ff2c0108b4',
+    config: {
+      nome: 'Bezsan Leilões',
+      whatsapp: '5511917665454',
+      // Ponto de partida: dias úteis, 09:00 às 18:00. O Gilmar muda no painel (Ajustes).
+      semana: { 0: [], 1: [['09:00', '18:00']], 2: [['09:00', '18:00']], 3: [['09:00', '18:00']], 4: [['09:00', '18:00']], 5: [['09:00', '18:00']], 6: [] },
+      intervalo: 30,
+      antecedencia_horas: 3,
+      dias_a_frente: 45,
+      aviso: 'Nossa equipe confirma a reunião pelo WhatsApp. Se precisar remarcar, avise com 24 horas de antecedência.',
+      servicos: [
+        { nome: 'Reunião por vídeo', duracao: 60 },
+        { nome: 'Reunião presencial', duracao: 60 },
+        { nome: 'Ligação rápida', duracao: 30 },
+      ],
+    },
+  },
+
   // Agenda de teste (dados de mentira): usada pelo teste humano automático. O código é público de propósito.
   'agenda-teste': {
     nome: 'Agenda de Teste',

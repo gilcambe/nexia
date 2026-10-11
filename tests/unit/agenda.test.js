@@ -210,6 +210,18 @@ test('AG8. cadastro: hash do código bate, sem código em texto; painel e cópia
   assert.match(landing, /const AG_SITE = NX_SITE/);
   assert.match(copia, /<meta name="agenda-site-url" content="..\/">/, 'painel do Studio Lima tem a aba Site');
   assert.ok(!/fetch\('\/api\/studiolima/.test(landing), 'nada aponta para a API antiga');
+  // Bezsan: mesma cópia do painel, site falando com a própria agenda, chaves do editor únicas.
+  const copiaBz = fs.readFileSync(path.join(raiz, 'sites/bezsan/agenda/index.html'), 'utf8');
+  assert.equal(normal(copiaBz), normal(base), 'a cópia do painel no site da Bezsan saiu do modelo: copie de novo');
+  assert.match(copiaBz, /<meta name="agenda-site" content="bezsan">/);
+  assert.match(copiaBz, /<meta name="agenda-site-url" content="..\/">/);
+  const siteBz = fs.readFileSync(path.join(raiz, 'sites/bezsan/index.html'), 'utf8');
+  assert.match(siteBz, /const NX_SITE = 'bezsan'/);
+  const chaves = [...siteBz.matchAll(/data-ed="([^"]+)"/g)].map(m => m[1]);
+  assert.ok(chaves.length > 50 && new Set(chaves).size === chaves.length, 'chaves data-ed da Bezsan únicas');
+  assert.ok(chaves.every(k => /^[a-z0-9-]{1,40}$/.test(k)));
+  assert.ok(!/\/api\/ai-agent|anthropic/i.test(siteBz), 'assistente do site não usa IA paga');
+  assert.equal(AGENDAS.bezsan.config.whatsapp, '5511917665454');
 });
 
 test('AG9. codigo_sempre (só a agenda de teste): o código refaz o primeiro acesso mesmo com senha criada', async () => {

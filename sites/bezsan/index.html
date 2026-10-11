@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Bezsan — Especialista em leilões de imóveis em todo o Brasil. Transformando oportunidades em patrimônio.">
+<title>Bezsan — Especialista em Leilões de Imóveis</title>
+<meta property="og:title" content="Bezsan — Especialista em Leilões de Imóveis">
+<meta property="og:description" content="Adquirimos imóveis em leilão por 40–60% do valor de mercado. Agende uma apresentação confidencial.">
+<meta name="theme-color" content="#0d0f12">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 44'%3E%3Crect width='44' height='44' fill='%230d0f12'/%3E%3Cpolygon points='22,2 40,12 40,32 22,42 4,32 4,12' fill='none' stroke='%23c9a84c' stroke-width='2.4'/%3E%3Cpolyline points='11,20 22,14 33,20' fill='none' stroke='%23c9a84c' stroke-width='2.4'/%3E%3Cpolyline points='11,24 22,30 33,24' fill='none' stroke='%23c9a84c' stroke-width='2.4'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --obs:#0d0f12;--obs2:#141619;--obs3:#1a1d21;--obs4:#21252a;
+  --gold:#c9a84c;--gold2:#e8c97a;--gdim:rgba(201,168,76,.1);
+  --gold20:rgba(201,168,76,.2);--gold27:rgba(201,168,76,.27);--gold33:rgba(201,168,76,.33);--gold40:rgba(201,168,76,.4);
+  --sv:#8a9aaa;--sv2:#a8b8c4;--svdim:rgba(138,154,170,.6);--bone:#f5f0e8;
+  --bd:#2a2e34;--bd2:#333840;
+}
+html{scroll-behavior:smooth}
+body{background:var(--obs);color:var(--bone);font-family:'DM Sans',system-ui,sans-serif;line-height:1.6;overflow-x:hidden}
+.hidden{display:none!important}
+/* NEXIA: o que o Gilmar escondeu no painel some do site; enquanto o conteúdo carrega, a página espera um instante. */
+.nx-oculto{display:none!important}
+html.nx-carregando body{opacity:0}
+body{transition:opacity .25s}
+
+/* HEADER */
+header{position:fixed;top:0;left:0;right:0;z-index:100;padding:16px 48px;display:flex;align-items:center;justify-content:space-between;background:rgba(13,15,18,.94);backdrop-filter:blur(20px);border-bottom:1px solid var(--bd)}
+.logo-a{display:flex;align-items:center;gap:12px;text-decoration:none}
+.logo-hex{width:42px;height:42px}
+.logo-tx{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--bone);letter-spacing:1px}
+.logo-sub{font-size:9.5px;color:var(--sv);letter-spacing:2.5px;text-transform:uppercase;display:block;margin-top:-3px}
+nav{display:flex;align-items:center;gap:28px}
+nav a,nav button{color:var(--sv);font-size:13px;text-decoration:none;letter-spacing:.4px;transition:.2s;background:none;border:0;font-family:inherit;cursor:pointer}
+nav a:hover{color:var(--gold)}
+.nav-cta{border:1px solid var(--gold)!important;color:var(--gold)!important;padding:8px 20px;font-size:11.5px!important;letter-spacing:1px!important;text-transform:uppercase}
+.nav-cta:hover{background:var(--gold)!important;color:var(--obs)!important}
+#menu-btn{display:none;background:none;border:1px solid var(--bd2);color:var(--bone);width:44px;height:44px;font-size:20px;cursor:pointer}
+#mobile-menu{position:fixed;top:72px;left:0;right:0;z-index:99;background:var(--obs2);border-bottom:1px solid var(--bd);padding:8px 20px 20px;display:flex;flex-direction:column}
+#mobile-menu a,#mobile-menu button{color:var(--bone);text-decoration:none;font-size:16px;padding:14px 0;border-bottom:1px solid var(--bd);background:none;border-left:0;border-right:0;border-top:0;text-align:left;font-family:inherit;cursor:pointer}
+#mobile-menu .nav-cta{margin-top:16px;text-align:center;padding:14px}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;align-items:center;position:relative;overflow:hidden;padding:130px 48px 80px}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 65% 50%,rgba(201,168,76,.07) 0%,transparent 55%),linear-gradient(180deg,var(--obs) 0%,var(--obs2) 100%)}
+.hero-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(201,168,76,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,.035) 1px,transparent 1px);background-size:64px 64px;-webkit-mask-image:radial-gradient(ellipse at center,black 0%,transparent 65%);mask-image:radial-gradient(ellipse at center,black 0%,transparent 65%)}
+.hero-content{position:relative;z-index:2;max-width:640px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:var(--gdim);border:1px solid var(--gold27);padding:7px 16px;font-size:10.5px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:36px}
+.hero-badge::before{content:'';width:6px;height:6px;background:var(--gold);border-radius:50%;animation:pdot 2s ease-in-out infinite}
+@keyframes pdot{0%,100%{opacity:1}50%{opacity:.4}}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(46px,5.8vw,80px);font-weight:300;line-height:1.07;letter-spacing:-.5px;color:var(--bone);margin-bottom:24px}
+h1 em{font-style:italic;color:var(--gold)}
+.hero-desc{font-size:17px;color:var(--sv2);max-width:500px;margin-bottom:44px;line-height:1.75;font-weight:300}
+.hero-stats{display:flex;gap:44px;margin-bottom:52px;padding-top:32px;border-top:1px solid var(--bd)}
+.hs-n{font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;color:var(--gold);display:block;line-height:1}
+.hs-l{font-size:11px;color:var(--sv);letter-spacing:1px;text-transform:uppercase;margin-top:4px;display:block}
+.hero-ctas{display:flex;gap:16px;flex-wrap:wrap}
+.btn-prim{background:var(--gold);color:var(--obs);border:none;padding:15px 36px;font-size:12.5px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:.25s;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:inherit}
+.btn-prim:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 8px 32px rgba(201,168,76,.3)}
+.btn-prim:disabled{opacity:.5;cursor:wait;transform:none}
+.btn-sec{background:transparent;color:var(--bone);border:1px solid var(--bd2);padding:15px 36px;font-size:12.5px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:.25s;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;font-family:inherit}
+.btn-sec:hover{border-color:var(--gold);color:var(--gold)}
+
+/* NUMBERS */
+.nums{background:var(--obs2);border-top:1px solid var(--bd);border-bottom:1px solid var(--bd);padding:56px 48px}
+.nums-grid{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.num-item{text-align:center;padding:20px;border-right:1px solid var(--bd)}
+.num-item:last-child{border-right:none}
+.num-n{font-family:'Cormorant Garamond',serif;font-size:52px;font-weight:300;color:var(--gold);display:block;line-height:1}
+.num-l{font-size:11.5px;color:var(--sv);letter-spacing:1.5px;text-transform:uppercase;margin-top:8px;display:block}
+.num-s{font-size:10.5px;color:var(--svdim);margin-top:3px;display:block}
+
+/* SECTIONS */
+section{padding:96px 48px;scroll-margin-top:70px}
+.container{max-width:1100px;margin:0 auto}
+.sec-lbl{font-size:10px;color:var(--gold);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;display:block}
+.sec-title{font-family:'Cormorant Garamond',serif;font-size:clamp(34px,3.8vw,52px);font-weight:300;line-height:1.15;color:var(--bone);margin-bottom:20px}
+.sec-title em{font-style:italic;color:var(--gold)}
+.sec-sub{font-size:16px;color:var(--sv);max-width:540px;line-height:1.75;font-weight:300}
+.divider{width:44px;height:1px;background:var(--gold);margin:24px 0}
+.centro{text-align:center;max-width:580px;margin:0 auto}
+.centro .divider{margin:20px auto}
+.centro .sec-sub{margin:0 auto}
+
+/* DRIVERS */
+.drivers-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:56px}
+.driver-card{background:var(--obs3);padding:40px 36px;border:1px solid var(--bd);position:relative;overflow:hidden;transition:.3s}
+.driver-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent);opacity:0;transition:.3s}
+.driver-card:hover{border-color:var(--gold20)}
+.driver-card:hover::before{opacity:1}
+.driver-num{font-family:'Cormorant Garamond',serif;font-size:80px;font-weight:300;color:rgba(201,168,76,.1);position:absolute;top:16px;right:20px;line-height:1}
+.driver-ico{font-size:28px;margin-bottom:20px;display:block}
+.driver-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--bone);margin-bottom:12px}
+.driver-desc{font-size:14px;color:var(--sv);line-height:1.75;font-weight:300}
+
+/* COMPARE */
+.compare-bg{background:var(--obs2)}
+.tabela-rolar{overflow-x:auto;margin-top:48px}
+.compare-table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:520px}
+.compare-table th{padding:16px 20px;text-align:left;font-weight:500;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--sv)}
+.compare-table th:nth-child(3){color:var(--gold);background:var(--gdim)}
+.compare-table td{padding:16px 20px;border-top:1px solid var(--bd);color:var(--sv2)}
+.compare-table td:nth-child(3){color:var(--gold);background:var(--gdim);font-weight:500}
+
+/* PROCESS */
+.process-bg{background:linear-gradient(180deg,var(--obs) 0%,var(--obs2) 100%)}
+.steps{display:grid;grid-template-columns:repeat(6,1fr);gap:0;margin-top:60px;position:relative}
+.steps::before{content:'';position:absolute;top:27px;left:4%;right:4%;height:1px;background:linear-gradient(90deg,transparent,var(--gold27),transparent)}
+.step{text-align:center;padding:0 10px}
+.step-circle{width:54px;height:54px;border-radius:50%;border:1px solid var(--gold33);background:var(--obs3);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:var(--gold);position:relative;z-index:1;transition:.3s}
+.step:hover .step-circle{background:var(--gold);color:var(--obs);border-color:var(--gold);box-shadow:0 0 20px rgba(201,168,76,.3)}
+.step-title{font-size:11px;font-weight:600;color:var(--bone);letter-spacing:.5px;margin-bottom:8px;text-transform:uppercase}
+.step-desc{font-size:11.5px;color:var(--sv);line-height:1.6;font-weight:300}
+
+/* RETURNS */
+.returns-bg{background:var(--obs3)}
+.scenarios{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:56px}
+.sc-card{background:var(--obs2);padding:44px 36px;border:1px solid var(--bd);text-align:center;transition:.3s;position:relative}
+.sc-card.featured{border-color:var(--gold27);background:linear-gradient(135deg,var(--obs2),var(--obs4))}
+.sc-lbl{font-size:10px;color:var(--sv);letter-spacing:2px;text-transform:uppercase;margin-bottom:20px;display:block}
+.sc-tir{font-family:'Cormorant Garamond',serif;font-size:64px;font-weight:300;color:var(--gold);line-height:1;margin-bottom:4px}
+.sc-tir-l{font-size:10.5px;color:var(--sv);letter-spacing:1px;text-transform:uppercase;margin-bottom:24px}
+.sc-meta{display:flex;flex-direction:column;gap:8px;padding-top:24px;border-top:1px solid var(--bd)}
+.sc-row{display:flex;justify-content:space-between;font-size:13px}
+.sc-row-l{color:var(--sv)}
+.sc-row-v{color:var(--bone);font-weight:500}
+.premissas{margin:28px auto 0;background:var(--obs2);border:1px solid var(--bd);padding:18px 24px;font-size:12.5px;color:var(--sv);line-height:1.7;max-width:800px}
+.premissas strong{color:var(--gold)}
+
+/* TEAM */
+.team-bg{background:var(--obs)}
+.team-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:56px}
+.team-card{background:var(--obs2);border:1px solid var(--bd);padding:40px 32px;text-align:center;transition:.3s;position:relative}
+.team-card:hover{border-color:var(--gold20);transform:translateY(-3px)}
+.team-photo{width:116px;height:116px;border-radius:50%;margin:0 auto 24px;overflow:hidden;border:2px solid var(--gold20);background:var(--obs3)}
+.team-photo img{width:100%;height:100%;object-fit:cover;object-position:50% 0%}
+.team-name{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:var(--bone);margin-bottom:4px}
+.team-role{font-size:9.5px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px}
+.team-div{width:28px;height:1px;background:var(--gold27);margin:16px auto}
+.team-bio{font-size:13px;color:var(--sv);line-height:1.75;font-weight:300}
+
+/* CTA / AGENDAMENTO */
+.cta-bg{background:linear-gradient(135deg,var(--obs2),var(--obs3));border-top:1px solid var(--bd);border-bottom:1px solid var(--bd)}
+.cta-inner{max-width:680px;margin:0 auto;text-align:center;padding:0 0}
+.cta-inner h2{font-family:'Cormorant Garamond',serif;font-size:clamp(38px,5vw,62px);font-weight:300;color:var(--bone);margin-bottom:20px;line-height:1.1}
+.cta-inner h2 em{font-style:italic;color:var(--gold)}
+.cta-texto{font-size:16px;color:var(--sv);margin-bottom:40px;font-weight:300}
+.cta-botoes{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.cta-nota{margin-top:20px;font-size:13px;color:var(--gold)}
+.cta-contacts{display:flex;gap:44px;justify-content:center;margin-top:52px;flex-wrap:wrap}
+.cta-contact-lbl{font-size:9.5px;color:var(--sv);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;display:block}
+.cta-contact-val{color:var(--bone);font-size:15px;text-decoration:none}
+.cta-contact-val:hover{color:var(--gold)}
+
+/* MODAL */
+#modal-agendar{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;padding:16px}
+#modal-agendar-overlay{position:absolute;inset:0;background:rgba(0,0,0,.86);backdrop-filter:blur(8px)}
+.modal-box{background:var(--obs2);border:1px solid var(--gold20);max-width:520px;width:100%;max-height:92vh;overflow-y:auto;padding:44px;position:relative}
+.modal-close{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--sv);font-size:28px;cursor:pointer;width:44px;height:44px}
+.modal-close:hover{color:var(--bone)}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;color:var(--bone);margin-bottom:8px}
+.modal-sub{font-size:13px;color:var(--sv);margin-bottom:28px;font-weight:300}
+.form-group{margin-bottom:18px}
+.form-lbl{font-size:9.5px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:8px}
+.form-inp,.form-sel{width:100%;background:var(--obs3);border:1px solid var(--bd);color:var(--bone);padding:13px 16px;font-size:16px;font-family:inherit;outline:none;transition:.2s;border-radius:0}
+.form-sel{cursor:pointer}
+.form-inp:focus,.form-sel:focus{border-color:var(--gold40)}
+.form-inp::placeholder{color:var(--svdim)}
+input[type=date].form-inp{color-scheme:dark}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.aceite{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:var(--sv2);line-height:1.55;margin-bottom:14px;cursor:pointer}
+.aceite input{width:20px;height:20px;margin-top:1px;accent-color:var(--gold);flex-shrink:0}
+.politica{font-size:12px;color:var(--sv);line-height:1.6;margin-bottom:14px}
+.erro{font-size:13px;color:#ffb4a8;background:rgba(220,60,40,.12);border:1px solid rgba(220,60,40,.35);padding:10px 14px;margin-bottom:14px}
+.sucesso{text-align:center;padding:12px 0}
+.sucesso .modal-title{margin-bottom:14px}
+.sucesso p{font-size:14px;color:var(--sv2);line-height:1.7;margin-bottom:16px}
+.sucesso .btn-prim,.sucesso .btn-sec{width:100%;margin-bottom:12px}
+.armadilha{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+
+/* ASSISTENTE (respostas prontas, sem custo) */
+.chat-bubble{position:fixed;bottom:24px;right:24px;z-index:300}
+.chat-toggle{width:58px;height:58px;background:var(--gold);border:none;border-radius:50%;cursor:pointer;font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 24px rgba(201,168,76,.4);transition:.3s}
+.chat-toggle:hover{transform:scale(1.08)}
+.chat-win{position:absolute;bottom:72px;right:0;width:358px;max-width:calc(100vw - 32px);background:var(--obs2);border:1px solid var(--gold20);display:none;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.chat-win.open{display:flex}
+.chat-head{background:var(--obs3);padding:14px 16px;border-bottom:1px solid var(--bd);display:flex;align-items:center;gap:12px}
+.chat-head-name{font-size:14px;font-weight:600;color:var(--bone)}
+.chat-head-status{font-size:10.5px;color:var(--gold);margin-top:2px}
+.chat-fechar{margin-left:auto;background:none;border:0;color:var(--sv);font-size:24px;cursor:pointer;width:40px;height:40px}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;max-height:300px;min-height:180px}
+.chat-msg{max-width:86%;font-size:13px;line-height:1.6;padding:10px 14px;white-space:pre-line}
+.chat-msg.bot{background:var(--obs3);border:1px solid var(--bd);color:var(--sv2);align-self:flex-start}
+.chat-msg.user{background:var(--gold);color:var(--obs);align-self:flex-end;font-weight:500}
+.chat-sugs{padding:8px 12px;display:flex;flex-wrap:wrap;gap:6px;border-top:1px solid var(--bd);background:var(--obs3)}
+.chat-sug{background:var(--obs4);border:1px solid var(--bd);color:var(--sv2);font-size:12px;padding:7px 10px;cursor:pointer;font-family:inherit}
+.chat-sug:hover{border-color:var(--gold27);color:var(--gold)}
+.chat-inp-area{display:flex;border-top:1px solid var(--bd)}
+.chat-inp{flex:1;min-width:0;background:var(--obs3);border:none;color:var(--bone);padding:13px 15px;font-size:16px;font-family:inherit;outline:none}
+.chat-send{background:var(--gold);border:none;color:var(--obs);padding:0 18px;font-size:18px;cursor:pointer;font-weight:700}
+
+/* FOOTER */
+footer{background:var(--obs);border-top:1px solid var(--bd);padding:60px 48px 36px}
+.footer-inner{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr;gap:56px}
+.footer-logo{display:flex;align-items:center;gap:11px}
+.footer-logo span{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:500;color:var(--bone)}
+.footer-desc{font-size:13px;color:var(--sv);line-height:1.75;font-weight:300;max-width:300px;margin-top:12px}
+.footer-col-title{font-size:9.5px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px}
+.footer-links{display:flex;flex-direction:column;gap:10px}
+.footer-links a{color:var(--sv);font-size:13px;text-decoration:none;transition:.15s}
+.footer-links a:hover{color:var(--gold)}
+.footer-bottom{max-width:1100px;margin:36px auto 0;padding-top:24px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--svdim)}
+.footer-bottom a{color:var(--sv);text-decoration:underline}
+
+/* FADE */
+.fu{opacity:0;transform:translateY(28px);transition:opacity .7s ease,transform .7s ease}
+.fu.vis{opacity:1;transform:none}
+
+@media(max-width:900px){
+  header{padding:14px 20px}
+  nav{display:none}
+  #menu-btn{display:block}
+  .hero{padding:110px 20px 60px;min-height:auto}
+  .hero-stats{gap:20px;flex-wrap:wrap}
+  .hs-n{font-size:32px}
+  section,.nums{padding:64px 20px}
+  .drivers-grid,.steps,.scenarios,.team-grid{grid-template-columns:1fr}
+  .steps{gap:28px}
+  .nums-grid{grid-template-columns:1fr 1fr}
+  .num-n{font-size:38px}
+  .num-item:nth-child(even){border-right:none}
+  .steps::before{display:none}
+  .footer-inner{grid-template-columns:1fr;gap:28px}
+  .footer-bottom{flex-direction:column;text-align:center}
+  .modal-box{padding:36px 20px 24px}
+  .form-row{grid-template-columns:1fr;gap:0}
+  .btn-prim,.btn-sec{padding:15px 24px}
+  .hero-ctas a,.hero-ctas button{flex:1 1 100%}
+}
+</style>
+<script>document.documentElement.classList.add('nx-carregando'); setTimeout(function () { document.documentElement.classList.remove('nx-carregando'); }, 3000);</script>
+</head>
+<body>
+
+<!-- HEADER -->
+<header id="site-header">
+  <a class="logo-a" href="#inicio" aria-label="Bezsan, início">
+    <svg class="logo-hex" viewBox="0 0 44 44" fill="none" aria-hidden="true">
+      <polygon points="22,2 40,12 40,32 22,42 4,32 4,12" fill="none" stroke="#c9a84c" stroke-width="1.2"/>
+      <polygon points="22,8 36,16 36,30 22,38 8,30 8,16" fill="none" stroke="#c9a84c" stroke-width="1" opacity=".55"/>
+      <polyline points="11,20 22,14 33,20" fill="none" stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="11,24 22,30 33,24" fill="none" stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+      <line x1="22" y1="14" x2="22" y2="30" stroke="#c9a84c" stroke-width=".8" opacity=".45"/>
+    </svg>
+    <div><span class="logo-tx">bezsan</span><span class="logo-sub">Leilões de imóveis</span></div>
+  </a>
+  <nav>
+    <a href="#mercado">Mercado</a>
+    <a href="#processo">Processo</a>
+    <a href="#retornos">Retornos</a>
+    <a href="#equipe">Equipe</a>
+    <button type="button" class="nav-cta js-agendar">Agendar Reunião</button>
+  </nav>
+  <button type="button" id="menu-btn" aria-label="Abrir menu" aria-expanded="false">☰</button>
+</header>
+<div id="mobile-menu" class="hidden">
+  <a href="#mercado">Mercado</a>
+  <a href="#processo">Processo</a>
+  <a href="#retornos">Retornos</a>
+  <a href="#equipe">Equipe</a>
+  <a href="#agendamento">Contato</a>
+  <button type="button" class="nav-cta js-agendar">Agendar Reunião</button>
+</div>
+
+<!-- HERO -->
+<section class="hero" id="inicio" data-secao="inicio">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge" data-ed="inicio-1">Especialistas em Leilões · Brasil</div>
+    <h1 data-ed="inicio-2">Transforme<br>oportunidades<br>em <em>patrimônio</em></h1>
+    <p class="hero-desc" data-ed="inicio-3">Adquirimos imóveis em leilão por 40–60% do valor de mercado e revendemos com retorno expressivo em 6 a 18 meses. Atuamos em todo o Brasil.</p>
+    <div class="hero-stats">
+      <div><span class="hs-n" data-ed="inicio-4">22–28%</span><span class="hs-l" data-ed="inicio-5">TIR ao ano, líquido</span></div>
+      <div><span class="hs-n" data-ed="inicio-6">20+</span><span class="hs-l" data-ed="inicio-7">Anos de experiência</span></div>
+      <div><span class="hs-n" data-ed="inicio-8">R$250k</span><span class="hs-l" data-ed="inicio-9">Ticket mínimo</span></div>
+    </div>
+    <div class="hero-ctas">
+      <button type="button" class="btn-prim js-agendar" data-ed="inicio-10">Agendar Apresentação →</button>
+      <a href="#processo" class="btn-sec" data-ed="inicio-11">Como funciona</a>
+    </div>
+  </div>
+</section>
+
+<!-- NÚMEROS -->
+<div class="nums" data-secao="numeros">
+  <div class="nums-grid">
+    <div class="num-item fu"><span class="num-n" data-ed="numeros-1">248K</span><span class="num-l" data-ed="numeros-2">Imóveis em leilão</span><span class="num-s" data-ed="numeros-3">Brasil, 2025 (est.)</span></div>
+    <div class="num-item fu"><span class="num-n" data-ed="numeros-4">+153%</span><span class="num-l" data-ed="numeros-5">Crescimento 5 anos</span><span class="num-s" data-ed="numeros-6">Volume de leilões</span></div>
+    <div class="num-item fu"><span class="num-n" data-ed="numeros-7">1,4x–1,6x</span><span class="num-l" data-ed="numeros-8">Múltiplo de capital</span><span class="num-s" data-ed="numeros-9">Cenário base</span></div>
+    <div class="num-item fu"><span class="num-n" data-ed="numeros-10">26 estados</span><span class="num-l" data-ed="numeros-11">Cobertura nacional</span><span class="num-s" data-ed="numeros-12">Todo o Brasil + DF</span></div>
+  </div>
+</div>
+
+<!-- TESE -->
+<section id="mercado" data-secao="mercado">
+<div class="container">
+  <div class="fu">
+    <span class="sec-lbl" data-ed="mercado-1">Tese de Investimento</span>
+    <h2 class="sec-title" data-ed="mercado-2">Os três <em>drivers</em><br>de retorno</h2>
+    <div class="divider"></div>
+    <p class="sec-sub" data-ed="mercado-3">A combinação de desconto na entrada, velocidade de giro e eficiência operacional gera retornos consistentemente superiores ao mercado imobiliário tradicional.</p>
+  </div>
+  <div class="drivers-grid">
+    <div class="driver-card fu">
+      <div class="driver-num">01</div>
+      <span class="driver-ico" aria-hidden="true">🏷️</span>
+      <div class="driver-title" data-ed="mercado-4">Desconto de Aquisição</div>
+      <div class="driver-desc" data-ed="mercado-5">Compra por 40–60% abaixo do valor de mercado. O ganho está embutido no preço de entrada — não na especulação futura. Margem bruta de revenda entre 25% e 45%.</div>
+    </div>
+    <div class="driver-card fu">
+      <div class="driver-num">02</div>
+      <span class="driver-ico" aria-hidden="true">⚡</span>
+      <div class="driver-title" data-ed="mercado-6">Velocidade de Giro</div>
+      <div class="driver-desc" data-ed="mercado-7">Revenda em 6 a 18 meses com posicionamento de preço atrativo. Capital trabalhando mais vezes ao ano. Enquanto o mercado leva 60–120 dias para adquirir, operamos em 30–90 dias.</div>
+    </div>
+    <div class="driver-card fu">
+      <div class="driver-num">03</div>
+      <span class="driver-ico" aria-hidden="true">🎯</span>
+      <div class="driver-title" data-ed="mercado-8">Eficiência Operacional</div>
+      <div class="driver-desc" data-ed="mercado-9">Originação especializada, reformas padronizadas e canais de distribuição diretos reduzem custos e atritos. Diligência jurídica, fiscal e técnica em cada ativo antes do lance.</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- COMPARATIVO -->
+<section class="compare-bg" id="comparativo" data-secao="comparativo">
+<div class="container">
+  <div class="fu">
+    <span class="sec-lbl" data-ed="comparativo-1">Comparativo</span>
+    <h2 class="sec-title" data-ed="comparativo-2">Leilão <em>vs</em><br>Mercado Tradicional</h2>
+    <div class="divider"></div>
+  </div>
+  <div class="tabela-rolar fu">
+  <table class="compare-table">
+    <thead>
+      <tr><th data-ed="comparativo-3">Critério</th><th data-ed="comparativo-4">Mercado Tradicional</th><th data-ed="comparativo-5">Leilão de Imóveis · Bezsan</th></tr>
+    </thead>
+    <tbody>
+      <tr><td data-ed="comparativo-6">Desconto sobre valor de mercado</td><td data-ed="comparativo-7">0 – 10%</td><td data-ed="comparativo-8">30 – 60%</td></tr>
+      <tr><td data-ed="comparativo-9">Prazo até a aquisição</td><td data-ed="comparativo-10">60 – 120 dias</td><td data-ed="comparativo-11">30 – 90 dias</td></tr>
+      <tr><td data-ed="comparativo-12">Concorrência por ativo</td><td data-ed="comparativo-13">Alta</td><td data-ed="comparativo-14">Moderada / Baixa</td></tr>
+      <tr><td data-ed="comparativo-15">Margem bruta-alvo de revenda</td><td data-ed="comparativo-16">5 – 12%</td><td data-ed="comparativo-17">25 – 45%</td></tr>
+      <tr><td data-ed="comparativo-18">Diligência jurídica</td><td data-ed="comparativo-19">Padrão</td><td data-ed="comparativo-20">Aprofundada — equipe Bezsan</td></tr>
+      <tr><td data-ed="comparativo-21">TIR anual líquida (projetada)</td><td data-ed="comparativo-22">6 – 12%</td><td data-ed="comparativo-23">22 – 28%</td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+</section>
+
+<!-- PROCESSO -->
+<section class="process-bg" id="processo" data-secao="processo">
+<div class="container">
+  <div class="fu centro">
+    <span class="sec-lbl" data-ed="processo-1">Da Originação à Revenda</span>
+    <h2 class="sec-title" data-ed="processo-2">Nosso <em>processo</em></h2>
+    <div class="divider"></div>
+    <p class="sec-sub" data-ed="processo-3">De cada 100 imóveis monitorados, apenas 3 a 5 chegam à fase de lance. Rigor na seleção é o que garante os retornos.</p>
+  </div>
+  <div class="steps fu">
+    <div class="step"><div class="step-circle">1</div><div class="step-title" data-ed="processo-4">Originação</div><div class="step-desc" data-ed="processo-5">Monitoramos editais, plataformas digitais e bancos em todo o Brasil</div></div>
+    <div class="step"><div class="step-circle">2</div><div class="step-title" data-ed="processo-6">Diligência</div><div class="step-desc" data-ed="processo-7">Análise jurídica, matrícula, fiscal e técnica. Visita ao imóvel e modelagem</div></div>
+    <div class="step"><div class="step-circle">3</div><div class="step-title" data-ed="processo-8">Lance</div><div class="step-desc" data-ed="processo-9">Definição do preço-teto pelo comitê. Participação com estratégia definida</div></div>
+    <div class="step"><div class="step-circle">4</div><div class="step-title" data-ed="processo-10">Imissão</div><div class="step-desc" data-ed="processo-11">Pagamento, registro e imissão na posse. Em judiciais, inclui mandado</div></div>
+    <div class="step"><div class="step-circle">5</div><div class="step-title" data-ed="processo-12">Reforma</div><div class="step-desc" data-ed="processo-13">Reforma padrão, fotos profissionais e divulgação multicanal</div></div>
+    <div class="step"><div class="step-circle">6</div><div class="step-title" data-ed="processo-14">Revenda</div><div class="step-desc" data-ed="processo-15">Venda direta, imobiliárias e canais digitais em todo o Brasil</div></div>
+  </div>
+</div>
+</section>
+
+<!-- RETORNOS -->
+<section class="returns-bg" id="retornos" data-secao="retornos">
+<div class="container">
+  <div class="fu centro">
+    <span class="sec-lbl" data-ed="retornos-1">Projeções</span>
+    <h2 class="sec-title" data-ed="retornos-2">Retornos <em>projetados</em></h2>
+    <div class="divider"></div>
+    <p class="sec-sub" data-ed="retornos-3">Três cenários com premissas conservadoras, realistas e otimistas. Tributação já considerada na TIR líquida.</p>
+  </div>
+  <div class="scenarios fu">
+    <div class="sc-card">
+      <span class="sc-lbl" data-ed="retornos-4">Conservador</span>
+      <div class="sc-tir" data-ed="retornos-5">16%</div>
+      <div class="sc-tir-l" data-ed="retornos-6">ao ano, líquido</div>
+      <div class="sc-meta">
+        <div class="sc-row"><span class="sc-row-l">Desconto médio</span><span class="sc-row-v" data-ed="retornos-7">30%</span></div>
+        <div class="sc-row"><span class="sc-row-l">Prazo médio</span><span class="sc-row-v" data-ed="retornos-8">18 meses</span></div>
+        <div class="sc-row"><span class="sc-row-l">Múltiplo</span><span class="sc-row-v" data-ed="retornos-9">1,24x</span></div>
+      </div>
+    </div>
+    <div class="sc-card featured">
+      <span class="sc-lbl" data-ed="retornos-10">Base</span>
+      <div class="sc-tir" data-ed="retornos-11">24%</div>
+      <div class="sc-tir-l" data-ed="retornos-12">ao ano, líquido</div>
+      <div class="sc-meta">
+        <div class="sc-row"><span class="sc-row-l">Desconto médio</span><span class="sc-row-v" data-ed="retornos-13">40%</span></div>
+        <div class="sc-row"><span class="sc-row-l">Prazo médio</span><span class="sc-row-v" data-ed="retornos-14">12 meses</span></div>
+        <div class="sc-row"><span class="sc-row-l">Múltiplo</span><span class="sc-row-v" data-ed="retornos-15">1,40x</span></div>
+      </div>
+    </div>
+    <div class="sc-card">
+      <span class="sc-lbl" data-ed="retornos-16">Otimista</span>
+      <div class="sc-tir" data-ed="retornos-17">32%</div>
+      <div class="sc-tir-l" data-ed="retornos-18">ao ano, líquido</div>
+      <div class="sc-meta">
+        <div class="sc-row"><span class="sc-row-l">Desconto médio</span><span class="sc-row-v" data-ed="retornos-19">50%</span></div>
+        <div class="sc-row"><span class="sc-row-l">Prazo médio</span><span class="sc-row-v" data-ed="retornos-20">9 meses</span></div>
+        <div class="sc-row"><span class="sc-row-l">Múltiplo</span><span class="sc-row-v" data-ed="retornos-21">1,55x</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="premissas fu" data-ed="retornos-22">Premissas: custos transacionais ~7% · Reforma: 6–9% sobre aquisição · Corretagem na revenda: 5–6% · Carteira 8–12 ativos. Projeções não são promessa de retorno; resultados passados não garantem resultados futuros.</p>
+</div>
+</section>
+
+<!-- EQUIPE -->
+<section class="team-bg" id="equipe" data-secao="equipe">
+<div class="container">
+  <div class="fu centro">
+    <span class="sec-lbl" data-ed="equipe-1">Quem Somos</span>
+    <h2 class="sec-title" data-ed="equipe-2">Time <em>multidisciplinar</em></h2>
+    <div class="divider"></div>
+    <p class="sec-sub" data-ed="equipe-3">Trajetória combinada em direito imobiliário, mercado financeiro e gestão de carteira de imóveis.</p>
+  </div>
+  <div class="team-grid fu">
+    <div class="team-card">
+      <div class="team-photo"><img data-ed="equipe-foto-1" src="img/gilmar.jpg" alt="Gilmar Bezerra" width="116" height="116"></div>
+      <div class="team-name" data-ed="equipe-4">Gilmar Bezerra</div>
+      <div class="team-role" data-ed="equipe-5">Sócio-Fundador · Investimentos &amp; Estratégia</div>
+      <div class="team-div"></div>
+      <div class="team-bio" data-ed="equipe-6">+20 anos de experiência no mercado financeiro e de capitais. Especialização em Arrematações de Imóveis em Leilão. Expert em originação judicial e extrajudicial, estruturação de operações e gestão de carteira para revenda.</div>
+    </div>
+    <div class="team-card">
+      <div class="team-photo"><img data-ed="equipe-foto-2" src="img/tereza.jpg" alt="Tereza Santos" width="116" height="116"></div>
+      <div class="team-name" data-ed="equipe-7">Tereza Santos</div>
+      <div class="team-role" data-ed="equipe-8">Sócia-Fundadora · Originação &amp; Operações</div>
+      <div class="team-div"></div>
+      <div class="team-bio" data-ed="equipe-9">+10 anos como executiva de alto impacto, reconhecida como uma das executivas mais influentes de 2024. Responsável pela originação de oportunidades e condução operacional do portfólio nacional da Bezsan.</div>
+    </div>
+    <div class="team-card">
+      <div class="team-photo"><img data-ed="equipe-foto-3" src="img/gabriela.jpg" alt="Gabriela Ramos" width="116" height="116"></div>
+      <div class="team-name" data-ed="equipe-10">Gabriela Ramos</div>
+      <div class="team-role" data-ed="equipe-11">Jurídico &amp; Diligência</div>
+      <div class="team-div"></div>
+      <div class="team-bio" data-ed="equipe-12">Advogada especializada em Direito Imobiliário com expertise em todos os processos de leilão, da arrematação à imissão na posse. Conduz a diligência jurídica, fiscal e técnica completa de cada ativo.</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- AGENDAMENTO / CONTATO -->
+<section class="cta-bg" id="agendamento" data-secao="agendamento">
+<div class="cta-inner">
+  <h2 data-ed="agendamento-1">Transforme<br><em>oportunidades</em><br>em patrimônio</h2>
+  <p class="cta-texto" data-ed="agendamento-2">Escolha o dia e o horário da sua apresentação individual e confidencial. Nossa equipe confirma pelo WhatsApp.</p>
+  <div class="cta-botoes">
+    <button type="button" id="btn-agendar" class="btn-prim">Escolher dia e horário →</button>
+    <a href="https://wa.me/5511917665454" target="_blank" rel="noopener" class="btn-sec" data-ed="agendamento-3">💬 WhatsApp</a>
+  </div>
+  <p id="agendar-nota" class="cta-nota hidden">Não consegui abrir a agenda agora. Fale pelo WhatsApp que nossa equipe marca sua reunião.</p>
+  <div class="cta-contacts">
+    <div><span class="cta-contact-lbl" data-ed="agendamento-4">Telefone / WhatsApp</span><a href="tel:+5511917665454" class="cta-contact-val" data-ed="agendamento-5">+55 (11) 91766-5454</a></div>
+    <div><span class="cta-contact-lbl" data-ed="agendamento-6">E-mail</span><a href="mailto:contato@bezsan.com.br" class="cta-contact-val" data-ed="agendamento-7">contato@bezsan.com.br</a></div>
+  </div>
+</div>
+</section>
+
+<!-- MODAL DE AGENDAMENTO (real: grava na NEXIA Agenda e chega no painel da Bezsan) -->
+<div id="modal-agendar" class="hidden" role="dialog" aria-modal="true" aria-labelledby="ag-titulo">
+  <div id="modal-agendar-overlay"></div>
+  <div class="modal-box">
+    <button type="button" id="modal-agendar-fechar" class="modal-close" aria-label="Fechar">×</button>
+    <form id="form-agendar">
+      <div class="modal-title" id="ag-titulo">Agendar Reunião</div>
+      <div class="modal-sub">Apresentação confidencial com nossa equipe de investimentos</div>
+      <div class="form-group">
+        <label class="form-lbl" for="ag-procedimento">Tipo de reunião</label>
+        <select class="form-sel" id="ag-procedimento" required></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-lbl" for="ag-data">Data</label><input class="form-inp" type="date" id="ag-data" required></div>
+        <div class="form-group"><label class="form-lbl" for="ag-horario">Horário (Brasília)</label><select class="form-sel" id="ag-horario" required><option value="">Escolha a data</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-lbl" for="ag-nome">Nome completo</label><input class="form-inp" id="ag-nome" required maxlength="80" autocomplete="name" placeholder="Seu nome"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-lbl" for="ag-telefone">WhatsApp</label><input class="form-inp" type="tel" id="ag-telefone" required autocomplete="tel" placeholder="11 9XXXX-XXXX"></div>
+        <div class="form-group"><label class="form-lbl" for="ag-email">E-mail (opcional)</label><input class="form-inp" type="email" id="ag-email" maxlength="120" autocomplete="email" placeholder="seu@email.com"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-lbl" for="ag-capital">Capital disponível</label><select class="form-sel" id="ag-capital"><option value="">Prefiro não dizer</option><option>R$ 250K – R$ 500K</option><option>R$ 500K – R$ 1M</option><option>R$ 1M – R$ 3M</option><option>Acima de R$ 3M</option></select></div>
+        <div class="form-group"><label class="form-lbl" for="ag-objetivo">Objetivo</label><select class="form-sel" id="ag-objetivo"><option value="">Prefiro não dizer</option><option>Renda passiva</option><option>Valorização de capital</option><option>Diversificação</option><option>Substituir renda fixa</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-lbl" for="ag-obs">Mensagem (opcional)</label><textarea class="form-inp" id="ag-obs" maxlength="300" rows="2"></textarea></div>
+      <input type="text" id="ag-site-url" name="site_url" class="armadilha" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <label class="aceite"><input type="checkbox" id="ag-consentimento" required><span>Aceito que a Bezsan use meus dados para falar sobre esta reunião.</span></label>
+      <p id="ag-politica" class="politica"></p>
+      <p id="ag-erro" class="erro hidden" role="alert"></p>
+      <button type="submit" id="ag-submit" class="btn-prim" style="width:100%">Pedir este horário →</button>
+    </form>
+    <div id="ag-sucesso" class="sucesso hidden">
+      <div class="modal-title">Pedido enviado!</div>
+      <p id="ag-sucesso-detalhe"></p>
+      <p id="ag-sucesso-politica" class="politica"></p>
+      <a id="ag-sucesso-zap" href="#" target="_blank" rel="noopener" class="btn-prim hidden">Avisar a Bezsan no WhatsApp</a>
+      <button type="button" id="ag-sucesso-fechar" class="btn-sec">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer data-secao="rodape">
+<div class="footer-inner">
+  <div>
+    <div class="footer-logo">
+      <svg width="34" height="34" viewBox="0 0 44 44" fill="none" aria-hidden="true"><polygon points="22,2 40,12 40,32 22,42 4,32 4,12" fill="none" stroke="#c9a84c" stroke-width="1.2"/><polygon points="22,8 36,16 36,30 22,38 8,30 8,16" fill="none" stroke="#c9a84c" stroke-width="1" opacity=".55"/><polyline points="11,20 22,14 33,20" fill="none" stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><polyline points="11,24 22,30 33,24" fill="none" stroke="#c9a84c" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span>bezsan</span>
+    </div>
+    <p class="footer-desc" data-ed="rodape-1">Especialista em leilões de imóveis em todo o Brasil. Transformando oportunidades em patrimônio há mais de 20 anos.</p>
+  </div>
+  <div>
+    <div class="footer-col-title">Navegação</div>
+    <div class="footer-links">
+      <a href="#mercado">O Mercado</a>
+      <a href="#processo">Nosso Processo</a>
+      <a href="#retornos">Retornos</a>
+      <a href="#equipe">A Equipe</a>
+    </div>
+  </div>
+  <div>
+    <div class="footer-col-title">Contato</div>
+    <div class="footer-links">
+      <a href="tel:+5511917665454" data-ed="rodape-2">+55 (11) 91766-5454</a>
+      <a href="mailto:contato@bezsan.com.br" data-ed="rodape-3">contato@bezsan.com.br</a>
+      <a href="https://wa.me/5511917665454" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+  </div>
+</div>
+<div class="footer-bottom">
+  <span>© <span id="ano">2026</span> Bezsan. Todos os direitos reservados.</span>
+  <span><a href="agenda/">Área da Bezsan</a> · <a href="https://nexia.gcbezerra.workers.dev" target="_blank" rel="noopener">Feito com NEXIA</a></span>
+</div>
+</footer>
+
+<!-- ASSISTENTE: respostas prontas (grátis, sem IA paga). O que ele não souber vai para o WhatsApp. -->
+<div class="chat-bubble">
+  <div class="chat-win" id="chat-win" role="dialog" aria-label="Assistente Bezsan">
+    <div class="chat-head">
+      <svg width="34" height="34" viewBox="0 0 44 44" fill="none" aria-hidden="true"><polygon points="22,2 40,12 40,32 22,42 4,32 4,12" fill="none" stroke="#c9a84c" stroke-width="1.5"/><polyline points="11,20 22,14 33,20" fill="none" stroke="#c9a84c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><polyline points="11,24 22,30 33,24" fill="none" stroke="#c9a84c" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div>
+        <div class="chat-head-name">Bezsan · Assistente</div>
+        <div class="chat-head-status">Respostas rápidas</div>
+      </div>
+      <button type="button" class="chat-fechar" id="chat-fechar" aria-label="Fechar assistente">×</button>
+    </div>
+    <div class="chat-msgs" id="chat-msgs">
+      <div class="chat-msg bot">Olá! Sou o assistente da Bezsan. Toque numa pergunta abaixo ou escreva a sua.</div>
+    </div>
+    <div class="chat-sugs" id="chat-sugs">
+      <button type="button" class="chat-sug" data-pergunta="Qual o retorno esperado?">Qual o retorno?</button>
+      <button type="button" class="chat-sug" data-pergunta="Como funciona o investimento?">Como funciona?</button>
+      <button type="button" class="chat-sug" data-pergunta="Qual o valor mínimo?">Valor mínimo?</button>
+      <button type="button" class="chat-sug" data-pergunta="Quais são as taxas?">Taxas</button>
+      <button type="button" class="chat-sug" data-pergunta="Quais os riscos?">Riscos</button>
+      <button type="button" class="chat-sug" data-pergunta="Quero agendar uma reunião">Agendar reunião</button>
+    </div>
+    <form class="chat-inp-area" id="chat-form">
+      <input class="chat-inp" id="chat-inp" aria-label="Sua pergunta" placeholder="Digite sua pergunta..." maxlength="200" autocomplete="off">
+      <button type="submit" class="chat-send" aria-label="Enviar">↑</button>
+    </form>
+  </div>
+  <button type="button" class="chat-toggle" id="chat-toggle" aria-label="Abrir assistente">💬</button>
+</div>
+
+<script>
+/* Endereço da API da NEXIA (agenda + conteúdo editável deste site). */
+const NX_API = 'https://nexia.gcbezerra.workers.dev/api/agenda';
+const NX_SITE = 'bezsan';
+const ZAP = '5511917665454';
+
+document.getElementById('ano').textContent = new Date().getFullYear();
+
+/* ================= CONTEÚDO EDITÁVEL (NEXIA) =================
+   O Gilmar muda o site pelo painel (/agenda → Site): textos e fotos marcados com data-ed="rodape-4" e as seções (data-secao).
+   O que ele mudou vem da API; o que ele não mexeu continua como está neste arquivo.
+   Com ?editar=1 dentro do painel, a página vira a "cópia para tocar e editar". */
+const NX = { editar: new URLSearchParams(location.search).has('editar') && window.parent !== window, originais: {}, conteudo: null };
+const NX_SECOES = { inicio: 'Topo', numeros: 'Números', mercado: 'Tese de investimento', comparativo: 'Comparativo', processo: 'Processo', retornos: 'Retornos', equipe: 'Equipe', agendamento: 'Agendamento e contato', rodape: 'Rodapé' };
+
+function nxLerTexto(el) {
+  let t = '';
+  el.childNodes.forEach(n => { t += n.nodeName === 'BR' ? '\n' : n.textContent.replace(/\s+/g, ' '); });
+  return t.split('\n').map(x => x.trim()).join('\n').trim();
+}
+function nxEscreverTexto(el, t) {
+  if (nxLerTexto(el) === t) return;
+  el.replaceChildren(...String(t).split('\n').flatMap((linha, i) => (i ? [document.createElement('br'), linha] : [linha])));
+}
+function nxGuardarOriginais() {
+  document.querySelectorAll('[data-ed]').forEach(el => {
+    if (el.tagName === 'IMG') NX.originais[el.dataset.ed] = { img: el.getAttribute('src'), pos: el.style.objectPosition || '' };
+    else NX.originais[el.dataset.ed] = { txt: nxLerTexto(el), href: el.tagName === 'A' ? el.getAttribute('href') : null };
+  });
+}
+function nxAplicar(c) {
+  NX.conteudo = c || null;
+  const ocultos = (c && c.ocultos) || {};
+  const classe = NX.editar ? 'nx-escondido' : 'nx-oculto';
+  document.querySelectorAll('[data-ed]').forEach(el => {
+    const k = el.dataset.ed, o = NX.originais[k];
+    if (!o) return;
+    el.classList.toggle(classe, !!ocultos[k]);
+    if (o.img !== undefined) {
+      const im = c && c.imagens && c.imagens[k];
+      el.setAttribute('src', im ? im.url : o.img);
+      el.style.objectPosition = im ? `${im.posX}% ${im.posY}%` : o.pos;
+    } else {
+      nxEscreverTexto(el, c && c.textos && k in c.textos ? c.textos[k] : o.txt);
+      if (o.href !== null) el.setAttribute('href', (c && c.links && c.links[k]) || o.href);
+    }
+  });
+  document.querySelectorAll('[data-secao]').forEach(sec => sec.classList.toggle(classe, !!ocultos['secao-' + sec.dataset.secao]));
+  if (NX.editar) nxMarcarEdicao();
+}
+
+// ── Modo edição (dentro do painel) ──
+function nxMarcarEdicao() {
+  const raiz = document.documentElement;
+  if (!raiz.classList.contains('nx-ed')) {
+    raiz.classList.add('nx-ed');
+    document.head.insertAdjacentHTML('beforeend', `<style>
+      .nx-ed [data-ed] { outline: 2px dashed rgba(201,168,76,.75); outline-offset: 3px; cursor: pointer; }
+      .nx-ed .nx-escondido { opacity: .35; }
+      .nx-ed .fu { opacity: 1; transform: none; }
+      .nx-chip { position: absolute; z-index: 40; top: 10px; left: 10px; background: #c9a84c; color: #0d0f12; font: 600 13px/1 system-ui, sans-serif; padding: 9px 12px; border-radius: 999px; border: 0; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+      .nx-ed #modal-agendar, .nx-ed #site-header, .nx-ed #mobile-menu, .nx-ed .chat-bubble { display: none !important; }
+      .nx-ed .hero { padding-top: 70px; }
+    </style>`);
+  }
+  const ocultos = (NX.conteudo && NX.conteudo.ocultos) || {};
+  document.querySelectorAll('[data-secao]').forEach(sec => {
+    const id = sec.dataset.secao;
+    if (id === 'rodape') return;
+    if (getComputedStyle(sec).position === 'static') sec.style.position = 'relative';
+    let chip = sec.querySelector(':scope > .nx-chip[data-secao-botao]');
+    if (!chip) { chip = document.createElement('button'); chip.type = 'button'; chip.className = 'nx-chip'; chip.dataset.secaoBotao = id; sec.prepend(chip); }
+    chip.textContent = ocultos['secao-' + id] ? `Seção ${NX_SECOES[id] || id} escondida · mostrar` : `Seção ${NX_SECOES[id] || id} · esconder`;
+  });
+}
+function nxSecoes() { return [...document.querySelectorAll('[data-secao]')].map(s => ({ id: s.dataset.secao, nome: NX_SECOES[s.dataset.secao] || s.dataset.secao })); }
+if (NX.editar) {
+  document.addEventListener('click', e => {
+    const alvo = e.target.closest('[data-secao-botao],[data-ed]');
+    e.preventDefault(); e.stopPropagation();
+    if (!alvo) return;
+    let msg;
+    if (alvo.dataset.secaoBotao) msg = { tipo: 'secao', id: alvo.dataset.secaoBotao, nome: NX_SECOES[alvo.dataset.secaoBotao] };
+    else {
+      const k = alvo.dataset.ed, o = NX.originais[k];
+      msg = o.img !== undefined
+        ? { tipo: 'foto', chave: k, atual: alvo.getAttribute('src'), original: o.img }
+        : { tipo: 'texto', chave: k, atual: nxLerTexto(alvo), original: o.txt, link: o.href && /^(https:|tel:|mailto:)/.test(o.href) ? alvo.getAttribute('href') : null, linkOriginal: o.href };
+    }
+    parent.postMessage({ nx: 'tocar', ...msg }, location.origin);
+  }, true);
+  window.addEventListener('message', e => {
+    if (e.origin !== location.origin || !e.data || e.data.nx !== 'aplicar') return;
+    nxAplicar(e.data.conteudo);
+  });
+}
+
+async function iniciarConteudo() {
+  nxGuardarOriginais();
+  let c = null;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 2500);
+    const r = await fetch(NX_API + '?site=' + NX_SITE + '&conteudo=1', { signal: ctrl.signal });
+    clearTimeout(t);
+    c = (await r.json()).conteudo || null;
+  } catch (e) { c = null; } // fora do ar: mostra o conteúdo padrão deste arquivo
+  nxAplicar(c);
+  document.documentElement.classList.remove('nx-carregando');
+  if (NX.editar) parent.postMessage({ nx: 'pronto', padroes: {}, secoes: nxSecoes() }, location.origin);
+}
+iniciarConteudo();
+
+/* ================= MENU NO CELULAR ================= */
+const menu = document.getElementById('mobile-menu');
+const menuBtn = document.getElementById('menu-btn');
+function fecharMenu() { menu.classList.add('hidden'); menuBtn.setAttribute('aria-expanded', 'false'); menuBtn.textContent = '☰'; }
+menuBtn.addEventListener('click', () => {
+  const abrir = menu.classList.contains('hidden');
+  menu.classList.toggle('hidden', !abrir);
+  menuBtn.setAttribute('aria-expanded', String(abrir));
+  menuBtn.textContent = abrir ? '×' : '☰';
+});
+menu.querySelectorAll('a,button').forEach(a => a.addEventListener('click', fecharMenu));
+
+/* ================= AGENDAMENTO REAL (NEXIA Agenda) =================
+   Os horários livres vêm prontos do servidor (já sem os ocupados e bloqueados).
+   O pedido chega na hora no painel da Bezsan (/agenda), que confirma ou recusa. */
+const AG_API = NX_API;
+const AG_SITE = NX_SITE;
+let AG_CONFIG = null;
+
+async function carregarConfigAgendamento() {
+  try {
+    const resp = await fetch(AG_API + '?site=' + AG_SITE);
+    const json = await resp.json();
+    AG_CONFIG = resp.ok && Array.isArray(json.servicos) ? json : null;
+  } catch (e) {
+    AG_CONFIG = null; // fora do ar: o botão cai no aviso + WhatsApp
+  }
+}
+const AG_CONFIG_PROMISE = carregarConfigAgendamento();
+
+let AG_REQ_ID = 0; // ignora respostas antigas se a pessoa trocar a data rápido
+
+async function atualizarHorariosDisponiveis() {
+  const dataStr = document.getElementById('ag-data').value;
+  const selHorario = document.getElementById('ag-horario');
+  if (!dataStr) { selHorario.innerHTML = '<option value="">Escolha a data</option>'; return; }
+  const meuReqId = ++AG_REQ_ID;
+  selHorario.innerHTML = '<option value="">Carregando horários…</option>';
+  let json;
+  try {
+    const servico = document.getElementById('ag-procedimento').value;
+    const resp = await fetch(AG_API + '?site=' + AG_SITE + '&data=' + encodeURIComponent(dataStr) + '&servico=' + encodeURIComponent(servico));
+    json = await resp.json();
+  } catch (e) {
+    json = {};
+  }
+  if (meuReqId !== AG_REQ_ID) return;
+  if (!Array.isArray(json.horarios)) {
+    selHorario.innerHTML = '<option value="">Não consegui carregar os horários. Tente de novo.</option>';
+    return;
+  }
+  selHorario.innerHTML = json.horarios.length
+    ? '<option value="">Escolha o horário</option>' + json.horarios.map(s => `<option value="${s}">${s}</option>`).join('')
+    : '<option value="">Sem horários livres neste dia</option>';
+}
+
+function abrirModalAgendar() {
+  const sel = document.getElementById('ag-procedimento');
+  sel.replaceChildren(...AG_CONFIG.servicos.map(s => new Option(s.nome, s.id)));
+  const hoje = new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10);
+  const dataEl = document.getElementById('ag-data');
+  dataEl.min = hoje;
+  dataEl.max = AG_CONFIG.dias && AG_CONFIG.dias.length ? AG_CONFIG.dias[AG_CONFIG.dias.length - 1] : '';
+  dataEl.value = '';
+  document.getElementById('ag-horario').innerHTML = '<option value="">Escolha a data</option>';
+  document.getElementById('ag-erro').classList.add('hidden');
+  document.getElementById('form-agendar').classList.remove('hidden');
+  document.getElementById('ag-sucesso').classList.add('hidden');
+  document.getElementById('ag-politica').textContent = AG_CONFIG.aviso || '';
+  document.getElementById('modal-agendar').classList.remove('hidden');
+}
+function fecharModalAgendar() {
+  document.getElementById('modal-agendar').classList.add('hidden');
+}
+
+async function pedirAgendamento() {
+  await AG_CONFIG_PROMISE;
+  if (!AG_CONFIG) await carregarConfigAgendamento(); // tenta mais uma vez
+  if (AG_CONFIG) abrirModalAgendar();
+  else {
+    const nota = document.getElementById('agendar-nota');
+    nota.classList.remove('hidden');
+    nota.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+document.getElementById('btn-agendar').addEventListener('click', () => pedirAgendamento());
+document.querySelectorAll('.js-agendar').forEach(b => b.addEventListener('click', () => pedirAgendamento()));
+document.getElementById('modal-agendar-fechar').addEventListener('click', fecharModalAgendar);
+document.getElementById('modal-agendar-overlay').addEventListener('click', fecharModalAgendar);
+document.getElementById('ag-sucesso-fechar').addEventListener('click', fecharModalAgendar);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') fecharModalAgendar(); });
+document.getElementById('ag-data').addEventListener('change', atualizarHorariosDisponiveis);
+document.getElementById('ag-procedimento').addEventListener('change', atualizarHorariosDisponiveis);
+
+// E-mail, capital e objetivo vão junto na observação do pedido (é o que aparece no painel).
+function montarObs() {
+  const v = id => document.getElementById(id).value.trim();
+  return [
+    v('ag-email') && 'E-mail: ' + v('ag-email'),
+    v('ag-capital') && 'Capital: ' + v('ag-capital'),
+    v('ag-objetivo') && 'Objetivo: ' + v('ag-objetivo'),
+    v('ag-obs'),
+  ].filter(Boolean).join(' · ').slice(0, 500);
+}
+
+document.getElementById('form-agendar').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('ag-submit');
+  const erroEl = document.getElementById('ag-erro');
+  erroEl.classList.add('hidden');
+  btn.disabled = true;
+  try {
+    const dataStr = document.getElementById('ag-data').value;
+    const horaStr = document.getElementById('ag-horario').value;
+    if (!dataStr || !horaStr) throw new Error('Escolha a data e o horário.');
+    const resp = await fetch(AG_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, // sem "preflight": funciona de qualquer domínio
+      body: JSON.stringify({
+        acao: 'agendar',
+        site: AG_SITE,
+        servico: document.getElementById('ag-procedimento').value,
+        data: dataStr,
+        inicio: horaStr,
+        nome: document.getElementById('ag-nome').value.trim(),
+        whatsapp: document.getElementById('ag-telefone').value.trim(),
+        obs: montarObs(),
+        consentimento: document.getElementById('ag-consentimento').checked,
+        site_url: document.getElementById('ag-site-url').value
+      })
+    });
+    const json = await resp.json().catch(() => ({}));
+    if (!resp.ok || !json.ok) {
+      if (resp.status === 409) atualizarHorariosDisponiveis();
+      throw new Error(json.error || 'Não foi possível agendar. Tente outro horário.');
+    }
+    document.getElementById('form-agendar').classList.add('hidden');
+    document.getElementById('ag-sucesso').classList.remove('hidden');
+    const quando = `${dataStr.split('-').reverse().join('/')} às ${horaStr}`;
+    document.getElementById('ag-sucesso-detalhe').textContent = `${json.servico || 'Reunião'}, ${quando}. Nossa equipe vai confirmar pelo WhatsApp.`;
+    document.getElementById('ag-sucesso-politica').textContent = AG_CONFIG.aviso || '';
+    const zap = document.getElementById('ag-sucesso-zap');
+    if (json.whatsapp) {
+      const nome = document.getElementById('ag-nome').value.trim();
+      const num = String(json.whatsapp).length <= 11 ? '55' + json.whatsapp : json.whatsapp;
+      zap.href = 'https://wa.me/' + num + '?text=' + encodeURIComponent(`Olá! Sou ${nome} e acabei de pedir ${json.servico} para ${quando} pelo site da Bezsan.`);
+      zap.classList.remove('hidden');
+    }
+    document.getElementById('form-agendar').reset();
+  } catch (err) {
+    erroEl.textContent = err.message;
+    erroEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* ================= ASSISTENTE (respostas prontas) ================= */
+const RESPOSTAS = [
+  { chaves: ['agend', 'reuni', 'marcar', 'apresenta', 'conversar'], texto: 'Ótimo! Vou abrir a agenda para você escolher o dia e o horário da sua apresentação.', agendar: true },
+  { chaves: ['retorno', 'rend', 'tir', 'lucro', 'ganho', 'rentab'], texto: 'A TIR-alvo é de 22% a 28% ao ano, líquida, no cenário base (múltiplo de 1,4x a 1,6x em 12 a 18 meses). São projeções, não promessa: resultados passados não garantem resultados futuros.' },
+  { chaves: ['mínimo', 'minimo', 'ticket', 'quanto preciso', 'valor m', 'entrada'], texto: 'O ticket mínimo é de R$ 250 mil.' },
+  { chaves: ['taxa', 'custo', 'cobra', 'honor', 'comiss'], texto: 'A taxa é de 7% do valor da arrematação, mais R$ 2 mil de pesquisa (pagamento único). Na reunião explicamos tudo em detalhe.' },
+  { chaves: ['risco', 'garant', 'segur', 'perder'], texto: 'Todo investimento tem risco. Por isso cada imóvel passa por diligência jurídica, fiscal e técnica antes do lance, e só 3 a 5 de cada 100 imóveis monitorados chegam à fase de lance.' },
+  { chaves: ['funciona', 'processo', 'como é', 'passo', 'etapa'], texto: 'São 6 etapas: originação, diligência, lance, imissão na posse, reforma e revenda. Compramos imóveis em leilão por 40% a 60% abaixo do valor de mercado e revendemos em 6 a 18 meses.' },
+  { chaves: ['prazo', 'tempo', 'meses', 'quando recebo'], texto: 'A revenda costuma acontecer entre 6 e 18 meses depois da compra.' },
+  { chaves: ['onde', 'estado', 'cidade', 'região', 'regiao'], texto: 'Atuamos em todo o Brasil: 26 estados e o Distrito Federal.' },
+  { chaves: ['equipe', 'quem', 'sócio', 'socio', 'gilmar', 'tereza', 'gabriela'], texto: 'A Bezsan é conduzida por Gilmar Bezerra (investimentos e estratégia), Tereza Santos (originação e operações) e Gabriela Ramos (jurídico e diligência).' },
+  { chaves: ['contato', 'telefone', 'whats', 'email', 'e-mail', 'falar'], texto: 'Fale com a gente pelo WhatsApp +55 (11) 91766-5454 ou pelo e-mail contato@bezsan.com.br.' },
+];
+const chatWin = document.getElementById('chat-win');
+function abrirChat(abrir) { chatWin.classList.toggle('open', abrir); if (abrir) document.getElementById('chat-inp').focus({ preventScroll: true }); }
+document.getElementById('chat-toggle').addEventListener('click', () => abrirChat(!chatWin.classList.contains('open')));
+document.getElementById('chat-fechar').addEventListener('click', () => abrirChat(false));
+function addChatMsg(texto, quem) {
+  const d = document.createElement('div');
+  d.className = 'chat-msg ' + quem; d.textContent = texto;
+  const msgs = document.getElementById('chat-msgs');
+  msgs.appendChild(d); msgs.scrollTop = msgs.scrollHeight;
+}
+function responder(pergunta) {
+  const p = pergunta.toLowerCase();
+  addChatMsg(pergunta, 'user');
+  const r = RESPOSTAS.find(x => x.chaves.some(c => p.includes(c)));
+  setTimeout(() => {
+    if (r) addChatMsg(r.texto, 'bot');
+    else addChatMsg('Essa eu prefiro que nossa equipe responda. Fale pelo WhatsApp +55 (11) 91766-5454 ou agende uma reunião.', 'bot');
+    if (r && r.agendar) setTimeout(() => { abrirChat(false); pedirAgendamento(); }, 700);
+  }, 250);
+}
+document.getElementById('chat-sugs').addEventListener('click', e => { const b = e.target.closest('[data-pergunta]'); if (b) responder(b.dataset.pergunta); });
+document.getElementById('chat-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const inp = document.getElementById('chat-inp');
+  const msg = inp.value.trim(); if (!msg) return;
+  inp.value = ''; responder(msg);
+});
+
+/* ================= ANIMAÇÃO AO ROLAR ================= */
+const obs = new IntersectionObserver(entries => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); }); }, { threshold: .1, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.fu').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
