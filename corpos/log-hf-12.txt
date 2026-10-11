@@ -1,2 +1,4 @@
 m-negra-alto-lado 1 ok
 m-negra-alto-lado 2 ok
+# 1 erro 'NoneType' object has no attribute 'groups'
+# 2 erro 'NoneType' object has no attribute 'groups'
