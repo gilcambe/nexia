@@ -18,6 +18,12 @@ const CODIGO = 'TESTEAGENDA'; // agenda de teste: código e senha públicos de p
 const SENHA = 'agenda-teste-2026';
 const SENHA_TEMP = 'agenda-temp-2026';
 const RUN = String(Date.now()).slice(-5);
+// O que muda de um site para outro no passo do editor (foto que troca, seção que esconde, lista de procedimentos).
+const PERFIS = {
+  studiolima: { foto: 'procedimentos-foto-1', secao: 'journal', nomeSecao: 'Journal', procs: true },
+  bezsan: { foto: 'equipe-foto-1', secao: 'retornos', nomeSecao: 'Retornos', procs: false },
+};
+const PERFIL = PERFIS[new URL(SITE_URL).hostname.split('.')[0]] || PERFIS.studiolima;
 
 const falhas = [];
 function confere(cond, msg) { if (!cond) falhas.push(msg); console.log((cond ? '  ✓ ' : '  ✗ ') + msg); return cond; }
@@ -303,30 +309,32 @@ const semana = d => new Date(d + 'T12:00:00Z').getUTCDay();
   await car.waitForSelector('#folha-texto.oculto', { state: 'attached', timeout: 15000 });
   await siteCarregado();
   confere((await cli.textContent('[data-ed="inicio-2"]')).includes('Título ' + RUN), 'cliente vê o título novo no site');
-  await q.locator('[data-ed="procedimentos-foto-1"]').click();
+  await q.locator(`[data-ed="${PERFIL.foto}"]`).click();
   await car.waitForSelector('#folha-foto:not(.oculto)');
   await car.check('#f-autorizo');
   await car.setInputFiles('#f-arquivo', fotoArq);
   await car.waitForSelector('#folha-foto.oculto', { state: 'attached', timeout: 30000 });
   await siteCarregado();
-  await cli.locator('[data-ed="procedimentos-foto-1"]').scrollIntoViewIfNeeded();
-  const fotoOk = await cli.waitForFunction(() => { const im = document.querySelector('[data-ed="procedimentos-foto-1"]'); return /foto=/.test(im.src) && im.complete && im.naturalWidth > 100; }, null, { timeout: 15000 }).then(() => true, () => false);
+  await cli.locator(`[data-ed="${PERFIL.foto}"]`).scrollIntoViewIfNeeded();
+  const fotoOk = await cli.waitForFunction(k => { const im = document.querySelector(`[data-ed="${k}"]`); return /foto=/.test(im.src) && im.complete && im.naturalWidth > 100; }, PERFIL.foto, { timeout: 15000 }).then(() => true, () => false);
   confere(fotoOk, 'foto enviada pelo celular aparece no site (guardada grátis na NEXIA)');
-  await car.click('#site-procs');
-  await car.waitForSelector('#folha-procs:not(.oculto)');
-  const nomeProc = (await car.locator('#p-lista .proc').nth(1).locator('label').textContent()).trim();
-  await car.locator('#p-lista .proc').nth(1).locator('input').uncheck();
-  await car.waitForSelector('#toast:has-text("saiu do site")', { timeout: 15000 });
-  await foto(car, 'procedimentos-oferecidos');
-  await car.click('#folha-procs [data-fechar]');
+  if (PERFIL.procs) {
+    await car.click('#site-procs');
+    await car.waitForSelector('#folha-procs:not(.oculto)');
+    const nomeProc = (await car.locator('#p-lista .proc').nth(1).locator('label').textContent()).trim();
+    await car.locator('#p-lista .proc').nth(1).locator('input').uncheck();
+    await car.waitForSelector('#toast:has-text("saiu do site")', { timeout: 15000 });
+    await foto(car, 'procedimentos-oferecidos');
+    await car.click('#folha-procs [data-fechar]');
+    await siteCarregado();
+    confere(!(await cli.textContent('#procedures-grid')).includes(nomeProc), `desmarcar "${nomeProc}": some do site`);
+    const servAgora = (await get({})).servicos.map(s => s.nome);
+    confere(!servAgora.includes(nomeProc) && servAgora.length > 5, 'e some da agenda (os outros procedimentos viram serviços da agenda)');
+  } else confere(await car.isHidden('#site-procs'), 'sem lista de procedimentos neste site: o botão não aparece');
+  await q.locator(`[data-secao-botao="${PERFIL.secao}"]`).click();
+  await car.waitForFunction(k => /mostrar/.test(document.querySelector('#site-quadro').contentDocument.querySelector(`[data-secao-botao="${k}"]`).textContent), PERFIL.secao, { timeout: 15000 });
   await siteCarregado();
-  confere(!(await cli.textContent('#procedures-grid')).includes(nomeProc), `desmarcar "${nomeProc}": some do site`);
-  const servAgora = (await get({})).servicos.map(s => s.nome);
-  confere(!servAgora.includes(nomeProc) && servAgora.length > 5, 'e some da agenda (os outros procedimentos viram serviços da agenda)');
-  await q.locator('[data-secao-botao="journal"]').click();
-  await car.waitForFunction(() => /mostrar/.test(document.querySelector('#site-quadro').contentDocument.querySelector('[data-secao-botao="journal"]').textContent), null, { timeout: 15000 });
-  await siteCarregado();
-  confere(await cli.isHidden('#journal'), 'esconder a seção Journal: some do site');
+  confere(await cli.isHidden('#' + PERFIL.secao), `esconder a seção ${PERFIL.nomeSecao}: some do site`);
   await foto(cli, 'site-editado');
 
   console.log('\n9. Senha e sair');

@@ -112,7 +112,7 @@
 <!-- ENTRAR -->
 <section id="tela-login" class="tela login oculto">
   <h1 id="login-nome">Minha agenda</h1>
-  <p>Área só da dona do estúdio.</p>
+  <p>Área só do dono do negócio.</p>
   <div class="abas">
     <button type="button" id="aba-entrar" class="ativa">Entrar</button>
     <button type="button" id="aba-primeiro">Primeiro acesso</button>
@@ -163,7 +163,7 @@
     <!-- SITE: cópia da página para tocar e editar -->
     <section id="pag-site" class="oculto">
       <h2>Seu site</h2>
-      <p class="dica">Toque em qualquer texto, foto, procedimento ou seção do site abaixo para mudar ou excluir. Cada mudança já vale para quem abrir o site.</p>
+      <p class="dica">Toque em qualquer texto, foto ou seção do site abaixo para mudar ou excluir. Cada mudança já vale para quem abrir o site.</p>
       <div class="acoes"><button type="button" class="btn pequeno" id="site-procs">Procedimentos que você oferece</button><a class="btn pequeno claro" id="site-ver" target="_blank" rel="noopener">Ver o site</a></div>
       <div id="site-msg" class="msg aviso oculto" role="status"></div>
       <iframe id="site-quadro" title="Cópia do seu site para editar"></iframe>
@@ -172,7 +172,7 @@
     <!-- AJUSTES -->
     <section id="pag-ajustes" class="oculto">
       <form id="form-config">
-        <h2>Seu estúdio</h2>
+        <h2>Seu negócio</h2>
         <div class="cartao">
           <label for="cfg-nome">Nome que aparece</label><input id="cfg-nome" maxlength="80">
           <label for="cfg-whats">Seu WhatsApp (com DDD)</label><input id="cfg-whats" inputmode="tel">
@@ -226,7 +226,7 @@
 <div class="folha oculto" id="folha-novo"><div class="caixa">
   <div class="titulo"><h2>Marcar horário</h2><button class="fechar" type="button" data-fechar aria-label="Fechar">×</button></div>
   <form id="form-novo">
-    <label for="n-nome">Nome da cliente</label><input id="n-nome" required maxlength="80" autocomplete="off">
+    <label for="n-nome">Nome da pessoa</label><input id="n-nome" required maxlength="80" autocomplete="off">
     <label for="n-whats">WhatsApp (opcional)</label><input id="n-whats" inputmode="tel" autocomplete="off">
     <label for="n-serv">Serviço</label><select id="n-serv"></select>
     <label for="n-data">Dia</label><input id="n-data" type="date" required>
@@ -269,7 +269,7 @@
 <div class="folha oculto" id="folha-foto"><div class="caixa">
   <div class="titulo"><h2>Mudar foto</h2><button class="fechar" type="button" data-fechar aria-label="Fechar">×</button></div>
   <img id="f-previa" class="previa" alt="">
-  <label class="check"><input type="checkbox" id="f-autorizo"> Tenho o direito de usar a foto nova. Se aparece uma cliente, ela autorizou por escrito.</label>
+  <label class="check"><input type="checkbox" id="f-autorizo"> Tenho o direito de usar a foto nova. Se aparece outra pessoa, ela autorizou por escrito.</label>
   <label class="btn largo" for="f-arquivo" id="f-escolher">Escolher outra foto</label><input id="f-arquivo" class="arquivo" type="file" accept="image/*">
   <div class="acoes"><button type="button" class="btn claro pequeno" id="f-esconder">Esconder do site</button><button type="button" class="btn claro pequeno" id="f-original">Voltar ao original</button></div>
   <div id="erro-foto" class="msg erro oculto" role="alert"></div>
@@ -366,7 +366,7 @@
     var b = this.querySelector('button'); b.disabled = true;
     chamar({ acao: 'primeiro-acesso', codigo: $('codigo').value, senha_nova: $('nova1').value, token: '-' }).then(function (j) {
       b.disabled = false;
-      if (j.ok) { estado.token = j.token; gravarToken(j.token); abrirApp(); toast('Senha criada. Bem-vinda!'); }
+      if (j.ok) { estado.token = j.token; gravarToken(j.token); abrirApp(); toast('Senha criada. Tudo pronto!'); }
       else erro('erro-primeiro', j.error || 'Não deu certo. Tente de novo.');
     });
   };
@@ -490,7 +490,7 @@
     b.disabled = true;
     chamar(corpo).then(function (j) {
       if (!j.ok) { b.disabled = false; toast(j.error || 'Não deu certo.'); return; }
-      var msg = { confirmado: 'Confirmado. Avise a cliente pelo WhatsApp.', cancelado: 'Cancelado. O horário ficou livre.', concluido: 'Marcado como atendido.', faltou: 'Marcado como falta.' }[corpo.status] || 'Horário liberado.';
+      var msg = { confirmado: 'Confirmado. Avise a pessoa pelo WhatsApp.', cancelado: 'Cancelado. O horário ficou livre.', concluido: 'Marcado como atendido.', faltou: 'Marcado como falta.' }[corpo.status] || 'Horário liberado.';
       toast(msg);
       carregar(false);
     });
@@ -662,7 +662,7 @@
 
   window.addEventListener('message', function (e) {
     if (e.origin !== location.origin || !e.data || !e.data.nx || e.source !== quadro()) return;
-    if (e.data.nx === 'pronto') { site.pronto = true; site.padroes = e.data.padroes; mostrar($('site-msg'), false); enviarAoQuadro(); }
+    if (e.data.nx === 'pronto') { site.pronto = true; site.padroes = e.data.padroes || {}; mostrar($('site-procs'), !!site.padroes.procedimentos); mostrar($('site-msg'), false); enviarAoQuadro(); }
     if (e.data.nx === 'tocar') tocou(e.data);
   });
 
@@ -760,7 +760,7 @@
   var NOMES_LISTA = { procedimentos: 'procedimento', galeria: 'foto da galeria', journal: 'artigo', cuidados: 'cuidado', bio: '"Sobre"' };
   function campoFoto(img) {
     return '<label>Foto</label><img class="previa" data-previa src="' + esc(img && img.url || '') + '" alt="">' +
-      '<label class="check"><input type="checkbox" data-autorizo> Tenho o direito de usar a foto nova. Se aparece uma cliente, ela autorizou por escrito.</label>' +
+      '<label class="check"><input type="checkbox" data-autorizo> Tenho o direito de usar a foto nova. Se aparece outra pessoa, ela autorizou por escrito.</label>' +
       '<label class="btn claro pequeno" style="margin-top:8px">Trocar foto<input type="file" accept="image/*" class="arquivo" data-arquivo></label>';
   }
   var campo = function (id, rot, v, tipo) {
@@ -885,7 +885,7 @@
     var itens = listaAtual('hero');
     $('i-campos').innerHTML = '<p class="dica">As fotos se revezam no topo do site.</p>' + itens.map(function (h, k) {
       return '<div class="mini"><img src="' + esc(h.url) + '" alt=""><div class="acoes" style="margin:0"><button type="button" class="btn claro pequeno" data-h="' + k + '" data-d="-1">↑</button><button type="button" class="btn claro pequeno" data-h="' + k + '" data-d="1">↓</button><button type="button" class="btn vermelho pequeno" data-h="' + k + '" data-d="x">Excluir</button></div></div>';
-    }).join('') + '<label class="check"><input type="checkbox" data-autorizo> Tenho o direito de usar a foto nova. Se aparece uma cliente, ela autorizou por escrito.</label>' +
+    }).join('') + '<label class="check"><input type="checkbox" data-autorizo> Tenho o direito de usar a foto nova. Se aparece outra pessoa, ela autorizou por escrito.</label>' +
       '<label class="btn largo claro">+ Adicionar foto<input type="file" accept="image/*" class="arquivo" data-arquivo></label>';
     mostrar($('i-salvar'), false); mostrar($('i-acoes'), false);
     abrirFolha('folha-item');

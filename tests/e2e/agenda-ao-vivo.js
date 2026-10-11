@@ -63,16 +63,19 @@ const get = async q => { const r = await fetch(API + '?' + new URLSearchParams({
   await page.waitForSelector('#modal-agendar:not(.hidden)', { timeout: 15000 });
   const nServ = await page.locator('#ag-procedimento option').count();
   confere(nServ >= 1, `formulário com ${nServ} serviços vindos da agenda`);
-  const amanha = new Date(Date.now() - 3 * 3600000 + 86400000).toISOString().slice(0, 10);
+  // Primeiro dia de atendimento depois de hoje, na agenda real deste site (que pode não abrir todo dia).
+  const slugSite = new URL(SITE_URL).hostname.split('.')[0];
+  const real = await fetch(API + '?site=' + slugSite).then(r => r.json()).catch(() => ({}));
+  const amanha = (real.dias || []).find(d => d > (real.dias || [])[0]) || new Date(Date.now() - 3 * 3600000 + 86400000).toISOString().slice(0, 10);
   await page.fill('#ag-data', amanha);
   await page.dispatchEvent('#ag-data', 'change');
   await page.waitForFunction(() => document.querySelectorAll('#ag-horario option').length > 1 || /Sem horários/.test(document.querySelector('#ag-horario').textContent), null, { timeout: 15000 });
   const horas = await page.$$eval('#ag-horario option', os => os.map(o => o.value).filter(Boolean));
-  confere(horas.length > 0, `horários de amanhã no site: ${horas.length}`);
+  confere(horas.length > 0, `horários de ${amanha} no site: ${horas.length}`);
   await foto('02-site-formulario');
   await page.goto(SITE_URL + '/agenda/', { waitUntil: 'networkidle' });
   await page.waitForSelector('#tela-login:not(.oculto)', { timeout: 15000 });
-  confere((await page.textContent('#login-nome')).includes('Studio Lima'), 'painel /agenda abre com o nome do estúdio');
+  confere((await page.textContent('#login-nome')).includes(real.nome || 'Studio Lima'), `painel /agenda abre com o nome "${real.nome}"`);
   await foto('03-painel-entrar');
   confere(erros.length === 0, 'sem erro de JavaScript' + (erros.length ? ': ' + erros.join(' | ') : ''));
   await browser.close();
