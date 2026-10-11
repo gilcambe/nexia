@@ -101,6 +101,18 @@
 <main id="app" class="oculto">
   <!-- BUSCAR -->
   <section id="pg-buscar" class="tela">
+    <h2>Leilões de vários leiloeiros</h2>
+    <div class="cartao">
+      <p class="dica" style="margin-top:0">Busca automática nos leilões judiciais e extrajudiciais de leiloeiros de todo o Brasil (fonte pública: Leilões Judiciais).</p>
+      <div class="grade2">
+        <div><label for="a-busca">O que procura</label><input id="a-busca" placeholder="Ex.: apartamento"></div>
+        <div><label for="a-uf">Estado</label><select id="a-uf"><option value="">Todos</option></select></div>
+      </div>
+      <button class="btn largo" type="button" id="a-buscar">Buscar leilões</button>
+      <div id="a-msg" class="msg oculto"></div>
+    </div>
+    <div id="a-lista"></div>
+
     <h2>Buscar imóveis da Caixa</h2>
     <div class="cartao">
       <p class="dica" style="margin-top:0">O site da Caixa não deixa robôs baixarem a lista. Baixe você mesmo, com 1 toque, e escolha o arquivo aqui. Ele é lido só neste aparelho.</p>
@@ -175,6 +187,7 @@
         <input class="arquivo" type="file" id="im-matricula" accept="application/pdf,.pdf">
         <button class="btn pequeno claro" type="button" id="im-colar-abrir">Colar texto</button>
       </div>
+      <div id="im-anexos" class="acoes"></div>
       <div id="im-colar" class="oculto">
         <label for="im-colar-tipo">Este texto é</label>
         <select id="im-colar-tipo"><option value="edital">Edital</option><option value="matricula">Matrícula</option></select>
@@ -295,9 +308,13 @@
 
   function api(corpo) {
     corpo.site = SITE; corpo.token = token;
-    return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(corpo) })
+    // Nunca fica "carregando" para sempre: a IA tem até 70 s, o resto 25 s.
+    var ctl = window.AbortController ? new AbortController() : null;
+    var limite = setTimeout(function () { if (ctl) ctl.abort(); }, /analisar|parecer|arquivo/.test(corpo.acao) ? 70000 : 25000);
+    return fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=UTF-8' }, body: JSON.stringify(corpo), signal: ctl ? ctl.signal : undefined })
       .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { j._status = r.status; return j; }); })
-      .catch(function () { return { _status: 0, error: 'Sem internet. Tente de novo.' }; })
+      .catch(function (e) { return { _status: 0, error: e && e.name === 'AbortError' ? 'Demorou demais para responder. Tente de novo.' : 'Sem internet. Tente de novo.' }; })
+      .then(function (j) { clearTimeout(limite); return j; })
       .then(function (j) {
         if (j._status === 401 && j.sair) { semLogin(); throw new Error(j.error); }
         if (j._status !== 200) throw new Error(j.error || 'Não deu certo. Tente de novo.');
@@ -317,6 +334,32 @@
   $('nav-buscar').onclick = function () { pagina('buscar'); };
   $('nav-imoveis').onclick = function () { pagina('imoveis'); };
   $('nav-guia').onclick = function () { pagina('guia'); };
+
+  // ── Busca automática (vários leiloeiros) ──
+  K.UFS.forEach(function (uf) { var o = document.createElement('option'); o.value = uf; o.textContent = uf; $('a-uf').appendChild(o); });
+  function dataHora(s) { var m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(String(s || '')); return m ? m[3] + '/' + m[2] + '/' + m[1] + ' ' + m[4] + 'h' + m[5] : ''; }
+  $('a-buscar').onclick = function () {
+    var b = this; b.disabled = true;
+    msg($('a-msg'), 'aviso', 'Buscando leilões…'); $('a-lista').innerHTML = '';
+    api({ acao: 'buscar', busca: $('a-busca').value.trim(), uf: $('a-uf').value }).then(function (j) {
+      var lista = j.imoveis || [];
+      msg($('a-msg'), lista.length ? 'ok' : 'aviso', lista.length ? lista.length + ' leilões encontrados. Para ver outros, mude a busca (casa, terreno, bairro, cidade).' : 'Nada encontrado. Tente outra palavra ou outro estado.');
+      lista.forEach(function (i) {
+        var d = document.createElement('div'); d.className = 'item';
+        d.innerHTML = '<div class="cab"><span class="nome">' + esc(i.titulo) + '</span>' + (i.desconto > 0 ? '<span class="chip n2">' + esc(String(i.desconto).replace('.', ',')) + '% abaixo da avaliação</span>' : '') + '</div>' +
+          '<div class="det">' + esc([i.cidade, i.uf].filter(Boolean).join('/')) + (i.tipo ? ' · ' + esc(i.tipo) : '') + (i.situacao ? ' · ' + esc(i.situacao) : '') + '</div>' +
+          '<div class="det">Lance ' + reais(i.lance) + (i.avaliacao ? ' · Avaliação ' + reais(i.avaliacao) : '') + (i.fechamento ? ' · encerra ' + esc(dataHora(i.fechamento)) : '') + '</div>' +
+          '<div class="det">' + esc(i.leilao) + (i.leiloeiro ? ' · ' + esc(i.leiloeiro) : '') + '</div>' +
+          (i.anexos && i.anexos.length ? '<div class="det">Documentos: ' + esc(i.anexos.map(function (a) { return a.nome; }).join(', ')) + '</div>' : '') +
+          '<div class="acoes"><button class="btn pequeno" type="button">Analisar</button>' + (linkSeguro(i.link) ? '<a class="btn pequeno claro" target="_blank" rel="noopener" href="' + esc(i.link) + '">Ver no site do leilão</a>' : '') + '</div>';
+        d.querySelector('button').onclick = function () {
+          abrirImovel(null, { origem: 'leiloesjudiciais', lote_id: i.lote_id, endereco: i.titulo, cidade: i.cidade, uf: i.uf, modalidade: i.judicial ? 'Leilão judicial' : 'Leilão', link: i.link, descricao: i.descricao.slice(0, 3000), lance: i.lance, avaliacao: i.avaliacao, processo: i.processo, anexos: i.anexos, comissao_pct: 5 });
+        };
+        $('a-lista').appendChild(d);
+      });
+    }).catch(function (e) { msg($('a-msg'), 'erro', e.message); }).then(function () { b.disabled = false; });
+  };
+  $('a-busca').addEventListener('keydown', function (ev) { if (ev.key === 'Enter') $('a-buscar').click(); });
 
   // ── Buscar (lista da Caixa) ──
   var listaCaixa = [], achados = [], mostrando = 0;
@@ -433,6 +476,7 @@
     $('im-edital-res').innerHTML = atual.analise_edital ? resumoDoc('Edital', atual.analise_edital) : '';
     $('im-matricula-res').innerHTML = atual.analise_matricula ? resumoDoc('Matrícula', atual.analise_matricula) : '';
     $('im-processo-res').innerHTML = atual.processo_info ? resumoProcesso(atual.processo_info) : '';
+    desenharAnexos();
     if (atual.parecer) { $('im-parecer').textContent = atual.parecer; mostrar($('im-parecer'), true); } else mostrar($('im-parecer'), false);
     mostrar($('im-doc-msg'), false); mostrar($('im-colar'), false);
     mostrar($('im-apagar'), !!atualId);
@@ -557,6 +601,28 @@
       if (c.texto.length < 300 && !(c.imagens && c.imagens.length)) throw new Error('Não consegui ler este PDF. Tente "Colar texto".');
       return analisarDoc(tipo, c);
     }).catch(function (e) { msg($('im-doc-msg'), 'erro', e.message || 'Não consegui ler este PDF.'); });
+  }
+  function desenharAnexos() {
+    var el = $('im-anexos'); el.innerHTML = '';
+    (atual.anexos || []).forEach(function (a) {
+      if (!/^https:\/\/s3-sa-east-1\.amazonaws\.com\//.test(a.url)) return;
+      var tipo = /matr/i.test(a.nome) ? 'matricula' : /edital/i.test(a.nome) ? 'edital' : null;
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'btn pequeno' + (tipo ? '' : ' claro');
+      b.textContent = tipo ? 'Ler ' + a.nome.toLowerCase() + ' do leilão' : 'Abrir ' + a.nome.toLowerCase();
+      b.onclick = function () {
+        if (!tipo) { window.open(a.url, '_blank', 'noopener'); return; }
+        b.disabled = true; msg($('im-doc-msg'), 'aviso', 'Baixando o documento do leilão…');
+        api({ acao: 'arquivo', url: a.url }).then(function (j) {
+          var bin = atob(j.pdf), bytes = new Uint8Array(bin.length);
+          for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          return lerPdf(new Blob([bytes], { type: 'application/pdf' }));
+        }).then(function (c) {
+          if (c.texto.length < 300 && !(c.imagens && c.imagens.length)) throw new Error('Não consegui ler este PDF. Abra no site do leilão.');
+          return analisarDoc(tipo, c);
+        }).catch(function (e) { msg($('im-doc-msg'), 'erro', e.message); }).then(function () { b.disabled = false; });
+      };
+      el.appendChild(b);
+    });
   }
   $('im-edital').onchange = function () { enviarPdf('edital', this); };
   $('im-matricula').onchange = function () { enviarPdf('matricula', this); };

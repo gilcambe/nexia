@@ -13,6 +13,8 @@
 //   analisar  { tipo: 'edital'|'matricula', texto?, imagens?: ['data:image/jpeg;base64,...'] } → { dados }
 //   parecer   { imovel, conta }                                                            → { texto }
 //   processo  { numero }                                                                   → { processo }
+//   buscar    { busca, uf? }   → imóveis de vários leiloeiros pela API pública do Leilões Judiciais → { imoveis }
+//   arquivo   { url }          → PDF público de um lote (edital, matrícula) em base64, para a página ler
 //   listar | salvar { imovel } | apagar { id }
 
 const COLLECTION = 'agenda_contas';
@@ -60,6 +62,60 @@ function resumirProcesso(src) {
   };
 }
 
+// ── Busca automática: API pública do Leilões Judiciais (www.leiloesjudiciais.com.br/api/openapi.json:
+// "Acesso público, sem autenticação"; robots.txt: ai-input=yes). Junta lotes de vários leiloeiros do país.
+// Os outros portais testados bloqueiam robôs (Cloudflare/captcha) ou proíbem cópia nos termos: ficam como links. ──
+const LJ_MCP = 'https://www.leiloesjudiciais.com.br/api/mcp/messages';
+const LJ_SITE = 'https://www.leiloesjudiciais.com.br';
+const ANEXO_RE = /^https:\/\/s3-sa-east-1\.amazonaws\.com\/906de634c48fb7d34136160b4c353ae4\/public\/anexo\/[A-Za-z0-9_-]{1,80}\.pdf$/;
+const ARQUIVO_MAX = 12 * 1024 * 1024;
+const UFS = ['AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO'];
+const _cacheBusca = new Map();
+
+const semHtml = h => String(h || '').replace(/<br\s*\/?>|<\/p>/gi, '\n').replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, '\n').trim();
+const reaisNum = v => { const n = Number(v); return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : 0; };
+function valorNoTexto(texto, rotulo) {
+  const m = new RegExp(rotulo + '[^R]{0,40}R\\$\\s*([\\d.]+,\\d{2})', 'i').exec(texto);
+  return m ? Number(m[1].replace(/\./g, '').replace(',', '.')) : 0;
+}
+function loteParaImovel(r) {
+  if (!r || typeof r !== 'object') return null;
+  const texto = semHtml(r.nm_descricao).slice(0, 6000);
+  const avaliacao = valorNoTexto(texto, 'avalia[cç][aã]o') || (r.bn_exibeavaliacao ? reaisNum(r.vl_lanceminimo) : 0);
+  const lance = reaisNum(r.vl_lanceinicialsegundoleilao) || reaisNum(r.vl_lanceinicial) || reaisNum(r.vl_lanceminimo);
+  const proc = /\b(\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4})\b/.exec(texto);
+  const leilaoId = String(r.leilao_id || '').replace(/\D/g, '');
+  const loteId = String(r.lote_id || '').replace(/\D/g, '');
+  if (!loteId) return null;
+  const anexos = (Array.isArray(r.anexos) ? r.anexos : []).filter(a => a && ANEXO_RE.test(String(a.nm_path_completo || ''))).slice(0, 8).map(a => ({ nome: String(a.nm || 'Anexo').slice(0, 60), url: a.nm_path_completo }));
+  return {
+    fonte: 'Leilões Judiciais', lote_id: loteId, titulo: String(r.nm_titulo_lote || '').slice(0, 200), leilao: String(r.nm_titulo_leilao || '').slice(0, 200),
+    cidade: String(r.nm_cidade || '').slice(0, 80), uf: String(r.nm_estado || '').toUpperCase().slice(0, 2), tipo: String(r.nm_subcategoria || '').slice(0, 60),
+    lance, avaliacao, desconto: avaliacao && lance ? Math.round((1 - lance / avaliacao) * 1000) / 10 : 0,
+    fechamento: String(r.dt_fechamento || '').slice(0, 25), situacao: String(r.nm_statuslote || '').slice(0, 60),
+    leiloeiro: String(r.nm_leiloeiro || '').slice(0, 100), parcelas: Number(r.nu_parcelas) || 0, entrada_pct: Number(r.vl_percentualentrada) || 0,
+    processo: proc ? proc[1] : '', descricao: texto,
+    link: leilaoId ? `${LJ_SITE}/lote/${leilaoId}/${loteId}` : LJ_SITE, anexos,
+    judicial: /judicial/i.test(String(r.nm_titulo_leilao || '')) && !/extrajudicial/i.test(String(r.nm_titulo_leilao || '')),
+  };
+}
+async function buscarLeiloesJudiciais(fetchFn, { busca, uf }, now) {
+  const chave = busca + '|' + uf;
+  const c = _cacheBusca.get(chave);
+  if (c && now - c.em < 10 * 60000) return c.lista;
+  const args = { query: busca, categoria: 'imoveis' };
+  if (uf) args.estado = uf;
+  const r = await fetchFn(LJ_MCP, { method: 'POST', headers: { 'Content-Type': 'application/json', 'User-Agent': 'NexiaBezsan/1.0 (+https://bezsan.pages.dev)' }, body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'search_leiloes', arguments: args } }) });
+  if (!r.ok) throw new Error('fonte');
+  const j = await r.json();
+  const texto = j && j.result && Array.isArray(j.result.content) && j.result.content[0] && j.result.content[0].text;
+  const dados = JSON.parse(texto || '{}');
+  const lista = (Array.isArray(dados.results) ? dados.results : []).map(loteParaImovel).filter(Boolean);
+  _cacheBusca.set(chave, { em: now, lista });
+  if (_cacheBusca.size > 200) _cacheBusca.delete(_cacheBusca.keys().next().value);
+  return lista;
+}
+
 // ── IA grátis ──
 const PEDIDO_EDITAL = `Você é um advogado especialista em leilões de imóveis no Brasil. Leia o EDITAL abaixo e devolva SÓ um JSON (sem texto antes ou depois, sem markdown) com estes campos, usando null quando o edital não disser:
 {"tipo_leilao":"judicial|extrajudicial|venda_direta","processo":"número CNJ ou null","vara":"","leiloeiro":"","site_leilao":"","endereco":"","cidade":"","uf":"","descricao":"","area_m2":null,"matricula":"","cartorio":"","inscricao_iptu":"","praca1_data":"AAAA-MM-DD","praca1_valor":0,"praca2_data":"AAAA-MM-DD","praca2_valor":0,"avaliacao":0,"comissao_pct":0,"pagamento":"à vista, parcelado, FGTS, financiamento","ocupado":true,"debitos_iptu":"quem paga e quanto","debitos_condominio":"quem paga e quanto","onus":["penhoras, hipotecas, usufruto, indisponibilidade, ações"],"prazos":["prazos importantes"],"riscos":["riscos concretos para quem compra"],"resumo":"3 frases simples"}
@@ -84,17 +140,18 @@ function modelosGratis(FREE, { longo, imagens }) {
   return lista;
 }
 
-async function perguntarIa({ router, FREE, system, conteudo, imagens, maxTokens, timeoutMs = 15000, totalMs = 50000, now = Date.now }) {
+async function perguntarIa({ router, FREE, system, conteudo, imagens, maxTokens, timeoutMs = 15000, totalMs = 45000, now = Date.now }) {
   const inicio = now();
   const lista = modelosGratis(FREE, { longo: conteudo.length > 16000, imagens: imagens && imagens.length });
   for (const d of lista) {
-    if (now() - inicio > totalMs) break;
+    const resta = totalMs - (now() - inicio);
+    if (resta < 3000) break; // nunca deixa a pessoa esperando mais que o total
     try {
       const cap = router.capabilities(d);
       if (!cap || !cap.available || (imagens && imagens.length && !cap.vision)) continue;
       const out = await Promise.race([
         router.chat(d, { system, messages: [{ role: 'user', content: conteudo }], maxTokens, ...(imagens && imagens.length ? { images: imagens } : {}) }),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), timeoutMs)),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), Math.min(timeoutMs, resta))),
       ]);
       if (out && out.text) return { texto: out.text, modelo: `${d.provider}:${d.model}` };
     } catch { /* próximo modelo grátis */ }
@@ -205,6 +262,28 @@ function createHandler(deps = {}) {
       return res(200, { ok: true });
     }
 
+    if (acao === 'buscar') {
+      const busca = str(body.busca, 60) || 'imóvel';
+      const uf = str(body.uf, 2).toUpperCase();
+      if (uf && !UFS.includes(uf)) return res(400, { error: 'Estado inválido.' });
+      try {
+        const imoveis = await buscarLeiloesJudiciais(fetchFn, { busca, uf }, now());
+        return res(200, { ok: true, fonte: 'Leilões Judiciais', imoveis });
+      } catch { return res(502, { error: 'A busca automática não respondeu agora. Tente de novo ou use os links dos leiloeiros.' }); }
+    }
+
+    if (acao === 'arquivo') {
+      const url = str(body.url, 300);
+      if (!ANEXO_RE.test(url)) return res(400, { error: 'Arquivo não permitido.' });
+      let r;
+      try { r = await fetchFn(url, { headers: { 'User-Agent': 'NexiaBezsan/1.0' } }); } catch { return res(502, { error: 'Não consegui baixar o arquivo.' }); }
+      if (!r.ok) return res(502, { error: 'Não consegui baixar o arquivo.' });
+      const buf = Buffer.from(await r.arrayBuffer());
+      if (buf.length > ARQUIVO_MAX) return res(413, { error: 'Arquivo grande demais para ler aqui. Abra no site do leilão.' });
+      if (buf.slice(0, 4).toString('latin1') !== '%PDF') return res(502, { error: 'O arquivo não é um PDF.' });
+      return res(200, { ok: true, pdf: buf.toString('base64') });
+    }
+
     if (acao === 'processo') {
       const t = tribunalDoProcesso(body.numero);
       if (!t) return res(400, { error: 'Número de processo inválido. Use o formato 0000000-00.0000.0.00.0000 (de tribunal estadual, federal ou do trabalho).' });
@@ -262,3 +341,4 @@ exports.createHandler = createHandler;
 exports.tribunalDoProcesso = tribunalDoProcesso;
 exports.extrairJson = extrairJson;
 exports.modelosGratis = modelosGratis;
+exports.loteParaImovel = loteParaImovel;

@@ -38,7 +38,15 @@ const router = {
 };
 const FREE = { reasoning: [{ provider: 'groq', model: 'simulado' }] };
 const datajud = [];
+let EDITAL_LOTE = null; // PDF do edital "publicado" pelo leiloeiro (gerado no teste)
+const ANEXO = 'https://s3-sa-east-1.amazonaws.com/906de634c48fb7d34136160b4c353ae4/public/anexo/4399341790094440.pdf';
 const fetchCnj = async (url, o) => {
+  if (/leiloesjudiciais\.com\.br\/api\/mcp/.test(url)) {
+    const args = JSON.parse(o.body).params.arguments;
+    const lote = { lote_id: 218898, leilao_id: 99916, nm_titulo_lote: 'Apartamento nº 21 c/ 165m² - São Paulo/SP', nm_titulo_leilao: '711ª LEILÃO JUDICIAL UNIFICADO DO TRT DA 2ª REGIÃO', nm_descricao: '<p>(Proc. 1000818-76.2020.5.02.0090 - 90ª VT São Paulo/SP)</p><p>VALOR DA AVALIAÇÃO: R$ 1.700.000,00</p><p>Há indisponibilidade.</p>', vl_lanceminimo: '1700000.00', vl_lanceinicial: '1275000.00', bn_exibeavaliacao: true, nm_cidade: 'São Paulo', nm_estado: 'SP', nm_subcategoria: 'Apartamentos', nm_statuslote: 'Aberto para Lance', nm_leiloeiro: 'Daniel Oliveira Júnior', dt_fechamento: '2026-11-17 13:05:50-03', anexos: [{ nm: 'EDITAL', nm_path_completo: ANEXO }] };
+    return { ok: true, json: async () => ({ result: { content: [{ type: 'text', text: JSON.stringify({ totalResults: 1, results: args.query === 'nada' ? [] : [lote] }) }] } }) };
+  }
+  if (url === ANEXO) return { ok: true, arrayBuffer: async () => EDITAL_LOTE };
   datajud.push({ url, corpo: JSON.parse(o.body) });
   return { ok: true, json: async () => ({ hits: { hits: [{ _source: { numeroProcesso: '10001234520238260100', tribunal: 'TJSP', classe: { nome: 'Cumprimento de sentença' }, orgaoJulgador: { nome: '41ª Vara Cível - Foro Central' }, assuntos: [{ nome: 'Condomínio' }], movimentos: [{ dataHora: '2026-09-01T10:00:00Z', nome: 'Designada hasta pública' }, { dataHora: '2025-03-01T10:00:00Z', nome: 'Penhora' }] } }] } }) };
 };
@@ -85,6 +93,7 @@ const CSV = Buffer.from([
   };
   const edital = await pdf('edital.pdf', 'EDITAL DE LEILÃO JUDICIAL - PALMEIRAS-31', Array.from({ length: 12 }, (_, i) => `Cláusula ${i + 1}. O imóvel da Rua das Palmeiras, 200, apto 31, São Paulo/SP, matrícula 123.456 do 5º RI, será levado a leilão. Primeira praça em 10/11/2026 pelo valor de avaliação de R$ 420.000,00; segunda praça em 24/11/2026 por 50% da avaliação. Comissão do leiloeiro de 5%.`));
   const matricula = await pdf('matricula.pdf', 'MATRÍCULA 123.456 - 5º OFICIAL DE REGISTRO DE IMÓVEIS', Array.from({ length: 8 }, (_, i) => `R.${i + 1} - Registro ${i + 1} da matrícula 123.456. Proprietário João Executado. Hipoteca em favor da Caixa. AV.6 indisponibilidade de bens.`));
+  EDITAL_LOTE = fs.readFileSync(edital);
   await gerador.close();
 
   const celular = { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, locale: 'pt-BR', timezoneId: 'America/Sao_Paulo', acceptDownloads: true };
@@ -130,7 +139,29 @@ const CSV = Buffer.from([
   confere(pg.url().endsWith('/leiloes/'), 'botão "Leilões" abre a Central');
   await foto('central-buscar');
 
-  console.log('3. Buscar na lista da Caixa');
+  console.log('3. Busca automática em vários leiloeiros');
+  await pg.fill('#a-busca', 'nada');
+  await pg.click('#a-buscar');
+  await pg.waitForSelector('#a-msg.aviso:has-text("Nada encontrado")');
+  confere(true, 'busca sem resultado avisa claramente');
+  await pg.fill('#a-busca', 'apartamento');
+  await pg.selectOption('#a-uf', 'SP');
+  await pg.press('#a-busca', 'Enter');
+  await pg.waitForSelector('#a-lista .item');
+  const card = await pg.textContent('#a-lista .item');
+  confere(card.includes('Apartamento nº 21') && card.includes('25% abaixo') && card.includes('R$ 1.275.000') && card.includes('17/11/2026 13h05'), 'leilão encontrado com lance, desconto e data de encerramento');
+  confere((await pg.getAttribute('#a-lista a:has-text("Ver no site do leilão")', 'href')) === 'https://www.leiloesjudiciais.com.br/lote/99916/218898', '"Ver no site do leilão" aponta para o lote');
+  await foto('busca-automatica');
+  await pg.click('#a-lista .item button:has-text("Analisar")');
+  await pg.waitForSelector('#pg-imovel:not(.oculto)');
+  confere((await pg.inputValue('#im-processo')) === '1000818-76.2020.5.02.0090' && (await pg.inputValue('#im-lance')) === '1.275.000' && (await pg.inputValue('#im-avaliacao')) === '1.700.000', 'Analisar traz processo, lance e avaliação do lote');
+  await pg.click('#im-anexos button:has-text("Ler edital do leilão")');
+  await pg.waitForSelector('#im-doc-msg.ok, #im-doc-msg.erro', { timeout: 30000 });
+  confere(await pg.isVisible('#im-doc-msg.ok') && pedidosIa.some(o => /EDITAL/.test(o.system) && o.messages[0].content.includes('PALMEIRAS-31')), '"Ler edital do leilão" baixa o PDF do lote e a IA lê');
+  await pg.click('#voltar');
+  await pg.click('#nav-buscar');
+
+  console.log('4. Buscar na lista da Caixa');
   confere((await pg.getAttribute('#b-baixar', 'href')) === 'https://venda-imoveis.caixa.gov.br/listaweb/Lista_imoveis_SP.csv', 'botão 1 aponta para a lista da Caixa de SP');
   await pg.selectOption('#b-uf', 'MG');
   confere((await pg.getAttribute('#b-baixar', 'href')).endsWith('Lista_imoveis_MG.csv'), 'trocar o estado troca o link da lista');
@@ -163,7 +194,7 @@ const CSV = Buffer.from([
   confere((await pg.locator('#portais .item').count()) >= 1, 'lista de outros bancos e leiloeiros aparece');
   await foto('busca-filtrada');
 
-  console.log('4. Analisar o imóvel da Caixa');
+  console.log('5. Analisar o imóvel da Caixa');
   await pg.click('#b-lista .item button:has-text("Analisar")');
   await pg.waitForSelector('#pg-imovel:not(.oculto)');
   confere((await pg.inputValue('#im-endereco')).includes('RUA DOS TRILHOS') && (await pg.inputValue('#im-lance')) === '180.000', 'imóvel abre com endereço e preço da Caixa');
@@ -174,7 +205,7 @@ const CSV = Buffer.from([
   await pg.waitForSelector('#toast:not(.oculto)');
   confere((await pg.textContent('#toast')) === 'Imóvel salvo.', 'salvar o imóvel da Caixa');
 
-  console.log('5. Imóvel de leiloeiro: edital e matrícula em PDF');
+  console.log('6. Imóvel de leiloeiro: edital e matrícula em PDF');
   await pg.click('#nav-imoveis');
   await pg.waitForSelector('#lista-imoveis .item');
   confere((await pg.locator('#lista-imoveis .item').count()) === 1 && (await pg.textContent('#lista-imoveis')).includes('Vale a pena'), 'lista "Imóveis" mostra o imóvel salvo e o veredito');
@@ -199,7 +230,7 @@ const CSV = Buffer.from([
   confere((await pg.textContent('#im-veredito-txt')) !== 'Vale a pena' && (await pg.textContent('#im-motivos')).includes('ocupado'), 'ocupado e com riscos: a Central não diz "Vale a pena"');
   await foto('imovel-documentos');
 
-  console.log('6. Colar texto');
+  console.log('7. Colar texto');
   await pg.click('#im-colar-abrir');
   await pg.fill('#im-colar-texto', 'curto');
   await pg.click('#im-colar-ler');
@@ -207,14 +238,14 @@ const CSV = Buffer.from([
   await pg.click('#im-colar-abrir');
   confere(await pg.isHidden('#im-colar'), '"Colar texto" abre e fecha');
 
-  console.log('7. Processo no CNJ');
+  console.log('8. Processo no CNJ');
   await abrirSecao('Processo judicial (CNJ)');
   await pg.click('#im-processo-btn');
   await pg.waitForFunction(() => /Cumprimento de sentença/.test(document.querySelector('#im-processo-res').textContent), null, { timeout: 10000 });
   confere(datajud[0] && /api_publica_tjsp/.test(datajud[0].url) && datajud[0].corpo.query.match.numeroProcesso === '10001234520238260100', 'consulta vai ao TJSP no DataJud com o número limpo');
   confere((await pg.textContent('#im-processo-res')).includes('Designada hasta pública'), 'mostra a última movimentação do processo');
 
-  console.log('8. Dívidas e conta');
+  console.log('9. Dívidas e conta');
   await abrirSecao('Dívidas de IPTU e condomínio');
   confere((await pg.getAttribute('#im-iptu-link', 'href')).startsWith('https://') && (await pg.locator('#im-iptu-passos li').count()) >= 3, 'IPTU: link da prefeitura e passo a passo');
   const antes = await pg.textContent('#im-numeros');
@@ -228,7 +259,7 @@ const CSV = Buffer.from([
   const lanceMax = await pg.locator('#im-numeros div', { hasText: 'Lance máximo' }).textContent();
   confere(/R\$ [\d.]+/.test(lanceMax), 'lance máximo calculado: ' + lanceMax.replace('Lance máximo', ''));
 
-  console.log('9. Parecer, passo a passo, salvar e reabrir');
+  console.log('10. Parecer, passo a passo, salvar e reabrir');
   await abrirSecao('Parecer da IA');
   await pg.click('#im-parecer-btn');
   await pg.waitForFunction(() => /advogado/.test(document.querySelector('#im-parecer').textContent), null, { timeout: 10000 });
@@ -250,7 +281,7 @@ const CSV = Buffer.from([
   confere(await pg.isChecked('[data-etapa="busca-portais"]') && (await pg.textContent('#im-processo-res')).includes('Designada'), 'reabrir mantém passos marcados e o processo');
   confere((await pg.textContent('#im-parecer')).includes('advogado') && (await pg.textContent('#im-edital-res')).includes('Edital lido'), 'reabrir mantém parecer e leitura do edital');
 
-  console.log('10. Relatório em PDF');
+  console.log('11. Relatório em PDF');
   await pg.evaluate(() => { window.print = () => { window.__imprimiu = true; }; });
   await pg.click('#im-relatorio');
   confere(await pg.evaluate(() => window.__imprimiu === true), '"Relatório em PDF" abre a impressão');
@@ -261,7 +292,7 @@ const CSV = Buffer.from([
   confere(await pg.isVisible('#relatorio') && await pg.isHidden('header.topo'), 'na impressão só o relatório aparece');
   await pg.emulateMedia({ media: 'screen' });
 
-  console.log('11. Passo a passo geral e apagar');
+  console.log('12. Passo a passo geral e apagar');
   await pg.click('#nav-guia');
   confere((await pg.locator('#guia details').count()) === 7 && (await pg.textContent('#guia')).includes('Chaves entregues'), 'guia mostra as 7 fases até a entrega das chaves');
   await pg.locator('#guia details summary').first().click();
@@ -276,7 +307,7 @@ const CSV = Buffer.from([
   await pg.waitForSelector('#app:not(.oculto)');
   confere(pg.url().endsWith('/agenda/'), 'botão "Agenda" volta ao painel');
 
-  console.log('12. Computador');
+  console.log('13. Computador');
   await pg.setViewportSize({ width: 1280, height: 860 });
   await pg.goto(base + '/leiloes/', { waitUntil: 'load' });
   await pg.click('#nav-imoveis');

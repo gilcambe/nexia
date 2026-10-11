@@ -186,3 +186,34 @@ test('LE12 etapas: passo a passo completo até as chaves, ids únicos', () => {
   assert.equal(p.feitos, 2);
   assert.equal(p.proximo.id, 'busca-triagem');
 });
+
+test('LE13 leilao: busca automática na API pública do Leilões Judiciais e PDF do lote', async () => {
+  const lote = { lote_id: 218898, leilao_id: 99916, nm_titulo_lote: 'Apartamento nº 21 - São Paulo/SP', nm_titulo_leilao: '711ª LEILÃO JUDICIAL UNIFICADO', nm_descricao: '<p>(Proc. 1000818-76.2020.5.02.0090)</p><p>VALOR DA AVALIAÇÃO: R$ 1.700.000,00 (um milhão)</p>', vl_lanceminimo: '1700000.00', vl_lanceinicial: '1275000.00', bn_exibeavaliacao: true, nm_cidade: 'São Paulo', nm_estado: 'SP', dt_fechamento: '2026-11-17 13:05:50-03', anexos: [{ nm: 'EDITAL', nm_path_completo: 'https://s3-sa-east-1.amazonaws.com/906de634c48fb7d34136160b4c353ae4/public/anexo/4399341790094440.pdf' }, { nm: 'X', nm_path_completo: 'https://outro.com/x.pdf' }] };
+  const pedidos = [];
+  const fetch = async (url, o) => {
+    pedidos.push({ url, o });
+    if (/mcp\/messages/.test(url)) return { ok: true, json: async () => ({ jsonrpc: '2.0', id: 1, result: { content: [{ type: 'text', text: JSON.stringify({ totalResults: 1, results: [lote] }) }] } }) };
+    return { ok: true, arrayBuffer: async () => Buffer.from('%PDF-1.4 teste') };
+  };
+  const a = montarLeilao({ fetch });
+  const r = await a.post({ acao: 'buscar', busca: 'apartamento', uf: 'sp' });
+  assert.equal(r.statusCode, 200, r.body);
+  const corpo = JSON.parse(pedidos[0].o.body);
+  assert.equal(corpo.params.name, 'search_leiloes');
+  assert.deepEqual(corpo.params.arguments, { query: 'apartamento', categoria: 'imoveis', estado: 'SP' });
+  const i = r.json.imoveis[0];
+  assert.equal(i.lance, 1275000);
+  assert.equal(i.avaliacao, 1700000);
+  assert.equal(i.desconto, 25);
+  assert.equal(i.processo, '1000818-76.2020.5.02.0090');
+  assert.equal(i.link, 'https://www.leiloesjudiciais.com.br/lote/99916/218898');
+  assert.equal(i.anexos.length, 1, 'só anexos do repositório público do leilão');
+  assert.ok(!/</.test(i.descricao));
+  assert.equal((await a.post({ acao: 'buscar', busca: 'casa', uf: 'XX' })).statusCode, 400);
+  const pdf = await a.post({ acao: 'arquivo', url: i.anexos[0].url });
+  assert.equal(pdf.statusCode, 200);
+  assert.equal(Buffer.from(pdf.json.pdf, 'base64').toString().slice(0, 4), '%PDF');
+  assert.equal((await a.post({ acao: 'arquivo', url: 'https://evil.com/a.pdf' })).statusCode, 400);
+  const falha = montarLeilao({ fetch: async () => ({ ok: false }) });
+  assert.equal((await falha.post({ acao: 'buscar', busca: 'xyz-sem-cache' })).statusCode, 502);
+});
