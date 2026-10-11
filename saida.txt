@@ -1,0 +1,74 @@
+===== detalhe
+{"jsonrpc":"2.0","id":5,"result":{"content":[{"type":"text","text":"{\n  \"leilaoId\": \"218898\",\n  \"found\": true,\n  \"details\": {\n    \"nu\": \"96\",\n    \"lote_id\": 218898,\n    \"leilao_id\": 99916,\n    \"nm_titulo_lote\": \"Apartamento nº 21 c/ 165,555m² - São Paulo/SP\",\n    \"nm_titulo_leilao\": \"711ª LEILÃO JUDICIAL UNIFICADO DO TRT DA 2ª REGIÃO EM SÃO PAULO/SP\",\n    \"nm_descricao\": \"<p style=\\\"text-align: justify;\\\"><span style=\\\"color: #0b1ea0; font-size: 12pt;\\\"><strong>LOTE 096 – 12:11H) (Proc. 1000818-76.2020.5.02.0090 - 90ª VT São Paulo/SP)</strong></span></p>\\n<p style=\\\"text-align: justify;\\\"><span style=\\\"font-size: 10pt;\\\">O IMÓVEL DE MATRÍCULA Nº 147.300 DO 6º CARTÓRIO DE REGISTRO DE IMÓVEIS DE SÃO PAULO/SP. Nº CONTRIBUINTE: 044.110.0039-3. </span></p>\\n<p style=\\\"text-align: justify;\\\"><span style=\\\"font-size: 10pt;\\\">DESCRIÇÃO: O apartamento nº 21, localizado no 2º andar ou 4º pavimento do Edifício Jardins de Guadalupe, situado à Rua Frei Antônio de Guadalupe, nº 67, no 26º Subdistrito – Vila Prudente, com a área útil de 165,555m², a área comum de 269,861m², a área total de 435,416m² e a participação no terreno e coisas comuns do condomínio de 12,5000%, estando-lhe vinculados 1 depósito localizado no 2º subsolo, e 3 vagas de garagem, esta localizada nos 1º e 2º subsolos, sendo que cada caga comporta 1 veículo. O terreno, constituído pelos lotes nºs 19 e 20 da quadra I-1, da Vila Zelina, onde está construído o referido empreendimento, encerra a área de 752,05m² OBSERVAÇÕES: 1) Há indisponibilidade. 2) Há outras penhoras. 3) Eventuais despesas cartorárias decorrentes do registro da arrematação, inclusive a baixa de eventuais gravames (cancelamento de penhoras e/ou indisponibilidades), poderão ficar a cargo do arrematante, na forma do art. 320-G do Provimento CNJ n° 149/2023, ressalvada eventual decisão do Juízo da Execução em sentido contrário, na forma do art. 320-C do Provimento CNJ n° 149/2023. 4) Nos termos do art. 79, §§ 6º e 7º da Consolidação das Normas da Corregedoria (provimento GP/CR nº 04/2026), o adquirente ficará isento dos débitos tributários cujo fato gerador seja a propriedade, o domínio útil ou a posse dos bens e direitos adquiridos em leilão judicial ou por iniciativa particular, inscritos ou não na dívida ativa, bem como dos débitos não tributários de natureza propter rem relativos ao referido
+===== detalhe2
+{"jsonrpc":"2.0","id":5,"result":{"content":[{"type":"text","text":"{\n  \"leilaoId\": \"99916\",\n  \"found\": true,\n  \"details\": {\n    \"lote_anterior\": null,\n    \"lote_proximo\": {\n      \"lote_id\": 99915,\n      \"nu_lote\": \"2\",\n      \"nm_titulo_lote\": \"39m³ de Madeira Serrada - Ariquemes/RO\"\n    },\n    \"bn_exibeavaliacao\": false,\n    \"nm_usuario\": null\n  }\n}"}]}}
+HTTP 200
+
+===== vazio
+{"jsonrpc":"2.0","id":6,"error":{"code":-32602,"message":"Invalid params: 'query' parameter is required for search_leiloes"}}
+HTTP 200
+
+===== imovel
+{"jsonrpc":"2.0","id":6,"result":{"content":[{"type":"text","text":"{\n  \"query\": \"imovel\",\n  \"estado\": null,\n  \"categoria\": \"imoveis\",\n  \"totalResults\": 10,\n  \"results\": [\n    {\n      \"nu\": \"1\",\n      \"lote_id\": 95911,\n      \"leilao_id\": 29525,\n      \"nm_titulo_lote\": \"Fazenda São Bento c/ 16.040 hectares - Alto Parnaíba/MA\",\n      \"nm_titulo_leilao\": \"Alt
+totalResults\": 10
+===== links
+href="/animais/bovinos"
+href="/animais/equinos"
+href="/animais/outros"
+href="/imoveis/apartamentos"
+href="/imoveis/casas"
+href="/imoveis/comerciais"
+href="/imoveis/fazendas-sitios-e-chacaras"
+href="/imoveis/industriais"
+href="/imoveis/outros"
+href="/imoveis/terrenos-e-lotes"
+href="/imoveis/vagas-de-garagem"
+href="/informatica-e-eletronicos/celulares"
+href="/informatica-e-eletronicos/computadores-e-notebooks"
+href="/informatica-e-eletronicos/outros"
+href="/informatica-e-eletronicos/perifericos"
+href="/informatica-e-eletronicos/televisao"
+href="/informatica-e-eletronicos/video-game"
+href="/lote/100052/219337"
+href="/lote/100263/219982"
+href="/lote/100328/220165"
+href="/lote/100328/220166"
+href="/lote/100369/220256"
+href="/lote/100441/221302"
+href="/lote/100442/221303"
+href="/lote/100484/221417"
+href="/lote/100631/221948"
+href="/lote/100651/222004"
+href="/lote/100654/222027"
+href="/lote/100691/222122"
+href="/lote/100704/222142"
+===== cors s3
+HTTP/1.1 200 OK
+x-amz-id-2: BWvvP2pSBqwlXtLjpWnx/c00WuVbx99XXcAL6SS/BEl4dC7qkkZtRyT8hCkBeeuUq0WQuX4w2AAUSbZ5N4zy4F81wf6NnD3e
+x-amz-request-id: CV1888Q3Q3D8BNSS
+Server: AmazonS3
+Date: Sun, 11 Oct 2026 01:35:17 GMT
+Last-Modified: Tue, 22 Sep 2026 16:27:21 GMT
+ETag: "d6105dee43cae19e08ce27fd208261c9"
+x-amz-server-side-encryption: AES256
+x-amz-version-id: kIa8oLYbIHbkobZznnd7kSRyrgpHQsHR
+Accept-Ranges: bytes
+Content-Length: 144096
+Content-Type: application/pdf
+
+===== cors mcp
+HTTP/2 404 
+date: Sun, 11 Oct 2026 01:35:16 GMT
+content-type: application/json
+content-length: 133
+server: cloudflare
+nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+x-content-type-options: nosniff
+cache-control: no-store
+content-signal: ai-train=no, search=yes, ai-input=yes
+strict-transport-security: max-age=31536000; includeSubDomains
+cf-cache-status: DYNAMIC
+report-to: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=XkV0q7HVmPijhoxMRmyirR3MtYw1gZ0DUsSObpbf8SXcAk9lvNbtWxMoU80pJVkGr9eH9%2B2m3vv%2FXnW8fzL5eS3hDWvi3UfeTdH6OS0gMvxjjxKhEQLyUXSIlTDvhBBV%2FZELvcI75BNfQRRCxz0%3D"}]}
+cf-ray: a48a208f4c97aa5e-LAX
+alt-svc: h3=":443"; ma=86400
+
