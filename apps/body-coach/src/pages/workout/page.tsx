@@ -33,6 +33,7 @@ import MonitorCardiaco from '@/components/feature/MonitorCardiaco';
 import { estadoFC, kcalMusculacao, zerarSessaoFC } from '@/lib/ferramentas/frequencia';
 import type { DadosCartao } from '@/lib/ferramentas/cartao';
 import { definirVoz, falar, fraseExercicio, fraseFim, fraseSerie, vozDisponivel, vozLigada } from '@/lib/ferramentas/vozCoach';
+import { useTelaLigada } from '@/lib/telaLigada';
 import { duplaAtual, enviarStatusDupla } from '@/lib/ferramentas/social';
 
 type Phase =
@@ -217,17 +218,14 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, exIndex, voz]);
 
-  // rest countdown
-  useEffect(() => {
-    if (!resting || restLeft <= 0) return;
-    const t = setTimeout(() => setRestLeft((s) => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [resting, restLeft]);
-
+  // O descanso conta sozinho no DescansoTimer (pelo relógio); cada série nova recomeça a contagem.
+  const [restKey, setRestKey] = useState(0);
   const startRest = (sec: number) => {
     setRestLeft(sec);
+    setRestKey((k) => k + 1);
     setResting(true);
   };
+  useTelaLigada(phase !== 'SESSION_COMPLETE');
 
   const addSet = (newSet: NewSet) => {
     const prev = setsByEx[exercise.id] ?? [];
@@ -602,7 +600,9 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
             {resting && restLeft > 0 && (
               <div className="mt-5">
                 <DescansoTimer
+                  key={restKey}
                   segundos={restLeft}
+                  proximo={(() => { const feitas = currentSets.length; return feitas < (exercise.targetSets || 3) ? `${exercise.name}, série ${feitas + 1}` : session.exercises[exIndex + 1]?.name; })()}
                   onFinish={() => setResting(false)}
                   onSkip={() => setResting(false)}
                 />

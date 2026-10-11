@@ -5,6 +5,7 @@ import app from './app.js';
 import functions from './functions.js';
 import jobs from '../nexia-ai/jobs/index.js';
 import { corpoIa } from './corpoIa.js';
+import lembretes from './lembretes.js';
 
 export default {
   async fetch(request, env) {
@@ -21,6 +22,11 @@ export default {
     ctx.waitUntil(jobs.scheduledSweep({ env: process.env, now: () => at }).then(
       r => console.log('[nexia-cron]', JSON.stringify(r).slice(0, 500)),
       e => console.error('[nexia-cron]', e && e.message),
+    ));
+    // Body Coach: lembretes no celular (treino, água) de quem tem lembrete neste bloco de 5 min.
+    ctx.waitUntil(lembretes.rodar(at).then(
+      r => console.log('[bc-lembretes]', JSON.stringify(r)),
+      e => console.error('[bc-lembretes]', e && e.message),
     ));
   },
 };

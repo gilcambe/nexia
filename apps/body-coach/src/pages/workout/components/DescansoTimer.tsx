@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { falar, fraseDescanso, FRASE_FIM_DESCANSO } from '@/lib/ferramentas/vozCoach';
+import { agendarFimDescanso, cancelarFimDescanso } from '@/lib/avisos';
 
 export interface DescansoTimerProps {
   segundos: number;
   onFinish: () => void;
   onSkip: () => void;
+  proximo?: string; // o que vem depois (aparece no aviso com a tela bloqueada)
 }
 
 // Bip curto e vibração: o aluno percebe o fim do descanso sem olhar para a tela.
@@ -27,49 +29,55 @@ function avisar() {
   } catch { /* sem áudio */ }
 }
 
-export default function DescansoTimer({ segundos: initialSegundos, onFinish, onSkip }: DescansoTimerProps) {
-  const [segundos, setSegundos] = useState(initialSegundos);
-  const [isRunning, setIsRunning] = useState(true);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+export default function DescansoTimer({ segundos: initialSegundos, onFinish, onSkip, proximo }: DescansoTimerProps) {
+  // Conta pelo relógio (hora em que acaba), não por "menos 1 a cada segundo": com a tela bloqueada o
+  // celular congela a página, e ao voltar o tempo continua certo.
+  const [fimEm, setFimEm] = useState(() => Date.now() + initialSegundos * 1000);
+  const [agora, setAgora] = useState(() => Date.now());
   const initialRef = useRef(initialSegundos);
+  const acabou = useRef(false);
+  const segundos = Math.max(0, Math.ceil((fimEm - agora) / 1000));
 
-  // Atualiza initialRef quando initialSegundos muda (para reset corretamente)
   useEffect(() => {
     initialRef.current = initialSegundos;
+    acabou.current = false;
+    setFimEm(Date.now() + initialSegundos * 1000);
   }, [initialSegundos]);
 
-  // Contagem regressiva com setInterval e limpeza
   useEffect(() => {
-    if (!isRunning || segundos <= 0) return;
+    const t = setInterval(() => setAgora(Date.now()), 250);
+    const voltar = () => setAgora(Date.now());
+    document.addEventListener('visibilitychange', voltar);
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', voltar); };
+  }, []);
 
-    intervalRef.current = setInterval(() => {
-      setSegundos((s) => Math.max(0, s - 1));
-    }, 1000);
+  // Com a tela bloqueada ou em outro app, quem avisa é o service worker (se os avisos estiverem ligados).
+  useEffect(() => {
+    agendarFimDescanso(fimEm, proximo);
+    return () => cancelarFimDescanso();
+  }, [fimEm, proximo]);
 
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [isRunning, segundos]);
-
-  // Dispara onFinish quando segundos chegam a 0 (com bip e vibração, para quem está de olho no aparelho)
   useEffect(() => {
     const f = fraseDescanso(segundos);
     if (f) falar(f);
   }, [segundos]);
 
   useEffect(() => {
-    if (segundos <= 0) {
-      avisar();
-      falar(FRASE_FIM_DESCANSO);
-      if (intervalRef.current) clearInterval(intervalRef.current);
+    if (segundos <= 0 && !acabou.current) {
+      acabou.current = true;
+      if (document.visibilityState === 'visible') {
+        avisar();
+        falar(FRASE_FIM_DESCANSO);
+      }
       onFinish();
     }
   }, [segundos, onFinish]);
 
-  const handleAdd15 = () => setSegundos((s) => s + 15);
-  const handleSub15 = () => setSegundos((s) => Math.max(0, s - 15));
+  const handleAdd15 = () => { initialRef.current += 15; setFimEm((f) => Math.max(Date.now(), f) + 15000); };
+  const handleSub15 = () => setFimEm((f) => f - 15000);
   const handleSkip = () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
+    acabou.current = true;
+    cancelarFimDescanso();
     onSkip();
   };
 

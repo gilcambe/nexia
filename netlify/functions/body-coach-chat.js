@@ -14,6 +14,7 @@
 
 const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware');
 const { equipe, textoDoTreino, situacaoAnamnese } = require('./body-coach/equipe');
+const { acoesPush, avisarConversa } = require('./body-coach/push');
 
 const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 const par = (a, b) => [a, b].sort().join('__');
@@ -277,6 +278,8 @@ async function executar(body, uid, db, ctx = {}) {
   // Treino em dupla ao vivo: um cria o código, o amigo entra, e cada um vê a série e os batimentos do outro.
   // Não depende de coach nem de equipe; a sala some sozinha em 4 horas.
   if (acao && acao.startsWith('dupla_')) return dupla(body, uid, db, eu);
+  // Avisos no celular (Web Push grátis): ligar, desligar, escolher lembretes, testar.
+  if (acao && acao.startsWith('push_')) { const r = await acoesPush(body, uid, db); if (r) return r; }
 
   if (!eu) return [409, { error: 'Antes, escolha se você é aluno ou coach.' }];
 
@@ -291,6 +294,7 @@ async function executar(body, uid, db, ctx = {}) {
       : `🍽️ Montei o seu plano alimentar (${valor.refeicoes.length} refeições). Já está na aba Nutrição do seu app.`;
     const m = { de: uid, texto, em: agora };
     const r = await db.collection('bc_conversas').doc(par(uid, aluno)).collection('mensagens').add(m);
+    await avisarConversa(db, aluno, eu.nome, texto);
     return { id: r.id, ...m };
   };
   const daEquipe = await equipe(body, uid, db, eu, { fichaLimpa, planoLimpo, gravarPrescricao });
@@ -396,7 +400,10 @@ async function executar(body, uid, db, ctx = {}) {
     await dir.doc(uid).set(novo, { merge: true });
     // Notas por série, "até a falha", esforço e comentário vão para a conversa com o coach.
     const nota = eu.papel === 'aluno' && eu.coachUid ? textoDoTreino(body) : '';
-    if (nota) await db.collection('bc_conversas').doc(par(uid, eu.coachUid)).collection('mensagens').add({ de: uid, texto: nota, em: Date.now(), tipo: 'treino' });
+    if (nota) {
+      await db.collection('bc_conversas').doc(par(uid, eu.coachUid)).collection('mensagens').add({ de: uid, texto: nota, em: Date.now(), tipo: 'treino' });
+      await avisarConversa(db, eu.coachUid, eu.nome, nota);
+    }
     return [200, { semana, desafioMarcado, coachAvisado: !!nota }];
   }
   if (acao === 'ranking_config') {
@@ -473,6 +480,7 @@ async function executar(body, uid, db, ctx = {}) {
     await dir.doc(uid).set({ pagamentos }, { merge: true });
     const [ano, m] = mes.split('-');
     await db.collection('bc_conversas').doc(par(uid, eu.coachUid)).collection('mensagens').add({ de: uid, texto: `💸 Paguei a mensalidade de ${m}/${ano} pelo Pix. Pode conferir?`, em: Date.now() });
+    await avisarConversa(db, eu.coachUid, eu.nome, `💸 Paguei a mensalidade de ${m}/${ano} pelo Pix.`);
     return [200, { ok: true }];
   }
 
@@ -541,6 +549,7 @@ async function executar(body, uid, db, ctx = {}) {
     if (!texto) return [400, { error: 'Escreva a mensagem.' }];
     const m = { de: uid, texto, em: Date.now() };
     const ref = await msgs.add(m);
+    await avisarConversa(db, outro, eu.nome, texto);
     return [200, { mensagem: { id: ref.id, ...m } }];
   }
   if (acao === 'aluno_evolucao') {
@@ -571,6 +580,7 @@ async function executar(body, uid, db, ctx = {}) {
     await dir.doc(outro).set({ proximaAvaliacao: proxima }, { merge: true });
     const m = { de: uid, texto: `📅 Avaliação marcada para ${dataBR(data)}${hora ? ` às ${hora}` : ''}. Como se preparar: venha em jejum de 3 horas, sem treinar antes, com bexiga vazia e roupa leve. Para as fotos, mesma luz e mesmo lugar da última vez.`, em: Date.now(), tipo: 'agenda' };
     const r = await msgs.add(m);
+    await avisarConversa(db, outro, eu.nome, `📅 Avaliação marcada para ${dataBR(data)}${hora ? ` às ${hora}` : ''}.`);
     return [200, { proximaAvaliacao: proxima, mensagem: { id: r.id, ...m } }];
   }
   if (acao === 'comentar') {
@@ -582,6 +592,7 @@ async function executar(body, uid, db, ctx = {}) {
     const data = DATA_OK.test(String(body.data || '')) ? body.data : null;
     const m = { de: uid, texto, em: Date.now(), ref: { entrada, alvo, data } };
     const r = await msgs.add(m);
+    await avisarConversa(db, outro, eu.nome, texto);
     return [200, { mensagem: { id: r.id, ...m } }];
   }
   // Ficha e dieta do aluno montadas pelo coach: o coach lê o questionário do aluno e grava no perfil dele.
@@ -631,6 +642,7 @@ async function executar(body, uid, db, ctx = {}) {
     const ref = await db.collection('bc_videos').add({ de: uid, para: outro, video: body.video, em: Date.now() });
     const m = { de: uid, texto: limpa(body.texto, 300), video: ref.id, em: Date.now() };
     const r = await msgs.add(m);
+    await avisarConversa(db, outro, eu.nome, `🎥 ${m.texto || 'Mandou um vídeo'}`);
     return [200, { mensagem: { id: r.id, ...m } }];
   }
   if (acao === 'ler') {
@@ -668,7 +680,7 @@ exports.handler = async (event) => {
   const auth = await verifyBearerToken(event);
   if (!auth.ok) return resposta(event, 401, { error: 'Entre na sua conta para conversar.' });
   // leituras (a tela confere a cada poucos segundos) não gastam o limite nem a cota do banco grátis
-  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar', 'desafio_criar', 'desafio_checkin', 'comentar', 'agendar_avaliacao', 'compartilhar_criar', 'dupla_criar', 'dupla_entrar', 'pix_config', 'pagamento_avisar', 'ranking_config', 'treino_feito', 'ficha_salvar', 'dieta_salvar', 'anamnese_salvar', 'anamnese_responder', 'modelo_salvar', 'modelo_apagar', 'modelo_aplicar'].includes(body.acao)) {
+  if (['enviar', 'perfil', 'vincular', 'video_enviar', 'demo_salvar', 'feedback_enviar', 'desafio_criar', 'desafio_checkin', 'comentar', 'agendar_avaliacao', 'compartilhar_criar', 'dupla_criar', 'dupla_entrar', 'pix_config', 'pagamento_avisar', 'ranking_config', 'treino_feito', 'ficha_salvar', 'dieta_salvar', 'anamnese_salvar', 'anamnese_responder', 'modelo_salvar', 'modelo_apagar', 'modelo_aplicar', 'push_assinar', 'push_prefs', 'push_testar'].includes(body.acao)) {
     const rl = await checkRateLimit(auth.uid, 'body-coach-chat');
     if (!rl.ok) return resposta(event, 429, { error: 'Muitos pedidos seguidos. Aguarde um instante.' });
   }

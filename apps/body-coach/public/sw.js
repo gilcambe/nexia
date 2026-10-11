@@ -11,3 +11,39 @@ self.addEventListener('fetch', (e) => {
   }
   e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((res) => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); } return res; })));
 });
+
+// Avisos no celular (Web Push): mensagem do coach/aluno, hora do treino, beber água.
+self.addEventListener('push', (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch { d = { corpo: e.data ? e.data.text() : '' }; }
+  e.waitUntil(self.registration.showNotification(d.titulo || 'NEXIA Body Coach', {
+    body: d.corpo || '', icon: 'icon-192.png', badge: 'icon-192.png', tag: d.tag || undefined, renotify: !!d.tag,
+    vibrate: [200, 100, 200], data: { url: d.url || '' },
+  }));
+});
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const alvo = new URL(`./${(e.notification.data && e.notification.data.url) || ''}`, self.registration.scope).href;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((lista) => {
+    const aberta = lista.find((c) => c.url.startsWith(self.registration.scope));
+    if (aberta) return aberta.focus().then((c) => (c && 'navigate' in c ? c.navigate(alvo) : c));
+    return self.clients.openWindow(alvo);
+  }));
+});
+
+// Fim do descanso com a tela bloqueada ou em outro app: a página pede, o service worker avisa na hora certa.
+let descanso = 0;
+self.addEventListener('message', (e) => {
+  const m = e.data || {};
+  if (m.tipo === 'descanso_cancelar') { descanso += 1; self.registration.getNotifications({ tag: 'descanso' }).then((ns) => ns.forEach((n) => n.close())); return; }
+  if (m.tipo !== 'descanso') return;
+  const meu = ++descanso;
+  const falta = Math.max(0, Math.min(10 * 60000, Number(m.fimEm) - Date.now()));
+  e.waitUntil(new Promise((ok) => setTimeout(ok, falta)).then(() => {
+    if (meu !== descanso) return undefined;
+    return self.clients.matchAll({ type: 'window' }).then((lista) => {
+      if (lista.some((c) => c.visibilityState === 'visible')) return undefined; // app na tela: a própria página avisa
+      return self.registration.showNotification('Descanso acabou ⏱️', { body: m.proximo ? `Próxima série: ${m.proximo}` : 'Bora para a próxima série!', icon: 'icon-192.png', tag: 'descanso', renotify: true, requireInteraction: false, vibrate: [400, 150, 400, 150, 400], data: { url: 'workout' } });
+    });
+  }));
+});
