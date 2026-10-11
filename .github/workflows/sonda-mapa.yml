@@ -1,0 +1,28 @@
+name: Sonda mapa (temporaria)
+on:
+  push:
+    branches: [nexia/bezsan-mapa-sonda]
+    paths: [.github/workflows/sonda-mapa.yml]
+permissions:
+  contents: write
+jobs:
+  sonda:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Sondar
+        run: |
+          set +e
+          o=saida.txt
+          Q='[out:json][timeout:20];(nwr(around:1000,-23.5506,-46.6333)[amenity~"^(school|kindergarten|college|university)$"];);out count;(nwr(around:1000,-23.5506,-46.6333)[amenity~"^(hospital|clinic|doctors|pharmacy)$"];);out count;(nwr(around:1000,-23.5506,-46.6333)[shop~"^(supermarket|convenience|bakery|greengrocer)$"];);out count;(nwr(around:1000,-23.5506,-46.6333)[highway=bus_stop];nwr(around:1000,-23.5506,-46.6333)[railway~"^(station|subway_entrance|tram_stop)$"];);out count;(nwr(around:1000,-23.5506,-46.6333)[leisure~"^(park|playground|sports_centre|pitch)$"];);out count;(nwr(around:1000,-23.5506,-46.6333)[amenity~"^(bank|restaurant|cafe|fast_food)$"];);out count;'
+          for u in https://overpass-api.de/api/interpreter https://overpass.kumi.systems/api/interpreter https://maps.mail.ru/osm/tools/overpass/api/interpreter https://overpass.private.coffee/api/interpreter; do
+            for i in 1 2; do echo "=== $u try $i" >> $o; curl -s -m 40 -H "Origin: https://bezsan.pages.dev" -H "User-Agent: Mozilla/5.0 Chrome" -D h.txt -o b.txt -X POST --data-urlencode "data=$Q" "$u"; head -1 h.txt >> $o; grep -i '^access-control' h.txt >> $o; head -c 400 b.txt | tr -d '\n' >> $o; echo >> $o; done
+            echo "=== $u OPTIONS" >> $o; curl -s -m 20 -X OPTIONS -H "Origin: https://bezsan.pages.dev" -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type" -D - -o /dev/null "$u" | grep -i "^HTTP\|access-control" >> $o
+          done
+          for q in "q=Rua+Frei+Ant%C3%B4nio+de+Guadalupe%2C+67%2C+Vila+Prudente%2C+S%C3%A3o+Paulo%2C+SP%2C+Brasil" "street=67+Rua+Frei+Ant%C3%B4nio+de+Guadalupe&city=S%C3%A3o+Paulo&state=SP&country=Brasil" "q=Rua+Frei+Ant%C3%B4nio+de+Guadalupe%2C+S%C3%A3o+Paulo"; do echo "=== nominatim $q" >> $o; curl -s -m 20 -A "Mozilla/5.0" "https://nominatim.openstreetmap.org/search?format=json&limit=1&addressdetails=1&countrycodes=br&$q" | head -c 500 >> $o; echo >> $o; done
+          echo "=== photon" >> $o; curl -s -m 20 "https://photon.komoot.io/api/?q=Rua+Frei+Antonio+de+Guadalupe+67+Sao+Paulo&limit=1&lat=-23.55&lon=-46.63" | head -c 500 >> $o
+      - name: Publicar
+        run: |
+          git config user.name nexia-bot; git config user.email bot@nexia.invalid
+          git checkout -b sondas-mapa-${{ github.run_id }}
+          git add saida.txt; git commit -qm sonda; git push -q origin sondas-mapa-${{ github.run_id }}
