@@ -9,7 +9,7 @@
     // Browser globals (root is window)
     root.BezsanFontes = factory();
   }
-}(typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : this, function () {
+}(this, function () {
   'use strict';
 
   // Portais de leilões suportados
