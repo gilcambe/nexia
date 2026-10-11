@@ -96,3 +96,17 @@ test('CF-Q1. sonda de cota: sem conta segue; 429/RESOURCE_EXHAUSTED segura; outr
   assert.equal((await sondarCota(env, async () => ({ ok: false, status: 500, text: async () => 'erro' }), tok)).ok, true, 'erro desconhecido não trava a fila');
   assert.equal((await sondarCota(env, async () => { throw new Error('rede'); }, tok)).ok, true);
 });
+
+test('CF13. partes criadas pela própria fila (github-actions[bot]) são despachadas, uma de cada vez e em ordem', () => {
+  const parte = (n, k) => issue(n, ['cortex-parte'], { author_association: 'CONTRIBUTOR', user: { login: 'github-actions[bot]' }, title: `[Parte ${k}/2 de #359] Bezsan: fontes` });
+  const a = decidir({ issues: [parte(364, 1), parte(365, 2)], runs: [], agora: AGORA });
+  assert.deepEqual(a.map(x => [x.tipo, x.numero]), [['despachar', 364]]);
+  // Quando a parte 1 sai da fila (concluída), a 2 é despachada.
+  const b = decidir({ issues: [parte(365, 2)], runs: [], agora: AGORA });
+  assert.deepEqual(b.map(x => [x.tipo, x.numero]), [['despachar', 365]]);
+});
+
+test('CF14. Issue com rótulo de parte, mas de outra pessoa de fora, continua ignorada', () => {
+  const a = decidir({ issues: [issue(1, ['cortex-parte'], { author_association: 'CONTRIBUTOR', user: { login: 'alguem' }, title: '[Parte 1/2 de #9] x' })], runs: [], agora: AGORA });
+  assert.deepEqual(a, []);
+});
