@@ -193,10 +193,19 @@ async function main() {
       report([200, 202].includes(ex.status) && !!exec, 'Execução: pedido aceito', `${ex.status} ${ex.json && (ex.json.error || (exec && exec.status) || ex.json.decision || '')}`);
       let last = exec;
       // Economia da cota grátis do Firestore: o intervalo cresce (20 s -> 60 s) em vez de ler a cada 20 s.
+      // Com todos os passos feitos, a execução só espera o CI do PR: pede a reavaliação dos gates (no
+      // máximo a cada 3 min). Sem isso ela ficava "running" até a varredura de hora em hora, o teste
+      // desistia e a fila repetia a tarefa, abrindo um PR duplicado a cada tentativa.
+      let reavaliadoEm = 0;
       for (let t = 0, passo = 20; exec && t < WAIT_EXEC_S; t += passo, passo = Math.min(60, passo + 10)) {
         const g = await api(`/nexia/executions/${exec.id}`);
         last = g.json && g.json.record;
         if (last && ['succeeded', 'failed', 'cancelled', 'waiting_approval', 'needs_input'].includes(last.status)) break;
+        if (last && last.status === 'running' && (last.plan || []).length && last.plan.every(s => s.status === 'done' || s.status === 'skipped') && t - reavaliadoEm >= 180) {
+          reavaliadoEm = t;
+          const rf = await api(`/nexia/executions/${exec.id}/refresh`, { method: 'POST' });
+          console.log(`  aguardando o CI do PR: reavaliação pedida (${rf.status})`);
+        }
         await sleep(passo * 1000);
       }
       report(!!last && ['succeeded', 'waiting_approval'].includes(last.status), 'Execução: terminou', last ? `${last.status} intent=${last.intent} codigo=${last.error_code || '-'} resumo=${String(last.result_summary || '').slice(0, 160)} modelos=${(last.models || []).join(',')}` : 'sem registro');
