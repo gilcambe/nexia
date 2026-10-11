@@ -268,7 +268,7 @@ const CSV = Buffer.from([
   confere((await pg.textContent('#pc-pilares [data-pilar="regiao"]')).includes('sem dados'), 'região sem análise fica "sem dados"');
   await abrirSecao('Região e valorização');
   await pg.click('#im-regiao-btn');
-  await pg.waitForFunction(() => /Região analisada/.test(document.querySelector('#im-regiao-res').textContent), null, { timeout: 15000 });
+  await pg.waitForFunction(() => /Região analisada[\s\S]*Escolas e faculdades/.test(document.querySelector('#im-regiao-res').textContent), null, { timeout: 15000 });
   const rg = await pg.textContent('#im-regiao-res');
   confere(rg.includes('11.451.245') && rg.includes('Santa Cecília') && rg.includes('Escolas e faculdades: 26'), 'região: população do Censo, bairro no mapa e serviços a 1 km');
   confere(pedidosMapa.some(u => /nominatim/.test(u)) && pedidosMapa.some(u => /overpass/.test(u)), 'o navegador acha o endereço e os serviços no mapa quando o servidor não consegue');
