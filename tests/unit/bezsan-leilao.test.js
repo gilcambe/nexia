@@ -217,3 +217,96 @@ test('LE13 leilao: busca automática na API pública do Leilões Judiciais e PDF
   const falha = montarLeilao({ fetch: async () => ({ ok: false }) });
   assert.equal((await falha.post({ acao: 'buscar', busca: 'xyz-sem-cache' })).statusCode, 502);
 });
+
+const P = require('../../sites/bezsan/leiloes/parecer.js');
+const { fetchRegiao } = require('../helpers/regiao-fake.js');
+const REGIAO_BOA = { municipio: { nome: 'São Paulo', uf: 'SP' }, populacao: { cresc_anual_pct: 1.2 }, pib_per_capita: { cresc_anual_pct: 9 }, servicos: [1, 2, 3, 4, 5, 6].map(q => ({ nome: 'S' + q, qtd: q })), mercado: { ivgr_12m_pct: 5.3 } };
+const pilar = (pc, id) => pc.pilares.find(p => p.id === id);
+
+test('LE14 parecer: imóvel limpo, desocupado, barato e em cidade crescendo vale a pena até o limite', () => {
+  const im = { lance: 200000, avaliacao: 400000, modalidade: 'Leilão extrajudicial', area_m2: 70, preco_m2: 6000,
+    analise_edital: { tipo_leilao: 'extrajudicial', ocupado: false, iptu_quem_paga: 'preco', tipo_imovel: 'casa', onus: [] },
+    analise_matricula: { onus: ['Alienação fiduciária ao Banco X'], alertas: [] }, regiao: REGIAO_BOA };
+  const pc = P.montar(im, C.calcular(im));
+  assert.equal(pc.nivel, 2, JSON.stringify(pc.pilares.map(p => [p.id, p.nota, p.itens.map(i => i.nivel + ':' + i.texto)])));
+  assert.match(pc.veredito, /^Vale a pena, até R\$ /);
+  assert.ok(pc.nota >= 80, 'nota ' + pc.nota);
+  assert.ok(pc.lance_limite > 0 && pc.lance_limite <= pc.lance_maximo_conta);
+  assert.equal(pc.lance_limite % 500, 0);
+  assert.equal(pc.tipo_leilao, 'extrajudicial');
+  assert.equal(pc.posse.ocupado, false);
+  assert.ok(pc.venda_com_valorizacao > 400000);
+});
+
+test('LE15 parecer: indisponibilidade, embargos, ocupado por invasor e IPTU por conta de quem compra', () => {
+  const base = { lance: 200000, avaliacao: 400000, ocupado: true, processo: '1000123-45.2023.8.26.0100', regiao: REGIAO_BOA,
+    analise_edital: { tipo_leilao: 'judicial', ocupado: true, ocupante: 'terceiros invasores', debitos_iptu: 'Os débitos de IPTU ficam a cargo do arrematante', tipo_imovel: 'apartamento', executado: 'João Executado', onus: ['Penhora (R.5)'] },
+    analise_matricula: { proprietarios: ['Maria Outra Pessoa'], onus: ['Penhora (R.5)', 'Indisponibilidade de bens (AV.6)'], alertas: [] },
+    processo_info: { classe: 'Execução', sinais: [{ nome: 'Embargos à Execução' }, { nome: 'Agravo de Instrumento' }] } };
+  const pc = P.montar(base, C.calcular(base));
+  const j = pilar(pc, 'juridico').itens.map(i => i.nivel + ':' + i.texto).join('\n');
+  assert.match(j, /grave:Há indisponibilidade/);
+  assert.match(j, /grave:O executado do edital \(João Executado\) não aparece/);
+  assert.match(j, /grave:O processo tem embargos/);
+  assert.match(j, /atencao:O processo tem recurso/);
+  assert.match(pilar(pc, 'posse').itens.map(i => i.nivel + ':' + i.texto).join('\n'), /grave:Ocupado por terceiros/);
+  assert.equal(pc.posse.prazo, '3 a 12 meses');
+  assert.match(pilar(pc, 'dividas').itens.map(i => i.nivel + ':' + i.texto).join('\n'), /grave:O edital diz que quem compra paga o IPTU/);
+  assert.notEqual(pc.nivel, 2, 'com ponto grave nunca diz "Vale a pena"');
+  assert.ok(pc.reserva_risco >= 0.2, 'reserva ' + pc.reserva_risco);
+  assert.ok(pc.conferir.some(c => /advogado/.test(c)));
+  // mesma coisa, mas com prejuízo: não vale
+  const caro = { ...base, lance: 390000 };
+  assert.equal(P.montar(caro, C.calcular(caro)).nivel, 0);
+  assert.equal(P.montar(caro, C.calcular(caro)).lance_limite, 0);
+});
+
+test('LE16 parecer: sem dados pede o que falta; quem paga a dívida é lido do texto do edital', () => {
+  const vazio = P.montar({}, C.calcular({}));
+  assert.equal(vazio.nivel, 0);
+  assert.match(vazio.veredito, /Faltam dados/);
+  assert.equal(pilar(vazio, 'regiao').nota, null, 'região sem dados não entra na nota');
+  assert.ok(vazio.conferir.some(c => /Analisar a região/.test(c)));
+  assert.equal(P.quemPaga('', 'Os débitos de IPTU sub-rogam-se no preço (art. 130 do CTN).'), 'preco');
+  assert.equal(P.quemPaga('', 'Débitos condominiais são de responsabilidade do arrematante.'), 'arrematante');
+  assert.equal(P.quemPaga('nao_informado', 'Nada consta.'), '');
+  assert.equal(P.tipoLeilao({ modalidade: 'Venda Direta Online' }), 'venda_direta');
+  // avaliação inflada em relação ao mercado
+  const im = { lance: 200000, avaliacao: 600000, area_m2: 60, preco_m2: 5000 };
+  assert.match(pilar(P.montar(im, C.calcular(im)), 'financeiro').itens.map(i => i.texto).join(' '), /acima do valor de mercado estimado \(R\$ 300\.000/);
+});
+
+test('LE17 leilao: região com IBGE, Banco Central, mapa e serviços perto; sinais do processo', async () => {
+  const f = fetchRegiao({ cidade: 'Santa Rita do Teste', id: 3599901 });
+  const a = montarLeilao({ fetch: f.fn });
+  const r = await a.post({ acao: 'regiao', endereco: 'Rua das Palmeiras, 200', cidade: 'santa rita do teste', uf: 'sp' });
+  assert.equal(r.statusCode, 200, r.body);
+  const g = r.json.regiao;
+  assert.equal(g.municipio.id, 3599901);
+  assert.equal(g.populacao.censo_2022, 11451245);
+  assert.equal(g.populacao.cresc_anual_pct, 0.1);
+  assert.equal(g.pib_per_capita.ano, 2021);
+  assert.equal(g.pib_per_capita.cresc_anual_pct, 3.2);
+  assert.equal(g.mercado.ivgr_12m_pct, 5.3);
+  assert.equal(g.mercado.selic_pct, 13.75);
+  assert.equal(g.local.bairro, 'Santa Cecília');
+  assert.deepEqual(g.servicos.map(s => s.qtd), [26, 37, 28, 54, 29, 68]);
+  assert.ok(f.pedidos.find(p => /nominatim/.test(p.url)).o.headers['User-Agent'].includes('NEXIA'), 'Nominatim pede identificação');
+  assert.ok(f.pedidos.find(p => /indicadores/.test(p.url)).url.endsWith('/resultados/359990'), 'IBGE usa o código de 6 dígitos');
+  assert.match(decodeURIComponent(f.pedidos.find(p => /overpass/.test(p.url)).o.body), /around:1000,-23\.55274,-46\.65395/);
+  assert.equal((await a.post({ acao: 'regiao', cidade: 'Cidade Que Não Existe', uf: 'SP' })).statusCode, 502);
+  assert.equal((await a.post({ acao: 'regiao', cidade: 'X', uf: 'ZZ' })).statusCode, 400);
+  // Endereço fora da cidade no mapa: não conta serviços de outro lugar
+  const fora = fetchRegiao({ cidade: 'Outra Cidade Teste', id: 3599902 });
+  const b = montarLeilao({ fetch: async (u, o) => (/nominatim/.test(u) ? { ok: true, json: async () => [{ lat: '-1', lon: '-1', address: { city: 'Longe' } }] } : fora.fn(u, o)) });
+  const r2 = await b.post({ acao: 'regiao', endereco: 'Rua X', cidade: 'Outra Cidade Teste', uf: 'RJ' });
+  assert.equal(r2.statusCode, 200, r2.body);
+  assert.equal(r2.json.regiao.servicos, null);
+  assert.equal(r2.json.regiao.local.na_cidade, false);
+  // Sinais: procura em todas as movimentações do processo
+  const movs = Array.from({ length: 30 }, (_, i) => ({ dataHora: `2026-01-${String(i + 1).padStart(2, '0')}T00:00:00Z`, nome: i === 0 ? 'Embargos à Execução' : 'Juntada de Petição' }));
+  const c = montarLeilao({ fetch: async () => ({ ok: true, json: async () => ({ hits: { hits: [{ _source: { numeroProcesso: '1', movimentos: movs } }] } }) }) });
+  const pr = await c.post({ acao: 'processo', numero: '1000123-45.2023.8.26.0100' });
+  assert.equal(pr.json.processo.movimentos.length, 15);
+  assert.deepEqual(pr.json.processo.sinais.map(s => s.nome), ['Embargos à Execução']);
+});

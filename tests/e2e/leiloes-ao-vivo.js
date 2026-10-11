@@ -71,6 +71,14 @@ São Paulo, 1º de outubro de 2026.`;
     const arq = await postar(API, { acao: 'arquivo', token, url: comAnexo.anexos[0].url });
     confere(arq.status === 200 && Buffer.from(arq.json.pdf || '', 'base64').slice(0, 4).toString() === '%PDF', `baixa o PDF do lote (${arq.status} ${arq.json.error || ''})`);
   }
+  const alvo = lotes.find(l => l.cidade && l.uf) || { cidade: 'São Paulo', uf: 'SP', endereco: 'Avenida Paulista, 1000' };
+  const rg = await postar(API, { acao: 'regiao', token, endereco: alvo.endereco || '', cidade: alvo.cidade, uf: alvo.uf });
+  const g = rg.json.regiao || {};
+  confere(rg.status === 200 && g.municipio && g.populacao && g.populacao.censo_2022 > 0, `região de ${alvo.cidade}/${alvo.uf} pelo IBGE (${rg.status} ${rg.json.error || ''}): Censo 2022 ${g.populacao && g.populacao.censo_2022}, PIB por pessoa ${g.pib_per_capita && g.pib_per_capita.valor}`);
+  confere(g.mercado && typeof g.mercado.ivgr_12m_pct === 'number', `preço dos imóveis no Brasil pelo Banco Central: ${g.mercado && g.mercado.ivgr_12m_pct}% em 12 meses`);
+  const sp = await postar(API, { acao: 'regiao', token, endereco: 'Avenida Paulista, 1000', cidade: 'São Paulo', uf: 'SP' });
+  const sv = (sp.json.regiao && sp.json.regiao.servicos) || [];
+  confere(sp.status === 200 && sv.length === 6 && sv.every(x => x.qtd > 0), 'endereço no mapa e serviços a 1 km pelo OpenStreetMap: ' + sv.map(x => x.id + ' ' + x.qtd).join(', '));
   const s = await postar(API, { acao: 'salvar', token, imovel: { endereco: 'Teste automático', lance: 1 } });
   confere(s.status === 200 && s.json.id, 'salvar imóvel');
   const ap = await postar(API, { acao: 'apagar', token, id: s.json.id });
@@ -128,6 +136,43 @@ São Paulo, 1º de outubro de 2026.`;
     await pg.waitForSelector('#pg-imoveis:not(.oculto)', { timeout: 20000 }).catch(() => {});
   }
   confere(!(await pg.textContent('#lista-imoveis')).includes('Palmeiras'), 'apagar no site');
+  console.log('3. Consultoria completa de um lote real (busca, edital do leiloeiro, região, parecer, relatório)');
+  await pg.click('#nav-buscar');
+  await pg.fill('#a-busca', 'apartamento'); await pg.selectOption('#a-uf', 'SP');
+  await pg.click('#a-buscar');
+  await pg.waitForSelector('#a-lista .item', { timeout: 30000 }).catch(() => {});
+  const cartao = pg.locator('#a-lista .item', { hasText: /Documentos: .*EDITAL/i }).first();
+  if (confere(await cartao.count() > 0, 'busca no site acha lote real com edital')) {
+    console.log('    lote: ' + (await cartao.locator('.nome').textContent()).slice(0, 120));
+    await cartao.locator('button:has-text("Analisar")').click();
+    await pg.waitForSelector('#pg-imovel:not(.oculto)');
+    const ler = pg.locator('#im-anexos button', { hasText: /Ler edital/i }).first();
+    if (await ler.count()) {
+      await ler.click();
+      await pg.waitForSelector('#im-doc-msg.ok, #im-doc-msg.erro', { timeout: 120000 }).catch(() => {});
+      confere(await pg.isVisible('#im-doc-msg.ok'), 'edital real do leiloeiro lido pela IA: ' + (await pg.textContent('#im-doc-msg')).slice(0, 90));
+    }
+    await pg.locator('#pg-imovel summary', { hasText: 'Região e valorização' }).click();
+    await pg.click('#im-regiao-btn');
+    await pg.waitForFunction(() => /Região analisada|erro/.test(document.querySelector('#im-regiao-res').textContent + document.querySelector('#im-regiao-res').innerHTML), null, { timeout: 60000 }).catch(() => {});
+    confere((await pg.textContent('#im-regiao-res')).includes('Região analisada'), 'região do lote real analisada no site');
+    console.log('    região: ' + (await pg.textContent('#im-regiao-res')).replace(/\s+/g, ' ').slice(0, 600));
+    const nota = await pg.textContent('#pc-nota'), ver = await pg.textContent('#pc-veredito');
+    confere(/^\d+$/.test(nota) && ver.length > 5, `parecer completo: nota ${nota}, ${ver}`);
+    for (const pl of await pg.locator('#pc-pilares .pilar').all()) console.log('    ' + (await pl.innerText()).replace(/\n+/g, ' | ').slice(0, 700));
+    await foto('parecer-completo-real');
+    await pg.locator('#pg-imovel summary', { hasText: 'Parecer da IA' }).click();
+    await pg.click('#im-parecer-btn');
+    await pg.waitForFunction(() => /advogado|ocupada|Tente|Demorou/.test(document.querySelector('#im-parecer').textContent), null, { timeout: 90000 }).catch(() => {});
+    const texto = await pg.textContent('#im-parecer');
+    confere(/VEREDITO/.test(texto) && /advogado/.test(texto), 'parecer de consultoria da IA no lote real');
+    console.log('    parecer da IA:\n' + texto.split('\n').map(l => '      ' + l).join('\n'));
+    await pg.evaluate(() => { window.print = () => { window.__imprimiu = true; }; });
+    await pg.click('#im-relatorio');
+    const rel = await pg.textContent('#relatorio');
+    confere(rel.includes('Parecer completo') && rel.includes('Região analisada'), 'relatório em PDF do lote real com parecer completo e região');
+    if (FOTOS) { await pg.emulateMedia({ media: 'print' }); await pg.screenshot({ path: path.join(FOTOS, 'leiloes-' + String(++n).padStart(2, '0') + '-relatorio-real.png'), fullPage: true }); await pg.emulateMedia({ media: 'screen' }); }
+  }
   confere(erros.length === 0, 'nenhum erro de JavaScript' + (erros.length ? ': ' + erros.join(' | ') : ''));
   await browser.close();
 

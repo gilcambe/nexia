@@ -72,6 +72,22 @@
   .barra { height: 10px; border-radius: 999px; background: var(--neutro-f); overflow: hidden; margin-top: 8px; }
   .barra i { display: block; height: 100%; background: var(--ok); }
   .lista-ia { margin: 6px 0 0; padding-left: 18px; font-size: 14px; }
+  .pc { border-radius: 16px; padding: 16px; margin-top: 12px; border: 2px solid var(--linha); background: var(--cartao); }
+  .pc.n2 { border-color: var(--ok); } .pc.n1 { border-color: var(--alerta); } .pc.n0 { border-color: var(--erro); }
+  .pc-topo { display: flex; gap: 14px; align-items: center; }
+  .pc-nota { flex: none; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-size: 24px; font-weight: 700; background: var(--neutro-f); }
+  .pc.n2 .pc-nota { background: var(--ok-f); color: var(--ok); } .pc.n1 .pc-nota { background: var(--alerta-f); color: var(--alerta); } .pc.n0 .pc-nota { background: var(--erro-f); color: var(--erro); }
+  .pc-topo small { display: block; color: var(--suave); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+  .pc-topo b { font-size: 19px; display: block; line-height: 1.25; }
+  .pc ul.pc-resumo { margin: 10px 0 0; padding-left: 18px; font-size: 14px; }
+  .pilar { margin-top: 10px; padding: 8px 0 0; border-top: 1px solid var(--linha); }
+  .pilar .cab { display: flex; justify-content: space-between; gap: 8px; font-size: 15px; font-weight: 600; }
+  .pilar .barra i.n1 { background: var(--alerta); } .pilar .barra i.n0 { background: var(--erro); }
+  .pilar ul { list-style: none; margin: 6px 0 0; padding: 0; font-size: 14px; }
+  .pilar li { padding: 3px 0 3px 24px; position: relative; }
+  .pilar li::before { position: absolute; left: 0; top: 2px; width: 18px; text-align: center; font-weight: 700; }
+  .pilar li.ok::before { content: "✓"; color: var(--ok); } .pilar li.atencao::before { content: "!"; color: var(--alerta); } .pilar li.grave::before { content: "✕"; color: var(--erro); }
+  .pilar li small { display: block; color: var(--suave); }
   .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(80px + env(safe-area-inset-bottom)); background: var(--texto); color: #fff; padding: 12px 18px; border-radius: 999px; font-size: 14px; z-index: 20; max-width: calc(100% - 32px); text-align: center; }
   a.link { color: var(--cor); word-break: break-word; }
   #relatorio { display: none; }
@@ -163,7 +179,14 @@
     <div class="acoes" style="margin-top:12px"><button class="btn pequeno claro" type="button" id="voltar">← Voltar</button></div>
     <h2 id="im-titulo">Imóvel</h2>
 
-    <div class="veredito n0" id="im-veredito"><b id="im-veredito-txt">Preencha o lance e o valor de venda</b><ul id="im-motivos"></ul></div>
+    <div class="pc n0" id="pc">
+      <div class="pc-topo"><div class="pc-nota" id="pc-nota">–</div><div><small>Parecer completo</small><b id="pc-veredito">Preencha o lance e a avaliação</b></div></div>
+      <ul class="pc-resumo" id="pc-resumo"></ul>
+      <div id="pc-pilares"></div>
+      <details id="pc-conferir-box"><summary>O que conferir antes do lance (<span id="pc-conferir-n">0</span>)</summary><ol class="lista-ia" id="pc-conferir"></ol></details>
+    </div>
+    <p class="dica" style="margin-top:14px">Só a conta de dinheiro:</p>
+    <div class="veredito n0" id="im-veredito" style="margin-top:4px"><b id="im-veredito-txt">Preencha o lance e o valor de venda</b><ul id="im-motivos"></ul></div>
     <div class="numeros" id="im-numeros"></div>
 
     <details open><summary>Dados do imóvel</summary>
@@ -199,6 +222,18 @@
       <div id="im-matricula-res"></div>
       <label for="im-alertas">Riscos encontrados (um por linha)</label>
       <textarea id="im-alertas" placeholder="Ex.: penhora de outro credor"></textarea>
+    </details>
+
+    <details id="im-regiao-box"><summary>Região e valorização</summary>
+      <p class="dica">Usa só dados públicos e grátis: IBGE (população e renda da cidade), Banco Central (preço dos imóveis no país) e o mapa OpenStreetMap (serviços a até 1 km).</p>
+      <button class="btn largo claro" type="button" id="im-regiao-btn">Analisar a região</button>
+      <div id="im-regiao-res"></div>
+      <div class="grade2">
+        <div><label for="im-area">Área do imóvel (m²)</label><input id="im-area" data-campo="area_m2" data-num inputmode="decimal"></div>
+        <div><label for="im-m2">Preço do m² na região (R$)</label><input id="im-m2" data-campo="preco_m2" data-num inputmode="decimal"></div>
+      </div>
+      <p class="dica">Preço do m²: veja de 3 a 5 imóveis parecidos à venda no mesmo bairro, divida o preço pela área e faça a média.</p>
+      <div class="acoes"><a class="btn pequeno claro" id="im-m2-busca" target="_blank" rel="noopener" href="https://www.google.com/search?q=im%C3%B3vel+%C3%A0+venda">Ver anúncios parecidos</a><a class="btn pequeno claro" href="https://www.fipe.org.br/pt-br/indices/fipezap/" target="_blank" rel="noopener">Índice FipeZap</a></div>
     </details>
 
     <details><summary>Processo judicial (CNJ)</summary>
@@ -257,8 +292,9 @@
     </details>
 
     <details><summary>Parecer da IA</summary>
-      <button class="btn largo claro" type="button" id="im-parecer-btn">Pedir parecer da IA</button>
-      <div id="im-parecer" class="msg oculto" style="background:var(--neutro-f)"></div>
+      <p class="dica">A IA escreve a consultoria completa: imóvel e valores, região, parte jurídica, posse, dívidas, até quanto dar de lance e o que conferir.</p>
+      <button class="btn largo claro" type="button" id="im-parecer-btn">Escrever o parecer completo</button>
+      <div id="im-parecer" class="msg oculto" style="background:var(--neutro-f);white-space:pre-line"></div>
     </details>
 
     <details><summary>Passo a passo deste imóvel <span class="chip" id="im-progresso-chip" style="margin-left:8px"></span></summary>
@@ -283,6 +319,7 @@
 <div class="toast oculto" id="toast"></div>
 
 <script src="calculo.js"></script>
+<script src="parecer.js"></script>
 <script src="etapas.js"></script>
 <script src="caixa.js"></script>
 <script src="fontes.js" onerror="void 0"></script>
@@ -297,7 +334,7 @@
   var qs = new URLSearchParams(location.search);
   var SITE = (qs.get('site') || meta('leilao-site')).toLowerCase();
   var API = qs.get('api') || meta('leilao-api');
-  var C = window.BezsanCalculo, E = window.BezsanEtapas, K = window.BezsanCaixa;
+  var C = window.BezsanCalculo, E = window.BezsanEtapas, K = window.BezsanCaixa, P = window.BezsanParecer;
   var F = function () { return window.BezsanFontes || null; };
   var lerToken = function () { try { return localStorage.getItem('nexia_agenda_' + SITE) || ''; } catch (e) { return ''; } };
   var token = lerToken();
@@ -438,9 +475,11 @@
     $('lista-imoveis').innerHTML = '';
     imoveis.forEach(function (im) {
       var r = C.calcular(entradaConta(im));
+      var pc = P.montar(im, r);
       var p = E.progresso(im.etapas);
-      var d = document.createElement('div'); d.className = 'item n' + r.veredito.nivel;
-      d.innerHTML = '<div class="cab"><span class="nome">' + esc(im.endereco || 'Imóvel sem endereço') + '</span><span class="chip n' + r.veredito.nivel + '">' + esc(r.veredito.texto) + '</span></div>' +
+      var d = document.createElement('div'); d.className = 'item n' + pc.nivel;
+      d.innerHTML = '<div class="cab"><span class="nome">' + esc(im.endereco || 'Imóvel sem endereço') + '</span><span class="chip n' + pc.nivel + '">Nota ' + pc.nota + '</span></div>' +
+        '<div class="det"><b>' + esc(pc.veredito) + '</b></div>' +
         '<div class="det">' + esc([im.cidade, im.uf].filter(Boolean).join(' - ')) + ' · lance ' + reais(r.custos.lance) + ' · lucro ' + reais(r.resultado.lucro_liquido) + '</div>' +
         '<div class="barra"><i style="width:' + p.pct + '%"></i></div><div class="det">' + p.feitos + ' de ' + p.total + ' passos' + (p.proximo ? ' · próximo: ' + esc(p.proximo.titulo) : '') + '</div>' +
         '<div class="acoes"><button class="btn pequeno" type="button">Abrir</button></div>';
@@ -476,6 +515,8 @@
     $('im-edital-res').innerHTML = atual.analise_edital ? resumoDoc('Edital', atual.analise_edital) : '';
     $('im-matricula-res').innerHTML = atual.analise_matricula ? resumoDoc('Matrícula', atual.analise_matricula) : '';
     $('im-processo-res').innerHTML = atual.processo_info ? resumoProcesso(atual.processo_info) : '';
+    $('im-regiao-res').innerHTML = resumoRegiao(atual.regiao);
+    linkAnuncios();
     desenharAnexos();
     if (atual.parecer) { $('im-parecer').textContent = atual.parecer; mostrar($('im-parecer'), true); } else mostrar($('im-parecer'), false);
     mostrar($('im-doc-msg'), false); mostrar($('im-colar'), false);
@@ -511,8 +552,66 @@
       ['Custo total', c.total, 1], ['Venda', r.venda.valor], ['Corretagem', -r.venda.corretagem], ['Lucro antes do imposto', r.resultado.lucro_bruto], ['Imposto', -r.resultado.imposto],
       ['Lucro líquido', r.resultado.lucro_liquido, 1], ['Retorno no período', pct(r.resultado.roi), 1], ['Lance em que não há lucro', r.resultado.lance_empate],
     ].map(function (l) { return '<tr' + (l[2] ? ' class="forte"' : '') + '><td>' + l[0] + '</td><td>' + (typeof l[1] === 'number' ? reais(l[1]) : l[1]) + '</td></tr>'; }).join('');
+    desenharParecer(P.montar(atual, r));
     return r;
   }
+  var motor = null;
+  function htmlPilares(pc) {
+    return pc.pilares.map(function (pl) {
+      var n = pl.nota === null ? null : pl.nota, cor = n === null ? '' : n >= 70 ? '' : n >= 50 ? 'n1' : 'n0';
+      return '<div class="pilar" data-pilar="' + pl.id + '"><div class="cab"><span>' + esc(pl.titulo) + '</span><span>' + (n === null ? 'sem dados' : n + '/100') + '</span></div>' +
+        '<div class="barra"><i class="' + cor + '" style="width:' + (n || 0) + '%"></i></div>' +
+        '<ul>' + pl.itens.map(function (i) { return '<li class="' + i.nivel + '">' + esc(i.texto) + (i.fazer && i.nivel !== 'ok' ? '<small>' + esc(i.fazer) + '</small>' : '') + '</li>'; }).join('') + '</ul></div>';
+    }).join('');
+  }
+  function desenharParecer(pc) {
+    motor = pc;
+    $('pc').className = 'pc n' + pc.nivel;
+    $('pc-nota').textContent = pc.nota;
+    $('pc-veredito').textContent = pc.veredito;
+    var resumo = pc.resumo.slice();
+    if (pc.posse.ocupado && pc.posse.prazo) resumo.push('Ocupado: ' + pc.posse.caminho + ' Prazo comum: ' + pc.posse.prazo + '.');
+    if (pc.venda_com_valorizacao) resumo.push('Com a valorização média do país, a venda pode chegar a ' + reais(pc.venda_com_valorizacao) + ' no prazo da conta (estimativa).');
+    $('pc-resumo').innerHTML = resumo.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
+    $('pc-pilares').innerHTML = htmlPilares(pc);
+    $('pc-conferir-n').textContent = pc.conferir.length;
+    $('pc-conferir').innerHTML = pc.conferir.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
+    mostrar($('pc-conferir-box'), pc.conferir.length > 0);
+  }
+
+  // ── Região ──
+  function milhar(n) { return typeof n === 'number' ? n.toLocaleString('pt-BR') : '–'; }
+  function pctBr(n) { return typeof n === 'number' ? n.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%' : '–'; }
+  function resumoRegiao(g) {
+    if (!g) return '';
+    var pop = g.populacao || {}, l = g.local, linhas = [];
+    linhas.push('Cidade: ' + g.municipio.nome + '/' + g.municipio.uf + (l && l.bairro ? ' · bairro ' + l.bairro : ''));
+    if (pop.censo_2010 || pop.censo_2022) linhas.push('População: ' + milhar(pop.censo_2010) + ' (2010) → ' + milhar(pop.censo_2022) + ' (2022), ' + pctBr(pop.cresc_anual_pct) + ' ao ano');
+    if (g.pib_per_capita) linhas.push('PIB por pessoa: ' + reais(g.pib_per_capita.valor) + ' (' + g.pib_per_capita.ano + '), ' + pctBr(g.pib_per_capita.cresc_anual_pct) + ' ao ano em 5 anos');
+    if (g.salario_medio_sm) linhas.push('Salário médio formal: ' + String(g.salario_medio_sm.valor).replace('.', ',') + ' salários mínimos (' + g.salario_medio_sm.ano + ')');
+    if (g.mercado && typeof g.mercado.ivgr_12m_pct === 'number') linhas.push('Preço dos imóveis no Brasil (Banco Central): ' + pctBr(g.mercado.ivgr_12m_pct) + ' em 12 meses' + (typeof g.mercado.selic_pct === 'number' ? ' · Selic ' + pctBr(g.mercado.selic_pct) + ' ao ano' : ''));
+    var serv = (g.servicos || []).map(function (sv) { return sv.nome + ': ' + sv.qtd; });
+    var mapa = l && typeof l.lat === 'number' ? 'https://www.openstreetmap.org/?mlat=' + l.lat + '&mlon=' + l.lon + '#map=16/' + l.lat + '/' + l.lon : '';
+    return '<div class="cartao"><h3>Região analisada</h3>' + linhas.map(function (t) { return '<div class="det">' + esc(t) + '</div>'; }).join('') +
+      (serv.length ? lista('A até 1 km (OpenStreetMap)', serv) : '<div class="det">' + esc(l ? 'Endereço achado só de forma aproximada; serviços perto não contados.' : 'Endereço não achado no mapa; serviços perto não contados.') + '</div>') +
+      (l && l.endereco ? '<div class="det">No mapa: ' + esc(l.endereco) + '</div>' : '') +
+      (mapa ? '<div class="acoes"><a class="btn pequeno claro" target="_blank" rel="noopener" href="' + esc(mapa) + '">Ver no mapa</a></div>' : '') +
+      '<p class="dica">Fontes: ' + esc((g.fontes || []).join('; ')) + '.</p></div>';
+  }
+  function linkAnuncios() {
+    var g = atual.regiao, bairro = g && g.local && g.local.bairro ? g.local.bairro : '';
+    var tipo = (atual.analise_edital && atual.analise_edital.tipo_imovel) || 'imóvel';
+    var q = [tipo, 'à venda', bairro, atual.cidade, atual.uf, 'm²'].filter(Boolean).join(' ');
+    $('im-m2-busca').href = 'https://www.google.com/search?q=' + encodeURIComponent(q);
+  }
+  $('im-regiao-btn').onclick = function () {
+    var b = this; lerCampos();
+    if (!atual.cidade || !atual.uf) { $('im-regiao-res').innerHTML = '<div class="msg erro">Preencha a cidade e o estado do imóvel (em "Dados do imóvel").</div>'; return; }
+    b.disabled = true; $('im-regiao-res').innerHTML = '<div class="msg aviso">Consultando IBGE, Banco Central e o mapa…</div>';
+    api({ acao: 'regiao', endereco: atual.endereco, cidade: atual.cidade, uf: atual.uf }).then(function (j) {
+      atual.regiao = j.regiao; $('im-regiao-res').innerHTML = resumoRegiao(j.regiao); linkAnuncios(); recalcular();
+    }).catch(function (e) { $('im-regiao-res').innerHTML = '<div class="msg erro">' + esc(e.message) + '</div>'; }).then(function () { b.disabled = false; });
+  };
   $('pg-imovel').addEventListener('input', function (ev) { if (ev.target.matches('[data-campo], #im-alertas')) { recalcular(); if (ev.target.id === 'im-cidade' || ev.target.id === 'im-uf') guiaIptu(); } });
   $('pg-imovel').addEventListener('change', function (ev) { if (ev.target.matches('[data-campo]')) recalcular(); });
 
@@ -639,6 +738,7 @@
     if (tipo === 'edital') {
       atual.analise_edital = d;
       definir('im-endereco', d.endereco); definir('im-cidade', d.cidade); definir('im-uf', d.uf); definir('im-descricao', d.descricao);
+      if (num(d.area_m2)) definir('im-area', d.area_m2);
       definir('im-processo', d.processo);
       if (d.tipo_leilao) definir('im-modalidade', { judicial: 'Leilão judicial', extrajudicial: 'Leilão extrajudicial', venda_direta: 'Venda direta' }[d.tipo_leilao] || d.tipo_leilao);
       if (num(d.avaliacao)) definir('im-avaliacao', d.avaliacao, true);
@@ -651,6 +751,7 @@
     } else {
       atual.analise_matricula = d;
       definir('im-endereco', d.endereco); definir('im-descricao', d.descricao);
+      if (num(d.area_m2)) definir('im-area', d.area_m2);
       $('im-matricula-res').innerHTML = resumoDoc('Matrícula', d);
     }
     var riscos = [].concat(d.onus || [], d.riscos || [], d.alertas || []).filter(function (s) { return typeof s === 'string' && s.trim(); });
@@ -699,8 +800,10 @@
   $('im-parecer-btn').onclick = function () {
     var b = this, r = recalcular();
     b.disabled = true; $('im-parecer').textContent = 'A IA está escrevendo o parecer…'; mostrar($('im-parecer'), true);
-    var imovel = { endereco: atual.endereco, cidade: atual.cidade, uf: atual.uf, modalidade: atual.modalidade, descricao: atual.descricao, ocupado: atual.ocupado, riscos: atual.alertas, edital: atual.analise_edital, matricula: atual.analise_matricula, processo: atual.processo_info ? { classe: atual.processo_info.classe, ultimo: (atual.processo_info.movimentos || [])[0] } : null };
-    api({ acao: 'parecer', imovel: imovel, conta: { custos: r.custos, venda: r.venda, resultado: r.resultado, veredito: r.veredito } }).then(function (j) {
+    var imovel = { endereco: atual.endereco, cidade: atual.cidade, uf: atual.uf, modalidade: atual.modalidade, descricao: atual.descricao, ocupado: atual.ocupado, area_m2: atual.area_m2, preco_m2: atual.preco_m2, riscos: atual.alertas, edital: atual.analise_edital, matricula: atual.analise_matricula, processo: atual.processo_info ? { classe: atual.processo_info.classe, ultimo: (atual.processo_info.movimentos || [])[0], sinais: atual.processo_info.sinais } : null };
+    var m = motor ? { nota: motor.nota, veredito: motor.veredito, lance_limite: motor.lance_limite, reserva_risco: motor.reserva_risco, posse: motor.posse, venda_com_valorizacao: motor.venda_com_valorizacao, pilares: motor.pilares.map(function (p) { return { titulo: p.titulo, nota: p.nota, pontos: p.itens.map(function (i) { return i.nivel + ': ' + i.texto; }) }; }), conferir: motor.conferir } : null;
+    var g = atual.regiao ? { municipio: atual.regiao.municipio, populacao: atual.regiao.populacao, pib_per_capita: atual.regiao.pib_per_capita, servicos: atual.regiao.servicos, mercado: atual.regiao.mercado, bairro: atual.regiao.local && atual.regiao.local.bairro } : null;
+    api({ acao: 'parecer', imovel: imovel, conta: { custos: r.custos, venda: r.venda, resultado: r.resultado, veredito: r.veredito }, motor: m, regiao: g }).then(function (j) {
       atual.parecer = j.texto; $('im-parecer').textContent = j.texto;
     }).catch(function (e) { $('im-parecer').textContent = e.message; }).then(function () { b.disabled = false; });
   };
@@ -720,8 +823,11 @@
     var r = recalcular(), p = E.progresso(atual.etapas);
     var hoje = new Date().toLocaleDateString('pt-BR');
     $('relatorio').innerHTML = '<h1>Relatório de leilão · Bezsan</h1><p>' + esc(atual.endereco || '') + (atual.cidade ? ' · ' + esc(atual.cidade) + '/' + esc(atual.uf || '') : '') + '<br>' + esc(atual.modalidade || '') + ' · ' + hoje + '</p>' +
-      '<div class="veredito n' + r.veredito.nivel + '"><b>' + esc(r.veredito.texto) + '</b><ul>' + r.veredito.motivos.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul></div>' +
-      '<h2>Números</h2><table class="conta">' + $('im-tabela').innerHTML + '<tr class="forte"><td>Lance máximo recomendado</td><td>' + reais(r.resultado.lance_maximo) + '</td></tr></table>' +
+      '<div class="pc n' + motor.nivel + '"><div class="pc-topo"><div class="pc-nota">' + motor.nota + '</div><div><small>Parecer completo</small><b>' + esc(motor.veredito) + '</b></div></div><ul class="pc-resumo">' + $('pc-resumo').innerHTML + '</ul>' + htmlPilares(motor) + '</div>' +
+      (motor.conferir.length ? '<h2>O que conferir antes do lance</h2><ol class="lista-ia">' + $('pc-conferir').innerHTML + '</ol>' : '') +
+      '<h2>Números</h2><div class="veredito n' + r.veredito.nivel + '"><b>Conta: ' + esc(r.veredito.texto) + '</b><ul>' + r.veredito.motivos.map(function (m) { return '<li>' + esc(m) + '</li>'; }).join('') + '</ul></div>' +
+      '<table class="conta">' + $('im-tabela').innerHTML + '<tr class="forte"><td>Lance máximo recomendado (só pela conta)</td><td>' + reais(r.resultado.lance_maximo) + '</td></tr>' + (motor.lance_limite ? '<tr class="forte"><td>Lance limite (com reserva para os riscos)</td><td>' + reais(motor.lance_limite) + '</td></tr>' : '') + '</table>' +
+      (atual.regiao ? '<h2>Região</h2>' + resumoRegiao(atual.regiao) : '') +
       (atual.analise_edital ? '<h2>Edital</h2>' + resumoDoc('Edital', atual.analise_edital) : '') +
       (atual.analise_matricula ? '<h2>Matrícula</h2>' + resumoDoc('Matrícula', atual.analise_matricula) : '') +
       (atual.processo_info ? '<h2>Processo</h2>' + resumoProcesso(atual.processo_info) : '') +
