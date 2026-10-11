@@ -9,9 +9,12 @@ NIVEL = {'magro': 'lean muscular athletic body with visible abs, low body fat',
          'alto': 'slightly overweight body with a soft belly and some love handles, about 25 percent body fat, not obese'}
 VISTA = {'frente': 'facing the camera, front view', 'lado': 'standing in strict side profile facing right, side view',
          'costas': 'seen from behind, back view, facing away from the camera'}
+ALTO = {'m': 'average man carrying a little extra weight, slightly thick waist, broad torso, a modest small gut, about 25 percent body fat, healthy everyday look',
+        'f': 'curvy average woman carrying a little extra weight, fuller hips and thighs, slightly thick waist, mostly flat stomach, about 32 percent body fat, healthy everyday look'}
 def prompt(k):
     s, p, n, v = re.match(r'^(m|f)-(clara|media|morena|negra)-(magro|medio|alto)-(frente|lado|costas)$', k).groups()
-    return (f'Wide full body shot, camera far away. Ultra realistic full length studio photograph of one adult {SEXO[s]}, {PELE[p]}, {NIVEL[n]}, {ROUPA[s]}, barefoot, '
+    nivel = ALTO[s] if n == 'alto' else NIVEL[n]
+    return (f'Wide full body shot, camera far away. Ultra realistic full length studio photograph of one adult {SEXO[s]}, {PELE[p]}, {nivel}, {ROUPA[s]}, barefoot, '
             f'standing straight and relaxed with arms hanging slightly away from the body, {VISTA[v]}. The whole body from the top of the head '
             'to the feet is visible and nothing is cut off, the person fills only the middle 70 percent of the frame height with empty space above the head and below the feet, centered. Plain light gray seamless '
             'studio background, soft even lighting, natural realistic skin texture, sharp focus, DSLR photo, 85mm lens.')
@@ -26,7 +29,7 @@ if not client: sys.exit(0)
 ks = open('corpos-hf.txt').read().split()
 parte, total = int(os.environ.get('PARTE', 0)), int(os.environ.get('TOTAL', 1))
 ks = ks[parte::total]
-for n in (1, 2):
+for n in (3, 4):
     for k in ks:
         if os.path.exists(f'corpos/{k}__{n}.webp'): continue
         try:
