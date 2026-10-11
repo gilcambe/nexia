@@ -160,6 +160,17 @@ São Paulo, 1º de outubro de 2026.`;
     await pg.waitForFunction(() => /Região analisada|erro/.test(document.querySelector('#im-regiao-res').textContent + document.querySelector('#im-regiao-res').innerHTML), null, { timeout: 60000 }).catch(() => {});
     confere((await pg.textContent('#im-regiao-res')).includes('Região analisada'), 'região do lote real analisada no site');
     const rgTxt = await pg.textContent('#im-regiao-res');
+    const endLote = await pg.inputValue('#im-endereco');
+    const diag = await pg.evaluate(async (q) => {
+      const r = {};
+      const ver = async (nome, url, op) => { try { const x = await fetch(url, op); r[nome] = x.status + ' ' + (await x.text()).slice(0, 160); } catch (e) { r[nome] = 'erro ' + e.message; } };
+      await ver('nominatim', 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&addressdetails=1&q=' + encodeURIComponent(q));
+      await ver('photon', 'https://photon.komoot.io/api/?limit=1&q=' + encodeURIComponent(q));
+      await ver('overpass', 'https://overpass-api.de/api/interpreter', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent('[out:json];node(around:500,-23.588,-46.574)[amenity];out count;') });
+      return r;
+    }, endLote + ', São Paulo, SP, Brasil');
+    console.log('    endereço lido do edital: ' + endLote);
+    for (const k of Object.keys(diag)) console.log('    mapa no navegador, ' + k + ': ' + diag[k].replace(/\s+/g, ' '));
     confere(rgTxt.includes('No mapa:'), 'endereço do lote real achado no mapa');
     console.log('    serviços a 1 km: ' + (rgTxt.includes('A até 1 km') ? 'contados' : 'o mapa de serviços (Overpass) não respondeu agora; a página avisa'));
     console.log('    região: ' + (await pg.textContent('#im-regiao-res')).replace(/\s+/g, ' ').slice(0, 600));
