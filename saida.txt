@@ -1,0 +1,582 @@
+===== www.leilaoimovel.com.br
+home 403 5528 https://www.leilaoimovel.com.br/
+      5 cloudflare
+<title>Just a moment...
+-- robots
+<!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-hRQNb4iHUVHJIWzgn8UKoq&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-src-attr &#39;none&#39;; style-src &#39;unsafe-inline&#39;; img-src &#39;self&#39; https://challenges.cloudflare.com; connect-src &#39;self&#39; https://challenges.cloudflare.com; frame-src &#39;self&#39; https://challenges.cloudflare.com blob:; child-src &#39;self&#39; https://challenges.cloudflare.com blob:; worker-src blob:; form-action http: https:; base-uri &#39;self&#39;"><style>*{box-sizing:border-box;margin:0;padding:0}html{line-height:1.15;-webkit-text-size-adjust:100%;color:#313131;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"}body{display:flex;flex-direction:column;height:100vh;min-height:100vh}.main-content{margin:8rem auto;padding-left:1.5rem;max-width:60rem}@media (width <= 720px){.main-content{margin-top:4rem}}#challenge-error-text{background-image:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zd
+-- sitemap https://www.leilaoimovel.com.br/sitemap.xml
+<!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-ojHpljvM9TX7Jjiq8a5Xou&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-src-attr &#39;none&#39;; style-src &#39;unsafe-inline&#39;; img-src &#39;self&#39; https://challenges.cloudflare.com; connect-src &#39;self&#39; https://challenges.cloudflare.com; frame-src &#39;self&#39; https://challenges.cloudflare.com blob:; child-src &#39;self&#39; https://challenges.cloudflare.com blob:; worker-src blob:; form-action http: https:; base-uri &#39;self&#39;"><style>*{box-sizing:border-box;margin:0;padding:0}html{line-height:1.15;-webkit-text-size-adjust:100%;color:#313131;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"}body{displa
+===== www.imovelleilao.com.br
+curl: (6) Could not resolve host: www.imovelleilao.com.br
+home 000 0 https://www.imovelleilao.com.br/
+home ERRO
+      5 cloudflare
+<title>Just a moment...
+-- robots
+curl: (6) Could not resolve host: www.imovelleilao.com.br
+
+-- sitemap https://www.imovelleilao.com.br/sitemap.xml
+curl: (6) Could not resolve host: www.imovelleilao.com.br
+
+===== imovelleilao.com.br
+curl: (6) Could not resolve host: imovelleilao.com.br
+home 000 0 https://imovelleilao.com.br/
+home ERRO
+      5 cloudflare
+<title>Just a moment...
+-- robots
+curl: (6) Could not resolve host: imovelleilao.com.br
+
+-- sitemap https://imovelleilao.com.br/sitemap.xml
+curl: (6) Could not resolve host: imovelleilao.com.br
+
+===== www.resale.com.br
+home 200 345007 https://www.resale.com.br/
+      1 captcha
+<title>Encontre as Melhores Ofertas de Imóveis - Resale | Outlet Imobiliário
+-- robots
+User-agent: *
+Allow:/
+
+Sitemap:https://resale.com.br/sitemap.xml
+-- sitemap https://www.resale.com.br/sitemap.xml
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url>
+<loc>https://resale.com.br/</loc>
+</url>
+<url>
+<loc>https://resale.com.br/busca</loc>
+</url>
+<url>
+<loc>https://resale.com.br/fale-conosco</loc>
+</url>
+<url>
+<loc>https://resale.com.br/perguntas-frequentes</loc>
+</url>
+<url>
+<loc>https://resale.com.br/sobre-a-resale</loc>
+</url>
+<url>
+<loc>https://resale.com.br/termos</loc>
+</url>
+</urlset>
+===== www.portalzuk.com.br
+home 200 660848 https://www.portalzuk.com.br/
+<title>Leilão de Imóveis Online - Judiciais e Extrajudiciais Zuk
+https://www.portalzuk.com.br/api/indique-leiloeiro-ba
+https://www.portalzuk.com.br/api/indique-leiloeiro-go
+https://www.portalzuk.com.br/api/indique-leiloeiro-ms
+https://www.portalzuk.com.br/api/indique-leiloeiro-pi
+https://www.portalzuk.com.br/api/indique-leiloeiro-pr
+https://www.portalzuk.com.br/api/indique-leiloeiro-rj
+https://www.portalzuk.com.br/api/indique-leiloeiro-ro
+https://www.portalzuk.com.br/api/indique-leiloeiro-sc
+-- robots
+User-agent: *
+Allow: /
+Allow: *.css
+Allow: *.js
+Disallow: /edital
+Disallow: /minha-conta
+Disallow: /auditorio-virtual
+Disallow: /xxx
+Disallow: /cache-c1897637681273681237
+Disallow: /assinatura-documento
+Disallow: /ajax-lote*
+Disallow: /ajax-modal*
+-- sitemap https://www.portalzuk.com.br/sitemap.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url>
+<loc>https://www.portalzuk.com.br/</loc>
+<priority>1.0</priority>
+<changefreq>daily</changefreq>
+<lastmod>2024-03-04</lastmod>
+</url>
+<url>
+<loc>https://www.portalzuk.com.br/quem-somos</loc>
+<priority>0.7</priority>
+</url>
+<url>
+<loc>https://www.portalzuk.com.br/contato</loc>
+<priority>0.7</priority>
+</url>
+<url>
+<loc>https://www.portalzuk.com.br/quero-vender</loc>
+<priority>0.7</priority>
+</url>
+<url>
+<loc>https://www.portalzuk.com.br/termos-de-uso</loc>
+<priority>0.7</priority>
+</url>
+<url>
+<loc>https://www.portalzuk.com.br/cadastro</loc>
+<priority>0.7</priority>
+</url>
+<url>
+<loc>https://www.portalzuk.com.br/login</loc>
+<priority>0.7</priority>
+</url>
+<url>
+<loc>https://www.portalzuk.com.br/agenda/leiloes</loc>
+<priority>1.0</priority>
+<changefreq>daily</changefreq>
+<lastmod>2024-03-04</lastmod>
+</url>
+</urlset>
+
+===== www.megaleiloes.com.br
+home 200 314076 https://www.megaleiloes.com.br/
+      1 cloudflare
+<title>Leilões Judiciais e Extrajudiciais Online | Mega Leilões
+-- robots
+User-agent: *
+Allow: /
+Disallow: /login
+Sitemap: https://www.megaleiloes.com.br/sitemap/sitemap_index.xml
+-- sitemap https://www.megaleiloes.com.br/sitemap/sitemap_index.xml
+<!DOCTYPE html>
+<!--
+ ██████  ████████ ██   ██ ██ ███████ 
+██    ██    ██    ██   ██ ██ ██      
+██    ██    ██    ███████ ██ ███████ 
+██    ██    ██    ██   ██ ██      ██ 
+██████     ██    ██   ██ ██ ███████ 
+
+Desenvolvido por Othis desde 2011.
+-->
+<html lang="pt-BR">
+
+<head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=yes">
+    <meta name="p:domain_verify" content="e42b661d92337b391e87b4469331f86e" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=yyQpGp9A3x">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=yyQpGp9A3x">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=yyQpGp9A3x">
+<link rel="manifest" href="/site.webmanifest?v=yyQpGp9A3x">
+<link rel="mask-icon" href="/safari
+===== www.sold.com.br
+home 200 68503 https://www.sold.com.br/
+      1 captcha
+<title>Sold
+application/atom+xml" title="Sold RSS Feed" href="https://www.sold.com.br/rss.xml" /
+-- robots
+# Robots.txt file for Market Superbid
+
+User-agent: *
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Mediapartners-Google
+Allow: /
+
+User-agent: Adsbot-Google
+Allow: /
+
+Sitemap: https://www.superbid.net/*
+-- sitemap https://www.superbid.net/*
+<!DOCTYPE html><html lang="pt-BR" class="__className_3306a8 __className_e68c2d __className_6b03d3"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width"/><link rel="canonical" href="https://www.superbid.net/_next/static/chunks/6192.undefined.js"/><link rel="preload" href="/static/others/logo-superbid.webp" as="image" fetchpriority="high"/><link rel="preload" href="/static/countries/brasil.svg" as="image" fetchpriority="high"/><link rel="preload" href="/static/countries/colombia.svg" as="image" fetchpriority="high"/><link rel="preload" href="/static/countries/argentina.svg" as="image" fetchpriority="high"/><link rel="preload" href="/static/countries/peru.svg" as="image" fetchpriority="high"/><link rel="preload" href="/static/countries/chile.svg" as="image" fetchpriority="high"/><link rel="preload" href="https://static.s4bdigital.net/photos/photo_inexistente.jpg" as="image" fetchpriority="high"/><meta name="next-head-count" content="10"/><link rel="preload" href="/_next/static/media/e4af272ccee01ff0-s.p.woff2" as="font" type="font/woff2" crossorigin="anonymous" data-next-font="size-adjust"/><link rel="preload" href="/_next/static/media/636a5ac981f94f8b-s.p.w
+===== www.superbid.net
+home 200 2041678 https://www.superbid.net/
+      1 captcha
+<title>Superbid
+application/atom+xml" title="Superbid RSS Feed" href="https://www.superbid.net/rss.xml" /
+-- robots
+User-agent: *
+Disallow: /categorias/[...categoryId]
+Allow: /
+-- sitemap https://www.superbid.net/sitemap.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<sitemap><loc>http://localhost:3000/sitemap-0.xml</loc></sitemap>
+</sitemapindex>
+===== www.frazaoleiloes.com.br
+home 200 244931 https://www.frazaoleiloes.com.br/
+<title>Leil&#227;o de Im&#243;veis Online e Presencial | Fraz&#227;o Leil&#245;es
+-- robots
+User-agent: *
+Allow: /
+Disallow: /Auction/Index/
+Disallow: /Comitente/Dashboard
+Sitemap: https://www.frazaoleiloes.com.br/sitemap.xml
+-- sitemap https://www.frazaoleiloes.com.br/sitemap.xml
+<?xml version="1.0" encoding="utf-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://www.frazaoleiloes.com.br/sitemap-paginas.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.frazaoleiloes.com.br/sitemap-leiloes.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.frazaoleiloes.com.br/sitemap-lotes.xml</loc>
+  </sitemap>
+  <sitemap>
+    <loc>https://www.frazaoleiloes.com.br/sitemap-blog.xml</loc>
+  </sitemap>
+</sitemapindex>
+===== www.biasileiloes.com.br
+home 200 188141 https://www.biasileiloes.com.br/
+<title>Biasi Leil&#245;es | Leil&#227;o de Im&#243;veis: Casas, Apartamentos, Terrenos e Im&#243;veis Comerciais
+-- robots
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>The resource cannot be found.</title>
+        <meta name="viewport" content="width=device-width" />
+        <style>
+         body {font-family:"Verdana";font-weight:normal;font-size: .7em;color:black;} 
+         p {font-family:"Verdana";font-weight:normal;color:black;margin-top: -5px}
+         b {font-family:"Verdana";font-weight:bold;color:black;margin-top: -5px}
+         H1 { font-family:"Verdana";font-weight:normal;font-size:18pt;color:red }
+         H2 { font-family:"Verdana";font-weight:normal;font-size:14pt;color:maroon }
+         pre {font-family:"Consolas","Lucida Console",Monospace;font-size:11pt;margin:0;padding:0.5em;line-height:14pt}
+         .marker {font-weight: bold; color: black;text-decoration: none;}
+         .version {color: gray;}
+         .error {margin-bottom: 10px;}
+         .expandable { text-decoration:underline; font-weight:bold; color:navy; cursor:pointer; }
+         @media screen and (max-width: 639px) {
+          pre { width: 440px; overflow: auto; white-space: pre-wrap; word-wrap: break-word; }
+         }
+         @media screen and (max-width: 479px) {
+          pre { width: 280px; }
+         }
+        </style>
+    </head>
+
+    <body bgcolor="white">
+
+            <span><H1>Server Error in '/' Application.<hr width=100% size=1 color=silver></H1>
+
+            <h2> <i>The resource cannot be found.</i> </h2></span>
+
+            <font face="Arial, Helvetica, Geneva, SunSan
+-- sitemap https://www.biasileiloes.com.br/sitemap.xml
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>The resource cannot be found.</title>
+        <meta name="viewport" content="width=device-width" />
+        <style>
+         body {font-family:"Verdana";font-weight:normal;font-size: .7em;color:black;} 
+         p {font-family:"Verdana";font-weight:normal;color:black;margin-top: -5px}
+         b {font-family:"Verdana";font-weight:bold;color:black;margin-top: -5px}
+         H1 { font-family:"Verdana";font-weight:normal;font-size:18pt;color:red }
+         H2 { font-family:"Verdana";font-weight:normal;font-size:14pt;color:maroon }
+         pre {font-family:"Consolas","Lucida Console",Monospace;font-size:11pt;margin:0;padding:0.5em;line-height:14pt}
+         .marker {font-weight: bold; color: black;text-decoration: none;}
+         .version {color: gray;}
+         .error {margin-bottom: 10px;}
+         .expandable { text-decoration:underline; font-weight:bold; color:navy; cursor:pointer; }
+         @media screen and (max-width: 639px) {
+          pre { width: 440px; overflow: auto; white-space: pre-wrap; word-wrap: break-word; }
+         }
+         @media screen and (max-width: 479px) {
+          pre { width: 280px; }
+===== www.lancejudicial.com.br
+home 403 5412 https://www.grupolance.com.br/
+      5 cloudflare
+<title>Just a moment...
+-- robots
+User-agent: *
+Disallow: /entrar/
+Disallow: /temp/
+Disallow: /search/
+Disallow: /*.pdf$
+Disallow: /ajax/
+Disallow: /auditorio/
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: bingbot
+Crawl-delay: 10
+Disallow: /entrar/
+Disallow: /temp/
+Disallow: /search/
+Disallow: /*.pdf$
+Disallow: /ajax/
+Disallow: /auditorio/
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+Sitemap: https://www.grupolance.com.br/sitemap.xml
+-- sitemap https://www.grupolance.com.br/sitemap.xml
+<!DOCTYPE html><html lang="en-US"><head><title>Just a moment...</title><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=Edge"><meta name="robots" content="noindex,nofollow"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="content-security-policy" content="default-src &#39;none&#39;; script-src &#39;nonce-bJaDWrR9qzDAcdbAOdmqBQ&#39; &#39;unsafe-eval&#39; https://challenges.cloudflare.com; script-src-attr &#39;none&#39;; style-src &#39;unsafe-inline&#39;; img-src &#39;self&#39; https://challenges.cloudflare.com; connect-src &#39;self&#39; https://challenges.cloudflare.com; frame-src &#39;self&#39; https://challenges.cloudflare.com blob:; child-src &#39;self&#39; https://challenges.cloudflare.com blob:; worker-src blob:; form-action http: https:; base-uri &#39;self&#39;"><style>*{box-sizing:border-box;margin:0;padding:0}html{line-height:1.15;-webkit-text-size-adjust:100%;color:#313131;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans",sans-serif,"Apple Color Emoji","Segoe UI Emoji","Segoe UI Symbol","Noto Color Emoji"}body{displa
+===== www.leiloesjudiciais.com.br
+home 200 2053366 https://www.leiloesjudiciais.com.br/
+      4 captcha
+<title>Leilão de Imóveis, Terrenos, Veículos e mais - Leilões Judiciais
+-- robots
+User-agent: *
+Disallow: /*?amp*
+Disallow: /*?s=*
+Disallow: /*?search=*
+Disallow: /*?replytocom*
+Disallow: /*?pagina=
+Disallow: /leilao/*?pagina=
+Disallow: /busca
+
+Allow: /blog
+Allow: /blog/
+
+Allow: /.well-known/
+Allow: /api/mcp/messages
+Allow: /auth.md
+Allow: /api/openapi.json
+
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+
+Sitemap: https://www.leiloesjudiciais.com.br/sitemap.xml
+-- sitemap https://www.leiloesjudiciais.com.br/sitemap.xml
+<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:news="http://www.google.com/schemas/sitemap-news/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"><url><loc>https://www.leiloesjudiciais.com.br/</loc><lastmod>2026-10-08T23:21:50.392Z</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url><url><loc>https://www.leiloesjudiciais.com.br/blog</loc><lastmod>2026-10-08T23:21:50.394Z</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url><url><loc>https://www.leiloesjudiciais.com.br/sobre-nos</loc><lastmod>2026-10-08T23:21:50.394Z</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url><url><loc>https://www.leiloesjudiciais.com.br/depoimentos</loc><lastmod>2026-10-08T23:21:50.394Z</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url><url><loc>https://www.leiloesjudiciais.com.br/regras</loc><lastmod>2026-10-08T23:21:50.394Z</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url><url><loc>https://www.leiloesjudiciais.com.br/imoveis</loc><last
+===== www.spleiloes.com.br
+curl: (60) SSL certificate problem: unable to get local issuer certificate
+More details here: https://curl.se/docs/sslcerts.html
+
+curl failed to verify the legitimacy of the server and therefore could not
+establish a secure connection to it. To learn more about this situation and
+how to fix it, please visit the web page mentioned above.
+home 000 0 https://www.spleiloes.com.br/
+home ERRO
+      4 captcha
+<title>Leilão de Imóveis, Terrenos, Veículos e mais - Leilões Judiciais
+-- robots
+curl: (60) SSL certificate problem: unable to get local issuer certificate
+More details here: https://curl.se/docs/sslcerts.html
+
+curl failed to verify the legitimacy of the server and therefore could not
+establish a secure connection to it. To learn more about this situation and
+how to fix it, please visit the web page mentioned above.
+
+-- sitemap https://www.spleiloes.com.br/sitemap.xml
+curl: (60) SSL certificate problem: unable to get local issuer certificate
+More details here: https://curl.se/docs/sslcerts.html
+
+curl failed to verify the legitimacy of the server and therefore could not
+establish a secure connection to it. To learn more about this situation and
+how to fix it, please visit the web page mentioned above.
+
+===== www.leilaovip.com.br
+curl: (47) Maximum (50) redirects followed
+home 302 0 https://www.leilaovip.com.br/
+home ERRO
+      4 captcha
+<title>Leilão de Imóveis, Terrenos, Veículos e mais - Leilões Judiciais
+-- robots
+
+
+User-agent: *
+Allow: /
+
+Sitemap: https://www.vipleiloes.com.br/sitemap.xml
+
+-- sitemap https://www.vipleiloes.com.br/sitemap.xml
+<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://www.vipleiloes.com.br</loc></url>
+  <url><loc>https://www.vipleiloes.com.br/QuemSomos</loc></url>
+  <url><loc>https://www.vipleiloes.com.br/Agenda</loc></url>
+  <url><loc>https://www.vipleiloes.com.br/ComoComprar</loc></url>
+  <url><loc>https://www.vipleiloes.com.br/Servicos</loc></url>
+  <url><loc>https://lp.vipleiloes.com.br/quero-vender-veiculos</loc></url>
+  <url><loc>https://www.vipleiloes.com.br/Conta/Entrar</loc></url>
+  <url><loc>https://www.vipleiloes.com.br/Pesquisa</loc></url>
+  <url><loc>https://www.vipleiloes.com.br/evento/anuncio/</loc></url>
+  <url><loc>https://www.vipleiloes.com.br/evento/detalhes/</loc></url>
+</urlset>
+===== www.santanderimoveis.com.br
+home 403 385 https://www.santanderimoveis.com.br/
+<TITLE>Access Denied
+-- robots
+<HTML><HEAD>
+<TITLE>Access Denied</TITLE>
+</HEAD><BODY>
+<H1>Access Denied</H1>
+ 
+You don't have permission to access "http&#58;&#47;&#47;www&#46;santanderimoveis&#46;com&#46;br&#47;robots&#46;txt" on this server.<P>
+Reference&#32;&#35;18&#46;68cfdb17&#46;1791682166&#46;58887db1
+<P>https&#58;&#47;&#47;errors&#46;edgesuite&#46;net&#47;18&#46;68cfdb17&#46;1791682166&#46;58887db1</P>
+</BODY>
+</HTML>
+
+-- sitemap https://www.santanderimoveis.com.br/sitemap.xml
+<HTML><HEAD>
+<TITLE>Access Denied</TITLE>
+</HEAD><BODY>
+<H1>Access Denied</H1>
+ 
+You don't have permission to access "http&#58;&#47;&#47;www&#46;santanderimoveis&#46;com&#46;br&#47;sitemap&#46;xml" on this server.<P>
+Reference&#32;&#35;18&#46;68cfdb17&#46;1791682166&#46;58887e70
+<P>https&#58;&#47;&#47;errors&#46;edgesuite&#46;net&#47;18&#46;68cfdb17&#46;1791682166&#46;58887e70</P>
+</BODY>
+</HTML>
+
+===== www.zukerman.com.br
+home 200 660848 https://www.portalzuk.com.br/
+<title>Leilão de Imóveis Online - Judiciais e Extrajudiciais Zuk
+https://www.portalzuk.com.br/api/indique-leiloeiro-ba
+https://www.portalzuk.com.br/api/indique-leiloeiro-go
+https://www.portalzuk.com.br/api/indique-leiloeiro-ms
+https://www.portalzuk.com.br/api/indique-leiloeiro-pi
+https://www.portalzuk.com.br/api/indique-leiloeiro-pr
+https://www.portalzuk.com.br/api/indique-leiloeiro-rj
+https://www.portalzuk.com.br/api/indique-leiloeiro-ro
+https://www.portalzuk.com.br/api/indique-leiloeiro-sc
+-- robots
+User-Agent: *
+Disallow:
+Disallow:/leiloes/editais/
+Disallow:/login
+Allow:*.js
+Allow:*.css
+Sitemap: https://www.zukerman.com.br/sitemap-index.xml
+
+User-agent: YandexBot
+Disallow:/
+
+
+-- sitemap https://www.zukerman.com.br/sitemap-index.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<sitemap>
+<loc>https://www.zukerman.com.br/sitemap.xml</loc>
+<lastmod>2022-02-18</lastmod>
+</sitemap>
+<sitemap>
+<loc>https://www.zukerman.com.br/sitemap-blog.xml</loc>
+<lastmod>2022-02-18</lastmod>
+</sitemap>
+<sitemap>
+<loc>https://www.zukerman.com.br/sitemap-vendedores.xml</loc>
+<lastmod>2022-02-18</lastmod>
+</sitemap>
+<sitemap>
+<loc>https://www.zukerman.com.br/sitemap-categorias.xml</loc>
+<lastmod>2022-02-18</lastmod>
+</sitemap>
+<sitemap>
+<loc>https://www.zukerman.com.br/sitemap-regioes.xml</loc>
+<lastmod>2022-02-18</lastmod>
+</sitemap>
+<sitemap>
+<loc>https://www.zukerman.com.br/sitemap-produtos.xml</loc>
+<lastmod>2022-02-18</lastmod>
+</sitemap>
+<sitemap>
+<loc>https://www.zukerman.com.br/sitemap-bairros.xml</loc>
+<lastmod>2022-02-18</lastmod>
+</sitemap>
+</sitemapindex>
+
+===== www.emgea.gov.br
+home 200 257978 https://www.emgea.gov.br/
+<title>Emgea - Empresa Gestora de Ativos
+https://www.bing.com/api/maps/mapcontrol?callback=GetMap&key=AvSL3YFjGtjjQm5ZWG-NdPHY4qEHMk7y4sioE5wbU3A8PRbpABYhPCdYMyXXB0c2
+-- robots
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+<title>404 - File or directory not found.</title>
+<style type="text/css">
+<!--
+body{margin:0;font-size:.7em;font-family:Verdana, Arial, Helvetica, sans-serif;background:#EEEEEE;}
+fieldset{padding:0 15px 10px 15px;} 
+h1{font-size:2.4em;margin:0;color:#FFF;}
+h2{font-size:1.7em;margin:0;color:#CC0000;} 
+h3{font-size:1.2em;margin:10px 0 0 0;color:#000000;} 
+#header{width:96%;margin:0 0 0 0;padding:6px 2% 6px 2%;font-family:"trebuchet MS", Verdana, sans-serif;color:#FFF;
+background-color:#555555;}
+#content{margin:0 0 0 2%;position:relative;}
+.content-container{background:#FFF;width:96%;margin-top:8px;padding:10px;position:relative;}
+-->
+</style>
+</head>
+<body>
+<div id="header"><h1>Server Error</h1></div>
+<div id="content">
+ <div class="content-container"><fieldset>
+  <h2>404 - File or directory not found.</h2>
+  <h3>The resource you are looking for might have been removed, had its name changed, or is temporarily unavailable.</h3>
+ </fieldset></div>
+</div>
+</body>
+</html>
+
+-- sitemap https://www.emgea.gov.br/sitemap.xml
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+<title>404 - File or directory not found.</title>
+<style type="text/css">
+<!--
+body{margin:0;font-size:.7em;font-family:Verdana, Arial, Helvetica, sans-serif;background:#EEEEEE;}
+fieldset{padding:0 15px 10px 15px;} 
+h1{font-size:2.4em;margin:0;color:#FFF;}
+h2{font-size:1.7em;margin:0;color:#CC0000;} 
+h3{font-size:1.2em;margin:10px 0 0 0;color:#000000;} 
+#header{width:96%;margin:0 0 0 0;padding:6px 2% 6px 2%;font-family:"trebuchet MS", Verdana, sans-serif;color:#FFF;
+background-color:#555555;}
+#content{margin:0 0 0 2%;position:relative;}
+.content-container{background:#FFF;width:96%;margin-top:8px;padding:10px;position:relative;}
+-->
+</style>
+</head>
+<body>
+<div id="header"><h1>Server Error</h1></div>
+<div id="content">
+ <div class="content-container"><fieldset>
+  <h2>404 - File or directory not found.</h2>
+  <h3>The resource you are looking for might have been removed, had its name changed, or is temporarily unavailable.</h3>
+ 
+===== www.bb.com.br
+home 403 83566 https://www.bb.com.br/
+-- robots
+<html>
+  <head>
+    <link
+      rel="icon"
+      href="https://bb.com.br/site/wp-content/themes/portal40/img/icn-am.ico"
+      type="image/x-icon"
+    />
+  </head>
+  <style>
+    @font-face {
+      font-family: relacionamento;
+      font-style: normal;
+      font-weight: 400;
+      src: url("data:font/woff;base64,d09GRgABAAAAABEQABAAAAAAHHgAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAAQ9AAAABoAAAAclcAHbkdERUYAABDYAAAAHAAAAB4AJwAQT1MvMgAAAdwAAABKAAAAYEDBXS1jbWFwAAACRAAAAEIAAAFCAA/0smN2dCAAAAn0AAAACwAAAA4AAAAAZnBnbQAAAogAAAbtAAAODGIu+XpnYXNwAAAQ0AAAAAgAAAAIAAAAEGdseWYAAAoYAAAFUAAAB6CX66lDaGVhZAAAAWwAAAAvAAAANhv4SShoaGVhAAABnAAAAB0AAAAkA9wB2mhtdHgAAAIoAAAAGwAAABwGawB8bG9jYQAACgAAAAAWAAAAFgj4Bt5tYXhwAAABvAAAACAAAAAgAWIBVG5hbWUAAA9oAAAA9QAAAelSrFvWcG9zdAAAEGAAAABuAAAAj0XRCThwcmVwAAAJeAAAAHoAAACcfrY7tnicY2BkYGAAYlfuFst4fpuvDPJMDCBwN6vFG06z/L/K+IbxAJDLwQCWBgANzwqMAHicY2BkYGA88P8qgx4TAwgwvmFgZEAFLABkZQO5AAAAAAEAAAAKAFoACgAAAAAAAgAgAEgAjQAAAKAAsAAAAAB4nGNgYWJgnMDAysDA6MOYxsDA4A6lvzJIMrQwMDAxsHIywIEAgskQkOaawtDwkfEjO+OB/wcY9BgPMGgDhRmRlCgwMAIACNALgwAAeJxjYmAQZAACJghWZ9AGQlEg1GZgAQAJHQDuAHicY2BgYGaAYBkGRgYQsAHyGMF8FgYFIM0ChED+R/b//4Ek4////ExQlQyMbAwwJgMjE5BgYkAFjAzDHgAAQ/kGswAAeJytV2tbG8cVntUNjAEDQtjNuu4oY1GXHckkcRxiKw7ZZVEcJanAuN11brtIuE2TXpLe6DW9X5Q/c1a0T51v+Wl5z8xKAQfcp89TPui8M/POnOucWUhoSeJ+FMZSdh+J+Z0uVe49iOiGS9fi5KEc3o+o0Eg/mxbTot9X+269TiImEaitkXBEkPhNcjTJ5GGTClrVVb1JRS0HR8XlmvADqgYySfyssBz4WaMYUCHYO5Q0qwCCdECl3uGoUCjgGKofXK7z7Gi+5viXJaDyR1WnijVFohcdxKMVp2AUljQVPaoFEeujlSDIC
+-- sitemap https://www.bb.com.br/sitemap.xml
+<html>
+  <head>
+    <link
+      rel="icon"
+      href="https://bb.com.br/site/wp-content/themes/portal40/img/icn-am.ico"
+      type="image/x-icon"
+    />
+  </head>
+  <style>
+    @font-face {
+      font-family: relacionamento;
+      font-style: normal;
+      font-weight: 400;
+      src: url("data:font/woff;base64,d09GRgABAAAAABEQABAAAAAAHHgAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAAQ9AAAABoAAAAclcAHbkdERUYAABDYAAAAHAAAAB4AJwAQT1MvMgAAAdwAAABKAAAAYEDBXS1jbWFwAAACRAAAAEIAAAFCAA/0smN2dCAAAAn0AAAACwAAAA4AAAAAZnBnbQAAAogAAAbtAAAODGIu+XpnYXNwAAAQ0AAAAAgAAAAIAAAAEGdseWYAAAoYAAAFUAAAB6CX66lDaGVhZAAAAWwAAAAvAAAANhv4SShoaGVhAAABnAAAAB0AAAAkA9wB2mhtdHgAAAIoAAAAGwAAABwGawB8bG9jYQAACgAAAAAWAAAAFgj4Bt5tYXhwAAABvAAAACAAAAAgAWIBVG5hbWUAAA9oAAAA9QAAAelSrFvWcG9zdAAAEGAAAABuAAAAj0XRCThwcmVwAAAJeAAAAHoAAACcfrY7tnicY2BkYGAAYlfuFst4fpuvDPJMDCBwN6vFG06z/L/K+IbxAJDLwQCWBgANzwqMAHicY2BkYGA88P8qgx4TAwgwvmFgZEAFLABkZQO5AAAAAAEAAAAKAFoACgAAAAAAAgAgAEgAjQAAAKAAsAAAAAB4nGNgYWJgnMDAysDA6MOYxsDA4A6lvzJIMrQwMDAxsHIywIEAgskQkOaawtDwkfEjO+OB/wcY9BgPMGgDhRmRlCgwMAIACNALgwAAeJxjYmAQZAACJghWZ9AGQlEg1GZgAQAJHQDuAHicY2BgYGaAYBkGRgYQsAHyGMF8FgYFIM0ChED+R/b//4Ek4////ExQlQyMbAwwJgMjE5BgYkAFjAzDHgAAQ/kGswAAeJytV2tbG
