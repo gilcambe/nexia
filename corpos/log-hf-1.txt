@@ -1,0 +1,4 @@
+m-negra-alto-frente 1 ok
+f-clara-alto-frente 1 ok
+m-negra-alto-frente 2 ok
+f-clara-alto-frente 2 erro You have exceeded your ZeroGPU quota (90s requested vs. 0s left). Try again in 0:00:00. Authenticate with a Hugging Face token for more quota - https://huggingface.co/settings/tokens
