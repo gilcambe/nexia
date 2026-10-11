@@ -22,7 +22,7 @@
     zuk: 'https://www.zuk.com.br/leiloes',
     megaLeiloes: 'https://www.megaleiloes.com.br',
     sold: 'https://www.sold.com.br/leiloes',
-    frazao: 'https://www.frazão.com.br/leiloes',
+    frazao: 'https://www.frazao.com.br/leiloes',
     biasi: 'https://www.biasi.com.br/leiloes',
     lanceJudicial: 'https://www.lancejudicial.com.br',
     tjsp: 'https://www.tjsp.jus.br/consulta-leilao'
