@@ -598,6 +598,47 @@
       (mapa ? '<div class="acoes"><a class="btn pequeno claro" target="_blank" rel="noopener" href="' + esc(mapa) + '">Ver no mapa</a></div>' : '') +
       '<p class="dica">Fontes: ' + esc((g.fontes || []).join('; ')) + '.</p></div>';
   }
+  // O mapa (Nominatim e Overpass, do OpenStreetMap) não atende pedidos vindos de servidores na nuvem:
+  // quando o servidor não conseguiu, o próprio navegador pergunta (as duas APIs aceitam, são grátis e públicas).
+  var SERVICOS = [
+    ['educacao', 'Escolas e faculdades', '[amenity~"^(school|kindergarten|college|university)$"]'],
+    ['saude', 'Saúde (hospital, posto, farmácia)', '[amenity~"^(hospital|clinic|doctors|pharmacy)$"]'],
+    ['mercado', 'Mercados e padarias', '[shop~"^(supermarket|convenience|bakery|greengrocer)$"]'],
+    ['transporte', 'Ônibus, metrô e trem', '[highway=bus_stop]', '[railway~"^(station|subway_entrance|tram_stop)$"]'],
+    ['lazer', 'Praças e parques', '[leisure~"^(park|playground|sports_centre|pitch)$"]'],
+    ['comercio', 'Bancos, restaurantes e comércio', '[amenity~"^(bank|restaurant|cafe|fast_food)$"]'],
+  ];
+  function semAcento(t) { return String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim(); }
+  function jsonGet(url, opcoes) { return fetch(url, opcoes).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
+  function mapaNoNavegador(g) {
+    if (!g || g.servicos || !atual.endereco) return Promise.resolve(g);
+    var cidade = semAcento(g.municipio.nome);
+    var rua = atual.endereco.split(/,|\s-\s/).slice(0, 2).join(',').replace(/\b(apto?|apartamento|casa|bloco|lote)\b.*$/i, '').trim();
+    var base = 'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&addressdetails=1';
+    var tentativas = [base + '&q=' + encodeURIComponent([atual.endereco, g.municipio.nome, g.municipio.uf, 'Brasil'].join(', ')),
+      base + '&street=' + encodeURIComponent(rua) + '&city=' + encodeURIComponent(g.municipio.nome) + '&state=' + encodeURIComponent(g.municipio.uf) + '&country=Brasil'];
+    function tentar(i) {
+      if (i >= tentativas.length) return Promise.resolve(null);
+      return jsonGet(tentativas[i], { headers: { 'Accept-Language': 'pt-BR' } }).then(function (j) {
+        var a = j && j[0], ad = a && a.address || {};
+        if (a && semAcento(ad.city || ad.town || ad.village || ad.municipality) === cidade) return a;
+        return tentar(i + 1);
+      });
+    }
+    return tentar(0).then(function (a) {
+      if (!a) return g;
+      var lat = Number(Number(a.lat).toFixed(5)), lon = Number(Number(a.lon).toFixed(5)), ad = a.address || {};
+      g.local = { lat: lat, lon: lon, endereco: String(a.display_name || '').slice(0, 200), bairro: String(ad.suburb || ad.neighbourhood || ad.city_district || '').slice(0, 80), na_cidade: true };
+      var perto = 'nwr(around:1000,' + lat + ',' + lon + ')';
+      var q = '[out:json][timeout:20];' + SERVICOS.map(function (sv) { return '(' + sv.slice(2).map(function (f) { return perto + f + ';'; }).join('') + ');out count;'; }).join('');
+      var corpo = { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'data=' + encodeURIComponent(q) };
+      return jsonGet('https://overpass-api.de/api/interpreter', corpo).then(function (j) { return j && j.elements ? j : jsonGet('https://overpass.kumi.systems/api/interpreter', corpo); }).then(function (j) {
+        if (j && j.elements && j.elements.length === SERVICOS.length) g.servicos = SERVICOS.map(function (sv, i) { return { id: sv[0], nome: sv[1], qtd: Number(j.elements[i].tags && j.elements[i].tags.total) || 0 }; });
+        g.fontes = (g.fontes || []).concat('OpenStreetMap (Nominatim para o endereço e Overpass para os serviços perto)');
+        return g;
+      });
+    });
+  }
   function linkAnuncios() {
     var g = atual.regiao, bairro = g && g.local && g.local.bairro ? g.local.bairro : '';
     var tipo = (atual.analise_edital && atual.analise_edital.tipo_imovel) || 'imóvel';
@@ -608,8 +649,8 @@
     var b = this; lerCampos();
     if (!atual.cidade || !atual.uf) { $('im-regiao-res').innerHTML = '<div class="msg erro">Preencha a cidade e o estado do imóvel (em "Dados do imóvel").</div>'; return; }
     b.disabled = true; $('im-regiao-res').innerHTML = '<div class="msg aviso">Consultando IBGE, Banco Central e o mapa…</div>';
-    api({ acao: 'regiao', endereco: atual.endereco, cidade: atual.cidade, uf: atual.uf }).then(function (j) {
-      atual.regiao = j.regiao; $('im-regiao-res').innerHTML = resumoRegiao(j.regiao); linkAnuncios(); recalcular();
+    api({ acao: 'regiao', endereco: atual.endereco, cidade: atual.cidade, uf: atual.uf }).then(function (j) { return mapaNoNavegador(j.regiao); }).then(function (g) {
+      atual.regiao = g; $('im-regiao-res').innerHTML = resumoRegiao(g); linkAnuncios(); recalcular();
     }).catch(function (e) { $('im-regiao-res').innerHTML = '<div class="msg erro">' + esc(e.message) + '</div>'; }).then(function () { b.disabled = false; });
   };
   $('pg-imovel').addEventListener('input', function (ev) { if (ev.target.matches('[data-campo], #im-alertas')) { recalcular(); if (ev.target.id === 'im-cidade' || ev.target.id === 'im-uf') guiaIptu(); } });

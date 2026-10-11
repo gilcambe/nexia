@@ -264,6 +264,8 @@ ATÉ QUANTO DAR DE LANCE
 ANTES DE DAR O LANCE
 Em cada título escreva de 1 a 4 frases curtas. Use só os dados do JSON: nunca invente números, leis, datas ou fatos. Quando faltar um dado, diga o que falta conferir. O veredito e o lance limite têm de ser os mesmos do motor (motor.veredito e motor.lance_limite). Sem markdown (sem asteriscos, sem #, sem listas com traço). Termine com a frase: "Análise automática: confirme com um advogado antes de dar lance."`;
 
+function parecerCompleto(t) { return /ANTES DE DAR O LANCE/i.test(t) && /advogado/i.test(t) && String(t).length > 400; }
+
 function extrairJson(texto) {
   const t = String(texto || '').replace(/```(?:json)?/gi, '');
   const i = t.indexOf('{');
@@ -279,8 +281,9 @@ function modelosGratis(FREE, { longo, imagens }) {
   return lista;
 }
 
-async function perguntarIa({ router, FREE, system, conteudo, imagens, maxTokens, timeoutMs = 15000, totalMs = 45000, now = Date.now }) {
+async function perguntarIa({ router, FREE, system, conteudo, imagens, maxTokens, timeoutMs = 15000, totalMs = 45000, now = Date.now, aceita }) {
   const inicio = now();
+  let reserva = null; // resposta incompleta: só usada se nenhum outro modelo grátis completar
   const lista = modelosGratis(FREE, { longo: conteudo.length > 16000, imagens: imagens && imagens.length });
   for (const d of lista) {
     const resta = totalMs - (now() - inicio);
@@ -292,10 +295,14 @@ async function perguntarIa({ router, FREE, system, conteudo, imagens, maxTokens,
         router.chat(d, { system, messages: [{ role: 'user', content: conteudo }], maxTokens, ...(imagens && imagens.length ? { images: imagens } : {}) }),
         new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), Math.min(timeoutMs, resta))),
       ]);
-      if (out && out.text) return { texto: out.text, modelo: `${d.provider}:${d.model}` };
+      if (out && out.text) {
+        const r = { texto: out.text, modelo: `${d.provider}:${d.model}` };
+        if (!aceita || aceita(out.text)) return r;
+        if (!reserva || out.text.length > reserva.texto.length) reserva = r;
+      }
     } catch { /* próximo modelo grátis */ }
   }
-  return null;
+  return reserva;
 }
 
 // Imóvel salvo: só campos simples (texto, número, booleano, listas curtas, objetos rasos).
@@ -458,9 +465,13 @@ function createHandler(deps = {}) {
       const FREE = getFree();
       if (acao === 'parecer') {
         const dados = JSON.stringify({ imovel: limparValor(body.imovel), conta: limparValor(body.conta), motor: limparValor(body.motor), regiao: limparValor(body.regiao) }).slice(0, 30000);
-        const out = await perguntarIa({ router, FREE, system: PEDIDO_PARECER, conteudo: dados, maxTokens: 1600, now });
+        // Modelos que "pensam" gastam parte do limite antes de escrever: limite folgado e só aceita o parecer inteiro.
+        const out = await perguntarIa({ router, FREE, system: PEDIDO_PARECER, conteudo: dados, maxTokens: 4000, now, aceita: parecerCompleto });
         if (!out) return res(503, { error: 'A IA grátis está ocupada agora. Tente de novo em instantes.' });
-        return res(200, { ok: true, texto: out.texto.trim(), modelo: out.modelo });
+        let texto = out.texto.replace(/[*#]+/g, '').replace(/[ \t]+\n/g, '\n').trim();
+        const inteiro = parecerCompleto(texto);
+        if (!/confirme com um advogado/i.test(texto)) texto += (inteiro ? '' : '\n\n(O parecer veio cortado pela IA grátis. Toque de novo para pedir outro.)') + '\n\nAnálise automática: confirme com um advogado antes de dar lance.';
+        return res(200, { ok: true, texto, modelo: out.modelo, completo: inteiro });
       }
       const tipo = body.tipo === 'matricula' ? 'matricula' : 'edital';
       const texto = str(body.texto, TEXTO_MAX + 1);

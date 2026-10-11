@@ -15,7 +15,10 @@ const leilao = require('../../netlify/functions/leilao.js');
 const { AGENDAS } = require('../../clientes/agendas.js');
 const { fakeDb } = require('../helpers/agenda-fake-db.js');
 const { fetchRegiao } = require('../helpers/regiao-fake.js');
-const regiao = fetchRegiao();
+// O servidor na nuvem não consegue o mapa (como no ar): quem acha o endereço e os serviços é o navegador.
+const regiao = fetchRegiao({ semMapa: true });
+const mapa = fetchRegiao();
+const pedidosMapa = [];
 
 const RAIZ = path.join(__dirname, '../../sites/bezsan');
 const FOTOS = process.argv[2] || '';
@@ -113,6 +116,11 @@ const CSV = Buffer.from([
     if (u.startsWith('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/')) {
       if (!PDFJS_DIR) return route.continue();
       return route.fulfill({ status: 200, contentType: 'text/javascript', body: fs.readFileSync(path.join(PDFJS_DIR, path.basename(new URL(u).pathname))) });
+    }
+    if (/^https:\/\/(nominatim\.openstreetmap\.org|overpass-api\.de)\//.test(u)) {
+      pedidosMapa.push(u);
+      const r = await mapa.fn(u, { body: route.request().postData() });
+      return route.fulfill({ status: 200, headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' }, body: JSON.stringify(await r.json()) });
     }
     if (u.startsWith(base) || u.startsWith('data:') || u.startsWith('blob:')) return route.continue();
     return route.abort();
@@ -261,6 +269,7 @@ const CSV = Buffer.from([
   await pg.waitForFunction(() => /Região analisada/.test(document.querySelector('#im-regiao-res').textContent), null, { timeout: 15000 });
   const rg = await pg.textContent('#im-regiao-res');
   confere(rg.includes('11.451.245') && rg.includes('Santa Cecília') && rg.includes('Escolas e faculdades: 26'), 'região: população do Censo, bairro no mapa e serviços a 1 km');
+  confere(pedidosMapa.some(u => /nominatim/.test(u)) && pedidosMapa.some(u => /overpass/.test(u)), 'o navegador acha o endereço e os serviços no mapa quando o servidor não consegue');
   confere((await pg.getAttribute('#im-regiao-res a', 'href')).startsWith('https://www.openstreetmap.org/?mlat=-23.55274'), '"Ver no mapa" abre o OpenStreetMap no endereço');
   confere(/\d+\/100/.test(await pg.textContent('#pc-pilares [data-pilar="regiao"] .cab')) && (await pg.textContent('#pc-pilares [data-pilar="regiao"]')).includes('IVG-R'), 'pilar região ganha nota e a valorização do Banco Central');
   confere((await pg.getAttribute('#im-m2-busca', 'href')).includes(encodeURIComponent('Santa Cecília')), '"Ver anúncios parecidos" pesquisa no bairro do imóvel');
