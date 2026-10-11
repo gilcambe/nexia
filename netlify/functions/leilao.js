@@ -509,7 +509,7 @@ function createHandler(deps = {}) {
       }
       if (texto.length < 200 && !imagens.length) return res(400, { error: 'Não consegui ler o documento. Envie o PDF do edital ou da matrícula, ou cole o texto.' });
       const conteudo = (tipo === 'edital' ? 'EDITAL:\n' : 'MATRÍCULA:\n') + (texto ? texto.slice(0, TEXTO_MAX) : '(o documento está nas imagens)');
-      const out = await perguntarIa({ router, FREE, system: tipo === 'edital' ? PEDIDO_EDITAL : PEDIDO_MATRICULA, conteudo, imagens, maxTokens: 2500, now });
+      const out = await perguntarIa({ router, FREE, system: tipo === 'edital' ? PEDIDO_EDITAL : PEDIDO_MATRICULA, conteudo, imagens, maxTokens: 2500, now, aceita: t => !!extrairJson(t) });
       if (!out) return res(503, { error: 'A IA grátis está ocupada agora. Tente de novo em instantes.' });
       const dados = extrairJson(out.texto);
       if (!dados) return res(502, { error: 'A IA não devolveu uma análise legível. Tente de novo.' });
