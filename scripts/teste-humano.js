@@ -145,7 +145,9 @@ async function cenarioTreino(browser, base, viewport) {
     await page.goto(base + 'auth', { waitUntil: 'load', timeout: 45000 });
     await page.locator('input[type=email], input[type=text]').first().fill(process.env.LOGIN_USER, { timeout: 3000 });
     await page.locator('input[type=password]').first().fill(process.env.LOGIN_PASS || '', { timeout: 3000 });
-    await page.locator('button[type=submit]').first().click({ timeout: 3000 });
+    // A abertura NEXIA (1 a 2 s) pode estar por cima do botão: espera ela sair; se ainda assim não der, aperta Enter na senha.
+    await page.locator('button[type=submit]').first().click({ timeout: 10000 })
+      .catch(() => page.locator('input[type=password]').first().press('Enter'));
     await page.waitForFunction(() => !/\/auth/.test(location.pathname), null, { timeout: 20000 }).catch(() => {});
     if (/\/auth/.test(new URL(page.url()).pathname)) {
       const msg = await page.evaluate(() => (document.body.innerText || '').replace(/\s+/g, ' ').slice(0, 300)).catch(() => '');
@@ -180,9 +182,22 @@ async function cenarioTreino(browser, base, viewport) {
     onde = 'ícone do chat do coach';
     if (!(await page.getByRole('button', { name: /coach/i }).count())) nota(tela, onde, 'não existe o ícone/botão do chat do coach na tela do treino');
     onde = 'mudar a ordem dos exercícios';
-    if (!(await page.locator('button[title*="Subir"], button[title*="Descer"], button[aria-label*="Subir"], button[aria-label*="Descer"]').count())) nota(tela, onde, 'não existe como mudar a ordem dos exercícios | botões: ' + (await page.evaluate(() => [...document.querySelectorAll('button')].map(b => (b.getAttribute('aria-label') || b.title || b.innerText || '?').trim().slice(0, 25)).join(' / ')).catch(() => '')).slice(0, 400));
+    if (!(await page.locator('button[title*="Subir"], button[title*="Descer"], button[aria-label*="Mudar a ordem"]').count())) nota(tela, onde, 'não existe como mudar a ordem dos exercícios | botões: ' + (await page.evaluate(() => [...document.querySelectorAll('button')].map(b => (b.getAttribute('aria-label') || b.title || b.innerText || '?').trim().slice(0, 25)).join(' / ')).catch(() => '')).slice(0, 400));
     await page.screenshot({ path: path.join(OUT, `${viewport.nome}-treino-ativo.png`), fullPage: true }).catch(() => {});
-    feitos.push(`${tela}: montou o treino, iniciou, trocou exercício (${n} opções), conferiu botões`);
+    // Próximo e Anterior: avança um exercício e volta para o mesmo.
+    onde = 'botões Próximo e Anterior';
+    // "Exercício N" no topo do cartão diz em qual exercício o aluno está.
+    const nomeAtual = async () => (await page.getByText(/^\s*Exercício \d+\s*$/i).first().innerText().catch(() => '')).trim();
+    const primeiro = await nomeAtual();
+    if (await page.getByRole('button', { name: /voltar ao exercício anterior/i }).count()) nota(tela, onde, 'no 1º exercício já aparece o botão Anterior');
+    await page.getByRole('button', { name: /CONCLUIR → PRÓXIMO/i }).click({ timeout: 5000 });
+    await page.waitForTimeout(300);
+    const segundo = await nomeAtual();
+    if (segundo === primeiro) nota(tela, onde, 'Próximo não mudou de exercício');
+    await page.getByRole('button', { name: /voltar ao exercício anterior/i }).click({ timeout: 5000 });
+    await page.waitForTimeout(300);
+    if ((await nomeAtual()) !== primeiro) nota(tela, onde, `Anterior não voltou ao exercício "${primeiro}"`);
+    feitos.push(`${tela}: montou o treino, iniciou, trocou exercício (${n} opções), foi ao próximo e voltou com Anterior, conferiu botões`);
   } catch (e) {
     const vi = await page.evaluate(() => (document.body.innerText || '').replace(/\s+/g, ' ').slice(0, 220)).catch(() => '');
     nota(tela, onde, `o cenário do treino parou: ${e.message.slice(0, 90)} | tela: ${vi} | endereço: ${page.url().slice(-40)}`);
