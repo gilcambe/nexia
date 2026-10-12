@@ -1,45 +1,47 @@
-# Manual do Robô de Ofertas – Afiliados
+# Manual do Robô de Ofertas e Guia Completo para Afiliados
 
-## 1. O que é
-O Robô de Ofertas ajuda você a encontrar descontos e ganhar comissões divulgando links.
-- Receba links de ofertas.
-- Divulgue em suas redes.
-- Receba comissões por venda.
+Este manual foi elaborado para orientar todos os parceiros afiliados sobre como utilizar o Robô de Ofertas de maneira eficiente, segura e em conformidade com as regras estabelecidas, permitindo maximizar seus ganhos através do celular ou computador.
+
+## 1. O que é o Robô de Ofertas
+O Robô de Ofertas é uma ferramenta inteligente criada para auxiliar você a encontrar os melhores descontos do mercado e obter comissões ao divulgar links exclusivos.
+- Receba listas diárias de ofertas atualizadas automaticamente.
+- Divulgue facilmente em suas redes sociais e grupos favoritos.
+- Receba comissões transparentes por cada venda realizada através do seu link.
 
 ## 2. Como usar pelo celular
-Instale o aplicativo Android ou iOS e siga o passo a passo.
+Você pode gerenciar todo o seu negócio diretamente pelo seu smartphone, utilizando o aplicativo Android ou iOS ou acessando o site responsivo.
 ### 2.1 Instalação e Cadastro
-1. Baixe o app na loja oficial.
-2. Crie sua conta com e-mail e senha.
-3. Faça login e acesse o menu inferior.
+1. Baixe o aplicativo oficial na loja de aplicativos do seu celular.
+2. Crie sua conta utilizando seu e-mail principal e uma senha segura.
+3. Faça login e explore o menu inferior para conhecer todas as opções.
 
 ### 2.2 Navegação e Links
-- Use a aba "Ofertas" para buscar produtos.
-- Copie seu link exclusivo em "Meu link".
-- Ative notificações para novos alertas.
+- Use a aba "Ofertas" para pesquisar produtos específicos com descontos imperdíveis.
+- Copie o seu link exclusivo diretamente na seção "Meu link" para garantir a sua comissão.
+- Ative as notificações push para receber alertas instantâneos de novas promoções.
 
-## 3. Lojas
-O sistema trabalha com centenas de lojas parceiras separadas por categorias.
-- Tecnologia, Moda, Casa, Saúde e Esportes.
-- Busque a loja desejada e confira a comissão antes de divulgar.
+## 3. Lojas Parceiras e Comissões
+O sistema trabalha integrado com centenas de lojas parceiras de grande porte, organizadas em categorias bem definidas.
+- Encontre produtos nas categorias de Tecnologia, Moda, Casa, Saúde e Esportes.
+- Busque a loja desejada e confira sempre a porcentagem da comissão antes de realizar qualquer divulgação.
 
-## 4. Redes e segredos
-Variáveis de ambiente configuradas no `.env` ou no painel do Cloudflare e Firebase:
-- `PAYMENT_API_KEY`: chave de pagamentos.
-- `MAILGUN_API_KEY`: envio de e-mails.
-- `WHATSAPP_TOKEN`: token de mensagens.
+## 4. Configurações de Rede e Integração
+Para o funcionamento correto da plataforma, as variáveis de ambiente essenciais são configuradas no arquivo `.env` ou diretamente no painel do Cloudflare e do Firebase:
+- `PAYMENT_API_KEY`: Chave de integração para processamento de pagamentos e repasses.
+- `MAILGUN_API_KEY`: Chave para o disparo de e-mails transacionais e notificações.
+- `WHATSAPP_TOKEN`: Token de autenticação para envio de mensagens via API do WhatsApp.
 
-## 5. WhatsApp
-Use o botão "Compartilhar via WhatsApp" na página de oferta para abrir o aplicativo com a mensagem pré-preenchida, garantindo segurança e evitando spam.
+## 5. Divulgação via WhatsApp
+Utilize o botão de ação rápida "Compartilhar via WhatsApp" presente em todas as páginas de oferta para abrir o aplicativo instantaneamente com a mensagem pré-preenchida, garantindo agilidade, segurança e evitando o envio manual incorreto de links.
 
-## 6. Regras para não ser bloqueado
-Para manter sua conta ativa:
-- Não envie spam.
-- Use apenas links oficiais.
-- Respeite as políticas das redes sociais.
+## 6. Regras de Segurança para Evitar o Bloqueio de Contas
+Para manter sua conta sempre ativa, regular e segura, siga rigorosamente estas orientações fundamentais:
+- Nunca envie mensagens em massa não solicitadas (spam) em grupos onde não é permitido.
+- Utilize exclusivamente os links oficiais gerados pelo seu painel de afiliado.
+- Respeite rigorosamente as políticas de privacidade e os termos de uso das redes sociais e plataformas de mensagens.
 
-## 7. Trocar o nome do site, os temas ou os limites
-Personalize seu espaço facilmente:
-- **Nome:** Altere nas configurações do projeto.
-- **Temas:** Ajuste as variáveis CSS de cor e fonte.
-- **Limites:** Modifique os parâmetros de requisições e ofertas no painel.
+## 7. Como Trocar o Nome do Site, os Temas Visuais e os Limites
+Personalize a sua experiência e adapte a plataforma às suas necessidades específicas de forma simples:
+- **Nome do site:** Altere o título e o nome comercial diretamente nas configurações gerais do projeto ou no arquivo de configuração principal.
+- **Temas visuais:** Ajuste as variáveis de cores, fontes e estilos localizadas no arquivo CSS principal para refletir a identidade desejada.
+- **Limites operacionais:** Modifique os parâmetros de requisições, paginação de ofertas e limites de envio no painel de administração da plataforma.
