@@ -48,7 +48,7 @@ O WhatsApp é um dos principais canais de conversão para afiliados, mas deve se
 - Evite ferramentas de envio automático massivo ou disparo em massa que violem os termos de uso do aplicativo de mensagens.
 - Mantenha uma comunicação transparente e honesta com seus seguidores, informando claramente que os links enviados são de afiliados.
 
-## 6. Regras para Não Ser Bloqueado
+## 6. Regras para não ser bloqueado
 Para manter sua conta ativa, segura e com bom desempenho a longo prazo, siga rigorosamente as diretrizes de conduta da plataforma e das redes sociais:
 
 - Evite a prática de spam e o envio repetido e excessivo do mesmo link em curtos períodos de tempo nos grupos.
@@ -56,7 +56,7 @@ Para manter sua conta ativa, segura e com bom desempenho a longo prazo, siga rig
 - Identifique claramente os links de afiliado quando exigido pelas redes sociais ou pelas diretrizes comerciais vigentes.
 - Não utilize bots, scripts ou ferramentas de automação não autorizadas que possam comprometer a integridade do sistema ou simular cliques falsos.
 
-## 7. Trocar o Nome do Site, os Temas ou os Limites
+## 7. Trocar o nome do site, os temas ou os limites
 O sistema é altamente customizável, permitindo que administradores ajustem parâmetros visuais e operacionais conforme a necessidade do projeto:
 
 - Nome do site e identidade: Altere diretamente no arquivo de configuração principal ou através do painel de administração da plataforma.
