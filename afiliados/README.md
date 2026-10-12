@@ -46,6 +46,13 @@ O WhatsApp é um canal de conversão importante, use com responsabilidade.
 - Evite envio automático massivo que viole os termos de uso.
 - Mantenha comunicação transparente com seus seguidores.
 
+## 5. Boas Práticas no WhatsApp
+O WhatsApp é um canal de conversão importante, use com responsabilidade.
+
+- Use "Compartilhar via WhatsApp" para pré-preencher mensagens.
+- Evite envio automático massivo que viole os termos de uso.
+- Mantenha comunicação transparente com seus seguidores.
+
 ## 6. Regras para não ser bloqueado
 Para manter sua conta ativa e evitar bloqueios nas redes sociais e canais de divulgação, siga rigorosamente as orientações abaixo:
 
