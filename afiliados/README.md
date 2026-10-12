@@ -69,11 +69,6 @@ Em elas são agrupadas por categorias para facilitar a navegação.
 - Combine ofertas de diferentes categorias para alcançar mais pessoas.
 - Atualize seus links regularmente para aproveitar novas promoções.
 
-## Conclusão
-Com o Robô de Ofertas, você tem uma ferramenta simples e poderosa para gerar renda extra.
-Tudo pode ser feito diretamente do celular, sem precisar de um site ou blog.
-Comece hoje, siga os passos acima e veja seus resultados crescerem.
-
 ## 4. Redes e segredos
 
 As redes e segredos são variáveis de ambiente que permitem que o Robô de Ofertas acesse serviços externos, como APIs de pagamento, integrações de e-mail, ou autenticação. Você pode configurar essas variáveis em três locais:
@@ -91,19 +86,24 @@ As redes e segredos são variáveis de ambiente que permitem que o Robô de Ofer
 
 Para compartilhar ofertas via WhatsApp, clique no botão “Compartilhar via WhatsApp” na página de oferta. O link abre o WhatsApp Web ou aplicativo com a mensagem pré‑preenchida contendo o título e link da oferta. Essa abordagem manual garante que o usuário veja o conteúdo antes de enviar, evitando phishing e mantendo a segurança do serviço.
 
-## 6. Regras para nao ser bloqueado
+## 6. Regras para não ser bloqueado
 
-Para garantir que sua conta e seus canais de divulgacao continuem ativos e seguros, siga estas regras fundamentais:
+Para garantir que sua conta e seus canais de divulgação continuem ativos e seguros, siga estas regras fundamentais:
 
-- Nao envie links repetidos ou spam em grupos e redes sociais.
-- Respeite as politicas de privacidade e os termos de uso de cada plataforma onde divulgar.
-- Identifique claramente que seus links sao de afiliado quando exigido pelas normas locais.
-- Nao utilize metodos automaticos ou bots nao autorizados para disparar mensagens.
+- Não envie links repetidos ou spam em grupos e redes sociais.
+- Respeite as políticas de privacidade e os termos de uso de cada plataforma onde divulgar.
+- Identifique claramente que seus links são de afiliado quando exigido pelas normas locais.
+- Não utilize métodos automáticos ou bots não autorizados para disparar mensagens.
 
 ## 7. Trocar o nome do site, os temas ou os limites
 
-Voce pode personalizar facilmente o funcionamento e a identidade visual do Robô de Ofertas:
+Você pode personalizar facilmente o funcionamento e a identidade visual do Robô de Ofertas:
 
-- Nome do site: Altere o titulo principal e as configuracoes de exibicao no arquivo de configuracao ou no painel de administracao.
-- Temas: Personalize as cores, fontes e estilos editando as variaveis CSS e os arquivos de estilo do projeto.
-- Limites: Ajuste as cotas de requisicoes, limites de compartilhamento e configuracoes de desempenho diretamente nas variaveis de ambiente e configuracoes do servidor.
+- Nome do site: Altere o título principal e as configurações de exibição no arquivo de configuração ou no painel de administração.
+- Temas: Personalize as cores, fontes e estilos editando as variáveis CSS e os arquivos de estilo do projeto.
+- Limites: Ajuste as cotas de requisições, limites de compartilhamento e configurações de desempenho diretamente nas variáveis de ambiente e configurações do servidor.
+
+## Conclusão
+Com o Robô de Ofertas, você tem uma ferramenta simples e poderosa para gerar renda extra.
+Tudo pode ser feito diretamente do celular, sem precisar de um site ou blog.
+Comece hoje, siga os passos acima e veja seus resultados crescerem.
