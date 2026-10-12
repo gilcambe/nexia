@@ -47,16 +47,19 @@ O WhatsApp é um canal de conversão importante, use com responsabilidade.
 - Mantenha comunicação transparente com seus seguidores.
 
 ## 6. Regras para não ser bloqueado
-Para manter sua conta ativa e evitar bloqueios nas redes sociais e canais de divulgação, siga rigorosamente as orientações abaixo:
+Para manter sua conta sempre ativa e evitar bloqueios nas redes sociais e canais de divulgação, siga rigorosamente as orientações abaixo:
 
-- Evite envio em massa não autorizado, mensagens repetitivas ou práticas que caracterizem spam em grupos de WhatsApp e Telegram.
-- Informe de maneira clara e transparente aos seus seguidores que os links compartilhados são de afiliado e geram comissão para você.
-- Respeite os limites operacionais diários de cliques, disparos e interações definidos pelo sistema e pelas plataformas parceiras.
-- Mantenha uma postura ética, divulgando apenas promoções reais, verificadas e de lojas idôneas para proteger seu público.
+- Evite envio em massa não autorizado, mensagens repetitivas ou qualquer prática que caracterize spam em grupos de WhatsApp e canais do Telegram.
+- Informe de maneira clara e transparente aos seus seguidores que os links compartilhados são de afiliado e podem gerar comissão para você.
+- Respeite os intervalos entre mensagens e os limites operacionais diários de cliques, disparos e interações definidos pelas plataformas parceiras.
+- Mantenha uma postura ética, divulgando apenas promoções reais, ativas e de lojas parceiras idôneas para proteger o seu público.
+- Nunca utilize palavras enganosas, promessas de ganhos fáceis ou chamadas sensacionalistas que induzam o usuário a erro.
+- Respeite sempre os pedidos de descadastro ou saída de membros dos seus grupos e listas de transmissão.
 
 ## 7. Trocar o nome do site, os temas ou os limites
-Você pode adaptar a plataforma facilmente para atender às suas necessidades de marca e operação através das configurações:
+Você pode adaptar a plataforma facilmente para atender às suas necessidades de marca e operação através das opções de configuração:
 
-- **Nome do site:** Altere o título principal, textos de cabeçalho e metadados nos arquivos de configuração do projeto ou no painel de administração.
-- **Temas:** Personalize cores, logotipos e fontes editando as variáveis CSS e os estilos globais do design system mobile-first.
-- **Limites:** Ajuste cotas operacionais, limites de requisições e parâmetros de segurança diretamente nas variáveis de ambiente do servidor e arquivos de configuração.
+- **Nome do site:** Altere o título principal, textos de cabeçalho, rodapé e metadados nos arquivos de configuração do projeto ou diretamente pelo painel administrativo.
+- **Temas:** Personalize cores primárias, logotipos, ícones e fontes editando as variáveis CSS e os estilos globais do design system mobile-first.
+- **Limites:** Ajuste cotas operacionais, limites diários de requisições e parâmetros de segurança diretamente nas variáveis de ambiente do servidor e nos arquivos de configuração.
+- **Notificações:** Defina a frequência e os canais de alerta para novas promoções e relatórios de comissões.
