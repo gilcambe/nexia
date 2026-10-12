@@ -72,7 +72,7 @@ export default function TabelaEvolucao({ serie, inicial }: { serie: ItemSerie[];
                         <td key={c.id} className="whitespace-nowrap px-2 py-1.5 text-right font-semibold text-foreground-900">
                           {v == null ? <span className="text-foreground-300">–</span> : fmt(v)}
                           {d ? (
-                            <span className={`ml-1 text-[10px] font-medium ${bom == null ? 'text-foreground-400' : bom ? 'text-accent-600' : 'text-red-500'}`}>
+                            <span className={`ml-1 text-xs font-medium ${bom == null ? 'text-foreground-400' : bom ? 'text-accent-600' : 'text-red-500'}`}>
                               {d > 0 ? '↑' : '↓'}{fmt(Math.abs(d))}
                             </span>
                           ) : null}

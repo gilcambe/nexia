@@ -23,7 +23,7 @@ export default function WaterTracker({
           </p>
         </div>
         <div className="text-right">
-          <span className="inline-flex items-center gap-1 rounded-full bg-accent-100 px-2.5 py-1 text-[11px] font-semibold text-accent-700">
+          <span className="inline-flex items-center gap-1 rounded-full bg-accent-100 px-2.5 py-1 text-xs font-semibold text-accent-700">
             <i className="ri-drop-line"></i>
             {remaining > 0 ? `faltam ${remaining.toFixed(1)} L` : 'meta atingida'}
           </span>

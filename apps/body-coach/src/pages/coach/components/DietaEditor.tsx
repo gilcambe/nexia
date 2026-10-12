@@ -74,7 +74,7 @@ export default function DietaEditor({ nomeAluno, inicial, salvando, onSalvar, on
         <p className="text-xs font-semibold text-foreground-600">Metas do dia (opcional: viram as metas do aluno no app)</p>
         <div className="mt-2 grid grid-cols-4 gap-2">
           {([['kcal', 'kcal'], ['proteina', 'Prot. g'], ['carbo', 'Carbo g'], ['gordura', 'Gord. g']] as const).map(([k, l]) => (
-            <label key={k} className="text-[11px] font-semibold text-foreground-500">{l}
+            <label key={k} className="text-xs font-semibold text-foreground-500">{l}
               <input type="number" inputMode="numeric" min={0} value={t[k] || ''} onChange={(e) => mudarTotal(k, e.target.value)} className={`${campo} mt-0.5 px-1.5`} aria-label={`Meta de ${l}`} />
             </label>
           ))}
@@ -85,10 +85,10 @@ export default function DietaEditor({ nomeAluno, inicial, salvando, onSalvar, on
         {plano.refeicoes.map((r, i) => (
           <li key={i} className="rounded-2xl border border-background-200 bg-background-50 p-3" data-testid="dieta-refeicao">
             <div className="flex items-end gap-2">
-              <label className="w-24 shrink-0 text-[11px] font-semibold text-foreground-500">Horário
+              <label className="w-24 shrink-0 text-xs font-semibold text-foreground-500">Horário
                 <input type="time" value={r.horario ?? ''} onChange={(e) => mudarRef(i, { horario: e.target.value || null })} className={`${campo} mt-0.5 px-1.5`} aria-label={`Horário de ${r.nome}`} />
               </label>
-              <label className="flex-1 text-[11px] font-semibold text-foreground-500">Refeição
+              <label className="flex-1 text-xs font-semibold text-foreground-500">Refeição
                 <input value={r.nome} onChange={(e) => mudarRef(i, { nome: e.target.value })} maxLength={40} className={`${campo} mt-0.5`} aria-label={`Nome da refeição ${i + 1}`} />
               </label>
               <button type="button" onClick={() => setPlano({ ...plano, refeicoes: plano.refeicoes.filter((_, k) => k !== i) })} aria-label={`Tirar ${r.nome}`} className="rounded-lg border border-red-200 px-2.5 py-2 text-red-600"><i className="ri-delete-bin-line"></i></button>
@@ -104,7 +104,7 @@ export default function DietaEditor({ nomeAluno, inicial, salvando, onSalvar, on
             </ul>
             {r.itens.length < 20 && <button type="button" onClick={() => mudarRef(i, { itens: [...r.itens, { nome: '', qtd: '' }] })} aria-label={`Adicionar alimento em ${r.nome}`} className="mt-2 text-xs font-semibold text-primary-700"><i className="ri-add-line mr-0.5"></i>Alimento</button>}
             <input value={r.obs.join(' ')} onChange={(e) => mudarRef(i, { obs: e.target.value ? [e.target.value] : [] })} maxLength={200} placeholder="Observação (opcional)" aria-label={`Observação de ${r.nome}`} className={`${campo} mt-2`} />
-            {r.trocas.length > 0 && <p className="mt-1 text-[11px] text-foreground-500">{r.trocas.length} troca{r.trocas.length > 1 ? 's' : ''} do PDF mantida{r.trocas.length > 1 ? 's' : ''}.</p>}
+            {r.trocas.length > 0 && <p className="mt-1 text-xs text-foreground-500">{r.trocas.length} troca{r.trocas.length > 1 ? 's' : ''} do PDF mantida{r.trocas.length > 1 ? 's' : ''}.</p>}
           </li>
         ))}
       </ol>

@@ -66,8 +66,8 @@ export default function BuscaAlimento({ onAdd, onClose }: { onAdd: (m: MealFood)
           {lista.map((a) => (
             <li key={a.codigo + a.nome}>
               <button type="button" onClick={() => setEscolhido(a)} className="flex w-full items-center justify-between rounded-lg border border-background-200 bg-background-50 px-3 py-2 text-left hover:bg-background-100">
-                <span className="min-w-0"><span className="block truncate text-sm font-medium text-foreground-800">{a.nome}</span>{a.marca && <span className="block truncate text-[11px] text-foreground-500">{a.marca}</span>}</span>
-                <span className="ml-2 shrink-0 text-[11px] text-foreground-500">{a.kcal} kcal/100 g</span>
+                <span className="min-w-0"><span className="block truncate text-sm font-medium text-foreground-800">{a.nome}</span>{a.marca && <span className="block truncate text-xs text-foreground-500">{a.marca}</span>}</span>
+                <span className="ml-2 shrink-0 text-xs text-foreground-500">{a.kcal} kcal/100 g</span>
               </button>
             </li>
           ))}

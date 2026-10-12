@@ -7,6 +7,7 @@ import { getFirebase } from '@/lib/firebaseClient';
 import Card, { CardHeader } from '@/components/base/Card';
 import SobreVoce from './components/SobreVoce';
 import ConviteCoach from './components/ConviteCoach';
+import { definirLetra, letraGuardada, TAMANHOS } from '@/lib/letra';
 
 type Answers = Record<string, string | string[] | undefined>;
 interface SavedProfile {
@@ -18,6 +19,25 @@ interface SavedProfile {
 
 const MISSING = 'Não informado';
 const text = (v: unknown, suffix = '') => (typeof v === 'string' && v.trim() ? `${v.trim()}${suffix}` : MISSING);
+
+// Letra maior para quem acha pequeno: vale para o app inteiro, neste celular.
+function TamanhoDaLetra() {
+  const [atual, setAtual] = useState(letraGuardada);
+  return (
+    <Card padding="p-5">
+      <CardHeader title="Tamanho da letra" icon="ri-font-size-2" />
+      <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Tamanho da letra" data-testid="tamanho-letra">
+        {TAMANHOS.map((t) => (
+          <button key={t.id} type="button" role="radio" aria-checked={atual === t.id} onClick={() => { definirLetra(t.id); setAtual(t.id); }}
+            className={`min-h-[56px] rounded-xl border-2 px-2 py-2 font-semibold ${atual === t.id ? 'border-primary-500 bg-primary-50 text-primary-800' : 'border-background-200 text-foreground-700'}`}
+            style={{ fontSize: `${t.pct / 100}rem` }}>
+            A <span className="block text-xs font-medium">{t.nome}</span>
+          </button>
+        ))}
+      </div>
+    </Card>
+  );
+}
 
 function InfoRow({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
@@ -106,6 +126,7 @@ export default function Profile() {
         </Card>
       )}
 
+      <TamanhoDaLetra />
       <SobreVoce />
       <ConviteCoach />
 

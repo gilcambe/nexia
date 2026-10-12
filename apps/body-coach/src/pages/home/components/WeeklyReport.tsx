@@ -161,21 +161,21 @@ export default function WeeklyReport() {
         <>
           <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-lg bg-background-100/70 p-3">
-              <p className="text-[11px] text-foreground-500">Check-ins</p>
+              <p className="text-xs text-foreground-500">Check-ins</p>
               <p className="font-heading text-lg font-bold text-foreground-950">{report.checkIns}/7</p>
             </div>
             <div className="rounded-lg bg-background-100/70 p-3">
-              <p className="text-[11px] text-foreground-500">Prontidão média</p>
+              <p className="text-xs text-foreground-500">Prontidão média</p>
               <p className="font-heading text-lg font-bold text-foreground-950">{report.avgThis ?? '—'}</p>
             </div>
             <div className="rounded-lg bg-background-100/70 p-3">
-              <p className="text-[11px] text-foreground-500">Var. Prontidão</p>
+              <p className="text-xs text-foreground-500">Var. Prontidão</p>
               <p className={`font-heading text-lg font-bold ${report.readinessDelta == null ? 'text-foreground-950' : report.readinessDelta >= 0 ? 'text-accent-600' : 'text-primary-600'}`}>
                 {report.readinessDelta == null ? '—' : `${report.readinessDelta > 0 ? '+' : ''}${report.readinessDelta}`}
               </p>
             </div>
             <div className="rounded-lg bg-background-100/70 p-3">
-              <p className="text-[11px] text-foreground-500">Var. peso</p>
+              <p className="text-xs text-foreground-500">Var. peso</p>
               <p className={`font-heading text-lg font-bold ${report.weightDelta == null ? 'text-foreground-950' : 'text-foreground-950'}`}>
                 {report.weightDelta == null ? '—' : `${report.weightDelta > 0 ? '+' : ''}${report.weightDelta} kg`}
               </p>
@@ -190,7 +190,7 @@ export default function WeeklyReport() {
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-[11px] text-foreground-400">
+          <p className="mt-3 text-xs text-foreground-400">
             Relatório gerado por regras a partir dos seus dados reais de check-in e evolução.
           </p>
         </>

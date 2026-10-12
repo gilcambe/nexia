@@ -114,7 +114,7 @@ export default function Dupla() {
           <>
             <p className="mt-1 text-sm text-foreground-700">{st?.exercicio || 'Aquecendo'}{st?.series ? ` · ${st.series} ${st.series === 1 ? 'série' : 'séries'}` : ''}</p>
             {st?.recado && <p className="mt-1 inline-block rounded-full bg-primary-50 px-2.5 py-1 text-sm font-semibold text-primary-800">{st.recado}</p>}
-            <p className="mt-1 text-[11px] text-foreground-400">{ha(st?.em)}</p>
+            <p className="mt-1 text-xs text-foreground-400">{ha(st?.em)}</p>
           </>
         ) : (
           <p className="mt-1 text-sm text-foreground-500">Mande o código para o seu amigo.</p>

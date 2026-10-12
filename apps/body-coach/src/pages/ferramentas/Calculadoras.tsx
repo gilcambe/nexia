@@ -199,7 +199,7 @@ export default function Calculadoras() {
           </div>
         )}
       </Card>
-      <p className="text-center text-[11px] text-foreground-400">Estimativas de referência. Não substituem avaliação profissional.</p>
+      <p className="text-center text-xs text-foreground-400">Estimativas de referência. Não substituem avaliação profissional.</p>
     </div>
   );
 }

@@ -111,9 +111,9 @@ export default function Convites() {
                   <p className="truncate text-sm font-semibold text-foreground-900">{c.nome}</p>
                   <p className="truncate text-xs text-foreground-500">{[c.email, c.telefone && `+${c.telefone}`].filter(Boolean).join(' · ')}</p>
                 </div>
-                {c.entrou ? <span className="rounded-full bg-accent-50 px-2 py-0.5 text-[11px] font-semibold text-accent-800">✅ entrou</span>
-                  : c.enviado ? <span className="rounded-full bg-secondary-50 px-2 py-0.5 text-[11px] font-semibold text-secondary-800">enviado</span>
-                    : <span className="rounded-full bg-background-100 px-2 py-0.5 text-[11px] font-semibold text-foreground-600">na fila</span>}
+                {c.entrou ? <span className="rounded-full bg-accent-50 px-2 py-0.5 text-xs font-semibold text-accent-800">✅ entrou</span>
+                  : c.enviado ? <span className="rounded-full bg-secondary-50 px-2 py-0.5 text-xs font-semibold text-secondary-800">enviado</span>
+                    : <span className="rounded-full bg-background-100 px-2 py-0.5 text-xs font-semibold text-foreground-600">na fila</span>}
                 {!c.entrou && c.telefone && <button type="button" onClick={() => void zap(c)} aria-label={`WhatsApp para ${c.nome}`} className="flex h-8 w-8 items-center justify-center rounded-full text-[#128C7E]"><i className="ri-whatsapp-line text-lg"></i></button>}
                 {!c.entrou && c.email && <button type="button" onClick={() => void email([c])} aria-label={`E-mail para ${c.nome}`} className="flex h-8 w-8 items-center justify-center rounded-full text-primary-600"><i className="ri-mail-line text-lg"></i></button>}
                 <button type="button" onClick={() => void apagar(c)} aria-label={`Tirar ${c.nome}`} className="flex h-8 w-8 items-center justify-center rounded-full text-foreground-400"><i className="ri-delete-bin-line"></i></button>

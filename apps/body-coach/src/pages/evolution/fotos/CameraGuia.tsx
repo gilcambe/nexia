@@ -84,7 +84,7 @@ export default function CameraGuia({
       </div>
       <p className="px-4 pt-2 text-center text-xs text-white/80">{info.dica} Mesmo lugar, mesma luz e mesma distância sempre.</p>
       {fantasma && (
-        <label className="mx-auto mt-1 flex w-full max-w-[320px] items-center gap-2 px-4 text-[11px] text-white/80">
+        <label className="mx-auto mt-1 flex w-full max-w-[320px] items-center gap-2 px-4 text-xs text-white/80">
           Foto anterior
           <input type="range" min={0} max={0.7} step={0.05} value={opFantasma} onChange={(e) => setOpFantasma(Number(e.target.value))} className="flex-1" aria-label="Transparência da foto anterior" />
         </label>

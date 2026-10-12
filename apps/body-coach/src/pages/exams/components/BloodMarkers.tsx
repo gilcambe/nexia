@@ -109,7 +109,7 @@ export default function BloodMarkers() {
                   <span className="text-xs text-foreground-500">
                     {r.value} {r.unit}
                   </span>
-                  <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusStyle[r.status]}`}>
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle[r.status]}`}>
                     {statusLabel[r.status]}
                   </span>
                 </div>
@@ -139,7 +139,7 @@ export default function BloodMarkers() {
                     <span className="text-sm font-semibold text-foreground-900">{m.label}</span>
                     <span className="flex items-center gap-2">
                       {pts.length > 1 && <span className="text-xs text-foreground-500">{pts[pts.length - 2].v} → </span>}
-                      <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${statusStyle[st]}`}>{ult.v} {m.unit}</span>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle[st]}`}>{ult.v} {m.unit}</span>
                       <i className={`ri-arrow-${aberto ? 'up' : 'down'}-s-line text-foreground-400`}></i>
                     </span>
                   </button>
@@ -154,7 +154,7 @@ export default function BloodMarkers() {
                           <Line type="monotone" dataKey="v" stroke="oklch(var(--primary-500))" strokeWidth={2.5} dot={{ r: 3 }} />
                         </LineChart>
                       </ResponsiveContainer>
-                      <p className="px-2 text-[11px] text-foreground-500">Faixa verde: ideal ({m.low}–{m.high} {m.unit}).</p>
+                      <p className="px-2 text-xs text-foreground-500">Faixa verde: ideal ({m.low}–{m.high} {m.unit}).</p>
                     </div>
                   )}
                 </div>

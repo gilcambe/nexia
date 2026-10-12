@@ -184,7 +184,7 @@ export default function Chat() {
           {lista.contatos.map((c) => (
             <button key={c.uid} onClick={() => setAberto(c)} className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium ${aberto?.uid === c.uid ? 'border-primary-500 bg-primary-100 text-primary-700' : 'border-background-200 bg-background-50 text-foreground-700'}`}>
               {c.foto ? <img src={c.foto} alt="" className="h-6 w-6 rounded-full object-cover" /> : <i className="ri-user-3-line"></i>}{c.nome}
-              {c.parte && <span className="rounded-full bg-background-100 px-1.5 text-[10px] font-semibold text-foreground-600">{c.parte === 'dieta' ? (papel === 'coach' ? 'dieta' : 'nutri') : (papel === 'coach' ? 'treino' : 'personal')}</span>}
+              {c.parte && <span className="rounded-full bg-background-100 px-1.5 text-xs font-semibold text-foreground-600">{c.parte === 'dieta' ? (papel === 'coach' ? 'dieta' : 'nutri') : (papel === 'coach' ? 'treino' : 'personal')}</span>}
             </button>
           ))}
         </div>
@@ -200,12 +200,12 @@ export default function Chat() {
                 <div className={`max-w-[80%] whitespace-pre-wrap break-words rounded-2xl px-3 py-2 text-sm ${m.de === user?.id ? 'bg-primary-500 text-background-50' : 'bg-background-50 text-foreground-800 border border-background-200'}`}>
                   {m.video && <BolhaVideo id={m.video} />}
                   {m.ref && (
-                    <Link to={papel === 'coach' ? `/coach/evolucao/${aberto.uid}/relatorio/${m.ref.entrada}` : `/evolution/relatorio/${m.ref.entrada}`} className="mb-1 block text-[11px] font-semibold underline opacity-80">
+                    <Link to={papel === 'coach' ? `/coach/evolucao/${aberto.uid}/relatorio/${m.ref.entrada}` : `/evolution/relatorio/${m.ref.entrada}`} className="mb-1 block text-xs font-semibold underline opacity-80">
                       💬 Comentário na avaliação{m.ref.data ? ` de ${m.ref.data.split('-').reverse().join('/')}` : ''}
                     </Link>
                   )}
                   {m.texto}
-                  <span className="mt-0.5 block text-right text-[10px] opacity-70">{new Date(m.em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
+                  <span className="mt-0.5 block text-right text-xs opacity-70">{new Date(m.em).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>
                 </div>
               </div>
             ))}

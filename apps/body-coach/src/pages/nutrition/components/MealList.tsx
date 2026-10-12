@@ -17,7 +17,7 @@ export default function MealList({ meals, onRemove }: { meals: MealFood[]; onRem
               <p className="truncate text-sm font-medium text-foreground-900">{m.name}</p>
               <span className="shrink-0 text-xs text-foreground-400">{m.time}</span>
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-foreground-500">
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-foreground-500">
               <span>{m.calories} kcal</span>
               <span className="text-primary-600">{m.protein} g proteína</span>
               <span>{m.carbs} g carbo</span>

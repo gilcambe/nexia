@@ -43,10 +43,10 @@ export default function ResultadosAvaliacao({ av, res, compacto }: { av: Avaliac
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {visiveis.map((i) => (
           <div key={i.label} className="rounded-xl bg-background-100/70 p-2.5">
-            <p className="text-[11px] text-foreground-500">{i.label}</p>
+            <p className="text-xs text-foreground-500">{i.label}</p>
             <p className="font-heading text-base font-bold text-foreground-950">{i.valor}</p>
-            {i.classe && <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold ${tom(i.classe.replace(/^Risco /, '').replace(/^./, (c) => c.toUpperCase()))}`}>{i.classe}</span>}
-            {i.dica && <p className="mt-0.5 text-[10px] leading-tight text-foreground-400">{i.dica}</p>}
+            {i.classe && <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${tom(i.classe.replace(/^Risco /, '').replace(/^./, (c) => c.toUpperCase()))}`}>{i.classe}</span>}
+            {i.dica && <p className="mt-0.5 text-xs leading-tight text-foreground-400">{i.dica}</p>}
           </div>
         ))}
       </div>

@@ -63,24 +63,24 @@ export default function EvolutionMini() {
         <>
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-xl bg-background-100/70 p-3">
-              <p className="text-[11px] text-foreground-500">Peso</p>
+              <p className="text-xs text-foreground-500">Peso</p>
               <p className="mt-0.5 font-heading text-lg font-bold text-foreground-950">{fmt(latestWeight)}</p>
               {deltaWeight != null && (
-                <p className={`text-[11px] font-medium ${deltaWeight <= 0 ? 'text-accent-600' : 'text-primary-600'}`}>
+                <p className={`text-xs font-medium ${deltaWeight <= 0 ? 'text-accent-600' : 'text-primary-600'}`}>
                   {deltaWeight > 0 ? '+' : ''}
                   {deltaWeight.toFixed(1).replace('.', ',')} kg
                 </p>
               )}
             </div>
             <div className="rounded-xl bg-background-100/70 p-3">
-              <p className="text-[11px] text-foreground-500">Cintura</p>
+              <p className="text-xs text-foreground-500">Cintura</p>
               <p className="mt-0.5 font-heading text-lg font-bold text-foreground-950">{fmt(latestCintura)}</p>
-              <p className="text-[11px] font-medium text-foreground-400">cm</p>
+              <p className="text-xs font-medium text-foreground-400">cm</p>
             </div>
             <div className="rounded-xl bg-background-100/70 p-3">
-              <p className="text-[11px] text-foreground-500">Massa magra</p>
+              <p className="text-xs text-foreground-500">Massa magra</p>
               <p className="mt-0.5 font-heading text-lg font-bold text-foreground-950">{fmt(leanMass)}</p>
-              <p className="text-[11px] font-medium text-foreground-400">kg</p>
+              <p className="text-xs font-medium text-foreground-400">kg</p>
             </div>
           </div>
 

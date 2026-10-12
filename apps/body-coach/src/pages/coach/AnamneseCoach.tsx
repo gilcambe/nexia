@@ -59,7 +59,7 @@ export default function AnamneseCoach() {
           <button type="button" onClick={() => setPerguntas(PERGUNTAS_PRONTAS())} className="w-full rounded-xl bg-primary-500 px-4 py-3 text-sm font-semibold text-background-50 dark:text-foreground-950">
             <i className="ri-magic-line mr-1"></i>Começar com 12 perguntas prontas
           </button>
-          <p className="text-center text-[11px] text-foreground-500">Triagem de saúde (PAR-Q), rotina e alimentação. Você muda o que quiser.</p>
+          <p className="text-center text-xs text-foreground-500">Triagem de saúde (PAR-Q), rotina e alimentação. Você muda o que quiser.</p>
           <button type="button" onClick={() => setPerguntas([novaPergunta()])} className="w-full rounded-xl border border-background-200 bg-background-50 px-4 py-3 text-sm font-semibold text-foreground-700">
             <i className="ri-edit-2-line mr-1"></i>Escrever do zero
           </button>

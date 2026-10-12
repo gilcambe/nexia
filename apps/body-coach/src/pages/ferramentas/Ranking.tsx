@@ -78,14 +78,14 @@ export default function Ranking() {
             <li key={`${l.nome}-${i}`} className={`flex items-center gap-3 rounded-xl px-3 py-2.5 ${l.eu ? 'bg-primary-50 ring-1 ring-primary-300' : 'bg-background-100/60'}`}>
               <span className="w-7 text-center font-heading text-lg font-bold">{MEDALHA[i] ?? i + 1}</span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate font-semibold text-foreground-950">{l.nome}{l.eu && ' (você)'}{!l.visivel && <span className="ml-1 text-[11px] font-normal text-foreground-400">· oculto para a equipe</span>}</span>
+                <span className="block truncate font-semibold text-foreground-950">{l.nome}{l.eu && ' (você)'}{!l.visivel && <span className="ml-1 text-xs font-normal text-foreground-400">· oculto para a equipe</span>}</span>
                 <span className="block text-xs text-foreground-500">{l.treinos} treinos · {l.minutos} min{l.refeicoes ? ` · ${l.refeicoes} refeições` : ''}{l.checkins ? ` · ${l.checkins} check-ins` : ''}{r.desafio ? ` · ${l.dias} dias de desafio` : ''}</span>
               </span>
               <span className="font-heading text-lg font-bold text-primary-700">{l.pontos}</span>
             </li>
           ))}
         </ol>
-        <p className="mt-2 px-1 text-[11px] text-foreground-400">10 pontos por treino, 1 a cada 10 minutos, 5 por dia de desafio, 2 por refeição registrada (até 5 por dia), 2 pelo check-in do dia e 3 por treino com retorno para o coach. Zera toda segunda.</p>
+        <p className="mt-2 px-1 text-xs text-foreground-400">10 pontos por treino, 1 a cada 10 minutos, 5 por dia de desafio, 2 por refeição registrada (até 5 por dia), 2 pelo check-in do dia e 3 por treino com retorno para o coach. Zera toda segunda.</p>
       </Card>
       {r.papel === 'coach' && <p className="px-1 text-xs text-foreground-500">Como coach, você vê toda a equipe. Cada aluno escolhe se aparece para os colegas. Crie desafios na conversa da equipe.</p>}
       {r.papel !== 'coach' && <Card>
@@ -129,7 +129,7 @@ function RankingCarga() {
           </li>
         ))}
       </ol>
-      <p className="mt-2 px-1 text-[11px] text-foreground-400">Quanto a carga subiu desde a primeira vez que você fez o exercício no app (1RM estimado pelas suas melhores séries).</p>
+      <p className="mt-2 px-1 text-xs text-foreground-400">Quanto a carga subiu desde a primeira vez que você fez o exercício no app (1RM estimado pelas suas melhores séries).</p>
     </Card>
   );
 }

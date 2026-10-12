@@ -79,7 +79,7 @@ export default function AddMealModal({
               className="flex items-center justify-between rounded-lg border border-background-200 bg-background-50 px-3 py-2 text-left transition hover:bg-background-100"
             >
               <span className="text-sm font-medium text-foreground-800">{q.name}</span>
-              <span className="ml-2 shrink-0 text-[11px] text-foreground-500">{q.calories} kcal</span>
+              <span className="ml-2 shrink-0 text-xs text-foreground-500">{q.calories} kcal</span>
             </button>
           ))}
         </div>

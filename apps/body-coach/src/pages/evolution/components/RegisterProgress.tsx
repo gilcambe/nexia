@@ -268,7 +268,7 @@ export default function RegisterProgress({
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[11px] text-foreground-400">
+            <p className="text-xs text-foreground-400">
               {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
             </p>
             <button

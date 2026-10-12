@@ -49,7 +49,7 @@ function Refeicao({ r, idx, destaque, trocas }: { r: RefeicaoPlano; idx: number;
       <div className="flex items-baseline gap-2">
         {r.horario && <span className="font-heading text-sm font-bold text-primary-600">{r.horario}</span>}
         <p className="text-sm font-semibold text-foreground-900">{r.nome}</p>
-        {destaque && <span className="rounded-full bg-primary-500 px-2 py-0.5 text-[10px] font-semibold text-white">próxima</span>}
+        {destaque && <span className="rounded-full bg-primary-500 px-2 py-0.5 text-xs font-semibold text-white">próxima</span>}
         {r.macros && r.macros.kcal > 0 && <span className="ml-auto shrink-0 text-xs text-foreground-500">{fmt(r.macros.kcal)} kcal</span>}
       </div>
       <ul className="mt-1.5 space-y-0.5 text-sm text-foreground-700">
@@ -61,7 +61,7 @@ function Refeicao({ r, idx, destaque, trocas }: { r: RefeicaoPlano; idx: number;
               <button type="button" onClick={() => { setSempre(!!trocas.fixas.find((f) => f.chave === chave)); setTrocando({ chave, nome: i.nome, qtd: i.qtd }); }} className="flex w-full items-center justify-between gap-3 rounded-lg py-1 text-left active:bg-primary-50" data-testid="plano-item">
                 <span>
                   {t ? t.nome : i.nome}
-                  {t && <span className="ml-1 rounded-full bg-primary-100 px-1.5 py-0.5 text-[10px] font-semibold text-primary-700">trocado</span>}
+                  {t && <span className="ml-1 rounded-full bg-primary-100 px-1.5 py-0.5 text-xs font-semibold text-primary-700">trocado</span>}
                 </span>
                 <span className="flex shrink-0 items-center gap-1.5 text-right text-foreground-500">
                   {t ? t.porcao : i.qtd}
@@ -89,7 +89,7 @@ function Refeicao({ r, idx, destaque, trocas }: { r: RefeicaoPlano; idx: number;
         />
       )}
       {r.macros && r.macros.kcal > 0 && (
-        <p className="mt-1 text-[11px] text-foreground-500">Proteína {fmt(r.macros.proteina)} g · Carbo {fmt(r.macros.carbo)} g · Gordura {fmt(r.macros.gordura)} g</p>
+        <p className="mt-1 text-xs text-foreground-500">Proteína {fmt(r.macros.proteina)} g · Carbo {fmt(r.macros.carbo)} g · Gordura {fmt(r.macros.gordura)} g</p>
       )}
       <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
         {r.macros && r.macros.kcal > 0 && (
@@ -199,7 +199,7 @@ export default function PlanoNutricionista() {
           {([['kcal', fmt(t.kcal)], ['Proteína', `${fmt(t.proteina)} g`], ['Carbo', `${fmt(t.carbo)} g`], ['Gordura', `${fmt(t.gordura)} g`]] as const).map(([l, v]) => (
             <div key={l} className="rounded-lg bg-background-100 px-1 py-2">
               <p className="font-heading text-sm font-bold text-foreground-950">{v}</p>
-              <p className="text-[10px] text-foreground-500">{l}</p>
+              <p className="text-xs text-foreground-500">{l}</p>
             </div>
           ))}
         </div>

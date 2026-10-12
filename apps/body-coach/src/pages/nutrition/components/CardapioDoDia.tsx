@@ -75,7 +75,7 @@ export default function CardapioDoDia() {
                     <button type="button" onClick={() => { setTirar(false); setAberto({ chave, item: i }); }} className="flex w-full items-center justify-between gap-3 rounded-lg py-1 text-left active:bg-primary-50" data-testid="cardapio-item">
                       <span>
                         {v.nome} <span className="text-foreground-500">({v.porcao})</span>
-                        {t && <span className="ml-1 rounded-full bg-primary-100 px-1.5 py-0.5 text-[10px] font-semibold text-primary-700">trocado</span>}
+                        {t && <span className="ml-1 rounded-full bg-primary-100 px-1.5 py-0.5 text-xs font-semibold text-primary-700">trocado</span>}
                       </span>
                       <span className="flex shrink-0 items-center gap-1.5 text-foreground-500">
                         {v.kcal != null && `${v.kcal} kcal`}

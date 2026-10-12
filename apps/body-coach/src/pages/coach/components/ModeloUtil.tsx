@@ -21,7 +21,7 @@ export function UsarModelo({ tipo, onUsar }: { tipo: 'ficha' | 'dieta'; onUsar: 
               setAbrindo(m.id); setErro('');
               try { const x = await verModelo(m.id); onUsar(x.dados, x.nome); } catch (e) { setErro((e as Error).message); } finally { setAbrindo(''); }
             }} className="flex w-full items-center justify-between rounded-xl border border-background-200 bg-background-50 px-3 py-2.5 text-left text-sm">
-              <span><span className="font-semibold text-foreground-900">{m.nome}</span><span className="block text-[11px] text-foreground-500">{m.resumo}</span></span>
+              <span><span className="font-semibold text-foreground-900">{m.nome}</span><span className="block text-xs text-foreground-500">{m.resumo}</span></span>
               <i className={abrindo === m.id ? 'ri-loader-4-line animate-spin' : 'ri-arrow-right-s-line text-lg text-accent-700'}></i>
             </button>
           </li>

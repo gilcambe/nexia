@@ -84,7 +84,7 @@ export default function Suplementos() {
           ))}
         </div>
       </Card>
-      <p className="text-[11px] text-foreground-400">Atleta federado? Confira cada suplemento na aba Anti-Doping. Doses são exemplos comuns; siga a orientação do seu nutricionista ou médico.</p>
+      <p className="text-xs text-foreground-400">Atleta federado? Confira cada suplemento na aba Anti-Doping. Doses são exemplos comuns; siga a orientação do seu nutricionista ou médico.</p>
     </div>
   );
 }

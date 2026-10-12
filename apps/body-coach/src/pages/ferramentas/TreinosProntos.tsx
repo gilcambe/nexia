@@ -172,7 +172,7 @@ export default function TreinosProntos() {
           <Card key={s.semana} padding="p-4">
             <p className="text-sm font-semibold text-foreground-950">Semana {s.semana}</p>
             <ol className="mt-1.5 space-y-1 text-sm text-foreground-700">
-              {s.treinos.map((t, i) => <li key={i} className="flex gap-2"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-100 text-[11px] font-bold text-primary-700">{i + 1}</span>{t}</li>)}
+              {s.treinos.map((t, i) => <li key={i} className="flex gap-2"><span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary-100 text-xs font-bold text-primary-700">{i + 1}</span>{t}</li>)}
             </ol>
           </Card>
         ))}
@@ -211,13 +211,13 @@ export default function TreinosProntos() {
               <button key={p.id} type="button" onClick={() => setPlano(p.id)} className="rounded-2xl border border-background-200 bg-background-50 p-3 text-center">
                 <i className="ri-run-line text-2xl text-primary-600"></i>
                 <span className="block font-heading text-lg font-bold text-foreground-950">{p.id.toUpperCase()}</span>
-                <span className="block text-[11px] text-foreground-500">{p.semanas.length} semanas</span>
+                <span className="block text-xs text-foreground-500">{p.semanas.length} semanas</span>
               </button>
             ))}
           </div>
         </>
       )}
-      <p className="text-center text-[11px] text-foreground-400">O app fala o nome de cada exercício e apita nos últimos 3 segundos. Dá para assistir algo ou ouvir música junto.</p>
+      <p className="text-center text-xs text-foreground-400">O app fala o nome de cada exercício e apita nos últimos 3 segundos. Dá para assistir algo ou ouvir música junto.</p>
     </div>
   );
 }

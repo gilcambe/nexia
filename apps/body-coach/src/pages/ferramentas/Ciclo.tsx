@@ -21,7 +21,7 @@ export default function Ciclo() {
         <Card>
           <div className="flex items-center gap-3">
             <span className={`flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full text-white ${info.cor}`}>
-              <span className="text-[10px] leading-none">dia</span>
+              <span className="text-xs leading-none">dia</span>
               <span className="font-heading text-xl font-bold leading-none">{info.dia}</span>
             </span>
             <div>
@@ -57,7 +57,7 @@ export default function Ciclo() {
         <button type="button" disabled={!inicio} onClick={() => salvar({ inicio, duracao: Number(duracao) || 28 })} className="mt-3 w-full rounded-xl bg-primary-500 py-3 font-semibold text-background-50 disabled:opacity-50 dark:text-foreground-950">Salvar</button>
         {ciclo && <button type="button" onClick={() => { salvar(null); setInicio(''); }} className="mt-2 w-full rounded-xl py-2 text-sm text-foreground-500">Desativar e apagar</button>}
       </Card>
-      <p className="text-[11px] text-foreground-400">Previsão por calendário, não é método contraceptivo nem diagnóstico. Ciclos irregulares ou dor forte: procure seu ginecologista.</p>
+      <p className="text-xs text-foreground-400">Previsão por calendário, não é método contraceptivo nem diagnóstico. Ciclos irregulares ou dor forte: procure seu ginecologista.</p>
     </div>
   );
 }

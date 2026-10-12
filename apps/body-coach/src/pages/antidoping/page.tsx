@@ -65,7 +65,7 @@ export default function AntiDoping() {
         </form>
 
         <div className="mt-4">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-foreground-400">Testar exemplos rápidos</p>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Testar exemplos rápidos</p>
           <div className="flex flex-wrap gap-2">
             {sampleSupplements.map((s) => (
               <button
@@ -101,7 +101,7 @@ export default function AntiDoping() {
               {result.matched.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {result.matched.map((m) => (
-                    <span key={m} className="rounded-full bg-background-50/70 px-2 py-0.5 text-[11px] text-foreground-600">
+                    <span key={m} className="rounded-full bg-background-50/70 px-2 py-0.5 text-xs text-foreground-600">
                       {m}
                     </span>
                   ))}
@@ -123,13 +123,13 @@ export default function AntiDoping() {
               <p className="text-sm font-semibold text-foreground-900">
                 <span className="font-mono text-primary-700">{c.code}</span> · {c.name}
               </p>
-              <p className="mt-1 text-[11px] text-foreground-500">{c.examples.join(' · ')}</p>
+              <p className="mt-1 text-xs text-foreground-500">{c.examples.join(' · ')}</p>
             </div>
           ))}
         </div>
       </Card>
 
-      <p className="rounded-lg bg-accent-100/50 p-3 text-[11px] leading-relaxed text-foreground-600">
+      <p className="rounded-lg bg-accent-100/50 p-3 text-xs leading-relaxed text-foreground-600">
         <i className="ri-information-line mr-1 text-accent-700"></i>
         Esta é uma triagem por palavras-chave para <strong>orientação de performance</strong>. Não substitui a
         verificação oficial (WADA / Global DRO) nem a avaliação do médico do esporte e do farmacêutico anti-doping.

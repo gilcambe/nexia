@@ -40,7 +40,7 @@ export default function Jejum() {
               {PROTOCOLOS.map((p) => (
                 <button key={p.id} type="button" onClick={() => setHoras(p.horas)} className={`rounded-xl py-2.5 text-center ${horas === p.horas ? 'bg-primary-500 text-background-50 dark:text-foreground-950' : 'border border-background-200 bg-background-50 text-foreground-700'}`}>
                   <span className="block font-heading text-lg font-bold">{p.nome}</span>
-                  <span className="block text-[10px] opacity-80">{p.dica}</span>
+                  <span className="block text-xs opacity-80">{p.dica}</span>
                 </button>
               ))}
             </div>
@@ -54,7 +54,7 @@ export default function Jejum() {
               <circle cx="90" cy="90" r={raio} fill="none" strokeWidth="14" className="stroke-background-200" />
               <circle cx="90" cy="90" r={raio} fill="none" strokeWidth="14" strokeLinecap="round" className="stroke-primary-500" strokeDasharray={circ} strokeDashoffset={circ * (1 - prog.pct / 100)} transform="rotate(-90 90 90)" />
               <text x="90" y="86" textAnchor="middle" className="fill-foreground-950 font-heading text-[28px] font-bold">{hhmm(prog.passadoMin)}</text>
-              <text x="90" y="110" textAnchor="middle" className="fill-foreground-500 text-[12px]">de {jejum.horas}h · {prog.pct}%</text>
+              <text x="90" y="110" textAnchor="middle" className="fill-foreground-500 text-xs">de {jejum.horas}h · {prog.pct}%</text>
             </svg>
             <p className="text-center text-sm font-semibold text-foreground-900">{prog.concluido ? 'Meta batida! Pode comer quando quiser.' : `Faltam ${hhmm(prog.faltaMin)}`}</p>
             <p className="rounded-lg bg-primary-50 px-3 py-2 text-center text-xs text-foreground-700">{prog.fase}</p>
@@ -65,7 +65,7 @@ export default function Jejum() {
           </div>
         )}
       </Card>
-      <p className="text-[11px] leading-relaxed text-foreground-400">Jejum é opcional e não serve para todos. Evite se estiver grávida ou amamentando, tiver diabetes, histórico de transtorno alimentar ou usar remédios que exijam comida. Na dúvida, fale com seu nutricionista. Beba água, café e chá sem açúcar à vontade.</p>
+      <p className="text-xs leading-relaxed text-foreground-400">Jejum é opcional e não serve para todos. Evite se estiver grávida ou amamentando, tiver diabetes, histórico de transtorno alimentar ou usar remédios que exijam comida. Na dúvida, fale com seu nutricionista. Beba água, café e chá sem açúcar à vontade.</p>
     </div>
   );
 }

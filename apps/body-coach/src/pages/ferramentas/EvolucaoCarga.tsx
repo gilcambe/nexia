@@ -36,9 +36,9 @@ export default function EvolucaoCarga() {
         <Card>
           <h2 className="font-heading text-lg font-bold text-foreground-950">{ex.nome}</h2>
           <div className="mt-2 grid grid-cols-3 gap-2 text-center">
-            <div className="rounded-xl bg-background-100/70 p-2"><p className="font-heading text-lg font-bold">{ex.recorde.carga} kg</p><p className="text-[11px] text-foreground-500">recorde × {ex.recorde.reps}</p></div>
-            <div className="rounded-xl bg-background-100/70 p-2"><p className="font-heading text-lg font-bold">{Math.round(ex.ultimo.rm)} kg</p><p className="text-[11px] text-foreground-500">1RM estimado</p></div>
-            <div className="rounded-xl bg-background-100/70 p-2"><p className={`font-heading text-lg font-bold ${ex.variacaoPct > 0 ? 'text-emerald-600' : ex.variacaoPct < 0 ? 'text-red-600' : ''}`}>{ex.variacaoPct > 0 ? '+' : ''}{ex.variacaoPct}%</p><p className="text-[11px] text-foreground-500">desde o início</p></div>
+            <div className="rounded-xl bg-background-100/70 p-2"><p className="font-heading text-lg font-bold">{ex.recorde.carga} kg</p><p className="text-xs text-foreground-500">recorde × {ex.recorde.reps}</p></div>
+            <div className="rounded-xl bg-background-100/70 p-2"><p className="font-heading text-lg font-bold">{Math.round(ex.ultimo.rm)} kg</p><p className="text-xs text-foreground-500">1RM estimado</p></div>
+            <div className="rounded-xl bg-background-100/70 p-2"><p className={`font-heading text-lg font-bold ${ex.variacaoPct > 0 ? 'text-emerald-600' : ex.variacaoPct < 0 ? 'text-red-600' : ''}`}>{ex.variacaoPct > 0 ? '+' : ''}{ex.variacaoPct}%</p><p className="text-xs text-foreground-500">desde o início</p></div>
           </div>
           <div className="mt-3 h-52" aria-label="Gráfico de carga">
             <ResponsiveContainer width="100%" height="100%">
@@ -52,7 +52,7 @@ export default function EvolucaoCarga() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <p className="text-[11px] text-foreground-500"><span className="text-primary-600">━</span> carga do melhor set · <span className="text-accent-600">┅</span> 1RM estimado</p>
+          <p className="text-xs text-foreground-500"><span className="text-primary-600">━</span> carga do melhor set · <span className="text-accent-600">┅</span> 1RM estimado</p>
           {sug && <p className="mt-3 rounded-xl bg-primary-50 p-3 text-sm text-foreground-800"><b>Próximo treino: {sug.weight} kg × {sug.reps}.</b> {sug.motivo}</p>}
         </Card>
         <Card padding="p-4">

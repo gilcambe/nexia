@@ -116,7 +116,7 @@ export default function Saude() {
         </div>
       </Card>
       <Link to="/exams" className="block rounded-2xl border border-background-200 bg-background-50 p-3 text-center text-sm font-semibold text-primary-700"><i className="ri-stethoscope-line mr-1"></i>Exames de sangue com histórico e gráfico</Link>
-      <p className="text-[11px] text-foreground-400">Referências: Diretriz Brasileira de Hipertensão (2020) e Sociedade Brasileira de Diabetes. Não substitui consulta médica.</p>
+      <p className="text-xs text-foreground-400">Referências: Diretriz Brasileira de Hipertensão (2020) e Sociedade Brasileira de Diabetes. Não substitui consulta médica.</p>
     </div>
   );
 }

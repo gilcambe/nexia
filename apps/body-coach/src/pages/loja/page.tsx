@@ -69,7 +69,7 @@ export default function LojaPage() {
             );
           })}
         </ul>
-        <p className="text-center text-[11px] text-foreground-400">O pagamento vai direto para o coach, sem taxa. Ao confirmar, o programa aparece no seu app NEXIA Body Coach.</p>
+        <p className="text-center text-xs text-foreground-400">O pagamento vai direto para o coach, sem taxa. Ao confirmar, o programa aparece no seu app NEXIA Body Coach.</p>
       </div>
     </div>
   );

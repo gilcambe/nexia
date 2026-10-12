@@ -89,7 +89,7 @@ function Pessoa({ uid, nome, foto, papel, parte, onTirar, ocupado }: { uid: stri
       </div>
       <div className="flex flex-col items-end gap-1">
         <Link to={`/chat?com=${uid}`} className="rounded-lg border border-background-200 px-2.5 py-1.5 text-xs font-semibold text-foreground-700">Conversar</Link>
-        {onTirar && <button type="button" onClick={onTirar} disabled={ocupado} className="text-[11px] font-semibold text-red-600">Tirar</button>}
+        {onTirar && <button type="button" onClick={onTirar} disabled={ocupado} className="text-xs font-semibold text-red-600">Tirar</button>}
       </div>
     </li>
   );

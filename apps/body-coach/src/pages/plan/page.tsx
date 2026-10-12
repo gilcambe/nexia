@@ -90,7 +90,7 @@ export default function Plan() {
           const lista = previa(i);
           return (
             <div key={d.titulo} className={`relative rounded-2xl border p-4 ${proximo ? 'border-primary-300 bg-primary-100/50' : 'border-background-200 bg-background-50'}`}>
-              {proximo && <span className="absolute right-3 top-3 rounded-full bg-primary-500 px-2 py-0.5 text-[10px] font-semibold text-background-50">Próximo</span>}
+              {proximo && <span className="absolute right-3 top-3 rounded-full bg-primary-500 px-2 py-0.5 text-xs font-semibold text-background-50">Próximo</span>}
               <p className="pr-16 font-heading text-base font-semibold leading-snug text-foreground-950">{d.titulo}</p>
               <ul className="mt-3 space-y-1">
                 {lista.map((n) => <li key={n} className="truncate text-xs text-foreground-600"><i className="ri-checkbox-circle-line mr-1 text-accent-600"></i>{n}</li>)}
@@ -125,7 +125,7 @@ function FichaDoCoach({ ficha, dia, onTreinar }: { ficha: FichaCoach; dia: numbe
           const proximo = i === dia;
           return (
             <div key={i} className={`relative rounded-2xl border p-4 ${proximo ? 'border-primary-300 bg-primary-100/50' : 'border-background-200 bg-background-50'}`}>
-              {proximo && <span className="absolute right-3 top-3 rounded-full bg-primary-500 px-2 py-0.5 text-[10px] font-semibold text-background-50">Próximo</span>}
+              {proximo && <span className="absolute right-3 top-3 rounded-full bg-primary-500 px-2 py-0.5 text-xs font-semibold text-background-50">Próximo</span>}
               <p className="pr-16 font-heading text-base font-semibold leading-snug text-foreground-950">{d.titulo}</p>
               <ul className="mt-3 space-y-1.5">
                 {d.exercicios.map((x, j) => (

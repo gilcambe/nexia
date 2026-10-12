@@ -187,7 +187,7 @@ async function cenarioTreino(browser, base, viewport) {
     // Próximo e Anterior: avança um exercício e volta para o mesmo.
     onde = 'botões Próximo e Anterior';
     // "Exercício N" no topo do cartão diz em qual exercício o aluno está.
-    const nomeAtual = async () => (await page.getByText(/^\s*Exercício \d+\s*$/i).first().innerText().catch(() => '')).trim();
+    const nomeAtual = async () => (await page.getByText(/^\s*Exercício \d+( de \d+)?\s*$/i).first().innerText().catch(() => '')).trim();
     const primeiro = await nomeAtual();
     if (await page.getByRole('button', { name: /voltar ao exercício anterior/i }).count()) nota(tela, onde, 'no 1º exercício já aparece o botão Anterior');
     await page.getByRole('button', { name: /CONCLUIR → PRÓXIMO/i }).click({ timeout: 5000 });

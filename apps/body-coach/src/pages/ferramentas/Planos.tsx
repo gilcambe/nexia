@@ -24,7 +24,7 @@ export default function Planos() {
       </div>
       {PLANOS.map((p) => (
         <Card key={p.nome} className={p.destaque ? 'border-2 border-primary-500' : ''}>
-          {p.destaque && <span className="mb-2 inline-block rounded-full bg-primary-500 px-2.5 py-0.5 text-[11px] font-bold uppercase text-background-50 dark:text-foreground-950">Mais escolhido</span>}
+          {p.destaque && <span className="mb-2 inline-block rounded-full bg-primary-500 px-2.5 py-0.5 text-xs font-bold uppercase text-background-50 dark:text-foreground-950">Mais escolhido</span>}
           <p className="font-heading text-lg font-bold text-foreground-950">{p.nome}</p>
           <p className="mt-0.5"><span className="font-heading text-2xl font-bold text-foreground-950">{p.preco}</span> <span className="text-xs text-foreground-500">{p.periodo}</span></p>
           <ul className="mt-3 space-y-1.5">
@@ -32,7 +32,7 @@ export default function Planos() {
           </ul>
         </Card>
       ))}
-      <p className="text-center text-[11px] text-foreground-400">Pagamento por Pix, cartão ou boleto direto no app quando a fase de teste acabar.</p>
+      <p className="text-center text-xs text-foreground-400">Pagamento por Pix, cartão ou boleto direto no app quando a fase de teste acabar.</p>
     </div>
   );
 }

@@ -227,7 +227,7 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
               onChange={(e) => setTempoMin(Number(e.target.value))}
               className="w-full accent-emerald-500 cursor-pointer"
             />
-            <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+            <div className="flex justify-between text-xs text-slate-400 mt-1">
               <span>20 min</span>
               <span>60 min</span>
               <span>120 min</span>

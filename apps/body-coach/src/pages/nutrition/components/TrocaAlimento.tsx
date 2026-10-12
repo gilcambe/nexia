@@ -51,7 +51,7 @@ export default function TrocaAlimento({ item, doNutri = [], doApp, trocado, onEs
         {doApp.length > 0 && (
           <div className="mt-3">
             <p className="text-sm font-semibold text-foreground-800">{doNutri.length ? 'Outras opções equivalentes' : 'Opções equivalentes'}</p>
-            <p className="text-[11px] text-foreground-500">Mesmo tipo de alimento, porção ajustada para o mesmo nutriente principal.</p>
+            <p className="text-xs text-foreground-500">Mesmo tipo de alimento, porção ajustada para o mesmo nutriente principal.</p>
             <ul className="mt-1.5 space-y-1.5">
               {doApp.map((a) => (
                 <li key={a.nome}>

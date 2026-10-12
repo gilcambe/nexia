@@ -49,7 +49,7 @@ export default function Avisos() {
           <button type="button" disabled={ocupado} onClick={() => void fazer(async () => { const r = await ativarAvisos(prefs); setPrefs(r.prefs); setLigado(true); }, 'Avisos ligados neste celular!')} className="w-full rounded-xl bg-primary-500 px-4 py-3 text-sm font-semibold text-background-50 disabled:opacity-50 dark:text-foreground-950">
             <i className="ri-notification-3-line mr-1"></i>{ocupado ? 'Ligando...' : 'Ligar avisos neste celular'}
           </button>
-          <p className="mt-2 text-center text-[11px] text-foreground-500">O celular vai perguntar se pode mostrar notificações: toque em Permitir.</p>
+          <p className="mt-2 text-center text-xs text-foreground-500">O celular vai perguntar se pode mostrar notificações: toque em Permitir.</p>
         </div>
       )}
 

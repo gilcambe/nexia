@@ -60,16 +60,16 @@ export default function Fotos360({ fotos }: { fotos: Fotos }) {
         ))}
         <div className="absolute bottom-2 left-2 right-2 flex flex-wrap justify-center gap-1.5">
           {poses.map((p, k) => (
-            <button key={p.id} type="button" onClick={() => { setGirar(false); setI(k); }} className={`rounded-full px-2.5 py-1 text-[11px] font-semibold backdrop-blur ${k === atual ? 'bg-foreground-900 text-background-50' : 'bg-background-50/80 text-foreground-700'}`}>{p.label}</button>
+            <button key={p.id} type="button" onClick={() => { setGirar(false); setI(k); }} className={`rounded-full px-2.5 py-1 text-xs font-semibold backdrop-blur ${k === atual ? 'bg-foreground-900 text-background-50' : 'bg-background-50/80 text-foreground-700'}`}>{p.label}</button>
           ))}
           {poses.length > 1 && (
-            <button type="button" onClick={() => setGirar((g) => !g)} className="rounded-full bg-background-50/80 px-2.5 py-1 text-[11px] font-semibold text-foreground-700 backdrop-blur" aria-label={girar ? 'Parar de girar' : 'Girar sozinho'}>
+            <button type="button" onClick={() => setGirar((g) => !g)} className="rounded-full bg-background-50/80 px-2.5 py-1 text-xs font-semibold text-foreground-700 backdrop-blur" aria-label={girar ? 'Parar de girar' : 'Girar sozinho'}>
               <i className={girar ? 'ri-pause-line' : 'ri-refresh-line'}></i>
             </button>
           )}
         </div>
       </div>
-      <p className="mt-2 text-[11px] text-foreground-600">Arraste o dedo para girar. {poses.length < 4 ? 'Coloque as 4 poses na aba Fotos para o giro completo.' : ''}</p>
+      <p className="mt-2 text-xs text-foreground-600">Arraste o dedo para girar. {poses.length < 4 ? 'Coloque as 4 poses na aba Fotos para o giro completo.' : ''}</p>
     </div>
   );
 }

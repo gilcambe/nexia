@@ -63,12 +63,14 @@ function textoDoTreino(body) {
   const notas = (Array.isArray(body.notas) ? body.notas : []).slice(0, 30).map((n) => ({
     ex: limpa(n && n.ex, 60), serie: Math.max(1, Math.min(20, Math.round(Number(n && n.serie) || 1))),
     falha: !!(n && n.falha), nota: limpa(n && n.nota, 200), carga: limpa(String((n && n.carga) ?? ''), 12), reps: Math.max(0, Math.min(200, Math.round(Number(n && n.reps) || 0))),
+    extra: !!(n && n.extra), // feito no intervalo (ex.: abdominal no descanso), sem série
   })).filter((n) => n.ex && (n.falha || n.nota));
   const temEsforco = esforco >= 1 && esforco <= 5;
   if (!comentario && !notas.length && !temEsforco) return '';
   const linhas = [`🏋️ Treino feito: ${titulo}${min ? ` (${min} min)` : ''}.`];
   if (temEsforco) linhas.push(`Esforço: ${'●'.repeat(esforco)}${'○'.repeat(5 - esforco)} (${['muito leve', 'leve', 'na medida', 'pesado', 'no limite'][esforco - 1]}).`);
   for (const n of notas.slice(0, 12)) {
+    if (n.extra) { linhas.push(`• ${n.ex}${n.nota ? ` (${n.nota})` : ''}`); continue; }
     linhas.push(`• ${n.ex}, série ${n.serie}${n.carga ? ` (${n.carga} kg × ${n.reps})` : ''}${n.falha ? ' · até a falha' : ''}${n.nota ? `: ${n.nota}` : ''}`);
   }
   if (comentario) linhas.push(`“${comentario}”`);

@@ -28,7 +28,7 @@ export default function PainelCorpo({ serie, perfil, nome, onSalvarMedida, avata
       <div className="mb-2 flex items-center gap-2">
         <i className="ri-body-scan-line text-lg text-primary-500"></i>
         <h2 className="font-heading text-base font-semibold text-foreground-950">{nome ? `Corpo de ${nome}` : 'Seu corpo'}</h2>
-        {ultima && <span className="ml-auto text-[11px] text-foreground-500">medidas de {dataBr(ultima.data)}</span>}
+        {ultima && <span className="ml-auto text-xs text-foreground-500">medidas de {dataBr(ultima.data)}</span>}
       </div>
       {comFotos && (
         <div className="mb-2 grid grid-cols-2 gap-1 rounded-xl bg-background-100 p-1">
@@ -39,7 +39,7 @@ export default function PainelCorpo({ serie, perfil, nome, onSalvarMedida, avata
       {vista === 'fotos' && comFotos ? (
         <>
           <Fotos360 fotos={comFotos.fotos} />
-          <p className="mt-1 text-[11px] text-foreground-400">Suas fotos de {dataBr(comFotos.data)}. Para comparar com outras datas, use a aba Fotos.</p>
+          <p className="mt-1 text-xs text-foreground-400">Suas fotos de {dataBr(comFotos.data)}. Para comparar com outras datas, use a aba Fotos.</p>
         </>
       ) : (
         <CorpoRealista valores={recentes} sexo={ultima?.av.sexo ?? perfil.sexo} altura={perfil.altura} gordura={gordura} onSalvarMedida={nome ? undefined : onSalvarMedida} avatar={avatar} onMudarAvatar={nome ? undefined : onMudarAvatar} />

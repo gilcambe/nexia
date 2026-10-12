@@ -36,7 +36,7 @@ export default function Comentarios({ com, nomeOutro, entrada, data, meuUid }: {
         <ul className="mb-3 space-y-2">
           {lista.map((c) => (
             <li key={c.id} className={`rounded-xl px-3 py-2 text-sm ${c.de === meuUid ? 'ml-6 bg-primary-50 text-foreground-900' : 'mr-6 bg-background-100 text-foreground-800'}`}>
-              <span className="mb-0.5 block text-[11px] font-semibold text-foreground-500">{c.de === meuUid ? 'Você' : nomeOutro} · {rotulo(c.ref?.alvo)} · {new Date(c.em).toLocaleDateString('pt-BR')}</span>
+              <span className="mb-0.5 block text-xs font-semibold text-foreground-500">{c.de === meuUid ? 'Você' : nomeOutro} · {rotulo(c.ref?.alvo)} · {new Date(c.em).toLocaleDateString('pt-BR')}</span>
               <span className="whitespace-pre-wrap">{c.texto}</span>
             </li>
           ))}

@@ -74,6 +74,12 @@ export default {
           950: 'oklch(var(--foreground-950) / <alpha-value>)',
         },
       },
+      // Letras maiores para ler no celular durante o treino (pedido do dono, out/2026): +1 a +2 px em tudo.
+      fontSize: {
+        xs: ['0.8125rem', { lineHeight: '1.15rem' }],
+        sm: ['0.9375rem', { lineHeight: '1.4rem' }],
+        base: ['1.0625rem', { lineHeight: '1.6rem' }],
+      },
       fontFamily: {
         sans: ['var(--font-body)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         body: ['var(--font-body)', 'ui-sans-serif', 'system-ui', 'sans-serif'],

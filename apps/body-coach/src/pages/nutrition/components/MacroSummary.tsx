@@ -14,7 +14,7 @@ function Ring({ pct, label, value, unit }: { pct: number; label: string; value: 
       >
         <div className="flex h-[104px] w-[104px] flex-col items-center justify-center rounded-full bg-background-50">
           <span className="font-heading text-2xl font-bold text-foreground-950">{value}</span>
-          <span className="text-[11px] text-foreground-400">{unit}</span>
+          <span className="text-xs text-foreground-400">{unit}</span>
         </div>
       </div>
       <p className="mt-2 text-xs font-medium text-foreground-600">{label}</p>

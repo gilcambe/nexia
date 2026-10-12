@@ -87,7 +87,7 @@ export default function Postura({ serie }: { serie: ItemSerie[] }) {
                   <img src={r.src} alt={`Postura ${r.pose}`} className="h-full w-full object-fill" />
                   <Sobreposicao r={r} />
                 </div>
-                <figcaption className="mt-0.5 text-[10px] text-foreground-500">{POSES.find((p) => p.id === r.pose)!.label}</figcaption>
+                <figcaption className="mt-0.5 text-xs text-foreground-500">{POSES.find((p) => p.id === r.pose)!.label}</figcaption>
               </figure>
             ))}
           </div>
@@ -102,7 +102,7 @@ export default function Postura({ serie }: { serie: ItemSerie[] }) {
             {resumo.length === 0 && <li className="text-sm text-foreground-600">Não achei o corpo inteiro nas fotos. Tire de corpo inteiro, a uns 2 metros, com a câmera na altura do umbigo.</li>}
           </ul>
           {semCorpo.length > 0 && resumo.length > 0 && <p className="mt-2 text-xs text-foreground-500">Não achei o corpo na foto: {semCorpo.join(', ')}.</p>}
-          <p className="mt-2 text-[11px] text-foreground-500">É uma checagem simples, não um diagnóstico. A foto precisa estar reta e de corpo inteiro. Na dúvida, mostre ao seu coach ou a um fisioterapeuta.</p>
+          <p className="mt-2 text-xs text-foreground-500">É uma checagem simples, não um diagnóstico. A foto precisa estar reta e de corpo inteiro. Na dúvida, mostre ao seu coach ou a um fisioterapeuta.</p>
         </>
       )}
     </Card>

@@ -46,7 +46,7 @@ export default function FichaEditor({ nomeAluno, respostas, inicial, salvando, o
           <div className="mt-3 grid grid-cols-2 gap-2">
             {(Object.keys(DIVISOES) as Divisao[]).map((d) => (
               <button key={d} type="button" onClick={() => { setFicha(rascunhoDaFicha(respostas, d)); setDia(0); }} className="rounded-xl border border-background-200 bg-background-50 px-3 py-2.5 text-left text-sm font-semibold text-foreground-900 hover:border-primary-300">
-                {DIVISOES[d].nome}<span className="block text-[11px] font-normal text-foreground-500">{DIVISOES[d].dias.length} treino{DIVISOES[d].dias.length > 1 ? 's' : ''}</span>
+                {DIVISOES[d].nome}<span className="block text-xs font-normal text-foreground-500">{DIVISOES[d].dias.length} treino{DIVISOES[d].dias.length > 1 ? 's' : ''}</span>
               </button>
             ))}
           </div>
@@ -119,23 +119,23 @@ export default function FichaEditor({ nomeAluno, respostas, inicial, salvando, o
                 </div>
               </div>
               <div className="mt-2 grid grid-cols-3 gap-2">
-                <label className="text-[11px] font-semibold text-foreground-500">Séries
+                <label className="text-xs font-semibold text-foreground-500">Séries
                   <input type="number" inputMode="numeric" min={1} max={10} value={x.series} onChange={(e) => mudarEx(j, { series: Math.min(10, Math.max(1, Number(e.target.value) || 1)) })} className={`${campo} mt-0.5`} aria-label={`Séries de ${x.nome}`} />
                 </label>
-                <label className="text-[11px] font-semibold text-foreground-500">Repetições
+                <label className="text-xs font-semibold text-foreground-500">Repetições
                   <input value={x.reps} onChange={(e) => mudarEx(j, { reps: e.target.value })} maxLength={12} placeholder="8–12" className={`${campo} mt-0.5`} aria-label={`Repetições de ${x.nome}`} />
                 </label>
-                <label className="text-[11px] font-semibold text-foreground-500">Descanso
+                <label className="text-xs font-semibold text-foreground-500">Descanso
                   <select value={x.descanso} onChange={(e) => mudarEx(j, { descanso: Number(e.target.value) })} className={`${campo} mt-0.5`} aria-label={`Descanso de ${x.nome}`}>
                     {[...new Set([...DESCANSOS, x.descanso])].sort((a, b) => a - b).map((s) => <option key={s} value={s}>{s >= 60 ? `${Math.floor(s / 60)}min${s % 60 ? ` ${s % 60}s` : ''}` : `${s}s`}</option>)}
                   </select>
                 </label>
               </div>
               <div className="mt-2 grid grid-cols-3 gap-2">
-                <label className="text-[11px] font-semibold text-foreground-500">Carga
+                <label className="text-xs font-semibold text-foreground-500">Carga
                   <input value={x.carga} onChange={(e) => mudarEx(j, { carga: e.target.value })} maxLength={16} placeholder="ex.: 20 kg" className={`${campo} mt-0.5`} aria-label={`Carga de ${x.nome}`} />
                 </label>
-                <label className="col-span-2 text-[11px] font-semibold text-foreground-500">Observação
+                <label className="col-span-2 text-xs font-semibold text-foreground-500">Observação
                   <input value={x.obs} onChange={(e) => mudarEx(j, { obs: e.target.value })} maxLength={200} placeholder="ex.: descida em 3 segundos" className={`${campo} mt-0.5`} aria-label={`Observação de ${x.nome}`} />
                 </label>
               </div>
@@ -183,14 +183,14 @@ function EscolherExercicio({ jaNoTreino, onEscolher, onFechar }: { jaNoTreino: s
         </div>
         <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar: supino, agachamento..." aria-label="Buscar exercício" className={`${campo} mt-3`} autoFocus />
         <div className="mt-2 flex gap-1.5 overflow-x-auto pb-1">
-          <button type="button" onClick={() => setGrupo('')} className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${!grupo ? 'bg-primary-500 text-background-50' : 'bg-background-100 text-foreground-700'}`}>Todos</button>
-          {GRUPOS.map((g) => <button key={g.id} type="button" onClick={() => setGrupo(g.id)} className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] font-semibold ${grupo === g.id ? 'bg-primary-500 text-background-50' : 'bg-background-100 text-foreground-700'}`}>{g.nome}</button>)}
+          <button type="button" onClick={() => setGrupo('')} className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${!grupo ? 'bg-primary-500 text-background-50' : 'bg-background-100 text-foreground-700'}`}>Todos</button>
+          {GRUPOS.map((g) => <button key={g.id} type="button" onClick={() => setGrupo(g.id)} className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${grupo === g.id ? 'bg-primary-500 text-background-50' : 'bg-background-100 text-foreground-700'}`}>{g.nome}</button>)}
         </div>
         <ul className="mt-2 flex-1 space-y-1.5 overflow-y-auto">
           {lista.map((x) => (
             <li key={x.id}>
               <button type="button" onClick={() => onEscolher(novoExercicio(x.id))} className="flex w-full items-center justify-between rounded-xl border border-background-200 px-3 py-2.5 text-left text-sm hover:border-primary-300">
-                <span><span className="font-medium text-foreground-900">{x.nome}</span><span className="block text-[11px] text-foreground-500">{GRUPOS.find((g) => g.id === x.grupo)?.nome}{jaNoTreino.includes(x.id) ? ' · já está no treino' : ''}</span></span>
+                <span><span className="font-medium text-foreground-900">{x.nome}</span><span className="block text-xs text-foreground-500">{GRUPOS.find((g) => g.id === x.grupo)?.nome}{jaNoTreino.includes(x.id) ? ' · já está no treino' : ''}</span></span>
                 <i className="ri-add-circle-line text-lg text-primary-500"></i>
               </button>
             </li>

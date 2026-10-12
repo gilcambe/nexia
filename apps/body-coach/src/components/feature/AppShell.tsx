@@ -79,7 +79,7 @@ function BrandMark({ size = 'md' }: { size?: 'md' | 'sm' }) {
         <p className="max-w-[11rem] truncate font-heading font-bold tracking-tight text-foreground-950">
           {marca?.nome || 'NEXIA'}
         </p>
-        <p className="mt-0.5 text-[10px] font-medium tracking-[0.18em] text-foreground-400 uppercase">
+        <p className="mt-0.5 text-xs font-medium tracking-[0.18em] text-foreground-400 uppercase">
           {marca?.nome ? 'com NEXIA Body Coach' : 'Body Coach AI'}
         </p>
       </div>
@@ -97,7 +97,7 @@ function CoachFab() {
     >
       <i className="ri-robot-2-line text-2xl"></i>
       {unread > 0 && (
-        <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-500 px-1 text-[11px] font-semibold text-background-50">
+        <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-accent-500 px-1 text-xs font-semibold text-background-50">
           {unread}
         </span>
       )}
@@ -110,22 +110,22 @@ function BottomTabs({ onMore }: { onMore: () => void }) {
   const { setOpen, unread } = useCoach();
   const navigate = useNavigate();
   const tab = ({ isActive }: { isActive: boolean }) =>
-    `flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium transition active:scale-95 ${isActive ? 'text-primary-600' : 'text-foreground-500'}`;
+    `flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition active:scale-95 ${isActive ? 'text-primary-600' : 'text-foreground-500'}`;
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-background-200 bg-background-50/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden" aria-label="Navegação principal">
       <div className="mx-auto flex max-w-md items-end px-1">
         <NavLink to="/" end className={tab}><i className="ri-sun-line text-xl"></i>Hoje</NavLink>
         <NavLink to="/nutrition" className={tab}><i className="ri-restaurant-line text-xl"></i>Nutrição</NavLink>
-        <button onClick={() => navigate('/workout')} className="-mt-5 flex flex-1 flex-col items-center gap-0.5 text-[11px] font-semibold text-primary-700 active:scale-95" aria-label="Ir para o treino">
+        <button onClick={() => navigate('/workout')} className="-mt-5 flex flex-1 flex-col items-center gap-0.5 text-xs font-semibold text-primary-700 active:scale-95" aria-label="Ir para o treino">
           <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-500 text-background-50 shadow-lg ring-4 ring-background-50"><i className="ri-play-fill text-2xl"></i></span>
           Treino
         </button>
         <NavLink to="/evolution" className={tab}><i className="ri-line-chart-line text-xl"></i>Evolução</NavLink>
-        <button onClick={() => setOpen(true)} className="relative flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium text-foreground-500 active:scale-95" aria-label="Abrir coach">
+        <button onClick={() => setOpen(true)} className="relative flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium text-foreground-500 active:scale-95" aria-label="Abrir coach">
           <span className="relative"><i className="ri-robot-2-line text-xl"></i>{unread > 0 && <span className="absolute -right-2 -top-1 h-2.5 w-2.5 rounded-full bg-accent-500"></span>}</span>
           Coach
         </button>
-        <button onClick={onMore} className="flex flex-1 flex-col items-center gap-0.5 py-2 text-[11px] font-medium text-foreground-500 active:scale-95" aria-label="Mais opções">
+        <button onClick={onMore} className="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium text-foreground-500 active:scale-95" aria-label="Mais opções">
           <i className="ri-menu-line text-xl"></i>Mais
         </button>
       </div>
@@ -207,10 +207,10 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
             {profile?.photo_data ? <img src={profile.photo_data} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" /> : <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-sm font-bold text-primary-700">{displayName.charAt(0).toUpperCase()}</span>}
             <p className="truncate text-xs font-semibold text-foreground-700">{profile?.nickname || displayName}</p>
           </div>
-          <p className="mt-0.5 text-[11px] text-foreground-400">{user?.email}</p>
+          <p className="mt-0.5 text-xs text-foreground-400">{user?.email}</p>
           <div className="mt-2 flex items-center gap-1.5">
             <span className={`h-1.5 w-1.5 rounded-full ${isLocalDemo ? 'bg-secondary-500' : 'bg-accent-500'}`}></span>
-            <span className={`text-[11px] ${isLocalDemo ? 'text-secondary-700' : 'text-accent-700'}`}>
+            <span className={`text-xs ${isLocalDemo ? 'text-secondary-700' : 'text-accent-700'}`}>
               {isLocalDemo ? 'Modo local (teste)' : 'Conectado'}
             </span>
           </div>

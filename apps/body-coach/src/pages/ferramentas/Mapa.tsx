@@ -86,7 +86,7 @@ export default function Mapa() {
               );
             })}
           </ul>
-          <p className="text-[11px] text-foreground-400">Dados do OpenStreetMap (colaborativo). Confira horário e acesso antes de ir.</p>
+          <p className="text-xs text-foreground-400">Dados do OpenStreetMap (colaborativo). Confira horário e acesso antes de ir.</p>
         </>
       )}
       {erro && <p className="text-sm text-red-600" role="alert">{erro}</p>}

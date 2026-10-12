@@ -40,7 +40,7 @@ export default function ReadinessRing({
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="font-heading text-3xl font-bold text-foreground-950">{score}</span>
-        {label && <span className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-foreground-400">{label}</span>}
+        {label && <span className="mt-0.5 text-xs font-medium uppercase tracking-wide text-foreground-400">{label}</span>}
       </div>
     </div>
   );

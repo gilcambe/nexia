@@ -68,7 +68,7 @@ export default function StreakCard() {
           <i className="ri-fire-line text-lg text-primary-500"></i>
           <h2 className="font-heading text-base font-semibold text-foreground-950">Sua constância</h2>
         </div>
-        <span className="rounded-full bg-primary-100 px-2.5 py-1 text-[11px] font-semibold text-primary-700">
+        <span className="rounded-full bg-primary-100 px-2.5 py-1 text-xs font-semibold text-primary-700">
           {seq > 0 ? `${seq} ${seq === 1 ? 'semana firme' : 'semanas firmes'}` : 'comece sua sequência'}
         </span>
       </div>

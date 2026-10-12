@@ -80,8 +80,8 @@ export default function Feed() {
             <div className="flex items-center gap-2">
               {p.foto ? <img src={p.foto} alt="" className="h-9 w-9 rounded-full object-cover" /> : <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-100 text-primary-700"><i className="ri-user-3-line"></i></span>}
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-foreground-950">{p.nome}{p.coach && <span className="ml-1 rounded-full bg-primary-100 px-1.5 py-0.5 text-[10px] font-bold text-primary-700">COACH</span>}</p>
-                <p className="text-[11px] text-foreground-500">{quando(p.em)}</p>
+                <p className="truncate text-sm font-semibold text-foreground-950">{p.nome}{p.coach && <span className="ml-1 rounded-full bg-primary-100 px-1.5 py-0.5 text-xs font-bold text-primary-700">COACH</span>}</p>
+                <p className="text-xs text-foreground-500">{quando(p.em)}</p>
               </div>
               {(p.meu || souCoach) && <button type="button" onClick={() => { if (window.confirm('Apagar este post?')) void apagarPost(p.id).then(carregar); }} aria-label="Apagar post" className="p-1 text-foreground-400"><i className="ri-delete-bin-line"></i></button>}
             </div>

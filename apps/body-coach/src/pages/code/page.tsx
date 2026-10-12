@@ -42,7 +42,7 @@ export default function CodePage() {
             </span>
             <div>
               <p className="font-heading text-lg font-bold text-foreground-950">{s.value}</p>
-              <p className="text-[11px] text-foreground-500">{s.label}</p>
+              <p className="text-xs text-foreground-500">{s.label}</p>
             </div>
           </div>
         ))}
