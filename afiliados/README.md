@@ -90,3 +90,20 @@ As redes e segredos são variáveis de ambiente que permitem que o Robô de Ofer
 ## 5. WhatsApp
 
 Para compartilhar ofertas via WhatsApp, clique no botão “Compartilhar via WhatsApp” na página de oferta. O link abre o WhatsApp Web ou aplicativo com a mensagem pré‑preenchida contendo o título e link da oferta. Essa abordagem manual garante que o usuário veja o conteúdo antes de enviar, evitando phishing e mantendo a segurança do serviço.
+
+## 4. Redes e segredos
+
+As redes e segredos são variáveis de ambiente que permitem que o Robô de Ofertas acesse serviços externos, como APIs de pagamento, integrações de e-mail, ou autenticação. Você pode configurar essas variáveis em três locais:
+1. arquivo `.env` no diretório raiz do projeto,
+2. painel de configurações do Cloudflare Workers,
+3. painel de configurações do Firebase Functions.
+
+| Rede            | Segredo        | Onde configurar  |
+|-----------------|----------------|------------------|
+| PAYMENT_API_KEY | `pk_live_xxx`  | `.env`           |
+| MAILGUN_API_KEY | `key-xxxx`     | `.env`           |
+| WHATSAPP_TOKEN  | `token-xxxx`   | Cloudflare Vars  |
+
+## 5. WhatsApp
+
+Para compartilhar ofertas via WhatsApp, clique no botão “Compartilhar via WhatsApp” na página de oferta. O link abre o WhatsApp Web ou aplicativo com a mensagem pré‑preenchida contendo o título e link da oferta. Essa abordagem manual garante que o usuário veja o conteúdo antes de enviar, evitando phishing e mantendo a segurança do serviço.
