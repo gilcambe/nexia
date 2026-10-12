@@ -46,13 +46,17 @@ O WhatsApp é um canal de conversão importante, use com responsabilidade.
 - Evite envio automático massivo que viole os termos de uso.
 - Mantenha comunicação transparente com seus seguidores.
 
-## 6. Regras para Evitar Bloqueios
-- Evite spam, envio em massa não autorizado ou compartilhamento excessivo.
-- Informe seus seguidores que os links geram comissão.
-- Respeite os limites diários de cliques e interações.
-- Mantenha postura ética e profissional.
+## 6. Regras para não ser bloqueado
+Para manter sua conta ativa e evitar bloqueios nas redes sociais e canais de divulgação, siga rigorosamente as orientações abaixo:
 
-## 7. Personalização e Limites
-- **Nome do site:** Altere o título principal no arquivo de configuração do projeto.
-- **Temas:** Personalize cores e fontes alterando as variáveis CSS do design system.
-- **Limites:** Configure limites operacionais e cotas nas variáveis de ambiente do servidor.
+- Evite envio em massa não autorizado, mensagens repetitivas ou práticas que caracterizem spam em grupos de WhatsApp e Telegram.
+- Informe de maneira clara e transparente aos seus seguidores que os links compartilhados são de afiliado e geram comissão para você.
+- Respeite os limites operacionais diários de cliques, disparos e interações definidos pelo sistema e pelas plataformas parceiras.
+- Mantenha uma postura ética, divulgando apenas promoções reais, verificadas e de lojas idôneas para proteger seu público.
+
+## 7. Trocar o nome do site, os temas ou os limites
+Você pode adaptar a plataforma facilmente para atender às suas necessidades de marca e operação através das configurações:
+
+- **Nome do site:** Altere o título principal, textos de cabeçalho e metadados nos arquivos de configuração do projeto ou no painel de administração.
+- **Temas:** Personalize cores, logotipos e fontes editando as variáveis CSS e os estilos globais do design system mobile-first.
+- **Limites:** Ajuste cotas operacionais, limites de requisições e parâmetros de segurança diretamente nas variáveis de ambiente do servidor e arquivos de configuração.
