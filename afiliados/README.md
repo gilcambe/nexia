@@ -34,14 +34,17 @@ Para o funcionamento correto da plataforma, as variáveis de ambiente essenciais
 ## 5. Divulgação via WhatsApp
 Utilize o botão de ação rápida "Compartilhar via WhatsApp" presente em todas as páginas de oferta para abrir o aplicativo instantaneamente com a mensagem pré-preenchida, garantindo agilidade, segurança e evitando o envio manual incorreto de links.
 
-## 6. Regras de Segurança para Evitar o Bloqueio de Contas
-Para manter sua conta sempre ativa, regular e segura, siga rigorosamente estas orientações fundamentais:
-- Nunca envie mensagens em massa não solicitadas (spam) em grupos onde não é permitido.
-- Utilize exclusivamente os links oficiais gerados pelo seu painel de afiliado.
-- Respeite rigorosamente as políticas de privacidade e os termos de uso das redes sociais e plataformas de mensagens.
+## 6. Regras para não ser bloqueado
+Para manter sua conta de afiliado sempre ativa, regular e segura, é fundamental seguir boas práticas diárias de divulgação e atendimento:
+- Nunca envie mensagens em massa ou links repetitivos sem autorização em grupos onde você não tem permissão explícita dos administradores.
+- Utilize exclusivamente os links oficiais gerados diretamente no seu painel de afiliado para garantir o rastreio correto e o recebimento das suas comissões.
+- Respeite rigorosamente todas as políticas de privacidade, diretrizes da comunidade e termos de uso de cada rede social ou plataforma de mensagens utilizada.
+- Evite práticas enganosas ou promessas exageradas sobre os produtos divulgados, mantendo sempre a transparência com o seu público e clientes finais.
+- Monitore regularmente o desempenho dos seus links e o engajamento dos seus seguidores para ajustar a frequência das postagens conforme a aceitação da audiência.
 
-## 7. Como Trocar o Nome do Site, os Temas Visuais e os Limites
-Personalize a sua experiência e adapte a plataforma às suas necessidades específicas de forma simples:
-- **Nome do site:** Altere o título e o nome comercial diretamente nas configurações gerais do projeto ou no arquivo de configuração principal.
-- **Temas visuais:** Ajuste as variáveis de cores, fontes e estilos localizadas no arquivo CSS principal para refletir a identidade desejada.
-- **Limites operacionais:** Modifique os parâmetros de requisições, paginação de ofertas e limites de envio no painel de administração da plataforma.
+## 7. Trocar o nome do site, os temas ou os limites
+Personalize a sua experiência na plataforma e adapte as configurações gerais de acordo com a sua identidade visual e as necessidades do seu negócio:
+- **Nome do site:** Altere o título, o logotipo e o nome comercial do seu projeto de forma rápida e prática acessando as configurações gerais diretamente no painel de administração ou editando os arquivos de configuração do sistema.
+- **Temas visuais:** Modifique as cores principais, os estilos de fontes e a aparência geral da interface ajustando as variáveis dedicadas no arquivo CSS principal do projeto, permitindo uma identidade totalmente personalizada.
+- **Limites operacionais:** Configure e gerencie os parâmetros de requisições, a paginação de ofertas, o volume máximo de disparos permitidos e os limites de exibição de itens por página utilizando o painel de controle do aplicativo.
+- **Suporte adicional:** Em caso de dúvidas sobre qualquer alteração avançada de parâmetros ou personalizações complexas, consulte sempre a documentação técnica oficial ou entre em contato com a equipe de suporte através dos canais autorizados.
