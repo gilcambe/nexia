@@ -6,7 +6,7 @@ import { papelEContatos } from '@/lib/papelCoach';
 
 // No treino: o aluno grava a própria execução (até 10 s) e manda direto na conversa com o coach,
 // já com o nome do exercício e a carga, para o coach analisar a técnica.
-export default function GravarParaCoach({ exercicio, detalhe }: { exercicio: string; detalhe?: string }) {
+export default function GravarParaCoach({ exercicio, detalhe, compacto = false }: { exercicio: string; detalhe?: string; compacto?: boolean }) {
   const [info, setInfo] = useState<{ papel: 'coach' | 'aluno' | 'nenhum'; contatos: Contato[] } | null>(null);
   const [para, setPara] = useState<string>('');
   const [gravando, setGravando] = useState(false);
@@ -22,6 +22,29 @@ export default function GravarParaCoach({ exercicio, detalhe }: { exercicio: str
   if (!info || info.papel === 'coach') return null;
   const temCoach = info.papel === 'aluno' && info.contatos.length > 0;
   const coach = info.contatos.find((c) => c.uid === para);
+
+  const gravador = gravando && (
+    <GravadorVideo
+      titulo={`Sua execução: ${exercicio}`}
+      onFechar={() => setGravando(false)}
+      onEnviar={async (v) => {
+        await chatApi({ acao: 'video_enviar', com: para, video: v, texto: `Minha execução: ${exercicio}${detalhe ? ` (${detalhe})` : ''}. Pode avaliar?` });
+        setEnviado(`Vídeo enviado para ${coach?.nome || 'o seu coach'}. A resposta chega na aba Coach.`);
+      }}
+    />
+  );
+  // Versão botão (tela do treino): um toque abre a câmera; sem coach, nem aparece.
+  if (compacto) {
+    if (!temCoach) return null;
+    return (
+      <>
+        <button type="button" onClick={() => setGravando(true)} data-testid="gravar-execucao" className="flex min-h-[52px] items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-left text-sm font-semibold text-red-700">
+          <i className={`${enviado ? 'ri-check-line' : 'ri-video-add-line'} text-xl`}></i>{enviado ? 'Vídeo enviado' : 'Gravar p/ o coach'}
+        </button>
+        {gravador}
+      </>
+    );
+  }
 
   return (
     <div className="mt-3 rounded-xl border border-red-200 bg-red-50/60 p-3" data-testid="gravar-para-coach">
@@ -47,16 +70,7 @@ export default function GravarParaCoach({ exercicio, detalhe }: { exercicio: str
       ) : (
         <Link to="/chat" className="mt-2 inline-flex rounded-xl bg-background-50 px-4 py-2 text-sm font-semibold text-red-700 ring-1 ring-red-200">Conectar ao meu coach</Link>
       )}
-      {gravando && (
-        <GravadorVideo
-          titulo={`Sua execução: ${exercicio}`}
-          onFechar={() => setGravando(false)}
-          onEnviar={async (v) => {
-            await chatApi({ acao: 'video_enviar', com: para, video: v, texto: `Minha execução: ${exercicio}${detalhe ? ` (${detalhe})` : ''}. Pode avaliar?` });
-            setEnviado(`Vídeo enviado para ${coach?.nome || 'o seu coach'}. A resposta chega na aba Coach.`);
-          }}
-        />
-      )}
+      {gravador}
     </div>
   );
 }

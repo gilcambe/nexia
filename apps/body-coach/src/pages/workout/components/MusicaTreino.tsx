@@ -55,7 +55,7 @@ export default function MusicaTreino({ variante = 'cartao' }: { variante?: 'cart
           </div>
           <div className="mt-3 grid grid-cols-4 gap-2">
             {APPS_MUSICA.map((a) => (
-              <button key={a.id} type="button" onClick={() => tocarNoApp(a.id)} className={`flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-[11px] font-medium ${app === a.id ? 'bg-white/15 ring-1 ring-white/40' : 'bg-white/5'}`} aria-label={`Tocar no ${a.nome}`}>
+              <button key={a.id} type="button" onClick={() => tocarNoApp(a.id)} className={`flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-xs font-medium ${app === a.id ? 'bg-white/15 ring-1 ring-white/40' : 'bg-white/5'}`} aria-label={`Tocar no ${a.nome}`}>
                 <i className={`${a.icone} text-2xl`} style={{ color: a.cor }}></i>
                 {a.nome.replace(' Music', '')}
               </button>
@@ -101,7 +101,7 @@ export default function MusicaTreino({ variante = 'cartao' }: { variante?: 'cart
             </button>
 
             <p className="mt-4 text-sm font-semibold text-foreground-800">{pref.link ? 'Trocar minha playlist' : 'Usar minha playlist'}</p>
-            <p className="text-[11px] text-foreground-500">No app de música: playlist &gt; Compartilhar &gt; Copiar link. Cole aqui.</p>
+            <p className="text-xs text-foreground-500">No app de música: playlist &gt; Compartilhar &gt; Copiar link. Cole aqui.</p>
             <div className="mt-1.5 flex gap-2">
               <input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://open.spotify.com/playlist/..." className="min-w-0 flex-1 rounded-lg border border-background-200 bg-background-50 px-3 py-2 text-sm" aria-label="Link da playlist" />
               <button type="button" onClick={tocarMinha} className="rounded-lg bg-background-100 px-3 py-2 text-sm font-semibold text-foreground-800">Salvar e tocar</button>

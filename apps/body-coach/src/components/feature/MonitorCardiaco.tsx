@@ -12,7 +12,8 @@ export function useFC(): EstadoFC {
 }
 
 // Batimentos ao vivo (cinta ou relógio pelo Bluetooth), zona atual e calorias da sessão.
-export default function MonitorCardiaco({ compacto = false }: { compacto?: boolean }) {
+// soConectado: durante os exercícios, só aparece se o relógio/cinta já estiver ligado (tela mais limpa).
+export default function MonitorCardiaco({ compacto = false, soConectado = false }: { compacto?: boolean; soConectado?: boolean }) {
   const { profile } = useAuth();
   const ob = (profile?.onboarding ?? {}) as Record<string, string | undefined>;
   const idade = Number(ob.age) || 30;
@@ -24,12 +25,13 @@ export default function MonitorCardiaco({ compacto = false }: { compacto?: boole
   const zona = fc.bpm ? zonas.find((z) => fc.bpm >= z.de && fc.bpm <= z.ate) ?? (fc.bpm > zonas[4].ate ? zonas[4] : null) : null;
 
   if (!fc.conectado) {
+    if (soConectado) return null;
     return (
       <div className={`rounded-2xl border border-background-200 bg-background-50 ${compacto ? 'p-3' : 'p-4'}`}>
         <button type="button" onClick={() => void conectarFC()} className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-300 bg-red-50 py-2.5 text-sm font-semibold text-red-700">
           <i className="ri-heart-pulse-line text-lg"></i>Conectar relógio ou cinta cardíaca
         </button>
-        {!bluetoothDisponivel() && <p className="mt-1.5 text-center text-[11px] text-foreground-500">Precisa do Chrome no Android ou no computador. No iPhone, importe o treino do relógio depois.</p>}
+        {!bluetoothDisponivel() && <p className="mt-1.5 text-center text-xs text-foreground-500">Precisa do Chrome no Android ou no computador. No iPhone, importe o treino do relógio depois.</p>}
         {fc.erro && <p className="mt-1.5 text-center text-xs text-red-700">{fc.erro}</p>}
       </div>
     );
@@ -48,7 +50,7 @@ export default function MonitorCardiaco({ compacto = false }: { compacto?: boole
         </div>
         <button type="button" onClick={desconectarFC} className="shrink-0 rounded-lg p-2 text-foreground-400" aria-label="Desconectar monitor"><i className="ri-bluetooth-connect-line text-lg"></i></button>
       </div>
-      <p className="mt-1 truncate text-[11px] text-foreground-400">{fc.aparelho}</p>
+      <p className="mt-1 truncate text-xs text-foreground-400">{fc.aparelho}</p>
     </div>
   );
 }

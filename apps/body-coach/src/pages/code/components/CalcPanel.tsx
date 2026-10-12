@@ -28,10 +28,10 @@ export default function CalcPanel() {
               <h4 className="font-heading text-sm font-semibold text-foreground-950">{c.title}</h4>
             </div>
             <div className="mt-3 overflow-x-auto rounded-lg border border-background-200 bg-background-100/50 p-3">
-              <code className="whitespace-pre font-mono text-[12px] text-primary-700">{c.formula}</code>
+              <code className="whitespace-pre font-mono text-xs text-primary-700">{c.formula}</code>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-foreground-700">{c.description}</p>
-            <p className="mt-3 flex items-center gap-1.5 text-[11px] text-foreground-400">
+            <p className="mt-3 flex items-center gap-1.5 text-xs text-foreground-400">
               <i className="ri-file-code-line"></i>
               <span className="font-mono">{c.source}</span>
             </p>

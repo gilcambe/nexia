@@ -194,7 +194,7 @@ export default function CoachPanel() {
                 }
               >
                 <p className="whitespace-pre-line leading-relaxed">{m.text}</p>
-                <p className={m.speaker === 'user' ? 'mt-1 text-right text-[11px] text-background-50/70' : 'mt-1 text-[11px] text-foreground-400'}>
+                <p className={m.speaker === 'user' ? 'mt-1 text-right text-xs text-background-50/70' : 'mt-1 text-xs text-foreground-400'}>
                   {m.time}
                 </p>
               </div>
@@ -270,7 +270,7 @@ export default function CoachPanel() {
               <i className="ri-send-plane-fill"></i>
             </button>
           </div>
-          <p className="mt-2 text-center text-[11px] text-foreground-400">
+          <p className="mt-2 text-center text-xs text-foreground-400">
             {speechSupported
               ? 'Toque no microfone e fale — o coach também responde em áudio.'
               : 'Voz não suportada neste navegador. Digite sua mensagem normalmente.'}

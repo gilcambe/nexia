@@ -84,11 +84,11 @@ export default function MetasCorpo({ serie, metas, fotoMeta, salvar }: { serie: 
         <div className="mt-4 grid grid-cols-2 gap-2">
           <figure className="text-center">
             {ultFrente ? <img src={ultFrente} alt="Você hoje" className="aspect-[3/4] w-full rounded-lg object-cover object-top" /> : <div className="flex aspect-[3/4] items-center justify-center rounded-lg bg-background-100 text-xs text-foreground-500">Tire a foto de frente</div>}
-            <figcaption className="mt-1 text-[11px] text-foreground-500">Você {ult ? 'agora' : ''}</figcaption>
+            <figcaption className="mt-1 text-xs text-foreground-500">Você {ult ? 'agora' : ''}</figcaption>
           </figure>
           <figure className="text-center">
             <img src={fotoMeta} alt="Físico de referência" className="aspect-[3/4] w-full rounded-lg object-cover object-top" />
-            <figcaption className="mt-1 text-[11px] text-foreground-500">Referência</figcaption>
+            <figcaption className="mt-1 text-xs text-foreground-500">Referência</figcaption>
           </figure>
         </div>
       )}
@@ -101,7 +101,7 @@ export default function MetasCorpo({ serie, metas, fotoMeta, salvar }: { serie: 
               const atual = [...serie].reverse().find((s) => s.m[o.key] != null)?.m[o.key];
               return (
                 <label key={o.key} className="block">
-                  <span className="mb-0.5 block text-[11px] font-medium text-foreground-600">{o.label} ({o.unidade}){atual != null ? ` · hoje ${fmt(atual)}` : ''}</span>
+                  <span className="mb-0.5 block text-xs font-medium text-foreground-600">{o.label} ({o.unidade}){atual != null ? ` · hoje ${fmt(atual)}` : ''}</span>
                   <input inputMode="decimal" name={`meta_${o.key}`} value={rascunho[o.key] ?? ''} onChange={(e) => setRascunho((r) => ({ ...r, [o.key]: e.target.value }))} className="w-full rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-sm" />
                 </label>
               );
@@ -115,7 +115,7 @@ export default function MetasCorpo({ serie, metas, fotoMeta, salvar }: { serie: 
             </label>
             {foto && <button type="button" onClick={() => setFoto(null)} className="text-xs text-red-600">Tirar</button>}
           </div>
-          <p className="text-[11px] text-foreground-500">Use a foto só como inspiração: cada corpo tem a sua estrutura. Fica guardada só na sua conta.</p>
+          <p className="text-xs text-foreground-500">Use a foto só como inspiração: cada corpo tem a sua estrutura. Fica guardada só na sua conta.</p>
           <div className="flex gap-2">
             <button type="button" onClick={() => void gravar()} className="flex-1 rounded-lg bg-primary-500 px-3 py-2 text-sm font-semibold text-background-50 dark:text-foreground-950">Salvar metas</button>
             <button type="button" onClick={() => setEditar(false)} className="rounded-lg border border-background-300 px-3 py-2 text-sm font-semibold text-foreground-700">Cancelar</button>
@@ -123,7 +123,7 @@ export default function MetasCorpo({ serie, metas, fotoMeta, salvar }: { serie: 
         </div>
       )}
       {msg && <p className="mt-2 text-sm text-foreground-700">{msg}</p>}
-      {!editar && progresso.length > 0 && <p className="mt-3 text-[11px] text-foreground-500">No corpo 3D, toque em “Como vou ficar na meta” para ver o contorno com essas medidas.</p>}
+      {!editar && progresso.length > 0 && <p className="mt-3 text-xs text-foreground-500">No corpo 3D, toque em “Como vou ficar na meta” para ver o contorno com essas medidas.</p>}
     </Card>
   );
 }

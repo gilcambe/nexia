@@ -46,7 +46,7 @@ export default function Conquistas() {
         ].map((x) => (
           <div key={x.l} className="rounded-2xl border border-background-200 bg-background-50 p-3 text-center">
             <p className="font-heading text-xl font-bold text-foreground-950">{x.v}</p>
-            <p className="text-[11px] leading-tight text-foreground-500">{x.l}</p>
+            <p className="text-xs leading-tight text-foreground-500">{x.l}</p>
           </div>
         ))}
       </div>
@@ -66,7 +66,7 @@ export default function Conquistas() {
             <div className="min-w-0 flex-1">
               <p className="flex items-center justify-between gap-2 font-semibold text-foreground-950">
                 <span className="truncate">{c.nome}</span>
-                <span className="shrink-0 text-[11px] font-medium text-primary-700">+{c.xp} XP</span>
+                <span className="shrink-0 text-xs font-medium text-primary-700">+{c.xp} XP</span>
               </p>
               <p className="text-xs text-foreground-500">{c.descricao}</p>
               {!c.ok && (
@@ -74,7 +74,7 @@ export default function Conquistas() {
                   <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-background-200">
                     <div className="h-full rounded-full bg-primary-500" style={{ width: `${Math.min(100, (c.atual / c.meta) * 100)}%` }} />
                   </div>
-                  <span className="text-[11px] text-foreground-500">{c.atual.toLocaleString('pt-BR')}/{c.meta.toLocaleString('pt-BR')}</span>
+                  <span className="text-xs text-foreground-500">{c.atual.toLocaleString('pt-BR')}/{c.meta.toLocaleString('pt-BR')}</span>
                 </div>
               )}
             </div>

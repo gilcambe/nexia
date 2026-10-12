@@ -30,7 +30,7 @@ export default function Periodizacao() {
           {OBJETIVOS.map((o) => (
             <button key={o.id} type="button" onClick={() => setObjetivo(o.id)} className={`rounded-xl p-3 text-left ${objetivo === o.id ? 'bg-primary-500 text-background-50 dark:text-foreground-950' : 'border border-background-200 bg-background-50 text-foreground-800'}`}>
               <span className="block font-semibold">{o.nome}</span>
-              <span className="block text-[11px] opacity-80">{o.desc}</span>
+              <span className="block text-xs opacity-80">{o.desc}</span>
             </button>
           ))}
         </div>
@@ -68,7 +68,7 @@ export default function Periodizacao() {
             <div key={s.semana} ref={ativa ? ref : undefined} className={`rounded-2xl border p-3 ${ativa ? 'border-2 border-primary-500 bg-primary-50' : s.deload ? 'border-dashed border-background-300 bg-background-50' : 'border-background-200 bg-background-50'} ${s.semana < atual ? 'opacity-60' : ''}`}>
               <p className="flex items-center justify-between text-sm font-semibold text-foreground-950">
                 <span>Semana {s.semana} · {s.fase}</span>
-                {ativa && <span className="rounded-full bg-primary-500 px-2 py-0.5 text-[10px] font-bold uppercase text-background-50 dark:text-foreground-950">Agora</span>}
+                {ativa && <span className="rounded-full bg-primary-500 px-2 py-0.5 text-xs font-bold uppercase text-background-50 dark:text-foreground-950">Agora</span>}
                 {s.semana < atual && <i className="ri-check-line text-emerald-600"></i>}
               </p>
               <div className="mt-1.5 grid grid-cols-3 gap-1.5 text-center text-xs">
@@ -82,7 +82,7 @@ export default function Periodizacao() {
           );
         })}
       </div>
-      <p className="text-[11px] text-foreground-400">RIR = repetições que ainda sobrariam no fim da série (RIR 2 = parar faltando 2). Os exercícios continuam os da sua ficha; a periodização muda séries, repetições, carga e descanso.</p>
+      <p className="text-xs text-foreground-400">RIR = repetições que ainda sobrariam no fim da série (RIR 2 = parar faltando 2). Os exercícios continuam os da sua ficha; a periodização muda séries, repetições, carga e descanso.</p>
       <button type="button" onClick={() => { if (window.confirm('Recomeçar a periodização?')) salvar(null); }} className="w-full py-2 text-sm text-foreground-500">Recomeçar / mudar objetivo</button>
     </div>
   );

@@ -91,9 +91,9 @@ export default function CorpoRealista({ valores, sexo, altura, gordura, onSalvar
               aria-label={`${onSalvarMedida ? 'Medir' : 'Ver medida'}: ${NOME_DA_PARTE[p]}`}
             >
               <span className={`flex h-6 w-6 items-center justify-center rounded-full border-2 ${ativo ? 'border-primary-500 bg-primary-500 text-white' : m != null ? 'border-white bg-black/40 text-white' : 'border-white bg-primary-500/80 text-white'}`}>
-                <i className={m != null ? 'ri-ruler-line text-[11px]' : 'ri-add-line text-[12px]'}></i>
+                <i className={m != null ? 'ri-ruler-line text-xs' : 'ri-add-line text-xs'}></i>
               </span>
-              <span className={`pointer-events-none absolute left-7 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md px-2 py-0.5 text-[10px] font-semibold ${ativo ? 'bg-primary-500 text-white' : 'bg-black/60 text-white'}`}>
+              <span className={`pointer-events-none absolute left-7 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-semibold ${ativo ? 'bg-primary-500 text-white' : 'bg-black/60 text-white'}`}>
                 {NOME_DA_PARTE[p]}{m != null ? ` · ${m.toLocaleString('pt-BR')} cm` : ''}
               </span>
             </button>
@@ -102,12 +102,12 @@ export default function CorpoRealista({ valores, sexo, altura, gordura, onSalvar
       </div>
       <div className="mt-2 flex flex-wrap justify-center gap-1.5">
         {(['frente', 'lado', 'costas'] as const).map((v) => (
-          <button key={v} type="button" onClick={() => setVista(v)} className={`rounded-full px-3 py-1 text-[11px] font-semibold ${vista === v ? 'bg-foreground-900 text-background-50' : 'bg-background-100 text-foreground-700'}`}>
+          <button key={v} type="button" onClick={() => setVista(v)} className={`rounded-full px-3 py-1 text-xs font-semibold ${vista === v ? 'bg-foreground-900 text-background-50' : 'bg-background-100 text-foreground-700'}`}>
             {v === 'frente' ? 'Frente' : v === 'lado' ? 'Lado' : 'Costas'}
           </button>
         ))}
         {onMudarAvatar && (
-          <button type="button" onClick={() => setEditando((e) => !e)} aria-expanded={editando} className={`rounded-full px-3 py-1 text-[11px] font-semibold ${editando ? 'bg-primary-500 text-white' : 'bg-primary-500/10 text-primary-600'}`}>
+          <button type="button" onClick={() => setEditando((e) => !e)} aria-expanded={editando} className={`rounded-full px-3 py-1 text-xs font-semibold ${editando ? 'bg-primary-500 text-white' : 'bg-primary-500/10 text-primary-600'}`}>
             <i className="ri-user-settings-line mr-1"></i>Personalizar corpo
           </button>
         )}
@@ -115,7 +115,7 @@ export default function CorpoRealista({ valores, sexo, altura, gordura, onSalvar
       {editando && onMudarAvatar && (
         <div className="mt-2 space-y-2.5 rounded-xl border border-background-200 bg-background-50 p-3" data-testid="personalizar-corpo">
           <div>
-            <p className="mb-1 text-[11px] font-semibold text-foreground-600">Corpo</p>
+            <p className="mb-1 text-xs font-semibold text-foreground-600">Corpo</p>
             <div className="grid grid-cols-2 gap-1 rounded-lg bg-background-100 p-1">
               {([['m', 'Homem'], ['f', 'Mulher']] as const).map(([id, nome]) => (
                 <button key={id} type="button" aria-pressed={avatar.sexo === id} onClick={() => mudar({ sexo: id })} className={`rounded-md py-1.5 text-xs font-semibold ${avatar.sexo === id ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>{nome}</button>
@@ -123,25 +123,25 @@ export default function CorpoRealista({ valores, sexo, altura, gordura, onSalvar
             </div>
           </div>
           <div>
-            <p className="mb-1 text-[11px] font-semibold text-foreground-600">Tom de pele</p>
+            <p className="mb-1 text-xs font-semibold text-foreground-600">Tom de pele</p>
             <div className="flex gap-3">
               {PELES.map((p) => (
                 <button key={p.id} type="button" aria-pressed={avatar.pele === p.id} aria-label={`Pele ${p.nome}`} onClick={() => mudar({ pele: p.id })} className="flex flex-col items-center gap-0.5">
                   <span className={`h-8 w-8 rounded-full border-2 ${avatar.pele === p.id ? 'border-primary-500 ring-2 ring-primary-500/30' : 'border-white shadow'}`} style={{ background: p.cor }}></span>
-                  <span className="text-[10px] text-foreground-600">{p.nome}</span>
+                  <span className="text-xs text-foreground-600">{p.nome}</span>
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <p className="mb-1 text-[11px] font-semibold text-foreground-600">Biotipo</p>
+            <p className="mb-1 text-xs font-semibold text-foreground-600">Biotipo</p>
             <div className="flex flex-wrap gap-1.5">
               {BIOTIPOS.map((b) => (
-                <button key={b.id} type="button" aria-pressed={avatar.biotipo === b.id} onClick={() => mudar({ biotipo: b.id })} className={`rounded-full px-3 py-1 text-[11px] font-semibold ${avatar.biotipo === b.id ? 'bg-foreground-900 text-background-50' : 'bg-background-100 text-foreground-700'}`}>{b.nome}</button>
+                <button key={b.id} type="button" aria-pressed={avatar.biotipo === b.id} onClick={() => mudar({ biotipo: b.id })} className={`rounded-full px-3 py-1 text-xs font-semibold ${avatar.biotipo === b.id ? 'bg-foreground-900 text-background-50' : 'bg-background-100 text-foreground-700'}`}>{b.nome}</button>
               ))}
             </div>
           </div>
-          <p className="text-[10px] text-foreground-500">Depois de escolher, o corpo continua sendo moldado com as suas medidas. "Pela gordura" troca sozinho conforme o seu % de gordura muda.</p>
+          <p className="text-xs text-foreground-500">Depois de escolher, o corpo continua sendo moldado com as suas medidas. "Pela gordura" troca sozinho conforme o seu % de gordura muda.</p>
         </div>
       )}
       {parte && (
@@ -159,7 +159,7 @@ export default function CorpoRealista({ valores, sexo, altura, gordura, onSalvar
           )}
         </div>
       )}
-      <p className="mt-2 text-[11px] text-foreground-500">
+      <p className="mt-2 text-xs text-foreground-500">
         {legenda ?? `Corpo realista moldado com o seu peso, altura e ${medidas} de 6 medidas da fita.`} {onSalvarMedida && medidas < 6 ? 'Toque no + para colocar as que faltam.' : ''}
       </p>
     </div>

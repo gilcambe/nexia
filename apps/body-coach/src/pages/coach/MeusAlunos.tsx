@@ -82,7 +82,7 @@ export default function MeusAlunos() {
                   </div>
                   <i className="ri-arrow-right-s-line text-xl text-foreground-400"></i>
                 </Link>
-                <div className="mt-3 flex flex-wrap gap-1.5 text-[11px] font-semibold">
+                <div className="mt-3 flex flex-wrap gap-1.5 text-xs font-semibold">
                   <span className="rounded-full bg-background-100 px-2 py-0.5 text-foreground-700">{a.treinosSemana} treino{a.treinosSemana === 1 ? '' : 's'} na semana</span>
                   <span className="rounded-full bg-background-100 px-2 py-0.5 text-foreground-700">🍽️ {a.refeicoesHoje} refeiç{a.refeicoesHoje === 1 ? 'ão' : 'ões'} hoje</span>
                   {a.temFicha ? <span className="rounded-full bg-accent-50 px-2 py-0.5 text-accent-800">📋 ficha do coach</span> : <span className="rounded-full bg-secondary-50 px-2 py-0.5 text-secondary-800">sem ficha</span>}
@@ -112,7 +112,7 @@ function Resumo({ valor, rotulo, cor }: { valor: number | string; rotulo: string
   return (
     <div className="rounded-xl border border-background-200 bg-background-50 p-3">
       <p className={`font-heading text-xl font-bold ${cor}`}>{valor}</p>
-      <p className="text-[11px] leading-tight text-foreground-500">{rotulo}</p>
+      <p className="text-xs leading-tight text-foreground-500">{rotulo}</p>
     </div>
   );
 }

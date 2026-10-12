@@ -35,7 +35,7 @@ export default function VideoDoCoach({ id, nome, className = '', gravar = true }
       {doCoach ? (
         <div className={`relative overflow-hidden bg-black ${className}`}>
           <video src={video as string} autoPlay muted loop playsInline controls className="h-full w-full object-contain" aria-label={`Execução do coach: ${nome}`} data-testid="demo-coach-video" />
-          <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-primary-500 px-2 py-1 text-[11px] font-semibold text-white">
+          <span className="pointer-events-none absolute left-2 top-2 rounded-full bg-primary-500 px-2 py-1 text-xs font-semibold text-white">
             <i className="ri-user-star-fill mr-1"></i>{papel === 'coach' ? 'Sua execução (seus alunos veem)' : 'Execução do seu coach'}
           </span>
         </div>
@@ -52,7 +52,7 @@ export default function VideoDoCoach({ id, nome, className = '', gravar = true }
           <i className="ri-video-add-line text-2xl text-primary-600"></i>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-foreground-900">{video ? 'Seus alunos veem a sua execução' : 'Mostre aos alunos como você faz'}</p>
-            <p className="text-[11px] text-foreground-500">Grave até 10 s. Vira a demonstração deste exercício para todos os seus alunos. <Link to="/coach/demonstracoes" className="font-semibold text-primary-600 underline">Todas</Link></p>
+            <p className="text-xs text-foreground-500">Grave até 10 s. Vira a demonstração deste exercício para todos os seus alunos. <Link to="/coach/demonstracoes" className="font-semibold text-primary-600 underline">Todas</Link></p>
           </div>
           <button type="button" onClick={() => setGravando(true)} className="shrink-0 rounded-lg bg-primary-500 px-3 py-2 text-xs font-semibold text-white" data-testid="demo-coach-gravar">{video ? 'Regravar' : 'Gravar'}</button>
         </div>

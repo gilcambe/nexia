@@ -147,7 +147,7 @@ export default function Exams() {
             <h2 className="font-heading text-base font-semibold text-foreground-950">Marcadores de sangue</h2>
           </div>
           <BloodMarkers />
-          <p className="mt-5 rounded-lg bg-accent-100/60 p-3 text-[11px] leading-relaxed text-foreground-600">
+          <p className="mt-5 rounded-lg bg-accent-100/60 p-3 text-xs leading-relaxed text-foreground-600">
             <i className="ri-information-line mr-1 text-accent-700"></i>
             Isto é <strong className="font-semibold">orientação de performance</strong>, não diagnóstico
             médico. Consulte sempre um profissional de saúde antes de suplementar.

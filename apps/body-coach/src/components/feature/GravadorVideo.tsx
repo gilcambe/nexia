@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { iniciarGravacao, MAX_SEG, podeGravar, type Gravacao } from '@/lib/gravar';
+import { comprimirArquivo, iniciarGravacao, MAX_SEG, podeGravar, type Gravacao } from '@/lib/gravar';
 
-// Tela de gravação: mostra a câmera, grava até 10 s, deixa rever e só então envia.
+// Tela de gravação: mostra a câmera, grava até 10 s (ou usa um vídeo da galeria), deixa rever e só então envia.
 export default function GravadorVideo({ titulo, onEnviar, onFechar }: { titulo: string; onEnviar: (videoTexto: string) => Promise<void>; onFechar: () => void }) {
   const vid = useRef<HTMLVideoElement>(null);
   const grav = useRef<Gravacao | null>(null);
@@ -9,6 +9,8 @@ export default function GravadorVideo({ titulo, onEnviar, onFechar }: { titulo: 
   const [seg, setSeg] = useState(0);
   const [clipe, setClipe] = useState('');
   const [erro, setErro] = useState('');
+  const [preparando, setPreparando] = useState(0); // 0 = parado; >0 = % ao reduzir um vídeo da galeria
+  const galeria = useRef<HTMLInputElement>(null);
 
   useEffect(() => () => { grav.current?.stream.getTracks().forEach((t) => t.stop()); }, []);
   useEffect(() => {
@@ -28,6 +30,13 @@ export default function GravadorVideo({ titulo, onEnviar, onFechar }: { titulo: 
     } catch {
       setErro('Não consegui abrir a câmera. Permita o uso da câmera no navegador e tente de novo.');
     }
+  };
+  const daGaleria = async (f?: File) => {
+    if (!f) return;
+    setErro(''); setPreparando(1);
+    try { const t = await comprimirArquivo(f, 0, (p) => setPreparando(Math.max(1, Math.round(p * 100)))); setClipe(t); setFase('revisar'); }
+    catch (e) { setErro((e as Error).message); }
+    setPreparando(0);
   };
   const enviar = async () => {
     setFase('enviando'); setErro('');
@@ -52,9 +61,14 @@ export default function GravadorVideo({ titulo, onEnviar, onFechar }: { titulo: 
                 : <video ref={vid} playsInline muted className="h-full w-full object-cover" aria-label="Câmera" />}
               {fase === 'gravando' && <span className="absolute left-2 top-2 rounded-full bg-red-600 px-2 py-0.5 text-xs font-semibold text-white">● {seg}/{MAX_SEG} s</span>}
             </div>
-            <p className="mt-2 text-xs text-foreground-500">Vídeo curto, de até {MAX_SEG} segundos e sem som. Apoie o celular e mostre o movimento inteiro.</p>
+            <p className="mt-2 text-xs text-foreground-500">Vídeo curto, de até {MAX_SEG} segundos e sem som. Apoie o celular e mostre o movimento inteiro. Já gravou antes? Use “Da galeria” (pegamos os primeiros {MAX_SEG} s).</p>
             <div className="mt-3 flex gap-2">
-              {fase === 'pronto' && <button onClick={() => void gravar()} className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-sm font-semibold text-white"><i className="ri-record-circle-line mr-1"></i>Gravar</button>}
+              {fase === 'pronto' && <button onClick={() => void gravar()} disabled={!!preparando} className="flex-1 rounded-xl bg-red-600 px-4 py-3 text-base font-semibold text-white disabled:opacity-50"><i className="ri-record-circle-line mr-1"></i>Gravar</button>}
+              {fase === 'pronto' && (
+                <button onClick={() => galeria.current?.click()} disabled={!!preparando} className="flex-1 rounded-xl border-2 border-background-200 px-4 py-3 text-base font-semibold text-foreground-800 disabled:opacity-60" data-testid="video-da-galeria">
+                  {preparando ? `Preparando ${preparando}%` : <><i className="ri-folder-video-line mr-1"></i>Da galeria</>}
+                </button>
+              )}
               {fase === 'gravando' && <button onClick={() => grav.current?.parar()} className="flex-1 rounded-xl bg-foreground-900 px-4 py-3 text-sm font-semibold text-background-50"><i className="ri-stop-circle-line mr-1"></i>Parar</button>}
               {(fase === 'revisar' || fase === 'enviando') && (
                 <>
@@ -65,6 +79,7 @@ export default function GravadorVideo({ titulo, onEnviar, onFechar }: { titulo: 
             </div>
           </>
         )}
+        <input ref={galeria} type="file" accept="video/*" className="hidden" onChange={(e) => { void daGaleria(e.target.files?.[0]); e.target.value = ''; }} data-testid="entrada-galeria" />
         {erro && <p role="alert" className="mt-2 text-sm text-red-600">{erro}</p>}
       </div>
     </div>

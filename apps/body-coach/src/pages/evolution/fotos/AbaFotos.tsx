@@ -143,7 +143,7 @@ export default function AbaFotos({
                 ) : (
                   <Silhueta pose={p.id} className="h-full w-full opacity-60" />
                 )}
-                <span className="absolute left-1.5 top-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white">{p.label}</span>
+                <span className="absolute left-1.5 top-1.5 rounded-full bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">{p.label}</span>
               </div>
               <div className="mt-2 flex gap-1.5">
                 <button type="button" onClick={() => setCamera(p.id)} className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-primary-500 px-2 py-1.5 text-xs font-semibold text-background-50 dark:text-foreground-950" aria-label={`Câmera ${p.label}`}>
@@ -179,7 +179,7 @@ export default function AbaFotos({
         <h2 className="mb-3 font-heading text-base font-semibold text-foreground-950">Antes e depois</h2>
         <div className="mb-3 grid grid-cols-4 gap-1 rounded-xl bg-background-100 p-1">
           {POSES.map((p) => (
-            <button key={p.id} type="button" onClick={() => setPose(p.id)} className={`rounded-lg py-1.5 text-[11px] font-semibold ${pose === p.id ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>
+            <button key={p.id} type="button" onClick={() => setPose(p.id)} className={`rounded-lg py-1.5 text-xs font-semibold ${pose === p.id ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>
               {p.label.replace('Lado ', '')}
             </button>
           ))}
@@ -193,7 +193,7 @@ export default function AbaFotos({
             <div className="mb-3 grid grid-cols-2 gap-2">
               {([['Antes', antes, setAntesId], ['Depois', depois, setDepoisId]] as const).map(([rot, sel, set]) => (
                 <label key={rot} className="block">
-                  <span className="mb-1 block text-[11px] font-medium text-foreground-500">{rot}</span>
+                  <span className="mb-1 block text-xs font-medium text-foreground-500">{rot}</span>
                   <select value={sel?.id} onChange={(e) => set(Number(e.target.value))} className="w-full rounded-lg border border-background-300 bg-background-50 px-2 py-1.5 text-sm">
                     {comFoto.map((s) => <option key={s.id} value={s.id}>{dataBr(s.data)}</option>)}
                   </select>
@@ -221,7 +221,7 @@ export default function AbaFotos({
                 {[antes, depois].map((s, i) => (
                   <figure key={i} className="relative overflow-hidden rounded-xl bg-background-100">
                     <img src={s.fotos[pose]!} alt={`${pose} ${dataBr(s.data)}`} className="aspect-[3/4] w-full object-cover object-top" />
-                    <figcaption className="absolute left-1.5 top-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white">{legenda(s)}</figcaption>
+                    <figcaption className="absolute left-1.5 top-1.5 rounded-full bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">{legenda(s)}</figcaption>
                   </figure>
                 ))}
               </div>
@@ -231,8 +231,8 @@ export default function AbaFotos({
                   <img src={depois.fotos[pose]!} alt={`Depois ${dataBr(depois.data)}`} className="absolute inset-0 h-full w-full select-none object-cover object-top" draggable={false} />
                   <img src={antes.fotos[pose]!} alt={`Antes ${dataBr(antes.data)}`} className="absolute inset-0 h-full w-full select-none object-cover object-top" draggable={false} style={{ clipPath: `inset(0 ${100 - corte}% 0 0)` }} />
                   <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-white" style={{ left: `${corte}%` }} />
-                  <span className="absolute left-1.5 top-1.5 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-white">{dataBr(antes.data)}</span>
-                  <span className="absolute right-1.5 top-1.5 rounded-full bg-primary-500 px-2 py-0.5 text-[10px] font-semibold text-white">{dataBr(depois.data)}</span>
+                  <span className="absolute left-1.5 top-1.5 rounded-full bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">{dataBr(antes.data)}</span>
+                  <span className="absolute right-1.5 top-1.5 rounded-full bg-primary-500 px-2 py-0.5 text-xs font-semibold text-white">{dataBr(depois.data)}</span>
                 </div>
                 <input type="range" min={0} max={100} value={corte} onChange={(e) => setCorte(Number(e.target.value))} className="mx-auto mt-2 block w-full max-w-[340px] accent-primary-500" aria-label="Arraste para comparar" />
               </div>

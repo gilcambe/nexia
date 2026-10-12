@@ -136,7 +136,7 @@ export default function ImportarAvaliacao({
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold text-foreground-950">
                     {dataBr(av.data)}
-                    {datasExistentes.has(av.data) && <span className="ml-2 rounded-full bg-background-100 px-2 py-0.5 text-[10px] font-medium text-foreground-600">junta com a que já existe</span>}
+                    {datasExistentes.has(av.data) && <span className="ml-2 rounded-full bg-background-100 px-2 py-0.5 text-xs font-medium text-foreground-600">junta com a que já existe</span>}
                   </p>
                   <p className="truncate text-xs text-foreground-500">
                     {qtd} medidas · {av.valores.peso ? `${av.valores.peso} kg` : 'sem peso'}{r.gordura != null ? ` · ${r.gordura}% gordura` : ''}

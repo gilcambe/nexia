@@ -5,6 +5,10 @@ import { EXERCICIOS, type Grupo } from '@/lib/exerciseDb';
 import { papelEContatos } from '@/lib/papelCoach';
 import GravadorVideo from '@/components/feature/GravadorVideo';
 import { demosCoach } from '@/lib/demosCoach';
+import { idDoNome } from '@/lib/coach/fichaCoach';
+
+// Nome legível de um exercício próprio a partir do id (livre-triceps-coice → Triceps coice).
+const nomeDoLivre = (id: string) => { const t = id.replace(/^livre-/, '').replace(/-/g, ' '); return t.charAt(0).toUpperCase() + t.slice(1); };
 
 // Biblioteca do coach: grava a própria execução de cada exercício. O aluno vê esse vídeo como a
 // demonstração principal do exercício durante o treino.
@@ -49,11 +53,31 @@ export default function Demonstracoes() {
       <h1 className="font-heading text-2xl font-bold text-foreground-950">Minhas demonstrações</h1>
       <div className="rounded-2xl bg-gradient-to-br from-[#1f2226] to-black p-4 text-white">
         <p className="font-heading text-base font-bold"><i className="ri-user-star-fill mr-1 text-primary-400"></i>Seus alunos aprendem com você</p>
-        <p className="mt-1 text-xs text-white/70">Grave você fazendo cada exercício (até 10 s). No treino, o aluno vê o seu vídeo como a demonstração principal.</p>
+        <p className="mt-1 text-xs text-white/70">Grave você fazendo cada exercício (até 10 s) ou use um vídeo da galeria. No treino, o aluno vê o seu vídeo como a demonstração principal. Exercício que não está na lista? Digite o nome na busca.</p>
         <p className="mt-2 text-sm font-semibold" data-testid="demos-contagem">{feitas.length} de {EXERCICIOS.length} exercícios gravados</p>
-        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-primary-500" style={{ width: `${(feitas.length / EXERCICIOS.length) * 100}%` }}></div></div>
+        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/15"><div className="h-full rounded-full bg-primary-500" style={{ width: `${Math.min(100, (feitas.filter((f) => !f.startsWith('livre-')).length / EXERCICIOS.length) * 100)}%` }}></div></div>
       </div>
       <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar exercício" className="rounded-xl border border-background-200 bg-background-50 px-3 py-2 text-sm" aria-label="Buscar exercício" />
+      {busca.trim().length >= 3 && (
+        <button type="button" onClick={() => setGravando({ id: idDoNome(busca.trim()), nome: busca.trim() })} className="rounded-xl border-2 border-dashed border-primary-300 bg-primary-50 px-4 py-3 text-left text-base font-semibold text-primary-700" data-testid="demo-gravar-livre">
+          <i className="ri-video-add-line mr-1"></i>Gravar “{busca.trim()}” (exercício que não está na lista)
+        </button>
+      )}
+      {feitas.some((f) => f.startsWith('livre-')) && (
+        <div className="rounded-2xl border border-background-200 bg-background-50 p-3">
+          <p className="text-sm font-semibold text-foreground-700">Seus exercícios próprios gravados</p>
+          <ul className="mt-1 divide-y divide-background-200">
+            {feitas.filter((f) => f.startsWith('livre-')).map((id) => (
+              <li key={id} className="flex items-center gap-3 py-2">
+                <i className="ri-checkbox-circle-fill text-xl text-green-600"></i>
+                <span className="min-w-0 flex-1 truncate text-sm font-medium text-foreground-900">{nomeDoLivre(id)}</span>
+                <button type="button" onClick={() => void ver(id, nomeDoLivre(id))} className="rounded-lg px-2 py-1.5 text-primary-600" aria-label={`Ver ${nomeDoLivre(id)}`}><i className="ri-play-circle-line text-xl"></i></button>
+                <button type="button" onClick={() => setGravando({ id, nome: nomeDoLivre(id) })} className="rounded-lg border border-background-200 px-3 py-1.5 text-xs font-semibold text-foreground-700">Regravar</button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="flex gap-1.5 overflow-x-auto pb-1">
         {(['todos', ...Object.keys(GRUPOS)] as (Grupo | 'todos')[]).map((g) => (
           <button key={g} type="button" onClick={() => setGrupo(g)} aria-pressed={grupo === g} className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium ${grupo === g ? 'border-primary-500 bg-primary-100 text-primary-700' : 'border-background-200 text-foreground-600'}`}>{g === 'todos' ? 'Todos' : GRUPOS[g]}</button>
@@ -67,7 +91,7 @@ export default function Demonstracoes() {
               <i className={`${ok ? 'ri-checkbox-circle-fill text-green-600' : 'ri-checkbox-blank-circle-line text-foreground-300'} text-xl`}></i>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium text-foreground-900">{e.nome}</p>
-                <p className="text-[11px] text-foreground-500">{GRUPOS[e.grupo]}{ok ? ' · gravado' : ''}</p>
+                <p className="text-xs text-foreground-500">{GRUPOS[e.grupo]}{ok ? ' · gravado' : ''}</p>
               </div>
               {ok && <button type="button" onClick={() => void ver(e.id, e.nome)} className="rounded-lg px-2 py-1.5 text-xs font-semibold text-primary-600" aria-label={`Ver ${e.nome}`}><i className="ri-play-circle-line text-lg"></i></button>}
               <button type="button" onClick={() => setGravando({ id: e.id, nome: e.nome })} className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${ok ? 'border border-background-200 text-foreground-700' : 'bg-primary-500 text-white'}`} data-testid={`demo-gravar-${e.id}`}>{ok ? 'Regravar' : 'Gravar'}</button>

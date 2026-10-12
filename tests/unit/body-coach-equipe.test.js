@@ -123,4 +123,6 @@ test('BCE3. treino com notas por série, falha e esforço vai para a conversa do
   // aluno sem coach: só conta o treino
   assert.equal((await executar({ acao: 'treino_feito', minutos: 10, comentario: 'oi' }, 'eva', db))[1].coachAvisado, false);
   assert.equal(textoDoTreino({ esforco: 9 }), '');
+  // Feito no intervalo (ex.: abdominal no descanso): linha própria, sem "série".
+  assert.match(textoDoTreino({ notas: [{ ex: 'Abdominal', serie: 1, extra: true, nota: 'no intervalo de Supino: 3x20' }] }), /• Abdominal \(no intervalo de Supino: 3x20\)/);
 });

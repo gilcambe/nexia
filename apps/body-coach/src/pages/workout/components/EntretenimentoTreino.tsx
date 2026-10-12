@@ -36,7 +36,7 @@ export default function EntretenimentoTreino({ variante = 'cartao', minutosSuger
       <i className="ri-play-circle-fill text-3xl text-primary-500"></i>
       <span className="min-w-0 flex-1">
         <span className="block truncate text-sm font-bold">Continuar {pref.serie}</span>
-        <span className="block text-[11px] text-foreground-500">no {nomeApp(pref.app ?? app)} · só vale assistir no cardio</span>
+        <span className="block text-xs text-foreground-500">no {nomeApp(pref.app ?? app)} · só vale assistir no cardio</span>
       </span>
     </button>
   ) : null;
@@ -59,7 +59,7 @@ export default function EntretenimentoTreino({ variante = 'cartao', minutosSuger
           {continuar}
           <div className="mt-3 grid grid-cols-4 gap-2">
             {APPS_TELA.slice(0, 4).map((a) => (
-              <button key={a.id} type="button" onClick={() => assistirNoApp(a.id)} className={`flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-[11px] font-medium ${app === a.id ? 'bg-white/15 ring-1 ring-white/40' : 'bg-white/5'}`} aria-label={`Abrir ${a.nome}`}>
+              <button key={a.id} type="button" onClick={() => assistirNoApp(a.id)} className={`flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-xs font-medium ${app === a.id ? 'bg-white/15 ring-1 ring-white/40' : 'bg-white/5'}`} aria-label={`Abrir ${a.nome}`}>
                 <i className={`${a.icone} text-2xl`} style={{ color: a.cor }}></i>
                 {a.nome.replace(' Video', '')}
               </button>
@@ -97,7 +97,7 @@ export default function EntretenimentoTreino({ variante = 'cartao', minutosSuger
             </div>
 
             <p className="mt-4 text-sm font-semibold text-foreground-800">Minha série do cardio</p>
-            <p className="text-[11px] text-foreground-500">Combine com você mesmo: essa série só no cardio. Vira motivo para não faltar.</p>
+            <p className="text-xs text-foreground-500">Combine com você mesmo: essa série só no cardio. Vira motivo para não faltar.</p>
             <div className="mt-1.5 flex gap-2">
               <input value={serie} onChange={(e) => setSerie(e.target.value)} placeholder="Ex.: Round 6, The Boys, novela..." className="min-w-0 flex-1 rounded-lg border border-background-200 bg-background-50 px-3 py-2 text-sm" aria-label="Nome da série" />
               <button type="button" onClick={salvarSerie} disabled={!serie.trim()} className="rounded-lg bg-primary-500 px-3 py-2 text-sm font-semibold text-white disabled:opacity-50" data-testid="tela-salvar-serie">Salvar e abrir</button>
@@ -109,7 +109,7 @@ export default function EntretenimentoTreino({ variante = 'cartao', minutosSuger
                 <button key={i.id} type="button" onClick={() => abrir(youtube(i.busca))} className="rounded-xl border border-background-200 p-2.5 text-left" data-testid={`tela-ideia-${i.id}`}>
                   <i className={`${i.icone} text-xl text-primary-500`}></i>
                   <span className="mt-1 block text-xs font-bold text-foreground-900">{i.titulo}</span>
-                  <span className="block text-[11px] leading-tight text-foreground-500">{i.sub}</span>
+                  <span className="block text-xs leading-tight text-foreground-500">{i.sub}</span>
                 </button>
               ))}
             </div>

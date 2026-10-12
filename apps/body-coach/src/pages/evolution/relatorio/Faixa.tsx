@@ -29,7 +29,7 @@ export default function Faixa({
           ))}
         </div>
         <div className="absolute -top-1 h-4.5 w-1 -translate-x-1/2 rounded bg-[#1f2328]" style={{ left: `${pos}%`, height: 18 }} />
-        <div className="mt-0.5 flex text-[9px] text-[#868e96]">
+        <div className="mt-0.5 flex text-xs text-[#868e96]">
           {faixas.map(([a, b, nome]) => (
             <span key={nome} className="truncate text-center" style={{ width: `${((b - a) / (max - min)) * 100}%` }}>{nome}</span>
           ))}

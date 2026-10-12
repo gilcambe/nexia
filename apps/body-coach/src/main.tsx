@@ -5,9 +5,12 @@ import './index.css'
 import App from './App.tsx'
 import { mostrarAbertura } from './abertura'
 import { aplicarMarca, marcaGuardada } from './lib/coach/profissionais'
+import { aplicarLetra } from './lib/letra'
 
 // abre já com a cor do coach (a marca guardada da última vez), sem piscar o laranja padrão
 aplicarMarca(marcaGuardada())
+// e com o tamanho de letra escolhido no Perfil
+aplicarLetra()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

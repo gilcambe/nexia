@@ -45,12 +45,12 @@ export default function Marca() {
 
       {/* Prévia do topo do app do aluno */}
       <div className="rounded-2xl border border-background-200 bg-background-50 p-4" data-testid="marca-previa">
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-wide text-foreground-400">Como o aluno vê</p>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-foreground-400">Como o aluno vê</p>
         <div className="flex items-center gap-2.5">
           {logo ? <img src={logo} alt="Logo escolhido" className="h-10 w-10 rounded-xl object-contain" /> : <span className="flex h-10 w-10 items-center justify-center rounded-xl text-white" style={{ background: corCss(cor) }}><i className="ri-heart-3-line text-lg"></i></span>}
           <div className="leading-none">
             <p className="font-heading font-bold text-foreground-950">{nome.trim() || 'NEXIA'}</p>
-            <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.18em] text-foreground-400">{nome.trim() ? 'com NEXIA Body Coach' : 'Body Coach AI'}</p>
+            <p className="mt-0.5 text-xs font-medium uppercase tracking-[0.18em] text-foreground-400">{nome.trim() ? 'com NEXIA Body Coach' : 'Body Coach AI'}</p>
           </div>
         </div>
         <span className="mt-3 block rounded-xl px-4 py-2.5 text-center text-sm font-semibold text-white" style={{ background: corCss(cor) }}>Iniciar treino</span>
@@ -63,7 +63,7 @@ export default function Marca() {
         <p className="mt-4 text-sm font-medium text-foreground-800">Cor</p>
         <div className="mt-2 grid grid-cols-4 gap-2" role="radiogroup" aria-label="Cor da marca">
           {CORES.map((c) => (
-            <button key={c.id} type="button" role="radio" aria-checked={cor === c.id} aria-label={c.nome} onClick={() => setCor(c.id)} className={`flex flex-col items-center gap-1 rounded-xl border p-2 text-[11px] font-semibold ${cor === c.id ? 'border-foreground-900 text-foreground-950' : 'border-background-200 text-foreground-600'}`}>
+            <button key={c.id} type="button" role="radio" aria-checked={cor === c.id} aria-label={c.nome} onClick={() => setCor(c.id)} className={`flex flex-col items-center gap-1 rounded-xl border p-2 text-xs font-semibold ${cor === c.id ? 'border-foreground-900 text-foreground-950' : 'border-background-200 text-foreground-600'}`}>
               <span className="h-7 w-7 rounded-full" style={{ background: corCss(c.id) }}></span>{c.nome}
             </button>
           ))}

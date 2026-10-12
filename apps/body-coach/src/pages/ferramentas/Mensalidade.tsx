@@ -58,7 +58,7 @@ function Aluno({ r, recarregar }: { r: Extract<Resposta, { papel: 'aluno' }>; re
           <button type="button" disabled={ocupado || r.avisou} onClick={() => void avisar()} className="mt-2 w-full rounded-xl border border-background-200 px-4 py-3 text-sm font-semibold text-foreground-800 disabled:opacity-60">{r.avisou ? 'Coach avisado ✓' : 'Já paguei, avisar o coach'}</button>
         </Card>
       )}
-      <p className="text-[11px] text-foreground-500">O pagamento vai direto para a conta do seu coach, sem taxa e sem intermediário.</p>
+      <p className="text-xs text-foreground-500">O pagamento vai direto para a conta do seu coach, sem taxa e sem intermediário.</p>
     </div>
   );
 }
@@ -123,8 +123,8 @@ function Coach({ r, mes, setMes, recarregar }: { r: Extract<Resposta, { papel: '
           <button type="button" onClick={() => setMes(mesesAntes(mes, -1))} disabled={mes >= mesAtual()} aria-label="Próximo mês" className="rounded-lg p-2 disabled:opacity-30"><i className="ri-arrow-right-s-line text-xl"></i></button>
         </div>
         <div className="mt-2 grid grid-cols-2 gap-2 text-center">
-          <div className="rounded-xl bg-emerald-50 p-2"><p className="font-heading text-xl font-bold text-emerald-700">{reais(total)}</p><p className="text-[11px] text-foreground-500">recebido</p></div>
-          <div className="rounded-xl bg-background-100/70 p-2"><p className="font-heading text-xl font-bold">{pagos.length}/{r.alunos.length}</p><p className="text-[11px] text-foreground-500">alunos pagaram</p></div>
+          <div className="rounded-xl bg-emerald-50 p-2"><p className="font-heading text-xl font-bold text-emerald-700">{reais(total)}</p><p className="text-xs text-foreground-500">recebido</p></div>
+          <div className="rounded-xl bg-background-100/70 p-2"><p className="font-heading text-xl font-bold">{pagos.length}/{r.alunos.length}</p><p className="text-xs text-foreground-500">alunos pagaram</p></div>
         </div>
         {r.alunos.length === 0 && <p className="mt-3 text-sm text-foreground-500">Quando os alunos entrarem com o seu código, eles aparecem aqui.</p>}
         <ul className="mt-3 divide-y divide-background-200">

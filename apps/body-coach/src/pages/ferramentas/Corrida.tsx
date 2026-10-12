@@ -135,7 +135,7 @@ export default function Corrida() {
         </div>
         {salvo && <p className="mt-2 text-center text-sm font-medium text-emerald-700"><i className="ri-check-line mr-1"></i>Salvo! Já conta nas conquistas e no relatório da semana.</p>}
       </Card>
-      <p className="text-center text-[11px] text-foreground-400">Deixe a tela ligada durante o percurso: o navegador pausa o GPS com a tela apagada.</p>
+      <p className="text-center text-xs text-foreground-400">Deixe a tela ligada durante o percurso: o navegador pausa o GPS com a tela apagada.</p>
     </div>
   );
 }

@@ -160,7 +160,7 @@ export default function ContadorReps() {
         </Card>
       )}
       <button type="button" onClick={() => setVoz((v) => !v)} aria-pressed={voz} className="w-full py-1 text-xs font-medium text-foreground-500"><i className={voz ? 'ri-volume-up-line mr-1' : 'ri-volume-mute-line mr-1'}></i>{voz ? 'O app fala cada repetição' : 'Sem voz'}</button>
-      <p className="text-[11px] text-foreground-400">A imagem é processada no seu celular e não é gravada nem enviada. Funciona melhor com boa luz e o corpo inteiro aparecendo.</p>
+      <p className="text-xs text-foreground-400">A imagem é processada no seu celular e não é gravada nem enviada. Funciona melhor com boa luz e o corpo inteiro aparecendo.</p>
     </div>
   );
 }

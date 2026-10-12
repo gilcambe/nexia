@@ -46,7 +46,7 @@ export default function NutritionCard() {
               <span className="text-xs text-foreground-500">{m.key}</span>
               <span className="text-sm font-semibold text-foreground-900">
                 {m.current.toLocaleString('pt-BR')}
-                <span className="text-[11px] font-normal text-foreground-400">/{m.target.toLocaleString('pt-BR')}</span>
+                <span className="text-xs font-normal text-foreground-400">/{m.target.toLocaleString('pt-BR')}</span>
               </span>
             </div>
             <div className="mt-1.5">

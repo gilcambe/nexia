@@ -65,7 +65,7 @@ export default function AlunosEvolucao() {
                   <p className="rounded-lg bg-background-100 px-2 py-1.5">Gordura <b>{fmt(ult.m.gordura, '%')}</b>{dGordura ? <span className={`ml-1 text-xs ${dGordura < 0 ? 'text-accent-600' : 'text-red-500'}`}>{dGordura > 0 ? '+' : ''}{dGordura}</span> : null}</p>
                 </div>
               )}
-              <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-semibold">
+              <div className="mt-2 flex flex-wrap gap-1.5 text-xs font-semibold">
                 {avisos.map((x) => <span key={x.texto} className="rounded-full bg-red-50 px-2 py-0.5 text-red-700">⚠️ {x.texto.split(/[:(]/)[0].trim()}</span>)}
                 {atrasado && a.partilha.avaliacoes && <span className="rounded-full bg-secondary-50 px-2 py-0.5 text-secondary-800">Reavaliação atrasada</span>}
                 {a.proximaAvaliacao && <span className="rounded-full bg-accent-50 px-2 py-0.5 text-accent-800">📅 {dataBr(a.proximaAvaliacao.data)}{a.proximaAvaliacao.hora ? ` ${a.proximaAvaliacao.hora}` : ''}</span>}

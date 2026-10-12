@@ -75,7 +75,7 @@ export default function RelatorioView({
       <article className="relatorio mx-auto my-3 max-w-[820px] bg-white p-4 text-[#1f2328] shadow-sm sm:my-6 sm:p-8 print:my-0 print:max-w-none print:p-0">
         <header className="flex items-start justify-between gap-3 border-b-2 border-[#e8590c] pb-3">
           <div>
-            <p className="text-[11px] font-bold uppercase tracking-widest text-[#e8590c]">NEXIA Body Coach</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-[#e8590c]">NEXIA Body Coach</p>
             <h1 className="text-xl font-bold">Relatório de avaliação física</h1>
             <p className="text-sm">{nome}</p>
             {avaliador && (
@@ -90,7 +90,7 @@ export default function RelatorioView({
             {v.idade != null && <p><b>Idade:</b> {v.idade} anos</p>}
             {sexo && <p><b>Sexo:</b> {sexo === 'M' ? 'Masculino' : 'Feminino'}</p>}
             {v.altura != null && <p><b>Altura:</b> {fmt(v.altura)} cm</p>}
-            <p className="text-[10px] text-[#666]">{av.fonte}</p>
+            <p className="text-xs text-[#666]">{av.fonte}</p>
           </div>
         </header>
 
@@ -152,7 +152,7 @@ export default function RelatorioView({
           {grupo('dobras').length > 0 && (
             <Secao titulo="Dobras cutâneas (mm)">
               <Lista itens={grupo('dobras').map((c) => [c.label, fmt(v[c.key], 0)])} />
-              <p className="mt-1 text-[11px] text-[#666]">Soma: <b>{fmt(res.somaDobras, 0)} mm</b>{res.protocolo ? ` · ${DOBRAS_PROTOCOLO[res.protocolo].nome} + Brozek` : ''}{res.densidade ? ` · densidade ${fmt(res.densidade, 3)} g/mL` : ''}</p>
+              <p className="mt-1 text-xs text-[#666]">Soma: <b>{fmt(res.somaDobras, 0)} mm</b>{res.protocolo ? ` · ${DOBRAS_PROTOCOLO[res.protocolo].nome} + Brozek` : ''}{res.densidade ? ` · densidade ${fmt(res.densidade, 3)} g/mL` : ''}</p>
             </Secao>
           )}
           {grupo('circ').length > 0 && (
@@ -187,7 +187,7 @@ export default function RelatorioView({
                 ))}
               </tbody>
             </table>
-            <p className="mt-1 text-[11px] text-[#666]">Até 1 cm (ou 3% de músculo) de diferença é normal. Acima disso, vale um pouco mais de volume no lado menor.</p>
+            <p className="mt-1 text-xs text-[#666]">Até 1 cm (ou 3% de músculo) de diferença é normal. Acima disso, vale um pouco mais de volume no lado menor.</p>
           </Secao>
         )}
 
@@ -206,7 +206,7 @@ export default function RelatorioView({
               {POSES.map((p) => (
                 <figure key={p.id} className="text-center">
                   {item.fotos[p.id] ? <img src={item.fotos[p.id]!} alt={p.label} className="aspect-[3/4] w-full rounded object-cover object-top" /> : <div className="aspect-[3/4] w-full rounded bg-[#f1f3f5]" />}
-                  <figcaption className="mt-1 text-[10px] text-[#666]">{p.label}</figcaption>
+                  <figcaption className="mt-1 text-xs text-[#666]">{p.label}</figcaption>
                 </figure>
               ))}
             </div>
@@ -215,7 +215,7 @@ export default function RelatorioView({
 
         {av.notas && <Secao titulo="Observações"><p className="whitespace-pre-line text-xs">{av.notas}</p></Secao>}
 
-        <footer className="mt-6 border-t pt-2 text-[10px] leading-4 text-[#888]">
+        <footer className="mt-6 border-t pt-2 text-xs leading-4 text-[#888]">
           Gerado pelo NEXIA Body Coach{avaliador ? ` para ${avaliador.nome}` : ''} em {new Date().toLocaleDateString('pt-BR')}. Gordura por dobras: Jackson & Pollock ou Guedes com a fórmula de Brozek.
           Classificações: % de gordura (Pollock & Wilmore), IMC (OMS), relação cintura/quadril (Bray & Gray), CMB (Jelliffe).
           {Object.keys(v).some((k) => CAMPO_POR_KEY[k]?.grupo === 'bio') ? ' Dados de bioimpedância como informados pelo aparelho.' : ''}

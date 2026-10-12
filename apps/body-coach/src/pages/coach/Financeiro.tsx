@@ -66,7 +66,7 @@ export default function Financeiro() {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        <p className="mt-1 text-[11px] text-foreground-500"><span className="text-primary-600">■</span> mensalidades <span className="ml-2 text-green-600">■</span> programas vendidos</p>
+        <p className="mt-1 text-xs text-foreground-500"><span className="text-primary-600">■</span> mensalidades <span className="ml-2 text-green-600">■</span> programas vendidos</p>
       </div>
 
       {vendasAbertas.length > 0 && (
@@ -90,7 +90,7 @@ export default function Financeiro() {
           <h2 className="font-heading text-lg font-bold text-foreground-950">Mensalidades</h2>
           {f.pix && faltam.length > 0 && <button type="button" disabled={!!ocupado} onClick={() => void fazer('todos', () => lembrarPagamento(), 'Lembrete enviado para quem falta pagar (conversa e celular).')} className="text-xs font-semibold text-primary-700"><i className="ri-notification-3-line mr-0.5"></i>Lembrar todos</button>}
         </div>
-        {f.pix && <p className="text-[11px] text-foreground-500">{f.pix.lembrete === false ? 'Lembrete automático desligado.' : 'Lembrete automático ligado: 3 dias antes, no dia e 3 dias depois do vencimento.'} <Link to="/ferramentas/mensalidade" className="underline">Mudar</Link></p>}
+        {f.pix && <p className="text-xs text-foreground-500">{f.pix.lembrete === false ? 'Lembrete automático desligado.' : 'Lembrete automático ligado: 3 dias antes, no dia e 3 dias depois do vencimento.'} <Link to="/ferramentas/mensalidade" className="underline">Mudar</Link></p>}
         {f.alunos.length === 0 && <p className="text-sm text-foreground-500">Nenhum aluno ainda.</p>}
         <ul className="space-y-2">
           {f.alunos.map((a) => (
@@ -121,7 +121,7 @@ function Tile({ valor, rotulo, cor }: { valor: string; rotulo: string; cor: stri
   return (
     <div className="rounded-xl border border-background-200 bg-background-50 p-3">
       <p className={`font-heading text-lg font-bold ${cor}`}>{valor}</p>
-      <p className="text-[11px] leading-tight text-foreground-500">{rotulo}</p>
+      <p className="text-xs leading-tight text-foreground-500">{rotulo}</p>
     </div>
   );
 }

@@ -89,7 +89,7 @@ export default function Relogio() {
               ].map(([v, l]) => (
                 <div key={String(l)} className="rounded-lg bg-background-50 p-2">
                   <p className="font-heading text-lg font-bold text-foreground-950">{v}</p>
-                  <p className="text-[11px] text-foreground-500">{l}</p>
+                  <p className="text-xs text-foreground-500">{l}</p>
                 </div>
               ))}
             </div>

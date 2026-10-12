@@ -87,7 +87,7 @@ export default function LembretesRefeicoes() {
             <button type="button" onClick={baixar} disabled={!escolhidas.length} className="rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-semibold text-background-50 disabled:opacity-40"><i className="ri-calendar-event-line mr-1"></i>Criar todos os lembretes</button>
             <button type="button" onClick={() => void salvarHoras()} className="rounded-xl bg-background-100 px-4 py-2.5 text-sm font-semibold text-foreground-700">Só salvar horários</button>
           </div>
-          <p className="text-[11px] text-foreground-500">No Android, o botão "Agenda" de cada refeição abre o Google Agenda já preenchido (repete todo dia). "Criar todos" baixa um arquivo para o calendário do celular (iPhone e Samsung).</p>
+          <p className="text-xs text-foreground-500">No Android, o botão "Agenda" de cada refeição abre o Google Agenda já preenchido (repete todo dia). "Criar todos" baixa um arquivo para o calendário do celular (iPhone e Samsung).</p>
           {msg && <p role="status" className="text-sm text-primary-700">{msg}</p>}
         </div>
       )}

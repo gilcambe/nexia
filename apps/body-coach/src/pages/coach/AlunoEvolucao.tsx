@@ -67,7 +67,7 @@ export default function AlunoEvolucao() {
       <nav className="sticky top-0 z-20 grid grid-cols-4 gap-1 rounded-2xl border border-background-200 bg-background-50/95 p-1 backdrop-blur" aria-label="Seções da evolução do aluno">
         {ABAS.map((a) => (
           <button key={a.id} type="button" onClick={() => setParams(a.id === 'resumo' ? {} : { aba: a.id }, { replace: true })} aria-current={aba === a.id ? 'page' : undefined}
-            className={`flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-semibold ${aba === a.id ? 'bg-primary-500 text-background-50 dark:text-foreground-950' : 'text-foreground-600'}`}>
+            className={`flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-xs font-semibold ${aba === a.id ? 'bg-primary-500 text-background-50 dark:text-foreground-950' : 'text-foreground-600'}`}>
             <i className={`${a.icone} text-base`}></i>{a.label}
           </button>
         ))}

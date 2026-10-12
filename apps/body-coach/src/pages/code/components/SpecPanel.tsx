@@ -36,7 +36,7 @@ export default function SpecPanel() {
                 <p className="mt-0.5 text-xs text-foreground-600">{r.usage}</p>
                 <div className="mt-1.5 flex flex-wrap gap-1">
                   {r.anchors.map((a) => (
-                    <span key={a} className="rounded-full bg-background-100 px-2 py-0.5 text-[11px] text-foreground-600">
+                    <span key={a} className="rounded-full bg-background-100 px-2 py-0.5 text-xs text-foreground-600">
                       {a}
                     </span>
                   ))}
@@ -45,7 +45,7 @@ export default function SpecPanel() {
             </div>
           ))}
         </div>
-        <p className="mt-3 rounded-lg bg-accent-100/60 p-2.5 text-[11px] text-foreground-600">
+        <p className="mt-3 rounded-lg bg-accent-100/60 p-2.5 text-xs text-foreground-600">
           Formato OKLCH: variáveis guardam os canais (ex.: <span className="font-mono">0.64 0.17 42</span>) e o Tailwind aplica com{' '}
           <span className="font-mono">oklch(var(--token) / alpha)</span>.
         </p>
@@ -59,9 +59,9 @@ export default function SpecPanel() {
                 <p className="text-sm font-semibold text-foreground-900" style={{ fontFamily: t.cssVar }}>
                   {t.font}
                 </p>
-                <p className="text-[11px] text-foreground-500">{t.alias}</p>
+                <p className="text-xs text-foreground-500">{t.alias}</p>
               </div>
-              <span className="font-mono text-[11px] text-foreground-400">{t.cssVar}</span>
+              <span className="font-mono text-xs text-foreground-400">{t.cssVar}</span>
             </div>
           ))}
         </div>
@@ -72,7 +72,7 @@ export default function SpecPanel() {
           {layoutScale.map((l) => (
             <li key={l.token} className="flex items-center justify-between rounded-lg bg-background-100/60 px-3 py-2">
               <span className="font-mono text-xs text-foreground-800">{l.token}</span>
-              <span className="text-[11px] text-foreground-500">{l.usage}</span>
+              <span className="text-xs text-foreground-500">{l.usage}</span>
             </li>
           ))}
         </ul>
@@ -83,7 +83,7 @@ export default function SpecPanel() {
           {stack.map((s) => (
             <div key={s.name} className="rounded-lg border border-background-200 bg-background-50 px-3 py-2">
               <p className="text-sm font-semibold text-foreground-900">{s.name}</p>
-              <p className="font-mono text-[11px] text-foreground-500">{s.version}</p>
+              <p className="font-mono text-xs text-foreground-500">{s.version}</p>
             </div>
           ))}
         </div>
@@ -98,7 +98,7 @@ export default function SpecPanel() {
           {dataModel.map((t) => (
             <div key={t.table} className="rounded-lg border border-background-200 bg-background-50 p-3">
               <p className="font-mono text-xs font-semibold text-primary-700">{t.table}</p>
-              <p className="mt-1 font-mono text-[11px] leading-relaxed text-foreground-600">{t.columns}</p>
+              <p className="mt-1 font-mono text-xs leading-relaxed text-foreground-600">{t.columns}</p>
             </div>
           ))}
         </div>
@@ -118,12 +118,12 @@ export default function SpecPanel() {
               <i className="ri-file-copy-2-line mt-0.5 text-foreground-400"></i>
               <span>
                 <span className="font-mono text-xs font-semibold text-foreground-900">{x.f}</span>
-                <span className="block text-[11px] text-foreground-500">{x.d}</span>
+                <span className="block text-xs text-foreground-500">{x.d}</span>
               </span>
             </li>
           ))}
         </ul>
-        <p className="mt-3 text-[11px] text-foreground-500">
+        <p className="mt-3 text-xs text-foreground-500">
           O conteúdo completo de cada arquivo está na aba <strong>“Arquivos”</strong>, grupo <strong>config raiz</strong>.
         </p>
       </Section>

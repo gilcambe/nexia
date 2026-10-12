@@ -4,6 +4,7 @@ import type { Session, SetLog } from '@/mocks/workout';
 import type { CardioAtividade } from './cardioDoTexto';
 import type { Lesao } from './exerciseDb';
 import type { Ficha } from './ficha';
+import type { Extra } from './exercicioLivre';
 
 export type Origem =
   | { tipo: 'ficha'; ficha: Ficha } // ficha automática do app: avança o ciclo ao salvar
@@ -21,6 +22,7 @@ export interface TreinoAndamento {
   setsByEx: Record<string, SetLog[]>;
   cardioFeito: CardioAtividade[];
   origem: Origem;
+  extras?: Extra[]; // feito no intervalo (ex.: abdominal no descanso)
 }
 
 const chave = (uid: string) => `bc_treino_andamento_${uid}`;

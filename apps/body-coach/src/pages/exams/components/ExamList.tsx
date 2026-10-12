@@ -41,12 +41,12 @@ export default function ExamList({
             <div className="flex flex-wrap items-center gap-2">
               <p className="truncate text-sm font-medium text-foreground-900">{e.title}</p>
               {e.exam_type && (
-                <span className="rounded-full bg-secondary-100 px-2 py-0.5 text-[10px] font-semibold text-secondary-900">
+                <span className="rounded-full bg-secondary-100 px-2 py-0.5 text-xs font-semibold text-secondary-900">
                   {e.exam_type}
                 </span>
               )}
             </div>
-            <p className="mt-0.5 text-[11px] text-foreground-400">{formatDate(e.taken_at)}</p>
+            <p className="mt-0.5 text-xs text-foreground-400">{formatDate(e.taken_at)}</p>
             {e.notes && <p className="mt-0.5 truncate text-xs text-foreground-500">{e.notes}</p>}
           </div>
           <div className="flex shrink-0 items-center gap-1">

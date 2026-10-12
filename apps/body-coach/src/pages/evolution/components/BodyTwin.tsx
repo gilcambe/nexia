@@ -351,10 +351,10 @@ export default function BodyTwin({
                   <i className="ri-arrow-left-right-line text-sm"></i>
                 </div>
               </div>
-              <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-semibold text-background-50">
+              <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-xs font-semibold text-background-50">
                 Atual
               </span>
-              <span className="absolute right-2 top-2 rounded-full bg-accent-500 px-2 py-0.5 text-[10px] font-semibold text-background-50 dark:text-foreground-950">
+              <span className="absolute right-2 top-2 rounded-full bg-accent-500 px-2 py-0.5 text-xs font-semibold text-background-50 dark:text-foreground-950">
                 Meta
               </span>
             </>
@@ -389,7 +389,7 @@ export default function BodyTwin({
                 />
               ))}
               {measureCm !== null && (
-                <span className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-black/70 px-2 py-0.5 text-[11px] font-semibold text-background-50">
+                <span className="pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-md bg-black/70 px-2 py-0.5 text-xs font-semibold text-background-50">
                   {measureCm.toFixed(1)} cm
                 </span>
               )}
@@ -424,10 +424,10 @@ export default function BodyTwin({
                           : 'border-background-50 bg-black/35 text-background-50 backdrop-blur-sm group-hover:bg-primary-500'
                       }`}
                     >
-                      <i className="ri-add-line text-[11px]"></i>
+                      <i className="ri-add-line text-xs"></i>
                     </span>
                     <span
-                      className={`pointer-events-none absolute left-1/2 top-6 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-0.5 text-[10px] font-semibold transition ${
+                      className={`pointer-events-none absolute left-1/2 top-6 -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-semibold transition ${
                         active ? 'bg-primary-500 text-background-50' : 'bg-black/70 text-background-50 opacity-0 group-hover:opacity-100'
                       }`}
                     >
@@ -441,7 +441,7 @@ export default function BodyTwin({
 
           {/* goal badge */}
           {goalMode && !compareMode && (
-            <div className="absolute left-1/2 top-3 -translate-x-1/2 whitespace-nowrap rounded-full bg-accent-500 px-3 py-1 text-[11px] font-semibold text-background-50 dark:text-foreground-950">
+            <div className="absolute left-1/2 top-3 -translate-x-1/2 whitespace-nowrap rounded-full bg-accent-500 px-3 py-1 text-xs font-semibold text-background-50 dark:text-foreground-950">
               Meta · {goalBodyFat}% gordura · {goalLeanMass.toFixed(1)} kg magra
             </div>
           )}
@@ -464,11 +464,11 @@ export default function BodyTwin({
       {/* dados atuais reais */}
       <div className="grid grid-cols-2 gap-2 rounded-xl bg-background-100/70 p-3">
         <div className="text-center">
-          <p className="text-[10px] text-foreground-500">Peso atual</p>
+          <p className="text-xs text-foreground-500">Peso atual</p>
           <p className="font-heading text-sm font-bold text-foreground-950">{currentWeight} kg</p>
         </div>
         <div className="text-center">
-          <p className="text-[10px] text-foreground-500">Gordura</p>
+          <p className="text-xs text-foreground-500">Gordura</p>
           <p className="font-heading text-sm font-bold text-foreground-950">{currentBodyFat}%</p>
         </div>
       </div>
@@ -503,7 +503,7 @@ export default function BodyTwin({
                     key={a}
                     onClick={() => changeAngle(a)}
                     disabled={goalMode}
-                    className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
+                    className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium transition disabled:opacity-40 ${
                       angle === a && !goalMode ? 'bg-primary-100 text-primary-700' : 'text-foreground-500 hover:bg-background-100'
                     }`}
                   >
@@ -514,7 +514,7 @@ export default function BodyTwin({
               <button
                 onClick={() => setAutoRotate((v) => !v)}
                 disabled={goalMode}
-                className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-40 ${
+                className={`flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium transition disabled:opacity-40 ${
                   autoRotate ? 'bg-primary-500 text-background-50 dark:text-foreground-950' : 'text-foreground-500 hover:bg-background-100'
                 }`}
               >
@@ -590,7 +590,7 @@ export default function BodyTwin({
             onSalvar={(cm) => onSalvarMedida.salvar(regiao, cm)}
           />
         ) : (
-          <p className="-mt-2 text-center text-[11px] text-foreground-500">Toque no + para ver ou colocar a medida de cada parte do corpo.</p>
+          <p className="-mt-2 text-center text-xs text-foreground-500">Toque no + para ver ou colocar a medida de cada parte do corpo.</p>
         )
       )}
 
@@ -603,7 +603,7 @@ export default function BodyTwin({
                 <button
                   key={a}
                   onClick={() => changeAngle(a)}
-                  className={`whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium transition ${
+                  className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium transition ${
                     angle === a ? 'bg-primary-100 text-primary-700' : 'text-foreground-500 hover:bg-background-100'
                   }`}
                 >
@@ -641,7 +641,7 @@ export default function BodyTwin({
                 setMeasurePoints([]);
                 setMeasureCm(null);
               }}
-              className={`flex-1 whitespace-nowrap rounded-full px-1 py-1.5 text-[11px] font-medium transition ${
+              className={`flex-1 whitespace-nowrap rounded-full px-1 py-1.5 text-xs font-medium transition ${
                 tool === 'select' ? 'bg-background-50 text-foreground-950' : 'text-foreground-500 hover:text-foreground-800'
               }`}
             >
@@ -653,7 +653,7 @@ export default function BodyTwin({
                 setMeasurePoints([]);
                 setMeasureCm(null);
               }}
-              className={`flex-1 whitespace-nowrap rounded-full px-1 py-1.5 text-[11px] font-medium transition ${
+              className={`flex-1 whitespace-nowrap rounded-full px-1 py-1.5 text-xs font-medium transition ${
                 tool === 'move' ? 'bg-background-50 text-foreground-950' : 'text-foreground-500 hover:text-foreground-800'
               }`}
             >
@@ -665,7 +665,7 @@ export default function BodyTwin({
                 setMeasurePoints([]);
                 setMeasureCm(null);
               }}
-              className={`flex-1 whitespace-nowrap rounded-full px-1 py-1.5 text-[11px] font-medium transition ${
+              className={`flex-1 whitespace-nowrap rounded-full px-1 py-1.5 text-xs font-medium transition ${
                 tool === 'measure' ? 'bg-background-50 text-foreground-950' : 'text-foreground-500 hover:text-foreground-800'
               }`}
             >

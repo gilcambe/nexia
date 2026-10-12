@@ -64,7 +64,7 @@ export default function Evolution() {
             type="button"
             onClick={() => irPara(a.id)}
             aria-current={aba === a.id ? 'page' : undefined}
-            className={`flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-semibold transition ${aba === a.id ? 'bg-primary-500 text-background-50 dark:text-foreground-950' : 'text-foreground-600'}`}
+            className={`flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-xs font-semibold transition ${aba === a.id ? 'bg-primary-500 text-background-50 dark:text-foreground-950' : 'text-foreground-600'}`}
           >
             <i className={`${a.icone} text-base`}></i>
             {a.label}

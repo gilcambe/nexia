@@ -31,7 +31,7 @@ export default function Retrospectiva() {
     <div className="rounded-2xl bg-white/10 p-3">
       <i className={`${icone} text-lg opacity-80`}></i>
       <p className="font-heading text-2xl font-bold">{v}</p>
-      <p className="text-[11px] opacity-80">{l}</p>
+      <p className="text-xs opacity-80">{l}</p>
     </div>
   );
   return (

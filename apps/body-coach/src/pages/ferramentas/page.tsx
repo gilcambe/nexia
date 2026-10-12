@@ -27,6 +27,7 @@ const Mapa = carregar(() => import('./Mapa'));
 const ModoViagem = carregar(() => import('./ModoViagem'));
 const Mensalidade = carregar(() => import('./Mensalidade'));
 const Resumo = carregar(() => import('./Resumo'));
+const PostInstagram = carregar(() => import('./PostInstagram'));
 
 // Ferramentas extras do Body Coach, todas grátis e feitas no próprio aparelho.
 export const FERRAMENTAS = [
@@ -50,6 +51,7 @@ export const FERRAMENTAS = [
   { id: 'saude', grupo: 'Saúde', nome: 'Pressão, glicemia e check-up', desc: 'Registro com gráfico e lembretes de exames', icone: 'ri-heart-add-line', el: Saude },
   { id: 'dicas', grupo: 'Saúde', nome: 'Dicas de saúde', desc: 'Sono, água, comida, treino, mente e postura', icone: 'ri-lightbulb-flash-line', el: Dicas },
   { id: 'ciclo', grupo: 'Saúde', nome: 'Ciclo menstrual', desc: 'Treino e dieta ajustados à fase (opcional)', icone: 'ri-drop-line', el: Ciclo },
+  { id: 'post', grupo: 'Loja e comunidade', nome: 'Post para o Instagram', desc: 'Fotos e vídeos do treino viram post ou vídeo com a sua marca', icone: 'ri-instagram-line', el: PostInstagram },
   { id: 'loja', grupo: 'Loja e comunidade', nome: 'Loja', desc: 'Suplementos, acessórios e tênis recomendados para você', icone: 'ri-store-2-line', el: Loja },
   { id: 'mensalidade', grupo: 'Loja e comunidade', nome: 'Mensalidade por Pix', desc: 'Aluno paga o personal direto, sem taxa; o coach marca quem pagou', icone: 'ri-qr-code-line', el: Mensalidade },
   { id: 'indique', grupo: 'Loja e comunidade', nome: 'Indique e compartilhe', desc: 'Seu link, cartão do treino e embaixador', icone: 'ri-gift-line', el: Indique },

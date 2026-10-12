@@ -86,7 +86,7 @@ function Aplicar({ modelo, onFechar }: { modelo: ModeloResumo; onFechar: (msg?: 
               <label className="flex items-center gap-3 rounded-xl border border-background-200 px-3 py-2.5 text-sm">
                 <input type="checkbox" checked={marcados.includes(a.uid)} onChange={() => alternar(a.uid)} className="h-4 w-4 accent-primary-500" aria-label={a.nome} />
                 <span className="flex-1 font-medium text-foreground-900">{a.nome}</span>
-                {tem(a) && <span className="text-[11px] text-secondary-800">já tem: será trocada</span>}
+                {tem(a) && <span className="text-xs text-secondary-800">já tem: será trocada</span>}
               </label>
             </li>
           ))}

@@ -31,7 +31,7 @@ export default function DemoExecucao({ id, nome, className = '' }: { id: string;
     >
       <img src={frames[0]} alt={`${nome}: posição inicial`} loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
       <img src={frames[1]} alt={`${nome}: posição final`} loading="lazy" className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${fim ? 'opacity-100' : 'opacity-0'}`} />
-      <span className="absolute bottom-2 right-2 rounded-full bg-black/60 px-2 py-1 text-[11px] font-medium text-white">
+      <span className="absolute bottom-2 right-2 rounded-full bg-black/60 px-2 py-1 text-xs font-medium text-white">
         <i className={`${rodando ? 'ri-pause-fill' : 'ri-play-fill'} mr-0.5`}></i>{rodando ? 'toque p/ pausar' : 'toque p/ tocar'}
       </span>
     </button>
