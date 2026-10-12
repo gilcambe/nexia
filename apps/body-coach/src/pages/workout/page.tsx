@@ -424,6 +424,7 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
                 Trocar exercício
               </button>
               <div className="flex items-center gap-1 bg-background-200/70 p-1 rounded-lg">
+                <span className="px-1 text-xs font-semibold text-foreground-600">Ordem</span>
                 <button
                   onClick={() => {
                     const novaSessao = moverExercicio(session, exIndex, exIndex - 1);
@@ -433,7 +434,8 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
                     }
                   }}
                   disabled={exIndex === 0}
-                  title="Subir exercício"
+                  title="Mudar a ordem: fazer este exercício antes"
+                  aria-label="Mudar a ordem: fazer este exercício antes"
                   className="inline-flex items-center justify-center p-1 rounded text-foreground-700 hover:bg-background-300 disabled:opacity-40 transition"
                 >
                   <i className="ri-arrow-up-line text-sm"></i>
@@ -447,7 +449,8 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
                     }
                   }}
                   disabled={exIndex === session.exercises.length - 1}
-                  title="Descer exercício"
+                  title="Mudar a ordem: fazer este exercício depois"
+                  aria-label="Mudar a ordem: fazer este exercício depois"
                   className="inline-flex items-center justify-center p-1 rounded text-foreground-700 hover:bg-background-300 disabled:opacity-40 transition"
                 >
                   <i className="ri-arrow-down-line text-sm"></i>
@@ -609,18 +612,29 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
               </div>
             )}
 
+            <div className="mt-5 flex gap-2">
+            {exIndex > 0 && (
+              <button
+                onClick={() => { setResting(false); setExIndex((i) => Math.max(0, i - 1)); }}
+                aria-label="Voltar ao exercício anterior"
+                className="shrink-0 rounded-xl border border-background-200 bg-background-50 px-4 py-3 text-sm font-semibold text-foreground-700 transition hover:bg-background-100"
+              >
+                ← ANTERIOR
+              </button>
+            )}
             <button
               onClick={finishExercise}
-              className={`mt-5 w-full rounded-xl px-6 py-3 text-sm font-semibold transition whitespace-nowrap ${
+              className={`min-w-0 flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition ${
                 exIndex < session.exercises.length - 1
                   ? 'bg-primary-500 text-background-50 hover:bg-primary-600'
                   : 'bg-accent-500 text-background-50 hover:bg-accent-600'
               }`}
             >
               {exIndex < session.exercises.length - 1
-                ? 'CONCLUIR EXERCÍCIO → PRÓXIMO'
+                ? 'CONCLUIR → PRÓXIMO'
                 : 'FINALIZAR FORÇA'}
             </button>
+            </div>
           </div>
         )}
 

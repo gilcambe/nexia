@@ -34,8 +34,16 @@ export function estadoPadrao(respostas: Record<string, unknown> | null | undefin
 
 // Treino de um dia da ficha. Sempre a mesma escolha de exercícios (variacao 0), para a ficha,
 // a tela inicial e o treino iniciado baterem.
+// O ajuste do dia (sono, tempo, dores, ênfase) pode tirar ou acrescentar exercícios, mas nunca muda a ordem da ficha:
+// os que estão na ficha vêm na mesma ordem dela, e os acrescentados vão para o fim.
 export function treinoDaFicha(respostas: Record<string, unknown>, divisao: Divisao, dia: number, estado?: EstadoDoDia, enfase: Grupo[] = []): TreinoDoDia {
-  return montarTreinoDoDia({ respostas, divisao, diaDaDivisao: dia, enfase, estado: estado ?? estadoPadrao(respostas), variacao: 0 });
+  const padrao = montarTreinoDoDia({ respostas, divisao, diaDaDivisao: dia, enfase: [], estado: estadoPadrao(respostas), variacao: 0 });
+  if (!estado && !enfase.length) return padrao;
+  const hoje = montarTreinoDoDia({ respostas, divisao, diaDaDivisao: dia, enfase, estado: estado ?? estadoPadrao(respostas), variacao: 0 });
+  const pos = new Map(padrao.sessao.exercises.map((e, i) => [e.id, i]));
+  const fora = padrao.sessao.exercises.length;
+  const exercises = [...hoje.sessao.exercises].sort((a, b) => (pos.get(a.id) ?? fora) - (pos.get(b.id) ?? fora));
+  return { ...hoje, sessao: { ...hoje.sessao, exercises } };
 }
 
 // Depois de um treino da ficha, o próximo dia do ciclo é o seguinte (volta ao A depois do último).
