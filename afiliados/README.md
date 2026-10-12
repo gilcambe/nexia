@@ -1,109 +1,42 @@
 # Manual do Robô de Ofertas – Afiliados
 
 ## 1. O que é
-O Robô de Ofertas é um serviço que ajuda você a encontrar promoções e descontos em diversas lojas.
-Ele funciona analisando milhares de produtos e selecionando as melhores oportunidades.
-Como afiliado, você pode compartilhar esses descontos e ganhar comissões.
-
-O objetivo do programa de afiliados é simples:
-- Receber links de ofertas.
-- Divulgar esses links em suas redes ou canais.
-- Receber pagamento por cada venda gerada.
-
-Tudo isso pode ser feito sem precisar de conhecimentos técnicos avançados.
+O Robô de Ofertas ajuda você a encontrar promoções em diversas lojas para compartilhar e ganhar comissões:
+- Receba links de ofertas.
+- Divulgue em suas redes ou canais.
+- Ganhe por cada venda gerada sem complicação.
 
 ## 2. Como usar pelo celular
-O aplicativo do Robô de Ofertas está disponível para Android e iOS.
-Você pode instalar a versão móvel diretamente da loja de aplicativos.
-
-### 2.1 Instalação
-1. Abra a loja de aplicativos do seu celular (Google Play ou App Store).
-2. Procure por “Robô de Ofertas”.
-3. Toque em “Instalar” e aguarde a conclusão.
-4. Abra o aplicativo após a instalação.
-
-### 2.2 Cadastro
-- Na primeira abertura, você verá a tela de boas‑vindas.
-- Toque em “Criar conta”.
-- Preencha seu nome, e‑mail e crie uma senha.
-- Confirme o e‑mail usando o link que será enviado.
-- Faça login com as credenciais criadas.
-
-### 2.3 Navegação básica
-- Na barra inferior, você tem quatro ícones principais: Início, Ofertas, Meu link e Perfil.
-- Toque em “Ofertas” para ver as promoções disponíveis.
-- Use a busca no topo para encontrar um produto específico.
-- Ao encontrar uma oferta interessante, toque em “Compartilhar”.
-- Escolha entre copiar o link, enviar por WhatsApp, Instagram, ou outras apps.
-
-### 2.4 Gerando seu link de afiliado
-- No menu “Meu link”, você verá um link único associado à sua conta.
-- Esse link pode ser usado em qualquer lugar: bio do Instagram, descrição de vídeo, e‑mail etc.
-- Cada vez que alguém clicar e comprar, a comissão será creditada para você.
-
-### 2.5 Recebendo notificações
-- Ative as notificações nas configurações para ser avisado de novas ofertas.
-- As notificações podem ser configuradas por categoria de produto.
-- Você pode desativar notificações a qualquer momento nas preferências.
+Instale o app para Android ou iOS pela loja de aplicativos.
+- Instalação: Abra a Google Play ou App Store, procure “Robô de Ofertas” e instale.
+- Cadastro: Toque em “Criar conta”, preencha seus dados, confirme o e-mail e faça login.
+- Navegação: Use a barra inferior (Início, Ofertas, Meu link, Perfil) para buscar e compartilhar ofertas.
+- Link de afiliado: No menu “Meu link”, copie seu link exclusivo para usar na bio ou mensagens.
+- Notificações: Ative alertas para receber avisos de novas promoções por categoria.
 
 ## 3. Lojas
-O Robô de Ofertas trabalha com centenas de lojas parceiras.
-Em elas são agrupadas por categorias para facilitar a navegação.
-
-### 3.1 Principais categorias
-- Tecnologia: smartphones, notebooks, acessórios.
-- Moda: roupas, calçados, acessórios.
-- Casa e cozinha: eletrodomésticos, utensílios, decoração.
-- Saúde e beleza: cosméticos, suplementos, equipamentos.
-- Esporte e lazer: bicicletas, equipamentos de academia, brinquedos.
-
-### 3.2 Como encontrar uma loja
-- Na tela “Ofertas”, toque na aba “Lojas”.
-- Use a barra de busca para digitar o nome da loja.
-- Selecione a loja para ver todas as promoções ativas.
-- Cada loja exibe a taxa de comissão que você receberá.
-
-### 3.3 Dicas para melhorar a performance
-- Compartilhe ofertas de lojas que seu público conhece.
-- Use imagens e descrições claras ao divulgar.
-- Combine ofertas de diferentes categorias para alcançar mais pessoas.
-- Atualize seus links regularmente para aproveitar novas promoções.
-
-## Conclusão
-Com o Robô de Ofertas, você tem uma ferramenta simples e poderosa para gerar renda extra.
-Tudo pode ser feito diretamente do celular, sem precisar de um site ou blog.
-Comece hoje, siga os passos acima e veja seus resultados crescerem.
+O aplicativo conta com centenas de lojas parceiras organizadas por categorias como Tecnologia, Moda, Casa, Saúde e Esporte.
+- Encontre lojas na aba “Lojas” e confira a comissão de cada uma.
+- Dicas: Divulgue lojas conhecidas, use imagens claras e atualize seus links regularmente.
 
 ## 4. Redes e segredos
-
-As redes e segredos são variáveis de ambiente que permitem que o Robô de Ofertas acesse serviços externos, como APIs de pagamento, integrações de e-mail, ou autenticação. Você pode configurar essas variáveis em três locais:
-1. arquivo `.env` no diretório raiz do projeto,
-2. painel de configurações do Cloudflare Workers,
-3. painel de configurações do Firebase Functions.
-
-| Rede            | Segredo        | Onde configurar  |
-|-----------------|----------------|------------------|
-| PAYMENT_API_KEY | `pk_live_xxx`  | `.env`           |
-| MAILGUN_API_KEY | `key-xxxx`     | `.env`           |
-| WHATSAPP_TOKEN  | `token-xxxx`   | Cloudflare Vars  |
+Configure as variáveis de ambiente necessárias (`.env`, Cloudflare Workers ou Firebase Functions):
+- PAYMENT_API_KEY (`pk_live_xxx`)
+- MAILGUN_API_KEY (`key-xxxx`)
+- WHATSAPP_TOKEN (`token-xxxx`)
 
 ## 5. WhatsApp
+Clique em “Compartilhar via WhatsApp” na página da oferta para abrir o app ou WhatsApp Web com mensagem pré-preenchida, garantindo segurança e revisão antes do envio.
 
-Para compartilhar ofertas via WhatsApp, clique no botão “Compartilhar via WhatsApp” na página de oferta. O link abre o WhatsApp Web ou aplicativo com a mensagem pré‑preenchida contendo o título e link da oferta. Essa abordagem manual garante que o usuário veja o conteúdo antes de enviar, evitando phishing e mantendo a segurança do serviço.
-
-## 6. Regras para nao ser bloqueado
-
-Para garantir que sua conta e seus canais de divulgacao continuem ativos e seguros, siga estas regras fundamentais:
-
-- Nao envie links repetidos ou spam em grupos e redes sociais.
-- Respeite as politicas de privacidade e os termos de uso de cada plataforma onde divulgar.
-- Identifique claramente que seus links sao de afiliado quando exigido pelas normas locais.
-- Nao utilize metodos automaticos ou bots nao autorizados para disparar mensagens.
+## 6. Regras para não ser bloqueado
+Para manter sua conta e canais seguros e ativos:
+- Não envie links repetidos ou spam em grupos.
+- Respeite as políticas e termos de cada plataforma.
+- Identifique claramente os links de afiliado quando exigido.
+- Não utilize métodos automáticos ou bots não autorizados.
 
 ## 7. Trocar o nome do site, os temas ou os limites
-
-Voce pode personalizar facilmente o funcionamento e a identidade visual do Robô de Ofertas:
-
-- Nome do site: Altere o titulo principal e as configuracoes de exibicao no arquivo de configuracao ou no painel de administracao.
-- Temas: Personalize as cores, fontes e estilos editando as variaveis CSS e os arquivos de estilo do projeto.
-- Limites: Ajuste as cotas de requisicoes, limites de compartilhamento e configuracoes de desempenho diretamente nas variaveis de ambiente e configuracoes do servidor.
+Personalize o Robô de Ofertas facilmente:
+- Nome do site: Altere o título e exibições no arquivo de configuração.
+- Temas: Personalize cores e fontes editando as variáveis CSS e estilos.
+- Limites: Ajuste cotas de requisições e compartilhamento nas variáveis de ambiente.
