@@ -49,11 +49,12 @@ O WhatsApp é um dos principais canais de conversão para afiliados, mas deve se
 - Mantenha uma comunicação transparente e honesta com seus seguidores, informando claramente que os links enviados são de afiliados.
 
 ## 6. Regras para não ser bloqueado
-- Evite práticas de spam, envio em massa não autorizado ou compartilhamento excessivo em grupos.
-- Seja transparente informando aos seguidores que os links geram comissão.
-- Respeite os limites diários de cliques e mensagens de cada aplicativo.
+- Evite práticas de spam, envio em massa não autorizado ou compartilhamento excessivo em grupos para proteger sua conta.
+- Seja transparente informando sempre aos seus seguidores que os links compartilhados geram comissão.
+- Respeite os limites diários de cliques, interações e mensagens estabelecidos pelas plataformas e aplicativos parceiros.
+- Mantenha sempre uma postura ética e profissional em todas as suas publicações e divulgações.
 
 ## 7. Trocar o nome do site, os temas ou os limites
-- Nome do site: Altere o título principal e referências no arquivo de configuração.
-- Temas: Personalize a paleta de cores alterando as variáveis CSS.
-- Limites: Configure os limites e cotas nas variáveis de ambiente do servidor.
+- Nome do site: Altere o título principal e as referências diretamente no arquivo de configuração do projeto de forma simples e rápida.
+- Temas: Personalize a paleta de cores, fontes e estilo visual alterando as variáveis CSS do design system.
+- Limites: Configure os limites operacionais, tempos de espera e cotas nas variáveis de ambiente seguras do servidor.
