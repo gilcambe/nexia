@@ -1,75 +1,66 @@
-# Manual do Robô de Ofertas – Afiliados
+# Manual do Robô de Ofertas
+
+Guia prático para você usar o Robô de Ofertas diretamente pelo celular e começar a divulgar produtos sem complicação.
+
+---
 
 ## 1. O que é
-O Robô de Ofertas é um serviço que ajuda você a encontrar promoções e descontos em diversas lojas.
-Ele funciona analisando milhares de produtos e selecionando as melhores oportunidades.
-Como afiliado, você pode compartilhar esses descontos e ganhar comissões.
 
-O objetivo do programa de afiliados é simples:
-- Receber links de ofertas.
-- Divulgar esses links em suas redes ou canais.
-- Receber pagamento por cada venda gerada.
+O Robô de Ofertas é uma ferramenta automática criada para encontrar as melhores promoções da internet em tempo real. Ele monitora lojas conhecidas, identifica descontos reais e gera links personalizados com o seu código de afiliado.
 
-Tudo isso pode ser feito sem precisar de conhecimentos técnicos avançados.
+Assim, sempre que você envia uma oferta para seus amigos, familiares ou grupos e alguém faz uma compra pelo seu link, você ganha uma comissão em dinheiro.
+
+Principais vantagens do robô:
+- Você não precisa ter estoque nem enviar produtos por correio.
+- Não precisa criar um site ou entender de programação.
+- As lojas parceiras cuidam de todo o pagamento, embalagem e entrega.
+- Você só precisa escolher as ofertas e compartilhar pelo próprio aparelho.
+- O robô já entrega o texto pronto com o preço e o link para copiar.
+
+---
 
 ## 2. Como usar pelo celular
-O aplicativo do Robô de Ofertas está disponível para Android e iOS.
-Você pode instalar a versão móvel diretamente da loja de aplicativos.
 
-### 2.1 Instalação
-1. Abra a loja de aplicativos do seu celular (Google Play ou App Store).
-2. Procure por “Robô de Ofertas”.
-3. Toque em “Instalar” e aguarde a conclusão.
-4. Abra o aplicativo após a instalação.
+Você pode fazer tudo na palma da mão, usando o WhatsApp, Telegram ou o navegador do celular.
 
-### 2.2 Cadastro
-- Na primeira abertura, você verá a tela de boas‑vindas.
-- Toque em “Criar conta”.
-- Preencha seu nome, e‑mail e crie uma senha.
-- Confirme o e‑mail usando o link que será enviado.
-- Faça login com as credenciais criadas.
+### Passo 1: Entrar no grupo ou canal do robô
+1. Abra o link do grupo de ofertas que você recebeu no WhatsApp ou Telegram.
+2. Toque em "Entrar no grupo" ou "Entrar no canal".
+3. Silencie as notificações se preferir olhar com calma durante o dia.
 
-### 2.3 Navegação básica
-- Na barra inferior, você tem quatro ícones principais: Início, Ofertas, Meu link e Perfil.
-- Toque em “Ofertas” para ver as promoções disponíveis.
-- Use a busca no topo para encontrar um produto específico.
-- Ao encontrar uma oferta interessante, toque em “Compartilhar”.
-- Escolha entre copiar o link, enviar por WhatsApp, Instagram, ou outras apps.
+### Passo 2: Escolher uma boa promoção
+1. Veja as mensagens que o robô envia ao longo do dia.
+2. Cada mensagem mostra a foto, o nome do item, o valor com desconto e o link.
+3. Escolha produtos úteis ou desejados, como fraldas, celulares, roupas ou panelas.
 
-### 2.4 Gerando seu link de afiliado
-- No menu “Meu link”, você verá um link único associado à sua conta.
-- Esse link pode ser usado em qualquer lugar: bio do Instagram, descrição de vídeo, e‑mail etc.
-- Cada vez que alguém clicar e comprar, a comissão será creditada para você.
+### Passo 3: Copiar e compartilhar o link
+1. Toque e segure o dedo sobre o link da mensagem para copiá-lo.
+2. Abra a conversa ou grupo onde quer divulgar (WhatsApp, Instagram ou Facebook).
+3. Cole o link junto com uma frase simples recomendando o produto.
+4. Envie a mensagem.
 
-### 2.5 Recebendo notificações
-- Ative as notificações nas configurações para ser avisado de novas ofertas.
-- As notificações podem ser configuradas por categoria de produto.
-- Você pode desativar notificações a qualquer momento nas preferências.
+### Dicas para quem usa celular
+- Crie um grupo só com você no WhatsApp para salvar suas promoções favoritas.
+- Use a função "Status" do WhatsApp e os "Stories" do Instagram para postar links.
+- Sempre confira se o link abre direto na página da loja antes de espalhar.
+- Nunca mande mensagens repetidas sem parar para não incomodar seus contatos.
+
+---
 
 ## 3. Lojas
-O Robô de Ofertas trabalha com centenas de lojas parceiras.
-Em elas são agrupadas por categorias para facilitar a navegação.
 
-### 3.1 Principais categorias
-- Tecnologia: smartphones, notebooks, acessórios.
-- Moda: roupas, calçados, acessórios.
-- Casa e cozinha: eletrodomésticos, utensílios, decoração.
-- Saúde e beleza: cosméticos, suplementos, equipamentos.
-- Esporte e lazer: bicicletas, equipamentos de academia, brinquedos.
+O robô trabalha em conjunto com as maiores redes de comércio eletrônico do Brasil. Isso traz segurança para quem compra e garantia de recebimento para você.
 
-### 3.2 Como encontrar uma loja
-- Na tela “Ofertas”, toque na aba “Lojas”.
-- Use a barra de busca para digitar o nome da loja.
-- Selecione a loja para ver todas as promoções ativas.
-- Cada loja exibe a taxa de comissão que você receberá.
+### Lojas parceiras mais comuns
+- Amazon Brasil: livros, eletrônicos, itens para casa e produtos de uso diário.
+- Magazine Luiza (Magalu): eletrodomésticos, televisores, móveis e celulares.
+- Mercado Livre: grande variedade de categorias com entrega rápida.
+- Shopee: utilidades domésticas, roupas, ferramentas e pequenos presentes.
+- Casas Bahia e Ponto Frio: tecnologia, cozinha e itens para o lar.
 
-### 3.3 Dicas para melhorar a performance
-- Compartilhe ofertas de lojas que seu público conhece.
-- Use imagens e descrições claras ao divulgar.
-- Combine ofertas de diferentes categorias para alcançar mais pessoas.
-- Atualize seus links regularmente para aproveitar novas promoções.
-
-## Conclusão
-Com o Robô de Ofertas, você tem uma ferramenta simples e poderosa para gerar renda extra.
-Tudo pode ser feito diretamente do celular, sem precisar de um site ou blog.
-Comece hoje, siga os passos acima e veja seus resultados crescerem.
+### Regras importantes sobre as lojas
+- Confiança: todas as lojas são grandes e consolidadas no mercado nacional.
+- Preços dinâmicos: os descontos podem acabar rápido quando o estoque da loja zera.
+- Comissões: cada loja tem uma porcentagem diferente de ganho por categoria.
+- Pagamentos: o dinheiro das comissões é pago conforme as regras de cada loja parceira.
+- Suporte ao cliente: se o comprador tiver dúvidas sobre a entrega, o suporte da loja resolve tudo.
