@@ -49,15 +49,11 @@ O WhatsApp é um dos principais canais de conversão para afiliados, mas deve se
 - Mantenha uma comunicação transparente e honesta com seus seguidores, informando claramente que os links enviados são de afiliados.
 
 ## 6. Regras para não ser bloqueado
-- Evite práticas de spam, envio em massa não autorizado ou compartilhamento excessivo em grupos onde você não tem permissão.
-- Seja transparente: informe sempre aos seus seguidores que os links compartilhados são de afiliado e geram comissão.
-- Respeite os limites diários de cliques e mensagens recomendados por cada rede social ou aplicativo de mensagens.
-- Mantenha suas credenciais e links seguros, evitando o uso de encurtadores desconhecidos ou suspeitos.
+- Evite práticas de spam, envio em massa não autorizado ou compartilhamento excessivo em grupos.
+- Seja transparente informando aos seguidores que os links geram comissão.
+- Respeite os limites diários de cliques e mensagens de cada aplicativo.
 
 ## 7. Trocar o nome do site, os temas ou os limites
-- Nome do site: Altere o título principal e as referências de marca no arquivo de configuração ou nas propriedades do projeto.
-- Temas: Personalize a paleta de cores e os estilos visuais alterando as variáveis CSS no arquivo de estilos principal.
-- Limites e ajustes: Configure os limites de requisições, paginação e cotas de envio diretamente nas variáveis de ambiente do servidor.
-
-## Conclusão
-Com o Robô de Ofertas e este manual prático completo, você possui todas as orientações necessárias para gerar renda extra direto do celular de forma simples, organizada, automatizada e totalmente segura. Aproveite todas as funcionalidades, mantenha as boas práticas e bons negócios!
+- Nome do site: Altere o título principal e referências no arquivo de configuração.
+- Temas: Personalize a paleta de cores alterando as variáveis CSS.
+- Limites: Configure os limites e cotas nas variáveis de ambiente do servidor.
