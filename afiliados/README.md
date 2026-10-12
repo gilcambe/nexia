@@ -90,3 +90,20 @@ As redes e segredos são variáveis de ambiente que permitem que o Robô de Ofer
 ## 5. WhatsApp
 
 Para compartilhar ofertas via WhatsApp, clique no botão “Compartilhar via WhatsApp” na página de oferta. O link abre o WhatsApp Web ou aplicativo com a mensagem pré‑preenchida contendo o título e link da oferta. Essa abordagem manual garante que o usuário veja o conteúdo antes de enviar, evitando phishing e mantendo a segurança do serviço.
+
+## 6. Regras para nao ser bloqueado
+
+Para garantir que sua conta e seus canais de divulgacao continuem ativos e seguros, siga estas regras fundamentais:
+
+- Nao envie links repetidos ou spam em grupos e redes sociais.
+- Respeite as politicas de privacidade e os termos de uso de cada plataforma onde divulgar.
+- Identifique claramente que seus links sao de afiliado quando exigido pelas normas locais.
+- Nao utilize metodos automaticos ou bots nao autorizados para disparar mensagens.
+
+## 7. Trocar o nome do site, os temas ou os limites
+
+Voce pode personalizar facilmente o funcionamento e a identidade visual do Robô de Ofertas:
+
+- Nome do site: Altere o titulo principal e as configuracoes de exibicao no arquivo de configuracao ou no painel de administracao.
+- Temas: Personalize as cores, fontes e estilos editando as variaveis CSS e os arquivos de estilo do projeto.
+- Limites: Ajuste as cotas de requisicoes, limites de compartilhamento e configuracoes de desempenho diretamente nas variaveis de ambiente e configuracoes do servidor.
