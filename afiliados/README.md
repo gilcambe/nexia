@@ -48,7 +48,7 @@ Você pode instalar a versão móvel diretamente da loja de aplicativos.
 
 ## 3. Lojas
 O Robô de Ofertas trabalha com centenas de lojas parceiras.
-Elas são agrupadas por categorias para facilitar a navegação.
+Em elas são agrupadas por categorias para facilitar a navegação.
 
 ### 3.1 Principais categorias
 - Tecnologia: smartphones, notebooks, acessórios.
