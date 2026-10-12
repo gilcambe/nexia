@@ -69,11 +69,6 @@ Em elas são agrupadas por categorias para facilitar a navegação.
 - Combine ofertas de diferentes categorias para alcançar mais pessoas.
 - Atualize seus links regularmente para aproveitar novas promoções.
 
-## Conclusão
-Com o Robô de Ofertas, você tem uma ferramenta simples e poderosa para gerar renda extra.
-Tudo pode ser feito diretamente do celular, sem precisar de um site ou blog.
-Comece hoje, siga os passos acima e veja seus resultados crescerem.
-
 ## 4. Redes e segredos
 
 As redes e segredos são variáveis de ambiente que permitem que o Robô de Ofertas acesse serviços externos, como APIs de pagamento, integrações de e-mail, ou autenticação. Você pode configurar essas variáveis em três locais:
@@ -90,3 +85,8 @@ As redes e segredos são variáveis de ambiente que permitem que o Robô de Ofer
 ## 5. WhatsApp
 
 Para compartilhar ofertas via WhatsApp, clique no botão “Compartilhar via WhatsApp” na página de oferta. O link abre o WhatsApp Web ou aplicativo com a mensagem pré‑preenchida contendo o título e link da oferta. Essa abordagem manual garante que o usuário veja o conteúdo antes de enviar, evitando phishing e mantendo a segurança do serviço.
+
+## Conclusão
+Com o Robô de Ofertas, você tem uma ferramenta simples e poderosa para gerar renda extra.
+Tudo pode ser feito diretamente do celular, sem precisar de um site ou blog.
+Comece hoje, siga os passos acima e veja seus resultados crescerem.
