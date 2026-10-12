@@ -35,12 +35,11 @@ O ecossistema do Robô trabalha com centenas de grandes lojas e varejistas nacio
 - Selecione e compartilhe apenas ofertas que façam sentido para o seu nicho e sejam reconhecidas pela qualidade e pelo interesse real do público.
 
 ## 4. Redes, Configurações e Segredos da Aplicação
-Para garantir o correto funcionamento das integrações e dos recursos automatizados, a plataforma utiliza variáveis de ambiente e chaves de segurança protegidas no servidor.
+Para garantir o correto funcionamento das integrações e dos recursos automatizados, a plataforma utiliza variáveis de ambiente e chaves de segurança protegidas no servidor de forma segura.
 
-- `PAYMENT_API_KEY`: Chave de autenticação para o gateway de pagamento e recebimento seguro de comissões.
-- `MAILGUN_API_KEY`: Chave utilizada para o disparo automático de relatórios e notificações por e-mail aos afiliados.
-- `WHATSAPP_TOKEN`: Token de integração oficial para os recursos de envio e compartilhamento de mensagens via API do WhatsApp.
-- Mantenha sempre essas chaves em sigilo absoluto, nunca as expondo em repositórios públicos, redes sociais ou conversas de suporte.
+- Configure corretamente as credenciais de pagamento, e-mail e integração de mensagens nos parâmetros do servidor.
+- Mantenha sempre todas as chaves e tokens em sigilo absoluto, nunca os expondo em repositórios públicos, redes sociais ou conversas de suporte.
+- Siga as orientações técnicas da equipe de desenvolvimento para atualizar ou renovar as chaves de acesso periodicamente.
 
 ## 5. Boas Práticas e Uso do WhatsApp
 O WhatsApp é um dos principais canais de conversão para afiliados, mas deve ser utilizado com responsabilidade e dentro dos padrões aceitáveis para evitar restrições na sua conta pessoal ou comercial.
