@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ThemeContext } from '@/hooks/useTheme';
+import { ThemeContext, useTheme } from '@/hooks/useTheme';
 import Sidebar from '@/pages/cortex-app/components/Sidebar';
 import ChatArea from '@/pages/cortex-app/components/ChatArea';
 import PreviewPanel from '@/pages/cortex-app/components/PreviewPanel';
