@@ -26,6 +26,7 @@ export interface SetLog {
   nota?: string; // anotação para o coach
   porLado?: boolean; // carga de cada lado
   unilateral?: boolean; // um lado por vez
+  porTempo?: boolean; // prancha e isometria: reps = segundos
 }
 
 export interface PrevSet {

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { papelEContatos, papelGuardado } from './papelCoach';
+import { verComo } from './verComo';
 
 export type Papel = 'coach' | 'aluno' | 'nenhum';
 
@@ -7,6 +8,12 @@ export type Papel = 'coach' | 'aluno' | 'nenhum';
 // null = ainda descobrindo (primeira vez neste aparelho). ativo=false só lê o que já foi descoberto, sem chamar o servidor.
 export function usePapel(ativo = true): Papel | null {
   const [papel, setPapel] = useState<Papel | null>(() => papelGuardado());
+  const [comoAdmin, setComoAdmin] = useState(verComo);
+  useEffect(() => {
+    const mudou = () => setComoAdmin(verComo());
+    window.addEventListener('bc-ver-como', mudou);
+    return () => window.removeEventListener('bc-ver-como', mudou);
+  }, []);
   useEffect(() => {
     const salvo = (e: Event) => setPapel((e as CustomEvent<Papel>).detail);
     window.addEventListener('bc-papel-salvo', salvo);
@@ -20,5 +27,5 @@ export function usePapel(ativo = true): Papel | null {
     window.addEventListener('bc-papel', ler);
     return () => { vivo = false; window.removeEventListener('bc-papel', ler); };
   }, [ativo]);
-  return papel;
+  return comoAdmin ?? papel;
 }

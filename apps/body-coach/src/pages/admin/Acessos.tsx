@@ -6,6 +6,7 @@ import type { Conta } from './contas';
 import ResumoAcesso from './ResumoAcesso';
 import PedidosAcesso, { type Pedido } from './PedidosAcesso';
 import RegrasAcesso, { type Config } from './RegrasAcesso';
+import VerComo from './VerComo';
 
 
 // Só o admin do NEXIA: quem pagou (Pix), liberar dias e faixa do coach, contas de teste, dias grátis e receita do mês.
@@ -33,6 +34,7 @@ export default function Acessos() {
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <h1 className="font-heading text-2xl font-bold text-foreground-950">Acessos (admin)</h1>
+      <VerComo />
       <ResumoAcesso contas={dados.contas} receitaMes={dados.receitaMes} faixa={faixa} setFaixa={setFaixa} valor={valor} setValor={setValor} />
       {msg && <p role="status" className="rounded-lg bg-primary-50 p-2 text-sm text-primary-800">{msg}</p>}
       <PedidosAcesso pedidos={dados.pedidos} contas={dados.contas} liberar={(uid, d, c) => void liberar(uid, d, c)} />
