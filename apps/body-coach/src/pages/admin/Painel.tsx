@@ -38,35 +38,32 @@ export default function PainelAdmin() {
   const [promoMsg, setPromoMsg] = useState<string | null>(null);
   const [promoErro, setPromoErro] = useState<string | null>(null);
 
+  const invocarServerAction = async (nome: string, payload?: any) => {
+    const fn = (window as Record<string, any>)[nome];
+    if (typeof fn === "function") {
+      return await fn(payload);
+    }
+    throw new Error(`Ação do servidor '${nome}' indisponível no momento.`);
+  };
+
   const carregarDadosDono = async () => {
     setLoadingResumo(true);
     setLoadingCupons(true);
     setErroServidor(null);
 
-    // Testando dono_resumo
     try {
-      if ((window as any).dono_resumo) {
-        const res = await (window as any).dono_resumo();
-        setResumo(res);
-      } else {
-        // Tenta chamada global ou simula fallback gracioso se a action não existir no server
-        setResumo({ totalAlunos: 0, faturamentoMes: 0, ativosHoje: 0 });
-      }
+      const res = await invocarServerAction("dono_resumo");
+      setResumo(res);
     } catch (e: any) {
       console.warn("dono_resumo indisponível:", e);
-      setResumo({ erro: e?.message || "Ação dono_resumo indisponível" });
+      setResumo({ totalAlunos: 0, faturamentoMes: 0, ativosHoje: 0, erro: e?.message || "Ação dono_resumo indisponível" });
     } finally {
       setLoadingResumo(false);
     }
 
-    // Testando cupom_lista
     try {
-      if ((window as any).cupom_lista) {
-        const lista = await (window as any).cupom_lista();
-        setCupons(Array.isArray(lista) ? lista : []);
-      } else {
-        setCupons([]);
-      }
+      const lista = await invocarServerAction("cupom_lista");
+      setCupons(Array.isArray(lista) ? lista : []);
     } catch (e: any) {
       console.warn("cupom_lista indisponível:", e);
       setCupons([]);
@@ -84,16 +81,12 @@ export default function PainelAdmin() {
     setPresenteMsg(null);
     setPresenteErro(null);
     try {
-      if ((window as any).dono_presente) {
-        await (window as any).dono_presente({ uid: presenteUid, item: presenteItem });
-        setPresenteMsg("Presente enviado com sucesso!");
-        setPresenteUid("");
-        setPresenteItem("");
-      } else {
-        setPresenteErro("Ação server 'dono_presente' ainda não implementada no backend.");
-      }
+      await invocarServerAction("dono_presente", { uid: presenteUid, item: presenteItem });
+      setPresenteMsg("Presente enviado com sucesso!");
+      setPresenteUid("");
+      setPresenteItem("");
     } catch (err: any) {
-      setPresenteErro(err?.message || "Erro ao enviar presente.");
+      setPresenteErro(err?.message || "Ação server 'dono_presente' ainda não implementada no backend.");
     }
   };
 
@@ -102,17 +95,13 @@ export default function PainelAdmin() {
     setCupomMsg(null);
     setCupomErro(null);
     try {
-      if ((window as any).cupom_criar) {
-        await (window as any).cupom_criar({ codigo: cupomCodigo, desconto: Number(cupomDesconto) });
-        setCupomMsg("Cupom criado com sucesso!");
-        setCupomCodigo("");
-        setCupomDesconto("");
-        carregarDadosDono();
-      } else {
-        setCupomErro("Ação server 'cupom_criar' ainda não implementada no backend.");
-      }
+      await invocarServerAction("cupom_criar", { codigo: cupomCodigo, desconto: Number(cupomDesconto) });
+      setCupomMsg("Cupom criado com sucesso!");
+      setCupomCodigo("");
+      setCupomDesconto("");
+      carregarDadosDono();
     } catch (err: any) {
-      setCupomErro(err?.message || "Erro ao criar cupom.");
+      setCupomErro(err?.message || "Ação server 'cupom_criar' ainda não implementada no backend.");
     }
   };
 
@@ -121,16 +110,12 @@ export default function PainelAdmin() {
     setPromoMsg(null);
     setPromoErro(null);
     try {
-      if ((window as any).promo_salvar) {
-        await (window as any).promo_salvar({ titulo: promoTitulo, texto: promoTexto });
-        setPromoMsg("Promoção salva com sucesso!");
-        setPromoTitulo("");
-        setPromoTexto("");
-      } else {
-        setPromoErro("Ação server 'promo_salvar' ainda não implementada no backend.");
-      }
+      await invocarServerAction("promo_salvar", { titulo: promoTitulo, texto: promoTexto });
+      setPromoMsg("Promoção salva com sucesso!");
+      setPromoTitulo("");
+      setPromoTexto("");
     } catch (err: any) {
-      setPromoErro(err?.message || "Erro ao salvar promoção.");
+      setPromoErro(err?.message || "Ação server 'promo_salvar' ainda não implementada no backend.");
     }
   };
 
