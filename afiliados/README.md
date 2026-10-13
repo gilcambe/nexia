@@ -65,3 +65,5 @@ Você pode adaptar a plataforma facilmente para atender às suas necessidades de
  - **Notificações:** Defina a frequência e os canais de alerta para novas promoções e relatórios de comissões.
 
 Antes de executar qualquer script de configuração externo, certifique-se de inspecionar seu conteúdo para garantir a segurança e a integridade do seu ambiente. Verifique sempre o código-fonte do script antes de executá-lo em sua máquina.
+
+Baixe o script configurar-robo.bat e dê dois cliques para configurá-lo.
