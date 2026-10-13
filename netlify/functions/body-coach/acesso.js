@@ -18,6 +18,7 @@ async function configAcesso(db) {
     diasGratisCoach: Number(c.diasGratisCoach) > 0 ? Math.round(Number(c.diasGratisCoach)) : 30,
     isentos: [...SEMPRE_ISENTOS, ...(Array.isArray(c.isentos) ? c.isentos.map((e) => String(e).trim().toLowerCase()) : [])],
     pix: String(c.pix || ''),
+    promo: c.promo && Number(c.promo.pct) > 0 ? { pct: Number(c.promo.pct), ate: Number(c.promo.ate) || 0, texto: String(c.promo.texto || '') } : null,
   };
 }
 
@@ -115,7 +116,13 @@ async function registrarAparelho(db, uid, aparelho, agora = Date.now()) {
   }
   const hoje = diaBR(agora);
   const mergeData = { aparelhos: lista, removidos };
-  if (a.ultimoUso !== hoje) mergeData.ultimoUso = hoje;
+  if (a.ultimoUso !== hoje) {
+    mergeData.ultimoUso = hoje;
+    // uso do dia (gráfico do Painel do dono): cada conta conta uma vez por dia
+    const u = db.collection('bc_uso').doc(hoje);
+    const atual = (await u.get()).data?.() || {};
+    await u.set({ dia: hoje, ativos: (Number(atual.ativos) || 0) + 1 }, { merge: true });
+  }
   await ref.set(mergeData, { merge: true });
   return { sair: false };
 }
@@ -131,6 +138,16 @@ async function estaBloqueado(db, uid, ctx = {}, agora = Date.now()) {
 }
 const LIVRES = ['perfil', 'contatos', 'feedback_enviar', 'push_assinar', 'push_prefs'];
 
+// Cupom de desconto (bc_cupons/{CODIGO}): vale até validoAte e até maxUsos (0 = sem limite).
+const limparCodigo = (c) => String(c || '').trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
+async function cupomValido(db, codigo) {
+  const id = limparCodigo(codigo);
+  if (id.length < 3) return null;
+  const c = (await db.collection('bc_cupons').doc(id).get()).data?.();
+  if (!c || !(c.validoAte > Date.now()) || (c.maxUsos > 0 && (c.usos || 0) >= c.maxUsos)) return null;
+  return { ...c, codigo: id };
+}
+
 // Ações acesso_*: ver (todos), paguei (todos), lista/liberar/isento/config (só o admin).
 async function acoesAcesso(body, uid, db, ctx = {}, eu = null) {
   const acao = body.acao;
@@ -139,10 +156,17 @@ async function acoesAcesso(body, uid, db, ctx = {}, eu = null) {
     const ac = await acessoDe(db, uid, { ...ctx, coachUid, papel: eu && eu.papel });
     cache.delete(uid);
     const ap = ctx.master ? { sair: false } : await registrarAparelho(db, uid, body.aparelho);
-    return [200, { ...ac, ...ap, master: !!ctx.master || SEMPRE_ISENTOS.includes(String(ctx.email || '').toLowerCase()), papel: (eu && eu.papel) || 'nenhum' }];
+    const { promo } = await configAcesso(db);
+    return [200, { ...ac, ...ap, master: !!ctx.master || SEMPRE_ISENTOS.includes(String(ctx.email || '').toLowerCase()), papel: (eu && eu.papel) || 'nenhum', ...(promo && promo.ate > Date.now() ? { promo } : {}) }];
+  }
+  if (acao === 'cupom_ver') {
+    const c = await cupomValido(db, body.codigo);
+    return c ? [200, { pct: c.pct, codigo: c.codigo }] : [404, { error: 'Cupom inválido ou vencido.' }];
   }
   if (acao === 'acesso_paguei') {
-    await db.collection('bc_acesso_pedidos').add({ uid, email: String(ctx.email || ''), nome: (eu && eu.nome) || '', em: Date.now() });
+    const c = body.cupom ? await cupomValido(db, body.cupom) : null;
+    await db.collection('bc_acesso_pedidos').add({ uid, email: String(ctx.email || ''), nome: (eu && eu.nome) || '', em: Date.now(), ...(c ? { cupom: c.codigo, pct: c.pct } : {}) });
+    if (c) await db.collection('bc_cupons').doc(c.codigo).set({ usos: (c.usos || 0) + 1 }, { merge: true });
     return [200, { ok: true }];
   }
   if (acao === 'acesso_plano') {
@@ -158,6 +182,35 @@ async function acoesAcesso(body, uid, db, ctx = {}, eu = null) {
     return [200, { ...ac, alunos: alunos.length, cobertos: cobertos.length, faixas: FAIXAS }];
   }
   return acoesAdmin(body, db, ctx);
+}
+
+// Painel do dono: contas por tipo, pagantes, cadastros e uso por dia, receita por mês.
+async function resumoDono(db, col, agora = Date.now()) {
+  const contas = (await col.orderBy('inicio', 'desc').limit(3000).get()).docs.map((d) => d.data());
+  const dias = Array.from({ length: 30 }, (_, i) => diaBR(agora - (29 - i) * DIA));
+  const meses = [...new Set(Array.from({ length: 200 }, (_, i) => diaBR(agora - i * DIA).slice(0, 7)))].slice(0, 6).reverse();
+  const porTipo = { coach: 0, aluno: 0, independente: 0 };
+  const novos = Object.fromEntries(dias.map((d) => [d, 0]));
+  let pagantes = 0, emTeste = 0, vencendo7 = 0;
+  for (const c of contas) {
+    porTipo[c.tipo === 'coach' || c.tipo === 'aluno' ? c.tipo : 'independente'] += 1;
+    const pago = c.pagoAte > agora;
+    if (pago) { pagantes += 1; if (c.pagoAte < agora + 7 * DIA) vencendo7 += 1; }
+    else if (c.gratisAte > agora) emTeste += 1;
+    const d = c.inicio ? diaBR(c.inicio) : '';
+    if (d in novos) novos[d] += 1;
+  }
+  const [uso, pags] = await Promise.all([
+    Promise.all(dias.map((d) => db.collection('bc_uso').doc(d).get())),
+    Promise.all(meses.map((m) => db.collection('bc_acesso_pagamentos').where('mes', '==', m).limit(1000).get())),
+  ]);
+  const receitaPorMes = meses.map((mes, i) => ({ mes, valor: pags[i].docs.reduce((t, x) => t + (Number(x.data().valor) || 0), 0) }));
+  return {
+    total: contas.length, porTipo, pagantes, emTeste, vencendo7,
+    novosPorDia: dias.map((dia) => ({ dia, n: novos[dia] })),
+    ativosPorDia: dias.map((dia, i) => ({ dia, n: Number((uso[i].data?.() || {}).ativos) || 0 })),
+    receitaPorMes, receitaMes: receitaPorMes[receitaPorMes.length - 1].valor,
+  };
 }
 
 // Só o admin: lista de contas e receita, liberar dias (e faixa do coach), isentar e regras.
@@ -195,6 +248,40 @@ async function acoesAdmin(body, db, ctx) {
     await col.doc(alvo).set({ isento: body.isento === true }, { merge: true });
     cache.delete(alvo);
     return [200, { ok: true }];
+  }
+  if (acao === 'dono_presente') {
+    const email = String(body.email || '').trim().toLowerCase();
+    if (!email || !email.includes('@')) return [400, { error: 'E-mail inválido.' }];
+    const dias = Number(body.dias) > 0 ? Math.round(Number(body.dias)) : 30;
+    const snap = await col.where('email', '==', email).limit(1).get();
+    if (!snap.docs[0]) return [404, { error: 'Essa pessoa ainda não entrou no app.' }];
+    const uidAlvo = snap.docs[0].id;
+    const pagoAte = await liberarAcesso(db, uidAlvo, dias, Date.now(), { valor: 0 });
+    await col.doc(uidAlvo).set({ presente: true }, { merge: true });
+    cache.clear();
+    return [200, { ok: true, uid: uidAlvo, pagoAte }];
+  }
+  if (acao === 'dono_resumo') return [200, await resumoDono(db, col)];
+  if (acao === 'cupom_criar') {
+    const codigo = limparCodigo(body.codigo);
+    const pct = Math.round(Number(body.pct));
+    if (codigo.length < 3) return [400, { error: 'O código precisa de 3 a 20 letras ou números.' }];
+    if (!(pct >= 5 && pct <= 90)) return [400, { error: 'O desconto vai de 5% a 90%.' }];
+    const dias = Number(body.dias) > 0 ? Math.round(Number(body.dias)) : 30;
+    const cupom = { codigo, pct, validoAte: Date.now() + dias * DIA, maxUsos: Math.max(0, Math.round(Number(body.maxUsos) || 0)), usos: 0, criadoEm: Date.now() };
+    await db.collection('bc_cupons').doc(codigo).set(cupom);
+    return [200, { cupom }];
+  }
+  if (acao === 'cupom_lista') {
+    const snap = await db.collection('bc_cupons').orderBy('criadoEm', 'desc').limit(50).get();
+    return [200, { cupons: snap.docs.map((d) => d.data()) }];
+  }
+  if (acao === 'promo_salvar') {
+    const pct = Math.round(Number(body.pct) || 0);
+    if (pct && !(pct >= 5 && pct <= 90)) return [400, { error: 'O desconto vai de 5% a 90%.' }];
+    const promo = pct ? { pct, ate: Number(body.ate) || Date.now() + 7 * DIA, texto: String(body.texto || '').slice(0, 120) } : null;
+    await db.collection('bc_config').doc('acesso').set({ promo }, { merge: true });
+    return [200, { promo }];
   }
   if (acao === 'acesso_config') {
     const atual = await configAcesso(db);
