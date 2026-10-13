@@ -17,17 +17,19 @@ export default function CortexPage() {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
   };
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      <div className={cn(
-        "min-h-screen flex flex-col md:flex-row transition-colors duration-200",
-        theme === 'dark' ? 'bg-[#0a0a0f] text-white' : 'bg-gray-50 text-gray-900'
-      )}>
+      <div
+        className={cn(
+          'min-h-screen flex flex-col md:flex-row transition-colors duration-200 w-full',
+          theme === 'dark' ? 'bg-[#0a0a0f] text-white' : 'bg-gray-50 text-gray-900'
+        )}
+      >
         <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-screen">
+        <main className="flex-1 flex flex-col md:flex-row overflow-hidden min-h-screen relative">
           <ChatArea onTogglePreview={() => setPreviewOpen(!previewOpen)} previewOpen={previewOpen} />
           <PreviewPanel isOpen={previewOpen} onClose={() => setPreviewOpen(false)} />
         </main>
@@ -35,3 +37,4 @@ export default function CortexPage() {
     </ThemeContext.Provider>
   );
 }
+
