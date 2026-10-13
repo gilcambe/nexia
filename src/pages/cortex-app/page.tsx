@@ -4,6 +4,16 @@ import Sidebar from '@/pages/cortex-app/components/Sidebar';
 import ChatArea from '@/pages/cortex-app/components/ChatArea';
 import PreviewPanel from '@/pages/cortex-app/components/PreviewPanel';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  text: string;
+  model?: string;
+  streaming?: boolean;
+  imagem?: string;
+}
 
 export default function CortexPage() {
   const navigate = useNavigate();
