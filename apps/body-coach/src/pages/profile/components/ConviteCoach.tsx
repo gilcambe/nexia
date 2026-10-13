@@ -4,6 +4,7 @@ import Card from '@/components/base/Card';
 import { useAuth } from '@/components/feature/AuthContext';
 import { chatApi, type Contato } from '@/lib/chat';
 import { esquecerPapel } from '@/lib/papelCoach';
+import { esquecerPapel } from '@/lib/papelCoach';
 
 // Perfil do coach: link próprio para convidar alunos. Cada aluno que abre o link entra na equipe deste coach.
 export default function ConviteCoach() {
