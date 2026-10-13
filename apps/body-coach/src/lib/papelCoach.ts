@@ -13,7 +13,7 @@ function guardarPapel(p: Papel | null) {
   if (p) window.dispatchEvent(new CustomEvent('bc-papel-salvo', { detail: p }));
 }
 
-let papelConhecido: 'coach' | 'aluno' | 'nenhum' | undefined;
+
 let contatosConhecidos: Contato[] = [];
 let papelPromessa: Promise<void> | undefined;
 function descobrirPapel() {
