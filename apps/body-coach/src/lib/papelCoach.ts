@@ -3,7 +3,18 @@
 import { chatApi, type Contato } from './chat';
 import { aplicarMarca, type Marca } from './coach/profissionais';
 
-let papelConhecido: 'coach' | 'aluno' | 'nenhum' | undefined;
+type Papel = 'coach' | 'aluno' | 'nenhum';
+// Guardado no aparelho: o menu certo aparece na hora, mesmo antes da resposta ou sem internet.
+export function papelGuardado(): Papel | null {
+  try {
+    const p = localStorage.getItem('bc_papel');
+    if (p === 'coach' || p === 'aluno' || p === 'nenhum') return p;
+    return null;
+  } catch {
+    return null;
+  }
+}
+let papelConhecido: Papel | undefined;
 let contatosConhecidos: Contato[] = [];
 let papelPromessa: Promise<void> | undefined;
 function descobrirPapel() {
