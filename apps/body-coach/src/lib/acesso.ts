@@ -15,6 +15,7 @@ export interface Acesso {
   sair: boolean;
   master: boolean;
   papel: 'coach' | 'aluno' | 'nenhum';
+  promo?: { pct: number; ate: number; texto: string }; // promoção do dono no ar
 }
 
 // Número deste aparelho (uma conta pode ficar aberta em no máximo 2 aparelhos).
@@ -27,7 +28,10 @@ function aparelhoId(): string {
 }
 
 export const verAcesso = () => chatApi<Acesso>({ acao: 'acesso_ver', aparelho: aparelhoId() });
-export const avisarQuePaguei = () => chatApi<{ ok: boolean }>({ acao: 'acesso_paguei' });
+export const avisarQuePaguei = (cupom = '') => chatApi<{ ok: boolean }>({ acao: 'acesso_paguei', ...(cupom ? { cupom } : {}) });
+export const verCupom = (codigo: string) => chatApi<{ pct: number; codigo: string }>({ acao: 'cupom_ver', codigo });
+// Preço do Premium com desconto (promoção ou cupom; vale o maior, não somam).
+export const comDesconto = (valor: number, pct: number) => `R$ ${(valor * (1 - pct / 100)).toFixed(2).replace('.', ',')}`;
 export const dataCurta = (t: number) => new Date(t).toLocaleDateString('pt-BR');
 
 // Telas do Premium: sem Premium (bloqueado) elas mostram como assinar; o resto do app continua grátis.

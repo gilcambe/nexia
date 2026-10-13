@@ -108,3 +108,43 @@ test('acesso: dono_presente libera plano e marca presente: true se existe, ou 40
   assert.equal(db.dados['bc_acesso']['user123'].presente, true);
   assert.ok(db.dados['bc_acesso']['user123'].pagoAte > Date.now());
 });
+
+test('painel do dono: resumo, uso diário, cupom e promoção', async () => {
+  const db = fakeDb();
+  const agora = Date.now();
+  db.dados.bc_acesso = {
+    c1: { tipo: 'coach', inicio: agora, pagoAte: agora + 3 * DIA },
+    i1: { tipo: 'independente', inicio: agora, gratisAte: agora + 10 * DIA },
+    a1: { tipo: 'aluno', inicio: agora },
+  };
+  const mes = new Date(agora - 3 * 3600000).toISOString().slice(0, 7);
+  db.dados.bc_acesso_pagamentos = { p: { mes, valor: 19.9 } };
+  await acoesAcesso({ acao: 'acesso_ver', aparelho: 'x1' }, 'i1', db, {});
+  await acoesAcesso({ acao: 'acesso_ver', aparelho: 'x1' }, 'i1', db, {});
+  await acoesAcesso({ acao: 'acesso_ver', aparelho: 'x2' }, 'novo', db, {}); // conta nova: independente em teste
+  const [st, r] = await acoesAcesso({ acao: 'dono_resumo' }, 'adm', db, { master: true });
+  assert.equal(st, 200);
+  assert.equal(r.total, 4);
+  assert.deepEqual(r.porTipo, { coach: 1, aluno: 1, independente: 2 });
+  assert.equal(r.pagantes, 1);
+  assert.equal(r.emTeste, 2);
+  assert.equal(r.vencendo7, 1);
+  assert.equal(r.receitaMes, 19.9);
+  assert.equal(r.ativosPorDia[29].n, 2);
+  assert.equal((await acoesAcesso({ acao: 'dono_resumo' }, 'i1', db, {}))[0], 403);
+
+  assert.equal((await acoesAcesso({ acao: 'cupom_criar', codigo: 'volta20', pct: 20, dias: 10, maxUsos: 1 }, 'adm', db, { master: true }))[0], 200);
+  assert.equal((await acoesAcesso({ acao: 'cupom_criar', codigo: 'x', pct: 20 }, 'i1', db, {}))[0], 403);
+  const [stc, c] = await acoesAcesso({ acao: 'cupom_ver', codigo: 'VOLTA20' }, 'i1', db, {});
+  assert.equal(stc, 200);
+  assert.equal(c.pct, 20);
+  await acoesAcesso({ acao: 'acesso_paguei', cupom: 'volta20' }, 'i1', db, { email: 'i@x.com' });
+  assert.equal((await acoesAcesso({ acao: 'cupom_ver', codigo: 'VOLTA20' }, 'i1', db, {}))[0], 404); // 1 uso só
+  assert.equal((await acoesAcesso({ acao: 'cupom_ver', codigo: 'NADA' }, 'i1', db, {}))[0], 404);
+
+  await acoesAcesso({ acao: 'promo_salvar', pct: 30, ate: agora + DIA, texto: 'Semana fit' }, 'adm', db, { master: true });
+  const [, ver] = await acoesAcesso({ acao: 'acesso_ver', aparelho: 'x1' }, 'i1', db, {});
+  assert.equal(ver.promo.pct, 30);
+  await acoesAcesso({ acao: 'promo_salvar', pct: 0 }, 'adm', db, { master: true });
+  assert.equal((await acoesAcesso({ acao: 'acesso_ver', aparelho: 'x1' }, 'i1', db, {}))[1].promo, undefined);
+});
