@@ -49,6 +49,16 @@ function getCorsOrigin(reqHeaders) {
 // ─── RATE LIMITER ─────────────────────────────────────────────────
 const RATE_STORE  = new Map();
 const RATE_LIMITS = { free: 50, starter: 500, pro: 99999, enterprise: 99999 };
+// Validacao de consistencia de PR do Cortex
+function validateCortexConsistency(issueBody, changedFiles) {
+  if (!issueBody) return true;
+  const matches = issueBody.match(/`([^`]+)`/g);
+  if (!matches || matches.length === 0) return true;
+  const requestedFiles = matches.map(m => m.replace(/`/g, '').trim()).filter(f => f.includes('/') || f.includes('.'));
+  if (requestedFiles.length === 0) return true;
+  return requestedFiles.some(f => changedFiles.includes(f));
+}
+
 function checkRateLimit(uid, plan) {
   const now = Date.now(), monthKey = new Date().toISOString().slice(0, 7);
   const key = `${uid}:${monthKey}`;
