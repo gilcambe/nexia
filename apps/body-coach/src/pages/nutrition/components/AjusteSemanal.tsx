@@ -8,7 +8,7 @@ import { sugerirAjuste } from '@/lib/metas';
 // Dieta adaptativa: a balança da semana decide se as calorias sobem, descem ou ficam.
 export default function AjusteSemanal() {
   const { user, profile, refreshProfile } = useAuth();
-  const { entries } = useProgressData();
+  const { entries } = useProgressData(user?.id);
   const [salvando, setSalvando] = useState(false);
   const [feito, setFeito] = useState('');
   const goal = (profile as unknown as { onboarding?: { goal?: string } } | null)?.onboarding?.goal;
