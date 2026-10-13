@@ -7,6 +7,7 @@
 const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware');
 const { getRouter } = require('../../nexia-ai/model-router');
 const { listFor } = require('../../nexia-ai/orchestrator/models');
+const { estaBloqueado } = require('./body-coach/acesso');
 
 const COMUM = ' Responda em português do Brasil como numa conversa de WhatsApp com UMA pessoa que você conhece: calorosa, natural e curta (1 a 3 frases na maioria das respostas; só passe disso se a pessoa pedir um plano ou uma explicação). Responda ao que a pessoa acabou de dizer, levando em conta as mensagens anteriores da conversa; nunca repita o que já foi dito e nunca despeje dicas, números ou listas que ninguém pediu. Se a pessoa só cumprimentar ("oi", "olá", "bom dia"), cumprimente de volta pelo apelido e pergunte UMA coisa simples sobre o dia dela (como dormiu, como está de energia ou se vai treinar hoje), usando o contexto só se ajudar. Se o contexto trouxer "apelido", chame a pessoa por ele. Use os dados do contexto só quando forem relevantes ao que foi perguntado e sem inventar nada que não esteja nele. Quando der conselho, personalize ao objetivo, às modalidades, ao nível e às limitações: quem corre recebe dicas de corrida, quem luta, de luta, quem nada, de natação; cadeirante nunca recebe exercício em pé, perna em pé nem esteira; respeite lesões e condições. Se a pessoa disser que está cansada, com sono ou desanimada, mostre que entendeu (ex.: "poxa, entendo") e sugira algo leve ou pergunte como ela dormiu; nunca comemore o cansaço. Não repita a mesma pergunta que já foi feita. Faça no máximo uma pergunta por mensagem. Não use listas nem títulos.';
 const PAPEIS = {
@@ -28,6 +29,16 @@ exports.handler = async (event) => {
   if (!auth.ok) return resposta(event, 401, { error: 'Entre na sua conta para falar com a equipe.' });
   const rl = await checkRateLimit(auth.uid, 'body-coach-ai');
   if (!rl.ok) return resposta(event, 429, { error: 'Muitas mensagens seguidas. Aguarde um instante.' });
+  // Período grátis acabou e não pagou: a IA também fica bloqueada (o bloqueio é no servidor, não só na tela).
+  try {
+    const { db } = require('./firebase-init');
+    if (db) {
+      const eu = (await db.collection('bc_diretorio').doc(auth.uid).get()).data?.() || {};
+      if (await estaBloqueado(db, auth.uid, { master: auth.role === 'master', email: auth.email, papel: eu.papel, coachUid: eu.papel === 'aluno' ? eu.coachUid || '' : '' })) {
+        return resposta(event, 402, { error: 'Seu período grátis acabou. Pague para continuar usando o app.', bloqueado: true });
+      }
+    }
+  } catch { /* banco fora do ar: não bloqueia */ }
 
   let body;
   try { body = JSON.parse(event.body || '{}'); } catch { return resposta(event, 400, { error: 'Pedido inválido.' }); }

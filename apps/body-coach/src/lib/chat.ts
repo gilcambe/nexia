@@ -20,6 +20,7 @@ export async function chatApi<T>(corpo: Record<string, unknown>): Promise<T> {
       signal: ctrl.signal,
     });
     const data = (await res.json().catch(() => ({}))) as T & { error?: string };
+    if (res.status === 402) window.dispatchEvent(new Event('bc-bloqueado')); // período grátis acabou: a tela de pagamento aparece
     if (!res.ok) throw new Error(data.error || 'Não consegui conversar agora.');
     return data;
   } catch (e) {

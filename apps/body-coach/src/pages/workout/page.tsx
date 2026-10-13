@@ -245,6 +245,8 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
       completed: true,
       ...(newSet.falha ? { falha: true } : {}),
       ...(newSet.nota ? { nota: newSet.nota } : {}),
+      ...(newSet.porLado ? { porLado: true } : {}),
+      ...(newSet.unilateral ? { unilateral: true } : {}),
     };
     setSetsByEx((v) => ({ ...v, [exercise.id]: [...prev, setLog] }));
     startRest(exercise.restSec);
@@ -426,7 +428,7 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
                         Série
                       </span>
                       <span className="text-right text-base font-semibold text-foreground-950">
-                        {s.weight}{exercise.weightUnit === 'kg/lado' ? ' kg/lado' : ' kg'} × {s.reps}
+                        {s.weight}{s.porLado || exercise.weightUnit === 'kg/lado' ? ' kg cada lado' : ' kg'} × {s.reps}{s.unilateral ? ' (unilateral)' : ''}
                         <span className="ml-2 text-sm font-normal text-foreground-500">{s.falha ? 'falha' : `RIR ${s.rir}`}</span>
                         {s.nota && <span className="block text-sm font-normal text-primary-700"><i className="ri-sticky-note-line mr-0.5"></i>{s.nota}</span>}
                       </span>
@@ -479,9 +481,11 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
             {/* registrar série */}
             <div className="mt-4 border-t border-background-200 pt-4">
               <SetEntry
+                key={exercise.id}
                 minWeight={exercise.minWeight}
                 maxWeight={exercise.maxWeight}
                 weightUnit={exercise.weightUnit}
+                exercicio={exercise.name}
                 targetReps={exercise.targetReps}
                 sugestao={exercise.sets.length === 0 ? sugerirCarga(historicoSeries[exercise.name], exercise.targetReps) : null}
                 ultima={(() => { const l = currentSets[currentSets.length - 1] ?? exercise.sets[exercise.sets.length - 1]; return l ? { weight: l.weight, reps: l.reps } : null; })()}
@@ -722,7 +726,7 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
           });
 
           // Séries com "até a falha" ou nota: vão no treino salvo e na conversa com o coach.
-          const notasSeries = session.exercises.flatMap((e) => (setsByEx[e.id] ?? []).filter((x) => x.falha || x.nota).map((x) => ({ ex: e.name, serie: x.set, falha: !!x.falha, nota: x.nota ?? '', carga: x.weight, reps: x.reps })));
+          const notasSeries = session.exercises.flatMap((e) => (setsByEx[e.id] ?? []).filter((x) => x.falha || x.nota).map((x) => ({ ex: e.name, serie: x.set, falha: !!x.falha, nota: x.nota ?? '', carga: x.porLado ? `${x.weight}/lado` : x.weight, reps: x.reps })));
           // O que foi feito no intervalo também vai para o coach.
           const notas = [...notasSeries, ...extras.map(notaDoExtra)];
           const handleFinishSession = async () => {

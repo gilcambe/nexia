@@ -8,9 +8,11 @@ import CoachPanel from './CoachPanel';
 import InstallButton from './InstallButton';
 import { setUserDoc } from '@/lib/userData';
 import { codigoIndicacao } from '@/lib/ferramentas/cartao';
-import { papelEContatos } from '@/lib/papelCoach';
+import { usePapel } from '@/lib/usePapel';
 import { enviarPendentes } from '@/lib/pendentes';
 import { marcaGuardada, type Marca } from '@/lib/coach/profissionais';
+import PortaoAcesso from './PortaoAcesso';
+import TourGuiado from './TourGuiado';
 
 // Menu enxuto: só as telas principais. As outras (Respirar, Equipe, Exames, Anti-Doping...) ficam em Ferramentas.
 const navItems = [
@@ -22,6 +24,27 @@ const navItems = [
   { to: '/feed', label: 'Feed da equipe', icon: 'ri-group-line' },
   { to: '/ferramentas', label: 'Ferramentas', icon: 'ri-apps-2-line' },
   { to: '/avisos', label: 'Avisos no celular', icon: 'ri-notification-3-line' },
+  { to: '/guia', label: 'Guia do app', icon: 'ri-book-open-line' },
+  { to: '/profile', label: 'Perfil', icon: 'ri-user-3-line' },
+];
+
+// Menu do coach/personal: só as funções de quem cuida dos alunos.
+const coachItems = [
+  { to: '/coach/alunos', label: 'Meus alunos', icon: 'ri-team-line' },
+  { to: '/chat', label: 'Conversa', icon: 'ri-chat-3-line' },
+  { to: '/coach/evolucao', label: 'Evolução dos alunos', icon: 'ri-line-chart-line' },
+  { to: '/coach/modelos', label: 'Modelos de ficha e dieta', icon: 'ri-file-copy-2-line' },
+  { to: '/coach/anamnese', label: 'Anamnese', icon: 'ri-questionnaire-line' },
+  { to: '/coach/demonstracoes', label: 'Vídeos de execução', icon: 'ri-video-add-line' },
+  { to: '/coach/convites', label: 'Convidar alunos', icon: 'ri-user-add-line' },
+  { to: '/feed', label: 'Feed da equipe', icon: 'ri-group-line' },
+  { to: '/coach/financeiro', label: 'Financeiro', icon: 'ri-money-dollar-circle-line' },
+  { to: '/ferramentas/mensalidade', label: 'Mensalidade por Pix', icon: 'ri-qr-code-line' },
+  { to: '/coach/programas', label: 'Programas à venda', icon: 'ri-store-2-line' },
+  { to: '/coach/marca', label: 'Minha marca', icon: 'ri-palette-line' },
+  { to: '/coach/plano', label: 'Meu plano', icon: 'ri-vip-crown-line' },
+  { to: '/avisos', label: 'Avisos no celular', icon: 'ri-notification-3-line' },
+  { to: '/guia', label: 'Guia do app', icon: 'ri-book-open-line' },
   { to: '/profile', label: 'Perfil', icon: 'ri-user-3-line' },
 ];
 
@@ -89,6 +112,7 @@ function BrandMark({ size = 'md' }: { size?: 'md' | 'sm' }) {
 
 function CoachFab() {
   const { setOpen, unread } = useCoach();
+  if (usePapel(false) === 'coach') return null;
   return (
     <button
       onClick={() => setOpen(true)}
@@ -109,8 +133,24 @@ function CoachFab() {
 function BottomTabs({ onMore }: { onMore: () => void }) {
   const { setOpen, unread } = useCoach();
   const navigate = useNavigate();
+  const papel = usePapel(false);
   const tab = ({ isActive }: { isActive: boolean }) =>
     `flex min-w-0 flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium transition active:scale-95 ${isActive ? 'text-primary-600' : 'text-foreground-500'}`;
+  if (papel === 'coach') {
+    return (
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-background-200 bg-background-50/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden" aria-label="Navegação principal">
+        <div className="mx-auto flex max-w-md items-end px-1">
+          <NavLink to="/coach/alunos" className={tab}><i className="ri-team-line text-xl"></i>Alunos</NavLink>
+          <NavLink to="/chat" className={tab}><i className="ri-chat-3-line text-xl"></i>Conversa</NavLink>
+          <NavLink to="/coach/evolucao" className={tab}><i className="ri-line-chart-line text-xl"></i>Evolução</NavLink>
+          <NavLink to="/coach/financeiro" className={tab}><i className="ri-money-dollar-circle-line text-xl"></i>Financeiro</NavLink>
+          <button onClick={onMore} className="flex flex-1 flex-col items-center gap-0.5 py-2 text-xs font-medium text-foreground-500 active:scale-95" aria-label="Mais opções">
+            <i className="ri-menu-line text-xl"></i>Mais
+          </button>
+        </div>
+      </nav>
+    );
+  }
   return (
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-background-200 bg-background-50/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden" aria-label="Navegação principal">
       <div className="mx-auto flex max-w-md items-end px-1">
@@ -139,12 +179,15 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { profile, user, signOut, isLocalDemo } = useAuth();
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Atleta';
-  // Coach ganha o atalho "Meus alunos" no menu (o papel é descoberto uma vez por abertura do app).
-  const [papel, setPapel] = useState<'coach' | 'aluno' | 'nenhum'>('nenhum');
-  useEffect(() => { if (user) void papelEContatos().then((r) => setPapel(r.papel)); }, [user]);
-  const itens = papel === 'coach'
-    ? [navItems[0], { to: '/coach/alunos', label: 'Meus alunos', icon: 'ri-team-line' }, ...navItems.slice(1)]
-    : papel === 'aluno' ? [...navItems.slice(0, 5), { to: '/equipe', label: 'Minha equipe', icon: 'ri-user-heart-line' }, ...navItems.slice(5)] : navItems;
+  // Coach vê só o menu de coach; aluno ganha "Minha equipe" (o papel fica guardado no aparelho).
+  const papel = usePapel(!!user);
+  const ehCoach = papel === 'coach';
+  const itens = ehCoach
+    ? coachItems
+    : papel === 'aluno' ? [...navItems.slice(0, 5), { to: '/equipe', label: 'Minha equipe', icon: 'ri-user-heart-line' }, ...navItems.slice(5)]
+    // Sem coach (treina sozinho): sem Conversa e Feed da equipe; um atalho para quem quiser entrar na equipe de um personal.
+    : [...navItems.filter((i) => i.to !== '/chat' && i.to !== '/feed'), { to: '/acesso', label: 'Minha assinatura', icon: 'ri-vip-crown-line' }, { to: '/chat', label: 'Tenho um personal', icon: 'ri-user-star-line' }]
+  const comAdmin = user?.email?.toLowerCase() === 'gcbezerra@gmail.com' ? [...itens, { to: '/admin/acessos', label: 'Acessos (admin)', icon: 'ri-shield-user-line' }] : itens;
 
   const handleSignOut = async () => {
     await signOut();
@@ -158,7 +201,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
       </div>
 
       <nav className="flex-1 px-3 space-y-1">
-        {itens.map((item) => (
+        {comAdmin.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
@@ -177,7 +220,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           </NavLink>
         ))}
 
-        <button
+        {!ehCoach && <button
           onClick={() => {
             navigate('/workout');
             onNavigate?.();
@@ -186,17 +229,17 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
         >
           <i className="ri-play-circle-line text-lg"></i>
           Iniciar treino
-        </button>
+        </button>}
 
         <InstallButton />
 
-        <button
+{!ehCoach && <button
           onClick={() => setOpen(true)}
           className="mt-1 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground-600 transition hover:bg-background-100"
         >
           <i className="ri-mic-line text-lg"></i>
           Falar com o Coach
-        </button>
+        </button>}
 
         <FeedbackLink onNavigate={onNavigate} />
       </nav>
@@ -309,13 +352,14 @@ function Shell() {
       {/* main */}
       <main className="min-h-screen min-w-0 break-words lg:pl-60">
         <div className="mx-auto max-w-6xl px-4 pb-28 pt-6 md:px-6 md:py-8 lg:pb-8">
-          <Outlet />
+          <PortaoAcesso><Outlet /></PortaoAcesso>
         </div>
       </main>
 
       <CoachFab />
       <BottomTabs onMore={() => setMobileOpen(true)} />
       <CoachPanel />
+      <TourGuiado />
     </div>
   );
 }

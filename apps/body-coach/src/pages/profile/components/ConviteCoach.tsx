@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Card from '@/components/base/Card';
 import { useAuth } from '@/components/feature/AuthContext';
 import { chatApi, type Contato } from '@/lib/chat';
+import { esquecerPapel } from '@/lib/papelCoach';
 
 // Perfil do coach: link próprio para convidar alunos. Cada aluno que abre o link entra na equipe deste coach.
 export default function ConviteCoach() {
@@ -18,7 +19,7 @@ export default function ConviteCoach() {
 
   const virarCoach = async () => {
     setMsg('');
-    try { await chatApi({ acao: 'perfil', papel: 'coach', nome: profile?.nickname || profile?.full_name || user?.email?.split('@')[0] || 'Coach', foto: profile?.photo_data ?? '' }); await carregar(); }
+    try { await chatApi({ acao: 'perfil', papel: 'coach', nome: profile?.nickname || profile?.full_name || user?.email?.split('@')[0] || 'Coach', foto: profile?.photo_data ?? '' }); esquecerPapel(); await carregar(); }
     catch (e) { setMsg((e as Error).message); }
   };
 

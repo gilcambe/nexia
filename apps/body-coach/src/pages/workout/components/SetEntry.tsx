@@ -6,6 +6,15 @@ export interface NewSet {
   rir: number;
   falha?: boolean;
   nota?: string;
+  porLado?: boolean; // a carga é de cada lado (ex.: 40 kg em cada halter)
+  unilateral?: boolean; // feito um lado por vez
+}
+
+// Lembra, por exercício, se a carga é de cada lado e se é unilateral (a próxima série já vem marcada).
+const chaveModo = (ex: string) => `bc_carga_modo_${ex}`;
+function modoSalvo(ex: string, padraoLado: boolean) {
+  try { const m = JSON.parse(localStorage.getItem(chaveModo(ex)) || 'null'); if (m) return { porLado: !!m.porLado, unilateral: !!m.unilateral }; } catch { /* sem armazenamento */ }
+  return { porLado: padraoLado, unilateral: /unilateral/i.test(ex) };
 }
 
 // "Quantas repetições ainda dava?" no lugar do número RIR: 0 = foi até a falha.
@@ -23,6 +32,7 @@ export default function SetEntry({
   targetReps,
   ultima,
   sugestao,
+  exercicio = '',
   onSubmit,
 }: {
   minWeight: number;
@@ -31,8 +41,12 @@ export default function SetEntry({
   targetReps: string;
   ultima?: { weight: number; reps: number } | null;
   sugestao?: { weight: number; reps: number; motivo: string } | null;
+  exercicio?: string;
   onSubmit: (set: NewSet) => void;
 }) {
+  const [modo, setModo] = useState(() => modoSalvo(exercicio, weightUnit === 'kg/lado'));
+  const mudarModo = (m: { porLado: boolean; unilateral: boolean }) => { setModo(m); try { localStorage.setItem(chaveModo(exercicio), JSON.stringify(m)); } catch { /* sem armazenamento */ } };
+  const unidade = weightUnit === 'kg/lado' ? 'kg' : weightUnit;
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
   const [rir, setRir] = useState(2);
@@ -45,7 +59,7 @@ export default function SetEntry({
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    onSubmit({ weight: Number(weight), reps: Number(reps), rir, falha: rir === 0, nota: nota.trim() || undefined });
+    onSubmit({ weight: Number(weight), reps: Number(reps), rir, falha: rir === 0, nota: nota.trim() || undefined, ...modo });
     limpar();
   };
 
@@ -67,14 +81,20 @@ export default function SetEntry({
         </div>
       )}
       {ultima && (
-        <button type="button" onClick={() => { onSubmit({ weight: ultima.weight, reps: ultima.reps, rir, falha: rir === 0, nota: nota.trim() || undefined }); limpar(); }} className="mb-3 w-full rounded-2xl bg-primary-100 px-4 py-3 text-base font-bold text-primary-800 active:scale-[0.98]" data-testid="repetir-serie">
-          <i className="ri-repeat-line mr-1"></i>Repetir: {ultima.weight} {weightUnit} × {ultima.reps}
+        <button type="button" onClick={() => { onSubmit({ weight: ultima.weight, reps: ultima.reps, rir, falha: rir === 0, nota: nota.trim() || undefined, ...modo }); limpar(); }} className="mb-3 w-full rounded-2xl bg-primary-100 px-4 py-3 text-base font-bold text-primary-800 active:scale-[0.98]" data-testid="repetir-serie">
+          <i className="ri-repeat-line mr-1"></i>Repetir: {ultima.weight} {unidade}{modo.porLado ? ' cada lado' : ''} × {ultima.reps}
         </button>
       )}
       <form onSubmit={submit}>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <label className="block">
-            <span className="text-sm font-semibold text-foreground-600">Carga ({weightUnit})</span>
+            <span className="flex flex-wrap items-center justify-between gap-2">
+              <span className="text-sm font-semibold text-foreground-600">Carga ({unidade}){modo.porLado ? ' de cada lado' : ''}</span>
+              <span className="flex gap-1.5">
+                <button type="button" onClick={() => mudarModo({ ...modo, porLado: !modo.porLado })} aria-pressed={modo.porLado} data-testid="carga-lado" className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${modo.porLado ? 'border-primary-500 bg-primary-100 text-primary-800' : 'border-background-300 text-foreground-600'}`}>{modo.porLado ? 'Cada lado' : 'Total'}</button>
+                <button type="button" onClick={() => mudarModo({ ...modo, unilateral: !modo.unilateral })} aria-pressed={modo.unilateral} data-testid="carga-unilateral" className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${modo.unilateral ? 'border-primary-500 bg-primary-100 text-primary-800' : 'border-background-300 text-foreground-600'}`}>{modo.unilateral ? 'Unilateral' : 'Bilateral'}</button>
+              </span>
+            </span>
             <span className="mt-1 flex items-center gap-1.5">
               <button type="button" onClick={() => ajustar('weight', -2.5)} className={mais} aria-label="Menos 2,5 de carga">−</button>
               <input type="number" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder={ultima ? String(ultima.weight) : `${minWeight}–${maxWeight}`} aria-label={`Carga (${weightUnit})`} className={campo} />

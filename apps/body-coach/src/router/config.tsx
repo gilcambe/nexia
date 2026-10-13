@@ -2,6 +2,7 @@ import type { RouteObject } from "react-router-dom";
 import NotFound from "../pages/NotFound";
 import AppShell from "../components/feature/AppShell";
 import AuthGuard from "../components/feature/AuthGuard";
+import SoPapel from "../components/feature/SoPapel";
 import Home from "../pages/home/page";
 import Auth from "../pages/auth/page";
 import { carregar } from "./carregar";
@@ -43,7 +44,12 @@ const Equipe = carregar(() => import("../pages/equipe/page"));
 const Convites = carregar(() => import("../pages/coach/Convites"));
 const MarcaCoach = carregar(() => import("../pages/coach/Marca"));
 const Ferramentas = carregar(() => import("../pages/ferramentas/page"));
+const MeuAcesso = carregar(() => import("../pages/acesso/page"));
+const AcessosAdmin = carregar(() => import("../pages/admin/Acessos"));
+const Guia = carregar(() => import("../pages/guia/page"));
+const MeuPlano = carregar(() => import("../pages/coach/MeuPlano"));
 
+// SoPapel: telas só do coach e telas só do aluno (o coach não vê as do aluno e vice-versa).
 const routes: RouteObject[] = [
   {
     path: "/auth",
@@ -97,36 +103,40 @@ const routes: RouteObject[] = [
       </AuthGuard>
     ),
     children: [
-      { index: true, element: <Home /> },
-      { path: "workout", element: <Workout /> },
-      { path: "nutrition", element: <Nutrition /> },
-      { path: "evolution", element: <Evolution /> },
-      { path: "plan", element: <Plan /> },
+      { index: true, element: <SoPapel papel="aluno"><Home /></SoPapel> },
+      { path: "workout", element: <SoPapel papel="aluno"><Workout /></SoPapel> },
+      { path: "nutrition", element: <SoPapel papel="aluno"><Nutrition /></SoPapel> },
+      { path: "evolution", element: <SoPapel papel="aluno"><Evolution /></SoPapel> },
+      { path: "plan", element: <SoPapel papel="aluno"><Plan /></SoPapel> },
       { path: "profile", element: <Profile /> },
-      { path: "team", element: <Team /> },
+      { path: "team", element: <SoPapel papel="aluno"><Team /></SoPapel> },
       { path: "chat", element: <Chat /> },
-      { path: "coach/alunos", element: <MeusAlunos /> },
-      { path: "coach/alunos/:uid", element: <AlunoPlano /> },
-      { path: "coach/anamnese", element: <AnamneseCoach /> },
-      { path: "coach/modelos", element: <Modelos /> },
-      { path: "coach/convites", element: <Convites /> },
-      { path: "coach/marca", element: <MarcaCoach /> },
-      { path: "equipe", element: <Equipe /> },
-      { path: "coach/modelos/:id", element: <ModeloEditar /> },
-      { path: "anamnese", element: <Anamnese /> },
+      { path: "coach/alunos", element: <SoPapel papel="coach"><MeusAlunos /></SoPapel> },
+      { path: "coach/alunos/:uid", element: <SoPapel papel="coach"><AlunoPlano /></SoPapel> },
+      { path: "coach/anamnese", element: <SoPapel papel="coach"><AnamneseCoach /></SoPapel> },
+      { path: "coach/modelos", element: <SoPapel papel="coach"><Modelos /></SoPapel> },
+      { path: "coach/convites", element: <SoPapel papel="coach"><Convites /></SoPapel> },
+      { path: "coach/marca", element: <SoPapel papel="coach"><MarcaCoach /></SoPapel> },
+      { path: "equipe", element: <SoPapel papel="aluno"><Equipe /></SoPapel> },
+      { path: "coach/modelos/:id", element: <SoPapel papel="coach"><ModeloEditar /></SoPapel> },
+      { path: "anamnese", element: <SoPapel papel="aluno"><Anamnese /></SoPapel> },
       { path: "avisos", element: <Avisos /> },
-      { path: "coach/financeiro", element: <Financeiro /> },
-      { path: "coach/programas", element: <Programas /> },
+      { path: "coach/financeiro", element: <SoPapel papel="coach"><Financeiro /></SoPapel> },
+      { path: "coach/programas", element: <SoPapel papel="coach"><Programas /></SoPapel> },
       { path: "feed", element: <Feed /> },
-      { path: "coach/evolucao", element: <AlunosEvolucao /> },
-      { path: "coach/demonstracoes", element: <Demonstracoes /> },
-      { path: "coach/evolucao/:uid", element: <AlunoEvolucao /> },
+      { path: "coach/evolucao", element: <SoPapel papel="coach"><AlunosEvolucao /></SoPapel> },
+      { path: "coach/demonstracoes", element: <SoPapel papel="coach"><Demonstracoes /></SoPapel> },
+      { path: "coach/evolucao/:uid", element: <SoPapel papel="coach"><AlunoEvolucao /></SoPapel> },
       { path: "feedback", element: <Feedback /> },
-      { path: "respirar", element: <Respirar /> },
+      { path: "acesso", element: <MeuAcesso /> },
+      { path: "admin/acessos", element: <AcessosAdmin /> },
+      { path: "guia", element: <Guia /> },
+      { path: "coach/plano", element: <SoPapel papel="coach"><MeuPlano /></SoPapel> },
+      { path: "respirar", element: <SoPapel papel="aluno"><Respirar /></SoPapel> },
       { path: "ferramentas", element: <Ferramentas /> },
       { path: "ferramentas/:id", element: <Ferramentas /> },
-      { path: "exams", element: <Exams /> },
-      { path: "antidoping", element: <AntiDoping /> },
+      { path: "exams", element: <SoPapel papel="aluno"><Exams /></SoPapel> },
+      { path: "antidoping", element: <SoPapel papel="aluno"><AntiDoping /></SoPapel> },
     ],
   },
   {
