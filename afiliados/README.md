@@ -64,4 +64,4 @@ Você pode adaptar a plataforma facilmente para atender às suas necessidades de
 - **Limites:** Ajuste cotas operacionais, limites diários de requisições e parâmetros de segurança diretamente nas variáveis de ambiente do servidor e nos arquivos de configuração.
  - **Notificações:** Defina a frequência e os canais de alerta para novas promoções e relatórios de comissões.
 
-Baixe o script configurar-robo.bat e dê dois cliques para configurá-lo.
+Baixe o script configurar-robo.bat e dê dois cliques para configurá‑lo.
