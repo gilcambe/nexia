@@ -304,6 +304,9 @@ export default function Onboarding() {
                 />
               </label>
               <p className="text-xs text-foreground-400">Isso não é diagnóstico. O treino evita o que pode piorar a dor.</p>
+              <div className="mt-4">
+                <EscolherPapel />
+              </div>
             </>
           )}
         </div>
