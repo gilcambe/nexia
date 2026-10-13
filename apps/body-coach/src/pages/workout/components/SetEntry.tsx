@@ -123,6 +123,7 @@ export default function SetEntry({
       {ultima && (
         <button type="button" onClick={() => { 
           onSubmit({ weight: ultima.weight, reps: ultima.reps, rir, falha: rir === 0, nota: nota.trim() || undefined, ...modo }); 
+          limpar();
         }} className="mb-3 w-full rounded-2xl bg-primary-100 px-4 py-3 text-base font-bold text-primary-800 active:scale-[0.98]" data-testid="repetir-serie">
           <i className="ri-repeat-line mr-1"></i>Repetir: {ultima.weight} {unidade}{modo.porLado ? ' cada lado' : ''} × {ultima.reps}
         </button>
