@@ -305,7 +305,8 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
     return [8, 12];
   };
 
-  const dica = dicaAoVivo({
+  // Prancha e isometria: a dica de reps e carga não serve.
+  const dica = ehPorTempo(exercise.name) ? null : dicaAoVivo({
     exercicio: exercise.name,
     repsAlvo: parseReps(exercise.targetReps || '8-12'),
     seriesPlanejadas: 3,
@@ -404,7 +405,7 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
             </p>
             <h2 className="mt-1 font-heading text-2xl font-bold leading-tight text-foreground-950 sm:text-3xl">{exercise.name}</h2>
             <p className="mt-1 text-base text-foreground-600">
-              {exercise.targetSets || 3} séries · {exercise.targetReps} reps · descanso {exercise.restSec || 60} s
+              {exercise.targetSets || 3} séries · {ehPorTempo(exercise.name) ? 'por tempo' : `${exercise.targetReps} reps`} · descanso {exercise.restSec || 60} s
             </p>
 
             <VideoDoCoach id={exercise.id} nome={exercise.name} className="aspect-[4/3] w-full rounded-xl sm:max-w-sm" />
@@ -434,7 +435,7 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
                       </span>
                       <span className="text-right text-base font-semibold text-foreground-950">
                         {s.porTempo ? `${s.reps} s` : <>{s.weight}{s.porLado || exercise.weightUnit === 'kg/lado' ? ' kg cada lado' : ' kg'} × {s.reps}{s.unilateral ? ' (unilateral)' : ''}</>}
-                        <span className="ml-2 text-sm font-normal text-foreground-500">{s.falha ? 'falha' : `RIR ${s.rir}`}</span>
+                        <span className="ml-2 text-sm font-normal text-foreground-500">{s.porTempo ? '' : s.falha ? 'falha' : `RIR ${s.rir}`}</span>
                         {s.nota && <span className="block text-sm font-normal text-primary-700"><i className="ri-sticky-note-line mr-0.5"></i>{s.nota}</span>}
                       </span>
                       {delta !== null && (
