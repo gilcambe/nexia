@@ -406,5 +406,25 @@ async function assertTenantAccess(event, tenantId, headers) {
   return null; // ok
 }
 
-module.exports = { resolveRole, isConfiguredMasterEmail, guard, checkRateLimit, validateTenant, assertTenantAccess, sanitizePrompt, checkPermission, validateAIAction, verifyBearerToken, requireBearerAuth, HEADERS, makeHeaders, getCorsOrigin, ROLE_PERMISSIONS, handler: _handler };
+/**
+ * isCortexPermitido — Verifica se o usuário tem permissão para usar o Cortex.
+ */
+function isCortexPermitido(email, emailVerified) {
+  // Primeiro verifica se o e‑mail corresponde ao master configurado e está verificado
+  if (isConfiguredMasterEmail(email, emailVerified)) {
+    return true;
+  }
+  // Busca a lista de e‑mails permitidos na variável de ambiente
+  const permitidos = (process.env.CORTEX_EMAILS_PERMITIDOS || '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean);
+  if (!permitidos.length || !email || emailVerified !== true) {
+    return false;
+  }
+  return permitidos.includes(String(email).trim().toLowerCase());
+}
+
+module.exports = { resolveRole, isConfiguredMasterEmail, isCortexPermitido, guard, checkRateLimit, validateTenant, assertTenantAccess, sanitizePrompt, checkPermission, validateAIAction, verifyBearerToken, requireBearerAuth, HEADERS, makeHeaders, getCorsOrigin, ROLE_PERMISSIONS, handler: _handler };
 module.exports.handler = _handler;
+module.exports.isCortexPermitido = isCortexPermitido;
