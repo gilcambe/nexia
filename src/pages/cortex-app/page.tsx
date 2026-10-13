@@ -277,6 +277,41 @@ export default function CortexApp() {
     );
   }, []);
 
+  const handleCopy = useCallback((text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      // Could add a toast notification here
+      console.log('Copiado para a área de transferência');
+    }).catch(() => {
+      console.error('Falha ao copiar');
+    });
+  }, []);
+
+  const handleRegenerate = useCallback((messageId: string) => {
+    setMessages((prev) => {
+      const idx = prev.findIndex((m) => m.id === messageId);
+      if (idx <= 0) return prev;
+      const userMsg = prev[idx - 1];
+      if (userMsg.role !== 'user') return prev;
+      // Remove the assistant message and re-send the user message
+      const newMessages = prev.slice(0, idx);
+      // Trigger a re-send by calling send with the user message text
+      setTimeout(() => send(userMsg.text), 0);
+      return newMessages;
+    });
+  }, [send]);
+
+  const handleEditSend = useCallback((messageId: string) => {
+    setMessages((prev) => {
+      const idx = prev.findIndex((m) => m.id === messageId);
+      if (idx <= 0) return prev;
+      const userMsg = prev[idx - 1];
+      if (userMsg.role !== 'user') return prev;
+      // Put the user message text back in the input and remove the assistant message
+      setInput(userMsg.text);
+      return prev.slice(0, idx);
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col">
       {/* Header */}
@@ -439,6 +474,44 @@ export default function CortexApp() {
                   </div>
                 )}
                 <div className="whitespace-pre-wrap break-words">{msg.text}</div>
+                {msg.role === "assistant" && (
+                  <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-nexia-border/30">
+                    <button
+                      onClick={() => handleCopy(msg.text)}
+                      className="px-3 py-1.5 text-xs rounded-lg bg-nexia-surface2 border border-nexia-border text-nexia-muted hover:text-white hover:border-nexia-cyan/40 hover:bg-nexia-cyan/10 transition-all cursor-pointer flex items-center gap-1.5"
+                      title="Copiar resposta"
+                    >
+                      <i className="ri-file-copy-line" /> Copiar
+                    </button>
+                    {!msg.streaming && msg.text && (
+                      <button
+                        onClick={() => handleRegenerate(msg.id)}
+                        className="px-3 py-1.5 text-xs rounded-lg bg-nexia-surface2 border border-nexia-border text-nexia-muted hover:text-white hover:border-nexia-cyan/40 hover:bg-nexia-cyan/10 transition-all cursor-pointer flex items-center gap-1.5"
+                        title="Regenerar resposta"
+                      >
+                        <i className="ri-refresh-line" /> Regenerar
+                      </button>
+                    )}
+                    {!msg.streaming && msg.text && (
+                      <button
+                        onClick={() => handleEditSend(msg.id)}
+                        className="px-3 py-1.5 text-xs rounded-lg bg-nexia-surface2 border border-nexia-border text-nexia-muted hover:text-white hover:border-nexia-cyan/40 hover:bg-nexia-cyan/10 transition-all cursor-pointer flex items-center gap-1.5"
+                        title="Editar e reenviar"
+                      >
+                        <i className="ri-edit-line" /> Editar e reenviar
+                      </button>
+                    )}
+                    {msg.streaming && (
+                      <button
+                        onClick={stopStream}
+                        className="px-3 py-1.5 text-xs rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 transition-all cursor-pointer flex items-center gap-1.5"
+                        title="Parar geração"
+                      >
+                        <i className="ri-stop-fill" /> Parar
+                      </button>
+                    )}
+                  </div>
+                )}
                 {msg.imagem && (
                   <a href={msg.imagem} target="_blank" rel="noreferrer">
                     <img src={msg.imagem} alt="Imagem gerada" className="mt-2 rounded-lg max-w-full" loading="lazy" />
