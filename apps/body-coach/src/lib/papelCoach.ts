@@ -13,7 +13,10 @@ function guardarPapel(p: Papel | null) {
   if (p) window.dispatchEvent(new CustomEvent('bc-papel-salvo', { detail: p }));
 }
 
-let papelConhecido: 'coach' | 'aluno' | 'nenhum' | undefined;
+type Papel = 'coach' | 'aluno' | 'nenhum';
+// Guardado no aparelho: o menu certo aparece na hora, mesmo antes da resposta ou sem internet.
+export function papelGuardado(): Papel | null {
+  try { const p = localStorage.getItem('bc_papel'); return p
 let contatosConhecidos: Contato[] = [];
 let papelPromessa: Promise<void> | undefined;
 function descobrirPapel() {
