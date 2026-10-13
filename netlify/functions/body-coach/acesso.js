@@ -193,6 +193,18 @@ async function acoesAdmin(body, db, ctx) {
     cache.delete(alvo);
     return [200, { ok: true }];
   }
+  if (acao === 'dono_presente') {
+    const email = String(body.email || '').trim().toLowerCase();
+    if (!email || !email.includes('@')) return [400, { error: 'E-mail inválido.' }];
+    const dias = Number(body.dias) > 0 ? Math.round(Number(body.dias)) : 30;
+    const snap = await col.where('email', '==', email).limit(1).get();
+    if (!snap.docs[0]) return [404, { error: 'Essa pessoa ainda não entrou no app.' }];
+    const uidAlvo = snap.docs[0].id;
+    const pagoAte = await liberarAcesso(db, uidAlvo, dias, Date.now(), { valor: 0 });
+    await col.doc(uidAlvo).set({ presente: true }, { merge: true });
+    cache.clear();
+    return [200, { ok: true, uid: uidAlvo, pagoAte }];
+  }
   if (acao === 'acesso_config') {
     const atual = await configAcesso(db);
     const dias = Number(body.diasGratis);

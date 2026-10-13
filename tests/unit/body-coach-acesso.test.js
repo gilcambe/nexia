@@ -92,3 +92,19 @@ test('coach: nunca bloqueia; sem pagar cobre 3 alunos; Parceiro não cobre; alun
   assert.equal(st, 200);
   assert.equal(plano.plano, 'completo');
 });
+
+test('acesso: dono_presente libera plano e marca presente: true se existe, ou 404 se não existe', async () => {
+  const db = fakeDb();
+  // Sem conta
+  const [st404] = await acoesAcesso({ acao: 'dono_presente', email: 'inexistente@x.com', dias: 30 }, 'adm', db, { master: true });
+  assert.equal(st404, 404);
+
+  // Com conta
+  db.dados['bc_acesso'] = { user123: { email: 'contapresente@x.com', inicio: Date.now() } };
+  const [st200, res] = await acoesAcesso({ acao: 'dono_presente', email: 'contapresente@x.com', dias: 45 }, 'adm', db, { master: true });
+  assert.equal(st200, 200);
+  assert.equal(res.ok, true);
+  assert.equal(res.uid, 'user123');
+  assert.equal(db.dados['bc_acesso']['user123'].presente, true);
+  assert.ok(db.dados['bc_acesso']['user123'].pagoAte > Date.now());
+});
