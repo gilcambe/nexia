@@ -1,0 +1,18 @@
+{
+  "id": "body-coach",
+  "nome": "Body Coach",
+  "link": "https://exemplo.com/bodycoach",
+  "cidade": "São Paulo",
+  "assuntos": [
+    "personal trainer",
+    "saúde"
+  ],
+  "imagens": [
+    "https://exemplo.com/img1.jpg"
+  ],
+  "hashtags": [
+    "#bodycoach",
+    "#treino",
+    "#saude"
+  ]
+}

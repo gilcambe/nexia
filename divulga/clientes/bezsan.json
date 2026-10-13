@@ -1,0 +1,18 @@
+{
+  "id": "bezsan",
+  "nome": "Bezsan",
+  "link": "https://exemplo.com/bezsan",
+  "cidade": "São Paulo",
+  "assuntos": [
+    "calçados",
+    "conforto"
+  ],
+  "imagens": [
+    "https://exemplo.com/bezsan1.jpg"
+  ],
+  "hashtags": [
+    "#bezsan",
+    "#calcados",
+    "#conforto"
+  ]
+}
