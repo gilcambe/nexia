@@ -22,15 +22,36 @@ export function gerarTextoFallback(cliente: Cliente): string {
   return `Conheça o ${cliente.nome} em ${cliente.cidade}! Especialista em ${assuntoStr}. Acesse: ${cliente.link} ${hashtagsStr}`;
 }
 
+import Anthropic from '@anthropic-ai/sdk';
+
 export async function gerarTextoIA(cliente: Cliente, promptExtra?: string): Promise<string> {
   try {
-    // Tenta usar IA se configurada ou retorna fallback caso contrário
     const apiKey = process.env.ANTHROPIC_API_KEY || process.env.NEXIA_AI_API_KEY;
     if (!apiKey) {
       return gerarTextoFallback(cliente);
     }
-    
-    // Fallback seguro caso ocorra qualquer indisponibilidade da API de IA
+
+    const anthropic = new Anthropic({ apiKey });
+    const prompt = `Crie uma postagem de divulgação atraente e profissional para redes sociais sobre o seguinte cliente:\n` +
+      `- Nome: ${cliente.nome}\n` +
+      `- Cidade: ${cliente.cidade}\n` +
+      `- Assuntos: ${cliente.assuntos.join(', ')}\n` +
+      `- Link: ${cliente.link}\n` +
+      `- Hashtags: ${cliente.hashtags.join(' ')}\n` +
+      (promptExtra ? `Instruções extras: ${promptExtra}\n` : '') +
+      `Escreva um texto engajador incluindo as hashtags ao final.`;
+
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-sonnet-20241022',
+      max_tokens: 300,
+      messages: [{ role: 'user', content: prompt }]
+    });
+
+    const textContent = response.content.find(c => c.type === 'text');
+    if (textContent && textContent.text) {
+      return textContent.text.trim();
+    }
+
     return gerarTextoFallback(cliente);
   } catch (err) {
     return gerarTextoFallback(cliente);
