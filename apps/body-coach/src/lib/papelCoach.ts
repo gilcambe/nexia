@@ -26,15 +26,16 @@ function guardarPapel(p: Papel | null) {
   if (p) window.dispatchEvent(new CustomEvent('bc-papel-salvo', { detail: p }));
 }
 
-let papelConhecido: Papel | undefined;
+
+// Valor lido do localStorage ao inicializar o app
+// Garante que o menu correto apareça na hora, mesmo antes da resposta ou sem internet
 let contatosConhecidos: Contato[] = [];
 let papelPromessa: Promise<void> | undefined;
 
 function descobrirPapel() {
   papelPromessa ??= chatApi<{ papel: 'coach' | 'aluno'; contatos: Contato[]; marca?: Marca | null }>({ acao: 'contatos' })
     .then((r) => {
-      papelConhecido =
-        r.papel === 'aluno' && !r.contatos.length ? 'nenhum' : r.papel;
+      papelConhecido = (r.papel === 'aluno' && !r.contatos.length ? 'nenhum' : r.papel) as Papel;
       contatosConhecidos = r.contatos ?? [];
       aplicarMarca(r.marca ?? null); // a cor e o logo do coach (ou o tema padrão)
       guardarPapel(papelConhecido);
