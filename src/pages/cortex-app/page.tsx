@@ -48,7 +48,7 @@ const BOAS_VINDAS: Message = {
   model: "CORTEX v16",
 };
 
-export default function CortexApp() {
+export default function CortexPage() {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([BOAS_VINDAS]);
   const [input, setInput] = useState("");
