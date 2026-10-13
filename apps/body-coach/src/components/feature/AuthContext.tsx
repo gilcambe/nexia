@@ -22,7 +22,6 @@ import { aplicarMarca } from '@/lib/coach/profissionais';
 import { esquecerPapel } from '@/lib/papelCoach';
 
 
-
 export interface AthleteProfile {
   id: string;
   full_name: string | null;
