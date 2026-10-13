@@ -79,6 +79,7 @@ interface AuthContextValue {
   ) => Promise<{ error: string | null; needsEmailConfirm: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: () => void;
+  isLocalDemo: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -219,7 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, signIn, signUp, signOut, refreshProfile: () => { if (user) fetchProfile(user.id); } }}
+      value={{ user, profile, loading, isLocalDemo: false, signIn, signUp, signOut, refreshProfile: () => { if (user) fetchProfile(user.id); } }}
     >
       {children}
     </AuthContext.Provider>
