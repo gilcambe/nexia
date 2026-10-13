@@ -2,32 +2,28 @@
 // Uma chamada só por abertura do app; quem não tem coach fica como "nenhum" e as telas não insistem.
 import { chatApi, type Contato } from './chat';
 import { aplicarMarca, type Marca } from './coach/profissionais';
-import { useState, useEffect } from 'react';
 
 type Papel = 'coach' | 'aluno' | 'nenhum';
 // Guardado no aparelho: o menu certo aparece na hora, mesmo antes da resposta ou sem internet.
 export function papelGuardado(): Papel | null {
-  try {
-    const p = localStorage.getItem('bc_papel');
-    return p === 'coach' || p === 'aluno' || p === 'nenhum' ? (p as Papel) : null;
-  } catch {
-    return null;
-  }
+  try { const p = localStorage.getItem('bc_papel'); return p === 'coach' || p === 'aluno' || p === 'nenhum' ? p : null; } catch { return null; }
 }
-let papelConhecido: Papel | undefined;
+function guardarPapel(p: Papel | null) {
+  try { if (p) localStorage.setItem('bc_papel', p); else localStorage.removeItem('bc_papel'); } catch { /* sem armazenamento */ }
+  if (p) window.dispatchEvent(new CustomEvent('bc-papel-salvo', { detail: p }));
+}
+
+let papelConhecido: 'coach' | 'aluno' | 'nenhum' | undefined;
 let contatosConhecidos: Contato[] = [];
 let papelPromessa: Promise<void> | undefined;
 function descobrirPapel() {
   papelPromessa ??= chatApi<{ papel: 'coach' | 'aluno'; contatos: Contato[]; marca?: Marca | null }>({ acao: 'contatos' })
     .then((r) => {
-      papelConhecido = r.papel === 'aluno' && !r.contatos.length ? 'nenhum' : r.papel;
-      if (papelConhecido) {
-        localStorage.setItem('bc_papel', papelConhecido);
-      }
-      contatosConhecidos = r.contatos ?? [];
+      papelConhecido = r.papel === 'aluno' && !r.contatos.length ? 'nenhum' : r.papel; contatosConhecidos = r.contatos ?? [];
       aplicarMarca(r.marca ?? null); // a cor e o logo do coach (ou o tema padrão)
+      guardarPapel(papelConhecido);
     })
-    .catch(() => { papelConhecido = 'nenhum'; localStorage.removeItem('bc_papel'); });
+    .catch(() => { papelConhecido = papelGuardado() ?? 'nenhum'; });
   return papelPromessa;
 }
 
@@ -39,24 +35,10 @@ export async function papelEContatos(): Promise<{ papel: 'coach' | 'aluno' | 'ne
 
 export const papelSalvo = () => papelConhecido;
 
-export function usePapel() {
-  const [papel, setPapel] = useState<Papel | null>(papelGuardado());
-  const [contatos, setContatos] = useState<Contato[]>([]);
-
-  useEffect(() => {
-    papelEContatos().then(({ papel: novoPapel, contatos: novosContatos }) => {
-      setPapel(novoPapel);
-      setContatos(novosContatos);
-    });
-  }, []);
-
-  return { papel, contatos };
-}
-
 // Depois de entrar numa equipe, mudar a marca ou sair da conta: descobre de novo na próxima vez.
+// Avisa o menu (evento bc-papel) para trocar entre as telas do coach e as do aluno.
 export function esquecerPapel() {
-  papelPromessa = undefined;
-  papelConhecido = undefined;
-  contatosConhecidos = [];
-  localStorage.removeItem('bc_papel');
+  papelPromessa = undefined; papelConhecido = undefined; contatosConhecidos = [];
+  guardarPapel(null);
+  window.dispatchEvent(new Event('bc-papel'));
 }
