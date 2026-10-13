@@ -2,13 +2,13 @@ import fs from 'fs';
 import path from 'path';
 
 const ESTADO_PATH = path.resolve('divulga/estado.json');
-const CANAIS = [
+export const CANAIS = [
   { id: 'twitter', ativo: true, publicar: async (texto) => { console.log('[Twitter]', texto); return { ok: true }; } },
   { id: 'linkedin', ativo: true, publicar: async (texto) => { console.log('[LinkedIn]', texto); return { ok: true }; } },
   { id: 'instagram', ativo: false, publicar: async (texto) => { console.log('[Instagram]', texto); return { ok: true }; } },
 ];
 
-const CLIENTES = [
+export const CLIENTES = [
   { id: 'cli_1', nome: 'Cliente Alpha', url: 'https://exemplo.com/alpha' },
   { id: 'cli_2', nome: 'Cliente Beta', url: 'https://exemplo.com/beta' },
   { id: 'cli_3', nome: 'Cliente Gamma', url: 'https://exemplo.com/gamma' },
