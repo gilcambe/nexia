@@ -48,7 +48,13 @@ const BOAS_VINDAS: Message = {
   model: "CORTEX v16",
 };
 
-export default function CortexApp() {
+import { ThemeContext, useTheme } from '@/hooks/useTheme';
+import Sidebar from '@/pages/cortex-app/components/Sidebar';
+import ChatArea from '@/pages/cortex-app/components/ChatArea';
+import PreviewPanel from '@/pages/cortex-app/components/PreviewPanel';
+import { cn } from '@/lib/utils';
+
+export default function CortexPage() {
   const navigate = useNavigate();
   const [messages, setMessages] = useState<Message[]>([BOAS_VINDAS]);
   const [input, setInput] = useState("");
