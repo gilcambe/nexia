@@ -24,7 +24,7 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 }
 
 const { admin, db }                       = require('./firebase-init');
-const { isCortexPermitido } = require('./middleware'); // Importação adicionada (CommonJS)
+import { isCortexPermitido } from './middleware';
 const { guard, assertTenantAccess, sanitizePrompt, makeHeaders, HEADERS } = require('./middleware');
 const { publicErrorBody } = require('../../lib/safe-error');
 
