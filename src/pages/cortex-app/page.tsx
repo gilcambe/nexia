@@ -28,16 +28,14 @@ export default function CortexPage() {
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
       <div className={cn("min-h-screen flex bg-background text-foreground transition-colors duration-200", theme)}>
         <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-        
         <main className="flex-1 flex flex-col min-w-0 relative">
-          <ChatArea 
+          <ChatArea
             onTogglePreview={() => setPreviewOpen(!previewOpen)}
             isPreviewOpen={previewOpen}
           />
         </main>
-
-        <PreviewPanel 
-          isOpen={previewOpen} 
+        <PreviewPanel
+          isOpen={previewOpen}
           onClose={() => setPreviewOpen(false)}
           content={previewContent}
         />
@@ -45,6 +43,7 @@ export default function CortexPage() {
     </ThemeContext.Provider>
   );
 }
+
 
 
 export default function CortexPage() {
