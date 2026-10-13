@@ -234,3 +234,14 @@ test('AF15 workflow: a cada 2 h, segredos um a um, estado na branch afiliados-da
   assert.ok(!/toJSON\(secrets\)/.test(wf));
   assert.deepEqual(robo.buscasDaRodada(CONFIG, AGORA).length, CONFIG.categorias.length);
 });
+
+test('configurar-robo.bat cobre os segredos do afiliados.yml e nunca usa --body', () => {
+  const raiz = path.join(__dirname, '..', '..');
+  const bat = fs.readFileSync(path.join(raiz, 'afiliados', 'configurar-robo.bat'), 'utf8');
+  const yml = fs.readFileSync(path.join(raiz, '.github', 'workflows', 'afiliados.yml'), 'utf8');
+  const nomes = [...new Set([...yml.matchAll(/secrets\.([A-Z_]+)/g)].map((m) => m[1]))].filter((n) => n !== 'CLOUDFLARE_API_TOKEN');
+  assert.ok(nomes.length > 5);
+  for (const n of nomes) assert.match(bat, new RegExp(`call :segredo ${n} `), `falta ${n} no .bat`);
+  assert.doesNotMatch(bat, /--body/);
+  assert.match(bat, /\r\n/, 'o .bat precisa de fim de linha do Windows');
+});
