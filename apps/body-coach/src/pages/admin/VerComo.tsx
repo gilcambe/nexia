@@ -6,7 +6,7 @@ import { mudarVerComo, verComo, type VerComo as Tipo } from '@/lib/verComo';
 const OPCOES: { v: Tipo | null; label: string; ir: string }[] = [
   { v: 'coach', label: 'Coach', ir: '/coach/alunos' },
   { v: 'aluno', label: 'Aluno de coach', ir: '/' },
-  { v: 'nenhum', label: 'Treina sozinho', ir: '/' },
+  { v: 'nenhum', label: 'Quem treina sozinho', ir: '/' },
   { v: null, label: 'Minha conta real', ir: '/' },
 ];
 
