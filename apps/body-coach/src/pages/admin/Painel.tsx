@@ -39,9 +39,10 @@ export default function PainelAdmin() {
   const [promoErro, setPromoErro] = useState<string | null>(null);
 
   const invocarServerAction = async (nome: string, payload?: any) => {
-    const fn = (window as Record<string, any>)[nome];
+    const win = window as unknown as Record<string, unknown>;
+    const fn = win[nome];
     if (typeof fn === "function") {
-      return await fn(payload);
+      return await (fn as (p?: unknown) => Promise<unknown>)(payload);
     }
     throw new Error(`Ação do servidor '${nome}' indisponível no momento.`);
   };
