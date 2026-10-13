@@ -12,7 +12,8 @@ function validateCortexConsistency(issueBody, changedFiles) {
     .map(m => m.replace(/`/g, '').trim())
     .filter(f => f.includes('/') || f.includes('.'));
   if (requestedFiles.length === 0) return true;
-  return requestedFiles.some(f => changedFiles.includes(f));
+  // Se nenhum dos arquivos solicitados foi alterado, retorna falso (rejeita a consistência)
+  return requestedFiles.every(f => changedFiles.includes(f)) || requestedFiles.some(f => changedFiles.includes(f));
 }
 
 module.exports = {
