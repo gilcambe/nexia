@@ -186,7 +186,7 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
     ? coachItems
     : papel === 'aluno' ? [...navItems.slice(0, 5), { to: '/equipe', label: 'Minha equipe', icon: 'ri-user-heart-line' }, ...navItems.slice(5)]
     // Sem coach (treina sozinho): sem Conversa e Feed da equipe; um atalho para quem quiser entrar na equipe de um personal.
-    : [...navItems.filter((i) => i.to !== '/chat' && i.to !== '/feed'), { to: '/acesso', label: 'Minha assinatura', icon: 'ri-vip-crown-line' }, { to: '/chat', label: 'Tenho um personal', icon: 'ri-user-star-line' }]
+    : [...navItems.filter((i) => i.to !== '/chat' && i.to !== '/feed'), { to: '/acesso', label: 'Minha assinatura', icon: 'ri-vip-crown-line' }]
   const comAdmin = user?.email?.toLowerCase() === 'gcbezerra@gmail.com' ? [...itens, { to: '/admin/acessos', label: 'Acessos (admin)', icon: 'ri-shield-user-line' }] : itens;
 
   const handleSignOut = async () => {
