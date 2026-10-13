@@ -6,8 +6,8 @@ export interface NewSet {
   rir: number;
   falha?: boolean;
   nota?: string;
-  porLado?: boolean; // a carga é de cada lado (ex.: 40 kg em cada halter)
-  unilateral?: boolean; // feito um lado por vez
+  porLado?: boolean; // carga de cada lado
+  unilateral?: boolean; // um lado por vez
 }
 
 // Lembra, por exercício, se a carga é de cada lado e se é unilateral (a próxima série já vem marcada).
