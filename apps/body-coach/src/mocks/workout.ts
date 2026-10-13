@@ -24,6 +24,8 @@ export interface SetLog {
   completed: boolean;
   falha?: boolean; // foi até a falha
   nota?: string; // anotação para o coach
+  porLado?: boolean; // carga de cada lado
+  unilateral?: boolean; // um lado por vez
 }
 
 export interface PrevSet {

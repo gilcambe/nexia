@@ -4,29 +4,13 @@ import { useAuth } from './AuthContext';
 import { usePapel } from '@/lib/usePapel';
 
 // Separa as telas: as do coach só abrem para o coach; as do aluno mandam o coach para "Meus alunos".
-export function SoPapel({ papel, children }: { papel: 'coach' | 'aluno'; children: ReactNode }) {
-  const { user, loading } = useAuth();
-  const { papelAtual, loading: loadingPapel } = usePapel();
-
-  if (loading || loadingPapel) {
-    return (
-      <div className="flex items-center justify-center min-h-[50vh]">
-        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
+export default function SoPapel({ papel, children }: { papel: 'coach' | 'aluno'; children: ReactNode }) {
+  const { user } = useAuth();
+  const atual = usePapel(!!user);
+  if (atual === null) {
+    return <div className="flex min-h-[40vh] items-center justify-center text-sm text-foreground-500"><i className="ri-loader-4-line mr-2 animate-spin text-xl text-primary-500"></i>Carregando...</div>;
   }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (papelAtual !== papel) {
-    if (papel === 'coach') {
-      return <Navigate to="/app/aluno" replace />;
-    } else {
-      return <Navigate to="/app/alunos" replace />;
-    }
-  }
-
+  if (papel === 'coach' && atual !== 'coach') return <Navigate to="/" replace />;
+  if (papel === 'aluno' && atual === 'coach') return <Navigate to="/coach/alunos" replace />;
   return <>{children}</>;
 }

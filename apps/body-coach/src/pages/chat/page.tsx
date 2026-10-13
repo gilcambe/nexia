@@ -120,7 +120,7 @@ export default function Chat() {
 
   const escolher = async (p: Papel) => {
     setErro('');
-    try { await chatApi({ acao: 'perfil', papel: p, nome, foto: profile?.photo_data ?? '' }); await carregarContatos(); }
+    try { await chatApi({ acao: 'perfil', papel: p, nome, foto: profile?.photo_data ?? '' }); esquecerPapel(); await carregarContatos(); }
     catch (e) { setErro((e as Error).message); }
   };
   const entrar = async () => {

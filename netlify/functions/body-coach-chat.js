@@ -19,6 +19,7 @@ const { negocio, lojaVer } = require('./body-coach/negocio');
 const { comunidade, registrarCargas, pontosDe } = require('./body-coach/comunidade');
 const { inicioSemanaBR } = require('./body-coach/tempo');
 const { profissionais, vinculoDe, podeEditar, meusAlunos, marcaLimpa, marcarConvite } = require('./body-coach/profissionais');
+const { acoesAcesso, estaBloqueado, LIVRES } = require('./body-coach/acesso');
 
 const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 const par = (a, b) => [a, b].sort().join('__');
@@ -230,6 +231,11 @@ async function executar(body, uid, db, ctx = {}) {
   const dir = db.collection('bc_diretorio');
   const eu = (await dir.doc(uid).get()).data?.() || null;
   const acao = body.acao;
+  // Acesso: teste grátis, aviso e bloqueio no servidor (o admin libera quando confirma o Pix).
+  if (typeof acao === 'string' && acao.startsWith('acesso_')) return acoesAcesso(body, uid, db, ctx, eu);
+  if (!LIVRES.includes(acao) && await estaBloqueado(db, uid, { ...ctx, papel: eu && eu.papel, coachUid: eu && eu.papel === 'aluno' ? eu.coachUid || '' : '' })) {
+    return [402, { error: 'Seu período grátis acabou. Pague para continuar usando o app.', bloqueado: true }];
+  }
 
   if (acao === 'perfil') {
     const papel = body.papel === 'coach' ? 'coach' : 'aluno';
