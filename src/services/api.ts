@@ -2,7 +2,7 @@ import { apiPath, healthUrl, firebaseConfigUrl } from "@/config/env";
 import { initFirebase } from "@/services/firebase";
 
 // Token do usuário logado no Firebase; sem login devolve {} e a API responde 401.
-async function cabecalhoAuth(): Promise<Record<string, string>> {
+export async function cabecalhoAuth(): Promise<Record<string, string>> {
   try {
     const result = await initFirebase();
     const u = result?.auth?.currentUser;
