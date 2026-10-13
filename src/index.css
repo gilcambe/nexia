@@ -11,6 +11,43 @@
   ::selection { background-color: rgba(0, 212, 170, 0.2); color: #00d4aa; }
 }
 
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs rounded-lg font-medium transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply bg-nexia-cyan text-[#0a0a0f] hover:bg-nexia-cyan-dim focus:outline-none focus:ring-2 focus:ring-nexia-cyan/50 focus:ring-offset-2 focus:ring-offset-[#0a0a0f];
+  }
+  .btn-secondary {
+    @apply bg-nexia-surface2 border border-nexia-border text-nexia-muted hover:text-white hover:border-nexia-cyan/40 hover:bg-nexia-cyan/10 focus:outline-none focus:ring-2 focus:ring-nexia-cyan/50 focus:ring-offset-2 focus:ring-offset-[#0a0a0f];
+  }
+  .btn-danger {
+    @apply bg-red-500/20 border border-red-500/30 text-red-400 hover:bg-red-500/30 hover:border-red-500/50 focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-[#0a0a0f];
+  }
+  .btn-ghost {
+    @apply bg-transparent text-nexia-muted hover:text-white hover:bg-nexia-surface2 focus:outline-none focus:ring-2 focus:ring-nexia-cyan/50 focus:ring-offset-2 focus:ring-offset-[#0a0a0f];
+  }
+
+  .toast {
+    @apply fixed bottom-6 right-6 z-50 px-4 py-3 rounded-lg text-sm font-medium shadow-lg animate-slide-up;
+  }
+  .toast-success {
+    @apply bg-emerald-500/90 text-white border border-emerald-500/30;
+  }
+  .toast-error {
+    @apply bg-red-500/90 text-white border border-red-500/30;
+  }
+  .toast-info {
+    @apply bg-nexia-cyan/90 text-[#0a0a0f] border border-nexia-cyan/30;
+  }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up { animation: slide-up 0.3s ease-out; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
