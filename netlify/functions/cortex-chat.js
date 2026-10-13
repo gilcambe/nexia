@@ -330,6 +330,20 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers, body: JSON.stringify(clarification) };
     }
 
+    // Validação de consistência do PR de resposta vs Issue original (Cortex Pre-check)
+    const issueBody = body.issueBody || body.issue_body || '';
+    if (issueBody) {
+      const matchFiles = issueBody.match(/`([^`]+)`/g) || [];
+      const mentionedFiles = matchFiles.map(s => s.replace(/`/g, '').trim()).filter(f => f.includes('/') || f.includes('.'));
+      const prFiles = body.prFiles || body.pr_files || [];
+      if (mentionedFiles.length > 0 && prFiles.length > 0) {
+        const hasIntersection = mentionedFiles.some(mf => prFiles.some(pf => pf.includes(mf) || mf.includes(pf)));
+        if (!hasIntersection && body.status === 'cortex-feito') {
+          return { statusCode: 400, headers, body: JSON.stringify({ error: 'Inconsistência detectada: nenhum dos arquivos mencionados entre crases na Issue foi alterado no PR.', mentionedFiles, prFiles }) };
+        }
+      }
+    }
+
     let decision = { type: 'chat', intent: model !== 'auto' ? model : 'chat', response: '' };
     let layer = 0;
     if (model === 'auto') {
