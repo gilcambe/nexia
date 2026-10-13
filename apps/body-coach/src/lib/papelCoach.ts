@@ -8,35 +8,3 @@ type Papel = 'coach' | 'aluno' | 'nenhum';
 // aparecer na hora (inclusive sem internet). O valor pode ser alterado pelo usuário,
 // então NUNCA use esta função para decisões de autorização — autorização sempre vem
 // do servidor, via papelEContatos() (chat acao="contatos").
-export function papelGuardado(): Papel | null {
-  try {
-    const p = localStorage.getItem('bc_papel');
-    if (p === 'coach' || p === 'aluno' || p === 'nenhum') return p;
-    return null;
-  } catch {
-    return null;
-  }
-}
-let papelConhecido: Papel | undefined;
-let contatosConhecidos: Contato[] = [];
-let papelPromessa: Promise<void> | undefined;
-function descobrirPapel() {
-  papelPromessa ??= chatApi<{ papel: 'coach' | 'aluno'; contatos: Contato[]; marca?: Marca | null }>({ acao: 'contatos' })
-    .then((r) => {
-      papelConhecido = r.papel === 'aluno' && !r.contatos.length ? 'nenhum' : r.papel; contatosConhecidos = r.contatos ?? [];
-      aplicarMarca(r.marca ?? null); // a cor e o logo do coach (ou o tema padrão)
-    })
-    .catch(() => { papelConhecido = 'nenhum'; });
-  return papelPromessa;
-}
-
-export async function papelEContatos(): Promise<{ papel: 'coach' | 'aluno' | 'nenhum'; contatos: Contato[] }> {
-  await descobrirPapel();
-  return { papel: papelConhecido ?? 'nenhum', contatos: contatosConhecidos };
-}
-
-
-export const papelSalvo = () => papelConhecido;
-
-// Depois de entrar numa equipe, mudar a marca ou sair da conta: descobre de novo na próxima vez.
-export function esquecerPapel() { papelPromessa = undefined; papelConhecido = undefined; contatosConhecidos = []; }
