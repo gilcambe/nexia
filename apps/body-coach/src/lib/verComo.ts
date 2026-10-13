@@ -3,25 +3,11 @@
 export type VerComo = 'coach' | 'aluno' | 'nenhum';
 export const EMAIL_ADMIN = 'gcbezerra@gmail.com';
 
-export function getVerComo(): VerComo {
-  if (typeof window === 'undefined') return 'nenhum';
-  try {
-    const val = localStorage.getItem('nexia_ver_como');
-    if (val === 'coach' || val === 'aluno' || val === 'nenhum') {
-      return val;
-    }
-  } catch {}
-  return 'nenhum';
+export function verComo(): VerComo | null {
+  try { const v = localStorage.getItem('bc_ver_como'); return v === 'coach' || v === 'aluno' || v === 'nenhum' ? v : null; } catch { return null; }
 }
 
-export function setVerComo(modo: VerComo): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem('nexia_ver_como', modo);
-  } catch {}
-}
-
-export function isAdmin(email?: string | null): boolean {
-  if (!email) return false;
-  return email.toLowerCase() === EMAIL_ADMIN.toLowerCase();
+export function mudarVerComo(v: VerComo | null) {
+  try { if (v) localStorage.setItem('bc_ver_como', v); else localStorage.removeItem('bc_ver_como'); } catch { /* sem armazenamento */ }
+  window.dispatchEvent(new Event('bc-ver-como'));
 }

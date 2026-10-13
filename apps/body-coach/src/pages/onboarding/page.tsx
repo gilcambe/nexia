@@ -6,6 +6,8 @@ import { calcularMetas } from '@/lib/metas';
 import { montarCardapio } from '@/lib/dietPlan';
 import { DIVISOES } from '@/lib/dayPlan';
 import { fichaDoPerfil, treinoDaFicha, type Ficha } from '@/lib/ficha';
+import { papelGuardado } from '@/lib/papelCoach';
+import EscolherPapel from './EscolherPapel';
 
 // Primeiro acesso guiado (~1 minuto): 4 telas curtas e o aluno sai com treino e dieta prontos.
 // Grava as mesmas respostas de antes (profile/main.onboarding), que a ficha, o treino e a dieta já usam.
@@ -67,6 +69,8 @@ export default function Onboarding() {
   const [preenchido, setPreenchido] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pronto, setPronto] = useState(false);
+  // Quem chegou por link de convite ou já tem papel não precisa escolher de novo.
+  const [tipoOk, setTipoOk] = useState(() => { try { return !!localStorage.getItem('bc_convite') || !!papelGuardado(); } catch { return false; } });
 
   // Refazendo o questionário: começa com as respostas que já existem.
   useEffect(() => {
@@ -200,6 +204,8 @@ export default function Onboarding() {
       </div>
     );
   }
+
+  if (!tipoOk) return <EscolherPapel nome={profile?.nickname || profile?.full_name || user?.email?.split('@')[0] || 'Aluno'} onAluno={() => setTipoOk(true)} />;
 
   const current = steps[step];
   const isLast = step === steps.length - 1;

@@ -23,6 +23,7 @@ import { dicaAoVivo } from '@/lib/liveCoach';
 import { getUserDoc, listUserDocs } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
+import { ehPorTempo } from '@/lib/porTempo';
 import ExercicioExtra, { type ModoExtra } from './components/ExercicioExtra';
 import { adicionarDepois, notaDoExtra, novoExtra, textoExtra, trocarPorLivre, type Extra } from '@/lib/exercicioLivre';
 import DescansoTimer from './components/DescansoTimer';
@@ -247,6 +248,7 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
       ...(newSet.nota ? { nota: newSet.nota } : {}),
       ...(newSet.porLado ? { porLado: true } : {}),
       ...(newSet.unilateral ? { unilateral: true } : {}),
+      ...(newSet.porTempo ? { porTempo: true } : {}),
     };
     setSetsByEx((v) => ({ ...v, [exercise.id]: [...prev, setLog] }));
     startRest(exercise.restSec);
@@ -255,6 +257,9 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
     falar(fraseSerie(setLog.set, exercise.targetSets || 3, newSet.weight, newSet.reps, recorde, exercise.restSec));
     void enviarStatusDupla({ exercicio: exercise.name, series: setLog.set, bpm: estadoFC().bpm || 0, recado: recorde ? 'Recorde! 🏆' : '' }, true);
   };
+
+  // Apaga uma série registrada por engano e renumera as outras.
+  const removerSerie = (id: string) => setSetsByEx((v) => ({ ...v, [exercise.id]: (v[exercise.id] ?? []).filter((s) => s.id !== id).map((s, i) => ({ ...s, set: i + 1 })) }));
 
   const finishExercise = () => {
     if (exIndex < session.exercises.length - 1) {
@@ -428,7 +433,7 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
                         Série
                       </span>
                       <span className="text-right text-base font-semibold text-foreground-950">
-                        {s.weight}{s.porLado || exercise.weightUnit === 'kg/lado' ? ' kg cada lado' : ' kg'} × {s.reps}{s.unilateral ? ' (unilateral)' : ''}
+                        {s.porTempo ? `${s.reps} s` : <>{s.weight}{s.porLado || exercise.weightUnit === 'kg/lado' ? ' kg cada lado' : ' kg'} × {s.reps}{s.unilateral ? ' (unilateral)' : ''}</>}
                         <span className="ml-2 text-sm font-normal text-foreground-500">{s.falha ? 'falha' : `RIR ${s.rir}`}</span>
                         {s.nota && <span className="block text-sm font-normal text-primary-700"><i className="ri-sticky-note-line mr-0.5"></i>{s.nota}</span>}
                       </span>
@@ -437,6 +442,7 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
                           {delta > 0 ? `+${delta}` : delta < 0 ? `${delta}` : '='}
                         </span>
                       )}
+                      <button type="button" onClick={() => removerSerie(s.id)} aria-label={`Apagar série ${s.set}`} data-testid="apagar-serie" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-foreground-500 hover:bg-red-50 hover:text-red-600"><i className="ri-delete-bin-line text-lg"></i></button>
                     </div>
                   );
                 })}
@@ -487,7 +493,7 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
                 weightUnit={exercise.weightUnit}
                 exercicio={exercise.name}
                 targetReps={exercise.targetReps}
-                sugestao={exercise.sets.length === 0 ? sugerirCarga(historicoSeries[exercise.name], exercise.targetReps) : null}
+                sugestao={exercise.sets.length === 0 && !ehPorTempo(exercise.name) ? sugerirCarga(historicoSeries[exercise.name], exercise.targetReps) : null}
                 ultima={(() => { const l = currentSets[currentSets.length - 1] ?? exercise.sets[exercise.sets.length - 1]; return l ? { weight: l.weight, reps: l.reps } : null; })()}
                 onSubmit={(s) => {
                   addSet(s);
