@@ -1,4 +1,5 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
+import { ehPorTempo } from '../../../lib/porTempo';
 
 export interface NewSet {
   weight: number;
@@ -44,22 +45,61 @@ export default function SetEntry({
   exercicio?: string;
   onSubmit: (set: NewSet) => void;
 }) {
+  const porTempo = ehPorTempo(exercicio);
   const [modo, setModo] = useState(() => modoSalvo(exercicio, weightUnit === 'kg/lado'));
   const mudarModo = (m: { porLado: boolean; unilateral: boolean }) => { setModo(m); try { localStorage.setItem(chaveModo(exercicio), JSON.stringify(m)); } catch { /* sem armazenamento */ } };
   const unidade = weightUnit === 'kg/lado' ? 'kg' : weightUnit;
   const [weight, setWeight] = useState('');
-  const [reps, setReps] = useState('');
+  const [reps, setReps] = useState(porTempo ? '30' : '');
   const [rir, setRir] = useState(2);
   const [nota, setNota] = useState('');
   const [anotando, setAnotando] = useState(false);
 
-  const canSubmit = weight !== '' && reps !== '';
-  const limpar = () => { setWeight(''); setReps(''); setRir(2); setNota(''); setAnotando(false); };
+  // Cronômetro para exercícios por tempo
+  const [cronometroAtivo, setCronometroAtivo] = useState(false);
+  const [segundosDecorridos, setSegundosDecorridos] = useState(0);
+
+  useEffect(() => {
+    let timer: any = null;
+    if (cronometroAtivo) {
+      timer = setInterval(() => {
+        setSegundosDecorridos((s) => s + 1);
+      }, 1000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [cronometroAtivo]);
+
+  const iniciarPararCronometro = () => {
+    if (!cronometroAtivo) {
+      setCronometroAtivo(true);
+    } else {
+      setCronometroAtivo(false);
+      setReps(String(segundosDecorridos || 30));
+    }
+  };
+
+  const zerarCronometro = () => {
+    setCronometroAtivo(false);
+    setSegundosDecorridos(0);
+  };
+
+  const canSubmit = porTempo ? reps !== '' : (weight !== '' && reps !== '');
+  const limpar = () => { 
+    setWeight(''); 
+    setReps(porTempo ? '30' : ''); 
+    setRir(2); 
+    setNota(''); 
+    setAnotando(false); 
+    setCronometroAtivo(false);
+    setSegundosDecorridos(0);
+  };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    onSubmit({ weight: Number(weight), reps: Number(reps), rir, falha: rir === 0, nota: nota.trim() || undefined, ...modo });
+    onSubmit({ weight: porTempo ? 0 : Number(weight), reps: Number(reps), rir, falha: rir === 0, nota: nota.trim() || undefined, ...modo });
     limpar();
   };
 
@@ -81,35 +121,70 @@ export default function SetEntry({
         </div>
       )}
       {ultima && (
-        <button type="button" onClick={() => { onSubmit({ weight: ultima.weight, reps: ultima.reps, rir, falha: rir === 0, nota: nota.trim() || undefined, ...modo }); limpar(); }} className="mb-3 w-full rounded-2xl bg-primary-100 px-4 py-3 text-base font-bold text-primary-800 active:scale-[0.98]" data-testid="repetir-serie">
+        <button type="button" onClick={() => { 
+          onSubmit({ weight: ultima.weight, reps: ultima.reps, rir, falha: rir === 0, nota: nota.trim() || undefined, ...modo }); 
+        }} className="mb-3 w-full rounded-2xl bg-primary-100 px-4 py-3 text-base font-bold text-primary-800 active:scale-[0.98]" data-testid="repetir-serie">
           <i className="ri-repeat-line mr-1"></i>Repetir: {ultima.weight} {unidade}{modo.porLado ? ' cada lado' : ''} × {ultima.reps}
         </button>
       )}
       <form onSubmit={submit}>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <label className="block">
-            <span className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-foreground-600">Carga ({unidade}){modo.porLado ? ' de cada lado' : ''}</span>
-              <span className="flex gap-1.5">
-                <button type="button" onClick={() => mudarModo({ ...modo, porLado: !modo.porLado })} aria-pressed={modo.porLado} data-testid="carga-lado" className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${modo.porLado ? 'border-primary-500 bg-primary-100 text-primary-800' : 'border-background-300 text-foreground-600'}`}>{modo.porLado ? 'Cada lado' : 'Total'}</button>
-                <button type="button" onClick={() => mudarModo({ ...modo, unilateral: !modo.unilateral })} aria-pressed={modo.unilateral} data-testid="carga-unilateral" className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${modo.unilateral ? 'border-primary-500 bg-primary-100 text-primary-800' : 'border-background-300 text-foreground-600'}`}>{modo.unilateral ? 'Unilateral' : 'Bilateral'}</button>
+        {porTempo ? (
+          <div className="mb-3 rounded-2xl border-2 border-primary-200 bg-primary-50/50 p-4 text-center">
+            <p className="text-sm font-semibold text-primary-800 mb-1"><i className="ri-timer-line mr-1"></i>Exercício por tempo (segundos)</p>
+            <div className="my-3 text-4xl font-black text-foreground-950 font-mono">
+              {cronometroAtivo ? segundosDecorridos : (reps || segundosDecorridos || 30)}s
+            </div>
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <button
+                type="button"
+                onClick={iniciarPararCronometro}
+                className={`rounded-xl px-5 py-2.5 text-sm font-bold text-white shadow active:scale-95 ${cronometroAtivo ? 'bg-red-600 hover:bg-red-700' : 'bg-primary-600 hover:bg-primary-700'}`}
+              >
+                {cronometroAtivo ? 'Parar / Usar tempo' : 'Iniciar Cronômetro'}
+              </button>
+              <button
+                type="button"
+                onClick={zerarCronometro}
+                className="rounded-xl border border-background-300 bg-background-100 px-4 py-2.5 text-sm font-semibold text-foreground-700 active:scale-95"
+              >
+                Zerar
+              </button>
+            </div>
+            <label className="block text-left">
+              <span className="text-xs font-semibold text-foreground-600">Ou ajuste os segundos manualmente:</span>
+              <div className="mt-1 flex items-center gap-1.5">
+                <button type="button" onClick={() => ajustar('reps', -5)} className={mais} aria-label="Menos 5 segundos">−</button>
+                <input type="number" inputMode="numeric" value={reps} onChange={(e) => setReps(e.target.value)} placeholder="30" aria-label="Segundos" className={campo} />
+                <button type="button" onClick={() => ajustar('reps', 5)} className={mais} aria-label="Mais 5 segundos">+</button>
+              </div>
+            </label>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className="block">
+              <span className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-sm font-semibold text-foreground-600">Carga ({unidade}){modo.porLado ? ' de cada lado' : ''}</span>
+                <span className="flex gap-1.5">
+                  <button type="button" onClick={() => mudarModo({ ...modo, porLado: !modo.porLado })} aria-pressed={modo.porLado} data-testid="carga-lado" className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${modo.porLado ? 'border-primary-500 bg-primary-100 text-primary-800' : 'border-background-300 text-foreground-600'}`}>{modo.porLado ? 'Cada lado' : 'Total'}</button>
+                  <button type="button" onClick={() => mudarModo({ ...modo, unilateral: !modo.unilateral })} aria-pressed={modo.unilateral} data-testid="carga-unilateral" className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${modo.unilateral ? 'border-primary-500 bg-primary-100 text-primary-800' : 'border-background-300 text-foreground-600'}`}>{modo.unilateral ? 'Unilateral' : 'Bilateral'}</button>
+                </span>
               </span>
-            </span>
-            <span className="mt-1 flex items-center gap-1.5">
-              <button type="button" onClick={() => ajustar('weight', -2.5)} className={mais} aria-label="Menos 2,5 de carga">−</button>
-              <input type="number" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder={ultima ? String(ultima.weight) : `${minWeight}–${maxWeight}`} aria-label={`Carga (${weightUnit})`} className={campo} />
-              <button type="button" onClick={() => ajustar('weight', 2.5)} className={mais} aria-label="Mais 2,5 de carga">+</button>
-            </span>
-          </label>
-          <label className="block">
-            <span className="text-sm font-semibold text-foreground-600">Repetições ({targetReps})</span>
-            <span className="mt-1 flex items-center gap-1.5">
-              <button type="button" onClick={() => ajustar('reps', -1)} className={mais} aria-label="Menos uma repetição">−</button>
-              <input type="number" inputMode="numeric" value={reps} onChange={(e) => setReps(e.target.value)} placeholder={ultima ? String(ultima.reps) : '12'} aria-label="Repetições" className={campo} />
-              <button type="button" onClick={() => ajustar('reps', 1)} className={mais} aria-label="Mais uma repetição">+</button>
-            </span>
-          </label>
-        </div>
+              <span className="mt-1 flex items-center gap-1.5">
+                <button type="button" onClick={() => ajustar('weight', -2.5)} className={mais} aria-label="Menos 2,5 de carga">−</button>
+                <input type="number" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder={ultima ? String(ultima.weight) : `${minWeight}–${maxWeight}`} aria-label={`Carga (${weightUnit})`} className={campo} />
+                <button type="button" onClick={() => ajustar('weight', 2.5)} className={mais} aria-label="Mais 2,5 de carga">+</button>
+              </span>
+            </label>
+            <label className="block">
+              <span className="text-sm font-semibold text-foreground-600">Repetições ({targetReps})</span>
+              <span className="mt-1 flex items-center gap-1.5">
+                <button type="button" onClick={() => ajustar('reps', -1)} className={mais} aria-label="Menos uma repetição">−</button>
+                <input type="number" inputMode="numeric" value={reps} onChange={(e) => setReps(e.target.value)} placeholder={ultima ? String(ultima.reps) : '12'} aria-label="Repetições" className={campo} />
+                <button type="button" onClick={() => ajustar('reps', 1)} className={mais} aria-label="Mais uma repetição">+</button>
+              </span>
+            </label>
+          </div>
+        )}
         <p className="mt-3 text-sm font-semibold text-foreground-600">Quantas repetições ainda dava?</p>
         <div className="mt-1 grid grid-cols-4 gap-1.5" role="radiogroup" aria-label="Quantas repetições ainda dava">
           {SOBRA.map((o) => (
