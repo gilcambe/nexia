@@ -277,6 +277,63 @@ export default function CortexApp() {
     );
   }, []);
 
+  const handleCopy = useCallback((text: string) => {
+    navigator.clipboard.writeText(text).catch(() => {
+      // Fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    });
+  }, []);
+
+  const handleRegenerate = useCallback((assistantMsgId: string) => {
+    // Find the user message right before this assistant message
+    setMessages((prev) => {
+      const idx = prev.findIndex((m) => m.id === assistantMsgId);
+      if (idx <= 0) return prev;
+      const userMsg = prev[idx - 1];
+      if (userMsg.role !== 'user') return prev;
+      // Remove this assistant message and re-send
+      const newMessages = prev.slice(0, idx);
+      setMessages(newMessages);
+      // Trigger send with the user message text
+      setTimeout(() => send(userMsg.text), 0);
+      return newMessages;
+    });
+  }, [send]);
+
+  const handleEditSend = useCallback((assistantMsgId: string) => {
+    setMessages((prev) => {
+      const idx = prev.findIndex((m) => m.id === assistantMsgId);
+      if (idx <= 0) return prev;
+      const userMsg = prev[idx - 1];
+      if (userMsg.role !== 'user') return prev;
+      // Put the user message text in the input for editing
+      setInput(userMsg.text);
+      // Remove this assistant message and the user message
+      const newMessages = prev.slice(0, idx - 1);
+      setMessages(newMessages);
+      return newMessages;
+    });
+  }, []);
+
+  const handleStopMessage = useCallback((assistantMsgId: string) => {
+    // Only stop if this is the currently streaming message
+    setMessages((prev) => {
+      const msg = prev.find((m) => m.id === assistantMsgId);
+      if (msg?.streaming) {
+        abortRef.current?.abort();
+        abortRef.current = null;
+        setLoading(false);
+        return prev.map((m) => m.id === assistantMsgId ? { ...m, streaming: false } : m);
+      }
+      return prev;
+    });
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col">
       {/* Header */}
