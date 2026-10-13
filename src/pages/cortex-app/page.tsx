@@ -270,9 +270,27 @@ export default function CortexPage() {
     );
   }, []);
 
+  const [themeState, setThemeState] = useState<'dark' | 'light'>('dark');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewContent, setPreviewContent] = useState<string | null>(null);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (themeState === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [themeState]);
+
+  const toggleTheme = () => {
+    setThemeState((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
   return (
-    <ThemeContext.Provider value={theme}>
-      <div className={cn("min-h-screen bg-[#0a0a0f] text-white flex flex-col")}>
+    <ThemeContext.Provider value={{ theme: themeState, setTheme: setThemeState, toggleTheme }}>
+      <div className={cn("min-h-screen bg-[#0a0a0f] text-white flex flex-col", themeState === 'light' ? 'bg-gray-50 text-gray-900' : '')}>
         <header className="border-b border-nexia-border bg-[#0a0a0f] flex-shrink-0">
           <div className="px-4 md:px-8 py-4 max-w-6xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -299,6 +317,10 @@ export default function CortexPage() {
               <button onClick={() => setConexoesAberto((v) => !v)} title="Conexões com outros apps"
                 className="px-2.5 py-1.5 text-xs rounded-lg bg-nexia-surface border border-nexia-border text-nexia-muted hover:text-white cursor-pointer">
                 <i className="ri-plug-line" /> Conexões
+              </button>
+              <button onClick={toggleTheme} title="Alternar Tema"
+                className="px-2.5 py-1.5 text-xs rounded-lg bg-nexia-surface border border-nexia-border text-nexia-muted hover:text-white cursor-pointer">
+                <i className={themeState === 'dark' ? 'ri-sun-line' : 'ri-moon-line'} />
               </button>
               <span className={`w-2 h-2 rounded-full ${loading ? "bg-amber-400 animate-pulse" : "bg-nexia-cyan animate-pulse"}`} />
               <span className="text-xs text-nexia-cyan">{loading ? "Processando..." : "Online"}</span>
@@ -395,7 +417,7 @@ export default function CortexPage() {
         )}
 
         <div className="flex-1 flex overflow-hidden">
-          <Sidebar />
+          <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
           <ChatArea
             messages={messages}
             input={input}
@@ -412,50 +434,18 @@ export default function CortexPage() {
             errorBanner={errorBanner}
             setErrorBanner={setErrorBanner}
             bottomRef={bottomRef}
-          />
-          <PreviewPanel />
-        </div>
-      </div>
-    </ThemeContext.Provider>
-  );
-}
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewContent, setPreviewContent] = useState<string | null>(null);
-
-  useEffect(() => {
-    // Sincroniza tema com o documento ou classes
-    const root = document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
-
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
-      <div className={cn("min-h-screen flex flex-col md:flex-row bg-[#0a0a0f] text-white transition-colors duration-200", theme === 'light' ? 'bg-gray-50 text-gray-900' : '')}>
-        <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="flex-1 flex flex-col min-w-0 relative">
-          <ChatArea 
             onOpenPreview={(content) => {
               setPreviewContent(content);
               setPreviewOpen(true);
-            }} 
+            }}
           />
-        </main>
-        {previewOpen && (
-          <PreviewPanel 
-            content={previewContent} 
-            onClose={() => setPreviewOpen(false)} 
-          />
-        )}
+          {previewOpen && (
+            <PreviewPanel
+              content={previewContent}
+              onClose={() => setPreviewOpen(false)}
+            />
+          )}
+        </div>
       </div>
     </ThemeContext.Provider>
   );
