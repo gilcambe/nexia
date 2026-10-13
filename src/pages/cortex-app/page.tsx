@@ -48,7 +48,36 @@ const BOAS_VINDAS: Message = {
   model: "CORTEX v16",
 };
 
+import { ThemeContext, useTheme } from '@/hooks/useTheme';
+import Sidebar from '@/pages/cortex-app/components/Sidebar';
+import ChatArea from '@/pages/cortex-app/components/ChatArea';
+import PreviewPanel from '@/pages/cortex-app/components/PreviewPanel';
+import { cn } from '@/lib/utils';
+
 export default function CortexPage() {
+  const themeState = useTheme();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [previewOpen, setPreviewOpen] = useState(true);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const [messages, setMessages] = useState<Message[]>([BOAS_VINDAS]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [selectedModel, setSelectedModel] = useState("auto");
+  const [conversaId, setConversaId] = useState(novaConversaId());
+  const [conversas, setConversas] = useState(listarConversas());
+  const [historicoAberto, setHistoricoAberto] = useState(false);
+  const [conexoesAberto, setConexoesAberto] = useState(false);
+  const [conexoes, setConexoes] = useState<Conexao[]>([]);
+  const [google, setGoogle] = useState<ConfigGoogle | null>(lerConfigGoogle());
+  const [googleForm, setGoogleForm] = useState<ConfigGoogle>(google || { url: "", segredo: "" });
+  const [googleMsg, setGoogleMsg] = useState("");
+  const [projetoId, setProjetoId] = useState("");
+  const [projetos, setProjetos] = useState(listarProjetos());
+  const [editando, setEditando] = useState<{ id?: string; nome: string; instrucoes: string } | null>(null);
+  const [errorBanner, setErrorBanner] = useState<string | null>(null);
+  const [serverStarting, setServerStarting] = useState(false);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
