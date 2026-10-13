@@ -45,7 +45,7 @@ const Convites = carregar(() => import("../pages/coach/Convites"));
 const MarcaCoach = carregar(() => import("../pages/coach/Marca"));
 const Ferramentas = carregar(() => import("../pages/ferramentas/page"));
 const MeuAcesso = carregar(() => import("../pages/acesso/page"));
-const AcessosAdmin = carregar(() => import("../pages/admin/Acessos"));
+const AcessosAdmin = carregar(() => import("../pages/admin/Acessos"));\nconst PainelAdmin = carregar(() => import("../pages/admin/Painel"));
 const Guia = carregar(() => import("../pages/guia/page"));
 const MeuPlano = carregar(() => import("../pages/coach/MeuPlano"));
 
@@ -129,7 +129,7 @@ const routes: RouteObject[] = [
       { path: "coach/evolucao/:uid", element: <SoPapel papel="coach"><AlunoEvolucao /></SoPapel> },
       { path: "feedback", element: <Feedback /> },
       { path: "acesso", element: <MeuAcesso /> },
-      { path: "admin/acessos", element: <AcessosAdmin /> },
+      { path: "admin/acessos", element: <AcessosAdmin /> },\n      { path: "admin/painel", element: <PainelAdmin /> },
       { path: "guia", element: <Guia /> },
       { path: "coach/plano", element: <SoPapel papel="coach"><MeuPlano /></SoPapel> },
       { path: "respirar", element: <SoPapel papel="aluno"><Respirar /></SoPapel> },
