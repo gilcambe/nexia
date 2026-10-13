@@ -64,17 +64,4 @@ Você pode adaptar a plataforma facilmente para atender às suas necessidades de
 - **Limites:** Ajuste cotas operacionais, limites diários de requisições e parâmetros de segurança diretamente nas variáveis de ambiente do servidor e nos arquivos de configuração.
 - **Notificações:** Defina a frequência e os canais de alerta para novas promoções e relatórios de comissões.
 
-### 8. Como começar a configuração
-Antes de executar qualquer script de configuração, **leia o conteúdo do arquivo**, confirme a origem e reveja com atenção as permissões que ele usa.
-
-> ⚠️ **Atenção — execução de script local (risco alto)**
-> - Você está sendo convidado(a) a baixar e executar `configurar-robo.bat`, um arquivo de lote que roda diretamente no seu sistema operacional.**Não** execute se você não se identificar como usuário(a) autorizado(a) e aprovado(a) na plataforma.
-> - **Leia todo o conteúdo** do arquivo antes de executá-lo. Se qualquer comando parecer estranho, duvidoso, pedir credenciais, acessar rede ou instalar softwares que você não reconhece, **não execute** e fale com o suporte.
-> - **Confirme a origem**: baixe o script apenas do **canal oficial do projeto** (repositório informado no rodapé / painel de afiliados deste README). Desconfie de links encaminhados por terceiros.
-> - **Valide a integridade**: quando disponível, confira o hash (SHA-256) ou a assinatura fornecida pela equipe de segurança.
-> - **Permissões**: execute **sem privilégios elevados** (sem administrador / root) em um ambiente controlado onde você não mexe com credenciais sensíveis.
-> - **Sem aprovação do usuário**, nenhum comando deve ser executado automaticamente.
-> - **Alternativa sem script**: você pode fazer a configuração manualmente seguindo as Sections 4 e 7 deste README (variáveis de ambiente e configurações do painel), dispensando totalmente a execução do `.bat`.
-
 Baixe o script configurar-robo.bat e dê dois cliques para configurá‑lo.
-**Importante**: siga as orientações de segurança acima **antes** de dar os dois cliques; a recomendação vale exclusivamente para quem entende o que está executando.
