@@ -422,6 +422,59 @@ async function runAgentLoop(jobId, task, agentType, tenantId, userId) {
 
       if (!toolCall) {
         // Agente finalizou — sem mais tool calls
+        // Validação de consistência (Primeira parte da correção):
+        // Extrai caminhos de arquivos contidos entre crases (`) no corpo original da Issue (task)
+        const issueFilePaths = [];
+        const backtickRegex = /`([^`]+)`/g;
+        let match;
+        while ((match = backtickRegex.exec(task)) !== null) {
+          const candidate = match[1].trim();
+          if (candidate.includes('/') || candidate.includes('.')) {
+            issueFilePaths.push(candidate);
+          }
+        }
+
+        // Obtém a lista de arquivos alterados (criados ou editados via ferramentas) durante o loop
+        const changedFilesSet = new Set();
+        for (const step of steps) {
+          if (step.name && (step.name.includes('Tool: createFile') || step.name.includes('Tool: editFile') || step.name.includes('createFile') || step.name.includes('editFile'))) {
+            try {
+              if (step.result) {
+                const parsedRes = typeof step.result === 'string' ? JSON.parse(step.result) : step.result;
+                if (parsedRes && parsedRes.path) {
+                  changedFilesSet.add(parsedRes.path);
+                }
+              }
+            } catch {}
+          }
+        }
+
+        const workspaceColCheck = db.collection('tenants').doc(tenantId).collection('workspace');
+        if (issueFilePaths.length > 0) {
+          const snapWs = await workspaceColCheck.where('_deleted', '==', false).get();
+          const workspacePaths = snapWs.docs.map(d => d.data().path);
+          workspacePaths.forEach(p => changedFilesSet.add(p));
+
+          const hasConsistency = issueFilePaths.some(issuePath => 
+            Array.from(changedFilesSet).some(wsPath => wsPath.includes(issuePath) || issuePath.includes(wsPath))
+          );
+
+          if (!hasConsistency && toolCalls > 0) {
+            const consistencyErrorMsg = `[CORTEX-AGENT] Erro de consistência: Nenhum dos arquivos mencionados na issue (${issueFilePaths.join(', ')}) foi alterado ou criado nas ferramentas/workspace. Operação de finalização bloqueada.`;
+            console.error(consistencyErrorMsg);
+            await addStep('Erro de consistência', consistencyErrorMsg, 'error');
+            await jobRef.update({
+              status:    'error',
+              error:     consistencyErrorMsg,
+              steps,
+              totalMs:   Date.now() - t0,
+              toolCalls,
+              updatedAt: now(),
+            });
+            return;
+          }
+        }
+
         await addStep('Resposta final', reply.slice(0, 500));
         await jobRef.update({
           status:    'done',
