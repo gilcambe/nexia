@@ -48,27 +48,7 @@ const BOAS_VINDAS: Message = {
   model: "CORTEX v16",
 };
 
-export default function CortexApp() {
-  const navigate = useNavigate();
-  const [messages, setMessages] = useState<Message[]>([BOAS_VINDAS]);
-  const [input, setInput] = useState("");
-  const [conversaId, setConversaId] = useState(() => novaConversaId());
-  const [loading, setLoading] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("auto");
-  const [serverStarting, setServerStarting] = useState(false);
-  const [errorBanner, setErrorBanner] = useState<string | null>(null);
-  const [historicoAberto, setHistoricoAberto] = useState(false);
-  const [conversas, setConversas] = useState<Conversa[]>(() => listarConversas());
-  const [projetos, setProjetos] = useState<ProjetoCortex[]>(() => listarProjetos());
-  const [projetoId, setProjetoId] = useState<string>("");
-  const [conexoesAberto, setConexoesAberto] = useState(false);
-  const [google, setGoogle] = useState<ConfigGoogle | null>(() => lerConfigGoogle());
-  const [googleForm, setGoogleForm] = useState<ConfigGoogle>(() => lerConfigGoogle() || { url: "", segredo: "" });
-  const [googleMsg, setGoogleMsg] = useState("");
-  const [conexoes, setConexoes] = useState<Conexao[]>([]);
-  const [editando, setEditando] = useState<{ id?: string; nome: string; instrucoes: string } | null>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
-  const abortRef = useRef<AbortController | null>(null);
+export default function CortexPage() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
