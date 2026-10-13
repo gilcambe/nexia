@@ -24,7 +24,8 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 }
 
 const { admin, db }                       = require('./firebase-init');
-const { guard, assertTenantAccess, sanitizePrompt, makeHeaders, HEADERS, isCortexPermitido } = require('./middleware');
+const { isCortexPermitido } = require('./middleware'); // Importação adicionada (CommonJS)
+const { guard, assertTenantAccess, sanitizePrompt, makeHeaders, HEADERS } = require('./middleware');
 const { publicErrorBody } = require('../../lib/safe-error');
 
 // FIX: helper centralizado para serverTimestamp — evita repetição
@@ -553,6 +554,13 @@ exports.handler = async (event) => {
   }
 
   const guardErr = await guard(event, 'cortex-agent', { skipTenant: true });
+// Verifica se o usuário tem acesso ao Cortex
+if (!isCortexPermitido(event._email, event._email_verified ?? true)) {
+  return {
+    statusCode: 403,
+    body: JSON.stringify({ error: 'Seu usuário não tem acesso ao Cortex.' })
+  };
+}
   if (guardErr) return guardErr;
 
   // Verifica se o usuário tem acesso ao Cortex
