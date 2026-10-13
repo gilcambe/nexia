@@ -69,7 +69,6 @@ export default function Onboarding() {
   const [preenchido, setPreenchido] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pronto, setPronto] = useState(false);
-  const [papel, setPapel] = useState(papelGuardado());
 
   // Refazendo o questionário: começa com as respostas que já existem.
   useEffect(() => {
