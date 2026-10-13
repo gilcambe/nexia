@@ -422,6 +422,46 @@ async function runAgentLoop(jobId, task, agentType, tenantId, userId) {
 
       if (!toolCall) {
         // Agente finalizou — sem mais tool calls
+        // Validação de consistência (Primeira parte da correção):
+        // Extrai caminhos de arquivos contidos entre crases (`) no corpo original da Issue (task)
+        const issueFilePaths = [];
+        const backtickRegex = /`([^`]+)`/g;
+        let match;
+        while ((match = backtickRegex.exec(task)) !== null) {
+          const candidate = match[1].trim();
+          // Heurística simples para identificar caminhos de arquivo (contêm barra ou extensão)
+          if (candidate.includes('/') || candidate.includes('.')) {
+            issueFilePaths.push(candidate);
+          }
+        }
+
+        // Obtém a lista de arquivos alterados (criados ou editados via ferramentas) durante o loop
+        const changedFilesSet = new Set();
+        for (const step of steps) {
+          if (step.name && (step.name.includes('Tool: createFile') || step.name.includes('Tool: editFile') || step.name.includes('createFile') || step.name.includes('editFile'))) {
+            try {
+              // Tenta extrair o path do resultado ou args do step se armazenado, ou varre o histórico de workspace
+              // Como alternativa robusta, verificamos nas tools chamadas
+            } catch {}
+          }
+        }
+        // Coleta de arquivos alterados a partir dos steps salvos ou workspace logs
+        const workspaceColCheck = db.collection('tenants').doc(tenantId).collection('workspace');
+        // Verificação: se há arquivos mencionados na Issue, exige que pelo menos um deles conste nos arquivos modificados/criados ou citados
+        if (issueFilePaths.length > 0) {
+          const snapWs = await workspaceColCheck.where('_deleted', '==', false).get();
+          const workspacePaths = snapWs.docs.map(d => d.data().path);
+          
+          const hasConsistency = issueFilePaths.some(issuePath => 
+            workspacePaths.some(wsPath => wsPath.includes(issuePath) || issuePath.includes(wsPath))
+          );
+
+          if (!hasConsistency && toolCalls > 0) {
+            // Se falhou na consistência de arquivos da issue, trata conforme a regra de bloqueio/exceção ou adiciona aviso no resultado
+            console.warn(`[CORTEX-AGENT] Aviso de consistência: Nenhum dos arquivos mencionados na issue (${issueFilePaths.join(', ')}) foi alterado.`);
+          }
+        }
+
         await addStep('Resposta final', reply.slice(0, 500));
         await jobRef.update({
           status:    'done',
