@@ -5,15 +5,6 @@ import { aplicarMarca, type Marca } from './coach/profissionais';
 
 type Papel = 'coach' | 'aluno' | 'nenhum';
 // Guardado no aparelho: o menu certo aparece na hora, mesmo antes da resposta ou sem internet.
-export function papelGuardado(): Papel | null {
-  try {
-    const p = localStorage.getItem('bc_papel');
-    return p === 'coach' || p === 'aluno' || p === 'nenhum' ? (p as Papel) : null;
-  } catch {
-    return null;
-  }
-}
-
 // ATENÇÃO: Este valor é apenas para conveniência visual no cliente e NÃO DEVE ser usado para controle de acesso ou autorização de funcionalidades sensíveis.
 // O controle de acesso e a autorização devem ser sempre verificados no backend.
 export function papelGuardado(): Papel | null {
