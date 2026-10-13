@@ -65,3 +65,4 @@ Você pode adaptar a plataforma facilmente para atender às suas necessidades de
  - **Notificações:** Defina a frequência e os canais de alerta para novas promoções e relatórios de comissões.
 
 Baixe o script configurar-robo.bat e dê dois cliques para configurá‑lo.
+
