@@ -3,8 +3,9 @@
 import { chatApi, type Contato } from './chat';
 import { aplicarMarca, type Marca } from './coach/profissionais';
 
-let papelConhecido: Papel | undefined;
+
 type Papel = 'coach' | 'aluno' | 'nenhum';
+let papelConhecido: Papel | undefined;
 // Guardado no aparelho: o menu certo aparece na hora, mesmo antes da resposta ou sem internet.
 export function papelGuardado(): Papel | null {
   try { const p = localStorage.getItem('bc_papel'); return p === 'coach' || p === 'aluno' || p === 'nenhum' ? p : null; } catch { return null; }
