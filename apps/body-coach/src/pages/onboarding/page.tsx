@@ -6,6 +6,8 @@ import { calcularMetas } from '@/lib/metas';
 import { montarCardapio } from '@/lib/dietPlan';
 import { DIVISOES } from '@/lib/dayPlan';
 import { fichaDoPerfil, treinoDaFicha, type Ficha } from '@/lib/ficha';
+import { papelGuardado } from '@/lib/papelCoach';
+import EscolherPapel from './EscolherPapel';
 
 // Primeiro acesso guiado (~1 minuto): 4 telas curtas e o aluno sai com treino e dieta prontos.
 // Grava as mesmas respostas de antes (profile/main.onboarding), que a ficha, o treino e a dieta já usam.
@@ -67,6 +69,7 @@ export default function Onboarding() {
   const [preenchido, setPreenchido] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pronto, setPronto] = useState(false);
+  const [papel, setPapel] = useState(papelGuardado());
 
   // Refazendo o questionário: começa com as respostas que já existem.
   useEffect(() => {
