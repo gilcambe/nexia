@@ -1,3 +1,9 @@
 {
-  "rodizio_index": 0
+  "rodizio_index": 0,
+  "historico_publicacoes": [],
+  "ultima_execucao": null,
+  "estatisticas": {
+    "por_cliente": {},
+    "por_canal": {}
+  }
 }

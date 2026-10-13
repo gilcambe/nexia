@@ -1,0 +1,14 @@
+[
+  {
+    "id": "twitter",
+    "ativo": true
+  },
+  {
+    "id": "linkedin",
+    "ativo": true
+  },
+  {
+    "id": "instagram",
+    "ativo": false
+  }
+]

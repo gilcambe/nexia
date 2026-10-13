@@ -1,0 +1,17 @@
+[
+  {
+    "id": "cli_1",
+    "nome": "Cliente Alpha",
+    "url": "https://exemplo.com/alpha"
+  },
+  {
+    "id": "cli_2",
+    "nome": "Cliente Beta",
+    "url": "https://exemplo.com/beta"
+  },
+  {
+    "id": "cli_3",
+    "nome": "Cliente Gamma",
+    "url": "https://exemplo.com/gamma"
+  }
+]
