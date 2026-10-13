@@ -16,6 +16,7 @@ const steps = [
   { key: 'objetivo', title: 'Qual é o seu objetivo?', icon: 'ri-trophy-line' },
   { key: 'treino', title: 'Como você treina?', icon: 'ri-run-line' },
   { key: 'comida', title: 'Comida e saúde', icon: 'ri-restaurant-line' },
+  { key: 'papel', title: 'Estilo do seu Coach', icon: 'ri-robot-line' },
 ];
 
 const goals = [
@@ -94,6 +95,7 @@ export default function Onboarding() {
     String(form.name ?? '').trim().length > 0 && peso > 25 && peso < 350,
     !!form.goal,
     !!form.level && !!form.days && lista('modality').length > 0,
+    true,
     true,
   ][step];
 
@@ -305,6 +307,13 @@ export default function Onboarding() {
               </label>
               <p className="text-xs text-foreground-400">Isso não é diagnóstico. O treino evita o que pode piorar a dor.</p>
             </>
+          )}
+
+          {step === 4 && (
+            <div className="space-y-4">
+              <p className="text-sm text-foreground-600">Escolha como o seu Coach vai conversar com você nos feedbacks e orientações:</p>
+              <EscolherPapel />
+            </div>
           )}
         </div>
 
