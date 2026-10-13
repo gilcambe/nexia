@@ -24,7 +24,8 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 }
 
 const { admin, db }                       = require('./firebase-init');
-const { guard, assertTenantAccess, sanitizePrompt, makeHeaders, HEADERS, isCortexPermitido } = require('./middleware');
+import { isCortexPermitido } from './middleware'; // Importação adicionada
+const { guard, assertTenantAccess, sanitizePrompt, makeHeaders, HEADERS } = require('./middleware');
 const { publicErrorBody } = require('../../lib/safe-error');
 
 // FIX: helper centralizado para serverTimestamp — evita repetição
