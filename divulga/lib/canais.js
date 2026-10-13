@@ -7,25 +7,109 @@ const afiliadosCanais = require('../../afiliados/lib/canais');
 
 const tempo = () => AbortSignal.timeout(30000);
 
+function sanitizeError(msg) {
+  if (typeof msg !== 'string') {
+    try { msg = JSON.stringify(msg); } catch { msg = String(msg); }
+  }
+  // Sanitize to avoid leaking sensitive internal API info, stack traces, tokens or paths
+  return msg
+    .replace(/(access_token|token|password|secret)=[^&\s]+/gi, '$1=***')
+    .replace(/Bearer\s+[a-zA-Z0-9_\-\.]+/gi, 'Bearer ***')
+    .slice(0, 200);
+}
+
 async function json(r, quem) {
   let j = null;
   try { j = await r.json(); } catch { /* sem corpo */ }
   if (!r.ok) {
-    const msg = (j && (j.error_description || (j.error && (j.error.message || j.error)) || j.message || j.detail || j.description)) || `HTTP ${r.status}`;
-    throw new afiliadosCanais.CanalErro(`${quem}: ${typeof msg === 'string' ? msg : JSON.stringify(msg)}`.slice(0, 300));
+    const rawMsg = (j && (j.error_description || (j.error && (j.error.message || j.error)) || j.message || j.detail || j.description)) || `HTTP ${r.status}`;
+    const safeMsg = sanitizeError(rawMsg);
+    throw new afiliadosCanais.CanalErro(`${quem}: ${safeMsg}`);
   }
   return j;
 }
 
+function validarUrlPublica(urlString) {
+  if (!urlString || typeof urlString !== 'string') return false;
+  try {
+    const parsed = new URL(urlString);
+    if (parsed.protocol !== 'https:') return false;
+    const hostname = parsed.hostname.toLowerCase();
+    // Block private/internal hostnames and IPs (SSRF mitigation)
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '0.0.0.0' ||
+      hostname === '[::1]' ||
+      hostname.endsWith('.internal') ||
+      hostname.endsWith('.local') ||
+      hostname.startsWith('10.') ||
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('172.16.') ||
+      hostname.startsWith('172.17.') ||
+      hostname.startsWith('172.18.') ||
+      hostname.startsWith('172.19.') ||
+      hostname.startsWith('20.') || // metadata or cloud local
+      hostname.startsWith('169.254.') // AWS/Cloud metadata
+    ) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function validarPost(post) {
+  if (!post || typeof post !== 'object') {
+    throw new afiliadosCanais.CanalErro('Post inválido');
+  }
+  if (post.titulo && (typeof post.titulo !== 'string' || post.titulo.length > 500)) {
+    throw new afiliadosCanais.CanalErro('Título inválido ou muito longo');
+  }
+  if (post.texto && (typeof post.texto !== 'string' || post.texto.length > 5000)) {
+    throw new afiliadosCanais.CanalErro('Texto inválido ou muito longo');
+  }
+  if (post.link) {
+    if (typeof post.link !== 'string' || post.link.length > 2000 || !validarUrlPublica(post.link)) {
+      throw new afiliadosCanais.CanalErro('Link inválido ou não seguro');
+    }
+  }
+  if (!post.imagem || typeof post.imagem !== 'string' || post.imagem.length > 2000 || !validarUrlPublica(post.imagem)) {
+    throw new afiliadosCanais.CanalErro('URL de imagem inválida ou não pública (HTTPS obrigatório)');
+  }
+}
+
+async function fetchWithRetry(fetchImpl, url, options = {}, retries = 3, delay = 1000) {
+  let attempt = 0;
+  while (true) {
+    attempt++;
+    try {
+      const res = await fetchImpl(url, options);
+      if ((res.status === 429 || res.status >= 500) && attempt < retries) {
+        await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt - 1)));
+        continue;
+      }
+      return res;
+    } catch (err) {
+      if (attempt >= retries) throw err;
+      await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, attempt - 1)));
+    }
+  }
+}
+
+const GRAPH_VERSION = process.env.DIVULGA_GRAPH_VERSION || 'v21.0';
+const GRAPH = `https://graph.facebook.com/${GRAPH_VERSION}`;
+
 // ---------- Facebook (página) ----------
-const GRAPH = 'https://graph.facebook.com/v21.0';
 const facebook = {
   id: 'facebook',
   nome: 'Página do Facebook',
   ativo: env => !!(env.DIVULGA_META_PAGE_ID && env.DIVULGA_META_PAGE_TOKEN),
   async publicar(post, { env, fetchImpl }) {
+    validarPost(post);
     const textoCompleto = [post.titulo, post.texto, post.link].filter(Boolean).join('\n\n');
-    const r = await fetchImpl(`${GRAPH}/${encodeURIComponent(env.DIVULGA_META_PAGE_ID)}/photos`, {
+    const r = await fetchWithRetry(fetchImpl, `${GRAPH}/${encodeURIComponent(env.DIVULGA_META_PAGE_ID)}/photos`, {
       method: 'POST',
       signal: tempo(),
       body: new URLSearchParams({
@@ -45,9 +129,10 @@ const instagram = {
   nome: 'Instagram',
   ativo: env => !!(env.DIVULGA_META_IG_USER_ID && env.DIVULGA_META_PAGE_TOKEN),
   async publicar(post, { env, fetchImpl }) {
+    validarPost(post);
     const conta = encodeURIComponent(env.DIVULGA_META_IG_USER_ID);
     const legenda = [post.titulo, post.texto, post.link ? `Link: ${post.link}` : ''].filter(Boolean).join('\n\n');
-    const c = await json(await fetchImpl(`${GRAPH}/${conta}/media`, {
+    const cRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/media`, {
       method: 'POST',
       signal: tempo(),
       body: new URLSearchParams({
@@ -55,15 +140,17 @@ const instagram = {
         caption: legenda.slice(0, 2200),
         access_token: env.DIVULGA_META_PAGE_TOKEN,
       }),
-    }), 'Instagram mídia');
-    const j = await json(await fetchImpl(`${GRAPH}/${conta}/media_publish`, {
+    });
+    const c = await json(cRes, 'Instagram mídia');
+    const jRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/media_publish`, {
       method: 'POST',
       signal: tempo(),
       body: new URLSearchParams({
         creation_id: c.id,
         access_token: env.DIVULGA_META_PAGE_TOKEN,
       }),
-    }), 'Instagram publicar');
+    });
+    const j = await json(jRes, 'Instagram publicar');
     return { ok: true, ref: j.id };
   },
 };
@@ -74,8 +161,9 @@ const pinterest = {
   nome: 'Pinterest',
   ativo: env => !!(env.DIVULGA_PINTEREST_APP_ID && env.DIVULGA_PINTEREST_APP_SECRET && env.DIVULGA_PINTEREST_REFRESH_TOKEN && env.DIVULGA_PINTEREST_BOARD_ID),
   async publicar(post, { env, fetchImpl }) {
+    validarPost(post);
     const basic = Buffer.from(`${env.DIVULGA_PINTEREST_APP_ID}:${env.DIVULGA_PINTEREST_APP_SECRET}`).toString('base64');
-    const t = await json(await fetchImpl('https://api.pinterest.com/v5/oauth/token', {
+    const tRes = await fetchWithRetry(fetchImpl, 'https://api.pinterest.com/v5/oauth/token', {
       method: 'POST',
       signal: tempo(),
       headers: {
@@ -86,9 +174,10 @@ const pinterest = {
         grant_type: 'refresh_token',
         refresh_token: env.DIVULGA_PINTEREST_REFRESH_TOKEN,
       }).toString(),
-    }), 'Pinterest token');
+    });
+    const t = await json(tRes, 'Pinterest token');
     const desc = [post.texto, post.link].filter(Boolean).join('\n\n');
-    const j = await json(await fetchImpl('https://api.pinterest.com/v5/pins', {
+    const jRes = await fetchWithRetry(fetchImpl, 'https://api.pinterest.com/v5/pins', {
       method: 'POST',
       signal: tempo(),
       headers: {
@@ -106,7 +195,8 @@ const pinterest = {
           url: post.imagem,
         },
       }),
-    }), 'Pinterest pin');
+    });
+    const j = await json(jRes, 'Pinterest pin');
     return { ok: true, ref: j.id };
   },
 };
@@ -118,8 +208,9 @@ const bluesky = {
   nome: 'Bluesky',
   ativo: env => !!(env.DIVULGA_BLUESKY_HANDLE && env.DIVULGA_BLUESKY_APP_PASSWORD),
   async publicar(post, { env, fetchImpl }) {
+    validarPost(post);
     const base = 'https://bsky.social/xrpc';
-    const s = await json(await fetchImpl(`${base}/com.atproto.server.createSession`, {
+    const sRes = await fetchWithRetry(fetchImpl, `${base}/com.atproto.server.createSession`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       signal: tempo(),
@@ -127,23 +218,27 @@ const bluesky = {
         identifier: env.DIVULGA_BLUESKY_HANDLE,
         password: env.DIVULGA_BLUESKY_APP_PASSWORD,
       }),
-    }), 'Bluesky login');
+    });
+    const s = await json(sRes, 'Bluesky login');
     const auth = { Authorization: `Bearer ${s.accessJwt}` };
     let thumb;
     try {
-      const img = await fetchImpl(post.imagem, { signal: tempo() });
-      const buf = Buffer.from(await img.arrayBuffer());
-      if (img.ok && buf.length < 950000) {
-        const up = await json(await fetchImpl(`${base}/com.atproto.repo.uploadBlob`, {
-          method: 'POST',
-          headers: {
-            ...auth,
-            'Content-Type': img.headers.get('content-type') || 'image/jpeg',
-          },
-          body: buf,
-          signal: tempo(),
-        }), 'Bluesky foto');
-        thumb = up.blob;
+      if (validarUrlPublica(post.imagem)) {
+        const img = await fetchWithRetry(fetchImpl, post.imagem, { signal: tempo() });
+        const buf = Buffer.from(await img.arrayBuffer());
+        if (img.ok && buf.length < 950000) {
+          const upRes = await fetchWithRetry(fetchImpl, `${base}/com.atproto.repo.uploadBlob`, {
+            method: 'POST',
+            headers: {
+              ...auth,
+              'Content-Type': img.headers.get('content-type') || 'image/jpeg',
+            },
+            body: buf,
+            signal: tempo(),
+          });
+          const up = await json(upRes, 'Bluesky foto');
+          thumb = up.blob;
+        }
       }
     } catch { /* posta sem miniatura */ }
 
@@ -164,7 +259,7 @@ const bluesky = {
         },
       },
     };
-    const j = await json(await fetchImpl(`${base}/com.atproto.repo.createRecord`, {
+    const jRes = await fetchWithRetry(fetchImpl, `${base}/com.atproto.repo.createRecord`, {
       method: 'POST',
       headers: {
         ...auth,
@@ -176,7 +271,8 @@ const bluesky = {
         collection: 'app.bsky.feed.post',
         record,
       }),
-    }), 'Bluesky post');
+    });
+    const j = await json(jRes, 'Bluesky post');
     return { ok: true, ref: j.uri };
   },
 };
@@ -187,11 +283,12 @@ const threads = {
   nome: 'Threads',
   ativo: env => !!(env.DIVULGA_THREADS_USER_ID && env.DIVULGA_THREADS_TOKEN),
   async publicar(post, { env, fetchImpl }) {
+    validarPost(post);
     const conta = encodeURIComponent(env.DIVULGA_THREADS_USER_ID);
     const mensagem = [post.titulo, post.texto, post.link].filter(Boolean).join('\n\n');
     
     // 1. Criar container de imagem do Threads
-    const containerRes = await fetchImpl(`${GRAPH}/${conta}/threads`, {
+    const containerRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/threads`, {
       method: 'POST',
       signal: tempo(),
       body: new URLSearchParams({
@@ -204,7 +301,7 @@ const threads = {
     const container = await json(containerRes, 'Threads container');
 
     // 2. Publicar o container
-    const publishRes = await fetchImpl(`${GRAPH}/${conta}/threads_publish`, {
+    const publishRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/threads_publish`, {
       method: 'POST',
       signal: tempo(),
       body: new URLSearchParams({
