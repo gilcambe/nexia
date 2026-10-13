@@ -69,8 +69,8 @@ export default function Onboarding() {
   const [preenchido, setPreenchido] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pronto, setPronto] = useState(false);
-  // Quem chegou por link de convite ou já tem papel não precisa escolher de novo.
-  const [tipoOk, setTipoOk] = useState(() => { try { return !!localStorage.getItem('bc_convite') || !!papelGuardado(); } catch { return false; } });
+  // Quem chegou por link de convite ou já é coach/aluno de coach não precisa escolher ("nenhum" é o padrão de conta nova).
+  const [tipoOk, setTipoOk] = useState(() => { try { const g = papelGuardado(); return !!localStorage.getItem('bc_convite') || g === 'coach' || g === 'aluno'; } catch { return false; } });
 
   // Refazendo o questionário: começa com as respostas que já existem.
   useEffect(() => {
