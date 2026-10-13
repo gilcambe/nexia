@@ -5,7 +5,7 @@ import { setUserDoc } from '@/lib/userData';
 import { calcularMetas } from '@/lib/metas';
 import { montarCardapio } from '@/lib/dietPlan';
 import { DIVISOES } from '@/lib/dayPlan';
-import { fichaDoPerfil, treinoDaFicha, type Ficha } from '@/lib/facha';
+import { fichaDoPerfil, treinoDaFicha, type Ficha } from '@/lib/ficha';
 import { papelGuardado } from '@/lib/papelCoach';
 import EscolherPapel from './EscolherPapel';
 
