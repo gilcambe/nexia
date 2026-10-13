@@ -113,7 +113,10 @@ async function registrarAparelho(db, uid, aparelho, agora = Date.now()) {
     removidos = [...removidos, ...lista.slice(MAX_APARELHOS).map((x) => x.id)].slice(-10);
     lista = lista.slice(0, MAX_APARELHOS);
   }
-  await ref.set({ aparelhos: lista, removidos }, { merge: true });
+  const hoje = diaBR(agora);
+  const mergeData = { aparelhos: lista, removidos };
+  if (a.ultimoUso !== hoje) mergeData.ultimoUso = hoje;
+  await ref.set(mergeData, { merge: true });
   return { sair: false };
 }
 
