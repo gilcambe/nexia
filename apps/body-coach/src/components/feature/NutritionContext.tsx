@@ -92,7 +92,7 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
-  const reload = useCallback(() => setReloadKey((k) => k + 1), []);
+  const reload = useCallback(() => setReloadKey((k) => k + 1), [user]);
 
   useEffect(() => {
     let active = true;
