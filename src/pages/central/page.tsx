@@ -56,7 +56,19 @@ export default function CentralPage() {
       <header className="sticky top-0 z-10 bg-[#0a0a0f]/95 backdrop-blur border-b border-nexia-border">
         <div className="px-4 py-3 max-w-2xl mx-auto flex items-center justify-between">
           <h1 className="text-lg font-bold" data-testid="central-title">Central <span className="text-nexia-cyan">NEXIA</span></h1>
-          <div className="flex items-center gap-3">\n            <span className="text-xs text-nexia-muted truncate max-w-[50%]">{user?.email}</span>\n            <button type="button" onClick={() => setClaro(v => !v)} data-testid="btn-tema" aria-label="Alternar tema claro/escuro" className="text-xs cursor-pointer px-2 py-1 rounded border border-nexia-border">\n              {claro ? "☀️ Claro" : "🌙 Escuro"}\n            </button>\n          </div>\n        </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-nexia-muted truncate max-w-[50%]">{user?.email}</span>
+            <button
+              type="button"
+              onClick={() => setClaro((v) => !v)}
+              data-testid="btn-tema"
+              aria-label="Alternar tema claro/escuro"
+              className="text-xs cursor-pointer px-2 py-1 rounded border border-nexia-border"
+            >
+              {claro ? "☀️ Claro" : "🌙 Escuro"}
+            </button>
+          </div>
+        </div>
       </header>
 
       <main className="px-4 py-4 max-w-2xl mx-auto">
