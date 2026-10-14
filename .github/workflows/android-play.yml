@@ -32,7 +32,11 @@ jobs:
         run: |
           mkdir -p ~/.bubblewrap
           echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_SDK_ROOT\"}" > ~/.bubblewrap/config.json
+          # O Bubblewrap exige <sdk>/bin (ou <sdk>/tools); no runner o sdkmanager fica em cmdline-tools/latest/bin.
+          [ -e "$ANDROID_SDK_ROOT/bin" ] || ln -s "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" "$ANDROID_SDK_ROOT/bin" || sudo ln -s "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" "$ANDROID_SDK_ROOT/bin"
           yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          # Versão do build-tools que o Bubblewrap 1.27 usa (BUILD_TOOLS_VERSION).
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "build-tools;36.1.0" > /dev/null
       - name: Gerar AAB
         env:
           BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASS }}
