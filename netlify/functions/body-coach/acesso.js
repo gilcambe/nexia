@@ -3,7 +3,7 @@
 const { meusAlunos } = require('./profissionais');
 
 // NEXIA Body Coach — acesso: teste grátis, aviso antes de acabar, bloqueio no servidor e liberação pelo admin (Pix, sem gateway).
-// bc_config/acesso: { diasGratis, diasGratisCoach, isentos: [emails], pix }.
+// bc_config/acesso: { diasGratis, diasGratisCoach, isentos: [emails], pix, pixNome }.
 // bc_acesso/{uid}: { tipo, inicio, gratisAte, pagoAte, faixa, plano, cobertos, cobertoAte, fimDia, email, aparelhos, removidos }.
 const DIA = 86400000;
 const AVISO_DIAS = 5;
@@ -18,6 +18,7 @@ async function configAcesso(db) {
     diasGratisCoach: Number(c.diasGratisCoach) > 0 ? Math.round(Number(c.diasGratisCoach)) : 30,
     isentos: [...SEMPRE_ISENTOS, ...(Array.isArray(c.isentos) ? c.isentos.map((e) => String(e).trim().toLowerCase()) : [])],
     pix: String(c.pix || ''),
+    pixNome: String(c.pixNome || ''),
     promo: c.promo && Number(c.promo.pct) > 0 ? { pct: Number(c.promo.pct), ate: Number(c.promo.ate) || 0, texto: String(c.promo.texto || '') } : null,
   };
 }
@@ -50,7 +51,7 @@ async function acessoDe(db, uid, ctx = {}, agora = Date.now()) {
     await ref.set({ email: a.email, tipo }, { merge: true });
   }
   const isento = !!(ctx.master || a.isento || (a.email && cfg.isentos.includes(a.email)));
-  const base = { tipo, gratisAte: a.gratisAte || 0, pagoAte: a.pagoAte || 0, pix: cfg.pix };
+  const base = { tipo, gratisAte: a.gratisAte || 0, pagoAte: a.pagoAte || 0, pix: cfg.pix, pixNome: cfg.pixNome };
   if (tipo === 'coach') {
     const limite = limiteDoCoach(a, isento, agora);
     const situacao = isento ? 'isento' : base.pagoAte > agora ? 'pago' : base.gratisAte > agora ? 'gratis' : 'basico';
@@ -290,6 +291,7 @@ async function acoesAdmin(body, db, ctx) {
       diasGratis: dias >= 1 && dias <= 365 ? Math.round(dias) : atual.diasGratis,
       diasGratisCoach: Number(body.diasGratisCoach) >= 1 && Number(body.diasGratisCoach) <= 365 ? Math.round(Number(body.diasGratisCoach)) : atual.diasGratisCoach,
       pix: typeof body.pix === 'string' ? body.pix.trim().slice(0, 120) : atual.pix,
+      pixNome: typeof body.pixNome === 'string' ? body.pixNome.trim().slice(0, 60) : atual.pixNome,
       isentos: Array.isArray(body.isentos) ? body.isentos.map((e) => String(e).trim().toLowerCase()).filter((e) => e.includes('@') && !SEMPRE_ISENTOS.includes(e)).slice(0, 100) : atual.isentos.filter((e) => !SEMPRE_ISENTOS.includes(e)),
     };
     await db.collection('bc_config').doc('acesso').set(novo, { merge: true });
