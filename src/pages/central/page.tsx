@@ -76,8 +76,8 @@ export default function CentralPage() {
       <header className="sticky top-0 z-10 bg-[#0a0a0f]/95 backdrop-blur border-b border-nexia-border">
         <div className="px-4 py-3 max-w-2xl mx-auto flex items-center justify-between">
           <h1 className="text-lg font-bold" data-testid="central-title">
-            Central <span className="text-nexia-cyan">NEXIA</span>
-          </h1>
+          Central <span className="text-nexia-cyan">NEXIA</span>
+        </h1>
           <div className="flex items-center gap-3">
             <span className="text-xs text-nexia-muted truncate max-w-[50%]">{user?.email}</span>
             <button
