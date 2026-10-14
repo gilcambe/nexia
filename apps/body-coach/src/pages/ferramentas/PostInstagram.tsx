@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useAuth } from '@/components/feature/AuthContext';
 import { apagarMomento, guardarMomento, listarMomentos, MAX_MOMENTOS, tipoDoArquivo, type Momento } from '@/lib/momentos';
 import { compartilharArquivo, duracaoPrevista, FRASES, gerarImagem, gerarVideo, TAMANHO, tipoDeVideo, type Formato, type Midia, type TextoPost } from '@/lib/postInstagram';
-import { linkIndicacao } from '@/lib/ferramentas/cartao';
+import { guardarSelo, linkIndicacao, seloLigado } from '@/lib/ferramentas/cartao';
 
 // Post/vídeo do treino para o Instagram: escolhe fotos e vídeos, o app monta com a marca discreta e abre o compartilhar.
 interface Estado { titulo?: string; numeros?: { valor: string; rotulo: string }[] }
@@ -33,6 +33,7 @@ export default function PostInstagram() {
   const [titulo, setTitulo] = useState(inicial.titulo ?? 'Treino feito');
   const [frase, setFrase] = useState(FRASES[0]);
   const [comNumeros, setComNumeros] = useState(true);
+  const [comSelo, setComSelo] = useState(seloLigado);
   const [gerando, setGerando] = useState<'' | 'imagem' | 'video'>('');
   const [progresso, setProgresso] = useState(0);
   const [pronto, setPronto] = useState<{ blob: Blob; url: string; ext: string; video: boolean } | null>(null);
@@ -47,7 +48,8 @@ export default function PostInstagram() {
   const midias: Midia[] = useMemo(() => momentos.map((m) => ({ id: m.id, tipo: m.tipo, url: URL.createObjectURL(m.blob) })), [momentos]);
   useEffect(() => () => midias.forEach((m) => URL.revokeObjectURL(m.url)), [midias]);
 
-  const texto: TextoPost = { titulo: titulo.trim(), frase: frase.trim(), numeros: comNumeros ? inicial.numeros : [] };
+  const linkApp = user ? linkIndicacao(user.id) : '';
+  const texto: TextoPost = { titulo: titulo.trim(), frase: frase.trim(), numeros: comNumeros ? inicial.numeros : [], selo: comSelo ? linkApp : '' };
   const chaveTexto = JSON.stringify(texto);
   const temVideo = midias.some((m) => m.tipo === 'video');
   const podeVideo = !!tipoDeVideo();
@@ -93,8 +95,7 @@ export default function PostInstagram() {
 
   const enviar = async () => {
     if (!pronto) return;
-    const link = user ? linkIndicacao(user.id) : '';
-    const r = await compartilharArquivo(pronto.blob, `treino-body-coach.${pronto.ext}`, `Treino pago no Body Coach 💪 ${link}`.trim());
+    const r = await compartilharArquivo(pronto.blob, `treino-body-coach.${pronto.ext}`, `Treino pago no Body Coach 💪 ${linkApp}`.trim());
     setMsg(r === 'baixado'
       ? (pronto.ext === 'webm' ? 'Vídeo salvo. Se o Instagram não aceitar este formato, use a opção de imagem.' : 'Arquivo salvo no aparelho. Abra o Instagram e escolha da galeria.')
       : '');
@@ -153,13 +154,17 @@ export default function PostInstagram() {
             Mostrar os números do treino ({inicial.numeros.map((n) => `${n.valor} ${n.rotulo}`).join(' · ')})
           </label>
         )}
+        <label className="mt-3 flex items-center gap-3 text-base text-foreground-800">
+          <input type="checkbox" checked={comSelo} onChange={(e) => { setComSelo(e.target.checked); guardarSelo(e.target.checked); setPronto(null); }} className="h-6 w-6" data-testid="mostrar-selo" />
+          Mostrar selo do app (QR code para treinarem com você)
+        </label>
       </section>
 
       {midias.length > 0 && !pronto && (
         <section>
           <h2 className="text-lg font-bold text-foreground-950">Prévia</h2>
           <canvas ref={previa} className={`mx-auto mt-2 block rounded-xl shadow-lg ${formato === 'story' ? 'w-56' : 'w-64'}`} aria-label="Prévia do post" data-testid="previa-post" />
-          <p className="mt-1 text-center text-sm text-foreground-500">A marca Body Coach fica pequena no canto.</p>
+          <p className="mt-1 text-center text-sm text-foreground-500">{comSelo ? 'O selo com QR do app fica no canto: quem escanear entra pelo seu convite.' : 'A marca Body Coach fica pequena no canto.'}</p>
         </section>
       )}
       <canvas ref={trabalho} className="hidden" />

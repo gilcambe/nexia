@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import Card from '@/components/base/Card';
 import { useAuth } from '@/components/feature/AuthContext';
 import { interpretMarker } from '@/pages/exams/components/markerRules';
+import OfertasDoDia from './OfertasDoDia';
 import { PRODUTOS, linkAmazon, linkMercadoLivre, recomendados, type ProdutoLoja } from '@/lib/ferramentas/loja';
 
 function Produto({ p }: { p: ProdutoLoja }) {
@@ -40,6 +41,8 @@ export default function Loja() {
 
   return (
     <div className="space-y-4">
+      <OfertasDoDia />
+
       <form onSubmit={(e) => { e.preventDefault(); if (busca.trim()) window.open(linkAmazon(busca.trim()), '_blank', 'noopener'); }} className="flex gap-2">
         <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar produto (ex.: whey, tênis)" className="min-w-0 flex-1 rounded-xl border border-background-200 bg-background-50 px-3 py-2.5 text-sm" aria-label="Buscar produto" />
         <button type="submit" className="rounded-xl bg-primary-500 px-4 text-background-50 dark:text-foreground-950" aria-label="Buscar"><i className="ri-search-line"></i></button>

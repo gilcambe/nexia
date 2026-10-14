@@ -1,10 +1,11 @@
 // Post e vídeo para o Instagram feitos no próprio celular (canvas + MediaRecorder): sem servidor, sem custo.
 // O aluno escolhe fotos/vídeos do treino; o app monta a imagem (colagem) ou o vídeo (sequência com zoom suave),
 // com o título do treino, os números e uma marca d'água discreta "Body Coach · NEXIA" no canto.
+import { selo } from '@/lib/ferramentas/cartao';
 
 export type Formato = 'story' | 'feed';
 export interface Midia { id: string; tipo: 'foto' | 'video'; url: string }
-export interface TextoPost { titulo?: string; frase?: string; numeros?: { valor: string; rotulo: string }[]; marca?: string }
+export interface TextoPost { titulo?: string; frase?: string; numeros?: { valor: string; rotulo: string }[]; marca?: string; selo?: string /* link do QR do app no canto; vazio = sem selo */ }
 
 export const TAMANHO: Record<Formato, { w: number; h: number; rotulo: string }> = {
   story: { w: 1080, h: 1920, rotulo: 'Story / Reels (vertical)' },
@@ -82,7 +83,7 @@ export function desenharTextos(ctx: CanvasRenderingContext2D, W: number, H: numb
     ctx.fillRect(0, H * 0.5, W, H * 0.5);
   }
   const margem = 70 * u;
-  let y = H - 150 * u;
+  let y = H - 150 * u - (t.selo ? 120 * u : 0); // com o selo, o texto sobe para não ficar por baixo dele
   ctx.textBaseline = 'alphabetic';
   ctx.shadowColor = 'rgba(0,0,0,0.45)';
   ctx.shadowBlur = 12 * u;
@@ -118,7 +119,8 @@ export function desenharTextos(ctx: CanvasRenderingContext2D, W: number, H: numb
     for (let i = ls.length - 1; i >= 0; i--) { ctx.fillText(ls[i], margem, y); y -= 84 * u; }
   }
   ctx.restore();
-  marcaDagua(ctx, W, H, t.marca);
+  if (t.selo) selo(ctx, W, H, t.selo);
+  else marcaDagua(ctx, W, H, t.marca);
 }
 
 // Marca d'água discreta (canto de baixo, à direita): pequena e meio transparente.

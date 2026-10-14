@@ -30,6 +30,7 @@ async function rodarLembretes(db, t = Date.now()) {
   // Mensalidade: uma vez por dia, às 09:00 de Brasília.
   const cobrancas = s === '09:00' ? await rodarCobrancas(db, t).catch((e) => ({ erro: e.message })) : undefined;
   const fimDoAcesso = s === '09:00' ? await avisarFimDoAcesso(db, t).catch((e) => ({ erro: e.message })) : undefined;
+  const volta = s === '18:00' ? await require('./voltar').avisarQuemSumiu(db, t).catch((e) => ({ erro: e.message })) : undefined;
   const snap = await db.collection('bc_push').where('horarios', 'array-contains', s).limit(300).get();
   let enviados = 0;
   for (const doc of snap.docs) {
@@ -48,7 +49,7 @@ async function rodarLembretes(db, t = Date.now()) {
     }
     if (prefs.agua.ativo && horariosDe({ ...prefs, treino: { ativo: false } }).includes(s)) enviados += await avisar(db, doc.id, { titulo: 'Hora de beber água 💧', corpo: 'Um copo agora. Toque para marcar.', url: 'nutrition', tag: 'agua' }, 'agua');
   }
-  return { slot: s, pessoas: snap.docs.length, enviados, cobrancas, fimDoAcesso };
+  return { slot: s, pessoas: snap.docs.length, enviados, cobrancas, fimDoAcesso, volta };
 }
 
 module.exports = { rodarLembretes, avisarFimDoAcesso };
