@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apagarModelo, aplicarModelo, listarModelos, type ModeloResumo } from '@/lib/coach/equipe';
 import { painelAlunos, type LinhaAluno } from '@/lib/coach/alunos';
+import { confirmar } from '../../lib/dialogo';
 
 // Modelos do coach: fichas e dietas prontas que ele aplica em vários alunos de uma vez.
 export default function Modelos() {
@@ -44,7 +45,7 @@ export default function Modelos() {
               <button type="button" onClick={() => { setAplicando(m); setOk(''); }} className="rounded-lg bg-primary-500 px-2 py-2 text-xs font-semibold text-background-50 dark:text-foreground-950">Aplicar</button>
               <Link to={`/coach/modelos/${m.id}`} className="rounded-lg border border-background-200 px-2 py-2 text-center text-xs font-semibold text-foreground-700">Editar</Link>
               <button type="button" onClick={async () => {
-                if (!window.confirm(`Apagar o modelo “${m.nome}”? Quem já recebeu continua com a cópia.`)) return;
+                if (!await confirmar(`Apagar o modelo “${m.nome}”? Quem já recebeu continua com a cópia.`)) return;
                 try { await apagarModelo(m.id); setLista((l) => (l ?? []).filter((x) => x.id !== m.id)); } catch (e) { setErro((e as Error).message); }
               }} className="rounded-lg border border-red-200 px-2 py-2 text-xs font-semibold text-red-600">Apagar</button>
             </div>

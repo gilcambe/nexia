@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '@/components/base/Card';
 import { apagarConvite, importarConvites, lerPlanilha, marcarEnviado, verConvites, type Convite } from '@/lib/coach/profissionais';
+import { confirmar } from '../../lib/dialogo';
 
 // Importar alunos de uma planilha e convidar todos: colar do Excel/Google Planilhas (ou abrir um .csv),
 // e mandar o link por WhatsApp (um toque por aluno) ou por e-mail (todos de uma vez). Mostra quem já entrou.
@@ -53,7 +54,7 @@ export default function Convites() {
     await carregar();
   };
   const apagar = async (c: Convite) => {
-    if (!window.confirm(`Tirar ${c.nome} da lista de convites?`)) return;
+    if (!await confirmar(`Tirar ${c.nome} da lista de convites?`)) return;
     try { await apagarConvite(c.id); await carregar(); } catch (e) { setErro((e as Error).message); }
   };
 

@@ -4,9 +4,7 @@
 // As 4 fotos (frente, costas, lado direito e esquerdo) vão no próprio documento, comprimidas,
 // porque o Cloud Storage do Firebase exige plano pago e o documento aceita até 1 MB.
 import { deleteUserDoc, setUserDoc } from '@/lib/userData';
-import { isLocalDemoActive, readLocalList, writeLocalList, LOCAL_PROGRESS_KEY } from '@/lib/localDemo';
 import type { ProgressEntry } from '@/hooks/useProgressData';
-import { localProgressSeed } from '@/mocks/localDemo';
 import { CAMPO_POR_KEY } from './campos.ts';
 import { calcular, type Avaliacao, type Sexo } from './calculos.ts';
 
@@ -134,21 +132,10 @@ export async function salvarAvaliacao(
     : av;
   const doc = documento(uid, id, final, fotos);
 
-  if (isLocalDemoActive()) {
-    const salvos = readLocalList<Record<string, unknown>>(LOCAL_PROGRESS_KEY) ?? (localProgressSeed.map((r) => ({ ...r })) as Record<string, unknown>[]);
-    const lista = salvos.filter((r) => r.id !== id);
-    lista.push(doc);
-    writeLocalList(LOCAL_PROGRESS_KEY, lista);
-    return id;
-  }
   await setUserDoc(uid, 'progress_entries', String(id), doc);
   return id;
 }
 
 export async function apagarAvaliacao(uid: string, id: number): Promise<void> {
-  if (isLocalDemoActive()) {
-    writeLocalList(LOCAL_PROGRESS_KEY, (readLocalList<Record<string, unknown>>(LOCAL_PROGRESS_KEY) ?? []).filter((r) => r.id !== id));
-    return;
-  }
   await deleteUserDoc(uid, 'progress_entries', String(id));
 }

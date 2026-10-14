@@ -1,7 +1,5 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import { setUserDoc, compressImageToDataUrl } from '@/lib/userData';
-import { isLocalDemoActive, readLocalList, writeLocalList, LOCAL_PROGRESS_KEY } from '@/lib/localDemo';
-import { localProgressSeed } from '@/mocks/localDemo';
 
 function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -86,27 +84,6 @@ export default function RegisterProgress({
     if (cinturaVal !== null) measurements.cintura = cinturaVal;
     if (quadrilVal !== null) measurements.quadril = quadrilVal;
 
-    // MODO LOCAL: salva apenas neste navegador (sem backend).
-    if (isLocalDemoActive()) {
-      // Parte da semente de exemplo (como nos exames); no original a lista começava vazia
-      // e o primeiro registro apagava o histórico de demonstração do gráfico.
-      const list =
-        readLocalList<Record<string, unknown>>(LOCAL_PROGRESS_KEY) ??
-        (localProgressSeed.map((r) => ({ ...r })) as Record<string, unknown>[]);
-      list.push({
-        taken_at: new Date().toISOString(),
-        weight_kg: weightVal,
-        body_fat_pct: bodyFatVal,
-        measurements,
-        notes: notes.trim() || null,
-      });
-      writeLocalList(LOCAL_PROGRESS_KEY, list);
-      setSuccessMsg('Progresso salvo (modo local).');
-      reset();
-      onSaved();
-      setSaving(false);
-      return;
-    }
 
     try {
       // 1) Foto: comprimida e guardada como data URL no próprio documento

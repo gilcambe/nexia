@@ -8,6 +8,7 @@ import Card, { CardHeader } from '@/components/base/Card';
 import SobreVoce from './components/SobreVoce';
 import ConviteCoach from './components/ConviteCoach';
 import { definirLetra, letraGuardada, TAMANHOS } from '@/lib/letra';
+import { confirmar } from '../../lib/dialogo';
 
 type Answers = Record<string, string | string[] | undefined>;
 interface SavedProfile {
@@ -74,7 +75,7 @@ export default function Profile() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const deleteAccount = async () => {
     if (!user) return;
-    if (!window.confirm('Isso apaga sua conta e todos os seus dados (perfil, refeições, check-ins, evolução e exames). Não dá para desfazer. Continuar?')) return;
+    if (!await confirmar('Isso apaga sua conta e todos os seus dados (perfil, refeições, check-ins, evolução e exames). Não dá para desfazer. Continuar?')) return;
     setDeleting(true);
     setDeleteError(null);
     try {

@@ -39,6 +39,7 @@ import type { DadosCartao } from '@/lib/ferramentas/cartao';
 import { definirVoz, falar, fraseExercicio, fraseFim, fraseSerie, vozDisponivel, vozLigada } from '@/lib/ferramentas/vozCoach';
 import { useTelaLigada } from '@/lib/telaLigada';
 import { duplaAtual, enviarStatusDupla } from '@/lib/ferramentas/social';
+import { confirmar } from '../../lib/dialogo';
 
 type Phase =
   | 'PRE_SESSION'
@@ -147,7 +148,7 @@ function ContinuarTreino({ t, onContinuar, onDescartar }: { t: TreinoAndamento; 
       <button type="button" onClick={onContinuar} className="mt-4 w-full rounded-xl bg-primary-500 px-6 py-3 text-sm font-semibold text-background-50 hover:bg-primary-600">
         <i className="ri-play-circle-line mr-1"></i>CONTINUAR DE ONDE PAREI
       </button>
-      <button type="button" onClick={() => { if (window.confirm('Apagar o treino em andamento e começar outro?')) onDescartar(); }} className="mt-3 w-full rounded-xl border border-background-200 bg-background-50 px-6 py-2.5 text-sm font-medium text-foreground-700">
+      <button type="button" onClick={async () => { if (await confirmar('Apagar o treino em andamento e começar outro?')) onDescartar(); }} className="mt-3 w-full rounded-xl border border-background-200 bg-background-50 px-6 py-2.5 text-sm font-medium text-foreground-700">
         Descartar e começar outro
       </button>
     </div>

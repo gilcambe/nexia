@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { anamneseDoCoach, novaPergunta, PERGUNTAS_PRONTAS, salvarAnamnese, type Pergunta, type TipoPergunta } from '@/lib/coach/equipe';
+import { confirmar } from '../../lib/dialogo';
 
 const campo = 'w-full rounded-lg border border-background-200 bg-background-50 px-2.5 py-2 text-sm text-foreground-900 outline-none focus:border-primary-300';
 const TIPOS: { id: TipoPergunta; nome: string }[] = [
@@ -113,7 +114,7 @@ export default function AnamneseCoach() {
           <button type="button" disabled={salvando} onClick={() => void salvar(perguntas)} className="w-full rounded-xl bg-primary-500 px-4 py-3 text-sm font-semibold text-background-50 disabled:opacity-50 dark:text-foreground-950">
             <i className={salvando ? 'ri-loader-4-line mr-1 animate-spin' : 'ri-save-3-line mr-1'}></i>{salvando ? 'Salvando...' : 'Salvar anamnese'}
           </button>
-          {tinha && <button type="button" onClick={() => { if (window.confirm('Desligar a anamnese? Os alunos param de ver as perguntas.')) void salvar([]); }} className="w-full rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-600">Desligar anamnese</button>}
+          {tinha && <button type="button" onClick={async () => { if (await confirmar('Desligar a anamnese? Os alunos param de ver as perguntas.')) void salvar([]); }} className="w-full rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-600">Desligar anamnese</button>}
         </>
       )}
     </div>

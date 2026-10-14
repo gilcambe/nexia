@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { apagarPost, curtir, postar, verFeed, type Post } from '@/lib/comunidade';
 import { compressImageToDataUrl } from '@/lib/userData';
+import { confirmar } from '../../lib/dialogo';
 
 const quando = (t: number) => {
   const min = Math.round((Date.now() - t) / 60000);
@@ -83,7 +84,7 @@ export default function Feed() {
                 <p className="truncate text-sm font-semibold text-foreground-950">{p.nome}{p.coach && <span className="ml-1 rounded-full bg-primary-100 px-1.5 py-0.5 text-xs font-bold text-primary-700">COACH</span>}</p>
                 <p className="text-xs text-foreground-500">{quando(p.em)}</p>
               </div>
-              {(p.meu || souCoach) && <button type="button" onClick={() => { if (window.confirm('Apagar este post?')) void apagarPost(p.id).then(carregar); }} aria-label="Apagar post" className="p-1 text-foreground-400"><i className="ri-delete-bin-line"></i></button>}
+              {(p.meu || souCoach) && <button type="button" onClick={async () => { if (await confirmar('Apagar este post?')) void apagarPost(p.id).then(carregar); }} aria-label="Apagar post" className="p-1 text-foreground-400"><i className="ri-delete-bin-line"></i></button>}
             </div>
             {p.texto && <p className="mt-2 whitespace-pre-line text-sm text-foreground-800">{p.texto}</p>}
             {p.imagem && <img src={p.imagem} alt={`Foto de ${p.nome}`} loading="lazy" className="mt-2 w-full rounded-xl object-cover" />}

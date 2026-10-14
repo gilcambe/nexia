@@ -2,7 +2,6 @@
 // Substitui o Supabase do app original do READDY: Auth (e-mail/senha) + Firestore.
 // A configuração pública do app da Web vem do próprio Worker (/api/firebase-config),
 // igual ao site principal (src/services/firebase.ts). Nada de chave fixa no código.
-// No MODO LOCAL (admin / admin01) nada aqui é chamado: tudo fica no navegador.
 import { initializeApp, getApps, type FirebaseApp, type FirebaseOptions } from 'firebase/app';
 import { getAuth, connectAuthEmulator, type Auth } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator, type Firestore } from 'firebase/firestore';

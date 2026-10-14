@@ -120,7 +120,7 @@ function readAsDataUrl(file: Blob): Promise<string> {
 
 // Reduz a imagem (lado maior até maxSide px) e gera JPEG em data URL, baixando a
 // qualidade até caber no limite do documento.
-export async function compressImageToDataUrl(file: File | Blob, maxSide = 1000, maxBytes = MAX_FOTO_BYTES): Promise<string> {
+export async function compressImageToDataUrl(file: File | Blob, maxSide = 1080, maxBytes = MAX_FOTO_BYTES): Promise<string> {
   const src = await readAsDataUrl(file);
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const el = new Image();
@@ -138,7 +138,8 @@ export async function compressImageToDataUrl(file: File | Blob, maxSide = 1000, 
     if (!ctx) break;
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     for (const q of [0.82, 0.7, 0.55]) {
-      const out = canvas.toDataURL('image/jpeg', q);
+      const webp = canvas.toDataURL('image/webp', q);
+      const out = webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/jpeg', q);
       if (out.length <= maxBytes) return out;
     }
     side = Math.round(side * 0.75);
@@ -184,4 +185,14 @@ export async function deleteAllUserData(uid: string): Promise<void> {
       if (coll !== 'workouts') throw e;
     }
   }
+}
+
+// Data local (AAAA-MM-DD) de N dias atrás.
+export function localDateKey(daysAgo = 0): string {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }

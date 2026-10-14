@@ -71,6 +71,7 @@ export default defineConfig({
     outDir: 'dist',
     rolldownOptions: {
       output: {
+        postBanner: '/*! NEXIA Body Coach (c) 2026 Gildivan Bezerra. Todos os direitos reservados. Copia proibida. */',
         // O Worker do Cloudflare só publica extensões conhecidas: o worker do pdf.js (.mjs) sai como .js.
         assetFileNames: (info: { names?: string[]; name?: string }) =>
           /\.mjs$/.test(info.names?.[0] ?? info.name ?? '') ? 'assets/[name]-[hash].js' : 'assets/[name]-[hash][extname]',
