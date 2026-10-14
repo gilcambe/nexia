@@ -20,13 +20,13 @@ self.addEventListener('fetch', (e) => {
     return;
   }
   e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((res) => {
-    if (res.ok) {
-      const copy = res.clone();
-      caches.open(CACHE).then((c) => {
-        c.put(req, copy);
-        if (!PESADO.test(req.url)) aparar(c);
-      });
-    }
+    if (!res.ok) return res;
+    if (PESADO.test(req.url)) return res; // vídeo/áudio não ficam no aparelho
+    const copy = res.clone();
+    caches.open(CACHE).then((c) => {
+      c.put(req, copy);
+      aparar(c);
+    });
     return res;
   })));
 });
