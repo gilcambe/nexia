@@ -277,6 +277,48 @@ export default function CortexApp() {
     );
   }, []);
 
+  const handleCopy = useCallback((text: string) => {
+    navigator.clipboard.writeText(text).catch(() => {
+      // fallback for older browsers
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+    });
+  }, []);
+
+  const handleRegenerate = useCallback((assistantId: string) => {
+    setMessages((prev) => {
+      const idx = prev.findIndex((m) => m.id === assistantId);
+      if (idx === -1) return prev;
+      const userMsg = prev[idx - 1];
+      if (!userMsg || userMsg.role !== 'user') return prev;
+      // Remove the assistant message and re-send the user message
+      const newMessages = prev.slice(0, idx);
+      // Trigger resend by calling send with the user message text
+      setTimeout(() => send(userMsg.text), 0);
+      return newMessages;
+    });
+  }, [send]);
+
+  const handleEditSend = useCallback((assistantId: string) => {
+    setMessages((prev) => {
+      const idx = prev.findIndex((m) => m.id === assistantId);
+      if (idx === -1) return prev;
+      const userMsg = prev[idx - 1];
+      if (!userMsg || userMsg.role !== 'user') return prev;
+      // Put the user message text back in the input and remove the assistant message
+      setInput(userMsg.text);
+      return prev.slice(0, idx);
+    });
+  }, []);
+
+  const handleStop = useCallback(() => {
+    stopStream();
+  }, [stopStream]);
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col">
       {/* Header */}
@@ -436,6 +478,39 @@ export default function CortexApp() {
                     <i className="ri-brain-line text-nexia-cyan text-xs" />
                     <span className="text-[10px] font-semibold text-nexia-cyan uppercase tracking-wider">{msg.model}</span>
                     {msg.streaming && <span className="w-1.5 h-1.5 rounded-full bg-nexia-cyan animate-pulse ml-1" />}
+                  </div>
+                )}
+                {/* Botões de ação do chat */}
+                {msg.role === "assistant" && !msg.streaming && (
+                  <div className="flex space-x-2 mb-4">
+                    <button
+                      className="btn btn-primary text-xs px-3 py-1"
+                      onClick={() => handleCopy(msg.text)}
+                      title="Copiar resposta"
+                    >
+                      <i className="ri-file-copy-line mr-1" /> Copiar
+                    </button>
+                    <button
+                      className="btn btn-secondary text-xs px-3 py-1"
+                      onClick={() => handleRegenerate(msg.id)}
+                      title="Regenerar resposta"
+                    >
+                      <i className="ri-refresh-line mr-1" /> Regenerar
+                    </button>
+                    <button
+                      className="btn btn-secondary text-xs px-3 py-1"
+                      onClick={() => handleEditSend(msg.id)}
+                      title="Editar e reenviar"
+                    >
+                      <i className="ri-edit-line mr-1" /> Editar e Reenviar
+                    </button>
+                    <button
+                      className="btn btn-danger text-xs px-3 py-1"
+                      onClick={handleStop}
+                      title="Parar geração"
+                    >
+                      <i className="ri-stop-fill mr-1" /> Parar
+                    </button>
                   </div>
                 )}
                 <div className="whitespace-pre-wrap break-words">{msg.text}</div>
