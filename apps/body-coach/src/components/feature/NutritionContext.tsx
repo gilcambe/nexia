@@ -126,7 +126,7 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, [user?.id, reloadKey, isLocalDemo]);
+  }, [user, user?.id, reloadKey, isLocalDemo]);
 
   const addMeal = useCallback(
     async (meal: MealFood) => {
@@ -157,7 +157,7 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
         setError('Falha ao salvar a refeição.');
       }
     },
-    [user?.id, isLocalDemo],
+    [user, user?.id, isLocalDemo],
   );
 
   const removeMeal = useCallback(
@@ -175,7 +175,7 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
         reload();
       }
     },
-    [user?.id, reload, isLocalDemo],
+    [user, user?.id, reload, isLocalDemo],
   );
 
   const totals = useMemo<NutritionTotals>(
