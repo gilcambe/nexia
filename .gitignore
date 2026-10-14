@@ -29,3 +29,5 @@ ui-debug.log
 .worker-assets/
 .wrangler/
 .dev.vars
+
+apps/body-coach/android/upload.keystore

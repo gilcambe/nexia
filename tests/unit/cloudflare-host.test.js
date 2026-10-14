@@ -247,3 +247,19 @@ test('CF-fila. o cron do Worker acorda a Fila do Cortex a cada 15 min, sem usar 
   assert.deepStrictEqual(await acordarFila({ env: {}, now: () => tique, fetchImpl }), { fila: 'desligada' });
   assert.strictEqual(calls.length, 1);
 });
+
+test('CF-BC. Worker: assetlinks.json do app Android e redirecionamento do link antigo do Body Coach', async () => {
+  const a = await call('/.well-known/assetlinks.json');
+  assert.strictEqual(a.status, 200);
+  const j = await a.json();
+  assert.strictEqual(j[0].target.package_name, 'app.nexia.bodycoach');
+  // Sem BODY_COACH_URL: nada muda.
+  assert.strictEqual((await call('/body-coach/workout')).status, 200);
+  // Com BODY_COACH_URL: só redireciona em *.workers.dev e quando não veio do Pages (X-Nexia-Proxy).
+  const env = { ASSETS: fakeAssets(FILES), BODY_COACH_URL: 'https://nexiabodycoach.pages.dev/' };
+  const r = await handleRequest(new Request('https://nexia.gcbezerra.workers.dev/body-coach/workout?x=1'), env, { getFunction: () => null });
+  assert.strictEqual(r.status, 301);
+  assert.strictEqual(r.headers.get('Location'), 'https://nexiabodycoach.pages.dev/body-coach/workout?x=1');
+  const p = await handleRequest(new Request('https://nexia.gcbezerra.workers.dev/body-coach/workout', { headers: { 'X-Nexia-Proxy': '1' } }), env, { getFunction: () => null });
+  assert.strictEqual(p.status, 200);
+});

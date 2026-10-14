@@ -192,6 +192,10 @@ async function serveStatic(request, url, env) {
   // ADR-CLONE-02: NEXIA Body Coach é outro SPA, montado em /body-coach/ (apps/body-coach).
   // Rotas dele (ex.: /body-coach/workout) caem no index.html dele, não no do site principal.
   if (safePath === BODY_COACH_PREFIX || safePath.startsWith(BODY_COACH_PREFIX + '/')) {
+    const novo = String(env.BODY_COACH_URL || '').replace(/\/$/, '');
+    if (novo && !request.headers.get('X-Nexia-Proxy') && url.hostname.endsWith('.workers.dev')) {
+      return Response.redirect(novo + safePath + url.search, 301);
+    }
     const bc = await fromAssets(assets, url, BODY_COACH_PREFIX + '/index.html', request.method);
     return bc || notFound(404);
   }
@@ -215,6 +219,9 @@ async function handleRequest(request, env, { getFunction }) {
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-Id',
     } });
+  }
+  if (pathname === '/.well-known/assetlinks.json') {
+    return json(200, require('../apps/body-coach/android/assetlinks.json'), { 'Cache-Control': 'public, max-age=3600', 'Access-Control-Allow-Origin': '*' });
   }
   if (pathname === '/health') {
     return json(200, { status: 'ok', version: VERSION, runtime: 'cloudflare-worker', frontend: !!env.ASSETS, timestamp: new Date().toISOString() },
