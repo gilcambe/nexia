@@ -11,6 +11,7 @@ const { linkUtm, textoIA } = require('./lib/texto');
 
 const RAIZ = __dirname;
 const IMAGENS = 'https://raw.githubusercontent.com/gilcambe/nexia/develop/divulga/imagens/';
+const VIDEOS = 'https://raw.githubusercontent.com/gilcambe/nexia/develop/divulga/videos/';
 
 const lerJson = (f, padrao) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return padrao; } };
 const lerPasta = p => (fs.existsSync(p) ? fs.readdirSync(p).filter(f => f.endsWith('.json')).sort() : []);
@@ -26,13 +27,20 @@ function carregar(raiz = RAIZ) {
   return { clientes, fila };
 }
 
+/** No Instagram as hashtags trazem gente nova: completa até 8 com as do cliente, sem repetir. */
+function maisHashtags(texto, cliente) {
+  const tem = new Set((texto.match(/#[\p{L}\d_]+/gu) || []).map(h => h.toLowerCase()));
+  const extra = (cliente.hashtagsInstagram || cliente.hashtags || []).filter(h => !tem.has(h.toLowerCase())).slice(0, Math.max(0, 8 - tem.size));
+  return extra.length ? `${texto} ${extra.join(' ')}` : texto;
+}
+
 const semBio = t => t.replace(/\s*(pelo )?link na bio/gi, '').replace(/\.\./g, '.').replace(/\s+\./g, '.').trim();
 
 /** Textos de cada rede. Instagram não abre link na legenda: lá vai "link na bio". */
-function montar({ cliente, legenda, imagem, id }) {
+function montar({ cliente, legenda, imagem, video, id }) {
   const porRede = rede => {
     const link = linkUtm(cliente.link, rede);
-    if (rede === 'instagram') return { texto: /link na bio/i.test(legenda) ? legenda : `${legenda}\n\nLink na bio.`, imagem };
+    if (rede === 'instagram') return { texto: maisHashtags(/link na bio/i.test(legenda) ? legenda : `${legenda}\n\nLink na bio.`, cliente), imagem, video };
     return { texto: semBio(legenda), link, imagem };
   };
   return { id, cliente: cliente.id, porRede };
@@ -42,7 +50,7 @@ function montar({ cliente, legenda, imagem, id }) {
 async function proximo({ clientes, fila }, estado, ctx) {
   const feitos = new Set(estado.feitos || []);
   const item = fila.find(i => !feitos.has(i.id) && clientes[i.cliente]);
-  if (item) return montar({ id: item.id, cliente: clientes[item.cliente], legenda: item.legenda, imagem: urlImagem(item.imagem) });
+  if (item) return montar({ id: item.id, cliente: clientes[item.cliente], legenda: item.legenda, imagem: urlImagem(item.imagem), video: item.video && VIDEOS + item.video });
   const prontos = Object.values(clientes).filter(c => c.ativo !== false && (c.imagens || []).length && (c.assuntos || []).length);
   if (!prontos.length) return null;
   const n = estado.rodizio || 0;

@@ -124,6 +124,18 @@ const facebook = {
   },
 };
 
+/** O Instagram processa o vídeo antes de publicar: espera ficar pronto (até ~3 min). */
+async function esperarVideo(id, env, fetchImpl, { tentativas = 36, pausa = 5000 } = {}) {
+  for (let i = 0; i < tentativas; i++) {
+    const r = await fetchImpl(`${GRAPH}/${encodeURIComponent(id)}?fields=status_code&access_token=${encodeURIComponent(env.DIVULGA_META_PAGE_TOKEN)}`, { signal: tempo() });
+    const j = await json(r, 'Instagram vídeo');
+    if (j.status_code === 'FINISHED') return;
+    if (j.status_code === 'ERROR' || j.status_code === 'EXPIRED') throw new afiliadosCanais.CanalErro(`Instagram vídeo: ${j.status_code}`);
+    await new Promise(res => setTimeout(res, env.DIVULGA_PAUSA_MS != null ? Number(env.DIVULGA_PAUSA_MS) : pausa));
+  }
+  throw new afiliadosCanais.CanalErro('Instagram vídeo: demorou demais');
+}
+
 // ---------- Instagram (conta comercial) ----------
 const instagram = {
   id: 'instagram',
@@ -133,16 +145,21 @@ const instagram = {
     validarPost(post);
     const conta = encodeURIComponent(env.DIVULGA_META_IG_USER_ID);
     const legenda = [post.titulo, post.texto, post.link ? `Link: ${post.link}` : ''].filter(Boolean).join('\n\n');
+    // Com vídeo vira Reels (o formato que o Instagram mais mostra para quem não segue a conta).
+    const midia = post.video && validarUrlPublica(post.video)
+      ? { media_type: 'REELS', video_url: post.video, share_to_feed: 'true' }
+      : { image_url: post.imagem };
     const cRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/media`, {
       method: 'POST',
       signal: tempo(),
       body: new URLSearchParams({
-        image_url: post.imagem,
+        ...midia,
         caption: legenda.slice(0, 2200),
         access_token: env.DIVULGA_META_PAGE_TOKEN,
       }),
     });
     const c = await json(cRes, 'Instagram mídia');
+    if (midia.video_url) await esperarVideo(c.id, env, fetchImpl);
     const jRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/media_publish`, {
       method: 'POST',
       signal: tempo(),

@@ -78,7 +78,13 @@ async function lojaVer(body, db) {
   const progs = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => p.ativo);
   const modelos = {};
   await Promise.all(progs.map(async (p) => { const m = (await db.collection('bc_modelos').doc(p.ficha).get()).data?.(); if (m) modelos[p.ficha] = m; }));
-  return [200, { coach: { nome: c.data().nome || 'Coach', foto: c.data().foto || '', recebePix: !!c.data().pix }, programas: progs.sort((a, b) => a.preco - b.preco).map((p) => publico(p.id, p, modelos)) }];
+  const d = c.data();
+  // Página pública do coach: só dados que ele mesmo escolheu mostrar (nada de e-mail nem de alunos, só quantos são).
+  const alunos = (await db.collection('bc_diretorio').where('coachUid', '==', c.id).limit(500).get().catch(() => ({ docs: [] }))).docs.length;
+  const m = d.marca && typeof d.marca === 'object' ? { nome: d.marca.nome || '', cor: d.marca.cor || 'laranja', logo: d.marca.logo || '' } : null;
+  const whats = String(d.whats || '').replace(/\D/g, '');
+  const coach = { nome: d.nome || 'Coach', foto: d.foto || '', recebePix: !!d.pix, marca: m, bio: limpa(d.bio, 300), whats, alunos, codigo };
+  return [200, { coach, programas: progs.sort((a, b) => a.preco - b.preco).map((p) => publico(p.id, p, modelos)) }];
 }
 
 async function negocio(body, uid, db, eu, util) {

@@ -182,7 +182,9 @@ async function acoesAcesso(body, uid, db, ctx = {}, eu = null) {
   }
   if (acao === 'acesso_paguei') {
     const c = body.cupom ? await cupomValido(db, body.cupom) : null;
-    await db.collection('bc_acesso_pedidos').add({ uid, email: String(ctx.email || ''), nome: (eu && eu.nome) || '', em: Date.now(), ...(c ? { cupom: c.codigo, pct: c.pct } : {}) });
+    const plano = ['mensal', 'anual'].includes(body.plano) ? body.plano : '';
+    const valor = Math.round(Math.min(1000, Math.max(0, Number(body.valor) || 0)) * 100) / 100;
+    await db.collection('bc_acesso_pedidos').add({ uid, email: String(ctx.email || ''), nome: (eu && eu.nome) || '', em: Date.now(), ...(c ? { cupom: c.codigo, pct: c.pct } : {}), ...(plano ? { plano, valor, dias: plano === 'anual' ? 365 : 30 } : {}) });
     if (c) await db.collection('bc_cupons').doc(c.codigo).set({ usos: (c.usos || 0) + 1 }, { merge: true });
     return [200, { ok: true }];
   }
@@ -258,6 +260,7 @@ async function acoesAdmin(body, db, ctx) {
     if (!alvo) return [404, { error: 'Não achei essa conta. A pessoa precisa abrir o app uma vez.' }];
     if (!(dias >= 1 && dias <= 400)) return [400, { error: 'Dias entre 1 e 400.' }];
     const pagoAte = await liberarAcesso(db, alvo, dias, Date.now(), { faixa: body.faixa, valor: body.valor });
+    if (Number(body.valor) > 0) await require('./indicacao').premiarIndicacao(db, alvo, liberarAcesso).catch(() => {});
     cache.clear(); // os alunos do coach mudam junto
     return [200, { ok: true, uid: alvo, pagoAte }];
   }

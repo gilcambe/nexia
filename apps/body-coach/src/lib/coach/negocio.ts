@@ -23,8 +23,10 @@ export const avisarCompra = (id: string) => chatApi<{ status: string }>({ acao: 
 export const minhasCompras = () => chatApi<{ compras: Compra[] }>({ acao: 'compras_minhas' }).then((r) => r.compras);
 export const pendencias = () => chatApi<{ coach: string | null; anamnese: 'pendente' | 'respondida' | null; mensalidade: { valor: number; vencimento: number; dias: number; avisou: boolean } | null }>({ acao: 'aluno_pendencias' });
 
+// Página pública do coach (o que ele escolheu mostrar).
+export interface CoachPublico { nome: string; foto: string; recebePix: boolean; marca?: { nome: string; cor: string; logo: string } | null; bio?: string; whats?: string; alunos?: number; codigo?: string }
 // Loja pública: sem login.
-export async function verLoja(codigo: string): Promise<{ coach: { nome: string; foto: string; recebePix: boolean }; programas: ProgramaPublico[] }> {
+export async function verLoja(codigo: string): Promise<{ coach: CoachPublico; programas: ProgramaPublico[] }> {
   const base = (import.meta.env.VITE_NEXIA_API_URL as string | undefined) || '';
   const r = await fetch(`${base}/api/body-coach-chat`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'loja_ver', codigo }) });
   const d = await r.json().catch(() => ({}));

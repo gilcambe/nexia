@@ -125,8 +125,20 @@ async function profissionais(body, uid, db, eu) {
     if (eu.papel !== 'coach') return [403, { error: 'Só o coach muda a marca.' }];
     if (body.logo && !LOGO_OK(body.logo)) return [400, { error: 'Logo inválido ou grande demais. Use uma imagem menor.' }];
     const marca = marcaLimpa(body);
-    await dir.doc(uid).set({ marca }, { merge: true });
-    return [200, { marca }];
+    const extra = {};
+    if (typeof body.bio === 'string') extra.bio = limpa(body.bio, 300);
+    if (body.whats !== undefined) {
+      const w = soDigitos(body.whats);
+      if (w && (w.length < 10 || w.length > 13)) return [400, { error: 'WhatsApp inválido. Use DDD + número.' }];
+      extra.whats = w;
+    }
+    await dir.doc(uid).set({ marca, ...extra }, { merge: true });
+    return [200, { marca, ...extra, codigo: eu.codigo || '' }];
+  }
+  // Dados da página pública do coach (para a tela Minha marca abrir já preenchida).
+  if (acao === 'marca_ver') {
+    if (eu.papel !== 'coach') return [403, { error: 'Só para coach.' }];
+    return [200, { marca: eu.marca || null, bio: eu.bio || '', whats: eu.whats || '', codigo: eu.codigo || '' }];
   }
 
   // ── Convites em lote ──
