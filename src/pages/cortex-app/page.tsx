@@ -171,6 +171,8 @@ export default function CortexApp() {
 
   const send = useCallback(async (text: string) => {
     if (!text.trim() || loading) return;
+    // Guarda contra race condition: se já está loading, ignora
+    if (loading) return;
     setErrorBanner(null);
     setServerStarting(false);
     const cmd = text.trim().match(/^\/(\w+)\s*([\s\S]*)$/);
@@ -480,36 +482,30 @@ export default function CortexApp() {
                     {msg.streaming && <span className="w-1.5 h-1.5 rounded-full bg-nexia-cyan animate-pulse ml-1" />}
                   </div>
                 )}
-                {/* Botões de ação do chat */}
+                {/* Botões de ação do chat (apenas mensagens finalizadas) */}
                 {msg.role === "assistant" && !msg.streaming && (
-                  <div className="flex space-x-2 mb-4">
+                  <div className="flex flex-wrap gap-2 mb-4">
                     <button
-                      className="btn btn-primary text-xs px-3 py-1"
+                      className="px-3 py-1.5 text-xs rounded-lg bg-nexia-cyan text-[#0a0a0f] hover:bg-nexia-cyan-dim transition-colors cursor-pointer flex items-center gap-1"
                       onClick={() => handleCopy(msg.text)}
                       title="Copiar resposta"
                     >
-                      <i className="ri-file-copy-line mr-1" /> Copiar
+                      <i className="ri-file-copy-line" /> Copiar
                     </button>
                     <button
-                      className="btn btn-secondary text-xs px-3 py-1"
+                      className="px-3 py-1.5 text-xs rounded-lg bg-nexia-surface2 border border-nexia-border text-nexia-muted hover:text-white hover:border-nexia-cyan/30 transition-all cursor-pointer flex items-center gap-1 disabled:opacity-40"
                       onClick={() => handleRegenerate(msg.id)}
+                      disabled={loading}
                       title="Regenerar resposta"
                     >
-                      <i className="ri-refresh-line mr-1" /> Regenerar
+                      <i className="ri-refresh-line" /> Regenerar
                     </button>
                     <button
-                      className="btn btn-secondary text-xs px-3 py-1"
+                      className="px-3 py-1.5 text-xs rounded-lg bg-nexia-surface2 border border-nexia-border text-nexia-muted hover:text-white hover:border-nexia-cyan/30 transition-all cursor-pointer flex items-center gap-1"
                       onClick={() => handleEditSend(msg.id)}
                       title="Editar e reenviar"
                     >
-                      <i className="ri-edit-line mr-1" /> Editar e Reenviar
-                    </button>
-                    <button
-                      className="btn btn-danger text-xs px-3 py-1"
-                      onClick={handleStop}
-                      title="Parar geração"
-                    >
-                      <i className="ri-stop-fill mr-1" /> Parar
+                      <i className="ri-edit-line" /> Editar e Reenviar
                     </button>
                   </div>
                 )}
