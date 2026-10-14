@@ -27,9 +27,16 @@ export default function CentralPage() {
   const { user, loading: authLoading } = useAuth();
   const { buscar } = useCentral();
   const [aba, setAba] = useState<Aba>(() => (location.hash.slice(1) as Aba) || "inicio");
+  const [claro, setClaro] = useState<boolean>(() => {
+    try { return localStorage.getItem("central-tema") === "claro"; } catch { return false; }
+  });
   const [d, setD] = useState<Dados>({});
   const [erros, setErros] = useState<Partial<Record<Parte, string>>>({});
   const [carregando, setCarregando] = useState(false);
+
+  useEffect(() => {
+    try { localStorage.setItem("central-tema", claro ? "claro" : "escuro"); } catch { /* sem storage */ }
+  }, [claro]);
 
   const conferir = useCallback(async () => {
     setCarregando(true); setErros({});
@@ -45,12 +52,11 @@ export default function CentralPage() {
   const semAcesso = erros.lista && /administrador/.test(erros.lista);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white font-display antialiased pb-24">
+    <div className={`${claro ? "central-claro " : ""}min-h-screen bg-[#0a0a0f] text-white font-display antialiased pb-24`}>
       <header className="sticky top-0 z-10 bg-[#0a0a0f]/95 backdrop-blur border-b border-nexia-border">
         <div className="px-4 py-3 max-w-2xl mx-auto flex items-center justify-between">
           <h1 className="text-lg font-bold" data-testid="central-title">Central <span className="text-nexia-cyan">NEXIA</span></h1>
-          <span className="text-xs text-nexia-muted truncate max-w-[50%]">{user?.email}</span>
-        </div>
+          <div className="flex items-center gap-3">\n            <span className="text-xs text-nexia-muted truncate max-w-[50%]">{user?.email}</span>\n            <button type="button" onClick={() => setClaro(v => !v)} data-testid="btn-tema" aria-label="Alternar tema claro/escuro" className="text-xs cursor-pointer px-2 py-1 rounded border border-nexia-border">\n              {claro ? "☀️ Claro" : "🌙 Escuro"}\n            </button>\n          </div>\n        </div>
       </header>
 
       <main className="px-4 py-4 max-w-2xl mx-auto">
