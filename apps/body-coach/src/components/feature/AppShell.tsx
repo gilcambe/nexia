@@ -95,9 +95,7 @@ function BrandMark({ size = 'md' }: { size?: 'md' | 'sm' }) {
       {marca?.logo ? (
         <img src={marca.logo} alt="" className={`${caixa} object-contain`} />
       ) : (
-        <div className={`flex items-center justify-center bg-primary-500 text-background-50 ${caixa}`}>
-          <i className="ri-heart-3-line text-lg"></i>
-        </div>
+        <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className={caixa} />
       )}
       <div className="min-w-0 leading-none">
         <p className="max-w-[11rem] truncate font-heading font-bold tracking-tight text-foreground-950">

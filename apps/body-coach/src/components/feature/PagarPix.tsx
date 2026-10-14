@@ -34,6 +34,7 @@ export default function PagarPix({ acesso, avisar }: { acesso: Acesso; avisar: (
             <>
               <p className="pt-1">Pague por Pix nesta chave:</p>
               <p className="break-all rounded-lg border border-background-200 bg-background-50 px-3 py-2 font-semibold text-foreground-900">{acesso.pix}</p>
+              {acesso.pixNome && <p className="text-sm">Pix para: <b className="text-foreground-900">{acesso.pixNome}</b></p>}
               <button onClick={() => void copiar()} className="w-full rounded-xl border border-primary-300 py-3 text-base font-semibold text-primary-700"><i className="ri-file-copy-line mr-1"></i>Copiar chave Pix</button>
             </>
           ) : <p className="pt-1">Fale com o NEXIA para receber a chave Pix.</p>}

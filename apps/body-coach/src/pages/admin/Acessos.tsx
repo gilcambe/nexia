@@ -15,6 +15,7 @@ export default function Acessos() {
   const [faixa, setFaixa] = useState('15');
   const [valor, setValor] = useState('');
   const [msg, setMsg] = useState('');
+  const [avisoRegras, setAvisoRegras] = useState('');
 
   const carregar = async () => {
     try {
@@ -25,7 +26,13 @@ export default function Acessos() {
   useEffect(() => { void carregar(); }, []);
   const fazer = async (corpo: Record<string, unknown>, ok: string) => {
     setMsg('');
-    try { await chatApi(corpo); setMsg(ok); await carregar(); } catch (e) { setMsg((e as Error).message); }
+    try { await chatApi(corpo); setMsg(ok); await carregar(); return true; } catch (e) { setMsg((e as Error).message); return false; }
+  };
+  // O botão Salvar regras fica no fim da página: a confirmação aparece logo abaixo dele.
+  const salvarRegras = async (corpo: Record<string, unknown>, ok: string) => {
+    setAvisoRegras('Salvando...');
+    setAvisoRegras((await fazer(corpo, ok)) ? 'Salvo! ✓' : 'Não salvou. Tente de novo.');
+    setTimeout(() => setAvisoRegras(''), 5000);
   };
   // Coach: grava a faixa escolhida (quantos alunos ficam grátis). O valor entra na receita do mês.
   const liberar = (uid: string, d: number, ehCoach = false) => fazer({ acao: 'acesso_liberar', uid, dias: d, valor: Number(valor.replace(',', '.')) || 0, ...(ehCoach ? { faixa: Number(faixa) } : {}) }, `Liberado por mais ${d} dias.`);
@@ -39,7 +46,7 @@ export default function Acessos() {
       {msg && <p role="status" className="rounded-lg bg-primary-50 p-2 text-sm text-primary-800">{msg}</p>}
       <PedidosAcesso pedidos={dados.pedidos} contas={dados.contas} liberar={(uid, d, c) => void liberar(uid, d, c)} />
       <ContasAcesso todas={dados.contas} liberar={(uid, d, c) => void liberar(uid, d, c)} fazer={(corpo, ok) => void fazer(corpo, ok)} />
-      <RegrasAcesso key={JSON.stringify(dados.config)} config={dados.config} fazer={(corpo, ok) => void fazer(corpo, ok)} />
+      <RegrasAcesso key={JSON.stringify(dados.config)} config={dados.config} fazer={(corpo, ok) => void salvarRegras(corpo, ok)} aviso={avisoRegras} />
     </div>
   );
 }

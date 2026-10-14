@@ -11,6 +11,10 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut as firebaseSignOut,
   type User as FirebaseUser,
 } from 'firebase/auth';
@@ -76,6 +80,7 @@ interface AuthContextValue {
     password: string,
     fullName: string,
   ) => Promise<{ error: string | null; needsEmailConfirm: boolean }>;
+  signInGoogle: () => Promise<{ error: string | null; novo?: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: () => void;
 }
@@ -99,10 +104,32 @@ function friendlyAuthError(err: unknown): string {
   if (code === 'auth/weak-password') return 'Senha fraca: use pelo menos 6 caracteres.';
   if (code === 'auth/invalid-email') return 'E-mail inválido.';
   if (code === 'auth/too-many-requests') return 'Muitas tentativas. Aguarde alguns minutos e tente de novo.';
+  if (code === 'auth/account-exists-with-different-credential') {
+    return 'Este e-mail já tem conta com senha. Entre com e-mail e senha.';
+  }
+  if (code === 'auth/unauthorized-domain') return 'Este endereço ainda não está liberado para entrar com Google.';
   if (code === 'auth/operation-not-allowed') {
     return 'Login por e-mail e senha ainda não está ativado no Firebase deste projeto.';
   }
   return msg;
+}
+
+// Primeiro login com Google: cria o perfil igual ao cadastro por e-mail. Devolve true se criou.
+async function garantirPerfil(u: FirebaseUser): Promise<boolean> {
+  const existe = await getUserDoc(u.uid, 'profile', 'main');
+  if (existe) return false;
+  await setUserDoc(u.uid, 'profile', 'main', {
+    full_name: u.displayName,
+    email: u.email,
+    height_cm: null,
+    gender: null,
+    birth_date: null,
+    goal_weight_kg: null,
+    goal_body_fat_pct: null,
+    coach_notes: null,
+    created_at: new Date().toISOString(),
+  });
+  return true;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -138,6 +165,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
           return;
         }
+        // Volta do login com Google por redirecionamento: cria o perfil se for a primeira vez.
+        getRedirectResult(fb.auth)
+          .then(async (res) => {
+            if (!res?.user) return;
+            const criou = await garantirPerfil(res.user).catch(() => false);
+            if (criou && mounted) fetchProfile(res.user.uid);
+          })
+          .catch(() => {});
         unsubscribe = onAuthStateChanged(fb.auth, (fbUser) => {
           if (!mounted) return;
           const appUser = fbUser ? toAppUser(fbUser) : null;
@@ -208,6 +243,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [fetchProfile],
   );
 
+  const signInGoogle = useCallback(async (): Promise<{ error: string | null; novo?: boolean }> => {
+    const fb = await getFirebase().catch(() => null);
+    if (!fb) return { error: OFFLINE_MESSAGE };
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    try {
+      const cred = await signInWithPopup(fb.auth, provider);
+      let novo = false;
+      try {
+        novo = await garantirPerfil(cred.user);
+      } catch (profileError) {
+        return { error: friendlyAuthError(profileError) };
+      }
+      setUser(toAppUser(cred.user));
+      fetchProfile(cred.user.uid);
+      return { error: null, novo };
+    } catch (err) {
+      const code = (err as { code?: string } | null)?.code ?? '';
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return { error: null };
+      if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+        try {
+          await signInWithRedirect(fb.auth, provider);
+          return { error: null };
+        } catch (e) {
+          return { error: friendlyAuthError(e) };
+        }
+      }
+      return { error: friendlyAuthError(err) };
+    }
+  }, [fetchProfile]);
+
   const signOut = useCallback(async () => {
     const fb = await getFirebase();
     if (fb) await firebaseSignOut(fb.auth).catch(() => {});
@@ -218,7 +284,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, signIn, signUp, signOut, refreshProfile: () => { if (user) fetchProfile(user.id); } }}
+      value={{ user, profile, loading, signIn, signUp, signInGoogle, signOut, refreshProfile: () => { if (user) fetchProfile(user.id); } }}
     >
       {children}
     </AuthContext.Provider>

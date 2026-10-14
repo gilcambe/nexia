@@ -148,3 +148,14 @@ test('painel do dono: resumo, uso diário, cupom e promoção', async () => {
   await acoesAcesso({ acao: 'promo_salvar', pct: 0 }, 'adm', db, { master: true });
   assert.equal((await acoesAcesso({ acao: 'acesso_ver', aparelho: 'x1' }, 'i1', db, {}))[1].promo, undefined);
 });
+
+test('acesso: regras salvam chave Pix e nome de quem recebe; quem paga vê os dois', async () => {
+  const db = fakeDb();
+  const [st] = await acoesAcesso({ acao: 'acesso_config', pix: '123.456.789-00', pixNome: ' GILDIVAN CAMILO BEZERRA ' }, 'adm', db, { master: true });
+  assert.equal(st, 200);
+  const a = await acessoDe(db, 'ana', { email: 'ana@x.com' }, Date.now());
+  assert.equal(a.pix, '123.456.789-00');
+  assert.equal(a.pixNome, 'GILDIVAN CAMILO BEZERRA');
+  await acoesAcesso({ acao: 'acesso_config', diasGratis: 20 }, 'adm', db, { master: true });
+  assert.equal((await acessoDe(db, 'ana', {}, Date.now())).pixNome, 'GILDIVAN CAMILO BEZERRA');
+});
