@@ -51,3 +51,12 @@ test('CENT5. dinheiro usa o resumo do Body Coach', async () => {
   const b = JSON.parse((await h(ev({ queryStringParameters: { parte: 'dinheiro' } }))).body);
   assert.deepStrictEqual([b.receitaMes, b.pagantes, b.avisos7], [50, 2, 1]);
 });
+
+test('CENT6. uso do Cloudflare: sem token avisa, com token soma os pedidos do dia', async () => {
+  const ev6 = ev({ queryStringParameters: { parte: 'cloudflare' } });
+  const sem = JSON.parse((await createHandler({ getMw: () => master, env: {} })(ev6)).body);
+  assert.strictEqual(sem.configurado, false);
+  const fetch = async () => ({ ok: true, json: async () => ({ data: { viewer: { accounts: [{ workersInvocationsAdaptive: [{ sum: { requests: 1200 } }, { sum: { requests: 34 } }] }] } } }) });
+  const com = JSON.parse((await createHandler({ getMw: () => master, env: { CLOUDFLARE_ANALYTICS_TOKEN: 't', NEXIA_D1_ACCOUNT_ID: 'c' }, fetch })(ev6)).body);
+  assert.deepStrictEqual([com.configurado, com.pedidos, com.limite], [true, 1234, 100000]);
+});
