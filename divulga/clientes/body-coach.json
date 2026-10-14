@@ -1,0 +1,27 @@
+{
+  "id": "body-coach",
+  "nome": "NEXIA Body Coach",
+  "link": "https://nexiabodycoach.pages.dev/",
+  "cidade": "",
+  "assuntos": [
+    "treino em casa ou na academia com IA",
+    "dieta que se ajusta toda semana",
+    "evolução com fotos e medidas",
+    "app com a marca do personal trainer"
+  ],
+  "imagens": [
+    "body-coach-1.jpg",
+    "body-coach-2.jpg",
+    "body-coach-3.jpg",
+    "body-coach-4.jpg",
+    "body-coach-5.jpg",
+    "body-coach-6.jpg"
+  ],
+  "hashtags": [
+    "#treino",
+    "#dieta",
+    "#fitness",
+    "#academia",
+    "#personaltrainer"
+  ]
+}

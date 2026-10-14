@@ -1,0 +1,69 @@
+'use strict';
+// NEXIA Divulga: fila primeiro, rodízio depois, utm em todo link, IA nunca trava, um canal com erro não para os outros.
+const test = require('node:test');
+const assert = require('node:assert');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const { rodar, semBio } = require('../../divulga/robo');
+
+const ENV_META = { DIVULGA_META_PAGE_ID: '1', DIVULGA_META_PAGE_TOKEN: 't', DIVULGA_META_IG_USER_ID: '2' };
+const ok = body => ({ ok: true, status: 200, json: async () => body });
+const falha = () => ({ ok: false, status: 400, json: async () => ({ error: { message: 'ruim' } }) });
+const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'divulga-'));
+const silencio = () => {};
+
+test('ensaio mostra o 1º post da fila e não chama nenhuma rede', async () => {
+  const chamadas = [];
+  const r = await rodar({ acao: 'ensaio', env: ENV_META, fetchImpl: async u => { chamadas.push(u); return ok({}); }, log: silencio });
+  assert.equal(r.postou, false);
+  assert.equal(r.post.id, 'body-coach-01');
+  assert.equal(chamadas.length, 0);
+});
+
+test('sem chaves: não publica e não marca a fila', async () => {
+  const dados = tmp();
+  const r = await rodar({ acao: 'rodar', dados, env: {}, fetchImpl: async () => ok({}), log: silencio });
+  assert.equal(r.postou, false);
+  assert.equal(fs.existsSync(path.join(dados, 'divulga-estado.json')), false);
+});
+
+test('fila sai em ordem, 1 por rodada, e o link do Facebook leva utm', async () => {
+  const dados = tmp();
+  const urls = [];
+  const fetchImpl = async (u, o) => { urls.push({ u: String(u), b: String(o && o.body) }); return ok({ id: 'x', post_id: 'p' }); };
+  const a = await rodar({ acao: 'rodar', dados, env: ENV_META, fetchImpl, log: silencio });
+  const b = await rodar({ acao: 'rodar', dados, env: ENV_META, fetchImpl, log: silencio });
+  assert.equal(a.post.id, 'body-coach-01');
+  assert.equal(b.post.id, 'body-coach-02');
+  const fb = urls.find(x => x.u.includes('/photos'));
+  assert.match(decodeURIComponent(fb.b.replace(/\+/g, ' ')), /utm_source=facebook&utm_medium=social&utm_campaign=divulga/);
+  const ig = urls.find(x => x.u.endsWith('/media'));
+  assert.match(decodeURIComponent(ig.b), /divulga\/imagens\/body-coach-1\.jpg/);
+});
+
+test('Facebook com erro não impede o Instagram', async () => {
+  const dados = tmp();
+  const fetchImpl = async u => (String(u).includes('/photos') ? falha() : ok({ id: 'ig' }));
+  const r = await rodar({ acao: 'rodar', dados, env: ENV_META, fetchImpl, log: silencio });
+  assert.equal(r.postou, true);
+  assert.deepEqual(r.resultados.map(x => [x.canal, x.ok]), [['facebook', false], ['instagram', true]]);
+});
+
+test('fila feita: rodízio usa texto fixo quando a IA falha', async () => {
+  const dados = tmp();
+  const feitos = fs.readdirSync(path.join(__dirname, '../../divulga/fila')).map(f => f.replace(/\.json$/, ''));
+  fs.writeFileSync(path.join(dados, 'divulga-estado.json'), JSON.stringify({ rodizio: 0, feitos }));
+  const fetchImpl = async u => (/groq|googleapis/.test(String(u)) ? falha() : ok({ id: 'x' }));
+  const r = await rodar({ acao: 'rodar', dados, env: { ...ENV_META, GROQ_API_KEY: 'g' }, fetchImpl, log: silencio });
+  assert.equal(r.postou, true);
+  assert.equal(r.post.rodizio, true);
+  assert.match(r.post.porRede('facebook').texto, /^NEXIA Body Coach: /);
+  const est = JSON.parse(fs.readFileSync(path.join(dados, 'divulga-estado.json'), 'utf8'));
+  assert.equal(est.rodizio, 1);
+});
+
+test('tira "link na bio" fora do Instagram', () => {
+  assert.equal(semBio('Monta seu treino. Link na bio. #a'), 'Monta seu treino. #a');
+  assert.equal(semBio('Comece grátis pelo link na bio. #a'), 'Comece grátis. #a');
+});

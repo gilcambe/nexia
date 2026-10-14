@@ -1,130 +1,99 @@
-const fs = require('fs');
-const path = require('path');
+'use strict';
+// NEXIA Divulga: posta os clientes da NEXIA sozinho, nas contas da própria NEXIA (grátis).
+// Uso: node divulga/robo.js rodar|ensaio [--dados <pasta>]
+// 1) Primeiro sai a fila pronta (divulga/fila/*.json, em ordem, 1 por rodada).
+// 2) Fila vazia: reveza os clientes (divulga/clientes/*.json) com texto da IA grátis.
+// Sem nenhuma rede ligada, só mostra os textos e não marca nada como postado.
+const fs = require('node:fs');
+const path = require('node:path');
+const { CANAIS } = require('./lib/canais');
+const { linkUtm, textoIA } = require('./lib/texto');
 
-const ESTADO_PATH = path.join(__dirname, 'estado.json');
-const CANAIS_PATH = path.join(__dirname, 'canais.json');
-const CLIENTES_PATH = path.join(__dirname, 'clientes.json');
+const RAIZ = __dirname;
+const IMAGENS = 'https://raw.githubusercontent.com/gilcambe/nexia/develop/divulga/imagens/';
 
-function lerEstado() {
-  if (!fs.existsSync(ESTADO_PATH)) {
-    return { indiceCliente: 0, historico: [] };
+const lerJson = (f, padrao) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return padrao; } };
+const lerPasta = p => (fs.existsSync(p) ? fs.readdirSync(p).filter(f => f.endsWith('.json')).sort() : []);
+const urlImagem = i => (/^https:\/\//.test(i) ? i : IMAGENS + i);
+
+function carregar(raiz = RAIZ) {
+  const clientes = {};
+  for (const f of lerPasta(path.join(raiz, 'clientes'))) {
+    const c = lerJson(path.join(raiz, 'clientes', f));
+    if (c && c.id) clientes[c.id] = c;
   }
-  const conteudo = fs.readFileSync(ESTADO_PATH, 'utf-8');
-  return JSON.parse(conteudo);
+  const fila = lerPasta(path.join(raiz, 'fila')).map(f => ({ id: f.replace(/\.json$/, ''), ...lerJson(path.join(raiz, 'fila', f), {}) }));
+  return { clientes, fila };
 }
 
-function escreverEstado(estado) {
-  fs.writeFileSync(ESTADO_PATH, JSON.stringify(estado, null, 2), 'utf-8');
-}
+const semBio = t => t.replace(/\s*(pelo )?link na bio/gi, '').replace(/\.\./g, '.').replace(/\s+\./g, '.').trim();
 
-function lerCanais() {
-  if (!fs.existsSync(CANAIS_PATH)) {
-    return [];
-  }
-  const conteudo = fs.readFileSync(CANAIS_PATH, 'utf-8');
-  return JSON.parse(conteudo);
-}
-
-function lerClientes() {
-  if (!fs.existsSync(CLIENTES_PATH)) {
-    return [];
-  }
-  const conteudo = fs.readFileSync(CLIENTES_PATH, 'utf-8');
-  return JSON.parse(conteudo);
-}
-
-function escolherProximoCliente(clientes, estado) {
-  if (!clientes || clientes.length === 0) {
-    return null;
-  }
-  const indice = estado.indiceCliente % clientes.length;
-  const cliente = clientes[indice];
-  estado.indiceCliente = (indice + 1) % clientes.length;
-  return cliente;
-}
-
-function gerarPost(cliente) {
-  const baseUrl = 'https://exemplo.com';
-  const utmSource = 'divulga';
-  const utmMedium = 'robo';
-  const utmCampaign = cliente.id || 'campanha-padrao';
-  const link = `${baseUrl}?utm_source=${utmSource}&utm_medium=${utmMedium}&utm_campaign=${utmCampaign}`;
-  
-  return {
-    texto: `Confira ${cliente.nome}! ${link}`,
-    link,
-    clienteId: cliente.id
+/** Textos de cada rede. Instagram não abre link na legenda: lá vai "link na bio". */
+function montar({ cliente, legenda, imagem, id }) {
+  const porRede = rede => {
+    const link = linkUtm(cliente.link, rede);
+    if (rede === 'instagram') return { texto: /link na bio/i.test(legenda) ? legenda : `${legenda}\n\nLink na bio.`, imagem };
+    return { texto: semBio(legenda), link, imagem };
   };
+  return { id, cliente: cliente.id, porRede };
 }
 
-async function publicarNoCanal(canal, post) {
-  // Simula publicação - em produção faria fetch real
-  console.log(`[${canal.nome}] Publicando: ${post.texto}`);
-  
-  // Simula erro aleatório para teste
-  if (canal.simularErro) {
-    throw new Error(`Erro simulado no canal ${canal.nome}`);
-  }
-  
-  return { sucesso: true, canal: canal.nome, postId: `post-${Date.now()}` };
+/** Escolhe o post desta rodada: primeiro a fila, depois o rodízio. */
+async function proximo({ clientes, fila }, estado, ctx) {
+  const feitos = new Set(estado.feitos || []);
+  const item = fila.find(i => !feitos.has(i.id) && clientes[i.cliente]);
+  if (item) return montar({ id: item.id, cliente: clientes[item.cliente], legenda: item.legenda, imagem: urlImagem(item.imagem) });
+  const prontos = Object.values(clientes).filter(c => c.ativo !== false && (c.imagens || []).length && (c.assuntos || []).length);
+  if (!prontos.length) return null;
+  const n = estado.rodizio || 0;
+  const c = prontos[n % prontos.length];
+  const volta = Math.floor(n / prontos.length);
+  const assunto = c.assuntos[volta % c.assuntos.length];
+  const base = await textoIA(c, assunto, ctx);
+  const legenda = `${base}\n\n${(c.hashtags || []).slice(0, 3).join(' ')}`.trim();
+  return { ...montar({ id: null, cliente: c, legenda, imagem: urlImagem(c.imagens[volta % c.imagens.length]) }), rodizio: true };
 }
 
-async function executar() {
-  const estado = lerEstado();
-  const clientes = lerClientes();
-  const canais = lerCanais().filter(c => c.ativo);
-  
-  const cliente = escolherProximoCliente(clientes, estado);
-  
-  if (!cliente) {
-    console.log('Nenhum cliente cadastrado.');
-    return { modo: 'erro', mensagem: 'Nenhum cliente cadastrado' };
+async function rodar({ acao = 'rodar', dados, env = process.env, fetchImpl = fetch, log = console.log, raiz = RAIZ } = {}) {
+  const arqEstado = dados && path.join(dados, 'divulga-estado.json');
+  const estado = (arqEstado && lerJson(arqEstado, null)) || { rodizio: 0, feitos: [], historico: [] };
+  const ctx = { env, fetchImpl, log };
+  const post = await proximo(carregar(raiz), estado, ctx);
+  if (!post) { log('Nada para postar (fila vazia e nenhum cliente com imagens e assuntos).'); return { postou: false }; }
+  const ativos = acao === 'ensaio' ? [] : CANAIS.filter(c => c.ativo(env));
+  log(`Post: ${post.id || 'rodízio'} (${post.cliente})`);
+  if (!ativos.length) {
+    for (const rede of ['instagram', 'facebook']) log(`--- ${rede} ---\n${post.porRede(rede).texto}\n${post.porRede(rede).link || ''}`);
+    log(acao === 'ensaio' ? 'Ensaio: nada foi publicado.' : 'Nenhuma rede ligada ainda: nada foi publicado.');
+    return { postou: false, post };
   }
-  
-  const post = gerarPost(cliente);
-  
-  if (canais.length === 0) {
-    console.log('=== MODO ENSAIO ===');
-    console.log('Nenhum canal ativo. Texto que seria publicado:');
-    console.log(post.texto);
-    console.log('=====================');
-    
-    estado.historico.push({
-      timestamp: new Date().toISOString(),
-      clienteId: cliente.id,
-      modo: 'ensaios',
-      post: post.texto
-    });
-    escreverEstado(estado);
-    
-    return { modo: 'ensaios', post: post.texto };
-  }
-  
   const resultados = [];
-  
-  for (const canal of canais) {
+  for (const canal of ativos) {
     try {
-      const resultado = await publicarNoCanal(canal, post);
-      resultados.push({ canal: canal.nome, ...resultado });
-    } catch (erro) {
-      console.error(`Erro no canal ${canal.nome}:`, erro.message);
-      resultados.push({ canal: canal.nome, sucesso: false, erro: erro.message });
+      const r = await canal.publicar(post.porRede(canal.id), { env, fetchImpl, quando: Date.now() });
+      resultados.push({ canal: canal.id, ok: true, ref: r && r.ref });
+      log(`OK ${canal.nome}`);
+    } catch (e) {
+      resultados.push({ canal: canal.id, ok: false });
+      log(`ERRO ${canal.nome}: ${String(e.message || e).slice(0, 200)}`);
     }
   }
-  
-  estado.historico.push({
-    timestamp: new Date().toISOString(),
-    clienteId: cliente.id,
-    modo: 'producao',
-    resultados
-  });
-  escreverEstado(estado);
-  
-  return { modo: 'producao', cliente: cliente.nome, resultados };
+  const postou = resultados.some(r => r.ok);
+  if (postou) {
+    if (post.id) estado.feitos = [...(estado.feitos || []), post.id];
+    if (post.rodizio) estado.rodizio = (estado.rodizio || 0) + 1;
+  }
+  estado.historico = [...(estado.historico || []), { quando: new Date().toISOString(), id: post.id, cliente: post.cliente, resultados }].slice(-60);
+  if (arqEstado) { fs.mkdirSync(dados, { recursive: true }); fs.writeFileSync(arqEstado, JSON.stringify(estado, null, 2)); }
+  return { postou, resultados, post };
 }
 
-module.exports = { executar, lerEstado, escreverEstado, escolherProximoCliente, gerarPost };
+module.exports = { rodar, carregar, proximo, montar, semBio };
 
 if (require.main === module) {
-  executar().then(r => console.log('Resultado:', JSON.stringify(r, null, 2)));
+  const args = process.argv.slice(2);
+  const i = args.indexOf('--dados');
+  rodar({ acao: args[0] || 'ensaio', dados: i >= 0 ? args[i + 1] : null })
+    .then(r => { if (r.resultados && !r.postou) process.exitCode = 1; })
+    .catch(e => { console.error(e.message); process.exitCode = 1; });
 }
