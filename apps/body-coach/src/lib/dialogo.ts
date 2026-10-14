@@ -2,88 +2,39 @@
 function abrir(texto: string, botoes: { rotulo: string; valor: boolean; forte?: boolean }[]): Promise<boolean> {
   return new Promise((resolve) => {
     const fundo = document.createElement('div');
-    fundo.style.cssText = `
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.5);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10000;
-      padding: 16px;
-      font-family: inherit;
-    `;
-
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-      background: var(--bg-card, #fff);
-      color: var(--text-primary, #000);
-      border-radius: 12px;
-      padding: 24px;
-      max-width: 90vw;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-      text-align: center;
-    `;
-
-    const mensagem = document.createElement('p');
-    mensagem.textContent = texto;
-    mensagem.style.cssText = `margin: 0 0 20px; line-height: 1.5;`;
-
-    const containerBotoes = document.createElement('div');
-    containerBotoes.style.cssText = `display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;`;
-
-    botoes.forEach(({ rotulo, valor, forte }) => {
-      const botao = document.createElement('button');
-      botao.type = 'button';
-      botao.textContent = rotulo;
-      botao.style.cssText = `
-        padding: 12px 24px;
-        border-radius: 8px;
-        border: none;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: opacity 0.15s, transform 0.1s;
-        ${forte
-          ? 'background: var(--accent, #0066cc); color: #fff;'
-          : 'background: var(--bg-secondary, #f0f0f0); color: var(--text-primary, #000);'}
-      `;
-      botao.addEventListener('mouseenter', () => (botao.style.opacity = '0.85'));
-      botao.addEventListener('mouseleave', () => (botao.style.opacity = '1'));
-      botao.addEventListener('mousedown', () => (botao.style.transform = 'scale(0.98)'));
-      botao.addEventListener('mouseup', () => (botao.style.transform = 'scale(1)'));
-      botao.addEventListener('click', () => {
-        limpar();
-        resolve(valor);
-      });
-      containerBotoes.appendChild(botao);
-    });
-
-    const limpar = () => {
-      if (fundo.parentNode) {
-        fundo.parentNode.removeChild(fundo);
-      }
-      document.removeEventListener('keydown', onKeyDown);
-    };
-
-    // Fechar com ESC
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        limpar();
-        resolve(false);
-      }
-    };
-    document.addEventListener('keydown', onKeyDown);
-
-    modal.appendChild(mensagem);
-    modal.appendChild(containerBotoes);
-    fundo.appendChild(modal);
+    fundo.setAttribute('role', 'dialog');
+    fundo.setAttribute('aria-modal', 'true');
+    fundo.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.45)';
+    const caixa = document.createElement('div');
+    caixa.style.cssText = 'width:100%;max-width:360px;border-radius:20px;background:#fff;color:#1c1917;padding:20px;box-shadow:0 10px 40px rgba(0,0,0,.25);font:500 16px/1.45 Inter,system-ui,sans-serif';
+    const p = document.createElement('p');
+    p.textContent = texto;
+    p.style.cssText = 'margin:0 0 18px;white-space:pre-line';
+    const linha = document.createElement('div');
+    linha.style.cssText = 'display:flex;gap:10px;justify-content:flex-end';
+    const fechar = (v: boolean) => { fundo.remove(); document.removeEventListener('keydown', tecla); resolve(v); };
+    const tecla = (e: KeyboardEvent) => { if (e.key === 'Escape') fechar(false); };
+    for (const b of botoes) {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.textContent = b.rotulo;
+      el.style.cssText = `min-height:44px;padding:0 18px;border-radius:12px;font:600 15px Inter,system-ui,sans-serif;border:${b.forte ? '0' : '1px solid #e7e5e4'};background:${b.forte ? '#ea580c' : '#fff'};color:${b.forte ? '#fff' : '#1c1917'}`;
+      el.onclick = () => fechar(b.valor);
+      linha.appendChild(el);
+    }
+    fundo.onclick = (e) => { if (e.target === fundo) fechar(false); };
+    document.addEventListener('keydown', tecla);
+    caixa.append(p, linha);
+    fundo.appendChild(caixa);
     document.body.appendChild(fundo);
-
-    // Foco no primeiro botão para acessibilidade
-    const primeiroBotao = containerBotoes.querySelector('button') as HTMLElement;
-    primeiroBotao?.focus();
+    (linha.lastElementChild as HTMLButtonElement | null)?.focus();
   });
+}
+
+export function confirmar(texto: string, sim = 'Sim', nao = 'Cancelar'): Promise<boolean> {
+  return abrir(texto, [{ rotulo: nao, valor: false }, { rotulo: sim, valor: true, forte: true }]);
+}
+
+export async function avisar(texto: string): Promise<void> {
+  await abrir(texto, [{ rotulo: 'Entendi', valor: true, forte: true }]);
 }

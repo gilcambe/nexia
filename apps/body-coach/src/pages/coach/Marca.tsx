@@ -47,7 +47,7 @@ export default function Marca() {
       <div className="rounded-2xl border border-background-200 bg-background-50 p-4" data-testid="marca-previa">
         <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-foreground-400">Como o aluno vê</p>
         <div className="flex items-center gap-2.5">
-          {logo ? <img src={logo} alt="Logo escolhido" className="h-10 w-10 rounded-xl object-contain" /> : <span className="flex h-10 w-10 items-center justify-center rounded-xl text-white" style={{ background: corCss(cor) }}><i className="ri-heart-3-line text-lg"></i></span>}
+          {logo ? <img src={logo} alt="Logo escolhido" className="h-10 w-10 rounded-xl object-contain" /> : <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="h-10 w-10 rounded-xl" />}
           <div className="leading-none">
             <p className="font-heading font-bold text-foreground-950">{nome.trim() || 'NEXIA'}</p>
             <p className="mt-0.5 text-xs font-medium uppercase tracking-[0.18em] text-foreground-400">{nome.trim() ? 'com NEXIA Body Coach' : 'Body Coach AI'}</p>
