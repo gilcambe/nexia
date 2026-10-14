@@ -1,0 +1,65 @@
+# NEXIA Divulga: posta os clientes da NEXIA sozinho, 2x por dia (grátis, GitHub Actions).
+# Primeiro a fila pronta (divulga/fila), depois o rodízio com texto da IA. Estado na branch "divulga-dados".
+name: Divulga NEXIA
+
+on:
+  schedule:
+    - cron: '23 12,21 * * *'
+  workflow_dispatch:
+    inputs:
+      acao:
+        description: 'O que fazer'
+        type: choice
+        options: [rodar, ensaio]
+        default: rodar
+
+permissions:
+  contents: write
+
+concurrency:
+  group: divulga
+  cancel-in-progress: false
+
+jobs:
+  divulga:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Abrir os dados
+        run: |
+          git config user.name "NEXIA Divulga"
+          git config user.email "divulga@nexia.invalid"
+          if git fetch -q --depth 1 origin divulga-dados; then
+            git worktree add -q -B divulga-dados dados FETCH_HEAD
+          else
+            git worktree add -q --orphan -b divulga-dados dados
+          fi
+      - name: Postar
+        env:
+          ACAO: ${{ github.event_name == 'schedule' && 'rodar' || inputs.acao }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          DIVULGA_META_PAGE_ID: ${{ secrets.DIVULGA_META_PAGE_ID }}
+          DIVULGA_META_PAGE_TOKEN: ${{ secrets.DIVULGA_META_PAGE_TOKEN }}
+          DIVULGA_META_IG_USER_ID: ${{ secrets.DIVULGA_META_IG_USER_ID }}
+          DIVULGA_THREADS_USER_ID: ${{ secrets.DIVULGA_THREADS_USER_ID }}
+          DIVULGA_THREADS_TOKEN: ${{ secrets.DIVULGA_THREADS_TOKEN }}
+          DIVULGA_PINTEREST_APP_ID: ${{ secrets.DIVULGA_PINTEREST_APP_ID }}
+          DIVULGA_PINTEREST_APP_SECRET: ${{ secrets.DIVULGA_PINTEREST_APP_SECRET }}
+          DIVULGA_PINTEREST_REFRESH_TOKEN: ${{ secrets.DIVULGA_PINTEREST_REFRESH_TOKEN }}
+          DIVULGA_PINTEREST_BOARD_ID: ${{ secrets.DIVULGA_PINTEREST_BOARD_ID }}
+          DIVULGA_BLUESKY_HANDLE: ${{ secrets.DIVULGA_BLUESKY_HANDLE }}
+          DIVULGA_BLUESKY_APP_PASSWORD: ${{ secrets.DIVULGA_BLUESKY_APP_PASSWORD }}
+        run: node divulga/robo.js "$ACAO" --dados dados
+      - name: Guardar os dados
+        if: always()
+        run: |
+          cd dados
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -qm "dados do Divulga"
+          git push -q origin divulga-dados
