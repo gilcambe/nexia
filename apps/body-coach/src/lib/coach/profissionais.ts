@@ -68,7 +68,8 @@ export const corCss = (cor: Cor, passo = 500) => {
 };
 
 const CHAVE = 'bc_marca';
-export const salvarMarca = (m: Marca) => chatApi<{ marca: Marca | null }>({ acao: 'marca_salvar', ...m });
+export const salvarMarca = (m: Marca & { bio?: string; whats?: string }) => chatApi<{ marca: Marca | null; codigo?: string }>({ acao: 'marca_salvar', ...m });
+export const verMarca = () => chatApi<{ marca: Marca | null; bio: string; whats: string; codigo: string }>({ acao: 'marca_ver' });
 export function marcaGuardada(): Marca | null {
   try { const v = localStorage.getItem(CHAVE); return v ? (JSON.parse(v) as Marca) : null; } catch { return null; }
 }

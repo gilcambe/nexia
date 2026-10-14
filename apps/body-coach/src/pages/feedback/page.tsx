@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { chatApi } from '@/lib/chat';
 
+interface Avaliacao { uid: string; nome: string; papel: string; estrelas: number; texto: string; publicar: boolean; aprovado: boolean; em: number }
 interface Item { id: string; nome: string; tipo: string; texto: string; tela: string; em: number }
 const TIPOS = [['bug', 'Algo não funciona'], ['ideia', 'Tenho uma ideia'], ['elogio', 'Gostei de algo']] as const;
 
@@ -14,6 +15,10 @@ export default function Feedback() {
   const [msg, setMsg] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [itens, setItens] = useState<Item[] | null>(null);
+  const [aba, setAba] = useState<'comentarios' | 'avaliacoes'>('comentarios');
+  const [avals, setAvals] = useState<{ itens: Avaliacao[]; media: number } | null>(null);
+  const carregarAvals = () => chatApi<{ itens: Avaliacao[]; media: number }>({ acao: 'avaliacoes_ver' }).then(setAvals).catch(() => setAvals(null));
+  const aprovar = async (a: Avaliacao) => { try { await chatApi({ acao: 'avaliacao_aprovar', uid: a.uid, aprovado: !a.aprovado }); await carregarAvals(); } catch (e) { setMsg((e as Error).message); } };
 
   useEffect(() => { chatApi<{ itens: Item[] }>({ acao: 'feedback_ver' }).then((r) => setItens(r.itens)).catch(() => setItens(null)); }, []);
 
@@ -35,7 +40,26 @@ export default function Feedback() {
       <button onClick={() => void enviar()} disabled={enviando || texto.trim().length < 3} className="w-full rounded-xl bg-primary-500 px-4 py-3 text-sm font-semibold text-background-50 disabled:opacity-40">{enviando ? 'Enviando…' : 'Enviar'}</button>
       {msg && <p role="status" className="text-sm text-primary-700">{msg}</p>}
       {itens && (
-        <section className="pt-4">
+        <div className="flex gap-2 pt-4" role="tablist">
+          {([['comentarios', 'Comentários'], ['avaliacoes', 'Avaliações']] as const).map(([id, n]) => <button key={id} role="tab" aria-selected={aba === id} onClick={() => { setAba(id); if (id === 'avaliacoes' && !avals) void carregarAvals(); }} className={`rounded-full border px-3 py-1.5 text-sm ${aba === id ? 'border-primary-500 bg-primary-100 text-primary-700' : 'border-background-200 text-foreground-600'}`}>{n}</button>)}
+        </div>
+      )}
+      {itens && aba === 'avaliacoes' && (
+        <section>
+          <h2 className="font-heading text-lg font-semibold text-foreground-950">Avaliações ({avals?.itens.length ?? 0}){avals && avals.itens.length > 0 ? ` · média ${avals.media} ★` : ''}</h2>
+          <ul className="mt-2 space-y-2">
+            {avals?.itens.map((a) => (
+              <li key={a.uid} className="rounded-xl border border-background-200 bg-background-50 p-3 text-sm">
+                <p className="text-xs text-foreground-500">{'★'.repeat(a.estrelas)}{'☆'.repeat(5 - a.estrelas)} · {a.nome || 'sem nome'} · {a.papel} · {new Date(a.em).toLocaleString('pt-BR')}{a.publicar ? ' · pode publicar' : ''}</p>
+                {a.texto && <p className="mt-1 whitespace-pre-wrap break-words text-foreground-800">{a.texto}</p>}
+                {a.publicar && <button onClick={() => void aprovar(a)} className={`mt-2 rounded-lg border px-3 py-1.5 text-xs font-semibold ${a.aprovado ? 'border-red-300 text-red-600' : 'border-primary-300 text-primary-700'}`}>{a.aprovado ? 'Tirar' : 'Aprovar'}</button>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {itens && aba === 'comentarios' && (
+        <section>
           <h2 className="font-heading text-lg font-semibold text-foreground-950">Comentários recebidos ({itens.length})</h2>
           <ul className="mt-2 space-y-2">
             {itens.map((i) => (

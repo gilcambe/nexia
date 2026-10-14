@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '@/components/base/Card';
 import { useAuth } from '@/components/feature/AuthContext';
 import CompartilharCartao from '@/components/feature/CompartilharCartao';
+import { chatApi } from '@/lib/chat';
 import { linkIndicacao } from '@/lib/ferramentas/cartao';
 import { calcularConquistas, nivel, sequencias } from '@/lib/ferramentas/conquistas';
 import { useHistorico } from '@/lib/ferramentas/useHistorico';
@@ -12,6 +13,8 @@ export default function Indique() {
   const h = useHistorico(user?.id, false);
   const [copiado, setCopiado] = useState(false);
   const link = user ? linkIndicacao(user.id) : '';
+  const [pagas, setPagas] = useState<number | null>(null);
+  useEffect(() => { if (user) chatApi<{ pagas: number }>({ acao: 'indicacao_ver' }).then((r) => setPagas(r.pagas)).catch(() => undefined); }, [user]);
   const conq = useMemo(() => calcularConquistas(h), [h]);
   const nv = nivel(conq, h.treinos.length, h.refeicoes, h.checkins);
   const seq = sequencias(h.treinos.filter((t) => t.done_at).map((t) => new Date(t.done_at as string)));
@@ -38,7 +41,7 @@ export default function Indique() {
     <div className="space-y-3">
       <Card className="bg-gradient-to-br from-primary-500 to-primary-700 text-background-50 dark:text-foreground-950">
         <p className="font-heading text-xl font-bold">Indique e ganhe</p>
-        <p className="mt-1 text-sm opacity-90">Cada amigo que entrar pelo seu link fica registrado como sua indicação. Quando os planos pagos começarem, cada indicação que assinar vale 1 mês de Premium para você.</p>
+        <p className="mt-1 text-sm opacity-90">Indique um amigo: quando ele assinar o Premium, você ganha 1 mês grátis.{pagas !== null && <> Já ganhou: <b data-testid="indicacoes-pagas">{pagas}</b></>}</p>
       </Card>
       <Card>
         <p className="text-xs font-semibold uppercase tracking-wide text-foreground-400">Seu link</p>

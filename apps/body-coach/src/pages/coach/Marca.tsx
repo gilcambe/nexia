@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '@/components/base/Card';
-import { aplicarMarca, CORES, corCss, marcaGuardada, reduzirLogo, salvarMarca, type Cor } from '@/lib/coach/profissionais';
+import { aplicarMarca, CORES, corCss, marcaGuardada, reduzirLogo, salvarMarca, verMarca, type Cor } from '@/lib/coach/profissionais';
 
 // Marca do coach: nome, cor e logo aparecem no app de todos os alunos dele (e no dele). Grátis: é só o tema do app.
 export default function Marca() {
@@ -12,6 +12,10 @@ export default function Marca() {
   const [erro, setErro] = useState('');
   const [ok, setOk] = useState('');
   const [ocupado, setOcupado] = useState(false);
+  const [bio, setBio] = useState('');
+  const [whats, setWhats] = useState('');
+  const [codigo, setCodigo] = useState('');
+  useEffect(() => { verMarca().then((r) => { setBio(r.bio); setWhats(r.whats); setCodigo(r.codigo); }).catch(() => undefined); }, []);
 
   const escolherLogo = async (f: File | undefined) => {
     if (!f) return;
@@ -21,7 +25,8 @@ export default function Marca() {
   const salvar = async () => {
     setOcupado(true); setErro(''); setOk('');
     try {
-      const r = await salvarMarca({ nome: nome.trim(), cor, logo });
+      const r = await salvarMarca({ nome: nome.trim(), cor, logo, bio: bio.trim(), whats });
+      if (r.codigo) setCodigo(r.codigo);
       aplicarMarca(r.marca);
       setOk('Marca salva! Os seus alunos veem na próxima vez que abrirem o app.');
     } catch (e) { setErro((e as Error).message); } finally { setOcupado(false); }
@@ -79,9 +84,15 @@ export default function Marca() {
         </div>
         <p className="mt-1 text-xs text-foreground-500">Quadrado e com fundo transparente fica melhor. O app reduz sozinho.</p>
 
+        <label className="mt-4 block text-sm font-medium text-foreground-800" htmlFor="marca-bio">Sua bio (aparece na sua página)</label>
+        <textarea id="marca-bio" value={bio} onChange={(e) => setBio(e.target.value)} maxLength={300} rows={3} placeholder="Ex.: Personal há 8 anos, especialista em emagrecimento." className="mt-1 w-full rounded-lg border border-background-200 bg-background-50 px-3 py-2.5 text-sm outline-none focus:border-primary-300" />
+        <label className="mt-4 block text-sm font-medium text-foreground-800" htmlFor="marca-whats">Seu WhatsApp</label>
+        <input id="marca-whats" value={whats} onChange={(e) => setWhats(e.target.value.replace(/\D/g, ''))} inputMode="numeric" maxLength={13} placeholder="DDD + número, ex.: 81999998888" className="mt-1 w-full rounded-lg border border-background-200 bg-background-50 px-3 py-2.5 text-sm outline-none focus:border-primary-300" />
+
         <button type="button" onClick={() => void salvar()} disabled={ocupado} className="mt-5 w-full rounded-xl px-4 py-3 text-sm font-semibold text-white disabled:opacity-40" style={{ background: corCss(cor) }}>Salvar minha marca</button>
         {(atual || nome || logo || cor !== 'laranja') && <button type="button" onClick={() => void voltarPadrao()} disabled={ocupado} className="mt-2 w-full text-sm font-semibold text-foreground-500">Voltar para a marca NEXIA</button>}
       </Card>
+      {codigo && <Link to={`/loja/${codigo}`} className="block text-center text-sm font-semibold text-primary-600"><i className="ri-external-link-line mr-1"></i>Ver minha página</Link>}
     </div>
   );
 }
