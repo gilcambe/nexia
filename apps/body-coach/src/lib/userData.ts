@@ -106,6 +106,8 @@ export async function deleteUserDoc(uid: string, coll: BodyCoachCollection, id: 
 // O Cloud Storage do Firebase exige plano pago; por isso o arquivo vai como data URL
 // dentro do próprio documento do Firestore (limite de 1 MB por documento).
 export const MAX_INLINE_BYTES = 850_000;
+// Fotos: até 180 KB (WebP, ou JPEG onde não houver WebP). Cabem ~5 vezes mais fotos no banco grátis.
+export const MAX_FOTO_BYTES = 180_000;
 
 function readAsDataUrl(file: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -118,7 +120,7 @@ function readAsDataUrl(file: Blob): Promise<string> {
 
 // Reduz a imagem (lado maior até maxSide px) e gera JPEG em data URL, baixando a
 // qualidade até caber no limite do documento.
-export async function compressImageToDataUrl(file: File | Blob, maxSide = 1000, maxBytes = MAX_INLINE_BYTES): Promise<string> {
+export async function compressImageToDataUrl(file: File | Blob, maxSide = 1000, maxBytes = MAX_FOTO_BYTES): Promise<string> {
   const src = await readAsDataUrl(file);
   const img = await new Promise<HTMLImageElement>((resolve, reject) => {
     const el = new Image();
