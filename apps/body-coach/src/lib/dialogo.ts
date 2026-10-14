@@ -1,5 +1,5 @@
 // Janela de confirmação e aviso no visual do app (no lugar de window.confirm / window.alert).
-export function abrir(texto: string, botoes: { rotulo: string; valor: boolean; forte?: boolean }[]): Promise<boolean> {
+function abrir(texto: string, botoes: { rotulo: string; valor: boolean; forte?: boolean }[]): Promise<boolean> {
   return new Promise((resolve) => {
     const fundo = document.createElement('div');
     fundo.style.cssText = `
