@@ -233,6 +233,8 @@ async function executar(body, uid, db, ctx = {}) {
   const acao = body.acao;
   // Acesso: teste grátis, aviso e bloqueio no servidor (o admin libera quando confirma o Pix).
   if (typeof acao === 'string' && acao.startsWith('acesso_')) return acoesAcesso(body, uid, db, ctx, eu);
+  // Loja: ofertas fitness do robô de afiliados (só leitura de um arquivo público, com cache de 1 h).
+  if (acao === 'loja_ofertas') return [200, await require('./body-coach/ofertas').lojaOfertas()];
   if (!LIVRES.includes(acao) && await estaBloqueado(db, uid, { ...ctx, papel: eu && eu.papel, coachUid: eu && eu.papel === 'aluno' ? eu.coachUid || '' : '' })) {
     return [402, { error: 'Seu período grátis acabou. Pague para continuar usando o app.', bloqueado: true }];
   }
