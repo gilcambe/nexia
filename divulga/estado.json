@@ -1,0 +1,46 @@
+{
+  "clientes": [
+    {
+      "id": "cli_1",
+      "nome": "Cliente A",
+      "utm_source": "cliente-a",
+      "canais": [
+        {
+          "id": "canal_1",
+          "tipo": "telegram",
+          "config": {
+            "chat_id": "-1001234567890",
+            "token": "{{TELEGRAM_TOKEN}}"
+          },
+          "ativo": true
+        },
+        {
+          "id": "canal_2",
+          "tipo": "whatsapp",
+          "config": {
+            "phone": "5511999999999",
+            "token": "{{WHATSAPP_TOKEN}}"
+          },
+          "ativo": true
+        }
+      ]
+    },
+    {
+      "id": "cli_2",
+      "nome": "Cliente B",
+      "utm_source": "cliente-b",
+      "canais": [
+        {
+          "id": "canal_3",
+          "tipo": "telegram",
+          "config": {
+            "chat_id": "-1009876543210",
+            "token": "{{TELEGRAM_TOKEN}}"
+          },
+          "ativo": false
+        }
+      ]
+    }
+  ],
+  "indice_atual": 0
+}
