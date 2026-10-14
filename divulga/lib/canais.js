@@ -100,6 +100,7 @@ async function fetchWithRetry(fetchImpl, url, options = {}, retries = 3, delay =
 
 const GRAPH_VERSION = process.env.DIVULGA_GRAPH_VERSION || 'v21.0';
 const GRAPH = `https://graph.facebook.com/${GRAPH_VERSION}`;
+const THREADS = 'https://graph.threads.net/v1.0';
 
 // ---------- Facebook (página) ----------
 const facebook = {
@@ -288,7 +289,7 @@ const threads = {
     const mensagem = [post.titulo, post.texto, post.link].filter(Boolean).join('\n\n');
     
     // 1. Criar container de imagem do Threads
-    const containerRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/threads`, {
+    const containerRes = await fetchWithRetry(fetchImpl, `${THREADS}/${conta}/threads`, {
       method: 'POST',
       signal: tempo(),
       body: new URLSearchParams({
@@ -301,7 +302,7 @@ const threads = {
     const container = await json(containerRes, 'Threads container');
 
     // 2. Publicar o container
-    const publishRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/threads_publish`, {
+    const publishRes = await fetchWithRetry(fetchImpl, `${THREADS}/${conta}/threads_publish`, {
       method: 'POST',
       signal: tempo(),
       body: new URLSearchParams({
