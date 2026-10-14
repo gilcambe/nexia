@@ -7,8 +7,8 @@ const os = require('node:os');
 const path = require('node:path');
 const { rodar, semBio } = require('../../divulga/robo');
 
-const ENV_META = { DIVULGA_META_PAGE_ID: '1', DIVULGA_META_PAGE_TOKEN: 't', DIVULGA_META_IG_USER_ID: '2' };
-const ok = body => ({ ok: true, status: 200, json: async () => body });
+const ENV_META = { DIVULGA_META_PAGE_ID: '1', DIVULGA_META_PAGE_TOKEN: 't', DIVULGA_META_IG_USER_ID: '2', DIVULGA_PAUSA_MS: '0' };
+const ok = body => ({ ok: true, status: 200, json: async () => ({ status_code: 'FINISHED', ...body }) });
 const falha = () => ({ ok: false, status: 400, json: async () => ({ error: { message: 'ruim' } }) });
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'divulga-'));
 const silencio = () => {};
@@ -39,7 +39,11 @@ test('fila sai em ordem, 1 por rodada, e o link do Facebook leva utm', async () 
   const fb = urls.find(x => x.u.includes('/photos'));
   assert.match(decodeURIComponent(fb.b.replace(/\+/g, ' ')), /utm_source=facebook&utm_medium=social&utm_campaign=divulga/);
   const ig = urls.find(x => x.u.endsWith('/media'));
-  assert.match(decodeURIComponent(ig.b), /divulga\/imagens\/body-coach-1\.jpg/);
+  const corpo = new URLSearchParams(ig.b);
+  assert.equal(corpo.get('media_type'), 'REELS');
+  assert.match(corpo.get('video_url'), /divulga\/videos\/body-coach-1\.mp4$/);
+  assert.ok((corpo.get('caption').match(/#/g) || []).length >= 8, 'Instagram leva 8 hashtags');
+  assert.ok(urls.some(x => x.u.includes('fields=status_code')), 'espera o vídeo ficar pronto');
 });
 
 test('Facebook com erro não impede o Instagram', async () => {
@@ -66,4 +70,11 @@ test('fila feita: rodízio usa texto fixo quando a IA falha', async () => {
 test('tira "link na bio" fora do Instagram', () => {
   assert.equal(semBio('Monta seu treino. Link na bio. #a'), 'Monta seu treino. #a');
   assert.equal(semBio('Comece grátis pelo link na bio. #a'), 'Comece grátis. #a');
+});
+
+test('vídeo com erro no Instagram não publica e não trava', async () => {
+  const dados = tmp();
+  const fetchImpl = async u => (String(u).includes('status_code') ? ok({ status_code: 'ERROR' }) : ok({ id: 'c' }));
+  const r = await rodar({ acao: 'rodar', dados, env: ENV_META, fetchImpl, log: silencio });
+  assert.deepEqual(r.resultados.map(x => [x.canal, x.ok]), [['facebook', true], ['instagram', false]]);
 });
