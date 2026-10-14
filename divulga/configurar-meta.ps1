@@ -26,9 +26,9 @@ try {
   $ig = $pag.instagram_business_account.id
   if (-not $ig) { throw 'Essa pagina nao tem Instagram comercial ligado. Ligue o Instagram a pagina e rode de novo.' }
 
-  $pag.id | gh secret set DIVULGA_META_PAGE_ID --repo $repo
-  $pag.access_token | gh secret set DIVULGA_META_PAGE_TOKEN --repo $repo
-  $ig | gh secret set DIVULGA_META_IG_USER_ID --repo $repo
+  gh secret set DIVULGA_META_PAGE_ID --repo $repo --body "$($pag.id)"
+  gh secret set DIVULGA_META_PAGE_TOKEN --repo $repo --body "$($pag.access_token)"
+  gh secret set DIVULGA_META_IG_USER_ID --repo $repo --body "$ig"
   if ($LASTEXITCODE -ne 0) { throw 'O GitHub nao aceitou guardar os codigos.' }
 
   gh workflow run divulga.yml --repo $repo -f acao=rodar

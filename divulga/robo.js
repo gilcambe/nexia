@@ -62,7 +62,9 @@ async function proximo({ clientes, fila }, estado, ctx) {
   return { ...montar({ id: null, cliente: c, legenda, imagem: urlImagem(c.imagens[volta % c.imagens.length]) }), rodizio: true };
 }
 
-async function rodar({ acao = 'rodar', dados, env = process.env, fetchImpl = fetch, log = console.log, raiz = RAIZ } = {}) {
+async function rodar({ acao = 'rodar', dados, env: envBruto = process.env, fetchImpl = fetch, log = console.log, raiz = RAIZ } = {}) {
+  // Segredo salvo pelo PowerShell chega com quebra de linha no fim ("Cannot parse access token"): limpa antes de usar.
+  const env = Object.fromEntries(Object.entries(envBruto).map(([k, v]) => [k, typeof v === 'string' ? v.replace(/[\u0000\uFEFF]/g, '').trim() : v]));
   const arqEstado = dados && path.join(dados, 'divulga-estado.json');
   const estado = (arqEstado && lerJson(arqEstado, null)) || { rodizio: 0, feitos: [], historico: [] };
   const ctx = { env, fetchImpl, log };

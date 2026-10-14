@@ -78,3 +78,12 @@ test('vídeo com erro no Instagram não publica e não trava', async () => {
   const r = await rodar({ acao: 'rodar', dados, env: ENV_META, fetchImpl, log: silencio });
   assert.deepEqual(r.resultados.map(x => [x.canal, x.ok]), [['facebook', true], ['instagram', false]]);
 });
+
+test('chave com quebra de linha no fim (salva pelo PowerShell) funciona', async () => {
+  const dados = tmp();
+  const corpos = [];
+  const env = { DIVULGA_META_PAGE_ID: '1\r\n', DIVULGA_META_PAGE_TOKEN: 'tok\r\n', DIVULGA_PAUSA_MS: '0' };
+  await rodar({ acao: 'rodar', dados, env, fetchImpl: async (u, o) => { corpos.push(String(u) + ' ' + String(o && o.body)); return ok({ id: 'x' }); }, log: silencio });
+  assert.ok(corpos[0].includes('/1/photos'));
+  assert.ok(corpos[0].includes('access_token=tok') && !corpos[0].includes('%0D'));
+});
