@@ -61,26 +61,31 @@ async function publicarCanal(canal, texto) {
 async function executar() {
   const estado = lerEstado();
   const cliente = proximoCliente(estado);
-  
+
   if (!cliente) {
     console.log('Nenhum cliente com canal ativo. Modo ensaio.');
+    const clientesComCanal = estado.clientes.filter(c => c.canais.length > 0);
+    if (clientesComCanal.length > 0) {
+      const clienteEnsaio = clientesComCanal[estado.indice_atual % clientesComCanal.length];
+      const texto = gerarPost(clienteEnsaio);
+      console.log('MODO ENSAIO - Post que seria publicado:');
+      console.log(texto);
+    }
     return { modo: 'ensaio', cliente: null, resultados: [] };
   }
 
   const texto = gerarPost(cliente);
   const canaisAtivos = cliente.canais.filter(c => c.ativo);
 
-  const resultados = await Promise.allSettled(
-    canaisAtivos.map(canal => publicarCanal(canal, texto).catch(err => ({ ok: false, canal: canal.id, erro: err.message })))
+  const resultados = await Promise.all(
+    canaisAtivos.map(canal =>
+      publicarCanal(canal, texto).catch(err => ({ ok: false, canal: canal.id, erro: err.message }))
+    )
   );
 
-  const resultadosFinais = resultados.map((r, i) => 
-    r.status === 'fulfilled' ? r.value : { ok: false, canal: canaisAtivos[i].id, erro: r.reason?.message || String(r.reason) }
-  );
-
-  console.log('Resultados:', JSON.stringify(resultadosFinais, null, 2));
+  console.log('Resultados:', JSON.stringify(resultados, null, 2));
   salvarEstado(estado);
-  return { modo: 'producao', cliente: cliente.id, resultados: resultadosFinais };
+  return { modo: 'producao', cliente: cliente.id, resultados };
 }
 
 if (require.main === module) {
