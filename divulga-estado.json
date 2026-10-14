@@ -1,0 +1,21 @@
+{
+  "rodizio": 0,
+  "feitos": [],
+  "historico": [
+    {
+      "quando": "2026-10-14T08:13:31.266Z",
+      "id": "body-coach-01",
+      "cliente": "body-coach",
+      "resultados": [
+        {
+          "canal": "facebook",
+          "ok": false
+        },
+        {
+          "canal": "instagram",
+          "ok": false
+        }
+      ]
+    }
+  ]
+}
