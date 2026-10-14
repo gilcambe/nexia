@@ -324,4 +324,4 @@ async function acoesAdmin(body, db, ctx) {
   return [400, { error: 'Ação desconhecida.' }];
 }
 
-module.exports = { DIAS_TESTADOR, virarTestador, FAIXAS, GRACA_DIAS, acessoDe, liberarAcesso, registrarAparelho, configAcesso, estaBloqueado, acoesAcesso, diaBR, LIVRES, AVISO_DIAS, MAX_APARELHOS };
+module.exports = { resumoDono, DIAS_TESTADOR, virarTestador, FAIXAS, GRACA_DIAS, acessoDe, liberarAcesso, registrarAparelho, configAcesso, estaBloqueado, acoesAcesso, diaBR, LIVRES, AVISO_DIAS, MAX_APARELHOS };

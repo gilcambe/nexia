@@ -48,6 +48,7 @@ const LOADERS = {
   'tenant-domain': () => require('../netlify/functions/tenant-domain.js'),
   'usage': () => require('../netlify/functions/usage.js'),
   'whatsapp-business': () => require('../netlify/functions/whatsapp-business.js'),
+  'central': () => require('../netlify/functions/central.js'),
   'nexia-api': () => require('../nexia-ai/api/index.js'),
 };
 
