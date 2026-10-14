@@ -34,6 +34,17 @@ export default function Mais({ d, erro }: { d: Dados; erro?: string }) {
         )}
       </Cartao>
 
+      <Cartao titulo="Uso do site hoje">
+        {!d.cloudflare ? <Carregando /> : !d.cloudflare.configurado ? (
+          <p className="text-sm text-nexia-muted">Ainda não ligado. Falta criar no Cloudflare um token só de leitura ("Analytics: Read") e guardar como CLOUDFLARE_ANALYTICS_TOKEN.</p>
+        ) : d.cloudflare.erro ? <p className="text-sm text-nexia-muted">{d.cloudflare.erro}</p> : (
+          <div className="space-y-1" data-testid="uso-cloudflare">
+            <div className="text-sm">{(d.cloudflare.pedidos || 0).toLocaleString("pt-BR")} de {d.cloudflare.limite.toLocaleString("pt-BR")} pedidos grátis</div>
+            <div className="h-3 rounded-full bg-nexia-surface2 overflow-hidden"><div className={`h-full ${(d.cloudflare.pedidos || 0) > d.cloudflare.limite * 0.8 ? "bg-amber-400" : "bg-nexia-cyan"}`} style={{ width: `${Math.min(100, ((d.cloudflare.pedidos || 0) / d.cloudflare.limite) * 100)}%` }} /></div>
+          </div>
+        )}
+      </Cartao>
+
       <Cartao titulo="Banco de dados">
         {!d.banco ? <Carregando /> : (
           <div className="flex items-center gap-3 text-sm">

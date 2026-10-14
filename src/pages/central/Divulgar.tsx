@@ -52,6 +52,11 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
         </>
       )}
 
+      <Cartao titulo="De onde vêm as visitas">
+        <p className="text-sm text-nexia-muted">Cada post leva um link marcado com a rede de onde a pessoa veio (Instagram ou Facebook). As visitas aparecem no Google Search Console.</p>
+        <Botao href="https://search.google.com/search-console">Ver visitas no Google</Botao>
+      </Cartao>
+
       <Cartao titulo="Robô de ofertas">
         <p className="text-sm text-nexia-muted">Busca ofertas fitness na Shopee e na Amazon e monta a vitrine.</p>
         <div className="grid grid-cols-2 gap-2">

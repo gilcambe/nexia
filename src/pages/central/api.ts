@@ -29,9 +29,10 @@ export interface Dados {
   robos?: { robos: Robo[] };
   divulga?: Divulga;
   banco?: { ok: boolean; cheio?: boolean; tempo: number };
+  cloudflare?: { configurado: boolean; pedidos?: number; limite: number; erro?: string };
 }
 export type Parte = keyof Dados;
-export const PARTES: Parte[] = ["lista", "saude", "dinheiro", "cortex", "robos", "divulga", "banco"];
+export const PARTES: Parte[] = ["lista", "saude", "dinheiro", "cortex", "robos", "divulga", "banco", "cloudflare"];
 
 export function useCentral() {
   const { getToken } = useAuth();
