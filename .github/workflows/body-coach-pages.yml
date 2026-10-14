@@ -9,6 +9,7 @@ permissions:
 jobs:
   pages:
     runs-on: ubuntu-latest
+    environment: production
     defaults:
       run:
         working-directory: apps/body-coach/pages-proxy
