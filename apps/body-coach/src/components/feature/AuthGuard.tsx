@@ -18,7 +18,10 @@ export default function AuthGuard({ children }: { children: ReactNode }) {
   }
 
   if (!user) {
-    return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
+    // Convite, loja de coach e link de indicação vão direto para o login; o resto conhece o app antes.
+    const direto = /^\/(convite|loja)\//.test(location.pathname) || new URLSearchParams(location.search).has('ref');
+    if (!direto) return <Navigate to={`/conheca${location.search}`} replace />;
+    return <Navigate to={`/auth${location.search}`} replace state={{ from: location.pathname }} />;
   }
 
   return <>{children}</>;
