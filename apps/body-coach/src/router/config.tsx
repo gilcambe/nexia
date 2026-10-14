@@ -18,6 +18,7 @@ const Chat = carregar(() => import("../pages/chat/page"));
 const Convite = carregar(() => import("../pages/chat/Convite"));
 const Feedback = carregar(() => import("../pages/feedback/page"));
 const Termos = carregar(() => import("../pages/privacy/Termos"));
+const Conheca = carregar(() => import("../pages/conheca/page"));
 const Respirar = carregar(() => import("../pages/breathe/page"));
 const Exams = carregar(() => import("../pages/exams/page"));
 const AntiDoping = carregar(() => import("../pages/antidoping/page"));
@@ -59,6 +60,10 @@ const routes: RouteObject[] = [
   {
     path: "/convite/:codigo",
     element: <Convite />,
+  },
+  {
+    path: "/conheca",
+    element: <Conheca />,
   },
   {
     path: "/termos",
