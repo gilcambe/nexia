@@ -29,7 +29,6 @@ export default function CentralPage() {
   const [aba, setAba] = useState<Aba>(() => (location.hash.slice(1) as Aba) || "inicio");
   const [claro, setClaro] = useState<boolean>(() => {
     try { return localStorage.getItem("central-tema") === "claro"; } catch { return false; }
-  
   });
   const [d, setD] = useState<Dados>({});
   const [erros, setErros] = useState<Partial<Record<Parte, string>>>({});
