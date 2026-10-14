@@ -1,4 +1,14 @@
-const CACHE = 'body-coach-v2';
+const CACHE = 'body-coach-v3';
+const MAX_ITENS = 120;
+// Vídeo e áudio não ficam no aparelho (ocupam muito); o resto guarda só os 120 mais recentes.
+const PESADO = /\.(mp4|webm|mov|mp3|m4a|wav)$/i;
+function aparar(c) {
+  return c.keys().then((keys) => {
+    if (keys.length <= MAX_ITENS) return;
+    const toDelete = keys.slice(0, keys.length - MAX_ITENS);
+    return Promise.all(toDelete.map((k) => c.delete(k)));
+  });
+}
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', (e) => {
@@ -9,7 +19,16 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(fetch(req).then((res) => { const copy = res.clone(); caches.open(CACHE).then((c) => c.put('./index.html', copy)); return res; }).catch(() => caches.match('./index.html')));
     return;
   }
-  e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((res) => { if (res.ok) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); } return res; })));
+  e.respondWith(caches.match(req).then((hit) => hit || fetch(req).then((res) => {
+    if (res.ok) {
+      const copy = res.clone();
+      caches.open(CACHE).then((c) => {
+        c.put(req, copy);
+        if (!PESADO.test(req.url)) aparar(c);
+      });
+    }
+    return res;
+  })));
 });
 
 // Avisos no celular (Web Push): mensagem do coach/aluno, hora do treino, beber água.
