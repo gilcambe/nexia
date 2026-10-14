@@ -1,5 +1,9 @@
 // Cartão do treino para o Instagram/WhatsApp (formato story 1080×1920), desenhado no próprio
 // celular com canvas. Leva a marca Body Coach e o link de indicação: cada post vira divulgação grátis.
+import qrcode from 'qrcode-generator';
+
+// Endereço oficial do app (o QR e o link de indicação sempre apontam para cá, nunca para o endereço antigo).
+export const APP_URL = 'https://nexiabodycoach.pages.dev';
 
 export interface DadosCartao {
   titulo: string;
@@ -8,6 +12,7 @@ export interface DadosCartao {
   destaque?: string; // ex.: "Novo recorde no supino: 80 kg"
   nome?: string;
   link?: string;
+  selo?: boolean; // QR do app no canto (padrão: o que a pessoa escolheu em "Mostrar selo do app")
 }
 
 function quebrar(ctx: CanvasRenderingContext2D, texto: string, largura: number): string[] {
@@ -91,11 +96,83 @@ export function desenharCartao(c: HTMLCanvasElement, d: DadosCartao): void {
   if (d.link) {
     ctx.fillStyle = 'rgba(255,255,255,0.75)';
     ctx.font = '32px system-ui, sans-serif';
-    ctx.fillText(d.link.replace(/^https?:\/\//, ''), 90, 1755);
+    ctx.fillText(d.link.replace(/^https?:\/\//, '').split('/')[0], 90, 1755);
   }
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.font = '28px system-ui, sans-serif';
   ctx.fillText('Feito com NEXIA', 90, 1830);
+  if (d.link && (d.selo ?? seloLigado())) selo(ctx, 1080, 1920, d.link);
+}
+
+// "Mostrar selo do app" (ligado por padrão), lembrado no aparelho.
+export function seloLigado(): boolean {
+  try { return localStorage.getItem('bc_selo') !== '0'; } catch { return true; }
+}
+export function guardarSelo(ligado: boolean): void {
+  try { localStorage.setItem('bc_selo', ligado ? '1' : '0'); } catch { /* sem armazenamento */ }
+}
+
+const qrs = new Map<string, boolean[][]>();
+function matrizQr(link: string): boolean[][] {
+  let m = qrs.get(link);
+  if (!m) {
+    const q = qrcode(0, 'M');
+    q.addData(link);
+    q.make();
+    const n = q.getModuleCount();
+    m = Array.from({ length: n }, (_, r) => Array.from({ length: n }, (_, c) => q.isDark(r, c)));
+    qrs.set(link, m);
+  }
+  return m;
+}
+
+// Selo do app no canto de baixo à direita: faixa escura com o QR do link e "Body Coach / Treine comigo: escaneie".
+// Desenho síncrono: dá para chamar em todo quadro do vídeo.
+export function selo(ctx: CanvasRenderingContext2D, w: number, h: number, link: string): void {
+  if (!link) return;
+  const u = w / 1080;
+  const lado = Math.round(w * 0.12);
+  const pad = 16 * u;
+  const margem = 32 * u;
+  ctx.save();
+  ctx.globalAlpha = 1;
+  ctx.shadowColor = 'transparent';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = `800 ${34 * u}px system-ui, sans-serif`;
+  const l1 = ctx.measureText('Body Coach').width;
+  ctx.font = `500 ${23 * u}px system-ui, sans-serif`;
+  const l2 = ctx.measureText('Treine comigo: escaneie').width;
+  const largura = pad + lado + 18 * u + Math.max(l1, l2) + pad * 1.4;
+  const altura = lado + pad * 2;
+  const x = w - margem - largura;
+  const y = h - margem - altura;
+  ctx.fillStyle = 'rgba(10,10,14,0.68)';
+  ctx.beginPath();
+  ctx.roundRect(x, y, largura, altura, 22 * u);
+  ctx.fill();
+  // QR com borda branca (zona de silêncio) para qualquer câmera ler.
+  const qx = x + pad;
+  const qy = y + pad;
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.roundRect(qx, qy, lado, lado, 8 * u);
+  ctx.fill();
+  const m = matrizQr(link);
+  const borda = lado * 0.07;
+  const cel = (lado - borda * 2) / m.length;
+  ctx.fillStyle = '#000000';
+  m.forEach((linha, r) => linha.forEach((escuro, c) => {
+    if (escuro) ctx.fillRect(qx + borda + c * cel, qy + borda + r * cel, Math.ceil(cel), Math.ceil(cel));
+  }));
+  const tx = qx + lado + 18 * u;
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `800 ${34 * u}px system-ui, sans-serif`;
+  ctx.fillText('Body Coach', tx, y + altura / 2 - 4 * u);
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  ctx.font = `500 ${23 * u}px system-ui, sans-serif`;
+  ctx.fillText('Treine comigo: escaneie', tx, y + altura / 2 + 30 * u);
+  ctx.restore();
 }
 
 export async function compartilharCanvas(c: HTMLCanvasElement, texto: string, url?: string): Promise<'compartilhado' | 'baixado'> {
@@ -124,7 +201,7 @@ export function codigoIndicacao(uid: string): string {
   return uid.slice(0, 10);
 }
 export function linkIndicacao(uid: string): string {
-  return `${window.location.origin}${import.meta.env.BASE_URL}auth?ref=${codigoIndicacao(uid)}`;
+  return `${APP_URL}/body-coach/auth?ref=${codigoIndicacao(uid)}`;
 }
 // Guarda quem indicou (vem no link ?ref=) para gravar no perfil depois do cadastro.
 export function capturarIndicacao(): void {

@@ -92,7 +92,7 @@ test('AF5 links: lê título, foto e preço do JSON-LD ou do Open Graph; ML cai 
   assert.deepEqual(p, { titulo: 'Fone ML', imagem: 'https://http2.mlstatic.com/a.jpg', preco: 99, nota: 0 });
 });
 
-const oferta = (id, extra = {}) => ({ ...normalizar(no(id)), categoria: 'eletronicos', ...extra });
+const oferta = (id, extra = {}) => ({ ...normalizar(no(id)), categoria: 'fones', ...extra });
 
 test('AF6 vitrine: filtra nota/vendas/comissão/preço, expira em dias_no_site e ordena por pontos', () => {
   const f = CONFIG.filtros;

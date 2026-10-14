@@ -1,17 +1,17 @@
 {
   "site": {
     "slug": "achados-nexia",
-    "nome": "Achados do Dia",
-    "frase": "As melhores ofertas da Shopee, do Mercado Livre e da Amazon, conferidas várias vezes por dia.",
+    "nome": "Achados Fitness",
+    "frase": "As melhores ofertas de suplementos, roupas e acessórios de treino da Shopee, do Mercado Livre e da Amazon.",
     "cor": "#ee4d2d"
   },
   "categorias": [
-    { "id": "casa", "nome": "Casa e cozinha", "buscas": ["organizador cozinha", "utensilios cozinha", "decoração casa", "air fryer acessorios"] },
-    { "id": "beleza", "nome": "Beleza", "buscas": ["skincare", "maquiagem", "secador cabelo", "perfume"] },
-    { "id": "fitness", "nome": "Fitness", "buscas": ["garrafa academia", "elastico exercicio", "luva academia", "roupa academia"] },
-    { "id": "eletronicos", "nome": "Eletrônicos", "buscas": ["fone bluetooth", "carregador turbo", "smartwatch", "caixa de som bluetooth"] },
-    { "id": "bebe", "nome": "Bebê e crianças", "buscas": ["brinquedo educativo", "roupa bebe", "mochila infantil"] },
-    { "id": "pet", "nome": "Pet", "buscas": ["brinquedo cachorro", "caminha pet", "comedouro gato"] }
+    { "id": "suplementos", "nome": "Suplementos", "buscas": ["whey protein", "creatina", "pre treino", "multivitaminico"] },
+    { "id": "roupas", "nome": "Roupas de treino", "buscas": ["legging academia", "short academia masculino", "top fitness", "tenis corrida"] },
+    { "id": "acessorios", "nome": "Acessórios", "buscas": ["garrafa academia", "luva academia", "strap musculacao", "coqueteleira"] },
+    { "id": "em-casa", "nome": "Treino em casa", "buscas": ["halter ajustavel", "elastico exercicio", "tapete yoga", "corda de pular"] },
+    { "id": "relogios", "nome": "Relógios e cintas", "buscas": ["smartwatch", "monitor cardiaco", "balanca bioimpedancia"] },
+    { "id": "fones", "nome": "Fones para treino", "buscas": ["fone bluetooth esportivo", "fone conducao ossea", "fone corrida a prova d agua"] }
   ],
   "filtros": {
     "nota_minima": 4.6,

@@ -28,6 +28,7 @@ const ModoViagem = carregar(() => import('./ModoViagem'));
 const Mensalidade = carregar(() => import('./Mensalidade'));
 const Resumo = carregar(() => import('./Resumo'));
 const PostInstagram = carregar(() => import('./PostInstagram'));
+const Desafio30 = carregar(() => import('./Desafio30'));
 
 // Ferramentas extras do Body Coach, todas grátis e feitas no próprio aparelho.
 export const FERRAMENTAS = [
@@ -40,6 +41,7 @@ export const FERRAMENTAS = [
   { id: 'viagem', grupo: 'Treino', nome: 'Modo viagem', desc: 'Treino no hotel com o tempo e o que tiver, guiado por voz', icone: 'ri-suitcase-3-line', el: ModoViagem },
   { id: 'mapa', grupo: 'Treino', nome: 'Onde treinar perto', desc: 'Academias, parques, pistas e aparelhos ao ar livre', icone: 'ri-map-2-line', el: Mapa },
   { id: 'calculadoras', grupo: 'Treino', nome: 'Calculadoras', desc: '1RM, anilhas, zonas cardíacas, ritmo, gasto e água', icone: 'ri-calculator-line', el: Calculadoras },
+  { id: 'desafio30', grupo: 'Treino', nome: 'Desafio 30 dias', desc: 'Uma tarefa por dia, sequência e certificado para postar (Premium)', icone: 'ri-fire-line', el: Desafio30 },
   { id: 'resumo', grupo: 'Evolução', nome: 'Resumo da semana', desc: 'Sequência, prontidão, último treino, peso e relatório semanal', icone: 'ri-dashboard-line', el: Resumo },
   { id: 'evolucao-carga', grupo: 'Evolução', nome: 'Evolução de carga', desc: 'Gráfico e recordes de cada exercício', icone: 'ri-line-chart-line', el: EvolucaoCarga },
   { id: 'conquistas', grupo: 'Evolução', nome: 'Conquistas e nível', desc: 'Medalhas, XP e sequência de treinos', icone: 'ri-trophy-line', el: Conquistas },
