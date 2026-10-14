@@ -1,4 +1,8 @@
-const CACHE = 'body-coach-v2';
+const CACHE = 'body-coach-v3';
+const MAX_ITENS = 120;
+// Vídeo e áudio não ficam no aparelho (ocupam muito); o resto guarda só os 120 mais recentes.
+const PESADO = /\.(mp4|webm|mov|mp3|m4a|wav)$/i;
+function aparar(c) { return c.keys().then((k
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./', './index.html'])).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', (e) => {
