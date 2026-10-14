@@ -3,6 +3,7 @@ import Card from '@/components/base/Card';
 import { useAuth } from '@/components/feature/AuthContext';
 import { setUserDoc } from '@/lib/userData';
 import { OBJETIVOS, montarPeriodizacao, objetivoDoPerfil, semanaAtual, type Objetivo } from '@/lib/ferramentas/periodizacao';
+import { confirmar } from '../../lib/dialogo';
 
 const hojeISO = () => new Date().toISOString().slice(0, 10);
 
@@ -83,7 +84,7 @@ export default function Periodizacao() {
         })}
       </div>
       <p className="text-xs text-foreground-400">RIR = repetições que ainda sobrariam no fim da série (RIR 2 = parar faltando 2). Os exercícios continuam os da sua ficha; a periodização muda séries, repetições, carga e descanso.</p>
-      <button type="button" onClick={() => { if (window.confirm('Recomeçar a periodização?')) salvar(null); }} className="w-full py-2 text-sm text-foreground-500">Recomeçar / mudar objetivo</button>
+      <button type="button" onClick={async () => { if (await confirmar('Recomeçar a periodização?')) salvar(null); }} className="w-full py-2 text-sm text-foreground-500">Recomeçar / mudar objetivo</button>
     </div>
   );
 }

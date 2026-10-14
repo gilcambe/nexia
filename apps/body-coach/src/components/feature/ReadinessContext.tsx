@@ -9,8 +9,6 @@ import {
 } from 'react';
 import { listUserDocs, setUserDoc } from '@/lib/userData';
 import { useAuth } from './AuthContext';
-import { localDateKey } from '@/lib/localDemo';
-import { localReadinessSeed } from '@/mocks/localDemo';
 import { marcarPontos } from '@/lib/comunidade';
 import {
   computeReadiness,
@@ -57,41 +55,6 @@ function toDateKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function buildLocalReadinessRows(): DailyReadinessRow[] {
-  return localReadinessSeed
-    .map((s, i) => {
-      const input: ReadinessInput = {
-        sleepHours: s.sleep_hours,
-        sleepQuality: s.sleep_quality,
-        soreness: s.soreness,
-        fatigue: s.fatigue,
-        energy: s.energy,
-        stress: s.stress,
-        painLevel: s.pain_level,
-        hrv: s.hrv,
-        rhr: s.rhr,
-      };
-      const row: DailyReadinessRow = {
-        id: i + 1,
-        check_in_date: localDateKey(s.offset),
-        sleep_hours: s.sleep_hours,
-        sleep_quality: s.sleep_quality,
-        soreness: s.soreness,
-        fatigue: s.fatigue,
-        energy: s.energy,
-        stress: s.stress,
-        pain_level: s.pain_level,
-        hrv: s.hrv,
-        rhr: s.rhr,
-        readiness_score: computeReadiness(input).score,
-        notes: s.notes,
-        created_at: new Date().toISOString(),
-      };
-      return row;
-    })
-    .sort((a, b) => b.check_in_date.localeCompare(a.check_in_date));
-}
-
 function toInput(row: DailyReadinessRow): ReadinessInput {
   return {
     sleepHours: row.sleep_hours ?? 8,
@@ -113,7 +76,7 @@ export function useReadiness() {
 }
 
 export function ReadinessProvider({ children }: { children: ReactNode }) {
-  const { user, isLocalDemo } = useAuth();
+  const { user } = useAuth();
   const [entries, setEntries] = useState<DailyReadinessRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -127,12 +90,6 @@ export function ReadinessProvider({ children }: { children: ReactNode }) {
     async function load() {
       if (!user) {
         setEntries([]);
-        setLoading(false);
-        return;
-      }
-      if (isLocalDemo) {
-        setEntries(buildLocalReadinessRows());
-        setError(null);
         setLoading(false);
         return;
       }
@@ -153,7 +110,7 @@ export function ReadinessProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, [user?.id, reloadKey, isLocalDemo]);
+  }, [user, reloadKey]);
 
   const checkIn = useCallback(
     async (input: ReadinessInput, notes?: string) => {
@@ -161,30 +118,6 @@ export function ReadinessProvider({ children }: { children: ReactNode }) {
       const score = computeReadiness(input).score;
       const todayKey = toDateKey(new Date());
 
-      // MODO LOCAL: atualiza o estado em memória, sem tocar no backend.
-      if (isLocalDemo) {
-        setEntries((prev) => {
-          const others = prev.filter((e) => e.check_in_date.slice(0, 10) !== todayKey);
-          const row: DailyReadinessRow = {
-            id: Date.now(),
-            check_in_date: todayKey,
-            sleep_hours: input.sleepHours,
-            sleep_quality: input.sleepQuality,
-            soreness: input.soreness,
-            fatigue: input.fatigue,
-            energy: input.energy,
-            stress: input.stress,
-            pain_level: input.painLevel,
-            hrv: input.hrv ?? null,
-            rhr: input.rhr ?? null,
-            readiness_score: score,
-            notes: notes || null,
-            created_at: new Date().toISOString(),
-          };
-          return [row, ...others].sort((a, b) => b.check_in_date.localeCompare(a.check_in_date));
-        });
-        return { error: null };
-      }
 
       // Um check-in por dia: o id do documento é a própria data (equivale ao
       // upsert por user_id + check_in_date do original).
@@ -214,7 +147,7 @@ export function ReadinessProvider({ children }: { children: ReactNode }) {
       reload();
       return { error: null };
     },
-    [user?.id, reload, isLocalDemo, entries],
+    [user, reload, entries],
   );
 
   const todayKey = toDateKey(new Date());

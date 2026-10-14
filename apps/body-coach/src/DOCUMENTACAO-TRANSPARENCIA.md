@@ -40,7 +40,7 @@ Todos os números que você vê — nome, idade, peso, medidas, refeições, pro
 - Ao recarregar a página, os dados voltam ao estado inicial (mock).
 - **Não há login, não há banco de dados, não há persistência real.**
 
-Na versão NEXIA, quem cria conta (e-mail e senha) tem os dados salvos no Firebase (Auth + Firestore). O acesso de teste (admin / admin01) continua 100% no navegador, sem backend.
+Na versão NEXIA, quem cria conta (e-mail e senha) tem os dados salvos no Firebase (Auth + Firestore).
 
 ---
 

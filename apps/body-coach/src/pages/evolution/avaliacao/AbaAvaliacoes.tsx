@@ -8,6 +8,7 @@ import type { ItemSerie } from '@/lib/avaliacao/serie';
 import type { ProgressEntry } from '@/hooks/useProgressData';
 import AvaliacaoForm from './AvaliacaoForm';
 import ImportarAvaliacao from './ImportarAvaliacao';
+import { confirmar } from '../../../lib/dialogo';
 
 export default function AbaAvaliacoes({
   uid,
@@ -60,7 +61,7 @@ export default function AbaAvaliacoes({
   };
 
   const apagar = async (item: ItemSerie) => {
-    if (!uid || !window.confirm(`Apagar a avaliação de ${dataBr(item.data)}? Não dá para desfazer.`)) return;
+    if (!uid || !await confirmar(`Apagar a avaliação de ${dataBr(item.data)}? Não dá para desfazer.`)) return;
     try {
       await apagarAvaliacao(uid, item.id);
       setMsg('Avaliação apagada.');

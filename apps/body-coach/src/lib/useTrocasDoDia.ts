@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { localDateKey } from '@/lib/localDemo';
+import { localDateKey } from '@/lib/userData';
 
 // Troca escolhida para um item do cardápio ou do plano. Vale só hoje (guardada no aparelho).
 export interface Troca { nome: string; porcao: string; kcal?: number; p?: number; c?: number; g?: number }

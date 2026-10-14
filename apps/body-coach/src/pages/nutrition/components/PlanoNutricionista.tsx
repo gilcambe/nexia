@@ -8,6 +8,7 @@ import { useTrocasDoDia, type Troca } from '@/lib/useTrocasDoDia';
 import type { TrocaFixa } from '@/components/feature/AuthContext';
 import ExportarPlano from '@/components/feature/ExportarPlano';
 import TrocaAlimento from './TrocaAlimento';
+import { confirmar } from '../../../lib/dialogo';
 
 const minutos = (h: string | null) => (h ? Number(h.slice(0, 2)) * 60 + Number(h.slice(3, 5)) : null);
 const fmt = (n: number) => n.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
@@ -224,7 +225,7 @@ export default function PlanoNutricionista() {
         <button type="button" onClick={() => ref.current?.click()} disabled={lendo} className="rounded-lg bg-background-100 px-3 py-1.5 text-xs font-semibold text-foreground-700">
           {lendo ? 'Lendo...' : 'Trocar plano'}
         </button>
-        <button type="button" onClick={() => { if (confirm('Remover o plano do nutricionista?')) salvar(null); }} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground-500">
+        <button type="button" onClick={async () => { if (await confirmar('Remover o plano do nutricionista?')) salvar(null); }} className="rounded-lg px-3 py-1.5 text-xs font-semibold text-foreground-500">
           Remover
         </button>
       </div>

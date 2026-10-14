@@ -83,7 +83,6 @@ interface AuthContextValue {
   signInGoogle: () => Promise<{ error: string | null; novo?: boolean }>;
   signOut: () => Promise<void>;
   refreshProfile: () => void;
-  isLocalDemo: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -285,7 +284,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, profile, loading, isLocalDemo: false, signIn, signUp, signInGoogle, signOut, refreshProfile: () => { if (user) fetchProfile(user.id); } }}
+      value={{ user, profile, loading, signIn, signUp, signInGoogle, signOut, refreshProfile: () => { if (user) fetchProfile(user.id); } }}
     >
       {children}
     </AuthContext.Provider>

@@ -9,7 +9,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
-import { nutritionTargets, waterGoal as defaultWaterGoal, initialMeals, type MealFood } from '@/mocks/nutrition';
+import { nutritionTargets, waterGoal as defaultWaterGoal, type MealFood } from '@/mocks/nutrition';
 import { listUserDocs, setUserDoc, deleteUserDoc } from '@/lib/userData';
 import { marcarPontos } from '@/lib/comunidade';
 import { useAuth } from './AuthContext';
@@ -68,7 +68,7 @@ export function useNutrition() {
 }
 
 export function NutritionProvider({ children }: { children: ReactNode }) {
-  const { user, isLocalDemo, profile } = useAuth();
+  const { user, profile } = useAuth();
   const [allMeals, setMeals] = useState<DayMeal[]>([]);
   const meals = useMemo(() => allMeals.filter(isToday), [allMeals]);
   // Água do dia guardada no navegador (por usuário e por data).
@@ -92,7 +92,7 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
-  const reload = useCallback(() => setReloadKey((k) => k + 1), [user]);
+  const reload = useCallback(() => setReloadKey((k) => k + 1), []);
 
   useEffect(() => {
     let active = true;
@@ -100,12 +100,6 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
     async function load() {
       if (!user) {
         setMeals([]);
-        setLoading(false);
-        return;
-      }
-      if (isLocalDemo) {
-        setMeals(initialMeals);
-        setError(null);
         setLoading(false);
         return;
       }
@@ -126,16 +120,11 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
-  }, [user, user?.id, reloadKey, isLocalDemo]);
+  }, [user, user?.id, reloadKey]);
 
   const addMeal = useCallback(
     async (meal: MealFood) => {
       if (!user) return;
-      // MODO LOCAL: mantém as refeições em memória, sem tocar no backend.
-      if (isLocalDemo) {
-        setMeals((prev) => [...prev, { ...meal, id: meal.id || `m-${Date.now()}` }]);
-        return;
-      }
       // Firestore: bodycoach_users/{uid}/meals/{id} — o id já nasce no cliente.
       const newId = `m-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       setMeals((prev) => [...prev, { ...meal, id: newId, created_at: new Date().toISOString() }]);
@@ -157,16 +146,12 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
         setError('Falha ao salvar a refeição.');
       }
     },
-    [user, user?.id, isLocalDemo],
+    [user],
   );
 
   const removeMeal = useCallback(
     async (id: string) => {
       if (!user) return;
-      if (isLocalDemo) {
-        setMeals((prev) => prev.filter((m) => m.id !== id));
-        return;
-      }
       setMeals((prev) => prev.filter((m) => m.id !== id));
       try {
         await deleteUserDoc(user.id, 'meals', id);
@@ -175,7 +160,7 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
         reload();
       }
     },
-    [user, user?.id, reload, isLocalDemo],
+    [user, reload],
   );
 
   const totals = useMemo<NutritionTotals>(
