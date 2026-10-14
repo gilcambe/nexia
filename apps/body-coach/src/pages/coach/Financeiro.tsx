@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from 'recharts';
 import { confirmarVenda, lembrarPagamento, marcarPago, verFinanceiro, type AlunoFin, type Financeiro as Fin } from '@/lib/coach/negocio';
 import { codigoPix, nomeMes, reais } from '@/lib/ferramentas/pix';
+import { confirmar } from '../../lib/dialogo';
 
 const MES_CURTO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 const situacao = (a: AlunoFin) => (a.pago ? 'Pago' : a.avisou ? 'Disse que pagou: confira no banco' : a.dias > 0 ? `Vence em ${a.dias} dia${a.dias > 1 ? 's' : ''}` : a.dias === 0 ? 'Vence hoje' : `Atrasado há ${-a.dias} dia${a.dias < -1 ? 's' : ''}`);
@@ -78,7 +79,7 @@ export default function Financeiro() {
               <p className="text-xs text-foreground-600">{reais(v.preco)} · {v.status === 'avisou' ? 'disse que pagou: confira no banco' : 'gerou o Pix, ainda não avisou'}</p>
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <button type="button" disabled={!!ocupado} onClick={() => void fazer(v.id, () => confirmarVenda(v.id, true), `Venda confirmada! ${v.comprador} recebeu o programa e entrou na sua equipe.`)} className="rounded-lg bg-green-600 px-2 py-2 text-xs font-semibold text-white disabled:opacity-50">Recebi o Pix</button>
-                <button type="button" disabled={!!ocupado} onClick={() => { if (window.confirm('Não encontrou o Pix? O comprador será avisado.')) void fazer(v.id, () => confirmarVenda(v.id, false), 'Venda recusada.'); }} className="rounded-lg border border-red-200 px-2 py-2 text-xs font-semibold text-red-600 disabled:opacity-50">Não recebi</button>
+                <button type="button" disabled={!!ocupado} onClick={async () => { if (await confirmar('Não encontrou o Pix? O comprador será avisado.')) void fazer(v.id, () => confirmarVenda(v.id, false), 'Venda recusada.'); }} className="rounded-lg border border-red-200 px-2 py-2 text-xs font-semibold text-red-600 disabled:opacity-50">Não recebi</button>
               </div>
             </div>
           ))}

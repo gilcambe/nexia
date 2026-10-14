@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent, type ReactNode } from 'react';
 import type { Macros, PlanoAlimentar, RefeicaoPlano } from '@/lib/planoAlimentar';
+import { confirmar } from '../../../lib/dialogo';
 
 export type Plano = Pick<PlanoAlimentar, 'refeicoes' | 'totais' | 'extras'>;
 // sem largura: quem usa escolhe (w-full na maioria; na linha do alimento o nome estica e a quantidade fica fixa)
@@ -120,7 +121,7 @@ export default function DietaEditor({ nomeAluno, inicial, salvando, onSalvar, on
       </button>
       <div className="flex gap-2">
         <button type="button" onClick={() => arquivo.current?.click()} disabled={lendo} className="flex-1 rounded-xl border border-background-200 px-3 py-2 text-xs font-semibold text-foreground-600">{lendo ? 'Lendo...' : 'Trocar pelo PDF'}</button>
-        {podeRemover && <button type="button" onClick={() => { if (window.confirm(`Tirar o plano alimentar de ${nomeAluno}?`)) onRemover(); }} className="flex-1 rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-600">Tirar dieta do aluno</button>}
+        {podeRemover && <button type="button" onClick={async () => { if (await confirmar(`Tirar o plano alimentar de ${nomeAluno}?`)) onRemover(); }} className="flex-1 rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-600">Tirar dieta do aluno</button>}
       </div>
       {erro && <p role="alert" className="text-sm text-red-600">{erro}</p>}
       {entrada}

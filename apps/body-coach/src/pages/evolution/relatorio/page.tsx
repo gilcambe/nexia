@@ -13,16 +13,15 @@ import LinkSeguro from './LinkSeguro';
 export default function RelatorioAvaliacao() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, isLocalDemo } = useAuth();
+  const { user } = useAuth();
   const { entries, loading, perfil } = useProgressData(user?.id);
   const serie = useMemo(() => montarSerie(entries, perfil), [entries, perfil]);
   const idx = serie.findIndex((s) => String(s.id) === id);
   const [coach, setCoach] = useState<{ uid: string; nome: string; foto: string } | null>(null);
 
   useEffect(() => {
-    if (isLocalDemo) return;
     evolucaoInfo().then((r) => setCoach(r.coach)).catch(() => setCoach(null));
-  }, [isLocalDemo]);
+  }, []);
 
   if (loading) return <div className="p-8 text-center text-sm text-foreground-500"><i className="ri-loader-4-line mr-2 animate-spin"></i>Carregando...</div>;
   if (idx < 0) {
@@ -42,7 +41,7 @@ export default function RelatorioAvaliacao() {
       nome={perfil.nome ?? user?.email ?? 'Aluno'}
       avaliador={coach ? { nome: coach.nome, foto: coach.foto } : null}
       onVoltar={() => navigate('/evolution')}
-      rodape={!isLocalDemo && (
+      rodape={(
         <div className="space-y-3">
           <LinkSeguro entrada={item.id} temFotos={POSES.some((p) => item.fotos[p.id])} />
           {coach && <Comentarios com={coach.uid} nomeOutro={coach.nome} entrada={item.id} data={item.data} meuUid={user?.id} />}

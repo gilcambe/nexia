@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { apagarPrograma, linkDaLoja, listarProgramas, salvarPrograma, type Programa } from '@/lib/coach/negocio';
 import { listarModelos, type ModeloResumo } from '@/lib/coach/equipe';
 import { reais } from '@/lib/ferramentas/pix';
+import { confirmar } from '../../lib/dialogo';
 
 const campo = 'w-full rounded-lg border border-background-200 bg-background-50 px-2.5 py-2 text-sm text-foreground-900 outline-none focus:border-primary-300';
 const VAZIO: Partial<Programa> = { titulo: '', descricao: '', preco: 0, semanas: 8, ficha: '', dieta: null, ativo: true };
@@ -86,7 +87,7 @@ export default function Programas() {
               </div>
               <div className="flex gap-2 text-xs font-semibold">
                 <button type="button" onClick={() => { setEditando(p); setMsg(''); }} className="text-primary-700">Editar</button>
-                <button type="button" onClick={() => { if (window.confirm(`Tirar “${p.titulo}” da loja?`)) void apagarPrograma(p.id).then(carregar); }} className="text-red-600">Apagar</button>
+                <button type="button" onClick={async () => { if (await confirmar(`Tirar “${p.titulo}” da loja?`)) void apagarPrograma(p.id).then(carregar); }} className="text-red-600">Apagar</button>
               </div>
             </div>
           </li>
