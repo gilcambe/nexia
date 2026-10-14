@@ -22,21 +22,21 @@
       "nome": "Twitter",
       "ativo": true,
       "endpoint": "https://api.twitter.com/2/tweets",
-      "token": "token_twitter"
+      "tokenEnv": "TWITTER_TOKEN"
     },
     {
       "id": "canal_002",
       "nome": "LinkedIn",
       "ativo": true,
       "endpoint": "https://api.linkedin.com/v2/ugcPosts",
-      "token": "token_linkedin"
+      "tokenEnv": "LINKEDIN_TOKEN"
     },
     {
       "id": "canal_003",
       "nome": "Facebook",
       "ativo": false,
       "endpoint": "https://graph.facebook.com/v18.0/me/feed",
-      "token": "token_facebook"
+      "tokenEnv": "FACEBOOK_TOKEN"
     }
   ]
 }
