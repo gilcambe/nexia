@@ -29,7 +29,26 @@ function aparelhoId(): string {
 }
 
 export const verAcesso = () => chatApi<Acesso>({ acao: 'acesso_ver', aparelho: aparelhoId() });
-export const avisarQuePaguei = (cupom = '') => chatApi<{ ok: boolean }>({ acao: 'acesso_paguei', ...(cupom ? { cupom } : {}) });
+export const avisarQuePaguei = (cupom = '', plano?: PlanoPremium, valor?: number) => chatApi<{ ok: boolean }>({ acao: 'acesso_paguei', ...(cupom ? { cupom } : {}), ...(plano ? { plano, valor } : {}) });
+// Premium (aluno ou treina sozinho): mensal ou anual. O admin libera 30 ou 365 dias conforme o plano do pedido.
+export type PlanoPremium = 'mensal' | 'anual';
+export const PLANOS_PREMIUM: Record<PlanoPremium, { nome: string; valor: number; dias: number }> = {
+  mensal: { nome: 'Mensal', valor: 19.9, dias: 30 },
+  anual: { nome: 'Anual', valor: 179, dias: 365 },
+};
+export const ECONOMIA_ANUAL = Math.round((1 - PLANOS_PREMIUM.anual.valor / (PLANOS_PREMIUM.mensal.valor * 12)) * 100);
+export const valorComDesconto = (valor: number, pct: number) => Math.round(valor * (1 - pct / 100) * 100) / 100;
+// Tipo da chave Pix do NEXIA (para montar o copia e cola com o valor).
+export function tipoDaChave(chave: string): 'cpf' | 'cnpj' | 'telefone' | 'email' | 'aleatoria' {
+  const c = chave.trim();
+  if (c.includes('@')) return 'email';
+  if (c.startsWith('+')) return 'telefone';
+  const d = c.replace(/\D/g, '');
+  if (/^[0-9a-f-]{32,36}$/i.test(c) && c.includes('-') && d.length !== 11 && d.length !== 14) return 'aleatoria';
+  if (d.length === 14) return 'cnpj';
+  if (d.length === 11 && /^[\d.\-]+$/.test(c)) return 'cpf';
+  return d.length >= 10 && d.length <= 13 ? 'telefone' : 'aleatoria';
+}
 export const verCupom = (codigo: string) => chatApi<{ pct: number; codigo: string }>({ acao: 'cupom_ver', codigo });
 // Preço do Premium com desconto (promoção ou cupom; vale o maior, não somam).
 export const comDesconto = (valor: number, pct: number) => `R$ ${(valor * (1 - pct / 100)).toFixed(2).replace('.', ',')}`;
@@ -43,7 +62,7 @@ export function telaPremium(caminho: string, tipo: Acesso['tipo']): boolean {
 }
 
 export const PRECOS = {
-  premium: 'R$ 19,90 por mês ou R$ 149 por ano',
+  premium: 'R$ 19,90 por mês ou R$ 179 por ano',
   faixas: [
     { faixa: 3, nome: 'Grátis', alunos: 'até 3 alunos', preco: 'R$ 0' },
     { faixa: 15, nome: 'Coach 15', alunos: 'até 15 alunos', preco: 'R$ 49 por mês' },

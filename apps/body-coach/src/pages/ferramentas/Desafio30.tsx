@@ -4,6 +4,7 @@ import { useAuth } from '@/components/feature/AuthContext';
 import PainelAcesso from '@/components/feature/PainelAcesso';
 import { verAcesso, type Acesso } from '@/lib/acesso';
 import { compartilharCanvas, linkIndicacao } from '@/lib/ferramentas/cartao';
+import { confirmar } from '@/lib/dialogo';
 import {
   DESAFIOS, desenharCertificado, diaAtual, hojeISO, lerProgresso, marcarHoje, salvarProgresso, sequencia, situacaoDia, temCertificado,
   type ProgressoDesafio,
@@ -120,7 +121,7 @@ export default function Desafio30() {
 
       {msg && <p role="status" className="rounded-xl bg-secondary-50 px-3 py-2 text-sm text-secondary-900">{msg}</p>}
 
-      <button type="button" onClick={() => { if (window.confirm('Trocar de desafio? O progresso deste será apagado.')) mudar(null); }} className="w-full rounded-2xl border-2 border-background-200 py-3 text-sm font-semibold text-foreground-600">Trocar de desafio</button>
+      <button type="button" onClick={async () => { if (await confirmar('Trocar de desafio? O progresso deste será apagado.')) mudar(null); }} className="w-full rounded-2xl border-2 border-background-200 py-3 text-sm font-semibold text-foreground-600">Trocar de desafio</button>
     </div>
   );
 }

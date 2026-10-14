@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import qrcode from 'qrcode-generator';
 import { useAuth } from '@/components/feature/AuthContext';
 import { avisarCompra, comprar, minhasCompras, verLoja, type Compra, type ProgramaPublico } from '@/lib/coach/negocio';
+import Topo from './Topo';
 import { codigoPix, reais, type TipoChave } from '@/lib/ferramentas/pix';
 
 type Loja = Awaited<ReturnType<typeof verLoja>>;
@@ -35,15 +36,8 @@ export default function LojaPage() {
   return (
     <div className="min-h-screen bg-background-50 px-4 py-6">
       <div className="mx-auto max-w-xl space-y-4">
-        {loja && (
-          <header className="flex items-center gap-3">
-            {loja.coach.foto ? <img src={loja.coach.foto} alt="" className="h-14 w-14 rounded-full object-cover" /> : <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-100 text-2xl text-primary-700"><i className="ri-user-star-line"></i></span>}
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-foreground-400">Programas de</p>
-              <h1 className="font-heading text-2xl font-bold text-foreground-950">{loja.coach.nome}</h1>
-            </div>
-          </header>
-        )}
+        {loja && <Topo coach={loja.coach} codigo={codigo.toUpperCase()} />}
+        {loja && loja.programas.length > 0 && <h2 className="pt-2 font-heading text-lg font-bold text-foreground-950">Programas</h2>}
         {erro && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p>}
         {!loja && !erro && <p className="text-center text-sm text-foreground-500"><i className="ri-loader-4-line mr-2 animate-spin"></i>Carregando...</p>}
 

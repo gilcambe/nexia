@@ -20,6 +20,7 @@ const { comunidade, registrarCargas, pontosDe } = require('./body-coach/comunida
 const { inicioSemanaBR } = require('./body-coach/tempo');
 const { profissionais, vinculoDe, podeEditar, meusAlunos, marcaLimpa, marcarConvite } = require('./body-coach/profissionais');
 const { acoesAcesso, estaBloqueado, LIVRES } = require('./body-coach/acesso');
+const { acoesAvaliacoes, depoimentosPublicos } = require('./body-coach/avaliacoes');
 
 const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 const par = (a, b) => [a, b].sort().join('__');
@@ -233,6 +234,8 @@ async function executar(body, uid, db, ctx = {}) {
   const acao = body.acao;
   // Acesso: teste grátis, aviso e bloqueio no servidor (o admin libera quando confirma o Pix).
   if (typeof acao === 'string' && acao.startsWith('acesso_')) return acoesAcesso(body, uid, db, ctx, eu);
+  // Nota do app e depoimentos (vale também para quem está sem Premium).
+  if (['avaliar', 'avaliacoes_ver', 'avaliacao_aprovar'].includes(acao)) return acoesAvaliacoes(body, uid, db, ctx, eu);
   // Loja: ofertas fitness do robô de afiliados (só leitura de um arquivo público, com cache de 1 h).
   if (acao === 'loja_ofertas') return [200, await require('./body-coach/ofertas').lojaOfertas()];
   if (!LIVRES.includes(acao) && await estaBloqueado(db, uid, { ...ctx, papel: eu && eu.papel, coachUid: eu && eu.papel === 'aluno' ? eu.coachUid || '' : '' })) {
@@ -257,6 +260,8 @@ async function executar(body, uid, db, ctx = {}) {
     await db.collection('bc_feedback').add({ uid, nome: (eu && eu.nome) || '', tipo, texto, tela: limpa(body.tela, 60), em: Date.now() });
     return [200, { ok: true }];
   }
+  // Indicação: quantas pessoas que você indicou já assinaram (cada uma rendeu 1 mês de Premium).
+  if (acao === 'indicacao_ver') return [200, { pagas: Number(eu && eu.indicacoesPagas) || 0 }];
   if (acao === 'feedback_ver') {
     if (!ctx.master) return [403, { error: 'Só o administrador vê os comentários.' }];
     const snap = await db.collection('bc_feedback').orderBy('em', 'desc').limit(100).get();
@@ -700,6 +705,7 @@ async function executar(body, uid, db, ctx = {}) {
 exports.executar = executar;
 exports.verCompartilhado = verCompartilhado;
 exports.lojaVer = lojaVer;
+exports.depoimentosPublicos = depoimentosPublicos;
 exports.resumirSemana = resumirSemana;
 
 exports.handler = async (event) => {
@@ -715,6 +721,17 @@ exports.handler = async (event) => {
       const { db } = require('./firebase-init');
       if (!db) return resposta(event, 503, { error: 'Indisponível agora.' });
       const [status, out] = await lojaVer(body, db);
+      return resposta(event, status, out);
+    } catch {
+      return resposta(event, 503, { error: 'Indisponível agora. Tente de novo.' });
+    }
+  }
+  // Depoimentos aprovados para a página do app: sem login, só primeiro nome, texto e estrelas.
+  if (body && body.acao === 'depoimentos_publicos') {
+    try {
+      const { db } = require('./firebase-init');
+      if (!db) return resposta(event, 503, { error: 'Indisponível agora.' });
+      const [status, out] = await depoimentosPublicos(db);
       return resposta(event, status, out);
     } catch {
       return resposta(event, 503, { error: 'Indisponível agora. Tente de novo.' });
