@@ -18,3 +18,17 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Tema claro da Central */
+.central-claro {
+  background-color: #f6f7f9 !important;
+  color: #111 !important;
+}
+.central-claro .bg-nexia-surface {
+  background-color: #ffffff !important;
+  border-color: #d7dbe0 !important;
+}
+.central-claro .bg-nexia-surface2 {
+  background-color: #eef0f3 !important;
+  border-color: #d7dbe0 !important;
+}
