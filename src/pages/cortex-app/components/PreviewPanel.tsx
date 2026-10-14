@@ -57,53 +57,38 @@ ${code}
     }
   }, [code]);
 
-  const btnBase = "px-3 py-1.5 text-xs rounded-lg border transition-colors cursor-pointer disabled:opacity-40";
-  const btnPrimary = `${btnBase} bg-nexia-cyan text-[#0a0a0f] hover:bg-nexia-cyan-dim`;
-  const btnSecondary = `${btnBase} bg-nexia-surface border-nexia-border text-nexia-muted hover:text-white hover:border-nexia-cyan/30`;
-  const btnActive = `${btnBase} bg-nexia-cyan/20 border-nexia-cyan/40 text-nexia-cyan`;
+  const btn = "px-3 py-1.5 text-xs rounded-lg border border-nexia-border bg-nexia-surface text-nexia-muted hover:text-white hover:border-nexia-cyan/30 transition-colors cursor-pointer disabled:opacity-40";
+  const btnActive = "px-3 py-1.5 text-xs rounded-lg border border-nexia-cyan/40 bg-nexia-cyan/20 text-nexia-cyan transition-colors cursor-pointer";
 
   return (
     <div className="flex flex-col h-full bg-nexia-surface border border-nexia-border rounded-xl overflow-hidden">
       {/* Header */}
       <div className="flex justify-between items-center p-2 bg-[#252932] border-b border-nexia-border">
-        <div className="flex items-center space-x-2">
-          <span className="text-xs font-medium text-nexia-muted uppercase tracking-wider">Preview</span>
-          <span className="w-1 h-1 rounded-full bg-nexia-cyan" />
-          <span className="text-xs text-nexia-muted font-mono">{fileName}</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <button
-            onClick={showPreview}
-            className={viewMode === "preview" ? btnActive : btnSecondary}
-            title="Visualizar resultado"
-          >
-            <i className="ri-layout-grid-line" /> Preview
-          </button>
+        <div className="flex space-x-1">
           <button
             onClick={showCode}
-            className={viewMode === "code" ? btnActive : btnSecondary}
+            className={viewMode === "code" ? btnActive : btn}
             title="Ver código fonte"
           >
-            <i className="ri-code-line" /> Ver Código
+            Ver Código
           </button>
           {originalCode && (
             <button
               onClick={showDiff}
-              className={viewMode === "diff" ? btnActive : btnSecondary}
+              className={viewMode === "diff" ? btnActive : btn}
               title="Comparar com original"
             >
-              <i className="ri-git-commit-line" /> Ver Diff
+              Ver Diff
             </button>
           )}
-          <button onClick={downloadCode} className={btnSecondary} title="Baixar código">
-            <i className="ri-download-line" /> Baixar
+          <button onClick={downloadZip} className={btn} title="Baixar como ZIP">
+            ZIP
           </button>
-          <button onClick={downloadZip} className={btnSecondary} title="Baixar como ZIP">
-            <i className="ri-file-zip-line" /> ZIP
-          </button>
-          <button onClick={copyCode} className={btnSecondary} title="Copiar código">
-            <i className="ri-file-copy-line" /> Copiar
-          </button>
+        </div>
+        <div className="flex items-center space-x-2">
+          <span className="text-xs text-nexia-muted font-mono">{fileName}</span>
+          <span className="w-1 h-1 rounded-full bg-nexia-cyan" />
+          <span className="text-xs font-medium text-nexia-muted uppercase tracking-wider">Preview</span>
         </div>
       </div>
 
@@ -131,7 +116,15 @@ ${code}
       {/* Footer */}
       <div className="px-4 py-2 bg-[#252932] border-t border-nexia-border flex justify-between items-center text-xs text-nexia-muted">
         <span>{code.split("\n").length} linhas · {code.length} caracteres</span>
-        <span className="font-mono">{language}</span>
+        <div className="flex items-center space-x-2">
+          <button onClick={downloadCode} className={btn} title="Baixar código">
+            Baixar
+          </button>
+          <button onClick={copyCode} className={btn} title="Copiar código">
+            Copiar
+          </button>
+          <span className="font-mono">{language}</span>
+        </div>
       </div>
     </div>
   );
