@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type ChangeEvent } from 'react';
 import { useAuth } from '@/components/feature/AuthContext';
 import { useNutrition } from '@/components/feature/NutritionContext';
 import { setUserDoc } from '@/lib/userData';
@@ -144,7 +144,7 @@ export default function PlanoNutricionista() {
     refreshProfile();
   };
 
-  const escolher = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const escolher = async (e: ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     e.target.value = '';
     if (!f) return;
