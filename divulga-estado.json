@@ -16,6 +16,23 @@
           "ok": false
         }
       ]
+    },
+    {
+      "quando": "2026-10-14T08:23:20.362Z",
+      "id": "body-coach-01",
+      "cliente": "body-coach",
+      "resultados": [
+        {
+          "canal": "facebook",
+          "ok": false,
+          "erro": "Facebook: Invalid OAuth access token - Cannot parse access token"
+        },
+        {
+          "canal": "instagram",
+          "ok": false,
+          "erro": "Instagram mídia: Invalid OAuth access token - Cannot parse access token"
+        }
+      ]
     }
   ]
 }
