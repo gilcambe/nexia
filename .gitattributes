@@ -1,2 +1,3 @@
 *.bat text eol=crlf
 afiliados/configurar-robo.bat -text
+apps/body-coach/android/android-play.bat -text
