@@ -9,6 +9,7 @@ import InstallButton from './InstallButton';
 import { setUserDoc } from '@/lib/userData';
 import { codigoIndicacao } from '@/lib/ferramentas/cartao';
 import { usePapel } from '@/lib/usePapel';
+import { EMAIL_ADMIN, mudarVerComo, verComo } from '@/lib/verComo';
 import { enviarPendentes } from '@/lib/pendentes';
 import { marcaGuardada, type Marca } from '@/lib/coach/profissionais';
 import PortaoAcesso from './PortaoAcesso';
@@ -94,7 +95,9 @@ function BrandMark({ size = 'md' }: { size?: 'md' | 'sm' }) {
       {marca?.logo ? (
         <img src={marca.logo} alt="" className={`${caixa} object-contain`} />
       ) : (
-        <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className={caixa} />
+        <div className={`flex items-center justify-center bg-primary-500 text-background-50 ${caixa}`}>
+          <i className="ri-heart-3-line text-lg"></i>
+        </div>
       )}
       <div className="min-w-0 leading-none">
         <p className="max-w-[11rem] truncate font-heading font-bold tracking-tight text-foreground-950">
@@ -183,9 +186,11 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const itens = ehCoach
     ? coachItems
     : papel === 'aluno' ? [...navItems.slice(0, 5), { to: '/equipe', label: 'Minha equipe', icon: 'ri-user-heart-line' }, ...navItems.slice(5)]
-    // Sem coach (treina sozinho): sem Conversa, sem Feed da equipe e sem Tenho um personal (deixa só Minha assinatura).
+    // Sem coach (treina sozinho): sem Conversa e Feed da equipe; quem tiver um personal entra pelo link de convite dele.
     : [...navItems.filter((i) => i.to !== '/chat' && i.to !== '/feed'), { to: '/acesso', label: 'Minha assinatura', icon: 'ri-vip-crown-line' }]
-  const comAdmin = user?.email?.toLowerCase() === 'gcbezerra@gmail.com' ? [...itens, { to: '/admin/acessos', label: 'Acessos (admin)', icon: 'ri-shield-user-line' }] : itens;
+  const ehAdmin = user?.email?.toLowerCase() === EMAIL_ADMIN;
+  const comAdmin = ehAdmin ? [...itens, { to: '/admin/painel', label: 'Painel do dono', icon: 'ri-dashboard-line' }, { to: '/admin/acessos', label: 'Acessos (admin)', icon: 'ri-shield-user-line' }] : itens;
+
 
   const handleSignOut = async () => {
     await signOut();
@@ -275,6 +280,9 @@ function Shell() {
   // Veio de um link de convite do coach: depois do login/cadastro, vai para a conversa que conclui a entrada na equipe.
   // Entrou por um link de indicação: grava no perfil quem indicou (uma vez só, nunca a si mesmo).
   const { user, profile } = useAuth();
+  // O dono usa o app no dia a dia como quem treina sozinho (e troca a visão no Painel do dono).
+  const ehDono = user?.email?.toLowerCase() === EMAIL_ADMIN;
+  useEffect(() => { if (ehDono && !verComo()) mudarVerComo('nenhum'); }, [ehDono]);
   useEffect(() => {
     if (!user || !profile || profile.indicado_por) return;
     let ref: string | null = null;

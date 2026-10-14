@@ -4,6 +4,7 @@ import Card from '@/components/base/Card';
 import { chatApi } from '@/lib/chat';
 import Barras from './Barras';
 import Ferramentas from './Ferramentas';
+import VerComo from './VerComo';
 import { reais, type Cupom, type Resumo } from './painelTipos';
 
 // Painel do dono: números do app, uso, receita e as ferramentas de venda (presente, cupom, promoção).
@@ -30,6 +31,7 @@ export default function PainelAdmin() {
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <h1 className="font-heading text-2xl font-bold text-foreground-950">Painel do dono</h1>
+      <VerComo />
       {msg && <p role="status" className="rounded-lg bg-primary-50 p-2 text-sm text-primary-800">{msg}</p>}
       {!resumo ? <p className="text-sm text-foreground-500">{msg ? '' : 'Carregando...'}</p> : (
         <>

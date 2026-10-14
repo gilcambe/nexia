@@ -32,7 +32,7 @@ export const avisarQuePaguei = (cupom = '') => chatApi<{ ok: boolean }>({ acao: 
 export const verCupom = (codigo: string) => chatApi<{ pct: number; codigo: string }>({ acao: 'cupom_ver', codigo });
 // Preço do Premium com desconto (promoção ou cupom; vale o maior, não somam).
 export const comDesconto = (valor: number, pct: number) => `R$ ${(valor * (1 - pct / 100)).toFixed(2).replace('.', ',')}`;
-export const dataCurta = (t: number) => new Date(t).toLocaleDateString('pt-BR');
+export const dataCurta = (t: number) => new Date(t).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
 // Telas do Premium: sem Premium (bloqueado) elas mostram como assinar; o resto do app continua grátis.
 const PREMIUM = ['/evolution', '/exams', '/antidoping', '/feed', '/equipe', '/anamnese', '/ferramentas/post', '/ferramentas/retrospectiva', '/ferramentas/periodizacao', '/ferramentas/lista-compras', '/ferramentas/ranking'];
