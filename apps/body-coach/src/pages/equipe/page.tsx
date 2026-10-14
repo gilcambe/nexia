@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Card from '@/components/base/Card';
 import { entrarParceiro, minhaEquipe, NOME_PARTE, sairParceiro, type MinhaEquipe, type Parte } from '@/lib/coach/profissionais';
 import { esquecerPapel } from '@/lib/papelCoach';
+import { confirmar } from '../../lib/dialogo';
 
 // Minha equipe (aluno): o coach principal e, se quiser, um segundo profissional (nutricionista ou personal)
 // que cuida de uma parte. Cada um mexe só na sua parte; o aluno conversa com os dois.
@@ -28,7 +29,7 @@ export default function EquipePage() {
     } catch (x) { setErro((x as Error).message); } finally { setOcupado(false); }
   };
   const sair = async () => {
-    if (!e?.parceiro || !window.confirm(`Tirar ${e.parceiro.nome} da sua equipe?`)) return;
+    if (!e?.parceiro || !await confirmar(`Tirar ${e.parceiro.nome} da sua equipe?`)) return;
     setOcupado(true); setErro(''); setOk('');
     try { await sairParceiro(); esquecerPapel(); setOk('Pronto. O seu coach volta a cuidar de tudo.'); await carregar(); }
     catch (x) { setErro((x as Error).message); } finally { setOcupado(false); }

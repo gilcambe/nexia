@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import Card from '@/components/base/Card';
-import { useAuth } from '@/components/feature/AuthContext';
 import { evolucaoConfig, evolucaoInfo, PREPARO, type Partilha, type ProximaAvaliacao } from '@/lib/avaliacao/coach';
 import { dataBr } from '@/lib/avaliacao/calculos';
 import { compartilharArquivo } from '@/lib/avaliacao/imagens';
@@ -8,14 +7,12 @@ import { gerarIcsAvaliacaoMarcada } from '@/lib/lembretes';
 
 // Para o aluno que tem coach: a próxima avaliação marcada (com o preparo) e o que o coach pode ver.
 export default function CoachEvolucao() {
-  const { isLocalDemo } = useAuth();
   const [info, setInfo] = useState<{ coach: { nome: string } | null; partilha: Partilha; proximaAvaliacao: ProximaAvaliacao | null } | null>(null);
   const [erro, setErro] = useState('');
 
   useEffect(() => {
-    if (isLocalDemo) return;
     evolucaoInfo().then(setInfo).catch(() => setInfo(null));
-  }, [isLocalDemo]);
+  }, []);
   if (!info?.coach) return null;
 
   const mudar = async (p: Partilha) => {

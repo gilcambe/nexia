@@ -1,7 +1,5 @@
 import { useRef, useState, type ChangeEvent } from 'react';
 import { setUserDoc, fileToInlineDataUrl } from '@/lib/userData';
-import { isLocalDemoActive, readLocalList, writeLocalList, LOCAL_EXAMS_KEY, type LocalExamRecord } from '@/lib/localDemo';
-import { localExamSeed } from '@/mocks/localDemo';
 import { examTypes } from './markerRules';
 
 export default function ExamUpload({
@@ -46,24 +44,6 @@ export default function ExamUpload({
       return;
     }
 
-    // MODO LOCAL: salva apenas neste navegador (sem backend).
-    if (isLocalDemoActive()) {
-      const stored =
-        readLocalList<LocalExamRecord>(LOCAL_EXAMS_KEY) ?? (localExamSeed as LocalExamRecord[]);
-      stored.push({
-        id: Date.now(),
-        exam_type: type,
-        title: title.trim() || (file ? file.name : 'Exame'),
-        file_url: null,
-        notes: notes.trim() || null,
-        taken_at: new Date().toISOString(),
-      });
-      writeLocalList(LOCAL_EXAMS_KEY, stored);
-      setSuccessMsg('Exame salvo (modo local).');
-      reset();
-      onSaved();
-      return;
-    }
 
     if (!file) {
       setErrorMsg('Selecione um arquivo de exame.');

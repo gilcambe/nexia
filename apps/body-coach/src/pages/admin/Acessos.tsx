@@ -36,7 +36,8 @@ export default function Acessos() {
     setTimeout(() => setAvisoRegras(''), 5000);
   };
   // Coach: grava a faixa escolhida (quantos alunos ficam grátis). O valor entra na receita do mês.
-  const liberar = (uid: string, d: number, ehCoach = false) => fazer({ acao: 'acesso_liberar', uid, dias: d, valor: Number(valor.replace(',', '.')) || 0, ...(ehCoach ? { faixa: Number(faixa) } : {}) }, `Liberado por mais ${d} dias.`);
+  // valorPedido: o valor do plano que a pessoa pediu (anual/mensal); sem ele vale o valor digitado no resumo.
+  const liberar = (uid: string, d: number, ehCoach = false, valorPedido?: number) => fazer({ acao: 'acesso_liberar', uid, dias: d, valor: valorPedido || Number(valor.replace(',', '.')) || 0, ...(ehCoach ? { faixa: Number(faixa) } : {}) }, `Liberado por mais ${d} dias.`);
 
   if (!dados) return <p className="text-sm text-foreground-500">{msg || 'Carregando...'}</p>;
   return (
@@ -46,7 +47,7 @@ export default function Acessos() {
       <ResumoAcesso contas={dados.contas} receitaMes={dados.receitaMes} faixa={faixa} setFaixa={setFaixa} valor={valor} setValor={setValor} />
       {msg && <p role="status" className="rounded-lg bg-primary-50 p-2 text-sm text-primary-800">{msg}</p>}
       <TestadoresAcesso />
-      <PedidosAcesso pedidos={dados.pedidos} contas={dados.contas} liberar={(uid, d, c) => void liberar(uid, d, c)} />
+      <PedidosAcesso pedidos={dados.pedidos} contas={dados.contas} liberar={(uid, d, c, v) => void liberar(uid, d, c, v)} />
       <ContasAcesso todas={dados.contas} liberar={(uid, d, c) => void liberar(uid, d, c)} fazer={(corpo, ok) => void fazer(corpo, ok)} />
       <RegrasAcesso key={JSON.stringify(dados.config)} config={dados.config} fazer={(corpo, ok) => void salvarRegras(corpo, ok)} aviso={avisoRegras} />
     </div>

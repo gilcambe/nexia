@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import PainelAcesso from './PainelAcesso';
 import { telaPremium, verAcesso, type Acesso } from '@/lib/acesso';
+import { avisar as avisarJanela } from '../../lib/dialogo';
 
 // Portão do app: aviso nos últimos dias e, sem Premium, as telas do Premium mostram como assinar.
 // O básico (treino, ficha, água, refeições) continua grátis. O coach nunca é bloqueado.
@@ -19,7 +20,7 @@ export default function PortaoAcesso({ children }: { children: ReactNode }) {
   const ver = useCallback(() => {
     if (!user) return;
     void verAcesso().then((a) => {
-      if (a.sair) { window.alert('Sua conta foi aberta em outro aparelho. Cada conta funciona em no máximo 2 aparelhos. Entre de novo para usar aqui.'); void sair(); return; }
+      if (a.sair) { void avisarJanela('Sua conta foi aberta em outro aparelho. Cada conta funciona em no máximo 2 aparelhos. Entre de novo para usar aqui.').then(() => sair()); return; }
       setAcesso(a);
     }).catch(() => { /* sem internet: segue */ });
   }, [user, sair]);

@@ -8,6 +8,7 @@ import { avisarTreinoFeito } from '@/lib/ferramentas/social';
 import { useWakeLock } from '@/lib/useWakeLock';
 import { estadoFC, zerarSessaoFC } from '@/lib/ferramentas/frequencia';
 import { CATEGORIAS_PRONTOS, PLANOS_CORRIDA, TREINOS_PRONTOS, duracaoMin, kcalTreinoPronto, type TreinoPronto } from '@/lib/ferramentas/treinosProntos';
+import { confirmar } from '../../lib/dialogo';
 
 const ICONE: Record<string, string> = {
   HIIT: 'ri-flashlight-line', Abdômen: 'ri-focus-3-line', Alongamento: 'ri-body-scan-line', Yoga: 'ri-mental-health-line',
@@ -130,7 +131,7 @@ export function Player({ treino, onSair }: { treino: TreinoPronto; onSair: () =>
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <button type="button" onClick={() => { setRodando(false); if (feito < 60 || window.confirm('Sair do treino?')) onSair(); }} className="text-sm font-medium text-primary-700"><i className="ri-close-line mr-1"></i>Sair</button>
+        <button type="button" onClick={async () => { setRodando(false); if (feito < 60 || await confirmar('Sair do treino?')) onSair(); }} className="text-sm font-medium text-primary-700"><i className="ri-close-line mr-1"></i>Sair</button>
         <button type="button" onClick={() => setSom((s) => !s)} aria-pressed={som} className="rounded-full border border-background-200 px-3 py-1 text-xs font-semibold text-foreground-700"><i className={som ? 'ri-volume-up-line mr-1' : 'ri-volume-mute-line mr-1'}></i>{som ? 'Voz ligada' : 'Sem som'}</button>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-background-200"><div className="h-full bg-primary-500 transition-all" style={{ width: `${pct}%` }} /></div>

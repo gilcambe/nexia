@@ -45,7 +45,7 @@ export async function buscarPorNome(texto: string): Promise<Alimento[]> {
 }
 
 // Leitura do código pela câmera (Chrome/Android e outros que têm BarcodeDetector). Sem suporte: o aluno digita o número.
-interface Detector { detect: (v: CanvasImageSource) => Promise<{ rawValue: string }[]> }
+interface Detector { detect: (v: HTMLVideoElement | HTMLImageElement | HTMLCanvasElement | ImageBitmap) => Promise<{ rawValue: string }[]> }
 export function podeLerCodigo(): boolean { return typeof (window as unknown as { BarcodeDetector?: unknown }).BarcodeDetector !== 'undefined' && !!navigator.mediaDevices?.getUserMedia; }
 export async function lerCodigoDaCamera(video: HTMLVideoElement, parar: () => boolean): Promise<string | null> {
   const D = (window as unknown as { BarcodeDetector: new (o: { formats: string[] }) => Detector }).BarcodeDetector;

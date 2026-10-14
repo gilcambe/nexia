@@ -1,29 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '@/components/feature/AuthContext';
 import { listUserDocs, deleteUserDoc, dataUrlToObjectUrl } from '@/lib/userData';
-import { isLocalDemoActive, readLocalList, writeLocalList, localIso, LOCAL_EXAMS_KEY, type LocalExamRecord } from '@/lib/localDemo';
-import { localExamSeed } from '@/mocks/localDemo';
 import Card from '@/components/base/Card';
 import ExamUpload from './components/ExamUpload';
 import ExamList, { type ExamItem } from './components/ExamList';
 import BloodMarkers from './components/BloodMarkers';
-
-// Monta a lista de exames do MODO LOCAL (semente + itens salvos no navegador).
-function buildLocalExams(): ExamItem[] {
-  const stored = readLocalList<LocalExamRecord>(LOCAL_EXAMS_KEY);
-  const records: LocalExamRecord[] = stored ?? (localExamSeed as LocalExamRecord[]);
-  return records
-    .map((r, i) => ({
-      id: r.id ?? i + 1,
-      exam_type: r.exam_type,
-      title: r.title,
-      file_url: r.file_url ?? null,
-      notes: r.notes,
-      taken_at: r.taken_at ?? localIso(r.offset ?? 0),
-      signedUrl: null,
-    }))
-    .sort((a, b) => new Date(b.taken_at).getTime() - new Date(a.taken_at).getTime());
-}
 
 export default function Exams() {
   const { user } = useAuth();
@@ -40,12 +21,6 @@ export default function Exams() {
     async function load() {
       if (!user) {
         setExams([]);
-        setLoading(false);
-        return;
-      }
-      if (isLocalDemoActive()) {
-        setExams(buildLocalExams());
-        setError(null);
         setLoading(false);
         return;
       }
@@ -67,16 +42,12 @@ export default function Exams() {
     return () => {
       active = false;
     };
-  }, [user?.id, reloadKey]);
+  }, [user, reloadKey]);
 
   const handleDelete = async (id: number) => {
     if (!user) return;
     const next = exams.filter((e) => e.id !== id);
     setExams(next);
-    if (isLocalDemoActive()) {
-      writeLocalList(LOCAL_EXAMS_KEY, next);
-      return;
-    }
     await deleteUserDoc(user.id, 'medical_exams', String(id)).catch(() => setError('Falha ao remover o exame.'));
     reload();
   };
@@ -90,16 +61,6 @@ export default function Exams() {
           e sugestões de vitaminas, suplementos e encaminhamentos.
         </p>
       </header>
-
-      {isLocalDemoActive() && (
-        <div className="flex items-start gap-2 rounded-xl border border-secondary-200 bg-secondary-100/60 px-4 py-3 text-sm text-secondary-900">
-          <i className="ri-information-line mt-0.5 text-secondary-700"></i>
-          <span>
-            Você está no <strong className="font-semibold">modo local</strong> (login de teste).
-            Os exames exibidos são exemplos e os que você adicionar ficam salvos apenas neste navegador.
-          </span>
-        </div>
-      )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
         <div className="space-y-6">

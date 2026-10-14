@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { DIVISOES, type Divisao } from '@/lib/dayPlan';
 import { EXERCICIOS, type Grupo } from '@/lib/exerciseDb';
 import { idDoNome, novoExercicio, rascunhoDaFicha, type ExercicioCoach, type FichaCoach } from '@/lib/coach/fichaCoach';
+import { confirmar } from '../../../lib/dialogo';
 
 const GRUPOS: { id: Grupo; nome: string }[] = [
   { id: 'peito', nome: 'Peito' }, { id: 'costas', nome: 'Costas' }, { id: 'ombros', nome: 'Ombros' }, { id: 'biceps', nome: 'Bíceps' },
@@ -101,7 +102,7 @@ export default function FichaEditor({ nomeAluno, respostas, inicial, salvando, o
             <input value={d.titulo} onChange={(e) => mudarDia((x) => ({ ...x, titulo: e.target.value }))} maxLength={60} className={`${campo} mt-1`} />
           </label>
           {ficha.dias.length > 1 && (
-            <button type="button" onClick={() => { if (window.confirm(`Apagar o ${d.titulo}?`)) { setFicha({ ...ficha, dias: ficha.dias.filter((_, i) => i !== iDia) }); setDia(0); } }} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-600" aria-label="Apagar este treino">
+            <button type="button" onClick={async () => { if (await confirmar(`Apagar o ${d.titulo}?`)) { setFicha({ ...ficha, dias: ficha.dias.filter((_, i) => i !== iDia) }); setDia(0); } }} className="rounded-lg border border-red-200 px-3 py-2 text-xs font-semibold text-red-600" aria-label="Apagar este treino">
               <i className="ri-delete-bin-line"></i>
             </button>
           )}
@@ -162,8 +163,8 @@ export default function FichaEditor({ nomeAluno, respostas, inicial, salvando, o
         <i className={salvando ? 'ri-loader-4-line mr-1 animate-spin' : 'ri-send-plane-line mr-1'}></i>{salvando ? 'Enviando...' : rotuloEnviar ?? `Enviar ficha para ${nomeAluno}`}
       </button>
       <div className="flex gap-2">
-        <button type="button" onClick={() => { if (window.confirm('Descartar o que mudou aqui?')) { setFicha(inicial); setDia(0); } }} className="flex-1 rounded-xl border border-background-200 px-3 py-2 text-xs font-semibold text-foreground-600">Desfazer mudanças</button>
-        {podeRemover && <button type="button" onClick={() => { if (window.confirm(`Tirar a ficha de ${nomeAluno}? O app volta a montar o treino sozinho.`)) onRemover(); }} className="flex-1 rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-600">Tirar ficha do aluno</button>}
+        <button type="button" onClick={async () => { if (await confirmar('Descartar o que mudou aqui?')) { setFicha(inicial); setDia(0); } }} className="flex-1 rounded-xl border border-background-200 px-3 py-2 text-xs font-semibold text-foreground-600">Desfazer mudanças</button>
+        {podeRemover && <button type="button" onClick={async () => { if (await confirmar(`Tirar a ficha de ${nomeAluno}? O app volta a montar o treino sozinho.`)) onRemover(); }} className="flex-1 rounded-xl border border-red-200 px-3 py-2 text-xs font-semibold text-red-600">Tirar ficha do aluno</button>}
       </div>
       {extraRodape?.(ficha)}
     </div>

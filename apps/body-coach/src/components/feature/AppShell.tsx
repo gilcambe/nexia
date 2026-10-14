@@ -175,7 +175,7 @@ function BottomTabs({ onMore }: { onMore: () => void }) {
 function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const { setOpen } = useCoach();
   const navigate = useNavigate();
-  const { profile, user, signOut, isLocalDemo } = useAuth();
+  const { profile, user, signOut } = useAuth();
 
   const displayName = profile?.full_name || user?.email?.split('@')[0] || 'Atleta';
   // Coach vê só o menu de coach; aluno ganha "Minha equipe" (o papel fica guardado no aparelho).
@@ -253,9 +253,9 @@ function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           </div>
           <p className="mt-0.5 text-xs text-foreground-400">{user?.email}</p>
           <div className="mt-2 flex items-center gap-1.5">
-            <span className={`h-1.5 w-1.5 rounded-full ${isLocalDemo ? 'bg-secondary-500' : 'bg-accent-500'}`}></span>
-            <span className={`text-xs ${isLocalDemo ? 'text-secondary-700' : 'text-accent-700'}`}>
-              {isLocalDemo ? 'Modo local (teste)' : 'Conectado'}
+            <span className={`h-1.5 w-1.5 rounded-full bg-accent-500`}></span>
+            <span className={`text-xs text-accent-700`}>
+              Conectado
             </span>
           </div>
           <button
