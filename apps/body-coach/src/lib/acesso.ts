@@ -12,6 +12,7 @@ export interface Acesso {
   gratisAte: number;
   pagoAte: number;
   pix: string;
+  pixNome?: string;
   sair: boolean;
   master: boolean;
   papel: 'coach' | 'aluno' | 'nenhum';
