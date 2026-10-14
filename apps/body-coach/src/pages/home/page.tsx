@@ -9,6 +9,7 @@ import NutritionCard from './components/NutritionCard';
 import NuncaFalhe from './components/NuncaFalhe';
 import AvisoAnamnese from './components/AvisoAnamnese';
 import LigarAvisos from './components/LigarAvisos';
+import ConviteTestador from './components/ConviteTestador';
 
 // Tela Hoje: só o essencial do dia (treino, dieta, água e o check-in). O resto fica em Ferramentas.
 export default function Home() {
@@ -69,6 +70,7 @@ export default function Home() {
       <NutritionCard />
       <DailyCheckIn />
       <LigarAvisos />
+      <ConviteTestador />
 
       <Link to="/ferramentas" className="flex items-center gap-3 rounded-2xl border border-background-200 bg-background-50 p-4 transition hover:border-primary-300">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-xl text-primary-700"><i className="ri-apps-2-line"></i></span>

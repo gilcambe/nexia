@@ -50,6 +50,7 @@ const AcessosAdmin = carregar(() => import("../pages/admin/Acessos"));
 const PainelAdmin = carregar(() => import("../pages/admin/Painel"));
 const Guia = carregar(() => import("../pages/guia/page"));
 const MeuPlano = carregar(() => import("../pages/coach/MeuPlano"));
+const Testador = carregar(() => import("../pages/testador/page"));
 
 // SoPapel: telas só do coach e telas só do aluno (o coach não vê as do aluno e vice-versa).
 const routes: RouteObject[] = [
@@ -135,6 +136,7 @@ const routes: RouteObject[] = [
       { path: "coach/evolucao/:uid", element: <SoPapel papel="coach"><AlunoEvolucao /></SoPapel> },
       { path: "feedback", element: <Feedback /> },
       { path: "acesso", element: <MeuAcesso /> },
+      { path: "testador", element: <Testador /> },
       { path: "admin/acessos", element: <AcessosAdmin /> },
       { path: "admin/painel", element: <PainelAdmin /> },
       { path: "guia", element: <Guia /> },

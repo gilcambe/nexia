@@ -17,6 +17,7 @@ export interface Acesso {
   master: boolean;
   papel: 'coach' | 'aluno' | 'nenhum';
   promo?: { pct: number; ate: number; texto: string }; // promoção do dono no ar
+  testador?: boolean; // já ganhou o Premium de testador do app Android
 }
 
 // Número deste aparelho (uma conta pode ficar aberta em no máximo 2 aparelhos).

@@ -51,7 +51,7 @@ async function acessoDe(db, uid, ctx = {}, agora = Date.now()) {
     await ref.set({ email: a.email, tipo }, { merge: true });
   }
   const isento = !!(ctx.master || a.isento || (a.email && cfg.isentos.includes(a.email)));
-  const base = { tipo, gratisAte: a.gratisAte || 0, pagoAte: a.pagoAte || 0, pix: cfg.pix, pixNome: cfg.pixNome };
+  const base = { tipo, gratisAte: a.gratisAte || 0, pagoAte: a.pagoAte || 0, pix: cfg.pix, pixNome: cfg.pixNome, testador: !!a.testador };
   if (tipo === 'coach') {
     const limite = limiteDoCoach(a, isento, agora);
     const situacao = isento ? 'isento' : base.pagoAte > agora ? 'pago' : base.gratisAte > agora ? 'gratis' : 'basico';
@@ -149,6 +149,22 @@ async function cupomValido(db, codigo) {
   return { ...c, codigo: id };
 }
 
+// Testador do app Android (teste fechado do Google Play): uma vez por conta ganha 30 dias de Premium.
+// bc_testadores/{uid}: { uid, email, nome, em, dia }. O Premium sai pelo mesmo caminho do presente do dono (liberarAcesso, valor 0).
+const DIAS_TESTADOR = 30;
+async function virarTestador(db, uid, ctx = {}, eu = null, agora = Date.now()) {
+  const ref = db.collection('bc_testadores').doc(uid);
+  const ja = (await ref.get()).data?.();
+  if (ja) return [200, { ok: true, jaGanhou: true, em: ja.em || 0 }];
+  const email = String(ctx.email || '').trim().toLowerCase();
+  // grava antes de liberar: um segundo clique rápido já encontra o registro
+  await ref.set({ uid, email, nome: (eu && eu.nome) || '', em: agora, dia: diaBR(agora) });
+  const pagoAte = await liberarAcesso(db, uid, DIAS_TESTADOR, agora, { valor: 0 });
+  await db.collection('bc_acesso').doc(uid).set({ testador: agora }, { merge: true });
+  cache.delete(uid);
+  return [200, { ok: true, jaGanhou: false, dias: DIAS_TESTADOR, pagoAte }];
+}
+
 // Ações acesso_*: ver (todos), paguei (todos), lista/liberar/isento/config (só o admin).
 async function acoesAcesso(body, uid, db, ctx = {}, eu = null) {
   const acao = body.acao;
@@ -170,6 +186,7 @@ async function acoesAcesso(body, uid, db, ctx = {}, eu = null) {
     if (c) await db.collection('bc_cupons').doc(c.codigo).set({ usos: (c.usos || 0) + 1 }, { merge: true });
     return [200, { ok: true }];
   }
+  if (acao === 'acesso_testador') return virarTestador(db, uid, ctx, eu);
   if (acao === 'acesso_plano') {
     if (!eu || eu.papel !== 'coach') return [403, { error: 'Só o coach escolhe o plano dos alunos.' }];
     const ref = db.collection('bc_acesso').doc(uid);
@@ -262,6 +279,10 @@ async function acoesAdmin(body, db, ctx) {
     cache.clear();
     return [200, { ok: true, uid: uidAlvo, pagoAte }];
   }
+  if (acao === 'acesso_testadores') {
+    const snap = await db.collection('bc_testadores').orderBy('em', 'desc').limit(200).get();
+    return [200, { testadores: snap.docs.map((d) => { const x = d.data(); return { uid: d.id, email: x.email || '', nome: x.nome || '', em: x.em || 0 }; }) }];
+  }
   if (acao === 'dono_resumo') return [200, await resumoDono(db, col)];
   if (acao === 'cupom_criar') {
     const codigo = limparCodigo(body.codigo);
@@ -300,4 +321,4 @@ async function acoesAdmin(body, db, ctx) {
   return [400, { error: 'Ação desconhecida.' }];
 }
 
-module.exports = { FAIXAS, GRACA_DIAS, acessoDe, liberarAcesso, registrarAparelho, configAcesso, estaBloqueado, acoesAcesso, diaBR, LIVRES, AVISO_DIAS, MAX_APARELHOS };
+module.exports = { DIAS_TESTADOR, virarTestador, FAIXAS, GRACA_DIAS, acessoDe, liberarAcesso, registrarAparelho, configAcesso, estaBloqueado, acoesAcesso, diaBR, LIVRES, AVISO_DIAS, MAX_APARELHOS };
