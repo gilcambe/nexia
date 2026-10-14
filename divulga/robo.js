@@ -108,10 +108,20 @@ async function publicarNoCanal(canal, texto) {
   // Valida endpoint antes de usar (prevenção SSRF)
   validarEndpoint(canal.endpoint);
   
+  // Valida tokenEnv antes de tentar obter o token (erro de configuração)
+  if (!canal.tokenEnv) {
+    return { sucesso: false, canal: canal.nome, erro: 'Configuração inválida: tokenEnv ausente' };
+  }
+  
+  let token;
+  try {
+    token = obterToken(canal);
+  } catch (error) {
+    return { sucesso: false, canal: canal.nome, erro: `Configuração inválida: ${error.message}` };
+  }
+  
   // Rate limiting
   await aguardarRateLimit(canal.id);
-  
-  const token = obterToken(canal);
   
   // Timeout de 10 segundos
   const controller = new AbortController();

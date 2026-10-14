@@ -14,10 +14,18 @@ function resetarEstado() {
 describe('Robô de Divulgação', () => {
   beforeEach(() => {
     resetarEstado();
+    // Configura variáveis de ambiente para tokens dos canais
+    process.env.TWITTER_TOKEN = 'token_twitter';
+    process.env.LINKEDIN_TOKEN = 'token_linkedin';
+    process.env.FACEBOOK_TOKEN = 'token_facebook';
   });
 
   afterEach(() => {
     resetarEstado();
+    // Limpa variáveis de ambiente
+    delete process.env.TWITTER_TOKEN;
+    delete process.env.LINKEDIN_TOKEN;
+    delete process.env.FACEBOOK_TOKEN;
   });
 
   describe('Rodízio de clientes', () => {
@@ -95,7 +103,7 @@ describe('Robô de Divulgação', () => {
         nome: 'Twitter',
         ativo: true,
         endpoint: 'https://api.twitter.com/2/tweets',
-        token: 'token_twitter'
+        tokenEnv: 'TWITTER_TOKEN'
       };
 
       const fetchMock = mock.method(global, 'fetch', async () => ({
@@ -117,7 +125,7 @@ describe('Robô de Divulgação', () => {
         nome: 'Twitter',
         ativo: true,
         endpoint: 'https://api.twitter.com/2/tweets',
-        token: 'token_twitter'
+        tokenEnv: 'TWITTER_TOKEN'
       };
 
       const fetchMock = mock.method(global, 'fetch', async () => ({
@@ -140,7 +148,7 @@ describe('Robô de Divulgação', () => {
         nome: 'Twitter',
         ativo: true,
         endpoint: 'https://api.twitter.com/2/tweets',
-        token: 'token_twitter'
+        tokenEnv: 'TWITTER_TOKEN'
       };
 
       const fetchMock = mock.method(global, 'fetch', async () => {
@@ -151,8 +159,42 @@ describe('Robô de Divulgação', () => {
       
       assert.strictEqual(resultado.sucesso, false);
       assert.strictEqual(resultado.canal, 'Twitter');
-      assert.ok(resultado.erro.includes('Network error'));
+      assert.ok(resultado.erro.includes('Erro de rede'));
       fetchMock.mock.restore();
+    });
+
+    test('deve retornar erro de configuração quando tokenEnv ausente', async () => {
+      const canal = {
+        id: 'canal_001',
+        nome: 'Twitter',
+        ativo: true,
+        endpoint: 'https://api.twitter.com/2/tweets'
+        // tokenEnv ausente
+      };
+
+      const resultado = await publicarNoCanal(canal, 'Texto de teste');
+      
+      assert.strictEqual(resultado.sucesso, false);
+      assert.strictEqual(resultado.canal, 'Twitter');
+      assert.ok(resultado.erro.includes('Configuração inválida'));
+      assert.ok(resultado.erro.includes('tokenEnv ausente'));
+    });
+
+    test('deve retornar erro de configuração quando variável de ambiente não definida', async () => {
+      const canal = {
+        id: 'canal_001',
+        nome: 'Twitter',
+        ativo: true,
+        endpoint: 'https://api.twitter.com/2/tweets',
+        tokenEnv: 'TOKEN_INEXISTENTE'
+      };
+
+      const resultado = await publicarNoCanal(canal, 'Texto de teste');
+      
+      assert.strictEqual(resultado.sucesso, false);
+      assert.strictEqual(resultado.canal, 'Twitter');
+      assert.ok(resultado.erro.includes('Configuração inválida'));
+      assert.ok(resultado.erro.includes('TOKEN_INEXISTENTE'));
     });
   });
 
