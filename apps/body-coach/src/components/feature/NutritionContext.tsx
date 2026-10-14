@@ -80,14 +80,14 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
     } catch {
       setWater(0);
     }
-  }, [waterKey]);
+  }, [waterKey, user]);
   useEffect(() => {
     try {
       localStorage.setItem(waterKey, String(water));
     } catch {
       // Navegador sem armazenamento: a água só vale nesta sessão.
     }
-  }, [waterKey, water]);
+  }, [waterKey, water, user]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
