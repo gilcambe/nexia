@@ -82,8 +82,11 @@ async function rodar({ acao = 'rodar', dados, env = process.env, fetchImpl = fet
       resultados.push({ canal: canal.id, ok: true, ref: r && r.ref });
       log(`OK ${canal.nome}`);
     } catch (e) {
-      resultados.push({ canal: canal.id, ok: false });
-      log(`ERRO ${canal.nome}: ${String(e.message || e).slice(0, 200)}`);
+      // O motivo fica no estado e vira aviso no GitHub (sem nenhum código secreto: canais.js já tira tokens da mensagem).
+      const erro = String(e.message || e).replace(/(access_token|token|secret)=[^&\s]+/gi, '$1=***').slice(0, 200);
+      resultados.push({ canal: canal.id, ok: false, erro });
+      log(`ERRO ${canal.nome}: ${erro}`);
+      if (env.GITHUB_ACTIONS) console.log(`::warning title=${canal.nome}::${erro.replace(/[\r\n]+/g, ' ')}`);
     }
   }
   const postou = resultados.some(r => r.ok);
