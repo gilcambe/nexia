@@ -1,6 +1,5 @@
 const fs = require('fs');
 const path = require('path');
-const fetch = require('node-fetch');
 
 const ESTADO_PATH = path.join(__dirname, 'estado.json');
 
@@ -71,13 +70,6 @@ async function executar() {
   const texto = gerarPost(cliente);
   const canaisAtivos = cliente.canais.filter(c => c.ativo);
 
-  if (canaisAtivos.length === 0) {
-    console.log('--- MODO ENSAIO ---');
-    console.log(texto);
-    salvarEstado(estado);
-    return { modo: 'ensaio', cliente: cliente.id, resultados: [{ canal: 'console', texto, ok: true }] };
-  }
-
   const resultados = await Promise.allSettled(
     canaisAtivos.map(canal => publicarCanal(canal, texto).catch(err => ({ ok: false, canal: canal.id, erro: err.message })))
   );
@@ -92,6 +84,7 @@ async function executar() {
 }
 
 if (require.main === module) {
+
   executar().catch(err => {
     console.error('Erro fatal:', err);
     process.exit(1);
