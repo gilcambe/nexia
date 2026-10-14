@@ -1,0 +1,17 @@
+[
+  {
+    "id": "1",
+    "nome": "Canal Principal",
+    "ativo": true
+  },
+  {
+    "id": "2",
+    "nome": "Canal Secundário",
+    "ativo": true
+  },
+  {
+    "id": "3",
+    "nome": "Canal Inativo",
+    "ativo": false
+  }
+]
