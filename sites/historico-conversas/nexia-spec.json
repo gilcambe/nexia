@@ -1,0 +1,197 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Histórico de Conversas Cortex",
+    "tagline": "Visualize e gerencie suas conversas com busca avançada e navegação inteligente",
+    "photo_theme": "chat interface",
+    "description": "Visualize e gerencie suas conversas com busca avançada e navegação inteligente",
+    "folder": "sites/historico-conversas",
+    "fonts": {
+      "heading": "Montserrat",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#0d6efd",
+      "accent": "#6ee7b7",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#1f2937"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 99999-9999",
+      "email": "suporte@cortex.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "conversas",
+        "label": "Conversas",
+        "singular": "Conversa",
+        "fields": [
+          {
+            "key": "id",
+            "label": "ID",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "titulo",
+            "label": "Título",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Nova",
+              "Em andamento",
+              "Fechada"
+            ],
+            "required": true
+          },
+          {
+            "key": "ultimo_usuario",
+            "label": "Último Usuário",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "id": "101",
+            "titulo": "Revisão de requisitos",
+            "data": "2026-10-14",
+            "status": "Em andamento",
+            "ultimo_usuario": "Ana Pereira"
+          },
+          {
+            "id": "102",
+            "titulo": "Integração API",
+            "data": "2026-10-13",
+            "status": "Nova",
+            "ultimo_usuario": "Carlos Silva"
+          },
+          {
+            "id": "103",
+            "titulo": "Feedback do cliente",
+            "data": "2026-10-12",
+            "status": "Fechada",
+            "ultimo_usuario": "Mariana Costa"
+          },
+          {
+            "id": "104",
+            "titulo": "Ajustes de UI",
+            "data": "2026-10-11",
+            "status": "Em andamento",
+            "ultimo_usuario": "Rafael Gomes"
+          }
+        ]
+      },
+      {
+        "key": "usuarios",
+        "label": "Usuários",
+        "singular": "Usuário",
+        "fields": [
+          {
+            "key": "id",
+            "label": "ID",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cargo",
+            "label": "Cargo",
+            "type": "select",
+            "options": [
+              "Admin",
+              "Usuário",
+              "Cliente"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "id": "1",
+            "nome": "Ana Pereira",
+            "email": "ana.pereira@empresa.com",
+            "telefone": "(11) 91234-5678",
+            "cargo": "Admin"
+          },
+          {
+            "id": "2",
+            "nome": "Carlos Silva",
+            "email": "carlos.silva@empresa.com",
+            "telefone": "(11) 92345-6789",
+            "cargo": "Usuário"
+          },
+          {
+            "id": "3",
+            "nome": "Mariana Costa",
+            "email": "mariana.costa@empresa.com",
+            "telefone": "(11) 93456-7890",
+            "cargo": "Cliente"
+          },
+          {
+            "id": "4",
+            "nome": "Rafael Gomes",
+            "email": "rafael.gomes@empresa.com",
+            "telefone": "(11) 94567-8901",
+            "cargo": "Usuário"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Histórico",
+      "Busca",
+      "Mensagens"
+    ]
+  },
+  "media": {}
+}
