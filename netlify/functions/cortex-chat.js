@@ -282,6 +282,16 @@ exports.handler = async (event) => {
   const guardErr = await guard(event, 'cortex-chat');
   if (guardErr) return guardErr;
 
+  // ADR-F1-02: Restringir o Cortex apenas ao usuário master
+  const { isMasterUser } = require('./middleware');
+  if (!isMasterUser(event)) {
+    return {
+      statusCode: 403,
+      headers,
+      body: JSON.stringify({ error: 'Acesso restrito ao usuário master do Cortex.' })
+    };
+  }
+
   const start = Date.now();
   try {
     let body = {};
