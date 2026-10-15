@@ -1,0 +1,221 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex Histórico de Conversas",
+    "tagline": "Visualize e gerencie conversas do Cortex em um painel inteligente",
+    "photo_theme": "conversation chat",
+    "description": "Visualize e gerencie conversas do Cortex em um painel inteligente",
+    "folder": "sites/cortex-historico",
+    "fonts": {
+      "heading": "Playfair Display",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2c3e50",
+      "accent": "#e74c3c",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#1a1a1a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 98765-4321",
+      "email": "suporte@cortex.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "conversas",
+        "label": "Conversas",
+        "singular": "Conversa",
+        "fields": [
+          {
+            "key": "id",
+            "label": "ID",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "participantes",
+            "label": "Participantes",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "horario",
+            "label": "Horário",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Aberta",
+              "Fechada",
+              "Arquivada"
+            ],
+            "required": true
+          },
+          {
+            "key": "assunto",
+            "label": "Assunto",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "id": "C001",
+            "participantes": "Maria, João",
+            "data": "2026-10-14",
+            "horario": "09:15",
+            "status": "Aberta",
+            "assunto": "Projeto API",
+            "descricao": "Revisar endpoints da API /api/nexia/history"
+          },
+          {
+            "id": "C002",
+            "participantes": "Equipe Tech",
+            "data": "2026-10-13",
+            "horario": "14:30",
+            "status": "Fechada",
+            "assunto": "Deploy produção",
+            "descricao": "Confirmar deploy da versão 2.3"
+          },
+          {
+            "id": "C003",
+            "participantes": "Lucas, Ana",
+            "data": "2026-10-12",
+            "horario": "11:00",
+            "status": "Arquivada",
+            "assunto": "Bug relatado",
+            "descricao": "Corrigir bug de login"
+          },
+          {
+            "id": "C004",
+            "participantes": "Paula",
+            "data": "2026-10-10",
+            "horario": "16:45",
+            "status": "Aberta",
+            "assunto": "Solicitação cliente",
+            "descricao": "Adicionar filtro avançado"
+          }
+        ]
+      },
+      {
+        "key": "usuarios",
+        "label": "Usuários",
+        "singular": "Usuário",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cargo",
+            "label": "Cargo",
+            "type": "select",
+            "options": [
+              "Administrador",
+              "Analista",
+              "Desenvolvedor",
+              "Suporte"
+            ],
+            "required": true
+          },
+          {
+            "key": "ultimo_login",
+            "label": "Último login",
+            "type": "date",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Carlos Silva",
+            "email": "carlos.silva@cortex.com.br",
+            "telefone": "(11) 91234-5678",
+            "cargo": "Administrador",
+            "ultimo_login": "2026-10-13"
+          },
+          {
+            "nome": "Mariana Costa",
+            "email": "mariana.costa@cortex.com.br",
+            "telefone": "(11) 92345-6789",
+            "cargo": "Analista",
+            "ultimo_login": "2026-10-12"
+          },
+          {
+            "nome": "Pedro Mendes",
+            "email": "pedro.mendes@cortex.com.br",
+            "telefone": "(11) 93456-7890",
+            "cargo": "Desenvolvedor",
+            "ultimo_login": "2026-10-14"
+          },
+          {
+            "nome": "Fernanda Lima",
+            "email": "fernanda.lima@cortex.com.br",
+            "telefone": "(11) 94567-8901",
+            "cargo": "Suporte",
+            "ultimo_login": "2026-10-11"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Histórico",
+      "Conversa",
+      "Usuários",
+      "Configurações"
+    ]
+  },
+  "media": {}
+}
