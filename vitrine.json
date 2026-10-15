@@ -49,11 +49,11 @@
   "comissao": 0.13,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-820lp-msjcgt0pai9we6",
   "vendedor": "Bettdow",
-  "link": "https://s.shopee.com.br/113gim8cZQ",
+  "link": "https://s.shopee.com.br/6L5Et9KBZp",
   "link_produto": "https://shopee.com.br/product/1114645438/44213872297",
   "categoria": "relogios",
   "desde": 1791985654341,
-  "visto": 1792019825978,
+  "visto": 1792084008100,
   "pontos": 194.5
  },
  {
@@ -110,7 +110,7 @@
   "link_produto": "https://shopee.com.br/product/1242044379/23297485141",
   "categoria": "suplementos",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 107.5
  },
  {
@@ -148,7 +148,7 @@
   "link_produto": "https://shopee.com.br/product/1242044379/22392993399",
   "categoria": "suplementos",
   "desde": 1791985654341,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 93.4
  },
  {
@@ -243,7 +243,7 @@
   "link_produto": "https://shopee.com.br/product/1242044379/20399323829",
   "categoria": "suplementos",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 69.5
  },
  {
@@ -283,6 +283,25 @@
   "desde": 1791936932793,
   "visto": 1791940572096,
   "pontos": 64.7
+ },
+ {
+  "id": "shopee-22092998564",
+  "loja": "shopee",
+  "titulo": "Creatina Monohidratada Pura 1kg, 500g, 600, 300g e 150g - Dark Lab",
+  "preco": 39.9,
+  "preco_antigo": 95,
+  "desconto": 58,
+  "nota": 4.9,
+  "vendas": 12124,
+  "comissao": 0.26,
+  "imagem": "https://cf.shopee.com.br/file/br-11134207-820ld-ms0e8jfsnb45e1",
+  "vendedor": "Dark Lab Oficial",
+  "link": "https://s.shopee.com.br/20wEuSI31A",
+  "link_produto": "https://shopee.com.br/product/1242044379/22092998564",
+  "categoria": "suplementos",
+  "desde": 1792039687458,
+  "visto": 1792084008100,
+  "pontos": 64.3
  },
  {
   "id": "shopee-22494941454",
@@ -357,7 +376,7 @@
   "link_produto": "https://shopee.com.br/product/1778532130/23699413977",
   "categoria": "suplementos",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 59.5
  },
  {
@@ -433,7 +452,7 @@
   "link_produto": "https://shopee.com.br/product/1242044379/18699254225",
   "categoria": "suplementos",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 55.6
  },
  {
@@ -473,25 +492,6 @@
   "desde": 1791985654341,
   "visto": 1791985654341,
   "pontos": 54.7
- },
- {
-  "id": "shopee-22092998564",
-  "loja": "shopee",
-  "titulo": "Creatina Monohidratada Pura 1kg, 500g, 600, 300g e 150g - Dark Lab",
-  "preco": 32.9,
-  "preco_antigo": 78.33,
-  "desconto": 58,
-  "nota": 4.9,
-  "vendas": 12124,
-  "comissao": 0.26,
-  "imagem": "https://cf.shopee.com.br/file/br-11134207-820ld-ms0e8jfsnb45e1",
-  "vendedor": "Dark Lab Oficial",
-  "link": "https://s.shopee.com.br/20wEuSI31A",
-  "link_produto": "https://shopee.com.br/product/1242044379/22092998564",
-  "categoria": "suplementos",
-  "desde": 1792039687458,
-  "visto": 1792039687458,
-  "pontos": 53
  },
  {
   "id": "shopee-3021247843",
@@ -714,11 +714,11 @@
   "comissao": 0.13,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-81z1k-mifw3g727rb70d",
   "vendedor": "LUNANA Shop",
-  "link": "https://s.shopee.com.br/2LZ4JE3XrY",
+  "link": "https://s.shopee.com.br/7VHCHIFkCw",
   "link_produto": "https://shopee.com.br/product/1566977006/58202231060",
   "categoria": "relogios",
   "desde": 1791985654341,
-  "visto": 1792019825978,
+  "visto": 1792084008100,
   "pontos": 44.2
  },
  {
@@ -771,11 +771,11 @@
   "comissao": 0.16,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-7rdym-lxrzfhio6fhl9d",
   "vendedor": "-BML-",
-  "link": "https://s.shopee.com.br/1gJNW065DM",
+  "link": "https://s.shopee.com.br/30omv1WsKz",
   "link_produto": "https://shopee.com.br/product/1180920205/22093160276",
   "categoria": "relogios",
   "desde": 1791985654341,
-  "visto": 1792019825978,
+  "visto": 1792084008100,
   "pontos": 43.5
  },
  {
@@ -851,7 +851,7 @@
   "link_produto": "https://shopee.com.br/product/1397772996/20299558422",
   "categoria": "suplementos",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 42.4
  },
  {
@@ -889,7 +889,7 @@
   "link_produto": "https://shopee.com.br/product/380641757/20199188109",
   "categoria": "em-casa",
   "desde": 1792019825978,
-  "visto": 1792064242036,
+  "visto": 1792084008100,
   "pontos": 40.6
  },
  {
@@ -927,7 +927,7 @@
   "link_produto": "https://shopee.com.br/product/347988064/9212570285",
   "categoria": "suplementos",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 39.1
  },
  {
@@ -980,11 +980,11 @@
   "comissao": 0.13,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-81z1k-mg4sqr0e5nggcd",
   "vendedor": "Os produtos preferidos",
-  "link": "https://s.shopee.com.br/1Vzyldxl6l",
+  "link": "https://s.shopee.com.br/6AlogqKouo",
   "link_produto": "https://shopee.com.br/product/1158053430/22499056874",
   "categoria": "relogios",
   "desde": 1791963784009,
-  "visto": 1792064242036,
+  "visto": 1792084008100,
   "pontos": 35.7
  },
  {
@@ -1113,11 +1113,11 @@
   "comissao": 0.13,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-81zub-mkkp8o2qrxfl50",
   "vendedor": "LUNANA Shop",
-  "link": "https://s.shopee.com.br/8fT7qrju3K",
+  "link": "https://s.shopee.com.br/9pf73aBGEz",
   "link_produto": "https://shopee.com.br/product/1566977006/58203749906",
   "categoria": "fones",
   "desde": 1791985654341,
-  "visto": 1792019825978,
+  "visto": 1792084008100,
   "pontos": 32
  },
  {
@@ -1155,7 +1155,7 @@
   "link_produto": "https://shopee.com.br/product/413762733/19099500190",
   "categoria": "roupas",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 31.2
  },
  {
@@ -1174,7 +1174,7 @@
   "link_produto": "https://shopee.com.br/product/1041565530/18098113124",
   "categoria": "roupas",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 30.8
  },
  {
@@ -1383,7 +1383,7 @@
   "link_produto": "https://shopee.com.br/product/1655509891/58261704601",
   "categoria": "roupas",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 27.3
  },
  {
@@ -1421,7 +1421,7 @@
   "link_produto": "https://shopee.com.br/product/338537405/9511754133",
   "categoria": "suplementos",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 27.2
  },
  {
@@ -1438,9 +1438,9 @@
   "vendedor": "Loja do Suplemento Oficial",
   "link": "https://s.shopee.com.br/BUaj5P1jt",
   "link_produto": "https://shopee.com.br/product/446247790/23199363095",
-  "categoria": "acessorios",
+  "categoria": "suplementos",
   "desde": 1792019825978,
-  "visto": 1792064242036,
+  "visto": 1792084008100,
   "pontos": 27
  },
  {
@@ -1668,7 +1668,7 @@
   "link_produto": "https://shopee.com.br/product/313706462/20599906769",
   "categoria": "roupas",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 22.7
  },
  {
@@ -1763,7 +1763,7 @@
   "link_produto": "https://shopee.com.br/product/1655509891/22894934956",
   "categoria": "roupas",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 22.1
  },
  {
@@ -1968,11 +1968,11 @@
   "comissao": 0.06,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-820lk-mm8e1uokutc69b",
   "vendedor": "INOVA MALL.1",
-  "link": "https://s.shopee.com.br/AUum2EcvKn",
+  "link": "https://s.shopee.com.br/5fpY5vR7hI",
   "link_produto": "https://shopee.com.br/product/1493421921/21998324835",
   "categoria": "fones",
   "desde": 1791985654341,
-  "visto": 1792019825978,
+  "visto": 1792084008100,
   "pontos": 19.9
  },
  {
@@ -2105,7 +2105,7 @@
   "link_produto": "https://shopee.com.br/product/484053989/23292865377",
   "categoria": "roupas",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 18.4
  },
  {
@@ -2238,7 +2238,7 @@
   "link_produto": "https://shopee.com.br/product/1157943395/22794906912",
   "categoria": "suplementos",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 16
  },
  {
@@ -2409,7 +2409,7 @@
   "link_produto": "https://shopee.com.br/product/254876736/23898940980",
   "categoria": "roupas",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 14.6
  },
  {
@@ -2485,7 +2485,7 @@
   "link_produto": "https://shopee.com.br/product/1876581966/54166806189",
   "categoria": "suplementos",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 13.7
  },
  {
@@ -2842,11 +2842,11 @@
   "comissao": 0.08,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-820lv-mogyvltqiakj8c",
   "vendedor": "LUNANA Shop",
-  "link": "https://s.shopee.com.br/9V2EqOgjMZ",
+  "link": "https://s.shopee.com.br/AUunqo8itB",
   "link_produto": "https://shopee.com.br/product/1566977006/58210270642",
   "categoria": "fones",
   "desde": 1791985654341,
-  "visto": 1792019825978,
+  "visto": 1792084008100,
   "pontos": 11.3
  },
  {
@@ -2956,11 +2956,11 @@
   "comissao": 0.07,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-825a1-mfwuniqgbuoc85",
   "vendedor": "ANJ.GG store",
-  "link": "https://s.shopee.com.br/9zyVRJepLi",
+  "link": "https://s.shopee.com.br/5q8yIEQUML",
   "link_produto": "https://shopee.com.br/product/391739739/22194555567",
   "categoria": "fones",
   "desde": 1791985654341,
-  "visto": 1792019825978,
+  "visto": 1792084008100,
   "pontos": 10.7
  },
  {
@@ -3017,7 +3017,7 @@
   "link_produto": "https://shopee.com.br/product/807581166/17280330186",
   "categoria": "em-casa",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 10.3
  },
  {
@@ -3203,11 +3203,11 @@
   "comissao": 0.08,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-823rb-moxh073s5nv32a",
   "vendedor": "BOMABOMA",
-  "link": "https://s.shopee.com.br/8pmY3AjGiN",
+  "link": "https://s.shopee.com.br/9KiqSfDAFu",
   "link_produto": "https://shopee.com.br/product/1682453278/58211734842",
   "categoria": "fones",
   "desde": 1791985654341,
-  "visto": 1792019825978,
+  "visto": 1792084008100,
   "pontos": 9.5
  },
  {
@@ -3226,7 +3226,7 @@
   "link_produto": "https://shopee.com.br/product/1829370324/58262115339",
   "categoria": "em-casa",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 9.5
  },
  {
@@ -3321,7 +3321,7 @@
   "link_produto": "https://shopee.com.br/product/356114339/20499072504",
   "categoria": "roupas",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 8.7
  },
  {
@@ -3473,7 +3473,7 @@
   "link_produto": "https://shopee.com.br/product/1512108548/22993885040",
   "categoria": "em-casa",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 8.1
  },
  {
@@ -3511,7 +3511,7 @@
   "link_produto": "https://shopee.com.br/product/284799412/9413802166",
   "categoria": "acessorios",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 8
  },
  {
@@ -3549,7 +3549,7 @@
   "link_produto": "https://shopee.com.br/product/1840627515/58261885368",
   "categoria": "em-casa",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 7.8
  },
  {
@@ -3568,7 +3568,7 @@
   "link_produto": "https://shopee.com.br/product/1809590521/58259518122",
   "categoria": "em-casa",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 7.8
  },
  {
@@ -3625,7 +3625,7 @@
   "link_produto": "https://shopee.com.br/product/1697167383/58201784501",
   "categoria": "roupas",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 7.6
  },
  {
@@ -3663,7 +3663,7 @@
   "link_produto": "https://shopee.com.br/product/1147729120/21797609359",
   "categoria": "em-casa",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 7.5
  },
  {
@@ -3682,7 +3682,7 @@
   "link_produto": "https://shopee.com.br/product/1839780697/22999518877",
   "categoria": "em-casa",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 7.3
  },
  {
@@ -3724,6 +3724,25 @@
   "pontos": 7.1
  },
  {
+  "id": "shopee-58206629933",
+  "loja": "shopee",
+  "titulo": "Kit 3 Faixas Elásticas de Resistência 3 Intensidades para Exercícios Treino e Fisioterapia Hip Bands",
+  "preco": 21.99,
+  "preco_antigo": 40.72,
+  "desconto": 46,
+  "nota": 4.9,
+  "vendas": 1952,
+  "comissao": 0.07,
+  "imagem": "https://cf.shopee.com.br/file/sg-11134201-825zy-mln90k8oq2o11b",
+  "vendedor": "Loja 128",
+  "link": "https://s.shopee.com.br/1BN8jee3ny",
+  "link_produto": "https://shopee.com.br/product/974102638/58206629933",
+  "categoria": "em-casa",
+  "desde": 1792084008100,
+  "visto": 1792084008100,
+  "pontos": 7.1
+ },
+ {
   "id": "shopee-21498326018",
   "loja": "shopee",
   "titulo": "Calça Legging Canelada Premium de Cintura Alta Sem Costura Academia Feminina Elástica e Fitness",
@@ -3754,11 +3773,11 @@
   "comissao": 0.07,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-7ren4-m1oearn7t1rz61",
   "vendedor": "Jorge.store",
-  "link": "https://s.shopee.com.br/9pf5F0fSgb",
+  "link": "https://s.shopee.com.br/9zyXFtAcu6",
   "link_produto": "https://shopee.com.br/product/410705973/23893066508",
   "categoria": "fones",
   "desde": 1791985654341,
-  "visto": 1792019825978,
+  "visto": 1792084008100,
   "pontos": 7
  },
  {
@@ -3811,11 +3830,11 @@
   "comissao": 0.06,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-7rep6-m2gs8qz5az0ce1",
   "vendedor": "Marisa.store",
-  "link": "https://s.shopee.com.br/AAHvdceC0l",
+  "link": "https://s.shopee.com.br/5LChhJSONG",
   "link_produto": "https://shopee.com.br/product/400311012/21197979274",
   "categoria": "fones",
   "desde": 1791985654341,
-  "visto": 1792019825978,
+  "visto": 1792084008100,
   "pontos": 6.9
  },
  {
@@ -3830,11 +3849,11 @@
   "comissao": 0.03,
   "imagem": "https://cf.shopee.com.br/file/cn-11134207-820l4-mqhg200cth4w38",
   "vendedor": "LOJA_DO_POVO.br",
-  "link": "https://s.shopee.com.br/905yFTidNM",
+  "link": "https://s.shopee.com.br/8fT9fRFhbi",
   "link_produto": "https://shopee.com.br/product/1378634997/26181234420",
   "categoria": "fones",
   "desde": 1791985654341,
-  "visto": 1792019825978,
+  "visto": 1792084008100,
   "pontos": 6.9
  },
  {
@@ -3872,7 +3891,7 @@
   "link_produto": "https://shopee.com.br/product/698088031/58255590745",
   "categoria": "roupas",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 6.8
  },
  {
@@ -3906,11 +3925,11 @@
   "comissao": 0.03,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-820m0-mpp5kpuip537a4",
   "vendedor": "benedo",
-  "link": "https://s.shopee.com.br/1B9WwCQbC",
+  "link": "https://s.shopee.com.br/6fi5HlIutr",
   "link_produto": "https://shopee.com.br/product/1494273370/58262895607",
   "categoria": "relogios",
   "desde": 1791985654341,
-  "visto": 1792019825978,
+  "visto": 1792084008100,
   "pontos": 6.7
  },
  {
@@ -4043,7 +4062,7 @@
   "link_produto": "https://shopee.com.br/product/326710202/22792663277",
   "categoria": "roupas",
   "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 6.1
  },
  {
@@ -4123,6 +4142,25 @@
   "pontos": 5.9
  },
  {
+  "id": "shopee-58204541630",
+  "loja": "shopee",
+  "titulo": "Relogio Smartwatch Feminino Masculino  Series 10 Para Android ios Faz Recebe Chamada",
+  "preco": 39.99,
+  "preco_antigo": 199.95,
+  "desconto": 80,
+  "nota": 4.8,
+  "vendas": 1402,
+  "comissao": 0.03,
+  "imagem": "https://cf.shopee.com.br/file/br-11134207-81ztc-mk9cs8cko8ap5e",
+  "vendedor": "t3l9xp44pa",
+  "link": "https://s.shopee.com.br/60SOUXLSFn",
+  "link_produto": "https://shopee.com.br/product/1690126272/58204541630",
+  "categoria": "relogios",
+  "desde": 1792084008100,
+  "visto": 1792084008100,
+  "pontos": 5.9
+ },
+ {
   "id": "shopee-22093858622",
   "loja": "shopee",
   "titulo": "Comedouro ou Bebedouro Inox Para Pet Cachorro Gato e Outros com Base Antiderrapante– 150ml a 1400ml",
@@ -4176,26 +4214,7 @@
   "link_produto": "https://shopee.com.br/product/1523139407/47858345120",
   "categoria": "suplementos",
   "desde": 1792039687458,
-  "visto": 1792039687458,
-  "pontos": 5.8
- },
- {
-  "id": "shopee-22499437358",
-  "loja": "shopee",
-  "titulo": "Protetor Palmar Grip Academia Silicone Luva Treino Musculacao Antiderrapante Protege Contra Calos Par + Estojo Case",
-  "preco": 15.99,
-  "preco_antigo": 45.69,
-  "desconto": 65,
-  "nota": 5,
-  "vendas": 1361,
-  "comissao": 0.07,
-  "imagem": "https://cf.shopee.com.br/file/sg-11134201-8259y-mrtr7dyvcwsh9f",
-  "vendedor": "Nuvem Branca",
-  "link": "https://s.shopee.com.br/8KqIS5yGhW",
-  "link_produto": "https://shopee.com.br/product/1771240822/22499437358",
-  "categoria": "acessorios",
-  "desde": 1792039687458,
-  "visto": 1792039687458,
+  "visto": 1792084008100,
   "pontos": 5.8
  },
  {
@@ -4210,11 +4229,11 @@
   "comissao": 0.12,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-825b0-mruijmnmlhxied",
   "vendedor": "Loja MM Utilidades",
-  "link": "https://s.shopee.com.br/W7Q7rAWaH",
+  "link": "https://s.shopee.com.br/6q1VU4IHYs",
   "link_produto": "https://shopee.com.br/product/1163417262/58261589683",
   "categoria": "relogios",
   "desde": 1791985654341,
-  "visto": 1792019825978,
+  "visto": 1792084008100,
   "pontos": 5.7
  },
  {
@@ -4248,11 +4267,11 @@
   "comissao": 0.06,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-7rfgg-m9akut11lpyac0",
   "vendedor": "Marisa.store",
-  "link": "https://s.shopee.com.br/1qcpAFwUQn",
+  "link": "https://s.shopee.com.br/2gBwWPY90x",
   "link_produto": "https://shopee.com.br/product/400311012/17255136776",
   "categoria": "relogios",
   "desde": 1791963784009,
-  "visto": 1792064242036,
+  "visto": 1792084008100,
   "pontos": 5.4
  },
  {
@@ -4539,24 +4558,5 @@
   "desde": 1791963784009,
   "visto": 1792064242036,
   "pontos": 4.9
- },
- {
-  "id": "shopee-58214309634",
-  "loja": "shopee",
-  "titulo": "Garrafa Térmica 900ML Com Alça Aço Inoxidável Isolamento Térmico Com Canudo Para Academia Trabalho Caminhada",
-  "preco": 32.99,
-  "preco_antigo": 99.97,
-  "desconto": 67,
-  "nota": 4.8,
-  "vendas": 1399,
-  "comissao": 0.03,
-  "imagem": "https://cf.shopee.com.br/file/sg-11134201-8259l-mqp5spdtxj4177",
-  "vendedor": "Dream fly",
-  "link": "https://s.shopee.com.br/AUul8T5bDI",
-  "link_produto": "https://shopee.com.br/product/1847771333/58214309634",
-  "categoria": "acessorios",
-  "desde": 1791936932793,
-  "visto": 1791985654341,
-  "pontos": 4.8
  }
 ]
