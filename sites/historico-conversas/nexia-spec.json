@@ -7,17 +7,17 @@
     "description": "Visualize e gerencie suas conversas com busca avançada e navegação inteligente. A página /historico, restrita ao usuário master, apresenta uma barra lateral com listas de conversas agrupadas por Hoje, Ontem, Últimos 7 dias e Anteriores, permite busca por texto, rolagem infinita via cursor da API /ap",
     "folder": "sites/historico-conversas",
     "fonts": {
-      "heading": "Montserrat",
+      "heading": "Plus Jakarta Sans",
       "body": "Inter"
     },
     "palette": {
       "primary": "#0d6efd",
-      "accent": "#6ee7b7",
-      "bg": "#fbfaf7",
+      "accent": "#10b981",
+      "bg": "#f3f4f6",
       "surface": "#ffffff",
-      "text": "#1d2426",
-      "muted": "#5d6b6e",
-      "dark": "#1f2937"
+      "text": "#111827",
+      "muted": "#606773",
+      "dark": "#111827"
     },
     "style": "modern",
     "contact": {
@@ -82,28 +82,28 @@
         "sample": [
           {
             "id": "101",
-            "titulo": "Revisão de requisitos",
+            "titulo": "Revisão de requisitos do módulo financeiro",
             "data": "2026-10-14",
             "status": "Em andamento",
             "ultimo_usuario": "Ana Pereira"
           },
           {
             "id": "102",
-            "titulo": "Integração API",
+            "titulo": "Integração com API de pagamentos",
             "data": "2026-10-13",
             "status": "Nova",
             "ultimo_usuario": "Carlos Silva"
           },
           {
             "id": "103",
-            "titulo": "Feedback do cliente",
+            "titulo": "Feedback do cliente sobre onboarding",
             "data": "2026-10-12",
             "status": "Fechada",
             "ultimo_usuario": "Mariana Costa"
           },
           {
             "id": "104",
-            "titulo": "Ajustes de UI",
+            "titulo": "Ajustes de UI na tela de relatórios",
             "data": "2026-10-11",
             "status": "Em andamento",
             "ultimo_usuario": "Rafael Gomes"
