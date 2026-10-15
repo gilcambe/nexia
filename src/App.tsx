@@ -42,7 +42,9 @@ function App() {
     <I18nextProvider i18n={i18n}>
       <AuthProvider>
         <BrowserRouter basename={__BASE_PATH__}>
-          <AppRoutes />
+          <MasterRoute>
+            <AppRoutes />
+          </MasterRoute>
         </BrowserRouter>
       </AuthProvider>
     </I18nextProvider>
