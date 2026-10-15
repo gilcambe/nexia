@@ -1,0 +1,166 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex Histórico",
+    "tagline": "Painel de conversas e histórico de interações para usuários master",
+    "photo_theme": "office workspace",
+    "description": "Painel de conversas e histórico de interações para usuários master",
+    "folder": "sites/cortex-historico",
+    "fonts": {
+      "heading": "Playfair Display",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2563eb",
+      "accent": "#10b981",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#1f2937"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 98765-4321",
+      "email": "suporte@cortex.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "conversas",
+        "label": "Conversas",
+        "singular": "Conversa",
+        "fields": [
+          {
+            "key": "id",
+            "label": "ID",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "remetente",
+            "label": "Remetente",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "texto",
+            "label": "Mensagem",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "horario",
+            "label": "Horário",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Enviada",
+              "Recebida",
+              "Arquivada"
+            ],
+            "required": true
+          },
+          {
+            "key": "canal",
+            "label": "Canal",
+            "type": "select",
+            "options": [
+              "WhatsApp",
+              "Email",
+              "Chat"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "id": "101",
+            "remetente": "Cliente A",
+            "texto": "Preciso de suporte para a integração.",
+            "data": "2026-10-14",
+            "horario": "09:15",
+            "status": "Recebida",
+            "canal": "WhatsApp"
+          },
+          {
+            "id": "102",
+            "remetente": "Suporte",
+            "texto": "Claro, estou à disposição para ajudar.",
+            "data": "2026-10-14",
+            "horario": "09:20",
+            "status": "Enviada",
+            "canal": "WhatsApp"
+          },
+          {
+            "id": "103",
+            "remetente": "Cliente B",
+            "texto": "Qual o prazo de entrega do módulo X?",
+            "data": "2026-10-13",
+            "horario": "14:45",
+            "status": "Recebida",
+            "canal": "Email"
+          },
+          {
+            "id": "104",
+            "remetente": "Suporte",
+            "texto": "Entregaremos até 30/10/2026.",
+            "data": "2026-10-13",
+            "horario": "15:00",
+            "status": "Enviada",
+            "canal": "Email"
+          },
+          {
+            "id": "105",
+            "remetente": "Cliente C",
+            "texto": "Erro ao acessar a API /api/nexia/history/",
+            "data": "2026-10-12",
+            "horario": "11:30",
+            "status": "Recebida",
+            "canal": "Chat"
+          },
+          {
+            "id": "106",
+            "remetente": "Suporte",
+            "texto": "Verifiquei, o endpoint está ativo. Precisa de mais alguma coisa?",
+            "data": "2026-10-12",
+            "horario": "11:35",
+            "status": "Enviada",
+            "canal": "Chat"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Histórico",
+      "Busca Avançada",
+      "Configurações",
+      "Exportação"
+    ]
+  },
+  "media": {}
+}
