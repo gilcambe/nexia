@@ -1,14 +1,14 @@
-/* Cortex P1 - Painel de Histórico — gerado pelo NEXIA Site Kit (ADR-Q-04) */
+/* Cortex-p1 — gerado pelo NEXIA Site Kit (ADR-Q-04) */
 :root {
-  --primary: #2c3e50;
-  --accent: #e67e22;
+  --primary: #0d47a1;
+  --accent: #ffc107;
   --bg: #f4f6f8;
   --surface: #ffffff;
   --surface-2: #f8fafb;
   --text: #17202a;
   --muted: #64707d;
   --line: #e3e8ee;
-  --sidebar: #1a1a1a;
+  --sidebar: #212121;
   --danger: #d64545;
   --ok: #1f9d67;
   --font-head: "Playfair Display", system-ui, sans-serif;
