@@ -1,0 +1,328 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex Central: Histórico e Usuários",
+    "tagline": "Painel administrativo para gestão de sessões e perfis",
+    "photo_theme": "",
+    "description": "Painel administrativo para gestão de sessões e perfis",
+    "folder": "demos/cortex-central",
+    "fonts": {
+      "heading": "Plus Jakarta Sans",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2563eb",
+      "accent": "#10b981",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "",
+      "email": "admin@cortexai.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "usuarios",
+        "label": "Usuários",
+        "singular": "Usuário",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome Completo",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "perfil",
+            "label": "Perfil de Acesso",
+            "type": "select",
+            "options": [
+              "Master",
+              "Operador",
+              "Suporte",
+              "Gestor"
+            ],
+            "required": true
+          },
+          {
+            "key": "ultima_atividade",
+            "label": "Última Atividade",
+            "type": "date",
+            "options": [],
+            "required": false
+          },
+          {
+            "key": "status",
+            "label": "Status da Conta",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Pausado",
+              "Expirado"
+            ],
+            "required": true
+          },
+          {
+            "key": "sessoes",
+            "label": "Sessões Ativas",
+            "type": "number",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Dr. Rafael Almeida",
+            "email": "rafael_almeida@cortex.ai",
+            "perfil": "Master",
+            "ultima_atividade": "2026-05-21",
+            "status": "Ativo",
+            "sessoes": "5"
+          },
+          {
+            "nome": "Juliana Costa",
+            "email": "ju_costa@admin.cortex.com",
+            "perfil": "Gestor",
+            "ultima_atividade": "2026-05-21",
+            "status": "Ativo",
+            "sessoes": "2"
+          },
+          {
+            "nome": "Pablo Mendes",
+            "email": "pablo.ti@suporte.ai",
+            "perfil": "Suporte",
+            "ultima_atividade": "2026-05-18",
+            "status": "Pausado",
+            "sessoes": "0"
+          },
+          {
+            "nome": "Lucia Ferreira",
+            "email": "lucia.f@cortexcentral.com",
+            "perfil": "Operador",
+            "ultima_atividade": "2026-05-20",
+            "status": "Expirado",
+            "sessoes": "0"
+          }
+        ]
+      },
+      {
+        "key": "conversas",
+        "label": "Histórico de Conversas",
+        "singular": "Conversa",
+        "fields": [
+          {
+            "key": "id_sessao",
+            "label": "ID da Sessão",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "usuario",
+            "label": "Cliente",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_abertura",
+            "label": "Data/Hora Início",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "assunto",
+            "label": "Assunto Principal",
+            "type": "text",
+            "options": [],
+            "required": false
+          },
+          {
+            "key": "tipo_interacao",
+            "label": "Tipo",
+            "type": "select",
+            "options": [
+              "Voz (STT/TTS)",
+              "Texto (Chat)",
+              "Integração API"
+            ],
+            "required": true
+          },
+          {
+            "key": "duracao",
+            "label": "Duração (min)",
+            "type": "number",
+            "options": [],
+            "required": false
+          },
+          {
+            "key": "status_revisao",
+            "label": "Revisão",
+            "type": "select",
+            "options": [
+              "Pendente",
+              "Em Revisão",
+              "Aprovada",
+              "Correção"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "id_sessao": "SES-2026-09901",
+            "usuario": "Cliente Premium (Anônimo)",
+            "data_abertura": "2026-05-21 14:32",
+            "assunto": "Limite de transação",
+            "tipo_interacao": "Voz (STT/TTS)",
+            "duracao": "12",
+            "status_revisao": "Pendente"
+          },
+          {
+            "id_sessao": "SES-2026-09898",
+            "usuario": "Empresa Global Tech",
+            "data_abertura": "2026-05-21 10:15",
+            "assunto": "Inscrever novo título",
+            "tipo_interacao": "Texto (Chat)",
+            "duracao": "5",
+            "status_revisao": "Em Revisão"
+          },
+          {
+            "id_sessao": "SES-2026-09855",
+            "usuario": "Retorno Automático",
+            "data_abertura": "2026-05-20 18:45",
+            "assunto": "Contra-proposta enviada",
+            "tipo_interacao": "Integração API",
+            "duracao": "2",
+            "status_revisao": "Aprovada"
+          },
+          {
+            "id_sessao": "SES-2026-09802",
+            "usuario": "Operador Humano (Backup)",
+            "data_abertura": "2026-05-19 09:10",
+            "assunto": "Disputa judicial",
+            "tipo_interacao": "Voz (STT/TTS)",
+            "duracao": "28",
+            "status_revisao": "Correção"
+          }
+        ]
+      },
+      {
+        "key": "alertas",
+        "label": "Alertas do Master",
+        "singular": "Alerta",
+        "fields": [
+          {
+            "key": "titulo",
+            "label": "Descrição",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "prioridade",
+            "label": "Nível",
+            "type": "select",
+            "options": [
+              "Crítico",
+              "Alto",
+              "Médio",
+              "Baixo"
+            ],
+            "required": true
+          },
+          {
+            "key": "origem",
+            "label": "Módulo de Origem",
+            "type": "select",
+            "options": [
+              "Auto-Rejeição",
+              "Sistema Legal",
+              "Financeiro",
+              "Integração"
+            ],
+            "required": true
+          },
+          {
+            "key": "data_ocorrencia",
+            "label": "Data/Hora",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Situação",
+            "type": "select",
+            "options": [
+              "Aberto",
+              "Em Tratamento",
+              "Resolvido",
+              "Ignorado"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "titulo": "Auto-rejeição executada em Prazo-Limite",
+            "prioridade": "Alto",
+            "origem": "Sistema Legal",
+            "data_ocorrencia": "2026-05-21 13:00",
+            "status": "Em Tratamento"
+          },
+          {
+            "titulo": "Caixa abaixo do mínimo de segurança",
+            "prioridade": "Crítico",
+            "origem": "Financeiro",
+            "data_ocorrencia": "2026-05-21 10:45",
+            "status": "Aberto"
+          },
+          {
+            "titulo": "Erro na sincronização do faturamento",
+            "prioridade": "Médio",
+            "origem": "Integração",
+            "data_ocorrencia": "2026-05-20 14:12",
+            "status": "Resolvido"
+          },
+          {
+            "titulo": "Novo usuário com perfil Master solicitado",
+            "prioridade": "Baixo",
+            "origem": "Gestão",
+            "data_ocorrencia": "2026-05-18 09:30",
+            "status": "Ignorado"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Autenticação",
+      "Histórico",
+      "Ações",
+      "Financeiro"
+    ]
+  },
+  "media": {}
+}
