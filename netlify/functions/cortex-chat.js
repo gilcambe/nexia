@@ -282,7 +282,7 @@ exports.handler = async (event) => {
   const guardErr = await guard(event, 'cortex-chat');
   if (guardErr) return guardErr;
 
-  // ADR-F1-02: Restringir o Cortex apenas ao usuário master
+  // ADR-F1-02: Restringir o Cortex apenas ao usuário master (chat, agente, memória, logs)
   const { isMasterUser } = require('./middleware');
   if (!isMasterUser(event)) {
     return {
