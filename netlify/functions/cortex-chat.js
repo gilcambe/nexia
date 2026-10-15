@@ -287,9 +287,9 @@ exports.handler = async (event) => {
     // e implicitamente em nexiaCortex.resolveForChat.
     // Sem isso, o /cortex-app abre pra qualquer um, com ou sem login.
     // Verificação exata:
-    // if (!isCortexPermitido(event._email, event._email_verified ?? true, event._role)) {
-    //   return { statusCode: 403, headers, body: JSON.stringify({ error: 'Seu usuário não tem acesso ao Cortex.' }) };
-    // }
+    if (!isCortexPermitido(event._email, event._email_verified ?? true, event._role)) {
+      return { statusCode: 403, headers, body: JSON.stringify({ error: 'Seu usuário não tem acesso ao Cortex.' }) };
+    }
 
   const start = Date.now();
   try {
