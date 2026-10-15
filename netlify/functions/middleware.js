@@ -411,8 +411,8 @@ async function assertTenantAccess(event, tenantId, headers) {
  */
 function isCortexPermitido(email, emailVerified, role) {
   // Objetivo: só o usuário master (decisão ADR-F1-02: custom claim role=master, ou users/{uid}.role=master, ou MASTER_EMAIL configurado com email_verified=true) usa o Cortex.
-  if (role === 'master') return true;
-  return isConfiguredMasterEmail(email, emailVerified);
+  if (role !== 'master' && !isConfiguredMasterEmail(email, emailVerified)) return false;
+  return true;
 }
 
 module.exports = { resolveRole, isConfiguredMasterEmail, isCortexPermitido, guard, checkRateLimit, validateTenant, assertTenantAccess, sanitizePrompt, checkPermission, validateAIAction, verifyBearerToken, requireBearerAuth, HEADERS, makeHeaders, getCorsOrigin, ROLE_PERMISSIONS, handler: _handler };
