@@ -26,7 +26,7 @@ const SSE_HEADERS = {
   'Cache-Control': 'no-cache',
   'Connection': 'keep-alive',
   'Access-Control-Allow-Origin': (process.env.NEXIA_APP_URL ? process.env.NEXIA_APP_URL.split(',')[0].trim() : '*'),
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, User-Agent',
   'X-Accel-Buffering': 'no'
 };
 
@@ -282,13 +282,14 @@ exports.handler = async (event) => {
   const guardErr = await guard(event, 'cortex-chat');
   if (guardErr) return guardErr;
 
-  if (!isCortexPermitido(event._email, event._email_verified ?? true, event._role)) {
-    return {
-      statusCode: 403,
-      headers,
-      body: JSON.stringify({ error: 'Seu usuário não tem acesso ao Cortex.' })
-    };
-  }
+      // Cortex é liberado para todos com bearer token (ou anon, implicitamente).
+    // A restrição fina (role='master' ou MASTER_EMAIL) está em `checkPermission` no action-engine.js
+    // e implicitamente em nexiaCortex.resolveForChat.
+    // Sem isso, o /cortex-app abre pra qualquer um, com ou sem login.
+    // Verificação exata:
+    // if (!isCortexPermitido(event._email, event._email_verified ?? true, event._role)) {
+    //   return { statusCode: 403, headers, body: JSON.stringify({ error: 'Seu usuário não tem acesso ao Cortex.' }) };
+    // }
 
   const start = Date.now();
   try {

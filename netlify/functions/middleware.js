@@ -19,7 +19,7 @@ const HEADERS = {
   'Content-Type':                'application/json',
   'Access-Control-Allow-Origin': process.env.NEXIA_APP_URL ? process.env.NEXIA_APP_URL.split(',')[0].trim() : '*',
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-Id'
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-Id, User-Agent'
 };
 
 function makeHeaders(event) {
