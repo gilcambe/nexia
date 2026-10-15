@@ -4,7 +4,8 @@
     "body-coach-01",
     "body-coach-02",
     "body-coach-03",
-    "body-coach-04"
+    "body-coach-04",
+    "body-coach-05"
   ],
   "historico": [
     {
@@ -104,6 +105,23 @@
           "canal": "instagram",
           "ok": true,
           "ref": "17950387602057729"
+        }
+      ]
+    },
+    {
+      "quando": "2026-10-15T15:02:39.985Z",
+      "id": "body-coach-05",
+      "cliente": "body-coach",
+      "resultados": [
+        {
+          "canal": "facebook",
+          "ok": true,
+          "ref": "1380111745183159_122095156875518156"
+        },
+        {
+          "canal": "instagram",
+          "ok": true,
+          "ref": "18131453458692525"
         }
       ]
     }
