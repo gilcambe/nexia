@@ -1,0 +1,146 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex-p1 Admin",
+    "tagline": "Painel de controle e histórico de conversas do Cortex",
+    "photo_theme": "",
+    "description": "Painel de controle e histórico de conversas do Cortex",
+    "folder": "demos/cortex-p1",
+    "fonts": {
+      "heading": "Plus Jakarta Sans",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2563eb",
+      "accent": "#06b6d4",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 98765-4321",
+      "email": "suporte@cortex.ai",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "conversas",
+        "label": "Conversas",
+        "singular": "Conversa",
+        "fields": [
+          {
+            "key": "usuario",
+            "label": "Usuário",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "grupo",
+            "label": "Período",
+            "type": "select",
+            "options": [
+              "Hoje",
+              "Ontem",
+              "Últimos 7 dias",
+              "Anteriores"
+            ],
+            "required": true
+          },
+          {
+            "key": "resumo",
+            "label": "Resumo da Conversa",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "mensagens",
+            "label": "Total de Mensagens",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "atualizado",
+            "label": "Atualizado em",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status da API",
+            "type": "select",
+            "options": [
+              "Sincronizado",
+              "Pendente",
+              "Erro"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "usuario": "Carlos Eduardo",
+            "grupo": "Hoje",
+            "resumo": "Dúvida sobre integração da API /api/nexia/history",
+            "mensagens": "14",
+            "atualizado": "2026-06-07",
+            "status": "Sincronizado"
+          },
+          {
+            "usuario": "Mariana Costa",
+            "grupo": "Ontem",
+            "resumo": "Configuração de permissões de acesso master",
+            "mensagens": "8",
+            "atualizado": "2026-06-06",
+            "status": "Sincronizado"
+          },
+          {
+            "usuario": "Roberto Alves",
+            "grupo": "Últimos 7 dias",
+            "resumo": "Rolagem infinita na barra lateral de conversas",
+            "mensagens": "22",
+            "atualizado": "2026-06-04",
+            "status": "Sincronizado"
+          },
+          {
+            "usuario": "Beatriz Lima",
+            "grupo": "Anteriores",
+            "resumo": "Relatório de logs de erro do sistema",
+            "mensagens": "5",
+            "atualizado": "2026-05-28",
+            "status": "Sincronizado"
+          },
+          {
+            "usuario": "Lucas Martins",
+            "grupo": "Anteriores",
+            "resumo": "Ajuste na rota /historico do router React",
+            "mensagens": "19",
+            "atualizado": "2026-05-20",
+            "status": "Sincronizado"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Histórico",
+      "Conversas",
+      "Master",
+      "Configurações"
+    ]
+  },
+  "media": {}
+}
