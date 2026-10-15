@@ -1,0 +1,224 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex Histórico",
+    "tagline": "Visualize e gerencie conversas com filtragem inteligente",
+    "photo_theme": "",
+    "description": "Visualize e gerencie conversas com filtragem inteligente",
+    "folder": "sites/cortex-p1",
+    "fonts": {
+      "heading": "Playfair Display",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2c3e50",
+      "accent": "#e67e22",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#1a1a1a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 98765-4321",
+      "email": "suporte@cortex.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "conversas",
+        "label": "Conversas",
+        "singular": "Conversa",
+        "fields": [
+          {
+            "key": "id",
+            "label": "ID",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "titulo",
+            "label": "Título",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_hora",
+            "label": "Data e Hora",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "remetente",
+            "label": "Remetente",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "destinatario",
+            "label": "Destinatário",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "conteudo",
+            "label": "Conteúdo",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Aberta",
+              "Em andamento",
+              "Concluída",
+              "Arquivada"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "id": "C001",
+            "titulo": "Revisão do contrato",
+            "data_hora": "2026-10-14",
+            "remetente": "Ana Silva",
+            "destinatario": "Carlos Mendes",
+            "conteudo": "Preciso da aprovação até sexta.",
+            "status": "Aberta"
+          },
+          {
+            "id": "C002",
+            "titulo": "Bug no relatório",
+            "data_hora": "2026-10-13",
+            "remetente": "Lucas Oliveira",
+            "destinatario": "Equipe Tech",
+            "conteudo": "O relatório gera erro 500 ao exportar.",
+            "status": "Em andamento"
+          },
+          {
+            "id": "C003",
+            "titulo": "Solicitação de orçamento",
+            "data_hora": "2026-10-12",
+            "remetente": "Mariana Costa",
+            "destinatario": "Financeiro",
+            "conteudo": "Favor enviar proposta para campanha Q4.",
+            "status": "Concluída"
+          },
+          {
+            "id": "C004",
+            "titulo": "Feedback do cliente",
+            "data_hora": "2026-10-10",
+            "remetente": "Cliente XYZ",
+            "destinatario": "Suporte",
+            "conteudo": "Agradecemos o atendimento rápido.",
+            "status": "Arquivada"
+          }
+        ]
+      },
+      {
+        "key": "usuarios",
+        "label": "Usuários",
+        "singular": "Usuário",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E‑mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cargo",
+            "label": "Cargo",
+            "type": "select",
+            "options": [
+              "Administrador",
+              "Analista",
+              "Suporte",
+              "Gerente"
+            ],
+            "required": true
+          },
+          {
+            "key": "ativo",
+            "label": "Ativo",
+            "type": "select",
+            "options": [
+              "Sim",
+              "Não"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Ana Silva",
+            "email": "ana.silva@cortex.com.br",
+            "telefone": "(11) 91234-5678",
+            "cargo": "Analista",
+            "ativo": "Sim"
+          },
+          {
+            "nome": "Carlos Mendes",
+            "email": "carlos.mendes@cortex.com.br",
+            "telefone": "(11) 92345-6789",
+            "cargo": "Gerente",
+            "ativo": "Sim"
+          },
+          {
+            "nome": "Lucas Oliveira",
+            "email": "lucas.oliveira@cortex.com.br",
+            "telefone": "(11) 93456-7890",
+            "cargo": "Suporte",
+            "ativo": "Sim"
+          },
+          {
+            "nome": "Mariana Costa",
+            "email": "mariana.costa@cortex.com.br",
+            "telefone": "(11) 94567-8901",
+            "cargo": "Administrador",
+            "ativo": "Sim"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Histórico",
+      "Chat",
+      "Configurações"
+    ]
+  },
+  "media": {}
+}
