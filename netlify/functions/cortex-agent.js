@@ -556,6 +556,11 @@ exports.handler = async (event) => {
   const guardErr = await guard(event, 'cortex-agent', { skipTenant: true });
   if (guardErr) return guardErr;
 
+  // ADR-F1-02: Só o usuário master pode usar o Cortex
+  if (typeof isCortexPermitido === 'function' && !(await isCortexPermitido(event))) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Acesso restrito ao usuário master do Cortex.' }) };
+  }
+
   if (!isCortexPermitido(event._email, event._email_verified ?? true)) {
     return {
       statusCode: 403,
