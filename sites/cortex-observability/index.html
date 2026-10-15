@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cortex Observability — Monitoramento em tempo real de conversas e agentes</title>
+  <meta name="description" content="Monitoramento em tempo real de conversas e agentes">
+  <meta name="theme-color" content="#1e3a8a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
+</head>
+<body>
+  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
+      <div class="sidebar__brand">
+        <span class="logo" aria-hidden="true">C</span>
+        <span>Cortex Observability</span>
+      </div>
+      <nav class="sidebar__nav" aria-label="Seções">
+        <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
+        <a href="#/deploys" data-route="deploys"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Deploys</span></a>
+        <a href="#/conversas" data-route="conversas"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Conversas</span></a>
+        <a href="#/usuarios" data-route="usuarios"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Usuários</span></a>
+      </nav>
+      <div class="sidebar__foot">
+        <p>Suporte: dev@cortex.ai</p>
+        <p>Dados salvos neste navegador.</p>
+      </div>
+    </aside>
+    <div class="backdrop" data-close-menu hidden></div>
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="topbar__title">
+          <h1 id="view-title">Painel</h1>
+          <p id="view-sub">Monitoramento em tempo real de conversas e agentes</p>
+        </div>
+        <label class="search">
+          <span class="sr-only">Buscar</span>
+          <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search" type="search" placeholder="Buscar..." autocomplete="off">
+        </label>
+        <button class="icon-btn" type="button" id="theme" aria-label="Alternar modo escuro"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </header>
+      <main id="conteudo" class="content">
+        <section id="view-painel" class="view" aria-labelledby="view-title">
+          <div class="kpis" id="kpis"></div>
+          <div class="grid2">
+            <article class="card">
+              <header class="card__head"><h2 id="chart-title">Resumo</h2></header>
+              <div class="chart-box"><canvas id="chart" aria-label="Gráfico do resumo" role="img"></canvas></div>
+            </article>
+            <article class="card">
+              <header class="card__head"><h2>Últimos cadastros</h2></header>
+              <ul class="recent" id="recent"></ul>
+            </article>
+          </div>
+        </section>
+        <section id="view-entity" class="view" hidden>
+          <div class="toolbar">
+            <p class="count" id="count"></p>
+            <div class="toolbar__actions">
+              <button class="btn btn--ghost" type="button" id="export"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Exportar CSV</button>
+              <button class="btn btn--primary" type="button" id="add"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> <span id="add-label">Novo</span></button>
+            </div>
+          </div>
+          <div class="card table-card">
+            <div class="table-wrap">
+              <table class="table">
+                <thead id="thead"></thead>
+                <tbody id="tbody"></tbody>
+              </table>
+            </div>
+            <div class="empty" id="empty" hidden>
+              <svg class="i" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg>
+              <h2>Nada por aqui ainda</h2>
+              <p>Clique em “Adicionar” para fazer o primeiro cadastro.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="modal" id="modal" aria-labelledby="modal-title">
+    <form id="form" novalidate>
+      <header class="modal__head">
+        <h2 id="modal-title">Novo</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </header>
+      <div class="modal__body" id="form-fields"></div>
+      <footer class="modal__foot">
+        <button class="btn btn--ghost" type="button" data-close>Cancelar</button>
+        <button class="btn btn--primary" type="submit">Salvar</button>
+      </footer>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-observability","name":"Cortex Observability","entities":[{"key":"deploys","label":"Deploys","singular":"Deploy","fields":[{"key":"ref","label":"Referência","type":"text","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Sucesso","Falhou","Cancelado"],"required":true},{"key":"autor","label":"Autor","type":"text","options":[],"required":true},{"key":"data","label":"Data/Hora","type":"date","options":[],"required":true},{"key":"duracao","label":"Duração (min)","type":"number","options":[],"required":true},{"key":"nota","label":"Notas","type":"textarea","options":[],"required":false}],"sample":[{"ref":"#1042","status":"Sucesso","autor":"Ana Beta","data":"2026-05-14","duracao":"12","nota":"Deploy em produção: novos endpoints de métricas."},{"ref":"#1041","status":"Falhou","autor":"Carlos Gama","data":"2026-05-13","duracao":"4","nota":"Erro no build: dependências conflitantes de TypeScript."},{"ref":"#1040","status":"Sucesso","autor":"Bruna Dias","data":"2026-05-12","duracao":"18","nota":"Atualização do frontend com novas rotas de observabilidade."},{"ref":"#1039","status":"Cancelado","autor":"Igor Silva","data":"2026-05-11","duracao":"0","nota":"Rollback solicitado devido a instabilidade na fila de mensagens."},{"ref":"#1038","status":"Sucesso","autor":"Lia Nogueira","data":"2026-05-10","duracao":"9","nota":"Correções de segurança na autenticação de APIs."}]},{"key":"conversas","label":"Conversas","singular":"Conversa","fields":[{"key":"id","label":"ID da conversa","type":"text","options":[],"required":true},{"key":"titulo","label":"Título","type":"text","options":[],"required":true},{"key":"grupo","label":"Período","type":"select","options":["Hoje","Ontem","Últimos 7 dias","Anteriores"],"required":true},{"key":"usuario","label":"Usuário","type":"text","options":[],"required":true},{"key":"mensagem_resumo","label":"Resumo da última mensagem","type":"textarea","options":[],"required":true},{"key":"status_sessao","label":"Status da sessão","type":"select","options":["Ativa","Encerrada"],"required":true}],"sample":[{"id":"conv-89201","titulo":"Análise de erros no front-end","grupo":"Hoje","usuario":"Usuário 4092","mensagem_resumo":"O usuário reportou um estouro de stack em React ao recarregar a página.","status_sessao":"Ativa"},{"id":"conv-89198","titulo":"Implantação de métricas","grupo":"Ontem","usuario":"Usuário Master","mensagem_resumo":"Confirmação da integração do Prometeus com o Grafana.","status_sessao":"Encerrada"},{"id":"conv-89105","titulo":"Ajuste de sliders de dashboard","grupo":"Últimos 7 dias","usuario":"Usuário 7721","mensagem_resumo":"Pedido de alinhamento dos gráficos no painel de latência.","status_sessao":"Encerrada"},{"id":"conv-88912","titulo":"Rotina de backup de logs","grupo":"Anteriores","usuario":"Usuário 1004","mensagem_resumo":"Definição de cron para exportar logs do Elasticsearch.","status_sessao":"Encerrada"},{"id":"conv-88850","titulo":"Testes de carga na API REST","grupo":"Anteriores","usuario":"Usuário 2399","mensagem_resumo":"Relatório de performance antes do release da nova feature.","status_sessao":"Encerrada"}]},{"key":"usuarios","label":"Usuários","singular":"Usuário","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"email","label":"E-mail","type":"email","options":[],"required":true},{"key":"telefone","label":"Telefone","type":"phone","options":[],"required":true},{"key":"plano","label":"Plano","type":"select","options":["Free","Pro","Enterprise"],"required":true},{"key":"ultima_situacao","label":"Última atividade","type":"date","options":[],"required":true},{"key":"biografia","label":"BIO","type":"textarea","options":[],"required":false}],"sample":[{"nome":"Carlos Mendes","email":"carlos@empresa.com","telefone":"(11) 98765-4321","plano":"Enterprise","ultima_situacao":"2026-05-15","biografia":"Engenheiro de SRE. Gestor de serviços críticos."},{"nome":"Juliana Souza","email":"juliana@empresa.com","telefone":"(11) 91234-5678","plano":"Pro","ultima_situacao":"2026-05-14","biografia":"Analista de Dados focada em observabilidade."},{"nome":"Roberto Figueiredo","email":"roberto@empresa.com","telefone":"(21) 99876-5432","plano":"Free","ultima_situacao":"2026-05-10","biografia":"Estudando novas práticas de DevSecOps."},{"nome":"Patrícia Nogueira","email":"patricia@empresa.com","telefone":"(31) 98765-4321","plano":"Pro","ultima_situacao":"2026-05-12","biografia":"Líder de produto na área de QA de APIs."}]}]}</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
