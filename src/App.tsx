@@ -6,6 +6,7 @@ import i18n from "./i18n";
 
 declare const __BASE_PATH__: string;
 
+// Restrição de acesso ao Cortex e /execucoes apenas para o usuário master (ADR-F1-02).
 function App() {
   return (
     <I18nextProvider i18n={i18n}>
