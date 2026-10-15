@@ -205,6 +205,9 @@ exports.handler = async (event) => {
 
   const guardErr = await guard(event, 'cortex-memory', { skipTenant: true });
   if (guardErr) return guardErr;
+  if (!isCortexPermitido(event._email, true, event._role)) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Acesso negado ao Cortex: restrito apenas ao usuário master.' }) };
+  }
 
   if (!db) return { statusCode: 503, headers, body: JSON.stringify({ ok: false, error: 'Firebase indisponível — configure FIREBASE_SERVICE_ACCOUNT nos segredos do Worker.' }) };
 

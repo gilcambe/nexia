@@ -555,6 +555,9 @@ exports.handler = async (event) => {
 
   const guardErr = await guard(event, 'cortex-agent', { skipTenant: true });
   if (guardErr) return guardErr;
+  if (!isCortexPermitido(event._email, true, event._role)) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Acesso negado ao Cortex: restrito apenas ao usuário master.' }) };
+  }
 
   if (!isCortexPermitido(event._email, event._email_verified ?? true)) {
     return {

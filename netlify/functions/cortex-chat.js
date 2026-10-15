@@ -281,6 +281,9 @@ exports.handler = async (event) => {
 
   const guardErr = await guard(event, 'cortex-chat');
   if (guardErr) return guardErr;
+  if (!isCortexPermitido(event._email, true, event._role)) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Acesso negado ao Cortex: restrito apenas ao usuário master.' }) };
+  }
 
   const start = Date.now();
   try {
