@@ -554,15 +554,15 @@ exports.handler = async (event) => {
   }
 
   const guardErr = await guard(event, 'cortex-agent', { skipTenant: true });
-// Verifica se o usuário tem acesso ao Cortex
+  if (guardErr) return guardErr;
+
   if (!isCortexPermitido(event._email, event._email_verified ?? true)) {
     return {
       statusCode: 403,
+      headers,
       body: JSON.stringify({ error: 'Seu usuário não tem acesso ao Cortex.' })
     };
   }
-
-  if (guardErr) return guardErr;
 
   // GET → consulta status de um job existente
   if (event.httpMethod === 'GET') {
