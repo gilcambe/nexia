@@ -282,14 +282,11 @@ exports.handler = async (event) => {
   const guardErr = await guard(event, 'cortex-chat');
   if (guardErr) return guardErr;
 
-      // Cortex é liberado para todos com bearer token (ou anon, implicitamente).
-    // A restrição fina (role='master' ou MASTER_EMAIL) está em `checkPermission` no action-engine.js
-    // e implicitamente em nexiaCortex.resolveForChat.
-    // Sem isso, o /cortex-app abre pra qualquer um, com ou sem login.
-    // Verificação exata:
-    if (!isCortexPermitido(event._email, event._email_verified ?? true, event._role)) {
-      return { statusCode: 403, headers, body: JSON.stringify({ error: 'Seu usuário não tem acesso ao Cortex.' }) };
-    }
+  const { isMasterUser } = require('./lib/master-auth');
+  const isMaster = await isMasterUser(event);
+  if (!isMaster) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Acesso restrito ao usuário master.' }) };
+  }
 
   const start = Date.now();
   try {
