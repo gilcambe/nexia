@@ -1,0 +1,201 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex Observability",
+    "tagline": "Monitoramento em tempo real de conversas e agentes",
+    "photo_theme": "software code server",
+    "description": "Monitoramento em tempo real de conversas, logs de deploys e gestão de usuários com foco na observabilidade da API /api/nexia/history.",
+    "folder": "sites/cortex-observability",
+    "fonts": {
+      "heading": "Space Grotesk",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#1e3a8a",
+      "accent": "#22d3ee",
+      "bg": "#f8fafc",
+      "surface": "#ffffff",
+      "text": "#0f172a",
+      "muted": "#64748b",
+      "dark": "#020617"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "11988887777",
+      "phone": "(11) 3333-4444",
+      "email": "suporte@cortex.ai",
+      "address": "Av. Paulista, 1200 - Cj 801",
+      "city": "São Paulo, SP",
+      "hours": "Seg-Sex 9h às 18h",
+      "instagram": "cortex.ai",
+      "facebook": "cortex.ai",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "deploys",
+        "label": "Deploy Logs",
+        "singular": "Deploy",
+        "fields": [
+          {
+            "key": "ref",
+            "label": "Réf. Interna",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Situação",
+            "type": "select",
+            "options": [
+              "Sucesso",
+              "Falhou",
+              "Em Andamento"
+            ],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data/Hora",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "duracao",
+            "label": "Duração (s)",
+            "type": "number",
+            "options": [],
+            "required": false
+          },
+          {
+            "key": "obs",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "ref": "OP-9921",
+            "status": "Em Andamento",
+            "data": "2026-05-18 10:45",
+            "duracao": "45",
+            "obs": "Deploy na conta Enterprise #4092 em fase de validação de carga."
+          },
+          {
+            "ref": "OP-9920",
+            "status": "Sucesso",
+            "data": "2026-05-18 09:12",
+            "duracao": "112",
+            "obs": "Implementação do módulo de histórico com rolagem infinita."
+          },
+          {
+            "ref": "OP-9918",
+            "status": "Falhou",
+            "data": "2026-05-17 14:30",
+            "duracao": "8",
+            "obs": "Erros de sintaxe no componente de Sidebar de conversas."
+          },
+          {
+            "ref": "OP-9915",
+            "status": "Sucesso",
+            "data": "2026-05-16 22:00",
+            "duracao": "55",
+            "obs": "Correção de memória no serviço de processamento de logs."
+          }
+        ]
+      },
+      {
+        "key": "usuarios",
+        "label": "Usuários Ativos",
+        "singular": "Usuário",
+        "fields": [
+          {
+            "key": "email",
+            "label": "E-mail de Acesso",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cargo",
+            "label": "Perfil no Sistema",
+            "type": "select",
+            "options": [
+              "Master (Dono)",
+              "Administrador",
+              "Auditor"
+            ],
+            "required": true
+          },
+          {
+            "key": "ultimo_acesso",
+            "label": "Último Login",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "conversas",
+            "label": "Total de Sessões",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Situação da Conta",
+            "type": "select",
+            "options": [
+              "Ativa",
+              "Pendente",
+              "Suspensa"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "email": "dono@cortex-p1.com",
+            "cargo": "Master (Dono)",
+            "ultimo_acesso": "2026-05-18",
+            "conversas": "450",
+            "status": "Ativa"
+          },
+          {
+            "email": "admin.ops@cortex-p1.com",
+            "cargo": "Administrador",
+            "ultimo_acesso": "2026-05-17",
+            "conversas": "120",
+            "status": "Ativa"
+          },
+          {
+            "email": "auditor.ext@cortex-p1.com",
+            "cargo": "Auditor",
+            "ultimo_acesso": "2026-05-15",
+            "conversas": "35",
+            "status": "Ativa"
+          },
+          {
+            "email": "dev.team@cortex-p1.com",
+            "cargo": "Administrador",
+            "ultimo_acesso": "2026-05-12",
+            "conversas": "88",
+            "status": "Pendente"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Deploy Logs",
+      "Usuários Ativos",
+      "Acesso Master (Histórico)"
+    ]
+  },
+  "media": {}
+}
