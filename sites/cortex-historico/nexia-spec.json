@@ -1,0 +1,277 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex Histórico",
+    "tagline": "Visualize conversas e mensagens com filtragem avançada",
+    "photo_theme": "office workspace",
+    "description": "Visualize conversas e mensagens com filtragem avançada",
+    "folder": "sites/cortex-historico",
+    "fonts": {
+      "heading": "Playfair Display",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#3b73b5",
+      "accent": "#ff7a59",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#2d2d2d"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 90000-1234",
+      "email": "contato@cortex.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "conversas",
+        "label": "Conversas",
+        "singular": "Conversa",
+        "fields": [
+          {
+            "key": "titulo",
+            "label": "Título",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "participantes",
+            "label": "Participantes",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Aberta",
+              "Em andamento",
+              "Fechada"
+            ],
+            "required": true
+          },
+          {
+            "key": "unread",
+            "label": "Não lidas",
+            "type": "number",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "titulo": "Suporte ao cliente",
+            "data": "2026-10-10",
+            "participantes": "Ana, João",
+            "status": "Aberta",
+            "unread": "3"
+          },
+          {
+            "titulo": "Projeto X - Atualizações",
+            "data": "2026-10-09",
+            "participantes": "Equipe Alpha",
+            "status": "Em andamento",
+            "unread": "0"
+          },
+          {
+            "titulo": "Reunião de estratégia",
+            "data": "2026-10-08",
+            "participantes": "Diretoria",
+            "status": "Fechada",
+            "unread": "0"
+          },
+          {
+            "titulo": "Feedback do produto",
+            "data": "2026-10-07",
+            "participantes": "Cliente XYZ",
+            "status": "Aberta",
+            "unread": "5"
+          }
+        ]
+      },
+      {
+        "key": "mensagens",
+        "label": "Mensagens",
+        "singular": "Mensagem",
+        "fields": [
+          {
+            "key": "conversaid",
+            "label": "ID da Conversa",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "remetente",
+            "label": "Remetente",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "texto",
+            "label": "Texto",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "datahora",
+            "label": "Data e Hora",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tipo",
+            "label": "Tipo",
+            "type": "select",
+            "options": [
+              "Texto",
+              "Arquivo",
+              "Imagem"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "conversaid": "",
+            "remetente": "Ana",
+            "texto": "Olá, preciso de ajuda com a conta.",
+            "datahora": "",
+            "tipo": "Texto"
+          },
+          {
+            "conversaid": "",
+            "remetente": "Sistema",
+            "texto": "Documento anexado.",
+            "datahora": "",
+            "tipo": "Arquivo"
+          },
+          {
+            "conversaid": "",
+            "remetente": "João",
+            "texto": "Segue a proposta revisada.",
+            "datahora": "",
+            "tipo": "Imagem"
+          },
+          {
+            "conversaid": "",
+            "remetente": "Suporte",
+            "texto": "Estamos verificando o seu caso.",
+            "datahora": "",
+            "tipo": "Texto"
+          }
+        ]
+      },
+      {
+        "key": "usuarios",
+        "label": "Usuários",
+        "singular": "Usuário",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cargo",
+            "label": "Cargo",
+            "type": "select",
+            "options": [
+              "Admin",
+              "Analista",
+              "Suporte",
+              "Cliente"
+            ],
+            "required": true
+          },
+          {
+            "key": "ativo",
+            "label": "Ativo",
+            "type": "select",
+            "options": [
+              "Sim",
+              "Não"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Ana Silva",
+            "email": "ana.silva@cortex.com.br",
+            "telefone": "(11) 98765-4321",
+            "cargo": "Suporte",
+            "ativo": "Sim"
+          },
+          {
+            "nome": "Bruno Costa",
+            "email": "bruno.costa@cortex.com.br",
+            "telefone": "(11) 91234-5678",
+            "cargo": "Analista",
+            "ativo": "Sim"
+          },
+          {
+            "nome": "Carla Mendes",
+            "email": "carla.mendes@cortex.com.br",
+            "telefone": "(11) 92345-6789",
+            "cargo": "Cliente",
+            "ativo": "Sim"
+          },
+          {
+            "nome": "Davi Lima",
+            "email": "davi.lima@cortex.com.br",
+            "telefone": "(11) 93456-7890",
+            "cargo": "Admin",
+            "ativo": "Sim"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Conversas",
+      "Mensagens",
+      "Usuários"
+    ]
+  },
+  "media": {}
+}
