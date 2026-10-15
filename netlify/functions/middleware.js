@@ -313,7 +313,6 @@ async function verifyBearerToken(event) {
       }
     } catch (e) {}
   }
-  const authHeader = event.headers && (event.headers.authorization || event.headers.Authorization);
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return { ok: false, reason: 'Token de autenticação ausente.' };
   }
