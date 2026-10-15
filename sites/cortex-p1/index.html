@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cortex-p1 — Painel de histórico de conversas e cadastros para usuários master</title>
-  <meta name="description" content="Painel de histórico de conversas e cadastros para usuários master">
-  <meta name="theme-color" content="#0d47a1">
+  <title>Cortex Admin — Histórico e gestão de conversas</title>
+  <meta name="description" content="Histórico e gestão de conversas">
+  <meta name="theme-color" content="#4f46e5">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
 </head>
@@ -18,15 +18,16 @@
     <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
       <div class="sidebar__brand">
         <span class="logo" aria-hidden="true">C</span>
-        <span>Cortex-p1</span>
+        <span>Cortex Admin</span>
       </div>
       <nav class="sidebar__nav" aria-label="Seções">
         <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
-        <a href="#/usuarios" data-route="usuarios"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Usuários</span></a>
-        <a href="#/conversas" data-route="conversas"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Conversas</span></a>
+        <a href="#/conversas" data-route="conversas"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Conversas</span></a>
+        <a href="#/mensagens" data-route="mensagens"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Mensagens</span></a>
+        <a href="#/usuarios" data-route="usuarios"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Usuários</span></a>
       </nav>
       <div class="sidebar__foot">
-        <p>Suporte: suporte@cortexp1.com.br</p>
+        <p>Suporte: suporte@cortex.com.br</p>
         <p>Dados salvos neste navegador.</p>
       </div>
     </aside>
@@ -36,7 +37,7 @@
         <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
         <div class="topbar__title">
           <h1 id="view-title">Painel</h1>
-          <p id="view-sub">Painel de histórico de conversas e cadastros para usuários master</p>
+          <p id="view-sub">Histórico e gestão de conversas</p>
         </div>
         <label class="search">
           <span class="sr-only">Buscar</span>
@@ -100,7 +101,7 @@
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1","name":"Cortex-p1","entities":[{"key":"usuarios","label":"Usuários","singular":"Usuário","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"email","label":"E‑mail","type":"email","options":[],"required":true},{"key":"telefone","label":"Telefone","type":"phone","options":[],"required":true},{"key":"cargo","label":"Cargo","type":"select","options":["Administrador","Analista","Desenvolvedor","Suporte"],"required":true},{"key":"salario","label":"Salário","type":"money","options":[],"required":true},{"key":"data_admissao","label":"Data de admissão","type":"date","options":[],"required":true},{"key":"observacoes","label":"Observações","type":"textarea","options":[],"required":false}],"sample":[{"nome":"Mariana Alves","email":"mariana.alves@cortex.com.br","telefone":"(11) 91234-5678","cargo":"Analista","salario":"5.500","data_admissao":"2024-03-15","observacoes":"Especialista em BI"},{"nome":"Pedro Silva","email":"pedro.silva@cortex.com.br","telefone":"(11) 92345-6789","cargo":"Desenvolvedor","salario":"7.200","data_admissao":"2023-11-02","observacoes":"Full‑stack Node/React"},{"nome":"Cláudia Ramos","email":"claudia.ramos@cortex.com.br","telefone":"(11) 93456-7890","cargo":"Suporte","salario":"3.800","data_admissao":"2025-01-10","observacoes":"Atendimento 24h"},{"nome":"Rafael Costa","email":"rafael.costa@cortex.com.br","telefone":"(11) 94567-8901","cargo":"Administrador","salario":"9.000","data_admissao":"2022-07-20","observacoes":"Gerência de projetos"}]},{"key":"conversas","label":"Conversas","singular":"Conversa","fields":[{"key":"assunto","label":"Assunto","type":"text","options":[],"required":true},{"key":"data","label":"Data","type":"date","options":[],"required":true},{"key":"hora","label":"Hora","type":"text","options":[],"required":true},{"key":"participantes","label":"Participantes","type":"text","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Aberta","Em andamento","Encerrada"],"required":true},{"key":"mensagens","label":"Mensagens","type":"textarea","options":[],"required":false}],"sample":[{"assunto":"Integração API /history","data":"2026-10-14","hora":"09:30","participantes":"Maria, João","status":"Em andamento","mensagens":"Discussão sobre autenticação"},{"assunto":"Revisão de design UI","data":"2026-10-13","hora":"14:10","participantes":"Lucas, Ana","status":"Aberta","mensagens":"Ajustes de tipografia"},{"assunto":"Bug relatório de erros","data":"2026-10-12","hora":"11:45","participantes":"Pedro, Carla","status":"Encerrada","mensagens":"Problema resolvido"},{"assunto":"Planejamento sprint Q4","data":"2026-10-11","hora":"16:00","participantes":"Equipe completa","status":"Aberta","mensagens":"Definição de metas"}]}]}</script>
+  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1","name":"Cortex Admin","entities":[{"key":"conversas","label":"Conversas","singular":"Conversa","fields":[{"key":"usuario","label":"Usuário","type":"text","options":[],"required":true},{"key":"inicio","label":"Início","type":"date","options":[],"required":true},{"key":"duracao","label":"Duração","type":"text","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Ativa","Encerrada"],"required":true},{"key":"resumo","label":"Tópico","type":"textarea","options":[],"required":false}],"sample":[{"usuario":"Ana Souza","inicio":"2026-10-06","duracao":"15 min","status":"Ativa","resumo":"Consultas e agendamentos futuros."},{"usuario":"Bruno Lima","inicio":"2026-10-06","duracao":"8 min","status":"Encerrada","resumo":"Dúvidas sobre faturamento mensal."},{"usuario":"Carla Dias","inicio":"2026-10-05","duracao":"22 min","status":"Ativa","resumo":"Ajustes na integração da API."},{"usuario":"Davi Reis","inicio":"2026-10-01","duracao":"12 min","status":"Encerrada","resumo":"Registro de feedback técnico."}]},{"key":"mensagens","label":"Mensagens","singular":"Mensagem","fields":[{"key":"autor","label":"Autor","type":"select","options":["Usuário","Cortex"],"required":true},{"key":"conversa","label":"Conversa ref","type":"text","options":[],"required":true},{"key":"horario","label":"Horário","type":"text","options":[],"required":true},{"key":"conteudo","label":"Conteúdo","type":"textarea","options":[],"required":false}],"sample":[{"autor":"Usuário","conversa":"Ana Souza - 06/10","horario":"10:02","conteudo":"Olá, preciso de ajuda para entender o histórico de consultas."},{"autor":"Cortex","conversa":"Ana Souza - 06/10","horario":"10:02","conteudo":"Claro! Posso buscar os dados da sua agenda e explicar como o sistema funciona."},{"autor":"Usuário","conversa":"Bruno Lima - 06/10","horario":"11:15","conteudo":"O relatório de faturamento não está gerando corretamente."},{"autor":"Cortex","conversa":"Bruno Lima - 06/10","horario":"11:16","conteudo":"Desculpe o perrengue, vou verificar o erro com o time de engenharia."}]},{"key":"usuarios","label":"Usuários","singular":"Usuário","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"email","label":"E-mail","type":"email","options":[],"required":true},{"key":"telefone","label":"Telefone","type":"phone","options":[],"required":true},{"key":"papel","label":"Papel","type":"select","options":["Master","Operador","Leitor"],"required":true},{"key":"atualizado","label":"Últ. Atualização","type":"date","options":[],"required":true},{"key":"notas","label":"Notas","type":"textarea","options":[],"required":false}],"sample":[{"nome":"Ricard Lemos","email":"ricard@cortex.com.br","telefone":"(11) 98765-0001","papel":"Master","atualizado":"2026-10-06","notas":"Administrador principal do sistema."},{"nome":"Elena Costa","email":"elena@cortex.com.br","telefone":"(11) 98765-0002","papel":"Operador","atualizado":"2026-10-05","notas":"Responsável pelo atendimento diário."},{"nome":"Jonas Silva","email":"jonas@cortex.com.br","telefone":"(11) 98765-0003","papel":"Leitor","atualizado":"2026-10-02","notas":"Acompanha dados gerenciais."},{"nome":"Amanda Pires","email":"amanda@cortex.com.br","telefone":"(11) 98765-0004","papel":"Operador","atualizado":"2026-10-01","notas":"Suporte de sistemas internos."}]}]}</script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
   <script src="app.js" defer></script>
 </body>
