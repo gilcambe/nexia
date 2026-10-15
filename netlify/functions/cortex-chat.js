@@ -282,6 +282,14 @@ exports.handler = async (event) => {
   const guardErr = await guard(event, 'cortex-chat');
   if (guardErr) return guardErr;
 
+  if (!isCortexPermitido(event._email, event._email_verified ?? true, event._role)) {
+    return {
+      statusCode: 403,
+      headers,
+      body: JSON.stringify({ error: 'Seu usuário não tem acesso ao Cortex.' })
+    };
+  }
+
   const start = Date.now();
   try {
     let body = {};
