@@ -1,0 +1,326 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex Observability",
+    "tagline": "Monitoramento em tempo real de conversas e agentes",
+    "photo_theme": "",
+    "description": "Monitoramento em tempo real de conversas e agentes",
+    "folder": "sites/cortex-observability",
+    "fonts": {
+      "heading": "Syne",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#1e3a8a",
+      "accent": "#22d3ee",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "",
+      "email": "dev@cortex.ai",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "deploys",
+        "label": "Deploys",
+        "singular": "Deploy",
+        "fields": [
+          {
+            "key": "ref",
+            "label": "Referência",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Sucesso",
+              "Falhou",
+              "Cancelado"
+            ],
+            "required": true
+          },
+          {
+            "key": "autor",
+            "label": "Autor",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data/Hora",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "duracao",
+            "label": "Duração (min)",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "nota",
+            "label": "Notas",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "ref": "#1042",
+            "status": "Sucesso",
+            "autor": "Ana Beta",
+            "data": "2026-05-14",
+            "duracao": "12",
+            "nota": "Deploy em produção: novos endpoints de métricas."
+          },
+          {
+            "ref": "#1041",
+            "status": "Falhou",
+            "autor": "Carlos Gama",
+            "data": "2026-05-13",
+            "duracao": "4",
+            "nota": "Erro no build: dependências conflitantes de TypeScript."
+          },
+          {
+            "ref": "#1040",
+            "status": "Sucesso",
+            "autor": "Bruna Dias",
+            "data": "2026-05-12",
+            "duracao": "18",
+            "nota": "Atualização do frontend com novas rotas de observabilidade."
+          },
+          {
+            "ref": "#1039",
+            "status": "Cancelado",
+            "autor": "Igor Silva",
+            "data": "2026-05-11",
+            "duracao": "0",
+            "nota": "Rollback solicitado devido a instabilidade na fila de mensagens."
+          },
+          {
+            "ref": "#1038",
+            "status": "Sucesso",
+            "autor": "Lia Nogueira",
+            "data": "2026-05-10",
+            "duracao": "9",
+            "nota": "Correções de segurança na autenticação de APIs."
+          }
+        ]
+      },
+      {
+        "key": "conversas",
+        "label": "Conversas",
+        "singular": "Conversa",
+        "fields": [
+          {
+            "key": "id",
+            "label": "ID da conversa",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "titulo",
+            "label": "Título",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "grupo",
+            "label": "Período",
+            "type": "select",
+            "options": [
+              "Hoje",
+              "Ontem",
+              "Últimos 7 dias",
+              "Anteriores"
+            ],
+            "required": true
+          },
+          {
+            "key": "usuario",
+            "label": "Usuário",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "mensagem_resumo",
+            "label": "Resumo da última mensagem",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status_sessao",
+            "label": "Status da sessão",
+            "type": "select",
+            "options": [
+              "Ativa",
+              "Encerrada"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "id": "conv-89201",
+            "titulo": "Análise de erros no front-end",
+            "grupo": "Hoje",
+            "usuario": "Usuário 4092",
+            "mensagem_resumo": "O usuário reportou um estouro de stack em React ao recarregar a página.",
+            "status_sessao": "Ativa"
+          },
+          {
+            "id": "conv-89198",
+            "titulo": "Implantação de métricas",
+            "grupo": "Ontem",
+            "usuario": "Usuário Master",
+            "mensagem_resumo": "Confirmação da integração do Prometeus com o Grafana.",
+            "status_sessao": "Encerrada"
+          },
+          {
+            "id": "conv-89105",
+            "titulo": "Ajuste de sliders de dashboard",
+            "grupo": "Últimos 7 dias",
+            "usuario": "Usuário 7721",
+            "mensagem_resumo": "Pedido de alinhamento dos gráficos no painel de latência.",
+            "status_sessao": "Encerrada"
+          },
+          {
+            "id": "conv-88912",
+            "titulo": "Rotina de backup de logs",
+            "grupo": "Anteriores",
+            "usuario": "Usuário 1004",
+            "mensagem_resumo": "Definição de cron para exportar logs do Elasticsearch.",
+            "status_sessao": "Encerrada"
+          },
+          {
+            "id": "conv-88850",
+            "titulo": "Testes de carga na API REST",
+            "grupo": "Anteriores",
+            "usuario": "Usuário 2399",
+            "mensagem_resumo": "Relatório de performance antes do release da nova feature.",
+            "status_sessao": "Encerrada"
+          }
+        ]
+      },
+      {
+        "key": "usuarios",
+        "label": "Usuários",
+        "singular": "Usuário",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "plano",
+            "label": "Plano",
+            "type": "select",
+            "options": [
+              "Free",
+              "Pro",
+              "Enterprise"
+            ],
+            "required": true
+          },
+          {
+            "key": "ultima_situacao",
+            "label": "Última atividade",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "biografia",
+            "label": "BIO",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Carlos Mendes",
+            "email": "carlos@empresa.com",
+            "telefone": "(11) 98765-4321",
+            "plano": "Enterprise",
+            "ultima_situacao": "2026-05-15",
+            "biografia": "Engenheiro de SRE. Gestor de serviços críticos."
+          },
+          {
+            "nome": "Juliana Souza",
+            "email": "juliana@empresa.com",
+            "telefone": "(11) 91234-5678",
+            "plano": "Pro",
+            "ultima_situacao": "2026-05-14",
+            "biografia": "Analista de Dados focada em observabilidade."
+          },
+          {
+            "nome": "Roberto Figueiredo",
+            "email": "roberto@empresa.com",
+            "telefone": "(21) 99876-5432",
+            "plano": "Free",
+            "ultima_situacao": "2026-05-10",
+            "biografia": "Estudando novas práticas de DevSecOps."
+          },
+          {
+            "nome": "Patrícia Nogueira",
+            "email": "patricia@empresa.com",
+            "telefone": "(31) 98765-4321",
+            "plano": "Pro",
+            "ultima_situacao": "2026-05-12",
+            "biografia": "Líder de produto na área de QA de APIs."
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Deploys",
+      "Conversas",
+      "Usuários"
+    ]
+  },
+  "media": {}
+}
