@@ -2,9 +2,9 @@
   "spec": {
     "kind": "system",
     "name": "Cortex Histórico",
-    "tagline": "Visualize e gerencie conversas com rapidez e segurança",
-    "photo_theme": "",
-    "description": "Visualize e gerencie conversas com rapidez e segurança",
+    "tagline": "Painel Master de Conversas e Histórico Nexia",
+    "photo_theme": "dashboard analytics modern",
+    "description": "Gerenciamento avançado do histórico de conversas do Cortex com visualização restrita a masters, barra lateral com agrupamento temporal, busca e painel interativo.",
     "folder": "sites/cortex-historico",
     "fonts": {
       "heading": "Playfair Display",
@@ -24,9 +24,9 @@
       "whatsapp": "",
       "phone": "(11) 98888-7777",
       "email": "suporte@cortex.com.br",
-      "address": "",
-      "city": "",
-      "hours": "",
+      "address": "Av. Paulista, 1000 - São Paulo, SP",
+      "city": "São Paulo",
+      "hours": "Seg a Sex das 09h às 18h",
       "instagram": "",
       "facebook": "",
       "youtube": "",
@@ -156,7 +156,8 @@
               "Desenvolvedor",
               "Analista",
               "Gerente de Projeto",
-              "QA"
+              "QA",
+              "Master"
             ],
             "required": true
           },
@@ -188,7 +189,7 @@
             "nome": "Lucas Silva",
             "email": "lucas.silva@cortex.com.br",
             "telefone": "(11) 91234-5678",
-            "cargo": "Desenvolvedor",
+            "cargo": "Master",
             "departamento": "Tecnologia",
             "status": "Ativo"
           },
