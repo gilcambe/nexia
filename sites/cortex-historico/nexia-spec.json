@@ -1,0 +1,302 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex Histórico",
+    "tagline": "Visualize e gerencie conversas com rapidez e segurança",
+    "photo_theme": "",
+    "description": "Visualize e gerencie conversas com rapidez e segurança",
+    "folder": "sites/cortex-historico",
+    "fonts": {
+      "heading": "Playfair Display",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2c3e50",
+      "accent": "#e74c3c",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#1a1a1a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 98888-7777",
+      "email": "suporte@cortex.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "conversas",
+        "label": "Conversas",
+        "singular": "Conversa",
+        "fields": [
+          {
+            "key": "id",
+            "label": "ID",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "assunto",
+            "label": "Assunto",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "horario",
+            "label": "Horário",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Aberta",
+              "Em andamento",
+              "Concluída",
+              "Arquivada"
+            ],
+            "required": true
+          },
+          {
+            "key": "participantes",
+            "label": "Participantes",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "id": "C001",
+            "assunto": "Integração API /api/nexia/history",
+            "data": "2026-10-14",
+            "horario": "09:30",
+            "status": "Em andamento",
+            "participantes": "Lucas Silva (Dev), Marina Costa (QA), João Pedro (PM)"
+          },
+          {
+            "id": "C002",
+            "assunto": "Revisão de segurança da rota /historico",
+            "data": "2026-10-13",
+            "horario": "14:15",
+            "status": "Aberta",
+            "participantes": "Rafael Almeida (Segurança), Ana Paula (DevOps)"
+          },
+          {
+            "id": "C003",
+            "assunto": "Teste de rolagem infinita na lista de chats",
+            "data": "2026-10-12",
+            "horario": "11:00",
+            "status": "Concluída",
+            "participantes": "Tiago Mendes (Front), Fernanda Lopes (QA)"
+          },
+          {
+            "id": "C004",
+            "assunto": "Implementação do filtro por data",
+            "data": "2026-10-11",
+            "horario": "16:45",
+            "status": "Arquivada",
+            "participantes": "Carlos Eduardo (Dev), Patrícia Silva (Analista)"
+          }
+        ]
+      },
+      {
+        "key": "usuarios",
+        "label": "Usuários",
+        "singular": "Usuário",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cargo",
+            "label": "Cargo",
+            "type": "select",
+            "options": [
+              "Desenvolvedor",
+              "Analista",
+              "Gerente de Projeto",
+              "QA"
+            ],
+            "required": true
+          },
+          {
+            "key": "departamento",
+            "label": "Departamento",
+            "type": "select",
+            "options": [
+              "Tecnologia",
+              "Qualidade",
+              "Gestão",
+              "Suporte"
+            ],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Inativo"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Lucas Silva",
+            "email": "lucas.silva@cortex.com.br",
+            "telefone": "(11) 91234-5678",
+            "cargo": "Desenvolvedor",
+            "departamento": "Tecnologia",
+            "status": "Ativo"
+          },
+          {
+            "nome": "Marina Costa",
+            "email": "marina.costa@cortex.com.br",
+            "telefone": "(11) 92345-6789",
+            "cargo": "Analista",
+            "departamento": "Qualidade",
+            "status": "Ativo"
+          },
+          {
+            "nome": "João Pedro",
+            "email": "joao.pedro@cortex.com.br",
+            "telefone": "(11) 93456-7890",
+            "cargo": "Gerente de Projeto",
+            "departamento": "Gestão",
+            "status": "Ativo"
+          },
+          {
+            "nome": "Ana Paula",
+            "email": "ana.paula@cortex.com.br",
+            "telefone": "(11) 94567-8901",
+            "cargo": "QA",
+            "departamento": "Suporte",
+            "status": "Inativo"
+          }
+        ]
+      },
+      {
+        "key": "departamentos",
+        "label": "Departamentos",
+        "singular": "Departamento",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "responsavel",
+            "label": "Responsável",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "localizacao",
+            "label": "Localização",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Tecnologia",
+            "responsavel": "Carlos Eduardo",
+            "email": "tecnologia@cortex.com.br",
+            "telefone": "(11) 95678-9012",
+            "localizacao": "São Paulo - 5º andar"
+          },
+          {
+            "nome": "Qualidade",
+            "responsavel": "Patrícia Silva",
+            "email": "qualidade@cortex.com.br",
+            "telefone": "(11) 96789-0123",
+            "localizacao": "São Paulo - 4º andar"
+          },
+          {
+            "nome": "Gestão",
+            "responsavel": "Rafael Almeida",
+            "email": "gestao@cortex.com.br",
+            "telefone": "(11) 97890-1234",
+            "localizacao": "São Paulo - 3º andar"
+          },
+          {
+            "nome": "Suporte",
+            "responsavel": "Fernanda Lopes",
+            "email": "suporte@cortex.com.br",
+            "telefone": "(11) 98901-2345",
+            "localizacao": "São Paulo - 2º andar"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Histórico",
+      "Conversas",
+      "Usuários",
+      "Departamentos"
+    ]
+  },
+  "media": {}
+}
