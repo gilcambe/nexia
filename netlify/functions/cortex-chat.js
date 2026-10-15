@@ -282,6 +282,21 @@ exports.handler = async (event) => {
   const guardErr = await guard(event, 'cortex-chat');
   if (guardErr) return guardErr;
 
+  // ADR-F1-02: Apenas o usuário master pode usar o Cortex (/api/cortex, /cortex-app, /api/cortex-agent, memória e logs)
+  const userRole = event._role || (event._claims && event._claims.role);
+  const userEmail = event._email || (event._claims && event._claims.email);
+  const masterEmail = process.env.MASTER_EMAIL;
+  const isMasterByClaim = userRole === 'master';
+  const isMasterByEmail = masterEmail && userEmail && userEmail.toLowerCase() === masterEmail.toLowerCase();
+  
+  if (!isMasterByClaim && !isMasterByEmail) {
+    return {
+      statusCode: 403,
+      headers,
+      body: JSON.stringify({ error: 'Acesso restrito exclusivamente ao usuário master (ADR-F1-02).' })
+    };
+  }
+
   const start = Date.now();
   try {
     let body = {};
