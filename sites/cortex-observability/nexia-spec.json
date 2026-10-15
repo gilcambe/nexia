@@ -3,32 +3,32 @@
     "kind": "system",
     "name": "Cortex Observability",
     "tagline": "Monitoramento em tempo real de conversas e agentes",
-    "photo_theme": "",
-    "description": "Monitoramento em tempo real de conversas e agentes",
+    "photo_theme": "software code server",
+    "description": "Monitoramento em tempo real de conversas, logs de deploys e gestão de usuários com foco na observabilidade da API /api/nexia/history.",
     "folder": "sites/cortex-observability",
     "fonts": {
-      "heading": "Syne",
+      "heading": "Space Grotesk",
       "body": "Inter"
     },
     "palette": {
       "primary": "#1e3a8a",
       "accent": "#22d3ee",
-      "bg": "#fbfaf7",
+      "bg": "#f8fafc",
       "surface": "#ffffff",
-      "text": "#1d2426",
-      "muted": "#5d6b6e",
-      "dark": "#0f172a"
+      "text": "#0f172a",
+      "muted": "#64748b",
+      "dark": "#020617"
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "",
-      "phone": "",
-      "email": "dev@cortex.ai",
-      "address": "",
-      "city": "",
-      "hours": "",
-      "instagram": "",
-      "facebook": "",
+      "whatsapp": "11988887777",
+      "phone": "(11) 3333-4444",
+      "email": "suporte@cortex.ai",
+      "address": "Av. Paulista, 1200 - Cj 801",
+      "city": "São Paulo, SP",
+      "hours": "Seg-Sex 9h às 18h",
+      "instagram": "cortex.ai",
+      "facebook": "cortex.ai",
       "youtube": "",
       "tiktok": "",
       "linkedin": ""
@@ -36,32 +36,25 @@
     "entities": [
       {
         "key": "deploys",
-        "label": "Deploys",
+        "label": "Deploy Logs",
         "singular": "Deploy",
         "fields": [
           {
             "key": "ref",
-            "label": "Referência",
+            "label": "Réf. Interna",
             "type": "text",
             "options": [],
             "required": true
           },
           {
             "key": "status",
-            "label": "Status",
+            "label": "Situação",
             "type": "select",
             "options": [
               "Sucesso",
               "Falhou",
-              "Cancelado"
+              "Em Andamento"
             ],
-            "required": true
-          },
-          {
-            "key": "autor",
-            "label": "Autor",
-            "type": "text",
-            "options": [],
             "required": true
           },
           {
@@ -73,14 +66,14 @@
           },
           {
             "key": "duracao",
-            "label": "Duração (min)",
+            "label": "Duração (s)",
             "type": "number",
             "options": [],
-            "required": true
+            "required": false
           },
           {
-            "key": "nota",
-            "label": "Notas",
+            "key": "obs",
+            "label": "Observações",
             "type": "textarea",
             "options": [],
             "required": false
@@ -88,238 +81,120 @@
         ],
         "sample": [
           {
-            "ref": "#1042",
-            "status": "Sucesso",
-            "autor": "Ana Beta",
-            "data": "2026-05-14",
-            "duracao": "12",
-            "nota": "Deploy em produção: novos endpoints de métricas."
+            "ref": "OP-9921",
+            "status": "Em Andamento",
+            "data": "2026-05-18 10:45",
+            "duracao": "45",
+            "obs": "Deploy na conta Enterprise #4092 em fase de validação de carga."
           },
           {
-            "ref": "#1041",
+            "ref": "OP-9920",
+            "status": "Sucesso",
+            "data": "2026-05-18 09:12",
+            "duracao": "112",
+            "obs": "Implementação do módulo de histórico com rolagem infinita."
+          },
+          {
+            "ref": "OP-9918",
             "status": "Falhou",
-            "autor": "Carlos Gama",
-            "data": "2026-05-13",
-            "duracao": "4",
-            "nota": "Erro no build: dependências conflitantes de TypeScript."
+            "data": "2026-05-17 14:30",
+            "duracao": "8",
+            "obs": "Erros de sintaxe no componente de Sidebar de conversas."
           },
           {
-            "ref": "#1040",
+            "ref": "OP-9915",
             "status": "Sucesso",
-            "autor": "Bruna Dias",
-            "data": "2026-05-12",
-            "duracao": "18",
-            "nota": "Atualização do frontend com novas rotas de observabilidade."
-          },
-          {
-            "ref": "#1039",
-            "status": "Cancelado",
-            "autor": "Igor Silva",
-            "data": "2026-05-11",
-            "duracao": "0",
-            "nota": "Rollback solicitado devido a instabilidade na fila de mensagens."
-          },
-          {
-            "ref": "#1038",
-            "status": "Sucesso",
-            "autor": "Lia Nogueira",
-            "data": "2026-05-10",
-            "duracao": "9",
-            "nota": "Correções de segurança na autenticação de APIs."
-          }
-        ]
-      },
-      {
-        "key": "conversas",
-        "label": "Conversas",
-        "singular": "Conversa",
-        "fields": [
-          {
-            "key": "id",
-            "label": "ID da conversa",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "titulo",
-            "label": "Título",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "grupo",
-            "label": "Período",
-            "type": "select",
-            "options": [
-              "Hoje",
-              "Ontem",
-              "Últimos 7 dias",
-              "Anteriores"
-            ],
-            "required": true
-          },
-          {
-            "key": "usuario",
-            "label": "Usuário",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "mensagem_resumo",
-            "label": "Resumo da última mensagem",
-            "type": "textarea",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status_sessao",
-            "label": "Status da sessão",
-            "type": "select",
-            "options": [
-              "Ativa",
-              "Encerrada"
-            ],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "id": "conv-89201",
-            "titulo": "Análise de erros no front-end",
-            "grupo": "Hoje",
-            "usuario": "Usuário 4092",
-            "mensagem_resumo": "O usuário reportou um estouro de stack em React ao recarregar a página.",
-            "status_sessao": "Ativa"
-          },
-          {
-            "id": "conv-89198",
-            "titulo": "Implantação de métricas",
-            "grupo": "Ontem",
-            "usuario": "Usuário Master",
-            "mensagem_resumo": "Confirmação da integração do Prometeus com o Grafana.",
-            "status_sessao": "Encerrada"
-          },
-          {
-            "id": "conv-89105",
-            "titulo": "Ajuste de sliders de dashboard",
-            "grupo": "Últimos 7 dias",
-            "usuario": "Usuário 7721",
-            "mensagem_resumo": "Pedido de alinhamento dos gráficos no painel de latência.",
-            "status_sessao": "Encerrada"
-          },
-          {
-            "id": "conv-88912",
-            "titulo": "Rotina de backup de logs",
-            "grupo": "Anteriores",
-            "usuario": "Usuário 1004",
-            "mensagem_resumo": "Definição de cron para exportar logs do Elasticsearch.",
-            "status_sessao": "Encerrada"
-          },
-          {
-            "id": "conv-88850",
-            "titulo": "Testes de carga na API REST",
-            "grupo": "Anteriores",
-            "usuario": "Usuário 2399",
-            "mensagem_resumo": "Relatório de performance antes do release da nova feature.",
-            "status_sessao": "Encerrada"
+            "data": "2026-05-16 22:00",
+            "duracao": "55",
+            "obs": "Correção de memória no serviço de processamento de logs."
           }
         ]
       },
       {
         "key": "usuarios",
-        "label": "Usuários",
+        "label": "Usuários Ativos",
         "singular": "Usuário",
         "fields": [
           {
-            "key": "nome",
-            "label": "Nome",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
             "key": "email",
-            "label": "E-mail",
+            "label": "E-mail de Acesso",
             "type": "email",
             "options": [],
             "required": true
           },
           {
-            "key": "telefone",
-            "label": "Telefone",
-            "type": "phone",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "plano",
-            "label": "Plano",
+            "key": "cargo",
+            "label": "Perfil no Sistema",
             "type": "select",
             "options": [
-              "Free",
-              "Pro",
-              "Enterprise"
+              "Master (Dono)",
+              "Administrador",
+              "Auditor"
             ],
             "required": true
           },
           {
-            "key": "ultima_situacao",
-            "label": "Última atividade",
+            "key": "ultimo_acesso",
+            "label": "Último Login",
             "type": "date",
             "options": [],
             "required": true
           },
           {
-            "key": "biografia",
-            "label": "BIO",
-            "type": "textarea",
+            "key": "conversas",
+            "label": "Total de Sessões",
+            "type": "number",
             "options": [],
-            "required": false
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Situação da Conta",
+            "type": "select",
+            "options": [
+              "Ativa",
+              "Pendente",
+              "Suspensa"
+            ],
+            "required": true
           }
         ],
         "sample": [
           {
-            "nome": "Carlos Mendes",
-            "email": "carlos@empresa.com",
-            "telefone": "(11) 98765-4321",
-            "plano": "Enterprise",
-            "ultima_situacao": "2026-05-15",
-            "biografia": "Engenheiro de SRE. Gestor de serviços críticos."
+            "email": "dono@cortex-p1.com",
+            "cargo": "Master (Dono)",
+            "ultimo_acesso": "2026-05-18",
+            "conversas": "450",
+            "status": "Ativa"
           },
           {
-            "nome": "Juliana Souza",
-            "email": "juliana@empresa.com",
-            "telefone": "(11) 91234-5678",
-            "plano": "Pro",
-            "ultima_situacao": "2026-05-14",
-            "biografia": "Analista de Dados focada em observabilidade."
+            "email": "admin.ops@cortex-p1.com",
+            "cargo": "Administrador",
+            "ultimo_acesso": "2026-05-17",
+            "conversas": "120",
+            "status": "Ativa"
           },
           {
-            "nome": "Roberto Figueiredo",
-            "email": "roberto@empresa.com",
-            "telefone": "(21) 99876-5432",
-            "plano": "Free",
-            "ultima_situacao": "2026-05-10",
-            "biografia": "Estudando novas práticas de DevSecOps."
+            "email": "auditor.ext@cortex-p1.com",
+            "cargo": "Auditor",
+            "ultimo_acesso": "2026-05-15",
+            "conversas": "35",
+            "status": "Ativa"
           },
           {
-            "nome": "Patrícia Nogueira",
-            "email": "patricia@empresa.com",
-            "telefone": "(31) 98765-4321",
-            "plano": "Pro",
-            "ultima_situacao": "2026-05-12",
-            "biografia": "Líder de produto na área de QA de APIs."
+            "email": "dev.team@cortex-p1.com",
+            "cargo": "Administrador",
+            "ultimo_acesso": "2026-05-12",
+            "conversas": "88",
+            "status": "Pendente"
           }
         ]
       }
     ],
     "modules": [
-      "Deploys",
-      "Conversas",
-      "Usuários"
+      "Deploy Logs",
+      "Usuários Ativos",
+      "Acesso Master (Histórico)"
     ]
   },
   "media": {}
