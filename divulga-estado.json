@@ -3,7 +3,8 @@
   "feitos": [
     "body-coach-01",
     "body-coach-02",
-    "body-coach-03"
+    "body-coach-03",
+    "body-coach-04"
   ],
   "historico": [
     {
@@ -86,6 +87,23 @@
           "canal": "instagram",
           "ok": true,
           "ref": "18664071166023573"
+        }
+      ]
+    },
+    {
+      "quando": "2026-10-15T00:32:21.275Z",
+      "id": "body-coach-04",
+      "cliente": "body-coach",
+      "resultados": [
+        {
+          "canal": "facebook",
+          "ok": true,
+          "ref": "1380111745183159_122094831657518156"
+        },
+        {
+          "canal": "instagram",
+          "ok": true,
+          "ref": "17950387602057729"
         }
       ]
     }
