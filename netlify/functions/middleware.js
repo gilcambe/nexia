@@ -291,6 +291,28 @@ function validateAIAction(type, data) {
  * Retorna { ok, uid, role } ou { ok: false, reason }
  */
 async function verifyBearerToken(event) {
+  // ADR-F1-02: Permite Master por email ou custom claim
+  const authHeader = event.headers && (event.headers.authorization || event.headers.Authorization);
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    try {
+      if (admin && admin.auth) {
+        const decoded = await admin.auth().verifyIdToken(token);
+        event._uid = decoded.uid;
+        event._email = decoded.email;
+        event._email_verified = decoded.email_verified;
+        event._claims = decoded;
+        event._role = decoded.role || (decoded.customClaims && decoded.customClaims.role);
+        
+        // Verifica se é master por claim ou MASTER_EMAIL
+        const masterEmail = process.env.MASTER_EMAIL;
+        const isMaster = event._role === 'master' || (masterEmail && decoded.email && decoded.email.toLowerCase() === masterEmail.toLowerCase() && decoded.email_verified);
+        if (isMaster) {
+          event._role = 'master';
+        }
+      }
+    } catch (e) {}
+  }
   const authHeader = event.headers && (event.headers.authorization || event.headers.Authorization);
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return { ok: false, reason: 'Token de autenticação ausente.' };
