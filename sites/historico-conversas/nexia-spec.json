@@ -4,7 +4,7 @@
     "name": "Histórico de Conversas Cortex",
     "tagline": "Visualize e gerencie suas conversas com busca avançada e navegação inteligente",
     "photo_theme": "chat interface",
-    "description": "Visualize e gerencie suas conversas com busca avançada e navegação inteligente",
+    "description": "Visualize e gerencie suas conversas com busca avançada e navegação inteligente. A página /historico, restrita ao usuário master, apresenta uma barra lateral com listas de conversas agrupadas por Hoje, Ontem, Últimos 7 dias e Anteriores, permite busca por texto, rolagem infinita via cursor da API /ap",
     "folder": "sites/historico-conversas",
     "fonts": {
       "heading": "Montserrat",
