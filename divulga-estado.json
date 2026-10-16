@@ -1,5 +1,5 @@
 {
-  "rodizio": 1,
+  "rodizio": 2,
   "feitos": [
     "body-coach-01",
     "body-coach-02",
@@ -157,6 +157,23 @@
           "canal": "instagram",
           "ok": true,
           "ref": "18101367359340659"
+        }
+      ]
+    },
+    {
+      "quando": "2026-10-16T14:51:48.815Z",
+      "id": null,
+      "cliente": "body-coach",
+      "resultados": [
+        {
+          "canal": "facebook",
+          "ok": true,
+          "ref": "1380111745183159_122095923057518156"
+        },
+        {
+          "canal": "instagram",
+          "ok": false,
+          "erro": "Instagram publicar: Media ID is not available"
         }
       ]
     }
