@@ -1,0 +1,42 @@
+# Revisor do Cortex (sem Claude). Marca com "precisa-dono" e comenta os PRs do Cortex que não podem entrar sozinhos.
+# NUNCA põe "automerge" (isso é do portão objetivo do auto-merge.yml). Sem checkout do PR: o script roda do
+# código da branch principal e lê o PR só pela API. Pré-análise por modelo grátis (GitHub Models, permissão models: read).
+# REVISOR_VETO=1 (variável do repositório) deixa um "não" claro da IA tirar o automerge; por padrão fica desligado.
+name: Revisor do Cortex
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, ready_for_review]
+  schedule:
+    - cron: '17,47 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: read
+  issues: write
+  models: read
+
+concurrency:
+  group: revisor-cortex
+  cancel-in-progress: false
+
+jobs:
+  revisar:
+    name: Revisar PRs do Cortex
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Em pull_request_target o checkout padrão é a branch base (confiável), nunca o código do PR.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Revisar
+        run: node scripts/revisor-pr.js
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          REVISOR_VETO: ${{ vars.REVISOR_VETO }}

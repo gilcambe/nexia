@@ -203,7 +203,7 @@ exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: 'Method Not Allowed' };
 
-  const guardErr = await guard(event, 'cortex-memory', { skipTenant: true });
+  const guardErr = await guard(event, 'cortex-memory', { skipTenant: true, cortexOnly: true });
   if (guardErr) return guardErr;
 
   if (!db) return { statusCode: 503, headers, body: JSON.stringify({ ok: false, error: 'Firebase indisponível — configure FIREBASE_SERVICE_ACCOUNT nos segredos do Worker.' }) };

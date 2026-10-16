@@ -71,7 +71,7 @@ exports.handler = async (event) => {
   const headers = makeHeaders(event);
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
   // FIX v49: guard ANTES do método check — sem token retorna 401, não 405
-  const guardErr = await guard(event, 'cortex-logs', { skipTenant: true });
+  const guardErr = await guard(event, 'cortex-logs', { skipTenant: true, cortexOnly: true });
   if (guardErr) return guardErr;
   if (event.httpMethod !== 'GET') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   if (!db) return { statusCode: 503, headers, body: JSON.stringify({ ok: false, error: 'Firebase indisponível — configure FIREBASE_SERVICE_ACCOUNT nos segredos do Worker.' }) };

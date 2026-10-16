@@ -238,7 +238,7 @@ exports.handler = async (event) => {
 
 
 
-  const guardErr = await guard(event, 'cortex-learn', { skipTenant: true });
+  const guardErr = await guard(event, 'cortex-learn', { skipTenant: true, cortexOnly: true });
   if (guardErr) return guardErr;
 
 
