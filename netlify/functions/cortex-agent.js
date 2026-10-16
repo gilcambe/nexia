@@ -24,7 +24,6 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
 }
 
 const { admin, db }                       = require('./firebase-init');
-const { isCortexPermitido } = require('./middleware'); // Importação adicionada (CommonJS)
 const { guard, assertTenantAccess, sanitizePrompt, makeHeaders, HEADERS } = require('./middleware');
 const { publicErrorBody } = require('../../lib/safe-error');
 
@@ -553,16 +552,9 @@ exports.handler = async (event) => {
     };
   }
 
-  const guardErr = await guard(event, 'cortex-agent', { skipTenant: true });
+  // A trava do Cortex (só o dono) fica dentro do guard (cortexOnly): usa o e-mail VERIFICADO do token.
+  const guardErr = await guard(event, 'cortex-agent', { skipTenant: true, cortexOnly: true });
   if (guardErr) return guardErr;
-
-  if (!isCortexPermitido(event._email, event._email_verified ?? true)) {
-    return {
-      statusCode: 403,
-      headers,
-      body: JSON.stringify({ error: 'Seu usuário não tem acesso ao Cortex.' })
-    };
-  }
 
   // GET → consulta status de um job existente
   if (event.httpMethod === 'GET') {

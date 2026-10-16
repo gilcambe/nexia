@@ -219,6 +219,7 @@ function sanitizePrompt(text) {
  * opts.skipAuth = true → permite bypass (apenas para rotas internas/scheduled)
  * opts.skipTenant = true → pula validação de tenant
  * opts.requiredRole = 'admin'|'master' → exige role mínimo
+ * opts.cortexOnly = true → só o dono usa (ver podeUsarCortex); CORTEX_SOMENTE_DONO=0 desliga a trava
  */
 async function guard(event, functionName, opts = {}) {
   const h = makeHeaders(event);
@@ -239,10 +240,15 @@ async function guard(event, functionName, opts = {}) {
         return { statusCode: 403, headers: h, body: JSON.stringify({ error: 'Permissão insuficiente.' }) };
       }
     }
+    // Trava do Cortex: só o dono (master por papel ou MASTER_EMAIL verificado). Ver podeUsarCortex.
+    if (opts.cortexOnly && !podeUsarCortex(tokenResult)) {
+      return { statusCode: 403, headers: h, body: JSON.stringify({ error: 'Seu usuário não tem acesso ao Cortex.' }) };
+    }
     // Expõe uid/role verificados no evento — funções downstream usam event._uid
     event._uid    = tokenResult.uid;
     event._role   = tokenResult.role;
     event._email  = tokenResult.email;
+    event._email_verified = tokenResult.emailVerified === true;
   }
 
   // ── BODY PARSE ─────────────────────────────────────────────────────────────
@@ -323,7 +329,7 @@ async function verifyBearerToken(event) {
     } catch (e) { console.error('[verifyBearerToken] perfil:', e && e.message); }
   }
   const role = resolveRole(decoded, profile);
-  return { ok: true, uid: decoded.uid, email: decoded.email, role, tenantSlug: decoded.tenantSlug || (profile && profile.tenantSlug) || null };
+  return { ok: true, uid: decoded.uid, email: decoded.email, emailVerified: decoded.email_verified === true, role, tenantSlug: decoded.tenantSlug || (profile && profile.tenantSlug) || null };
 }
 
 /**
@@ -415,6 +421,17 @@ function isCortexPermitido(email, emailVerified, role) {
   return isConfiguredMasterEmail(email, emailVerified);
 }
 
-module.exports = { resolveRole, isConfiguredMasterEmail, isCortexPermitido, guard, checkRateLimit, validateTenant, assertTenantAccess, sanitizePrompt, checkPermission, validateAIAction, verifyBearerToken, requireBearerAuth, HEADERS, makeHeaders, getCorsOrigin, ROLE_PERMISSIONS, handler: _handler };
+/**
+ * podeUsarCortex — trava do Cortex (decisão do dono, 2026-10-15: "só eu tenho acesso por enquanto").
+ * Recebe o resultado de verifyBearerToken. Aceita papel master ou MASTER_EMAIL com e-mail VERIFICADO
+ * (e-mail não confirmado nunca vale). Falha fechado. CORTEX_SOMENTE_DONO=0 desliga a trava.
+ */
+function podeUsarCortex(tokenResult) {
+  if (String(process.env.CORTEX_SOMENTE_DONO || '').trim() === '0') return true;
+  if (!tokenResult || tokenResult.ok !== true) return false;
+  return isCortexPermitido(tokenResult.email, tokenResult.emailVerified === true, tokenResult.role);
+}
+
+module.exports = { resolveRole, isConfiguredMasterEmail, isCortexPermitido, podeUsarCortex, guard, checkRateLimit, validateTenant, assertTenantAccess, sanitizePrompt, checkPermission, validateAIAction, verifyBearerToken, requireBearerAuth, HEADERS, makeHeaders, getCorsOrigin, ROLE_PERMISSIONS, handler: _handler };
 module.exports.handler = _handler;
 module.exports.isCortexPermitido = isCortexPermitido;
