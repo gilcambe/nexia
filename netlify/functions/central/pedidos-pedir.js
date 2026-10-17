@@ -3,4 +3,5 @@
 // como a Claude faria. Um projeto novo é uma linha em PROJETOS.
 
 const PROJETOS = [
-  { id: 'cortex', nome: 'o próprio Cortex', re: /\b"
+  { id: 'cortex', nome: 'o próprio Cortex', re: /\bcortex\b/i }
+];
