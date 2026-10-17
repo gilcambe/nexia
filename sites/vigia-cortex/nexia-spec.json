@@ -1,0 +1,136 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Vigia do Cortex",
+    "tagline": "Monitoramento inteligente de filas e alertas",
+    "photo_theme": "",
+    "description": "Monitoramento inteligente de filas e alertas",
+    "folder": "sites/vigia-cortex",
+    "fonts": {
+      "heading": "Space Grotesk",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#1e293b",
+      "accent": "#3b82f6",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "",
+      "email": "suporte@nexia.gcbezerra.workers.dev",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "alertas",
+        "label": "Alertas de Monitoramento",
+        "singular": "Alerta",
+        "fields": [
+          {
+            "key": "id",
+            "label": "ID do Alerta",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "titulo",
+            "label": "Título do Alerta",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Aberto",
+              "Investigando",
+              "Resolvido"
+            ],
+            "required": true
+          },
+          {
+            "key": "prioridade",
+            "label": "Prioridade",
+            "type": "select",
+            "options": [
+              "Baixa",
+              "Média",
+              "Alta"
+            ],
+            "required": true
+          },
+          {
+            "key": "criado_em",
+            "label": "Data/Criado",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "detalhes",
+            "label": "Detalhes Técnicos",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "id": "101",
+            "titulo": "Fila de processamento parada",
+            "status": "Aberto",
+            "prioridade": "Alta",
+            "criado_em": "2026-10-18",
+            "detalhes": "Sem entregas nas últimas 24 horas. Verificar conectividade do worker."
+          },
+          {
+            "id": "102",
+            "titulo": "Tempo de resposta elevado",
+            "status": "Investigando",
+            "prioridade": "Média",
+            "criado_em": "2026-10-17",
+            "detalhes": "Latência média acima de 500ms nas últimas 6 horas."
+          },
+          {
+            "id": "103",
+            "titulo": "Falha de autenticação recorrente",
+            "status": "Resolvido",
+            "prioridade": "Alta",
+            "criado_em": "2026-10-15",
+            "detalhes": "Token expirado, renovação automática implementada."
+          },
+          {
+            "id": "104",
+            "titulo": "Erro 502 no gateway",
+            "status": "Aberto",
+            "prioridade": "Alta",
+            "criado_em": "2026-10-18",
+            "detalhes": "Gateway fica indisponível em picos de tráfego."
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Monitoramento",
+      "Alertas",
+      "Histórico"
+    ]
+  },
+  "media": {}
+}
