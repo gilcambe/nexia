@@ -1,0 +1,260 @@
+{
+  "spec": {
+    "kind": "site",
+    "name": "Sorriso Leve",
+    "tagline": "Odontologia gentil para toda a família",
+    "description": "Clínica odontológica em São Paulo que oferece clareamento, implantes, ortodontia e atendimento geral com foco no conforto e na confiança dos pacientes.",
+    "folder": "demos/sorriso-leve",
+    "fonts": {
+      "heading": "Playfair Display",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2C7A7B",
+      "accent": "#F4A259",
+      "bg": "#F5F9FA",
+      "surface": "#FFFFFF",
+      "text": "#0F2E33",
+      "muted": "#5B6F70",
+      "dark": "#0A1F24"
+    },
+    "style": "soft",
+    "contact": {
+      "whatsapp": "5511998887777",
+      "phone": "(11) 99888-7777",
+      "email": "contato@sorrisoleve.com.br",
+      "address": "Rua das Flores, 120",
+      "city": "São Paulo - SP",
+      "hours": "Seg a Sex, 8h às 19h",
+      "instagram": "sorrisoleve",
+      "facebook": ""
+    },
+    "sections": [
+      {
+        "type": "hero",
+        "id": "sorriso-leve-cuidando-do-seu-sorriso",
+        "title": "Sorriso Leve – Cuidando do seu sorriso",
+        "subtitle": "Clareamento, implantes, ortodontia e atendimento familiar em São Paulo.",
+        "eyebrow": "Clínica Odontológica",
+        "cta": {
+          "label": "Agendar avaliação",
+          "href": "whatsapp"
+        },
+        "cta2": {
+          "label": "Conheça nossos serviços",
+          "href": "#servicos"
+        },
+        "image_query": "friendly dentist smiling with patient in modern clinic",
+        "video_query": ""
+      },
+      {
+        "type": "services",
+        "id": "servicos",
+        "title": "Nossos Tratamentos",
+        "subtitle": "Soluções completas para saúde e estética dental.",
+        "items": [
+          {
+            "title": "Clareamento",
+            "text": "Técnica avançada que clareia até 8 tons em uma única sessão.",
+            "price": "A partir de R$ 790",
+            "image_query": "teeth whitening clinic"
+          },
+          {
+            "title": "Implantes",
+            "text": "Implantes de última geração com recuperação rápida e segura.",
+            "price": "A partir de R$ 4.500",
+            "image_query": "dental implant procedure"
+          },
+          {
+            "title": "Ortodontia",
+            "text": "Aparelhos invisíveis e tradicionais para todas as idades.",
+            "price": "Planos a partir de R$ 250/mês",
+            "image_query": "orthodontic braces"
+          },
+          {
+            "title": "Clínica Geral",
+            "text": "Check‑up, limpeza e tratamento de cáries com conforto e tecnologia.",
+            "price": "A partir de R$ 200",
+            "image_query": "dental checkup"
+          }
+        ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-a-sorriso-leve",
+        "title": "Sobre a Sorriso Leve",
+        "subtitle": "Com mais de 15 anos de experiência, a Sorriso Leve combina tecnologia de ponta e um atendimento humanizado para transformar a saúde bucal de famílias em São Paulo. Nossa missão é criar sorrisos saudáveis e felizes, sempre com respeito e acolhimento.",
+        "text": "Com mais de 15 anos de experiência, a Sorriso Leve combina tecnologia de ponta e um atendimento humanizado para transformar a saúde bucal de famílias em São Paulo. Nossa missão é criar sorrisos saudáveis e felizes, sempre com respeito e acolhimento.",
+        "image_query": "modern dental clinic reception",
+        "stats": [
+          {
+            "value": "15",
+            "label": "anos de história"
+          },
+          {
+            "value": "10k+",
+            "label": "pacientes atendidos"
+          },
+          {
+            "value": "5k+",
+            "label": "sorrisos transformados"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "nosso-espaco",
+        "title": "Nosso Espaço",
+        "subtitle": "",
+        "image_queries": [
+          "dental office interior modern",
+          "dentist chair with patient",
+          "friendly dental staff",
+          "dental equipment sterilization",
+          "waiting area with natural light"
+        ]
+      },
+      {
+        "type": "testimonials",
+        "id": "depoimentos",
+        "title": "Depoimentos",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Carla Mendes",
+            "role": "",
+            "text": "Finalmente encontrei uma clínica que entende meus medos. O tratamento foi rápido e o sorriso ficou incrível!",
+            "rating": 5
+          },
+          {
+            "name": "Rafael Souza",
+            "role": "",
+            "text": "Os implantes foram perfeitos, sem dor e com recuperação rápida. Recomendo a todos!",
+            "rating": 5
+          },
+          {
+            "name": "Mariana Lima",
+            "role": "",
+            "text": "A ortodontia invisível mudou minha vida. O resultado ficou natural e o acompanhamento foi excelente.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "perguntas-frequentes",
+        "title": "Perguntas Frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Aceitam convênios odontológicos?",
+            "a": "Sim, trabalhamos com os principais planos de saúde e odontológicos."
+          },
+          {
+            "q": "Qual a duração de um tratamento de clareamento?",
+            "a": "A maioria dos pacientes vê resultados em 1 a 2 sessões, dependendo do caso."
+          },
+          {
+            "q": "É doloroso colocar implante?",
+            "a": "Utilizamos anestesia local e técnicas minimamente invasivas para garantir conforto total."
+          },
+          {
+            "q": "Qual a frequência ideal das consultas de manutenção?",
+            "a": "Recomendamos visitas semestrais para limpeza e avaliação preventiva."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "agende-sua-avaliacao",
+        "title": "Agende sua avaliação",
+        "subtitle": "Atendimento rápido via WhatsApp – sua primeira consulta é sem compromisso.",
+        "cta": {
+          "label": "Chamar no WhatsApp",
+          "href": "whatsapp"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "fale-conosco",
+        "title": "Fale Conosco",
+        "subtitle": "Estamos prontos para atender suas dúvidas e marcar sua consulta. Entre em contato pelos canais abaixo.",
+        "map": true
+      }
+    ]
+  },
+  "media": {
+    "s1.item0": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/97/US_Navy_050714-N-2347S-033_Dental_Technician_3rd_Class_Namel_Renelus_grinds_down_imperfections_in_the_mouth_cast_for_teeth_bleaching_trays_at_the_Branch_Health_Clinic_Diego_Garcia.jpg/1280px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 914,
+      "alt": "Diego Garcia (July 14, 2005) – Dental Technician 3rd Class Namel Renelus grinds ",
+      "credit": "U.S. Navy photo by Photographer’s Mate 3rd Class Peter Santini (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item1": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/CeraRoot.jpg/1280px-CeraRoot.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 851,
+      "alt": "CeraRoot zirconia dental implant (metal-free) type 14, tapped in procedure.",
+      "credit": "Dr. Xavi Oliva (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Orthodontic_face-mask_or_reverse_pull_headgear.jpg",
+      "width": 2048,
+      "height": 1530,
+      "alt": "Orthodontic face-mask or reverse pull headgear",
+      "credit": "Orthodontic face-mask or reverse pull headgear — Orthodontist101 (BY-SA 3.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/7/7c/During_COVID-19_Pandemic-Free_Dental_checkup_for_underprivileged_children_by_a_trust_-Kolkata_West_Bengal-September_2021_IMG_20210912_102705_1.jpg",
+      "width": 2400,
+      "height": 1350,
+      "alt": "During COVID-19 Pandemic-Free Dental checkup for underprivileged children by a t",
+      "credit": "During COVID-19 Pandemic-Free Dental checkup for underprivileged children by a trust -Kolkata West Bengal-Sept",
+      "provider": "openverse"
+    },
+    "s3.g0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/f6/Pharmacy_%2827651099119%29.jpg",
+      "width": 4766,
+      "height": 3177,
+      "alt": "Pharmacy (27651099119)",
+      "credit": "Pharmacy (27651099119) — Rob Oo from NL (BY 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g1": {
+      "url": "https://cdn.stocksnap.io/img-thumbs/960w/YXEEJ34DKF.jpg",
+      "width": 4928,
+      "height": 3264,
+      "alt": "Dentist Orthodontist",
+      "credit": "Dentist Orthodontist — Michal Jarmoluk (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g2": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/Friendly_competition%2C_married_Soldiers_both_get_selected_for_drill_sergeant_academy_%286116408%29.jpg/1280px-Friendly_competition%2C_married_Soldiers_both_get_selected_for_drill_sergeant_academy_%286116408%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 938,
+      "alt": "Staff Sgt. Jamie Castillo currently serves as the Operations Noncommissioned Off",
+      "credit": "U.S. Army RHCE by Russell Toof (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/9/93/Sterilizer_Getinge_HS11k3_IMG_0569.JPG",
+      "width": 4000,
+      "height": 3000,
+      "alt": "Sterilizer Getinge HS11k3 IMG 0569",
+      "credit": "Sterilizer Getinge HS11k3 IMG 0569 — Bjoertvedt (BY-SA 3.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g4": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Durdle_Door%2C_Just_a_Few_Moments_Before_%2816139197100%29.jpg",
+      "width": 3000,
+      "height": 2003,
+      "alt": "File:Durdle Door, Just a Few Moments Before (16139197100).jpg",
+      "credit": "File:Durdle Door, Just a Few Moments Before (16139197100).jpg — Lies Thru a Lens (BY 2.0, via Openverse)",
+      "provider": "openverse"
+    }
+  }
+}
