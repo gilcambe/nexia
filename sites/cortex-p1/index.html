@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cortex Admin — Histórico e gestão de conversas</title>
-  <meta name="description" content="Histórico e gestão de conversas">
-  <meta name="theme-color" content="#4f46e5">
+  <title>Cortex-p1 Teste — Painel de cadastros e monitoramento</title>
+  <meta name="description" content="Painel de cadastros e monitoramento">
+  <meta name="theme-color" content="#2c3e50">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
 </head>
@@ -18,16 +18,15 @@
     <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
       <div class="sidebar__brand">
         <span class="logo" aria-hidden="true">C</span>
-        <span>Cortex Admin</span>
+        <span>Cortex-p1 Teste</span>
       </div>
       <nav class="sidebar__nav" aria-label="Seções">
         <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
-        <a href="#/conversas" data-route="conversas"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Conversas</span></a>
-        <a href="#/mensagens" data-route="mensagens"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Mensagens</span></a>
-        <a href="#/usuarios" data-route="usuarios"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Usuários</span></a>
+        <a href="#/usuarios" data-route="usuarios"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Usuários</span></a>
+        <a href="#/projetos" data-route="projetos"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Projetos</span></a>
       </nav>
       <div class="sidebar__foot">
-        <p>Suporte: suporte@cortex.com.br</p>
+        <p>Suporte: suporte@cortexp1.com.br</p>
         <p>Dados salvos neste navegador.</p>
       </div>
     </aside>
@@ -37,7 +36,7 @@
         <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
         <div class="topbar__title">
           <h1 id="view-title">Painel</h1>
-          <p id="view-sub">Histórico e gestão de conversas</p>
+          <p id="view-sub">Painel de cadastros e monitoramento</p>
         </div>
         <label class="search">
           <span class="sr-only">Buscar</span>
@@ -101,7 +100,7 @@
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1","name":"Cortex Admin","entities":[{"key":"conversas","label":"Conversas","singular":"Conversa","fields":[{"key":"usuario","label":"Usuário","type":"text","options":[],"required":true},{"key":"inicio","label":"Início","type":"date","options":[],"required":true},{"key":"duracao","label":"Duração","type":"text","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Ativa","Encerrada"],"required":true},{"key":"resumo","label":"Tópico","type":"textarea","options":[],"required":false}],"sample":[{"usuario":"Ana Souza","inicio":"2026-10-06","duracao":"15 min","status":"Ativa","resumo":"Consultas e agendamentos futuros."},{"usuario":"Bruno Lima","inicio":"2026-10-06","duracao":"8 min","status":"Encerrada","resumo":"Dúvidas sobre faturamento mensal."},{"usuario":"Carla Dias","inicio":"2026-10-05","duracao":"22 min","status":"Ativa","resumo":"Ajustes na integração da API."},{"usuario":"Davi Reis","inicio":"2026-10-01","duracao":"12 min","status":"Encerrada","resumo":"Registro de feedback técnico."}]},{"key":"mensagens","label":"Mensagens","singular":"Mensagem","fields":[{"key":"autor","label":"Autor","type":"select","options":["Usuário","Cortex"],"required":true},{"key":"conversa","label":"Conversa ref","type":"text","options":[],"required":true},{"key":"horario","label":"Horário","type":"text","options":[],"required":true},{"key":"conteudo","label":"Conteúdo","type":"textarea","options":[],"required":false}],"sample":[{"autor":"Usuário","conversa":"Ana Souza - 06/10","horario":"10:02","conteudo":"Olá, preciso de ajuda para entender o histórico de consultas."},{"autor":"Cortex","conversa":"Ana Souza - 06/10","horario":"10:02","conteudo":"Claro! Posso buscar os dados da sua agenda e explicar como o sistema funciona."},{"autor":"Usuário","conversa":"Bruno Lima - 06/10","horario":"11:15","conteudo":"O relatório de faturamento não está gerando corretamente."},{"autor":"Cortex","conversa":"Bruno Lima - 06/10","horario":"11:16","conteudo":"Desculpe o perrengue, vou verificar o erro com o time de engenharia."}]},{"key":"usuarios","label":"Usuários","singular":"Usuário","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"email","label":"E-mail","type":"email","options":[],"required":true},{"key":"telefone","label":"Telefone","type":"phone","options":[],"required":true},{"key":"papel","label":"Papel","type":"select","options":["Master","Operador","Leitor"],"required":true},{"key":"atualizado","label":"Últ. Atualização","type":"date","options":[],"required":true},{"key":"notas","label":"Notas","type":"textarea","options":[],"required":false}],"sample":[{"nome":"Ricard Lemos","email":"ricard@cortex.com.br","telefone":"(11) 98765-0001","papel":"Master","atualizado":"2026-10-06","notas":"Administrador principal do sistema."},{"nome":"Elena Costa","email":"elena@cortex.com.br","telefone":"(11) 98765-0002","papel":"Operador","atualizado":"2026-10-05","notas":"Responsável pelo atendimento diário."},{"nome":"Jonas Silva","email":"jonas@cortex.com.br","telefone":"(11) 98765-0003","papel":"Leitor","atualizado":"2026-10-02","notas":"Acompanha dados gerenciais."},{"nome":"Amanda Pires","email":"amanda@cortex.com.br","telefone":"(11) 98765-0004","papel":"Operador","atualizado":"2026-10-01","notas":"Suporte de sistemas internos."}]}]}</script>
+  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1","name":"Cortex-p1 Teste","entities":[{"key":"usuarios","label":"Usuários","singular":"Usuário","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"email","label":"E‑mail","type":"email","options":[],"required":true},{"key":"telefone","label":"Telefone","type":"phone","options":[],"required":true},{"key":"cargo","label":"Cargo","type":"select","options":["Administrador","Gerente","Analista","Operador"],"required":true},{"key":"data_cadastro","label":"Data de Cadastro","type":"date","options":[],"required":true}],"sample":[{"nome":"Ana Pereira","email":"ana.pereira@example.com","telefone":"(11) 98765-4321","cargo":"Gerente","data_cadastro":"2026-01-15"},{"nome":"Bruno Silva","email":"bruno.silva@example.com","telefone":"(11) 97654-3210","cargo":"Analista","data_cadastro":"2026-02-20"},{"nome":"Carla Mendes","email":"carla.mendes@example.com","telefone":"(11) 96543-2109","cargo":"Operador","data_cadastro":"2026-03-05"},{"nome":"Diego Costa","email":"diego.costa@example.com","telefone":"(11) 95432-1098","cargo":"Administrador","data_cadastro":"2026-04-12"}]},{"key":"projetos","label":"Projetos","singular":"Projeto","fields":[{"key":"titulo","label":"Título","type":"text","options":[],"required":true},{"key":"descricao","label":"Descrição","type":"textarea","options":[],"required":true},{"key":"data_inicio","label":"Início","type":"date","options":[],"required":true},{"key":"data_fim","label":"Fim","type":"date","options":[],"required":true},{"key":"orcamento","label":"Orçamento","type":"money","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Planejado","Em andamento","Concluído","Cancelado"],"required":true}],"sample":[{"titulo":"Integração API","descricao":"Desenvolvimento da integração entre sistemas internos e externos","data_inicio":"2026-05-01","data_fim":"2026-06-15","orcamento":"15000","status":"Em andamento"},{"titulo":"Migração Cloud","descricao":"Transferir infraestrutura para plataforma de nuvem escalável","data_inicio":"2026-04-10","data_fim":"2026-07-30","orcamento":"25000","status":"Planejado"},{"titulo":"Dashboard Analítico","descricao":"Criar painel de visualização de KPIs para a diretoria","data_inicio":"2026-03-20","data_fim":"2026-05-05","orcamento":"12000","status":"Concluído"},{"titulo":"Treinamento equipe","descricao":"Capacitar equipe em novas ferramentas de automação","data_inicio":"2026-02-01","data_fim":"2026-02-28","orcamento":"5000","status":"Cancelado"}]}]}</script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
   <script src="app.js" defer></script>
 </body>
