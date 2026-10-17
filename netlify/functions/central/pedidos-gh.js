@@ -6,4 +6,4 @@ const REPO = 'gilcambe/nexia';
 const API = 'https://api.github.com';
 
 const nomes = (i) => (i.labels || []).map((l) => l.name || l);
-const tentativas = (i) => Math.max(0,
+const tentativas = (i) => Math.max(0, parseInt((i.fields || {}).attempt) || 0);
