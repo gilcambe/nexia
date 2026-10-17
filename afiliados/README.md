@@ -46,18 +46,18 @@ O WhatsApp é um canal de conversão importante, use com responsabilidade.
 - Evite envio automático massivo que viole os termos de uso.
 - Mantenha comunicação transparente com seus seguidores.
 
-## 6. Regras para nao ser bloqueado
-Para manter sua conta ativa e evitar bloqueios nas redes sociais e canais de divulgação, siga as orientações:
+## 6. Regras para não ser bloqueado
+Para manter sua conta ativa e evitar bloqueios nas redes sociais e canais de divulgação, siga as orientações básicas:
 
-- Evite envio em massa nao autorizado ou mensagens repetitivas em grupos.
-- Informe claramente que os links sao de afiliado.
-- Respeite os intervalos e limites diários definidos.
-- Divulgue apenas promoções reais e lojas idôneas.
+- Evite envio em massa não autorizado ou mensagens repetitivas em grupos de terceiros.
+- Informe claramente aos seus seguidores que os links compartilhados são de afiliado.
+- Respeite os intervalos recomendados e limites diários definidos pela plataforma.
+- Divulgue apenas promoções reais, ofertas checadas e lojas idôneas.
 
 ## 7. Trocar o nome do site, os temas ou os limites
-Você pode adaptar a plataforma nas opções de configuração:
+Você pode adaptar a plataforma rapidamente através das opções de configuração e arquivos de projeto:
 
-- **Nome do site:** Altere o título, cabeçalho e rodapé.
-- **Temas:** Personalize cores e fontes nas variáveis CSS.
-- **Limites:** Ajuste cotas e parâmetros nas variáveis de ambiente.
+- **Nome do site:** Altere o título principal, o cabeçalho e o rodapé nos arquivos de layout.
+- **Temas:** Personalize as cores, fontes e espaçamentos alterando as variáveis no arquivo CSS.
+- **Limites:** Ajuste cotas de acesso, timeouts e parâmetros operacionais nas variáveis de ambiente.
 
