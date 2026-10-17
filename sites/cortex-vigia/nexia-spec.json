@@ -2,9 +2,9 @@
   "spec": {
     "kind": "system",
     "name": "Cortex Vigia",
-    "tagline": "Painel de monitoramento contínuo da fila de automação e alertas proativos",
-    "photo_theme": "",
-    "description": "Painel de monitoramento contínuo da fila de automação e alertas proativos",
+    "tagline": "Painel operacional de monitoramento da fila de automação e alertas proativos",
+    "photo_theme": "server code dashboard",
+    "description": "Painel de controle e monitoramento contínuo da fila de tarefas, diagnósticos de execução e gestão de alertas automatizados.",
     "folder": "sites/cortex-vigia",
     "fonts": {
       "heading": "Space Grotesk",
@@ -13,20 +13,20 @@
     "palette": {
       "primary": "#2563eb",
       "accent": "#f59e0b",
-      "bg": "#fbfaf7",
+      "bg": "#f8fafc",
       "surface": "#ffffff",
-      "text": "#1d2426",
-      "muted": "#5d6b6e",
-      "dark": "#0f172a"
+      "text": "#0f172a",
+      "muted": "#64748b",
+      "dark": "#020617"
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "",
+      "whatsapp": "11987654321",
       "phone": "(11) 98765-4321",
       "email": "operacao@nexiacortex.dev.br",
-      "address": "",
-      "city": "",
-      "hours": "",
+      "address": "Edifício Tech Hub, Sala 402",
+      "city": "São Paulo - SP",
+      "hours": "Monitoramento contínuo 24/7",
       "instagram": "",
       "facebook": "",
       "youtube": "",
