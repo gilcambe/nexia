@@ -1,0 +1,144 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Vigia do Cortex",
+    "tagline": "Monitora a inteligência da fila e acorda o responsável",
+    "photo_theme": "abstract technology dashboard",
+    "description": "Monitora a inteligência da fila e acorda o responsável",
+    "folder": "demos/cortex-p1",
+    "fonts": {
+      "heading": "Space Grotesk",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#5b21b6",
+      "accent": "#0ea5e9",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(31) 99999-0000",
+      "email": "devops@cortex.ai.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "alertas",
+        "label": "Alertas Monitorados",
+        "singular": "Alerta",
+        "fields": [
+          {
+            "key": "id",
+            "label": "Identificador",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "titulo",
+            "label": "Título do Incidente",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_abertura",
+            "label": "Data de Abertura",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "responsavel",
+            "label": "Responsável",
+            "type": "select",
+            "options": [
+              "Operador 1",
+              "Operador 2",
+              "Admin NEXIA",
+              "Inteligência Artificial"
+            ],
+            "required": true
+          },
+          {
+            "key": "idade_atual",
+            "label": "Idade (horas)",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "accao_recomendada",
+            "label": "Ação Necessária",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email_contato",
+            "label": "E-mail de Notificação",
+            "type": "email",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "id": "1",
+            "titulo": "Falha na processamento de dados de vendas",
+            "data_abertura": "2024-05-20",
+            "responsavel": "Operador 1",
+            "idade_atual": "4",
+            "accao_recomendada": "Verificar relatórios de logs do servidor",
+            "email_contato": "juliana.santos@empresa.com.br"
+          },
+          {
+            "id": "2",
+            "titulo": "Redução de desempenho do motor de buscas",
+            "data_abertura": "2024-05-21",
+            "responsavel": "Operador 2",
+            "idade_atual": "12",
+            "accao_recomendada": "Avaliar escalonamento de nuvem",
+            "email_contato": "ricardo.alves@empresa.com.br"
+          },
+          {
+            "id": "3",
+            "titulo": "Erro de conexão com base de dados pós-transação",
+            "data_abertura": "2024-05-22",
+            "responsavel": "Admin NEXIA",
+            "idade_atual": "24",
+            "accao_recomendada": "Restaurar a conexão com as rotas de rede",
+            "email_contato": "admin@empresa.com.br"
+          },
+          {
+            "id": "4",
+            "titulo": "Quebra no processamento de filas de requisições",
+            "data_abertura": "2024-05-23",
+            "responsavel": "Operador 1",
+            "idade_atual": "36",
+            "accao_recomendada": "Aplicar correção de memória e reiniciar",
+            "email_contato": "jorge.pereira@empresa.com.br"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Monitoramento",
+      "Alertas",
+      "Responsáveis"
+    ]
+  },
+  "media": {}
+}
