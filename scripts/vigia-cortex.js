@@ -7,15 +7,14 @@ const DONO = process.env.DONO || 'gilcambe';
 const PAINEL = 'https://nexia.gcbezerra.workers.dev/meu-cortex';
 
 async function gh(token, method, caminho, body) {
-  const r = await fetch(`https://api.github.com/repos/${REPO}/${caminho}`, {,
-    {
-      method: method,
-      headers: {
-        Accept: 'application/vnd.github.v3+json',
-        Authorization: `token ${token}`,
-      },
-      body: body ? JSON.stringify(body) : undefined,
-    });
+  const r = await fetch(`https://api.github.com/repos/${REPO}/${caminho}`, {
+    method: method,
+    headers: {
+      Accept: 'application/vnd.github.v3+json',
+      Authorization: `token ${token}`,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
   if (!r.ok) {
     throw new Error(`${method} ${caminho} ${r.status} ${await r.text()}`);
   }
