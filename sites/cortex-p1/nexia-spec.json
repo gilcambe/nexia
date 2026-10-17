@@ -1,29 +1,29 @@
 {
   "spec": {
     "kind": "system",
-    "name": "Cortex Admin",
-    "tagline": "Histórico e gestão de conversas",
+    "name": "Cortex-p1 Teste",
+    "tagline": "Painel de cadastros e monitoramento",
     "photo_theme": "",
-    "description": "Histórico e gestão de conversas",
+    "description": "Painel de cadastros e monitoramento",
     "folder": "sites/cortex-p1",
     "fonts": {
-      "heading": "Plus Jakarta Sans",
+      "heading": "Playfair Display",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#4f46e5",
-      "accent": "#22d3ee",
+      "primary": "#2c3e50",
+      "accent": "#e67e22",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#0f172a"
+      "dark": "#111827"
     },
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "(11) 98765-4321",
-      "email": "suporte@cortex.com.br",
+      "phone": "(11) 91234-5678",
+      "email": "suporte@cortexp1.com.br",
       "address": "",
       "city": "",
       "hours": "",
@@ -34,145 +34,6 @@
       "linkedin": ""
     },
     "entities": [
-      {
-        "key": "conversas",
-        "label": "Conversas",
-        "singular": "Conversa",
-        "fields": [
-          {
-            "key": "usuario",
-            "label": "Usuário",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "inicio",
-            "label": "Início",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "duracao",
-            "label": "Duração",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
-            "type": "select",
-            "options": [
-              "Ativa",
-              "Encerrada"
-            ],
-            "required": true
-          },
-          {
-            "key": "resumo",
-            "label": "Tópico",
-            "type": "textarea",
-            "options": [],
-            "required": false
-          }
-        ],
-        "sample": [
-          {
-            "usuario": "Ana Souza",
-            "inicio": "2026-10-06",
-            "duracao": "15 min",
-            "status": "Ativa",
-            "resumo": "Consultas e agendamentos futuros."
-          },
-          {
-            "usuario": "Bruno Lima",
-            "inicio": "2026-10-06",
-            "duracao": "8 min",
-            "status": "Encerrada",
-            "resumo": "Dúvidas sobre faturamento mensal."
-          },
-          {
-            "usuario": "Carla Dias",
-            "inicio": "2026-10-05",
-            "duracao": "22 min",
-            "status": "Ativa",
-            "resumo": "Ajustes na integração da API."
-          },
-          {
-            "usuario": "Davi Reis",
-            "inicio": "2026-10-01",
-            "duracao": "12 min",
-            "status": "Encerrada",
-            "resumo": "Registro de feedback técnico."
-          }
-        ]
-      },
-      {
-        "key": "mensagens",
-        "label": "Mensagens",
-        "singular": "Mensagem",
-        "fields": [
-          {
-            "key": "autor",
-            "label": "Autor",
-            "type": "select",
-            "options": [
-              "Usuário",
-              "Cortex"
-            ],
-            "required": true
-          },
-          {
-            "key": "conversa",
-            "label": "Conversa ref",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "horario",
-            "label": "Horário",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "conteudo",
-            "label": "Conteúdo",
-            "type": "textarea",
-            "options": [],
-            "required": false
-          }
-        ],
-        "sample": [
-          {
-            "autor": "Usuário",
-            "conversa": "Ana Souza - 06/10",
-            "horario": "10:02",
-            "conteudo": "Olá, preciso de ajuda para entender o histórico de consultas."
-          },
-          {
-            "autor": "Cortex",
-            "conversa": "Ana Souza - 06/10",
-            "horario": "10:02",
-            "conteudo": "Claro! Posso buscar os dados da sua agenda e explicar como o sistema funciona."
-          },
-          {
-            "autor": "Usuário",
-            "conversa": "Bruno Lima - 06/10",
-            "horario": "11:15",
-            "conteudo": "O relatório de faturamento não está gerando corretamente."
-          },
-          {
-            "autor": "Cortex",
-            "conversa": "Bruno Lima - 06/10",
-            "horario": "11:16",
-            "conteudo": "Desculpe o perrengue, vou verificar o erro com o time de engenharia."
-          }
-        ]
-      },
       {
         "key": "usuarios",
         "label": "Usuários",
@@ -187,7 +48,7 @@
           },
           {
             "key": "email",
-            "label": "E-mail",
+            "label": "E‑mail",
             "type": "email",
             "options": [],
             "required": true
@@ -200,71 +61,149 @@
             "required": true
           },
           {
-            "key": "papel",
-            "label": "Papel",
+            "key": "cargo",
+            "label": "Cargo",
             "type": "select",
             "options": [
-              "Master",
-              "Operador",
-              "Leitor"
+              "Administrador",
+              "Gerente",
+              "Analista",
+              "Operador"
             ],
             "required": true
           },
           {
-            "key": "atualizado",
-            "label": "Últ. Atualização",
+            "key": "data_cadastro",
+            "label": "Data de Cadastro",
+            "type": "date",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Ana Pereira",
+            "email": "ana.pereira@example.com",
+            "telefone": "(11) 98765-4321",
+            "cargo": "Gerente",
+            "data_cadastro": "2026-01-15"
+          },
+          {
+            "nome": "Bruno Silva",
+            "email": "bruno.silva@example.com",
+            "telefone": "(11) 97654-3210",
+            "cargo": "Analista",
+            "data_cadastro": "2026-02-20"
+          },
+          {
+            "nome": "Carla Mendes",
+            "email": "carla.mendes@example.com",
+            "telefone": "(11) 96543-2109",
+            "cargo": "Operador",
+            "data_cadastro": "2026-03-05"
+          },
+          {
+            "nome": "Diego Costa",
+            "email": "diego.costa@example.com",
+            "telefone": "(11) 95432-1098",
+            "cargo": "Administrador",
+            "data_cadastro": "2026-04-12"
+          }
+        ]
+      },
+      {
+        "key": "projetos",
+        "label": "Projetos",
+        "singular": "Projeto",
+        "fields": [
+          {
+            "key": "titulo",
+            "label": "Título",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_inicio",
+            "label": "Início",
             "type": "date",
             "options": [],
             "required": true
           },
           {
-            "key": "notas",
-            "label": "Notas",
-            "type": "textarea",
+            "key": "data_fim",
+            "label": "Fim",
+            "type": "date",
             "options": [],
-            "required": false
+            "required": true
+          },
+          {
+            "key": "orcamento",
+            "label": "Orçamento",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Planejado",
+              "Em andamento",
+              "Concluído",
+              "Cancelado"
+            ],
+            "required": true
           }
         ],
         "sample": [
           {
-            "nome": "Ricard Lemos",
-            "email": "ricard@cortex.com.br",
-            "telefone": "(11) 98765-0001",
-            "papel": "Master",
-            "atualizado": "2026-10-06",
-            "notas": "Administrador principal do sistema."
+            "titulo": "Integração API",
+            "descricao": "Desenvolvimento da integração entre sistemas internos e externos",
+            "data_inicio": "2026-05-01",
+            "data_fim": "2026-06-15",
+            "orcamento": "15000",
+            "status": "Em andamento"
           },
           {
-            "nome": "Elena Costa",
-            "email": "elena@cortex.com.br",
-            "telefone": "(11) 98765-0002",
-            "papel": "Operador",
-            "atualizado": "2026-10-05",
-            "notas": "Responsável pelo atendimento diário."
+            "titulo": "Migração Cloud",
+            "descricao": "Transferir infraestrutura para plataforma de nuvem escalável",
+            "data_inicio": "2026-04-10",
+            "data_fim": "2026-07-30",
+            "orcamento": "25000",
+            "status": "Planejado"
           },
           {
-            "nome": "Jonas Silva",
-            "email": "jonas@cortex.com.br",
-            "telefone": "(11) 98765-0003",
-            "papel": "Leitor",
-            "atualizado": "2026-10-02",
-            "notas": "Acompanha dados gerenciais."
+            "titulo": "Dashboard Analítico",
+            "descricao": "Criar painel de visualização de KPIs para a diretoria",
+            "data_inicio": "2026-03-20",
+            "data_fim": "2026-05-05",
+            "orcamento": "12000",
+            "status": "Concluído"
           },
           {
-            "nome": "Amanda Pires",
-            "email": "amanda@cortex.com.br",
-            "telefone": "(11) 98765-0004",
-            "papel": "Operador",
-            "atualizado": "2026-10-01",
-            "notas": "Suporte de sistemas internos."
+            "titulo": "Treinamento equipe",
+            "descricao": "Capacitar equipe em novas ferramentas de automação",
+            "data_inicio": "2026-02-01",
+            "data_fim": "2026-02-28",
+            "orcamento": "5000",
+            "status": "Cancelado"
           }
         ]
       }
     ],
     "modules": [
-      "Dashboard",
-      "Histórico",
-      "Usuários"
+      "Cadastros",
+      "Relatórios",
+      "Dashboard"
     ]
   },
   "media": {}
