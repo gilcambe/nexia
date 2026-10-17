@@ -64,7 +64,8 @@ const wantsStaging = message => /\b(staging|homologa|publiqu\w*|publicar)\b/.tes
  * Esses pedidos passam pelo Designer e pela checagem visual obrigatória.
  */
 function buildKind(message) {
-  const m = normalize(withoutUrls(message));
+  // Código colado no pedido (bloco ```) não conta: "crie ... app" dentro do código não é pedido de site novo.
+  const m = normalize(withoutUrls(String(message || '').replace(/```[\s\S]*?```/g, ' ')));
   // O verbo precisa estar perto do substantivo ("crie um site", "desenvolva o novo painel"): "crie a página de
   // contato do Site Alfa" é mudança num site que já existe, não site novo.
   // ADR-CLONE-01: "clone o site https://..." também cria site novo (só com o design do site de referência).
