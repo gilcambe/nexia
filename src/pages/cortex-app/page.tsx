@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ThemeContext, useTheme } from '@/hooks/useTheme';
 import Sidebar from '@/pages/cortex-app/components/Sidebar';
 import ChatArea from '@/pages/cortex-app/components/ChatArea';
