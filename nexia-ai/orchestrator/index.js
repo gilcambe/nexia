@@ -10,6 +10,7 @@
 // Nada é declarado concluído sem os gates com evidência; a execução fica "running"
 // enquanto o CI roda e é reavaliada por refresh().
 const crypto = require('crypto');
+const { arquivosLiterais, temEdicaoExtra } = require('./literal');
 const { resolveProject } = require('../project-resolver');
 const { buildContext } = require('../context-engine');
 const { runAgent, askModel, createMeter } = require('./runtime');
@@ -517,12 +518,18 @@ function createOrchestrator(deps) {
           const headOf = r => (r && r.status === 'succeeded' && r.result.commits.length ? r.result.commits[r.result.commits.length - 1].sha : null);
           let before = null;   // rodada de correção: exige commit novo, não basta o da rodada anterior
           if (fix) before = headOf(await tool(ctx, state, 'qa', 'github.compare', { base: repo.default_branch, head: state.work_branch }));
+          const literais = kitKind ? [] : arquivosLiterais(message);
+          if (literais.length) {
+            const lr = await tool(ctx, state, plan[i].agent, 'github.commit_files', { branch: state.work_branch, message: `Cópia literal do pedido: ${literais.map(f => f.path).join(', ')}`, files: literais });
+            if (lr.status !== 'succeeded') handle(i, lr, () => '');
+            else steps[i] = { ...steps[i], tool_call_ids: addIds(i, ids(lr)) };
+          }
           if (kitKind && !fix) await kitRender(i);
           else if (kitKind) await kitRevise(i, state.fix_feedback);
-          else {
+          else if (!stop && !(literais.length && !temEdicaoExtra(message))) {
             // ADR-CORTEX-01: lista explícita de arquivos e os primeiros já lidos (economiza passos e cota do modelo grátis).
             const files = filesIn(message, analysis, state.fix_feedback || '');
-            const listed = files.length ? `\nArquivos envolvidos (todos precisam ser conferidos; os primeiros já foram lidos abaixo): ${files.join(', ')}` : '';
+            const listed = files.length ? `\nArquivos envolvidos (todos precisam ser conferidos; os primeiros já foram lidos abaixo): ${files.join(', ')}` : '' + (literais.length ? `\nJá gravados literalmente, NÃO os toque: ${literais.map(f => f.path).join(', ')}` : '');
             await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).\n${kitKind ? 'Spec do Designer (o código foi gerado pelo NEXIA Site Kit: corrija só o que a revisão apontou, com github.edit_files, sem reescrever os arquivos inteiros)' : 'Análise do Architect'}:\n${analysis}${fix}${listed}\n\nLeia os arquivos atuais com github.get_file (ref ${state.work_branch}). Para arquivo existente use github.edit_files; para arquivo novo, github.commit_files. Tudo na branch ${state.work_branch}. Não mexa em arquivos que o pedido não envolve. Cumpra cada item do pedido em todos os arquivos citados antes de terminar.`,
               '', { branch: state.work_branch, preload: files.slice(0, 4), ref: state.work_branch, rotate: Math.max(0, (state.fix_rounds || 0) - 1) });
             // Sem commit (ex.: o arquivo pedido como "novo" já existe): uma segunda volta mandando editar/ligar o existente.
