@@ -7,4 +7,5 @@ const DONO = process.env.DONO || 'gilcambe';
 const PAINEL = 'https://nexia.gcbezerra.workers.dev/meu-cortex';
 
 async function gh(token, method, caminho, body) {
-  const r = await fetch('htt"
+  const r = await fetch('http');
+}
