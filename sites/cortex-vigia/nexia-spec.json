@@ -1,0 +1,211 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex Vigia",
+    "tagline": "Painel operacional de monitoramento da fila de automação e alertas proativos",
+    "photo_theme": "server code dashboard",
+    "description": "Painel de controle e monitoramento contínuo da fila de tarefas, diagnósticos de execução e gestão de alertas automatizados.",
+    "folder": "sites/cortex-vigia",
+    "fonts": {
+      "heading": "Space Grotesk",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2563eb",
+      "accent": "#f59e0b",
+      "bg": "#f8fafc",
+      "surface": "#ffffff",
+      "text": "#0f172a",
+      "muted": "#64748b",
+      "dark": "#020617"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "11987654321",
+      "phone": "(11) 98765-4321",
+      "email": "operacao@nexiacortex.dev.br",
+      "address": "Edifício Tech Hub, Sala 402",
+      "city": "São Paulo - SP",
+      "hours": "Monitoramento contínuo 24/7",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "fila_execucao",
+        "label": "Fila de Tarefas",
+        "singular": "Tarefa na Fila",
+        "fields": [
+          {
+            "key": "codigo_issue",
+            "label": "Identificador",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "titulo",
+            "label": "Título da Demanda",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Em Execução",
+              "Aguardando Fila",
+              "Travada",
+              "Concluída"
+            ],
+            "required": true
+          },
+          {
+            "key": "dependencia",
+            "label": "Etapa Relacionada",
+            "type": "text",
+            "options": [],
+            "required": false
+          },
+          {
+            "key": "tempo_parado_horas",
+            "label": "Horas sem Atividade",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "ultima_verificacao",
+            "label": "Última Verificação",
+            "type": "date",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "codigo_issue": "ISS-689-P1",
+            "titulo": "Implementação do monitor vigia para despacho automático",
+            "status": "Em Execução",
+            "dependencia": "Módulo de Diagnóstico Base",
+            "tempo_parado_horas": "2",
+            "ultima_verificacao": "2026-03-30"
+          },
+          {
+            "codigo_issue": "ISS-689-P2",
+            "titulo": "Configuração da API de notificações do repositório",
+            "status": "Aguardando Fila",
+            "dependencia": "ISS-689-P1",
+            "tempo_parado_horas": "0",
+            "ultima_verificacao": "2026-03-30"
+          },
+          {
+            "codigo_issue": "ISS-674-P3",
+            "titulo": "Sincronização de webhooks do ambiente de esteira",
+            "status": "Travada",
+            "dependencia": "Conexão com servidor externo",
+            "tempo_parado_horas": "26",
+            "ultima_verificacao": "2026-03-29"
+          },
+          {
+            "codigo_issue": "ISS-668-P1",
+            "titulo": "Otimização das consultas de estado e fechamento",
+            "status": "Concluída",
+            "dependencia": "Nenhuma",
+            "tempo_parado_horas": "0",
+            "ultima_verificacao": "2026-03-28"
+          }
+        ]
+      },
+      {
+        "key": "alertas_vigia",
+        "label": "Incidentes e Alertas",
+        "singular": "Incidente",
+        "fields": [
+          {
+            "key": "alerta_id",
+            "label": "Código do Alerta",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "nivel",
+            "label": "Gravidade",
+            "type": "select",
+            "options": [
+              "Crítico",
+              "Atenção",
+              "Informativo",
+              "Resolvido"
+            ],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Diagnóstico do Incidente",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_emissao",
+            "label": "Data do Alerta",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "notificados",
+            "label": "Responsável Acionado",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "alerta_id": "ALT-2026-014",
+            "nivel": "Crítico",
+            "descricao": "Nenhuma entrega concluída nas últimas 26 horas na fila principal.",
+            "data_emissao": "2026-03-30",
+            "notificados": "gilcambe"
+          },
+          {
+            "alerta_id": "ALT-2026-013",
+            "nivel": "Atenção",
+            "descricao": "Demanda dependente bloqueada por tarefa anterior sem avanço.",
+            "data_emissao": "2026-03-29",
+            "notificados": "suporte-esteira"
+          },
+          {
+            "alerta_id": "ALT-2026-012",
+            "nivel": "Resolvido",
+            "descricao": "Fluxo reestabelecido após conclusão de etapa pendente pelo desenvolvedor.",
+            "data_emissao": "2026-03-28",
+            "notificados": "gilcambe"
+          },
+          {
+            "alerta_id": "ALT-2026-011",
+            "nivel": "Informativo",
+            "descricao": "Fila processada sem gargalos acumulados durante a janela matutina.",
+            "data_emissao": "2026-03-27",
+            "notificados": "automacao"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Painel em Tempo Real",
+      "Fila de Tarefas",
+      "Incidentes e Alertas",
+      "Auditoria de Entregas"
+    ]
+  },
+  "media": {}
+}
