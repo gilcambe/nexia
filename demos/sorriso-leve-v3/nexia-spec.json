@@ -1,0 +1,245 @@
+{
+  "spec": {
+    "kind": "site",
+    "name": "Sorriso Leve",
+    "tagline": "Odontologia gentil para toda a família",
+    "photo_theme": "dentist dental",
+    "description": "Clínica odontológica em São Paulo especializada em clareamento, implantes, ortodontia e atendimento geral.",
+    "folder": "demos/sorriso-leve-v3",
+    "fonts": {
+      "heading": "Playfair Display",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2A7F8E",
+      "accent": "#F4A259",
+      "bg": "#F7FBFB",
+      "surface": "#FFFFFF",
+      "text": "#16302F",
+      "muted": "#5B6F70",
+      "dark": "#0F2E33"
+    },
+    "style": "soft",
+    "contact": {
+      "whatsapp": "5511999998888",
+      "phone": "(11) 99999-8888",
+      "email": "contato@sorrisoleve.com.br",
+      "address": "Rua das Flores, 120",
+      "city": "São Paulo - SP",
+      "hours": "Seg a Sex, 8h às 19h",
+      "instagram": "sorrisoleve",
+      "facebook": ""
+    },
+    "sections": [
+      {
+        "type": "hero",
+        "id": "sorriso-leve-cuidado-que-transforma",
+        "title": "Sorriso Leve: cuidado que transforma",
+        "subtitle": "Clareamento, implantes, ortodontia e atendimento geral em São Paulo",
+        "eyebrow": "Clínica odontológica",
+        "cta": {
+          "label": "Agendar avaliação",
+          "href": "whatsapp"
+        },
+        "cta2": {
+          "label": "Conheça nossos serviços",
+          "href": "#servicos"
+        },
+        "image_query": "happy dentist patient",
+        "video_query": "dental clinic tour"
+      },
+      {
+        "type": "services",
+        "id": "servicos",
+        "title": "Nossos Tratamentos",
+        "subtitle": "Soluções completas para sua saúde bucal",
+        "items": [
+          {
+            "title": "Clareamento",
+            "text": "Deixe seu sorriso até 8 tons mais branco de forma segura.",
+            "price": "a partir de R$ 690",
+            "image_query": "teeth whitening"
+          },
+          {
+            "title": "Implantes",
+            "text": "Restauramos dentes perdidos com tecnologia de última geração.",
+            "price": "consultar avaliação",
+            "image_query": "dental implant"
+          },
+          {
+            "title": "Ortodontia",
+            "text": "Aparelhos invisíveis e convencionais para alinhar seu sorriso.",
+            "price": "a partir de R$ 3.500",
+            "image_query": "orthodontic braces"
+          },
+          {
+            "title": "Clínico Geral",
+            "text": "Check‑up completo, prevenção e tratamento de cáries.",
+            "price": "a partir de R$ 250",
+            "image_query": "dental checkup"
+          }
+        ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-a-sorriso-leve",
+        "title": "Sobre a Sorriso Leve",
+        "subtitle": "Com mais de 10 anos de experiência, nossa equipe combina tecnologia avançada e atenção humanizada para oferecer o melhor cuidado odontológico a famílias de São Paulo.",
+        "text": "Com mais de 10 anos de experiência, nossa equipe combina tecnologia avançada e atenção humanizada para oferecer o melhor cuidado odontológico a famílias de São Paulo.",
+        "image_query": "modern dental office",
+        "stats": [
+          {
+            "value": "10",
+            "label": "anos de tradição"
+          },
+          {
+            "value": "5.000+",
+            "label": "pacientes atendidos"
+          },
+          {
+            "value": "3.000+",
+            "label": "sorrisos transformados"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "galeria",
+        "title": "Galeria",
+        "subtitle": "",
+        "image_queries": [
+          "dental office interior",
+          "dentist chair patient",
+          "happy patient smile",
+          "dental tools closeup",
+          "reception area dental clinic"
+        ]
+      },
+      {
+        "type": "testimonials",
+        "id": "depoimentos",
+        "title": "Depoimentos",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Carla M.",
+            "role": "",
+            "text": "Nunca imaginei que visitar o dentista poderia ser tão agradável. Meu sorriso nunca esteve tão bonito!",
+            "rating": 5
+          },
+          {
+            "name": "Rafael S.",
+            "role": "",
+            "text": "O tratamento de implante foi rápido e sem dor. Recomendo a todos!",
+            "rating": 5
+          },
+          {
+            "name": "Mariana P.",
+            "role": "",
+            "text": "A equipe me fez sentir confortável durante todo o tratamento ortodôntico.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "duvidas-frequentes",
+        "title": "Dúvidas Frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Aceitam convênio odontológico?",
+            "a": "Sim, trabalhamos com os principais planos de saúde dental."
+          },
+          {
+            "q": "Qual a primeira visita?",
+            "a": "Uma avaliação completa, diagnóstico e plano de tratamento personalizado."
+          },
+          {
+            "q": "Quanto tempo dura o clareamento?",
+            "a": "O procedimento leva em média 1 hora, com resultados visíveis imediatamente."
+          },
+          {
+            "q": "Posso agendar online?",
+            "a": "Sim, através do botão de WhatsApp ou pelo nosso site."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "agende-sua-avaliacao",
+        "title": "Agende sua avaliação",
+        "subtitle": "Responda rápido pelo WhatsApp e garanta seu horário.",
+        "cta": {
+          "label": "Chamar no WhatsApp",
+          "href": "whatsapp"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "fale-conosco",
+        "title": "Fale Conosco",
+        "subtitle": "",
+        "map": true
+      }
+    ]
+  },
+  "media": {
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Preparing_Teeth_Whitening_Materials_for_Dental_Treatment.jpg/1280px-Preparing_Teeth_Whitening_Materials_for_Dental_Treatment.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "Preparing Teeth Whitening Materials for Dental Treatment",
+      "credit": "Preparing Teeth Whitening Materials for Dental Treatment — Jameswasswa (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/X-ray_of_root_analogue_dental_implant_two_rooted_left_lower_molar.jpg/1280px-X-ray_of_root_analogue_dental_implant_two_rooted_left_lower_molar.jpg",
+      "width": 1280,
+      "height": 1007,
+      "alt": "X-ray of root analogue dental implant two rooted left lower molar",
+      "credit": "X-ray of root analogue dental implant two rooted left lower molar — Logicwhatelse (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/During_COVID-19_Pandemic-Free_Dental_checkup_for_underprivileged_children_by_a_trust_-Kolkata_West_Bengal-September_2021_IMG_20210912_102705_1.jpg/1280px-During_COVID-19_Pandemic-Free_Dental_checkup_for_underprivileged_children_by_a_trust_-Kolkata_West_Bengal-September_2021_IMG_20210912_102705_1.jpg",
+      "width": 1280,
+      "height": 720,
+      "alt": "During COVID-19 Pandemic-Free Dental checkup for underprivileged children by a t",
+      "credit": "During COVID-19 Pandemic-Free Dental checkup for underprivileged children by a trust -Kolkata West Bengal-Sept",
+      "provider": "openverse"
+    },
+    "s2.about": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Inspire_Dental_Group_-_fmr_Gandy%27s_Oyster_House%2C_American_Multigraph_Company_et_al._-_Buffalo%2C_New_York_-_20201209.jpg/1280px-Inspire_Dental_Group_-_fmr_Gandy%27s_Oyster_House%2C_American_Multigraph_Company_et_al._-_Buffalo%2C_New_York_-_20201209.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "Inspire Dental Group - fmr Gandy's Oyster House, American Multigraph Company et ",
+      "credit": "Inspire Dental Group - fmr Gandy's Oyster House, American Multigraph Company et al. - Buffalo, New York - 2020",
+      "provider": "openverse"
+    },
+    "s3.g0": {
+      "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL2Zyb2ZmaWNlX2RlbnRpc3RfMTYzOTY3NS1pbWFnZS1reWJiMGZxci5qcGc.jpg",
+      "width": 3616,
+      "height": 2421,
+      "alt": "Dental clinic",
+      "credit": "Dental clinic — autor desconhecido (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g1": {
+      "url": "https://cdn.stocksnap.io/img-thumbs/960w/YXEEJ34DKF.jpg",
+      "width": 4928,
+      "height": 3264,
+      "alt": "Dentist Orthodontist",
+      "credit": "Dentist Orthodontist — Michal Jarmoluk (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g3": {
+      "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZnJtaXJyb3JfZGVudGlzdF9pbnN0cnVtZW50c18xMjkyNTIwLWltYWdlLWt5YmQ2ejZ5LmpwZw.jpg",
+      "width": 5472,
+      "height": 3648,
+      "alt": "Closeup dental instrument",
+      "credit": "Closeup dental instrument — autor desconhecido (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    }
+  }
+}
