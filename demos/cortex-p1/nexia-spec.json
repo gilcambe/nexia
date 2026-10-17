@@ -1,0 +1,295 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex-p1 Admin",
+    "tagline": "Painel de controle, gestão de cadastros e histórico de conversas do Cortex",
+    "photo_theme": "dashboard analytics modern",
+    "description": "Sistema administrativo completo do Cortex-p1 com gerenciamento de entidades, painel de histórico de conversas com busca, agrupamento temporal, rolagem infinita e visualização detalhada de mensagens para usuários master.",
+    "folder": "demos/cortex-p1",
+    "fonts": {
+      "heading": "Plus Jakarta Sans",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2563eb",
+      "accent": "#06b6d4",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "11987654321",
+      "phone": "(11) 98765-4321",
+      "email": "suporte@cortex.ai",
+      "address": "Av. Paulista, 1000 - São Paulo, SP",
+      "city": "São Paulo, SP",
+      "hours": "Seg-Sex: 9h às 18h",
+      "instagram": "https://instagram.com",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": "https://linkedin.com"
+    },
+    "entities": [
+      {
+        "key": "conversas",
+        "label": "Conversas",
+        "singular": "Conversa",
+        "fields": [
+          {
+            "key": "usuario",
+            "label": "Usuário",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "grupo",
+            "label": "Período",
+            "type": "select",
+            "options": [
+              "Hoje",
+              "Ontem",
+              "Últimos 7 dias",
+              "Anteriores"
+            ],
+            "required": true
+          },
+          {
+            "key": "resumo",
+            "label": "Resumo da Conversa",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "mensagens",
+            "label": "Total de Mensagens",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "atualizado",
+            "label": "Atualizado em",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status da API",
+            "type": "select",
+            "options": [
+              "Sincronizado",
+              "Pendente",
+              "Erro"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "usuario": "Carlos Eduardo",
+            "grupo": "Hoje",
+            "resumo": "Dúvida sobre integração da API /api/nexia/history",
+            "mensagens": "14",
+            "atualizado": "2026-06-07",
+            "status": "Sincronizado"
+          },
+          {
+            "usuario": "Mariana Costa",
+            "grupo": "Ontem",
+            "resumo": "Configuração de permissões de acesso master",
+            "mensagens": "8",
+            "atualizado": "2026-06-06",
+            "status": "Sincronizado"
+          },
+          {
+            "usuario": "Roberto Alves",
+            "grupo": "Últimos 7 dias",
+            "resumo": "Rolagem infinita na barra lateral de conversas",
+            "mensagens": "22",
+            "atualizado": "2026-06-04",
+            "status": "Sincronizado"
+          },
+          {
+            "usuario": "Beatriz Lima",
+            "grupo": "Anteriores",
+            "resumo": "Relatório de logs de erro do sistema",
+            "mensagens": "5",
+            "atualizado": "2026-05-28",
+            "status": "Sincronizado"
+          },
+          {
+            "usuario": "Lucas Martins",
+            "grupo": "Anteriores",
+            "resumo": "Ajuste na rota /historico do router React",
+            "mensagens": "19",
+            "atualizado": "2026-05-20",
+            "status": "Sincronizado"
+          }
+        ]
+      },
+      {
+        "key": "usuarios_master",
+        "label": "Usuários Master",
+        "singular": "Usuário Master",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome Completo",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail Corporativo",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "nivel",
+            "label": "Nível de Acesso",
+            "type": "select",
+            "options": [
+              "Master Super",
+              "Master Admin",
+              "Auditor"
+            ],
+            "required": true
+          },
+          {
+            "key": "status_conta",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Inativo"
+            ],
+            "required": true
+          },
+          {
+            "key": "ultimo_acesso",
+            "label": "Último Acesso",
+            "type": "date",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Carlos Eduardo",
+            "email": "carlos.eduardo@cortex.ai",
+            "nivel": "Master Super",
+            "status_conta": "Ativo",
+            "ultimo_acesso": "2026-06-07"
+          },
+          {
+            "nome": "Fernanda Souza",
+            "email": "fernanda.souza@cortex.ai",
+            "nivel": "Master Admin",
+            "status_conta": "Ativo",
+            "ultimo_acesso": "2026-06-06"
+          },
+          {
+            "nome": "Gabriel Lima",
+            "email": "gabriel.lima@cortex.ai",
+            "nivel": "Auditor",
+            "status_conta": "Ativo",
+            "ultimo_acesso": "2026-06-05"
+          },
+          {
+            "nome": "Juliana Ribeiro",
+            "email": "juliana.ribeiro@cortex.ai",
+            "nivel": "Master Admin",
+            "status_conta": "Inativo",
+            "ultimo_acesso": "2026-05-15"
+          }
+        ]
+      },
+      {
+        "key": "endpoints_api",
+        "label": "Endpoints API",
+        "singular": "Endpoint",
+        "fields": [
+          {
+            "key": "rota",
+            "label": "Rota da API",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "metodo",
+            "label": "Método HTTP",
+            "type": "select",
+            "options": [
+              "GET",
+              "POST",
+              "PUT",
+              "DELETE"
+            ],
+            "required": true
+          },
+          {
+            "key": "status_api",
+            "label": "Estado",
+            "type": "select",
+            "options": [
+              "Estável",
+              "Em Homologação",
+              "Depreciado"
+            ],
+            "required": true
+          },
+          {
+            "key": "tempo_resposta",
+            "label": "Tempo Médio (ms)",
+            "type": "number",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "rota": "/api/nexia/history/conversations",
+            "metodo": "GET",
+            "status_api": "Estável",
+            "tempo_resposta": "45"
+          },
+          {
+            "rota": "/api/nexia/history/messages",
+            "metodo": "GET",
+            "status_api": "Estável",
+            "tempo_resposta": "60"
+          },
+          {
+            "rota": "/api/cortex/auth/master",
+            "metodo": "POST",
+            "status_api": "Estável",
+            "tempo_resposta": "30"
+          },
+          {
+            "rota": "/api/cortex/config",
+            "metodo": "PUT",
+            "status_api": "Em Homologação",
+            "tempo_resposta": "120"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Histórico",
+      "Conversas",
+      "Master",
+      "Configurações"
+    ]
+  },
+  "media": {}
+}
