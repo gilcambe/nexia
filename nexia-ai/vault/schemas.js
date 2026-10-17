@@ -387,6 +387,7 @@ const SCHEMAS = {
       execution_id: t.string({ required: true, max: 128, pattern: /^[A-Za-z0-9_.:-]+$/, patternName: 'execution_id', immutable: true }),
       requested_by: { ...actorRef, required: true, immutable: true },
       request_summary: t.string({ required: true, max: 500 }),
+      request_text: t.string({ max: 4000 }),
       intent: t.enum(EXECUTION_INTENTS, { required: true }),
       status: t.enum(['planned', 'running', 'waiting_approval', 'needs_input', 'succeeded', 'failed', 'cancelled'], { required: true }),
       plan: t.array(t.object({
