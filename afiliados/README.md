@@ -46,23 +46,18 @@ O WhatsApp é um canal de conversão importante, use com responsabilidade.
 - Evite envio automático massivo que viole os termos de uso.
 - Mantenha comunicação transparente com seus seguidores.
 
-## 6. Regras para não ser bloqueado
-Para manter sua conta sempre ativa e evitar bloqueios nas redes sociais e canais de divulgação, siga rigorosamente as orientações abaixo:
+## 6. Regras para nao ser bloqueado
+Para manter sua conta ativa e evitar bloqueios nas redes sociais e canais de divulgação, siga as orientações:
 
-- Evite envio em massa não autorizado, mensagens repetitivas ou qualquer prática que caracterize spam em grupos de WhatsApp e canais do Telegram.
-- Informe de maneira clara e transparente aos seus seguidores que os links compartilhados são de afiliado e podem gerar comissão para você.
-- Respeite os intervalos entre mensagens e os limites operacionais diários de cliques, disparos e interações definidos pelas plataformas parceiras.
-- Mantenha uma postura ética, divulgando apenas promoções reais, ativas e de lojas parceiras idôneas para proteger o seu público.
-- Nunca utilize palavras enganosas, promessas de ganhos fáceis ou chamadas sensacionalistas que induzam o usuário a erro.
-- Respeite sempre os pedidos de descadastro ou saída de membros dos seus grupos e listas de transmissão.
+- Evite envio em massa nao autorizado ou mensagens repetitivas em grupos.
+- Informe claramente que os links sao de afiliado.
+- Respeite os intervalos e limites diários definidos.
+- Divulgue apenas promoções reais e lojas idôneas.
 
 ## 7. Trocar o nome do site, os temas ou os limites
-Você pode adaptar a plataforma facilmente para atender às suas necessidades de marca e operação através das opções de configuração:
+Você pode adaptar a plataforma nas opções de configuração:
 
-- **Nome do site:** Altere o título principal, textos de cabeçalho, rodapé e metadados nos arquivos de configuração do projeto ou diretamente pelo painel administrativo.
-- **Temas:** Personalize cores primárias, logotipos, ícones e fontes editando as variáveis CSS e os estilos globais do design system mobile-first.
-- **Limites:** Ajuste cotas operacionais, limites diários de requisições e parâmetros de segurança diretamente nas variáveis de ambiente do servidor e nos arquivos de configuração.
-  - **Notificações:** Defina a frequência e os canais de alerta para novas promoções e relatórios de comissões.
-
-Baixe o script configurar-robo.bat e dê dois cliques para configurá‑lo.
+- **Nome do site:** Altere o título, cabeçalho e rodapé.
+- **Temas:** Personalize cores e fontes nas variáveis CSS.
+- **Limites:** Ajuste cotas e parâmetros nas variáveis de ambiente.
 
