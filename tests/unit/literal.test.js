@@ -29,3 +29,10 @@ test('LIT4. caminho fora do projeto é recusado', () => {
 test('LIT5. pedido que também manda editar arquivo existente ainda chama o agente', () => {
   assert.strictEqual(temEdicaoExtra(`${um}\nE em \`cloudflare/functions.js\` acrescente uma linha.`), true);
 });
+
+test('código colado no pedido não vira "site novo" (buildKind ignora blocos de código)', () => {
+  const { buildKind } = require('../../nexia-ai/orchestrator');
+  const pedido = 'Copie EXATAMENTE. Só 1 arquivo novo: `scripts/x.js`:\n```js\n// crie um painel e gere um app\nconst a = 1;\n```\nNada além disso.';
+  assert.strictEqual(buildKind(pedido), null);
+  assert.strictEqual(buildKind('Crie um site para a clínica'), 'site');
+});
