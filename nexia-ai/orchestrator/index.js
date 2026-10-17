@@ -205,7 +205,7 @@ function createOrchestrator(deps) {
 
   /** Executa os passos a partir do primeiro não concluído. */
   async function advance(ctx, exe, req) {
-    const message = exe.request_summary;
+    const message = exe.request_text || exe.request_summary;
     const plan = planFor(exe.intent, message);
     const meter = createMeter({ ...DEFAULT_BUDGET, ...(exe.budget || {}) });
     const project = await vault.Project.get(ctx, exe.project_id);
@@ -782,7 +782,7 @@ function createOrchestrator(deps) {
     const plan = planFor(intent, message).map((s, i) => ({ step: i + 1, agent: s.agent, goal: s.goal, status: 'pending', tool_call_ids: [] }));
     const { record, replayed } = await vault.Execution.create(ctx, {
       project_id: r.project_id, client_id: r.client_id, execution_id: ctx.executionId, requested_by: ctx.actor,
-      request_summary: message.slice(0, 500), intent, status: 'planned', plan, budget: { ...DEFAULT_BUDGET, ...(req.budget || {}) },
+      request_summary: message.slice(0, 500), request_text: message.slice(0, 4000), intent, status: 'planned', plan, budget: { ...DEFAULT_BUDGET, ...(req.budget || {}) },
       usage: { tool_calls: 0, input_tokens: 0, output_tokens: 0, cost_usd_micros: 0, cost_known: true, duration_ms: 0 },
       started_at: now().toISOString(),
     }, req.idempotencyKey ? { idempotencyKey: req.idempotencyKey } : {});
@@ -809,7 +809,7 @@ function createOrchestrator(deps) {
     const call = lastId ? await vault.ToolCall.get(ctx, lastId) : null;
     if (!call || call.status === 'pending_approval') return exe;
     const plan = exe.plan.map(s => ({ ...s }));
-    const action = planFor(exe.intent, exe.request_summary)[i].action;
+    const action = planFor(exe.intent, exe.request_text || exe.request_summary)[i].action;
     if (call.status === 'succeeded') {
       // Passo determinístico: a própria chamada aprovada conclui o passo. Passo de agente: o
       // agente roda de novo para terminar o trabalho (a ação aprovada já foi feita).
