@@ -407,6 +407,7 @@ Coleção `vault_executions`, id `exe_…`, schemaVersion 1.
 | `requested_by.type` | enum | sim |  |  | `user`, `agent`, `system` |
 | `requested_by.id` | string (actor_id) | sim |  |  | 1–128 caracteres |
 | `request_summary` | string | sim |  |  | 1–500 caracteres |
+| `request_text` | string |  |  |  | 1–4000 caracteres |
 | `intent` | enum | sim |  |  | `question`, `status`, `change`, `review`, `pipeline`, `deploy_staging`, `deploy_production`, `unknown` |
 | `status` | enum | sim |  |  | `planned`, `running`, `waiting_approval`, `needs_input`, `succeeded`, `failed`, `cancelled` |
 | `plan` | array de objeto |  |  | [] | até 20 itens |
