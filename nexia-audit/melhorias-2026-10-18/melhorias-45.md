@@ -26,3 +26,13 @@
 - **Custo:** 0.
 - **Justificativa:** Tarefas pequenas passam na revisão e no teste; estimativa na entrada evita surpresa; divisão precoce de pedidos multi-arquivo evita falhas acumuladas.
 
+---
+
+# Melhoria 48: Tour curto de 4 telas por papel (aluno, coach) só na 1ª vez, com "pular"
+
+- **Status:** Pendente
+- **Regra:** O novo usuário verá um tour de 4 telas na primeira vez que acessar, adaptado ao seu papel (aluno ou coach). Cada tela terá a opção de "Pular" o tour.
+- **Por quê:** O novo usuário entende as funcionalidades principais sem se perder, melhorando a experiência de onboarding.
+- **Custo:** 0.
+- **Justificativa:** Facilita a compreensão do sistema por novos usuários e permite que usuários experientes pulem a introdução.
+
