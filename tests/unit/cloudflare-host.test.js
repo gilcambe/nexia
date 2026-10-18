@@ -253,6 +253,7 @@ test('CF-BC. Worker: assetlinks.json do app Android e redirecionamento do link a
   assert.strictEqual(a.status, 200);
   const j = await a.json();
   assert.strictEqual(j[0].target.package_name, 'app.nexia.bodycoach');
+  assert.ok(j[0].target.sha256_cert_fingerprints.every((f) => /^([0-9A-F]{2}:){31}[0-9A-F]{2}$/.test(f)) && j[0].target.sha256_cert_fingerprints.length >= 1);
   // Sem BODY_COACH_URL: nada muda.
   assert.strictEqual((await call('/body-coach/workout')).status, 200);
   // Com BODY_COACH_URL: só redireciona em *.workers.dev e quando não veio do Pages (X-Nexia-Proxy).
