@@ -46,6 +46,10 @@ jobs:
         run: |
           gh issue view "$NUMERO" --json title,body --jq '"# " + .title + "\n\n" + .body' > "$RUNNER_TEMP/tarefa.md"
           echo "Tarefa:"; head -c 600 "$RUNNER_TEMP/tarefa.md"
+      - name: Arquivos citados na tarefa
+        run: |
+          grep -oE '`[A-Za-z0-9_./-]+/[A-Za-z0-9_.-]+\.[a-z]{1,5}`' "$RUNNER_TEMP/tarefa.md" | tr -d '`' | sort -u | head -8 > "$RUNNER_TEMP/arquivos.txt" || true
+          echo "Arquivos:"; cat "$RUNNER_TEMP/arquivos.txt"
       - name: Aplicar com a primeira conta que responder
         id: aplicar
         run: |
@@ -63,7 +67,7 @@ jobs:
             IFS='|' read -r nome modelo var chave <<< "$c"
             echo "Tentando conta: $nome"
             git reset -q --hard "origin/${GITHUB_REF_NAME}" || true
-            if env "$var=$chave" aider --yes-always --no-auto-commits --no-check-update --no-analytics --model "$modelo" --message "$PROMPT" 2>&1 | tail -40 && [ -n "$(git status --porcelain)" ]; then
+            if env "$var=$chave" aider --yes-always --no-auto-commits --no-gitignore --no-check-update --no-analytics --model "$modelo" --message "$PROMPT" $(tr '\n' ' ' < "$RUNNER_TEMP/arquivos.txt") 2>&1 | tail -40; [ -n "$(git status --porcelain | grep -v -E '\.aider|\.gitignore')" ]; then
               echo "ok=1" >> "$GITHUB_OUTPUT"; echo "conta=$nome" >> "$GITHUB_OUTPUT"; exit 0
             fi
             echo "Conta $nome sem resultado (cota/limite); próxima."
@@ -74,10 +78,18 @@ jobs:
         run: npm test
       - name: Abrir PR
         if: steps.aplicar.outputs.ok == '1'
+        env:
+          GITHUB_APP_ID: ${{ secrets.NEXIA_GITHUB_APP_ID }}
+          GITHUB_APP_PRIVATE_KEY: ${{ secrets.NEXIA_GITHUB_APP_PRIVATE_KEY }}
+          REPO: ${{ github.repository }}
         run: |
           git add -A
+          git reset -q -- '.aider*' .gitignore 2>/dev/null || true
           git commit -q -m "Reserva (${{ steps.aplicar.outputs.conta }}): issue #$NUMERO"
           git push -q origin "nexia/reserva-$NUMERO"
+          # PR aberto pela GitHub App do NEXIA: assim o CI roda nele (com o token padrão o GitHub não roda).
+          APP_TOKEN=$(node -e "require('./scripts/cortex-fila').tokenDaApp().then(t=>process.stdout.write(t||''))" 2>/dev/null || true)
+          [ -n "$APP_TOKEN" ] && export GH_TOKEN="$APP_TOKEN"
           gh pr create --base "$GITHUB_REF_NAME" --head "nexia/reserva-$NUMERO" --title "Reserva: issue #$NUMERO" --body "Aplicado pela conta ${{ steps.aplicar.outputs.conta }}. Fecha #$NUMERO." --label automerge
       - name: Sem cota hoje
         if: steps.aplicar.outputs.ok != '1'
