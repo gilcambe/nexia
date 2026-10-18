@@ -5,8 +5,16 @@ let app: FirebaseApp | null = null;
 
 export async function initFirebase() {
   if (app) {
-    const { getAuth } = await import("firebase/auth");
-    return { app, auth: getAuth(app) };
+      const { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence } = await import("firebase/auth");
+  let auth;
+  try {
+    auth = initializeAuth(app, {
+      persistence: [indexedDBLocalPersistence, browserLocalPersistence]
+    });
+  } catch {
+    auth = getAuth(app);
+  }
+  return { app, auth };
   }
   // Config pública do app da Web guardada no aparelho: abre sem esperar o Worker; a rede só atualiza para a próxima vez.
   let cfg: unknown = null;
@@ -24,8 +32,16 @@ export async function initFirebase() {
     cfg = data;
   }
   app = initializeApp(cfg as FirebaseOptions);
-  const { getAuth } = await import("firebase/auth");
-  return { app, auth: getAuth(app) };
+  const { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence } = await import("firebase/auth");
+  let auth;
+  try {
+    auth = initializeAuth(app, {
+      persistence: [indexedDBLocalPersistence, browserLocalPersistence]
+    });
+  } catch {
+    auth = getAuth(app);
+  }
+  return { app, auth };
 }
 
 export function getFirebaseApp(): FirebaseApp | null {
