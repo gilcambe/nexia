@@ -78,8 +78,9 @@ exports.handler = async (event) => {
   if (produto && !images) return resposta(event, 400, { error: 'Mande a foto do produto.' });
 
   const router = getRouter();
-  // Regra do dono: o Body Coach só usa IA grátis, mesmo que alguém configure a chave paga da Anthropic.
-  for (const d of listFor('fast').filter((x) => x.provider !== 'anthropic')) {
+  // Regra do dono: o Body Coach só usa IA grátis (`FREE.fast` e `FREE.reasoning`), nunca provedor `anthropic`, mesmo com a chave configurada.
+  const listaModelos = (body.role === 'nutrologo' || role === 'nutrologo' || role === 'coach') ? FREE.reasoning : FREE.fast;
+  for (const d of (Array.isArray(listaModelos) ? listaModelos : FREE.fast).filter((x) => x && x.provider !== 'anthropic')) {
     try {
       const cap = router.capabilities(d);
       if (!cap.available || (images && !cap.vision)) continue;
