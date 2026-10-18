@@ -36,6 +36,25 @@ function paisConcluidos({ pais, partes }) {
   }
   return pais.filter(x => { const ps = porPai.get(x.number) || []; return ps.length > 0 && ps.every(p => p.state === 'closed' && nomes(p).includes(L.feito)); }).map(x => x.number);
 }
+// Caminhos de arquivo entre crases no pedido (ex.: `src/a/b.ts`). Servem para conferir se a entrega mexeu no que foi pedido.
+function caminhosDoPedido(corpo) {
+  const achados = String(corpo || '').match(/`[\w./-]*\/[\w.-]+\.(?:js|ts|tsx|jsx|css|html|json|md|yml|svg|webmanifest)`/g) || [];
+  return [...new Set(achados.map(c => c.slice(1, -1)).filter(c => !c.startsWith('/') && !c.includes('..')))];
+}
+// Rede de segurança do "feito": o pedido cita arquivos, mas nenhum deles existe na develop nem em PR aberto = a rodada não entregou nada.
+async function entregouAlgo(token, corpo) {
+  const caminhos = caminhosDoPedido(corpo);
+  if (!caminhos.length) return true;
+  try {
+    for (const c of caminhos.slice(0, 6)) if ((await gh(token, 'GET', `/contents/${c}?ref=develop`)).status === 200) return true;
+    const prs = (await gh(token, 'GET', '/pulls?state=open&per_page=30')).json || [];
+    for (const pr of prs.filter(x => /^nexia\//.test((x.head || {}).ref || ''))) {
+      const fs = (await gh(token, 'GET', `/pulls/${pr.number}/files?per_page=100`)).json || [];
+      if (fs.some(f => caminhos.includes(f.filename))) return true;
+    }
+    return false;
+  } catch { return true; }
+}
 const minutos = (agora, iso) => (agora - new Date(iso).getTime()) / 60000;
 // As partes de uma tarefa dividida são criadas pela própria fila (conta github-actions[bot], que o GitHub marca
 // como CONTRIBUTOR). Elas contam como confiáveis: só quem tem acesso ao repositório consegue pôr rótulos.
@@ -59,7 +78,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
     const run = ultimaRun(i.number);
     const pista = numeroDe(ls, 'pista');
     if (run && run.status === 'completed') {
-      if (run.conclusion === 'success') { acoes.push({ tipo: 'concluir', numero: i.number, run: run.id }); continue; }
+      if (run.conclusion === 'success') { acoes.push({ tipo: 'concluir', numero: i.number, run: run.id, corpo: String(i.body || '') }); continue; }
       if (run.cota) { acoes.push({ tipo: 'reenfileirar', numero: i.number, tentativa: numeroDe(ls, 'tentativa'), run: run.id, conclusao: 'cota do banco' }); continue; }
       const t = numeroDe(ls, 'tentativa') + 1;
       acoes.push(t >= MAX_TENTATIVAS
@@ -197,6 +216,11 @@ async function executar(token, acao, dividir) {
     });
     if (d.status !== 204) { await delLabel(L.rodando); await comentar(`Não consegui disparar o Cortex (${d.status}). Tento de novo no próximo ciclo.`); }
   } else if (acao.tipo === 'concluir') {
+    if (!(await entregouAlgo(token, acao.corpo))) {
+      await delLabel(L.rodando);
+      await comentar(`A rodada terminou sem erro, mas os arquivos pedidos (${caminhosDoPedido(acao.corpo).slice(0, 3).join(', ')}) não estão na develop nem em PR aberto. Não marquei como feita; volta para a fila.`);
+      return;
+    }
     await delLabel(L.rodando); await addLabel(L.feito);
     await comentar(`Concluída pelo Cortex: https://github.com/${REPO}/actions/runs/${acao.run}`);
     await gh(token, 'PATCH', `/issues/${n}`, { state: 'closed', state_reason: 'completed' });
@@ -299,5 +323,5 @@ async function main() {
   }
 }
 
-module.exports = { sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
+module.exports = { caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });

@@ -1,9 +1,12 @@
 import { useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const next = params.get("next");
+  const destino = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
   const { login, register, loading, error } = useAuth();
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
@@ -22,12 +25,12 @@ export default function LoginPage() {
       } else {
         await register(email, password, name);
       }
-      navigate("/");
+      navigate(destino);
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : "Erro na autenticação");
     }
     setSubmitting(false);
-  }, [email, password, name, mode, login, register, navigate]);
+  }, [email, password, name, mode, login, register, navigate, destino]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center px-4">
