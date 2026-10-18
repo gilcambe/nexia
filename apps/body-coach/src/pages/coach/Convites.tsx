@@ -19,7 +19,7 @@ export default function Convites() {
   useEffect(() => { void carregar(); }, []);
 
   const lidos = useMemo(() => lerPlanilha(texto), [texto]);
-  const base = dados ? `${window.location.origin}${import.meta.env.BASE_URL}convite/${dados.codigo}` : '';
+  const base = dados ? `${window.location.origin}${import.meta.env.BASE_URL}c/${dados.codigo}` : '';
   const recado = (nome: string, link: string) => `${nome ? `Oi ${nome.split(' ')[0]}!` : 'Oi, tudo bem?'} Aqui é ${dados?.coach ?? 'o seu coach'}. Criei o seu acesso ao meu app de treino (é grátis). Toque no link para entrar na minha equipe: ${link}`;
   const faltam = (dados?.convites ?? []).filter((c) => !c.entrou);
   const proximoZap = faltam.find((c) => c.telefone && !c.enviado);

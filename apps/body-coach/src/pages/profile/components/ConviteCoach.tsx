@@ -24,7 +24,7 @@ export default function ConviteCoach() {
   };
 
   if (!info) return null;
-  const link = info.codigo ? `${window.location.origin}${import.meta.env.BASE_URL}convite/${info.codigo}` : '';
+  const link = info.codigo ? `${window.location.origin}${import.meta.env.BASE_URL}c/${info.codigo}` : '';
   const copiar = async () => { try { await navigator.clipboard.writeText(link); setMsg('Link copiado! Cole no WhatsApp.'); } catch { setMsg('Não consegui copiar. Segure o link e copie.'); } };
   const compartilhar = async () => { try { await navigator.share({ title: 'Meu treino no Body Coach', text: 'Entre na minha equipe de treino:', url: link }); } catch { /* cancelou */ } };
 
