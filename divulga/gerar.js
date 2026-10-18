@@ -17,7 +17,8 @@ function carregarCliente(id) {
 }
 
 function montarPecas(cliente, hoje = new Date()) {
-  const prints = (cliente.imagens || []).slice(0, 4).map(i => dataUri(path.join(RAIZ, 'imagens', i))).filter(Boolean);
+  // prints reais do app só entram se o cliente listar `prints` (arquivos em divulga/prints); senão valem as telas desenhadas pelo visual
+  const prints = (cliente.prints || []).slice(0, 4).map(i => dataUri(path.join(RAIZ, 'prints', i))).filter(Boolean);
   const telas = carrossel(cliente, { prints });
   return {
     'carrossel-1': telas[0], 'carrossel-2': telas[1], 'carrossel-3': telas[2], 'carrossel-4': telas[3], 'carrossel-5': telas[4],
