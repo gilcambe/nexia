@@ -40,9 +40,17 @@ export default function CentralPage() {
 
   const conferir = useCallback(async () => {
     setCarregando(true); setErros({});
-    await Promise.all(PARTES.map((p) => buscar(p)
-      .then((v) => setD((x) => ({ ...x, [p]: v })))
-      .catch((e: Error) => setErros((x) => ({ ...x, [p]: e.message })))));
+    // No máximo 3 pedidos ao mesmo tempo: 11 de uma vez derrubavam as partes mais pesadas no celular ("Failed to fetch").
+    const fila = [...PARTES];
+    const trabalhador = async () => {
+      for (let p = fila.shift(); p; p = fila.shift()) {
+        const parte = p;
+        await buscar(parte)
+          .then((v) => setD((x) => ({ ...x, [parte]: v })))
+          .catch((e: Error) => setErros((x) => ({ ...x, [parte]: e.message })));
+      }
+    };
+    await Promise.all([trabalhador(), trabalhador(), trabalhador()]);
     setCarregando(false);
   }, [buscar]);
 

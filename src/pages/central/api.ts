@@ -48,7 +48,17 @@ export function useCentral() {
   const pedir = useCallback(async <T,>(init: RequestInit & { query?: string } = {}): Promise<T> => {
     const token = await getToken();
     if (!token) throw new Error("Faça login para continuar.");
-    const res = await fetch(apiPath("/central") + (init.query || ""), { ...init, headers: { "Content-Type": "text/plain;charset=UTF-8", Authorization: `Bearer ${token}` } });
+    // "Failed to fetch" = a conexão caiu antes de haver resposta (servidor ocupado, rede do celular): tenta de novo até 3 vezes.
+    let res: Response | undefined;
+    for (let tentativa = 0; tentativa < 3 && !res; tentativa++) {
+      try {
+        res = await fetch(apiPath("/central") + (init.query || ""), { ...init, headers: { "Content-Type": "text/plain;charset=UTF-8", Authorization: `Bearer ${token}` } });
+      } catch (e) {
+        if (tentativa === 2 || init.method === "POST") throw new Error("Sem conexão com o servidor agora. Toque em Conferir de novo.");
+        await new Promise((r) => setTimeout(r, 700 * (tentativa + 1)));
+      }
+    }
+    if (!res) throw new Error("Sem conexão com o servidor agora. Toque em Conferir de novo.");
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(body.error || `Erro ${res.status}`);
     return body as T;
