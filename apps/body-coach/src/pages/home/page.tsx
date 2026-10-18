@@ -8,6 +8,7 @@ import TodayCard from './components/TodayCard';
 import NutritionCard from './components/NutritionCard';
 import NuncaFalhe from './components/NuncaFalhe';
 import AvisoAnamnese from './components/AvisoAnamnese';
+import AvisoFotos from './components/AvisoFotos';
 import LigarAvisos from './components/LigarAvisos';
 import ConviteTestador from './components/ConviteTestador';
 import PedirAvaliacao from '@/components/feature/PedirAvaliacao';
@@ -66,6 +67,7 @@ export default function Home() {
       )}
 
       <AvisoAnamnese />
+      <AvisoFotos />
       <NuncaFalhe />
       <TodayCard />
       <PedirAvaliacao />
