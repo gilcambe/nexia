@@ -1,0 +1,119 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Instalar App Cortex-p1",
+    "tagline": "Instale o app oficial direto da Play Store – segurança e desempenho garantidos",
+    "photo_theme": "mobile app",
+    "description": "Instale o app oficial direto da Play Store – segurança e desempenho garantidos",
+    "folder": "sites/instalar-app",
+    "fonts": {
+      "heading": "Montserrat",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2563eb",
+      "accent": "#10b981",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#1f2937"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 98888-7777",
+      "email": "contato@cortexp1.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "instalacoes",
+        "label": "Instalações",
+        "singular": "Instalação",
+        "fields": [
+          {
+            "key": "dispositivo",
+            "label": "Dispositivo",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "versao",
+            "label": "Versão do App",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data da Instalação",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Concluída",
+              "Falha"
+            ],
+            "required": true
+          },
+          {
+            "key": "observacoes",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "dispositivo": "Samsung Galaxy S22",
+            "versao": "1.3.0",
+            "data": "2026-10-10",
+            "status": "Concluída",
+            "observacoes": ""
+          },
+          {
+            "dispositivo": "Xiaomi Redmi Note 10",
+            "versao": "1.3.0",
+            "data": "2026-10-11",
+            "status": "Concluída",
+            "observacoes": ""
+          },
+          {
+            "dispositivo": "Motorola Moto G Power",
+            "versao": "1.3.0",
+            "data": "2026-10-12",
+            "status": "Falha",
+            "observacoes": "Erro de assinatura"
+          },
+          {
+            "dispositivo": "Google Pixel 7",
+            "versao": "1.3.0",
+            "data": "2026-10-13",
+            "status": "Concluída",
+            "observacoes": ""
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Instalação",
+      "Suporte"
+    ]
+  },
+  "media": {}
+}
