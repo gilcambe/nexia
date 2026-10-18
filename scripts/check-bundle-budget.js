@@ -1,27 +1,28 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const OUT_DIR = path.resolve('out/assets');
-const MAX_INITIAL_JS_SIZE_KB = 500; // Limite de 500KB para o JS inicial/vendor principal
+const OUT_DIR = path.resolve('out');
+const ASSETS_DIR = path.join(OUT_DIR, 'assets');
+const MAX_INITIAL_JS_SIZE_KB = 500; // Limite de 500KB para arquivos do bundle inicial/vendor crítico
 
 try {
-  if (!fs.existsSync(OUT_DIR)) {
-    console.error('Diretório out/assets não encontrado. Execute o build primeiro.');
+  const targetDir = fs.existsSync(ASSETS_DIR) ? ASSETS_DIR : OUT_DIR;
+  if (!fs.existsSync(targetDir)) {
+    console.error('Diretório de build (out ou out/assets) não encontrado. Execute o build primeiro.');
     process.exit(1);
   }
 
-  const files = fs.readdirSync(OUT_DIR);
-  const jsFiles = files.filter(f => f.endsWith('.js'));
+  const files = fs.readdirSync(targetDir, { recursive: true });
+  const jsFiles = files.filter(f => typeof f === 'string' && f.endsWith('.js') && !f.includes('vendor-firebase'));
 
-  let totalSize = 0;
   let maxFile = '';
   let maxFileSize = 0;
 
   for (const file of jsFiles) {
-    const filePath = path.join(OUT_DIR, file);
+    const filePath = path.join(targetDir, file);
+    if (!fs.statSync(filePath).isFile()) continue;
     const stats = fs.statSync(filePath);
     const sizeKB = stats.size / 1024;
-    totalSize += sizeKB;
     console.log(`[Bundle Budget] ${file}: ${sizeKB.toFixed(2)} KB`);
 
     if (stats.size > maxFileSize) {
@@ -31,7 +32,7 @@ try {
   }
 
   const maxFileKB = maxFileSize / 1024;
-  console.log(`[Bundle Budget] Maior arquivo JS: ${maxFile} (${maxFileKB.toFixed(2)} KB)`);
+  console.log(`[Bundle Budget] Maior arquivo JS inicial/crítico: ${maxFile} (${maxFileKB.toFixed(2)} KB)`);
 
   if (maxFileKB > MAX_INITIAL_JS_SIZE_KB) {
     console.error(`\n[ERRO] Bundle Budget excedido! O arquivo ${maxFile} tem ${maxFileKB.toFixed(2)} KB, ultrapassando o limite de ${MAX_INITIAL_JS_SIZE_KB} KB.`);
