@@ -77,9 +77,4 @@ regexes = [
   '''fake-api-key''',
   '''senha-forte-123''',
   '''eyJhbGciOiJub25lIn0\.e30\.''',
-  '''NEXIA_[A-Za-z0-9_]*''',
-  '''FIREBASE_[A-Za-z0-9_]*''',
-  '''CLOUDFLARE_[A-Za-z0-9_]*''',
-  '''GITHUB_[A-Za-z0-9_]*''',
-  '''ANTHROPIC_[A-Za-z0-9_]*''',
 ]
