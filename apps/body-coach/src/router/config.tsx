@@ -28,6 +28,7 @@ const RelatorioAvaliacao = carregar(() => import("../pages/evolution/relatorio/p
 const Compartilhado = carregar(() => import("../pages/compartilhado/page"));
 const AlunosEvolucao = carregar(() => import("../pages/coach/AlunosEvolucao"));
 const AlunoEvolucao = carregar(() => import("../pages/coach/AlunoEvolucao"));
+const Presenca = carregar(() => import("../pages/coach/Presenca"));
 const RelatorioAluno = carregar(() => import("../pages/coach/RelatorioAluno"));
 const Demonstracoes = carregar(() => import("../pages/coach/Demonstracoes"));
 const MeusAlunos = carregar(() => import("../pages/coach/MeusAlunos"));
@@ -133,6 +134,7 @@ const routes: RouteObject[] = [
       { path: "feed", element: <Feed /> },
       { path: "coach/evolucao", element: <SoPapel papel="coach"><AlunosEvolucao /></SoPapel> },
       { path: "coach/demonstracoes", element: <SoPapel papel="coach"><Demonstracoes /></SoPapel> },
+      { path: "coach/presenca/:uid", element: <SoPapel papel="coach"><Presenca /></SoPapel> },
       { path: "coach/evolucao/:uid", element: <SoPapel papel="coach"><AlunoEvolucao /></SoPapel> },
       { path: "feedback", element: <Feedback /> },
       { path: "acesso", element: <MeuAcesso /> },
