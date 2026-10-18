@@ -171,3 +171,12 @@ test('ensaio mostra a lista de interação e o roteiro de collabs', async () => 
   assert.match(t, /interagir à mão/);
   assert.match(t, /roteiro de 3 collabs/);
 });
+
+test('visual de marca: post único traz a tela do app, a marca Body Coach e escapa o texto', () => {
+  const { postUnico } = require('../../divulga/lib/visual');
+  const h = postUnico({ nome: 'Body Coach' }, { titulo: 'Dieta <x>', destaque: 'ok', texto: 'texto', tela: 'dieta' });
+  assert.match(h, /Dieta de hoje/);
+  assert.match(h, /Body Coach/);
+  assert.match(h, /tela de exemplo/);
+  assert.match(h, /Dieta &lt;x&gt;/);
+});
