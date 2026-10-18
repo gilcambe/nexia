@@ -1,0 +1,86 @@
+# NEXIA — Reserva do Cortex: quando a Claude fica sem créditos, uma conta grátis ligada (Gemini, OpenAI, Anthropic, OpenRouter)
+# aplica a issue cortex-fila e abre PR nexia/reserva-N. Tenta cada conta na ordem; em erro de cota passa para a próxima.
+name: Cortex Reserva
+
+on:
+  workflow_dispatch:
+    inputs:
+      numero:
+        description: Número da issue cortex-fila a aplicar
+        required: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: cortex-reserva-${{ inputs.numero }}
+  cancel-in-progress: false
+
+jobs:
+  reserva:
+    name: Reserva #${{ inputs.numero }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment: production
+    env:
+      NUMERO: ${{ inputs.numero }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RESERVA_GEMINI_KEY: ${{ secrets.RESERVA_GEMINI_KEY }}
+      RESERVA_OPENAI_KEY: ${{ secrets.RESERVA_OPENAI_KEY }}
+      RESERVA_ANTHROPIC_KEY: ${{ secrets.RESERVA_ANTHROPIC_KEY }}
+      RESERVA_OPENROUTER_KEY: ${{ secrets.RESERVA_OPENROUTER_KEY }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Instalar Aider
+        run: pip install --quiet aider-chat
+      - name: Ler a issue
+        run: |
+          gh issue view "$NUMERO" --json title,body --jq '"# " + .title + "\n\n" + .body' > "$RUNNER_TEMP/tarefa.md"
+          echo "Tarefa:"; head -c 600 "$RUNNER_TEMP/tarefa.md"
+      - name: Aplicar com a primeira conta que responder
+        id: aplicar
+        run: |
+          git config user.name "nexia-reserva"
+          git config user.email "reserva@users.noreply.github.com"
+          git checkout -q -b "nexia/reserva-$NUMERO"
+          PROMPT="Aplique esta tarefa no repositório. Só grátis, não remova nenhuma função existente. $(cat "$RUNNER_TEMP/tarefa.md")"
+          contas=()
+          [ -n "$RESERVA_GEMINI_KEY" ] && contas+=("gemini|gemini/gemini-2.0-flash|GEMINI_API_KEY|$RESERVA_GEMINI_KEY")
+          [ -n "$RESERVA_OPENROUTER_KEY" ] && contas+=("openrouter|openrouter/deepseek/deepseek-chat-v3-0324:free|OPENROUTER_API_KEY|$RESERVA_OPENROUTER_KEY")
+          [ -n "$RESERVA_OPENAI_KEY" ] && contas+=("openai|gpt-4o-mini|OPENAI_API_KEY|$RESERVA_OPENAI_KEY")
+          [ -n "$RESERVA_ANTHROPIC_KEY" ] && contas+=("anthropic|claude-3-5-haiku-20241022|ANTHROPIC_API_KEY|$RESERVA_ANTHROPIC_KEY")
+          if [ ${#contas[@]} -eq 0 ]; then echo "Nenhuma conta de reserva ligada."; echo "ok=0" >> "$GITHUB_OUTPUT"; exit 0; fi
+          for c in "${contas[@]}"; do
+            IFS='|' read -r nome modelo var chave <<< "$c"
+            echo "Tentando conta: $nome"
+            git reset -q --hard "origin/${GITHUB_REF_NAME}" || true
+            if env "$var=$chave" aider --yes-always --no-auto-commits --no-check-update --no-analytics --model "$modelo" --message "$PROMPT" 2>&1 | tail -40 && [ -n "$(git status --porcelain)" ]; then
+              echo "ok=1" >> "$GITHUB_OUTPUT"; echo "conta=$nome" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+            echo "Conta $nome sem resultado (cota/limite); próxima."
+          done
+          echo "ok=0" >> "$GITHUB_OUTPUT"
+      - name: Testar
+        if: steps.aplicar.outputs.ok == '1'
+        run: npm test
+      - name: Abrir PR
+        if: steps.aplicar.outputs.ok == '1'
+        run: |
+          git add -A
+          git commit -q -m "Reserva (${{ steps.aplicar.outputs.conta }}): issue #$NUMERO"
+          git push -q origin "nexia/reserva-$NUMERO"
+          gh pr create --base "$GITHUB_REF_NAME" --head "nexia/reserva-$NUMERO" --title "Reserva: issue #$NUMERO" --body "Aplicado pela conta ${{ steps.aplicar.outputs.conta }}. Fecha #$NUMERO." --label automerge
+      - name: Sem cota hoje
+        if: steps.aplicar.outputs.ok != '1'
+        run: |
+          gh issue comment "$NUMERO" --body "Reserva: nenhuma conta ligada respondeu (sem cota ou sem chave). A fila tenta de novo amanhã."
+          exit 1
