@@ -33,6 +33,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
+          NEXIA_JOBS_TOKEN: ${{ secrets.NEXIA_JOBS_TOKEN }}
           # Divisor de tarefas grandes: só modelos grátis (rodízio). Um segredo por linha (o GitHub exige).
           FIREBASE_SERVICE_ACCOUNT_B: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_B }}
           FIREBASE_SERVICE_ACCOUNT_C: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_C }}
