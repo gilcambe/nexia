@@ -10,15 +10,10 @@ jobs:
           F=https://nexia-c8710.firebaseapp.com
           for js in iframe.js handler.js; do curl -sS "$F/__/auth/$js" -o /tmp/$js; done
           python3 - <<'PY'
+          s=open('/tmp/handler.js').read()
+          i=s.index('webwidgetstarter_projectNumber'); print(s[i-2600:i+100])
           import re
-          for f in ['iframe.js','handler.js']:
-              s=open('/tmp/'+f).read()
-              print('=====',f)
-              for m in re.finditer(r'unauthorized-domain|UNAUTHORIZED_DOMAIN|INVALID_ORIGIN', s):
-                  i=m.start(); print('--- @',i); print(s[max(0,i-500):i+900])
-              # find the function name defined containing "unauthorized-domain" and its call sites
-              for m in re.finditer(r'var (\w+)=function\(a\)\{var b="unauthorized-domain"', s):
-                  name=m.group(1); print('FN',name)
-                  for c in re.finditer(r'[^\w.]'+re.escape(name)+r'\(', s):
-                      j=c.start(); print('CALL @',j, s[max(0,j-600):j+200])
+          for m in re.finditer(r'[,;\s]up=function', s): print('UP', s[m.start():m.start()+400])
+          for m in re.finditer(r'[,;\s]ph=function', s): print('PH', s[m.start():m.start()+300])
           PY
+          curl -sS https://nexia-c8710.firebaseapp.com/__/auth/experiments.js | head -c 1500
