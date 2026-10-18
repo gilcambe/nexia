@@ -31,6 +31,11 @@ jobs:
       RESERVA_OPENAI_KEY: ${{ secrets.RESERVA_OPENAI_KEY }}
       RESERVA_ANTHROPIC_KEY: ${{ secrets.RESERVA_ANTHROPIC_KEY }}
       RESERVA_OPENROUTER_KEY: ${{ secrets.RESERVA_OPENROUTER_KEY }}
+      # Contas grátis que o Cortex já usa (um segredo por linha): entram como reserva extra quando o Gemini estoura a cota do dia.
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -66,6 +71,9 @@ jobs:
               contas+=("gemini|gemini/$GM|GEMINI_API_KEY|$RESERVA_GEMINI_KEY")
             done
           fi
+          [ -n "$GROQ_API_KEY" ] && contas+=("groq|groq/llama-3.3-70b-versatile|GROQ_API_KEY|$GROQ_API_KEY")
+          [ -n "$MISTRAL_API_KEY" ] && contas+=("mistral|mistral/codestral-latest|MISTRAL_API_KEY|$MISTRAL_API_KEY")
+          [ -n "$OPENROUTER_API_KEY" ] && contas+=("openrouter-cortex|openrouter/deepseek/deepseek-chat-v3-0324:free|OPENROUTER_API_KEY|$OPENROUTER_API_KEY")
           [ -n "$RESERVA_OPENROUTER_KEY" ] && contas+=("openrouter|openrouter/deepseek/deepseek-chat-v3-0324:free|OPENROUTER_API_KEY|$RESERVA_OPENROUTER_KEY")
           [ -n "$RESERVA_OPENAI_KEY" ] && contas+=("openai|gpt-4o-mini|OPENAI_API_KEY|$RESERVA_OPENAI_KEY")
           [ -n "$RESERVA_ANTHROPIC_KEY" ] && contas+=("anthropic|claude-3-5-haiku-20241022|ANTHROPIC_API_KEY|$RESERVA_ANTHROPIC_KEY")
