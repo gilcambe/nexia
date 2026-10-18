@@ -64,6 +64,11 @@ exports.handler = async (event) => {
 
   // 1. Uso exclusivo da lista grátis (FREE.fast / FREE.reasoning), nunca anthropic
   const useModels = (role === 'nutrologo' || role === 'fisioterapeuta' || receita) ? FREE.reasoning : FREE.fast;
+  for (const m of useModels) {
+    if (m.provider === 'anthropic') {
+      throw new Error('Erro crítico: Provedor anthropic não permitido no Body Coach');
+    }
+  }
 
   // 2. Respostas prontas locais (sem IA) para perguntas mais comuns detectadas por palavras-chave
   const lcMsg = message.toLowerCase();
