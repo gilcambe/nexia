@@ -98,7 +98,7 @@ exports.handler = async (event) => {
   } else if (lowerMsg.includes('água') || lowerMsg.includes('beber água') || lowerMsg.includes('hidratação')) {
     const aguaMl = ctxObj.agua_ml || ctxObj.agua || 2500;
     localReply = `Lembre-se de manter a hidratação em dia! A meta recomendada para você é de cerca de ${aguaMl} ml de água por hoje. Já bebeu água suficiente?`;
-  } else if (lowerMsg.includes('sono') || lowerMsg.includes 'dormi' || lowerMsg.includes('dormir')) {
+  } else if (lowerMsg.includes('sono') || lowerMsg.includes('dormi') || lowerMsg.includes('dormir')) {
     const horasSono = ctxObj.horas_sono || ctxObj.sono || 7;
     localReply = `O descanso é fundamental para a recuperação e resultados. Você registrou cerca de ${horasSono} horas de sono. Tente manter uma boa rotina de descanso!`;
   }
