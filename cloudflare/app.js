@@ -131,11 +131,31 @@ async function webConfigFromServiceAccount(env, fetchImpl) {
   return webConfigCache;
 }
 
-async function firebaseConfig(env, fetchImpl = (...a) => fetch(...a)) {
+// Login do Google sem mostrar "firebaseapp.com": só quando FIREBASE_AUTH_PROXY_DOMAIN está definido e a chamada vem pelo domínio próprio (Pages).
+function authDomainProprio(env, request) {
+  const dom = String(env.FIREBASE_AUTH_PROXY_DOMAIN || '').trim();
+  if (!dom || !request || !request.headers.get('X-Nexia-Proxy')) return '';
+  return dom;
+}
+
+const AUTH_ORIGEM = 'https://nexia-c8710.firebaseapp.com';
+
+async function proxyAuth(request, url, fetchImpl = (...a) => fetch(...a)) {
+  const alvo = new URL(url.pathname + url.search, AUTH_ORIGEM);
+  const headers = new Headers(request.headers);
+  headers.delete('X-Nexia-Proxy'); headers.delete('host');
+  const init = { method: request.method, headers, redirect: 'manual' };
+  if (request.method !== 'GET' && request.method !== 'HEAD') init.body = request.body;
+  return fetchImpl(alvo, init);
+}
+
+async function firebaseConfig(env, fetchImpl = (...a) => fetch(...a), request) {
   const cors = { 'Access-Control-Allow-Origin': '*' };
   if (!env.FIREBASE_API_KEY && env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
     try {
-      const c = await webConfigFromServiceAccount(env, fetchImpl);
+      const c = { ...(await webConfigFromServiceAccount(env, fetchImpl)) };
+      const proprio = authDomainProprio(env, request);
+      if (proprio) c.authDomain = proprio;
       return json(200, c, { 'Cache-Control': 'public, max-age=300', ...cors });
     } catch (e) {
       console.error('[firebase-config] sem FIREBASE_API_KEY e a leitura automática falhou:', e && e.message);
@@ -146,7 +166,7 @@ async function firebaseConfig(env, fetchImpl = (...a) => fetch(...a)) {
   }
   return json(200, {
     apiKey: env.FIREBASE_API_KEY,
-    authDomain: env.FIREBASE_AUTH_DOMAIN || '',
+    authDomain: authDomainProprio(env, request) || env.FIREBASE_AUTH_DOMAIN || '',
     projectId: env.FIREBASE_PROJECT_ID || '',
     storageBucket: env.FIREBASE_STORAGE_BUCKET || '',
     messagingSenderId: env.FIREBASE_MESSAGING_SENDER_ID || '',
@@ -232,7 +252,8 @@ async function handleRequest(request, env, { getFunction }) {
     return json(200, { status: 'ok', version: VERSION, runtime: 'cloudflare-worker', frontend: !!env.ASSETS, timestamp: new Date().toISOString() },
       { 'Access-Control-Allow-Origin': '*' });
   }
-  if (pathname === '/api/firebase-config') return firebaseConfig(env);
+  if (pathname === '/__/firebase/init.json' || pathname.startsWith('/__/auth/')) return proxyAuth(request, url);
+  if (pathname === '/api/firebase-config') return firebaseConfig(env, undefined, request);
   if (pathname.startsWith('/api/') || pathname.startsWith('/.netlify/functions/')) {
     return runFunction(resolveFunctionName(pathname), request, url, env, getFunction);
   }
