@@ -35,7 +35,10 @@ export default function CortexPage() {
   const [itens, setItens] = useState<Resumo[]>(() => lerCache<Resumo[]>("lista") || []);
   const [erro, setErro] = useState<string>();
   const [inicial, setInicial] = useState("");
-  const [instalar, setInstalar] = useState<(() => void) | null>(null);
+  const [instalar, setInstalar] = useState<(() => void) | null>(() => {
+    const ev = (window as unknown as { __cxInstall?: Event & { prompt: () => void } }).__cxInstall;
+    return ev ? () => ev.prompt() : null;
+  });
 
   useEffect(() => {
     if (typeof matchMedia !== "function") return;
@@ -118,8 +121,11 @@ export default function CortexPage() {
           <div className="flex-1 min-h-0 flex flex-col">
             <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-4 text-center">
               <Logo tamanho={64} />
-              {(instalar || (/Android/i.test(navigator.userAgent) && !matchMedia("(display-mode: standalone)").matches)) && (
-                <button onClick={() => (instalar ? instalar() : window.open("https://nexiacortex.pages.dev", "_blank"))} className="mt-6 h-11 px-6 rounded-xl border border-[var(--cx-line)] text-sm font-medium" data-testid="cx-instalar-topo">Instalar o app Cortex</button>
+              {instalar && (
+                <button onClick={instalar} className="mt-6 h-11 px-6 rounded-xl border border-[var(--cx-line)] text-sm font-medium" data-testid="cx-instalar-topo">Instalar o app Cortex</button>
+              )}
+              {!instalar && /Android/i.test(navigator.userAgent) && !matchMedia("(display-mode: standalone)").matches && (
+                <p className="mt-6 text-sm text-[var(--cx-mut)]" data-testid="cx-instalar-dica">Para instalar: Chrome, menu ⋮, Instalar app.</p>
               )}
               {erro && <p className="text-sm text-red-400 mt-4" role="alert">{erro}</p>}
             </div>

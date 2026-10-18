@@ -50,6 +50,8 @@ jobs:
           grep -nE 'minifyEnabled|shrinkResources' app/build.gradle || true
           npx -y @bubblewrap/cli@1.27.0 build --skipPwaValidation --manifest=./twa-manifest.json < /dev/null 2>&1 | tee build.log || falhou "bubblewrap build" build.log
           ls -la *.apk
+          "$ANDROID_SDK_ROOT"/build-tools/36.1.0/aapt2 dump badging app-release-signed.apk | grep -E "^package:|launchable-activity" || true
+          unzip -l app-release-signed.apk | grep -E "classes[0-9]*\.dex" || true
       - name: Digital da chave (para o assetlinks.json)
         env:
           KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
@@ -83,7 +85,7 @@ jobs:
           cat > site/index.html <<'HTML'
           <!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cortex</title>
           <body style="margin:0;background:#000;color:#fff;font-family:system-ui,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center;padding:24px">
-          <main><h1>Cortex</h1><p style="color:#aaa">Toque no botão e instale. Se o celular pedir, permita instalar deste site.</p>
+          <main><h1>Cortex</h1><p style="color:#666;font-size:12px">Versão ${{ github.run_number }}</p><p style="color:#aaa">Toque no botão e instale. Se o celular pedir, permita instalar deste site.</p>
           <a href="cortex.apk" style="display:inline-block;background:#00d4aa;color:#000;font-weight:800;padding:18px 36px;border-radius:999px;text-decoration:none;font-size:20px">Baixar o app Cortex</a></main></body></html>
           HTML
       - name: Publicar
