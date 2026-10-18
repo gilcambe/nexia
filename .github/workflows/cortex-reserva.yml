@@ -60,9 +60,11 @@ jobs:
           contas=()
           if [ -n "$RESERVA_GEMINI_KEY" ]; then
             # Modelo do Gemini muda com o tempo (o 2.0 foi desligado): pergunta ao Google qual "flash" está disponível agora.
-            GM=$(curl -sS "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=$RESERVA_GEMINI_KEY" | jq -r '[.models[]?|select(.supportedGenerationMethods|index("generateContent"))|.name|select(test("flash")) |select(test("lite|image|tts|live|thinking|exp|preview")|not)]|sort|reverse|.[0] // empty' | sed 's#^models/##')
-            echo "Modelo Gemini escolhido: ${GM:-nenhum}"
-            [ -n "$GM" ] && contas+=("gemini|gemini/$GM|GEMINI_API_KEY|$RESERVA_GEMINI_KEY")
+            # Vários modelos candidatos: alguns não têm cota grátis (limit 0); o laço abaixo passa para o próximo.
+            for GM in $(curl -sS "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=$RESERVA_GEMINI_KEY" | jq -r '[.models[]?|select(.supportedGenerationMethods|index("generateContent"))|.name|select(test("flash")) |select(test("lite|image|tts|live|thinking|exp|preview|omni|audio|robotics")|not)]|sort|reverse|.[0:4][]' | sed 's#^models/##'); do
+              echo "Modelo Gemini candidato: $GM"
+              contas+=("gemini|gemini/$GM|GEMINI_API_KEY|$RESERVA_GEMINI_KEY")
+            done
           fi
           [ -n "$RESERVA_OPENROUTER_KEY" ] && contas+=("openrouter|openrouter/deepseek/deepseek-chat-v3-0324:free|OPENROUTER_API_KEY|$RESERVA_OPENROUTER_KEY")
           [ -n "$RESERVA_OPENAI_KEY" ] && contas+=("openai|gpt-4o-mini|OPENAI_API_KEY|$RESERVA_OPENAI_KEY")
