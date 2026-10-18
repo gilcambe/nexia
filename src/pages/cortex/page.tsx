@@ -8,7 +8,7 @@ import Conversa from "./Conversa";
 import Lateral from "./Lateral";
 import type { Vista } from "./Lateral";
 import Logo from "./Logo";
-import Apresentacao, { introVista } from "./Apresentacao";
+import { mostrarAbertura } from "@/lib/abertura-nexia";
 import { Artefatos, Config, Conexoes, Tarefas } from "./Paineis";
 
 export type Tema = "auto" | "escuro" | "claro";
@@ -42,7 +42,6 @@ export default function CortexPage() {
   const [itens, setItens] = useState<Resumo[]>([]);
   const [erro, setErro] = useState<string>();
   const [inicial, setInicial] = useState("");
-  const [intro, setIntro] = useState(() => !introVista());
   const [instalar, setInstalar] = useState<(() => void) | null>(null);
 
   useEffect(() => {
@@ -53,11 +52,12 @@ export default function CortexPage() {
     return () => m.removeEventListener("change", f);
   }, []);
 
-  // App instalável: manifesto próprio só enquanto esta página está aberta.
+  // App instalável: o manifesto fica no index.html (escopo /cortex); aqui entram a cor da barra, o ícone e a abertura NEXIA.
   useEffect(() => {
-    const link = document.createElement("link"); link.rel = "manifest"; link.href = "/cortex.webmanifest";
-    const cor = document.createElement("meta"); cor.name = "theme-color"; cor.content = "#0b0b10";
-    document.head.append(link, cor);
+    const cor = document.createElement("meta"); cor.name = "theme-color"; cor.content = "#000000";
+    const ico = document.createElement("link"); ico.rel = "apple-touch-icon"; ico.href = "/cortex-icon-180.png";
+    document.head.append(cor, ico);
+    mostrarAbertura("CORTEX");
     const titulo = document.title; document.title = "Cortex · NEXIA";
     const pedido = (e: Event) => {
       e.preventDefault();
@@ -65,7 +65,7 @@ export default function CortexPage() {
       setInstalar(() => () => ev.prompt());
     };
     window.addEventListener("beforeinstallprompt", pedido);
-    return () => { link.remove(); cor.remove(); document.title = titulo; window.removeEventListener("beforeinstallprompt", pedido); };
+    return () => { ico.remove(); cor.remove(); document.title = titulo; window.removeEventListener("beforeinstallprompt", pedido); };
   }, []);
 
   const mudarTema = (t: Tema) => { setTema(t); try { localStorage.setItem("cx_tema", t); } catch { /* sem armazenamento: vale só nesta sessão */ } };
@@ -88,7 +88,6 @@ export default function CortexPage() {
   return (
     <div className="cx h-[100dvh] flex overflow-hidden" data-tema={temaFinal} data-testid="cortex-app">
       <style>{CSS}</style>
-      {user && intro && <Apresentacao fechar={() => setIntro(false)} />}
       <aside className="hidden md:block w-72 shrink-0">{lateral}</aside>
       {menu && (
         <div className="md:hidden fixed inset-0 z-40 flex" onClick={() => setMenu(false)}>
@@ -133,7 +132,7 @@ export default function CortexPage() {
         {user && vista === "conexoes" && <div className="flex-1 overflow-y-auto"><Conexoes email={email} /></div>}
         {user && vista === "tarefas" && <div className="flex-1 overflow-y-auto"><Tarefas abrir={abrir} /></div>}
         {user && vista === "artefatos" && <div className="flex-1 overflow-y-auto"><Artefatos abrir={abrir} /></div>}
-        {user && vista === "config" && <div className="flex-1 overflow-y-auto"><Config tema={tema} mudarTema={mudarTema} email={email} instalar={instalar} rever={() => setIntro(true)} sair={async () => { await logout(); navigate("/login"); }} /></div>}
+        {user && vista === "config" && <div className="flex-1 overflow-y-auto"><Config tema={tema} mudarTema={mudarTema} email={email} instalar={instalar} sair={async () => { await logout(); navigate("/login"); }} /></div>}
       </main>
     </div>
   );

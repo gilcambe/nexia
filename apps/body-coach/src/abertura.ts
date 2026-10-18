@@ -3,7 +3,8 @@
 //    com onda de choque; 3) as letras NEXIA chegam de longe e se juntam; 4) um brilho de metal varre a marca
 //    e uma estrela de luz pisca na ponta do N; 5) tudo se apaga num zoom suave. Toque para pular.
 // Quem pediu menos animação vê a marca parada por 0,8 s.
-export function mostrarAbertura(): void {
+// `produto` é o texto pequeno abaixo de NEXIA (BODY COACH, CORTEX...). Cópia idêntica em src/lib/abertura-nexia.ts (teste ABERTURA-SYNC).
+export function mostrarAbertura(produto = 'BODY COACH'): void {
   try {
     if (sessionStorage.getItem('nexia_splash')) return;
     sessionStorage.setItem('nexia_splash', '1');
@@ -38,7 +39,7 @@ export function mostrarAbertura(): void {
     '<rect x="2" y="2" width="100" height="100" rx="28" fill="url(#nx-c)" stroke="url(#nx-g)" stroke-width="2.5"/>' +
     '<path d="M33 74V30l38 44V30" stroke="url(#nx-g)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" class="nx-traco"/>' +
     '</svg><i class="nx-estrela"></i></div>' +
-    `<div class="nx-nome">${letras}</div><div class="nx-sub">BODY COACH</div>` +
+    `<div class="nx-nome">${letras}</div><div class="nx-sub">${produto.replace(/[<>&]/g, '')}</div>` +
     '</div>';
 
   const st = document.createElement('style');
