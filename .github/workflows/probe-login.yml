@@ -7,27 +7,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          cd /tmp && npm i -s playwright@1.47.2 >/dev/null 2>&1 && npx -y playwright@1.47.2 install chromium >/dev/null 2>&1
-          cat > t.js <<'JS'
-          const { chromium, devices } = require('playwright');
-          (async () => {
-            const b = await chromium.launch();
-            const ctx = await b.newContext({ ...devices['Pixel 7'] });
-            const p = await ctx.newPage();
-            p.on('console', m => console.log('CONSOLE', m.type(), m.text().slice(0, 300)));
-            ctx.on('page', np => { console.log('POPUP', np.url()); np.on('framenavigated', f => f === np.mainFrame() && console.log('POPUP-NAV', f.url().slice(0, 400))); });
-            p.on('framenavigated', f => console.log('NAV', f.url().slice(0, 300)));
-            await p.goto('https://nexiabodycoach.pages.dev/body-coach/', { waitUntil: 'networkidle' });
-            await p.waitForTimeout(3000);
-            console.log('URL', p.url());
-            const btn = p.getByText('Entrar com Google').first();
-            if (!(await btn.count())) { await p.goto('https://nexiabodycoach.pages.dev/body-coach/auth', { waitUntil: 'networkidle' }); await p.waitForTimeout(2000); }
-            console.log('URL2', p.url());
-            await p.getByText('Entrar com Google').first().click();
-            await p.waitForTimeout(12000);
-            const txt = await p.locator('body').innerText();
-            console.log('TEXT', txt.replace(/\s+/g, ' ').slice(0, 800));
-            await b.close();
-          })().catch(e => { console.log('ERR', e.message); process.exit(0); });
-          JS
-          node t.js
+          F=https://nexia-c8710.firebaseapp.com
+          for js in iframe.js handler.js; do curl -sS "$F/__/auth/$js" -o /tmp/$js; done
+          python3 - <<'PY'
+          import re
+          for f in ['iframe.js','handler.js']:
+              s=open('/tmp/'+f).read()
+              print('=====',f)
+              for m in re.finditer(r'unauthorized-domain|UNAUTHORIZED_DOMAIN|INVALID_ORIGIN', s):
+                  i=m.start(); print('--- @',i); print(s[max(0,i-500):i+900])
+              # find the function name defined containing "unauthorized-domain" and its call sites
+              for m in re.finditer(r'var (\w+)=function\(a\)\{var b="unauthorized-domain"', s):
+                  name=m.group(1); print('FN',name)
+                  for c in re.finditer(r'[^\w.]'+re.escape(name)+r'\(', s):
+                      j=c.start(); print('CALL @',j, s[max(0,j-600):j+200])
+          PY
