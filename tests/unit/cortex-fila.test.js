@@ -110,3 +110,9 @@ test('CF14. Issue com rótulo de parte, mas de outra pessoa de fora, continua ig
   const a = decidir({ issues: [issue(1, ['cortex-parte'], { author_association: 'CONTRIBUTOR', user: { login: 'alguem' }, title: '[Parte 1/2 de #9] x' })], runs: [], agora: AGORA });
   assert.deepEqual(a, []);
 });
+
+test('FILA-CAM: caminhosDoPedido pega só arquivos entre crases com pasta', () => {
+  const { caminhosDoPedido } = require('../../scripts/cortex-fila');
+  assert.deepEqual(caminhosDoPedido('Crie `src/a/b.ts` e `README.md` e `/health` e `../x/y.js` e `src/a/b.ts`'), ['src/a/b.ts']);
+  assert.deepEqual(caminhosDoPedido('sem nada'), []);
+});

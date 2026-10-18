@@ -41,6 +41,7 @@ jobs:
           # TEMPORÁRIO: segredos por cliente (NEXIA_<FIREBASE|CLOUDFLARE>_<TENANT>_*, Fase 9) precisam
           # de uma linha aqui. Motivo: passando todos os segredos de uma vez, o GitHub parou os runs em "action_required" (2026-10-04).
           NEXIA_APP_URL: ${{ secrets.NEXIA_APP_URL }}
+          ASSETLINKS_SHA256: ${{ secrets.ASSETLINKS_SHA256 }}
           NEXIA_CNAME_TARGET: ${{ secrets.NEXIA_CNAME_TARGET }}
           NEXIA_CRON_SECRET: ${{ secrets.NEXIA_CRON_SECRET }}
           NEXIA_GITHUB_TOKEN: ${{ secrets.NEXIA_GITHUB_TOKEN }}

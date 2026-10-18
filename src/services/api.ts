@@ -77,12 +77,13 @@ async function _fetch<T>(
 ): Promise<ApiResponse<T>> {
   try {
     const res = await fetch(url, {
-      headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
+      headers: { "Content-Type": "application/json", ...(await cabecalhoAuth()), ...(opts.headers || {}) },
       method: opts.method,
       body: opts.body,
       signal: opts.signal,
     });
     const status = res.status;
+    if (status === 401) return { error: "Faça login para usar o Cortex.", status };
     if (!res.ok) {
       const body = await res.text();
       return { error: body || `HTTP ${status}`, status };
@@ -117,7 +118,7 @@ export async function* streamCortex(
   try {
     res = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(await cabecalhoAuth()) },
       body,
       signal,
     });
@@ -127,6 +128,10 @@ export async function* streamCortex(
     return;
   }
 
+  if (res.status === 401) {
+    yield { token: "Faça login para usar o Cortex.", done: true };
+    return;
+  }
   if (!res.ok) {
     const txt = await res.text().catch(() => "");
     yield { token: `Erro na API (${res.status}): ${txt}`, done: true };

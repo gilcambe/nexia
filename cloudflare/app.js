@@ -221,7 +221,11 @@ async function handleRequest(request, env, { getFunction }) {
     } });
   }
   if (pathname === '/.well-known/assetlinks.json') {
-    return json(200, require('../apps/body-coach/android/assetlinks.json'), { 'Cache-Control': 'public, max-age=3600', 'Access-Control-Allow-Origin': '*' });
+    const base = require('../apps/body-coach/android/assetlinks.json');
+    // Digitais da chave do app (ASSETLINKS_SHA256, separadas por vírgula): sem elas o Android abre o app como aba do Chrome.
+    const digitais = String(env.ASSETLINKS_SHA256 || '').split(',').map(x => x.trim().toUpperCase()).filter(x => /^([0-9A-F]{2}:){31}[0-9A-F]{2}$/.test(x));
+    const links = digitais.length ? base.map(l => ({ ...l, target: { ...l.target, sha256_cert_fingerprints: digitais } })) : base;
+    return json(200, links, { 'Cache-Control': 'public, max-age=3600', 'Access-Control-Allow-Origin': '*' });
   }
   if (pathname === '/health') {
     return json(200, { status: 'ok', version: VERSION, runtime: 'cloudflare-worker', frontend: !!env.ASSETS, timestamp: new Date().toISOString() },
