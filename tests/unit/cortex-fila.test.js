@@ -2,7 +2,7 @@
 // Fila fixa do Cortex: decisões puras (sem rede).
 const test = require('node:test');
 const assert = require('node:assert');
-const { decidir, MAX_TENTATIVAS, precisaDividir, paisConcluidos, dividirComIA, sondarCota } = require('../../scripts/cortex-fila');
+const { decidir, MAX_TENTATIVAS, precisaDividir, paisConcluidos, dividirComIA, sondarCota, entregouAlgo } = require('../../scripts/cortex-fila');
 
 const AGORA = Date.parse('2026-10-07T10:00:00Z');
 const issue = (n, labels = [], extra = {}) => ({ number: n, body: `tarefa ${n}`, author_association: 'OWNER', updated_at: '2026-10-07T09:59:00Z', labels: ['cortex-fila', ...labels].map(name => ({ name })), ...extra });
@@ -134,4 +134,27 @@ test('cópia exata grande nunca vai para o divisor (perderia o código)', () => 
   const corpo = 'Copie EXATAMENTE:\n\n' + ['a.js', 'b.js', 'c.js', 'd.js', 'e.js'].map((f) => '`src/' + f + '`\n```\n' + 'x'.repeat(900) + '\n```\n').join('\n');
   assert.equal(precisaDividir(issue(7, ['cortex-fila'], { body: corpo })), false);
   assert.equal(precisaDividir(issue(8, ['cortex-fila'], { body: 'Faça algo em src/a.js. ' + 'z'.repeat(3000) })), true);
+});
+
+test('FILA-ENTREGA. arquivo já existente, sem commit depois do início e sem PR não é entregue', async () => {
+  const origFetch = global.fetch;
+  let calls = [];
+  global.fetch = async (url) => {
+    const u = new URL(url);
+    calls.push(u.pathname + u.search);
+    if (u.pathname.includes('/commits') && u.searchParams.get('path') === 'central/produtos.js') {
+      return { ok: true, status: 200, json: async () => [], text: async () => '[]' };
+    }
+    if (u.pathname === '/pulls' && u.searchParams.get('state') === 'open') {
+      return { ok: true, status: 200, json: async () => [], text: async () => '[]' };
+    }
+    return { ok: false, status: 404, json: async () => null, text: async () => '' };
+  };
+  try {
+    const r = await entregouAlgo('tok', 'Edite `central/produtos.js`', '2026-10-01T00:00:00Z');
+    assert.equal(r, false, 'não entregou: nenhum commit após desde e nenhum PR aberto');
+    assert.ok(calls.some(c => c.includes('/commits') && c.includes('path=central%2Fprodutos.js')), 'consultou commits do arquivo');
+  } finally {
+    global.fetch = origFetch;
+  }
 });
