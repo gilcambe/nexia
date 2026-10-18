@@ -1,1 +1,28 @@
-[{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"app.nexia.bodycoach","sha256_cert_fingerprints":["DE:63:BB:FE:CE:3E:02:E7:77:A3:C9:4D:2D:FC:9D:52:B0:DE:82:66:0E:C6:74:3D:D2:7B:55:F6:59:2C:94:EB"]}},{"relation":["delegate_permission/common.handle_all_urls"],"target":{"namespace":"android_app","package_name":"app.nexia.cortex","sha256_cert_fingerprints":["DE:63:BB:FE:CE:3E:02:E7:77:A3:C9:4D:2D:FC:9D:52:B0:DE:82:66:0E:C6:74:3D:D2:7B:55:F6:59:2C:94:EB"]}}]
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.nexia.bodycoach",
+      "sha256_cert_fingerprints": [
+        "DE:63:BB:FE:CE:3E:02:E7:77:A3:C9:4D:2D:FC:9D:52:B0:DE:82:66:0E:C6:74:3D:D2:7B:55:F6:59:2C:94:EB",
+        "7F:E8:C7:CD:D5:9D:84:B1:58:2D:2C:F4:A1:99:62:A4:04:C7:58:98:AA:D0:B8:50:1F:02:45:52:AB:82:7F:63"
+      ]
+    }
+  },
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.nexia.cortex",
+      "sha256_cert_fingerprints": [
+        "DE:63:BB:FE:CE:3E:02:E7:77:A3:C9:4D:2D:FC:9D:52:B0:DE:82:66:0E:C6:74:3D:D2:7B:55:F6:59:2C:94:EB",
+        "7F:E8:C7:CD:D5:9D:84:B1:58:2D:2C:F4:A1:99:62:A4:04:C7:58:98:AA:D0:B8:50:1F:02:45:52:AB:82:7F:63"
+      ]
+    }
+  }
+]
