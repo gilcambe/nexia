@@ -8,6 +8,7 @@ import Conversa from "./Conversa";
 import Lateral from "./Lateral";
 import type { Vista } from "./Lateral";
 import Logo from "./Logo";
+import Apresentacao, { introVista } from "./Apresentacao";
 import { Artefatos, Config, Conexoes, Tarefas } from "./Paineis";
 
 export type Tema = "auto" | "escuro" | "claro";
@@ -41,6 +42,7 @@ export default function CortexPage() {
   const [itens, setItens] = useState<Resumo[]>([]);
   const [erro, setErro] = useState<string>();
   const [inicial, setInicial] = useState("");
+  const [intro, setIntro] = useState(() => !introVista());
   const [instalar, setInstalar] = useState<(() => void) | null>(null);
 
   useEffect(() => {
@@ -86,6 +88,7 @@ export default function CortexPage() {
   return (
     <div className="cx h-[100dvh] flex overflow-hidden" data-tema={temaFinal} data-testid="cortex-app">
       <style>{CSS}</style>
+      {user && intro && <Apresentacao fechar={() => setIntro(false)} />}
       <aside className="hidden md:block w-72 shrink-0">{lateral}</aside>
       {menu && (
         <div className="md:hidden fixed inset-0 z-40 flex" onClick={() => setMenu(false)}>
@@ -130,7 +133,7 @@ export default function CortexPage() {
         {user && vista === "conexoes" && <div className="flex-1 overflow-y-auto"><Conexoes email={email} /></div>}
         {user && vista === "tarefas" && <div className="flex-1 overflow-y-auto"><Tarefas abrir={abrir} /></div>}
         {user && vista === "artefatos" && <div className="flex-1 overflow-y-auto"><Artefatos abrir={abrir} /></div>}
-        {user && vista === "config" && <div className="flex-1 overflow-y-auto"><Config tema={tema} mudarTema={mudarTema} email={email} instalar={instalar} sair={async () => { await logout(); navigate("/login"); }} /></div>}
+        {user && vista === "config" && <div className="flex-1 overflow-y-auto"><Config tema={tema} mudarTema={mudarTema} email={email} instalar={instalar} rever={() => setIntro(true)} sair={async () => { await logout(); navigate("/login"); }} /></div>}
       </main>
     </div>
   );
