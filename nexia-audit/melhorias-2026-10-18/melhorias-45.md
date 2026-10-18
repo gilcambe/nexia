@@ -16,3 +16,13 @@
 - **Custo:** 0.
 - **Justificativa:** Resposta imediata sem fila de issues para perguntas; apenas mudanças de código entram no fluxo de issue.
 
+---
+
+# Melhoria 47: Divisão automática de tarefa grande (já na 3ª falha) e antes: estimativa na entrada
+
+- **Status:** Implementado
+- **Regra:** Pedidos que tocam mais de 4 arquivos são divididos logo no começo em tarefas pequenas; quando uma tarefa grande acumula a 3ª falha, ela é dividida automaticamente antes de nova tentativa. Toda entrada de tarefa grande inclui estimativa.
+- **Por quê:** Tarefas pequenas passam.
+- **Custo:** 0.
+- **Justificativa:** Evita que tarefas grandes fiquem presas em falhas repetidas sem divisão.
+
