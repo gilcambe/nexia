@@ -1,0 +1,21 @@
+name: probe-login
+on:
+  push:
+    branches: [nexia/probe-login-google]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          P=https://nexiabodycoach.pages.dev; F=https://nexia-c8710.firebaseapp.com
+          echo "== config"; curl -sS $P/api/firebase-config | sed 's/"apiKey":"[^"]*"/"apiKey":"x"/'; echo
+          for path in /__/auth/iframe /__/auth/handler /__/firebase/init.json; do
+            echo "== $path"; curl -sS -D - -o /tmp/b "$P$path" | head -20; head -c 1500 /tmp/b; echo
+            curl -sS "$F$path" -o /tmp/f; cmp -s /tmp/b /tmp/f && echo SAME || echo DIFF
+          done
+          for js in iframe.js handler.js; do
+            curl -sS "$P/__/auth/$js" -o /tmp/$js; echo "== $js $(wc -c </tmp/$js)"; head -c 200 /tmp/$js; echo
+            curl -sS "$F/__/auth/$js" -o /tmp/f$js; cmp -s /tmp/$js /tmp/f$js && echo SAME || echo DIFF
+            grep -o ".\{300\}unauthorized-domain.\{300\}" /tmp/f$js | head -3
+            grep -o ".\{200\}init\.json.\{300\}" /tmp/f$js | head -3
+          done
