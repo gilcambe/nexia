@@ -1,0 +1,42 @@
+{
+  "packageId": "app.nexia.cortex",
+  "host": "nexia.gcbezerra.workers.dev",
+  "name": "Cortex",
+  "launcherName": "Cortex",
+  "display": "standalone",
+  "orientation": "portrait",
+  "themeColor": "#000000",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#000000",
+  "enableNotifications": false,
+  "startUrl": "/cortex",
+  "iconUrl": "https://nexia.gcbezerra.workers.dev/cortex-icon-512.png",
+  "maskableIconUrl": "https://nexia.gcbezerra.workers.dev/cortex-icon-maskable-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./upload.keystore",
+    "alias": "upload"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 1,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://nexia.gcbezerra.workers.dev/cortex.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": false,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://nexia.gcbezerra.workers.dev/cortex",
+  "minSdkVersion": 24,
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": []
+}

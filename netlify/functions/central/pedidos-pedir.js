@@ -35,7 +35,7 @@ function montarPedido(texto, quem) {
     projeto: p ? p.id : null,
     titulo: t.split('\n')[0].slice(0, 90),
     labels: p ? ['cortex-fila', 'projeto-' + p.id] : ['cortex-fila'],
-    body: `${t}${contexto}\n\n${REGRAS}\n\n_Pedido pelo Cortex no celular por ${quem}._`,
+    body: `${t}${contexto}\n\n${REGRAS}\n\n_Pedido de ${quem}._`,
   };
 }
 

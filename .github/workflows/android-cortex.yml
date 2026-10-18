@@ -1,0 +1,94 @@
+name: Android Cortex (app instalável, sem barra do navegador)
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  aab:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: apps/cortex/android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Chave de envio
+        env:
+          KS_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -z "$KS_B64" ]; then echo "::error::Falta o segredo ANDROID_KEYSTORE_B64. Rode o arquivo mesmo do Body Coach (android-play.bat)."; exit 1; fi
+          echo "$KS_B64" | base64 -d > upload.keystore
+      - name: Versao
+        run: |
+          jq --argjson c "${{ github.run_number }}" '.appVersionCode = $c | .appVersionName = ("1.0." + ($c|tostring))' twa-manifest.json > t.json && mv t.json twa-manifest.json
+      - name: Configurar Bubblewrap
+        run: |
+          mkdir -p ~/.bubblewrap
+          echo "{\"jdkPath\":\"$JAVA_HOME\",\"androidSdkPath\":\"$ANDROID_SDK_ROOT\"}" > ~/.bubblewrap/config.json
+          # O Bubblewrap exige <sdk>/bin (ou <sdk>/tools); no runner o sdkmanager fica em cmdline-tools/latest/bin.
+          [ -e "$ANDROID_SDK_ROOT/bin" ] || ln -s "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" "$ANDROID_SDK_ROOT/bin" || sudo ln -s "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" "$ANDROID_SDK_ROOT/bin"
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          # Versão do build-tools que o Bubblewrap 1.27 usa (BUILD_TOOLS_VERSION).
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "build-tools;36.1.0" > /dev/null
+      - name: Gerar APK
+        env:
+          BUBBLEWRAP_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+          BUBBLEWRAP_KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+        run: |
+          set -o pipefail
+          falhou() { echo "::error title=$1::$(sed 's/\x1b\[[0-9;]*m//g' "$2" | grep -v '^\s*$' | grep -v '^\s*at ' | grep -iE -A6 'wrong|error|failed|exception|not found|could not' | head -n 40 | tr '\n' '|' | cut -c1-3500)"; exit 1; }
+          npx -y @bubblewrap/cli@1.27.0 update --skipVersionUpgrade --manifest=./twa-manifest.json < /dev/null 2>&1 | tee update.log || falhou "bubblewrap update" update.log
+          npx -y @bubblewrap/cli@1.27.0 build --skipPwaValidation --manifest=./twa-manifest.json < /dev/null 2>&1 | tee build.log || falhou "bubblewrap build" build.log
+          ls -la *.apk
+      - name: Digital da chave (para o assetlinks.json)
+        env:
+          KS_PASS: ${{ secrets.ANDROID_KEYSTORE_PASS }}
+        run: |
+          FP=$(keytool -list -v -keystore upload.keystore -alias upload -storepass "$KS_PASS" | grep 'SHA256:' | awk '{print $2}')
+          echo "::notice title=SHA256 da chave de envio::$FP"
+          echo "### SHA256 da chave de envio: \`$FP\`" >> "$GITHUB_STEP_SUMMARY"
+          rm -f upload.keystore
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cortex-apk
+          path: apps/cortex/android/app-release-signed.apk
+          retention-days: 30
+  publicar:
+    # O APK vai para um endereço fixo e curto, para baixar direto no celular: https://nexiacortex.pages.dev/cortex.apk
+    needs: aab
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - uses: actions/download-artifact@v4
+        with:
+          name: cortex-apk
+          path: site
+      - name: Montar a página de download
+        run: |
+          mv site/app-release-signed.apk site/cortex.apk
+          cat > site/index.html <<'HTML'
+          <!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cortex</title>
+          <body style="margin:0;background:#000;color:#fff;font-family:system-ui,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center;padding:24px">
+          <main><h1>Cortex</h1><p style="color:#aaa">Toque no botão e instale. Se o celular pedir, permita instalar deste site.</p>
+          <a href="cortex.apk" style="display:inline-block;background:#00d4aa;color:#000;font-weight:800;padding:18px 36px;border-radius:999px;text-decoration:none;font-size:20px">Baixar o app Cortex</a></main></body></html>
+          HTML
+      - name: Publicar
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx -y wrangler@3 pages project create nexiacortex --production-branch main >/dev/null 2>&1 || true
+          npx -y wrangler@3 pages deploy site --project-name nexiacortex --branch main
+          SUB=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/nexiacortex" | jq -r '.result.subdomain')
+          echo "### Baixe o app: https://$SUB/cortex.apk" >> "$GITHUB_STEP_SUMMARY"

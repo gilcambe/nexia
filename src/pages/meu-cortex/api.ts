@@ -18,6 +18,10 @@ export const NOME_SITUACAO: Record<Situacao, string> = {
 };
 export const NOME_PR: Record<PR["estado"], string> = { aberto: "Aberto", rascunho: "Rascunho", juntado: "✅ Já está no app", fechado: "Fechado sem entrar" };
 
+// Último estado guardado no aparelho: o app mostra na hora e atualiza em seguida.
+export const lerCache = <T,>(chave: string): T | null => { try { const t = localStorage.getItem("cx:" + chave); return t ? (JSON.parse(t) as T) : null; } catch { return null; } };
+export const guardarCache = (chave: string, v: unknown) => { try { localStorage.setItem("cx:" + chave, JSON.stringify(v)); } catch { /* cheio ou bloqueado: segue sem cache */ } };
+
 export function usePedidos() {
   const { getToken } = useAuth();
   const chamar = useCallback(async <T,>(query: string, corpo?: Record<string, unknown>): Promise<T> => {
@@ -36,6 +40,6 @@ export function usePedidos() {
     chamar<Lista>(`?estado=${estado}&pagina=${pagina}&q=${encodeURIComponent(q)}`), [chamar]);
   const abrir = useCallback((n: number) => chamar<Detalhe>(`?n=${n}`), [chamar]);
   const deploy = useCallback(() => chamar<Deploy>("?deploy=1"), [chamar]);
-  const agir = useCallback((corpo: Record<string, unknown>) => chamar<{ ok: boolean; mensagem: string; numero?: number }>("", corpo), [chamar]);
+  const agir = useCallback((corpo: Record<string, unknown>) => chamar<{ ok: boolean; mensagem: string; numero?: number; caminho?: string }>("", corpo), [chamar]);
   return { listar, abrir, agir, deploy };
 }

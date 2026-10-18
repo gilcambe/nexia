@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePedidos } from "../meu-cortex/api";
+import { usePedidos, lerCache, guardarCache } from "../meu-cortex/api";
 import type { Resumo } from "../meu-cortex/api";
 import Composer from "./Composer";
 import Conversa from "./Conversa";
@@ -19,13 +19,6 @@ const CSS = `
 .cx{background:var(--cx-bg);color:var(--cx-txt);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
 `;
 
-const SUGESTOES = [
-  "Mudar um texto ou botão no Body Coach",
-  "Conferir por que uma tarefa do Cortex travou",
-  "Criar uma nova página no site de um cliente",
-  "Revisar e melhorar o visual de uma tela",
-];
-
 const lerTema = (): Tema => { try { const t = localStorage.getItem("cx_tema"); return t === "claro" || t === "escuro" ? t : "auto"; } catch { return "auto"; } };
 
 // Cortex: o app de IA do dono da NEXIA. Menu lateral com histórico, conversa por pedido, conexões e publicação.
@@ -39,7 +32,7 @@ export default function CortexPage() {
   const [aberto, setAberto] = useState<number>(() => Number(location.hash.replace("#p", "")) || 0);
   const [menu, setMenu] = useState(false);
   const [busca, setBusca] = useState("");
-  const [itens, setItens] = useState<Resumo[]>([]);
+  const [itens, setItens] = useState<Resumo[]>(() => lerCache<Resumo[]>("lista") || []);
   const [erro, setErro] = useState<string>();
   const [inicial, setInicial] = useState("");
   const [instalar, setInstalar] = useState<(() => void) | null>(null);
@@ -72,7 +65,7 @@ export default function CortexPage() {
   const temaFinal = tema === "auto" ? (claroSistema ? "claro" : "escuro") : tema;
 
   const buscar = useCallback((q: string) => {
-    listar(q, "todos", 1).then((r) => { setItens(r.itens); setErro(undefined); }).catch((e: Error) => setErro(e.message));
+    listar(q, "todos", 1).then((r) => { setItens(r.itens); setErro(undefined); if (!q) guardarCache("lista", r.itens.slice(0, 60)); }).catch((e: Error) => setErro(e.message));
   }, [listar]);
   useEffect(() => { if (!authLoading && user) { const t = setTimeout(() => buscar(busca), busca ? 350 : 0); return () => clearTimeout(t); } }, [authLoading, user, busca, buscar]);
 
@@ -119,14 +112,9 @@ export default function CortexPage() {
               <Logo tamanho={64} />
               <h1 className="text-3xl font-semibold mt-5" data-testid="cx-ola">Olá{nome ? `, ${nome.split(" ")[0]}` : ""}</h1>
               <p className="text-[var(--cx-mut)] mt-2 mb-7">O que o Cortex faz hoje?</p>
-              <div className="grid sm:grid-cols-2 gap-2 w-full max-w-2xl">
-                {SUGESTOES.map((s) => (
-                  <button key={s} onClick={() => setInicial(s + ": ")} className="text-left px-4 py-3 rounded-2xl border border-[var(--cx-line)] bg-[var(--cx-card)] text-sm hover:border-[var(--cx-ac)] min-h-[44px]" data-testid="cx-sugestao">{s}</button>
-                ))}
-              </div>
               {erro && <p className="text-sm text-red-400 mt-4" role="alert">{erro}</p>}
             </div>
-            <Composer modo="pedido" inicial={inicial} enviar={async (texto) => { const r = await agir({ acao: "pedir", texto }); buscar(busca); if (r.numero) abrir(r.numero); }} />
+            <Composer modo="pedido" subir={async (nome, base64) => (await agir({ acao: "anexar", nome, base64 })).caminho || ""} inicial={inicial} enviar={async (texto) => { const r = await agir({ acao: "pedir", texto }); buscar(busca); if (r.numero) abrir(r.numero); }} />
           </div>
         )}
         {user && vista === "conexoes" && <div className="flex-1 overflow-y-auto"><Conexoes email={email} /></div>}
