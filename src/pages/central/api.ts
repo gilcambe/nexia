@@ -21,6 +21,12 @@ export interface Divulga {
   proximos: { id: string; texto: string }[];
   historico: { quando: string; id: string | null; cliente: string; resultados: { canal: string; ok: boolean; erro?: string }[] }[];
 }
+export type Situacao = "ok" | "erro" | "desligado";
+export interface Fornecedor { id: string; nome: string; grupo: string; paraQue: string; gratis: string; link: string; situacao: Situacao; quando: string | null }
+export interface Personal { email: string; plano: string; faixa: number; situacao: "isento" | "pagando" | "teste" | "vencido"; desde: number }
+export interface Lead { id: string; nome: string; produto: string; status: string; whatsapp: string; email: string; quando: string; origem: string }
+export interface Leads { total: number; semana: number; novos: number; porStatus: Record<string, number>; porProduto: Record<string, number>; porOrigem: Record<string, number>; ultimos: Lead[] }
+export interface TesteIA { provedor: string; modelo: string; situacao: Situacao; tempo?: number; motivo?: string }
 export interface Dados {
   lista?: { produtos: Produto[]; links: { nome: string; url: string }[] };
   saude?: { produtos: Medida[]; em: string };
@@ -30,9 +36,12 @@ export interface Dados {
   divulga?: Divulga;
   banco?: { ok: boolean; cheio?: boolean; tempo: number };
   cloudflare?: { configurado: boolean; pedidos?: number; limite: number; erro?: string };
+  empresa?: { fornecedores: Fornecedor[] };
+  clientes?: { empresas: { site: string; nome: string; leilao: boolean }[]; personais: Personal[] };
+  leads?: Leads;
 }
 export type Parte = keyof Dados;
-export const PARTES: Parte[] = ["lista", "saude", "dinheiro", "cortex", "robos", "divulga", "banco", "cloudflare"];
+export const PARTES: Parte[] = ["lista", "saude", "dinheiro", "cortex", "robos", "divulga", "banco", "cloudflare", "empresa", "clientes", "leads"];
 
 export function useCentral() {
   const { getToken } = useAuth();
@@ -45,7 +54,7 @@ export function useCentral() {
     return body as T;
   }, [getToken]);
   const buscar = useCallback(<K extends Parte>(parte: K) => pedir<NonNullable<Dados[K]>>({ query: `?parte=${parte}` }), [pedir]);
-  const agir = useCallback((corpo: Record<string, unknown>) => pedir<{ ok: boolean; mensagem: string; link?: string }>({ method: "POST", body: JSON.stringify(corpo) }), [pedir]);
+  const agir = useCallback(<T = { ok: boolean; mensagem: string; link?: string },>(corpo: Record<string, unknown>) => pedir<T>({ method: "POST", body: JSON.stringify(corpo) }), [pedir]);
   const entrarSuporte = useCallback(async (site: string) => {
     const token = await getToken();
     const res = await fetch(apiPath("/agenda"), { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8", Authorization: `Bearer ${token}` }, body: JSON.stringify({ acao: "suporte", site }) });

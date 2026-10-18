@@ -1,10 +1,12 @@
 'use strict';
 // Central NEXIA (/central): uma página para o dono cuidar de toda a NEXIA. Só o master entra.
-//   GET  /api/central?parte=saude|dinheiro|cortex|robos|divulga|banco|cloudflare|lista
-//   POST /api/central {acao:'rodar', arquivo, ensaio?} | {acao:'pedir', texto}
+//   GET  /api/central?parte=saude|dinheiro|cortex|robos|divulga|banco|cloudflare|lista|empresa|clientes|leads
+//   POST /api/central {acao:'rodar', arquivo, ensaio?} | {acao:'pedir', texto} | {acao:'testar-ias'}
 // Cada parte é um pedido separado: a página mostra o que já chegou sem esperar o resto.
 
 const { PRODUTOS, LINKS, ROBOS } = require('../../central/produtos');
+const { FORNECEDORES } = require('../../central/fornecedores');
+const empresa = require('./central/empresa');
 
 async function medir(url, fetchFn, ms = 6000) {
   const t0 = Date.now();
@@ -38,6 +40,10 @@ function createHandler(deps = {}) {
   const getDb = deps.getDb || (() => require('./firebase-init').db);
   const getGithub = deps.getGithub || (() => require('./central/github').criarGithub());
   const getResumo = deps.getResumo || (() => require('./body-coach/acesso').resumoDono);
+  const getRouter = deps.getRouter || (() => require('../../nexia-ai/model-router').getRouter());
+  const getIAs = deps.getIAs || (() => require('../../nexia-ai/orchestrator/models').FREE.fast);
+  const getAgendas = deps.getAgendas || (() => require('../../clientes/agendas').AGENDAS);
+  const env = deps.env || process.env;
   const fetchFn = deps.fetch || ((...a) => fetch(...a));
 
   return async (event) => {
@@ -54,6 +60,7 @@ function createHandler(deps = {}) {
       if (method === 'POST') {
         let body = {};
         try { body = JSON.parse(event.body || '{}') || {}; } catch { return res(400, { error: 'Pedido inválido.' }); }
+        if (body.acao === 'testar-ias') return res(200, { ias: await empresa.testarIAs(getRouter(), getIAs()), em: new Date().toISOString() });
         const gh = getGithub();
         if (body.acao === 'rodar') {
           const robo = ROBOS.find((r) => r.arquivo === body.arquivo && r.inputs);
@@ -91,8 +98,15 @@ function createHandler(deps = {}) {
         try { await getDb().collection('bc_uso').limit(1).get(); return res(200, { ok: true, tempo: Date.now() - t0 }); }
         catch (e) { return res(200, { ok: false, cheio: /RESOURCE_EXHAUSTED|quota/i.test(String(e.message)), tempo: Date.now() - t0 }); }
       }
-      if (parte === 'cloudflare') return res(200, await usoCloudflare(deps.env || process.env, fetchFn));
+      if (parte === 'cloudflare') return res(200, await usoCloudflare(env, fetchFn));
+      if (parte === 'clientes') return res(200, await empresa.clientes(getDb(), getAgendas()));
+      if (parte === 'leads') return res(200, await empresa.leads(getDb()));
       const gh = getGithub();
+      if (parte === 'empresa') {
+        const usados = ROBOS.filter((r) => FORNECEDORES.some((f) => f.robo === r.arquivo));
+        const robos = await gh.robos(usados).catch(() => []);
+        return res(200, { fornecedores: empresa.fornecedores(FORNECEDORES, env, robos) });
+      }
       if (parte === 'cortex') return res(200, await gh.cortex());
       if (parte === 'robos') return res(200, { robos: await gh.robos(ROBOS) });
       if (parte === 'divulga') return res(200, await gh.divulga());
