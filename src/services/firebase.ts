@@ -2,17 +2,19 @@ import { initializeApp, type FirebaseApp, type FirebaseOptions } from "firebase/
 import { api } from "./api";
 
 let app: FirebaseApp | null = null;
+let auth: any = null;
 
 export async function initFirebase() {
   if (app) {
-    const { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence } = await import("firebase/auth");
-    let auth;
-    try {
-      auth = initializeAuth(app, {
-        persistence: [indexedDBLocalPersistence, browserLocalPersistence]
-      });
-    } catch {
-      auth = getAuth(app);
+    if (!auth) {
+      const { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence } = await import("firebase/auth");
+      try {
+        auth = initializeAuth(app, {
+          persistence: [indexedDBLocalPersistence, browserLocalPersistence]
+        });
+      } catch {
+        auth = getAuth(app);
+      }
     }
     return { app, auth };
   }
@@ -33,7 +35,6 @@ export async function initFirebase() {
   }
   app = initializeApp(cfg as FirebaseOptions);
   const { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence } = await import("firebase/auth");
-  let auth;
   try {
     auth = initializeAuth(app, {
       persistence: [indexedDBLocalPersistence, browserLocalPersistence]
