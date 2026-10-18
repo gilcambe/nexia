@@ -24,11 +24,7 @@ async function loadConfig(): Promise<FirebaseOptions | null> {
     const type = res.headers.get('content-type') || '';
     if (!type.includes('application/json')) return null;
     const cfg = (await res.json()) as FirebaseOptions;
-    if (!cfg || !cfg.apiKey) return null;
-    // Login com Google mostra o endereço do Firebase; com o Worker repassando /__/auth o app usa o próprio endereço.
-    const { authProxy, ...resto } = cfg as FirebaseOptions & { authProxy?: boolean };
-    if (authProxy && typeof location !== 'undefined' && !/^(localhost|127\.)/.test(location.hostname)) resto.authDomain = location.host;
-    return resto;
+    return cfg && cfg.apiKey ? cfg : null;
   } catch {
     return null;
   }

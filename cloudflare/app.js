@@ -136,7 +136,7 @@ async function firebaseConfig(env, fetchImpl = (...a) => fetch(...a)) {
   if (!env.FIREBASE_API_KEY && env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
     try {
       const c = await webConfigFromServiceAccount(env, fetchImpl);
-      return json(200, env.AUTH_DOMINIO_PROPRIO === '1' ? { ...c, authProxy: true } : c, { 'Cache-Control': 'public, max-age=300', ...cors });
+      return json(200, c, { 'Cache-Control': 'public, max-age=300', ...cors });
     } catch (e) {
       console.error('[firebase-config] sem FIREBASE_API_KEY e a leitura automática falhou:', e && e.message);
     }
@@ -145,7 +145,6 @@ async function firebaseConfig(env, fetchImpl = (...a) => fetch(...a)) {
     return json(503, { error: 'Firebase config unavailable. Cadastre FIREBASE_API_KEY nos segredos do repositório no GitHub e rode o Deploy Cloudflare de novo.' }, cors);
   }
   return json(200, {
-    ...(env.AUTH_DOMINIO_PROPRIO === '1' ? { authProxy: true } : {}),
     apiKey: env.FIREBASE_API_KEY,
     authDomain: env.FIREBASE_AUTH_DOMAIN || '',
     projectId: env.FIREBASE_PROJECT_ID || '',
@@ -234,14 +233,6 @@ async function handleRequest(request, env, { getFunction }) {
       { 'Access-Control-Allow-Origin': '*' });
   }
   if (pathname === '/api/firebase-config') return firebaseConfig(env);
-  // Login com Google na página do próprio produto (sem mostrar o endereço do Firebase): repassa /__/auth e /__/firebase.
-  if (pathname.startsWith('/__/auth/') || pathname.startsWith('/__/firebase/')) {
-    const host = env.FIREBASE_AUTH_DOMAIN || (webConfigCache && webConfigCache.authDomain) || 'nexia-c8710.firebaseapp.com';
-    const headers = new Headers(request.headers); headers.delete('host');
-    const init = { method: request.method, headers, redirect: 'manual' };
-    if (request.method !== 'GET' && request.method !== 'HEAD') init.body = request.body;
-    return fetch(`https://${host}${url.pathname}${url.search}`, init);
-  }
   if (pathname.startsWith('/api/') || pathname.startsWith('/.netlify/functions/')) {
     return runFunction(resolveFunctionName(pathname), request, url, env, getFunction);
   }
