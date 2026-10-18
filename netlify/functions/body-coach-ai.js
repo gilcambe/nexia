@@ -63,7 +63,8 @@ exports.handler = async (event) => {
   }
 
   const router = getRouter();
-  for (const d of listFor('fast')) {
+  // Regra do dono: o Body Coach só usa IA grátis, mesmo que alguém configure a chave paga da Anthropic.
+  for (const d of listFor('fast').filter((x) => x.provider !== 'anthropic')) {
     try {
       const cap = router.capabilities(d);
       if (!cap.available || (images && !cap.vision)) continue;
