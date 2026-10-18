@@ -159,7 +159,9 @@ const instagram = {
       }),
     });
     const c = await json(cRes, 'Instagram mídia');
+    // Foto também precisa ficar pronta antes de publicar (senão: "Media ID is not available"); se a consulta falhar, tenta publicar mesmo assim.
     if (midia.video_url) await esperarVideo(c.id, env, fetchImpl);
+    else await esperarVideo(c.id, env, fetchImpl, { tentativas: 12, pausa: 3000 }).catch(() => undefined);
     const jRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/media_publish`, {
       method: 'POST',
       signal: tempo(),
