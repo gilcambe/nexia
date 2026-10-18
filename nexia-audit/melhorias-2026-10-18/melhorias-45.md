@@ -26,3 +26,12 @@
 - **Custo:** 0.
 - **Justificativa:** Tarefas pequenas passam na revisão e no teste; estimativa na entrada evita surpresa; divisão precoce de pedidos multi-arquivo evita falhas acumuladas.
 
+## Alerta automático de queda por e‑mail (Brevo grátis) e na Central
+- **Objetivo**: Monitorar o endpoint `/health` da API e o aplicativo Body Coach. Caso falhem duas vezes consecutivas, disparar um alerta por e‑mail usando a conta gratuita do Brevo e registrar o evento na Central de monitoramento.
+- **Motivo**: Produto em produção requer monitoramento 24h sem custo adicional.
+- **Implementação**:
+  1. Criar `src/monitoring/healthWatcher.js` que faz polling a cada minuto e conta falhas consecutivas.
+  2. Utilizar `src/notification/brevoClient.js` para envio de e‑mail (variável de ambiente `BREVO_API_KEY`).
+  3. Iniciar o watcher em `src/server.js`.
+  4. Garantir que nenhum teste existente seja quebrado (`npm test` continua passando).
+
