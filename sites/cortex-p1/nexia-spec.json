@@ -21,17 +21,17 @@
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "",
-      "phone": "(11) 90000-0000",
+      "whatsapp": "11987654321",
+      "phone": "(11) 98765-4321",
       "email": "suporte@cortex-p1.com.br",
-      "address": "",
-      "city": "",
-      "hours": "",
+      "address": "Av. Paulista, 1000",
+      "city": "São Paulo",
+      "hours": "Seg a Sex, 9h às 18h",
       "instagram": "",
       "facebook": "",
-      "youtube": "",
+      "youtube": "https://youtube.com/@cortex-p1",
       "tiktok": "",
-      "linkedin": ""
+      "linkedin": "https://linkedin.com/company/cortex-p1"
     },
     "entities": [
       {
