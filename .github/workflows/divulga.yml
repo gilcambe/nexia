@@ -23,7 +23,7 @@ concurrency:
 jobs:
   divulga:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -55,6 +55,19 @@ jobs:
           DIVULGA_BLUESKY_HANDLE: ${{ secrets.DIVULGA_BLUESKY_HANDLE }}
           DIVULGA_BLUESKY_APP_PASSWORD: ${{ secrets.DIVULGA_BLUESKY_APP_PASSWORD }}
         run: node divulga/robo.js "$ACAO" --dados dados
+      - name: Gerar carrossel, story, antes e depois e reel (só no ensaio)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.acao == 'ensaio' }}
+        run: |
+          npm install --no-save --no-audit --no-fund @playwright/test@1.59.1
+          npx playwright install --with-deps chromium
+          node divulga/gerar.js divulga-ensaio
+      - name: Mostrar o ensaio para o dono
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.acao == 'ensaio' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: divulga-ensaio
+          path: divulga-ensaio/
+          retention-days: 14
       - name: Guardar os dados
         if: always()
         run: |

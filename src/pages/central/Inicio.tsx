@@ -1,13 +1,22 @@
 import type { Dados } from "./api";
 import { reais, haQuanto } from "./api";
 import type { Aviso, Aba } from "./avisos";
+import { useState } from "react";
 import { Cartao, Sinal, Numero, Botao, Carregando } from "./ui";
+
+function BotaoAvisar() {
+  const suporta = typeof Notification !== "undefined";
+  const [estado, setEstado] = useState(suporta ? Notification.permission : "denied");
+  if (!suporta || estado === "granted") return null;
+  if (estado === "denied") return <p className="text-xs text-nexia-muted">Os avisos no aparelho estão bloqueados no navegador.</p>;
+  return <Botao onClick={async () => setEstado(await Notification.requestPermission())}>🔔 Avisar no celular quando algo parar</Botao>;
+}
 
 export default function Inicio({ d, avisos, ir, conferir, carregando }: { d: Dados; avisos: Aviso[]; ir: (a: Aba) => void; conferir: () => void; carregando: boolean }) {
   const pronto = !!(d.saude && d.robos && d.cortex);
   const tudoOk = pronto && avisos.length === 0;
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 flex flex-col">
       <section className={`rounded-2xl p-5 border ${!pronto ? "border-nexia-border bg-nexia-surface" : tudoOk ? "border-emerald-500/40 bg-emerald-500/10" : "border-amber-400/40 bg-amber-400/10"}`} data-testid="central-sinal">
         <div className="text-2xl font-bold">
           {!pronto ? "Conferindo tudo…" : tudoOk ? "✅ Tudo funcionando" : `⚠️ ${avisos.length} coisa${avisos.length > 1 ? "s precisam" : " precisa"} de você`}
@@ -40,6 +49,7 @@ export default function Inicio({ d, avisos, ir, conferir, carregando }: { d: Dad
         )}
       </Cartao>
 
+      <BotaoAvisar />
       <Botao onClick={conferir} disabled={carregando} tipo="forte" testid="central-conferir">{carregando ? "Conferindo…" : "🔄 Conferir de novo"}</Botao>
     </div>
   );

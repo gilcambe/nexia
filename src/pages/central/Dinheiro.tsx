@@ -1,8 +1,28 @@
+import { useState } from "react";
 import type { Dados } from "./api";
 import { reais } from "./api";
 import { Cartao, Numero, Barras, Botao, Carregando } from "./ui";
 
 const MES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+
+function lerMeta() { try { return Number(localStorage.getItem("central-meta")) || 1000; } catch { return 1000; } }
+
+function Meta({ valor }: { valor: number }) {
+  const [meta, setMeta] = useState(lerMeta);
+  const pct = Math.min(100, Math.round((valor / meta) * 100));
+  const mudar = () => {
+    const v = Number(String(window.prompt("Meta do mês em reais:", String(meta)) || "").replace(",", "."));
+    if (v > 0) { setMeta(v); try { localStorage.setItem("central-meta", String(v)); } catch { /* sem storage */ } }
+  };
+  return (
+    <div className="space-y-1" data-testid="meta-mes">
+      <div className="flex justify-between items-center text-sm"><span>Meta do mês</span>
+        <button onClick={mudar} className="text-xs text-nexia-cyan underline cursor-pointer">Mudar meta</button></div>
+      <div className="h-3 rounded-full bg-nexia-surface2 overflow-hidden"><div className="h-full bg-nexia-cyan" style={{ width: `${pct}%` }} /></div>
+      <div className="text-xs text-nexia-muted">{reais(valor)} de {reais(meta)} ({pct}%)</div>
+    </div>
+  );
+}
 
 export default function Dinheiro({ d, erro }: { d: Dados; erro?: string }) {
   const x = d.dinheiro;
@@ -19,6 +39,7 @@ export default function Dinheiro({ d, erro }: { d: Dados; erro?: string }) {
           <Numero valor={x.vencendo7} rotulo="vencem em 7 dias" />
           <Numero valor={x.avisos7} rotulo="avisos de Pix (7 dias)" />
         </div>
+        <Meta valor={x.receitaMes} />
         <Botao href="https://nexiabodycoach.pages.dev/body-coach/admin/acessos" tipo="forte">Confirmar pagamentos e liberar acesso</Botao>
       </Cartao>
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCentral, PARTES } from "./api";
@@ -49,6 +49,22 @@ export default function CentralPage() {
   useEffect(() => { if (!authLoading && user) conferir(); }, [authLoading, user, conferir]);
   const ir = (a: Aba) => { setAba(a); history.replaceState(null, "", `#${a}`); window.scrollTo(0, 0); };
   const avisos = useMemo(() => calcularAvisos(d), [d]);
+
+  // Com a Central aberta, confere de novo a cada 5 minutos e avisa no aparelho quando algo novo fica vermelho.
+  useEffect(() => {
+    if (!user) return;
+    const t = setInterval(conferir, 5 * 60000);
+    return () => clearInterval(t);
+  }, [user, conferir]);
+  const vermelhosVistos = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (!d.saude) return;
+    const vermelhos = avisos.filter((a) => a.cor === "vermelho").map((a) => a.texto);
+    if (vermelhosVistos.current && typeof Notification !== "undefined" && Notification.permission === "granted") {
+      for (const t of vermelhos) if (!vermelhosVistos.current.has(t)) new Notification("Central NEXIA", { body: t });
+    }
+    vermelhosVistos.current = new Set(vermelhos);
+  }, [avisos, d.saude]);
   const semAcesso = erros.lista && /administrador/.test(erros.lista);
 
   return (

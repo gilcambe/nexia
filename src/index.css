@@ -32,4 +32,11 @@
   background-color: #eef0f3 !important;
   border-color: #d7dbe0 !important;
 }
+
+.central-claro header { background-color: rgba(246, 247, 249, 0.95) !important; }
+.central-claro .text-white { color: #111 !important; }
+.central-claro .border-nexia-border { border-color: #d7dbe0 !important; }
+.central-claro .text-nexia-muted { color: #5b6270 !important; }
+.central-claro .text-nexia-cyan { color: #008f74 !important; }
+.central-claro .bg-nexia-cyan { color: #000 !important; }
 /* Fim do Tema claro da Central */

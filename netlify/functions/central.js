@@ -1,6 +1,6 @@
 'use strict';
 // Central NEXIA (/central): uma página para o dono cuidar de toda a NEXIA. Só o master entra.
-//   GET  /api/central?parte=saude|dinheiro|cortex|robos|divulga|banco|lista
+//   GET  /api/central?parte=saude|dinheiro|cortex|robos|divulga|banco|cloudflare|lista
 //   POST /api/central {acao:'rodar', arquivo, ensaio?} | {acao:'pedir', texto}
 // Cada parte é um pedido separado: a página mostra o que já chegou sem esperar o resto.
 
@@ -16,6 +16,21 @@ async function medir(url, fetchFn, ms = 6000) {
     return { ok: r.status < 500, codigo: r.status, tempo, lento: tempo > 3000 };
   } catch (e) { return { ok: false, codigo: 0, tempo: Date.now() - t0, lento: false }; }
   finally { clearTimeout(timer); }
+}
+
+// Pedidos do site hoje (o plano grátis do Cloudflare Workers dá 100 mil por dia). Só lê; precisa de um token com "Analytics: Read".
+async function usoCloudflare(env, fetchFn) {
+  const token = env.CLOUDFLARE_ANALYTICS_TOKEN || '';
+  const conta = env.NEXIA_D1_ACCOUNT_ID || env.CLOUDFLARE_ACCOUNT_ID || '';
+  if (!token || !conta) return { configurado: false, limite: 100000 };
+  const hoje = new Date().toISOString().slice(0, 10);
+  const query = 'query($a:String!,$d:Date!){viewer{accounts(filter:{accountTag:$a}){workersInvocationsAdaptive(limit:1000,filter:{date_geq:$d,date_leq:$d}){sum{requests}}}}}';
+  const r = await fetchFn('https://api.cloudflare.com/client/v4/graphql', { method: 'POST', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: JSON.stringify({ query, variables: { a: conta, d: hoje } }) });
+  const j = await r.json().catch(() => ({}));
+  const linhas = (((j.data || {}).viewer || {}).accounts || [])[0];
+  if (!r.ok || !linhas) return { configurado: true, erro: 'O Cloudflare não respondeu agora.', limite: 100000 };
+  const pedidos = (linhas.workersInvocationsAdaptive || []).reduce((t, x) => t + (Number((x.sum || {}).requests) || 0), 0);
+  return { configurado: true, pedidos, limite: 100000 };
 }
 
 function createHandler(deps = {}) {
@@ -76,6 +91,7 @@ function createHandler(deps = {}) {
         try { await getDb().collection('bc_uso').limit(1).get(); return res(200, { ok: true, tempo: Date.now() - t0 }); }
         catch (e) { return res(200, { ok: false, cheio: /RESOURCE_EXHAUSTED|quota/i.test(String(e.message)), tempo: Date.now() - t0 }); }
       }
+      if (parte === 'cloudflare') return res(200, await usoCloudflare(deps.env || process.env, fetchFn));
       const gh = getGithub();
       if (parte === 'cortex') return res(200, await gh.cortex());
       if (parte === 'robos') return res(200, { robos: await gh.robos(ROBOS) });
