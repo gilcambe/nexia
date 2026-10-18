@@ -6,7 +6,10 @@ import { Cartao, Sinal, Botao, Carregando } from "./ui";
 export default function Produtos({ d }: { d: Dados }) {
   const { entrarSuporte } = useCentral();
   const [msg, setMsg] = useState<string | null>(null);
+  const [busca, setBusca] = useState("");
   if (!d.lista) return <Carregando />;
+  const simples = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const produtos = d.lista.produtos.filter((p) => simples(`${p.nome} ${p.frase}`).includes(simples(busca.trim())));
 
   const entrar = async (site: string) => {
     const aba = window.open("about:blank", "_blank"); // o celular bloqueia abas abertas depois de esperar a rede
@@ -20,8 +23,11 @@ export default function Produtos({ d }: { d: Dados }) {
 
   return (
     <div className="space-y-3">
+      <input type="search" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar produto ou cliente"
+        className="w-full rounded-xl bg-nexia-surface2 border border-nexia-border p-3 text-sm text-white" data-testid="produtos-busca" />
       {msg && <p className="text-sm text-nexia-cyan" role="status">{msg}</p>}
-      {d.lista.produtos.map((p) => {
+      {produtos.length === 0 && <p className="text-sm text-nexia-muted">Nada encontrado com "{busca}".</p>}
+      {produtos.map((p) => {
         const m = d.saude?.produtos.find((x) => x.id === p.id);
         const cor = !m ? "cinza" : !m.ok ? "vermelho" : m.lento ? "amarelo" : "verde";
         const estado = !m ? "conferindo…" : !m.ok ? "fora do ar" : m.lento ? `lento (${(m.tempo / 1000).toFixed(1)} s)` : `no ar (${(m.tempo / 1000).toFixed(1)} s)`;
