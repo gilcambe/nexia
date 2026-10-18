@@ -23,6 +23,8 @@ function precisaDividir(i) {
   const ls = nomes(i);
   if (ls.includes(L.parte) || ls.includes(L.dividido) || ls.includes(L.semDivisao)) return false;
   const corpo = String(i.body || '');
+  // Cópia exata ("Copie EXATAMENTE") é gravada direto, sem IA: dividir apagaria o código do pedido.
+  if (require('./cortex-literal-direto').arquivosDiretos(i).length) return false;
   const arquivos = new Set(corpo.match(/[\w./-]+\.(?:js|ts|tsx|jsx|css|html|json|md|yml)\b/g) || []);
   return corpo.length > MAX_CORPO || arquivos.size > MAX_ARQUIVOS;
 }
@@ -245,8 +247,19 @@ async function executar(token, acao, dividir) {
   }
 }
 
+// Token da GitHub App do NEXIA (pode abrir PR; o NEXIA_JOBS_TOKEN cria ramo e arquivo mas o GitHub recusa o PR).
+async function tokenDaApp() {
+  if (!process.env.GITHUB_APP_ID || !process.env.GITHUB_APP_PRIVATE_KEY) return null;
+  const { createAuth } = require('../nexia-ai/github-adapter/auth');
+  const [owner, repo] = REPO.split('/');
+  const auth = createAuth({ env: process.env, fetchImpl: fetch, apiBase: 'https://api.github.com' });
+  const h = await auth.headersFor({ owner, repo }, { write: true, permissions: { contents: 'write', pull_requests: 'write' } });
+  return String(h.Authorization || '').replace(/^Bearer /, '') || null;
+}
+
 async function literalDireto(token, issues) {
-  const escrita = process.env.NEXIA_JOBS_TOKEN || token; // chave do dono (autorizada): o CI roda nos PRs que ela abre
+  let escrita = process.env.NEXIA_JOBS_TOKEN || token; // chave do dono (autorizada): o CI roda nos PRs que ela abre
+  try { escrita = (await tokenDaApp()) || escrita; } catch (e) { console.log(`App do NEXIA indisponível (${e.message}); uso a chave da fila.`); }
   try {
     const { processarDiretos } = require('./cortex-literal-direto');
     const lerArquivo = async p => {
@@ -267,7 +280,7 @@ async function literalDireto(token, issues) {
       },
       abrirPR: async (ramo, i, arqs) => {
         const r = await gh(escrita, 'POST', '/pulls', { title: `Cópia literal do pedido #${i.number}`, head: ramo, base: 'develop', body: `Pedido #${i.number}, gravado direto (sem IA): ${arqs.map(a => '`' + a.path + '`').join(', ')}.\n\nNão fecha o pedido: a fila fecha quando o arquivo estiver na develop.` });
-        if (r.status !== 201) throw new Error(`PR ${r.status}`);
+        if (r.status !== 201) throw new Error(`PR ${r.status} ${String((r.json || {}).message || '').slice(0, 120)}`);
         return r.json.number;
       },
       concluir: async n => {
@@ -334,5 +347,5 @@ async function main() {
   }
 }
 
-module.exports = { TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
+module.exports = { tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });

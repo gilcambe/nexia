@@ -47,3 +47,16 @@ test('DIR4. PR direto já aberto não repete', async () => {
   await processarDiretos({ issues: [issue(7, corpo('a/b.js', 'x'))], ...deps });
   assert.deepStrictEqual(log, []);
 });
+
+test('LD-falha: o PR recusado numa cópia não derruba as outras', async () => {
+  const { processarDiretos } = require('../../scripts/cortex-literal-direto');
+  const pedido = (n, f) => ({ number: n, labels: ['cortex-fila'], body: 'Copie EXATAMENTE:\n\n`' + f + '`\n```\nx\n```\n' });
+  const prs = [];
+  const tratados = await processarDiretos({
+    issues: [pedido(1, 'a/um.js'), pedido(2, 'a/dois.js')], abertosPRs: [], lerArquivo: async () => null,
+    gravar: async () => {}, abrirPR: async (ramo, i) => { if (i.number === 1) throw new Error('PR 403'); prs.push(i.number); return 9; },
+    concluir: async () => {}, comentar: async () => {},
+  });
+  assert.deepStrictEqual([...tratados].sort(), [1, 2]);
+  assert.deepStrictEqual(prs, [2]);
+});

@@ -34,10 +34,15 @@ async function processarDiretos({ issues, abertosPRs, lerArquivo, gravar, abrirP
     if (!mudar.length) { await concluir(i.number); continue; }
     if (criados >= MAX_POR_CICLO) continue;
     const ramo = `nexia/direto-${i.number}-${Date.now().toString(36)}`;
-    await gravar(ramo, mudar, `Cópia literal do pedido #${i.number}: ${mudar.map(m => m.path).join(', ')}`);
-    const pr = await abrirPR(ramo, i, mudar);
-    await comentar(i.number, `Gravei ${mudar.length} arquivo(s) direto, sem IA (cópia exata): PR #${pr}. A tarefa fecha sozinha quando entrar na develop.`);
     criados++;
+    // Uma falha (ex.: o GitHub recusou o PR) não derruba as outras cópias nem manda esta para o divisor de tarefas.
+    try {
+      await gravar(ramo, mudar, `Cópia literal do pedido #${i.number}: ${mudar.map(m => m.path).join(', ')}`);
+      const pr = await abrirPR(ramo, i, mudar);
+      await comentar(i.number, `Gravei ${mudar.length} arquivo(s) direto, sem IA (cópia exata): PR #${pr}. A tarefa fecha sozinha quando entrar na develop.`);
+    } catch (e) {
+      console.log(`cópia direta #${i.number} falhou (tento de novo no próximo ciclo): ${e.message}`);
+    }
   }
   return tratados;
 }
