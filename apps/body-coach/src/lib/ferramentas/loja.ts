@@ -5,7 +5,16 @@ export const AFILIADOS = {
   mercadolivre: (import.meta.env.VITE_ML_AFILIADO ?? ''), // código do Mercado Livre Afiliados (vai no parâmetro "matt_tool")
 };
 
-export type CategoriaLoja = 'Suplementos' | 'Acessórios de treino' | 'Treino em casa' | 'Relógios e cintas' | 'Roupas e tênis' | 'Cozinha fit';
+export type CategoriaLoja =
+  | 'Suplementos'
+  | 'Roupas masculina'
+  | 'Roupas feminina'
+  | 'Tênis'
+  | 'Acessórios de treino'
+  | 'Treino em casa'
+  | 'Relógios e cintas'
+  | 'Cozinha fit'
+  | 'Recuperação';
 export interface ProdutoLoja { id: string; nome: string; categoria: CategoriaLoja; busca: string; porque: string; icone: string; tags: string[] }
 
 export const PRODUTOS: ProdutoLoja[] = [
