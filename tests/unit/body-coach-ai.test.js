@@ -54,6 +54,7 @@ test('BCAI-loja. a Loja tem mais de 80 produtos, ids únicos e o código de afil
   assert.ok(m.PRODUTOS.length >= 80);
   assert.equal(new Set(m.PRODUTOS.map((x) => x.id)).size, m.PRODUTOS.length);
   assert.match(m.linkAmazon('whey'), /[?&]tag=gilcambe-20/);
+});
 
 test('BCAI-avaliacoes. análise sincera e produto por foto existem, com limite de fotos', () => {
   const src = require('fs').readFileSync(require('path').join(__dirname, '../../netlify/functions/body-coach-ai.js'), 'utf8');
