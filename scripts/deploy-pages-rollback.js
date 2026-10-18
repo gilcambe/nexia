@@ -41,7 +41,7 @@ function requestCloudflare(endpoint, method = 'GET', data = null) {
         try {
           const json = JSON.parse(body);
           if (!json.success && res.statusCode >= 400) {
-            reject(new Error(`Erro Cloudflare API [${res.statusCode}]: ${JSON.stringify(json.errors || json))}`));
+            reject(new Error(`Erro Cloudflare API [${res.statusCode}]: ${JSON.stringify(json.errors || json)}`));
           } else {
             resolve(json);
           }
