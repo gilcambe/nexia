@@ -32,7 +32,11 @@ function getAuth(role) {
 }
 
 function getApp(role) {
-  return initializeTestApp({ projectId: PROJECT_ID, auth: getAuth(role) });
+  return initializeTestApp({
+    projectId: PROJECT_ID,
+    auth: getAuth(role),
+    firestore: { host: 'localhost', port: 8080 }
+  });
 }
 
 describe('Regras de segurança do Firestore - matriz de permissões', () => {
