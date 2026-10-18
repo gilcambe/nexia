@@ -7,12 +7,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
-          P=https://nexiabodycoach.pages.dev; F=https://nexia-c8710.firebaseapp.com
-          echo "== CONFIG"; curl -sS $P/api/firebase-config | sed 's/"apiKey":"[^"]*"/"apiKey":"x"/'; echo
-          echo "== CONFIG-W"; curl -sS https://nexia.gcbezerra.workers.dev/api/firebase-config | sed 's/"apiKey":"\([^"]\{8\}\)[^"]*"/"apiKey":"\1"/'; echo
-          curl -sS $P/body-coach/ -o /tmp/i; echo "== REFPOL"; curl -sSI $P/body-coach/ | grep -i "referrer\|content-security\|cross-origin"
-          for js in iframe.js handler.js; do
-            curl -sS "$F/__/auth/$js" -o /tmp/$js
-            echo "== $js"; grep -o ".\{250\}[^a-zA-Z]Pl([^)]*).\{250\}" /tmp/$js | head -8
-            grep -o ".\{250\}getAuthorizedDomains\|authorizedDomains.\{250\}" /tmp/$js | head -5
-          done
+          cd /tmp && npm i -s playwright@1.47.2 >/dev/null 2>&1 && npx -y playwright@1.47.2 install chromium >/dev/null 2>&1
+          cat > t.js <<'JS'
+          const { chromium, devices } = require('playwright');
+          (async () => {
+            const b = await chromium.launch();
+            const ctx = await b.newContext({ ...devices['Pixel 7'] });
+            const p = await ctx.newPage();
+            p.on('console', m => console.log('CONSOLE', m.type(), m.text().slice(0, 300)));
+            ctx.on('page', np => { console.log('POPUP', np.url()); np.on('framenavigated', f => f === np.mainFrame() && console.log('POPUP-NAV', f.url().slice(0, 400))); });
+            p.on('framenavigated', f => console.log('NAV', f.url().slice(0, 300)));
+            await p.goto('https://nexiabodycoach.pages.dev/body-coach/', { waitUntil: 'networkidle' });
+            await p.waitForTimeout(3000);
+            console.log('URL', p.url());
+            const btn = p.getByText('Entrar com Google').first();
+            if (!(await btn.count())) { await p.goto('https://nexiabodycoach.pages.dev/body-coach/auth', { waitUntil: 'networkidle' }); await p.waitForTimeout(2000); }
+            console.log('URL2', p.url());
+            await p.getByText('Entrar com Google').first().click();
+            await p.waitForTimeout(12000);
+            const txt = await p.locator('body').innerText();
+            console.log('TEXT', txt.replace(/\s+/g, ' ').slice(0, 800));
+            await b.close();
+          })().catch(e => { console.log('ERR', e.message); process.exit(0); });
+          JS
+          node t.js
