@@ -8,11 +8,10 @@ test.describe('NEXIA End-to-End Tests (Rigorous)', () => {
     await page.goto(BASE_URL);
     await expect(page).toHaveTitle(/NEXIA|Cortex/i);
 
-    // 2. Login obrigatório (clicar no botão de entrar/login se presente)
-    const loginButton = page.locator('button:has-text("Entrar"), a:has-text("Entrar"), button:has-text("Login")');
-    if (await loginButton.isVisible({ timeout: 5000 }).catch(() => false)) {
-      await loginButton.first().click();
-    }
+    // 2. Login obrigatório e explícito (garantindo que o fluxo não seja opcional)
+    const loginButton = page.locator('button:has-text("Entrar"), a:has-text("Entrar"), button:has-text("Login"), button:has-text("Google")');
+    await expect(loginButton.first()).toBeVisible({ timeout: 10000 });
+    await loginButton.first().click();
 
     // 3. Abrir o Cortex obrigatoriamente
     const cortexLink = page.locator('text=Cortex, a[href*="cortex"], button:has-text("Cortex")');
