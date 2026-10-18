@@ -203,13 +203,7 @@ const server = http.createServer((req, res) => {
   // Health
   if (pathname === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' });
-    return res.end(JSON.stringify({
-      status: 'ok', version: '60.0.0',
-      uptime: Math.floor(process.uptime()),
-      functions: Object.keys(loadedFunctions).length,
-      frontend: fs.existsSync(path.join(OUT, 'index.html')),
-      timestamp: new Date().toISOString(),
-    }));
+    return res.end(JSON.stringify({ status: 'ok agora' }));
   }
 
   // Firebase config
