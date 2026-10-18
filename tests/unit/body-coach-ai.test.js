@@ -39,3 +39,24 @@ test('BCAI-cardio. painel da esteira vira números limitados e a semana soma as 
   assert.equal(resumoSemana([{ id: 'a', em: Date.now(), aparelho: 'bike', tempoSeg: 600, km: 3, kcal: 100, kmh: 18, passos: 0 }]).kcal, 100);
   assert.match(avaliarSemana(0, 'emagrecer'), /Ainda sem cardio/);
 });
+
+test('BCAI-gratis. o Body Coach nunca usa provedor pago, mesmo com ANTHROPIC_API_KEY', () => {
+  process.env.ANTHROPIC_API_KEY = 'x';
+  try {
+    const { listaGratis, respostaLocal, cacheGet, cachePut, SEM_IA } = require('../../netlify/functions/body-coach/respostas-locais');
+    for (const c of ['fast', 'reasoning']) {
+      const l = listaGratis(c);
+      assert.ok(l.length > 0);
+      assert.ok(l.every((d) => d.provider !== 'anthropic'));
+    }
+    assert.match(respostaLocal('Quanto ainda posso comer?', { kcalRestantes: 640 }), /640 kcal/);
+    assert.match(respostaLocal('quanta água devo beber', { pesoKg: 80 }), /2,8 litros/);
+    assert.match(respostaLocal('Troca de exercício?', {}), /Trocar/);
+    assert.match(respostaLocal('dormi mal', {}), /7 a 9 horas/);
+    assert.equal(respostaLocal('explique periodização ondulatória', {}), null);
+    assert.ok(SEM_IA.length > 20);
+    cachePut('coach', 'Oi, tudo bem?', {}, 'ola', 1000);
+    assert.equal(cacheGet('coach', 'oi tudo bem', {}, 2000), 'ola');
+    assert.equal(cacheGet('coach', 'oi tudo bem', {}, 1000 + 25 * 3600 * 1000), null);
+  } finally { delete process.env.ANTHROPIC_API_KEY; }
+});

@@ -6,7 +6,7 @@
 
 const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware');
 const { getRouter } = require('../../nexia-ai/model-router');
-const { listFor } = require('../../nexia-ai/orchestrator/models');
+const { listaGratis, respostaLocal, cacheGet, cachePut, SEM_IA } = require('./body-coach/respostas-locais');
 const { estaBloqueado } = require('./body-coach/acesso');
 
 const COMUM = ' Responda em português do Brasil como numa conversa de WhatsApp com UMA pessoa que você conhece: calorosa, natural e curta (1 a 3 frases na maioria das respostas; só passe disso se a pessoa pedir um plano ou uma explicação). Responda ao que a pessoa acabou de dizer, levando em conta as mensagens anteriores da conversa; nunca repita o que já foi dito e nunca despeje dicas, números ou listas que ninguém pediu. Se a pessoa só cumprimentar ("oi", "olá", "bom dia"), cumprimente de volta pelo apelido e pergunte UMA coisa simples sobre o dia dela (como dormiu, como está de energia ou se vai treinar hoje), usando o contexto só se ajudar. Se o contexto trouxer "apelido", chame a pessoa por ele. Use os dados do contexto só quando forem relevantes ao que foi perguntado e sem inventar nada que não esteja nele. Quando der conselho, personalize ao objetivo, às modalidades, ao nível e às limitações: quem corre recebe dicas de corrida, quem luta, de luta, quem nada, de natação; cadeirante nunca recebe exercício em pé, perna em pé nem esteira; respeite lesões e condições. Se a pessoa disser que está cansada, com sono ou desanimada, mostre que entendeu (ex.: "poxa, entendo") e sugira algo leve ou pergunte como ela dormiu; nunca comemore o cansaço. Não repita a mesma pergunta que já foi feita. Faça no máximo uma pergunta por mensagem. Não use listas nem títulos.';
@@ -62,15 +62,28 @@ exports.handler = async (event) => {
     images = [{ mime: m[1], data: m[2] }];
   }
 
+  // Pergunta comum: resposta pronta, sem IA. Pergunta repetida: cache de 24 h. Só vale para conversa de texto.
+  const simples = !images && !cardio && !receita;
+  const ctxObj = body.context && typeof body.context === 'object' ? body.context : {};
+  if (simples && historico.length === 0) {
+    const pronta = respostaLocal(message, ctxObj);
+    if (pronta) return resposta(event, 200, { reply: pronta, role, model: 'local' });
+    const guardada = cacheGet(role, message, ctxObj);
+    if (guardada) return resposta(event, 200, { reply: guardada, role, model: 'cache' });
+  }
   const router = getRouter();
-  for (const d of listFor('fast')) {
+  for (const d of listaGratis(role === 'nutrologo' || role === 'fisioterapeuta' ? 'reasoning' : 'fast')) {
     try {
       const cap = router.capabilities(d);
       if (!cap.available || (images && !cap.vision)) continue;
       // Cada modelo tem 12 s; se demorar, passa logo para o próximo (nunca deixa o aluno esperando no vazio).
       const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: images ? 1200 : receita ? 2000 : 700, ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
-      if (out && out.text) return resposta(event, 200, { reply: out.text, role, model: d.model });
+      if (out && out.text) {
+        if (simples && historico.length === 0) cachePut(role, message, ctxObj, out.text);
+        return resposta(event, 200, { reply: out.text, role, model: d.model });
+      }
     } catch { /* tenta o próximo modelo */ }
   }
+  if (simples) return resposta(event, 200, { reply: respostaLocal(message, ctxObj) || SEM_IA, role, model: 'local' });
   return resposta(event, 503, { error: 'A equipe está indisponível agora. Tente de novo em alguns minutos.' });
 };
