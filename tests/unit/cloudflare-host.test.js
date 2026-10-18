@@ -275,3 +275,13 @@ test('CF-BC2. assetlinks.json soma as digitais de ASSETLINKS_SHA256 às do arqui
   assert.ok(j.some(l => l.target.package_name === 'app.nexia.cortex'));
   assert.strictEqual(j[0].target.package_name, 'app.nexia.bodycoach');
 });
+
+test('CF-AUTH. login do Google no domínio próprio: /__/auth vai ao Firebase e authDomain só muda com a variável e pelo proxy', async () => {
+  const cfg = (env, headers = {}) => handleRequest(new Request('https://nexia.test/api/firebase-config', { headers }), { ASSETS: fakeAssets(FILES), FIREBASE_API_KEY: 'k', FIREBASE_AUTH_DOMAIN: 'nexia-c8710.firebaseapp.com', ...env }, { getFunction: () => null }).then(r => r.json());
+  assert.strictEqual((await cfg({})).authDomain, 'nexia-c8710.firebaseapp.com');
+  assert.strictEqual((await cfg({ FIREBASE_AUTH_PROXY_DOMAIN: 'nexiabodycoach.pages.dev' })).authDomain, 'nexia-c8710.firebaseapp.com', 'sem o proxy do Pages nada muda');
+  assert.strictEqual((await cfg({ FIREBASE_AUTH_PROXY_DOMAIN: 'nexiabodycoach.pages.dev' }, { 'X-Nexia-Proxy': '1' })).authDomain, 'nexiabodycoach.pages.dev');
+  assert.strictEqual((await cfg({}, { 'X-Nexia-Proxy': '1' })).authDomain, 'nexia-c8710.firebaseapp.com', 'sem a variável nada muda');
+  const src = fs.readFileSync(path.join(ROOT, 'cloudflare/app.js'), 'utf8');
+  assert.match(src, /pathname === '\/__\/firebase\/init\.json' \|\| pathname\.startsWith\('\/__\/auth\/'\)/);
+});
