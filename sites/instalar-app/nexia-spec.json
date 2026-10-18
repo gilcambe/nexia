@@ -2,9 +2,9 @@
   "spec": {
     "kind": "system",
     "name": "Instalar App Cortex-p1",
-    "tagline": "Instale o app oficial direto da Play Store – segurança e desempenho garantidos",
+    "tagline": "Sofware em standalone, sem barra de endereços: verificação de integridade ao vivo e instalação guiada.",
     "photo_theme": "mobile app",
-    "description": "Instale o app oficial direto da Play Store – segurança e desempenho garantidos",
+    "description": "Página técnica para installation de Cortex-p1 em Android. Implementa manifiesto PWA (display: standalone) para garantir a ausência da barra de URL, valida a assinatura digital via assetlinks (PR #771) e redireciona automaticamente para a Play Store ou APK direto quando detecta o User Agent.",
     "folder": "sites/instalar-app",
     "fonts": {
       "heading": "Montserrat",
@@ -21,7 +21,7 @@
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "",
+      "whatsapp": "11999998888",
       "phone": "(11) 98888-7777",
       "email": "contato@cortexp1.com.br",
       "address": "",
@@ -110,10 +110,7 @@
         ]
       }
     ],
-    "modules": [
-      "Instalação",
-      "Suporte"
-    ]
+    "modules": []
   },
   "media": {}
 }
