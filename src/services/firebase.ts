@@ -5,16 +5,16 @@ let app: FirebaseApp | null = null;
 
 export async function initFirebase() {
   if (app) {
-      const { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence } = await import("firebase/auth");
-  let auth;
-  try {
-    auth = initializeAuth(app, {
-      persistence: [indexedDBLocalPersistence, browserLocalPersistence]
-    });
-  } catch {
-    auth = getAuth(app);
-  }
-  return { app, auth };
+    const { getAuth, initializeAuth, indexedDBLocalPersistence, browserLocalPersistence } = await import("firebase/auth");
+    let auth;
+    try {
+      auth = initializeAuth(app, {
+        persistence: [indexedDBLocalPersistence, browserLocalPersistence]
+      });
+    } catch {
+      auth = getAuth(app);
+    }
+    return { app, auth };
   }
   // Config pública do app da Web guardada no aparelho: abre sem esperar o Worker; a rede só atualiza para a próxima vez.
   let cfg: unknown = null;
