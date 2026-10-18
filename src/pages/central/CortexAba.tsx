@@ -36,7 +36,7 @@ export default function CortexAba({ d, erro }: { d: Dados; erro?: string }) {
           className="w-full rounded-xl bg-nexia-surface2 border border-nexia-border p-3 text-sm text-white" data-testid="cortex-pedido" />
         <div className="grid grid-cols-2 gap-2">
           <Botao onClick={pedir} disabled={ocupado || texto.trim().length < 10} tipo="forte">🧠 Enviar pedido</Botao>
-          <Botao href="/cortex-app">Abrir o Cortex</Botao>
+          <Botao href="/meu-cortex">Histórico de pedidos</Botao>
         </div>
         {msg && <p className="text-sm text-nexia-cyan" role="status">{msg}</p>}
       </Cartao>

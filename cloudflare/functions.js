@@ -49,6 +49,7 @@ const LOADERS = {
   'usage': () => require('../netlify/functions/usage.js'),
   'whatsapp-business': () => require('../netlify/functions/whatsapp-business.js'),
   'central': () => require('../netlify/functions/central.js'),
+  'pedidos': () => require('../netlify/functions/pedidos.js'),
   'nexia-api': () => require('../nexia-ai/api/index.js'),
 };
 
