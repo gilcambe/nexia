@@ -31,3 +31,4 @@ ui-debug.log
 .dev.vars
 
 apps/body-coach/android/upload.keystore
+.aider*
