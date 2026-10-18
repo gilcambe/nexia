@@ -2,10 +2,16 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/feature/AuthContext';
 import { chatApi } from '@/lib/chat';
 import { verCupom } from '@/lib/acesso';
+import { codigoIndicacao } from '@/lib/ferramentas/cartao';
 
 // Monta o link curto de convite (com cupom, se houver) e a mensagem pronta para o WhatsApp.
-export const linkConvite = (origem: string, base: string, codigoCoach: string, cupom: string) =>
-  `${origem}${base}c/${codigoCoach || 'amigo'}${cupom ? `?cupom=${encodeURIComponent(cupom)}` : ''}`;
+// Coach: link curto da equipe. Aluno comum: link de indicação (quem indicou ganha 1 mês quando o amigo assina).
+export const linkConvite = (origem: string, base: string, codigoCoach: string, cupom: string, indicacao = '') => {
+  const extra = cupom ? `cupom=${encodeURIComponent(cupom)}` : '';
+  if (codigoCoach) return `${origem}${base}c/${codigoCoach}${extra ? `?${extra}` : ''}`;
+  const q = [indicacao ? `ref=${indicacao}` : '', extra].filter(Boolean).join('&');
+  return `${origem}${base}${indicacao ? 'auth' : 'c/amigo'}${q ? `?${q}` : ''}`;
+};
 
 export const recadoConvite = (nome: string, link: string, pct = 0) =>
   `Oi! Sou ${nome || 'seu amigo'} e estou treinando com o Body Coach (treino, dieta e coach de IA no celular). Entra pelo meu link${pct ? ` e ganha ${pct}% de desconto no Premium` : ''}: ${link}`;
@@ -28,7 +34,7 @@ export default function ConvidarAmigo({ onFechar }: { onFechar: () => void }) {
     if (c) {
       try { pct = (await verCupom(c)).pct; } catch (e) { setMsg((e as Error).message); return null; }
     }
-    const link = linkConvite(window.location.origin, import.meta.env.BASE_URL, codigoCoach, c);
+    const link = linkConvite(window.location.origin, import.meta.env.BASE_URL, codigoCoach, c, user ? codigoIndicacao(user.id) : '');
     return { link, texto: recadoConvite(nome, link, pct) };
   };
   const zap = async () => { const r = await preparar(); if (r) window.open(`https://wa.me/?text=${encodeURIComponent(r.texto)}`, '_blank', 'noopener'); };

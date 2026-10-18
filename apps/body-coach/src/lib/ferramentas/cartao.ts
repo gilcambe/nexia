@@ -211,5 +211,8 @@ export function capturarIndicacao(): void {
   try {
     const ref = new URLSearchParams(window.location.search).get('ref');
     if (ref && /^[A-Za-z0-9]{6,40}$/.test(ref)) localStorage.setItem('bc_indicado_por', ref);
+    // ?cupom=: desconto do convite, aplicado sozinho na tela de pagamento
+    const cupom = (new URLSearchParams(window.location.search).get('cupom') ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
+    if (cupom) localStorage.setItem('bc_cupom', cupom);
   } catch { /* sem armazenamento */ }
 }
