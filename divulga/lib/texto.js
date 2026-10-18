@@ -12,7 +12,7 @@ function linkUtm(link, rede) {
 
 const pedido = (c, assunto) =>
   `Escreva um post curto de rede social em português do Brasil para "${c.nome}" sobre: ${assunto}. ` +
-  'Até 300 caracteres, tom animado e simples, 1 chamada para ação no fim, sem link, sem hashtags, sem aspas.';
+  'Até 300 caracteres, tom animado e simples, sem link, sem hashtags, sem aspas e sem chamada para ação no fim (ela é acrescentada depois).';
 
 async function groq(prompt, env, fetchImpl) {
   const r = await fetchImpl('https://api.groq.com/openai/v1/chat/completions', {
