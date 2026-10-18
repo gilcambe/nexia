@@ -1,0 +1,22 @@
+[
+  {
+    "titulo": "Ofertas do dia Shopee",
+    "items": [
+      {
+        "nome": "Shaker Termico 700ml",
+        "link": "https://shopee.com.br/shaker-termico-700ml?affiliate_id=nexia&campaign_id=bodycoach"
+        "preco": "R$ 25,90"
+      },
+      {
+        "nome": "Creatina Monohidratada 300g",
+        "link": "https://shopee.com.br/creatina-monohidratada-300g?affiliate_id=nexia&campaign_id=bodycoach"
+        "preco": "R$ 49,90"
+      },
+      {
+        "nome": "Tapete Yoga 6mm",
+        "link": "https://shopee.com.br/tapete-yoga-6mm?affiliate_id=nexia&campaign_id=bodycoach"
+        "preco": "R$ 35,90"
+      }
+    ]
+  }
+]
