@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/feature/AuthContext';
 import { useCoach } from '@/components/feature/CoachContext';
@@ -10,6 +10,7 @@ import NuncaFalhe from './components/NuncaFalhe';
 import AvisoAnamnese from './components/AvisoAnamnese';
 import AvisoFotos from './components/AvisoFotos';
 import LigarAvisos from './components/LigarAvisos';
+import ConvidarAmigo from './components/ConvidarAmigo';
 import ConviteTestador from './components/ConviteTestador';
 import PedirAvaliacao from '@/components/feature/PedirAvaliacao';
 
@@ -19,6 +20,7 @@ export default function Home() {
   const { profile, user, loading } = useAuth();
   const { result } = useReadiness();
   const navigate = useNavigate();
+  const [convidando, setConvidando] = useState(false);
 
   // Aluno que ainda não montou o plano: vai uma vez para o passo a passo de 1 minuto.
   useEffect(() => {
@@ -46,6 +48,14 @@ export default function Home() {
             {saudacao}, {firstName}
           </h1>
         </div>
+        <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row">
+        <button
+          onClick={() => setConvidando((v) => !v)}
+          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-primary-300 px-3.5 py-1.5 text-xs font-semibold text-primary-700 transition hover:bg-primary-100"
+        >
+          <i className="ri-user-add-line"></i>
+          Convidar
+        </button>
         <button
           onClick={() => setOpen(true)}
           className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-semibold text-background-50 transition hover:bg-primary-600"
@@ -53,7 +63,10 @@ export default function Home() {
           <i className="ri-robot-2-line"></i>
           Coach
         </button>
+        </div>
       </header>
+
+      {convidando && <ConvidarAmigo onFechar={() => setConvidando(false)} />}
 
       {profile && !profile.onboarding && (
         <Link to="/onboarding" className="flex items-center gap-3 rounded-2xl border border-primary-300 bg-primary-100 p-4">
@@ -70,11 +83,20 @@ export default function Home() {
       <AvisoFotos />
       <NuncaFalhe />
       <TodayCard />
-      <PedirAvaliacao />
       <NutritionCard />
       <DailyCheckIn />
-      <LigarAvisos />
-      <ConviteTestador />
+
+      <details className="group rounded-2xl border border-background-200 bg-background-50">
+        <summary className="flex cursor-pointer list-none items-center justify-between p-4 text-sm font-semibold text-foreground-800">
+          <span><i className="ri-more-2-line mr-2"></i>Mais</span>
+          <i className="ri-arrow-down-s-line text-xl text-foreground-400 transition group-open:rotate-180"></i>
+        </summary>
+        <div className="space-y-5 px-4 pb-4">
+          <PedirAvaliacao />
+          <LigarAvisos />
+          <ConviteTestador />
+        </div>
+      </details>
 
       <Link to="/ferramentas" className="flex items-center gap-3 rounded-2xl border border-background-200 bg-background-50 p-4 transition hover:border-primary-300">
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-xl text-primary-700"><i className="ri-apps-2-line"></i></span>

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import qrcode from 'qrcode-generator';
 import { avisarQuePaguei, dataCurta, ECONOMIA_ANUAL, PLANOS_PREMIUM, PRECOS, tipoDaChave, valorComDesconto, verCupom, type Acesso, type PlanoPremium } from '@/lib/acesso';
 import { codigoPix, reais } from '@/lib/ferramentas/pix';
@@ -19,6 +19,15 @@ export default function PagarPix({ acesso, avisar }: { acesso: Acesso; avisar: (
   }, [coach, acesso.pix, valor, plano]);
   const qr = useMemo(() => { if (!pixCodigo) return ''; const q = qrcode(0, 'M'); q.addData(pixCodigo); q.make(); return q.createDataURL(5, 2); }, [pixCodigo]);
   const copiarTexto = async (t: string, msg: string) => { try { await navigator.clipboard.writeText(t); avisar(msg); } catch { avisar('Não consegui copiar. Segure o texto e copie.'); } };
+  // Cupom que veio no link de convite (/c/amigo?cupom=…): entra sozinho
+  useEffect(() => {
+    let guardado = '';
+    try { guardado = localStorage.getItem('bc_cupom') ?? ''; } catch { /* sem armazenamento */ }
+    if (!guardado) return;
+    setCodigo(guardado);
+    verCupom(guardado).then((c) => { setCupom(c); avisar(`Cupom ${c.codigo}: ${c.pct}% de desconto.`); }).catch(() => { /* cupom vencido: segue sem desconto */ });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const aplicar = async () => { try { const c = await verCupom(codigo); setCupom(c); avisar(`Cupom ${c.codigo}: ${c.pct}% de desconto.`); } catch (e) { setCupom(null); avisar((e as Error).message); } };
   const paguei = async () => {
     try { await (coach ? avisarQuePaguei(cupom?.codigo ?? '') : avisarQuePaguei(cupom?.codigo ?? '', plano, valor)); avisar('Recebemos o seu aviso! Assim que o Pix for confirmado, o app libera sozinho.'); } catch (e) { avisar((e as Error).message); }
