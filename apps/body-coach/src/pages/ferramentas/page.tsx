@@ -29,12 +29,14 @@ const Mensalidade = carregar(() => import('./Mensalidade'));
 const Resumo = carregar(() => import('./Resumo'));
 const PostInstagram = carregar(() => import('./PostInstagram'));
 const Desafio30 = carregar(() => import('./Desafio30'));
+const Cardio = carregar(() => import('./Cardio'));
 
 // Ferramentas extras do Body Coach, todas grátis e feitas no próprio aparelho.
 export const FERRAMENTAS = [
   { id: 'treinos-prontos', grupo: 'Treino', nome: 'Treinos prontos', desc: 'HIIT, abdômen, yoga, alongamento, casa e corrida, guiados por voz', icone: 'ri-play-circle-line', el: TreinosProntos },
   { id: 'contador', grupo: 'Treino', nome: 'Contador por câmera', desc: 'A câmera conta suas repetições e avisa a amplitude', icone: 'ri-camera-lens-line', el: ContadorReps },
   { id: 'relogio', grupo: 'Treino', nome: 'Relógio e batimentos', desc: 'Cinta/relógio ao vivo e importar treino (GPX/TCX)', icone: 'ri-heart-pulse-line', el: Relogio },
+  { id: 'cardio', grupo: 'Treino', nome: 'Cardio por foto', desc: 'Foto do painel da esteira, bike ou escada: lê tempo, km e calorias e soma na semana', icone: 'ri-camera-lens-line', el: Cardio },
   { id: 'corrida', grupo: 'Treino', nome: 'Corrida com GPS', desc: 'Distância, ritmo e percurso pelo celular', icone: 'ri-run-line', el: Corrida },
   { id: 'periodizacao', grupo: 'Treino', nome: 'Periodização', desc: 'Seu ciclo de 4 a 16 semanas com descarga', icone: 'ri-stack-line', el: Periodizacao },
   { id: 'dupla', grupo: 'Treino', nome: 'Treino em dupla ao vivo', desc: 'Treine com um amigo e veja a série e os batimentos dele', icone: 'ri-team-line', el: Dupla },
