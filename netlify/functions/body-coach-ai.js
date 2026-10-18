@@ -62,15 +62,72 @@ exports.handler = async (event) => {
     images = [{ mime: m[1], data: m[2] }];
   }
 
+  // 1. Uso exclusivo da lista grátis (FREE.fast / FREE.reasoning), nunca anthropic
+  const useModels = (role === 'nutrologo' || role === 'fisioterapeuta' || receita) ? FREE.reasoning : FREE.fast;
+
+  // 2. Respostas prontas locais (sem IA) para perguntas mais comuns detectadas por palavras-chave
+  const lcMsg = message.toLowerCase();
+  let localReply = null;
+  const ctxObj = body.context && typeof body.context === 'object' ? body.context : {};
+  
+  if (lcMsg.includes('quanto ainda posso comer') || lcMsg.includes('calorias restantes') || lcMsg.includes('quanto falta comer')) {
+    const metas = ctxObj.metas || {};
+    const consumido = ctxObj.consumido || {};
+    const metaCal = Number(metas.calorias) || Number(metas.kcal) || 2000;
+    const consCal = Number(consumido.calorias) || Number(consumido.kcal) || 0;
+    const restCal = metaCal - consCal;
+    if (restCal > 0) {
+      localReply = `Ainda faltam cerca de ${Math.round(restCal)} kcal para atingir sua meta de hoje. Mantenha o foco nos macros!`;
+    } else {
+      localReply = `Você já atingiu ou ultrapassou a meta de calorias de hoje em ${Math.abs(Math.round(restCal))} kcal. Cuidado com os excessos!`;
+    }
+  } else if (lcMsg.includes('o que treino hoje') || lcMsg.includes('qual o treino de hoje') || lcMsg.includes('treino de hoje')) {
+    const treinoHoje = ctxObj.treinoHoje || ctxObj.treino || '';
+    if (treinoHoje) {
+      localReply = `Hoje seu treino programado é: ${typeof treinoHoje === 'string' ? treinoHoje : JSON.stringify(treinoHoje)}. Arrebenta!`;
+    } else {
+      localReply = `Não encontrei um treino específico cadastrado para hoje no seu painel. Que tal uma caminhada ou um treino leve de mobilidade?`;
+    }
+  } else if (lcMsg.includes('troca de exercício') || lcMsg.includes('trocar exercício') || lcMsg.includes('substituir exercício')) {
+    localReply = `Para trocar um exercício, escolha uma opção que trabalhe o mesmo grupo muscular e respeite suas limitações atuais. Se sentir dor ou desconforto, pare imediatamente!`;
+  } else if (lcMsg.includes('água') || lcMsg.includes('beber água') || lcMsg.includes('hidratação')) {
+    localReply = `A hidratação é fundamental para o seu desempenho e recuperação. Tente beber água regularmente ao longo do dia, ajustando conforme sua sede e o volume de treino.`;
+  } else if (lcMsg.includes('sono') || lcMsg.includes('dormir') || lcMsg.includes('descanso')) {
+    localReply = `Uma boa noite de sono (entre 7 e 8 horas) é essencial para a recuperação muscular e para manter a energia em dia. Tente descansar bem!`;
+  }
+
+  if (localReply) {
+    return resposta(event, 200, { reply: localReply, role, model: 'local-cache' });
+  }
+
+  // 3. Cache de 24h por pergunta normalizada + contexto resumido no Firestore (ou Map em memória como fallback rápido)
+  const normMsg = lcMsg.replace(/[^a-z0-9]/g, '_').slice(0, 100);
+  const cacheKey = `${auth.uid}_${role}_${normMsg}_${contexto.slice(0, 50)}`;
+  // Usamos cache em memória ou Firestore. Como o acesso tem Map, podemos usar um cache global ou verificar no Firestore se db estiver disponível.
+  // Vamos usar um Map estático simples com expiração de 24h para atender ao requisito de cache de forma robusta e rápida.
+  if (!global.__bcAiCache) global.__bcAiCache = new Map();
+  const cachedItem = global.__bcAiCache.get(cacheKey);
+  const now = Date.now();
+  if (cachedItem && cachedItem.exp > now) {
+    return resposta(event, 200, { reply: cachedItem.text, role, model: cachedItem.model });
+  }
+
   const router = getRouter();
-  for (const d of listFor('fast')) {
+  let lastErrorMsg = '';
+  for (const d of useModels) {
     try {
       const cap = router.capabilities(d);
       if (!cap.available || (images && !cap.vision)) continue;
       // Cada modelo tem 12 s; se demorar, passa logo para o próximo (nunca deixa o aluno esperando no vazio).
       const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: images ? 1200 : receita ? 2000 : 700, ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
-      if (out && out.text) return resposta(event, 200, { reply: out.text, role, model: d.model });
-    } catch { /* tenta o próximo modelo */ }
+      if (out && out.text) {
+        global.__bcAiCache.set(cacheKey, { text: out.text, model: d.model, exp: now + 24 * 3600000 });
+        return resposta(event, 200, { reply: out.text, role, model: d.model });
+      }
+    } catch (err) { lastErrorMsg = err.message; /* tenta o próximo modelo */ }
   }
-  return resposta(event, 503, { error: 'A equipe está indisponível agora. Tente de novo em alguns minutos.' });
+
+  // 4. Se todos os modelos grátis falharem: resposta local útil + "tente de novo em alguns minutos", nunca erro em branco.
+  const fallbackReply = `Estou com dificuldades técnicas no momento para acessar a IA, mas lembre-se de manter o foco na sua constância, hidratação e descanso. Tente de novo em alguns minutos!`;
+  return resposta(event, 200, { reply: fallbackReply, role, model: 'fallback-local' });
 };
