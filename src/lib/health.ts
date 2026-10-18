@@ -1,5 +1,5 @@
-import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const COLLECTION = 'health/samples';
 
@@ -31,29 +31,39 @@ export interface HealthDashboardData {
   errorCountByRoute: Record<string, number>;
 }
 
-// --- abstração mínima de storage (Firestore por padrão) -----------------
+// --- abstração mínima de storage (Firestore por padrão) ------------------
 
 function storagePath(day: string): string {
-  // 4 segmentos: coleção / documento / subcoleção / documento (válido para getDoc/setDoc)
-  return `${COLLECTION}/day/${day}`;
-}
-
-function requireAuth(): void {
-  if (!auth.currentUser) {
-    throw new Error('Usuário não autenticado: acesso às amostras de saúde requer login.');
-  }
+  // documento diretamente na coleção, usando o dia como índice (YYYY-MM-DD)
+  return `${COLLECTION}/${day}`;
 }
 
 async function readDay(day: string): Promise<HealthSample | null> {
-  requireAuth();
   const snap = await getDoc(doc(db, storagePath(day)));
   if (!snap.exists()) return null;
-  const data = snap.data() as HealthSample;
+  const data = snap.data();
+  if (!isHealthSample(data)) return null;
   return data;
 }
 
+function isHealthSample(value: unknown): value is HealthSample {
+  if (typeof value !== 'object' || value === null) return false;
+  const s = value as Record<string, unknown>;
+  if (typeof s.timestamp !== 'string') return false;
+  const m = s.metrics;
+  if (typeof m !== 'object' || m === null) return false;
+  const metrics = m as Record<string, unknown>;
+  return (
+    typeof metrics.cpu === 'number' &&
+    typeof metrics.mem === 'number' &&
+    typeof metrics.responseTime === 'number' &&
+    typeof metrics.errorRate === 'number' &&
+    typeof metrics.routes === 'object' &&
+    metrics.routes !== null
+  );
+}
+
 async function writeDay(day: string, sample: HealthSample): Promise<void> {
-  requireAuth();
   await setDoc(doc(db, storagePath(day)), sample);
 }
 
@@ -117,7 +127,7 @@ export async function getHealthDashboardData(): Promise<HealthDashboardData> {
   for (let i = 1; i < samples.length; i++) {
     const prev = samples[i - 1];
     const curr = samples[i];
-    const magnitude = curr.metrics.responseTime - prev.metrics.responseTime;
+    const magnitude = prev.metrics.responseTime - curr.metrics.responseTime;
     if (magnitude > 0) {
       drops.push({ timestamp: curr.timestamp, magnitude });
     }
