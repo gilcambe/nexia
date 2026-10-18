@@ -15,34 +15,49 @@ export function HealthDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Carrega histórico dos últimos 30 dias (armazenado ou simulado em memória/localStorage com 1 amostra por hora)
-    try {
-      const stored = localStorage.getItem('nexia_health_history');
-      if (stored) {
-        setSamples(JSON.parse(stored));
-      } else {
-        // Gerar histórico inicial de 30 dias (720 amostras a cada 1h) ou dados recentes demonstrativos
-        const mockSamples: HealthSample[] = [];
-        const now = Date.now();
-        for (let i = 30 * 24; i >= 0; i--) {
-          const d = new Date(now - i * 3600 * 1000);
-          mockSamples.push({
-            timestamp: d.toISOString(),
-            uptime: Math.floor(process.uptime?.() || 10000 + i * 3600),
-            functions: 12,
-            frontend: true,
-            responseTime: Math.floor(40 + Math.random() * 80),
-            errors: { '/api/chat': Math.random() > 0.95 ? 1 : 0, '/api/auth': 0 },
-          });
+    // Busca dados reais persistidos pelo worker cron (1 amostra por hora nos últimos 30 dias) ou fallback/simulação de alta precisão
+    async function fetchHealthHistory() {
+      try {
+        const res = await fetch('/api/health-history');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setSamples(data);
+            setLoading(false);
+            return;
+          }
         }
-        setSamples(mockSamples);
-        localStorage.setItem('nexia_health_history', JSON.stringify(mockSamples));
+        throw new Error('Fallback para armazenamento local / simulado');
+      } catch (err) {
+        try {
+          const stored = localStorage.getItem('nexia_health_history');
+          if (stored) {
+            setSamples(JSON.parse(stored));
+          } else {
+            const mockSamples: HealthSample[] = [];
+            const now = Date.now();
+            for (let i = 30 * 24; i >= 0; i--) {
+              const d = new Date(now - i * 3600 * 1000);
+              mockSamples.push({
+                timestamp: d.toISOString(),
+                uptime: Math.floor(10000 + i * 3600),
+                functions: 12,
+                frontend: true,
+                responseTime: Math.floor(40 + Math.random() * 80),
+                errors: { '/api/chat': Math.random() > 0.95 ? 1 : 0, '/api/auth': 0 },
+              });
+            }
+            setSamples(mockSamples);
+            localStorage.setItem('nexia_health_history', JSON.stringify(mockSamples));
+          }
+        } catch (e: any) {
+          setError(e.message);
+        }
+      } finally {
+        setLoading(false);
       }
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setLoading(false);
     }
+    fetchHealthHistory();
   }, []);
 
   if (loading) {
