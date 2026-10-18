@@ -1,6 +1,8 @@
 const { initializeTestApp, assertFails, assertSucceeds } = require('@firebase/rules-unit-testing');
+const firebase = require('firebase/compat/app');
+require('firebase/compat/firestore');
 
-const PROJECT_ID = 'demo-nexia';
+const PROJECT_ID = 'nexia-audit-test';
 
 // Matriz de permissões por coleção e papel
 const permissionMatrix = {
