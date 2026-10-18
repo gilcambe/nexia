@@ -22,6 +22,7 @@ const SINCERA = 'Você é um coach de fisiculturismo e emagrecimento brasileiro,
 const PRODUTOS_SYS = { suplemento: 'Você avalia um suplemento ou produto fitness pela foto do rótulo ou da embalagem.', tabela: 'Você avalia a tabela nutricional da foto.', prato: 'Você avalia a refeição da foto.', exame: 'Você explica os valores de um exame de sangue da foto.' };
 const PRODUTO = (tipo) => `${PRODUTOS_SYS[tipo] || PRODUTOS_SYS.suplemento} Responda em português do Brasil, sem markdown, com estas seções em texto simples: O que é; Pontos bons; Pontos de atenção (açúcar, sódio, aditivos, dose, excesso de promessa); Vale a pena para o objetivo da pessoa? (sim, depende ou não, e por quê); Alternativa melhor ou mais barata, se houver. Se algo não estiver legível, diga o que faltou. Não prescreva remédio nem diagnostique; para exame, só explique o que está fora da faixa e sugira levar ao médico. Informação educativa.`;
 const RECEITA = 'Você é um nutricionista no app NEXIA Body Coach e cria UMA receita simples, barata e gostosa da culinária brasileira, em português do Brasil. Use preferencialmente os ingredientes que a pessoa disser ter; se não disser, use itens comuns de mercado. Encaixe nas calorias e proteína que ainda faltam no dia (contexto) e respeite objetivo, restrições e limitações. Formato exato, sem enfeites: primeira linha só o nome da receita; depois "Tempo: X min | Rende: N porção(ões)"; depois "Ingredientes:" com um item por linha começando com "- "; depois "Modo de preparo:" com passos numerados (máximo 6, curtos); por fim "Aproximado por porção: X kcal, Y g de proteína". Não use markdown, asteriscos nem títulos. Não prescreva remédios nem trate doenças.';
+const IMPORTAR = 'Você recebe o texto de uma lista, relatório ou exportação de alunos de outro aplicativo de treino (MFit, Tecnofit, Treinus etc.). Devolva SOMENTE um JSON, sem markdown, no formato [{"nome":"...","email":"...","telefone":"..."}] com um item por aluno. Use string vazia no que não aparecer. Não invente alunos, e-mails nem telefones; ignore títulos, datas, valores e linhas que não sejam de aluno.';
 const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 
 exports.handler = async (event) => {
@@ -47,7 +48,9 @@ exports.handler = async (event) => {
   let body;
   try { body = JSON.parse(event.body || '{}'); } catch { return resposta(event, 400, { error: 'Pedido inválido.' }); }
   const message = typeof body.message === 'string' ? body.message.trim() : '';
-  if (message.length < 1 || message.length > 3000) return resposta(event, 400, { error: 'Escreva uma mensagem de até 3000 caracteres.' });
+  const importar = body.task === 'importar';
+  const limiteMsg = importar ? 12000 : 3000;
+  if (message.length < 1 || message.length > limiteMsg) return resposta(event, 400, { error: `Escreva uma mensagem de até ${limiteMsg} caracteres.` });
   const role = Object.prototype.hasOwnProperty.call(PAPEIS, body.role) ? body.role : 'coach';
   const contexto = JSON.stringify(body.context && typeof body.context === 'object' ? body.context : {}).slice(0, 2000);
   const receita = body.task === 'receita';
@@ -55,7 +58,7 @@ exports.handler = async (event) => {
   const sincera = body.task === 'avaliacao';
   const produto = body.task === 'produto';
   if (cardio && typeof body.image !== 'string') return resposta(event, 400, { error: 'Mande a foto do painel.' });
-  const system = `${cardio ? CARDIO : sincera ? SINCERA : produto ? PRODUTO(body.tipo) : receita ? RECEITA : PAPEIS[role]}\nContexto do aluno: ${contexto}`;
+  const system = `${importar ? IMPORTAR : cardio ? CARDIO : sincera ? SINCERA : produto ? PRODUTO(body.tipo) : receita ? RECEITA : PAPEIS[role]}\nContexto do aluno: ${contexto}`;
   // Últimas mensagens da conversa (até 10), para o coach lembrar o que o aluno já disse.
   const historico = Array.isArray(body.history) ? body.history.slice(-10).filter((h) => h && (h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string' && h.content.trim()).map((h) => ({ role: h.role, content: h.content.trim().slice(0, 600) })) : [];
   const mensagens = [...historico, { role: 'user', content: message }];
@@ -80,7 +83,7 @@ exports.handler = async (event) => {
       const cap = router.capabilities(d);
       if (!cap.available || (images && !cap.vision)) continue;
       // Cada modelo tem 12 s; se demorar, passa logo para o próximo (nunca deixa o aluno esperando no vazio).
-      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: sincera || produto ? 1600 : images ? 1200 : receita ? 2000 : 700, ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
+      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: importar ? 2500 : sincera || produto ? 1600 : images ? 1200 : receita ? 2000 : 700, ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
       if (out && out.text) return resposta(event, 200, { reply: out.text, role, model: d.model });
     } catch { /* tenta o próximo modelo */ }
   }

@@ -94,3 +94,15 @@ export async function lerArquivos(arquivos: File[], aviso: Progresso = () => {})
     avisos: todos.flatMap((t) => t.avisos),
   };
 }
+
+// Só o texto corrido de um PDF (até 8 páginas), para a IA procurar a lista de alunos.
+export async function textoDoPdf(arquivo: File): Promise<string> {
+  const lib = await pdfjs();
+  const doc = await lib.getDocument({ data: new Uint8Array(await arquivo.arrayBuffer()) }).promise;
+  let t = '';
+  for (let i = 1; i <= Math.min(doc.numPages, 8); i += 1) {
+    const tc = await (await doc.getPage(i)).getTextContent();
+    t += `${(tc.items as { str?: string }[]).map((it) => it.str ?? '').join(' ')}\n`;
+  }
+  return t;
+}
