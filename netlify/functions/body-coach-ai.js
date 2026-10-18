@@ -77,17 +77,105 @@ exports.handler = async (event) => {
   }
   if (produto && !images) return resposta(event, 400, { error: 'Mande a foto do produto.' });
 
+  // 2. Respostas prontas locais (sem IA) para perguntas mais comuns
+  const msgLower = message.toLowerCase();
+  let localReply = null;
+  const ctxObj = body.context && typeof body.context === 'object' ? body.context : {};
+
+  // Água
+  if (msgLower.includes('agua') || msgLower.includes('água') || msgLower.includes('beber')) {
+    const metaAgua = ctxObj.metaAgua || ctxObj.aguaMl || 2500;
+    const bebido = ctxObj.aguaBebida || ctxObj.aguaAtual || 0;
+    const falta = Math.max(0, metaAgua - bebido);
+    localReply = falta > 0 
+      ? `Você já bebeu ${bebido}ml de água hoje e sua meta é ${metaAgua}ml. Faltam ${falta}ml, bora tomar um copo agora!` 
+      : `Parabéns! Você já bateu sua meta de ${metaAgua}ml de água hoje. Continue assim!`;
+  } 
+  // Sono
+  else if (msgLower.includes('sono') || msgLower.includes('dormir') || msgLower.includes('dormi')) {
+    const horasSono = ctxObj.sonoHoras || ctxObj.horasSono;
+    localReply = horasSono !== undefined 
+      ? `Você registrou ${horasSono} horas de sono. Descansar bem é fundamental para a recuperação e para o ganho de massa ou queima de gordura!`
+      : `O sono é essencial para sua recuperação e resultados. Tente dormir entre 7 e 8 horas por noite e mantenha uma rotina consistente.`;
+  }
+  // Quanto ainda posso comer / calorias
+  else if (msgLower.includes('comer') || msgLower.includes('caloria') || msgLower.includes('fome') || msgLower.includes('dieta') || msgLower.includes('macros')) {
+    const metaCal = ctxObj.metaCalorias || ctxObj.caloriasMeta || 2000;
+    const consumidoCal = ctxObj.caloriasConsumidas || ctxObj.caloriasAtual || 0;
+    const restamCal = metaCal - consumidoCal;
+    localReply = restamCal > 0
+      ? `Você consumiu ${consumidoCal} kcal de uma meta de ${metaCal} kcal. Ainda restam ${restamCal} kcal para você bater hoje. Escolha boas fontes de proteína e vegetais!`
+      : `Você já atingiu ou ultrapassou sua meta de ${metaCal} kcal hoje (${consumidoCal} kcal consumidas). Foque em água e chás sem açúcar agora.`;
+  }
+  // O que treino hoje / treino
+  else if (msgLower.includes('treino') || msgLower.includes('treinar') || msgLower.includes('exercicio') || msgLower.includes('exercício')) {
+    const treinoHoje = ctxObj.treinoHoje || ctxObj.treinoNome || ctxObj.proximoTreino;
+    localReply = treinoHoje
+      ? `Seu treino programado para hoje é: ${treinoHoje}. Bora dar o seu melhor e manter a constância!`
+      : `Hoje o foco é manter a constância e dar o seu melhor! Confira a aba de treinos do app para ver os detalhes da sua série.`;
+  }
+  // Troca de exercício
+  else if (msgLower.includes('troca') || msgLower.includes('substituir') || msgLower.includes('dor') || msgLower.includes('incomodando')) {
+    localReply = `Se algum exercício estiver causando desconforto ou você precisar substituir por falta de equipamento, opte por um movimento que trabalhe o mesmo grupamento muscular com amplitude segura. Se a dor persistir, pare o exercício imediatamente!`;
+  }
+
+  // 3. Cache de 24h por pergunta normalizada + contexto resumido (Firestore ou memória/simulado se KV/DB)
+  const normalizedMsg = msgLower.replace(/[^a-z0-9]/g, '_').slice(0, 50);
+  const cacheKey = `bc_cache_${auth.uid}_${role}_${normalizedMsg}`;
+  let cachedData = null;
+
+  try {
+    const { db } = require('./firebase-init');
+    if (db) {
+      const docSnap = await db.collection('bc_cache').doc(cacheKey).get();
+      if (docSnap.exists) {
+        const data = docSnap.data();
+        if (data && data.timestamp && (Date.now() - data.timestamp < 24 * 60 * 60 * 1000)) {
+          cachedData = data.reply;
+        }
+      }
+    }
+  } catch { /* cache indisponível, prossegue */ }
+
+  if (cachedData) {
+    return resposta(event, 200, { reply: cachedData, role, model: 'cache-local', cached: true });
+  }
+
+  if (localReply) {
+    try {
+      const { db } = require('./firebase-init');
+      if (db) {
+        await db.collection('bc_cache').doc(cacheKey).set({ reply: localReply, timestamp: Date.now() });
+      }
+    } catch { /* ignora erro de salvamento no cache */ }
+    return resposta(event, 200, { reply: localReply, role, model: 'local-rule' });
+  }
+
   const router = getRouter();
-  // Regra do dono: o Body Coach só usa IA grátis (`FREE.fast` e `FREE.reasoning`), nunca provedor `anthropic`, mesmo com a chave configurada.
-  const listaModelos = (body.role === 'nutrologo' || role === 'nutrologo' || role === 'coach') ? FREE.reasoning : FREE.fast;
-  for (const d of (Array.isArray(listaModelos) ? listaModelos : FREE.fast).filter((x) => x && x.provider !== 'anthropic')) {
+  // 1. O Body Coach passa a usar só a lista grátis: FREE.fast (e FREE.reasoning para análises), nunca provedor anthropic
+  const listaModelos = (sincera || produto || receita) ? listFor('reasoning') : listFor('fast');
+  const candidatosValidos = listaModelos.filter((x) => x.provider !== 'anthropic');
+
+  for (const d of candidatosValidos) {
     try {
       const cap = router.capabilities(d);
       if (!cap.available || (images && !cap.vision)) continue;
       // Cada modelo tem 12 s; se demorar, passa logo para o próximo (nunca deixa o aluno esperando no vazio).
       const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: importar ? 2500 : sincera || produto ? 1600 : images ? 1200 : receita ? 2000 : 700, ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
-      if (out && out.text) return resposta(event, 200, { reply: out.text, role, model: d.model });
+      if (out && out.text) {
+        const replyText = out.text;
+        try {
+          const { db } = require('./firebase-init');
+          if (db) {
+            await db.collection('bc_cache').doc(cacheKey).set({ reply: replyText, timestamp: Date.now() });
+          }
+        } catch { /* ignora cache */ }
+        return resposta(event, 200, { reply: replyText, role, model: d.model });
+      }
     } catch { /* tenta o próximo modelo */ }
   }
-  return resposta(event, 503, { error: 'A equipe está indisponível agora. Tente de novo em alguns minutos.' });
+
+  // 4. Se todos os modelos grátis falharem: resposta local útil + "tente de novo em alguns minutos", nunca erro em branco
+  const fallbackReply = `Estou com uma instabilidade momentânea na conexão com os servidores de IA, mas seu Body Coach está aqui! Mantenha o foco no seu plano, hidrate-se bem e tente de novo em alguns minutos.`;
+  return resposta(event, 200, { reply: fallbackReply, role, model: 'fallback-local' });
 };
