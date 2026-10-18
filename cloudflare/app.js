@@ -222,9 +222,10 @@ async function handleRequest(request, env, { getFunction }) {
   }
   if (pathname === '/.well-known/assetlinks.json') {
     const base = require('../apps/body-coach/android/assetlinks.json');
-    // Digitais da chave do app (ASSETLINKS_SHA256, separadas por vírgula): sem elas o Android abre o app como aba do Chrome.
+    // Digitais extras do app (ASSETLINKS_SHA256, separadas por vírgula): sem elas o Android abre o app como aba do Chrome.
     const digitais = String(env.ASSETLINKS_SHA256 || '').split(',').map(x => x.trim().toUpperCase()).filter(x => /^([0-9A-F]{2}:){31}[0-9A-F]{2}$/.test(x));
-    const links = digitais.length ? base.map(l => ({ ...l, target: { ...l.target, sha256_cert_fingerprints: digitais } })) : base;
+    // Acrescenta às digitais do arquivo (chave de envio): com a Play, a chave que assina o app instalado é outra (Assinatura de apps do Play Console).
+    const links = digitais.length ? base.map(l => ({ ...l, target: { ...l.target, sha256_cert_fingerprints: [...new Set([...(l.target.sha256_cert_fingerprints || []), ...digitais])] } })) : base;
     return json(200, links, { 'Cache-Control': 'public, max-age=3600', 'Access-Control-Allow-Origin': '*' });
   }
   if (pathname === '/health') {

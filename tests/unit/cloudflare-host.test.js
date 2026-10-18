@@ -265,11 +265,13 @@ test('CF-BC. Worker: assetlinks.json do app Android e redirecionamento do link a
   assert.strictEqual(p.status, 200);
 });
 
-test('CF-BC2. assetlinks.json usa as digitais de ASSETLINKS_SHA256 e ignora lixo', async () => {
+test('CF-BC2. assetlinks.json soma as digitais de ASSETLINKS_SHA256 às do arquivo e ignora lixo', async () => {
   const fp = n => Array.from({ length: 32 }, (_, i) => ((i * n) % 256).toString(16).padStart(2, '0').toUpperCase()).join(':');
   const env = { ASSETS: fakeAssets(FILES), ASSETLINKS_SHA256: `${fp(3)}, ${fp(5)}, lixo` };
   const r = await handleRequest(new Request('https://nexia.gcbezerra.workers.dev/.well-known/assetlinks.json'), env, { getFunction: () => null });
   const j = await r.json();
-  assert.deepStrictEqual(j[0].target.sha256_cert_fingerprints, [fp(3), fp(5)]);
+  const doArquivo = require('../../apps/body-coach/android/assetlinks.json')[0].target.sha256_cert_fingerprints;
+  assert.deepStrictEqual(j[0].target.sha256_cert_fingerprints, [...doArquivo, fp(3), fp(5)]);
+  assert.ok(j.some(l => l.target.package_name === 'app.nexia.cortex'));
   assert.strictEqual(j[0].target.package_name, 'app.nexia.bodycoach');
 });
