@@ -253,9 +253,47 @@ async function handleRequest(request, env, { getFunction }) {
       { 'Access-Control-Allow-Origin': '*' });
   }
   if (pathname === '/__/firebase/init.json' || pathname.startsWith('/__/auth/')) return proxyAuth(request, url);
-  if (pathname === '/api/firebase-config') return firebaseConfig(env, undefined, request);
+  if (pathname === '/api/firebase-config') {
+    const cfCache = caches.default;
+    const cacheKey = new Request(request.url, request);
+    let cached = typeof cfCache !== 'undefined' ? await cfCache.match(cacheKey) : null;
+    if (cached) return cached;
+    const resp = await firebaseConfig(env, undefined, request);
+    if (resp.status === 200 && typeof cfCache !== 'undefined') {
+      const cacheResp = new Response(resp.clone().body, resp);
+      cacheResp.headers.set('Cache-Control', 'public, max-age=300');
+      ctx.waitUntil(cfCache.put(cacheKey, cacheResp));
+    }
+    return resp;
+  }
   if (pathname.startsWith('/api/') || pathname.startsWith('/.netlify/functions/')) {
-    return runFunction(resolveFunctionName(pathname), request, url, env, getFunction);
+    // Cache de borda para APIs de leitura (Cache API do Worker): listas de ofertas, config pública, /api/firebase-config e catálogos com 60 a 300 s
+    const isGet = request.method === 'GET';
+    const isReadApi = isGet && (
+      pathname.includes('ofertas') ||
+      pathname.includes('config') ||
+      pathname.includes('catalogo') ||
+      pathname.includes('catalogos') ||
+      pathname.includes('produtos') ||
+      pathname.includes('planos') ||
+      pathname.includes('servicos')
+    );
+    const cfCache = isReadApi && typeof caches !== 'undefined' ? caches.default : null;
+    const cacheKey = cfCache ? new Request(request.url, request) : null;
+    if (cfCache) {
+      const cached = await cfCache.match(cacheKey);
+      if (cached) return cached;
+    }
+    const res = await runFunction(resolveFunctionName(pathname), request, url, env, getFunction);
+    if (cfCache && res.status === 200) {
+      const cacheResp = new Response(res.clone().body, res);
+      // Custo 0, 60 a 300 s conforme pedido (usamos 300s / 5 minutos)
+      cacheResp.headers.set('Cache-Control', 'public, max-age=300');
+      if (typeof ctx !== 'undefined' && typeof ctx.waitUntil === 'function') {
+        ctx.waitUntil(cfCache.put(cacheKey, cacheResp));
+      }
+    }
+    return res;
   }
   return serveStatic(request, url, env);
 }
