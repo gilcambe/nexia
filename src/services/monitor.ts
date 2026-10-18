@@ -8,6 +8,27 @@ export interface CentralAlert {
 
 class MonitorService {
   private failures: Record<string, number> = {};
+  private timer: any = null;
+
+  constructor() {
+    this.startMonitoring();
+  }
+
+  startMonitoring(intervalMs = 60000) {
+    if (this.timer) return;
+    this.timer = setInterval(() => {
+      const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+      this.checkEndpoint(`${baseUrl}/health`, 'Health Check').catch(() => {});
+      this.checkEndpoint(`${baseUrl}/body-coach`, 'Body Coach App').catch(() => {});
+    }, intervalMs);
+  }
+
+  stopMonitoring() {
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
+  }
 
   async checkEndpoint(url: string, name: string): Promise<boolean> {
     try {
