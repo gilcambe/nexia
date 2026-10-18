@@ -75,6 +75,9 @@ exports.handler = async (event) => {
     if (!query || typeof query !== 'string' || query.trim().length < 2) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'query é obrigatória (mínimo 2 caracteres)' }) };
     }
+    if (query.trim().length > 500) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'query excede o tamanho máximo de 500 caracteres' }) };
+    }
 
     const q = encodeURIComponent(query.trim());
     const res = await _fetchTimeout(`${DDG_BASE}?q=${q}`, {
