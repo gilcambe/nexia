@@ -26,7 +26,7 @@ export default function Presenca() {
 
   return (
     <div className="space-y-4">
-      <Link to="/coach" className="inline-flex items-center gap-1 text-sm font-medium text-primary-700"><i className="ri-arrow-left-line"></i>Meus alunos</Link>
+      <Link to="/coach/alunos" className="inline-flex items-center gap-1 text-sm font-medium text-primary-700"><i className="ri-arrow-left-line"></i>Meus alunos</Link>
       <header>
         <h1 className="font-heading text-2xl font-bold text-foreground-950">Presença de {d.nome}</h1>
         <p className="text-sm text-foreground-600" data-testid="presenca-resumo">Treinou em {treinou} dos últimos 28 dias.</p>
