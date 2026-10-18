@@ -17,7 +17,7 @@ const dois = (n: number) => String(n).padStart(2, '0');
 const escapa = (t: string) => t.replace(/[\;,]/g, (c) => `\\${c}`).replace(/\n/g, '\\n');
 
 // hora no formato "HH:MM"; devolve o texto do .ics (linhas separadas por CRLF).
-export function gerarIcs(opts: { dias: string[]; hora: string; apelido?: string | null; incluirPeso?: boolean; agora?: Date }): string {
+export function gerarIcs(opts: { dias: string[]; hora: string; apelido?: string | null; incluirPeso?: boolean; incluirFotos?: boolean; agora?: Date }): string {
   const agora = opts.agora ?? new Date();
   const [h, m] = (opts.hora || '18:00').split(':').map(Number);
   const hh = Number.isFinite(h) ? h : 18;
@@ -42,8 +42,16 @@ export function gerarIcs(opts: { dias: string[]; hora: string; apelido?: string 
   const dias = opts.dias.length ? opts.dias : ['MO', 'WE', 'FR'];
   linhas.push(...evento('treino', `${nome}hora do treino!`.replace(/^./, (c) => c.toUpperCase()), 'Abra o NEXIA Body Coach, responda como você está e comece o treino de hoje.', `FREQ=WEEKLY;BYDAY=${dias.join(',')}`, hh, mm, 60, dias));
   if (opts.incluirPeso) linhas.push(...evento('peso', 'Registrar o peso da semana', 'Registre o seu peso na aba Evolução para o app ajustar a dieta.', 'FREQ=WEEKLY;BYDAY=SU', 8, 0, 10, ['SU']));
+  if (opts.incluirFotos) linhas.push(...evento('fotos', 'Fotos de evolução da semana', 'Abra o NEXIA Body Coach > Evolução e tire as fotos (frente, costas e lados) com a mesma luz e o mesmo lugar.', 'FREQ=WEEKLY;BYDAY=SU', 8, 10, 10, ['SU']));
   linhas.push('END:VCALENDAR');
   return linhas.join('\r\n') + '\r\n';
+}
+
+// Dias desde a última foto/avaliação (null = nunca tirou). Passou de 7 dias, o Hoje lembra de tirar de novo.
+export function diasSemFotos(datas: (string | null | undefined)[], agora: Date = new Date()): number | null {
+  const t = datas.map((d) => (d ? new Date(d).getTime() : NaN)).filter((n) => Number.isFinite(n));
+  if (!t.length) return null;
+  return Math.floor((agora.getTime() - Math.max(...t)) / 86400000);
 }
 
 // Lembrete mensal de reavaliação (fotos nas 4 posições + medidas), sempre no mesmo dia do mês.
