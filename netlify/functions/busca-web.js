@@ -15,7 +15,7 @@ async function _fetchTimeout(url, opts = {}, ms = 25000) {
  * ╚══════════════════════════════════════════════════════╝
  */
 const { admin, db } = require('./firebase-init');
-const { requireBearerAuth, HEADERS, makeHeaders } = require('./middleware');
+const { requireBearerAuth, HEADERS, makeHeaders, assertTenantAccess } = require('./middleware');
 
 const DDG_BASE = 'https://html.duckduckgo.com/html/';
 
@@ -109,8 +109,12 @@ exports.handler = async (event) => {
 
     const answer = `${answerParts}\n\n---\n**Fontes:**\n${sources.map(s => `[${s.id}] ${s.title} — ${s.url}`).join('\n')}`;
 
-    // Log de auditoria
+    // Log de auditoria — isola por tenant: só grava se o usuário autenticado
+    // pertence ao tenantId (ou é master). Impede que um usuário autenticado
+    // grave na coleção de outro tenant (IDOR de tenant).
     if (tenantId) {
+      const tenantErr = await assertTenantAccess(event, tenantId, headers);
+      if (tenantErr) return tenantErr;
       try {
         await db.collection('tenants').doc(tenantId).collection('busca_web_log').add({
           query,
