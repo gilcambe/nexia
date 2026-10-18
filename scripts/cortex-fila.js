@@ -45,9 +45,21 @@ function caminhosDoPedido(corpo) {
   return [...new Set(achados.map(c => c.slice(1, -1)).filter(c => !c.startsWith('/') && !c.includes('..')))];
 }
 // Rede de segurança do "feito": o pedido cita arquivos, mas nenhum deles existe na develop nem em PR aberto = a rodada não entregou nada.
-async function entregouAlgo(token, corpo) {
+const palavras = t => new Set(String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().match(/[a-z0-9]{5,}/g) || []);
+// Pedido sem arquivo citado: só vale como entregue se a rodada abriu um PR nexia/* parecido com o título (2+ palavras em comum).
+async function entregouPr(token, titulo, runId) {
+  try {
+    const run = (await gh(token, 'GET', `/actions/runs/${runId}`)).json || {};
+    const desde = new Date(run.created_at || 0).getTime();
+    const alvo = palavras(titulo);
+    const prs = (await gh(token, 'GET', '/pulls?state=all&sort=created&direction=desc&per_page=40')).json || [];
+    return prs.some(pr => /^nexia\//.test((pr.head || {}).ref || '') && new Date(pr.created_at).getTime() >= desde
+      && [...palavras(pr.title)].filter(w => alvo.has(w)).length >= 2);
+  } catch { return true; }
+}
+async function entregouAlgo(token, corpo, titulo, runId) {
   const caminhos = caminhosDoPedido(corpo);
-  if (!caminhos.length) return true;
+  if (!caminhos.length) return titulo && runId ? entregouPr(token, titulo, runId) : true;
   try {
     for (const c of caminhos.slice(0, 6)) if ((await gh(token, 'GET', `/contents/${c}?ref=develop`)).status === 200) return true;
     const prs = (await gh(token, 'GET', '/pulls?state=open&per_page=30')).json || [];
@@ -81,7 +93,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
     const run = ultimaRun(i.number);
     const pista = numeroDe(ls, 'pista');
     if (run && run.status === 'completed') {
-      if (run.conclusion === 'success') { acoes.push({ tipo: 'concluir', numero: i.number, run: run.id, corpo: String(i.body || '') }); continue; }
+      if (run.conclusion === 'success') { acoes.push({ tipo: 'concluir', numero: i.number, run: run.id, corpo: String(i.body || ''), titulo: String(i.title || '') }); continue; }
       if (run.cota) { acoes.push({ tipo: 'reenfileirar', numero: i.number, tentativa: numeroDe(ls, 'tentativa'), run: run.id, conclusao: 'cota do banco' }); continue; }
       const t = numeroDe(ls, 'tentativa') + 1;
       // Falhou 3 vezes inteira: o modelo grátis não dá conta do tamanho. Divide em partes pequenas em vez de repetir até travar.
@@ -229,9 +241,9 @@ async function executar(token, acao, dividir) {
     });
     if (d.status !== 204) { await delLabel(L.rodando); await comentar(`Não consegui disparar o Cortex (${d.status}). Tento de novo no próximo ciclo.`); }
   } else if (acao.tipo === 'concluir') {
-    if (!(await entregouAlgo(token, acao.corpo))) {
+    if (!(await entregouAlgo(token, acao.corpo, acao.titulo, acao.run))) {
       await delLabel(L.rodando);
-      await comentar(`A rodada terminou sem erro, mas os arquivos pedidos (${caminhosDoPedido(acao.corpo).slice(0, 3).join(', ')}) não estão na develop nem em PR aberto. Não marquei como feita; volta para a fila.`);
+      await comentar(`A rodada terminou sem erro, mas não achei o código entregue (${caminhosDoPedido(acao.corpo).slice(0, 3).join(', ') || 'nenhum PR parecido com o pedido'}). Não marquei como feita; volta para a fila.`);
       return;
     }
     await delLabel(L.rodando); await addLabel(L.feito);
