@@ -120,6 +120,6 @@ test('saúde: pressão, glicemia e dica do dia; loja recomenda pelo perfil', asy
   const rec = l.recomendados({ objetivo: 'Hipertrofia', modalidades: ['Corrida'], marcadoresBaixos: ['vitamina_d'], suplementos: ['Creatina'] });
   assert.ok(rec.some((p) => p.id === 'whey') && rec.some((p) => p.id === 'vitd'));
   assert.ok(!rec.some((p) => p.id === 'creatina'));
-  assert.match(l.linkAmazon('whey protein'), /^https:\/\/www\.amazon\.com\.br\/s\?k=whey\+protein$/);
+  assert.match(l.linkAmazon('whey protein'), /^https:\/\/www\.amazon\.com\.br\/s\?k=whey\+protein&tag=gilcambe-20$/);
   assert.match(l.linkMercadoLivre('whey protein'), /lista\.mercadolivre\.com\.br\/whey-protein$/);
 });

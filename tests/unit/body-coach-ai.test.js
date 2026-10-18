@@ -40,6 +40,22 @@ test('BCAI-cardio. painel da esteira vira números limitados e a semana soma as 
   assert.match(avaliarSemana(0, 'emagrecer'), /Ainda sem cardio/);
 });
 
+test('BCAI-gratis. o chat do coach nunca usa provedor pago (Anthropic)', () => {
+  const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '../../netlify/functions/body-coach-ai.js'), 'utf8');
+  assert.match(src, /listFor\('fast'\)\.filter\(\(x\) => x\.provider !== 'anthropic'\)/);
+});
+
+test('BCAI-loja. a Loja tem mais de 80 produtos, ids únicos e o código de afiliado da Amazon', async () => {
+  const fs = require('node:fs'); const os = require('node:os'); const path = require('node:path'); const ts = require('typescript');
+  const src = fs.readFileSync(path.join(__dirname, '../../apps/body-coach/src/lib/ferramentas/loja.ts'), 'utf8');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bc-loja-'));
+  fs.writeFileSync(path.join(dir, 'loja.mjs'), ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText);
+  const m = await import(require('node:url').pathToFileURL(path.join(dir, 'loja.mjs')).href);
+  assert.ok(m.PRODUTOS.length >= 80);
+  assert.equal(new Set(m.PRODUTOS.map((x) => x.id)).size, m.PRODUTOS.length);
+  assert.match(m.linkAmazon('whey'), /[?&]tag=gilcambe-20/);
+});
+
 test('BCAI-avaliacoes. análise sincera e produto por foto existem, com limite de fotos', () => {
   const src = require('fs').readFileSync(require('path').join(__dirname, '../../netlify/functions/body-coach-ai.js'), 'utf8');
   assert.match(src, /SINCERA/);

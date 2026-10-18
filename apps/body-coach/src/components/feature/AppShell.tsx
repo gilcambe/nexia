@@ -20,6 +20,7 @@ const navItems = [
   { to: '/', label: 'Hoje', icon: 'ri-sun-line' },
   { to: '/nutrition', label: 'Nutrição', icon: 'ri-restaurant-line' },
   { to: '/evolution', label: 'Evolução', icon: 'ri-line-chart-line' },
+  { to: '/ferramentas/loja', label: 'Loja', icon: 'ri-store-2-line' },
   { to: '/plan', label: 'Ficha de treino', icon: 'ri-calendar-line' },
   { to: '/chat', label: 'Conversa', icon: 'ri-chat-3-line' },
   { to: '/feed', label: 'Feed da equipe', icon: 'ri-group-line' },
