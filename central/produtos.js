@@ -32,6 +32,13 @@ const ROBOS = [
   { arquivo: 'afiliados.yml', nome: 'Ofertas (afiliados)', inputs: { acao: 'rodar' } },
   { arquivo: 'fila-cortex.yml', nome: 'Fila do Cortex', inputs: {} },
   { arquivo: 'smoke.yml', nome: 'Teste rápido do site', inputs: { url: BASE } },
+  { arquivo: 'vigia-cortex.yml', nome: 'Vigia do Cortex', inputs: {} },
+  { arquivo: 'teste-coach.yml', nome: 'Teste do coach com IA', inputs: { url: BASE } },
+  { arquivo: 'teste-humano.yml', nome: 'Teste de pessoa no Body Coach', inputs: {} },
+  { arquivo: 'body-coach-pages.yml', nome: 'Publicação do Body Coach', inputs: {} },
+  { arquivo: 'android-play.yml', nome: 'App Android (Google Play)', inputs: {} },
+  { arquivo: 'nexia-jobs.yml', nome: 'Trabalhos do Cortex', inputs: null },
+  { arquivo: 'smoke-logado.yml', nome: 'Teste completo com login', inputs: null },
   { arquivo: 'deploy-cloudflare.yml', nome: 'Publicação do site', inputs: null },
   { arquivo: 'ci.yml', nome: 'Conferência do código', inputs: null },
 ];
