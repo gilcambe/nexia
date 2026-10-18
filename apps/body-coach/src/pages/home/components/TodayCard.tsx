@@ -6,6 +6,7 @@ import { getUserDoc } from '@/lib/userData';
 import { DIVISOES } from '@/lib/dayPlan';
 import { fichaDoPerfil, treinoDaFicha, type Ficha } from '@/lib/ficha';
 import { diaDaFichaCoach, sessaoDaFichaCoach, temFichaCoach } from '@/lib/coach/fichaCoach';
+import { gravarOuGuardar } from '@/lib/pendentes';
 import { lerAndamento, seriesFeitas } from '@/lib/treinoAndamento';
 import Card from '@/components/base/Card';
 
@@ -14,6 +15,7 @@ export default function TodayCard() {
   const { setOpen } = useCoach();
   const { user } = useAuth();
   const [profile, setProfile] = useState<{ onboarding?: Record<string, unknown>; ficha?: Partial<Ficha>; mobility?: string[]; ficha_coach?: unknown; ficha_coach_dia?: number } | null>(null);
+  const [trocando, setTrocando] = useState(false);
   const andamento = user?.id ? lerAndamento(user.id) : null;
 
   useEffect(() => {
@@ -39,6 +41,20 @@ export default function TodayCard() {
   // A ficha que o coach montou vem antes da automática.
   const fc = temFichaCoach(profile?.ficha_coach) ? profile.ficha_coach : null;
   const sessaoCoach = fc ? sessaoDaFichaCoach(fc, diaDaFichaCoach(fc, profile?.ficha_coach_dia)) : null;
+
+  // Opções para "Mudar treino de hoje": os dias do ciclo da ficha ativa. Escolher um passa a ser o treino de hoje e o ciclo segue dali.
+  const opcoes: { titulo: string; escolher: () => Record<string, unknown> }[] = fc
+    ? fc.dias.map((d, i) => ({ titulo: d.titulo || `Treino ${i + 1}`, escolher: () => ({ ficha_coach_dia: i }) }))
+    : ficha
+      ? DIVISOES[ficha.divisao].dias.map((d, i) => ({ titulo: d.titulo, escolher: () => ({ ficha: { divisao: ficha.divisao, proximoDia: i } }) }))
+      : [];
+  const escolherTreino = (o: (typeof opcoes)[number]) => {
+    if (!user?.id) return;
+    const dados = o.escolher();
+    setProfile((p) => (p ? { ...p, ...dados } : p));
+    setTrocando(false);
+    void gravarOuGuardar(user.id, 'profile', 'main', dados, true).catch(() => {});
+  };
 
   const title = andamento ? andamento.session.title : sessaoCoach ? sessaoCoach.title : dia ? dia.titulo : 'Treino de hoje';
   const subtitle = andamento
@@ -77,6 +93,33 @@ export default function TodayCard() {
           Falar com o Coach
         </button>
       </div>
+
+      {opcoes.length > 1 && !andamento && (
+        <div className="mt-3">
+          <button
+            onClick={() => setTrocando((v) => !v)}
+            className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 hover:underline"
+            data-testid="mudar-treino"
+          >
+            <i className="ri-shuffle-line"></i>
+            Mudar treino de hoje
+          </button>
+          {trocando && (
+            <ul className="mt-2 flex flex-col gap-2" data-testid="lista-treinos">
+              {opcoes.map((o, i) => (
+                <li key={i}>
+                  <button
+                    onClick={() => escolherTreino(o)}
+                    className="w-full rounded-lg border border-background-200 bg-background-50 px-4 py-2.5 text-left text-sm text-foreground-800 transition hover:bg-background-100"
+                  >
+                    {o.titulo}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </Card>
   );
 }
