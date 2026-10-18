@@ -129,3 +129,9 @@ test('FILA-DIV3. tarefa que falha 3 vezes é dividida em partes em vez de repeti
   const b = decidir({ issues: [issue(['cortex-sem-divisao'])], runs, agora: Date.now() }).find(x => x.numero === 9);
   assert.equal(b.tipo, 'reenfileirar');
 });
+
+test('cópia exata grande nunca vai para o divisor (perderia o código)', () => {
+  const corpo = 'Copie EXATAMENTE:\n\n' + ['a.js', 'b.js', 'c.js', 'd.js', 'e.js'].map((f) => '`src/' + f + '`\n```\n' + 'x'.repeat(900) + '\n```\n').join('\n');
+  assert.equal(precisaDividir(issue(7, ['cortex-fila'], { body: corpo })), false);
+  assert.equal(precisaDividir(issue(8, ['cortex-fila'], { body: 'Faça algo em src/a.js. ' + 'z'.repeat(3000) })), true);
+});
