@@ -11,7 +11,7 @@ export default function Lembretes({ diasPorSemana, apelido }: { diasPorSemana: n
 
   const alterna = (c: string) => setDias((d) => (d.includes(c) ? d.filter((x) => x !== c) : [...d, c]));
   const baixar = () => {
-    const blob = new Blob([gerarIcs({ dias, hora, apelido, incluirPeso: peso })], { type: 'text/calendar;charset=utf-8' });
+    const blob = new Blob([gerarIcs({ dias, hora, apelido, incluirPeso: peso, incluirFotos: peso })], { type: 'text/calendar;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url; a.download = 'lembretes-body-coach.ics';
@@ -33,7 +33,7 @@ export default function Lembretes({ diasPorSemana, apelido }: { diasPorSemana: n
         <label className="flex items-center gap-2 text-sm text-foreground-700">Hora do treino
           <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} className="rounded-lg border border-background-200 bg-background-50 px-2 py-1.5 text-sm" />
         </label>
-        <label className="flex items-center gap-2 text-sm text-foreground-700"><input type="checkbox" checked={peso} onChange={(e) => setPeso(e.target.checked)} />Lembrar de pesar aos domingos</label>
+        <label className="flex items-center gap-2 text-sm text-foreground-700"><input type="checkbox" checked={peso} onChange={(e) => setPeso(e.target.checked)} />Lembrar de pesar e tirar as fotos aos domingos</label>
       </div>
       <button type="button" onClick={baixar} disabled={!dias.length} className="mt-4 rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-semibold text-background-50 disabled:opacity-40"><i className="ri-calendar-event-line mr-1"></i>Criar lembretes</button>
       {feito && <p role="status" className="mt-2 text-sm text-primary-700">Arquivo baixado. Toque nele e escolha “Adicionar ao calendário”.</p>}

@@ -51,6 +51,7 @@ export default function CortexPage() {
     const ico = document.createElement("link"); ico.rel = "apple-touch-icon"; ico.href = "/cortex-icon-180.png";
     document.head.append(cor, ico);
     mostrarAbertura("CORTEX");
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/cortex-sw.js", { scope: "/cortex" }).catch(() => undefined);
     const titulo = document.title; document.title = "Cortex · NEXIA";
     const pedido = (e: Event) => {
       e.preventDefault();
@@ -110,11 +111,9 @@ export default function CortexPage() {
           <div className="flex-1 min-h-0 flex flex-col">
             <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-4 text-center">
               <Logo tamanho={64} />
-              <h1 className="text-3xl font-semibold mt-5" data-testid="cx-ola">Olá{nome ? `, ${nome.split(" ")[0]}` : ""}</h1>
-              <p className="text-[var(--cx-mut)] mt-2 mb-7">O que o Cortex faz hoje?</p>
               {erro && <p className="text-sm text-red-400 mt-4" role="alert">{erro}</p>}
             </div>
-            <Composer modo="pedido" subir={async (nome, base64) => (await agir({ acao: "anexar", nome, base64 })).caminho || ""} inicial={inicial} enviar={async (texto) => { const r = await agir({ acao: "pedir", texto }); buscar(busca); if (r.numero) abrir(r.numero); }} />
+            <Composer modo="pedido" inicial={inicial} enviar={async (texto) => { const r = await agir({ acao: "pedir", texto }); buscar(busca); if (r.numero) abrir(r.numero); }} />
           </div>
         )}
         {user && vista === "conexoes" && <div className="flex-1 overflow-y-auto"><Conexoes email={email} /></div>}

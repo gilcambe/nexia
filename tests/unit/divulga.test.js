@@ -62,7 +62,8 @@ test('fila feita: rodízio usa texto fixo quando a IA falha', async () => {
   const r = await rodar({ acao: 'rodar', dados, env: { ...ENV_META, GROQ_API_KEY: 'g' }, fetchImpl, log: silencio });
   assert.equal(r.postou, true);
   assert.equal(r.post.rodizio, true);
-  assert.match(r.post.porRede('facebook').texto, /^NEXIA Body Coach: /);
+  assert.match(r.post.porRede('facebook').texto, /NEXIA Body Coach: /);
+  assert.match(r.post.porRede('facebook').texto.split('\n')[0], /[:?]$/); // gancho na 1ª linha
   const est = JSON.parse(fs.readFileSync(path.join(dados, 'divulga-estado.json'), 'utf8'));
   assert.equal(est.rodizio, 1);
 });
@@ -105,4 +106,87 @@ test('Cortex: anexo de qualquer tipo vai para o ramo cortex-anexos e rodapé ant
   const gh = async (u) => (/comments/.test(u) ? [] : /search/.test(u) ? { items: [] } : { number: 1, title: 't', state: 'open', labels: [], user: { login: 'a' }, created_at: 'x', updated_at: 'x', body: 'Faça isso.\n\n_Pedido pelo Cortex no celular por gil@x.com._', comments: 0 });
   const d = await criarDetalhe(gh)(1);
   assert.ok(!/celular/i.test(d.conversa[0].texto));
+});
+
+test('calendário: tema de cada dia da semana, gancho na 1ª linha, CTA e 5 a 10 hashtags', () => {
+  const { SEMANA, temaDoDia, montarLegenda, hashtagsNicho } = require('../../divulga/lib/calendario');
+  assert.equal(SEMANA.length, 7);
+  assert.equal(temaDoDia(new Date('2026-10-19T15:00:00Z')).tema, 'dica-treino'); // segunda
+  assert.equal(temaDoDia(new Date('2026-10-23T15:00:00Z')).tema, 'oferta-loja'); // sexta
+  assert.equal(temaDoDia(new Date('2026-10-18T15:00:00Z')).tema, 'teste-gratis'); // domingo
+  const c = { nome: 'NEXIA Body Coach', hashtags: ['#treino', '#dieta'] };
+  const l = montarLegenda(c, 'desafio', 'Venha treinar com a gente.');
+  const linhas = l.split('\n');
+  assert.match(linhas[0], /30 dias/);
+  assert.match(l, /Marque um amigo/);
+  assert.match(l, /#DesafioBodyCoach/);
+  const h = hashtagsNicho(c);
+  assert.ok(h.length >= 5 && h.length <= 10);
+  assert.equal(new Set(h.map(x => x.toLowerCase())).size, h.length);
+});
+
+test('visual: carrossel com 5 telas, story 1080x1920 com contagem e antes/depois com 2 prints', () => {
+  const { carrossel, story, antesDepois } = require('../../divulga/lib/visual');
+  const c = { nome: 'NEXIA Body Coach', assuntos: ['treino com IA'] };
+  const telas = carrossel(c, { prints: ['data:image/jpeg;base64,AAA', 'data:image/jpeg;base64,BBB'] });
+  assert.equal(telas.length, 5);
+  assert.match(telas[0], /não vê resultado/);
+  assert.match(telas[4], /Comente QUERO/);
+  assert.match(telas[1], /AAA/);
+  const s = story(c, { pergunta: 'Vai treinar?', ate: '2026-10-25', hoje: new Date('2026-10-23T12:00:00Z') });
+  assert.match(s, /--w:1080px;--h:1920px/);
+  assert.match(s, /Faltam 2 dias/);
+  const ad = antesDepois(c, { antes: 'data:image/jpeg;base64,X1', depois: 'data:image/jpeg;base64,X2' });
+  assert.ok(ad.includes('X1') && ad.includes('X2'));
+  assert.match(carrossel({ nome: '<b>x</b>' })[1], /&lt;b&gt;/);
+});
+
+test('gerar: monta as 7 peças do cliente real sem rede', () => {
+  const { montarPecas } = require('../../divulga/gerar');
+  const cliente = JSON.parse(fs.readFileSync(path.join(__dirname, '../../divulga/clientes/body-coach.json'), 'utf8'));
+  const p = montarPecas(cliente, new Date('2026-10-19T15:00:00Z'));
+  assert.equal(Object.keys(p).length, 7);
+  assert.match(p.story, /segunda/);
+});
+
+test('/conheca: conta o clique do dia, vai para o app com UTM e nunca falha para o visitante', async () => {
+  const { createHandler, destino, dia } = require('../../netlify/functions/conheca');
+  const gravados = [];
+  const admin = { firestore: { FieldValue: { increment: n => ({ inc: n }) } } };
+  const db = { collection: nome => ({ doc: id => ({ set: async (d, o) => gravados.push({ nome, id, d, o }) }) }) };
+  const h = createHandler({ getDb: () => ({ admin, db }), agora: () => new Date('2026-10-19T01:00:00Z') });
+  const r = await h({ httpMethod: 'GET', queryStringParameters: { r: 'story' } });
+  assert.equal(r.statusCode, 302);
+  assert.equal(r.headers.Location, 'https://nexiabodycoach.pages.dev/?utm_source=story&utm_medium=social&utm_campaign=divulga');
+  assert.equal(gravados[0].nome, 'divulga_cliques');
+  assert.equal(gravados[0].id, '2026-10-18'); // 22h em Brasília ainda é dia 18
+  assert.deepEqual(gravados[0].d.redes, { story: { inc: 1 } });
+  const r2 = await createHandler({ getDb: () => { throw new Error('banco fora'); } })({ httpMethod: 'GET', queryStringParameters: { r: 'inventada' } });
+  assert.equal(r2.statusCode, 302);
+  assert.match(r2.headers.Location, /utm_source=bio/);
+  assert.equal((await h({ httpMethod: 'POST' })).statusCode, 405);
+  assert.equal(destino('bio').includes('utm_campaign=divulga'), true);
+  assert.equal(dia(new Date('2026-10-19T02:59:00Z')), '2026-10-18');
+  const { resolveFunctionName } = require('../../lib/routes.js');
+  assert.equal(resolveFunctionName('/api/conheca'), 'conheca');
+  assert.ok(fs.readFileSync(path.join(__dirname, '../../public/conheca/index.html'), 'utf8').includes('/api/conheca?r=bio'));
+});
+
+test('interação semanal: 20 itens que mudam por semana, sem inventar perfis, e convite de collab pronto', () => {
+  const { listaSemanal, conviteCollab, roteiroCollabs } = require('../../divulga/lib/interacao');
+  const a = listaSemanal(new Date('2026-10-19T12:00:00Z'));
+  const b = listaSemanal(new Date('2026-10-26T12:00:00Z'));
+  assert.equal(a.itens.length, 20);
+  assert.ok(a.itens.every(i => !/@/.test(i.alvo)));
+  assert.notDeepEqual(a.itens.map(i => i.alvo), b.itens.map(i => i.alvo));
+  assert.match(conviteCollab('Ana'), /^Oi, Ana!/);
+  assert.equal(roteiroCollabs().length, 4);
+});
+
+test('ensaio mostra a lista de interação e o roteiro de collabs', async () => {
+  const linhas = [];
+  await rodar({ acao: 'ensaio', env: {}, fetchImpl: async () => ok({}), log: t => linhas.push(t) });
+  const t = linhas.join('\n');
+  assert.match(t, /interagir à mão/);
+  assert.match(t, /roteiro de 3 collabs/);
 });

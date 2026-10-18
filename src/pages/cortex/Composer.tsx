@@ -4,7 +4,6 @@ interface Props {
   modo: "pedido" | "nota";
   enviar: (texto: string) => Promise<void>;
   inicial?: string;
-  subir?: (nome: string, base64: string) => Promise<string>;
 }
 
 type Reconhecedor = { lang: string; interimResults: boolean; onresult: (e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void; onend: () => void; start: () => void; stop: () => void };
@@ -16,14 +15,30 @@ const criarReconhecedor = (): Reconhecedor | null => {
 
 const MAX = 3500;
 
+const paraBase64 = (f: Blob) => new Promise<string>((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1] ?? ""); r.onerror = () => no(r.error); r.readAsDataURL(f); });
+
+// Print ou foto: reduz até caber (~40 mil letras) para o pedido não passar do limite do GitHub.
+async function reduzirImagem(f: File): Promise<string> {
+  const bmp = await createImageBitmap(f);
+  for (const [lado, q] of [[1100, 0.6], [900, 0.5], [700, 0.45], [520, 0.4]] as const) {
+    const k = Math.min(1, lado / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas"); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    c.getContext("2d")!.drawImage(bmp, 0, 0, c.width, c.height);
+    const url = c.toDataURL("image/jpeg", q);
+    if (url.length < 40_000) return url;
+  }
+  throw new Error("imagem grande demais");
+}
+
 // Caixa de mensagem estilo app de IA: cresce sozinha, anexa arquivo de texto, dita por voz e envia.
-export default function Composer({ modo, enviar, inicial = "", subir }: Props) {
+export default function Composer({ modo, enviar, inicial = "" }: Props) {
   const [texto, setTexto] = useState(inicial);
   const [ouvindo, setOuvindo] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const area = useRef<HTMLTextAreaElement>(null);
   const arquivo = useRef<HTMLInputElement>(null);
+  const [anexos, setAnexos] = useState<{ nome: string; md: string }[]>([]);
   const voz = useRef<Reconhecedor | null>(null);
 
   useEffect(() => { setTexto(inicial); }, [inicial]);
@@ -38,38 +53,25 @@ export default function Composer({ modo, enviar, inicial = "", subir }: Props) {
   const mandar = async () => {
     if (!pode) return;
     setOcupado(true); setAviso(null);
-    try { await enviar(texto.trim()); setTexto(""); } catch (e) { setAviso((e as Error).message); } finally { setOcupado(false); }
+    try { await enviar([texto.trim(), ...anexos.map((a) => a.md)].join("\n\n")); setTexto(""); setAnexos([]); } catch (e) { setAviso((e as Error).message); } finally { setOcupado(false); }
   };
 
-  // Aceita qualquer tipo de arquivo. Texto pequeno entra no pedido; foto é reduzida; o resto vai para o repositório e o pedido cita o caminho.
-  const reduzirFoto = (f: File) => new Promise<{ nome: string; base64: string }>((ok, erro) => {
-    const url = URL.createObjectURL(f); const img = new Image();
-    img.onload = () => {
-      const k = Math.min(1, 1600 / Math.max(img.width, img.height));
-      const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-      c.getContext("2d")?.drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
-      ok({ nome: f.name.replace(/\.[^.]+$/, "") + ".jpg", base64: c.toDataURL("image/jpeg", 0.8).split(",")[1] });
-    };
-    img.onerror = () => { URL.revokeObjectURL(url); erro(new Error("Não consegui abrir esta imagem.")); };
-    img.src = url;
-  });
-  const lerBase64 = (f: File) => new Promise<string>((ok, erro) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1] || ""); r.onerror = () => erro(new Error("Não consegui ler o arquivo.")); r.readAsDataURL(f); });
+  // Qualquer tipo de arquivo: texto/código entra como texto; print/foto é reduzido; o resto vai embutido se for pequeno.
   const anexar = async (f: File | undefined) => {
     if (!f) return;
     setAviso(null);
     try {
-      const texto = /^text\//.test(f.type) || /\.(txt|md|js|ts|tsx|jsx|json|css|html|yml|yaml|csv)$/i.test(f.name);
-      if (texto && f.size <= 100_000) {
-        const conteudo = await f.text();
-        setTexto((t) => `${t}${t ? "\n\n" : ""}Arquivo ${f.name}:\n\`\`\`\n${conteudo}\n\`\`\``.slice(0, MAX + 200));
-        return;
+      let bloco: string;
+      if (f.type.startsWith("image/")) bloco = `![${f.name}](${await reduzirImagem(f)})`;
+      else if (f.type.startsWith("text/") || /\.(txt|md|js|ts|tsx|jsx|json|css|html|yml|yaml|csv|log|sql|sh|py)$/i.test(f.name)) {
+        if (f.size > 60_000) { setAviso("Esse arquivo de texto passa de 60 KB. Mande só o trecho que importa."); return; }
+        bloco = `Arquivo \`${f.name}\`:\n\`\`\`\n${await f.text()}\n\`\`\``;
+      } else {
+        if (f.size > 30_000) { setAviso("Esse tipo de arquivo só entra até 30 KB. Para PDF ou arquivo grande, mande para a Claude pelo chat."); return; }
+        bloco = `Arquivo \`${f.name}\` (${f.type || "tipo desconhecido"}): [abrir](data:${f.type || "application/octet-stream"};base64,${await paraBase64(f)})`;
       }
-      if (!subir) { setAviso("Anexo indisponível aqui."); return; }
-      setOcupado(true);
-      const { nome, base64 } = /^image\//.test(f.type) ? await reduzirFoto(f) : { nome: f.name, base64: await lerBase64(f) };
-      const caminho = await subir(nome, base64);
-      setTexto((t) => `${t}${t ? "\n\n" : ""}Anexo (ramo cortex-anexos): ${caminho}`);
-    } catch (e) { setAviso((e as Error).message); } finally { setOcupado(false); }
+      setAnexos((a) => [...a, { nome: f.name, md: bloco }]);
+    } catch { setAviso("Não consegui ler esse arquivo."); }
   };
 
   const ditar = () => {
@@ -91,7 +93,7 @@ export default function Composer({ modo, enviar, inicial = "", subir }: Props) {
           placeholder={modo === "pedido" ? "O que o Cortex deve fazer? Diga o projeto e o que mudar." : "Anotação neste pedido. O Cortex lê só o pedido: para mudar o que ele faz, abra um Novo pedido."}
           className="w-full resize-none bg-transparent outline-none px-5 pt-4 pb-2 text-[15px] leading-6 text-[var(--cx-txt)] placeholder:text-[var(--cx-mut)] max-h-[220px]" />
         <div className="flex items-center gap-1 px-2 pb-2">
-          <button type="button" className={btn} aria-label="Anexar arquivo" onClick={() => arquivo.current?.click()} data-testid="cx-anexo">
+          <button type="button" className={btn} aria-label="Anexar arquivo ou print" onClick={() => arquivo.current?.click()} data-testid="cx-anexo">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
           </button>
           <input ref={arquivo} type="file" hidden onChange={(e) => { anexar(e.target.files?.[0]); e.target.value = ""; }} />
@@ -105,6 +107,13 @@ export default function Composer({ modo, enviar, inicial = "", subir }: Props) {
           </button>
         </div>
       </div>
+      {anexos.length > 0 && (
+        <div className="flex flex-wrap gap-2 mt-2 px-2" data-testid="cx-anexos">
+          {anexos.map((a, i) => (
+            <button key={i} type="button" onClick={() => setAnexos((l) => l.filter((_, k) => k !== i))} className="text-xs rounded-full border border-[var(--cx-line)] px-3 py-1 text-[var(--cx-mut)]" aria-label={`Tirar ${a.nome}`}>{a.nome} ✕</button>
+          ))}
+        </div>
+      )}
       {aviso && <p className="text-sm text-red-400 mt-2 px-2" role="alert">{aviso}</p>}
     </div>
   );

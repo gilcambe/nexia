@@ -98,6 +98,9 @@ export function desenharCartao(c: HTMLCanvasElement, d: DadosCartao): void {
     ctx.font = '32px system-ui, sans-serif';
     ctx.fillText(d.link.replace(/^https?:\/\//, '').split('/')[0], 90, 1755);
   }
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.font = '32px system-ui, sans-serif';
+  ctx.fillText('@nexiabodycoach', 90, 1805);
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.font = '28px system-ui, sans-serif';
   ctx.fillText('Feito com NEXIA', 90, 1830);
@@ -126,7 +129,7 @@ function matrizQr(link: string): boolean[][] {
   return m;
 }
 
-// Selo do app no canto de baixo à direita: faixa escura com o QR do link e "Body Coach / Treine comigo: escaneie".
+// Selo do app no canto de baixo à direita: faixa escura com o QR do link e "Body Coach / @nexiabodycoach · escaneie".
 // Desenho síncrono: dá para chamar em todo quadro do vídeo.
 export function selo(ctx: CanvasRenderingContext2D, w: number, h: number, link: string): void {
   if (!link) return;
@@ -142,7 +145,7 @@ export function selo(ctx: CanvasRenderingContext2D, w: number, h: number, link: 
   ctx.font = `800 ${34 * u}px system-ui, sans-serif`;
   const l1 = ctx.measureText('Body Coach').width;
   ctx.font = `500 ${23 * u}px system-ui, sans-serif`;
-  const l2 = ctx.measureText('Treine comigo: escaneie').width;
+  const l2 = ctx.measureText('@nexiabodycoach · escaneie').width;
   const largura = pad + lado + 18 * u + Math.max(l1, l2) + pad * 1.4;
   const altura = lado + pad * 2;
   const x = w - margem - largura;
@@ -171,7 +174,7 @@ export function selo(ctx: CanvasRenderingContext2D, w: number, h: number, link: 
   ctx.fillText('Body Coach', tx, y + altura / 2 - 4 * u);
   ctx.fillStyle = 'rgba(255,255,255,0.85)';
   ctx.font = `500 ${23 * u}px system-ui, sans-serif`;
-  ctx.fillText('Treine comigo: escaneie', tx, y + altura / 2 + 30 * u);
+  ctx.fillText('@nexiabodycoach · escaneie', tx, y + altura / 2 + 30 * u);
   ctx.restore();
 }
 

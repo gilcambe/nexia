@@ -8,6 +8,8 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { CANAIS } = require('./lib/canais');
 const { linkUtm, textoIA } = require('./lib/texto');
+const { temaDoDia, montarLegenda } = require('./lib/calendario');
+const { listaSemanal, roteiroCollabs } = require('./lib/interacao');
 
 const RAIZ = __dirname;
 const IMAGENS = 'https://raw.githubusercontent.com/gilcambe/nexia/develop/divulga/imagens/';
@@ -57,8 +59,10 @@ async function proximo({ clientes, fila }, estado, ctx) {
   const c = prontos[n % prontos.length];
   const volta = Math.floor(n / prontos.length);
   const assunto = c.assuntos[volta % c.assuntos.length];
-  const base = await textoIA(c, assunto, ctx);
-  const legenda = `${base}\n\n${(c.hashtags || []).slice(0, 3).join(' ')}`.trim();
+  // Calendário semanal fixo: o tema do dia (dica, recurso, desafio...) dá o gancho, a chamada e as hashtags.
+  const tema = temaDoDia();
+  const base = await textoIA(c, `${tema.assunto} (foco: ${assunto})`, ctx);
+  const legenda = montarLegenda(c, tema, base);
   return { ...montar({ id: null, cliente: c, legenda, imagem: urlImagem(c.imagens[volta % c.imagens.length]) }), rodizio: true };
 }
 
@@ -74,6 +78,11 @@ async function rodar({ acao = 'rodar', dados, env: envBruto = process.env, fetch
   log(`Post: ${post.id || 'rodízio'} (${post.cliente})`);
   if (!ativos.length) {
     for (const rede of ['instagram', 'facebook']) log(`--- ${rede} ---\n${post.porRede(rede).texto}\n${post.porRede(rede).link || ''}`);
+    if (acao === 'ensaio') {
+      const l = listaSemanal();
+      log(`--- para você interagir à mão esta semana (${l.itens.length} itens) ---\n${l.itens.map(i => `• ${i.alvo}: ${i.fazer}`).join('\n')}`);
+      log(`--- roteiro de 3 collabs ---\n${roteiroCollabs().map(p => `${p.passo}. ${p.titulo}: ${p.texto}`).join('\n')}`);
+    }
     log(acao === 'ensaio' ? 'Ensaio: nada foi publicado.' : 'Nenhuma rede ligada ainda: nada foi publicado.');
     return { postou: false, post };
   }
