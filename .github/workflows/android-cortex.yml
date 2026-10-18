@@ -45,6 +45,9 @@ jobs:
           set -o pipefail
           falhou() { echo "::error title=$1::$(sed 's/\x1b\[[0-9;]*m//g' "$2" | grep -v '^\s*$' | grep -v '^\s*at ' | grep -iE -A6 'wrong|error|failed|exception|not found|could not' | head -n 40 | tr '\n' '|' | cut -c1-3500)"; exit 1; }
           npx -y @bubblewrap/cli@1.27.0 update --skipVersionUpgrade --manifest=./twa-manifest.json < /dev/null 2>&1 | tee update.log || falhou "bubblewrap update" update.log
+          # O R8 renomeava a LauncherActivity ("Component class R.u does not exist"): o APK instalava mas fechava ao abrir.
+          sed -i -E 's/(minifyEnabled|shrinkResources)[ =]+true/\1 false/' app/build.gradle
+          grep -nE 'minifyEnabled|shrinkResources' app/build.gradle || true
           npx -y @bubblewrap/cli@1.27.0 build --skipPwaValidation --manifest=./twa-manifest.json < /dev/null 2>&1 | tee build.log || falhou "bubblewrap build" build.log
           ls -la *.apk
       - name: Digital da chave (para o assetlinks.json)
