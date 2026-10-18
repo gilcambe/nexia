@@ -64,6 +64,11 @@ const routes: RouteObject[] = [
     element: <Convite />,
   },
   {
+    // link curto de convite (o mesmo destino de /convite/:codigo)
+    path: "/c/:codigo",
+    element: <Convite />,
+  },
+  {
     path: "/conheca",
     element: <Conheca />,
   },
