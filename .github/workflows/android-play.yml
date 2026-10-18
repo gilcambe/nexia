@@ -54,7 +54,6 @@ jobs:
           FP=$(keytool -list -v -keystore upload.keystore -alias upload -storepass "$KS_PASS" | grep 'SHA256:' | awk '{print $2}')
           echo "::notice title=SHA256 da chave de envio::$FP"
           echo "### SHA256 da chave de envio: \`$FP\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "Para tirar a barra de endereço do app: crie o segredo ASSETLINKS_SHA256 no GitHub com este valor: \`$FP\`" >> "$GITHUB_STEP_SUMMARY"
           rm -f upload.keystore
       - uses: actions/upload-artifact@v4
         with:
