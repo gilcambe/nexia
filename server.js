@@ -18,7 +18,6 @@ const { publicErrorBody } = require('./lib/safe-error');
 const { isStreamResult, writeStream } = require('./lib/stream-response');
 const { PUBLIC_DIRS, TENANT_PAGES, resolveFunctionName } = require('./lib/routes');
 const { startHealthWatcher } = require('./monitoring/healthWatcher');
-const { sendBrevoEmail } = require('./notification/brevoClient');
 
 const PORT = process.env.PORT || 3001;
 const ROOT = __dirname;
@@ -294,7 +293,7 @@ module.exports = { server, resolveFunctionName };
 if (require.main !== module) return;
 
 // ─── ALERTA DE QUEDA (Melhoria 45): polling /health a cada minuto ───
-startHealthWatcher({ onConsecutiveFailure: sendBrevoEmail });
+startHealthWatcher();
 
 server.listen(PORT, () => {
   console.log('\n[NEXIA OS v60] Servidor unificado na porta', PORT);
