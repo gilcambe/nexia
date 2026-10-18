@@ -1,5 +1,5 @@
 import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
 
 const COLLECTION = 'health/samples';
 
@@ -34,10 +34,18 @@ export interface HealthDashboardData {
 // --- abstração mínima de storage (Firestore por padrão) -----------------
 
 function storagePath(day: string): string {
-  return `${COLLECTION}/${day}`;
+  // 4 segmentos: coleção / documento / subcoleção / documento (válido para getDoc/setDoc)
+  return `${COLLECTION}/day/${day}`;
+}
+
+function requireAuth(): void {
+  if (!auth.currentUser) {
+    throw new Error('Usuário não autenticado: acesso às amostras de saúde requer login.');
+  }
 }
 
 async function readDay(day: string): Promise<HealthSample | null> {
+  requireAuth();
   const snap = await getDoc(doc(db, storagePath(day)));
   if (!snap.exists()) return null;
   const data = snap.data() as HealthSample;
@@ -45,6 +53,7 @@ async function readDay(day: string): Promise<HealthSample | null> {
 }
 
 async function writeDay(day: string, sample: HealthSample): Promise<void> {
+  requireAuth();
   await setDoc(doc(db, storagePath(day)), sample);
 }
 
