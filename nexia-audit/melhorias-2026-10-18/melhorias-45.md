@@ -16,3 +16,13 @@
 - **Custo:** 0.
 - **Justificativa:** Resposta imediata sem fila de issues para perguntas; apenas mudanças de código entram no fluxo de issue.
 
+---
+
+# Melhoria 47: Cache semântico de respostas e de leitura de arquivos
+
+- **Status:** Proposto
+- **Regra:** Mesma pergunta/contexto em até 24 h reaproveita a resposta armazenada. A chave é um hash normalizado da pergunta + contexto.
+- **Por quê:** Rapidez na resposta e economia de cota de modelo/leitura.
+- **Custo:** 0 (usa KV/D1 gratuitos do Cloudflare).
+- **Justificativa:** Evita chamadas desnecessárias ao modelo e leituras repetidas de arquivos para perguntas/conteúdos idênticos dentro de um dia.
+
