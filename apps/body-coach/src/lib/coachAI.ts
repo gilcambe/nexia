@@ -12,7 +12,7 @@ const API_BASE: string = (import.meta.env.VITE_NEXIA_API_URL as string | undefin
 
 export interface TurnoConversa { role: 'user' | 'assistant'; content: string }
 
-export async function perguntar(papel: Papel, message: string, context: Record<string, unknown>, image?: string, history?: TurnoConversa[], task?: 'receita' | 'cardio'): Promise<string> {
+export async function perguntar(papel: Papel, message: string, context: Record<string, unknown>, image?: string | string[], history?: TurnoConversa[], task?: 'receita' | 'cardio' | 'avaliacao' | 'produto', extra?: Record<string, unknown>): Promise<string> {
   const fb = await getFirebase();
   const token = await fb?.auth.currentUser?.getIdToken();
   if (!token) throw new Error('Entre na sua conta para falar com a equipe.');
@@ -24,7 +24,7 @@ export async function perguntar(papel: Papel, message: string, context: Record<s
     res = await fetch(`${API_BASE}/api/body-coach-ai`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ message, role: papel, context: { ...perfilIA, ...context }, ...(image ? { image } : {}), ...(history?.length ? { history } : {}), ...(task ? { task } : {}) }),
+      body: JSON.stringify({ message, role: papel, context: { ...perfilIA, ...context }, ...(Array.isArray(image) ? (image.length ? { images: image } : {}) : image ? { image } : {}), ...(extra || {}), ...(history?.length ? { history } : {}), ...(task ? { task } : {}) }),
       signal: ctrl.signal,
     });
   } catch {

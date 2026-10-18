@@ -30,6 +30,7 @@ const Resumo = carregar(() => import('./Resumo'));
 const PostInstagram = carregar(() => import('./PostInstagram'));
 const Desafio30 = carregar(() => import('./Desafio30'));
 const Cardio = carregar(() => import('./Cardio'));
+const AvaliarFoto = carregar(() => import('./AvaliarFoto'));
 
 // Ferramentas extras do Body Coach, todas grátis e feitas no próprio aparelho.
 export const FERRAMENTAS = [
@@ -49,6 +50,7 @@ export const FERRAMENTAS = [
   { id: 'conquistas', grupo: 'Evolução', nome: 'Conquistas e nível', desc: 'Medalhas, XP e sequência de treinos', icone: 'ri-trophy-line', el: Conquistas },
   { id: 'ranking', grupo: 'Evolução', nome: 'Ranking e desafios', desc: 'Pontos da semana na equipe do seu coach', icone: 'ri-medal-line', el: Ranking },
   { id: 'retrospectiva', grupo: 'Evolução', nome: 'Retrospectiva do mês', desc: 'Seus números do mês, prontos para postar', icone: 'ri-movie-2-line', el: Retrospectiva },
+  { id: 'avaliar', grupo: 'Nutrição', nome: 'Avaliar por foto', desc: 'Foto de suplemento, rótulo, prato ou exame: a IA avalia e recomenda', icone: 'ri-scan-2-line', el: AvaliarFoto },
   { id: 'lista-compras', grupo: 'Nutrição', nome: 'Lista de compras', desc: 'Tudo da sua dieta para a semana', icone: 'ri-shopping-cart-2-line', el: ListaCompras },
   { id: 'jejum', grupo: 'Nutrição', nome: 'Jejum intermitente', desc: 'Cronômetro 12:12 até 20:4 (opcional)', icone: 'ri-hourglass-line', el: Jejum },
   { id: 'suplementos', grupo: 'Nutrição', nome: 'Suplementos', desc: 'Lista, horários, lembrete e check do dia', icone: 'ri-capsule-line', el: Suplementos },
