@@ -58,7 +58,12 @@ jobs:
           git checkout -q -b "nexia/reserva-$NUMERO"
           PROMPT="Aplique esta tarefa no repositório. Só grátis, não remova nenhuma função existente. $(cat "$RUNNER_TEMP/tarefa.md")"
           contas=()
-          [ -n "$RESERVA_GEMINI_KEY" ] && contas+=("gemini|gemini/gemini-2.0-flash|GEMINI_API_KEY|$RESERVA_GEMINI_KEY")
+          if [ -n "$RESERVA_GEMINI_KEY" ]; then
+            # Modelo do Gemini muda com o tempo (o 2.0 foi desligado): pergunta ao Google qual "flash" está disponível agora.
+            GM=$(curl -sS "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200&key=$RESERVA_GEMINI_KEY" | jq -r '[.models[]?|select(.supportedGenerationMethods|index("generateContent"))|.name|select(test("flash")) |select(test("lite|image|tts|live|thinking|exp|preview")|not)]|sort|reverse|.[0] // empty' | sed 's#^models/##')
+            echo "Modelo Gemini escolhido: ${GM:-nenhum}"
+            [ -n "$GM" ] && contas+=("gemini|gemini/$GM|GEMINI_API_KEY|$RESERVA_GEMINI_KEY")
+          fi
           [ -n "$RESERVA_OPENROUTER_KEY" ] && contas+=("openrouter|openrouter/deepseek/deepseek-chat-v3-0324:free|OPENROUTER_API_KEY|$RESERVA_OPENROUTER_KEY")
           [ -n "$RESERVA_OPENAI_KEY" ] && contas+=("openai|gpt-4o-mini|OPENAI_API_KEY|$RESERVA_OPENAI_KEY")
           [ -n "$RESERVA_ANTHROPIC_KEY" ] && contas+=("anthropic|claude-3-5-haiku-20241022|ANTHROPIC_API_KEY|$RESERVA_ANTHROPIC_KEY")
@@ -67,7 +72,7 @@ jobs:
             IFS='|' read -r nome modelo var chave <<< "$c"
             echo "Tentando conta: $nome"
             git reset -q --hard "origin/${GITHUB_REF_NAME}" || true
-            if env "$var=$chave" aider --yes-always --no-auto-commits --no-gitignore --no-check-update --no-analytics --model "$modelo" --message "$PROMPT" $(tr '\n' ' ' < "$RUNNER_TEMP/arquivos.txt") 2>&1 | tail -40; [ -n "$(git status --porcelain | grep -v -E '\.aider|\.gitignore')" ]; then
+            if env "$var=$chave" aider --yes-always --no-auto-commits --no-gitignore --no-detect-urls --no-check-update --no-analytics --model "$modelo" --message "$PROMPT" $(tr '\n' ' ' < "$RUNNER_TEMP/arquivos.txt") 2>&1 | tail -40; [ -n "$(git status --porcelain | grep -v -E '\.aider|\.gitignore')" ]; then
               echo "ok=1" >> "$GITHUB_OUTPUT"; echo "conta=$nome" >> "$GITHUB_OUTPUT"; exit 0
             fi
             echo "Conta $nome sem resultado (cota/limite); próxima."
