@@ -11,7 +11,9 @@ test('convite com desconto: botão Convidar na Home, link curto com cupom e reca
   assert.match(home, /Convidar\s*<\/button>/);
   assert.match(home, /<ConvidarAmigo/);
   const c = ler('pages/home/components/ConvidarAmigo.tsx');
-  assert.match(c, /c\/\$\{codigoCoach \|\| 'amigo'\}\$\{cupom \? `\?cupom=/);
+  assert.match(c, /c\/\$\{codigoCoach\}/);
+  assert.match(c, /ref=\$\{indicacao\}/);
+  assert.match(ler('lib/ferramentas/cartao.ts'), /bc_cupom/);
   assert.match(c, /wa\.me\/\?text=/);
   assert.match(c, /verCupom/);
   const conv = ler('pages/chat/Convite.tsx');
