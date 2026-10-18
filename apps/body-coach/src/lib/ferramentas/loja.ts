@@ -1,8 +1,8 @@
 // Loja do Body Coach: catálogo com links de afiliado (Amazon Associados e Mercado Livre Afiliados).
 // A NEXIA ganha comissão em cada compra, sem custo para o aluno. Preencha os códigos quando as contas forem aprovadas.
 export const AFILIADOS = {
-  amazon: '', // tag do Amazon Associados, ex.: "nexia-20"
-  mercadolivre: '', // código do Mercado Livre Afiliados (vai no parâmetro "matt_tool")
+  amazon: 'gilcambe-20', // tag do Amazon Associados (pública, já usada pelo robô de ofertas)
+  mercadolivre: '', // código do Mercado Livre Afiliados (vai no parâmetro "matt_tool"); lido de VITE_ML_AFILIADO se definido
 };
 
 export type CategoriaLoja = 'Suplementos' | 'Acessórios de treino' | 'Treino em casa' | 'Relógios e cintas' | 'Roupas e tênis' | 'Cozinha fit';
