@@ -37,7 +37,9 @@ export interface HealthSample {
 export async function storeHealthSample(sample: HealthSample): Promise<void> {
   const samplesRef = healthDb.getCollection(HEALTH_SAMPLES_PATH);
   // Usa o próprio timestamp (ISO) como ID do documento para garantir índice por dia/único.
-  const docRef = doc(samplesRef, sample.timestamp);
+  const date = new Date(sample.timestamp);
+  const docId = date.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+  const docRef = doc(samplesRef, docId);
   await setDoc(docRef, {
     ...sample,
     createdAt: serverTimestamp(),
@@ -48,7 +50,7 @@ export async function storeHealthSample(sample: HealthSample): Promise<void> {
  * Consulta as 30 últimas amostras de saúde no Firestore (últimos 30 dias).
  * Retorna as amostras ordenadas do mais antigo para o mais recente.
  */
-export async function getLast30DaysSamples(): Promise<HealthSample[]> {
+async function getLast30DaysSamples(): Promise<HealthSample[]> {
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
