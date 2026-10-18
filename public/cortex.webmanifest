@@ -1,0 +1,13 @@
+{
+  "name": "NEXIA Cortex",
+  "short_name": "Cortex",
+  "description": "O Cortex da NEXIA: mande pedidos, acompanhe o histórico e publique.",
+  "start_url": "/cortex",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b0b10",
+  "theme_color": "#0b0b10",
+  "icons": [
+    { "src": "/cortex-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,110 @@
+import { useCallback, useEffect, useState } from "react";
+import { haQuanto } from "../central/api";
+import { NOME_SITUACAO, usePedidos } from "../meu-cortex/api";
+import type { Deploy, Filtro, Resumo } from "../meu-cortex/api";
+import type { Tema } from "./page";
+
+const Cartao = ({ children, testid }: { children: React.ReactNode; testid?: string }) => (
+  <div className="rounded-2xl border border-[var(--cx-line)] bg-[var(--cx-card)] p-4" data-testid={testid}>{children}</div>
+);
+const Ponto = ({ ok }: { ok: boolean | null }) => <span className={`inline-block w-2.5 h-2.5 rounded-full ${ok === null ? "bg-gray-500" : ok ? "bg-emerald-400" : "bg-red-500"}`} />;
+const Titulo = ({ t, s }: { t: string; s?: string }) => <header className="mb-5"><h2 className="text-2xl font-semibold">{t}</h2>{s && <p className="text-sm text-[var(--cx-mut)] mt-1">{s}</p>}</header>;
+
+// O que o Cortex usa de verdade: o estado de GitHub e Cloudflare vem das APIs; as IAs grátis são o rodízio fixo do Cortex.
+const IAS = ["Groq", "GitHub Models", "Gemini", "Workers AI", "Mistral", "OpenRouter"];
+
+export function Conexoes({ email }: { email: string }) {
+  const { listar, deploy } = usePedidos();
+  const [gh, setGh] = useState<boolean | null>(null);
+  const [d, setD] = useState<Deploy | null>(null);
+  useEffect(() => {
+    listar("", "todos", 1).then(() => setGh(true)).catch(() => setGh(false));
+    deploy().then(setD).catch(() => setD(null));
+  }, [listar, deploy]);
+  return (
+    <div className="max-w-3xl mx-auto p-6 space-y-3">
+      <Titulo t="Conexões" s="Tudo o que o Cortex usa para trabalhar. Tudo grátis." />
+      <Cartao testid="cx-con-github"><p className="flex items-center gap-2 font-medium"><Ponto ok={gh} />GitHub</p>
+        <p className="text-sm text-[var(--cx-mut)] mt-1">{gh === null ? "Verificando…" : gh ? "Conectado: a fila de pedidos e o histórico ficam nele, de graça." : "Sem acesso. Entre como dono."}</p></Cartao>
+      <Cartao testid="cx-con-cloudflare"><p className="flex items-center gap-2 font-medium"><Ponto ok={d ? !d.falhou : null} />Cloudflare</p>
+        <p className="text-sm text-[var(--cx-mut)] mt-1">{!d ? "Verificando…" : d.emAndamento ? "Publicando agora…" : d.falhou ? "A última publicação falhou." : `Último deploy ${haQuanto(d.ultimoDeploy?.quando)}. ${d.mudancas ? `${d.mudancas} mudança(s) esperando publicar.` : "Tudo no ar."}`}</p></Cartao>
+      <Cartao testid="cx-con-firebase"><p className="flex items-center gap-2 font-medium"><Ponto ok={!!email} />Firebase</p>
+        <p className="text-sm text-[var(--cx-mut)] mt-1">Login do dono ativo: {email}.</p></Cartao>
+      <Cartao testid="cx-con-ias"><p className="font-medium">IAs grátis do Cortex</p>
+        <div className="flex flex-wrap gap-2 mt-3">{IAS.map((i) => <span key={i} className="px-3 h-8 inline-flex items-center rounded-full border border-[var(--cx-line)] text-sm">{i}</span>)}</div>
+        <p className="text-sm text-[var(--cx-mut)] mt-3">O Cortex alterna entre elas sozinho, para nunca parar por falta de IA.</p></Cartao>
+    </div>
+  );
+}
+
+function ListaPedidos({ itens, abrir }: { itens: Resumo[]; abrir: (n: number) => void }) {
+  return (
+    <ul className="space-y-2">{itens.map((t) => (
+      <li key={t.numero}><button onClick={() => abrir(t.numero)} className="w-full text-left rounded-xl border border-[var(--cx-line)] bg-[var(--cx-card)] px-4 py-3 hover:border-[var(--cx-ac)]" data-testid="cx-linha">
+        <span className="text-xs text-[var(--cx-mut)]">#{t.numero} · {NOME_SITUACAO[t.situacao]} · {haQuanto(t.quando)}</span>
+        <span className="block break-words mt-0.5">{t.titulo}</span></button></li>
+    ))}{!itens.length && <li className="text-sm text-[var(--cx-mut)]">Nada por aqui.</li>}</ul>
+  );
+}
+
+const FILTROS: { id: Filtro; nome: string }[] = [{ id: "todos", nome: "Todas" }, { id: "abertos", nome: "Andando" }, { id: "travados", nome: "Travadas" }, { id: "feitos", nome: "Feitas" }];
+
+export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
+  const { listar } = usePedidos();
+  const [f, setF] = useState<Filtro>("abertos");
+  const [itens, setItens] = useState<Resumo[]>([]);
+  const [erro, setErro] = useState<string>();
+  useEffect(() => { setErro(undefined); listar("", f, 1).then((r) => setItens(r.itens)).catch((e: Error) => setErro(e.message)); }, [listar, f]);
+  return (
+    <div className="max-w-3xl mx-auto p-6">
+      <Titulo t="Tarefas" s="A fila do Cortex, do jeito que ele enxerga." />
+      <div className="flex gap-2 mb-4 overflow-x-auto">{FILTROS.map((x) => (
+        <button key={x.id} onClick={() => setF(x.id)} data-testid={`cx-filtro-${x.id}`}
+          className={`px-4 h-10 rounded-full text-sm border ${f === x.id ? "bg-[var(--cx-ac)] text-black border-transparent font-semibold" : "border-[var(--cx-line)]"}`}>{x.nome}</button>))}</div>
+      {erro && <p className="text-red-400 text-sm" role="alert">{erro}</p>}
+      <ListaPedidos itens={itens} abrir={abrir} />
+    </div>
+  );
+}
+
+export function Artefatos({ abrir }: { abrir: (n: number) => void }) {
+  const { listar, deploy, agir } = usePedidos();
+  const [itens, setItens] = useState<Resumo[]>([]);
+  const [d, setD] = useState<Deploy | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const ver = useCallback(() => { deploy().then(setD).catch((e: Error) => setMsg(e.message)); }, [deploy]);
+  useEffect(() => { ver(); listar("", "feitos", 1).then((r) => setItens(r.itens)).catch(() => undefined); }, [ver, listar]);
+  const publicar = async () => { setMsg(null); try { setMsg((await agir({ acao: "publicar" })).mensagem); setTimeout(ver, 4000); } catch (e) { setMsg((e as Error).message); } };
+  return (
+    <div className="max-w-3xl mx-auto p-6 space-y-5">
+      <Titulo t="Artefatos" s="O que o Cortex entregou e o que já está no ar." />
+      <Cartao testid="cx-publicar">
+        <p className="font-medium" data-testid="cx-publicar-situacao">{!d ? "Verificando…" : d.emAndamento ? "⏳ Publicando agora…" : d.falhou ? "🔴 A última publicação falhou." : d.mudancas ? `🟡 ${d.mudancas} mudança(s) ainda não estão no ar.` : "🟢 Tudo o que entrou já está no ar."}</p>
+        {d && d.titulos.length > 0 && <ul className="text-sm text-[var(--cx-mut)] list-disc pl-5 mt-2">{d.titulos.map((t) => <li key={t}>{t}</li>)}</ul>}
+        <button disabled={!d || d.emAndamento || (!d.mudancas && !d.falhou)} onClick={() => confirm("Publicar o app novo no ar agora?") && publicar()} data-testid="cx-publicar-agora"
+          className="mt-3 h-11 px-5 rounded-xl bg-gradient-to-br from-[#00d4aa] to-[#7c6cf0] text-black font-semibold disabled:opacity-40">Publicar agora</button>
+        {msg && <p className="text-sm text-[var(--cx-ac)] mt-2" role="status">{msg}</p>}
+      </Cartao>
+      <p className="text-sm font-medium">Entregues</p>
+      <ListaPedidos itens={itens} abrir={abrir} />
+    </div>
+  );
+}
+
+export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema; mudarTema: (t: Tema) => void; email: string; instalar: (() => void) | null; sair: () => void }) {
+  const op: { id: Tema; nome: string }[] = [{ id: "auto", nome: "Automático" }, { id: "escuro", nome: "Escuro" }, { id: "claro", nome: "Claro" }];
+  return (
+    <div className="max-w-3xl mx-auto p-6 space-y-3">
+      <Titulo t="Configurações" s={email} />
+      <Cartao><p className="font-medium mb-3">Aparência</p>
+        <div className="flex gap-2">{op.map((o) => (
+          <button key={o.id} onClick={() => mudarTema(o.id)} data-testid={`cx-tema-${o.id}`}
+            className={`flex-1 h-11 rounded-xl border text-sm ${tema === o.id ? "border-[var(--cx-ac)] bg-[var(--cx-hover)] font-semibold" : "border-[var(--cx-line)]"}`}>{o.nome}</button>))}</div></Cartao>
+      <Cartao><p className="font-medium">App no celular</p>
+        <p className="text-sm text-[var(--cx-mut)] mt-1">{instalar ? "Instale o Cortex na tela inicial." : "No Chrome do celular: menu ⋮ → Instalar app (ou Adicionar à tela inicial)."}</p>
+        {instalar && <button onClick={instalar} className="mt-3 h-11 px-5 rounded-xl bg-[var(--cx-ac)] text-black font-semibold" data-testid="cx-instalar">Instalar app</button>}</Cartao>
+      <Cartao><a href="/central" className="block font-medium">Central NEXIA</a><p className="text-sm text-[var(--cx-mut)] mt-1">Vendas, produtos e divulgação.</p></Cartao>
+      <button onClick={sair} className="w-full h-12 rounded-xl border border-[var(--cx-line)] text-red-400" data-testid="cx-sair">Sair</button>
+    </div>
+  );
+}
