@@ -78,15 +78,85 @@ exports.handler = async (event) => {
   if (produto && !images) return resposta(event, 400, { error: 'Mande a foto do produto.' });
 
   const router = getRouter();
+  const { FREE } = require('../../nexia-ai/orchestrator/models');
+  
+  // 2. Respostas prontas locais (sem IA) para as perguntas mais comuns
+  const lowerMsg = message.toLowerCase();
+  let localReply = null;
+  const ctxObj = body.context && typeof body.context === 'object' ? body.context : {};
+
+  if (lowerMsg.includes('quanto ainda posso comer') || lowerMsg.includes('calorias') || lowerMsg.includes('quanto falta')) {
+    const metaKcal = ctxObj.meta_kcal || ctxObj.calorias_meta || 2000;
+    const consumido = ctxObj.calorias_consumidas || ctxObj.consumido || 0;
+    const restam = metaKcal - consumido;
+    localReply = `Você tem uma meta de ${metaKcal} kcal e já consumiu ${consumido} kcal hoje. Ainda restam ${restam > 0 ? restam : 0} kcal para atingir sua meta. Continue firme!`;
+  } else if (lowerMsg.includes('o que treino hoje') || lowerMsg.includes('treino de hoje') || lowerMsg.includes('qual o treino')) {
+    const treinoHoje = ctxObj.treino_hoje || ctxObj.treino || 'um treino equilibrado focado no seu objetivo';
+    localReply = `Para hoje, o planejado é: ${treinoHoje}. Prepare-se bem, mantenha a postura correta e foco na execução!`;
+  } else if (lowerMsg.includes('troca de exercício') || lowerMsg.includes('trocar exercício') || lowerMsg.includes('substituir')) {
+    localReply = `Se precisar trocar um exercício por algum desconforto ou falta de aparelho, opte por um movimento que trabalhe o mesmo grupamento muscular com amplitude semelhante. Respeite seus limites e evite forçar articulações doloridas.`;
+  } else if (lowerMsg.includes('água') || lowerMsg.includes('beber água') || lowerMsg.includes('hidratação')) {
+    const aguaMl = ctxObj.agua_ml || ctxObj.agua || 2500;
+    localReply = `Lembre-se de manter a hidratação em dia! A meta recomendada para você é de cerca de ${aguaMl} ml de água por hoje. Já bebeu água suficiente?`;
+  } else if (lowerMsg.includes('sono') || lowerMsg.includes 'dormi' || lowerMsg.includes('dormir')) {
+    const horasSono = ctxObj.horas_sono || ctxObj.sono || 7;
+    localReply = `O descanso é fundamental para a recuperação e resultados. Você registrou cerca de ${horasSono} horas de sono. Tente manter uma boa rotina de descanso!`;
+  }
+
+  if (localReply) {
+    return resposta(event, 200, { reply: localReply, role, model: 'local-static' });
+  }
+
+  // 3. Cache de 24 h por pergunta normalizada + contexto resumido (no Firestore ou KV já usados)
+  const crypto = require('crypto');
+  const normalizedMsg = message.trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+  const cacheKey = `bc_cache_${auth.uid}_${crypto.createHash('md5').update(normalizedMsg + '_' + contexto).digest('hex')}`;
+  
+  let cachedReply = null;
+  try {
+    const { db } = require('./firebase-init');
+    if (db) {
+      const docSnap = await db.collection('bc_cache').doc(cacheKey).get();
+      if (docSnap.exists) {
+        const data = docSnap.data();
+        if (data && data.timestamp && (Date.now() - data.timestamp < 24 * 60 * 60 * 1000)) {
+          cachedReply = data.reply;
+        }
+      }
+    }
+  } catch { /* erro no cache não bloqueia fluxo */ }
+
+  if (cachedReply) {
+    return resposta(event, 200, { reply: cachedReply, role, model: 'cache' });
+  }
+
+  // 1. O Body Coach passa a usar só a lista grátis: FREE.fast (e FREE.reasoning para análises), nunca provedor anthropic
+  const taskList = (sincera || produto || receita) ? FREE.reasoning : FREE.fast;
+
   // Regra do dono: o Body Coach só usa IA grátis, mesmo que alguém configure a chave paga da Anthropic.
-  for (const d of listFor('fast').filter((x) => x.provider !== 'anthropic')) {
+  for (const d of taskList.filter((x) => x.provider !== 'anthropic')) {
     try {
       const cap = router.capabilities(d);
       if (!cap.available || (images && !cap.vision)) continue;
       // Cada modelo tem 12 s; se demorar, passa logo para o próximo (nunca deixa o aluno esperando no vazio).
       const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: importar ? 2500 : sincera || produto ? 1600 : images ? 1200 : receita ? 2000 : 700, ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
-      if (out && out.text) return resposta(event, 200, { reply: out.text, role, model: d.model });
+      if (out && out.text) {
+        const finalReply = out.text;
+        try {
+          const { db } = require('./firebase-init');
+          if (db) {
+            await db.collection('bc_cache').doc(cacheKey).set({
+              reply: finalReply,
+              timestamp: Date.now()
+            });
+          }
+        } catch { /* falha ao salvar cache não quebra resposta */ }
+        return resposta(event, 200, { reply: finalReply, role, model: d.model });
+      }
     } catch { /* tenta o próximo modelo */ }
   }
-  return resposta(event, 503, { error: 'A equipe está indisponível agora. Tente de novo em alguns minutos.' });
+
+  // 4. Se todos os modelos grátis falharem: resposta local útil + "tente de novo em alguns minutos", nunca erro em branco.
+  const fallbackReply = `Não consegui conectar aos modelos de IA no momento, mas lembre-se de manter o foco no seu objetivo, beber água e seguir firme na sua rotina! Tente de novo em alguns minutos.`;
+  return resposta(event, 200, { reply: fallbackReply, role, model: 'fallback-local' });
 };
