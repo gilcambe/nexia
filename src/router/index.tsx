@@ -21,6 +21,7 @@ const LeadsPage = lazy(() => import("../pages/leads/page"));
 const ClientesPage = lazy(() => import("../pages/clientes/page"));
 const CentralPage = lazy(() => import("../pages/central/page"));
 const MeuCortexPage = lazy(() => import("../pages/meu-cortex/page"));
+const CortexPage = lazy(() => import("../pages/cortex/page"));
 const NotFound = lazy(() => import("../pages/NotFound"));
 const PrivacidadePage = lazy(() => import("../pages/legais/privacidade/page"));
 const TermosPage = lazy(() => import("../pages/legais/termos/page"));
@@ -45,6 +46,7 @@ const routes: RouteObject[] = [
   { path: "/leads", element: <LeadsPage /> },
   { path: "/clientes", element: <ClientesPage /> },
   { path: "/central", element: <CentralPage /> },
+  { path: "/cortex", element: <CortexPage /> },
   { path: "/meu-cortex", element: <MeuCortexPage /> },
   { path: "/ces", element: <TenantPage tenant="ces" /> },
   { path: "/bezsan", element: <TenantPage tenant="bezsan" /> },
