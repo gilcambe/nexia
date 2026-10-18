@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { haQuanto } from "../central/api";
-import { usePedidos } from "../meu-cortex/api";
+import { usePedidos, lerCache, guardarCache } from "../meu-cortex/api";
 import type { Detalhe, Situacao } from "../meu-cortex/api";
 import Logo from "./Logo";
 import Composer from "./Composer";
@@ -19,13 +19,13 @@ const limpo = (t: string) => t.replace(/\n*_(?:Pedido |Pelo |pelo )[^_\n]*Cortex
 
 export default function Conversa({ n, voltar }: { n: number; voltar: () => void }) {
   const { abrir, agir } = usePedidos();
-  const [d, setD] = useState<Detalhe | null>(null);
+  const [d, setD] = useState<Detalhe | null>(() => lerCache<Detalhe>("p" + n));
   const [erro, setErro] = useState<string>();
   const [msg, setMsg] = useState<string | null>(null);
   const fim = useRef<HTMLDivElement>(null);
 
-  const carregar = useCallback(() => { abrir(n).then((x) => { setD(x); setErro(undefined); }).catch((e: Error) => setErro(e.message)); }, [abrir, n]);
-  useEffect(() => { setD(null); carregar(); }, [carregar]);
+  const carregar = useCallback(() => { abrir(n).then((x) => { setD(x); setErro(undefined); guardarCache("p" + n, x); }).catch((e: Error) => setErro(e.message)); }, [abrir, n]);
+  useEffect(() => { setD(lerCache<Detalhe>("p" + n)); carregar(); }, [carregar, n]);
   useEffect(() => {
     if (!d || !ESTADO[d.situacao].vivo) return;
     const t = setInterval(carregar, 15000);

@@ -89,6 +89,25 @@ test('chave com quebra de linha no fim (salva pelo PowerShell) funciona', async 
   assert.ok(corpos[0].includes('access_token=tok') && !corpos[0].includes('%0D'));
 });
 
+test('Cortex: anexo de qualquer tipo vai para o ramo cortex-anexos e rodapé antigo some', async () => {
+  const { agir } = require('../../netlify/functions/central/pedidos-acoes');
+  const chamadas = [];
+  const p = { gh: async (url, init) => { chamadas.push([url, init && init.method]); if (/git\/ref\/heads\/cortex-anexos/.test(url)) throw new Error('404'); if (/heads\/develop/.test(url)) return { object: { sha: 'abc' } }; return {}; } };
+  const r = await agir(p, { acao: 'anexar', nome: 'Captura de tela (1).png', base64: 'QUJD' }, 'dono');
+  assert.equal(r.status, 200);
+  assert.match(r.corpo.caminho, /^cortex-anexos\/\d{4}-\d{2}-\d{2}-[a-z0-9]+-Captura-de-tela-1-\.png$/);
+  assert.ok(chamadas.some(([u, m]) => /git\/refs$/.test(u) && m === 'POST'));
+  assert.ok(chamadas.some(([u, m]) => /contents\/cortex-anexos\//.test(u) && m === 'PUT'));
+  assert.equal((await agir(p, { acao: 'anexar', nome: 'x', base64: 'A'.repeat(960000) }, 'dono')).status, 400);
+  assert.equal((await agir(p, { acao: 'anexar', nome: 'x', base64: '<script>' }, 'dono')).status, 400);
+  const { montarPedido } = require('../../netlify/functions/central/pedidos-pedir');
+  assert.ok(!/no celular por/i.test(montarPedido('Mudar o texto do botão no Body Coach', 'dono').body));
+  const { criarDetalhe } = require('../../netlify/functions/central/pedidos-detalhe');
+  const gh = async (u) => (/comments/.test(u) ? [] : /search/.test(u) ? { items: [] } : { number: 1, title: 't', state: 'open', labels: [], user: { login: 'a' }, created_at: 'x', updated_at: 'x', body: 'Faça isso.\n\n_Pedido pelo Cortex no celular por gil@x.com._', comments: 0 });
+  const d = await criarDetalhe(gh)(1);
+  assert.ok(!/celular/i.test(d.conversa[0].texto));
+});
+
 test('calendário: tema de cada dia da semana, gancho na 1ª linha, CTA e 5 a 10 hashtags', () => {
   const { SEMANA, temaDoDia, montarLegenda, hashtagsNicho } = require('../../divulga/lib/calendario');
   assert.equal(SEMANA.length, 7);

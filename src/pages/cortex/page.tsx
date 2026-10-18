@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePedidos } from "../meu-cortex/api";
+import { usePedidos, lerCache, guardarCache } from "../meu-cortex/api";
 import type { Resumo } from "../meu-cortex/api";
 import Composer from "./Composer";
 import Conversa from "./Conversa";
@@ -32,7 +32,7 @@ export default function CortexPage() {
   const [aberto, setAberto] = useState<number>(() => Number(location.hash.replace("#p", "")) || 0);
   const [menu, setMenu] = useState(false);
   const [busca, setBusca] = useState("");
-  const [itens, setItens] = useState<Resumo[]>([]);
+  const [itens, setItens] = useState<Resumo[]>(() => lerCache<Resumo[]>("lista") || []);
   const [erro, setErro] = useState<string>();
   const [inicial, setInicial] = useState("");
   const [instalar, setInstalar] = useState<(() => void) | null>(null);
@@ -66,7 +66,7 @@ export default function CortexPage() {
   const temaFinal = tema === "auto" ? (claroSistema ? "claro" : "escuro") : tema;
 
   const buscar = useCallback((q: string) => {
-    listar(q, "todos", 1).then((r) => { setItens(r.itens); setErro(undefined); }).catch((e: Error) => setErro(e.message));
+    listar(q, "todos", 1).then((r) => { setItens(r.itens); setErro(undefined); if (!q) guardarCache("lista", r.itens.slice(0, 60)); }).catch((e: Error) => setErro(e.message));
   }, [listar]);
   useEffect(() => { if (!authLoading && user) { const t = setTimeout(() => buscar(busca), busca ? 350 : 0); return () => clearTimeout(t); } }, [authLoading, user, busca, buscar]);
 

@@ -8,21 +8,42 @@ const { publicar } = require('./pedidos-publicar');
 const issue = (c) => '/repos/gilcambe/nexia/issues/' + c;
 const r = (status, corpo) => ({ status, corpo });
 
+// Anexo de qualquer tipo (foto, PDF, planilha...): vai para o ramo cortex-anexos e o pedido cita o caminho.
+const RAMO_ANEXOS = 'cortex-anexos';
+const MAX_BASE64 = 950000;
+async function anexar(p, b) {
+  const nome = String(b.nome || 'arquivo').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^[-.]+/, '').slice(-80) || 'arquivo';
+  const dados = String(b.base64 || '');
+  if (!/^[A-Za-z0-9+/=]+$/.test(dados) || dados.length < 4) return r(400, { error: 'Arquivo inválido.' });
+  if (dados.length > MAX_BASE64) return r(400, { error: 'Arquivo grande demais (máximo uns 700 KB; fotos são reduzidas sozinhas).' });
+  const repo = '/repos/gilcambe/nexia';
+  let ramoExiste = true;
+  try { await p.gh(repo + '/git/ref/heads/' + RAMO_ANEXOS); } catch { ramoExiste = false; }
+  if (!ramoExiste) {
+    const base = await p.gh(repo + '/git/ref/heads/develop');
+    await p.gh(repo + '/git/refs', { method: 'POST', body: JSON.stringify({ ref: 'refs/heads/' + RAMO_ANEXOS, sha: base.object.sha }) });
+  }
+  const caminho = 'cortex-anexos/' + new Date().toISOString().slice(0, 10) + '-' + Date.now().toString(36) + '-' + nome;
+  await p.gh(repo + '/contents/' + caminho, { method: 'PUT', body: JSON.stringify({ message: 'Anexo do Cortex: ' + nome, content: dados, branch: RAMO_ANEXOS }) });
+  return r(200, { ok: true, caminho, ramo: RAMO_ANEXOS, mensagem: 'Anexo guardado.' });
+}
+
 async function agir(p, b, quem) {
   const texto = String(b.texto || '').trim();
   const n = Number(b.n) || 0;
   if (b.acao === 'pedir') {
     if (texto.length < 10) return r(400, { error: 'Escreva o pedido com pelo menos 10 letras.' });
     if (texto.length > 3500) return r(400, { error: 'Pedido grande demais. Divida em pedidos menores (até 3500 letras).' });
-    const ped = montarPedido ? montarPedido(texto, quem) : { titulo: texto.split('\n')[0].slice(0, 90), labels: ['cortex-fila'], body: texto + '\n\n_Pedido pelo Cortex no celular por ' + quem + '._' };
+    const ped = montarPedido ? montarPedido(texto, quem) : { titulo: texto.split('\n')[0].slice(0, 90), labels: ['cortex-fila'], body: texto + '\n\n_Pedido de ' + quem + '._' };
     const i = await p.gh('/repos/gilcambe/nexia/issues', { method: 'POST', body: JSON.stringify({ title: ped.titulo, labels: ped.labels, body: ped.body }) });
     return r(200, { ok: true, numero: i.number, mensagem: 'Pedido #' + i.number + ' na fila. O Cortex pega em até 15 minutos.' });
   }
+  if (b.acao === 'anexar') return anexar(p, b);
   if (b.acao === 'publicar') return publicar(p.gh);
   if (!n && b.acao !== 'juntar') return r(400, { error: 'Falta o número do pedido.' });
   if (b.acao === 'comentar') {
     if (texto.length < 2) return r(400, { error: 'Escreva a mensagem.' });
-    await p.gh(issue(n) + '/comments', { method: 'POST', body: JSON.stringify({ body: texto + '\n\n_Pelo Cortex no celular por ' + quem + '._' }) });
+    await p.gh(issue(n) + '/comments', { method: 'POST', body: JSON.stringify({ body: texto + '\n\n_Nota de ' + quem + '._' }) });
     return r(200, { ok: true, mensagem: 'Mensagem guardada no pedido #' + n + '.' });
   }
   if (b.acao === 'tentar') {

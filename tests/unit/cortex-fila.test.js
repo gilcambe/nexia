@@ -19,9 +19,9 @@ test('CF2. ignora Issue de quem não é dono/membro/colaborador e pull requests'
 });
 
 test('CF3. execução com sucesso conclui; falha reenfileira com tentativa+1', () => {
-  const a = decidir({ issues: [issue(1, ['cortex-rodando', 'pista-1']), issue(2, ['cortex-rodando', 'pista-2', 'tentativa-2'])], runs: [run(1, 'completed', 'success'), run(2, 'completed', 'failure')], agora: AGORA });
+  const a = decidir({ issues: [issue(1, ['cortex-rodando', 'pista-1']), issue(2, ['cortex-rodando', 'pista-2', 'tentativa-3'])], runs: [run(1, 'completed', 'success'), run(2, 'completed', 'failure')], agora: AGORA });
   assert.equal(a[0].tipo, 'concluir');
-  assert.deepEqual([a[1].tipo, a[1].tentativa], ['reenfileirar', 3]);
+  assert.deepEqual([a[1].tipo, a[1].tentativa], ['reenfileirar', 4]);
 });
 
 test('CF4. na última tentativa trava e avisa', () => {
@@ -115,4 +115,17 @@ test('FILA-CAM: caminhosDoPedido pega só arquivos entre crases com pasta', () =
   const { caminhosDoPedido } = require('../../scripts/cortex-fila');
   assert.deepEqual(caminhosDoPedido('Crie `src/a/b.ts` e `README.md` e `/health` e `../x/y.js` e `src/a/b.ts`'), ['src/a/b.ts']);
   assert.deepEqual(caminhosDoPedido('sem nada'), []);
+});
+
+test('FILA-DIV3. tarefa que falha 3 vezes é dividida em partes em vez de repetir até travar', () => {
+  const { decidir } = require('../../scripts/cortex-fila.js');
+  const issue = (extra = []) => ({ number: 9, title: 'NEXIA: loja grande', body: 'Faça a loja.', author_association: 'OWNER', labels: ['cortex-fila', 'cortex-rodando', 'pista-1', 'tentativa-2', ...extra].map(name => ({ name })) });
+  const runs = [{ id: 5, name: 'Cortex #9', status: 'completed', conclusion: 'failure' }];
+  const a = decidir({ issues: [issue()], runs, agora: Date.now() }).find(x => x.numero === 9);
+  assert.equal(a.tipo, 'dividir');
+  assert.equal(a.limpar, true);
+  assert.equal(a.tentativa, 3);
+  // já dividida antes (sem divisão): continua o caminho normal de repetir
+  const b = decidir({ issues: [issue(['cortex-sem-divisao'])], runs, agora: Date.now() }).find(x => x.numero === 9);
+  assert.equal(b.tipo, 'reenfileirar');
 });
