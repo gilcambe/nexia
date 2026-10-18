@@ -98,6 +98,13 @@ export default function CortexPage() {
           <button onClick={novo} className="ml-auto w-11 h-11 flex items-center justify-center" aria-label="Novo pedido"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg></button>
         </header>
 
+        {authLoading && (
+          <div className="flex-1 flex flex-col p-4 gap-3 animate-pulse" data-testid="cx-esqueleto" aria-busy="true">
+            {[70, 90, 55, 80].map((w, i) => <div key={i} className="h-4 rounded bg-[var(--cx-card)]" style={{ width: `${w}%` }} />)}
+            <div className="mt-auto h-14 rounded-2xl bg-[var(--cx-card)]" />
+          </div>
+        )}
+
         {!authLoading && !user && (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center">
             <Logo tamanho={64} /><h1 className="text-2xl font-semibold">Cortex</h1>
@@ -111,6 +118,9 @@ export default function CortexPage() {
           <div className="flex-1 min-h-0 flex flex-col">
             <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-4 text-center">
               <Logo tamanho={64} />
+              {(instalar || (/Android/i.test(navigator.userAgent) && !matchMedia("(display-mode: standalone)").matches)) && (
+                <button onClick={() => (instalar ? instalar() : window.open("https://nexiacortex.pages.dev", "_blank"))} className="mt-6 h-11 px-6 rounded-xl border border-[var(--cx-line)] text-sm font-medium" data-testid="cx-instalar-topo">Instalar o app Cortex</button>
+              )}
               {erro && <p className="text-sm text-red-400 mt-4" role="alert">{erro}</p>}
             </div>
             <Composer modo="pedido" inicial={inicial} enviar={async (texto) => { const r = await agir({ acao: "pedir", texto }); buscar(busca); if (r.numero) abrir(r.numero); }} />
