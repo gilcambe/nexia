@@ -19,6 +19,7 @@ const { negocio, lojaVer } = require('./body-coach/negocio');
 const { comunidade, registrarCargas, pontosDe } = require('./body-coach/comunidade');
 const { inicioSemanaBR } = require('./body-coach/tempo');
 const { profissionais, vinculoDe, podeEditar, meusAlunos, marcaLimpa, marcarConvite } = require('./body-coach/profissionais');
+const presenca = require('./body-coach/presenca');
 const { acoesAcesso, estaBloqueado, LIVRES } = require('./body-coach/acesso');
 const { acoesAvaliacoes, depoimentosPublicos } = require('./body-coach/avaliacoes');
 
@@ -410,7 +411,7 @@ async function executar(body, uid, db, ctx = {}) {
     const semana = { ...s, inicio: sem, treinos: s.treinos + 1, minutos: s.minutos + min, kcal: (s.kcal || 0) + kcal, feedbacks: (s.feedbacks || 0) + (temRetorno ? 1 : 0) };
     // feitoEm: treino salvo sem internet e enviado depois conta no dia em que foi feito
     const feito = Number(body.feitoEm);
-    const novo = { semana, progressao: registrarCargas(eu, body.melhores), ultimoTreino: feito > 0 && feito <= Date.now() && feito > Date.now() - 7 * 86400000 ? Math.max(feito, Number(eu.ultimoTreino) || 0) : Date.now() };
+    const novo = { semana, historico: presenca.registrar(eu, body), progressao: registrarCargas(eu, body.melhores), ultimoTreino: feito > 0 && feito <= Date.now() && feito > Date.now() - 7 * 86400000 ? Math.max(feito, Number(eu.ultimoTreino) || 0) : Date.now() };
     let desafioMarcado = false;
     if (eu.papel === 'aluno' && eu.coachUid) {
       const d = ((await dir.doc(eu.coachUid).get()).data?.() || {}).desafio;
@@ -632,6 +633,11 @@ async function executar(body, uid, db, ctx = {}) {
     const r = await msgs.add(m);
     await avisarConversa(db, outro, eu.nome, texto);
     return [200, { mensagem: { id: r.id, ...m } }];
+  }
+  // Presença: o coach (ou o parceiro da equipe) vê os treinos que o aluno concluiu nos últimos dias.
+  if (acao === 'presenca_aluno') {
+    if (eu.papel !== 'coach') return [403, { error: 'Só o coach vê a presença do aluno.' }];
+    return [200, { nome: dOutro.nome || 'Aluno', treinos: presenca.ultimos(dOutro, 60), ultimoTreino: Number(dOutro.ultimoTreino) || null }];
   }
   // Ficha e dieta do aluno montadas pelo coach: o coach lê o questionário do aluno e grava no perfil dele.
   if (acao === 'prescricao_ver') {

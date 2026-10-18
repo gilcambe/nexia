@@ -93,10 +93,11 @@ export default function MeusAlunos() {
                   {a.vinculo !== 'parceiro' && a.equipe && <span className="rounded-full bg-primary-50 px-2 py-0.5 text-primary-700">🤝 {a.equipe.nome} cuida d{a.equipe.parte === 'treino' ? 'o treino' : 'a alimentação'}</span>}
                   {p?.cobra && a.vinculo !== 'parceiro' && (a.pago ? <span className="rounded-full bg-accent-50 px-2 py-0.5 text-accent-800">💸 pago</span> : a.avisou ? <span className="rounded-full bg-secondary-50 px-2 py-0.5 text-secondary-800">💸 disse que pagou</span> : <span className="rounded-full bg-red-50 px-2 py-0.5 text-red-700">💸 não pagou</span>)}
                 </div>
-                <div className="mt-3 grid grid-cols-3 gap-2">
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <Link to={`/coach/alunos/${a.uid}`} className="rounded-lg bg-primary-500 px-2 py-2 text-center text-xs font-semibold text-background-50 dark:text-foreground-950">Ficha e dieta</Link>
                   <Link to={`/chat?com=${a.uid}`} className="rounded-lg border border-background-200 px-2 py-2 text-center text-xs font-semibold text-foreground-700">Conversar</Link>
                   <Link to={`/coach/evolucao/${a.uid}`} className="rounded-lg border border-background-200 px-2 py-2 text-center text-xs font-semibold text-foreground-700">Evolução</Link>
+                  <Link to={`/coach/presenca/${a.uid}`} className="rounded-lg border border-background-200 px-2 py-2 text-center text-xs font-semibold text-foreground-700">Presença</Link>
                 </div>
               </li>
             ))}
