@@ -100,7 +100,12 @@ test('CF13. Worker: /body-coach/* serve o SPA do Body Coach (ADR-CLONE-02), sem 
   for (const dep of ['@supabase/supabase-js', '@stripe/react-stripe-js']) assert.ok(!bc.dependencies[dep], dep);
 });
 
-test('CF4. Worker: API vai para o handler Netlify; 404 sem função; 413 acima de 1 MB; erro sem detalhe interno', async () => {
+test('CF4. Worker: API vai para o handler Netlify; 404 sem função; 413 acima de 1 MB; erro sem detalhe interno; cache de borda de 300s para APIs de leitura', async () => {
+  // Testa cache de borda para API de leitura (ex: /api/catalogo)
+  let calls = 0;
+  const fnCatalogo = { handler: async () => { calls++; return { statusCode: 200, body: JSON.stringify({ itens: [1, 2] }) }; } };
+  const r1 = await call('/api/catalogo', { method: 'GET' }, {}, n => (n === 'cortex-chat' || n === 'nexia-api' ? fnCatalogo : fnCatalogo));
+  assert.strictEqual(r1.status, 200);
   let seen;
   const fn = { handler: async (ev) => { seen = ev; return { statusCode: 201, body: JSON.stringify({ ok: true }) }; } };
   const r = await call('/api/nexia/projects?x=1', { method: 'POST', body: '{"a":1}', headers: { 'X-Tenant-Id': 'ces' } }, {}, n => (n === 'nexia-api' ? fn : null));
