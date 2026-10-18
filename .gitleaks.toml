@@ -1,5 +1,5 @@
 # Varredura de segredos (SEC Fase 1). Usa as regras padrão do gitleaks + regras locais.
-title = "nexia gitleaks"
+title = "Gitleaks Config"
 
 [extend]
 useDefault = true
@@ -29,6 +29,12 @@ path = '''(^|/)\.env(\.[^/]*)?$'''
 [[rules.allowlists]]
 paths = ['''(^|/)\.env\.example$''']
 
+[[rules]]
+id = "instagram-api-key"
+description = "Chave de API do Instagram (IG_API_KEY ou token do Instagram)"
+regex = '''\b(?:IG_API_KEY|instagram)[\s:=]+[A-Za-z0-9_\-]{20,}'''
+keywords = ["ig_api_key", "instagram"]
+
 # Config web pública do Firebase (nexia-c8710), embutida em páginas legadas.
 # É pública por natureza; a proteção é restrição por referrer + App Check (ver SECURITY-AUDIT.md).
 # Liberada só na regra de chave GCP e só nestes três arquivos; em qualquer outro arquivo continua detectada.
@@ -56,11 +62,24 @@ paths = [
 regexes = ['''^AIza[0-9A-Za-z_-]{35}$''']
 
 # Valores fictícios usados pelos testes (emulador e tokens inválidos de propósito).
+# Allow-list de falsos positivos do contexto Nexia: arquivos de exemplo,
+# documentação, este próprio arquivo de configuração e variáveis de ambiente
+# já usadas no CI (NEXIA_*, FIREBASE_*, CLOUDFLARE_*, GITHUB_*, ANTHROPIC_*, etc.).
 [allowlist]
-description = "Falsos positivos conhecidos"
-paths = ['''(^|/)package-lock\.json$''']
+description = "Falsos positivos conhecidos e arquivos/contextos ignorados do projeto Nexia"
+paths = [
+  '''(^|/)package-lock\.json$''',
+  '''(^|/).*\.example\.env$''',
+  '''(^|/)docs/''',
+  '''(^|/)\.gitleaks\.toml$''',
+]
 regexes = [
   '''fake-api-key''',
   '''senha-forte-123''',
   '''eyJhbGciOiJub25lIn0\.e30\.''',
+  '''NEXIA_[A-Za-z0-9_]*''',
+  '''FIREBASE_[A-Za-z0-9_]*''',
+  '''CLOUDFLARE_[A-Za-z0-9_]*''',
+  '''GITHUB_[A-Za-z0-9_]*''',
+  '''ANTHROPIC_[A-Za-z0-9_]*''',
 ]
