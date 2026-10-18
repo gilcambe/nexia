@@ -30,8 +30,7 @@
   "vars": {
     "NEXIA_JOBS": "github",
     "NEXIA_JOBS_REPO": "gilcambe/nexia",
-    "NEXIA_JOBS_REF": "develop",
-    "FIREBASE_AUTH_PROXY_DOMAIN": "nexiabodycoach.pages.dev"
+    "NEXIA_JOBS_REF": "develop"
   },
   // ADR-AUTO-01: a cada 5 min procura Robôs NEXIA vencidos; execuções paradas continuam de hora
   // em hora (ADR-F12-03). Cron é grátis no Worker; 288 tiques por dia, uma consulta cada.
