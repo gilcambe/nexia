@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import Card from '@/components/base/Card';
 import { apagarConvite, importarConvites, lerPlanilha, marcarEnviado, verConvites, type Convite } from '@/lib/coach/profissionais';
 import { confirmar } from '../../lib/dialogo';
+import { perguntar } from '@/lib/coachAI';
+import { alunosDoJson, alunosParaTexto } from '@/lib/coach/importarAlunos';
 
 // Importar alunos de uma planilha e convidar todos: colar do Excel/Google Planilhas (ou abrir um .csv),
 // e mandar o link por WhatsApp (um toque por aluno) ou por e-mail (todos de uma vez). Mostra quem já entrou.
@@ -23,9 +25,23 @@ export default function Convites() {
   const proximoZap = faltam.find((c) => c.telefone && !c.enviado);
   const emails = faltam.filter((c) => c.email);
 
-  const abrirArquivo = (f: File | undefined) => {
+  // PDF de outro app (MFit, Tecnofit...) ou texto bagunçado: a IA grátis acha os alunos e a lista aparece na prévia para corrigir.
+  const lerComIA = async (bruto: string) => {
+    setOcupado(true); setErro(''); setOk('Lendo com a IA...');
+    try {
+      const r = await perguntar('coach', bruto.slice(0, 11500), {}, undefined, undefined, 'importar');
+      const achados = alunosDoJson(r);
+      if (!achados.length) { setOk(''); setErro('Não consegui achar alunos com e-mail ou telefone nesse arquivo. Tente o .csv ou cole as colunas.'); return; }
+      setTexto(alunosParaTexto(achados)); setOk(`A IA achou ${achados.length} aluno${achados.length === 1 ? '' : 's'}. Confira abaixo antes de confirmar.`);
+    } catch (e) { setOk(''); setErro((e as Error).message); } finally { setOcupado(false); }
+  };
+  const abrirArquivo = async (f: File | undefined) => {
     if (!f) return;
-    if (!/\.(csv|txt|tsv)$/i.test(f.name)) { setErro('Use um arquivo .csv (no Excel: Salvar como > CSV) ou copie e cole as colunas.'); return; }
+    if (/\.pdf$/i.test(f.name) || f.type === 'application/pdf') {
+      try { await lerComIA(await (await import('@/lib/avaliacao/lerArquivo')).textoDoPdf(f)); } catch { setErro('Não consegui abrir esse PDF.'); }
+      return;
+    }
+    if (!/\.(csv|txt|tsv)$/i.test(f.name)) { setErro('Use .csv, .txt ou PDF (ou copie e cole as colunas).'); return; }
     const r = new FileReader();
     r.onload = () => { setErro(''); setTexto(String(r.result ?? '')); };
     r.readAsText(f);
@@ -73,8 +89,8 @@ export default function Convites() {
         <p className="mt-1 text-sm text-foreground-600">No Excel ou Google Planilhas, selecione as colunas <strong>nome</strong>, <strong>e-mail</strong> e <strong>telefone</strong>, copie e cole aqui. Também serve um arquivo .csv.</p>
         <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={5} aria-label="Colar planilha" placeholder={'Maria Silva\tmaria@email.com\t(11) 98888-7777\nJoão Souza\tjoao@email.com\t(21) 97777-6666'} className="mt-3 w-full rounded-lg border border-background-200 bg-background-50 px-3 py-2 font-mono text-xs outline-none focus:border-primary-300" />
         <label className="mt-2 inline-flex cursor-pointer items-center gap-1 rounded-lg border border-background-200 px-3 py-1.5 text-xs font-semibold text-foreground-700">
-          <i className="ri-file-excel-2-line"></i>Abrir arquivo .csv
-          <input type="file" accept=".csv,.txt,.tsv,text/csv" className="sr-only" data-testid="convites-arquivo" onChange={(e) => abrirArquivo(e.target.files?.[0])} />
+          <i className="ri-file-excel-2-line"></i>Abrir arquivo (.csv ou PDF de outro app)
+          <input type="file" accept=".csv,.txt,.tsv,.pdf,text/csv,application/pdf" className="sr-only" data-testid="convites-arquivo" onChange={(e) => void abrirArquivo(e.target.files?.[0])} />
         </label>
         {texto.trim() && (
           <div className="mt-3 space-y-2" data-testid="convites-previa">
