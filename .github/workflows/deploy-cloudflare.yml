@@ -57,6 +57,7 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           NEXIA_APP_URL: ${{ secrets.NEXIA_APP_URL }}
+          ASSETLINKS_SHA256: ${{ secrets.ASSETLINKS_SHA256 }}
       - name: Deploy
         run: npx -y wrangler@4 deploy
         env:
