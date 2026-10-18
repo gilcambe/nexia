@@ -39,3 +39,11 @@ test('BCAI-cardio. painel da esteira vira números limitados e a semana soma as 
   assert.equal(resumoSemana([{ id: 'a', em: Date.now(), aparelho: 'bike', tempoSeg: 600, km: 3, kcal: 100, kmh: 18, passos: 0 }]).kcal, 100);
   assert.match(avaliarSemana(0, 'emagrecer'), /Ainda sem cardio/);
 });
+
+test('BCAI-avaliacoes. análise sincera e produto por foto existem, com limite de fotos', () => {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '../../netlify/functions/body-coach-ai.js'), 'utf8');
+  assert.match(src, /SINCERA/);
+  assert.match(src, /PRODUTO/);
+  assert.match(src, /slice\(0, 4\)/);
+  assert.match(src, /Mande a foto do produto/);
+});

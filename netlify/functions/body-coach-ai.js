@@ -18,6 +18,9 @@ const PAPEIS = {
 };
 
 const CARDIO = 'Você lê a foto do painel de uma esteira, bicicleta, escada, elíptico ou relógio e devolve SOMENTE um JSON, sem texto e sem markdown, no formato {"aparelho":"esteira|bike|escada|eliptico|outro","tempo_seg":número,"distancia_km":número,"kcal":número,"velocidade_kmh":número,"passos":número}. Use null no que não aparecer ou não estiver legível. Tempo "01:00:02" vira 3602. Não invente números.';
+const SINCERA = 'Você é um coach de fisiculturismo e emagrecimento brasileiro, sincero e respeitoso, avaliando a evolução da pessoa por fotos (da mais recente para a mais antiga, se houver mais de uma) e pelas medidas do contexto. Responda em português do Brasil, sem markdown, com estas seções em texto simples: Resumo (2 frases); Pontos fortes; Pontos a melhorar (por região: ombros, peito, costas, braços, cintura e abdômen, pernas, postura); Cintura e medidas (compare com a avaliação anterior, se houver); Plano das próximas 4 semanas (treino, dieta e cardio, bem objetivo); Nota de evolução de 0 a 10. Diga a verdade com educação, sem elogio vazio, sem diagnosticar doença nem indicar remédio. Se a foto estiver ruim, diga o que mudar para a próxima (luz, distância, pose).';
+const PRODUTOS_SYS = { suplemento: 'Você avalia um suplemento ou produto fitness pela foto do rótulo ou da embalagem.', tabela: 'Você avalia a tabela nutricional da foto.', prato: 'Você avalia a refeição da foto.', exame: 'Você explica os valores de um exame de sangue da foto.' };
+const PRODUTO = (tipo) => `${PRODUTOS_SYS[tipo] || PRODUTOS_SYS.suplemento} Responda em português do Brasil, sem markdown, com estas seções em texto simples: O que é; Pontos bons; Pontos de atenção (açúcar, sódio, aditivos, dose, excesso de promessa); Vale a pena para o objetivo da pessoa? (sim, depende ou não, e por quê); Alternativa melhor ou mais barata, se houver. Se algo não estiver legível, diga o que faltou. Não prescreva remédio nem diagnostique; para exame, só explique o que está fora da faixa e sugira levar ao médico. Informação educativa.`;
 const RECEITA = 'Você é um nutricionista no app NEXIA Body Coach e cria UMA receita simples, barata e gostosa da culinária brasileira, em português do Brasil. Use preferencialmente os ingredientes que a pessoa disser ter; se não disser, use itens comuns de mercado. Encaixe nas calorias e proteína que ainda faltam no dia (contexto) e respeite objetivo, restrições e limitações. Formato exato, sem enfeites: primeira linha só o nome da receita; depois "Tempo: X min | Rende: N porção(ões)"; depois "Ingredientes:" com um item por linha começando com "- "; depois "Modo de preparo:" com passos numerados (máximo 6, curtos); por fim "Aproximado por porção: X kcal, Y g de proteína". Não use markdown, asteriscos nem títulos. Não prescreva remédios nem trate doenças.';
 const resposta = (event, statusCode, body) => ({ statusCode, headers: makeHeaders(event), body: JSON.stringify(body) });
 
@@ -49,18 +52,27 @@ exports.handler = async (event) => {
   const contexto = JSON.stringify(body.context && typeof body.context === 'object' ? body.context : {}).slice(0, 2000);
   const receita = body.task === 'receita';
   const cardio = body.task === 'cardio';
+  const sincera = body.task === 'avaliacao';
+  const produto = body.task === 'produto';
   if (cardio && typeof body.image !== 'string') return resposta(event, 400, { error: 'Mande a foto do painel.' });
-  const system = `${cardio ? CARDIO : receita ? RECEITA : PAPEIS[role]}\nContexto do aluno: ${contexto}`;
+  const system = `${cardio ? CARDIO : sincera ? SINCERA : produto ? PRODUTO(body.tipo) : receita ? RECEITA : PAPEIS[role]}\nContexto do aluno: ${contexto}`;
   // Últimas mensagens da conversa (até 10), para o coach lembrar o que o aluno já disse.
   const historico = Array.isArray(body.history) ? body.history.slice(-10).filter((h) => h && (h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string' && h.content.trim()).map((h) => ({ role: h.role, content: h.content.trim().slice(0, 600) })) : [];
   const mensagens = [...historico, { role: 'user', content: message }];
   // Foto de evolução (opcional): só modelos com visão (Gemini grátis) olham a imagem.
   let images;
-  if (typeof body.image === 'string') {
-    const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(body.image);
-    if (!m || m[2].length > 900000) return resposta(event, 400, { error: 'Foto inválida ou grande demais.' });
-    images = [{ mime: m[1], data: m[2] }];
+  const brutas = Array.isArray(body.images) ? body.images.slice(0, 4) : typeof body.image === 'string' ? [body.image] : [];
+  if (brutas.length) {
+    images = [];
+    let total = 0;
+    for (const b of brutas) {
+      const m = typeof b === 'string' ? /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(b) : null;
+      total += m ? m[2].length : 0;
+      if (!m || m[2].length > 900000 || total > 2400000) return resposta(event, 400, { error: 'Foto inválida ou grande demais.' });
+      images.push({ mime: m[1], data: m[2] });
+    }
   }
+  if (produto && !images) return resposta(event, 400, { error: 'Mande a foto do produto.' });
 
   const router = getRouter();
   for (const d of listFor('fast')) {
@@ -68,7 +80,7 @@ exports.handler = async (event) => {
       const cap = router.capabilities(d);
       if (!cap.available || (images && !cap.vision)) continue;
       // Cada modelo tem 12 s; se demorar, passa logo para o próximo (nunca deixa o aluno esperando no vazio).
-      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: images ? 1200 : receita ? 2000 : 700, ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
+      const out = await Promise.race([router.chat(d, { system, messages: mensagens, maxTokens: sincera || produto ? 1600 : images ? 1200 : receita ? 2000 : 700, ...(images ? { images } : {}) }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 12000))]);
       if (out && out.text) return resposta(event, 200, { reply: out.text, role, model: d.model });
     } catch { /* tenta o próximo modelo */ }
   }

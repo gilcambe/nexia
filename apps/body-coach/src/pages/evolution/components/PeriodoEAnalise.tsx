@@ -49,18 +49,19 @@ export default function PeriodoEAnalise({ entries }: Props) {
     try {
       const perfil = user?.id ? await getUserDoc<{ onboarding?: Record<string, unknown> }>(user.id, 'profile', 'main') : null;
       const anterior = entries.length > 1 ? entries[entries.length - 2] : null;
-      const foto = ultima.image_url && ultima.image_url.startsWith('data:image/') ? ultima.image_url : undefined;
+      // até 4 fotos: as poses da avaliação atual primeiro e depois a frente da anterior (para comparar)
+      const dataUrl = (v: unknown): v is string => typeof v === 'string' && v.startsWith('data:image/');
+      const fotos: string[] = [...Object.values(ultima.fotos ?? {}), ultima.image_url].filter(dataUrl);
+      if (anterior) fotos.push(...[anterior.fotos?.frente, anterior.image_url].filter(dataUrl).slice(0, 1));
       const pergunta =
-        'Faça minha avaliação de evolução como uma consulta de coach de fisiculturismo. ' +
-        'Diga com realismo o que melhorou, o que falta, onde focar no treino, ajustes de alimentação e se vale suplementar algo. ' +
-        'Se houver foto, descreva o que vê (proporções, pontos fracos).';
+        'Faça minha avaliação sincera de evolução. Compare com a avaliação anterior e diga com realismo o que melhorou, o que falta e onde focar.';
       const r = await perguntar('coach', pergunta, {
         atual: { peso: ultima.weight_kg, gordura: ultima.body_fat_pct, medidas: ultima.measurements, data: ultima.taken_at },
         anterior: anterior
           ? { peso: anterior.weight_kg, gordura: anterior.body_fat_pct, medidas: anterior.measurements, data: anterior.taken_at }
           : null,
         onboarding: perfil?.onboarding ?? null,
-      }, foto);
+      }, [...new Set(fotos)].slice(0, 4), undefined, 'avaliacao');
       setAnalise(r);
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Não consegui analisar agora.');
