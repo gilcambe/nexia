@@ -2,7 +2,7 @@
 // Fila fixa do Cortex: decisões puras (sem rede).
 const test = require('node:test');
 const assert = require('node:assert');
-const { decidir, MAX_TENTATIVAS, precisaDividir, paisConcluidos, dividirComIA, sondarCota } = require('../../scripts/cortex-fila');
+const { decidir, MAX_TENTATIVAS, precisaDividir, paisConcluidos, dividirComIA, sondarCota, entregouAlgo } = require('../../scripts/cortex-fila');
 
 const AGORA = Date.parse('2026-10-07T10:00:00Z');
 const issue = (n, labels = [], extra = {}) => ({ number: n, body: `tarefa ${n}`, author_association: 'OWNER', updated_at: '2026-10-07T09:59:00Z', labels: ['cortex-fila', ...labels].map(name => ({ name })), ...extra });
@@ -134,4 +134,28 @@ test('cópia exata grande nunca vai para o divisor (perderia o código)', () => 
   const corpo = 'Copie EXATAMENTE:\n\n' + ['a.js', 'b.js', 'c.js', 'd.js', 'e.js'].map((f) => '`src/' + f + '`\n```\n' + 'x'.repeat(900) + '\n```\n').join('\n');
   assert.equal(precisaDividir(issue(7, ['cortex-fila'], { body: corpo })), false);
   assert.equal(precisaDividir(issue(8, ['cortex-fila'], { body: 'Faça algo em src/a.js. ' + 'z'.repeat(3000) })), true);
+});
+
+test('FILA-ENTREGA: arquivo que já existia na develop, sem commit depois do início e sem PR aberto, NÃO é concluído', async () => {
+  const desde = '2026-10-01T00:00:00Z';
+  const corpo = 'Edite `central/produtos.js`.';
+  const origFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const u = String(url);
+    if (u.includes('/contents/central/produtos.js?ref=develop')) {
+      return { status: 200, json: { sha: 'abc', content: Buffer.from('const x = 1;').toString('base64') }, text: async () => JSON.stringify({ sha: 'abc' }) };
+    }
+    if (u.includes('/commits?sha=develop&path=') && u.includes('&since=')) {
+      return { status: 200, json: [], text: async () => '[]' };
+    }
+    if (u.includes('/pulls?state=open&per_page=30')) {
+      return { status: 200, json: [], text: async () => '[]' };
+    }
+    return { status: 404, json: null, text: async () => '{}' };
+  };
+  try {
+    assert.equal(await entregouAlgo('token', corpo, desde), false);
+  } finally {
+    globalThis.fetch = origFetch;
+  }
 });
