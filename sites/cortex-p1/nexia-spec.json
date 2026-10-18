@@ -1,0 +1,395 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex-p1 Painel",
+    "tagline": "Cadastros, dispositivos e instalações do app Cortex-p1",
+    "photo_theme": "software dashboard",
+    "description": "Cadastros, dispositivos e instalações do app Cortex-p1",
+    "folder": "sites/cortex-p1",
+    "fonts": {
+      "heading": "Plus Jakarta Sans",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#4f46e5",
+      "accent": "#06b6d4",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#111827"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 90000-0000",
+      "email": "suporte@cortex-p1.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "usuarios",
+        "label": "Usuários",
+        "singular": "Usuário",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "papel",
+            "label": "Papel",
+            "type": "select",
+            "options": [
+              "Administrador",
+              "Operador",
+              "Visitante"
+            ],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Inativo",
+              "Bloqueado"
+            ],
+            "required": true
+          },
+          {
+            "key": "created_at",
+            "label": "Cadastro em",
+            "type": "date",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Alessandra Martins",
+            "email": "alessandra@cortex-p1.com.br",
+            "telefone": "(11) 91234-5678",
+            "papel": "Administrador",
+            "status": "Ativo",
+            "created_at": "2026-01-10"
+          },
+          {
+            "nome": "Bruno Oliveira",
+            "email": "bruno@cortex-p1.com.br",
+            "telefone": "(11) 92345-6789",
+            "papel": "Operador",
+            "status": "Ativo",
+            "created_at": "2026-02-15"
+          },
+          {
+            "nome": "Carla Ferreira",
+            "email": "carla@cortex-p1.com.br",
+            "telefone": "(11) 93456-7890",
+            "papel": "Visitante",
+            "status": "Inativo",
+            "created_at": "2026-03-05"
+          },
+          {
+            "nome": "Diego Souza",
+            "email": "diego@cortex-p1.com.br",
+            "telefone": "(11) 94567-8901",
+            "papel": "Operador",
+            "status": "Ativo",
+            "created_at": "2026-04-12"
+          },
+          {
+            "nome": "Elena Costa",
+            "email": "elena@cortex-p1.com.br",
+            "telefone": "(11) 95678-9012",
+            "papel": "Administrador",
+            "status": "Bloqueado",
+            "created_at": "2026-05-20"
+          }
+        ]
+      },
+      {
+        "key": "instalacoes",
+        "label": "Instalações",
+        "singular": "Instalação",
+        "fields": [
+          {
+            "key": "dispositivo",
+            "label": "Dispositivo",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "versao",
+            "label": "Versão",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "plataforma",
+            "label": "Plataforma",
+            "type": "select",
+            "options": [
+              "Android",
+              "iOS"
+            ],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Pendente",
+              "Instalado",
+              "Falhou",
+              "Atualizando"
+            ],
+            "required": true
+          },
+          {
+            "key": "data_instalacao",
+            "label": "Data da instalação",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "observacoes",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "dispositivo": "SM-G991B",
+            "versao": "1.0.4",
+            "plataforma": "Android",
+            "status": "Instalado",
+            "data_instalacao": "2026-09-01",
+            "observacoes": "Instalação via Play Store concluída"
+          },
+          {
+            "dispositivo": "Pixel 7",
+            "versao": "1.0.4",
+            "plataforma": "Android",
+            "status": "Falhou",
+            "data_instalacao": "2026-09-02",
+            "observacoes": "Erro de assinatura no assetlinks"
+          },
+          {
+            "dispositivo": "iPhone 13",
+            "versao": "1.0.3",
+            "plataforma": "iOS",
+            "status": "Instalado",
+            "data_instalacao": "2026-08-28",
+            "observacoes": "Teste de flight interno"
+          },
+          {
+            "dispositivo": "SM-A536B",
+            "versao": "1.0.5",
+            "plataforma": "Android",
+            "status": "Atualizando",
+            "data_instalacao": "2026-09-15",
+            "observacoes": "APK direto baixado pelo painel"
+          },
+          {
+            "dispositivo": "iPad Air",
+            "versao": "1.0.3",
+            "plataforma": "iOS",
+            "status": "Pendente",
+            "data_instalacao": "2026-09-16",
+            "observacoes": "Aguardando aprovação da loja"
+          }
+        ]
+      },
+      {
+        "key": "dispositivos",
+        "label": "Dispositivos",
+        "singular": "Dispositivo",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "modelo",
+            "label": "Modelo",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "numero_serie",
+            "label": "Número de série",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Online",
+              "Offline",
+              "Manutenção"
+            ],
+            "required": true
+          },
+          {
+            "key": "ultima_conexao",
+            "label": "Última conexão",
+            "type": "date",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Tablet Recepção",
+            "modelo": "Galaxy Tab A8",
+            "numero_serie": "SN-2026-001",
+            "status": "Online",
+            "ultima_conexao": "2026-09-18"
+          },
+          {
+            "nome": "Celular Campo",
+            "modelo": "Moto G54",
+            "numero_serie": "SN-2026-002",
+            "status": "Offline",
+            "ultima_conexao": "2026-09-10"
+          },
+          {
+            "nome": "Terminal Loja",
+            "modelo": "iPhone SE",
+            "numero_serie": "SN-2026-003",
+            "status": "Online",
+            "ultima_conexao": "2026-09-18"
+          },
+          {
+            "nome": "Estação Backoffice",
+            "modelo": "Pixel 6a",
+            "numero_serie": "SN-2026-004",
+            "status": "Manutenção",
+            "ultima_conexao": "2026-09-05"
+          }
+        ]
+      },
+      {
+        "key": "versoes",
+        "label": "Versões",
+        "singular": "Versão",
+        "fields": [
+          {
+            "key": "versao",
+            "label": "Versão",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "build",
+            "label": "Build",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_lancamento",
+            "label": "Lançamento",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "changelog",
+            "label": "Changelog",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "obrigatoria",
+            "label": "Obrigatória",
+            "type": "select",
+            "options": [
+              "Sim",
+              "Não"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "versao": "1.0.5",
+            "build": "45",
+            "data_lancamento": "2026-09-14",
+            "changelog": "Correção de assinatura do assetlinks e detecção de Android",
+            "obrigatoria": "Sim"
+          },
+          {
+            "versao": "1.0.4",
+            "build": "42",
+            "data_lancamento": "2026-08-25",
+            "changelog": "Primeira versão pública com instalação via Play Store",
+            "obrigatoria": "Não"
+          },
+          {
+            "versao": "1.0.3",
+            "build": "38",
+            "data_lancamento": "2026-07-20",
+            "changelog": "Painel de cadastros e modo offline",
+            "obrigatoria": "Não"
+          },
+          {
+            "versao": "1.0.2",
+            "build": "33",
+            "data_lancamento": "2026-06-10",
+            "changelog": "Login e cadastro de usuários",
+            "obrigatoria": "Não"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Usuários",
+      "Instalações",
+      "Dispositivos",
+      "Versões"
+    ]
+  },
+  "media": {}
+}
