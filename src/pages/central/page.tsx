@@ -6,27 +6,27 @@ import type { Dados, Parte } from "./api";
 import { calcularAvisos } from "./avisos";
 import type { Aba } from "./avisos";
 import Inicio from "./Inicio";
-import Produtos from "./Produtos";
+import Clientes from "./Clientes";
 import Dinheiro from "./Dinheiro";
 import Divulgar from "./Divulgar";
 import CortexAba from "./CortexAba";
-import Mais from "./Mais";
+import Sistema from "./Sistema";
 
 // Central NEXIA: o dono vê e controla toda a NEXIA numa página só, feita para o celular.
 const ABAS: { id: Aba; nome: string; icone: string }[] = [
   { id: "inicio", nome: "Início", icone: "🏠" },
+  { id: "clientes", nome: "Clientes", icone: "👥" },
   { id: "dinheiro", nome: "Dinheiro", icone: "💰" },
-  { id: "produtos", nome: "Produtos", icone: "🧩" },
   { id: "divulgar", nome: "Divulgar", icone: "📣" },
   { id: "cortex", nome: "Cortex", icone: "🧠" },
-  { id: "mais", nome: "Mais", icone: "☰" },
+  { id: "sistema", nome: "Sistema", icone: "⚙️" },
 ];
 
 export default function CentralPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { buscar } = useCentral();
-  const [aba, setAba] = useState<Aba>(() => (location.hash.slice(1) as Aba) || "inicio");
+  const [aba, setAba] = useState<Aba>(() => ({ produtos: "clientes", mais: "sistema" } as Record<string, Aba>)[location.hash.slice(1)] || (location.hash.slice(1) as Aba) || "inicio");
   const [claro, setClaro] = useState<boolean>(() => {
     try { return localStorage.getItem("central-tema") === "claro"; } catch { return false; }
   });
@@ -95,11 +95,11 @@ export default function CentralPage() {
         {user && !semAcesso && (
           <>
             {aba === "inicio" && <Inicio d={d} avisos={avisos} ir={ir} conferir={conferir} carregando={carregando} />}
-            {aba === "produtos" && <Produtos d={d} />}
+            {aba === "clientes" && <Clientes d={d} erros={erros} />}
             {aba === "dinheiro" && <Dinheiro d={d} erro={erros.dinheiro} />}
             {aba === "divulgar" && <Divulgar d={d} erro={erros.divulga} />}
             {aba === "cortex" && <CortexAba d={d} erro={erros.cortex} />}
-            {aba === "mais" && <Mais d={d} erro={erros.robos} />}
+            {aba === "sistema" && <Sistema d={d} erros={erros} />}
           </>
         )}
       </main>

@@ -38,6 +38,17 @@ export default function Inicio({ d, avisos, ir, conferir, carregando }: { d: Dad
         </Cartao>
       )}
 
+      <Cartao titulo="Sua empresa hoje">
+        {!d.clientes || !d.leads || !d.empresa ? <Carregando /> : (
+          <div className="grid grid-cols-2 gap-2" data-testid="empresa-hoje">
+            <button className="text-left cursor-pointer" onClick={() => ir("clientes")}><Numero valor={d.clientes.empresas.length + d.clientes.personais.filter((p) => p.situacao === "pagando").length} rotulo="clientes pagando" destaque /></button>
+            <button className="text-left cursor-pointer" onClick={() => ir("clientes")}><Numero valor={d.leads.novos} rotulo="contatos esperando resposta" /></button>
+            <button className="text-left cursor-pointer" onClick={() => ir("sistema")}><Numero valor={`${d.empresa.fornecedores.filter((f) => f.situacao === "ok").length}/${d.empresa.fornecedores.length}`} rotulo="serviços ligados" /></button>
+            <button className="text-left cursor-pointer" onClick={() => ir("cortex")}><Numero valor={d.cortex ? d.cortex.fazendo.length + d.cortex.naFila : "…"} rotulo="tarefas com o Cortex" /></button>
+          </div>
+        )}
+      </Cartao>
+
       <Cartao titulo="Dinheiro do Body Coach">
         {!d.dinheiro ? <Carregando /> : (
           <div className="grid grid-cols-2 gap-2">

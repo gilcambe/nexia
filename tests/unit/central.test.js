@@ -60,3 +60,44 @@ test('CENT6. uso do Cloudflare: sem token avisa, com token soma os pedidos do di
   const com = JSON.parse((await createHandler({ getMw: () => master, env: { CLOUDFLARE_ANALYTICS_TOKEN: 't', NEXIA_D1_ACCOUNT_ID: 'c' }, fetch })(ev6)).body);
   assert.deepStrictEqual([com.configurado, com.pedidos, com.limite], [true, 1234, 100000]);
 });
+
+// Banco falso mínimo: collection().where().orderBy().limit().get() devolve as linhas dadas.
+const dbFalso = (linhas) => {
+  const q = (nome) => ({ where: () => q(nome), orderBy: () => q(nome), limit: () => q(nome),
+    get: async () => ({ docs: (linhas[nome] || []).map((x, i) => ({ id: 'd' + i, data: () => x })) }) });
+  return { collection: q };
+};
+
+test('CENT7. empresa: fornecedor sem chave fica "falta ligar", robô com erro aparece com erro', async () => {
+  const gh = { ...ghFalso(), robos: async (l) => l.map((r) => ({ arquivo: r.arquivo, situacao: r.arquivo === 'divulga.yml' ? 'erro' : 'ok', quando: 'x' })) };
+  const r = JSON.parse((await createHandler({ getMw: () => master, getGithub: () => gh, env: { GROQ_API_KEY: 'k' } })(ev({ queryStringParameters: { parte: 'empresa' } }))).body);
+  const s = Object.fromEntries(r.fornecedores.map((f) => [f.id, f.situacao]));
+  assert.deepStrictEqual([s.groq, s.gemini, s.meta, s.shopee, s.cloudflare], ['ok', 'desligado', 'erro', 'ok', 'ok']);
+  assert.ok(!JSON.stringify(r).includes('"k"'), 'nunca mostra o valor da chave');
+});
+
+test('CENT8. clientes e contatos interessados vêm do banco, em frases simples', async () => {
+  const agora = Date.now();
+  const db = dbFalso({
+    bc_acesso: [{ tipo: 'coach', email: 'a@x', pagoAte: agora + 1e8 }, { tipo: 'coach', email: 'b@x', gratisAte: agora + 1e8 }, { tipo: 'coach', email: 'c@x', pagoAte: 1 }],
+    nexia_leads: [{ nome: 'Ana', status: 'novo', produto: 'body-coach', whatsapp: '11999990000', criado_em: new Date().toISOString(), utm: { source: 'instagram' } },
+      { nome: 'Bia', status: 'cliente', produto: 'nexia', site: 'nexia.pages.dev', criado_em: '2020-01-01T00:00:00Z' }],
+  });
+  const h = createHandler({ getMw: () => master, getDb: () => db, getAgendas: () => ({ studiolima: { nome: 'Studio Lima' }, teste: { codigo_sempre: true } }) });
+  const c = JSON.parse((await h(ev({ queryStringParameters: { parte: 'clientes' } }))).body);
+  assert.deepStrictEqual(c.empresas.map((e) => e.nome), ['Studio Lima']);
+  assert.deepStrictEqual(c.personais.map((p) => p.situacao).sort(), ['pagando', 'teste', 'vencido']);
+  const l = JSON.parse((await h(ev({ queryStringParameters: { parte: 'leads' } }))).body);
+  assert.deepStrictEqual([l.total, l.semana, l.novos, l.porStatus.cliente, l.porOrigem.instagram], [2, 1, 1, 1, 1]);
+});
+
+test('CENT9. testar IAs: 1 teste por provedor, sem chave = desligado, erro esconde a chave', async () => {
+  const router = {
+    capabilities: (d) => ({ available: d.provider !== 'mistral' }),
+    chat: async (d) => { if (d.provider === 'google') throw new Error('falhou key=SEGREDO'); return { ok: 1 }; },
+  };
+  const ias = [{ provider: 'groq', model: 'a' }, { provider: 'groq', model: 'b' }, { provider: 'google', model: 'g' }, { provider: 'mistral', model: 'm' }];
+  const r = JSON.parse((await createHandler({ getMw: () => master, getRouter: () => router, getIAs: () => ias })(ev({ httpMethod: 'POST', body: JSON.stringify({ acao: 'testar-ias' }) }))).body);
+  assert.deepStrictEqual(r.ias.map((i) => [i.provedor, i.situacao]), [['groq', 'ok'], ['google', 'erro'], ['mistral', 'desligado']]);
+  assert.ok(!JSON.stringify(r).includes('SEGREDO'));
+});
