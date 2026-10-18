@@ -55,7 +55,7 @@ jobs:
         run: |
           git config user.name "nexia-reserva"
           git config user.email "reserva@users.noreply.github.com"
-          git checkout -q -b "nexia/reserva-$NUMERO"
+          git checkout -q -b "nexia/reserva-$NUMERO-$GITHUB_RUN_NUMBER"
           PROMPT="Aplique esta tarefa no repositório. Só grátis, não remova nenhuma função existente. $(cat "$RUNNER_TEMP/tarefa.md")"
           contas=()
           if [ -n "$RESERVA_GEMINI_KEY" ]; then
@@ -93,11 +93,11 @@ jobs:
           git add -A
           git reset -q -- '.aider*' .gitignore 2>/dev/null || true
           git commit -q -m "Reserva (${{ steps.aplicar.outputs.conta }}): issue #$NUMERO"
-          git push -q origin "nexia/reserva-$NUMERO"
+          git push -q origin "nexia/reserva-$NUMERO-$GITHUB_RUN_NUMBER"
           # PR aberto pela GitHub App do NEXIA: assim o CI roda nele (com o token padrão o GitHub não roda).
           APP_TOKEN=$(node -e "require('./scripts/cortex-fila').tokenDaApp().then(t=>process.stdout.write(t||''))" 2>/dev/null || true)
           [ -n "$APP_TOKEN" ] && export GH_TOKEN="$APP_TOKEN"
-          gh pr create --base "$GITHUB_REF_NAME" --head "nexia/reserva-$NUMERO" --title "Reserva: issue #$NUMERO" --body "Aplicado pela conta ${{ steps.aplicar.outputs.conta }}. Fecha #$NUMERO." --label automerge
+          gh pr create --base "$GITHUB_REF_NAME" --head "nexia/reserva-$NUMERO-$GITHUB_RUN_NUMBER" --title "Reserva: issue #$NUMERO" --body "Aplicado pela conta ${{ steps.aplicar.outputs.conta }}. Fecha #$NUMERO." --label automerge
       - name: Sem cota hoje
         if: steps.aplicar.outputs.ok != '1'
         run: |
