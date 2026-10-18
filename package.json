@@ -10,6 +10,7 @@
     "build": "vite build",
     "build:body-coach": "npm ci --prefix apps/body-coach --no-audit --no-fund && npm run build --prefix apps/body-coach",
     "build:worker": "vite build && npm run build:body-coach && node scripts/build-worker-assets.js",
+    "deploy:pages-rollback": "node scripts/deploy-pages-rollback.js",
     "preview": "vite preview",
     "start": "node server.js",
     "typecheck": "tsc --noEmit -p .",
