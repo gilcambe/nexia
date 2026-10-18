@@ -1,6 +1,7 @@
 import { useNavigate, useRoutes } from "react-router-dom";
 import { useEffect, lazy, Suspense } from "react";
 import type { RouteObject } from "react-router-dom";
+import RotaProtegida from "@/components/RotaProtegida";
 
 const Home = lazy(() => import("../pages/home/page"));
 const Sentinel = lazy(() => import("../pages/sentinel/page"));
@@ -30,13 +31,13 @@ const LGPDPage = lazy(() => import("../pages/legais/lgpd/page"));
 
 const routes: RouteObject[] = [
   { path: "/", element: <Home /> },
-  { path: "/sentinel", element: <Sentinel /> },
-  { path: "/pipeline", element: <Pipeline /> },
-  { path: "/codigo", element: <Codigo /> },
+  { path: "/sentinel", element: <RotaProtegida><Sentinel /></RotaProtegida> },
+  { path: "/pipeline", element: <RotaProtegida><Pipeline /></RotaProtegida> },
+  { path: "/codigo", element: <RotaProtegida><Codigo /></RotaProtegida> },
   { path: "/docs", element: <Docs /> },
-  { path: "/cortex-app", element: <CortexApp /> },
-  { path: "/swarm-control", element: <SwarmControl /> },
-  { path: "/qa-center", element: <QACenter /> },
+  { path: "/cortex-app", element: <RotaProtegida><CortexApp /></RotaProtegida> },
+  { path: "/swarm-control", element: <RotaProtegida><SwarmControl /></RotaProtegida> },
+  { path: "/qa-center", element: <RotaProtegida><QACenter /></RotaProtegida> },
   { path: "/login", element: <LoginPage /> },
   { path: "/projetos", element: <ProjetosPage /> },
   { path: "/aprovacoes", element: <AprovacoesPage /> },
