@@ -34,8 +34,7 @@ function getAuth(role) {
 function getApp(role) {
   return initializeTestApp({
     projectId: PROJECT_ID,
-    auth: getAuth(role),
-    firestore: { host: 'localhost', port: 8080 }
+    auth: getAuth(role)
   });
 }
 
