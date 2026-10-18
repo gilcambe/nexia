@@ -14,6 +14,9 @@ const PR_ESTADO = { aberto: "Aberto", rascunho: "Rascunho", juntado: "Já está 
 const CI = { verde: "Testes passaram", vermelho: "Testes falharam", rodando: "Testes rodando" } as Record<string, string>;
 
 // Um pedido como conversa: o que o dono pediu, o que o Cortex respondeu, o estado ao vivo e os PRs entregues.
+// Esconde a assinatura técnica que o servidor coloca no fim ("Pedido pelo Cortex no celular por ...").
+const limpo = (t: string) => t.replace(/\n*_(?:Pedido |Pelo |pelo )[^_\n]*Cortex no celular[^_\n]*_\s*$/i, "");
+
 export default function Conversa({ n, voltar }: { n: number; voltar: () => void }) {
   const { abrir, agir } = usePedidos();
   const [d, setD] = useState<Detalhe | null>(null);
@@ -63,12 +66,12 @@ export default function Conversa({ n, voltar }: { n: number; voltar: () => void 
             <div key={k} className="flex gap-3" data-testid="cx-fala">
               <Logo tamanho={32} />
               <div className="min-w-0"><p className="text-xs text-[var(--cx-mut)] mb-1">Cortex · {haQuanto(c.quando)}</p>
-                <p className="whitespace-pre-wrap break-words text-[15px] leading-6">{c.texto}</p></div>
+                <p className="whitespace-pre-wrap break-words text-[15px] leading-6">{limpo(c.texto)}</p></div>
             </div>
           ) : (
             <div key={k} className="flex justify-end" data-testid="cx-fala">
               <div className="max-w-[88%] rounded-3xl rounded-br-md px-4 py-3 bg-[var(--cx-user)]">
-                <p className="whitespace-pre-wrap break-words text-[15px] leading-6">{c.texto}</p>
+                <p className="whitespace-pre-wrap break-words text-[15px] leading-6">{limpo(c.texto)}</p>
                 <p className="text-[11px] text-[var(--cx-mut)] mt-1 text-right">{haQuanto(c.quando)}</p>
               </div>
             </div>

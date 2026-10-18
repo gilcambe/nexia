@@ -1,6 +1,6 @@
 import { useId } from "react";
 
-// Logo NEXIA (padrão de todos os produtos): N prateado metálico em quadrado arredondado escuro, igual à abertura e aos ícones.
+// Logo do Cortex (cada produto tem a sua inicial): C prateado metálico com um ponto verde em quadrado arredondado escuro, igual à abertura e aos ícones.
 // O id do degradê é único por logo: um id repetido dentro de um bloco escondido (menu do PC) apagaria o N dos outros.
 export default function Logo({ tamanho = 32 }: { tamanho?: number }) {
   const id = useId();
@@ -11,7 +11,8 @@ export default function Logo({ tamanho = 32 }: { tamanho?: number }) {
         <linearGradient id={`${id}c`} x1="0" y1="0" x2="0" y2="104" gradientUnits="userSpaceOnUse"><stop offset="0" stopColor="#1d2024" /><stop offset="1" stopColor="#050506" /></linearGradient>
       </defs>
       <rect x="2" y="2" width="100" height="100" rx="28" fill={`url(#${id}c)`} stroke={`url(#${id}g)`} strokeWidth="2.5" />
-      <path d="M33 74V30l38 44V30" stroke={`url(#${id}g)`} strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M69.2 34.8A24.4 24.4 0 1 0 69.2 69.2" stroke={`url(#${id}g)`} strokeWidth="9.3" strokeLinecap="round" fill="none" />
+      <circle cx="71.5" cy="52" r="4.9" fill="#00d4aa" />
     </svg>
   );
 }

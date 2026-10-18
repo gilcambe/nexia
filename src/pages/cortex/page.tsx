@@ -19,13 +19,6 @@ const CSS = `
 .cx{background:var(--cx-bg);color:var(--cx-txt);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
 `;
 
-const SUGESTOES = [
-  "Mudar um texto ou botão no Body Coach",
-  "Conferir por que uma tarefa do Cortex travou",
-  "Criar uma nova página no site de um cliente",
-  "Revisar e melhorar o visual de uma tela",
-];
-
 const lerTema = (): Tema => { try { const t = localStorage.getItem("cx_tema"); return t === "claro" || t === "escuro" ? t : "auto"; } catch { return "auto"; } };
 
 // Cortex: o app de IA do dono da NEXIA. Menu lateral com histórico, conversa por pedido, conexões e publicação.
@@ -58,6 +51,7 @@ export default function CortexPage() {
     const ico = document.createElement("link"); ico.rel = "apple-touch-icon"; ico.href = "/cortex-icon-180.png";
     document.head.append(cor, ico);
     mostrarAbertura("CORTEX");
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/cortex-sw.js", { scope: "/cortex" }).catch(() => undefined);
     const titulo = document.title; document.title = "Cortex · NEXIA";
     const pedido = (e: Event) => {
       e.preventDefault();
@@ -117,13 +111,6 @@ export default function CortexPage() {
           <div className="flex-1 min-h-0 flex flex-col">
             <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-4 text-center">
               <Logo tamanho={64} />
-              <h1 className="text-3xl font-semibold mt-5" data-testid="cx-ola">Olá{nome ? `, ${nome.split(" ")[0]}` : ""}</h1>
-              <p className="text-[var(--cx-mut)] mt-2 mb-7">O que o Cortex faz hoje?</p>
-              <div className="grid sm:grid-cols-2 gap-2 w-full max-w-2xl">
-                {SUGESTOES.map((s) => (
-                  <button key={s} onClick={() => setInicial(s + ": ")} className="text-left px-4 py-3 rounded-2xl border border-[var(--cx-line)] bg-[var(--cx-card)] text-sm hover:border-[var(--cx-ac)] min-h-[44px]" data-testid="cx-sugestao">{s}</button>
-                ))}
-              </div>
               {erro && <p className="text-sm text-red-400 mt-4" role="alert">{erro}</p>}
             </div>
             <Composer modo="pedido" inicial={inicial} enviar={async (texto) => { const r = await agir({ acao: "pedir", texto }); buscar(busca); if (r.numero) abrir(r.numero); }} />
