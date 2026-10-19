@@ -17,6 +17,7 @@ const { normalizeRequestPath, resolveStatic } = require('./lib/safe-static');
 const { publicErrorBody } = require('./lib/safe-error');
 const { isStreamResult, writeStream } = require('./lib/stream-response');
 const { PUBLIC_DIRS, TENANT_PAGES, resolveFunctionName } = require('./lib/routes');
+const { startWatcher } = require('./monitoring/healthWatcher');
 
 const PORT = process.env.PORT || 3001;
 const ROOT = __dirname;
@@ -296,6 +297,8 @@ server.listen(PORT, () => {
   console.log('[NEXIA] Functions:', Object.keys(loadedFunctions).length, 'carregadas');
   console.log('[NEXIA] URL:', process.env.NEXIA_APP_URL || 'http://localhost:' + PORT);
   startKeepalive();
+  // Inicia o watcher de saúde
+  startWatcher();
 });
 process.on('SIGTERM', () => server.close(() => process.exit(0)));
 process.on('SIGINT',  () => server.close(() => process.exit(0)));
