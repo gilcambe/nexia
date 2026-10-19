@@ -9,7 +9,7 @@ const PISTAS = 3;
 const MAX_TENTATIVAS = 12;
 const TENTATIVAS_ATE_DIVIDIR = 3;
 const CONFIAVEIS = ['OWNER', 'MEMBER', 'COLLABORATOR'];
-const L = { fila: 'cortex-fila', rodando: 'cortex-rodando', feito: 'cortex-feito', travado: 'cortex-travado', dividido: 'cortex-dividido', parte: 'cortex-parte', semDivisao: 'cortex-sem-divisao' };
+const L = { fila: 'cortex-fila', rodando: 'cortex-rodando', feito: 'cortex-feito', travado: 'cortex-travado', dividido: 'cortex-dividido', parte: 'cortex-parte', semDivisao: 'cortex-sem-divisao', prioridade: 'cortex-prioridade' };
 const MAX_CORPO = 2500;      // tarefa maior que isso é dividida em partes pequenas
 const MAX_ARQUIVOS = 4;      // ou que mexe em mais arquivos do que isso
 
@@ -112,7 +112,8 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
 
   const fila = validas
     .filter(i => { const ls = nomes(i); return !ls.includes(L.rodando) && !ls.includes(L.feito) && !ls.includes(L.travado) && !ls.includes(L.dividido); })
-    .sort((a, b) => a.number - b.number);
+    // Rótulo cortex-prioridade passa na frente (ex.: correções que impedem o próprio Cortex de parar); depois, por número.
+    .sort((a, b) => (nomes(b).includes(L.prioridade) - nomes(a).includes(L.prioridade)) || a.number - b.number);
   // Partes da mesma tarefa rodam em ordem: a parte 2 só sai quando a 1 terminou (uma costuma usar o arquivo da outra).
   const esperaAnterior = i => {
     const p = parteDe(i);
