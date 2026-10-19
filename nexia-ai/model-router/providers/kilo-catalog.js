@@ -28,9 +28,10 @@ function rank(id) {
 const isFree = id => typeof id === 'string' && /^[A-Za-z0-9._/-]{1,110}:free$/.test(id);
 
 /** Resposta de /models (formato OpenRouter: { data: [{ id, supported_parameters?, pricing? }] }) → ids grátis ordenados. */
-function pickFree(payload) {
+function pickFree(payload, { ordem } = {}) {
   const rows = Array.isArray(payload) ? payload : (payload && Array.isArray(payload.data) ? payload.data : []);
   const ids = [];
+  const ctx = {};
   for (const m of rows) {
     const id = typeof m === 'string' ? m : m && m.id;
     if (!isFree(id) || ids.includes(id)) continue;
@@ -40,15 +41,19 @@ function pickFree(payload) {
     const p = m && m.pricing;
     if (p && [p.prompt, p.completion].some(v => v !== undefined && Number(v) !== 0)) continue;
     ids.push(id);
+    ctx[id] = Number(m && m.context_length) || 0;
   }
+  // #955 (OpenRouter): maior janela de contexto primeiro; empate fica na ordem do catálogo.
+  if (ordem === 'contexto') return ids.map((id, i) => ({ id, i })).sort((a, b) => ctx[b.id] - ctx[a.id] || a.i - b.i).map(x => x.id);
   return ids.map((id, i) => ({ id, i })).sort((a, b) => rank(a.id) - rank(b.id) || a.i - b.i).map(x => x.id);
 }
 
 /**
  * Cache por instância (o router do processo é um só: getRouter()).
- * @param {{ fetchImpl: Function, env?: object, now?: () => number, url?: string }} o
+ * @param {{ fetchImpl: Function, env?: object, now?: () => number, url?: string, ordem?: 'contexto' }} o  (url: outro catálogo no formato OpenRouter; a chave do Kilo só vai para o Kilo)
  */
-function createKiloCatalog({ fetchImpl, env = {}, now = () => Date.now(), url = MODELS_URL }) {
+function createKiloCatalog({ fetchImpl, env = {}, now = () => Date.now(), url, ordem } = {}) {
+  url = url || MODELS_URL;
   let cache = null;   // { ids, until, source }
   let inflight = null;
 
@@ -56,10 +61,10 @@ function createKiloCatalog({ fetchImpl, env = {}, now = () => Date.now(), url = 
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), TIMEOUT);
     try {
-      const headers = { Accept: 'application/json', ...(env.KILO_API_KEY ? { Authorization: `Bearer ${env.KILO_API_KEY}` } : {}) };
+      const headers = { Accept: 'application/json', ...(env.KILO_API_KEY && url === MODELS_URL ? { Authorization: `Bearer ${env.KILO_API_KEY}` } : {}) };
       const res = await fetchImpl(url, { method: 'GET', headers, signal: ctrl.signal });
       if (!res || !res.ok) throw new Error(`status ${res && res.status}`);
-      const ids = pickFree(await res.json());
+      const ids = pickFree(await res.json(), { ordem });
       if (!ids.length) throw new Error('sem modelos grátis');
       cache = { ids, until: now() + OK_TTL, source: 'gateway' };
     } catch {

@@ -138,6 +138,10 @@ function createFakeGithub({ owner = 'gilcambe', repo = 'nexia', appId = '424242'
       const list = checks.get(ref) || checks.get([...branches].find(([, sha]) => sha === ref)?.[0]) || [];
       return json(200, { total_count: list.length, check_runs: list });
     }
+    if (method === 'GET' && rest === '/pulls') {
+      const st = u.searchParams.get('state') || 'open';
+      return json(200, pulls.filter(p => st === 'all' || p.state === st).map(p => ({ ...p, head: { ref: p.head }, base: { ref: p.base } })));
+    }
     if (method === 'POST' && rest === '/pulls') {
       if (!branches.has(body.head) || !branches.has(body.base)) return json(422, { message: 'Validation Failed' });
       const pr = { number: pulls.length + 1, ...body, state: 'open', html_url: `https://github.com/${owner}/${repo}/pull/${pulls.length + 1}` };

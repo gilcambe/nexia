@@ -204,6 +204,22 @@ test('O4b. ADR-Q-01: revisão pede mudança, o agente corrige na mesma branch e 
   assert.match(lazy.exe.result_summary, /rodada de correção terminou sem commit novo/);
 });
 
+test('O4k. #984: duas execuções do mesmo pedido usam o mesmo work_branch e reaproveitam o PR aberto', async () => {
+  await setAutonomy(3);
+  const script = () => ({ architect: [{ text: 'Mudar src/rodape.html.' }], frontend: [req => ({ tool_calls: [call('github.commit_files', { branch: branchOf(req), message: 'Rodapé',
+    files: [{ path: 'src/rodape.html', content: `<footer>${crypto.randomBytes(3).toString('hex')}</footer>\n` }] })] }), { text: 'feito' }],
+    reviewer: [report('approve')], security: [report('approve')] });
+  const msg = 'Corrija o estilo do rodapé do Site Alfa (tentativa repetida)';
+  const a = await startAndRun(orch(scriptedRouter(script())), msg);
+  const pulls = fake.pulls.length;
+  const b = await startAndRun(orch(scriptedRouter(script())), msg);
+  assert.notStrictEqual(a.exe.id, b.exe.id);
+  assert.strictEqual(b.exe.work_branch, a.exe.work_branch, 'mesmo branch nas duas tentativas');
+  assert.ok(a.exe.pull_request, JSON.stringify([a.exe.status, a.exe.error_code]));
+  assert.strictEqual(b.exe.pull_request, a.exe.pull_request, 'mesmo PR');
+  assert.strictEqual(fake.pulls.length, pulls, 'nenhum PR novo na segunda tentativa');
+});
+
 test('O4j. pedido só de arquivo novo que já existe na branch padrão: conclui sem PR vazio; se não existe, NO_CHANGES', async () => {
   await setAutonomy(3);
   const pulls = fake.pulls.length;
@@ -336,7 +352,7 @@ test('O4h. ADR-Q-04: foto que deixa de abrir é trocada sem modelo; correção p
   const hits = {};
   const reach = async url => { hits[url] = (hits[url] || 0) + 1; return { status: /\/0\.jpg$/.test(url) && hits[url] > 1 ? 404 : 206, body: null }; };
   const gw = createGateway({ db, vault, env: fake.env, fetchImpl });
-  const { exe } = await startAndRun(orch(router, { gateway: gw, fetchImpl: reach }), 'Crie um site para a padaria Pão da Serra');
+  const { exe } = await startAndRun(orch(router, { gateway: gw, fetchImpl: reach }), 'Crie um site para a padaria Pão da Serra, por favor');
   assert.ok(exe.pull_request, JSON.stringify([exe.status, exe.error_code, exe.result_summary, exe.plan.map(s => s.summary)]));
   assert.strictEqual(exe.fix_rounds, 1);
   const html = fake.fileAt(exe.work_branch, 'demos/pao2/index.html');

@@ -13,6 +13,7 @@ const { createAnthropicProvider } = require('./providers/anthropic');
 const { createOpenAICompatibleProvider, PROVIDERS: OPENAI_COMPATIBLE } = require('./providers/openai-compatible');
 const { createGeminiProvider } = require('./providers/gemini');
 const { createCohereProvider } = require('./providers/cohere');
+const { createCache, chave, cacheavel } = require('./cache');
 
 const PROVIDER_IDS = Object.freeze(['anthropic', 'gemini', 'cohere', ...Object.keys(OPENAI_COMPATIBLE)]);
 
@@ -45,9 +46,19 @@ function createRouter(o = {}) {
     return { ...p.capabilities(desc.model), available: p.available() };
   }
 
+  // #956: respostas sem ferramentas pedidas com req.cache === true ficam 24 h em memória (sem req.cache, nada muda).
+  const cache = o.cache || createCache();
   async function chat(desc, req) {
     const p = providerFor(desc);
-    return p.chat(desc.model, normalizeRequest(req));
+    if (!cacheavel(req)) return p.chat(desc.model, normalizeRequest(req));
+    // Modelo entra na chave: resposta ruim de um modelo não vira a resposta do próximo do rodízio.
+    const k = `${desc.provider}|${desc.model}|${chave(req)}`;
+    const hit = cache.get(k);
+    if (hit) return { ...hit, cached: true };
+    const { cache: _c, ...limpo } = req;
+    const out = await p.chat(desc.model, normalizeRequest(limpo));
+    if (out && !(out.tool_calls || []).length) cache.set(k, out);
+    return out;
   }
 
   /** Streaming real: cada trecho sai do provedor e é repassado na hora. */

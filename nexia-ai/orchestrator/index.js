@@ -85,6 +85,8 @@ function specialistFor(message) {
 }
 
 const slug = s => normalize(s).replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'tarefa';
+/** #984: branch de trabalho estável por pedido (mesmo texto → mesmo branch em toda nova tentativa). */
+const workBranchFor = message => `nexia/${slug(message)}-${crypto.createHash('sha1').update(String(message || '')).digest('hex').slice(0, 6)}`;
 
 /**
  * ADR-CORTEX-01: caminhos de arquivo citados no pedido e na análise do Architect (linha "ARQUIVOS:" primeiro).
@@ -519,11 +521,12 @@ function createOrchestrator(deps) {
           await designSpec(i);
         } else if (action === 'create_branch') {
           const hadBranch = !!state.work_branch;   // retomada: a branch pode já ter sido criada
-          const branch = state.work_branch || `nexia/${slug(message)}-${state.execution_id.slice(-6).toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+          // #984: sufixo estável (hash do pedido), não o execution_id: cada nova tentativa da mesma tarefa usa o mesmo branch e o mesmo PR.
+          const branch = state.work_branch || workBranchFor(message);
           if (!state.work_branch) await commit({ work_branch: branch });
           const r = await tool(ctx, state, plan[i].agent, 'github.create_branch', { branch });
-          const exists = r.status === 'failed' && r.error && r.error.code === 'CONFLICT' && ((steps[i].attempts || 0) > 0 || hadBranch);
-          if (exists) stepDone(i, { tool_call_ids: addIds(i, ids(r)), summary: `${branch} já existia (retomada)` });
+          const exists = r.status === 'failed' && r.error && r.error.code === 'CONFLICT';
+          if (exists) stepDone(i, { tool_call_ids: addIds(i, ids(r)), summary: `${branch} já existia (${hadBranch || (steps[i].attempts || 0) > 0 ? 'retomada' : 'reaproveitada de tentativa anterior'})` });
           else handle(i, r, x => `branch ${x.branch} criada de ${x.from}`);
         } else if (action === 'agent:implement') {
           const fix = state.fix_feedback
@@ -642,10 +645,18 @@ function createOrchestrator(deps) {
             stepFail(i, { tool_call_ids: addIds(i, ids(cmp)), error_code: 'EMPTY_DIFF', summary: `A branch ${state.work_branch} não tem mudanças; PR não aberto.` });
             stop = { status: 'failed', error_code: 'EMPTY_DIFF', result_summary: `Nenhum arquivo mudou na branch ${state.work_branch}; PR vazio não foi aberto.` };
           } else {
+          // #984/#1015: já existe PR aberto deste branch (tentativa anterior da mesma tarefa)? Reaproveita, sem abrir outro.
+          const lp = await tool(ctx, state, plan[i].agent, 'github.list_pulls', { state: 'open', limit: 100 });
+          const aberto = lp.status === 'succeeded' && (lp.result.pulls || []).find(p => p.head === state.work_branch);
+          if (aberto) {
+            stepDone(i, { tool_call_ids: addIds(i, ids(lp)), summary: `PR #${aberto.number} reaproveitado ${aberto.html_url}` });
+            await commit({ pull_request: aberto.number });
+          } else {
           const r = await tool(ctx, state, plan[i].agent, 'github.create_pr', { head: state.work_branch,
             title: `NEXIA: ${message}`.slice(0, 120),
             body: `Pedido: ${message}\n\nExecution: ${state.execution_id}\nReviewer: ${state.review_verdict || '—'} · Security: ${state.security_verdict || '—'}\n\nAberto pelo NEXIA AI (rascunho). O merge é de uma pessoa.` });
           if (handle(i, r, x => `PR #${x.number} ${x.html_url}`)) await commit({ pull_request: r.result.number });
+          }
           }
         } else if (action === 'checks' || action === 'checks_before_deploy') {
           const ref = action === 'checks' ? state.work_branch : await deployRef(ctx, project.id, state.intent);
@@ -891,4 +902,4 @@ function usageOf(meter, prev = {}) {
 function clip(t, n) { const s = String(t); return s.length <= n ? s : `${s.slice(0, n - 1)}…`; }
 function clean(o) { return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined && v !== null && v !== '')); }
 
-module.exports = { buildKind, createOrchestrator, classifyIntent, filesIn, noCommitNudge, soCriaArquivos, planFor, specialistFor, DEFAULT_BUDGET };
+module.exports = { buildKind, createOrchestrator, classifyIntent, filesIn, noCommitNudge, soCriaArquivos, planFor, specialistFor, workBranchFor, DEFAULT_BUDGET };
