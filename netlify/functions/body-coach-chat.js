@@ -361,6 +361,35 @@ async function executar(body, uid, db, ctx = {}) {
     return [200, { alunos: lista, hoje, mes, cobra: !!eu.pix }];
   }
 
+  // Painel "Quem precisa de atenção hoje": alunos sem treino há 3 dias, com mensagem pronta
+  if (acao === 'alunos_atencao') {
+    if (eu.papel !== 'coach') return [403, { error: 'Só o coach vê quem precisa de atenção.' }];
+    const hoje = new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10);
+    const mes = hoje.slice(0, 7);
+    const sem = inicioSemanaBR();
+    const alunos = await meusAlunos(db, uid);
+    const lista = await Promise.all(alunos.map(async (a) => {
+      const d = a.data();
+      const linha = await linhaDoPainel(db, a.id, d, mes, hoje, sem, eu, uid);
+      // Filtra apenas alunos que não treinaram nos últimos 3 dias
+      if (linha.diasSemTreinar && linha.diasSemTreinar >= 3) {
+        return {
+          ...linha,
+          mensagemPronta: `Oi ${d.nome || 'aluno'}, tudo bem? Vi que você não treinou nos últimos dias. Estou aqui para ajudar se precisar de ajustes no treino ou qualquer dúvida. Bora voltar à ativa? 💪`
+        };
+      }
+      return null;
+    }));
+    // Remove alunos null (que treinaram nos últimos 3 dias)
+    const precisamAtencao = lista.filter(item => item !== null);
+    return [200, { 
+      alunos: precisamAtencao, 
+      hoje, 
+      total: precisamAtencao.length,
+      mensagemPadrao: `Oi [nome do aluno], tudo bem? Vi que você não treinou nos últimos dias. Estou aqui para ajudar se precisar de ajustes no treino ou qualquer dúvida. Bora voltar à ativa? 💪`
+    }];
+  }
+
   // Desafio da equipe: o coach cria um (ex.: "7 dias treinando"); cada aluno marca o seu dia. Um aluno nunca vê o progresso de outro.
   const hojeBR = () => new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10);
   if (acao === 'desafio_criar') {
