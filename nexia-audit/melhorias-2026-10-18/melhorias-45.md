@@ -61,6 +61,21 @@
 
 ---
 
+# Melhoria 50: Modos "Rápido / Pensar / Pesquisar" no composer
+
+- **Status:** Pendente de implementação
+- **Regra:** Três modos de execução no composer: Rápido (modelo pequeno), Pensar (raciocínio), Pesquisar (web)
+- **Por quê:** O dono escolhe velocidade ou profundidade como no Claude/ChatGPT; respostas imediatas vs. análise profunda
+- **Custo:** 0
+- **Implementação:**
+  1. Interface de seleção de modo no composer (botões ou dropdown)
+  2. Parâmetro de modo no prompt do modelo (rápido=pouco raciocínio, pensar=máximo raciocínio, pesquisar=acesso web)
+  3. Ajuste do prompt baseado no modo escolhido
+  4. Mensagem visual indicando o modo ativo
+- **Justificativa:** Flexibilidade para respostas rápidas ou análises profundas, como em IA populares, sem custo adicional.
+
+---
+
 # Melhoria 49: Programa de indicação com recompensa
 
 - **Status:** Pendente de implementação
