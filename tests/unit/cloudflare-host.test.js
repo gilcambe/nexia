@@ -285,3 +285,20 @@ test('CF-AUTH. login do Google no domínio próprio: /__/auth vai ao Firebase e 
   const src = fs.readFileSync(path.join(ROOT, 'cloudflare/app.js'), 'utf8');
   assert.match(src, /pathname === '\/__\/firebase\/init\.json' \|\| pathname\.startsWith\('\/__\/auth\/'\)/);
 });
+
+test('CF-AUTH-KERNEX. domínios Kernex usam o próprio host como authDomain só com KERNEX_AUTH_PROPRIO=1 (#1013)', async () => {
+  const { authDomainProprio } = require('../../cloudflare/app.js');
+  const req = (u, h = {}) => new Request(u, { headers: h });
+  const LIGADO = { KERNEX_AUTH_PROPRIO: '1', FIREBASE_AUTH_PROXY_DOMAIN: 'nexiabodycoach.pages.dev' };
+  assert.strictEqual(authDomainProprio(LIGADO, req('https://bodycoach.kernex.com.br/api/firebase-config')), 'bodycoach.kernex.com.br');
+  assert.strictEqual(authDomainProprio(LIGADO, req('https://cortex.kernex.com.br/api/firebase-config')), 'cortex.kernex.com.br');
+  assert.strictEqual(authDomainProprio(LIGADO, req('https://kernex.com.br/api/firebase-config')), 'kernex.com.br');
+  assert.strictEqual(authDomainProprio(LIGADO, req('https://nexia.gcbezerra.workers.dev/api/firebase-config')), '', 'workers.dev sem cabeçalho');
+  assert.strictEqual(authDomainProprio(LIGADO, req('https://outro.kernex.com.br/api/firebase-config')), '', 'fora da lista');
+  assert.strictEqual(authDomainProprio(LIGADO, req('https://nexia.gcbezerra.workers.dev/api/firebase-config', { 'X-Nexia-Proxy': '1' })), 'nexiabodycoach.pages.dev', 'Pages do Body Coach igual a hoje');
+  // sem a variável: nada muda, nem nos domínios Kernex
+  assert.strictEqual(authDomainProprio({}, req('https://bodycoach.kernex.com.br/api/firebase-config')), '');
+  assert.strictEqual(authDomainProprio({ KERNEX_AUTH_PROPRIO: '0' }, req('https://bodycoach.kernex.com.br/api/firebase-config')), '');
+  const cfg = await handleRequest(req('https://bodycoach.kernex.com.br/api/firebase-config'), { ASSETS: fakeAssets(FILES), FIREBASE_API_KEY: 'k', FIREBASE_AUTH_DOMAIN: 'nexia-c8710.firebaseapp.com', KERNEX_AUTH_PROPRIO: '1' }, { getFunction: () => null }).then(r => r.json());
+  assert.strictEqual(cfg.authDomain, 'bodycoach.kernex.com.br');
+});
