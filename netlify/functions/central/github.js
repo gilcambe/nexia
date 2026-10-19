@@ -170,7 +170,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     }
   }
 
-  return { cortex, robos, rodar, pedirAoCortex, divulga, temToken: !!token };
+  return { cortex, robos, rodar, pedirAoCortex, divulga, metaGraphAPI, temToken: !!token };
 }
 
 module.exports = { criarGithub, REPO };
