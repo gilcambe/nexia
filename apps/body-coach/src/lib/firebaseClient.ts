@@ -4,7 +4,7 @@
 // igual ao site principal (src/services/firebase.ts). Nada de chave fixa no código.
 import { initializeApp, getApps, type FirebaseApp, type FirebaseOptions } from 'firebase/app';
 import { getAuth, connectAuthEmulator, type Auth } from 'firebase/auth';
-import { getFirestore, connectFirestoreEmulator, type Firestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager, connectFirestoreEmulator, type Firestore } from 'firebase/firestore';
 
 export interface FirebaseHandles {
   app: FirebaseApp;
@@ -17,16 +17,39 @@ const API_BASE: string = (import.meta.env.VITE_NEXIA_API_URL as string | undefin
 
 let pending: Promise<FirebaseHandles | null> | null = null;
 
+// A configuração pública do Firebase (não é segredo) fica guardada no aparelho para o app abrir sem internet.
+export const CHAVE_CFG_FIREBASE = 'bc_firebase_cfg';
+function cfgGuardada(): FirebaseOptions | null {
+  try {
+    const cfg = JSON.parse(localStorage.getItem(CHAVE_CFG_FIREBASE) || 'null') as FirebaseOptions | null;
+    return cfg && typeof cfg.apiKey === 'string' && cfg.apiKey ? cfg : null;
+  } catch { return null; }
+}
+
 async function loadConfig(): Promise<FirebaseOptions | null> {
   try {
     const res = await fetch(`${API_BASE}/api/firebase-config`, { headers: { Accept: 'application/json' } });
-    if (!res.ok) return null;
+    if (!res.ok) return cfgGuardada();
     const type = res.headers.get('content-type') || '';
-    if (!type.includes('application/json')) return null;
+    if (!type.includes('application/json')) return cfgGuardada();
     const cfg = (await res.json()) as FirebaseOptions;
-    return cfg && cfg.apiKey ? cfg : null;
-  } catch {
+    if (cfg && cfg.apiKey) {
+      try { localStorage.setItem(CHAVE_CFG_FIREBASE, JSON.stringify(cfg)); } catch { /* sem armazenamento */ }
+      return cfg;
+    }
     return null;
+  } catch {
+    return cfgGuardada(); // sem internet: usa a da última vez
+  }
+}
+
+// Dados do Firestore guardados no aparelho (abre com os dados de hoje sem rede e atualiza depois).
+// Se o navegador não deixar (modo anônimo, IndexedDB bloqueado), segue como antes, só na memória.
+function abrirFirestore(app: FirebaseApp): Firestore {
+  try {
+    return initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
+  } catch {
+    return getFirestore(app);
   }
 }
 
@@ -42,7 +65,7 @@ export function getFirebase(): Promise<FirebaseHandles | null> {
       }
       const app = getApps().find((a) => a.name === 'body-coach') ?? initializeApp(cfg, 'body-coach');
       const auth = getAuth(app);
-      const db = getFirestore(app);
+      const db = abrirFirestore(app);
       // Só em testes locais (build com VITE_BODYCOACH_EMULATORS=1): usa o Firebase Emulator.
       // Builds de produção nunca definem essa variável.
       if (import.meta.env.VITE_BODYCOACH_EMULATORS === '1') {

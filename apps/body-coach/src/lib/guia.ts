@@ -33,6 +33,16 @@ export const GUIA_COACH: PassoGuia[] = [
 ];
 
 export const guiaDo = (papel: string | null) => (papel === 'coach' ? GUIA_COACH : GUIA_ALUNO);
+// Tour curto da primeira vez: só 4 telas por papel. O guia completo continua na tela "Guia do app".
+export const TOUR_TITULOS = {
+  aluno: ['Bem-vindo ao Body Coach', 'Treino', 'Nutrição', 'Guia do app'],
+  coach: ['Bem-vindo, coach', 'Convidar alunos', 'Meus alunos', 'Guia do app'],
+} as const;
+export function passosTour(papel: string | null): PassoGuia[] {
+  const titulos: readonly string[] = papel === 'coach' ? TOUR_TITULOS.coach : TOUR_TITULOS.aluno;
+  const guia = guiaDo(papel);
+  return titulos.map((t) => guia.find((p) => p.titulo === t)).filter((p): p is PassoGuia => !!p);
+}
 const chave = (papel: string, uid: string) => `bc_tour_${papel === 'coach' ? 'coach' : 'aluno'}_${uid}`;
 export function tourVisto(papel: string, uid: string): boolean { try { return localStorage.getItem(chave(papel, uid)) === '1'; } catch { return true; } }
 export function marcarTourVisto(papel: string, uid: string) { try { localStorage.setItem(chave(papel, uid), '1'); } catch { /* sem armazenamento */ } }

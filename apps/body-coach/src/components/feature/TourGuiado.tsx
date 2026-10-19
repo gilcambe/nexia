@@ -2,16 +2,16 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { usePapel } from '@/lib/usePapel';
-import { guiaDo, marcarTourVisto, tourVisto } from '@/lib/guia';
+import { marcarTourVisto, passosTour, tourVisto } from '@/lib/guia';
 
-// Tour da primeira vez (um para o coach, outro para o aluno). Some depois e pode ser revisto no "Guia do app".
+// Tour curto (4 telas) da primeira vez (um para o coach, outro para o aluno). Some depois e pode ser revisto no "Guia do app".
 export default function TourGuiado() {
   const { user, profile } = useAuth();
   const papel = usePapel(false);
   const navigate = useNavigate();
   const [aberto, setAberto] = useState(false);
   const [i, setI] = useState(0);
-  const passos = guiaDo(papel).filter((p) => p.tour);
+  const passos = passosTour(papel); // 4 telas; o guia completo fica em "Guia do app"
 
   useEffect(() => {
     if (!user || !papel) return;
@@ -39,6 +39,7 @@ export default function TourGuiado() {
           {passos.map((x, k) => <span key={x.titulo} className={`h-2 rounded-full ${k === i ? 'w-6 bg-primary-500' : 'w-2 bg-background-300'}`}></span>)}
         </div>
         <p className="mt-1 text-xs text-foreground-400">{i + 1} de {passos.length}</p>
+        {i > 0 && !ultimo && <button onClick={fechar} className="mt-1 text-xs font-medium text-foreground-500 underline">Pular o tour</button>}
         {p.rota && <button onClick={() => { navigate(p.rota!); }} className="mt-3 text-sm font-semibold text-primary-600 underline">Abrir esta tela</button>}
         <div className="mt-4 flex gap-2">
           {i > 0 ? <button onClick={() => setI(i - 1)} className="flex-1 rounded-xl border border-background-200 py-3 text-base font-medium text-foreground-700">Voltar</button>

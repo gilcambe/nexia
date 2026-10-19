@@ -19,6 +19,7 @@ const Convite = carregar(() => import("../pages/chat/Convite"));
 const Feedback = carregar(() => import("../pages/feedback/page"));
 const Termos = carregar(() => import("../pages/privacy/Termos"));
 const Conheca = carregar(() => import("../pages/conheca/page"));
+const Instalar = carregar(() => import("../pages/instalar/page"));
 const Respirar = carregar(() => import("../pages/breathe/page"));
 const Exams = carregar(() => import("../pages/exams/page"));
 const AntiDoping = carregar(() => import("../pages/antidoping/page"));
@@ -71,6 +72,11 @@ const routes: RouteObject[] = [
   {
     path: "/conheca",
     element: <Conheca />,
+  },
+  {
+    // página pública "Instalar o app": Android vai para a Play Store (app sem barra de endereço)
+    path: "/instalar",
+    element: <Instalar />,
   },
   {
     path: "/termos",

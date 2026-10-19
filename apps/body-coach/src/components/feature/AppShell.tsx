@@ -14,6 +14,7 @@ import { enviarPendentes } from '@/lib/pendentes';
 import { marcaGuardada, type Marca } from '@/lib/coach/profissionais';
 import PortaoAcesso from './PortaoAcesso';
 import TourGuiado from './TourGuiado';
+import { guardarUltimaTela, telaParaVoltar } from '@/lib/ultimaTela';
 
 // Menu enxuto: só as telas principais. As outras (Respirar, Equipe, Exames, Anti-Doping...) ficam em Ferramentas.
 const navItems = [
@@ -291,6 +292,15 @@ function Shell() {
     if (ref === codigoIndicacao(user.id)) return;
     void setUserDoc(user.id, 'profile', 'main', { indicado_por: ref, indicado_em: new Date().toISOString() }, true).catch(() => {});
   }, [user, profile]);
+  // Abertura instantânea: reaberto na tela inicial pouco depois, volta para a última tela (uma vez por abertura).
+  useEffect(() => {
+    if (location.pathname !== '/') return;
+    try { if (sessionStorage.getItem('bc_voltou')) return; sessionStorage.setItem('bc_voltou', '1'); } catch { return; }
+    const ultima = telaParaVoltar();
+    if (ultima) navigate(ultima, { replace: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => { guardarUltimaTela(location.pathname + location.search); }, [location.pathname, location.search]);
   // Treinos salvos sem internet vão sozinhos quando a conexão volta.
   useEffect(() => {
     if (!user) return;
