@@ -1,0 +1,107 @@
+{
+  "kind": "site",
+  "name": "Adriano Blumer",
+  "tagline": "Performance. Saúde. Resultados.",
+  "description": "Adriano Blumer, nutricionista esportivo em São Paulo. Atendimento presencial e online, com protocolos de nutrição personalizados.",
+  "folder": "sites/adrianoblumer",
+  "style": "modern",
+  "fonts": {
+    "heading": "Playfair Display",
+    "body": "Inter"
+  },
+  "palette": {
+    "primary": "#2FA88A",
+    "accent": "#c9a84c",
+    "bg": "#f6faf8",
+    "surface": "#ffffff",
+    "text": "#13221d",
+    "muted": "#55665f",
+    "dark": "#0b1512"
+  },
+  "logo": "referencia/logo-adriano-full.png",
+  "favicon": "referencia/logo-adriano-icon.png",
+  "selo": {
+    "label": "Feito com Kernex",
+    "url": "https://kernex.com.br/?utm_source=adriano&utm_medium=selo"
+  },
+  "contact": {
+    "whatsapp": "5511999994185",
+    "city": "São Paulo - SP",
+    "hours": "Atendimento presencial em São Paulo e online para todo o Brasil",
+    "instagram": "adrianoblumer_nutri",
+    "tiktok": "adrianoblumer_nutri",
+    "youtube": "https://www.youtube.com/@adrianoblumer"
+  },
+  "sections": [
+    {
+      "type": "hero",
+      "eyebrow": "Nutricionista esportivo · São Paulo e online",
+      "title": "Adriano Blumer",
+      "subtitle": "Performance. Saúde. Resultados. Nutrição com estratégia, ciência e resultados reais.",
+      "cta": {
+        "label": "Falar no WhatsApp",
+        "href": "whatsapp"
+      },
+      "cta2": {
+        "label": "Conhecer o Adriano",
+        "href": "#sobre"
+      }
+    },
+    {
+      "type": "about",
+      "id": "sobre",
+      "title": "Sobre",
+      "subtitle": "Ciência aplicada à transformação real.",
+      "text": "Adriano Blumer é nutricionista esportivo, com protocolos de nutrição para emagrecimento sustentável, ganho de massa muscular, saúde hormonal e performance esportiva.\nO método é baseado em evidências científicas e personalizado: sem fórmulas genéricas, sem dietas impossíveis. Cada paciente recebe um protocolo pensado para a sua realidade, os seus objetivos e a sua rotina."
+    },
+    {
+      "type": "cta",
+      "title": "Vamos começar?",
+      "subtitle": "Fale direto com o Adriano pelo WhatsApp.",
+      "cta": {
+        "label": "Falar no WhatsApp",
+        "href": "whatsapp"
+      }
+    },
+    {
+      "type": "links",
+      "id": "redes",
+      "title": "Redes sociais",
+      "subtitle": "Dicas de nutrição e treino todos os dias.",
+      "items": [
+        {
+          "label": "Instagram @adrianoblumer_nutri",
+          "url": "https://www.instagram.com/adrianoblumer_nutri",
+          "icon": "instagram"
+        },
+        {
+          "label": "TikTok @adrianoblumer_nutri",
+          "url": "https://www.tiktok.com/@adrianoblumer_nutri",
+          "icon": "tiktok"
+        },
+        {
+          "label": "YouTube @adrianoblumer",
+          "url": "https://www.youtube.com/@adrianoblumer",
+          "icon": "youtube"
+        }
+      ]
+    },
+    {
+      "type": "gallery",
+      "id": "fotos",
+      "title": "Fotos",
+      "image_queries": [
+        "adriano 1",
+        "adriano 2",
+        "adriano 3"
+      ]
+    },
+    {
+      "type": "contact",
+      "title": "Fale com o Adriano",
+      "subtitle": "Atendimento presencial em São Paulo e online para todo o Brasil.",
+      "map": false,
+      "form": false
+    }
+  ]
+}

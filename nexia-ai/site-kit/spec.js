@@ -67,7 +67,10 @@ function palette(p = {}) {
 
 const url = (u, max = 300) => { const v = str(u, max); return /^(https?:\/\/|mailto:|tel:)/i.test(v) && !/[\s"'<>]/.test(v) ? v : ''; };
 const youtubeId = u => { const m = /(?:youtube(?:-nocookie)?\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(String(u || '')); return m ? m[1] : ''; };
+// Imagem do próprio site (logo/ícone): https ou caminho relativo seguro já copiado para a pasta do site (ex.: assets/logo.png).
+const asset = u => { const v = str(u, 300); return /^https:\/\/[^\s"'<>]+$/i.test(v) || (/^[A-Za-z0-9_-][A-Za-z0-9._/-]*\.(png|jpe?g|svg|webp|ico|gif)$/i.test(v) && !v.split('/').some(x => x === '..' || x.startsWith('.'))) ? v : ''; };
 const LINK_ICONS = ['whatsapp', 'instagram', 'facebook', 'youtube', 'tiktok', 'linkedin', 'spotify', 'mail', 'phone', 'pin', 'link', 'calendar', 'cart', 'play'];
+const CARD_ICONS = [...LINK_ICONS, 'sparkle', 'chart', 'grid', 'list', 'check', 'star', 'clock', 'music', 'search'];
 
 const cta = c => (c && str(c.label, 40) ? { label: str(c.label, 40), href: str(c.href, 200) || '#contato' } : null);
 
@@ -77,7 +80,8 @@ function section(s) {
   const base = { type, id: slugify(s.id || s.title || type) || type, title: str(s.title, 120), subtitle: str(s.subtitle || s.text, 600) };
   switch (type) {
     case 'hero': return { ...base, eyebrow: str(s.eyebrow, 60), cta: cta(s.cta), cta2: cta(s.cta2), image_query: str(s.image_query, 100), video_query: str(s.video_query, 100) };
-    case 'services': return { ...base, items: arr(s.items, 12).map(i => ({ title: str(i.title, 80), text: str(i.text, 300), price: str(i.price, 40), image_query: str(i.image_query, 100) })).filter(i => i.title) };
+    case 'services': return { ...base, items: arr(s.items, 12).map(i => ({ title: str(i.title, 80), text: str(i.text, 300), price: str(i.price, 40), image_query: str(i.image_query, 100),
+      tag: str(i.tag, 30), url: url(i.url), icon: CARD_ICONS.includes(i.icon) ? i.icon : '' })).filter(i => i.title) };
     case 'about': return { ...base, text: str(s.text, 1200), image_query: str(s.image_query, 100), stats: arr(s.stats, 4).map(x => ({ value: str(x.value, 12), label: str(x.label, 40) })).filter(x => x.value) };
     case 'gallery': return { ...base, image_queries: arr(s.image_queries, 8).map(q => str(q, 100)).filter(Boolean), gif_queries: arr(s.gif_queries, 2).map(q => str(q, 100)).filter(Boolean) };
     case 'video': { const yt = youtubeId(s.youtube || s.url); const q = str(s.video_query, 100); return yt || q ? { ...base, youtube: yt, video_query: yt ? '' : q } : null; }
@@ -87,7 +91,7 @@ function section(s) {
     case 'testimonials': return { ...base, items: arr(s.items, 6).map(i => ({ name: str(i.name, 60), role: str(i.role, 60), text: str(i.text, 400), rating: Math.min(Math.max(Number(i.rating) || 5, 1), 5) })).filter(i => i.text) };
     case 'faq': return { ...base, items: arr(s.items, 10).map(i => ({ q: str(i.q || i.question, 200), a: str(i.a || i.answer, 800) })).filter(i => i.q && i.a) };
     case 'cta': return { ...base, cta: cta(s.cta) };
-    case 'contact': return { ...base, map: s.map !== false };
+    case 'contact': return { ...base, map: s.map !== false, form: s.form !== false };
     default: return null;
   }
 }
@@ -124,6 +128,10 @@ function normalizeSpec(raw, { kind: forcedKind, request = '' } = {}) {
     contact: { whatsapp: str(contact.whatsapp, 20).replace(/\D/g, ''), phone: str(contact.phone, 30), email: str(contact.email, 80), address: str(contact.address, 160),
       city: str(contact.city, 60), hours: str(contact.hours, 120), instagram: str(contact.instagram, 60).replace(/^@/, ''), facebook: str(contact.facebook, 60),
       youtube: url(contact.youtube), tiktok: str(contact.tiktok, 60).replace(/^@/, ''), linkedin: url(contact.linkedin) },
+    // Opcionais: logo/ícone do próprio cliente, selo do rodapé e origem gravada nos leads do formulário.
+    logo: asset(r.logo), logo_scrolled: asset(r.logo_scrolled), favicon: asset(r.favicon), brand_text: r.brand_text === true,
+    selo: r.selo && typeof r.selo === 'object' && str(r.selo.label, 40) && url(r.selo.url) ? { label: str(r.selo.label, 40), url: url(r.selo.url) } : { label: 'Feito com NEXIA', url: 'https://nexia.gcbezerra.workers.dev' },
+    leads_origem: slugify(r.leads_origem),
   };
   if (kind === 'site') {
     spec.sections = arr(r.sections, 12).map(section).filter(Boolean);
@@ -171,4 +179,4 @@ function mediaQueries(spec) {
   return out;
 }
 
-module.exports = { normalizeSpec, extractJson, mediaQueries, slugify, contrast, youtubeId, SECTION_TYPES, FIELD_TYPES, HEADING_FONTS, BODY_FONTS };
+module.exports = { asset, normalizeSpec, extractJson, mediaQueries, slugify, contrast, youtubeId, SECTION_TYPES, FIELD_TYPES, HEADING_FONTS, BODY_FONTS };
