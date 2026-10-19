@@ -39,7 +39,7 @@ const PROVIDERS = Object.freeze({
   // Z.ai: GLM Flash grátis (só e-mail, sem cartão; ~1 pedido/seg, ~1.000/dia).
   zai:         { url: 'https://api.z.ai/api/paas/v4/chat/completions', env: 'ZAI_API_KEY', max_output: 16384, tools: true },
   // ADR-FREE-05: Codestral (codestral.mistral.ai) tem chave própria e grátis (30 pedidos/min, 2 mil por dia).
-  codestral:   { url: 'https://codestral.mistral.ai/v1/chat/completions', env: 'CODESTRAL_API_KEY', max_output: 32768, tools: true }
+  codestral:   { url: 'https://codestral.mistral.ai/v1/chat/completions', env: 'CODESTRAL_API_KEY', max_output: 32768, tools: true },
   // ADR-FREE-05: Kilo Gateway. Sem chave, só modelos grátis (":free"; 200 pedidos/hora por IP). KILO_API_KEY é opcional.
   // O modelo "auto:N" é o N-ésimo grátis do catálogo vivo do gateway (kilo-catalog.js); nunca chama modelo pago.
   kilo:        { url: 'https://api.kilo.ai/api/gateway/chat/completions', env: 'KILO_API_KEY', keyless: true, free_only: true, catalog: true, max_output: 16384, tools: true },
