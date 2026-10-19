@@ -35,3 +35,13 @@
   3. Iniciar o watcher em `src/server.js`.
   4. Garantir que nenhum teste existente seja quebrado (`npm test` continua passando).
 
+---
+
+# Melhoria 48: Memória do Cortex (decisões do dono)
+
+- **Status:** Implementado (regra de processo)
+- **Regra:** Arquivo de memória no repositório lido a cada pedido. Nada pago. Ícone do produto. Português simples.
+- **Por quê:** Não repetir erro já corrigido.
+- **Custo:** 0.
+- **Justificativa:** A memória do Cortex registra decisões do dono para que erros já corrigidos não se repitam, sem custo e sem depender de serviços pagos.
+
