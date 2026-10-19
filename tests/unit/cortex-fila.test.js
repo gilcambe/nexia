@@ -9,7 +9,7 @@ const issue = (n, labels = [], extra = {}) => ({ number: n, body: `tarefa ${n}`,
 const run = (n, status, conclusion, minAtras = 1, id = n * 10) => ({ id, name: `Cortex #${n}`, status, conclusion, updated_at: new Date(AGORA - minAtras * 60000).toISOString() });
 
 test('CF1. despacha em até 3 pistas, cada uma com o seu número', () => {
-  const a = decidir({ issues: [1, 2, 3, 4].map(n => issue(n)), runs: [], agora: AGORA });
+  const a = decidir({ issues: [1, 2, 3, 4].map(n => issue(n)), runs: [], agora: AGORA, pistas: 3 });
   assert.deepEqual(a.map(x => [x.tipo, x.numero, x.pista]), [['despachar', 1, 1], ['despachar', 2, 2], ['despachar', 3, 3]]);
 });
 
@@ -137,6 +137,14 @@ test('cópia exata grande nunca vai para o divisor (perderia o código)', () => 
 });
 
 test('CF-PRIO. rótulo cortex-prioridade passa na frente das tarefas antigas', () => {
-  const a = decidir({ issues: [issue(1), issue(2), issue(3), issue(9, ['cortex-prioridade'])], runs: [], agora: AGORA });
+  const a = decidir({ issues: [issue(1), issue(2), issue(3), issue(9, ['cortex-prioridade'])], runs: [], agora: AGORA, pistas: 3 });
   assert.deepEqual(a.map(x => x.numero), [9, 1, 2]);
+});
+
+test('CF-VAZAO. padrão de 6 pistas; parte anterior travada não segura as seguintes', () => {
+  const a = decidir({ issues: [1, 2, 3, 4, 5, 6, 7].map(n => issue(n)), runs: [], agora: AGORA });
+  assert.strictEqual(a.filter(x => x.tipo === 'despachar').length, 6);
+  const p1 = issue(10, ['cortex-parte', 'cortex-travado'], { title: '[Parte 1/2 de #9] x' });
+  const p2 = issue(11, ['cortex-parte'], { title: '[Parte 2/2 de #9] x' });
+  assert.deepEqual(decidir({ issues: [p1, p2], runs: [], agora: AGORA }).map(x => x.numero), [11]);
 });
