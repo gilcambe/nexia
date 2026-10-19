@@ -31,7 +31,7 @@ const PROVIDERS = Object.freeze({
   together:    { url: 'https://api.together.xyz/v1/chat/completions', env: 'TOGETHER_API_KEY', max_output: 8192, tools: true },
   // ADR-FREE-04: grátis e sem cadastro novo. GitHub Models usa o próprio token do GitHub Actions
   // (permissão models: read); Workers AI usa a conta grátis do Cloudflare (10 mil "neurons" por dia).
-  // Plano grátis do GitHub Models: ~8 mil tokens de entrada por pedido (acima disso, 413 tokens_limit_reached).
+  // Desligado pelo GitHub em 30/07/2026; fora da cadeia padrão.
   github:      { url: 'https://models.github.ai/inference/chat/completions', env: 'GITHUB_MODELS_TOKEN', max_output: 4096, max_input: 8000, tools: true },
   cloudflare:  { url: (m, env) => `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(env.CLOUDFLARE_AI_ACCOUNT_ID || env.CLOUDFLARE_ACCOUNT_ID || 'sem-conta')}/ai/v1/chat/completions`,
                  env: 'CLOUDFLARE_AI_TOKEN', max_output: 8192, tools: true },   // + CLOUDFLARE_AI_ACCOUNT_ID

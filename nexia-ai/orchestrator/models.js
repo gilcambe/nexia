@@ -10,7 +10,6 @@
 // muitos provedores com cotas separadas; esgotou ou caiu um (429, 503 "high demand", pedido grande demais
 // para o teto do modelo), vai para o próximo na hora. Ordem:
 //   Groq (GROQ_API_KEY; cota por modelo, então 6 modelos somam 6 cotas)
-//   → GitHub Models (token do próprio GitHub Actions; pedido acima de ~8 mil tokens é pulado sem chamar)
 //   → Google AI Studio (GEMINI_API_KEY; flash-latest, 2.5 Flash, flash-lite-latest, 2.5 Flash-Lite: cota por modelo)
 //   → Codestral (CODESTRAL_API_KEY, opcional) → NVIDIA NIM (NVIDIA_API_KEY, opcional)
 //   → Cloudflare Workers AI (CLOUDFLARE_AI_TOKEN + CLOUDFLARE_AI_ACCOUNT_ID) → Mistral (MISTRAL_API_KEY)
@@ -22,7 +21,7 @@
 // (ex.: NEXIA_MODELS_CODING="groq:openai/gpt-oss-120b,kilo:z-ai/glm-5:free,kilo:auto:1") troca a lista.
 const g = model => ({ provider: 'groq', model });
 const KILO = [1, 2, 3, 4, 5].map(n => ({ provider: 'kilo', model: `auto:${n}` }));
-const TAIL = [{ provider: 'github', model: 'openai/gpt-4.1' }, { provider: 'github', model: 'openai/gpt-4.1-mini' },
+const TAIL = [
   { provider: 'google', model: 'gemini-flash-latest' }, { provider: 'google', model: 'gemini-2.5-flash' },
   { provider: 'google', model: 'gemini-flash-lite-latest' }, { provider: 'google', model: 'gemini-2.5-flash-lite' },
   { provider: 'codestral', model: 'codestral-latest' },
