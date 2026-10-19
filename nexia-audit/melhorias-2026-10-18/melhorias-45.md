@@ -3,6 +3,7 @@
 - **Status:** Implementado
 - **Regra:** Cada aluno tem código de indicação único (derivado do seu ID). O amigo que chega pelo link ganha desconto automático e quem indicou ganha dias grátis de acesso.
 - **Por quê:** Crescimento orgânico sem anúncio e custo zero.
+- **Funcionalidade de cupom:** O mesmo código de indicação funciona tanto no processo de cadastro quanto no fluxo Pix, garantindo desconto automático em ambos os cenários.
 - **Implementação:**
   1. Geração de código e link de indicação em `apps/body-coach/src/lib/ferramentas/cartao.ts`.
   2. Captura automática do parâmetro `?ref=` e `?cupom=` no carregamento do aplicativo (`apps/body-coach/src/App.tsx`).
