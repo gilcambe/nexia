@@ -40,6 +40,8 @@ const PROVIDERS = Object.freeze({
   // ADR-FREE-05: Kilo Gateway. Sem chave, só modelos grátis (":free"; 200 pedidos/hora por IP). KILO_API_KEY é opcional.
   // O modelo "auto:N" é o N-ésimo grátis do catálogo vivo do gateway (kilo-catalog.js); nunca chama modelo pago.
   kilo:        { url: 'https://api.kilo.ai/api/gateway/chat/completions', env: 'KILO_API_KEY', keyless: true, free_only: true, catalog: true, max_output: 16384, tools: true },
+  // LLM7.io: sem chave (30/min, 100 mil tokens/dia); LLM7_API_KEY opcional (token grátis por e-mail) aumenta o limite.
+  llm7:        { url: 'https://api.llm7.io/v1/chat/completions', env: 'LLM7_API_KEY', keyless: true, max_output: 8192, tools: true },
 });
 
 const DEFAULT_TIMEOUT = 120000;
