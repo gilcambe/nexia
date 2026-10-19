@@ -1,79 +1,68 @@
 'use strict';
 const { describe, test } = require('node:test');
 const assert = require('node:assert');
-const { createRouter } = require('./index');
 const { createCache } = require('./cache');
+const { createRouter } = require('./index');
 
-function providerFalso(contador) {
+function falsoProvider(chamadas) {
   return {
     id: 'falso',
-    envKey: 'FALSO_KEY',
     available: () => true,
-    capabilities: () => ({}),
+    capabilities: () => ({ tool_call: false, streaming: false }),
     chat: async (_model, req) => {
-      contador.chamadas++;
-      return {
-        text: `resp ${contador.chamadas}`,
-        usage: {},
-        provider: 'falso',
-        model: req.model || 'm',
-      };
+      chamadas.push(req);
+      return { text: `resp:${chamadas.length}`, usage: {}, provider: 'falso', model: _model };
     },
   };
 }
 
+const DESCS = [{ provider: 'falso', model: 'm' }];
+
 describe('chatWithFallback com cache', () => {
-  test('segundo pedido igual com cache:true nao chama o provedor', async () => {
-    const contador = { chamadas: 0 };
-    const router = createRouter({ providers: { falso: providerFalso(contador) } });
-    const req = { cache: true, system: 's', messages: [{ role: 'user', content: 'oi' }] };
-    const d = { provider: 'falso', model: 'm' };
-    const r1 = await router.chatWithFallback([d], req);
-    assert.strictEqual(r1.text, 'resp 1');
-    const r2 = await router.chatWithFallback([d], req);
-    assert.strictEqual(r2.text, 'resp 1');
-    assert.strictEqual(contador.chamadas, 1);
+  test('segundo pedido igual nao chama o provedor', async () => {
+    const chamadas = [];
+    const router = createRouter({ providers: { falso: falsoProvider(chamadas) } });
+    const req = { system: 's', messages: [{ role: 'user', content: 'oi' }], cache: true };
+    const r1 = await router.chatWithFallback(DESCS, req);
+    const r2 = await router.chatWithFallback(DESCS, req);
+    assert.strictEqual(chamadas.length, 1);
+    assert.strictEqual(r1.text, 'resp:1');
+    assert.strictEqual(r2.text, 'resp:1');
   });
 
   test('pedido com tools nunca usa cache nem armazena', async () => {
-    const contador = { chamadas: 0 };
-    const router = createRouter({ providers: { falso: providerFalso(contador) } });
+    const chamadas = [];
+    const router = createRouter({ providers: { falso: falsoProvider(chamadas) } });
     const req = {
-      cache: true,
       system: 's',
       messages: [{ role: 'user', content: 'oi' }],
+      cache: true,
       tools: [{ name: 'x' }],
     };
-    const d = { provider: 'falso', model: 'm' };
-    await router.chatWithFallback([d], req);
-    await router.chatWithFallback([d], req);
-    assert.strictEqual(contador.chamadas, 2);
+    await router.chatWithFallback(DESCS, req);
+    await router.chatWithFallback(DESCS, req);
+    assert.strictEqual(chamadas.length, 2);
   });
 
-  test('sem req.cache nada muda (provedor chamado toda vez)', async () => {
-    const contador = { chamadas: 0 };
-    const router = createRouter({ providers: { falso: providerFalso(contador) } });
+  test('sem req.cache nada muda: sempre chama o provedor', async () => {
+    const chamadas = [];
+    const router = createRouter({ providers: { falso: falsoProvider(chamadas) } });
     const req = { system: 's', messages: [{ role: 'user', content: 'oi' }] };
-    const d = { provider: 'falso', model: 'm' };
-    await router.chatWithFallback([d], req);
-    await router.chatWithFallback([d], req);
-    assert.strictEqual(contador.chamadas, 2);
+    await router.chatWithFallback(DESCS, req);
+    await router.chatWithFallback(DESCS, req);
+    assert.strictEqual(chamadas.length, 2);
   });
 
-  test('item vencido eh ignorado e o provedor e chamado novamente', async () => {
+  test('item vencido eh ignorado e provedor chamado de novo', async () => {
     let tempo = 1000;
-    const contador = { chamadas: 0 };
     const cache = createCache({ ttlMs: 100, agora: () => tempo });
-    const router = createRouter({
-      providers: { falso: providerFalso(contador) },
-      cache,
-    });
-    const req = { cache: true, system: 's', messages: [{ role: 'user', content: 'oi' }] };
-    const d = { provider: 'falso', model: 'm' };
-    await router.chatWithFallback([d], req);
-    assert.strictEqual(contador.chamadas, 1);
-    tempo = 2000; // vence a entrada
-    await router.chatWithFallback([d], req);
-    assert.strictEqual(contador.chamadas, 2);
+    const chamadas = [];
+    const router = createRouter({ providers: { falso: falsoProvider(chamadas) }, cache });
+    const req = { system: 's', messages: [{ role: 'user', content: 'oi' }], cache: true };
+    await router.chatWithFallback(DESCS, req);
+    assert.strictEqual(chamadas.length, 1);
+    tempo = 2000; // vence
+    await router.chatWithFallback(DESCS, req);
+    assert.strictEqual(chamadas.length, 2);
   });
 });
