@@ -29,8 +29,9 @@ export default function Produtos({ d }: { d: Dados }) {
       {produtos.length === 0 && <p className="text-sm text-nexia-muted">Nada encontrado com "{busca}".</p>}
       {produtos.map((p) => {
         const m = d.saude?.produtos.find((x) => x.id === p.id);
-        const cor = !m ? "cinza" : !m.ok ? "vermelho" : m.lento ? "amarelo" : "verde";
-        const estado = !m ? "conferindo…" : !m.ok ? "fora do ar" : m.lento ? `lento (${(m.tempo / 1000).toFixed(1)} s)` : `no ar (${(m.tempo / 1000).toFixed(1)} s)`;
+        const emBreve = p.pendente || !p.site;
+        const cor = emBreve || !m ? "cinza" : !m.ok ? "vermelho" : m.lento ? "amarelo" : "verde";
+        const estado = emBreve ? "em breve" : !m ? "conferindo…" : !m.ok ? "fora do ar" : m.lento ? `lento (${(m.tempo / 1000).toFixed(1)} s)` : `no ar (${(m.tempo / 1000).toFixed(1)} s)`;
         return (
           <Cartao key={p.id}>
             <div className="flex items-start gap-3" data-testid={`produto-${p.id}`}>
@@ -41,12 +42,14 @@ export default function Produtos({ d }: { d: Dados }) {
                 <div className="flex items-center gap-2 text-xs mt-1"><Sinal cor={cor} />{estado}</div>
               </div>
             </div>
+            {p.site ? (
             <div className="grid grid-cols-2 gap-2">
               <Botao href={p.site}>🌐 Abrir site</Botao>
-              <Botao href={p.painel}>⚙️ Abrir painel</Botao>
+              {p.painel && <Botao href={p.painel}>⚙️ Abrir painel</Botao>}
               {p.suporte && <Botao onClick={() => entrar(p.suporte!)} testid={`suporte-${p.suporte}`}>🛟 Entrar como suporte</Botao>}
-              <Botao onClick={() => copiar(p.site)}>📋 Copiar link</Botao>
+              <Botao onClick={() => copiar(p.site!)}>📋 Copiar link</Botao>
             </div>
+            ) : <p className="text-xs text-nexia-muted" data-testid={`em-breve-${p.id}`}>Site em breve</p>}
           </Cartao>
         );
       })}

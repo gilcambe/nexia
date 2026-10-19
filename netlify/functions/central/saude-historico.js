@@ -5,7 +5,7 @@
 // reserva) quando NEXIA_D1_TOKEN/NEXIA_D1_ACCOUNT_ID existem; senão no Firestore do projeto.
 // Uma amostra = 1 documento por hora em saude_horas/<AAAA-MM-DDTHH>; mais velho que 30 dias é apagado.
 
-const { PRODUTOS } = require('../../../central/produtos');
+const { NO_AR } = require('../../../central/produtos');
 
 const DIAS = 30;
 const HORA = 36e5;
@@ -16,7 +16,7 @@ const BASE = 'https://nexia.gcbezerra.workers.dev';
 const ROTAS = [
   { id: 'nexia', nome: 'NEXIA (página inicial)', url: BASE + '/' },
   { id: 'central', nome: 'Central', url: BASE + '/central' },
-  ...PRODUTOS.map((p) => ({ id: p.id, nome: p.nome, url: p.site })),
+  ...NO_AR.map((p) => ({ id: p.id, nome: p.nome, url: p.site })),
 ];
 
 const horaDe = (ms) => new Date(ms).toISOString().slice(0, 13); // "2026-10-19T13"
