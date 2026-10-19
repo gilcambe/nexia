@@ -92,7 +92,7 @@ export default function Planos() {
           <h2 className="section-title">O que dizem quem já testou</h2>
           <div className="prova-grid">
             <article className="depoimento">
-              <div className="depoimento__avatar">AS</td>
+              <div className="depoimento__avatar">AS</div>
               <div className="depoimento__conteudo">
                 <p className="depoimento__texto">"Perdeu 5 kg em 2 meses com o plano Básico. O app é simples e o treino cabe na minha rotina."</p>
                 <div className="depoimento__autor">
@@ -102,7 +102,7 @@ export default function Planos() {
             </article>
 
             <article className="depoimento">
-              <div className="depoimento__avatar">RC</td>
+              <div className="depoimento__avatar">RC</div>
               <div className="depoimento__conteudo">
                 <p className="depoimento__texto">"O plano Pro mudou meus treinos. Acompanhamento semanal faz toda a diferença para não desistir."</p>
                 <div className="depoimento__autor">
@@ -112,7 +112,7 @@ export default function Planos() {
             </article>
 
             <article className="depoimento">
-              <div className="depoimento__avatar">FM</td>
+              <div className="depoimento__avatar">FM</div>
               <div className="depoimento__conteudo">
                 <p className="depoimento__texto">"Premium vale cada centavo: treino + nutrição + coach direto no WhatsApp. Resultados em 4 semanas."</p>
                 <div className="depoimento__autor">
