@@ -132,9 +132,20 @@ async function webConfigFromServiceAccount(env, fetchImpl) {
 }
 
 // Login do Google sem mostrar "firebaseapp.com": só quando FIREBASE_AUTH_PROXY_DOMAIN está definido e a chamada vem pelo domínio próprio (Pages).
+// Domínios Kernex (#1013): com a variável KERNEX_AUTH_PROPRIO=1 no Worker, o pedido que chega por um host da lista
+// usa o próprio host como authDomain (o /__/auth desse host já é repassado ao Firebase em proxyAuth).
+// Sem a variável, nada muda. Ligar só depois de cadastrar os endereços no Firebase e no Google
+// (passo a passo no PR do #1013). Para desfazer, apague a variável.
+const KERNEX_HOSTS = ['kernex.com.br', 'bodycoach.kernex.com.br', 'cortex.kernex.com.br'];
 function authDomainProprio(env, request) {
+  if (!request) return '';
+  if (String(env.KERNEX_AUTH_PROPRIO || '').trim() === '1') {
+    let host = '';
+    try { host = new URL(request.url).hostname.toLowerCase(); } catch { host = ''; }
+    if (KERNEX_HOSTS.includes(host)) return host;
+  }
   const dom = String(env.FIREBASE_AUTH_PROXY_DOMAIN || '').trim();
-  if (!dom || !request || !request.headers.get('X-Nexia-Proxy')) return '';
+  if (!dom || !request.headers.get('X-Nexia-Proxy')) return '';
   return dom;
 }
 
@@ -267,4 +278,4 @@ async function handleRequest(request, env, { getFunction }) {
   return serveStatic(request, url, env);
 }
 
-module.exports = { handleRequest, populateProcessEnv, toEvent, firebaseConfig, _resetWebConfigCache, MAX_BODY_SIZE };
+module.exports = { handleRequest, populateProcessEnv, toEvent, firebaseConfig, _resetWebConfigCache, MAX_BODY_SIZE, authDomainProprio, KERNEX_HOSTS };
