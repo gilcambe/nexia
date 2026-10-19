@@ -312,6 +312,49 @@ async function literalDireto(token, issues) {
   } catch (e) { console.log(`cópia direta falhou (${e.message}); a fila normal segue.`); return new Set(); }
 }
 
+// Rascunhos parados (#1017): PR aberto, em rascunho, do app do Cortex, título "NEXIA:", sem commit novo há 72 h
+// e sem rótulo automerge → fecha com um comentário (nada é apagado: o ramo fica e o PR pode ser reaberto).
+// No máximo 10 por ciclo. Nunca mexe em PR que não é rascunho nem em PR de outra pessoa.
+const PARADO_MS = 72 * 3600e3;
+const MAX_FECHAR_RASCUNHOS = 10;
+const MSG_RASCUNHO_PARADO = 'Fechado por estar parado há 3 dias. A tarefa continua na fila do Cortex e pode abrir um PR novo.';
+const doCortex = pr => { const u = pr.user || {}; return u.type === 'Bot' && /^nexia[\w-]*\[bot\]$/.test(u.login || ''); };
+// Pré-filtro sem pedir nada ao GitHub (a data do último commit vem depois, só para estes).
+function candidatosRascunho(prs, agora = Date.now()) {
+  return (prs || []).filter(pr => pr.state === 'open' && pr.draft === true && /^NEXIA:/.test(pr.title || '') && doCortex(pr)
+    && !nomes(pr).includes('automerge') && agora - Date.parse(pr.created_at || 0) >= PARADO_MS);
+}
+// commitEm: { [numero do PR]: data ISO do último commit }. Sem data conhecida, não fecha.
+function rascunhosParados({ prs, commitEm = {}, agora = Date.now(), max = MAX_FECHAR_RASCUNHOS }) {
+  return candidatosRascunho(prs, agora).filter(pr => {
+    const t = Date.parse(commitEm[pr.number] || '');
+    return Number.isFinite(t) && agora - t >= PARADO_MS;
+  }).slice(0, max).map(pr => pr.number);
+}
+
+async function fecharRascunhosParados(token) {
+  let escrita = token;
+  try { escrita = (await tokenDaApp()) || token; } catch { /* sem app: usa a chave do workflow */ }
+  const prs = [];
+  for (let pag = 1; pag <= 3; pag++) {
+    const lote = (await gh(token, 'GET', `/pulls?state=open&per_page=100&page=${pag}`)).json || [];
+    prs.push(...lote);
+    if (lote.length < 100) break;
+  }
+  const commitEm = {};
+  for (const pr of candidatosRascunho(prs).slice(0, 30)) {
+    const c = (await gh(token, 'GET', `/commits/${pr.head && pr.head.sha}`)).json;
+    commitEm[pr.number] = c && c.commit && ((c.commit.committer && c.commit.committer.date) || (c.commit.author && c.commit.author.date));
+  }
+  const fechar = rascunhosParados({ prs, commitEm });
+  for (const n of fechar) {
+    await gh(escrita, 'POST', `/issues/${n}/comments`, { body: MSG_RASCUNHO_PARADO });
+    const r = await gh(escrita, 'PATCH', `/pulls/${n}`, { state: 'closed' });
+    console.log(`rascunho parado #${n}: fechado (${r.status}).`);
+  }
+  return fechar;
+}
+
 async function main() {
   const token = process.env.GITHUB_TOKEN;
   if (!token) throw new Error('Falta GITHUB_TOKEN.');
@@ -359,6 +402,7 @@ async function main() {
   }
   for (const a of acoes) { console.log(`${a.tipo} #${a.numero}${a.pista ? ` pista ${a.pista}` : ''}${a.tentativa ? ` tentativa ${a.tentativa}` : ''}`); await executar(token, a, dividir); }
   console.log(`${issues.length} na fila, ${acoes.length} ação(ões).`);
+  try { await fecharRascunhosParados(token); } catch (e) { console.log(`rascunhos parados: ${e.message}`); }
   const ignoradas = issues.filter(i => !i.pull_request && !confiavel(i));
   if (ignoradas.length) console.log(`ignoradas (autor sem acesso): ${ignoradas.map(i => `#${i.number}`).join(', ')}`);
   if (!issues.length) {
@@ -371,5 +415,5 @@ async function main() {
   }
 }
 
-module.exports = { tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
+module.exports = { rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
