@@ -3,6 +3,43 @@ import { db } from '../firebase';
 
 const COLLECTION = 'health/samples';
 
+// --- Interface de abstração para storage --------------------------------
+
+export interface StorageAdapter {
+  getSample(day: string): Promise<HealthSample | null>;
+  storeSample(day: string, sample: HealthSample): Promise<void>;
+}
+
+export class FirestoreStorageAdapter implements StorageAdapter {
+  async getSample(day: string): Promise<HealthSample | null> {
+    try {
+      const snap = await getDoc(doc(db, `${COLLECTION}/${day}`));
+      if (snap.exists()) {
+        const data = snap.data() as HealthSample;
+        if (data && data.timestamp && data.metrics) {
+          return data;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error(`Erro ao ler amostra do dia ${day}:`, error);
+      return null;
+    }
+  }
+
+  async storeSample(day: string, sample: HealthSample): Promise<void> {
+    try {
+      await setDoc(doc(db, `${COLLECTION}/${day}`), sample);
+    } catch (error) {
+      console.error('Erro ao armazenar amostra de saúde:', error);
+      throw new Error('Falha ao armazenar amostra de saúde no Firestore');
+    }
+  }
+}
+
+// Instância padrão usando Firestore
+const storageAdapter = new FirestoreStorageAdapter();
+
 // --- tipos ---------------------------------------------------------------
 
 export interface RouteStats {
@@ -26,7 +63,7 @@ export interface HealthSample {
 
 export interface HealthDashboardData {
   samples: HealthSample[];
-  responseIncreases: Array<{ timestamp: string; magnitude: number }>;
+  drops: Array<{ timestamp: string; magnitude: number }>;
   avgResponseTimeByRoute: Record<string, number>;
   errorCountByRoute: Record<string, number>;
 }
@@ -64,7 +101,7 @@ function aggregateRoutes(routes: Record<string, RouteStats>): {
 // --- API pública ---------------------------------------------------------
 
 /**
- * Consulta o Firestore para obter as amostras dos últimos 30 dias
+ * Consulta o storage para obter as amostras dos últimos 30 dias
  * (caminho health/samples, índice por dia).
  * 
  * @returns Promise<HealthSample[]> Array de amostras ordenadas por timestamp
@@ -74,17 +111,9 @@ export async function getHealthSamples(): Promise<HealthSample[]> {
   const samples: HealthSample[] = [];
   
   for (const day of days) {
-    try {
-      const snap = await getDoc(doc(db, `${COLLECTION}/${day}`));
-      if (snap.exists()) {
-        const data = snap.data() as HealthSample;
-        // Validar formato do dado
-        if (data && data.timestamp && data.metrics) {
-          samples.push(data);
-        }
-      }
-    } catch (error) {
-      console.error(`Erro ao ler amostra do dia ${day}:`, error);
+    const sample = await storageAdapter.getSample(day);
+    if (sample) {
+      samples.push(sample);
     }
   }
   
@@ -92,7 +121,7 @@ export async function getHealthSamples(): Promise<HealthSample[]> {
 }
 
 /**
- * Armazena uma nova amostra de saúde no Firestore.
+ * Armazena uma nova amostra de saúde no storage.
  * 
  * @param sample Amostra de saúde com timestamp e métricas
  * @returns Promise<void>
@@ -116,12 +145,7 @@ export async function storeHealthSample(sample: HealthSample): Promise<void> {
   
   const day = isoDay(new Date(sample.timestamp));
   
-  try {
-    await setDoc(doc(db, `${COLLECTION}/${day}`), sample);
-  } catch (error) {
-    console.error('Erro ao armazenar amostra de saúde:', error);
-    throw new Error('Falha ao armazenar amostra de saúde no Firestore');
-  }
+  await storageAdapter.storeSample(day, sample);
 }
 
 /**
@@ -136,13 +160,13 @@ export async function storeHealthSample(sample: HealthSample): Promise<void> {
 export async function getHealthDashboardData(): Promise<HealthDashboardData> {
   const samples = await getHealthSamples();
 
-  const responseIncreases: Array<{ timestamp: string; magnitude: number }> = [];
+  const drops: Array<{ timestamp: string; magnitude: number }> = [];
   for (let i = 1; i < samples.length; i++) {
     const prev = samples[i - 1];
     const curr = samples[i];
     const magnitude = curr.metrics.responseTime - prev.metrics.responseTime;
     if (magnitude > 0) {
-      responseIncreases.push({ timestamp: curr.timestamp, magnitude });
+      drops.push({ timestamp: curr.timestamp, magnitude });
     }
   }
 
@@ -172,7 +196,7 @@ export async function getHealthDashboardData(): Promise<HealthDashboardData> {
 
   return {
     samples,
-    responseIncreases,
+    drops,
     avgResponseTimeByRoute,
     errorCountByRoute: aggregated.errorCountByRoute,
   };
