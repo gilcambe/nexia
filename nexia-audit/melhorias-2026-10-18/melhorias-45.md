@@ -62,6 +62,19 @@
 
 ---
 
+# Melhoria 45: Modos "Rápido / Pensar / Pesquisar" no composer
+
+- **Status:** Pendente de implementação
+- **Regra:** Implementar modos "Rápido / Pensar / Pesquisar" no composer:
+  - Rápido = modelo pequeno (resposta rápida)
+  - Pensar = raciocínio (análise mais profunda)
+  - Pesquisar = web (busca na internet)
+- **Por quê:** O dono escolhe velocidade ou profundidade como no Claude/ChatGPT, permitindo controle sobre o resultado.
+- **Custo:** 0 (todos os modelos usados são gratuitos)
+- **M:** Implementação simples sem alteração de regras existentes.
+
+---
+
 # Melhoria 49: Programa de indicação com recompensa
 
 - **Status:** Pendente de implementação
