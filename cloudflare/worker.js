@@ -6,6 +6,7 @@ import functions from './functions.js';
 import jobs from '../nexia-ai/jobs/index.js';
 import { corpoIa } from './corpoIa.js';
 import lembretes from './lembretes.js';
+import saude from './saude.js';
 
 export default {
   async fetch(request, env) {
@@ -27,6 +28,11 @@ export default {
     ctx.waitUntil(lembretes.rodar(at).then(
       r => console.log('[bc-lembretes]', JSON.stringify(r)),
       e => console.error('[bc-lembretes]', e && e.message),
+    ));
+    // Central: histórico de saúde (1 amostra por hora por rota pública, 30 dias).
+    ctx.waitUntil(saude.rodar(at).then(
+      r => console.log('[saude-historico]', JSON.stringify(r)),
+      e => console.error('[saude-historico]', e && e.message),
     ));
   },
 };

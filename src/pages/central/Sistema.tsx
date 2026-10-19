@@ -4,8 +4,9 @@ import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
 import type { Cor } from "./ui";
 import Mais from "./Mais";
+import SaudeHistorico from "./SaudeHistorico";
 
-// Aba Sistema: as IAs que trabalham para a NEXIA, os fornecedores (serviços grátis que usamos) e os robôs.
+// Aba Sistema: a saúde dos sites em 30 dias, as IAs que trabalham para a NEXIA, os fornecedores (serviços grátis que usamos) e os robôs.
 const COR: Record<Situacao, Cor> = { ok: "verde", erro: "vermelho", desligado: "cinza" };
 const FRASE: Record<Situacao, string> = { ok: "ligado", erro: "deu erro", desligado: "falta ligar" };
 const NOME_IA: Record<string, string> = { groq: "Groq", github: "GitHub Models", google: "Google Gemini", codestral: "Codestral", nvidia: "NVIDIA", cloudflare: "Cloudflare Workers AI", mistral: "Mistral", openrouter: "OpenRouter", kilo: "Kilo" };
@@ -25,6 +26,8 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
 
   return (
     <div className="space-y-4">
+      <SaudeHistorico />
+
       <Cartao titulo="IAs que trabalham para a NEXIA" acao={<Botao onClick={testar} disabled={testando} testid="testar-ias">{testando ? "Testando…" : "🧪 Testar agora"}</Botao>}>
         {erroIA && <p className="text-sm text-red-400" role="alert">{erroIA}</p>}
         {!ias ? (

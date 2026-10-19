@@ -27,6 +27,11 @@ export interface Personal { email: string; plano: string; faixa: number; situaca
 export interface Lead { id: string; nome: string; produto: string; status: string; whatsapp: string; email: string; quando: string; origem: string }
 export interface Leads { total: number; semana: number; novos: number; porStatus: Record<string, number>; porProduto: Record<string, number>; porOrigem: Record<string, number>; ultimos: Lead[] }
 export interface TesteIA { provedor: string; modelo: string; situacao: Situacao; tempo?: number; motivo?: string }
+export interface RotaSaude {
+  id: string; nome: string; url: string; amostras: number; disponibilidade: number | null; quedas: number; horasFora: number;
+  erros: number; codigos: Record<string, number>; tempoMedio: number | null; ultimaQueda: string | null; agora: boolean;
+}
+export interface Historico { dias: number; amostras: number; desde: string | null; rotas: RotaSaude[]; porDia: { dia: string; disponibilidade: number }[] }
 export interface Dados {
   lista?: { produtos: Produto[]; links: { nome: string; url: string }[] };
   saude?: { produtos: Medida[]; em: string };
@@ -39,6 +44,7 @@ export interface Dados {
   empresa?: { fornecedores: Fornecedor[] };
   clientes?: { empresas: { site: string; nome: string; leilao: boolean }[]; personais: Personal[] };
   leads?: Leads;
+  historico?: Historico; // só a aba Sistema pede (lê 30 dias; não entra no "conferir" de 5 em 5 min)
 }
 export type Parte = keyof Dados;
 export const PARTES: Parte[] = ["lista", "saude", "dinheiro", "cortex", "robos", "divulga", "banco", "cloudflare", "empresa", "clientes", "leads"];

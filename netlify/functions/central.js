@@ -1,6 +1,6 @@
 'use strict';
 // Central NEXIA (/central): uma página para o dono cuidar de toda a NEXIA. Só o master entra.
-//   GET  /api/central?parte=saude|dinheiro|cortex|robos|divulga|banco|cloudflare|lista|empresa|clientes|leads
+//   GET  /api/central?parte=saude|historico|dinheiro|cortex|robos|divulga|banco|cloudflare|lista|empresa|clientes|leads
 //   POST /api/central {acao:'rodar', arquivo, ensaio?} | {acao:'pedir', texto} | {acao:'testar-ias'}
 // Cada parte é um pedido separado: a página mostra o que já chegou sem esperar o resto.
 
@@ -43,6 +43,7 @@ function createHandler(deps = {}) {
   const getRouter = deps.getRouter || (() => require('../../nexia-ai/model-router').getRouter());
   const getIAs = deps.getIAs || (() => require('../../nexia-ai/orchestrator/models').FREE.fast);
   const getAgendas = deps.getAgendas || (() => require('../../clientes/agendas').AGENDAS);
+  const getHistorico = deps.getHistorico || (() => require('./central/saude-historico'));
   const env = deps.env || process.env;
   const fetchFn = deps.fetch || ((...a) => fetch(...a));
 
@@ -84,6 +85,12 @@ function createHandler(deps = {}) {
       if (parte === 'saude') {
         const medidos = await Promise.all(PRODUTOS.map(async (p) => ({ id: p.id, ...(await medir(p.site, fetchFn)) })));
         return res(200, { produtos: medidos, em: new Date().toISOString() });
+      }
+      if (parte === 'historico') {
+        const h = getHistorico();
+        const db = deps.getHistoricoDb ? deps.getHistoricoDb() : h.abrirBanco(env);
+        if (!db) return res(200, { dias: h.DIAS, amostras: 0, desde: null, rotas: [], porDia: [] });
+        return res(200, await h.resumo(db));
       }
       if (parte === 'dinheiro') {
         const db = getDb();
