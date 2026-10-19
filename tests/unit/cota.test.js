@@ -94,7 +94,7 @@ describe('registrarCabecalhos', () => {
     p.registrarCabecalhos({ provider: 'groq', model: 'a' }, HEADERS({ 'x-ratelimit-remaining-requests': '0' }));
     assert.strictEqual(p.bloqueado({ provider: 'groq', model: 'a' }), true);
 
-    p2 = createPlacar({ agora: () => 1000 });
+    const p2 = createPlacar({ agora: () => 1000 });
     p2.registrarCabecalhos({ provider: 'openrouter', model: 'b' }, HEADERS({ 'x-ratelimit-remaining-requests': '1' }));
     assert.strictEqual(p2.bloqueado({ provider: 'openrouter', model: 'b' }), true);
   });
