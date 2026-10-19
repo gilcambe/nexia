@@ -10,6 +10,9 @@ import ConviteCoach from './components/ConviteCoach';
 import { definirLetra, letraGuardada, TAMANHOS } from '@/lib/letra';
 import { confirmar } from '../../lib/dialogo';
 
+// Política única da Kernex (LGPD). Trocar para https://kernex.com.br/privacidade.html quando o domínio ligar.
+const PRIVACIDADE_KERNEX = 'https://kernex.pages.dev/privacidade.html';
+
 type Answers = Record<string, string | string[] | undefined>;
 interface SavedProfile {
   full_name?: string | null;
@@ -76,6 +79,7 @@ export default function Profile() {
   const deleteAccount = async () => {
     if (!user) return;
     if (!await confirmar('Isso apaga sua conta e todos os seus dados (perfil, refeições, check-ins, evolução e exames). Não dá para desfazer. Continuar?')) return;
+    if (!await confirmar('Tem certeza? Esta é a última confirmação: a conta e todos os dados serão apagados agora.')) return;
     setDeleting(true);
     setDeleteError(null);
     try {
@@ -191,6 +195,14 @@ export default function Profile() {
           >
             <i className="ri-file-text-line"></i> Termos e privacidade
           </Link>
+          <a
+            href={PRIVACIDADE_KERNEX}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-medium text-primary-600 hover:underline inline-flex items-center gap-1.5"
+          >
+            <i className="ri-shield-check-line"></i> Privacidade e termos (Kernex)
+          </a>
           <button
             type="button"
             onClick={deleteAccount}
