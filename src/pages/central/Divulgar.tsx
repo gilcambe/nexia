@@ -3,6 +3,31 @@ import type { Dados } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
 
+// Função para escapar HTML e prevenir XSS
+const escapeHtml = (text: string): string => {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+};
+
+// Função para validar e formatar dados do gráfico
+const formatarDadosGrafico = (historico: any[]) => {
+  if (!historico || !Array.isArray(historico) || historico.length === 0) return [];
+  
+  return historico.map(item => {
+    if (!item || typeof item !== 'object') return null;
+    
+    return {
+      data: escapeHtml(String(item.data || '')),
+      seguidores: Number(item.seguidores) || 0,
+      curtidas: Number(item.curtidas) || 0,
+      comentarios: Number(item.comentarios) || 0,
+      compartilhamentos: Number(item.compartilhamentos) || 0,
+      alcance: Number(item.alcance) || 0
+    };
+  }).filter(Boolean);
+};
+
 const REDE: Record<string, string> = { facebook: "Facebook", instagram: "Instagram" };
 
 // Função para formatar dados do gráfico
@@ -19,33 +44,38 @@ const formatarDadosGrafico = (historico: any[]) => {
   }));
 };
 
-// Função para encontrar melhor horário
+// Função para encontrar melhor horário com validação de dados
 const obterMelhorHorario = (historico: any[]) => {
-  if (!historico || historico.length === 0) return null;
+  if (!historico || !Array.isArray(historico) || historico.length === 0) return null;
   
   // Agrupa posts por hora
-  const postsPorHora = {};
+  const postsPorHora: Record<string, { count: number; engagement: number }> = {};
+  
   historico.forEach(item => {
-    if (item.melhorHorario !== undefined) {
-      const hora = item.melhorHorario;
+    if (!item || typeof item !== 'object') return;
+    
+    const hora = String(item.melhorHorario);
+    if (hora && !isNaN(Number(hora))) {
       if (!postsPorHora[hora]) {
         postsPorHora[hora] = { count: 0, engagement: 0 };
       }
       postsPorHora[hora].count++;
-      postsPorHora[hora].engagement += (item.curtidas || 0) + (item.comentarios || 0) + (item.compartilhamentos || 0);
+      postsPorHora[hora].engagement += (Number(item.curtidas) || 0) + (Number(item.comentarios) || 0) + (Number(item.compartilhamentos) || 0);
     }
   });
   
   // Encontra hora com melhor engajamento médio
-  let melhorHora = null;
+  let melhorHora: number | null = null;
   let melhorEngajamentoMedio = 0;
   
   Object.keys(postsPorHora).forEach(hora => {
     const { count, engagement } = postsPorHora[hora];
-    const engajamentoMedio = engagement / count;
-    if (engajamentoMedio > melhorEngajamentoMedio) {
-      melhorEngajamentoMedio = engajamentoMedio;
-      melhorHora = parseInt(hora);
+    if (count > 0) {
+      const engajamentoMedio = engagement / count;
+      if (engajamentoMedio > melhorEngajamentoMedio) {
+        melhorEngajamentoMedio = engajamentoMedio;
+        melhorHora = parseInt(hora);
+      }
     }
   });
   
@@ -137,14 +167,14 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
                 </div>
               </div>
               
-              {x.metaGraphAPI.melhorHorario !== undefined && (
+              {typeof x.metaGraphAPI.melhorHorario === 'number' && (
                 <div className="mb-4">
                   <p className="text-sm font-medium">Melhor horário para postar: <span className="text-nexia-cyan">{x.metaGraphAPI.melhorHorario}:00</span></p>
                   <p className="text-xs text-nexia-muted">Baseado no engajamento histórico</p>
                 </div>
               )}
               
-              {x.metaGraphAPI.historico && x.metaGraphAPI.historico.length > 0 && (
+              {x.metaGraphAPI.historico && Array.isArray(x.metaGraphAPI.historico) && x.metaGraphAPI.historico.length > 0 && (
                 <div className="mb-4">
                   <h4 className="text-sm font-medium mb-2">Evolução dos últimos 30 dias</h4>
                   <div className="space-y-2">
@@ -152,9 +182,9 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
                       <div key={index} className="flex items-center justify-between text-xs">
                         <span>{item.data}</span>
                         <div className="flex gap-2">
-                          <span className="text-nexia-cyan">👤 {item.seguidores}</span>
-                          <span>❤️ {item.curtidas}</span>
-                          <span>👁️ {item.alcance}</span>
+                          <span className="text-nexia-cyan">👤 {item.seguidores.toLocaleString()}</span>
+                          <span>❤️ {item.curtidas.toLocaleString()}</span>
+                          <span>👁️ {item.alcance.toLocaleString()}</span>
                         </div>
                       </div>
                     ))}
@@ -162,11 +192,11 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
                 </div>
               )}
               
-              {x.metaGraphAPI.erro && (
-                <div className="bg-nexia-vermelho/10 border border-nexia-vermelho/30 rounded-lg p-3 mb-4">
-                  <p className="text-sm text-nexia-vermelho">Erro: {x.metaGraphAPI.erro}</p>
-                </div>
-              )}
+                        {x.metaGraphAPI.erro && (
+            <div className="bg-nexia-vermelho/10 border border-nexia-vermelho/30 rounded-lg p-3 mb-4">
+              <p className="text-sm text-nexia-vermelho">Erro ao acessar dados da Graph API</p>
+            </div>
+          )}
             </>
           ) : (
             <div className="bg-nexia-amarelo/10 border border-nexia-amarelo/30 rounded-lg p-4">
