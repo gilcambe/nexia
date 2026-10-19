@@ -56,7 +56,7 @@ export default function PagarPix({ acesso, avisar }: { acesso: Acesso; avisar: (
                 const p = PLANOS_PREMIUM[id];
                 const marcado = plano === id;
                 return (
-                  <button key={id} type="button" role="radio" aria-checked={marcado} onClick={() => setPlano(id)} className={`relative rounded-xl border-2 bg-background-50 px-2 pb-2 pt-3 text-center ${marcado ? 'border-primary-500' : 'border-background-200'}`}>
+                  <button key={id} type="button" role="radio" aria-checked={marcado} onClick={() => setPlano(id)} className={`relative rounded-xl border-2 bg-background-50 px-2 pb-2 pt-5 text-center ${marcado ? 'border-primary-500' : 'border-background-200'}`}>
                     {id === 'anual' && <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-accent-500 px-2 py-0.5 text-[11px] font-bold text-white">economize {ECONOMIA_ANUAL}%</span>}
                     <span className="block text-xs font-semibold uppercase tracking-wide text-foreground-500">{p.nome}</span>
                     {pct > 0 && <s className="block text-xs text-foreground-400">{reais(p.valor)}</s>}
@@ -69,7 +69,7 @@ export default function PagarPix({ acesso, avisar }: { acesso: Acesso; avisar: (
           )}
           {pct > 0 && <p className="font-semibold text-primary-700">{pct}% de desconto {coach ? 'em qualquer plano' : 'aplicado'}.</p>}
           <div className="flex gap-2 pt-1">
-            <input value={codigo} onChange={(e) => setCodigo(e.target.value.toUpperCase())} placeholder="Tenho um cupom ou convite" aria-label="Cupom de desconto" className="min-w-0 flex-1 rounded-lg border border-background-200 bg-background-50 px-3 py-2 text-base uppercase" />
+            <input value={codigo} onChange={(e) => setCodigo(e.target.value.toUpperCase())} placeholder="Tenho um cupom ou convite" aria-label="Cupom de desconto" className="min-w-0 flex-1 rounded-lg border border-background-200 bg-background-50 px-3 py-2 text-base uppercase placeholder:text-sm placeholder:normal-case" />
             <button onClick={() => void aplicar()} disabled={codigo.trim().length < 3} className="rounded-lg border border-primary-300 px-3 text-sm font-semibold text-primary-700 disabled:opacity-50">Aplicar</button>
           </div>
           {acesso.pix ? (
