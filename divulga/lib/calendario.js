@@ -73,4 +73,4 @@ function montarLegenda(cliente, tema, corpo) {
   return `${GANCHOS[t.tema] || GANCHOS['dica-treino']}\n\n${texto}\n\n${t.cta}.\n\n${hashtagsNicho(cliente, extra).join(' ')}`;
 }
 
-module.exports = { SEMANA, temaDoDia, hashtagsNicho, montarLegenda, GANCHOS };
+module.exports = { SEMANA, temaDoDia, hashtagsNicho, montarLegenda, GANCHOS, proximos7Temas };
