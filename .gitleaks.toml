@@ -67,27 +67,22 @@ regex = '''(?i)(ig_api_key|instagram[_-]?api[_-]?key)[\s"':=<]+[A-Za-z0-9_-]{10,
 keywords = ["ig_api_key", "instagram"]
 
 # Valores fictícios usados pelos testes (emulador e tokens inválidos de propósito)
-# e caminhos ou variáveis comuns de CI do Nexia para evitar falsos positivos.
+# e caminhos comuns de CI do Nexia para evitar falsos positivos.
+# Obs.: no gitleaks 8.24, allowlists globais ([allowlist]) são ignoradas quando a
+# config estende as regras padrão; por isso usamos allowlists por regra
+# ([[rules.allowlists]]) e mantemos esta seção global apenas como documentação
+# dos arquivos permitidos. Os nomes de secrets de CI não são listados aqui para
+# não expor nomes sensíveis nem mascarar vazamento de seus valores reais.
 [allowlist]
-description = "Falsos positivos conhecidos e arquivos permitidos"
+description = "Arquivos permitidos (falsos positivos conhecidos)"
 paths = [
   '''(^|/)package-lock\.json$''',
   '''^\.gitleaks\.toml$''',
   '''\.example\.env$''',
   '''(^|/)\.env\.example$''',
-  '''^docs/''',
 ]
 regexes = [
   '''fake-api-key''',
   '''senha-forte-123''',
   '''eyJhbGciOiJub25lIn0\.e30\.''',
-  # Variáveis de ambiente do CI do projeto Nexia (evita falsos positivos)
-  '''NEXIA_CRON_SECRET''',
-  '''NEXIA_JOBS_TOKEN''',
-  '''NEXIA_GITHUB_TOKEN''',
-  '''FIREBASE_SERVICE_ACCOUNT_BASE64''',
-  '''FIREBASE_SERVICE_ACCOUNT_B''',
-  '''FIREBASE_SERVICE_ACCOUNT_C''',
-  '''NEXIA_D1_TOKEN''',
-  '''NEXIA_D1_ACCOUNT_ID''',
 ]
