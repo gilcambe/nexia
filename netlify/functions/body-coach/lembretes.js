@@ -1,7 +1,7 @@
 'use strict';
 
 // NEXIA Body Coach — lembretes no celular pelo robô de 5 em 5 minutos (cron grátis do Cloudflare):
-// hora do treino (só se ainda não treinou hoje) e beber água. Lê só quem tem lembrete neste horário.
+// hora do treino (só se ainda não treinou hoje), refeição e beber água. Lê só quem tem lembrete neste horário.
 
 const { avisar, prefsLimpas, horariosDe, slot } = require('./push');
 const { rodarCobrancas } = require('./negocio');
@@ -47,7 +47,11 @@ async function rodarLembretes(db, t = Date.now()) {
         continue; // não manda água e treino juntos
       }
     }
-    if (prefs.agua.ativo && horariosDe({ ...prefs, treino: { ativo: false } }).includes(s)) enviados += await avisar(db, doc.id, { titulo: 'Hora de beber água 💧', corpo: 'Um copo agora. Toque para marcar.', url: 'nutrition', tag: 'agua' }, 'agua');
+    if (prefs.refeicao.ativo && prefs.refeicao.horas.some((x) => slot(x) === s)) {
+      enviados += await avisar(db, doc.id, { titulo: 'Hora da refeição 🍽️', corpo: 'Registre em 1 toque: repita ontem ou uma favorita.', url: 'nutrition', tag: 'refeicao' }, 'refeicao');
+      continue; // não manda água e refeição juntos
+    }
+    if (prefs.agua.ativo && horariosDe({ ...prefs, treino: { ativo: false }, refeicao: { ativo: false, horas: [] } }).includes(s)) enviados += await avisar(db, doc.id, { titulo: 'Hora de beber água 💧', corpo: 'Um copo agora. Toque para marcar.', url: 'nutrition', tag: 'agua' }, 'agua');
   }
   return { slot: s, pessoas: snap.docs.length, enviados, cobrancas, fimDoAcesso, volta };
 }

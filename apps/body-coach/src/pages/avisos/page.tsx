@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ativarAvisos, assinaturaAtual, desativarAvisos, ehIphoneSemInstalar, salvarPrefs, suportaAvisos, testarAviso, verAvisos, type PrefsAvisos } from '@/lib/avisos';
+import { useAuth } from '@/components/feature/AuthContext';
+import { aplicarAprendido } from '@/lib/horariosAprendidos';
+import { aprenderDoUso, ativarAvisos, assinaturaAtual, desativarAvisos, ehIphoneSemInstalar, salvarPrefs, suportaAvisos, testarAviso, verAvisos, type PrefsAvisos } from '@/lib/avisos';
 
-const PADRAO: PrefsAvisos = { mensagens: true, treino: { ativo: true, hora: '18:00' }, agua: { ativo: false, de: '08:00', ate: '20:00', cada: 2 }, mensalidade: true };
+const PADRAO: PrefsAvisos = { mensagens: true, treino: { ativo: true, hora: '18:00' }, agua: { ativo: false, de: '08:00', ate: '20:00', cada: 2 }, mensalidade: true, refeicao: { ativo: false, horas: ['12:00', '19:30'] }, auto: false };
 const campo = 'rounded-lg border border-background-200 bg-background-50 px-2 py-1.5 text-sm text-foreground-900';
 
 // Avisos no celular: mensagens do coach/aluno, hora do treino, beber água, mensalidade e fim do descanso. Tudo grátis.
@@ -11,6 +13,16 @@ export default function Avisos() {
   const [ocupado, setOcupado] = useState(false);
   const [msg, setMsg] = useState('');
   const [erro, setErro] = useState('');
+  const { user } = useAuth();
+  const refeicao = prefs.refeicao ?? { ativo: false, horas: ['12:00', '19:30'] };
+  // Horários aprendidos pelo uso: quando você costuma treinar e comer (últimos 30 dias).
+  const usarMeusHorarios = () => user && fazer(async () => {
+    const a = await aprenderDoUso(user.id);
+    if (!a.treino && !a.refeicoes.length && !a.agua) throw new Error('Ainda não tenho uso suficiente. Registre treinos e refeições por alguns dias.');
+    const novo = aplicarAprendido(prefs, a);
+    setPrefs(novo);
+    if (ligado) await salvarPrefs(novo);
+  }, 'Horários ajustados pelo seu uso.');
 
   useEffect(() => {
     void (async () => {
@@ -70,6 +82,22 @@ export default function Avisos() {
               </select>
             </div>
           )}
+        </div>
+        <div className="border-t border-background-200">
+          <Chave on={refeicao.ativo} onChange={(v) => mudar({ ...prefs, refeicao: { ...refeicao, ativo: v } })} rotulo="Refeições" detalhe="Lembra de registrar (repetir ontem em 1 toque)" />
+          {refeicao.ativo && (
+            <div className="flex flex-wrap items-center gap-2 pb-2.5 text-xs text-foreground-600">
+              {refeicao.horas.map((h, i) => (
+                <input key={i} type="time" step={300} value={h} onChange={(e) => e.target.value && mudar({ ...prefs, refeicao: { ...refeicao, horas: refeicao.horas.map((x, j) => (j === i ? e.target.value : x)) } })} aria-label={`Horário da refeição ${i + 1}`} className={campo} />
+              ))}
+              {refeicao.horas.length < 4 && <button type="button" onClick={() => mudar({ ...prefs, refeicao: { ...refeicao, horas: [...refeicao.horas, '16:00'] } })} className="rounded-lg border border-background-200 px-2 py-1.5 font-semibold text-primary-700">+ horário</button>}
+              {refeicao.horas.length > 1 && <button type="button" onClick={() => mudar({ ...prefs, refeicao: { ...refeicao, horas: refeicao.horas.slice(0, -1) } })} className="rounded-lg border border-background-200 px-2 py-1.5 text-foreground-600">− horário</button>}
+            </div>
+          )}
+        </div>
+        <div className="border-t border-background-200">
+          <Chave on={!!prefs.auto} onChange={(v) => mudar({ ...prefs, auto: v })} rotulo="Ajustar horários sozinho" detalhe="Toda semana o app usa a hora em que você costuma treinar e comer" />
+          <button type="button" disabled={ocupado || !user} onClick={() => void usarMeusHorarios()} className="mb-2.5 w-full rounded-xl border border-primary-300 px-3 py-2 text-sm font-semibold text-primary-700 disabled:opacity-50"><i className="ri-magic-line mr-1"></i>Usar meus horários agora</button>
         </div>
         <div className="border-t border-background-200">
           <Chave on={prefs.mensalidade} onChange={(v) => mudar({ ...prefs, mensalidade: v })} rotulo="Mensalidade" detalhe="Lembrete antes de vencer (alunos de coach com Pix)" />

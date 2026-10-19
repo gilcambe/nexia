@@ -91,9 +91,14 @@ async function enviarUm(db, sub, conteudo) {
   return r.status;
 }
 
-const PREFS_PADRAO = { mensagens: true, treino: { ativo: false, hora: '18:00' }, agua: { ativo: false, de: '08:00', ate: '20:00', cada: 2 }, mensalidade: true };
+const PREFS_PADRAO = { mensagens: true, treino: { ativo: false, hora: '18:00' }, agua: { ativo: false, de: '08:00', ate: '20:00', cada: 2 }, mensalidade: true, refeicao: { ativo: false, horas: ['12:00', '19:30'] }, auto: false };
 const HORA = /^([01]\d|2[0-3]):[0-5]\d$/;
 const slot = (hhmm) => { const [h, m] = hhmm.split(':').map(Number); return `${String(h).padStart(2, '0')}:${String(Math.floor(m / 5) * 5).padStart(2, '0')}`; };
+
+function horasRefeicao(l) {
+  const ok = Array.isArray(l) ? [...new Set(l.filter((h) => typeof h === 'string' && HORA.test(h)))].sort().slice(0, 4) : [];
+  return ok.length ? ok : ['12:00', '19:30'];
+}
 
 function prefsLimpas(p) {
   const x = p && typeof p === 'object' ? p : {};
@@ -104,6 +109,9 @@ function prefsLimpas(p) {
     treino: { ativo: !!t.ativo, hora: HORA.test(t.hora) ? t.hora : '18:00' },
     agua: { ativo: !!a.ativo, de: HORA.test(a.de) ? a.de : '08:00', ate: HORA.test(a.ate) ? a.ate : '20:00', cada: [1, 2, 3].includes(Number(a.cada)) ? Number(a.cada) : 2 },
     mensalidade: x.mensalidade !== false,
+    // refeição: até 4 horários; auto: o app ajusta os horários pelo uso (horários aprendidos)
+    refeicao: { ativo: !!(x.refeicao && x.refeicao.ativo), horas: horasRefeicao(x.refeicao && x.refeicao.horas) },
+    auto: x.auto === true,
   };
 }
 
@@ -111,6 +119,7 @@ function prefsLimpas(p) {
 function horariosDe(prefs) {
   const h = new Set();
   if (prefs.treino.ativo) h.add(slot(prefs.treino.hora));
+  if (prefs.refeicao && prefs.refeicao.ativo) prefs.refeicao.horas.forEach((x) => h.add(slot(x)));
   if (prefs.agua.ativo) {
     const min = (s) => { const [a, b] = s.split(':').map(Number); return a * 60 + b; };
     for (let t = min(prefs.agua.de); t <= min(prefs.agua.ate); t += prefs.agua.cada * 60) h.add(slot(`${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`));
