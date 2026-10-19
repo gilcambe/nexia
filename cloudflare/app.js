@@ -104,6 +104,76 @@ async function runFunction(fnName, request, url, env, getFunction) {
   }
 }
 
+// ─── Cache de Borda (Cache API do Worker) para APIs de leitura ──────────────────
+// Suporta listas de ofertas, config pública, /api/firebase-config e catálogos (60 a 300s).
+const CACHEABLE_API_PREFIXES = [
+  '/api/firebase-config',
+  '/api/leilao',
+  '/api/leads',
+  '/api/pedidos',
+  '/api/central',
+  '/api/conheca',
+  '/api/agenda',
+  '/api/models',
+  '/api/tenant',
+  '/api/crm',
+  '/api/usage',
+  '/api/billing',
+  '/api/observe',
+  '/api/observability',
+  '/api/metrics',
+  '/api/kpi',
+  '/api/churn',
+  '/api/sales',
+  '/api/financial',
+  '/api/audit',
+  '/api/ads',
+];
+
+function isCacheableApiRequest(request, url) {
+  if (request.method !== 'GET' && request.method !== 'HEAD') return false;
+  // Se houver Authorization header com token de usuário logado/admin, não faz cache público
+  if (request.headers.get('authorization')) return false;
+  const p = url.pathname;
+  return CACHEABLE_API_PREFIXES.some(prefix => p === prefix || p.startsWith(prefix + '/'));
+}
+
+async function getEdgeCachedResponse(request, url, env, getFunction) {
+  const useCache = typeof caches !== 'undefined' && caches.default;
+  let cacheKey = null;
+  if (useCache) {
+    cacheKey = new Request(url.toString(), { method: request.method });
+    const cached = await caches.default.match(cacheKey);
+    if (cached) {
+      return cached;
+    }
+  }
+
+  const response = await runFunction(resolveFunctionName(url.pathname), request, url, env, getFunction);
+  
+  if (useCache && response.status === 200) {
+    const resHeaders = new Headers(response.headers);
+    // Definir max-age de 60 a 300 segundos (300s por padrão para reduzir leituras do Firestore)
+    if (!resHeaders.has('Cache-Control') || resHeaders.get('Cache-Control').includes('no-cache')) {
+      resHeaders.set('Cache-Control', 'public, max-age=300');
+    }
+    const cacheableResponse = new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: resHeaders,
+    });
+    // Cloudflare Cache API exige que a resposta tenha cabeçalho Cache-Control com max-age > 0
+    try {
+      await caches.default.put(cacheKey, cacheableResponse.clone());
+    } catch (err) {
+      console.warn('[edge-cache] put failed:', err && err.message);
+    }
+    return cacheableResponse;
+  }
+
+  return response;
+}
+
 // Sem os 6 FIREBASE_* do site, lê a configuração pública do app da Web direto do Firebase
 // (Management API) com a própria chave de serviço; fica em memória enquanto o Worker vive.
 // Assim o dono só precisa cadastrar a chave de serviço. Valores do site são públicos por natureza.
@@ -255,6 +325,9 @@ async function handleRequest(request, env, { getFunction }) {
   if (pathname === '/__/firebase/init.json' || pathname.startsWith('/__/auth/')) return proxyAuth(request, url);
   if (pathname === '/api/firebase-config') return firebaseConfig(env, undefined, request);
   if (pathname.startsWith('/api/') || pathname.startsWith('/.netlify/functions/')) {
+    if (isCacheableApiRequest(request, url)) {
+      return getEdgeCachedResponse(request, url, env, getFunction);
+    }
     return runFunction(resolveFunctionName(pathname), request, url, env, getFunction);
   }
   return serveStatic(request, url, env);
