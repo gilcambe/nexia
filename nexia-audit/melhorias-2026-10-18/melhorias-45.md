@@ -20,6 +20,17 @@
 
 # Melhoria 47: Divisão automática de tarefa grande
 
+---
+
+# Melhoria 48: Busca na web com citação usando ferramentas gratuitas
+
+- **Status:** Planejado
+- **Ferramenta:** DuckDuckGo HTML (zero custo) — ou Brave free tier quando necessário
+- **Por quê:** Precisão em assuntos novos, custo 0, sem dependência de APIs pagas
+- **Implementação:** Server-side handler that calls DuckDuckGo HTML, extrai resultados e exibe fontes citadas no fim da resposta
+- **Custo:** 0
+- **Justificativa:** Permite respostas fundamentadas em dados reais sem custos de API; as citações garantem rastreabilidade e credibilidade
+
 - **Status:** Implementado (regra de processo)
 - **Regra:** Pedido grande (já na 3ª falha) divide automaticamente em tarefas pequenas antes de executar. Antes de começar: estimativa na entrada. Se o pedido toca mais de 4 arquivos, dividir logo no começo.
 - **Por quê:** Tarefas pequenas passam; tarefa grande que falha 3 vezes vira várias pequenas.
