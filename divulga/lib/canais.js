@@ -75,9 +75,21 @@ function validarPost(post) {
       throw new afiliadosCanais.CanalErro('Link inválido ou não seguro');
     }
   }
-  if (!post.imagem || typeof post.imagem !== 'string' || post.imagem.length > 2000 || !validarUrlPublica(post.imagem)) {
+  const urlOk = u => typeof u === 'string' && u.length <= 2000 && validarUrlPublica(u);
+  const lista = imagensDe(post);
+  if (lista) {
+    if (!lista.every(urlOk)) throw new afiliadosCanais.CanalErro('URL de imagem do carrossel inválida ou não pública (HTTPS obrigatório)');
+    return;
+  }
+  if (!urlOk(post.imagem)) {
     throw new afiliadosCanais.CanalErro('URL de imagem inválida ou não pública (HTTPS obrigatório)');
   }
+}
+
+/** Carrossel/álbum: `post.imagens` com 2 ou mais URLs vira lista (máx. 10, limite do Instagram). Senão, null (post de sempre). */
+const MAX_CARROSSEL = 10;
+function imagensDe(post) {
+  return post && Array.isArray(post.imagens) && post.imagens.length >= 2 ? post.imagens.slice(0, MAX_CARROSSEL) : null;
 }
 
 async function fetchWithRetry(fetchImpl, url, options = {}, retries = 3, delay = 1000) {
@@ -110,6 +122,25 @@ const facebook = {
   async publicar(post, { env, fetchImpl }) {
     validarPost(post);
     const textoCompleto = [post.titulo, post.texto, post.link].filter(Boolean).join('\n\n');
+    const pagina = encodeURIComponent(env.DIVULGA_META_PAGE_ID);
+    const album = imagensDe(post);
+    if (album) {
+      // Álbum: sobe cada foto sem publicar e depois um post no feed com todas anexadas.
+      const ids = [];
+      for (const url of album) {
+        const fRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${pagina}/photos`, {
+          method: 'POST',
+          signal: tempo(),
+          body: new URLSearchParams({ url, published: 'false', access_token: env.DIVULGA_META_PAGE_TOKEN }),
+        });
+        ids.push((await json(fRes, 'Facebook foto')).id);
+      }
+      const corpo = new URLSearchParams({ message: textoCompleto, access_token: env.DIVULGA_META_PAGE_TOKEN });
+      ids.forEach((id, i) => corpo.set(`attached_media[${i}]`, JSON.stringify({ media_fbid: id })));
+      const aRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${pagina}/feed`, { method: 'POST', signal: tempo(), body: corpo });
+      const a = await json(aRes, 'Facebook álbum');
+      return { ok: true, ref: a.id };
+    }
     const r = await fetchWithRetry(fetchImpl, `${GRAPH}/${encodeURIComponent(env.DIVULGA_META_PAGE_ID)}/photos`, {
       method: 'POST',
       signal: tempo(),
@@ -145,9 +176,38 @@ const instagram = {
     validarPost(post);
     const conta = encodeURIComponent(env.DIVULGA_META_IG_USER_ID);
     const legenda = [post.titulo, post.texto, post.link ? `Link: ${post.link}` : ''].filter(Boolean).join('\n\n');
+    const carrossel = imagensDe(post);
+    if (carrossel) {
+      // Carrossel: um container filho por imagem, espera cada um, depois o container CAROUSEL e publica.
+      const filhos = [];
+      for (const url of carrossel) {
+        const fRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/media`, {
+          method: 'POST',
+          signal: tempo(),
+          body: new URLSearchParams({ image_url: url, is_carousel_item: 'true', access_token: env.DIVULGA_META_PAGE_TOKEN }),
+        });
+        const f = await json(fRes, 'Instagram carrossel item');
+        await esperarVideo(f.id, env, fetchImpl, { tentativas: 12, pausa: 3000 }).catch(() => undefined);
+        filhos.push(f.id);
+      }
+      const cRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/media`, {
+        method: 'POST',
+        signal: tempo(),
+        body: new URLSearchParams({ media_type: 'CAROUSEL', children: filhos.join(','), caption: legenda.slice(0, 2200), access_token: env.DIVULGA_META_PAGE_TOKEN }),
+      });
+      const c = await json(cRes, 'Instagram carrossel');
+      await esperarVideo(c.id, env, fetchImpl, { tentativas: 12, pausa: 3000 }).catch(() => undefined);
+      const pRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/media_publish`, {
+        method: 'POST',
+        signal: tempo(),
+        body: new URLSearchParams({ creation_id: c.id, access_token: env.DIVULGA_META_PAGE_TOKEN }),
+      });
+      const p = await json(pRes, 'Instagram publicar');
+      return { ok: true, ref: p.id };
+    }
     // Com vídeo vira Reels (o formato que o Instagram mais mostra para quem não segue a conta).
     const midia = post.video && validarUrlPublica(post.video)
-      ? { media_type: 'REELS', video_url: post.video, share_to_feed: 'true' }
+      ? { media_type: 'REELS', video_url: post.video, share_to_feed: 'true', ...(post.capa && validarUrlPublica(post.capa) ? { cover_url: post.capa } : {}) }
       : { image_url: post.imagem };
     const cRes = await fetchWithRetry(fetchImpl, `${GRAPH}/${conta}/media`, {
       method: 'POST',
