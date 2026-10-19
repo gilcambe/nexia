@@ -38,6 +38,29 @@ export interface MetaGraphAPI {
     comentarios: number;
     compartilhamentos: number;
     alcance: number;
+    melhorHorario: number;
+    posts: number;
+  }[];
+  erro?: string;
+  mensagem?: string;
+}
+
+export interface MetaGraphAPI {
+  temChave: boolean;
+  seguidores?: number;
+  curtidas?: number;
+  comentarios?: number;
+  compartilhamentos?: number;
+  alcance?: number;
+  melhorHorario?: number;
+  posts?: number;
+  historico?: {
+    data: string;
+    seguidores: number;
+    curtidas: number;
+    comentarios: number;
+    compartilhamentos: number;
+    alcance: number;
     melhorHorario?: number;
     posts?: number;
   }[];
