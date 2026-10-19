@@ -21,6 +21,52 @@ export interface Divulga {
   proximos: { id: string; texto: string }[];
   historico: { quando: string; id: string | null; cliente: string; resultados: { canal: string; ok: boolean; erro?: string }[] }[];
 }
+
+export interface MetaGraphAPI {
+  temChave: boolean;
+  seguidores?: number;
+  curtidas?: number;
+  comentarios?: number;
+  compartilhamentos?: number;
+  alcance?: number;
+  melhorHorario?: number;
+  posts?: number;
+  historico?: {
+    data: string;
+    seguidores: number;
+    curtidas: number;
+    comentarios: number;
+    compartilhamentos: number;
+    alcance: number;
+    melhorHorario: number;
+    posts: number;
+  }[];
+  erro?: string;
+  mensagem?: string;
+}
+
+export interface MetaGraphAPI {
+  temChave: boolean;
+  seguidores?: number;
+  curtidas?: number;
+  comentarios?: number;
+  compartilhamentos?: number;
+  alcance?: number;
+  melhorHorario?: number;
+  posts?: number;
+  historico?: {
+    data: string;
+    seguidores: number;
+    curtidas: number;
+    comentarios: number;
+    compartilhamentos: number;
+    alcance: number;
+    melhorHorario?: number;
+    posts?: number;
+  }[];
+  mensagem?: string;
+  erro?: string;
+}
 export type Situacao = "ok" | "erro" | "desligado";
 export interface Fornecedor { id: string; nome: string; grupo: string; paraQue: string; gratis: string; link: string; situacao: Situacao; quando: string | null }
 export interface Personal { email: string; plano: string; faixa: number; situacao: "isento" | "pagando" | "teste" | "vencido"; desde: number }
@@ -40,6 +86,7 @@ export interface Dados {
   cortex?: Cortex;
   robos?: { robos: Robo[] };
   divulga?: Divulga;
+  metaGraphAPI?: MetaGraphAPI;
   banco?: { ok: boolean; cheio?: boolean; tempo: number };
   cloudflare?: { configurado: boolean; pedidos?: number; limite: number; erro?: string };
   empresa?: { fornecedores: Fornecedor[] };
