@@ -67,21 +67,15 @@ async function entregouPr(token, titulo, runId) {
   } catch { return true; }
 }
 // #852: arquivo que já existia na develop só conta se teve commit na develop depois do início da tarefa (`desde`).
-async function entregouAlgo(token, corpo, titulo, runId, desde) {
+async function entregouAlgo(token, corpo, desde) {
   const arquivos = corpo.files || [];
-  if (!arquivos.length) return titulo && runId ? entregouPr(token, titulo, runId) : true;
+  if (!arquivos.length) return true;
   try {
     // Verifica se algum arquivo tem commit na develop depois de 'desde'
-    for (const arquivo of arquivos.slice(0, 6)) {
+    for (const arquivo of arquivos) {
       if (!desde) return true;
       const cs = (await gh(token, 'GET', `/commits?sha=develop&path=${encodeURIComponent(arquivo)}&since=${encodeURIComponent(desde)}&per_page=1`)).json;
       if (Array.isArray(cs) && cs.length > 0) return true;
-    }
-    // Se nenhum arquivo tem commit novo, verifica se algum está em PR aberto
-    const prs = (await gh(token, 'GET', '/pulls?state=open&per_page=30')).json || [];
-    for (const pr of prs.filter(x => /^nexia\//.test((x.head || {}).ref || ''))) {
-      const fs = (await gh(token, 'GET', `/pulls/${pr.number}/files?per_page=100`)).json || [];
-      if (fs.some(f => arquivos.includes(f.filename))) return true;
     }
     return false;
   } catch { return true; }
