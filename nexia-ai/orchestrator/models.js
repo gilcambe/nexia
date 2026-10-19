@@ -34,6 +34,17 @@ const GROQ_STRONG = ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'moonshotai/kimi
   'openai/gpt-oss-20b', 'meta-llama/llama-4-scout-17b-16e-instruct'];
 const GROQ_FAST = ['openai/gpt-oss-20b', 'meta-llama/llama-4-scout-17b-16e-instruct', 'qwen/qwen3.8-27b', 'llama-3.3-70b-versatile',
   'openai/gpt-oss-120b', 'moonshotai/kimi-k2-instruct-0905'];
+
+/** Remove repetidos (mesmo provider e model), mantendo o primeiro. */
+function semRepetir(lista) {
+  const visto = new Set();
+  return lista.filter(d => {
+    const chave = `${d.provider}|${d.model}`;
+    if (visto.has(chave)) return false;
+    visto.add(chave);
+    return true;
+  });
+}
 const FREE = Object.freeze({
   reasoning: [...GROQ_STRONG.map(g), ...TAIL],
   coding: [...GROQ_STRONG.map(g), ...TAIL],
