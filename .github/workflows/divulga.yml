@@ -23,7 +23,7 @@ concurrency:
 jobs:
   divulga:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -38,9 +38,33 @@ jobs:
           else
             git worktree add -q --orphan -b divulga-dados dados
           fi
+      # Linha de produção (#992): roteiro > telas com a cor do cliente > reel (só no horário das 19h15) > post.json.
+      # Os arquivos vão para a branch "divulga-midia" (só a última produção, sobrescrita) para virar URL pública raw.
+      # Se falhar, o robô posta o de sempre.
+      - name: Produzir o post do cliente da vez
+        id: produzir
+        if: ${{ github.event_name == 'schedule' || inputs.acao == 'rodar' }}
+        continue-on-error: true
+        timeout-minutes: 10
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          command -v ffmpeg >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-dejavu-core; }
+          npm install --no-save --no-audit --no-fund @playwright/test@1.59.1
+          npx playwright install --with-deps chromium
+          git worktree add -q --orphan -b divulga-midia midia
+          node divulga/produzir.js auto midia/producao --dados dados
+          cd midia
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -qm "midia do Divulga"
+          git push -q -f origin divulga-midia
+          sleep 15
       - name: Postar
         env:
           ACAO: ${{ github.event_name == 'schedule' && 'rodar' || inputs.acao }}
+          PRODUCAO: ${{ steps.produzir.outcome == 'success' && 'midia/producao' || '' }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           DIVULGA_META_PAGE_ID: ${{ secrets.DIVULGA_META_PAGE_ID }}
@@ -54,13 +78,15 @@ jobs:
           DIVULGA_PINTEREST_BOARD_ID: ${{ secrets.DIVULGA_PINTEREST_BOARD_ID }}
           DIVULGA_BLUESKY_HANDLE: ${{ secrets.DIVULGA_BLUESKY_HANDLE }}
           DIVULGA_BLUESKY_APP_PASSWORD: ${{ secrets.DIVULGA_BLUESKY_APP_PASSWORD }}
-        run: node divulga/robo.js "$ACAO" --dados dados
+        run: node divulga/robo.js "$ACAO" --dados dados ${PRODUCAO:+--producao "$PRODUCAO"}
       - name: Gerar carrossel, story, antes e depois e reel (só no ensaio)
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.acao == 'ensaio' }}
         run: |
+          command -v ffmpeg >/dev/null || { sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg fonts-dejavu-core; }
           npm install --no-save --no-audit --no-fund @playwright/test@1.59.1
           npx playwright install --with-deps chromium
           node divulga/gerar.js divulga-ensaio
+          node divulga/produzir.js auto divulga-ensaio/producao --dados dados --reel
       - name: Mostrar o ensaio para o dono
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.acao == 'ensaio' }}
         uses: actions/upload-artifact@v4
