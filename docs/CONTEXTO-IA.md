@@ -5,7 +5,8 @@ Cole o texto abaixo no início da conversa, ou mande a IA ler este arquivo no Gi
 ## Quem e o quê
 - Dono: Gildivan Bezerra (gcbezerra@gmail.com). Escreve em português, não é programador: respostas curtas, simples, passo a passo.
 - NEXIA: plataforma com vários produtos. Repositório `gilcambe/nexia`, ramo principal `develop`.
-- Produtos: **Body Coach** (app de treino, `/body-coach`, em produção, não pode quebrar), **Cortex** (IA que programa, `/cortex`), **Central** (`/central`, painel do dono), sites de clientes (Bezsan, Studio Lima), Divulga (robô de posts), Achados (afiliados).
+- Marca pública: **Kernex** (kernex.com.br, frase 'Inteligência que resolve.'). Arte em `brand/kernex/`. Nomes internos continuam `nexia` para não quebrar nada.
+- Produtos: **Body Coach** (app de treino, `/body-coach`, em produção, não pode quebrar), **Cortex** (IA que programa, `/cortex`), **Central** (`/central`, painel do dono), sites de clientes (Bezsan, Studio Lima), Divulga (robô de posts), Achados (afiliados). Clientes antigos: CES Brasil 2027 (`/ces`), Viajante Pro (`/vp`), Splash Eventos (`/splash`).
 - Infra: SÓ Firebase + GitHub + Cloudflare. Nada pago, nada de Render, sem Blaze nem Workers Pago.
 
 ## Regras que valem sempre
@@ -14,7 +15,7 @@ Cole o texto abaixo no início da conversa, ou mande a IA ler este arquivo no Gi
 3. Nenhuma função existente é removida. Tudo grátis.
 4. Pode mesclar sem perguntar quando o CI está verde (rótulo `automerge`, ramo `nexia/*`). Precisa da palavra do dono: publicar regras do Firestore, chaves reais, reescrever histórico do git, qualquer coisa irreversível.
 5. O dono recusou trocar chaves expostas: não insistir.
-6. Ícone de app/site = inicial ou logo do PRÓPRIO produto; NEXIA só no vídeo de abertura de 2 s.
+6. Ícone de app/site = inicial ou logo do PRÓPRIO produto; a marca **Kernex** aparece só na vinheta de 2 s e no selo 'Feito com Kernex'.
 7. Todo projeto termina com teste completo "como pessoa".
 
 ## Como o Cortex funciona

@@ -263,7 +263,7 @@ ${body}
     </div>
     <div class="container footer__bottom">
       <p>© <span data-year>${new Date().getFullYear()}</span> ${esc(spec.name)}. Todos os direitos reservados.</p>
-      <a class="selo-nexia" href="${attr(spec.selo ? spec.selo.url : 'https://nexia.gcbezerra.workers.dev')}" target="_blank" rel="noopener">${esc(spec.selo ? spec.selo.label : 'Feito com NEXIA')}</a>
+      <a class="selo-nexia" href="${attr(spec.selo ? spec.selo.url : 'https://kernex.com.br/?utm_source=site&utm_medium=selo&utm_campaign=clientes')}" target="_blank" rel="noopener">${esc(spec.selo ? spec.selo.label : 'Feito com Kernex')}</a>
       ${credits.length ? `<details class="credits"><summary>Créditos das imagens</summary><ul>${credits.map(x => `<li>${esc(x)}</li>`).join('')}</ul></details>` : ''}
     </div>
   </footer>

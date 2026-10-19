@@ -44,7 +44,7 @@ function pagina({ cfg, titulo, descricao, corpo, raiz = '', canonica, imagem, ex
 <header><div class="in"><h1><a href="${raiz || './'}" style="text-decoration:none">${esc(s.nome)}</a></h1><p>${esc(s.frase)}</p></div></header>
 <p class="aviso">Os links deste site são de afiliado: se você comprar por eles, podemos ganhar uma comissão, sem custo extra para você. Preços e estoque podem mudar na loja.</p>
 ${corpo}
-<footer><a href="${raiz}privacidade.html">Privacidade e aviso de afiliado</a> · <a href="${raiz}whatsapp/">Mensagem para WhatsApp</a> · <a href="${raiz}feed.xml">RSS</a><br>Feito com NEXIA</footer>
+<footer><a href="${raiz}privacidade.html">Privacidade e aviso de afiliado</a> · <a href="${raiz}whatsapp/">Mensagem para WhatsApp</a> · <a href="${raiz}feed.xml">RSS</a><br><a href="https://kernex.com.br/?utm_source=achados&amp;utm_medium=selo&amp;utm_campaign=clientes" target="_blank" rel="noopener">Feito com Kernex</a></footer>
 </body></html>`;
 }
 

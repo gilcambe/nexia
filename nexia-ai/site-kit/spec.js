@@ -38,6 +38,9 @@ function extractJson(text) {
 }
 
 /** Primeira pasta válida (a pedida pelo usuário vence a escolhida pela IA); sem nenhuma, sites/<nome>. */
+// Selo padrão do rodapé de todo site gerado: link para a Kernex com o slug do site (#1001).
+const seloKernex = slug => ({ label: 'Feito com Kernex', url: `https://kernex.com.br/?utm_source=${slug}&utm_medium=selo&utm_campaign=clientes` });
+
 function safeFolder(options, name) {
   for (const f of options) {
     const clean = String(f || '').trim().replace(/^\/+|\/+$/g, '');
@@ -130,9 +133,11 @@ function normalizeSpec(raw, { kind: forcedKind, request = '' } = {}) {
       youtube: url(contact.youtube), tiktok: str(contact.tiktok, 60).replace(/^@/, ''), linkedin: url(contact.linkedin) },
     // Opcionais: logo/ícone do próprio cliente, selo do rodapé e origem gravada nos leads do formulário.
     logo: asset(r.logo), logo_scrolled: asset(r.logo_scrolled), favicon: asset(r.favicon), brand_text: r.brand_text === true,
-    selo: r.selo && typeof r.selo === 'object' && str(r.selo.label, 40) && url(r.selo.url) ? { label: str(r.selo.label, 40), url: url(r.selo.url) } : { label: 'Feito com NEXIA', url: 'https://nexia.gcbezerra.workers.dev' },
+    // Sem selo próprio no spec: selo "Feito com Kernex" com o slug do site (nome da pasta) no utm_source (#1001).
+    selo: r.selo && typeof r.selo === 'object' && str(r.selo.label, 40) && url(r.selo.url) ? { label: str(r.selo.label, 40), url: url(r.selo.url) } : null,
     leads_origem: slugify(r.leads_origem),
   };
+  if (!spec.selo) spec.selo = seloKernex(slugify(String(spec.folder || '').split('/').pop()) || slugify(name) || 'site');
   if (kind === 'site') {
     spec.sections = arr(r.sections, 12).map(section).filter(Boolean);
     if (!spec.sections.some(s => s.type === 'hero')) errors.push('falta a seção "hero"');
