@@ -22,7 +22,7 @@ const PROVIDERS = Object.freeze({
   xai:         { url: 'https://api.x.ai/v1/chat/completions', env: 'XAI_API_KEY', max_output: 32768, tools: true },
   perplexity:  { url: 'https://api.perplexity.ai/chat/completions', env: 'PERPLEXITY_API_KEY', max_output: 8192, tools: false },
   cerebras:    { url: 'https://api.cerebras.ai/v1/chat/completions', env: 'CEREBRAS_API_KEY', max_output: 32768, tools: true },
-  openrouter:  { url: 'https://openrouter.ai/api/v1/chat/completions', env: 'OPENROUTER_API_KEY', max_output: 16384, tools: true,
+  openrouter:  { url: 'https://openrouter.ai/api/v1/chat/completions', env: 'OPENROUTER_API_KEY', max_output: 16384, tools: true, catalog: true, catalogUrl: 'https://openrouter.ai/api/v1/models',
                  extraHeaders: env => ({ 'HTTP-Referer': env.NEXIA_APP_URL || 'https://nexia.com.br', 'X-Title': 'NEXIA OS' }) },
   mistral:     { url: 'https://api.mistral.ai/v1/chat/completions', env: 'MISTRAL_API_KEY', max_output: 32768, tools: true },
   // ADR-FREE-05: NVIDIA NIM (build.nvidia.com, grátis com verificação por telefone, 40 pedidos/min) aceita tool_call no formato OpenAI.
