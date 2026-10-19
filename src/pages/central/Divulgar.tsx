@@ -61,6 +61,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
     try { setMsg((await agir(corpo)).mensagem); } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
   };
   const x = d.divulga;
+  const metaGraphData = d.metaGraphAPI;
   return (
     <div className="space-y-4">
       <Cartao titulo="Propaganda grátis">
