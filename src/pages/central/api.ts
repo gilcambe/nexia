@@ -62,6 +62,7 @@ export interface Dados {
   cortex?: Cortex;
   robos?: { robos: Robo[] };
   divulga?: Divulga;
+  metaGraphAPI?: MetaGraphAPI;
   banco?: { ok: boolean; cheio?: boolean; tempo: number };
   cloudflare?: { configurado: boolean; pedidos?: number; limite: number; erro?: string };
   empresa?: { fornecedores: Fornecedor[] };
