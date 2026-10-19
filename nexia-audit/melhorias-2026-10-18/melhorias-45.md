@@ -27,6 +27,20 @@
 - **Justificativa:** Tarefas pequenas passam na revisão e no teste; estimativa na entrada evita surpresa; divisão precoce de pedidos multi-arquivo evita falhas acumuladas.
 
 ## Alerta automático de queda por e‑mail (Brevo grátis) e na Central
+
+---
+
+# Melhoria 48: Busca na web com citação usando ferramentas gratuitas
+
+- **Status:** Planejado
+- **Ferramenta:** DuckDuckGo HTML (zero custo) — ou Brave free tier quando necessário
+- **Por quê:** Precisão em assuntos novos, custo 0, sem dependência de APIs pagas
+- **Implementação:** Server-side handler que chama DuckDuckGo HTML, extrai resultados e exibe fontes citadas no fim da resposta
+- **Custo:** 0
+- **Justificativa:** Permite respostas fundamentadas em dados reais sem custos de API; as citações garantem rastreabilidade e credibilidade
+
+---
+
 - **Objetivo**: Monitorar o endpoint `/health` da API e o aplicativo Body Coach. Caso falhem duas vezes consecutivas, disparar um alerta por e‑mail usando a conta gratuita do Brevo e registrar o evento na Central de monitoramento.
 - **Motivo**: Produto em produção requer monitoramento 24h sem custo adicional.
 - **Implementação**:
