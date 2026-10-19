@@ -31,6 +31,11 @@ test('LEAD1. lead válido é gravado limpo, com origem e site; resposta libera q
   assert.deepEqual(d.utm, { source: 'instagram', campaign: 'beta' });
 });
 
+test('LEAD1b. "origem" do formulário (ex.: site da Kernex) é guardada limpa', () => {
+  assert.equal(cleanLead({ ...valido, origem: 'Kernex-Site<x>' }).lead.origem, 'kernex-sitex');
+  assert.equal(cleanLead(valido).lead.origem, '');
+});
+
 test('LEAD2. validação: nome, contato, consentimento LGPD, e-mail e WhatsApp', () => {
   assert.match(cleanLead({ ...valido, nome: 'A' }).error, /nome/);
   assert.match(cleanLead({ nome: 'Ana', consentimento: true }).error, /WhatsApp ou e-mail/);
