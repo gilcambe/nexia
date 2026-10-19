@@ -19,6 +19,7 @@
 // Gemma pelo AI Studio ficou de fora: sem garantia de tool_call no endpoint compatível com OpenAI.
 // Provedor sem chave é pulado na hora. Os nomes mudam com o tempo: NEXIA_MODELS_<CLASSE>
 // (ex.: NEXIA_MODELS_CODING="groq:openai/gpt-oss-120b,kilo:z-ai/glm-5:free,kilo:auto:1") troca a lista.
+const { getPlacar } = require('../model-router/cota');
 const g = model => ({ provider: 'groq', model });
 const KILO = [1, 2, 3, 4, 5].map(n => ({ provider: 'kilo', model: `auto:${n}` }));
 const TAIL = [
@@ -62,9 +63,10 @@ function listFor(cls, env = process.env) {
 
 /** @returns {{ provider, model }[]} candidatos disponíveis para a classe */
 function candidates(router, cls, env = process.env) {
-  return listFor(cls, env).filter(d => {
+  const lista = listFor(cls, env).filter(d => {
     try { const c = router.capabilities(d); return c && c.available !== false && c.tool_call; } catch { return false; }
   });
+  return getPlacar().ordenar(lista);
 }
 
 module.exports = { CLASSES, FREE, candidates, listFor, parseList };
