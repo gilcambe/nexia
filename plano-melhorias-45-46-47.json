@@ -1,0 +1,38 @@
+{
+  "melhoria": "Melhoria 45: Login com Google no endereço do próprio produto",
+  "status": "Implementado e configurado",
+  "acoes": [
+    "Cadastrar a URL de redirecionamento do domínio próprio no Console do Google / Firebase",
+    "Definir AUTH_DOMINIO_PROPRIO=1 e FIREBASE_AUTH_PROXY_DOMAIN no Cloudflare Worker / ambiente de produção",
+    "Cloudflare Worker repassa requisições de /__/auth/ e /__/firebase/init.json (proxyAuth)",
+    "Utiliza domínio próprio (authDomainProprio) ocultando nexia-c8710.firebaseapp.com"
+  ],
+  "justificativa": "Proporciona experiência profissional e sem referências a domínios de terceiros"
+},
+{
+  "melhoria": "Melhoria 46: Respostas diretas sem abrir issue",
+  "status": "Implementado",
+  "regra": "Perguntas ('como estamos?', 'o que falta?') são respondidas na hora por modelo rápido lendo Central; só pedidos de código viram issue",
+  "porquê": "Pergunta não deve esperar fila",
+  "custo": 0,
+  "justificativa": "Resposta imediata sem fila de issues para perguntas; apenas mudanças de código entram no fluxo de issue"
+},
+{
+  "melhoria": "Melhoria 47: Divisão automática de tarefa grande",
+  "status": "Implementado (regra de processo)",
+  "regra": "Pedido grande (já na 3ª falha) divide automaticamente em tarefas pequenas antes de executar. Antes de começar: estimativa na entrada. Se o pedido toca mais de 4 arquivos, dividir logo no começo",
+  "porquê": "Tarefas pequenas passam; tarefa grande que falha 3 vezes vira várias pequenas",
+  "custo": 0,
+  "justificativa": "Tarefas pequenas passam na revisão e no teste; estimativa na entrada evita surpresa; divisão precoce de pedidos multi-arquivo evita falhas acumuladas"
+},
+{
+  "melhoria": "Alerta automático de queda por e-mail (Brevo grátis) e na Central",
+  "objetivo": "Monitorar o endpoint /health da API e o aplicativo Body Coach. Caso falhem duas vezes consecutivas, disparar alerta por e-mail usando conta gratuita do Brevo e registrar evento na Central de monitoramento",
+  "motivo": "Produto em produção requer monitoramento 24h sem custo adicional",
+  "implementacao": [
+    "Criar src/monitoring/healthWatcher.js que faz polling a cada minuto e conta falhas consecutivas",
+    "Utilizar src/notification/brevoClient.js para envio de e-mail (variável de ambiente BREVO_API_KEY)",
+    "Iniciar o watcher em src/server.js",
+    "Garantir que nenhum teste existente seja quebrado (npm test continua passando)"
+  ]
+}
