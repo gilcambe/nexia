@@ -11,6 +11,48 @@ import saude from './saude.js';
 export default {
   async fetch(request, env) {
     if (new URL(request.url).pathname === '/api/corpo-ia') return corpoIa(request, env);
+    
+    // Cache de borda para APIs de leitura (Cache API do Worker)
+    const url = new URL(request.url);
+    if (request.method === 'GET') {
+      // APIs com cache: listas de ofertas, config pública, /api/firebase-config e catálogos
+      const cacheablePaths = [
+        '/api/ofertas',
+        '/api/config-publica',
+        '/api/firebase-config',
+        '/api/catalogos'
+      ];
+      
+      if (cacheablePaths.some(path => url.pathname.startsWith(path))) {
+        const cache = caches.default;
+        const cacheKey = new Request(request.url, request);
+        
+        // Tenta buscar do cache
+        const cachedResponse = await cache.match(cacheKey);
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+        
+        // Se não está no cache, executa a requisição original
+        const response = await app.handleRequest(request, env, { getFunction: functions.getFunction });
+        
+        // Cacheia a resposta com TTL entre 60 e 300 segundos
+        const ttl = Math.floor(Math.random() * 241) + 60; // 60-300 segundos
+        const cacheResponse = new Response(response.body, {
+          status: response.status,
+          statusText: response.statusText,
+          headers: {
+            'Content-Type': response.headers.get('Content-Type'),
+            'Cache-Control': `public, max-age=${ttl}`,
+            'X-Cache': 'MISS'
+          }
+        });
+        
+        ctx.waitUntil(cache.put(cacheKey, cacheResponse.clone()));
+        return cacheResponse;
+      }
+    }
+    
     return app.handleRequest(request, env, { getFunction: functions.getFunction });
   },
 
