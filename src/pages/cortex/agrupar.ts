@@ -41,3 +41,18 @@ export const MODOS: Record<ModoResposta, ConfiguracaoResposta> = {
     contexto: 'Responda de forma curta, direta e prática. Sem enrolação.',
   },
 
+  pensar: {
+    modo: 'pensar',
+    descricao: 'Análise aprofundada com raciocínio',
+    modelo: 'or_deepseek_r1',
+    contexto: 'Pense passo a passo, analise profundamente e dê uma resposta completa e bem fundamentada.',
+  },
+
+  pesquisar: {
+    modo: 'pesquisar',
+    descricao: 'Busca por informações atualizadas',
+    modelo: 'perplexity',
+    contexto: 'Pesquise informações atualizadas na web antes de responder. Use fontes confiáveis e cite suas referências.',
+  },
+};
+
