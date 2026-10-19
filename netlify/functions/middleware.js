@@ -45,6 +45,7 @@ const RATE_LIMITS = {
   'tenant-admin':       { max: 120, windowMs: 60_000 },
   'observability':      { max: 200, windowMs: 60_000 },
   'cortex-logs':        { max: 200, windowMs: 60_000 },
+  'respostas-rapidas': { max: 300, windowMs: 60_000 },
   'default':            { max: 200, windowMs: 60_000 }
 };
 
