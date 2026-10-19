@@ -10,7 +10,7 @@
 
 # Melhoria 46: Respostas diretas sem abrir issue
 
-- **Status:** Implementado
+- **Status:** Implementado e validado no processo da Central
 - **Regra:** Perguntas ("como estamos?", "o que falta?") são respondidas na hora por um modelo rápido lendo a Central; só pedidos de código viram issue.
 - **Por quê:** Pergunta não deve esperar fila.
 - **Custo:** 0.
