@@ -141,19 +141,25 @@ async function runFunction(fnName, req, res, body) {
     body: body && body.length ? body.toString('utf8') : null,
     isBase64Encoded: false,
   };
-  try {
-    const result = await fn.handler(event, {});
-    const baseHeaders = {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': getCorsOrigin(req.headers),
-      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-Id',
-    };
-    // NEXIA AI (Fase 5): streaming real quando o handler devolve { stream }
-    if (isStreamResult(result)) return writeStream(req, res, result, baseHeaders);
-    res.writeHead(result.statusCode || 200, { ...baseHeaders, ...(result.headers || {}) });
-    res.end(result.body || '');
-  } catch (e) {
+      try {
+      const result = await fn.handler(event, {});
+      const parsedUrl = url.parse(req.url);
+      const pathname = parsedUrl.pathname || '';
+      const isReadApi = (req.method === 'GET' || req.method === 'HEAD') &&
+        (pathname.includes('/ofertas') || pathname.includes('/catalogo') || pathname.includes('/config') || pathname.includes('/firebase-config') || pathname.includes('/oferta'));
+      const cacheHeaders = isReadApi ? { 'Cache-Control': 'public, max-age=300, s-maxage=300' } : {};
+      const baseHeaders = {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': getCorsOrigin(req.headers),
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-Id',
+        ...cacheHeaders,
+      };
+      // NEXIA AI (Fase 5): streaming real quando o handler devolve { stream }
+      if (isStreamResult(result)) return writeStream(req, res, result, baseHeaders);
+      res.writeHead(result.statusCode || 200, { ...baseHeaders, ...(result.headers || {}) });
+      res.end(result.body || '');
+    } catch (e) {
     // SEC Fase 1 (A5): detalhe só no log, cliente recebe correlationId
     res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': getCorsOrigin(req.headers) });
     res.end(JSON.stringify(publicErrorBody('FN ' + fnName, e)));
