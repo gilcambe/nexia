@@ -148,3 +148,51 @@ test('CF-VAZAO. padrão de 6 pistas; parte anterior travada não segura as segui
   const p2 = issue(11, ['cortex-parte'], { title: '[Parte 2/2 de #9] x' });
   assert.deepEqual(decidir({ issues: [p1, p2], runs: [], agora: AGORA }).map(x => x.numero), [11]);
 });
+
+test('CF-REQ1. tarefa aberta com cortex-feito fecha como concluída', () => {
+  const a = decidir({ issues: [issue(1, ['cortex-feito'])], runs: [], agora: AGORA });
+  assert.equal(a[0].tipo, 'fechar-feito');
+  assert.equal(a[0].numero, 1);
+});
+
+test('CF-REQ2. tarefa com cortex-rodando sem execução Cortex #N nas últimas 2h vira reenfileirar sem execução', () => {
+  const a = decidir({ issues: [issue(1, ['cortex-rodando', 'pista-1'], { updated_at: '2026-10-07T08:00:00Z' })], runs: [], agora: AGORA });
+  assert.equal(a[0].tipo, 'reenfileirar');
+  assert.equal(a[0].numero, 1);
+  assert.equal(a[0].conclusao, 'sem execução');
+});
+
+test('CF-REQ3. ao despachar, deixa só a pista nova e remove todas as outras', () => {
+  const a = decidir({ issues: [issue(1, ['cortex-fila', 'pista-2'])], runs: [], agora: AGORA, pistas: 3 });
+  const despacho = a.find(x => x.tipo === 'despachar');
+  assert.equal(despacho.numero, 1);
+  assert.equal(despacho.pista, 3);
+});
+
+test('CF-REQ4. ao reenfileirar, remove todos os rótulos pista-*', () => {
+  const a = decidir({ issues: [issue(1, ['cortex-rodando', 'pista-1', 'pista-2', 'tentativa-3'])], runs: [run(1, 'completed', 'failure')], agora: AGORA });
+  const reenfileirar = a.find(x => x.tipo === 'reenfileirar');
+  assert.equal(reenfileirar.numero, 1);
+  assert.equal(reenfileirar.tentativa, 4);
+});
+
+test('CF-REQ5. ao travar, remove todos os rótulos pista-*', () => {
+  const a = decidir({ issues: [issue(1, ['cortex-rodando', 'pista-1', 'tentativa-12'])], runs: [run(1, 'completed', 'failure')], agora: AGORA });
+  const travar = a.find(x => x.tipo === 'travar');
+  assert.equal(travar.numero, 1);
+  assert.equal(travar.tentativas, 12);
+});
+
+test('CF-REQ6. ao dividir, remove todos os rótulos pista-*', () => {
+  const a = decidir({ issues: [issue(1, ['cortex-rodando', 'pista-1', 'tentativa-3'])], runs: [run(1, 'completed', 'failure')], agora: AGORA });
+  const dividir = a.find(x => x.tipo === 'dividir');
+  assert.equal(dividir.numero, 1);
+  assert.equal(dividir.limpar, true);
+  assert.equal(dividir.tentativa, 3);
+});
+
+test('CF-REQ7. ao concluir, remove todos os rótulos pista-*', () => {
+  const a = decidir({ issues: [issue(1, ['cortex-rodando', 'pista-1'])], runs: [run(1, 'completed', 'success')], agora: AGORA });
+  const concluir = a.find(x => x.tipo === 'concluir');
+  assert.equal(concluir.numero, 1);
+});
