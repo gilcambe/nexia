@@ -1,0 +1,15 @@
+{
+  "marca": "Kernex",
+  "frase": "Inteligência que resolve.",
+  "fonte": "Inter (títulos: Inter Display, peso 600)",
+  "cores": {
+    "fundo": "#060d1c",
+    "azul": "#1d5fd0",
+    "azulClaro": "#6fb8ff",
+    "azulEscuro": "#0a2468",
+    "ciano": "#2fd3c7",
+    "aco": "#6b7d96",
+    "textoClaro": "#e2e8f2",
+    "textoEscuro": "#24406e"
+  }
+}
