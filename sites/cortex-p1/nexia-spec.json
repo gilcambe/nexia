@@ -1,0 +1,237 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex-p1 Teste",
+    "tagline": "Controle total e monitoramento em um só lugar",
+    "photo_theme": "mobile app dashboard interface",
+    "description": "Acesse o painel Cortex-p1 via app nativo para uma experiência fluida, segura e sem barreiras de URL. Gerencie usuários, acompanhe instalações e visualize relatórios em tempo real.",
+    "folder": "sites/cortex-p1",
+    "fonts": {
+      "heading": "Outfit",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2563eb",
+      "accent": "#10b981",
+      "bg": "#f8fafc",
+      "surface": "#ffffff",
+      "text": "#1e293b",
+      "muted": "#64748b",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 91234-5678",
+      "email": "contato@cortexp1.com.br",
+      "address": "Av. Paulista, 1000 - São Paulo, SP",
+      "city": "São Paulo",
+      "hours": "Seg - Sex: 09:00 - 18:00",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "usuarios",
+        "label": "Usuários",
+        "singular": "Usuário",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E‑mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "perfil",
+            "label": "Perfil",
+            "type": "select",
+            "options": [
+              "Admin",
+              "Editor",
+              "Visualizador"
+            ],
+            "required": true
+          },
+          {
+            "key": "data_cadastro",
+            "label": "Data de cadastro",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Inativo"
+            ],
+            "required": true
+          },
+          {
+            "key": "observacoes",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Mariana Silva",
+            "email": "mariana@exemplo.com",
+            "telefone": "(11) 98765-4321",
+            "perfil": "Admin",
+            "data_cadastro": "2026-09-15",
+            "status": "Ativo",
+            "observacoes": ""
+          },
+          {
+            "nome": "Pedro Alves",
+            "email": "pedro@exemplo.com",
+            "telefone": "(11) 92345-6789",
+            "perfil": "Editor",
+            "data_cadastro": "2026-09-20",
+            "status": "Ativo",
+            "observacoes": ""
+          },
+          {
+            "nome": "Laura Costa",
+            "email": "laura@exemplo.com",
+            "telefone": "(11) 93456-7890",
+            "perfil": "Visualizador",
+            "data_cadastro": "2026-09-25",
+            "status": "Inativo",
+            "observacoes": ""
+          },
+          {
+            "nome": "Rafael Mendes",
+            "email": "rafael@exemplo.com",
+            "telefone": "(11) 94567-8901",
+            "perfil": "Editor",
+            "data_cadastro": "2026-10-01",
+            "status": "Ativo",
+            "observacoes": ""
+          }
+        ]
+      },
+      {
+        "key": "instalacoes",
+        "label": "Instalações",
+        "singular": "Instalação",
+        "fields": [
+          {
+            "key": "usuario",
+            "label": "Usuário",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "versao_app",
+            "label": "Versão do App",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_instalacao",
+            "label": "Data da Instalação",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "dispositivo",
+            "label": "Dispositivo",
+            "type": "select",
+            "options": [
+              "Pixel 7",
+              "Galaxy S23",
+              "OnePlus 11",
+              "Xiaomi 13"
+            ],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Instalado",
+              "Falha"
+            ],
+            "required": true
+          },
+          {
+            "key": "observacoes",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "usuario": "Mariana Silva",
+            "versao_app": "1.0.3",
+            "data_instalacao": "2026-10-05",
+            "dispositivo": "Pixel 7",
+            "status": "Instalado",
+            "observacoes": ""
+          },
+          {
+            "usuario": "Pedro Alves",
+            "versao_app": "1.0.3",
+            "data_instalacao": "2026-10-06",
+            "dispositivo": "Galaxy S23",
+            "status": "Instalado",
+            "observacoes": ""
+          },
+          {
+            "usuario": "Laura Costa",
+            "versao_app": "1.0.2",
+            "data_instalacao": "2026-10-04",
+            "dispositivo": "OnePlus 11",
+            "status": "Falha",
+            "observacoes": ""
+          },
+          {
+            "usuario": "Rafael Mendes",
+            "versao_app": "1.0.3",
+            "data_instalacao": "2026-10-07",
+            "dispositivo": "Xiaomi 13",
+            "status": "Instalado",
+            "observacoes": ""
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Gerenciamento de Usuários",
+      "Instalações",
+      "Relatórios"
+    ]
+  },
+  "media": {}
+}
