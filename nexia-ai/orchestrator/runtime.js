@@ -10,6 +10,7 @@
 // como feito sem confirmação da ferramenta.
 const { allowed, systemPrompt, AGENTS } = require('./agents');
 const { candidates } = require('./models');
+const { getPlacar } = require('../model-router/cota');
 const { parseEditBlocks, FORMAT_HELP } = require('./edit-blocks');
 
 const RETRYABLE_TOOL = new Set(['UPSTREAM']);
@@ -85,6 +86,7 @@ function createFailover(models, meter) {
       const real = d.model && d.model !== desc.model ? ` (${d.model})` : '';
       errors.push(`${desc.provider}/${desc.model}${real}: ${String((e && e.message) || code || 'erro')}${d.upstream ? ` ${String(d.upstream).replace(/\s+/g, ' ').slice(0, 160)}` : ''}`);
       const kind = classify(e);
+      getPlacar().marcar(desc, kind, retryAfterMs(d.upstream));
       lastCode = code;
       if (!SKIP.has(kind)) lastLive = code;
       if (kind === 'tpm' && shrink < 2) { shrink++; return null; }

@@ -63,9 +63,10 @@ function listFor(cls, env = process.env) {
 
 /** @returns {{ provider, model }[]} candidatos disponíveis para a classe */
 function candidates(router, cls, env = process.env) {
-  return listFor(cls, env).filter(d => {
+  const lista = listFor(cls, env).filter(d => {
     try { const c = router.capabilities(d); return c && c.available !== false && c.tool_call; } catch { return false; }
   });
+  return require('../model-router/cota').getPlacar().ordenar(lista);
 }
 
 module.exports = { CLASSES, FREE, candidates, listFor, parseList };
