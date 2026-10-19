@@ -89,8 +89,13 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
 
   for (const i of validas) {
     const ls = nomes(i);
-    if (ls.includes(L.feito) || ls.includes(L.travado)) continue;
+    if (ls.includes(L.travado)) continue;
     if (!ls.includes(L.rodando)) continue;
+    if (ls.includes(L.feito)) {
+      // Aberta e já marcada como feita: fecha como concluída.
+      acoes.push({ tipo: 'fechar-feito', numero: i.number });
+      continue;
+    }
     const run = ultimaRun(i.number);
     const pista = numeroDe(ls, 'pista');
     if (run && run.status === 'completed') {
@@ -106,7 +111,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
         : { tipo: 'reenfileirar', numero: i.number, tentativa: t, run: run.id, conclusao: run.conclusion });
       continue;
     }
-    if (!run && minutos(agora, i.updated_at) > 20) { acoes.push({ tipo: 'reenfileirar', numero: i.number, tentativa: numeroDe(ls, 'tentativa'), run: null, conclusao: 'sem execução' }); continue; }
+    if (!run && minutos(agora, i.updated_at) > 120) { acoes.push({ tipo: 'reenfileirar', numero: i.number, tentativa: numeroDe(ls, 'tentativa'), run: null, conclusao: 'sem execução' }); continue; }
     ativas++;
     if (pista) pistasEmUso.add(pista);
   }
@@ -221,8 +226,7 @@ async function executar(token, acao, dividir) {
   if (acao.tipo === 'dividir') {
     if (acao.limpar) {
       // Veio de uma tarefa que falhou: sai da pista (rodando) e anota a tentativa; se a divisão falhar, ela volta inteira para a fila.
-      await delLabel(L.rodando);
-      for (const k of [1, 2, 3]) await delLabel(`pista-${k}`).catch(() => null);
+      await delLabel(L.rodando); await limparPistas();
       if (acao.tentativa) await addLabel(`tentativa-${acao.tentativa}`);
     }
     const partes = dividir ? await dividir(acao.tarefa) : null;
@@ -252,15 +256,19 @@ async function executar(token, acao, dividir) {
       await comentar(`A rodada terminou sem erro, mas não achei o código entregue (${caminhosDoPedido(acao.corpo).slice(0, 3).join(', ') || 'nenhum PR parecido com o pedido'}). Não marquei como feita; volta para a fila.`);
       return;
     }
-    await delLabel(L.rodando); await addLabel(L.feito);
+    await delLabel(L.rodando); await limparPistas(); await addLabel(L.feito);
     await comentar(`Concluída pelo Cortex: https://github.com/${REPO}/actions/runs/${acao.run}`);
+    await gh(token, 'PATCH', `/issues/${n}`, { state: 'closed', state_reason: 'completed' });
+  } else if (acao.tipo === 'fechar-feito') {
+    await delLabel(L.rodando); await limparPistas(); await addLabel(L.feito);
+    await comentar('Tarefa aberta já marcada como concluída pelo Cortex: fechando.');
     await gh(token, 'PATCH', `/issues/${n}`, { state: 'closed', state_reason: 'completed' });
   } else if (acao.tipo === 'reenfileirar') {
     await delLabel(L.rodando); await limparPistas();
     for (const l of [`tentativa-${acao.tentativa - 1}`]) if (acao.tentativa > 1) await delLabel(l);
     await addLabel(`tentativa-${acao.tentativa}`);
   } else if (acao.tipo === 'travar') {
-    await delLabel(L.rodando); await addLabel(L.travado);
+    await delLabel(L.rodando); await limparPistas(); await addLabel(L.travado);
     await comentar(`Tarefa travada depois de ${acao.tentativas} tentativas (última: https://github.com/${REPO}/actions/runs/${acao.run}). Precisa de olhar humano.`);
   }
 }
