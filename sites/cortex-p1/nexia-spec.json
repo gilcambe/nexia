@@ -2,38 +2,222 @@
   "spec": {
     "kind": "system",
     "name": "Cortex-p1 Teste",
-    "tagline": "Controle total e monitoramento em um só lugar",
-    "photo_theme": "mobile app dashboard interface",
-    "description": "Acesse o painel Cortex-p1 via app nativo para uma experiência fluida, segura e sem barreiras de URL. Gerencie usuários, acompanhe instalações e visualize relatórios em tempo real.",
+    "tagline": "Sistema de IA integrado",
+    "photo_theme": "",
+    "description": "Sistema de IA integrado",
     "folder": "sites/cortex-p1",
     "fonts": {
-      "heading": "Outfit",
+      "heading": "Plus Jakarta Sans",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#2563eb",
-      "accent": "#10b981",
-      "bg": "#f8fafc",
+      "primary": "#4f46e5",
+      "accent": "#06b6d4",
+      "bg": "#fbfaf7",
       "surface": "#ffffff",
-      "text": "#1e293b",
-      "muted": "#64748b",
-      "dark": "#0f172a"
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#111827"
     },
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "(11) 91234-5678",
-      "email": "contato@cortexp1.com.br",
-      "address": "Av. Paulista, 1000 - São Paulo, SP",
-      "city": "São Paulo",
-      "hours": "Seg - Sex: 09:00 - 18:00",
+      "phone": "(11) 90000-0000",
+      "email": "suporte@cortex.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
       "instagram": "",
       "facebook": "",
       "youtube": "",
       "tiktok": "",
       "linkedin": ""
     },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=cortex-p1&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
     "entities": [
+      {
+        "key": "tarefas",
+        "label": "Tarefas",
+        "singular": "Tarefa",
+        "fields": [
+          {
+            "key": "titulo",
+            "label": "Título",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "prioridade",
+            "label": "Prioridade",
+            "type": "select",
+            "options": [
+              "Baixa",
+              "Média",
+              "Alta"
+            ],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Pendente",
+              "Em Progresso",
+              "Concluída",
+              "Bloqueada"
+            ],
+            "required": true
+          },
+          {
+            "key": "criado_em",
+            "label": "Criado em",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "responsavel",
+            "label": "Responsável",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "titulo": "Implementar integração Gemini",
+            "descricao": "Adicionar suporte direto ao Gemini na Central",
+            "prioridade": "Alta",
+            "status": "Em Progresso",
+            "criado_em": "2026-10-15",
+            "responsavel": "João Silva"
+          },
+          {
+            "titulo": "Documentar API",
+            "descricao": "Criar documentação completa da API Cortex",
+            "prioridade": "Média",
+            "status": "Pendente",
+            "criado_em": "2026-10-16",
+            "responsavel": "Maria Santos"
+          },
+          {
+            "titulo": "Corrigir bug histórico",
+            "descricao": "Resolver problema de exibição de tarefas travadas",
+            "prioridade": "Alta",
+            "status": "Concluída",
+            "criado_em": "2026-10-14",
+            "responsavel": "Carlos Oliveira"
+          },
+          {
+            "titulo": "Testes de performance",
+            "descricao": "Executar testes de carga no sistema",
+            "prioridade": "Baixa",
+            "status": "Pendente",
+            "criado_em": "2026-10-17",
+            "responsavel": "Ana Costa"
+          }
+        ]
+      },
+      {
+        "key": "projetos",
+        "label": "Projetos",
+        "singular": "Projeto",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_inicio",
+            "label": "Data de Início",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_previsao",
+            "label": "Previsão de Término",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "orcamento",
+            "label": "Orçamento",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "gerente",
+            "label": "Gerente",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Cortex-p1",
+            "descricao": "Plataforma de integração com IAs",
+            "data_inicio": "2026-09-01",
+            "data_previsao": "2026-12-31",
+            "orcamento": "50000",
+            "gerente": "João Silva"
+          },
+          {
+            "nome": "Central de IA",
+            "descricao": "Painel de controle para múltiplas IAs",
+            "data_inicio": "2026-10-01",
+            "data_previsao": "2027-02-28",
+            "orcamento": "75000",
+            "gerente": "Maria Santos"
+          },
+          {
+            "nome": "API REST",
+            "descricao": "Documentação e implementação da API",
+            "data_inicio": "2026-08-15",
+            "data_previsao": "2026-11-30",
+            "orcamento": "30000",
+            "gerente": "Carlos Oliveira"
+          },
+          {
+            "nome": "Mobile App",
+            "descricao": "Aplicativo móvel para acompanhamento",
+            "data_inicio": "2026-11-01",
+            "data_previsao": "2027-04-30",
+            "orcamento": "80000",
+            "gerente": "Ana Costa"
+          }
+        ]
+      },
       {
         "key": "usuarios",
         "label": "Usuários",
@@ -48,129 +232,132 @@
           },
           {
             "key": "email",
-            "label": "E‑mail",
+            "label": "E-mail",
             "type": "email",
             "options": [],
             "required": true
           },
           {
-            "key": "telefone",
-            "label": "Telefone",
-            "type": "phone",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "perfil",
-            "label": "Perfil",
+            "key": "cargo",
+            "label": "Cargo",
             "type": "select",
             "options": [
-              "Admin",
-              "Editor",
-              "Visualizador"
+              "Desenvolvedor",
+              "Designer",
+              "Gerente",
+              "Tester"
             ],
             "required": true
           },
           {
-            "key": "data_cadastro",
-            "label": "Data de cadastro",
+            "key": "data_admissao",
+            "label": "Data de Admissão",
             "type": "date",
             "options": [],
             "required": true
           },
           {
-            "key": "status",
-            "label": "Status",
-            "type": "select",
-            "options": [
-              "Ativo",
-              "Inativo"
-            ],
+            "key": "salario",
+            "label": "Salário",
+            "type": "money",
+            "options": [],
             "required": true
           },
           {
-            "key": "observacoes",
-            "label": "Observações",
-            "type": "textarea",
-            "options": [],
-            "required": false
+            "key": "departamento",
+            "label": "Departamento",
+            "type": "select",
+            "options": [
+              "TI",
+              "Design",
+              "Marketing",
+              "Financeiro"
+            ],
+            "required": true
           }
         ],
         "sample": [
           {
-            "nome": "Mariana Silva",
-            "email": "mariana@exemplo.com",
-            "telefone": "(11) 98765-4321",
-            "perfil": "Admin",
-            "data_cadastro": "2026-09-15",
-            "status": "Ativo",
-            "observacoes": ""
+            "nome": "João Silva",
+            "email": "joao@cortex.com.br",
+            "cargo": "Gerente",
+            "data_admissao": "2025-06-01",
+            "salario": "8000",
+            "departamento": "TI"
           },
           {
-            "nome": "Pedro Alves",
-            "email": "pedro@exemplo.com",
-            "telefone": "(11) 92345-6789",
-            "perfil": "Editor",
-            "data_cadastro": "2026-09-20",
-            "status": "Ativo",
-            "observacoes": ""
+            "nome": "Maria Santos",
+            "email": "maria@cortex.com.br",
+            "cargo": "Desenvolvedora",
+            "data_admissao": "2025-07-15",
+            "salario": "6500",
+            "departamento": "TI"
           },
           {
-            "nome": "Laura Costa",
-            "email": "laura@exemplo.com",
-            "telefone": "(11) 93456-7890",
-            "perfil": "Visualizador",
-            "data_cadastro": "2026-09-25",
-            "status": "Inativo",
-            "observacoes": ""
+            "nome": "Carlos Oliveira",
+            "email": "carlos@cortex.com.br",
+            "cargo": "Designer",
+            "data_admissao": "2025-08-20",
+            "salario": "5500",
+            "departamento": "Design"
           },
           {
-            "nome": "Rafael Mendes",
-            "email": "rafael@exemplo.com",
-            "telefone": "(11) 94567-8901",
-            "perfil": "Editor",
-            "data_cadastro": "2026-10-01",
-            "status": "Ativo",
-            "observacoes": ""
+            "nome": "Ana Costa",
+            "email": "ana@cortex.com.br",
+            "cargo": "Tester",
+            "data_admissao": "2025-09-10",
+            "salario": "5000",
+            "departamento": "TI"
           }
         ]
       },
       {
-        "key": "instalacoes",
-        "label": "Instalações",
-        "singular": "Instalação",
+        "key": "historico",
+        "label": "Histórico de Interações",
+        "singular": "Interação",
         "fields": [
           {
-            "key": "usuario",
-            "label": "Usuário",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "versao_app",
-            "label": "Versão do App",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "data_instalacao",
-            "label": "Data da Instalação",
+            "key": "data",
+            "label": "Data",
             "type": "date",
             "options": [],
             "required": true
           },
           {
-            "key": "dispositivo",
-            "label": "Dispositivo",
+            "key": "tipo",
+            "label": "Tipo",
             "type": "select",
             "options": [
-              "Pixel 7",
-              "Galaxy S23",
-              "OnePlus 11",
-              "Xiaomi 13"
+              "Pergunta",
+              "Resposta",
+              "Erro",
+              "Feedback"
             ],
+            "required": true
+          },
+          {
+            "key": "conteudo",
+            "label": "Conteúdo",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "ia_utilizada",
+            "label": "IA Utilizada",
+            "type": "select",
+            "options": [
+              "Gemini",
+              "ChatGPT",
+              "Claude"
+            ],
+            "required": true
+          },
+          {
+            "key": "tokens_gastos",
+            "label": "Tokens Gastos",
+            "type": "number",
+            "options": [],
             "required": true
           },
           {
@@ -178,59 +365,55 @@
             "label": "Status",
             "type": "select",
             "options": [
-              "Instalado",
+              "Sucesso",
+              "Parcial",
               "Falha"
             ],
             "required": true
-          },
-          {
-            "key": "observacoes",
-            "label": "Observações",
-            "type": "textarea",
-            "options": [],
-            "required": false
           }
         ],
         "sample": [
           {
-            "usuario": "Mariana Silva",
-            "versao_app": "1.0.3",
-            "data_instalacao": "2026-10-05",
-            "dispositivo": "Pixel 7",
-            "status": "Instalado",
-            "observacoes": ""
+            "data": "2026-10-18",
+            "tipo": "Pergunta",
+            "conteudo": "Como integrar o Gemini ao Cortex?",
+            "ia_utilizada": "Gemini",
+            "tokens_gastos": "120",
+            "status": "Sucesso"
           },
           {
-            "usuario": "Pedro Alves",
-            "versao_app": "1.0.3",
-            "data_instalacao": "2026-10-06",
-            "dispositivo": "Galaxy S23",
-            "status": "Instalado",
-            "observacoes": ""
+            "data": "2026-10-17",
+            "tipo": "Resposta",
+            "conteudo": "Para integrar, utilize a API disponível na documentação",
+            "ia_utilizada": "ChatGPT",
+            "tokens_gastos": "85",
+            "status": "Sucesso"
           },
           {
-            "usuario": "Laura Costa",
-            "versao_app": "1.0.2",
-            "data_instalacao": "2026-10-04",
-            "dispositivo": "OnePlus 11",
-            "status": "Falha",
-            "observacoes": ""
+            "data": "2026-10-16",
+            "tipo": "Erro",
+            "conteudo": "Falha na autenticação da API",
+            "ia_utilizada": "Claude",
+            "tokens_gastos": "45",
+            "status": "Falha"
           },
           {
-            "usuario": "Rafael Mendes",
-            "versao_app": "1.0.3",
-            "data_instalacao": "2026-10-07",
-            "dispositivo": "Xiaomi 13",
-            "status": "Instalado",
-            "observacoes": ""
+            "data": "2026-10-15",
+            "tipo": "Feedback",
+            "conteudo": "Sistema está funcionando muito bem",
+            "ia_utilizada": "Gemini",
+            "tokens_gastos": "30",
+            "status": "Sucesso"
           }
         ]
       }
     ],
     "modules": [
-      "Gerenciamento de Usuários",
-      "Instalações",
-      "Relatórios"
+      "Sistema",
+      "Tarefas",
+      "Projetos",
+      "Usuários",
+      "Histórico"
     ]
   },
   "media": {}
