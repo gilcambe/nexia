@@ -11,6 +11,7 @@
 // Evolução: alunos_evolucao, aluno_evolucao, agendar_avaliacao, comentar (coach); evolucao_info, evolucao_config (aluno);
 // compartilhar_criar / compartilhar_revogar (dono da avaliação) e compartilhado_ver (link público que vence sozinho).
 // Vídeos: clipes curtos (até ~10 s, gravados já comprimidos no celular) guardados como texto no próprio banco grátis.
+// Painel do coach: alunos_atencao - lista automática de alunos sem treino há 3 dias, com mensagem pronta em 1 toque.
 
 const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware');
 const { equipe, textoDoTreino, situacaoAnamnese } = require('./body-coach/equipe');
@@ -359,6 +360,29 @@ async function executar(body, uid, db, ctx = {}) {
     const alunos = await meusAlunos(db, uid);
     const lista = await Promise.all(alunos.map((a) => linhaDoPainel(db, a.id, a.data(), mes, hoje, sem, eu, uid)));
     return [200, { alunos: lista, hoje, mes, cobra: !!eu.pix }];
+  }
+
+  // Painel do coach: "quem precisa de atenção hoje" - lista de alunos sem treino há 3 dias com mensagem pronta em 1 toque
+  if (acao === 'alunos_atencao') {
+    if (eu.papel !== 'coach') return [403, { error: 'Só o coach vê a lista de atenção.' }];
+    const alunos = await meusAlunos(db, uid);
+    const hoje = new Date(Date.now() - 3 * 3600000).toISOString().slice(0, 10);
+    const lista = await Promise.all(alunos.map(async (a) => {
+      const d = a.data();
+      const base = { uid: a.id, nome: d.nome || 'Aluno', foto: d.foto || '' };
+      let ultimo = Number(d.ultimoTreino) || 0;
+      if (!ultimo) {
+        const w = await db.collection('bodycoach_users').doc(a.id).collection('workouts').orderBy('done_at', 'desc').limit(1).get().catch(() => null);
+        ultimo = w && w.docs[0] ? tempo(w.docs[0].data().done_at) : 0;
+      }
+      const diasSemTreinar = ultimo ? Math.floor((tempo(`${hoje}T12:00:00-03:00`) - tempo(`${diaBR(ultimo)}T12:00:00-03:00`)) / 86400000) : null;
+      if (!diasSemTreinar || diasSemTreinar < 3) {
+        return { ...base, atencao: false };
+      }
+      const mensagem = `Olá ${d.nome || 'aluno'}, notei que não vejo você treinando há ${diasSemTreinar} dias. Como posso ajudar? Vamos marcar um treino rápido?`;
+      return { ...base, atencao: true, diasSemTreinar, mensagem };
+    }));
+    return [200, { alunos: lista, hoje }];
   }
 
   // Desafio da equipe: o coach cria um (ex.: "7 dias treinando"); cada aluno marca o seu dia. Um aluno nunca vê o progresso de outro.
