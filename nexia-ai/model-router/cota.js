@@ -79,6 +79,8 @@ function createPlacar({ agora = () => Date.now() } = {}) {
         .sort((a, b) => a.ate - b.ate)
         .map(x => x.item);
     },
+    /** Esquece todos os castigos (testes e diagnóstico). */
+    limpar() { for (const k of Object.keys(placar)) delete placar[k]; },
     /** Objeto simples para salvar no D1 (parte 3). */
     exportar() {
       const out = {};
@@ -93,6 +95,7 @@ function createPlacar({ agora = () => Date.now() } = {}) {
         const e = obj[k];
         if (!e || typeof e.ate !== 'number') continue;
         if (e.ate <= agora_) continue; // vencido: ignora
+        if (placar[k] && placar[k].ate >= e.ate) continue; // já temos um castigo igual ou mais longo
         placar[k] = { ate: e.ate, motivo: String(e.motivo || '') };
       }
     },
@@ -132,4 +135,36 @@ function getPlacar() {
   return placarCompartilhado;
 }
 
-module.exports = { createPlacar, getPlacar, parseReset };
+// Cada job do GitHub Actions começa do zero: o placar vai para o D1 grátis (mesmo banco do Vault) entre execuções.
+// Sem NEXIA_D1_TOKEN/NEXIA_D1_ACCOUNT_ID não faz nada; erro do D1 só avisa e nunca derruba a tarefa.
+const DOC = 'ia_cota/placar';
+function driverD1(env, o) {
+  if (o && o.driver) return o.driver;
+  if (!env.NEXIA_D1_TOKEN || !env.NEXIA_D1_ACCOUNT_ID) return null;
+  const { createD1Driver } = require('../../lib/firebase-lite/d1-backend');
+  return createD1Driver({ token: env.NEXIA_D1_TOKEN, accountId: env.NEXIA_D1_ACCOUNT_ID });
+}
+async function carregarDoD1(env = process.env, o = {}) {
+  try {
+    const d = driverD1(env, o);
+    if (!d) return false;
+    const doc = (await d.get([DOC])).get(DOC);
+    if (doc && doc.fields) (o.placar || getPlacar()).importar(doc.fields.placar);
+    return true;
+  } catch (e) { console.warn('[cota] não li o placar do D1:', e && e.message); return false; }
+}
+/** Junta com o que outro job salvou (castigo mais longo vence) e grava. */
+async function salvarNoD1(env = process.env, o = {}) {
+  try {
+    const d = driverD1(env, o);
+    if (!d) return false;
+    const p = o.placar || getPlacar();
+    const atual = (await d.get([DOC])).get(DOC);
+    if (atual && atual.fields) p.importar(atual.fields.placar);
+    const agora = new Date().toISOString();
+    await d.apply([{ type: 'upsert', path: DOC, fields: { placar: p.exportar() }, create_time: (atual && atual.create_time) || agora, update_time: agora }]);
+    return true;
+  } catch (e) { console.warn('[cota] não salvei o placar no D1:', e && e.message); return false; }
+}
+
+module.exports = { createPlacar, getPlacar, parseReset, carregarDoD1, salvarNoD1 };
