@@ -70,13 +70,35 @@ async function entregouPr(token, titulo, runId) {
 async function entregouAlgo(token, corpo, desde) {
   const arquivos = corpo.files || [];
   if (!arquivos.length) return true;
+  
   try {
-    // Verifica se algum arquivo tem commit na develop depois de 'desde'
+    // Verifica PRs abertos contendo os arquivos
+    const prs = (await gh(token, 'GET', '/pulls?state=open&per_page=100')).json || [];
+    
     for (const arquivo of arquivos) {
+      // Se não há data de início, considera como entregue
       if (!desde) return true;
+      
+      // Verifica se há PR aberto contendo o arquivo
+      const temPrAberto = prs.some(pr => {
+        const arquivosPr = (pr.files || []).map(f => f.filename);
+        return arquivosPr.includes(arquivo);
+      });
+      
+      if (temPrAberto) return true;
+      
+      // Verifica se há commit na develop depois de 'desde'
       const cs = (await gh(token, 'GET', `/commits?sha=develop&path=${encodeURIComponent(arquivo)}&since=${encodeURIComponent(desde)}&per_page=1`)).json;
       if (Array.isArray(cs) && cs.length > 0) return true;
+      
+      // Se não há commits novos, verifica se o arquivo existia na develop antes de 'desde'
+      const arquivoExistiaAntes = (await gh(token, 'GET', `/commits?sha=develop&path=${encodeURIComponent(arquivo)}&until=${encodeURIComponent(desde)}&per_page=1`)).json;
+      if (!Array.isArray(arquivoExistiaAntes) || arquivoExistiaAntes.length === 0) {
+        // O arquivo não existia na develop antes de 'desde', então não pode ser considerado entregue
+        continue;
+      }
     }
+    
     return false;
   } catch { return true; }
 }
