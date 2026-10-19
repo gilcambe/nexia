@@ -9,6 +9,7 @@ import Pergunta from "./Pergunta";
 import Lateral from "./Lateral";
 import type { Vista } from "./Lateral";
 import Logo from "./Logo";
+import { ehPergunta } from "./intencao";
 import { mostrarAbertura } from "@/lib/abertura-nexia";
 import { Artefatos, Config, Conexoes, Tarefas } from "./Paineis";
 
@@ -39,6 +40,9 @@ export default function CortexPage() {
   const [itens, setItens] = useState<Resumo[]>(() => lerCache<Resumo[]>("lista") || []);
   const [erro, setErro] = useState<string>();
   const [inicial, setInicial] = useState("");
+  // #823: pergunta mandada em "Pedir tarefa" é respondida na hora (sem issue). "Virar pedido" força a tarefa.
+  const [primeira, setPrimeira] = useState<string>();
+  const [forcarPedido, setForcarPedido] = useState(false);
   const [modo, setModo] = useState<ModoInicio>(lerModo);
   const mudarModo = (m: ModoInicio) => { setModo(m); try { localStorage.setItem("cx_modo", m); } catch { /* sem armazenamento */ } };
   const [instalar, setInstalar] = useState<(() => void) | null>(() => {
@@ -126,12 +130,12 @@ export default function CortexPage() {
         {user && vista === "chat" && aberto === 0 && (
           <div className="flex justify-center pt-3 shrink-0" role="tablist" aria-label="Tipo de conversa">
             {([["pedido", "Pedir tarefa"], ["pergunta", "Perguntar agora"]] as const).map(([m, rotulo]) => (
-              <button key={m} role="tab" aria-selected={modo === m} onClick={() => mudarModo(m)} data-testid={`cx-modo-${m}`}
+              <button key={m} role="tab" aria-selected={modo === m} onClick={() => { setPrimeira(undefined); mudarModo(m); }} data-testid={`cx-modo-${m}`}
                 className={`h-9 px-4 text-sm border border-[var(--cx-line)] first:rounded-l-xl last:rounded-r-xl ${modo === m ? "bg-[var(--cx-card)] font-semibold" : "text-[var(--cx-mut)]"}`}>{rotulo}</button>
             ))}
           </div>
         )}
-        {user && vista === "chat" && aberto === 0 && modo === "pergunta" && <Pergunta virarPedido={(t) => { setInicial(t); mudarModo("pedido"); }} />}
+        {user && vista === "chat" && aberto === 0 && modo === "pergunta" && <Pergunta primeira={primeira} virarPedido={(t) => { setPrimeira(undefined); setInicial(t); setForcarPedido(true); mudarModo("pedido"); }} />}
         {user && vista === "chat" && aberto === 0 && modo === "pedido" && (
           <div className="flex-1 min-h-0 flex flex-col">
             <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-4 text-center">
@@ -144,7 +148,11 @@ export default function CortexPage() {
               )}
               {erro && <p className="text-sm text-red-400 mt-4" role="alert">{erro}</p>}
             </div>
-            <Composer modo="pedido" inicial={inicial} enviar={async (texto) => { const r = await agir({ acao: "pedir", texto }); buscar(busca); if (r.numero) abrir(r.numero); }} />
+            <Composer modo="pedido" inicial={inicial} enviar={async (texto) => {
+              if (!forcarPedido && ehPergunta(texto)) { setPrimeira(texto); mudarModo("pergunta"); return; }
+              setForcarPedido(false);
+              const r = await agir({ acao: "pedir", texto }); buscar(busca); if (r.numero) abrir(r.numero);
+            }} />
           </div>
         )}
         {user && vista === "conexoes" && <div className="flex-1 overflow-y-auto"><Conexoes email={email} /></div>}
