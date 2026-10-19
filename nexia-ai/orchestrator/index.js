@@ -21,6 +21,7 @@ const { WEB, checkWebFiles, fmt } = require('./web-check');
 const { evaluateGates, verdict } = require('./gates');
 const { normalize } = require('../text');
 const { redactSecrets } = require('../vault/secrets');
+const { separarCi } = require('./correcao-ci');
 
 const DEFAULT_BUDGET = Object.freeze({ max_steps: 80, max_tool_calls: 160, max_tokens: 2000000, max_ms: 30 * 60 * 1000 });
 // ADR-Q-01: quando Reviewer ou Security pedem mudanças, o agente que implementou corrige na mesma
@@ -530,7 +531,9 @@ function createOrchestrator(deps) {
           else handle(i, r, x => `branch ${x.branch} criada de ${x.from}`);
         } else if (action === 'agent:implement') {
           const fix = state.fix_feedback
-            ? `\n\nRODADA DE CORREÇÃO ${state.fix_rounds}: a revisão pediu mudanças. Corrija TODOS os pontos abaixo na mesma branch, com um novo commit:\n${state.fix_feedback}`
+            ? (/^O CI do PR falhou/.test(state.fix_feedback) && !state.fix_rounds
+              ? `\n\nRODADA DE CORREÇÃO DO CI: ${state.fix_feedback}`
+              : `\n\nRODADA DE CORREÇÃO ${state.fix_rounds}: a revisão pediu mudanças. Corrija TODOS os pontos abaixo na mesma branch, com um novo commit:\n${state.fix_feedback}`)
             : '';
           const headOf = r => (r && r.status === 'succeeded' && r.result.commits.length ? r.result.commits[r.result.commits.length - 1].sha : null);
           let before = null;   // rodada de correção: exige commit novo, não basta o da rodada anterior
@@ -798,7 +801,10 @@ function createOrchestrator(deps) {
    * @returns {{ status: 'needs_input', question, candidates } | { execution }}
    */
   async function start(ctx, req) {
-    const message = String(req.message || '').trim();
+    // #828: pedido com o erro do CI anexado (fila do Cortex). O erro vira a 1ª rodada de correção;
+    // o pedido fica igual ao original, então a branch e o PR são os mesmos da tentativa anterior.
+    const ci = separarCi(req.message);
+    const message = ci.pedido;
     if (!message) return { status: 'needs_input', question: 'O que você quer fazer?', candidates: [] };
     const intent = classifyIntent(message);
     const r = await resolve({ vault, ctx, message, selectedProjectId: req.projectId, conversationProjectId: req.conversationProjectId,
@@ -812,6 +818,7 @@ function createOrchestrator(deps) {
       request_summary: message.slice(0, 500), request_text: message.slice(0, 4000), intent, status: 'planned', plan, budget: { ...DEFAULT_BUDGET, ...(req.budget || {}) },
       usage: { tool_calls: 0, input_tokens: 0, output_tokens: 0, cost_usd_micros: 0, cost_known: true, duration_ms: 0 },
       started_at: now().toISOString(),
+      ...(ci.erro ? { fix_feedback: clip(redactSecrets(ci.erro), 4000) } : {}),
     }, req.idempotencyKey ? { idempotencyKey: req.idempotencyKey } : {});
     return { execution: record, replayed, resolution: { confidence: r.confidence, rationale: r.rationale } };
   }

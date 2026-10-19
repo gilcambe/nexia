@@ -378,6 +378,47 @@ async function fecharRascunhosParados(token) {
   return fechar;
 }
 
+// #828: PR do Cortex com o CI vermelho volta para o Cortex com as últimas 80 linhas do erro (até 2 vezes).
+// Uma correção por ciclo, sem pista (projeto principal) e nunca duas ao mesmo tempo. CORTEX_CORRIGIR_CI=0 desliga.
+async function logDoJob(token, jobId) {
+  try {
+    const r = await fetch(`https://api.github.com/repos/${REPO}/actions/jobs/${jobId}/logs`, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
+    return r.ok ? await r.text() : '';
+  } catch { return ''; }
+}
+async function corrigirCiDosPrs(token, runs) {
+  if (process.env.CORTEX_CORRIGIR_CI === '0') return null;
+  const cc = require('../nexia-ai/orchestrator/correcao-ci');
+  if ((runs || []).some(r => /^Cortex #PR\d+/.test(r.name || '') && r.status !== 'completed')) return null;   // já tem uma correção rodando
+  let escrita = token;
+  try { escrita = (await tokenDaApp()) || token; } catch { /* sem app: usa a chave do workflow */ }
+  const prs = ((await gh(token, 'GET', '/pulls?state=open&sort=updated&direction=desc&per_page=30')).json || []).filter(pr => /^nexia\//.test((pr.head || {}).ref || '') && cc.pedidoDoPr(pr.body));
+  for (const pr of prs) {
+    // Jobs do Actions do commit (a chave da fila tem actions:read; check-runs pediria checks:read).
+    const execs = ((await gh(token, 'GET', `/actions/runs?head_sha=${pr.head.sha}&per_page=10`)).json || {}).workflow_runs || [];
+    const checks = [];
+    for (const ex of execs.slice(0, 4)) checks.push(...(((await gh(token, 'GET', `/actions/runs/${ex.id}/jobs?per_page=50`)).json || {}).jobs || []));
+    const comentarios = (await gh(token, 'GET', `/issues/${pr.number}/comments?per_page=100`)).json || [];
+    const d = cc.decidirCorrecao({ pr, checks, comentarios });
+    if (!d || d.tipo === 'esperar') continue;
+    if (d.tipo === 'ajuda') {
+      await gh(escrita, 'POST', `/issues/${pr.number}/comments`, { body: `<!-- cortex-ajuda-ci -->O Cortex tentou corrigir o CI ${cc.MAX_CORRECOES} vezes e não conseguiu. Precisa de olhar humano.` });
+      console.log(`CI do PR #${pr.number}: pediu ajuda.`);
+      continue;
+    }
+    const falho = checks.find(c => c.name === cc.CHECK_CI && c.conclusion === 'failure');
+    const erro = cc.ultimasLinhas(await logDoJob(token, falho.id)) || String((falho.output || {}).summary || 'sem log');
+    const task = `${cc.pedidoDoPr(pr.body)}${cc.MARCA}${cc.feedbackCi(erro, d.rodada)}`;
+    const r = await gh(token, 'POST', '/actions/workflows/smoke-logado.yml/dispatches', {
+      ref: 'develop', inputs: { url: BASE_URL, task, autonomia: '3', pista: '', modo: 'economico', tarefa_id: `PR${pr.number}` },
+    });
+    await gh(escrita, 'POST', `/issues/${pr.number}/comments`, { body: `${cc.comentarioCi(pr.head.sha, d.rodada)}O CI falhou. O Cortex recebeu as últimas ${cc.LINHAS} linhas do erro e vai tentar corrigir (${d.rodada}/${cc.MAX_CORRECOES}).` });
+    console.log(`CI do PR #${pr.number}: correção ${d.rodada} disparada (${r.status}).`);
+    return pr.number;   // uma por ciclo
+  }
+  return null;
+}
+
 async function main() {
   const token = process.env.GITHUB_TOKEN;
   if (!token) throw new Error('Falta GITHUB_TOKEN.');
@@ -426,6 +467,7 @@ async function main() {
   for (const a of acoes) { console.log(`${a.tipo} #${a.numero}${a.pista ? ` pista ${a.pista}` : ''}${a.tentativa ? ` tentativa ${a.tentativa}` : ''}`); await executar(token, a, dividir); }
   console.log(`${issues.length} na fila, ${acoes.length} ação(ões).`);
   try { await fecharRascunhosParados(token); } catch (e) { console.log(`rascunhos parados: ${e.message}`); }
+  try { await corrigirCiDosPrs(token, runs); } catch (e) { console.log(`correção de CI: ${e.message}`); }
   const ignoradas = issues.filter(i => !i.pull_request && !confiavel(i));
   if (ignoradas.length) console.log(`ignoradas (autor sem acesso): ${ignoradas.map(i => `#${i.number}`).join(', ')}`);
   if (!issues.length) {
@@ -438,5 +480,5 @@ async function main() {
   }
 }
 
-module.exports = { depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
+module.exports = { corrigirCiDosPrs, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
