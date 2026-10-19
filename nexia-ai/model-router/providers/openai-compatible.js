@@ -29,6 +29,8 @@ const PROVIDERS = Object.freeze({
   huggingface: { url: m => `https://router.huggingface.co/hf-inference/models/${m}/v1/chat/completions`, env: 'HF_API_KEY', max_output: 8192, tools: false },
   sambanova:   { url: 'https://api.sambanova.ai/v1/chat/completions', env: 'SAMBANOVA_API_KEY', max_output: 8192, tools: false },
   together:    { url: 'https://api.together.xyz/v1/chat/completions', env: 'TOGETHER_API_KEY', max_output: 8192, tools: true },
+  // Z.ai: GLM Flash grátis (só e-mail, sem cartão; ~1 pedido/seg, ~1.000/dia).
+  zai:         { url: 'https://api.z.ai/api/paas/v4/chat/completions', env: 'ZAI_API_KEY', max_output: 16384, tools: true },
   // ADR-FREE-04: grátis e sem cadastro novo. GitHub Models usa o próprio token do GitHub Actions
   // (permissão models: read); Workers AI usa a conta grátis do Cloudflare (10 mil "neurons" por dia).
   // Desligado pelo GitHub em 30/07/2026; fora da cadeia padrão.
