@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from './AuthContext';
-import { compartilharCanvas, desenharCartao, linkIndicacao, type DadosCartao } from '@/lib/ferramentas/cartao';
+import { compartilharCanvas, desenharCartao, desenharResumoSemanal, linkIndicacao, type DadosCartao } from '@/lib/ferramentas/cartao';
 
 // Botão + prévia do cartão para Instagram/WhatsApp. O nome e o link de indicação entram sozinhos.
-export default function CompartilharCartao({ dados, rotulo = 'Compartilhar no Instagram' }: { dados: Omit<DadosCartao, 'nome' | 'link'>; rotulo?: string }) {
+// formato 'feed': resumo da semana em 1080×1350 (post do Instagram); padrão: story 1080×1920.
+export default function CompartilharCartao({ dados, rotulo = 'Compartilhar no Instagram', formato = 'story', texto = 'Treino feito no Body Coach! 💪' }: { dados: Omit<DadosCartao, 'nome' | 'link'>; rotulo?: string; formato?: 'story' | 'feed'; texto?: string }) {
   const { user, profile } = useAuth();
   const ref = useRef<HTMLCanvasElement>(null);
   const [aberto, setAberto] = useState(false);
@@ -12,14 +13,14 @@ export default function CompartilharCartao({ dados, rotulo = 'Compartilhar no In
   const nome = profile?.nickname || profile?.full_name?.split(' ')[0] || undefined;
 
   useEffect(() => {
-    if (aberto && ref.current) desenharCartao(ref.current, { ...dados, nome, link });
-  }, [aberto, dados, nome, link]);
+    if (aberto && ref.current) (formato === 'feed' ? desenharResumoSemanal : desenharCartao)(ref.current, { ...dados, nome, link });
+  }, [aberto, dados, nome, link, formato]);
 
   const enviar = async () => {
     if (!ref.current) return;
     try {
-      const r = await compartilharCanvas(ref.current, 'Treino feito no Body Coach! 💪', link);
-      setMsg(r === 'baixado' ? 'Imagem salva. Poste no story e marque um amigo!' : '');
+      const r = await compartilharCanvas(ref.current, texto, link);
+      setMsg(r === 'baixado' ? `Imagem salva. Poste no ${formato === 'feed' ? 'feed' : 'story'} e marque @nexiabodycoach!` : '');
     } catch {
       setMsg('Não consegui gerar a imagem neste aparelho.');
     }

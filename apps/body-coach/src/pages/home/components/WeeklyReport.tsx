@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import Card from '@/components/base/Card';
+import CompartilharCartao from '@/components/feature/CompartilharCartao';
 import { useAuth } from '@/components/feature/AuthContext';
 import { useReadiness } from '@/components/feature/ReadinessContext';
 import { useProgressData } from '@/hooks/useProgressData';
@@ -105,6 +106,21 @@ export default function WeeklyReport() {
   }, [entries, progress, streak]);
 
   const fullText = report.lines.join(' ');
+  // Cartão da semana para o Instagram (1080×1350) com os mesmos números do relatório.
+  const cartao = useMemo(() => {
+    const kg = (n: number) => `${n > 0 ? '+' : ''}${String(n).replace('.', ',')} kg`;
+    return {
+      titulo: 'Minha semana',
+      data: new Date(),
+      itens: [
+        { rotulo: 'check-ins', valor: `${report.checkIns}/7` },
+        { rotulo: 'dias seguidos', valor: String(streak) },
+        { rotulo: 'prontidão média', valor: report.avgThis != null ? String(report.avgThis) : '—' },
+        { rotulo: 'peso na semana', valor: report.weightDelta != null ? kg(report.weightDelta) : '—' },
+      ],
+      destaque: report.advice,
+    };
+  }, [report, streak]);
 
   const speak = () => {
     if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
@@ -193,6 +209,9 @@ export default function WeeklyReport() {
           <p className="mt-3 text-xs text-foreground-400">
             Relatório gerado por regras a partir dos seus dados reais de check-in e evolução.
           </p>
+          <div className="mt-3">
+            <CompartilharCartao dados={cartao} formato="feed" rotulo="Postar minha semana no Instagram" texto="Minha semana no Body Coach 💪 @nexiabodycoach" />
+          </div>
         </>
       )}
     </Card>

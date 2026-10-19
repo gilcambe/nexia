@@ -107,6 +107,85 @@ export function desenharCartao(c: HTMLCanvasElement, d: DadosCartao): void {
   if (d.link && (d.selo ?? seloLigado())) selo(ctx, 1080, 1920, d.link);
 }
 
+// Resumo da semana no formato do feed do Instagram (1080×1350, retrato 4:5) com @nexiabodycoach:
+// quem posta a evolução divulga o app. Mesmas cores e selo do cartão do treino.
+export const FEED = { largura: 1080, altura: 1350 };
+export function desenharResumoSemanal(c: HTMLCanvasElement, d: DadosCartao): void {
+  const W = FEED.largura;
+  const H = FEED.altura;
+  c.width = W;
+  c.height = H;
+  const ctx = c.getContext('2d');
+  if (!ctx) return;
+  const g = ctx.createLinearGradient(0, 0, W, H);
+  g.addColorStop(0, '#0b0b0f');
+  g.addColorStop(0.6, '#1a1208');
+  g.addColorStop(1, '#f97316');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  const r = ctx.createRadialGradient(880, 220, 10, 880, 220, 520);
+  r.addColorStop(0, 'rgba(249,115,22,0.45)');
+  r.addColorStop(1, 'rgba(249,115,22,0)');
+  ctx.fillStyle = r;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = '#f97316';
+  ctx.font = 'bold 40px system-ui, sans-serif';
+  ctx.fillText('BODY COACH', 80, 130);
+  const inicio = new Date(d.data.getTime() - 6 * 86400000);
+  const curta = (x: Date) => x.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.font = '32px system-ui, sans-serif';
+  ctx.fillText(`${curta(inicio)} – ${curta(d.data)}`, 80, 180);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 88px system-ui, sans-serif';
+  const linhas = quebrar(ctx, d.titulo || 'Minha semana', 920).slice(0, 2);
+  linhas.forEach((l, i) => ctx.fillText(l, 80, 320 + i * 100));
+  let y = 320 + linhas.length * 100 - 30;
+  if (d.nome) {
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = '40px system-ui, sans-serif';
+    ctx.fillText(`${d.nome} segue firme 💪`, 80, y + 40);
+    y += 60;
+  }
+  y += 40;
+
+  d.itens.slice(0, 4).forEach((it, i) => {
+    const x = 80 + (i % 2) * 470;
+    const yy = y + Math.floor(i / 2) * 250;
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.beginPath();
+    ctx.roundRect(x, yy, 450, 220, 32);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 76px system-ui, sans-serif';
+    ctx.fillText(it.valor, x + 36, yy + 120);
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.font = '32px system-ui, sans-serif';
+    ctx.fillText(it.rotulo, x + 36, yy + 178);
+  });
+  y += Math.ceil(Math.min(4, d.itens.length) / 2) * 250 + 10;
+
+  if (d.destaque && y < H - 330) {
+    ctx.fillStyle = 'rgba(249,115,22,0.95)';
+    ctx.beginPath();
+    ctx.roundRect(80, y, 920, 120, 32);
+    ctx.fill();
+    ctx.fillStyle = '#0b0b0f';
+    ctx.font = 'bold 36px system-ui, sans-serif';
+    quebrar(ctx, d.destaque, 860).slice(0, 2).forEach((l, i) => ctx.fillText(l, 110, y + 55 + i * 42));
+  }
+
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.font = 'bold 38px system-ui, sans-serif';
+  ctx.fillText('Evolua comigo no Body Coach', 80, H - 140);
+  ctx.fillStyle = 'rgba(255,255,255,0.8)';
+  ctx.font = '32px system-ui, sans-serif';
+  ctx.fillText('@nexiabodycoach', 80, H - 90);
+  if (d.link && (d.selo ?? seloLigado())) selo(ctx, W, H, d.link);
+}
+
 // "Mostrar selo do app" (ligado por padrão), lembrado no aparelho.
 export function seloLigado(): boolean {
   try { return localStorage.getItem('bc_selo') !== '0'; } catch { return true; }
