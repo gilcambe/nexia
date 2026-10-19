@@ -143,13 +143,11 @@ async function runFunction(fnName, req, res, body) {
   };
       try {
       const result = await fn.handler(event, {});
-      const fnParsedUrl = url.parse(req.url);
-      const fnPathname = fnParsedUrl.pathname || '';
+      const fnPathname = url.parse(req.url).pathname || '';
       const isReadApi = (req.method === 'GET' || req.method === 'HEAD') &&
-        (fnPathname.includes('/ofertas') || fnPathname.includes('/catalogo') || fnPathname.includes('/config') || fnPathname.includes('/firebase-config') || fnPathname.includes('/oferta'));
+        ['/ofertas', '/catalogo', '/config', '/firebase-config', '/oferta'].some(k => fnPathname.includes(k));
       const resultHeaders = result && result.headers ? result.headers : {};
-      const hasResultCache = Object.keys(resultHeaders).some(k => k.toLowerCase() === 'cache-control');
-      const cacheControlVal = isReadApi && !hasResultCache ? 'public, max-age=300, s-maxage=300' : (resultHeaders[Object.keys(resultHeaders).find(k => k.toLowerCase() === 'cache-control')]);
+      const hasCache = Object.keys(resultHeaders).some(k => k.toLowerCase() === 'cache-control');
 
       const finalHeaders = {
         'Content-Type': 'application/json',
@@ -157,7 +155,7 @@ async function runFunction(fnName, req, res, body) {
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-Id',
         ...resultHeaders,
-        ...(isReadApi && !hasResultCache ? { 'Cache-Control': 'public, max-age=300, s-maxage=300' } : {}),
+        ...(isReadApi && !hasCache ? { 'Cache-Control': 'public, max-age=300, s-maxage=300' } : {}),
       };
 
       if (result) {
@@ -227,16 +225,11 @@ const server = http.createServer((req, res) => {
     }));
   }
 
-  // Firebase config
-  if (pathname === '/api/firebase-config') {
+  // Firebase config & Cache de borda para APIs de leitura (Ofertas, Catálogos e Config pública) - 60 a 300 segundos
+  if (pathname === '/api/firebase-config' || (['/ofertas', '/catalogo', '/config', '/firebase-config'].some(k => pathname.includes(k)) && (req.method === 'GET' || req.method === 'HEAD'))) {
     res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300');
-    return serveFirebaseConfig(res);
-  }
-
-  // Cache de borda para APIs de leitura (Ofertas, Catálogos e Config pública) - 60 a 300 segundos
-  if (pathname.includes('/ofertas') || pathname.includes('/catalogo') || pathname.includes('/config') || pathname.includes('/firebase-config')) {
-    if (req.method === 'GET' || req.method === 'HEAD') {
-      res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300');
+    if (pathname === '/api/firebase-config') {
+      return serveFirebaseConfig(res);
     }
   }
 
