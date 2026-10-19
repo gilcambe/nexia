@@ -2,6 +2,13 @@
 // Escolha de modelo pelo Orchestrator (spec §14: tarefa, custo, contexto, latência e
 // capacidade). Classe de tarefa → lista de candidatos em ordem; vale o primeiro cujo
 // provedor está configurado e suporta tool_call.
+// Cada classe começa por um provedor diferente para espalhar a cota:
+//   reasoning → Google primeiro (4 modelos de TAIL), depois GROQ_STRONG, depois o resto de TAIL.
+//   coding → GROQ_STRONG primeiro, depois TAIL (igual a hoje).
+//   fast → Mistral, Cloudflare e Codestral primeiro, depois GROQ_FAST, depois o resto de TAIL.
+// semRepetir(lista) remove duplicados (mesmo provider e model), mantendo a primeira ocorrência.
+// Nenhum modelo é removido: cada classe preserva o mesmo conjunto de antes, apenas reordenado.
+
 //
 // ADR-FREE-03: o projeto não usa nada pago. O Claude (Anthropic) só entra se alguém configurar
 // ANTHROPIC_API_KEY (cobra por uso). A Cerebras continua fora: o "plano grátis" exige cartão (crédito
