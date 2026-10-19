@@ -14,6 +14,7 @@
 //   → Codestral (CODESTRAL_API_KEY, opcional) → NVIDIA NIM (NVIDIA_API_KEY, opcional)
 //   → Cloudflare Workers AI (CLOUDFLARE_AI_TOKEN + CLOUDFLARE_AI_ACCOUNT_ID) → Mistral (MISTRAL_API_KEY)
 //   → OpenRouter ":free" (OPENROUTER_API_KEY)
+//   → Z.ai GLM Flash (ZAI_API_KEY, só cadastro por e-mail, sem cartão; ~1 pedido/seg, ~1.000/dia)
 //   → Kilo Gateway SEM CHAVE (sempre disponível): os 5 melhores modelos ":free" do catálogo vivo do gateway.
 // Só depois de o Kilo também falhar a execução espera a cota voltar (WAITING_AI_QUOTA) e é retomada sozinha.
 // Gemma pelo AI Studio ficou de fora: sem garantia de tool_call no endpoint compatível com OpenAI.
@@ -28,6 +29,7 @@ const TAIL = [
   { provider: 'nvidia', model: 'qwen/qwen3-coder-480b-a35b-instruct' }, { provider: 'nvidia', model: 'openai/gpt-oss-120b' },
   { provider: 'cloudflare', model: '@cf/openai/gpt-oss-120b' },
   { provider: 'mistral', model: 'mistral-small-latest' }, { provider: 'mistral', model: 'devstral-small-latest' },
+  { provider: 'zai', model: 'glm-4.7-flash' }, { provider: 'zai', model: 'glm-4.5-flash' },
   { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }, { provider: 'openrouter', model: 'openai/gpt-oss-120b:free' },
   ...KILO];
 const GROQ_STRONG = ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'moonshotai/kimi-k2-instruct-0905', 'llama-3.3-70b-versatile',

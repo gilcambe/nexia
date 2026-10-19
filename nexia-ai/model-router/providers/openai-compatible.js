@@ -41,6 +41,8 @@ const PROVIDERS = Object.freeze({
   // ADR-FREE-05: Kilo Gateway. Sem chave, só modelos grátis (":free"; 200 pedidos/hora por IP). KILO_API_KEY é opcional.
   // O modelo "auto:N" é o N-ésimo grátis do catálogo vivo do gateway (kilo-catalog.js); nunca chama modelo pago.
   kilo:        { url: 'https://api.kilo.ai/api/gateway/chat/completions', env: 'KILO_API_KEY', keyless: true, free_only: true, catalog: true, max_output: 16384, tools: true },
+  // Z.ai: GLM Flash grátis (só e-mail, sem cartão; ~1 pedido/seg, ~1.000/dia).
+  zai:         { url: 'https://api.z.ai/api/paas/v4/chat/completions', env: 'ZAI_API_KEY', max_output: 16384, tools: true },
 });
 
 const DEFAULT_TIMEOUT = 120000;
