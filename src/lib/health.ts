@@ -3,6 +3,27 @@ import { db } from '../firebase';
 
 const COLLECTION = 'health/samples';
 
+// Storage adapter interface para abstração mínima (preparado para D1 no futuro)
+export interface StorageAdapter {
+  readDay(day: string): Promise<HealthSample | null>;
+  writeDay(day: string, sample: HealthSample): Promise<void>;
+}
+
+// Implementação Firestore por padrão
+class FirestoreStorageAdapter implements StorageAdapter {
+  async readDay(day: string): Promise<HealthSample | null> {
+    const snap = await getDoc(doc(db, `${COLLECTION}/${day}`));
+    if (!snap.exists()) return null;
+    return snap.data() as HealthSample;
+  }
+
+  async writeDay(day: string, sample: HealthSample): Promise<void> {
+    await setDoc(doc(db, `${COLLECTION}/${day}`), sample);
+  }
+}
+
+const storage: StorageAdapter = new FirestoreStorageAdapter();
+
 // --- tipos ---------------------------------------------------------------
 
 export interface RouteStats {
