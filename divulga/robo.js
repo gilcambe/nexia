@@ -39,10 +39,13 @@ function maisHashtags(texto, cliente) {
 const semBio = t => t.replace(/\s*(pelo )?link na bio/gi, '').replace(/\.\./g, '.').replace(/\s+\./g, '.').trim();
 
 /** Textos de cada rede. Instagram não abre link na legenda: lá vai "link na bio". */
-function montar({ cliente, legenda, imagem, video, id }) {
+function montar({ cliente, legenda, imagem, video, imagens, id }) {
+  // Carrossel/álbum só quando a fila manda `imagens`; sem isso o post é o de sempre.
+  const extra = Array.isArray(imagens) && imagens.length ? { imagens } : {};
   const porRede = rede => {
     const link = linkUtm(cliente.link, rede);
-    if (rede === 'instagram') return { texto: maisHashtags(/link na bio/i.test(legenda) ? legenda : `${legenda}\n\nLink na bio.`, cliente), imagem, video };
+    if (rede === 'instagram') return { texto: maisHashtags(/link na bio/i.test(legenda) ? legenda : `${legenda}\n\nLink na bio.`, cliente), imagem, video, ...extra };
+    if (rede === 'facebook') return { texto: semBio(legenda), link, imagem, ...extra };
     return { texto: semBio(legenda), link, imagem };
   };
   return { id, cliente: cliente.id, porRede };
@@ -52,7 +55,7 @@ function montar({ cliente, legenda, imagem, video, id }) {
 async function proximo({ clientes, fila }, estado, ctx) {
   const feitos = new Set(estado.feitos || []);
   const item = fila.find(i => !feitos.has(i.id) && clientes[i.cliente]);
-  if (item) return montar({ id: item.id, cliente: clientes[item.cliente], legenda: item.legenda, imagem: urlImagem(item.imagem), video: item.video && VIDEOS + item.video });
+  if (item) return montar({ id: item.id, cliente: clientes[item.cliente], legenda: item.legenda, imagem: urlImagem(item.imagem || (item.imagens || [])[0] || ''), video: item.video && VIDEOS + item.video, imagens: Array.isArray(item.imagens) ? item.imagens.map(urlImagem) : undefined });
   const prontos = Object.values(clientes).filter(c => c.ativo !== false && (c.imagens || []).length && (c.assuntos || []).length);
   if (!prontos.length) return null;
   const n = estado.rodizio || 0;

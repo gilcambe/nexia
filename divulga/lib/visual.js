@@ -33,8 +33,11 @@ p{font-size:42px;line-height:1.3;color:#e7e5e4}
 .lista{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:20px}.lista div{background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.12);border-radius:32px;padding:34px;font-size:36px;font-weight:800;line-height:1.2}.lista span{display:block;font-size:64px;margin-bottom:14px}
 .img{width:100%;height:100%;object-fit:cover;border-radius:58px}`;
 
-function pagina(largura, altura, miolo, { ordem, de, arroba = '@nexiabodycoach', rodape = true } = {}) {
-  return `<!doctype html><html lang="pt-BR"><meta charset="utf-8"><style>:root{--w:${largura}px;--h:${altura}px}${CSS}</style><body><div class="marca"><i>${HALTERE}</i><div>Body Coach<small>by NEXIA</small></div></div><div class="miolo">${miolo}</div>${rodape ? `<div class="arroba">${esc(arroba)}</div>` : ''}${ordem ? `<div class="num">${ordem}/${de}</div>` : ''}</body></html>`;
+const MARCA_BODY_COACH = `<i>${HALTERE}</i><div>Body Coach<small>by NEXIA</small></div>`;
+
+/** `marca` (HTML já escapado) e `css` extra são opcionais: sem eles, a página é a de sempre (Body Coach). */
+function pagina(largura, altura, miolo, { ordem, de, arroba = '@nexiabodycoach', rodape = true, marca = MARCA_BODY_COACH, css = '' } = {}) {
+  return `<!doctype html><html lang="pt-BR"><meta charset="utf-8"><style>:root{--w:${largura}px;--h:${altura}px}${CSS}${css}</style><body><div class="marca">${marca}</div><div class="miolo">${miolo}</div>${rodape ? `<div class="arroba">${esc(arroba)}</div>` : ''}${ordem ? `<div class="num">${ordem}/${de}</div>` : ''}</body></html>`;
 }
 
 const aviso = '<div class="ex">tela de exemplo</div>';
@@ -109,4 +112,125 @@ function postUnico(cliente, { titulo = '', destaque = '', texto = '', tela = 'ho
   return pagina(1080, 1350, `<div style="display:flex;gap:30px;align-items:center;justify-content:space-between"><div style="flex:1">${lado}</div>${reduzido(cel, 0.7)}</div>`);
 }
 
-module.exports = { carrossel, story, antesDepois, postUnico, pagina, esc };
+// ---------- Modelos de tela de carrossel com a cor de cada cliente ----------
+
+/** "#abc" ou "#aabbcc" -> [r, g, b]. Cor inválida vira preto. */
+function rgb(cor) {
+  let h = String(cor || '').trim().replace(/^#/, '');
+  if (/^[0-9a-f]{3}$/i.test(h)) h = h.split('').map(c => c + c).join('');
+  if (!/^[0-9a-f]{6}$/i.test(h)) return [0, 0, 0];
+  return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16));
+}
+const luz = cor => {
+  const [r, g, b] = rgb(cor).map(v => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+/** Contraste WCAG entre duas cores (1 a 21). Texto legível precisa de 4.5 ou mais. */
+function contraste(a, b) {
+  const [x, y] = [luz(a), luz(b)].sort((m, n) => n - m);
+  return Math.round(((x + 0.05) / (y + 0.05)) * 100) / 100;
+}
+/** Branco ou preto, o que tiver mais contraste com o fundo. */
+const textoSobre = fundo => (contraste(fundo, '#ffffff') >= contraste(fundo, '#000000') ? '#ffffff' : '#000000');
+/** Cor de texto preferida se passar de 4.5:1; senão, branco ou preto. */
+const legivel = (cor, fundo) => (contraste(cor, fundo) >= 4.5 ? cor : textoSobre(fundo));
+
+const corOk = c => /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(String(c || '').trim());
+/** Cores do próprio cliente (regra do dono), com contraste garantido. Sem cores: tons neutros. */
+function temaDe(cliente = {}) {
+  const c = cliente.cores || {};
+  const fundo = corOk(c.fundo) ? c.fundo.trim() : '#111111';
+  const destaque = corOk(c.destaque) ? c.destaque.trim() : '#f5f5f5';
+  const texto = textoSobre(fundo);
+  return { fundo, destaque, texto, realce: legivel(destaque, fundo), sobreDestaque: textoSobre(destaque) };
+}
+
+const CSS_MODELO = t => `body{background:${t.fundo};color:${t.texto};padding:80px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;font-weight:800}
+.marca{color:${t.texto}}.marca i{background:${t.destaque};color:${t.sobreDestaque};border:0;font-size:40px;font-weight:900;overflow:hidden}.marca i img,.marca i svg{width:100%;height:100%;object-fit:contain}
+.marca small{color:${t.realce}}h1 b,h2 b{color:${t.realce}}p{color:${t.texto};opacity:.92}
+.num,.arroba{bottom:48px;color:${t.texto};opacity:.75}.arroba{left:80px}.num{right:80px}
+.m-capa{font-size:110px;line-height:1.02;font-weight:900;letter-spacing:-.03em}.m-capa.longa{font-size:84px}
+.m-faixa{margin-top:44px;background:${t.destaque};color:${t.sobreDestaque};font-size:40px;line-height:1.25;padding:26px 36px;border-radius:24px}
+.m-arraste{margin-top:56px;display:flex;align-items:center;gap:18px;font-size:36px;color:${t.realce}}
+.m-n{font-size:220px;line-height:.9;font-weight:900;color:${t.realce};letter-spacing:-.05em;margin-bottom:24px}
+.m-selo{align-self:flex-start;font-size:56px;font-weight:900;letter-spacing:.1em;color:#fff;padding:18px 44px;border-radius:999px;margin-bottom:40px}
+.m-mito{background:#b91c1c}.m-verdade{background:#15803d}
+.m-passo{font-size:40px;color:${t.realce};margin-bottom:20px}.m-barra{height:22px;border-radius:12px;background:${t.texto}33;overflow:hidden;margin-bottom:56px}.m-barra i{display:block;height:100%;background:${t.destaque}}
+.m-cols{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:20px}.m-cols div{border-radius:32px;padding:40px;font-size:38px;line-height:1.25;min-height:520px}
+.m-sem{border:3px solid ${t.texto}55}.m-com{background:${t.destaque};color:${t.sobreDestaque}}.m-cols b{display:block;font-size:44px;margin-bottom:22px;letter-spacing:.06em}
+.m-aspas{font-size:220px;line-height:.6;color:${t.realce};font-family:Georgia,serif;height:110px}.m-frase{font-size:76px;line-height:1.12;font-weight:900;letter-spacing:-.02em}.m-autor{margin-top:40px;font-size:34px;opacity:.8}
+.m-prova{font-size:190px;line-height:1;font-weight:900;color:${t.realce};letter-spacing:-.04em;margin-bottom:28px}
+.m-acoes{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:56px}.m-acoes div{background:${t.destaque};color:${t.sobreDestaque};border-radius:28px;padding:32px 12px;text-align:center;font-size:34px}.m-acoes svg{display:block;margin:0 auto 16px;width:72px;height:72px}`;
+
+// Ícones simples embutidos (sem imagem externa). `currentColor` segue a cor do texto.
+const ICONE = {
+  seta: '<svg viewBox="0 0 24 24" width="56" height="56" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h15M13 6l6 6-6 6"/></svg>',
+  salvar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg>',
+  compartilhar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4z"/></svg>',
+  comentar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-6.4A8 8 0 1 1 21 12z"/></svg>',
+};
+
+/** Marca do próprio cliente: logo embutido (SVG ou data:image) se existir; senão a inicial na cor de destaque. */
+function marcaDe(cliente = {}) {
+  const nome = String(cliente.nome || '').replace(/^NEXIA\s+/i, '');
+  const logo = String(cliente.logo || '').trim();
+  let icone = esc(nome.charAt(0).toUpperCase() || '•');
+  if (/^<svg[\s>]/i.test(logo) && !/<script|\son\w+=/i.test(logo)) icone = logo;
+  else if (/^data:image\/(png|jpe?g|webp|gif|svg\+xml)[;,]/i.test(logo)) icone = `<img src="${esc(logo)}" alt="">`;
+  return `<i>${icone}</i><div>${esc(nome)}</div>`;
+}
+const arrobaDe = cliente => (cliente && cliente.instagram ? `@${String(cliente.instagram).replace(/^@/, '')}` : '');
+
+const MODELOS_TELA = {
+  capa: ({ titulo, texto }) => {
+    const longa = String(titulo || '').trim().split(/\s+/).length > 6;
+    return `<h1 class="m-capa${longa ? ' longa' : ''}">${esc(titulo)}</h1>${texto ? `<div class="m-faixa">${esc(texto)}</div>` : ''}<div class="m-arraste">Arraste ${ICONE.seta}</div>`;
+  },
+  lista: ({ titulo, texto, numero, ordem }) => `<div class="m-n">${esc(numero != null ? numero : ordem || 1)}</div><h2>${esc(titulo)}</h2><p>${esc(texto)}</p>`,
+  'mito-verdade': ({ titulo, texto, selo }) => {
+    const verdade = selo ? /verdade/i.test(selo) : /^\s*verdade/i.test(titulo || '');
+    const titulo2 = String(titulo || '').replace(/^\s*(mito|verdade)\s*[:\-–]?\s*/i, '');
+    return `<span class="m-selo ${verdade ? 'm-verdade' : 'm-mito'}">${verdade ? 'VERDADE' : 'MITO'}</span>${titulo2 ? `<h2>${esc(titulo2)}</h2>` : ''}<p>${esc(texto)}</p>`;
+  },
+  passo: ({ titulo, texto, passo, total, ordem, de }) => {
+    const n = Number(passo || ordem || 1);
+    const t = Math.max(n, Number(total || de || n));
+    return `<div class="m-passo">Passo ${n} de ${t}</div><div class="m-barra"><i style="width:${Math.round((n / t) * 100)}%"></i></div><h2>${esc(titulo)}</h2><p>${esc(texto)}</p>`;
+  },
+  comparacao: ({ titulo, texto, sem, com }) => {
+    const [a, b] = sem != null || com != null ? [sem, com] : String(texto || '').split('|');
+    return `<h2>${esc(titulo)}</h2><div class="m-cols"><div class="m-sem"><b>SEM</b>${esc(a || '')}</div><div class="m-com"><b>COM</b>${esc(b || '')}</div></div>`;
+  },
+  citacao: ({ titulo, texto, autor }) => `<div class="m-aspas">“</div><div class="m-frase">${esc(titulo)}</div><div class="m-autor">${esc(autor || texto || '')}</div>`,
+  prova: ({ titulo, texto, numero }) => `<div class="m-prova">${esc(numero || titulo)}</div>${numero ? `<h2>${esc(titulo)}</h2>` : ''}<p>${esc(texto)}</p>`,
+  cta: ({ titulo, texto }) => `<h1 style="font-size:92px">${esc(titulo)}</h1>${texto ? `<p style="margin-top:30px">${esc(texto)}</p>` : ''}<div class="m-acoes"><div>${ICONE.salvar}Salve</div><div>${ICONE.compartilhar}Compartilhe</div><div>${ICONE.comentar}Comente</div></div>`,
+};
+const MODELOS = Object.keys(MODELOS_TELA);
+
+/** Uma tela 1080x1350 no modelo pedido, com cor, logo e @ do próprio cliente. */
+function telaModelo(modelo, cliente = {}, dados = {}) {
+  const fazer = MODELOS_TELA[modelo] || MODELOS_TELA.lista;
+  const { ordem, de } = dados;
+  return pagina(1080, 1350, fazer({ ...dados, titulo: dados.titulo || '', texto: dados.texto || '' }), {
+    ordem, de, arroba: arrobaDe(cliente), rodape: !!arrobaDe(cliente), marca: marcaDe(cliente), css: CSS_MODELO(temaDe(cliente)),
+  });
+}
+
+/** Modelo das telas do meio conforme a série do roteiro (lib/roteiro.js). */
+const MODELO_DA_SERIE = { 'mito-verdade': 'mito-verdade', 'passo-a-passo': 'passo' };
+
+/** Roteiro (gancho, telas, cta) -> lista de HTML: capa + telas + cta, no máximo 10 (limite do Instagram). */
+function carrosselRoteiro(cliente, roteiro = {}) {
+  const meio = (roteiro.telas || []).slice(0, 8);
+  const de = meio.length + 2;
+  const modelo = MODELO_DA_SERIE[roteiro.serie] || 'lista';
+  const telas = [telaModelo('capa', cliente, { titulo: roteiro.gancho, ordem: 1, de })];
+  meio.forEach((t, i) => telas.push(telaModelo(modelo, cliente, {
+    titulo: t.titulo, texto: t.texto, ordem: i + 2, de, numero: i + 1, passo: i + 1, total: meio.length,
+    selo: modelo === 'mito-verdade' && !/^\s*(mito|verdade)/i.test(t.titulo || '') ? (i % 2 ? 'verdade' : 'mito') : undefined,
+  })));
+  telas.push(telaModelo('cta', cliente, { titulo: roteiro.cta || 'Gostou?', texto: roteiro.pergunta, ordem: de, de }));
+  return telas;
+}
+
+module.exports = { carrossel, story, antesDepois, postUnico, pagina, esc, contraste, telaModelo, carrosselRoteiro, MODELOS };
