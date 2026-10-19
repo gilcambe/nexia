@@ -45,3 +45,13 @@
 - **Custo:** 0.
 - **Justificativa:** A memória do Cortex registra decisões do dono para que erros já corrigidos não se repitam, sem custo e sem depender de serviços pagos.
 
+---
+
+# Melhoria 49: Programa de indicação com recompensa
+
+- **Status:** Pendente de implementação
+- **Regra:** Cada aluno tem um código de indicação. O amigo que usar o código ganha um desconto na primeira mensalidade. O aluno que indicou ganha dias grátis de acesso premium.
+- **Por quê:** Crescimento orgânico sem custos de publicidade.
+- **Custo:** 0 (não há custo direto de implementação).
+- **Justificativa:** Incentivar a base de usuários a promover o produto, resultando em aquisição de novos alunos de forma orgânica e de baixo custo.
+
