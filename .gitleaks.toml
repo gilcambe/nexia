@@ -29,31 +29,13 @@ path = '''(^|/)\.env(\.[^/]*)?$'''
 [[rules.allowlists]]
 paths = ['''(^|/)\.env\.example$''']
 
-# Config web pública do Firebase (nexia-c8710), embutida em páginas legadas.
-# É pública por natureza; a proteção é restrição por referrer + App Check (ver SECURITY-AUDIT.md).
-# Liberada só na regra de chave GCP e só nestes três arquivos; em qualquer outro arquivo continua detectada.
-# Obs.: no gitleaks 8.24, [[allowlists]] globais são ignoradas quando a config estende a padrão;
-# por isso usamos allowlist por regra e a tabela [allowlist] única.
+# Regra padrão de chave GCP (detectada em qualquer arquivo).
 [[rules]]
 id = "gcp-api-key"
-[[rules.allowlists]]
-paths = [
-  '''^bezsan/bezsan-admin\.html$''',
-  '''^ces/ces-app-executivo\.html$''',
-  '''^viajante-pro/vp-admin\.html$''',
-]
 
-# A mesma chave também casa com a regra genérica; liberada só quando o valor é uma chave web (AIza…) nesses arquivos.
+# Regra genérica de chave de API (detectada em qualquer arquivo).
 [[rules]]
 id = "generic-api-key"
-[[rules.allowlists]]
-condition = "AND"
-paths = [
-  '''^bezsan/bezsan-admin\.html$''',
-  '''^ces/ces-app-executivo\.html$''',
-  '''^viajante-pro/vp-admin\.html$''',
-]
-regexes = ['''^AIza[0-9A-Za-z_-]{35}$''']
 
 # Regra para detectar chaves de API do Instagram.
 [[rules]]
@@ -75,13 +57,4 @@ regexes = [
   '''fake-api-key''',
   '''senha-forte-123''',
   '''eyJhbGciOiJub25lIn0\.e30\.''',
-  # Variáveis de ambiente do CI do projeto Nexia (evita falsos positivos)
-  '''NEXIA_CRON_SECRET''',
-  '''NEXIA_JOBS_TOKEN''',
-  '''NEXIA_GITHUB_TOKEN''',
-  '''FIREBASE_SERVICE_ACCOUNT_BASE64''',
-  '''FIREBASE_SERVICE_ACCOUNT_B''',
-  '''FIREBASE_SERVICE_ACCOUNT_C''',
-  '''NEXIA_D1_TOKEN''',
-  '''NEXIA_D1_ACCOUNT_ID''',
 ]
