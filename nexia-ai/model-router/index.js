@@ -34,7 +34,7 @@ function createRouter(o = {}) {
   }
   Object.assign(providers, o.providers || {});
 
-  const cache = createCache();
+  const cache = o.cache || createCache();
 
   const providerFor = desc => {
     const p = desc && providers[desc.provider];
@@ -109,7 +109,7 @@ function createRouter(o = {}) {
         const out = await chat(d, req);
         if (usarCache) cache.set(cache.chave(req), out);
         return { ...out, attempts };
-      catch (e) {
+      } catch (e) {
         if (e && e.code === CODES.ABORTED) throw e;
         attempts.push({ provider: d.provider, model: d.model, code: e.code || 'ERROR' });
       }
