@@ -225,9 +225,11 @@ async function executar(token, acao, dividir) {
   if (acao.tipo === 'dividir') {
     if (acao.limpar) {
       // Veio de uma tarefa que falhou: sai da pista (rodando) e anota a tentativa; se a divisão falhar, ela volta inteira para a fila.
-      await delLabel(L.rodando); await limparPistas();
+      await delLabel(L.rodando);
       if (acao.tentativa) await addLabel(`tentativa-${acao.tentativa}`);
     }
+    // Ao dividir, tira TODOS os rótulos pista-* (rodadas antigas não contam mais).
+    await limparPistas();
     const partes = dividir ? await dividir(acao.tarefa) : null;
     if (!partes) { await addLabel(L.semDivisao); await comentar('Não consegui dividir esta tarefa agora; ela segue inteira.'); return; }
     const criadas = [];
