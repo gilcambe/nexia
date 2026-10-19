@@ -69,3 +69,18 @@
 - **Custo:** 0 (não há custo direto de implementação).
 - **Justificativa:** Incentivar a base de usuários a promover o produto, resultando em aquisição de novos alunos de forma orgânica e de baixo custo.
 
+---
+
+# Melhoria 50: Cache de borda para APIs de leitura
+
+- **Status:** Pendente de implementação
+- **Regra:** Cache API do Worker para endpoints de leitura: listas de ofertas, config pública, /api/firebase-config e catálogos (60 a 300 segundos)
+- **Por quê:** Menos leituras do Firestore (cota grátis) e resposta mais rápida
+- **Custo:** 0
+- **Implementação:**
+  1. Configurar Cache API no Cloudflare Worker para os endpoints especificados
+  2. Definir TTL entre 60-300 segundos conforme o tipo de dado
+  3. Manter regras existentes do Firestore e segredos inalterados
+  4. Garantir que `npm test` continue passando
+- **Justificativa:** Reduz custos com Firestore (cota gratuita) e melhora performance sem custo adicional
+
