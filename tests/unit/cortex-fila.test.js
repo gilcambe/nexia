@@ -135,3 +135,8 @@ test('cópia exata grande nunca vai para o divisor (perderia o código)', () => 
   assert.equal(precisaDividir(issue(7, ['cortex-fila'], { body: corpo })), false);
   assert.equal(precisaDividir(issue(8, ['cortex-fila'], { body: 'Faça algo em src/a.js. ' + 'z'.repeat(3000) })), true);
 });
+
+test('CF-PRIO. rótulo cortex-prioridade passa na frente das tarefas antigas', () => {
+  const a = decidir({ issues: [issue(1), issue(2), issue(3), issue(9, ['cortex-prioridade'])], runs: [], agora: AGORA });
+  assert.deepEqual(a.map(x => x.numero), [9, 1, 2]);
+});
