@@ -19,6 +19,12 @@
 // Gemma pelo AI Studio ficou de fora: sem garantia de tool_call no endpoint compatível com OpenAI.
 // Provedor sem chave é pulado na hora. Os nomes mudam com o tempo: NEXIA_MODELS_<CLASSE>
 // (ex.: NEXIA_MODELS_CODING="groq:openai/gpt-oss-120b,kilo:z-ai/glm-5:free,kilo:auto:1") troca a lista.
+//
+// Ordem de FREE por classe (cada classe começa por um provedor diferente, espalhando a carga):
+//   coding  → Groq (GROQ_STRONG) primeiro, depois TAIL.
+//   reasoning → os 4 Google AI Studio de TAIL primeiro, depois Groq (GROQ_STRONG), depois o resto de TAIL.
+//   fast → Mistral, Cloudflare e Codestral primeiro, depois Groq (GROQ_FAST), depois TAIL.
+// semRepetir() garante que não haja descritores repetidos (mesmo provider e model) em nenhuma classe.
 const g = model => ({ provider: 'groq', model });
 const KILO = [1, 2, 3, 4, 5].map(n => ({ provider: 'kilo', model: `auto:${n}` }));
 const TAIL = [
@@ -34,10 +40,29 @@ const GROQ_STRONG = ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'moonshotai/kimi
   'openai/gpt-oss-20b', 'meta-llama/llama-4-scout-17b-16e-instruct'];
 const GROQ_FAST = ['openai/gpt-oss-20b', 'meta-llama/llama-4-scout-17b-16e-instruct', 'qwen/qwen3.8-27b', 'llama-3.3-70b-versatile',
   'openai/gpt-oss-120b', 'moonshotai/kimi-k2-instruct-0905'];
+
+// Descritores fixos usados no início de classes de FREE.
+const GOOGLE4 = TAIL.slice(0, 4);
+const RESTO_TAIL = TAIL.slice(4);
+const MISTRAL_SMALL = { provider: 'mistral', model: 'mistral-small-latest' };
+const CLOUDFLARE_GPT_OSS = { provider: 'cloudflare', model: '@cf/openai/gpt-oss-120b' };
+const CODESTRA_LATEST = { provider: 'codestral', model: 'codestral-latest' };
+
+/** Remove descritores repetidos (mesmo provider e model), mantendo o primeiro. */
+function semRepetir(lista) {
+  const visto = new Set();
+  return lista.filter(d => {
+    const chave = `${d.provider}::${d.model}`;
+    if (visto.has(chave)) return false;
+    visto.add(chave);
+    return true;
+  });
+}
+
 const FREE = Object.freeze({
-  reasoning: [...GROQ_STRONG.map(g), ...TAIL],
-  coding: [...GROQ_STRONG.map(g), ...TAIL],
-  fast: [...GROQ_FAST.map(g), ...TAIL],
+  reasoning: semRepetir([...GOOGLE4, ...GROQ_STRONG.map(g), ...RESTO_TAIL]),
+  coding: semRepetir([...GROQ_STRONG.map(g), ...TAIL]),
+  fast: semRepetir([MISTRAL_SMALL, CLOUDFLARE_GPT_OSS, CODESTRA_LATEST, ...GROQ_FAST.map(g), ...TAIL]),
 });
 
 const CLASSES = Object.freeze({
@@ -67,4 +92,4 @@ function candidates(router, cls, env = process.env) {
   });
 }
 
-module.exports = { CLASSES, FREE, candidates, listFor, parseList };
+module.exports = { CLASSES, FREE, semRepetir, candidates, listFor, parseList };
