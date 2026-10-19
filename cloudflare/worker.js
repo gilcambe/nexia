@@ -12,18 +12,25 @@ export default {
   async fetch(request, env) {
     if (new URL(request.url).pathname === '/api/corpo-ia') return corpoIa(request, env);
     
-    // Cache de borda para APIs de leitura (Cache API do Worker)
+    // Cache de borda para APIs de leitura (Cache API do Worker) - CORRIGIDO SEGURANCA
     const url = new URL(request.url);
     if (request.method === 'GET') {
-      // APIs com cache: listas de ofertas, config pública, /api/firebase-config e catálogos
+      // APIs com cache (excluindo rotas sensíveis)
       const cacheablePaths = [
         '/api/ofertas',
-        '/api/config-publica',
-        '/api/firebase-config',
         '/api/catalogos'
       ];
       
       if (cacheablePaths.some(path => url.pathname.startsWith(path))) {
+        // Verifica se a requisição é autenticada (evita expor dados privados)
+        const authHeader = request.headers.get('Authorization');
+        const sessionId = request.headers.get('X-Session-ID') || request.cookies?.get('session-id');
+        
+        // Se não tem autenticação e a rota pode ser sensível, não cacheia
+        if (!authHeader && !sessionId) {
+          return app.handleRequest(request, env, { getFunction: functions.getFunction });
+        }
+        
         const cache = caches.default;
         const cacheKey = new Request(request.url, request);
         
@@ -36,8 +43,21 @@ export default {
         // Se não está no cache, executa a requisição original
         const response = await app.handleRequest(request, env, { getFunction: functions.getFunction });
         
-        // Cacheia a resposta com TTL entre 60 e 300 segundos
-        const ttl = Math.floor(Math.random() * 241) + 60; // 60-300 segundos
+        // Não cacheia respostas de erro (4xx/5xx)
+        if (response.status >= 400) {
+          return response;
+        }
+        
+        // TTL fixo por tipo de rota (evita aleatoriedade)
+        let ttl;
+        if (url.pathname.startsWith('/api/ofertas')) {
+          ttl = 120; // 2 minutos para ofertas (mudam com frequência)
+        } else if (url.pathname.startsWith('/api/catalogos')) {
+          ttl = 300; // 5 minutos para catálogos (estáticos)
+        } else {
+          ttl = 60; // fallback: 1 minuto
+        }
+        
         const cacheResponse = new Response(response.body, {
           status: response.status,
           statusText: response.statusText,
