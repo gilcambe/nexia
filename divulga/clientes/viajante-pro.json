@@ -1,0 +1,27 @@
+{
+  "id": "viajante-pro",
+  "nome": "Viajante Pro",
+  "link": "",
+  "ativo": false,
+  "cidade": "",
+  "assuntos": [
+    "viagens premium com tudo organizado no celular",
+    "check-in e ingressos sempre à mão",
+    "itinerário da viagem dia a dia",
+    "suporte 24 horas e botão de emergência durante a viagem",
+    "pontos de fidelidade a cada viagem",
+    "roteiros sob medida para quem viaja com conforto"
+  ],
+  "imagens": [],
+  "hashtags": [
+    "#viagem",
+    "#viagens",
+    "#turismo",
+    "#viagemdeluxo",
+    "#ferias",
+    "#roteirodeviagem",
+    "#viajarepreciso",
+    "#viajantepro"
+  ],
+  "cores": { "fundo": "#F7F4EF", "destaque": "#B8935A" }
+}

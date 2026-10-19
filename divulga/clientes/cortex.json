@@ -1,0 +1,26 @@
+{
+  "id": "cortex",
+  "nome": "Cortex",
+  "link": "https://nexia.gcbezerra.workers.dev/cortex",
+  "cidade": "",
+  "assuntos": [
+    "assistente de IA que cria sites a partir de um pedido simples",
+    "apps prontos sem precisar programar",
+    "peça em português e acompanhe cada etapa",
+    "histórico de todos os pedidos num só lugar",
+    "publicação do site com um toque",
+    "ideias viram páginas no ar em minutos"
+  ],
+  "imagens": [],
+  "hashtags": [
+    "#inteligenciaartificial",
+    "#ia",
+    "#criacaodesites",
+    "#nocode",
+    "#empreendedorismo",
+    "#tecnologia",
+    "#marketingdigital",
+    "#cortex"
+  ],
+  "cores": { "fundo": "#000000", "destaque": "#00d4aa" }
+}

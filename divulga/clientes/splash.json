@@ -1,0 +1,27 @@
+{
+  "id": "splash",
+  "nome": "Splash Eventos",
+  "link": "",
+  "ativo": false,
+  "cidade": "",
+  "assuntos": [
+    "agenda de espaços e eventos num só lugar",
+    "reservas de salão sem conflito de datas",
+    "contratos e pagamentos dos eventos organizados",
+    "controle de fornecedores e equipe do evento",
+    "orçamento rápido para festas e eventos corporativos",
+    "painel com a ocupação do espaço em tempo real"
+  ],
+  "imagens": [],
+  "hashtags": [
+    "#eventos",
+    "#festas",
+    "#espacodeeventos",
+    "#casamento",
+    "#eventoscorporativos",
+    "#gestaodeeventos",
+    "#organizacaodeeventos",
+    "#splasheventos"
+  ],
+  "cores": { "fundo": "#07090F", "destaque": "#a855f7" }
+}

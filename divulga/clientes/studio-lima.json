@@ -2,8 +2,25 @@
   "id": "studio-lima",
   "nome": "Studio Lima",
   "link": "https://studiolima.pages.dev/",
-  "cidade": "",
-  "assuntos": [],
+  "cidade": "São Paulo",
+  "assuntos": [
+    "limpeza de pele profunda e hidratação facial",
+    "microagulhamento e peeling químico para renovar a pele",
+    "HIFU e radiofrequência facial para firmeza",
+    "drenagem linfática e cuidados pós-operatórios",
+    "criolipólise e tratamentos corporais",
+    "atendimento personalizado com a esteticista Carolina Martins"
+  ],
   "imagens": [],
-  "hashtags": []
+  "hashtags": [
+    "#esteticafacial",
+    "#estetica",
+    "#limpezadepele",
+    "#skincare",
+    "#autoestima",
+    "#drenagemlinfatica",
+    "#esteticasp",
+    "#studiolima"
+  ],
+  "cores": { "fundo": "#1e1311", "destaque": "#ca9252" }
 }
