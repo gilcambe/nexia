@@ -11,6 +11,7 @@
 // Evolução: alunos_evolucao, aluno_evolucao, agendar_avaliacao, comentar (coach); evolucao_info, evolucao_config (aluno);
 // compartilhar_criar / compartilhar_revogar (dono da avaliação) e compartilhado_ver (link público que vence sozinho).
 // Vídeos: clipes curtos (até ~10 s, gravados já comprimidos no celular) guardados como texto no próprio banco grátis.
+// Painel do coach: alunos_atencao - lista automática de alunos sem treino há 3 dias, com mensagem pronta em 1 toque.
 
 const { verifyBearerToken, checkRateLimit, makeHeaders } = require('./middleware');
 const { equipe, textoDoTreino, situacaoAnamnese } = require('./body-coach/equipe');
