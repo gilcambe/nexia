@@ -13,6 +13,7 @@ const crypto = require('crypto');
 const { arquivosLiterais, temEdicaoExtra } = require('./literal');
 const { resolveProject } = require('../project-resolver');
 const { buildContext } = require('../context-engine');
+const { contextoDoRepo, raizLocal } = require('../context-engine/arquivos-provaveis');
 const { runAgent, askModel, createMeter } = require('./runtime');
 const kit = require('../site-kit');
 const cloner = require('../cloner');
@@ -182,6 +183,11 @@ function createOrchestrator(deps) {
   const now = deps.now || (() => new Date());
   const resolve = deps.resolver || resolveProject;
   const contextOf = deps.contextBuilder || buildContext;
+  // #819: MAPA.md e arquivos prováveis (busca pelas palavras do pedido) quando o repositório está no disco.
+  const repoContextOf = deps.repoContext || ((repo, message) => {
+    const raiz = raizLocal(repo);
+    return raiz ? contextoDoRepo({ raiz, texto: message }) : { texto: '', arquivos: [] };
+  });
   const agentCtx = (ctx, agent) => ({ ...ctx, actor: { type: 'agent', id: agent } });
 
   // Texto livre vindo da IA (resumos, pergunta, feedback) pode citar algo com cara de secret
@@ -213,7 +219,14 @@ function createOrchestrator(deps) {
     const repo = project.primary_repository_id ? await vault.Repository.get(ctx, project.primary_repository_id)
       : (await vault.Repository.list(ctx, { where: { project_id: project.id }, limit: 1 }))[0];
     let context = null;
-    const getContext = async () => context || (context = (await contextOf({ vault, ctx, projectId: project.id, message })).text);
+    let repoCtx = null;
+    const getRepoCtx = async () => {
+      if (repoCtx) return repoCtx;
+      try { repoCtx = (await repoContextOf(repo, message)) || { texto: '', arquivos: [] }; }
+      catch (e) { console.warn('[ORCHESTRATOR] Arquivos prováveis indisponíveis:', e && e.message); repoCtx = { texto: '', arquivos: [] }; }
+      return repoCtx;
+    };
+    const getContext = async () => context || (context = `${(await contextOf({ vault, ctx, projectId: project.id, message })).text}${(await getRepoCtx()).texto || ''}`);
     const baseUsage = exe.usage || {};   // uso acumulado antes desta rodada
     let state = { ...exe };
     let steps = exe.plan.map(s => ({ ...s }));
@@ -529,7 +542,9 @@ function createOrchestrator(deps) {
           else if (kitKind) await kitRevise(i, state.fix_feedback);
           else if (!stop && !(literais.length && !temEdicaoExtra(message))) {
             // ADR-CORTEX-01: lista explícita de arquivos e os primeiros já lidos (economiza passos e cota do modelo grátis).
-            const files = filesIn(message, analysis, state.fix_feedback || '');
+            const citados = filesIn(message, analysis, state.fix_feedback || '');
+            // Sem caminho citado (nem pelo Architect): começa pelos arquivos prováveis da busca, já lidos.
+            const files = citados.length ? citados : ((await getRepoCtx()).arquivos || []).slice(0, 4);
             const listed = files.length ? `\nArquivos envolvidos (todos precisam ser conferidos; os primeiros já foram lidos abaixo): ${files.join(', ')}` : '' + (literais.length ? `\nJá gravados literalmente, NÃO os toque: ${literais.map(f => f.path).join(', ')}` : '');
             await runA(i, plan[i].agent, `Pedido do usuário: "${message}"\nBranch de trabalho: ${state.work_branch} (já existe).\n${kitKind ? 'Spec do Designer (o código foi gerado pelo NEXIA Site Kit: corrija só o que a revisão apontou, com github.edit_files, sem reescrever os arquivos inteiros)' : 'Análise do Architect'}:\n${analysis}${fix}${listed}\n\nLeia os arquivos atuais com github.get_file (ref ${state.work_branch}). Para arquivo existente use github.edit_files; para arquivo novo, github.commit_files. Tudo na branch ${state.work_branch}. Não mexa em arquivos que o pedido não envolve. Cumpra cada item do pedido em todos os arquivos citados antes de terminar.`,
               '', { branch: state.work_branch, preload: files.slice(0, 4), ref: state.work_branch, rotate: Math.max(0, (state.fix_rounds || 0) - 1) });
