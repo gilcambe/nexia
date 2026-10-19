@@ -9,6 +9,14 @@ const BASE_URL = process.env.NEXIA_URL || 'https://nexia.gcbezerra.workers.dev';
 const PISTAS = Math.max(1, Math.min(10, Number(process.env.CORTEX_PISTAS) || 6));
 const MAX_TENTATIVAS = 12;
 const TENTATIVAS_ATE_DIVIDIR = 3;
+// Rodada "verde" que não entrega o arquivo pedido (ex.: o Cortex não pode criar `.github/workflows/*`) abria um rascunho
+// novo a cada ciclo, para sempre (18 rascunhos do gitleaks em 19/10). Depois de MAX_SEM_ENTREGA rodadas assim, trava.
+const MAX_SEM_ENTREGA = 2;
+// Rótulo sem-entrega-N: N = quantas rodadas terminaram sem entrega. Devolve o próximo passo depois de mais uma.
+function depoisSemEntrega(labels) {
+  const n = Math.max(0, ...labels.map(l => /^sem-entrega-(\d+)$/.exec(l)).filter(Boolean).map(m => Number(m[1]))) + 1;
+  return { n, travar: n >= MAX_SEM_ENTREGA };
+}
 const CONFIAVEIS = ['OWNER', 'MEMBER', 'COLLABORATOR'];
 const L = { fila: 'cortex-fila', rodando: 'cortex-rodando', feito: 'cortex-feito', travado: 'cortex-travado', dividido: 'cortex-dividido', parte: 'cortex-parte', semDivisao: 'cortex-sem-divisao', prioridade: 'cortex-prioridade' };
 const MAX_CORPO = 2500;      // tarefa maior que isso é dividida em partes pequenas
@@ -248,8 +256,15 @@ async function executar(token, acao, dividir) {
     if (d.status !== 204) { await delLabel(L.rodando); await comentar(`Não consegui disparar o Cortex (${d.status}). Tento de novo no próximo ciclo.`); }
   } else if (acao.tipo === 'concluir') {
     if (!(await entregouAlgo(token, acao.corpo, acao.titulo, acao.run))) {
-      await delLabel(L.rodando);
-      await comentar(`A rodada terminou sem erro, mas não achei o código entregue (${caminhosDoPedido(acao.corpo).slice(0, 3).join(', ') || 'nenhum PR parecido com o pedido'}). Não marquei como feita; volta para a fila.`);
+      const ls = nomes((await gh(token, 'GET', `/issues/${n}`)).json || {});
+      const { n: k, travar } = depoisSemEntrega(ls);
+      await delLabel(L.rodando); await limparPistas();
+      for (let j = 1; j < k; j++) await delLabel(`sem-entrega-${j}`);
+      await addLabel(travar ? L.travado : `sem-entrega-${k}`);
+      const alvo = caminhosDoPedido(acao.corpo).slice(0, 3).join(', ') || 'nenhum PR parecido com o pedido';
+      await comentar(travar
+        ? `${k} rodadas terminaram sem entregar o código (${alvo}). Travei para não abrir mais rascunhos repetidos; precisa de olhar humano.`
+        : `A rodada terminou sem erro, mas não achei o código entregue (${alvo}). Não marquei como feita; volta para a fila (${k}/${MAX_SEM_ENTREGA}).`);
       return;
     }
     await delLabel(L.rodando); await addLabel(L.feito);
@@ -415,5 +430,5 @@ async function main() {
   }
 }
 
-module.exports = { rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
+module.exports = { depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
