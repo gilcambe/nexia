@@ -5,6 +5,53 @@ import { Cartao, Sinal, Botao, Carregando } from "./ui";
 
 const REDE: Record<string, string> = { facebook: "Facebook", instagram: "Instagram" };
 
+// Função para formatar dados do gráfico
+const formatarDadosGrafico = (historico: any[]) => {
+  if (!historico || historico.length === 0) return [];
+  
+  return historico.map(item => ({
+    data: item.data,
+    seguidores: item.seguidores || 0,
+    curtidas: item.curtidas || 0,
+    comentarios: item.comentarios || 0,
+    compartilhamentos: item.compartilhamentos || 0,
+    alcance: item.alcance || 0
+  }));
+};
+
+// Função para encontrar melhor horário
+const obterMelhorHorario = (historico: any[]) => {
+  if (!historico || historico.length === 0) return null;
+  
+  // Agrupa posts por hora
+  const postsPorHora = {};
+  historico.forEach(item => {
+    if (item.melhorHorario !== undefined) {
+      const hora = item.melhorHorario;
+      if (!postsPorHora[hora]) {
+        postsPorHora[hora] = { count: 0, engagement: 0 };
+      }
+      postsPorHora[hora].count++;
+      postsPorHora[hora].engagement += (item.curtidas || 0) + (item.comentarios || 0) + (item.compartilhamentos || 0);
+    }
+  });
+  
+  // Encontra hora com melhor engajamento médio
+  let melhorHora = null;
+  let melhorEngajamentoMedio = 0;
+  
+  Object.keys(postsPorHora).forEach(hora => {
+    const { count, engagement } = postsPorHora[hora];
+    const engajamentoMedio = engagement / count;
+    if (engajamentoMedio > melhorEngajamentoMedio) {
+      melhorEngajamentoMedio = engajamentoMedio;
+      melhorHora = parseInt(hora);
+    }
+  });
+  
+  return melhorHora;
+};
+
 export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   const { agir } = useCentral();
   const [msg, setMsg] = useState<string | null>(null);
@@ -63,6 +110,75 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
           <Botao onClick={() => rodar({ acao: "rodar", arquivo: "afiliados.yml" })} disabled={ocupado}>🛍️ Buscar ofertas</Botao>
           <Botao href="https://achados-nexia.pages.dev/">Ver vitrine</Botao>
         </div>
+      </Cartao>
+
+      {/* Seção de Dados da Graph API */}
+      <Cartao titulo="Dados da Meta (Graph API)">
+        {x.metaGraphAPI ? (
+          x.metaGraphAPI.temChave ? (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="bg-nexia-surface2 rounded-lg p-3">
+                  <p className="text-xs text-nexia-muted">Seguidores</p>
+                  <p className="text-lg font-bold">{x.metaGraphAPI.seguidores?.toLocaleString()}</p>
+                </div>
+                <div className="bg-nexia-surface2 rounded-lg p-3">
+                  <p className="text-xs text-nexia-muted">Curtidas (últimos posts)</p>
+                  <p className="text-lg font-bold">{x.metaGraphAPI.curtidas?.toLocaleString()}</p>
+                </div>
+                <div className="bg-nexia-surface2 rounded-lg p-3">
+                  <p className="text-xs text-nexia-muted">Alcance</p>
+                  <p className="text-lg font-bold">{x.metaGraphAPI.alcance?.toLocaleString()}</p>
+                </div>
+                <div className="bg-nexia-surface2 rounded-lg p-3">
+                  <p className="text-xs text-nexia-muted">Posts analisados</p>
+                  <p className="text-lg font-bold">{x.metaGraphAPI.posts}</p>
+                </div>
+              </div>
+              
+              {x.metaGraphAPI.melhorHorario !== undefined && (
+                <div className="mb-4">
+                  <p className="text-sm font-medium">Melhor horário para postar: <span className="text-nexia-cyan">{x.metaGraphAPI.melhorHorario}:00</span></p>
+                  <p className="text-xs text-nexia-muted">Baseado no engajamento histórico</p>
+                </div>
+              )}
+              
+              {x.metaGraphAPI.historico && x.metaGraphAPI.historico.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-sm font-medium mb-2">Evolução dos últimos 30 dias</h4>
+                  <div className="space-y-2">
+                    {formatarDadosGrafico(x.metaGraphAPI.historico).slice(-7).map((item, index) => (
+                      <div key={index} className="flex items-center justify-between text-xs">
+                        <span>{item.data}</span>
+                        <div className="flex gap-2">
+                          <span className="text-nexia-cyan">👤 {item.seguidores}</span>
+                          <span>❤️ {item.curtidas}</span>
+                          <span>👁️ {item.alcance}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {x.metaGraphAPI.erro && (
+                <div className="bg-nexia-vermelho/10 border border-nexia-vermelho/30 rounded-lg p-3 mb-4">
+                  <p className="text-sm text-nexia-vermelho">Erro: {x.metaGraphAPI.erro}</p>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="bg-nexia-amarelo/10 border border-nexia-amarelo/30 rounded-lg p-4">
+              <p className="text-sm font-medium mb-2">Chave da Graph API não configurada</p>
+              <p className="text-xs text-nexia-muted mb-3">Para usar esta funcionalidade, você precisa configurar a chave da Graph API da Meta.</p>
+              <Botao onClick={() => rodar({ acao: "configurar-meta" })} disabled={ocupado} tipo="forte">
+                📋 Gerar arquivo de configuração
+              </Botao>
+            </div>
+          )
+        ) : (
+          <Carregando />
+        )}
       </Cartao>
 
       <Cartao titulo="Rede de crescimento de seguidores (sem automação proibida)">
