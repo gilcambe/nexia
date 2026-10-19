@@ -17,6 +17,9 @@ const { createCohereProvider } = require('./providers/cohere');
 
 const PROVIDER_IDS = Object.freeze(['anthropic', 'gemini', 'cohere', ...Object.keys(OPENAI_COMPATIBLE)]);
 
+// Cache compartilhado de respostas do modelo (economiza cota em pedidos repetidos).
+const cacheRespostas = createCache();
+
 /**
  * @param {{ env?, fetchImpl?, baseUrls?: Record<string,string>, anthropicClientOptions?, providers?: Record<string, object> }} [o]
  *   baseUrls/fetchImpl/providers servem para testes apontarem para servidores falsos.
