@@ -506,7 +506,7 @@ function createOrchestrator(deps) {
           await designSpec(i);
         } else if (action === 'create_branch') {
           const hadBranch = !!state.work_branch;   // retomada: a branch pode já ter sido criada
-          const branch = state.work_branch || `nexia/${slug(message)}-${state.execution_id.slice(-6).toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+          const branch = state.work_branch || `nexia/${slug(message)}-${crypto.createHash('sha1').update(message).digest('hex').slice(0, 6)}`;
           if (!state.work_branch) await commit({ work_branch: branch });
           const r = await tool(ctx, state, plan[i].agent, 'github.create_branch', { branch });
           const exists = r.status === 'failed' && r.error && r.error.code === 'CONFLICT' && ((steps[i].attempts || 0) > 0 || hadBranch);
