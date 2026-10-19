@@ -69,3 +69,19 @@
 - **Custo:** 0 (não há custo direto de implementação).
 - **Justificativa:** Incentivar a base de usuários a promover o produto, resultando em aquisição de novos alunos de forma orgânica e de baixo custo.
 
+---
+
+# Melhoria 50: Modos "Rápido / Pensar / Pesquisar" no composer
+
+- **Status:** Pendente de implementação
+- **Regra:** Três modos de operação no composer: Rápido (modelo pequeno, resposta rápida), Pensar (raciocínio aprofundado), Pesquisar (acesso à web).
+- **Por quê:** O dono escolhe velocidade ou profundidade como no Claude/ChatGPT, dando controle sobre custo e qualidade.
+- **Custo:** 0 (implementação interna sem custo adicional).
+- **Implementação:**
+  1. Interface de seleção de modo no composer (dropdown ou botões)
+  2. Configuração de parâmetros do modelo baseado no modo selecionado
+  3. Modo Rápido: modelo pequeno, tempo limitado
+  4. Modo Pensar: raciocínio em cadeia, mais tokens
+  5. Modo Pesquisar: habilidade de pesquisar na web antes de responder
+- **Justificativa:** Oferece flexibilidade sem custo adicional, permitindo que o usuário escolha entre velocidade e profundidade conforme a necessidade.
+
