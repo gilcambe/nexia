@@ -1,6 +1,6 @@
 # Melhoria 45: Modos de Resposta no Composer
 
-Esta melhoria visa refatorar a lógica de validação de entrada nas APIs REST, reduzindo duplicidade de código, melhorando a performance e facilitando testes unitários. 
+Esta melhoria visa refatorar a lógica de validação de entrada nas APIs REST, reduzindo duplicidade de código, melhorando a performance e facilitando testes unitários.
 
 - **Status:** Implementado
 - **Regra:** O composer oferece três modos de resposta: Rápido, Pensar e Pesquisar. O dono escolhe velocidade ou profundidade como no Claude/ChatGPT.
