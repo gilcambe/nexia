@@ -1,0 +1,48 @@
+# Gerado pelo NEXIA AI (pipeline modelo, Fase 9). Deploy só por workflow_dispatch;
+# produção exige revisores no environment "production" (Settings → Environments).
+name: "NEXIA Pipeline"
+run-name: "nexia-pipeline target=${{ inputs.target || 'none' }}"
+on:
+  pull_request:
+  push:
+    branches: ["develop"]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Ambiente de deploy"
+        type: "choice"
+        options: ["none", "staging", "production"]
+        default: "none"
+permissions:
+  contents: "read"
+concurrency:
+  group: "nexia-pipeline-${{ github.ref }}-${{ inputs.target || 'ci' }}"
+  cancel-in-progress: false
+jobs:
+  ci:
+    name: "CI"
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@11d5960a326750d5838078e36cf38b85af677262"
+      - name: "Node"
+        uses: "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020"
+        with:
+          node-version: "20"
+          cache: "npm"
+      - name: "Instalar dependências"
+        run: "npm ci"
+      - name: "Lint"
+        run: "npm run lint"
+      - name: "Testes"
+        run: "npm test"
+      - name: "Build"
+        run: "npm run build"
+      - name: "Dependências (vulnerabilidade alta ou crítica falha)"
+        run: "npm audit --omit=dev --audit-level=high"
+      - name: "Secret scan (gitleaks, checksum verificado)"
+        run: |-
+          curl -sSL -o gl.tgz "https://github.com/gitleaks/gitleaks/releases/download/v8.24.3/gitleaks_8.24.3_linux_x64.tar.gz"
+          echo "9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c  gl.tgz" | sha256sum -c -
+          tar -xzf gl.tgz gitleaks && rm gl.tgz
+          ./gitleaks dir . --redact --no-banner
