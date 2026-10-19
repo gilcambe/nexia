@@ -3,7 +3,24 @@
   "nome": "Bezsan",
   "link": "https://bezsan.pages.dev/",
   "cidade": "",
-  "assuntos": [],
+  "assuntos": [
+    "imóveis de leilão comprados 40 a 60% abaixo do valor de mercado",
+    "revenda em 6 a 18 meses com retorno expressivo",
+    "diligência jurídica, fiscal e técnica antes de cada lance",
+    "leilão de imóveis em todo o Brasil com mais de 20 anos de experiência",
+    "reformas padronizadas que aumentam o valor de revenda",
+    "investimento em imóveis com ticket a partir de R$ 250 mil"
+  ],
   "imagens": [],
-  "hashtags": []
+  "hashtags": [
+    "#leilaodeimoveis",
+    "#imoveis",
+    "#investimentoimobiliario",
+    "#leilao",
+    "#mercadoimobiliario",
+    "#investimentos",
+    "#patrimonio",
+    "#bezsan"
+  ],
+  "cores": { "fundo": "#0d0f12", "destaque": "#c9a84c" }
 }
