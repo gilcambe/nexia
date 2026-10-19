@@ -83,3 +83,21 @@
 - **Custo:** 0 (não há custo direto de implementação).
 - **Justificativa:** Incentivar a base de usuários a promover o produto, resultando em aquisição de novos alunos de forma orgânica e de baixo custo.
 
+---
+
+# Melhoria 50: Modos "Rápido / Pensar / Pesquisar" no composer
+
+- **Status:** Pendente de implementação
+- **Regra:** Implementar seletor de modo no composer com três opções: Rápido (modelo pequeno), Pensar (raciocínio), Pesquisar (web). O modo atual será o padrão para não quebrar o fluxo existente.
+- **Por quê:** O dono escolhe velocidade ou profundidade como no Claude/ChatGPT.
+- **Custo:** 0 (todos os modelos usados são gratuitos).
+- **Implementação:**
+  1. Seletor "Rápido / Pensar / Pesquisar" no composer (src/pages/cortex/), com o modo atual como padrão.
+  2. Mapeamento explícito modo -> modelo no nexia-ai/model-router (rápido = modelo pequeno, pensar = modelo de raciocínio, pesquisar = modelo com busca na web).
+  3. Envio do modo no corpo da requisição e uso no handler (netlify/functions/cortex-chat.js), sem remover nenhuma função existente.
+- **Modelos gratuitos:**
+  - Rápido: `groq_llama3_fast` (modelo pequeno e rápido)
+  - Pensar: `or_deepseek_r1` (modelo com raciocínio)
+  - Pesquisar: `perplexity_fast` (modelo com busca na web)
+- **Fallback:** Se o modo pesquisar estiver indisponível, usar o modo pensar com aviso ao usuário.
+
