@@ -17,3 +17,35 @@ export function agruparPorData(itens: Resumo[], agora = new Date()): Grupo[] {
   }
   return grupos.filter((g) => g.itens.length);
 }
+
+// Tipos para os modos do composer
+export type ModoComposer = 'rapido' | 'pensar' | 'pesquisar';
+
+export interface ModoConfig {
+  label: string;
+  description: string;
+  model: string;
+}
+
+export const MODO_CONFIG: Record<ModoComposer, ModoConfig> = {
+  rapido: {
+    label: "Rápido",
+    description: "Resposta rápida com modelo pequeno",
+    model: "groq_llama3_fast"
+  },
+  pensar: {
+    label: "Pensar", 
+    description: "Análise profunda com raciocínio",
+    model: "or_deepseek_r1"
+  },
+  pesquisar: {
+    label: "Pesquisar",
+    description: "Busca na internet para respostas atualizadas",
+    model: "perplexity_fast"
+  }
+};
+
+// Função para obter o modelo padrão (mantém compatibilidade)
+export function getModeloPadrao(): ModoComposer {
+  return 'rapido'; // Padrão para não quebrar fluxo existente
+}
