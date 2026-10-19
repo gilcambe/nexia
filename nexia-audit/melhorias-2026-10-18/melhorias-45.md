@@ -45,3 +45,6 @@
 - Testar valor padrão do modo
 - Testar mapeamento modo→modelo
 - Testar envio do modo na requisição
+
+## Auto-correção de CI
+- Auto‑correction: when the CI fails, Cortex receives the last 80 lines of the error log and automatically retries the CI up to 2 times before human intervention.
