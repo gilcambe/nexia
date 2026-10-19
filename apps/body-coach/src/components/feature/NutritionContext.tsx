@@ -13,6 +13,7 @@ import { nutritionTargets, waterGoal as defaultWaterGoal, type MealFood } from '
 import { listUserDocs, setUserDoc, deleteUserDoc } from '@/lib/userData';
 import { marcarPontos } from '@/lib/comunidade';
 import { useAuth } from './AuthContext';
+import { refeicoesDeOntem } from '@/lib/refeicaoUmToque';
 
 interface NutritionTotals {
   calories: number;
@@ -24,6 +25,8 @@ interface NutritionTotals {
 
 interface NutritionContextValue {
   meals: MealFood[];
+  // Refeições de ontem, para "repetir ontem" em 1 toque.
+  yesterdayMeals: MealFood[];
   water: number;
   waterGoal: number;
   targets: typeof nutritionTargets;
@@ -71,6 +74,7 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();
   const [allMeals, setMeals] = useState<DayMeal[]>([]);
   const meals = useMemo(() => allMeals.filter(isToday), [allMeals]);
+  const yesterdayMeals = useMemo(() => refeicoesDeOntem(allMeals), [allMeals]);
   // Água do dia guardada no navegador (por usuário e por data).
   const waterKey = `bc_water_${user?.id ?? 'anon'}_${today()}`;
   const [water, setWater] = useState<number>(0);
@@ -190,6 +194,7 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       meals,
+      yesterdayMeals,
       water,
       waterGoal,
       targets,
@@ -202,7 +207,7 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
       addWater: (liters: number) => setWater((prev) => Math.round((prev + liters) * 100) / 100),
       resetWater: () => setWater(0),
     }),
-    [meals, water, waterGoal, targets, totals, loading, error, reload, addMeal, removeMeal],
+    [meals, yesterdayMeals, water, waterGoal, targets, totals, loading, error, reload, addMeal, removeMeal],
   );
 
   return <NutritionContext.Provider value={value}>{children}</NutritionContext.Provider>;

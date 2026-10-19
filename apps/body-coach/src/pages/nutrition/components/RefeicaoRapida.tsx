@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { alimentoDoTexto, NutrientesTotais } from '@/lib/alimentoDoTexto';
 import { perguntar } from '@/lib/coachAI';
+import { useNutrition } from '@/components/feature/NutritionContext';
+import { lerEstimativa, PEDIDO_ESTIMATIVA, semLinhaEstimativa } from '@/lib/refeicaoUmToque';
 
 export const RefeicaoRapida: React.FC = () => {
   const [texto, setTexto] = useState('');
@@ -8,6 +10,19 @@ export const RefeicaoRapida: React.FC = () => {
   const [totais, setTotais] = useState<NutrientesTotais | null>(null);
   const [veredito, setVeredito] = useState<string | null>(null);
   const [carregandoVeredito, setCarregandoVeredito] = useState(false);
+  const [registrada, setRegistrada] = useState('');
+  const { addMeal } = useNutrition();
+  // Valores editáveis antes de registrar (a estimativa da foto é só um ponto de partida).
+  const editar = (campo: keyof NutrientesTotais, v: string) => setTotais((t) => (t ? { ...t, [campo]: Math.max(0, Math.round(Number(v) || 0)) } : t));
+  const registrar = async () => {
+    if (!totais) return;
+    const nome = texto.trim().slice(0, 60) || 'Refeição da foto';
+    try {
+      await addMeal({ id: '', name: nome, time: new Date().toTimeString().slice(0, 5), calories: totais.calorias, protein: totais.proteinas, carbs: totais.carboidratos, fat: totais.gorduras, fiber: 0 });
+      setRegistrada(`${nome} registrada.`);
+      setTexto(''); setImagemPreview(null); setTotais(null); setVeredito(null);
+    } catch (e) { setRegistrada((e as Error).message); }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -23,14 +38,17 @@ export const RefeicaoRapida: React.FC = () => {
   const handleCalcular = async () => {
     const resultado = alimentoDoTexto(texto);
     setTotais(resultado);
+    setRegistrada('');
 
     if (imagemPreview || texto.trim()) {
       try {
         setCarregandoVeredito(true);
         setVeredito(null);
-        const prompt = `Analise a seguinte refeição e dê um veredito nutricional detalhado e construtivo. Descrição: "${texto}". ${imagemPreview ? 'O usuário anexou uma foto da refeição.' : ''}`;
+        const prompt = `Analise a seguinte refeição e dê um veredito nutricional detalhado e construtivo. Descrição: "${texto}". ${imagemPreview ? 'O usuário anexou uma foto da refeição.' : ''} ${PEDIDO_ESTIMATIVA}`;
         const resposta = await perguntar('nutrologo', prompt, {}, imagemPreview || undefined);
-        setVeredito(resposta || 'Refeição analisada com sucesso!');
+        const est = lerEstimativa(resposta);
+        if (est) setTotais(est);
+        setVeredito(semLinhaEstimativa(resposta || '') || 'Refeição analisada com sucesso!');
       } catch (err) {
         setVeredito('Não foi possível obter o veredito da IA no momento. Tente novamente.');
       } finally {
@@ -98,28 +116,33 @@ export const RefeicaoRapida: React.FC = () => {
           </div>
         )}
 
+        {registrada && <p role="status" className="text-sm text-emerald-700 dark:text-emerald-300">{registrada}</p>}
+
         {totais && (
           <div className="mt-6 pt-4 border-t border-zinc-100 dark:border-zinc-800 space-y-4">
             <div>
-              <h4 className="text-sm font-medium text-zinc-900 dark:text-white mb-3">Totais Calculados:</h4>
+              <h4 className="text-sm font-medium text-zinc-900 dark:text-white mb-3">Totais estimados (toque para corrigir):</h4>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="bg-emerald-50 dark:bg-emerald-950/30 p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/50">
                   <span className="block text-xs text-emerald-600 dark:text-emerald-400 font-medium">Calorias</span>
-                  <span className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{totais.calorias} kcal</span>
+                  <input type="number" inputMode="numeric" min={0} aria-label="calorias" value={totais.calorias} onChange={(e) => editar('calorias', e.target.value)} className="w-full bg-transparent text-lg font-bold text-zinc-900 outline-none dark:text-white" /><span className="text-xs">kcal</span>
                 </div>
                 <div className="bg-blue-50 dark:bg-blue-950/30 p-3 rounded-xl border border-blue-100 dark:border-blue-950/50">
                   <span className="block text-xs text-blue-600 dark:text-blue-400 font-medium">Proteínas</span>
-                  <span className="text-lg font-bold text-blue-700 dark:text-blue-300">{totais.proteinas}g</span>
+                  <input type="number" inputMode="numeric" min={0} aria-label="proteinas" value={totais.proteinas} onChange={(e) => editar('proteinas', e.target.value)} className="w-full bg-transparent text-lg font-bold text-zinc-900 outline-none dark:text-white" /><span className="text-xs">g</span>
                 </div>
                 <div className="bg-amber-50 dark:bg-amber-950/30 p-3 rounded-xl border border-amber-100 dark:border-amber-900/50">
                   <span className="block text-xs text-amber-600 dark:text-amber-400 font-medium">Carboidratos</span>
-                  <span className="text-lg font-bold text-amber-700 dark:text-amber-300">{totais.carboidratos}g</span>
+                  <input type="number" inputMode="numeric" min={0} aria-label="carboidratos" value={totais.carboidratos} onChange={(e) => editar('carboidratos', e.target.value)} className="w-full bg-transparent text-lg font-bold text-zinc-900 outline-none dark:text-white" /><span className="text-xs">g</span>
                 </div>
                 <div className="bg-purple-50 dark:bg-purple-950/30 p-3 rounded-xl border border-purple-100 dark:border-purple-900/50">
                   <span className="block text-xs text-purple-600 dark:text-purple-400 font-medium">Gorduras</span>
-                  <span className="text-lg font-bold text-purple-700 dark:text-purple-300">{totais.gorduras}g</span>
+                  <input type="number" inputMode="numeric" min={0} aria-label="gorduras" value={totais.gorduras} onChange={(e) => editar('gorduras', e.target.value)} className="w-full bg-transparent text-lg font-bold text-zinc-900 outline-none dark:text-white" /><span className="text-xs">g</span>
                 </div>
               </div>
+              <button type="button" onClick={() => void registrar()} disabled={carregandoVeredito || totais.calorias <= 0} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60">
+                <i className="ri-check-line"></i> Registrar refeição
+              </button>
             </div>
 
             {(carregandoVeredito || veredito) && (
@@ -134,7 +157,9 @@ export const RefeicaoRapida: React.FC = () => {
                     Analisando sua refeição e foto...
                   </div>
                 ) : (
-                  <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-line leading-relaxed">\n                    {veredito}\n                  </p>
+                  <p className="text-sm text-zinc-700 dark:text-zinc-300 whitespace-pre-line leading-relaxed">
+                    {veredito}
+                  </p>
                 )}
               </div>
             )}
