@@ -255,7 +255,46 @@ async function handleRequest(request, env, { getFunction }) {
   if (pathname === '/__/firebase/init.json' || pathname.startsWith('/__/auth/')) return proxyAuth(request, url);
   if (pathname === '/api/firebase-config') return firebaseConfig(env, undefined, request);
   if (pathname.startsWith('/api/') || pathname.startsWith('/.netlify/functions/')) {
-    return runFunction(resolveFunctionName(pathname), request, url, env, getFunction);
+    const isGet = request.method === 'GET' || request.method === 'HEAD';
+    const cacheKey = isGet ? new Request(url.toString(), request) : null;
+    const cache = typeof caches !== 'undefined' ? caches.default : null;
+    if (isGet && cache) {
+      const cached = await cache.match(cacheKey);
+      if (cached) return cached;
+    }
+
+    const fnName = resolveFunctionName(pathname);
+    const isCacheableRead = isGet && (
+      fnName === 'pedidos' || 
+      fnName === 'conheca' || 
+      fnName === 'ads-engine' || 
+      fnName === 'kpi-engine' || 
+      fnName === 'catalogos' ||
+      pathname.includes('ofertas') ||
+      pathname.includes('catalog') ||
+      pathname.includes('config')
+    );
+
+    const response = await runFunction(fnName, request, url, env, getFunction);
+    
+    if (isGet && cache && response.status === 200) {
+      const resHeaders = new Headers(response.headers);
+      if (!resHeaders.has('Cache-Control') || resHeaders.get('Cache-Control') === 'no-cache') {
+        resHeaders.set('Cache-Control', 'public, max-age=300');
+      }
+      const cloned = new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: resHeaders,
+      });
+      // Cloudflare Cache API requires Cache-Control public and max-age > 0
+      if (isCacheableRead || resHeaders.get('Cache-Control')?.includes('max-age=')) {
+        await cache.put(cacheKey, cloned.clone());
+      }
+      return cloned;
+    }
+
+    return response;
   }
   return serveStatic(request, url, env);
 }
