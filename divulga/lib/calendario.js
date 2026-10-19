@@ -17,6 +17,31 @@ function temaDoDia(data = new Date()) {
   return SEMANA[br.getUTCDay()];
 }
 
+/** Próximos 7 temas com horários de postagem (7h15, 12h15, 19h15). */
+function proximos7Temas(data = new Date()) {
+  const br = new Date(data.getTime() - 3 * 3600 * 1000);
+  const hoje = br.getUTCDay();
+  const temas = [];
+  
+  for (let i = 0; i < 7; i++) {
+    const diaIndex = (hoje + i) % 7;
+    const dia = SEMANA[diaIndex];
+    const dataPostagem = new Date(br);
+    dataPostagem.setDate(br.getDate() + i);
+    
+    temas.push({
+      dia: dia.dia,
+      tema: dia.tema,
+      assunto: dia.assunto,
+      cta: dia.cta,
+      data: dataPostagem.toISOString().split('T')[0],
+      horarios: ['07:15', '12:15', '19:15']
+    });
+  }
+  
+  return temas;
+}
+
 const GANCHOS = {
   'dica-treino': 'Pare de errar isso no treino:',
   recurso: 'Isso muda a sua semana de treino:',
