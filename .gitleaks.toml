@@ -1,6 +1,7 @@
 # Varredura de segredos (SEC Fase 1). Usa as regras padrão do gitleaks + regras locais.
 title = "Gitleaks Config"
 
+# Estende as regras padrão do Gitleaks (inclui regras padrão para AWS, Slack, GitHub, etc.)
 [extend]
 useDefault = true
 
@@ -27,7 +28,10 @@ id = "dotenv-file"
 description = "Arquivo .env versionado"
 path = '''(^|/)\.env(\.[^/]*)?$'''
 [[rules.allowlists]]
-paths = ['''(^|/)\.env\.example$''']
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''(^|/)\.example\.env$''',
+]
 
 # Config web pública do Firebase (nexia-c8710), embutida em páginas legadas.
 # É pública por natureza; a proteção é restrição por referrer + App Check (ver SECURITY-AUDIT.md).
@@ -62,13 +66,15 @@ description = "Chave de API do Instagram (IG_API_KEY)"
 regex = '''(?i)(ig_api_key|instagram[_-]?api[_-]?key)[\s"':=<]+[A-Za-z0-9_-]{10,}'''
 keywords = ["ig_api_key", "instagram"]
 
-# Valores fictícios usados pelos testes (emulador e tokens inválidos de propósito).
+# Valores fictícios usados pelos testes (emulador e tokens inválidos de propósito)
+# e caminhos ou variáveis comuns de CI do Nexia para evitar falsos positivos.
 [allowlist]
-description = "Falsos positivos conhecidos"
+description = "Falsos positivos conhecidos e arquivos permitidos"
 paths = [
   '''(^|/)package-lock\.json$''',
   '''^\.gitleaks\.toml$''',
   '''\.example\.env$''',
+  '''(^|/)\.env\.example$''',
   '''^docs/''',
 ]
 regexes = [
