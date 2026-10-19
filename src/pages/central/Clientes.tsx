@@ -44,6 +44,7 @@ export default function Clientes({ d, erros }: { d: Dados; erros: Partial<Record
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">{l.nome}</div>
                         <div className="text-xs text-nexia-muted truncate">{l.produto} · {haQuanto(l.quando)}{l.origem && ` · ${l.origem}`}</div>
+                        {l.indicadoPor && <div className="text-xs text-nexia-cyan truncate" data-testid="lead-indicado-por">Indicado por: {l.indicadoPor}</div>}
                       </div>
                       {l.whatsapp ? <Botao href={zap(l.whatsapp)}>💬 WhatsApp</Botao> : l.email ? <Botao href={`mailto:${l.email}`}>✉️ E-mail</Botao> : null}
                     </li>

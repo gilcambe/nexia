@@ -50,6 +50,26 @@ function renderizar(raw, saida, media = {}, { base } = {}) {
     fs.writeFileSync(destino, conteudo);
     escritos.push(rel);
   }
+  // Páginas extras do cliente (opcional): clientes/<slug>/paginas.js recebe o index.html gerado e devolve
+  // arquivos a escrever (ex.: privacidade, termos, página por produto, sitemap) e imagens locais para assets/.
+  const extrasJs = base && path.join(base, 'paginas.js');
+  if (extrasJs && fs.existsSync(extrasJs)) {
+    const indexHtml = fs.readFileSync(path.join(saida, 'index.html'), 'utf8');
+    const { arquivos: extras = {}, imagens = [] } = require(extrasJs).paginasExtras({ spec, indexHtml, base }) || {};
+    for (const [rel, conteudo] of Object.entries(extras)) {
+      if (rel.includes('..') || path.isAbsolute(rel)) throw new Error(`caminho inseguro: ${rel}`);
+      fs.mkdirSync(path.dirname(path.join(saida, rel)), { recursive: true });
+      fs.writeFileSync(path.join(saida, rel), conteudo);
+      if (!escritos.includes(rel)) escritos.push(rel);
+    }
+    for (const origem of imagens) {
+      if (!(origem + path.sep).startsWith(RAIZ + path.sep) || !IMAGEM.test(origem) || !fs.existsSync(origem)) throw new Error(`imagem local inválida ou ausente: ${origem}`);
+      const nome = `assets/${path.basename(origem)}`;
+      fs.mkdirSync(path.join(saida, 'assets'), { recursive: true });
+      fs.copyFileSync(origem, path.join(saida, nome));
+      if (!copiados.includes(nome)) copiados.push(nome);
+    }
+  }
   return { spec, escritos: [...escritos, ...copiados] };
 }
 
