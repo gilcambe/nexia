@@ -27,11 +27,15 @@ test('RS2. spec inválido não gera nada', () => {
   assert.throws(() => renderizar({ sections: [] }, os.tmpdir()), /inválido/);
 });
 
-test('RS3. todo site de cliente leva o selo "Feito com NEXIA" no rodapé', () => {
+test('RS3. todo site de cliente leva o selo "Feito com Kernex" no rodapé, com o slug do site no utm_source (#1001)', () => {
   const raw = JSON.parse(fs.readFileSync(path.join(__dirname, '../../clientes/exemplo/site.json'), 'utf8'));
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'site-'));
-  renderizar(raw, dir);
-  assert.match(fs.readFileSync(path.join(dir, 'index.html'), 'utf8'), /class="selo-nexia"[^>]*>Feito com NEXIA</);
+  const { spec } = renderizar(raw, dir);
+  const slug = String(spec.folder).split('/').pop();
+  const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
+  assert.match(html, /class="selo-nexia"[^>]*>Feito com Kernex</);
+  assert.ok(html.includes(`kernex.com.br/?utm_source=${slug}&amp;utm_medium=selo&amp;utm_campaign=clientes`), slug);
+  assert.doesNotMatch(html, /Feito com NEXIA/);
 });
 
 const gerar = slug => {

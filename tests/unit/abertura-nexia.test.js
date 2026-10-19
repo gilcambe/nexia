@@ -26,3 +26,19 @@ test('ABERTURA-PWA: manifesto do Cortex instalável sem barra do navegador (stan
   }
   assert.match(R('index.html'), /rel="manifest" href="\/cortex\.webmanifest"/);
 });
+
+test('ABERTURA-KERNEX: vinheta mostra KERNEX, símbolo inline e frase, sem NEXIA visível, em até 2 s', () => {
+  const src = R('src/lib/abertura-nexia.ts');
+  assert.match(src, /MARCA_ABERTURA = 'KERNEX'/);
+  assert.match(src, /FRASE_ABERTURA = 'Inteligência que resolve\.'/);
+  assert.match(src, /SIMBOLO_KERNEX_SVG =\s*\n\s*'<svg/);
+  assert.match(src, /background:#060d1c/);
+  // o HTML montado (htmlAbertura) não tem o texto NEXIA visível
+  const html = src.slice(src.indexOf('export function htmlAbertura'), src.indexOf('export function mostrarAbertura'));
+  assert.ok(html.length > 50);
+  assert.doesNotMatch(html, /NEXIA/);
+  assert.doesNotMatch(src, /'NEXIA'\.split/);
+  const dur = Number((src.match(/DURACAO_ABERTURA_MS = (\d+)/) || [])[1]);
+  assert.ok(dur > 0 && dur <= 2000, 'duração <= 2000 ms');
+  assert.match(src, /sessionStorage\.getItem\('nexia_splash'\)/);
+});

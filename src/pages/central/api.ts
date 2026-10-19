@@ -4,7 +4,7 @@ import { apiPath } from "@/config/env";
 
 // Central NEXIA: conversa com /api/central (só o administrador). Cada parte vem num pedido separado.
 
-export interface Produto { id: string; nome: string; icone: string; frase: string; site: string; painel: string; suporte?: string }
+export interface Produto { id: string; nome: string; icone: string; frase: string; site?: string; painel?: string; suporte?: string; pendente?: boolean }
 export interface Medida { id: string; ok: boolean; codigo: number; tempo: number; lento: boolean }
 export interface Tarefa { numero: number; titulo: string; link: string; quando: string }
 export interface Robo { arquivo: string; nome: string; podeRodar: boolean; situacao: "ok" | "erro" | "rodando" | "nunca" | "sem-acesso"; quando: string | null; link: string | null }
@@ -90,5 +90,6 @@ export function haQuanto(iso: string | null | undefined): string {
   if (min < 60) return `há ${min} min`;
   const h = Math.round(min / 60);
   if (h < 24) return `há ${h} h`;
-  return `há ${Math.round(h / 24)} dias`;
+  const d = Math.round(h / 24);
+  return `há ${d} ${d === 1 ? "dia" : "dias"}`;
 }

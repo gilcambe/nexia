@@ -1,18 +1,28 @@
 'use strict';
-// Central NEXIA: lista dos produtos e clientes que aparecem na página /central.
+// Central Kernex: lista dos produtos e clientes que aparecem na página /central.
 // "site" é o que o público vê, "painel" é a área do dono. "suporte" = cliente com agenda (entrar sem senha).
-// Produto novo: acrescente uma linha aqui. Links grátis do dia a dia ficam em LINKS.
+// Produto novo: acrescente uma linha aqui. "pendente: true" = ainda sem site no ar (a tela mostra "em breve"). Links grátis do dia a dia ficam em LINKS.
 
 const BASE = 'https://nexia.gcbezerra.workers.dev';
 
 const PRODUTOS = [
   { id: 'body-coach', nome: 'Body Coach', icone: '💪', frase: 'App de treino e dieta (vende assinatura)', site: 'https://nexiabodycoach.pages.dev/', painel: 'https://nexiabodycoach.pages.dev/body-coach/admin/acessos' },
-  { id: 'cortex', nome: 'Cortex', icone: '🧠', frase: 'O robô que programa a NEXIA', site: BASE + '/health', painel: BASE + '/cortex-app' },
+  { id: 'cortex', nome: 'Cortex', icone: '🧠', frase: 'O robô que programa a Kernex', site: BASE + '/health', painel: BASE + '/cortex-app' },
   { id: 'achados', nome: 'Achados (ofertas)', icone: '🛍️', frase: 'Vitrine de ofertas com link de afiliado', site: 'https://achados-nexia.pages.dev/', painel: 'https://github.com/gilcambe/nexia/actions/workflows/afiliados.yml' },
   { id: 'divulga', nome: 'Divulga', icone: '📣', frase: 'Posta os clientes no Facebook e Instagram', site: 'https://www.instagram.com/nexiabodycoach/', painel: 'https://github.com/gilcambe/nexia/actions/workflows/divulga.yml' },
   { id: 'bezsan', nome: 'Bezsan Leilões', icone: '🏛️', frase: 'Cliente: site e agenda de reuniões', site: 'https://bezsan.pages.dev/', painel: 'https://bezsan.pages.dev/agenda/', suporte: 'bezsan' },
   { id: 'studiolima', nome: 'Studio Lima', icone: '✨', frase: 'Cliente: estética, site e agenda', site: 'https://studiolima.pages.dev/', painel: 'https://studiolima.pages.dev/agenda/', suporte: 'studiolima' },
+  // Clientes antigos (#1003). EV Supplements não é mais cliente e MyCoach virou o Body Coach: não entram.
+  { id: 'ces', nome: 'CES Brasil 2027', icone: '🌐', frase: 'Cliente: missão empresarial (evento)', site: BASE + '/ces', painel: BASE + '/ces' },
+  { id: 'vp', nome: 'Viajante Pro', icone: '✈️', frase: 'Cliente: agência de viagens', site: BASE + '/vp', painel: BASE + '/vp' },
+  { id: 'splash', nome: 'Splash Eventos', icone: '💧', frase: 'Cliente: locação de espaços para eventos', site: BASE + '/splash', painel: BASE + '/splash' },
+  // O site do Adriano entra quando a landing nova for publicada em https://adrianoblumer.pages.dev.
+  { id: 'adriano', nome: 'Adriano Blumer', icone: '🥗', frase: 'Cliente: nutricionista (landing com WhatsApp e redes)', pendente: true },
+  { id: 'arqia', nome: 'Arqia', icone: '📐', frase: 'Produto futuro: sistema para arquitetos', pendente: true },
 ];
+
+// Só os que têm site no ar entram nas medições de saúde.
+const NO_AR = PRODUTOS.filter((p) => p.site && !p.pendente);
 
 const LINKS = [
   { nome: 'Firebase (banco e logins)', url: 'https://console.firebase.google.com/' },
@@ -23,7 +33,7 @@ const LINKS = [
   { nome: 'Shopee Afiliados (comissões)', url: 'https://affiliate.shopee.com.br/' },
   { nome: 'Amazon Associados (comissões)', url: 'https://associados.amazon.com.br/' },
   { nome: 'Google Search Console', url: 'https://search.google.com/search-console' },
-  { nome: 'Gmail da NEXIA', url: 'https://mail.google.com/' },
+  { nome: 'Gmail da Kernex', url: 'https://mail.google.com/' },
 ];
 
 // Robôs que a Central pode mandar rodar (arquivo do GitHub Actions → nome simples e o que mandar).
@@ -43,4 +53,4 @@ const ROBOS = [
   { arquivo: 'ci.yml', nome: 'Conferência do código', inputs: null },
 ];
 
-module.exports = { PRODUTOS, LINKS, ROBOS, BASE };
+module.exports = { PRODUTOS, NO_AR, LINKS, ROBOS, BASE };

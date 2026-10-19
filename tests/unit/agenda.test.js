@@ -202,7 +202,7 @@ test('AG8. cadastro: hash do código bate, sem código em texto; painel e cópia
   const raiz = path.join(__dirname, '../..');
   const base = fs.readFileSync(path.join(raiz, 'nexia-ai/site-kit/agenda/painel.html'), 'utf8');
   const copia = fs.readFileSync(path.join(raiz, 'sites/studiolima/agenda/index.html'), 'utf8');
-  const normal = s => s.replace(/<meta name="agenda-extra" content="[^"]*">/, '').replace(/<meta name="agenda-site" content="[^"]*">/, '').replace(/<meta name="agenda-site-url" content="[^"]*">/, '').replace(/<title>[^<]*<\/title>/, '');
+  const normal = s => s.replace(/utm_source=[a-z0-9-]+/g, 'utm_source=SLUG').replace(/<meta name="agenda-extra" content="[^"]*">/, '').replace(/<meta name="agenda-site" content="[^"]*">/, '').replace(/<meta name="agenda-site-url" content="[^"]*">/, '').replace(/<title>[^<]*<\/title>/, '');
   assert.equal(normal(copia), normal(base), 'a cópia do painel no site do Studio Lima saiu do modelo: copie de novo');
   assert.match(copia, /<meta name="agenda-site" content="studiolima">/);
   const landing = fs.readFileSync(path.join(raiz, 'sites/studiolima/index.html'), 'utf8');

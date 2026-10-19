@@ -74,11 +74,12 @@ async function _fetch<T>(
     body?: string;
     headers?: Record<string, string>;
     signal?: AbortSignal;
+    semLogin?: boolean;
   } = {}
 ): Promise<ApiResponse<T>> {
   try {
     const res = await fetch(url, {
-      headers: { "Content-Type": "application/json", ...(await cabecalhoAuth()), ...(opts.headers || {}) },
+      headers: { "Content-Type": "application/json", ...(opts.semLogin ? {} : await cabecalhoAuth()), ...(opts.headers || {}) },
       method: opts.method,
       body: opts.body,
       signal: opts.signal,
@@ -197,7 +198,8 @@ type AnyObj = Record<string, any>;
 
 export const api = {
   health: () => _fetch<HealthStatus>(healthUrl()),
-  firebaseConfig: () => _fetch<FirebaseClientConfig>(firebaseConfigUrl()),
+  // Sem token: pedir o token chamaria initFirebase(), que pede a config de novo (laço de centenas de pedidos por abertura).
+  firebaseConfig: () => _fetch<FirebaseClientConfig>(firebaseConfigUrl(), { semLogin: true }),
   sentinelScan: () =>
     _fetch<SentinelReport>(apiPath("/sentinel-qa"), {
       method: "POST",
