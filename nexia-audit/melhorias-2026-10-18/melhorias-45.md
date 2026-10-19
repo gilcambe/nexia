@@ -1,4 +1,26 @@
-# Melhoria 45: Programa de indicação com recompensa
+# Melhoria 45: Cache de borda para APIs de leitura (Cache API do Worker)
+
+- **Status:** Pendente de implementação
+- **Regra:** Implementar cache de borda para APIs de leitura usando Cache API do Worker.
+- **Endpoints a serem cacheados:**
+  - Listas de ofertas
+  - Configuração pública
+  - `/api/firebase-config`
+  - Catálogos
+- **Tempo de cache:** 60 a 300 segundos
+- **Por quê:** Menos leituras do Firestore (cota grátis) e resposta mais rápida.
+- **Custo:** 0 (não há custo direto de implementação).
+- **Implementação:**
+  1. Utilizar Cache API do Cloudflare Worker para armazenar respostas de leitura.
+  2. Configurar tempo de cache adequado para cada endpoint (60-300s).
+  3. Manter lógica de atualização automática quando necessário.
+  4. Não remover nenhuma função existente.
+  5. Não alterar regras do Firestore nem segredos.
+- **Justificativa:** Reduz custos com Firestore e melhora performance sem custo adicional.
+
+---
+
+# Melhoria 45.1: Programa de indicação com recompensa
 
 - **Status:** Implementado
 - **Regra:** Cada aluno tem código de indicação único (derivado do seu ID). O amigo que chega pelo link ganha desconto automático e quem indicou ganha dias grátis de acesso.
