@@ -5,6 +5,8 @@ import { useAuth } from './AuthContext';
 import { useReadiness } from './ReadinessContext';
 import { useNutrition } from './NutritionContext';
 import { useProgressData } from '@/hooks/useProgressData';
+import type { LinhaAluno } from '@/lib/coach/alunos';
+import { painelAlunos, sumiu } from '@/lib/coach/alunos';
 
 function getRecognition(): any | null {
   const w = window as any;
@@ -19,6 +21,9 @@ export default function CoachPanel() {
   const { result } = useReadiness();
   const { totals, targets } = useNutrition();
   const { latest } = useProgressData(user?.id);
+  
+  const [alunosComAtencao, setAlunosComAtencao] = useState<LinhaAluno[]>([]);
+  const [carregandoAlunos, setCarregandoAlunos] = useState(false);
 
   const [draft, setDraft] = useState('');
   const [listening, setListening] = useState(false);
@@ -56,6 +61,28 @@ export default function CoachPanel() {
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 150);
   }, [open]);
+
+  // Carregar alunos que precisam de atenção
+  useEffect(() => {
+    const carregarAlunos = async () => {
+      if (!user?.id) return;
+      
+      setCarregandoAlunos(true);
+      try {
+        const painel = await painelAlunos();
+        const alunosAtencao = painel.alunos.filter(sumiu);
+        setAlunosComAtencao(alunosAtencao);
+      } catch (error) {
+        console.error('Erro ao carregar alunos:', error);
+      } finally {
+        setCarregandoAlunos(false);
+      }
+    };
+    
+    if (open) {
+      carregarAlunos();
+    }
+  }, [open, user?.id]);
 
   useEffect(() => {
     if (!voiceOn || !('speechSynthesis' in window)) return;
@@ -119,6 +146,12 @@ export default function CoachPanel() {
     { rotulo: 'Registrar refeição', icone: 'ri-restaurant-line', ir: '/nutrition' },
     { rotulo: 'Ver evolução', icone: 'ri-line-chart-line', ir: '/evolution' },
   ];
+
+  // Enviar mensagem padrão para aluno que precisa de atenção
+  const enviarMensagemAtencao = (aluno: LinhaAluno) => {
+    const mensagem = `Olá ${aluno.nome}! Vi que você não treinou nos últimos dias. Tudo bem? Estou aqui para ajudar se precisar de ajustes no treino ou tiver alguma dúvida. 💪`;
+    send(mensagem);
+  };
 
   return (
     <div className="fixed inset-0 z-[60] flex justify-end">
