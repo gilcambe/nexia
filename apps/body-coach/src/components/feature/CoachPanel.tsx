@@ -215,6 +215,39 @@ export default function CoachPanel() {
           </span>
         </div>
 
+        {/* Alunos sem treino há 3 dias (Quem precisa de atenção hoje) */}
+        <div className="border-b border-background-200 bg-background-100/30 px-5 py-3">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground-700 flex items-center gap-1.5">
+              <i className="ri-alert-line text-accent-500"></i>
+              Quem precisa de atenção hoje ({alunosComAtencao.length})
+            </h4>
+            {carregandoAlunos && <span className="text-[10px] text-foreground-400">Atualizando...</span>}
+          </div>
+          {alunosComAtencao.length === 0 ? (
+            <p className="text-xs text-foreground-500 italic">Nenhum aluno sem treino há 3 dias. Todos ativos! 🎉</p>
+          ) : (
+            <div className="space-y-2 max-h-36 overflow-y-auto no-scrollbar">
+              {alunosComAtencao.map((aluno) => (
+                <div key={aluno.id} className="flex items-center justify-between rounded-xl bg-background-50 border border-background-200 p-2 text-xs">
+                  <div>
+                    <p className="font-semibold text-foreground-900">{aluno.nome}</p>
+                    <p className="text-[10px] text-foreground-500">Sem treino há {aluno.diasSemTreino || 3} dias</p>
+                  </div>
+                  <button
+                    onClick={() => enviarMensagemAtencao(aluno)}
+                    className="flex items-center gap-1 rounded-lg bg-primary-500 px-2.5 py-1 text-[11px] font-medium text-background-50 transition active:scale-95 hover:bg-primary-600"
+                    title="Enviar mensagem pronta em 1 toque"
+                  >
+                    <i className="ri-whatsapp-line"></i>
+                    Cobrar
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* messages */}
         <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
           {messages.map((m) => (
