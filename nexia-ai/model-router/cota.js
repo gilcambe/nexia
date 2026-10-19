@@ -149,7 +149,10 @@ async function carregarDoD1(env = process.env, o = {}) {
     const d = driverD1(env, o);
     if (!d) return false;
     const doc = (await d.get([DOC])).get(DOC);
-    if (doc && doc.fields) (o.placar || getPlacar()).importar(doc.fields.placar);
+    if (doc && doc.fields) {
+      (o.placar || getPlacar()).importar(doc.fields.placar);
+      (o.qualidade || require('./qualidade').getQualidade()).importar(doc.fields.qualidade);   // #832
+    }
     return true;
   } catch (e) { console.warn('[cota] não li o placar do D1:', e && e.message); return false; }
 }
@@ -160,9 +163,10 @@ async function salvarNoD1(env = process.env, o = {}) {
     if (!d) return false;
     const p = o.placar || getPlacar();
     const atual = (await d.get([DOC])).get(DOC);
-    if (atual && atual.fields) p.importar(atual.fields.placar);
+    const q = o.qualidade || require('./qualidade').getQualidade();
+    if (atual && atual.fields) { p.importar(atual.fields.placar); q.importar(atual.fields.qualidade); }
     const agora = new Date().toISOString();
-    await d.apply([{ type: 'upsert', path: DOC, fields: { placar: p.exportar() }, create_time: (atual && atual.create_time) || agora, update_time: agora }]);
+    await d.apply([{ type: 'upsert', path: DOC, fields: { placar: p.exportar(), qualidade: q.exportar() }, create_time: (atual && atual.create_time) || agora, update_time: agora }]);
     return true;
   } catch (e) { console.warn('[cota] não salvei o placar no D1:', e && e.message); return false; }
 }

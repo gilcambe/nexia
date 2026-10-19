@@ -4,7 +4,7 @@
 // teto por pedido, e WAITING_AI_QUOTA só depois de o Kilo também falhar. fetch falso: nenhuma API real.
 const test = require('node:test');
 // O placar de cota é do processo inteiro: cada teste começa sem castigos de outro.
-test.beforeEach(() => require('../../nexia-ai/model-router/cota').getPlacar().limpar());
+test.beforeEach(() => { require('../../nexia-ai/model-router/cota').getPlacar().limpar(); require('../../nexia-ai/model-router/qualidade').getQualidade().limpar(); });
 const assert = require('node:assert');
 const { createRouter, CODES } = require('../../nexia-ai/model-router');
 const { pickFree, STATIC_FREE, MODELS_URL } = require('../../nexia-ai/model-router/providers/kilo-catalog');

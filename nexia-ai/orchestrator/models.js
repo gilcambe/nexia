@@ -28,6 +28,7 @@
 //   fast → Mistral, Cloudflare e Codestral primeiro, depois Groq (GROQ_FAST), depois TAIL.
 // semRepetir() garante que não haja descritores repetidos (mesmo provider e model) em nenhuma classe.
 const { getPlacar } = require('../model-router/cota');
+const { getQualidade } = require('../model-router/qualidade');
 const g = model => ({ provider: 'groq', model });
 const KILO = [1, 2, 3, 4, 5].map(n => ({ provider: 'kilo', model: `auto:${n}` }));
 const TAIL = [
@@ -97,7 +98,9 @@ function candidates(router, cls, env = process.env) {
     try { const c = router.capabilities(d); return c && c.available !== false && c.tool_call; } catch { return false; }
   });
   // Placar de cota (cota.js): modelo sem cota fica de fora até a cota voltar, em todas as execuções.
-  return getPlacar().ordenar(lista);
+  // #832: placar de qualidade: comprovado bom nesta classe sobe, comprovado ruim desce.
+  return getQualidade().ordenar(getPlacar().ordenar(lista), key(cls));
 }
+const key = cls => (Object.prototype.hasOwnProperty.call(CLASSES, cls) ? cls : 'coding');
 
 module.exports = { CLASSES, FREE, semRepetir, candidates, listFor, parseList };
