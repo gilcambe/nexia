@@ -1,6 +1,8 @@
 'use strict';
 // Fase 10: partes determinísticas do Orchestrator (intenção, plano, gates, orçamento, agentes).
 const test = require('node:test');
+// O placar de cota é do processo inteiro: cada teste começa sem castigos de outro.
+test.beforeEach(() => require('../../nexia-ai/model-router/cota').getPlacar().limpar());
 const assert = require('node:assert');
 const { classifyIntent, planFor, specialistFor } = require('../../nexia-ai/orchestrator');
 const { evaluateGates, verdict } = require('../../nexia-ai/orchestrator/gates');
@@ -94,7 +96,7 @@ test('U4. agentes: os 10 da spec, só leitura onde deve, modelos por classe', ()
   assert.ok(allowed('devops', 'deploy.staging') && !allowed('devops', 'github.commit_files'));
   for (const a of Object.keys(AGENTS)) assert.ok(!allowed(a, 'deploy.production') && !allowed(a, 'local.terminal_run'), a);
   const router = { capabilities: d => ({ available: d.model !== 'claude-opus-5-5', tool_call: true }) };
-  assert.deepStrictEqual(candidates(router, 'reasoning', {}).map(d => d.model).slice(0, 2), ['claude-sonnet-5-5', 'openai/gpt-oss-120b'], 'sem o primeiro, cai no próximo');
+  assert.deepStrictEqual(candidates(router, 'reasoning', {}).map(d => d.model).slice(0, 2), ['claude-sonnet-5-5', 'gemini-flash-latest'], 'sem o primeiro, cai no próximo (raciocínio começa pelo Gemini)');
   // ADR-FREE-03: sem chave da Anthropic (paga), só os grátis que estiverem configurados
   const free = { capabilities: d => ({ available: ['google', 'groq'].includes(d.provider), tool_call: true }) };
   assert.deepStrictEqual(candidates(free, 'coding', {}).map(d => `${d.provider}:${d.model}`), ['groq:openai/gpt-oss-120b', 'groq:qwen/qwen3.8-27b',
@@ -105,7 +107,7 @@ test('U4. agentes: os 10 da spec, só leitura onde deve, modelos por classe', ()
   for (const cls of Object.keys(FREE)) {
     const provs = new Set(FREE[cls].map(d => d.provider));
     // ADR-FREE-05: Cerebras fora (o "grátis" exige cartão); Kilo, Codestral e NVIDIA NIM entram.
-    for (const p of provs) assert.ok(['groq', 'google', 'codestral', 'nvidia', 'cloudflare', 'mistral', 'openrouter', 'kilo'].includes(p), `${cls}: ${p} não é grátis`);
+    for (const p of provs) assert.ok(['groq', 'google', 'codestral', 'nvidia', 'cloudflare', 'mistral', 'zai', 'openrouter', 'llm7', 'kilo'].includes(p), `${cls}: ${p} não é grátis`);
     assert.ok(provs.size >= 8, `${cls}: precisa de vários provedores grátis`);
     assert.ok(FREE[cls].filter(d => d.provider === 'openrouter').every(d => d.model.endsWith(':free')));
     // A lista termina com vários modelos grátis do Kilo Gateway (sem chave: nunca fica sem candidato).
@@ -168,4 +170,12 @@ test('U12. soCriaArquivos: só pedido de arquivo novo que proíbe editar existen
   assert.ok(!soCriaArquivos('Crie (arquivo novo, não edite nenhum existente) a.ts e importe-o em b.tsx'), 'pede ligar: não');
   assert.ok(!soCriaArquivos('Corrija o rodapé do Site Alfa'));
   assert.ok(!soCriaArquivos(''));
+});
+
+test('U-ORDEM. cada classe grátis começa por um provedor diferente, sem repetidos e com os mesmos modelos', () => {
+  const { FREE } = require('../../nexia-ai/orchestrator/models');
+  assert.deepStrictEqual(['reasoning', 'coding', 'fast'].map(c => FREE[c][0].provider), ['google', 'groq', 'mistral']);
+  const k = d => `${d.provider}|${d.model}`;
+  for (const c of Object.keys(FREE)) assert.strictEqual(new Set(FREE[c].map(k)).size, FREE[c].length, c);
+  assert.deepStrictEqual(new Set(FREE.reasoning.map(k)), new Set(FREE.coding.map(k)));
 });

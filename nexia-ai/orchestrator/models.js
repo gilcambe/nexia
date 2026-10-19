@@ -14,11 +14,20 @@
 //   → Codestral (CODESTRAL_API_KEY, opcional) → NVIDIA NIM (NVIDIA_API_KEY, opcional)
 //   → Cloudflare Workers AI (CLOUDFLARE_AI_TOKEN + CLOUDFLARE_AI_ACCOUNT_ID) → Mistral (MISTRAL_API_KEY)
 //   → OpenRouter ":free" (OPENROUTER_API_KEY)
+//   → Z.ai (ZAI_API_KEY, opcional): glm-4.7-flash e glm-4.5-flash, grátis, só cadastro com e-mail (~1 pedido/seg, ~1.000/dia).
+//   → LLM7.io SEM CHAVE (codestral-latest, gpt-oss-20b; 30 pedidos/min, 100 mil tokens/dia; LLM7_API_KEY opcional).
 //   → Kilo Gateway SEM CHAVE (sempre disponível): os 5 melhores modelos ":free" do catálogo vivo do gateway.
 // Só depois de o Kilo também falhar a execução espera a cota voltar (WAITING_AI_QUOTA) e é retomada sozinha.
 // Gemma pelo AI Studio ficou de fora: sem garantia de tool_call no endpoint compatível com OpenAI.
 // Provedor sem chave é pulado na hora. Os nomes mudam com o tempo: NEXIA_MODELS_<CLASSE>
 // (ex.: NEXIA_MODELS_CODING="groq:openai/gpt-oss-120b,kilo:z-ai/glm-5:free,kilo:auto:1") troca a lista.
+//
+// Ordem de FREE por classe (cada classe começa por um provedor diferente, espalhando a carga):
+//   coding  → Groq (GROQ_STRONG) primeiro, depois TAIL.
+//   reasoning → os 4 Google AI Studio de TAIL primeiro, depois Groq (GROQ_STRONG), depois o resto de TAIL.
+//   fast → Mistral, Cloudflare e Codestral primeiro, depois Groq (GROQ_FAST), depois TAIL.
+// semRepetir() garante que não haja descritores repetidos (mesmo provider e model) em nenhuma classe.
+const { getPlacar } = require('../model-router/cota');
 const g = model => ({ provider: 'groq', model });
 const KILO = [1, 2, 3, 4, 5].map(n => ({ provider: 'kilo', model: `auto:${n}` }));
 const TAIL = [
@@ -28,16 +37,37 @@ const TAIL = [
   { provider: 'nvidia', model: 'qwen/qwen3-coder-480b-a35b-instruct' }, { provider: 'nvidia', model: 'openai/gpt-oss-120b' },
   { provider: 'cloudflare', model: '@cf/openai/gpt-oss-120b' },
   { provider: 'mistral', model: 'mistral-small-latest' }, { provider: 'mistral', model: 'devstral-small-latest' },
+  { provider: 'zai', model: 'glm-4.7-flash' }, { provider: 'zai', model: 'glm-4.5-flash' },
   { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }, { provider: 'openrouter', model: 'openai/gpt-oss-120b:free' },
+  { provider: 'llm7', model: 'codestral-latest' }, { provider: 'llm7', model: 'gpt-oss-20b' },
   ...KILO];
 const GROQ_STRONG = ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'moonshotai/kimi-k2-instruct-0905', 'llama-3.3-70b-versatile',
   'openai/gpt-oss-20b', 'meta-llama/llama-4-scout-17b-16e-instruct'];
 const GROQ_FAST = ['openai/gpt-oss-20b', 'meta-llama/llama-4-scout-17b-16e-instruct', 'qwen/qwen3.8-27b', 'llama-3.3-70b-versatile',
   'openai/gpt-oss-120b', 'moonshotai/kimi-k2-instruct-0905'];
+
+// Descritores fixos usados no início de classes de FREE.
+const GOOGLE4 = TAIL.slice(0, 4);
+const RESTO_TAIL = TAIL.slice(4);
+const MISTRAL_SMALL = { provider: 'mistral', model: 'mistral-small-latest' };
+const CLOUDFLARE_GPT_OSS = { provider: 'cloudflare', model: '@cf/openai/gpt-oss-120b' };
+const CODESTRA_LATEST = { provider: 'codestral', model: 'codestral-latest' };
+
+/** Remove descritores repetidos (mesmo provider e model), mantendo o primeiro. */
+function semRepetir(lista) {
+  const visto = new Set();
+  return lista.filter(d => {
+    const chave = `${d.provider}::${d.model}`;
+    if (visto.has(chave)) return false;
+    visto.add(chave);
+    return true;
+  });
+}
+
 const FREE = Object.freeze({
-  reasoning: [...GROQ_STRONG.map(g), ...TAIL],
-  coding: [...GROQ_STRONG.map(g), ...TAIL],
-  fast: [...GROQ_FAST.map(g), ...TAIL],
+  reasoning: semRepetir([...GOOGLE4, ...GROQ_STRONG.map(g), ...RESTO_TAIL]),
+  coding: semRepetir([...GROQ_STRONG.map(g), ...TAIL]),
+  fast: semRepetir([MISTRAL_SMALL, CLOUDFLARE_GPT_OSS, CODESTRA_LATEST, ...GROQ_FAST.map(g), ...TAIL]),
 });
 
 const CLASSES = Object.freeze({
@@ -62,9 +92,11 @@ function listFor(cls, env = process.env) {
 
 /** @returns {{ provider, model }[]} candidatos disponíveis para a classe */
 function candidates(router, cls, env = process.env) {
-  return listFor(cls, env).filter(d => {
+  const lista = listFor(cls, env).filter(d => {
     try { const c = router.capabilities(d); return c && c.available !== false && c.tool_call; } catch { return false; }
   });
+  // Placar de cota (cota.js): modelo sem cota fica de fora até a cota voltar, em todas as execuções.
+  return getPlacar().ordenar(lista);
 }
 
-module.exports = { CLASSES, FREE, candidates, listFor, parseList };
+module.exports = { CLASSES, FREE, semRepetir, candidates, listFor, parseList };

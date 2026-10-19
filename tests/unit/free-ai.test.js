@@ -3,6 +3,8 @@
 // lista, catálogo vivo de modelos ":free" (com lista fixa de reserva), troca de modelo rápida em 503 /
 // teto por pedido, e WAITING_AI_QUOTA só depois de o Kilo também falhar. fetch falso: nenhuma API real.
 const test = require('node:test');
+// O placar de cota é do processo inteiro: cada teste começa sem castigos de outro.
+test.beforeEach(() => require('../../nexia-ai/model-router/cota').getPlacar().limpar());
 const assert = require('node:assert');
 const { createRouter, CODES } = require('../../nexia-ai/model-router');
 const { pickFree, STATIC_FREE, MODELS_URL } = require('../../nexia-ai/model-router/providers/kilo-catalog');
@@ -84,7 +86,7 @@ test('K3. sem chave nenhuma o Cortex ainda tem candidatos (o Kilo) em toda class
   const r = createRouter({ env: {}, fetchImpl: async () => json({}) });
   for (const cls of ['reasoning', 'coding', 'fast']) {
     const c = candidates(r, cls, {});
-    assert.ok(c.length >= 5 && c.every(d => d.provider === 'kilo'), cls);
+    assert.ok(c.length >= 5 && c.every(d => d.provider === 'kilo' || d.provider === 'llm7'), cls);   // os dois funcionam sem chave
     assert.ok(!FREE[cls].some(d => d.provider === 'cerebras'), cls);
   }
   // NVIDIA NIM e Codestral entram quando a chave existe (tool_call ligado).
@@ -139,14 +141,17 @@ test('K6. Groq sem cota do dia, GitHub grande demais e Gemini em 503 → o Kilo 
 
 test('K7. 429 no Kilo passa ao próximo modelo grátis do Kilo na hora; askModel segue as mesmas regras', async () => {
   let n = 0;
-  const f = fakeFetch((url, b) => (url === KILO_CHAT && n++ === 0 ? json({ error: { message: 'Rate limit exceeded' } }, 429) : answer(b.model)));
+  // O LLM7 (também sem chave, antes do Kilo) fica fora do ar aqui: o teste é sobre o Kilo.
+  const f = fakeFetch((url, b) => (url.includes('llm7') ? json({}, 503) : url === KILO_CHAT && n++ === 0 ? json({ error: { message: 'Rate limit exceeded' } }, 429) : answer(b.model)));
   const r = createRouter({ env: {}, fetchImpl: f.fetchImpl });
   const t0 = Date.now();
   const out = await run(r);
   assert.strictEqual(out.status, 'done');
   assert.strictEqual(out.model, 'kilo/minimax/minimax-m2.1:free');
   assert.ok(Date.now() - t0 < 3000);
-  const g = fakeFetch((url, b) => (url.includes('generativelanguage') ? json({}, 503) : answer(b.model, '{"ok":true}')));
+  // O 429 acima deixou o kilo/auto:1 de castigo no placar de cota; a segunda metade testa outra coisa.
+  require('../../nexia-ai/model-router/cota').getPlacar().limpar();
+  const g = fakeFetch((url, b) => (url.includes('generativelanguage') || url.includes('llm7') ? json({}, 503) : answer(b.model, '{"ok":true}')));
   const a = await askModel({ agentId: 'architect', router: createRouter({ env: { GEMINI_API_KEY: 'k' }, fetchImpl: g.fetchImpl }), meter: meter(), system: 's', prompt: 'p' });
   assert.deepStrictEqual([a.status, a.model], ['done', 'kilo/z-ai/glm-5:free']);
 });
@@ -161,4 +166,45 @@ test('K8. WAITING_AI_QUOTA só quando TUDO falha, inclusive os 5 modelos do Kilo
   assert.strictEqual(kilo.length, 5, 'os 5 do Kilo foram tentados antes de desistir');
   assert.strictEqual(f.calls.at(-1).url, KILO_CHAT, 'o Kilo é o último');
   assert.match(out.text, /kilo\/auto:5/);
+});
+
+test('K-COTA. Groq sem cota do dia: o próximo job (processo novo) já começa sem chamar a Groq, lendo o placar salvo', async () => {
+  const { createMemoryDriver } = require('../../lib/firebase-lite/d1-backend');
+  const { getPlacar, carregarDoD1, salvarNoD1 } = require('../../nexia-ai/model-router/cota');
+  const banco = createMemoryDriver();
+  const GROQ = 'https://api.groq.com/openai/v1/chat/completions';
+  const DAY_NO_HINT = 'Rate limit reached for model on requests per day (RPD): Limit 1000, Used 1000, Requested 1.';
+  const env = { GROQ_API_KEY: 'g', GEMINI_API_KEY: 'k' };
+  // Job 1: todos os modelos da Groq respondem 429 de cota do dia; o Gemini responde.
+  const f1 = fakeFetch((url, b) => (url === GROQ ? json({ error: { message: DAY_NO_HINT } }, 429) : answer(b.model)));
+  const out1 = await runAgent({ agentId: 'coder', goal: 'Faça.', router: createRouter({ env, fetchImpl: f1.fetchImpl }), gateway, ctx: {}, projectId: 'p1', meter: meter() });
+  assert.strictEqual(out1.status, 'done');
+  assert.ok(f1.calls.some(c => c.url === GROQ), 'o job 1 bateu na Groq e levou o 429');
+  assert.ok(await salvarNoD1({}, { driver: banco }));
+  // Job 2: processo novo (placar vazio), carrega do banco e não chama a Groq nenhuma vez.
+  getPlacar().limpar();
+  assert.ok(await carregarDoD1({}, { driver: banco }));
+  const f2 = fakeFetch((url, b) => (url === GROQ ? json({ error: { message: DAY_NO_HINT } }, 429) : answer(b.model)));
+  const out2 = await runAgent({ agentId: 'coder', goal: 'Faça.', router: createRouter({ env, fetchImpl: f2.fetchImpl }), gateway, ctx: {}, projectId: 'p1', meter: meter() });
+  assert.strictEqual(out2.status, 'done');
+  assert.strictEqual(f2.calls.filter(c => c.url === GROQ).length, 0, 'a Groq esgotada não é chamada de novo');
+  // Sem dica de espera, o castigo da cota do dia é longo (6 h), não os 10 s do padrão do runtime.
+  const e = Object.values(getPlacar().exportar())[0];
+  assert.ok(e.ate - Date.now() > 5 * 3600e3);
+});
+
+test('K-COTA2. salvar junta com o placar de outro job (o castigo mais longo vence) e erro do banco não derruba nada', async () => {
+  const { createMemoryDriver } = require('../../lib/firebase-lite/d1-backend');
+  const { createPlacar, salvarNoD1, carregarDoD1 } = require('../../nexia-ai/model-router/cota');
+  const banco = createMemoryDriver();
+  const a = createPlacar(); a.marcar({ provider: 'groq', model: 'x' }, 'daily', 0);
+  const b = createPlacar(); b.marcar({ provider: 'google', model: 'y' }, 'busy');
+  await salvarNoD1({}, { driver: banco, placar: a });
+  await salvarNoD1({}, { driver: banco, placar: b });
+  const c = createPlacar(); await carregarDoD1({}, { driver: banco, placar: c });
+  assert.ok(c.bloqueado({ provider: 'groq', model: 'x' }) && c.bloqueado({ provider: 'google', model: 'y' }));
+  const ruim = { get: async () => { throw new Error('D1 fora'); }, apply: async () => { throw new Error('D1 fora'); } };
+  assert.strictEqual(await carregarDoD1({}, { driver: ruim, placar: c }), false);
+  assert.strictEqual(await salvarNoD1({}, { driver: ruim, placar: c }), false);
+  assert.strictEqual(await carregarDoD1({}, {}), false, 'sem segredos do D1 não faz nada');
 });
