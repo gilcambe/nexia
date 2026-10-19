@@ -1,6 +1,7 @@
 {
   "id": "studio-lima",
   "nome": "Studio Lima",
+  "ativo": false,
   "link": "https://studiolima.pages.dev/",
   "cidade": "São Paulo",
   "assuntos": [

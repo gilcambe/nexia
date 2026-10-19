@@ -1,6 +1,7 @@
 {
   "id": "cortex",
   "nome": "Cortex",
+  "ativo": false,
   "link": "https://nexia.gcbezerra.workers.dev/cortex",
   "cidade": "",
   "assuntos": [

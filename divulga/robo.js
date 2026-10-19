@@ -63,11 +63,16 @@ function montar({ cliente, legenda, imagem, video, imagens, id, capa }) {
   return { id, cliente: cliente.id, porRede };
 }
 
+/** Cliente ligado: existe e não tem `"ativo": false` (pausado fica fora da fila e do rodízio, sem apagar nada). */
+const ligado = c => !!c && c.ativo !== false;
+/** Item da fila pronta que ainda pode sair agora: não feito e de cliente ligado (de cliente pausado espera a volta). */
+const filaPendente = (fila, clientes, feitos) => (fila || []).find(i => !feitos.has(i.id) && ligado(clientes[i.cliente]));
+
 /** Cliente da vez no rodízio (null se ainda há item na fila pronta, que sai antes). */
 function clienteDaVez({ clientes, fila }, estado = {}) {
   const feitos = new Set(estado.feitos || []);
-  if ((fila || []).some(i => !feitos.has(i.id) && clientes[i.cliente])) return null;
-  const prontos = Object.values(clientes).filter(c => c.ativo !== false && (c.imagens || []).length && (c.assuntos || []).length);
+  if (filaPendente(fila, clientes, feitos)) return null;
+  const prontos = Object.values(clientes).filter(c => ligado(c) && (c.imagens || []).length && (c.assuntos || []).length);
   if (!prontos.length) return null;
   const n = estado.rodizio || 0;
   return { c: prontos[n % prontos.length], volta: Math.floor(n / prontos.length) };
@@ -96,7 +101,7 @@ function postProduzido(producao, c, agora = new Date()) {
 /** Escolhe o post desta rodada: primeiro a fila, depois o rodízio. */
 async function proximo({ clientes, fila }, estado, ctx) {
   const feitos = new Set(estado.feitos || []);
-  const item = fila.find(i => !feitos.has(i.id) && clientes[i.cliente]);
+  const item = filaPendente(fila, clientes, feitos);
   if (item) return montar({ id: item.id, cliente: clientes[item.cliente], legenda: item.legenda, imagem: urlImagem(item.imagem || (item.imagens || [])[0] || ''), video: item.video && VIDEOS + item.video, imagens: Array.isArray(item.imagens) ? item.imagens.map(urlImagem) : undefined });
   const vez = clienteDaVez({ clientes, fila: [] }, estado);
   if (!vez) return null;
