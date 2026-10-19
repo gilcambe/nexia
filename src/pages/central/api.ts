@@ -90,5 +90,6 @@ export function haQuanto(iso: string | null | undefined): string {
   if (min < 60) return `há ${min} min`;
   const h = Math.round(min / 60);
   if (h < 24) return `há ${h} h`;
-  return `há ${Math.round(h / 24)} dias`;
+  const d = Math.round(h / 24);
+  return `há ${d} ${d === 1 ? "dia" : "dias"}`;
 }
