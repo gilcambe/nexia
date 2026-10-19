@@ -26,17 +26,3 @@ id = "instagram-api-key"
 description = "Instagram API Key Detection"
 regex = '''(?i)(IG_API_KEY|insta_api_key|instagram_[a-z0-9]{10,30})'''
 
-[[rules]]
-id = "aws-keys"
-description = "AWS Access Key Detection"
-regex = '''(?i)(AKIA[0-9A-Z]{16})'''
-
-[[rules]]
-id = "slack-tokens"
-description = "Slack Token Detection"
-regex = '''(?i)(xox[baprs]-)?([a-zA-Z0-9]{24}T[a-zA-Z0-9]{6,12}T[a-zA-Z0-9]{24})'''
-
-[[rules]]
-id = "github-tokens"
-description = "GitHub Token Detection"
-regex = '''(?i)(github_pat|ghp_[a-zA-Z0-9]{36})'''
