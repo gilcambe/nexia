@@ -102,7 +102,10 @@ function createGithubAdapter(o) {
   const auth = o.auth || createAuth({ env: o.env || process.env, fetchImpl, apiBase, now: o.now });
   const base = `/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.repo)}`;
 
+  // #830: leitura de arquivo repetida na mesma rodada sai da memória. Qualquer escrita limpa tudo.
+  const leituras = new Map();
   async function call(method, path, { body, write = false, permissions = PERMS.read, accept } = {}) {
+    if (method !== 'GET') leituras.clear();
     const headers = { Accept: accept || 'application/vnd.github+json', 'User-Agent': 'nexia-ai-github-adapter', 'X-GitHub-Api-Version': '2022-11-28',
       ...(await auth.headersFor(repo, { write, permissions })), ...(body ? { 'Content-Type': 'application/json' } : {}) };
     let r;
@@ -151,7 +154,9 @@ function createGithubAdapter(o) {
     async getFile({ path, ref }) {
       checkPath(path);
       if (ref !== undefined) checkRef(ref);
-      const d = await call('GET', `/contents/${enc(path)}${ref ? `?ref=${encodeURIComponent(ref)}` : ''}`);
+      const rota = `/contents/${enc(path)}${ref ? `?ref=${encodeURIComponent(ref)}` : ''}`;
+      const d = leituras.has(rota) ? leituras.get(rota) : await call('GET', rota);
+      leituras.set(rota, d);
       // Modelos grátis pedem get_file numa pasta (ex.: "apps/body-coach"): em vez de erro (que gastava
       // passos em repetição), devolve a listagem com a dica de abrir um arquivo dela.
       if (Array.isArray(d)) {
