@@ -64,7 +64,7 @@ regexes = ['''^AIza[0-9A-Za-z_-]{35}$''']
 id = "instagram-api-key"
 description = "Chave de API do Instagram (IG_API_KEY)"
 regex = '''(?i)(ig_api_key|instagram[_-]?api[_-]?key)[\s"':=<]+[A-Za-z0-9_-]{10,}'''
-keywords = ["ig_api_key", "instagram"]
+keywords = ["ig_api_key", "IG_API_KEY", "instagram"]
 
 # Valores fictícios usados pelos testes (emulador e tokens inválidos de propósito)
 # e caminhos ou variáveis comuns de CI do Nexia para evitar falsos positivos.
