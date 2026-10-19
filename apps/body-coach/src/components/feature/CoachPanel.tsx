@@ -229,7 +229,7 @@ export default function CoachPanel() {
           ) : (
             <div className="space-y-2 max-h-36 overflow-y-auto no-scrollbar">
               {alunosComAtencao.map((aluno) => (
-                <div key={aluno.id} className="flex items-center justify-between rounded-xl bg-background-50 border border-background-200 p-2 text-xs">
+                <div key={aluno.uid} className="flex items-center justify-between rounded-xl bg-background-50 border border-background-200 p-2 text-xs">
                   <div>
                     <p className="font-semibold text-foreground-900">{aluno.nome}</p>
                     <p className="text-[10px] text-foreground-500">Sem treino há {aluno.diasSemTreino || 3} dias</p>
