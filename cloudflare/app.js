@@ -177,6 +177,11 @@ async function firebaseConfig(env, fetchImpl = (...a) => fetch(...a), request) {
 const _resetWebConfigCache = () => { webConfigCache = null; };
 
 const BODY_COACH_PREFIX = '/body-coach';
+// Domínios Kernex: cada subdomínio abre o próprio app na raiz (#1180). Caminhos antigos seguem iguais.
+const HOME_POR_HOST = {
+  'bodycoach.kernex.com.br': BODY_COACH_PREFIX + '/',
+  'cortex.kernex.com.br': '/cortex',
+};
 
 const extOf = p => { const m = /\.[^./]+$/.exec(p); return m ? m[0].toLowerCase() : ''; };
 
@@ -194,6 +199,8 @@ async function serveStatic(request, url, env) {
   if (request.method !== 'GET' && request.method !== 'HEAD') return notFound(405);
   const safePath = normalizeRequestPath(url.pathname || '/');
   if (safePath === null) return notFound(400);
+  const home = HOME_POR_HOST[url.hostname];
+  if (home && safePath === '/') return Response.redirect(url.origin + home + url.search, 302);
   const assets = env.ASSETS;
   if (!assets) return notFound(404);
 
