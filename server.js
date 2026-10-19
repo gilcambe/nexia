@@ -143,10 +143,10 @@ async function runFunction(fnName, req, res, body) {
   };
       try {
       const result = await fn.handler(event, {});
-      const parsedUrl = url.parse(req.url);
-      const pathname = parsedUrl.pathname || '';
+      const fnParsedUrl = url.parse(req.url);
+      const fnPathname = fnParsedUrl.pathname || '';
       const isReadApi = (req.method === 'GET' || req.method === 'HEAD') &&
-        (pathname.includes('/ofertas') || pathname.includes('/catalogo') || pathname.includes('/config') || pathname.includes('/firebase-config') || pathname.includes('/oferta'));
+        (fnPathname.includes('/ofertas') || fnPathname.includes('/catalogo') || fnPathname.includes('/config') || fnPathname.includes('/firebase-config') || fnPathname.includes('/oferta'));
       const cacheHeaders = isReadApi ? { 'Cache-Control': 'public, max-age=300, s-maxage=300' } : {};
       const baseHeaders = {
         'Content-Type': 'application/json',
@@ -155,11 +155,12 @@ async function runFunction(fnName, req, res, body) {
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-Id',
         ...cacheHeaders,
       };
-      // Se a resposta do handler já traz headers explícitos de Cache-Control, respeitamos ou priorizamos
+      const resultHeaders = result.headers || {};
+      const hasResultCache = Object.keys(resultHeaders).some(k => k.toLowerCase() === 'cache-control');
       const finalHeaders = {
         ...baseHeaders,
-        ...(result.headers || {}),
-        ...(isReadApi && (!result.headers || !result.headers['Cache-Control'] && !result.headers['cache-control']) ? { 'Cache-Control': 'public, max-age=300, s-maxage=300' } : {})
+        ...resultHeaders,
+        ...(isReadApi && !hasResultCache ? { 'Cache-Control': 'public, max-age=300, s-maxage=300' } : {})
       };
       // NEXIA AI (Fase 5): streaming real quando o handler devolve { stream }
       if (isStreamResult(result)) return writeStream(req, res, result, finalHeaders);
