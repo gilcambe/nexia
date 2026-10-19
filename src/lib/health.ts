@@ -66,7 +66,11 @@ async function readDay(day: string): Promise<HealthSample | null> {
 }
 
 async function writeDay(day: string, sample: HealthSample): Promise<void> {
-  await setDoc(doc(db, storagePath(day)), sample);
+  const docData: HealthSample = {
+    timestamp: sample.timestamp,
+    metrics: sample.metrics,
+  };
+  await setDoc(doc(db, storagePath(day)), docData);
 }
 
 // --- helpers -------------------------------------------------------------
