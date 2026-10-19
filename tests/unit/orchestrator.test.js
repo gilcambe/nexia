@@ -105,7 +105,7 @@ test('U4. agentes: os 10 da spec, só leitura onde deve, modelos por classe', ()
   for (const cls of Object.keys(FREE)) {
     const provs = new Set(FREE[cls].map(d => d.provider));
     // ADR-FREE-05: Cerebras fora (o "grátis" exige cartão); Kilo, Codestral e NVIDIA NIM entram.
-    for (const p of provs) assert.ok(['groq', 'github', 'google', 'codestral', 'nvidia', 'cloudflare', 'mistral', 'openrouter', 'kilo'].includes(p), `${cls}: ${p} não é grátis`);
+    for (const p of provs) assert.ok(['groq', 'google', 'codestral', 'nvidia', 'cloudflare', 'mistral', 'openrouter', 'kilo'].includes(p), `${cls}: ${p} não é grátis`);
     assert.ok(provs.size >= 8, `${cls}: precisa de vários provedores grátis`);
     assert.ok(FREE[cls].filter(d => d.provider === 'openrouter').every(d => d.model.endsWith(':free')));
     // A lista termina com vários modelos grátis do Kilo Gateway (sem chave: nunca fica sem candidato).
@@ -113,6 +113,8 @@ test('U4. agentes: os 10 da spec, só leitura onde deve, modelos por classe', ()
     assert.ok(tail.every(d => d.provider === 'kilo' && /^auto:\d$/.test(d.model)), `${cls}: termina no Kilo`);
     assert.strictEqual(FREE[cls].findIndex(d => d.provider === 'kilo'), FREE[cls].length - 5, `${cls}: Kilo só no fim`);
     assert.ok(FREE[cls].filter(d => d.provider === 'groq').length >= 6, `${cls}: vários modelos Groq (cotas separadas)`);
+    // ADR-FREE-04: GitHub Models desligado em 30/07/2026; não deve aparecer na lista padrão
+    assert.ok(!FREE[cls].some(d => d.provider === 'github'), `${cls}: github não deve estar na lista padrão`);
   }
   const custom = candidates(free, 'coding', { NEXIA_MODELS_CODING: 'groq:moonshotai/kimi-k2, google:gemini-9, bad, x:y z' });
   assert.deepStrictEqual(custom.map(d => `${d.provider}:${d.model}`), ['groq:moonshotai/kimi-k2', 'google:gemini-9']);
