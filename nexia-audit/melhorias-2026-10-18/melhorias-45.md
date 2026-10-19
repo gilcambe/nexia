@@ -1,4 +1,17 @@
-# Melhoria 45: Login com Google no endereço do próprio produto
+# Melhoria 45: Programa de indicação com recompensa
+
+- **Status:** Implementado
+- **Regra:** Cada aluno tem código de indicação único (derivado do seu ID). O amigo que chega pelo link ganha desconto automático e quem indicou ganha dias grátis de acesso.
+- **Por quê:** Crescimento orgânico sem anúncio e custo zero.
+- **Implementação:**
+  1. Geração de código e link de indicação em `apps/body-coach/src/lib/ferramentas/cartao.ts`.
+  2. Captura automática do parâmetro `?ref=` e `?cupom=` no carregamento do aplicativo (`apps/body-coach/src/App.tsx`).
+  3. Suporte no perfil do aluno em `apps/body-coach/src/components/feature/AuthContext.tsx`.
+  4. Testes unitários para validar a lógica de indicação e cupons.
+
+---
+
+# Melhoria 45.1: Login com Google no endereço do próprio produto
 
 - **Status:** Implementado e configurado
 - **Ação manual do dono:** Cadastrar a URL de redirecionamento do domínio próprio no Console do Google / Firebase.
