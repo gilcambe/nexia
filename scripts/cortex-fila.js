@@ -90,12 +90,12 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
   for (const i of validas) {
     const ls = nomes(i);
     if (ls.includes(L.travado)) continue;
-    if (!ls.includes(L.rodando)) continue;
     if (ls.includes(L.feito)) {
-      // Aberta e já marcada como feita: fecha como concluída.
+      // Aberta e já marcada como feita: fecha como concluída (qualquer tarefa aberta com "feito" fecha, mesmo sem rótulo rodando).
       acoes.push({ tipo: 'fechar-feito', numero: i.number });
       continue;
     }
+    if (!ls.includes(L.rodando)) continue;
     const run = ultimaRun(i.number);
     const pista = numeroDe(ls, 'pista');
     if (run && run.status === 'completed') {
@@ -111,7 +111,8 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
         : { tipo: 'reenfileirar', numero: i.number, tentativa: t, run: run.id, conclusao: run.conclusion });
       continue;
     }
-    if (!run && minutos(agora, i.updated_at) > 120) { acoes.push({ tipo: 'reenfileirar', numero: i.number, tentativa: numeroDe(ls, 'tentativa'), run: null, conclusao: 'sem execução' }); continue; }
+    const execucaoRecente = run && minutos(agora, run.created_at || run.updated_at || i.updated_at) <= 120;
+    if (!execucaoRecente && minutos(agora, i.updated_at) > 120) { acoes.push({ tipo: 'reenfileirar', numero: i.number, tentativa: numeroDe(ls, 'tentativa'), run: run ? run.id : null, conclusao: 'sem execução' }); continue; }
     ativas++;
     if (pista) pistasEmUso.add(pista);
   }
