@@ -66,7 +66,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
       gh('/contents/divulga/fila?ref=develop').catch(() => []),
     ]);
     const feitos = new Set((estado && estado.feitos) || []);
-    const nomes = (Array.isArray(arquivos) ? arquivos : []).map((f) => f.name).filter((n) => n.endsWith('.json')).map((n) => n.replace(/\\.json$/, ''));
+    const nomes = (Array.isArray(arquivos) ? arquivos : []).map((f) => f.name).filter((n) => n.endsWith('.json')).map((n) => n.replace(/\.json$/, ''));
     const pendentes = nomes.filter((n) => !feitos.has(n)).slice(0, 5);
     const proximos = (await Promise.all(pendentes.map((n) => lerRaw('develop', 'divulga/fila/' + n + '.json')))).map((p, k) => ({ id: pendentes[k], texto: String((p && (p.texto || p.legenda)) || '').slice(0, 280) }));
     const historico = ((estado && estado.historico) || []).slice(-8).reverse();
