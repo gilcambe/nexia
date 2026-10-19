@@ -69,9 +69,23 @@ export async function usarCupomGuardado(): Promise<number> {
     if (r.dias || r.jaUsado) { try { localStorage.removeItem('bc_cupom'); } catch { /* sem armazenamento */ } }
     return r.dias || 0;
   } catch (e) {
-    if (/inválido|vencido/i.test((e as Error).message)) { try { localStorage.removeItem('bc_cupom'); } catch { /* sem armazenamento */ } }
+    if (/inválido|vencido/i.test((e as Error).message)) {
+      try {
+        localStorage.removeItem('bc_cupom');
+        // não era cupom: código de 6 letras digitado no cadastro é o código do coach (entra na equipe)
+        if (localStorage.getItem('bc_cupom_digitado') === c && /^[A-Z0-9]{6}$/.test(c)) localStorage.setItem('bc_convite', c);
+        localStorage.removeItem('bc_cupom_digitado');
+      } catch { /* sem armazenamento */ }
+    }
     return 0;
   }
+}
+// Campo "tenho um convite" do cadastro: guarda o código para usar depois do login (cupom no Pix, dias grátis ou equipe do coach).
+export function guardarCodigoDigitado(bruto: string): string {
+  const c = String(bruto || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
+  if (c.length < 3) return '';
+  try { localStorage.setItem('bc_cupom', c); localStorage.setItem('bc_cupom_digitado', c); } catch { /* sem armazenamento */ }
+  return c;
 }
 // Preço do Premium com desconto (promoção ou cupom; vale o maior, não somam).
 export const comDesconto = (valor: number, pct: number) => `R$ ${(valor * (1 - pct / 100)).toFixed(2).replace('.', ',')}`;

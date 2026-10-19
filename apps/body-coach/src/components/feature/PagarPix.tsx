@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import qrcode from 'qrcode-generator';
-import { avisarQuePaguei, dataCurta, ECONOMIA_ANUAL, PLANOS_PREMIUM, PRECOS, tipoDaChave, valorComDesconto, verCupom, type Acesso, type PlanoPremium } from '@/lib/acesso';
+import { avisarQuePaguei, dataCurta, ECONOMIA_ANUAL, PLANOS_PREMIUM, PRECOS, tipoDaChave, usarCupom, valorComDesconto, verCupom, type Acesso, type PlanoPremium } from '@/lib/acesso';
 import { codigoPix, reais } from '@/lib/ferramentas/pix';
 
 // Preços e pagamento por Pix (chave do NEXIA) com o aviso "Já paguei" para o admin conferir.
@@ -25,10 +25,17 @@ export default function PagarPix({ acesso, avisar }: { acesso: Acesso; avisar: (
     try { guardado = localStorage.getItem('bc_cupom') ?? ''; } catch { /* sem armazenamento */ }
     if (!guardado) return;
     setCodigo(guardado);
-    verCupom(guardado).then((c) => { setCupom(c); avisar(`Cupom ${c.codigo}: ${c.pct}% de desconto.`); }).catch(() => { /* cupom vencido: segue sem desconto */ });
+    verCupom(guardado).then((c) => { if (!(c.pct > 0)) return; setCupom(c); avisar(`Cupom ${c.codigo}: ${c.pct}% de desconto.`); }).catch(() => { /* cupom vencido: segue sem desconto */ });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const aplicar = async () => { try { const c = await verCupom(codigo); setCupom(c); avisar(`Cupom ${c.codigo}: ${c.pct}% de desconto.`); } catch (e) { setCupom(null); avisar((e as Error).message); } };
+  const aplicar = async () => {
+    try {
+      const c = await verCupom(codigo);
+      // convite de dias grátis digitado aqui: soma os dias ao teste (o mesmo código do link e do cadastro)
+      if (c.dias) { const r = await usarCupom(c.codigo); avisar(r.jaUsado ? 'Você já usou um convite de dias grátis.' : `Convite ${c.codigo}: +${r.dias} dias grátis. Abra o app de novo para ver.`); return; }
+      setCupom(c); avisar(`Cupom ${c.codigo}: ${c.pct}% de desconto.`);
+    } catch (e) { setCupom(null); avisar((e as Error).message); }
+  };
   const paguei = async () => {
     try { await (coach ? avisarQuePaguei(cupom?.codigo ?? '') : avisarQuePaguei(cupom?.codigo ?? '', plano, valor)); avisar('Recebemos o seu aviso! Assim que o Pix for confirmado, o app libera sozinho.'); } catch (e) { avisar((e as Error).message); }
   };
@@ -62,7 +69,7 @@ export default function PagarPix({ acesso, avisar }: { acesso: Acesso; avisar: (
           )}
           {pct > 0 && <p className="font-semibold text-primary-700">{pct}% de desconto {coach ? 'em qualquer plano' : 'aplicado'}.</p>}
           <div className="flex gap-2 pt-1">
-            <input value={codigo} onChange={(e) => setCodigo(e.target.value.toUpperCase())} placeholder="Tenho um cupom" aria-label="Cupom de desconto" className="min-w-0 flex-1 rounded-lg border border-background-200 bg-background-50 px-3 py-2 text-base uppercase" />
+            <input value={codigo} onChange={(e) => setCodigo(e.target.value.toUpperCase())} placeholder="Tenho um cupom ou convite" aria-label="Cupom de desconto" className="min-w-0 flex-1 rounded-lg border border-background-200 bg-background-50 px-3 py-2 text-base uppercase" />
             <button onClick={() => void aplicar()} disabled={codigo.trim().length < 3} className="rounded-lg border border-primary-300 px-3 text-sm font-semibold text-primary-700 disabled:opacity-50">Aplicar</button>
           </div>
           {acesso.pix ? (
