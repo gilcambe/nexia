@@ -15,6 +15,7 @@
 //   → Cloudflare Workers AI (CLOUDFLARE_AI_TOKEN + CLOUDFLARE_AI_ACCOUNT_ID) → Mistral (MISTRAL_API_KEY)
 //   → OpenRouter ":free" (OPENROUTER_API_KEY)
 //   → Kilo Gateway SEM CHAVE (sempre disponível): os 5 melhores modelos ":free" do catálogo vivo do gateway.
+//   → LLM7.io SEM CHAVE (sempre disponível): codestral-latest e gpt-oss-20b (30/min, 100 mil tokens/dia; LLM7_API_KEY opcional).
 // Só depois de o Kilo também falhar a execução espera a cota voltar (WAITING_AI_QUOTA) e é retomada sozinha.
 // Gemma pelo AI Studio ficou de fora: sem garantia de tool_call no endpoint compatível com OpenAI.
 // Provedor sem chave é pulado na hora. Os nomes mudam com o tempo: NEXIA_MODELS_<CLASSE>
