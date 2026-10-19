@@ -1,5 +1,6 @@
 const express = require('express');
 const PORT = process.env.PORT || 3000;
+const { startWatcher } = require('./monitoring/healthWatcher');
 
 const app = express();
 
@@ -11,9 +12,6 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/', (req, res) => {
   res.json({ status: 'ok', message: 'Servidor está rodando' });
 });
-
-const { startWatcher } = require('./monitoring/healthWatcher');
-
 
 // Inicia o monitoramento de saúde após o servidor estar escutando
 const server = app.listen(PORT, () => {
