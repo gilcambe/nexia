@@ -253,8 +253,17 @@ async function handleRequest(request, env, { getFunction }) {
       { 'Access-Control-Allow-Origin': '*' });
   }
   if (pathname === '/__/firebase/init.json' || pathname.startsWith('/__/auth/')) return proxyAuth(request, url);
-  if (pathname === '/api/firebase-config') return firebaseConfig(env, undefined, request);
   if (pathname.startsWith('/api/') || pathname.startsWith('/.netlify/functions/')) {
+    // Cache de borda para GETs de APIs de leitura (listas, catálogos, config pública)
+    const isGet = request.method === 'GET' || request.method === 'HEAD';
+    const cacheKey = isGet ? new Request(url.toString(), request) : null;
+    const cache = typeof caches !== 'undefined' ? caches.default : null;
+    if (isGet && cache) {
+      const cached = await cache.match(cacheKey);
+      if (cached) return cached;
+    }
+  }
+  if (pathname === '/api/firebase-config') return firebaseConfig(env, undefined, request);
     const isGet = request.method === 'GET' || request.method === 'HEAD';
     const cacheKey = isGet ? new Request(url.toString(), request) : null;
     const cache = typeof caches !== 'undefined' ? caches.default : null;
