@@ -155,9 +155,15 @@ async function runFunction(fnName, req, res, body) {
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-Id',
         ...cacheHeaders,
       };
+      // Se a resposta do handler já traz headers explícitos de Cache-Control, respeitamos ou priorizamos
+      const finalHeaders = {
+        ...baseHeaders,
+        ...(result.headers || {}),
+        ...(isReadApi && (!result.headers || !result.headers['Cache-Control'] && !result.headers['cache-control']) ? { 'Cache-Control': 'public, max-age=300, s-maxage=300' } : {})
+      };
       // NEXIA AI (Fase 5): streaming real quando o handler devolve { stream }
-      if (isStreamResult(result)) return writeStream(req, res, result, baseHeaders);
-      res.writeHead(result.statusCode || 200, { ...baseHeaders, ...(result.headers || {}) });
+      if (isStreamResult(result)) return writeStream(req, res, result, finalHeaders);
+      res.writeHead(result.statusCode || 200, finalHeaders);
       res.end(result.body || '');
     } catch (e) {
     // SEC Fase 1 (A5): detalhe só no log, cliente recebe correlationId
