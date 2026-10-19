@@ -2,6 +2,8 @@
 // Central NEXIA: o que a página precisa do GitHub (fila do Cortex, robôs, posts do Divulga).
 // Usa o token da fila (NEXIA_JOBS_TOKEN) só no servidor; nada dele vai para a página.
 
+const calendario = require('../../../divulga/lib/calendario');
+
 const REPO = 'gilcambe/nexia';
 const API = 'https://api.github.com/repos/' + REPO;
 
@@ -54,6 +56,75 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   async function pedirAoCortex(titulo, texto, quem) {
     const i = await gh('/issues', { method: 'POST', body: JSON.stringify({ title: titulo, body: texto + '\n\n_Pedido pela Central NEXIA por ' + quem + '._', labels: ['cortex-fila'] }) });
     return { numero: i.number, link: i.html_url };
+  }
+
+  async function proximos7Temas() {
+    return calendario.proximos7Temas();
+  }
+
+  async function divulgaPorHorario(temaId, horario) {
+    // Validação do horário
+    const horariosValidos = ['07:15', '12:15', '19:15'];
+    if (!horariosValidos.includes(horario)) {
+      throw new Error('Horário inválido. Use: 07:15, 12:15 ou 19:15');
+    }
+    
+    // Busca o tema específico
+    const temas = calendario.proximos7Temas();
+    const tema = temas.find(t => t.id === temaId);
+    if (!tema) {
+      throw new Error('Tema não encontrado');
+    }
+    
+    // Cria o post para o horário específico
+    const post = {
+      id: `${temaId}-${horario.replace(':', '')}`,
+      tema: tema.tema,
+      dia: tema.dia,
+      data: tema.data,
+      horario: horario,
+      assunto: tema.assunto,
+      cta: tema.cta,
+      hashtags: calendario.hashtagsNicho({}),
+      quando: new Date().toISOString()
+    };
+    
+    // Salva o post na fila de divulgação
+    const ramo = 'develop';
+    const caminho = `divulga/fila/${post.id}.json`;
+    
+    // Atualiza o estado de divulgação
+    const estadoAtual = await lerRaw('divulga-dados', 'divulga-estado.json') || {};
+    const feitos = new Set(estadoAtual.feitos || []);
+    
+    // Adiciona o novo post à fila
+    const novoEstado = {
+      ...estadoAtual,
+      proximos: [...(estadoAtual.proximos || []), post.id],
+      quando: new Date().toISOString()
+    };
+    
+    // Salva o estado atualizado
+    await gh('/contents/divulga-dados', {
+      method: 'PUT',
+      body: JSON.stringify({
+        message: `Adicionado post ${post.id} à fila`,
+        content: Buffer.from(JSON.stringify(novoEstado, null, 2)).toString('base64'),
+        branch: ramo
+      })
+    });
+    
+    // Salva o post na fila
+    await gh(`/contents/${caminho}`, {
+      method: 'POST',
+      body: JSON.stringify({
+        message: `Post ${post.id} para horário ${horario}`,
+        content: Buffer.from(JSON.stringify(post, null, 2)).toString('base64'),
+        branch: ramo
+      })
+    });
+    
+    return { sucesso: true, post };
   }
 
   async function divulga() {
