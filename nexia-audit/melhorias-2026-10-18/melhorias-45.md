@@ -35,3 +35,25 @@
   3. Iniciar o watcher em `src/server.js`.
   4. Garantir que nenhum teste existente seja quebrado (`npm test` continua passando).
 
+---
+
+# Melhoria 48: Orçamento de cotas grátis com contador e freio
+
+- **Status:** Implementado
+- **Objetivo:** Monitorar o uso dos recursos gratuitos (Firestore leituras/escritas, pedidos do Worker limitados a 100 mil/dia e neurônios do Workers AI) para garantir custo zero e nunca estourar a cota gratuita.
+- **Por quê:** "Nada pago" exige não estourar a cota. Custo 0.
+- **Implementação:**
+  1. `src/monitoring/healthWatcher.js` (renomeado logicamente para QuotaWatcher) conta leituras/escritas do Firestore, pedidos do Worker e neurônios do Workers AI, calcula o % usado de cada cota e registra eventos na Central.
+  2. Quando um recurso atinge 80% da cota gratuita, o "freio" é ativado e o serviço opcional correspondente é desligado. Acima de 100%, é crítico.
+  3. `src/notification/brevoClient.js` envia alerta por e-mail via Brevo (conta gratuita) quando o freio é acionado ou a cota estoura.
+  4. `src/server.js` inicia o QuotaWatcher ao subir o Worker/servidor.
+  5. Os contadores resetam a cada dia (UTC).
+  6. Nenhuma função existente foi removida. Regras do Firestore e segredos não foram alterados.
+  7. `npm test` continua passando.
+- **Métricas monitoradas:**
+  - Firestore leituras por dia (limite padrão 50.000, ajustável por `FIRESTORE_READS_PER_DAY`)
+  - Firestore escritas por dia (limite padrão 20.000, ajustável por `FIRESTORE_WRITES_PER_DAY`)
+  - Pedidos do Worker por dia (limite padrão 100.000, ajustável por `WORKER_REQUESTS_PER_DAY`)
+  - Neurônios do Workers AI por dia (limite padrão 1.000.000, ajustável por `WORKERS_AI_NEURONS_PER_DAY`)
+- **Limite do freio:** 80% da cota gratuita (ajustável via `brakeThreshold`).
+

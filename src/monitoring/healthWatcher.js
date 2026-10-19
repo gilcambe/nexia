@@ -1,123 +1,175 @@
-const { fetch } = require('node-fetch');
 const { setInterval } = require('timers');
-const brevoClient = require('../notification/brevoClient');
 
-class HealthWatcher {
+class QuotaWatcher {
   constructor() {
-    this.apiFailures = 0;
-    this.bodyCoachFailures = 0;
-    this.maxFailures = 2;
-    this.checkInterval = 60000; // 1 minuto
+    this.limits = {
+      firestoreReadsPerDay: parseInt(process.env.FIRESTORE_READS_PER_DAY || '50000', 10),
+      firestoreWritesPerDay: parseInt(process.env.FIRESTORE_WRITES_PER_DAY || '20000', 10),
+      workerRequestsPerDay: parseInt(process.env.WORKER_REQUESTS_PER_DAY || '100000', 10),
+      workersAiNeuronsPerDay: parseInt(process.env.WORKERS_AI_NEURONS_PER_DAY || '1000000', 10),
+    };
+    this.usage = {
+      firestoreReads: 0,
+      firestoreWrites: 0,
+      workerRequests: 0,
+      workersAiNeurons: 0,
+    };
+    this.brakes = {
+      firestoreReads: false,
+      firestoreWrites: false,
+      workerRequests: false,
+      workersAiNeurons: false,
+    };
+    this.brakeThreshold = 0.8; // 80%
     this.isRunning = false;
+    this.intervalId = null;
+    this.checkInterval = 60000; // 1 minuto
+    this.centralEvents = [];
+    this.lastResetDate = null;
   }
 
-  async start() {
+  start() {
     if (this.isRunning) return;
-    
     this.isRunning = true;
-    console.log('HealthWatcher iniciado - monitorando a cada 60 segundos');
-    
-    // Executa imediatamente o primeiro check
-    await this.performChecks();
-    
-    // Configura o intervalo
-    this.intervalId = setInterval(async () => {
-      await this.performChecks();
+    console.log('QuotaWatcher iniciado - monitorando cotas grátis a cada 60 segundos');
+    this.resetDailyUsage();
+    this.checkQuotas();
+    this.intervalId = setInterval(() => {
+      this.checkQuotas();
     }, this.checkInterval);
   }
 
-  async stop() {
+  stop() {
     if (!this.isRunning) return;
-    
     this.isRunning = false;
     if (this.intervalId) {
       clearInterval(this.intervalId);
+      this.intervalId = null;
     }
-    console.log('HealthWatcher parado');
+    console.log('QuotaWatcher parado');
   }
 
-  async performChecks() {
-    try {
-      await this.checkApiHealth();
-      await this.checkBodyCoachHealth();
-    } catch (error) {
-      console.error('Erro durante os checks de saúde:', error);
-    }
+  resetDailyUsage() {
+    const now = new Date();
+    this.lastResetDate = now.getDate();
+    this.usage = {
+      firestoreReads: 0,
+      firestoreWrites: 0,
+      workerRequests: 0,
+      workersAiNeurons: 0,
+    };
+    this.brakes = {
+      firestoreReads: false,
+      firestoreWrites: false,
+      workerRequests: false,
+      workersAiNeurons: false,
+    };
+    this.logToCentral('QuotaWatcher: contadores diários resetados');
   }
 
-  async checkApiHealth() {
-    try {
-      const response = await fetch(`${process.env.NEXIA_APP_URL || 'http://localhost:3000'}/health`, {
-        timeout: 5000
-      });
-      
-      if (response.ok) {
-        this.apiFailures = 0;
-        console.log('Check de saúde da API: OK');
-      } else {
-        this.apiFailures++;
-        console.log(`Check de saúde da API: Falha (${this.apiFailures}/${this.maxFailures})`);
-        
-        if (this.apiFailures >= this.maxFailures) {
-          await this.handleHealthFailure('API');
-        }
-      }
-    } catch (error) {
-      this.apiFailures++;
-      console.log(`Check de saúde da API: Erro (${this.apiFailures}/${this.maxFailures})`, error.message);
-      
-      if (this.apiFailures >= this.maxFailures) {
-        await this.handleHealthFailure('API');
-      }
+  recordFirestoreRead(count = 1) {
+    if (Number.isInteger(count) && count > 0) {
+      this.usage.firestoreReads += count;
     }
   }
 
-  async checkBodyCoachHealth() {
-    try {
-      const response = await fetch(`${process.env.NEXIA_APP_URL || 'http://localhost:3000'}/api/body-coach/health`, {
-        timeout: 5000
-      });
-      
-      if (response.ok) {
-        this.bodyCoachFailures = 0;
-        console.log('Check de saúde do Body Coach: OK');
-      } else {
-        this.bodyCoachFailures++;
-        console.log(`Check de saúde do Body Coach: Falha (${this.bodyCoachFailures}/${this.maxFailures})`);
-        
-        if (this.bodyCoachFailures >= this.maxFailures) {
-          await this.handleHealthFailure('Body Coach');
-        }
-      }
-    } catch (error) {
-      this.bodyCoachFailures++;
-      console.log(`Check de saúde do Body Coach: Erro (${this.bodyCoachFailures}/${this.maxFailures})`, error.message);
-      
-      if (this.bodyCoachFailures >= this.maxFailures) {
-        await this.handleHealthFailure('Body Coach');
-      }
+  recordFirestoreWrite(count = 1) {
+    if (Number.isInteger(count) && count > 0) {
+      this.usage.firestoreWrites += count;
     }
   }
 
-  async handleHealthFailure(service) {
-    console.log(`${service} falhou ${this.maxFailures} vezes consecutivas - enviando alerta`);
-    
-    try {
-      await brevoClient.sendAlertEmail(service);
-      console.log(`Alerta enviado para ${service}`);
-    } catch (error) {
-      console.error('Falha ao enviar alerta por e-mail:', error);
+  recordWorkerRequest(count = 1) {
+    if (Number.isInteger(count) && count > 0) {
+      this.usage.workerRequests += count;
     }
-    
-    // Registra o evento na Central de monitoramento
-    this.logToCentral(`ALERTA: ${service} está inativo após ${this.maxFailures} falhas consecutivas`);
+  }
+
+  recordWorkersAiNeurons(count = 1) {
+    if (Number.isInteger(count) && count > 0) {
+      this.usage.workersAiNeurons += count;
+    }
+  }
+
+  getPercentUsed(resource) {
+    const limitKey = `${resource}PerDay`;
+    const limit = this.limits[limitKey];
+    const used = this.usage[resource];
+    if (!limit || limit <= 0) return 0;
+    return Math.min(100, Math.round((used / limit) * 100));
+  }
+
+  getAllPercents() {
+    return {
+      firestoreReads: this.getPercentUsed('firestoreReads'),
+      firestoreWrites: this.getPercentUsed('firestoreWrites'),
+      workerRequests: this.getPercentUsed('workerRequests'),
+      workersAiNeurons: this.getPercentUsed('workersAiNeurons'),
+    };
+  }
+
+  isBraked(resource) {
+    return this.brakes[resource] === true;
+  }
+
+  checkQuotas() {
+    const now = new Date();
+    if (this.lastResetDate === null || now.getDate() !== this.lastResetDate) {
+      this.resetDailyUsage();
+    }
+
+    const percents = this.getAllPercents();
+    const alerts = [];
+
+    for (const [resource, percent] of Object.entries(percents)) {
+      if (percent >= this.brakeThreshold * 100 && !this.brakes[resource]) {
+        this.brakes[resource] = true;
+        alerts.push(`${resource} atingiu ${percent}% - freio ativado (opcional desligado)`);
+        this.logToCentral(`FREIO: ${resource} em ${percent}% da cota gratuita - serviço opcional desligado`);
+      } else if (percent >= 100) {
+        alerts.push(`${resource} estourado: ${percent}%`);
+        this.logToCentral(`CRÍTICO: ${resource} estourado ${percent}% da cota gratuita`);
+      }
+    }
+
+    if (alerts.length > 0) {
+      console.log('QuotaWatcher alertas:', alerts.join('; '));
+    }
+
+    return {
+      percents,
+      brakes: { ...this.brakes },
+      limits: { ...this.limits },
+      usage: { ...this.usage },
+      alerts,
+    };
   }
 
   logToCentral(message) {
-    // Aqui seria implementada a lógica para registrar na Central de monitoramento
-    // Por enquanto, apenas logamos no console
-    console.log(`[CENTRAL] ${new Date().toISOString()}: ${message}`);
+    const event = {
+      timestamp: new Date().toISOString(),
+      message,
+    };
+    this.centralEvents.push(event);
+    if (this.centralEvents.length > 100) {
+      this.centralEvents = this.centralEvents.slice(-100);
+    }
+    console.log(`[CENTRAL] ${event.timestamp}: ${message}`);
+  }
+
+  getCentralEvents() {
+    return [...this.centralEvents];
+  }
+
+  getStatus() {
+    return {
+      percents: this.getAllPercents(),
+      brakes: { ...this.brakes },
+      limits: { ...this.limits },
+      usage: { ...this.usage },
+      events: this.getCentralEvents(),
+    };
   }
 }
 
-module.exports = new HealthWatcher();
+module.exports = new QuotaWatcher();
