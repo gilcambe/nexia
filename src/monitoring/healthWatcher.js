@@ -120,10 +120,72 @@ Este alerta foi disparado automaticamente após ${MAX_CONSECUTIVE_FAILURES} falh
 }
 
 /**
- * Registra evento na Central de monitoramento
- * Por enquanto escreve em arquivo de log local
+ * Registra evento na Central de monitoramento real
+ * Envia evento para a Central de monitoramento via API
  */
-function logToCentral(details) {
+async function logToCentral(details) {
+  const https = require('https');
+  const CENTRAL_API_URL = process.env.CENTRAL_API_URL || 'https://api.nexia.app/monitoring/log';
+  const CENTRAL_API_KEY = process.env.CENTRAL_API_KEY;
+
+  if (!CENTRAL_API_KEY) {
+    console.warn('[HealthWatcher] CENTRAL_API_KEY não definida, fallback para log local');
+    return logToCentralFallback(details);
+  }
+
+  const payload = JSON.stringify({
+    service: 'nexia-health-monitor',
+    level: 'error',
+    message: 'Falhas consecutivas detectadas no monitoramento',
+    details,
+    timestamp: details.timestamp,
+  });
+
+  return new Promise((resolve, reject) => {
+    const req = https.request(CENTRAL_API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${CENTRAL_API_KEY}`,
+        'Content-Length': Buffer.byteLength(payload),
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', (chunk) => { data += chunk; });
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          console.log('[HealthWatcher] Evento registrado na Central de monitoramento');
+          resolve({ status: res.statusCode, body: data });
+        } else {
+          console.error(`[HealthWatcher] Falha ao registrar na Central: ${res.statusCode} - ${data}`);
+          logToCentralFallback(details);
+          resolve({ status: res.statusCode, body: data });
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      console.error('[HealthWatcher] Falha de rede ao registrar na Central:', err.message);
+      logToCentralFallback(details);
+      resolve({ status: 500, error: err.message });
+    });
+
+    req.setTimeout(10000, () => {
+      req.destroy();
+      console.error('[HealthWatcher] Timeout ao registrar na Central');
+      logToCentralFallback(details);
+      resolve({ status: 408, error: 'Timeout' });
+    });
+
+    req.write(payload);
+    req.end();
+  });
+}
+
+/**
+ * Fallback para log local quando Central não está disponível
+ */
+function logToCentralFallback(details) {
   const fs = require('fs');
   const path = require('path');
   const logDir = path.join(__dirname, '..', '..', 'logs');
@@ -133,9 +195,14 @@ function logToCentral(details) {
     if (!fs.existsSync(logDir)) {
       fs.mkdirSync(logDir, { recursive: true });
     }
-    fs.appendFileSync(logFile, JSON.stringify(details) + '\n');
+    fs.appendFileSync(logFile, JSON.stringify({
+      ...details,
+      fallback: true,
+      timestamp: new Date().toISOString(),
+    }) + '\n');
+    console.log('[HealthWatcher] Evento salvo em log local (fallback)');
   } catch (err) {
-    console.error('[HealthWatcher] Falha ao gravar na Central:', err.message);
+    console.error('[HealthWatcher] Falha ao gravar log fallback:', err.message);
   }
 }
 
