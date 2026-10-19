@@ -1,16 +1,12 @@
 import express from 'express';
-import { startHealthWatcher } from './monitoring/healthWatcher';
+
 // Importar outras dependências conforme necessário
 
 const app = express();
 const port = process.env.PORT || 3000;
 
 // Configurações do Body Coach (exemplo)
-const BODY_COACH_HEALTH_URL = process.env.BODY_COACH_HEALTH_URL || 'http://localhost:3001/health'; // URL do health check do Body Coach
-const APP_NAME_BODY_COACH = 'Body Coach';
 
-// Iniciar o health watcher para o Body Coach
-startHealthWatcher(BODY_COACH_HEALTH_URL, APP_NAME_BODY_COACH);
 
 // Rotas da API principal
 app.get('/', (req, res) => {
