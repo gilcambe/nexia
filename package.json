@@ -11,6 +11,7 @@
     "build:body-coach": "npm ci --prefix apps/body-coach --no-audit --no-fund && npm run build --prefix apps/body-coach",
     "build:worker": "vite build && npm run build:body-coach && node scripts/build-worker-assets.js",
     "preview": "vite preview",
+    "audit:bundle": "node scripts/bundle-budget.js out",
     "start": "node server.js",
     "typecheck": "tsc --noEmit -p .",
     "test": "node --test tests/unit/*.test.js",
