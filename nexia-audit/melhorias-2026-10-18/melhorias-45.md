@@ -1,4 +1,14 @@
-# Melhoria 45: Login com Google no endereço do próprio produto
+# Melhoria 45: Cache de borda para APIs de leitura (Cache API do Worker)
+
+- **Status:** Implementado
+- **Objetivo:** Adicionar cache de borda (Cache API do Cloudflare Worker) para APIs de leitura (listas de ofertas, config pública, `/api/firebase-config` e catálogos) com 60 a 300 segundos (`max-age=300`).
+- **Por quê:** Menores leituras do Firestore (preservando a cota gratuita) e resposta mais rápida para os usuários.
+- **Custo:** 0 (utiliza a Cache API nativa do Cloudflare Workers sem planos pagos ou serviços externos).
+- **Implementação:** Inclusão de cabeçalhos de `Cache-Control` (`public, max-age=300`) e utilização de `caches.default` no Cloudflare Worker para rotas de listagens, config pública e catálogos de leitura.
+
+---
+
+# Melhoria 45 (Legado): Login com Google no endereço do próprio produto
 
 - **Status:** Implementado e configurado
 - **Ação manual do dono:** Cadastrar a URL de redirecionamento do domínio próprio no Console do Google / Firebase.
