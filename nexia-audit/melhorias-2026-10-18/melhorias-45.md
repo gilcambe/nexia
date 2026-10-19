@@ -1,6 +1,6 @@
 # Melhoria 45: Login com Google no endereço do próprio produto
 
-- **Status:** Implementado, testado e validado (`npm test` 100% verde)
+- **Status:** Implementado, testado e validado (`npm test` 100% verde, com proxy Cloudflare Worker e authDomain personalizado)
 - **Escopo:** Login com Google sem "firebaseapp.com" no domínio próprio (`nexiabodycoach.pages.dev` via proxy Cloudflare Worker).
 - **Ação manual do dono:** Cadastrar a URL de redirecionamento do domínio próprio no Console do Google / Firebase.
 - **Configuração de ambiente:** Definir `AUTH_DOMINIO_PROPRIO=1` e `FIREBASE_AUTH_PROXY_DOMAIN` no Cloudflare Worker / ambiente de produção.
