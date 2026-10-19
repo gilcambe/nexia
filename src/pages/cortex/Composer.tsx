@@ -36,6 +36,7 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
   const [ouvindo, setOuvindo] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+  const [modoOperacao, setModoOperacao] = useState<"rapido" | "pensar" | "pesquisar">("rapido");
   const area = useRef<HTMLTextAreaElement>(null);
   const arquivo = useRef<HTMLInputElement>(null);
   const [anexos, setAnexos] = useState<{ nome: string; md: string }[]>([]);
@@ -53,7 +54,17 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
   const mandar = async () => {
     if (!pode) return;
     setOcupado(true); setAviso(null);
-    try { await enviar([texto.trim(), ...anexos.map((a) => a.md)].join("\n\n")); setTexto(""); setAnexos([]); } catch (e) { setAviso((e as Error).message); } finally { setOcupado(false); }
+    try { 
+      // Adiciona o modo de operação ao início do texto
+      const textoComModo = `[MODE:${modoOperacao.toUpperCase()}]\n${texto.trim()}`;
+      await enviar([textoComModo, ...anexos.map((a) => a.md)].join("\n\n")); 
+      setTexto(""); 
+      setAnexos([]); 
+    } catch (e) { 
+      setAviso((e as Error).message); 
+    } finally { 
+      setOcupado(false); 
+    }
   };
 
   // Qualquer tipo de arquivo: texto/código entra como texto; print/foto é reduzido; o resto vai embutido se for pequeno.
@@ -93,6 +104,33 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
           placeholder={modo === "pedido" ? "O que o Cortex deve fazer? Diga o projeto e o que mudar." : modo === "pergunta" ? "Pergunte ao Cortex. A resposta chega na hora." : "Anotação neste pedido. O Cortex lê só o pedido: para mudar o que ele faz, abra um Novo pedido."}
           className="w-full resize-none bg-transparent outline-none px-5 pt-4 pb-2 text-[15px] leading-6 text-[var(--cx-txt)] placeholder:text-[var(--cx-mut)] max-h-[220px]" />
         <div className="flex items-center gap-1 px-2 pb-2">
+          {/* Seletor de modos */}
+          <div className="flex items-center gap-1 bg-[var(--cx-card)] rounded-lg px-2 py-1 border border-[var(--cx-line)]">
+            <button 
+              type="button" 
+              onClick={() => setModoOperacao("rapido")}
+              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${modoOperacao === "rapido" ? "bg-[var(--cx-ac)] text-white" : "text-[var(--cx-mut)] hover:text-[var(--cx-txt)]"}`}
+              aria-label="Modo Rápido (modelo pequeno)"
+            >
+              Rápido
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setModoOperacao("pensar")}
+              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${modoOperacao === "pensar" ? "bg-[var(--cx-ac)] text-white" : "text-[var(--cx-mut)] hover:text-[var(--cx-txt)]"}`}
+              aria-label="Modo Pensar (raciocínio)"
+            >
+              Pensar
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setModoOperacao("pesquisar")}
+              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${modoOperacao === "pesquisar" ? "bg-[var(--cx-ac)] text-white" : "text-[var(--cx-mut)] hover:text-[var(--cx-txt)]"}`}
+              aria-label="Modo Pesquisar (web)"
+            >
+              Pesquisar
+            </button>
+          </div>
           <button type="button" className={btn} aria-label="Anexar arquivo ou print" onClick={() => arquivo.current?.click()} data-testid="cx-anexo">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
           </button>
