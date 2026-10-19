@@ -1,28 +1,7 @@
-import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const COLLECTION = 'health/samples';
-
-// Storage adapter interface para abstração mínima (preparado para D1 no futuro)
-export interface StorageAdapter {
-  readDay(day: string): Promise<HealthSample | null>;
-  writeDay(day: string, sample: HealthSample): Promise<void>;
-}
-
-// Implementação Firestore por padrão
-class FirestoreStorageAdapter implements StorageAdapter {
-  async readDay(day: string): Promise<HealthSample | null> {
-    const snap = await getDoc(doc(db, `${COLLECTION}/${day}`));
-    if (!snap.exists()) return null;
-    return snap.data() as HealthSample;
-  }
-
-  async writeDay(day: string, sample: HealthSample): Promise<void> {
-    await setDoc(doc(db, `${COLLECTION}/${day}`), sample);
-  }
-}
-
-const storage: StorageAdapter = new FirestoreStorageAdapter();
 
 // --- tipos ---------------------------------------------------------------
 
@@ -52,23 +31,6 @@ export interface HealthDashboardData {
   errorCountByRoute: Record<string, number>;
 }
 
-// --- abstração mínima de storage (Firestore por padrão) -----------------
-
-function storagePath(day: string): string {
-  return `${COLLECTION}/${day}`;
-}
-
-async function readDay(day: string): Promise<HealthSample | null> {
-  const snap = await getDoc(doc(db, storagePath(day)));
-  if (!snap.exists()) return null;
-  const data = snap.data() as HealthSample;
-  return data;
-}
-
-async function writeDay(day: string, sample: HealthSample): Promise<void> {
-  await setDoc(doc(db, storagePath(day)), sample);
-}
-
 // --- helpers -------------------------------------------------------------
 
 function isoDay(date: Date): string {
@@ -84,19 +46,6 @@ function last30Days(): string[] {
     days.push(isoDay(d));
   }
   return days;
-}
-
-function aggregateRoutes(routes: Record<string, RouteStats>): {
-  avgResponseTimeByRoute: Record<string, number>;
-  errorCountByRoute: Record<string, number>;
-} {
-  const avgResponseTimeByRoute: Record<string, number> = {};
-  const errorCountByRoute: Record<string, number> = {};
-  for (const [route, stats] of Object.entries(routes)) {
-    avgResponseTimeByRoute[route] = stats.avgTime;
-    errorCountByRoute[route] = stats.errors;
-  }
-  return { avgResponseTimeByRoute, errorCountByRoute };
 }
 
 // --- API pública ---------------------------------------------------------
@@ -134,11 +83,12 @@ export async function getHealthDashboardData(): Promise<HealthDashboardData> {
   const samples = await getHealthSamples();
 
   const drops: Array<{ timestamp: string; magnitude: number }> = [];
+  const responseTimeThreshold = 100; // Limiar mínimo de 100ms para considerar uma queda
   for (let i = 1; i < samples.length; i++) {
     const prev = samples[i - 1];
     const curr = samples[i];
     const magnitude = curr.metrics.responseTime - prev.metrics.responseTime;
-    if (magnitude > 0) {
+    if (magnitude > responseTimeThreshold) {
       drops.push({ timestamp: curr.timestamp, magnitude });
     }
   }
