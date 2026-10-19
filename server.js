@@ -226,11 +226,12 @@ const server = http.createServer((req, res) => {
   }
 
   // Firebase config & Cache de borda para APIs de leitura (Ofertas, Catálogos e Config pública) - 60 a 300 segundos
-  if (pathname === '/api/firebase-config' || (['/ofertas', '/catalogo', '/config', '/firebase-config'].some(k => pathname.includes(k)) && (req.method === 'GET' || req.method === 'HEAD'))) {
+  if (pathname === '/api/firebase-config') {
     res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300');
-    if (pathname === '/api/firebase-config') {
-      return serveFirebaseConfig(res);
-    }
+    return serveFirebaseConfig(res);
+  }
+  if (['/ofertas', '/catalogo', '/config', '/firebase-config'].some(k => pathname.includes(k)) && (req.method === 'GET' || req.method === 'HEAD')) {
+    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300');
   }
 
   // APIs → functions
