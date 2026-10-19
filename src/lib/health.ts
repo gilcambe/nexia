@@ -1,28 +1,7 @@
-import { collection, query, where, orderBy, limit, getDocs, doc, getDoc, setDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { getDoc, doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const COLLECTION = 'health/samples';
-
-// Storage adapter interface para abstração mínima (preparado para D1 no futuro)
-export interface StorageAdapter {
-  readDay(day: string): Promise<HealthSample | null>;
-  writeDay(day: string, sample: HealthSample): Promise<void>;
-}
-
-// Implementação Firestore por padrão
-class FirestoreStorageAdapter implements StorageAdapter {
-  async readDay(day: string): Promise<HealthSample | null> {
-    const snap = await getDoc(doc(db, `${COLLECTION}/${day}`));
-    if (!snap.exists()) return null;
-    return snap.data() as HealthSample;
-  }
-
-  async writeDay(day: string, sample: HealthSample): Promise<void> {
-    await setDoc(doc(db, `${COLLECTION}/${day}`), sample);
-  }
-}
-
-const storage: StorageAdapter = new FirestoreStorageAdapter();
 
 // --- tipos ---------------------------------------------------------------
 
@@ -47,26 +26,9 @@ export interface HealthSample {
 
 export interface HealthDashboardData {
   samples: HealthSample[];
-  drops: Array<{ timestamp: string; magnitude: number }>;
+  responseIncreases: Array<{ timestamp: string; magnitude: number }>;
   avgResponseTimeByRoute: Record<string, number>;
   errorCountByRoute: Record<string, number>;
-}
-
-// --- abstração mínima de storage (Firestore por padrão) -----------------
-
-function storagePath(day: string): string {
-  return `${COLLECTION}/${day}`;
-}
-
-async function readDay(day: string): Promise<HealthSample | null> {
-  const snap = await getDoc(doc(db, storagePath(day)));
-  if (!snap.exists()) return null;
-  const data = snap.data() as HealthSample;
-  return data;
-}
-
-async function writeDay(day: string, sample: HealthSample): Promise<void> {
-  await setDoc(doc(db, storagePath(day)), sample);
 }
 
 // --- helpers -------------------------------------------------------------
@@ -110,10 +72,22 @@ function aggregateRoutes(routes: Record<string, RouteStats>): {
 export async function getHealthSamples(): Promise<HealthSample[]> {
   const days = last30Days();
   const samples: HealthSample[] = [];
+  
   for (const day of days) {
-    const sample = await readDay(day);
-    if (sample) samples.push(sample);
+    try {
+      const snap = await getDoc(doc(db, `${COLLECTION}/${day}`));
+      if (snap.exists()) {
+        const data = snap.data() as HealthSample;
+        // Validar formato do dado
+        if (data && data.timestamp && data.metrics) {
+          samples.push(data);
+        }
+      }
+    } catch (error) {
+      console.error(`Erro ao ler amostra do dia ${day}:`, error);
+    }
   }
+  
   return samples.sort((a, b) => a.timestamp.localeCompare(b.timestamp));
 }
 
@@ -124,8 +98,30 @@ export async function getHealthSamples(): Promise<HealthSample[]> {
  * @returns Promise<void>
  */
 export async function storeHealthSample(sample: HealthSample): Promise<void> {
+  // Validar formato do sample
+  if (!sample || !sample.timestamp || !sample.metrics) {
+    throw new Error('Formato inválido de amostra: timestamp e metrics são obrigatórios');
+  }
+  
+  if (typeof sample.timestamp !== 'string' || !sample.timestamp.startsWith('2')) {
+    throw new Error('Timestamp deve ser uma string ISO válida');
+  }
+  
+  if (typeof sample.metrics.cpu !== 'number' || 
+      typeof sample.metrics.mem !== 'number' || 
+      typeof sample.metrics.responseTime !== 'number' || 
+      typeof sample.metrics.errorRate !== 'number') {
+    throw new Error('Todas as métricas devem ser números');
+  }
+  
   const day = isoDay(new Date(sample.timestamp));
-  await writeDay(day, sample);
+  
+  try {
+    await setDoc(doc(db, `${COLLECTION}/${day}`), sample);
+  } catch (error) {
+    console.error('Erro ao armazenar amostra de saúde:', error);
+    throw new Error('Falha ao armazenar amostra de saúde no Firestore');
+  }
 }
 
 /**
@@ -140,13 +136,13 @@ export async function storeHealthSample(sample: HealthSample): Promise<void> {
 export async function getHealthDashboardData(): Promise<HealthDashboardData> {
   const samples = await getHealthSamples();
 
-  const drops: Array<{ timestamp: string; magnitude: number }> = [];
+  const responseIncreases: Array<{ timestamp: string; magnitude: number }> = [];
   for (let i = 1; i < samples.length; i++) {
     const prev = samples[i - 1];
     const curr = samples[i];
     const magnitude = curr.metrics.responseTime - prev.metrics.responseTime;
     if (magnitude > 0) {
-      drops.push({ timestamp: curr.timestamp, magnitude });
+      responseIncreases.push({ timestamp: curr.timestamp, magnitude });
     }
   }
 
@@ -176,7 +172,7 @@ export async function getHealthDashboardData(): Promise<HealthDashboardData> {
 
   return {
     samples,
-    drops,
+    responseIncreases,
     avgResponseTimeByRoute,
     errorCountByRoute: aggregated.errorCountByRoute,
   };
