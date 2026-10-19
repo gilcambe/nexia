@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext';
 import PainelAcesso from './PainelAcesso';
 import { telaPremium, verAcesso, type Acesso } from '@/lib/acesso';
 import { avisar as avisarJanela } from '../../lib/dialogo';
+import { ajustarHorariosSozinho } from '@/lib/avisos';
 
 // Portão do app: aviso nos últimos dias e, sem Premium, as telas do Premium mostram como assinar.
 // O básico (treino, ficha, água, refeições) continua grátis. O coach nunca é bloqueado.
@@ -26,7 +27,7 @@ export default function PortaoAcesso({ children }: { children: ReactNode }) {
   }, [user, sair]);
 
   // Lembretes inteligentes: com "ajustar sozinho" ligado, os horários seguem o uso (no máximo 1 vez por semana).
-  useEffect(() => { if (user) void import('@/lib/avisos').then((m) => m.ajustarHorariosSozinho(user.id)).catch(() => false); }, [user]);
+  useEffect(() => { if (user) void ajustarHorariosSozinho(user.id).catch(() => false); }, [user]);
 
   useEffect(() => {
     ver();
