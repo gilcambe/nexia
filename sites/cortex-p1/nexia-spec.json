@@ -2,31 +2,31 @@
   "spec": {
     "kind": "system",
     "name": "Cortex-p1 Teste",
-    "tagline": "Instale o app oficial e aproveite a experiência sem barra de URL",
-    "photo_theme": "mobile app",
-    "description": "Instale o app oficial e aproveite a experiência sem barra de URL",
+    "tagline": "Controle total e monitoramento em um só lugar",
+    "photo_theme": "mobile app dashboard interface",
+    "description": "Acesse o painel Cortex-p1 via app nativo para uma experiência fluida, segura e sem barreiras de URL. Gerencie usuários, acompanhe instalações e visualize relatórios em tempo real.",
     "folder": "sites/cortex-p1",
     "fonts": {
-      "heading": "Montserrat",
+      "heading": "Outfit",
       "body": "Inter"
     },
     "palette": {
       "primary": "#2563eb",
       "accent": "#10b981",
-      "bg": "#fbfaf7",
+      "bg": "#f8fafc",
       "surface": "#ffffff",
-      "text": "#1d2426",
-      "muted": "#5d6b6e",
-      "dark": "#1f2937"
+      "text": "#1e293b",
+      "muted": "#64748b",
+      "dark": "#0f172a"
     },
     "style": "modern",
     "contact": {
       "whatsapp": "",
       "phone": "(11) 91234-5678",
       "email": "contato@cortexp1.com.br",
-      "address": "",
-      "city": "",
-      "hours": "",
+      "address": "Av. Paulista, 1000 - São Paulo, SP",
+      "city": "São Paulo",
+      "hours": "Seg - Sex: 09:00 - 18:00",
       "instagram": "",
       "facebook": "",
       "youtube": "",
