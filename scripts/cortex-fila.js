@@ -107,7 +107,8 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
         : { tipo: 'reenfileirar', numero: i.number, tentativa: t, run: run.id, conclusao: run.conclusion });
       continue;
     }
-    if (!run && minutos(agora, i.updated_at) > 120) { acoes.push({ tipo: 'reenfileirar', numero: i.number, tentativa: numeroDe(ls, 'tentativa'), run: null, conclusao: 'sem execução' }); continue; }
+    const execAntiga = run && minutos(agora, run.updated_at || run.created_at) > 120;
+    if (!run || execAntiga) { acoes.push({ tipo: 'reenfileirar', numero: i.number, tentativa: numeroDe(ls, 'tentativa'), run: run ? run.id : null, conclusao: execAntiga ? 'execucao antiga (>2h)' : 'sem execucao' }); continue; }
     ativas++;
     if (pista) pistasEmUso.add(pista);
   }
