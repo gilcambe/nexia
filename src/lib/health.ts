@@ -48,6 +48,26 @@ function last30Days(): string[] {
   return days;
 }
 
+/**
+ * Lê uma amostra específica do Firestore para um dia específico.
+ */
+async function readDay(day: string): Promise<HealthSample | null> {
+  const docRef = doc(db, COLLECTION, day);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    return docSnap.data() as HealthSample;
+  }
+  return null;
+}
+
+/**
+ * Escreve uma amostra específica no Firestore para um dia específico.
+ */
+async function writeDay(day: string, sample: HealthSample): Promise<void> {
+  const docRef = doc(db, COLLECTION, day);
+  await setDoc(docRef, sample);
+}
+
 // --- API pública ---------------------------------------------------------
 
 /**
