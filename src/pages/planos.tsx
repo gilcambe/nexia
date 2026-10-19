@@ -12,7 +12,7 @@ const PLANOS = [
       'Acesso ao app Body Coach',
       'Suporte por e-mail',
     ],
-    pix: '00020126580014BR.GOV.BCB.PIX013611946a71-8c3b-4f3a-9e2d-5c8b1a7d3f4e5204000053039865802BR5925Testador NEXIA6009SAO PAULO62270516Teste de vendas63044A2E',
+    pixKey: 'PIX_BASICO',
   },
   {
     nome: 'Popular',
@@ -26,7 +26,7 @@ const PLANOS = [
       'Suporte por WhatsApp',
       'Ajustes mensais de plano',
     ],
-    pix: '00020126580014BR.GOV.BCB.PIX013611946a71-8c3b-4f3a-9e2d-5c8b1a7d3f4e5204000053039865802BR5925Testador NEXIA6009SAO PAULO62270516Teste de vendas63044A2E',
+    pixKey: 'PIX_POPULAR',
   },
   {
     nome: 'Premium',
@@ -40,7 +40,7 @@ const PLANOS = [
       'Ajustes semanais de plano',
       'Avaliação física mensal',
     ],
-    pix: '00020126580014BR.GOV.BCB.PIX013611946a71-8c3b-4f3a-9e2d-5c8b1a7d3f4e5204000053039865802BR5925Testador NEXIA6009SAO PAULO62270516Teste de vendas63044A2E',
+    pixKey: 'PIX_PREMIUM',
   },
 ];
 
