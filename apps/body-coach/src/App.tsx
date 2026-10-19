@@ -5,7 +5,7 @@ import i18n from "./i18n";
 import { AuthProvider } from "./components/feature/AuthContext";
 import { capturarIndicacao } from "./lib/ferramentas/cartao";
 
-// Link de indicação (?ref=): guarda quem indicou antes do cadastro.
+// Link de indicação (?ref=): guarda quem indicou antes do cadastro. // Sistema de respostas diretas sem issue
 capturarIndicacao();
 
 

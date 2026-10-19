@@ -1,0 +1,117 @@
+{
+  "kind": "site",
+  "name": "Kernex",
+  "tagline": "Inteligência que resolve.",
+  "description": "Apps e sites com inteligência artificial para pequenos negócios.",
+  "folder": "sites/kernex",
+  "style": "modern",
+  "fonts": {
+    "heading": "Plus Jakarta Sans",
+    "body": "Inter"
+  },
+  "palette": {
+    "primary": "#1d5fd0",
+    "accent": "#2fd3c7",
+    "bg": "#f4f7fc",
+    "surface": "#ffffff",
+    "text": "#0a2468",
+    "muted": "#4d5f7a",
+    "dark": "#060d1c"
+  },
+  "logo": "../../brand/kernex/simbolo.svg",
+  "brand_text": true,
+  "favicon": "../../brand/kernex/simbolo.svg",
+  "selo": {
+    "label": "Feito com Kernex",
+    "url": "https://kernex.pages.dev"
+  },
+  "leads_origem": "kernex-site",
+  "contact": {
+    "whatsapp": "5511944037259",
+    "email": "contato@kernex.com.br",
+    "city": "São Paulo - SP"
+  },
+  "sections": [
+    {
+      "type": "hero",
+      "eyebrow": "Kernex",
+      "title": "Inteligência que resolve.",
+      "subtitle": "Apps e sites com inteligência artificial para pequenos negócios.",
+      "cta": {
+        "label": "Falar com a Kernex",
+        "href": "#contato"
+      },
+      "cta2": {
+        "label": "Ver produtos",
+        "href": "#produtos"
+      }
+    },
+    {
+      "type": "services",
+      "id": "produtos",
+      "title": "Produtos",
+      "subtitle": "Ferramentas prontas para o seu negócio crescer.",
+      "items": [
+        {
+          "title": "Body Coach",
+          "text": "App de treino e dieta para personal e aluno.",
+          "icon": "chart",
+          "url": "https://nexiabodycoach.pages.dev"
+        },
+        {
+          "title": "Sites para negócios",
+          "text": "Site + agenda + assistente.",
+          "icon": "calendar"
+        },
+        {
+          "title": "Achados",
+          "text": "Ofertas.",
+          "icon": "cart"
+        },
+        {
+          "title": "Atendimento com IA",
+          "text": "Assistente que responde seus clientes.",
+          "tag": "Em breve",
+          "icon": "sparkle"
+        },
+        {
+          "title": "Arqia",
+          "text": "Sistema para arquitetos.",
+          "tag": "Em breve",
+          "icon": "grid"
+        }
+      ]
+    },
+    {
+      "type": "services",
+      "id": "clientes",
+      "title": "Clientes",
+      "subtitle": "Alguns negócios que já usam a Kernex.",
+      "items": [
+        { "title": "Bezsan Leilões", "icon": "star", "url": "https://bezsan.pages.dev" },
+        { "title": "Studio Lima", "icon": "star", "url": "https://studiolima.pages.dev" },
+        { "title": "Splash Eventos", "icon": "star", "url": "https://nexia.gcbezerra.workers.dev/splash/landing" },
+        { "title": "Viajante Pro", "icon": "star", "url": "https://nexia.gcbezerra.workers.dev/viajante-pro/landing" },
+        { "title": "CES Brasil 2027", "icon": "star", "url": "https://nexia.gcbezerra.workers.dev/ces/landing" },
+        { "title": "Adriano Blumer", "icon": "star", "url": "https://adrianoblumer.pages.dev" }
+      ]
+    },
+    {
+      "type": "services",
+      "id": "como-funciona",
+      "title": "Como funciona",
+      "subtitle": "Três passos, sem complicação.",
+      "items": [
+        { "title": "1. Conversa", "text": "Você conta o que o seu negócio precisa.", "icon": "whatsapp" },
+        { "title": "2. Site ou app pronto", "text": "A Kernex monta e publica para você.", "icon": "check" },
+        { "title": "3. Suporte", "text": "Ajustes e ajuda sempre que precisar.", "icon": "clock" }
+      ]
+    },
+    {
+      "type": "contact",
+      "title": "Contato",
+      "subtitle": "Mande uma mensagem ou chame no WhatsApp.",
+      "map": false
+    }
+  ]
+}

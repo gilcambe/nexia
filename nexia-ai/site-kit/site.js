@@ -37,6 +37,8 @@ const sec = {
   <div class="hero__media" aria-hidden="true">${v ? `<video autoplay muted loop playsinline poster="${attr((m && m.url) || v.poster || '')}"><source src="${attr(v.url)}" type="${attr(v.mime || 'video/mp4')}"></video>` : img(m, 'hero__img', { eager: true })}</div>
   <div class="hero__overlay" aria-hidden="true"></div>
   <div class="container hero__content">
+    ${media[`s${si}.avatar`] ? `<div class="hero__in" style="--d:0s">${img(media[`s${si}.avatar`], 'hero__avatar', { eager: true })}</div>` : ''}
+    ${media[`s${si}.logo`] ? `<div class="hero__in" style="--d:0s">${img(media[`s${si}.logo`], 'hero__logo', { eager: true })}</div>` : ''}
     ${s.eyebrow ? `<p class="eyebrow hero__in" style="--d:0s">${esc(s.eyebrow)}</p>` : ''}
     <h1 class="hero__in" style="--d:.1s">${esc(s.title || spec.name)}</h1>
     ${s.subtitle ? `<p class="hero__lead hero__in" style="--d:.2s">${esc(s.subtitle)}</p>` : ''}
@@ -54,11 +56,13 @@ const sec = {
     ${head(s)}
     <div class="cards">
       ${s.items.map((it, k) => `<article class="card reveal" style="--d:${(k % 3) * 0.08}s">
-        ${media[`s${si}.item${k}`] ? `<div class="card__media">${img(media[`s${si}.item${k}`], 'card__img', { sizes: '(max-width: 700px) 100vw, 33vw' })}</div>` : `<div class="card__icon">${icon('sparkle', 26)}</div>`}
+        ${media[`s${si}.item${k}`] ? `<div class="card__media">${img(media[`s${si}.item${k}`], 'card__img', { sizes: '(max-width: 700px) 100vw, 33vw' })}</div>` : `<div class="card__icon">${icon(it.icon || 'sparkle', 26)}</div>`}
         <div class="card__body">
+          ${it.tag ? `<p class="card__tag">${esc(it.tag)}</p>` : ''}
           <h3>${esc(it.title)}</h3>
           ${it.text ? `<p>${esc(it.text)}</p>` : ''}
           ${it.price ? `<p class="price">${esc(it.price)}</p>` : ''}
+          ${it.url ? `<a class="card__link" href="${attr(it.url)}"${/^https?:/i.test(it.url) ? ' target="_blank" rel="noopener"' : ''}>Ver ${esc(it.title)} ${icon('arrow', 16)}</a>` : ''}
         </div>
       </article>`).join('\n      ')}
     </div>
@@ -184,7 +188,7 @@ const sec = {
       <ul class="contact__list">${items}</ul>
       ${s.map && where ? `<div class="map"><iframe title="Mapa: ${attr(where)}" src="https://maps.google.com/maps?q=${encodeURIComponent(where)}&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>` : ''}
     </div>
-    <form class="form reveal" style="--d:.1s" novalidate data-whatsapp="${attr(c.whatsapp)}" data-email="${attr(c.email)}" data-name="${attr(spec.name)}" data-leads="${attr(LEADS_API)}">
+    ${s.form === false ? '' : `<form class="form reveal" style="--d:.1s" novalidate data-whatsapp="${attr(c.whatsapp)}" data-email="${attr(c.email)}" data-name="${attr(spec.name)}" data-leads="${attr(LEADS_API)}"${spec.leads_origem ? ` data-origem="${attr(spec.leads_origem)}"` : ''}>
       <div class="field"><label for="f-nome">Nome</label><input id="f-nome" name="nome" autocomplete="name" required minlength="2"><small class="field__err" aria-live="polite"></small></div>
       <div class="field"><label for="f-tel">Telefone / WhatsApp</label><input id="f-tel" name="telefone" type="tel" autocomplete="tel" inputmode="tel" required pattern="[0-9()+\\-\\s]{10,}"><small class="field__err" aria-live="polite"></small></div>
       <div class="field"><label for="f-email">E-mail <span class="opt">(opcional)</span></label><input id="f-email" name="email" type="email" autocomplete="email"><small class="field__err" aria-live="polite"></small></div>
@@ -193,7 +197,7 @@ const sec = {
       <div class="hp" aria-hidden="true"><input name="site_url" tabindex="-1" autocomplete="off" aria-label="Não preencha"></div>
       <button class="btn btn--primary btn--block" type="submit">Enviar mensagem ${icon('arrow', 18)}</button>
       <p class="form__ok" role="status" hidden>${icon('check', 18)} Recebemos sua mensagem! Vamos responder em breve.</p>
-    </form>
+    </form>`}
   </div>
 </section>`;
   },
@@ -230,6 +234,7 @@ function html(spec, media) {
   <meta property="og:description" content="${attr(spec.description || spec.tagline)}">
   <meta property="og:type" content="website">
   ${ogImg ? `<meta property="og:image" content="${attr(ogImg.url)}">` : ''}
+  ${spec.favicon ? `<link rel="icon" href="${attr(spec.favicon)}">\n  <link rel="apple-touch-icon" href="${attr(spec.favicon)}">` : ''}
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="${attr(fontsHref(spec.fonts))}" rel="stylesheet">
@@ -239,7 +244,7 @@ function html(spec, media) {
   <a class="skip" href="#conteudo">Pular para o conteúdo</a>
   <header class="topbar" id="topo">
     <div class="container topbar__inner">
-      <a class="brand" href="#topo">${esc(spec.name)}</a>
+      <a class="brand${spec.logo ? ' brand--logo' : ''}" href="#topo"${spec.logo ? ` aria-label="${attr(spec.name)}"` : ''}>${spec.logo ? `<img class="brand__logo${spec.logo_scrolled ? ' brand__logo--top' : ''}" src="${attr(spec.logo)}" alt="${attr(spec.name)}" height="44">${spec.logo_scrolled ? `<img class="brand__logo brand__logo--scrolled" src="${attr(spec.logo_scrolled)}" alt="" height="44">` : ''}${spec.brand_text ? `<span>${esc(spec.name)}</span>` : ''}` : esc(spec.name)}</a>
       <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu" aria-label="Abrir menu">${icon('menu', 24)}</button>
       <nav id="menu" class="menu" aria-label="Menu principal">
         ${nav.map(s => `<a href="#${anchor(s)}">${esc(navLabel(s))}</a>`).join('\n        ')}
@@ -258,7 +263,7 @@ ${body}
     </div>
     <div class="container footer__bottom">
       <p>© <span data-year>${new Date().getFullYear()}</span> ${esc(spec.name)}. Todos os direitos reservados.</p>
-      <a class="selo-nexia" href="https://nexia.gcbezerra.workers.dev" target="_blank" rel="noopener">Feito com NEXIA</a>
+      <a class="selo-nexia" href="${attr(spec.selo ? spec.selo.url : 'https://nexia.gcbezerra.workers.dev')}" target="_blank" rel="noopener">${esc(spec.selo ? spec.selo.label : 'Feito com NEXIA')}</a>
       ${credits.length ? `<details class="credits"><summary>Créditos das imagens</summary><ul>${credits.map(x => `<li>${esc(x)}</li>`).join('')}</ul></details>` : ''}
     </div>
   </footer>
@@ -328,6 +333,11 @@ p { margin: 0 0 1rem; }
 .topbar__inner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .brand { font-family: var(--font-head); font-weight: var(--head-weight); font-size: 1.45rem; color: #fff; text-decoration: none; letter-spacing: var(--track); transition: color .35s; }
 .is-scrolled .brand { color: var(--text); }
+.brand--logo { display: inline-flex; align-items: center; gap: .6rem; }
+.hero__logo { display: block; width: clamp(180px, 28vw, 300px); height: auto; margin: -2rem 0 .5rem -1rem; }
+.brand__logo { display: block; height: 44px; width: auto; border-radius: 8px; }
+.brand__logo--scrolled, .is-scrolled .brand__logo--top { display: none; }
+.is-scrolled .brand__logo--scrolled { display: block; }
 .menu { display: flex; align-items: center; gap: 1.6rem; }
 .menu a:not(.btn) { color: #fff; text-decoration: none; font-weight: 500; white-space: nowrap; position: relative; transition: color .35s; }
 .is-scrolled .menu a:not(.btn) { color: var(--text); }
@@ -337,7 +347,8 @@ p { margin: 0 0 1rem; }
 .is-scrolled .menu-btn { color: var(--text); }
 
 /* Hero */
-.hero { position: relative; min-height: 100svh; display: grid; align-items: center; color: #fff; overflow: hidden; isolation: isolate; }
+.hero { position: relative; min-height: 100svh; display: grid; align-items: center; color: #fff; overflow: hidden; isolation: isolate; background: var(--dark); }
+.hero__avatar { width: clamp(120px, 22vw, 180px); height: clamp(120px, 22vw, 180px); border-radius: 50%; object-fit: cover; object-position: 50% 25%; border: 4px solid color-mix(in srgb, var(--primary) 70%, #fff); box-shadow: var(--shadow); margin-bottom: 1.5rem; }
 .hero__media, .hero__overlay { position: absolute; inset: 0; z-index: -1; }
 .hero__media img, .hero__media video { width: 100%; height: 100%; object-fit: cover; animation: zoom 18s var(--ease) both; }
 .hero__overlay { background: linear-gradient(115deg, color-mix(in srgb, var(--dark) 88%, transparent) 10%, color-mix(in srgb, var(--dark) 45%, transparent) 60%, transparent), linear-gradient(0deg, color-mix(in srgb, var(--dark) 60%, transparent), transparent 40%); }
@@ -363,6 +374,9 @@ p { margin: 0 0 1rem; }
 .card__icon { margin: 1.75rem 1.75rem 0; width: 56px; height: 56px; display: grid; place-items: center; border-radius: 16px; background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); }
 .card__body { padding: 1.5rem 1.75rem 1.9rem; display: flex; flex-direction: column; flex: 1; }
 .card__body p { color: var(--muted); }
+.card__tag { align-self: flex-start; font-size: .75rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--primary) !important; background: color-mix(in srgb, var(--accent) 18%, transparent); padding: .25rem .7rem; border-radius: 999px; margin-bottom: .75rem; }
+.card__link { margin-top: auto; display: inline-flex; align-items: center; gap: .4rem; color: var(--primary); font-weight: 600; text-decoration: none; }
+.card__link:hover .i { transform: translateX(3px); }
 .price { margin-top: auto; font-family: var(--font-head); font-size: 1.35rem; font-weight: var(--head-weight); color: var(--primary) !important; }
 .split { display: grid; gap: clamp(2rem, 5vw, 5rem); grid-template-columns: 1.05fr 1fr; align-items: center; }
 .split__media { position: relative; }
@@ -589,7 +603,7 @@ const JS = `// Gerado pelo NEXIA Site Kit (ADR-Q-04). Sem dependências.
         ['source', 'medium', 'campaign', 'content', 'term'].forEach(k => { const v = q.get('utm_' + k); if (v) utm[k] = v; });
         fetch(form.dataset.leads, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
           body: JSON.stringify({ nome: d.nome, whatsapp: d.telefone, email: d.email, mensagem: d.mensagem, consentimento: true, site_url: d.site_url || '',
-            produto: 'site', site: location.hostname, pagina: location.pathname, utm }) }).catch(() => {});
+            produto: 'site', site: location.hostname, pagina: location.pathname, utm, ...(form.dataset.origem ? { origem: form.dataset.origem } : {}) }) }).catch(() => {});
       }
       const ok2 = $('.form__ok', form);
       if (ok2) ok2.hidden = false;

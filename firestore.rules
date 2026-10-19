@@ -148,15 +148,18 @@ service cloud.firestore {
       }
 
       // ── /tenants/{tenantSlug}/usage ───────────────────────────
+      // #814: o contador de cota (cortex-chat) é gravado pelo servidor (Admin SDK); antes qualquer
+      // membro podia zerar a própria cota pelo app.
       match /usage/{docId} {
         allow read:   if isAdminOfTenant(tenantSlug);
-        allow write:  if isAuthenticated() && belongsToTenant(tenantSlug);
+        allow write:  if isMaster();
       }
 
       // ── /tenants/{tenantSlug}/audit_log ──────────────────────
       match /audit_log/{docId} {
         allow read:   if isAdminOfTenant(tenantSlug);
-        allow create: if isAuthenticated() && belongsToTenant(tenantSlug);
+        // #814: auditoria só pelo servidor (Admin SDK); um membro não pode forjar registro.
+        allow create: if false;
         allow update, delete: if false; // audit logs are immutable
       }
 

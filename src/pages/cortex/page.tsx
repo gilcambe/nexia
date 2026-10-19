@@ -5,6 +5,7 @@ import { usePedidos, lerCache, guardarCache } from "../meu-cortex/api";
 import type { Resumo } from "../meu-cortex/api";
 import Composer from "./Composer";
 import Conversa from "./Conversa";
+import Pergunta from "./Pergunta";
 import Lateral from "./Lateral";
 import type { Vista } from "./Lateral";
 import Logo from "./Logo";
@@ -18,6 +19,9 @@ const CSS = `
 .cx[data-tema=claro]{--cx-bg:#f8f8f5;--cx-side:#efefea;--cx-card:#ffffff;--cx-line:#e2e2db;--cx-txt:#1c1c22;--cx-mut:#6b6b76;--cx-ac:#00a884;--cx-hover:#e6e6df;--cx-user:#dff3ec}
 .cx{background:var(--cx-bg);color:var(--cx-txt);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
 `;
+
+type ModoInicio = "pedido" | "pergunta";
+const lerModo = (): ModoInicio => { try { return localStorage.getItem("cx_modo") === "pergunta" ? "pergunta" : "pedido"; } catch { return "pedido"; } };
 
 const lerTema = (): Tema => { try { const t = localStorage.getItem("cx_tema"); return t === "claro" || t === "escuro" ? t : "auto"; } catch { return "auto"; } };
 
@@ -35,6 +39,8 @@ export default function CortexPage() {
   const [itens, setItens] = useState<Resumo[]>(() => lerCache<Resumo[]>("lista") || []);
   const [erro, setErro] = useState<string>();
   const [inicial, setInicial] = useState("");
+  const [modo, setModo] = useState<ModoInicio>(lerModo);
+  const mudarModo = (m: ModoInicio) => { setModo(m); try { localStorage.setItem("cx_modo", m); } catch { /* sem armazenamento */ } };
   const [instalar, setInstalar] = useState<(() => void) | null>(() => {
     const ev = (window as unknown as { __cxInstall?: Event & { prompt: () => void } }).__cxInstall;
     return ev ? () => ev.prompt() : null;
@@ -118,6 +124,15 @@ export default function CortexPage() {
 
         {user && vista === "chat" && aberto > 0 && <div className="flex-1 min-h-0"><Conversa n={aberto} voltar={novo} /></div>}
         {user && vista === "chat" && aberto === 0 && (
+          <div className="flex justify-center pt-3 shrink-0" role="tablist" aria-label="Tipo de conversa">
+            {([["pedido", "Pedir tarefa"], ["pergunta", "Perguntar agora"]] as const).map(([m, rotulo]) => (
+              <button key={m} role="tab" aria-selected={modo === m} onClick={() => mudarModo(m)} data-testid={`cx-modo-${m}`}
+                className={`h-9 px-4 text-sm border border-[var(--cx-line)] first:rounded-l-xl last:rounded-r-xl ${modo === m ? "bg-[var(--cx-card)] font-semibold" : "text-[var(--cx-mut)]"}`}>{rotulo}</button>
+            ))}
+          </div>
+        )}
+        {user && vista === "chat" && aberto === 0 && modo === "pergunta" && <Pergunta virarPedido={(t) => { setInicial(t); mudarModo("pedido"); }} />}
+        {user && vista === "chat" && aberto === 0 && modo === "pedido" && (
           <div className="flex-1 min-h-0 flex flex-col">
             <div className="flex-1 overflow-y-auto flex flex-col items-center justify-center px-4 text-center">
               <Logo tamanho={64} />

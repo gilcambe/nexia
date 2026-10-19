@@ -1,5 +1,6 @@
 import { apiPath, healthUrl, firebaseConfigUrl } from "@/config/env";
 import { initFirebase } from "@/services/firebase";
+import { criarLeitorSSE, type EventoSSE } from "@/lib/sse";
 
 // Token do usuário logado no Firebase; sem login devolve {} e a API responde 401.
 async function cabecalhoAuth(): Promise<Record<string, string>> {
@@ -102,6 +103,7 @@ export async function* streamCortex(
     message: string;
     model?: string;
     tenantId?: string;
+    conversationId?: string;
   },
   signal?: AbortSignal
 ): AsyncGenerator<CortexStreamChunk, void, unknown> {
@@ -112,7 +114,7 @@ export async function* streamCortex(
     tenantId: payload.tenantId || "nexia",
     stream: true,
     maxTokens: 0,
-    conversationId: "default",
+    conversationId: payload.conversationId || "default",
   });
 
   let res: Response;
@@ -144,29 +146,29 @@ export async function* streamCortex(
     return;
   }
 
+  // Respostas prontas (ação, imagem) vêm em JSON mesmo com stream: true; viram um pedaço só.
+  if (/application\/json/i.test(res.headers.get("Content-Type") || "")) {
+    const j = (await res.json().catch(() => ({}))) as Partial<CortexReply> & { error?: string; _meta?: { modelUsed?: string } };
+    yield { token: String(j.reply ?? j.error ?? ""), done: true, model: j._meta?.modelUsed };
+    return;
+  }
+
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
-  let buffer = "";
+  const leitor = criarLeitorSSE();
+  const converter = (ev: EventoSSE): CortexStreamChunk | "fim" =>
+    "fim" in ev ? "fim" : "json" in ev ? (ev.json as CortexStreamChunk) : { token: ev.texto, done: false };
 
   try {
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() || "";
-      for (const line of lines) {
-        if (!line.startsWith("data: ")) continue;
-        const data = line.slice(6).trim();
-        if (data === "[DONE]") return;
-        if (!data) continue;
-        try {
-          const parsed = JSON.parse(data) as CortexStreamChunk;
-          yield parsed;
-        } catch {
-          yield { token: data, done: false };
-        }
+      const eventos = done ? leitor.terminar() : leitor.empurrar(decoder.decode(value, { stream: true }));
+      for (const ev of eventos) {
+        const c = converter(ev);
+        if (c === "fim") return;
+        yield c;
       }
+      if (done) break;
     }
   } finally {
     reader.releaseLock();

@@ -40,6 +40,7 @@ function cleanLead(body, headers = {}) {
     nome, whatsapp, email,
     mensagem: str(body.mensagem, 2000),
     produto: str(body.produto, 60).toLowerCase().replace(/[^a-z0-9-]/g, '') || 'geral',
+    origem: str(body.origem, 60).toLowerCase().replace(/[^a-z0-9-]/g, ''),
     site,
     pagina: str(body.pagina, 300),
     utm,

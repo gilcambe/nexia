@@ -33,3 +33,51 @@ test('RS3. todo site de cliente leva o selo "Feito com NEXIA" no rodapé', () =>
   renderizar(raw, dir);
   assert.match(fs.readFileSync(path.join(dir, 'index.html'), 'utf8'), /class="selo-nexia"[^>]*>Feito com NEXIA</);
 });
+
+const gerar = slug => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), `site-${slug}-`));
+  const base = path.join(__dirname, `../../clientes/${slug}`);
+  const raw = JSON.parse(fs.readFileSync(path.join(base, 'site.json'), 'utf8'));
+  const media = JSON.parse(fs.readFileSync(path.join(base, 'midia.json'), 'utf8'));
+  const r = renderizar(raw, dir, media, { base });
+  return { ...r, dir, html: fs.readFileSync(path.join(dir, 'index.html'), 'utf8') };
+};
+
+test('RS4. landing do Adriano Blumer (#1022): título, WhatsApp, 3 redes, logo e fotos do próprio cliente, selo Kernex', () => {
+  const { html, escritos, dir } = gerar('adriano');
+  assert.match(html, /<title>Adriano Blumer/);
+  assert.match(html, /href="https:\/\/wa\.me\/5511999994185/);
+  assert.match(html, /Falar no WhatsApp/);
+  for (const rede of ['https://www.instagram.com/adrianoblumer_nutri', 'https://www.tiktok.com/@adrianoblumer_nutri', 'https://www.youtube.com/@adrianoblumer']) assert.ok(html.includes(`href="${rede}"`), rede);
+  assert.match(html, /rel="icon" href="assets\/logo-adriano-icon\.png"/);
+  assert.match(html, /class="brand__logo" src="assets\/logo-adriano-full\.png"/);
+  assert.match(html, /class="hero__avatar" src="assets\/foto-adriano\.jpg"/);
+  assert.match(html, /class="selo-nexia" href="https:\/\/kernex\.com\.br\/\?utm_source=adriano&amp;utm_medium=selo"[^>]*>Feito com Kernex</);
+  assert.doesNotMatch(html, /<form|R\$/);
+  for (const f of ['assets/logo-adriano-full.png', 'assets/logo-adriano-icon.png', 'assets/foto-adriano.jpg']) {
+    assert.ok(escritos.includes(f), f);
+    assert.ok(fs.statSync(path.join(dir, f)).size > 1000);
+  }
+});
+
+test('RS5. site da Kernex (#1008): produtos, clientes, como funciona, contato com formulário que grava origem kernex-site', () => {
+  const { html, escritos } = gerar('kernex');
+  assert.match(html, /<title>Kernex — Inteligência que resolve\./);
+  for (const id of ['produtos', 'clientes', 'como-funciona', 'contato']) assert.match(html, new RegExp(`<section class="section[^"]*" id="${id}"`), id);
+  assert.match(html, /<form class="form[^>]*data-leads="https:\/\/nexia\.gcbezerra\.workers\.dev\/api\/leads" data-origem="kernex-site"/);
+  assert.match(html, /href="https:\/\/nexiabodycoach\.pages\.dev"/);
+  assert.match(html, /href="https:\/\/adrianoblumer\.pages\.dev"/);
+  assert.equal((html.match(/class="card__tag">Em breve</g) || []).length, 2);
+  assert.match(html, /href="https:\/\/wa\.me\/5511944037259/);
+  assert.ok(escritos.includes('assets/logo-fundo-escuro.svg') && escritos.includes('assets/simbolo.svg'));
+});
+
+test('RS6. imagem local fora do repositório ou que não é imagem é recusada; sem base nada é copiado', () => {
+  const raw = JSON.parse(fs.readFileSync(path.join(__dirname, '../../clientes/exemplo/site.json'), 'utf8'));
+  const base = path.join(__dirname, '../../clientes/exemplo');
+  const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'site-'));
+  assert.throws(() => renderizar({ ...raw, logo: '../../../../../../etc/x.png' }, tmp(), {}, { base }), /imagem local/);
+  assert.throws(() => renderizar({ ...raw, logo: 'site.json' }, tmp(), {}, { base }), /imagem local/);
+  const { escritos } = renderizar({ ...raw, logo: 'assets/x.png' }, tmp());
+  assert.ok(!escritos.some(f => f.startsWith('assets/')));
+});

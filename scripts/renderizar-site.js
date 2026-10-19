@@ -10,7 +10,33 @@ const path = require('path');
 const kit = require('../nexia-ai/site-kit');
 const { SITE_EXAMPLE } = require('../nexia-ai/site-kit/prompt');
 
-function renderizar(raw, saida, media = {}) {
+const RAIZ = path.resolve(__dirname, '..');
+const IMAGEM = /\.(png|jpe?g|svg|webp|ico|gif)$/i;
+
+// Imagens locais (logo, ícone e fotos do midia.json com caminho relativo à pasta do site.json) são copiadas
+// para <saida>/assets/ e o caminho vira "assets/<arquivo>". Só arquivos de imagem dentro do repositório.
+function copiarLocais(raw, media, base, saida) {
+  const copiados = [];
+  const local = v => typeof v === 'string' && v && !/^[a-z][a-z0-9+.-]*:/i.test(v) && !v.startsWith('//');
+  const copiar = v => {
+    const origem = path.resolve(base, v);
+    if (!(origem + path.sep).startsWith(RAIZ + path.sep) || !IMAGEM.test(origem) || !fs.existsSync(origem)) throw new Error(`imagem local inválida ou ausente: ${v}`);
+    const nome = `assets/${path.basename(origem)}`;
+    fs.mkdirSync(path.join(saida, 'assets'), { recursive: true });
+    fs.copyFileSync(origem, path.join(saida, nome));
+    if (!copiados.includes(nome)) copiados.push(nome);
+    return nome;
+  };
+  const r = { ...raw };
+  for (const k of ['logo', 'logo_scrolled', 'favicon']) if (local(r[k])) r[k] = copiar(r[k]);
+  const m = {};
+  for (const [slot, item] of Object.entries(media || {})) m[slot] = item && local(item.url) ? { ...item, url: copiar(item.url) } : item;
+  return { raw: r, media: m, copiados };
+}
+
+function renderizar(raw, saida, media = {}, { base } = {}) {
+  let copiados = [];
+  if (base) ({ raw, media, copiados } = copiarLocais(raw, media, base, saida));
   const { spec, errors } = kit.normalizeSpec(raw, { kind: 'site' });
   if (!spec) throw new Error(`spec inválido: ${errors.join('; ')}`);
   const arquivos = kit.render(spec, media);
@@ -24,7 +50,7 @@ function renderizar(raw, saida, media = {}) {
     fs.writeFileSync(destino, conteudo);
     escritos.push(rel);
   }
-  return { spec, escritos };
+  return { spec, escritos: [...escritos, ...copiados] };
 }
 
 if (require.main === module) {
@@ -32,7 +58,7 @@ if (require.main === module) {
   if (a === '--exemplo') { console.log(JSON.stringify(SITE_EXAMPLE, null, 2)); process.exit(0); }
   if (!a || !b) { console.error('uso: node scripts/renderizar-site.js <spec.json> <pasta-de-saida>'); process.exit(2); }
   try {
-    const { spec, escritos } = renderizar(JSON.parse(fs.readFileSync(a, 'utf8')), b, m && fs.existsSync(m) ? JSON.parse(fs.readFileSync(m, 'utf8')) : {});
+    const { spec, escritos } = renderizar(JSON.parse(fs.readFileSync(a, 'utf8')), b, m && fs.existsSync(m) ? JSON.parse(fs.readFileSync(m, 'utf8')) : {}, { base: path.dirname(path.resolve(a)) });
     console.log(`site "${spec.name}": ${escritos.length} arquivo(s) em ${b}`);
   } catch (e) { console.error(e.message); process.exit(1); }
 }

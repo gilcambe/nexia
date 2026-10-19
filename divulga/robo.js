@@ -2,7 +2,9 @@
 // NEXIA Divulga: posta os clientes da NEXIA sozinho, nas contas da própria NEXIA (grátis).
 // Uso: node divulga/robo.js rodar|ensaio [--dados <pasta>]
 // 1) Primeiro sai a fila pronta (divulga/fila/*.json, em ordem, 1 por rodada).
-// 2) Fila vazia: reveza os clientes (divulga/clientes/*.json) com texto da IA grátis.
+// 2) Fila vazia: reveza os clientes (divulga/clientes/*.json). Se a linha de produção (divulga/produzir.js) deixou
+//    o post.json de hoje do cliente da vez, publica ele: 7h15 carrossel, 12h15 foto com pergunta, 19h15 reel.
+//    Sem post.json, o de sempre: foto fixa + texto da IA grátis.
 // Sem nenhuma rede ligada, só mostra os textos e não marca nada como postado.
 const fs = require('node:fs');
 const path = require('node:path');
@@ -14,6 +16,16 @@ const { listaSemanal, roteiroCollabs } = require('./lib/interacao');
 const RAIZ = __dirname;
 const IMAGENS = 'https://raw.githubusercontent.com/gilcambe/nexia/develop/divulga/imagens/';
 const VIDEOS = 'https://raw.githubusercontent.com/gilcambe/nexia/develop/divulga/videos/';
+// Arquivos da linha de produção: branch "divulga-midia" (só a última produção, sobrescrita a cada rodada).
+const MIDIA = 'https://raw.githubusercontent.com/gilcambe/nexia/divulga-midia/';
+
+/** Data de Brasília (AAAA-MM-DD), a mesma usada pelo workflow para a pasta da produção. */
+const dataBrasilia = (d = new Date()) => new Date(d.getTime() - 3 * 3600 * 1000).toISOString().slice(0, 10);
+/** Formato pelo horário de Brasília: manhã carrossel (7h15), meio do dia foto com pergunta (12h15), noite reel (19h15). */
+function formatoDoHorario(d = new Date()) {
+  const h = new Date(d.getTime() - 3 * 3600 * 1000).getUTCHours();
+  return h < 10 ? 'carrossel' : h < 17 ? 'foto' : 'reel';
+}
 
 const lerJson = (f, padrao) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return padrao; } };
 const lerPasta = p => (fs.existsSync(p) ? fs.readdirSync(p).filter(f => f.endsWith('.json')).sort() : []);
@@ -39,16 +51,46 @@ function maisHashtags(texto, cliente) {
 const semBio = t => t.replace(/\s*(pelo )?link na bio/gi, '').replace(/\.\./g, '.').replace(/\s+\./g, '.').trim();
 
 /** Textos de cada rede. Instagram não abre link na legenda: lá vai "link na bio". */
-function montar({ cliente, legenda, imagem, video, imagens, id }) {
+function montar({ cliente, legenda, imagem, video, imagens, id, capa }) {
   // Carrossel/álbum só quando a fila manda `imagens`; sem isso o post é o de sempre.
   const extra = Array.isArray(imagens) && imagens.length ? { imagens } : {};
   const porRede = rede => {
     const link = linkUtm(cliente.link, rede);
-    if (rede === 'instagram') return { texto: maisHashtags(/link na bio/i.test(legenda) ? legenda : `${legenda}\n\nLink na bio.`, cliente), imagem, video, ...extra };
+    if (rede === 'instagram') return { texto: maisHashtags(/link na bio/i.test(legenda) ? legenda : `${legenda}\n\nLink na bio.`, cliente), imagem, video, ...(capa ? { capa } : {}), ...extra };
     if (rede === 'facebook') return { texto: semBio(legenda), link, imagem, ...extra };
     return { texto: semBio(legenda), link, imagem };
   };
   return { id, cliente: cliente.id, porRede };
+}
+
+/** Cliente da vez no rodízio (null se ainda há item na fila pronta, que sai antes). */
+function clienteDaVez({ clientes, fila }, estado = {}) {
+  const feitos = new Set(estado.feitos || []);
+  if ((fila || []).some(i => !feitos.has(i.id) && clientes[i.cliente])) return null;
+  const prontos = Object.values(clientes).filter(c => c.ativo !== false && (c.imagens || []).length && (c.assuntos || []).length);
+  if (!prontos.length) return null;
+  const n = estado.rodizio || 0;
+  return { c: prontos[n % prontos.length], volta: Math.floor(n / prontos.length) };
+}
+
+/**
+ * Post da linha de produção (produzir.js): `<producao>/<data>/<cliente>/post.json` de hoje.
+ * Carrossel no IG/FB de manhã, foto com pergunta no meio do dia, reel à noite (sem vídeo, vira carrossel).
+ * Threads/Bluesky/Pinterest sempre recebem texto + 1ª imagem. Sem post.json válido: null (segue o de sempre).
+ */
+function postProduzido(producao, c, agora = new Date()) {
+  const rel = `producao/${dataBrasilia(agora)}/${c.id}/`;
+  const p = lerJson(path.join(producao, dataBrasilia(agora), c.id, 'post.json'), null);
+  if (!p || p.cliente !== c.id || !p.legenda || !Array.isArray(p.imagens) || !p.imagens.length) return null;
+  const url = f => (/^https:\/\//.test(f) ? f : MIDIA + rel + f);
+  const imagens = p.imagens.map(url);
+  const tags = (p.hashtags || []).filter(h => !p.legenda.includes(h)).join(' ');
+  const legenda = tags ? `${p.legenda}\n\n${tags}` : p.legenda;
+  let formato = formatoDoHorario(agora);
+  if (formato === 'reel' && !p.video) formato = 'carrossel';
+  const base = { id: null, cliente: c, legenda, imagem: imagens[0] };
+  const extra = formato === 'carrossel' ? { imagens } : formato === 'reel' ? { video: url(p.video), capa: p.capa ? url(p.capa) : undefined } : {};
+  return { ...montar({ ...base, ...extra }), rodizio: true, formato, serie: p.serie };
 }
 
 /** Escolhe o post desta rodada: primeiro a fila, depois o rodízio. */
@@ -56,11 +98,11 @@ async function proximo({ clientes, fila }, estado, ctx) {
   const feitos = new Set(estado.feitos || []);
   const item = fila.find(i => !feitos.has(i.id) && clientes[i.cliente]);
   if (item) return montar({ id: item.id, cliente: clientes[item.cliente], legenda: item.legenda, imagem: urlImagem(item.imagem || (item.imagens || [])[0] || ''), video: item.video && VIDEOS + item.video, imagens: Array.isArray(item.imagens) ? item.imagens.map(urlImagem) : undefined });
-  const prontos = Object.values(clientes).filter(c => c.ativo !== false && (c.imagens || []).length && (c.assuntos || []).length);
-  if (!prontos.length) return null;
-  const n = estado.rodizio || 0;
-  const c = prontos[n % prontos.length];
-  const volta = Math.floor(n / prontos.length);
+  const vez = clienteDaVez({ clientes, fila: [] }, estado);
+  if (!vez) return null;
+  const { c, volta } = vez;
+  const produzido = ctx && ctx.producao && postProduzido(ctx.producao, c, ctx.agora || new Date());
+  if (produzido) return produzido;
   const assunto = c.assuntos[volta % c.assuntos.length];
   // Calendário semanal fixo: o tema do dia (dica, recurso, desafio...) dá o gancho, a chamada e as hashtags.
   const tema = temaDoDia();
@@ -69,16 +111,16 @@ async function proximo({ clientes, fila }, estado, ctx) {
   return { ...montar({ id: null, cliente: c, legenda, imagem: urlImagem(c.imagens[volta % c.imagens.length]) }), rodizio: true };
 }
 
-async function rodar({ acao = 'rodar', dados, env: envBruto = process.env, fetchImpl = fetch, log = console.log, raiz = RAIZ } = {}) {
+async function rodar({ acao = 'rodar', dados, env: envBruto = process.env, fetchImpl = fetch, log = console.log, raiz = RAIZ, producao = null, agora } = {}) {
   // Segredo salvo pelo PowerShell chega com quebra de linha no fim ("Cannot parse access token"): limpa antes de usar.
   const env = Object.fromEntries(Object.entries(envBruto).map(([k, v]) => [k, typeof v === 'string' ? v.replace(/[\u0000\uFEFF]/g, '').trim() : v]));
   const arqEstado = dados && path.join(dados, 'divulga-estado.json');
   const estado = (arqEstado && lerJson(arqEstado, null)) || { rodizio: 0, feitos: [], historico: [] };
-  const ctx = { env, fetchImpl, log };
+  const ctx = { env, fetchImpl, log, producao, agora };
   const post = await proximo(carregar(raiz), estado, ctx);
   if (!post) { log('Nada para postar (fila vazia e nenhum cliente com imagens e assuntos).'); return { postou: false }; }
   const ativos = acao === 'ensaio' ? [] : CANAIS.filter(c => c.ativo(env));
-  log(`Post: ${post.id || 'rodízio'} (${post.cliente})`);
+  log(`Post: ${post.id || 'rodízio'} (${post.cliente})${post.formato ? ` produzido: ${post.formato}` : ''}`);
   if (!ativos.length) {
     for (const rede of ['instagram', 'facebook']) log(`--- ${rede} ---\n${post.porRede(rede).texto}\n${post.porRede(rede).link || ''}`);
     if (acao === 'ensaio') {
@@ -113,12 +155,13 @@ async function rodar({ acao = 'rodar', dados, env: envBruto = process.env, fetch
   return { postou, resultados, post };
 }
 
-module.exports = { rodar, carregar, proximo, montar, semBio };
+module.exports = { rodar, carregar, proximo, montar, semBio, clienteDaVez, postProduzido, formatoDoHorario, dataBrasilia };
 
 if (require.main === module) {
   const args = process.argv.slice(2);
   const i = args.indexOf('--dados');
-  rodar({ acao: args[0] || 'ensaio', dados: i >= 0 ? args[i + 1] : null })
+  const p = args.indexOf('--producao');
+  rodar({ acao: args[0] || 'ensaio', dados: i >= 0 ? args[i + 1] : null, producao: p >= 0 ? args[p + 1] : null })
     .then(r => { if (r.resultados && !r.postou) process.exitCode = 1; })
     .catch(e => { console.error(e.message); process.exitCode = 1; });
 }

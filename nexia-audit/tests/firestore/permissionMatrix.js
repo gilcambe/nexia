@@ -1,5 +1,8 @@
-// Matriz de permissões por coleção e papel (helper centralizado)
-const permissionMatrix = {
+/**
+ * Exporta a matriz de permissões usada pelos testes.
+ * Cada chave de coleção contém objetos por papel com permissões de leitura e escrita.
+ */
+module.exports = {
   alunos: {
     aluno: { read: true, write: false },
     coach: { read: true, write: false },
@@ -19,5 +22,3 @@ const permissionMatrix = {
     anon: { read: false, write: false }
   }
 };
-
-module.exports = permissionMatrix;

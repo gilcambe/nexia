@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 interface Props {
-  modo: "pedido" | "nota";
+  modo: "pedido" | "nota" | "pergunta";
   enviar: (texto: string) => Promise<void>;
   inicial?: string;
 }
@@ -90,7 +90,7 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
       <div className="rounded-3xl border border-[var(--cx-line)] bg-[var(--cx-card)] shadow-[0_8px_40px_-12px_rgba(0,0,0,.35)] focus-within:border-[var(--cx-ac)] transition-colors">
         <textarea ref={area} value={texto} onChange={(e) => setTexto(e.target.value)} rows={1} data-testid="cx-texto"
           onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); mandar(); } }}
-          placeholder={modo === "pedido" ? "O que o Cortex deve fazer? Diga o projeto e o que mudar." : "Anotação neste pedido. O Cortex lê só o pedido: para mudar o que ele faz, abra um Novo pedido."}
+          placeholder={modo === "pedido" ? "O que o Cortex deve fazer? Diga o projeto e o que mudar." : modo === "pergunta" ? "Pergunte ao Cortex. A resposta chega na hora." : "Anotação neste pedido. O Cortex lê só o pedido: para mudar o que ele faz, abra um Novo pedido."}
           className="w-full resize-none bg-transparent outline-none px-5 pt-4 pb-2 text-[15px] leading-6 text-[var(--cx-txt)] placeholder:text-[var(--cx-mut)] max-h-[220px]" />
         <div className="flex items-center gap-1 px-2 pb-2">
           <button type="button" className={btn} aria-label="Anexar arquivo ou print" onClick={() => arquivo.current?.click()} data-testid="cx-anexo">
