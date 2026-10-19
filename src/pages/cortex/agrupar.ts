@@ -51,7 +51,7 @@ export const MODOS: Record<ModoResposta, ConfiguracaoResposta> = {
   pesquisar: {
     modo: 'pesquisar',
     descricao: 'Busca por informações atualizadas na web',
-    modelo: 'perplexity_fast',
+    modelo: 'perplexity',
     contexto: 'Pesquise informações atualizadas na web antes de responder. Use fontes confiáveis e cite suas referências. Responda de forma completa e bem fundamentada.',
   },
 };
