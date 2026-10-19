@@ -36,8 +36,10 @@ const PROVIDERS = Object.freeze({
   github:      { url: 'https://models.github.ai/inference/chat/completions', env: 'GITHUB_MODELS_TOKEN', max_output: 4096, max_input: 8000, tools: true },
   cloudflare:  { url: (m, env) => `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(env.CLOUDFLARE_AI_ACCOUNT_ID || env.CLOUDFLARE_ACCOUNT_ID || 'sem-conta')}/ai/v1/chat/completions`,
                  env: 'CLOUDFLARE_AI_TOKEN', max_output: 8192, tools: true },   // + CLOUDFLARE_AI_ACCOUNT_ID
+  // Z.ai: GLM Flash grátis (só e-mail, sem cartão; ~1 pedido/seg, ~1.000/dia).
+  zai:         { url: 'https://api.z.ai/api/paas/v4/chat/completions', env: 'ZAI_API_KEY', max_output: 16384, tools: true },
   // ADR-FREE-05: Codestral (codestral.mistral.ai) tem chave própria e grátis (30 pedidos/min, 2 mil por dia).
-  codestral:   { url: 'https://codestral.mistral.ai/v1/chat/completions', env: 'CODESTRAL_API_KEY', max_output: 32768, tools: true },
+  codestral:   { url: 'https://codestral.mistral.ai/v1/chat/completions', env: 'CODESTRAL_API_KEY', max_output: 32768, tools: true }
   // ADR-FREE-05: Kilo Gateway. Sem chave, só modelos grátis (":free"; 200 pedidos/hora por IP). KILO_API_KEY é opcional.
   // O modelo "auto:N" é o N-ésimo grátis do catálogo vivo do gateway (kilo-catalog.js); nunca chama modelo pago.
   kilo:        { url: 'https://api.kilo.ai/api/gateway/chat/completions', env: 'KILO_API_KEY', keyless: true, free_only: true, catalog: true, max_output: 16384, tools: true },
