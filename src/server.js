@@ -8,7 +8,7 @@ const { startHealthWatcher } = require('../monitoring/healthWatcher');
 
 const PORT = parseInt(process.env.PORT, 10) || 3001;
 
-const server = http.createHandler ? null : null; // placeholder mantido sem quebrar importações futuras
+
 
 function handleRequest(req, res) {
   const url = new URL(req.url, `http://localhost:${PORT}`);
