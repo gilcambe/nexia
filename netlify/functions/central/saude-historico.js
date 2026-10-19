@@ -51,7 +51,7 @@ async function guardarAmostra(db, { at = Date.now(), medir, rotas = ROTAS } = {}
     velhas.docs.forEach((d) => b.delete(d.ref));
     await b.commit();
   }
-  return { hora, rotas: medidas.length, fora: medidas.filter(([, m]) => !m.ok).map(([id]) => id), apagadas: velhas.size };
+  return { hora, rotas: medidas.length, fora: medidas.filter(([, m]) => !m.ok).map(([id]) => id), apagadas: velhas.size, porRota };
 }
 
 /** Resumo dos últimos 30 dias por rota: disponibilidade %, quedas, tempo médio e erros. */
