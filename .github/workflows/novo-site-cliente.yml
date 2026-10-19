@@ -7,6 +7,10 @@ on:
       slug:
         description: 'Nome do site (letras minúsculas, números e hífen; 3 a 40). Usa clientes/<slug>/site.json'
         required: true
+      pasta:
+        description: 'Opcional: pasta em clientes/ quando difere do nome do site (ex.: adriano para adrianoblumer). Vazio = o próprio nome'
+        required: false
+        default: ''
 permissions:
   contents: read
 jobs:
@@ -21,13 +25,15 @@ jobs:
       - name: Validar o nome
         env:
           SLUG: ${{ inputs.slug }}
+          PASTA: ${{ inputs.pasta }}
         run: |
           echo "$SLUG" | grep -Eq '^[a-z0-9-]{3,40}$' || { echo "::error::slug inválido (use ^[a-z0-9-]{3,40}$)"; exit 1; }
-          [ -f "clientes/$SLUG/site.json" ] || { echo "::error::falta clientes/$SLUG/site.json"; exit 1; }
+          PASTA="${PASTA:-$SLUG}"
+          echo "$PASTA" | grep -Eq '^[a-z0-9-]{3,40}$' || { echo "::error::pasta inválida (use ^[a-z0-9-]{3,40}$)"; exit 1; }
+          [ -f "clientes/$PASTA/site.json" ] || { echo "::error::falta clientes/$PASTA/site.json"; exit 1; }
+          echo "PASTA=$PASTA" >> "$GITHUB_ENV"
       - name: Gerar o site
-        env:
-          SLUG: ${{ inputs.slug }}
-        run: node scripts/renderizar-site.js "clientes/$SLUG/site.json" "$RUNNER_TEMP/site" "clientes/$SLUG/midia.json"
+        run: node scripts/renderizar-site.js "clientes/$PASTA/site.json" "$RUNNER_TEMP/site" "clientes/$PASTA/midia.json"
       - name: Criar o projeto no Cloudflare Pages (se ainda não existir)
         env:
           SLUG: ${{ inputs.slug }}
