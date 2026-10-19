@@ -1,1 +1,5 @@
-# Playbook v1 (2026) - Este documento substitui qualquer playbooks antigos no docs/. - Uso: Ler antes de qualquer alteração em runtime. - Regra de ouro: Se o teste falhar, reverta. - Contato: cxo@nexia.ai
+# Playbook v1 (2026)
+- Este documento substitui qualquer playbooks antigos no docs/.
+- Uso: Ler antes de qualquer alteração em runtime.
+- Regra de ouro: Se o teste falhar, reverta.
+- Contato: cxo@nexia.ai
