@@ -9,6 +9,7 @@
 const { ModelError, CODES } = require('./errors');
 const { normalizeRequest } = require('./messages');
 const { costEstimate } = require('./pricing');
+const { createCache } = require('./cache');
 const { createAnthropicProvider } = require('./providers/anthropic');
 const { createOpenAICompatibleProvider, PROVIDERS: OPENAI_COMPATIBLE } = require('./providers/openai-compatible');
 const { createGeminiProvider } = require('./providers/gemini');
@@ -32,6 +33,8 @@ function createRouter(o = {}) {
     providers[id] = createOpenAICompatibleProvider(id, { env, ...(fetchImpl ? { fetchImpl } : {}), ...(base[id] ? { baseUrl: base[id] } : {}) });
   }
   Object.assign(providers, o.providers || {});
+
+  const cache = createCache();
 
   const providerFor = desc => {
     const p = desc && providers[desc.provider];
@@ -96,8 +99,16 @@ function createRouter(o = {}) {
   /** Tenta cada descritor até um responder. Erros por provedor ficam em `attempts`. */
   async function chatWithFallback(descs, req) {
     const attempts = [];
+    const usarCache = req && req.cache === true && !req.tools;
     for (const d of dedupe(descs)) {
-      try { return { ...(await chat(d, req)), attempts }; }
+      try {
+        if (usarCache) {
+          const hit = cache.get(cache.chave(req));
+          if (hit) return { ...hit, attempts };
+        }
+        const out = await chat(d, req);
+        if (usarCache) cache.set(cache.chave(req), out);
+        return { ...out, attempts };
       catch (e) {
         if (e && e.code === CODES.ABORTED) throw e;
         attempts.push({ provider: d.provider, model: d.model, code: e.code || 'ERROR' });

@@ -200,7 +200,7 @@ async function dividirComIA(tarefa, router, lista) {
     try {
       const cap = router.capabilities(d);
       if (!cap.available) continue;
-      const out = await Promise.race([router.chat(d, { system: SISTEMA_DIVISOR, messages: [{ role: 'user', content: tarefa.slice(0, 12000) }], maxTokens: 3000 }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 40000))]);
+      const out = await Promise.race([router.chat(d, { system: SISTEMA_DIVISOR, messages: [{ role: 'user', content: tarefa.slice(0, 12000) }], maxTokens: 3000, cache: true }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 40000))]);
       const m = out && out.text && /\[[\s\S]*\]/.exec(out.text);
       const arr = m && JSON.parse(m[0]);
       if (Array.isArray(arr) && arr.length >= 2 && arr.length <= 5 && arr.every(t => typeof t === 'string' && t.trim().length >= 30 && t.length <= 3500)) return arr.map(t => t.trim());
