@@ -13,14 +13,19 @@ import LigarAvisos from './components/LigarAvisos';
 import ConvidarAmigo from './components/ConvidarAmigo';
 import ConviteTestador from './components/ConviteTestador';
 import PedirAvaliacao from '@/components/feature/PedirAvaliacao';
+import { guardarVerTudo, proximaAcao, verTudoGuardado } from '@/lib/modoSimples';
 
-// Tela Hoje: só o essencial do dia (treino, dieta, água e o check-in). O resto fica em Ferramentas.
+// Tela Hoje. Modo simples (padrão): 3 cartões (treino de hoje, refeição de hoje, próxima ação) e "Ver tudo".
+// "Ver tudo" mostra a tela completa (treino, dieta, água, check-in, avisos e "Mais"). O resto fica em Ferramentas.
 export default function Home() {
   const { setOpen } = useCoach();
   const { profile, user, loading } = useAuth();
-  const { result } = useReadiness();
+  const { result, hasCheckedToday, loading: carregandoCheckin } = useReadiness();
   const navigate = useNavigate();
   const [convidando, setConvidando] = useState(false);
+  const [verTudo, setVerTudo] = useState(verTudoGuardado);
+  const [fazendoCheckin, setFazendoCheckin] = useState(false);
+  const mudarVerTudo = (v: boolean) => { guardarVerTudo(v); setVerTudo(v); };
 
   // Aluno que ainda não montou o plano: vai uma vez para o passo a passo de 1 minuto.
   useEffect(() => {
@@ -68,6 +73,36 @@ export default function Home() {
 
       {convidando && <ConvidarAmigo onFechar={() => setConvidando(false)} />}
 
+      {!verTudo ? (
+        <>
+          <AvisoAnamnese />
+          <TodayCard />
+          <NutritionCard />
+          {(() => {
+            const a = proximaAcao({ onboarding: !!profile?.onboarding, checkinHoje: hasCheckedToday || carregandoCheckin, hora: now.getHours() });
+            const corpo = (
+              <>
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-500 text-xl text-background-50"><i className={a.icone}></i></span>
+                <span className="min-w-0 flex-1 text-left">
+                  <span className="block text-xs font-semibold uppercase tracking-wide text-primary-700">Próxima ação</span>
+                  <span className="block font-semibold text-foreground-950">{a.titulo}</span>
+                  <span className="block text-xs text-foreground-600">{a.texto}</span>
+                </span>
+                <i className="ri-arrow-right-s-line text-xl text-primary-700"></i>
+              </>
+            );
+            const cls = 'flex w-full items-center gap-3 rounded-2xl border border-primary-300 bg-primary-100 p-4';
+            return a.rota
+              ? <Link to={a.rota} className={cls} data-testid="proxima-acao">{corpo}</Link>
+              : <button type="button" onClick={() => setFazendoCheckin((v) => !v)} className={cls} data-testid="proxima-acao">{corpo}</button>;
+          })()}
+          {fazendoCheckin && !hasCheckedToday && <DailyCheckIn />}
+          <button type="button" onClick={() => mudarVerTudo(true)} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-background-200 bg-background-50 p-4 text-sm font-semibold text-foreground-800" data-testid="ver-tudo">
+            <i className="ri-layout-grid-line"></i>Ver tudo
+          </button>
+        </>
+      ) : (
+      <>
       {profile && !profile.onboarding && (
         <Link to="/onboarding" className="flex items-center gap-3 rounded-2xl border border-primary-300 bg-primary-100 p-4">
           <i className="ri-magic-line text-2xl text-primary-600"></i>
@@ -108,6 +143,11 @@ export default function Home() {
         </span>
         <i className="ri-arrow-right-s-line text-xl text-foreground-400"></i>
       </Link>
+      <button type="button" onClick={() => mudarVerTudo(false)} className="w-full py-2 text-center text-sm font-medium text-foreground-500 underline">
+        Voltar ao modo simples
+      </button>
+      </>
+      )}
     </div>
   );
 }
