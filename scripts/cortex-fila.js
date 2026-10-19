@@ -10,11 +10,52 @@ const PISTAS = Math.max(1, Math.min(10, Number(process.env.CORTEX_PISTAS) || 6))
 const MAX_TENTATIVAS = 12;
 const TENTATIVAS_ATE_DIVIDIR = 3;
 const CONFIAVEIS = ['OWNER', 'MEMBER', 'COLLABORATOR'];
-const L = { fila: 'cortex-fila', rodando: 'cortex-rodando', feito: 'cortex-feito', travado: 'cortex-travado', dividido: 'cortex-dividido', parte: 'cortex-parte', semDivisao: 'cortex-sem-divisao', prioridade: 'cortex-prioridade' };
+// Classes de prioridade: produção > cliente > melhoria
+const PRIORIDADE = {
+  producao: { peso: 3, tetoDiario: 8 },  // 8 jobs por dia para produção
+  cliente: { peso: 2, tetoDiario: 12 },   // 12 jobs por dia para cliente
+  melhoria: { peso: 1, tetoDiario: 16 }   // 16 jobs por dia para melhoria
+};
+// Contador diário de jobs executados por tipo
+let contadorDiario = {
+  producao: 0,
+  cliente: 0,
+  melhoria: 0,
+  data: new Date().toDateString()
+};
+const L = { fila: 'cortex-fila', rodando: 'cortex-rodando', feito: 'cortex-feito', travado: 'cortex-travado', dividido: 'cortex-dividido', parte: 'cortex-parte', semDivisao: 'cortex-sem-divisao', prioridade: 'cortex-prioridade', producao: 'cortex-producao', cliente: 'cortex-cliente', melhoria: 'cortex-melhoria' };
 const MAX_CORPO = 2500;      // tarefa maior que isso é dividida em partes pequenas
 const MAX_ARQUIVOS = 4;      // ou que mexe em mais arquivos do que isso
 
 const nomes = i => (i.labels || []).map(l => (typeof l === 'string' ? l : l.name));
+
+// Determina a classe de prioridade de uma issue
+function classePrioridade(labels) {
+  if (labels.includes(L.producao)) return 'producao';
+  if (labels.includes(L.cliente)) return 'cliente';
+  if (labels.includes(L.melhoria)) return 'melhoria';
+  return 'melhoria'; // padrão
+}
+
+// Verifica se há orçamento disponível para uma classe de prioridade
+function temOrcamentoDisponivel(classe) {
+  const hoje = new Date().toDateString();
+  // Reinicia contador se mudou de dia
+  if (contadorDiario.data !== hoje) {
+    contadorDiario = {
+      producao: 0,
+      cliente: 0,
+      melhoria: 0,
+      data: hoje
+    };
+  }
+  return contadorDiario[classe] < PRIORIDADE[classe].tetoDiario;
+}
+
+// Registra um job como executado
+function registrarJobExecutado(classe) {
+  contadorDiario[classe]++;
+}
 const numeroDe = (labels, prefixo) => {
   const m = labels.map(n => new RegExp(`^${prefixo}-(\\d+)$`).exec(n)).find(Boolean);
   return m ? Number(m[1]) : 0;
