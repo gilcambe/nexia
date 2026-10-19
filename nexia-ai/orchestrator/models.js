@@ -38,7 +38,8 @@ const TAIL = [
   { provider: 'cloudflare', model: '@cf/openai/gpt-oss-120b' },
   { provider: 'mistral', model: 'mistral-small-latest' }, { provider: 'mistral', model: 'devstral-small-latest' },
   { provider: 'zai', model: 'glm-4.7-flash' }, { provider: 'zai', model: 'glm-4.5-flash' },
-  { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }, { provider: 'openrouter', model: 'openai/gpt-oss-120b:free' },
+  // #955: catálogo vivo dos :free da OpenRouter (auto:N = N-ésimo grátis com tools; trava free_only no provedor).
+  ...[1, 2, 3].map(n => ({ provider: 'openrouter', model: `auto:${n}` })),
   { provider: 'llm7', model: 'codestral-latest' }, { provider: 'llm7', model: 'gpt-oss-20b' },
   ...KILO];
 const GROQ_STRONG = ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'moonshotai/kimi-k2-instruct-0905', 'llama-3.3-70b-versatile',

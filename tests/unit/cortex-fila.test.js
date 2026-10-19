@@ -148,3 +148,23 @@ test('CF-VAZAO. padrão de 6 pistas; parte anterior travada não segura as segui
   const p2 = issue(11, ['cortex-parte'], { title: '[Parte 2/2 de #9] x' });
   assert.deepEqual(decidir({ issues: [p1, p2], runs: [], agora: AGORA }).map(x => x.numero), [11]);
 });
+
+test('CF-1016a. tarefa aberta com cortex-feito fecha como concluída (e não ocupa pista)', () => {
+  const a = decidir({ issues: [issue(800, ['cortex-feito', 'cortex-rodando', 'pista-2']), issue(2)], runs: [], agora: AGORA, pistas: 1 });
+  assert.deepEqual(a.map(x => [x.tipo, x.numero, x.pista]), [['fechar-feito', 800, undefined], ['despachar', 2, 1]]);
+});
+
+test('CF-1016b. "rodando" com execução que não termina há mais de 2 h volta para a fila e libera a pista', () => {
+  const velha = { ...run(1, 'queued', null), created_at: new Date(AGORA - 121 * 60000).toISOString() };
+  const nova = { ...run(2, 'in_progress', null), created_at: new Date(AGORA - 30 * 60000).toISOString() };
+  const a = decidir({ issues: [issue(1, ['cortex-rodando', 'pista-1']), issue(2, ['cortex-rodando', 'pista-2']), issue(3)], runs: [velha, nova], agora: AGORA, pistas: 2 });
+  assert.deepEqual(a.map(x => [x.tipo, x.numero, x.pista]), [['reenfileirar', 1, undefined], ['despachar', 3, 1]]);
+});
+
+test('CF-1016c. reenfileirar, travar, dividir e concluir tiram todos os pista-*; despachar deixa só a nova', async () => {
+  const fonte = require('fs').readFileSync(require('path').join(__dirname, '../../scripts/cortex-fila.js'), 'utf8');
+  const bloco = tipo => { const ini = fonte.indexOf(`acao.tipo === '${tipo}')`); return ini < 0 ? '' : fonte.slice(ini, fonte.indexOf('\n  }', ini)); };
+  for (const t of ['reenfileirar', 'travar', 'dividir', 'fechar-feito']) assert.match(bloco(t), /limparPistas\(\)/, t);
+  assert.match(bloco('concluir'), /limparPistas\(\)/);
+  assert.match(bloco('despachar'), /limparPistas\(acao\.pista\)/);
+});

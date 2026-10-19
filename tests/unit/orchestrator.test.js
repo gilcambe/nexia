@@ -109,7 +109,7 @@ test('U4. agentes: os 10 da spec, só leitura onde deve, modelos por classe', ()
     // ADR-FREE-05: Cerebras fora (o "grátis" exige cartão); Kilo, Codestral e NVIDIA NIM entram.
     for (const p of provs) assert.ok(['groq', 'google', 'codestral', 'nvidia', 'cloudflare', 'mistral', 'zai', 'openrouter', 'llm7', 'kilo'].includes(p), `${cls}: ${p} não é grátis`);
     assert.ok(provs.size >= 8, `${cls}: precisa de vários provedores grátis`);
-    assert.ok(FREE[cls].filter(d => d.provider === 'openrouter').every(d => d.model.endsWith(':free')));
+    assert.ok(FREE[cls].filter(d => d.provider === 'openrouter').every(d => d.model.endsWith(':free') || /^auto:\d$/.test(d.model)), 'OpenRouter: só :free ou o catálogo vivo de :free');
     // A lista termina com vários modelos grátis do Kilo Gateway (sem chave: nunca fica sem candidato).
     const tail = FREE[cls].slice(-5);
     assert.ok(tail.every(d => d.provider === 'kilo' && /^auto:\d$/.test(d.model)), `${cls}: termina no Kilo`);
@@ -178,4 +178,12 @@ test('U-ORDEM. cada classe grátis começa por um provedor diferente, sem repeti
   const k = d => `${d.provider}|${d.model}`;
   for (const c of Object.keys(FREE)) assert.strictEqual(new Set(FREE[c].map(k)).size, FREE[c].length, c);
   assert.deepStrictEqual(new Set(FREE.reasoning.map(k)), new Set(FREE.coding.map(k)));
+});
+
+test('#984. branch de trabalho estável: mesmo pedido → mesmo branch; pedido diferente → outro', () => {
+  const { workBranchFor } = require('../../nexia-ai/orchestrator');
+  const a = workBranchFor('Corrija o rodapé do Site Alfa');
+  assert.strictEqual(workBranchFor('Corrija o rodapé do Site Alfa'), a);
+  assert.match(a, /^nexia\/corrija-o-rodape-do-site-alfa-[0-9a-f]{6}$/);
+  assert.notStrictEqual(workBranchFor('Corrija o topo do Site Alfa'), a);
 });
