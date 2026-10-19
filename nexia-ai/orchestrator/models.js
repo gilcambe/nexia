@@ -15,7 +15,8 @@
 //   → Cloudflare Workers AI (CLOUDFLARE_AI_TOKEN + CLOUDFLARE_AI_ACCOUNT_ID) → Mistral (MISTRAL_API_KEY)
 //   → OpenRouter ":free" (OPENROUTER_API_KEY)
 //   → Kilo Gateway SEM CHAVE (sempre disponível): os 5 melhores modelos ":free" do catálogo vivo do gateway.
-// Só depois de o Kilo também falhar a execução espera a cota voltar (WAITING_AI_QUOTA) e é retomada sozinha.
+//   → LLM7.io SEM CHAVE (codestral-latest, gpt-oss-20b; 30 pedidos/min, 100 mil tokens/dia; LLM7_API_KEY opcional aumenta o limite).
+// Só depois de o LLM7 também falhar a execução espera a cota voltar (WAITING_AI_QUOTA) e é retomada sozinha.
 // Gemma pelo AI Studio ficou de fora: sem garantia de tool_call no endpoint compatível com OpenAI.
 // Provedor sem chave é pulado na hora. Os nomes mudam com o tempo: NEXIA_MODELS_<CLASSE>
 // (ex.: NEXIA_MODELS_CODING="groq:openai/gpt-oss-120b,kilo:z-ai/glm-5:free,kilo:auto:1") troca a lista.
@@ -29,7 +30,8 @@ const TAIL = [
   { provider: 'cloudflare', model: '@cf/openai/gpt-oss-120b' },
   { provider: 'mistral', model: 'mistral-small-latest' }, { provider: 'mistral', model: 'devstral-small-latest' },
   { provider: 'openrouter', model: 'qwen/qwen3-coder:free' }, { provider: 'openrouter', model: 'openai/gpt-oss-120b:free' },
-  ...KILO];
+  ...KILO,
+  { provider: 'llm7', model: 'codestral-latest' }, { provider: 'llm7', model: 'gpt-oss-20b' }];
 const GROQ_STRONG = ['openai/gpt-oss-120b', 'qwen/qwen3.8-27b', 'moonshotai/kimi-k2-instruct-0905', 'llama-3.3-70b-versatile',
   'openai/gpt-oss-20b', 'meta-llama/llama-4-scout-17b-16e-instruct'];
 const GROQ_FAST = ['openai/gpt-oss-20b', 'meta-llama/llama-4-scout-17b-16e-instruct', 'qwen/qwen3.8-27b', 'llama-3.3-70b-versatile',
