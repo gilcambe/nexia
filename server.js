@@ -162,6 +162,13 @@ async function runFunction(fnName, req, res, body) {
         ...resultHeaders,
         ...(isReadApi && !hasResultCache ? { 'Cache-Control': 'public, max-age=300, s-maxage=300' } : {})
       };
+      if (result && result.headers) {
+        if (isReadApi && !hasResultCache) {
+          result.headers['Cache-Control'] = 'public, max-age=300, s-maxage=300';
+        }
+      } else if (result) {
+        result.headers = isReadApi ? { 'Cache-Control': 'public, max-age=300, s-maxage=300' } : {};
+      }
       // NEXIA AI (Fase 5): streaming real quando o handler devolve { stream }
       if (isStreamResult(result)) return writeStream(req, res, result, finalHeaders);
       res.writeHead(result.statusCode || 200, finalHeaders);
