@@ -26,6 +26,14 @@
 - **Custo:** 0.
 - **Justificativa:** Tarefas pequenas passam na revisão e no teste; estimativa na entrada evita surpresa; divisão precoce de pedidos multi-arquivo evita falhas acumuladas.
 
+# Melhoria 49: Painel do Coach: "Quem precisa de atenção hoje"
+
+- **Status:** Implementado
+- **Objetivo:** Listar automaticamente alunos sem treino há 3 dias, com mensagem pronta em 1 toque.
+- **Por quê:** Aumenta o valor percebido para quem paga como coach.
+- **Custo:** 0
+- **Justificativa:** Proporciona ao coach uma ferramenta eficiente para identificar e engajar alunos que necessitam de acompanhamento, sem custo adicional.
+
 ## Alerta automático de queda por e‑mail (Brevo grátis) e na Central
 - **Objetivo**: Monitorar o endpoint `/health` da API e o aplicativo Body Coach. Caso falhem duas vezes consecutivas, disparar um alerta por e‑mail usando a conta gratuita do Brevo e registrar o evento na Central de monitoramento.
 - **Motivo**: Produto em produção requer monitoramento 24h sem custo adicional.
