@@ -1,4 +1,5 @@
 const { setInterval } = require('timers');
+const brevoClient = require('../notification/brevoClient');
 
 class QuotaWatcher {
   constructor() {
@@ -122,13 +123,33 @@ class QuotaWatcher {
     const alerts = [];
 
     for (const [resource, percent] of Object.entries(percents)) {
-      if (percent >= this.brakeThreshold * 100 && !this.brakes[resource]) {
+              if (percent >= this.brakeThreshold * 100 && !this.brakes[resource]) {
         this.brakes[resource] = true;
         alerts.push(`${resource} atingiu ${percent}% - freio ativado (opcional desligado)`);
         this.logToCentral(`FREIO: ${resource} em ${percent}% da cota gratuita - serviço opcional desligado`);
-      } else if (percent >= 100) {
+        
+        // Enviar alerta por e-mail quando o freio for acionado
+        try {
+          await brevoClient.sendAlertEmail(
+            `${resource} atingiu ${percent}% da cota`,
+            `O recurso ${resource} atingiu ${percent}% do limite diário gratuito. Serviço opcional desligado para evitar custos.`
+          );
+        } catch (error) {
+          console.error('Falha ao enviar alerta por e-mail:', error.message);
+        }
+              } else if (percent >= 100) {
         alerts.push(`${resource} estourado: ${percent}%`);
         this.logToCentral(`CRÍTICO: ${resource} estourado ${percent}% da cota gratuita`);
+        
+        // Enviar alerta crítico por e-mail quando a cota for estourada
+        try {
+          await brevoClient.sendAlertEmail(
+            `${resource} ESTOURADO ${percent}%`,
+            `ATENÇÃO: O recurso ${resource} estourou ${percent}% do limite diário gratuito. Ação imediata necessária.`
+          );
+        } catch (error) {
+          console.error('Falha ao enviar alerta crítico por e-mail:', error.message);
+        }
       }
     }
 
