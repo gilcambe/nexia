@@ -1,6 +1,7 @@
 {
   "id": "bezsan",
   "nome": "Bezsan",
+  "ativo": false,
   "link": "https://bezsan.pages.dev/",
   "cidade": "",
   "assuntos": [

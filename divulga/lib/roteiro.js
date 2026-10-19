@@ -159,8 +159,9 @@ const MODELOS = {
 };
 
 /** Legenda: gancho > valor > CTA > pergunta, até 900 caracteres, sem promessa e com no máximo 1 "link na bio". */
-function montarLegendaRoteiro({ gancho, valor, cta, pergunta }) {
-  const fim = `\n\n${limpa(cta).replace(/[.!]*$/, '.')}\n\n${pergunta}`;
+function montarLegendaRoteiro({ gancho, valor, cta, pergunta, chamada }) {
+  // `chamada` (opcional, do cliente): convite fixo para o link, ex. "Teste grátis: site". Sai logo depois do CTA.
+  const fim = `\n\n${limpa(cta).replace(/[.!]*$/, '.')}${limpa(chamada) ? `\n${limpa(chamada)}` : ''}\n\n${pergunta}`;
   const ini = `${gancho}\n\n`;
   const sobra = LIMITES.legenda - ini.length - fim.length;
   const corpo = sobra > 20 ? corta(valor, sobra) : '';
@@ -187,17 +188,22 @@ function normalizar(bruto, cliente, serie) {
     gancho,
     telas,
     cta,
-    legenda: montarLegendaRoteiro({ gancho, valor, cta, pergunta }),
+    legenda: montarLegendaRoteiro({ gancho, valor, cta, pergunta, chamada: cliente && cliente.chamada }),
     hashtags: hashtagsRoteiro(cliente, bruto.hashtags),
     pergunta,
   };
 }
 
-/** Modelo fixo da série (sem IA). Sempre devolve um roteiro válido. */
-const roteiroFixo = (cliente, serie) => normalizar(MODELOS[serie](cliente), cliente, serie);
+/**
+ * Modelo fixo da série (sem IA). Sempre devolve um roteiro válido.
+ * Se o cliente trouxer `roteiros[serie]` (gancho, telas, cta, pergunta) pronto e válido, usa ele no lugar do genérico.
+ */
+const roteiroFixo = (cliente, serie) =>
+  (cliente && cliente.roteiros && normalizar(cliente.roteiros[serie], cliente, serie)) || normalizar(MODELOS[serie](cliente), cliente, serie);
 
 const pedidoRoteiro = (c, serie) =>
   `Crie o roteiro de um carrossel de Instagram em português do Brasil para "${c.nome}" (${(c.assuntos || []).slice(0, 6).join('; ')}). ` +
+  (Array.isArray(c.ganchos) && c.ganchos.length ? `Ideias de gancho no estilo do perfil: ${c.ganchos.slice(0, 6).join('; ')}. ` : '') +
   `Série: ${serie}. Responda SÓ com JSON, sem texto fora dele, no formato ` +
   '{"gancho":"..","telas":[{"titulo":"..","texto":".."}],"cta":"..","legenda":"..","hashtags":["#.."],"pergunta":".."}. ' +
   `Regras: 5 a 7 telas; título até ${LIMITES.titulo} caracteres; texto até ${LIMITES.texto}; legenda até 700 caracteres ` +
