@@ -282,7 +282,7 @@ async function executar(token, acao, dividir) {
     });
     if (d.status !== 204) { await delLabel(L.rodando); await comentar(`Não consegui disparar o Cortex (${d.status}). Tento de novo no próximo ciclo.`); }
   } else if (acao.tipo === 'concluir') {
-    if (!(await entregouAlgo(token, acao.corpo, acao.titulo, acao.run, acao.desde))) {
+    if (!(await entregouAlgo(token, acao.corpo, acao.desde))) {
       const ls = nomes((await gh(token, 'GET', `/issues/${n}`)).json || {});
       const { n: k, travar } = depoisSemEntrega(ls);
       await delLabel(L.rodando); await limparPistas();
