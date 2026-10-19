@@ -24,7 +24,7 @@ export interface Divulga {
 export type Situacao = "ok" | "erro" | "desligado";
 export interface Fornecedor { id: string; nome: string; grupo: string; paraQue: string; gratis: string; link: string; situacao: Situacao; quando: string | null }
 export interface Personal { email: string; plano: string; faixa: number; situacao: "isento" | "pagando" | "teste" | "vencido"; desde: number }
-export interface Lead { id: string; nome: string; produto: string; status: string; whatsapp: string; email: string; quando: string; origem: string }
+export interface Lead { id: string; nome: string; produto: string; status: string; whatsapp: string; email: string; quando: string; origem: string; indicadoPor?: string }
 export interface Leads { total: number; semana: number; novos: number; porStatus: Record<string, number>; porProduto: Record<string, number>; porOrigem: Record<string, number>; ultimos: Lead[] }
 export interface TesteIA { provedor: string; modelo: string; situacao: Situacao; tempo?: number; motivo?: string }
 export interface RotaSaude {

@@ -34,6 +34,7 @@ function cleanLead(body, headers = {}) {
   const utm = {};
   const u = body.utm && typeof body.utm === 'object' ? body.utm : {};
   for (const k of UTM) { const v = str(u[k], 120); if (v) utm[k] = v; }
+  const indicadoPor = str(body.indicadoPor, 200); // "Indique um negócio" no site da Kernex (#1019)
   let site = str(body.site, 200);
   if (!site) { try { site = new URL(headers.origin || headers.referer || '').hostname; } catch { site = ''; } }
   return { lead: {
@@ -48,6 +49,7 @@ function cleanLead(body, headers = {}) {
     status: 'novo',
     nota: '',
     criado_em: new Date().toISOString(),
+    ...(indicadoPor ? { indicadoPor } : {}),
   } };
 }
 

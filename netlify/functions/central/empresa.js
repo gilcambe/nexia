@@ -43,7 +43,7 @@ async function leads(db, agora = Date.now()) {
     porProduto: conta((l) => l.produto),
     porOrigem: conta((l) => (l.utm && l.utm.source) || l.site),
     ultimos: todos.slice(0, 10).map((l) => ({ id: l.id, nome: l.nome || '', produto: l.produto || '', status: l.status || 'novo',
-      whatsapp: l.whatsapp || '', email: l.email || '', quando: l.criado_em || '', origem: (l.utm && l.utm.source) || l.site || '' })),
+      whatsapp: l.whatsapp || '', email: l.email || '', quando: l.criado_em || '', origem: (l.utm && l.utm.source) || l.site || '', ...(l.indicadoPor ? { indicadoPor: l.indicadoPor } : {}) })),
   };
 }
 
