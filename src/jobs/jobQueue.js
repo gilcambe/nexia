@@ -46,14 +46,23 @@ function saveState(state) {
 }
 
 /**
+ * Reseta o orçamento e fila diária (útil para testes).
+ */
+function resetDailyQuota() {
+  const state = { date: new Date().toISOString().slice(0, 10), usage: { producao: 0, cliente: 0, melhoria: 0 }, queue: [] };
+  saveState(state);
+  return state;
+}
+
+/**
  * Enfileira um job respeitando classes: 'producao', 'cliente', 'melhoria'.
  */
-function enqueueJob(job) {
+function enqueue(job) {
   const jobClass = CLASSES[job.type] ? job.type : 'melhoria';
   const state = loadState();
 
   const newItem = {
-    id: 'job_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+    id: job.id || ('job_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5)),
     type: jobClass,
     priority: CLASSES[jobClass].priority,
     payload: job.payload || {},
@@ -73,10 +82,13 @@ function enqueueJob(job) {
   return newItem;
 }
 
+// Alias para compatibilidade
+const enqueueJob = enqueue;
+
 /**
- * Retorna o próximo job autorizado a rodar dentro do orçamento diário.
+ * Retorna e remove o próximo job autorizado a rodar dentro do orçamento diário.
  */
-function getNextJob() {
+function dequeue() {
   const state = loadState();
   const index = state.queue.findIndex(j => j.status === 'pending');
   if (index === -1) return null;
@@ -91,10 +103,12 @@ function getNextJob() {
   }
 
   state.usage[job.type] = currentUsage + job.estimatedMinutes;
-  job.status = 'running';
+  state.queue.splice(index, 1);
   saveState(state);
   return job;
 }
+
+const getNextJob = dequeue;
 
 function getQueueStatus() {
   const state = loadState();
@@ -106,6 +120,7 @@ function getQueueStatus() {
       cliente: CLASSES.cliente.dailyBudgetMinutes,
       melhoria: CLASSES.melhoria.dailyBudgetMinutes
     },
+    total: state.queue.length,
     queueLength: state.queue.length,
     pending: state.queue.filter(j => j.status === 'pending').length
   };
@@ -113,8 +128,11 @@ function getQueueStatus() {
 
 module.exports = {
   CLASSES,
+  enqueue,
   enqueueJob,
+  dequeue,
   getNextJob,
   getQueueStatus,
+  resetDailyQuota,
   loadState
 };
