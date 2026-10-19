@@ -25,6 +25,9 @@ export default function PortaoAcesso({ children }: { children: ReactNode }) {
     }).catch(() => { /* sem internet: segue */ });
   }, [user, sair]);
 
+  // Lembretes inteligentes: com "ajustar sozinho" ligado, os horários seguem o uso (no máximo 1 vez por semana).
+  useEffect(() => { if (user) void import('@/lib/avisos').then((m) => m.ajustarHorariosSozinho(user.id)).catch(() => false); }, [user]);
+
   useEffect(() => {
     ver();
     const bloqueou = () => { setRecusou(true); ver(); };

@@ -1,12 +1,16 @@
 // Avisos no celular (Web Push grátis, chaves criadas pelo nosso servidor). Funciona no Android (Chrome)
 // e no iPhone com o app instalado na tela de início (iOS 16.4+).
 import { chatApi } from './chat';
+import { listUserDocs } from './userData';
+import { aplicarAprendido, aprenderHorarios, type Aprendido } from './horariosAprendidos';
 
 export interface PrefsAvisos {
   mensagens: boolean;
   treino: { ativo: boolean; hora: string };
   agua: { ativo: boolean; de: string; ate: string; cada: number };
   mensalidade: boolean;
+  refeicao?: { ativo: boolean; horas: string[] };
+  auto?: boolean; // ajustar os horários sozinho pelo uso
 }
 
 export const suportaAvisos = () => typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
@@ -45,6 +49,29 @@ export async function ativarAvisos(prefs?: PrefsAvisos): Promise<{ prefs: PrefsA
 export const verAvisos = () => chatApi<{ prefs: PrefsAvisos; aparelhos: number }>({ acao: 'push_ver' });
 export const salvarPrefs = (prefs: PrefsAvisos) => chatApi<{ prefs: PrefsAvisos }>({ acao: 'push_prefs', prefs });
 export const testarAviso = () => chatApi<{ enviados: number }>({ acao: 'push_testar' });
+// Horários aprendidos pelo uso: refeições e treinos dos últimos 30 dias.
+export async function aprenderDoUso(uid: string): Promise<Aprendido> {
+  const [refeicoes, treinos] = await Promise.all([
+    listUserDocs<{ meal_time?: string; created_at?: string }>(uid, 'meals', 'created_at', 'desc').catch(() => []),
+    listUserDocs<{ done_at?: string }>(uid, 'workouts', 'done_at', 'desc').catch(() => []),
+  ]);
+  return aprenderHorarios(
+    refeicoes.slice(0, 200).map((r) => ({ time: r.meal_time, created_at: r.created_at })),
+    treinos.slice(0, 60).map((t) => t.done_at ?? '').filter(Boolean),
+  );
+}
+// Com "ajustar sozinho" ligado: uma vez por semana, ao abrir o app, os horários seguem o uso.
+export async function ajustarHorariosSozinho(uid: string): Promise<boolean> {
+  if (!suportaAvisos() || Notification.permission !== 'granted') return false;
+  const chave = `bc_avisos_ajuste_${uid}`;
+  try { if (Date.now() - Number(localStorage.getItem(chave) || 0) < 7 * 86400000) return false; localStorage.setItem(chave, String(Date.now())); } catch { return false; }
+  const { prefs } = await verAvisos();
+  if (!prefs.auto) return false;
+  const novo = aplicarAprendido(prefs, await aprenderDoUso(uid));
+  if (JSON.stringify(novo) === JSON.stringify(prefs)) return false;
+  await salvarPrefs(novo);
+  return true;
+}
 export async function desativarAvisos() {
   const sub = await assinaturaAtual();
   if (!sub) return;
