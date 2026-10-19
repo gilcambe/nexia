@@ -9,6 +9,7 @@
 const { ModelError, CODES } = require('./errors');
 const { normalizeRequest } = require('./messages');
 const { costEstimate } = require('./pricing');
+const { createCache } = require('./cache');
 const { createAnthropicProvider } = require('./providers/anthropic');
 const { createOpenAICompatibleProvider, PROVIDERS: OPENAI_COMPATIBLE } = require('./providers/openai-compatible');
 const { createGeminiProvider } = require('./providers/gemini');
