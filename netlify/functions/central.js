@@ -1,6 +1,6 @@
 'use strict';
 // Central NEXIA (/central): uma página para o dono cuidar de toda a NEXIA. Só o master entra.
-//   GET  /api/central?parte=saude|historico|dinheiro|cortex|robos|divulga|banco|cloudflare|lista|empresa|clientes|leads
+//   GET  /api/central?parte=saude|historico|erros|dinheiro|cortex|robos|divulga|banco|cloudflare|lista|empresa|clientes|leads
 //   POST /api/central {acao:'rodar', arquivo, ensaio?} | {acao:'pedir', texto} | {acao:'testar-ias'}
 // Cada parte é um pedido separado: a página mostra o que já chegou sem esperar o resto.
 
@@ -108,6 +108,11 @@ function createHandler(deps = {}) {
       if (parte === 'cloudflare') return res(200, await usoCloudflare(env, fetchFn));
       if (parte === 'clientes') return res(200, await empresa.clientes(getDb(), getAgendas()));
       if (parte === 'leads') return res(200, await empresa.leads(getDb()));
+      if (parte === 'erros') {
+        // #815: últimos erros 5xx do Worker, com o rid (o mesmo do cabeçalho X-Request-Id e do log).
+        const db = deps.getHistoricoDb ? deps.getHistoricoDb() : getHistorico().abrirBanco(env);
+        return res(200, { erros: await require('../../lib/rid').listarErros(db, 50) });
+      }
       const gh = getGithub();
       if (parte === 'empresa') {
         const usados = ROBOS.filter((r) => FORNECEDORES.some((f) => f.robo === r.arquivo));
