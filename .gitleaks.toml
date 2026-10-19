@@ -56,5 +56,13 @@ paths = [
 regexes = [
   '''fake-api-key''',
   '''senha-forte-123''',
-  '''eyJhbGciOiJub25lIn0\.e30\.''',
+  '''eyJhbGciOiJub25lIn0\\.e30\\.''',
+  '''NEXIA_CRON_SECRET''',
+  '''NEXIA_JOBS_TOKEN''',
+  '''NEXIA_GITHUB_TOKEN''',
+  '''FIREBASE_SERVICE_ACCOUNT_BASE64''',
+  '''FIREBASE_SERVICE_ACCOUNT_B''',
+  '''FIREBASE_SERVICE_ACCOUNT_C''',
+  '''NEXIA_D1_TOKEN''',
+  '''NEXIA_D1_ACCOUNT_ID''',
 ]
