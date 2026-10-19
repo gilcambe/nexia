@@ -31,3 +31,5 @@ ui-debug.log
 .dev.vars
 
 apps/body-coach/android/upload.keystore
+test-results-no-ar/
+playwright-report-no-ar/
