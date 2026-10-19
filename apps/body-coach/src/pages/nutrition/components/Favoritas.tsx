@@ -5,7 +5,8 @@ import { alternarFavorita, ehFavorita, lerFavoritas, type Favorita } from '@/lib
 
 // Registrar em 1 toque: estrela nas refeições de hoje e lista das favoritas para repetir.
 export default function Favoritas() {
-  const { meals, addMeal } = useNutrition();
+  const { meals, yesterdayMeals, addMeal } = useNutrition();
+  const [repetindo, setRepetindo] = useState(false);
   const [favs, setFavs] = useState<Favorita[]>(() => lerFavoritas());
   const [msg, setMsg] = useState('');
   const hora = () => new Date().toTimeString().slice(0, 5);
@@ -14,10 +15,26 @@ export default function Favoritas() {
     catch (e) { setMsg((e as Error).message); }
   };
   const paraFav = (m: (typeof meals)[number]): Favorita => ({ name: m.name, calories: m.calories, protein: m.protein, carbs: m.carbs, fat: m.fat, fiber: m.fiber ?? 0 });
-  if (!favs.length && !meals.length) return null;
+  // Repetir ontem: registra de novo, com o horário de ontem, cada refeição que ainda não foi lançada hoje.
+  const faltamDeOntem = yesterdayMeals.filter((y) => !meals.some((m) => m.name.toLowerCase() === y.name.toLowerCase()));
+  const repetirOntem = async () => {
+    setRepetindo(true);
+    try {
+      for (const y of faltamDeOntem) await addMeal({ ...y, id: '', time: y.time || hora() });
+      setMsg(`${faltamDeOntem.length} refeição(ões) de ontem registrada(s).`);
+    } catch (e) { setMsg((e as Error).message); }
+    finally { setRepetindo(false); }
+  };
+  if (!favs.length && !meals.length && !yesterdayMeals.length) return null;
   return (
     <Card padding="p-5">
       <div className="flex items-center gap-2"><i className="ri-star-line text-lg text-primary-500"></i><h2 className="font-heading text-base font-semibold text-foreground-950">Favoritas: registrar em 1 toque</h2></div>
+      {faltamDeOntem.length > 0 && (
+        <button type="button" disabled={repetindo} onClick={() => void repetirOntem()} className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-semibold text-background-50 disabled:opacity-60">
+          <i className={repetindo ? 'ri-loader-4-line animate-spin' : 'ri-history-line'}></i>
+          Repetir ontem ({faltamDeOntem.length} {faltamDeOntem.length === 1 ? 'refeição' : 'refeições'} · {Math.round(faltamDeOntem.reduce((a, y) => a + y.calories, 0))} kcal)
+        </button>
+      )}
       {favs.length > 0 ? (
         <ul className="mt-3 space-y-2">
           {favs.map((f) => (
