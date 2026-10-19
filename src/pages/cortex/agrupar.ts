@@ -17,3 +17,13 @@ export function agruparPorData(itens: Resumo[], agora = new Date()): Grupo[] {
   }
   return grupos.filter((g) => g.itens.length);
 }
+
+// Modos de resposta: Rápido, Pensar, Pesquisar
+export type ModoResposta = 'rapido' | 'pensar' | 'pesquisar';
+
+export interface ConfiguracaoResposta {
+  modo: ModoResposta;
+  descricao: string;
+  modelo: string;
+  contexto: string;
+}
