@@ -4,6 +4,7 @@
 const { ModelError, CODES } = require('../errors');
 const { withTimeout, sseData } = require('../messages');
 const { createKiloCatalog, isFree } = require('./kilo-catalog');
+const { getPlacar } = require('../cota');
 
 // max_output: teto aplicado ao max_tokens pedido. Os chamadores legados pediam até
 // 100000 tokens, e vários provedores recusam com 400 acima do próprio limite.
@@ -140,6 +141,8 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
     async chat(model, req) {
       const { res, t, model: real } = await post(model, req, false);
       try {
+        try { getPlacar().registrarCabecalhos({ provider: id, model }, res.headers); } catch {}
+
         const d = await res.json();
         const msg = (d.choices && d.choices[0] && d.choices[0].message) || {};
         const tool_calls = (msg.tool_calls || []).map(tc => {
@@ -155,6 +158,7 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
 
     async *stream(model, req) {
       const { res, t } = await post(model, req, true);
+      try { getPlacar().registrarCabecalhos({ provider: id, model }, res.headers); } catch {}
       let usage = { input_tokens: 0, output_tokens: 0 };
       let stop = null;
       try {

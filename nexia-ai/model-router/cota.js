@@ -16,6 +16,18 @@ function chaveDe(desc) {
   return String(desc);
 }
 
+/** Converte um cabeçalho de reset (ex: "2m59.56s", "7.66s", "30") em ms. */
+function parseReset(texto) {
+  if (texto == null || texto === '') return SESSENTA_S;
+  const s = String(texto).trim();
+  const m = s.match(/^(\d+)m(\d+(?:\.\d+)?)s$/);
+  if (m) return Math.round((Number(m[1]) * 60 + Number(m[2])) * 1000);
+  const m2 = s.match(/^(\d+(?:\.\d+)?)s$/);
+  if (m2) return Math.round(Number(m2[1]) * 1000);
+  if (/^\d+$/.test(s)) return Number(s) * 1000;
+  return SESSENTA_S;
+}
+
 function createPlacar({ agora = () => Date.now() } = {}) {
   const placar = {}; // chave -> { ate: number, motivo: string }
 
@@ -84,9 +96,32 @@ function createPlacar({ agora = () => Date.now() } = {}) {
         placar[k] = { ate: e.ate, motivo: String(e.motivo || '') };
       }
     },
-    /** Fica vazio por enquanto (parte 4). */
+    /** Registra cabeçalhos de rate-limit da resposta e marca o modelo se estiver sem cota. */
     registrarCabecalhos(desc, headers) {
-      // intencionalmente vazio
+      try {
+        if (!headers) return;
+        const get = (nome) => {
+          try { return headers.get(nome); } catch { return undefined; }
+        };
+        const remainingRequests = get('x-ratelimit-remaining-requests');
+        const remainingTokens = get('x-ratelimit-remaining-tokens');
+        const reset = get('x-ratelimit-reset-requests');
+        let bloquear = false;
+        if (remainingRequests !== null && remainingRequests !== undefined) {
+          const v = Number(remainingRequests);
+          if (!Number.isNaN(v) && (v === 0 || v === 1)) bloquear = true;
+        }
+        if (remainingTokens !== null && remainingTokens !== undefined) {
+          const v = Number(remainingTokens);
+          if (!Number.isNaN(v) && v < 2000) bloquear = true;
+        }
+        if (bloquear) {
+          const ms = reset != null ? parseReset(reset) : SESSENTA_S;
+          this.marcar(desc, 'rate', ms);
+        }
+      } catch {
+        // nunca pode quebrar a resposta do chamador
+      }
     },
   };
 }
@@ -97,4 +132,4 @@ function getPlacar() {
   return placarCompartilhado;
 }
 
-module.exports = { createPlacar, getPlacar };
+module.exports = { createPlacar, getPlacar, parseReset };
