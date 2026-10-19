@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 interface Props {
   modo: "pedido" | "nota" | "pergunta";
-  enviar: (texto: string) => Promise<void>;
+  enviar: (texto: string, modoResposta?: "rapido" | "pensar" | "pesquisar") => Promise<void>;
   inicial?: string;
 }
 
@@ -36,6 +36,7 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
   const [ouvindo, setOuvindo] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+  const [modoResposta, setModoResposta] = useState<"rapido" | "pensar" | "pesquisar">("rapido");
   const area = useRef<HTMLTextAreaElement>(null);
   const arquivo = useRef<HTMLInputElement>(null);
   const [anexos, setAnexos] = useState<{ nome: string; md: string }[]>([]);
@@ -53,7 +54,7 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
   const mandar = async () => {
     if (!pode) return;
     setOcupado(true); setAviso(null);
-    try { await enviar([texto.trim(), ...anexos.map((a) => a.md)].join("\n\n")); setTexto(""); setAnexos([]); } catch (e) { setAviso((e as Error).message); } finally { setOcupado(false); }
+    try { await enviar([texto.trim(), ...anexos.map((a) => a.md)].join("\n\n"), modoResposta); setTexto(""); setAnexos([]); } catch (e) { setAviso((e as Error).message); } finally { setOcupado(false); }
   };
 
   // Qualquer tipo de arquivo: texto/código entra como texto; print/foto é reduzido; o resto vai embutido se for pequeno.
@@ -101,6 +102,38 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
           <button type="button" className={`${btn} ${ouvindo ? "!text-red-400 animate-pulse" : ""}`} aria-label={ouvindo ? "Parar de ouvir" : "Ditar por voz"} onClick={ditar} data-testid="cx-mic">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
           </button>
+          
+          {/* Seletor de modo de resposta */}
+          <div className="flex items-center gap-1 bg-[var(--cx-card)] border border-[var(--cx-line)] rounded-lg px-2 py-1 shrink-0">
+            <button 
+              type="button" 
+              onClick={() => setModoResposta("rapido")}
+              className={`px-2 py-1 text-xs rounded-md transition-colors ${modoResposta === "rapido" ? "bg-[#00d4aa] text-black" : "text-[var(--cx-mut)] hover:bg-[var(--cx-hover)]"}`}
+              aria-label="Modo Rápido"
+              title="Resposta rápida e direta"
+            >
+              Rápido
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setModoResposta("pensar")}
+              className={`px-2 py-1 text-xs rounded-md transition-colors ${modoResposta === "pensar" ? "bg-[#7c6cf0] text-white" : "text-[var(--cx-mut)] hover:bg-[var(--cx-hover)]"}`}
+              aria-label="Modo Pensar"
+              title="Análise aprofundada com raciocínio"
+            >
+              Pensar
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setModoResposta("pesquisar")}
+              className={`px-2 py-1 text-xs rounded-md transition-colors ${modoResposta === "pesquisar" ? "bg-[#f59e0b] text-white" : "text-[var(--cx-mut)] hover:bg-[var(--cx-hover)]"}`}
+              aria-label="Modo Pesquisar"
+              title="Busca por informações atualizadas"
+            >
+              Pesquisar
+            </button>
+          </div>
+          
           <button type="button" onClick={mandar} disabled={!pode} aria-label="Enviar" data-testid="cx-enviar"
             className="w-11 h-11 rounded-full flex items-center justify-center text-black bg-gradient-to-br from-[#00d4aa] to-[#7c6cf0] disabled:opacity-30 shrink-0">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
