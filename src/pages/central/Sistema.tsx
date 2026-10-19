@@ -28,7 +28,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
     <div className="space-y-4">
       <SaudeHistorico />
 
-      <Cartao titulo="IAs que trabalham para a NEXIA" acao={<Botao onClick={testar} disabled={testando} testid="testar-ias">{testando ? "Testando…" : "🧪 Testar agora"}</Botao>}>
+      <Cartao titulo="IAs que trabalham para a Kernex" acao={<Botao onClick={testar} disabled={testando} testid="testar-ias">{testando ? "Testando…" : "🧪 Testar agora"}</Botao>}>
         {erroIA && <p className="text-sm text-red-400" role="alert">{erroIA}</p>}
         {!ias ? (
           <p className="text-sm text-nexia-muted">O Cortex e o coach usam só IAs grátis. Se uma cair, a próxima entra sozinha. Toque em "Testar agora" para ver quais estão respondendo.</p>

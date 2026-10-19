@@ -4,7 +4,7 @@ import { apiPath } from "@/config/env";
 
 // Central NEXIA: conversa com /api/central (só o administrador). Cada parte vem num pedido separado.
 
-export interface Produto { id: string; nome: string; icone: string; frase: string; site: string; painel: string; suporte?: string }
+export interface Produto { id: string; nome: string; icone: string; frase: string; site?: string; painel?: string; suporte?: string; pendente?: boolean }
 export interface Medida { id: string; ok: boolean; codigo: number; tempo: number; lento: boolean }
 export interface Tarefa { numero: number; titulo: string; link: string; quando: string }
 export interface Robo { arquivo: string; nome: string; podeRodar: boolean; situacao: "ok" | "erro" | "rodando" | "nunca" | "sem-acesso"; quando: string | null; link: string | null }

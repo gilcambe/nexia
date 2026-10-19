@@ -4,7 +4,7 @@
 //   POST /api/central {acao:'rodar', arquivo, ensaio?} | {acao:'pedir', texto} | {acao:'testar-ias'}
 // Cada parte é um pedido separado: a página mostra o que já chegou sem esperar o resto.
 
-const { PRODUTOS, LINKS, ROBOS } = require('../../central/produtos');
+const { PRODUTOS, NO_AR, LINKS, ROBOS } = require('../../central/produtos');
 const { FORNECEDORES } = require('../../central/fornecedores');
 const empresa = require('./central/empresa');
 
@@ -83,7 +83,7 @@ function createHandler(deps = {}) {
       const parte = String((event.queryStringParameters || {}).parte || 'lista');
       if (parte === 'lista') return res(200, { produtos: PRODUTOS, links: LINKS });
       if (parte === 'saude') {
-        const medidos = await Promise.all(PRODUTOS.map(async (p) => ({ id: p.id, ...(await medir(p.site, fetchFn)) })));
+        const medidos = await Promise.all(NO_AR.map(async (p) => ({ id: p.id, ...(await medir(p.site, fetchFn)) })));
         return res(200, { produtos: medidos, em: new Date().toISOString() });
       }
       if (parte === 'historico') {
