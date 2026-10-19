@@ -72,7 +72,7 @@ function serveFirebaseConfig(res) {
     res.end(JSON.stringify({ error: 'Firebase config unavailable. Configure FIREBASE_API_KEY nos segredos do Worker (wrangler secret put).' }));
     return;
   }
-  res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=300', 'Access-Control-Allow-Origin': '*' });
+  res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=300, s-maxage=300', 'Access-Control-Allow-Origin': '*' });
   res.end(JSON.stringify({
     apiKey:            process.env.FIREBASE_API_KEY,
     authDomain:        process.env.FIREBASE_AUTH_DOMAIN         || '',
@@ -147,28 +147,23 @@ async function runFunction(fnName, req, res, body) {
       const fnPathname = fnParsedUrl.pathname || '';
       const isReadApi = (req.method === 'GET' || req.method === 'HEAD') &&
         (fnPathname.includes('/ofertas') || fnPathname.includes('/catalogo') || fnPathname.includes('/config') || fnPathname.includes('/firebase-config') || fnPathname.includes('/oferta'));
-      const cacheHeaders = isReadApi ? { 'Cache-Control': 'public, max-age=300, s-maxage=300' } : {};
-      const baseHeaders = {
+      const resultHeaders = result && result.headers ? result.headers : {};
+      const hasResultCache = Object.keys(resultHeaders).some(k => k.toLowerCase() === 'cache-control');
+      const cacheControlVal = isReadApi && !hasResultCache ? 'public, max-age=300, s-maxage=300' : (resultHeaders[Object.keys(resultHeaders).find(k => k.toLowerCase() === 'cache-control')]);
+
+      const finalHeaders = {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': getCorsOrigin(req.headers),
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-Id',
-        ...cacheHeaders,
-      };
-      const resultHeaders = result.headers || {};
-      const hasResultCache = Object.keys(resultHeaders).some(k => k.toLowerCase() === 'cache-control');
-      const finalHeaders = {
-        ...baseHeaders,
         ...resultHeaders,
-        ...(isReadApi && !hasResultCache ? { 'Cache-Control': 'public, max-age=300, s-maxage=300' } : {})
+        ...(isReadApi && !hasResultCache ? { 'Cache-Control': 'public, max-age=300, s-maxage=300' } : {}),
       };
-      if (result && result.headers) {
-        if (isReadApi && !hasResultCache) {
-          result.headers['Cache-Control'] = 'public, max-age=300, s-maxage=300';
-        }
-      } else if (result) {
-        result.headers = isReadApi ? { 'Cache-Control': 'public, max-age=300, s-maxage=300' } : {};
+
+      if (result) {
+        result.headers = finalHeaders;
       }
+
       // NEXIA AI (Fase 5): streaming real quando o handler devolve { stream }
       if (isStreamResult(result)) return writeStream(req, res, result, finalHeaders);
       res.writeHead(result.statusCode || 200, finalHeaders);
@@ -234,7 +229,7 @@ const server = http.createServer((req, res) => {
 
   // Firebase config
   if (pathname === '/api/firebase-config') {
-    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300');
     return serveFirebaseConfig(res);
   }
 
