@@ -234,7 +234,8 @@ async function executar(body, uid, db, ctx = {}) {
   const eu = (await dir.doc(uid).get()).data?.() || null;
   const acao = body.acao;
   // Acesso: teste grátis, aviso e bloqueio no servidor (o admin libera quando confirma o Pix).
-  if (typeof acao === 'string' && acao.startsWith('acesso_')) return acoesAcesso(body, uid, db, ctx, eu);
+  // cupom_*, dono_* e promo_salvar também moram em acesso.js (antes caíam em "Pedido inválido").
+  if (typeof acao === 'string' && (/^(acesso|cupom|dono)_/.test(acao) || acao === 'promo_salvar')) return acoesAcesso(body, uid, db, ctx, eu);
   // Nota do app e depoimentos (vale também para quem está sem Premium).
   if (['avaliar', 'avaliacoes_ver', 'avaliacao_aprovar'].includes(acao)) return acoesAvaliacoes(body, uid, db, ctx, eu);
   // Loja: ofertas fitness do robô de afiliados (só leitura de um arquivo público, com cache de 1 h).

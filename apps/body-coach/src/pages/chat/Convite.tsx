@@ -13,10 +13,12 @@ export default function Convite() {
     const convite = (params.get('c') ?? '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 60);
     const extra = { ...(parte === 'dieta' || parte === 'treino' ? { parte } : {}), ...(convite ? { convite } : {}) };
     // ?cupom=: desconto do convite, aplicado sozinho na tela de pagamento
-    const cupom = (params.get('cupom') ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
+    // /c/CVXXXXXX: o código do convite do dono é o próprio link (código de coach tem 6 letras, nunca 8)
+    const cupomNoCaminho = /^CV[A-Z0-9]{6}$/.test(c);
+    const cupom = cupomNoCaminho ? c : (params.get('cupom') ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
     if (cupom) { try { localStorage.setItem('bc_cupom', cupom); } catch { /* sem armazenamento */ } }
     // /c/amigo é o convite de um aluno comum (sem coach): só leva o cupom
-    if (c.length >= 4 && c !== 'AMIGO') { try { localStorage.setItem('bc_convite', c); localStorage.setItem('bc_convite_extra', JSON.stringify(extra)); } catch { /* sem armazenamento */ } }
+    if (c.length >= 4 && c !== 'AMIGO' && !cupomNoCaminho) { try { localStorage.setItem('bc_convite', c); localStorage.setItem('bc_convite_extra', JSON.stringify(extra)); } catch { /* sem armazenamento */ } }
     navigate('/chat', { replace: true });
   }, [codigo, navigate, params]);
   return <p className="py-10 text-center text-sm text-foreground-500">Abrindo o seu convite…</p>;

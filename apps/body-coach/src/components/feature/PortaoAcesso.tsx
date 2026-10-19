@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import PainelAcesso from './PainelAcesso';
-import { telaPremium, verAcesso, type Acesso } from '@/lib/acesso';
+import { telaPremium, usarCupomGuardado, verAcesso, type Acesso } from '@/lib/acesso';
 import { avisar as avisarJanela } from '../../lib/dialogo';
 
 // Portão do app: aviso nos últimos dias e, sem Premium, as telas do Premium mostram como assinar.
@@ -19,7 +19,8 @@ export default function PortaoAcesso({ children }: { children: ReactNode }) {
   const sair = useCallback(async () => { await signOut(); navigate('/auth'); }, [signOut, navigate]);
   const ver = useCallback(() => {
     if (!user) return;
-    void verAcesso().then((a) => {
+    // convite de dias grátis guardado entra antes de ver o acesso (assim os dias já aparecem)
+    void usarCupomGuardado().then((dias) => { if (dias) void avisarJanela(`Convite aceito: você ganhou ${dias} dias grátis.`); }).catch(() => 0).then(() => verAcesso()).then((a) => {
       if (a.sair) { void avisarJanela('Sua conta foi aberta em outro aparelho. Cada conta funciona em no máximo 2 aparelhos. Entre de novo para usar aqui.').then(() => sair()); return; }
       setAcesso(a);
     }).catch(() => { /* sem internet: segue */ });

@@ -50,7 +50,43 @@ export function tipoDaChave(chave: string): 'cpf' | 'cnpj' | 'telefone' | 'email
   if (d.length === 11 && /^[\d.\-]+$/.test(c)) return 'cpf';
   return d.length >= 10 && d.length <= 13 ? 'telefone' : 'aleatoria';
 }
-export const verCupom = (codigo: string) => chatApi<{ pct: number; codigo: string }>({ acao: 'cupom_ver', codigo });
+export const verCupom = (codigo: string) => chatApi<{ pct: number; codigo: string; dias?: number }>({ acao: 'cupom_ver', codigo });
+// Convite em 2 toques (só o dono): cria um código de 1 uso com 20% de desconto ou 30 dias grátis.
+export type TipoConvite = 'pct' | 'dias';
+export const OPCOES_CONVITE: { tipo: TipoConvite; valor: number; rotulo: string }[] = [
+  { tipo: 'pct', valor: 20, rotulo: '20% de desconto' },
+  { tipo: 'dias', valor: 30, rotulo: '30 dias grátis' },
+];
+export const criarConvite = (tipo: TipoConvite, valor: number) => chatApi<{ cupom: { codigo: string; pct: number; diasGratis?: number } }>({ acao: 'cupom_convite', tipo, valor });
+export const usarCupom = (codigo: string) => chatApi<{ ok: boolean; pct?: number; dias?: number; jaUsado?: boolean; codigo: string }>({ acao: 'cupom_usar', codigo });
+// Depois do login: um convite de dias grátis guardado (link ou campo "tenho um convite") entra sozinho, uma vez.
+export async function usarCupomGuardado(): Promise<number> {
+  let c = '';
+  try { c = localStorage.getItem('bc_cupom') ?? ''; } catch { return 0; }
+  if (!c) return 0;
+  try {
+    const r = await usarCupom(c);
+    if (r.dias || r.jaUsado) { try { localStorage.removeItem('bc_cupom'); } catch { /* sem armazenamento */ } }
+    return r.dias || 0;
+  } catch (e) {
+    if (/inválido|vencido/i.test((e as Error).message)) {
+      try {
+        localStorage.removeItem('bc_cupom');
+        // não era cupom: código de 6 letras digitado no cadastro é o código do coach (entra na equipe)
+        if (localStorage.getItem('bc_cupom_digitado') === c && /^[A-Z0-9]{6}$/.test(c)) localStorage.setItem('bc_convite', c);
+        localStorage.removeItem('bc_cupom_digitado');
+      } catch { /* sem armazenamento */ }
+    }
+    return 0;
+  }
+}
+// Campo "tenho um convite" do cadastro: guarda o código para usar depois do login (cupom no Pix, dias grátis ou equipe do coach).
+export function guardarCodigoDigitado(bruto: string): string {
+  const c = String(bruto || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
+  if (c.length < 3) return '';
+  try { localStorage.setItem('bc_cupom', c); localStorage.setItem('bc_cupom_digitado', c); } catch { /* sem armazenamento */ }
+  return c;
+}
 // Preço do Premium com desconto (promoção ou cupom; vale o maior, não somam).
 export const comDesconto = (valor: number, pct: number) => `R$ ${(valor * (1 - pct / 100)).toFixed(2).replace('.', ',')}`;
 export const dataCurta = (t: number) => new Date(t).toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });

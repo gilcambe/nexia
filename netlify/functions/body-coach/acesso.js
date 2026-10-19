@@ -178,7 +178,23 @@ async function acoesAcesso(body, uid, db, ctx = {}, eu = null) {
   }
   if (acao === 'cupom_ver') {
     const c = await cupomValido(db, body.codigo);
-    return c ? [200, { pct: c.pct, codigo: c.codigo }] : [404, { error: 'Cupom inválido ou vencido.' }];
+    return c ? [200, { pct: Number(c.pct) || 0, codigo: c.codigo, ...(c.diasGratis > 0 ? { dias: c.diasGratis } : {}) }] : [404, { error: 'Cupom inválido ou vencido.' }];
+  }
+  // Convite de "dias grátis": soma os dias ao teste da conta, uma vez por conta. Cupom de % fica para o Pix.
+  if (acao === 'cupom_usar') {
+    const c = await cupomValido(db, body.codigo);
+    if (!c) return [404, { error: 'Convite inválido ou vencido.' }];
+    if (!(c.diasGratis > 0)) return [200, { ok: true, pct: Number(c.pct) || 0, codigo: c.codigo }];
+    await acessoDe(db, uid, { ...ctx, coachUid, papel: eu && eu.papel });
+    const ref = db.collection('bc_acesso').doc(uid);
+    const a = (await ref.get()).data?.() || {};
+    if (a.cupomDias) return [200, { ok: true, jaUsado: true, codigo: c.codigo, gratisAte: a.gratisAte || 0 }];
+    const agora = Date.now();
+    const gratisAte = Math.max(agora, a.gratisAte || 0) + Math.round(c.diasGratis) * DIA;
+    await ref.set({ gratisAte, cupomDias: c.codigo, fimDia: diaBR(Math.max(gratisAte, a.pagoAte || 0)) }, { merge: true });
+    await db.collection('bc_cupons').doc(c.codigo).set({ usos: (c.usos || 0) + 1 }, { merge: true });
+    cache.delete(uid);
+    return [200, { ok: true, dias: c.diasGratis, codigo: c.codigo, gratisAte }];
   }
   if (acao === 'acesso_paguei') {
     const c = body.cupom ? await cupomValido(db, body.cupom) : null;
@@ -294,6 +310,22 @@ async function acoesAdmin(body, db, ctx) {
     if (!(pct >= 5 && pct <= 90)) return [400, { error: 'O desconto vai de 5% a 90%.' }];
     const dias = Number(body.dias) > 0 ? Math.round(Number(body.dias)) : 30;
     const cupom = { codigo, pct, validoAte: Date.now() + dias * DIA, maxUsos: Math.max(0, Math.round(Number(body.maxUsos) || 0)), usos: 0, criadoEm: Date.now() };
+    await db.collection('bc_cupons').doc(codigo).set(cupom);
+    return [200, { cupom }];
+  }
+  // Convite com desconto em 2 toques: o dono escolhe "20%" ou "30 dias grátis" e o código nasce sozinho (1 uso, vale 30 dias).
+  if (acao === 'cupom_convite') {
+    const dias = body.tipo === 'dias';
+    const valor = Math.round(Number(body.valor) || (dias ? 30 : 20));
+    if (dias ? !(valor >= 1 && valor <= 90) : !(valor >= 5 && valor <= 90)) return [400, { error: dias ? 'De 1 a 90 dias grátis.' : 'O desconto vai de 5% a 90%.' }];
+    const letras = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let codigo = '';
+    for (let i = 0; i < 4 && !codigo; i++) {
+      const tent = 'CV' + Array.from({ length: 6 }, () => letras[Math.floor(Math.random() * letras.length)]).join('');
+      if (!(await db.collection('bc_cupons').doc(tent).get()).data?.()) codigo = tent;
+    }
+    if (!codigo) return [500, { error: 'Tente de novo.' }];
+    const cupom = { codigo, pct: dias ? 0 : valor, ...(dias ? { diasGratis: valor } : {}), validoAte: Date.now() + 30 * DIA, maxUsos: 1, usos: 0, criadoEm: Date.now(), convite: true };
     await db.collection('bc_cupons').doc(codigo).set(cupom);
     return [200, { cupom }];
   }

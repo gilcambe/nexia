@@ -3,6 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/components/feature/AuthContext';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { getFirebase } from '@/lib/firebaseClient';
+import { guardarCodigoDigitado } from '@/lib/acesso';
 
 
 type Mode = 'login' | 'signup';
@@ -22,6 +23,9 @@ export default function Auth() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  // "Tenho um convite": o mesmo código do link (cupom, dias grátis ou código do coach) digitado à mão.
+  const [convite, setConvite] = useState(() => { try { return localStorage.getItem('bc_cupom') ?? ''; } catch { return ''; } });
+  const [abrirConvite, setAbrirConvite] = useState(() => !!convite);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -31,6 +35,7 @@ export default function Auth() {
     setError(null);
     setInfo(null);
     setGoogle(true);
+    if (mode === 'signup') guardarCodigoDigitado(convite);
     try {
       const r = await signInGoogle();
       if (r.error) setError(r.error);
@@ -93,6 +98,7 @@ export default function Auth() {
     }
 
     setSubmitting(true);
+    if (mode === 'signup') guardarCodigoDigitado(convite);
     try {
       if (mode === 'login') {
         const { error: err } = await signIn(email.trim(), password);
@@ -211,6 +217,25 @@ export default function Auth() {
                 />
               </label>
             )}
+
+            {mode === 'signup' && (abrirConvite ? (
+              <label className="flex flex-col gap-1.5">
+                <span className="text-sm font-medium text-foreground-600">Código do convite (opcional)</span>
+                <input
+                  type="text"
+                  value={convite}
+                  onChange={(e) => setConvite(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20))}
+                  placeholder="Ex.: CV7K2MQP"
+                  aria-label="Código do convite"
+                  autoCapitalize="characters"
+                  className="rounded-lg border border-background-200 bg-background-50 px-3 py-2.5 text-sm uppercase outline-none focus:border-primary-300"
+                />
+              </label>
+            ) : (
+              <button type="button" onClick={() => setAbrirConvite(true)} className="text-sm font-semibold text-primary-600">
+                <i className="ri-coupon-3-line mr-1"></i>Tenho um convite
+              </button>
+            ))}
 
             <label className="flex flex-col gap-1.5">
               <span className="text-sm font-medium text-foreground-600">E-mail ou usuário</span>
