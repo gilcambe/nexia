@@ -109,26 +109,44 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
             <button 
               type="button" 
               onClick={() => setModoOperacao("rapido")}
-              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${modoOperacao === "rapido" ? "bg-[var(--cx-ac)] text-white" : "text-[var(--cx-mut)] hover:text-[var(--cx-txt)]"}`}
+              className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${modoOperacao === "rapido" ? "bg-[var(--cx-ac)] text-white shadow-sm" : "text-[var(--cx-mut)] hover:text-[var(--cx-txt)] hover:bg-[var(--cx-hover)]"}`}
               aria-label="Modo Rápido (modelo pequeno)"
             >
-              Rápido
+              <span className="flex items-center gap-1">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 6v6l4 2" />
+                </svg>
+                Rápido
+              </span>
             </button>
             <button 
               type="button" 
               onClick={() => setModoOperacao("pensar")}
-              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${modoOperacao === "pensar" ? "bg-[var(--cx-ac)] text-white" : "text-[var(--cx-mut)] hover:text-[var(--cx-txt)]"}`}
+              className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${modoOperacao === "pensar" ? "bg-[var(--cx-ac)] text-white shadow-sm" : "text-[var(--cx-mut)] hover:text-[var(--cx-txt)] hover:bg-[var(--cx-hover)]"}`}
               aria-label="Modo Pensar (raciocínio)"
             >
-              Pensar
+              <span className="flex items-center gap-1">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M12 2v20M2 12h20" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                Pensar
+              </span>
             </button>
             <button 
               type="button" 
               onClick={() => setModoOperacao("pesquisar")}
-              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${modoOperacao === "pesquisar" ? "bg-[var(--cx-ac)] text-white" : "text-[var(--cx-mut)] hover:text-[var(--cx-txt)]"}`}
+              className={`px-3 py-1.5 rounded text-xs font-medium transition-all ${modoOperacao === "pesquisar" ? "bg-[var(--cx-ac)] text-white shadow-sm" : "text-[var(--cx-mut)] hover:text-[var(--cx-txt)] hover:bg-[var(--cx-hover)]"}`}
               aria-label="Modo Pesquisar (web)"
             >
-              Pesquisar
+              <span className="flex items-center gap-1">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+                Pesquisar
+              </span>
             </button>
           </div>
           <button type="button" className={btn} aria-label="Anexar arquivo ou print" onClick={() => arquivo.current?.click()} data-testid="cx-anexo">
