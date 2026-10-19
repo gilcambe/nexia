@@ -99,9 +99,22 @@ function createRouter(o = {}) {
 
   /** Tenta cada descritor até um responder. Erros por provedor ficam em `attempts`. */
   async function chatWithFallback(descs, req) {
+    const hasTools = req && Array.isArray(req.tools) && req.tools.length > 0;
+    // Usa cache apenas quando explicitamente solicitado e não há tools (cache de resposta com tool_call seria incorreto).
+    if (req && req.cache === true && !hasTools) {
+      const k = cacheRespostas.chave(req);
+      const hit = cacheRespostas.get(k);
+      if (hit) return { ...hit, attempts: [] };
+    }
     const attempts = [];
     for (const d of dedupe(descs)) {
-      try { return { ...(await chat(d, req)), attempts }; }
+      try {
+        const out = await chat(d, req);
+        if (req && req.cache === true && !hasTools) {
+          cacheRespostas.set(cacheRespostas.chave(req), out);
+        }
+        return { ...out, attempts };
+      }
       catch (e) {
         if (e && e.code === CODES.ABORTED) throw e;
         attempts.push({ provider: d.provider, model: d.model, code: e.code || 'ERROR' });
