@@ -6,7 +6,7 @@ import i18n from "./i18n";
 
 declare const __BASE_PATH__: string;
 
-function App() {
+// Modo Rápido / Pensar / Pesquisar selecionado no composer\nfunction App() {
   return (
     <I18nextProvider i18n={i18n}>
       <AuthProvider>
