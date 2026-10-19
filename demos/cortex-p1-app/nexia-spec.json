@@ -1,0 +1,231 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex-p1 PWA & App Admin",
+    "tagline": "Gerenciamento de Assetlinks, Instalações e PWA sem barra de URL",
+    "photo_theme": "mobile application technology",
+    "description": "Gerenciamento de Assetlinks, Instalações e PWA sem barra de URL",
+    "folder": "demos/cortex-p1-app",
+    "fonts": {
+      "heading": "Outfit",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2563eb",
+      "accent": "#0ea5e9",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 98765-4321",
+      "email": "dev@cortex-p1.internal",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "entities": [
+      {
+        "key": "melhorias",
+        "label": "Melhorias",
+        "singular": "Melhoria",
+        "fields": [
+          {
+            "key": "titulo",
+            "label": "Título da Tarefa",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "pr",
+            "label": "Pull Request",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Pendente",
+              "Em Testes",
+              "Em Produção",
+              "Concluído"
+            ],
+            "required": true
+          },
+          {
+            "key": "custo",
+            "label": "Custo",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "detalhes",
+            "label": "Detalhes Técnicos",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "titulo": "App sem barra de URL e assetlinks",
+            "pr": "PR #771",
+            "status": "Em Produção",
+            "custo": "0",
+            "data": "2026-10-18",
+            "detalhes": "Depende do app da Play assinado com a digital do Play no assetlinks. Instalação via loja."
+          },
+          {
+            "titulo": "Validação de ambiente Body Coach",
+            "pr": "PR #772",
+            "status": "Em Testes",
+            "custo": "0",
+            "data": "2026-10-19",
+            "detalhes": "Mudança pequena, atrás de teste, sem quebrar regras do Firestore."
+          },
+          {
+            "titulo": "Página Instalação Android dedicada",
+            "pr": "PR #775",
+            "status": "Pendente",
+            "custo": "0",
+            "data": "2026-10-20",
+            "detalhes": "Detecta Android automaticamente e direciona para o APK oficial ou Play Store."
+          },
+          {
+            "titulo": "Verificação de Assetlinks ao vivo",
+            "pr": "PR #778",
+            "status": "Concluído",
+            "custo": "0",
+            "data": "2026-10-21",
+            "detalhes": "Endpoint para checar integridade do arquivo .well-known/assetlinks.json."
+          }
+        ]
+      },
+      {
+        "key": "dispositivos",
+        "label": "Dispositivos",
+        "singular": "Dispositivo",
+        "fields": [
+          {
+            "key": "modelo",
+            "label": "Modelo do Aparelho",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "sistema",
+            "label": "Sistema Operacional",
+            "type": "select",
+            "options": [
+              "Android 14",
+              "Android 15",
+              "iOS 18",
+              "ChromeOS"
+            ],
+            "required": true
+          },
+          {
+            "key": "modo",
+            "label": "Tipo de Instalação",
+            "type": "select",
+            "options": [
+              "App Nativo (Play)",
+              "Atalho do Chrome",
+              "PWA TWA",
+              "Indefinido"
+            ],
+            "required": true
+          },
+          {
+            "key": "assetlinks",
+            "label": "Assetlinks Verificado",
+            "type": "select",
+            "options": [
+              "Sim",
+              "Não",
+              "Pendente"
+            ],
+            "required": true
+          },
+          {
+            "key": "usuario",
+            "label": "Usuário",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "observacoes",
+            "label": "Notas",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "modelo": "Samsung Galaxy S24",
+            "sistema": "Android 14",
+            "modo": "App Nativo (Play)",
+            "assetlinks": "Sim",
+            "usuario": "dono@empresa.com",
+            "observacoes": "Funcionando perfeitamente sem barra de URL."
+          },
+          {
+            "modelo": "Motorola Edge 50",
+            "sistema": "Android 15",
+            "modo": "Atalho do Chrome",
+            "assetlinks": "Não",
+            "usuario": "gerente@empresa.com",
+            "observacoes": "Usuário abriu pelo atalho antigo do navegador. Necessário forçar reinstalação."
+          },
+          {
+            "modelo": "Google Pixel 8",
+            "sistema": "Android 14",
+            "modo": "PWA TWA",
+            "assetlinks": "Sim",
+            "usuario": "coach@bodycoach.app",
+            "observacoes": "Ambiente de produção validado com sucesso."
+          },
+          {
+            "modelo": "Xiaomi 13T",
+            "sistema": "Android 14",
+            "modo": "Indefinido",
+            "assetlinks": "Pendente",
+            "usuario": "teste@cortex.p1",
+            "observacoes": "Aguardando aceite na Google Play Console."
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Painel Principal",
+      "Gestão de Assetlinks",
+      "Detecção Android",
+      "Testes e Qualidade"
+    ]
+  },
+  "media": {}
+}
