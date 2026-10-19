@@ -139,38 +139,44 @@ function isCacheableApiRequest(request, url) {
 }
 
 async function getEdgeCachedResponse(request, url, env, getFunction) {
-  const useCache = typeof caches !== 'undefined' && caches.default;
+  let useCache = false;
+  try {
+    useCache = typeof caches !== 'undefined' && caches && typeof caches.default === 'object' && caches.default !== null;
+  } catch (e) {
+    useCache = false;
+  }
   let cacheKey = null;
   if (useCache) {
-    cacheKey = new Request(url.toString(), { method: request.method });
     try {
+      cacheKey = new Request(url.toString(), { method: request.method });
       const cached = await caches.default.match(cacheKey);
       if (cached) {
         return cached;
       }
     } catch (e) {
-      // Ignora erro do ambiente de testes unitários onde caches.default.match pode não estar totalmente implementado
+      // Ignora erro do ambiente de testes unitários onde caches.default pode não estar totalmente implementado
+      useCache = false;
     }
   }
 
   const response = await runFunction(resolveFunctionName(url.pathname), request, url, env, getFunction);
   
-  if (useCache && response.status === 200) {
-    const resHeaders = new Headers(response.headers);
-    if (!resHeaders.has('Cache-Control') || resHeaders.get('Cache-Control').includes('no-cache')) {
-      resHeaders.set('Cache-Control', 'public, max-age=300');
-    }
-    const cacheableResponse = new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: resHeaders,
-    });
+  if (useCache && response && response.status === 200) {
     try {
+      const resHeaders = new Headers(response.headers);
+      if (!resHeaders.has('Cache-Control') || resHeaders.get('Cache-Control').includes('no-cache')) {
+        resHeaders.set('Cache-Control', 'public, max-age=300');
+      }
+      const cacheableResponse = new Response(response.body, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: resHeaders,
+      });
       await caches.default.put(cacheKey, cacheableResponse.clone());
+      return cacheableResponse;
     } catch (err) {
       // Ignora erro de put no cache em ambiente de testes ou restrito
     }
-    return cacheableResponse;
   }
 
   return response;
