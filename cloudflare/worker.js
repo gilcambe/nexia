@@ -18,7 +18,8 @@ export default {
       // APIs com cache (excluindo rotas sensíveis)
       const cacheablePaths = [
         '/api/ofertas',
-        '/api/catalogos'
+        '/api/catalogos',
+        '/api/firebase-config'
       ];
       
       if (cacheablePaths.some(path => url.pathname.startsWith(path))) {
@@ -54,6 +55,8 @@ export default {
           ttl = 120; // 2 minutos para ofertas (mudam com frequência)
         } else if (url.pathname.startsWith('/api/catalogos')) {
           ttl = 300; // 5 minutos para catálogos (estáticos)
+        } else if (url.pathname.startsWith('/api/firebase-config')) {
+          ttl = 60; // 1 minuto para config do Firebase (dados públicos)
         } else {
           ttl = 60; // fallback: 1 minuto
         }
