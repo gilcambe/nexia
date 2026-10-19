@@ -10,10 +10,11 @@
 
 # Melhoria 46: Respostas diretas sem abrir issue
 
-- **Status:** Implementado
+- **Status:** Implementado, integrado ao agente e validado no fluxo da Central
 - **Regra:** Perguntas ("como estamos?", "o que falta?") são respondidas na hora por um modelo rápido lendo a Central; só pedidos de código viram issue.
-- **Por quê:** Pergunta não deve esperar fila.
+- **Por quê:** Pergunta não deve esperar fila de issues ou builds.
 - **Custo:** 0.
+- **Implementação:** Endpoint e handler dedicados de consulta rápida (modelo leve com acesso direto aos artefatos da Central, sem criação de tracking issues no GitHub).
 - **Justificativa:** Resposta imediata sem fila de issues para perguntas; apenas mudanças de código entram no fluxo de issue.
 
 ---
