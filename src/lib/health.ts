@@ -84,7 +84,7 @@ function aggregateRoutes(routes: Record<string, RouteStats>): {
  * Consulta o Firestore para obter as amostras dos últimos 30 dias
  * (caminho health/samples, índice por dia).
  */
-export async function storeHealthSample(): Promise<HealthSample[]> {
+export async function getHealthSamples(): Promise<HealthSample[]> {
   const days = last30Days();
   const samples: HealthSample[] = [];
   for (const day of days) {
@@ -95,6 +95,14 @@ export async function storeHealthSample(): Promise<HealthSample[]> {
 }
 
 /**
+ * Armazena uma nova amostra de saúde no Firestore.
+ */
+export async function storeHealthSample(sample: HealthSample): Promise<void> {
+  const day = isoDay(new Date(sample.timestamp));
+  await writeDay(day, sample);
+}
+
+/**
  * Retorna dados aglomerados para o painel:
  * - array de amostras (últimos 30 dias)
  * - métricas de queda (drops)
@@ -102,7 +110,7 @@ export async function storeHealthSample(): Promise<HealthSample[]> {
  * - contagem de erros por rota
  */
 export async function getHealthDashboardData(): Promise<HealthDashboardData> {
-  const samples = await storeHealthSample();
+  const samples = await getHealthSamples();
 
   const drops: Array<{ timestamp: string; magnitude: number }> = [];
   for (let i = 1; i < samples.length; i++) {
