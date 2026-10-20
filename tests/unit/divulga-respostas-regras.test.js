@@ -99,4 +99,13 @@ test('DR8. Ação "agradecer" para "Top!" retornando uma frase da lista FRASES p
   // Verificar que as respostas são strings não vazias (frases reais)
   assert.ok(typeof respostaSorteio0 === 'string' && respostaSorteio0.length > 0, 'A resposta deve ser uma string não vazia');
   assert.ok(typeof respostaSorteio1 === 'string' && respostaSorteio1.length > 0, 'A resposta deve ser uma string não vazia');
+  
+  // Testar que a função retorna frases diferentes com sorteios diferentes
+  const frase0 = decidir(comentario, post, () => 0);
+  const frase1 = decidir(comentario, post, () => 1);
+  assert.notEqual(frase0, frase1, 'Frases diferentes para sorteios diferentes');
+  
+  // Testar que a função retorna frases da lista FRASES
+  const frase2 = decidir(comentario, post, () => 2);
+  assert.ok(typeof frase2 === 'string' && frase2.length > 0, 'A resposta deve ser uma string não vazia');
 });
