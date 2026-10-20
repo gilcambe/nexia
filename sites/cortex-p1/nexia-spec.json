@@ -1,10 +1,10 @@
 {
   "spec": {
     "kind": "system",
-    "name": "Cortex-p1",
-    "tagline": "Gestão Inteligente de Projetos e Dados",
+    "name": "Cortex p1",
+    "tagline": "Contexto IA, credenciais e sanitização protegidos em um só painel",
     "photo_theme": "",
-    "description": "Gestão Inteligente de Projetos e Dados",
+    "description": "Contexto IA, credenciais e sanitização protegidos em um só painel",
     "folder": "sites/cortex-p1",
     "fonts": {
       "heading": "Plus Jakarta Sans",
@@ -22,8 +22,8 @@
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "(11) 90000-0000",
-      "email": "contato@cortex-p1.com.br",
+      "phone": "",
+      "email": "exemplo@cortexp1.com.br",
       "address": "",
       "city": "",
       "hours": "",
@@ -44,29 +44,27 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "projetos",
-        "label": "Projetos",
-        "singular": "Projeto",
+        "key": "contextos",
+        "label": "Contextos IA",
+        "singular": "Contexto IA",
         "fields": [
           {
-            "key": "nome",
-            "label": "Nome do Projeto",
+            "key": "titulo",
+            "label": "Título",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "data_inicio",
-            "label": "Data de Início",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "data_fim",
-            "label": "Data de Término",
-            "type": "date",
-            "options": [],
+            "key": "origem",
+            "label": "Origem",
+            "type": "select",
+            "options": [
+              "Documento",
+              "Navegador",
+              "API",
+              "Manual"
+            ],
             "required": true
           },
           {
@@ -74,23 +72,29 @@
             "label": "Status",
             "type": "select",
             "options": [
-              "Planejando",
-              "Em Andamento",
-              "Concluído",
-              "Pausado"
+              "Ativo",
+              "Em revisão",
+              "Inativo"
             ],
             "required": true
           },
           {
-            "key": "orcamento",
-            "label": "Orçamento",
-            "type": "money",
+            "key": "tokens",
+            "label": "Tokens",
+            "type": "number",
             "options": [],
             "required": true
           },
           {
-            "key": "descricao",
-            "label": "Descrição",
+            "key": "atualizado",
+            "label": "Atualizado em",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "conteudo",
+            "label": "Conteúdo sanitizado",
             "type": "textarea",
             "options": [],
             "required": false
@@ -98,53 +102,261 @@
         ],
         "sample": [
           {
-            "nome": "Sistema de Gestão",
-            "data_inicio": "2026-06-01",
-            "data_fim": "2026-12-31",
-            "status": "Em Andamento",
-            "orcamento": "150000",
-            "descricao": "Desenvolvimento de plataforma integrada para gestão de projetos"
+            "titulo": "Resumo de atendimento Cortex",
+            "origem": "Documento",
+            "status": "Ativo",
+            "tokens": "1840",
+            "atualizado": "2026-03-18",
+            "conteudo": "Cortex analisou o chamado e recommended o encaminhamento para a equipe técnica. Conexão: Filas: 1 | Rodando: 0 | Travadas: 0"
           },
           {
-            "nome": "Redesign UI/UX",
-            "data_inicio": "2026-07-15",
-            "data_fim": "2026-09-30",
-            "status": "Planejando",
-            "orcamento": "85000",
-            "descricao": "Atualização da interface do usuário com foco em experiência"
+            "titulo": "Pesquisa de mercado",
+            "origem": "Navegador",
+            "status": "Em revisão",
+            "tokens": "3260",
+            "atualizado": "2026-03-17",
+            "conteudo": "Cortex consolidou benchmarks, principais concorrentes e oportunidades de crescimento para o produto digital."
           },
           {
-            "nome": "Migração Cloud",
-            "data_inicio": "2026-05-10",
-            "data_fim": "2026-08-20",
-            "status": "Concluído",
-            "orcamento": "220000",
-            "descricao": "Migração completa da infraestrutura para nuvem AWS"
+            "titulo": "Documento de integração",
+            "origem": "API",
+            "status": "Ativo",
+            "tokens": "2150",
+            "atualizado": "2026-03-16",
+            "conteudo": "Cortex validou os endpoints da integração e preparou as instruções de uso para a equipe de desenvolvimento."
           },
           {
-            "nome": "Inteligência Artificial",
-            "data_inicio": "2026-08-01",
-            "data_fim": "2027-03-15",
-            "status": "Em Andamento",
-            "orcamento": "320000",
-            "descricao": "Implementação de módulos de IA para análise preditiva"
+            "titulo": "Contexto de suporte",
+            "origem": "Manual",
+            "status": "Ativo",
+            "tokens": "980",
+            "atualizado": "2026-03-15",
+            "conteudo": "Cortex organizou as dúvidas frequentes e os procedimentos operacionais do suporte."
           },
           {
-            "nome": "Sistema de Helpdesk",
-            "data_inicio": "2026-04-05",
-            "data_fim": "2026-07-10",
-            "status": "Pausado",
-            "orcamento": "95000",
-            "descricao": "Desenvolvimento de sistema de suporte técnico integrado"
+            "titulo": "Contexto arquivado",
+            "origem": "Documento",
+            "status": "Inativo",
+            "tokens": "740",
+            "atualizado": "2026-03-12",
+            "conteudo": "Cortex manteve um resumo histórico da operação para consultas internas."
+          }
+        ]
+      },
+      {
+        "key": "credenciais",
+        "label": "Credenciais",
+        "singular": "Credencial",
+        "fields": [
+          {
+            "key": "provedor",
+            "label": "Provedor",
+            "type": "select",
+            "options": [
+              "OpenAI",
+              "Google AI",
+              "GitHub",
+              "RSA"
+            ],
+            "required": true
+          },
+          {
+            "key": "identificador",
+            "label": "Identificador",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "segredo",
+            "label": "Chave mascarada",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "ambiente",
+            "label": "Ambiente",
+            "type": "select",
+            "options": [
+              "Produção",
+              "Homologação",
+              "Teste"
+            ],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativa",
+              "Rotação agendada",
+              "Revogada"
+            ],
+            "required": true
+          },
+          {
+            "key": "ultima_rotacao",
+            "label": "Última rotação",
+            "type": "date",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "provedor": "OpenAI",
+            "identificador": "Cortex OpenAI Principal",
+            "segredo": "sk-••••4821",
+            "ambiente": "Produção",
+            "status": "Ativa",
+            "ultima_rotacao": "2026-03-01"
+          },
+          {
+            "provedor": "Google AI",
+            "identificador": "Cortex Google Vision",
+            "segredo": "AIza••••91Q",
+            "ambiente": "Produção",
+            "status": "Rotação agendada",
+            "ultima_rotacao": "2026-02-18"
+          },
+          {
+            "provedor": "GitHub",
+            "identificador": "Cortex Repositório Interno",
+            "segredo": "ghp_••••2F7",
+            "ambiente": "Homologação",
+            "status": "Ativa",
+            "ultima_rotacao": "2026-03-10"
+          },
+          {
+            "provedor": "RSA",
+            "identificador": "Cortex Integração Segura",
+            "segredo": "RSA-••••-••••",
+            "ambiente": "Produção",
+            "status": "Ativa",
+            "ultima_rotacao": "2026-01-28"
+          },
+          {
+            "provedor": "OpenAI",
+            "identificador": "Cortex OpenAI Testes",
+            "segredo": "sk-••••0000",
+            "ambiente": "Teste",
+            "status": "Revogada",
+            "ultima_rotacao": "2026-03-15"
+          }
+        ]
+      },
+      {
+        "key": "testes",
+        "label": "Testes de sanitização",
+        "singular": "Teste de sanitização",
+        "fields": [
+          {
+            "key": "caso",
+            "label": "Caso",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "categoria",
+            "label": "Categoria",
+            "type": "select",
+            "options": [
+              "Chave de API",
+              "Token de acesso",
+              "Chave privada",
+              "Conteúdo copiado"
+            ],
+            "required": true
+          },
+          {
+            "key": "esperado",
+            "label": "Resultado esperado",
+            "type": "select",
+            "options": [
+              "Segredo removido",
+              "Texto preservado",
+              "Cópia protegida"
+            ],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Aprovado",
+              "Falhou",
+              "Pendente"
+            ],
+            "required": true
+          },
+          {
+            "key": "duracao",
+            "label": "Duração",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "caso": "Remove chaves com prefixo sk-",
+            "categoria": "Chave de API",
+            "esperado": "Segredo removido",
+            "status": "Aprovado",
+            "duracao": "42",
+            "data": "2026-03-18"
+          },
+          {
+            "caso": "Remove chaves com prefixo AIza",
+            "categoria": "Chave de API",
+            "esperado": "Segredo removido",
+            "status": "Aprovado",
+            "duracao": "38",
+            "data": "2026-03-18"
+          },
+          {
+            "caso": "Remove tokens com prefixo ghp_",
+            "categoria": "Token de acesso",
+            "esperado": "Segredo removido",
+            "status": "Aprovado",
+            "duracao": "41",
+            "data": "2026-03-18"
+          },
+          {
+            "caso": "Remove blocos de chave privada RSA",
+            "categoria": "Chave privada",
+            "esperado": "Segredo removido",
+            "status": "Aprovado",
+            "duracao": "56",
+            "data": "2026-03-17"
+          },
+          {
+            "caso": "Preserva Cortex na cópia do contexto",
+            "categoria": "Conteúdo copiado",
+            "esperado": "Cópia protegida",
+            "status": "Aprovado",
+            "duracao": "63",
+            "data": "2026-03-17"
           }
         ]
       }
     ],
     "modules": [
-      "Dashboard",
-      "Projetos",
-      "Equipe",
-      "Relatórios"
+      "Contextos IA",
+      "Credenciais",
+      "Sanitização",
+      "Testes"
     ]
   },
   "media": {}
