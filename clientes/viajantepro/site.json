@@ -186,5 +186,8 @@
       "title": "Entre em Contato"
     }
   ],
-  "madeWithKernexLink": "https://kernex.com.br/?utm_source=viajantepro&utm_medium=selo"
+  "selo": {
+    "label": "Feito com Kernex",
+    "url": "https://kernex.com.br/?utm_source=viajantepro&utm_medium=selo"
+  }
 }
