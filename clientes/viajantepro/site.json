@@ -1,17 +1,190 @@
 {
-  "nome": "Viajante Pro",
-  "frase": "Seu parceiro em viagens de luxo",
-  "servicos": [
-    "Pacotes exclusivos",
-    "Consultoria de viagens",
-    "Gestão de itinerários"
-  ],
-  "contato": {
-    "whatsapp": "+55 11 99999-9999",
-    "email": "contato@viajantepro.com"
+  "kind": "site",
+  "title": "Viajante Pro",
+  "name": "Viajante Pro",
+  "tagline": "Seu parceiro em viagens de luxo",
+  "description": "Agência de viagens especializada em pacotes exclusivos e consultoria personalizada para experiências memoráveis.",
+  "folder": "clientes/viajantepro",
+  "style": "elegant",
+  "photo_theme": "luxury travel destination",
+  "fonts": {
+    "heading": "Playfair Display",
+    "body": "Lato"
   },
-  "primaryColor": "#00E5FF",
+  "palette": {
+    "primary": "#00E5FF",
+    "accent": "#FF6B6B",
+    "bg": "#F8F9FA",
+    "surface": "#FFFFFF",
+    "text": "#2C3E50",
+    "muted": "#7F8C8D",
+    "dark": "#1A252F"
+  },
   "favicon": "favicon-vp.svg",
-  "madeWithKernexLink": "https://kernex.com.br/?utm_source=viajantepro&utm_medium=selo",
-  "title": "Viajante Pro"
+  "contact": {
+    "whatsapp": "+55 11 99999-9999",
+    "phone": "+55 11 99999-9999",
+    "email": "contato@viajantepro.com",
+    "address": "Rua das Viagens, 123",
+    "city": "São Paulo - SP",
+    "hours": "Seg a sex, 9h às 18h",
+    "instagram": "viajantepro",
+    "youtube": "",
+    "tiktok": "",
+    "linkedin": ""
+  },
+  "sections": [
+    {
+      "type": "hero",
+      "eyebrow": "Agência de viagens",
+      "title": "Descubra o mundo com estilo",
+      "subtitle": "Pacotes exclusivos e consultoria personalizada para viagens inesquecíveis.",
+      "cta": {
+        "label": "Falar com especialista",
+        "href": "whatsapp"
+      },
+      "cta2": {
+        "label": "Ver destinos",
+        "href": "#destinos"
+      },
+      "image_query": "luxury travel destination beach resort",
+      "video_query": "travel"
+    },
+    {
+      "type": "services",
+      "id": "servicos",
+      "title": "Nossos Serviços",
+      "subtitle": "Viagens personalizadas para você.",
+      "items": [
+        {
+          "title": "Pacotes Exclusivos",
+          "text": "Destinos selecionados com alto padrão de qualidade.",
+          "price": "a partir de R$ 5.000",
+          "image_query": "luxury resort pool"
+        },
+        {
+          "title": "Consultoria de Viagens",
+          "text": "Planejamento personalizado conforme seu estilo e orçamento.",
+          "image_query": "travel consultant"
+        },
+        {
+          "title": "Gestão de Itinerários",
+          "text": "Tudo organizado para você aproveitar cada momento.",
+          "image_query": "travel itinerary"
+        }
+      ]
+    },
+    {
+      "type": "about",
+      "title": "Sobre a Viajante Pro",
+      "text": "Há 8 anos criando experiências memoráveis para nossos clientes.",
+      "image_query": "luxury travel agency office",
+      "stats": [
+        {
+          "value": "8",
+          "label": "anos"
+        },
+        {
+          "value": "2000+",
+          "label": "clientes"
+        },
+        {
+          "value": "50+",
+          "label": "destinos"
+        }
+      ]
+    },
+    {
+      "type": "gallery",
+      "title": "Nossos Destinos",
+      "image_queries": [
+        "luxury beach resort",
+        "mountain travel",
+        "city tour",
+        "luxury cruise",
+        "desert safari",
+        "tropical paradise"
+      ]
+    },
+    {
+      "type": "video",
+      "title": "Conheça nossos pacotes",
+      "subtitle": "Descubra destinos incríveis que preparamos para você.",
+      "youtube": "",
+      "video_query": "luxury travel destinations"
+    },
+    {
+      "type": "testimonials",
+      "title": "Depoimentos de Clientes",
+      "items": [
+        {
+          "name": "Ana P.",
+          "text": "Viagem perfeita, tudo organizado com excelência!",
+          "rating": 5
+        },
+        {
+          "name": "Carlos M.",
+          "text": "Consultoria super personalizada, atendeu todas nossas expectativas.",
+          "rating": 5
+        },
+        {
+          "name": "Juliana S.",
+          "text": "Destinos incríveis, voltamos ano que vem!",
+          "rating": 5
+        }
+      ]
+    },
+    {
+      "type": "links",
+      "title": "Fale Conosco",
+      "items": [
+        {
+          "label": "Agendar pelo WhatsApp",
+          "url": "https://wa.me/5511999999999",
+          "icon": "whatsapp"
+        },
+        {
+          "label": "Instagram",
+          "url": "https://instagram.com/viajantepro",
+          "icon": "instagram"
+        }
+      ]
+    },
+    {
+      "type": "faq",
+      "title": "Dúvidas Frequentes",
+      "items": [
+        {
+          "q": "Como funciona a consultoria?",
+          "a": "Avaliamos seu perfil e orçamento para sugerir os melhores destinos."
+        },
+        {
+          "q": "Aceitam parcelamento?",
+          "a": "Sim, em até 12x no cartão de crédito."
+        },
+        {
+          "q": "Os pacotes incluem seguro viagem?",
+          "a": "Sim, todos nossos pacotes incluem seguro viagem completo."
+        },
+        {
+          "q": "Trabalham com destinos nacionais?",
+          "a": "Sim, oferecemos pacotes para os melhores destinos do Brasil."
+        }
+      ]
+    },
+    {
+      "type": "cta",
+      "title": "Pronto para sua próxima aventura?",
+      "subtitle": "Fale com nossos especialistas e personalize sua viagem.",
+      "cta": {
+        "label": "Falar com especialista",
+        "href": "whatsapp"
+      }
+    },
+    {
+      "type": "contact",
+      "title": "Entre em Contato"
+    }
+  ],
+  "madeWithKernexLink": "https://kernex.com.br/?utm_source=viajantepro&utm_medium=selo"
 }
