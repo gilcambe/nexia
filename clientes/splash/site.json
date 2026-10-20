@@ -6,6 +6,7 @@
   "folder": "splash",
   "style": "elegant",
   "photo_theme": "luxury event venue",
+  "leads_origem": "splash-site",
   "fonts": {
     "heading": "Cormorant Garamond",
     "body": "Inter"
@@ -29,68 +30,7 @@
     "instagram": "",
     "youtube": "",
     "tiktok": "",
-    "linkedin": "",
-    "form": {
-      "endpoint": "/api/leads",
-      "fields": [
-        {
-          "name": "nome",
-          "label": "Responsável pelo evento *",
-          "type": "text",
-          "required": true
-        },
-        {
-          "name": "email",
-          "label": "E-mail *",
-          "type": "email",
-          "required": true
-        },
-        {
-          "name": "whatsapp",
-          "label": "WhatsApp *",
-          "type": "tel",
-          "required": true
-        },
-        {
-          "name": "espaco",
-          "label": "Espaço desejado *",
-          "type": "select",
-          "required": true,
-          "options": ["Santa Adélia", "Santa Bárbara", "Ambos os espaços"]
-        },
-        {
-          "name": "tipo",
-          "label": "Tipo de evento *",
-          "type": "select",
-          "required": true,
-          "options": ["Casamento", "15 Anos", "Formatura", "Aniversário", "Corporativo", "Outros"]
-        },
-        {
-          "name": "data",
-          "label": "Data desejada *",
-          "type": "date",
-          "required": true
-        },
-        {
-          "name": "convidados",
-          "label": "N.º de convidados *",
-          "type": "select",
-          "required": true,
-          "options": ["Até 100", "100 a 200", "200 a 350", "350 a 500", "Acima de 500"]
-        },
-        {
-          "name": "observacoes",
-          "label": "Observações / Pedidos especiais",
-          "type": "textarea",
-          "required": false
-        }
-      ],
-      "source": "splash-site",
-      "success": {
-        "title": "Solicitação recebida!",
-        "text": "Nossa equipe verificará a disponibilidade e entrará em contato em até 24 horas úteis via e-mail e WhatsApp."
-      }
-    }
+    "linkedin": ""
   },
   "sections": [
     {
