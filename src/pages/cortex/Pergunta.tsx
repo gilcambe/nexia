@@ -12,6 +12,17 @@ import Composer from "./Composer";
 interface Fala { id: string; quem: "dono" | "cortex"; texto: string; vivo?: boolean; modelo?: string }
 
 // #823: "como estamos?" / "o que falta?" leem a Central (fila do Cortex) antes de responder. Sem acesso, responde sem esse contexto.
+// #826: modo "Pesquisar" busca na web (grátis, pelo servidor) e a resposta termina com as fontes.
+async function buscarWeb(token: string | null, q: string): Promise<{ contexto: string; rodape: string }> {
+  if (!token) return { contexto: "", rodape: "" };
+  try {
+    const r = await fetch(apiPath("/central") + "?parte=busca&q=" + encodeURIComponent(q.slice(0, 300)), { headers: { Authorization: `Bearer ${token}` } });
+    if (!r.ok) return { contexto: "", rodape: "" };
+    const j = (await r.json()) as { contexto?: string; rodape?: string };
+    return { contexto: j.contexto || "", rodape: j.rodape || "" };
+  } catch { return { contexto: "", rodape: "" }; }
+}
+
 async function lerCentral(token: string | null): Promise<string> {
   if (!token) return "";
   try {
@@ -41,13 +52,17 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
     corte.current = ctl;
     const mudar = (f: (x: Fala) => Fala) => setFalas((l) => l.map((x) => (x.id === id ? f(x) : x)));
     try {
-      const ctx = ehSobreSituacao(texto) ? await lerCentral(await getToken().catch(() => null)) : "";
-      const message = ctx ? `${ctx}\n\nPergunta do dono: ${texto}` : texto;
+      const token = ehSobreSituacao(texto) || modo === "pesquisar" ? await getToken().catch(() => null) : null;
+      const ctx = ehSobreSituacao(texto) ? await lerCentral(token) : "";
+      const web = modo === "pesquisar" ? await buscarWeb(token, texto) : { contexto: "", rodape: "" };
+      const antes = [ctx, web.contexto].filter(Boolean).join("\n\n");
+      const message = antes ? `${antes}\n\nPergunta do dono: ${texto}` : texto;
       for await (const c of streamCortex({ message, tenantId: "nexia", conversationId: conversa, modo }, ctl.signal)) {
         if (c.token) mudar((x) => ({ ...x, texto: x.texto + c.token }));
         if (c.model) mudar((x) => ({ ...x, modelo: c.model }));
         if (c.done) break;
       }
+      if (web.rodape) mudar((x) => ({ ...x, texto: x.texto + web.rodape }));
     } catch (e) {
       if (!ctl.signal.aborted) mudar((x) => ({ ...x, texto: x.texto + `\n\n❌ ${(e as Error).message || "A resposta foi interrompida."}` }));
     } finally {
