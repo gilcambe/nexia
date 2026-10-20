@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import type { Dados } from "./api";
-import { useCentral, haQuanto } from "./api";
+import { useCentral, haQuanto, reais } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
-import { reais } from "./api";
 
 const REDE: Record<string, string> = { facebook: "Facebook", instagram: "Instagram" };
 
@@ -52,8 +51,8 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
         try {
           const resposta = await agir({ acao: 'meta-analytics' });
           
-          if (resposta.ok && dadosAnalytics) {
-            setMetaAnalytics(dadosAnalytics);
+          if (resposta.ok && resposta.dados) {
+            setMetaAnalytics(resposta.dados);
           } else {
             setErroAnalytics('Não foi possível obter os dados da Meta. Verifique se a chave está configurada corretamente.');
           }
@@ -68,43 +67,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
     }
   }, [metaConfigurada, agir]);
 
-  // Função para simular dados de analytics (em um caso real, viria da API)
-  const gerarDadosAnalytics = (): MetaAnalytics => {
-    const hoje = new Date();
-    const historico = [];
-    
-    // Gerar dados dos últimos 30 dias
-    for (let i = 29; i >= 0; i--) {
-      const data = new Date();
-      data.setDate(hoje.getDate() - i);
-      
-      historico.push({
-        data: data.toISOString().split('T')[0],
-        seguidores: Math.floor(Math.random() * 1000) + 5000,
-        alcance: Math.floor(Math.random() * 5000) + 10000,
-        curtidas: Math.floor(Math.random() * 200) + 100
-      });
-    }
-    
-    // Calcular melhor horário (simulação)
-    const horarios = ['08:00', '12:00', '18:00', '20:00'];
-    const melhorHorario = horarios[Math.floor(Math.random() * horarios.length)];
-    
-    // Calcular melhor tema (simulação)
-    const temas = ['Fitness', 'Nutrição', 'Motivação', 'Dicas'];
-    const melhorTema = temas[Math.floor(Math.random() * temas.length)];
-    
-    return {
-      seguidores: historico[historico.length - 1].seguidores,
-      alcance: historico.reduce((acc, item) => acc + item.alcance, 0),
-      curtidas: historico.reduce((acc, item) => acc + item.curtidas, 0),
-      melhorHorario,
-      melhorTema,
-      historico
-    };
-  };
 
-  const dadosAnalytics = gerarDadosAnalytics();
   const x = d.divulga;
   return (
     <div className="space-y-4">
