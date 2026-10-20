@@ -168,3 +168,42 @@ test('CF-1016c. reenfileirar, travar, dividir e concluir tiram todos os pista-*;
   assert.match(bloco('concluir'), /limparPistas\(\)/);
   assert.match(bloco('despachar'), /limparPistas\(acao\.pista\)/);
 });
+
+// #852: pedido que muda arquivo que já existia, sem commit depois do início e sem PR, não é concluído.
+async function comFetch(rotas, fn) {
+  const antes = global.fetch;
+  const chamadas = [];
+  global.fetch = async url => {
+    chamadas.push(url);
+    const r = rotas.find(([re]) => re.test(url));
+    const [status, json] = r ? r[1] : [404, {}];
+    return { status, text: async () => JSON.stringify(json) };
+  };
+  try { return await fn(chamadas); } finally { global.fetch = antes; }
+}
+const { entregouAlgo } = require('../../scripts/cortex-fila');
+const PEDIDO = 'Mudar `central/produtos.js` para mostrar o preço.';
+
+test('CF-852a. arquivo já existente sem commit depois do início e sem PR: NÃO entregou', async () => {
+  const ok = await comFetch([[/\/contents\//, [200, {}]], [/\/commits\?/, [200, []]], [/\/pulls\?/, [200, []]]],
+    chamadas => entregouAlgo('t', PEDIDO, 'x', 1, '2026-10-18T10:00:00Z').then(v => { assert.ok(chamadas.some(u => /since=2026-10-18/.test(u))); return v; }));
+  assert.equal(ok, false);
+});
+
+test('CF-852b. arquivo já existente com commit na develop depois do início: entregou', async () => {
+  const ok = await comFetch([[/\/contents\//, [200, {}]], [/\/commits\?/, [200, [{ sha: 'a' }]]]],
+    () => entregouAlgo('t', PEDIDO, 'x', 1, '2026-10-18T10:00:00Z'));
+  assert.equal(ok, true);
+});
+
+test('CF-852c. PR aberto nexia/* com o arquivo continua contando', async () => {
+  const ok = await comFetch([[/\/contents\//, [200, {}]], [/\/commits\?/, [200, []]], [/\/pulls\/7\/files/, [200, [{ filename: 'central/produtos.js' }]]], [/\/pulls\?/, [200, [{ number: 7, head: { ref: 'nexia/x' } }]]]],
+    () => entregouAlgo('t', PEDIDO, 'x', 1, '2026-10-18T10:00:00Z'));
+  assert.equal(ok, true);
+});
+
+test('CF-852d. concluir leva o created_at da issue em acao.desde', () => {
+  const a = decidir({ issues: [issue(1, ['cortex-rodando', 'pista-1'], { created_at: '2026-10-18T10:00:00Z' })], runs: [run(1, 'completed', 'success')], agora: AGORA });
+  assert.equal(a[0].tipo, 'concluir');
+  assert.equal(a[0].desde, '2026-10-18T10:00:00Z');
+});

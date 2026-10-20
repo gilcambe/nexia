@@ -66,6 +66,6 @@ test('SSE3. app Cortex: aba "Perguntar agora" usa o streaming e mostra a respost
   const page = R('src/pages/cortex/page.tsx');
   assert.match(page, /Perguntar agora/);
   assert.match(page, /<Pergunta /);
-  assert.match(page, /enviar=\{async \(texto\) => \{ const r = await agir\(\{ acao: "pedir", texto \}\)/, 'pedido pela fila continua igual');
+  assert.match(page, /const r = await agir\(\{ acao: "pedir", texto \}\)/, 'pedido pela fila continua igual (pergunta curta vai para "Perguntar agora", #823)');
   assert.match(R('src/pages/cortex/Composer.tsx'), /"pedido" \| "nota" \| "pergunta"/);
 });

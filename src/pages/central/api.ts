@@ -33,6 +33,7 @@ export interface RotaSaude {
 }
 export interface Cota { id: string; nome: string; limite: number; usado: number | null; pct: number | null }
 export interface Cotas { itens: Cota[]; perto: string[]; frear: boolean; limiar: number; firestoreErro?: string; em: string }
+export interface ErroRecente { em: number; rid: string; rota: string; metodo: string; codigo: number; msg: string }
 export interface Historico { dias: number; amostras: number; desde: string | null; rotas: RotaSaude[]; porDia: { dia: string; disponibilidade: number }[] }
 export interface Dados {
   lista?: { produtos: Produto[]; links: { nome: string; url: string }[] };
@@ -47,6 +48,7 @@ export interface Dados {
   empresa?: { fornecedores: Fornecedor[] };
   clientes?: { empresas: { site: string; nome: string; leilao: boolean }[]; personais: Personal[] };
   leads?: Leads;
+  erros?: { erros: ErroRecente[] }; // aba Sistema, só quando abre
   historico?: Historico; // só a aba Sistema pede (lê 30 dias; não entra no "conferir" de 5 em 5 min)
 }
 export type Parte = keyof Dados;

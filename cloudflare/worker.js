@@ -7,11 +7,14 @@ import jobs from '../nexia-ai/jobs/index.js';
 import { corpoIa } from './corpoIa.js';
 import lembretes from './lembretes.js';
 import saude from './saude.js';
+import cacheBorda from './cacheBorda.js';
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     if (new URL(request.url).pathname === '/api/corpo-ia') return corpoIa(request, env);
-    return app.handleRequest(request, env, { getFunction: functions.getFunction });
+    // #807: leituras públicas (config do Firebase etc.) passam pelo cache de borda (60 a 300 s).
+    return cacheBorda.comCacheDeBorda(request, env, ctx,
+      () => app.handleRequest(request, env, { getFunction: functions.getFunction }));
   },
 
   // ADR-F12-03 + ADR-FREE-02 + ADR-AUTO-01: a cada 5 min procura Robôs NEXIA vencidos e, de hora

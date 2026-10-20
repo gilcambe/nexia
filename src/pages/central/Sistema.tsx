@@ -5,6 +5,7 @@ import { Cartao, Sinal, Botao, Carregando } from "./ui";
 import type { Cor } from "./ui";
 import Mais from "./Mais";
 import SaudeHistorico from "./SaudeHistorico";
+import UltimosErros from "./UltimosErros";
 
 // Aba Sistema: a saúde dos sites em 30 dias, as IAs que trabalham para a NEXIA, os fornecedores (serviços grátis que usamos) e os robôs.
 const COR: Record<Situacao, Cor> = { ok: "verde", erro: "vermelho", desligado: "cinza" };
@@ -27,6 +28,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
   return (
     <div className="space-y-4">
       <SaudeHistorico />
+      <UltimosErros />
 
       <Cartao titulo="IAs que trabalham para a Kernex" acao={<Botao onClick={testar} disabled={testando} testid="testar-ias">{testando ? "Testando…" : "🧪 Testar agora"}</Botao>}>
         {erroIA && <p className="text-sm text-red-400" role="alert">{erroIA}</p>}
