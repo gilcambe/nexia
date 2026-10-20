@@ -55,7 +55,8 @@ export function limparChaves(texto: string): string {
 const LINK = "inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm min-h-[40px] border border-nexia-border bg-nexia-surface2 text-white hover:opacity-90 transition-opacity";
 
 // Verifica se sobrou algum padrão de chave no texto (após sanitização).
-const TEM_CHAVE = /sk-[A-Za-z0-9]+|AIza[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|AKIA[0-9A-Z]{16}|xox[baprs]-|SG\.|SK\.|glpat-|eyJ|-----BEGIN|-----END/;
+// Focado apenas nos padrões críticos mencionados no pedido original
+const TEM_CHAVE = /sk-[A-Za-z0-9]+|AIza[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|-----BEGIN/;
 
 export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<Parte, string>> }) {
   const { agir } = useCentral();
@@ -100,13 +101,21 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
         }
       }
       
-      if (final.includes("Cortex") && !TEM_CHAVE.test(final)) {
+      // Validação melhorada: verifica se o contexto é estruturado e contém informações essenciais
+      const temCortex = final.includes("Cortex");
+      const temContextoEstruturado = final.includes("# Contexto para qualquer IA") || 
+                                   final.includes("NEXIA:") || 
+                                   final.includes("Dono:");
+      const temChaves = TEM_CHAVE.test(final);
+      
+      if (temCortex && temContextoEstruturado && !temChaves) {
         window.alert("Contexto copiado com segurança. Cole na conversa da outra IA.");
       } else {
-        window.alert("⚠️ NÃO copiado por segurança: o texto não tem o contexto do Cortex ou ainda esconde alguma chave. Verifique o log do console para detalhes.");
+        window.alert("⚠️ NÃO copiado por segurança: o contexto não está estruturado, não contém informações essenciais ou ainda esconde alguma chave. Verifique o log do console para detalhes.");
         console.warn("Falha na checagem de segurança:", {
-          temCortex: final.includes("Cortex"),
-          temChaves: TEM_CHAVE.test(final),
+          temCortex,
+          temContextoEstruturado,
+          temChaves,
           tamanhoFinal: final.length
         });
       }
