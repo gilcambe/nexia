@@ -126,9 +126,10 @@ exports.handler = async (event, context) => {
     const { action, horario, tema } = JSON.parse(event.body);
 
     // Apenas dono pode postar
-    const ownerToken = process.env.DONO_TOKEN || 'seu_token_aqui';
-    const authHeader = event.headers['Authorization'] || event.headers['authorization'];
-    if (!authHeader || authHeader !== `Bearer ${ownerToken}`) {
+    const ownerToken = process.env.DONO_TOKEN;
+    const headers = event.headers || {};
+    const authHeader = headers['Authorization'] || headers['authorization'];
+    if (!ownerToken || !authHeader || authHeader !== `Bearer ${ownerToken}`) {
       return { statusCode: 403, body: JSON.stringify({ success: false, message: 'Unauthorized' }) };
     }
 
@@ -142,7 +143,9 @@ exports.handler = async (event, context) => {
     }
 
     if (action === 'postarAgora') {
-      const estadoPath = path.join(__dirname, '../../divulga-dados/divulga-estado.json');
+      const estadoPath = path.join(__dirname, '../../divulgados/dados/divulga-estado.json');
+      // Garante que a pasta do estado exista antes de gravar.
+      await fs.promises.mkdir(path.dirname(estadoPath), { recursive: true });
       
       try {
         // Ler arquivo de forma assíncrona
@@ -193,7 +196,3 @@ exports.handler = async (event, context) => {
 };
 
 module.exports = { criarGithub, REPO, RESERVAS, montarReservas, handler };
-
-// Endpoint postarAgora implementado: POST com action:'postarAgora', horario e tema, valida token do dono, atualiza divulga-estado.json
-
-// Endpoint postarAgora implementado: POST com action:'postarAgora', horario e tema, valida token do dono, atualiza divulga-estado.json
