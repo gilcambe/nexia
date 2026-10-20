@@ -72,6 +72,14 @@ function criarGithub(env = process.env, fetchFn = fetch) {
 
   const rodar = (arquivo, inputs) => gh('/actions/workflows/' + arquivo + '/dispatches', { method: 'POST', body: JSON.stringify({ ref: 'develop', inputs }) });
 
+  async function postarAgora(horario, tema) {
+    // Cria uma issue para agendar a postagem
+    const titulo = `Postar agora: ${horario} - ${tema}`;
+    const corpo = `Postagem automática agendada para ${horario} com tema: ${tema}\n\nRotina: divulga.yml\nHorário: ${horario}\nTema: ${tema}`;
+    const i = await gh('/issues', { method: 'POST', body: JSON.stringify({ title: titulo, body: corpo, labels: ['divulga-agora', 'cortex-fila'] }) });
+    return { success: true, numero: i.number, link: i.html_url };
+  }
+
   async function pedirAoCortex(titulo, texto, quem) {
     const i = await gh('/issues', { method: 'POST', body: JSON.stringify({ title: titulo, body: texto + '\n\n_Pedido pela Central NEXIA por ' + quem + '._', labels: ['cortex-fila'] }) });
     return { numero: i.number, link: i.html_url };
