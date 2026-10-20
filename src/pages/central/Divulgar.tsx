@@ -83,6 +83,32 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
 
       {!x ? <Carregando erro={erro} /> : (
         <>
+          <Cartao titulo="Desempenho de seguidores (Últimos 30 dias)">
+            <p className="text-sm text-nexia-muted mb-3">Evolução do público nas redes sociais e insights de picos de engajamento.</p>
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="rounded-xl bg-nexia-surface2 p-3">
+                <span className="text-xs text-nexia-muted block">⏰ Melhor horário de pico</span>
+                <span className="text-sm font-semibold text-nexia-cyan">{x.melhorHorario || "Ainda sem dados suficientes"}</span>
+              </div>
+              <div className="rounded-xl bg-nexia-surface2 p-3">
+                <span className="text-xs text-nexia-muted block">🎯 Melhor tema de engajamento</span>
+                <span className="text-sm font-semibold text-nexia-cyan">{x.melhorTema || "Ainda sem dados suficientes"}</span>
+              </div>
+            </div>
+            {x.seguidores30d && x.seguidores30d.length > 0 ? (
+              <div className="space-y-1 max-h-48 overflow-y-auto pr-1">
+                {x.seguidores30d.map((s, idx) => (
+                  <div key={idx} className="flex justify-between items-center text-xs p-2 rounded-lg bg-nexia-surface2">
+                    <span className="text-nexia-muted">{s.dia}</span>
+                    <span className="font-medium text-white">{s.total.toLocaleString("pt-BR")} seguidores</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-nexia-muted">Dados de seguidores em coleta contínua pelo robô.</p>
+            )}
+          </Cartao>
+
           <Cartao titulo="Últimos posts">
             {x.historico.length === 0 && <p className="text-sm text-nexia-muted">Nenhum post ainda.</p>}
             <ul className="space-y-2">
