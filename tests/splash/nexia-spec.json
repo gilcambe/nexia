@@ -1,0 +1,350 @@
+{
+  "spec": {
+    "kind": "site",
+    "name": "Splash Eventos",
+    "tagline": "Transformando momentos em experiências inesquecíveis",
+    "photo_theme": "event party",
+    "description": "Organização de eventos corporativos, sociais e privados com criatividade e excelência.",
+    "folder": "tests/splash",
+    "fonts": {
+      "heading": "Playfair Display",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#6a4c93",
+      "accent": "#ff6b6b",
+      "bg": "#f8f9fa",
+      "surface": "#ffffff",
+      "text": "#2d3436",
+      "muted": "#636e72",
+      "dark": "#2d3436"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "5511999998888",
+      "phone": "(11) 99999-8888",
+      "email": "contato@splasheventos.com.br",
+      "address": "Av. Paulista, 1000",
+      "city": "São Paulo - SP",
+      "hours": "Seg a Dom, 9h às 22h",
+      "instagram": "splasheventos",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=splash&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "sections": [
+      {
+        "type": "hero",
+        "id": "transformando-momentos-em-memorias-inesq",
+        "title": "Transformando momentos em memórias inesquecíveis",
+        "subtitle": "Eventos corporativos, sociais e privados com criatividade e excelência.",
+        "eyebrow": "Organizadores de eventos",
+        "cta": {
+          "label": "Solicitar orçamento",
+          "href": "whatsapp"
+        },
+        "cta2": {
+          "label": "Nossos serviços",
+          "href": "#servicos"
+        },
+        "image_query": "elegant event party",
+        "video_query": ""
+      },
+      {
+        "type": "services",
+        "id": "servicos",
+        "title": "Nossos serviços",
+        "subtitle": "Soluções completas para o seu evento",
+        "items": [
+          {
+            "title": "Eventos Corporativos",
+            "text": "Congressos, lançamentos e confraternizações.",
+            "price": "",
+            "image_query": "corporate event",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Casamentos",
+            "text": "Celebrações românticas e personalizadas.",
+            "price": "",
+            "image_query": "wedding party",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Aniversários",
+            "text": "Festas temáticas para todas as idades.",
+            "price": "",
+            "image_query": "birthday celebration",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Eventos Sociais",
+            "text": "Coquetéis, jantares e celebrações especiais.",
+            "price": "",
+            "image_query": "social gathering",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          }
+        ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-a-splash",
+        "title": "Sobre a Splash",
+        "subtitle": "Há 10 anos criando experiências memoráveis.",
+        "text": "Há 10 anos criando experiências memoráveis.",
+        "image_query": "event planning team",
+        "stats": [
+          {
+            "value": "10",
+            "label": "anos"
+          },
+          {
+            "value": "500+",
+            "label": "eventos"
+          },
+          {
+            "value": "2000+",
+            "label": "clientes satisfeitos"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "nossos-eventos",
+        "title": "Nossos eventos",
+        "subtitle": "",
+        "image_queries": [
+          "wedding reception",
+          "corporate conference",
+          "birthday party",
+          "cocktail event",
+          "elegant dinner",
+          "outdoor celebration",
+          "private party",
+          "event decoration"
+        ],
+        "gif_queries": []
+      },
+      {
+        "type": "video",
+        "id": "conheca-nosso-trabalho",
+        "title": "Conheça nosso trabalho",
+        "subtitle": "Veja como transformamos eventos experiências memoráveis.",
+        "youtube": "",
+        "video_query": "event highlights"
+      },
+      {
+        "type": "testimonials",
+        "id": "depoimentos",
+        "title": "Depoimentos",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Maria S.",
+            "role": "",
+            "text": "O casamento dos sonhos! Tudo perfeito.",
+            "rating": 5
+          },
+          {
+            "name": "João C.",
+            "role": "",
+            "text": "Congresso corporativo impecável. Parabéns!",
+            "rating": 5
+          },
+          {
+            "name": "Ana P.",
+            "role": "",
+            "text": "Aniversário do meu filho inesquecível.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "links",
+        "id": "redes-sociais",
+        "title": "Redes sociais",
+        "subtitle": "",
+        "items": [
+          {
+            "label": "Instagram",
+            "url": "https://instagram.com/splasheventos",
+            "icon": "instagram"
+          },
+          {
+            "label": "WhatsApp",
+            "url": "https://wa.me/5511999998888",
+            "icon": "whatsapp"
+          },
+          {
+            "label": "Facebook",
+            "url": "https://facebook.com/splasheventos",
+            "icon": "facebook"
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "duvidas-frequentes",
+        "title": "Dúvidas frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Como faço para contratar os serviços?",
+            "a": "Entre em contato pelo WhatsApp ou e-mail para um orçamento personalizado."
+          },
+          {
+            "q": "Trabalhamos com orçamento fechado?",
+            "a": "Sim, oferecemos pacotes com valores definidos ou personalizados conforme necessidade."
+          },
+          {
+            "q": "Quantas pessoas podem atender?",
+            "a": "Capacidade para eventos de 20 a 500 pessoas, com estrutura adequada."
+          },
+          {
+            "q": "Fornecemos decoração?",
+            "a": "Sim, temos opções de decoração temática e personalizada."
+          },
+          {
+            "q": "Trabalhamos em outras cidades?",
+            "a": "Sim, atendemos São Paulo e região metropolitana."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "pronto-para-criar-seu-evento",
+        "title": "Pronto para criar seu evento?",
+        "subtitle": "Fale com nossos especialistas e transforme seu sonho em realidade.",
+        "cta": {
+          "label": "Solicitar orçamento",
+          "href": "whatsapp"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "fale-com-a-splash",
+        "title": "Fale com a Splash",
+        "subtitle": "",
+        "map": true,
+        "form": true
+      }
+    ]
+  },
+  "media": {
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Hallenstadion_Zurich_Corporation_Event_June_2011.jpg/1280px-Hallenstadion_Zurich_Corporation_Event_June_2011.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "File:Hallenstadion Zurich Corporation Event June 2011.jpg",
+      "credit": "File:Hallenstadion Zurich Corporation Event June 2011.jpg — Christophorus77 (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Lombok_Wedding_Party_1998.jpg/1280px-Lombok_Wedding_Party_1998.jpg",
+      "width": 1280,
+      "height": 869,
+      "alt": "File:Lombok Wedding Party 1998.jpg",
+      "credit": "File:Lombok Wedding Party 1998.jpg — anoldent (BY-SA 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item3": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/Pierre-Auguste_Renoir_-_Luncheon_of_the_Boating_Party_-_Google_Art_Project.jpg/1280px-Pierre-Auguste_Renoir_-_Luncheon_of_the_Boating_Party_-_Google_Art_Project.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 948,
+      "alt": "Pierre-Auguste Renoir - Luncheon of the Boating Party - Google Art Project",
+      "credit": "Pierre-Auguste Renoir (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Sir_Tom_Jones_at_The_Queen%27s_Birthday_Party_%28cropped%29.jpg",
+      "width": 1500,
+      "height": 1644,
+      "alt": "Sir Tom Jones at The Queen's Birthday Party (cropped)",
+      "credit": "Sir Tom Jones at The Queen's Birthday Party (cropped) — Raph_PH (BY 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g6": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Private_LAN_party_in_Norway.JPG/1280px-Private_LAN_party_in_Norway.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Private LAN party in Norway",
+      "credit": "Omalmin (CC BY-SA 3.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g7": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/27/Mule_decoration_contest_at_the_National_Western_Stock_Show_in_the_Events_Center.jpg/1280px-Mule_decoration_contest_at_the_National_Western_Stock_Show_in_the_Events_Center.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 851,
+      "alt": "Mule decoration contest at the National Western Stock Show in the Events Center",
+      "credit": "Nathan Walker (CC BY 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s4.clip": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/5/59/Event_highlight_of_Public_Domain_Day_2020_in_Medan_City%2C_Indonesia%3B_January_2020.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "width": 1280,
+      "height": 720,
+      "alt": "Event highlight of Public Domain Day 2020 in Medan City, Indonesia, on January 1",
+      "credit": "Rachmat04 for Wikimedia Indonesia (CC BY 3.0, via Wikimedia Commons)",
+      "provider": "wikimedia",
+      "mime": "video/webm"
+    },
+    "s0.hero": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Gitikka_Ganju_Dhar_at_corporate_event.jpg/1280px-Gitikka_Ganju_Dhar_at_corporate_event.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "Gitikka Ganju Dhar at corporate event",
+      "credit": "Gitikka Ganju Dhar at corporate event — Gitikka ganju dhar (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s2.about": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Corporate_Events_and_Guests_at_PIBM.jpg/1280px-Corporate_Events_and_Guests_at_PIBM.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "Corporate Events and Guests at PIBM",
+      "credit": "Corporate Events and Guests at PIBM — AnnanyaSingh (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item2": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9f/Cheese_And_Wine_Party_Debconf23.jpg/1280px-Cheese_And_Wine_Party_Debconf23.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Cheese And Wine Party Debconf23",
+      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g0": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Cheese_And_Wine_Party_Debconf23_2.jpg/1280px-Cheese_And_Wine_Party_Debconf23_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Cheese And Wine Party Debconf23",
+      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g1": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/Cheese_And_Wine_Party_Debconf23_3.jpg/1280px-Cheese_And_Wine_Party_Debconf23_3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1707,
+      "alt": "Cheese And Wine Party Debconf23",
+      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    }
+  }
+}
