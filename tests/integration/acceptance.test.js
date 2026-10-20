@@ -5,6 +5,8 @@
 // nenhum deploy real acontece (o "Actions" é o falso).
 // Rodar com: npm run test:rules
 const test = require('node:test');
+// #832: cada teste começa com o placar de qualidade vazio (a ordem dos modelos não depende do teste anterior).
+test.beforeEach(() => require('../../nexia-ai/model-router/qualidade').getQualidade().limpar());
 const assert = require('node:assert');
 const path = require('path');
 const crypto = require('crypto');
