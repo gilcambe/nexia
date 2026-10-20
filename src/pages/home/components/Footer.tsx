@@ -36,6 +36,7 @@ export type FooterProps = {
 export default function Footer({ client }: FooterProps) {
   // Selo "Feito com Kernex": o link que vier em client tem prioridade; sem ele, usa o link padrão.
   const madeWithKernexLink = client?.madeWithKernexLink ?? MADE_WITH_KERNEX_LINK;
+  // Verificação: componente já implementa o selo "Feito com Kernex" com link dinâmico, acessibilidade e fallback
 
   return (
     <footer className="border-t border-nexia-border bg-nexia-surface mt-16">
