@@ -2,7 +2,7 @@ import type { Resumo } from "../meu-cortex/api";
 import { agruparPorData } from "./agrupar";
 import Logo from "./Logo";
 
-export type Vista = "chat" | "conexoes" | "tarefas" | "artefatos" | "config";
+export type Vista = "chat" | "conexoes" | "tarefas" | "artefatos" | "config" | "central";
 
 const MENU: { id: Vista; nome: string; d: string }[] = [
   { id: "conexoes", nome: "Conexões", d: "M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" },
@@ -37,7 +37,7 @@ export default function Lateral({ itens, aberto, vista, busca, nome, email, busc
           <input value={busca} onChange={(e) => buscar(e.target.value)} placeholder="Procurar" aria-label="Procurar nos pedidos" data-testid="cx-busca"
             className="flex-1 min-w-0 bg-transparent outline-none text-[15px] text-[var(--cx-txt)] placeholder:text-[var(--cx-mut)]" />
         </label>
-        {MENU.slice(0, 3).map((m) => (
+        {MENU.slice(0, 4).map((m) => (
           <button key={m.id} className={`${item} ${vista === m.id ? "bg-[var(--cx-hover)]" : ""}`} onClick={() => ir(m.id)} data-testid={`cx-menu-${m.id}`}><Icone d={m.d} />{m.nome}</button>
         ))}
       </div>
