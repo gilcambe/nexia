@@ -39,12 +39,27 @@ export function Conexoes({ email }: { email: string }) {
   );
 }
 
-function ListaPedidos({ itens, abrir }: { itens: Resumo[]; abrir: (n: number) => void }) {
+function ListaPedidos({ itens, abrir, fazer }: { itens: Resumo[]; abrir: (n: number) => void; fazer?: (corpo: Record<string, unknown>) => Promise<void> | void }) {
   return (
     <ul className="space-y-2">{itens.map((t) => (
-      <li key={t.numero}><button onClick={() => abrir(t.numero)} className="w-full text-left rounded-xl border border-[var(--cx-line)] bg-[var(--cx-card)] px-4 py-3 hover:border-[var(--cx-ac)]" data-testid="cx-linha">
-        <span className="text-xs text-[var(--cx-mut)]">#{t.numero} · {NOME_SITUACAO[t.situacao]} · {haQuanto(t.quando)}</span>
-        <span className="block break-words mt-0.5">{t.titulo}</span></button></li>
+      <li key={t.numero} className="flex items-center gap-2 rounded-xl border border-[var(--cx-line)] bg-[var(--cx-card)] px-4 py-3 hover:border-[var(--cx-ac)]">
+        <button onClick={() => abrir(t.numero)} className="flex-1 text-left" data-testid="cx-linha">
+          <span className="text-xs text-[var(--cx-mut)]">#{t.numero} · {NOME_SITUACAO[t.situacao]} · {haQuanto(t.quando)}</span>
+          <span className="block break-words mt-0.5">{t.titulo}</span>
+        </button>
+        {fazer && (
+          <div className="flex items-center gap-2 shrink-0">
+            {t.situacao === "travado" && (
+              <button type="button" onClick={(e) => { e.stopPropagation(); fazer({ acao: "tentar", n: t.numero }); }} className="h-8 px-2.5 rounded-lg bg-[var(--cx-ac)] text-black text-xs font-semibold" data-testid="cx-lista-tentar">Tentar de novo</button>
+            )}
+            {t.situacao !== "feito" && t.situacao !== "fechado" ? (
+              <button type="button" onClick={(e) => { e.stopPropagation(); if (confirm("Cancelar este pedido?")) fazer({ acao: "cancelar", n: t.numero }); }} className="h-8 px-2.5 rounded-lg border border-[var(--cx-line)] text-xs" data-testid="cx-lista-cancelar">Cancelar</button>
+            ) : (
+              <button type="button" onClick={(e) => { e.stopPropagation(); fazer({ acao: "reabrir", n: t.numero }); }} className="h-8 px-2.5 rounded-lg border border-[var(--cx-line)] text-xs" data-testid="cx-lista-reabrir">Reabrir</button>
+            )}
+          </div>
+        )}
+      </li>
     ))}{!itens.length && <li className="text-sm text-[var(--cx-mut)]">Nada por aqui.</li>}</ul>
   );
 }
@@ -52,19 +67,50 @@ function ListaPedidos({ itens, abrir }: { itens: Resumo[]; abrir: (n: number) =>
 const FILTROS: { id: Filtro; nome: string }[] = [{ id: "todos", nome: "Todas" }, { id: "abertos", nome: "Andando" }, { id: "travados", nome: "Travadas" }, { id: "feitos", nome: "Feitas" }];
 
 export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
-  const { listar } = usePedidos();
+  const { listar, agir } = usePedidos();
   const [f, setF] = useState<Filtro>("abertos");
+  const [busca, setBusca] = useState("");
+  const [buscaDebounced, setBuscaDebounced] = useState("");
   const [itens, setItens] = useState<Resumo[]>([]);
   const [erro, setErro] = useState<string>();
-  useEffect(() => { setErro(undefined); listar("", f, 1).then((r) => setItens(r.itens)).catch((e: Error) => setErro(e.message)); }, [listar, f]);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => { setBuscaDebounced(busca); }, 300);
+    return () => clearTimeout(timer);
+  }, [busca]);
+
+  const carregar = useCallback(() => {
+    setErro(undefined);
+    listar(buscaDebounced, f, 1).then((r) => setItens(r.itens)).catch((e: Error) => setErro(e.message));
+  }, [listar, buscaDebounced, f]);
+
+  useEffect(() => { carregar(); }, [carregar]);
+
+  const fazer = async (corpo: Record<string, unknown>) => {
+    setMsg(null);
+    try {
+      const res = await agir(corpo);
+      if (res && res.mensagem) setMsg(res.mensagem);
+      carregar();
+    } catch (e) {
+      setErro((e as Error).message);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-6">
       <Titulo t="Tarefas" s="A fila do Cortex, do jeito que ele enxerga." />
+      <div className="mb-4">
+        <input type="text" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Pesquisar tarefas..." data-testid="cx-tarefas-busca"
+          className="w-full h-10 px-4 rounded-xl border border-[var(--cx-line)] bg-[var(--cx-card)] text-sm text-[var(--cx-txt)] outline-none focus:border-[var(--cx-ac)]" />
+      </div>
       <div className="flex gap-2 mb-4 overflow-x-auto">{FILTROS.map((x) => (
         <button key={x.id} onClick={() => setF(x.id)} data-testid={`cx-filtro-${x.id}`}
           className={`px-4 h-10 rounded-full text-sm border ${f === x.id ? "bg-[var(--cx-ac)] text-black border-transparent font-semibold" : "border-[var(--cx-line)]"}`}>{x.nome}</button>))}</div>
-      {erro && <p className="text-red-400 text-sm" role="alert">{erro}</p>}
-      <ListaPedidos itens={itens} abrir={abrir} />
+      {erro && <p className="text-red-400 text-sm mb-2" role="alert">{erro}</p>}
+      {msg && <p className="text-[var(--cx-ac)] text-sm mb-2" role="status">{msg}</p>}
+      <ListaPedidos itens={itens} abrir={abrir} fazer={fazer} />
     </div>
   );
 }
