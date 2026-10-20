@@ -91,18 +91,18 @@ export default function Footer({ client }: FooterProps) {
         <div className="border-t border-nexia-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="text-[11px] text-nexia-muted">© 2026 NEXIA OS · Todos os direitos reservados · LGPD Compliant</span>
           <div className="flex items-center gap-3">
-                      {client?.madeWithKernexLink && (
-            <a
-              href={client.madeWithKernexLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="made-with-kernex"
-              title="Feito com Kernex"
-              aria-label="Feito com Kernex (abre em uma nova aba)"
-            >
-              Feito com Kernex
-            </a>
-          )}
+            {client?.madeWithKernexLink && (
+              <a
+                href={client.madeWithKernexLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="made-with-kernex text-xs text-nexia-muted hover:text-nexia-cyan transition-colors px-2 py-1 rounded border border-nexia-border"
+                title="Feito com Kernex"
+                aria-label="Feito com Kernex (abre em uma nova aba)"
+              >
+                Feito com Kernex
+              </a>
+            )}
             <a href="https://wa.me/5511944037259" target="_blank" rel="noopener noreferrer" className="w-7 h-7 flex items-center justify-center rounded-lg bg-nexia-surface2 border border-nexia-border hover:border-nexia-cyan/40 transition-colors">
               <i className="ri-whatsapp-line text-nexia-muted hover:text-nexia-cyan text-sm" />
             </a>
