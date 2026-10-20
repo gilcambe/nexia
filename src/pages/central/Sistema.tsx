@@ -6,7 +6,7 @@ import type { Cor } from "./ui";
 import Mais from "./Mais";
 import SaudeHistorico from "./SaudeHistorico";
 import UltimosErros from "./UltimosErros";
-import { buscarContextoIA } from "@/lib/fetch-contexto-ia";
+import { buscarContextoIA, sanitizarTexto } from "@/lib/fetch-contexto-ia";
 
 // Aba Sistema: a saúde dos sites em 30 dias, as IAs que trabalham para a NEXIA, os fornecedores (serviços grátis que usamos) e os robôs.
 const COR: Record<Situacao, Cor> = { ok: "verde", erro: "vermelho", desligado: "cinza" };
@@ -22,22 +22,40 @@ const URLS_CONTEXTO = [
 // Remove chaves e segredos do texto. Pode ser usado como extra sanitização.
 export function limparChaves(texto: string): string {
   if (!texto) return "";
-  // Remove blocos PEM completos (de BEGIN até END)
-  const textoSemPEM = texto.replace(/-----BEGIN[^\n]+[\s\S]*?-----END[^\n]+/g, "[oculto]");
-
-  return textoSemPEM
-    .replace(/sk-[A-Za-z0-9]+/g, "[oculto]")
-    .replace(/AIza[A-Za-z0-9_-]+/g, "[oculto]")
-    .replace(/ghp_[A-Za-z0-9]+/g, "[oculto]")
-    // Cabeçalho de chave sem o bloco correspondente (chave solta)
-    .replace(/-----BEGIN[^\n]+/g, "[oculto]");
+  
+  // Lista unificada de padrões de chaves e segredos sensíveis
+  const PADROES = [
+    // Chaves API
+    { regex: /sk-[A-Za-z0-9]+/g, nome: "OpenAI API Key" },
+    { regex: /AIza[A-Za-z0-9_-]+/g, nome: "Google API Key" },
+    { regex: /ghp_[A-Za-z0-9]+/g, nome: "GitHub Personal Access Token" },
+    { regex: /AKIA[0-9A-Z]{16}/g, nome: "AWS Access Key" },
+    { regex: /xox[baprs]-[A-Za-z0-9-]+/g, nome: "Slack Token" },
+    { regex: /SG\.[A-Za-z0-9_-]+/g, nome: "SendGrid API Key" },
+    { regex: /SK\.[A-Za-z0-9_-]+/g, nome: "SendGrid Web API Key" },
+    { regex: /glpat-[A-Za-z0-9_-]{20}/g, nome: "GitLab Personal Access Token" },
+    { regex: /eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*/g, nome: "JWT Token" },
+    // Blocos PEM/PGP (chaves SSL, PGP, etc.)
+    { regex: /-----BEGIN[^\n]+[\s\S]*?-----END[^\n]+/g, nome: "PEM/PGP Key Block" },
+    { regex: /-----BEGIN[^\n]+/g, nome: "PEM/PGP Key Start" },
+    { regex: /-----END[^\n]+/g, nome: "PEM/PGP Key End" },
+  ];
+  
+  let textoLimpo = texto;
+  
+  // Aplica cada regex substituindo por '[oculto]'
+  PADROES.forEach(({ regex }) => {
+    textoLimpo = textoLimpo.replace(regex, "[oculto]");
+  });
+  
+  return textoLimpo;
 }
 
 // Estilo dos links (mesmo visual do botão) para abrir outra IA em outra aba.
 const LINK = "inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm min-h-[40px] border border-nexia-border bg-nexia-surface2 text-white hover:opacity-90 transition-opacity";
 
 // Verifica se sobrou algum padrão de chave no texto (após sanitização).
-const TEM_CHAVE = /sk-[A-Za-z0-9]+|AIza[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|-----BEGIN/;
+const TEM_CHAVE = /sk-[A-Za-z0-9]+|AIza[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|AKIA[0-9A-Z]{16}|xox[baprs]-|SG\.|SK\.|glpat-|eyJ|-----BEGIN|-----END/;
 
 export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<Parte, string>> }) {
   const { agir } = useCentral();
@@ -53,7 +71,9 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
     try {
       // Usa a função já existente que faz fetch + sanitização
       const contextoBruto = await buscarContextoComFallback();
-      const contextoLimpo = limparChaves(contextoBruto);
+      // Aplica sanitização dupla: primeiro a função do fetch-contexto-ia.ts, depois nossa limpeza extra
+      const contextoSanitizado = sanitizarTexto(contextoBruto);
+      const contextoLimpo = limparChaves(contextoSanitizado);
       
       const fila = d.cortex?.naFila ?? 0;
       const rodando = d.cortex?.fazendo?.length ?? 0;
@@ -81,9 +101,14 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
       }
       
       if (final.includes("Cortex") && !TEM_CHAVE.test(final)) {
-        window.alert("Contexto copiado. Cole na conversa da outra IA.");
+        window.alert("Contexto copiado com segurança. Cole na conversa da outra IA.");
       } else {
-        window.alert("Não copiei por segurança: o texto não tem o contexto do Cortex ou ainda esconde alguma chave.");
+        window.alert("⚠️ NÃO copiado por segurança: o texto não tem o contexto do Cortex ou ainda esconde alguma chave. Verifique o log do console para detalhes.");
+        console.warn("Falha na checagem de segurança:", {
+          temCortex: final.includes("Cortex"),
+          temChaves: TEM_CHAVE.test(final),
+          tamanhoFinal: final.length
+        });
       }
     } catch (e) {
       window.alert(`Não consegui copiar o contexto: ${(e as Error).message}`);
