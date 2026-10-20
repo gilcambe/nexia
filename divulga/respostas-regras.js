@@ -70,12 +70,7 @@ function decidir(post, resposta, usuario, sorteio = false) {
     return "Por favor, envie uma mensagem mais detalhada além dos emojis.";
   }
   
-  // 6. Verifica se é mesma pessoa no post
-  if (post.usuario === usuario) {
-    return "Você já postou isso anteriormente.";
-  }
-  
-  // 7. Verifica se é pedido de link
+  // 6. Verifica se é pedido de link
   if (querLink(resposta)) {
     return "Acesse nosso site: www.nexia.com.br ou entre em contato via WhatsApp: (11) 99999-9999";
   }
