@@ -132,7 +132,7 @@ exports.handler = async (event, context) => {
   if (action === 'postarAgora') {
     const fs = require('fs');
     const path = require('path');
-    const estadoPath = path.join(__dirname, '../../divulga-dados/divulga-estado.json');
+    const estadoPath = path.join(__dirname, '../../divulgados/dados/divulga-estado.json');
     const data = JSON.parse(fs.readFileSync(estadoPath, 'utf8'));
     data.postagens = data.postagens || [];
     data.postagens.push({ horario, tema, data: new Date().toISOString() });
