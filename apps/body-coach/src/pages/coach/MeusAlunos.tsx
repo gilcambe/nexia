@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Card from '@/components/base/Card';
 import { painelAlunos, sumiu, type LinhaAluno, type Painel } from '@/lib/coach/alunos';
+import { quemPrecisaDeAtencao, linkMensagem } from '@/lib/coach/atencao';
 
 type Filtro = 'todos' | 'sumiram' | 'semficha' | 'naopagou';
 
@@ -27,6 +28,7 @@ export default function MeusAlunos() {
     semficha: alunos.filter((a) => !a.temFicha).length,
     naopagou: alunos.filter((a) => !a.pago && a.vinculo !== 'parceiro').length,
   };
+  const atencao = quemPrecisaDeAtencao(alunos);
   const lista = alunos
     .filter((a) => filtro === 'todos' || (filtro === 'sumiram' ? sumiu(a) : filtro === 'semficha' ? !a.temFicha : !a.pago && a.vinculo !== 'parceiro'))
     .sort((x, y) => Number(sumiu(y)) - Number(sumiu(x)) || (y.diasSemTreinar ?? 999) - (x.diasSemTreinar ?? 999) || x.nome.localeCompare(y.nome));
@@ -61,6 +63,25 @@ export default function MeusAlunos() {
             <Resumo valor={conta.semficha} rotulo="sem ficha do coach" cor={conta.semficha ? 'text-secondary-800' : 'text-foreground-950'} />
             <Resumo valor={conta.naopagou} rotulo={`não pagaram ${p ? p.mes.split('-').reverse().join('/') : ''}`} cor={conta.naopagou ? 'text-secondary-800' : 'text-foreground-950'} />
           </div>
+
+          {atencao.length > 0 && (
+            <section className="rounded-2xl border border-red-200 bg-red-50/60 p-4 dark:border-red-900 dark:bg-red-950/30" data-testid="atencao-hoje">
+              <h2 className="font-heading text-base font-bold text-foreground-950">Quem precisa de atenção hoje</h2>
+              <p className="mt-0.5 text-xs text-foreground-600">3 dias ou mais sem treinar. Toque em "Mandar mensagem": a conversa abre com o texto pronto, é só conferir e enviar.</p>
+              <ul className="mt-3 space-y-2">
+                {atencao.slice(0, 8).map((a) => (
+                  <li key={a.uid} className="flex items-center gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-foreground-950">{a.nome}</p>
+                      <p className="text-xs text-red-600">{quando(a)}</p>
+                    </div>
+                    <Link to={linkMensagem(a)} className="shrink-0 rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-semibold text-background-50 dark:text-foreground-950" aria-label={`Mandar mensagem pronta para ${a.nome}`}><i className="ri-chat-smile-2-line mr-1"></i>Mandar mensagem</Link>
+                  </li>
+                ))}
+              </ul>
+              {atencao.length > 8 && <button type="button" onClick={() => setFiltro('sumiram')} className="mt-2 text-xs font-semibold text-primary-600">Ver todos os {atencao.length}</button>}
+            </section>
+          )}
 
           <div className="grid grid-cols-4 gap-1 rounded-xl bg-background-100 p-1" role="tablist">
             {([['todos', 'Todos'], ['sumiram', 'Sumiram'], ['semficha', 'Sem ficha'], ['naopagou', 'Não pagou']] as const).map(([id, l]) => (

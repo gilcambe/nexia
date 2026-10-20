@@ -1,5 +1,7 @@
 # Melhoria 45: Modos de Resposta no Composer
 
+> Esta melhoria visa refatorar a lógica de validação de entrada nas APIs REST, reduzindo duplicidade de código, melhorando a performance e facilitando testes unitários.
+
 - **Status:** Implementado
 - **Regra:** O composer oferece três modos de resposta: Rápido, Pensar e Pesquisar. O dono escolhe velocidade ou profundidade como no Claude/ChatGPT.
 - **Por quê:** Diferentes necessidades de resposta: rapidez para perguntas simples, profundidade para análise complexa, e pesquisa para informações atualizadas.
@@ -47,4 +49,6 @@
 - Testar envio do modo na requisição
 
 ## Auto-correção de CI
-- Auto‑correction: when the CI fails, Cortex receives the last 80 lines of the error log and automatically retries the CI up to 2 times before human intervention.
+
+- Capacidade de correção automática quando o CI falha:
+  - Auto‑correction: when the CI fails, Cortex receives the last 80 lines of the error log and automatically retries the CI up to 2 times before human intervention.

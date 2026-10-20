@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { streamCortex } from "@/services/api";
+import { apiPath } from "@/config/env";
+import { useAuth } from "@/contexts/AuthContext";
+import { contextoCentral, ehSobreSituacao } from "./intencao";
+import type { SituacaoCortex } from "./intencao";
 import Logo from "./Logo";
 import Composer from "./Composer";
 
@@ -7,7 +11,17 @@ import Composer from "./Composer";
 // Para mudar código, "Virar pedido" manda a pergunta para a fila do Cortex como um pedido normal.
 interface Fala { id: string; quem: "dono" | "cortex"; texto: string; vivo?: boolean; modelo?: string }
 
-export default function Pergunta({ virarPedido }: { virarPedido: (texto: string) => void }) {
+// #823: "como estamos?" / "o que falta?" leem a Central (fila do Cortex) antes de responder. Sem acesso, responde sem esse contexto.
+async function lerCentral(token: string | null): Promise<string> {
+  if (!token) return "";
+  try {
+    const r = await fetch(apiPath("/central") + "?parte=cortex", { headers: { Authorization: `Bearer ${token}` } });
+    return r.ok ? contextoCentral((await r.json()) as SituacaoCortex) : "";
+  } catch { return ""; }
+}
+
+export default function Pergunta({ virarPedido, primeira }: { virarPedido: (texto: string) => void; primeira?: string }) {
+  const { getToken } = useAuth();
   const [falas, setFalas] = useState<Fala[]>([]);
   const [conversa] = useState(() => "cortex-app-" + Date.now().toString(36));
   const corte = useRef<AbortController | null>(null);
@@ -16,6 +30,9 @@ export default function Pergunta({ virarPedido }: { virarPedido: (texto: string)
 
   useEffect(() => { fim.current?.scrollIntoView({ block: "end" }); }, [falas]);
   useEffect(() => () => corte.current?.abort(), []);
+  // Pergunta que chegou pelo "Pedir tarefa" (#823): responde na hora, sem abrir issue.
+  const feita = useRef(false);
+  useEffect(() => { if (primeira && !feita.current) { feita.current = true; void perguntar(primeira); } }, [primeira]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const perguntar = async (texto: string) => {
     const id = "c" + Date.now();
@@ -24,7 +41,9 @@ export default function Pergunta({ virarPedido }: { virarPedido: (texto: string)
     corte.current = ctl;
     const mudar = (f: (x: Fala) => Fala) => setFalas((l) => l.map((x) => (x.id === id ? f(x) : x)));
     try {
-      for await (const c of streamCortex({ message: texto, tenantId: "nexia", conversationId: conversa }, ctl.signal)) {
+      const ctx = ehSobreSituacao(texto) ? await lerCentral(await getToken().catch(() => null)) : "";
+      const message = ctx ? `${ctx}\n\nPergunta do dono: ${texto}` : texto;
+      for await (const c of streamCortex({ message, tenantId: "nexia", conversationId: conversa }, ctl.signal)) {
         if (c.token) mudar((x) => ({ ...x, texto: x.texto + c.token }));
         if (c.model) mudar((x) => ({ ...x, modelo: c.model }));
         if (c.done) break;

@@ -128,6 +128,7 @@ export default function Conheca() {
               <p className="mt-1 text-sm text-foreground-600">Para personal. 3 alunos grátis para sempre.</p>
             </Card>
           </div>
+          <Link to={comRef('/planos')} className="mt-3 block text-center text-sm font-semibold text-[#ea580c] underline">Ver todos os planos e dúvidas</Link>
         </section>
 
         <section>

@@ -19,6 +19,7 @@ Este arquivo contém as decisões e regras fundamentais do projeto. A lista que 
 - **Aplicação:** Perguntas como "como estamos?" ou "o que falta?" são respondidas imediatamente
 - **Custo:** 0 (sem fila para perguntas)
 - **Apenas pedidos de código viram issue"
+- **Mecanismo:** Modelo rápido (groq_llama3_fast) lendo Central para perguntas
 
 ### 4. Divisão de Tarefas
 - **Regra:** Tarefas grandes são divididas automaticamente em pequenas

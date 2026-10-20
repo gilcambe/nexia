@@ -148,3 +148,12 @@ test('B7: sem internet a casca guardada abre na hora', async () => {
   const nav = await disparar('https://app.test/body-coach/', { mode: 'navigate' });
   assert.equal(nav.corpo, 'casca');
 });
+
+test('A8 (#811). Body Coach abre com a config guardada e atualiza pela rede depois', () => {
+  const fb = ler('lib/firebaseClient.ts');
+  const corpo = fb.slice(fb.indexOf('async function loadConfig'));
+  assert.match(corpo, /const guardada = cfgGuardada\(\);/);
+  assert.match(corpo, /if \(guardada\) \{ rede\.catch\(\(\) => null\); return guardada; \}/);
+  assert.match(fb, /async function buscarConfigNaRede/);
+  assert.match(fb, /localStorage\.setItem\(CHAVE_CFG_FIREBASE/);
+});
