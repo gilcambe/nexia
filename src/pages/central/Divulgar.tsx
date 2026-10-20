@@ -15,21 +15,24 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   // Posta na hora: usado pelos botões 07h15, 12h15 e 19h15 de cada tema da semana.
   // Função implementada conforme solicitado no pedido.
   const handlePostarAgora = async (horario: string, tema: string) => {
+    setOcupado(true);
     try {
-      const res = await fetch('/.netlify/functions/central/github', {
+      const res = await fetch('/api/central', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'postarAgora', horario, tema }),
+        body: JSON.stringify({ acao: 'postarAgora', horario, tema }),
       });
       const data = await res.json();
       if (data.success) {
         alert('Postagem agendada para ' + horario + ' com tema: ' + tema);
       } else {
-        alert('Erro: ' + data.message);
+        alert('Erro: ' + (data.message || 'Falha ao postar'));
       }
     } catch (err) {
       console.error(err);
       alert('Falha na requisição');
+    } finally {
+      setOcupado(false);
     }
   };
   
