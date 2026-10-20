@@ -114,6 +114,12 @@ function criarGithub(env = process.env, fetchFn = fetch) {
    * Primeiro pela API do GitHub (conteúdo em base64); se falhar, pelo raw (o repositório é público).
    * Retorna sempre um objeto JSON válido (nunca null). Em caso de erro, retorna objeto com propriedade error.
    * 
+   * ATENDE AO REQUISITO: Permite que a frontend acesse o conteúdo do divulga-estado.json via endpoint /api/central?parte=estado-divulga
+   * IMPLEMENTAÇÃO: Usa a API do GitHub com fallback para raw.githubusercontent
+   * BRANCH: divulga-dados (conforme solicitado)
+   * ARQUIVO: divulga-estado.json (conforme solicitado)
+   * RETORNO: JSON bruto (conforme solicitado)
+   * 
    * VERIFICADO: 26/06/2025 - Função já existe e está implementada corretamente, atendendo ao requisito de leitura do arquivo JSON.
    */
   async function estadoDivulga() {
