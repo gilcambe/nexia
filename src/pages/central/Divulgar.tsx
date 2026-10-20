@@ -54,24 +54,26 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
       </Cartao>
 
       <Cartao titulo="Temas da semana">
-        <p className="text-sm text-nexia-muted">Cada dia tem um tema. Escolha o hor\u00e1rio e o rob\u00f4 cria e publica o texto na hora.</p>
-        <div className="divulga-themes space-y-2">
-          {temasSemana.map((t, i) => (
-            <div key={i} className="tema-item rounded-xl bg-nexia-surface2 p-3 text-sm space-y-2">
+        <p className="text-sm text-nexia-muted">Cada dia tem um tema. Escolha o horário e o robô cria e publica o texto na hora.</p>
+        <div className="space-y-2">
+          {temasSemana.map((t) => (
+            <div key={t.dia} className="rounded-xl bg-nexia-surface2 p-3 text-sm space-y-2">
               <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                <span className="font-medium text-nexia-text">{t.dia}</span>
-                <span aria-hidden="true" className="text-nexia-muted">\u2013</span>
+                <span className="font-medium">{t.dia}</span>
+                <span aria-hidden="true" className="text-nexia-muted">–</span>
                 <span className="text-nexia-muted">{t.tema}</span>
               </div>
-              <div className="horarios flex flex-wrap gap-2">
-                {HORARIOS.map((horario) => (
+              <div className="flex flex-wrap gap-2">
+                {HORARIOS.map((h) => (
                   <button
-                    key={horario}
+                    key={h}
                     type="button"
-                    onClick={() => handlePostarAgora(horario, t.tema)}
+                    onClick={() => handlePostarAgora(h, t.tema)}
                     disabled={ocupado}
-                    className="rounded-lg border border-nexia-border bg-nexia-surface px-3 py-1.5 text-xs font-medium text-nexia-text transition hover:border-nexia-cyan hover:text-nexia-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexia-cyan disabled:cursor-not-allowed disabled:opacity-50"
-                  >Postar {horario}</button>
+                    className="rounded-lg border border-nexia-border bg-nexia-surface px-3 py-1.5 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Postar {h}
+                  </button>
                 ))}
               </div>
             </div>
