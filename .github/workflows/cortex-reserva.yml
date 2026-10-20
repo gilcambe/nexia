@@ -110,4 +110,7 @@ jobs:
         if: steps.aplicar.outputs.ok != '1'
         run: |
           gh issue comment "$NUMERO" --body "Reserva: nenhuma conta ligada respondeu (sem cota ou sem chave). A fila tenta de novo amanhã."
+          # #803: o rótulo segura a tarefa até o dia virar; a Central mostra o aviso e a fila reenfileira do zero.
+          gh label create cortex-reserva-sem-cota --color FBCA04 --description "Reserva sem cota hoje: volta amanhã" 2>/dev/null || true
+          gh issue edit "$NUMERO" --add-label cortex-reserva-sem-cota || true
           exit 1

@@ -34,7 +34,7 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
   const feita = useRef(false);
   useEffect(() => { if (primeira && !feita.current) { feita.current = true; void perguntar(primeira); } }, [primeira]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const perguntar = async (texto: string) => {
+  const perguntar = async (texto: string, modo?: "rapido" | "pensar" | "pesquisar") => {
     const id = "c" + Date.now();
     setFalas((l) => [...l, { id: "d" + Date.now(), quem: "dono", texto }, { id, quem: "cortex", texto: "", vivo: true }]);
     const ctl = new AbortController();
@@ -43,7 +43,7 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
     try {
       const ctx = ehSobreSituacao(texto) ? await lerCentral(await getToken().catch(() => null)) : "";
       const message = ctx ? `${ctx}\n\nPergunta do dono: ${texto}` : texto;
-      for await (const c of streamCortex({ message, tenantId: "nexia", conversationId: conversa }, ctl.signal)) {
+      for await (const c of streamCortex({ message, tenantId: "nexia", conversationId: conversa, modo }, ctl.signal)) {
         if (c.token) mudar((x) => ({ ...x, texto: x.texto + c.token }));
         if (c.model) mudar((x) => ({ ...x, modelo: c.model }));
         if (c.done) break;
@@ -90,7 +90,7 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
           <div ref={fim} />
         </div>
       </div>
-      <Composer modo="pergunta" enviar={async (t) => { if (respondendo) throw new Error("Espere a resposta terminar ou toque em Parar."); void perguntar(t); }} />
+      <Composer modo="pergunta" enviar={async (t, m) => { if (respondendo) throw new Error("Espere a resposta terminar ou toque em Parar."); void perguntar(t, m); }} />
     </div>
   );
 }

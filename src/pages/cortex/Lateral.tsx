@@ -2,12 +2,13 @@ import type { Resumo } from "../meu-cortex/api";
 import { agruparPorData } from "./agrupar";
 import Logo from "./Logo";
 
-export type Vista = "chat" | "conexoes" | "tarefas" | "artefatos" | "config";
+export type Vista = "chat" | "conexoes" | "tarefas" | "artefatos" | "config" | "central";
 
 const MENU: { id: Vista; nome: string; d: string }[] = [
   { id: "conexoes", nome: "Conexões", d: "M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" },
   { id: "tarefas", nome: "Tarefas", d: "M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" },
   { id: "artefatos", nome: "Artefatos", d: "M12 2l9 5v10l-9 5-9-5V7zM12 12l9-5M12 12v10M12 12L3 7" },
+  { id: "central", nome: "Central de controle", d: "M12 2v20M2 12h20M6 6l12 12M18 6l-12 12" },
   { id: "config", nome: "Configurações", d: "M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6zM19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" },
 ];
 
@@ -36,7 +37,7 @@ export default function Lateral({ itens, aberto, vista, busca, nome, email, busc
           <input value={busca} onChange={(e) => buscar(e.target.value)} placeholder="Procurar" aria-label="Procurar nos pedidos" data-testid="cx-busca"
             className="flex-1 min-w-0 bg-transparent outline-none text-[15px] text-[var(--cx-txt)] placeholder:text-[var(--cx-mut)]" />
         </label>
-        {MENU.slice(0, 3).map((m) => (
+        {MENU.slice(0, 4).map((m) => (
           <button key={m.id} className={`${item} ${vista === m.id ? "bg-[var(--cx-hover)]" : ""}`} onClick={() => ir(m.id)} data-testid={`cx-menu-${m.id}`}><Icone d={m.d} />{m.nome}</button>
         ))}
       </div>
