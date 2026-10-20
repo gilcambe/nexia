@@ -25,12 +25,13 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
     } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
   };
   
-  // Temas da semana com horários de postagem
-  const temasSemana = SEMANA.map((dia, idx) => ({ dia, tema: temaDoDia(dia) }));
   const rodar = async (corpo: Record<string, unknown>) => {
     setOcupado(true); setMsg(null);
     try { setMsg((await agir(corpo)).mensagem); } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
   };
+  // Temas da semana com horários de postagem (07h15, 12h15 e 19h15)
+  const temasSemana = SEMANA.map((dia, idx) => ({ dia, tema: temaDoDia(dia) }));
+
   const x = d.divulga;
   return (
     <div className="space-y-4">
@@ -54,24 +55,15 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
                 <span className="text-nexia-muted">{t.tema}</span>
               </div>
               <div className="horarios flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => handlePostarAgora('07h15', t.tema)}
-                  disabled={ocupado}
-                  className="rounded-lg border border-nexia-border bg-nexia-surface px-3 py-1.5 text-xs font-medium text-nexia-text transition hover:border-nexia-cyan hover:text-nexia-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexia-cyan disabled:cursor-not-allowed disabled:opacity-50"
-                >Postar 07h15</button>
-                <button
-                  type="button"
-                  onClick={() => handlePostarAgora('12h15', t.tema)}
-                  disabled={ocupado}
-                  className="rounded-lg border border-nexia-border bg-nexia-surface px-3 py-1.5 text-xs font-medium text-nexia-text transition hover:border-nexia-cyan hover:text-nexia-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexia-cyan disabled:cursor-not-allowed disabled:opacity-50"
-                >Postar 12h15</button>
-                <button
-                  type="button"
-                  onClick={() => handlePostarAgora('19h15', t.tema)}
-                  disabled={ocupado}
-                  className="rounded-lg border border-nexia-border bg-nexia-surface px-3 py-1.5 text-xs font-medium text-nexia-text transition hover:border-nexia-cyan hover:text-nexia-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexia-cyan disabled:cursor-not-allowed disabled:opacity-50"
-                >Postar 19h15</button>
+                {['07h15', '12h15', '19h15'].map((horario) => (
+                  <button
+                    key={horario}
+                    type="button"
+                    onClick={() => handlePostarAgora(horario, t.tema)}
+                    disabled={ocupado}
+                    className="rounded-lg border border-nexia-border bg-nexia-surface px-3 py-1.5 text-xs font-medium text-nexia-text transition hover:border-nexia-cyan hover:text-nexia-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexia-cyan disabled:cursor-not-allowed disabled:opacity-50"
+                  >Postar {horario}</button>
+                ))}
               </div>
             </div>
           ))}
