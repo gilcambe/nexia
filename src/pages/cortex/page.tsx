@@ -89,6 +89,7 @@ export default function CortexPage() {
 
   const nome = user?.displayName || "";
   const email = user?.email || "";
+  const isAdmin = user?.email === "gcbezerra@gmail.com";
 
   const lateral = <Lateral itens={itens} aberto={aberto} vista={vista} busca={busca} nome={nome} email={email} buscar={setBusca} novo={novo} abrir={abrir} ir={ir} />;
 
@@ -108,6 +109,11 @@ export default function CortexPage() {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h10" /></svg>
           </button>
           <Logo tamanho={28} /><span className="font-semibold">Cortex</span>
+          {isAdmin && (
+            <button onClick={() => navigate("/central")} className="w-11 h-11 flex items-center justify-center" aria-label="Central de controle" data-testid="cx-central">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 2v20M2 12h20M6 6l12 12M18 6l-12 12" /></svg>
+            </button>
+          )}
           <button onClick={novo} className="ml-auto w-11 h-11 flex items-center justify-center" aria-label="Novo pedido"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg></button>
         </header>
 
