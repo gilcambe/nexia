@@ -40,3 +40,30 @@
 .central-claro .text-nexia-cyan { color: #008f74 !important; }
 .central-claro .bg-nexia-cyan { color: #000 !important; }
 /* Fim do Tema claro da Central */
+
+/* Selo "Feito com Kernex" no rodapé */
+.made-with-kernex {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  line-height: 1.2;
+  color: #9ca3af;
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 4px 10px;
+  border: 1px solid #2a2a35;
+  border-radius: 999px;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+.made-with-kernex:hover {
+  color: #00d4aa;
+  border-color: rgba(0, 212, 170, 0.45);
+  background-color: rgba(0, 212, 170, 0.08);
+}
+.made-with-kernex:focus-visible {
+  outline: 2px solid #00d4aa;
+  outline-offset: 2px;
+  color: #00d4aa;
+}
+.central-claro .made-with-kernex { color: #5b6270; border-color: #d7dbe0; }
+.central-claro .made-with-kernex:hover { color: #008f74; border-color: rgba(0, 143, 116, 0.45); }

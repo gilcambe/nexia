@@ -23,7 +23,19 @@ const product = [
   { label: "Documentação", to: "/docs" },
 ];
 
-export default function Footer({ client }) {
+export const MADE_WITH_KERNEX_LINK = "https://kernex.com.br/?utm_source=viajantepro&utm_medium=selo";
+
+export type FooterClient = {
+  madeWithKernexLink?: string;
+};
+
+export type FooterProps = {
+  client?: FooterClient;
+};
+
+export default function Footer({ client }: FooterProps) {
+  const madeWithKernexLink = client?.madeWithKernexLink ?? MADE_WITH_KERNEX_LINK;
+
   return (
     <footer className="border-t border-nexia-border bg-nexia-surface mt-16">
       <div className="px-4 md:px-8 py-12 max-w-7xl mx-auto">
@@ -68,8 +80,13 @@ export default function Footer({ client }) {
         <div className="border-t border-nexia-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="text-[11px] text-nexia-muted">© 2026 NEXIA OS · Todos os direitos reservados · LGPD Compliant</span>
           <div className="flex items-center gap-3">
-            {client.madeWithKernexLink && (
-              <a href={client.madeWithKernexLink} target="_blank" rel="noopener noreferrer" className="made-with-kernex">
+            {madeWithKernexLink && (
+              <a
+                href={madeWithKernexLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="made-with-kernex"
+              >
                 Feito com Kernex
               </a>
             )}
