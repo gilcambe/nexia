@@ -156,6 +156,28 @@ async function rodar({ acao = 'rodar', dados, env: envBruto = process.env, fetch
     if (post.rodizio) estado.rodizio = (estado.rodizio || 0) + 1;
   }
   estado.historico = [...(estado.historico || []), { quando: new Date().toISOString(), id: post.id, cliente: post.cliente, resultados }].slice(-60);
+
+  // Coleta diária de seguidores via Graph API da Meta (1 amostra por dia em divulg-estado.json)
+  const tokenMeta = env.DIVULGA_META_PAGE_TOKEN || env.META_PAGE_TOKEN;
+  const igUserId = env.DIVULGA_META_IG_USER_ID || env.META_IG_USER_ID;
+  if (tokenMeta && igUserId) {
+    try {
+      const hojeStr = dataBrasilia(agora || new Date());
+      estado.seguidores = Array.isArray(estado.seguidores) ? estado.seguidores : [];
+      if (!estado.seguidores.some(s => s && s.dia === hojeStr)) {
+        const url = `https://graph.facebook.com/v19.0/${igUserId}?fields=followers_count&access_token=${tokenMeta}`;
+        const r = await fetchImpl(url);
+        if (r.ok) {
+          const data = await r.json().catch(() => null);
+          if (data && typeof data.followers_count === 'number') {
+            estado.seguidores.push({ dia: hojeStr, total: data.followers_count });
+            estado.seguidores = estado.seguidores.slice(-60);
+          }
+        }
+      }
+    } catch { /* se faltar permissao ou der erro na Graph API, nao falha o robo */ }
+  }
+
   if (arqEstado) { fs.mkdirSync(dados, { recursive: true }); fs.writeFileSync(arqEstado, JSON.stringify(estado, null, 2)); }
   return { postou, resultados, post };
 }

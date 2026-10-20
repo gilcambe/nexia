@@ -85,11 +85,11 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
             <div className="grid grid-cols-2 gap-2 mb-4">
               <div className="rounded-xl bg-nexia-surface2 p-3">
                 <span className="text-xs text-nexia-muted block">⏰ Melhor horário de pico</span>
-                <span className="text-base font-semibold text-nexia-cyan">{x.melhorHorario || "12h15"}</span>
+                <span className="text-sm font-semibold text-nexia-cyan">{x.melhorHorario || "Ainda sem dados suficientes"}</span>
               </div>
               <div className="rounded-xl bg-nexia-surface2 p-3">
                 <span className="text-xs text-nexia-muted block">🎯 Melhor tema de engajamento</span>
-                <span className="text-base font-semibold text-nexia-cyan">{x.melhorTema || "Dicas & Treinos"}</span>
+                <span className="text-sm font-semibold text-nexia-cyan">{x.melhorTema || "Ainda sem dados suficientes"}</span>
               </div>
             </div>
             {x.seguidores30d && x.seguidores30d.length > 0 ? (

@@ -206,19 +206,22 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     // Processamento de engajamento e seguidores dos últimos 30 dias (sem gravacao em disco)
     const seguidores30d = Array.isArray(estado && estado.seguidores) ? estado.seguidores.slice(-30) : [];
 
-    // Cálculo do melhor horário e tema pelos picos de engajamento no histórico
-    const postsEngajamento = Array.isArray(estado && estado.historico) ? estado.historico : [];
-    const porHorario = {};
-    const porTema = {};
-    for (const p of postsEngajamento) {
-      const h = p.horario || '12h15';
-      const t = p.tema || 'Geral';
-      const eng = Number(p.curtidas || p.engajamento || p.alcance || 0);
-      porHorario[h] = (porHorario[h] || 0) + eng;
-      porTema[t] = (porTema[t] || 0) + eng;
+    // Cálculo do melhor horário e tema pelos picos de engajamento no histórico (mínimo de 5 posts válidos com engajamento)
+    const postsValidos = (Array.isArray(estado && estado.historico) ? estado.historico : []).filter(p => p && p.horario && p.tema && (p.curtidas !== undefined || p.engajamento !== undefined || p.alcance !== undefined));
+    let melhorHorario = null;
+    let melhorTema = null;
+
+    if (postsValidos.length >= 5) {
+      const porHorario = {};
+      const porTema = {};
+      for (const p of postsValidos) {
+        const eng = Number(p.curtidas || p.engajamento || p.alcance || 0);
+        porHorario[p.horario] = (porHorario[p.horario] || 0) + eng;
+        porTema[p.tema] = (porTema[p.tema] || 0) + eng;
+      }
+      melhorHorario = Object.keys(porHorario).sort((a, b) => porHorario[b] - porHorario[a])[0] || null;
+      melhorTema = Object.keys(porTema).sort((a, b) => porTema[b] - porTema[a])[0] || null;
     }
-    const melhorHorario = Object.keys(porHorario).sort((a, b) => porHorario[b] - porHorario[a])[0] || '12h15';
-    const melhorTema = Object.keys(porTema).sort((a, b) => porTema[b] - porTema[a])[0] || 'Dicas & Treinos';
 
     return {
       naFila: nomes.length - nomes.filter((n) => feitos.has(n)).length,
