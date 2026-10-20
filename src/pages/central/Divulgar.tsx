@@ -24,6 +24,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
     } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
   };
   
+  // Temas da semana com horários de postagem
   const temasSemana = SEMANA.map((dia, idx) => ({ dia, tema: temaDoDia(dia) }));
   const rodar = async (corpo: Record<string, unknown>) => {
     setOcupado(true); setMsg(null);
