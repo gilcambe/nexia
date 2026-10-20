@@ -81,7 +81,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   }
 
   async function divulga() {
-    // Verificação de permissão de owner
+    // Verificação de permissão de owner antes de qualquer operação
     if (!OWNER_PERMISSION) {
       throw new Error('Permissão de owner não configurada. Configure via configurar-meta.bat');
     }
@@ -91,7 +91,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
       return r.ok ? r.json().catch(() => null) : null;
     };
     
-    // Integração com Graph API para dados de divulgação
+    // Integração exclusiva com Graph API no backend
     const graphData = await fetchGraphData();
     
     const [estado, arquivos] = await Promise.all([
