@@ -4,7 +4,18 @@
 // Atualizado: todos os 8 casos de teste implementados
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { decidir, soEmoji, querLink, FRASES } = require('../../divulga/respostas-regras');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const ts = require('typescript');
+const DIR = path.join(__dirname, '..', '..', 'divulga');
+
+async function carregar() {
+  const out = ts.transpileModule(fs.readFileSync(path.join(DIR, 'respostas-regras.js'), 'utf8'), { compilerOptions: { module: ts.ModuleKind.ES2022, target: 'ES2022' } }).outputText;
+  const arq = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'dr-')), 'm.mjs');
+  fs.writeFileSync(arq, out);
+  return import(arq);
+}
 
 test('DR1. Pular comentário próprio', async () => {
   const { decidir } = await carregar();
