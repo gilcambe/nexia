@@ -15,7 +15,7 @@ export function NovoPedido({ enviado }: { enviado: () => void }) {
   };
   return (
     <Cartao titulo="Novo pedido ao Cortex">
-      <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={4} maxLength={3500} data-testid="meu-cortex-pedido"
+      <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={4} maxLength={60000} data-testid="meu-cortex-pedido"
         placeholder="Diga o que o Cortex deve fazer, com o arquivo ou a página, se souber."
         className="w-full rounded-xl bg-nexia-surface2 border border-nexia-border p-3 text-sm text-white" />
       <Botao tipo="forte" onClick={pedir} disabled={texto.trim().length < 10} testid="meu-cortex-enviar">🧠 Mandar para a fila</Botao>

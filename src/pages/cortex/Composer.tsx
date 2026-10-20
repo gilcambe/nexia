@@ -14,7 +14,7 @@ const criarReconhecedor = (): Reconhecedor | null => {
   return C ? new C() : null;
 };
 
-const MAX = 3500;
+const MAX = 60000;
 
 const paraBase64 = (f: Blob) => new Promise<string>((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1] ?? ""); r.onerror = () => no(r.error); r.readAsDataURL(f); });
 
