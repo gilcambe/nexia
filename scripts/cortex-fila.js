@@ -88,12 +88,12 @@ async function entregouAlgo(token, corpo, desde) {
       if (temPrAberto) return true;
       
       // Verifica se há commit na develop depois de 'desde'
-      const cs = (await gh(token, 'GET', `/commits?sha=develop&path=${encodeURIComponent(arquivo)}&since=${encodeURIComponent(desde)}&per_page=1`)).json;
-      if (Array.isArray(cs) && cs.length > 0) return true;
+      const commitsDesp = (await gh(token, 'GET', `/commits?sha=develop&path=${encodeURIComponent(arquivo)}&since=${encodeURIComponent(desde)}&per_page=1`)).json;
+      if (Array.isArray(commitsDesp) && commitsDesp.length > 0) return true;
       
       // Se não há commits novos, verifica se o arquivo existia na develop antes de 'desde'
-      const arquivoExistiaAntes = (await gh(token, 'GET', `/commits?sha=develop&path=${encodeURIComponent(arquivo)}&until=${encodeURIComponent(desde)}&per_page=1`));
-      if (!Array.isArray(arquivoExistiaAntes) || arquivoExistiaAntes.length === 0) {
+      const commitsAntes = (await gh(token, 'GET', `/commits?sha=develop&path=${encodeURIComponent(arquivo)}&until=${encodeURIComponent(desde)}&per_page=1`)).json;
+      if (!Array.isArray(commitsAntes) || commitsAntes.length === 0) {
         // O arquivo não existia na develop antes de 'desde', então não pode ser considerado entregue
         continue;
       }
