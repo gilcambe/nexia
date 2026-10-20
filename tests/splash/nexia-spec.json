@@ -41,7 +41,7 @@
       "label": "Feito com Kernex",
       "url": "https://kernex.com.br/?utm_source=splash&utm_medium=selo&utm_campaign=clientes"
     },
-    "leads_origem": "",
+    "leads_origem": "splash",
     "sections": [
       {
         "type": "hero",
@@ -109,7 +109,7 @@
         "id": "sobre-a-splash",
         "title": "Sobre a Splash",
         "subtitle": "Há 10 anos criando experiências memoráveis.",
-        "text": "Há 10 anos criando experiências memoráveis.",
+        "text": "Há 10 anos, a Splash transforma projetos em experiências marcantes, unindo planejamento criterioso, criatividade e atenção a cada detalhe.",
         "image_query": "event planning team",
         "stats": [
           {
@@ -130,7 +130,7 @@
         "type": "gallery",
         "id": "nossos-eventos",
         "title": "Nossos eventos",
-        "subtitle": "",
+        "subtitle": "Experiências únicas, realizadas com cuidado em cada detalhe.",
         "image_queries": [
           "wedding reception",
           "corporate conference",
@@ -147,7 +147,7 @@
         "type": "video",
         "id": "conheca-nosso-trabalho",
         "title": "Conheça nosso trabalho",
-        "subtitle": "Veja como transformamos eventos experiências memoráveis.",
+        "subtitle": "Veja como transformamos eventos em experiências memoráveis.",
         "youtube": "",
         "video_query": "event highlights"
       },
@@ -155,7 +155,7 @@
         "type": "testimonials",
         "id": "depoimentos",
         "title": "Depoimentos",
-        "subtitle": "",
+        "subtitle": "Experiências que superaram as expectativas de nossos clientes.",
         "items": [
           {
             "name": "Maria S.",
@@ -181,7 +181,7 @@
         "type": "links",
         "id": "redes-sociais",
         "title": "Redes sociais",
-        "subtitle": "",
+        "subtitle": "Acompanhe as novidades e bastidores da Splash.",
         "items": [
           {
             "label": "Instagram",
@@ -208,23 +208,23 @@
         "items": [
           {
             "q": "Como faço para contratar os serviços?",
-            "a": "Entre em contato pelo WhatsApp ou e-mail para um orçamento personalizado."
+            "a": "Entre em contato pelo WhatsApp ou e-mail para receber um orçamento personalizado."
           },
           {
             "q": "Trabalhamos com orçamento fechado?",
-            "a": "Sim, oferecemos pacotes com valores definidos ou personalizados conforme necessidade."
+            "a": "Sim, oferecemos pacotes com valores definidos ou personalizados conforme a necessidade do seu evento."
           },
           {
-            "q": "Quantas pessoas podem atender?",
-            "a": "Capacidade para eventos de 20 a 500 pessoas, com estrutura adequada."
+            "q": "Quantas pessoas podemos atender?",
+            "a": "Atendemos eventos de 20 a 500 pessoas com estrutura e equipe adequadas ao tamanho da celebração."
           },
           {
             "q": "Fornecemos decoração?",
-            "a": "Sim, temos opções de decoração temática e personalizada."
+            "a": "Sim, oferecemos opções de decoração temática e personalizada, alinhadas ao conceito do evento."
           },
           {
             "q": "Trabalhamos em outras cidades?",
-            "a": "Sim, atendemos São Paulo e região metropolitana."
+            "a": "Sim, atendemos São Paulo e região metropolitana. Consulte nossa equipe para outros locais."
           }
         ]
       },
@@ -242,13 +242,21 @@
         "type": "contact",
         "id": "fale-com-a-splash",
         "title": "Fale com a Splash",
-        "subtitle": "",
+        "subtitle": "Conte como você imagina seu evento e receba uma proposta personalizada.",
         "map": true,
         "form": true
       }
     ]
   },
   "media": {
+    "s0.hero": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Gitikka_Ganju_Dhar_at_corporate_event.jpg/1280px-Gitikka_Ganju_Dhar_at_corporate_event.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "Gitikka Ganju Dhar at corporate event",
+      "credit": "Gitikka Ganju Dhar at corporate event — Gitikka ganju dhar (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
     "s1.item0": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Hallenstadion_Zurich_Corporation_Event_June_2011.jpg/1280px-Hallenstadion_Zurich_Corporation_Event_June_2011.jpg",
       "width": 1280,
@@ -265,12 +273,44 @@
       "credit": "File:Lombok Wedding Party 1998.jpg — anoldent (BY-SA 2.0, via Openverse)",
       "provider": "openverse"
     },
+    "s1.item2": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9f/Cheese_And_Wine_Party_Debconf23.jpg/1280px-Cheese_And_Wine_Party_Debconf23.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Cheese And Wine Party Debconf23",
+      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
     "s1.item3": {
       "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/Pierre-Auguste_Renoir_-_Luncheon_of_the_Boating_Party_-_Google_Art_Project.jpg/1280px-Pierre-Auguste_Renoir_-_Luncheon_of_the_Boating_Party_-_Google_Art_Project.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "width": 1280,
       "height": 948,
       "alt": "Pierre-Auguste Renoir - Luncheon of the Boating Party - Google Art Project",
       "credit": "Pierre-Auguste Renoir (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s2.about": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Corporate_Events_and_Guests_at_PIBM.jpg/1280px-Corporate_Events_and_Guests_at_PIBM.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "Corporate Events and Guests at PIBM",
+      "credit": "Corporate Events and Guests at PIBM — AnnanyaSingh (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g0": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Cheese_And_Wine_Party_Debconf23_2.jpg/1280px-Cheese_And_Wine_Party_Debconf23_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Cheese And Wine Party Debconf23",
+      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g1": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/Cheese_And_Wine_Party_Debconf23_3.jpg/1280px-Cheese_And_Wine_Party_Debconf23_3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1707,
+      "alt": "Cheese And Wine Party Debconf23",
+      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
       "provider": "wikimedia"
     },
     "s3.g2": {
@@ -305,46 +345,6 @@
       "credit": "Rachmat04 for Wikimedia Indonesia (CC BY 3.0, via Wikimedia Commons)",
       "provider": "wikimedia",
       "mime": "video/webm"
-    },
-    "s0.hero": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Gitikka_Ganju_Dhar_at_corporate_event.jpg/1280px-Gitikka_Ganju_Dhar_at_corporate_event.jpg",
-      "width": 1280,
-      "height": 853,
-      "alt": "Gitikka Ganju Dhar at corporate event",
-      "credit": "Gitikka Ganju Dhar at corporate event — Gitikka ganju dhar (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s2.about": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Corporate_Events_and_Guests_at_PIBM.jpg/1280px-Corporate_Events_and_Guests_at_PIBM.jpg",
-      "width": 1280,
-      "height": 853,
-      "alt": "Corporate Events and Guests at PIBM",
-      "credit": "Corporate Events and Guests at PIBM — AnnanyaSingh (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s1.item2": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9f/Cheese_And_Wine_Party_Debconf23.jpg/1280px-Cheese_And_Wine_Party_Debconf23.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 960,
-      "alt": "Cheese And Wine Party Debconf23",
-      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s3.g0": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Cheese_And_Wine_Party_Debconf23_2.jpg/1280px-Cheese_And_Wine_Party_Debconf23_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 960,
-      "alt": "Cheese And Wine Party Debconf23",
-      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s3.g1": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/Cheese_And_Wine_Party_Debconf23_3.jpg/1280px-Cheese_And_Wine_Party_Debconf23_3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 1707,
-      "alt": "Cheese And Wine Party Debconf23",
-      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
     }
   }
 }
