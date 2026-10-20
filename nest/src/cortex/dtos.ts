@@ -1,6 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsString, IsOptional, IsBoolean } from 'class-validator';
 
+// DTOs para o módulo Cortex - implementados conforme requisitos
+
 export enum TaskStatus {
   PENDING = 'PENDING',
   QUEUED = 'QUEUED',
