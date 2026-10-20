@@ -5,15 +5,23 @@ import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
 
 const REDE: Record<string, string> = { facebook: "Facebook", instagram: "Instagram" };
+const HORARIOS = ["07h15", "12h15", "19h15"];
 
 export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   const { agir } = useCentral();
   const [msg, setMsg] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
   
+  // Posta na hora: usado pelos botões 07h15, 12h15 e 19h15 de cada tema da semana.
   const handlePostarAgora = async (horario: string, tema: string) => {
+    if (!HORARIOS.includes(horario)) { setMsg("Horário inválido. Escolha 07h15, 12h15 ou 19h15."); return; }
+    const textoTema = (tema || "").trim();
+    if (!textoTema) { setMsg("Esse dia ainda não tem tema definido."); return; }
     setOcupado(true); setMsg(null);
-    try { setMsg((await agir({ acao: "rodar", arquivo: "divulga.yml", horario, tema })).mensagem); } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
+    try {
+      const r = await agir({ acao: "rodar", arquivo: "divulga.yml", horario, tema: textoTema });
+      setMsg(r.mensagem || `Post sobre ${textoTema} enviado para ${horario}.`);
+    } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
   };
   
   const temasSemana = SEMANA.map((dia, idx) => ({ dia, tema: temaDoDia(dia) }));
