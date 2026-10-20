@@ -25,17 +25,20 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   setMsg(null);
   
   try {
-    // Usar a função agir que já inclui token de autorização
-    const resultado = await agir({ acao: 'postarAgora', horario, tema });
-    
-    if (resultado.ok) {
+    const res = await fetch('/.netlify/functions/central/github', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'postarAgora', horario, tema }),
+    });
+    const data = await res.json();
+    if (data.success) {
       setMsg(`Postagem agendada para ${horario} com tema: ${tema}`);
     } else {
-      setMsg(resultado.mensagem || 'Erro ao agendar postagem');
+      setMsg('Erro: ' + data.message);
     }
   } catch (err) {
     console.error(err);
-    setMsg('Falha na requisição: ' + (err as Error).message);
+    setMsg('Falha na requisição');
   } finally {
     setOcupado(false);
   }
