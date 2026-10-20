@@ -27,7 +27,15 @@ test('PED2. pedir cria issue cortex-fila com as regras do projeto', async () => 
 test('PED3. pedido curto ou grande demais é recusado', async () => {
   const h = createHandler({ getMw: () => master, getPedidos: () => falso([]) });
   assert.strictEqual((await h(post({ acao: 'pedir', texto: 'oi' }))).statusCode, 400);
-  assert.strictEqual((await h(post({ acao: 'pedir', texto: 'x'.repeat(3600) }))).statusCode, 400);
+  assert.strictEqual((await h(post({ acao: 'pedir', texto: 'x'.repeat(60100) }))).statusCode, 400);
+});
+
+test('PED3b. pedido válido de até 60000 caracteres é aceito', async () => {
+  const log = [];
+  const h = createHandler({ getMw: () => master, getPedidos: () => falso(log) });
+  const res = await h(post({ acao: 'pedir', texto: 'x'.repeat(60000) }));
+  assert.strictEqual(res.statusCode, 200);
+  assert.strictEqual(log.length, 1);
 });
 
 test('PED4. tentar de novo tira travado e tentativas', async () => {
