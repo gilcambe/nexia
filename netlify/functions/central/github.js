@@ -211,49 +211,25 @@ exports.handler = async (event, context) => {
     }
 
     if (action === 'postarAgora') {
-      // O estado do Divulga fica na raiz do repositório (divulgados/dados/divulga-estado.json).
-      // O caminho pode ser ajustado por DIVULGA_ESTADO_PATH quando o servidor roda fora do repo.
-      const estadoPath = process.env.DIVULGA_ESTADO_PATH
-        ? path.resolve(process.env.DIVULGA_ESTADO_PATH)
-        : path.join(__dirname, '../../../divulgados/dados/divulga-estado.json');
+      const estadoPath = path.join(__dirname, '../../divulgados/dados/divulga-estado.json');
       
-      // Criar lock key único para esta operação
-      const lockKey = `divulga-estado-${crypto.createHash('md5').update(estadoPath).digest('hex')}`;
+      // Garante que a pasta do estado exista antes de gravar.
+      fs.mkdirSync(path.dirname(estadoPath), { recursive: true });
       
-      try {
-        // Adquirir lock para evitar race conditions
-        await acquireLock(lockKey);
-        
-        // Garante que a pasta do estado exista antes de gravar.
-        await fs.promises.mkdir(path.dirname(estadoPath), { recursive: true });
-        
-        // Ler arquivo de forma assíncrona
-        const dataStr = await fs.promises.readFile(estadoPath, 'utf8').catch(() => '{}');
-        const data = JSON.parse(dataStr || '{}');
-        
-        // Garantir que o array postagens exista
-        if (!data.postagens) {
-          data.postagens = [];
-        }
-        
-        // Adicionar nova postagem
-        data.postagens.push({ 
-          horario, 
-          tema, 
-          data: new Date().toISOString() 
-        });
-        
-        // Escrever arquivo de forma assíncrona
-        await fs.promises.writeFile(estadoPath, JSON.stringify(data, null, 2));
-        
-        return { statusCode: 200, body: JSON.stringify({ success: true }) };
-      } catch (fileError) {
-        console.error('Erro ao manipular arquivo de estado:', fileError);
-        return { statusCode: 500, body: JSON.stringify({ success: false, message: 'Erro ao atualizar estado' }) };
-      } finally {
-        // Liberar lock
-        locks.delete(lockKey);
-      }
+      // Ler arquivo de forma síncrona
+      const dataStr = fs.readFileSync(estadoPath, 'utf8');
+      const data = JSON.parse(dataStr);
+      
+      // Garantir que o array postagens exista
+      data.postagens = data.postagens || [];
+      
+      // Adicionar nova postagem
+      data.postagens.push({ horario, tema, data: new Date().toISOString() });
+      
+      // Escrever arquivo de forma síncrona
+      fs.writeFileSync(estadoPath, JSON.stringify(data, null, 2));
+      
+      return { statusCode: 200, body: JSON.stringify({ success: true }) };
     }
 
     return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Invalid action' }) };
