@@ -4,7 +4,7 @@ const sections: { icon: string; title: string; text: string }[] = [
   {
     icon: 'ri-information-line',
     title: 'Quem somos',
-    text: 'O NEXIA Body Coach AI é um app de acompanhamento de treino, dieta e evolução.',
+    text: 'O Body Coach AI é um app de acompanhamento de treino, dieta e evolução.',
   },
   {
     icon: 'ri-database-2-line',

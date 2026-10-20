@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 // Termos de uso (versão inicial da fase de testes). Deve ser revisada por um advogado antes de cobrar.
 const itens: [string, string][] = [
-  ['O que é', 'O NEXIA Body Coach AI é um app de acompanhamento de treino, alimentação e evolução. Nesta fase ele é oferecido gratuitamente para testes.'],
+  ['O que é', 'O Body Coach AI é um app de acompanhamento de treino, alimentação e evolução. Nesta fase ele é oferecido gratuitamente para testes.'],
   ['Não substitui profissionais', 'As orientações do app e da inteligência artificial não substituem médico, nutricionista, fisioterapeuta ou educador físico. Em dor forte, lesão, doença ou dúvida de saúde, procure um profissional. Você é responsável por treinar dentro dos seus limites.'],
   ['Sua conta', 'Use dados verdadeiros e guarde a sua senha. Você pode apagar a conta e todos os seus dados a qualquer momento, no Perfil.'],
   ['Coach e alunos', 'O coach só vê as mensagens, vídeos e o resumo da semana dos alunos que entraram na equipe dele pelo convite. As avaliações (medidas) aparecem para o coach enquanto o aluno deixar ligado; as fotos só se o aluno ligar. Um aluno nunca vê os dados de outro aluno.'],

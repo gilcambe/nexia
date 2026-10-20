@@ -138,7 +138,7 @@ export default function CoachPanel() {
               )}
             </div>
             <div>
-              <h3 className="font-heading text-base font-semibold text-foreground-950">Coach NEXIA</h3>
+              <h3 className="font-heading text-base font-semibold text-foreground-950">Body Coach</h3>
               <p className="flex items-center gap-1.5 text-xs text-accent-700">
                 <span className="h-1.5 w-1.5 rounded-full bg-accent-500"></span>
                 {listening ? 'Ouvindo você...' : 'Ciente do seu contexto'}

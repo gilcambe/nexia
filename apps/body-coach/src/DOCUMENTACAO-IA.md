@@ -49,7 +49,7 @@ Criar uma função chamada `coach-ai` que:
 Exemplo (OpenAI, dentro da função do Worker):
 
 ```ts
-const SYSTEM_PROMPT = `Você é o Coach NEXIA, parte de uma equipe de alta performance.
+const SYSTEM_PROMPT = `Você é o Body Coach, parte de uma equipe de alta performance.
 Responda de forma objetiva e motivadora, em português.
 Regras: nunca dê diagnóstico médico; sempre sugira procurar um profissional quando
 o assunto for saúde/lesão; priorize a segurança do atleta.`;

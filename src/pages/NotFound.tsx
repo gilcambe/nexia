@@ -13,7 +13,7 @@ export default function NotFound() {
         </div>
         <h1 className="text-xl md:text-2xl font-semibold text-white">Página não encontrada</h1>
         <p className="mt-2 text-base text-nexia-muted font-mono">{location.pathname}</p>
-        <p className="mt-4 text-lg md:text-xl text-nexia-muted">Volte ao site principal e explore o NEXIA OS</p>
+        <p className="mt-4 text-lg md:text-xl text-nexia-muted">Volte ao site principal e explore o Kernex</p>
         <button
           onClick={() => navigate("/")}
           className="mt-6 px-5 py-2.5 rounded-lg bg-nexia-cyan text-[#0a0a0f] text-sm font-semibold hover:bg-nexia-cyan-dim transition-colors cursor-pointer"

@@ -137,7 +137,7 @@ export function marcaDagua(ctx: CanvasRenderingContext2D, W: number, H: number, 
   ctx.fillText(marca ? `${marca} · Body Coach` : 'Body Coach', W - 40 * u, H - 62 * u);
   ctx.globalAlpha = 0.55;
   ctx.font = `500 ${20 * u}px system-ui, sans-serif`;
-  ctx.fillText('feito com NEXIA', W - 40 * u, H - 34 * u);
+  ctx.fillText('feito com Body Coach', W - 40 * u, H - 34 * u);
   ctx.restore();
 }
 

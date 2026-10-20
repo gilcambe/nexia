@@ -26,7 +26,7 @@ export default function Lateral({ itens, aberto, vista, busca, nome, email, busc
     <div className="flex flex-col h-full bg-[var(--cx-side)] border-r border-[var(--cx-line)]">
       <div className="flex items-center gap-3 px-4 h-16 shrink-0">
         <Logo tamanho={34} />
-        <div className="leading-tight"><p className="text-[11px] tracking-[.28em] text-[var(--cx-mut)]">NEXIA</p><p className="text-lg font-semibold">Cortex</p></div>
+        <div className="leading-tight"><p className="text-[11px] tracking-[.28em] text-[var(--cx-mut)]">KERNEX</p><p className="text-lg font-semibold">Cortex</p></div>
       </div>
       <div className="px-3 space-y-1">
         <button className={`${item} bg-[var(--cx-hover)] font-medium`} onClick={novo} data-testid="cx-novo">

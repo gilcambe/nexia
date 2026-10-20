@@ -35,7 +35,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center px-4">
       <button onClick={() => navigate("/")} className="absolute top-6 left-6 flex items-center gap-2 text-sm text-nexia-muted hover:text-white transition-colors cursor-pointer">
-        <i className="ri-arrow-left-line" /> NEXIA OS
+        <i className="ri-arrow-left-line" /> Kernex
       </button>
 
       <div className="w-full max-w-sm">
@@ -43,7 +43,7 @@ export default function LoginPage() {
           <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-nexia-cyan/20 border border-nexia-cyan/30">
             <i className="ri-brain-fill text-nexia-cyan text-xl" />
           </div>
-          <span className="font-bold text-white text-xl tracking-tight">NEXIA<span className="text-nexia-cyan">OS</span></span>
+          <span className="font-bold text-white text-xl tracking-tight">Kernex</span>
         </div>
 
         <div className="rounded-xl bg-nexia-surface border border-nexia-border p-6">

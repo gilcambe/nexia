@@ -133,9 +133,9 @@ export default function Auth() {
       <div className="w-full max-w-md">
         {/* brand */}
         <div className="mb-8 flex flex-col items-center">
-          <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="NEXIA Body Coach" className="h-14 w-14 rounded-2xl" />
+          <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="Body Coach" className="h-14 w-14 rounded-2xl" />
           <p className="mt-3 font-heading text-2xl font-bold tracking-tight text-foreground-950">
-            NEXIA
+            Body Coach
           </p>
           <p className="mt-0.5 text-xs font-medium uppercase tracking-[0.18em] text-foreground-400">
             Body Coach AI

@@ -40,9 +40,9 @@ export function gerarIcs(opts: { dias: string[]; hora: string; apelido?: string 
   };
   const linhas = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//NEXIA Body Coach//PT-BR//', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
   const dias = opts.dias.length ? opts.dias : ['MO', 'WE', 'FR'];
-  linhas.push(...evento('treino', `${nome}hora do treino!`.replace(/^./, (c) => c.toUpperCase()), 'Abra o NEXIA Body Coach, responda como você está e comece o treino de hoje.', `FREQ=WEEKLY;BYDAY=${dias.join(',')}`, hh, mm, 60, dias));
+  linhas.push(...evento('treino', `${nome}hora do treino!`.replace(/^./, (c) => c.toUpperCase()), 'Abra o Body Coach, responda como você está e comece o treino de hoje.', `FREQ=WEEKLY;BYDAY=${dias.join(',')}`, hh, mm, 60, dias));
   if (opts.incluirPeso) linhas.push(...evento('peso', 'Registrar o peso da semana', 'Registre o seu peso na aba Evolução para o app ajustar a dieta.', 'FREQ=WEEKLY;BYDAY=SU', 8, 0, 10, ['SU']));
-  if (opts.incluirFotos) linhas.push(...evento('fotos', 'Fotos de evolução da semana', 'Abra o NEXIA Body Coach > Evolução e tire as fotos (frente, costas e lados) com a mesma luz e o mesmo lugar.', 'FREQ=WEEKLY;BYDAY=SU', 8, 10, 10, ['SU']));
+  if (opts.incluirFotos) linhas.push(...evento('fotos', 'Fotos de evolução da semana', 'Abra o Body Coach > Evolução e tire as fotos (frente, costas e lados) com a mesma luz e o mesmo lugar.', 'FREQ=WEEKLY;BYDAY=SU', 8, 10, 10, ['SU']));
   linhas.push('END:VCALENDAR');
   return linhas.join('\r\n') + '\r\n';
 }
@@ -62,7 +62,7 @@ export function gerarIcsReavaliacao(agora: Date = new Date(), hora = 8): string 
   const fim = new Date(prox.getTime() + 20 * 60000);
   const carimbo = `${agora.getUTCFullYear()}${dois(agora.getUTCMonth() + 1)}${dois(agora.getUTCDate())}T${dois(agora.getUTCHours())}${dois(agora.getUTCMinutes())}00Z`;
   const titulo = 'Reavaliação do mês: fotos e medidas';
-  const texto = 'Abra o NEXIA Body Coach > Evolução: tire as fotos nas 4 posições (frente, costas, lado direito e esquerdo) e registre as medidas ou importe o laudo da balança.';
+  const texto = 'Abra o Body Coach > Evolução: tire as fotos nas 4 posições (frente, costas, lado direito e esquerdo) e registre as medidas ou importe o laudo da balança.';
   return [
     'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//NEXIA Body Coach//PT-BR//', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
     'BEGIN:VEVENT', 'UID:reavaliacao@nexia-body-coach', `DTSTAMP:${carimbo}`, `DTSTART:${q(prox)}`, `DTEND:${q(fim)}`,
@@ -108,8 +108,8 @@ export function gerarIcsRefeicoes(refeicoes: { nome: string; hora: string }[], o
       'BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${escapa(titulo)}`, `TRIGGER:${ant ? `-PT${ant}M` : 'PT0M'}`, 'END:VALARM', 'END:VEVENT',
     );
   };
-  refeicoes.forEach((r, i) => evento(`refeicao-${i}-${r.nome.normalize('NFD').replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}`, `${r.nome}: hora de comer`, 'Abra o NEXIA Body Coach > Nutrição para ver o que comer (e trocar algum alimento, se quiser).', r.hora, 20));
-  if (opts.agua) for (const hora of ['09:00', '11:00', '15:00', '17:00', '19:00']) evento(`agua-${hora.replace(':', '')}`, 'Beber água', 'Um copo de água agora. Marque no NEXIA Body Coach > Nutrição.', hora, 5);
+  refeicoes.forEach((r, i) => evento(`refeicao-${i}-${r.nome.normalize('NFD').replace(/[^a-zA-Z0-9]/g, '').toLowerCase()}`, `${r.nome}: hora de comer`, 'Abra o Body Coach > Nutrição para ver o que comer (e trocar algum alimento, se quiser).', r.hora, 20));
+  if (opts.agua) for (const hora of ['09:00', '11:00', '15:00', '17:00', '19:00']) evento(`agua-${hora.replace(':', '')}`, 'Beber água', 'Um copo de água agora. Marque no Body Coach > Nutrição.', hora, 5);
   linhas.push('END:VCALENDAR');
   return linhas.join('\r\n') + '\r\n';
 }

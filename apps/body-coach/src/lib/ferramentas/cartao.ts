@@ -103,7 +103,7 @@ export function desenharCartao(c: HTMLCanvasElement, d: DadosCartao): void {
   ctx.fillText('@nexiabodycoach', 90, 1805);
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.font = '28px system-ui, sans-serif';
-  ctx.fillText('Feito com NEXIA', 90, 1830);
+  ctx.fillText('Feito com Body Coach', 90, 1830);
   if (d.link && (d.selo ?? seloLigado())) selo(ctx, 1080, 1920, d.link);
 }
 

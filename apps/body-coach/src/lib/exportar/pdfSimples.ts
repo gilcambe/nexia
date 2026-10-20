@@ -61,7 +61,7 @@ function quebrar(bytes: number[], tam: number, negrito: boolean, max: number): n
 
 const esc = (bytes: number[]) => bytes.map((c) => (c === 40 || c === 41 || c === 92 ? `\\${String.fromCharCode(c)}` : String.fromCharCode(c))).join('');
 
-export function gerarPdf(titulo: string, subtitulo: string, linhas: LinhaPdf[], rodape = 'Feito com NEXIA Body Coach'): Blob {
+export function gerarPdf(titulo: string, subtitulo: string, linhas: LinhaPdf[], rodape = 'Feito com Body Coach'): Blob {
   const paginas: string[] = [];
   let ops: string[] = [];
   let y = 0;

@@ -14,7 +14,7 @@ export default function MeusDados() {
     if (!user) return;
     setEstado('baixando');
     try {
-      const dados: Record<string, unknown> = { exportado_em: new Date().toISOString(), app: 'NEXIA Body Coach', conta: user.email };
+      const dados: Record<string, unknown> = { exportado_em: new Date().toISOString(), app: 'Body Coach', conta: user.email };
       for (const c of ALL_COLLECTIONS) {
         if (c === 'profile') { dados.perfil = await getUserDoc(user.id, 'profile', 'main'); continue; }
         const campo = c === 'meals' ? 'created_at' : c === 'workouts' ? 'done_at' : c === 'daily_readiness' ? 'check_in_date' : 'taken_at';

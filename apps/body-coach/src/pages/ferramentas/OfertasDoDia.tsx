@@ -54,7 +54,7 @@ export function OfertasLista({ ofertas }: { ofertas: OfertaLoja[] }) {
         ))}
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{ofertas.filter((o) => o.categoria === atual).map((o) => <CartaoOferta key={o.id} o={o} />)}</div>
-      <p className="mt-2 text-[11px] text-foreground-400">Links de afiliado: a NEXIA pode ganhar uma comissão, sem custo extra para você.</p>
+      <p className="mt-2 text-[11px] text-foreground-400">Links de afiliado: o Body Coach pode ganhar uma comissão, sem custo extra para você.</p>
     </section>
   );
 }

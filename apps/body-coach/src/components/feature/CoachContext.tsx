@@ -43,7 +43,7 @@ export function useCoach() {
 }
 
 function buildGreeting(name: string): string {
-  return `Olá, ${name}! Sou o Coach NEXIA e estou do seu lado na academia. Estou acompanhando seu contexto em tempo real — pode me dizer o que fez (ex.: "fiz 12 com 70"), como se sente, ou pedir um resumo do seu dia.`;
+  return `Olá, ${name}! Sou o Body Coach e estou do seu lado na academia. Estou acompanhando seu contexto em tempo real — pode me dizer o que fez (ex.: "fiz 12 com 70"), como se sente, ou pedir um resumo do seu dia.`;
 }
 
 function buildReadinessReply(s?: CoachContextSnapshot): string {

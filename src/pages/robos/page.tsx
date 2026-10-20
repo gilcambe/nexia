@@ -148,7 +148,7 @@ export default function RobosPage() {
             <button onClick={() => navigate("/projetos")} className="text-sm text-nexia-muted hover:text-white cursor-pointer">
               <i className="ri-arrow-left-line" /> Projetos
             </button>
-            <h1 className="text-2xl font-bold" data-testid="robos-title">Robôs NEXIA</h1>
+            <h1 className="text-2xl font-bold" data-testid="robos-title">Robôs Kernex</h1>
           </div>
           <div className="flex gap-4">
             <button onClick={() => navigate("/execucoes")} className="text-sm text-nexia-cyan cursor-pointer">Execuções</button>

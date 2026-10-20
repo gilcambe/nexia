@@ -30,7 +30,7 @@ export function contextoCentral(s: SituacaoCortex | null | undefined): string {
   if (!s) return "";
   const nomes = (l: TarefaCentral[] | undefined) => (l || []).slice(0, 5).map((x) => `#${x.numero} ${x.titulo}`).join("; ") || "nenhuma";
   return [
-    "Situação agora (Central NEXIA, fila do Cortex):",
+    "Situação agora (Central Kernex, fila do Cortex):",
     `- na fila: ${s.naFila}`,
     `- fazendo agora: ${(s.fazendo || []).length} (${nomes(s.fazendo)})`,
     `- travadas (precisam do dono): ${(s.travadas || []).length} (${nomes(s.travadas)})`,

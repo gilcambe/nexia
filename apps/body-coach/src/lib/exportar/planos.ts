@@ -28,7 +28,7 @@ export function fichaEmTexto(f: FichaCoach, aluno?: string): string {
     linhas.push('', `*${d.titulo}*`);
     d.exercicios.forEach((x, j) => linhas.push(`${j + 1}. ${x.nome}: ${x.series}×${x.reps}, descanso ${descanso(x.descanso)}${x.carga ? `, ${x.carga}` : ''}${x.obs ? ` (${x.obs})` : ''}`));
   });
-  linhas.push('', 'Feito com NEXIA Body Coach');
+  linhas.push('', 'Feito com Body Coach');
   return linhas.join('\n');
 }
 
@@ -58,7 +58,7 @@ export function dietaEmTexto(p: Plano, aluno?: string): string {
     r.itens.forEach((it) => linhas.push(`• ${it.nome}${it.qtd ? ` (${it.qtd})` : ''}`));
     r.obs.forEach((o) => linhas.push(`_${o}_`));
   });
-  linhas.push('', 'Feito com NEXIA Body Coach');
+  linhas.push('', 'Feito com Body Coach');
   return linhas.join('\n');
 }
 

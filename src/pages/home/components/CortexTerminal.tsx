@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ScrollReveal } from "@/hooks/useScrollReveal";
 
 const lines = [
-  { delay: 0, type: "info", text: "NEXIA CORTEX v16 — Iniciando orquestrador..." },
+  { delay: 0, type: "info", text: "Kernex CORTEX v16 — Iniciando orquestrador..." },
   { delay: 600, type: "system", text: "[BOOT] Carregando 50+ providers de IA..." },
   { delay: 1200, type: "system", text: "[REDIS] Conectado — Fila de jobs: 0 pendentes" },
   { delay: 1800, type: "user", text: '> msg: "Crie uma API REST em Node.js com JWT auth"' },

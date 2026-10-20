@@ -47,7 +47,7 @@ export default function Conheca() {
   const personal = comRef('/auth?papel=coach');
 
   const { user } = useAuth();
-  useEffect(() => { document.title = 'NEXIA Body Coach: seu personal no bolso'; }, []);
+  useEffect(() => { document.title = 'Body Coach: seu personal no bolso'; }, []);
   if (user) return <Navigate to="/" replace />;
 
   const botoes = (
@@ -69,12 +69,12 @@ export default function Conheca() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="h-9 w-9 rounded-xl" />
-              <span className="font-heading text-lg font-bold tracking-tight">NEXIA <span className="text-[#fb923c]">Body Coach</span></span>
+              <span className="font-heading text-lg font-bold tracking-tight"><span className="text-[#fb923c]">Body Coach</span></span>
             </div>
             <Link to="/auth" className="rounded-full border border-white/20 px-3 py-1.5 text-sm font-semibold">Entrar</Link>
           </div>
           <div className="mt-10 text-center">
-            <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="NEXIA Body Coach" className="mx-auto h-20 w-20 rounded-3xl shadow-2xl shadow-orange-600/30" />
+            <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="Body Coach" className="mx-auto h-20 w-20 rounded-3xl shadow-2xl shadow-orange-600/30" />
             <h1 className="mt-6 font-heading text-4xl font-extrabold leading-tight">Seu personal<br />no <span className="text-[#fb923c]">bolso</span></h1>
             <p className="mx-auto mt-3 max-w-sm text-base text-stone-300">Treino, dieta e evolução num app só, com coach de IA.</p>
           </div>
@@ -156,7 +156,7 @@ export default function Conheca() {
         <Link to="/termos" className="underline">Termos de uso</Link>
         <span className="mx-2">·</span>
         <Link to="/privacidade" className="underline">Privacidade</Link>
-        <p className="mt-2">Feito pela NEXIA</p>
+        <p className="mt-2">Feito pelo Body Coach</p>
       </footer>
     </div>
   );

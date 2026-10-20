@@ -73,7 +73,7 @@ export default function MusicaTreino({ variante = 'cartao' }: { variante?: 'cart
               <h3 className="font-heading text-lg font-bold text-foreground-950">Música no treino</h3>
               <button type="button" onClick={() => setAberto(false)} className="rounded-full p-2 text-foreground-500" aria-label="Fechar"><i className="ri-close-line text-xl"></i></button>
             </div>
-            <p className="text-xs text-foreground-500">O app de música abre por cima. Dê play e volte para o NEXIA: a música continua.</p>
+            <p className="text-xs text-foreground-500">O app de música abre por cima. Dê play e volte para o Body Coach: a música continua.</p>
 
             <p className="mt-3 text-sm font-semibold text-foreground-800">Seu app</p>
             <div className="mt-1.5 grid grid-cols-2 gap-2">

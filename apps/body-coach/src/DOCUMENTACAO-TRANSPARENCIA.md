@@ -1,4 +1,4 @@
-# NEXIA Body Coach AI — Documento de Transparência e Confiabilidade
+# Body Coach AI — Documento de Transparência e Confiabilidade
 
 > Este documento explica, de forma honesta e completa, COMO o site foi construído, DE ONDE vieram as informações, o QUE é real e o QUE é simulado, e como avaliar se você pode confiar nele.
 
@@ -40,7 +40,7 @@ Todos os números que você vê — nome, idade, peso, medidas, refeições, pro
 - Ao recarregar a página, os dados voltam ao estado inicial (mock).
 - **Não há login, não há banco de dados, não há persistência real.**
 
-Na versão NEXIA, quem cria conta (e-mail e senha) tem os dados salvos no Firebase (Auth + Firestore).
+Na versão Body Coach, quem cria conta (e-mail e senha) tem os dados salvos no Firebase (Auth + Firestore).
 
 ---
 
@@ -107,7 +107,7 @@ Quando você sobe uma foto e clica em "Estimar medidas automaticamente":
 | Build | Vite | 8.0.1 |
 | Internacionalização | i18next | 25.4.1 |
 
-Dependências que estão instaladas mas **não são usadas ativamente** (herdadas do template): lucide-react. (Na versão NEXIA, Supabase e Stripe foram removidos e o Firebase passou a ser o backend.)
+Dependências que estão instaladas mas **não são usadas ativamente** (herdadas do template): lucide-react. (Na versão Body Coach, Supabase e Stripe foram removidos e o Firebase passou a ser o backend.)
 
 ### 4.2 Estrutura de arquivos
 

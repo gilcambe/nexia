@@ -74,7 +74,7 @@ export default function CodeBrowser({
   const copyAll = async () => {
     const header =
       '/* ============================================================\n' +
-      '   NEXIA Body Coach AI - dump COMPLETO do projeto\n' +
+      '   Body Coach AI - dump COMPLETO do projeto\n' +
       `   ${files.length} arquivos (código, config, json, env, etc.)\n` +
       '   ============================================================ */\n\n';
     const dump = files

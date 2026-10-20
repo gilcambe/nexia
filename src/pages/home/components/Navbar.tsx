@@ -32,7 +32,7 @@ export default function Navbar() {
           <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-nexia-cyan/20 border border-nexia-cyan/30">
             <i className="ri-brain-fill text-nexia-cyan text-lg" />
           </div>
-          <span className="font-bold text-white text-base tracking-tight">NEXIA<span className="text-nexia-cyan">OS</span></span>
+          <span className="font-bold text-white text-base tracking-tight">Kernex</span>
         </Link>
 
         {/* Desktop nav */}

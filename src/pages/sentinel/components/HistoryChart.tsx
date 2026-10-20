@@ -44,7 +44,7 @@ export function SentinelFooter() {
       <div className="px-4 md:px-8 py-6 max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 flex items-center justify-center rounded-lg bg-nexia-cyan/20"><i className="ri-brain-fill text-nexia-cyan text-sm" /></div>
-          <span className="text-white font-bold text-sm tracking-tight">NEXIA<span className="text-nexia-cyan">OS</span></span>
+          <span className="text-white font-bold text-sm tracking-tight">Kernex</span>
         </div>
         <span className="text-[11px] text-nexia-muted">Sentinel QA v1.0 · Build 2026.05.03 · Autonomous QA Engine</span>
       </div>

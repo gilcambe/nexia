@@ -33,7 +33,7 @@ export default function Planos() {
   const { search } = useLocation();
   const ref = new URLSearchParams(search).get('ref');
   const comRef = (base: string) => (ref ? `${base}${base.includes('?') ? '&' : '?'}ref=${encodeURIComponent(ref)}` : base);
-  useEffect(() => { document.title = 'Planos e preços · NEXIA Body Coach'; }, []);
+  useEffect(() => { document.title = 'Planos e preços · Body Coach'; }, []);
 
   // Logado: vai direto para "Minha assinatura" (onde está o Pix). Sem conta: cria a conta e volta para lá.
   const pix = user
@@ -48,7 +48,7 @@ export default function Planos() {
           <div className="flex items-center justify-between">
             <Link to={user ? '/' : '/conheca'} className="flex items-center gap-2">
               <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="h-9 w-9 rounded-xl" />
-              <span className="font-heading text-lg font-bold tracking-tight">NEXIA <span className="text-[#fb923c]">Body Coach</span></span>
+              <span className="font-heading text-lg font-bold tracking-tight"><span className="text-[#fb923c]">Body Coach</span></span>
             </Link>
             {!user && <Link to="/auth" className="rounded-full border border-white/20 px-3 py-1.5 text-sm font-semibold">Entrar</Link>}
           </div>

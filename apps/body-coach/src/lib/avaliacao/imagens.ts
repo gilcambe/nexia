@@ -35,7 +35,7 @@ function marca(ctx: CanvasRenderingContext2D, w: number, h: number) {
   ctx.font = `600 ${Math.round(w / 45)}px Inter, sans-serif`;
   ctx.fillStyle = 'rgba(255,255,255,0.85)';
   ctx.textAlign = 'right';
-  ctx.fillText('Feito com NEXIA Body Coach', w - 16, h - 16);
+  ctx.fillText('Feito com Body Coach', w - 16, h - 16);
   ctx.textAlign = 'left';
 }
 
@@ -110,7 +110,7 @@ export async function videoEvolucao(quadros: { src: string; data: string; texto?
     ctx.font = '600 22px Inter, sans-serif';
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.textAlign = 'right';
-    ctx.fillText('NEXIA Body Coach', W - 30, 80);
+    ctx.fillText('Body Coach', W - 30, 80);
     ctx.textAlign = 'left';
   };
 

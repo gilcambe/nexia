@@ -86,9 +86,9 @@ export default function PagarPix({ acesso, avisar }: { acesso: Acesso; avisar: (
               {acesso.pixNome && <p className="text-sm">Pix para: <b className="text-foreground-900">{acesso.pixNome}</b></p>}
               <button onClick={() => void copiarTexto(acesso.pix, 'Chave Pix copiada! Cole no app do seu banco.')} className="w-full rounded-xl border border-primary-300 py-3 text-base font-semibold text-primary-700"><i className="ri-file-copy-line mr-1"></i>Copiar chave Pix</button>
             </>
-          ) : <p className="pt-1">Fale com o NEXIA para receber a chave Pix.</p>}
+          ) : <p className="pt-1">Fale com o Body Coach para receber a chave Pix.</p>}
         </div>
-      <button onClick={() => void paguei()} className="w-full rounded-xl bg-primary-500 py-3 text-base font-semibold text-background-50">Já paguei, avisar o NEXIA</button>
+      <button onClick={() => void paguei()} className="w-full rounded-xl bg-primary-500 py-3 text-base font-semibold text-background-50">Já paguei, avisar o Body Coach</button>
     </>
   );
 }

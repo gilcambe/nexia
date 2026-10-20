@@ -23,7 +23,7 @@ export const recentFindings = [
 ];
 
 export const projectScan = {
-  name: "NEXIA OS", url: NEXIA_APP_URL,
+  name: "Kernex", url: NEXIA_APP_URL,
   techStack: ["React 18", "TypeScript", "TailwindCSS", "Vite", "i18next", "React Router"],
   totalFiles: 47, totalLines: 3847, testCoverage: 72.4, securityScore: 84, performanceScore: 78, a11yScore: 91,
   lastFullScan: "2026-05-03T14:30:00Z",

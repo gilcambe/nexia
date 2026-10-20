@@ -34,7 +34,7 @@ export default function Marca() {
   const voltarPadrao = async () => {
     setNome(''); setCor('laranja'); setLogo('');
     setOcupado(true); setErro(''); setOk('');
-    try { await salvarMarca({ nome: '', cor: 'laranja', logo: '' }); aplicarMarca(null); setOk('Voltou para a marca NEXIA.'); }
+    try { await salvarMarca({ nome: '', cor: 'laranja', logo: '' }); aplicarMarca(null); setOk('Voltou para a marca Body Coach.'); }
     catch (e) { setErro((e as Error).message); } finally { setOcupado(false); }
   };
 
@@ -54,8 +54,8 @@ export default function Marca() {
         <div className="flex items-center gap-2.5">
           {logo ? <img src={logo} alt="Logo escolhido" className="h-10 w-10 rounded-xl object-contain" /> : <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="h-10 w-10 rounded-xl" />}
           <div className="leading-none">
-            <p className="font-heading font-bold text-foreground-950">{nome.trim() || 'NEXIA'}</p>
-            <p className="mt-0.5 text-xs font-medium uppercase tracking-[0.18em] text-foreground-400">{nome.trim() ? 'com NEXIA Body Coach' : 'Body Coach AI'}</p>
+            <p className="font-heading font-bold text-foreground-950">{nome.trim() || 'Body Coach'}</p>
+            <p className="mt-0.5 text-xs font-medium uppercase tracking-[0.18em] text-foreground-400">{nome.trim() ? 'com Body Coach' : 'Body Coach AI'}</p>
           </div>
         </div>
         <span className="mt-3 block rounded-xl px-4 py-2.5 text-center text-sm font-semibold text-white" style={{ background: corCss(cor) }}>Iniciar treino</span>
@@ -90,7 +90,7 @@ export default function Marca() {
         <input id="marca-whats" value={whats} onChange={(e) => setWhats(e.target.value.replace(/\D/g, ''))} inputMode="numeric" maxLength={13} placeholder="DDD + número, ex.: 81999998888" className="mt-1 w-full rounded-lg border border-background-200 bg-background-50 px-3 py-2.5 text-sm outline-none focus:border-primary-300" />
 
         <button type="button" onClick={() => void salvar()} disabled={ocupado} className="mt-5 w-full rounded-xl px-4 py-3 text-sm font-semibold text-white disabled:opacity-40" style={{ background: corCss(cor) }}>Salvar minha marca</button>
-        {(atual || nome || logo || cor !== 'laranja') && <button type="button" onClick={() => void voltarPadrao()} disabled={ocupado} className="mt-2 w-full text-sm font-semibold text-foreground-500">Voltar para a marca NEXIA</button>}
+        {(atual || nome || logo || cor !== 'laranja') && <button type="button" onClick={() => void voltarPadrao()} disabled={ocupado} className="mt-2 w-full text-sm font-semibold text-foreground-500">Voltar para a marca Body Coach</button>}
       </Card>
       {codigo && <Link to={`/loja/${codigo}`} className="block text-center text-sm font-semibold text-primary-600"><i className="ri-external-link-line mr-1"></i>Ver minha página</Link>}
     </div>

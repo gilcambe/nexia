@@ -43,7 +43,7 @@ export default function RelatorioView({
   const lados = simetria(v, av.segmental);
 
   const compartilhar = async () => {
-    const texto = `Minha avaliação de ${dataBr(av.data)}: ${fmt(v.peso)} kg, ${fmt(res.gordura)}% de gordura, ${fmt(res.mlg)} kg de massa magra. (NEXIA Body Coach)`;
+    const texto = `Minha avaliação de ${dataBr(av.data)}: ${fmt(v.peso)} kg, ${fmt(res.gordura)}% de gordura, ${fmt(res.mlg)} kg de massa magra. (Body Coach)`;
     try {
       if (navigator.share) await navigator.share({ title: 'Minha avaliação', text: texto });
       else await navigator.clipboard.writeText(texto);
@@ -75,7 +75,7 @@ export default function RelatorioView({
       <article className="relatorio mx-auto my-3 max-w-[820px] bg-white p-4 text-[#1f2328] shadow-sm sm:my-6 sm:p-8 print:my-0 print:max-w-none print:p-0">
         <header className="flex items-start justify-between gap-3 border-b-2 border-[#e8590c] pb-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-[#e8590c]">NEXIA Body Coach</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-[#e8590c]">Body Coach</p>
             <h1 className="text-xl font-bold">Relatório de avaliação física</h1>
             <p className="text-sm">{nome}</p>
             {avaliador && (
@@ -216,7 +216,7 @@ export default function RelatorioView({
         {av.notas && <Secao titulo="Observações"><p className="whitespace-pre-line text-xs">{av.notas}</p></Secao>}
 
         <footer className="mt-6 border-t pt-2 text-xs leading-4 text-[#888]">
-          Gerado pelo NEXIA Body Coach{avaliador ? ` para ${avaliador.nome}` : ''} em {new Date().toLocaleDateString('pt-BR')}. Gordura por dobras: Jackson & Pollock ou Guedes com a fórmula de Brozek.
+          Gerado pelo Body Coach{avaliador ? ` para ${avaliador.nome}` : ''} em {new Date().toLocaleDateString('pt-BR')}. Gordura por dobras: Jackson & Pollock ou Guedes com a fórmula de Brozek.
           Classificações: % de gordura (Pollock & Wilmore), IMC (OMS), relação cintura/quadril (Bray & Gray), CMB (Jelliffe).
           {Object.keys(v).some((k) => CAMPO_POR_KEY[k]?.grupo === 'bio') ? ' Dados de bioimpedância como informados pelo aparelho.' : ''}
         </footer>

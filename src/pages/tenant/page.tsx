@@ -37,7 +37,7 @@ export default function TenantPage({ tenant }: { tenant?: string }) {
           <div className="w-12 h-12 flex items-center justify-center mx-auto mb-4 rounded-xl bg-red-500/10"><i className="ri-error-warning-line text-red-400 text-xl" /></div>
           <h1 className="text-xl font-bold mb-2">Tenant não encontrado</h1>
           <p className="text-sm text-nexia-muted mb-4">O tenant "{tenantId}" não está configurado.</p>
-          <button onClick={() => navigate("/")} className="px-4 py-2 text-sm bg-nexia-cyan text-[#0a0a0f] rounded-lg hover:bg-nexia-cyan-dim transition-colors cursor-pointer">Voltar ao NEXIA OS</button>
+          <button onClick={() => navigate("/")} className="px-4 py-2 text-sm bg-nexia-cyan text-[#0a0a0f] rounded-lg hover:bg-nexia-cyan-dim transition-colors cursor-pointer">Voltar ao Kernex</button>
         </div>
       </div>
     );
@@ -49,7 +49,7 @@ export default function TenantPage({ tenant }: { tenant?: string }) {
         <div className="px-4 md:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-sm text-nexia-muted hover:text-white transition-colors cursor-pointer">
-              <i className="ri-arrow-left-line" /> NEXIA OS
+              <i className="ri-arrow-left-line" /> Kernex
             </button>
             <div className="w-px h-5 bg-nexia-border" />
             <div className="flex items-center gap-2">

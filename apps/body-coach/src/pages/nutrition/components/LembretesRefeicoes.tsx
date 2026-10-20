@@ -71,7 +71,7 @@ export default function LembretesRefeicoes() {
                 <input type="checkbox" checked={!!ligadas[r.nome]} onChange={(e) => setLigadas((l) => ({ ...l, [r.nome]: e.target.checked }))} aria-label={`Lembrar ${r.nome}`} />
                 <span className="flex-1 text-sm text-foreground-800">{r.nome}</span>
                 <input type="time" value={horas[r.nome] ?? r.horario} onChange={(e) => setHoras((h) => ({ ...h, [r.nome]: e.target.value }))} className="rounded-lg border border-background-200 bg-background-50 px-2 py-1.5 text-sm" aria-label={`Horário ${r.nome}`} />
-                <a href={linkGoogleAgenda(`${r.nome}: hora de comer`, horas[r.nome] ?? r.horario, 'Abra o NEXIA Body Coach > Nutrição para ver o que comer.')} target="_blank" rel="noopener noreferrer" onClick={() => void salvarHoras()} className="rounded-lg bg-background-100 px-2 py-1.5 text-xs font-semibold text-foreground-700" aria-label={`Lembrete de ${r.nome} no Google Agenda`}>
+                <a href={linkGoogleAgenda(`${r.nome}: hora de comer`, horas[r.nome] ?? r.horario, 'Abra o Body Coach > Nutrição para ver o que comer.')} target="_blank" rel="noopener noreferrer" onClick={() => void salvarHoras()} className="rounded-lg bg-background-100 px-2 py-1.5 text-xs font-semibold text-foreground-700" aria-label={`Lembrete de ${r.nome} no Google Agenda`}>
                   <i className="ri-google-line"></i> Agenda
                 </a>
               </li>

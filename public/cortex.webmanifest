@@ -1,8 +1,8 @@
 {
   "id": "/cortex",
-  "name": "NEXIA Cortex",
+  "name": "Kernex Cortex",
   "short_name": "Cortex",
-  "description": "O Cortex da NEXIA: mande pedidos, acompanhe o histórico e publique.",
+  "description": "O Cortex da Kernex: mande pedidos, acompanhe o histórico e publique.",
   "lang": "pt-BR",
   "start_url": "/cortex",
   "scope": "/cortex",
