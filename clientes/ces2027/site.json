@@ -1,0 +1,20 @@
+{
+  "nome": "CES Brasil 2027",
+  "frase": "A MAIOR FEIRA DE TECNOLOGIA DO MUNDO ESTÁ DE VOLTA",
+  "servicos": [
+    "Venda de ingressos para CES",
+    "Pacotes de viagem completos",
+    "Logística de hospedagem e transporte",
+    "Suporte VIP 24/7",
+    "Networking com líderes do setor",
+    "Relatórios de tendências exclusivos"
+  ],
+  "contato": {
+    "whatsapp": "5511944037259",
+    "email": "henrique@cesbrasil.tech",
+    "formAction": "/api/leads"
+  },
+  "corPrincipal": "#0057FF",
+  "favicon": "/clientes/ces2027/assets/favicon.svg",
+  "footer": "<a href=\"https://kernex.com.br/?utm_source=ces2027&utm_medium=selo\" target=\"_blank\">Feito com Kernex</a>"
+}
