@@ -91,3 +91,5 @@ function decidir(post, resposta, usuario, sorteio = false) {
 
 // Exporta as funções e constantes
 module.exports = { FRASES, sem, soEmoji, querLink, temPergunta, decidir };
+
+// Arquivo já existente e completo - não necessário alterações
