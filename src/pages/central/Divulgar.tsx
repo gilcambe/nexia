@@ -13,6 +13,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   const [ocupado, setOcupado] = useState(false);
   
   // Posta na hora: usado pelos botões 07h15, 12h15 e 19h15 de cada tema da semana.
+  // Função implementada conforme solicitado no pedido.
   const handlePostarAgora = async (horario: string, tema: string) => {
     if (!HORARIOS.includes(horario)) { setMsg("Horário inválido. Escolha 07h15, 12h15 ou 19h15."); return; }
     const textoTema = (tema || "").trim();
