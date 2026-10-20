@@ -20,6 +20,7 @@ try { ragModule = require('./rag-engine'); } catch { ragModule = { buildRAGConte
 const { guard, sanitizePrompt, validateAIAction, checkPermission, HEADERS, makeHeaders } = require('./middleware');
 const { publicErrorBody } = require('../../lib/safe-error');
 const nexiaCortex = require('../../nexia-ai/cortex'); // NEXIA AI (Fase 4): resolver + contexto do Vault
+const { TEXTO: DECISOES_DONO } = require('../../nexia-ai/orchestrator/decisoes-dono'); // #824: memória do Cortex
 
 const SSE_HEADERS = {
   'Content-Type': 'text/event-stream',
@@ -263,7 +264,7 @@ async function checkAndTrackUsage(tenantId, userId) {
 function buildSystemPrompt(tenantId, plan, ragCtx, learningCtx) {
   const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
   // NEXIA: acesso sempre ILIMITADO, sem restrição de tamanho ou tokens
-  return `Você é o CORTEX — IA Suprema do NEXIA OS, sistema operacional empresarial SaaS.\n\nTENANT: ${tenantId} | PLANO: ${plan.toUpperCase()} | ACESSO: 🔓 ILIMITADO | HORA BRT: ${now}\n\n## CAPACIDADES:\n- **Estratégia e Negócios**: SaaS, MRR, churn, pricing, vendas, marketing, valuation\n- **Desenvolvimento**: Firebase, Netlify Functions, JS/TS, React, Python — código COMPLETO\n- **Segurança**: OWASP, LGPD, Firebase Rules, pentest, auditoria\n- **CRM**: Criar tarefas, contatos, reuniões, lançamentos financeiros\n- **Jurídico**: Contratos, LGPD, editais de leilão, compliance\n- **Análise Financeira**: DRE, fluxo de caixa, precificação, projeções\n\n## REGRAS ABSOLUTAS:\n- Responda SEMPRE em português do Brasil\n- Use markdown rico (tabelas, código, listas) em respostas técnicas\n- Forneça código COMPLETO e INTEGRAL — NUNCA truncado, NUNCA use "..." para omitir\n- Seja direto e acionável — sem rodeios\n- Modo MASTER ativo: detalhamento máximo, sem limite de tamanho de resposta\n${learningCtx ? `\n## CONTEXTO DO USUÁRIO:\n${learningCtx}\n` : ''}${ragCtx ? `\n## DOCUMENTOS DE REFERÊNCIA:\n${ragCtx}\n` : ''}`;
+  return `Você é o CORTEX — IA Suprema do NEXIA OS, sistema operacional empresarial SaaS.\n\nTENANT: ${tenantId} | PLANO: ${plan.toUpperCase()} | ACESSO: 🔓 ILIMITADO | HORA BRT: ${now}\n\n## CAPACIDADES:\n- **Estratégia e Negócios**: SaaS, MRR, churn, pricing, vendas, marketing, valuation\n- **Desenvolvimento**: Firebase, Netlify Functions, JS/TS, React, Python — código COMPLETO\n- **Segurança**: OWASP, LGPD, Firebase Rules, pentest, auditoria\n- **CRM**: Criar tarefas, contatos, reuniões, lançamentos financeiros\n- **Jurídico**: Contratos, LGPD, editais de leilão, compliance\n- **Análise Financeira**: DRE, fluxo de caixa, precificação, projeções\n\n## REGRAS ABSOLUTAS:\n- Responda SEMPRE em português do Brasil\n- Use markdown rico (tabelas, código, listas) em respostas técnicas\n- Forneça código COMPLETO e INTEGRAL — NUNCA truncado, NUNCA use "..." para omitir\n- Seja direto e acionável — sem rodeios\n- Modo MASTER ativo: detalhamento máximo, sem limite de tamanho de resposta\n\n${DECISOES_DONO}\n${learningCtx ? `\n## CONTEXTO DO USUÁRIO:\n${learningCtx}\n` : ''}${ragCtx ? `\n## DOCUMENTOS DE REFERÊNCIA:\n${ragCtx}\n` : ''}`;
 }
 
 async function cxLog(tenantId, userId, data) {
