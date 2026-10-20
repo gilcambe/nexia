@@ -2,7 +2,7 @@
 // Fase 10: partes determinísticas do Orchestrator (intenção, plano, gates, orçamento, agentes).
 const test = require('node:test');
 // O placar de cota é do processo inteiro: cada teste começa sem castigos de outro.
-test.beforeEach(() => require('../../nexia-ai/model-router/cota').getPlacar().limpar());
+test.beforeEach(() => { require('../../nexia-ai/model-router/cota').getPlacar().limpar(); require('../../nexia-ai/model-router/qualidade').getQualidade().limpar(); });
 const assert = require('node:assert');
 const { classifyIntent, planFor, specialistFor } = require('../../nexia-ai/orchestrator');
 const { evaluateGates, verdict } = require('../../nexia-ai/orchestrator/gates');

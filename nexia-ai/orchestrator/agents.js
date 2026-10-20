@@ -64,6 +64,7 @@ const EDITING = [
 ].join('\n');
 
 const { TEXTO: LICOES } = require('./licoes');
+const { TEXTO: DECISOES } = require('./decisoes-dono');
 
 const AGENTS = Object.freeze({
   orchestrator: { title: 'Orchestrator', model: 'fast', tools: [], prompt: 'Coordena; não codifica.' },
@@ -97,7 +98,7 @@ const allowed = (agentId, toolName) => (AGENTS[agentId].tools || []).some(p => m
 
 function systemPrompt(agentId, context) {
   const licoes = (AGENTS[agentId].tools || []).some(t => /commit_files|edit_files/.test(t)) ? `\n\n${LICOES}` : '';
-  return `${COMMON}\n\n${AGENTS[agentId].prompt}${licoes}${context ? `\n\nCONTEXTO DO PROJETO (Vault):\n${context}` : ''}`;
+  return `${COMMON}\n\n${AGENTS[agentId].prompt}\n\n${DECISOES}${licoes}${context ? `\n\nCONTEXTO DO PROJETO (Vault):\n${context}` : ''}`;
 }
 
 module.exports = { AGENTS, allowed, systemPrompt, READ_TOOLS, CODE_TOOLS, MEDIA_TOOLS, QUALITY, DESIGN };

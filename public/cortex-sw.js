@@ -18,3 +18,18 @@ self.addEventListener("fetch", (e) => {
     return guardado || rede;
   }));
 });
+
+// #833: avisos do Cortex (tarefa feita, travada e resumo das 8h). Toque abre o app.
+self.addEventListener("push", (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch { d = { corpo: e.data ? e.data.text() : "" }; }
+  e.waitUntil(self.registration.showNotification(d.titulo || "Cortex", { body: d.corpo || "", tag: d.tag || "cortex", icon: "/cortex-icon-192.png", badge: "/cortex-icon-192.png", data: { url: d.url || "/cortex" } }));
+});
+self.addEventListener("notificationclick", (e) => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || "/cortex";
+  e.waitUntil(self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((l) => {
+    const aberto = l.find((c) => new URL(c.url).pathname.startsWith("/cortex"));
+    return aberto ? aberto.focus() : self.clients.openWindow(url);
+  }));
+});
