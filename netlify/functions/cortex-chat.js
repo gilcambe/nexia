@@ -20,6 +20,7 @@ try { ragModule = require('./rag-engine'); } catch { ragModule = { buildRAGConte
 const { guard, sanitizePrompt, validateAIAction, checkPermission, HEADERS, makeHeaders } = require('./middleware');
 const { publicErrorBody } = require('../../lib/safe-error');
 const nexiaCortex = require('../../nexia-ai/cortex'); // NEXIA AI (Fase 4): resolver + contexto do Vault
+const modos = require('../../nexia-ai/cortex/modos'); // #831: Rápido / Pensar / Pesquisar
 const { TEXTO: DECISOES_DONO } = require('../../nexia-ai/orchestrator/decisoes-dono'); // #824: memória do Cortex
 
 const SSE_HEADERS = {
@@ -313,6 +314,9 @@ exports.handler = async (event) => {
     const learningCtx = await learnModule.buildLearningContext(tenantId, message).catch(() => null);
     let ragCtx = '';
     if (ragEnabled) { try { ragCtx = await ragModule.buildRAGContext(tenantId, message) || ''; } catch { } }
+    // #831: modo escolhido no composer. Sem modo, nada muda.
+    const modo = model === 'auto' ? modos.modoValido(body.modo) : null;
+    if (modo && modos.MODOS[modo].web) { try { const w = await modos.buscarWeb(rawMessage); if (w) ragCtx = ragCtx ? `${ragCtx}\n\n${w}` : w; } catch { } }
 
     const fullCtx = [...context, { role: 'user', content: message }];
 
@@ -333,7 +337,9 @@ exports.handler = async (event) => {
 
     let decision = { type: 'chat', intent: model !== 'auto' ? model : 'chat', response: '' };
     let layer = 0;
-    if (model === 'auto') {
+    if (modo) {
+      decision.intent = modos.MODOS[modo].intent;   // escolha do dono: pula o passo do orquestrador (mais rápido)
+    } else if (model === 'auto') {
       try {
         // Orchestrator com fallback multi-provider
         let orchRaw = null;
@@ -413,7 +419,7 @@ exports.handler = async (event) => {
       modelUsed = ai.label || ai.model;
 
       const systemPrompt = buildSystemPrompt(tenantId, usage.plan, ragCtx, learningCtx) + nexiaCortex.promptSection(projectCtx);
-      const tokLimit = maxTokens || 100000; // NEXIA: sem limite — máximo absoluto do modelo
+      const tokLimit = maxTokens || (modo && modos.MODOS[modo].maxTokens) || 100000; // NEXIA: sem limite — máximo absoluto do modelo
 
       if (stream) {
         // NEXIA AI (Fase 5): streaming real. Cada token vai para o cliente assim que o
