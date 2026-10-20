@@ -122,25 +122,74 @@ exports.handler = async (event, context) => {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  const { action, horario, tema } = JSON.parse(event.body);
+  try {
+    const { action, horario, tema } = JSON.parse(event.body);
 
-  // Apenas dono pode postar
-  const ownerToken = process.env.DONO_TOKEN || 'seu_token_aqui';
-  const authHeader = event.headers['Authorization'] || event.headers['authorization'];
-  if (!authHeader || authHeader !== `Bearer ${ownerToken}`) {
-    return { statusCode: 403, body: JSON.stringify({ success: false, message: 'Unauthorized' }) };
+    // Apenas dono pode postar
+    const ownerToken = process.env.DONO_TOKEN || 'seu_token_aqui';
+    const authHeader = event.headers['Authorization'] || event.headers['authorization'];
+    if (!authHeader || authHeader !== `Bearer ${ownerToken}`) {
+      return { statusCode: 403, body: JSON.stringify({ success: false, message: 'Unauthorized' }) };
+    }
+
+    // Validação dos campos
+    if (!horario || typeof horario !== 'string' || horario.length > 50) {
+      return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Horário inválido: deve ser uma string com até 50 caracteres' }) };
+    }
+    
+    if (!tema || typeof tema !== 'string' || tema.length > 100) {
+      return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Tema inválido: deve ser uma string com até 100 caracteres' }) };
+    }
+
+    if (action === 'postarAgora') {
+      const estadoPath = path.join(__dirname, '../../divulga-dados/divulga-estado.json');
+      
+      try {
+        // Ler arquivo de forma assíncrona
+        const dataStr = await fs.promises.readFile(estadoPath, 'utf8');
+        const data = JSON.parse(dataStr);
+        
+        // Garantir que o array postagens exista
+        if (!data.postagens) {
+          data.postagens = [];
+        }
+        
+        // Adicionar nova postagem
+        data.postagens.push({ 
+          horario, 
+          tema, 
+          data: new Date().toISOString() 
+        });
+        
+        // Escrever arquivo de forma assíncrona
+        await fs.promises.writeFile(estadoPath, JSON.stringify(data, null, 2));
+        
+        return { statusCode: 200, body: JSON.stringify({ success: true }) };
+      } catch (fileError) {
+        if (fileError.code === 'ENOENT') {
+          // Arquivo não existe, criar um novo
+          const newData = {
+            feitos: [],
+            historico: [],
+            postagens: [{
+              horario,
+              tema,
+              data: new Date().toISOString()
+            }]
+          };
+          await fs.promises.writeFile(estadoPath, JSON.stringify(newData, null, 2));
+          return { statusCode: 200, body: JSON.stringify({ success: true }) };
+        }
+        console.error('Erro ao manipular arquivo de estado:', fileError);
+        return { statusCode: 500, body: JSON.stringify({ success: false, message: 'Erro ao atualizar estado' }) };
+      }
+    }
+
+    return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Invalid action' }) };
+  } catch (parseError) {
+    console.error('Erro ao parsear corpo da requisição:', parseError);
+    return { statusCode: 400, body: JSON.stringify({ success: false, message: 'JSON inválido' }) };
   }
-
-  if (action === 'postarAgora') {
-    const estadoPath = path.join(__dirname, '../../divulga-dados/divulga-estado.json');
-    const data = JSON.parse(fs.readFileSync(estadoPath, 'utf8'));
-    data.postagens = data.postagens || [];
-    data.postagens.push({ horario, tema, data: new Date().toISOString() });
-    fs.writeFileSync(estadoPath, JSON.stringify(data, null, 2));
-    return { statusCode: 200, body: JSON.stringify({ success: true }) };
-  }
-
-  return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Invalid action' }) };
 };
 
 module.exports = { criarGithub, REPO, RESERVAS, montarReservas, handler };
