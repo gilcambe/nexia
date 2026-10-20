@@ -95,22 +95,31 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   }
 
   async function salvarDadosMeta(dados) {
-    // Extrair dados recebidos
+    // Validar dados recebidos
+    if (!dados || typeof dados !== 'object') {
+      throw new Error('Dados inválidos: objeto esperado');
+    }
+    
     const { seguidores, alcance, curtidas, melhorHorario, tema } = dados;
+    
+    // Validar campos obrigatórios
+    if (seguidores === undefined || alcance === undefined || curtidas === undefined) {
+      throw new Error('Campos obrigatórios ausentes: seguidores, alcance e curtidas');
+    }
     
     // Criar data atual
     const hoje = new Date();
     const dataFormatada = hoje.toISOString().split('T')[0]; // YYYY-MM-DD
     
-    // Criar amostra diária
+    // Criar amostra diária com estrutura padronizada
     const amostra = {
       data: dataFormatada,
       timestamp: hoje.toISOString(),
-      seguidores,
-      alcance,
-      curtidas,
-      melhorHorario,
-      tema
+      seguidores: Number(seguidores) || 0,
+      alcance: Number(alcance) || 0,
+      curtidas: Number(curtidas) || 0,
+      melhorHorario: melhorHorario || null,
+      tema: tema || null
     };
     
     // Ler arquivo de estado existente
@@ -126,6 +135,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
           estado = await estadoRaw.json();
         } catch (e) {
           console.error('Erro ao parsear estado:', e);
+          estado = {};
         }
       }
       
@@ -173,84 +183,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     return montarReservas(repo, prod, semCota);
   }
 
-  async function salvarDadosMeta(dados) {
-    const hoje = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    const caminhoArquivo = 'divulga-dados/divulga-estado.json';
-    
-    // Estrutura dos dados a serem salvos
-    const novaAmostra = {
-      quando: new Date().toISOString(),
-      id: null,
-      cliente: 'meta',
-      resultados: [
-        {
-          canal: 'meta',
-          seguidores: dados.seguidores || 0,
-          alcance: dados.alcance || 0,
-          curtidas: dados.curtidas || 0,
-          melhorHorario: dados.melhorHorario || null,
-          tema: dados.tema || null,
-          ok: true
-        }
-      ]
-    };
-    
-    try {
-      // Tenta obter o SHA do arquivo na branch divulga-dados
-      const arquivoInfo = await fetch(`https://api.github.com/repos/${REPO}/contents/${caminhoArquivo}?ref=divulga-dados`, {
-        headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github.v3+json' }
-      });
-      
-      const dadosAtuais = { historico: [] };
-      let sha = null;
-      
-      if (arquivoInfo.ok) {
-        const fileInfo = await arquivoInfo.json();
-        sha = fileInfo.sha;
-        
-        // Tenta ler o conteúdo atual do arquivo
-        try {
-          const arquivoContent = await fetch(`https://raw.githubusercontent.com/${REPO}/divulga-dados/${caminhoArquivo}`, {
-            headers: { 'User-Agent': 'nexia-central' }
-          });
-          
-          if (arquivoContent.ok) {
-            dadosAtuais.historico = await arquivoContent.json().then(data => data.historico || []);
-          }
-        } catch (e) {
-          console.error('Erro ao ler conteúdo do arquivo:', e);
-        }
-      }
-      
-      // Adiciona a nova amostra ao histórico
-      dadosAtuais.historico.push(novaAmostra);
-      
-      // Mantém apenas as últimas 100 amostras para não crescer indefinidamente
-      if (dadosAtuais.historico.length > 100) {
-        dadosAtuais.historico = dadosAtuais.historico.slice(-100);
-      }
-      
-      // Atualiza ou cria o arquivo
-      await fetch(`https://api.github.com/repos/${REPO}/contents/${caminhoArquivo}`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'Content-Type': 'application/json',
-          'Accept': 'application/vnd.github.v3+json'
-        },
-        body: JSON.stringify({
-          message: `Atualizar dados da Meta para ${hoje}`,
-          content: Buffer.from(JSON.stringify(dadosAtuais, null, 2)).toString('base64'),
-          sha: sha
-        })
-      });
-      
-      return { sucesso: true, arquivo: caminhoArquivo };
-    } catch (error) {
-      console.error('Erro ao salvar dados da Meta:', error);
-      return { sucesso: false, erro: error.message };
-    }
-  }
+
 
   return { cortex, robos, rodar, pedirAoCortex, divulga, reservas, salvarDadosMeta, temToken: !!token };
 }
