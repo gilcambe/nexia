@@ -1,0 +1,199 @@
+{
+  "kind": "site",
+  "name": "Splash Eventos",
+  "tagline": "Espaços de Alto Padrão para Eventos Inesquecíveis",
+  "description": "Dois espaços de alto padrão para casamentos, formaturas, aniversários de 15 anos e eventos corporativos.",
+  "folder": "splash",
+  "style": "elegant",
+  "photo_theme": "luxury event venue",
+  "leads_origem": "splash-site",
+  "fonts": {
+    "heading": "Cormorant Garamond",
+    "body": "Inter"
+  },
+  "palette": {
+    "primary": "#C9A84C",
+    "accent": "#F5EDD6",
+    "bg": "#0A0D08",
+    "surface": "rgba(255,255,255,0.04)",
+    "text": "#F8F4ED",
+    "muted": "rgba(248,244,237,0.72)",
+    "dark": "#111408"
+  },
+  "contact": {
+    "whatsapp": "",
+    "phone": "",
+    "email": "",
+    "address": "",
+    "city": "",
+    "hours": "",
+    "instagram": "",
+    "youtube": "",
+    "tiktok": "",
+    "linkedin": ""
+  },
+  "sections": [
+    {
+      "type": "hero",
+      "eyebrow": "Locação de espaços para eventos exclusivos",
+      "title": "O cenário perfeito para o seu momento especial",
+      "subtitle": "Onde memórias se tornam eternas.",
+      "cta": {
+        "label": "Solicitar orçamento",
+        "href": "#contato"
+      },
+      "cta2": {
+        "label": "Ver espaços",
+        "href": "#espacos"
+      },
+      "image_query": "luxury wedding venue",
+      "video_query": "event"
+    },
+    {
+      "type": "services",
+      "id": "espacos",
+      "title": "Nossos Espaços",
+      "subtitle": "Diversos ambientes para todos os tipos de eventos.",
+      "items": [
+        {
+          "title": "Santa Adélia",
+          "text": "Espaço completo para até 500 pessoas, ideal para casamentos e eventos grandes.",
+          "price": "a partir de R$ 15.000",
+          "image_query": "luxury wedding venue"
+        },
+        {
+          "title": "Santa Bárbara",
+          "text": "Salão temático para até 350 pessoas, perfeito para 15 anos e formaturas.",
+          "price": "a partir de R$ 10.000",
+          "image_query": "garden event space"
+        }
+      ]
+    },
+    {
+      "type": "about",
+      "title": "Sobre a Splash Eventos",
+      "text": "Há 10 anos transformando eventos em experiências memoráveis com dois espaços exclusivos.",
+      "image_query": "luxury event venue interior",
+      "stats": [
+        {
+          "value": "10",
+          "label": "anos"
+        },
+        {
+          "value": "2000+",
+          "label": "eventos"
+        },
+        {
+          "value": "98%",
+          "label": "satisfação"
+        }
+      ]
+    },
+    {
+      "type": "gallery",
+      "title": "Nossos Espaços",
+      "image_queries": [
+        "luxury ballroom",
+        "wedding venue",
+        "corporate event",
+        "garden party",
+        "luxury interior",
+        "event decoration"
+      ],
+      "gif_queries": [
+        "event setup"
+      ]
+    },
+    {
+      "type": "video",
+      "title": "Conheça nossos espaços",
+      "subtitle": "Um tour virtual por nossos ambientes exclusivos.",
+      "youtube": "",
+      "video_query": "luxury venue tour"
+    },
+    {
+      "type": "team",
+      "title": "Equipe Splash",
+      "members": [
+        {
+          "name": "Carlos Mendes",
+          "role": "Diretor de Eventos",
+          "image_query": "event planner portrait"
+        },
+        {
+          "name": "Ana Silva",
+          "role": "Chefe de Cerimonial",
+          "image_query": "female event coordinator"
+        }
+      ]
+    },
+    {
+      "type": "testimonials",
+      "title": "Depoimentos",
+      "items": [
+        {
+          "name": "Ana & Marcos Lima",
+          "text": "O Splash Santa Adélia foi o cenário dos nossos sonhos. O jardim iluminado, o salão impecável — cada foto ficou perfeita.",
+          "rating": 5
+        },
+        {
+          "name": "Isabella Carvalho",
+          "text": "Fiz meu 15 anos no Splash Santa Bárbara e foi a noite mais linda da minha vida. A piscina decorativa com iluminação foi um sucesso!",
+          "rating": 5
+        },
+        {
+          "name": "Felipe Andrade",
+          "text": "Realizamos a confraternização com 300 pessoas. Espaço amplo, equipe atenciosa, buffet de qualidade.",
+          "rating": 5
+        }
+      ]
+    },
+    {
+      "type": "links",
+      "title": "Links rápidos",
+      "items": [
+        {
+          "label": "Solicitar orçamento",
+          "url": "#contato",
+          "icon": "mail"
+        }
+      ]
+    },
+    {
+      "type": "faq",
+      "title": "Dúvidas frequentes",
+      "items": [
+        {
+          "q": "Aceitam eventos de última hora?",
+          "a": "Depende da disponibilidade, entre em contato."
+        },
+        {
+          "q": "Fornecem decoração?",
+          "a": "Sim, temos pacotes com decoração completa."
+        },
+        {
+          "q": "Tem estacionamento?",
+          "a": "Sim, estacionamento privativo para 100 vagas."
+        },
+        {
+          "q": "Aceitam pagamento parcelado?",
+          "a": "Sim, até 12x no cartão de crédito."
+        }
+      ]
+    },
+    {
+      "type": "cta",
+      "title": "Solicite sua verificação de data",
+      "subtitle": "Resposta rápida em até 24 horas úteis.",
+      "cta": {
+        "label": "Solicitar orçamento",
+        "href": "#contato"
+      }
+    },
+    {
+      "type": "contact",
+      "title": "Solicite Verificação de Data",
+      "subtitle": "Preencha o formulário e nossa equipe responde em até 24 horas úteis."
+    }
+  ]
+}
