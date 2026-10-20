@@ -66,9 +66,52 @@ function createHandler(deps = {}) {
         if (body.acao === 'rodar') {
           const robo = ROBOS.find((r) => r.arquivo === body.arquivo && r.inputs);
           if (!robo) return res(400, { error: 'Esse robô não pode ser ligado por aqui.' });
+          
+          // Validação de horários permitidos para divulga.yml
+          if (robo.arquivo === 'divulga.yml' && body.horario) {
+            const HORARIOS_PERMITIDOS = ['07h15', '12h15', '19h15'];
+            if (!HORARIOS_PERMITIDOS.includes(body.horario)) {
+              return res(400, { error: 'Horário inválido. Use 07h15, 12h15 ou 19h15.' });
+            }
+          }
+          
+          // Validação e limitação do tema
+          if (robo.arquivo === 'divulga.yml' && body.tema) {
+            const tema = String(body.tema || '').trim();
+            if (!tema) {
+              return res(400, { error: 'O tema não pode estar vazio.' });
+            }
+            if (tema.length > 200) {
+              return res(400, { error: 'O tema é muito longo. Máximo 200 caracteres.' });
+            }
+          }
+          
+          // Verificar se já existe uma execução do divulga.yml em andamento
+          if (robo.arquivo === 'divulga.yml') {
+            const workflows = await gh.workflows();
+            const divulgaWorkflow = workflows.find(w => w.name === 'divulga.yml');
+            if (divulgaWorkflow) {
+              const runs = await gh.workflowRuns(divulgaWorkflow.id, 'in_progress');
+              if (runs.length > 0) {
+                return res(400, { error: 'Já existe uma execução do robô de divulgação em andamento. Aguarde terminar.' });
+              }
+            }
+          }
+          
           const inputs = body.ensaio && robo.arquivo === 'divulga.yml' ? { acao: 'ensaio' } : robo.inputs;
+          
+          // Adicionar horário e tema aos inputs se fornecidos
+          if (body.horario) inputs.horario = body.horario;
+          if (body.tema) inputs.tema = body.tema;
+          
           await gh.rodar(robo.arquivo, inputs);
-          return res(200, { ok: true, mensagem: robo.nome + ': mandei rodar. Em 1 ou 2 minutos aparece aqui.' });
+          
+          // Mensagem mais clara sobre o que aconteceu
+          let mensagem = robo.nome + ': mandei rodar. Em 1 ou 2 minutos aparece aqui.';
+          if (robo.arquivo === 'divulga.yml' && body.horario && body.tema) {
+            mensagem = `Post sobre ${body.tema} agendado para ${body.horario}. O robô criará e publicará o texto automaticamente.`;
+          }
+          return res(200, { ok: true, mensagem });
         }
         if (body.acao === 'pedir') {
           const texto = String(body.texto || '').trim().slice(0, 3000);
