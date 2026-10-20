@@ -25,10 +25,10 @@ export function limparChaves(texto: string): string {
   
   // Padrões de chaves e segredos sensíveis (apenas os 4 do pedido)
   const PADROES = [
-    { regex: /sk-[A-Za-z0-9]+/g, nome: "OpenAI API Key" },
-    { regex: /AIza[A-Za-z0-9_-]+/g, nome: "Google API Key" },
-    { regex: /ghp_[A-Za-z0-9]+/g, nome: "GitHub Personal Access Token" },
-    { regex: /-----BEGIN[^\n]+/g, nome: "PEM/PGP Key Start" },
+    /sk-[A-Za-z0-9]+/g, // API key do OpenAI (sk-proj, sk-ant, etc.)
+    /AIza[A-Za-z0-9_-]+/g, // API key do Google
+    /ghp_[A-Za-z0-9]+/g, // GitHub personal access token
+    /-----BEGIN[^\n]+/g, // cabeçalho de bloco PEM/PGP (só a linha do BEGIN)
   ];
   
   let textoLimpo = texto;
