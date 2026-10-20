@@ -51,4 +51,4 @@
 ## Auto-correção de CI
 
 - Capacidade de correção automática quando o CI falha:
-  - Auto‑correction: when the CI fails, Cortex receives the last 80 lines of the error log and automatically retries the CI up to 2 times before human intervention.
+- Auto‑correction: when the CI fails, Cortex receives the last 80 lines of the error log and automatically retries the CI up to 2 times before human intervention.
