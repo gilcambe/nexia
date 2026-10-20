@@ -12,11 +12,66 @@ const COR: Record<Situacao, Cor> = { ok: "verde", erro: "vermelho", desligado: "
 const FRASE: Record<Situacao, string> = { ok: "ligado", erro: "deu erro", desligado: "falta ligar" };
 const NOME_IA: Record<string, string> = { groq: "Groq", github: "GitHub Models", google: "Google Gemini", codestral: "Codestral", nvidia: "NVIDIA", cloudflare: "Cloudflare Workers AI", mistral: "Mistral", openrouter: "OpenRouter", kilo: "Kilo" };
 
+// Contexto para outras IAs: o arquivo docs/CONTEXTO-IA.md do próprio repositório (nunca tem chave, mas limpamos mesmo assim).
+const URLS_CONTEXTO = [
+  "https://raw.githubusercontent.com/gilcambe/nexia/develop/docs/CONTEXTO-IA.md",
+  "https://raw.githubusercontent.com/gilcambe/nexia/main/docs/CONTEXTO-IA.md",
+];
+
+// Qualquer chave que aparecer no texto sai como [oculto] antes de copiar.
+export function limparChaves(texto: string): string {
+  return texto
+    .replace(/sk-[A-Za-z0-9]+/g, "[oculto]")
+    .replace(/AIza[A-Za-z0-9_-]+/g, "[oculto]")
+    .replace(/ghp_[A-Za-z0-9]+/g, "[oculto]")
+    .replace(/-----BEGIN[^\n]+/g, "[oculto]");
+}
+
+// Mesmo padrão da limpeza, sem a flag global: serve só para conferir se sobrou chave.
+const TEM_CHAVE = /sk-[A-Za-z0-9]+|AIza[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|-----BEGIN[^\n]+/;
+
 export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<Parte, string>> }) {
   const { agir } = useCentral();
   const [ias, setIas] = useState<TesteIA[] | null>(null);
   const [testando, setTestando] = useState(false);
   const [erroIA, setErroIA] = useState<string | null>(null);
+  const [contextoIA, setContextoIA] = useState("");
+  const [carregandoIA, setCarregandoIA] = useState(false);
+
+  // Baixa o contexto, tira as chaves, junta o resumo da fila e põe na área de transferência.
+  const copiarContexto = async () => {
+    setCarregandoIA(true);
+    try {
+      let bruto = "";
+      for (const url of URLS_CONTEXTO) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          bruto = await res.text();
+          if (bruto.trim()) break;
+        } catch {
+          // tenta a próxima URL
+        }
+      }
+      if (!bruto.trim()) throw new Error("Não consegui baixar o contexto agora. Tente de novo em um instante.");
+      const limpo = limparChaves(bruto);
+      const fila = d.cortex?.naFila ?? 0;
+      const rodando = d.cortex?.fazendo?.length ?? 0;
+      const travadas = d.cortex?.travadas?.length ?? 0;
+      const final = `${limpo}\n\nConexão: Filas: ${fila} | Rodando: ${rodando} | Travadas: ${travadas}`;
+      setContextoIA(final);
+      await colar(final);
+      if (final.includes("Cortex") && !TEM_CHAVE.test(final)) {
+        window.alert("Contexto copiado. Cole na conversa da outra IA.");
+      } else {
+        window.alert("Não copiei por segurança: o texto não tem o contexto do Cortex ou ainda esconde alguma chave.");
+      }
+    } catch (e) {
+      window.alert(`Não consegui copiar o contexto: ${(e as Error).message}`);
+    } finally {
+      setCarregandoIA(false);
+    }
+  };
   const testar = async () => {
     setTestando(true); setErroIA(null);
     try { setIas((await agir<{ ias: TesteIA[] }>({ acao: "testar-ias" })).ias || []); } catch (e) { setErroIA((e as Error).message); }
@@ -78,6 +133,23 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
             ))}
           </div>
         )}
+      </Cartao>
+
+      <Cartao titulo="Usar outra IA">
+        <div className="space-y-3">
+          <p className="text-sm text-nexia-muted">Cole na conversa e a IA já sabe tudo.</p>
+          <Botao onClick={copiarContexto} disabled={carregandoIA} testid="btn-copiar-contexto">
+            {carregandoIA ? "Copiando…" : "📋 Copiar contexto"}
+          </Botao>
+          <div className="flex flex-wrap gap-2">
+            <Botao href="https://gemini.google.com">Abrir Gemini</Botao>
+            <Botao href="https://chat.openai.com">Abrir ChatGPT</Botao>
+            <Botao href="https://claude.ai">Abrir Claude</Botao>
+          </div>
+          {contextoIA && (
+            <p className="text-xs text-nexia-muted" role="status">Contexto pronto: {contextoIA.length} caracteres. Agora é só colar na conversa.</p>
+          )}
+        </div>
       </Cartao>
 
       <Mais d={d} erro={erros.robos} />
