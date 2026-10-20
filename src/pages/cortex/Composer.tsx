@@ -54,8 +54,13 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
 
   const mandar = async () => {
     if (!pode) return;
+    const conteudoCompleto = [texto.trim(), ...anexos.map((a) => a.md)].join("\n\n");
+    if (conteudoCompleto.length > MAX) {
+      setAviso(`O pedido com os anexos tem ${conteudoCompleto.length.toLocaleString("pt-BR")} caracteres e excede o limite máximo de ${MAX.toLocaleString("pt-BR")}. Reduza o texto ou remova alguns anexos.`);
+      return;
+    }
     setOcupado(true); setAviso(null);
-    try { await enviar([texto.trim(), ...anexos.map((a) => a.md)].join("\n\n"), modoResposta); setTexto(""); setAnexos([]); } catch (e) { setAviso((e as Error).message); } finally { setOcupado(false); }
+    try { await enviar(conteudoCompleto, modoResposta); setTexto(""); setAnexos([]); } catch (e) { setAviso((e as Error).message); } finally { setOcupado(false); }
   };
 
   // Qualquer tipo de arquivo: texto/código entra como texto; print/foto é reduzido; o resto vai embutido se for pequeno.
@@ -104,7 +109,7 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
   return (
     <div className="w-full max-w-3xl mx-auto px-3 pb-3">
       <div className="rounded-3xl border border-[var(--cx-line)] bg-[var(--cx-card)] shadow-[0_8px_40px_-12px_rgba(0,0,0,.35)] focus-within:border-[var(--cx-ac)] transition-colors">
-        <textarea ref={area} value={texto} onChange={(e) => setTexto(e.target.value)} rows={1} data-testid="cx-texto"
+        <textarea ref={area} value={texto} onChange={(e) => setTexto(e.target.value)} rows={1} maxLength={MAX} data-testid="cx-texto"
           onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); mandar(); } }}
           placeholder={modo === "pedido" ? "O que o Cortex deve fazer? Diga o projeto e o que mudar." : modo === "pergunta" ? "Pergunte ao Cortex. A resposta chega na hora." : "Anotação neste pedido. O Cortex lê só o pedido: para mudar o que ele faz, abra um Novo pedido."}
           className="w-full resize-none bg-transparent outline-none px-5 pt-4 pb-2 text-[15px] leading-6 text-[var(--cx-txt)] placeholder:text-[var(--cx-mut)] max-h-[220px]" />
