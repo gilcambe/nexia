@@ -44,7 +44,7 @@ export default function Footer({ client }: FooterProps) {
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2.5 mb-3">
               <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-nexia-cyan/20"><i className="ri-brain-fill text-nexia-cyan" /></div>
-              <span className="font-bold text-white">NEXIA<span className="text-nexia-cyan">OS</span></span>
+              <span className="font-bold text-white">KERNEX</span>
             </div>
             <p className="text-xs text-nexia-muted leading-relaxed mb-4">Sistema Operacional de Inteligência Artificial. Orquestre 50+ providers em uma única plataforma SaaS.</p>
             <a href="mailto:contato@nexiaos.com.br" className="text-xs text-nexia-muted hover:text-nexia-cyan transition-colors">contato@nexiaos.com.br</a>
@@ -79,7 +79,7 @@ export default function Footer({ client }: FooterProps) {
         </div>
 
         <div className="border-t border-nexia-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span className="text-[11px] text-nexia-muted">© 2026 NEXIA OS · Todos os direitos reservados · LGPD Compliant</span>
+          <span className="text-[11px] text-nexia-muted">© 2026 KERNEX · Todos os direitos reservados · LGPD Compliant</span>
           <div className="flex items-center gap-3">
             {madeWithKernexLink && (
               <a

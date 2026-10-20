@@ -53,7 +53,7 @@ export default function DocsPage() {
             <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-nexia-cyan/10 border border-nexia-cyan/20"><i className="ri-book-open-line text-nexia-cyan text-xl" /></div>
             <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Documentação de Deploy</h1>
           </div>
-          <p className="text-sm md:text-base text-nexia-muted max-w-lg">Guia completo para deployar o ecossistema NEXIA OS — frontend, backend, Docker, Redis, BullMQ e Ollama.</p>
+          <p className="text-sm md:text-base text-nexia-muted max-w-lg">Guia completo para deployar o ecossistema KERNEX — frontend, backend, Docker, Redis, BullMQ e Ollama.</p>
         </div>
       </header>
 

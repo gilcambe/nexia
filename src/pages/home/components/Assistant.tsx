@@ -7,7 +7,7 @@ const chips = ["Ver demos", "Falar com vendas", "Integração API", "Parceria"];
 export default function Assistant() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string; streaming?: boolean }[]>([
-    { role: "assistant", text: "Olá! Sou o NEXIA Assistant. Como posso ajudar você hoje? 👋" },
+    { role: "assistant", text: "Olá! Sou o KERNEX Assistant. Como posso ajudar você hoje? 👋" },
   ]);
   const [loading, setLoading] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -60,7 +60,7 @@ export default function Assistant() {
         <div className="max-w-2xl mx-auto">
           <div className="text-center mb-8">
             <h2 className="text-3xl md:text-4xl font-black text-white mb-4">
-              NEXIA <span className="text-nexia-cyan">Assistant</span>
+              KERNEX <span className="text-nexia-cyan">Assistant</span>
             </h2>
             <p className="text-nexia-muted">Powered by CORTEX v16 — resposta real via SSE streaming.</p>
           </div>
@@ -68,7 +68,7 @@ export default function Assistant() {
           <div className="rounded-xl bg-nexia-surface border border-nexia-border overflow-hidden">
             <div className="flex items-center gap-2 px-4 py-3 border-b border-nexia-border bg-nexia-surface2">
               <div className={`w-2 h-2 rounded-full ${loading ? "bg-amber-400 animate-pulse" : "bg-nexia-cyan animate-pulse"}`} />
-              <span className="text-xs text-nexia-muted">NEXIA Assistant — {loading ? "Processando..." : "Online"}</span>
+              <span className="text-xs text-nexia-muted">KERNEX Assistant — {loading ? "Processando..." : "Online"}</span>
             </div>
 
             <div className="p-4 space-y-3 min-h-[200px] max-h-[320px] overflow-y-auto">

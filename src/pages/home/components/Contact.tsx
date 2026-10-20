@@ -76,7 +76,7 @@ export default function Contact() {
               <button onClick={handleSubmit} disabled={status === "loading"} className="flex-1 flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-nexia-cyan text-[#0a0a0f] text-sm font-semibold hover:bg-nexia-cyan-dim transition-colors disabled:opacity-60 cursor-pointer">
                 {status === "loading" ? <><i className="ri-loader-4-line animate-spin" /> Enviando...</> : <><i className="ri-send-plane-line" /> Enviar mensagem</>}
               </button>
-              <a href="https://wa.me/5511944037259?text=Olá! Quero saber mais sobre o NEXIA OS" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap">
+              <a href="https://wa.me/5511944037259?text=Olá! Quero saber mais sobre o KERNEX" target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors whitespace-nowrap">
                 <i className="ri-whatsapp-fill" /> WhatsApp
               </a>
             </div>
