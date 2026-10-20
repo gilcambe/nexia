@@ -101,20 +101,16 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
         }
       }
       
-      // Validação melhorada: verifica se o contexto é estruturado e contém informações essenciais
+      // Segurança: o alerta de sucesso só sai quando o texto tem o contexto do Cortex e nenhuma chave sobrou.
       const temCortex = final.includes("Cortex");
-      const temContextoEstruturado = final.includes("# Contexto para qualquer IA") || 
-                                   final.includes("NEXIA:") || 
-                                   final.includes("Dono:");
       const temChaves = TEM_CHAVE.test(final);
-      
-      if (temCortex && temContextoEstruturado && !temChaves) {
-        window.alert("Contexto copiado com segurança. Cole na conversa da outra IA.");
+
+      if (temCortex && !temChaves) {
+        window.alert("Contexto copiado. Cole na conversa da outra IA.");
       } else {
-        window.alert("⚠️ NÃO copiado por segurança: o contexto não está estruturado, não contém informações essenciais ou ainda esconde alguma chave. Verifique o log do console para detalhes.");
+        window.alert("Não copiei por segurança: o texto não tem o contexto do Cortex ou ainda esconde alguma chave.");
         console.warn("Falha na checagem de segurança:", {
           temCortex,
-          temContextoEstruturado,
           temChaves,
           tamanhoFinal: final.length
         });
@@ -218,7 +214,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
             <a className={LINK} href="https://claude.ai" target="_blank" rel="noopener noreferrer">Abrir Claude</a>
           </div>
           {contextoIA && (
-            <p className="text-xs text-nexia-muted" role="status">Contexto pronto: {contextoIA.length} caracteres. Agora é só colar na conversa.</p>
+            <p className="text-xs text-nexia-muted" role="status" aria-live="polite">Contexto pronto: {contextoIA.length} caracteres. Agora é só colar na conversa.</p>
           )}
         </div>
       </Cartao>
