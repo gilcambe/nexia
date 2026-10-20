@@ -46,7 +46,7 @@ export default function Conversa({ n, voltar }: { n: number; voltar: () => void 
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="px-4 py-3 border-b border-[var(--cx-line)] flex items-center gap-3">
-        <button onClick={voltar} className="md:hidden text-[var(--cx-mut)] w-9 h-9" aria-label="Voltar" data-testid="cx-voltar">←</button>
+        <button onClick={voltar} className="text-[var(--cx-mut)] w-9 h-9" aria-label="Voltar" data-testid="cx-voltar">←</button>
         <div className="min-w-0 flex-1">
           <h2 className="font-semibold truncate" data-testid="cx-titulo">{d.titulo}</h2>
           <p className="text-xs text-[var(--cx-mut)] flex items-center gap-2">
