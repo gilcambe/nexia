@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 // Central NEXIA: o que a página precisa do GitHub (fila do Cortex, robôs, posts do Divulga).
 // Usa o token da fila (NEXIA_JOBS_TOKEN) só no servidor; nada dele vai para a página.
 
@@ -116,10 +117,77 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   return { cortex, robos, rodar, pedirAoCortex, divulga, reservas, temToken: !!token };
 }
 
+// Rate limiting: simples implementação com timestamp e contador
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minuto
+const RATE_LIMIT_MAX_REQUESTS = 5; // 5 requisições por minuto
+const requestCounts = new Map();
+
+function checkRateLimit(clientIp) {
+  const now = Date.now();
+  const windowStart = now - RATE_LIMIT_WINDOW;
+  
+  if (!requestCounts.has(clientIp)) {
+    requestCounts.set(clientIp, { count: 1, timestamp: now });
+    return true;
+  }
+  
+  const clientData = requestCounts.get(clientIp);
+  if (clientData.timestamp < windowStart) {
+    requestCounts.set(clientIp, { count: 1, timestamp: now });
+    return true;
+  }
+  
+  if (clientData.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false;
+  }
+  
+  clientData.count++;
+  clientData.timestamp = now;
+  return true;
+}
+
+// Lock mechanism para evitar race conditions
+const lockTimeout = 5000; // 5 segundos
+const locks = new Map();
+
+function acquireLock(lockKey) {
+  return new Promise((resolve, reject) => {
+    const now = Date.now();
+    
+    if (locks.has(lockKey)) {
+      const lockData = locks.get(lockKey);
+      if (now - lockData.timestamp > lockTimeout) {
+        // Lock expirado, liberar
+        locks.delete(lockKey);
+      } else {
+        // Lock ativo, aguardar
+        setTimeout(() => acquireLock(lockKey).then(resolve).catch(reject), 100);
+        return;
+      }
+    }
+    
+    // Adquirir lock
+    locks.set(lockKey, { timestamp: now });
+    
+    // Liberar lock após timeout
+    setTimeout(() => {
+      locks.delete(lockKey);
+    }, lockTimeout);
+    
+    resolve();
+  });
+}
+
 // Handler HTTP para ações do central/github.js
 exports.handler = async (event, context) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
+  }
+  
+  // Rate limiting
+  const clientIp = event.headers['x-forwarded-for'] || event.headers['x-real-ip'] || 'unknown';
+  if (!checkRateLimit(clientIp)) {
+    return { statusCode: 429, body: JSON.stringify({ success: false, message: 'Too many requests' }) };
   }
 
   try {
@@ -148,13 +216,20 @@ exports.handler = async (event, context) => {
       const estadoPath = process.env.DIVULGA_ESTADO_PATH
         ? path.resolve(process.env.DIVULGA_ESTADO_PATH)
         : path.join(__dirname, '../../../divulgados/dados/divulga-estado.json');
-      // Garante que a pasta do estado exista antes de gravar.
-      await fs.promises.mkdir(path.dirname(estadoPath), { recursive: true });
+      
+      // Criar lock key único para esta operação
+      const lockKey = `divulga-estado-${crypto.createHash('md5').update(estadoPath).digest('hex')}`;
       
       try {
+        // Adquirir lock para evitar race conditions
+        await acquireLock(lockKey);
+        
+        // Garante que a pasta do estado exista antes de gravar.
+        await fs.promises.mkdir(path.dirname(estadoPath), { recursive: true });
+        
         // Ler arquivo de forma assíncrona
-        const dataStr = await fs.promises.readFile(estadoPath, 'utf8');
-        const data = JSON.parse(dataStr);
+        const dataStr = await fs.promises.readFile(estadoPath, 'utf8').catch(() => '{}');
+        const data = JSON.parse(dataStr || '{}');
         
         // Garantir que o array postagens exista
         if (!data.postagens) {
@@ -173,22 +248,11 @@ exports.handler = async (event, context) => {
         
         return { statusCode: 200, body: JSON.stringify({ success: true }) };
       } catch (fileError) {
-        if (fileError.code === 'ENOENT') {
-          // Arquivo não existe, criar um novo
-          const newData = {
-            feitos: [],
-            historico: [],
-            postagens: [{
-              horario,
-              tema,
-              data: new Date().toISOString()
-            }]
-          };
-          await fs.promises.writeFile(estadoPath, JSON.stringify(newData, null, 2));
-          return { statusCode: 200, body: JSON.stringify({ success: true }) };
-        }
         console.error('Erro ao manipular arquivo de estado:', fileError);
         return { statusCode: 500, body: JSON.stringify({ success: false, message: 'Erro ao atualizar estado' }) };
+      } finally {
+        // Liberar lock
+        locks.delete(lockKey);
       }
     }
 
