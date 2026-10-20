@@ -67,11 +67,103 @@ async function buscarEstadoAtual() {
     });
     
     const content = Buffer.from(response.data.content, 'base64').toString('utf8');
-    return JSON.parse(content);
+    const dados = JSON.parse(content);
+    
+    // Processa o histórico para gerar estado atual
+    const estadoAtual = processarHistorico(dados);
+    return estadoAtual;
   } catch (err) {
     console.error('Erro ao buscar estado:', err);
     throw new Error(`Não foi possível ler o arquivo ${ESTADO_ARQUIVO} do branch ${ESTADO_BRANCH}`);
   }
+}
+
+/**
+ * Processa o histórico para gerar estado atual de cada rede
+ */
+function processarHistorico(dados) {
+  const estado = {
+    redes: {}
+  };
+  
+  // Pega os canais únicos do histórico
+  const canais = new Set();
+  dados.historico.forEach(entry => {
+    if (entry.resultados) {
+      entry.resultados.forEach(result => {
+        canais.add(result.canal);
+      });
+    }
+  });
+  
+  // Inicializa estado para cada canal
+  canais.forEach(canal => {
+    estado.redes[canal] = {
+      canal: canal,
+      status: 'desconhecido',
+      ultima_tentativa: null,
+      erros_consecutivos: 0,
+      erro: null
+    };
+  });
+  
+  // Processa o histórico do mais recente para o mais antigo
+  const resultadosOrdenados = [...dados.historico].sort((a, b) => 
+    new Date(b.quando) - new Date(a.quando)
+  );
+  
+  // Conta erros consecutivos
+  const errosConsecutivos = {};
+  canais.forEach(canal => {
+    errosConsecutivos[canal] = 0;
+  });
+  
+  // Encontra a última tentativa bem-sucedida para cada canal
+  const ultimaSucesso = {};
+  canais.forEach(canal => {
+    ultimaSucesso[canal] = null;
+  });
+  
+  resultadosOrdenados.forEach(entry => {
+    const timestamp = new Date(entry.quando);
+    
+    entry.resultados.forEach(result => {
+      const canal = result.canal;
+      if (!estado.redes[canal]) return;
+      
+      // Atualiza última tentativa
+      estado.redes[canal].ultima_tentativa = timestamp;
+      
+      if (result.ok) {
+        // Se houve sucesso, zera contador de erros consecutivos
+        errosConsecutivos[canal] = 0;
+        estado.redes[canal].status = 'sucesso';
+        estado.redes[canal].erro = null;
+        
+        // Atualiza última sucesso se for mais recente
+        if (!ultimaSucesso[canal] || timestamp > ultimaSucesso[canal]) {
+          ultimaSucesso[canal] = timestamp;
+        }
+      } else {
+        // Se houve erro, incrementa contador
+        errosConsecutivos[canal]++;
+        estado.redes[canal].status = 'erro';
+        estado.redes[canal].erro = result.erro || 'Erro desconhecido';
+      }
+    });
+  });
+  
+  // Define os contadores finais de erros consecutivos
+  canais.forEach(canal => {
+    estado.redes[canal].erros_consecutivos = errosConsecutivos[canal];
+    
+    // Se não houve sucesso, define status como erro
+    if (!ultimaSucesso[canal]) {
+      estado.redes[canal].status = 'erro';
+    }
+  });
+  
+  return estado;
 }
 
 /**
@@ -188,6 +280,19 @@ function houveSucesso(estado) {
 }
 
 /**
+ * Verifica se houve sucesso na publicação nos últimos 30h
+ */
+function houveSucessoUltimas30h(estado) {
+  if (!estado || !estado.ultima_tentativa) return false;
+  
+  const ultimaTentativa = parseTimestamp(estado.ultima_tentativa);
+  if (!ultimaTentativa) return false;
+  
+  const tempoSemSucesso = Date.now() - ultimaTentativa.getTime();
+  return tempoSemSucesso < MAX_TEMPO_SEM_SUCESSO;
+}
+
+/**
  * Verifica se há erro consecutivo
  */
 function temErroConsecutivo(estado) {
@@ -212,8 +317,8 @@ async function verificarRede(nomeRede, estado) {
     }
   }
   
-  // Se há erro consecutivo ou tempo sem sucesso, cria alerta
-  if (temErroConsecutivo(estado) || !houveSucesso(estado)) {
+  // Se há erro consecutivo ou não houve sucesso nos últimos 30h, cria alerta
+  if (temErroConsecutivo(estado) || !houveSucessoUltimas30h(estado)) {
     console.log(`Rede ${nomeRede} precisa de alerta`);
     
     // Verifica se já existe issue
