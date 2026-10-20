@@ -1,20 +1,137 @@
 {
-  "nome": "CES Brasil 2027",
-  "frase": "A MAIOR FEIRA DE TECNOLOGIA DO MUNDO ESTÁ DE VOLTA",
-  "servicos": [
-    "Missão Empresarial Brasileira",
-    "Ingressos CES 2027",
-    "Pacotes de Viagem",
-    "Logística Completa",
-    "Networking Estruturado",
-    "Suporte 24/7"
-  ],
-  "contato": {
-    "whatsapp": "5511944037259",
-    "email": "henrique@cesbrasil.tech",
-    "formAction": "/api/leads"
+  "kind": "site",
+  "name": "CES Brasil 2027",
+  "tagline": "A Maior Feira de Tecnologia do Mundo Está de Volta",
+  "description": "Missão Empresarial Brasileira para a CES 2027 em Las Vegas. Conecte-se com líderes de inovação global e garanta sua presença.",
+  "folder": "clientes/ces2027",
+  "style": "elegant",
+  "photo_theme": "technology event exhibition",
+  "leads_origem": "ces2027-site",
+  "favicon": "/clientes/ces2027/assets/favicon.svg",
+  "selo": {
+    "label": "Feito com Kernex",
+    "url": "https://kernex.com.br/?utm_source=ces2027&utm_medium=selo"
   },
   "corPrincipal": "#0057FF",
-  "favicon": "/clientes/ces2027/assets/favicon.svg",
-  "footer": "<a href=\"https://kernex.com.br/?utm_source=ces2027&utm_medium=selo\" target=\"_blank\">Feito com Kernex</a>"
+  "footer": "<a href=\"https://kernex.com.br/?utm_source=ces2027&utm_medium=selo\" target=\"_blank\">Feito com Kernex</a>",
+  "fonts": {
+    "heading": "Sora",
+    "body": "Inter"
+  },
+  "palette": {
+    "primary": "#0057FF",
+    "accent": "#FF5C00",
+    "bg": "#FAF8F5",
+    "surface": "#FFFFFF",
+    "text": "#0F172A",
+    "muted": "#64748B",
+    "dark": "#06090F"
+  },
+  "contact": {
+    "whatsapp": "5511944037259",
+    "phone": "",
+    "email": "henrique@cesbrasil.tech",
+    "address": "",
+    "city": "Las Vegas / Brasil",
+    "hours": "",
+    "instagram": "https://instagram.com/cesbrasil.tech",
+    "youtube": "",
+    "tiktok": "",
+    "linkedin": "https://linkedin.com/company/cesbrasil"
+  },
+  "sections": [
+    {
+      "type": "hero",
+      "eyebrow": "Missão Empresarial Brasileira · cesbrasil.tech",
+      "title": "A MAIOR FEIRA DE TECNOLOGIA DO MUNDO ESTÁ DE VOLTA",
+      "subtitle": "CES 2027 · Las Vegas · Janeiro de 2027",
+      "cta": {
+        "label": "Garantir Ingressos",
+        "href": "#contato"
+      },
+      "cta2": {
+        "label": "Ver Serviços",
+        "href": "#servicos"
+      },
+      "image_query": "technology exhibition booth",
+      "video_query": "technology fair"
+    },
+    {
+      "type": "services",
+      "id": "servicos",
+      "title": "Serviços da Missão Empresarial",
+      "subtitle": "Soluções completas para sua participação na CES 2027",
+      "items": [
+        {
+          "title": "Missão Empresarial Brasileira",
+          "text": "Acompanhamento e networking estruturado com executivos brasileiros.",
+          "image_query": "business networking"
+        },
+        {
+          "title": "Ingressos CES 2027",
+          "text": "Acesso e credenciamento oficial facilitado para a feira.",
+          "image_query": "conference badge"
+        },
+        {
+          "title": "Pacotes de Viagem & Logística",
+          "text": "Voo, hospedagem e transfer de alto padrão pela operação Viajante Pro.",
+          "image_query": "luxury hotel las vegas"
+        },
+        {
+          "title": "Suporte 24/7",
+          "text": "Atendimento e concierge contínuos durante toda a missão.",
+          "image_query": "customer support"
+        }
+      ]
+    },
+    {
+      "type": "about",
+      "title": "Sobre a CES 2027",
+      "text": "A CES é o principal palco global para lançamentos tecnológicos. Reúne executivos, fundadores e líderes de tecnologia para inteligência de mercado e oportunidades de negócios.",
+      "image_query": "tech conference stage",
+      "stats": [
+        {
+          "value": "148k+",
+          "label": "Participantes"
+        },
+        {
+          "value": "4.1k+",
+          "label": "Expositores"
+        },
+        {
+          "value": "140+",
+          "label": "Países"
+        }
+      ]
+    },
+    {
+      "type": "gallery",
+      "title": "A CES em Imagens",
+      "image_queries": [
+        "tech exhibition booth",
+        "robotics demo",
+        "ai technology fair",
+        "las vegas convention center"
+      ]
+    },
+    {
+      "type": "faq",
+      "title": "Dúvidas Frequentes",
+      "items": [
+        {
+          "q": "O que inclui o pacote da Missão Empresarial?",
+          "a": "Acompanhamento, suporte logístico, networking e assessoria durante o evento."
+        },
+        {
+          "q": "Como comprar o ingresso?",
+          "a": "Preencha nosso formulário para receber as instruções e opções de pacote."
+        }
+      ]
+    },
+    {
+      "type": "contact",
+      "title": "Solicite Mais Informações",
+      "subtitle": "Preencha o formulário e nossa equipe entrará em contato."
+    }
+  ]
 }

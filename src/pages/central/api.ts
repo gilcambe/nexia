@@ -20,6 +20,9 @@ export interface Divulga {
   naFila: number;
   proximos: { id: string; texto: string }[];
   historico: { quando: string; id: string | null; cliente: string; resultados: { canal: string; ok: boolean; erro?: string }[] }[];
+  seguidores30d?: { dia: string; total: number }[];
+  melhorHorario?: string;
+  melhorTema?: string;
 }
 export type Situacao = "ok" | "erro" | "desligado";
 export interface Fornecedor { id: string; nome: string; grupo: string; paraQue: string; gratis: string; link: string; situacao: Situacao; quando: string | null }

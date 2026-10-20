@@ -38,7 +38,7 @@ async function agir(p, b, quem) {
   const n = Number(b.n) || 0;
   if (b.acao === 'pedir') {
     if (texto.length < 10) return r(400, { error: 'Escreva o pedido com pelo menos 10 letras.' });
-    if (texto.length > 3500) return r(400, { error: 'Pedido grande demais. Divida em pedidos menores (até 3500 letras).' });
+    if (texto.length > 60000) return r(400, { error: 'Pedido grande demais. Divida em pedidos menores (até 60000 letras).' });
     const ped = montarPedido ? montarPedido(texto, quem) : { titulo: texto.split('\n')[0].slice(0, 90), labels: ['cortex-fila'], body: texto + '\n\n_Pedido de ' + quem + '._' };
     const i = await p.gh('/repos/gilcambe/nexia/issues', { method: 'POST', body: JSON.stringify({ title: ped.titulo, labels: ped.labels, body: ped.body }) });
     return r(200, { ok: true, numero: i.number, mensagem: 'Pedido #' + i.number + ' na fila. O Cortex pega em até 15 minutos.' });
