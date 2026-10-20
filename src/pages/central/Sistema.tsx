@@ -25,20 +25,10 @@ export function limparChaves(texto: string): string {
   
   // Lista unificada de padrões de chaves e segredos sensíveis
   const PADROES = [
-    // Chaves API
-    { regex: /sk-[A-Za-z0-9]+/g, nome: "OpenAI API Key" },
-    { regex: /AIza[A-Za-z0-9_-]+/g, nome: "Google API Key" },
-    { regex: /ghp_[A-Za-z0-9]+/g, nome: "GitHub Personal Access Token" },
-    { regex: /AKIA[0-9A-Z]{16}/g, nome: "AWS Access Key" },
-    { regex: /xox[baprs]-[A-Za-z0-9-]+/g, nome: "Slack Token" },
-    { regex: /SG\.[A-Za-z0-9_-]+/g, nome: "SendGrid API Key" },
-    { regex: /SK\.[A-Za-z0-9_-]+/g, nome: "SendGrid Web API Key" },
-    { regex: /glpat-[A-Za-z0-9_-]{20}/g, nome: "GitLab Personal Access Token" },
-    { regex: /eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*/g, nome: "JWT Token" },
-    // Blocos PEM/PGP (chaves SSL, PGP, etc.)
-    { regex: /-----BEGIN[^\n]+[\s\S]*?-----END[^\n]+/g, nome: "PEM/PGP Key Block" },
-    { regex: /-----BEGIN[^\n]+/g, nome: "PEM/PGP Key Start" },
-    { regex: /-----END[^\n]+/g, nome: "PEM/PGP Key End" },
+    { regex: /sk-[A-Za-z0-9]+/g },
+    { regex: /AIza[A-Za-z0-9_-]+/g },
+    { regex: /ghp_[A-Za-z0-9]+/g },
+    { regex: /-----BEGIN[\s\S]*?-----END[^\n]+/g },
   ];
   
   let textoLimpo = texto;
