@@ -106,6 +106,14 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     const tarefasFeitas = nomes.filter((n) => feitos.has(n)).length;
     const tarefasPendentes = totalTarefas - tarefasFeitas;
     
+    // Dados de particionamento para a interface
+    const particionamento = {
+      total: totalTarefas,
+      feitas: tarefasFeitas,
+      pendentes: tarefasPendentes,
+      progresso: totalTarefas > 0 ? Math.round((tarefasFeitas / totalTarefas) * 100) : 0
+    };
+    
     const pendentes = nomes.filter((n) => !feitos.has(n)).slice(0, 5);
     const proximos = (await Promise.all(pendentes.map((n) => lerRaw('develop', 'divulga/fila/' + n + '.json')))).map((p, k) => ({ 
       id: pendentes[k], 
@@ -117,9 +125,9 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     const historico = ((estado && estado.historico) || []).slice(-8).reverse();
     
     return { 
+      // Dados de particionamento expostos para a interface
+      particionamento,
       naFila: tarefasPendentes, 
-      total: totalTarefas,
-      feitas: tarefasFeitas,
       proximos, 
       historico,
       // Dados agregados do Graph API
