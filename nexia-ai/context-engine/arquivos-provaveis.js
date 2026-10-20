@@ -144,6 +144,10 @@ function contextoDoRepo({ raiz, texto, max = MAX_ARQUIVOS, spawn = spawnSync }) 
   const r = arquivosProvaveis({ raiz, texto, max, spawn });
   const partes = [];
   if (mapa) partes.push(`### Mapa do repositório (MAPA.md)\n${mapa}`);
+  // #818: mapa vivo gerado do código na hora (rotas, workflows e nomes de segredos), sempre atual.
+  let vivo = '';
+  try { vivo = require('../../scripts/gerar-mapa.js').resumoParaCortex(raiz); } catch { vivo = ''; }
+  if (vivo) partes.push(`### Mapa vivo (gerado do código agora)\n${vivo}`);
   if (r.arquivos.length) {
     partes.push(`### Arquivos prováveis para este pedido (busca por: ${r.palavras.join(', ')})\n`
       + r.arquivos.map((a) => `- ${a.path} (tem: ${a.palavras.join(', ')})`).join('\n')

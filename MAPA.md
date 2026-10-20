@@ -16,6 +16,7 @@ Lido pelo Cortex antes de cada pedido (junto com os arquivos achados pelas palav
 - `server.js` mesmo servidor em Node para testes locais. `lib/` utilidades comuns (stream-response, safe-path).
 
 ## Cortex (IA que faz as tarefas)
+- `docs/MAPA.md` mapa vivo gerado do código (rotas, segredos só nomes, workflows): `npm run mapa` atualiza.
 - `scripts/cortex-fila.js` fila (issues com rótulo `cortex-fila`), roda em `.github/workflows/fila-cortex.yml`.
 - `nexia-ai/orchestrator/` passos do pedido (Architect, Coder, Reviewer); `nexia-ai/model-router/` modelos grátis e cotas.
 - `nexia-ai/context-engine/` contexto do prompt (Vault + MAPA.md + arquivos prováveis). `nexia-ai/tool-gateway/` ferramentas com permissão.
