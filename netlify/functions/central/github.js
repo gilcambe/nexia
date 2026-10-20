@@ -7,6 +7,11 @@ const API = 'https://api.github.com/repos/' + REPO;
 // Branch e arquivo onde o robô do Divulga guarda o estado (gravados pelo workflow .github/workflows/divulga.yml).
 const BRANCH_DIVULGA = 'divulga-dados';
 const ARQUIVO_ESTADO = 'divulga-estado.json';
+// Limite de tamanho do arquivo (1MB)
+const MAX_FILE_SIZE = 1024 * 1024;
+// Cache para respostas de estadoDivulga (5 minutos)
+const estadoCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000;
 
 /** Decodifica base64 em texto UTF-8 (o GitHub devolve o conteúdo do arquivo codificado). */
 function decodificarBase64(texto) {
