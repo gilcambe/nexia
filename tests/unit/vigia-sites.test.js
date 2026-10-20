@@ -84,3 +84,28 @@ test('VG5. o cron de saúde chama o vigia e devolve o resumo sem as medidas brut
   assert.match(s, /10000/);
   assert.match(s, /catch \(e\) \{ r\.vigia = /);
 });
+
+test('VS-EMAIL1. 2ª falha seguida manda 1 e-mail pelo Brevo (sem token do GitHub também)', async () => {
+  const db = bancoFalso();
+  const enviados = [];
+  const fetchImpl = async (url, init) => { if (String(url).includes('brevo')) enviados.push(JSON.parse(init.body)); return { ok: true, status: 201 }; };
+  const env = { BREVO_API_KEY: 'k', LEADS_NOTIFY_EMAIL: 'dono@exemplo.com' };
+  const r1 = await v.vigiar(db, { porRota: { bezsan: CAIU }, rotas: ROTAS, env, fetchImpl });
+  assert.strictEqual(r1.email, undefined);
+  const r2 = await v.vigiar(db, { porRota: { bezsan: CAIU }, rotas: ROTAS, env, fetchImpl });
+  assert.strictEqual(r2.email, 'enviado');
+  const r3 = await v.vigiar(db, { porRota: { bezsan: CAIU }, rotas: ROTAS, env, fetchImpl });
+  assert.strictEqual(r3.email, undefined);
+  assert.strictEqual(enviados.length, 1);
+  assert.match(enviados[0].subject, /Fora do ar: Bezsan/);
+  assert.strictEqual(enviados[0].to[0].email, 'dono@exemplo.com');
+});
+
+test('VS-EMAIL2. sem BREVO_API_KEY ou sem e-mail, não manda', async () => {
+  let chamou = false;
+  const f = async () => { chamou = true; return { ok: true }; };
+  assert.strictEqual(await v.enviarEmailAlerta([{ nome: 'x', url: 'u' }], { env: { BREVO_API_KEY: 'k' }, fetchImpl: f }), 'sem-config');
+  assert.strictEqual(await v.enviarEmailAlerta([{ nome: 'x', url: 'u' }], { env: { LEADS_NOTIFY_EMAIL: 'a@b.co' }, fetchImpl: f }), 'sem-config');
+  assert.strictEqual(chamou, false);
+  assert.strictEqual(await v.enviarEmailAlerta([{ nome: 'x', url: 'u' }], { env: { BREVO_API_KEY: 'k', LEADS_NOTIFY_EMAIL: 'a@b.co' }, fetchImpl: async () => ({ ok: false, status: 401 }) }), 'erro-401');
+});

@@ -3,14 +3,29 @@
 // pedidos iguais; responder do cache economiza a cota grátis. Só vale quando o chamador pede (req.cache === true).
 const { createHash } = require('node:crypto');
 
-/** Chave = sha256 de { system, messages }; o modelo não entra (qualquer grátis que respondeu serve). */
+const fs = require('node:fs');
+const path = require('node:path');
+
+// #830: chave "semântica" = texto normalizado (espaços, quebras de linha e maiúsculas não mudam a pergunta).
+const normalizar = t => String(t == null ? '' : typeof t === 'string' ? t : JSON.stringify(t)).replace(/\s+/g, ' ').trim().toLowerCase();
+
+/** Chave = sha256 de { system, messages } normalizados; o modelo não entra aqui (o router acrescenta). */
 function chave(req) {
-  return createHash('sha256').update(JSON.stringify({ system: (req && req.system) || '', messages: (req && req.messages) || [] })).digest('hex');
+  const msgs = ((req && req.messages) || []).map(m => ({ role: m && m.role, content: normalizar(m && m.content) }));
+  return createHash('sha256').update(JSON.stringify({ system: normalizar(req && req.system), messages: msgs })).digest('hex');
 }
 
 /** Map com ordem de uso: o mais antigo sai quando passa de `max`; item vencido é ignorado e removido. */
-function createCache({ max = 500, ttlMs = 24 * 3600e3, agora = () => Date.now() } = {}) {
+// `arquivo` (opcional, desligado por padrão): guarda o cache em JSON para a próxima rodada reaproveitar.
+function createCache({ max = 500, ttlMs = 24 * 3600e3, agora = () => Date.now(), arquivo = '' } = {}) {
   const m = new Map();
+  if (arquivo) {
+    try { for (const [k, e] of Object.entries(JSON.parse(fs.readFileSync(arquivo, 'utf8')))) if (e && e.ate > agora()) m.set(k, e); } catch { /* sem arquivo ainda */ }
+  }
+  const gravar = () => {
+    if (!arquivo) return;
+    try { fs.mkdirSync(path.dirname(arquivo), { recursive: true }); fs.writeFileSync(arquivo, JSON.stringify(Object.fromEntries(m))); } catch { /* disco cheio ou só leitura: segue em memória */ }
+  };
   return {
     get(k) {
       const e = m.get(k);
@@ -23,6 +38,7 @@ function createCache({ max = 500, ttlMs = 24 * 3600e3, agora = () => Date.now() 
       m.delete(k);
       m.set(k, { valor, ate: agora() + ttlMs });
       while (m.size > max) m.delete(m.keys().next().value);
+      gravar();
     },
     get size() { return m.size; },
   };
@@ -31,4 +47,4 @@ function createCache({ max = 500, ttlMs = 24 * 3600e3, agora = () => Date.now() 
 /** Pode usar o cache? Só com req.cache === true e sem ferramentas. */
 const cacheavel = req => !!req && req.cache === true && !(Array.isArray(req.tools) ? req.tools.length : req.tools);
 
-module.exports = { createCache, chave, cacheavel };
+module.exports = { createCache, chave, cacheavel, normalizar };

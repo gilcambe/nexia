@@ -47,7 +47,8 @@ function createRouter(o = {}) {
   }
 
   // #956: respostas sem ferramentas pedidas com req.cache === true ficam 24 h em memória (sem req.cache, nada muda).
-  const cache = o.cache || createCache();
+  // #830: NEXIA_CACHE_ARQUIVO (opcional) guarda o cache em disco entre rodadas.
+  const cache = o.cache || createCache({ arquivo: (o.env || process.env).NEXIA_CACHE_ARQUIVO || '' });
   async function chat(desc, req) {
     const p = providerFor(desc);
     if (!cacheavel(req)) return p.chat(desc.model, normalizeRequest(req));

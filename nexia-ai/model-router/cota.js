@@ -8,6 +8,11 @@ const SEIS_H = 6 * 60 * 60 * 1000;
 const VINTE_E_QUATRO_H = 24 * 60 * 60 * 1000;
 const DOIS_MIN = 2 * 60 * 1000;
 const SESSENTA_S = 60 * 1000;
+// #821: disjuntor (circuit breaker). Modelo que falha CIRCUITO_FALHAS vezes seguidas por instabilidade
+// (busy/transient: 5xx, "high demand", timeout) é rebaixado por 1 hora. Um sucesso zera a conta.
+const UMA_H = 60 * 60 * 1000;
+const CIRCUITO_FALHAS = 3;
+const INSTAVEL = new Set(['busy', 'transient']);
 
 function chaveDe(desc) {
   if (typeof desc === 'string') return desc;
@@ -30,6 +35,7 @@ function parseReset(texto) {
 
 function createPlacar({ agora = () => Date.now() } = {}) {
   const placar = {}; // chave -> { ate: number, motivo: string }
+  const seguidas = {}; // chave -> falhas seguidas por instabilidade (disjuntor)
 
   function castigo(tipo, retryAfterMs) {
     switch (tipo) {
@@ -49,11 +55,19 @@ function createPlacar({ agora = () => Date.now() } = {}) {
   return {
     /** Marca um modelo como sem cota por um tempo de castigo. */
     marcar(desc, tipo, retryAfterMs) {
+      const k = chaveDe(desc);
+      if (INSTAVEL.has(tipo) && (seguidas[k] = (seguidas[k] || 0) + 1) >= CIRCUITO_FALHAS) {
+        seguidas[k] = 0;
+        placar[k] = { ate: agora() + UMA_H, motivo: 'circuito' };
+        return;
+      }
       const ms = castigo(tipo, retryAfterMs);
       if (ms === null) return;
-      const k = chaveDe(desc);
+      if (placar[k] && placar[k].ate > agora() + ms) return; // não encurta um castigo mais longo (ex.: disjuntor)
       placar[k] = { ate: agora() + ms, motivo: tipo };
     },
+    /** #821: resposta boa fecha o disjuntor (zera as falhas seguidas). */
+    sucesso(desc) { delete seguidas[chaveDe(desc)]; },
     /** true se o modelo ainda está bloqueado. */
     bloqueado(desc) {
       const k = chaveDe(desc);
@@ -80,7 +94,7 @@ function createPlacar({ agora = () => Date.now() } = {}) {
         .map(x => x.item);
     },
     /** Esquece todos os castigos (testes e diagnóstico). */
-    limpar() { for (const k of Object.keys(placar)) delete placar[k]; },
+    limpar() { for (const k of Object.keys(placar)) delete placar[k]; for (const k of Object.keys(seguidas)) delete seguidas[k]; },
     /** Objeto simples para salvar no D1 (parte 3). */
     exportar() {
       const out = {};
@@ -171,4 +185,4 @@ async function salvarNoD1(env = process.env, o = {}) {
   } catch (e) { console.warn('[cota] não salvei o placar no D1:', e && e.message); return false; }
 }
 
-module.exports = { createPlacar, getPlacar, parseReset, carregarDoD1, salvarNoD1 };
+module.exports = { CIRCUITO_FALHAS, createPlacar, getPlacar, parseReset, carregarDoD1, salvarNoD1 };

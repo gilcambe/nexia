@@ -72,7 +72,7 @@ function createFailover(models, meter, cls) {
     errors,
     get desc() { return models[mi]; },
     get shrink() { return shrink; },
-    ok() { tries = 0; anotar(models[mi], cls, true); },
+    ok() { tries = 0; anotar(models[mi], cls, true); try { getPlacar().sucesso(models[mi]); } catch { /* placar nunca derruba a tarefa */ } },
     /** Troca já para o próximo modelo vivo (de preferência de outro provedor); false se não houver outro. */
     switchModel() {
       const cur = models[mi];

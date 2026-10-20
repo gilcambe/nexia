@@ -1,0 +1,53 @@
+# Teste ponta a ponta no endereço real depois de cada deploy (#809). Playwright no Actions (grátis).
+# SEM login e SÓ leitura: abre as páginas, não envia formulário e bloqueia POST/PUT/DELETE ao site.
+# Não usa segredo nenhum. Se falhar, o job fica vermelho com prints em "Artifacts".
+name: Ponta a ponta no ar
+
+on:
+  workflow_run:
+    workflows: ['Deploy Cloudflare']
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Endereço do NEXIA (vazio = https://nexia.gcbezerra.workers.dev)'
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-no-ar
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Instalar o Chromium do Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Testar o site no ar (sem login)
+        env:
+          BASE_URL: ${{ inputs.url || 'https://nexia.gcbezerra.workers.dev' }}
+        run: |
+          case "$BASE_URL" in https://*) ;; *) echo "use https://"; exit 2;; esac
+          npx playwright test -c tests/e2e/playwright.no-ar.config.js
+      - name: Guardar relatório e prints
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-no-ar
+          path: |
+            playwright-report-no-ar
+            test-results-no-ar
+          retention-days: 7
