@@ -2,32 +2,32 @@
   "spec": {
     "kind": "site",
     "name": "Splash Eventos",
-    "tagline": "Transformando momentos inesquecíveis",
-    "photo_theme": "event venue",
-    "description": "Organização de eventos corporativos, sociais e privados com excelência e criatividade.",
+    "tagline": "Eventos inesquecíveis para todos os momentos",
+    "photo_theme": "event party",
+    "description": "Agência especializada em organização de eventos corporativos, sociais e privados.",
     "folder": "sites/splash",
     "fonts": {
       "heading": "Playfair Display",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#2c3e50",
-      "accent": "#e74c3c",
-      "bg": "#f9f9f9",
+      "primary": "#6b46c1",
+      "accent": "#f59e0b",
+      "bg": "#f9fafb",
       "surface": "#ffffff",
-      "text": "#2c3e50",
-      "muted": "#667071",
-      "dark": "#1a252f"
+      "text": "#1f2937",
+      "muted": "#6b7280",
+      "dark": "#111827"
     },
-    "style": "elegant",
+    "style": "modern",
     "contact": {
       "whatsapp": "5511999998888",
       "phone": "(11) 99999-8888",
-      "email": "contato@splasheventos.com.br",
-      "address": "Av. Paulista, 1234",
+      "email": "contato@plasheventos.com.br",
+      "address": "Av. Paulista, 1234, São Paulo - SP",
       "city": "São Paulo - SP",
       "hours": "Seg a sex, 9h às 18h",
-      "instagram": "splasheventos",
+      "instagram": "plasheventos",
       "facebook": "",
       "youtube": "",
       "tiktok": "",
@@ -45,59 +45,59 @@
     "sections": [
       {
         "type": "hero",
-        "id": "transformando-momentos-inesqueciveis",
-        "title": "Transformando momentos inesquecíveis",
-        "subtitle": "Eventos corporativos, sociais e privados com excelência e criatividade.",
-        "eyebrow": "Organização de eventos",
+        "id": "transformando-momentos-em-experiencias-m",
+        "title": "Transformando momentos em experiências memoráveis",
+        "subtitle": "Eventos corporativos, sociais e privados com criatividade e excelência.",
+        "eyebrow": "Agência de Eventos",
         "cta": {
-          "label": "Solicitar orçamento",
+          "label": "Orçamento",
           "href": "whatsapp"
         },
         "cta2": {
-          "label": "Conheça nossos serviços",
+          "label": "Nossos serviços",
           "href": "#servicos"
         },
-        "image_query": "elegant event venue",
+        "image_query": "elegant event party",
         "video_query": ""
       },
       {
         "type": "services",
         "id": "servicos",
-        "title": "Nossos serviços",
-        "subtitle": "Soluções completas para o seu evento.",
+        "title": "Nossos Serviços",
+        "subtitle": "Soluções completas para todos os tipos de eventos.",
         "items": [
           {
             "title": "Eventos Corporativos",
-            "text": "Congressos, lançamentos e convenções com infraestrutura completa.",
+            "text": "Congressos, lançamentos e team building.",
             "price": "",
-            "image_query": "corporate event conference",
+            "image_query": "corporate event",
             "tag": "",
             "url": "",
             "icon": ""
           },
           {
-            "title": "Casamentos e Festas",
-            "text": "Celebrações personalizadas com elegância e detalhes impecáveis.",
+            "title": "Casamentos",
+            "text": "Celebrações românticas e personalizadas.",
             "price": "",
-            "image_query": "wedding reception venue",
+            "image_query": "wedding party",
             "tag": "",
             "url": "",
             "icon": ""
           },
           {
-            "title": "Lançamentos e Festivais",
-            "text": "Eventos de grande porte com cenários impactantes e experiência memorável.",
+            "title": "Eventos Sociais",
+            "text": "Aniversários, formaturas e confraternizações.",
             "price": "",
-            "image_query": "music festival stage",
+            "image_query": "social celebration",
             "tag": "",
             "url": "",
             "icon": ""
           },
           {
-            "title": "Eventos Corporativos",
-            "text": "Team buildings, confraternizações e eventos temáticos.",
+            "title": "Eventos Privados",
+            "text": "Festas exclusivas e sob medida.",
             "price": "",
-            "image_query": "corporate team building",
+            "image_query": "private party",
             "tag": "",
             "url": "",
             "icon": ""
@@ -106,14 +106,14 @@
       },
       {
         "type": "about",
-        "id": "sobre-a-splash-eventos",
-        "title": "Sobre a Splash Eventos",
-        "subtitle": "Há 15 anos criando experiências memoráveis com dedicação e inovação.",
-        "text": "Há 15 anos criando experiências memoráveis com dedicação e inovação.",
-        "image_query": "team planning event",
+        "id": "sobre-a-splash",
+        "title": "Sobre a Splash",
+        "subtitle": "Há 8 anos criando experiências únicas e inesquecíveis.",
+        "text": "Há 8 anos criando experiências únicas e inesquecíveis.",
+        "image_query": "event planning office",
         "stats": [
           {
-            "value": "15",
+            "value": "8",
             "label": "anos"
           },
           {
@@ -121,35 +121,44 @@
             "label": "eventos"
           },
           {
-            "value": "10.000+",
-            "label": "clientes satisfeitos"
+            "value": "200+",
+            "label": "clientes"
           }
         ]
       },
       {
         "type": "gallery",
         "id": "nossos-trabalhos",
-        "title": "Nossos trabalhos",
+        "title": "Nossos Trabalhos",
         "subtitle": "",
         "image_queries": [
-          "corporate event dinner",
-          "wedding ceremony outdoor",
-          "music festival crowd",
-          "product launch event",
+          "elegant wedding reception",
+          "corporate conference",
           "birthday party decoration",
-          "corporate conference hall",
-          "wedding reception details",
-          "event planning team"
+          "event planning team",
+          "luxury event venue",
+          "outdoor garden event",
+          "cocktail party",
+          "corporate team building"
         ],
         "gif_queries": []
       },
       {
         "type": "video",
-        "id": "veja-nossos-eventos-em-acao",
-        "title": "Veja nossos eventos em ação",
-        "subtitle": "Um vídeo mostra mais que mil fotos.",
+        "id": "nossos-eventos",
+        "title": "Nossos Eventos",
+        "subtitle": "Veja como transformamos momentos em experiências.",
         "youtube": "",
         "video_query": "event highlights"
+      },
+      {
+        "type": "music",
+        "id": "playlist-de-eventos",
+        "title": "Playlist de Eventos",
+        "subtitle": "Músicas que marcam nossos eventos.",
+        "audio_url": "",
+        "audio_title": "",
+        "audio_query": "party music"
       },
       {
         "type": "testimonials",
@@ -158,29 +167,29 @@
         "subtitle": "",
         "items": [
           {
-            "name": "Ana S.",
+            "name": "Maria S.",
             "role": "",
-            "text": "Transformaram nosso evento corporativo em algo inesquecível!",
+            "text": "O casamento dos sonhos! Equipe incrível.",
             "rating": 5
           },
           {
-            "name": "Marcos R.",
+            "name": "João R.",
             "role": "",
-            "text": "Atendimento impecável e detalhes que fizeram toda a diferença no nosso casamento.",
+            "text": "Congresso corporativo impecável. Recomendo!",
             "rating": 5
           },
           {
-            "name": "Carla L.",
+            "name": "Ana L.",
             "role": "",
-            "text": "Profissionais dedicados que superaram todas as nossas expectativas.",
+            "text": "Festa de 15 anos da minha filha perfeita.",
             "rating": 5
           }
         ]
       },
       {
         "type": "links",
-        "id": "fale-conosco",
-        "title": "Fale conosco",
+        "id": "conecte-se",
+        "title": "Conecte-se",
         "subtitle": "",
         "items": [
           {
@@ -194,42 +203,37 @@
             "icon": "instagram"
           },
           {
-            "label": "E-mail",
-            "url": "mailto:contato@splasheventos.com.br",
-            "icon": "mail"
-          },
-          {
-            "label": "Telefone",
-            "url": "tel:11999998888",
-            "icon": "phone"
+            "label": "Facebook",
+            "url": "https://facebook.com/splasheventos",
+            "icon": "facebook"
           }
         ]
       },
       {
         "type": "faq",
         "id": "duvidas-frequentes",
-        "title": "Dúvidas frequentes",
+        "title": "Dúvidas Frequentes",
         "subtitle": "",
         "items": [
           {
-            "q": "Como funciona o processo de contratação?",
-            "a": "Primeiro conversamos sobre sua visão, depois apresentamos propostas personalizadas e ajustamos detalhes."
+            "q": "Como faço o orçamento de um evento?",
+            "a": "Envie suas necessidades pelo WhatsApp e retornamos em 24h."
           },
           {
-            "q": "Trabalhamos com orçamento fixo?",
-            "a": "Sim, oferecemos pacotes fechados e orçamentos personalizados conforme as necessidades do evento."
+            "q": "Trabalhamos com qualquer tipo de evento?",
+            "a": "Sim, desde eventos sociais até corporativos de grande porte."
           },
           {
-            "q": "Vocês fornecem equipamentos de áudio e vídeo?",
-            "a": "Sim, temos parcerias com fornecedores premium para garantir a melhor qualidade técnica."
+            "q": "Qual o prazo mínimo para contratar?",
+            "a": "Recomendamos 2 meses para eventos grandes, mas atendemos casos urgentes."
           },
           {
-            "q": "Como é feito o pagamento?",
-            "a": "Podemos parcelar em até 12x no cartão ou negociar condições especiais para eventos grandes."
+            "q": "Tem pacotes pré-definidos?",
+            "a": "Sim, temos opções básicas, intermediárias e premium."
           },
           {
-            "q": "Vocês atuam em outras cidades?",
-            "a": "Sim, temos estrutura para eventos em todo o Brasil e internacionalmente."
+            "q": "Inclui equipamentos de som e iluminação?",
+            "a": "Sim, todos os pacotes incluem estrutura básica."
           }
         ]
       },
@@ -237,7 +241,7 @@
         "type": "cta",
         "id": "pronto-para-criar-seu-evento",
         "title": "Pronto para criar seu evento?",
-        "subtitle": "Entre em contato e vamos transformar sua ideia em realidade.",
+        "subtitle": "Fale com nossos especialistas e personalize seu evento.",
         "cta": {
           "label": "Solicitar orçamento",
           "href": "whatsapp"
@@ -245,8 +249,8 @@
       },
       {
         "type": "contact",
-        "id": "contato",
-        "title": "Contato",
+        "id": "entre-em-contato",
+        "title": "Entre em contato",
         "subtitle": "",
         "map": true,
         "form": true
@@ -254,6 +258,94 @@
     ]
   },
   "media": {
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/e2/Wedding_party_in_Tbilisi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 402,
+      "alt": "Wedding party at Tbilisi Sameba Cathedral",
+      "credit": "Paata Vardanashvili from Tbilisi, Georgia (CC BY 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item2": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/Pierre-Auguste_Renoir_-_Luncheon_of_the_Boating_Party_-_Google_Art_Project.jpg/1280px-Pierre-Auguste_Renoir_-_Luncheon_of_the_Boating_Party_-_Google_Art_Project.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 948,
+      "alt": "Pierre-Auguste Renoir - Luncheon of the Boating Party - Google Art Project",
+      "credit": "Pierre-Auguste Renoir (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item3": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Private_LAN_party_in_Norway.JPG/1280px-Private_LAN_party_in_Norway.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Private LAN party in Norway",
+      "credit": "Omalmin (CC BY-SA 3.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s2.about": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/Planning_the_Science_Museum_Late_event_2014-11-19.jpg/1280px-Planning_the_Science_Museum_Late_event_2014-11-19.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "The planning session for the Wikimedia UK event as part of the Science Museum La",
+      "credit": "Chris McKenna (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Birthday_decoration.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 960,
+      "alt": "change your view by balloon",
+      "credit": "Partycanadainc (CC BY-SA 3.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g6": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/RUNET-2006_COCKTAIL_PARTY.JPG/1280px-RUNET-2006_COCKTAIL_PARTY.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Russian Wikipedia - Runet-2006 prize winner. Cocktail party prior to the ceremon",
+      "credit": "Wulfson (CC BY-SA 3.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s0.hero": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2a/Office_of_Community_Planning_and_Development_Leadership_Development_Program_-_Office_of_Community_Planning_and_Development_Leadership_Development_Program_participants_%28in_focus%29_-_DPLA_-_84b469308791cd14904eb7f09a9b6990.JPG/1280px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 834,
+      "alt": "The original finding aid described this photograph as: Event: Office of Communit",
+      "credit": "Department of Housing and Urban Development. Office of the Chief Human Capital Office. Office of Broadcasting ",
+      "provider": "wikimedia"
+    },
+    "s1.item0": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9f/Cheese_And_Wine_Party_Debconf23.jpg/1280px-Cheese_And_Wine_Party_Debconf23.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Cheese And Wine Party Debconf23",
+      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g0": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Cheese_And_Wine_Party_Debconf23_2.jpg/1280px-Cheese_And_Wine_Party_Debconf23_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Cheese And Wine Party Debconf23",
+      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g1": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/Cheese_And_Wine_Party_Debconf23_3.jpg/1280px-Cheese_And_Wine_Party_Debconf23_3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1707,
+      "alt": "Cheese And Wine Party Debconf23",
+      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g3": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/Cheese_And_Wine_Party_Debconf23_4.jpg/1280px-Cheese_And_Wine_Party_Debconf23_4.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1707,
+      "alt": "Cheese And Wine Party Debconf23",
+      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
     "s4.clip": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/5/59/Event_highlight_of_Public_Domain_Day_2020_in_Medan_City%2C_Indonesia%3B_January_2020.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
       "width": 1280,
@@ -262,86 +354,6 @@
       "credit": "Rachmat04 for Wikimedia Indonesia (CC BY 3.0, via Wikimedia Commons)",
       "provider": "wikimedia",
       "mime": "video/webm"
-    },
-    "s0.hero": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/SCO_OpenServer_Release_6_Launch_Event_at_New_York_Marriott_Downtown_June_2005.jpg/1280px-SCO_OpenServer_Release_6_Launch_Event_at_New_York_Marriott_Downtown_June_2005.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 853,
-      "alt": "First day of launch event for the SCO OpenServer Release 6 \"Legend\" operating sy",
-      "credit": "Jonathan Schilling (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s1.item0": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/Event_management_66.jpg/1280px-Event_management_66.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 1078,
-      "alt": "Decorations @ event centres",
-      "credit": "Kenogenic (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s1.item1": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Event_management_69.jpg/1280px-Event_management_69.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 853,
-      "alt": "Decorations @ event centres",
-      "credit": "Kenogenic (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s1.item2": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e8/Covid-19_%27Alert_Level_2%27_event_venue_notices.jpg/1280px-Covid-19_%27Alert_Level_2%27_event_venue_notices.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 1799,
-      "alt": "Covid-19 'Alert Level 2' event venue notices, Tory St, Wellington",
-      "credit": "Alan Tennyson (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s1.item3": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b8/Union_Tpke_168_St_td_%282021-09-12%29_02_-_Royal_Event_Center.jpg/1280px-Union_Tpke_168_St_td_%282021-09-12%29_02_-_Royal_Event_Center.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 853,
-      "alt": "The Royal Event Center (168-11 Union Turnpike), at Union Turnpike and 168th Stre",
-      "credit": "Tdorante10 (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s2.about": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/51/Union_Tpke_168_St_td_%282021-07-29%29_01_-_Royal_Event_Center.jpg/1280px-Union_Tpke_168_St_td_%282021-07-29%29_01_-_Royal_Event_Center.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 853,
-      "alt": "The Royal Event Center (168-11 Union Turnpike), at Union Turnpike and 168th Stre",
-      "credit": "Tdorante10 (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s3.g0": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/BIC_Bournemouth_International_Centre_Event_Venue.jpg/1280px-BIC_Bournemouth_International_Centre_Event_Venue.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 1707,
-      "alt": "Photo of the Bournemouth International Centre BIC, one of the many events venues",
-      "credit": "delegateconnectimages (CC BY 2.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s3.g1": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/64/Aerial_view_of_the_event_venue_and_participants.jpg/1280px-Aerial_view_of_the_event_venue_and_participants.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 960,
-      "alt": "Aerial view of the event venue and participants during Wiktionary Editathon in K",
-      "credit": "Uncle Bash007 (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s3.g2": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f5/Lubbock_April_2022_30_%28Bus_Event_Center%29.jpg/1280px-Lubbock_April_2022_30_%28Bus_Event_Center%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 853,
-      "alt": "The Bus Event Center in Lubbock, Texas (United States).",
-      "credit": "Michael Barera (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s3.g3": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/Venue_MSIG_Odia.jpg/1280px-Venue_MSIG_Odia.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 590,
-      "alt": "Venue MSIG Odia",
-      "credit": "Chinmayee Mishra (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
     }
   }
 }
