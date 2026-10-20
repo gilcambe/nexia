@@ -39,6 +39,12 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   const [msg, setMsg] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
   
+  // Estados para dados históricos e métricas
+  const [dadosHistoricos, setDadosHistoricos] = useState<DadosHistoricos[]>([]);
+  const [melhorHorarioTema, setMelhorHorarioTema] = useState<MelhorHorarioTema | null>(null);
+  const [carregandoDados, setCarregandoDados] = useState(true);
+  const [diasDisponiveis, setDiasDisponiveis] = useState(0);
+  
   // Posta na hora: usado pelos botões 07h15, 12h15 e 19h15 de cada tema da semana.
   // Função implementada conforme solicitado no pedido.
   const handlePostarAgora = async (horario: string, tema: string) => {
