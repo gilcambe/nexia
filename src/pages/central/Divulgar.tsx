@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SEMANA, temaDoDia } from '../../lib/calendario';
 import type { Dados } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
