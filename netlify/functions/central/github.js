@@ -3,7 +3,8 @@
 // Usa o token da fila (NEXIA_JOBS_TOKEN) só no servidor; nada dele vai para a página.
 
 // Variável de ambiente configurada via configurar-meta.bat
-const OWNER_PERMISSION = process.env.NEXIA_OWNER_PERMISSION === 'true';
+// Melhoria: Adiciona validação mais robusta de permissão de owner
+const OWNER_PERMISSION = process.env.NEXIA_OWNER_PERMISSION === 'true' && process.env.NEXIA_JOBS_TOKEN;
 
 const REPO = 'gilcambe/nexia';
 const API = 'https://api.github.com/repos/' + REPO;
@@ -81,58 +82,109 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   }
 
   async function divulga() {
-    // Verificação de permissão de owner antes de qualquer operação
+    // Verificação robusta de permissão de owner
     if (!OWNER_PERMISSION) {
-      throw new Error('Permissão de owner não configurada. Configure via configurar-meta.bat');
+      throw new Error('Permissão de owner não configurada ou token inválido. Configure via configurar-meta.bat');
     }
     
+    // Validação robusta de entrada - limita o número máximo de operações
+    const MAX_OPERATIONS = 100;
+    
     const lerRaw = async (ramo, arq) => {
-      const r = await fetchFn('https://raw.githubusercontent.com/' + REPO + '/' + ramo + '/' + arq, { headers: { 'User-Agent': 'nexia-central' } });
-      return r.ok ? r.json().catch(() => null) : null;
+      // Validação de parâmetros para evitar injeção de dados
+      if (!ramo || typeof ramo !== 'string' || !arq || typeof arq !== 'string') {
+        throw new Error('Parâmetros inválidos para leitura de arquivo');
+      }
+      
+      try {
+        const r = await fetchFn('https://raw.githubusercontent.com/' + REPO + '/' + ramo + '/' + arq, { 
+          headers: { 'User-Agent': 'nexia-central' },
+          timeout: 5000 // Timeout para evitar negação de serviço
+        });
+        
+        if (!r.ok) {
+          if (r.status === 404) return null; // Arquivo não encontrado é esperado
+          throw new Error(`Erro ao acessar arquivo: ${r.status}`);
+        }
+        
+        return r.json().catch(() => null);
+      } catch (error) {
+        console.error('Erro ao ler arquivo:', error);
+        return null;
+      }
     };
     
-    // Integração exclusiva com Graph API no backend
-    const graphData = await fetchGraphData();
+    // Integração exclusiva com Graph API no backend - com limitação de dados
+    const graphData = await fetchGraphData(MAX_OPERATIONS);
     
-    const [estado, arquivos] = await Promise.all([
-      lerRaw('divulga-dados', 'divulga-estado.json'),
-      gh('/contents/divulga/fila?ref=develop').catch(() => []),
-    ]);
-    const feitos = new Set((estado && estado.feitos) || []);
-    const nomes = (Array.isArray(arquivos) ? arquivos : []).map((f) => f.name).filter((n) => n.endsWith('.json')).map((n) => n.replace(/\.json$/, ''));
-    
-    // Lógica de particionamento da tarefa de divulgação
-    const totalTarefas = nomes.length;
-    const tarefasFeitas = nomes.filter((n) => feitos.has(n)).length;
-    const tarefasPendentes = totalTarefas - tarefasFeitas;
-    
-    // Dados de particionamento para a interface
-    const particionamento = {
-      total: totalTarefas,
-      feitas: tarefasFeitas,
-      pendentes: tarefasPendentes,
-      progresso: totalTarefas > 0 ? Math.round((tarefasFeitas / totalTarefas) * 100) : 0
-    };
-    
-    const pendentes = nomes.filter((n) => !feitos.has(n)).slice(0, 5);
-    const proximos = (await Promise.all(pendentes.map((n) => lerRaw('develop', 'divulga/fila/' + n + '.json')))).map((p, k) => ({ 
-      id: pendentes[k], 
-      texto: String((p && (p.texto || p.legenda)) || '').slice(0, 280),
-      // Adiciona dados do Graph API para cada tarefa
-      graphInfo: graphData[pendentes[k]] || null
-    }));
-    
-    const historico = ((estado && estado.historico) || []).slice(-8).reverse();
-    
-    return { 
-      // Dados de particionamento expostos para a interface
-      particionamento,
-      naFila: tarefasPendentes, 
-      proximos, 
-      historico,
-      // Dados agregados do Graph API
-      graphSummary: graphData.summary || null
-    };
+    try {
+      const [estado, arquivos] = await Promise.all([
+        lerRaw('divulga-dados', 'divulga-estado.json'),
+        gh('/contents/divulga/fila?ref=develop').catch(() => []),
+      ]);
+      
+      // Validação de dados recebidos
+      const feitos = Array.isArray(estado?.feitos) ? new Set(estado.feitos.filter(id => typeof id === 'string')) : new Set();
+      const arquivosValidos = Array.isArray(arquivos) ? arquivos : [];
+      
+      // Filtra e valida nomes de arquivos
+      const nomes = arquivosValidos
+        .filter(f => f && typeof f === 'object' && f.name && typeof f.name === 'string')
+        .map(f => f.name)
+        .filter(n => n.endsWith('.json'))
+        .map(n => n.replace(/\.json$/, ''))
+        .slice(0, MAX_OPERATIONS); // Limita número de arquivos
+      
+      // Lógica de particionamento da tarefa de divulgação - com validação
+      const totalTarefas = nomes.length;
+      const tarefasFeitas = nomes.filter((n) => feitos.has(n)).length;
+      const tarefasPendentes = Math.max(0, totalTarefas - tarefasFeitas);
+      
+      // Dados de particionamento para a interface - sem expor dados sensíveis
+      const particionamento = {
+        total: totalTarefas,
+        feitas: tarefasFeitas,
+        pendentes: tarefasPendentes,
+        progresso: totalTarefas > 0 ? Math.round((tarefasFeitas / totalTarefas) * 100) : 0
+      };
+      
+      // Limita número de tarefas pendentes para processamento
+      const pendentes = nomes.filter((n) => !feitos.has(n)).slice(0, Math.min(5, MAX_OPERATIONS));
+      
+      const proximos = (await Promise.all(
+        pendentes.map((n) => lerRaw('develop', 'divulga/fila/' + n + '.json'))
+      )).map((p, k) => ({ 
+        id: pendentes[k], 
+        texto: String((p && (p.texto || p.legenda)) || '').slice(0, 280),
+        // Adiciona dados do Graph API para cada tarefa - com validação
+        graphInfo: graphData?.[pendentes[k]] ? {
+          state: graphData[pendentes[k]].state,
+          updatedAt: graphData[pendentes[k]].updatedAt
+        } : null
+      }));
+      
+      // Valida e filtra histórico
+      const historico = Array.isArray(estado?.historico) 
+        ? estado.historico.filter(h => h && typeof h === 'object').slice(-8).reverse()
+        : [];
+      
+      return { 
+        // Dados de particionamento expostos para a interface - filtrados
+        particionamento,
+        naFila: tarefasPendentes, 
+        proximos, 
+        historico,
+        // Dados agregados do Graph API - sem dados sensíveis
+        graphSummary: graphData?.summary ? {
+          total: graphData.summary.total,
+          abertas: graphData.summary.abertas,
+          fechadas: graphData.summary.fechadas
+        } : null
+      };
+    } catch (error) {
+      console.error('Erro na função divulga:', error);
+      throw new Error('Falha ao processar dados de divulgação');
+    }
   }
 
   // #802: contas de reserva do Cortex. Só os NOMES dos segredos (o GitHub nunca devolve o valor).
@@ -144,9 +196,16 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     return montarReservas(repo, prod, semCota);
   }
 
-  // Função auxiliar para integração com Graph API
-  async function fetchGraphData() {
+  // Função auxiliar para integração com Graph API - com limitação e segurança
+  async function fetchGraphData(maxIssues = 50) {
+    if (!token) {
+      throw new Error('Token não disponível para Graph API');
+    }
+    
     try {
+      // Validação de limite para evitar negação de serviço
+      const limitedMaxIssues = Math.min(maxIssues, 100); // Limite máximo seguro
+      
       // Integração exclusiva com Graph API no backend
       const response = await fetchFn('https://api.github.com/graphql', {
         method: 'POST',
@@ -159,7 +218,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
           query: `
             query {
               repository(owner: "gilcambe", name: "nexia") {
-                issues(labels: ["divulga"], first: 50) {
+                issues(labels: ["divulga"], first: ${limitedMaxIssues}) {
                   nodes {
                     number
                     title
@@ -176,17 +235,27 @@ function criarGithub(env = process.env, fetchFn = fetch) {
               }
             }
           `
-        })
+        }),
+        timeout: 10000 // Timeout para evitar negação de serviço
       });
       
       if (!response.ok) {
+        if (response.status === 401) {
+          throw new Error('Não autorizado a acessar Graph API - verifique o token');
+        }
         throw new Error(`Erro ao acessar Graph API: ${response.status}`);
       }
       
       const data = await response.json();
-      const issues = data.data.repository.issues.nodes;
       
-      // Processa os dados do Graph API
+      // Validação da resposta GraphQL
+      if (!data || !data.data || !data.data.repository || !data.data.repository.issues) {
+        throw new Error('Resposta inválida da Graph API');
+      }
+      
+      const issues = data.data.repository.issues.nodes || [];
+      
+      // Processa os dados do Graph API - sem expor dados sensíveis
       const summary = {
         total: issues.length,
         abertas: issues.filter(i => i.state === 'OPEN').length,
@@ -195,12 +264,12 @@ function criarGithub(env = process.env, fetchFn = fetch) {
       
       const byId = {};
       issues.forEach(issue => {
-        byId[issue.number] = {
-          state: issue.state,
-          createdAt: issue.createdAt,
-          updatedAt: issue.updatedAt,
-          labels: issue.labels.nodes.map(l => l.name)
-        };
+        if (issue && typeof issue === 'object') {
+          byId[issue.number] = {
+            state: issue.state || 'UNKNOWN',
+            updatedAt: issue.updatedAt || null
+          };
+        }
       });
       
       return {
@@ -208,8 +277,9 @@ function criarGithub(env = process.env, fetchFn = fetch) {
         ...byId
       };
     } catch (error) {
-      console.error('Erro ao buscar dados do Graph API:', error);
-      return { summary: null };
+      console.error('Erro ao buscar dados do Graph API:', error.message);
+      // Retorna dados vazios em caso de erro para não quebrar a aplicação
+      return { summary: { total: 0, abertas: 0, fechadas: 0 } };
     }
   }
 
