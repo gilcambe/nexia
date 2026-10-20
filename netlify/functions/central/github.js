@@ -6,7 +6,7 @@ const REPO = 'gilcambe/nexia';
 const API = 'https://api.github.com/repos/' + REPO;
 // Branch e arquivo onde o robô do Divulga guarda o estado (gravados pelo workflow .github/workflows/divulga.yml).
 const BRANCH_DIVULGA = 'divulga-dados';
-const ARQUIVO_ESTADO = 'dados/divulga-estado.json';
+const ARQUIVO_ESTADO = 'divulga-estado.json';
 
 /** Decodifica base64 em texto UTF-8 (o GitHub devolve o conteúdo do arquivo codificado). */
 function decodificarBase64(texto) {
@@ -93,36 +93,73 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   }
 
   /**
-   * Lê o divulga-estado.json da branch divulga-dados e devolve o JSON bruto (ou null se ainda não existir).
+   * Lê o divulga-estado.json da branch divulga-dados e devolve o JSON bruto (ou objeto vazio se não existir ou erro).
    * Primeiro pela API do GitHub (conteúdo em base64); se falhar, pelo raw (o repositório é público).
+   * Retorna sempre um objeto JSON válido (nunca null). Em caso de erro, retorna objeto com propriedade error.
    */
   async function lerEstadoDivulga() {
     try {
+      // Tenta acessar via API do GitHub
       const arquivo = await gh('/contents/' + ARQUIVO_ESTADO + '?ref=' + BRANCH_DIVULGA);
       
       // Trata arquivos grandes (>1MB): GitHub retorna download_url em vez de content
       if (arquivo && arquivo.download_url && !arquivo.content) {
         const r = await fetchFn(arquivo.download_url, { headers: { 'User-Agent': 'nexia-central' } });
-        if (!r.ok) return null;
-        return await r.json().catch(() => null);
+        if (!r.ok) {
+          console.error('Erro ao acessar download_url:', r.status, r.statusText);
+          return { error: 'Não foi possível acessar o arquivo GitHub' };
+        }
+        try {
+          return await r.json();
+        } catch (jsonError) {
+          console.error('Erro ao parsear JSON do download_url:', jsonError.message);
+          return { error: 'Formato inválido do arquivo' };
+        }
       }
       
+      // Trata conteúdo via base64
       const texto = arquivo && typeof arquivo.content === 'string' ? decodificarBase64(arquivo.content) : null;
-      if (texto) return JSON.parse(texto);
+      if (texto) {
+        try {
+          return JSON.parse(texto);
+        } catch (jsonError) {
+          console.error('Erro ao parsear JSON do conteúdo base64:', jsonError.message);
+          return { error: 'Formato inválido do arquivo' };
+        }
+      }
     } catch (e) { 
       // Registra erro no log para depuração (401/403 = falha de autenticação, 404 = arquivo não existe)
-      if (e.message && (e.message.includes('401') || e.message.includes('403'))) {
-        console.error('Erro de autenticação ao acessar GitHub:', e.message);
+      const errorMsg = e.message || String(e);
+      if (errorMsg.includes('401') || errorMsg.includes('403')) {
+        console.error('Erro de autenticação ao acessar GitHub:', errorMsg);
+      } else if (errorMsg.includes('404')) {
+        console.log('Arquivo não encontrado na branch:', BRANCH_DIVULGA, '->', ARQUIVO_ESTADO);
+      } else {
+        console.error('Erro ao acessar GitHub:', errorMsg);
       }
       /* branch/arquivo ainda não existe ou sem token: tenta o raw */ 
     }
+    
+    // Tenta acessar via raw.githubusercontent (fallback)
     try {
-      const r = await fetchFn('https://raw.githubusercontent.com/' + REPO + '/' + BRANCH_DIVULGA + '/' + ARQUIVO_ESTADO, { headers: { 'User-Agent': 'nexia-central' } });
-      if (!r.ok) return null;
-      return await r.json().catch(() => null);
+      const r = await fetchFn('https://raw.githubusercontent.com/' + REPO + '/' + BRANCH_DIVULGA + '/' + ARQUIVO_ESTADO, { 
+        headers: { 'User-Agent': 'nexia-central' } 
+      });
+      
+      if (!r.ok) {
+        console.error('Erro ao acessar raw do GitHub:', r.status, r.statusText);
+        return { error: `Arquivo não encontrado: ${r.status} ${r.statusText}` };
+      }
+      
+      try {
+        return await r.json();
+      } catch (jsonError) {
+        console.error('Erro ao parsear JSON do raw:', jsonError.message);
+        return { error: 'Formato inválido do arquivo' };
+      }
     } catch (e) { 
-      console.error('Erro ao acessar raw do GitHub:', e.message);
-      return null; 
+      console.error('Erro ao acessar raw do GitHub:', e.message || String(e));
+      return { error: 'Não foi possível acessar o arquivo' };
     }
   }
 
