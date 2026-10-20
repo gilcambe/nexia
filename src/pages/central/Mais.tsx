@@ -45,6 +45,22 @@ export default function Mais({ d, erro }: { d: Dados; erro?: string }) {
         )}
       </Cartao>
 
+      <Cartao titulo="Cotas grátis de hoje">
+        {!d.cotas ? <Carregando /> : (
+          <div className="space-y-2" data-testid="cotas">
+            {d.cotas.frear && <p className="text-sm text-amber-400" role="alert">Perto de {d.cotas.limiar}% em: {d.cotas.itens.filter((i) => d.cotas?.perto.includes(i.id)).map((i) => i.nome).join(", ")}. O que é opcional (ex.: fotos do Workers AI) para até amanhã.</p>}
+            {d.cotas.itens.map((i) => (
+              <div key={i.id} className="space-y-1">
+                <div className="text-sm">{i.nome}: {i.usado === null ? <span className="text-nexia-muted">não medido</span> : <>{i.usado.toLocaleString("pt-BR")} de {i.limite.toLocaleString("pt-BR")} ({i.pct}%)</>}</div>
+                {i.usado !== null && <div className="h-2 rounded-full bg-nexia-surface2 overflow-hidden"><div className={`h-full ${(i.pct || 0) >= d.cotas!.limiar ? "bg-amber-400" : "bg-nexia-cyan"}`} style={{ width: `${Math.min(100, i.pct || 0)}%` }} /></div>}
+              </div>
+            ))}
+            {d.cotas.firestoreErro === "sem acesso" && <p className="text-xs text-nexia-muted">Firestore sem medir: dê o papel "Monitoring Viewer" à conta de serviço do Firebase no Google Cloud (IAM).</p>}
+            {d.cotas.itens.some((i) => (i.id === "worker" || i.id === "ia") && i.usado === null) && <p className="text-xs text-nexia-muted">Cloudflare sem medir: falta o token só de leitura CLOUDFLARE_ANALYTICS_TOKEN.</p>}
+          </div>
+        )}
+      </Cartao>
+
       <Cartao titulo="Banco de dados">
         {!d.banco ? <Carregando /> : (
           <div className="flex items-center gap-3 text-sm">

@@ -12,6 +12,7 @@
     "build:worker": "vite build && npm run build:body-coach && node scripts/build-worker-assets.js",
     "preview": "vite preview",
     "audit:bundle": "node scripts/bundle-budget.js out",
+    "mapa": "node scripts/gerar-mapa.js",
     "start": "node server.js",
     "typecheck": "tsc --noEmit -p .",
     "test": "node --test tests/unit/*.test.js",

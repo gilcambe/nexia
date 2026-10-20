@@ -11,6 +11,10 @@
 const { allowed, systemPrompt, AGENTS } = require('./agents');
 const { candidates } = require('./models');
 const { getPlacar } = require('../model-router/cota');
+const { getQualidade } = require('../model-router/qualidade');
+// #832: falta de cota ou pedido grande demais não é culpa do modelo: não conta no placar de qualidade.
+const SEM_CULPA = new Set(['rate', 'daily', 'tpm', 'too_large']);
+const anotar = (desc, cls, ok) => { try { if (cls) getQualidade().registrar(desc, cls, ok); } catch { /* nunca derruba a tarefa */ } };
 const { parseEditBlocks, FORMAT_HELP } = require('./edit-blocks');
 
 const RETRYABLE_TOOL = new Set(['UPSTREAM']);
@@ -59,7 +63,7 @@ const SKIP = new Set(['too_large', 'daily', 'fatal']);   // não adianta tentar 
  * de novo (com `desc`/`shrink` atualizados) ou { code } quando todos falharam. Quando o fim da lista chega
  * com algum 429 de cota por minuto, espera a janela virar e recomeça (até RATE_ROUNDS vezes).
  */
-function createFailover(models, meter) {
+function createFailover(models, meter, cls) {
   let mi = 0, rounds = 0, tries = 0, shrink = 0, sawRate = false, hint = '', lastLive = null, lastCode = null;
   const skip = new Set();
   const errors = [];
@@ -68,7 +72,7 @@ function createFailover(models, meter) {
     errors,
     get desc() { return models[mi]; },
     get shrink() { return shrink; },
-    ok() { tries = 0; try { getPlacar().sucesso(models[mi]); } catch { /* placar nunca derruba a tarefa */ } },
+    ok() { tries = 0; anotar(models[mi], cls, true); try { getPlacar().sucesso(models[mi]); } catch { /* placar nunca derruba a tarefa */ } },
     /** Troca já para o próximo modelo vivo (de preferência de outro provedor); false se não houver outro. */
     switchModel() {
       const cur = models[mi];
@@ -86,6 +90,7 @@ function createFailover(models, meter) {
       const real = d.model && d.model !== desc.model ? ` (${d.model})` : '';
       errors.push(`${desc.provider}/${desc.model}${real}: ${String((e && e.message) || code || 'erro')}${d.upstream ? ` ${String(d.upstream).replace(/\s+/g, ' ').slice(0, 160)}` : ''}`);
       const kind = classify(e);
+      if (!SEM_CULPA.has(kind)) anotar(desc, cls, false);
       // Placar de cota: lembra o castigo para as próximas execuções (sem dica de espera, cota.js usa o padrão do tipo).
       getPlacar().marcar(desc, kind, /(?:try again|retry) in/i.test(String(d.upstream || '')) ? retryAfterMs(d.upstream) : 0);
       lastCode = code;
@@ -281,7 +286,7 @@ async function runAgent(o) {
   const applied = new Set();   // blocos de texto já enviados ao gateway
   const branch = o.branch || ((/Branch de trabalho: (nexia\/\S+)/.exec(o.goal || '') || [])[1]) || null;
   const localErrors = [];   // gravações recusadas (diagnóstico no resumo do passo quando nada foi gravado)
-  const fo = createFailover(models, o.meter);   // shrink 0: 8192 tokens de resposta; 1: 4096; 2: 2048
+  const fo = createFailover(models, o.meter, agent.model);   // shrink 0: 8192 tokens de resposta; 1: 4096; 2: 2048
 
   const lastToolFail = { model: null, tool: null, n: 0 };
   const strike = (key, model, code, text) => {
@@ -471,7 +476,7 @@ async function askModel(o) {
   const agent = AGENTS[o.agentId];
   const models = candidates(o.router, agent.model);
   if (!models.length) return { status: 'failed', error_code: 'NO_MODEL', text: 'Nenhum modelo configurado.' };
-  const fo = createFailover(models, o.meter);
+  const fo = createFailover(models, o.meter, agent.model);
   for (;;) {
     o.meter.check();
     const desc = fo.desc;
