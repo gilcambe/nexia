@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsString, IsOptional, IsBoolean } from 'class-validator';
+import { IsEnum, IsString, IsNotEmpty, IsOptional, IsBoolean, IsDateString } from 'class-validator';
 
 // DTOs para o módulo Cortex - implementados conforme requisitos
 
@@ -9,6 +9,12 @@ export enum TaskStatus {
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
+}
+
+export enum TaskPriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
 }
 
 export class CreateTaskRequest {
@@ -32,11 +38,13 @@ export class CreateTaskRequest {
   @ApiProperty({
     description: 'Prioridade da tarefa',
     example: 'high',
+    enum: TaskPriority,
+    enumName: 'TaskPriority',
     required: false,
   })
   @IsOptional()
-  @IsString()
-  priority?: string;
+  @IsEnum(TaskPriority)
+  priority?: TaskPriority;
 
   @ApiProperty({
     description: 'Indica se a tarefa é recorrente',
@@ -48,11 +56,31 @@ export class CreateTaskRequest {
   isRecurring?: boolean;
 
   @ApiProperty({
-    description: 'Data de agendamento para tarefas recorrentes',
+    description: 'Status da tarefa',
+    example: 'PENDING',
+    enum: TaskStatus,
+    enumName: 'TaskStatus',
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(TaskStatus)
+  status?: TaskStatus;
+
+  @ApiProperty({
+    description: 'Data de início planejada',
     example: '2024-01-15T10:00:00Z',
     required: false,
   })
   @IsOptional()
-  @IsString()
-  scheduledAt?: string;
+  @IsDateString()
+  plannedStartDate?: string;
+
+  @ApiProperty({
+    description: 'Data de conclusão planejada',
+    example: '2024-01-20T18:00:00Z',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  plannedEndDate?: string;
 }
