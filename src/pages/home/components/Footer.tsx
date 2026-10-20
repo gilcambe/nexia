@@ -23,7 +23,7 @@ const product = [
   { label: "Documentação", to: "/docs" },
 ];
 
-export const MADE_WITH_KERNEX_LINK = "https://kernex.com.br/?utm_source=viajantepro&utm_medium=selo";
+export const MADE_WITH_KERNEX_LINK = "https://kernex.com.br/?utm_source=nexiaos&utm_medium=selo";
 
 export type FooterClient = {
   madeWithKernexLink?: string;
@@ -45,9 +45,7 @@ export type FooterProps = {
 };
 
 export default function Footer({ client }: FooterProps) {
-  // Selo "Feito com Kernex": o link que vier em client tem prioridade; sem ele, usa o link padrão.
-  const madeWithKernexLink = client?.madeWithKernexLink ?? MADE_WITH_KERNEX_LINK;
-  // Verificação: componente já implementa o selo "Feito com Kernex" com link dinâmico, acessibilidade e fallback
+  // Selo "Feito com Kernex": mostra apenas quando client.madeWithKernexLink existe
 
   return (
     <footer className="border-t border-nexia-border bg-nexia-surface mt-16">
@@ -93,18 +91,18 @@ export default function Footer({ client }: FooterProps) {
         <div className="border-t border-nexia-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="text-[11px] text-nexia-muted">© 2026 NEXIA OS · Todos os direitos reservados · LGPD Compliant</span>
           <div className="flex items-center gap-3">
-            {madeWithKernexLink && (
-              <a
-                href={madeWithKernexLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="made-with-kernex"
-                title="Feito com Kernex"
-                aria-label="Feito com Kernex (abre em uma nova aba)"
-              >
-                Feito com Kernex
-              </a>
-            )}
+                      {client?.madeWithKernexLink && (
+            <a
+              href={isValidUrl(client.madeWithKernexLink) ? client.madeWithKernexLink : MADE_WITH_KERNEX_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="made-with-kernex"
+              title="Feito com Kernex"
+              aria-label="Feito com Kernex (abre em uma nova aba)"
+            >
+              Feito com Kernex
+            </a>
+          )}
             <a href="https://wa.me/5511944037259" target="_blank" rel="noopener noreferrer" className="w-7 h-7 flex items-center justify-center rounded-lg bg-nexia-surface2 border border-nexia-border hover:border-nexia-cyan/40 transition-colors">
               <i className="ri-whatsapp-line text-nexia-muted hover:text-nexia-cyan text-sm" />
             </a>
@@ -117,28 +115,4 @@ export default function Footer({ client }: FooterProps) {
     </footer>
   );
 
-  // Estilos CSS para o selo "Feito com Kernex"
-  const style = document.createElement('style');
-  style.textContent = `
-    .made-with-kernex {
-      display: inline-flex;
-      align-items: center;
-      padding: 4px 8px;
-      background-color: rgba(34, 197, 94, 0.1);
-      border: 1px solid rgba(34, 197, 94, 0.2);
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 500;
-      color: #22c55e;
-      text-decoration: none;
-      transition: all 0.2s ease;
-    }
-    
-    .made-with-kernex:hover {
-      background-color: rgba(34, 197, 94, 0.15);
-      border-color: rgba(34, 197, 94, 0.3);
-      color: #16a34a;
-    }
-  `;
-  document.head.appendChild(style);
-}
+
