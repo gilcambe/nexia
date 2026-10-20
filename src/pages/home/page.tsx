@@ -7,7 +7,7 @@ import CortexTerminal from "./components/CortexTerminal";
 import Agents from "./components/Agents";
 import Assistant from "./components/Assistant";
 import Contact from "./components/Contact";
-import Footer from "./components/Footer";
+import Footer, { MADE_WITH_KERNEX_LINK } from "./components/Footer";
 import ThemeWidget from "./components/ThemeWidget";
 
 export default function Home() {
@@ -24,7 +24,7 @@ export default function Home() {
         <Assistant />
         <Contact />
       </main>
-      <Footer />
+      <Footer client={{ madeWithKernexLink: MADE_WITH_KERNEX_LINK }} />
       <ThemeWidget />
     </div>
   );
