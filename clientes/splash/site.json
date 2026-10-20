@@ -164,23 +164,19 @@
       "items": [
         {
           "q": "Aceitam eventos de última hora?",
-          "a": "Depende da disponibilidade, entre em contato.",
-          "href": "leads"
+          "a": "Depende da disponibilidade, entre em contato."
         },
         {
           "q": "Fornecem decoração?",
-          "a": "Sim, temos pacotes com decoração completa.",
-          "href": "leads"
+          "a": "Sim, temos pacotes com decoração completa."
         },
         {
           "q": "Tem estacionamento?",
-          "a": "Sim, estacionamento privativo para 100 vagas.",
-          "href": "leads"
+          "a": "Sim, estacionamento privativo para 100 vagas."
         },
         {
           "q": "Aceitam pagamento parcelado?",
-          "a": "Sim, até 12x no cartão de crédito.",
-          "href": "leads"
+          "a": "Sim, até 12x no cartão de crédito."
         }
       ]
     },
@@ -195,12 +191,7 @@
     },
     {
       "type": "contact",
-      "title": "Solicite Verificação de Data",
-      "subtitle": "Informe os dados do evento e verificamos a disponibilidade em até 24h.",
-      "cta": {
-        "label": "Enviar mensagem",
-        "href": "leads"
-      }
+      "title": "Solicite Verificação de Data"
     }
   ]
 }
