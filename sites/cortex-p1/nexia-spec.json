@@ -1,175 +1,70 @@
 {
   "spec": {
     "kind": "system",
-    "name": "Cortex-p1 Teste",
-    "tagline": "Controle total e monitoramento em um só lugar",
-    "photo_theme": "mobile app dashboard interface",
-    "description": "Acesse o painel Cortex-p1 via app nativo para uma experiência fluida, segura e sem barreiras de URL. Gerencie usuários, acompanhe instalações e visualize relatórios em tempo real.",
+    "name": "Cortex-p1",
+    "tagline": "Teste de contexto, sanitização e filas em um só painel",
+    "photo_theme": "",
+    "description": "Teste de contexto, sanitização e filas em um só painel",
     "folder": "sites/cortex-p1",
     "fonts": {
-      "heading": "Outfit",
+      "heading": "Sora",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#2563eb",
-      "accent": "#10b981",
-      "bg": "#f8fafc",
+      "primary": "#6d28d9",
+      "accent": "#0e7490",
+      "bg": "#fbfaf7",
       "surface": "#ffffff",
-      "text": "#1e293b",
-      "muted": "#64748b",
-      "dark": "#0f172a"
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#111827"
     },
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "(11) 91234-5678",
-      "email": "contato@cortexp1.com.br",
-      "address": "Av. Paulista, 1000 - São Paulo, SP",
-      "city": "São Paulo",
-      "hours": "Seg - Sex: 09:00 - 18:00",
+      "phone": "",
+      "email": "exemplo@cortex-p1.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
       "instagram": "",
       "facebook": "",
       "youtube": "",
       "tiktok": "",
       "linkedin": ""
     },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=cortex-p1&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
     "entities": [
       {
-        "key": "usuarios",
-        "label": "Usuários",
-        "singular": "Usuário",
+        "key": "testes_contexto",
+        "label": "Testes de contexto",
+        "singular": "Teste de contexto",
         "fields": [
           {
             "key": "nome",
-            "label": "Nome",
+            "label": "Nome do teste",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "email",
-            "label": "E‑mail",
-            "type": "email",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "telefone",
-            "label": "Telefone",
-            "type": "phone",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "perfil",
-            "label": "Perfil",
+            "key": "integracao",
+            "label": "Integração",
             "type": "select",
             "options": [
-              "Admin",
-              "Editor",
-              "Visualizador"
-            ],
-            "required": true
-          },
-          {
-            "key": "data_cadastro",
-            "label": "Data de cadastro",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
-            "type": "select",
-            "options": [
-              "Ativo",
-              "Inativo"
-            ],
-            "required": true
-          },
-          {
-            "key": "observacoes",
-            "label": "Observações",
-            "type": "textarea",
-            "options": [],
-            "required": false
-          }
-        ],
-        "sample": [
-          {
-            "nome": "Mariana Silva",
-            "email": "mariana@exemplo.com",
-            "telefone": "(11) 98765-4321",
-            "perfil": "Admin",
-            "data_cadastro": "2026-09-15",
-            "status": "Ativo",
-            "observacoes": ""
-          },
-          {
-            "nome": "Pedro Alves",
-            "email": "pedro@exemplo.com",
-            "telefone": "(11) 92345-6789",
-            "perfil": "Editor",
-            "data_cadastro": "2026-09-20",
-            "status": "Ativo",
-            "observacoes": ""
-          },
-          {
-            "nome": "Laura Costa",
-            "email": "laura@exemplo.com",
-            "telefone": "(11) 93456-7890",
-            "perfil": "Visualizador",
-            "data_cadastro": "2026-09-25",
-            "status": "Inativo",
-            "observacoes": ""
-          },
-          {
-            "nome": "Rafael Mendes",
-            "email": "rafael@exemplo.com",
-            "telefone": "(11) 94567-8901",
-            "perfil": "Editor",
-            "data_cadastro": "2026-10-01",
-            "status": "Ativo",
-            "observacoes": ""
-          }
-        ]
-      },
-      {
-        "key": "instalacoes",
-        "label": "Instalações",
-        "singular": "Instalação",
-        "fields": [
-          {
-            "key": "usuario",
-            "label": "Usuário",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "versao_app",
-            "label": "Versão do App",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "data_instalacao",
-            "label": "Data da Instalação",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "dispositivo",
-            "label": "Dispositivo",
-            "type": "select",
-            "options": [
-              "Pixel 7",
-              "Galaxy S23",
-              "OnePlus 11",
-              "Xiaomi 13"
+              "Cortex",
+              "OpenAI",
+              "Google AI",
+              "GitHub",
+              "RSA"
             ],
             "required": true
           },
@@ -178,59 +73,108 @@
             "label": "Status",
             "type": "select",
             "options": [
-              "Instalado",
-              "Falha"
+              "Aprovado",
+              "Falhou",
+              "Pendente",
+              "Em execução"
             ],
             "required": true
           },
           {
-            "key": "observacoes",
-            "label": "Observações",
+            "key": "texto_contexto",
+            "label": "Texto de contexto",
             "type": "textarea",
             "options": [],
-            "required": false
+            "required": true
+          },
+          {
+            "key": "filas",
+            "label": "Filas",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "rodando",
+            "label": "Rodando",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "travadas",
+            "label": "Travadas",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "linha_status",
+            "label": "Linha de status",
+            "type": "text",
+            "options": [],
+            "required": true
           }
         ],
         "sample": [
           {
-            "usuario": "Mariana Silva",
-            "versao_app": "1.0.3",
-            "data_instalacao": "2026-10-05",
-            "dispositivo": "Pixel 7",
-            "status": "Instalado",
-            "observacoes": ""
+            "nome": "Sanitização de chaves Cortex",
+            "integracao": "Cortex",
+            "status": "Aprovado",
+            "texto_contexto": "Olá Cortex tem chave sk-abc123 e outro AIzaXYZ e segredo -----BEGIN RSA PVT----- e ghp_123abc",
+            "filas": "1",
+            "rodando": "0",
+            "travadas": "0",
+            "linha_status": "Conexão: Filas: 1 | Rodando: 0 | Travadas: 0"
           },
           {
-            "usuario": "Pedro Alves",
-            "versao_app": "1.0.3",
-            "data_instalacao": "2026-10-06",
-            "dispositivo": "Galaxy S23",
-            "status": "Instalado",
-            "observacoes": ""
+            "nome": "Contexto sem credenciais",
+            "integracao": "Cortex",
+            "status": "Aprovado",
+            "texto_contexto": "Olá Cortex, conecte o painel às filas e mostre o estado atual da execução.",
+            "filas": "2",
+            "rodando": "0",
+            "travadas": "0",
+            "linha_status": "Conexão: Filas: 2 | Rodando: 0 | Travadas: 0"
           },
           {
-            "usuario": "Laura Costa",
-            "versao_app": "1.0.2",
-            "data_instalacao": "2026-10-04",
-            "dispositivo": "OnePlus 11",
-            "status": "Falha",
-            "observacoes": ""
+            "nome": "Verificação de integração Google",
+            "integracao": "Google AI",
+            "status": "Pendente",
+            "texto_contexto": "Contexto de homologação para validar a leitura das respostas da API.",
+            "filas": "1",
+            "rodando": "1",
+            "travadas": "0",
+            "linha_status": "Conexão: Filas: 1 | Rodando: 1 | Travadas: 0"
           },
           {
-            "usuario": "Rafael Mendes",
-            "versao_app": "1.0.3",
-            "data_instalacao": "2026-10-07",
-            "dispositivo": "Xiaomi 13",
-            "status": "Instalado",
-            "observacoes": ""
+            "nome": "Validação de repositório",
+            "integracao": "GitHub",
+            "status": "Falhou",
+            "texto_contexto": "Falha simulada ao montar o contexto para revisão do fluxo de cópia.",
+            "filas": "3",
+            "rodando": "0",
+            "travadas": "1",
+            "linha_status": "Conexão: Filas: 3 | Rodando: 0 | Travadas: 1"
+          },
+          {
+            "nome": "Carga em execução",
+            "integracao": "RSA",
+            "status": "Em execução",
+            "texto_contexto": "Processamento em andamento para validar a sanitização antes da cópia final.",
+            "filas": "4",
+            "rodando": "2",
+            "travadas": "0",
+            "linha_status": "Conexão: Filas: 4 | Rodando: 2 | Travadas: 0"
           }
         ]
       }
     ],
     "modules": [
-      "Gerenciamento de Usuários",
-      "Instalações",
-      "Relatórios"
+      "Visão geral",
+      "Testes de contexto",
+      "Fila de execução",
+      "Logs"
     ]
   },
   "media": {}
