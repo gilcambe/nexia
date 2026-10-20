@@ -134,9 +134,9 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     } catch (e) { 
       // Registra erro no log para depuração (401/403 = falha de autenticação, 404 = arquivo não existe)
       const errorMsg = e.message || String(e);
-      if (errorMsg.includes('401') || errorMsg.includes('403')) {
+      if (e.status === 401 || e.status === 403) {
         console.error('Erro de autenticação ao acessar GitHub:', errorMsg);
-      } else if (errorMsg.includes('404')) {
+      } else if (e.status === 404) {
         console.log('Arquivo não encontrado na branch:', BRANCH_DIVULGA, '->', ARQUIVO_ESTADO);
       } else {
         console.error('Erro ao acessar GitHub:', errorMsg);
