@@ -3,7 +3,7 @@ import type { Cor } from "./ui";
 
 // O que precisa do dono agora, em frases simples. A aba diz onde resolver.
 export interface Aviso { cor: Cor; texto: string; aba: Aba }
-export type Aba = "inicio" | "clientes" | "dinheiro" | "divulgar" | "cortex" | "sistema";
+export type Aba = "inicio" | "clientes" | "dinheiro" | "divulgar" | "cortex" | "prs" | "sistema";
 
 export function calcularAvisos(d: Dados): Aviso[] {
   const a: Aviso[] = [];
