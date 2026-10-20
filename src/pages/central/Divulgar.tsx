@@ -15,23 +15,31 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   // Posta na hora: usado pelos botões 07h15, 12h15 e 19h15 de cada tema da semana.
   // Função implementada conforme solicitado no pedido.
   const handlePostarAgora = async (horario: string, tema: string) => {
-    try {
-      const res = await fetch('/.netlify/functions/central/github', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'postarAgora', horario, tema }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        alert('Postagem agendada para ' + horario + ' com tema: ' + tema);
-      } else {
-        alert('Erro: ' + data.message);
-      }
-    } catch (err) {
-      console.error(err);
-      alert('Falha na requisição');
+  // Validações existentes - não remover conforme regra do dono
+  if (!horario || !tema) {
+    setMsg('Horário e tema são obrigatórios');
+    return;
+  }
+  
+  setOcupado(true);
+  setMsg(null);
+  
+  try {
+    // Usar a função agir que já inclui token de autorização
+    const resultado = await agir({ acao: 'postarAgora', horario, tema });
+    
+    if (resultado.ok) {
+      setMsg(`Postagem agendada para ${horario} com tema: ${tema}`);
+    } else {
+      setMsg(resultado.mensagem || 'Erro ao agendar postagem');
     }
-  };
+  } catch (err) {
+    console.error(err);
+    setMsg('Falha na requisição: ' + (err as Error).message);
+  } finally {
+    setOcupado(false);
+  }
+};
   
   const rodar = async (corpo: Record<string, unknown>) => {
     setOcupado(true); setMsg(null);
