@@ -1,0 +1,206 @@
+# MAPA vivo do NEXIA (gerado do código)
+
+Gerado por `node scripts/gerar-mapa.js` a partir de `lib/routes.js`, `.env.example` e `.github/workflows/`. Não edite à mão: rode o script. O mapa escrito à mão (onde fica cada coisa) é o `MAPA.md` da raiz.
+
+## Rotas da API (53)
+
+Caminho → handler em `netlify/functions/<handler>.js` (o Worker chama pelo `cloudflare/functions.js`).
+
+- `/api/cortex` → `cortex-chat`
+- `/api/body-coach-ai` → `body-coach-ai`
+- `/api/body-coach-chat` → `body-coach-chat`
+- `/api/leads` → `leads`
+- `/api/pedidos` → `pedidos`
+- `/api/central` → `central`
+- `/api/conheca` → `conheca`
+- `/api/agenda` → `agenda`
+- `/api/leilao` → `leilao`
+- `/api/ai-analysis` → `cortex-chat`
+- `/api/auth` → `auth`
+- `/api/memory` → `cortex-memory`
+- `/api/rag` → `rag-engine`
+- `/api/autodev` → `autodev-engine`
+- `/api/models` → `multi-model-engine`
+- `/api/swarm` → `swarm`
+- `/api/agent-run` → `cortex-agent`
+- `/api/agents` → `agents`
+- `/api/actions` → `action-engine`
+- `/api/logs` → `cortex-logs`
+- `/api/events` → `event-processor`
+- `/api/notifications` → `notifications`
+- `/api/tenant` → `tenant-admin`
+- `/api/crm` → `tenant-admin`
+- `/api/usage` → `usage`
+- `/api/billing` → `billing`
+- `/api/observe` → `observability`
+- `/api/observability` → `observability`
+- `/api/learn` → `cortex-learn`
+- `/api/pabx` → `pabx-handler`
+- `/api/osint` → `osint-query`
+- `/api/takedown` → `takedown-gen`
+- `/api/payment` → `payment-engine`
+- `/api/metrics` → `metrics-aggregator`
+- `/api/architect` → `architect`
+- `/api/whatsapp` → `whatsapp-business`
+- `/api/nfe` → `nfe-engine`
+- `/api/dynamic-pricing` → `dynamic-pricing`
+- `/api/sentinel` → `sentinel-iot`
+- `/api/sentinel-qa` → `sentinel`
+- `/api/governance` → `middleware`
+- `/api/tenant-domain` → `tenant-domain`
+- `/api/dunning` → `dunning-scheduler`
+- `/api/kpi` → `kpi-engine`
+- `/api/churn` → `churn-predictor`
+- `/api/sales` → `ai-sales-agent`
+- `/api/financial` → `ai-financial`
+- `/api/internal-agents` → `internal-agents`
+- `/api/audit` → `audit-log`
+- `/api/ads` → `ads-engine`
+- `/api/recovery` → `account-recovery`
+- `/api/strike` → `strike-engine`
+- `/api/nexia` → `nexia-api`
+
+## Páginas dos clientes (14)
+
+- `/ces/landing` → `ces/ces-landing.html`
+- `/bezsan/landing` → `bezsan/bezsan-landing.html`
+- `/vp/landing` → `viajante-pro/vp-landing.html`
+- `/viajante-pro/landing` → `viajante-pro/vp-landing.html`
+- `/splash/landing` → `splash/splash-landing.html`
+- `/ces/admin` → `ces/ces-admin.html`
+- `/bezsan/admin` → `bezsan/bezsan-admin.html`
+- `/vp/admin` → `viajante-pro/vp-admin.html`
+- `/viajante-pro/admin` → `viajante-pro/vp-admin.html`
+- `/splash/admin` → `splash/splash-admin.html`
+- `/ces/checkin` → `ces/checkin.html`
+- `/ces/executivo` → `ces/ces-app-executivo.html`
+- `/vp/guia` → `viajante-pro/vp-guide.html`
+- `/vp/passageiro` → `viajante-pro/vp-passenger.html`
+
+## Segredos e variáveis (91, só nomes)
+
+Origem: `.env.example` (E) e/ou workflows que usam (W).
+
+- `AMAZON_TAG` W: afiliados.yml
+- `ANDROID_KEYSTORE_B64` W: android-cortex.yml, android-play.yml
+- `ANDROID_KEYSTORE_PASS` W: android-cortex.yml, android-play.yml
+- `ANTHROPIC_API_KEY` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `ASSETLINKS_SHA256` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `BLUESKY_APP_PASSWORD` W: afiliados.yml
+- `BLUESKY_HANDLE` W: afiliados.yml
+- `BREVO_API_KEY` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `CEREBRAS_API_KEY` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `CLOUDFLARE_AI_ACCOUNT_ID` EW: deploy-cloudflare.yml, fila-cortex.yml, nexia-jobs.yml
+- `CLOUDFLARE_AI_TOKEN` EW: deploy-cloudflare.yml, fila-cortex.yml, nexia-jobs.yml
+- `CLOUDFLARE_ANALYTICS_TOKEN` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `CLOUDFLARE_API_TOKEN` W: afiliados.yml, android-cortex.yml, body-coach-pages.yml, deploy-cloudflare.yml, novo-site-cliente.yml, publicar-site-cliente.yml
+- `CODESTRAL_API_KEY` EW: deploy-cloudflare.yml, fila-cortex.yml, nexia-jobs.yml
+- `DEEPSEEK_API_KEY` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `DIVULGA_BLUESKY_APP_PASSWORD` W: divulga.yml
+- `DIVULGA_BLUESKY_HANDLE` W: divulga.yml
+- `DIVULGA_META_IG_USER_ID` W: divulga.yml
+- `DIVULGA_META_PAGE_ID` W: divulga.yml
+- `DIVULGA_META_PAGE_TOKEN` W: divulga.yml
+- `DIVULGA_PINTEREST_APP_ID` W: divulga.yml
+- `DIVULGA_PINTEREST_APP_SECRET` W: divulga.yml
+- `DIVULGA_PINTEREST_BOARD_ID` W: divulga.yml
+- `DIVULGA_PINTEREST_REFRESH_TOKEN` W: divulga.yml
+- `DIVULGA_THREADS_TOKEN` W: divulga.yml
+- `DIVULGA_THREADS_USER_ID` W: divulga.yml
+- `DUNNING_SECRET` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `FIREBASE_API_KEY` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `FIREBASE_APP_ID` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `FIREBASE_AUTH_DOMAIN` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `FIREBASE_MESSAGING_SENDER_ID` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `FIREBASE_PROJECT_ID` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `FIREBASE_SERVICE_ACCOUNT_B` EW: cadastrar-tenant-b.yml, deploy-cloudflare.yml, fila-cortex.yml, nexia-jobs.yml, publicar-indices.yml
+- `FIREBASE_SERVICE_ACCOUNT_BASE64` EW: dar-master.yml, deploy-cloudflare.yml, diagnostico-firestore.yml, diagnostico.yml, fila-cortex.yml, nexia-jobs.yml, publicar-indices.yml, publicar-regras.yml, smoke-logado.yml, teste-coach.yml, teste-humano.yml
+- `FIREBASE_SERVICE_ACCOUNT_C` EW: cadastrar-tenant-b.yml, deploy-cloudflare.yml, fila-cortex.yml, nexia-jobs.yml, publicar-indices.yml
+- `FIREBASE_STORAGE_BUCKET` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `GEMINI_API_KEY` EW: cortex-reserva.yml, deploy-cloudflare.yml, diagnostico.yml, divulga.yml, fila-cortex.yml, nexia-jobs.yml
+- `GITHUB_APP_ID` E
+- `GITHUB_APP_INSTALLATION_ID` E
+- `GITHUB_APP_PRIVATE_KEY` E
+- `GITHUB_REPO` E
+- `GITHUB_TOKEN` EW: cortex-reserva.yml, fila-cortex.yml, vigia-cortex.yml
+- `GROQ_API_KEY` EW: cortex-reserva.yml, deploy-cloudflare.yml, diagnostico.yml, divulga.yml, fila-cortex.yml, nexia-jobs.yml
+- `KILO_API_KEY` EW: deploy-cloudflare.yml, fila-cortex.yml, nexia-jobs.yml
+- `LEADS_NOTIFY_EMAIL` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `MASTER_EMAIL` EW: deploy-cloudflare.yml, nexia-jobs.yml, publicar-regras.yml
+- `META_IG_USER_ID` W: afiliados.yml
+- `META_PAGE_ID` W: afiliados.yml
+- `META_PAGE_TOKEN` W: afiliados.yml
+- `METRICS_SECRET` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `MISTRAL_API_KEY` EW: cortex-reserva.yml, deploy-cloudflare.yml, fila-cortex.yml, nexia-jobs.yml
+- `MP_ACCESS_TOKEN` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `MP_WEBHOOK_SECRET` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `NEXIA_APP_URL` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `NEXIA_CNAME_TARGET` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `NEXIA_CRON_SECRET` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `NEXIA_D1_ACCOUNT_ID` EW: deploy-cloudflare.yml, fila-cortex.yml, nexia-jobs.yml, testar-d1.yml
+- `NEXIA_D1_TOKEN` EW: deploy-cloudflare.yml, fila-cortex.yml, nexia-jobs.yml, testar-d1.yml
+- `NEXIA_GITHUB_APP_ID` W: cortex-reserva.yml, deploy-cloudflare.yml, fila-cortex.yml, nexia-jobs.yml
+- `NEXIA_GITHUB_APP_INSTALLATION_ID` W: deploy-cloudflare.yml, nexia-jobs.yml
+- `NEXIA_GITHUB_APP_PRIVATE_KEY` W: cortex-reserva.yml, deploy-cloudflare.yml, fila-cortex.yml, nexia-jobs.yml
+- `NEXIA_GITHUB_REPO` W: deploy-cloudflare.yml, nexia-jobs.yml
+- `NEXIA_GITHUB_TOKEN` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `NEXIA_JOBS_TOKEN` EW: deploy-cloudflare.yml, diagnostico.yml, fila-cortex.yml
+- `NEXIA_MODELS_CODING` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `NEXIA_MODELS_FAST` EW: deploy-cloudflare.yml, fila-cortex.yml, nexia-jobs.yml
+- `NEXIA_MODELS_REASONING` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `NODE_ENV` E
+- `NVIDIA_API_KEY` EW: deploy-cloudflare.yml, fila-cortex.yml, nexia-jobs.yml
+- `OPENAI_API_KEY` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `OPENROUTER_API_KEY` EW: cortex-reserva.yml, deploy-cloudflare.yml, fila-cortex.yml, nexia-jobs.yml
+- `PEXELS_API_KEY` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `PINTEREST_APP_ID` W: afiliados.yml
+- `PINTEREST_APP_SECRET` W: afiliados.yml
+- `PINTEREST_BOARD_ID` W: afiliados.yml
+- `PINTEREST_REFRESH_TOKEN` W: afiliados.yml
+- `PORT` E
+- `RESERVA_ANTHROPIC_KEY` W: cortex-reserva.yml
+- `RESERVA_GEMINI_KEY` W: cortex-reserva.yml
+- `RESERVA_OPENAI_KEY` W: cortex-reserva.yml
+- `RESERVA_OPENROUTER_KEY` W: cortex-reserva.yml
+- `SENTINEL_HEAL_ENABLED` EW: deploy-cloudflare.yml, nexia-jobs.yml
+- `SHOPEE_APP_ID` W: afiliados.yml
+- `SHOPEE_SECRET` W: afiliados.yml
+- `TELEGRAM_BOT_TOKEN` W: afiliados.yml
+- `TELEGRAM_CANAL` W: afiliados.yml
+- `X_ACCESS_SECRET` W: afiliados.yml
+- `X_ACCESS_TOKEN` W: afiliados.yml
+- `X_API_KEY` W: afiliados.yml
+- `X_API_SECRET` W: afiliados.yml
+- `ZAI_API_KEY` EW: deploy-cloudflare.yml, fila-cortex.yml, nexia-jobs.yml
+
+## Workflows (29)
+
+- `afiliados.yml` — Robô de ofertas (schedule, workflow_dispatch)
+- `android-cortex.yml` — Android Cortex (app instalável, sem barra do navegador) (workflow_dispatch)
+- `android-play.yml` — Android Body Coach (Google Play) (workflow_dispatch)
+- `auto-merge.yml` — Merge automático (schedule, workflow_dispatch, workflow_run)
+- `body-coach-pages.yml` — Body Coach no Pages (link sem gcbezerra) (push, workflow_dispatch)
+- `cadastrar-tenant-b.yml` — Cadastrar tenant no banco B (workflow_dispatch)
+- `ci.yml` — CI (push, pull_request, workflow_dispatch)
+- `clonar-site.yml` — Clonar site (workflow_dispatch)
+- `cortex-reserva.yml` — Cortex Reserva (workflow_dispatch)
+- `dar-master.yml` — Dar master ao dono (workflow_dispatch)
+- `deploy-cloudflare.yml` — Deploy Cloudflare (workflow_dispatch, workflow_run)
+- `diagnostico-firestore.yml` — Diagnóstico do Firestore (workflow_dispatch)
+- `diagnostico.yml` — Diagnóstico (workflow_dispatch)
+- `divulga.yml` — Divulga NEXIA (schedule, workflow_dispatch)
+- `fila-cortex.yml` — Fila do Cortex (schedule, workflow_dispatch)
+- `gitleaks.yml` — Gitleaks (pull_request)
+- `nexia-jobs.yml` — NEXIA Jobs (workflow_dispatch)
+- `novo-site-cliente.yml` — Novo site de cliente (modelo + publicar) (workflow_dispatch)
+- `preview-site.yml` — Fotos de tela de site gerado (workflow_dispatch)
+- `publicar-indices.yml` — Publicar índices do Firestore (workflow_dispatch)
+- `publicar-regras.yml` — Publicar regras do Firestore (workflow_dispatch)
+- `publicar-site-cliente.yml` — Publicar site de cliente (Cloudflare Pages) (workflow_dispatch)
+- `smoke-logado.yml` — Smoke com login (workflow_dispatch)
+- `smoke.yml` — Smoke (site no ar) (workflow_dispatch)
+- `testar-agenda.yml` — Testar agenda no ar (workflow_dispatch)
+- `testar-d1.yml` — Testar banco de reserva (Cloudflare D1) (workflow_dispatch)
+- `teste-coach.yml` — Testar conversa do coach (workflow_dispatch)
+- `teste-humano.yml` — Teste de pessoa (workflow_dispatch)
+- `vigia-cortex.yml` — Vigia do Cortex (schedule, workflow_dispatch)
