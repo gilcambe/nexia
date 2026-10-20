@@ -1,20 +1,124 @@
 {
-  "nome": "CES Brasil 2027",
-  "frase": "A MAIOR FEIRA DE TECNOLOGIA DO MUNDO ESTÁ DE VOLTA",
-  "servicos": [
-    "Venda de ingressos para CES",
-    "Pacotes de viagem completos",
-    "Logística de hospedagem e transporte",
-    "Suporte VIP 24/7",
-    "Networking com líderes do setor",
-    "Relatórios de tendências exclusivos"
-  ],
-  "contato": {
-    "whatsapp": "5511944037259",
-    "email": "henrique@cesbrasil.tech",
-    "formAction": "/api/leads"
+  "kind": "site",
+  "name": "CES Brasil 2027",
+  "tagline": "A MAIOR FEIRA DE TECNOLOGIA DO MUNDO ESTÁ DE VOLTA",
+  "description": "Missão Empresarial Brasileira no maior evento de tecnologia do mundo. Conecte-se com os líderes de inovação global.",
+  "folder": "clientes/ces2027",
+  "style": "tech",
+  "photo_theme": "technology innovation conference",
+  "fonts": {
+    "heading": "Sora",
+    "body": "Inter"
   },
-  "corPrincipal": "#0057FF",
-  "favicon": "/clientes/ces2027/assets/favicon.svg",
-  "footer": "<a href=\"https://kernex.com.br/?utm_source=ces2027&utm_medium=selo\" target=\"_blank\">Feito com Kernex</a>"
+  "palette": {
+    "primary": "#0057FF",
+    "accent": "#FF6B35",
+    "bg": "#FAF8F5",
+    "surface": "#FFFFFF",
+    "text": "#1A1A1A",
+    "muted": "#666666",
+    "dark": "#000000"
+  },
+  "contact": {
+    "whatsapp": "5511944037259",
+    "phone": "",
+    "email": "henrique@cesbrasil.tech",
+    "address": "",
+    "city": "",
+    "hours": "",
+    "instagram": "",
+    "youtube": "",
+    "tiktok": "",
+    "linkedin": ""
+  },
+  "sections": [
+    {
+      "type": "hero",
+      "eyebrow": "Feira de Tecnologia",
+      "title": "CES Brasil 2027",
+      "subtitle": "A maior feira de tecnologia do mundo está de volta com inovações que vão transformar o futuro.",
+      "cta": {
+        "label": "Comprar ingressos",
+        "href": "whatsapp"
+      },
+      "cta2": {
+        "label": "Ver serviços",
+        "href": "#servicos"
+      },
+      "image_query": "technology innovation conference",
+      "video_query": "tech conference"
+    },
+    {
+      "type": "services",
+      "id": "servicos",
+      "title": "Nossos Serviços",
+      "subtitle": "Soluções completas para sua experiência CES 2027",
+      "items": [
+        {
+          "title": "Venda de ingressos para CES",
+          "text": "Acesso exclusivo ao maior evento de tecnologia do mundo",
+          "price": "",
+          "image_query": "event tickets"
+        },
+        {
+          "title": "Pacotes de viagem completos",
+          "text": "Hospedagem, transporte e tudo o que você precisa",
+          "image_query": "travel package"
+        },
+        {
+          "title": "Logística de hospedagem e transporte",
+          "text": "Suporte completo para sua estada em Las Vegas",
+          "image_query": "logistics transportation"
+        },
+        {
+          "title": "Suporte VIP 24/7",
+          "text": "Assistência personalizada durante todo o evento",
+          "image_query": "vip support"
+        },
+        {
+          "title": "Networking com líderes do setor",
+          "text": "Oportunidades de conexão com empresas globais",
+          "image_query": "business networking"
+        },
+        {
+          "title": "Relatórios de tendências exclusivos",
+          "text": "Análises e insights sobre as principais inovações",
+          "image_query": "market trends report"
+        }
+      ]
+    },
+    {
+      "type": "about",
+      "title": "Sobre o CES",
+      "text": "O Consumer Electronics Show é o maior e mais influente evento de tecnologia do mundo, reunindo as maiores empresas e inovadores do setor.",
+      "image_query": "technology conference",
+      "stats": [
+        {
+          "value": "2027",
+          "label": "Edição"
+        },
+        {
+          "value": "4.000+",
+          "label": "Expositores"
+        },
+        {
+          "value": "170.000+",
+          "label": "Visitantes"
+        }
+      ]
+    },
+    {
+      "type": "cta",
+      "title": "Participe da maior feira de tecnologia",
+      "subtitle": "Garanta seu lugar e transforme seu negócio",
+      "cta": {
+        "label": "Falar com especialista",
+        "href": "whatsapp"
+      }
+    },
+    {
+      "type": "contact",
+      "title": "Entre em contato"
+    }
+  ]
 }
