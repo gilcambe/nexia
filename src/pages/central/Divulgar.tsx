@@ -16,6 +16,21 @@ import {
   Filler
 } from 'chart.js';
 
+// Interface para os dados históricos de divulga-dados
+interface DadosHistoricos {
+  data: string;
+  engajamento: number;
+  horario: string;
+  tema: string;
+  canal: string;
+}
+
+interface MelhorHorarioTema {
+  horario: string;
+  tema: string;
+  engajamentoMedio: number;
+}
+
 const REDE: Record<string, string> = { facebook: "Facebook", instagram: "Instagram" };
 const HORARIOS = ["07h15", "12h15", "19h15"];
 
