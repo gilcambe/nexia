@@ -20,8 +20,9 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
     setLoading(true);
     setError(null);
     try {
-      const data = listaSemanal();
-      setWeekly(data.itens);
+      const response = await fetch('/.netlify/functions/central/github?action=getWeekly');
+      const data = await response.json();
+      setWeekly(data);
     } catch (err) {
       setError('Falha ao carregar lista semanal');
     } finally {
