@@ -123,21 +123,67 @@ exports.handler = async (event, context) => {
   const { action, horario, tema } = JSON.parse(event.body);
 
   // Apenas dono pode postar
-  const ownerToken = process.env.DONO_TOKEN || 'seu_token_aqui';
+  const ownerToken = process.env.DONO_TOKEN;
+  if (!ownerToken) {
+    return { statusCode: 500, body: JSON.stringify({ success: false, message: 'Server configuration error: DONO_TOKEN not set' }) };
+  }
   const authHeader = event.headers['Authorization'] || event.headers['authorization'];
   if (!authHeader || authHeader !== `Bearer ${ownerToken}`) {
     return { statusCode: 403, body: JSON.stringify({ success: false, message: 'Unauthorized' }) };
   }
 
   if (action === 'postarAgora') {
-    const fs = require('fs');
-    const path = require('path');
-    const estadoPath = path.join(__dirname, '../../divulga-dados/divulga-estado.json');
-    const data = JSON.parse(fs.readFileSync(estadoPath, 'utf8'));
-    data.postagens = data.postagens || [];
-    data.postagens.push({ horario, tema, data: new Date().toISOString() });
-    fs.writeFileSync(estadoPath, JSON.stringify(data, null, 2));
-    return { statusCode: 200, body: JSON.stringify({ success: true }) };
+    // Validar entrada
+    if (!horario || typeof horario !== 'string' || horario.trim() === '') {
+      return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Horário é obrigatório e deve ser uma string não vazia' }) };
+    }
+    if (!tema || typeof tema !== 'string' || tema.trim() === '') {
+      return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Tema é obrigatório e deve ser uma string não vazia' }) };
+    }
+    
+    try {
+      const fs = require('fs');
+      const path = require('path');
+      const estadoPath = path.join(__dirname, '../../divulga-dados/divulga-estado.json');
+      
+      // Verificar se o arquivo existe, se não criar estrutura básica
+      let data;
+      try {
+        const fileContent = fs.readFileSync(estadoPath, 'utf8');
+        data = JSON.parse(fileContent);
+      } catch (error) {
+        if (error.code === 'ENOENT') {
+          // Arquivo não existe, criar estrutura básica
+          data = { postagens: [], feitos: [], historico: [] };
+        } else {
+          throw error;
+        }
+      }
+      
+      // Garantir que postagens existe
+      data.postagens = data.postagens || [];
+      
+      // Adicionar nova postagem
+      data.postagens.push({ 
+        horario: horario.trim(), 
+        tema: tema.trim(), 
+        data: new Date().toISOString() 
+      });
+      
+      // Escrever arquivo com tratamento de erro
+      fs.writeFileSync(estadoPath, JSON.stringify(data, null, 2));
+      return { statusCode: 200, body: JSON.stringify({ success: true }) };
+    } catch (error) {
+      console.error('Erro ao atualizar divulga-estado.json:', error);
+      return { 
+        statusCode: 500, 
+        body: JSON.stringify({ 
+          success: false, 
+          message: 'Erro interno ao salvar postagem',
+          error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        }) 
+      };
+    }
   }
 
   return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Invalid action' }) };
