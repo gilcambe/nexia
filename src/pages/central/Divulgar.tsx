@@ -25,12 +25,13 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
     } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
   };
   
-  // Temas da semana com horários de postagem
-  const temasSemana = SEMANA.map((dia, idx) => ({ dia, tema: temaDoDia(dia) }));
   const rodar = async (corpo: Record<string, unknown>) => {
     setOcupado(true); setMsg(null);
     try { setMsg((await agir(corpo)).mensagem); } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
   };
+  // Temas da semana com horários de postagem (07h15, 12h15 e 19h15)
+  const temasSemana = SEMANA.map((dia, idx) => ({ dia, tema: temaDoDia(dia) }));
+
   const x = d.divulga;
   return (
     <div className="space-y-4">
