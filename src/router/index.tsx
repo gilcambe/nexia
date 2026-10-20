@@ -4,6 +4,7 @@ import type { RouteObject } from "react-router-dom";
 import RotaProtegida from "@/components/RotaProtegida";
 
 const Home = lazy(() => import("../pages/home/page"));
+const SiteCliente = lazy(() => import("../components/SiteCliente"));
 const Sentinel = lazy(() => import("../pages/sentinel/page"));
 const Pipeline = lazy(() => import("../pages/pipeline/page"));
 const Codigo = lazy(() => import("../pages/codigo/page"));
