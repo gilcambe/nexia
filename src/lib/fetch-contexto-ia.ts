@@ -45,11 +45,12 @@ export function sanitizarTexto(texto: string): string {
 
   // Regex para diferentes tipos de chaves e segredos
   const regexes = [
-    /sk-[A-Za-z0-9]+/g, // API keys do OpenAI
+    /sk-[A-Za-z0-9]+/g, // API keys do OpenAI (sk-proj, sk-ant, etc.)
     /AIza[A-Za-z0-9_-]+/g, // API keys do Google
     /ghp_[A-Za-z0-9]+/g, // GitHub personal access tokens
     /-----BEGIN[\s\S]*?-----END[^\n]*/g, // Bloco de chave PEM/PGP completo (várias linhas)
-    /-----BEGIN[^\n]*/g, // Cabeçalho de bloco sem fim correspondente
+    /-----BEGIN[^\n]*[\s\S]*?-----BEGIN[^\n]*/g, // Vários blocos PEM sem fim correspondente
+    /-----BEGIN[^\n]*/g, // Cabeçalho de bloco isolado (sem BEGIN nem END correspondente)
   ];
 
   let textoSanitizado = texto;
