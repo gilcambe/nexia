@@ -28,7 +28,7 @@ export function limparChaves(texto: string): string {
     { regex: /sk-[A-Za-z0-9]+/g },
     { regex: /AIza[A-Za-z0-9_-]+/g },
     { regex: /ghp_[A-Za-z0-9]+/g },
-    { regex: /-----BEGIN[\s\S]*?-----END[^\n]+/g },
+    { regex: /-----BEGIN[^\n]+/g },
   ];
   
   let textoLimpo = texto;
