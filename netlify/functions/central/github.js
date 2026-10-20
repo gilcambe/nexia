@@ -94,6 +94,86 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     return { naFila: nomes.length - nomes.filter((n) => feitos.has(n)).length, proximos, historico };
   }
 
+  async function salvarDadosMeta(dados) {
+    // Validar dados recebidos
+    if (!dados || typeof dados !== 'object') {
+      throw new Error('Dados inválidos: objeto esperado');
+    }
+    
+    const { seguidores, alcance, curtidas, melhorHorario, tema } = dados;
+    
+    // Validar campos obrigatórios
+    if (seguidores === undefined || alcance === undefined || curtidas === undefined) {
+      throw new Error('Campos obrigatórios ausentes: seguidores, alcance e curtidas');
+    }
+    
+    // Criar data atual
+    const hoje = new Date();
+    const dataFormatada = hoje.toISOString().split('T')[0]; // YYYY-MM-DD
+    
+    // Criar amostra diária com estrutura padronizada
+    const amostra = {
+      data: dataFormatada,
+      timestamp: hoje.toISOString(),
+      seguidores: Number(seguidores) || 0,
+      alcance: Number(alcance) || 0,
+      curtidas: Number(curtidas) || 0,
+      melhorHorario: melhorHorario || null,
+      tema: tema || null
+    };
+    
+    // Ler arquivo de estado existente
+    try {
+      const estadoPath = 'divulga-dados/divulga-estado.json';
+      const estadoRaw = await fetchFn(`https://raw.githubusercontent.com/${REPO}/develop/${estadoPath}`, { 
+        headers: { 'User-Agent': 'nexia-central' } 
+      });
+      
+      let estado = {};
+      if (estadoRaw.ok) {
+        try {
+          estado = await estadoRaw.json();
+        } catch (e) {
+          console.error('Erro ao parsear estado:', e);
+          estado = {};
+        }
+      }
+      
+      // Garantir que a estrutura correta exista
+      estado.feitos = estado.feitos || [];
+      estado.historico = estado.historico || [];
+      
+      // Adicionar nova amostra ao histórico
+      estado.historico.push(amostra);
+      
+      // Manter apenas os últimos 30 dias de histórico
+      if (estado.historico.length > 30) {
+        estado.historico = estado.historico.slice(-30);
+      }
+      
+      // Atualizar arquivo de estado
+      await fetchFn(`https://api.github.com/repos/${REPO}/contents/${estadoPath}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json',
+          'Accept': 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28'
+        },
+        body: JSON.stringify({
+          message: `Atualizar estado do Meta - ${dataFormatada}`,
+          content: Buffer.from(JSON.stringify(estado, null, 2)).toString('base64'),
+          sha: estadoRaw.headers.get('ETag') || undefined
+        })
+      });
+      
+      return { sucesso: true, data: amostra };
+    } catch (error) {
+      console.error('Erro ao salvar dados do Meta:', error);
+      throw new Error(`Falha ao salvar dados do Meta: ${error.message}`);
+    }
+  }
+
   // #802: contas de reserva do Cortex. Só os NOMES dos segredos (o GitHub nunca devolve o valor).
   async function reservas() {
     const nomesDe = async (c) => { try { return ((await gh(c)).secrets || []).map((x) => x.name); } catch { return null; } };
@@ -103,7 +183,9 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     return montarReservas(repo, prod, semCota);
   }
 
-  return { cortex, robos, rodar, pedirAoCortex, divulga, reservas, temToken: !!token };
+
+
+  return { cortex, robos, rodar, pedirAoCortex, divulga, reservas, salvarDadosMeta, temToken: !!token };
 }
 
-module.exports = { criarGithub, REPO, RESERVAS, montarReservas };
+module.exports = { criarGithub, REPO, RESERVAS, montarReservas, salvarDadosMeta };
