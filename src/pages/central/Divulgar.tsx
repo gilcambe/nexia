@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-
+import { listaSemanal } from "../../../divulga/lib/interacao";
 
 import type { Dados } from "./api";
 import { useCentral, haQuanto } from "./api";
@@ -17,17 +17,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   const [toggleDisabled, setToggleDisabled] = useState(false);
   
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('/.netlify/functions/central/github?action=getWeekly');
-      const data = await response.json();
-      setWeekly(data);
-    } catch (err) {
-      setError('Falha ao carregar lista semanal');
-    } finally {
-      setLoading(false);
-    }
+    fetch('/.netlify/functions/central/github?action=getWeekly').then(r=>r.json()).then(setWeekly);
   }, []);
   
   const handleToggle = async (index: number) => {
@@ -132,16 +122,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
       ) : weekly && weekly.length > 0 ? (
         <Cartao titulo="Lista Semanal">
           <p className="text-sm text-nexia-muted">Clique para marcar como feito/nãofeito. Salvo automaticamente.</p>
-          {weekly && weekly.map((d, i) => (
-            <div 
-              key={i} 
-              className="daily-box"
-              onClick={() => handleToggle(i)}
-            >
-              <span className="day-name">{d.day}</span>
-              <span className="status-icon">{d.done ? '✅' : '❌'}</span>
-            </div>
-          ))}
+          {weekly && weekly.map((d, i)=> <div key={i} className='daily-box' onClick={()=>handleToggle(i)}>{d.day} {d.done ? '✅' : '❌'}</div>)
         </Cartao>
       ) : weekly && weekly.length === 0 ? (
         <Cartao titulo="Lista Semanal">
