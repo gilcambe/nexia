@@ -1,0 +1,235 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex-p1",
+    "tagline": "Sistema de gestão inteligente para equipes",
+    "photo_theme": "",
+    "description": "Sistema de gestão inteligente para equipes",
+    "folder": "src/tests",
+    "fonts": {
+      "heading": "Plus Jakarta Sans",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#4f46e5",
+      "accent": "#06b6d4",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#111827"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 90000-0000",
+      "email": "suporte@cortex-p1.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=tests&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "usuarios",
+        "label": "Usuários",
+        "singular": "Usuário",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "Email",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cargo",
+            "label": "Cargo",
+            "type": "select",
+            "options": [
+              "Administrador",
+              "Operador",
+              "Supervisor",
+              "Analista"
+            ],
+            "required": true
+          },
+          {
+            "key": "departamento",
+            "label": "Departamento",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "dataadmissao",
+            "label": "Data de Admissão",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Inativo",
+              "Afastado"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "João Silva",
+            "email": "joao.silva@cortex-p1.com.br",
+            "cargo": "Administrador",
+            "departamento": "TI",
+            "dataadmissao": "",
+            "status": "Ativo"
+          },
+          {
+            "nome": "Maria Santos",
+            "email": "maria.santos@cortex-p1.com.br",
+            "cargo": "Operador",
+            "departamento": "Operações",
+            "dataadmissao": "",
+            "status": "Ativo"
+          },
+          {
+            "nome": "Pedro Oliveira",
+            "email": "pedro.oliveira@cortex-p1.com.br",
+            "cargo": "Supervisor",
+            "departamento": "Vendas",
+            "dataadmissao": "",
+            "status": "Afastado"
+          },
+          {
+            "nome": "Ana Costa",
+            "email": "ana.costa@cortex-p1.com.br",
+            "cargo": "Analista",
+            "departamento": "Financeiro",
+            "dataadmissao": "",
+            "status": "Ativo"
+          }
+        ]
+      },
+      {
+        "key": "projetos",
+        "label": "Projetos",
+        "singular": "Projeto",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "responsavel",
+            "label": "Responsável",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "prazo",
+            "label": "Prazo",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "orcamento",
+            "label": "Orçamento",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Planejamento",
+              "Em Andamento",
+              "Concluído",
+              "Cancelado"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Sistema de IA",
+            "descricao": "Desenvolvimento de sistema de inteligência artificial para análise de dados",
+            "responsavel": "João Silva",
+            "prazo": "2026-12-31",
+            "orcamento": "250000",
+            "status": "Em Andamento"
+          },
+          {
+            "nome": "Portal de Clientes",
+            "descricao": "Plataforma online para autogestão de clientes",
+            "responsavel": "Maria Santos",
+            "prazo": "2026-09-15",
+            "orcamento": "180000",
+            "status": "Planejamento"
+          },
+          {
+            "nome": "Migração para Cloud",
+            "descricao": "Transferência de infraestrutura para ambiente cloud",
+            "responsavel": "Pedro Oliveira",
+            "prazo": "2026-07-30",
+            "orcamento": "320000",
+            "status": "Concluído"
+          },
+          {
+            "nome": "App Móvel",
+            "descricao": "Aplicativo mobile para gestão de tarefas",
+            "responsavel": "Ana Costa",
+            "prazo": "2026-11-20",
+            "orcamento": "150000",
+            "status": "Cancelado"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Dashboard",
+      "Gestão de Usuários",
+      "Projetos",
+      "Relatórios"
+    ]
+  },
+  "media": {}
+}
