@@ -1,6 +1,6 @@
 'use strict';
 // Central NEXIA (/central): uma página para o dono cuidar de toda a NEXIA. Só o master entra.
-//   GET  /api/central?parte=busca&q=…|saude|historico|erros|dinheiro|cortex|robos|divulga|banco|cloudflare|lista|empresa|clientes|leads
+//   GET  /api/central?parte=busca&q=…|saude|historico|erros|cotas|dinheiro|cortex|robos|divulga|banco|cloudflare|lista|empresa|clientes|leads
 //   POST /api/central {acao:'rodar', arquivo, ensaio?} | {acao:'pedir', texto} | {acao:'testar-ias'}
 // Cada parte é um pedido separado: a página mostra o que já chegou sem esperar o resto.
 
@@ -107,6 +107,7 @@ function createHandler(deps = {}) {
       }
       if (parte === 'cloudflare') return res(200, await usoCloudflare(env, fetchFn));
       if (parte === 'busca') return res(200, await require('../../lib/busca-web').buscar((event.queryStringParameters || {}).q, { fetchImpl: fetchFn }));
+      if (parte === 'cotas') return res(200, await require('../../lib/cotas').medir(env, { fetchImpl: fetchFn, getToken: deps.getCotasToken }));
       if (parte === 'clientes') return res(200, await empresa.clientes(getDb(), getAgendas()));
       if (parte === 'leads') return res(200, await empresa.leads(getDb()));
       if (parte === 'erros') {

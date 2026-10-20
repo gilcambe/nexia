@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { usePedidos } from "@/pages/meu-cortex/api";
 
 interface Props {
   modo: "pedido" | "nota" | "pergunta";
@@ -58,12 +59,26 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
   };
 
   // Qualquer tipo de arquivo: texto/código entra como texto; print/foto é reduzido; o resto vai embutido se for pequeno.
+  // #825: foto, PDF, planilha e áudio passam pela IA grátis do servidor (descrição, texto ou transcrição).
+  const { agir } = usePedidos();
+  const entender = async (f: File): Promise<string | null> => {
+    if (f.size > 700_000 || !/^(image|audio)\//.test(f.type) && !/\.(pdf|xlsx|xlsm|xls|ods|docx|odt|csv|mp3|m4a|wav|ogg|opus|webm)$/i.test(f.name)) return null;
+    try {
+      const r = await agir({ acao: "entender", nome: f.name, tipo: f.type, base64: await paraBase64(f) }) as { ok: boolean; texto?: string; tipo?: string };
+      if (!r.ok || !r.texto) return null;
+      const como = r.tipo === "imagem" ? "descrição da imagem" : r.tipo === "audio" ? "transcrição do áudio" : "texto do arquivo";
+      return `Anexo \`${f.name}\` (${como}, feita pela IA):\n\`\`\`\n${r.texto}\n\`\`\``;
+    } catch { return null; }
+  };
   const anexar = async (f: File | undefined) => {
     if (!f) return;
     setAviso(null);
     try {
       let bloco: string;
-      if (f.type.startsWith("image/")) bloco = `![${f.name}](${await reduzirImagem(f)})`;
+      const entendido = await entender(f);
+      if (entendido && f.type.startsWith("image/")) bloco = `![${f.name}](${await reduzirImagem(f).catch(() => "")})\n\n${entendido}`;
+      else if (entendido) bloco = entendido;
+      else if (f.type.startsWith("image/")) bloco = `![${f.name}](${await reduzirImagem(f)})`;
       else if (f.type.startsWith("text/") || /\.(txt|md|js|ts|tsx|jsx|json|css|html|yml|yaml|csv|log|sql|sh|py)$/i.test(f.name)) {
         if (f.size > 60_000) { setAviso("Esse arquivo de texto passa de 60 KB. Mande só o trecho que importa."); return; }
         bloco = `Arquivo \`${f.name}\`:\n\`\`\`\n${await f.text()}\n\`\`\``;

@@ -29,6 +29,11 @@ async function anexar(p, b) {
 }
 
 async function agir(p, b, quem) {
+  // #825: entende o anexo (descrição da imagem, texto do PDF/planilha, transcrição do áudio) com IA grátis.
+  if (b.acao === 'entender') {
+    const x = await require('../../../lib/anexos-entender').entenderAnexo({ nome: b.nome, tipo: b.tipo, base64: b.base64 }, process.env);
+    return x.erro ? r(200, { ok: false, tipo: x.tipo, mensagem: x.erro }) : r(200, { ok: true, tipo: x.tipo, texto: x.texto, mensagem: 'Anexo entendido.' });
+  }
   const texto = String(b.texto || '').trim();
   const n = Number(b.n) || 0;
   if (b.acao === 'pedir') {
