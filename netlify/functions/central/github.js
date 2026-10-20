@@ -2,6 +2,8 @@
 // Central NEXIA: o que a página precisa do GitHub (fila do Cortex, robôs, posts do Divulga).
 // Usa o token da fila (NEXIA_JOBS_TOKEN) só no servidor; nada dele vai para a página.
 
+const fs = require('fs');
+const path = require('path');
 const REPO = 'gilcambe/nexia';
 const API = 'https://api.github.com/repos/' + REPO;
 
@@ -113,5 +115,38 @@ function criarGithub(env = process.env, fetchFn = fetch) {
 
   return { cortex, robos, rodar, pedirAoCortex, divulga, reservas, temToken: !!token };
 }
+
+// Handler HTTP para ações do central/github.js
+exports.handler = async (event, context) => {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Method Not Allowed' };
+  }
+
+  try {
+    const { action, horario, tema } = JSON.parse(event.body);
+
+    // Apenas dono pode postar
+    const ownerToken = process.env.DONO_TOKEN || 'seu_token_aqui';
+    const authHeader = event.headers['Authorization'] || event.headers['authorization'];
+    if (!authHeader || authHeader !== `Bearer ${ownerToken}`) {
+      return { statusCode: 403, body: JSON.stringify({ success: false, message: 'Unauthorized' }) };
+    }
+
+    if (action === 'postarAgora') {
+      // Atualizar arquivo local de estado
+      const estadoPath = path.join(__dirname, '../../divulga-dados/divulga-estado.json');
+      const data = JSON.parse(fs.readFileSync(estadoPath, 'utf8'));
+      data.postagens = data.postagens || [];
+      data.postagens.push({ horario, tema, data: new Date().toISOString() });
+      fs.writeFileSync(estadoPath, JSON.stringify(data, null, 2));
+      
+      return { statusCode: 200, body: JSON.stringify({ success: true }) };
+    }
+
+    return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Invalid action' }) };
+  } catch (error) {
+    return { statusCode: 500, body: JSON.stringify({ success: false, message: 'Internal Server Error' }) };
+  }
+};
 
 module.exports = { criarGithub, REPO, RESERVAS, montarReservas };
