@@ -3,6 +3,11 @@ const { spawn } = require('child_process');
 console.log('Executando npm test...');
 const testProcess = spawn('npm', ['test'], { stdio: 'inherit' });
 
+testProcess.on('error', (error) => {
+  console.log(`\n❌ Erro ao executar npm test: ${error.message}`);
+  process.exit(1);
+});
+
 testProcess.on('close', (code) => {
   if (code === 0) {
     console.log('\n✅ Todos os testes passaram!');
@@ -12,4 +17,5 @@ testProcess.on('close', (code) => {
     console.log(`\n❌ Testes falharam com código: ${code}`);
     console.log('❌ Verifique os logs acima para detalhes das falhas.');
   }
+  process.exit(code);
 });
