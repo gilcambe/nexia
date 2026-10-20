@@ -6,6 +6,7 @@ import type { Cor } from "./ui";
 import Mais from "./Mais";
 import SaudeHistorico from "./SaudeHistorico";
 import UltimosErros from "./UltimosErros";
+import { buscarContextoIA } from "@/lib/fetch-contexto-ia";
 
 // Aba Sistema: a saúde dos sites em 30 dias, as IAs que trabalham para a NEXIA, os fornecedores (serviços grátis que usamos) e os robôs.
 const COR: Record<Situacao, Cor> = { ok: "verde", erro: "vermelho", desligado: "cinza" };
@@ -18,17 +19,19 @@ const URLS_CONTEXTO = [
   "https://raw.githubusercontent.com/gilcambe/nexia/main/docs/CONTEXTO-IA.md",
 ];
 
-// Qualquer chave que aparecer no texto sai como [oculto] antes de copiar.
+// Remove chaves e segredos do texto. Pode ser usado como extra sanitização.
 export function limparChaves(texto: string): string {
-  return texto
+  // Remove blocos PEM completos (de BEGIN até END)
+  const textoSemPEM = texto.replace(/-----BEGIN[^\n]+[\s\S]*?-----END[^\n]+/g, "[oculto]");
+  
+  return textoSemPEM
     .replace(/sk-[A-Za-z0-9]+/g, "[oculto]")
     .replace(/AIza[A-Za-z0-9_-]+/g, "[oculto]")
-    .replace(/ghp_[A-Za-z0-9]+/g, "[oculto]")
-    .replace(/-----BEGIN[^\n]+/g, "[oculto]");
+    .replace(/ghp_[A-Za-z0-9]+/g, "[oculto]");
 }
 
-// Mesmo padrão da limpeza, sem a flag global: serve só para conferir se sobrou chave.
-const TEM_CHAVE = /sk-[A-Za-z0-9]+|AIza[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|-----BEGIN[^\n]+/;
+// Verifica se sobrou algum padrão de chave no texto (após sanitização).
+const TEM_CHAVE = /sk-[A-Za-z0-9]+|AIza[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|-----BEGIN/;
 
 export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<Parte, string>> }) {
   const { agir } = useCentral();
@@ -38,29 +41,39 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
   const [contextoIA, setContextoIA] = useState("");
   const [carregandoIA, setCarregandoIA] = useState(false);
 
-  // Baixa o contexto, tira as chaves, junta o resumo da fila e põe na área de transferência.
+  // Busca o contexto, sanitiza, adiciona info da fila e copia para clipboard.
   const copiarContexto = async () => {
     setCarregandoIA(true);
     try {
-      let bruto = "";
-      for (const url of URLS_CONTEXTO) {
-        try {
-          const res = await fetch(url);
-          if (!res.ok) continue;
-          bruto = await res.text();
-          if (bruto.trim()) break;
-        } catch {
-          // tenta a próxima URL
-        }
-      }
-      if (!bruto.trim()) throw new Error("Não consegui baixar o contexto agora. Tente de novo em um instante.");
-      const limpo = limparChaves(bruto);
+      // Usa a função já existente que faz fetch + sanitização
+      const contextoBruto = await buscarContextoIA();
+      const contextoLimpo = limparChaves(contextoBruto);
+      
       const fila = d.cortex?.naFila ?? 0;
       const rodando = d.cortex?.fazendo?.length ?? 0;
       const travadas = d.cortex?.travadas?.length ?? 0;
-      const final = `${limpo}\n\nConexão: Filas: ${fila} | Rodando: ${rodando} | Travadas: ${travadas}`;
+      const final = `${contextoLimpo}\n\nConexão: Filas: ${fila} | Rodando: ${rodando} | Travadas: ${travadas}`;
+      
       setContextoIA(final);
-      await colar(final);
+      
+      // Implementa cópia para clipboard com fallback
+      try {
+        await navigator.clipboard.writeText(final);
+      } catch {
+        // Fallback para navegadores antigos
+        const textarea = document.createElement('textarea');
+        textarea.value = final;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+          document.execCommand('copy');
+        } finally {
+          document.body.removeChild(textarea);
+        }
+      }
+      
       if (final.includes("Cortex") && !TEM_CHAVE.test(final)) {
         window.alert("Contexto copiado. Cole na conversa da outra IA.");
       } else {
