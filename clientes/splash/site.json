@@ -1,6 +1,7 @@
 {
   "kind": "site",
   "name": "Splash Eventos",
+  "favicon": "S",
   "tagline": "Espaços de Alto Padrão para Eventos Inesquecíveis",
   "description": "Dois espaços de alto padrão para casamentos, formaturas, aniversários de 15 anos e eventos corporativos.",
   "folder": "splash",
@@ -12,7 +13,7 @@
     "body": "Inter"
   },
   "palette": {
-    "primary": "#C9A84C",
+    "primary": "#00D68F",
     "accent": "#F5EDD6",
     "bg": "#0A0D08",
     "surface": "rgba(255,255,255,0.04)",
