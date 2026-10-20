@@ -21,14 +21,20 @@ const URLS_CONTEXTO = [
 
 // Remove chaves e segredos do texto. Pode ser usado como extra sanitização.
 export function limparChaves(texto: string): string {
+  if (!texto) return "";
   // Remove blocos PEM completos (de BEGIN até END)
   const textoSemPEM = texto.replace(/-----BEGIN[^\n]+[\s\S]*?-----END[^\n]+/g, "[oculto]");
-  
+
   return textoSemPEM
     .replace(/sk-[A-Za-z0-9]+/g, "[oculto]")
     .replace(/AIza[A-Za-z0-9_-]+/g, "[oculto]")
-    .replace(/ghp_[A-Za-z0-9]+/g, "[oculto]");
+    .replace(/ghp_[A-Za-z0-9]+/g, "[oculto]")
+    // Cabeçalho de chave sem o bloco correspondente (chave solta)
+    .replace(/-----BEGIN[^\n]+/g, "[oculto]");
 }
+
+// Estilo dos links (mesmo visual do botão) para abrir outra IA em outra aba.
+const LINK = "inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm min-h-[40px] border border-nexia-border bg-nexia-surface2 text-white hover:opacity-90 transition-opacity";
 
 // Verifica se sobrou algum padrão de chave no texto (após sanitização).
 const TEM_CHAVE = /sk-[A-Za-z0-9]+|AIza[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|-----BEGIN/;
@@ -46,7 +52,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
     setCarregandoIA(true);
     try {
       // Usa a função já existente que faz fetch + sanitização
-      const contextoBruto = await buscarContextoIA();
+      const contextoBruto = await buscarContextoComFallback();
       const contextoLimpo = limparChaves(contextoBruto);
       
       const fila = d.cortex?.naFila ?? 0;
@@ -85,6 +91,24 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
       setCarregandoIA(false);
     }
   };
+  // Lê o arquivo de contexto do repositório. Usa o serviço da Central e, se ele falhar,
+  // tenta as URLs conhecidas do próprio projeto (ramo develop e ramo main).
+  const buscarContextoComFallback = async (): Promise<string> => {
+    try {
+      return await buscarContextoIA();
+    } catch {
+      for (const url of URLS_CONTEXTO) {
+        try {
+          const resposta = await fetch(url);
+          if (resposta.ok) return await resposta.text();
+        } catch {
+          // tenta a próxima URL
+        }
+      }
+      throw new Error("Não consegui ler o arquivo de contexto do repositório.");
+    }
+  };
+
   const testar = async () => {
     setTestando(true); setErroIA(null);
     try { setIas((await agir<{ ias: TesteIA[] }>({ acao: "testar-ias" })).ias || []); } catch (e) { setErroIA((e as Error).message); }
@@ -155,9 +179,9 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
             {carregandoIA ? "Copiando…" : "📋 Copiar contexto"}
           </Botao>
           <div className="flex flex-wrap gap-2">
-            <Botao href="https://gemini.google.com">Abrir Gemini</Botao>
-            <Botao href="https://chat.openai.com">Abrir ChatGPT</Botao>
-            <Botao href="https://claude.ai">Abrir Claude</Botao>
+            <a className={LINK} href="https://gemini.google.com" target="_blank" rel="noopener noreferrer">Abrir Gemini</a>
+            <a className={LINK} href="https://chat.openai.com" target="_blank" rel="noopener noreferrer">Abrir ChatGPT</a>
+            <a className={LINK} href="https://claude.ai" target="_blank" rel="noopener noreferrer">Abrir Claude</a>
           </div>
           {contextoIA && (
             <p className="text-xs text-nexia-muted" role="status">Contexto pronto: {contextoIA.length} caracteres. Agora é só colar na conversa.</p>
