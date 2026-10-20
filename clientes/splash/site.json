@@ -6,6 +6,7 @@
   "folder": "splash",
   "style": "elegant",
   "photo_theme": "luxury event venue",
+  "leads_origem": "splash-site",
   "fonts": {
     "heading": "Cormorant Garamond",
     "body": "Inter"
@@ -39,7 +40,7 @@
       "subtitle": "Onde memórias se tornam eternas.",
       "cta": {
         "label": "Solicitar orçamento",
-        "href": "leads"
+        "href": "#contato"
       },
       "cta2": {
         "label": "Ver espaços",
@@ -186,12 +187,13 @@
       "subtitle": "Resposta rápida em até 24 horas úteis.",
       "cta": {
         "label": "Solicitar orçamento",
-        "href": "leads"
+        "href": "#contato"
       }
     },
     {
       "type": "contact",
-      "title": "Solicite Verificação de Data"
+      "title": "Solicite Verificação de Data",
+      "subtitle": "Preencha o formulário e nossa equipe responde em até 24 horas úteis."
     }
   ]
 }
