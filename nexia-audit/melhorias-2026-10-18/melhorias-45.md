@@ -49,4 +49,6 @@
 - Testar envio do modo na requisição
 
 ## Auto-correção de CI
-* Auto‑correction: when the CI fails, Cortex receives the last 80 lines of the error log and automatically retries the CI up to 2 times before human intervention.*
+
+- Capacidade de correção automática quando o CI falha:
+  - Auto‑correction: when the CI fails, Cortex receives the last 80 lines of the error log and automatically retries the CI up to 2 times before human intervention.
