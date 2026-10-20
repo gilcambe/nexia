@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cortex-p1 — Sistema de gestão inteligente para equipes</title>
+  <meta name="description" content="Sistema de gestão inteligente para equipes">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
+</head>
+<body>
+  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
+      <div class="sidebar__brand">
+        <span class="logo" aria-hidden="true">C</span>
+        <span>Cortex-p1</span>
+      </div>
+      <nav class="sidebar__nav" aria-label="Seções">
+        <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
+        <a href="#/usuarios" data-route="usuarios"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Usuários</span></a>
+        <a href="#/projetos" data-route="projetos"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Projetos</span></a>
+      </nav>
+      <div class="sidebar__foot">
+        <p>Suporte: suporte@cortex-p1.com.br</p>
+        <p>Dados salvos neste navegador.</p>
+      </div>
+    </aside>
+    <div class="backdrop" data-close-menu hidden></div>
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="topbar__title">
+          <h1 id="view-title">Painel</h1>
+          <p id="view-sub">Sistema de gestão inteligente para equipes</p>
+        </div>
+        <label class="search">
+          <span class="sr-only">Buscar</span>
+          <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search" type="search" placeholder="Buscar..." autocomplete="off">
+        </label>
+        <button class="icon-btn" type="button" id="theme" aria-label="Alternar modo escuro"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </header>
+      <main id="conteudo" class="content">
+        <section id="view-painel" class="view" aria-labelledby="view-title">
+          <div class="kpis" id="kpis"></div>
+          <div class="grid2">
+            <article class="card">
+              <header class="card__head"><h2 id="chart-title">Resumo</h2></header>
+              <div class="chart-box"><canvas id="chart" aria-label="Gráfico do resumo" role="img"></canvas></div>
+            </article>
+            <article class="card">
+              <header class="card__head"><h2>Últimos cadastros</h2></header>
+              <ul class="recent" id="recent"></ul>
+            </article>
+          </div>
+        </section>
+        <section id="view-entity" class="view" hidden>
+          <div class="toolbar">
+            <p class="count" id="count"></p>
+            <div class="toolbar__actions">
+              <button class="btn btn--ghost" type="button" id="export"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Exportar CSV</button>
+              <button class="btn btn--primary" type="button" id="add"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> <span id="add-label">Novo</span></button>
+            </div>
+          </div>
+          <div class="card table-card">
+            <div class="table-wrap">
+              <table class="table">
+                <thead id="thead"></thead>
+                <tbody id="tbody"></tbody>
+              </table>
+            </div>
+            <div class="empty" id="empty" hidden>
+              <svg class="i" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg>
+              <h2>Nada por aqui ainda</h2>
+              <p>Clique em “Adicionar” para fazer o primeiro cadastro.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="modal" id="modal" aria-labelledby="modal-title">
+    <form id="form" novalidate>
+      <header class="modal__head">
+        <h2 id="modal-title">Novo</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </header>
+      <div class="modal__body" id="form-fields"></div>
+      <footer class="modal__foot">
+        <button class="btn btn--ghost" type="button" data-close>Cancelar</button>
+        <button class="btn btn--primary" type="submit">Salvar</button>
+      </footer>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="application/json" id="app-config">{"key":"nexia-app:src/tests","name":"Cortex-p1","entities":[{"key":"usuarios","label":"Usuários","singular":"Usuário","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"email","label":"Email","type":"email","options":[],"required":true},{"key":"cargo","label":"Cargo","type":"select","options":["Administrador","Operador","Supervisor","Analista"],"required":true},{"key":"departamento","label":"Departamento","type":"text","options":[],"required":true},{"key":"dataadmissao","label":"Data de Admissão","type":"date","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Ativo","Inativo","Afastado"],"required":true}],"sample":[{"nome":"João Silva","email":"joao.silva@cortex-p1.com.br","cargo":"Administrador","departamento":"TI","dataadmissao":"","status":"Ativo"},{"nome":"Maria Santos","email":"maria.santos@cortex-p1.com.br","cargo":"Operador","departamento":"Operações","dataadmissao":"","status":"Ativo"},{"nome":"Pedro Oliveira","email":"pedro.oliveira@cortex-p1.com.br","cargo":"Supervisor","departamento":"Vendas","dataadmissao":"","status":"Afastado"},{"nome":"Ana Costa","email":"ana.costa@cortex-p1.com.br","cargo":"Analista","departamento":"Financeiro","dataadmissao":"","status":"Ativo"}]},{"key":"projetos","label":"Projetos","singular":"Projeto","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"descricao","label":"Descrição","type":"textarea","options":[],"required":true},{"key":"responsavel","label":"Responsável","type":"text","options":[],"required":true},{"key":"prazo","label":"Prazo","type":"date","options":[],"required":true},{"key":"orcamento","label":"Orçamento","type":"money","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Planejamento","Em Andamento","Concluído","Cancelado"],"required":true}],"sample":[{"nome":"Sistema de IA","descricao":"Desenvolvimento de sistema de inteligência artificial para análise de dados","responsavel":"João Silva","prazo":"2026-12-31","orcamento":"250000","status":"Em Andamento"},{"nome":"Portal de Clientes","descricao":"Plataforma online para autogestão de clientes","responsavel":"Maria Santos","prazo":"2026-09-15","orcamento":"180000","status":"Planejamento"},{"nome":"Migração para Cloud","descricao":"Transferência de infraestrutura para ambiente cloud","responsavel":"Pedro Oliveira","prazo":"2026-07-30","orcamento":"320000","status":"Concluído"},{"nome":"App Móvel","descricao":"Aplicativo mobile para gestão de tarefas","responsavel":"Ana Costa","prazo":"2026-11-20","orcamento":"150000","status":"Cancelado"}]}]}</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
