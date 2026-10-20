@@ -18,7 +18,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      # #806: guarda o deploy que está no ar antes, para voltar a ele se o novo não responder.
+      - name: Guardar o deploy anterior
+        id: antes
+        working-directory: .
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/pages-volta.js antes nexiabodycoach
       - name: Publicar
+        id: publicar
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
@@ -26,4 +35,12 @@ jobs:
           npx -y wrangler@3 pages project create nexiabodycoach --production-branch main >/dev/null 2>&1 || true
           npx -y wrangler@3 pages deploy public --project-name nexiabodycoach --branch main
           SUB=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/nexiabodycoach" | jq -r '.result.subdomain')
+          echo "sub=$SUB" >> "$GITHUB_OUTPUT"
           echo "### Link do Body Coach: https://$SUB/body-coach/" >> "$GITHUB_STEP_SUMMARY"
+      - name: Teste do site no ar (se falhar, volta para o deploy anterior)
+        if: steps.publicar.outputs.sub != '' && steps.publicar.outputs.sub != 'null'
+        working-directory: .
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/pages-volta.js conferir nexiabodycoach "https://${{ steps.publicar.outputs.sub }}/body-coach/" "${{ steps.antes.outputs.anterior }}"

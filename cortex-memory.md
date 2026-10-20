@@ -1,5 +1,7 @@
 # 🧠 Memória do Cortex - Decisões do Dono
 
+> A lista que o Cortex lê a cada pedido fica em `nexia-ai/orchestrator/decisoes-dono.js` (o Worker não lê .md). Mude lá.
+
 ## Regras Fundamentais
 
 ### ✅ Nada Pago
@@ -8,9 +10,8 @@
 - Evitar custos adicionais para o produto
 
 ### 🎯 Ícone do Produto
-- Sempre incluir ícone relevante no início de cada seção
-- Usar emojis simples e representativos
-- Manter identidade visual consistente
+- Ícone e logo de cada app ou site são os do PRÓPRIO produto ou cliente
+- A marca Kernex aparece só no selo "Feito com Kernex" e no site da Kernex
 
 ### 🇧🇷 Português Simples
 - Linguagem clara e direta

@@ -35,6 +35,12 @@ function createHandler(deps = {}) {
       }
       let b = {};
       try { b = JSON.parse(event.body || '{}') || {}; } catch { return res(400, { error: 'Pedido inválido.' }); }
+      // #833: avisos do Cortex no celular (Web Push grátis), ações avisos_*.
+      if (/^avisos_/.test(String(b.acao || ''))) {
+        const getDb = deps.getDb || (() => require('./firebase-init').db);
+        const [status, corpo] = (await require('./central/cortex-avisos').acoesAvisos(b, getDb())) || [400, { error: 'Ação desconhecida.' }];
+        return res(status, corpo);
+      }
       const x = await agir(p, b, auth.email || 'dono');
       return res(x.status, x.corpo);
     } catch (e) {

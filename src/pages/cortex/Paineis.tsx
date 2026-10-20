@@ -91,6 +91,33 @@ export function Artefatos({ abrir }: { abrir: (n: number) => void }) {
   );
 }
 
+// #833: avisos no celular (tarefa feita/travada e resumo das 8h). Web Push grátis pelo próprio servidor.
+const b64ParaBytes = (b: string) => { const s = atob(b.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((b.length + 3) % 4)); return Uint8Array.from(s, (c) => c.charCodeAt(0)); };
+function AvisosCelular() {
+  const { agir } = usePedidos();
+  const [msg, setMsg] = useState("");
+  const pode = typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+  const ligar = async () => {
+    try {
+      setMsg("Ligando…");
+      if ((await Notification.requestPermission()) !== "granted") { setMsg("O celular não deixou mostrar avisos. Libere nas configurações do Chrome."); return; }
+      const reg = (await navigator.serviceWorker.getRegistration("/cortex")) || (await navigator.serviceWorker.register("/cortex-sw.js", { scope: "/cortex" }));
+      const { chave } = (await agir({ acao: "avisos_chave" })) as unknown as { chave: string };
+      const sub = (await reg.pushManager.getSubscription()) || (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ParaBytes(chave) }));
+      await agir({ acao: "avisos_assinar", sub: sub.toJSON() });
+      await agir({ acao: "avisos_testar" });
+      setMsg("Pronto: você vai receber um aviso quando uma tarefa terminar ou travar, e um resumo às 8h.");
+    } catch (e) { setMsg((e as Error).message || "Não consegui ligar os avisos."); }
+  };
+  return (
+    <Cartao testid="cx-avisos"><p className="font-medium">Avisos no celular</p>
+      <p className="text-sm text-[var(--cx-mut)] mt-1">{pode ? "Tarefa feita ou travada e resumo às 8h. Grátis." : "Este navegador não aceita avisos. Use o Chrome com o app instalado."}</p>
+      {pode && <button onClick={ligar} className="mt-3 h-11 px-5 rounded-xl border border-[var(--cx-line)] text-sm font-medium" data-testid="cx-avisos-ligar">Ligar avisos</button>}
+      {msg && <p className="text-sm mt-2" role="status">{msg}</p>}
+    </Cartao>
+  );
+}
+
 export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema; mudarTema: (t: Tema) => void; email: string; instalar: (() => void) | null; sair: () => void }) {
   const op: { id: Tema; nome: string }[] = [{ id: "auto", nome: "Automático" }, { id: "escuro", nome: "Escuro" }, { id: "claro", nome: "Claro" }];
   return (
@@ -103,6 +130,7 @@ export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema;
       <Cartao><p className="font-medium">App no celular</p>
         <p className="text-sm text-[var(--cx-mut)] mt-1">{instalar ? "Instale o Cortex na tela inicial." : "No Chrome do celular: menu ⋮ → Instalar app (ou Adicionar à tela inicial)."}</p>
         {instalar && <button onClick={instalar} className="mt-3 h-11 px-5 rounded-xl bg-[var(--cx-ac)] text-black font-semibold" data-testid="cx-instalar">Instalar app</button>}</Cartao>
+      <AvisosCelular />
       <Cartao><a href="/central" className="block font-medium">Central NEXIA</a><p className="text-sm text-[var(--cx-mut)] mt-1">Vendas, produtos e divulgação.</p></Cartao>
       <button onClick={sair} className="w-full h-12 rounded-xl border border-[var(--cx-line)] text-red-400" data-testid="cx-sair">Sair</button>
     </div>

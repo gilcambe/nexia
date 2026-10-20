@@ -4,6 +4,8 @@
 // com as chamadas de ferramenta previstas, e o Orchestrator decide o resto. Nada sai da máquina.
 // Rodar com: npm run test:rules
 const test = require('node:test');
+// #832: cada teste começa com o placar de qualidade vazio (a ordem dos modelos não depende do teste anterior).
+test.beforeEach(() => require('../../nexia-ai/model-router/qualidade').getQualidade().limpar());
 const assert = require('node:assert');
 const crypto = require('crypto');
 const { createVault, createExecutionContext } = require('../../nexia-ai/vault');
