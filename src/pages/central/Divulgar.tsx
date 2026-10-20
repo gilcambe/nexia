@@ -45,6 +45,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   const [carregandoDados, setCarregandoDados] = useState(true);
   const [diasDisponiveis, setDiasDisponiveis] = useState(0);
   const [ultimaAtualizacao, setUltimaAtualizacao] = useState(0);
+  const [erroDados, setErroDados] = useState<string | null>(null);
   
   // Busca dados históricos do backend (últimos 30 dias)
   const buscarDadosHistoricos = async () => {
@@ -69,6 +70,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
       }
     } catch (err) {
       console.error('Falha ao buscar dados históricos:', err);
+      setErroDados('Falha ao carregar dados de engajamento. Tente novamente mais tarde.');
     } finally {
       setCarregandoDados(false);
     }
@@ -111,8 +113,6 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   };
   
   // Carrega dados quando o componente montar e atualiza a cada visita
-  const [ultimaAtualizacao, setUltimaAtualizacao] = useState(0);
-  
   useEffect(() => {
     buscarDadosHistoricos();
     
@@ -120,18 +120,28 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
     setUltimaAtualizacao(Date.now());
   }, []);
   
-  // Atualiza dados a cada visita do usuário (evita atualizações excessivas)
+  // Atualiza dados quando a página recebe foco ou é ativada (evita atualizações excessivas)
   useEffect(() => {
-    const intervalo = 5 * 60 * 1000; // 5 minutos
-    const timer = setTimeout(() => {
-      if (Date.now() - ultimaAtualizacao > intervalo) {
+    const handleFocus = () => {
+      buscarDadosHistoricos();
+      setUltimaAtualizacao(Date.now());
+    };
+    
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
         buscarDadosHistoricos();
         setUltimaAtualizacao(Date.now());
       }
-    }, intervalo);
+    };
     
-    return () => clearTimeout(timer);
-  }, [ultimaAtualizacao]);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
   
   // Posta na hora: usado pelos botões 07h15, 12h15 e 19h15 de cada tema da semana.
   // Função implementada conforme solicitado no pedido.
