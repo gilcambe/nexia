@@ -37,9 +37,12 @@ if (!fs.existsSync(midiaPath)) {
 // Verifica se há commits na branch divulga-dados
 try {
   const { execSync } = require('child_process');
-  // Muda para o diretório de dados antes de executar o git log
-  process.chdir(dadosPath);
-  const gitLog = execSync('git log --oneline -n 5', { encoding: 'utf8' });
+  // Usa caminho absoluto para o git log sem mudar o diretório de trabalho
+  const gitLog = execSync('git log --oneline -n 5', { 
+    encoding: 'utf8', 
+    cwd: dadosPath,
+    timeout: 10000
+  });
   console.log('📝 Últimos commits na branch divulga-dados:');
   console.log(gitLog);
 } catch (error) {
