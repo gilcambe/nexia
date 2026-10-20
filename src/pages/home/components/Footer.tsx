@@ -93,7 +93,7 @@ export default function Footer({ client }: FooterProps) {
           <div className="flex items-center gap-3">
                       {client?.madeWithKernexLink && (
             <a
-              href={isValidUrl(client.madeWithKernexLink) ? client.madeWithKernexLink : MADE_WITH_KERNEX_LINK}
+              href={client.madeWithKernexLink}
               target="_blank"
               rel="noopener noreferrer"
               className="made-with-kernex"
