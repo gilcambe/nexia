@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { listaSemanal } from "../../../divulga/lib/interacao";
+
 
 import type { Dados } from "./api";
 import { useCentral, haQuanto } from "./api";
@@ -43,7 +43,17 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
       novoWeekly[index] = { ...novoWeekly[index], done: novoEstado };
       setWeekly(novoWeekly);
       
-      const response = await agir({ acao: 'toggle', index, done: novoEstado });
+      const response = await fetch('/.netlify/functions/central/github?action=toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ index, done: novoEstado }),
+      });
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.mensagem || 'Falha ao atualizar status');
+      }
       if (!response.success) {
         throw new Error(response.mensagem || 'Falha ao atualizar status');
       }
@@ -128,7 +138,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
               className="daily-box"
               onClick={() => handleToggle(i)}
             >
-              <span className="day-name">{d.alvo}</span>
+              <span className="day-name">{d.day}</span>
               <span className="status-icon">{d.done ? '✅' : '❌'}</span>
             </div>
           ))}
