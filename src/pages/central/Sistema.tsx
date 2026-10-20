@@ -6,7 +6,7 @@ import type { Cor } from "./ui";
 import Mais from "./Mais";
 import SaudeHistorico from "./SaudeHistorico";
 import UltimosErros from "./UltimosErros";
-import { buscarContextoIA } from "@/lib/fetch-contexto-ia";
+import { buscarContextoIA, sanitizarTexto } from "@/lib/fetch-contexto-ia";
 
 // Aba Sistema: a saúde dos sites em 30 dias, as IAs que trabalham para a NEXIA, os fornecedores (serviços grátis que usamos) e os robôs.
 const COR: Record<Situacao, Cor> = { ok: "verde", erro: "vermelho", desligado: "cinza" };
@@ -21,16 +21,41 @@ const URLS_CONTEXTO = [
 
 // Remove chaves e segredos do texto. Pode ser usado como extra sanitização.
 export function limparChaves(texto: string): string {
-  // Remove blocos PEM completos (de BEGIN até END)
-  const textoSemPEM = texto.replace(/-----BEGIN[^\n]+[\s\S]*?-----END[^\n]+/g, "[oculto]");
+  if (!texto) return "";
   
-  return textoSemPEM
-    .replace(/sk-[A-Za-z0-9]+/g, "[oculto]")
-    .replace(/AIza[A-Za-z0-9_-]+/g, "[oculto]")
-    .replace(/ghp_[A-Za-z0-9]+/g, "[oculto]");
+  // Lista unificada de padrões de chaves e segredos sensíveis
+  const PADROES = [
+    // Chaves API
+    { regex: /sk-[A-Za-z0-9]+/g, nome: "OpenAI API Key" },
+    { regex: /AIza[A-Za-z0-9_-]+/g, nome: "Google API Key" },
+    { regex: /ghp_[A-Za-z0-9]+/g, nome: "GitHub Personal Access Token" },
+    { regex: /AKIA[0-9A-Z]{16}/g, nome: "AWS Access Key" },
+    { regex: /xox[baprs]-[A-Za-z0-9-]+/g, nome: "Slack Token" },
+    { regex: /SG\.[A-Za-z0-9_-]+/g, nome: "SendGrid API Key" },
+    { regex: /SK\.[A-Za-z0-9_-]+/g, nome: "SendGrid Web API Key" },
+    { regex: /glpat-[A-Za-z0-9_-]{20}/g, nome: "GitLab Personal Access Token" },
+    { regex: /eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*/g, nome: "JWT Token" },
+    // Blocos PEM/PGP (chaves SSL, PGP, etc.)
+    { regex: /-----BEGIN[^\n]+[\s\S]*?-----END[^\n]+/g, nome: "PEM/PGP Key Block" },
+    { regex: /-----BEGIN[^\n]+/g, nome: "PEM/PGP Key Start" },
+    { regex: /-----END[^\n]+/g, nome: "PEM/PGP Key End" },
+  ];
+  
+  let textoLimpo = texto;
+  
+  // Aplica cada regex substituindo por '[oculto]'
+  PADROES.forEach(({ regex }) => {
+    textoLimpo = textoLimpo.replace(regex, "[oculto]");
+  });
+  
+  return textoLimpo;
 }
 
+// Estilo dos links (mesmo visual do botão) para abrir outra IA em outra aba.
+const LINK = "inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2 text-sm min-h-[40px] border border-nexia-border bg-nexia-surface2 text-white hover:opacity-90 transition-opacity";
+
 // Verifica se sobrou algum padrão de chave no texto (após sanitização).
+// Focado apenas nos padrões críticos mencionados no pedido original
 const TEM_CHAVE = /sk-[A-Za-z0-9]+|AIza[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|-----BEGIN/;
 
 export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<Parte, string>> }) {
@@ -46,8 +71,10 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
     setCarregandoIA(true);
     try {
       // Usa a função já existente que faz fetch + sanitização
-      const contextoBruto = await buscarContextoIA();
-      const contextoLimpo = limparChaves(contextoBruto);
+      const contextoBruto = await buscarContextoComFallback();
+      // Aplica sanitização dupla: primeiro a função do fetch-contexto-ia.ts, depois nossa limpeza extra
+      const contextoSanitizado = sanitizarTexto(contextoBruto);
+      const contextoLimpo = limparChaves(contextoSanitizado);
       
       const fila = d.cortex?.naFila ?? 0;
       const rodando = d.cortex?.fazendo?.length ?? 0;
@@ -74,10 +101,19 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
         }
       }
       
-      if (final.includes("Cortex") && !TEM_CHAVE.test(final)) {
+      // Segurança: o alerta de sucesso só sai quando o texto tem o contexto do Cortex e nenhuma chave sobrou.
+      const temCortex = final.includes("Cortex");
+      const temChaves = TEM_CHAVE.test(final);
+
+      if (temCortex && !temChaves) {
         window.alert("Contexto copiado. Cole na conversa da outra IA.");
       } else {
         window.alert("Não copiei por segurança: o texto não tem o contexto do Cortex ou ainda esconde alguma chave.");
+        console.warn("Falha na checagem de segurança:", {
+          temCortex,
+          temChaves,
+          tamanhoFinal: final.length
+        });
       }
     } catch (e) {
       window.alert(`Não consegui copiar o contexto: ${(e as Error).message}`);
@@ -85,6 +121,24 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
       setCarregandoIA(false);
     }
   };
+  // Lê o arquivo de contexto do repositório. Usa o serviço da Central e, se ele falhar,
+  // tenta as URLs conhecidas do próprio projeto (ramo develop e ramo main).
+  const buscarContextoComFallback = async (): Promise<string> => {
+    try {
+      return await buscarContextoIA();
+    } catch {
+      for (const url of URLS_CONTEXTO) {
+        try {
+          const resposta = await fetch(url);
+          if (resposta.ok) return await resposta.text();
+        } catch {
+          // tenta a próxima URL
+        }
+      }
+      throw new Error("Não consegui ler o arquivo de contexto do repositório.");
+    }
+  };
+
   const testar = async () => {
     setTestando(true); setErroIA(null);
     try { setIas((await agir<{ ias: TesteIA[] }>({ acao: "testar-ias" })).ias || []); } catch (e) { setErroIA((e as Error).message); }
@@ -155,12 +209,12 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
             {carregandoIA ? "Copiando…" : "📋 Copiar contexto"}
           </Botao>
           <div className="flex flex-wrap gap-2">
-            <Botao href="https://gemini.google.com">Abrir Gemini</Botao>
-            <Botao href="https://chat.openai.com">Abrir ChatGPT</Botao>
-            <Botao href="https://claude.ai">Abrir Claude</Botao>
+            <a className={LINK} href="https://gemini.google.com" target="_blank" rel="noopener noreferrer">Abrir Gemini</a>
+            <a className={LINK} href="https://chat.openai.com" target="_blank" rel="noopener noreferrer">Abrir ChatGPT</a>
+            <a className={LINK} href="https://claude.ai" target="_blank" rel="noopener noreferrer">Abrir Claude</a>
           </div>
           {contextoIA && (
-            <p className="text-xs text-nexia-muted" role="status">Contexto pronto: {contextoIA.length} caracteres. Agora é só colar na conversa.</p>
+            <p className="text-xs text-nexia-muted" role="status" aria-live="polite">Contexto pronto: {contextoIA.length} caracteres. Agora é só colar na conversa.</p>
           )}
         </div>
       </Cartao>
