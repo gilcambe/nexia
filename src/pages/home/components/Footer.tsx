@@ -81,9 +81,9 @@ export default function Footer({ client }: FooterProps) {
         <div className="border-t border-nexia-border pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <span className="text-[11px] text-nexia-muted">© 2026 NEXIA OS · Todos os direitos reservados · LGPD Compliant</span>
           <div className="flex items-center gap-3">
-            {client.madeWithKernexLink && (
+            {madeWithKernexLink && (
               <a
-                href={client.madeWithKernexLink}
+                href={madeWithKernexLink}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="made-with-kernex"
