@@ -71,8 +71,6 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
       const travadas = d.cortex?.travadas?.length ?? 0;
       const final = `${contextoLimpo}\n\nConexão: Filas: ${fila} | Rodando: ${rodando} | Travadas: ${travadas}`;
       
-      setContextoIA(final);
-      
       // Implementa cópia para clipboard com fallback
       try {
         await navigator.clipboard.writeText(final);
@@ -96,6 +94,8 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
       const temChaves = TEM_CHAVE.test(final);
 
       if (temCortex && !temChaves) {
+        // Só marca o contexto como pronto quando o texto passou na checagem de segurança.
+        setContextoIA(final);
         window.alert("Contexto copiado. Cole na conversa da outra IA.");
       } else {
         window.alert("Não copiei por segurança: o texto não tem o contexto do Cortex ou ainda esconde alguma chave.");
