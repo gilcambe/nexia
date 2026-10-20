@@ -23,13 +23,12 @@ const URLS_CONTEXTO = [
 export function limparChaves(texto: string): string {
   if (!texto) return "";
   
-  // Lista unificada de padrões de chaves e segredos sensíveis
-  // Só estes 4 padrões, como combinado. Nenhum outro é removido.
+  // Padrões de chaves e segredos sensíveis (apenas os 4 do pedido)
   const PADROES = [
-    /sk-[A-Za-z0-9]+/g,
-    /AIza[A-Za-z0-9_-]+/g,
-    /ghp_[A-Za-z0-9]+/g,
-    /-----BEGIN[^\n]+/g,
+    { regex: /sk-[A-Za-z0-9]+/g, nome: "OpenAI API Key" },
+    { regex: /AIza[A-Za-z0-9_-]+/g, nome: "Google API Key" },
+    { regex: /ghp_[A-Za-z0-9]+/g, nome: "GitHub Personal Access Token" },
+    { regex: /-----BEGIN[^\n]+/g, nome: "PEM/PGP Key Start" },
   ];
   
   let textoLimpo = texto;
