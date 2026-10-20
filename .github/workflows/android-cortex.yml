@@ -88,7 +88,15 @@ jobs:
           <main><h1>Cortex</h1><p style="color:#666;font-size:12px">Versão ${{ github.run_number }}</p><p style="color:#aaa">Toque no botão e instale. Se o celular pedir, permita instalar deste site.</p>
           <a href="cortex.apk" style="display:inline-block;background:#00d4aa;color:#000;font-weight:800;padding:18px 36px;border-radius:999px;text-decoration:none;font-size:20px">Baixar o app Cortex</a></main></body></html>
           HTML
+      # #806: guarda o deploy que está no ar antes, para voltar a ele se o novo não responder.
+      - name: Guardar o deploy anterior
+        id: antes
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/pages-volta.js antes nexiacortex
       - name: Publicar
+        id: publicar
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
@@ -96,4 +104,11 @@ jobs:
           npx -y wrangler@3 pages project create nexiacortex --production-branch main >/dev/null 2>&1 || true
           npx -y wrangler@3 pages deploy site --project-name nexiacortex --branch main
           SUB=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/pages/projects/nexiacortex" | jq -r '.result.subdomain')
+          echo "sub=$SUB" >> "$GITHUB_OUTPUT"
           echo "### Baixe o app: https://$SUB/cortex.apk" >> "$GITHUB_STEP_SUMMARY"
+      - name: Teste do site no ar (se falhar, volta para o deploy anterior)
+        if: steps.publicar.outputs.sub != '' && steps.publicar.outputs.sub != 'null'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: node scripts/pages-volta.js conferir nexiacortex "https://${{ steps.publicar.outputs.sub }}/" "${{ steps.antes.outputs.anterior }}"

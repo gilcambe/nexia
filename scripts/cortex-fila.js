@@ -133,7 +133,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
         acoes.push({ tipo: 'dividir', numero: i.number, titulo: i.title || '', tarefa: String(i.body || '').trim(), limpar: true, tentativa: t }); continue;
       }
       acoes.push(t >= MAX_TENTATIVAS
-        ? { tipo: 'travar', numero: i.number, tentativas: t, run: run.id }
+        ? { tipo: 'travar', numero: i.number, tentativas: t, run: run.id, titulo: String(i.title || '') }
         : { tipo: 'reenfileirar', numero: i.number, tentativa: t, run: run.id, conclusao: run.conclusion });
       continue;
     }
@@ -290,11 +290,13 @@ async function executar(token, acao, dividir) {
       await comentar(travar
         ? `${k} rodadas terminaram sem entregar o código (${alvo}). Travei para não abrir mais rascunhos repetidos; precisa de olhar humano.`
         : `A rodada terminou sem erro, mas não achei o código entregue (${alvo}). Não marquei como feita; volta para a fila (${k}/${MAX_SEM_ENTREGA}).`);
+      if (travar) await avisarDono('travado', n, acao.titulo);
       return;
     }
     await delLabel(L.rodando); await limparPistas(); await addLabel(L.feito);
     await comentar(`Concluída pelo Cortex: https://github.com/${REPO}/actions/runs/${acao.run}`);
     await gh(token, 'PATCH', `/issues/${n}`, { state: 'closed', state_reason: 'completed' });
+    await avisarDono('feito', n, acao.titulo);
   } else if (acao.tipo === 'reenfileirar') {
     await delLabel(L.rodando); await limparPistas();
     for (const l of [`tentativa-${acao.tentativa - 1}`]) if (acao.tentativa > 1) await delLabel(l);
@@ -310,7 +312,43 @@ async function executar(token, acao, dividir) {
   } else if (acao.tipo === 'travar') {
     await delLabel(L.rodando); await limparPistas(); await addLabel(L.travado);
     await comentar(`Tarefa travada depois de ${acao.tentativas} tentativas (última: https://github.com/${REPO}/actions/runs/${acao.run}). Precisa de olhar humano.`);
+    await avisarDono('travado', n, acao.titulo);
   }
+}
+
+// #833: aviso no celular (Web Push) e e-mail grátis (Brevo, opcional) quando uma tarefa termina ou trava,
+// e resumo às 8h. Sem conta de serviço do Firebase ou sem aparelho assinado, não faz nada. CORTEX_AVISOS=0 desliga.
+function bancoDosAvisos() {
+  if (process.env.CORTEX_AVISOS === '0' || !(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || process.env.FIREBASE_SERVICE_ACCOUNT)) return null;
+  try { return require('../netlify/functions/firebase-init').db; } catch { return null; }
+}
+async function avisarDono(tipo, n, titulo) {
+  try {
+    const av = require('../netlify/functions/central/cortex-avisos');
+    const msg = av.linhaEvento(tipo, n, titulo);
+    const db = bancoDosAvisos();
+    if (db) await av.avisarPush(db, msg);
+    if (process.env.CORTEX_AVISOS !== '0') await av.avisarEmail(`${msg.titulo}: ${msg.corpo}`, `${msg.corpo}\nhttps://github.com/${REPO}/issues/${n}`);
+  } catch (e) { console.log(`aviso: ${e.message}`); }
+}
+async function resumoDiario(token, issues) {
+  try {
+    const db = bancoDosAvisos();
+    if (!db) return;
+    const av = require('../netlify/functions/central/cortex-avisos');
+    const d = await av.lerDoc(db);
+    const { mandar, dia } = av.horaDoResumo(Date.now(), d.resumoEm);
+    if (!mandar) return;
+    const desde = new Date(Date.now() - 864e5).toISOString();
+    const feitas = ((await gh(token, 'GET', `/issues?state=closed&labels=${L.feito}&since=${desde}&per_page=100`)).json || []).filter(i => !i.pull_request && i.closed_at >= desde);
+    const abertas = issues.filter(i => !i.pull_request && !nomes(i).includes(L.dividido));
+    const travadas = abertas.filter(i => nomes(i).includes(L.travado));
+    const texto = av.textoResumo({ feitas, travadas, naFila: abertas.length - travadas.length });
+    await av.ref(db).set({ resumoEm: dia }, { merge: true });
+    await av.avisarPush(db, { titulo: '☀️ Resumo do Cortex', corpo: texto, tag: 'cx-resumo' });
+    await av.avisarEmail('Resumo do Cortex', texto);
+    console.log(`resumo das 8h: ${texto}`);
+  } catch (e) { console.log(`resumo das 8h: ${e.message}`); }
 }
 
 // Token da GitHub App do NEXIA (pode abrir PR; o NEXIA_JOBS_TOKEN cria ramo e arquivo mas o GitHub recusa o PR).
@@ -452,6 +490,7 @@ async function main() {
   for (const a of acoes) { console.log(`${a.tipo} #${a.numero}${a.pista ? ` pista ${a.pista}` : ''}${a.tentativa ? ` tentativa ${a.tentativa}` : ''}`); await executar(token, a, dividir); }
   console.log(`${issues.length} na fila, ${acoes.length} ação(ões).`);
   try { await fecharRascunhosParados(token); } catch (e) { console.log(`rascunhos parados: ${e.message}`); }
+  await resumoDiario(token, issues);
   const ignoradas = issues.filter(i => !i.pull_request && !confiavel(i));
   if (ignoradas.length) console.log(`ignoradas (autor sem acesso): ${ignoradas.map(i => `#${i.number}`).join(', ')}`);
   if (!issues.length) {

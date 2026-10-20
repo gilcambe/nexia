@@ -1,6 +1,6 @@
 # Memória do Cortex - Decisões do Dono
 
-Este arquivo contém as decisões e regras fundamentais do projeto, lido a cada pedido para evitar repetir erros já corrigidos.
+Este arquivo contém as decisões e regras fundamentais do projeto. A lista que o Cortex lê a cada pedido fica em `nexia-ai/orchestrator/decisoes-dono.js` (o Worker não lê .md).
 
 ## Regras Fundamentais
 

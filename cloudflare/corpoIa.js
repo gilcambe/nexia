@@ -14,6 +14,8 @@ const VISTA = {
   lado: 'standing in strict side profile facing right, side view',
   costas: 'seen from behind, back view, facing away from the camera',
 };
+import cotas from '../lib/cotas.js';
+
 const CHAVE = /^(m|f)-(clara|media|morena|negra)-(magro|medio|alto)-(frente|lado|costas)$/;
 
 export async function corpoIa(request, env) {
@@ -21,6 +23,8 @@ export async function corpoIa(request, env) {
   const m = CHAVE.exec(chave);
   if (!m) return new Response('chave inválida', { status: 400 });
   if (!env.AI) return new Response('Workers AI indisponível', { status: 503 });
+  // #808: foto é opcional; perto de 80% dos neurônios grátis do dia, para até amanhã.
+  if (await cotas.freio(env, 'ia').catch(() => false)) return new Response('cota grátis do Workers AI perto do fim hoje; tente amanhã', { status: 503 });
   const [, s, p, n, v] = m;
   const prompt = `Wide full body shot, camera far away. Ultra realistic full length studio photograph of one adult ${SEXO[s]}, ${PELE[p]}, ${NIVEL[n]}, ${ROUPA[s]}, barefoot, `
     + `standing straight and relaxed with arms hanging slightly away from the body, ${VISTA[v]}. The whole body from the top of the head `
