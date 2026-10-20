@@ -10,6 +10,13 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   const { agir } = useCentral();
   const [msg, setMsg] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+  
+  const handlePostarAgora = async (horario: string, tema: string) => {
+    setOcupado(true); setMsg(null);
+    try { setMsg((await agir({ acao: "rodar", arquivo: "divulga.yml", horario, tema })).mensagem); } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
+  };
+  
+  const temasSemana = SEMANA.map((dia, idx) => ({ dia, tema: temaDoDia(dia) }));
   const rodar = async (corpo: Record<string, unknown>) => {
     setOcupado(true); setMsg(null);
     try { setMsg((await agir(corpo)).mensagem); } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
@@ -24,6 +31,21 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
           <Botao onClick={() => rodar({ acao: "rodar", arquivo: "divulga.yml", ensaio: true })} disabled={ocupado}>👀 Testar sem postar</Botao>
         </div>
         {msg && <p className="text-sm text-nexia-cyan" role="status">{msg}</p>}
+      </Cartao>
+
+      <Cartao titulo="Temas da semana">
+        <div className="divulga-themes">
+          {temasSemana.map((t, i) => (
+            <div key={i} className="tema-item">
+              <span>{t.dia}</span> – <span>{t.tema}</span>
+              <div className="horarios">
+                <button onClick={() => handlePostarAgora('07h15', t.tema)} disabled={ocupado}>Postar 07h15</button>
+                <button onClick={() => handlePostarAgora('12h15', t.tema)} disabled={ocupado}>Postar 12h15</button>
+                <button onClick={() => handlePostarAgora('19h15', t.tema)} disabled={ocupado}>Postar 19h15</button>
+              </div>
+            </div>
+          ))}
+        </div>
       </Cartao>
 
       {!x ? <Carregando erro={erro} /> : (
