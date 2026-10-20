@@ -116,4 +116,29 @@ export default function Footer({ client }: FooterProps) {
       </div>
     </footer>
   );
+
+  // Estilos CSS para o selo "Feito com Kernex"
+  const style = document.createElement('style');
+  style.textContent = `
+    .made-with-kernex {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 8px;
+      background-color: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #22c55e;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    
+    .made-with-kernex:hover {
+      background-color: rgba(34, 197, 94, 0.15);
+      border-color: rgba(34, 197, 94, 0.3);
+      color: #16a34a;
+    }
+  `;
+  document.head.appendChild(style);
 }
