@@ -38,8 +38,8 @@ if (!fs.existsSync(midiaPath)) {
 try {
   const { execSync } = require('child_process');
   // Usa caminho absoluto para o git log sem mudar o diretório de trabalho
-  const gitLog = execSync('git log --oneline -n 5', { 
-    encoding: 'utf8', 
+  const gitLog = execSync('git log --oneline -n 5', {
+    encoding: 'utf8',
     cwd: dadosPath,
     timeout: 10000
   });
