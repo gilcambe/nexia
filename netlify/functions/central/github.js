@@ -103,7 +103,72 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     return montarReservas(repo, prod, semCota);
   }
 
-  return { cortex, robos, rodar, pedirAoCortex, divulga, reservas, temToken: !!token };
+  async function salvarDadosMeta(dados) {
+    const hoje = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const caminhoArquivo = `divulga-dados/divulga-${hoje}.json`;
+    
+    // Estrutura dos dados a serem salvos
+    const dadosEstruturados = {
+      data: hoje,
+      seguidores: dados.seguidores || 0,
+      alcance: dados.alcance || 0,
+      curtidas: dados.curtidas || 0,
+      melhorHorario: dados.melhorHorario || null,
+      tema: dados.tema || null,
+      timestamp: new Date().toISOString()
+    };
+    
+    try {
+      // Tenta ler o arquivo existente primeiro
+      const arquivoExistente = await fetch(`https://raw.githubusercontent.com/${REPO}/develop/${caminhoArquivo}`, {
+        headers: { 'User-Agent': 'nexia-central' }
+      });
+      
+      if (arquivoExistente.ok) {
+        // Se o arquivo existir, atualiza os dados
+        const dadosAtuais = await arquivoExistente.json();
+        // Mantém apenas os dados mais recentes do dia
+        dadosEstruturados.dadosDoDia = dadosEstruturados;
+        delete dadosEstruturados.data; // Remove data do objeto principal
+        
+        // Atualiza o arquivo existente
+        await fetch(`https://api.github.com/repos/${REPO}/contents/${caminhoArquivo}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json',
+            'Accept': 'application/vnd.github.v3+json'
+          },
+          body: JSON.stringify({
+            message: `Atualizar dados da Meta para ${hoje}`,
+            content: Buffer.from(JSON.stringify(dadosEstruturados, null, 2)).toString('base64'),
+            sha: (await arquivoExistente.json()).sha
+          })
+        });
+      } else {
+        // Se o arquivo não existir, cria um novo
+        await fetch(`https://api.github.com/repos/${REPO}/contents/${caminhoArquivo}`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json',
+            'Accept': 'application/vnd.github.v3+json'
+          },
+          body: JSON.stringify({
+            message: `Criar arquivo de dados da Meta para ${hoje}`,
+            content: Buffer.from(JSON.stringify(dadosEstruturados, null, 2)).toString('base64')
+          })
+        });
+      }
+      
+      return { sucesso: true, arquivo: caminhoArquivo };
+    } catch (error) {
+      console.error('Erro ao salvar dados da Meta:', error);
+      return { sucesso: false, erro: error.message };
+    }
+  }
+
+  return { cortex, robos, rodar, pedirAoCortex, divulga, reservas, salvarDadosMeta, temToken: !!token };
 }
 
 module.exports = { criarGithub, REPO, RESERVAS, montarReservas };
