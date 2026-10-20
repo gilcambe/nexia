@@ -11,25 +11,73 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   const [msg, setMsg] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
   const [weekly, setWeekly] = useState<any[]>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [toggleDisabled, setToggleDisabled] = useState(false);
   
   useEffect(() => {
+    setLoading(true);
+    setError(null);
+    
     fetch('/.netlify/functions/central/github?action=getWeekly')
-      .then(r => r.json())
-      .then(setWeekly)
-      .catch(console.error);
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Erro na API: ${response.status}`);
+        }
+        const data = await response.json();
+        
+        // Validação dos dados retornados
+        if (!Array.isArray(data)) {
+          throw new Error('Formato de dados inválido: esperado um array');
+        }
+        
+        // Validação de cada item
+        const validData = data.filter(item => 
+          item && 
+          typeof item === 'object' && 
+          'day' in item && 
+          'done' in item
+        );
+        
+        if (validData.length !== data.length) {
+          console.warn('Alguns itens da lista semanal foram filtrados por dados inválidos');
+        }
+        
+        setWeekly(validData);
+      })
+      .catch(err => {
+        console.error('Erro ao buscar lista semanal:', err);
+        setError(err.message || 'Falha ao carregar lista semanal');
+        setWeekly([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
   
   const handleToggle = async (index: number) => {
-    if (!weekly) return;
+    if (!weekly || toggleDisabled) return;
     
-    const novoWeekly = [...weekly];
-    novoWeekly[index] = { ...novoWeekly[index], done: !novoWeekly[index].done };
-    setWeekly(novoWeekly);
+    // Debounce simples para evitar múltiplos cliques rápidos
+    setToggleDisabled(true);
     
     try {
+      const novoWeekly = [...weekly];
+      novoWeekly[index] = { ...novoWeekly[index], done: !novoWeekly[index].done };
+      setWeekly(novoWeekly);
+      
       await agir({ acao: 'toggle', index, done: novoWeekly[index].done });
     } catch (e) {
       console.error('Erro ao atualizar status:', e);
+      // Reverter mudança em caso de erro
+      const response = await fetch('/.netlify/functions/central/github?action=getWeekly');
+      if (response.ok) {
+        const freshData = await response.json();
+        setWeekly(freshData);
+      }
+    } finally {
+      // Timeout para debounce
+      setTimeout(() => setToggleDisabled(false), 500);
     }
   };
   const rodar = async (corpo: Record<string, unknown>) => {
@@ -80,14 +128,27 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
         <Botao href="https://search.google.com/search-console">Ver visitas no Google</Botao>
       </Cartao>
 
-      {weekly && (
+      {loading ? (
+        <Cartao titulo="Lista Semanal">
+          <div className="flex items-center justify-center py-4">
+            <Carregando texto="Carregando lista..." />
+          </div>
+        </Cartao>
+      ) : error ? (
+        <Cartao titulo="Lista Semanal">
+          <div className="text-center py-4">
+            <p className="text-red-500 text-sm mb-2">{error}</p>
+            <Botao onClick={() => window.location.reload()} tipo="forte">Tentar novamente</Botao>
+          </div>
+        </Cartao>
+      ) : weekly && weekly.length > 0 ? (
         <Cartao titulo="Lista Semanal">
           <p className="text-sm text-nexia-muted">Clique para marcar como feito/nãofeito. Salvo automaticamente.</p>
           <div className="grid grid-cols-1 gap-2">
             {weekly.map((d, i) => (
               <div 
-                key={i} 
-                className={`daily-box ${d.done ? 'bg-green-50' : 'bg-nexia-surface2'} p-3 rounded-lg cursor-pointer flex justify-between items-center`}
+                key={d.day || i} // Usa o day como chave única, ou fallback para índice
+                className={`daily-box ${d.done ? 'bg-green-50' : 'bg-nexia-surface2'} p-3 rounded-lg cursor-pointer flex justify-between items-center ${toggleDisabled ? 'opacity-70' : ''}`}
                 onClick={() => handleToggle(i)}
               >
                 <span>{d.day}</span>
@@ -96,7 +157,11 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
             ))}
           </div>
         </Cartao>
-      )}
+      ) : weekly && weekly.length === 0 ? (
+        <Cartao titulo="Lista Semanal">
+          <p className="text-sm text-nexia-muted">Nenhum item na lista. Aguarde a carga inicial ou tente novamente.</p>
+        </Cartao>
+      ) : null}
 
       <Cartao titulo="Robô de ofertas">
         <p className="text-sm text-nexia-muted">Busca ofertas fitness na Shopee e na Amazon e monta a vitrine.</p>
