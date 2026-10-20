@@ -17,6 +17,7 @@
     "test": "node --test tests/unit/*.test.js",
     "test:rules": "npx -y firebase-tools@13.35.1 emulators:exec --only auth,firestore --project demo-nexia \"node --test --test-concurrency=1 tests/integration/*.test.js\"",
     "test:e2e": "playwright test -c tests/e2e/playwright.config.js",
+    "test:e2e:no-ar": "playwright test -c tests/e2e/playwright.no-ar.config.js",
     "test:e2e:readdy": "playwright test -c tests/e2e/playwright.readdy.config.js; node tests/e2e/check-readdy-parity.js"
   },
   "dependencies": {

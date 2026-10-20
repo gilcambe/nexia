@@ -11,6 +11,7 @@ const { publicErrorBody } = require('../lib/safe-error');
 const { isStreamResult } = require('../lib/stream-response');
 const { TENANT_PAGES, resolveFunctionName } = require('../lib/routes');
 const { createTokenSource } = require('../lib/firebase-lite/google-auth');
+const rid = require('../lib/rid');
 
 const MAX_BODY_SIZE = 1 * 1024 * 1024;
 const VERSION = '60.0.0';
@@ -76,7 +77,7 @@ function streamBody(iterable) {
   });
 }
 
-async function runFunction(fnName, request, url, env, getFunction) {
+async function runFunction(fnName, request, url, env, getFunction, reqId) {
   const origin = corsOrigin(env, request.headers);
   const fn = fnName ? getFunction(fnName) : null;
   if (!fn || typeof fn.handler !== 'function') {
@@ -91,7 +92,9 @@ async function runFunction(fnName, request, url, env, getFunction) {
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-Id',
   };
   try {
-    const result = await fn.handler(toEvent(request, url, body), {});
+    const ev = toEvent(request, url, body);
+    if (reqId) ev.headers['x-request-id'] = reqId;
+    const result = await fn.handler(ev, {});
     const headers = { ...baseHeaders, ...((result && result.headers) || {}) };
     if (isStreamResult(result)) {
       return new Response(streamBody(result.stream), { status: result.statusCode || 200, headers: { ...headers, 'X-Accel-Buffering': 'no' } });
@@ -100,7 +103,8 @@ async function runFunction(fnName, request, url, env, getFunction) {
     const payload = result && result.body ? (result.isBase64Encoded ? Buffer.from(result.body, 'base64') : result.body) : null;
     return new Response(status === 204 || status === 304 ? null : payload, { status, headers });
   } catch (e) {
-    return json(500, publicErrorBody('FN ' + fnName, e), { 'Access-Control-Allow-Origin': origin });
+    rid.logJson('error', 'função falhou', { rid: reqId, fn: fnName, erro: String((e && e.message) || e).slice(0, 300) });
+    return json(500, { ...publicErrorBody('FN ' + fnName, e), rid: reqId }, { 'Access-Control-Allow-Origin': origin });
   }
 }
 
@@ -246,7 +250,34 @@ async function serveStatic(request, url, env) {
  * @param {Record<string, any>} env  vars, secrets e o binding ASSETS do Worker
  * @param {{ getFunction: (name: string) => any }} deps
  */
-async function handleRequest(request, env, { getFunction }) {
+async function handleRequest(request, env, deps) {
+  // #815: um rid por pedido, devolvido em X-Request-Id; erro 5xx vira log JSON e vai para "últimos erros" da Central.
+  const reqId = rid.ridDe(request.headers.get('x-request-id'));
+  let resp = await atender(request, env, deps, reqId);
+  try { resp.headers.set('X-Request-Id', reqId); } catch {
+    resp = new Response(resp.body, { status: resp.status, statusText: resp.statusText, headers: new Headers(resp.headers) });
+    resp.headers.set('X-Request-Id', reqId);
+  }
+  if (resp.status >= 500) {
+    const rota = new URL(request.url).pathname;
+    rid.logJson('error', 'resposta ' + resp.status, { rid: reqId, rota, metodo: request.method, codigo: resp.status });
+    const guardar = deps.guardarErro || guardarErroPadrao;
+    await Promise.race([
+      Promise.resolve().then(() => guardar(env, { rid: reqId, rota, metodo: request.method, codigo: resp.status, msg: 'resposta ' + resp.status })).catch(() => false),
+      new Promise((r) => setTimeout(r, 1500)),
+    ]);
+  }
+  return resp;
+}
+
+// Grava só se o Worker tem banco (chave de serviço ou D1); nos testes e sem chave, não faz nada.
+async function guardarErroPadrao(env, item) {
+  if (!env || !(env.FIREBASE_SERVICE_ACCOUNT_BASE64 || (env.NEXIA_D1_TOKEN && env.NEXIA_D1_ACCOUNT_ID))) return false;
+  const db = require('../netlify/functions/central/saude-historico.js').abrirBanco(process.env);
+  return rid.guardarErro(db, item);
+}
+
+async function atender(request, env, { getFunction }, reqId) {
   populateProcessEnv(env);
   const url = new URL(request.url);
   const pathname = url.pathname.replace(/\/\/+/g, '/').replace(/(.+)\/$/, '$1') || '/';
@@ -273,7 +304,7 @@ async function handleRequest(request, env, { getFunction }) {
   if (pathname === '/__/firebase/init.json' || pathname.startsWith('/__/auth/')) return proxyAuth(request, url);
   if (pathname === '/api/firebase-config') return firebaseConfig(env, undefined, request);
   if (pathname.startsWith('/api/') || pathname.startsWith('/.netlify/functions/')) {
-    return runFunction(resolveFunctionName(pathname), request, url, env, getFunction);
+    return runFunction(resolveFunctionName(pathname), request, url, env, getFunction, reqId);
   }
   return serveStatic(request, url, env);
 }
