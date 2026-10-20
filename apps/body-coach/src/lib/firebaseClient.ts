@@ -26,7 +26,7 @@ function cfgGuardada(): FirebaseOptions | null {
   } catch { return null; }
 }
 
-async function loadConfig(): Promise<FirebaseOptions | null> {
+async function buscarConfigNaRede(): Promise<FirebaseOptions | null> {
   try {
     const res = await fetch(`${API_BASE}/api/firebase-config`, { headers: { Accept: 'application/json' } });
     if (!res.ok) return cfgGuardada();
@@ -41,6 +41,16 @@ async function loadConfig(): Promise<FirebaseOptions | null> {
   } catch {
     return cfgGuardada(); // sem internet: usa a da última vez
   }
+}
+
+// #811: login instantâneo. Com a config guardada no aparelho, o app abre na hora (o login salvo no
+// IndexedDB do Firebase volta sem esperar o Worker) e a rede só atualiza a config para a próxima vez.
+// Sem config guardada (1ª vez), espera a rede como antes.
+async function loadConfig(): Promise<FirebaseOptions | null> {
+  const guardada = cfgGuardada();
+  const rede = buscarConfigNaRede();
+  if (guardada) { rede.catch(() => null); return guardada; }
+  return rede;
 }
 
 // Dados do Firestore guardados no aparelho (abre com os dados de hoje sem rede e atualiza depois).
@@ -64,7 +74,7 @@ export function getFirebase(): Promise<FirebaseHandles | null> {
         return null;
       }
       const app = getApps().find((a) => a.name === 'body-coach') ?? initializeApp(cfg, 'body-coach');
-      const auth = getAuth(app);
+      const auth = getAuth(app); // no navegador o getAuth já guarda o login no IndexedDB (cai para localStorage)
       const db = abrirFirestore(app);
       // Só em testes locais (build com VITE_BODYCOACH_EMULATORS=1): usa o Firebase Emulator.
       // Builds de produção nunca definem essa variável.

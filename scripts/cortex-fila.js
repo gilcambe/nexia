@@ -66,11 +66,17 @@ async function entregouPr(token, titulo, runId) {
       && [...palavras(pr.title)].filter(w => alvo.has(w)).length >= 2);
   } catch { return true; }
 }
-async function entregouAlgo(token, corpo, titulo, runId) {
+// #852: arquivo que já existia na develop só conta se teve commit na develop depois do início da tarefa (`desde`).
+async function entregouAlgo(token, corpo, titulo, runId, desde) {
   const caminhos = caminhosDoPedido(corpo);
   if (!caminhos.length) return titulo && runId ? entregouPr(token, titulo, runId) : true;
   try {
-    for (const c of caminhos.slice(0, 6)) if ((await gh(token, 'GET', `/contents/${c}?ref=develop`)).status === 200) return true;
+    for (const c of caminhos.slice(0, 6)) {
+      if ((await gh(token, 'GET', `/contents/${c}?ref=develop`)).status !== 200) continue;
+      if (!desde) return true;
+      const cs = (await gh(token, 'GET', `/commits?sha=develop&path=${encodeURIComponent(c)}&since=${encodeURIComponent(desde)}&per_page=1`)).json;
+      if (Array.isArray(cs) && cs.length > 0) return true;
+    }
     const prs = (await gh(token, 'GET', '/pulls?state=open&per_page=30')).json || [];
     for (const pr of prs.filter(x => /^nexia\//.test((x.head || {}).ref || ''))) {
       const fs = (await gh(token, 'GET', `/pulls/${pr.number}/files?per_page=100`)).json || [];
@@ -104,7 +110,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
     const run = ultimaRun(i.number);
     const pista = numeroDe(ls, 'pista');
     if (run && run.status === 'completed') {
-      if (run.conclusion === 'success') { acoes.push({ tipo: 'concluir', numero: i.number, run: run.id, corpo: String(i.body || ''), titulo: String(i.title || '') }); continue; }
+      if (run.conclusion === 'success') { acoes.push({ tipo: 'concluir', numero: i.number, run: run.id, corpo: String(i.body || ''), titulo: String(i.title || ''), desde: i.created_at || null }); continue; }
       if (run.cota) { acoes.push({ tipo: 'reenfileirar', numero: i.number, tentativa: numeroDe(ls, 'tentativa'), run: run.id, conclusao: 'cota do banco' }); continue; }
       const t = numeroDe(ls, 'tentativa') + 1;
       // Falhou 3 vezes inteira: o modelo grátis não dá conta do tamanho. Divide em partes pequenas em vez de repetir até travar.
@@ -259,7 +265,7 @@ async function executar(token, acao, dividir) {
     });
     if (d.status !== 204) { await delLabel(L.rodando); await comentar(`Não consegui disparar o Cortex (${d.status}). Tento de novo no próximo ciclo.`); }
   } else if (acao.tipo === 'concluir') {
-    if (!(await entregouAlgo(token, acao.corpo, acao.titulo, acao.run))) {
+    if (!(await entregouAlgo(token, acao.corpo, acao.titulo, acao.run, acao.desde))) {
       const ls = nomes((await gh(token, 'GET', `/issues/${n}`)).json || {});
       const { n: k, travar } = depoisSemEntrega(ls);
       await delLabel(L.rodando); await limparPistas();
@@ -480,5 +486,5 @@ async function main() {
   }
 }
 
-module.exports = { corrigirCiDosPrs, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
+module.exports = { corrigirCiDosPrs, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });

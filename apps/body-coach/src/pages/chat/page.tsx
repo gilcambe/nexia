@@ -60,6 +60,7 @@ export default function Chat() {
   const fim = useRef<HTMLDivElement>(null);
   const [params] = useSearchParams();
   const comParam = params.get('com');
+  const textoParam = params.get('texto'); // mensagem pronta vinda de "Quem precisa de atenção hoje"
   const nome = profile?.nickname || profile?.full_name || user?.email?.split('@')[0] || 'Aluno';
 
   const carregarContatos = useCallback(async () => {
@@ -69,12 +70,13 @@ export default function Chat() {
       // veio de "Meus alunos" ou "Minha equipe" (?com=uid): já abre a conversa com essa pessoa
       const pedido = comParam ? r.contatos.find((c) => c.uid === comParam) : undefined;
       if (pedido) setAberto((a) => a ?? pedido);
+      if (pedido && textoParam) setTexto((t) => t || textoParam.slice(0, 1500));
       if (r.papel === 'aluno' && r.contatos[0]) setAberto((a) => a ?? r.contatos[0]);
     } catch (e) {
       const m = (e as Error).message;
       if (/escolha se você/i.test(m)) setPapel(null); else { setPapel(null); setErro(m); }
     }
-  }, [comParam]);
+  }, [comParam, textoParam]);
   useEffect(() => {
     if (!user) return;
     let vivo = true;
