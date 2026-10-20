@@ -239,6 +239,22 @@
       "credit": "Chris McKenna (CC BY-SA 4.0, via Wikimedia Commons)",
       "provider": "wikimedia"
     },
+    "s3.g0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/HK_%E4%B8%8A%E7%92%B0_Sheung_Wan_%E5%A4%AA%E5%B9%B3%E5%B1%B1%E8%A1%97_Tai_Ping_Shan_Street_Joyce_-_event_party_kitchen_preparation_Jan-2012.jpg/1280px-HK_%E4%B8%8A%E7%92%B0_Sheung_Wan_%E5%A4%AA%E5%B9%B3%E5%B1%B1%E8%A1%97_Tai_Ping_Shan_Street_Joyce_-_event_party_kitchen_preparation_Jan-2012.jpg",
+      "width": 1280,
+      "height": 956,
+      "alt": "HK 上環 Sheung Wan 太平山街 Tai Ping Shan Street Joyce - event party kitchen preparati",
+      "credit": "HK 上環 Sheung Wan 太平山街 Tai Ping Shan Street Joyce - event party kitchen preparation Jan-2012 — Fungenix (BY-SA ",
+      "provider": "openverse"
+    },
+    "s3.g1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/David_Chalmers_at_Singularity_Summit_09_pre-event_party.jpg/1280px-David_Chalmers_at_Singularity_Summit_09_pre-event_party.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "David Chalmers at Singularity Summit 09 pre-event party",
+      "credit": "David Chalmers at Singularity Summit 09 pre-event party — David Orban (BY 2.0, via Openverse)",
+      "provider": "openverse"
+    },
     "s3.g2": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Sir_Tom_Jones_at_The_Queen%27s_Birthday_Party_%28cropped%29.jpg",
       "width": 1500,
@@ -261,22 +277,6 @@
       "height": 876,
       "alt": "Cocktail Party At The Imperial Hotel March 13, 1961 (Tokyo, Japan) (496610682)",
       "credit": "Cocktail Party At The Imperial Hotel March 13, 1961 (Tokyo, Japan) (496610682) — takomabibelot (BY 2.0, via Op",
-      "provider": "openverse"
-    },
-    "s3.g0": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/HK_%E4%B8%8A%E7%92%B0_Sheung_Wan_%E5%A4%AA%E5%B9%B3%E5%B1%B1%E8%A1%97_Tai_Ping_Shan_Street_Joyce_-_event_party_kitchen_preparation_Jan-2012.jpg/1280px-HK_%E4%B8%8A%E7%92%B0_Sheung_Wan_%E5%A4%AA%E5%B9%B3%E5%B1%B1%E8%A1%97_Tai_Ping_Shan_Street_Joyce_-_event_party_kitchen_preparation_Jan-2012.jpg",
-      "width": 1280,
-      "height": 956,
-      "alt": "HK 上環 Sheung Wan 太平山街 Tai Ping Shan Street Joyce - event party kitchen preparati",
-      "credit": "HK 上環 Sheung Wan 太平山街 Tai Ping Shan Street Joyce - event party kitchen preparation Jan-2012 — Fungenix (BY-SA ",
-      "provider": "openverse"
-    },
-    "s3.g1": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/David_Chalmers_at_Singularity_Summit_09_pre-event_party.jpg/1280px-David_Chalmers_at_Singularity_Summit_09_pre-event_party.jpg",
-      "width": 1280,
-      "height": 960,
-      "alt": "David Chalmers at Singularity Summit 09 pre-event party",
-      "credit": "David Chalmers at Singularity Summit 09 pre-event party — David Orban (BY 2.0, via Openverse)",
       "provider": "openverse"
     },
     "s3.g5": {
