@@ -1,0 +1,347 @@
+{
+  "spec": {
+    "kind": "site",
+    "name": "Splash Eventos",
+    "tagline": "Transformando momentos em experiências inesquecíveis",
+    "photo_theme": "event planning",
+    "description": "Agência premium de organização de eventos corporativos, sociais e personalizados com excelência e criatividade.",
+    "folder": "clientes/splash",
+    "fonts": {
+      "heading": "Playfair Display",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2a5a7e",
+      "accent": "#e63946",
+      "bg": "#f8f9fa",
+      "surface": "#ffffff",
+      "text": "#212529",
+      "muted": "#616971",
+      "dark": "#0d1b2a"
+    },
+    "style": "elegant",
+    "contact": {
+      "whatsapp": "5511999998888",
+      "phone": "(11) 99999-8888",
+      "email": "contato@splasheventos.com.br",
+      "address": "Av. Paulista, 1000",
+      "city": "São Paulo - SP",
+      "hours": "Seg a Dom, 8h às 22h",
+      "instagram": "splasheventos",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=splash&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "sections": [
+      {
+        "type": "hero",
+        "id": "transformamos-momentos-em-experiencias-i",
+        "title": "Transformamos momentos em experiências inesquecíveis",
+        "subtitle": "Eventos corporativos, sociais e personalizados com excelência e criatividade.",
+        "eyebrow": "Agência de Eventos Premium",
+        "cta": {
+          "label": "Solicitar orçamento",
+          "href": "contact"
+        },
+        "cta2": {
+          "label": "Ver serviços",
+          "href": "#servicos"
+        },
+        "image_query": "elegant event planning",
+        "video_query": ""
+      },
+      {
+        "type": "services",
+        "id": "servicos",
+        "title": "Nossos serviços",
+        "subtitle": "Soluções completas para o seu evento",
+        "items": [
+          {
+            "title": "Eventos Corporativos",
+            "text": "Team buildings, convenções e lançamentos de produtos.",
+            "price": "",
+            "image_query": "corporate event",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Casamentos",
+            "text": "Sonhos se tornando realidade com elegância e exclusividade.",
+            "price": "",
+            "image_query": "wedding event",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Festas de Aniversário",
+            "text": "Comemorações memoráveis para todas as idades.",
+            "price": "",
+            "image_query": "birthday party",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Eventos Sociais",
+            "text": "Encontros e confraternizações exclusivas.",
+            "price": "",
+            "image_query": "social gathering",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Decoração",
+            "text": "Ambientes temáticos e personalizados.",
+            "price": "",
+            "image_query": "event decoration",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          }
+        ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-a-splash-eventos",
+        "title": "Sobre a Splash Eventos",
+        "subtitle": "Há 15 anos criando experiências únicas e inesquecíveis.",
+        "text": "Há 15 anos criando experiências únicas e inesquecíveis.",
+        "image_query": "event planning team",
+        "stats": [
+          {
+            "value": "15",
+            "label": "anos de experiência"
+          },
+          {
+            "value": "500+",
+            "label": "eventos realizados"
+          },
+          {
+            "value": "2000+",
+            "label": "clientes satisfeitos"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "nossos-eventos",
+        "title": "Nossos eventos",
+        "subtitle": "",
+        "image_queries": [
+          "wedding reception",
+          "corporate conference",
+          "birthday party decoration",
+          "elegant dinner",
+          "event setup",
+          "guests celebrating"
+        ],
+        "gif_queries": []
+      },
+      {
+        "type": "video",
+        "id": "conheca-nosso-trabalho",
+        "title": "Conheça nosso trabalho",
+        "subtitle": "Um vídeo mostra mais que mil palavras.",
+        "youtube": "",
+        "video_query": "event planning montage"
+      },
+      {
+        "type": "testimonials",
+        "id": "depoimentos",
+        "title": "Depoimentos",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Ana L.",
+            "role": "",
+            "text": "O casamento dos sonhos, organizado perfeitamente!",
+            "rating": 5
+          },
+          {
+            "name": "Marcos S.",
+            "role": "",
+            "text": "Eventos corporativos que impressionam clientes e parceiros.",
+            "rating": 5
+          },
+          {
+            "name": "Carla M.",
+            "role": "",
+            "text": "Atendimento impecável e atenção aos detalhes.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "links",
+        "id": "links-uteis",
+        "title": "Links úteis",
+        "subtitle": "",
+        "items": [
+          {
+            "label": "Orçamento rápido",
+            "url": "https://wa.me/5511999998888",
+            "icon": "whatsapp"
+          },
+          {
+            "label": "Instagram",
+            "url": "https://instagram.com/splasheventos",
+            "icon": "instagram"
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "duvidas-frequentes",
+        "title": "Dúvidas frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Como faço para solicitar um orçamento?",
+            "a": "Envie suas informações pelo WhatsApp ou formulário de contato."
+          },
+          {
+            "q": "Trabalhamos com orçamento fixo?",
+            "a": "Sim, oferecemos pacotes com valores pré-definidos e personalizados."
+          },
+          {
+            "q": "Qual é o valor mínimo para contratar?",
+            "a": "A partir de R$ 5.000, dependendo do evento."
+          },
+          {
+            "q": "E se o evento for cancelado?",
+            "a": "Política de cancelamento descrita no contrato, com devolução parcial."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "pronto-para-criar-seu-evento",
+        "title": "Pronto para criar seu evento?",
+        "subtitle": "Entre em contato e vamos transformar sua ideia em realidade.",
+        "cta": {
+          "label": "Falar com um especialista",
+          "href": "contact"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "entre-em-contato",
+        "title": "Entre em contato",
+        "subtitle": "",
+        "map": true,
+        "form": true
+      }
+    ]
+  },
+  "media": {
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Hallenstadion_Zurich_Corporation_Event_June_2011.jpg/1280px-Hallenstadion_Zurich_Corporation_Event_June_2011.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "File:Hallenstadion Zurich Corporation Event June 2011.jpg",
+      "credit": "File:Hallenstadion Zurich Corporation Event June 2011.jpg — Christophorus77 (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/The_Special_Event_2015_Wedding_Gala.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 960,
+      "alt": "A major national event for the industry's top wedding and event planners.",
+      "credit": "BECMarketing (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item4": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/27/Mule_decoration_contest_at_the_National_Western_Stock_Show_in_the_Events_Center.jpg/1280px-Mule_decoration_contest_at_the_National_Western_Stock_Show_in_the_Events_Center.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 851,
+      "alt": "Mule decoration contest at the National Western Stock Show in the Events Center",
+      "credit": "Nathan Walker (CC BY 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g4": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d7/Parkrun_Katowice_route_map_sign_and_event_setup_in_Kosciuszko_Park.png/1280px-Parkrun_Katowice_route_map_sign_and_event_setup_in_Kosciuszko_Park.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Parkrun Katowice route map sign and event setup",
+      "credit": "Jonathan Deamer (CC BY 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s0.hero": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Gitikka_Ganju_Dhar_at_corporate_event.jpg/1280px-Gitikka_Ganju_Dhar_at_corporate_event.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "Gitikka Ganju Dhar at corporate event",
+      "credit": "Gitikka Ganju Dhar at corporate event — Gitikka ganju dhar (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s2.about": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Corporate_Events_and_Guests_at_PIBM.jpg/1280px-Corporate_Events_and_Guests_at_PIBM.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "Corporate Events and Guests at PIBM",
+      "credit": "Corporate Events and Guests at PIBM — AnnanyaSingh (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/42/Planning_of_the_Pan-American_Exposition%2C_1901.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 741,
+      "alt": "1901 photograph of the a planning stage of the Pan-American Exposition displayin",
+      "credit": "Unknown authorUnknown author (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item3": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/Nasarus_Event_Planning_and_Management.jpg/1280px-Nasarus_Event_Planning_and_Management.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1707,
+      "alt": "Implementing a coordinated effort to help Syrian refugees, Nasarus Events has ve",
+      "credit": "Rumplstiltskin1939 (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/00/Craftworld_Events_-_Event_Planning_company_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 960,
+      "alt": "Storefront of Craftworld Events",
+      "credit": "Craftworldevents (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/6/6a/JW_Marriott_Royal_Wedding_-_KYC_Event.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 800,
+      "alt": "JW Marriott, Mumbai Royal Wedding Scenes by KYC Events, a well known Event Manag",
+      "credit": "Gdaghfd (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g2": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cb/Event_decorations2.jpg/1280px-Event_decorations2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 853,
+      "alt": "Event decorations",
+      "credit": "Kenogenic (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g3": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/Event_management_66.jpg/1280px-Event_management_66.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1078,
+      "alt": "Decorations @ event centres",
+      "credit": "Kenogenic (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    }
+  }
+}
