@@ -61,17 +61,8 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
   const copiarContexto = async () => {
     setCarregandoIA(true);
     try {
-      // Busca diretamente a URL do repositório (como pedido no escopo)
-      const usuario = "gilcambe";
-      const repo = "nexia";
-      const url = `https://raw.githubusercontent.com/${usuario}/${repo}/main/docs/CONTEXTO-IA.md`;
-      
-      const resposta = await fetch(url);
-      if (!resposta.ok) {
-        throw new Error(`Não foi possível acessar o arquivo: ${resposta.status} ${resposta.statusText}`);
-      }
-      
-      const contextoBruto = await resposta.text();
+      // Lê o arquivo docs/CONTEXTO-IA.md do próprio repositório (URL definida no projeto, com fallback para os ramos conhecidos).
+      const contextoBruto = await buscarContextoComFallback();
       // Aplica sanitização dupla: primeiro a função do fetch-contexto-ia.ts, depois nossa limpeza extra
       const contextoSanitizado = sanitizarTexto(contextoBruto);
       const contextoLimpo = limparChaves(contextoSanitizado);
@@ -103,7 +94,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
       
       // Segurança: o alerta de sucesso só sai quando o texto tem o contexto do Cortex e nenhuma chave sobrou.
       const temCortex = final.includes("Cortex");
-      const temChaves = TEM_CHAVE.test(contextoLimpo);
+      const temChaves = TEM_CHAVE.test(final);
 
       if (temCortex && !temChaves) {
         window.alert("Contexto copiado. Cole na conversa da outra IA.");
