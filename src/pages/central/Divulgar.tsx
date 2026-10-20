@@ -45,6 +45,73 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   const [carregandoDados, setCarregandoDados] = useState(true);
   const [diasDisponiveis, setDiasDisponiveis] = useState(0);
   
+  // Busca dados históricos do backend
+  const buscarDadosHistoricos = async () => {
+    try {
+      const res = await fetch('/.netlify/functions/central/github', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'buscarHistorico' }),
+      });
+      const data = await res.json();
+      if (data.success && data.dados) {
+        setDadosHistoricos(data.dados);
+        setDiasDisponiveis(data.diasDisponiveis || 0);
+        
+        // Calcular melhor horário e tema
+        const melhor = calcularMelhorHorarioTema(data.dados);
+        setMelhorHorarioTema(melhor);
+      } else {
+        console.error('Erro ao buscar dados históricos:', data.message);
+      }
+    } catch (err) {
+      console.error('Falha ao buscar dados históricos:', err);
+    } finally {
+      setCarregandoDados(false);
+    }
+  };
+  
+  // Calcula o melhor horário e tema com base nos dados históricos
+  const calcularMelhorHorarioTema = (dados: DadosHistoricos[]): MelhorHorarioTema | null => {
+    if (!dados || dados.length === 0) return null;
+    
+    // Agrupar por horário e tema
+    const agrupado: Record<string, { totalEngajamento: number; contagem: number }> = {};
+    
+    dados.forEach(item => {
+      const chave = `${item.horario}-${item.tema}`;
+      if (!agrupado[chave]) {
+        agrupado[chave] = { totalEngajamento: 0, contagem: 0 };
+      }
+      agrupado[chave].totalEngajamento += item.engajamento;
+      agrupado[chave].contagem += 1;
+    });
+    
+    // Encontrar o melhor horário e tema pela média de engajamento
+    let melhorMedia = 0;
+    let melhorHorario = '';
+    let melhorTema = '';
+    
+    Object.entries(agrupado).forEach(([chave, dados]) => {
+      const media = dados.totalEngajamento / dados.contagem;
+      if (media > melhorMedia) {
+        melhorMedia = media;
+        [melhorHorario, melhorTema] = chave.split('-');
+      }
+    });
+    
+    return {
+      horario: melhorHorario,
+      tema: melhorTema,
+      engajamentoMedio: melhorMedia
+    };
+  };
+  
+  // Carrega dados quando o componente montar
+  useEffect(() => {
+    buscarDadosHistoricos();
+  }, []);
+  
   // Posta na hora: usado pelos botões 07h15, 12h15 e 19h15 de cada tema da semana.
   // Função implementada conforme solicitado no pedido.
   const handlePostarAgora = async (horario: string, tema: string) => {
@@ -83,6 +150,67 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
           <Botao onClick={() => rodar({ acao: "rodar", arquivo: "divulga.yml", ensaio: true })} disabled={ocupado}>👀 Testar sem postar</Botao>
         </div>
         {msg && <p className="text-sm text-nexia-cyan" role="status">{msg}</p>}
+      </Cartao>
+
+      {/* Gráfico de engajamento histórico */}
+      <Cartao titulo="Engajamento Histórico">
+        {carregandoDados ? (
+          <div className="flex items-center justify-center py-8">
+            <Carregando texto="Carregando dados de engajamento..." />
+          </div>
+        ) : dadosHistoricos.length > 0 ? (
+          <div className="space-y-4">
+            <div className="text-sm text-nexia-muted">
+              <p>Exibindo dados dos últimos {diasDisponiveis} dias{diasDisponiveis < 30 ? ' (dados limitados)' : ''}</p>
+              {melhorHorarioTema && (
+                <p className="text-nexia-cyan mt-2">
+                  🎯 Melhor horário: {melhorHorarioTema.horario} com tema "{melhorHorarioTema.tema}" 
+                  (média: {melhorHorarioTema.engajamentoMedio.toFixed(1)})
+                </p>
+              )}
+            </div>
+            <div className="h-64">
+              <Line 
+                data={{
+                  labels: dadosHistoricos.map(d => new Date(d.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })),
+                  datasets: [
+                    {
+                      label: 'Engajamento',
+                      data: dadosHistoricos.map(d => d.engajamento),
+                      borderColor: 'rgb(6, 182, 212)',
+                      backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                      tension: 0.4,
+                      fill: true
+                    }
+                  ]
+                }}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                      callbacks: {
+                        label: (context) => `Engajamento: ${context.parsed.y}`
+                      }
+                    }
+                  },
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                      grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    x: {
+                      grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    }
+                  }
+                }}
+              />
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-nexia-muted">Nenhum dado de engajamento disponível.</p>
+        )}
       </Cartao>
 
       <Cartao titulo="Temas da semana">
