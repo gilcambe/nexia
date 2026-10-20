@@ -202,8 +202,49 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     const pendentes = nomes.filter((n) => !feitos.has(n)).slice(0, 5);
     const proximos = (await Promise.all(pendentes.map((n) => lerRaw('develop', 'divulga/fila/' + n + '.json')))).map((p, k) => ({ id: pendentes[k], texto: String((p && (p.texto || p.legenda)) || '').slice(0, 280) }));
     const historico = ((estado && estado.historico) || []).slice(-8).reverse();
-    // `estado` é o JSON bruto do divulga-estado.json: a frontend recebe o arquivo inteiro, não só o resumo.
-    return { naFila: nomes.length - nomes.filter((n) => feitos.has(n)).length, proximos, historico, estado: estado || null };
+
+    // Processamento de engajamento e seguidores dos últimos 30 dias (sem gravacao em disco)
+    const seguidores30d = Array.isArray(estado && estado.seguidores) ? estado.seguidores.slice(-30) : [];
+
+    // Cálculo do melhor horário e tema pelos picos de engajamento no histórico
+    const postsEngajamento = Array.isArray(estado && estado.historico) ? estado.historico : [];
+    const porHorario = {};
+    const porTema = {};
+    for (const p of postsEngajamento) {
+      const h = p.horario || '12h15';
+      const t = p.tema || 'Geral';
+      const eng = Number(p.curtidas || p.engajamento || p.alcance || 0);
+      porHorario[h] = (porHorario[h] || 0) + eng;
+      porTema[t] = (porTema[t] || 0) + eng;
+    }
+    const melhorHorario = Object.keys(porHorario).sort((a, b) => porHorario[b] - porHorario[a])[0] || '12h15';
+    const melhorTema = Object.keys(porTema).sort((a, b) => porTema[b] - porTema[a])[0] || 'Dicas & Treinos';
+
+    return {
+      naFila: nomes.length - nomes.filter((n) => feitos.has(n)).length,
+      proximos,
+      historico,
+      estado: estado || null,
+      seguidores30d,
+      melhorHorario,
+      melhorTema,
+    };
+  }
+
+  // Integração segura com a Graph API da Meta no backend usando segredos de ambiente
+  async function buscarMetaGraphAPI() {
+    const tokenMeta = env.DIVULGA_META_PAGE_TOKEN || env.META_PAGE_TOKEN;
+    const igUserId = env.DIVULGA_META_IG_USER_ID || env.META_IG_USER_ID;
+    if (!tokenMeta || !igUserId) return { configurado: false, erro: 'Credenciais Meta Graph API não configuradas' };
+    try {
+      const url = `https://graph.facebook.com/v19.0/${igUserId}?fields=followers_count,media_count&access_token=${tokenMeta}`;
+      const r = await fetchFn(url, { headers: { 'User-Agent': 'nexia-central' } });
+      if (!r.ok) return { configurado: true, erro: `Meta Graph API respondeu ${r.status}` };
+      const data = await r.json();
+      return { configurado: true, seguidores: data.followers_count || 0, midia: data.media_count || 0 };
+    } catch (e) {
+      return { configurado: true, erro: (e && e.message) || 'Falha na requisição Graph API' };
+    }
   }
 
   // #802: contas de reserva do Cortex. Só os NOMES dos segredos (o GitHub nunca devolve o valor).
