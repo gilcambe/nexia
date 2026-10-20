@@ -1,114 +1,13 @@
 {
-  "kind": "site",
-  "name": "Viajante Pro",
-  "tagline": "Seu parceiro em viagens de luxo",
-  "description": "Serviços premium de consultoria e gestão de viagens com exclusividade e conforto.",
-  "folder": "viajante-pro",
-  "style": "luxury",
-  "photo_theme": "luxury travel",
-  "fonts": {
-    "heading": "Fraunces",
-    "body": "Inter"
+  "nome": "Viajante Pro",
+  "frase": "Seu parceiro em viagens de luxo",
+  "servicos": ["Pacotes exclusivos", "Consultoria de viagens", "Gestão de itinerários"],
+  "contato": {
+    "whatsapp": "+55 11 99999-9999",
+    "email": "contato@viajantepro.com"
   },
-  "palette": {
-    "primary": "#B8935A",
-    "accent": "#F7F4EF",
-    "bg": "#F7F4EF",
-    "surface": "#FFFFFF",
-    "text": "#333333",
-    "muted": "#666666",
-    "dark": "#222222"
-  },
-  "contact": {
-    "whatsapp": "5511999999999",
-    "phone": "(11) 99999-9999",
-    "email": "contato@viajantepro.com",
-    "address": "",
-    "city": "",
-    "hours": "",
-    "instagram": "",
-    "youtube": "",
-    "tiktok": "",
-    "linkedin": ""
-  },
+  "primaryColor": "#00E5FF",
+  "favicon": "favicon-vp.svg",
   "madeWithKernexLink": "https://kernex.com.br/?utm_source=viajantepro&utm_medium=selo",
-  "sections": [
-    {
-      "type": "hero",
-      "eyebrow": "Viagens Premium",
-      "title": "Seu parceiro em viagens de luxo",
-      "subtitle": "Pacotes exclusivos, consultoria especializada e gestão completa do seu itinerário.",
-      "cta": {
-        "label": "Falar com especialista",
-        "href": "whatsapp"
-      },
-      "cta2": {
-        "label": "Ver pacotes",
-        "href": "#servicos"
-      },
-      "image_query": "luxury travel destination"
-    },
-    {
-      "type": "services",
-      "id": "servicos",
-      "title": "Nossos Serviços",
-      "subtitle": "Soluções completas para suas viagens de luxo.",
-      "items": [
-        {
-          "title": "Pacotes Exclusivos",
-          "text": "Destinos premium com todo conforto e exclusividade.",
-          "price": "a partir de R$ 5.000",
-          "image_query": "luxury travel package"
-        },
-        {
-          "title": "Consultoria de Viagens",
-          "text": "Planejamento personalizado por especialistas experientes.",
-          "image_query": "travel consultant"
-        },
-        {
-          "title": "Gestão de Itinerários",
-          "text": "Tudo organizado no seu celular, check-in e ingressos sempre à mão.",
-          "image_query": "travel itinerary app"
-        }
-      ]
-    },
-    {
-      "type": "about",
-      "title": "Sobre o Viajante Pro",
-      "text": "Há mais de 10 anos transformando experiências de viagem em memórias inesquecíveis com exclusividade e atendimento premium.",
-      "image_query": "luxury travel agency"
-    },
-    {
-      "type": "gallery",
-      "title": "Nossos Destinos",
-      "image_queries": [
-        "luxury beach resort",
-        "mountain luxury hotel",
-        "private yacht",
-        "luxury train travel",
-        "private villa",
-        "luxury spa retreat"
-      ]
-    },
-    {
-      "type": "links",
-      "title": "Entre em Contato",
-      "items": [
-        {
-          "label": "Falar no WhatsApp",
-          "url": "https://wa.me/5511999999999",
-          "icon": "whatsapp"
-        },
-        {
-          "label": "Enviar E-mail",
-          "url": "mailto:contato@viajantepro.com",
-          "icon": "email"
-        }
-      ]
-    },
-    {
-      "type": "contact",
-      "title": "Fale com a gente"
-    }
-  ]
+  "title": "Viajante Pro"
 }
