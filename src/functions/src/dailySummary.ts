@@ -2,7 +2,7 @@ import { schedule } from 'firebase-functions/v2';
 import { admin } from 'firebase-admin';
 import { sendPush } from './notifications';
 
-export const dailySummary = schedule('0 8 * * *', {
+export const dailySummary = schedule('every 24 hours', {
   timeZone: 'UTC',
   onRun: async () => {
     try {
