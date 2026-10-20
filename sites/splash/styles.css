@@ -1,19 +1,19 @@
 /* Splash Eventos — gerado pelo NEXIA Site Kit (ADR-Q-04) */
 :root {
-  --primary: #2c3e50;
-  --accent: #e74c3c;
-  --bg: #f8f9fa;
+  --primary: #6b46c1;
+  --accent: #f59e0b;
+  --bg: #f9fafb;
   --surface: #ffffff;
-  --text: #2c3e50;
-  --muted: #667071;
-  --dark: #1a252f;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --dark: #111827;
   --font-head: "Playfair Display", Georgia, serif;
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --radius: 4px;
-  --radius-lg: 8px;
-  --shadow: 0 18px 40px -24px rgba(0,0,0,.35);
-  --head-weight: 600;
-  --track: .01em;
+  --radius: 14px;
+  --radius-lg: 24px;
+  --shadow: 0 24px 48px -28px rgba(0,0,0,.35);
+  --head-weight: 700;
+  --track: -.02em;
   --container: 1200px;
   --ease: cubic-bezier(.2, .7, .2, 1);
 }
