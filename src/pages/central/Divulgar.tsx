@@ -7,6 +7,10 @@ import { Cartao, Sinal, Botao, Carregando } from "./ui";
 const REDE: Record<string, string> = { facebook: "Facebook", instagram: "Instagram" };
 const HORARIOS = ["07h15", "12h15", "19h15"];
 
+// Temas da semana com horários de postagem (07h15, 12h15 e 19h15)
+// Vem de src/lib/calendario.ts: SEMANA traz os dias e temaDoDia(dia) traz o tema de cada dia.
+const temasSemana = SEMANA.map((dia) => ({ dia, tema: temaDoDia(dia) }));
+
 export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   const { agir } = useCentral();
   const [msg, setMsg] = useState<string | null>(null);
@@ -37,9 +41,6 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
     setOcupado(true); setMsg(null);
     try { setMsg((await agir(corpo)).mensagem); } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
   };
-  // Temas da semana com horários de postagem (07h15, 12h15 e 19h15)
-  const temasSemana = SEMANA.map((dia) => ({ dia, tema: temaDoDia(dia) }));
-
   const x = d.divulga;
   return (
     <div className="space-y-4">
@@ -63,7 +64,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
                 <span className="text-nexia-muted">{t.tema}</span>
               </div>
               <div className="horarios flex flex-wrap gap-2">
-                {['07h15', '12h15', '19h15'].map((horario) => (
+                {HORARIOS.map((horario) => (
                   <button
                     key={horario}
                     type="button"
