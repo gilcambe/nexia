@@ -1,8 +1,20 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SEMANA, temaDoDia } from '../../lib/calendario';
 import type { Dados } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+  Filler
+} from 'chart.js';
 
 const REDE: Record<string, string> = { facebook: "Facebook", instagram: "Instagram" };
 const HORARIOS = ["07h15", "12h15", "19h15"];
