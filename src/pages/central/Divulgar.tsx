@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { listaSemanal } from "../../../divulga/lib/interacao";
+
 import type { Dados } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
@@ -16,17 +16,51 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   const [toggleDisabled, setToggleDisabled] = useState(false);
   
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     fetch('/.netlify/functions/central/github?action=getWeekly')
-      .then(r => r.json())
-      .then(setWeekly);
+      .then(r => {
+        if (!r.ok) throw new Error('Falha ao carregar lista semanal');
+        return r.json();
+      })
+      .then(data => {
+        setWeekly(data);
+      })
+      .catch(err => {
+        setError(err.message);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
   
-  const handleToggle = (index: number) => {
-    if (!weekly) return;
-    const novoWeekly = [...weekly];
-    novoWeekly[index] = { ...novoWeekly[index], done: !novoWeekly[index].done };
-    setWeekly(novoWeekly);
-    agir({ acao: 'toggle', index, done: novoWeekly[index].done });
+  const handleToggle = async (index: number) => {
+    if (!weekly || toggleDisabled) return;
+    
+    setLoading(true);
+    setToggleDisabled(true);
+    setError(null);
+    
+    try {
+      const novoWeekly = [...weekly];
+      const novoEstado = !novoWeekly[index].done;
+      novoWeekly[index] = { ...novoWeekly[index], done: novoEstado };
+      setWeekly(novoWeekly);
+      
+      const response = await agir({ acao: 'toggle', index, done: novoEstado });
+      if (!response.success) {
+        throw new Error(response.mensagem || 'Falha ao atualizar status');
+      }
+    } catch (err) {
+      setError((err as Error).message);
+      // Reverte a mudança local se falhar
+      const novoWeekly = [...weekly];
+      novoWeekly[index] = { ...novoWeekly[index], done: !novoWeekly[index].done };
+      setWeekly(novoWeekly);
+    } finally {
+      setLoading(false);
+      setToggleDisabled(false);
+    }
   };
   const rodar = async (corpo: Record<string, unknown>) => {
     setOcupado(true); setMsg(null);
@@ -92,7 +126,16 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
       ) : weekly && weekly.length > 0 ? (
         <Cartao titulo="Lista Semanal">
           <p className="text-sm text-nexia-muted">Clique para marcar como feito/nãofeito. Salvo automaticamente.</p>
-          {weekly && weekly.map((d, i)=> <div key={i} className='daily-box' onClick={()=>handleToggle(i)}>{d.day} {d.done ? '✅' : '❌'}</div>)}
+          {weekly && weekly.map((d, i) => (
+            <div 
+              key={i} 
+              className={`daily-box ${d.done ? 'done' : ''}`}
+              onClick={() => handleToggle(i)}
+            >
+              <span className="day-name">{d.day}</span>
+              <span className="status-icon">{d.done ? '✅' : '❌'}</span>
+            </div>
+          ))}
         </Cartao>
       ) : weekly && weekly.length === 0 ? (
         <Cartao titulo="Lista Semanal">
