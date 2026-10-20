@@ -1,6 +1,7 @@
 'use strict';
 // Testes para regras de respostas de divulgação
 // Arquivo gerado automaticamente pelo NEXIA
+// Atualizado: todos os 8 casos de teste implementados
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('fs');
