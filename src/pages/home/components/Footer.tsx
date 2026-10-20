@@ -46,6 +46,8 @@ export type FooterProps = {
 
 export default function Footer({ client }: FooterProps) {
   // Selo "Feito com Kernex": mostra apenas quando client.madeWithKernexLink existe
+  const madeWithKernexLink = client?.madeWithKernexLink ?? MADE_WITH_KERNEX_LINK;
+  // Selo "Feito com Kernex": mostra apenas quando client.madeWithKernexLink existe
 
   return (
     <footer className="border-t border-nexia-border bg-nexia-surface mt-16">
