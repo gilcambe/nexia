@@ -1,5 +1,3 @@
-import { VITE_URL_CONTEXTO_IA } from '../config';
-
 /**
  * Sanitiza texto removendo chaves e segredos sensíveis
  * @param texto O texto a ser sanitizado
@@ -8,21 +6,36 @@ import { VITE_URL_CONTEXTO_IA } from '../config';
 export function sanitizarTexto(texto: string): string {
   // Regex para diferentes tipos de chaves e segredos
   const regexes = [
-    sk-[A-Za-z0-9]+, // API keys do OpenAI
-    AIza[A-Za-z0-9_-]+, // API keys do Google
-    ghp_[A-Za-z0-9]+, // GitHub personal access tokens
-    -----BEGIN[^\n]+, // Blocos de chaves PEM/PGP
+    /sk-[A-Za-z0-9]+/g, // API keys do OpenAI
+    /AIza[A-Za-z0-9_-]+/g, // API keys do Google
+    /ghp_[A-Za-z0-9]+/g, // GitHub personal access tokens
+    /-----BEGIN[\s\S]*?-----END/g, // Blocos de chaves PEM/PGP multilinha
   ];
 
   let textoSanitizado = texto;
   
   // Aplica cada regex substituindo por '[oculto]'
   regexes.forEach(regex => {
-    const regexObj = new RegExp(regex, 'g');
-    textoSanitizado = textoSanitizado.replace(regexObj, '[oculto]');
+    textoSanitizado = textoSanitizado.replace(regex, '[oculto]');
   });
 
   return textoSanitizado;
+}
+
+/**
+ * Valida se uma URL é segura para acesso
+ * @param url A URL a ser validada
+ * @returns boolean Se a URL é válida e segura
+ */
+function isValidUrl(url: string): boolean {
+  try {
+    const urlObj = new URL(url);
+    // Permite apenas URLs do GitHub (raw.githubusercontent.com)
+    return urlObj.hostname === 'raw.githubusercontent.com' && 
+           urlObj.pathname.startsWith('/gilcambe/nexia/');
+  } catch {
+    return false;
+  }
 }
 
 /**
