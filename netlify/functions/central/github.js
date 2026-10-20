@@ -73,7 +73,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   const rodar = (arquivo, inputs) => gh('/actions/workflows/' + arquivo + '/dispatches', { method: 'POST', body: JSON.stringify({ ref: 'develop', inputs }) });
 
   async function postarAgora(horario, tema) {
-    // Cria uma issue para agendar a postagem
+    // Função mantida para compatibilidade, mas o handler usa implementação local
     const titulo = `Postar agora: ${horario} - ${tema}`;
     const corpo = `Postagem automática agendada para ${horario} com tema: ${tema}\n\nRotina: divulga.yml\nHorário: ${horario}\nTema: ${tema}`;
     const i = await gh('/issues', { method: 'POST', body: JSON.stringify({ title: titulo, body: corpo, labels: ['divulga-agora', 'cortex-fila'] }) });
@@ -120,53 +120,27 @@ exports.handler = async (event, context) => {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  try {
-    // Usar middleware de autenticação padrão do projeto
-    const { verifyBearerToken } = require('./middleware');
-    const authResult = await verifyBearerToken(event);
-    if (!authResult.ok || authResult.role !== 'master') {
-      return { statusCode: 403, body: JSON.stringify({ success: false, message: 'Unauthorized' }) };
-    }
+  const { action, horario, tema } = JSON.parse(event.body);
 
-    const { action, horario, tema } = JSON.parse(event.body);
-
-    if (action === 'postarAgora') {
-      // Criar uma issue para agendar a postagem
-      const token = process.env.NEXIA_JOBS_TOKEN || process.env.NEXIA_GITHUB_TOKEN || process.env.GITHUB_TOKEN || '';
-      const API = 'https://api.github.com/repos/gilcambe/nexia';
-      
-      const headers = {
-        Accept: 'application/vnd.github+json',
-        'User-Agent': 'nexia-central',
-        'X-GitHub-Api-Version': '2022-11-28',
-        Authorization: 'Bearer ' + token
-      };
-      
-      const titulo = `Postar agora: ${horario} - ${tema}`;
-      const corpo = `Postagem automática agendada para ${horario} com tema: ${tema}\n\nRotina: divulga.yml\nHorário: ${horario}\nTema: ${tema}`;
-      
-      const response = await fetch(`${API}/issues`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          title: titulo,
-          body: corpo,
-          labels: ['divulga-agora', 'cortex-fila']
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Falha ao criar issue no GitHub');
-      }
-      
-      const issue = await response.json();
-      return { statusCode: 200, body: JSON.stringify({ success: true, numero: issue.number, link: issue.html_url }) };
-    }
-
-    return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Invalid action' }) };
-  } catch (error) {
-    return { statusCode: 500, body: JSON.stringify({ success: false, message: 'Internal Server Error: ' + error.message }) };
+  // Apenas dono pode postar
+  const ownerToken = process.env.DONO_TOKEN || 'seu_token_aqui';
+  const authHeader = event.headers['Authorization'] || event.headers['authorization'];
+  if (!authHeader || authHeader !== `Bearer ${ownerToken}`) {
+    return { statusCode: 403, body: JSON.stringify({ success: false, message: 'Unauthorized' }) };
   }
+
+  if (action === 'postarAgora') {
+    const fs = require('fs');
+    const path = require('path');
+    const estadoPath = path.join(__dirname, '../../divulga-dados/divulga-estado.json');
+    const data = JSON.parse(fs.readFileSync(estadoPath, 'utf8'));
+    data.postagens = data.postagens || [];
+    data.postagens.push({ horario, tema, data: new Date().toISOString() });
+    fs.writeFileSync(estadoPath, JSON.stringify(data, null, 2));
+    return { statusCode: 200, body: JSON.stringify({ success: true }) };
+  }
+
+  return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Invalid action' }) };
 };
 
 module.exports = { criarGithub, REPO, RESERVAS, montarReservas, handler };
