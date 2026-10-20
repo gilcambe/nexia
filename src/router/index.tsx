@@ -54,6 +54,7 @@ const routes: RouteObject[] = [
   { path: "/vp", element: <TenantPage tenant="vp" /> },
   { path: "/viajante-pro", element: <TenantPage tenant="vp" /> },
   { path: "/splash", element: <TenantPage tenant="splash" /> },
+  { path: "/ces2027", element: <SiteCliente configPath="clientes/ces2027/site.json" /> },
   { path: "/privacidade", element: <PrivacidadePage /> },
   { path: "/termos", element: <TermosPage /> },
   { path: "/cookies", element: <CookiesPage /> },
