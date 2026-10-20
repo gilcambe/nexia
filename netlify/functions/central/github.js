@@ -4,6 +4,26 @@
 
 const REPO = 'gilcambe/nexia';
 const API = 'https://api.github.com/repos/' + REPO;
+// Branch e arquivo onde o robô do Divulga guarda o estado (gravados pelo workflow .github/workflows/divulga.yml).
+const BRANCH_DIVULGA = 'divulga-dados';
+const ARQUIVO_ESTADO = 'divulga-estado.json';
+// Limite de tamanho do arquivo (1MB)
+const MAX_FILE_SIZE = 1024 * 1024;
+// Cache para respostas de estadoDivulga (5 minutos)
+const estadoCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000;
+
+/** Decodifica base64 em texto UTF-8 (o GitHub devolve o conteúdo do arquivo codificado). */
+function decodificarBase64(texto) {
+  const limpo = String(texto || '').replace(/\s/g, '');
+  if (!limpo) return null;
+  try {
+    if (typeof Buffer !== 'undefined') return Buffer.from(limpo, 'base64').toString('utf8');
+    const bin = atob(limpo);
+    const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+    return new TextDecoder('utf-8').decode(bytes);
+  } catch { return null; }
+}
 
 // #802: contas de reserva que a Conexões mostra. gratis=false: cobra por uso (regra do dono: nada pago).
 const RESERVAS = [
@@ -34,7 +54,11 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     if (init.body) headers['Content-Type'] = 'application/json';
     const r = await fetchFn(API + caminho, { ...init, headers });
     const corpo = r.status === 204 ? {} : await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(corpo.message || 'GitHub respondeu ' + r.status);
+    if (!r.ok) {
+      const e = new Error(corpo.message || 'GitHub respondeu ' + r.status);
+      e.status = r.status;
+      throw e;
+    }
     return corpo;
   }
 
@@ -85,13 +109,84 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     return { numero: i.number, link: i.html_url };
   }
 
+  /**
+   * Lê o divulga-estado.json da branch divulga-dados e devolve o JSON bruto (ou objeto vazio se não existir ou erro).
+   * Primeiro pela API do GitHub (conteúdo em base64); se falhar, pelo raw (o repositório é público).
+   * Retorna sempre um objeto JSON válido (nunca null). Em caso de erro, retorna objeto com propriedade error.
+   */
+  async function estadoDivulga() {
+    try {
+      // Tenta acessar via API do GitHub
+      const arquivo = await gh('/contents/' + ARQUIVO_ESTADO + '?ref=' + BRANCH_DIVULGA);
+      
+      // Trata arquivos grandes (>1MB): GitHub retorna download_url em vez de content
+      if (arquivo && arquivo.download_url && !arquivo.content) {
+        const r = await fetchFn(arquivo.download_url, { headers: { 'User-Agent': 'nexia-central' } });
+        if (!r.ok) {
+          console.error('Erro ao acessar download_url:', r.status, r.statusText);
+          return { error: 'Não foi possível acessar o arquivo GitHub' };
+        }
+        try {
+          return await r.json();
+        } catch (jsonError) {
+          console.error('Erro ao parsear JSON do download_url:', jsonError.message);
+          return { error: 'Formato inválido do arquivo' };
+        }
+      }
+      
+      // Trata conteúdo via base64
+      const texto = arquivo && typeof arquivo.content === 'string' ? decodificarBase64(arquivo.content) : null;
+      if (texto) {
+        try {
+          return JSON.parse(texto);
+        } catch (jsonError) {
+          console.error('Erro ao parsear JSON do conteúdo base64:', jsonError.message);
+          return { error: 'Formato inválido do arquivo' };
+        }
+      }
+    } catch (e) { 
+      // Registra erro no log para depuração (401/403 = falha de autenticação, 404 = arquivo não existe)
+      const errorMsg = e.message || String(e);
+      if (e.status === 401 || e.status === 403) {
+        console.error('Erro de autenticação ao acessar GitHub:', errorMsg);
+      } else if (e.status === 404) {
+        console.log('Arquivo não encontrado na branch:', BRANCH_DIVULGA, '->', ARQUIVO_ESTADO);
+      } else {
+        console.error('Erro ao acessar GitHub:', errorMsg);
+      }
+      /* branch/arquivo ainda não existe ou sem token: tenta o raw */ 
+    }
+    
+    // Tenta acessar via raw.githubusercontent (fallback)
+    try {
+      const r = await fetchFn('https://raw.githubusercontent.com/' + REPO + '/' + BRANCH_DIVULGA + '/' + ARQUIVO_ESTADO, { 
+        headers: { 'User-Agent': 'nexia-central' } 
+      });
+      
+      if (!r.ok) {
+        console.error('Erro ao acessar raw do GitHub:', r.status, r.statusText);
+        return { error: `Arquivo não encontrado: ${r.status} ${r.statusText}` };
+      }
+      
+      try {
+        return await r.json();
+      } catch (jsonError) {
+        console.error('Erro ao parsear JSON do raw:', jsonError.message);
+        return { error: 'Formato inválido do arquivo' };
+      }
+    } catch (e) { 
+      console.error('Erro ao acessar raw do GitHub:', e.message || String(e));
+      return { error: 'Não foi possível acessar o arquivo' };
+    }
+  }
+
   async function divulga() {
     const lerRaw = async (ramo, arq) => {
       const r = await fetchFn('https://raw.githubusercontent.com/' + REPO + '/' + ramo + '/' + arq, { headers: { 'User-Agent': 'nexia-central' } });
       return r.ok ? r.json().catch(() => null) : null;
     };
     const [estado, arquivos] = await Promise.all([
-      lerRaw('divulga-dados', 'divulga-estado.json'),
+      estadoDivulga(),
       gh('/contents/divulga/fila?ref=develop').catch(() => []),
     ]);
     const feitos = new Set((estado && estado.feitos) || []);
@@ -99,7 +194,8 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     const pendentes = nomes.filter((n) => !feitos.has(n)).slice(0, 5);
     const proximos = (await Promise.all(pendentes.map((n) => lerRaw('develop', 'divulga/fila/' + n + '.json')))).map((p, k) => ({ id: pendentes[k], texto: String((p && (p.texto || p.legenda)) || '').slice(0, 280) }));
     const historico = ((estado && estado.historico) || []).slice(-8).reverse();
-    return { naFila: nomes.length - nomes.filter((n) => feitos.has(n)).length, proximos, historico };
+    // `estado` é o JSON bruto do divulga-estado.json: a frontend recebe o arquivo inteiro, não só o resumo.
+    return { naFila: nomes.length - nomes.filter((n) => feitos.has(n)).length, proximos, historico, estado: estado || null };
   }
 
   // #802: contas de reserva do Cortex. Só os NOMES dos segredos (o GitHub nunca devolve o valor).
@@ -111,7 +207,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     return montarReservas(repo, prod, semCota);
   }
 
-  return { cortex, robos, rodar, pedirAoCortex, divulga, reservas, temToken: !!token };
+  return { cortex, robos, rodar, pedirAoCortex, divulga, estadoDivulga, reservas, temToken: !!token };
 }
 
-module.exports = { criarGithub, REPO, RESERVAS, montarReservas };
+module.exports = { criarGithub, REPO, RESERVAS, montarReservas, decodificarBase64, BRANCH_DIVULGA, ARQUIVO_ESTADO };
