@@ -25,10 +25,10 @@ export function limparChaves(texto: string): string {
   
   // Padrões de chaves e segredos sensíveis (apenas os 4 do pedido)
   const PADROES = [
-    /sk-[A-Za-z0-9]+/g, // API key do OpenAI (sk-proj, sk-ant, etc.)
-    /AIza[A-Za-z0-9_-]+/g, // API key do Google
-    /ghp_[A-Za-z0-9]+/g, // GitHub personal access token
-    /-----BEGIN[^\n]+/g, // cabeçalho de bloco PEM/PGP (só a linha do BEGIN)
+    /sk-[A-Za-z0-9]+/g,
+    /AIza[A-Za-z0-9_-]+/g,
+    /ghp_[A-Za-z0-9]+/g,
+    /-----BEGIN[^\n]+/g
   ];
   
   let textoLimpo = texto;
@@ -46,7 +46,7 @@ const LINK = "inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2
 
 // Verifica se sobrou algum padrão de chave no texto (após sanitização).
 // Focado apenas nos padrões críticos mencionados no pedido original
-const TEM_CHAVE = /sk-[A-Za-z0-9]+|AIza[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|-----BEGIN/;
+const TEM_CHAVE = /sk-[A-Za-z0-9]+|AIza[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|-----BEGIN[^\n]+/;
 
 export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<Parte, string>> }) {
   const { agir } = useCentral();
