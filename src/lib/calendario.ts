@@ -19,8 +19,11 @@ const TEMAS: Record<string, string> = {
 
 /**
  * Retorna o tema do dia. O texto pode ser simples, pois o componente apenas exibe o retorno.
+ * Aceita o nome do dia em qualquer caixa ("terça", "Terça") e devolve '' quando não há tema.
  */
 export function temaDoDia(dia: string): string {
   // Exemplo estático – pode ser ajustado futuramente.
-  return TEMAS[dia] ?? '';
+  if (!dia) return '';
+  const chave = dia.trim().toLowerCase().replace(/^./, (c) => c.toUpperCase());
+  return TEMAS[chave] ?? '';
 }
