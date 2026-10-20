@@ -81,7 +81,7 @@ async function entregouAlgo(token, corpo, desde) {
       // Se não há data de início, considera como entregue
       if (!desde) return true;
       
-      // Verifica se há PR aberto contendo o arquivo
+      // Verifica se há PR aberto contendo o arquivo (preserva lógica existente)
       const temPrAberto = prs.some(pr => {
         // Usa cache para evitar chamadas repetidas
         if (!arquivosPrCache.has(pr.number)) {
@@ -93,9 +93,13 @@ async function entregouAlgo(token, corpo, desde) {
       
       if (temPrAberto) return true;
       
-      // Verifica se há commit na develop depois de 'desde'
+      // Verifica se há commit na develop depois de 'desde' usando GH API
+      // GET /commits?sha=develop&path=<file>&since=<desde>&per_page=1
       const commitsDesp = (await gh(token, 'GET', `/commits?sha=develop&path=${arquivo}&since=${desde}&per_page=1`)).json;
-      if (Array.isArray(commitsDesp) && commitsDesp.length > 0) return true;
+      if (Array.isArray(commitsDesp) && commitsDesp.length > 0) {
+        // Tem commit após 'desde': arquivo foi alterado, conta como entregue
+        return true;
+      }
       
       // Verifica se o arquivo existia antes de 'desde' usando until
       const commitsAntes = (await gh(token, 'GET', `/commits?sha=develop&path=${arquivo}&until=${desde}&per_page=1`)).json;
@@ -105,6 +109,7 @@ async function entregouAlgo(token, corpo, desde) {
       }
     }
     
+    // Nenhum arquivo teve commit após 'desde' nem está em PR aberto
     return false;
   } catch { return true; }
 }
