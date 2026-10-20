@@ -122,13 +122,12 @@ exports.handler = async (event, context) => {
 
   const { action, horario, tema } = JSON.parse(event.body);
 
-  // Apenas dono pode postar
-  const ownerToken = process.env.DONO_TOKEN;
-  if (!ownerToken) {
-    return { statusCode: 500, body: JSON.stringify({ success: false, message: 'Server configuration error: DONO_TOKEN not set' }) };
-  }
-  const authHeader = event.headers['Authorization'] || event.headers['authorization'];
-  if (!authHeader || authHeader !== `Bearer ${ownerToken}`) {
+  // Usar middleware de autenticação do projeto (só dono)
+  try {
+    const getMw = require('./central');
+    const mw = getMw();
+    await mw.verifyBearerToken(event);
+  } catch (error) {
     return { statusCode: 403, body: JSON.stringify({ success: false, message: 'Unauthorized' }) };
   }
 
@@ -142,39 +141,49 @@ exports.handler = async (event, context) => {
     }
     
     try {
-      const fs = require('fs');
-      const path = require('path');
-      const estadoPath = path.join(__dirname, '../../divulga-dados/divulga-estado.json');
+      // Usar API do GitHub para atualizar o arquivo na branch divulga-dados
+      const gh = criarGithub();
       
-      // Verificar se o arquivo existe, se não criar estrutura básica
-      let data;
-      try {
-        const fileContent = fs.readFileSync(estadoPath, 'utf8');
-        data = JSON.parse(fileContent);
-      } catch (error) {
-        if (error.code === 'ENOENT') {
-          // Arquivo não existe, criar estrutura básica
-          data = { postagens: [], feitos: [], historico: [] };
-        } else {
-          throw error;
-        }
-      }
+      // Ler arquivo atual da branch divulga-dados
+      const estadoContent = await fetch(`https://raw.githubusercontent.com/${REPO}/divulga-dados/divulga-estado.json`)
+        .then(res => res.ok ? res.json() : null)
+        .catch(() => null);
+      
+      let data = estadoContent || { rodizio: 12, feitos: [], historico: [], postagens: [] };
       
       // Garantir que postagens existe
       data.postagens = data.postagens || [];
       
       // Adicionar nova postagem
-      data.postagens.push({ 
+      const novaPostagem = { 
         horario: horario.trim(), 
         tema: tema.trim(), 
         data: new Date().toISOString() 
+      };
+      data.postagens.push(novaPostagem);
+      
+      // Atualizar arquivo via GitHub API
+      const response = await fetch(`/contents/divulga-dados/divulga-estado.json`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${process.env.NEXIA_JOBS_TOKEN || process.env.NEXIA_GITHUB_TOKEN}`,
+          'Accept': 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28'
+        },
+        body: JSON.stringify({
+          message: `Adicionar postagem: ${horario} - ${tema}`,
+          content: Buffer.from(JSON.stringify(data, null, 2)).toString('base64'),
+          branch: 'divulga-dados'
+        })
       });
       
-      // Escrever arquivo com tratamento de erro
-      fs.writeFileSync(estadoPath, JSON.stringify(data, null, 2));
+      if (!response.ok) {
+        throw new Error('Falha ao atualizar arquivo no GitHub');
+      }
+      
       return { statusCode: 200, body: JSON.stringify({ success: true }) };
     } catch (error) {
-      console.error('Erro ao atualizar divulga-estado.json:', error);
+      console.error('Erro ao atualizar divulga-estado.json via GitHub API:', error);
       return { 
         statusCode: 500, 
         body: JSON.stringify({ 
