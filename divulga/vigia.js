@@ -1,12 +1,11 @@
-#!/usr/bin/env node
+const fs = require('fs');
+const path = require('path');
+const { execSync } = require('child_process');
 
 /**
  * Vigia da divulgação - monitora e verifica o status da divulgação
  * Executado após cada rodada do workflow de divulgação
  */
-
-const fs = require('fs');
-const path = require('path');
 
 // Caminho para o diretório de dados
 const dadosPath = path.join(process.cwd(), 'dados');
@@ -36,7 +35,6 @@ if (!fs.existsSync(midiaPath)) {
 
 // Verifica se há commits na branch divulga-dados
 try {
-  const { execSync } = require('child_process');
   // Usa caminho absoluto para o git log sem mudar o diretório de trabalho
   const gitLog = execSync('git log --oneline -n 5', {
     encoding: 'utf8',
