@@ -194,6 +194,20 @@
       "type": "contact",
       "title": "Solicite Verificação de Data",
       "subtitle": "Preencha o formulário e nossa equipe responde em até 24 horas úteis."
+    },
+    {
+      "type": "footer",
+      "content": [
+        {
+          "type": "copyright",
+          "text": "© 2023 Splash Eventos. Todos os direitos reservados."
+        },
+        {
+          "type": "seal",
+          "text": "Feito com Kernex",
+          "url": "https://kernex.com.br/?utm_source=splash&utm_medium=selo"
+        }
+      ]
     }
   ]
 }
