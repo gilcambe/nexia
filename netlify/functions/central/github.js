@@ -97,7 +97,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
    * Primeiro pela API do GitHub (conteúdo em base64); se falhar, pelo raw (o repositório é público).
    * Retorna sempre um objeto JSON válido (nunca null). Em caso de erro, retorna objeto com propriedade error.
    */
-  async function lerEstadoDivulga() {
+  async function estadoDivulga() {
     try {
       // Tenta acessar via API do GitHub
       const arquivo = await gh('/contents/' + ARQUIVO_ESTADO + '?ref=' + BRANCH_DIVULGA);
@@ -169,7 +169,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
       return r.ok ? r.json().catch(() => null) : null;
     };
     const [estado, arquivos] = await Promise.all([
-      lerEstadoDivulga(),
+      estadoDivulga(),
       gh('/contents/divulga/fila?ref=develop').catch(() => []),
     ]);
     const feitos = new Set((estado && estado.feitos) || []);
@@ -190,7 +190,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     return montarReservas(repo, prod, semCota);
   }
 
-  return { cortex, robos, rodar, pedirAoCortex, divulga, estadoDivulga: lerEstadoDivulga, reservas, temToken: !!token };
+  return { cortex, robos, rodar, pedirAoCortex, divulga, estadoDivulga, reservas, temToken: !!token };
 }
 
 module.exports = { criarGithub, REPO, RESERVAS, montarReservas, decodificarBase64, BRANCH_DIVULGA, ARQUIVO_ESTADO };
