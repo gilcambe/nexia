@@ -49,7 +49,11 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     if (init.body) headers['Content-Type'] = 'application/json';
     const r = await fetchFn(API + caminho, { ...init, headers });
     const corpo = r.status === 204 ? {} : await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(corpo.message || 'GitHub respondeu ' + r.status);
+    if (!r.ok) {
+      const e = new Error(corpo.message || 'GitHub respondeu ' + r.status);
+      e.status = r.status;
+      throw e;
+    }
     return corpo;
   }
 
