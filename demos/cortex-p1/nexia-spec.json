@@ -1,0 +1,273 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex p1",
+    "tagline": "Cadastros, contexto de IA e filas monitoradas com sanitização segura",
+    "photo_theme": "",
+    "description": "Cadastros, contexto de IA e filas monitoradas com sanitização segura",
+    "folder": "demos/cortex-p1",
+    "fonts": {
+      "heading": "Plus Jakarta Sans",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#4f46e5",
+      "accent": "#06b6d4",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#111827"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 90000-0000",
+      "email": "suporte@cortex.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=cortex-p1&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "contextos_ia",
+        "label": "Contextos de IA",
+        "singular": "Contexto de IA",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "origem",
+            "label": "Origem",
+            "type": "select",
+            "options": [
+              "Documentação",
+              "API",
+              "Manual",
+              "Importação"
+            ],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Em análise",
+              "Pausado",
+              "Erro"
+            ],
+            "required": true
+          },
+          {
+            "key": "filas",
+            "label": "Filas",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "rodando",
+            "label": "Rodando",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "travadas",
+            "label": "Travadas",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "atualizado",
+            "label": "Atualizado em",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "observacoes",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Contexto Cortex",
+            "origem": "Documentação",
+            "status": "Ativo",
+            "filas": "1",
+            "rodando": "0",
+            "travadas": "0",
+            "atualizado": "2026-10-06",
+            "observacoes": "Conexão: Filas: 1 | Rodando: 0 | Travadas: 0"
+          },
+          {
+            "nome": "Autenticação e permissões",
+            "origem": "API",
+            "status": "Em análise",
+            "filas": "2",
+            "rodando": "1",
+            "travadas": "0",
+            "atualizado": "2026-10-05",
+            "observacoes": "Sanitização de credenciais validada no clipboard."
+          },
+          {
+            "nome": "Fluxo de cadastros",
+            "origem": "Manual",
+            "status": "Ativo",
+            "filas": "3",
+            "rodando": "0",
+            "travadas": "0",
+            "atualizado": "2026-10-04",
+            "observacoes": "Textos prontos para cópia com indicadores de conexão."
+          },
+          {
+            "nome": "Importação de clientes",
+            "origem": "Importação",
+            "status": "Pausado",
+            "filas": "4",
+            "rodando": "0",
+            "travadas": "1",
+            "atualizado": "2026-10-03",
+            "observacoes": "Revisão manual pendente antes da próxima execução."
+          }
+        ]
+      },
+      {
+        "key": "cadastros",
+        "label": "Cadastros",
+        "singular": "Cadastro",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "perfil",
+            "label": "Perfil",
+            "type": "select",
+            "options": [
+              "Administrador",
+              "Analista",
+              "Desenvolvedor",
+              "Leitura"
+            ],
+            "required": true
+          },
+          {
+            "key": "situacao",
+            "label": "Situação",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Convite pendente",
+              "Inativo"
+            ],
+            "required": true
+          },
+          {
+            "key": "limite",
+            "label": "Limite mensal",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "criado",
+            "label": "Criado em",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "observacoes",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Marina Alves",
+            "email": "marina.alves@cortex.com.br",
+            "perfil": "Administrador",
+            "situacao": "Ativo",
+            "limite": "500",
+            "criado": "2026-08-12",
+            "observacoes": "Acesso completo ao painel e às filas."
+          },
+          {
+            "nome": "Rafael Nogueira",
+            "email": "rafael.nogueira@cortex.com.br",
+            "perfil": "Desenvolvedor",
+            "situacao": "Ativo",
+            "limite": "250",
+            "criado": "2026-08-20",
+            "observacoes": "Responsável pelos testes de sanitização."
+          },
+          {
+            "nome": "Camila Torres",
+            "email": "camila.torres@cortex.com.br",
+            "perfil": "Analista",
+            "situacao": "Convite pendente",
+            "limite": "100",
+            "criado": "2026-09-03",
+            "observacoes": "Convite reenviado para validação."
+          },
+          {
+            "nome": "Eduardo Ramos",
+            "email": "eduardo.ramos@cortex.com.br",
+            "perfil": "Leitura",
+            "situacao": "Inativo",
+            "limite": "50",
+            "criado": "2026-07-28",
+            "observacoes": "Cadastro preservado para auditoria."
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Visão geral",
+      "Contextos de IA",
+      "Cadastros",
+      "Sanitização"
+    ]
+  },
+  "media": {}
+}
