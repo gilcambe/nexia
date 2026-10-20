@@ -24,17 +24,18 @@ export function limparChaves(texto: string): string {
   if (!texto) return "";
   
   // Lista unificada de padrões de chaves e segredos sensíveis
+  // Só estes 4 padrões, como combinado. Nenhum outro é removido.
   const PADROES = [
-    { regex: /sk-[A-Za-z0-9]+/g },
-    { regex: /AIza[A-Za-z0-9_-]+/g },
-    { regex: /ghp_[A-Za-z0-9]+/g },
-    { regex: /-----BEGIN[^\n]+/g },
+    /sk-[A-Za-z0-9]+/g,
+    /AIza[A-Za-z0-9_-]+/g,
+    /ghp_[A-Za-z0-9]+/g,
+    /-----BEGIN[^\n]+/g,
   ];
   
   let textoLimpo = texto;
   
   // Aplica cada regex substituindo por '[oculto]'
-  PADROES.forEach(({ regex }) => {
+  PADROES.forEach((regex) => {
     textoLimpo = textoLimpo.replace(regex, "[oculto]");
   });
   
