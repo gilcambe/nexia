@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { listaSemanal } from "../../../divulga/lib/interacao";
 import type { Dados } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
