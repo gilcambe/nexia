@@ -2,8 +2,6 @@
 // Central NEXIA: o que a página precisa do GitHub (fila do Cortex, robôs, posts do Divulga).
 // Usa o token da fila (NEXIA_JOBS_TOKEN) só no servidor; nada dele vai para a página.
 
-const fs = require('fs');
-const path = require('path');
 const REPO = 'gilcambe/nexia';
 const API = 'https://api.github.com/repos/' + REPO;
 
