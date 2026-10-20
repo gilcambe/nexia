@@ -90,7 +90,7 @@ test('DR8. Ação "agradecer" para "Top!" retornando uma frase da lista FRASES p
   assert.equal(resposta, 'agradecer', 'Deve retornar ação agradecer para "Top!"');
   
   // Teste que a resposta de agradecer contém uma frase da lista FRASES
+  // (o exato valor depende da implementação, mas deve ser uma string não vazia)
   const respostaFrase = decidir(comentario, post, () => 0);
-  assert.match(respostaFrase, /agradecer/, 'Deve retornar ação agradecer');
-  // Verifica que a resposta contém uma frase (o exato valor depende da implementação)
+  assert.equal(respostaFrase, 'agradecer', 'Deve retornar ação agradecer');
 });
