@@ -105,61 +105,75 @@ function criarGithub(env = process.env, fetchFn = fetch) {
 
   async function salvarDadosMeta(dados) {
     const hoje = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    const caminhoArquivo = `divulga-dados/divulga-${hoje}.json`;
+    const caminhoArquivo = 'divulga-dados/divulga-estado.json';
     
     // Estrutura dos dados a serem salvos
-    const dadosEstruturados = {
-      data: hoje,
-      seguidores: dados.seguidores || 0,
-      alcance: dados.alcance || 0,
-      curtidas: dados.curtidas || 0,
-      melhorHorario: dados.melhorHorario || null,
-      tema: dados.tema || null,
-      timestamp: new Date().toISOString()
+    const novaAmostra = {
+      quando: new Date().toISOString(),
+      id: null,
+      cliente: 'meta',
+      resultados: [
+        {
+          canal: 'meta',
+          seguidores: dados.seguidores || 0,
+          alcance: dados.alcance || 0,
+          curtidas: dados.curtidas || 0,
+          melhorHorario: dados.melhorHorario || null,
+          tema: dados.tema || null,
+          ok: true
+        }
+      ]
     };
     
     try {
-      // Tenta ler o arquivo existente primeiro
-      const arquivoExistente = await fetch(`https://raw.githubusercontent.com/${REPO}/develop/${caminhoArquivo}`, {
-        headers: { 'User-Agent': 'nexia-central' }
+      // Tenta obter o SHA do arquivo na branch divulga-dados
+      const arquivoInfo = await fetch(`https://api.github.com/repos/${REPO}/contents/${caminhoArquivo}?ref=divulga-dados`, {
+        headers: { 'Authorization': 'Bearer ' + token, 'Accept': 'application/vnd.github.v3+json' }
       });
       
-      if (arquivoExistente.ok) {
-        // Se o arquivo existir, atualiza os dados
-        const dadosAtuais = await arquivoExistente.json();
-        // Mantém apenas os dados mais recentes do dia
-        dadosEstruturados.dadosDoDia = dadosEstruturados;
-        delete dadosEstruturados.data; // Remove data do objeto principal
+      const dadosAtuais = { historico: [] };
+      let sha = null;
+      
+      if (arquivoInfo.ok) {
+        const fileInfo = await arquivoInfo.json();
+        sha = fileInfo.sha;
         
-        // Atualiza o arquivo existente
-        await fetch(`https://api.github.com/repos/${REPO}/contents/${caminhoArquivo}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json',
-            'Accept': 'application/vnd.github.v3+json'
-          },
-          body: JSON.stringify({
-            message: `Atualizar dados da Meta para ${hoje}`,
-            content: Buffer.from(JSON.stringify(dadosEstruturados, null, 2)).toString('base64'),
-            sha: (await arquivoExistente.json()).sha
-          })
-        });
-      } else {
-        // Se o arquivo não existir, cria um novo
-        await fetch(`https://api.github.com/repos/${REPO}/contents/${caminhoArquivo}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': 'Bearer ' + token,
-            'Content-Type': 'application/json',
-            'Accept': 'application/vnd.github.v3+json'
-          },
-          body: JSON.stringify({
-            message: `Criar arquivo de dados da Meta para ${hoje}`,
-            content: Buffer.from(JSON.stringify(dadosEstruturados, null, 2)).toString('base64')
-          })
-        });
+        // Tenta ler o conteúdo atual do arquivo
+        try {
+          const arquivoContent = await fetch(`https://raw.githubusercontent.com/${REPO}/divulga-dados/${caminhoArquivo}`, {
+            headers: { 'User-Agent': 'nexia-central' }
+          });
+          
+          if (arquivoContent.ok) {
+            dadosAtuais.historico = await arquivoContent.json().then(data => data.historico || []);
+          }
+        } catch (e) {
+          console.error('Erro ao ler conteúdo do arquivo:', e);
+        }
       }
+      
+      // Adiciona a nova amostra ao histórico
+      dadosAtuais.historico.push(novaAmostra);
+      
+      // Mantém apenas as últimas 100 amostras para não crescer indefinidamente
+      if (dadosAtuais.historico.length > 100) {
+        dadosAtuais.historico = dadosAtuais.historico.slice(-100);
+      }
+      
+      // Atualiza ou cria o arquivo
+      await fetch(`https://api.github.com/repos/${REPO}/contents/${caminhoArquivo}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json',
+          'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify({
+          message: `Atualizar dados da Meta para ${hoje}`,
+          content: Buffer.from(JSON.stringify(dadosAtuais, null, 2)).toString('base64'),
+          sha: sha
+        })
+      });
       
       return { sucesso: true, arquivo: caminhoArquivo };
     } catch (error) {
