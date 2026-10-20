@@ -122,8 +122,8 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
       ) : weekly && weekly.length > 0 ? (
         <Cartao titulo="Lista Semanal">
           <p className="text-sm text-nexia-muted">Clique para marcar como feito/nãofeito. Salvo automaticamente.</p>
-          {weekly && weekly.map((d, i)=> <div key={i} className='daily-box' onClick={()=>handleToggle(i)}>{d.day} {d.done ? '✅' : '❌'}</div>)
-        </Cartao>
+          {weekly && weekly.map((d, i)=> <div key={i} className='daily-box' onClick={()=>handleToggle(i)}>{d.day} {d.done ? '✅' : '❌'}</div>)}
+          </Cartao>
       ) : weekly && weekly.length === 0 ? (
         <Cartao titulo="Lista Semanal">
           <p className="text-sm text-nexia-muted">Nenhum item na lista. Aguarde a carga inicial ou tente novamente.</p>
