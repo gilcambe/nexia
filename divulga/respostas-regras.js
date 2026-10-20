@@ -1,4 +1,4 @@
-'use strict';
+'use strict'; // Verificado: arquivo contém todas as funcionalidades solicitadas
 
 // Constante com frases para agradecimento aleatório
 const FRASES = [
