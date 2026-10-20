@@ -23,28 +23,18 @@ const URLS_CONTEXTO = [
 export function limparChaves(texto: string): string {
   if (!texto) return "";
   
-  // Lista unificada de padrões de chaves e segredos sensíveis
+  // Padrões de chaves e segredos sensíveis (apenas os 4 do pedido)
   const PADROES = [
-    // Chaves API
-    { regex: /sk-[A-Za-z0-9]+/g, nome: "OpenAI API Key" },
-    { regex: /AIza[A-Za-z0-9_-]+/g, nome: "Google API Key" },
-    { regex: /ghp_[A-Za-z0-9]+/g, nome: "GitHub Personal Access Token" },
-    { regex: /AKIA[0-9A-Z]{16}/g, nome: "AWS Access Key" },
-    { regex: /xox[baprs]-[A-Za-z0-9-]+/g, nome: "Slack Token" },
-    { regex: /SG\.[A-Za-z0-9_-]+/g, nome: "SendGrid API Key" },
-    { regex: /SK\.[A-Za-z0-9_-]+/g, nome: "SendGrid Web API Key" },
-    { regex: /glpat-[A-Za-z0-9_-]{20}/g, nome: "GitLab Personal Access Token" },
-    { regex: /eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*/g, nome: "JWT Token" },
-    // Blocos PEM/PGP (chaves SSL, PGP, etc.)
-    { regex: /-----BEGIN[^\n]+[\s\S]*?-----END[^\n]+/g, nome: "PEM/PGP Key Block" },
-    { regex: /-----BEGIN[^\n]+/g, nome: "PEM/PGP Key Start" },
-    { regex: /-----END[^\n]+/g, nome: "PEM/PGP Key End" },
+    /sk-[A-Za-z0-9]+/g,
+    /AIza[A-Za-z0-9_-]+/g,
+    /ghp_[A-Za-z0-9]+/g,
+    /-----BEGIN[^\n]+/g
   ];
   
   let textoLimpo = texto;
   
   // Aplica cada regex substituindo por '[oculto]'
-  PADROES.forEach(({ regex }) => {
+  PADROES.forEach((regex) => {
     textoLimpo = textoLimpo.replace(regex, "[oculto]");
   });
   
@@ -56,7 +46,7 @@ const LINK = "inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2
 
 // Verifica se sobrou algum padrão de chave no texto (após sanitização).
 // Focado apenas nos padrões críticos mencionados no pedido original
-const TEM_CHAVE = /sk-[A-Za-z0-9]+|AIza[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|-----BEGIN/;
+const TEM_CHAVE = /sk-[A-Za-z0-9]+|AIza[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|-----BEGIN[^\n]+/;
 
 export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<Parte, string>> }) {
   const { agir } = useCentral();
@@ -70,7 +60,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
   const copiarContexto = async () => {
     setCarregandoIA(true);
     try {
-      // Usa a função já existente que faz fetch + sanitização
+      // Lê o arquivo docs/CONTEXTO-IA.md do próprio repositório (URL definida no projeto, com fallback para os ramos conhecidos).
       const contextoBruto = await buscarContextoComFallback();
       // Aplica sanitização dupla: primeiro a função do fetch-contexto-ia.ts, depois nossa limpeza extra
       const contextoSanitizado = sanitizarTexto(contextoBruto);
@@ -80,8 +70,6 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
       const rodando = d.cortex?.fazendo?.length ?? 0;
       const travadas = d.cortex?.travadas?.length ?? 0;
       const final = `${contextoLimpo}\n\nConexão: Filas: ${fila} | Rodando: ${rodando} | Travadas: ${travadas}`;
-      
-      setContextoIA(final);
       
       // Implementa cópia para clipboard com fallback
       try {
@@ -106,6 +94,8 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
       const temChaves = TEM_CHAVE.test(final);
 
       if (temCortex && !temChaves) {
+        // Só marca o contexto como pronto quando o texto passou na checagem de segurança.
+        setContextoIA(final);
         window.alert("Contexto copiado. Cole na conversa da outra IA.");
       } else {
         window.alert("Não copiei por segurança: o texto não tem o contexto do Cortex ou ainda esconde alguma chave.");
