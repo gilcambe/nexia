@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Dados } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
@@ -9,6 +9,28 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   const { agir } = useCentral();
   const [msg, setMsg] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+  const [weekly, setWeekly] = useState<any[]>(null);
+  
+  useEffect(() => {
+    fetch('/.netlify/functions/central/github?action=getWeekly')
+      .then(r => r.json())
+      .then(setWeekly)
+      .catch(console.error);
+  }, []);
+  
+  const handleToggle = async (index: number) => {
+    if (!weekly) return;
+    
+    const novoWeekly = [...weekly];
+    novoWeekly[index] = { ...novoWeekly[index], done: !novoWeekly[index].done };
+    setWeekly(novoWeekly);
+    
+    try {
+      await agir({ acao: 'toggle', index, done: novoWeekly[index].done });
+    } catch (e) {
+      console.error('Erro ao atualizar status:', e);
+    }
+  };
   const rodar = async (corpo: Record<string, unknown>) => {
     setOcupado(true); setMsg(null);
     try { setMsg((await agir(corpo)).mensagem); } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
@@ -56,6 +78,24 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
         <p className="text-sm text-nexia-muted">Cada post leva um link marcado com a rede de onde a pessoa veio (Instagram ou Facebook). As visitas aparecem no Google Search Console.</p>
         <Botao href="https://search.google.com/search-console">Ver visitas no Google</Botao>
       </Cartao>
+
+      {weekly && (
+        <Cartao titulo="Lista Semanal">
+          <p className="text-sm text-nexia-muted">Clique para marcar como feito/nãofeito. Salvo automaticamente.</p>
+          <div className="grid grid-cols-1 gap-2">
+            {weekly.map((d, i) => (
+              <div 
+                key={i} 
+                className={`daily-box ${d.done ? 'bg-green-50' : 'bg-nexia-surface2'} p-3 rounded-lg cursor-pointer flex justify-between items-center`}
+                onClick={() => handleToggle(i)}
+              >
+                <span>{d.day}</span>
+                <span className="text-lg">{d.done ? '✅' : '❌'}</span>
+              </div>
+            ))}
+          </div>
+        </Cartao>
+      )}
 
       <Cartao titulo="Robô de ofertas">
         <p className="text-sm text-nexia-muted">Busca ofertas fitness na Shopee e na Amazon e monta a vitrine.</p>
