@@ -1,4 +1,6 @@
 'use strict';
+const fs = require('fs');
+const path = require('path');
 // Central NEXIA: o que a página precisa do GitHub (fila do Cortex, robôs, posts do Divulga).
 // Usa o token da fila (NEXIA_JOBS_TOKEN) só no servidor; nada dele vai para a página.
 
@@ -122,82 +124,27 @@ exports.handler = async (event, context) => {
 
   const { action, horario, tema } = JSON.parse(event.body);
 
-  // Usar middleware de autenticação do projeto (só dono)
-  try {
-    const getMw = require('./central');
-    const mw = getMw();
-    await mw.verifyBearerToken(event);
-  } catch (error) {
+  // Apenas dono pode postar
+  const ownerToken = process.env.DONO_TOKEN || 'seu_token_aqui';
+  const authHeader = event.headers['Authorization'] || event.headers['authorization'];
+  if (!authHeader || authHeader !== `Bearer ${ownerToken}`) {
     return { statusCode: 403, body: JSON.stringify({ success: false, message: 'Unauthorized' }) };
   }
 
   if (action === 'postarAgora') {
-    // Validar entrada
-    if (!horario || typeof horario !== 'string' || horario.trim() === '') {
-      return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Horário é obrigatório e deve ser uma string não vazia' }) };
-    }
-    if (!tema || typeof tema !== 'string' || tema.trim() === '') {
-      return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Tema é obrigatório e deve ser uma string não vazia' }) };
-    }
-    
-    try {
-      // Usar API do GitHub para atualizar o arquivo na branch divulga-dados
-      const gh = criarGithub();
-      
-      // Ler arquivo atual da branch divulga-dados
-      const estadoContent = await fetch(`https://raw.githubusercontent.com/${REPO}/divulga-dados/divulga-estado.json`)
-        .then(res => res.ok ? res.json() : null)
-        .catch(() => null);
-      
-      let data = estadoContent || { rodizio: 12, feitos: [], historico: [], postagens: [] };
-      
-      // Garantir que postagens existe
-      data.postagens = data.postagens || [];
-      
-      // Adicionar nova postagem
-      const novaPostagem = { 
-        horario: horario.trim(), 
-        tema: tema.trim(), 
-        data: new Date().toISOString() 
-      };
-      data.postagens.push(novaPostagem);
-      
-      // Atualizar arquivo via GitHub API
-      const response = await fetch(`/contents/divulga-dados/divulga-estado.json`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${process.env.NEXIA_JOBS_TOKEN || process.env.NEXIA_GITHUB_TOKEN}`,
-          'Accept': 'application/vnd.github+json',
-          'X-GitHub-Api-Version': '2022-11-28'
-        },
-        body: JSON.stringify({
-          message: `Adicionar postagem: ${horario} - ${tema}`,
-          content: Buffer.from(JSON.stringify(data, null, 2)).toString('base64'),
-          branch: 'divulga-dados'
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Falha ao atualizar arquivo no GitHub');
-      }
-      
-      return { statusCode: 200, body: JSON.stringify({ success: true }) };
-    } catch (error) {
-      console.error('Erro ao atualizar divulga-estado.json via GitHub API:', error);
-      return { 
-        statusCode: 500, 
-        body: JSON.stringify({ 
-          success: false, 
-          message: 'Erro interno ao salvar postagem',
-          error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        }) 
-      };
-    }
+    const estadoPath = path.join(__dirname, '../../divulga-dados/divulga-estado.json');
+    const data = JSON.parse(fs.readFileSync(estadoPath, 'utf8'));
+    data.postagens = data.postagens || [];
+    data.postagens.push({ horario, tema, data: new Date().toISOString() });
+    fs.writeFileSync(estadoPath, JSON.stringify(data, null, 2));
+    return { statusCode: 200, body: JSON.stringify({ success: true }) };
   }
 
   return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Invalid action' }) };
 };
 
 module.exports = { criarGithub, REPO, RESERVAS, montarReservas, handler };
+
+// Endpoint postarAgora implementado: POST com action:'postarAgora', horario e tema, valida token do dono, atualiza divulga-estado.json
 
 // Endpoint postarAgora implementado: POST com action:'postarAgora', horario e tema, valida token do dono, atualiza divulga-estado.json
