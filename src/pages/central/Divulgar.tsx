@@ -30,7 +30,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
     try { setMsg((await agir(corpo)).mensagem); } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
   };
   // Temas da semana com horários de postagem (07h15, 12h15 e 19h15)
-  const temasSemana = SEMANA.map((dia, idx) => ({ dia, tema: temaDoDia(dia) }));
+  const temasSemana = SEMANA.map((dia) => ({ dia, tema: temaDoDia(dia) }));
 
   const x = d.divulga;
   return (
@@ -55,7 +55,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
                 <span className="text-nexia-muted">{t.tema}</span>
               </div>
               <div className="horarios flex flex-wrap gap-2">
-                {['07h15', '12h15', '19h15'].map((horario) => (
+                {HORARIOS.map((horario) => (
                   <button
                     key={horario}
                     type="button"
