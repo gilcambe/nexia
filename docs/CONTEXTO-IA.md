@@ -34,3 +34,6 @@ Cole o texto abaixo no início da conversa, ou mande a IA ler este arquivo no Gi
 2. Escolha uma issue travada, entenda o erro no último comentário, corrija com o menor diff possível, rode `npm test`.
 3. Abra PR de ramo `nexia/...` com o rótulo `automerge`. Não mescle pela API.
 4. Diga ao dono, em português simples, o que mudou e o que ele precisa testar.
+
+## Instruções para Novas IAs
+Este arquivo é o contexto padrão para qualquer IA externa (Gemini, ChatGPT, Claude gratuita). Basta colar o conteúdo acima (ou mandar a IA ler `docs/CONTEXTO-IA.md` no GitHub) que a IA já entende o funcionamento do Cortex e o histórico do usuário, sem necessidade de gastar tokens em explicações adicionais.
