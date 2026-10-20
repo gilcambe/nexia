@@ -11,7 +11,7 @@ export function sanitizarTexto(texto: string): string {
     sk-[A-Za-z0-9]+, // API keys do OpenAI
     AIza[A-Za-z0-9_-]+, // API keys do Google
     ghp_[A-Za-z0-9]+, // GitHub personal access tokens
-    -----BEGIN[\s\S]+?-----END, // Blocos de chaves PEM/PGP
+    -----BEGIN[^\n]+, // Blocos de chaves PEM/PGP
   ];
 
   let textoSanitizado = texto;
