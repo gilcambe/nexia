@@ -1,0 +1,212 @@
+{
+  "kind": "site",
+  "name": "Splash Eventos",
+  "tagline": "Espaços de Alto Padrão para Eventos Inesquecíveis",
+  "description": "Buffets, salões e experiências.",
+  "folder": "splash",
+  "style": "elegant",
+  "photo_theme": "luxury event venue",
+  "fonts": {
+    "heading": "Cormorant Garamond",
+    "body": "Inter"
+  },
+  "palette": {
+    "primary": "#C9A84C",
+    "accent": "#F5EDD6",
+    "bg": "#0A0D08",
+    "surface": "rgba(255,255,255,0.04)",
+    "text": "#F8F4ED",
+    "muted": "rgba(248,244,237,0.72)",
+    "dark": "#111408"
+  },
+  "contact": {
+    "whatsapp": "",
+    "phone": "",
+    "email": "",
+    "address": "",
+    "city": "",
+    "hours": "",
+    "instagram": "",
+    "youtube": "",
+    "tiktok": "",
+    "linkedin": ""
+  },
+  "sections": [
+    {
+      "type": "hero",
+      "eyebrow": "Espaços para eventos",
+      "title": "Eventos inesquecíveis começam aqui",
+      "subtitle": "Buffets, salões e experiências de alto padrão para o seu momento especial.",
+      "cta": {
+        "label": "Solicitar orçamento",
+        "href": "leads"
+      },
+      "cta2": {
+        "label": "Ver espaços",
+        "href": "#espacos"
+      },
+      "image_query": "luxury wedding venue",
+      "video_query": "event"
+    },
+    {
+      "type": "services",
+      "id": "espacos",
+      "title": "Nossos Espaços",
+      "subtitle": "Diversos ambientes para todos os tipos de eventos.",
+      "items": [
+        {
+          "title": "Salão Principal",
+          "text": "Até 300 pessoas com ar condicionado.",
+          "price": "a partir de R$ 5.000",
+          "image_query": "ballroom interior"
+        },
+        {
+          "title": "Garden Lounge",
+          "text": "Área externa com paisagismo exclusivo.",
+          "price": "a partir de R$ 3.500",
+          "image_query": "garden event space"
+        },
+        {
+          "title": "Salão VIP",
+          "text": "Ambiente exclusivo para eventos corporativos.",
+          "price": "a partir de R$ 7.000",
+          "image_query": "luxury corporate event"
+        }
+      ]
+    },
+    {
+      "type": "about",
+      "title": "Sobre a Splash Eventos",
+      "text": "Há 10 anos transformando eventos em experiências memoráveis.",
+      "image_query": "luxury event venue interior",
+      "stats": [
+        {
+          "value": "10",
+          "label": "anos"
+        },
+        {
+          "value": "2000+",
+          "label": "eventos"
+        },
+        {
+          "value": "98%",
+          "label": "satisfação"
+        }
+      ]
+    },
+    {
+      "type": "gallery",
+      "title": "Nossos Espaços",
+      "image_queries": [
+        "luxury ballroom",
+        "wedding venue",
+        "corporate event",
+        "garden party",
+        "luxury interior",
+        "event decoration"
+      ],
+      "gif_queries": [
+        "event setup"
+      ]
+    },
+    {
+      "type": "video",
+      "title": "Conheça nossos espaços",
+      "subtitle": "Um tour virtual por nossos ambientes exclusivos.",
+      "youtube": "",
+      "video_query": "luxury venue tour"
+    },
+    {
+      "type": "team",
+      "title": "Equipe Splash",
+      "members": [
+        {
+          "name": "Carlos Mendes",
+          "role": "Diretor de Eventos",
+          "image_query": "event planner portrait"
+        },
+        {
+          "name": "Ana Silva",
+          "role": "Chefe de Cerimonial",
+          "image_query": "female event coordinator"
+        }
+      ]
+    },
+    {
+      "type": "testimonials",
+      "title": "Depoimentos",
+      "items": [
+        {
+          "name": "Maria L.",
+          "text": "O casamento dos sonhos realizado perfeitamente!",
+          "rating": 5
+        },
+        {
+          "name": "João G.",
+          "text": "Espaço excepcional e equipe profissional.",
+          "rating": 5
+        },
+        {
+          "name": "Patricia R.",
+          "text": "Atendimento personalizado e de alto nível.",
+          "rating": 5
+        }
+      ]
+    },
+    {
+      "type": "links",
+      "title": "Links rápidos",
+      "items": [
+        {
+          "label": "Solicitar orçamento",
+          "url": "#contato",
+          "icon": "mail"
+        }
+      ]
+    },
+    {
+      "type": "faq",
+      "title": "Dúvidas frequentes",
+      "items": [
+        {
+          "q": "Aceitam eventos de última hora?",
+          "a": "Depende da disponibilidade, entre em contato.",
+          "href": "leads"
+        },
+        {
+          "q": "Fornecem decoração?",
+          "a": "Sim, temos pacotes com decoração completa.",
+          "href": "leads"
+        },
+        {
+          "q": "Tem estacionamento?",
+          "a": "Sim, estacionamento privativo para 100 vagas.",
+          "href": "leads"
+        },
+        {
+          "q": "Aceitam pagamento parcelado?",
+          "a": "Sim, até 12x no cartão de crédito.",
+          "href": "leads"
+        }
+      ]
+    },
+    {
+      "type": "cta",
+      "title": "Solicite seu orçamento",
+      "subtitle": "Resposta rápida em até 24 horas.",
+      "cta": {
+        "label": "Solicitar orçamento",
+        "href": "leads"
+      }
+    },
+    {
+      "type": "contact",
+      "title": "Fale com a gente",
+      "subtitle": "Preencha o formulário e entraremos em contato.",
+      "cta": {
+        "label": "Enviar mensagem",
+        "href": "leads"
+      }
+    }
+  ]
+}
