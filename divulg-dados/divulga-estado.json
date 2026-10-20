@@ -1,1 +1,11 @@
-{ "weekly": [ {"day":"Mon","done":false}, {"day":"Tue","done":false}, {"day":"Wed","done":false}, {"day":"Thu","done":false}, {"day":"Fri","done":false}, {"day":"Sat","done":false}, {"day":"Sun","done":false} ] }
+{
+  "weekly": [
+    { "day": "Mon", "done": false },
+    { "day": "Tue", "done": false },
+    { "day": "Wed", "done": false },
+    { "day": "Thu", "done": false },
+    { "day": "Fri", "done": false },
+    { "day": "Sat", "done": false },
+    { "day": "Sun", "done": false }
+  ]
+}
