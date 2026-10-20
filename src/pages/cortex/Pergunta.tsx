@@ -45,19 +45,19 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
   const feita = useRef(false);
   useEffect(() => { if (primeira && !feita.current) { feita.current = true; void perguntar(primeira); } }, [primeira]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const perguntar = async (texto: string, modoResposta?: string) => {
+  const perguntar = async (texto: string, modo?: "rapido" | "pensar" | "pesquisar") => {
     const id = "c" + Date.now();
     setFalas((l) => [...l, { id: "d" + Date.now(), quem: "dono", texto }, { id, quem: "cortex", texto: "", vivo: true }]);
     const ctl = new AbortController();
     corte.current = ctl;
     const mudar = (f: (x: Fala) => Fala) => setFalas((l) => l.map((x) => (x.id === id ? f(x) : x)));
     try {
-      const token = ehSobreSituacao(texto) || modoResposta === "pesquisar" ? await getToken().catch(() => null) : null;
+      const token = ehSobreSituacao(texto) || modo === "pesquisar" ? await getToken().catch(() => null) : null;
       const ctx = ehSobreSituacao(texto) ? await lerCentral(token) : "";
-      const web = modoResposta === "pesquisar" ? await buscarWeb(token, texto) : { contexto: "", rodape: "" };
+      const web = modo === "pesquisar" ? await buscarWeb(token, texto) : { contexto: "", rodape: "" };
       const antes = [ctx, web.contexto].filter(Boolean).join("\n\n");
       const message = antes ? `${antes}\n\nPergunta do dono: ${texto}` : texto;
-      for await (const c of streamCortex({ message, tenantId: "nexia", conversationId: conversa }, ctl.signal)) {
+      for await (const c of streamCortex({ message, tenantId: "nexia", conversationId: conversa, modo }, ctl.signal)) {
         if (c.token) mudar((x) => ({ ...x, texto: x.texto + c.token }));
         if (c.model) mudar((x) => ({ ...x, modelo: c.model }));
         if (c.done) break;

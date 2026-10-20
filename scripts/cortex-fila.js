@@ -18,7 +18,7 @@ function depoisSemEntrega(labels) {
   return { n, travar: n >= MAX_SEM_ENTREGA };
 }
 const CONFIAVEIS = ['OWNER', 'MEMBER', 'COLLABORATOR'];
-const L = { fila: 'cortex-fila', rodando: 'cortex-rodando', feito: 'cortex-feito', travado: 'cortex-travado', dividido: 'cortex-dividido', parte: 'cortex-parte', semDivisao: 'cortex-sem-divisao', prioridade: 'cortex-prioridade' };
+const L = { fila: 'cortex-fila', rodando: 'cortex-rodando', feito: 'cortex-feito', travado: 'cortex-travado', dividido: 'cortex-dividido', parte: 'cortex-parte', semDivisao: 'cortex-sem-divisao', prioridade: 'cortex-prioridade', semCota: 'cortex-reserva-sem-cota' };
 const MAX_CORPO = 2500;      // tarefa maior que isso é dividida em partes pequenas
 const MAX_ARQUIVOS = 4;      // ou que mexe em mais arquivos do que isso
 
@@ -93,6 +93,21 @@ const confiavel = i => CONFIAVEIS.includes(i.author_association) || ((i.user || 
 // "[Parte 2/3 de #359] ..." -> { pai: 359, k: 2 }
 const parteDe = i => { const m = /^\[Parte (\d+)\/\d+ de #(\d+)\]/.exec(i.title || ''); return m ? { k: Number(m[1]), pai: Number(m[2]) } : null; };
 
+// #803: dia em Brasília (UTC-3). Tarefa que ficou sem cota da reserva volta à fila no dia seguinte, sem espera fixa.
+const diaBr = t => new Date(new Date(t).getTime() - 3 * 3600e3).toISOString().slice(0, 10);
+function reservaVolta(rotuladoEm, agora = Date.now()) { return !rotuladoEm || diaBr(rotuladoEm) < diaBr(agora); }
+async function reservasQueVoltam(token, issues, agora = Date.now()) {
+  const voltar = [];
+  for (const i of issues.filter(x => !x.pull_request && nomes(x).includes(L.semCota)).slice(0, 20)) {
+    try {
+      const ev = (await gh(token, 'GET', `/issues/${i.number}/events?per_page=100`)).json || [];
+      const quando = ev.filter(e => e.event === 'labeled' && e.label && e.label.name === L.semCota).map(e => e.created_at).pop();
+      if (reservaVolta(quando, agora)) voltar.push({ tipo: 'reserva-volta', numero: i.number, rotulos: nomes(i) });
+    } catch { /* tenta no próximo ciclo */ }
+  }
+  return voltar;
+}
+
 // Função pura: recebe issues e execuções e devolve a lista de ações. Fácil de testar.
 function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
   const acoes = [];
@@ -130,7 +145,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
   }
 
   const fila = validas
-    .filter(i => { const ls = nomes(i); return !ls.includes(L.rodando) && !ls.includes(L.feito) && !ls.includes(L.travado) && !ls.includes(L.dividido); })
+    .filter(i => { const ls = nomes(i); return !ls.includes(L.rodando) && !ls.includes(L.feito) && !ls.includes(L.travado) && !ls.includes(L.dividido) && !ls.includes(L.semCota); })   // #803: sem cota hoje espera o dia virar
     // Rótulo cortex-prioridade passa na frente (ex.: correções que impedem o próprio Cortex de parar); depois, por número.
     .sort((a, b) => (nomes(b).includes(L.prioridade) - nomes(a).includes(L.prioridade)) || a.number - b.number);
   // Partes da mesma tarefa rodam em ordem: a parte 2 só sai quando a 1 terminou (uma costuma usar o arquivo da outra).
@@ -290,6 +305,10 @@ async function executar(token, acao, dividir) {
     await delLabel(L.rodando); await limparPistas();
     await comentar('Esta tarefa já tinha o rótulo cortex-feito; fechei como concluída.');
     await gh(token, 'PATCH', `/issues/${n}`, { state: 'closed', state_reason: 'completed' });
+  } else if (acao.tipo === 'reserva-volta') {
+    // #803: novo dia, nova cota: volta para a fila do zero (tentativa-N, sem-entrega-N e travado saem).
+    for (const l of acao.rotulos.filter(x => x === L.semCota || x === L.travado || x === L.rodando || /^(tentativa|sem-entrega|pista)-\d+$/.test(x))) await delLabel(l).catch(() => null);
+    await comentar('Novo dia: a cota das IAs voltou. A tarefa voltou para a fila do zero.');
   } else if (acao.tipo === 'travar') {
     await delLabel(L.rodando); await limparPistas(); await addLabel(L.travado);
     await comentar(`Tarefa travada depois de ${acao.tentativas} tentativas (última: https://github.com/${REPO}/actions/runs/${acao.run}). Precisa de olhar humano.`);
@@ -447,6 +466,7 @@ async function main() {
   // Cópia literal ("Copie EXATAMENTE") não passa por IA: grava direto e a fila normal não despacha essas tarefas.
   const direto = await literalDireto(token, issues);
   let acoes = decidir({ issues: issues.filter(i => !direto.has(i.number)), runs });
+  try { acoes.push(...await reservasQueVoltam(token, issues)); } catch (e) { console.log(`reserva sem cota: ${e.message}`); }
   // Sem escrita disponível no banco, despachar só queima mais cota: segura as tarefas novas (o resto segue).
   if (acoes.some(a => a.tipo === 'despachar')) {
     const sonda = await sondarCota();
@@ -483,5 +503,5 @@ async function main() {
   }
 }
 
-module.exports = { entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
+module.exports = { reservaVolta, reservasQueVoltam, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });

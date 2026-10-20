@@ -3,6 +3,7 @@ import { haQuanto } from "../central/api";
 import { NOME_SITUACAO, usePedidos } from "../meu-cortex/api";
 import type { Deploy, Filtro, Resumo } from "../meu-cortex/api";
 import type { Tema } from "./page";
+import ContasReserva from "./Reservas";
 
 const Cartao = ({ children, testid }: { children: React.ReactNode; testid?: string }) => (
   <div className="rounded-2xl border border-[var(--cx-line)] bg-[var(--cx-card)] p-4" data-testid={testid}>{children}</div>
@@ -33,6 +34,7 @@ export function Conexoes({ email }: { email: string }) {
       <Cartao testid="cx-con-ias"><p className="font-medium">IAs grátis do Cortex</p>
         <div className="flex flex-wrap gap-2 mt-3">{IAS.map((i) => <span key={i} className="px-3 h-8 inline-flex items-center rounded-full border border-[var(--cx-line)] text-sm">{i}</span>)}</div>
         <p className="text-sm text-[var(--cx-mut)] mt-3">O Cortex alterna entre elas sozinho, para nunca parar por falta de IA.</p></Cartao>
+      <ContasReserva />
     </div>
   );
 }

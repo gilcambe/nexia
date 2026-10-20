@@ -122,6 +122,7 @@ function createHandler(deps = {}) {
         return res(200, { fornecedores: empresa.fornecedores(FORNECEDORES, env, robos) });
       }
       if (parte === 'cortex') return res(200, await gh.cortex());
+      if (parte === 'reservas') return res(200, await gh.reservas());   // #802: contas de reserva (só nomes de segredos)
       if (parte === 'robos') return res(200, { robos: await gh.robos(ROBOS) });
       if (parte === 'divulga') return res(200, await gh.divulga());
       return res(400, { error: 'Parte desconhecida.' });
