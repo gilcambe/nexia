@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { listaSemanal } from "../../../divulga/lib/interacao";
 
 import type { Dados } from "./api";
 import { useCentral, haQuanto } from "./api";
@@ -18,20 +19,14 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    fetch('/.netlify/functions/central/github?action=getWeekly')
-      .then(r => {
-        if (!r.ok) throw new Error('Falha ao carregar lista semanal');
-        return r.json();
-      })
-      .then(data => {
-        setWeekly(data);
-      })
-      .catch(err => {
-        setError(err.message);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+    try {
+      const data = listaSemanal();
+      setWeekly(data.itens);
+    } catch (err) {
+      setError('Falha ao carregar lista semanal');
+    } finally {
+      setLoading(false);
+    }
   }, []);
   
   const handleToggle = async (index: number) => {
@@ -129,10 +124,10 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
           {weekly && weekly.map((d, i) => (
             <div 
               key={i} 
-              className={`daily-box ${d.done ? 'done' : ''}`}
+              className="daily-box"
               onClick={() => handleToggle(i)}
             >
-              <span className="day-name">{d.day}</span>
+              <span className="day-name">{d.alvo}</span>
               <span className="status-icon">{d.done ? '✅' : '❌'}</span>
             </div>
           ))}
