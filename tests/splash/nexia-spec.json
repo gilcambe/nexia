@@ -2,31 +2,31 @@
   "spec": {
     "kind": "site",
     "name": "Splash Eventos",
-    "tagline": "Transformando momentos em experiências inesquecíveis",
-    "photo_theme": "event party",
-    "description": "Organização de eventos corporativos, sociais e privados com criatividade e excelência.",
+    "tagline": "Transformando sonhos em experiências memoráveis",
+    "photo_theme": "event wedding",
+    "description": "Organização de eventos premium para casamentos, festas corporativas e celebrações especiais.",
     "folder": "tests/splash",
     "fonts": {
       "heading": "Playfair Display",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#6a4c93",
-      "accent": "#ff6b6b",
+      "primary": "#3a3a3a",
+      "accent": "#e63946",
       "bg": "#f8f9fa",
       "surface": "#ffffff",
-      "text": "#2d3436",
-      "muted": "#636e72",
-      "dark": "#2d3436"
+      "text": "#1d1d1d",
+      "muted": "#616971",
+      "dark": "#212529"
     },
-    "style": "modern",
+    "style": "elegant",
     "contact": {
       "whatsapp": "5511999998888",
-      "phone": "(11) 99999-8888",
-      "email": "contato@splasheventos.com.br",
+      "phone": "(11) 9999-8888",
+      "email": "contato@splash-eventos.com.br",
       "address": "Av. Paulista, 1000",
       "city": "São Paulo - SP",
-      "hours": "Seg a Dom, 9h às 22h",
+      "hours": "Seg a Sex, 9h às 18h",
       "instagram": "splasheventos",
       "facebook": "",
       "youtube": "",
@@ -41,34 +41,43 @@
       "label": "Feito com Kernex",
       "url": "https://kernex.com.br/?utm_source=splash&utm_medium=selo&utm_campaign=clientes"
     },
-    "leads_origem": "splash",
+    "leads_origem": "",
     "sections": [
       {
         "type": "hero",
-        "id": "transformando-momentos-em-memorias-inesq",
-        "title": "Transformando momentos em memórias inesquecíveis",
-        "subtitle": "Eventos corporativos, sociais e privados com criatividade e excelência.",
-        "eyebrow": "Organizadores de eventos",
+        "id": "splash-eventos",
+        "title": "Splash Eventos",
+        "subtitle": "Transformamos sua visão em experiências memoráveis",
+        "eyebrow": "Organização de eventos premium",
         "cta": {
-          "label": "Solicitar orçamento",
-          "href": "whatsapp"
-        },
-        "cta2": {
-          "label": "Nossos serviços",
+          "label": "Conheça nossos serviços",
           "href": "#servicos"
         },
-        "image_query": "elegant event party",
+        "cta2": {
+          "label": "Ver galeria",
+          "href": "#galeria"
+        },
+        "image_query": "elegant wedding reception",
         "video_query": ""
       },
       {
         "type": "services",
         "id": "servicos",
-        "title": "Nossos serviços",
-        "subtitle": "Soluções completas para o seu evento",
+        "title": "Nossos Serviços",
+        "subtitle": "Do planejamento à execução impecável",
         "items": [
           {
-            "title": "Eventos Corporativos",
-            "text": "Congressos, lançamentos e confraternizações.",
+            "title": "Casamentos",
+            "text": "Casais sonhando com o dia perfeito",
+            "price": "",
+            "image_query": "wedding ceremony",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Empresariais",
+            "text": "Eventos que impressionam clientes e parceiros",
             "price": "",
             "image_query": "corporate event",
             "tag": "",
@@ -76,28 +85,19 @@
             "icon": ""
           },
           {
-            "title": "Casamentos",
-            "text": "Celebrações românticas e personalizadas.",
+            "title": "Festas Privadas",
+            "text": "Celebrações inesquecíveis para você e seus convidados",
             "price": "",
-            "image_query": "wedding party",
+            "image_query": "private party",
             "tag": "",
             "url": "",
             "icon": ""
           },
           {
-            "title": "Aniversários",
-            "text": "Festas temáticas para todas as idades.",
+            "title": "Eventos Temáticos",
+            "text": "Ambientes criativos e personalizados",
             "price": "",
-            "image_query": "birthday celebration",
-            "tag": "",
-            "url": "",
-            "icon": ""
-          },
-          {
-            "title": "Eventos Sociais",
-            "text": "Coquetéis, jantares e celebrações especiais.",
-            "price": "",
-            "image_query": "social gathering",
+            "image_query": "themed party",
             "tag": "",
             "url": "",
             "icon": ""
@@ -106,40 +106,40 @@
       },
       {
         "type": "about",
-        "id": "sobre-a-splash",
-        "title": "Sobre a Splash",
-        "subtitle": "Há 10 anos criando experiências memoráveis.",
-        "text": "Há 10 anos, a Splash transforma projetos em experiências marcantes, unindo planejamento criterioso, criatividade e atenção a cada detalhe.",
-        "image_query": "event planning team",
+        "id": "sobre-a-splash-eventos",
+        "title": "Sobre a Splash Eventos",
+        "subtitle": "Há 8 anos transformando sonhos em realidade com eventos inesquecíveis.",
+        "text": "Há 8 anos transformando sonhos em realidade com eventos inesquecíveis.",
+        "image_query": "event planning office",
         "stats": [
           {
-            "value": "10",
-            "label": "anos"
+            "value": "8",
+            "label": "anos de experiência"
           },
           {
             "value": "500+",
-            "label": "eventos"
+            "label": "eventos realizados"
           },
           {
-            "value": "2000+",
-            "label": "clientes satisfeitos"
+            "value": "100%",
+            "label": "satisfação"
           }
         ]
       },
       {
         "type": "gallery",
-        "id": "nossos-eventos",
-        "title": "Nossos eventos",
-        "subtitle": "Experiências únicas, realizadas com cuidado em cada detalhe.",
+        "id": "galeria",
+        "title": "Nossos Eventos",
+        "subtitle": "",
         "image_queries": [
-          "wedding reception",
+          "wedding decoration",
+          "corporate event hall",
+          "birthday party setup",
+          "outdoor wedding ceremony",
+          "elegant dinner reception",
+          "themed birthday party",
           "corporate conference",
-          "birthday party",
-          "cocktail event",
-          "elegant dinner",
-          "outdoor celebration",
-          "private party",
-          "event decoration"
+          "luxury wedding venue"
         ],
         "gif_queries": []
       },
@@ -147,204 +147,259 @@
         "type": "video",
         "id": "conheca-nosso-trabalho",
         "title": "Conheça nosso trabalho",
-        "subtitle": "Veja como transformamos eventos em experiências memoráveis.",
+        "subtitle": "Veja como transformamos eventos em experiências únicas",
         "youtube": "",
-        "video_query": "event highlights"
+        "video_query": "wedding event highlight"
+      },
+      {
+        "type": "music",
+        "id": "trilha-sonora-perfeita",
+        "title": "Trilha sonora perfeita",
+        "subtitle": "Música que complementa cada momento do seu evento",
+        "audio_url": "",
+        "audio_title": "",
+        "audio_query": "elegant wedding music"
+      },
+      {
+        "type": "links",
+        "id": "links-rapidos",
+        "title": "Links Rápidos",
+        "subtitle": "",
+        "items": [
+          {
+            "label": "Feito com Kernex",
+            "url": "https://kernex.com/feito-com-kernex",
+            "icon": "link"
+          },
+          {
+            "label": "Orçamento Online",
+            "url": "https://splash-eventos.com.br/orcamento",
+            "icon": "calendar"
+          },
+          {
+            "label": "Instagram",
+            "url": "https://instagram.com/splasheventos",
+            "icon": "instagram"
+          }
+        ]
+      },
+      {
+        "type": "team",
+        "id": "nossa-equipe",
+        "title": "Nossa Equipe",
+        "subtitle": "",
+        "members": [
+          {
+            "name": "Ana Silva",
+            "role": "Diretora de Eventos",
+            "image_query": "female event planner"
+          },
+          {
+            "name": "Carlos Mendes",
+            "role": "Chefe de Cerimônias",
+            "image_query": "male event coordinator"
+          }
+        ]
       },
       {
         "type": "testimonials",
         "id": "depoimentos",
         "title": "Depoimentos",
-        "subtitle": "Experiências que superaram as expectativas de nossos clientes.",
+        "subtitle": "",
         "items": [
           {
-            "name": "Maria S.",
+            "name": "Maria J.",
             "role": "",
-            "text": "O casamento dos sonhos! Tudo perfeito.",
+            "text": "O casamento dos nossos sonhos! A Splash foi incrível.",
             "rating": 5
           },
           {
-            "name": "João C.",
+            "name": "Roberto K.",
             "role": "",
-            "text": "Congresso corporativo impecável. Parabéns!",
+            "text": "Evento corporativo que superou todas as expectativas.",
             "rating": 5
           },
           {
-            "name": "Ana P.",
+            "name": "Patricia L.",
             "role": "",
-            "text": "Aniversário do meu filho inesquecível.",
+            "text": "Festa de aniversário que todos ainda comentam.",
             "rating": 5
-          }
-        ]
-      },
-      {
-        "type": "links",
-        "id": "redes-sociais",
-        "title": "Redes sociais",
-        "subtitle": "Acompanhe as novidades e bastidores da Splash.",
-        "items": [
-          {
-            "label": "Instagram",
-            "url": "https://instagram.com/splasheventos",
-            "icon": "instagram"
-          },
-          {
-            "label": "WhatsApp",
-            "url": "https://wa.me/5511999998888",
-            "icon": "whatsapp"
-          },
-          {
-            "label": "Facebook",
-            "url": "https://facebook.com/splasheventos",
-            "icon": "facebook"
           }
         ]
       },
       {
         "type": "faq",
         "id": "duvidas-frequentes",
-        "title": "Dúvidas frequentes",
+        "title": "Dúvidas Frequentes",
         "subtitle": "",
         "items": [
           {
             "q": "Como faço para contratar os serviços?",
-            "a": "Entre em contato pelo WhatsApp ou e-mail para receber um orçamento personalizado."
+            "a": "Basta preencher nosso formulário de orçamento ou entrar em contato."
           },
           {
-            "q": "Trabalhamos com orçamento fechado?",
-            "a": "Sim, oferecemos pacotes com valores definidos ou personalizados conforme a necessidade do seu evento."
+            "q": "Trabalhamos com orçamento personalizado?",
+            "a": "Sim, cada evento tem um planejamento único."
           },
           {
-            "q": "Quantas pessoas podemos atender?",
-            "a": "Atendemos eventos de 20 a 500 pessoas com estrutura e equipe adequadas ao tamanho da celebração."
+            "q": "Qual é o valor mínimo para contratar?",
+            "a": "A partir de R$ 5.000, dependendo do tipo de evento."
           },
           {
-            "q": "Fornecemos decoração?",
-            "a": "Sim, oferecemos opções de decoração temática e personalizada, alinhadas ao conceito do evento."
-          },
-          {
-            "q": "Trabalhamos em outras cidades?",
-            "a": "Sim, atendemos São Paulo e região metropolitana. Consulte nossa equipe para outros locais."
+            "q": "Vocês fornecem equipamentos de som e luz?",
+            "a": "Sim, temos parcerias com fornecedores de equipamentos."
           }
         ]
       },
       {
         "type": "cta",
-        "id": "pronto-para-criar-seu-evento",
-        "title": "Pronto para criar seu evento?",
-        "subtitle": "Fale com nossos especialistas e transforme seu sonho em realidade.",
+        "id": "pronto-para-transformar-seu-evento",
+        "title": "Pronto para transformar seu evento?",
+        "subtitle": "Fale com nossos especialistas e comece a planejar",
         "cta": {
-          "label": "Solicitar orçamento",
-          "href": "whatsapp"
+          "label": "Solicitar Orçamento",
+          "href": "orcamento"
         }
       },
       {
         "type": "contact",
-        "id": "fale-com-a-splash",
-        "title": "Fale com a Splash",
-        "subtitle": "Conte como você imagina seu evento e receba uma proposta personalizada.",
+        "id": "entre-em-contato",
+        "title": "Entre em contato",
+        "subtitle": "",
         "map": true,
         "form": true
       }
     ]
   },
   "media": {
-    "s0.hero": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/Gitikka_Ganju_Dhar_at_corporate_event.jpg/1280px-Gitikka_Ganju_Dhar_at_corporate_event.jpg",
-      "width": 1280,
-      "height": 853,
-      "alt": "Gitikka Ganju Dhar at corporate event",
-      "credit": "Gitikka Ganju Dhar at corporate event — Gitikka ganju dhar (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    },
     "s1.item0": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Hallenstadion_Zurich_Corporation_Event_June_2011.jpg/1280px-Hallenstadion_Zurich_Corporation_Event_June_2011.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Royal_Wedding_Stockholm_2010-Slottsbacken-05_edit.jpg/1280px-Royal_Wedding_Stockholm_2010-Slottsbacken-05_edit.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "width": 1280,
-      "height": 853,
-      "alt": "File:Hallenstadion Zurich Corporation Event June 2011.jpg",
-      "credit": "File:Hallenstadion Zurich Corporation Event June 2011.jpg — Christophorus77 (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s1.item1": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Lombok_Wedding_Party_1998.jpg/1280px-Lombok_Wedding_Party_1998.jpg",
-      "width": 1280,
-      "height": 869,
-      "alt": "File:Lombok Wedding Party 1998.jpg",
-      "credit": "File:Lombok Wedding Party 1998.jpg — anoldent (BY-SA 2.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s1.item2": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9f/Cheese_And_Wine_Party_Debconf23.jpg/1280px-Cheese_And_Wine_Party_Debconf23.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 960,
-      "alt": "Cheese And Wine Party Debconf23",
-      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s1.item3": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/Pierre-Auguste_Renoir_-_Luncheon_of_the_Boating_Party_-_Google_Art_Project.jpg/1280px-Pierre-Auguste_Renoir_-_Luncheon_of_the_Boating_Party_-_Google_Art_Project.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 948,
-      "alt": "Pierre-Auguste Renoir - Luncheon of the Boating Party - Google Art Project",
-      "credit": "Pierre-Auguste Renoir (Public domain, via Wikimedia Commons)",
+      "height": 905,
+      "alt": "Wedding of Victoria, Crown Princess of Sweden, and Daniel Westling; Cortège at S",
+      "credit": "Holger Motzkau (CC BY-SA 3.0, via Wikimedia Commons)",
       "provider": "wikimedia"
     },
     "s2.about": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Corporate_Events_and_Guests_at_PIBM.jpg/1280px-Corporate_Events_and_Guests_at_PIBM.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/Planning_the_Science_Museum_Late_event_2014-11-19.jpg/1280px-Planning_the_Science_Museum_Late_event_2014-11-19.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "width": 1280,
-      "height": 853,
-      "alt": "Corporate Events and Guests at PIBM",
-      "credit": "Corporate Events and Guests at PIBM — AnnanyaSingh (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
+      "height": 960,
+      "alt": "The planning session for the Wikimedia UK event as part of the Science Museum La",
+      "credit": "Chris McKenna (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
     },
     "s3.g0": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a4/Cheese_And_Wine_Party_Debconf23_2.jpg/1280px-Cheese_And_Wine_Party_Debconf23_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/ba/Flower_decorations_at_a_wedding_in_India_03.jpg/1280px-Flower_decorations_at_a_wedding_in_India_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "width": 1280,
-      "height": 960,
-      "alt": "Cheese And Wine Party Debconf23",
-      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
+      "height": 853,
+      "alt": "Flower decorations at a wedding in India",
+      "credit": "Kritzolina (CC BY-SA 4.0, via Wikimedia Commons)",
       "provider": "wikimedia"
     },
-    "s3.g1": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f1/Cheese_And_Wine_Party_Debconf23_3.jpg/1280px-Cheese_And_Wine_Party_Debconf23_3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+    "s3.g3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/a2/StateLibQld_1_189779_Outdoor_wedding_being_performed_under_the_Burke_and_Wills_tree%2C_near_Boulia%2C_Queensland%2C_1920s.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
       "width": 1280,
-      "height": 1707,
-      "alt": "Cheese And Wine Party Debconf23",
-      "credit": "Athulvis (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s3.g2": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Sir_Tom_Jones_at_The_Queen%27s_Birthday_Party_%28cropped%29.jpg",
-      "width": 1500,
-      "height": 1644,
-      "alt": "Sir Tom Jones at The Queen's Birthday Party (cropped)",
-      "credit": "Sir Tom Jones at The Queen's Birthday Party (cropped) — Raph_PH (BY 2.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s3.g6": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/df/Private_LAN_party_in_Norway.JPG/1280px-Private_LAN_party_in_Norway.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 960,
-      "alt": "Private LAN party in Norway",
-      "credit": "Omalmin (CC BY-SA 3.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s3.g7": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/27/Mule_decoration_contest_at_the_National_Western_Stock_Show_in_the_Events_Center.jpg/1280px-Mule_decoration_contest_at_the_National_Western_Stock_Show_in_the_Events_Center.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 851,
-      "alt": "Mule decoration contest at the National Western Stock Show in the Events Center",
-      "credit": "Nathan Walker (CC BY 2.0, via Wikimedia Commons)",
+      "height": 755,
+      "alt": "Outdoor wedding being performed under the Burke and Wills tree, near Boulia, Que",
+      "credit": "Wikimedia Commons (Public domain, via Wikimedia Commons)",
       "provider": "wikimedia"
     },
     "s4.clip": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/5/59/Event_highlight_of_Public_Domain_Day_2020_in_Medan_City%2C_Indonesia%3B_January_2020.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Nafees_Weds_Fareena_--_Butwal_--_Muslim_Wedding_Highlights.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
       "width": 1280,
-      "height": 720,
-      "alt": "Event highlight of Public Domain Day 2020 in Medan City, Indonesia, on January 1",
-      "credit": "Rachmat04 for Wikimedia Indonesia (CC BY 3.0, via Wikimedia Commons)",
+      "height": 544,
+      "alt": "Let us know If You Like It Book Now For Wedding Photography &amp; Videography Se",
+      "credit": "Ratna Photography Nepal (CC BY 3.0, via Wikimedia Commons)",
       "provider": "wikimedia",
       "mime": "video/webm"
+    },
+    "s7.m0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/7/72/Meri_Makaryan_%28born_1985%29_in_the_video_%27The_Dream_Wedding_Planner_-_Ep_23_ft._Edgar_Hay_Events%27.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 1345,
+      "alt": "Meri Makaryan (born 1985) in the video 'The Dream Wedding Planner - Ep 23 ft. Ed",
+      "credit": "MenuAM_USA (CC BY 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s7.m1": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Rome%2C_via_Appia_Antica_-_WMI-mAppiaM_2016_-_g8334.jpg/1280px-Rome%2C_via_Appia_Antica_-_WMI-mAppiaM_2016_-_g8334.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1707,
+      "alt": "This picture was taken in Rome during the \"mAppiaM!\" event, organised by Wikimed",
+      "credit": "Gianfranco (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s0.hero": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/ff/Christian_wedding_in_Russia.jpg/1280px-Christian_wedding_in_Russia.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 848,
+      "alt": "A Christian, Russian Orthodox, wedding ceremony in Church of the Dormition in Vo",
+      "credit": "Виктория Злых (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/The_Special_Event_2015_Wedding_Gala.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 960,
+      "alt": "A major national event for the industry's top wedding and event planners.",
+      "credit": "BECMarketing (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/6/6a/JW_Marriott_Royal_Wedding_-_KYC_Event.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 800,
+      "alt": "JW Marriott, Mumbai Royal Wedding Scenes by KYC Events, a well known Event Manag",
+      "credit": "Gdaghfd (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item3": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c7/Event_Wedding_Di_Samisara_Grand_Ballroom.jpg/1280px-Event_Wedding_Di_Samisara_Grand_Ballroom.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 720,
+      "alt": "Salah Satu Event Wedding Di Samisara Grand Ballroom",
+      "credit": "Akangyasin (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/eb/INIBEP_Instituto_Wedding_%26_Event_Planning.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 1310,
+      "alt": "INIBEP — Instituto Wedding &amp; Event Planning, founded in 2006",
+      "credit": "Culturaeventplanner (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/c/c2/Hausa_traditional_wedding_and_event_dressing_45.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 960,
+      "alt": "Hausa traditional wedding and event dressing",
+      "credit": "AsmudEmpire (CC0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g4": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Hausa_traditional_wedding_and_event_dressing_12.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 1921,
+      "alt": "Hausa traditional wedding and event dressing",
+      "credit": "AsmudEmpire (CC0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g5": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Hausa_traditional_wedding_and_event_dressing_15.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 1921,
+      "alt": "Hausa traditional wedding and event dressing",
+      "credit": "AsmudEmpire (CC0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g6": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/9/99/Hausa_traditional_wedding_and_event_dressing_25.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 1921,
+      "alt": "Hausa traditional wedding and event dressing",
+      "credit": "AsmudEmpire (CC0, via Wikimedia Commons)",
+      "provider": "wikimedia"
     }
   }
 }
