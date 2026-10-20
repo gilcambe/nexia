@@ -34,6 +34,7 @@ export type FooterProps = {
 };
 
 export default function Footer({ client }: FooterProps) {
+  // Selo "Feito com Kernex": o link que vier em client tem prioridade; sem ele, usa o link padrão.
   const madeWithKernexLink = client?.madeWithKernexLink ?? MADE_WITH_KERNEX_LINK;
 
   return (
@@ -86,6 +87,8 @@ export default function Footer({ client }: FooterProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="made-with-kernex"
+                title="Feito com Kernex"
+                aria-label="Feito com Kernex (abre em uma nova aba)"
               >
                 Feito com Kernex
               </a>
