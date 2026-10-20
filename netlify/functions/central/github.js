@@ -141,11 +141,12 @@ function criarGithub(env = process.env, fetchFn = fetch) {
       const tarefasPendentes = Math.max(0, totalTarefas - tarefasFeitas);
       
       // Dados de particionamento para a interface - sem expor dados sensíveis
+      // Garante que os valores se números válidos para evitar erros na interface
       const particionamento = {
-        total: totalTarefas,
-        feitas: tarefasFeitas,
-        pendentes: tarefasPendentes,
-        progresso: totalTarefas > 0 ? Math.round((tarefasFeitas / totalTarefas) * 100) : 0
+        total: Math.max(0, totalTarefas),
+        feitas: Math.max(0, tarefasFeitas),
+        pendentes: Math.max(0, tarefasPendentes),
+        progresso: totalTarefas > 0 ? Math.round(Math.min(100, Math.max(0, (tarefasFeitas / totalTarefas) * 100))) : 0
       };
       
       // Limita número de tarefas pendentes para processamento
