@@ -1,0 +1,17 @@
+{
+  "nome": "Viajante Pro",
+  "frase": "Seu parceiro em viagens de luxo",
+  "servicos": [
+    "Pacotes exclusivos",
+    "Consultoria de viagens",
+    "Gestão de itinerários"
+  ],
+  "contato": {
+    "whatsapp": "+55 11 99999-9999",
+    "email": "contato@viajantepro.com"
+  },
+  "primaryColor": "#00E5FF",
+  "favicon": "favicon-vp.svg",
+  "madeWithKernexLink": "https://kernex.com.br/?utm_source=viajantepro&utm_medium=selo",
+  "title": "Viajante Pro"
+}
