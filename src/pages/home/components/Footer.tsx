@@ -23,7 +23,7 @@ const product = [
   { label: "Documentação", to: "/docs" },
 ];
 
-export const MADE_WITH_KERNEX_LINK = "https://kernex.com.br/?utm_source=nexiaos&utm_medium=selo";
+export const MADE_WITH_KERNEX_LINK = "https://kernex.com.br/?utm_source=viajantepro&utm_medium=selo";
 
 export type FooterClient = {
   madeWithKernexLink?: string;
