@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsString, IsOptional, IsBoolean, IsDateString, IsIn } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsString, IsOptional, IsBoolean, IsDateString } from 'class-validator';
 
 // DTOs para o módulo Cortex - implementados conforme requisitos
 
