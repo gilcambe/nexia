@@ -1,0 +1,26 @@
+{
+  "passes": [
+    {
+      "passo": 1,
+      "descricao": "Plano de edições gerado para a implementação da tarefa.",
+      "status": "pendente"
+    },
+    {
+      "passo": 2,
+      "descricao": "Aplicação das edições planejadas no código fonte.",
+      "status": "pendente"
+    },
+    {
+      "passo": 3,
+      "descricao": "Execução de `npm test` e interpretação dos resultados.",
+      "status": "pendente"
+    }
+  ],
+  "regras": [
+    "Tudo grátis",
+    "Nenhuma função existente removida",
+    "Não mexer em regras do Firestore nem em segredos",
+    "npm test passa"
+  ],
+  "arquivo_referencia": "nexia-audit/melhorias-2026-10-18/melhorias-45.md"
+}
