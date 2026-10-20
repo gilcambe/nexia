@@ -34,14 +34,34 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
       </Cartao>
 
       <Cartao titulo="Temas da semana">
-        <div className="divulga-themes">
+        <p className="text-sm text-nexia-muted">Cada dia tem um tema. Escolha o hor\u00e1rio e o rob\u00f4 cria e publica o texto na hora.</p>
+        <div className="divulga-themes space-y-2">
           {temasSemana.map((t, i) => (
-            <div key={i} className="tema-item">
-              <span>{t.dia}</span> – <span>{t.tema}</span>
-              <div className="horarios">
-                <button onClick={() => handlePostarAgora('07h15', t.tema)} disabled={ocupado}>Postar 07h15</button>
-                <button onClick={() => handlePostarAgora('12h15', t.tema)} disabled={ocupado}>Postar 12h15</button>
-                <button onClick={() => handlePostarAgora('19h15', t.tema)} disabled={ocupado}>Postar 19h15</button>
+            <div key={i} className="tema-item rounded-xl bg-nexia-surface2 p-3 text-sm space-y-2">
+              <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                <span className="font-medium text-nexia-text">{t.dia}</span>
+                <span aria-hidden="true" className="text-nexia-muted">\u2013</span>
+                <span className="text-nexia-muted">{t.tema}</span>
+              </div>
+              <div className="horarios flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => handlePostarAgora('07h15', t.tema)}
+                  disabled={ocupado}
+                  className="rounded-lg border border-nexia-border bg-nexia-surface px-3 py-1.5 text-xs font-medium text-nexia-text transition hover:border-nexia-cyan hover:text-nexia-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexia-cyan disabled:cursor-not-allowed disabled:opacity-50"
+                >Postar 07h15</button>
+                <button
+                  type="button"
+                  onClick={() => handlePostarAgora('12h15', t.tema)}
+                  disabled={ocupado}
+                  className="rounded-lg border border-nexia-border bg-nexia-surface px-3 py-1.5 text-xs font-medium text-nexia-text transition hover:border-nexia-cyan hover:text-nexia-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexia-cyan disabled:cursor-not-allowed disabled:opacity-50"
+                >Postar 12h15</button>
+                <button
+                  type="button"
+                  onClick={() => handlePostarAgora('19h15', t.tema)}
+                  disabled={ocupado}
+                  className="rounded-lg border border-nexia-border bg-nexia-surface px-3 py-1.5 text-xs font-medium text-nexia-text transition hover:border-nexia-cyan hover:text-nexia-cyan focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-nexia-cyan disabled:cursor-not-allowed disabled:opacity-50"
+                >Postar 19h15</button>
               </div>
             </div>
           ))}
