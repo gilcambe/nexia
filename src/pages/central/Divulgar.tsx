@@ -16,69 +16,17 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   const [toggleDisabled, setToggleDisabled] = useState(false);
   
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-    
     fetch('/.netlify/functions/central/github?action=getWeekly')
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`Erro na API: ${response.status}`);
-        }
-        const data = await response.json();
-        
-        // Validação dos dados retornados
-        if (!Array.isArray(data)) {
-          throw new Error('Formato de dados inválido: esperado um array');
-        }
-        
-        // Validação de cada item
-        const validData = data.filter(item => 
-          item && 
-          typeof item === 'object' && 
-          'day' in item && 
-          'done' in item
-        );
-        
-        if (validData.length !== data.length) {
-          console.warn('Alguns itens da lista semanal foram filtrados por dados inválidos');
-        }
-        
-        setWeekly(validData);
-      })
-      .catch(err => {
-        console.error('Erro ao buscar lista semanal:', err);
-        setError(err.message || 'Falha ao carregar lista semanal');
-        setWeekly([]);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      .then(r => r.json())
+      .then(setWeekly);
   }, []);
   
-  const handleToggle = async (index: number) => {
-    if (!weekly || toggleDisabled) return;
-    
-    // Debounce simples para evitar múltiplos cliques rápidos
-    setToggleDisabled(true);
-    
-    try {
-      const novoWeekly = [...weekly];
-      novoWeekly[index] = { ...novoWeekly[index], done: !novoWeekly[index].done };
-      setWeekly(novoWeekly);
-      
-      await agir({ acao: 'toggle', index, done: novoWeekly[index].done });
-    } catch (e) {
-      console.error('Erro ao atualizar status:', e);
-      // Reverter mudança em caso de erro
-      const response = await fetch('/.netlify/functions/central/github?action=getWeekly');
-      if (response.ok) {
-        const freshData = await response.json();
-        setWeekly(freshData);
-      }
-    } finally {
-      // Timeout para debounce
-      setTimeout(() => setToggleDisabled(false), 500);
-    }
+  const handleToggle = (index: number) => {
+    if (!weekly) return;
+    const novoWeekly = [...weekly];
+    novoWeekly[index] = { ...novoWeekly[index], done: !novoWeekly[index].done };
+    setWeekly(novoWeekly);
+    agir({ acao: 'toggle', index, done: novoWeekly[index].done });
   };
   const rodar = async (corpo: Record<string, unknown>) => {
     setOcupado(true); setMsg(null);
@@ -144,18 +92,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
       ) : weekly && weekly.length > 0 ? (
         <Cartao titulo="Lista Semanal">
           <p className="text-sm text-nexia-muted">Clique para marcar como feito/nãofeito. Salvo automaticamente.</p>
-          <div className="grid grid-cols-1 gap-2">
-            {weekly.map((d, i) => (
-              <div 
-                key={d.day || i} // Usa o day como chave única, ou fallback para índice
-                className={`daily-box ${d.done ? 'bg-green-50' : 'bg-nexia-surface2'} p-3 rounded-lg cursor-pointer flex justify-between items-center ${toggleDisabled ? 'opacity-70' : ''}`}
-                onClick={() => handleToggle(i)}
-              >
-                <span>{d.day}</span>
-                <span className="text-lg">{d.done ? '✅' : '❌'}</span>
-              </div>
-            ))}
-          </div>
+          {weekly && weekly.map((d, i)=> <div key={i} className='daily-box' onClick={()=>handleToggle(i)}>{d.day} {d.done ? '✅' : '❌'}</div>)}
         </Cartao>
       ) : weekly && weekly.length === 0 ? (
         <Cartao titulo="Lista Semanal">
