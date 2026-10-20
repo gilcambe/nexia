@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cortex-p1 — Teste de contexto, sanitização e filas em um só painel</title>
-  <meta name="description" content="Teste de contexto, sanitização e filas em um só painel">
-  <meta name="theme-color" content="#6d28d9">
+  <title>Cortex-p1 — Gestão Inteligente de Projetos e Dados</title>
+  <meta name="description" content="Gestão Inteligente de Projetos e Dados">
+  <meta name="theme-color" content="#4f46e5">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
 </head>
@@ -22,10 +22,10 @@
       </div>
       <nav class="sidebar__nav" aria-label="Seções">
         <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
-        <a href="#/testes_contexto" data-route="testes_contexto"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Testes de contexto</span></a>
+        <a href="#/projetos" data-route="projetos"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Projetos</span></a>
       </nav>
       <div class="sidebar__foot">
-        <p>Suporte: exemplo@cortex-p1.com.br</p>
+        <p>Suporte: contato@cortex-p1.com.br</p>
         <p>Dados salvos neste navegador.</p>
       </div>
     </aside>
@@ -35,7 +35,7 @@
         <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
         <div class="topbar__title">
           <h1 id="view-title">Painel</h1>
-          <p id="view-sub">Teste de contexto, sanitização e filas em um só painel</p>
+          <p id="view-sub">Gestão Inteligente de Projetos e Dados</p>
         </div>
         <label class="search">
           <span class="sr-only">Buscar</span>
@@ -99,7 +99,7 @@
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1","name":"Cortex-p1","entities":[{"key":"testes_contexto","label":"Testes de contexto","singular":"Teste de contexto","fields":[{"key":"nome","label":"Nome do teste","type":"text","options":[],"required":true},{"key":"integracao","label":"Integração","type":"select","options":["Cortex","OpenAI","Google AI","GitHub","RSA"],"required":true},{"key":"status","label":"Status","type":"select","options":["Aprovado","Falhou","Pendente","Em execução"],"required":true},{"key":"texto_contexto","label":"Texto de contexto","type":"textarea","options":[],"required":true},{"key":"filas","label":"Filas","type":"number","options":[],"required":true},{"key":"rodando","label":"Rodando","type":"number","options":[],"required":true},{"key":"travadas","label":"Travadas","type":"number","options":[],"required":true},{"key":"linha_status","label":"Linha de status","type":"text","options":[],"required":true}],"sample":[{"nome":"Sanitização de chaves Cortex","integracao":"Cortex","status":"Aprovado","texto_contexto":"Olá Cortex tem chave sk-abc123 e outro AIzaXYZ e segredo -----BEGIN RSA PVT----- e ghp_123abc","filas":"1","rodando":"0","travadas":"0","linha_status":"Conexão: Filas: 1 | Rodando: 0 | Travadas: 0"},{"nome":"Contexto sem credenciais","integracao":"Cortex","status":"Aprovado","texto_contexto":"Olá Cortex, conecte o painel às filas e mostre o estado atual da execução.","filas":"2","rodando":"0","travadas":"0","linha_status":"Conexão: Filas: 2 | Rodando: 0 | Travadas: 0"},{"nome":"Verificação de integração Google","integracao":"Google AI","status":"Pendente","texto_contexto":"Contexto de homologação para validar a leitura das respostas da API.","filas":"1","rodando":"1","travadas":"0","linha_status":"Conexão: Filas: 1 | Rodando: 1 | Travadas: 0"},{"nome":"Validação de repositório","integracao":"GitHub","status":"Falhou","texto_contexto":"Falha simulada ao montar o contexto para revisão do fluxo de cópia.","filas":"3","rodando":"0","travadas":"1","linha_status":"Conexão: Filas: 3 | Rodando: 0 | Travadas: 1"},{"nome":"Carga em execução","integracao":"RSA","status":"Em execução","texto_contexto":"Processamento em andamento para validar a sanitização antes da cópia final.","filas":"4","rodando":"2","travadas":"0","linha_status":"Conexão: Filas: 4 | Rodando: 2 | Travadas: 0"}]}]}</script>
+  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1","name":"Cortex-p1","entities":[{"key":"projetos","label":"Projetos","singular":"Projeto","fields":[{"key":"nome","label":"Nome do Projeto","type":"text","options":[],"required":true},{"key":"data_inicio","label":"Data de Início","type":"date","options":[],"required":true},{"key":"data_fim","label":"Data de Término","type":"date","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Planejando","Em Andamento","Concluído","Pausado"],"required":true},{"key":"orcamento","label":"Orçamento","type":"money","options":[],"required":true},{"key":"descricao","label":"Descrição","type":"textarea","options":[],"required":false}],"sample":[{"nome":"Sistema de Gestão","data_inicio":"2026-06-01","data_fim":"2026-12-31","status":"Em Andamento","orcamento":"150000","descricao":"Desenvolvimento de plataforma integrada para gestão de projetos"},{"nome":"Redesign UI/UX","data_inicio":"2026-07-15","data_fim":"2026-09-30","status":"Planejando","orcamento":"85000","descricao":"Atualização da interface do usuário com foco em experiência"},{"nome":"Migração Cloud","data_inicio":"2026-05-10","data_fim":"2026-08-20","status":"Concluído","orcamento":"220000","descricao":"Migração completa da infraestrutura para nuvem AWS"},{"nome":"Inteligência Artificial","data_inicio":"2026-08-01","data_fim":"2027-03-15","status":"Em Andamento","orcamento":"320000","descricao":"Implementação de módulos de IA para análise preditiva"},{"nome":"Sistema de Helpdesk","data_inicio":"2026-04-05","data_fim":"2026-07-10","status":"Pausado","orcamento":"95000","descricao":"Desenvolvimento de sistema de suporte técnico integrado"}]}]}</script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
   <script src="app.js" defer></script>
 </body>
