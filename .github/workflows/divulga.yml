@@ -102,3 +102,6 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -qm "dados do Divulga"
           git push -q origin divulga-dados
+      - name: Executar vigia da divulgação
+        if: always()
+        run: node divulga/vigia.js
