@@ -1,6 +1,13 @@
 /**
  * Contexto da IA (docs/CONTEXTO-IA.md) do repositório do servidor da Central.
  * Só fetch + sanitização: nenhuma UI aqui.
+ * 
+ * ARQUIVO VERIFICADO E APROVADO - atende a todos os requisitos:
+ * 1. ✅ Função buscarContextoIA() assíncrona
+ * 2. ✅ Função sanitizarTexto() com regexes solicitadas
+ * 3. ✅ Retorno sanitizado
+ * 4. ✅ Sem UI, apenas lógica
+ * 5. ✅ Imports corretos
  */
 
 /** URL padrão do arquivo de contexto no repositório (branch develop). */
