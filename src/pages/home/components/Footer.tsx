@@ -29,6 +29,17 @@ export type FooterClient = {
   madeWithKernexLink?: string;
 };
 
+// Função de validação de URL para evitar URLs maliciosas
+const isValidUrl = (url: string): boolean => {
+  try {
+    const urlObj = new URL(url);
+    // Permite apenas HTTPS e HTTP
+    return urlObj.protocol === 'https:' || urlObj.protocol === 'http:';
+  } catch {
+    return false;
+  }
+};
+
 export type FooterProps = {
   client?: FooterClient;
 };
