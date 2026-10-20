@@ -125,7 +125,7 @@ function createHandler(deps = {}) {
       if (parte === 'reservas') return res(200, await gh.reservas());   // #802: contas de reserva (só nomes de segredos)
       if (parte === 'robos') return res(200, { robos: await gh.robos(ROBOS) });
       if (parte === 'divulga') return res(200, await gh.divulga());
-      if (parte === 'divulga-estado') return res(200, await gh.estadoDivulga());
+      if (parte === 'estado-divulga') return res(200, await gh.estadoDivulga());
       return res(400, { error: 'Parte desconhecida.' });
     } catch (e) {
       return res(502, { error: 'Não consegui buscar agora: ' + String(e.message || e).slice(0, 160) });
