@@ -143,7 +143,11 @@ exports.handler = async (event, context) => {
     }
 
     if (action === 'postarAgora') {
-      const estadoPath = path.join(__dirname, '../../divulgados/dados/divulga-estado.json');
+      // O estado do Divulga fica na raiz do repositório (divulgados/dados/divulga-estado.json).
+      // O caminho pode ser ajustado por DIVULGA_ESTADO_PATH quando o servidor roda fora do repo.
+      const estadoPath = process.env.DIVULGA_ESTADO_PATH
+        ? path.resolve(process.env.DIVULGA_ESTADO_PATH)
+        : path.join(__dirname, '../../../divulgados/dados/divulga-estado.json');
       // Garante que a pasta do estado exista antes de gravar.
       await fs.promises.mkdir(path.dirname(estadoPath), { recursive: true });
       
