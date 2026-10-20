@@ -11,6 +11,8 @@ import Dinheiro from "./Dinheiro";
 import Divulgar from "./Divulgar";
 import CortexAba from "./CortexAba";
 import Sistema from "./Sistema";
+import PrsAba from "./PrsAba";
+import InstalarApp from "./InstalarApp";
 
 // Central NEXIA: o dono vê e controla toda a NEXIA numa página só, feita para o celular.
 const ABAS: { id: Aba; nome: string; icone: string }[] = [
@@ -19,6 +21,7 @@ const ABAS: { id: Aba; nome: string; icone: string }[] = [
   { id: "dinheiro", nome: "Dinheiro", icone: "💰" },
   { id: "divulgar", nome: "Divulgar", icone: "📣" },
   { id: "cortex", nome: "Cortex", icone: "🧠" },
+  { id: "prs", nome: "PRs", icone: "🔀" },
   { id: "sistema", nome: "Sistema", icone: "⚙️" },
 ];
 
@@ -102,11 +105,13 @@ export default function CentralPage() {
         {semAcesso && <p className="text-red-400" role="alert">{erros.lista}</p>}
         {user && !semAcesso && (
           <>
+            {aba === "inicio" && <InstalarApp />}
             {aba === "inicio" && <Inicio d={d} avisos={avisos} ir={ir} conferir={conferir} carregando={carregando} />}
             {aba === "clientes" && <Clientes d={d} erros={erros} />}
             {aba === "dinheiro" && <Dinheiro d={d} erro={erros.dinheiro} />}
             {aba === "divulgar" && <Divulgar d={d} erro={erros.divulga} />}
             {aba === "cortex" && <CortexAba d={d} erro={erros.cortex} />}
+            {aba === "prs" && <PrsAba d={d} erro={erros.cortex} />}
             {aba === "sistema" && <Sistema d={d} erros={erros} />}
           </>
         )}
@@ -114,7 +119,7 @@ export default function CentralPage() {
 
       {user && !semAcesso && (
         <nav className="fixed bottom-0 inset-x-0 z-10 bg-nexia-surface border-t border-nexia-border" aria-label="Seções da Central">
-          <div className="max-w-2xl mx-auto grid grid-cols-6">
+          <div className="max-w-2xl mx-auto grid grid-cols-7">
             {ABAS.map((a) => (
               <button key={a.id} onClick={() => ir(a.id)} data-testid={`aba-${a.id}`}
                 className={`relative py-2 flex flex-col items-center text-[11px] cursor-pointer ${aba === a.id ? "text-nexia-cyan" : "text-nexia-muted"}`}>

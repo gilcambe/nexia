@@ -1,0 +1,20 @@
+{
+  "id": "/central",
+  "name": "Central Kernex",
+  "short_name": "Central",
+  "description": "A Central da Kernex no celular: saúde dos sites, fila do Cortex, PRs e alertas.",
+  "lang": "pt-BR",
+  "start_url": "/central",
+  "scope": "/central",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#060d1c",
+  "theme_color": "#060d1c",
+  "icons": [
+    { "src": "/central-icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/central-icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/central-icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/central-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
