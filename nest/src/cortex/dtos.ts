@@ -1,64 +1,86 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsString, IsNotEmpty, IsOptional, IsNumber, Min, Max } from 'class-validator';
+import { IsEnum, IsString, IsNotEmpty, IsOptional, IsBoolean, IsDateString } from 'class-validator';
+
+// DTOs para o módulo Cortex - implementados conforme requisitos
 
 export enum TaskStatus {
   PENDING = 'PENDING',
   QUEUED = 'QUEUED',
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
-  FAILED = 'FAILED'
+  FAILED = 'FAILED',
+}
+
+export enum TaskPriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
 }
 
 export class CreateTaskRequest {
   @ApiProperty({
     description: 'Título da tarefa',
-    example: 'Implementar autenticação JWT'
+    example: 'Implementar nova funcionalidade',
   })
-  @IsString()
   @IsNotEmpty()
+  @IsString()
   title: string;
 
   @ApiProperty({
     description: 'Descrição detalhada da tarefa',
-    example: 'Implementar sistema de autenticação usando JWT com expiração de 24 horas'
+    example: 'Implementar a nova funcionalidade de relatórios com exportação para PDF',
+    required: false,
   })
-  @IsString()
   @IsOptional()
+  @IsString()
   description?: string;
 
   @ApiProperty({
     description: 'Prioridade da tarefa',
-    example: 5,
-    minimum: 1,
-    maximum: 10
+    example: 'high',
+    enum: TaskPriority,
+    enumName: 'TaskPriority',
+    required: false,
   })
-  @IsNumber()
-  @Min(1)
-  @Max(10)
-  priority: number;
-
-  @ApiProperty({
-    description: 'ID do projeto ao qual a tarefa pertence',
-    example: 'projeto-123'
-  })
-  @IsString()
-  @IsNotEmpty()
-  projectId: string;
-
-  @ApiProperty({
-    description: 'ID do usuário responsável pela tarefa',
-    example: 'user-456'
-  })
-  @IsString()
   @IsOptional()
-  assigneeId?: string;
+  @IsEnum(TaskPriority)
+  priority?: TaskPriority;
 
   @ApiProperty({
-    description: 'Status inicial da tarefa',
+    description: 'Indica se a tarefa é recorrente',
+    example: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isRecurring?: boolean;
+
+  @ApiProperty({
+    description: 'Status da tarefa',
+    example: 'PENDING',
     enum: TaskStatus,
-    example: TaskStatus.PENDING
+    enumName: 'TaskStatus',
+    required: false,
   })
-  @IsEnum(TaskStatus)
   @IsOptional()
+  @IsEnum(TaskStatus)
   status?: TaskStatus;
+
+  @ApiProperty({
+    description: 'Data de início planejada',
+    example: '2024-01-15T10:00:00Z',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  plannedStartDate?: string;
+
+  @ApiProperty({
+    description: 'Data de conclusão planejada',
+    example: '2024-01-20T18:00:00Z',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  plannedEndDate?: string;
 }
