@@ -1,5 +1,6 @@
 {
   "kind": "site",
+  "title": "Viajante Pro",
   "name": "Viajante Pro",
   "tagline": "Seu parceiro em viagens de luxo",
   "description": "Agência de viagens especializada em pacotes exclusivos e consultoria personalizada para experiências memoráveis.",
@@ -19,6 +20,7 @@
     "muted": "#7F8C8D",
     "dark": "#1A252F"
   },
+  "favicon": "favicon-vp.svg",
   "contact": {
     "whatsapp": "+55 11 99999-9999",
     "phone": "+55 11 99999-9999",
@@ -183,5 +185,6 @@
       "type": "contact",
       "title": "Entre em Contato"
     }
-  ]
+  ],
+  "madeWithKernexLink": "https://kernex.com.br/?utm_source=viajantepro&utm_medium=selo"
 }
