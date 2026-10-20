@@ -169,4 +169,4 @@ exports.handler = async (event, context) => {
   }
 };
 
-module.exports = { criarGithub, REPO, RESERVAS, montarReservas };
+module.exports = { criarGithub, REPO, RESERVAS, montarReservas, handler };
