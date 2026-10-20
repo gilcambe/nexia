@@ -104,6 +104,8 @@ export async function* streamCortex(
     model?: string;
     tenantId?: string;
     conversationId?: string;
+    /** #831: Rápido = modelo pequeno, Pensar = raciocínio, Pesquisar = web. */
+    modo?: "rapido" | "pensar" | "pesquisar";
   },
   signal?: AbortSignal
 ): AsyncGenerator<CortexStreamChunk, void, unknown> {
@@ -115,6 +117,7 @@ export async function* streamCortex(
     stream: true,
     maxTokens: 0,
     conversationId: payload.conversationId || "default",
+    ...(payload.modo ? { modo: payload.modo } : {}),
   });
 
   let res: Response;

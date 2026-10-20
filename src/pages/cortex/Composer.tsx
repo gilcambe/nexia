@@ -103,8 +103,8 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
           </button>
           
-          {/* Seletor de modo de resposta */}
-          <div className="flex items-center gap-1 bg-[var(--cx-card)] border border-[var(--cx-line)] rounded-lg px-2 py-1 shrink-0">
+          {/* Seletor de modo de resposta (#831): só vale em "Perguntar agora", onde a resposta chega na hora. */}
+          {modo === "pergunta" && <div data-testid="cx-modos" className="flex items-center gap-1 bg-[var(--cx-card)] border border-[var(--cx-line)] rounded-lg px-2 py-1 shrink-0">
             <button 
               type="button" 
               onClick={() => setModoResposta("rapido")}
@@ -132,8 +132,8 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
             >
               Pesquisar
             </button>
-          </div>
-          
+          </div>}
+
           <button type="button" onClick={mandar} disabled={!pode} aria-label="Enviar" data-testid="cx-enviar"
             className="w-11 h-11 rounded-full flex items-center justify-center text-black bg-gradient-to-br from-[#00d4aa] to-[#7c6cf0] disabled:opacity-30 shrink-0">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
