@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Dados, Tarefa } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Numero, Botao, Carregando } from "./ui";
+import ContasReserva from "../cortex/Reservas";
 
 function Lista({ itens, vazio }: { itens: Tarefa[]; vazio: string }) {
   if (!itens.length) return <p className="text-sm text-nexia-muted">{vazio}</p>;
@@ -52,6 +53,7 @@ export default function CortexAba({ d, erro }: { d: Dados; erro?: string }) {
           <Cartao titulo="Travadas (precisam de ajuda)"><Lista itens={x.travadas} vazio="Nenhuma travada. 🎉" /></Cartao>
           <Cartao titulo="Últimas entregas"><Lista itens={x.ultimas} vazio="Nenhuma entrega nos últimos 7 dias." /></Cartao>
           <Cartao titulo="Próximas da fila"><Lista itens={x.proximas} vazio="Fila vazia." /></Cartao>
+          <ContasReserva />
         </>
       )}
     </div>
