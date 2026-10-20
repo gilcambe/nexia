@@ -1,0 +1,249 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex-p1 Test",
+    "tagline": "Sistema de gerenciamento de projetos e tarefas",
+    "photo_theme": "",
+    "description": "Sistema de gerenciamento de projetos e tarefas",
+    "folder": "sites/cortex-p1-test",
+    "fonts": {
+      "heading": "Plus Jakarta Sans",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#4f46e5",
+      "accent": "#06b6d4",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#111827"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 90000-0000",
+      "email": "suporte@cortex-p1.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=cortex-p1-test&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "projetos",
+        "label": "Projetos",
+        "singular": "Projeto",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome do Projeto",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Planejamento",
+              "Em Andamento",
+              "Em Revisão",
+              "Concluído",
+              "Cancelado"
+            ],
+            "required": true
+          },
+          {
+            "key": "data_inicio",
+            "label": "Data de Início",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_prevista_conclusao",
+            "label": "Data Prevista de Conclusão",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "orcamento",
+            "label": "Orçamento",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Redesign do Site",
+            "status": "Em Andamento",
+            "data_inicio": "2026-09-01",
+            "data_prevista_conclusao": "2026-11-30",
+            "orcamento": "50000",
+            "descricao": "Revisão completa da interface do site com foco em UX"
+          },
+          {
+            "nome": "Sistema de CRM",
+            "status": "Planejamento",
+            "data_inicio": "2026-10-15",
+            "data_prevista_conclusao": "2027-02-28",
+            "orcamento": "120000",
+            "descricao": "Desenvolvimento de sistema de gestão de relacionamento com clientes"
+          },
+          {
+            "nome": "App Móvel",
+            "status": "Em Revisão",
+            "data_inicio": "2026-07-10",
+            "data_prevista_conclusao": "2026-09-30",
+            "orcamento": "75000",
+            "descricao": "Aplicativo mobile para iOS e Android"
+          },
+          {
+            "nome": "Integração API",
+            "status": "Concluído",
+            "data_inicio": "2026-05-01",
+            "data_prevista_conclusao": "2026-06-15",
+            "orcamento": "25000",
+            "descricao": "Integração com serviços externos via API"
+          }
+        ]
+      },
+      {
+        "key": "tarefas",
+        "label": "Tarefas",
+        "singular": "Tarefa",
+        "fields": [
+          {
+            "key": "projeto",
+            "label": "Projeto",
+            "type": "select",
+            "options": [
+              "Redesign do Site",
+              "Sistema de CRM",
+              "App Móvel",
+              "Integração API"
+            ],
+            "required": true
+          },
+          {
+            "key": "titulo",
+            "label": "Título",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Pendente",
+              "Em Progresso",
+              "Concluída",
+              "Atrasada"
+            ],
+            "required": true
+          },
+          {
+            "key": "prioridade",
+            "label": "Prioridade",
+            "type": "select",
+            "options": [
+              "Baixa",
+              "Média",
+              "Alta",
+              "Urgente"
+            ],
+            "required": true
+          },
+          {
+            "key": "data_conclusao",
+            "label": "Data de Conclusão",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "observacoes",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "projeto": "Redesign do Site",
+            "titulo": "Criar wireframes principais",
+            "status": "Concluída",
+            "prioridade": "Alta",
+            "data_conclusao": "2026-09-15",
+            "observacoes": "Wireframes aprovados pelo cliente"
+          },
+          {
+            "projeto": "Sistema de CRM",
+            "titulo": "Definir requisitos funcionais",
+            "status": "Em Progresso",
+            "prioridade": "Urgente",
+            "data_conclusao": "2026-10-20",
+            "observacoes": "Reuniões agendadas com stakeholders"
+          },
+          {
+            "projeto": "App Móvel",
+            "titulo": "Desenvolver protótipo interativo",
+            "status": "Pendente",
+            "prioridade": "Média",
+            "data_conclusao": "2026-10-10",
+            "observacoes": "Aguardando feedback do design"
+          },
+          {
+            "projeto": "Integração API",
+            "titulo": "Documentar endpoints",
+            "status": "Concluída",
+            "prioridade": "Baixa",
+            "data_conclusao": "2026-06-20",
+            "observacoes": "Documentação finalizada"
+          },
+          {
+            "projeto": "App Móvel",
+            "titulo": "Testes de performance",
+            "status": "Atrasada",
+            "prioridade": "Alta",
+            "data_conclusao": "2026-09-25",
+            "observacoes": "Identificado gargalo no carregamento de imagens"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Projetos",
+      "Tarefas",
+      "Relatórios"
+    ]
+  },
+  "media": {}
+}
