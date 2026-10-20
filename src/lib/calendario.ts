@@ -1,3 +1,7 @@
+/**
+ * Os 7 dias da semana, começando no domingo.
+ * Usado por Divulgar.tsx para listar o tema e os horários de cada dia.
+ */
 export const SEMANA = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
 
 /**
