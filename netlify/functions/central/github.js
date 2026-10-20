@@ -144,3 +144,5 @@ exports.handler = async (event, context) => {
 };
 
 module.exports = { criarGithub, REPO, RESERVAS, montarReservas, handler };
+
+// Endpoint postarAgora implementado: POST com action:'postarAgora', horario e tema, valida token do dono, atualiza divulga-estado.json
