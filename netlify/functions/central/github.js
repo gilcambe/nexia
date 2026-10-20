@@ -2,6 +2,9 @@
 // Central NEXIA: o que a página precisa do GitHub (fila do Cortex, robôs, posts do Divulga).
 // Usa o token da fila (NEXIA_JOBS_TOKEN) só no servidor; nada dele vai para a página.
 
+// Variável de ambiente configurada via configurar-meta.bat
+const OWNER_PERMISSION = process.env.NEXIA_OWNER_PERMISSION === 'true';
+
 const REPO = 'gilcambe/nexia';
 const API = 'https://api.github.com/repos/' + REPO;
 
@@ -78,20 +81,50 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   }
 
   async function divulga() {
+    // Verificação de permissão de owner
+    if (!OWNER_PERMISSION) {
+      throw new Error('Permissão de owner não configurada. Configure via configurar-meta.bat');
+    }
+    
     const lerRaw = async (ramo, arq) => {
       const r = await fetchFn('https://raw.githubusercontent.com/' + REPO + '/' + ramo + '/' + arq, { headers: { 'User-Agent': 'nexia-central' } });
       return r.ok ? r.json().catch(() => null) : null;
     };
+    
+    // Integração com Graph API para dados de divulgação
+    const graphData = await fetchGraphData();
+    
     const [estado, arquivos] = await Promise.all([
       lerRaw('divulga-dados', 'divulga-estado.json'),
       gh('/contents/divulga/fila?ref=develop').catch(() => []),
     ]);
     const feitos = new Set((estado && estado.feitos) || []);
     const nomes = (Array.isArray(arquivos) ? arquivos : []).map((f) => f.name).filter((n) => n.endsWith('.json')).map((n) => n.replace(/\.json$/, ''));
+    
+    // Lógica de particionamento da tarefa de divulgação
+    const totalTarefas = nomes.length;
+    const tarefasFeitas = nomes.filter((n) => feitos.has(n)).length;
+    const tarefasPendentes = totalTarefas - tarefasFeitas;
+    
     const pendentes = nomes.filter((n) => !feitos.has(n)).slice(0, 5);
-    const proximos = (await Promise.all(pendentes.map((n) => lerRaw('develop', 'divulga/fila/' + n + '.json')))).map((p, k) => ({ id: pendentes[k], texto: String((p && (p.texto || p.legenda)) || '').slice(0, 280) }));
+    const proximos = (await Promise.all(pendentes.map((n) => lerRaw('develop', 'divulga/fila/' + n + '.json')))).map((p, k) => ({ 
+      id: pendentes[k], 
+      texto: String((p && (p.texto || p.legenda)) || '').slice(0, 280),
+      // Adiciona dados do Graph API para cada tarefa
+      graphInfo: graphData[pendentes[k]] || null
+    }));
+    
     const historico = ((estado && estado.historico) || []).slice(-8).reverse();
-    return { naFila: nomes.length - nomes.filter((n) => feitos.has(n)).length, proximos, historico };
+    
+    return { 
+      naFila: tarefasPendentes, 
+      total: totalTarefas,
+      feitas: tarefasFeitas,
+      proximos, 
+      historico,
+      // Dados agregados do Graph API
+      graphSummary: graphData.summary || null
+    };
   }
 
   // #802: contas de reserva do Cortex. Só os NOMES dos segredos (o GitHub nunca devolve o valor).
@@ -103,7 +136,76 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     return montarReservas(repo, prod, semCota);
   }
 
-  return { cortex, robos, rodar, pedirAoCortex, divulga, reservas, temToken: !!token };
+  // Função auxiliar para integração com Graph API
+  async function fetchGraphData() {
+    try {
+      // Integração exclusiva com Graph API no backend
+      const response = await fetchFn('https://api.github.com/graphql', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify({
+          query: `
+            query {
+              repository(owner: "gilcambe", name: "nexia") {
+                issues(labels: ["divulga"], first: 50) {
+                  nodes {
+                    number
+                    title
+                    state
+                    createdAt
+                    updatedAt
+                    labels(first: 5) {
+                      nodes {
+                        name
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          `
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Erro ao acessar Graph API: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const issues = data.data.repository.issues.nodes;
+      
+      // Processa os dados do Graph API
+      const summary = {
+        total: issues.length,
+        abertas: issues.filter(i => i.state === 'OPEN').length,
+        fechadas: issues.filter(i => i.state === 'CLOSED').length
+      };
+      
+      const byId = {};
+      issues.forEach(issue => {
+        byId[issue.number] = {
+          state: issue.state,
+          createdAt: issue.createdAt,
+          updatedAt: issue.updatedAt,
+          labels: issue.labels.nodes.map(l => l.name)
+        };
+      });
+      
+      return {
+        summary,
+        ...byId
+      };
+    } catch (error) {
+      console.error('Erro ao buscar dados do Graph API:', error);
+      return { summary: null };
+    }
+  }
+
+  return { cortex, robos, rodar, pedirAoCortex, divulga, reservas, temToken: !!token, fetchGraphData };
 }
 
 module.exports = { criarGithub, REPO, RESERVAS, montarReservas };
