@@ -1,0 +1,291 @@
+{
+  "spec": {
+    "kind": "site",
+    "name": "Splash Eventos",
+    "tagline": "Organização de eventos premium",
+    "photo_theme": "event party",
+    "description": "Criando experiências memoráveis para eventos corporativos e sociais.",
+    "folder": "sites/splash",
+    "fonts": {
+      "heading": "Playfair Display",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2c3e50",
+      "accent": "#e74c3c",
+      "bg": "#f8f9fa",
+      "surface": "#ffffff",
+      "text": "#2c3e50",
+      "muted": "#667071",
+      "dark": "#1a252f"
+    },
+    "style": "elegant",
+    "contact": {
+      "whatsapp": "5511999998888",
+      "phone": "(11) 99999-8888",
+      "email": "contato@splasheventos.com.br",
+      "address": "Av. Paulista, 1000",
+      "city": "São Paulo - SP",
+      "hours": "Seg a sex, 9h às 18h",
+      "instagram": "splasheventos",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=splash&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "sections": [
+      {
+        "type": "hero",
+        "id": "transformamos-momentos-em-memorias-inesq",
+        "title": "Transformamos momentos em memórias inesquecíveis",
+        "subtitle": "Organização completa de eventos corporativos e sociais com exclusividade.",
+        "eyebrow": "Eventos premium",
+        "cta": {
+          "label": "Fale conosco",
+          "href": "whatsapp"
+        },
+        "cta2": {
+          "label": "Ver serviços",
+          "href": "#servicos"
+        },
+        "image_query": "luxury event party",
+        "video_query": ""
+      },
+      {
+        "type": "services",
+        "id": "servicos",
+        "title": "Nossos serviços",
+        "subtitle": "Soluções completas para o seu evento.",
+        "items": [
+          {
+            "title": "Eventos corporativos",
+            "text": "Congressos, convenções e treinamentos.",
+            "price": "a partir de R$ 5.000",
+            "image_query": "corporate event",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Casamentos",
+            "text": "Celebrações personalizadas e elegantes.",
+            "price": "",
+            "image_query": "wedding party",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Festas temáticas",
+            "text": "Ambientes temáticos sob medida.",
+            "price": "",
+            "image_query": "themed party",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          }
+        ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-a-splash-eventos",
+        "title": "Sobre a Splash Eventos",
+        "subtitle": "Há 8 anos criando experiências únicas.",
+        "text": "Há 8 anos criando experiências únicas.",
+        "image_query": "event planning office",
+        "stats": [
+          {
+            "value": "8",
+            "label": "anos"
+          },
+          {
+            "value": "500+",
+            "label": "eventos"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "nossos-eventos",
+        "title": "Nossos eventos",
+        "subtitle": "",
+        "image_queries": [
+          "corporate event hall",
+          "wedding reception",
+          "birthday party",
+          "conference event",
+          "cocktail party",
+          "outdoor wedding"
+        ],
+        "gif_queries": []
+      },
+      {
+        "type": "testimonials",
+        "id": "depoimentos",
+        "title": "Depoimentos",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Maria S.",
+            "role": "",
+            "text": "O casamento dos sonhos! A equipe foi incrível.",
+            "rating": 5
+          },
+          {
+            "name": "João C.",
+            "role": "",
+            "text": "Evento corporativo impecável. Recomendo!",
+            "rating": 5
+          },
+          {
+            "name": "Ana P.",
+            "role": "",
+            "text": "Atendimento personalizado e resultados excepcionais.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "duvidas-frequentes",
+        "title": "Dúvidas frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Como começar a planejar?",
+            "a": "Entre em contato e agende uma conversa."
+          },
+          {
+            "q": "Trabalham com orçamento limitado?",
+            "a": "Sim, oferecemos opções para todos os perfis."
+          },
+          {
+            "q": "Quais locais vocês cobrem?",
+            "a": "Atendemos toda a região metropolitana de São Paulo."
+          },
+          {
+            "q": "Estrangeiros podem contratar?",
+            "a": "Sim, atendemos clientes de todo o Brasil e exterior."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "pronto-para-transformar-seu-evento",
+        "title": "Pronto para transformar seu evento?",
+        "subtitle": "Fale com nossos especialistas e receba uma proposta personalizada.",
+        "cta": {
+          "label": "Solicitar orçamento",
+          "href": "whatsapp"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "entre-em-contato",
+        "title": "Entre em contato",
+        "subtitle": "",
+        "map": true,
+        "form": true
+      }
+    ]
+  },
+  "media": {
+    "s0.hero": {
+      "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvcHgxMDE0MTc2LWltYWdlLWt3eXJoejliLmpwZw.jpg",
+      "width": 5184,
+      "height": 3456,
+      "alt": "luxury event party",
+      "credit": "Foto — autor desconhecido (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Hallenstadion_Zurich_Corporation_Event_June_2011.jpg/1280px-Hallenstadion_Zurich_Corporation_Event_June_2011.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "File:Hallenstadion Zurich Corporation Event June 2011.jpg",
+      "credit": "File:Hallenstadion Zurich Corporation Event June 2011.jpg — Christophorus77 (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Lombok_Wedding_Party_1998.jpg/1280px-Lombok_Wedding_Party_1998.jpg",
+      "width": 1280,
+      "height": 869,
+      "alt": "File:Lombok Wedding Party 1998.jpg",
+      "credit": "File:Lombok Wedding Party 1998.jpg — anoldent (BY-SA 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/A_cow_boy_themed_party_in_a_resort_in_Busabala_Uganda.jpg/1280px-A_cow_boy_themed_party_in_a_resort_in_Busabala_Uganda.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "A cow boy themed party in a resort in Busabala Uganda",
+      "credit": "A cow boy themed party in a resort in Busabala Uganda — Tamdra (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s2.about": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/Planning_the_Science_Museum_Late_event_2014-11-19.jpg/1280px-Planning_the_Science_Museum_Late_event_2014-11-19.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "The planning session for the Wikimedia UK event as part of the Science Museum La",
+      "credit": "Chris McKenna (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Sir_Tom_Jones_at_The_Queen%27s_Birthday_Party_%28cropped%29.jpg",
+      "width": 1500,
+      "height": 1644,
+      "alt": "Sir Tom Jones at The Queen's Birthday Party (cropped)",
+      "credit": "Sir Tom Jones at The Queen's Birthday Party (cropped) — Raph_PH (BY 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/2/2d/Pon_Nawasch_Phupantachsee_in_4_Dangerous_Press_Conference_Event.jpg",
+      "width": 1255,
+      "height": 1833,
+      "alt": "Pon Nawasch Phupantachsee in 4 Dangerous Press Conference Event",
+      "credit": "Pon Nawasch Phupantachsee in 4 Dangerous Press Conference Event — Whitestory (BY 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g4": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Cocktail_Party_At_The_Imperial_Hotel_March_13%2C_1961_%28Tokyo%2C_Japan%29_%28496610682%29.jpg/1280px-Cocktail_Party_At_The_Imperial_Hotel_March_13%2C_1961_%28Tokyo%2C_Japan%29_%28496610682%29.jpg",
+      "width": 1280,
+      "height": 876,
+      "alt": "Cocktail Party At The Imperial Hotel March 13, 1961 (Tokyo, Japan) (496610682)",
+      "credit": "Cocktail Party At The Imperial Hotel March 13, 1961 (Tokyo, Japan) (496610682) — takomabibelot (BY 2.0, via Op",
+      "provider": "openverse"
+    },
+    "s3.g0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/HK_%E4%B8%8A%E7%92%B0_Sheung_Wan_%E5%A4%AA%E5%B9%B3%E5%B1%B1%E8%A1%97_Tai_Ping_Shan_Street_Joyce_-_event_party_kitchen_preparation_Jan-2012.jpg/1280px-HK_%E4%B8%8A%E7%92%B0_Sheung_Wan_%E5%A4%AA%E5%B9%B3%E5%B1%B1%E8%A1%97_Tai_Ping_Shan_Street_Joyce_-_event_party_kitchen_preparation_Jan-2012.jpg",
+      "width": 1280,
+      "height": 956,
+      "alt": "HK 上環 Sheung Wan 太平山街 Tai Ping Shan Street Joyce - event party kitchen preparati",
+      "credit": "HK 上環 Sheung Wan 太平山街 Tai Ping Shan Street Joyce - event party kitchen preparation Jan-2012 — Fungenix (BY-SA ",
+      "provider": "openverse"
+    },
+    "s3.g1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/David_Chalmers_at_Singularity_Summit_09_pre-event_party.jpg/1280px-David_Chalmers_at_Singularity_Summit_09_pre-event_party.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "David Chalmers at Singularity Summit 09 pre-event party",
+      "credit": "David Chalmers at Singularity Summit 09 pre-event party — David Orban (BY 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g5": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Event_party_planners_designers_in_Adelaide_at_Whitemarquee.jpg",
+      "width": 1080,
+      "height": 1348,
+      "alt": "Event party planners designers in Adelaide at Whitemarquee",
+      "credit": "Event party planners designers in Adelaide at Whitemarquee — Christinaandriaus (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    }
+  }
+}
