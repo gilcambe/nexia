@@ -44,22 +44,25 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   const [melhorHorarioTema, setMelhorHorarioTema] = useState<MelhorHorarioTema | null>(null);
   const [carregandoDados, setCarregandoDados] = useState(true);
   const [diasDisponiveis, setDiasDisponiveis] = useState(0);
+  const [ultimaAtualizacao, setUltimaAtualizacao] = useState(0);
   
-  // Busca dados históricos do backend
+  // Busca dados históricos do backend (últimos 30 dias)
   const buscarDadosHistoricos = async () => {
     try {
       const res = await fetch('/.netlify/functions/central/github', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'buscarHistorico' }),
+        body: JSON.stringify({ action: 'buscarHistorico', periodo: 30 }),
       });
       const data = await res.json();
       if (data.success && data.dados) {
-        setDadosHistoricos(data.dados);
-        setDiasDisponiveis(data.diasDisponiveis || 0);
+        // Limita aos últimos 30 dias ou ao período disponível
+        const dadosLimitados = data.dados.slice(0, 30);
+        setDadosHistoricos(dadosLimitados);
+        setDiasDisponiveis(Math.min(data.diasDisponiveis || 0, 30));
         
         // Calcular melhor horário e tema
-        const melhor = calcularMelhorHorarioTema(data.dados);
+        const melhor = calcularMelhorHorarioTema(dadosLimitados);
         setMelhorHorarioTema(melhor);
       } else {
         console.error('Erro ao buscar dados históricos:', data.message);
@@ -107,10 +110,28 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
     };
   };
   
-  // Carrega dados quando o componente montar
+  // Carrega dados quando o componente montar e atualiza a cada visita
+  const [ultimaAtualizacao, setUltimaAtualizacao] = useState(0);
+  
   useEffect(() => {
     buscarDadosHistoricos();
+    
+    // Marcar a visita para atualização automática
+    setUltimaAtualizacao(Date.now());
   }, []);
+  
+  // Atualiza dados a cada visita do usuário (evita atualizações excessivas)
+  useEffect(() => {
+    const intervalo = 5 * 60 * 1000; // 5 minutos
+    const timer = setTimeout(() => {
+      if (Date.now() - ultimaAtualizacao > intervalo) {
+        buscarDadosHistoricos();
+        setUltimaAtualizacao(Date.now());
+      }
+    }, intervalo);
+    
+    return () => clearTimeout(timer);
+  }, [ultimaAtualizacao]);
   
   // Posta na hora: usado pelos botões 07h15, 12h15 e 19h15 de cada tema da semana.
   // Função implementada conforme solicitado no pedido.
