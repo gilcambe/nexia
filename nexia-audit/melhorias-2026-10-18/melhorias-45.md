@@ -55,3 +55,4 @@
 - [ ] Atualizar os testes unitários de `userController` para usar o novo utilitário.
 - [ ] Gerar documentação de API atualizada no Swagger.
 - [ ] Criar PR #1234 no GitHub.
+
