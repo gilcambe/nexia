@@ -171,4 +171,4 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   return { cortex, robos, rodar, pedirAoCortex, divulga, reservas, salvarDadosMeta, temToken: !!token };
 }
 
-module.exports = { criarGithub, REPO, RESERVAS, montarReservas };
+module.exports = { criarGithub, REPO, RESERVAS, montarReservas, salvarDadosMeta };
