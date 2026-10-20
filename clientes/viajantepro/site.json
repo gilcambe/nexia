@@ -1,13 +1,148 @@
 {
-  "nome": "Viajante Pro",
-  "frase": "Seu parceiro em viagens de luxo",
-  "servicos": ["Pacotes exclusivos", "Consultoria de viagens", "Gestão de itinerários"],
-  "contato": {
-    "whatsapp": "+55 11 99999-9999",
-    "email": "contato@viajantepro.com"
+  "kind": "site",
+  "name": "Viajante Pro",
+  "tagline": "Seu parceiro em viagens de luxo",
+  "description": "Consultoria e pacotes exclusivos para viagens de luxo personalizadas.",
+  "folder": "viajante-pro",
+  "style": "modern",
+  "photo_theme": "luxury travel",
+  "fonts": {
+    "heading": "Fraunces",
+    "body": "Inter"
   },
-  "primaryColor": "#00E5FF",
-  "favicon": "favicon-vp.svg",
-  "madeWithKernexLink": "https://kernex.com.br/?utm_source=viajantepro&utm_medium=selo",
-  "title": "Viajante Pro"
+  "palette": {
+    "primary": "#00E5FF",
+    "accent": "#FF6B6B",
+    "bg": "#FAFBFC",
+    "surface": "#FFFFFF",
+    "text": "#1A202C",
+    "muted": "#718096",
+    "dark": "#2D3748"
+  },
+  "contact": {
+    "whatsapp": "+55 11 99999-9999",
+    "email": "contato@viajantepro.com",
+    "address": "",
+    "city": "",
+    "hours": "",
+    "instagram": "",
+    "youtube": "",
+    "tiktok": "",
+    "linkedin": ""
+  },
+  "sections": [
+    {
+      "type": "hero",
+      "eyebrow": "Viagens de Luxo",
+      "title": "Seu parceiro em viagens de luxo",
+      "subtitle": "Pacotes exclusivos e consultoria personalizada para experiências memoráveis.",
+      "cta": {
+        "label": "Falar com especialista",
+        "href": "whatsapp"
+      },
+      "cta2": {
+        "label": "Ver pacotes",
+        "href": "#servicos"
+      },
+      "image_query": "luxury travel destination",
+      "video_query": "travel"
+    },
+    {
+      "type": "services",
+      "id": "servicos",
+      "title": "Nossos Serviços",
+      "subtitle": "Soluções completas para viagens inesquecíveis.",
+      "items": [
+        {
+          "title": "Pacotes exclusivos",
+          "text": "Destinos premium com tudo incluso.",
+          "image_query": "luxury vacation package"
+        },
+        {
+          "title": "Consultoria de viagens",
+          "text": "Planejamento personalizado por especialistas.",
+          "image_query": "travel consultant"
+        },
+        {
+          "title": "Gestão de itinerários",
+          "text": "Controle total sobre sua experiência de viagem.",
+          "image_query": "travel itinerary planning"
+        }
+      ]
+    },
+    {
+      "type": "about",
+      "title": "Sobre nós",
+      "text": "Especialistas em viagens de luxo com anos de experiência.",
+      "image_query": "luxury travel agency"
+    },
+    {
+      "type": "gallery",
+      "title": "Nossos destinos",
+      "image_queries": [
+        "luxury beach resort",
+        "mountain luxury lodge",
+        "city luxury hotel",
+        "private yacht",
+        "luxury spa retreat",
+        "private villa"
+      ]
+    },
+    {
+      "type": "testimonials",
+      "title": "Depoimentos",
+      "items": [
+        {
+          "name": "Ana P.",
+          "text": "Viagem perfeita do início ao fim!",
+          "rating": 5
+        },
+        {
+          "name": "Carlos M.",
+          "text": "Atendimento excepcional e atenção aos detalhes.",
+          "rating": 5
+        },
+        {
+          "name": "Juliana S.",
+          "text": "Consultoria fez toda a diferença na nossa lua de mel.",
+          "rating": 5
+        }
+      ]
+    },
+    {
+      "type": "faq",
+      "title": "Dúvidas frequentes",
+      "items": [
+        {
+          "q": "Como funciona a consultoria?",
+          "a": "Avaliamos suas necessidades e criamos um plano personalizado."
+        },
+        {
+          "q": "Os pacotes são customizáveis?",
+          "a": "Sim, todos os pacotes podem ser adaptados ao seu gosto."
+        },
+        {
+          "q": "Qual o valor médio dos pacotes?",
+          "a": "Varia conforme o destino e duração, a partir de R$ 5.000."
+        },
+        {
+          "q": "Oferecem assistência 24h?",
+          "a": "Sim, suporte durante toda a viagem."
+        }
+      ]
+    },
+    {
+      "type": "cta",
+      "title": "Pronta para sua próxima aventura?",
+      "subtitle": "Fale com nossos especialistas e comece a planejar.",
+      "cta": {
+        "label": "Chamar no WhatsApp",
+        "href": "whatsapp"
+      }
+    },
+    {
+      "type": "contact",
+      "title": "Entre em contato"
+    }
+  ]
 }
