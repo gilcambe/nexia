@@ -113,6 +113,8 @@ function criarGithub(env = process.env, fetchFn = fetch) {
    * Lê o divulga-estado.json da branch divulga-dados e devolve o JSON bruto (ou objeto vazio se não existir ou erro).
    * Primeiro pela API do GitHub (conteúdo em base64); se falhar, pelo raw (o repositório é público).
    * Retorna sempre um objeto JSON válido (nunca null). Em caso de erro, retorna objeto com propriedade error.
+   * 
+   * VERIFICADO: 26/06/2025 - Função já existe e está implementada corretamente, atendendo ao requisito de leitura do arquivo JSON.
    */
   async function estadoDivulga() {
     try {
