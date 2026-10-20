@@ -182,4 +182,4 @@ async function acoesPush(body, uid, db) {
   return null;
 }
 
-module.exports = { acoesPush, avisar, avisarConversa, criptografar, chavesVapid, prefsLimpas, horariosDe, slot, PREFS_PADRAO, deB64u, b64u, hkdf };
+module.exports = { enviarUm, acoesPush, avisar, avisarConversa, criptografar, chavesVapid, prefsLimpas, horariosDe, slot, PREFS_PADRAO, deB64u, b64u, hkdf };
