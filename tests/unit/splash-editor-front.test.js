@@ -60,3 +60,12 @@ test('SPLASH-FRONT5. painel do editor possui os botões, instruções e modals p
   assert.ok(htmlPainel.includes('id="midia-video-url"'), 'Deve conter input de link de vídeo');
   assert.ok(htmlPainel.includes('comprimirImagemClient'), 'Deve possuir a função client-side de compressão de foto para até 600 KB');
 });
+
+test('SPE-ESC: legendas de fotos e títulos de vídeos são escapados antes de ir para o HTML', () => {
+  const fs = require('node:fs'), path = require('node:path');
+  const html = fs.readFileSync(path.join(__dirname, '..', '..', 'sites', 'splash', 'index.html'), 'utf8');
+  assert.match(html, /function esc\(/);
+  assert.ok(!html.includes('${f.legenda}'), 'legenda sem escape');
+  assert.ok(!html.includes('${v.titulo}'), 'título sem escape');
+  assert.ok(!html.includes("alt=\"${f.legenda"), 'alt sem escape');
+});
