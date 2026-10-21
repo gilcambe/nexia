@@ -71,8 +71,18 @@ test('JUL7. pedido enorme é cortado em 30 mil letras no prompt', () => {
   assert.ok(p.length < 35000);
 });
 
-test('JUL8. a tela da lista tem o botão "Mandar para o Jules" só para travado', () => {
+test('JUL8. a tela da lista tem o botão "Mandar para o Jules" para travado, na fila ou em partes', () => {
   const t = fs.readFileSync(path.join(__dirname, '../../src/pages/cortex/Paineis.tsx'), 'utf8');
   assert.ok(t.includes('data-testid="cx-lista-jules"'));
-  assert.ok(/situacao === "travado" && \(\s*<button[\s\S]{0,400}acao: "jules"/.test(t));
+  assert.ok(/situacao === "travado" \|\| t\.situacao === "fila" \|\| t\.situacao === "dividido"\) && \(\s*<button[\s\S]{0,400}acao: "jules"/.test(t));
+  assert.ok(!/situacao === "feito"[^\n]*acao: "jules"/.test(t));
+});
+
+test('JUL9. tarefa na fila: além do Jules, trava para o Cortex não pegar de novo', async () => {
+  const log = [];
+  const x = await mandarParaJules({ gh: gh(log, issue({ labels: [{ name: 'cortex-fila' }] })) }, 5, 'dono', { env: { JULES_API_KEY: 'K' }, fetchFn: julesOk([]) });
+  assert.strictEqual(x.status, 200);
+  const rotulos = log.filter((l) => /labels$/.test(l[1])).flatMap((l) => l[2].labels);
+  assert.deepStrictEqual(rotulos, ['jules-enviado', 'cortex-travado']);
+  assert.ok(!rotulos.includes('automerge'));
 });
