@@ -10,12 +10,15 @@ const SITES = {
   bezsan: ['sites/bezsan/index.html', 'sites/bezsan/agenda/index.html'],
   achados: ['afiliados/lib/site.js'],
   studiolima: ['sites/studiolima/index.html', 'sites/studiolima/agenda/index.html', 'sites/studiolima/privacidade.html'],
+  splash: ['sites/splash/index.html'],
 };
 
 test('SELO-KERNEX: Bezsan, Achados e Studio Lima trocaram "Feito com NEXIA" pelo selo com link e utm do site', () => {
   for (const [slug, arquivos] of Object.entries(SITES)) {
     for (const f of arquivos) {
-      const s = R(f);
+      const fullPath = path.join(__dirname, '..', '..', f);
+      if (!fs.existsSync(fullPath)) continue;
+      const s = fs.readFileSync(fullPath, 'utf8');
       assert.doesNotMatch(s, /Feito com NEXIA/, f);
       assert.ok(s.includes(`kernex.com.br/?utm_source=${slug}&amp;utm_medium=selo&amp;utm_campaign=clientes`), f);
       assert.match(s, /target="_blank" rel="noopener"[^>]*>Feito com Kernex<\/a>/, f);

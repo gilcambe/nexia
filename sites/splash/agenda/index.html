@@ -1,0 +1,956 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="agenda-site" content="splash">
+<meta name="agenda-cor" content="#1A5C3A">
+<meta name="agenda-api" content="/api/locacao">
+<meta name="agenda-site-url" content="../">
+<meta name="theme-color" content="#1A5C3A">
+<title>Painel da Amanda · Splash Eventos</title>
+<style>
+  :root {
+    --cor: #1A5C3A;
+    --cor-escura: #0F3D27;
+    --cor-destaque: #C9A84C;
+    --fundo: #0A0D08;
+    --cartao: #111408;
+    --cartao-sub: #161a0d;
+    --texto: #F8F4ED;
+    --suave: #a39e93;
+    --linha: rgba(201,168,76,.18);
+    --ok: #137333;
+    --ok-f: #e6f4ea;
+    --alerta: #b06000;
+    --alerta-f: #fef7e0;
+    --erro: #c5221f;
+    --erro-f: #fce8e6;
+    --neutro-f: #1c2112;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; background: var(--fundo); color: var(--texto);
+    font: 16px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  .oculto { display: none !important; }
+  .tela { max-width: 680px; margin: 0 auto; padding: 0 16px calc(96px + env(safe-area-inset-bottom)); }
+
+  header.topo {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--cor-escura); color: var(--texto);
+    border-bottom: 1px solid var(--linha);
+    padding: calc(12px + env(safe-area-inset-top)) 16px 12px;
+  }
+  header.topo .linha {
+    max-width: 680px; margin: 0 auto; display: flex; align-items: center; gap: 12px;
+  }
+  header.topo h1 {
+    font-size: 18px; margin: 0; flex: 1; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--cor-destaque);
+  }
+  .ico {
+    background: rgba(255,255,255,.08); border: 1px solid var(--linha);
+    color: var(--texto); border-radius: 999px; min-width: 44px; height: 44px;
+    padding: 0 14px; font-size: 14px; display: inline-flex; align-items: center; justify-content: center;
+  }
+
+  .cartao {
+    background: var(--cartao); border: 1px solid var(--linha);
+    border-radius: 16px; padding: 18px; margin-top: 14px;
+  }
+  h2 { font-size: 18px; margin: 16px 0 8px; color: var(--cor-destaque); font-weight: 600; }
+  label { display: block; font-size: 13px; color: var(--suave); margin: 12px 0 4px; }
+  input, select, textarea {
+    width: 100%; min-width: 0; border: 1px solid var(--linha);
+    border-radius: 12px; padding: 12px; background: var(--cartao-sub);
+    color: var(--texto); min-height: 48px;
+  }
+  textarea { min-height: 96px; resize: vertical; }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    border: 0; border-radius: 999px; min-height: 48px; padding: 0 20px;
+    background: var(--cor); color: #fff; font-weight: 600; text-decoration: none;
+  }
+  .btn.largo { width: 100%; margin-top: 14px; }
+  .btn.claro { background: var(--neutro-f); color: var(--texto); border: 1px solid var(--linha); }
+  .btn.ouro { background: var(--cor-destaque); color: #000; font-weight: 700; }
+  .btn.verde { background: var(--ok); color: #fff; }
+  .btn.vermelho { background: var(--erro-f); color: var(--erro); }
+  .btn.pequeno { min-height: 40px; padding: 0 14px; font-size: 14px; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .msg { border-radius: 12px; padding: 12px; font-size: 14px; margin-top: 12px; }
+  .msg.erro { background: var(--erro-f); color: var(--erro); }
+  .msg.ok { background: var(--ok-f); color: var(--ok); }
+  .msg.aviso { background: var(--alerta-f); color: var(--alerta); }
+
+  .nav-abas {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+    background: var(--cartao); border-top: 1px solid var(--linha);
+    display: flex; justify-content: space-around;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+  .nav-aba-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: transparent; border: 0; color: var(--suave); font-size: 11px;
+    padding: 6px 0; position: relative; min-height: 44px;
+  }
+  .nav-aba-btn.ativa { color: var(--cor-destaque); font-weight: 700; }
+  .nav-aba-btn i { font-size: 20px; }
+  .badge-bolinha {
+    position: absolute; top: 2px; right: 25%; background: var(--erro);
+    color: #fff; font-size: 10px; font-weight: 800; border-radius: 999px;
+    padding: 2px 6px; min-width: 18px; text-align: center;
+  }
+
+  .unidade-seletor {
+    display: flex; gap: 8px; margin-top: 12px;
+  }
+  .unidade-seletor button {
+    flex: 1; border: 1px solid var(--linha); background: var(--cartao-sub);
+    color: var(--suave); border-radius: 999px; min-height: 44px; font-size: 13px; font-weight: 600;
+  }
+  .unidade-seletor button.ativa {
+    background: var(--cor); color: #fff; border-color: var(--cor-destaque);
+  }
+
+  /* Calendário Mensal */
+  .cal-header { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+  .cal-header h3 { margin: 0; font-size: 16px; font-weight: 600; }
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 12px; text-align: center;
+  }
+  .cal-dia-nome { font-size: 12px; color: var(--suave); font-weight: 600; padding: 4px 0; }
+  .cal-celula {
+    aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--linha);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; cursor: pointer; position: relative;
+    background: var(--cartao-sub);
+  }
+  .cal-celula.vazio { background: transparent; border: 0; cursor: default; }
+  .cal-celula.hoje { border: 2px solid var(--cor-destaque); }
+
+  .st-livre { background: #133a22; color: #a3e0b5; border-color: #1e5232; }
+  .st-pedido { background: #4a3600; color: #ffeb99; border-color: #735400; }
+  .st-aguardando_sinal { background: #4d1c00; color: #ffc299; border-color: #7a2d00; }
+  .st-confirmado { background: #0f5229; color: #ffffff; border-color: var(--cor-destaque); font-weight: 800; }
+  .st-bloqueado { background: #2a2d26; color: #8c9285; border-color: #3b4035; }
+
+  /* Lista de Pedidos e Reservas */
+  .pedido-card {
+    background: var(--cartao-sub); border: 1px solid var(--linha);
+    border-radius: 14px; padding: 16px; margin-top: 12px;
+  }
+  .pedido-card .topo-card {
+    display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;
+  }
+  .tag-status {
+    font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; text-transform: uppercase;
+  }
+  .acoes-card { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .acoes-card .btn { flex: 1; min-width: 140px; }
+
+  /* Modal */
+  .modal-fundo {
+    position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,.8);
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-corpo {
+    background: var(--cartao); border: 1px solid var(--linha);
+    border-radius: 20px; max-width: 500px; width: 100%; max-height: 90vh; overflow-y: auto; padding: 20px;
+  }
+</style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+</head>
+<body>
+
+<header class="topo">
+  <div class="linha">
+    <h1>Splash Eventos · Agenda</h1>
+    <button class="ico" onclick="abrirMinhaConta()" title="Minha Conta / Trocar Senha"><i class="ri-user-settings-line"></i></button>
+    <button class="ico" onclick="fazerLogout()" title="Sair"><i class="ri-logout-box-r-line"></i></button>
+  </div>
+</header>
+
+<main class="tela">
+  <!-- Tela de Login e Ativação -->
+  <div id="secao-login" class="cartao">
+    <h2>Acesso ao Painel da Amanda</h2>
+    <div id="msg-login" class="msg oculto"></div>
+
+    <div id="form-primeiro-acesso" class="oculto">
+      <p style="font-size:14px;color:var(--suave);">Este é seu primeiro acesso. Digite o código de ativação fornecido pelo administrador e crie sua senha pessoal.</p>
+      <label>Código do Primeiro Acesso</label>
+      <input type="text" id="login-codigo" placeholder="Digite o código">
+      <label>Nova Senha</label>
+      <input type="password" id="login-senha-nova" placeholder="Crie sua senha">
+      <button class="btn largo ouro" onclick="executarPrimeiroAcesso()">Ativar Conta e Entrar</button>
+    </div>
+
+    <div id="form-entrar">
+      <label>Sua Senha</label>
+      <input type="password" id="login-senha" placeholder="Digite sua senha">
+      <button class="btn largo ouro" onclick="executarEntrar()">Entrar no Painel</button>
+      <div style="margin-top:12px;text-align:center;">
+        <button class="btn claro pequeno" onclick="alternarModoPrimeiroAcesso()">Primeiro Acesso? Clique aqui</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conteúdo Autenticado -->
+  <div id="secao-painel" class="oculto">
+
+    <!-- Seletor Global de Unidade -->
+    <div class="unidade-seletor">
+      <button id="btn-un-santa-adelia" class="ativa" onclick="trocarUnidade('santa-adelia')">Splash Santa Adélia</button>
+      <button id="btn-un-santa-barbara" onclick="trocarUnidade('santa-barbara')">Splash Santa Bárbara</button>
+    </div>
+
+    <!-- ABA 1: CALENDÁRIO -->
+    <div id="aba-calendario">
+      <div class="cal-header">
+        <button class="ico" onclick="mudarMes(-1)"><i class="ri-arrow-left-s-line"></i></button>
+        <h3 id="cal-titulo-mes">Outubro de 2026</h3>
+        <button class="ico" onclick="mudarMes(1)"><i class="ri-arrow-right-s-line"></i></button>
+      </div>
+
+      <!-- Resumo do Mês -->
+      <div class="cartao" style="padding:12px 16px;display:flex;justify-content:space-around;text-align:center;margin-top:8px;">
+        <div><div id="resumo-livres" style="font-size:18px;font-weight:700;color:#a3e0b5;">0</div><div style="font-size:11px;color:var(--suave);">Dias Livres</div></div>
+        <div><div id="resumo-reservados" style="font-size:18px;font-weight:700;color:var(--cor-destaque);">0</div><div style="font-size:11px;color:var(--suave);">Reservados / Pedidos</div></div>
+      </div>
+
+      <!-- Grid de Dias -->
+      <div class="cal-grid">
+        <div class="cal-dia-nome">Dom</div>
+        <div class="cal-dia-nome">Seg</div>
+        <div class="cal-dia-nome">Ter</div>
+        <div class="cal-dia-nome">Qua</div>
+        <div class="cal-dia-nome">Qui</div>
+        <div class="cal-dia-nome">Sex</div>
+        <div class="cal-dia-nome">Sáb</div>
+      </div>
+      <div id="cal-dias-container" class="cal-grid"></div>
+
+      <!-- Legenda de Cores -->
+      <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:var(--suave);">
+        <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:3px;background:#133a22;"></span> Livre</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:3px;background:#4a3600;"></span> Pedido</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:3px;background:#4d1c00;"></span> Aguardando Sinal</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:3px;background:#0f5229;"></span> Confirmado</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;border-radius:3px;background:#2a2d26;"></span> Bloqueado</span>
+      </div>
+    </div>
+
+    <!-- ABA 2: PEDIDOS NOVOS -->
+    <div id="aba-pedidos" class="oculto">
+      <h2>Pedidos Pendentes de Ação</h2>
+      <div id="lista-pedidos-pendentes"></div>
+    </div>
+
+    <!-- ABA 3: PRÓXIMAS RESERVAS -->
+    <div id="aba-reservas" class="oculto">
+      <h2>Próximas Reservas e Histórico</h2>
+
+      <!-- Filtro e Busca -->
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <input type="text" id="filtro-busca" placeholder="Buscar por cliente ou data..." oninput="carregarReservas()">
+        <select id="filtro-status" onchange="carregarReservas()" style="max-width:140px;">
+          <option value="">Todos os status</option>
+          <option value="confirmado">Confirmado</option>
+          <option value="aguardando_sinal">Aguardando Sinal</option>
+          <option value="pedido">Pedido</option>
+          <option value="bloqueado">Bloqueado</option>
+          <option value="concluido">Concluído</option>
+          <option value="cancelado">Cancelado/Recusado</option>
+        </select>
+      </div>
+
+      <div id="lista-todas-reservas"></div>
+    </div>
+
+    <!-- ABA 4: NOVA RESERVA / BLOQUEIO -->
+    <div id="aba-nova" class="oculto">
+      <h2>Lançar Reserva Manual ou Bloqueio</h2>
+      <div class="cartao">
+        <label>Tipo de Lançamento</label>
+        <select id="novo-tipo-modo" onchange="alternarModoLancamento()">
+          <option value="reserva">Reserva Manual (Telefone / Presencial)</option>
+          <option value="bloqueio">Bloquear Dia ou Período</option>
+        </select>
+
+        <div id="form-lanc-reserva">
+          <label>Data</label>
+          <input type="date" id="lanc-res-data">
+          <label>Nome do Cliente</label>
+          <input type="text" id="lanc-res-nome" placeholder="Nome completo">
+          <label>WhatsApp</label>
+          <input type="tel" id="lanc-res-whatsapp" placeholder="(17) 99999-0000">
+          <label>Tipo de Evento</label>
+          <input type="text" id="lanc-res-tipo" placeholder="Ex: Casamento, Aniversário">
+          <label>Convidados</label>
+          <input type="number" id="lanc-res-convidados" placeholder="50">
+          <label>Observações</label>
+          <textarea id="lanc-res-obs" placeholder="Detalhes acertados..."></textarea>
+          <button class="btn largo ouro" onclick="salvarReservaManual()">Criar Reserva</button>
+        </div>
+
+        <div id="form-lanc-bloqueio" class="oculto">
+          <label>Data Inicial (De)</label>
+          <input type="date" id="lanc-bloq-de">
+          <label>Data Final (Até)</label>
+          <input type="date" id="lanc-bloq-ate">
+          <label>Motivo do Bloqueio</label>
+          <input type="text" id="lanc-bloq-motivo" placeholder="Ex: Manutenção, Reforma, Uso Próprio">
+          <button class="btn largo vermelho" onclick="salvarBloqueio()">Bloquear Período</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABA 5: CONFIGURAÇÕES -->
+    <div id="aba-config" class="oculto">
+      <h2>Configurações do Espaço</h2>
+      <div id="msg-config" class="msg oculto"></div>
+
+      <div class="cartao">
+        <label>Nome do Estabelecimento</label>
+        <input type="text" id="cfg-nome">
+
+        <label>WhatsApp Principal</label>
+        <input type="tel" id="cfg-whatsapp" placeholder="5517999990000">
+
+        <label>Chave Pix para Recebimento do Sinal</label>
+        <input type="text" id="cfg-pix-chave" placeholder="CPF, CNPJ, E-mail, Celular ou Aleatória">
+
+        <label>Titular da Chave Pix</label>
+        <input type="text" id="cfg-pix-titular" placeholder="Nome do titular">
+
+        <label>Tipo do Sinal</label>
+        <select id="cfg-sinal-tipo">
+          <option value="percentual">Percentual (%)</option>
+          <option value="fixo">Valor Fixo (R$)</option>
+        </select>
+
+        <label>Valor do Sinal</label>
+        <input type="number" id="cfg-sinal-valor" placeholder="Ex: 30 para 30% ou 500 para R$ 500">
+
+        <label>Prazo em horas para Segurar o Dia sem Sinal</label>
+        <input type="number" id="cfg-prazo-horas" placeholder="48">
+
+        <label>Antecedência Mínima (em dias)</label>
+        <input type="number" id="cfg-antecedencia-dias" placeholder="0">
+
+        <label>Aviso Geral (exibido no site público)</label>
+        <input type="text" id="cfg-aviso" placeholder="Ex: Agenda 2027 aberta!">
+
+        <label>Mensagem exibida ao cliente após o pedido</label>
+        <textarea id="cfg-mensagem-pedido"></textarea>
+
+        <button class="btn largo ouro" onclick="salvarConfiguracoes()">Salvar Configurações</button>
+      </div>
+
+      <div class="cartao" style="margin-top:20px;">
+        <h3>Cópia de Segurança (Backup)</h3>
+        <p style="font-size:13px;color:var(--suave);">Baixe uma planilha CSV com todas as reservas e histórico para manter sua cópia de segurança offline.</p>
+        <button class="btn claro largo" onclick="baixarBackupCsv()"><i class="ri-download-cloud-line"></i> Baixar Cópia de Segurança (CSV)</button>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Modal de Detalhes do Dia / Reserva -->
+<div id="modal-detalhes" class="modal-fundo oculto">
+  <div class="modal-corpo">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h3 id="modal-titulo" style="margin:0;color:var(--cor-destaque);">Detalhes do Dia</h3>
+      <button class="ico" onclick="fecharModal()"><i class="ri-close-line"></i></button>
+    </div>
+    <div id="modal-conteudo" style="margin-top:16px;"></div>
+  </div>
+</div>
+
+<!-- Modal de Troca de Senha -->
+<div id="modal-conta" class="modal-fundo oculto">
+  <div class="modal-corpo">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h3 style="margin:0;color:var(--cor-destaque);">Minha Conta / Trocar Senha</h3>
+      <button class="ico" onclick="fecharModalConta()"><i class="ri-close-line"></i></button>
+    </div>
+    <div id="msg-conta" class="msg oculto"></div>
+    <label>Senha Atual</label>
+    <input type="password" id="conta-senha-atual">
+    <label>Nova Senha</label>
+    <input type="password" id="conta-senha-nova">
+    <button class="btn largo ouro" onclick="executarTrocaSenha()">Alterar Senha</button>
+  </div>
+</div>
+
+<!-- Menu Inferior Mobile-First -->
+<nav id="menu-inferior" class="nav-abas oculto">
+  <button class="nav-aba-btn ativa" onclick="navegarAba('calendario')" id="tab-calendario">
+    <i class="ri-calendar-line"></i>
+    <span>Calendário</span>
+  </button>
+  <button class="nav-aba-btn" onclick="navegarAba('pedidos')" id="tab-pedidos">
+    <i class="ri-notification-3-line"></i>
+    <span>Pedidos</span>
+    <span id="badge-pedidos" class="badge-bolinha oculto">0</span>
+  </button>
+
+  <button class="nav-aba-btn" onclick="navegarAba('reservas')" id="tab-reservas">
+    <i class="ri-list-check-2"></i>
+    <span>Reservas</span>
+  </button>
+  <button class="nav-aba-btn" onclick="navegarAba('nova')" id="tab-nova">
+    <i class="ri-add-circle-line"></i>
+    <span>Novo</span>
+  </button>
+  <button class="nav-aba-btn" onclick="navegarAba('config')" id="tab-config">
+    <i class="ri-settings-4-line"></i>
+    <span>Ajustes</span>
+  </button>
+</nav>
+
+<script src="painel.js"></script>
+<script>
+  let TOKEN = sessionStorage.getItem('splash_token') || '';
+  let UNIDADE_ATUAL = 'santa-adelia';
+  let MES_ATUAL = new Date().toISOString().slice(0, 7); // AAAA-MM
+  let CONFIG_CACHE = {};
+  let RESERVAS_CACHE = [];
+  let DIAS_MAPA = {};
+
+  const metaSite = document.querySelector('meta[name="agenda-site"]');
+  const SITE_SLUG = metaSite ? metaSite.content : 'splash';
+  const API_BASE = '/api/locacao';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (TOKEN) {
+      iniciarPainel();
+    }
+  });
+
+  function alternarModoPrimeiroAcesso() {
+    document.getElementById('form-entrar').classList.toggle('oculto');
+    document.getElementById('form-primeiro-acesso').classList.toggle('oculto');
+  }
+
+  function apiPost(payload) {
+    return fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ site: SITE_SLUG, token: TOKEN, ...payload })
+    }).then(r => r.json().then(data => ({ status: r.status, body: data })));
+  }
+
+  function apiGet(params) {
+    const qs = new URLSearchParams({ site: SITE_SLUG, ...params }).toString();
+    return fetch(`${API_BASE}?${qs}`).then(r => r.json().then(data => ({ status: r.status, body: data })));
+  }
+
+  function mostrarMsg(id, texto, tipo = 'erro') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = texto;
+    el.className = `msg ${tipo}`;
+    el.classList.remove('oculto');
+  }
+
+  function ocultarMsg(id) {
+    const el = document.getElementById(id);
+    if (el) el.classList.add('oculto');
+  }
+
+  function executarEntrar() {
+    ocultarMsg('msg-login');
+    const senha = document.getElementById('login-senha').value;
+    if (!senha) return mostrarMsg('msg-login', 'Por favor, informe a senha.');
+
+    apiPost({ acao: 'entrar', senha }).then(res => {
+      if (res.status === 200 && res.body.token) {
+        TOKEN = res.body.token;
+        sessionStorage.setItem('splash_token', TOKEN);
+        iniciarPainel();
+      } else if (res.body.sem_ativacao) {
+        mostrarMsg('msg-login', 'Esta conta ainda não foi ativada pelo administrador.', 'aviso');
+      } else {
+        mostrarMsg('msg-login', res.body.error || 'Senha incorreta.');
+      }
+    }).catch(() => mostrarMsg('msg-login', 'Erro de conexão com o servidor.'));
+  }
+
+  function executarPrimeiroAcesso() {
+    ocultarMsg('msg-login');
+    const codigo = document.getElementById('login-codigo').value;
+    const senha_nova = document.getElementById('login-senha-nova').value;
+    if (!codigo || !senha_nova) return mostrarMsg('msg-login', 'Preencha o código e a nova senha.');
+
+    apiPost({ acao: 'primeiro-acesso', codigo, senha_nova }).then(res => {
+      if (res.status === 200 && res.body.token) {
+        TOKEN = res.body.token;
+        sessionStorage.setItem('splash_token', TOKEN);
+        iniciarPainel();
+      } else {
+        mostrarMsg('msg-login', res.body.error || 'Erro ao realizar primeiro acesso.');
+      }
+    });
+  }
+
+  function fazerLogout() {
+    if (TOKEN) apiPost({ acao: 'sair' }).catch(() => {});
+    TOKEN = '';
+    sessionStorage.removeItem('splash_token');
+    document.getElementById('secao-login').classList.remove('oculto');
+    document.getElementById('secao-painel').classList.add('oculto');
+    document.getElementById('menu-inferior').classList.add('oculto');
+  }
+
+  function iniciarPainel() {
+    document.getElementById('secao-login').classList.add('oculto');
+    document.getElementById('secao-painel').classList.remove('oculto');
+    document.getElementById('menu-inferior').classList.remove('oculto');
+
+    carregarConfig();
+    carregarCalendario();
+    carregarReservas();
+  }
+
+  function trocarUnidade(u) {
+    UNIDADE_ATUAL = u;
+    document.getElementById('btn-un-santa-adelia').classList.toggle('ativa', u === 'santa-adelia');
+    document.getElementById('btn-un-santa-barbara').classList.toggle('ativa', u === 'santa-barbara');
+    carregarCalendario();
+    carregarReservas();
+  }
+
+  function carregarConfig() {
+    apiPost({ acao: 'listar' }).then(res => {
+      if (res.status === 200 && res.body.config) {
+        CONFIG_CACHE = res.body.config;
+        povoarCamposConfig(CONFIG_CACHE);
+      }
+    });
+  }
+
+  function povoarCamposConfig(c) {
+    document.getElementById('cfg-nome').value = c.nome || '';
+    document.getElementById('cfg-whatsapp').value = c.whatsapp || '';
+    document.getElementById('cfg-pix-chave').value = (c.pix && c.pix.chave) || '';
+    document.getElementById('cfg-pix-titular').value = (c.pix && c.pix.titular) || '';
+    document.getElementById('cfg-sinal-tipo').value = (c.sinal && c.sinal.tipo) || 'percentual';
+    document.getElementById('cfg-sinal-valor').value = (c.sinal && c.sinal.valor) || 0;
+    document.getElementById('cfg-prazo-horas').value = c.prazo_horas || 48;
+    document.getElementById('cfg-antecedencia-dias').value = c.antecedencia_dias || 0;
+    document.getElementById('cfg-aviso').value = c.aviso || '';
+    document.getElementById('cfg-mensagem-pedido').value = c.mensagem_pedido || '';
+  }
+
+  function salvarConfiguracoes() {
+    ocultarMsg('msg-config');
+    const configNova = {
+      nome: document.getElementById('cfg-nome').value,
+      whatsapp: document.getElementById('cfg-whatsapp').value,
+      pix: {
+        chave: document.getElementById('cfg-pix-chave').value,
+        titular: document.getElementById('cfg-pix-titular').value
+      },
+      sinal: {
+        tipo: document.getElementById('cfg-sinal-tipo').value,
+        valor: Number(document.getElementById('cfg-sinal-valor').value)
+      },
+      prazo_horas: Number(document.getElementById('cfg-prazo-horas').value),
+      antecedencia_dias: Number(document.getElementById('cfg-antecedencia-dias').value),
+      aviso: document.getElementById('cfg-aviso').value,
+      mensagem_pedido: document.getElementById('cfg-mensagem-pedido').value
+    };
+
+    apiPost({ acao: 'config', config: configNova }).then(res => {
+      if (res.status === 200) {
+        CONFIG_CACHE = res.body.config;
+        mostrarMsg('msg-config', 'Configurações salvas com sucesso!', 'ok');
+      } else {
+        mostrarMsg('msg-config', res.body.error || 'Erro ao salvar configurações.');
+      }
+    });
+  }
+
+  function mudarMes(delta) {
+    const [a, m] = MES_ATUAL.split('-').map(Number);
+    const d = new Date(a, m - 1 + delta, 1);
+    MES_ATUAL = d.toISOString().slice(0, 7);
+    carregarCalendario();
+  }
+
+  function carregarCalendario() {
+    const [ano, mes] = MES_ATUAL.split('-');
+    const dataObj = new Date(Number(ano), Number(mes) - 1, 1);
+    const mesExtenso = dataObj.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+    document.getElementById('cal-titulo-mes').textContent = mesExtenso.charAt(0).toUpperCase() + mesExtenso.slice(1);
+
+    apiGet({ unidade: UNIDADE_ATUAL, mes: MES_ATUAL }).then(res => {
+      if (res.status === 200) {
+        DIAS_MAPA = res.body.dias || {};
+        renderizarCalendario(Number(ano), Number(mes), DIAS_MAPA);
+      }
+    });
+  }
+
+  function renderizarCalendario(ano, mes, diasMapa) {
+    const cont = document.getElementById('cal-dias-container');
+    cont.innerHTML = '';
+
+    const { primeiroDiaSemana, totalDias } = calcularDiasMes(ano, mes);
+    let qtdLivres = 0;
+    let qtdReservados = 0;
+
+    for (let i = 0; i < primeiroDiaSemana; i++) {
+      const div = document.createElement('div');
+      div.className = 'cal-celula vazio';
+      cont.appendChild(div);
+    }
+
+    const hojeIso = new Date().toISOString().slice(0, 10);
+
+    for (let dia = 1; dia <= totalDias; dia++) {
+      const diaPad = String(dia).padStart(2, '0');
+      const mesPad = String(mes).padStart(2, '0');
+      const isoData = `${ano}-${mesPad}-${diaPad}`;
+      const status = diasMapa[isoData] || 'livre';
+
+      if (status === 'livre') qtdLivres++;
+      else qtdReservados++;
+
+      const div = document.createElement('div');
+      div.className = `cal-celula st-${status} ${isoData === hojeIso ? 'hoje' : ''}`;
+      div.textContent = dia;
+      div.onclick = () => clicarDiaCalendario(isoData, status);
+      cont.appendChild(div);
+    }
+
+    document.getElementById('resumo-livres').textContent = qtdLivres;
+    document.getElementById('resumo-reservados').textContent = qtdReservados;
+  }
+
+  function carregarReservas() {
+    apiPost({ acao: 'listar', unidade: UNIDADE_ATUAL }).then(res => {
+      if (res.status === 200) {
+        RESERVAS_CACHE = res.body.itens || [];
+        atualizarListasEPedidos();
+      }
+    });
+  }
+
+  function atualizarListasEPedidos() {
+    const pendentes = RESERVAS_CACHE.filter(r => r.status === 'pedido' || r.status === 'aguardando_sinal');
+
+    // Atualizar badge de notificações
+    const badge = document.getElementById('badge-pedidos');
+    if (pendentes.length > 0) {
+      badge.textContent = pendentes.length;
+      badge.classList.remove('oculto');
+    } else {
+      badge.classList.add('oculto');
+    }
+
+    renderizarListaPedidosPendentes(pendentes);
+    renderizarListaTodasReservas();
+  }
+
+  function renderizarListaPedidosPendentes(lista) {
+    const cont = document.getElementById('lista-pedidos-pendentes');
+    if (lista.length === 0) {
+      cont.innerHTML = '<div class="cartao" style="text-align:center;color:var(--suave);">Nenhum pedido pendente de ação no momento.</div>';
+      return;
+    }
+
+    cont.innerHTML = lista.map(r => montarCartaoReserva(r, true)).join('');
+  }
+
+  function renderizarListaTodasReservas() {
+    const cont = document.getElementById('lista-todas-reservas');
+    const busca = (document.getElementById('filtro-busca').value || '').toLowerCase();
+    const statusFiltro = document.getElementById('filtro-status').value;
+
+    let filtradas = RESERVAS_CACHE;
+    if (statusFiltro) {
+      if (statusFiltro === 'cancelado') {
+        filtradas = filtradas.filter(r => r.status === 'cancelado' || r.status === 'recusado' || r.status === 'expirado');
+      } else {
+        filtradas = filtradas.filter(r => r.status === statusFiltro);
+      }
+    }
+
+    if (busca) {
+      filtradas = filtradas.filter(r =>
+        (r.nome || '').toLowerCase().includes(busca) ||
+        (r.data || '').includes(busca) ||
+        (r.protocolo || '').toLowerCase().includes(busca)
+      );
+    }
+
+    if (filtradas.length === 0) {
+      cont.innerHTML = '<div class="cartao" style="text-align:center;color:var(--suave);">Nenhuma reserva encontrada.</div>';
+      return;
+    }
+
+    cont.innerHTML = filtradas.map(r => montarCartaoReserva(r, false)).join('');
+  }
+
+  function montarCartaoReserva(r, destaqueAcao = false) {
+    const est = MapearEstado(r.status);
+    const dataBr = formatarDataBr(r.data);
+    const unNome = r.unidade === 'santa-barbara' ? 'Splash Santa Bárbara' : 'Splash Santa Adélia';
+
+    let htmlAcoes = '';
+    if (r.status === 'pedido' || r.status === 'aguardando_sinal') {
+      htmlAcoes += `<button class="btn ouro pequeno" onclick="aceitarEPedirSinal('${r.id}')"><i class="ri-whatsapp-line"></i> Aceitar e Pedir Sinal</button>`;
+      htmlAcoes += `<button class="btn verde pequeno" onclick="confirmarSinalPago('${r.id}')"><i class="ri-checkbox-circle-line"></i> Sinal Pago (Confirmar)</button>`;
+      htmlAcoes += `<button class="btn vermelho pequeno" onclick="recusarReserva('${r.id}')">Recusar</button>`;
+    } else if (r.status === 'confirmado') {
+      htmlAcoes += `<button class="btn claro pequeno" onclick="concluirReserva('${r.id}')">Concluir Evento</button>`;
+      htmlAcoes += `<button class="btn vermelho pequeno" onclick="cancelarReserva('${r.id}')">Cancelar Reserva</button>`;
+    }
+
+    if (r.whatsapp) {
+      const waNum = r.whatsapp.replace(/\D/g, '');
+      htmlAcoes += `<a href="https://wa.me/${waNum}" target="_blank" rel="noopener" class="btn claro pequeno"><i class="ri-chat-3-line"></i> Falar no WhatsApp</a>`;
+    }
+
+    return `
+      <div class="pedido-card">
+        <div class="topo-card">
+          <div>
+            <strong style="font-size:16px;color:var(--cor-destaque);">${escapeHtml(r.nome || 'Reserva Manual')}</strong>
+            <div style="font-size:12px;color:var(--suave);">${unNome} · <strong>${dataBr}</strong></div>
+          </div>
+          <span class="tag-status" style="background:${est.bg};color:${est.texto}">${est.rotulo}</span>
+        </div>
+
+        <div style="font-size:13px;margin-top:8px;line-height:1.5;">
+          ${r.protocolo ? `<div>Protocolo: <code>${escapeHtml(r.protocolo)}</code></div>` : ''}
+          ${r.tipo_evento ? `<div>Evento: ${escapeHtml(r.tipo_evento)} (${r.convidados || 0} convidados)</div>` : ''}
+          ${r.whatsapp ? `<div>WhatsApp: ${escapeHtml(r.whatsapp)}</div>` : ''}
+          ${r.obs ? `<div style="margin-top:4px;color:var(--suave);">Obs: ${escapeHtml(r.obs)}</div>` : ''}
+        </div>
+
+        ${htmlAcoes ? `<div class="acoes-card">${htmlAcoes}</div>` : ''}
+      </div>
+    `;
+  }
+
+  function aceitarEPedirSinal(id) {
+    const r = RESERVAS_CACHE.find(x => x.id === id);
+    if (!r) return;
+
+    apiPost({ acao: 'status', id, status: 'aguardando_sinal' }).then(res => {
+      if (res.status === 200) {
+        carregarReservas();
+        carregarCalendario();
+
+        const msg = montarMensagemWhatsApp(r, CONFIG_CACHE);
+        const waNum = (r.whatsapp || '').replace(/\D/g, '');
+        const urlWa = `https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`;
+        window.open(urlWa, '_blank');
+      } else {
+        alert(res.body.error || 'Erro ao alterar status.');
+      }
+    });
+  }
+
+  function confirmarSinalPago(id) {
+    if (!confirm('Confirmar que o sinal foi pago via Pix e garantir a reserva definitivamente?')) return;
+    apiPost({ acao: 'status', id, status: 'confirmado' }).then(res => {
+      if (res.status === 200) {
+        carregarReservas();
+        carregarCalendario();
+      } else {
+        alert(res.body.error || 'Erro ao confirmar reserva.');
+      }
+    });
+  }
+
+  function recusarReserva(id) {
+    if (!confirm('Deseja realmente recusar este pedido? O dia será liberado no calendário.')) return;
+    apiPost({ acao: 'status', id, status: 'recusado' }).then(res => {
+      if (res.status === 200) {
+        carregarReservas();
+        carregarCalendario();
+      }
+    });
+  }
+
+  function cancelarReserva(id) {
+    if (!confirm('Deseja realmente cancelar esta reserva confirmada? O dia será liberado no calendário.')) return;
+    apiPost({ acao: 'status', id, status: 'cancelado' }).then(res => {
+      if (res.status === 200) {
+        carregarReservas();
+        carregarCalendario();
+      }
+    });
+  }
+
+  function concluirReserva(id) {
+    apiPost({ acao: 'status', id, status: 'concluido' }).then(res => {
+      if (res.status === 200) {
+        carregarReservas();
+        carregarCalendario();
+      }
+    });
+  }
+
+  function clicarDiaCalendario(isoData, status) {
+    const reservasDoDia = RESERVAS_CACHE.filter(r => r.data === isoData && r.unidade === UNIDADE_ATUAL);
+    const dataBr = formatarDataBr(isoData);
+    document.getElementById('modal-titulo').textContent = `${dataBr} · ${UNIDADE_ATUAL === 'santa-barbara' ? 'Santa Bárbara' : 'Santa Adélia'}`;
+
+    const cont = document.getElementById('modal-conteudo');
+    if (reservasDoDia.length === 0) {
+      if (status === 'bloqueado') {
+        cont.innerHTML = `
+          <p>Este dia está <strong>Bloqueado</strong>.</p>
+          <button class="btn largo claro" onclick="desbloquearData('${isoData}')">Desbloquear Dia</button>
+        `;
+      } else {
+        cont.innerHTML = `
+          <p>Este dia está <strong>Livre</strong> para reservas.</p>
+          <button class="btn largo ouro" onclick="abrirNovoNoDia('${isoData}')">Lançar Reserva ou Bloqueio</button>
+        `;
+      }
+    } else {
+      cont.innerHTML = reservasDoDia.map(r => montarCartaoReserva(r, true)).join('');
+    }
+
+    document.getElementById('modal-detalhes').classList.remove('oculto');
+  }
+
+  function desbloquearData(data) {
+    apiPost({ acao: 'desbloquear', unidade: UNIDADE_ATUAL, data }).then(res => {
+      if (res.status === 200) {
+        fecharModal();
+        carregarCalendario();
+        carregarReservas();
+      }
+    });
+  }
+
+  function abrirNovoNoDia(data) {
+    fecharModal();
+    navegarAba('nova');
+    document.getElementById('lanc-res-data').value = data;
+    document.getElementById('lanc-bloq-de').value = data;
+    document.getElementById('lanc-bloq-ate').value = data;
+  }
+
+  function fecharModal() {
+    document.getElementById('modal-detalhes').classList.add('oculto');
+  }
+
+  function alternarModoLancamento() {
+    const modo = document.getElementById('novo-tipo-modo').value;
+    document.getElementById('form-lanc-reserva').classList.toggle('oculto', modo !== 'reserva');
+    document.getElementById('form-lanc-bloqueio').classList.toggle('oculto', modo !== 'bloqueio');
+  }
+
+  function salvarReservaManual() {
+    const payload = {
+      acao: 'criar',
+      unidade: UNIDADE_ATUAL,
+      data: document.getElementById('lanc-res-data').value,
+      nome: document.getElementById('lanc-res-nome').value,
+      whatsapp: document.getElementById('lanc-res-whatsapp').value,
+      tipo_evento: document.getElementById('lanc-res-tipo').value,
+      convidados: Number(document.getElementById('lanc-res-convidados').value),
+      obs: document.getElementById('lanc-res-obs').value,
+      status: 'confirmado'
+    };
+
+    if (!payload.data || !payload.nome) return alert('Preencha a data e o nome do cliente.');
+
+    apiPost(payload).then(res => {
+      if (res.status === 201) {
+        alert('Reserva criada com sucesso!');
+        navegarAba('calendario');
+        carregarCalendario();
+        carregarReservas();
+      } else {
+        alert(res.body.error || 'Erro ao criar reserva.');
+      }
+    });
+  }
+
+  function salvarBloqueio() {
+    const payload = {
+      acao: 'bloquear',
+      unidade: UNIDADE_ATUAL,
+      de: document.getElementById('lanc-bloq-de').value,
+      ate: document.getElementById('lanc-bloq-ate').value,
+      motivo: document.getElementById('lanc-bloq-motivo').value
+    };
+
+    if (!payload.de || !payload.ate) return alert('Preencha o período de bloqueio.');
+
+    apiPost(payload).then(res => {
+      if (res.status === 201) {
+        alert(`Período bloqueado (${res.body.bloqueios} dia(s)).`);
+        navegarAba('calendario');
+        carregarCalendario();
+        carregarReservas();
+      } else {
+        alert(res.body.error || 'Erro ao bloquear período.');
+      }
+    });
+  }
+
+  function baixarBackupCsv() {
+    const csvContent = gerarCsvBackup(RESERVAS_CACHE);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `backup-splash-reservas-${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function abrirMinhaConta() {
+    document.getElementById('modal-conta').classList.remove('oculto');
+  }
+
+  function fecharModalConta() {
+    document.getElementById('modal-conta').classList.add('oculto');
+  }
+
+  function executarTrocaSenha() {
+    ocultarMsg('msg-conta');
+    const senha_atual = document.getElementById('conta-senha-atual').value;
+    const senha_nova = document.getElementById('conta-senha-nova').value;
+
+    if (!senha_atual || !senha_nova) return mostrarMsg('msg-conta', 'Preencha a senha atual e a nova.');
+
+    apiPost({ acao: 'trocar-senha', senha_atual, senha_nova }).then(res => {
+      if (res.status === 200) {
+        mostrarMsg('msg-conta', 'Senha alterada com sucesso!', 'ok');
+        setTimeout(fecharModalConta, 1500);
+      } else {
+        mostrarMsg('msg-conta', res.body.error || 'Erro ao alterar senha.');
+      }
+    });
+  }
+
+  function navegarAba(nome) {
+    ['calendario', 'pedidos', 'reservas', 'nova', 'config'].forEach(a => {
+      document.getElementById(`aba-${a}`).classList.toggle('oculto', a !== nome);
+      document.getElementById(`tab-${a}`).classList.toggle('ativa', a === nome);
+    });
+  }
+</script>
+</body>
+</html>
