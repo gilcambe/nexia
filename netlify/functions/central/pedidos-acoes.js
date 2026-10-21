@@ -46,6 +46,8 @@ async function agir(p, b, quem) {
   if (b.acao === 'anexar') return anexar(p, b);
   if (b.acao === 'publicar') return publicar(p.gh);
   if (!n && b.acao !== 'juntar') return r(400, { error: 'Falta o número do pedido.' });
+  // Cortex → Jules (grátis): manda a tarefa travada para o Jules resolver e abrir o PR.
+  if (b.acao === 'jules') { const x = await require('./pedidos-jules').mandarParaJules(p, n, quem); return r(x.status, x.corpo); }
   if (b.acao === 'comentar') {
     if (texto.length < 2) return r(400, { error: 'Escreva a mensagem.' });
     await p.gh(issue(n) + '/comments', { method: 'POST', body: JSON.stringify({ body: texto + '\n\n_Nota de ' + quem + '._' }) });
