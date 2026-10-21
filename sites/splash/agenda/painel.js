@@ -143,6 +143,207 @@ function obterCorDiaEstado(status, doMes) {
   return map.bg;
 }
 
+function removerAcentos(str) {
+  if (!str || typeof str !== 'string') return '';
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
+
+function parseDataExcelOuTexto(val) {
+  if (val === null || val === undefined || val === '') return null;
+
+  // Se for número serial do Excel (ex: 45000)
+  if (typeof val === 'number' || (!isNaN(val) && !String(val).includes('/') && !String(val).includes('-'))) {
+    const num = Number(val);
+    if (num > 10000 && num < 100000) {
+      const dataObj = new Date(Math.round((num - 25569) * 86400 * 1000));
+      if (!isNaN(dataObj.getTime())) {
+        return dataObj.toISOString().slice(0, 10);
+      }
+    }
+  }
+
+  const s = String(val).trim();
+
+  // AAAA-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) {
+    const dObj = new Date(s + 'T00:00:00Z');
+    if (!isNaN(dObj.getTime()) && dObj.toISOString().slice(0, 10) === s) {
+      return s;
+    }
+  }
+
+  // DD/MM/AAAA ou DD-MM-AAAA ou D/M/AA
+  const m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+  if (m) {
+    let dia = m[1].padStart(2, '0');
+    let mes = m[2].padStart(2, '0');
+    let ano = m[3];
+    if (ano.length === 2) {
+      const anoAtual = new Date().getFullYear();
+      const seculo = Math.floor(anoAtual / 100) * 100;
+      ano = String(seculo + Number(ano));
+    }
+    const iso = `${ano}-${mes}-${dia}`;
+    const dObj = new Date(iso + 'T00:00:00Z');
+    if (!isNaN(dObj.getTime()) && dObj.toISOString().slice(0, 10) === iso) {
+      return iso;
+    }
+  }
+
+  return null;
+}
+
+function parseUnidadeImportacao(val, unidadePadrao) {
+  const norm = removerAcentos(String(val || ''));
+
+  if (norm.includes('barbara') || norm.includes('sb') || norm === '2' || norm === 'unidade 2' || norm === 'santa-barbara' || norm === 'santa barbara') {
+    return 'santa-barbara';
+  }
+  if (norm.includes('adelia') || norm.includes('sa') || norm === '1' || norm === 'unidade 1' || norm === 'santa-adelia' || norm === 'santa adelia') {
+    return 'santa-adelia';
+  }
+
+  if (unidadePadrao === 'santa-barbara' || unidadePadrao === 'santa-adelia') {
+    return unidadePadrao;
+  }
+
+  return null;
+}
+
+function parseWhatsappImportacao(val) {
+  if (!val) return '';
+  return String(val).replace(/\D/g, '');
+}
+
+function parseSituacaoImportacao(val, dataIso, hojeBr) {
+  const norm = removerAcentos(String(val || ''));
+  let sit = 'confirmado';
+
+  if (norm.includes('aguardando') || norm.includes('pendente') || norm.includes('sinal')) {
+    sit = 'aguardando_sinal';
+  } else if (norm.includes('concluid') || norm.includes('finalizad') || norm.includes('realizad')) {
+    sit = 'concluido';
+  } else if (norm.includes('confirmad') || norm.includes('pago') || norm.includes('ok') || norm === '') {
+    sit = 'confirmado';
+  }
+
+  // Regra do passado: data no passado é importada como concluída
+  if (dataIso && hojeBr && dataIso < hojeBr && (sit === 'confirmado' || sit === 'aguardando_sinal')) {
+    sit = 'concluido';
+  }
+
+  return sit;
+}
+
+function mapearCabecalhosImportacao(cabecalhos) {
+  const mapa = {
+    data: -1,
+    unidade: -1,
+    cliente: -1,
+    whatsapp: -1,
+    tipo_evento: -1,
+    valor_sinal: -1,
+    situacao: -1,
+    observacoes: -1
+  };
+
+  if (!Array.isArray(cabecalhos)) return mapa;
+
+  cabecalhos.forEach((col, idx) => {
+    const norm = removerAcentos(String(col || ''));
+    if (mapa.data === -1 && (norm.includes('data') || norm === 'dia' || norm === 'dt')) {
+      mapa.data = idx;
+    } else if (mapa.unidade === -1 && (norm.includes('unidade') || norm.includes('local') || norm.includes('salao'))) {
+      mapa.unidade = idx;
+    } else if (mapa.cliente === -1 && (norm.includes('cliente') || norm.includes('nome') || norm.includes('solicitante'))) {
+      mapa.cliente = idx;
+    } else if (mapa.whatsapp === -1 && (norm.includes('whatsapp') || norm.includes('whats') || norm.includes('zap') || norm.includes('telefone') || norm.includes('celular') || norm.includes('contato'))) {
+      mapa.whatsapp = idx;
+    } else if (mapa.tipo_evento === -1 && (norm.includes('tipo') || norm.includes('evento') || norm.includes('festa'))) {
+      mapa.tipo_evento = idx;
+    } else if (mapa.valor_sinal === -1 && (norm.includes('sinal') || norm.includes('valor'))) {
+      mapa.valor_sinal = idx;
+    } else if (mapa.situacao === -1 && (norm.includes('situacao') || norm.includes('status') || norm.includes('estado'))) {
+      mapa.situacao = idx;
+    } else if (mapa.observacoes === -1 && (norm.includes('obs') || norm.includes('observaca') || norm.includes('nota'))) {
+      mapa.observacoes = idx;
+    }
+  });
+
+  return mapa;
+}
+
+function normalizarLinhaImportacao(linha, mapaColunas, unidadePadrao, hojeBr, chavesVistas) {
+  const getVal = key => {
+    const idx = mapaColunas[key];
+    if (idx !== undefined && idx !== -1 && Array.isArray(linha)) {
+      return linha[idx];
+    }
+    if (typeof linha === 'object' && linha !== null && !Array.isArray(linha)) {
+      return linha[key];
+    }
+    return '';
+  };
+
+  const rawData = getVal('data');
+  const rawUnidade = getVal('unidade');
+  const rawCliente = getVal('cliente');
+  const rawWhatsapp = getVal('whatsapp');
+  const rawTipo = getVal('tipo_evento');
+  const rawSinal = getVal('valor_sinal');
+  const rawSituacao = getVal('situacao');
+  const rawObs = getVal('observacoes');
+
+  const dataIso = parseDataExcelOuTexto(rawData);
+  const unidade = parseUnidadeImportacao(rawUnidade, unidadePadrao);
+  const cliente = String(rawCliente || '').trim() || 'Cliente Importado';
+  const whatsapp = parseWhatsappImportacao(rawWhatsapp);
+  const tipo_evento = String(rawTipo || '').trim() || 'Outro';
+  const valor_sinal = Number(rawSinal) || 0;
+  const situacao = parseSituacaoImportacao(rawSituacao, dataIso, hojeBr);
+  const observacoes = String(rawObs || '').trim();
+
+  let selo = 'OK';
+  let motivo = 'Pronto para importar';
+
+  if (!dataIso) {
+    selo = 'ERRO';
+    motivo = 'Data inválida ou em formato desconhecido';
+  } else if (!unidade) {
+    selo = 'ERRO';
+    motivo = 'Unidade não identificada e nenhuma padrão selecionada';
+  } else {
+    const chave = `${unidade}_${dataIso}`;
+    if (chavesVistas && chavesVistas.has(chave)) {
+      selo = 'ERRO';
+      motivo = 'Data e unidade duplicadas no mesmo arquivo';
+    } else if (chavesVistas) {
+      chavesVistas.add(chave);
+    }
+  }
+
+  if (selo === 'OK' && dataIso && hojeBr && dataIso < hojeBr) {
+    selo = 'AVISO';
+    motivo = 'Data no passado: será importada como Concluída';
+  } else if (selo === 'OK' && (!rawUnidade || parseUnidadeImportacao(rawUnidade, null) === null)) {
+    selo = 'AVISO';
+    motivo = `Unidade não especificada no arquivo: atribuída a ${unidade === 'santa-barbara' ? 'Santa Bárbara' : 'Santa Adélia'}`;
+  }
+
+  return {
+    data: dataIso || '',
+    unidade: unidade || '',
+    cliente,
+    whatsapp,
+    tipo_evento,
+    valor_sinal,
+    situacao,
+    observacoes,
+    selo,
+    motivo
+  };
+}
+
 const SplashPainelObj = {
   escapeHtml,
   formatarDataBr,
@@ -153,7 +354,14 @@ const SplashPainelObj = {
   calcularDiasMes,
   nomeMesAnoPt,
   gerarGridCalendarioPainel,
-  obterCorDiaEstado
+  obterCorDiaEstado,
+  removerAcentos,
+  parseDataExcelOuTexto,
+  parseUnidadeImportacao,
+  parseWhatsappImportacao,
+  parseSituacaoImportacao,
+  mapearCabecalhosImportacao,
+  normalizarLinhaImportacao
 };
 
 if (typeof window !== 'undefined') {
