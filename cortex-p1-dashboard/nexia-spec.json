@@ -1,0 +1,218 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex-p1 Dashboard",
+    "tagline": "Painel de gestão de projetos e usuários",
+    "photo_theme": "",
+    "description": "Painel de gestão de projetos e usuários",
+    "folder": "cortex-p1-dashboard",
+    "fonts": {
+      "heading": "Plus Jakarta Sans",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#4f46e5",
+      "accent": "#06b6d4",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#111827"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "",
+      "email": "suporte@cortex-p1.com",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=cortex-p1-dashboard&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "usuarios",
+        "label": "Usuários",
+        "singular": "Usuário",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cargo",
+            "label": "Cargo",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "datacadastro",
+            "label": "Data de Cadastro",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Inativo",
+              "Aguardando Aprovação"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "João Silva",
+            "email": "joao.silva@cortex-p1.com",
+            "cargo": "Desenvolvedor",
+            "datacadastro": "",
+            "status": "Ativo"
+          },
+          {
+            "nome": "Maria Santos",
+            "email": "maria.santos@cortex-p1.com",
+            "cargo": "Gerente de Projetos",
+            "datacadastro": "",
+            "status": "Ativo"
+          },
+          {
+            "nome": "Pedro Oliveira",
+            "email": "pedro.oliveira@cortex-p1.com",
+            "cargo": "Designer",
+            "datacadastro": "",
+            "status": "Aguardando Aprovação"
+          },
+          {
+            "nome": "Ana Costa",
+            "email": "ana.costa@cortex-p1.com",
+            "cargo": "Analista de QA",
+            "datacadastro": "",
+            "status": "Inativo"
+          }
+        ]
+      },
+      {
+        "key": "projetos",
+        "label": "Projetos",
+        "singular": "Projeto",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cliente",
+            "label": "Cliente",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Planejamento",
+              "Em Andamento",
+              "Concluído",
+              "Cancelado"
+            ],
+            "required": true
+          },
+          {
+            "key": "datainicio",
+            "label": "Data de Início",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "dataprevisao",
+            "label": "Data de Previsão",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor",
+            "type": "money",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Redesign do Site",
+            "cliente": "Tech Solutions",
+            "status": "Em Andamento",
+            "datainicio": "",
+            "dataprevisao": "",
+            "valor": "150000"
+          },
+          {
+            "nome": "App Mobile",
+            "cliente": "E-commerce Plus",
+            "status": "Planejamento",
+            "datainicio": "",
+            "dataprevisao": "",
+            "valor": "250000"
+          },
+          {
+            "nome": "Sistema de CRM",
+            "cliente": "Sales Corp",
+            "status": "Concluído",
+            "datainicio": "",
+            "dataprevisao": "",
+            "valor": "300000"
+          },
+          {
+            "nome": "Portal de Clientes",
+            "cliente": "Service Ltda",
+            "status": "Cancelado",
+            "datainicio": "",
+            "dataprevisao": "",
+            "valor": "0"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Usuários",
+      "Projetos",
+      "Relatórios"
+    ]
+  },
+  "media": {}
+}
