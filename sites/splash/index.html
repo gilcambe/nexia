@@ -582,6 +582,8 @@ function nxListasPadrao() {
   return {};
 }
 
+function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
 function renderizarFotosUnidade(fotos) {
   const container = document.getElementById('galeria-fotos-grid');
   if (!container) return;
@@ -592,8 +594,8 @@ function renderizarFotosUnidade(fotos) {
   container.parentElement.style.display = 'block';
   container.innerHTML = fotos.map(f => `
     <div class="media-card">
-      <img src="${f.url}" alt="${f.legenda || 'Splash Eventos'}" loading="lazy">
-      ${f.legenda ? `<div class="media-title">${f.legenda}</div>` : ''}
+      <img src="${esc(f.url)}" alt="${esc(f.legenda || 'Splash Eventos')}" loading="lazy">
+      ${f.legenda ? `<div class="media-title">${esc(f.legenda)}</div>` : ''}
     </div>
   `).join('');
 }
@@ -611,9 +613,9 @@ function renderizarVideosUnidade(videos) {
   grid.innerHTML = videos.map(v => `
     <div class="media-card">
       <div class="video-embed-container">
-        <iframe src="${v.embed_url}" title="${v.titulo || 'Vídeo Splash Eventos'}" allowfullscreen></iframe>
+        <iframe src="${esc(v.embed_url)}" title="${esc(v.titulo || 'Vídeo Splash Eventos')}" allowfullscreen></iframe>
       </div>
-      ${v.titulo ? `<div class="media-title">${v.titulo}</div>` : ''}
+      ${v.titulo ? `<div class="media-title">${esc(v.titulo)}</div>` : ''}
     </div>
   `).join('');
 }
