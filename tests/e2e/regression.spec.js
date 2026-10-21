@@ -181,7 +181,7 @@ test.describe('NEXIA AI — Robôs (ADR-AUTO-01)', () => {
     const calls = [];
     page.on('request', r => { if (r.url().includes('/api/nexia/')) calls.push(r.url()); });
     await page.goto('/robos', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByTestId('robos-title')).toHaveText('Robôs NEXIA');
+    await expect(page.getByTestId('robos-title')).toHaveText('Robôs KERNEX');
     await expect(page.getByTestId('robos-login')).toBeVisible({ timeout: 15000 });
     expect(calls).toEqual([]);
   });

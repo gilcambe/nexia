@@ -61,7 +61,7 @@ export default function CodigoPage() {
             <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-nexia-cyan/10 border border-nexia-cyan/20">
               <i className="ri-code-box-line text-nexia-cyan text-xl" />
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Código-Fonte NEXIA OS</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">Código-Fonte KERNEX</h1>
           </div>
           <p className="text-sm md:text-base text-nexia-muted max-w-lg">
             Todo o código gerado. Copie, cole no Cursor/VS Code e entregue à Claude para incorporar no projeto.
@@ -149,7 +149,7 @@ export default function CodigoPage() {
               <i className="ri-brain-fill text-nexia-cyan text-sm" />
             </div>
             <span className="text-white font-bold text-sm tracking-tight">
-              NEXIA<span className="text-nexia-cyan">OS</span>
+              KERNEX
             </span>
           </div>
           <span className="text-[11px] text-nexia-muted">

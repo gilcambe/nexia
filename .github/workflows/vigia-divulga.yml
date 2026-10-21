@@ -1,0 +1,31 @@
+# Vigia do Divulga: a cada 3 horas olha o estado (ramo divulga-dados) e abre ou fecha o alerta "Divulga parado: <rede>".
+# Só lê o repositório e mexe em issues com o rótulo cortex-alerta. Não posta nada e não grava arquivo.
+name: Vigia do Divulga
+
+on:
+  schedule:
+    - cron: '40 */3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: vigia-divulga
+  cancel-in-progress: false
+
+jobs:
+  vigia:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 20
+      - name: Rodar o Vigia
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: node divulga/vigia.js

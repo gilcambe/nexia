@@ -53,7 +53,7 @@ export default function PipelinePage() {
           </div>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 flex items-center justify-center rounded-xl bg-nexia-cyan/10 border border-nexia-cyan/20"><i className="ri-node-tree text-nexia-cyan text-xl" /></div>
-            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">NEXIA OS Pipeline</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">KERNEX Pipeline</h1>
           </div>
           <p className="text-sm md:text-base text-nexia-muted max-w-lg">Ecossistema autônomo de QA + auto-refatoração. Clone → Testa → Corrige → Empacota → Entrega.</p>
         </div>
@@ -154,7 +154,7 @@ export default function PipelinePage() {
           <section className="text-center py-8">
             <h3 className="text-xl font-bold text-white mb-3">Pronto para escalar seu QA?</h3>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <a href="https://wa.me/5511944037259?text=Quero%20deployar%20o%20pipeline%20de%20QA%20da%20NEXIA%20OS!" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-all whitespace-nowrap"><i className="ri-whatsapp-fill" /> Quero Deployar</a>
+              <a href="https://wa.me/5511944037259?text=Quero%20deployar%20o%20pipeline%20de%20QA%20da%20KERNEX!" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-all whitespace-nowrap"><i className="ri-whatsapp-fill" /> Quero Deployar</a>
               <button onClick={() => navigate("/codigo")} className="flex items-center gap-2 px-5 py-2.5 rounded-lg border border-nexia-border text-nexia-muted text-sm hover:text-white hover:border-nexia-cyan/40 transition-all whitespace-nowrap cursor-pointer"><i className="ri-code-box-line" /> Ver Código-Fonte</button>
             </div>
           </section>
@@ -163,7 +163,7 @@ export default function PipelinePage() {
 
       <footer className="border-t border-nexia-border bg-nexia-surface mt-8">
         <div className="px-4 md:px-8 py-6 max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5"><div className="w-7 h-7 flex items-center justify-center rounded-lg bg-nexia-cyan/20"><i className="ri-brain-fill text-nexia-cyan text-sm" /></div><span className="text-white font-bold text-sm tracking-tight">NEXIA<span className="text-nexia-cyan">OS</span></span></div>
+          <div className="flex items-center gap-2.5"><div className="w-7 h-7 flex items-center justify-center rounded-lg bg-nexia-cyan/20"><i className="ri-brain-fill text-nexia-cyan text-sm" /></div><span className="text-white font-bold text-sm tracking-tight">KERNEX</span></div>
           <span className="text-[11px] text-nexia-muted">Pipeline v1.0 · Build 2026.05.03 · Autonomous QA Engine</span>
         </div>
       </footer>

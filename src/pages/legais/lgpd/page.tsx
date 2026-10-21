@@ -1,9 +1,9 @@
 import LegalLayout from "../components/LegalLayout";
 export default function LGPDPage() {
   return (
-    <LegalLayout title="LGPD — Lei Geral de Proteção de Dados" subtitle="Compromisso da NEXIA OS com a proteção de dados pessoais no Brasil" lastUpdated="04 de Maio de 2026">
+    <LegalLayout title="LGPD — Lei Geral de Proteção de Dados" subtitle="Compromisso da KERNEX com a proteção de dados pessoais no Brasil" lastUpdated="04 de Maio de 2026">
       <div className="space-y-8 text-sm text-nexia-muted leading-relaxed">
-        <section><h2 className="text-lg font-semibold text-white mb-3">1. Compromisso com a LGPD</h2><p>A NEXIA OS está plenamente comprometida com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018).</p></section>
+        <section><h2 className="text-lg font-semibold text-white mb-3">1. Compromisso com a LGPD</h2><p>A KERNEX está plenamente comprometida com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018).</p></section>
         <section><h2 className="text-lg font-semibold text-white mb-3">2. Controlador e DPO</h2><ul className="list-disc list-inside space-y-1 ml-4"><li><strong className="text-white">Nome:</strong> Gilson Cambe</li><li><strong className="text-white">E-mail:</strong> contato@nexiaos.com.br</li><li><strong className="text-white">WhatsApp:</strong> +55 11 94403-7259</li></ul></section>
         <section><h2 className="text-lg font-semibold text-white mb-3">3. Bases Legais para Tratamento</h2><ul className="list-disc list-inside space-y-1 ml-4"><li>Execução de contrato: fornecimento dos serviços contratados</li><li>Consentimento: envio de comunicações marketing</li><li>Legítimo interesse: prevenção de fraudes e segurança</li><li>Cumprimento de obrigação legal</li></ul></section>
         <section>

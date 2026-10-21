@@ -152,7 +152,7 @@ export default function AuditoriaPage() {
               </table>
             </div>
 
-            <h2 className="text-lg font-semibold pt-2">NEXIA Bridge (log do seu computador)</h2>
+            <h2 className="text-lg font-semibold pt-2">KERNEX Bridge (log do seu computador)</h2>
             <div className="rounded-xl border border-nexia-border bg-nexia-surface p-4 space-y-2 text-sm" data-testid="bridge-tokens">
               <p className="text-xs text-nexia-muted">Crie um token, coloque-o na variável <code>NEXIA_BRIDGE_TOKEN</code> do computador onde o Bridge roda e informe <code>"vault": {"{"} "url": "{typeof window !== "undefined" ? window.location.origin : ""}" {"}"}</code> no <code>bridge.json</code>. O token aparece só uma vez.</p>
               <div className="flex gap-2">
