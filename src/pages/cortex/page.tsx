@@ -84,7 +84,14 @@ export default function CortexPage() {
   useEffect(() => { if (!authLoading && user) { const t = setTimeout(() => buscar(busca), busca ? 350 : 0); return () => clearTimeout(t); } }, [authLoading, user, busca, buscar]);
 
   const abrir = (n: number) => { setAberto(n); setVista("chat"); setMenu(false); history.replaceState(null, "", n ? `#p${n}` : location.pathname); };
-  const ir = (v: Vista) => { setVista(v); setMenu(false); };
+  const ir = (v: Vista) => {
+    if (v === "central") {
+      navigate("/central");
+      return;
+    }
+    setVista(v);
+    setMenu(false);
+  };
   const novo = () => { setInicial(""); abrir(0); };
 
   const nome = user?.displayName || "";
@@ -104,14 +111,15 @@ export default function CortexPage() {
         </div>
       )}
       <main className="flex-1 min-w-0 flex flex-col">
-        <header className="md:hidden flex items-center gap-3 px-3 h-14 border-b border-[var(--cx-line)] shrink-0">
-          <button onClick={() => setMenu(true)} className="w-11 h-11 flex items-center justify-center" aria-label="Abrir menu" data-testid="cx-menu">
+        <header className="flex items-center gap-3 px-3 h-14 border-b border-[var(--cx-line)] shrink-0">
+          <button onClick={() => setMenu(true)} className="md:hidden w-11 h-11 flex items-center justify-center" aria-label="Abrir menu" data-testid="cx-menu">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M4 7h16M4 12h16M4 17h10" /></svg>
           </button>
           <Logo tamanho={28} /><span className="font-semibold">Cortex</span>
           {isAdmin && (
-            <button onClick={() => navigate("/central")} className="w-11 h-11 flex items-center justify-center" aria-label="Central de controle" data-testid="cx-central">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 2v20M2 12h20M6 6l12 12M18 6l-12 12" /></svg>
+            <button onClick={() => navigate("/central")} className="px-3 h-9 rounded-xl border border-[var(--cx-line)] text-sm font-medium flex items-center gap-2 hover:bg-[var(--cx-hover)]" aria-label="Central de controle" data-testid="cx-central">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 2v20M2 12h20M6 6l12 12M18 6l-12 12" /></svg>
+              <span>Central</span>
             </button>
           )}
           <button onClick={novo} className="ml-auto w-11 h-11 flex items-center justify-center" aria-label="Novo pedido"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg></button>

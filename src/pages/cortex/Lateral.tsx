@@ -22,6 +22,9 @@ interface Props {
 // Menu lateral: logo, Novo pedido, Procurar, atalhos, histórico por data e perfil do dono.
 export default function Lateral({ itens, aberto, vista, busca, nome, email, buscar, novo, abrir, ir }: Props) {
   const item = "w-full flex items-center gap-3 px-3 h-11 rounded-xl text-left text-[15px] hover:bg-[var(--cx-hover)]";
+  const isAdmin = email === "gcbezerra@gmail.com";
+  const menuItens = MENU.filter((m) => m.id !== "central" || isAdmin);
+
   return (
     <div className="flex flex-col h-full bg-[var(--cx-side)] border-r border-[var(--cx-line)]">
       <div className="flex items-center gap-3 px-4 h-16 shrink-0">
@@ -37,7 +40,7 @@ export default function Lateral({ itens, aberto, vista, busca, nome, email, busc
           <input value={busca} onChange={(e) => buscar(e.target.value)} placeholder="Procurar" aria-label="Procurar nos pedidos" data-testid="cx-busca"
             className="flex-1 min-w-0 bg-transparent outline-none text-[15px] text-[var(--cx-txt)] placeholder:text-[var(--cx-mut)]" />
         </label>
-        {MENU.slice(0, 4).map((m) => (
+        {menuItens.filter((m) => m.id !== "config").map((m) => (
           <button key={m.id} className={`${item} ${vista === m.id ? "bg-[var(--cx-hover)]" : ""}`} onClick={() => ir(m.id)} data-testid={`cx-menu-${m.id}`}><Icone d={m.d} />{m.nome}</button>
         ))}
       </div>
