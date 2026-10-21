@@ -149,35 +149,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
     };
   }, [ultimaAtualizacao]);
   
-  // Atualiza dados quando a página recebe foco ou é ativada (evita atualizações excessivas)
-  // Mantém apenas uma instância para evitar duplicação de eventos
-  useEffect(() => {
-    const handleFocus = () => {
-      // Verifica se passou mais de 5 minutos desde a última atualização
-      if (Date.now() - ultimaAtualizacao > 5 * 60 * 1000) {
-        buscarDadosHistoricos();
-        setUltimaAtualizacao(Date.now());
-      }
-    };
-    
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        // Verifica se passou mais de 5 minutos desde a última atualização
-        if (Date.now() - ultimaAtualizacao > 5 * 60 * 1000) {
-          buscarDadosHistoricos();
-          setUltimaAtualizacao(Date.now());
-        }
-      }
-    };
-    
-    window.addEventListener('focus', handleFocus);
-    window.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      window.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [ultimaAtualizacao]);
+
   
   // Posta na hora: usado pelos botões 07h15, 12h15 e 19h15 de cada tema da semana.
   // Função implementada conforme solicitado no pedido.
