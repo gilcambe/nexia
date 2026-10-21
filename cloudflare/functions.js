@@ -28,6 +28,7 @@ const LOADERS = {
   'internal-agents': () => require('../netlify/functions/internal-agents.js'),
   'leads': () => require('../netlify/functions/leads.js'),
   'agenda': () => require('../netlify/functions/agenda.js'),
+  'locacao': () => require('../netlify/functions/locacao.js'),
   'leilao': () => require('../netlify/functions/leilao.js'),
   'kpi-engine': () => require('../netlify/functions/kpi-engine.js'),
   'metrics-aggregator': () => require('../netlify/functions/metrics-aggregator.js'),

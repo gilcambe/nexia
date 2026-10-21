@@ -31,7 +31,7 @@ function fakeDb() {
       get: async () => ({
         docs: [...docs.keys()].filter(filho).map(k => snap(k)).filter(s => filtros.every(([f, op, v]) => {
           const x = s.data()[f];
-          return op === '==' ? x === v : op === '>=' ? x >= v : op === '<=' ? x <= v : false;
+          return op === '==' ? x === v : op === '>=' ? x >= v : op === '<=' ? x <= v : op === 'in' ? Array.isArray(v) && v.includes(x) : false;
         })),
       }),
     };
