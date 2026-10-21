@@ -148,14 +148,14 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
       </Cartao>
 
       <Cartao titulo="Rede de crescimento de seguidores (sem automação proibida)">
-        <p className="text-sm text-nexia-muted">Roteiro diário de colaborações, enquetes e Reels com ganchos. O robô só prepara; a interação em massa nunca é automática, para evitar bloqueio da conta. Custo 0.</p>
-        <ul className="space-y-2 text-sm text-nexia-muted">
-          <li className="rounded-xl bg-nexia-surface2 p-3"><b>1. Colaborações:</b> parcerias semanais com perfis do mesmo nicho e Reels em conjunto.</li>
-          <li className="rounded-xl bg-nexia-surface2 p-3"><b>2. Enquetes e caixas de perguntas:</b> engajamento diário nos Stories.</li>
-          <li className="rounded-xl bg-nexia-surface2 p-3"><b>3. Reels com gancho forte:</b> os 3 primeiros segundos prendem; chamada para ação nos comentários.</li>
-          <li className="rounded-xl bg-nexia-surface2 p-3"><b>⚠️ Regra de ouro:</b> interação em massa automatizada é proibida; o robô só prepara os roteiros.</li>
-        </ul>
-      </Cartao>
+  <p className="text-sm text-nexia-muted">Roteiro diário de colaborações, enquetes e Reels com ganchos. O robô só prepara; a interação em massa nunca é automática, para evitar bloqueio da conta. Custo 0.</p>
+  <ul className="space-y-2 text-sm text-nexia-muted">
+    <li className="rounded-xl bg-nexia-surface2 p-3"><b>1. Colaborações:</b> parcerias semanais com perfis do mesmo nicho e Reels em conjunto.</li>
+    <li className="rounded-xl bg-nexia-surface2 p-3"><b>2. Enquetes e caixas de perguntas:</b> engajamento diário nos Stories.</li>
+    <li className="rounded-xl bg-nexia-surface2 p-3"><b>3. Reels com gancho forte:</b> os 3 primeiros segundos prendem; chamada para ação nos comentários.</li>
+    <li className="rounded-xl bg-nexia-surface2 p-3"><b>⚠️ Regra de ouro:</b> interação em massa automatizada é proibida; o robô só prepara os roteiros.</li>
+  </ul>
+</Cartao>
     </div>
   );
 }
