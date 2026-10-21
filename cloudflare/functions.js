@@ -29,6 +29,7 @@ const LOADERS = {
   'leads': () => require('../netlify/functions/leads.js'),
   'agenda': () => require('../netlify/functions/agenda.js'),
   'locacao': () => require('../netlify/functions/locacao.js'),
+  'nutri': () => require('../netlify/functions/nutri.js'),
   'leilao': () => require('../netlify/functions/leilao.js'),
   'kpi-engine': () => require('../netlify/functions/kpi-engine.js'),
   'metrics-aggregator': () => require('../netlify/functions/metrics-aggregator.js'),
