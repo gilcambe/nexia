@@ -1,7 +1,7 @@
 import LegalLayout from "../components/LegalLayout";
 export default function CookiesPage() {
   return (
-    <LegalLayout title="Política de Cookies" subtitle="Como utilizamos cookies e tecnologias similares na NEXIA OS" lastUpdated="04 de Maio de 2026">
+    <LegalLayout title="Política de Cookies" subtitle="Como utilizamos cookies e tecnologias similares na KERNEX" lastUpdated="04 de Maio de 2026">
       <div className="space-y-8 text-sm text-nexia-muted leading-relaxed">
         <section><h2 className="text-lg font-semibold text-white mb-3">1. O que são Cookies</h2><p>Cookies são pequenos arquivos de texto armazenados em seu dispositivo quando você visita um site.</p></section>
         <section><h2 className="text-lg font-semibold text-white mb-3">2. Tipos de Cookies</h2>

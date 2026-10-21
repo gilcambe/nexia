@@ -127,7 +127,7 @@ export default function CortexPage() {
         {!authLoading && !user && (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 p-6 text-center">
             <Logo tamanho={64} /><h1 className="text-2xl font-semibold">Cortex</h1>
-            <p className="text-[var(--cx-mut)]">Entre como dono da NEXIA para abrir o Cortex.</p>
+            <p className="text-[var(--cx-mut)]">Entre como dono da KERNEX para abrir o Cortex.</p>
             <button onClick={() => navigate("/login")} className="h-12 px-8 rounded-xl bg-[var(--cx-ac)] text-black font-semibold">Entrar</button>
           </div>
         )}
