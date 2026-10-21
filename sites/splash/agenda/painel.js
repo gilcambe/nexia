@@ -30,25 +30,25 @@ function formatarMoeda(val) {
 function MapearEstado(status) {
   switch (status) {
     case 'livre':
-      return { rotulo: 'Livre', cor: 'verde-claro', bg: '#e6f4ea', texto: '#137333' };
+      return { rotulo: 'Livre', cor: 'verde-claro', bg: 'rgba(42,122,78,0.2)', texto: '#2A7A4E' };
     case 'pedido':
-      return { rotulo: 'Pedido pendente', cor: 'amarelo', bg: '#fef7e0', texto: '#b06000' };
+      return { rotulo: 'Pedido pendente', cor: 'amarelo', bg: 'rgba(230,162,60,0.2)', texto: '#e6a23c' };
     case 'aguardando_sinal':
-      return { rotulo: 'Aguardando sinal', cor: 'laranja', bg: '#feefe3', texto: '#c5221f' };
+      return { rotulo: 'Aguardando sinal', cor: 'laranja', bg: 'rgba(201,168,76,0.2)', texto: '#C9A84C' };
     case 'confirmado':
-      return { rotulo: 'Confirmado', cor: 'verde-forte', bg: '#137333', texto: '#ffffff' };
+      return { rotulo: 'Confirmado', cor: 'verde-forte', bg: '#2A7A4E', texto: '#ffffff' };
     case 'bloqueado':
-      return { rotulo: 'Bloqueado', cor: 'cinza', bg: '#f1f3f4', texto: '#5f6368' };
+      return { rotulo: 'Bloqueado', cor: 'cinza', bg: 'rgba(255,255,255,0.1)', texto: '#888888' };
     case 'concluido':
-      return { rotulo: 'Concluído', cor: 'azul', bg: '#e8f0fe', texto: '#1a73e8' };
+      return { rotulo: 'Concluído', cor: 'azul', bg: 'rgba(100,150,250,0.2)', texto: '#6496fa' };
     case 'recusado':
-      return { rotulo: 'Recusado', cor: 'vermelho', bg: '#fce8e6', texto: '#c5221f' };
+      return { rotulo: 'Recusado', cor: 'vermelho', bg: 'rgba(255,107,107,0.2)', texto: '#ff6b6b' };
     case 'cancelado':
-      return { rotulo: 'Cancelado', cor: 'cinza', bg: '#f1f3f4', texto: '#5f6368' };
+      return { rotulo: 'Cancelado', cor: 'cinza', bg: 'rgba(255,255,255,0.05)', texto: '#888888' };
     case 'expirado':
-      return { rotulo: 'Expirado', cor: 'cinza-escuro', bg: '#e0e0e0', texto: '#616161' };
+      return { rotulo: 'Expirado', cor: 'cinza-escuro', bg: 'rgba(255,255,255,0.05)', texto: '#666666' };
     default:
-      return { rotulo: status || 'Desconhecido', cor: 'desconhecido', bg: '#ffffff', texto: '#000000' };
+      return { rotulo: status || 'Desconhecido', cor: 'desconhecido', bg: 'transparent', texto: '#ffffff' };
   }
 }
 
@@ -115,14 +115,51 @@ function calcularDiasMes(ano, mes) {
   return { primeiroDiaSemana, totalDias };
 }
 
+function nomeMesAnoPt(mesIso) {
+  const [ano, mes] = mesIso.split('-');
+  const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  return `${meses[Number(mes) - 1]} ${ano}`;
+}
+
+function gerarGridCalendarioPainel(mesIso, mapaDias) {
+  const [ano, mes] = mesIso.split('-');
+  const { primeiroDiaSemana, totalDias } = calcularDiasMes(ano, mes);
+  const dias = [];
+  for (let i = 0; i < primeiroDiaSemana; i++) {
+    dias.push({ diaNum: '', doMes: false, status: 'vazio' });
+  }
+  for (let d = 1; d <= totalDias; d++) {
+    const diaPadded = String(d).padStart(2, '0');
+    const dataIso = `${mesIso}-${diaPadded}`;
+    const status = (mapaDias && mapaDias[dataIso]) || 'livre';
+    dias.push({ diaNum: d, doMes: true, dataIso, status });
+  }
+  return dias;
+}
+
+function obterCorDiaEstado(status, doMes) {
+  if (!doMes) return 'transparent';
+  const map = MapearEstado(status);
+  return map.bg;
+}
+
+const SplashPainelObj = {
+  escapeHtml,
+  formatarDataBr,
+  formatarMoeda,
+  MapearEstado,
+  montarMensagemWhatsApp,
+  gerarCsvBackup,
+  calcularDiasMes,
+  nomeMesAnoPt,
+  gerarGridCalendarioPainel,
+  obterCorDiaEstado
+};
+
+if (typeof window !== 'undefined') {
+  window.SplashPainel = SplashPainelObj;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    escapeHtml,
-    formatarDataBr,
-    formatarMoeda,
-    MapearEstado,
-    montarMensagemWhatsApp,
-    gerarCsvBackup,
-    calcularDiasMes
-  };
+  module.exports = SplashPainelObj;
 }
