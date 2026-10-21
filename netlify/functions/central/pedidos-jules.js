@@ -69,7 +69,11 @@ async function mandarParaJules(p, n, quem, { env = process.env, fetchFn = fetch 
 
   const id = String(ultimo.dados.id || String(ultimo.dados.name || '').replace(/^sessions\//, '') || '');
   const link = id ? 'https://jules.google.com/session/' + encodeURIComponent(id) : 'https://jules.google.com';
-  await p.gh(caminho + '/labels', { method: 'POST', body: JSON.stringify({ labels: ['jules-enviado'] }) }).catch(() => null);
+  // Tarefa "na fila": o Cortex ainda a pegaria sozinho e as duas IAs fariam o mesmo trabalho. Trava para ele.
+  const ls = nomes(i);
+  const rotulos = ['jules-enviado'];
+  if (!ls.includes('cortex-travado') && !ls.includes('cortex-dividido')) rotulos.push('cortex-travado');
+  await p.gh(caminho + '/labels', { method: 'POST', body: JSON.stringify({ labels: rotulos }) }).catch(() => null);
   await p.gh(caminho + '/comments', { method: 'POST', body: JSON.stringify({ body: 'Enviado ao Jules por ' + quem + '. Sessão: ' + link + '\nO Jules abre o PR sozinho (sem automerge). Confira o CI antes de juntar.' }) }).catch(() => null);
   return { status: 200, corpo: { ok: true, sessao: id, link, mensagem: 'Pedido #' + n + ' enviado ao Jules. Ele abre o PR sozinho; confira o CI antes de juntar.' } };
 }

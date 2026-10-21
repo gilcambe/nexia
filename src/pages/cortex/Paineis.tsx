@@ -49,7 +49,7 @@ function ListaPedidos({ itens, abrir, fazer }: { itens: Resumo[]; abrir: (n: num
         </button>
         {fazer && (
           <div className="flex items-center gap-2 shrink-0">
-            {t.situacao === "travado" && (
+            {(t.situacao === "travado" || t.situacao === "fila" || t.situacao === "dividido") && (
               <button type="button" onClick={(e) => { e.stopPropagation(); if (confirm(`Mandar o pedido #${t.numero} para o Jules? Ele abre o PR sozinho (sem juntar).`)) fazer({ acao: "jules", n: t.numero }); }} className="h-8 px-2.5 rounded-lg border border-[var(--cx-ac)] text-xs font-semibold" data-testid="cx-lista-jules">Mandar para o Jules</button>
             )}
             {t.situacao === "travado" && (
