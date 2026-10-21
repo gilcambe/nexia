@@ -167,7 +167,152 @@ function limparPessoa(body) {
 
 // ── Editor e Fotos ─────────────────────────────────────────────────────────
 
-const { lerFoto, limparConteudo, guardarFotoEmMemoria, FOTO_ID_RE, _fotos } = require('./agenda');
+const { limparConteudo } = require('./agenda');
+
+const CONTEUDO_MAX_LOCACAO = 900 * 1024; // ~900 KB
+const FOTO_MAX_BYTES = 600 * 1024;
+const FOTOS_MAX_POR_UNIDADE = 150;
+const FOTOS_MAX_TOTAL = 300;
+const FOTO_ID_RE = /^[a-f0-9]{24}$/;
+const TIPOS_FOTO = { 'image/webp': [0x52, 0x49, 0x46, 0x46], 'image/jpeg': [0xff, 0xd8, 0xff], 'image/png': [0x89, 0x50, 0x4e, 0x47] };
+
+const _fotos = new Map();
+let _fotosBytes = 0;
+function guardarFotoEmMemoria(k, v) {
+  if (_fotos.has(k)) return;
+  _fotos.set(k, v);
+  _fotosBytes += v.base64.length;
+  while (_fotosBytes > 30 * 1024 * 1024 && _fotos.size) { const [k0, v0] = _fotos.entries().next().value; _fotos.delete(k0); _fotosBytes -= v0.base64.length; }
+}
+
+function lerFoto(dados, tipo) {
+  const assinatura = TIPOS_FOTO[tipo];
+  if (!assinatura || typeof dados !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(dados)) return { error: 'Envie uma foto (JPG, PNG ou WebP).' };
+  const buf = Buffer.from(dados, 'base64');
+  if (!buf.length) return { error: 'Foto vazia.' };
+  if (buf.length > FOTO_MAX_BYTES) return { error: 'Foto grande demais. Tente outra.' };
+  if (!assinatura.every((b, i) => buf[i] === b)) return { error: 'Este arquivo não é uma foto.' };
+  return { base64: buf.toString('base64'), bytes: buf.length };
+}
+
+function gerarEmbedVideo(urlStr) {
+  const strUrl = str(urlStr, 500);
+  if (!strUrl) return { error: 'Informe a URL do vídeo.' };
+  let u;
+  try {
+    u = new URL(strUrl);
+  } catch {
+    return { error: 'URL do vídeo inválida.' };
+  }
+  const host = u.hostname.toLowerCase();
+  const path = u.pathname;
+
+  // YouTube
+  if (host === 'youtube.com' || host === 'www.youtube.com' || host === 'm.youtube.com') {
+    let videoId = u.searchParams.get('v');
+    if (!videoId) {
+      const parts = path.split('/').filter(Boolean);
+      if (parts[0] === 'embed' || parts[0] === 'v' || parts[0] === 'shorts') {
+        videoId = parts[1];
+      }
+    }
+    if (videoId && /^[A-Za-z0-9_-]{8,20}$/.test(videoId)) {
+      return {
+        ok: true,
+        provedor: 'youtube',
+        video_id: videoId,
+        url_original: strUrl,
+        embed_url: `https://www.youtube.com/embed/${videoId}`,
+      };
+    }
+  } else if (host === 'youtu.be') {
+    const videoId = path.replace(/^\//, '').split('/')[0];
+    if (videoId && /^[A-Za-z0-9_-]{8,20}$/.test(videoId)) {
+      return {
+        ok: true,
+        provedor: 'youtube',
+        video_id: videoId,
+        url_original: strUrl,
+        embed_url: `https://www.youtube.com/embed/${videoId}`,
+      };
+    }
+  }
+
+  // Instagram
+  if (host === 'instagram.com' || host === 'www.instagram.com') {
+    const parts = path.split('/').filter(Boolean);
+    if (['p', 'reel', 'tv'].includes(parts[0]) && parts[1]) {
+      const code = parts[1];
+      if (/^[A-Za-z0-9_-]{5,40}$/.test(code)) {
+        return {
+          ok: true,
+          provedor: 'instagram',
+          code,
+          url_original: strUrl,
+          embed_url: `https://www.instagram.com/p/${code}/embed/`,
+        };
+      }
+    }
+  }
+
+  // Vimeo
+  if (host === 'vimeo.com' || host === 'www.vimeo.com' || host === 'player.vimeo.com') {
+    const parts = path.split('/').filter(Boolean);
+    const videoId = parts[parts.length - 1];
+    if (videoId && /^\d{5,12}$/.test(videoId)) {
+      return {
+        ok: true,
+        provedor: 'vimeo',
+        video_id: videoId,
+        url_original: strUrl,
+        embed_url: `https://player.vimeo.com/video/${videoId}`,
+      };
+    }
+  }
+
+  return { error: 'Domínio de vídeo não permitido. Use links do YouTube, Instagram ou Vimeo.' };
+}
+
+function limparConteudoLocacao(c) {
+  const base = limparConteudo(c);
+  c = c && typeof c === 'object' && !Array.isArray(c) ? c : {};
+
+  if (c.aviso && typeof c.aviso === 'object') {
+    base.aviso = {
+      ativo: Boolean(c.aviso.ativo),
+      texto: str(c.aviso.texto, 300),
+      cor: str(c.aviso.cor, 30) || 'info',
+    };
+  }
+
+  if (c.contatos && typeof c.contatos === 'object') {
+    const cnt = c.contatos;
+    base.contatos = {};
+    if (cnt.whatsapp) base.contatos.whatsapp = digits(cnt.whatsapp).slice(0, 13);
+    if (cnt.telefone) base.contatos.telefone = digits(cnt.telefone).slice(0, 13);
+    if (cnt.email) base.contatos.email = str(cnt.email, 120);
+    if (cnt.endereco) base.contatos.endereco = str(cnt.endereco, 200);
+    if (cnt.instagram) base.contatos.instagram = str(cnt.instagram, 80);
+  }
+
+  if (Array.isArray(c.videos)) {
+    base.videos = c.videos.slice(0, 30).map(v => {
+      if (!v || typeof v !== 'object') return null;
+      const emb = gerarEmbedVideo(v.url || v.embed_url || v.url_original);
+      if (!emb.ok) return null;
+      return {
+        id: str(v.id, 40) || aleatorio(8),
+        unidade: str(v.unidade, 40),
+        titulo: str(v.titulo, 120),
+        provedor: emb.provedor,
+        embed_url: emb.embed_url,
+        url_original: emb.url_original,
+      };
+    }).filter(Boolean);
+  }
+
+  return base;
+}
 
 function painelDe(slug, cadastro = {}) {
   const p = typeof cadastro.painel === 'string' && /^https:\/\/[a-z0-9.-]+\//.test(cadastro.painel) ? cadastro.painel : `https://${slug}.pages.dev/agenda/`;
@@ -271,7 +416,35 @@ function createHandler(deps = {}) {
     }
     if (method === 'GET' && q.conteudo !== undefined) {
       const snap = await conta.collection('site').doc('conteudo').get();
-      return res(200, { conteudo: snap.exists ? limparConteudo(snap.data()) : null });
+      return res(200, { conteudo: snap.exists ? limparConteudoLocacao(snap.data()) : null });
+    }
+    if (method === 'GET' && q.foto_listar !== undefined) {
+      const snap = await conta.collection('fotos').get();
+      let fotos = snap.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          tipo: data.tipo,
+          unidade: data.unidade || '',
+          legenda: data.legenda || '',
+          ordem: Number(data.ordem) || 0,
+          capa: Boolean(data.capa),
+          url: `/api/locacao?site=${slug}&foto=${d.id}`,
+          criado_em: data.criado_em || null,
+        };
+      });
+      const uFiltro = str(q.unidade, 40);
+      if (uFiltro) fotos = fotos.filter(f => f.unidade === uFiltro);
+      fotos.sort((a, b) => (a.ordem - b.ordem) || (b.criado_em || '').localeCompare(a.criado_em || ''));
+      return res(200, { fotos });
+    }
+    if (method === 'GET' && q.video_listar !== undefined) {
+      const snap = await conta.collection('videos').get();
+      let videos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const uFiltro = str(q.unidade, 40);
+      if (uFiltro) videos = videos.filter(v => v.unidade === uFiltro);
+      videos.sort((a, b) => (b.criado_em || '').localeCompare(a.criado_em || ''));
+      return res(200, { videos });
     }
 
     // ── Público: Mapa do Mês por Unidade ou Configuração Geral ──
@@ -749,17 +922,219 @@ function createHandler(deps = {}) {
     }
 
     if (acao === 'site-salvar') {
-      const conteudo = limparConteudo(body.conteudo);
-      await conta.collection('site').doc('conteudo').set({ ...conteudo, atualizado_em: new Date(now()).toISOString() });
-      return res(200, { ok: true, conteudo });
+      const conteudo = limparConteudoLocacao(body.conteudo);
+      if (JSON.stringify(conteudo).length > CONTEUDO_MAX_LOCACAO) {
+        return res(413, { error: 'Conteúdo grande demais.' });
+      }
+
+      const agoraIso = new Date(now()).toISOString();
+      const refAtual = conta.collection('site').doc('conteudo');
+      const snapAtual = await refAtual.get();
+
+      if (snapAtual.exists) {
+        const antigo = snapAtual.data();
+        const histId = aleatorio(12);
+        await conta.collection('historico').doc(histId).set({
+          ...antigo,
+          salvo_em: agoraIso,
+          historico_id: histId,
+        });
+
+        const histSnap = await conta.collection('historico').get();
+        const versoes = histSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        if (versoes.length > 10) {
+          versoes.sort((a, b) => (a.salvo_em || '').localeCompare(b.salvo_em || ''));
+          const excedente = versoes.slice(0, versoes.length - 10);
+          for (const item of excedente) {
+            await conta.collection('historico').doc(item.id).delete();
+          }
+        }
+      }
+
+      const novoConteudo = { ...conteudo, atualizado_em: agoraIso };
+      await refAtual.set(novoConteudo);
+      return res(200, { ok: true, conteudo: novoConteudo });
+    }
+
+    if (acao === 'site-historico') {
+      const snap = await conta.collection('historico').get();
+      const items = snap.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          atualizado_em: data.atualizado_em || data.salvo_em || null,
+          salvo_em: data.salvo_em || null,
+        };
+      });
+      items.sort((a, b) => (b.salvo_em || '').localeCompare(a.salvo_em || ''));
+      return res(200, { historico: items.slice(0, 10) });
+    }
+
+    if (acao === 'site-restaurar') {
+      const id = str(body.id, 64);
+      if (!id) return res(400, { error: 'ID da versão do histórico é obrigatório.' });
+
+      const refHist = conta.collection('historico').doc(id);
+      const snapHist = await refHist.get();
+      if (!snapHist.exists) return res(404, { error: 'Versão do histórico não encontrada.' });
+
+      const dadosHist = snapHist.data();
+      const conteudoLimpo = limparConteudoLocacao(dadosHist);
+      const agoraIso = new Date(now()).toISOString();
+      const novoConteudo = { ...conteudoLimpo, atualizado_em: agoraIso };
+
+      await conta.collection('site').doc('conteudo').set(novoConteudo);
+      return res(200, { ok: true, conteudo: novoConteudo });
+    }
+
+    if (acao === 'site-desfazer') {
+      await conta.collection('site').doc('conteudo').delete();
+      return res(200, { ok: true });
     }
 
     if (acao === 'foto-enviar') {
-      const { base64, bytes, error: errFoto } = lerFoto(body.dados, str(body.tipo, 20));
+      let rawDados = body.dados || '';
+      let tipo = str(body.tipo, 20);
+      if (typeof rawDados === 'string' && rawDados.startsWith('data:')) {
+        const match = rawDados.match(/^data:(image\/[a-z]+);base64,(.*)$/);
+        if (match) {
+          if (!tipo) tipo = match[1];
+          rawDados = match[2];
+        } else if (rawDados.includes(',')) {
+          rawDados = rawDados.split(',')[1];
+        }
+      }
+
+      const { base64, bytes, error: errFoto } = lerFoto(rawDados, tipo);
       if (errFoto) return res(400, { error: errFoto });
+
+      const snapTotal = await conta.collection('fotos').get();
+      const todasFotos = snapTotal.docs.map(d => d.data());
+      if (todasFotos.length >= FOTOS_MAX_TOTAL) {
+        return res(400, { error: 'Limite total de fotos atingido. Remova alguma foto antes de enviar outra.' });
+      }
+
+      const unidadeId = str(body.unidade, 40);
+      if (unidadeId) {
+        const fotosUnidade = todasFotos.filter(f => f.unidade === unidadeId);
+        if (fotosUnidade.length >= FOTOS_MAX_POR_UNIDADE) {
+          return res(400, { error: 'Limite de fotos atingido para esta unidade. Remova alguma foto antes de enviar outra.' });
+        }
+      }
+
       const id = aleatorio(12);
-      await conta.collection('fotos').doc(id).set({ tipo: str(body.tipo, 20), dados: base64, bytes, criado_em: new Date(now()).toISOString() });
-      return res(201, { ok: true, id });
+      const agoraIso = new Date(now()).toISOString();
+      const novaFoto = {
+        id,
+        tipo,
+        dados: base64,
+        bytes,
+        unidade: unidadeId,
+        legenda: str(body.legenda, 200),
+        ordem: Number(body.ordem) || 0,
+        capa: Boolean(body.capa),
+        criado_em: agoraIso,
+        atualizado_em: agoraIso,
+      };
+
+      await conta.collection('fotos').doc(id).set(novaFoto);
+      return res(201, { ok: true, id, foto: { id, tipo, unidade: unidadeId, url: `/api/locacao?site=${slug}&foto=${id}` } });
+    }
+
+    if (acao === 'foto-listar') {
+      const snap = await conta.collection('fotos').get();
+      let fotos = snap.docs.map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          tipo: data.tipo,
+          unidade: data.unidade || '',
+          legenda: data.legenda || '',
+          ordem: Number(data.ordem) || 0,
+          capa: Boolean(data.capa),
+          url: `/api/locacao?site=${slug}&foto=${d.id}`,
+          criado_em: data.criado_em || null,
+        };
+      });
+      const uFiltro = str(body.unidade || q.unidade, 40);
+      if (uFiltro) fotos = fotos.filter(f => f.unidade === uFiltro);
+      fotos.sort((a, b) => (a.ordem - b.ordem) || (b.criado_em || '').localeCompare(a.criado_em || ''));
+      return res(200, { fotos });
+    }
+
+    if (acao === 'foto-editar') {
+      const id = str(body.id, 64);
+      if (!id || !FOTO_ID_RE.test(id)) return res(400, { error: 'ID de foto inválido.' });
+
+      const refFoto = conta.collection('fotos').doc(id);
+      const snap = await refFoto.get();
+      if (!snap.exists) return res(404, { error: 'Foto não encontrada.' });
+
+      const updateData = { atualizado_em: new Date(now()).toISOString() };
+      if (body.legenda !== undefined) updateData.legenda = str(body.legenda, 200);
+      if (body.ordem !== undefined) updateData.ordem = Number(body.ordem) || 0;
+      if (body.capa !== undefined) updateData.capa = Boolean(body.capa);
+      if (body.unidade !== undefined) updateData.unidade = str(body.unidade, 40);
+
+      await refFoto.update(updateData);
+      _fotos.delete(slug + '/' + id);
+      return res(200, { ok: true });
+    }
+
+    if (acao === 'video-salvar') {
+      const urlVideo = str(body.url, 500);
+      const emb = gerarEmbedVideo(urlVideo);
+      if (!emb.ok) return res(400, { error: emb.error });
+
+      const id = aleatorio(12);
+      const agoraIso = new Date(now()).toISOString();
+      const itemVideo = {
+        id,
+        unidade: str(body.unidade, 40),
+        titulo: str(body.titulo, 120),
+        provedor: emb.provedor,
+        embed_url: emb.embed_url,
+        url_original: emb.url_original,
+        criado_em: agoraIso,
+        atualizado_em: agoraIso,
+      };
+
+      await conta.collection('videos').doc(id).set(itemVideo);
+      return res(201, { ok: true, video: itemVideo });
+    }
+
+    if (acao === 'video-listar') {
+      const snap = await conta.collection('videos').get();
+      let videos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const uFiltro = str(body.unidade || q.unidade, 40);
+      if (uFiltro) videos = videos.filter(v => v.unidade === uFiltro);
+      videos.sort((a, b) => (b.criado_em || '').localeCompare(a.criado_em || ''));
+      return res(200, { videos });
+    }
+
+    if (acao === 'video-remover') {
+      const id = str(body.id, 64);
+      if (!id) return res(400, { error: 'ID de vídeo inválido.' });
+
+      const refVid = conta.collection('videos').doc(id);
+      const snap = await refVid.get();
+      if (!snap.exists) return res(404, { error: 'Vídeo não encontrado.' });
+
+      await refVid.delete();
+      return res(200, { ok: true });
+    }
+
+    if (acao === 'foto-remover') {
+      const id = str(body.id, 64);
+      if (!id || !FOTO_ID_RE.test(id)) return res(400, { error: 'ID de foto inválido.' });
+
+      const refFoto = conta.collection('fotos').doc(id);
+      const snap = await refFoto.get();
+      if (!snap.exists) return res(404, { error: 'Foto não encontrada.' });
+
+      await refFoto.delete();
+      _fotos.delete(slug + '/' + id);
+      return res(200, { ok: true });
     }
 
     return res(400, { error: 'Ação desconhecida.' });
@@ -772,3 +1147,5 @@ exports.montarConfig = montarConfig;
 exports.hashSenha = hashSenha;
 exports.agoraBr = agoraBr;
 exports.COLLECTION = COLLECTION;
+exports.limparConteudoLocacao = limparConteudoLocacao;
+exports.gerarEmbedVideo = gerarEmbedVideo;
