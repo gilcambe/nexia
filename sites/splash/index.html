@@ -11,6 +11,8 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{--champ:#F5EDD6;--gold:#C9A84C;--gold2:#A8843A;--gold3:#E8C96D;--gold-glow:rgba(201,168,76,.3);--emerald:#1A5C3A;--emerald2:#0F3D27;--emerald3:#2A7A4E;--em-glow:rgba(26,92,58,.25);--dark:#0A0D08;--dark2:#111408;--surface:rgba(255,255,255,.04);--border:rgba(255,255,255,.08);--border2:rgba(201,168,76,.15);--text:#F8F4ED;--text2:rgba(248,244,237,.72);--text3:rgba(248,244,237,.48);--serif:'Cormorant Garamond',Georgia,serif;--sans:'Inter',system-ui,sans-serif;}
 html{scroll-behavior:smooth}body{font-family:var(--sans);background:var(--dark);color:var(--text);overflow-x:hidden;min-width:320px}
+.nx-oculto{display:none !important;}
+html.nx-carregando body{opacity:0;}
 @keyframes hero-cf{0%{opacity:1}28%{opacity:1}33%{opacity:0}95%{opacity:0}100%{opacity:1}}
 @keyframes logo-glow{0%,100%{box-shadow:0 0 22px var(--gold-glow)}50%{box-shadow:0 0 40px rgba(201,168,76,.55)}}
 @keyframes em-breathe{0%,100%{box-shadow:0 6px 28px var(--em-glow)}50%{box-shadow:0 8px 40px rgba(26,92,58,.5)}}
@@ -48,66 +50,62 @@ html{scroll-behavior:smooth}body{font-family:var(--sans);background:var(--dark);
 .hero-shimmer-line{position:absolute;width:1px;top:0;bottom:0;background:linear-gradient(to bottom,transparent,rgba(201,168,76,.35) 50%,transparent);z-index:3}
 .hero-shimmer-line:nth-child(1){left:25%}.hero-shimmer-line:nth-child(2){right:28%;opacity:.5}
 .hero-content{position:relative;z-index:10;max-width:880px;text-align:center}
-.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 18px;border-radius:30px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.3);color:var(--gold);font-size:12px;font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:28px}
-.hero-h1{font-family:var(--serif);font-size:clamp(42px,7vw,82px);font-weight:400;line-height:1.08;color:var(--text);margin-bottom:24px}
-.hero-h1 em{font-style:italic;color:var(--champ);background:linear-gradient(135deg,#fff 0%,var(--champ) 60%,var(--gold3) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.hero-sub{font-size:clamp(16px,2vw,21px);color:var(--text2);max-width:640px;margin:0 auto 40px;line-height:1.6;font-weight:300}
-.hero-ctas{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
-.btn-gold{display:inline-flex;align-items:center;gap:10px;padding:16px 36px;border-radius:50px;font-size:15px;font-weight:700;background:linear-gradient(135deg,var(--gold2),var(--gold),var(--gold3));color:#1a0d00;text-decoration:none;box-shadow:0 6px 30px var(--gold-glow);transition:all .3s}
-.btn-gold:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(201,168,76,.5)}
-.btn-emerald{display:inline-flex;align-items:center;gap:10px;padding:16px 36px;border-radius:50px;font-size:15px;font-weight:700;background:linear-gradient(135deg,var(--emerald2),var(--emerald),var(--emerald3));color:#fff;text-decoration:none;box-shadow:0 6px 30px var(--em-glow);animation:em-breathe 4s ease-in-out infinite;transition:all .3s}
-.btn-emerald:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(26,92,58,.6)}
-.btn-outline{display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border-radius:50px;font-size:15px;font-weight:500;color:var(--text2);border:1px solid rgba(255,255,255,.2);text-decoration:none;transition:all .25s}
-.btn-outline:hover{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.06)}
-.stats-strip{position:relative;z-index:10;background:rgba(17,20,8,.95);border-y:1px solid var(--border2);padding:28px clamp(20px,5vw,80px)}
-.stats-inner{max-width:1100px;margin:0 auto;display:flex;justify-content:space-around;align-items:center;flex-wrap:wrap;gap:24px}
-.stat-item{text-align:center}.stat-num{font-family:var(--serif);font-size:clamp(28px,4vw,42px);font-weight:600;color:var(--gold);line-height:1}
-.stat-lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-top:6px;font-weight:500}
-.stat-div{width:1px;height:36px;background:var(--border)}
-@media(max-width:600px){.stat-div{display:none}}
-.section{padding:clamp(60px,8vw,100px) clamp(20px,5vw,80px);position:relative}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 18px;border-radius:30px;background:rgba(201,168,76,.1);border:1px solid var(--border2);font-size:12px;font-weight:600;color:var(--gold);margin-bottom:28px;letter-spacing:1px;text-transform:uppercase}
+.hero-h1{font-family:var(--serif);font-size:clamp(44px,7vw,80px);font-weight:400;line-height:1.05;color:var(--text);margin-bottom:24px}
+.hero-h1 em{font-style:italic;color:var(--gold3);font-weight:300}
+.hero-sub{font-size:clamp(15px,2vw,18px);color:var(--text2);line-height:1.6;max-width:620px;margin:0 auto 40px;font-weight:300}
+.hero-ctas{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+.btn-emerald{display:inline-flex;align-items:center;gap:10px;padding:16px 36px;border-radius:50px;background:linear-gradient(135deg,var(--emerald2),var(--emerald),var(--emerald3));color:#fff;font-size:15px;font-weight:700;text-decoration:none;box-shadow:0 6px 28px var(--em-glow);transition:all .3s;animation:em-breathe 4s infinite}
+.btn-emerald:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(26,92,58,.4)}
+.btn-outline{display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border-radius:50px;background:rgba(255,255,255,.05);border:1px solid var(--border2);color:var(--text);font-size:15px;font-weight:500;text-decoration:none;transition:all .3s}
+.btn-outline:hover{background:rgba(201,168,76,.1);color:var(--gold)}
+
+.section{padding:clamp(60px,10vw,120px) clamp(20px,5vw,80px)}
 .section-inner{max-width:1200px;margin:0 auto}
 .section-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
-.section-title{font-family:var(--serif);font-size:clamp(32px,5vw,54px);font-weight:400;color:var(--text);line-height:1.15;margin-bottom:16px}
-.section-title em{font-style:italic;color:var(--champ)}
-.section-sub{font-size:16px;color:var(--text2);max-width:580px;line-height:1.6;margin-bottom:48px}
+.section-title{font-family:var(--serif);font-size:clamp(32px,5vw,52px);font-weight:400;color:var(--text);line-height:1.1;margin-bottom:16px}
+.section-title em{font-style:italic;color:var(--gold3)}
+.section-sub{font-size:16px;color:var(--text2);max-width:560px;line-height:1.6;margin-bottom:48px}
 
-/* Estilos da Interface de Reservas e Calendário */
-.units-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:28px}
-.unit-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;cursor:pointer;transition:all .25s;position:relative}
-.unit-card:hover{border-color:var(--gold)}
-.unit-card.selected{background:rgba(201,168,76,.08);border-color:var(--gold);box-shadow:0 0 20px var(--gold-glow)}
-.unit-title{font-family:var(--serif);font-size:20px;color:var(--text);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
-.unit-desc{font-size:13px;color:var(--text2);line-height:1.4}
-.calendar-wrapper{background:var(--dark2);border:1px solid var(--border2);border-radius:20px;padding:24px;margin-bottom:32px}
-.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.cal-title{font-family:var(--serif);font-size:22px;color:var(--text)}
-.cal-nav-btn{background:var(--surface);border:1px solid var(--border);color:var(--text);width:38px;height:38px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
-.cal-nav-btn:hover:not(:disabled){border-color:var(--gold);color:var(--gold)}
-.cal-nav-btn:disabled{opacity:.3;cursor:not-allowed}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;text-align:center}
-.cal-day-head{font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;padding:8px 0}
-.cal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:10px;font-size:14px;font-weight:600;border:1px solid transparent;background:var(--surface);color:var(--text);cursor:pointer;transition:all .2s;position:relative}
-.cal-day.other-month{opacity:.25}
-.cal-day.disabled{opacity:.3;cursor:not-allowed;background:rgba(255,255,255,.01)}
-.cal-day.ocupado{background:rgba(255,77,77,.1);color:#ff7777;border-color:rgba(255,77,77,.2);cursor:not-allowed}
-.cal-day.livre:hover:not(.disabled){border-color:var(--gold);background:rgba(201,168,76,.15)}
-.cal-day.selected{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#1a0d00;border-color:var(--gold);box-shadow:0 0 15px var(--gold-glow)}
-.cal-legend{display:flex;gap:20px;justify-content:center;margin-top:20px;font-size:12px;color:var(--text2);flex-wrap:wrap}
-.leg-item{display:flex;align-items:center;gap:6px}
-.leg-dot{width:10px;height:10px;border-radius:50%}
-.leg-dot.livre{background:var(--surface);border:1px solid var(--gold)}
-.leg-dot.ocupado{background:#ff7777}
-.leg-dot.selecionado{background:var(--gold)}
+.topo-aviso{position:relative;z-index:600;background:#A8843A;color:#111408;text-align:center;padding:10px 16px;font-size:13px;font-weight:600;}
+.topo-aviso.cor-warning{background:#C9A84C;color:#0A0D08;}
+.topo-aviso.cor-info{background:#1A5C3A;color:#FFFFFF;}
+.topo-aviso.cor-danger{background:#A82A2A;color:#FFFFFF;}
 
-.form-card{background:var(--dark2);border:1px solid var(--border2);border-radius:24px;padding:clamp(24px,4vw,40px);box-shadow:0 20px 60px rgba(0,0,0,.6)}
-.form-card-title{font-family:var(--serif);font-size:28px;color:var(--text);margin-bottom:8px}
-.form-card-sub{font-size:13.5px;color:var(--text2);margin-bottom:28px;line-height:1.5}
-.fc-field{margin-bottom:20px}
+.fab-whatsapp{position:fixed;bottom:24px;right:24px;z-index:900;width:56px;height:56px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;text-decoration:none;box-shadow:0 6px 20px rgba(37,211,102,.4);transition:transform .2s;animation:fab-bounce 3s infinite}
+.fab-whatsapp:hover{transform:scale(1.1)}
+
+.units-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:40px}
+@media(max-width:640px){.units-grid{grid-template-columns:1fr}}
+.unit-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;cursor:pointer;transition:all .3s;position:relative}
+.unit-card:hover{border-color:var(--border2);background:rgba(255,255,255,.06)}
+.unit-card.selected{border-color:var(--gold);background:rgba(201,168,76,.08);box-shadow:0 0 24px var(--gold-glow)}
+.unit-title{font-family:var(--serif);font-size:22px;color:var(--text);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.unit-desc{font-size:13px;color:var(--text2);line-height:1.5}
+
+.calendar-wrapper{background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:32px;margin-bottom:40px}
+.cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.cal-title{font-family:var(--serif);font-size:24px;color:var(--text)}
+.cal-nav-btn{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:18px}
+.cal-nav-btn:hover{background:rgba(201,168,76,.15);border-color:var(--border2);color:var(--gold)}
+.cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;text-align:center;margin-bottom:12px}
+.cal-weekday{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
+.cal-day{aspect-ratio:1;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;position:relative}
+.cal-day:hover:not(.disabled):not(.ocupado){background:rgba(201,168,76,.2);border-color:var(--gold)}
+.cal-day.selected{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#1a0d00;font-weight:700;border-color:var(--gold);box-shadow:0 4px 16px var(--gold-glow)}
+.cal-day.ocupado{background:rgba(255,255,255,.02);border-color:transparent;color:var(--text3);cursor:not-allowed;text-decoration:line-through}
+.cal-day.disabled{opacity:.3;cursor:not-allowed}
+.cal-day.other-month{opacity:.2}
+
+.form-card{background:var(--surface);border:1px solid var(--border2);border-radius:24px;padding:36px;display:none;animation:fade-up .4s ease-out}
+.form-title{font-family:var(--serif);font-size:26px;color:var(--text);margin-bottom:8px}
+.form-sub{font-size:14px;color:var(--text2);margin-bottom:28px}
+.fc-group{margin-bottom:20px}
 .fc-label{display:block;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
-.fc-input{width:100%;padding:13px 18px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);font-size:14px;font-family:var(--sans);transition:all .25s;outline:none}
-.fc-input:focus{border-color:var(--gold);background:rgba(201,168,76,.05);box-shadow:0 0 16px var(--gold-glow)}
-.fc-input option{background:#111408;color:#F8F4ED}
+.fc-input,.fc-select,.fc-textarea{width:100%;padding:14px 18px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid var(--border);color:var(--text);font-family:var(--sans);font-size:14px;transition:all .2s}
+.fc-input:focus,.fc-select:focus,.fc-textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 12px var(--gold-glow)}
+.fc-select option{background:var(--dark);color:var(--text)}
 .fc-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:560px){.fc-row{grid-template-columns:1fr}}
 .fc-submit{width:100%;padding:16px;border-radius:50px;border:none;background:linear-gradient(135deg,var(--emerald2),var(--emerald),var(--emerald3));color:#fff;font-size:15px;font-weight:700;font-family:var(--sans);cursor:pointer;box-shadow:0 6px 28px var(--em-glow);transition:all .3s;margin-top:10px}
@@ -153,6 +151,13 @@ html{scroll-behavior:smooth}body{font-family:var(--sans);background:var(--dark);
 .testi-name{font-size:14px;font-weight:600;color:var(--text)}
 .testi-role{font-size:11px;color:var(--text3)}
 
+.media-gallery-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;margin-top:24px}
+.media-card{border-radius:16px;overflow:hidden;background:var(--surface);border:1px solid var(--border)}
+.media-card img{width:100%;height:220px;object-fit:cover;display:block}
+.media-card .media-title{padding:12px 16px;font-size:14px;color:var(--text2)}
+.video-embed-container{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:16px;background:#000}
+.video-embed-container iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
+
 .final-cta{background:linear-gradient(160deg,#111408 0%,#1a2010 100%);border-t:1px solid var(--border2);padding:clamp(60px,8vw,100px) clamp(20px,5vw,80px);text-align:center}
 .final-cta-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:16px}
 .final-cta-h{font-family:var(--serif);font-size:clamp(36px,6vw,60px);color:var(--text);margin-bottom:16px;line-height:1.1}
@@ -173,28 +178,31 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
 .selo-kernex{color:var(--text2);text-decoration:none;transition:color .2s}
 .selo-kernex:hover{color:var(--gold)}
 </style>
+<script>document.documentElement.classList.add('nx-carregando'); setTimeout(function () { document.documentElement.classList.remove('nx-carregando'); }, 3000);</script>
 </head>
 <body>
 
-<header id="navbar">
+<div id="topo-aviso" class="topo-aviso nx-oculto" role="region" aria-label="Aviso"></div>
+
+<header id="navbar" data-secao="menu">
   <div class="nav-inner">
     <a href="#" class="nav-logo">
       <div class="nav-logo-s">S</div>
       <div>
-        <div class="nav-logo-name">Splash Eventos</div>
-        <div class="nav-logo-sub">Espaços Premium</div>
+        <div class="nav-logo-name" data-ed="menu-logo-nome">Splash Eventos</div>
+        <div class="nav-logo-sub" data-ed="menu-logo-sub">Espaços Premium</div>
       </div>
     </a>
     <nav class="nav-links">
-      <a href="#espacos">Espaços</a>
-      <a href="#eventos">Eventos</a>
-      <a href="#processo">Como Funciona</a>
-      <a href="#solicitar" class="nav-cta"><i class="ri-calendar-check-line"></i><span>Reservar um dia</span></a>
+      <a href="#espacos" data-ed="menu-link-espacos">Espaços</a>
+      <a href="#eventos" data-ed="menu-link-eventos">Eventos</a>
+      <a href="#processo" data-ed="menu-link-processo">Como Funciona</a>
+      <a href="#solicitar" class="nav-cta" data-ed="menu-link-reserva"><i class="ri-calendar-check-line"></i><span>Reservar um dia</span></a>
     </nav>
   </div>
 </header>
 
-<section class="hero">
+<section class="hero" id="inicio" data-secao="inicio">
   <div class="hero-bg-slides">
     <div class="hero-bg-slide"></div>
     <div class="hero-bg-slide"></div>
@@ -210,36 +218,36 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
   <div class="hero-shimmer-line"></div>
 
   <div class="hero-content">
-    <div class="hero-eyebrow"><i class="ri-sparkles-line"></i> Locação de espaços para eventos exclusivos</div>
-    <h1 class="hero-h1">O cenário perfeito<br>para o seu<br><em>momento especial.</em></h1>
-    <p class="hero-sub">Splash Eventos oferece dois espaços de alto padrão para casamentos, formaturas, 15 anos e eventos corporativos com total exclusividade.</p>
+    <div class="hero-eyebrow" data-ed="hero-eyebrow"><i class="ri-sparkles-line"></i> Locação de espaços para eventos exclusivos</div>
+    <h1 class="hero-h1" data-ed="hero-titulo">O cenário perfeito<br>para o seu<br><em>momento especial.</em></h1>
+    <p class="hero-sub" data-ed="hero-subtitulo">Splash Eventos oferece dois espaços de alto padrão para casamentos, formaturas, 15 anos e eventos corporativos com total exclusividade.</p>
     <div class="hero-ctas">
-      <a href="#solicitar" class="btn-emerald"><i class="ri-calendar-event-line"></i><span>Reservar um dia</span></a>
-      <a href="#espacos" class="btn-outline"><i class="ri-building-4-line"></i><span>Ver espaços</span></a>
+      <a href="#solicitar" class="btn-emerald" data-ed="hero-cta-principal"><i class="ri-calendar-event-line"></i><span>Reservar um dia</span></a>
+      <a href="#espacos" class="btn-outline" data-ed="hero-cta-secundario"><i class="ri-building-4-line"></i><span>Ver espaços</span></a>
     </div>
   </div>
 </section>
 
-<section class="section" id="solicitar">
+<section class="section" id="solicitar" data-secao="solicitar">
   <div class="section-inner">
-    <div class="section-eyebrow fade-up"><i class="ri-calendar-check-line"></i><span>Agenda Online</span></div>
-    <h2 class="section-title fade-up">Reservar um dia<br><em>no Splash Eventos.</em></h2>
-    <p class="section-sub fade-up">Escolha uma unidade e o dia desejado para iniciar seu pedido de reserva.</p>
+    <div class="section-eyebrow fade-up" data-ed="solicitar-eyebrow"><i class="ri-calendar-check-line"></i><span>Agenda Online</span></div>
+    <h2 class="section-title fade-up" data-ed="solicitar-titulo">Reservar um dia<br><em>no Splash Eventos.</em></h2>
+    <p class="section-sub fade-up" data-ed="solicitar-subtitulo">Escolha uma unidade e o dia desejado para iniciar seu pedido de reserva.</p>
 
     <div class="units-grid">
       <div class="unit-card selected" id="card-santa-adelia" onclick="selecionarUnidade('santa-adelia')">
         <div class="unit-title">
-          <span>Splash Santa Adélia</span>
+          <span data-ed="unidade1-nome">Splash Santa Adélia</span>
           <i class="ri-checkbox-circle-fill" style="color:var(--gold);display:inline" id="icon-santa-adelia"></i>
         </div>
-        <div class="unit-desc">Espaço completo para até 500 pessoas. Ideal para casamentos e eventos de grande porte.</div>
+        <div class="unit-desc" data-ed="unidade1-desc">Espaço completo para até 500 pessoas. Ideal para casamentos e eventos de grande porte.</div>
       </div>
       <div class="unit-card" id="card-santa-barbara" onclick="selecionarUnidade('santa-barbara')">
         <div class="unit-title">
-          <span>Splash Santa Bárbara</span>
+          <span data-ed="unidade2-nome">Splash Santa Bárbara</span>
           <i class="ri-checkbox-circle-line" style="color:var(--text3);display:inline" id="icon-santa-barbara"></i>
         </div>
-        <div class="unit-desc">Salão temático para até 350 pessoas. Perfeito para 15 anos, formaturas e recepções.</div>
+        <div class="unit-desc" data-ed="unidade2-desc">Salão temático para até 350 pessoas. Perfeito para 15 anos, formaturas e recepções.</div>
       </div>
     </div>
 
@@ -249,52 +257,59 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
         <div class="cal-title" id="cal-mes-nome">Carregando calendário...</div>
         <button class="cal-nav-btn" id="btn-mes-proximo" onclick="mudarMes(1)"><i class="ri-arrow-right-s-line"></i></button>
       </div>
-      <div class="cal-grid" id="cal-dias-grid">
-        <!-- Dias do calendário serão inseridos dinamicamente -->
+
+      <div class="cal-weekdays">
+        <div class="cal-weekday">Dom</div>
+        <div class="cal-weekday">Seg</div>
+        <div class="cal-weekday">Ter</div>
+        <div class="cal-weekday">Qua</div>
+        <div class="cal-weekday">Qui</div>
+        <div class="cal-weekday">Sex</div>
+        <div class="cal-weekday">Sáb</div>
       </div>
-      <div class="cal-legend">
-        <div class="leg-item"><div class="leg-dot livre"></div> Dia Livre (clicável)</div>
-        <div class="leg-item"><div class="leg-dot ocupado"></div> Indisponível / Ocupado</div>
-        <div class="leg-item"><div class="leg-dot selecionado"></div> Dia Selecionado</div>
+
+      <div class="cal-days" id="cal-dias-grid">
+        <!-- Gerado via JS -->
       </div>
     </div>
 
-    <div class="form-card" id="card-formulario" style="display:none">
-      <div class="form-card-title">Dados da Reserva</div>
-      <div class="form-card-sub" id="form-dia-selecionado-texto">Preencha suas informações para solicitar a reserva deste dia.</div>
+    <div class="form-card" id="card-formulario">
+      <h3 class="form-title" data-ed="form-reserva-titulo">Dados da sua solicitação</h3>
+      <p class="form-sub" id="form-dia-selecionado-texto">Preencha seus dados abaixo para enviar o pedido à Amanda.</p>
 
       <div class="sinal-aviso">
-        <i class="ri-information-line" style="font-size:18px;color:var(--gold)"></i>
-        <div id="texto-sinal-aviso">
-          A reserva só é confirmada depois do pagamento do sinal. Seu dia fica segurado enquanto a Amanda entra em contato.
+        <i class="ri-information-line" style="font-size:18px;color:var(--gold);shrink:0"></i>
+        <div id="texto-sinal-aviso" data-ed="form-reserva-sinal-texto">
+          A reserva só é confirmada depois do pagamento do sinal. Ao enviar a solicitação, o dia escolhido fica temporariamente segurado para você enquanto a Amanda analisa o pedido e envia a chave Pix.
         </div>
       </div>
 
       <form id="form-pedir-reserva" onsubmit="enviarPedidoReserva(event)">
-        <!-- Honeypot anti-robô -->
+        <!-- Honeypots anti-robô -->
         <input type="text" name="campo_extra" id="campo_extra" style="display:none" tabindex="-1" autocomplete="off">
         <input type="text" name="site_url" id="site_url" style="display:none" tabindex="-1" autocomplete="off">
 
-        <div class="fc-field">
-          <label class="fc-label">Seu nome completo *</label>
-          <input class="fc-input" type="text" id="req-nome" required placeholder="Digite seu nome">
+        <div class="fc-group">
+          <label class="fc-label" for="req-nome">Seu Nome Completo</label>
+          <input class="fc-input" type="text" id="req-nome" required placeholder="Ex: Maria Silva">
         </div>
 
         <div class="fc-row">
-          <div class="fc-field">
-            <label class="fc-label">WhatsApp *</label>
+          <div class="fc-group">
+            <label class="fc-label" for="req-whatsapp">WhatsApp com DDD</label>
             <input class="fc-input" type="tel" id="req-whatsapp" required placeholder="(17) 99999-8888">
           </div>
-          <div class="fc-field">
-            <label class="fc-label">E-mail (opcional)</label>
-            <input class="fc-input" type="email" id="req-email" placeholder="seuemail@exemplo.com">
+
+          <div class="fc-group">
+            <label class="fc-label" for="req-email">E-mail para Contato</label>
+            <input class="fc-input" type="email" id="req-email" required placeholder="seu@email.com">
           </div>
         </div>
 
         <div class="fc-row">
-          <div class="fc-field">
-            <label class="fc-label">Tipo de evento *</label>
-            <select class="fc-input" id="req-tipo-evento" required>
+          <div class="fc-group">
+            <label class="fc-label" for="req-tipo-evento">Tipo de Evento</label>
+            <select class="fc-select" id="req-tipo-evento" required>
               <option value="">Selecione...</option>
               <option value="Casamento">Casamento</option>
               <option value="15 Anos">15 Anos</option>
@@ -304,41 +319,53 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
               <option value="Outro">Outro</option>
             </select>
           </div>
-          <div class="fc-field">
-            <label class="fc-label">N.º de convidados *</label>
-            <input class="fc-input" type="number" id="req-convidados" min="1" max="10000" required placeholder="Ex: 200">
+
+          <div class="fc-group">
+            <label class="fc-label" for="req-convidados">Nº Estimado de Convidados</label>
+            <select class="fc-select" id="req-convidados" required>
+              <option value="">Selecione...</option>
+              <option value="Até 100">Até 100 pessoas</option>
+              <option value="100 a 250">100 a 250 pessoas</option>
+              <option value="250 a 400">250 a 400 pessoas</option>
+              <option value="Mais de 400">Mais de 400 pessoas</option>
+            </select>
           </div>
         </div>
 
-        <div class="fc-field">
-          <label class="fc-label">Observações / Pedidos especiais</label>
-          <input class="fc-input" type="text" id="req-obs" placeholder="Tema, necessidades específicas...">
+        <div class="fc-group">
+          <label class="fc-label" for="req-obs">Observações (opcional)</label>
+          <textarea class="fc-textarea" id="req-obs" rows="3" placeholder="Horário pretendido, dúvidas ou pedidos especiais..."></textarea>
         </div>
 
         <div class="lgpd-check">
           <input type="checkbox" id="req-consentimento" required>
-          <label for="req-consentimento">Concordo com o uso dos meus dados para contato referente a este pedido de reserva de acordo com a <a href="privacidade.html" target="_blank">Política de Privacidade</a>.</label>
+          <label for="req-consentimento">Concordo com o tratamento dos meus dados exclusivamente para o agendamento da reserva, conforme a <a href="privacidade.html" target="_blank">Política de Privacidade</a>.</label>
         </div>
 
-        <div id="form-erro-msg" style="display:none;color:#ff7777;font-size:13px;margin-bottom:16px;background:rgba(255,77,77,.1);padding:10px;border-radius:8px"></div>
+        <div id="form-erro-msg" style="display:none;color:#ff6b6b;font-size:13px;margin-bottom:16px"></div>
 
         <button type="submit" class="fc-submit" id="btn-enviar-pedido">
-          <i class="ri-send-plane-fill"></i> Enviar Pedido de Reserva
+          <span>Enviar Pedido de Reserva</span>
         </button>
       </form>
     </div>
 
-    <div class="form-card" id="card-sucesso" style="display:none;text-align:center">
-      <div style="font-size:48px;color:var(--gold);margin-bottom:16px"><i class="ri-checkbox-circle-fill"></i></div>
-      <div class="form-card-title">Pedido Enviado com Sucesso!</div>
-      <div class="form-card-sub" style="margin-bottom:20px">
-        Seu protocolo de pedido é: <strong id="protocolo-reserva" style="color:var(--gold);font-size:18px">SPL-XXX</strong>
+    <div class="form-card" id="card-sucesso" style="text-align:center;border-color:var(--emerald3)">
+      <div style="font-size:48px;color:var(--emerald3);margin-bottom:12px"><i class="ri-checkbox-circle-line"></i></div>
+      <h3 class="form-title" style="color:#fff" data-ed="sucesso-titulo">Solicitação Enviada!</h3>
+      <p class="form-sub" id="sucesso-detalhes-msg">Seu pedido foi recebido com sucesso e o dia escolhido já está temporariamente reservado na agenda.</p>
+
+      <div style="background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:16px;padding:20px;max-width:400px;margin:0 auto 24px">
+        <div style="font-size:11px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Protocolo da Reserva</div>
+        <div style="font-family:var(--serif);font-size:24px;color:#fff;font-weight:600" id="protocolo-reserva">SPL-88219</div>
       </div>
-      <p style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:28px" id="sucesso-detalhes-msg">
-        O dia solicitado já ficou segurado na nossa agenda! A Amanda irá analisar o seu pedido e entrará em contato para passar as instruções do pagamento do sinal e confirmar sua reserva.
+
+      <p style="font-size:13.5px;color:var(--text2);margin-bottom:24px;line-height:1.5" data-ed="sucesso-instrucao">
+        A Amanda entrará em contato pelo seu WhatsApp com as orientações de pagamento do sinal para confirmar definitivamente.
       </p>
+
       <div id="zap-container" style="display:none">
-        <a id="btn-wa-me" href="#" target="_blank" rel="noopener" class="btn-emerald" style="text-decoration:none">
+        <a href="#" id="btn-wa-me" target="_blank" class="btn-emerald" style="background:#25D366;box-shadow:0 6px 20px rgba(37,211,102,.3)">
           <i class="ri-whatsapp-line"></i> Falar com a Amanda no WhatsApp
         </a>
       </div>
@@ -346,80 +373,133 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
   </div>
 </section>
 
-<div class="stats-strip">
-  <div class="stats-inner">
-    <div class="stat-item"><div class="stat-num">+1.200</div><div class="stat-lbl">Eventos realizados</div></div>
-    <div class="stat-div"></div>
-    <div class="stat-item"><div class="stat-num">2</div><div class="stat-lbl">Espaços exclusivos</div></div>
-    <div class="stat-div"></div>
-    <div class="stat-item"><div class="stat-num">500+</div><div class="stat-lbl">Convidados por evento</div></div>
-    <div class="stat-div"></div>
-    <div class="stat-item"><div class="stat-num">4.9★</div><div class="stat-lbl">Avaliação no Google</div></div>
-  </div>
-</div>
-
-<section class="section" id="espacos">
+<section class="section" id="espacos" data-secao="espacos">
   <div class="section-inner">
-    <div class="section-eyebrow fade-up"><i class="ri-building-4-line"></i><span>Nossas unidades</span></div>
-    <h2 class="section-title fade-up">Dois espaços únicos,<br><em>uma experiência inesquecível.</em></h2>
-    <p class="section-sub fade-up">Cada detalhe foi pensado para que o seu evento seja exatamente como você imaginou.</p>
-    <div class="spaces-grid">
-      <div class="space-card"><img src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&q=85&auto=format" alt="Santa Adélia" loading="lazy" onerror="this.style.opacity='0'"><div class="space-badge">Santa Adélia</div><div class="space-tag">Disponível</div><div class="space-overlay"><div class="space-name">Splash Santa Adélia</div><div class="space-cap"><i class="ri-group-line"></i> Até 500 convidados</div><div class="space-feats"><span class="space-feat">Pista coberta 800m²</span><span class="space-feat">Jardim iluminado</span><span class="space-feat">Estacionamento</span><span class="space-feat">Ar-condicionado</span></div></div></div>
-      <div class="space-card"><img src="https://images.unsplash.com/photo-1478146896981-b80fe463b330?w=800&q=85&auto=format" alt="Santa Bárbara" loading="lazy" onerror="this.style.opacity='0'"><div class="space-badge">Santa Bárbara</div><div class="space-tag">Disponível</div><div class="space-overlay"><div class="space-name">Splash Santa Bárbara</div><div class="space-cap"><i class="ri-group-line"></i> Até 350 convidados</div><div class="space-feats"><span class="space-feat">Salão nobre 600m²</span><span class="space-feat">Piscina decorativa</span><span class="space-feat">Camarins privativos</span><span class="space-feat">Mesa de frios inclusa</span></div></div></div>
+    <div class="section-eyebrow fade-up" data-ed="espacos-eyebrow"><i class="ri-building-4-line"></i><span>Nossas Unidades</span></div>
+    <h2 class="section-title fade-up" data-ed="espacos-titulo">Espaços criados para<br><em>marcar memórias.</em></h2>
+    <p class="section-sub fade-up" data-ed="espacos-subtitulo">Estrutura completa com climatização, iluminação cênica, camarim exclusivo e área externa paisagística.</p>
+
+    <div class="spaces-grid" id="espacos-grid">
+      <div class="space-card fade-up" data-lista="espacos" data-i="0">
+        <img data-ed="espaco-1-foto" src="https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&fit=crop&q=80" alt="Splash Santa Adélia" loading="lazy">
+        <div class="space-overlay">
+          <div class="space-badge" data-ed="espaco-1-badge">Unidade 1</div>
+          <div class="space-tag" data-ed="espaco-1-tag">Até 500 Pessoas</div>
+          <h3 class="space-name" data-ed="espaco-1-nome">Splash Santa Adélia</h3>
+          <div class="space-cap" data-ed="espaco-1-cap"><i class="ri-map-pin-line"></i> Santa Adélia — SP · Salão Principal &amp; Jardim</div>
+          <div class="space-feats">
+            <span class="space-feat" data-ed="espaco-1-feat1">Climatizado</span>
+            <span class="space-feat" data-ed="espaco-1-feat2">Luz Cênica</span>
+            <span class="space-feat" data-ed="espaco-1-feat3">Camarim Noiva</span>
+            <span class="space-feat" data-ed="espaco-1-feat4">Estacionamento</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-card fade-up" style="transition-delay:.1s" data-lista="espacos" data-i="1">
+        <img data-ed="espaco-2-foto" src="https://images.unsplash.com/photo-1545232979-fbf5920223d5?w=800&fit=crop&q=80" alt="Splash Santa Bárbara" loading="lazy">
+        <div class="space-overlay">
+          <div class="space-badge" data-ed="espaco-2-badge">Unidade 2</div>
+          <div class="space-tag" data-ed="espaco-2-tag">Até 350 Pessoas</div>
+          <h3 class="space-name" data-ed="espaco-2-nome">Splash Santa Bárbara</h3>
+          <div class="space-cap" data-ed="espaco-2-cap"><i class="ri-map-pin-line"></i> Santa Bárbara d'Oeste — SP · Salão &amp; Deck</div>
+          <div class="space-feats">
+            <span class="space-feat" data-ed="espaco-2-feat1">Piscina Decorativa</span>
+            <span class="space-feat" data-ed="espaco-2-feat2">Pista LED</span>
+            <span class="space-feat" data-ed="espaco-2-feat3">Área de Buffet</span>
+            <span class="space-feat" data-ed="espaco-2-feat4">Acessibilidade</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Galeria de Fotos por Unidade -->
+    <div id="galeria-fotos-secao" style="margin-top:40px">
+      <h3 style="font-family:var(--serif);font-size:24px;color:var(--text);margin-bottom:16px" data-ed="galeria-fotos-titulo">Fotos dos Espaços</h3>
+      <div id="galeria-fotos-grid" class="media-gallery-grid"></div>
     </div>
   </div>
 </section>
 
-<section class="section" id="eventos" style="padding-top:0;background:rgba(255,255,255,.015);border-top:1px solid var(--border2);border-bottom:1px solid var(--border2)">
+<section class="section" id="videos" data-secao="videos" style="background:rgba(255,255,255,.01)">
   <div class="section-inner">
-    <div class="section-eyebrow fade-up" style="margin-top:clamp(60px,8vw,80px)"><i class="ri-star-line"></i><span>Para cada celebração</span></div>
-    <h2 class="section-title fade-up">O espaço perfeito<br><em>para cada momento.</em></h2>
-    <div class="events-grid">
-      <div class="event-card fade-up"><span class="event-icon">💍</span><div class="event-name">Casamentos</div><p class="event-text">Cerimônia e recepção em um único espaço. Décor, buffet e DJ sob medida.</p></div>
-      <div class="event-card fade-up" style="transition-delay:.1s"><span class="event-icon">🌸</span><div class="event-name">15 Anos</div><p class="event-text">Salão temático, pista de dança, cabine de fotos e mágica para a debutante.</p></div>
-      <div class="event-card fade-up" style="transition-delay:.2s"><span class="event-icon">🎓</span><div class="event-name">Formaturas</div><p class="event-text">Espaço completo para colação, jantar e festa. Palco, sonorização e telão inclusos.</p></div>
-      <div class="event-card fade-up" style="transition-delay:.3s"><span class="event-icon">🏢</span><div class="event-name">Corporativos</div><p class="event-text">Confraternizações, lançamentos e convenções com toda infraestrutura profissional.</p></div>
+    <div class="section-eyebrow fade-up" data-ed="videos-eyebrow"><i class="ri-video-line"></i><span>Vídeos</span></div>
+    <h2 class="section-title fade-up" data-ed="videos-titulo">Conheça nossos espaços<br><em>em vídeo.</em></h2>
+    <div id="galeria-videos-grid" class="media-gallery-grid"></div>
+  </div>
+</section>
+
+<section class="section" id="eventos" data-secao="eventos" style="background:rgba(255,255,255,.02)">
+  <div class="section-inner">
+    <div class="section-eyebrow fade-up" data-ed="eventos-eyebrow"><i class="ri-star-line"></i><span>Experiências</span></div>
+    <h2 class="section-title fade-up" data-ed="eventos-titulo">Para todas as suas<br><em>comemorações.</em></h2>
+    <p class="section-sub fade-up" data-ed="eventos-subtitulo">Salões adaptáveis com infraestrutura preparada para atender ao conceito único da sua festa.</p>
+
+    <div class="events-grid" id="eventos-grid">
+      <div class="event-card fade-up" data-lista="eventos" data-i="0"><span class="event-icon">💍</span><div class="event-name" data-ed="evento-1-nome">Casamentos</div><p class="event-text" data-ed="evento-1-text">Cerimônia ao ar livre no jardim e recepção luxuosa no salão climatizado.</p></div>
+      <div class="event-card fade-up" style="transition-delay:.1s" data-lista="eventos" data-i="1"><span class="event-icon">🌸</span><div class="event-name" data-ed="evento-2-nome">15 Anos</div><p class="event-text" data-ed="evento-2-text">Salão temático, pista de dança, cabine de fotos e mágica para a debutante.</p></div>
+      <div class="event-card fade-up" style="transition-delay:.2s" data-lista="eventos" data-i="2"><span class="event-icon">🎓</span><div class="event-name" data-ed="evento-3-nome">Formaturas</div><p class="event-text" data-ed="evento-3-text">Estrutura de som, palco cênico e acústica ideal para bailes e celebrações.</p></div>
+      <div class="event-card fade-up" style="transition-delay:.3s" data-lista="eventos" data-i="3"><span class="event-icon">👔</span><div class="event-name" data-ed="evento-4-nome">Corporativos</div><p class="event-text" data-ed="evento-4-text">Convenções, jantares de gala, lançamentos de produtos e festas de fim de ano.</p></div>
     </div>
   </div>
 </section>
 
-<section class="section" id="processo">
+<section class="section" id="processo" data-secao="processo">
   <div class="section-inner">
-    <div class="section-eyebrow fade-up"><i class="ri-magic-line"></i><span>Como funciona</span></div>
-    <h2 class="section-title fade-up">Do sonho ao<br><em>evento perfeito.</em></h2>
-    <div class="process-grid">
-      <div class="process-step fade-up"><div class="process-num">1</div><div class="process-title">Solicite a Data</div><p class="process-text">Escolha a unidade e o dia no calendário online. O dia fica segurado na agenda.</p></div>
-      <div class="process-step fade-up" style="transition-delay:.1s"><div class="process-num">2</div><div class="process-title">Pagamento do Sinal</div><p class="process-text">A Amanda envia a chave Pix. Após o pagamento do sinal, sua reserva fica 100% confirmada.</p></div>
-      <div class="process-step fade-up" style="transition-delay:.2s"><div class="process-num">3</div><div class="process-title">Visita & Contrato</div><p class="process-text">Agende uma visita guiada para alinhar todos os detalhes e assinar o contrato.</p></div>
-      <div class="process-step fade-up" style="transition-delay:.3s"><div class="process-num">4</div><div class="process-title">Dia do Evento</div><p class="process-text">Nossa equipe estará presente em todo o evento para garantir que cada detalhe seja perfeito.</p></div>
+    <div class="section-eyebrow fade-up" data-ed="processo-eyebrow"><i class="ri-number-1"></i><span>Passo a Passo</span></div>
+    <h2 class="section-title fade-up" data-ed="processo-titulo">Como funciona a<br><em>sua reserva.</em></h2>
+    <p class="section-sub fade-up" data-ed="processo-subtitulo">Processo simples, transparente e sem burocracia para garantir seu dia dos sonhos.</p>
+
+    <div class="process-grid" id="processo-grid">
+      <div class="process-step fade-up" data-lista="processo" data-i="0">
+        <div class="process-num">01</div>
+        <h3 class="process-title" data-ed="passo-1-titulo">Escolha o Dia</h3>
+        <p class="process-text" data-ed="passo-1-text">Consulte o calendário em tempo real e escolha a data ideal na unidade pretendida.</p>
+      </div>
+      <div class="process-step fade-up" style="transition-delay:.1s" data-lista="processo" data-i="1">
+        <div class="process-num">02</div>
+        <h3 class="process-title" data-ed="passo-2-titulo">Envie a Solicitação</h3>
+        <p class="process-text" data-ed="passo-2-text">Preencha seus dados. O dia fica temporariamente bloqueado para evitar duplicidade.</p>
+      </div>
+      <div class="process-step fade-up" style="transition-delay:.2s" data-lista="processo" data-i="2">
+        <div class="process-num">03</div>
+        <h3 class="process-title" data-ed="passo-3-titulo">Pague o Sinal Pix</h3>
+        <p class="process-text" data-ed="passo-3-text">A Amanda envia os dados do Pix. Após a confirmação, sua reserva é 100% garantida.</p>
+      </div>
+      <div class="process-step fade-up" style="transition-delay:.3s" data-lista="processo" data-i="3">
+        <div class="process-num">04</div>
+        <h3 class="process-title" data-ed="passo-4-titulo">Celebre!</h3>
+        <p class="process-text" data-ed="passo-4-text">Pronto! Seu evento está agendado e a equipe Splash estará pronta para receber você.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<section class="section" style="padding-top:0">
+<section class="section" id="depoimentos" data-secao="depoimentos" style="background:rgba(255,255,255,.01)">
   <div class="section-inner">
-    <div class="section-eyebrow fade-up"><i class="ri-double-quotes-l"></i><span>Quem viveu, conta</span></div>
-    <h2 class="section-title fade-up">Histórias que<br><em>emocionam.</em></h2>
-    <div class="testi-grid">
-      <div class="testi-card fade-up"><div class="testi-stars">★★★★★</div><p class="testi-quote">"O Splash Santa Adélia foi o cenário dos nossos sonhos. O jardim iluminado, o salão impecável — cada foto ficou perfeita."</p><div class="testi-author"><div class="testi-av">A</div><div><div class="testi-name">Ana & Marcos Lima</div><div class="testi-role">Casamento</div></div></div></div>
-      <div class="testi-card fade-up" style="transition-delay:.1s"><div class="testi-stars">★★★★★</div><p class="testi-quote">"Fiz meu 15 anos no Splash Santa Bárbara e foi a noite mais linda da minha vida. A piscina decorativa e a cabine de fotos foram um sucesso!"</p><div class="testi-author"><div class="testi-av">I</div><div><div class="testi-name">Isabella Carvalho</div><div class="testi-role">15 Anos</div></div></div></div>
-      <div class="testi-card fade-up" style="transition-delay:.2s"><div class="testi-stars">★★★★★</div><p class="testi-quote">"Realizamos a confraternização com 300 pessoas. Espaço amplo, equipe atenciosa, buffet de qualidade. Já agendamos o evento do ano que vem!"</p><div class="testi-author"><div class="testi-av">F</div><div><div class="testi-name">Felipe Andrade</div><div class="testi-role">Evento Corporativo</div></div></div></div>
+    <div class="section-eyebrow fade-up" data-ed="depoimentos-eyebrow"><i class="ri-chat-quote-line"></i><span>Depoimentos</span></div>
+    <h2 class="section-title fade-up" data-ed="depoimentos-titulo">Quem celebrou conosco<br><em>recomenda.</em></h2>
+    <p class="section-sub fade-up" data-ed="depoimentos-subtitulo">A felicidade dos nossos clientes é o combustível que nos move todos os dias.</p>
+
+    <div class="testi-grid" id="depoimentos-grid">
+      <div class="testi-card fade-up" data-lista="depoimentos" data-i="0"><div class="testi-stars">★★★★★</div><p class="testi-quote" data-ed="depoimento-1-texto">"O Splash Santa Adélia foi o cenário dos nossos sonhos. O jardim iluminado, o salão impecável — cada foto ficou perfeita."</p><div class="testi-author"><div class="testi-av">A</div><div><div class="testi-name" data-ed="depoimento-1-nome">Ana &amp; Marcos Lima</div><div class="testi-role" data-ed="depoimento-1-role">Casamento</div></div></div></div>
+      <div class="testi-card fade-up" style="transition-delay:.1s" data-lista="depoimentos" data-i="1"><div class="testi-stars">★★★★★</div><p class="testi-quote" data-ed="depoimento-2-texto">"Fiz meu 15 anos no Splash Santa Bárbara e foi a noite mais linda da minha vida. A piscina decorativa e a cabine de fotos foram um sucesso!"</p><div class="testi-author"><div class="testi-av">I</div><div><div class="testi-name" data-ed="depoimento-2-nome">Isabella Carvalho</div><div class="testi-role" data-ed="depoimento-2-role">15 Anos</div></div></div></div>
     </div>
   </div>
 </section>
 
-<section class="final-cta">
-  <div class="final-cta-eyebrow"><i class="ri-calendar-event-line"></i><span>Sua data pode estar disponível</span></div>
-  <h2 class="final-cta-h">Seu evento merece<br><em>o cenário perfeito.</em></h2>
-  <p class="final-cta-sub">Datas em finais de semana esgotam rápido. Verifique a disponibilidade hoje mesmo e garanta o seu espaço.</p>
-  <a href="#solicitar" class="btn-emerald"><i class="ri-calendar-check-line"></i> Ver Calendário e Reservar</a>
+<section class="final-cta" id="contato" data-secao="contato">
+  <div class="final-cta-eyebrow" data-ed="cta-eyebrow"><i class="ri-sparkles-line"></i> Não deixe para depois</div>
+  <h2 class="final-cta-h" data-ed="cta-titulo">Garanta a data do seu<br><em>evento inesquecível.</em></h2>
+  <p class="final-cta-sub" data-ed="cta-subtitulo">A agenda para este ano e o próximo já está aberta. Verifique a disponibilidade da sua data agora mesmo.</p>
+  <a href="#solicitar" class="btn-emerald" style="font-size:16px;padding:18px 42px" data-ed="cta-botao"><i class="ri-calendar-check-line"></i><span>Verificar Disponibilidade</span></a>
 </section>
 
-<footer>
+<footer data-secao="rodape">
   <div class="footer-inner">
     <div>
-      <div class="footer-brand-name">Splash Eventos</div>
-      <div class="footer-brand-sub">Espaços de alto padrão para casamentos, 15 anos, formaturas e eventos corporativos.</div>
+      <div class="footer-brand-name" data-ed="rodape-brand">Splash Eventos</div>
+      <p class="footer-brand-sub" data-ed="rodape-sub">Espaços de alto padrão para casamentos, 15 anos e comemorações inesquecíveis.</p>
     </div>
     <div>
       <div class="footer-col-title">Navegação</div>
@@ -427,131 +507,305 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
         <li><a href="#espacos">Espaços</a></li>
         <li><a href="#eventos">Eventos</a></li>
         <li><a href="#processo">Como Funciona</a></li>
-        <li><a href="#solicitar">Reservar um dia</a></li>
+        <li><a href="#solicitar">Reservar Dia</a></li>
       </ul>
     </div>
     <div>
-      <div class="footer-col-title">Área do Cliente</div>
+      <div class="footer-col-title">Unidades</div>
       <ul class="footer-links">
-        <li><a href="privacidade.html">Política de Privacidade</a></li>
-        <li><a href="agenda/">Painel Administrativo</a></li>
+        <li style="color:var(--text2)">Santa Adélia — SP</li>
+        <li style="color:var(--text2)">Santa Bárbara — SP</li>
       </ul>
     </div>
-    <div>
+    <div id="footer-atendimento-info">
       <div class="footer-col-title">Atendimento</div>
-      <div style="font-size:13.5px;color:var(--text2);line-height:1.6" id="footer-atendimento-info">
-        Escolha a data no calendário acima para verificar disponibilidade e falar diretamente conosco.
-      </div>
+      <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:12px" data-ed="rodape-atendimento">Amanda Splash · Responsável pelas reservas e visitas aos espaços.</p>
+      <a href="privacidade.html" style="font-size:12px;color:var(--gold);text-decoration:underline">Política de Privacidade</a>
     </div>
   </div>
   <div class="footer-bottom">
-    <div>© <span id="year-copy"></span> Splash Eventos. Todos os direitos reservados.</div>
-    <div>
-      <a href="https://kernex.com.br/?utm_source=splash&amp;utm_medium=selo&amp;utm_campaign=clientes" target="_blank" rel="noopener" class="selo-kernex">Feito com Kernex</a>
-    </div>
+    <div>&copy; <span id="year-copy">2026</span> Splash Eventos. Todos os direitos reservados.</div>
+    <a href="https://kernex.com.br/?utm_source=splash&amp;utm_medium=selo" target="_blank" rel="noopener" class="selo-kernex">Feito com Kernex</a>
   </div>
 </footer>
 
+<a id="fab-wa-float" href="#" target="_blank" rel="noopener" class="fab-whatsapp nx-oculto" aria-label="WhatsApp"><i class="ri-whatsapp-line"></i></a>
+
 <script src="calendario.js"></script>
 <script>
-document.getElementById('year-copy').textContent = new Date().getFullYear();
-
-const API_LOCACAO = '/api/locacao';
 const SLUG = 'splash';
+const API_LOCACAO = '/api/locacao';
 
 let configLocacao = null;
-let unidadeAtual = 'santa-adelia';
-let mesExibicao = ''; // YYYY-MM
-let mapaDiasMes = {}; // 'YYYY-MM-DD': 'livre' | 'ocupado'
-let diaSelecionado = '';
+let unidadeAtual = 'santa-adelia'; // 'santa-adelia' ou 'santa-barbara'
+let mesAtualISO = new Date().toISOString().slice(0, 7); // AAAA-MM
+let diaSelecionado = null;
+let mapaDiasMes = {}; // 'AAAA-MM-DD' => 'ocupado' | 'livre'
+
+const NX = {
+  editar: new URLSearchParams(location.search).has('editar') && window.parent !== window,
+  originais: {},
+  conteudo: null
+};
+
+const NX_SECOES = {
+  inicio: 'Topo',
+  solicitar: 'Agenda & Reserva',
+  espacos: 'Espaços',
+  videos: 'Vídeos',
+  eventos: 'Experiências',
+  processo: 'Como Funciona',
+  depoimentos: 'Depoimentos',
+  contato: 'Chamada Final',
+  rodape: 'Rodapé'
+};
+
+function nxLerTexto(el) {
+  let t = '';
+  el.childNodes.forEach(n => { t += n.nodeName === 'BR' ? '\n' : n.textContent.replace(/\s+/g, ' '); });
+  return t.split('\n').map(x => x.trim()).join('\n').trim();
+}
+
+function nxEscreverTexto(el, t) {
+  if (nxLerTexto(el) === t) return;
+  el.replaceChildren(...String(t).split('\n').flatMap((linha, i) => (i ? [document.createElement('br'), linha] : [linha])));
+}
+
+function nxGuardarOriginais() {
+  document.querySelectorAll('[data-ed]').forEach(el => {
+    if (el.tagName === 'IMG') NX.originais[el.dataset.ed] = { img: el.getAttribute('src'), pos: el.style.objectPosition || '' };
+    else NX.originais[el.dataset.ed] = { txt: nxLerTexto(el), href: el.tagName === 'A' ? el.getAttribute('href') : null };
+  });
+}
+
+function nxListasPadrao() {
+  return {};
+}
+
+function renderizarFotosUnidade(fotos) {
+  const container = document.getElementById('galeria-fotos-grid');
+  if (!container) return;
+  if (!fotos || !fotos.length) {
+    container.parentElement.style.display = 'none';
+    return;
+  }
+  container.parentElement.style.display = 'block';
+  container.innerHTML = fotos.map(f => `
+    <div class="media-card">
+      <img src="${f.url}" alt="${f.legenda || 'Splash Eventos'}" loading="lazy">
+      ${f.legenda ? `<div class="media-title">${f.legenda}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderizarVideosUnidade(videos) {
+  const grid = document.getElementById('galeria-videos-grid');
+  const sec = document.getElementById('videos');
+  if (!grid || !sec) return;
+  if (!videos || !videos.length) {
+    sec.style.display = NX.editar ? 'block' : 'none';
+    grid.innerHTML = NX.editar ? '<p style="color:var(--text3);padding:20px;text-align:center">Nenhum vídeo cadastrado nesta unidade.</p>' : '';
+    return;
+  }
+  sec.style.display = 'block';
+  grid.innerHTML = videos.map(v => `
+    <div class="media-card">
+      <div class="video-embed-container">
+        <iframe src="${v.embed_url}" title="${v.titulo || 'Vídeo Splash Eventos'}" allowfullscreen></iframe>
+      </div>
+      ${v.titulo ? `<div class="media-title">${v.titulo}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+async function carregarMidiasUnidade() {
+  try {
+    const [resFotos, resVideos] = await Promise.all([
+      fetch(`${API_LOCACAO}?site=${SLUG}&foto_listar=1&unidade=${unidadeAtual}`).then(r => r.json()).catch(() => ({ fotos: [] })),
+      fetch(`${API_LOCACAO}?site=${SLUG}&video_listar=1&unidade=${unidadeAtual}`).then(r => r.json()).catch(() => ({ videos: [] }))
+    ]);
+    renderizarFotosUnidade(resFotos.fotos || []);
+    renderizarVideosUnidade(resVideos.videos || []);
+  } catch (e) {
+    // Silencioso em falhas
+  }
+}
+
+function nxAplicar(c) {
+  NX.conteudo = c || null;
+  const ocultos = (c && c.ocultos) || {};
+  const classe = NX.editar ? 'nx-escondido' : 'nx-oculto';
+
+  // Aviso no topo
+  const av = document.getElementById('topo-aviso');
+  if (av) {
+    if (c && c.aviso && c.aviso.ativo && c.aviso.texto) {
+      av.textContent = c.aviso.texto;
+      av.className = 'topo-aviso cor-' + (c.aviso.cor || 'info');
+    } else {
+      av.textContent = '';
+      av.className = 'topo-aviso nx-oculto';
+    }
+  }
+
+  // Botão flutuante WhatsApp
+  const fab = document.getElementById('fab-wa-float');
+  if (fab) {
+    const numWa = (c && c.contatos && c.contatos.whatsapp) || (configLocacao && configLocacao.whatsapp);
+    if (numWa) {
+      const cleanNum = String(numWa).replace(/\D/g, '');
+      fab.href = `https://wa.me/${cleanNum}`;
+      fab.classList.remove('nx-oculto');
+    } else {
+      fab.classList.add('nx-oculto');
+    }
+  }
+
+  // Textos, Imagens e Links
+  document.querySelectorAll('[data-ed]').forEach(el => {
+    const k = el.dataset.ed, o = NX.originais[k];
+    if (!o) return;
+    el.classList.toggle(classe, !!ocultos[k]);
+    if (o.img !== undefined) {
+      const im = c && c.imagens && c.imagens[k];
+      el.setAttribute('src', im ? im.url : o.img);
+      el.style.objectPosition = im ? `${im.posX}% ${im.posY}%` : o.pos;
+    } else {
+      nxEscreverTexto(el, c && c.textos && k in c.textos ? c.textos[k] : o.txt);
+      if (o.href !== null) el.setAttribute('href', (c && c.links && c.links[k]) || o.href);
+    }
+  });
+
+  // Seções
+  document.querySelectorAll('[data-secao]').forEach(sec => sec.classList.toggle(classe, !!ocultos['secao-' + sec.dataset.secao]));
+
+  if (NX.editar) nxMarcarEdicao();
+}
+
+function nxMarcarEdicao() {
+  const raiz = document.documentElement;
+  if (!raiz.classList.contains('nx-ed')) {
+    raiz.classList.add('nx-ed');
+    document.head.insertAdjacentHTML('beforeend', `<style>
+      .nx-ed [data-ed], .nx-ed [data-lista] { outline: 2px dashed rgba(201,168,76,.6); outline-offset: 3px; cursor: pointer; }
+      .nx-ed .nx-escondido { opacity: .35; }
+      .nx-ed .fade-in { opacity: 1; transform: none; }
+      .nx-chip { position: absolute; z-index: 40; top: 10px; left: 10px; background: #291410; color: #fff; font: 600 13px/1 system-ui, sans-serif; padding: 9px 12px; border-radius: 999px; border: 0; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+      .nx-add { display: block; margin: 20px auto 0; background: #825c4e; color: #fff; font: 600 14px system-ui, sans-serif; padding: 12px 20px; border-radius: 999px; border: 0; }
+      .nx-ed #navbar { display: none; }
+    </style>`);
+  }
+  const ocultos = (NX.conteudo && NX.conteudo.ocultos) || {};
+  document.querySelectorAll('[data-secao]').forEach(sec => {
+    const id = sec.dataset.secao;
+    if (id === 'rodape') return;
+    if (getComputedStyle(sec).position === 'static') sec.style.position = 'relative';
+    let chip = sec.querySelector(':scope > .nx-chip[data-secao-botao]');
+    if (!chip) { chip = document.createElement('button'); chip.type = 'button'; chip.className = 'nx-chip'; chip.dataset.secaoBotao = id; sec.prepend(chip); }
+    chip.textContent = ocultos['secao-' + id] ? `Seção ${NX_SECOES[id] || id} escondida · mostrar` : `Seção ${NX_SECOES[id] || id} · esconder`;
+  });
+}
+
+function nxSecoes() {
+  return [...document.querySelectorAll('[data-secao]')].map(s => ({ id: s.dataset.secao, nome: NX_SECOES[s.dataset.secao] || s.dataset.secao }));
+}
+
+if (NX.editar) {
+  document.addEventListener('click', e => {
+    const alvo = e.target.closest('[data-secao-botao],[data-lista],[data-ed]');
+    e.preventDefault(); e.stopPropagation();
+    if (!alvo) return;
+    let msg;
+    if (alvo.dataset.secaoBotao) msg = { tipo: 'secao', id: alvo.dataset.secaoBotao, nome: NX_SECOES[alvo.dataset.secaoBotao] };
+    else if (alvo.dataset.lista) msg = { tipo: 'lista', lista: alvo.dataset.lista, i: alvo.dataset.i || '' };
+    else {
+      const k = alvo.dataset.ed, o = NX.originais[k];
+      msg = o.img !== undefined
+        ? { tipo: 'foto', chave: k, atual: alvo.getAttribute('src'), original: o.img }
+        : { tipo: 'texto', chave: k, atual: nxLerTexto(alvo), original: o.txt, link: o.href && /^(https:|tel:|mailto:)/.test(o.href) ? alvo.getAttribute('href') : null, linkOriginal: o.href };
+    }
+    parent.postMessage({ nx: 'tocar', ...msg }, location.origin);
+  }, true);
+
+  window.addEventListener('message', e => {
+    if (e.origin !== location.origin || !e.data || e.data.nx !== 'aplicar') return;
+    nxAplicar(e.data.conteudo);
+  });
+}
 
 async function carregarConfiguracao() {
   try {
     const res = await fetch(`${API_LOCACAO}?site=${SLUG}`);
     if (res.ok) {
       configLocacao = await res.json();
-      atualizarTextoAvisoSinal();
-      atualizarOpcoesZap();
+      atualizarContatoConfig();
     }
-  } catch (e) {
-    console.error('Erro ao carregar configurações da locação:', e);
+  } catch (err) {
+    // Falha silenciosa
   }
 }
 
-function atualizarTextoAvisoSinal() {
-  const el = document.getElementById('texto-sinal-aviso');
-  if (!el) return;
-  const horas = configLocacao && configLocacao.prazo_horas ? configLocacao.prazo_horas : null;
-  if (horas) {
-    el.textContent = `A reserva só é confirmada depois do pagamento do sinal. Seu dia fica segurado por ${horas} horas enquanto a Amanda entra em contato.`;
-  } else {
-    el.textContent = `A reserva só é confirmada depois do pagamento do sinal. Seu dia fica segurado por um prazo combinado enquanto a Amanda entra em contato.`;
-  }
-}
-
-function atualizarOpcoesZap() {
+function atualizarContatoConfig() {
+  if (!configLocacao) return;
   const zapContainer = document.getElementById('zap-container');
-  const btnWaMe = document.getElementById('btn-wa-me');
-  if (configLocacao && configLocacao.whatsapp) {
+  const btnWa = document.getElementById('btn-wa-me');
+  if (configLocacao.whatsapp && zapContainer && btnWa) {
     const num = String(configLocacao.whatsapp).replace(/\D/g, '');
-    const numFinal = num.length <= 11 ? '55' + num : num;
-    btnWaMe.href = `https://wa.me/${numFinal}?text=${encodeURIComponent('Olá Amanda, acabei de enviar um pedido de reserva pelo site!')}`;
+    btnWa.href = `https://wa.me/${num}?text=Olá%20Amanda,%20fiz%20um%20pedido%20de%20reserva%20pelo%20site.`;
     zapContainer.style.display = 'block';
-  } else {
-    zapContainer.style.display = 'none';
   }
 }
 
-function selecionarUnidade(idUnidade) {
-  unidadeAtual = idUnidade;
-  document.getElementById('card-santa-adelia').classList.toggle('selected', idUnidade === 'santa-adelia');
-  document.getElementById('card-santa-barbara').classList.toggle('selected', idUnidade === 'santa-barbara');
+function selecionarUnidade(id) {
+  unidadeAtual = id;
 
+  const cardAdelia = document.getElementById('card-santa-adelia');
   const iconAdelia = document.getElementById('icon-santa-adelia');
+  const cardBarbara = document.getElementById('card-santa-barbara');
   const iconBarbara = document.getElementById('icon-santa-barbara');
-  if (idUnidade === 'santa-adelia') {
+
+  if (id === 'santa-adelia') {
+    cardAdelia.className = 'unit-card selected';
     iconAdelia.className = 'ri-checkbox-circle-fill';
     iconAdelia.style.color = 'var(--gold)';
+
+    cardBarbara.className = 'unit-card';
     iconBarbara.className = 'ri-checkbox-circle-line';
     iconBarbara.style.color = 'var(--text3)';
   } else {
+    cardBarbara.className = 'unit-card selected';
     iconBarbara.className = 'ri-checkbox-circle-fill';
     iconBarbara.style.color = 'var(--gold)';
+
+    cardAdelia.className = 'unit-card';
     iconAdelia.className = 'ri-checkbox-circle-line';
     iconAdelia.style.color = 'var(--text3)';
   }
 
-  diaSelecionado = '';
-  document.getElementById('card-formulario').style.display = 'none';
+  // Recarrega o calendário e as mídias da nova unidade
   carregarDiasCalendario();
+  carregarMidiasUnidade();
 }
 
 function mudarMes(delta) {
-  mesExibicao = SplashCalendario.somarMeses(mesExibicao, delta);
+  mesAtualISO = SplashCalendario.somarMeses(mesAtualISO, delta);
   carregarDiasCalendario();
 }
 
 async function carregarDiasCalendario() {
-  if (!mesExibicao) {
-    mesExibicao = SplashCalendario.mesAtualBr();
-  }
+  const calTitle = document.getElementById('cal-mes-nome');
+  calTitle.textContent = SplashCalendario.nomeMesPt(mesAtualISO);
 
-  document.getElementById('cal-mes-nome').textContent = SplashCalendario.nomeMesPt(mesExibicao);
-
-  // Desabilita navegação para meses anteriores ao mês atual
-  const mesAtualHoje = SplashCalendario.mesAtualBr();
-  document.getElementById('btn-mes-anterior').disabled = (mesExibicao <= mesAtualHoje);
-
-  // Busca mapa de ocupação da API
-  mapaDiasMes = {};
   try {
-    const res = await fetch(`${API_LOCACAO}?site=${SLUG}&unidade=${unidadeAtual}&mes=${mesExibicao}`);
+    const res = await fetch(`${API_LOCACAO}?site=${SLUG}&unidade=${unidadeAtual}&mes=${mesAtualISO}`);
     if (res.ok) {
       const data = await res.json();
       mapaDiasMes = data.dias || {};
+    } else {
+      mapaDiasMes = {};
     }
-  } catch (e) {
-    console.error('Erro ao carregar dias ocupados:', e);
+  } catch (err) {
+    mapaDiasMes = {};
   }
 
   renderizarGridCalendario();
@@ -561,16 +815,8 @@ function renderizarGridCalendario() {
   const grid = document.getElementById('cal-dias-grid');
   grid.innerHTML = '';
 
-  const cabecalhos = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-  cabecalhos.forEach(c => {
-    const div = document.createElement('div');
-    div.className = 'cal-day-head';
-    div.textContent = c;
-    grid.appendChild(div);
-  });
-
-  const hoje = SplashCalendario.hojeBr();
-  const grade = SplashCalendario.gerarGradeMes(mesExibicao, hoje);
+  const hojeISO = new Date().toISOString().slice(0, 10);
+  const grade = SplashCalendario.gerarGradeMes(mesAtualISO, hojeISO);
 
   grade.forEach(item => {
     const btn = document.createElement('button');
@@ -685,9 +931,26 @@ async function enviarPedidoReserva(e) {
   }
 }
 
+async function iniciarConteudo() {
+  nxGuardarOriginais();
+  let c = null;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 2500);
+    const r = await fetch(API_LOCACAO + '?site=' + SLUG + '&conteudo=1', { signal: ctrl.signal });
+    clearTimeout(t);
+    c = (await r.json()).conteudo || null;
+  } catch (e) { c = null; }
+  nxAplicar(c);
+  document.documentElement.classList.remove('nx-carregando');
+  if (NX.editar) parent.postMessage({ nx: 'pronto', padroes: nxListasPadrao(), secoes: nxSecoes() }, location.origin);
+}
+
 // Inicialização
 carregarConfiguracao();
 carregarDiasCalendario();
+carregarMidiasUnidade();
+iniciarConteudo();
 </script>
 </body>
 </html>
