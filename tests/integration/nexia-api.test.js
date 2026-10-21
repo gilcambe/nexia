@@ -182,7 +182,7 @@ test('A6. onboarding (módulo, fonte local = este repositório): repo, ambiente,
 // CI: token efêmero do Actions (somente leitura) em NEXIA_TEST_GITHUB_TOKEN, usado só durante este teste.
 const githubReachable = !!(process.env.NEXIA_TEST_GITHUB_TOKEN || process.env.NODE_USE_ENV_PROXY);
 test('A7. onboarding HTTP lendo gilcambe/nexia no GitHub (projeto real cadastrado com snapshot)',
-  { skip: !githubReachable && !process.env.CI && 'sem acesso ao GitHub neste ambiente (defina NEXIA_TEST_GITHUB_TOKEN)' }, async () => {
+  { skip: !githubReachable && 'sem acesso ao GitHub neste ambiente (defina NEXIA_TEST_GITHUB_TOKEN)' }, async () => {
     const previous = process.env.GITHUB_TOKEN;
     if (process.env.NEXIA_TEST_GITHUB_TOKEN) process.env.GITHUB_TOKEN = process.env.NEXIA_TEST_GITHUB_TOKEN;
     try {
