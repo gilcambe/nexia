@@ -148,8 +148,13 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
       </Cartao>
 
       <Cartao titulo="Rede de crescimento de seguidores (sem automação proibida)">
-        <p className="text-sm text-nexia-muted">Roteiro diário de colaborações, enquetes e Reels com ganchos. O robô só prepara e agenda; a interação em massa nunca é automática (evita bloqueio da conta). Risco de banimento da conta é maior que o ganho. Custo 0.</p>
-        <div className="space-y-3 text-sm text-nexia-muted pt-2">\n          <div className="rounded-xl bg-nexia-surface2 p-3 space-y-1">\n            <p className="font-medium text-nexia-text">1. Colaborações (Collabs)</p>\n            <p>Parcerias semanais com perfis do mesmo nicho. Publicação cruzada de Reels para alcançar novas audiências organicamente sem custo.</p>\n          </div>\n          <div className="rounded-xl bg-nexia-surface2 p-3 space-y-1">\n            <p className="font-medium text-nexia-text">2. Enquetes e Caixas de Perguntas</p>\n            <p>Engajamento diário nos Stories para reter seguidores e entender dores do público para novos conteúdos.</p>\n          </div>\n          <div className="rounded-xl bg-nexia-surface2 p-3 space-y-1">\n            <p className="font-medium text-nexia-text">3. Reels com Ganchos Fortes</p>\n            <p>Vídeos curtos focados nos primeiros 3 segundos (gancho de curiosidade ou dor imediata) e chamada para ação nos comentários.</p>\n          </div>\n          <div className="rounded-xl bg-nexia-surface2 p-3 space-y-1">\n            <p className="font-medium text-nexia-text">⚠️ Regra de Ouro da Segurança</p>\n            <p>O robô prepara os roteiros e materiais, mas a interação e postagem manual ou agendada respeitam os limites da plataforma. Interação em massa automatizada é proibida para evitar banimentos.</p>\n          </div>\n        </div>
+        <p className="text-sm text-nexia-muted">Roteiro diário de colaborações, enquetes e Reels com ganchos. O robô só prepara; a interação em massa nunca é automática, para evitar bloqueio da conta. Custo 0.</p>
+        <ul className="space-y-2 text-sm text-nexia-muted">
+          <li className="rounded-xl bg-nexia-surface2 p-3"><b>1. Colaborações:</b> parcerias semanais com perfis do mesmo nicho e Reels em conjunto.</li>
+          <li className="rounded-xl bg-nexia-surface2 p-3"><b>2. Enquetes e caixas de perguntas:</b> engajamento diário nos Stories.</li>
+          <li className="rounded-xl bg-nexia-surface2 p-3"><b>3. Reels com gancho forte:</b> os 3 primeiros segundos prendem; chamada para ação nos comentários.</li>
+          <li className="rounded-xl bg-nexia-surface2 p-3"><b>⚠️ Regra de ouro:</b> interação em massa automatizada é proibida; o robô só prepara os roteiros.</li>
+        </ul>
       </Cartao>
     </div>
   );
