@@ -112,13 +112,42 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
     };
   };
   
-  // Carrega dados quando o componente montar e atualiza a cada visita
+  // Carrega dados quando o componente montar
   useEffect(() => {
     buscarDadosHistoricos();
     
     // Marcar a visita para atualização automática
     setUltimaAtualizacao(Date.now());
   }, []);
+  
+  // Atualiza dados a cada visita do usuário (evita atualizações excessivas)
+  useEffect(() => {
+    const handleFocus = () => {
+      // Verifica se passou mais de 5 minutos desde a última atualização
+      if (Date.now() - ultimaAtualizacao > 5 * 60 * 1000) {
+        buscarDadosHistoricos();
+        setUltimaAtualizacao(Date.now());
+      }
+    };
+    
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Verifica se passou mais de 5 minutos desde a última atualização
+        if (Date.now() - ultimaAtualizacao > 5 * 60 * 1000) {
+          buscarDadosHistoricos();
+          setUltimaAtualizacao(Date.now());
+        }
+      }
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [ultimaAtualizacao]);
   
   // Atualiza dados quando a página recebe foco ou é ativada (evita atualizações excessivas)
   useEffect(() => {
@@ -211,7 +240,21 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
                       borderColor: 'rgb(6, 182, 212)',
                       backgroundColor: 'rgba(6, 182, 212, 0.1)',
                       tension: 0.4,
-                      fill: true
+                      fill: true,
+                      pointBackgroundColor: dadosHistoricos.map(d => {
+                        // Destacar pontos com melhor horário/tema
+                        if (melhorHorarioTema && d.horario === melhorHorarioTema.horario && d.tema === melhorHorarioTema.tema) {
+                          return 'rgb(251, 191, 36)'; // Amarelo para destacar
+                        }
+                        return 'rgb(6, 182, 212)';
+                      }),
+                      pointRadius: dadosHistoricos.map(d => {
+                        // Pontos maiores para melhor horário/tema
+                        if (melhorHorarioTema && d.horario === melhorHorarioTema.horario && d.tema === melhorHorarioTema.tema) {
+                          return 6;
+                        }
+                        return 4;
+                      })
                     }
                   ]
                 }}
@@ -222,7 +265,19 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
                     legend: { display: false },
                     tooltip: {
                       callbacks: {
-                        label: (context) => `Engajamento: ${context.parsed.y}`
+                        label: (context) => {
+                          const dataIndex = context.dataIndex;
+                          const data = dadosHistoricos[dataIndex];
+                          if (data) {
+                            return [
+                              `Engajamento: ${context.parsed.y}`,
+                              `Horário: ${data.horario}`,
+                              `Tema: ${data.tema}`,
+                              `Canal: ${data.canal}`
+                            ].join('\n');
+                          }
+                          return `Engajamento: ${context.parsed.y}`;
+                        }
                       }
                     }
                   },
@@ -239,8 +294,24 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
               />
             </div>
           </div>
+        ) : erroDados ? (
+          <div className="text-center py-4">
+            <p className="text-sm text-nexia-erro">{erroDados}</p>
+            <button 
+              onClick={buscarDadosHistoricos}
+              className="mt-2 text-sm text-nexia-cyan hover:underline"
+            >
+              Tentar novamente
+            </button>
+          </div>
         ) : (
-          <p className="text-sm text-nexia-muted">Nenhum dado de engajamento disponível.</p>
+          <div className="text-center py-4">
+            <p className="text-sm text-nexia-muted">
+              {diasDisponiveis === 0 
+                ? "Nenhum dado de engajamento disponível nos últimos 30 dias."
+                : "Carregando dados de engajamento..."}
+            </p>
+          </div>
         )}
       </Cartao>
 
