@@ -838,6 +838,160 @@ function createHandler(deps = {}) {
       return res(200, { ok: true });
     }
 
+    if (acao === 'importar') {
+      const loteId = str(body.lote_id, 40) || ('LOTE-' + aleatorio(4).toUpperCase());
+      const linhas = Array.isArray(body.linhas) ? body.linhas : [];
+
+      if (linhas.length === 0) {
+        return res(400, { error: 'Nenhuma linha enviada para importação.' });
+      }
+      if (linhas.length > 2000) {
+        return res(400, { error: 'O limite de importação é de 2000 linhas por arquivo.' });
+      }
+
+      const hoje = agoraBr(now()).data;
+      const agoraIso = new Date(now()).toISOString();
+
+      let importadas = 0;
+      let puladas = 0;
+      const detalheLinhas = [];
+      const chavesLote = new Set();
+
+      for (let i = 0; i < linhas.length; i++) {
+        const item = linhas[i] || {};
+        const data = str(item.data, 10);
+        const unidadeId = str(item.unidade, 40);
+
+        const unidadeValida = cfg.unidades.find(u => u.id === unidadeId);
+
+        if (!dataValida(data)) {
+          puladas++;
+          detalheLinhas.push({ linha: i + 1, ok: false, motivo: 'Data inválida ou ausente' });
+          continue;
+        }
+        if (!unidadeValida) {
+          puladas++;
+          detalheLinhas.push({ linha: i + 1, ok: false, motivo: 'Unidade desconhecida' });
+          continue;
+        }
+
+        const lockKey = `${unidadeId}_${data}`;
+
+        if (chavesLote.has(lockKey)) {
+          puladas++;
+          detalheLinhas.push({ linha: i + 1, ok: false, motivo: 'Dia/unidade duplicados na mesma importação' });
+          continue;
+        }
+
+        const refLock = diasLock.doc(lockKey);
+        const lockSnap = await refLock.get();
+        if (lockSnap.exists) {
+          puladas++;
+          detalheLinhas.push({ linha: i + 1, ok: false, motivo: 'Dia já reservado ou bloqueado no sistema' });
+          continue;
+        }
+
+        let status = str(item.situacao || item.status, 30);
+        if (!['confirmado', 'aguardando_sinal', 'concluido'].includes(status)) {
+          status = 'confirmado';
+        }
+        if (data < hoje) {
+          status = 'concluido';
+        }
+
+        chavesLote.add(lockKey);
+
+        const refReserva = reservas.doc();
+        const protocolo = 'SPL-IMP' + aleatorio(3).toUpperCase();
+        const nomeCliente = str(item.cliente || item.nome, 80) || 'Cliente Importado';
+        const zap = digits(item.whatsapp).slice(0, 13);
+        const tipoEvento = str(item.tipo_evento, 60) || 'Outro';
+        const obs = str(item.observacoes || item.obs, 500);
+        const valorSinal = Math.max(0, Number(item.valor_sinal) || 0);
+
+        const itemReserva = {
+          id: refReserva.id,
+          protocolo,
+          unidade: unidadeId,
+          unidade_nome: unidadeValida.nome,
+          data,
+          status,
+          nome: nomeCliente,
+          whatsapp: zap,
+          tipo_evento: tipoEvento,
+          valor_sinal: valorSinal,
+          obs,
+          origem: 'importacao',
+          lote_id: loteId,
+          criado_em: agoraIso,
+          atualizado_em: agoraIso,
+          auditoria: [{ quando: agoraIso, quem: 'importacao', de: null, para: status }],
+        };
+
+        const batch = db.batch();
+        batch.set(refReserva, itemReserva);
+        batch.create(refLock, { reserva_id: refReserva.id, unidade: unidadeId, data, lote_id: loteId, criado_em: agoraIso });
+
+        try {
+          await batch.commit();
+          importadas++;
+          detalheLinhas.push({ linha: i + 1, ok: true, id: refReserva.id, protocolo, data, unidade: unidadeId });
+        } catch {
+          puladas++;
+          detalheLinhas.push({ linha: i + 1, ok: false, motivo: 'Conflito ao gravar no servidor' });
+        }
+      }
+
+      return res(200, {
+        ok: true,
+        lote_id: loteId,
+        importadas,
+        puladas,
+        total: linhas.length,
+        detalhes: detalheLinhas,
+      });
+    }
+
+    if (acao === 'desfazer-importacao') {
+      const loteId = str(body.lote_id, 40);
+      if (!loteId) return res(400, { error: 'Informe o lote_id para desfazer.' });
+
+      const snap = await reservas.where('lote_id', '==', loteId).get();
+      const itensLote = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      if (itensLote.length === 0) {
+        return res(404, { error: 'Nenhuma reserva encontrada para este lote.' });
+      }
+
+      let desfeitas = 0;
+      let alteradas = 0;
+
+      for (const item of itensLote) {
+        const audit = Array.isArray(item.auditoria) ? item.auditoria : [];
+        const foiAlterado = audit.length > 1;
+
+        if (foiAlterado) {
+          alteradas++;
+          continue;
+        }
+
+        const lockKey = `${item.unidade}_${item.data}`;
+        await reservas.doc(item.id).delete();
+        await diasLock.doc(lockKey).delete();
+        desfeitas++;
+      }
+
+      return res(200, {
+        ok: true,
+        lote_id: loteId,
+        desfeitas,
+        alteradas,
+        mensagem: alteradas > 0
+          ? `${desfeitas} reserva(s) desfeita(s). ${alteradas} reserva(s) não puderam ser desfeitas por terem sido alteradas após a importação.`
+          : `${desfeitas} reserva(s) desfeita(s) com sucesso.`
+      });
+    }
+
     if (acao === 'bloquear') {
       const unidadeId = str(body.unidade, 40);
       const unidade = cfg.unidades.find(u => u.id === unidadeId);

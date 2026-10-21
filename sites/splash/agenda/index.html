@@ -307,6 +307,75 @@
     </div>
   </section>
 
+  <!-- ABA 5.5: IMPORTAR PLANILHA (EXCEL / CSV) -->
+  <section id="aba-importar" class="oculto">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ri-file-upload-line"></i> Importar Planilha da Agenda</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn pequeno claro" onclick="baixarModeloCsv()"><i class="ri-file-text-line"></i> Modelo CSV</button>
+          <button class="btn pequeno claro" onclick="baixarModeloXlsx()"><i class="ri-file-excel-line"></i> Modelo XLSX</button>
+        </div>
+      </div>
+      <p style="font-size: 13px; color: var(--suave);">Traga a sua agenda antiga do Excel ou do papel sem precisar digitar uma por uma. Escolha o arquivo no celular ou computador.</p>
+
+      <!-- PASSO 1: SELEÇÃO DE ARQUIVO E UNIDADE PADRÃO -->
+      <div id="imp-passo-1" style="margin-top: 16px;">
+        <label>Selecione a Planilha (.xlsx, .xls ou .csv)</label>
+        <input type="file" id="imp-arquivo-input" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onchange="processarArquivoImportacao(event)">
+
+        <label style="margin-top: 12px;">Unidade Padrão (caso a planilha não tenha coluna de unidade)</label>
+        <select id="imp-unidade-padrao">
+          <option value="santa-adelia">Splash Santa Adélia</option>
+          <option value="santa-barbara">Splash Santa Bárbara</option>
+        </select>
+      </div>
+
+      <!-- PASSO 2: PRÉVIA E CORREÇÕES -->
+      <div id="imp-passo-2" class="oculto" style="margin-top: 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+          <h4 style="font-size: 15px; color: var(--cor-destaque);">Prévia da Importação</h4>
+          <span id="imp-resumo-totais" style="font-size: 12px; color: var(--suave);"></span>
+        </div>
+
+        <div style="overflow-x: auto; border: 1px solid var(--linha); border-radius: 12px; margin-bottom: 16px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+            <thead>
+              <tr style="background: rgba(255,255,255,0.05); color: var(--cor-destaque); border-bottom: 1px solid var(--linha);">
+                <th style="padding: 8px 12px;">Selo</th>
+                <th style="padding: 8px 12px;">Data</th>
+                <th style="padding: 8px 12px;">Unidade</th>
+                <th style="padding: 8px 12px;">Cliente</th>
+                <th style="padding: 8px 12px;">WhatsApp</th>
+                <th style="padding: 8px 12px;">Tipo / Status</th>
+                <th style="padding: 8px 12px;">Motivo / Observação</th>
+                <th style="padding: 8px 12px;">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="imp-tabela-corpo"></tbody>
+          </table>
+        </div>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn pequeno ouro" onclick="confirmarImportacaoLote(false)"><i class="ri-check-double-line"></i> Importar Linhas OK e Avisos</button>
+          <button class="btn pequeno claro" onclick="confirmarImportacaoLote(true)"><i class="ri-check-line"></i> Importar Apenas OKs Estritos</button>
+          <button class="btn pequeno vermelho" onclick="reiniciarImportacao()"><i class="ri-close-line"></i> Cancelar</button>
+        </div>
+      </div>
+
+      <!-- PASSO 3: RESULTADO FINAL / RELATÓRIO -->
+      <div id="imp-passo-3" class="oculto" style="margin-top: 20px;">
+        <div id="imp-msg-resultado" class="msg ok"></div>
+        <div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn pequeno claro" onclick="baixarRelatorioImportacaoCsv()"><i class="ri-download-line"></i> Baixar Relatório CSV</button>
+          <button class="btn pequeno vermelho" id="btn-desfazer-lote" onclick="executarDesfazerImportacao()"><i class="ri-history-line"></i> Desfazer esta Importação</button>
+          <button class="btn pequeno ouro" onclick="navegarAba('calendario')"><i class="ri-calendar-line"></i> Ir para o Calendário</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
   <!-- ABA 6: CONFIGURAÇÕES / AJUSTES -->
   <section id="aba-config" class="oculto">
     <div class="card">
@@ -416,12 +485,17 @@
     <i class="ri-layout-edit-line"></i>
     <span>Editar Site</span>
   </button>
+  <button class="nav-aba-btn" onclick="navegarAba('importar')" id="tab-importar">
+    <i class="ri-file-upload-line"></i>
+    <span>Importar</span>
+  </button>
   <button class="nav-aba-btn" onclick="navegarAba('config')" id="tab-config">
     <i class="ri-settings-4-line"></i>
     <span>Ajustes</span>
   </button>
 </nav>
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous"></script>
 <script src="painel.js"></script>
 <script>
   let TOKEN = sessionStorage.getItem('splash_token') || '';
@@ -1156,8 +1230,272 @@
     }
   }
 
+  let IMPORTACAO_ESTADO = { linhasBrutas: [], mapaColunas: {}, linhasNorm: [], loteIdAtual: null, resultadoUltimo: null };
+
+  function preencherSeletoresMapeamento(cabecalhos, mapa) {
+    const ids = [
+      ['map-col-data', 'data'],
+      ['map-col-unidade', 'unidade'],
+      ['map-col-cliente', 'cliente'],
+      ['map-col-whatsapp', 'whatsapp'],
+      ['map-col-tipo', 'tipo_evento'],
+      ['map-col-sinal', 'valor_sinal'],
+      ['map-col-situacao', 'situacao'],
+      ['map-col-obs', 'observacoes']
+    ];
+
+    ids.forEach(([selectId, key]) => {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      sel.innerHTML = '<option value="-1">-- Não mapear --</option>';
+      cabecalhos.forEach((col, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = `Coluna ${idx + 1}: ${col || '(Sem Nome)'}`;
+        if (mapa[key] === idx) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    });
+
+    document.getElementById('imp-mapeamento-manual').classList.remove('oculto');
+  }
+
+  function atualizarMapeamentoManual() {
+    const mapa = {
+      data: Number(document.getElementById('map-col-data').value),
+      unidade: Number(document.getElementById('map-col-unidade').value),
+      cliente: Number(document.getElementById('map-col-cliente').value),
+      whatsapp: Number(document.getElementById('map-col-whatsapp').value),
+      tipo_evento: Number(document.getElementById('map-col-tipo').value),
+      valor_sinal: Number(document.getElementById('map-col-sinal').value),
+      situacao: Number(document.getElementById('map-col-situacao').value),
+      observacoes: Number(document.getElementById('map-col-obs').value)
+    };
+
+    IMPORTACAO_ESTADO.mapaColunas = mapa;
+    const unidadePadrao = document.getElementById('imp-unidade-padrao').value;
+    const hojeBr = new Date().toISOString().slice(0, 10);
+    const chavesVistas = new Set();
+    const normais = [];
+
+    for (let i = 1; i < IMPORTACAO_ESTADO.linhasBrutas.length; i++) {
+      const l = IMPORTACAO_ESTADO.linhasBrutas[i];
+      if (!l || (Array.isArray(l) && l.every(c => c === ''))) continue;
+      const norm = SplashPainel.normalizarLinhaImportacao(l, mapa, unidadePadrao, hojeBr, chavesVistas);
+      normais.push(norm);
+    }
+
+    IMPORTACAO_ESTADO.linhasNorm = normais;
+    renderizarPreviaImportacao();
+  }
+
+  function baixarModeloCsv() {
+    const csv = 'data,unidade,cliente,whatsapp,tipo_evento,valor_sinal,situacao,observacoes\n' +
+      '2026-11-10,Santa Adélia,Maria Silva,17999998888,Aniversário,200,confirmado,Festa de 15 anos\n' +
+      '2026-11-15,Santa Bárbara,João Souza,17988887777,Casamento,500,aguardando_sinal,Cerimônia no salão principal\n';
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'modelo_importacao_splash.csv';
+    a.click();
+  }
+
+  function baixarModeloXlsx() {
+    if (typeof XLSX !== 'undefined') {
+      const dados = [
+        ['data', 'unidade', 'cliente', 'whatsapp', 'tipo_evento', 'valor_sinal', 'situacao', 'observacoes'],
+        ['2026-11-10', 'Santa Adélia', 'Maria Silva', '17999998888', 'Aniversário', 200, 'confirmado', 'Festa de 15 anos'],
+        ['2026-11-15', 'Santa Bárbara', 'João Souza', '17988887777', 'Casamento', 500, 'aguardando_sinal', 'Cerimônia no salão principal']
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(dados);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Agenda');
+      XLSX.writeFile(wb, 'modelo_importacao_splash.xlsx');
+    } else {
+      baixarModeloCsv();
+    }
+  }
+
+  function processarArquivoImportacao(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    const unidadePadrao = document.getElementById('imp-unidade-padrao').value;
+    const hojeBr = new Date().toISOString().slice(0, 10);
+
+    const reader = new FileReader();
+    reader.onload = evt => {
+      let linhasBrutas = [];
+      const dataStr = evt.target.result;
+
+      if (file.name.endsWith('.csv')) {
+        const text = new TextDecoder('utf-8').decode(new Uint8Array(dataStr));
+        const delim = text.includes(';') ? ';' : ',';
+        const rawRows = text.split(/\r?\n/).filter(r => r.trim());
+        linhasBrutas = rawRows.map(r => r.split(delim).map(c => c.replace(/^"|"$/g, '').trim()));
+      } else if (typeof XLSX !== 'undefined') {
+        const wb = XLSX.read(dataStr, { type: 'array' });
+        const sheetName = wb.SheetNames[0];
+        const sheet = wb.Sheets[sheetName];
+        linhasBrutas = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      } else {
+        alert('Para arquivos Excel (.xlsx), aguarde o carregamento da biblioteca.');
+        return;
+      }
+
+      if (linhasBrutas.length === 0) {
+        alert('Arquivo vazio ou não foi possível ler as linhas.');
+        return;
+      }
+
+      const cabecalho = linhasBrutas[0];
+      const mapa = SplashPainel.mapearCabecalhosImportacao(cabecalho);
+      IMPORTACAO_ESTADO.linhasBrutas = linhasBrutas;
+      IMPORTACAO_ESTADO.mapaColunas = mapa;
+
+      preencherSeletoresMapeamento(cabecalho, mapa);
+
+      const chavesVistas = new Set();
+      const normais = [];
+
+      for (let i = 1; i < linhasBrutas.length; i++) {
+        const l = linhasBrutas[i];
+        if (!l || (Array.isArray(l) && l.every(c => c === ''))) continue;
+        const norm = SplashPainel.normalizarLinhaImportacao(l, mapa, unidadePadrao, hojeBr, chavesVistas);
+        normais.push(norm);
+      }
+
+      IMPORTACAO_ESTADO.linhasNorm = normais;
+      renderizarPreviaImportacao();
+    };
+
+    reader.readAsArrayBuffer(file);
+  }
+
+  function renderizarPreviaImportacao() {
+    document.getElementById('imp-passo-1').classList.add('oculto');
+    document.getElementById('imp-passo-2').classList.remove('oculto');
+    document.getElementById('imp-passo-3').classList.add('oculto');
+
+    const corpo = document.getElementById('imp-tabela-corpo');
+    corpo.innerHTML = '';
+
+    const linhas = IMPORTACAO_ESTADO.linhasNorm;
+    let okCnt = 0, avsCnt = 0, errCnt = 0;
+
+    linhas.forEach((l, idx) => {
+      if (l.selo === 'OK') okCnt++;
+      else if (l.selo === 'AVISO') avsCnt++;
+      else errCnt++;
+
+      const tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid var(--linha)';
+      if (l.selo === 'ERRO') tr.style.background = 'rgba(255,107,107,0.08)';
+
+      const bgSelo = l.selo === 'OK' ? 'var(--ok-f)' : (l.selo === 'AVISO' ? 'var(--alerta-f)' : 'var(--erro-f)');
+      const corSelo = l.selo === 'OK' ? 'var(--ok)' : (l.selo === 'AVISO' ? 'var(--alerta)' : 'var(--erro)');
+
+      tr.innerHTML = `
+        <td style="padding: 8px 12px;"><span class="badge-status" style="background:${bgSelo};color:${corSelo}">${l.selo}</span></td>
+        <td style="padding: 8px 12px;">${SplashPainel.escapeHtml(l.data)}</td>
+        <td style="padding: 8px 12px;">${l.unidade === 'santa-barbara' ? 'Santa Bárbara' : 'Santa Adélia'}</td>
+        <td style="padding: 8px 12px;">${SplashPainel.escapeHtml(l.cliente)}</td>
+        <td style="padding: 8px 12px;">${SplashPainel.escapeHtml(l.whatsapp)}</td>
+        <td style="padding: 8px 12px;">${SplashPainel.escapeHtml(l.tipo_evento)} (${l.situacao})</td>
+        <td style="padding: 8px 12px; font-size:11px; color:var(--suave);">${SplashPainel.escapeHtml(l.motivo)}</td>
+        <td style="padding: 8px 12px;"><button class="btn pequeno vermelho" style="min-height:30px;padding:0 8px;font-size:11px" onclick="removerLinhaImportacao(${idx})">Pular</button></td>
+      `;
+      corpo.appendChild(tr);
+    });
+
+    document.getElementById('imp-resumo-totais').textContent = `${linhas.length} linha(s) · ${okCnt} OK · ${avsCnt} Aviso · ${errCnt} Erro`;
+  }
+
+  function removerLinhaImportacao(idx) {
+    IMPORTACAO_ESTADO.linhasNorm.splice(idx, 1);
+    renderizarPreviaImportacao();
+  }
+
+  function reiniciarImportacao() {
+    IMPORTACAO_ESTADO.linhasBrutas = [];
+    IMPORTACAO_ESTADO.linhasNorm = [];
+    IMPORTACAO_ESTADO.mapaColunas = {};
+    document.getElementById('imp-arquivo-input').value = '';
+    document.getElementById('imp-passo-1').classList.remove('oculto');
+    document.getElementById('imp-mapeamento-manual').classList.add('oculto');
+    document.getElementById('imp-passo-2').classList.add('oculto');
+    document.getElementById('imp-passo-3').classList.add('oculto');
+  }
+
+  async function confirmarImportacaoLote(apenasOk) {
+    let filtradas = IMPORTACAO_ESTADO.linhasNorm.filter(l => l.selo !== 'ERRO');
+    if (apenasOk) {
+      filtradas = filtradas.filter(l => l.selo === 'OK');
+    }
+
+    if (filtradas.length === 0) {
+      return alert('Nenhuma linha válida selecionada para importação.');
+    }
+
+    const res = await apiPost({ acao: 'importar', linhas: filtradas });
+    if (res.status === 200 && res.body.ok) {
+      IMPORTACAO_ESTADO.loteIdAtual = res.body.lote_id;
+      IMPORTACAO_ESTADO.resultadoUltimo = res.body;
+
+      document.getElementById('imp-passo-2').classList.add('oculto');
+      document.getElementById('imp-passo-3').classList.remove('oculto');
+
+      const msg = document.getElementById('imp-msg-resultado');
+      msg.textContent = `Importação concluída com sucesso! Lote: ${res.body.lote_id}. Entraram: ${res.body.importadas} reserva(s). Puladas: ${res.body.puladas}.`;
+
+      carregarCalendario();
+      carregarReservas();
+    } else {
+      alert(res.body.error || 'Erro ao realizar a importação.');
+    }
+  }
+
+  async function executarDesfazerImportacao() {
+    if (!IMPORTACAO_ESTADO.loteIdAtual) return;
+    if (!confirm(`Deseja realmente desfazer todas as reservas importadas no lote ${IMPORTACAO_ESTADO.loteIdAtual}?`)) return;
+
+    const res = await apiPost({ acao: 'desfazer-importacao', lote_id: IMPORTACAO_ESTADO.loteIdAtual });
+    if (res.status === 200 && res.body.ok) {
+      alert(res.body.mensagem);
+      reiniciarImportacao();
+      carregarCalendario();
+      carregarReservas();
+    } else {
+      alert(res.body.error || 'Erro ao desfazer importação.');
+    }
+  }
+
+  function baixarRelatorioImportacaoCsv() {
+    const res = IMPORTACAO_ESTADO.resultadoUltimo;
+    if (!res || !res.detalhes) return;
+
+    const cabecalho = ['Linha', 'Status', 'Protocolo', 'Data', 'Unidade', 'Motivo'];
+    const linhas = res.detalhes.map(d => [
+      d.linha,
+      d.ok ? 'IMPORTADA' : 'PULADA',
+      d.protocolo || '',
+      d.data || '',
+      d.unidade || '',
+      `"${(d.motivo || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = [cabecalho.join(','), ...linhas.map(l => l.join(','))].join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `relatorio_importacao_${res.lote_id}.csv`;
+    link.click();
+  }
+
   function navegarAba(nome) {
-    ['calendario', 'pedidos', 'reservas', 'nova', 'editor', 'config'].forEach(a => {
+    ['calendario', 'pedidos', 'reservas', 'nova', 'editor', 'importar', 'config'].forEach(a => {
       document.getElementById(`aba-${a}`).classList.toggle('oculto', a !== nome);
       document.getElementById(`tab-${a}`).classList.toggle('ativa', a === nome);
     });
