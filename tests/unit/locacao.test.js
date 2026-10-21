@@ -51,8 +51,8 @@ async function montar(opts = {}) {
   return { db, h, post, get, setAgora: t => { agora = t; }, cadastro };
 }
 
-async function logar(a) {
-  const r = await a.post({ acao: 'primeiro-acesso', codigo: 'CODIGO123', senha_nova: 'senhaValida123' });
+async function logar(a, ip) {
+  const r = await a.post({ acao: 'primeiro-acesso', codigo: 'CODIGO123', senha_nova: 'senhaValida123' }, ip ? { ip } : {});
   assert.equal(r.statusCode, 200, r.body);
   return r.json.token;
 }
@@ -270,4 +270,59 @@ test('LOC12. suporte NEXIA master: lista contas de locação e abre sessão de s
   assert.equal(suporte.statusCode, 200, suporte.body);
   assert.match(suporte.json.token, /^[a-f0-9]{64}$/);
   assert.equal(suporte.json.horas, 8);
+});
+
+test('LOC13. o código do primeiro acesso NÃO vale depois que a dona criou a senha (sem sequestro de conta)', async () => {
+  const a = await montar();
+  await logar(a); // cria a senha 'senhaValida123'
+  const r = await a.post({ acao: 'primeiro-acesso', codigo: 'CODIGO123', senha_nova: 'outraSenha456' });
+  assert.equal(r.statusCode, 400);
+  assert.ok(/já tem senha/.test(r.json.error));
+  const entrar = await a.post({ acao: 'entrar', senha: 'senhaValida123' });
+  assert.equal(entrar.statusCode, 200, 'a senha original continua valendo');
+  const trocada = await a.post({ acao: 'entrar', senha: 'outraSenha456' });
+  assert.equal(trocada.statusCode, 401);
+});
+
+test('LOC14. só valem as mudanças de situação previstas (finais não voltam)', async () => {
+  const a = await montar();
+  const token = await logar(a);
+  await a.post(pedidoPadrao, { ip: '32.0.0.1' });
+  const id = [...a.db.docs.entries()].find(([k]) => k.includes('/reservas/'))[1].id;
+  const st = s => a.post({ acao: 'status', token, id, status: s });
+  assert.equal((await st('concluido')).statusCode, 400, 'pedido não vira concluído direto');
+  assert.equal((await st('aguardando_sinal')).statusCode, 200);
+  assert.equal((await st('pedido')).statusCode, 400, 'não volta para pedido');
+  assert.equal((await st('confirmado')).statusCode, 200);
+  assert.equal((await st('recusado')).statusCode, 400, 'confirmado não vira recusado');
+  assert.equal((await st('concluido')).statusCode, 200);
+  assert.equal((await st('confirmado')).statusCode, 400, 'concluído é final');
+});
+
+test('LOC15. a rota pública não mostra a chave Pix e o sinal não vem com valor inventado', async () => {
+  const a = await montar();
+  const tok = await logar(a);
+  await a.post({ acao: 'config', token: tok, config: { pix: { chave: '123.456.789-00', titular: 'Amanda' } } });
+  const pub = await a.get({});
+  assert.equal(pub.statusCode, 200);
+  assert.ok(!JSON.stringify(pub.json).includes('123.456.789'), 'Pix não aparece no público');
+  assert.equal(pub.json.pix, undefined);
+  const limpa = montarConfig({}, {});
+  assert.equal(limpa.sinal.valor, 0);
+  const painel = await a.post({ acao: 'listar', token: tok });
+  assert.equal(painel.json.config.pix.chave, '123.456.789-00', 'no painel a dona vê o Pix');
+});
+
+test('LOC16. calendário e listagem por unidade funcionam sem índice composto do Firestore', async () => {
+  const a = await montar();
+  const tok = await logar(a, '33.0.0.1');
+  await a.post(pedidoPadrao, { ip: '31.0.0.1' });
+  await a.post({ ...pedidoPadrao, unidade: 'santa-barbara', data: '2026-10-20', nome: 'Outra Pessoa' }, { ip: '31.0.0.2' });
+  const mapa = await a.get({ unidade: 'santa-adelia', mes: '2026-10' });
+  assert.equal(mapa.statusCode, 200);
+  assert.equal(mapa.json.dias['2026-10-15'], 'ocupado');
+  assert.equal(mapa.json.dias['2026-10-20'], 'livre', 'o dia ocupado na outra unidade continua livre aqui');
+  const lista = await a.post({ acao: 'listar', token: tok, de: '2026-10-01', ate: '2026-10-31', unidade: 'santa-barbara' }, { ip: '33.0.0.1' });
+  assert.equal(lista.statusCode, 200);
+  assert.deepEqual(lista.json.itens.map(i => i.nome), ['Outra Pessoa']);
 });

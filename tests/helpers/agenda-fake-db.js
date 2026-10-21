@@ -28,12 +28,19 @@ function fakeDb() {
       doc: (id) => docRef(`${p}/${id || 'auto' + (++n)}`),
       add: async (d) => { const r = docRef(`${p}/auto${++n}`); await r.create(d); return r; },
       where: (f, op, v) => colRef(p, [...filtros, [f, op, v]]),
-      get: async () => ({
+      get: async () => {
+        // Igual ao Firestore de verdade: filtro de intervalo em um campo + filtro em OUTRO campo exige índice composto.
+        const campoIntervalo = filtros.filter(([, op]) => op === '>=' || op === '<=').map(([f]) => f);
+        if (campoIntervalo.length && filtros.some(([f]) => !campoIntervalo.includes(f))) {
+          throw Object.assign(new Error('9 FAILED_PRECONDITION: The query requires an index.'), { code: 9 });
+        }
+        return {
         docs: [...docs.keys()].filter(filho).map(k => snap(k)).filter(s => filtros.every(([f, op, v]) => {
           const x = s.data()[f];
           return op === '==' ? x === v : op === '>=' ? x >= v : op === '<=' ? x <= v : op === 'in' ? Array.isArray(v) && v.includes(x) : false;
         })),
-      }),
+        };
+      },
     };
   }
   return {

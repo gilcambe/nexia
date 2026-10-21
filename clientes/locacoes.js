@@ -16,7 +16,7 @@ const LOCACOES = {
         { id: 'santa-adelia', nome: 'Splash Santa Adélia' },
         { id: 'santa-barbara', nome: 'Splash Santa Bárbara' },
       ],
-      sinal: { tipo: 'percentual', valor: 50 },
+      sinal: { tipo: 'percentual', valor: 0 }, // 0 = a dona define no painel (sem valor inventado)
       pix: { chave: '', titular: '' },
       prazo_horas: 48,
       antecedencia_dias: 0,

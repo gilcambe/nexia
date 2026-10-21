@@ -28,6 +28,12 @@ const TZ_OFFSET_MIN = -180; // Brasília (sem horário de verão)
 const SESSAO_DIAS = 30;
 const SUPORTE_HORAS = 8;
 const PBKDF2_ITER = 100000;
+// Mudanças de situação permitidas (pedido -> aguardando sinal -> confirmado -> concluído). Recusado, cancelado, expirado e concluído são finais.
+const TRANSICOES = {
+  pedido: ['aguardando_sinal', 'confirmado', 'recusado', 'cancelado'],
+  aguardando_sinal: ['confirmado', 'recusado', 'cancelado'],
+  confirmado: ['concluido', 'cancelado'],
+};
 const LIMITES = { pedir: { max: 6, windowMs: 60_000 }, entrar: { max: 8, windowMs: 10 * 60_000 } };
 
 const str = (v, max) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max) : '');
@@ -98,7 +104,7 @@ function montarConfig(cadastro = {}, salvo = {}) {
     unidades: limparUnidades(c.unidades),
     sinal: {
       tipo: c.sinal && c.sinal.tipo === 'valor' ? 'valor' : 'percentual',
-      valor: Math.max(0, Number(c.sinal && c.sinal.valor) || 50),
+      valor: Math.max(0, Number(c.sinal && c.sinal.valor) || 0), // 0 = a dona ainda não definiu (nada inventado)
     },
     pix: {
       chave: str(c.pix && c.pix.chave, 100),
@@ -112,12 +118,12 @@ function montarConfig(cadastro = {}, salvo = {}) {
   };
 }
 
+// A chave Pix NÃO sai na rota pública (pode ser o CPF da dona): ela só aparece no painel e na mensagem que a dona manda pelo WhatsApp.
 const configPublica = cfg => ({
   nome: cfg.nome,
   whatsapp: cfg.whatsapp,
   unidades: cfg.unidades,
   sinal: cfg.sinal,
-  pix: cfg.pix,
   prazo_horas: cfg.prazo_horas,
   antecedencia_dias: cfg.antecedencia_dias,
   dias_a_frente: cfg.dias_a_frente,
@@ -293,13 +299,13 @@ function createHandler(deps = {}) {
         const maxData = somaDias(hoje, cfg.dias_a_frente);
 
         // Busca todas as travas registradas na coleção 'dias' para essa unidade no mês
+        // Só o campo "data" no filtro (o Firestore exigiria índice composto com "unidade"); a unidade é filtrada aqui.
         const travasSnap = await diasLock
-          .where('unidade', '==', unidadeId)
           .where('data', '>=', inicioMes)
           .where('data', '<=', fimMes)
           .get();
 
-        const diasOcupadosSet = new Set(travasSnap.docs.map(d => d.data().data));
+        const diasOcupadosSet = new Set(travasSnap.docs.map(d => d.data()).filter(t => t.unidade === unidadeId).map(t => t.data));
 
         const mapaDias = {};
         for (let i = 1; i <= totalDias; i++) {
@@ -405,6 +411,10 @@ function createHandler(deps = {}) {
       const versao = Number(cadastro.versao) || 1;
 
       if (acao === 'primeiro-acesso') {
+        // O código só serve até a dona criar a senha (ou se o dono subir "versao" para gerar um novo). Sem isso, quem tivesse o código trocaria a senha dela.
+        if (dados.senha_hash && (Number(dados.versao) || 1) >= versao) {
+          return res(400, { error: 'Esta conta já tem senha. Use "Entrar".' });
+        }
         if (!cadastro.codigo_hash || !cadastro.codigo_salt) {
           return res(400, { error: 'Esta conta ainda não foi ativada pelo administrador.', sem_ativacao: true });
         }
@@ -492,12 +502,10 @@ function createHandler(deps = {}) {
       if (ate < de) ate = de;
       if (ate > somaDias(de, 365)) ate = somaDias(de, 365);
 
-      let query = reservas.where('data', '>=', de).where('data', '<=', ate);
       const unidadeFiltro = str(body.unidade, 40);
-      if (unidadeFiltro) query = query.where('unidade', '==', unidadeFiltro);
-
-      const snap = await query.get();
+      const snap = await reservas.where('data', '>=', de).where('data', '<=', ate).get(); // sem índice composto: a unidade é filtrada abaixo
       let lista = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (unidadeFiltro) lista = lista.filter(i => i.unidade === unidadeFiltro);
 
       const statusFiltro = str(body.status, 30);
       if (statusFiltro && STATUS_VALIDOS.includes(statusFiltro)) {
@@ -585,6 +593,9 @@ function createHandler(deps = {}) {
       const statusAnt = atual.status;
 
       if (statusAnt === novoStatus) return res(200, { ok: true });
+      if (!(TRANSICOES[statusAnt] || []).includes(novoStatus)) {
+        return res(400, { error: `Não dá para mudar de "${statusAnt}" para "${novoStatus}".` });
+      }
 
       const keyLock = `${atual.unidade}_${atual.data}`;
       const refLock = diasLock.doc(keyLock);
