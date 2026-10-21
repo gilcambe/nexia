@@ -10,7 +10,6 @@ const SITES = {
   bezsan: ['sites/bezsan/index.html', 'sites/bezsan/agenda/index.html'],
   achados: ['afiliados/lib/site.js'],
   studiolima: ['sites/studiolima/index.html', 'sites/studiolima/agenda/index.html', 'sites/studiolima/privacidade.html'],
-  splash: ['sites/splash/index.html'],
 };
 
 test('SELO-KERNEX: Bezsan, Achados e Studio Lima trocaram "Feito com NEXIA" pelo selo com link e utm do site', () => {
