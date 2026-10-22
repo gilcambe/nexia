@@ -65,7 +65,8 @@ test('SPLASH-PAINEL 4: Montagem de mensagem do WhatsApp com sinal e chave Pix', 
     sinal: { tipo: 'percentual', valor: 30 }
   };
   const msg1 = montarMensagemWhatsApp(reserva, configSemPix);
-  assert.ok(msg1.includes('A chave Pix para pagamento do sinal ainda não foi cadastrada'), 'deve avisar sobre Pix ausente');
+  assert.ok(msg1.includes('Vamos combinar o pagamento'), 'sem chave Pix, combina o pagamento por aqui');
+  assert.ok(!msg1.includes('Chave Pix:'), 'sem chave Pix, não inventa chave');
   assert.ok(!msg1.includes('123.456'), 'não deve conter chave Pix inventada');
 
   // Com chave Pix configurada

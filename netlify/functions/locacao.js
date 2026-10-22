@@ -88,12 +88,45 @@ function limparUnidades(lista) {
     let id = str(u.id, 40).toLowerCase().replace(/[^a-z0-9-]/g, '') || nome.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'unidade';
     while (ids.has(id)) id += '-2';
     ids.add(id);
-    out.push({ id, nome });
+    const un = { id, nome };
+    const endereco = str(u.endereco, 200);
+    if (endereco) un.endereco = endereco;
+    const diaria = Math.max(0, Math.round((Number(u.valor_diaria) || 0) * 100) / 100);
+    if (diaria > 0) un.valor_diaria = diaria; // 0 = não informado (a tela omite)
+    out.push(un);
   }
   return out.length ? out : [
     { id: 'santa-adelia', nome: 'Splash Santa Adélia' },
     { id: 'santa-barbara', nome: 'Splash Santa Bárbara' },
   ];
+}
+
+const slugTxt = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+
+// Extras que o cliente pode escolher no pedido (ex.: decoração). valor 0 = "valor combinado com a dona" (nada inventado).
+function limparExtras(lista) {
+  const out = [];
+  const ids = new Set();
+  for (const x of Array.isArray(lista) ? lista.slice(0, 20) : []) {
+    const nome = str(x && x.nome, 80);
+    if (!nome) continue;
+    let id = str(x.id, 40).toLowerCase().replace(/[^a-z0-9-]/g, '') || slugTxt(nome) || 'extra';
+    while (ids.has(id)) id += '-2';
+    ids.add(id);
+    out.push({ id, nome, descricao: str(x.descricao, 200), valor: Math.max(0, Math.round((Number(x.valor) || 0) * 100) / 100), ativo: x.ativo !== false });
+  }
+  return out;
+}
+
+// Avisos de promoção que a dona escreve (ex.: "Disponível dia 02/11 por R$ 799,99"). Só aparecem os ativos.
+function limparPromocoes(lista) {
+  const out = [];
+  for (const x of Array.isArray(lista) ? lista.slice(0, 10) : []) {
+    const texto = str(x && x.texto, 200);
+    if (!texto) continue;
+    out.push({ id: str(x.id, 40).replace(/[^a-z0-9-]/gi, '') || aleatorio(4), texto, ativa: x.ativa !== false });
+  }
+  return out;
 }
 
 function montarConfig(cadastro = {}, salvo = {}) {
@@ -109,7 +142,11 @@ function montarConfig(cadastro = {}, salvo = {}) {
     pix: {
       chave: str(c.pix && c.pix.chave, 100),
       titular: str(c.pix && c.pix.titular, 100),
+      mostrar: !(c.pix && c.pix.mostrar === false), // mostra a chave ao cliente depois que ele envia o pedido
     },
+    extras: limparExtras(c.extras),
+    promocoes: limparPromocoes(c.promocoes),
+    instagram: str(c.instagram, 100).replace(/^@/, ''),
     prazo_horas: Math.min(Math.max(Math.round(Number(c.prazo_horas) || 48), 1), 168),
     antecedencia_dias: Math.min(Math.max(Math.round(Number(c.antecedencia_dias) || 0), 0), 365),
     dias_a_frente: Math.min(Math.max(Math.round(Number(c.dias_a_frente) || 540), 1), 730),
@@ -122,6 +159,10 @@ function montarConfig(cadastro = {}, salvo = {}) {
 const configPublica = cfg => ({
   nome: cfg.nome,
   whatsapp: cfg.whatsapp,
+  instagram: cfg.instagram,
+  extras: cfg.extras.filter(e => e.ativo).map(({ id, nome, descricao, valor }) => ({ id, nome, descricao, valor })),
+  promocoes: cfg.promocoes.filter(p => p.ativa).map(({ id, texto }) => ({ id, texto })),
+  pix_ativo: Boolean(cfg.pix.chave && cfg.pix.mostrar),
   unidades: cfg.unidades,
   sinal: cfg.sinal,
   prazo_horas: cfg.prazo_horas,
@@ -527,6 +568,15 @@ function createHandler(deps = {}) {
       const keyLock = `${unidadeId}_${data}`;
       const refLock = diasLock.doc(keyLock);
 
+      // Extras escolhidos (ex.: decoração): só valem os que a dona deixou ativos; guardamos nome e valor da hora do pedido.
+      const idsExtras = (Array.isArray(body.extras) ? body.extras : []).slice(0, 20).map(x => str(x, 40));
+      const extrasSel = cfg.extras.filter(e => e.ativo && idsExtras.includes(e.id)).map(({ id, nome, valor }) => ({ id, nome, valor }));
+      const somaExtras = extrasSel.reduce((a, e) => a + e.valor, 0);
+      const base = Math.round(((unidade.valor_diaria || 0) + somaExtras) * 100) / 100;
+      let sinalValor = 0;
+      if (cfg.sinal.tipo === 'valor') sinalValor = cfg.sinal.valor || 0;
+      else if (cfg.sinal.valor > 0 && base > 0) sinalValor = Math.round(base * cfg.sinal.valor) / 100;
+
       const refReserva = reservas.doc();
       const protocolo = 'SPL-' + aleatorio(3).toUpperCase();
       const agoraIso = new Date(now()).toISOString();
@@ -540,6 +590,9 @@ function createHandler(deps = {}) {
         data,
         status: 'pedido',
         ...pessoa,
+        extras: extrasSel,
+        valor_total: base,
+        valor_sinal: sinalValor,
         consentimento: true,
         prazo_ate: prazoIso,
         criado_em: agoraIso,
@@ -560,11 +613,19 @@ function createHandler(deps = {}) {
         throw e;
       }
 
+      // A chave Pix só é mostrada a quem acabou de fazer um pedido (e só se a dona deixar ligado no painel).
+      const pix = cfg.pix.chave && cfg.pix.mostrar ? { chave: cfg.pix.chave, titular: cfg.pix.titular } : null;
       return res(201, {
         ok: true,
         protocolo,
         prazo_ate: prazoIso,
         mensagem: cfg.mensagem_pedido,
+        pix,
+        sinal_valor: sinalValor,
+        sinal_percentual: cfg.sinal.tipo === 'percentual' ? cfg.sinal.valor : 0,
+        valor_total: base,
+        extras: extrasSel,
+        whatsapp: cfg.whatsapp,
       });
     }
 
@@ -834,6 +895,12 @@ function createHandler(deps = {}) {
         }
       }
 
+      if (Array.isArray(campos.extras)) {
+        updateData.extras = campos.extras.slice(0, 20)
+          .map(x => ({ id: str(x && x.id, 40), nome: str(x && x.nome, 80), valor: Math.max(0, Number(x && x.valor) || 0) }))
+          .filter(x => x.nome);
+      }
+
       await refReserva.update(updateData);
       return res(200, { ok: true });
     }
@@ -1067,7 +1134,7 @@ function createHandler(deps = {}) {
     if (acao === 'config') {
       const novo = body.config && typeof body.config === 'object' ? body.config : {};
       const salvar = {};
-      const permitidos = ['nome', 'whatsapp', 'unidades', 'sinal', 'pix', 'prazo_horas', 'antecedencia_dias', 'dias_a_frente', 'aviso', 'mensagem_pedido'];
+      const permitidos = ['nome', 'whatsapp', 'instagram', 'unidades', 'sinal', 'pix', 'extras', 'promocoes', 'prazo_horas', 'antecedencia_dias', 'dias_a_frente', 'aviso', 'mensagem_pedido'];
       for (const k of permitidos) if (novo[k] !== undefined) salvar[k] = novo[k];
 
       const final = montarConfig(cadastro, { ...(dados.config || {}), ...salvar });
