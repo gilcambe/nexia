@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="agenda-site" content="splash">
 <meta name="agenda-api" content="https://nexia.gcbezerra.workers.dev/api/locacao">
-<title>Painel da Amanda — Splash Eventos</title>
+<title>Painel da Amanda — Splash</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
 <style>
   :root {
@@ -142,6 +142,12 @@
     border-radius: 16px; background: #fff; margin-top: 12px;
   }
   .acoes-editor { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+.cfg-sub{margin:22px 0 6px;font-size:15px;color:var(--cor-destaque)}
+.cfg-ajuda{font-size:12px;color:var(--suave);margin-bottom:8px}
+.cfg-bloco{border:1px solid var(--linha);border-radius:12px;padding:12px;margin:10px 0;background:rgba(255,255,255,.02)}
+.check-linha{display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:13px}
+.valores-reserva{margin-top:12px;padding-top:10px;border-top:1px solid var(--linha)}
 </style>
 </head>
 <body>
@@ -150,7 +156,7 @@
 <header class="header-painel">
   <div class="logo-tit">
     <i class="ri-sparkles-line"></i>
-    <span>Splash Eventos</span>
+    <span>Splash Piscina e Lazer</span>
   </div>
   <div id="usuario-topo" class="oculto">
     <button class="btn pequeno claro" onclick="abrirModalConta()"><i class="ri-user-settings-line"></i> Conta</button>
@@ -256,18 +262,17 @@
         <label>Nome do Cliente</label>
         <input type="text" id="lanc-res-nome" required>
         <label>WhatsApp</label>
-        <input type="tel" id="lanc-res-zap" required placeholder="(17) 99999-8888">
+        <input type="tel" id="lanc-res-zap" required placeholder="(11) 99999-8888">
         <label>Tipo de Evento</label>
         <select id="lanc-res-tipo">
-          <option value="Casamento">Casamento</option>
-          <option value="15 Anos">15 Anos</option>
-          <option value="Formatura">Formatura</option>
           <option value="Aniversário">Aniversário</option>
-          <option value="Corporativo">Corporativo</option>
+          <option value="Festa infantil">Festa infantil</option>
+          <option value="Confraternização">Confraternização</option>
+          <option value="Encontro de família ou amigos">Encontro de família ou amigos</option>
           <option value="Outro">Outro</option>
         </select>
         <label>Estimativa de Convidados</label>
-        <input type="number" id="lanc-res-convidados" placeholder="Ex: 200">
+        <input type="number" id="lanc-res-convidados" placeholder="Ex: 30">
         <label>Observações</label>
         <textarea id="lanc-res-obs" rows="2"></textarea>
         <button type="submit" class="btn largo ouro"><i class="ri-check-line"></i> Confirmar Reserva Manual</button>
@@ -383,17 +388,38 @@
         <div class="card-title">Configurações Gerais</div>
       </div>
       <form onsubmit="salvarConfiguracoes(event)">
-        <label>Nome do Titular da Conta Pix</label>
-        <input type="text" id="cfg-pix-titular" required>
-        <label>Chave Pix para o Sinal</label>
-        <input type="text" id="cfg-pix-chave" required placeholder="E-mail, CPF, CNPJ ou Celular">
-        <label>Percentual do Sinal (%)</label>
-        <input type="number" id="cfg-sinal-pct" required min="10" max="100">
-        <label>Prazo de Expiração do Pedido (Horas)</label>
-        <input type="number" id="cfg-prazo-horas" required min="1" max="72">
-        <label>WhatsApp de Contato Principal</label>
-        <input type="tel" id="cfg-whatsapp" required>
-        <button type="submit" class="btn largo ouro">Salvar Configurações</button>
+        <h4 class="cfg-sub">Pix para o sinal</h4>
+        <label>Nome do titular da conta Pix</label>
+        <input type="text" id="cfg-pix-titular">
+        <label>Chave Pix</label>
+        <input type="text" id="cfg-pix-chave" placeholder="E-mail, CPF, CNPJ, celular ou chave aleatória">
+        <label class="check-linha"><input type="checkbox" id="cfg-pix-mostrar" style="width:auto"> Mostrar a chave Pix para o cliente logo depois que ele enviar o pedido (ele paga e manda o comprovante pelo WhatsApp)</label>
+        <label>Tipo de sinal</label>
+        <select id="cfg-sinal-tipo"><option value="percentual">Percentual do valor total (%)</option><option value="valor">Valor fixo (R$)</option></select>
+        <label>Valor do sinal (% ou R$, conforme o tipo; deixe 0 para combinar com cada cliente)</label>
+        <input type="number" id="cfg-sinal-valor" min="0" step="0.01">
+        <label>Prazo para o cliente pagar o sinal (horas)</label>
+        <input type="number" id="cfg-prazo-horas" min="1" max="168">
+
+        <h4 class="cfg-sub">Contato</h4>
+        <label>WhatsApp da Amanda (com DDD)</label>
+        <input type="tel" id="cfg-whatsapp">
+        <label>Instagram (sem @)</label>
+        <input type="text" id="cfg-instagram" placeholder="splash_santaadelia">
+
+        <h4 class="cfg-sub">Unidades: endereço e valor da diária</h4>
+        <div id="cfg-unidades"></div>
+
+        <h4 class="cfg-sub">Extras que o cliente pode escolher (ex.: decoração)</h4>
+        <p class="cfg-ajuda">Deixe o valor em 0 para combinar o preço com o cliente pelo WhatsApp.</p>
+        <div id="cfg-extras"></div>
+        <button type="button" class="btn pequeno claro" onclick="adicionarExtraCfg()"><i class="ri-add-line"></i> Adicionar extra</button>
+
+        <h4 class="cfg-sub">Promoções no site (ex.: "Dia 02/11 disponível por R$ 799,99")</h4>
+        <div id="cfg-promos"></div>
+        <button type="button" class="btn pequeno claro" onclick="adicionarPromoCfg()"><i class="ri-add-line"></i> Adicionar promoção</button>
+
+        <button type="submit" class="btn largo ouro" style="margin-top:18px">Salvar Configurações</button>
       </form>
     </div>
   </section>
@@ -502,6 +528,7 @@
   let UNIDADE_ATUAL = 'santa-adelia';
   let MES_ATUAL = new Date().toISOString().slice(0, 7);
   let CONFIG_CACHE = {};
+  let PENDENTES_CACHE = [];
   let RESERVAS_CACHE = [];
   let DIAS_MAPA = {};
   let SITE_EDITOR = { aberto: false, conteudo: null, pronto: false, chaveTocada: null, tipoTocado: null };
@@ -585,7 +612,7 @@
     const msg = document.getElementById('msg-login');
     msg.classList.add('oculto');
 
-    const res = await apiPost({ acao: 'login', senha });
+    const res = await apiPost({ acao: 'entrar', senha });
     if (res.status === 200 && res.body.token) {
       TOKEN = res.body.token;
       sessionStorage.setItem('splash_token', TOKEN);
@@ -637,15 +664,16 @@
   }
 
   async function carregarConfiguracoes() {
-    const res = await apiGet({});
-    if (res.status === 200) {
-      CONFIG_CACHE = res.body;
-      document.getElementById('cfg-pix-titular').value = (res.body.pix && res.body.pix.titular) || '';
-      document.getElementById('cfg-pix-chave').value = (res.body.pix && res.body.pix.chave) || '';
-      document.getElementById('cfg-sinal-pct').value = res.body.sinal_percentual || 50;
-      document.getElementById('cfg-prazo-horas').value = res.body.prazo_expiracao_horas || 24;
-      document.getElementById('cfg-whatsapp').value = res.body.whatsapp || '';
+    // A configuração completa (com a chave Pix) só vem para quem está logada.
+    const res = await apiPost({ acao: 'listar', de: hojeBr(), ate: hojeBr() });
+    if (res.status === 200 && res.body.config) {
+      CONFIG_CACHE = res.body.config;
+      preencherFormularioConfig(CONFIG_CACHE);
     }
+  }
+
+  function hojeBr(deslocDias) {
+    return new Date(Date.now() - 3 * 3600000 + (deslocDias || 0) * 86400000).toISOString().slice(0, 10);
   }
 
   async function carregarCalendario() {
@@ -689,9 +717,11 @@
   }
 
   async function carregarReservas() {
-    const res = await apiPost({ acao: 'listar-reservas', unidade: UNIDADE_ATUAL });
+    const res = await apiPost({ acao: 'listar', unidade: UNIDADE_ATUAL, de: hojeBr(-30), ate: hojeBr(335) });
     if (res.status === 200) {
-      RESERVAS_CACHE = res.body.reservas || [];
+      RESERVAS_CACHE = res.body.itens || [];
+      PENDENTES_CACHE = (res.body.pendentes || []).filter(r => r.unidade === UNIDADE_ATUAL);
+      if (res.body.config) CONFIG_CACHE = res.body.config;
       renderizarListasReservas();
     }
   }
@@ -702,7 +732,7 @@
     pedCont.innerHTML = '';
     todCont.innerHTML = '';
 
-    const pendentes = RESERVAS_CACHE.filter(r => r.status === 'pedido' || r.status === 'aguardando_sinal');
+    const pendentes = PENDENTES_CACHE;
     document.getElementById('badge-pedidos').textContent = pendentes.length;
     document.getElementById('badge-pedidos').classList.toggle('oculto', pendentes.length === 0);
     document.getElementById('cnt-pedidos-badge').textContent = `${pendentes.length} pendente(s)`;
@@ -753,12 +783,21 @@
       <p><strong>Evento:</strong> ${SplashPainel.escapeHtml(r.tipo_evento)} (${r.convidados || 'N/A'} convidados)</p>
       <p><strong>Status:</strong> <span class="badge-status ${r.status}">${r.status}</span></p>
       ${r.obs ? `<p><strong>Obs:</strong> ${SplashPainel.escapeHtml(r.obs)}</p>` : ''}
+      ${(r.extras && r.extras.length) ? `<p><strong>Extras pedidos:</strong> ${r.extras.map(x => SplashPainel.escapeHtml(x.nome) + (x.valor > 0 ? ' (' + SplashPainel.formatarMoeda(x.valor) + ')' : ' (valor a combinar)')).join(', ')}</p>` : ''}
+      ${r.status === 'bloqueado' ? '' : `
+      <div class="valores-reserva">
+        <label>Valor total combinado (R$)</label>
+        <input type="number" id="md-valor-total" min="0" step="0.01" value="${Number(r.valor_total) || ''}">
+        <label>Valor do sinal (R$)</label>
+        <input type="number" id="md-valor-sinal" min="0" step="0.01" value="${Number(r.valor_sinal) || ''}">
+        <button class="btn pequeno claro" onclick="salvarValoresReserva('${SplashPainel.escapeHtml(r.id)}')">Salvar valores</button>
+      </div>`}
     `;
 
     acoes.innerHTML = '';
 
     if (r.status === 'pedido' || r.status === 'aguardando_sinal') {
-      const msgZap = SplashPainel.gerarMensagemWhatsappSinal(r, CONFIG_CACHE.pix || {});
+      const msgZap = SplashPainel.gerarMensagemWhatsappSinal(r, CONFIG_CACHE || {});
       const linkZap = `https://wa.me/${String(r.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent(msgZap)}`;
 
       acoes.innerHTML += `
@@ -786,11 +825,28 @@
   }
 
   function alterarStatusReserva(id, acaoStatus) {
-    apiPost({ acao: 'alterar-status', reserva_id: id, status_acao: acaoStatus }).then(res => {
+    const novo = acaoStatus === 'sinal_pago' ? 'confirmado' : acaoStatus; // "sinal pago" = reserva confirmada
+    apiPost({ acao: 'status', id, status: novo }).then(res => {
       if (res.status === 200) {
         fecharModal();
         carregarCalendario();
         carregarReservas();
+      } else {
+        alert((res.body && res.body.error) || 'Não foi possível mudar a situação desta reserva.');
+      }
+    });
+  }
+
+  function salvarValoresReserva(id) {
+    const total = Number(document.getElementById('md-valor-total').value) || 0;
+    const sinal = Number(document.getElementById('md-valor-sinal').value) || 0;
+    apiPost({ acao: 'editar', id, campos: { valor_total: total, valor_sinal: sinal } }).then(res => {
+      if (res.status === 200) {
+        alert('Valores salvos.');
+        fecharModal();
+        carregarReservas();
+      } else {
+        alert((res.body && res.body.error) || 'Erro ao salvar os valores.');
       }
     });
   }
@@ -826,7 +882,7 @@
   function salvarReservaManual(e) {
     e.preventDefault();
     const payload = {
-      acao: 'reserva-manual',
+      acao: 'criar',
       unidade: UNIDADE_ATUAL,
       data: document.getElementById('lanc-res-data').value,
       nome: document.getElementById('lanc-res-nome').value.trim(),
@@ -854,7 +910,7 @@
   function salvarBloqueioManual(e) {
     e.preventDefault();
     const payload = {
-      acao: 'bloquear-periodo',
+      acao: 'bloquear',
       unidade: UNIDADE_ATUAL,
       de: document.getElementById('lanc-bloq-de').value,
       ate: document.getElementById('lanc-bloq-ate').value,
@@ -875,27 +931,100 @@
     });
   }
 
+  function preencherFormularioConfig(c) {
+    document.getElementById('cfg-pix-titular').value = (c.pix && c.pix.titular) || '';
+    document.getElementById('cfg-pix-chave').value = (c.pix && c.pix.chave) || '';
+    document.getElementById('cfg-pix-mostrar').checked = !(c.pix && c.pix.mostrar === false);
+    document.getElementById('cfg-sinal-tipo').value = (c.sinal && c.sinal.tipo) || 'percentual';
+    document.getElementById('cfg-sinal-valor').value = (c.sinal && c.sinal.valor) || 0;
+    document.getElementById('cfg-prazo-horas').value = c.prazo_horas || 48;
+    document.getElementById('cfg-whatsapp').value = c.whatsapp || '';
+    document.getElementById('cfg-instagram').value = c.instagram || '';
+    document.getElementById('cfg-unidades').innerHTML = (c.unidades || []).map(u => `
+      <div class="cfg-bloco" data-id="${SplashPainel.escapeHtml(u.id)}" data-nome="${SplashPainel.escapeHtml(u.nome)}">
+        <strong>${SplashPainel.escapeHtml(u.nome)}</strong>
+        <label>Endereço (aparece no site)</label>
+        <input type="text" class="un-endereco" value="${SplashPainel.escapeHtml(u.endereco || '')}" maxlength="200">
+        <label>Valor da diária (R$, deixe em branco para não mostrar no site)</label>
+        <input type="number" class="un-diaria" min="0" step="0.01" value="${u.valor_diaria || ''}">
+      </div>`).join('');
+    renderExtrasCfg(c.extras || []);
+    renderPromosCfg(c.promocoes || []);
+  }
+
+  function renderExtrasCfg(lista) {
+    document.getElementById('cfg-extras').innerHTML = lista.map(x => `
+      <div class="cfg-bloco cfg-extra" data-id="${SplashPainel.escapeHtml(x.id || '')}">
+        <label>Nome</label><input type="text" class="ex-nome" value="${SplashPainel.escapeHtml(x.nome || '')}" maxlength="80">
+        <label>Descrição curta (opcional)</label><input type="text" class="ex-desc" value="${SplashPainel.escapeHtml(x.descricao || '')}" maxlength="200">
+        <label>Valor (R$)</label><input type="number" class="ex-valor" min="0" step="0.01" value="${x.valor || 0}">
+        <label class="check-linha"><input type="checkbox" class="ex-ativo" style="width:auto" ${x.ativo === false ? '' : 'checked'}> Mostrar no site</label>
+        <button type="button" class="btn pequeno vermelho" onclick="this.closest('.cfg-bloco').remove()">Remover</button>
+      </div>`).join('');
+  }
+
+  function renderPromosCfg(lista) {
+    document.getElementById('cfg-promos').innerHTML = lista.map(x => `
+      <div class="cfg-bloco cfg-promo" data-id="${SplashPainel.escapeHtml(x.id || '')}">
+        <label>Texto da promoção</label><input type="text" class="pr-texto" value="${SplashPainel.escapeHtml(x.texto || '')}" maxlength="200">
+        <label class="check-linha"><input type="checkbox" class="pr-ativa" style="width:auto" ${x.ativa === false ? '' : 'checked'}> Mostrar no site</label>
+        <button type="button" class="btn pequeno vermelho" onclick="this.closest('.cfg-bloco').remove()">Remover</button>
+      </div>`).join('');
+  }
+
+  function lerExtrasCfg() {
+    return Array.from(document.querySelectorAll('#cfg-extras .cfg-extra')).map(b => ({
+      id: b.dataset.id || '', nome: b.querySelector('.ex-nome').value.trim(), descricao: b.querySelector('.ex-desc').value.trim(),
+      valor: Number(b.querySelector('.ex-valor').value) || 0, ativo: b.querySelector('.ex-ativo').checked
+    })).filter(x => x.nome);
+  }
+
+  function lerPromosCfg() {
+    return Array.from(document.querySelectorAll('#cfg-promos .cfg-promo')).map(b => ({
+      id: b.dataset.id || '', texto: b.querySelector('.pr-texto').value.trim(), ativa: b.querySelector('.pr-ativa').checked
+    })).filter(x => x.texto);
+  }
+
+  function adicionarExtraCfg() {
+    renderExtrasCfg([...lerExtrasCfg(), { nome: 'Novo extra', valor: 0, ativo: true }]);
+  }
+
+  function adicionarPromoCfg() {
+    renderPromosCfg([...lerPromosCfg(), { texto: 'Nova promoção', ativa: true }]);
+  }
+
   function salvarConfiguracoes(e) {
     e.preventDefault();
+    const unidades = Array.from(document.querySelectorAll('#cfg-unidades .cfg-bloco')).map(b => ({
+      id: b.dataset.id, nome: b.dataset.nome,
+      endereco: b.querySelector('.un-endereco').value.trim(),
+      valor_diaria: Number(b.querySelector('.un-diaria').value) || 0
+    }));
     const payload = {
-      acao: 'salvar-config',
+      acao: 'config',
       config: {
         pix: {
           titular: document.getElementById('cfg-pix-titular').value.trim(),
-          chave: document.getElementById('cfg-pix-chave').value.trim()
+          chave: document.getElementById('cfg-pix-chave').value.trim(),
+          mostrar: document.getElementById('cfg-pix-mostrar').checked
         },
-        sinal_percentual: Number(document.getElementById('cfg-sinal-pct').value),
-        prazo_expiracao_horas: Number(document.getElementById('cfg-prazo-horas').value),
-        whatsapp: document.getElementById('cfg-whatsapp').value.trim()
+        sinal: { tipo: document.getElementById('cfg-sinal-tipo').value, valor: Number(document.getElementById('cfg-sinal-valor').value) || 0 },
+        prazo_horas: Number(document.getElementById('cfg-prazo-horas').value) || 48,
+        whatsapp: document.getElementById('cfg-whatsapp').value.trim(),
+        instagram: document.getElementById('cfg-instagram').value.trim(),
+        unidades,
+        extras: lerExtrasCfg(),
+        promocoes: lerPromosCfg()
       }
     };
 
     apiPost(payload).then(res => {
       if (res.status === 200) {
         alert('Configurações salvas com sucesso!');
-        carregarConfiguracoes();
+        CONFIG_CACHE = res.body.config || CONFIG_CACHE;
+        preencherFormularioConfig(CONFIG_CACHE);
       } else {
-        alert(res.body.error || 'Erro ao salvar configurações.');
+        alert((res.body && res.body.error) || 'Erro ao salvar configurações.');
       }
     });
   }

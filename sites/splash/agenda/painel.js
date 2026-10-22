@@ -56,32 +56,40 @@ function montarMensagemWhatsApp(reserva, config) {
   const c = config || {};
   const pix = c.pix || {};
   const dataBr = formatarDataBr(reserva.data);
-  const unidadeNome = reserva.unidade === 'santa-barbara' ? 'Splash Santa Bárbara' : 'Splash Santa Adélia';
+  const un = (c.unidades || []).find(u => u.id === reserva.unidade);
+  const unidadeNome = (un && un.nome) || reserva.unidade_nome || (reserva.unidade === 'santa-barbara' ? 'Splash Santa Bárbara' : 'Splash Santa Adélia');
 
-  let txtSinal = '';
-  if (c.sinal && c.sinal.tipo === 'fixo' && c.sinal.valor > 0) {
+  // Valor do sinal: o que a dona definiu na reserva; senão, o que está nas configurações; senão, "a combinar"
+  let txtSinal = 'a combinar';
+  if (Number(reserva.valor_sinal) > 0) {
+    txtSinal = formatarMoeda(reserva.valor_sinal);
+  } else if (c.sinal && c.sinal.tipo === 'valor' && c.sinal.valor > 0) {
     txtSinal = formatarMoeda(c.sinal.valor);
   } else if (c.sinal && c.sinal.tipo === 'percentual' && c.sinal.valor > 0) {
     txtSinal = `${c.sinal.valor}% do valor total`;
-  } else {
-    txtSinal = 'a combinar';
   }
 
+  const extras = Array.isArray(reserva.extras) ? reserva.extras : [];
   let msg = `Olá, ${reserva.nome}!\n\n`;
-  msg += `Seu pedido de reserva para o *${unidadeNome}* no dia *${dataBr}* foi recebido com sucesso!\n\n`;
+  msg += `Seu pedido de reserva para o *${unidadeNome}* no dia *${dataBr}* foi recebido com sucesso!\n`;
+  if (extras.length) msg += `Extras: ${extras.map(e => e.nome).join(', ')}.\n`;
+  if (Number(reserva.valor_total) > 0) msg += `Valor total: *${formatarMoeda(reserva.valor_total)}*.\n`;
+  msg += `\n`;
 
   if (!pix.chave) {
-    msg += `⚠️ *Atenção*: A chave Pix para pagamento do sinal ainda não foi cadastrada no painel de configurações. Por favor, entre em contato com a equipe para combinar a transferência.\n\n`;
+    msg += txtSinal === 'a combinar'
+      ? `Vamos combinar o pagamento do sinal por aqui.\n\n`
+      : `Para garantir a sua data, o sinal é de *${txtSinal}*. Vamos combinar o pagamento por aqui.\n\n`;
   } else {
-    msg += `Para confirmar e garantir a sua data, solicito o pagamento do sinal no valor de *${txtSinal}*.\n\n`;
+    msg += `Para confirmar e garantir a sua data, o sinal é de *${txtSinal}*.\n\n`;
     msg += `*Dados para Pix:*\n`;
     msg += `Chave Pix: *${pix.chave}*\n`;
     if (pix.titular) msg += `Titular: ${pix.titular}\n`;
     msg += `\n`;
   }
 
-  msg += `Após realizar o pagamento, por favor nos envie o comprovante por aqui.\n`;
-  msg += `Muito obrigado(a)!`;
+  msg += `Depois de pagar, envie o comprovante por aqui.\n`;
+  msg += `Muito obrigada!`;
 
   return msg;
 }
@@ -350,6 +358,7 @@ const SplashPainelObj = {
   formatarMoeda,
   MapearEstado,
   montarMensagemWhatsApp,
+  gerarMensagemWhatsappSinal: montarMensagemWhatsApp,
   gerarCsvBackup,
   calcularDiasMes,
   nomeMesAnoPt,

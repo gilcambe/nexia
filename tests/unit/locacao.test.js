@@ -74,7 +74,7 @@ test('LOC1. público: consulta config geral e mapa mensal por unidade', async ()
   const a = await montar();
   const pub = await a.get({});
   assert.equal(pub.statusCode, 200);
-  assert.equal(pub.json.nome, 'Splash Eventos');
+  assert.equal(pub.json.nome, 'Splash Piscina e Lazer');
   assert.equal(pub.json.unidades.length, 2);
   assert.equal(pub.json.unidades[0].id, 'santa-adelia');
   assert.equal(pub.json.unidades[1].id, 'santa-barbara');
