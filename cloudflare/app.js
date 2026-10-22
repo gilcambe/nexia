@@ -14,6 +14,7 @@ const { createTokenSource } = require('../lib/firebase-lite/google-auth');
 const rid = require('../lib/rid');
 
 const MAX_BODY_SIZE = 1 * 1024 * 1024;
+const CORS_ABERTO = new Set(['/api/locacao', '/api/nutri']);
 const VERSION = '60.0.0';
 
 function corsOrigin(env, headers) {
@@ -283,6 +284,17 @@ async function atender(request, env, { getFunction }, reqId) {
   const pathname = url.pathname.replace(/\/\/+/g, '/').replace(/(.+)\/$/, '$1') || '/';
 
   if (request.method === 'OPTIONS') {
+    // APIs dos sites de clientes (…pages.dev): quem chama é uma página em OUTRO endereço e a autenticação vai no
+    // corpo do pedido (nunca em cookie), então a pergunta prévia (CORS) precisa liberar qualquer origem, igual
+    // ao que a própria função já responde. Sem isso o navegador bloqueia o painel e o formulário de reserva.
+    if (CORS_ABERTO.has(pathname)) {
+      return new Response(null, { status: 204, headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Max-Age': '86400',
+      } });
+    }
     return new Response(null, { status: 204, headers: {
       'Access-Control-Allow-Origin': corsOrigin(env, request.headers),
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
