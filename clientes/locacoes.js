@@ -8,7 +8,8 @@ const LOCACOES = {
   splash: {
     nome: 'Splash Eventos',
     versao: 1,
-    // Sem codigo_salt nem codigo_hash por padrão (o dono gera depois com scripts/locacao-codigo.js)
+    codigo_salt: 'f880ae6ea10238de715a549b8abb05f2',
+    codigo_hash: 'e2d165583a27c742b72aff5b13db118428b7fb093222087a37692a24dfe75a38',
     config: {
       nome: 'Splash Eventos',
       whatsapp: '', // sem dados inventados

@@ -8,7 +8,8 @@ const NUTRIS = {
   adriano: {
     nome: 'Adriano Blumer',
     versao: 1,
-    // Sem codigo_salt nem codigo_hash por padrão (o dono gera depois com scripts/nutri-codigo.js)
+    codigo_salt: 'abcb8259e73eaca9144199d35082109e',
+    codigo_hash: '1b052f1ed3b42b719611c0531b0ca3d8d9d5580d8ed0ff7d27f9b3450174b5c6',
     config: {
       nome: 'Adriano Blumer',
       crn: '', // sem dados inventados
