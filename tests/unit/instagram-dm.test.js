@@ -319,3 +319,9 @@ test('IG9. tokens de acesso e segredos nunca aparecem nos logs ou corpo da respo
   assert.equal(jsonStr.includes(SECRET_TESTE), false);
   assert.equal(jsonStr.includes(VERIFY_TOKEN_TESTE), false);
 });
+
+test('IGDM-X1. palavra curta não casa no meio de outra palavra e a frase inteira casa', () => {
+  assert.equal(testarPalavraChave(normalizarTexto('que boi bonito'), ['oi']), false);
+  assert.equal(testarPalavraChave(normalizarTexto('Oi!'), ['oi']), true);
+  assert.equal(testarPalavraChave(normalizarTexto('EU QUERO saber mais'), ['eu quero']), true);
+});

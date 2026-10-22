@@ -42,9 +42,9 @@ function testarPalavraChave(textoComentarioNorm, palavrasRegra) {
   return palavrasRegra.some(p => {
     const pNorm = normalizarTexto(p);
     if (!pNorm) return false;
-    // Testa se a palavra ou frase aparece como subsequência ou palavra isolada
+    // Palavra ou frase inteira (não casa no meio de outra palavra: "oi" não casa em "boi")
     const regex = new RegExp(`(?:^|\\W)${pNorm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?:$|\\W)`, 'i');
-    return regex.test(textoComentarioNorm) || textoComentarioNorm.includes(pNorm);
+    return regex.test(textoComentarioNorm);
   });
 }
 
@@ -203,6 +203,15 @@ function createHandler(deps = {}) {
           }
         }
 
+        // Reserva o comentário ANTES de enviar: se a Meta reenviar o mesmo evento ao mesmo tempo,
+        // só um processamento passa (create falha se o documento já existe).
+        try {
+          await enviadoRef.create({ comment_id: commentId, user_id: fromUserId, estado: 'enviando', reservado_em: new Date(agora).toISOString() });
+        } catch {
+          ignorados++;
+          continue;
+        }
+
         // Montar mensagem privada
         let textoMensagem = regraEncontrada.mensagem;
         if (regraEncontrada.link) {
@@ -215,7 +224,8 @@ function createHandler(deps = {}) {
         };
 
         try {
-          const graphUrl = `https://graph.facebook.com/v19.0/${igUserId}/messages`;
+          const versao = String(getEnv('IG_GRAPH_VERSION') || 'v23.0').replace(/[^v0-9.]/g, '').slice(0, 10) || 'v23.0';
+          const graphUrl = `https://graph.facebook.com/${versao}/${igUserId}/messages`;
           const graphRes = await fetchApi(graphUrl, {
             method: 'POST',
             headers: {
@@ -226,6 +236,7 @@ function createHandler(deps = {}) {
           });
 
           if (!graphRes.ok) {
+            await enviadoRef.delete().catch(() => {}); // libera para nova tentativa
             erros++;
             console.error(`[Instagram DM] Erro no envio da Graph API: ${graphRes.status}`);
             continue;
@@ -248,6 +259,7 @@ function createHandler(deps = {}) {
 
           enviados++;
         } catch (e) {
+          await enviadoRef.delete().catch(() => {});
           erros++;
           console.error('[Instagram DM] Exceção ao chamar Graph API:', e && e.message ? e.message : 'Erro desconhecido');
         }
