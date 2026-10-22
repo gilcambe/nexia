@@ -6,27 +6,32 @@
 <title id="page-title">Splash Piscina e Lazer — Aluguel de espaço com piscina na zona leste de São Paulo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+<meta name="theme-color" content="#071A3A">
+<meta property="og:title" content="Splash Piscina e Lazer — bora dar um splash?">
+<meta property="og:description" content="Piscina, churrasqueira e jogos só para o seu grupo, por dia inteiro. Duas unidades na zona leste de São Paulo.">
+<meta property="og:image" content="https://splasheventos.pages.dev/midia/adelia-piscina-pebolim.jpg">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--champ:#F5EDD6;--gold:#C9A84C;--gold2:#A8843A;--gold3:#E8C96D;--gold-glow:rgba(201,168,76,.3);--emerald:#1A5C3A;--emerald2:#0F3D27;--emerald3:#2A7A4E;--em-glow:rgba(26,92,58,.25);--dark:#0A0D08;--dark2:#111408;--surface:rgba(255,255,255,.04);--border:rgba(255,255,255,.08);--border2:rgba(201,168,76,.15);--text:#F8F4ED;--text2:rgba(248,244,237,.72);--text3:rgba(248,244,237,.48);--serif:'Cormorant Garamond',Georgia,serif;--sans:'Inter',system-ui,sans-serif;}
+:root{--champ:#FFF6DC;--gold:#FFC93C;--gold2:#F59E0B;--gold3:#FFE08A;--gold-glow:rgba(255,201,60,.35);--emerald:#0AA5D6;--emerald2:#066FA3;--emerald3:#19C3F5;--em-glow:rgba(25,195,245,.3);--dark:#071A3A;--dark2:#0B2550;--pink:#FF5E8A;--surface:rgba(255,255,255,.07);--border:rgba(255,255,255,.14);--border2:rgba(255,201,60,.3);--text:#FFFFFF;--text2:rgba(255,255,255,.84);--text3:rgba(255,255,255,.62);--serif:'Fredoka','Inter',system-ui,sans-serif;--sans:'Inter',system-ui,sans-serif;}
 html{scroll-behavior:smooth}body{font-family:var(--sans);background:var(--dark);color:var(--text);overflow-x:hidden;min-width:320px}
 .nx-oculto{display:none !important;}
 html.nx-carregando body{opacity:0;}
 @keyframes hero-cf{0%{opacity:1}28%{opacity:1}33%{opacity:0}95%{opacity:0}100%{opacity:1}}
-@keyframes logo-glow{0%,100%{box-shadow:0 0 22px var(--gold-glow)}50%{box-shadow:0 0 40px rgba(201,168,76,.55)}}
-@keyframes em-breathe{0%,100%{box-shadow:0 6px 28px var(--em-glow)}50%{box-shadow:0 8px 40px rgba(26,92,58,.5)}}
+@keyframes logo-glow{0%,100%{box-shadow:0 0 22px var(--gold-glow)}50%{box-shadow:0 0 40px rgba(255,201,60,.55)}}
+@keyframes em-breathe{0%,100%{box-shadow:0 6px 28px var(--em-glow)}50%{box-shadow:0 8px 40px rgba(25,195,245,.5)}}
 @keyframes dot-glow{0%,100%{box-shadow:0 0 4px var(--gold)}50%{box-shadow:0 0 16px var(--gold)}}
 @keyframes chat-in{from{opacity:0;transform:translateY(20px) scale(.95)}to{opacity:1;transform:translateY(0) scale(1)}}
 @keyframes dot-pulse{0%,80%,100%{transform:scale(0);opacity:.4}40%{transform:scale(1);opacity:1}}
 @keyframes fab-bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
 @keyframes particle-float{0%{transform:translateY(0) translateX(0);opacity:0}10%{opacity:.7}90%{opacity:.7}100%{transform:translateY(-120vh) translateX(var(--px,20px));opacity:0}}
 @keyframes fade-up{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:translateY(0)}}
-.lang-switcher{display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.06);border:1px solid rgba(201,168,76,.2);border-radius:24px;padding:4px 6px}
+.lang-switcher{display:flex;align-items:center;gap:3px;background:rgba(255,255,255,.06);border:1px solid rgba(255,201,60,.2);border-radius:24px;padding:4px 6px}
 .lang-btn{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--text3);border:none;background:transparent;cursor:pointer;font-family:var(--sans);transition:all .2s}
 .lang-btn.active{background:var(--gold);color:#1a0d00}.lang-btn:hover:not(.active){color:var(--gold)}
 #navbar{position:fixed;top:0;left:0;right:0;z-index:500;padding:0 clamp(20px,5vw,80px);transition:background .4s}
-#navbar.scrolled{background:rgba(10,13,8,.9);backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(201,168,76,.12)}
+#navbar.scrolled{background:rgba(7,26,58,.9);backdrop-filter:blur(20px);box-shadow:0 1px 0 rgba(255,201,60,.12)}
 .nav-inner{max-width:1240px;margin:0 auto;height:78px;display:flex;align-items:center;justify-content:space-between;gap:16px}
 .nav-logo{display:flex;align-items:center;gap:14px;text-decoration:none}
 .nav-logo-s{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--gold2),var(--gold),var(--gold3));display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:22px;font-weight:600;color:#fff;font-style:italic;animation:logo-glow 3s ease-in-out infinite}
@@ -35,7 +40,7 @@ html.nx-carregando body{opacity:0;}
 .nav-links{display:flex;gap:20px;align-items:center}
 .nav-links a{color:var(--text2);font-size:13.5px;text-decoration:none;font-weight:500;transition:color .2s}
 .nav-links a:hover{color:var(--gold)}
-.nav-cta{display:inline-flex;align-items:center;gap:7px;padding:10px 24px;border-radius:50px;font-size:13px;font-weight:700;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#fff;text-decoration:none;box-shadow:0 4px 20px var(--gold-glow);transition:all .25s}
+.nav-cta{display:inline-flex;align-items:center;gap:7px;padding:10px 24px;border-radius:50px;font-size:13px;font-weight:700;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#2a1600;text-decoration:none;box-shadow:0 4px 20px var(--gold-glow);transition:all .25s}
 .nav-cta:hover{transform:translateY(-1px)}
 @media(max-width:860px){.nav-links>a{display:none}}
 .hero{position:relative;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;padding:100px clamp(20px,5vw,80px) 80px}
@@ -44,21 +49,21 @@ html.nx-carregando body{opacity:0;}
 .hero-bg-slide:nth-child(1){background:linear-gradient(135deg,#0a1628 0%,#1a0a2e 50%,#0d1f3c 100%);animation-delay:0s}
 .hero-bg-slide:nth-child(2){background:linear-gradient(135deg,#1a0a28 0%,#0a1a3e 50%,#2a0a1e 100%);animation-delay:-6s}
 .hero-bg-slide:nth-child(3){background:linear-gradient(135deg,#0a2028 0%,#1a1a0e 50%,#0a0a2e 100%);animation-delay:-12s}
-.hero-bg-overlay{position:absolute;inset:0;background:linear-gradient(160deg,rgba(10,13,8,.88) 0%,rgba(10,13,8,.72) 50%,rgba(10,13,8,.92) 100%);z-index:1}
+.hero-bg-overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,26,58,.55) 0%,rgba(7,26,58,.28) 40%,rgba(7,26,58,.88) 100%);z-index:1}
 .particles-canvas{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
 .sp{position:absolute;border-radius:50%;animation:particle-float linear infinite}
-.hero-shimmer-line{position:absolute;width:1px;top:0;bottom:0;background:linear-gradient(to bottom,transparent,rgba(201,168,76,.35) 50%,transparent);z-index:3}
+.hero-shimmer-line{position:absolute;width:1px;top:0;bottom:0;background:linear-gradient(to bottom,transparent,rgba(255,201,60,.35) 50%,transparent);z-index:3}
 .hero-shimmer-line:nth-child(1){left:25%}.hero-shimmer-line:nth-child(2){right:28%;opacity:.5}
 .hero-content{position:relative;z-index:10;max-width:880px;text-align:center}
-.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 18px;border-radius:30px;background:rgba(201,168,76,.1);border:1px solid var(--border2);font-size:12px;font-weight:600;color:var(--gold);margin-bottom:28px;letter-spacing:1px;text-transform:uppercase}
+.hero-eyebrow{display:inline-flex;align-items:center;gap:8px;padding:6px 18px;border-radius:30px;background:rgba(255,201,60,.1);border:1px solid var(--border2);font-size:12px;font-weight:600;color:var(--gold);margin-bottom:28px;letter-spacing:1px;text-transform:uppercase}
 .hero-h1{font-family:var(--serif);font-size:clamp(44px,7vw,80px);font-weight:400;line-height:1.05;color:var(--text);margin-bottom:24px}
 .hero-h1 em{font-style:italic;color:var(--gold3);font-weight:300}
 .hero-sub{font-size:clamp(15px,2vw,18px);color:var(--text2);line-height:1.6;max-width:620px;margin:0 auto 40px;font-weight:300}
 .hero-ctas{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
 .btn-emerald{display:inline-flex;align-items:center;gap:10px;padding:16px 36px;border-radius:50px;background:linear-gradient(135deg,var(--emerald2),var(--emerald),var(--emerald3));color:#fff;font-size:15px;font-weight:700;text-decoration:none;box-shadow:0 6px 28px var(--em-glow);transition:all .3s;animation:em-breathe 4s infinite}
-.btn-emerald:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(26,92,58,.4)}
+.btn-emerald:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(25,195,245,.4)}
 .btn-outline{display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border-radius:50px;background:rgba(255,255,255,.05);border:1px solid var(--border2);color:var(--text);font-size:15px;font-weight:500;text-decoration:none;transition:all .3s}
-.btn-outline:hover{background:rgba(201,168,76,.1);color:var(--gold)}
+.btn-outline:hover{background:rgba(255,201,60,.1);color:var(--gold)}
 
 .section{padding:clamp(60px,10vw,120px) clamp(20px,5vw,80px)}
 .section-inner{max-width:1200px;margin:0 auto}
@@ -67,9 +72,9 @@ html.nx-carregando body{opacity:0;}
 .section-title em{font-style:italic;color:var(--gold3)}
 .section-sub{font-size:16px;color:var(--text2);max-width:560px;line-height:1.6;margin-bottom:48px}
 
-.topo-aviso{position:relative;z-index:600;background:#A8843A;color:#111408;text-align:center;padding:10px 16px;font-size:13px;font-weight:600;}
-.topo-aviso.cor-warning{background:#C9A84C;color:#0A0D08;}
-.topo-aviso.cor-info{background:#1A5C3A;color:#FFFFFF;}
+.topo-aviso{position:relative;z-index:600;background:#E08A00;color:#0B2550;text-align:center;padding:10px 16px;font-size:13px;font-weight:600;}
+.topo-aviso.cor-warning{background:#FFC93C;color:#0A0D08;}
+.topo-aviso.cor-info{background:#0773A6;color:#FFFFFF;}
 .topo-aviso.cor-danger{background:#A82A2A;color:#FFFFFF;}
 
 .fab-whatsapp{position:fixed;bottom:24px;right:24px;z-index:900;width:56px;height:56px;border-radius:50%;background:#25D366;color:#fff;display:flex;align-items:center;justify-content:center;font-size:28px;text-decoration:none;box-shadow:0 6px 20px rgba(37,211,102,.4);transition:transform .2s;animation:fab-bounce 3s infinite}
@@ -79,7 +84,7 @@ html.nx-carregando body{opacity:0;}
 @media(max-width:640px){.units-grid{grid-template-columns:1fr}}
 .unit-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:24px;cursor:pointer;transition:all .3s;position:relative}
 .unit-card:hover{border-color:var(--border2);background:rgba(255,255,255,.06)}
-.unit-card.selected{border-color:var(--gold);background:rgba(201,168,76,.08);box-shadow:0 0 24px var(--gold-glow)}
+.unit-card.selected{border-color:var(--gold);background:rgba(255,201,60,.08);box-shadow:0 0 24px var(--gold-glow)}
 .unit-title{font-family:var(--serif);font-size:22px;color:var(--text);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
 .unit-desc{font-size:13px;color:var(--text2);line-height:1.5}
 
@@ -87,12 +92,12 @@ html.nx-carregando body{opacity:0;}
 .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
 .cal-title{font-family:var(--serif);font-size:24px;color:var(--text)}
 .cal-nav-btn{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:18px}
-.cal-nav-btn:hover{background:rgba(201,168,76,.15);border-color:var(--border2);color:var(--gold)}
+.cal-nav-btn:hover{background:rgba(255,201,60,.15);border-color:var(--border2);color:var(--gold)}
 .cal-weekdays{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;text-align:center;margin-bottom:12px}
 .cal-weekday{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gold)}
 .cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
 .cal-day{aspect-ratio:1;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid var(--border);color:var(--text);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;cursor:pointer;transition:all .2s;position:relative}
-.cal-day:hover:not(.disabled):not(.ocupado){background:rgba(201,168,76,.2);border-color:var(--gold)}
+.cal-day:hover:not(.disabled):not(.ocupado){background:rgba(255,201,60,.2);border-color:var(--gold)}
 .cal-day.selected{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#1a0d00;font-weight:700;border-color:var(--gold);box-shadow:0 4px 16px var(--gold-glow)}
 .cal-day.ocupado{background:rgba(255,255,255,.02);border-color:transparent;color:var(--text3);cursor:not-allowed;text-decoration:line-through}
 .cal-day.disabled{opacity:.3;cursor:not-allowed}
@@ -109,9 +114,9 @@ html.nx-carregando body{opacity:0;}
 .fc-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media(max-width:560px){.fc-row{grid-template-columns:1fr}}
 .fc-submit{width:100%;padding:16px;border-radius:50px;border:none;background:linear-gradient(135deg,var(--emerald2),var(--emerald),var(--emerald3));color:#fff;font-size:15px;font-weight:700;font-family:var(--sans);cursor:pointer;box-shadow:0 6px 28px var(--em-glow);transition:all .3s;margin-top:10px}
-.fc-submit:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 36px rgba(26,92,58,.5)}
+.fc-submit:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 10px 36px rgba(25,195,245,.5)}
 .fc-submit:disabled{opacity:.5;cursor:not-allowed}
-.sinal-aviso{background:rgba(201,168,76,.1);border:1px solid var(--border2);border-radius:12px;padding:14px;font-size:13px;color:var(--champ);line-height:1.5;margin-bottom:20px;display:flex;align-items:flex-start;gap:10px}
+.sinal-aviso{background:rgba(255,201,60,.1);border:1px solid var(--border2);border-radius:12px;padding:14px;font-size:13px;color:var(--champ);line-height:1.5;margin-bottom:20px;display:flex;align-items:flex-start;gap:10px}
 .lgpd-check{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:var(--text2);margin-bottom:20px;line-height:1.4}
 .lgpd-check input{margin-top:3px;accent-color:var(--gold)}
 .lgpd-check a{color:var(--gold);text-decoration:underline}
@@ -121,9 +126,9 @@ html.nx-carregando body{opacity:0;}
 .space-card:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:0 20px 50px rgba(0,0,0,.5)}
 .space-card img{width:100%;height:100%;object-fit:cover;transition:transform .6s}
 .space-card:hover img{transform:scale(1.05)}
-.space-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(10,13,8,.95) 0%,rgba(10,13,8,.4) 50%,transparent 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:32px}
-.space-badge{position:absolute;top:20px;left:20px;padding:6px 16px;border-radius:20px;background:rgba(10,13,8,.8);backdrop-filter:blur(10px);border:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--gold);letter-spacing:1px;text-transform:uppercase}
-.space-tag{position:absolute;top:20px;right:20px;padding:6px 14px;border-radius:20px;background:rgba(26,92,58,.85);backdrop-filter:blur(10px);font-size:10px;font-weight:700;color:#fff;letter-spacing:1px;text-transform:uppercase}
+.space-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(7,26,58,.95) 0%,rgba(7,26,58,.4) 50%,transparent 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:32px}
+.space-badge{position:absolute;top:20px;left:20px;padding:6px 16px;border-radius:20px;background:rgba(7,26,58,.8);backdrop-filter:blur(10px);border:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--gold);letter-spacing:1px;text-transform:uppercase}
+.space-tag{position:absolute;top:20px;right:20px;padding:6px 14px;border-radius:20px;background:rgba(25,195,245,.85);backdrop-filter:blur(10px);font-size:10px;font-weight:700;color:#fff;letter-spacing:1px;text-transform:uppercase}
 .space-name{font-family:var(--serif);font-size:28px;color:var(--text);margin-bottom:6px}
 .space-cap{font-size:13px;color:var(--text2);margin-bottom:16px;display:flex;align-items:center;gap:6px}
 .space-feats{display:flex;gap:8px;flex-wrap:wrap}
@@ -158,13 +163,13 @@ html.nx-carregando body{opacity:0;}
 .video-embed-container{position:relative;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:16px;background:#000}
 .video-embed-container iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}
 
-.final-cta{background:linear-gradient(160deg,#111408 0%,#1a2010 100%);border-t:1px solid var(--border2);padding:clamp(60px,8vw,100px) clamp(20px,5vw,80px);text-align:center}
+.final-cta{background:linear-gradient(160deg,#0B2550 0%,#0E3170 100%);border-top:1px solid var(--border2);padding:clamp(60px,8vw,100px) clamp(20px,5vw,80px);text-align:center}
 .final-cta-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:16px}
 .final-cta-h{font-family:var(--serif);font-size:clamp(36px,6vw,60px);color:var(--text);margin-bottom:16px;line-height:1.1}
 .final-cta-h em{font-style:italic;color:var(--champ)}
 .final-cta-sub{font-size:16px;color:var(--text2);max-width:520px;margin:0 auto 40px;line-height:1.6}
 
-footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20px,5vw,80px) 30px}
+footer{background:#041229;border-top:1px solid var(--border);padding:60px clamp(20px,5vw,80px) 30px}
 .footer-inner{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr;gap:40px;margin-bottom:50px}
 @media(max-width:860px){.footer-inner{grid-template-columns:1fr 1fr}}
 @media(max-width:500px){.footer-inner{grid-template-columns:1fr}}
@@ -174,7 +179,7 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
 .footer-links{list-style:none;display:flex;flex-direction:column;gap:10px}
 .footer-links a{color:var(--text2);font-size:13.5px;text-decoration:none;transition:color .2s}
 .footer-links a:hover{color:var(--gold)}
-.footer-bottom{max-width:1200px;margin:0 auto;padding-top:28px;border-t:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--text3)}
+.footer-bottom{max-width:1200px;margin:0 auto;padding-top:28px;border-top:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--text3)}
 .selo-kernex{color:var(--text2);text-decoration:none;transition:color .2s}
 .selo-kernex:hover{color:var(--gold)}
 
@@ -182,7 +187,7 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
 .nav-logo{display:flex;align-items:center}
 .hero-logo{width:120px;height:120px;border-radius:50%;object-fit:cover;margin:0 auto 18px;display:block;box-shadow:0 8px 40px rgba(0,0,0,.5)}
 .promo-lista{display:grid;gap:12px;margin-top:12px}
-.promo-item{background:linear-gradient(135deg,rgba(201,168,76,.18),rgba(26,92,58,.25));border:1px solid var(--gold);border-radius:16px;padding:16px 20px;font-size:16px;font-weight:600;color:#fff}
+.promo-item{background:linear-gradient(135deg,rgba(255,201,60,.18),rgba(25,195,245,.25));border:1px solid var(--gold);border-radius:16px;padding:16px 20px;font-size:16px;font-weight:600;color:#fff}
 .unit-preco{margin-top:8px;font-size:14px;font-weight:700;color:var(--gold)}
 .cal-legenda{margin-top:12px;font-size:12px;color:var(--text3);display:flex;gap:14px;align-items:center;justify-content:center}
 .cal-legenda .leg{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:4px;vertical-align:middle}
@@ -204,6 +209,80 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
 .btn-copiar{background:transparent;border:1px solid var(--gold);color:var(--gold);padding:10px 18px;border-radius:999px;font-weight:600;cursor:pointer}
 .sucesso-prazo{font-size:13px;color:var(--gold);margin-bottom:12px}
 .space-img-padrao{object-fit:contain;background:#0d1117;padding:24px}
+
+/* ===== Visual alegre + celular (v2) ===== */
+html,body{max-width:100%;overflow-x:hidden}img,video,iframe{max-width:100%}
+.hero-h1 em,.section-title em,.final-cta-h em{font-style:normal}
+.hero-h1,.section-title,.final-cta-h,.space-name,.event-name,.process-title,.unit-title,.form-title,.cal-title{font-weight:600;letter-spacing:-.2px}
+.hero{min-height:100vh;min-height:100svh;padding:96px clamp(16px,5vw,80px) 56px}
+.hero-bg-slide{background-size:cover;background-position:center;opacity:0;animation:hero-cf4 24s infinite}
+.hero-bg-slide:nth-child(1){animation-delay:0s}.hero-bg-slide:nth-child(2){animation-delay:6s}.hero-bg-slide:nth-child(3){animation-delay:12s}.hero-bg-slide:nth-child(4){animation-delay:18s}
+@keyframes hero-cf4{0%{opacity:0}5%{opacity:1}25%{opacity:1}30%{opacity:0}100%{opacity:0}}
+.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;opacity:0;transition:opacity 1.2s}
+.hero-video.ok{opacity:1}
+.hero-h1{font-size:clamp(38px,10.5vw,84px);line-height:1.04;text-shadow:0 4px 30px rgba(0,0,0,.35)}
+.hero-sub{text-shadow:0 2px 14px rgba(0,0,0,.4)}
+.hero-eyebrow{background:rgba(255,94,138,.22);border-color:rgba(255,94,138,.6);color:#fff;font-size:11px}
+.hero-logo{width:96px;height:96px;border:3px solid var(--gold)}
+.hero-ctas{width:100%}
+@media(max-width:560px){.hero-logo{display:none}.hero-ctas .btn-emerald,.hero-ctas .btn-outline{width:100%;justify-content:center;padding:15px 22px}.hero{padding-top:88px}.nav-inner{height:68px}.nav-logo-sub{display:none}.nav-cta{padding:9px 16px}}
+.btn-emerald{color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.ticker{overflow:hidden;background:linear-gradient(90deg,var(--pink),var(--gold2));color:#2a1600;font-weight:800;font-size:13px;letter-spacing:1.5px;text-transform:uppercase;padding:11px 0;white-space:nowrap}
+.ticker-trilho{display:flex;gap:34px;width:max-content;animation:ticker 26s linear infinite}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.section{padding:clamp(48px,9vw,110px) clamp(16px,5vw,80px)}
+.section-sub{margin-bottom:32px}
+.spaces-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.space-card{height:auto;min-height:340px;aspect-ratio:4/5}
+@media(min-width:760px){.space-card{aspect-ratio:auto;height:460px}}
+.space-overlay{padding:22px}
+.units-grid{margin-bottom:28px}
+.unit-card{padding:0;overflow:hidden}.unit-card .unit-title,.unit-card .unit-desc,.unit-card .unit-preco{padding-left:18px;padding-right:18px}
+.unit-card .unit-title{padding-top:14px}.unit-card .unit-preco{padding-bottom:16px}
+.unit-thumb{width:100%;height:130px;object-fit:cover;object-position:center 70%;display:block}
+.calendar-wrapper{padding:clamp(14px,4vw,32px);border-radius:20px}
+.cal-weekdays,.cal-days{gap:clamp(3px,1.2vw,8px)}
+.cal-day{border-radius:10px;font-size:clamp(12px,3.4vw,14px);min-width:0}
+.form-card{padding:clamp(18px,5vw,36px);border-radius:20px}
+.fc-input,.fc-select,.fc-textarea{font-size:16px}
+.event-card,.process-step,.testi-card{padding:22px}
+.events-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.process-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
+.testi-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
+.footer-inner{gap:28px}
+.final-cta{padding-left:clamp(16px,5vw,80px);padding-right:clamp(16px,5vw,80px)}
+.promo-lista{grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr))}
+.promo-item{background:linear-gradient(135deg,rgba(255,94,138,.28),rgba(255,201,60,.22));border:2px dashed var(--gold);border-radius:18px;padding:16px;font-size:17px;font-weight:600;color:#fff;text-align:center}
+.promo-item img{width:100%;border-radius:12px;display:block;margin-bottom:10px;cursor:zoom-in}
+.gal-tabs{display:flex;gap:8px;margin:0 0 16px;overflow-x:auto;padding-bottom:4px}
+.gal-tab{flex:0 0 auto;padding:10px 18px;border-radius:999px;border:1px solid var(--border2);background:var(--surface);color:var(--text);font:600 14px var(--sans);cursor:pointer}
+.gal-tab.ativa{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#2a1600;border-color:var(--gold)}
+.gal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:0}
+@media(min-width:760px){.gal-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}}
+.gal-item{position:relative;display:block;padding:0;border:0;border-radius:14px;overflow:hidden;background:var(--surface);cursor:zoom-in;aspect-ratio:3/4}
+.gal-item img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s}
+.gal-item:hover img{transform:scale(1.05)}
+.gal-item span{position:absolute;left:0;right:0;bottom:0;padding:22px 10px 8px;font:600 12px var(--sans);color:#fff;text-align:left;background:linear-gradient(transparent,rgba(7,26,58,.9))}
+.videos-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(min-width:760px){.videos-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}}
+.video-card{border-radius:16px;overflow:hidden;background:#000;border:1px solid var(--border)}
+.video-card video{width:100%;aspect-ratio:9/16;object-fit:cover;display:block;background:#000}
+.video-card .media-title{padding:10px 12px;font-size:13px;color:var(--text2)}
+.insta-box{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));align-items:start}
+.insta-box iframe{width:100%;min-height:480px;border:0;border-radius:16px;background:#fff}
+.insta-cta{background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);border-radius:20px;padding:26px;text-align:center;color:#fff}
+.insta-cta h3{font-family:var(--serif);font-size:24px;margin-bottom:8px}.insta-cta p{font-size:14px;margin-bottom:16px;opacity:.95}
+.insta-cta a{display:inline-flex;gap:8px;align-items:center;background:#fff;color:#833ab4;font-weight:700;padding:12px 22px;border-radius:999px;text-decoration:none}
+.prints-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px;margin-top:24px}
+.prints-grid img{width:100%;border-radius:14px;display:block;cursor:zoom-in;border:1px solid var(--border)}
+.btn-musica{position:fixed;left:16px;bottom:24px;z-index:900;height:52px;min-width:52px;padding:0 16px;border-radius:999px;border:0;background:linear-gradient(135deg,var(--pink),var(--gold2));color:#fff;font:700 13px var(--sans);display:flex;align-items:center;gap:8px;cursor:pointer;box-shadow:0 6px 20px rgba(255,94,138,.45)}
+.btn-musica i{font-size:22px}.btn-musica.tocando i{animation:fab-bounce 1s infinite}
+@media(max-width:420px){.btn-musica span{display:none}.btn-musica{padding:0;width:52px;justify-content:center}}
+.lb{position:fixed;inset:0;z-index:2000;background:rgba(2,8,23,.95);display:none;align-items:center;justify-content:center;padding:16px;flex-direction:column;gap:12px}
+.lb.aberto{display:flex}.lb img{max-width:100%;max-height:78vh;border-radius:12px}.lb-legenda{color:#fff;font:600 14px var(--sans);text-align:center}
+.lb button{position:absolute;background:rgba(255,255,255,.14);border:0;color:#fff;width:46px;height:46px;border-radius:50%;font-size:24px;cursor:pointer}
+.lb-fechar{top:14px;right:14px}.lb-ant{left:10px;top:50%}.lb-prox{right:10px;top:50%}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.001ms !important;animation-iteration-count:1 !important;scroll-behavior:auto !important}.hero-video{display:none}}
 </style>
 <script>document.documentElement.classList.add('nx-carregando'); setTimeout(function () { document.documentElement.classList.remove('nx-carregando'); }, 3000);</script>
 </head>
@@ -231,10 +310,12 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
 
 <section class="hero" id="inicio" data-secao="inicio">
   <div class="hero-bg-slides">
-    <div class="hero-bg-slide"></div>
-    <div class="hero-bg-slide"></div>
-    <div class="hero-bg-slide"></div>
+    <div class="hero-bg-slide" style="background-image:url('midia/adelia-piscina-pebolim.jpg')"></div>
+    <div class="hero-bg-slide" style="background-image:url('midia/barbara-piscina.jpg')"></div>
+    <div class="hero-bg-slide" style="background-image:url('midia/adelia-cascata.jpg')"></div>
+    <div class="hero-bg-slide" style="background-image:url('midia/adelia-piscina-noite.jpg')"></div>
   </div>
+  <video class="hero-video" id="hero-video" muted loop playsinline preload="metadata" poster="midia/adelia-video-noite.jpg"><source src="midia/adelia-video-noite.mp4" type="video/mp4"></video>
   <div class="hero-bg-overlay"></div>
   <div class="particles-canvas">
     <div class="sp" style="width:3px;height:3px;background:var(--gold);top:20%;left:15%;animation-duration:8s;--px:30px"></div>
@@ -246,15 +327,17 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
 
   <div class="hero-content">
     <img class="hero-logo" src="logo-splash.png" alt="Splash Piscina e Lazer" width="120" height="120" data-ed="hero-logo">
-    <div class="hero-eyebrow" data-ed="hero-eyebrow"><i class="ri-water-flash-line"></i> Piscina aquecida · Churrasqueira · Sala de jogos</div>
-    <h1 class="hero-h1" data-ed="hero-titulo">Seu dia de festa e lazer,<br>com a <em>piscina só para o seu grupo.</em></h1>
-    <p class="hero-sub" data-ed="hero-subtitulo">Alugue o Splash por dia inteiro para aniversários, confraternizações e encontros. Duas unidades na região de São Mateus, zona leste de São Paulo.</p>
+    <div class="hero-eyebrow" data-ed="hero-eyebrow"><i class="ri-sun-line"></i> Piscina · Churrasco · Jogos · Festa</div>
+    <h1 class="hero-h1" data-ed="hero-titulo">Bora dar um <em>splash?</em><br>A piscina é toda do seu grupo!</h1>
+    <p class="hero-sub" data-ed="hero-subtitulo">Aniversário, resenha, confraternização ou só um dia de pura diversão: piscina, jogos e churrasco por dia inteiro, só para você e sua turma. Duas unidades na zona leste de São Paulo.</p>
     <div class="hero-ctas">
-      <a href="#solicitar" class="btn-emerald" data-ed="hero-cta-principal"><i class="ri-calendar-event-line"></i><span>Reservar um dia</span></a>
-      <a href="#estrutura" class="btn-outline" data-ed="hero-cta-secundario"><i class="ri-hearts-line"></i><span>Ver o que tem</span></a>
+      <a href="#solicitar" class="btn-emerald" data-ed="hero-cta-principal"><i class="ri-calendar-event-line"></i><span>Quero reservar meu dia</span></a>
+      <a href="#espacos" class="btn-outline" data-ed="hero-cta-secundario"><i class="ri-image-line"></i><span>Ver fotos e vídeos</span></a>
     </div>
   </div>
 </section>
+
+<div class="ticker" aria-hidden="true"><div class="ticker-trilho"><span>🌊 Piscina</span><span>🍖 Churrasco</span><span>🎱 Sinuca</span><span>⚽ Pebolim</span><span>🤸 Cama elástica</span><span>🎉 Festa</span><span>🌊 Piscina</span><span>🍖 Churrasco</span><span>🎱 Sinuca</span><span>⚽ Pebolim</span><span>🤸 Cama elástica</span><span>🎉 Festa</span><span>🌊 Piscina</span><span>🍖 Churrasco</span><span>🎱 Sinuca</span><span>⚽ Pebolim</span><span>🤸 Cama elástica</span><span>🎉 Festa</span><span>🌊 Piscina</span><span>🍖 Churrasco</span><span>🎱 Sinuca</span><span>⚽ Pebolim</span><span>🤸 Cama elástica</span><span>🎉 Festa</span></div></div>
 
 <section class="section nx-oculto" id="promocoes" data-secao="promocoes">
   <div class="section-inner">
@@ -271,6 +354,7 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
 
     <div class="units-grid">
       <div class="unit-card selected" id="card-santa-adelia" onclick="selecionarUnidade('santa-adelia')">
+        <img class="unit-thumb" src="midia/adelia-piscina-pebolim.jpg" alt="" loading="lazy">
         <div class="unit-title">
           <span data-ed="unidade1-nome">Splash Santa Adélia</span>
           <i class="ri-checkbox-circle-fill" style="color:var(--gold);display:inline" id="icon-santa-adelia"></i>
@@ -279,6 +363,7 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
         <div class="unit-preco" id="preco-santa-adelia"></div>
       </div>
       <div class="unit-card" id="card-santa-barbara" onclick="selecionarUnidade('santa-barbara')">
+        <img class="unit-thumb" src="midia/barbara-piscina.jpg" alt="" loading="lazy">
         <div class="unit-title">
           <span data-ed="unidade2-nome">Splash Santa Bárbara</span>
           <i class="ri-checkbox-circle-line" style="color:var(--text3);display:inline" id="icon-santa-barbara"></i>
@@ -424,9 +509,9 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
     <p class="section-sub fade-up" data-ed="estrutura-subtitulo">Você aluga o espaço por dia inteiro. Veja o que oferecemos.</p>
 
     <div class="events-grid" id="estrutura-grid">
-      <div class="event-card fade-up" data-lista="estrutura" data-i="0"><span class="event-icon">🏊</span><div class="event-name" data-ed="estrutura-1-nome">Piscina aquecida</div><p class="event-text" data-ed="estrutura-1-text">Piscina para curtir o dia inteiro com a sua turma.</p></div>
-      <div class="event-card fade-up" style="transition-delay:.1s" data-lista="estrutura" data-i="1"><span class="event-icon">🍖</span><div class="event-name" data-ed="estrutura-2-nome">Churrasqueira</div><p class="event-text" data-ed="estrutura-2-text">Espaço com churrasqueira para o churrasco do grupo.</p></div>
-      <div class="event-card fade-up" style="transition-delay:.2s" data-lista="estrutura" data-i="2"><span class="event-icon">🎱</span><div class="event-name" data-ed="estrutura-3-nome">Sala de jogos</div><p class="event-text" data-ed="estrutura-3-text">Sala de jogos para a diversão de crianças e adultos.</p></div>
+      <div class="event-card fade-up" data-lista="estrutura" data-i="0"><span class="event-icon">🏊</span><div class="event-name" data-ed="estrutura-1-nome">Piscina</div><p class="event-text" data-ed="estrutura-1-text">Piscina para curtir o dia inteiro com a sua turma.</p></div>
+      <div class="event-card fade-up" style="transition-delay:.1s" data-lista="estrutura" data-i="1"><span class="event-icon">🍖</span><div class="event-name" data-ed="estrutura-2-nome">Churrasqueira</div><p class="event-text" data-ed="estrutura-2-text">Churrasqueira e mesas para o churrasco da turma.</p></div>
+      <div class="event-card fade-up" style="transition-delay:.2s" data-lista="estrutura" data-i="2"><span class="event-icon">🎱</span><div class="event-name" data-ed="estrutura-3-nome">Jogos e diversão</div><p class="event-text" data-ed="estrutura-3-text">No Santa Adélia: pebolim, sinuca e cama elástica para crianças e adultos.</p></div>
       <div class="event-card fade-up" style="transition-delay:.3s" data-lista="estrutura" data-i="3"><span class="event-icon">🎈</span><div class="event-name" data-ed="estrutura-4-nome">Decoração (opcional)</div><p class="event-text" data-ed="estrutura-4-text">Se quiser, escolha a decoração ao fazer o pedido. O valor é combinado com a Amanda.</p></div>
     </div>
   </div>
@@ -440,29 +525,29 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
 
     <div class="spaces-grid" id="espacos-grid">
       <div class="space-card fade-up" data-lista="espacos" data-i="0">
-        <img class="space-img-padrao" data-ed="espaco-1-foto" src="logo-splash.png" alt="Splash Santa Adélia" loading="lazy">
+        <img data-ed="espaco-1-foto" src="midia/adelia-piscina-pebolim.jpg" alt="Splash Santa Adélia" loading="lazy">
         <div class="space-overlay">
           <div class="space-badge" data-ed="espaco-1-badge">Unidade 1</div>
           <h3 class="space-name" data-ed="espaco-1-nome">Splash Santa Adélia</h3>
           <div class="space-cap"><i class="ri-map-pin-line"></i> <span id="endereco-santa-adelia">Região de São Mateus, São Paulo (SP)</span></div>
           <div class="space-feats">
-            <span class="space-feat" data-ed="espaco-1-feat1">Piscina aquecida</span>
+            <span class="space-feat" data-ed="espaco-1-feat1">Piscina</span>
             <span class="space-feat" data-ed="espaco-1-feat2">Churrasqueira</span>
-            <span class="space-feat" data-ed="espaco-1-feat3">Sala de jogos</span>
+            <span class="space-feat" data-ed="espaco-1-feat3">Pebolim e sinuca</span>
           </div>
         </div>
       </div>
 
       <div class="space-card fade-up" style="transition-delay:.1s" data-lista="espacos" data-i="1">
-        <img class="space-img-padrao" data-ed="espaco-2-foto" src="logo-splash.png" alt="Splash Santa Bárbara" loading="lazy">
+        <img data-ed="espaco-2-foto" src="midia/barbara-piscina.jpg" alt="Splash Santa Bárbara" loading="lazy">
         <div class="space-overlay">
           <div class="space-badge" data-ed="espaco-2-badge">Unidade 2</div>
           <h3 class="space-name" data-ed="espaco-2-nome">Splash Santa Bárbara</h3>
           <div class="space-cap"><i class="ri-map-pin-line"></i> <span id="endereco-santa-barbara">Região de São Mateus, São Paulo (SP)</span></div>
           <div class="space-feats">
-            <span class="space-feat" data-ed="espaco-2-feat1">Piscina aquecida</span>
-            <span class="space-feat" data-ed="espaco-2-feat2">Churrasqueira</span>
-            <span class="space-feat" data-ed="espaco-2-feat3">Sala de jogos</span>
+            <span class="space-feat" data-ed="espaco-2-feat1">Piscina</span>
+            <span class="space-feat" data-ed="espaco-2-feat2">Área gourmet</span>
+            <span class="space-feat" data-ed="espaco-2-feat3">Espaço para festa</span>
           </div>
         </div>
       </div>
@@ -470,8 +555,12 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
 
     <!-- Galeria de Fotos por Unidade -->
     <div id="galeria-fotos-secao" style="margin-top:40px">
-      <h3 style="font-family:var(--serif);font-size:24px;color:var(--text);margin-bottom:16px" data-ed="galeria-fotos-titulo">Fotos do Splash</h3>
-      <div id="galeria-fotos-grid" class="media-gallery-grid"></div>
+      <h3 style="font-family:var(--serif);font-size:26px;color:var(--text);margin-bottom:16px" data-ed="galeria-fotos-titulo">Fotos do Splash</h3>
+      <div class="gal-tabs" id="gal-tabs" role="tablist">
+        <button type="button" class="gal-tab ativa" data-un="santa-adelia" role="tab">Santa Adélia</button>
+        <button type="button" class="gal-tab" data-un="santa-barbara" role="tab">Santa Bárbara</button>
+      </div>
+      <div id="galeria-fotos-grid" class="media-gallery-grid gal-grid"></div>
     </div>
   </div>
 </section>
@@ -481,6 +570,23 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
     <div class="section-eyebrow fade-up" data-ed="videos-eyebrow"><i class="ri-video-line"></i><span>Vídeos</span></div>
     <h2 class="section-title fade-up" data-ed="videos-titulo">Veja o Splash<br><em>em vídeo.</em></h2>
     <div id="galeria-videos-grid" class="media-gallery-grid"></div>
+  </div>
+</section>
+
+<section class="section nx-oculto" id="instagram" data-secao="instagram">
+  <div class="section-inner">
+    <div class="section-eyebrow fade-up" data-ed="instagram-eyebrow"><i class="ri-instagram-line"></i><span>Nas redes</span></div>
+    <h2 class="section-title fade-up" data-ed="instagram-titulo">Siga a gente<br><em>no Instagram.</em></h2>
+    <div class="insta-box" id="insta-box"></div>
+  </div>
+</section>
+
+<section class="section nx-oculto" id="avaliacoes" data-secao="avaliacoes" style="background:rgba(255,255,255,.03)">
+  <div class="section-inner">
+    <div class="section-eyebrow fade-up" data-ed="avaliacoes-eyebrow"><i class="ri-star-smile-line"></i><span>Quem já curtiu</span></div>
+    <h2 class="section-title fade-up" data-ed="avaliacoes-titulo">Clientes <em>felizes.</em></h2>
+    <div class="testi-grid" id="avaliacoes-lista"></div>
+    <div class="prints-grid" id="avaliacoes-prints"></div>
   </div>
 </section>
 
@@ -564,6 +670,15 @@ footer{background:#070905;border-t:1px solid var(--border);padding:60px clamp(20
 
 <a id="fab-wa-float" href="#" target="_blank" rel="noopener" class="fab-whatsapp nx-oculto" aria-label="WhatsApp"><i class="ri-whatsapp-line"></i></a>
 
+<button type="button" class="btn-musica" id="btn-musica" aria-pressed="false" aria-label="Ligar a música"><i class="ri-music-2-line"></i><span>Música</span></button>
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Foto ampliada">
+  <button type="button" class="lb-fechar" id="lb-fechar" aria-label="Fechar"><i class="ri-close-line"></i></button>
+  <button type="button" class="lb-ant" id="lb-ant" aria-label="Foto anterior"><i class="ri-arrow-left-s-line"></i></button>
+  <img id="lb-img" alt="">
+  <div class="lb-legenda" id="lb-legenda"></div>
+  <button type="button" class="lb-prox" id="lb-prox" aria-label="Próxima foto"><i class="ri-arrow-right-s-line"></i></button>
+</div>
+
 <script src="calendario.js"></script>
 <script>
 const SLUG = 'splash';
@@ -584,6 +699,8 @@ const NX = {
 const NX_SECOES = {
   inicio: 'Topo',
   promocoes: 'Promoções',
+  instagram: 'Instagram',
+  avaliacoes: 'Avaliações',
   solicitar: 'Agenda & Reserva',
   estrutura: 'O que tem no Splash',
   espacos: 'Unidades',
@@ -617,53 +734,281 @@ function nxListasPadrao() {
 
 function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
-function renderizarFotosUnidade(fotos) {
+const API_ORIGIN = new URL(API_LOCACAO).origin;
+// Fotos enviadas pelo painel vêm como "/api/locacao?...": no site da Amanda (outro endereço) precisam do endereço completo da API.
+function urlApi(u) { const v = String(u || ''); return v.startsWith('/') ? API_ORIGIN + v : v; }
+
+let galeriaUnidade = 'santa-adelia';
+let instaPosts = [];
+let printsAvaliacoes = [];
+let avaliacoesTexto = [];
+
+// Fotos e vídeos que já vêm com o site. As que a Amanda enviar pelo painel entram antes destas.
+const MIDIA = {
+  'santa-adelia': {
+    fotos: [
+      ['adelia-piscina-pebolim', 'Piscina, pebolim e cama elástica'], ['adelia-cascata', 'Piscina com cascata'],
+      ['adelia-piscina-noite', 'O Splash à noite'], ['adelia-sinuca-cama-elastica', 'Sinuca e cama elástica'],
+      ['adelia-pebolim-piscina', 'Pebolim com vista pra piscina'], ['adelia-churrasqueira', 'Churrasqueira'],
+      ['adelia-mesa-churrasco', 'Mesa para o churrasco'], ['adelia-varanda', 'Varanda com mesas'],
+      ['adelia-piscina-deck', 'Piscina e deck'], ['adelia-piscina-area', 'Piscina e área de convivência'],
+      ['adelia-sinuca-bolas', 'Hora da sinuca'], ['adelia-sinuca', 'Mesa de sinuca'],
+      ['adelia-pebolim-sinuca', 'Pebolim e sinuca'], ['adelia-area-jogos', 'Área de jogos ao lado da piscina']
+    ].map(([a, t]) => ({ url: 'midia/' + a + '.jpg', legenda: t })),
+    videos: [
+      ['adelia-video-noite', 'O Splash à noite'], ['adelia-video-tour', 'Um tour pelo espaço'],
+      ['adelia-video-espaco', 'Conheça o espaço'], ['adelia-video-jogos', 'Hora do jogo']
+    ].map(([a, t]) => ({ src: 'midia/' + a + '.mp4', poster: 'midia/' + a + '.jpg', titulo: t }))
+  },
+  'santa-barbara': {
+    fotos: [
+      ['barbara-piscina', 'Piscina e área de convivência'], ['barbara-piscina-coberta', 'Piscina com espreguiçadeiras'],
+      ['barbara-cozinha', 'Cozinha e mesas'], ['barbara-cozinha-detalhe', 'Cozinha equipada'],
+      ['barbara-decoracao-futebol', 'Exemplo de decoração de festa']
+    ].map(([a, t]) => ({ url: 'midia/' + a + '.jpg', legenda: t })),
+    videos: []
+  }
+};
+
+function renderizarFotosUnidade(fotosApi) {
   const container = document.getElementById('galeria-fotos-grid');
   if (!container) return;
-  if (!fotos || !fotos.length) {
-    container.parentElement.style.display = 'none';
-    return;
-  }
-  container.parentElement.style.display = 'block';
-  container.innerHTML = fotos.map(f => `
-    <div class="media-card">
-      <img src="${esc(f.url)}" alt="${esc(f.legenda || 'Splash Piscina e Lazer')}" loading="lazy">
-      ${f.legenda ? `<div class="media-title">${esc(f.legenda)}</div>` : ''}
-    </div>
-  `).join('');
+  const doSite = (fotosApi || []).map(f => ({ url: urlApi(f.url), legenda: f.legenda || '' }));
+  const fotos = doSite.concat((MIDIA[galeriaUnidade] || { fotos: [] }).fotos);
+  container.replaceChildren(...fotos.map(f => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'gal-item'; b.setAttribute('data-lb', '1'); b.dataset.legenda = f.legenda;
+    const im = document.createElement('img');
+    im.src = f.url; im.alt = f.legenda || 'Splash Piscina e Lazer'; im.loading = 'lazy';
+    b.appendChild(im);
+    if (f.legenda) { const sp = document.createElement('span'); sp.textContent = f.legenda; b.appendChild(sp); }
+    return b;
+  }));
 }
 
 function renderizarVideosUnidade(videos) {
   const grid = document.getElementById('galeria-videos-grid');
   const sec = document.getElementById('videos');
   if (!grid || !sec) return;
-  if (!videos || !videos.length) {
+  const locais = (MIDIA[galeriaUnidade] || { videos: [] }).videos;
+  const doSite = (videos || []).filter(v => v.provedor !== 'instagram');
+  if (!locais.length && !doSite.length) {
     sec.style.display = NX.editar ? 'block' : 'none';
+    grid.className = 'media-gallery-grid';
     grid.innerHTML = NX.editar ? '<p style="color:var(--text3);padding:20px;text-align:center">Nenhum vídeo cadastrado nesta unidade.</p>' : '';
     return;
   }
   sec.style.display = 'block';
-  grid.innerHTML = videos.map(v => `
-    <div class="media-card">
-      <div class="video-embed-container">
-        <iframe src="${esc(v.embed_url)}" title="${esc(v.titulo || 'Vídeo Splash Piscina e Lazer')}" allowfullscreen></iframe>
-      </div>
+  grid.className = 'videos-grid';
+  const cartoes = doSite.map(v => `
+    <div class="video-card">
+      <div class="video-embed-container"><iframe src="${esc(v.embed_url)}" title="${esc(v.titulo || 'Vídeo Splash Piscina e Lazer')}" loading="lazy" allowfullscreen></iframe></div>
       ${v.titulo ? `<div class="media-title">${esc(v.titulo)}</div>` : ''}
-    </div>
-  `).join('');
+    </div>`);
+  const proprios = locais.map(v => `
+    <div class="video-card">
+      <video controls playsinline preload="none" poster="${esc(v.poster)}" src="${esc(v.src)}"></video>
+      <div class="media-title">${esc(v.titulo)}</div>
+    </div>`);
+  grid.innerHTML = cartoes.concat(proprios).join('');
 }
 
 async function carregarMidiasUnidade() {
+  const un = galeriaUnidade;
+  let fotos = [], videos = [];
   try {
-    const [resFotos, resVideos] = await Promise.all([
-      fetch(`${API_LOCACAO}?site=${SLUG}&foto_listar=1&unidade=${unidadeAtual}`).then(r => r.json()).catch(() => ({ fotos: [] })),
-      fetch(`${API_LOCACAO}?site=${SLUG}&video_listar=1&unidade=${unidadeAtual}`).then(r => r.json()).catch(() => ({ videos: [] }))
+    const [rf, rv] = await Promise.all([
+      fetch(`${API_LOCACAO}?site=${SLUG}&foto_listar=1&unidade=${un}`).then(r => r.json()).catch(() => ({ fotos: [] })),
+      fetch(`${API_LOCACAO}?site=${SLUG}&video_listar=1&unidade=${un}`).then(r => r.json()).catch(() => ({ videos: [] }))
     ]);
-    renderizarFotosUnidade(resFotos.fotos || []);
-    renderizarVideosUnidade(resVideos.videos || []);
-  } catch (e) {
-    // Silencioso em falhas
+    fotos = rf.fotos || []; videos = rv.videos || [];
+  } catch (e) { /* sem internet ou API fora: mostra só o que já vem com o site */ }
+  if (un !== galeriaUnidade) return; // a pessoa trocou de aba enquanto carregava
+  renderizarFotosUnidade(fotos);
+  renderizarVideosUnidade(videos);
+}
+
+function marcarAbaGaleria() {
+  document.querySelectorAll('#gal-tabs .gal-tab').forEach(b => {
+    const ativa = b.dataset.un === galeriaUnidade;
+    b.classList.toggle('ativa', ativa);
+    b.setAttribute('aria-selected', ativa ? 'true' : 'false');
+  });
+}
+
+function iniciarAbasGaleria() {
+  const abas = document.getElementById('gal-tabs');
+  if (!abas) return;
+  abas.addEventListener('click', e => {
+    const b = e.target.closest('.gal-tab');
+    if (!b || b.dataset.un === galeriaUnidade) return;
+    galeriaUnidade = b.dataset.un;
+    marcarAbaGaleria();
+    renderizarFotosUnidade([]);
+    carregarMidiasUnidade();
+  });
+  marcarAbaGaleria();
+}
+
+// ── Ampliar foto (lightbox) ──
+const LB = { itens: [], i: 0 };
+function lbMostrar() {
+  const it = LB.itens[LB.i];
+  if (!it) return;
+  document.getElementById('lb-img').src = it.url;
+  document.getElementById('lb-img').alt = it.legenda;
+  document.getElementById('lb-legenda').textContent = it.legenda;
+  const varias = LB.itens.length > 1;
+  document.getElementById('lb-ant').style.display = varias ? '' : 'none';
+  document.getElementById('lb-prox').style.display = varias ? '' : 'none';
+}
+function lbAbrir(el) {
+  const grupo = el.closest('.gal-grid, .promo-lista, .prints-grid') || el.parentElement;
+  const els = Array.from(grupo.querySelectorAll('[data-lb]'));
+  LB.itens = els.map(x => { const im = x.tagName === 'IMG' ? x : x.querySelector('img'); return { url: im.currentSrc || im.src, legenda: x.dataset.legenda || im.alt || '' }; });
+  LB.i = Math.max(0, els.indexOf(el));
+  lbMostrar();
+  document.getElementById('lb').classList.add('aberto');
+}
+function lbFechar() { document.getElementById('lb').classList.remove('aberto'); document.getElementById('lb-img').removeAttribute('src'); }
+function lbMover(d) { if (!LB.itens.length) return; LB.i = (LB.i + d + LB.itens.length) % LB.itens.length; lbMostrar(); }
+function iniciarLightbox() {
+  document.addEventListener('click', e => {
+    if (NX.editar) return;
+    const el = e.target.closest('[data-lb]');
+    if (el) lbAbrir(el);
+  });
+  document.getElementById('lb-fechar').addEventListener('click', lbFechar);
+  document.getElementById('lb-ant').addEventListener('click', () => lbMover(-1));
+  document.getElementById('lb-prox').addEventListener('click', () => lbMover(1));
+  document.getElementById('lb').addEventListener('click', e => { if (e.target.id === 'lb') lbFechar(); });
+  document.addEventListener('keydown', e => {
+    if (!document.getElementById('lb').classList.contains('aberto')) return;
+    if (e.key === 'Escape') lbFechar(); else if (e.key === 'ArrowLeft') lbMover(-1); else if (e.key === 'ArrowRight') lbMover(1);
+  });
+}
+
+// ── Instagram (posts que a Amanda cadastra como link do Instagram) ──
+function renderizarInstagram() {
+  const sec = document.getElementById('instagram');
+  const box = document.getElementById('insta-box');
+  if (!sec || !box) return;
+  const usuario = (configLocacao && configLocacao.instagram) || 'splash_santaadelia';
+  const posts = instaPosts.filter(v => /^https:\/\/www\.instagram\.com\//.test(v.embed_url || ''));
+  box.innerHTML = posts.map(v => `<iframe src="${esc(v.embed_url)}" title="${esc(v.titulo || 'Post do Instagram do Splash')}" loading="lazy" allowtransparency="true"></iframe>`).join('') +
+    `<div class="insta-cta"><h3>@${esc(usuario)}</h3><p>Festas, bastidores e promoções em primeira mão.</p><a href="https://www.instagram.com/${encodeURIComponent(usuario)}" target="_blank" rel="noopener"><i class="ri-instagram-line"></i> Seguir no Instagram</a></div>`;
+  sec.classList.remove('nx-oculto');
+}
+async function carregarInstagram() {
+  try {
+    const r = await fetch(`${API_LOCACAO}?site=${SLUG}&video_listar=1`).then(x => x.json());
+    instaPosts = (r.videos || []).filter(v => v.provedor === 'instagram');
+  } catch (e) { instaPosts = []; }
+  renderizarInstagram();
+}
+
+// ── Avaliações: textos escritos pela Amanda + prints de conversas e comentários ──
+function renderizarAvaliacoes(lista) {
+  avaliacoesTexto = lista || avaliacoesTexto;
+  const sec = document.getElementById('avaliacoes');
+  const cards = document.getElementById('avaliacoes-lista');
+  const prints = document.getElementById('avaliacoes-prints');
+  if (!sec || !cards || !prints) return;
+  cards.innerHTML = avaliacoesTexto.map(a => `
+    <div class="testi-card">
+      <div class="testi-stars">${'★'.repeat(Math.min(5, Math.max(1, Number(a.estrelas) || 5)))}</div>
+      <p class="testi-quote">“${esc(a.texto)}”</p>
+      ${a.nome ? `<div class="testi-author"><div class="testi-av">${esc(String(a.nome).trim().charAt(0).toUpperCase())}</div><div class="testi-name">${esc(a.nome)}</div></div>` : ''}
+    </div>`).join('');
+  prints.replaceChildren(...printsAvaliacoes.map(f => {
+    const im = document.createElement('img');
+    im.src = urlApi(f.url); im.alt = f.legenda || 'Avaliação de cliente'; im.loading = 'lazy'; im.setAttribute('data-lb', '1');
+    return im;
+  }));
+  sec.classList.toggle('nx-oculto', !avaliacoesTexto.length && !printsAvaliacoes.length && !NX.editar);
+}
+async function carregarPrintsAvaliacoes() {
+  try {
+    const r = await fetch(`${API_LOCACAO}?site=${SLUG}&foto_listar=1&unidade=avaliacoes`).then(x => x.json());
+    printsAvaliacoes = r.fotos || [];
+  } catch (e) { printsAvaliacoes = []; }
+  renderizarAvaliacoes();
+}
+
+// ── Vídeo do topo: só toca se a pessoa aceita movimento e não está economizando dados ──
+function iniciarVideoHero() {
+  const v = document.getElementById('hero-video');
+  if (!v) return;
+  const c = navigator.connection;
+  const parar = () => { v.remove(); };
+  if ((window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || (c && c.saveData)) { parar(); return; }
+  v.addEventListener('error', parar);
+  const p = v.play();
+  if (p && p.then) p.then(() => v.classList.add('ok')).catch(parar);
+}
+
+// ── Menu do topo ganha fundo quando a página rola ──
+function iniciarMenu() {
+  const nav = document.getElementById('navbar');
+  if (!nav) return;
+  const marcar = () => nav.classList.toggle('scrolled', window.scrollY > 24);
+  window.addEventListener('scroll', marcar, { passive: true });
+  marcar();
+}
+
+// ── Música de fundo (feita no próprio navegador, sem arquivo e sem direitos autorais; começa desligada) ──
+const Musica = (() => {
+  let ctx = null, mestre = null, timer = null, passo = 0, proximo = 0, ligada = false;
+  const BPM = 108, OITAVO = 60 / BPM / 2;
+  const ACORDES = [[261.63, 329.63, 392.0], [220.0, 261.63, 329.63], [174.61, 220.0, 261.63], [196.0, 246.94, 293.66]]; // C Am F G
+  const ESCALA = [523.25, 587.33, 659.25, 783.99, 880.0];
+  function nota(f, t, dur, tipo, vol) {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = tipo; o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(mestre); o.start(t); o.stop(t + dur + 0.05);
   }
+  function chiado(t, vol) {
+    const n = Math.floor(ctx.sampleRate * 0.04), buf = ctx.createBuffer(1, n, ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const s = ctx.createBufferSource(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+    f.type = 'highpass'; f.frequency.value = 6000; g.gain.value = vol; s.buffer = buf; s.connect(f); f.connect(g); g.connect(mestre); s.start(t);
+  }
+  function tocarPasso(i, t) {
+    const compasso = Math.floor(i / 8) % 4, p = i % 8, ac = ACORDES[compasso];
+    if (p === 0 || p === 4) { const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12); g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16); o.connect(g); g.connect(mestre); o.start(t); o.stop(t + 0.2); }
+    if (p === 0 || p === 3 || p === 6) nota(ac[0] / 2, t, OITAVO * 2.2, 'triangle', 0.32);
+    if (p === 2 || p === 5 || p === 7) ac.forEach(f => nota(f, t, OITAVO * 0.9, 'square', 0.035));
+    if (p % 2 === 1) chiado(t, 0.07);
+    if (Math.random() < 0.55) nota(ESCALA[Math.floor(Math.random() * ESCALA.length)], t, OITAVO * 1.4, 'sine', 0.06);
+  }
+  function agendar() { while (proximo < ctx.currentTime + 0.5) { tocarPasso(passo, proximo); passo += 1; proximo += OITAVO; } }
+  function ligar() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return false;
+    if (!ctx) { ctx = new AC(); mestre = ctx.createGain(); mestre.gain.value = 0.22; mestre.connect(ctx.destination); }
+    if (ctx.state === 'suspended') ctx.resume();
+    passo = 0; proximo = ctx.currentTime + 0.1; agendar();
+    timer = setInterval(agendar, 150);
+    ligada = true; return true;
+  }
+  function desligar() { clearInterval(timer); timer = null; ligada = false; if (ctx) ctx.suspend(); }
+  return { alternar() { return ligada ? (desligar(), false) : ligar(); }, pausarSeEscondida() { if (ligada && document.hidden) desligar(); }, ligada: () => ligada };
+})();
+
+function iniciarMusica() {
+  const b = document.getElementById('btn-musica');
+  if (!b) return;
+  if (!(window.AudioContext || window.webkitAudioContext)) { b.remove(); return; }
+  b.addEventListener('click', () => {
+    let on = false;
+    try { on = Musica.alternar(); } catch (e) { on = false; }
+    b.classList.toggle('tocando', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    b.setAttribute('aria-label', on ? 'Desligar a música' : 'Ligar a música');
+    const rot = b.querySelector('span'); if (rot) rot.textContent = on ? 'Som ligado' : 'Música';
+  });
+  document.addEventListener('visibilitychange', () => { Musica.pausarSeEscondida(); if (!Musica.ligada()) { b.classList.remove('tocando'); b.setAttribute('aria-pressed', 'false'); } });
 }
 
 function nxAplicar(c) {
@@ -722,7 +1067,7 @@ function nxMarcarEdicao() {
   if (!raiz.classList.contains('nx-ed')) {
     raiz.classList.add('nx-ed');
     document.head.insertAdjacentHTML('beforeend', `<style>
-      .nx-ed [data-ed], .nx-ed [data-lista] { outline: 2px dashed rgba(201,168,76,.6); outline-offset: 3px; cursor: pointer; }
+      .nx-ed [data-ed], .nx-ed [data-lista] { outline: 2px dashed rgba(255,201,60,.6); outline-offset: 3px; cursor: pointer; }
       .nx-ed .nx-escondido { opacity: .35; }
       .nx-ed .fade-in { opacity: 1; transform: none; }
       .nx-chip { position: absolute; z-index: 40; top: 10px; left: 10px; background: #291410; color: #fff; font: 600 13px/1 system-ui, sans-serif; padding: 9px 12px; border-radius: 999px; border: 0; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
@@ -831,14 +1176,15 @@ function atualizarContatoConfig() {
       </label>`).join('');
   }
 
-  // Promoções
+  // Promoções (texto e/ou print/post)
   const promos = cfg.promocoes || [];
   const secPromo = document.getElementById('promocoes');
   const listaPromo = document.getElementById('promocoes-lista');
   if (secPromo && listaPromo) {
-    listaPromo.innerHTML = promos.map(p => `<div class="promo-item">${esc(p.texto)}</div>`).join('');
+    listaPromo.innerHTML = promos.map(p => `<div class="promo-item">${p.imagem ? `<img src="${esc(urlApi(p.imagem))}" alt="${esc(p.texto || 'Promoção do Splash')}" data-lb="1" loading="lazy">` : ''}${p.texto ? `<div>${esc(p.texto)}</div>` : ''}</div>`).join('');
     secPromo.classList.toggle('nx-oculto', !promos.length && !NX.editar);
   }
+  renderizarAvaliacoes(cfg.avaliacoes || []);
 
   // Aviso geral
   const rg = document.getElementById('rodape-regiao');
@@ -919,6 +1265,8 @@ function selecionarUnidade(id) {
   }
 
   // Recarrega o calendário e as mídias da nova unidade
+  galeriaUnidade = id;
+  marcarAbaGaleria();
   carregarDiasCalendario();
   carregarMidiasUnidade();
 }
@@ -1088,6 +1436,13 @@ async function iniciarConteudo() {
 carregarConfiguracao();
 carregarDiasCalendario();
 carregarMidiasUnidade();
+carregarInstagram();
+carregarPrintsAvaliacoes();
+iniciarVideoHero();
+iniciarAbasGaleria();
+iniciarLightbox();
+iniciarMusica();
+iniciarMenu();
 iniciarConteudo();
 </script>
 </body>
