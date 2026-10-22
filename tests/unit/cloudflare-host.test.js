@@ -302,3 +302,16 @@ test('CF-AUTH-KERNEX. domínios Kernex usam o próprio host como authDomain só 
   const cfg = await handleRequest(req('https://bodycoach.kernex.com.br/api/firebase-config'), { ASSETS: fakeAssets(FILES), FIREBASE_API_KEY: 'k', FIREBASE_AUTH_DOMAIN: 'nexia-c8710.firebaseapp.com', KERNEX_AUTH_PROPRIO: '1' }, { getFunction: () => null }).then(r => r.json());
   assert.strictEqual(cfg.authDomain, 'bodycoach.kernex.com.br');
 });
+
+test('CF-CORS. pergunta prévia (OPTIONS) das APIs dos sites de clientes libera qualquer origem; o resto continua restrito', async () => {
+  const env = { NEXIA_APP_URL: 'https://nexia.gcbezerra.workers.dev' };
+  const pedir = (p) => call(p, { method: 'OPTIONS', headers: { Origin: 'https://splasheventos.pages.dev', 'Access-Control-Request-Method': 'POST', 'Access-Control-Request-Headers': 'content-type' } }, env);
+  for (const p of ['/api/locacao', '/api/nutri']) {
+    const r = await pedir(p);
+    assert.strictEqual(r.status, 204);
+    assert.strictEqual(r.headers.get('access-control-allow-origin'), '*', p);
+    assert.match(r.headers.get('access-control-allow-headers'), /Content-Type/i);
+  }
+  const outra = await pedir('/api/qualquer-outra');
+  assert.strictEqual(outra.headers.get('access-control-allow-origin'), 'https://nexia.gcbezerra.workers.dev');
+});
