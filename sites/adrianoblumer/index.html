@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="pt-BR" id="html-root">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="page-title">Adriano Blumer — Nutrição Esportiva e Clínica em São Paulo</title>
+<meta name="description" content="Adriano Blumer, nutricionista esportivo em São Paulo. Atendimento presencial e online com protocolos personalizados para emagrecimento, ganho de massa e performance.">
+<meta name="keywords" content="nutricionista esportivo, nutrição são paulo, emagrecimento, ganho de massa, adriano blumer">
+
+<!-- Open Graph -->
+<meta property="og:title" content="Adriano Blumer — Nutrição Esportiva e Clínica">
+<meta property="og:description" content="Nutrição com estratégia e ciência. Atendimento presencial em São Paulo e online para todo o Brasil.">
+<meta property="og:image" content="foto-adriano.jpg">
+<meta property="og:type" content="website">
+
+<!-- Favicon e Ícone -->
+<link rel="icon" href="logo-adriano-icon.png" type="image/png">
+<link rel="apple-touch-icon" href="logo-adriano-icon.png">
+
+<!-- Fontes e Ícones -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+
+<!-- JSON-LD Structured Data (Nutritionist / LocalBusiness) -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MedicalBusiness",
+  "name": "Adriano Blumer Nutrição Esportiva",
+  "image": "logo-adriano-full.png",
+  "telephone": "+5511999994185",
+  "email": "nutri.adrianoblumer@gmail.com",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Rua Domingos de Morais, 2781 - CJ 802",
+    "addressLocality": "São Paulo",
+    "addressRegion": "SP",
+    "postalCode": "04035-001",
+    "addressCountry": "BR"
+  },
+  "url": "https://biolink.website/nutriadriano",
+  "sameAs": [
+    "https://www.instagram.com/adrianoblumer_nutri",
+    "https://www.tiktok.com/@adrianoblumer_nutri",
+    "https://www.youtube.com/@adrianoblumer"
+  ]
+}
+</script>
+
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --primary: #2FA88A;
+  --primary-dark: #24876e;
+  --primary-light: rgba(47, 168, 138, 0.12);
+  --accent: #c9a84c;
+  --accent-light: rgba(201, 168, 76, 0.15);
+  --bg: #f6faf8;
+  --surface: #ffffff;
+  --text: #13221d;
+  --muted: #55665f;
+  --dark: #0b1512;
+  --border: rgba(19, 34, 29, 0.08);
+  --serif: 'Playfair Display', Georgia, serif;
+  --sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --radius: 16px;
+  --shadow: 0 10px 30px rgba(11, 21, 18, 0.05);
+}
+
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); line-height: 1.6; min-width: 320px; overflow-x: hidden; }
+.nx-oculto { display: none !important; }
+html.nx-carregando body { opacity: 0; }
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; height: auto; display: block; }
+
+/* Navbar */
+#navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 500; background: rgba(246, 250, 248, 0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); transition: all 0.3s; }
+.nav-container { max-width: 1200px; margin: 0 auto; height: 72px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; }
+.nav-logo { display: flex; align-items: center; gap: 12px; }
+.nav-logo img { height: 38px; width: auto; }
+.nav-logo-text { font-family: var(--serif); font-size: 20px; font-weight: 700; color: var(--dark); }
+.nav-links { display: flex; align-items: center; gap: 24px; }
+.nav-links a { font-size: 14px; font-weight: 500; color: var(--muted); transition: color 0.2s; }
+.nav-links a:hover { color: var(--primary); }
+.btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 22px; border-radius: 50px; background: var(--primary); color: #fff; font-size: 14px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 14px rgba(47, 168, 138, 0.3); }
+.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+.btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 22px; border-radius: 50px; background: transparent; color: var(--text); font-size: 14px; font-weight: 600; border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; }
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+@media (max-width: 820px) {
+  .nav-links { display: none; }
+}
+
+/* Hero Section */
+.hero { padding: 120px 20px 80px; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 40px; align-items: center; }
+.hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 30px; background: var(--primary-light); color: var(--primary-dark); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 20px; }
+.hero-h1 { font-family: var(--serif); font-size: clamp(34px, 5vw, 56px); font-weight: 700; color: var(--dark); line-height: 1.15; margin-bottom: 20px; }
+.hero-h1 em { font-style: italic; color: var(--primary); font-weight: 400; }
+.hero-sub { font-size: clamp(16px, 2vw, 18px); color: var(--muted); margin-bottom: 32px; max-width: 540px; }
+.hero-actions { display: flex; gap: 16px; flex-wrap: wrap; }
+.hero-img-box { position: relative; border-radius: 24px; overflow: hidden; box-shadow: var(--shadow); background: var(--surface); }
+.hero-img-box img { width: 100%; height: 500px; object-fit: cover; }
+
+@media (max-width: 820px) {
+  .hero { grid-template-columns: 1fr; padding-top: 100px; text-align: center; }
+  .hero-sub { margin-left: auto; margin-right: auto; }
+  .hero-actions { justify-content: center; }
+  .hero-img-box img { height: 380px; }
+}
+
+/* Sections Global */
+.section { padding: 80px 20px; }
+.container { max-width: 1200px; margin: 0 auto; }
+.section-header { text-align: center; max-width: 680px; margin: 0 auto 50px; }
+.section-tag { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--primary); margin-bottom: 10px; display: block; }
+.section-title { font-family: var(--serif); font-size: clamp(28px, 4vw, 42px); color: var(--dark); line-height: 1.2; margin-bottom: 16px; }
+.section-sub { font-size: 16px; color: var(--muted); }
+
+/* Sobre */
+.sobre-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 50px; align-items: center; }
+.sobre-img-box { border-radius: 24px; overflow: hidden; box-shadow: var(--shadow); }
+.sobre-img-box img { width: 100%; height: 480px; object-fit: cover; }
+.sobre-content h2 { font-family: var(--serif); font-size: 36px; color: var(--dark); margin-bottom: 20px; }
+.sobre-content p { color: var(--muted); font-size: 16px; margin-bottom: 24px; white-space: pre-line; }
+.sobre-details { display: grid; gap: 12px; margin-top: 20px; }
+.sobre-detail-item { background: var(--surface); padding: 14px 18px; border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; }
+.sobre-detail-item i { color: var(--primary); font-size: 18px; }
+
+@media (max-width: 820px) {
+  .sobre-grid { grid-template-columns: 1fr; }
+  .sobre-img-box img { height: 350px; }
+}
+
+/* Especialidades */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; }
+.card { background: var(--surface); border-radius: var(--radius); padding: 32px; border: 1px solid var(--border); box-shadow: var(--shadow); transition: transform 0.3s, border-color 0.3s; }
+.card:hover { transform: translateY(-4px); border-color: var(--primary-light); }
+.card-icon { width: 52px; height: 52px; border-radius: 14px; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 24px; margin-bottom: 20px; }
+.card-title { font-family: var(--serif); font-size: 22px; color: var(--dark); margin-bottom: 12px; }
+.card-text { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+/* Como Funciona */
+.etapas-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; }
+.etapa-card { background: var(--surface); padding: 28px; border-radius: var(--radius); border: 1px solid var(--border); position: relative; }
+.etapa-num { font-family: var(--serif); font-size: 36px; font-weight: 700; color: var(--accent); opacity: 0.8; margin-bottom: 12px; }
+.etapa-title { font-family: var(--serif); font-size: 18px; color: var(--dark); margin-bottom: 8px; }
+.etapa-text { font-size: 13.5px; color: var(--muted); }
+
+/* Calculadora IMC */
+.calc-card { max-width: 600px; margin: 0 auto; background: var(--surface); border-radius: 24px; padding: 36px; border: 1px solid var(--border); box-shadow: var(--shadow); }
+.calc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.calc-group { display: flex; flex-direction: column; gap: 8px; }
+.calc-label { font-size: 13px; font-weight: 600; color: var(--dark); }
+.calc-input { width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border); font-family: var(--sans); font-size: 15px; outline: none; }
+.calc-input:focus { border-color: var(--primary); }
+.calc-res { margin-top: 24px; padding: 20px; border-radius: 12px; background: var(--bg); text-align: center; display: none; }
+.calc-res-num { font-family: var(--serif); font-size: 32px; font-weight: 700; color: var(--primary-dark); }
+.calc-res-class { font-size: 14px; font-weight: 600; color: var(--dark); margin-top: 4px; }
+.calc-disclaimer { margin-top: 16px; font-size: 12px; color: var(--muted); text-align: center; }
+
+@media (max-width: 500px) {
+  .calc-row { grid-template-columns: 1fr; }
+}
+
+/* Dicas e Posts */
+.posts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+.post-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 24px; display: flex; flex-direction: column; justify-content: space-between; }
+.post-tag { font-size: 11px; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 8px; }
+.post-title { font-family: var(--serif); font-size: 18px; color: var(--dark); margin-bottom: 12px; }
+.post-desc { font-size: 13.5px; color: var(--muted); margin-bottom: 20px; }
+.post-link { font-size: 13px; font-weight: 600; color: var(--primary); display: inline-flex; align-items: center; gap: 4px; }
+
+/* Galeria */
+.galeria-avisos { background: var(--accent-light); border: 1px solid rgba(201, 168, 76, 0.3); border-radius: 12px; padding: 16px 20px; font-size: 13px; color: #6b5314; margin-bottom: 30px; display: flex; align-items: flex-start; gap: 10px; }
+.galeria-avisos i { font-size: 18px; shrink: 0; }
+.galeria-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+.galeria-item { border-radius: var(--radius); overflow: hidden; height: 260px; position: relative; box-shadow: var(--shadow); }
+.galeria-item img { width: 100%; height: 100%; object-fit: cover; }
+.galeria-caption { position: absolute; bottom: 0; inset-x: 0; padding: 16px; background: linear-gradient(to top, rgba(11,21,18,0.8), transparent); color: #fff; font-size: 13px; font-weight: 500; }
+
+/* FAQ */
+.faq-grid { max-width: 800px; margin: 0 auto; display: grid; gap: 16px; }
+.faq-item { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); padding: 20px 24px; }
+.faq-q { font-family: var(--serif); font-size: 18px; font-weight: 600; color: var(--dark); margin-bottom: 8px; }
+.faq-a { font-size: 14.5px; color: var(--muted); }
+
+/* Redes e Contato */
+.contato-box { background: var(--dark); color: #fff; border-radius: 28px; padding: clamp(40px, 6vw, 60px); display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+.contato-info h3 { font-family: var(--serif); font-size: 32px; margin-bottom: 16px; }
+.contato-info p { color: rgba(255,255,255,0.7); margin-bottom: 28px; font-size: 15px; }
+.contato-item { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 20px; font-size: 14px; color: rgba(255,255,255,0.9); }
+.contato-item i { font-size: 20px; color: var(--primary); }
+.contato-actions { display: flex; flex-direction: column; justify-content: center; gap: 16px; }
+
+@media (max-width: 820px) {
+  .contato-box { grid-template-columns: 1fr; }
+}
+
+/* Rodapé */
+footer { background: #070d0b; color: rgba(255,255,255,0.6); padding: 50px 20px 30px; font-size: 13px; border-top: 1px solid rgba(255,255,255,0.05); }
+.footer-inner { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+.selo-kernex { color: rgba(255,255,255,0.8); text-decoration: none; transition: color 0.2s; }
+.selo-kernex:hover { color: var(--primary); }
+
+/* Edição iframe */
+.nx-escondido { opacity: 0.35; }
+</style>
+<script>document.documentElement.classList.add('nx-carregando'); setTimeout(function () { document.documentElement.classList.remove('nx-carregando'); }, 3000);</script>
+</head>
+<body>
+
+<!-- Header / Navbar -->
+<header id="navbar" data-secao="menu">
+  <div class="nav-container">
+    <a href="#" class="nav-logo">
+      <img src="logo-adriano-full.png" alt="Adriano Blumer" data-ed="menu-logo-img">
+    </a>
+    <nav class="nav-links">
+      <a href="#sobre" data-ed="menu-link-sobre">Sobre</a>
+      <a href="#especialidades" data-ed="menu-link-especialidades">Especialidades</a>
+      <a href="#como-funciona" data-ed="menu-link-como-funciona">Como Funciona</a>
+      <a href="#dicas" data-ed="menu-link-dicas">Dicas</a>
+      <a href="#faq" data-ed="menu-link-faq">Dúvidas</a>
+      <a href="#contato" data-ed="menu-link-contato">Contato</a>
+    </nav>
+    <a id="btn-agendar-top" href="https://biolink.website/nutriadriano" target="_blank" rel="noopener" class="btn-primary" data-ed="menu-btn-agendar">
+      <i class="ri-calendar-check-line"></i><span>Agendar Consulta</span>
+    </a>
+  </div>
+</header>
+
+<!-- Hero Section -->
+<section class="hero" id="inicio" data-secao="inicio">
+  <div>
+    <div class="hero-badge" data-ed="hero-eyebrow">
+      <i class="ri-heart-pulse-line"></i> Nutrição Esportiva · Presencial e Online
+    </div>
+    <h1 class="hero-h1" data-ed="hero-titulo">
+      Nutrição esportiva com <em>estratégia e ciência.</em>
+    </h1>
+    <p class="hero-sub" data-ed="hero-subtitulo">
+      Protocolos nutricionais personalizados para emagrecimento sustentável, ganho de massa, saúde hormonal e alta performance — sem dietas impossíveis.
+    </p>
+    <div class="hero-actions">
+      <a id="btn-hero-agendar" href="https://biolink.website/nutriadriano" target="_blank" rel="noopener" class="btn-primary" data-ed="hero-cta-principal">
+        <i class="ri-calendar-line"></i><span>Agendar Consulta</span>
+      </a>
+      <a href="#sobre" class="btn-outline" data-ed="hero-cta-secundario">
+        <i class="ri-user-3-line"></i><span>Conhecer o Adriano</span>
+      </a>
+    </div>
+  </div>
+  <div class="hero-img-box">
+    <img src="foto-adriano.jpg" alt="Adriano Blumer Nutricionista" data-ed="hero-foto">
+  </div>
+</section>
+
+<!-- Sobre -->
+<section class="section" id="sobre" data-secao="sobre">
+  <div class="container">
+    <div class="sobre-grid">
+      <div class="sobre-img-box">
+        <img src="foto-6693.jpg" alt="Adriano Blumer" data-ed="sobre-foto">
+      </div>
+      <div class="sobre-content">
+        <span class="section-tag" data-ed="sobre-eyebrow">Sobre o Nutricionista</span>
+        <h2 data-ed="sobre-titulo">Adriano Blumer</h2>
+        <p data-ed="sobre-texto">
+          Adriano Blumer é nutricionista esportivo especializado em estratégias personalizadas para quem busca cuidar da alimentação com saúde e sustentabilidade.
+
+          O método é baseado em evidências científicas sólidas e adaptado à rotina individual de cada paciente. Sem fórmulas prontas ou restrições radicais, cada plano alimentar é elaborado respeitando os seus objetivos e o seu estilo de vida.
+        </p>
+        <div class="sobre-details">
+          <div class="sobre-detail-item" id="item-crn" style="display:none">
+            <i class="ri-award-line"></i><span data-ed="sobre-crn">CRN: </span>
+          </div>
+          <div class="sobre-detail-item" id="item-formacao" style="display:none">
+            <i class="ri-graduation-cap-line"></i><span data-ed="sobre-formacao">Formação: </span>
+          </div>
+          <div class="sobre-detail-item" id="item-atuacao" style="display:none">
+            <i class="ri-map-pin-2-line"></i><span data-ed="sobre-atuacao">Atuação: </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Especialidades -->
+<section class="section" id="especialidades" data-secao="especialidades" style="background: var(--surface);">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag" data-ed="especialidades-eyebrow">Áreas de Atuação</span>
+      <h2 class="section-title" data-ed="especialidades-titulo">Especialidades e Métodos</h2>
+      <p class="section-sub" data-ed="especialidades-subtitulo">Planejamento nutricional focado nas suas metas e necessidades biológicas.</p>
+    </div>
+    <div class="cards-grid" id="especialidades-grid">
+      <div class="card" data-lista="especialidades" data-i="0">
+        <div class="card-icon"><i class="ri-fire-line"></i></div>
+        <h3 class="card-title" data-ed="esp-1-titulo">Emagrecimento Sustentável</h3>
+        <p class="card-text" data-ed="esp-1-texto">Perda de gordura com preservação de massa magra, foco na saciedade e reeducação sem efeito sanfona.</p>
+      </div>
+      <div class="card" data-lista="especialidades" data-i="1">
+        <div class="card-icon"><i class="ri-pulse-line"></i></div>
+        <h3 class="card-title" data-ed="esp-2-titulo">Ganho de Massa Muscular</h3>
+        <p class="card-text" data-ed="esp-2-texto">Hipertrofia otimizada com cálculo exato de macronutrientes, superávit calórico estratégico e periodização.</p>
+      </div>
+      <div class="card" data-lista="especialidades" data-i="2">
+        <div class="card-icon"><i class="ri-heart-line"></i></div>
+        <h3 class="card-title" data-ed="esp-3-titulo">Saúde Hormonal &amp; Metabólica</h3>
+        <p class="card-text" data-ed="esp-3-texto">Ajustes nutricionais para disposição, qualidade do sono, modulação metabólica e bem-estar geral.</p>
+      </div>
+      <div class="card" data-lista="especialidades" data-i="3">
+        <div class="card-icon"><i class="ri-trophy-line"></i></div>
+        <h3 class="card-title" data-ed="esp-4-titulo">Performance Esportiva</h3>
+        <p class="card-text" data-ed="esp-4-texto">Estratégias de pré, intra e pós-treino para atletas e praticantes de atividade física organizarem a alimentação do treino.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Como Funciona -->
+<section class="section" id="como-funciona" data-secao="como-funciona">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag" data-ed="como-funciona-eyebrow">Acompanhamento</span>
+      <h2 class="section-title" data-ed="como-funciona-titulo">Como Funciona a Consulta</h2>
+      <p class="section-sub" data-ed="como-funciona-subtitulo">Passo a passo estruturado para acompanhar sua evolução com calma.</p>
+    </div>
+    <div class="etapas-grid" id="etapas-grid">
+      <div class="etapa-card" data-lista="etapas" data-i="0">
+        <div class="etapa-num">01</div>
+        <h3 class="etapa-title" data-ed="etapa-1-titulo">Primeira Consulta</h3>
+        <p class="etapa-text" data-ed="etapa-1-texto">Anamnese completa, avaliação de rotina, histórico de saúde, preferências alimentares e metas.</p>
+      </div>
+      <div class="etapa-card" data-lista="etapas" data-i="1">
+        <div class="etapa-num">02</div>
+        <h3 class="etapa-title" data-ed="etapa-2-titulo">Plano Nutricional</h3>
+        <p class="etapa-text" data-ed="etapa-2-texto">Elaboração de protocolo 100% individualizado, com opções flexíveis e orientações práticas.</p>
+      </div>
+      <div class="etapa-card" data-lista="etapas" data-i="2">
+        <div class="etapa-num">03</div>
+        <h3 class="etapa-title" data-ed="etapa-3-titulo">Acompanhamento</h3>
+        <p class="etapa-text" data-ed="etapa-3-texto">Suporte direto para dúvidas do dia a dia e suporte na adaptação da rotina.</p>
+      </div>
+      <div class="etapa-card" data-lista="etapas" data-i="3">
+        <div class="etapa-num">04</div>
+        <h3 class="etapa-title" data-ed="etapa-4-titulo">Ajustes &amp; Evolução</h3>
+        <p class="etapa-text" data-ed="etapa-4-texto">Reavaliação periódica e readequação do plano conforme o seu progresso.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Calculadora IMC -->
+<section class="section" id="calculadora" data-secao="calculadora" style="background: var(--surface);">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag" data-ed="calc-eyebrow">Ferramenta Rápida</span>
+      <h2 class="section-title" data-ed="calc-titulo">Simulador de IMC e Peso</h2>
+      <p class="section-sub" data-ed="calc-subtitulo">Confira um parâmetro inicial simplificado sobre seu índice de massa corporal.</p>
+    </div>
+    <div class="calc-card">
+      <div class="calc-row">
+        <div class="calc-group">
+          <label class="calc-label" for="calc-peso">Seu Peso (kg)</label>
+          <input type="number" id="calc-peso" class="calc-input" placeholder="Ex: 70" step="0.1">
+        </div>
+        <div class="calc-group">
+          <label class="calc-label" for="calc-altura">Sua Altura (cm)</label>
+          <input type="number" id="calc-altura" class="calc-input" placeholder="Ex: 175" step="1">
+        </div>
+      </div>
+      <button type="button" class="btn-primary" style="width:100%" onclick="calcularIMC()">Calcular IMC</button>
+      <div class="calc-res" id="calc-res-box">
+        <div class="calc-res-num" id="calc-res-val">--</div>
+        <div class="calc-res-class" id="calc-res-lbl">--</div>
+      </div>
+      <p class="calc-disclaimer">
+        * Atenção: esta estimativa matemática simples não substitui uma avaliação profissional completa com bioimpedância e dobras cutâneas.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Dicas de Alimentação -->
+<section class="section" id="dicas" data-secao="dicas">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag" data-ed="dicas-eyebrow">Conhecimento</span>
+      <h2 class="section-title" data-ed="dicas-titulo">Dicas de Alimentação</h2>
+      <p class="section-sub" data-ed="dicas-subtitulo">Estratégias práticas para melhorar seus hábitos alimentares e performance.</p>
+    </div>
+    <div class="posts-grid" id="dicas-grid">
+      <div class="post-card" data-lista="dicas" data-i="0">
+        <div>
+          <span class="post-tag">Hidratação</span>
+          <h3 class="post-title" data-ed="dica-1-titulo">Água e Performance</h3>
+          <p class="post-desc" data-ed="dica-1-desc">Uma desidratação leve de apenas 2% já pode reduzir seu rendimento no treino e afetar a cognição.</p>
+        </div>
+      </div>
+      <div class="post-card" data-lista="dicas" data-i="1">
+        <div>
+          <span class="post-tag">Organização</span>
+          <h3 class="post-title" data-ed="dica-2-titulo">Planejamento Semanal</h3>
+          <p class="post-desc" data-ed="dica-2-desc">Deixar opções saudáveis pré-prontas reduz escolhas por impulso e ajuda na constância da dieta.</p>
+        </div>
+      </div>
+      <div class="post-card" data-lista="dicas" data-i="2">
+        <div>
+          <span class="post-tag">Proteínas</span>
+          <h3 class="post-title" data-ed="dica-3-titulo">Fracionamento Proteico</h3>
+          <p class="post-desc" data-ed="dica-3-desc">Distribuir o consumo de proteína ao longo das refeições otimiza a síntese proteica muscular.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Posts e Conteúdos -->
+<section class="section" id="posts" data-secao="posts" style="background: var(--surface);">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag" data-ed="posts-eyebrow">Mídia &amp; Conteúdo</span>
+      <h2 class="section-title" data-ed="posts-titulo">Publicações &amp; Conteúdos</h2>
+      <p class="section-sub" data-ed="posts-subtitulo">Acompanhe análises e dicas exclusivas nas redes sociais.</p>
+    </div>
+    <div class="posts-grid" id="posts-grid">
+      <div class="post-card" data-lista="posts" data-i="0">
+        <div>
+          <span class="post-tag">Instagram</span>
+          <h3 class="post-title" data-ed="post-1-titulo">Mitos sobre a Creatina</h3>
+          <p class="post-desc" data-ed="post-1-desc">Entenda como funciona um dos suplementos mais estudados do mundo.</p>
+        </div>
+        <a href="https://www.instagram.com/adrianoblumer_nutri" target="_blank" rel="noopener" class="post-link">
+          Ver no Instagram <i class="ri-arrow-right-line"></i>
+        </a>
+      </div>
+      <div class="post-card" data-lista="posts" data-i="1">
+        <div>
+          <span class="post-tag">YouTube</span>
+          <h3 class="post-title" data-ed="post-2-titulo">Estratégias de Pré-Treino</h3>
+          <p class="post-desc" data-ed="post-2-desc">O que comer antes de treinar para maximizar a energia e o rendimento.</p>
+        </div>
+        <a href="https://www.youtube.com/@adrianoblumer" target="_blank" rel="noopener" class="post-link">
+          Assistir no YouTube <i class="ri-arrow-right-line"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Galeria -->
+<section class="section" id="galeria" data-secao="galeria">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag" data-ed="galeria-eyebrow">Galeria de Fotos</span>
+      <h2 class="section-title" data-ed="galeria-titulo">Consultório &amp; Rotina</h2>
+      <p class="section-sub" data-ed="galeria-subtitulo">Bastidores do atendimento, eventos e estrutura.</p>
+    </div>
+
+    <!-- Aviso CFN -->
+    <div class="galeria-avisos">
+      <i class="ri-shield-user-line"></i>
+      <div>
+        <strong>Nota de Conformidade:</strong> O Código de Ética do Nutricionista (CFN) restringe divulgações de comparações de resultados e promessas. Cada paciente é único e possui plano adaptado.
+      </div>
+    </div>
+
+    <div class="galeria-grid" id="galeria-grid">
+      <div class="galeria-item">
+        <img src="foto-6701.jpg" alt="Consultório Adriano Blumer" data-ed="galeria-1-foto">
+        <div class="galeria-caption" data-ed="galeria-1-legenda">Atendimento e Avaliação</div>
+      </div>
+      <div class="galeria-item">
+        <img src="foto-6704.jpg" alt="Acompanhamento Nutricional" data-ed="galeria-2-foto">
+        <div class="galeria-caption" data-ed="galeria-2-legenda">Estratégia e Acompanhamento</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" id="faq" data-secao="faq" style="background: var(--surface);">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag" data-ed="faq-eyebrow">Dúvidas Frequentes</span>
+      <h2 class="section-title" data-ed="faq-titulo">Perguntas Frequentes</h2>
+      <p class="section-sub" data-ed="faq-subtitulo">Respostas para as principais dúvidas sobre o atendimento.</p>
+    </div>
+    <div class="faq-grid" id="faq-grid">
+      <div class="faq-item" data-lista="faq" data-i="0">
+        <h3 class="faq-q" data-ed="faq-1-pergunta">O atendimento online é tão eficiente quanto o presencial?</h3>
+        <p class="faq-a" data-ed="faq-1-resposta">Sim. Na consulta online é feita a mesma anamnese detalhada e envio de diretrizes de medição. A estrutura do plano e o acompanhamento funcionam com o mesmo rigor científico.</p>
+      </div>
+      <div class="faq-item" data-lista="faq" data-i="1">
+        <h3 class="faq-q" data-ed="faq-2-pergunta">Preciso tomar suplementos obrigatoriamente?</h3>
+        <p class="faq-a" data-ed="faq-2-resposta">Não. A suplementação é indicada apenas quando necessária para complementar a alimentação ou otimizar a performance, de acordo com seus exames e rotina.</p>
+      </div>
+      <div class="faq-item" data-lista="faq" data-i="2">
+        <h3 class="faq-q" data-ed="faq-3-pergunta">Em quanto tempo o plano alimentar fica pronto?</h3>
+        <p class="faq-a" data-ed="faq-3-resposta">O plano alimentar é calculado individualmente e entregue após a consulta, com orientações e lista de substituições.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Depoimentos (Escondida por padrão via CSS ou JS se vazia) -->
+<section class="section nx-oculto" id="depoimentos" data-secao="depoimentos">
+  <div class="container">
+    <div class="section-header">
+      <span class="section-tag" data-ed="depoimentos-eyebrow">Avaliações</span>
+      <h2 class="section-title" data-ed="depoimentos-titulo">Depoimentos de Pacientes</h2>
+    </div>
+    <div class="cards-grid" id="depoimentos-grid"></div>
+  </div>
+</section>
+
+<!-- Redes Sociais & Contato -->
+<section class="section" id="contato" data-secao="contato">
+  <div class="container">
+    <div class="contato-box">
+      <div class="contato-info">
+        <span style="color:var(--primary);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:8px" data-ed="contato-eyebrow">Agendamento &amp; Endereço</span>
+        <h3 data-ed="contato-titulo">Atendimento Presencial e Online</h3>
+        <p data-ed="contato-subtitulo">Agende sua consulta ou tire dúvidas sobre a metodologia de acompanhamento.</p>
+
+        <div class="contato-item">
+          <i class="ri-map-pin-line"></i>
+          <div>
+            <strong>Consultório:</strong><br>
+            <span data-ed="contato-endereco">Rua Domingos de Morais, 2781 - CJ 802, Vila Mariana, São Paulo - SP, 04035-001</span><br>
+            <a href="https://maps.google.com/?q=Rua+Domingos+de+Morais,+2781+-+CJ+802,+Vila+Mariana,+S%C3%A3o+Paulo+-+SP" target="_blank" rel="noopener" style="color:var(--primary);font-size:13px;text-decoration:underline;margin-top:4px;display:inline-block">Ver no Google Maps</a>
+          </div>
+        </div>
+
+        <div class="contato-item">
+          <i class="ri-mail-line"></i>
+          <div>
+            <strong>E-mail:</strong><br>
+            <span data-ed="contato-email">nutri.adrianoblumer@gmail.com</span>
+          </div>
+        </div>
+
+        <div class="contato-item">
+          <i class="ri-time-line"></i>
+          <div>
+            <strong>Horário de resposta de mensagens:</strong><br>
+            <span data-ed="contato-horario">Seg, Qua e Sex: 10h às 16h · Ter e Qui: 11h às 19h</span>
+          </div>
+        </div>
+
+        <div class="contato-item" id="redes-sociais-links">
+          <i class="ri-share-line"></i>
+          <div>
+            <strong>Redes Sociais:</strong><br>
+            <div style="display:flex;gap:12px;margin-top:6px">
+              <a href="https://www.instagram.com/adrianoblumer_nutri" target="_blank" rel="noopener" style="color:#fff;font-size:20px"><i class="ri-instagram-line"></i></a>
+              <a href="https://www.tiktok.com/@adrianoblumer_nutri" target="_blank" rel="noopener" style="color:#fff;font-size:20px"><i class="ri-tiktok-line"></i></a>
+              <a href="https://www.youtube.com/@adrianoblumer" target="_blank" rel="noopener" style="color:#fff;font-size:20px"><i class="ri-youtube-line"></i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="contato-actions">
+        <a id="btn-wa-contato" href="https://wa.me/5511999994185?text=Ol%C3%A1%20Adriano,%20gostaria%20de%20informa%C3%A7%C3%B5es%20sobre%20agendamento." target="_blank" rel="noopener" class="btn-primary" style="padding:16px 28px;font-size:16px" data-ed="contato-btn-whatsapp">
+          <i class="ri-whatsapp-line" style="font-size:20px"></i><span>Falar no WhatsApp</span>
+        </a>
+        <a href="https://biolink.website/nutriadriano" target="_blank" rel="noopener" class="btn-outline" style="padding:16px 28px;font-size:15px;color:#fff;border-color:rgba(255,255,255,0.2)" data-ed="contato-btn-biolink">
+          <i class="ri-external-link-line"></i><span>Acessar Link de Agendamento</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Rodapé -->
+<footer data-secao="rodape">
+  <div class="footer-inner">
+    <div>
+      <div style="font-family:var(--serif);font-size:20px;color:#fff;font-weight:700;margin-bottom:6px" data-ed="rodape-nome">Adriano Blumer</div>
+      <div>Nutrição Esportiva e Clínica · CRN/SP</div>
+      <div style="margin-top:8px"><a href="privacidade.html" style="color:var(--primary);text-decoration:underline">Política de Privacidade (LGPD)</a></div>
+    </div>
+    <div>
+      &copy; <span id="year-copy">2026</span> Adriano Blumer. Todos os direitos reservados.
+    </div>
+    <div>
+      <a href="https://kernex.com.br/?utm_source=adriano&amp;utm_medium=selo&amp;utm_campaign=clientes" target="_blank" rel="noopener" class="selo-kernex">Feito com Kernex</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+const SLUG = 'adriano';
+const API_NUTRI = '/api/nutri';
+
+const NX = {
+  editar: new URLSearchParams(location.search).has('editar') && window.parent !== window,
+  originais: {},
+  conteudo: null
+};
+
+const NX_SECOES = {
+  inicio: 'Início',
+  sobre: 'Sobre',
+  especialidades: 'Especialidades',
+  'como-funciona': 'Como Funciona',
+  calculadora: 'Calculadora IMC',
+  dicas: 'Dicas',
+  posts: 'Posts & Vídeos',
+  galeria: 'Galeria',
+  faq: 'Perguntas Frequentes',
+  depoimentos: 'Depoimentos',
+  contato: 'Contato & Endereço',
+  rodape: 'Rodapé'
+};
+
+function nxLerTexto(el) {
+  let t = '';
+  el.childNodes.forEach(n => { t += n.nodeName === 'BR' ? '\n' : n.textContent.replace(/\s+/g, ' '); });
+  return t.split('\n').map(x => x.trim()).join('\n').trim();
+}
+
+function nxEscreverTexto(el, t) {
+  if (nxLerTexto(el) === t) return;
+  el.replaceChildren(...String(t).split('\n').flatMap((linha, i) => (i ? [document.createElement('br'), linha] : [linha])));
+}
+
+function nxGuardarOriginais() {
+  document.querySelectorAll('[data-ed]').forEach(el => {
+    if (el.tagName === 'IMG') NX.originais[el.dataset.ed] = { img: el.getAttribute('src'), pos: el.style.objectPosition || '' };
+    else NX.originais[el.dataset.ed] = { txt: nxLerTexto(el), href: el.tagName === 'A' ? el.getAttribute('href') : null };
+  });
+}
+
+function nxListasPadrao() { return {}; }
+
+function calcularIMC() {
+  const peso = parseFloat(document.getElementById('calc-peso').value);
+  const altCm = parseFloat(document.getElementById('calc-altura').value);
+  const resBox = document.getElementById('calc-res-box');
+  if (!peso || !altCm || peso <= 0 || altCm <= 0) {
+    alert('Por favor, informe peso e altura válidos.');
+    return;
+  }
+  const altM = altCm / 100;
+  const imc = (peso / (altM * altM)).toFixed(1);
+  let classif = '';
+  if (imc < 18.5) classif = 'Abaixo do peso ideal';
+  else if (imc < 24.9) classif = 'Peso adequado';
+  else if (imc < 29.9) classif = 'Sobrepeso';
+  else classif = 'Obesidade';
+
+  document.getElementById('calc-res-val').textContent = imc;
+  document.getElementById('calc-res-lbl').textContent = classif;
+  resBox.style.display = 'block';
+}
+
+function nxAplicar(c) {
+  NX.conteudo = c || null;
+  const ocultos = (c && c.ocultos) || {};
+  const classe = NX.editar ? 'nx-escondido' : 'nx-oculto';
+
+  // WhatsApp e Biolink
+  const numWa = (c && c.contatos && c.contatos.whatsapp) || '5511999994185';
+  const biolink = (c && c.contatos && c.contatos.biolink) || 'https://biolink.website/nutriadriano';
+
+  const btnWaTop = document.getElementById('btn-agendar-top');
+  const btnHeroAgend = document.getElementById('btn-hero-agendar');
+  const btnWaContato = document.getElementById('btn-wa-contato');
+
+  if (numWa) {
+    const cleanNum = String(numWa).replace(/\D/g, '');
+    const waUrl = `https://wa.me/${cleanNum}?text=Ol%C3%A1%20Adriano,%20gostaria%20de%20informa%C3%A7%C3%B5es%20sobre%20agendamento.`;
+    if (btnWaContato) { btnWaContato.href = waUrl; btnWaContato.style.display = 'inline-flex'; }
+  } else if (btnWaContato) {
+    btnWaContato.style.display = 'none';
+  }
+
+  const targetLink = numWa ? `https://wa.me/${String(numWa).replace(/\D/g, '')}` : biolink;
+  if (btnWaTop) btnWaTop.href = targetLink;
+  if (btnHeroAgend) btnHeroAgend.href = targetLink;
+
+  // Campos sobre (CRN, Formação, Atuação)
+  if (c && c.textos) {
+    if (c.textos['sobre-crn']) {
+      document.getElementById('item-crn').style.display = 'flex';
+    }
+    if (c.textos['sobre-formacao']) {
+      document.getElementById('item-formacao').style.display = 'flex';
+    }
+    if (c.textos['sobre-atuacao']) {
+      document.getElementById('item-atuacao').style.display = 'flex';
+    }
+  }
+
+  // Textos e Imagens
+  document.querySelectorAll('[data-ed]').forEach(el => {
+    const k = el.dataset.ed, o = NX.originais[k];
+    if (!o) return;
+    el.classList.toggle(classe, !!ocultos[k]);
+    if (o.img !== undefined) {
+      const im = c && c.imagens && c.imagens[k];
+      el.setAttribute('src', im ? im.url : o.img);
+      el.style.objectPosition = im ? `${im.posX}% ${im.posY}%` : o.pos;
+    } else {
+      nxEscreverTexto(el, c && c.textos && k in c.textos ? c.textos[k] : o.txt);
+      if (o.href !== null) el.setAttribute('href', (c && c.links && c.links[k]) || o.href);
+    }
+  });
+
+  // Seções
+  document.querySelectorAll('[data-secao]').forEach(sec => sec.classList.toggle(classe, !!ocultos['secao-' + sec.dataset.secao]));
+
+  if (NX.editar) nxMarcarEdicao();
+}
+
+function nxMarcarEdicao() {
+  const raiz = document.documentElement;
+  if (!raiz.classList.contains('nx-ed')) {
+    raiz.classList.add('nx-ed');
+    document.head.insertAdjacentHTML('beforeend', `<style>
+      .nx-ed [data-ed], .nx-ed [data-lista] { outline: 2px dashed rgba(47,168,138,.6); outline-offset: 3px; cursor: pointer; }
+      .nx-ed .nx-escondido { opacity: .35; }
+      .nx-chip { position: absolute; z-index: 40; top: 10px; left: 10px; background: #0b1512; color: #fff; font: 600 13px/1 system-ui, sans-serif; padding: 9px 12px; border-radius: 999px; border: 0; box-shadow: 0 2px 8px rgba(0,0,0,.25); }
+      .nx-ed #navbar { display: none; }
+    </style>`);
+  }
+  const ocultos = (NX.conteudo && NX.conteudo.ocultos) || {};
+  document.querySelectorAll('[data-secao]').forEach(sec => {
+    const id = sec.dataset.secao;
+    if (id === 'rodape') return;
+    if (getComputedStyle(sec).position === 'static') sec.style.position = 'relative';
+    let chip = sec.querySelector(':scope > .nx-chip[data-secao-botao]');
+    if (!chip) { chip = document.createElement('button'); chip.type = 'button'; chip.className = 'nx-chip'; chip.dataset.secaoBotao = id; sec.prepend(chip); }
+    chip.textContent = ocultos['secao-' + id] ? `Seção ${NX_SECOES[id] || id} escondida · mostrar` : `Seção ${NX_SECOES[id] || id} · esconder`;
+  });
+}
+
+function nxSecoes() {
+  return [...document.querySelectorAll('[data-secao]')].map(s => ({ id: s.dataset.secao, nome: NX_SECOES[s.dataset.secao] || s.dataset.secao }));
+}
+
+if (NX.editar) {
+  document.addEventListener('click', e => {
+    const alvo = e.target.closest('[data-secao-botao],[data-lista],[data-ed]');
+    e.preventDefault(); e.stopPropagation();
+    if (!alvo) return;
+    let msg;
+    if (alvo.dataset.secaoBotao) msg = { tipo: 'secao', id: alvo.dataset.secaoBotao, nome: NX_SECOES[alvo.dataset.secaoBotao] };
+    else if (alvo.dataset.lista) msg = { tipo: 'lista', lista: alvo.dataset.lista, i: alvo.dataset.i || '' };
+    else {
+      const k = alvo.dataset.ed, o = NX.originais[k];
+      msg = o.img !== undefined
+        ? { tipo: 'foto', chave: k, atual: alvo.getAttribute('src'), original: o.img }
+        : { tipo: 'texto', chave: k, atual: nxLerTexto(alvo), original: o.txt, link: o.href && /^(https:|tel:|mailto:)/.test(o.href) ? alvo.getAttribute('href') : null, linkOriginal: o.href };
+    }
+    parent.postMessage({ nx: 'tocar', ...msg }, location.origin);
+  }, true);
+
+  window.addEventListener('message', e => {
+    if (e.origin !== location.origin || !e.data || e.data.nx !== 'aplicar') return;
+    nxAplicar(e.data.conteudo);
+  });
+}
+
+async function iniciarConteudo() {
+  nxGuardarOriginais();
+  let c = null;
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 2500);
+    const r = await fetch(API_NUTRI + '?site=' + SLUG + '&conteudo=1', { signal: ctrl.signal });
+    clearTimeout(t);
+    c = (await r.json()).conteudo || null;
+  } catch (e) { c = null; }
+  nxAplicar(c);
+  document.documentElement.classList.remove('nx-carregando');
+  if (NX.editar) parent.postMessage({ nx: 'pronto', padroes: nxListasPadrao(), secoes: nxSecoes() }, location.origin);
+}
+
+iniciarConteudo();
+</script>
+</body>
+</html>
