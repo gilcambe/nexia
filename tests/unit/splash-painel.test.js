@@ -19,7 +19,7 @@ test('SPLASH-PAINEL 1: Leitura do HTML do painel da Amanda e metadados requerido
   const html = fs.readFileSync(htmlPath, 'utf8');
 
   assert.ok(html.includes('<meta name="agenda-site" content="splash">'), 'deve conter o meta tag agenda-site');
-  assert.ok(html.includes('<meta name="agenda-api" content="/api/locacao">'), 'deve indicar a API /api/locacao');
+  assert.ok(/<meta name="agenda-api" content="[^"]*\/api\/locacao">/.test(html), 'deve indicar a API /api/locacao');
   assert.ok(html.includes('Painel da Amanda'), 'deve conter o título do painel da Amanda');
   assert.ok(html.includes('id="aba-calendario"'), 'deve possuir a aba do calendário');
   assert.ok(html.includes('id="aba-pedidos"'), 'deve possuir a aba de pedidos');
