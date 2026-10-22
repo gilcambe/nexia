@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="nutri-site" content="adriano">
+<meta name="nutri-api" content="/api/nutri">
+<title>Painel do Adriano Blumer — Nutrição</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+<style>
+  :root {
+    --bg: #0b1512;
+    --cartao: #13221d;
+    --linha: rgba(47, 168, 138, 0.22);
+    --texto: #f6faf8;
+    --suave: rgba(246, 250, 248, 0.72);
+    --primary: #2FA88A;
+    --primary-dark: #24876e;
+    --cor-destaque: #2FA88A;
+    --accent: #c9a84c;
+    --erro: #ff6b6b;
+    --erro-f: rgba(255, 107, 107, 0.15);
+    --ok: #2A7A4E;
+    --ok-f: rgba(42, 122, 78, 0.2);
+    --alerta: #e6a23c;
+    --alerta-f: rgba(230, 162, 60, 0.15);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg); color: var(--texto); line-height: 1.5; padding-bottom: 80px; min-height: 100vh; min-width: 320px;
+  }
+  .header-painel {
+    background: var(--cartao); border-bottom: 1px solid var(--linha);
+    padding: 16px clamp(16px, 4vw, 32px); display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo-tit { font-size: 18px; font-weight: 700; color: var(--cor-destaque); display: flex; align-items: center; gap: 8px; }
+  .cont-main { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  .oculto { display: none !important; }
+
+  /* Login / Primeiro Acesso */
+  .card-login {
+    max-width: 420px; margin: 50px auto; background: var(--cartao);
+    border: 1px solid var(--linha); border-radius: 20px; padding: 32px;
+  }
+  .card-login h2 { font-size: 20px; margin-bottom: 8px; text-align: center; color: var(--cor-destaque); }
+  .card-login p { font-size: 13px; color: var(--suave); margin-bottom: 24px; text-align: center; }
+
+  /* Form */
+  label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--cor-destaque); margin: 12px 0 4px; }
+  input, select, textarea {
+    width: 100%; padding: 12px 14px; border-radius: 10px; background: rgba(255,255,255,0.04);
+    border: 1px solid var(--linha); color: var(--texto); font-size: 14px; font-family: inherit;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--cor-destaque); }
+
+  /* Botões */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600;
+    border: 0; cursor: pointer; transition: all 0.2s; text-decoration: none;
+  }
+  .btn.largo { width: 100%; margin-top: 16px; }
+  .btn.verde { background: var(--primary); color: #fff; }
+  .btn.verde:hover { background: var(--primary-dark); }
+  .btn.claro { background: rgba(255,255,255,0.08); color: var(--texto); }
+  .btn.vermelho { background: var(--erro-f); color: var(--erro); }
+  .btn.pequeno { min-height: 40px; padding: 0 14px; font-size: 14px; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .msg { border-radius: 12px; padding: 12px; font-size: 14px; margin-top: 12px; }
+  .msg.erro { background: var(--erro-f); color: var(--erro); }
+  .msg.ok { background: var(--ok-f); color: var(--ok); }
+  .msg.aviso { background: var(--alerta-f); color: var(--alerta); }
+
+  /* Nav Inferior Mobile */
+  .nav-abas {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+    background: var(--cartao); border-top: 1px solid var(--linha);
+    display: flex; justify-space-around;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+  .nav-aba-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: transparent; border: 0; color: var(--suave); font-size: 11px;
+    padding: 6px 0; position: relative; min-height: 44px; cursor: pointer;
+  }
+  .nav-aba-btn.ativa { color: var(--cor-destaque); font-weight: 700; }
+  .nav-aba-btn i { font-size: 18px; }
+
+  /* Cards */
+  .card {
+    background: var(--cartao); border: 1px solid var(--linha);
+    border-radius: 16px; padding: 20px; margin-top: 16px;
+  }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .card-title { font-size: 16px; font-weight: 700; color: var(--texto); display: flex; align-items: center; gap: 8px; }
+
+  /* Aviso CFN */
+  .aviso-cfn-box {
+    background: var(--alerta-f); border: 1px solid rgba(230,162,60,0.3);
+    border-radius: 12px; padding: 14px 16px; font-size: 13px; color: var(--alerta);
+    margin: 12px 0; display: flex; gap: 10px; align-items: flex-start;
+  }
+
+  /* Modals */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.82); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-box {
+    background: var(--cartao); border: 1px solid var(--linha); border-radius: 20px;
+    width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative;
+  }
+  .modal-fechar { position: absolute; top: 16px; right: 16px; background: transparent; border: 0; color: var(--suave); font-size: 20px; cursor: pointer; }
+
+  /* Editor iframe */
+  #site-quadro {
+    width: 100%; height: calc(100vh - 220px); min-height: 480px; border: 1px solid var(--linha);
+    border-radius: 16px; background: #fff; margin-top: 12px;
+  }
+  .acoes-editor { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+  .item-lista-painel {
+    background: rgba(255,255,255,0.02); border: 1px solid var(--linha);
+    border-radius: 12px; padding: 14px; margin-top: 10px; display: flex;
+    justify-content: space-between; align-items: center; gap: 12px;
+  }
+
+  @media (max-width: 480px) {
+    .nav-aba-btn span { font-size: 9px; }
+    .nav-aba-btn i { font-size: 16px; }
+    .btn { padding: 10px 14px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header Principal -->
+<header class="header-painel">
+  <div class="logo-tit">
+    <i class="ri-leaf-line"></i>
+    <span>Adriano Blumer · Painel</span>
+  </div>
+  <div id="usuario-topo" class="oculto">
+    <button class="btn pequeno claro" onclick="navegarAba('conta')"><i class="ri-user-settings-line"></i> Conta</button>
+  </div>
+</header>
+
+<!-- Área Deslogada / Primeiro Acesso -->
+<div id="area-deslogada" class="cont-main">
+  <div class="card-login" id="card-entrar">
+    <h2>Entrar no Painel</h2>
+    <p>Digite sua senha de acesso para gerenciar o site, fotos e Instagram.</p>
+    <div id="msg-login" class="msg erro oculto"></div>
+    <form onsubmit="executarLogin(event)">
+      <label for="input-senha-login">Senha de Acesso</label>
+      <input type="password" id="input-senha-login" required autofocus placeholder="Sua senha de acesso">
+      <button type="submit" class="btn largo verde">Entrar no Painel</button>
+    </form>
+    <p style="margin-top: 20px; font-size: 12px;">
+      <a href="#" style="color: var(--cor-destaque);" onclick="alternarTelaAcesso('primeiro')">Primeiro acesso? Ative sua conta com o código.</a>
+    </p>
+  </div>
+
+  <div class="card-login oculto" id="card-primeiro-acesso">
+    <h2>Primeiro Acesso</h2>
+    <p>Digite o código de ativação fornecido pelo administrador e crie sua senha.</p>
+    <div id="msg-primeiro" class="msg erro oculto"></div>
+    <form onsubmit="executarPrimeiroAcesso(event)">
+      <label for="input-codigo-ativacao">Código de Ativação</label>
+      <input type="text" id="input-codigo-ativacao" placeholder="Ex: CODIGONUTRI123" required>
+      <label for="input-senha-nova">Sua Nova Senha</label>
+      <input type="password" id="input-senha-nova" placeholder="Mínimo 6 caracteres" required minlength="6">
+      <button type="submit" class="btn largo verde">Ativar Conta e Entrar</button>
+    </form>
+    <p style="margin-top: 20px; font-size: 12px;">
+      <a href="#" style="color: var(--cor-destaque);" onclick="alternarTelaAcesso('login')">Já criou sua senha? Faça login.</a>
+    </p>
+  </div>
+</div>
+
+<!-- Área Logada / Painel Principal -->
+<div id="area-logada" class="cont-main oculto">
+
+  <!-- ABA 1: EDITAR MEU SITE -->
+  <section id="aba-editor">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ri-layout-edit-line"></i> Editar meu site</div>
+        <a class="btn pequeno claro" id="link-ver-site-publico" href="/" target="_blank" rel="noopener"><i class="ri-external-link-line"></i> Ver no ar</a>
+      </div>
+      <p style="font-size:13px;color:var(--suave)">Toque em qualquer texto ou foto no site abaixo para alterar. Toque na etiqueta da seção para ocultar ou exibir.</p>
+
+      <div class="acoes-editor">
+        <button class="btn pequeno verde" onclick="salvarAlteracoesSite()"><i class="ri-save-line"></i> Salvar mudanças</button>
+        <button class="btn pequeno claro" onclick="abrirHistoricoSite()"><i class="ri-history-line"></i> Histórico (últimas 10)</button>
+        <button class="btn pequeno vermelho" onclick="desfazerTudoSite()"><i class="ri-refresh-line"></i> Desfazer tudo</button>
+      </div>
+
+      <div id="editor-msg" class="msg aviso oculto"></div>
+      <iframe id="site-quadro" title="Cópia editável do seu site"></iframe>
+    </div>
+  </section>
+
+  <!-- ABA 2: FOTOS E GALERIA -->
+  <section id="aba-fotos" class="oculto">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ri-image-add-line"></i> Galeria de Fotos</div>
+      </div>
+
+      <!-- Aviso obrigatório CFN -->
+      <div class="aviso-cfn-box" id="cfn-aviso-box">
+        <i class="ri-shield-user-line" style="font-size:20px;shrink:0"></i>
+        <div>
+          <strong>Conformidade CFN:</strong><br>
+          <span id="cfn-aviso-texto">Atenção: o conselho de nutrição (CFN) restringe fotos de antes e depois e de resultados. Confirme com seu CRN antes de publicar e tenha autorização escrita do paciente.</span>
+        </div>
+      </div>
+
+      <!-- Formulário Envio Foto -->
+      <div style="border-bottom:1px solid var(--linha);padding-bottom:16px;margin-bottom:16px">
+        <h4 style="font-size:14px;color:#fff;margin-bottom:8px">Enviar Foto (Celular ou Computador)</h4>
+        <label for="foto-grupo-select">Grupo da Galeria</label>
+        <select id="foto-grupo-select">
+          <option value="consultorio">Consultório &amp; Estrutura</option>
+          <option value="bastidores">Bastidores &amp; Rotina</option>
+          <option value="pacientes">Pacientes com autorização (Atenção ao CFN)</option>
+        </select>
+        <label for="foto-file-input">Selecione a Imagem (JPG, PNG, WebP — até 600 KB)</label>
+        <input type="file" id="foto-file-input" accept="image/jpeg,image/png,image/webp">
+        <label for="foto-legenda-input">Legenda (opcional)</label>
+        <input type="text" id="foto-legenda-input" placeholder="Ex: Atendimento presencial na Vila Mariana">
+        <button class="btn largo verde" onclick="enviarFoto()"><i class="ri-upload-2-line"></i> Enviar Foto</button>
+      </div>
+
+      <div class="card-title" style="margin-bottom:10px">Fotos Cadastradas</div>
+      <div id="lista-fotos-container">Carregando fotos...</div>
+    </div>
+  </section>
+
+  <!-- ABA 3: DICAS E POSTS -->
+  <section id="aba-posts" class="oculto">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ri-article-line"></i> Dicas e Publicações</div>
+      </div>
+      <p style="font-size:13px;color:var(--suave);margin-bottom:16px">Publique dicas rápidas de alimentação ou links de posts do Instagram/YouTube para seus pacientes.</p>
+
+      <div style="border-bottom:1px solid var(--linha);padding-bottom:16px;margin-bottom:16px">
+        <h4 style="font-size:14px;color:#fff;margin-bottom:8px">Nova Dica de Alimentação</h4>
+        <label for="dica-titulo">Título da Dica</label>
+        <input type="text" id="dica-titulo" placeholder="Ex: Importância da Hidratação">
+        <label for="dica-categoria">Categoria</label>
+        <input type="text" id="dica-categoria" placeholder="Ex: Hidratação, Organização, Proteínas">
+        <label for="dica-texto">Texto Explicativo</label>
+        <textarea id="dica-texto" rows="3" placeholder="Escreva a dica simples de nutrição..."></textarea>
+        <button class="btn largo verde" onclick="adicionarDica()"><i class="ri-add-line"></i> Adicionar Dica</button>
+      </div>
+
+      <div style="border-bottom:1px solid var(--linha);padding-bottom:16px;margin-bottom:16px">
+        <h4 style="font-size:14px;color:#fff;margin-bottom:8px">Novo Post das Redes Sociais</h4>
+        <label for="post-titulo">Título do Post</label>
+        <input type="text" id="post-titulo" placeholder="Ex: Mitos sobre a Creatina">
+        <label for="post-resumo">Resumo / Descrição</label>
+        <textarea id="post-resumo" rows="2" placeholder="Resumo do que fala a publicação..."></textarea>
+        <label for="post-link">Link do Instagram ou YouTube (https://...)</label>
+        <input type="url" id="post-link" placeholder="https://www.instagram.com/p/...">
+        <button class="btn largo verde" onclick="adicionarPost()"><i class="ri-add-line"></i> Adicionar Post</button>
+      </div>
+
+      <div class="card-title" style="margin-bottom:10px">Conteúdos Atuais no Site</div>
+      <div id="lista-dicas-posts-container">
+        <!-- Renderizado dinamicamente -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ABA 4: INSTAGRAM DM -->
+  <section id="aba-instagram" class="oculto">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ri-instagram-line"></i> Respostas Automáticas no Instagram</div>
+      </div>
+      <p style="font-size:13px;color:var(--suave);margin-bottom:12px">Cadastre palavras-chave para o robô responder automaticamente quando comentarem nos seus posts.</p>
+
+      <div style="background:rgba(255,255,255,0.03);border:1px solid var(--linha);border-radius:12px;padding:14px;margin-bottom:16px">
+        <h4 style="font-size:13px;color:var(--cor-destaque);margin-bottom:6px"><i class="ri-information-line"></i> Como funciona:</h4>
+        <p style="font-size:12px;color:var(--suave)">Quando alguém comentar palavras como <em>"consulta", "valor" ou "agendar"</em> no seu Instagram, a mensagem abaixo será enviada no direct da pessoa com seu link de agendamento.</p>
+      </div>
+
+      <label for="dm-msg-padrao">Mensagem Padrão (resposta para dúvidas gerais)</label>
+      <textarea id="dm-msg-padrao" rows="3" placeholder="Olá! Deixe sua mensagem com as dúvidas que responderei dentro dos horários..."></textarea>
+
+      <div style="margin-top:16px;border-top:1px solid var(--linha);padding-top:16px">
+        <div class="card-header">
+          <h4 style="font-size:14px;color:#fff">Regras de Palavras-Chave</h4>
+          <button class="btn pequeno claro" onclick="adicionarRegraDmForm()"><i class="ri-add-line"></i> Nova Regra</button>
+        </div>
+        <div id="dm-regras-lista">Carregando regras...</div>
+        <button class="btn largo verde" style="margin-top:16px" onclick="salvarConfigDm()"><i class="ri-save-line"></i> Salvar Regras do Instagram</button>
+      </div>
+
+      <!-- Pendências da Meta -->
+      <div style="margin-top:24px;background:var(--cartao);border:1px solid var(--linha);border-radius:12px;padding:16px">
+        <h4 style="font-size:14px;color:var(--cor-destaque);margin-bottom:8px"><i class="ri-checkbox-circle-line"></i> Lista do que falta configurar na Meta</h4>
+        <ul style="font-size:12px;color:var(--suave);padding-left:20px;line-height:1.8">
+          <li>Conta do Instagram convertida para <strong>Conta Profissional / Criador</strong></li>
+          <li>Página do Facebook vinculada ao perfil do Instagram</li>
+          <li>Permissão de acesso às mensagens na Meta Business Suite ("Permitir acesso às mensagens")</li>
+          <li>Conectar o app KERNEX Nutri nas Configurações da Meta (será detalhado na Parte 4)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABA 5: CONTATOS E AVISOS -->
+  <section id="aba-contatos" class="oculto">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ri-contacts-book-line"></i> Contatos, Endereço e Avisos</div>
+      </div>
+      <form onsubmit="salvarContatosEAvisos(event)">
+        <label for="cnt-whatsapp">WhatsApp (somente números)</label>
+        <input type="tel" id="cnt-whatsapp" placeholder="5511999994185">
+        <p style="font-size:11px;color:var(--suave)">Se este campo estiver vazio, o botão de WhatsApp será ocultado no site.</p>
+
+        <label for="cnt-email">E-mail Profissional</label>
+        <input type="email" id="cnt-email" placeholder="nutri.adrianoblumer@gmail.com">
+
+        <label for="cnt-endereco">Endereço do Consultório</label>
+        <input type="text" id="cnt-endereco" placeholder="Rua Domingos de Morais, 2781 - CJ 802, Vila Mariana, São Paulo - SP, 04035-001">
+
+        <label for="cnt-biolink">Link de Agendamento (Biolink / Agenda)</label>
+        <input type="url" id="cnt-biolink" placeholder="https://biolink.website/nutriadriano">
+
+        <label for="cnt-horario">Horário de Resposta de Mensagens</label>
+        <input type="text" id="cnt-horario" placeholder="Seg, Qua e Sex: 10h às 16h · Ter e Qui: 11h às 19h">
+
+        <label for="cnt-instagram">Instagram (URL completa)</label>
+        <input type="url" id="cnt-instagram" placeholder="https://www.instagram.com/adrianoblumer_nutri">
+
+        <label for="cnt-tiktok">TikTok (URL completa)</label>
+        <input type="url" id="cnt-tiktok" placeholder="https://www.tiktok.com/@adrianoblumer_nutri">
+
+        <label for="cnt-youtube">YouTube (URL completa)</label>
+        <input type="url" id="cnt-youtube" placeholder="https://www.youtube.com/@adrianoblumer">
+
+        <button type="submit" class="btn largo verde"><i class="ri-save-line"></i> Salvar Informações de Contato</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ABA 6: MINHA CONTA -->
+  <section id="aba-conta" class="oculto">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ri-user-settings-line"></i> Minha Conta</div>
+      </div>
+
+      <div id="conta-msg" class="msg oculto"></div>
+
+      <div style="border-bottom:1px solid var(--linha);padding-bottom:16px;margin-bottom:16px">
+        <h4 style="font-size:14px;color:#fff;margin-bottom:8px">Alterar Senha</h4>
+        <label for="conta-senha-atual">Senha Atual</label>
+        <input type="password" id="conta-senha-atual" placeholder="Sua senha atual">
+        <label for="conta-senha-nova">Nova Senha</label>
+        <input type="password" id="conta-senha-nova" placeholder="Nova senha (mínimo 6 caracteres)">
+        <button class="btn largo verde" onclick="executarTrocaSenha()"><i class="ri-lock-password-line"></i> Atualizar Senha</button>
+      </div>
+
+      <button class="btn largo vermelho" onclick="logout()"><i class="ri-logout-box-r-line"></i> Sair do Painel</button>
+    </div>
+  </section>
+
+</div>
+
+<!-- MODAL EDIÇÃO DE CAMPO NO SITE -->
+<div id="modal-editar-campo" class="modal-overlay oculto">
+  <div class="modal-box">
+    <button class="modal-fechar" onclick="fecharModalCampo()">&times;</button>
+    <h3 style="font-size: 18px; margin-bottom: 12px; color: var(--cor-destaque);" id="modal-campo-titulo">Alterar Conteúdo</h3>
+    <div id="modal-campo-corpo"></div>
+  </div>
+</div>
+
+<!-- Menu Inferior Mobile-First -->
+<nav id="menu-inferior" class="nav-abas oculto">
+  <button class="nav-aba-btn ativa" onclick="navegarAba('editor')" id="tab-editor">
+    <i class="ri-layout-edit-line"></i>
+    <span>Editar Site</span>
+  </button>
+  <button class="nav-aba-btn" onclick="navegarAba('fotos')" id="tab-fotos">
+    <i class="ri-image-line"></i>
+    <span>Fotos</span>
+  </button>
+  <button class="nav-aba-btn" onclick="navegarAba('posts')" id="tab-posts">
+    <i class="ri-article-line"></i>
+    <span>Posts</span>
+  </button>
+  <button class="nav-aba-btn" onclick="navegarAba('instagram')" id="tab-instagram">
+    <i class="ri-instagram-line"></i>
+    <span>Instagram</span>
+  </button>
+  <button class="nav-aba-btn" onclick="navegarAba('contatos')" id="tab-contatos">
+    <i class="ri-contacts-book-line"></i>
+    <span>Contatos</span>
+  </button>
+  <button class="nav-aba-btn" onclick="navegarAba('conta')" id="tab-conta">
+    <i class="ri-user-line"></i>
+    <span>Conta</span>
+  </button>
+</nav>
+
+<script src="painel.js"></script>
+<script>
+  let TOKEN = sessionStorage.getItem('nutri_token') || '';
+  let SITE_EDITOR = { aberto: false, conteudo: null, pronto: false, chaveTocada: null, tipoTocado: null };
+  let FOTOS_CACHE = [];
+  let REGRAS_DM_CACHE = [];
+
+  const SITE_SLUG = 'adriano';
+  const API_NUTRI = '/api/nutri';
+  const SITE_URL = '/';
+
+  function init() {
+    if (TOKEN) {
+      exibirAreaLogada();
+      carregarTudo();
+    } else {
+      exibirAreaDeslogada();
+    }
+
+    window.addEventListener('message', e => {
+      if (e.origin !== location.origin || !e.data || !e.data.nx) return;
+      if (e.data.nx === 'pronto') {
+        SITE_EDITOR.pronto = true;
+        const msg = document.getElementById('editor-msg');
+        msg.classList.add('oculto');
+        enviarConteudoIframe();
+      } else if (e.data.nx === 'tocar') {
+        tratarToqueNoSite(e.data);
+      }
+    });
+  }
+
+  function alternarTelaAcesso(qual) {
+    document.getElementById('card-entrar').classList.toggle('oculto', qual !== 'login');
+    document.getElementById('card-primeiro-acesso').classList.toggle('oculto', qual !== 'primeiro');
+  }
+
+  function exibirAreaLogada() {
+    document.getElementById('area-deslogada').classList.add('oculto');
+    document.getElementById('area-logada').classList.remove('oculto');
+    document.getElementById('menu-inferior').classList.remove('oculto');
+    document.getElementById('usuario-topo').classList.remove('oculto');
+  }
+
+  function exibirAreaDeslogada() {
+    document.getElementById('area-deslogada').classList.remove('oculto');
+    document.getElementById('area-logada').classList.add('oculto');
+    document.getElementById('menu-inferior').classList.add('oculto');
+    document.getElementById('usuario-topo').classList.add('oculto');
+  }
+
+  async function apiPost(payload) {
+    try {
+      const res = await fetch(API_NUTRI, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ site: SITE_SLUG, token: TOKEN, ...payload })
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.status === 401 && body.sair) {
+        logout();
+        return { status: 401, body };
+      }
+      return { status: res.status, body };
+    } catch (err) {
+      return { status: 0, body: { error: 'Erro de rede ou servidor indisponível.' } };
+    }
+  }
+
+  async function apiGet(query = {}) {
+    try {
+      const q = new URLSearchParams({ site: SITE_SLUG, ...query });
+      const res = await fetch(`${API_NUTRI}?${q.toString()}`);
+      const body = await res.json().catch(() => ({}));
+      return { status: res.status, body };
+    } catch (err) {
+      return { status: 0, body: { error: 'Erro de conexão.' } };
+    }
+  }
+
+  async function executarLogin(e) {
+    e.preventDefault();
+    const senha = document.getElementById('input-senha-login').value;
+    const msg = document.getElementById('msg-login');
+    msg.classList.add('oculto');
+
+    const res = await apiPost({ acao: 'entrar', senha });
+    if (res.status === 200 && res.body.token) {
+      TOKEN = res.body.token;
+      sessionStorage.setItem('nutri_token', TOKEN);
+      exibirAreaLogada();
+      carregarTudo();
+    } else if (res.body.primeiro_acesso) {
+      msg.textContent = 'Primeiro acesso: informe o código de ativação.';
+      msg.classList.remove('oculto');
+      alternarTelaAcesso('primeiro');
+    } else if (res.body.sem_ativacao) {
+      msg.textContent = 'Esta conta ainda não foi ativada pelo administrador.';
+      msg.classList.remove('oculto');
+    } else {
+      msg.textContent = res.body.error || 'Senha incorreta.';
+      msg.classList.remove('oculto');
+    }
+  }
+
+  async function executarPrimeiroAcesso(e) {
+    e.preventDefault();
+    const codigo = document.getElementById('input-codigo-ativacao').value.trim();
+    const senha_nova = document.getElementById('input-senha-nova').value;
+    const msg = document.getElementById('msg-primeiro');
+    msg.classList.add('oculto');
+
+    const res = await apiPost({ acao: 'primeiro-acesso', codigo, senha_nova });
+    if (res.status === 200 && res.body.token) {
+      TOKEN = res.body.token;
+      sessionStorage.setItem('nutri_token', TOKEN);
+      exibirAreaLogada();
+      carregarTudo();
+    } else {
+      msg.textContent = res.body.error || 'Código de ativação incorreto.';
+      msg.classList.remove('oculto');
+    }
+  }
+
+  function logout() {
+    if (TOKEN) apiPost({ acao: 'sair' });
+    TOKEN = '';
+    sessionStorage.removeItem('nutri_token');
+    exibirAreaDeslogada();
+  }
+
+  function carregarTudo() {
+    carregarConteudoSiteInicial();
+    carregarPerfilContatos();
+    carregarFotos();
+    carregarConfigDm();
+  }
+
+  async function carregarConteudoSiteInicial() {
+    const res = await apiGet({ conteudo: '1' });
+    if (res.status === 200 && res.body.conteudo) {
+      SITE_EDITOR.conteudo = res.body.conteudo;
+      renderizarDicasEPosts();
+    } else {
+      SITE_EDITOR.conteudo = SITE_EDITOR.conteudo || {};
+    }
+  }
+
+  async function carregarPerfilContatos() {
+    const res = await apiGet({});
+    if (res.status === 200) {
+      const cfg = res.body;
+      document.getElementById('cnt-whatsapp').value = cfg.whatsapp || '';
+      document.getElementById('cnt-email').value = cfg.email || '';
+      document.getElementById('cnt-endereco').value = cfg.endereco || '';
+      document.getElementById('cnt-biolink').value = cfg.biolink || '';
+      document.getElementById('cnt-horario').value = cfg.horario_resposta || '';
+      document.getElementById('cnt-instagram').value = cfg.instagram || '';
+      document.getElementById('cnt-tiktok').value = cfg.tiktok || '';
+      document.getElementById('cnt-youtube').value = cfg.youtube || '';
+    }
+  }
+
+  /* --- ABA EDITAR SITE --- */
+  function abrirSiteEditor() {
+    SITE_EDITOR.aberto = true;
+    document.getElementById('link-ver-site-publico').href = SITE_URL;
+    const msg = document.getElementById('editor-msg');
+    msg.textContent = 'Carregando a cópia do seu site...';
+    msg.classList.remove('oculto');
+
+    if (SITE_EDITOR.conteudo) {
+      document.getElementById('site-quadro').src = `${SITE_URL}?editar=1`;
+    } else {
+      carregarConteudoSiteInicial().then(() => {
+        document.getElementById('site-quadro').src = `${SITE_URL}?editar=1`;
+      });
+    }
+  }
+
+  function quadroIframe() {
+    return document.getElementById('site-quadro').contentWindow;
+  }
+
+  function enviarConteudoIframe() {
+    if (SITE_EDITOR.pronto) {
+      quadroIframe().postMessage({ nx: 'aplicar', conteudo: SITE_EDITOR.conteudo }, location.origin);
+    }
+  }
+
+  function tratarToqueNoSite(data) {
+    if (data.tipo === 'secao') {
+      const c = SITE_EDITOR.conteudo || {};
+      if (!c.ocultos) c.ocultos = {};
+      const key = 'secao-' + data.id;
+      c.ocultos[key] = !c.ocultos[key];
+      SITE_EDITOR.conteudo = c;
+      enviarConteudoIframe();
+    } else if (data.tipo === 'texto') {
+      abrirModalEditarTexto(data);
+    } else if (data.tipo === 'foto') {
+      abrirModalEditarFoto(data);
+    } else if (data.tipo === 'lista') {
+      navegarAba('posts');
+    }
+  }
+
+  function abrirModalEditarTexto(data) {
+    SITE_EDITOR.chaveTocada = data.chave;
+    SITE_EDITOR.tipoTocado = 'texto';
+    const modal = document.getElementById('modal-editar-campo');
+    const tit = document.getElementById('modal-campo-titulo');
+    const corp = document.getElementById('modal-campo-corpo');
+
+    tit.textContent = 'Editar Texto';
+    corp.innerHTML = `
+      <label for="edit-texto-val">Texto</label>
+      <textarea id="edit-texto-val" rows="4">${AdrianoPainel.escapeHtml(data.atual)}</textarea>
+      <button class="btn largo verde" onclick="confirmarEdicaoTexto()">Aplicar Texto</button>
+    `;
+    modal.classList.remove('oculto');
+  }
+
+  function confirmarEdicaoTexto() {
+    const val = document.getElementById('edit-texto-val').value;
+    if (!SITE_EDITOR.conteudo) SITE_EDITOR.conteudo = {};
+    if (!SITE_EDITOR.conteudo.textos) SITE_EDITOR.conteudo.textos = {};
+    SITE_EDITOR.conteudo.textos[SITE_EDITOR.chaveTocada] = val;
+    fecharModalCampo();
+    enviarConteudoIframe();
+  }
+
+  function abrirModalEditarFoto(data) {
+    SITE_EDITOR.chaveTocada = data.chave;
+    SITE_EDITOR.tipoTocado = 'foto';
+    const modal = document.getElementById('modal-editar-campo');
+    const tit = document.getElementById('modal-campo-titulo');
+    const corp = document.getElementById('modal-campo-corpo');
+
+    tit.textContent = 'Trocar Foto';
+    corp.innerHTML = `
+      <p style="font-size:12px;color:var(--suave);margin-bottom:8px">Escolha uma imagem do seu celular ou computador (redução automática para até 600 KB).</p>
+      <input type="file" id="edit-foto-input" accept="image/jpeg,image/png,image/webp">
+      <button class="btn largo verde" style="margin-top:12px" onclick="confirmarEdicaoFoto()">Trocar Foto</button>
+    `;
+    modal.classList.remove('oculto');
+  }
+
+  async function confirmarEdicaoFoto() {
+    const fileEl = document.getElementById('edit-foto-input');
+    if (!fileEl || !fileEl.files || !fileEl.files[0]) return alert('Selecione uma foto.');
+    const file = fileEl.files[0];
+
+    try {
+      const base64 = await AdrianoPainel.comprimirImagemClient(file, 600 * 1024);
+      if (!SITE_EDITOR.conteudo) SITE_EDITOR.conteudo = {};
+      if (!SITE_EDITOR.conteudo.imagens) SITE_EDITOR.conteudo.imagens = {};
+      SITE_EDITOR.conteudo.imagens[SITE_EDITOR.chaveTocada] = { url: base64, posX: 50, posY: 50 };
+      fecharModalCampo();
+      enviarConteudoIframe();
+    } catch (err) {
+      alert(err.message || 'Não foi possível processar a imagem. Tente outra foto.');
+    }
+  }
+
+  function fecharModalCampo() {
+    document.getElementById('modal-editar-campo').classList.add('oculto');
+  }
+
+  function salvarAlteracoesSite() {
+    apiPost({ acao: 'site-salvar', conteudo: SITE_EDITOR.conteudo }).then(res => {
+      if (res.status === 200) {
+        alert('Site salvo com sucesso!');
+        renderizarDicasEPosts();
+      } else {
+        alert(res.body.error || 'Erro ao salvar o site.');
+      }
+    });
+  }
+
+  function desfazerTudoSite() {
+    if (!confirm('Deseja cancelar todas as alterações e voltar ao conteúdo original?')) return;
+    apiPost({ acao: 'site-desfazer' }).then(res => {
+      if (res.status === 200) {
+        alert('Conteúdo restaurado ao padrão.');
+        carregarConteudoSiteInicial().then(() => {
+          if (SITE_EDITOR.aberto) abrirSiteEditor();
+        });
+      }
+    });
+  }
+
+  function abrirHistoricoSite() {
+    apiPost({ acao: 'site-historico' }).then(res => {
+      if (res.status === 200) {
+        const hist = res.body.historico || [];
+        if (!hist.length) return alert('Nenhuma versão anterior no histórico.');
+        const msg = hist.map((h, i) => `${i + 1}. Salvo em: ${new Date(h.atualizado_em || h.salvo_em).toLocaleString('pt-BR')}`).join('\n');
+        const num = prompt(`Escolha a versão para restaurar (1 a ${hist.length}):\n\n${msg}`);
+        const idx = Number(num) - 1;
+        if (hist[idx]) {
+          apiPost({ acao: 'site-restaurar', id: hist[idx].id }).then(r => {
+            if (r.status === 200) {
+              alert('Versão restaurada!');
+              carregarConteudoSiteInicial().then(() => {
+                if (SITE_EDITOR.aberto) abrirSiteEditor();
+              });
+            }
+          });
+        }
+      }
+    });
+  }
+
+  /* --- ABA FOTOS --- */
+  async function carregarFotos() {
+    const cont = document.getElementById('lista-fotos-container');
+    const res = await apiPost({ acao: 'foto-listar' });
+    if (res.status !== 200) {
+      cont.textContent = 'Erro ao carregar fotos.';
+      return;
+    }
+    FOTOS_CACHE = res.body.fotos || [];
+    renderizarFotos();
+  }
+
+  function renderizarFotos() {
+    const cont = document.getElementById('lista-fotos-container');
+    if (!FOTOS_CACHE.length) {
+      cont.innerHTML = '<p style="font-size:13px;color:var(--suave)">Nenhuma foto enviada ainda.</p>';
+      return;
+    }
+
+    let html = '';
+    FOTOS_CACHE.forEach(f => {
+      const idEsc = AdrianoPainel.escapeHtml(f.id);
+      const legEsc = AdrianoPainel.escapeHtml(f.legenda || 'Foto sem legenda');
+      const grpEsc = AdrianoPainel.escapeHtml(f.grupo || 'consultorio');
+      const urlEsc = AdrianoPainel.escapeHtml(f.url);
+
+      html += `
+        <div class="item-lista-painel">
+          <div style="display:flex;align-items:center;gap:12px">
+            <img src="${urlEsc}" alt="${legEsc}" style="width:50px;height:50px;object-fit:cover;border-radius:8px">
+            <div>
+              <strong style="font-size:13px;color:#fff">${legEsc}</strong><br>
+              <span style="font-size:11px;color:var(--suave)">Grupo: ${grpEsc} ${f.capa ? '· Capa' : ''}</span>
+            </div>
+          </div>
+          <button class="btn pequeno vermelho" onclick="removerFoto('${idEsc}')"><i class="ri-delete-bin-line"></i></button>
+        </div>
+      `;
+    });
+    cont.innerHTML = html;
+  }
+
+  async function enviarFoto() {
+    const grupo = document.getElementById('foto-grupo-select').value;
+    const legenda = document.getElementById('foto-legenda-input').value.trim();
+    const fileEl = document.getElementById('foto-file-input');
+
+    if (!fileEl || !fileEl.files || !fileEl.files[0]) {
+      return alert('Selecione um arquivo de imagem.');
+    }
+
+    if (grupo === 'pacientes') {
+      const conf = confirm(`${AdrianoPainel.AVISO_CFN_TEXTO}\n\nDeseja prosseguir com o envio?`);
+      if (!conf) return;
+    }
+
+    const file = fileEl.files[0];
+    try {
+      const base64Data = await AdrianoPainel.comprimirImagemClient(file, 600 * 1024);
+      const res = await apiPost({
+        acao: 'foto-enviar',
+        dados: base64Data,
+        tipo: file.type || 'image/jpeg',
+        grupo,
+        legenda,
+      });
+
+      if (res.status === 201) {
+        alert('Foto enviada com sucesso!');
+        fileEl.value = '';
+        document.getElementById('foto-legenda-input').value = '';
+        carregarFotos();
+        if (SITE_EDITOR.aberto) enviarConteudoIframe();
+      } else {
+        alert(res.body.error || 'Erro ao enviar foto.');
+      }
+    } catch (e) {
+      alert(e.message || 'Erro ao processar imagem.');
+    }
+  }
+
+  async function removerFoto(id) {
+    if (!confirm('Deseja remover esta foto?')) return;
+    const res = await apiPost({ acao: 'foto-remover', id });
+    if (res.status === 200) {
+      carregarFotos();
+      if (SITE_EDITOR.aberto) enviarConteudoIframe();
+    }
+  }
+
+  /* --- ABA DICAS E POSTS --- */
+  function renderizarDicasEPosts() {
+    const cont = document.getElementById('lista-dicas-posts-container');
+    if (!cont) return;
+
+    const dicas = (SITE_EDITOR.conteudo && SITE_EDITOR.conteudo.dicas) || [];
+    const posts = (SITE_EDITOR.conteudo && SITE_EDITOR.conteudo.posts) || [];
+
+    if (!dicas.length && !posts.length) {
+      cont.innerHTML = '<p style="font-size:13px;color:var(--suave)">Nenhuma dica ou post cadastrado ainda.</p>';
+      return;
+    }
+
+    let html = '<h4 style="font-size:14px;color:#fff;margin-bottom:8px">Dicas de Alimentação</h4>';
+    if (!dicas.length) {
+      html += '<p style="font-size:12px;color:var(--suave);margin-bottom:12px">Nenhuma dica cadastrada.</p>';
+    } else {
+      dicas.forEach((d, i) => {
+        html += `
+          <div class="item-lista-painel">
+            <div>
+              <strong style="font-size:13px;color:#fff">${AdrianoPainel.escapeHtml(d.titulo)}</strong>
+              <span style="font-size:11px;color:var(--cor-destaque)"> (${AdrianoPainel.escapeHtml(d.categoria || 'Geral')})</span>
+              <p style="font-size:12px;color:var(--suave);margin-top:2px">${AdrianoPainel.escapeHtml(d.texto)}</p>
+            </div>
+            <button class="btn pequeno vermelho" onclick="removerDica(${i})"><i class="ri-delete-bin-line"></i></button>
+          </div>
+        `;
+      });
+    }
+
+    html += '<h4 style="font-size:14px;color:#fff;margin-top:16px;margin-bottom:8px">Publicações das Redes</h4>';
+    if (!posts.length) {
+      html += '<p style="font-size:12px;color:var(--suave)">Nenhum post cadastrado.</p>';
+    } else {
+      posts.forEach((p, i) => {
+        html += `
+          <div class="item-lista-painel">
+            <div>
+              <strong style="font-size:13px;color:#fff">${AdrianoPainel.escapeHtml(p.titulo)}</strong>
+              <p style="font-size:12px;color:var(--suave);margin-top:2px">${AdrianoPainel.escapeHtml(p.resumo)}</p>
+            </div>
+            <button class="btn pequeno vermelho" onclick="removerPost(${i})"><i class="ri-delete-bin-line"></i></button>
+          </div>
+        `;
+      });
+    }
+
+    cont.innerHTML = html;
+  }
+
+  function adicionarDica() {
+    const titulo = document.getElementById('dica-titulo').value.trim();
+    const categoria = document.getElementById('dica-categoria').value.trim();
+    const texto = document.getElementById('dica-texto').value.trim();
+
+    if (!titulo || !texto) return alert('Preencha o título e o texto da dica.');
+
+    if (!SITE_EDITOR.conteudo) SITE_EDITOR.conteudo = {};
+    if (!Array.isArray(SITE_EDITOR.conteudo.dicas)) SITE_EDITOR.conteudo.dicas = [];
+
+    SITE_EDITOR.conteudo.dicas.push({
+      id: String(Math.random()).slice(2, 10),
+      titulo,
+      categoria: categoria || 'Geral',
+      texto,
+    });
+
+    salvarAlteracoesSite();
+    document.getElementById('dica-titulo').value = '';
+    document.getElementById('dica-categoria').value = '';
+    document.getElementById('dica-texto').value = '';
+  }
+
+  function removerDica(idx) {
+    if (!SITE_EDITOR.conteudo || !Array.isArray(SITE_EDITOR.conteudo.dicas)) return;
+    SITE_EDITOR.conteudo.dicas.splice(idx, 1);
+    salvarAlteracoesSite();
+  }
+
+  function adicionarPost() {
+    const titulo = document.getElementById('post-titulo').value.trim();
+    const resumo = document.getElementById('post-resumo').value.trim();
+    const link = document.getElementById('post-link').value.trim();
+
+    if (!titulo || !resumo) return alert('Preencha o título e o resumo da publicação.');
+
+    if (!SITE_EDITOR.conteudo) SITE_EDITOR.conteudo = {};
+    if (!Array.isArray(SITE_EDITOR.conteudo.posts)) SITE_EDITOR.conteudo.posts = [];
+
+    SITE_EDITOR.conteudo.posts.push({
+      id: String(Math.random()).slice(2, 10),
+      titulo,
+      resumo,
+      link: AdrianoPainel.validarUrlHttps(link),
+    });
+
+    salvarAlteracoesSite();
+    document.getElementById('post-titulo').value = '';
+    document.getElementById('post-resumo').value = '';
+    document.getElementById('post-link').value = '';
+  }
+
+  function removerPost(idx) {
+    if (!SITE_EDITOR.conteudo || !Array.isArray(SITE_EDITOR.conteudo.posts)) return;
+    SITE_EDITOR.conteudo.posts.splice(idx, 1);
+    salvarAlteracoesSite();
+  }
+
+  /* --- ABA INSTAGRAM DM --- */
+  async function carregarConfigDm() {
+    const res = await apiPost({ acao: 'dm-config-ler' });
+    if (res.status === 200) {
+      REGRAS_DM_CACHE = res.body.regras || [];
+      document.getElementById('dm-msg-padrao').value = res.body.mensagem_padrao || '';
+      renderizarRegrasDm();
+    }
+  }
+
+  function renderizarRegrasDm() {
+    const cont = document.getElementById('dm-regras-lista');
+    if (!REGRAS_DM_CACHE.length) {
+      cont.innerHTML = '<p style="font-size:12px;color:var(--suave);margin-top:8px">Nenhuma regra cadastrada. Clique em "Nova Regra".</p>';
+      return;
+    }
+
+    let html = '';
+    REGRAS_DM_CACHE.forEach((r, i) => {
+      const palsStr = AdrianoPainel.escapeHtml(Array.isArray(r.palavras) ? r.palavras.join(', ') : r.palavras);
+      const msgEsc = AdrianoPainel.escapeHtml(r.mensagem);
+      const linkEsc = AdrianoPainel.escapeHtml(r.link || '');
+
+      html += `
+        <div style="background:rgba(255,255,255,0.02);border:1px solid var(--linha);border-radius:12px;padding:12px;margin-top:10px">
+          <label>Palavras-Chave (separadas por vírgula)</label>
+          <input type="text" id="dm-pals-${i}" value="${palsStr}" placeholder="consulta, valor, agendar">
+          <label>Mensagem de Resposta</label>
+          <textarea id="dm-msg-${i}" rows="2">${msgEsc}</textarea>
+          <label>Link (opcional, https://...)</label>
+          <input type="url" id="dm-link-${i}" value="${linkEsc}">
+          <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+            <label style="margin:0;display:flex;align-items:center;gap:6px">
+              <input type="checkbox" id="dm-ativa-${i}" ${r.ativa ? 'checked' : ''} style="width:auto"> Regra Ativa
+            </label>
+            <button class="btn pequeno vermelho" onclick="removerRegraDm(${i})">Excluir Regra</button>
+          </div>
+        </div>
+      `;
+    });
+    cont.innerHTML = html;
+  }
+
+  function adicionarRegraDmForm() {
+    REGRAS_DM_CACHE.push({
+      id: String(Math.random()).slice(2, 10),
+      palavras: ['consulta'],
+      mensagem: 'Olá! Acesse o biolink para informações de agendamento.',
+      link: 'https://biolink.website/nutriadriano',
+      ativa: true,
+    });
+    renderizarRegrasDm();
+  }
+
+  function removerRegraDm(i) {
+    REGRAS_DM_CACHE.splice(i, 1);
+    renderizarRegrasDm();
+  }
+
+  async function salvarConfigDm() {
+    const regrasMontadas = REGRAS_DM_CACHE.map((_, i) => {
+      const palsStr = document.getElementById(`dm-pals-${i}`)?.value || '';
+      const mensagem = document.getElementById(`dm-msg-${i}`)?.value || '';
+      const link = document.getElementById(`dm-link-${i}`)?.value || '';
+      const ativa = document.getElementById(`dm-ativa-${i}`)?.checked ?? true;
+
+      const palavras = palsStr.split(',').map(p => p.trim()).filter(Boolean);
+      return { palavras, mensagem, link, ativa };
+    });
+
+    const msgPadrao = document.getElementById('dm-msg-padrao').value.trim();
+
+    const res = await apiPost({
+      acao: 'dm-config-salvar',
+      regras: regrasMontadas,
+      mensagem_padrao: msgPadrao,
+    });
+
+    if (res.status === 200) {
+      alert('Configuração de Instagram DM salva com sucesso!');
+      carregarConfigDm();
+    } else {
+      alert(res.body.error || 'Erro ao salvar configuração.');
+    }
+  }
+
+  /* --- ABA CONTATOS E AVISOS --- */
+  function salvarContatosEAvisos(e) {
+    e.preventDefault();
+    if (!SITE_EDITOR.conteudo) SITE_EDITOR.conteudo = {};
+    if (!SITE_EDITOR.conteudo.contatos) SITE_EDITOR.conteudo.contatos = {};
+
+    SITE_EDITOR.conteudo.contatos = {
+      whatsapp: document.getElementById('cnt-whatsapp').value.trim(),
+      email: document.getElementById('cnt-email').value.trim(),
+      endereco: document.getElementById('cnt-endereco').value.trim(),
+      biolink: document.getElementById('cnt-biolink').value.trim(),
+      horario_resposta: document.getElementById('cnt-horario').value.trim(),
+      instagram: document.getElementById('cnt-instagram').value.trim(),
+      tiktok: document.getElementById('cnt-tiktok').value.trim(),
+      youtube: document.getElementById('cnt-youtube').value.trim(),
+    };
+
+    salvarAlteracoesSite();
+  }
+
+  /* --- ABA MINHA CONTA --- */
+  function executarTrocaSenha() {
+    const senha_atual = document.getElementById('conta-senha-atual').value;
+    const senha_nova = document.getElementById('conta-senha-nova').value;
+    const msg = document.getElementById('conta-msg');
+    msg.classList.add('oculto');
+
+    if (!senha_atual || !senha_nova) return alert('Preencha a senha atual e a nova senha.');
+
+    apiPost({ acao: 'trocar-senha', senha_atual, senha_nova }).then(res => {
+      if (res.status === 200) {
+        msg.textContent = 'Senha alterada com sucesso!';
+        msg.className = 'msg ok';
+        msg.classList.remove('oculto');
+        document.getElementById('conta-senha-atual').value = '';
+        document.getElementById('conta-senha-nova').value = '';
+      } else {
+        msg.textContent = res.body.error || 'Erro ao alterar senha.';
+        msg.className = 'msg erro';
+        msg.classList.remove('oculto');
+      }
+    });
+  }
+
+  function navegarAba(nome) {
+    ['editor', 'fotos', 'posts', 'instagram', 'contatos', 'conta'].forEach(a => {
+      const sec = document.getElementById(`aba-${a}`);
+      const btn = document.getElementById(`tab-${a}`);
+      if (sec) sec.classList.toggle('oculto', a !== nome);
+      if (btn) btn.classList.toggle('ativa', a === nome);
+    });
+    if (nome === 'editor' && !SITE_EDITOR.aberto) {
+      abrirSiteEditor();
+    }
+  }
+
+  init();
+</script>
+</body>
+</html>
