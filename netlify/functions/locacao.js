@@ -118,13 +118,34 @@ function limparExtras(lista) {
   return out;
 }
 
-// Avisos de promoção que a dona escreve (ex.: "Disponível dia 02/11 por R$ 799,99"). Só aparecem os ativos.
+// Link de imagem aceito nas promoções: foto enviada pelo próprio painel (/api/locacao?...&foto=ID) ou https.
+const linkImagem = t => { const v = str(t, 300); return /^(https:\/\/|\/api\/locacao\?)/.test(v) ? v : ''; };
+
+// Avisos de promoção que a dona escreve (ex.: "Disponível dia 02/11 por R$ 799,99"), com print/imagem opcional. Só aparecem os ativos.
 function limparPromocoes(lista) {
   const out = [];
   for (const x of Array.isArray(lista) ? lista.slice(0, 10) : []) {
     const texto = str(x && x.texto, 200);
+    const imagem = linkImagem(x && x.imagem);
+    if (!texto && !imagem) continue;
+    out.push({ id: str(x.id, 40).replace(/[^a-z0-9-]/gi, '') || aleatorio(4), texto, imagem, ativa: x.ativa !== false });
+  }
+  return out;
+}
+
+// Avaliações de clientes escritas pela dona (nome, texto e estrelas). Prints de avaliações entram como fotos da "unidade" avaliacoes.
+function limparAvaliacoes(lista) {
+  const out = [];
+  for (const x of Array.isArray(lista) ? lista.slice(0, 20) : []) {
+    const texto = str(x && x.texto, 400);
     if (!texto) continue;
-    out.push({ id: str(x.id, 40).replace(/[^a-z0-9-]/gi, '') || aleatorio(4), texto, ativa: x.ativa !== false });
+    out.push({
+      id: str(x.id, 40).replace(/[^a-z0-9-]/gi, '') || aleatorio(4),
+      nome: str(x.nome, 80),
+      texto,
+      estrelas: Math.min(Math.max(Math.round(Number(x.estrelas) || 5), 1), 5),
+      ativa: x.ativa !== false,
+    });
   }
   return out;
 }
@@ -146,6 +167,11 @@ function montarConfig(cadastro = {}, salvo = {}) {
     },
     extras: limparExtras(c.extras),
     promocoes: limparPromocoes(c.promocoes),
+    avaliacoes: limparAvaliacoes(c.avaliacoes),
+    fidelidade: {
+      minimo: Math.min(Math.max(Math.round(Number(c.fidelidade && c.fidelidade.minimo) || 3), 1), 50), // a partir de quantas reservas o cliente é "fiel"
+      percentual: Math.min(Math.max(Number(c.fidelidade && c.fidelidade.percentual) || 10, 0), 100), // desconto sugerido (a dona decide se aplica)
+    },
     instagram: str(c.instagram, 100).replace(/^@/, ''),
     prazo_horas: Math.min(Math.max(Math.round(Number(c.prazo_horas) || 48), 1), 168),
     antecedencia_dias: Math.min(Math.max(Math.round(Number(c.antecedencia_dias) || 0), 0), 365),
@@ -161,7 +187,8 @@ const configPublica = cfg => ({
   whatsapp: cfg.whatsapp,
   instagram: cfg.instagram,
   extras: cfg.extras.filter(e => e.ativo).map(({ id, nome, descricao, valor }) => ({ id, nome, descricao, valor })),
-  promocoes: cfg.promocoes.filter(p => p.ativa).map(({ id, texto }) => ({ id, texto })),
+  promocoes: cfg.promocoes.filter(p => p.ativa).map(({ id, texto, imagem }) => ({ id, texto, imagem })),
+  avaliacoes: cfg.avaliacoes.filter(a => a.ativa).map(({ id, nome, texto, estrelas }) => ({ id, nome, texto, estrelas })),
   pix_ativo: Boolean(cfg.pix.chave && cfg.pix.mostrar),
   unidades: cfg.unidades,
   sinal: cfg.sinal,
@@ -171,6 +198,105 @@ const configPublica = cfg => ({
   aviso: cfg.aviso,
   mensagem_pedido: cfg.mensagem_pedido,
 });
+
+// ── Financeiro: pagamentos, despesas, resumo por unidade e clientes ────────
+const FORMAS_PAGAMENTO = ['pix', 'dinheiro', 'cartao', 'transferencia', 'outro'];
+const FECHADAS = ['confirmado', 'concluido']; // reservas que contam como faturamento
+const CATEGORIAS_DESPESA = ['limpeza', 'manutencao', 'piscina', 'energia', 'agua', 'funcionario', 'marketing', 'imposto', 'outro'];
+const arred = n => Math.round((Number(n) || 0) * 100) / 100;
+const listaPagamentos = r => (Array.isArray(r && r.pagamentos) ? r.pagamentos : []);
+const somaPagamentos = r => arred(listaPagamentos(r).reduce((t, p) => t + (Number(p.valor) || 0), 0));
+const emPeriodo = (d, de, ate) => typeof d === 'string' && d >= de && d <= ate;
+
+function limparPagamento(x, hoje) {
+  const valor = arred(x && x.valor);
+  if (!(valor > 0) || valor > 10000000) return { error: 'Informe um valor maior que zero.' };
+  const forma = FORMAS_PAGAMENTO.includes(x && x.forma) ? x.forma : 'pix';
+  const data = dataValida(str(x && x.data, 10)) ? x.data : hoje;
+  return { pagamento: { id: aleatorio(6), valor, forma, data, obs: str(x && x.obs, 120), tipo: str(x && x.tipo, 20) === 'sinal' ? 'sinal' : 'pagamento' } };
+}
+
+function limparDespesa(x, hoje, unidadesIds) {
+  const valor = arred(x && x.valor);
+  if (!(valor > 0) || valor > 10000000) return { error: 'Informe um valor maior que zero.' };
+  const descricao = str(x && x.descricao, 120);
+  if (!descricao) return { error: 'Escreva o que foi a despesa.' };
+  const un = str(x && x.unidade, 40);
+  return {
+    despesa: {
+      data: dataValida(str(x && x.data, 10)) ? x.data : hoje,
+      unidade: unidadesIds.includes(un) ? un : 'geral', // "geral" = despesa das duas unidades
+      categoria: CATEGORIAS_DESPESA.includes(x && x.categoria) ? x.categoria : 'outro',
+      descricao,
+      valor,
+    },
+  };
+}
+
+function resumoFinanceiro(reservasLista, despesasLista, unidades, de, ate) {
+  const zero = () => ({ reservas: 0, faturamento: 0, recebido: 0, a_receber: 0, despesas: 0, lucro_previsto: 0, lucro_caixa: 0 });
+  const por = {};
+  for (const u of unidades) por[u.id] = { id: u.id, nome: u.nome, ...zero() };
+  por.geral = { id: 'geral', nome: 'Despesas gerais', ...zero() };
+  const meses = {};
+  const mesDe = d => (meses[d.slice(0, 7)] = meses[d.slice(0, 7)] || { mes: d.slice(0, 7), faturamento: 0, recebido: 0, despesas: 0 });
+  let semValor = 0;
+
+  for (const r of reservasLista) {
+    if (!r || !emPeriodo(r.data, de, ate) || !por[r.unidade] || r.status === 'bloqueado') continue;
+    const u = por[r.unidade];
+    const recebido = somaPagamentos(r);
+    u.recebido = arred(u.recebido + recebido);
+    mesDe(r.data).recebido = arred(mesDe(r.data).recebido + recebido);
+    if (!FECHADAS.includes(r.status)) continue;
+    const total = arred(r.valor_total);
+    if (!(total > 0)) semValor += 1;
+    u.reservas += 1;
+    u.faturamento = arred(u.faturamento + total);
+    u.a_receber = arred(u.a_receber + Math.max(0, total - recebido));
+    mesDe(r.data).faturamento = arred(mesDe(r.data).faturamento + total);
+  }
+  for (const d of despesasLista) {
+    if (!d || !emPeriodo(d.data, de, ate)) continue;
+    const u = por[d.unidade] || por.geral;
+    u.despesas = arred(u.despesas + (Number(d.valor) || 0));
+    mesDe(d.data).despesas = arred(mesDe(d.data).despesas + (Number(d.valor) || 0));
+  }
+  const porUnidade = Object.values(por);
+  for (const u of porUnidade) {
+    u.lucro_previsto = arred(u.faturamento - u.despesas);
+    u.lucro_caixa = arred(u.recebido - u.despesas);
+  }
+  const total = zero();
+  for (const u of porUnidade) for (const k of Object.keys(total)) total[k] = arred(total[k] + u[k]);
+  return { de, ate, total, por_unidade: porUnidade, meses: Object.values(meses).sort((a, b) => a.mes.localeCompare(b.mes)), reservas_sem_valor: semValor };
+}
+
+function resumoClientes(reservasLista, fidelidade) {
+  const minimo = (fidelidade && fidelidade.minimo) || 3;
+  const percentual = fidelidade && fidelidade.percentual != null ? fidelidade.percentual : 10;
+  const mapa = new Map();
+  for (const r of reservasLista) {
+    if (!r || r.status === 'bloqueado' || !r.nome) continue;
+    const zap = digits(r.whatsapp);
+    const chave = zap || ('nome:' + String(r.nome).toLowerCase().trim());
+    const c = mapa.get(chave) || { chave, nome: r.nome, whatsapp: zap, email: r.email || '', reservas: 0, total_gasto: 0, primeira: '', ultima: '', unidades: {}, cancelados: 0 };
+    if (r.status === 'cancelado' || r.status === 'recusado' || r.status === 'expirado') { c.cancelados += 1; mapa.set(chave, c); continue; }
+    if (!FECHADAS.includes(r.status)) { mapa.set(chave, c); continue; }
+    c.reservas += 1;
+    c.total_gasto = arred(c.total_gasto + (Number(r.valor_total) || 0));
+    if (!c.primeira || r.data < c.primeira) c.primeira = r.data;
+    if (!c.ultima || r.data > c.ultima) { c.ultima = r.data; c.nome = r.nome; if (r.email) c.email = r.email; }
+    c.unidades[r.unidade] = (c.unidades[r.unidade] || 0) + 1;
+    mapa.set(chave, c);
+  }
+  const clientes = [...mapa.values()].filter(c => c.reservas > 0 || c.cancelados > 0).map(c => ({
+    ...c,
+    fiel: c.reservas >= minimo,
+    desconto_sugerido: c.reservas >= minimo ? percentual : 0,
+  })).sort((a, b) => (b.reservas - a.reservas) || (b.total_gasto - a.total_gasto) || a.nome.localeCompare(b.nome));
+  return { fidelidade: { minimo, percentual }, clientes };
+}
 
 // ── Validação e Limite por IP ──────────────────────────────────────────────
 
@@ -789,6 +915,8 @@ function createHandler(deps = {}) {
         data,
         status,
         ...pessoa,
+        ...(arred(body.valor_total) > 0 ? { valor_total: arred(body.valor_total) } : {}),
+        ...(arred(body.valor_sinal) > 0 ? { valor_sinal: arred(body.valor_sinal) } : {}),
         prazo_ate: status === 'pedido' || status === 'aguardando_sinal' ? new Date(now() + cfg.prazo_horas * 3600000).toISOString() : null,
         criado_em: agoraIso,
         atualizado_em: agoraIso,
@@ -861,6 +989,11 @@ function createHandler(deps = {}) {
         auditoria: audit,
         atualizado_em: agoraIso,
       };
+
+      // "Sinal pago" = reserva confirmada: o sinal entra como pagamento recebido (uma vez só, sem duplicar).
+      if (novoStatus === 'confirmado' && Number(atual.valor_sinal) > 0 && somaPagamentos(atual) === 0) {
+        updateData.pagamentos = [...listaPagamentos(atual), { id: aleatorio(6), valor: arred(atual.valor_sinal), forma: 'pix', data: agoraBr(now()).data, obs: 'Sinal', tipo: 'sinal' }];
+      }
 
       await refReserva.update(updateData);
 
@@ -1134,7 +1267,7 @@ function createHandler(deps = {}) {
     if (acao === 'config') {
       const novo = body.config && typeof body.config === 'object' ? body.config : {};
       const salvar = {};
-      const permitidos = ['nome', 'whatsapp', 'instagram', 'unidades', 'sinal', 'pix', 'extras', 'promocoes', 'prazo_horas', 'antecedencia_dias', 'dias_a_frente', 'aviso', 'mensagem_pedido'];
+      const permitidos = ['nome', 'whatsapp', 'instagram', 'unidades', 'sinal', 'pix', 'extras', 'promocoes', 'avaliacoes', 'fidelidade', 'prazo_horas', 'antecedencia_dias', 'dias_a_frente', 'aviso', 'mensagem_pedido'];
       for (const k of permitidos) if (novo[k] !== undefined) salvar[k] = novo[k];
 
       const final = montarConfig(cadastro, { ...(dados.config || {}), ...salvar });
@@ -1358,6 +1491,92 @@ function createHandler(deps = {}) {
       return res(200, { ok: true });
     }
 
+    // ── Financeiro e clientes (só a dona, depois do login) ──
+    if (acao === 'pagamento-registrar') {
+      const id = str(body.id, 64);
+      if (!ID_RE.test(id)) return res(400, { error: 'Reserva inválida.' });
+      const ref = reservas.doc(id);
+      const snap = await ref.get();
+      if (!snap.exists) return res(404, { error: 'Reserva não encontrada.' });
+      const r = snap.data();
+      const { pagamento, error: errPag } = limparPagamento(body, agoraBr(now()).data);
+      if (errPag) return res(400, { error: errPag });
+      const lista = listaPagamentos(r);
+      if (lista.length >= 50) return res(400, { error: 'Muitos pagamentos nesta reserva.' });
+      await ref.update({ pagamentos: [...lista, pagamento], atualizado_em: new Date(now()).toISOString() });
+      return res(200, { ok: true, pagamento, recebido: arred(somaPagamentos(r) + pagamento.valor) });
+    }
+
+    if (acao === 'pagamento-remover') {
+      const id = str(body.id, 64);
+      if (!ID_RE.test(id)) return res(400, { error: 'Reserva inválida.' });
+      const ref = reservas.doc(id);
+      const snap = await ref.get();
+      if (!snap.exists) return res(404, { error: 'Reserva não encontrada.' });
+      const lista = listaPagamentos(snap.data());
+      const pid = str(body.pagamento_id, 20);
+      const nova = lista.filter(p => p.id !== pid);
+      if (nova.length === lista.length) return res(404, { error: 'Pagamento não encontrado.' });
+      await ref.update({ pagamentos: nova, atualizado_em: new Date(now()).toISOString() });
+      return res(200, { ok: true });
+    }
+
+    if (acao === 'despesa-salvar') {
+      const { despesa, error: errDesp } = limparDespesa(body, agoraBr(now()).data, cfg.unidades.map(u => u.id));
+      if (errDesp) return res(400, { error: errDesp });
+      const colDesp = conta.collection('despesas');
+      if ((await colDesp.get()).docs.length >= 2000) return res(400, { error: 'Limite de despesas atingido.' });
+      const did = aleatorio(8);
+      await colDesp.doc(did).set({ ...despesa, criado_em: new Date(now()).toISOString() });
+      return res(201, { ok: true, despesa: { id: did, ...despesa } });
+    }
+
+    if (acao === 'despesa-remover') {
+      const did = str(body.id, 64);
+      if (!ID_RE.test(did)) return res(400, { error: 'Despesa inválida.' });
+      const ref = conta.collection('despesas').doc(did);
+      if (!(await ref.get()).exists) return res(404, { error: 'Despesa não encontrada.' });
+      await ref.delete();
+      return res(200, { ok: true });
+    }
+
+    if (acao === 'financeiro') {
+      const hoje = agoraBr(now()).data;
+      const de = dataValida(str(body.de, 10)) ? body.de : hoje.slice(0, 8) + '01';
+      let ate = dataValida(str(body.ate, 10)) ? body.ate : somaDias(de, 30);
+      if (ate < de) ate = de;
+      if (ate > somaDias(de, 800)) ate = somaDias(de, 800);
+      const resSnap = await reservas.where('data', '>=', de).where('data', '<=', ate).get();
+      const reservasLista = resSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const despSnap = await conta.collection('despesas').get();
+      const despesasTodas = despSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const despesasPeriodo = despesasTodas.filter(d => emPeriodo(d.data, de, ate)).sort((a, b) => b.data.localeCompare(a.data));
+      const unidadeFiltro = str(body.unidade, 40);
+      const resumo = resumoFinanceiro(reservasLista, despesasTodas, cfg.unidades, de, ate);
+      const pagamentos = [];
+      for (const r of reservasLista) {
+        if (unidadeFiltro && r.unidade !== unidadeFiltro) continue;
+        for (const p of listaPagamentos(r)) pagamentos.push({ ...p, reserva_id: r.id, nome: r.nome, unidade: r.unidade, data_evento: r.data });
+      }
+      pagamentos.sort((a, b) => (b.data || '').localeCompare(a.data || ''));
+      const reservasFin = reservasLista
+        .filter(r => FECHADAS.includes(r.status) && (!unidadeFiltro || r.unidade === unidadeFiltro))
+        .map(r => ({ id: r.id, nome: r.nome, unidade: r.unidade, data: r.data, status: r.status, valor_total: arred(r.valor_total), valor_sinal: arred(r.valor_sinal), recebido: somaPagamentos(r), pagamentos: listaPagamentos(r) }))
+        .sort((a, b) => a.data.localeCompare(b.data));
+      return res(200, {
+        ...resumo,
+        reservas: reservasFin,
+        pagamentos,
+        despesas: unidadeFiltro ? despesasPeriodo.filter(d => d.unidade === unidadeFiltro || d.unidade === 'geral') : despesasPeriodo,
+        categorias: CATEGORIAS_DESPESA,
+      });
+    }
+
+    if (acao === 'clientes') {
+      const snap = await reservas.get();
+      return res(200, resumoClientes(snap.docs.map(d => ({ id: d.id, ...d.data() })), cfg.fidelidade));
+    }
+
     return res(400, { error: 'Ação desconhecida.' });
   };
 }
@@ -1370,3 +1589,5 @@ exports.agoraBr = agoraBr;
 exports.COLLECTION = COLLECTION;
 exports.limparConteudoLocacao = limparConteudoLocacao;
 exports.gerarEmbedVideo = gerarEmbedVideo;
+exports.resumoFinanceiro = resumoFinanceiro;
+exports.resumoClientes = resumoClientes;
