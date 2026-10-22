@@ -53,7 +53,8 @@ test('SPLASH-SITE1. validação do HTML público de sites/splash/index.html', ()
 
   // 6. Sem "NEXIA" visível (com exceção de comentários/scripts internos se houver)
   const regexNexiaVisivel = />[^<]*NEXIA[^<]*</i;
-  assert.ok(!regexNexiaVisivel.test(html), 'HTML não deve ter a palavra NEXIA visível no texto renderizado');
+  const semScripts = html.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/<style[\s\S]*?<\/style>/gi, '');
+  assert.ok(!regexNexiaVisivel.test(semScripts), 'HTML não deve ter a palavra NEXIA visível no texto renderizado');
 
   // 7. Sem dados inventados ou padrão no código de contato do proprietário
   assert.ok(!html.includes('5511999994185'), 'Não deve conter números genéricos de teste/exemplo sensíveis');
