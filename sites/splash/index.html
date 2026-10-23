@@ -385,6 +385,9 @@ footer{background:#021436;color:#c3d3ea;padding:54px clamp(16px,5vw,70px) 28px}
         <div id="texto-sinal-aviso" data-ed="form-reserva-sinal-texto">A reserva só é confirmada depois do pagamento do sinal. Ao enviar o pedido, o dia fica segurado para você por um tempo. Depois é só fazer o Pix e mandar o comprovante pelo WhatsApp.</div>
       </div>
 
+      <div class="sinal-aviso" id="resumo-valores" style="display:none"><i class="ri-money-dollar-circle-line"></i><div id="resumo-valores-texto"></div></div>
+      <div class="sinal-aviso" id="aviso-cancelamento" style="display:none"><i class="ri-error-warning-line"></i><div id="aviso-cancelamento-texto"></div></div>
+
       <form id="form-pedir-reserva" onsubmit="enviarPedidoReserva(event)">
         <input type="text" name="campo_extra" id="campo_extra" style="display:none" tabindex="-1" autocomplete="off">
         <input type="text" name="site_url" id="site_url" style="display:none" tabindex="-1" autocomplete="off">
@@ -456,6 +459,13 @@ footer{background:#021436;color:#c3d3ea;padding:54px clamp(16px,5vw,70px) 28px}
       </div>
       <p class="sucesso-prazo" id="sucesso-prazo"></p>
       <p style="font-size:14px;color:var(--ink2);margin-bottom:22px" data-ed="sucesso-instrucao">Depois de pagar, envie o comprovante pelo WhatsApp. Assim que a Amanda conferir, a sua reserva fica confirmada.</p>
+      <div id="comp-box" style="background:#f2fbff;border:1px solid #cfeaf5;border-radius:14px;padding:14px;margin-bottom:16px;text-align:left">
+        <div style="font-weight:700;color:var(--navy);margin-bottom:6px">Já pagou? Envie o comprovante aqui</div>
+        <input type="file" id="comp-arq" accept="image/jpeg,image/png,image/webp" style="width:100%;margin-bottom:8px">
+        <button type="button" class="btn-copiar" id="btn-comp" onclick="enviarComprovante()"><i class="ri-upload-2-line"></i> Enviar comprovante</button>
+        <p id="comp-msg" style="font-size:13px;margin-top:6px" role="status"></p>
+        <p style="font-size:12px;color:var(--ink3);margin-top:4px">Se preferir, mande a foto pelo WhatsApp (botão abaixo).</p>
+      </div>
       <div id="zap-container" style="display:none">
         <a href="#" id="btn-wa-me" target="_blank" rel="noopener" class="btn btn-zap"><i class="ri-whatsapp-line"></i> <span id="btn-wa-texto">Enviar comprovante no WhatsApp</span></a>
       </div>
@@ -943,6 +953,8 @@ function atualizarContatoConfig() {
     av.innerHTML = (cfg.avaliacoes || []).map(a => `<div class="aval-card"><div class="aval-estrelas" aria-label="${a.estrelas} estrelas">${'★'.repeat(a.estrelas)}${'☆'.repeat(5 - a.estrelas)}</div><p class="aval-texto">“${esc(a.texto)}”</p>${a.nome ? `<div class="aval-nome">${esc(a.nome)}</div>` : ''}</div>`).join('');
   }
   atualizarVisibilidades();
+  atualizarResumoValores();
+  Musica.configurar(cfg.musica);
 }
 
 /* ---------- pedido de reserva ---------- */
@@ -954,7 +966,74 @@ function copiarChavePix() {
   else { const t = document.createElement('textarea'); t.value = chave; document.body.appendChild(t); t.select(); try { document.execCommand('copy'); ok(); } catch (e) {} document.body.removeChild(t); }
 }
 
+function textoCancelamento() {
+  const c = (configLocacao && configLocacao.cancelamento) || {};
+  const partes = [];
+  if (c.horas > 0) partes.push('Cancelamentos devem ser avisados com pelo menos ' + c.horas + ' horas de antecedência. Fora desse prazo, o valor do sinal não é devolvido.');
+  if (c.texto) partes.push(c.texto);
+  return partes.join(' ');
+}
+function atualizarResumoValores() {
+  const box = document.getElementById('resumo-valores'), cx = document.getElementById('aviso-cancelamento');
+  if (!box || !configLocacao) return;
+  const u = (configLocacao.unidades || []).find(x => x.id === unidadeAtual);
+  const linhas = [];
+  if (u && u.valor_diaria > 0) {
+    let total = Number(u.valor_diaria);
+    const extras = Array.from(document.querySelectorAll('#extras-lista input[name=extra]:checked')).map(i => (configLocacao.extras || []).find(e => e.id === i.value)).filter(Boolean);
+    extras.forEach(e => { if (e.valor > 0) total += Number(e.valor); });
+    linhas.push('<b>' + esc(u.nome) + '</b>: diária ' + dinheiro(u.valor_diaria) + (total !== Number(u.valor_diaria) ? ' · total com extras ' + dinheiro(total) : ''));
+    const s = configLocacao.sinal || {};
+    if (s.valor > 0) linhas.push('Sinal para garantir a data: <b>' + (s.tipo === 'percentual' ? dinheiro(total * s.valor / 100) + ' (' + s.valor + '%)' : dinheiro(s.valor)) + '</b>');
+  } else linhas.push('Valores: combine com a Amanda pelo WhatsApp.');
+  box.style.display = 'flex'; document.getElementById('resumo-valores-texto').innerHTML = linhas.join('<br>');
+  const t = textoCancelamento();
+  cx.style.display = t ? 'flex' : 'none'; document.getElementById('aviso-cancelamento-texto').textContent = t;
+}
+document.addEventListener('change', e => { if (e.target.closest && e.target.closest('#extras-lista')) atualizarResumoValores(); });
+
+let ultimoPedido = null;
+function comprimirComprovante(file, max = 550 * 1024) {
+  return new Promise((ok, erro) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => {
+      let lado = Math.min(1600, Math.max(img.width, img.height)), q = 0.8;
+      for (let t = 0; t < 8; t++) {
+        const k = lado / Math.max(img.width, img.height), c = document.createElement('canvas');
+        c.width = Math.round(img.width * Math.min(1, k)); c.height = Math.round(img.height * Math.min(1, k));
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        const d = c.toDataURL('image/jpeg', q);
+        if (d.length * 0.75 <= max) { URL.revokeObjectURL(url); return ok(d); }
+        lado = Math.round(lado * 0.8); q = Math.max(0.5, q - 0.05);
+      }
+      URL.revokeObjectURL(url); erro(new Error('Imagem grande demais. Mande pelo WhatsApp.'));
+    };
+    img.onerror = () => erro(new Error('Não consegui ler essa imagem. Mande pelo WhatsApp.'));
+    img.src = url;
+  });
+}
+async function enviarComprovante() {
+  const msg = document.getElementById('comp-msg'), arq = document.getElementById('comp-arq').files[0];
+  msg.style.color = '#c0392b';
+  if (!arq) { msg.textContent = 'Escolha a foto ou print do comprovante.'; return; }
+  if (!ultimoPedido) { msg.textContent = 'Envie o comprovante pelo WhatsApp.'; return; }
+  const btn = document.getElementById('btn-comp'); btn.disabled = true; msg.style.color = ''; msg.textContent = 'Enviando...';
+  try {
+    const dados = await comprimirComprovante(arq);
+    const r = await fetch(API_LOCACAO, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'comprovante-enviar', site: SLUG, protocolo: ultimoPedido.protocolo, whatsapp: ultimoPedido.whatsapp, dados, tipo: 'image/jpeg' }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || 'Não consegui enviar. Mande pelo WhatsApp.');
+    msg.style.color = '#1e8e4e'; msg.textContent = 'Comprovante enviado! A Amanda vai conferir e confirmar a sua reserva.'; document.getElementById('comp-arq').value = '';
+  } catch (e) { msg.style.color = '#c0392b'; msg.textContent = e.message; }
+  finally { btn.disabled = false; }
+}
+
 function mostrarSucesso(data, dataFormatada) {
+  ultimoPedido = { protocolo: data.protocolo, whatsapp: document.getElementById('req-whatsapp').value.trim() };
+  const cancel = textoCancelamento();
+  let pc = document.getElementById('sucesso-cancel');
+  if (!pc) { pc = document.createElement('p'); pc.id = 'sucesso-cancel'; pc.style.cssText = 'font-size:13px;color:#6b5200;background:#fff7dc;border-radius:12px;padding:10px 12px;margin-bottom:14px'; document.getElementById('sucesso-prazo').after(pc); }
+  pc.textContent = cancel; pc.style.display = cancel ? 'block' : 'none';
   document.getElementById('protocolo-reserva').textContent = data.protocolo || 'SPL-';
   const extras = (data.extras || []).map(e => e.nome).join(', ');
   document.getElementById('sucesso-resumo').textContent = `${nomeUnidade(unidadeAtual)} · dia ${dataFormatada}` + (extras ? ` · com ${extras}` : '');
@@ -1029,6 +1108,7 @@ function renderizarGridCalendario() {
 
 function escolherDiaReserva(dataISO) {
   diaSelecionado = dataISO;
+  setTimeout(atualizarResumoValores, 0);
   renderizarGridCalendario();
   const [ano, mes, dia] = dataISO.split('-');
   document.getElementById('form-dia-selecionado-texto').innerHTML =
@@ -1083,10 +1163,11 @@ async function enviarPedidoReserva(e) {
 
 /* ---------- música de fundo (gerada no aparelho, sem arquivo; só liga quando a pessoa toca no botão) ---------- */
 const Musica = (function () {
-  let ctx = null, master = null, timer = null, passo = 0, proximo = 0, ligada = false;
-  const BPM = 98, COLCHEIA = 60 / BPM / 2;
+  let ctx = null, master = null, timer = null, passo = 0, proximo = 0, ligada = false, audioUrl = null, el = null;
+  let COLCHEIA = 60 / 98 / 2, VOL = 1;
   const ACORDES = [[48, 52, 55, 59], [45, 48, 52, 55], [41, 45, 48, 52], [43, 47, 50, 53]]; // C7M, Am7, F7M, G7
-  const ESCALA = [60, 62, 64, 67, 69, 72, 74, 76];
+  let ESCALA = [60, 62, 64, 67, 69, 72, 74, 76];
+  const ESTILOS = { alegre: { bpm: 98, vol: 1, escala: [60, 62, 64, 67, 69, 72, 74, 76] }, tropical: { bpm: 118, vol: 1, escala: [62, 64, 66, 69, 71, 74, 76, 78] }, chill: { bpm: 80, vol: 0.7, escala: [57, 60, 62, 64, 67, 69, 72, 74] } };
   const hz = m => 440 * Math.pow(2, (m - 69) / 12);
   function nota(t, m, dur, tipo, vol) {
     const o = ctx.createOscillator(), g = ctx.createGain();
@@ -1112,22 +1193,33 @@ const Musica = (function () {
     while (proximo < ctx.currentTime + 0.5) { tocar(proximo, passo); proximo += COLCHEIA; passo++; }
   }
   function ligar() {
+    if (audioUrl) { if (!el) { el = new Audio(audioUrl); el.loop = true; el.volume = 0.6; } el.play().catch(() => {}); ligada = true; return true; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return false;
     if (!ctx) { ctx = new AC(); master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination); }
     ctx.resume();
-    master.gain.cancelScheduledValues(ctx.currentTime); master.gain.linearRampToValueAtTime(0.9, ctx.currentTime + 1.2);
+    master.gain.cancelScheduledValues(ctx.currentTime); master.gain.linearRampToValueAtTime(0.9 * VOL, ctx.currentTime + 1.2);
     proximo = ctx.currentTime + 0.1;
     clearInterval(timer); timer = setInterval(agendar, 120); ligada = true;
     return true;
   }
   function desligar() {
+    if (audioUrl) { if (el) el.pause(); ligada = false; return; }
     if (!ctx) return;
     master.gain.cancelScheduledValues(ctx.currentTime); master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.6);
     clearInterval(timer); timer = null; ligada = false;
     setTimeout(() => { if (!ligada && ctx) ctx.suspend(); }, 800);
   }
-  return { alternar() { return ligada ? (desligar(), false) : ligar(); }, ativa: () => ligada };
+  function configurar(m) {
+    m = m || {};
+    const btn = document.getElementById('btn-musica');
+    if (m.estilo === 'desligada') { if (btn) btn.style.display = 'none'; return; }
+    audioUrl = /^https:\/\//.test(m.url || '') ? m.url : null;
+    const e = ESTILOS[m.estilo] || ESTILOS.alegre;
+    COLCHEIA = 60 / e.bpm / 2; ESCALA = e.escala; VOL = e.vol;
+    if (btn) btn.style.display = '';
+  }
+  return { configurar, alternar() { return ligada ? (desligar(), false) : ligar(); }, ativa: () => ligada };
 })();
 
 function iniciarInterface() {

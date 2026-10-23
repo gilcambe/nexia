@@ -103,6 +103,70 @@ function montarMensagemWhatsApp(reserva, config) {
   return msg;
 }
 
+
+const CONTRATO_MODELO = `CONTRATO DE LOCAÇÃO DE ESPAÇO PARA EVENTO
+
+LOCADORA: {locadora}
+LOCATÁRIO(A): {nome} — WhatsApp {whatsapp}
+UNIDADE: {unidade} — {endereco}
+DATA DO EVENTO: {data}
+TIPO DE EVENTO: {evento} ({convidados} convidados)
+EXTRAS: {extras}
+
+VALOR TOTAL: {valor_total}
+SINAL: {sinal}
+SALDO: {saldo}
+
+CANCELAMENTO: {cancelamento}
+
+O(A) locatário(a) declara ter lido e concordado com as condições acima e com as regras de uso do espaço.
+
+Protocolo {protocolo}`;
+
+function preencherContrato(modelo, reserva, config) {
+  const c = config || {};
+  const r = reserva || {};
+  const un = (c.unidades || []).find(u => u.id === r.unidade) || {};
+  const total = Number(r.valor_total) || 0;
+  const sinalN = Number(r.valor_sinal) || 0;
+  const pago = (Array.isArray(r.pagamentos) ? r.pagamentos : []).reduce((s, p) => s + (Number(p.valor) || 0), 0);
+  const canc = c.cancelamento || {};
+  const txtCanc = [canc.horas > 0 ? `avisar com pelo menos ${canc.horas} horas de antecedência; fora desse prazo o valor do sinal não é devolvido.` : '', canc.texto || ''].filter(Boolean).join(' ') || 'conforme combinado com a locadora.';
+  const mapa = {
+    locadora: c.nome || '',
+    nome: r.nome || '',
+    whatsapp: r.whatsapp || '',
+    unidade: un.nome || r.unidade_nome || '',
+    endereco: un.endereco || '',
+    data: formatarDataBr(r.data),
+    evento: r.tipo_evento || 'Evento',
+    convidados: r.convidados || 'a informar',
+    extras: (Array.isArray(r.extras) && r.extras.length) ? r.extras.map(e => e.nome).join(', ') : 'nenhum',
+    valor_total: total > 0 ? formatarMoeda(total) : 'a combinar',
+    sinal: sinalN > 0 ? formatarMoeda(sinalN) : 'a combinar',
+    saldo: total > 0 ? formatarMoeda(Math.max(0, total - pago)) : 'a combinar',
+    cancelamento: txtCanc,
+    protocolo: r.protocolo || '',
+  };
+  return String(modelo || '').replace(/\{([a-z_]+)\}/g, (m, k) => (k in mapa ? mapa[k] : m));
+}
+
+function montarMensagemConfirmacao(reserva, config) {
+  const c = config || {};
+  const un = (c.unidades || []).find(u => u.id === reserva.unidade) || {};
+  let msg = `Olá, ${reserva.nome}! ✅\n\n*Sua reserva está confirmada!*\n`;
+  msg += `${un.nome || reserva.unidade_nome || ''} — dia *${formatarDataBr(reserva.data)}*\n`;
+  if (un.endereco) msg += `Endereço: ${un.endereco}\n`;
+  if (Number(reserva.valor_total) > 0) msg += `Valor total: ${formatarMoeda(reserva.valor_total)}\n`;
+  if (c.contrato) msg += `\n*Contrato de locação:*\n\n${preencherContrato(c.contrato, reserva, c)}\n`;
+  else {
+    const canc = c.cancelamento || {};
+    if (canc.horas > 0) msg += `\nCancelamento: avisar com pelo menos ${canc.horas} horas de antecedência; fora do prazo o sinal não é devolvido.\n`;
+  }
+  msg += `\nQualquer dúvida é só chamar por aqui. Obrigada!`;
+  return msg;
+}
+
 function gerarCsvBackup(reservas) {
   const cabecalho = ['ID', 'Protocolo', 'Unidade', 'Data', 'Cliente', 'WhatsApp', 'E-mail', 'Tipo de Evento', 'Convidados', 'Status', 'Observações', 'Prazo Até'];
   const linhas = (reservas || []).map(r => [
@@ -467,6 +531,9 @@ const SplashPainelObj = {
   MapearEstado,
   montarMensagemWhatsApp,
   gerarMensagemWhatsappSinal: montarMensagemWhatsApp,
+  preencherContrato,
+  montarMensagemConfirmacao,
+  CONTRATO_MODELO,
   gerarCsvBackup,
   gerarCsvClientes,
   calcularDiasMes,

@@ -34,7 +34,7 @@ const TRANSICOES = {
   aguardando_sinal: ['confirmado', 'recusado', 'cancelado'],
   confirmado: ['concluido', 'cancelado'],
 };
-const LIMITES = { pedir: { max: 6, windowMs: 60_000 }, entrar: { max: 8, windowMs: 10 * 60_000 } };
+const LIMITES = { pedir: { max: 6, windowMs: 60_000 }, comprovante: { max: 5, windowMs: 10 * 60_000 }, entrar: { max: 8, windowMs: 10 * 60_000 } };
 
 const str = (v, max) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max) : '');
 const digits = v => String(v || '').replace(/\D/g, '');
@@ -172,6 +172,17 @@ function montarConfig(cadastro = {}, salvo = {}) {
       minimo: Math.min(Math.max(Math.round(Number(c.fidelidade && c.fidelidade.minimo) || 3), 1), 50), // a partir de quantas reservas o cliente é "fiel"
       percentual: Math.min(Math.max(Number(c.fidelidade && c.fidelidade.percentual) || 10, 0), 100), // desconto sugerido (a dona decide se aplica)
     },
+    // Multa/aviso de cancelamento: horas = prazo mínimo de aviso (0 = não definido) e texto livre da dona.
+    cancelamento: {
+      horas: Math.min(Math.max(Math.round(Number(c.cancelamento && c.cancelamento.horas) || 0), 0), 720),
+      texto: str(c.cancelamento && c.cancelamento.texto, 600),
+    },
+    // Modelo de contrato com {campos} que o painel preenche na confirmação (não sai na rota pública).
+    contrato: str(c.contrato, 8000),
+    musica: {
+      estilo: ['alegre', 'tropical', 'chill', 'desligada'].includes(c.musica && c.musica.estilo) ? c.musica.estilo : 'alegre',
+      url: /^https:\/\/[^\s"'<>]+\.(mp3|m4a|ogg|wav)(\?[^\s"'<>]*)?$/i.test(str(c.musica && c.musica.url, 300)) ? str(c.musica.url, 300) : '',
+    },
     instagram: str(c.instagram, 100).replace(/^@/, ''),
     prazo_horas: Math.min(Math.max(Math.round(Number(c.prazo_horas) || 48), 1), 168),
     antecedencia_dias: Math.min(Math.max(Math.round(Number(c.antecedencia_dias) || 0), 0), 365),
@@ -190,6 +201,8 @@ const configPublica = cfg => ({
   promocoes: cfg.promocoes.filter(p => p.ativa).map(({ id, texto, imagem }) => ({ id, texto, imagem })),
   avaliacoes: cfg.avaliacoes.filter(a => a.ativa).map(({ id, nome, texto, estrelas }) => ({ id, nome, texto, estrelas })),
   pix_ativo: Boolean(cfg.pix.chave && cfg.pix.mostrar),
+  cancelamento: cfg.cancelamento,
+  musica: cfg.musica,
   unidades: cfg.unidades,
   sinal: cfg.sinal,
   prazo_horas: cfg.prazo_horas,
@@ -581,6 +594,7 @@ function createHandler(deps = {}) {
           criado_em: data.criado_em || null,
         };
       });
+      fotos = fotos.filter(f => f.unidade !== 'comprovantes'); // comprovantes nunca aparecem na lista pública
       const uFiltro = str(q.unidade, 40);
       if (uFiltro) fotos = fotos.filter(f => f.unidade === uFiltro);
       fotos.sort((a, b) => (a.ordem - b.ordem) || (b.criado_em || '').localeCompare(a.criado_em || ''));
@@ -734,6 +748,34 @@ function createHandler(deps = {}) {
         extras: extrasSel,
         whatsapp: cfg.whatsapp,
       });
+    }
+
+    // ── Público: cliente anexa o comprovante do Pix (protocolo + final do WhatsApp conferem) ──
+    if (acao === 'comprovante-enviar') {
+      if (!ipPermitido('comprovante', ip, now())) return res(429, { error: 'Muitos envios seguidos. Tente de novo em alguns minutos.' });
+      const protocolo = str(body.protocolo, 20).toUpperCase();
+      const zap = digits(body.whatsapp);
+      if (!/^SPL-[A-Z0-9]{4,8}$/.test(protocolo) || zap.length < 8) return res(400, { error: 'Informe o protocolo e o WhatsApp do pedido.' });
+      const snapR = await reservas.where('protocolo', '==', protocolo).get();
+      const docR = snapR.docs.find(d => { const w = digits(d.data().whatsapp); return w && w.slice(-8) === zap.slice(-8); });
+      if (!docR) return res(404, { error: 'Não encontrei esse pedido. Confira o protocolo e o WhatsApp.' });
+      const reserva = docR.data();
+      if (['recusado', 'cancelado', 'expirado'].includes(reserva.status)) return res(400, { error: 'Este pedido não está mais ativo. Fale com a locadora pelo WhatsApp.' });
+      const anteriores = Array.isArray(reserva.comprovantes) ? reserva.comprovantes : [];
+      if (anteriores.length >= 5) return res(400, { error: 'Limite de comprovantes deste pedido atingido. Envie o restante pelo WhatsApp.' });
+      let raw = typeof body.dados === 'string' ? body.dados : '';
+      let tipo = str(body.tipo, 20);
+      const m = raw.match(/^data:(image\/[a-z]+);base64,(.*)$/);
+      if (m) { if (!tipo) tipo = m[1]; raw = m[2]; }
+      const { base64, bytes, error: errFoto } = lerFoto(raw, tipo);
+      if (errFoto) return res(400, { error: errFoto });
+      const snapF = await conta.collection('fotos').get();
+      if (snapF.docs.filter(d => d.data().unidade === 'comprovantes').length >= 200) return res(400, { error: 'Não consegui guardar o comprovante agora. Envie pelo WhatsApp.' });
+      const fid = aleatorio(12);
+      const agoraIso = new Date(now()).toISOString();
+      await conta.collection('fotos').doc(fid).set({ id: fid, tipo, dados: base64, bytes, unidade: 'comprovantes', legenda: 'comprovante ' + protocolo, ordem: 0, capa: false, criado_em: agoraIso, atualizado_em: agoraIso });
+      await reservas.doc(docR.id).update({ comprovantes: [...anteriores, { id: fid, em: agoraIso }], atualizado_em: agoraIso });
+      return res(201, { ok: true });
     }
 
     // ── Painel: Autenticação (Entrar / Primeiro Acesso) ──
@@ -1350,7 +1392,7 @@ function createHandler(deps = {}) {
     if (acao === 'config') {
       const novo = body.config && typeof body.config === 'object' ? body.config : {};
       const salvar = {};
-      const permitidos = ['nome', 'whatsapp', 'instagram', 'unidades', 'sinal', 'pix', 'extras', 'promocoes', 'avaliacoes', 'fidelidade', 'prazo_horas', 'antecedencia_dias', 'dias_a_frente', 'aviso', 'mensagem_pedido'];
+      const permitidos = ['nome', 'whatsapp', 'instagram', 'unidades', 'sinal', 'pix', 'extras', 'promocoes', 'avaliacoes', 'fidelidade', 'cancelamento', 'contrato', 'musica', 'prazo_horas', 'antecedencia_dias', 'dias_a_frente', 'aviso', 'mensagem_pedido'];
       for (const k of permitidos) if (novo[k] !== undefined) salvar[k] = novo[k];
 
       const final = montarConfig(cadastro, { ...(dados.config || {}), ...salvar });
@@ -1446,7 +1488,7 @@ function createHandler(deps = {}) {
       if (errFoto) return res(400, { error: errFoto });
 
       const snapTotal = await conta.collection('fotos').get();
-      const todasFotos = snapTotal.docs.map(d => d.data());
+      const todasFotos = snapTotal.docs.map(d => d.data()).filter(f => f.unidade !== 'comprovantes');
       if (todasFotos.length >= FOTOS_MAX_TOTAL) {
         return res(400, { error: 'Limite total de fotos atingido. Remova alguma foto antes de enviar outra.' });
       }
