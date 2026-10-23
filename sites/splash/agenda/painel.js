@@ -352,6 +352,105 @@ function normalizarLinhaImportacao(linha, mapaColunas, unidadePadrao, hojeBr, ch
   };
 }
 
+function gerarCsvClientes(clientes) {
+  // Função pura para gerar CSV de clientes
+  if (!Array.isArray(clientes)) {
+    throw new Error('clientes deve ser um array de objetos');
+  }
+
+  // Cabeçalho do CSV
+  const cabecalho = [
+    'Nome',
+    'WhatsApp',
+    'Pedidos',
+    'Reservas',
+    'Total',
+    'Ultima',
+    'Unidades',
+    'Fiel',
+    'Desconto Sugerido'
+  ];
+
+  // Função auxiliar para escapar valores CSV e proteger contra injeção de fórmula
+  function escaparValorCSV(valor) {
+    if (valor === null || valor === undefined) return '';
+    
+    const str = String(valor);
+    
+    // Proteção contra injeção de fórmula em planilhas
+    if (str.startsWith('=') || str.startsWith('+') || str.startsWith('-') || str.startsWith('@')) {
+      return `\'${str}`;
+    }
+    
+    // Se o valor contiver vírgulas, aspas ou novas linhas, envolver em aspas
+    if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+      return `"${str.replace(/"/g, '""')}"`;
+    }
+    
+    return str;
+  }
+
+  // Formatar total como moeda
+  function formatarTotal(total) {
+    try {
+      // Tenta usar SplashPainel.formatarMoeda se disponível
+      if (typeof SplashPainel !== 'undefined' && typeof SplashPainel.formatarMoeda === 'function') {
+        return SplashPainel.formatarMoeda(total);
+      }
+      
+      // Tenta usar formatarMoeda global se disponível
+      if (typeof formatarMoeda === 'function') {
+        return formatarMoeda(total);
+      }
+      
+      // Retorna o número bruto como fallback
+      return String(total);
+    } catch (e) {
+      return String(total);
+    }
+  }
+
+  // Formatar data como dd/mm/aaaa
+  function formatarData(data) {
+    try {
+      // Tenta usar formatarDataBr se disponível
+      if (typeof formatarDataBr === 'function') {
+        return formatarDataBr(data);
+      }
+      
+      // Formata manualmente se for uma data ISO
+      if (data && typeof data === 'string') {
+        const m = data.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (m) {
+          return `${m[3]}/${m[2]}/${m[1]}`;
+        }
+      }
+      
+      return String(data || '');
+    } catch (e) {
+      return String(data || '');
+    }
+  }
+
+  // Gerar linhas de dados
+  const linhas = clientes.map(cliente => {
+    const nome = escaparValorCSV(cliente.nome || '');
+    const whatsapp = escaparValorCSV(cliente.whatsapp || '');
+    const pedidos = escaparValorCSV(cliente.pedidos || 0);
+    const reservas = escaparValorCSV(cliente.reservas || 0);
+    const total = escaparValorCSV(formatarTotal(cliente.total));
+    const ultima = escaparValorCSV(formatarData(cliente.ultima));
+    const unidades = escaparValorCSV(cliente.unidades || '');
+    const fiel = escaparValorCSV(cliente.fiel || '');
+    const descontoSugerido = escaparValorCSV(cliente.desconto_sugerido || '');
+    
+    return [nome, whatsapp, pedidos, reservas, total, ultima, unidades, fiel, descontoSugerido].join(',');
+  });
+
+  // Combinar cabeçalho e linhas
+  return [cabecalho.join(','), ...linhas].join('\n');
+}
+
 const SplashPainelObj = {
   escapeHtml,
   formatarDataBr,
@@ -360,6 +459,7 @@ const SplashPainelObj = {
   montarMensagemWhatsApp,
   gerarMensagemWhatsappSinal: montarMensagemWhatsApp,
   gerarCsvBackup,
+  gerarCsvClientes,
   calcularDiasMes,
   nomeMesAnoPt,
   gerarGridCalendarioPainel,
@@ -375,8 +475,12 @@ const SplashPainelObj = {
 
 if (typeof window !== 'undefined') {
   window.SplashPainel = SplashPainelObj;
+  // Exportação individual da função gerarCsvClientes para uso global
+  window.SplashPainel.gerarCsvClientes = gerarCsvClientes;
 }
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = SplashPainelObj;
+  // Exportação individual da função gerarCsvClientes para Node.js
+  module.exports.gerarCsvClientes = gerarCsvClientes;
 }
