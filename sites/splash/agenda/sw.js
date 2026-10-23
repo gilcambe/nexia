@@ -9,7 +9,10 @@ var PAINEL_ARQUIVOS = [
   'manifest.webmanifest',
   'icone-192.png',
   'icone-512.png',
-  'icone-maskable-512.png'
+  'icone-maskable-512.png',
+  'gestao-financeiro.js',
+  'gestao-despesas.js',
+  'gestao-clientes.js'
 ];
 
 self.addEventListener('install', function (e) {
