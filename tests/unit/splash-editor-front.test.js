@@ -21,7 +21,7 @@ test('SPLASH-FRONT2. marcações data-ed e data-secao existem em seções e elem
   const html = fs.readFileSync(siteHtmlPath, 'utf8');
 
   // data-secao
-  const secoes = ['menu', 'inicio', 'solicitar', 'espacos', 'videos', 'estrutura', 'promocoes', 'processo', 'contato', 'rodape'];
+  const secoes = ['menu', 'inicio', 'solicitar', 'espacos', 'instagram', 'avaliacoes', 'estrutura', 'promocoes', 'processo', 'contato', 'rodape'];
   secoes.forEach(sec => {
     assert.ok(html.includes(`data-secao="${sec}"`), `Deve conter data-secao="${sec}"`);
   });

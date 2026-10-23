@@ -59,20 +59,22 @@ async function ambiente() {
     return null; // sem Chromium neste ambiente: o teste é pulado
   }
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  // As chamadas da página passam pelo Worker de verdade (cloudflare/app.js). Atenção: o Playwright responde sozinho à
+  // pergunta prévia de CORS (OPTIONS), então o CORS em si é protegido pelo teste CF-CORS (tests/unit/cloudflare-host.test.js).
+  const { handleRequest } = require('../../cloudflare/app');
+  const env = { NEXIA_APP_URL: 'https://nexia.gcbezerra.workers.dev' };
   await ctx.route('**/*', async route => {
     const req = route.request();
     const u = new URL(req.url());
     if (u.hostname === '127.0.0.1') return route.continue();
     if (u.hostname !== API_HOST) return route.abort();
-    const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, OPTIONS' };
-    if (req.method() === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
-    const r = await handler({
-      httpMethod: req.method(),
-      headers: { 'cf-connecting-ip': `10.8.${(n >> 8) & 255}.${n++ & 255}` },
-      queryStringParameters: Object.fromEntries(u.searchParams),
-      body: req.postData() || '',
-    });
-    return route.fulfill({ status: r.statusCode, headers: { ...cors, 'content-type': 'application/json' }, body: r.body });
+    const headers = {};
+    for (const [k, v] of Object.entries(await req.allHeaders())) headers[k] = v;
+    headers['cf-connecting-ip'] = `10.8.${(n >> 8) & 255}.${n++ & 255}`;
+    const r = await handleRequest(new Request(req.url(), { method: req.method(), headers, body: ['GET', 'HEAD', 'OPTIONS'].includes(req.method()) ? undefined : (req.postData() || undefined) }), env, { getFunction: nome => (nome === 'locacao' ? { handler } : null) });
+    const saida = {};
+    r.headers.forEach((v, k) => { saida[k] = v; });
+    return route.fulfill({ status: r.status, headers: saida, body: Buffer.from(await r.arrayBuffer()) });
   });
   const fechar = async () => { try { await browser.close(); } finally { servidor.closeAllConnections(); servidor.close(); } };
   return { chamar, ctx, base, fechar };
