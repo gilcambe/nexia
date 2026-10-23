@@ -1,0 +1,1749 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0A0D08">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icone-192.png">
+<meta name="agenda-site" content="splash-teste">
+<meta name="agenda-api" content="https://nexia.gcbezerra.workers.dev/api/locacao">
+<title>TESTE — Painel Splash</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+<style>
+  :root {
+    --bg: #0A0D08;
+    --cartao: #111408;
+    --linha: rgba(201,168,76,0.18);
+    --texto: #F8F4ED;
+    --suave: rgba(248,244,237,0.72);
+    --foco: #C9A84C;
+    --cor-destaque: #C9A84C;
+    --erro: #ff6b6b;
+    --erro-f: rgba(255,107,107,0.15);
+    --ok: #2A7A4E;
+    --ok-f: rgba(42,122,78,0.2);
+    --alerta: #e6a23c;
+    --alerta-f: rgba(230,162,60,0.15);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg); color: var(--texto); line-height: 1.5; padding-bottom: 80px; min-height: 100vh;
+  }
+  .header-painel {
+    background: var(--cartao); border-bottom: 1px solid var(--linha);
+    padding: 16px clamp(16px, 4vw, 32px); display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo-tit { font-size: 18px; font-weight: 700; color: var(--cor-destaque); display: flex; align-items: center; gap: 8px; }
+  .cont-main { max-width: 1000px; margin: 0 auto; padding: 16px; }
+  .oculto { display: none !important; }
+
+  /* Login / Primeiro Acesso */
+  .card-login {
+    max-width: 400px; margin: 60px auto; background: var(--cartao);
+    border: 1px solid var(--linha); border-radius: 20px; padding: 32px;
+  }
+  .card-login h2 { font-size: 20px; margin-bottom: 8px; text-align: center; color: var(--cor-destaque); }
+  .card-login p { font-size: 13px; color: var(--suave); margin-bottom: 24px; text-align: center; }
+
+  /* Formulários */
+  label { display: block; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--cor-destaque); margin: 12px 0 4px; }
+  input, select, textarea {
+    width: 100%; padding: 12px 14px; border-radius: 10px; background: rgba(255,255,255,0.04);
+    border: 1px solid var(--linha); color: var(--texto); font-size: 14px; font-family: inherit;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--cor-destaque); }
+
+  /* Botões */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 12px 20px; border-radius: 10px; font-size: 14px; font-weight: 600;
+    border: 0; cursor: pointer; transition: all 0.2s; text-decoration: none;
+  }
+  .btn.largo { width: 100%; margin-top: 16px; }
+  .btn.ouro { background: var(--cor-destaque); color: #1a0d00; }
+  .btn.ouro:hover { opacity: 0.9; }
+  .btn.claro { background: rgba(255,255,255,0.08); color: var(--texto); }
+  .btn.verde { background: var(--ok); color: #fff; }
+  .btn.vermelho { background: var(--erro-f); color: var(--erro); }
+  .btn.pequeno { min-height: 40px; padding: 0 14px; font-size: 14px; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  .msg { border-radius: 12px; padding: 12px; font-size: 14px; margin-top: 12px; }
+  .msg.erro { background: var(--erro-f); color: var(--erro); }
+  .msg.ok { background: var(--ok-f); color: var(--ok); }
+  .msg.aviso { background: var(--alerta-f); color: var(--alerta); }
+
+  .nav-abas {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+    background: var(--cartao); border-top: 1px solid var(--linha);
+    display: flex; justify-space-around: space-around;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+  .nav-aba-btn {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: transparent; border: 0; color: var(--suave); font-size: 11px;
+    padding: 6px 0; position: relative; min-height: 44px;
+  }
+  .nav-aba-btn.ativa { color: var(--cor-destaque); font-weight: 700; }
+  .nav-aba-btn i { font-size: 20px; }
+  .badge-bolinha {
+    position: absolute; top: 2px; right: 25%; background: var(--erro);
+    color: #fff; font-size: 10px; font-weight: 800; border-radius: 999px;
+    padding: 2px 6px; min-width: 18px; text-align: center;
+  }
+
+  .unidade-seletor {
+    display: flex; gap: 8px; margin-top: 12px;
+  }
+  .unidade-seletor button {
+    flex: 1; padding: 10px; border-radius: 10px; border: 1px solid var(--linha);
+    background: rgba(255,255,255,0.02); color: var(--suave); font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .unidade-seletor button.ativo { background: var(--cor-destaque); color: #1a0d00; border-color: var(--cor-destaque); }
+
+  /* Cards e Listas */
+  .card {
+    background: var(--cartao); border: 1px solid var(--linha);
+    border-radius: 16px; padding: 20px; margin-top: 16px;
+  }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .card-title { font-size: 16px; font-weight: 700; color: var(--texto); }
+
+  .reserva-item {
+    background: rgba(255,255,255,0.02); border: 1px solid var(--linha);
+    border-radius: 12px; padding: 14px; margin-top: 10px; display: flex;
+    justify-content: space-between; align-items: center; gap: 12px;
+  }
+  .reserva-info h4 { font-size: 15px; color: var(--texto); margin-bottom: 4px; }
+  .reserva-info p { font-size: 12px; color: var(--suave); }
+
+  .badge-status {
+    padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+  }
+  .badge-status.pedido { background: var(--alerta-f); color: var(--alerta); }
+  .badge-status.aguardando_sinal { background: rgba(201,168,76,0.2); color: var(--cor-destaque); }
+  .badge-status.confirmado { background: var(--ok-f); color: var(--ok); }
+  .badge-status.concluido { background: rgba(255,255,255,0.1); color: var(--suave); }
+  .badge-status.recusado, .badge-status.cancelado, .badge-status.expirado { background: var(--erro-f); color: var(--erro); }
+
+  /* Modal genérico */
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-box {
+    background: var(--cartao); border: 1px solid var(--linha); border-radius: 20px;
+    width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 24px; position: relative;
+  }
+  .modal-fechar { position: absolute; top: 16px; right: 16px; background: transparent; border: 0; color: var(--suave); font-size: 20px; cursor: pointer; }
+
+  /* Iframe Editor */
+  #site-quadro {
+    width: 100%; height: calc(100vh - 220px); min-height: 480px; border: 1px solid var(--linha);
+    border-radius: 16px; background: #fff; margin-top: 12px;
+  }
+  .acoes-editor { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+.cfg-sub{margin:22px 0 6px;font-size:15px;color:var(--cor-destaque)}
+.cfg-ajuda{font-size:12px;color:var(--suave);margin-bottom:8px}
+.cfg-bloco{border:1px solid var(--linha);border-radius:12px;padding:12px;margin:10px 0;background:rgba(255,255,255,.02)}
+.check-linha{display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:13px}
+.valores-reserva{margin-top:12px;padding-top:10px;border-top:1px solid var(--linha)}
+  .nav-abas { overflow-x: auto; justify-content: flex-start !important; }
+  .nav-aba-btn { flex: 0 0 auto; min-width: 74px; padding-left: 6px; padding-right: 6px; }
+  .grade-g { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 12px 0; }
+  .cartao-g { background: var(--cartao); border: 1px solid var(--linha); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+  .cartao-g h4 { margin-bottom: 6px; }
+  .suave { color: var(--suave); font-size: 13px; }
+  .aviso-g { background: var(--alerta-f); border: 1px solid var(--alerta); border-radius: 10px; padding: 10px; margin: 8px 0; }
+  .tit-g { margin: 16px 0 8px; }
+  .tabela-g > div { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 8px 0; border-bottom: 1px solid var(--linha); }
+  .linha-g { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; align-items: center; }
+  .linha-g input, .linha-g select { flex: 1 1 130px; min-width: 0; }
+  .lista-g { list-style: none; margin: 6px 0; font-size: 13px; }
+  .lista-g li { padding: 3px 0; }
+</style>
+</head>
+<body>
+
+<!-- Header Principal -->
+<header class="header-painel">
+  <div class="logo-tit">
+    <i class="ri-sparkles-line"></i>
+    <span>Splash Piscina e Lazer</span>
+  </div>
+  <div id="usuario-topo" class="oculto">
+    <button class="btn pequeno claro" onclick="abrirModalConta()"><i class="ri-user-settings-line"></i> Conta</button>
+  </div>
+</header>
+
+<!-- Área Deslogada / Primeiro Acesso -->
+<div id="area-deslogada" class="cont-main">
+  <div class="card-login" id="card-entrar">
+    <h2>Painel da Amanda</h2>
+    <p>Digite sua senha para gerenciar as reservas e o site.</p>
+    <div id="msg-login" class="msg erro oculto"></div>
+    <form onsubmit="executarLogin(event)">
+      <label>Senha de Acesso</label>
+      <input type="password" id="input-senha-login" required autofocus>
+      <button type="submit" class="btn largo ouro">Entrar no Painel</button>
+    </form>
+    <p style="margin-top: 20px; font-size: 12px;">
+      <a href="#" style="color: var(--cor-destaque);" onclick="alternarTelaAcesso('primeiro')">Primeiro acesso? Cadastre sua senha aqui.</a>
+    </p>
+  </div>
+
+  <div class="card-login oculto" id="card-primeiro-acesso">
+    <h2>Primeiro Acesso</h2>
+    <p>Digite o código de ativação e escolha uma senha forte.</p>
+    <div id="msg-primeiro" class="msg erro oculto"></div>
+    <form onsubmit="executarPrimeiroAcesso(event)">
+      <label>Código de Ativação</label>
+      <input type="text" id="input-codigo-ativacao" placeholder="Código de 8 ou 12 dígitos" required>
+      <label>Sua Nova Senha</label>
+      <input type="password" id="input-senha-nova" placeholder="Mínimo 8 caracteres" required minlength="8">
+      <button type="submit" class="btn largo ouro">Ativar Conta e Entrar</button>
+    </form>
+    <p style="margin-top: 20px; font-size: 12px;">
+      <a href="#" style="color: var(--cor-destaque);" onclick="alternarTelaAcesso('login')">Já tem senha? Faça login.</a>
+    </p>
+  </div>
+</div>
+
+<!-- Área Logada / Painel Principal -->
+<div id="area-logada" class="cont-main oculto">
+
+  <!-- Seletor Global de Unidade -->
+  <div class="unidade-seletor">
+    <button id="btn-u-santa-adelia" class="ativo" onclick="selecionarUnidade('santa-adelia')">Splash Santa Adélia</button>
+    <button id="btn-u-santa-barbara" onclick="selecionarUnidade('santa-barbara')">Splash Santa Bárbara</button>
+  </div>
+
+  <!-- ABA 1: CALENDÁRIO -->
+  <section id="aba-calendario">
+    <div class="card">
+      <div class="card-header">
+        <button class="btn pequeno claro" onclick="mudarMes(-1)"><i class="ri-arrow-left-s-line"></i></button>
+        <div class="card-title" id="titulo-mes-atual">Carregando...</div>
+        <button class="btn pequeno claro" onclick="mudarMes(1)"><i class="ri-arrow-right-s-line"></i></button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; text-align: center; margin-bottom: 8px; font-size: 11px; font-weight: 700; color: var(--cor-destaque);">
+        <div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SÁB</div>
+      </div>
+      <div id="grid-calendario-painel" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;"></div>
+    </div>
+  </section>
+
+  <!-- ABA 2: PEDIDOS PENDENTES -->
+  <section id="aba-pedidos" class="oculto">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Pedidos de Reserva Recebidos</div>
+        <span class="badge-status pedido" id="cnt-pedidos-badge">0 pendentes</span>
+      </div>
+      <p style="font-size: 13px; color: var(--suave);">Ao aceitar um pedido, envie a chave Pix para o cliente pagar o sinal e confirmar.</p>
+      <div id="lista-pedidos-pendentes"></div>
+    </div>
+  </section>
+
+  <!-- ABA 3: TODAS AS RESERVAS -->
+  <section id="aba-reservas" class="oculto">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Histórico de Reservas</div>
+        <button class="btn pequeno claro" onclick="baixarBackupCsv()"><i class="ri-download-line"></i> Baixar CSV</button>
+      </div>
+      <div id="lista-todas-reservas"></div>
+    </div>
+  </section>
+
+  <!-- ABA 4: NOVO LANÇAMENTO DIRETO (RES OU BLOQUEIO) -->
+  <section id="aba-nova" class="oculto">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Novo Lançamento Manual</div>
+      </div>
+      <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+        <button id="btn-tipo-res" class="btn pequeno ouro" onclick="alternarModoLancamento('reserva')">Lançar Reserva</button>
+        <button id="btn-tipo-bloq" class="btn pequeno claro" onclick="alternarModoLancamento('bloqueio')">Bloquear Data</button>
+      </div>
+
+      <!-- Formulário Reserva Manual -->
+      <form id="form-lanc-reserva" onsubmit="salvarReservaManual(event)">
+        <label>Data da Locação</label>
+        <input type="date" id="lanc-res-data" required>
+        <label>Nome do Cliente</label>
+        <input type="text" id="lanc-res-nome" required>
+        <label>WhatsApp</label>
+        <input type="tel" id="lanc-res-zap" required placeholder="(11) 99999-8888">
+        <label>Tipo de Evento</label>
+        <select id="lanc-res-tipo">
+          <option value="Aniversário">Aniversário</option>
+          <option value="Festa infantil">Festa infantil</option>
+          <option value="Confraternização">Confraternização</option>
+          <option value="Encontro de família ou amigos">Encontro de família ou amigos</option>
+          <option value="Outro">Outro</option>
+        </select>
+        <label>Estimativa de Convidados</label>
+        <input type="number" id="lanc-res-convidados" placeholder="Ex: 30">
+        <label>Observações</label>
+        <textarea id="lanc-res-obs" rows="2"></textarea>
+        <button type="submit" class="btn largo ouro"><i class="ri-check-line"></i> Confirmar Reserva Manual</button>
+      </form>
+
+      <!-- Formulário Bloqueio Manual -->
+      <form id="form-lanc-bloqueio" class="oculto" onsubmit="salvarBloqueioManual(event)">
+        <label>Data Inicial</label>
+        <input type="date" id="lanc-bloq-de" required>
+        <label>Data Final</label>
+        <input type="date" id="lanc-bloq-ate" required>
+        <label>Motivo do Bloqueio</label>
+        <input type="text" id="lanc-bloq-motivo" placeholder="Ex: Manutenção da piscina, Reforma, Uso próprio" required>
+        <button type="submit" class="btn largo ouro"><i class="ri-lock-line"></i> Bloquear Período</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- ABA 5: EDITAR MEU SITE -->
+  <section id="aba-editor" class="oculto">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ri-layout-edit-line"></i> Editar meu site</div>
+        <a class="btn pequeno claro" id="link-ver-site-publico" target="_blank" rel="noopener"><i class="ri-external-link-line"></i> Ver no ar</a>
+      </div>
+      <p style="font-size:13px;color:var(--suave)">Toque em qualquer texto, foto ou seção no site abaixo para alterar. As mudanças valem imediatamente.</p>
+
+      <div class="acoes-editor">
+        <button class="btn pequeno ouro" onclick="salvarAlteracoesSite()"><i class="ri-save-line"></i> Salvar mudanças</button>
+        <button class="btn pequeno claro" onclick="abrirModalMidia()"><i class="ri-image-add-line"></i> Fotos &amp; Vídeos</button>
+        <button class="btn pequeno claro" onclick="abrirHistoricoSite()"><i class="ri-history-line"></i> Histórico (10)</button>
+        <button class="btn pequeno vermelho" onclick="desfazerTudoSite()"><i class="ri-refresh-line"></i> Desfazer tudo</button>
+      </div>
+
+      <div id="editor-msg" class="msg aviso oculto"></div>
+      <iframe id="site-quadro" title="Cópia editável do seu site"></iframe>
+    </div>
+  </section>
+
+  <!-- ABA 5.5: IMPORTAR PLANILHA (EXCEL / CSV) -->
+  <section id="aba-importar" class="oculto">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ri-file-upload-line"></i> Importar Planilha da Agenda</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn pequeno claro" onclick="baixarModeloCsv()"><i class="ri-file-text-line"></i> Modelo CSV</button>
+          <button class="btn pequeno claro" onclick="baixarModeloXlsx()"><i class="ri-file-excel-line"></i> Modelo XLSX</button>
+        </div>
+      </div>
+      <p style="font-size: 13px; color: var(--suave);">Traga a sua agenda antiga do Excel ou do papel sem precisar digitar uma por uma. Escolha o arquivo no celular ou computador.</p>
+
+      <!-- PASSO 1: SELEÇÃO DE ARQUIVO E UNIDADE PADRÃO -->
+      <div id="imp-passo-1" style="margin-top: 16px;">
+        <label>Selecione a Planilha (.xlsx, .xls ou .csv)</label>
+        <input type="file" id="imp-arquivo-input" accept=".xlsx,.xls,.csv,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" onchange="processarArquivoImportacao(event)">
+
+        <label style="margin-top: 12px;">Unidade Padrão (caso a planilha não tenha coluna de unidade)</label>
+        <select id="imp-unidade-padrao">
+          <option value="santa-adelia">Splash Santa Adélia</option>
+          <option value="santa-barbara">Splash Santa Bárbara</option>
+        </select>
+      </div>
+
+      <!-- PASSO 2: PRÉVIA E CORREÇÕES -->
+      <div id="imp-passo-2" class="oculto" style="margin-top: 20px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px;">
+          <h4 style="font-size: 15px; color: var(--cor-destaque);">Prévia da Importação</h4>
+          <span id="imp-resumo-totais" style="font-size: 12px; color: var(--suave);"></span>
+        </div>
+
+        <div style="overflow-x: auto; border: 1px solid var(--linha); border-radius: 12px; margin-bottom: 16px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+            <thead>
+              <tr style="background: rgba(255,255,255,0.05); color: var(--cor-destaque); border-bottom: 1px solid var(--linha);">
+                <th style="padding: 8px 12px;">Selo</th>
+                <th style="padding: 8px 12px;">Data</th>
+                <th style="padding: 8px 12px;">Unidade</th>
+                <th style="padding: 8px 12px;">Cliente</th>
+                <th style="padding: 8px 12px;">WhatsApp</th>
+                <th style="padding: 8px 12px;">Tipo / Status</th>
+                <th style="padding: 8px 12px;">Motivo / Observação</th>
+                <th style="padding: 8px 12px;">Ação</th>
+              </tr>
+            </thead>
+            <tbody id="imp-tabela-corpo"></tbody>
+          </table>
+        </div>
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn pequeno ouro" onclick="confirmarImportacaoLote(false)"><i class="ri-check-double-line"></i> Importar Linhas OK e Avisos</button>
+          <button class="btn pequeno claro" onclick="confirmarImportacaoLote(true)"><i class="ri-check-line"></i> Importar Apenas OKs Estritos</button>
+          <button class="btn pequeno vermelho" onclick="reiniciarImportacao()"><i class="ri-close-line"></i> Cancelar</button>
+        </div>
+      </div>
+
+      <!-- PASSO 3: RESULTADO FINAL / RELATÓRIO -->
+      <div id="imp-passo-3" class="oculto" style="margin-top: 20px;">
+        <div id="imp-msg-resultado" class="msg ok"></div>
+        <div style="margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="btn pequeno claro" onclick="baixarRelatorioImportacaoCsv()"><i class="ri-download-line"></i> Baixar Relatório CSV</button>
+          <button class="btn pequeno vermelho" id="btn-desfazer-lote" onclick="executarDesfazerImportacao()"><i class="ri-history-line"></i> Desfazer esta Importação</button>
+          <button class="btn pequeno ouro" onclick="navegarAba('calendario')"><i class="ri-calendar-line"></i> Ir para o Calendário</button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ABA 6: CONFIGURAÇÕES / AJUSTES -->
+  <section id="aba-financeiro" class="oculto">
+    <h2>Financeiro</h2>
+    <div class="linha-g"><input type="date" id="fin-de" aria-label="De"><input type="date" id="fin-ate" aria-label="Até"><button class="btn pequeno ouro" id="fin-atualizar">Atualizar</button></div>
+    <div id="fin-resumo"></div>
+    <h3 class="tit-g">Reservas e pagamentos</h3>
+    <div id="fin-reservas"></div>
+  </section>
+
+  <section id="aba-despesas" class="oculto">
+    <h2>Despesas</h2>
+    <form id="desp-form" class="cartao-g">
+      <div class="linha-g"><select id="desp-unidade" aria-label="Unidade"></select><select id="desp-categoria" aria-label="Categoria"></select></div>
+      <div class="linha-g"><input type="text" id="desp-descricao" maxlength="120" placeholder="Descrição (ex.: produto da piscina)"><input type="number" id="desp-valor" min="0.01" step="0.01" placeholder="Valor" required><input type="date" id="desp-data" required></div>
+      <div class="linha-g"><button class="btn ouro" type="submit">Salvar despesa</button><span id="desp-msg" role="status"></span></div>
+    </form>
+    <div class="linha-g"><input type="date" id="desp-de" aria-label="De"><input type="date" id="desp-ate" aria-label="Até"><button class="btn pequeno ouro" type="button" id="desp-atualizar">Atualizar</button></div>
+    <p id="desp-total" style="margin:10px 0;font-weight:700"></p>
+    <div id="desp-lista"></div>
+  </section>
+
+  <section id="aba-clientes" class="oculto">
+    <h2>Clientes</h2>
+    <p class="suave" id="cli-regra"></p>
+    <div id="cli-lista"></div>
+  </section>
+
+  <section id="aba-config" class="oculto">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Configurações Gerais</div>
+      </div>
+      <form onsubmit="salvarConfiguracoes(event)">
+        <h4 class="cfg-sub">Pix para o sinal</h4>
+        <label>Nome do titular da conta Pix</label>
+        <input type="text" id="cfg-pix-titular">
+        <label>Chave Pix</label>
+        <input type="text" id="cfg-pix-chave" placeholder="E-mail, CPF, CNPJ, celular ou chave aleatória">
+        <label class="check-linha"><input type="checkbox" id="cfg-pix-mostrar" style="width:auto"> Mostrar a chave Pix para o cliente logo depois que ele enviar o pedido (ele paga e manda o comprovante pelo WhatsApp)</label>
+        <label>Tipo de sinal</label>
+        <select id="cfg-sinal-tipo"><option value="percentual">Percentual do valor total (%)</option><option value="valor">Valor fixo (R$)</option></select>
+        <label>Valor do sinal (% ou R$, conforme o tipo; deixe 0 para combinar com cada cliente)</label>
+        <input type="number" id="cfg-sinal-valor" min="0" step="0.01">
+        <label>Prazo para o cliente pagar o sinal (horas)</label>
+        <input type="number" id="cfg-prazo-horas" min="1" max="168">
+
+        <h4 class="cfg-sub">Contato</h4>
+        <label>WhatsApp da Amanda (com DDD)</label>
+        <input type="tel" id="cfg-whatsapp">
+        <label>Instagram (sem @)</label>
+        <input type="text" id="cfg-instagram" placeholder="splash_santaadelia">
+
+        <h4 class="cfg-sub">Unidades: endereço e valor da diária</h4>
+        <div id="cfg-unidades"></div>
+
+        <h4 class="cfg-sub">Extras que o cliente pode escolher (ex.: decoração)</h4>
+        <p class="cfg-ajuda">Deixe o valor em 0 para combinar o preço com o cliente pelo WhatsApp.</p>
+        <div id="cfg-extras"></div>
+        <button type="button" class="btn pequeno claro" onclick="adicionarExtraCfg()"><i class="ri-add-line"></i> Adicionar extra</button>
+
+        <h4 class="cfg-sub">Promoções no site (ex.: "Dia 02/11 disponível por R$ 799,99")</h4>
+        <div id="cfg-promos"></div>
+        <button type="button" class="btn pequeno claro" onclick="adicionarPromoCfg()"><i class="ri-add-line"></i> Adicionar promoção</button>
+
+        <h4 class="cfg-sub">Avaliações de clientes (texto)</h4>
+        <p class="cfg-ajuda">Para mostrar prints de avaliações, use "Fotos e vídeos" e escolha "Avaliações".</p>
+        <div id="cfg-avaliacoes"></div>
+        <button type="button" class="btn pequeno claro" onclick="adicionarAvaliacaoCfg()"><i class="ri-add-line"></i> Adicionar avaliação</button>
+
+        <h4 class="cfg-sub">Cliente fiel (desconto)</h4>
+        <label>Quantos aluguéis para ser cliente fiel</label>
+        <input type="number" id="cfg-fid-minimo" min="1" max="50">
+        <label>Desconto sugerido (%)</label>
+        <input type="number" id="cfg-fid-percentual" min="0" max="100" step="1">
+
+        <button type="button" class="btn largo claro" style="margin-top:18px" onclick="abrirModalMidia()"><i class="ri-image-add-line"></i> Fotos, vídeos, prints e posts</button>
+        <button type="submit" class="btn largo ouro" style="margin-top:18px">Salvar Configurações</button>
+      </form>
+    </div>
+  </section>
+
+</div>
+
+<!-- MODAL DETALHES / AÇÕES DA RESERVA -->
+<div id="modal-detalhes" class="modal-overlay oculto">
+  <div class="modal-box">
+    <button class="modal-fechar" onclick="fecharModal()">&times;</button>
+    <h3 style="font-size: 18px; margin-bottom: 12px; color: var(--cor-destaque);" id="md-titulo">Detalhes do Pedido</h3>
+    <div id="md-corpo" style="font-size: 13.5px; color: var(--texto); line-height: 1.6;"></div>
+    <div id="md-acoes" style="margin-top: 20px; display: flex; gap: 8px; flex-wrap: wrap;"></div>
+  </div>
+</div>
+
+<!-- MODAL EDIÇÃO DE TEXTO / FOTO DO SITE -->
+<div id="modal-editar-campo" class="modal-overlay oculto">
+  <div class="modal-box">
+    <button class="modal-fechar" onclick="fecharModalCampo()">&times;</button>
+    <h3 style="font-size: 18px; margin-bottom: 12px; color: var(--cor-destaque);" id="modal-campo-titulo">Alterar Conteúdo</h3>
+    <div id="modal-campo-corpo"></div>
+  </div>
+</div>
+
+<!-- MODAL FOTOS E VÍDEOS DAS UNIDADES -->
+<div id="modal-midia" class="modal-overlay oculto">
+  <div class="modal-box">
+    <button class="modal-fechar" onclick="fecharModalMidia()">&times;</button>
+    <h3 style="font-size: 18px; margin-bottom: 12px; color: var(--cor-destaque);">Fotos e Vídeos da Unidade</h3>
+    <p style="font-size:12px;color:var(--suave);margin-bottom:8px">Escolha onde as fotos e vídeos aparecem no site:</p>
+    <select id="midia-destino" onchange="carregarMidiasModal()" style="margin-bottom:12px"></select>
+
+    <div style="border-bottom:1px solid var(--linha);padding-bottom:16px;margin-bottom:16px">
+      <h4 style="font-size:14px;color:#fff;margin-bottom:8px">Adicionar Foto</h4>
+      <input type="file" id="midia-foto-input" accept="image/jpeg,image/png,image/webp">
+      <label>Legenda da Foto (opcional)</label>
+      <input type="text" id="midia-foto-legenda" placeholder="Ex: Vista da piscina iluminada">
+      <button class="btn pequeno ouro" style="margin-top:8px" onclick="enviarFotoServidor()">Enviar Foto (<= 600 KB)</button>
+    </div>
+
+    <div>
+      <h4 style="font-size:14px;color:#fff;margin-bottom:8px">Adicionar Vídeo</h4>
+      <p style="font-size:12px;color:var(--suave);margin-bottom:8px">Envie o vídeo do celular para o YouTube (pode ser como não listado) e cole o link aqui.</p>
+      <label>Link do Vídeo (YouTube, Vimeo ou Instagram Reel)</label>
+      <input type="url" id="midia-video-url" placeholder="https://www.youtube.com/watch?v=...">
+      <label>Título do Vídeo (opcional)</label>
+      <input type="text" id="midia-video-titulo" placeholder="Ex: Tour do Salão Principal">
+      <button class="btn pequeno ouro" style="margin-top:8px" onclick="salvarVideoServidor()">Salvar Vídeo</button>
+    </div>
+
+    <div style="margin-top:20px" id="midia-lista-container"></div>
+  </div>
+</div>
+
+<!-- MODAL CONTA / SENHA -->
+<div id="modal-conta" class="modal-overlay oculto">
+  <div class="modal-box">
+    <button class="modal-fechar" onclick="fecharModalConta()">&times;</button>
+    <h3 style="font-size: 18px; margin-bottom: 12px; color: var(--cor-destaque);">Sua Conta</h3>
+    <div id="msg-conta" class="msg oculto"></div>
+    <label>Senha Atual</label>
+    <input type="password" id="conta-senha-atual">
+    <label>Nova Senha</label>
+    <input type="password" id="conta-senha-nova">
+    <button class="btn largo ouro" onclick="executarTrocaSenha()">Alterar Senha</button>
+  </div>
+</div>
+
+<!-- Menu Inferior Mobile-First -->
+<nav id="menu-inferior" class="nav-abas oculto">
+  <button class="nav-aba-btn ativa" onclick="navegarAba('calendario')" id="tab-calendario">
+    <i class="ri-calendar-line"></i>
+    <span>Calendário</span>
+  </button>
+  <button class="nav-aba-btn" onclick="navegarAba('pedidos')" id="tab-pedidos">
+    <i class="ri-notification-3-line"></i>
+    <span>Pedidos</span>
+    <span id="badge-pedidos" class="badge-bolinha oculto">0</span>
+  </button>
+  <button class="nav-aba-btn" onclick="navegarAba('reservas')" id="tab-reservas">
+    <i class="ri-list-check-2"></i>
+    <span>Reservas</span>
+  </button>
+  <button class="nav-aba-btn" onclick="navegarAba('nova')" id="tab-nova">
+    <i class="ri-add-circle-line"></i>
+    <span>Novo</span>
+  </button>
+  <button class="nav-aba-btn" onclick="navegarAba('financeiro')" id="tab-financeiro"><i class="ri-money-dollar-circle-line"></i><span>Financeiro</span></button>
+  <button class="nav-aba-btn" onclick="navegarAba('despesas')" id="tab-despesas"><i class="ri-wallet-3-line"></i><span>Despesas</span></button>
+  <button class="nav-aba-btn" onclick="navegarAba('clientes')" id="tab-clientes"><i class="ri-user-star-line"></i><span>Clientes</span></button>
+  <button class="nav-aba-btn" onclick="navegarAba('editor')" id="tab-editor">
+    <i class="ri-layout-edit-line"></i>
+    <span>Editar Site</span>
+  </button>
+  <button class="nav-aba-btn" onclick="navegarAba('importar')" id="tab-importar">
+    <i class="ri-file-upload-line"></i>
+    <span>Importar</span>
+  </button>
+  <button class="nav-aba-btn" onclick="navegarAba('config')" id="tab-config">
+    <i class="ri-settings-4-line"></i>
+    <span>Ajustes</span>
+  </button>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous"></script>
+<script src="painel.js"></script>
+<script src="gestao.js"></script>
+<script>
+  let TOKEN = sessionStorage.getItem('splash_token') || '';
+  let UNIDADE_ATUAL = 'santa-adelia';
+  let MES_ATUAL = new Date().toISOString().slice(0, 7);
+  let CONFIG_CACHE = {};
+  let PENDENTES_CACHE = [];
+  let RESERVAS_CACHE = [];
+  let DIAS_MAPA = {};
+  let SITE_EDITOR = { aberto: false, conteudo: null, pronto: false, chaveTocada: null, tipoTocado: null };
+
+  const SITE_NAME = 'splash-teste';
+  const API_LOCACAO = 'https://nexia.gcbezerra.workers.dev/api/locacao';
+  const SITE_URL = '/';
+
+  function init() {
+    if (TOKEN) {
+      exibirAreaLogada();
+      carregarTudo();
+    } else {
+      exibirAreaDeslogada();
+    }
+
+    window.addEventListener('message', e => {
+      if (e.origin !== location.origin || !e.data || !e.data.nx) return;
+      if (e.data.nx === 'pronto') {
+        SITE_EDITOR.pronto = true;
+        const msg = document.getElementById('editor-msg');
+        msg.classList.add('oculto');
+        enviarConteudoIframe();
+      } else if (e.data.nx === 'tocar') {
+        tratarToqueNoSite(e.data);
+      }
+    });
+  }
+
+  function alternarTelaAcesso(qual) {
+    document.getElementById('card-entrar').classList.toggle('oculto', qual !== 'login');
+    document.getElementById('card-primeiro-acesso').classList.toggle('oculto', qual !== 'primeiro');
+  }
+
+  function exibirAreaLogada() {
+    document.getElementById('area-deslogada').classList.add('oculto');
+    document.getElementById('area-logada').classList.remove('oculto');
+    document.getElementById('menu-inferior').classList.remove('oculto');
+    document.getElementById('usuario-topo').classList.remove('oculto');
+  }
+
+  function exibirAreaDeslogada() {
+    document.getElementById('area-deslogada').classList.remove('oculto');
+    document.getElementById('area-logada').classList.add('oculto');
+    document.getElementById('menu-inferior').classList.add('oculto');
+    document.getElementById('usuario-topo').classList.add('oculto');
+  }
+
+  async function apiPost(payload) {
+    try {
+      const res = await fetch(API_LOCACAO, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ site: SITE_NAME, token: TOKEN, ...payload })
+      });
+      const body = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        logout();
+        return { status: 401, body };
+      }
+      return { status: res.status, body };
+    } catch (err) {
+      return { status: 0, body: { error: 'Erro de rede ou servidor inacessível.' } };
+    }
+  }
+
+  async function apiGet(query = {}) {
+    try {
+      const q = new URLSearchParams({ site: SITE_NAME, ...query });
+      const res = await fetch(`${API_LOCACAO}?${q.toString()}`);
+      const body = await res.json().catch(() => ({}));
+      return { status: res.status, body };
+    } catch (err) {
+      return { status: 0, body: { error: 'Erro de conexão.' } };
+    }
+  }
+
+  async function executarLogin(e) {
+    e.preventDefault();
+    const senha = document.getElementById('input-senha-login').value;
+    const msg = document.getElementById('msg-login');
+    msg.classList.add('oculto');
+
+    const res = await apiPost({ acao: 'entrar', senha });
+    if (res.status === 200 && res.body.token) {
+      TOKEN = res.body.token;
+      sessionStorage.setItem('splash_token', TOKEN);
+      exibirAreaLogada();
+      carregarTudo();
+    } else {
+      msg.textContent = res.body.error || 'Senha incorreta.';
+      msg.classList.remove('oculto');
+    }
+  }
+
+  async function executarPrimeiroAcesso(e) {
+    e.preventDefault();
+    const codigo = document.getElementById('input-codigo-ativacao').value.trim();
+    const senha_nova = document.getElementById('input-senha-nova').value;
+    const msg = document.getElementById('msg-primeiro');
+    msg.classList.add('oculto');
+
+    const res = await apiPost({ acao: 'primeiro-acesso', codigo, senha_nova });
+    if (res.status === 200 && res.body.token) {
+      TOKEN = res.body.token;
+      sessionStorage.setItem('splash_token', TOKEN);
+      exibirAreaLogada();
+      carregarTudo();
+    } else {
+      msg.textContent = res.body.error || 'Código inválido ou expirado.';
+      msg.classList.remove('oculto');
+    }
+  }
+
+  function logout() {
+    TOKEN = '';
+    sessionStorage.removeItem('splash_token');
+    exibirAreaDeslogada();
+  }
+
+  function selecionarUnidade(id) {
+    UNIDADE_ATUAL = id;
+    document.getElementById('btn-u-santa-adelia').classList.toggle('ativo', id === 'santa-adelia');
+    document.getElementById('btn-u-santa-barbara').classList.toggle('ativo', id === 'santa-barbara');
+    carregarCalendario();
+    carregarReservas();
+  }
+
+  function carregarTudo() {
+    carregarConfiguracoes();
+    carregarCalendario();
+    carregarReservas();
+  }
+
+  async function carregarConfiguracoes() {
+    // A configuração completa (com a chave Pix) só vem para quem está logada.
+    const res = await apiPost({ acao: 'listar', de: hojeBr(), ate: hojeBr() });
+    if (res.status === 200 && res.body.config) {
+      CONFIG_CACHE = res.body.config;
+      preencherFormularioConfig(CONFIG_CACHE);
+    }
+  }
+
+  function hojeBr(deslocDias) {
+    return new Date(Date.now() - 3 * 3600000 + (deslocDias || 0) * 86400000).toISOString().slice(0, 10);
+  }
+
+  async function carregarCalendario() {
+    document.getElementById('titulo-mes-atual').textContent = SplashPainel.nomeMesAnoPt(MES_ATUAL);
+    const res = await apiGet({ unidade: UNIDADE_ATUAL, mes: MES_ATUAL });
+    if (res.status === 200) {
+      DIAS_MAPA = res.body.dias || {};
+    } else {
+      DIAS_MAPA = {};
+    }
+    renderizarGridCalendario();
+  }
+
+  function renderizarGridCalendario() {
+    const container = document.getElementById('grid-calendario-painel');
+    container.innerHTML = '';
+    const dias = SplashPainel.gerarGridCalendarioPainel(MES_ATUAL, DIAS_MAPA);
+
+    dias.forEach(d => {
+      const el = document.createElement('div');
+      el.style.aspectRatio = '1';
+      el.style.borderRadius = '10px';
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
+      el.style.justifyContent = 'center';
+      el.style.fontSize = '13px';
+      el.style.fontWeight = '600';
+      el.style.cursor = d.doMes ? 'pointer' : 'default';
+      el.style.border = '1px solid var(--linha)';
+
+      const corBg = SplashPainel.obterCorDiaEstado(d.status, d.doMes);
+      el.style.background = corBg;
+      el.style.color = d.doMes ? '#fff' : 'var(--suave)';
+      el.textContent = d.diaNum;
+
+      if (d.doMes) {
+        el.onclick = () => abrirDetalhesData(d.dataIso);
+      }
+      container.appendChild(el);
+    });
+  }
+
+  async function carregarReservas() {
+    const res = await apiPost({ acao: 'listar', unidade: UNIDADE_ATUAL, de: hojeBr(-30), ate: hojeBr(335) });
+    if (res.status === 200) {
+      RESERVAS_CACHE = res.body.itens || [];
+      PENDENTES_CACHE = (res.body.pendentes || []).filter(r => r.unidade === UNIDADE_ATUAL);
+      if (res.body.config) CONFIG_CACHE = res.body.config;
+      renderizarListasReservas();
+    }
+  }
+
+  function renderizarListasReservas() {
+    const pedCont = document.getElementById('lista-pedidos-pendentes');
+    const todCont = document.getElementById('lista-todas-reservas');
+    pedCont.innerHTML = '';
+    todCont.innerHTML = '';
+
+    const pendentes = PENDENTES_CACHE;
+    document.getElementById('badge-pedidos').textContent = pendentes.length;
+    document.getElementById('badge-pedidos').classList.toggle('oculto', pendentes.length === 0);
+    document.getElementById('cnt-pedidos-badge').textContent = `${pendentes.length} pendente(s)`;
+
+    if (pendentes.length === 0) {
+      pedCont.innerHTML = '<p style="font-size:13px;color:var(--suave);padding:12px 0">Nenhum pedido pendente nesta unidade.</p>';
+    } else {
+      pendentes.forEach(r => pedCont.appendChild(criarCardReserva(r)));
+    }
+
+    if (RESERVAS_CACHE.length === 0) {
+      todCont.innerHTML = '<p style="font-size:13px;color:var(--suave);padding:12px 0">Nenhuma reserva cadastrada.</p>';
+    } else {
+      RESERVAS_CACHE.forEach(r => todCont.appendChild(criarCardReserva(r)));
+    }
+  }
+
+  function criarCardReserva(r) {
+    const div = document.createElement('div');
+    div.className = 'reserva-item';
+    const dataBr = SplashPainel.formatarDataBr(r.data);
+
+    div.innerHTML = `
+      <div class="reserva-info">
+        <h4>${SplashPainel.escapeHtml(r.nome)} — ${dataBr}</h4>
+        <p>${SplashPainel.escapeHtml(r.tipo_evento || 'Evento')} · ${SplashPainel.escapeHtml(r.whatsapp)} · Protocolo: ${r.protocolo || 'N/A'}</p>
+      </div>
+      <div>
+        <span class="badge-status ${r.status}">${r.status}</span>
+      </div>
+    `;
+    div.onclick = () => abrirModalDetalhesReserva(r);
+    return div;
+  }
+
+  function abrirModalDetalhesReserva(r) {
+    const modal = document.getElementById('modal-detalhes');
+    const corp = document.getElementById('md-corpo');
+    const acoes = document.getElementById('md-acoes');
+    document.getElementById('md-titulo').textContent = `Reserva #${r.protocolo || ''}`;
+
+    const dataBr = SplashPainel.formatarDataBr(r.data);
+    corp.innerHTML = `
+      <p><strong>Cliente:</strong> ${SplashPainel.escapeHtml(r.nome)}</p>
+      <p><strong>Data:</strong> ${dataBr}</p>
+      <p><strong>WhatsApp:</strong> ${SplashPainel.escapeHtml(r.whatsapp)}</p>
+      <p><strong>E-mail:</strong> ${SplashPainel.escapeHtml(r.email || 'Não informado')}</p>
+      <p><strong>Evento:</strong> ${SplashPainel.escapeHtml(r.tipo_evento)} (${r.convidados || 'N/A'} convidados)</p>
+      <p><strong>Status:</strong> <span class="badge-status ${r.status}">${r.status}</span></p>
+      ${r.obs ? `<p><strong>Obs:</strong> ${SplashPainel.escapeHtml(r.obs)}</p>` : ''}
+      ${(r.extras && r.extras.length) ? `<p><strong>Extras pedidos:</strong> ${r.extras.map(x => SplashPainel.escapeHtml(x.nome) + (x.valor > 0 ? ' (' + SplashPainel.formatarMoeda(x.valor) + ')' : ' (valor a combinar)')).join(', ')}</p>` : ''}
+      ${r.status === 'bloqueado' ? '' : `
+      <div class="valores-reserva">
+        <label>Valor total combinado (R$)</label>
+        <input type="number" id="md-valor-total" min="0" step="0.01" value="${Number(r.valor_total) || ''}">
+        <label>Valor do sinal (R$)</label>
+        <input type="number" id="md-valor-sinal" min="0" step="0.01" value="${Number(r.valor_sinal) || ''}">
+        <button class="btn pequeno claro" onclick="salvarValoresReserva('${SplashPainel.escapeHtml(r.id)}')">Salvar valores</button>
+      </div>`}
+    `;
+
+    acoes.innerHTML = '';
+
+    if (r.status === 'pedido' || r.status === 'aguardando_sinal') {
+      const msgZap = SplashPainel.gerarMensagemWhatsappSinal(r, CONFIG_CACHE || {});
+      const linkZap = `https://wa.me/${String(r.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent(msgZap)}`;
+
+      acoes.innerHTML += `
+        <a href="${linkZap}" target="_blank" class="btn pequeno ouro"><i class="ri-whatsapp-line"></i> Enviar Chave Pix</a>
+        <button class="btn pequeno verde" onclick="alterarStatusReserva('${r.id}', 'sinal_pago')"><i class="ri-check-double-line"></i> Marcar Sinal Pago</button>
+        <button class="btn pequeno vermelho" onclick="alterarStatusReserva('${r.id}', 'recusado')"><i class="ri-close-circle-line"></i> Recusar</button>
+      `;
+    } else if (r.status === 'confirmado') {
+      acoes.innerHTML += `
+        <button class="btn pequeno claro" onclick="alterarStatusReserva('${r.id}', 'concluido')"><i class="ri-checkbox-circle-line"></i> Concluir Evento</button>
+        <button class="btn pequeno vermelho" onclick="alterarStatusReserva('${r.id}', 'cancelado')"><i class="ri-close-line"></i> Cancelar Reserva</button>
+      `;
+    }
+
+    modal.classList.remove('oculto');
+  }
+
+  function abrirDetalhesData(dataIso) {
+    const res = RESERVAS_CACHE.find(r => r.data === dataIso);
+    if (res) {
+      abrirModalDetalhesReserva(res);
+    } else {
+      abrirNovoNoDia(dataIso);
+    }
+  }
+
+  function alterarStatusReserva(id, acaoStatus) {
+    const novo = acaoStatus === 'sinal_pago' ? 'confirmado' : acaoStatus; // "sinal pago" = reserva confirmada
+    apiPost({ acao: 'status', id, status: novo }).then(res => {
+      if (res.status === 200) {
+        fecharModal();
+        carregarCalendario();
+        carregarReservas();
+      } else {
+        alert((res.body && res.body.error) || 'Não foi possível mudar a situação desta reserva.');
+      }
+    });
+  }
+
+  function salvarValoresReserva(id) {
+    const total = Number(document.getElementById('md-valor-total').value) || 0;
+    const sinal = Number(document.getElementById('md-valor-sinal').value) || 0;
+    apiPost({ acao: 'editar', id, campos: { valor_total: total, valor_sinal: sinal } }).then(res => {
+      if (res.status === 200) {
+        alert('Valores salvos.');
+        fecharModal();
+        carregarReservas();
+      } else {
+        alert((res.body && res.body.error) || 'Erro ao salvar os valores.');
+      }
+    });
+  }
+
+  function abrirNovoNoDia(data) {
+    fecharModal();
+    navegarAba('nova');
+    document.getElementById('lanc-res-data').value = data;
+    document.getElementById('lanc-bloq-de').value = data;
+    document.getElementById('lanc-bloq-ate').value = data;
+  }
+
+  function fecharModal() {
+    document.getElementById('modal-detalhes').classList.add('oculto');
+  }
+
+  function fecharModalCampo() {
+    document.getElementById('modal-editar-campo').classList.add('oculto');
+  }
+
+  function fecharModalMidia() {
+    document.getElementById('modal-midia').classList.add('oculto');
+  }
+
+  function alternarModoLancamento(tipo) {
+    const isRes = tipo === 'reserva';
+    document.getElementById('form-lanc-reserva').classList.toggle('oculto', !isRes);
+    document.getElementById('form-lanc-bloqueio').classList.toggle('oculto', isRes);
+    document.getElementById('btn-tipo-res').className = `btn pequeno ${isRes ? 'ouro' : 'claro'}`;
+    document.getElementById('btn-tipo-bloq').className = `btn pequeno ${isRes ? 'claro' : 'ouro'}`;
+  }
+
+  function salvarReservaManual(e) {
+    e.preventDefault();
+    const payload = {
+      acao: 'criar',
+      unidade: UNIDADE_ATUAL,
+      data: document.getElementById('lanc-res-data').value,
+      nome: document.getElementById('lanc-res-nome').value.trim(),
+      whatsapp: document.getElementById('lanc-res-zap').value.trim(),
+      tipo_evento: document.getElementById('lanc-res-tipo').value,
+      convidados: Number(document.getElementById('lanc-res-convidados').value) || 0,
+      obs: document.getElementById('lanc-res-obs').value.trim(),
+      status: 'confirmado'
+    };
+
+    if (!payload.data || !payload.nome) return alert('Preencha a data e o nome do cliente.');
+
+    apiPost(payload).then(res => {
+      if (res.status === 201) {
+        alert('Reserva criada com sucesso!');
+        navegarAba('calendario');
+        carregarCalendario();
+        carregarReservas();
+      } else {
+        alert(res.body.error || 'Erro ao criar reserva.');
+      }
+    });
+  }
+
+  function salvarBloqueioManual(e) {
+    e.preventDefault();
+    const payload = {
+      acao: 'bloquear',
+      unidade: UNIDADE_ATUAL,
+      de: document.getElementById('lanc-bloq-de').value,
+      ate: document.getElementById('lanc-bloq-ate').value,
+      motivo: document.getElementById('lanc-bloq-motivo').value.trim()
+    };
+
+    if (!payload.de || !payload.ate) return alert('Preencha o período de bloqueio.');
+
+    apiPost(payload).then(res => {
+      if (res.status === 201) {
+        alert(`Período bloqueado (${res.body.bloqueios} dia(s)).`);
+        navegarAba('calendario');
+        carregarCalendario();
+        carregarReservas();
+      } else {
+        alert(res.body.error || 'Erro ao bloquear período.');
+      }
+    });
+  }
+
+  function preencherFormularioConfig(c) {
+    document.getElementById('cfg-pix-titular').value = (c.pix && c.pix.titular) || '';
+    document.getElementById('cfg-pix-chave').value = (c.pix && c.pix.chave) || '';
+    document.getElementById('cfg-pix-mostrar').checked = !(c.pix && c.pix.mostrar === false);
+    document.getElementById('cfg-sinal-tipo').value = (c.sinal && c.sinal.tipo) || 'percentual';
+    document.getElementById('cfg-sinal-valor').value = (c.sinal && c.sinal.valor) || 0;
+    document.getElementById('cfg-prazo-horas').value = c.prazo_horas || 48;
+    document.getElementById('cfg-whatsapp').value = c.whatsapp || '';
+    document.getElementById('cfg-instagram').value = c.instagram || '';
+    document.getElementById('cfg-unidades').innerHTML = (c.unidades || []).map(u => `
+      <div class="cfg-bloco" data-id="${SplashPainel.escapeHtml(u.id)}" data-nome="${SplashPainel.escapeHtml(u.nome)}">
+        <strong>${SplashPainel.escapeHtml(u.nome)}</strong>
+        <label>Endereço (aparece no site)</label>
+        <input type="text" class="un-endereco" value="${SplashPainel.escapeHtml(u.endereco || '')}" maxlength="200">
+        <label>Valor da diária (R$, deixe em branco para não mostrar no site)</label>
+        <input type="number" class="un-diaria" min="0" step="0.01" value="${u.valor_diaria || ''}">
+      </div>`).join('');
+    renderExtrasCfg(c.extras || []);
+    renderPromosCfg(c.promocoes || []);
+    renderAvaliacoesCfg(c.avaliacoes || []);
+    document.getElementById('cfg-fid-minimo').value = (c.fidelidade && c.fidelidade.minimo) || 3;
+    document.getElementById('cfg-fid-percentual').value = c.fidelidade ? c.fidelidade.percentual : 10;
+  }
+
+  function renderAvaliacoesCfg(lista) {
+    document.getElementById('cfg-avaliacoes').innerHTML = lista.map(x => `
+      <div class="cfg-bloco cfg-aval" data-id="${SplashPainel.escapeHtml(x.id || '')}">
+        <label>Nome do cliente</label><input type="text" class="av-nome" value="${SplashPainel.escapeHtml(x.nome || '')}" maxlength="80">
+        <label>O que ele disse</label><textarea class="av-texto" maxlength="400" rows="3">${SplashPainel.escapeHtml(x.texto || '')}</textarea>
+        <label>Estrelas (1 a 5)</label><input type="number" class="av-estrelas" min="1" max="5" value="${Number(x.estrelas) || 5}">
+        <label class="check-linha"><input type="checkbox" class="av-ativa" style="width:auto" ${x.ativa === false ? '' : 'checked'}> Mostrar no site</label>
+        <button type="button" class="btn pequeno vermelho" onclick="this.closest('.cfg-bloco').remove()">Remover</button>
+      </div>`).join('');
+  }
+  function lerAvaliacoesCfg() {
+    return Array.from(document.querySelectorAll('#cfg-avaliacoes .cfg-aval')).map(b => ({
+      id: b.dataset.id || '', nome: b.querySelector('.av-nome').value.trim(), texto: b.querySelector('.av-texto').value.trim(),
+      estrelas: Number(b.querySelector('.av-estrelas').value) || 5, ativa: b.querySelector('.av-ativa').checked
+    })).filter(x => x.texto);
+  }
+  function adicionarAvaliacaoCfg() { renderAvaliacoesCfg([...lerAvaliacoesCfg(), { nome: '', texto: 'Ótimo lugar!', estrelas: 5, ativa: true }]); }
+
+  function renderExtrasCfg(lista) {
+    document.getElementById('cfg-extras').innerHTML = lista.map(x => `
+      <div class="cfg-bloco cfg-extra" data-id="${SplashPainel.escapeHtml(x.id || '')}">
+        <label>Nome</label><input type="text" class="ex-nome" value="${SplashPainel.escapeHtml(x.nome || '')}" maxlength="80">
+        <label>Descrição curta (opcional)</label><input type="text" class="ex-desc" value="${SplashPainel.escapeHtml(x.descricao || '')}" maxlength="200">
+        <label>Valor (R$)</label><input type="number" class="ex-valor" min="0" step="0.01" value="${x.valor || 0}">
+        <label class="check-linha"><input type="checkbox" class="ex-ativo" style="width:auto" ${x.ativo === false ? '' : 'checked'}> Mostrar no site</label>
+        <button type="button" class="btn pequeno vermelho" onclick="this.closest('.cfg-bloco').remove()">Remover</button>
+      </div>`).join('');
+  }
+
+  function renderPromosCfg(lista) {
+    document.getElementById('cfg-promos').innerHTML = lista.map(x => `
+      <div class="cfg-bloco cfg-promo" data-id="${SplashPainel.escapeHtml(x.id || '')}">
+        <label>Texto da promoção</label><input type="text" class="pr-texto" value="${SplashPainel.escapeHtml(x.texto || '')}" maxlength="200">
+        <input type="hidden" class="pr-imagem" value="${SplashPainel.escapeHtml(x.imagem || '')}">
+        ${x.imagem ? `<img src="${SplashPainel.escapeHtml(absUrl(x.imagem))}" alt="" style="max-width:120px;border-radius:8px;display:block;margin:6px 0">` : ''}
+        <label>Print ou imagem da promoção (opcional)</label><input type="file" class="pr-arquivo" accept="image/jpeg,image/png,image/webp" onchange="anexarImagemPromo(this)">
+        <label class="check-linha"><input type="checkbox" class="pr-ativa" style="width:auto" ${x.ativa === false ? '' : 'checked'}> Mostrar no site</label>
+        <button type="button" class="btn pequeno vermelho" onclick="this.closest('.cfg-bloco').remove()">Remover</button>
+      </div>`).join('');
+  }
+
+  function lerExtrasCfg() {
+    return Array.from(document.querySelectorAll('#cfg-extras .cfg-extra')).map(b => ({
+      id: b.dataset.id || '', nome: b.querySelector('.ex-nome').value.trim(), descricao: b.querySelector('.ex-desc').value.trim(),
+      valor: Number(b.querySelector('.ex-valor').value) || 0, ativo: b.querySelector('.ex-ativo').checked
+    })).filter(x => x.nome);
+  }
+
+  function lerPromosCfg() {
+    return Array.from(document.querySelectorAll('#cfg-promos .cfg-promo')).map(b => ({
+      id: b.dataset.id || '', texto: b.querySelector('.pr-texto').value.trim(), imagem: b.querySelector('.pr-imagem').value, ativa: b.querySelector('.pr-ativa').checked
+    })).filter(x => x.texto || x.imagem);
+  }
+
+  function adicionarExtraCfg() {
+    renderExtrasCfg([...lerExtrasCfg(), { nome: 'Novo extra', valor: 0, ativo: true }]);
+  }
+
+  async function anexarImagemPromo(input) {
+    const file = input.files && input.files[0]; if (!file) return;
+    const bloco = input.closest('.cfg-promo');
+    try {
+      const b64 = await comprimirImagemClient(file, 600 * 1024);
+      const res = await apiPost({ acao: 'foto-enviar', unidade: 'promo', dados: b64.replace(/^data:image\/(jpeg|png|webp);base64,/, ''), tipo: file.type || 'image/jpeg', legenda: 'promoção' });
+      if (res.status !== 201) return alert((res.body && res.body.error) || 'Não consegui enviar a imagem.');
+      const url = (res.body.foto && res.body.foto.url) || res.body.url || '';
+      if (!url) return alert('Imagem enviada, mas não recebi o endereço. Tente de novo.');
+      bloco.querySelector('.pr-imagem').value = absUrl(url);
+      const lista = lerPromosCfg(); renderPromosCfg(lista);
+      alert('Imagem anexada. Toque em "Salvar Configurações" para publicar.');
+    } catch (e) { alert(e.message || 'Erro ao processar a imagem.'); }
+  }
+
+  function adicionarPromoCfg() {
+    renderPromosCfg([...lerPromosCfg(), { texto: 'Nova promoção', ativa: true }]);
+  }
+
+  function salvarConfiguracoes(e) {
+    e.preventDefault();
+    const unidades = Array.from(document.querySelectorAll('#cfg-unidades .cfg-bloco')).map(b => ({
+      id: b.dataset.id, nome: b.dataset.nome,
+      endereco: b.querySelector('.un-endereco').value.trim(),
+      valor_diaria: Number(b.querySelector('.un-diaria').value) || 0
+    }));
+    const payload = {
+      acao: 'config',
+      config: {
+        pix: {
+          titular: document.getElementById('cfg-pix-titular').value.trim(),
+          chave: document.getElementById('cfg-pix-chave').value.trim(),
+          mostrar: document.getElementById('cfg-pix-mostrar').checked
+        },
+        sinal: { tipo: document.getElementById('cfg-sinal-tipo').value, valor: Number(document.getElementById('cfg-sinal-valor').value) || 0 },
+        prazo_horas: Number(document.getElementById('cfg-prazo-horas').value) || 48,
+        whatsapp: document.getElementById('cfg-whatsapp').value.trim(),
+        instagram: document.getElementById('cfg-instagram').value.trim(),
+        unidades,
+        extras: lerExtrasCfg(),
+        promocoes: lerPromosCfg(),
+        avaliacoes: lerAvaliacoesCfg(),
+        fidelidade: { minimo: Number(document.getElementById('cfg-fid-minimo').value) || 3, percentual: Number(document.getElementById('cfg-fid-percentual').value) || 0 }
+      }
+    };
+
+    apiPost(payload).then(res => {
+      if (res.status === 200) {
+        alert('Configurações salvas com sucesso!');
+        CONFIG_CACHE = res.body.config || CONFIG_CACHE;
+        preencherFormularioConfig(CONFIG_CACHE);
+      } else {
+        alert((res.body && res.body.error) || 'Erro ao salvar configurações.');
+      }
+    });
+  }
+
+  function baixarBackupCsv() {
+    const csvContent = SplashPainel.gerarCsvBackup(RESERVAS_CACHE);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `backup_splash_${UNIDADE_ATUAL}_${new Date().toISOString().slice(0,10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function abrirModalConta() {
+    document.getElementById('modal-conta').classList.remove('oculto');
+  }
+
+  function fecharModalConta() {
+    document.getElementById('modal-conta').classList.add('oculto');
+  }
+
+  function executarTrocaSenha() {
+    const senha_atual = document.getElementById('conta-senha-atual').value;
+    const senha_nova = document.getElementById('conta-senha-nova').value;
+
+    apiPost({ acao: 'trocar-senha', senha_atual, senha_nova }).then(res => {
+      if (res.status === 200) {
+        alert('Senha alterada com sucesso!');
+        fecharModalConta();
+      } else {
+        alert(res.body.error || 'Erro ao alterar senha.');
+      }
+    });
+  }
+
+  /* --- ABA EDITAR SITE --- */
+  function abrirSiteEditor() {
+    SITE_EDITOR.aberto = true;
+    document.getElementById('link-ver-site-publico').href = SITE_URL;
+    const msg = document.getElementById('editor-msg');
+    msg.textContent = 'Carregando a cópia do seu site...';
+    msg.classList.remove('oculto');
+
+    apiGet({ conteudo: '1' }).then(res => {
+      SITE_EDITOR.conteudo = res.body.conteudo || {};
+      document.getElementById('site-quadro').src = `${SITE_URL}?editar=1`;
+    });
+  }
+
+  function quadroIframe() {
+    return document.getElementById('site-quadro').contentWindow;
+  }
+
+  function enviarConteudoIframe() {
+    if (SITE_EDITOR.pronto) {
+      quadroIframe().postMessage({ nx: 'aplicar', conteudo: SITE_EDITOR.conteudo }, location.origin);
+    }
+  }
+
+  function tratarToqueNoSite(data) {
+    if (data.tipo === 'secao') {
+      const c = SITE_EDITOR.conteudo || {};
+      if (!c.ocultos) c.ocultos = {};
+      const key = 'secao-' + data.id;
+      c.ocultos[key] = !c.ocultos[key];
+      SITE_EDITOR.conteudo = c;
+      enviarConteudoIframe();
+    } else if (data.tipo === 'texto') {
+      abrirModalEditarTexto(data);
+    } else if (data.tipo === 'foto') {
+      abrirModalEditarFoto(data);
+    }
+  }
+
+  function abrirModalEditarTexto(data) {
+    SITE_EDITOR.chaveTocada = data.chave;
+    SITE_EDITOR.tipoTocado = 'texto';
+    const modal = document.getElementById('modal-editar-campo');
+    const tit = document.getElementById('modal-campo-titulo');
+    const corp = document.getElementById('modal-campo-corpo');
+
+    tit.textContent = 'Editar Texto';
+    corp.innerHTML = `
+      <label>Texto</label>
+      <textarea id="edit-texto-val" rows="4">${SplashPainel.escapeHtml(data.atual)}</textarea>
+      <button class="btn largo ouro" onclick="confirmarEdicaoTexto()">Aplicar</button>
+    `;
+    modal.classList.remove('oculto');
+  }
+
+  function confirmarEdicaoTexto() {
+    const val = document.getElementById('edit-texto-val').value;
+    if (!SITE_EDITOR.conteudo) SITE_EDITOR.conteudo = {};
+    if (!SITE_EDITOR.conteudo.textos) SITE_EDITOR.conteudo.textos = {};
+    SITE_EDITOR.conteudo.textos[SITE_EDITOR.chaveTocada] = val;
+    fecharModalCampo();
+    enviarConteudoIframe();
+  }
+
+  function abrirModalEditarFoto(data) {
+    SITE_EDITOR.chaveTocada = data.chave;
+    SITE_EDITOR.tipoTocado = 'foto';
+    const modal = document.getElementById('modal-editar-campo');
+    const tit = document.getElementById('modal-campo-titulo');
+    const corp = document.getElementById('modal-campo-corpo');
+
+    tit.textContent = 'Trocar Foto';
+    corp.innerHTML = `
+      <p style="font-size:12px;color:var(--suave);margin-bottom:8px">Escolha uma imagem do seu celular ou computador (máx 600 KB após ajuste automático).</p>
+      <input type="file" id="edit-foto-input" accept="image/jpeg,image/png,image/webp">
+      <button class="btn largo ouro" style="margin-top:12px" onclick="confirmarEdicaoFoto()">Trocar Foto</button>
+    `;
+    modal.classList.remove('oculto');
+  }
+
+  async function confirmarEdicaoFoto() {
+    const fileEl = document.getElementById('edit-foto-input');
+    if (!fileEl || !fileEl.files || !fileEl.files[0]) return alert('Selecione uma foto.');
+    const file = fileEl.files[0];
+
+    try {
+      const base64 = await comprimirImagemClient(file, 600 * 1024);
+      if (!SITE_EDITOR.conteudo) SITE_EDITOR.conteudo = {};
+      if (!SITE_EDITOR.conteudo.imagens) SITE_EDITOR.conteudo.imagens = {};
+      SITE_EDITOR.conteudo.imagens[SITE_EDITOR.chaveTocada] = { url: base64, posX: 50, posY: 50 };
+      fecharModalCampo();
+      enviarConteudoIframe();
+    } catch (err) {
+      alert('Não foi possível processar a imagem. Tente uma foto menor.');
+    }
+  }
+
+  function comprimirImagemClient(file, maxBytes) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let w = img.width, h = img.height;
+          const maxDim = 1200;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+            else { w = Math.round((w * maxDim) / h); h = maxDim; }
+          }
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+
+          let qual = 0.85;
+          let result = canvas.toDataURL('image/jpeg', qual);
+          while (result.length * 0.75 > maxBytes && qual > 0.2) {
+            qual -= 0.1;
+            result = canvas.toDataURL('image/jpeg', qual);
+          }
+          if (result.length * 0.75 > maxBytes) {
+            reject(new Error('Foto grande demais.'));
+          } else {
+            resolve(result);
+          }
+        };
+        img.onerror = () => reject(new Error('Foto inválida.'));
+        img.src = e.target.result;
+      };
+      reader.onerror = () => reject(new Error('Erro ao ler foto.'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function salvarAlteracoesSite() {
+    apiPost({ acao: 'site-salvar', conteudo: SITE_EDITOR.conteudo }).then(res => {
+      if (res.status === 200) {
+        alert('Site salvo com sucesso!');
+      } else {
+        alert(res.body.error || 'Erro ao salvar o site.');
+      }
+    });
+  }
+
+  function desfazerTudoSite() {
+    if (!confirm('Deseja cancelar todas as alterações e voltar ao conteúdo original?')) return;
+    apiPost({ acao: 'site-desfazer' }).then(res => {
+      if (res.status === 200) {
+        alert('Conteúdo restaurado ao padrão.');
+        abrirSiteEditor();
+      }
+    });
+  }
+
+  function abrirHistoricoSite() {
+    apiPost({ acao: 'site-historico' }).then(res => {
+      if (res.status === 200) {
+        const hist = res.body.historico || [];
+        if (!hist.length) return alert('Nenhuma versão anterior no histórico.');
+        const msg = hist.map((h, i) => `${i + 1}. Salvo em: ${new Date(h.criado_em).toLocaleString('pt-BR')}`).join('\n');
+        const num = prompt(`Escolha a versão para restaurar (1 a ${hist.length}):\n\n${msg}`);
+        const idx = Number(num) - 1;
+        if (hist[idx]) {
+          apiPost({ acao: 'site-restaurar', id: hist[idx].id }).then(r => {
+            if (r.status === 200) {
+              alert('Versão restaurada!');
+              abrirSiteEditor();
+            }
+          });
+        }
+      }
+    });
+  }
+
+  /* --- MODAL MÍDIA (FOTOS E VÍDEOS) --- */
+  function absUrl(u) { u = String(u || ''); return u.startsWith('/') ? new URL(API_LOCACAO).origin + u : u; }
+  function midiaDestino() { const s = document.getElementById('midia-destino'); return (s && s.value) || UNIDADE_ATUAL; }
+  function abrirModalMidia() {
+    const s = document.getElementById('midia-destino');
+    s.innerHTML = ((CONFIG_CACHE && CONFIG_CACHE.unidades) || []).map(u => `<option value="${SplashPainel.escapeHtml(u.id)}">${SplashPainel.escapeHtml(u.nome)}: fotos e vídeos</option>`).join('')
+      + '<option value="promo">Promoções: prints e imagens</option><option value="avaliacoes">Avaliações: prints dos clientes</option><option value="posts">Instagram: fotos de posts</option><option value="instagram">Instagram: vídeos e Reels (link)</option>';
+    s.value = UNIDADE_ATUAL;
+    document.getElementById('modal-midia').classList.remove('oculto');
+    carregarMidiasModal();
+  }
+
+  async function carregarMidiasModal() {
+    const cont = document.getElementById('midia-lista-container');
+    cont.innerHTML = '<p style="font-size:12px;color:var(--suave)">Carregando fotos e vídeos da unidade...</p>';
+
+    const [resF, resV] = await Promise.all([
+      apiGet({ foto_listar: '1', unidade: midiaDestino() }),
+      apiGet({ video_listar: '1', unidade: midiaDestino() })
+    ]);
+
+    const fotos = resF.body.fotos || [];
+    const videos = resV.body.videos || [];
+
+    let html = '<h4 style="font-size:14px;color:#fff;margin-bottom:8px">Fotos Cadastradas</h4>';
+    if (!fotos.length) html += '<p style="font-size:12px;color:var(--suave)">Nenhuma foto enviada.</p>';
+    else {
+      html += fotos.map(f => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--linha)">
+          <div style="display:flex;align-items:center;gap:8px">
+            <img src="${SplashPainel.escapeHtml(absUrl(f.url))}" style="width:40px;height:40px;object-fit:cover;border-radius:6px">
+            <span style="font-size:12px;color:var(--texto)">${SplashPainel.escapeHtml(f.legenda || 'Foto sem legenda')}</span>
+          </div>
+          <button class="btn pequeno vermelho" onclick="removerFotoServidor('${f.id}')">&times;</button>
+        </div>
+      `).join('');
+    }
+
+    html += '<h4 style="font-size:14px;color:#fff;margin-top:16px;margin-bottom:8px">Vídeos Cadastrados</h4>';
+    if (!videos.length) html += '<p style="font-size:12px;color:var(--suave)">Nenhum vídeo cadastrado.</p>';
+    else {
+      html += videos.map(v => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--linha)">
+          <div>
+            <div style="font-size:12px;color:#fff;font-weight:600">${SplashPainel.escapeHtml(v.titulo || 'Vídeo sem título')}</div>
+            <div style="font-size:11px;color:var(--suave)">Provedor: ${v.provedor}</div>
+          </div>
+          <button class="btn pequeno vermelho" onclick="removerVideoServidor('${v.id}')">&times;</button>
+        </div>
+      `).join('');
+    }
+
+    cont.innerHTML = html;
+  }
+
+  async function enviarFotoServidor() {
+    const fileEl = document.getElementById('midia-foto-input');
+    const legenda = document.getElementById('midia-foto-legenda').value.trim();
+    if (!fileEl || !fileEl.files || !fileEl.files[0]) return alert('Selecione um arquivo de foto.');
+    const file = fileEl.files[0];
+
+    try {
+      const base64Data = await comprimirImagemClient(file, 600 * 1024);
+      const rawBase64 = base64Data.replace(/^data:image\/(jpeg|png|webp);base64,/, '');
+
+      const res = await apiPost({
+        acao: 'foto-enviar',
+        unidade: midiaDestino(),
+        dados: rawBase64,
+        tipo: file.type || 'image/jpeg',
+        legenda
+      });
+
+      if (res.status === 201) {
+        alert('Foto enviada!');
+        fileEl.value = '';
+        document.getElementById('midia-foto-legenda').value = '';
+        carregarMidiasModal();
+        if (SITE_EDITOR.aberto) enviarConteudoIframe();
+      } else {
+        alert(res.body.error || 'Erro ao enviar foto.');
+      }
+    } catch (e) {
+      alert(e.message || 'Erro ao processar foto.');
+    }
+  }
+
+  async function removerFotoServidor(id) {
+    if (!confirm('Remover esta foto?')) return;
+    const res = await apiPost({ acao: 'foto-remover', id });
+    if (res.status === 200) {
+      carregarMidiasModal();
+      if (SITE_EDITOR.aberto) enviarConteudoIframe();
+    }
+  }
+
+  async function salvarVideoServidor() {
+    const url = document.getElementById('midia-video-url').value.trim();
+    const titulo = document.getElementById('midia-video-titulo').value.trim();
+    if (!url) return alert('Cole o link do vídeo.');
+
+    const res = await apiPost({
+      acao: 'video-salvar',
+      unidade: midiaDestino(),
+      url,
+      titulo
+    });
+
+    if (res.status === 201) {
+      alert('Vídeo salvo!');
+      document.getElementById('midia-video-url').value = '';
+      document.getElementById('midia-video-titulo').value = '';
+      carregarMidiasModal();
+      if (SITE_EDITOR.aberto) enviarConteudoIframe();
+    } else {
+      alert(res.body.error || 'Link ou provedor de vídeo não permitido.');
+    }
+  }
+
+  async function removerVideoServidor(id) {
+    if (!confirm('Remover este vídeo?')) return;
+    const res = await apiPost({ acao: 'video-remover', id });
+    if (res.status === 200) {
+      carregarMidiasModal();
+      if (SITE_EDITOR.aberto) enviarConteudoIframe();
+    }
+  }
+
+  let IMPORTACAO_ESTADO = { linhasBrutas: [], mapaColunas: {}, linhasNorm: [], loteIdAtual: null, resultadoUltimo: null };
+
+  function preencherSeletoresMapeamento(cabecalhos, mapa) {
+    const ids = [
+      ['map-col-data', 'data'],
+      ['map-col-unidade', 'unidade'],
+      ['map-col-cliente', 'cliente'],
+      ['map-col-whatsapp', 'whatsapp'],
+      ['map-col-tipo', 'tipo_evento'],
+      ['map-col-sinal', 'valor_sinal'],
+      ['map-col-situacao', 'situacao'],
+      ['map-col-obs', 'observacoes']
+    ];
+
+    ids.forEach(([selectId, key]) => {
+      const sel = document.getElementById(selectId);
+      if (!sel) return;
+      sel.innerHTML = '<option value="-1">-- Não mapear --</option>';
+      cabecalhos.forEach((col, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = `Coluna ${idx + 1}: ${col || '(Sem Nome)'}`;
+        if (mapa[key] === idx) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    });
+
+    document.getElementById('imp-mapeamento-manual').classList.remove('oculto');
+  }
+
+  function atualizarMapeamentoManual() {
+    const mapa = {
+      data: Number(document.getElementById('map-col-data').value),
+      unidade: Number(document.getElementById('map-col-unidade').value),
+      cliente: Number(document.getElementById('map-col-cliente').value),
+      whatsapp: Number(document.getElementById('map-col-whatsapp').value),
+      tipo_evento: Number(document.getElementById('map-col-tipo').value),
+      valor_sinal: Number(document.getElementById('map-col-sinal').value),
+      situacao: Number(document.getElementById('map-col-situacao').value),
+      observacoes: Number(document.getElementById('map-col-obs').value)
+    };
+
+    IMPORTACAO_ESTADO.mapaColunas = mapa;
+    const unidadePadrao = document.getElementById('imp-unidade-padrao').value;
+    const hojeBr = new Date().toISOString().slice(0, 10);
+    const chavesVistas = new Set();
+    const normais = [];
+
+    for (let i = 1; i < IMPORTACAO_ESTADO.linhasBrutas.length; i++) {
+      const l = IMPORTACAO_ESTADO.linhasBrutas[i];
+      if (!l || (Array.isArray(l) && l.every(c => c === ''))) continue;
+      const norm = SplashPainel.normalizarLinhaImportacao(l, mapa, unidadePadrao, hojeBr, chavesVistas);
+      normais.push(norm);
+    }
+
+    IMPORTACAO_ESTADO.linhasNorm = normais;
+    renderizarPreviaImportacao();
+  }
+
+  function baixarModeloCsv() {
+    const csv = 'data,unidade,cliente,whatsapp,tipo_evento,valor_sinal,situacao,observacoes\n' +
+      '2026-11-10,Santa Adélia,Maria Silva,17999998888,Aniversário,200,confirmado,Festa de 15 anos\n' +
+      '2026-11-15,Santa Bárbara,João Souza,17988887777,Casamento,500,aguardando_sinal,Cerimônia no salão principal\n';
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'modelo_importacao_splash.csv';
+    a.click();
+  }
+
+  function baixarModeloXlsx() {
+    if (typeof XLSX !== 'undefined') {
+      const dados = [
+        ['data', 'unidade', 'cliente', 'whatsapp', 'tipo_evento', 'valor_sinal', 'situacao', 'observacoes'],
+        ['2026-11-10', 'Santa Adélia', 'Maria Silva', '17999998888', 'Aniversário', 200, 'confirmado', 'Festa de 15 anos'],
+        ['2026-11-15', 'Santa Bárbara', 'João Souza', '17988887777', 'Casamento', 500, 'aguardando_sinal', 'Cerimônia no salão principal']
+      ];
+      const ws = XLSX.utils.aoa_to_sheet(dados);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Agenda');
+      XLSX.writeFile(wb, 'modelo_importacao_splash.xlsx');
+    } else {
+      baixarModeloCsv();
+    }
+  }
+
+  function processarArquivoImportacao(e) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    const unidadePadrao = document.getElementById('imp-unidade-padrao').value;
+    const hojeBr = new Date().toISOString().slice(0, 10);
+
+    const reader = new FileReader();
+    reader.onload = evt => {
+      let linhasBrutas = [];
+      const dataStr = evt.target.result;
+
+      if (file.name.endsWith('.csv')) {
+        const text = new TextDecoder('utf-8').decode(new Uint8Array(dataStr));
+        const delim = text.includes(';') ? ';' : ',';
+        const rawRows = text.split(/\r?\n/).filter(r => r.trim());
+        linhasBrutas = rawRows.map(r => r.split(delim).map(c => c.replace(/^"|"$/g, '').trim()));
+      } else if (typeof XLSX !== 'undefined') {
+        const wb = XLSX.read(dataStr, { type: 'array' });
+        const sheetName = wb.SheetNames[0];
+        const sheet = wb.Sheets[sheetName];
+        linhasBrutas = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      } else {
+        alert('Para arquivos Excel (.xlsx), aguarde o carregamento da biblioteca.');
+        return;
+      }
+
+      if (linhasBrutas.length === 0) {
+        alert('Arquivo vazio ou não foi possível ler as linhas.');
+        return;
+      }
+
+      const cabecalho = linhasBrutas[0];
+      const mapa = SplashPainel.mapearCabecalhosImportacao(cabecalho);
+      IMPORTACAO_ESTADO.linhasBrutas = linhasBrutas;
+      IMPORTACAO_ESTADO.mapaColunas = mapa;
+
+      preencherSeletoresMapeamento(cabecalho, mapa);
+
+      const chavesVistas = new Set();
+      const normais = [];
+
+      for (let i = 1; i < linhasBrutas.length; i++) {
+        const l = linhasBrutas[i];
+        if (!l || (Array.isArray(l) && l.every(c => c === ''))) continue;
+        const norm = SplashPainel.normalizarLinhaImportacao(l, mapa, unidadePadrao, hojeBr, chavesVistas);
+        normais.push(norm);
+      }
+
+      IMPORTACAO_ESTADO.linhasNorm = normais;
+      renderizarPreviaImportacao();
+    };
+
+    reader.readAsArrayBuffer(file);
+  }
+
+  function renderizarPreviaImportacao() {
+    document.getElementById('imp-passo-1').classList.add('oculto');
+    document.getElementById('imp-passo-2').classList.remove('oculto');
+    document.getElementById('imp-passo-3').classList.add('oculto');
+
+    const corpo = document.getElementById('imp-tabela-corpo');
+    corpo.innerHTML = '';
+
+    const linhas = IMPORTACAO_ESTADO.linhasNorm;
+    let okCnt = 0, avsCnt = 0, errCnt = 0;
+
+    linhas.forEach((l, idx) => {
+      if (l.selo === 'OK') okCnt++;
+      else if (l.selo === 'AVISO') avsCnt++;
+      else errCnt++;
+
+      const tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid var(--linha)';
+      if (l.selo === 'ERRO') tr.style.background = 'rgba(255,107,107,0.08)';
+
+      const bgSelo = l.selo === 'OK' ? 'var(--ok-f)' : (l.selo === 'AVISO' ? 'var(--alerta-f)' : 'var(--erro-f)');
+      const corSelo = l.selo === 'OK' ? 'var(--ok)' : (l.selo === 'AVISO' ? 'var(--alerta)' : 'var(--erro)');
+
+      tr.innerHTML = `
+        <td style="padding: 8px 12px;"><span class="badge-status" style="background:${bgSelo};color:${corSelo}">${l.selo}</span></td>
+        <td style="padding: 8px 12px;">${SplashPainel.escapeHtml(l.data)}</td>
+        <td style="padding: 8px 12px;">${l.unidade === 'santa-barbara' ? 'Santa Bárbara' : 'Santa Adélia'}</td>
+        <td style="padding: 8px 12px;">${SplashPainel.escapeHtml(l.cliente)}</td>
+        <td style="padding: 8px 12px;">${SplashPainel.escapeHtml(l.whatsapp)}</td>
+        <td style="padding: 8px 12px;">${SplashPainel.escapeHtml(l.tipo_evento)} (${l.situacao})</td>
+        <td style="padding: 8px 12px; font-size:11px; color:var(--suave);">${SplashPainel.escapeHtml(l.motivo)}</td>
+        <td style="padding: 8px 12px;"><button class="btn pequeno vermelho" style="min-height:30px;padding:0 8px;font-size:11px" onclick="removerLinhaImportacao(${idx})">Pular</button></td>
+      `;
+      corpo.appendChild(tr);
+    });
+
+    document.getElementById('imp-resumo-totais').textContent = `${linhas.length} linha(s) · ${okCnt} OK · ${avsCnt} Aviso · ${errCnt} Erro`;
+  }
+
+  function removerLinhaImportacao(idx) {
+    IMPORTACAO_ESTADO.linhasNorm.splice(idx, 1);
+    renderizarPreviaImportacao();
+  }
+
+  function reiniciarImportacao() {
+    IMPORTACAO_ESTADO.linhasBrutas = [];
+    IMPORTACAO_ESTADO.linhasNorm = [];
+    IMPORTACAO_ESTADO.mapaColunas = {};
+    document.getElementById('imp-arquivo-input').value = '';
+    document.getElementById('imp-passo-1').classList.remove('oculto');
+    document.getElementById('imp-mapeamento-manual').classList.add('oculto');
+    document.getElementById('imp-passo-2').classList.add('oculto');
+    document.getElementById('imp-passo-3').classList.add('oculto');
+  }
+
+  async function confirmarImportacaoLote(apenasOk) {
+    let filtradas = IMPORTACAO_ESTADO.linhasNorm.filter(l => l.selo !== 'ERRO');
+    if (apenasOk) {
+      filtradas = filtradas.filter(l => l.selo === 'OK');
+    }
+
+    if (filtradas.length === 0) {
+      return alert('Nenhuma linha válida selecionada para importação.');
+    }
+
+    const res = await apiPost({ acao: 'importar', linhas: filtradas });
+    if (res.status === 200 && res.body.ok) {
+      IMPORTACAO_ESTADO.loteIdAtual = res.body.lote_id;
+      IMPORTACAO_ESTADO.resultadoUltimo = res.body;
+
+      document.getElementById('imp-passo-2').classList.add('oculto');
+      document.getElementById('imp-passo-3').classList.remove('oculto');
+
+      const msg = document.getElementById('imp-msg-resultado');
+      msg.textContent = `Importação concluída com sucesso! Lote: ${res.body.lote_id}. Entraram: ${res.body.importadas} reserva(s). Puladas: ${res.body.puladas}.`;
+
+      carregarCalendario();
+      carregarReservas();
+    } else {
+      alert(res.body.error || 'Erro ao realizar a importação.');
+    }
+  }
+
+  async function executarDesfazerImportacao() {
+    if (!IMPORTACAO_ESTADO.loteIdAtual) return;
+    if (!confirm(`Deseja realmente desfazer todas as reservas importadas no lote ${IMPORTACAO_ESTADO.loteIdAtual}?`)) return;
+
+    const res = await apiPost({ acao: 'desfazer-importacao', lote_id: IMPORTACAO_ESTADO.loteIdAtual });
+    if (res.status === 200 && res.body.ok) {
+      alert(res.body.mensagem);
+      reiniciarImportacao();
+      carregarCalendario();
+      carregarReservas();
+    } else {
+      alert(res.body.error || 'Erro ao desfazer importação.');
+    }
+  }
+
+  function baixarRelatorioImportacaoCsv() {
+    const res = IMPORTACAO_ESTADO.resultadoUltimo;
+    if (!res || !res.detalhes) return;
+
+    const cabecalho = ['Linha', 'Status', 'Protocolo', 'Data', 'Unidade', 'Motivo'];
+    const linhas = res.detalhes.map(d => [
+      d.linha,
+      d.ok ? 'IMPORTADA' : 'PULADA',
+      d.protocolo || '',
+      d.data || '',
+      d.unidade || '',
+      `"${(d.motivo || '').replace(/"/g, '""')}"`
+    ]);
+
+    const csvContent = [cabecalho.join(','), ...linhas.map(l => l.join(','))].join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `relatorio_importacao_${res.lote_id}.csv`;
+    link.click();
+  }
+
+  function navegarAba(nome) {
+    ['calendario', 'pedidos', 'reservas', 'nova', 'financeiro', 'despesas', 'clientes', 'editor', 'importar', 'config'].forEach(a => {
+      document.getElementById(`aba-${a}`).classList.toggle('oculto', a !== nome);
+      document.getElementById(`tab-${a}`).classList.toggle('ativa', a === nome);
+    });
+    if (window.Gestao) Gestao.abrir(nome);
+    if (nome === 'editor' && !SITE_EDITOR.aberto) {
+      abrirSiteEditor();
+    }
+  }
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  init();
+</script>
+</body>
+</html>
