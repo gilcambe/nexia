@@ -131,14 +131,21 @@ function csvEscapeValor(val) {
 }
 
 function gerarCsvFinanceiro(financeiroData, reservasData) {
+  if (!Array.isArray(financeiroData)) {
+    throw new Error('financeiroData deve ser um array');
+  }
+  if (!Array.isArray(reservasData)) {
+    throw new Error('reservasData deve ser um array');
+  }
+
   const reservasPorId = {};
-  (reservasData || []).forEach(r => {
+  reservasData.forEach(r => {
     if (r && r.id) reservasPorId[r.id] = r;
   });
 
-  const cabecalho = ['Data', 'Descrição', 'Tipo', 'Valor (R$)', 'Status', 'Reserva ID', 'Cliente', 'Unidade', 'Forma de Pagamento'];
+  const cabecalhoFinanceiro = ['Data', 'Descrição', 'Tipo', 'Valor (R$)', 'Status', 'Reserva ID', 'Cliente', 'Unidade', 'Forma de Pagamento'];
 
-  const linhas = (financeiroData || []).map(l => {
+  const linhasFinanceiro = financeiroData.map(l => {
     const reserva = l && l.reserva_id && reservasPorId[l.reserva_id] ? reservasPorId[l.reserva_id] : {};
     const valorBruto = l && l.valor !== undefined && l.valor !== '' ? String(l.valor).trim() : '';
     let valor = 0;
@@ -148,13 +155,12 @@ function gerarCsvFinanceiro(financeiroData, reservasData) {
       const parse = Number(normalizado);
       valor = Number.isNaN(parse) ? 0 : parse;
     }
-    const valorSeguro = valor;
 
     return [
       csvEscapeValor(l && l.data !== undefined ? l.data : ''),
       csvEscapeValor(l && l.descricao !== undefined ? l.descricao : ''),
       csvEscapeValor(l && l.tipo !== undefined ? l.tipo : ''),
-      valorSeguro,
+      valor,
       csvEscapeValor(l && l.status !== undefined ? l.status : ''),
       csvEscapeValor(l && l.reserva_id !== undefined ? l.reserva_id : ''),
       csvEscapeValor(reserva && reserva.nome !== undefined ? reserva.nome : ''),
@@ -163,7 +169,25 @@ function gerarCsvFinanceiro(financeiroData, reservasData) {
     ];
   });
 
-  return [cabecalho.join(','), ...linhas.map(linha => linha.join(','))].join('\n');
+  const cabecalhoReservas = ['ID', 'Cliente', 'Unidade', 'Data', 'Status', 'Valor Total', 'Valor Sinal', 'Forma de Pagamento'];
+
+  const linhasReservas = reservasData.map(r => {
+    return [
+      csvEscapeValor(r && r.id !== undefined ? r.id : ''),
+      csvEscapeValor(r && r.nome !== undefined ? r.nome : ''),
+      csvEscapeValor(r && r.unidade !== undefined ? r.unidade : ''),
+      csvEscapeValor(r && r.data !== undefined ? r.data : ''),
+      csvEscapeValor(r && r.status !== undefined ? r.status : ''),
+      csvEscapeValor(r && r.valor_total !== undefined ? r.valor_total : ''),
+      csvEscapeValor(r && r.valor_sinal !== undefined ? r.valor_sinal : ''),
+      csvEscapeValor(r && r.forma_pagamento !== undefined ? r.forma_pagamento : '')
+    ];
+  });
+
+  const secaoFinanceiro = [cabecalhoFinanceiro.join(','), ...linhasFinanceiro.map(linha => linha.join(','))].join('\n');
+  const secaoReservas = [cabecalhoReservas.join(','), ...linhasReservas.map(linha => linha.join(','))].join('\n');
+
+  return secaoFinanceiro + '\n\n' + secaoReservas;
 }
 
 function calcularDiasMes(ano, mes) {
