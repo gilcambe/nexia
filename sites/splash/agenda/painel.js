@@ -117,16 +117,26 @@ function gerarCsvBackup(reservas) {
 function csvEscapeValor(val) {
   if (val === null || val === undefined) return '';
   const s = String(val);
-  // Remove espaços iniciais antes de avaliar risco de fórmula
-  const trimInicio = s.replace(/^\s+/, '');
-  // Protege contra injeção de fórmulas de planilha: =, +, - e @ no início do campo
-  // (incluindo após espaços iniciais) — ignora caso a string seja só espaços
-  if (trimInicio.length > 0 && /^[=+\-@]/.test(trimInicio)) {
-    return `'` + s.replace(/"/g, '""');
+  
+  // Proteção contra injeção de fórmulas de planilha - técnicas avançadas
+  // 1. Qualquer string que comece com =, +, -, @ ou contenha =HYPERLINK, =CMD, etc.
+  const formulasPerigosas = [
+    /^=/, /^\+/, /^\-/, /^@/, // Começando com operadores perigosos
+    /=[A-Z]+\(/i, // Qualquer fórmula começando com = seguido de letras e (
+    /\|\s*['"]?\s*[CMD|'"].*\s*['"]?\s*!/i, // Técnicas de injeção via pipe
+    /\b(?:HYPERLINK|CMD|IF|VLOOKUP|CONCATENATE|SUM|COUNT|AVERAGE)\s*\(/i // Fórmulas comuns
+  ];
+  
+  // Se qualquer padrão perigoso for encontrado, protege com aspas e escapa aspas internas
+  if (formulasPerigosas.some(pattern => pattern.test(s))) {
+    return `"${s.replace(/"/g, '""')}"`;
   }
+  
+  // Proteção contra caracteres especiais que quebram CSV
   if (/[",\n\r]/.test(s)) {
     return `"${s.replace(/"/g, '""')}"`;
   }
+  
   return s;
 }
 
