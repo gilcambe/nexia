@@ -1,3 +1,2 @@
 User-agent: *
-Allow: /
-Sitemap: https://splash.pages.dev/sitemap.xml
+Disallow: /
