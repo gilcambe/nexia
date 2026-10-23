@@ -503,7 +503,16 @@ const SplashPainelObj = {
   parseWhatsappImportacao,
   parseSituacaoImportacao,
   mapearCabecalhosImportacao,
-  normalizarLinhaImportacao
+  normalizarLinhaImportacao,
+  // Funções para promoções
+  criarPromocao,
+  atualizarPromocao,
+  // Funções para avaliações
+  criarAvaliacao,
+  atualizarAvaliacao,
+  // Funções para Ajuda/Instagram
+  gerarOrientacoesVideos,
+  renderizarBlocoAjuda
 };
 
 if (typeof window !== 'undefined') {
