@@ -3,6 +3,8 @@
 /**
  * Funções puras e utilitários do painel da Amanda (Splash Eventos).
  * Isolado em JS para permitir testes unitários em Node.js sem precisar de DOM browser completo.
+ * 
+ * @function gerarCsvClientes - Função pura para exportar dados de clientes em formato CSV
  */
 
 function escapeHtml(str) {
