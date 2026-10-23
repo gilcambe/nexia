@@ -352,6 +352,139 @@ function normalizarLinhaImportacao(linha, mapaColunas, unidadePadrao, hojeBr, ch
   };
 }
 
+// Funções para gerenciar promoções
+function criarPromocao(titulo, descricao, imagem, ativa = true) {
+  return {
+    id: Date.now().toString(),
+    titulo: escapeHtml(titulo),
+    descricao: escapeHtml(descricao),
+    imagem: escapeHtml(imagem),
+    ativa: Boolean(ativa),
+    criado_em: new Date().toISOString()
+  };
+}
+
+function atualizarPromocao(promocao, updates) {
+  const atualizada = { ...promocao };
+  
+  if (updates.titulo !== undefined) {
+    atualizada.titulo = escapeHtml(updates.titulo);
+  }
+  if (updates.descricao !== undefined) {
+    atualizada.descricao = escapeHtml(updates.descricao);
+  }
+  if (updates.imagem !== undefined) {
+    atualizada.imagem = escapeHtml(updates.imagem);
+  }
+  if (updates.ativa !== undefined) {
+    atualizada.ativa = Boolean(updates.ativa);
+  }
+  
+  atualizada.atualizado_em = new Date().toISOString();
+  return atualizada;
+}
+
+// Funções para gerenciar avaliações
+function criarAvaliacao(nome, texto, estrelas, ativa = true) {
+  if (!texto || !nome || !estrelas || estrelas < 1 || estrelas > 5) {
+    throw new Error('Dados inválidos para avaliação');
+  }
+  
+  return {
+    id: Date.now().toString(),
+    nome: escapeHtml(nome),
+    texto: escapeHtml(texto),
+    estrelas: parseInt(estrelas),
+    ativa: Boolean(ativa),
+    criado_em: new Date().toISOString()
+  };
+}
+
+function atualizarAvaliacao(avaliacao, updates) {
+  const atualizada = { ...avaliacao };
+  
+  if (updates.nome !== undefined) {
+    atualizada.nome = escapeHtml(updates.nome);
+  }
+  if (updates.texto !== undefined) {
+    atualizada.texto = escapeHtml(updates.texto);
+  }
+  if (updates.estrelas !== undefined) {
+    const estrelas = parseInt(updates.estrelas);
+    if (estrelas >= 1 && estrelas <= 5) {
+      atualizada.estrelas = estrelas;
+    }
+  }
+  if (updates.ativa !== undefined) {
+    atualizada.ativa = Boolean(updates.ativa);
+  }
+  
+  atualizada.atualizado_em = new Date().toISOString();
+  return atualizada;
+}
+
+// Funções para gerenciar Ajuda/Instagram
+function gerarOrientacoesVideos() {
+  return [
+    {
+      id: '1',
+      titulo: 'Como gravar vídeos curtos',
+      descricao: 'Dicas para criar vídeos curtos e impactantes para o Instagram',
+      duracao: '2:30',
+      categoria: 'dicas'
+    },
+    {
+      id: '2',
+      titulo: 'Edição rápida no celular',
+      descricao: 'Apps e técnicas para editar vídeos diretamente do seu smartphone',
+      duracao: '3:15',
+      categoria: 'tecnologia'
+    },
+    {
+      id: '3',
+      titulo: 'Montagem de vídeos para eventos',
+      descricao: 'Como montar vídeos promocionais para seus eventos',
+      duracao: '4:20',
+      categoria: 'eventos'
+    }
+  ];
+}
+
+function renderizarBlocoAjuda(orientacoes) {
+  const container = document.createElement('div');
+  container.className = 'bloco-ajuda-instagram';
+  
+  const titulo = document.createElement('h3');
+  titulo.textContent = 'Orientações para Vídeos';
+  container.appendChild(titulo);
+  
+  const lista = document.createElement('div');
+  lista.className = 'lista-orientacoes';
+  
+  orientacoes.forEach(orientacao => {
+    const item = document.createElement('div');
+    item.className = 'item-orientacao';
+    
+    const itemTitulo = document.createElement('h4');
+    itemTitulo.textContent = orientacao.titulo;
+    item.appendChild(itemTitulo);
+    
+    const itemDescricao = document.createElement('p');
+    itemDescricao.textContent = orientacao.descricao;
+    item.appendChild(itemDescricao);
+    
+    const itemDuracao = document.createElement('span');
+    itemDuracao.className = 'duracao';
+    itemDuracao.textContent = `⏱️ ${orientacao.duracao}`;
+    item.appendChild(itemDuracao);
+    
+    lista.appendChild(item);
+  });
+  
+  container.appendChild(lista);
+  return container;
+}
+
 const SplashPainelObj = {
   escapeHtml,
   formatarDataBr,
