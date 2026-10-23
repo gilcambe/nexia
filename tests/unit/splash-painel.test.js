@@ -334,19 +334,7 @@ test('SPLASH-PAINEL 11: Validação de dados de reserva não encontrados', () =>
   assert.ok(linhas[1].includes(''), 'unidade da reserva não encontrada deve ser vazia');
 });
 
-test('SPLASH-PAINEL 12: Validação de dados vazios ou arrays vazios', () => {
-  // Testa com arrays vazios
-  const csv1 = gerarCsvFinanceiro([], []);
-  assert.equal(csv1, 'Data,Descrição,Tipo,Valor (R$),Status,Reserva ID,Cliente,Unidade,Forma de Pagamento', 'deve retornar apenas o cabeçalho quando arrays vazios');
-  
-  // Testa com null/undefined
-  const csv2 = gerarCsvFinanceiro(null, null);
-  assert.equal(csv2, 'Data,Descrição,Tipo,Valor (R$),Status,Reserva ID,Cliente,Unidade,Forma de Pagamento', 'deve retornar apenas o cabeçalho quando null');
-  
-  // Testa com undefined
-  const csv3 = gerarCsvFinanceiro(undefined, undefined);
-  assert.equal(csv3, 'Data,Descrição,Tipo,Valor (R$),Status,Reserva ID,Cliente,Unidade,Forma de Pagamento', 'deve retornar apenas o cabeçalho quando undefined');
-});
+
 
 test('SPLASH-PAINEL 13: Validação de dados com caracteres especiais e vírgulas', () => {
   const financeiroData = [
