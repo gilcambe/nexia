@@ -167,7 +167,7 @@ test('SPLASH-NAV2. painel da Amanda: primeiro acesso, pedido pendente, sinal pag
     await page.click('#lista-pedidos-pendentes .reserva-item');
     const zap = await page.getAttribute('#md-acoes a[href^="https://wa.me/"]', 'href');
     assert.match(decodeURIComponent(zap), /300,00/, 'a mensagem do WhatsApp traz o valor do sinal');
-    await page.click('#md-acoes >> text=Sinal Pago');
+    await page.click('#md-acoes >> text=Recebi o sinal');
     await page.waitForTimeout(500);
     const l1 = (await a.chamar('POST', { acao: 'listar', token: await tokenDe(a), de: dia(0), ate: dia(60) })).json;
     assert.equal(l1.itens.find(x => x.data === d1).status, 'confirmado');

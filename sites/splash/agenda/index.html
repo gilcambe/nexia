@@ -166,6 +166,8 @@
   .linha-g input, .linha-g select { flex: 1 1 130px; min-width: 0; }
   .lista-g { list-style: none; margin: 6px 0; font-size: 13px; }
   .lista-g li { padding: 3px 0; }
+  #aba-config button[type=submit] { position: sticky; bottom: 84px; z-index: 5; box-shadow: 0 6px 20px rgba(0,0,0,.5); }
+  #btn-avisos { margin: 8px 0; }
 </style>
 </head>
 <body>
@@ -246,7 +248,9 @@
         <div class="card-title">Pedidos de Reserva Recebidos</div>
         <span class="badge-status pedido" id="cnt-pedidos-badge">0 pendentes</span>
       </div>
-      <p style="font-size: 13px; color: var(--suave);">Ao aceitar um pedido, envie a chave Pix para o cliente pagar o sinal e confirmar.</p>
+      <p style="font-size: 13px; color: var(--suave);">Passo a passo: toque no pedido, 1) envie a chave Pix, 2) quando o sinal cair, confirme. O contrato vai junto pelo WhatsApp.</p>
+      <button type="button" class="btn pequeno claro" id="btn-avisos" onclick="ativarAvisos()"><i class="ri-notification-3-line"></i> Avisar quando chegar pedido novo</button>
+      <p id="avisos-estado" style="font-size:12px;color:var(--suave)"></p>
       <div id="lista-pedidos-pendentes"></div>
     </div>
   </section>
@@ -453,6 +457,24 @@
 
         <h4 class="cfg-sub">Unidades: endereço e valor da diária</h4>
         <div id="cfg-unidades"></div>
+
+        <h4 class="cfg-sub">Cancelamento (multa)</h4>
+        <p class="cfg-ajuda">Aparece no site na hora da reserva e vai no contrato.</p>
+        <label>Avisar com quantas horas de antecedência? (0 = não informar)</label>
+        <input type="number" id="cfg-canc-horas" min="0" max="720">
+        <label>Mensagem (opcional). Ex.: "Cancelando fora do prazo, o sinal não é devolvido."</label>
+        <textarea id="cfg-canc-texto" rows="3" maxlength="600"></textarea>
+
+        <h4 class="cfg-sub">Contrato de locação</h4>
+        <p class="cfg-ajuda">Quando você confirma uma reserva, os dados do cliente entram sozinhos e o contrato vai junto da confirmação pelo WhatsApp. Escreva do seu jeito e use estes campos: {nome} {whatsapp} {unidade} {endereco} {data} {evento} {convidados} {extras} {valor_total} {sinal} {saldo} {cancelamento} {protocolo} {locadora}</p>
+        <textarea id="cfg-contrato" rows="10" maxlength="8000"></textarea>
+        <button type="button" class="btn pequeno claro" onclick="usarContratoModelo()">Usar contrato modelo pronto</button>
+
+        <h4 class="cfg-sub">Música do site</h4>
+        <label>Estilo da música</label>
+        <select id="cfg-musica-estilo"><option value="alegre">Alegre (padrão)</option><option value="tropical">Tropical, mais animada</option><option value="chill">Calma, para relaxar</option><option value="desligada">Sem música</option></select>
+        <label>Ou use a sua música: link direto de um arquivo MP3 (opcional)</label>
+        <input type="url" id="cfg-musica-url" placeholder="https://.../musica.mp3">
 
         <h4 class="cfg-sub">Extras que o cliente pode escolher (ex.: decoração)</h4>
         <p class="cfg-ajuda">Deixe o valor em 0 para combinar o preço com o cliente pelo WhatsApp.</p>
@@ -718,6 +740,53 @@
     carregarReservas();
   }
 
+  /* --- AVISO DE PEDIDO NOVO (com o painel aberto no celular ou no computador) --- */
+  let PEDIDOS_CONHECIDOS = null;
+  function tocarAviso() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      const c = new AC(), o = c.createOscillator(), g = c.createGain();
+      o.frequency.value = 880; g.gain.setValueAtTime(0.2, c.currentTime); g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + 0.6);
+      o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime + 0.6);
+    } catch (e) { /* sem som */ }
+  }
+  function mostrarNotificacao(titulo, corpo) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (navigator.serviceWorker && navigator.serviceWorker.ready) navigator.serviceWorker.ready.then(r => r.showNotification(titulo, { body: corpo, icon: 'icone-192.png', tag: 'pedido-novo' })).catch(() => { try { new Notification(titulo, { body: corpo }); } catch (e) {} });
+    else { try { new Notification(titulo, { body: corpo }); } catch (e) {} }
+  }
+  function estadoAvisos() {
+    const el = document.getElementById('avisos-estado'); if (!el) return;
+    el.textContent = !('Notification' in window) ? 'Este aparelho não permite avisos. O número vermelho em "Pedidos" mostra quantos pedidos esperam.'
+      : Notification.permission === 'granted' ? 'Avisos ligados: você recebe um aviso e um som a cada pedido novo, com o painel aberto.'
+      : Notification.permission === 'denied' ? 'Avisos bloqueados no navegador. Libere nas configurações do site e tente de novo.' : '';
+  }
+  function ativarAvisos() {
+    if (!('Notification' in window)) return estadoAvisos();
+    Notification.requestPermission().then(() => { estadoAvisos(); if (Notification.permission === 'granted') mostrarNotificacao('Avisos ligados', 'Você será avisada a cada pedido novo.'); });
+  }
+  async function verificarPedidosNovos() {
+    if (!TOKEN) return;
+    const res = await apiPost({ acao: 'listar', de: hojeBr(), ate: hojeBr() });
+    if (res.status !== 200) return;
+    const pend = res.body.pendentes || [];
+    const ids = new Set(pend.map(p => p.id));
+    if (PEDIDOS_CONHECIDOS) {
+      const novos = pend.filter(p => !PEDIDOS_CONHECIDOS.has(p.id));
+      if (novos.length) {
+        tocarAviso();
+        mostrarNotificacao('Pedido novo de reserva', novos.map(n => n.nome + ' — ' + SplashPainel.formatarDataBr(n.data)).join('\n'));
+        carregarReservas(); carregarCalendario();
+      }
+    }
+    PEDIDOS_CONHECIDOS = ids;
+    const t = document.title.replace(/^\(\d+\) /, '');
+    document.title = ids.size ? '(' + ids.size + ') ' + t : t;
+  }
+  setInterval(verificarPedidosNovos, 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) verificarPedidosNovos(); });
+  setTimeout(() => { verificarPedidosNovos(); estadoAvisos(); }, 3000);
+
   function carregarTudo() {
     carregarConfiguracoes();
     carregarCalendario();
@@ -845,6 +914,7 @@
       <p><strong>Status:</strong> <span class="badge-status ${r.status}">${r.status}</span></p>
       ${r.obs ? `<p><strong>Obs:</strong> ${SplashPainel.escapeHtml(r.obs)}</p>` : ''}
       ${(r.extras && r.extras.length) ? `<p><strong>Extras pedidos:</strong> ${r.extras.map(x => SplashPainel.escapeHtml(x.nome) + (x.valor > 0 ? ' (' + SplashPainel.formatarMoeda(x.valor) + ')' : ' (valor a combinar)')).join(', ')}</p>` : ''}
+      ${(r.comprovantes && r.comprovantes.length) ? `<div class="comprovantes-reserva"><p><strong>Comprovante enviado pelo cliente:</strong> toque para abrir</p><div style="display:flex;gap:8px;flex-wrap:wrap">${r.comprovantes.map(c => `<a href="${SplashPainel.escapeHtml(absUrl('/api/locacao?site=' + SITE_NAME + '&foto=' + c.id))}" target="_blank" rel="noopener"><img src="${SplashPainel.escapeHtml(absUrl('/api/locacao?site=' + SITE_NAME + '&foto=' + c.id))}" alt="Comprovante" style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--linha)"></a>`).join('')}</div></div>` : ''}
       ${r.status === 'bloqueado' ? '' : `
       <div class="valores-reserva">
         <label>Valor total combinado (R$)</label>
@@ -862,11 +932,15 @@
       const linkZap = `https://wa.me/${String(r.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent(msgZap)}`;
 
       acoes.innerHTML += `
-        <a href="${linkZap}" target="_blank" class="btn pequeno ouro"><i class="ri-whatsapp-line"></i> Enviar Chave Pix</a>
-        <button class="btn pequeno verde" onclick="alterarStatusReserva('${r.id}', 'sinal_pago')"><i class="ri-check-double-line"></i> Marcar Sinal Pago</button>
+        <a href="${linkZap}" target="_blank" class="btn pequeno ouro"><i class="ri-whatsapp-line"></i> 1. Enviar chave Pix</a>
+        <button class="btn pequeno verde" onclick="confirmarEEnviarContrato('${r.id}')"><i class="ri-check-double-line"></i> 2. Recebi o sinal: confirmar e enviar contrato</button>
         <button class="btn pequeno vermelho" onclick="alterarStatusReserva('${r.id}', 'recusado')"><i class="ri-close-circle-line"></i> Recusar</button>
       `;
     } else if (r.status === 'confirmado') {
+      const linkConf = `https://wa.me/${String(r.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent(SplashPainel.montarMensagemConfirmacao(r, CONFIG_CACHE || {}))}`;
+      acoes.innerHTML += `
+        <a href="${linkConf}" target="_blank" class="btn pequeno ouro"><i class="ri-whatsapp-line"></i> Enviar confirmação e contrato</a>
+      `;
       acoes.innerHTML += `
         <button class="btn pequeno claro" onclick="alterarStatusReserva('${r.id}', 'concluido')"><i class="ri-checkbox-circle-line"></i> Concluir Evento</button>
         <button class="btn pequeno vermelho" onclick="alterarStatusReserva('${r.id}', 'cancelado')"><i class="ri-close-line"></i> Cancelar Reserva</button>
@@ -874,6 +948,20 @@
     }
 
     modal.classList.remove('oculto');
+  }
+
+  async function confirmarEEnviarContrato(id) {
+    const r0 = RESERVAS_CACHE.find(x => x.id === id) || PENDENTES_CACHE.find(x => x.id === id);
+    if (!r0) return;
+    const zap = window.open('', '_blank'); // abre já, para o celular não bloquear
+    const res = await apiPost({ acao: 'status', id, status: 'confirmado' });
+    if (res.status !== 200) { if (zap) zap.close(); return alert((res.body && res.body.error) || 'Não foi possível confirmar esta reserva.'); }
+    await carregarReservas();
+    const r = RESERVAS_CACHE.find(x => x.id === id) || r0;
+    const url = `https://wa.me/${String(r.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent(SplashPainel.montarMensagemConfirmacao(r, CONFIG_CACHE || {}))}`;
+    if (zap) zap.location.href = url; else window.open(url, '_blank');
+    fecharModal();
+    carregarCalendario();
   }
 
   function abrirDetalhesData(dataIso) {
@@ -1012,6 +1100,11 @@
     renderExtrasCfg(c.extras || []);
     renderPromosCfg(c.promocoes || []);
     renderAvaliacoesCfg(c.avaliacoes || []);
+    document.getElementById('cfg-canc-horas').value = (c.cancelamento && c.cancelamento.horas) || 0;
+    document.getElementById('cfg-canc-texto').value = (c.cancelamento && c.cancelamento.texto) || '';
+    document.getElementById('cfg-contrato').value = c.contrato || '';
+    document.getElementById('cfg-musica-estilo').value = (c.musica && c.musica.estilo) || 'alegre';
+    document.getElementById('cfg-musica-url').value = (c.musica && c.musica.url) || '';
     document.getElementById('cfg-fid-minimo').value = (c.fidelidade && c.fidelidade.minimo) || 3;
     document.getElementById('cfg-fid-percentual').value = c.fidelidade ? c.fidelidade.percentual : 10;
   }
@@ -1031,6 +1124,11 @@
       id: b.dataset.id || '', nome: b.querySelector('.av-nome').value.trim(), texto: b.querySelector('.av-texto').value.trim(),
       estrelas: Number(b.querySelector('.av-estrelas').value) || 5, ativa: b.querySelector('.av-ativa').checked
     })).filter(x => x.texto);
+  }
+  function usarContratoModelo() {
+    const el = document.getElementById('cfg-contrato');
+    if (el.value.trim() && !confirm('Substituir o texto atual pelo modelo pronto?')) return;
+    el.value = SplashPainel.CONTRATO_MODELO;
   }
   function adicionarAvaliacaoCfg() { renderAvaliacoesCfg([...lerAvaliacoesCfg(), { nome: '', texto: 'Ótimo lugar!', estrelas: 5, ativa: true }]); }
 
@@ -1116,6 +1214,9 @@
         extras: lerExtrasCfg(),
         promocoes: lerPromosCfg(),
         avaliacoes: lerAvaliacoesCfg(),
+        cancelamento: { horas: Number(document.getElementById('cfg-canc-horas').value) || 0, texto: document.getElementById('cfg-canc-texto').value.trim() },
+        contrato: document.getElementById('cfg-contrato').value,
+        musica: { estilo: document.getElementById('cfg-musica-estilo').value, url: document.getElementById('cfg-musica-url').value.trim() },
         fidelidade: { minimo: Number(document.getElementById('cfg-fid-minimo').value) || 3, percentual: Number(document.getElementById('cfg-fid-percentual').value) || 0 }
       }
     };

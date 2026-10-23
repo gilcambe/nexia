@@ -25,4 +25,9 @@ ok(sw.includes("'gestao.js'") && fs.existsSync(path.join(dir, 'gestao.js')), 'PW
 for (const t of ['cfg-avaliacoes', 'cfg-fid-minimo', 'cfg-fid-percentual', 'midia-destino']) ok(html.includes(`id="${t}"`), `AJUSTES ${t}`);
 for (const t of ['avaliacoes: lerAvaliacoesCfg()', 'fidelidade:', 'imagem: b.querySelector', 'unidade: midiaDestino()', 'absUrl(f.url)']) ok(html.includes(t), `AJUSTES ${t}`);
 for (const c of ['promo', 'avaliacoes', 'posts', 'instagram']) ok(html.includes(`<option value="${c}">`), `AJUSTES destino ${c}`);
+// Contrato, cancelamento, música, avisos e comprovante
+const site = fs.readFileSync(path.join(dir, '../index.html'), 'utf8');
+for (const t of ['cfg-canc-horas', 'cfg-canc-texto', 'cfg-contrato', 'cfg-musica-estilo', 'cfg-musica-url', 'btn-avisos']) ok(html.includes(`id="${t}"`), `CONTRATO painel ${t}`);
+for (const t of ['confirmarEEnviarContrato', 'montarMensagemConfirmacao', 'verificarPedidosNovos', 'cancelamento: {', 'musica: {', 'contrato: document']) ok(html.includes(t), `CONTRATO painel ${t}`);
+for (const t of ['resumo-valores', 'aviso-cancelamento', 'comp-arq', "'comprovante-enviar'", 'Musica.configurar(cfg.musica)']) ok(site.includes(t), `CONTRATO site ${t}`);
 process.exit(falhas ? 1 : 0);
