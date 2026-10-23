@@ -1,0 +1,24 @@
+'use strict';
+// Painel Splash: telas de gestão (financeiro, despesas, clientes) e app instalável.
+const fs = require('fs');
+const path = require('path');
+const dir = path.join(__dirname, '../../sites/splash/agenda');
+const html = fs.readFileSync(path.join(dir, 'index.html'), 'utf8');
+const js = fs.readFileSync(path.join(dir, 'gestao.js'), 'utf8');
+const sw = fs.readFileSync(path.join(dir, 'sw.js'), 'utf8');
+const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.webmanifest'), 'utf8'));
+let falhas = 0;
+const ok = (c, n) => { if (!c) { falhas++; console.error('FALHOU:', n); } else console.log('ok', n); };
+
+const ids = [...js.matchAll(/\$\('([a-z-]+)'\)/g)].map(m => m[1]);
+for (const id of new Set(ids)) ok(html.includes(`id="${id}"`), `GESTAO ${id} existe no HTML`);
+for (const aba of ['financeiro', 'despesas', 'clientes']) {
+  ok(html.includes(`id="aba-${aba}"`) && html.includes(`id="tab-${aba}"`), `GESTAO aba ${aba}`);
+  ok(html.includes(`'${aba}'`), `GESTAO navegarAba conhece ${aba}`);
+}
+for (const acao of ['financeiro', 'listar', 'pagamento-registrar', 'pagamento-remover', 'editar', 'despesa-listar', 'despesa-salvar', 'despesa-excluir', 'clientes']) ok(js.includes(`'${acao}'`), `GESTAO usa a ação ${acao}`);
+ok(/SplashPainel\.escapeHtml/.test(js) && !/innerHTML\s*=\s*[^;]*\$\{r\.nome\}/.test(js), 'GESTAO escapa textos');
+ok(html.includes('rel="manifest"') && html.includes("register('sw.js')"), 'PWA liga manifesto e service worker');
+for (const i of manifest.icons) ok(fs.existsSync(path.join(dir, i.src)) && sw.includes(i.src), `PWA ícone ${i.src}`);
+ok(sw.includes("'gestao.js'") && fs.existsSync(path.join(dir, 'gestao.js')), 'PWA cache inclui gestao.js');
+process.exit(falhas ? 1 : 0);

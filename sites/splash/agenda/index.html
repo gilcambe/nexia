@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0A0D08">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icone-192.png">
 <meta name="agenda-site" content="splash">
 <meta name="agenda-api" content="https://nexia.gcbezerra.workers.dev/api/locacao">
 <title>Painel da Amanda — Splash</title>
@@ -148,6 +153,19 @@
 .cfg-bloco{border:1px solid var(--linha);border-radius:12px;padding:12px;margin:10px 0;background:rgba(255,255,255,.02)}
 .check-linha{display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:13px}
 .valores-reserva{margin-top:12px;padding-top:10px;border-top:1px solid var(--linha)}
+  .nav-abas { overflow-x: auto; justify-content: flex-start !important; }
+  .nav-aba-btn { flex: 0 0 auto; min-width: 74px; padding-left: 6px; padding-right: 6px; }
+  .grade-g { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 12px 0; }
+  .cartao-g { background: var(--cartao); border: 1px solid var(--linha); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
+  .cartao-g h4 { margin-bottom: 6px; }
+  .suave { color: var(--suave); font-size: 13px; }
+  .aviso-g { background: var(--alerta-f); border: 1px solid var(--alerta); border-radius: 10px; padding: 10px; margin: 8px 0; }
+  .tit-g { margin: 16px 0 8px; }
+  .tabela-g > div { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 8px 0; border-bottom: 1px solid var(--linha); }
+  .linha-g { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; align-items: center; }
+  .linha-g input, .linha-g select { flex: 1 1 130px; min-width: 0; }
+  .lista-g { list-style: none; margin: 6px 0; font-size: 13px; }
+  .lista-g li { padding: 3px 0; }
 </style>
 </head>
 <body>
@@ -382,6 +400,32 @@
   </section>
 
   <!-- ABA 6: CONFIGURAÇÕES / AJUSTES -->
+  <section id="aba-financeiro" class="oculto">
+    <h2>Financeiro</h2>
+    <div class="linha-g"><input type="date" id="fin-de" aria-label="De"><input type="date" id="fin-ate" aria-label="Até"><button class="btn pequeno ouro" id="fin-atualizar">Atualizar</button></div>
+    <div id="fin-resumo"></div>
+    <h3 class="tit-g">Reservas e pagamentos</h3>
+    <div id="fin-reservas"></div>
+  </section>
+
+  <section id="aba-despesas" class="oculto">
+    <h2>Despesas</h2>
+    <form id="desp-form" class="cartao-g">
+      <div class="linha-g"><select id="desp-unidade" aria-label="Unidade"></select><select id="desp-categoria" aria-label="Categoria"></select></div>
+      <div class="linha-g"><input type="text" id="desp-descricao" maxlength="120" placeholder="Descrição (ex.: produto da piscina)"><input type="number" id="desp-valor" min="0.01" step="0.01" placeholder="Valor" required><input type="date" id="desp-data" required></div>
+      <div class="linha-g"><button class="btn ouro" type="submit">Salvar despesa</button><span id="desp-msg" role="status"></span></div>
+    </form>
+    <div class="linha-g"><input type="date" id="desp-de" aria-label="De"><input type="date" id="desp-ate" aria-label="Até"><button class="btn pequeno ouro" type="button" id="desp-atualizar">Atualizar</button></div>
+    <p id="desp-total" style="margin:10px 0;font-weight:700"></p>
+    <div id="desp-lista"></div>
+  </section>
+
+  <section id="aba-clientes" class="oculto">
+    <h2>Clientes</h2>
+    <p class="suave" id="cli-regra"></p>
+    <div id="cli-lista"></div>
+  </section>
+
   <section id="aba-config" class="oculto">
     <div class="card">
       <div class="card-header">
@@ -507,6 +551,9 @@
     <i class="ri-add-circle-line"></i>
     <span>Novo</span>
   </button>
+  <button class="nav-aba-btn" onclick="navegarAba('financeiro')" id="tab-financeiro"><i class="ri-money-dollar-circle-line"></i><span>Financeiro</span></button>
+  <button class="nav-aba-btn" onclick="navegarAba('despesas')" id="tab-despesas"><i class="ri-wallet-3-line"></i><span>Despesas</span></button>
+  <button class="nav-aba-btn" onclick="navegarAba('clientes')" id="tab-clientes"><i class="ri-user-star-line"></i><span>Clientes</span></button>
   <button class="nav-aba-btn" onclick="navegarAba('editor')" id="tab-editor">
     <i class="ri-layout-edit-line"></i>
     <span>Editar Site</span>
@@ -523,6 +570,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous"></script>
 <script src="painel.js"></script>
+<script src="gestao.js"></script>
 <script>
   let TOKEN = sessionStorage.getItem('splash_token') || '';
   let UNIDADE_ATUAL = 'santa-adelia';
@@ -1624,15 +1672,17 @@
   }
 
   function navegarAba(nome) {
-    ['calendario', 'pedidos', 'reservas', 'nova', 'editor', 'importar', 'config'].forEach(a => {
+    ['calendario', 'pedidos', 'reservas', 'nova', 'financeiro', 'despesas', 'clientes', 'editor', 'importar', 'config'].forEach(a => {
       document.getElementById(`aba-${a}`).classList.toggle('oculto', a !== nome);
       document.getElementById(`tab-${a}`).classList.toggle('ativa', a === nome);
     });
+    if (window.Gestao) Gestao.abrir(nome);
     if (nome === 'editor' && !SITE_EDITOR.aberto) {
       abrirSiteEditor();
     }
   }
 
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
   init();
 </script>
 </body>
