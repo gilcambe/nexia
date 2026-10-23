@@ -377,3 +377,180 @@ test('SPLASH-PAINEL 13: Validação de dados com caracteres especiais e vírgula
   assert.ok(linhas[1].includes('"Cliente \"Importante\""'), 'nome com aspas deve ser escapado');
   assert.ok(linhas[1].includes('"Cartão de Crédito"'), 'forma de pagamento com espaços deve estar entre aspas');
 });
+
+test('SPLASH-PAINEL 14: Lança erro se financeiroData não for array', () => {
+  assert.throws(() => gerarCsvFinanceiro('não é um array', []), /financeiroData deve ser um array/);
+  assert.throws(() => gerarCsvFinanceiro(null, []), /financeiroData deve ser um array/);
+  assert.throws(() => gerarCsvFinanceiro(undefined, []), /financeiroData deve ser um array/);
+  assert.throws(() => gerarCsvFinanceiro(123, []), /financeiroData deve ser um array/);
+  assert.throws(() => gerarCsvFinanceiro({}, []), /financeiroData deve ser um array/);
+});
+
+test('SPLASH-PAINEL 15: Lança erro se reservasData não for array', () => {
+  assert.throws(() => gerarCsvFinanceiro([], 'não é um array'), /reservasData deve ser um array/);
+  assert.throws(() => gerarCsvFinanceiro([], null), /reservasData deve ser um array/);
+  assert.throws(() => gerarCsvFinanceiro([], undefined), /reservasData deve ser um array/);
+  assert.throws(() => gerarCsvFinanceiro([], 123), /reservasData deve ser um array/);
+  assert.throws(() => gerarCsvFinanceiro([], {}), /reservasData deve ser um array/);
+});
+
+test('SPLASH-PAINEL 16: Geração com duas seções (financeiro e reservas) separadas por linha em branco', () => {
+  const financeiroData = [
+    {
+      data: '2026-10-25',
+      descricao: 'Reserva - Casamento',
+      tipo: 'receita',
+      valor: '5000.00',
+      status: 'pago',
+      reserva_id: 'res-1',
+      forma_pagamento: 'Pix'
+    }
+  ];
+
+  const reservasData = [
+    {
+      id: 'res-1',
+      nome: 'Carlos & Ana',
+      unidade: 'santa-barbara',
+      data: '2026-10-25',
+      status: 'confirmado',
+      valor_total: '5000.00',
+      valor_sinal: '1000.00',
+      forma_pagamento: 'Pix'
+    }
+  ];
+
+  const csv = gerarCsvFinanceiro(financeiroData, reservasData);
+  const secoes = csv.split('\n\n');
+
+  assert.equal(secoes.length, 2, 'deve gerar duas seções separadas por linha em branco');
+  assert.ok(secoes[0].startsWith('Data,Descrição,Tipo,Valor (R$),Status,Reserva ID,Cliente,Unidade,Forma de Pagamento'), 'primeira seção é financeiro');
+  assert.ok(secoes[1].startsWith('ID,Cliente,Unidade,Data,Status,Valor Total,Valor Sinal,Forma de Pagamento'), 'segunda seção é reservas');
+});
+
+test('SPLASH-PAINEL 17: Arrays vazios retornam cabeçalhos de ambas as seções', () => {
+  const csv = gerarCsvFinanceiro([], []);
+  const linhas = csv.split('\n');
+
+  assert.ok(linhas[0].startsWith('Data,Descrição,Tipo,Valor (R$),Status,Reserva ID,Cliente,Unidade,Forma de Pagamento'), 'cabeçalho financeiro');
+  assert.ok(linhas.some(l => l.startsWith('ID,Cliente,Unidade,Data,Status,Valor Total,Valor Sinal,Forma de Pagamento')), 'cabeçalho reservas');
+});
+
+test('SPLASH-PAINEL 18: Injeção de fórmula bloqueada para =, +, -, @ em ambos os conjuntos', () => {
+  const financeiroData = [
+    {
+      data: '=NOW()',
+      descricao: '+MALICIOUS',
+      tipo: '-ATAQUE',
+      valor: '1000.00',
+      status: '@PAYLOAD',
+      reserva_id: 'res-1',
+      forma_pagamento: 'Pix'
+    }
+  ];
+
+  const reservasData = [
+    {
+      id: 'res-1',
+      nome: '=INJECT-NAME',
+      unidade: '+INJECT-UNIT',
+      data: '-INJECT-DATE',
+      status: '@INJECT-STATUS',
+      valor_total: '100.00',
+      valor_sinal: '50.00',
+      forma_pagamento: 'Pix'
+    }
+  ];
+
+  const csv = gerarCsvFinanceiro(financeiroData, reservasData);
+  const linhas = csv.split('\n');
+
+  // financeiro
+  assert.ok(linhas[1].includes("'=NOW()"), 'data com = protegida');
+  assert.ok(linhas[1].includes("'+MALICIOUS"), 'descricao com + protegida');
+  assert.ok(linhas[1].includes("'-ATAQUE"), 'tipo com - protegido');
+  assert.ok(linhas[1].includes("'@PAYLOAD"), 'status com @ protegido');
+
+  // reservas (linha de reservas está na segunda seção)
+  const secaoReservas = csv.split('\n\n')[1];
+  const linhasReservas = secaoReservas.split('\n');
+  assert.ok(linhasReservas[1].includes("'=INJECT-NAME"), 'nome reserva com = protegido');
+  assert.ok(linhasReservas[1].includes("'+INJECT-UNIT"), 'unidade reserva com + protegida');
+  assert.ok(linhasReservas[1].includes("'-INJECT-DATE"), 'data reserva com - protegida');
+  assert.ok(linhasReservas[1].includes("'@INJECT-STATUS"), 'status reserva com @ protegido');
+});
+
+test('SPLASH-PAINEL 19: Escape de vírgula e aspas em ambas as seções', () => {
+  const financeiroData = [
+    {
+      data: '2026-10-25',
+      descricao: 'Evento "Especial" com, vírgulas',
+      tipo: 'receita',
+      valor: '1000.00',
+      status: 'pago',
+      reserva_id: 'res-1',
+      forma_pagamento: 'Pix'
+    }
+  ];
+
+  const reservasData = [
+    {
+      id: 'res-1',
+      nome: 'Cliente "Importante"',
+      unidade: 'santa-barbara',
+      data: '2026-10-25',
+      status: 'confirmado',
+      valor_total: '1000.00',
+      valor_sinal: '200.00',
+      forma_pagamento: 'Pix'
+    }
+  ];
+
+  const csv = gerarCsvFinanceiro(financeiroData, reservasData);
+  const linhas = csv.split('\n');
+
+  assert.ok(linhas[1].includes('"Evento ""Especial"" com, vírgulas"'), 'descrição com vírgulas e aspas escapada');
+  assert.ok(linhas[1].includes('"Cliente ""Importante"""'), 'nome com aspas escapado');
+
+  const secaoReservas = csv.split('\n\n')[1];
+  const linhasReservas = secaoReservas.split('\n');
+  assert.ok(linhasReservas[1].includes('"Cliente ""Importante"""'), 'nome reserva com aspas escapado');
+});
+
+test('SPLASH-PAINEL 20: null/undefined viram string vazia em ambas as seções', () => {
+  const financeiroData = [
+    {
+      data: null,
+      descricao: undefined,
+      tipo: '',
+      valor: '',
+      status: null,
+      reserva_id: undefined,
+      forma_pagamento: null
+    }
+  ];
+
+  const reservasData = [
+    {
+      id: 'res-1',
+      nome: null,
+      unidade: undefined,
+      data: null,
+      status: '',
+      valor_total: undefined,
+      valor_sinal: null,
+      forma_pagamento: undefined
+    }
+  ];
+
+  const csv = gerarCsvFinanceiro(financeiroData, reservasData);
+  const linhas = csv.split('\n');
+  const secaoReservas = csv.split('\n\n')[1];
+  const linhasReservas = secaoReservas.split('\n');
+
+  // financeiro - campos nulos/undefined aparecem como campos vazios entre vírgulas
+  assert.ok(linhas[1].includes(',,,'), 'campos nulos/undefined viram vazio no financeiro');
+
+  // reservas
+  assert.ok(linhasReservas[1].includes(',,,,,'), 'campos nulos/undefined viram vazio nas reservas');
+});
