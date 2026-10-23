@@ -167,7 +167,7 @@
   "link_produto": "https://shopee.com.br/product/1397772996/18198047409",
   "categoria": "suplementos",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 93.3
  },
  {
@@ -319,7 +319,7 @@
   "link_produto": "https://shopee.com.br/product/1397772996/27382602041",
   "categoria": "suplementos",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 68.5
  },
  {
@@ -414,7 +414,7 @@
   "link_produto": "https://shopee.com.br/product/1397772996/58260536574",
   "categoria": "suplementos",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 58.9
  },
  {
@@ -528,7 +528,7 @@
   "link_produto": "https://shopee.com.br/product/1397772996/23098028068",
   "categoria": "suplementos",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 49.9
  },
  {
@@ -585,7 +585,7 @@
   "link_produto": "https://shopee.com.br/product/347988064/20298322054",
   "categoria": "suplementos",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 47.5
  },
  {
@@ -661,7 +661,7 @@
   "link_produto": "https://shopee.com.br/product/1147903950/44553066762",
   "categoria": "roupas",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 45.5
  },
  {
@@ -813,7 +813,7 @@
   "link_produto": "https://shopee.com.br/product/347988064/22497186627",
   "categoria": "suplementos",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 41.8
  },
  {
@@ -851,7 +851,7 @@
   "link_produto": "https://shopee.com.br/product/962017397/19398319317",
   "categoria": "roupas",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 39.6
  },
  {
@@ -984,7 +984,7 @@
   "link_produto": "https://shopee.com.br/product/969401129/44467503760",
   "categoria": "roupas",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 33
  },
  {
@@ -1022,7 +1022,7 @@
   "link_produto": "https://shopee.com.br/product/446247790/58254796458",
   "categoria": "suplementos",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 31.7
  },
  {
@@ -1062,25 +1062,6 @@
   "desde": 1792019825978,
   "visto": 1792705306453,
   "pontos": 30.3
- },
- {
-  "id": "shopee-58250487610",
-  "loja": "shopee",
-  "titulo": "Epsilon Balança Digital Corporal Bioimpedancia Corporal 140kg Aplicativo Profissional Bluetooth",
-  "preco": 32.95,
-  "preco_antigo": 59.91,
-  "desconto": 45,
-  "nota": 4.9,
-  "vendas": 4211,
-  "comissao": 0.18,
-  "imagem": "https://cf.shopee.com.br/file/br-11134207-81z1k-mielzhrvg0zq9e",
-  "vendedor": "Invention Hunters",
-  "link": "https://s.shopee.com.br/30oy5sOKPY",
-  "link_produto": "https://shopee.com.br/product/1661007426/58250487610",
-  "categoria": "relogios",
-  "desde": 1792003253760,
-  "visto": 1792716158452,
-  "pontos": 29.9
  },
  {
   "id": "shopee-23897887281",
@@ -1132,11 +1113,11 @@
   "comissao": 0.2,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-820lx-mu0qzklwpwcj93",
   "vendedor": "THE HEAT SUPLEMENTOS ALIMENTARES",
-  "link": "https://s.shopee.com.br/80Df0FNaC3",
+  "link": "https://s.shopee.com.br/6Am1XMXrkc",
   "link_produto": "https://shopee.com.br/product/354523066/22191124006",
   "categoria": "suplementos",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 27.9
  },
  {
@@ -1155,7 +1136,7 @@
   "link_produto": "https://shopee.com.br/product/517548452/58253253743",
   "categoria": "roupas",
   "desde": 1791963784009,
-  "visto": 1792762282249,
+  "visto": 1792779922856,
   "pontos": 27.8
  },
  {
@@ -1235,6 +1216,25 @@
   "pontos": 26.7
  },
  {
+  "id": "shopee-58250487610",
+  "loja": "shopee",
+  "titulo": "Epsilon Balança Digital Corporal Bioimpedancia Corporal 140kg Aplicativo Profissional Bluetooth",
+  "preco": 27.55,
+  "preco_antigo": 59.89,
+  "desconto": 54,
+  "nota": 4.9,
+  "vendas": 4211,
+  "comissao": 0.18,
+  "imagem": "https://cf.shopee.com.br/file/br-11134207-81z1k-mielzhrvg0zq9e",
+  "vendedor": "Invention Hunters",
+  "link": "https://s.shopee.com.br/6Am1XMgnqA",
+  "link_produto": "https://shopee.com.br/product/1661007426/58250487610",
+  "categoria": "relogios",
+  "desde": 1792003253760,
+  "visto": 1792779922856,
+  "pontos": 26.6
+ },
+ {
   "id": "shopee-23998056993",
   "loja": "shopee",
   "titulo": "Pré-Treino Abduzido NitroMax 300g - 200mg Cafeína Beta-Alanina Arginina Pump",
@@ -1250,7 +1250,7 @@
   "link_produto": "https://shopee.com.br/product/354523066/23998056993",
   "categoria": "suplementos",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 26.5
  },
  {
@@ -1379,11 +1379,11 @@
   "comissao": 0.13,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-7ra3v-mbg5xql5j04le8",
   "vendedor": "WDJ TECH LTDA",
-  "link": "https://s.shopee.com.br/3LRoUUN3ji",
+  "link": "https://s.shopee.com.br/7VHP7obj8Y",
   "link_produto": "https://shopee.com.br/product/1660293952/22899279721",
   "categoria": "relogios",
   "desde": 1792003253760,
-  "visto": 1792716158452,
+  "visto": 1792779922856,
   "pontos": 24.4
  },
  {
@@ -1440,7 +1440,7 @@
   "link_produto": "https://shopee.com.br/product/338537405/22495781689",
   "categoria": "suplementos",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 23.6
  },
  {
@@ -1493,11 +1493,11 @@
   "comissao": 0.12,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-7ra2q-mb9ua7mhd30625",
   "vendedor": "WDJ TECH LTDA",
-  "link": "https://s.shopee.com.br/2gC7hGPb5W",
+  "link": "https://s.shopee.com.br/7AeYjCczoO",
   "link_produto": "https://shopee.com.br/product/1660293952/22794788395",
   "categoria": "relogios",
   "desde": 1792003253760,
-  "visto": 1792716158452,
+  "visto": 1792779922856,
   "pontos": 22.8
  },
  {
@@ -1573,7 +1573,7 @@
   "link_produto": "https://shopee.com.br/product/1362299566/41631210271",
   "categoria": "roupas",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 22.4
  },
  {
@@ -1630,7 +1630,7 @@
   "link_produto": "https://shopee.com.br/product/1840665987/23394999678",
   "categoria": "roupas",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 21.7
  },
  {
@@ -1797,11 +1797,11 @@
   "comissao": 0.11,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-7rcdt-lt6ul9keg9hf19",
   "vendedor": "ZSZ_SHOP",
-  "link": "https://s.shopee.com.br/7faneS6YwR",
+  "link": "https://s.shopee.com.br/6L5RjfgAVB",
   "link_produto": "https://shopee.com.br/product/987393610/22797412872",
   "categoria": "relogios",
   "desde": 1792003253760,
-  "visto": 1792716158452,
+  "visto": 1792779922856,
   "pontos": 20.2
  },
  {
@@ -1915,7 +1915,7 @@
   "link_produto": "https://shopee.com.br/product/380183487/19271343184",
   "categoria": "roupas",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 19.2
  },
  {
@@ -1949,11 +1949,11 @@
   "comissao": 0.13,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-820lu-mtoi8kv4r8jm87",
   "vendedor": "Fest&Fun",
-  "link": "https://s.shopee.com.br/4VdlsdIcMz",
+  "link": "https://s.shopee.com.br/7KxyvVcMTX",
   "link_produto": "https://shopee.com.br/product/418386328/58219203155",
   "categoria": "relogios",
   "desde": 1792003253760,
-  "visto": 1792716158452,
+  "visto": 1792779922856,
   "pontos": 18.7
  },
  {
@@ -2082,11 +2082,11 @@
   "comissao": 0.13,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-7r98o-m0562fkmkzmved",
   "vendedor": "Life Hack Homeware",
-  "link": "https://s.shopee.com.br/4B0vU1Jt2x",
+  "link": "https://s.shopee.com.br/3B8PxqsDvk",
   "link_produto": "https://shopee.com.br/product/1345719405/23293257603",
   "categoria": "relogios",
   "desde": 1792689347146,
-  "visto": 1792716158452,
+  "visto": 1792779922856,
   "pontos": 17.7
  },
  {
@@ -2101,11 +2101,11 @@
   "comissao": 0.13,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-820mc-mrm1d5ophc0654",
   "vendedor": "Larsul",
-  "link": "https://s.shopee.com.br/3VlEgnMQOl",
+  "link": "https://s.shopee.com.br/7puFWQaSSa",
   "link_produto": "https://shopee.com.br/product/372753581/20351119108",
   "categoria": "relogios",
   "desde": 1792003253760,
-  "visto": 1792716158452,
+  "visto": 1792779922856,
   "pontos": 17.6
  },
  {
@@ -2276,7 +2276,7 @@
   "link_produto": "https://shopee.com.br/product/344410462/23232308359",
   "categoria": "em-casa",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 15.2
  },
  {
@@ -2466,7 +2466,7 @@
   "link_produto": "https://shopee.com.br/product/386269845/22898179033",
   "categoria": "acessorios",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 13
  },
  {
@@ -2500,11 +2500,11 @@
   "comissao": 0.08,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-8260y-mkaqhjr0sgsmdc",
   "vendedor": "Quintal Online",
-  "link": "https://s.shopee.com.br/4B0wRCgZkU",
+  "link": "https://s.shopee.com.br/20wSZhs7yq",
   "link_produto": "https://shopee.com.br/product/1586952569/58204616969",
   "categoria": "acessorios",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 12.6
  },
  {
@@ -2523,7 +2523,7 @@
   "link_produto": "https://shopee.com.br/product/747746791/19428227444",
   "categoria": "suplementos",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 12.6
  },
  {
@@ -2637,7 +2637,7 @@
   "link_produto": "https://shopee.com.br/product/1020958846/58201231224",
   "categoria": "suplementos",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 11.9
  },
  {
@@ -2675,7 +2675,7 @@
   "link_produto": "https://shopee.com.br/product/1647510642/58253037807",
   "categoria": "roupas",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 11.9
  },
  {
@@ -2770,7 +2770,7 @@
   "link_produto": "https://shopee.com.br/product/1198548910/22093262019",
   "categoria": "em-casa",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 11.2
  },
  {
@@ -2796,9 +2796,9 @@
   "id": "shopee-22293882305",
   "loja": "shopee",
   "titulo": "Colchonete de Academia 90x40x3,00 a 2,90 cm Compacto Espuma Macia D23 Impermeável Azul Preto Pilates",
-  "preco": 27.45,
-  "preco_antigo": 28.89,
-  "desconto": 5,
+  "preco": 28.9,
+  "preco_antigo": null,
+  "desconto": 0,
   "nota": 4.8,
   "vendas": 1661,
   "comissao": 0.12,
@@ -2808,7 +2808,7 @@
   "link_produto": "https://shopee.com.br/product/1467199725/22293882305",
   "categoria": "em-casa",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 10.3
  },
  {
@@ -2865,7 +2865,7 @@
   "link_produto": "https://shopee.com.br/product/463235104/21798188745",
   "categoria": "suplementos",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 10
  },
  {
@@ -2891,20 +2891,20 @@
   "id": "shopee-22494457990",
   "loja": "shopee",
   "titulo": "Balança Inteligente de Bioimpedância Bluetooth até 180KG",
-  "preco": 29.97,
-  "preco_antigo": 59.94,
+  "preco": 29.77,
+  "preco_antigo": 59.54,
   "desconto": 50,
   "nota": 4.9,
   "vendas": 1970,
   "comissao": 0.07,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-820m7-mtjz4qw9plvm93",
   "vendedor": "Boutique da Deh",
-  "link": "https://s.shopee.com.br/3B8OIBNh4b",
+  "link": "https://s.shopee.com.br/60SbL3hRB9",
   "link_produto": "https://shopee.com.br/product/1046584933/22494457990",
   "categoria": "relogios",
   "desde": 1792003253760,
-  "visto": 1792716158452,
-  "pontos": 10
+  "visto": 1792779922856,
+  "pontos": 9.9
  },
  {
   "id": "shopee-22598703594",
@@ -2941,7 +2941,7 @@
   "link_produto": "https://shopee.com.br/product/1045932166/22694963227",
   "categoria": "roupas",
   "desde": 1791963784009,
-  "visto": 1792762282249,
+  "visto": 1792779922856,
   "pontos": 9.9
  },
  {
@@ -2998,7 +2998,7 @@
   "link_produto": "https://shopee.com.br/product/816922370/23893939375",
   "categoria": "em-casa",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 9.1
  },
  {
@@ -3055,7 +3055,7 @@
   "link_produto": "https://shopee.com.br/product/393353501/9039162426",
   "categoria": "em-casa",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 8.9
  },
  {
@@ -3074,7 +3074,7 @@
   "link_produto": "https://shopee.com.br/product/1664415227/58209278314",
   "categoria": "roupas",
   "desde": 1792134957631,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 8.7
  },
  {
@@ -3112,7 +3112,7 @@
   "link_produto": "https://shopee.com.br/product/1664415227/22094702926",
   "categoria": "roupas",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 8.3
  },
  {
@@ -3207,7 +3207,7 @@
   "link_produto": "https://shopee.com.br/product/1452530060/19299611725",
   "categoria": "em-casa",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 8
  },
  {
@@ -3306,6 +3306,25 @@
   "pontos": 7.4
  },
  {
+  "id": "shopee-12321894219",
+  "loja": "shopee",
+  "titulo": "Colchonete Eva linha premium 100x50x1cm Academia Pilates Abdominal Tapete Yoga exercícios treino Crossfit",
+  "preco": 29.99,
+  "preco_antigo": 32.96,
+  "desconto": 9,
+  "nota": 4.8,
+  "vendas": 972,
+  "comissao": 0.08,
+  "imagem": "https://cf.shopee.com.br/file/br-11134201-23020-o2d0pput6hnvad",
+  "vendedor": "Baratão E.V.A",
+  "link": "https://s.shopee.com.br/30oz33pLcC",
+  "link_produto": "https://shopee.com.br/product/415011104/12321894219",
+  "categoria": "em-casa",
+  "desde": 1792134957631,
+  "visto": 1792779922856,
+  "pontos": 7.2
+ },
+ {
   "id": "shopee-22793663352",
   "loja": "shopee",
   "titulo": "Smartwatch 49mm 10 Ultra Plus Bluetooth Chamadas Tela HD Esportivo Compatível com Android e iPhone",
@@ -3322,25 +3341,6 @@
   "categoria": "relogios",
   "desde": 1792670408293,
   "visto": 1792670408293,
-  "pontos": 7.1
- },
- {
-  "id": "shopee-12321894219",
-  "loja": "shopee",
-  "titulo": "Colchonete Eva linha premium 100x50x1cm Academia Pilates Abdominal Tapete Yoga exercícios treino Crossfit",
-  "preco": 28.3,
-  "preco_antigo": 32.91,
-  "desconto": 14,
-  "nota": 4.8,
-  "vendas": 972,
-  "comissao": 0.08,
-  "imagem": "https://cf.shopee.com.br/file/br-11134201-23020-o2d0pput6hnvad",
-  "vendedor": "Baratão E.V.A",
-  "link": "https://s.shopee.com.br/30oz33pLcC",
-  "link_produto": "https://shopee.com.br/product/415011104/12321894219",
-  "categoria": "em-casa",
-  "desde": 1792134957631,
-  "visto": 1792741057656,
   "pontos": 7.1
  },
  {
@@ -3374,11 +3374,11 @@
   "comissao": 0.03,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-820l5-mnh6k8s5iuip2a",
   "vendedor": "Linda casa casa 1",
-  "link": "https://s.shopee.com.br/2qVYqkpyxD",
+  "link": "https://s.shopee.com.br/4LKNLzjB30",
   "link_produto": "https://shopee.com.br/product/1287381202/58259568049",
   "categoria": "em-casa",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 7
  },
  {
@@ -3477,23 +3477,23 @@
   "pontos": 6.9
  },
  {
-  "id": "shopee-9270794107",
+  "id": "shopee-20198130359",
   "loja": "shopee",
-  "titulo": "PRÉ TREINO C4 BETA PUMP PRÉ WORKOUT 225G - NEW MILLEN",
-  "preco": 54.9,
-  "preco_antigo": 124.77,
-  "desconto": 56,
+  "titulo": "Strap 100% algodão para academia, cross fit e musculação ,levantamento de peso ,tala ,luva",
+  "preco": 15.3,
+  "preco_antigo": 17,
+  "desconto": 10,
   "nota": 4.9,
-  "vendas": 589,
-  "comissao": 0.03,
-  "imagem": "https://cf.shopee.com.br/file/br-11134207-7r98o-mbjs3huq6iua08",
-  "vendedor": "SUPPLEMENT TRUCK",
-  "link": "https://s.shopee.com.br/906CC5JmAH",
-  "link_produto": "https://shopee.com.br/product/389266749/9270794107",
-  "categoria": "suplementos",
-  "desde": 1792261982240,
-  "visto": 1792741057656,
-  "pontos": 6.9
+  "vendas": 210,
+  "comissao": 0.18,
+  "imagem": "https://cf.shopee.com.br/file/br-11134207-820lq-mmj0nd17k8p07a",
+  "vendedor": "Growdfitness",
+  "link": "https://s.shopee.com.br/1W0Bymu1zp",
+  "link_produto": "https://shopee.com.br/product/787304312/20198130359",
+  "categoria": "acessorios",
+  "desde": 1792779922856,
+  "visto": 1792779922856,
+  "pontos": 6.8
  },
  {
   "id": "shopee-23593603405",
@@ -3526,11 +3526,11 @@
   "comissao": 0.03,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-7ra3v-mbg5xql5j04le8",
   "vendedor": "Luxor Comercial",
-  "link": "https://s.shopee.com.br/7KxxFq7pcL",
+  "link": "https://s.shopee.com.br/6VOrvyfXAC",
   "link_produto": "https://shopee.com.br/product/222975446/22394186914",
   "categoria": "relogios",
   "desde": 1792003253760,
-  "visto": 1792716158452,
+  "visto": 1792779922856,
   "pontos": 6.6
  },
  {
@@ -3568,7 +3568,7 @@
   "link_produto": "https://shopee.com.br/product/875039015/22798035553",
   "categoria": "em-casa",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 6.5
  },
  {
@@ -3625,7 +3625,7 @@
   "link_produto": "https://shopee.com.br/product/1032838083/58268649472",
   "categoria": "em-casa",
   "desde": 1791963784009,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 6.5
  },
  {
@@ -3740,6 +3740,25 @@
   "categoria": "relogios",
   "desde": 1791963784009,
   "visto": 1792762282249,
+  "pontos": 6.2
+ },
+ {
+  "id": "shopee-22193990499",
+  "loja": "shopee",
+  "titulo": "Almofada Futon Dobrável 170x60x9cm Colchonete Multiuso Chão Pallets Sofá Visita Meditação Macia",
+  "preco": 52.54,
+  "preco_antigo": 77.26,
+  "desconto": 32,
+  "nota": 4.9,
+  "vendas": 1218,
+  "comissao": 0.03,
+  "imagem": "https://cf.shopee.com.br/file/br-11134207-820m4-mmezy42csphjee",
+  "vendedor": "Gabbeh Tapetes e Afins",
+  "link": "https://s.shopee.com.br/4B0x9gjoNx",
+  "link_produto": "https://shopee.com.br/product/1231490489/22193990499",
+  "categoria": "em-casa",
+  "desde": 1791963784009,
+  "visto": 1792779922856,
   "pontos": 6.2
  },
  {
@@ -3876,6 +3895,25 @@
   "pontos": 5.8
  },
  {
+  "id": "shopee-9270794107",
+  "loja": "shopee",
+  "titulo": "PRÉ TREINO C4 BETA PUMP PRÉ WORKOUT 225G - NEW MILLEN",
+  "preco": 42.58,
+  "preco_antigo": 125.24,
+  "desconto": 66,
+  "nota": 4.9,
+  "vendas": 589,
+  "comissao": 0.03,
+  "imagem": "https://cf.shopee.com.br/file/br-11134207-7r98o-mbjs3huq6iua08",
+  "vendedor": "SUPPLEMENT TRUCK",
+  "link": "https://s.shopee.com.br/60SbL3YV5b",
+  "link_produto": "https://shopee.com.br/product/389266749/9270794107",
+  "categoria": "suplementos",
+  "desde": 1792261982240,
+  "visto": 1792779922856,
+  "pontos": 5.7
+ },
+ {
   "id": "shopee-58261589683",
   "loja": "shopee",
   "titulo": "Pulseira Silicone para Apple Watch 38 40 41 42 44 45 49mm Series SE/SE2/SE3 Ultra Ajustável Esportiva Smartwatch",
@@ -4009,25 +4047,6 @@
   "pontos": 5.4
  },
  {
-  "id": "shopee-27975990756",
-  "loja": "shopee",
-  "titulo": "Kit 2 Balanças Digital Cozinha e Bioimpedância Para Dieta e Nutrição Fitness",
-  "preco": 45.99,
-  "preco_antigo": 79.29,
-  "desconto": 42,
-  "nota": 4.9,
-  "vendas": 719,
-  "comissao": 0.03,
-  "imagem": "https://cf.shopee.com.br/file/sg-11134201-822xv-mi3eod0m641vb1",
-  "vendedor": "Onive",
-  "link": "https://s.shopee.com.br/40hVHiKWNu",
-  "link_produto": "https://shopee.com.br/product/943206066/27975990756",
-  "categoria": "relogios",
-  "desde": 1792362454401,
-  "visto": 1792716158452,
-  "pontos": 5.4
- },
- {
   "id": "shopee-22298334214",
   "loja": "shopee",
   "titulo": "Fone Bluetooth Esportivo TWS 5.3 - À Prova de Suor, Bateria Longa Duração + Display de Carga-BT",
@@ -4066,6 +4085,25 @@
   "pontos": 5.3
  },
  {
+  "id": "shopee-27975990756",
+  "loja": "shopee",
+  "titulo": "Kit 2 Balanças Digital Cozinha e Bioimpedância Para Dieta e Nutrição Fitness",
+  "preco": 43.81,
+  "preco_antigo": 79.65,
+  "desconto": 45,
+  "nota": 4.9,
+  "vendas": 719,
+  "comissao": 0.03,
+  "imagem": "https://cf.shopee.com.br/file/sg-11134201-822xv-mi3eod0m641vb1",
+  "vendedor": "Onive",
+  "link": "https://s.shopee.com.br/30ozlXsrGj",
+  "link_produto": "https://shopee.com.br/product/943206066/27975990756",
+  "categoria": "relogios",
+  "desde": 1792362454401,
+  "visto": 1792779922856,
+  "pontos": 5.2
+ },
+ {
   "id": "shopee-58250449212",
   "loja": "shopee",
   "titulo": "Straps Com Munhequeira Feminina Rosa Algodão Musculação e Academia Profissional Exercicios Puxada",
@@ -4077,11 +4115,11 @@
   "comissao": 0.07,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-81z1k-mgsjw8hn8nifef",
   "vendedor": " nosso lar",
-  "link": "https://s.shopee.com.br/60SacZZb1v",
+  "link": "https://s.shopee.com.br/2VsjAcqDxz",
   "link_produto": "https://shopee.com.br/product/423437844/58250449212",
   "categoria": "acessorios",
   "desde": 1792003253760,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 5.2
  },
  {
@@ -4111,15 +4149,15 @@
   "preco_antigo": 23.58,
   "desconto": 11,
   "nota": 4.8,
-  "vendas": 1014,
+  "vendas": 1022,
   "comissao": 0.08,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-81z1k-mhewrnzf5kw5e4",
   "vendedor": "DMC comercio",
-  "link": "https://s.shopee.com.br/7puBcdOp6n",
+  "link": "https://s.shopee.com.br/qkVBYwV9N",
   "link_produto": "https://shopee.com.br/product/222013887/18198087196",
   "categoria": "em-casa",
   "desde": 1792348815654,
-  "visto": 1792608145548,
+  "visto": 1792779922856,
   "pontos": 5.2
  },
  {
@@ -4130,15 +4168,15 @@
   "preco_antigo": 80.83,
   "desconto": 53,
   "nota": 4.9,
-  "vendas": 1061,
+  "vendas": 1050,
   "comissao": 0.03,
   "imagem": "https://cf.shopee.com.br/file/cn-11134207-820l4-mfz0f6ad62oebc",
   "vendedor": "Sol Loja boutique ",
-  "link": "https://s.shopee.com.br/AUuxCoAmGV",
+  "link": "https://s.shopee.com.br/2qVZZEtUbi",
   "link_produto": "https://shopee.com.br/product/1432050634/28674556148",
   "categoria": "relogios",
   "desde": 1792261982240,
-  "visto": 1792625092941,
+  "visto": 1792779922856,
   "pontos": 5.1
  },
  {
@@ -4172,11 +4210,11 @@
   "comissao": 0.03,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-820lo-mmum8npa8t8gab",
   "vendedor": "True Deals",
-  "link": "https://s.shopee.com.br/2qVXtZOxkZ",
+  "link": "https://s.shopee.com.br/70L8Wtdd9N",
   "link_produto": "https://shopee.com.br/product/409359479/23899286286",
   "categoria": "relogios",
   "desde": 1792261982240,
-  "visto": 1792716158452,
+  "visto": 1792779922856,
   "pontos": 5
  },
  {
@@ -4252,7 +4290,7 @@
   "link_produto": "https://shopee.com.br/product/1389561582/18699557899",
   "categoria": "roupas",
   "desde": 1792220454693,
-  "visto": 1792741057656,
+  "visto": 1792779922856,
   "pontos": 4.9
  },
  {
@@ -4313,25 +4351,6 @@
   "pontos": 4.9
  },
  {
-  "id": "shopee-22193990499",
-  "loja": "shopee",
-  "titulo": "Almofada Futon Dobrável 170x60x9cm Colchonete Multiuso Chão Pallets Sofá Visita Meditação Macia",
-  "preco": 34.9,
-  "preco_antigo": 77.56,
-  "desconto": 55,
-  "nota": 4.9,
-  "vendas": 1218,
-  "comissao": 0.03,
-  "imagem": "https://cf.shopee.com.br/file/br-11134207-820m4-mmezy42csphjee",
-  "vendedor": "Gabbeh Tapetes e Afins",
-  "link": "https://s.shopee.com.br/3B8PFMoiHF",
-  "link_produto": "https://shopee.com.br/product/1231490489/22193990499",
-  "categoria": "em-casa",
-  "desde": 1791963784009,
-  "visto": 1792741057656,
-  "pontos": 4.8
- },
- {
   "id": "shopee-22994310607",
   "loja": "shopee",
   "titulo": "Fone de ouvido de condução óssea com clipe de ouvido sem fio, Fone de Ouvido Bluetooth sem fio-UF",
@@ -4348,6 +4367,25 @@
   "categoria": "fones",
   "desde": 1792220454693,
   "visto": 1792741057656,
+  "pontos": 4.8
+ },
+ {
+  "id": "shopee-21163105419",
+  "loja": "shopee",
+  "titulo": "Balança Digital Medidora Corporal Bioimpedância até 180kg",
+  "preco": 37.89,
+  "preco_antigo": 60.14,
+  "desconto": 37,
+  "nota": 4.9,
+  "vendas": 1628,
+  "comissao": 0.03,
+  "imagem": "https://cf.shopee.com.br/file/br-11134207-7r98o-lkr21clgu6qg6b",
+  "vendedor": "LUCKY BAZAR",
+  "link": "https://s.shopee.com.br/7fapK7b5nZ",
+  "link_produto": "https://shopee.com.br/product/375201738/21163105419",
+  "categoria": "relogios",
+  "desde": 1792779922856,
+  "visto": 1792779922856,
   "pontos": 4.8
  },
  {
@@ -4408,25 +4446,6 @@
   "pontos": 4.5
  },
  {
-  "id": "shopee-58256297823",
-  "loja": "shopee",
-  "titulo": "Balança Corporal Bioimpedância Profissional Bluetooth Digital",
-  "preco": 31.98,
-  "preco_antigo": 58.15,
-  "desconto": 45,
-  "nota": 4.9,
-  "vendas": 2410,
-  "comissao": 0.03,
-  "imagem": "https://cf.shopee.com.br/file/br-11134207-820m8-mlgdm3r6d05gb4",
-  "vendedor": "Romanti Prime",
-  "link": "https://s.shopee.com.br/3g4et6Ln3k",
-  "link_produto": "https://shopee.com.br/product/1749702291/58256297823",
-  "categoria": "relogios",
-  "desde": 1792261982240,
-  "visto": 1792716158452,
-  "pontos": 4.5
- },
- {
   "id": "shopee-58204762457",
   "loja": "shopee",
   "titulo": "Balança Bioimpedancia Digital Bluetooth Corporal até 180kg",
@@ -4438,12 +4457,31 @@
   "comissao": 0.03,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-8261y-mkd9eud8fv9i7e",
   "vendedor": "MaisClickStore",
-  "link": "https://s.shopee.com.br/3qO55PL9in",
+  "link": "https://s.shopee.com.br/6q1iKaeGUM",
   "link_produto": "https://shopee.com.br/product/1607577276/58204762457",
   "categoria": "relogios",
   "desde": 1792362454401,
-  "visto": 1792716158452,
+  "visto": 1792779922856,
   "pontos": 4.4
+ },
+ {
+  "id": "shopee-58256297823",
+  "loja": "shopee",
+  "titulo": "Balança Corporal Bioimpedância Profissional Bluetooth Digital",
+  "preco": 29.88,
+  "preco_antigo": 56.38,
+  "desconto": 47,
+  "nota": 4.9,
+  "vendas": 2410,
+  "comissao": 0.03,
+  "imagem": "https://cf.shopee.com.br/file/br-11134207-820m8-mlgdm3r6d05gb4",
+  "vendedor": "Romanti Prime",
+  "link": "https://s.shopee.com.br/6fiI8HetpL",
+  "link_produto": "https://shopee.com.br/product/1749702291/58256297823",
+  "categoria": "relogios",
+  "desde": 1792261982240,
+  "visto": 1792779922856,
+  "pontos": 4.3
  },
  {
   "id": "shopee-43203256115",
@@ -4520,43 +4558,5 @@
   "desde": 1792239257396,
   "visto": 1792762282249,
   "pontos": 4.3
- },
- {
-  "id": "shopee-21697098856",
-  "loja": "shopee",
-  "titulo": "Air Pro 4 Tws Fone De Ouvido Sem Fio Bluetooth 5.1Mini Fones Esportivos Para Android / Ios iphone",
-  "preco": 20.99,
-  "preco_antigo": 23.58,
-  "desconto": 11,
-  "nota": 4.6,
-  "vendas": 3767,
-  "comissao": 0.06,
-  "imagem": "https://cf.shopee.com.br/file/br-11134211-7qukw-lixiwcvuu8q8c2",
-  "vendedor": "SUPER CHETO",
-  "link": "https://s.shopee.com.br/3VlG2H3iwC",
-  "link_produto": "https://shopee.com.br/product/874603044/21697098856",
-  "categoria": "fones",
-  "desde": 1792239257396,
-  "visto": 1792762282249,
-  "pontos": 4.2
- },
- {
-  "id": "shopee-20097499769",
-  "loja": "shopee",
-  "titulo": "Avitrin Polivitamínico Coveli para Pássaros - 15ml",
-  "preco": 12.99,
-  "preco_antigo": 18.04,
-  "desconto": 28,
-  "nota": 4.9,
-  "vendas": 249,
-  "comissao": 0.11,
-  "imagem": "https://cf.shopee.com.br/file/sg-11134201-7rbkl-loqtdyj0zr5y04",
-  "vendedor": "mypetone",
-  "link": "https://s.shopee.com.br/1BNIixYIOr",
-  "link_produto": "https://shopee.com.br/product/290073877/20097499769",
-  "categoria": "suplementos",
-  "desde": 1792275857206,
-  "visto": 1792625092941,
-  "pontos": 4.2
  }
 ]
