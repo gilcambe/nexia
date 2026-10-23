@@ -11,7 +11,8 @@ const {
   MapearEstado,
   montarMensagemWhatsApp,
   gerarCsvBackup,
-  calcularDiasMes
+  calcularDiasMes,
+  gerarCsvFinanceiro
 } = require('../../sites/splash/agenda/painel.js');
 
 test('SPLASH-PAINEL 1: Leitura do HTML do painel da Amanda e metadados requeridos', () => {
