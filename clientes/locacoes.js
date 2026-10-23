@@ -31,6 +31,32 @@ const LOCACOES = {
       mensagem_pedido: 'Pedido de reserva recebido com sucesso! Aguarde o contato para confirmação do sinal.',
     },
   },
+  // Conta de TESTE do dono (dados fictícios, separada da conta real da Amanda). Código de primeiro acesso: ADMIN01.
+  'splash-teste': {
+    nome: 'Splash TESTE',
+    versao: 1,
+    codigo_salt: '741f44f11bf2f1e6e9718acc2773a4b8',
+    codigo_hash: 'd8f233466c67103e1dbc729a74542adf852c7cbef2a5c5a3fa19f9c02f6f2225',
+    config: {
+      nome: 'Splash TESTE (não é o site real)',
+      whatsapp: '5511941247074',
+      instagram: 'splash_santaadelia',
+      unidades: [
+        { id: 'santa-adelia', nome: 'Splash Santa Adélia', endereco: 'Endereço de teste, São Mateus (SP)' },
+        { id: 'santa-barbara', nome: 'Splash Santa Bárbara', endereco: 'Endereço de teste, São Mateus (SP)' },
+      ],
+      extras: [
+        { id: 'decoracao', nome: 'Decoração', descricao: 'Decoração do espaço para a sua festa', valor: 0, ativo: true },
+      ],
+      sinal: { tipo: 'percentual', valor: 30 },
+      pix: { chave: '', titular: '' },
+      prazo_horas: 48,
+      antecedencia_dias: 0,
+      dias_a_frente: 540,
+      aviso: 'AMBIENTE DE TESTE',
+      mensagem_pedido: 'Pedido de teste recebido com sucesso!',
+    },
+  },
 };
 
 module.exports = { LOCACOES };
