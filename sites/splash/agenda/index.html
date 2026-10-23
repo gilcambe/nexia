@@ -967,8 +967,12 @@
     document.getElementById('cfg-promos').innerHTML = lista.map(x => `
       <div class="cfg-bloco cfg-promo" data-id="${SplashPainel.escapeHtml(x.id || '')}">
         <label>Texto da promoção</label><input type="text" class="pr-texto" value="${SplashPainel.escapeHtml(x.texto || '')}" maxlength="200">
+        <label>Imagem da promoção (print/foto)</label>
+        <input type="file" class="pr-imagem" accept="image/jpeg,image/png,image/webp" onchange="previewPromoImage(this)">
+        ${x.imagem ? `<img src="${SplashPainel.escapeHtml(x.imagem)}" class="pr-img-preview" style="margin-top:8px;max-width:160px;border-radius:8px;border:1px solid var(--linha)" alt="Prévia da promoção">` : ''}
+        <button type="button" class="btn pequeno vermelho" onclick="removerImagemPromo(this)">Remover imagem</button>
         <label class="check-linha"><input type="checkbox" class="pr-ativa" style="width:auto" ${x.ativa === false ? '' : 'checked'}> Mostrar no site</label>
-        <button type="button" class="btn pequeno vermelho" onclick="this.closest('.cfg-bloco').remove()">Remover</button>
+        <button type="button" class="btn pequeno vermelho" onclick="this.closest('.cfg-bloco').remove()">Remover promoção</button>
       </div>`).join('');
   }
 
