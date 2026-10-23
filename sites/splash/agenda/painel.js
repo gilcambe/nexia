@@ -114,6 +114,48 @@ function gerarCsvBackup(reservas) {
   return [cabecalho.join(','), ...linhas.map(l => l.join(','))].join('\n');
 }
 
+function csvEscapeValor(val) {
+  if (val === null || val === undefined) return '';
+  const s = String(val);
+  // Protege contra injeção de fórmulas de planilha: =, +, - e @ no início do campo
+  if (/^[=+\-@]/.test(s)) {
+    return `'` + s.replace(/"/g, '""');
+  }
+  if (/[",\n\r]/.test(s)) {
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+  return s;
+}
+
+function gerarCsvFinanceiro(financeiroData, reservasData) {
+  const reservasPorId = {};
+  (reservasData || []).forEach(r => {
+    if (r && r.id) reservasPorId[r.id] = r;
+  });
+
+  const cabecalho = ['Data', 'Descrição', 'Tipo', 'Valor (R$)', 'Status', 'Reserva ID', 'Cliente', 'Unidade', 'Forma de Pagamento'];
+
+  const linhas = (financeiroData || []).map(l => {
+    const reserva = l && l.reserva_id && reservasPorId[l.reserva_id] ? reservasPorId[l.reserva_id] : {};
+    const valor = l && l.valor !== undefined && l.valor !== '' ? Number(l.valor) : 0;
+    const valorSeguro = Number.isNaN(valor) ? 0 : valor;
+
+    return [
+      csvEscapeValor(l && l.data !== undefined ? l.data : ''),
+      csvEscapeValor(l && l.descricao !== undefined ? l.descricao : ''),
+      csvEscapeValor(l && l.tipo !== undefined ? l.tipo : ''),
+      valorSeguro,
+      csvEscapeValor(l && l.status !== undefined ? l.status : ''),
+      csvEscapeValor(l && l.reserva_id !== undefined ? l.reserva_id : ''),
+      csvEscapeValor(reserva && reserva.nome !== undefined ? reserva.nome : ''),
+      csvEscapeValor(reserva && reserva.unidade !== undefined ? reserva.unidade : ''),
+      csvEscapeValor(l && l.forma_pagamento !== undefined ? l.forma_pagamento : '')
+    ];
+  });
+
+  return [cabecalho.join(','), ...linhas.map(linha => linha.join(','))].join('\n');
+}
+
 function calcularDiasMes(ano, mes) {
   const numAno = Number(ano);
   const numMes = Number(mes); // 1 a 12
@@ -360,6 +402,7 @@ const SplashPainelObj = {
   montarMensagemWhatsApp,
   gerarMensagemWhatsappSinal: montarMensagemWhatsApp,
   gerarCsvBackup,
+  gerarCsvFinanceiro,
   calcularDiasMes,
   nomeMesAnoPt,
   gerarGridCalendarioPainel,
