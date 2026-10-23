@@ -21,4 +21,8 @@ ok(/SplashPainel\.escapeHtml/.test(js) && !/innerHTML\s*=\s*[^;]*\$\{r\.nome\}/.
 ok(html.includes('rel="manifest"') && html.includes("register('sw.js')"), 'PWA liga manifesto e service worker');
 for (const i of manifest.icons) ok(fs.existsSync(path.join(dir, i.src)) && sw.includes(i.src), `PWA ícone ${i.src}`);
 ok(sw.includes("'gestao.js'") && fs.existsSync(path.join(dir, 'gestao.js')), 'PWA cache inclui gestao.js');
+// Ajustes: promoções com imagem, avaliações, fidelidade e mídia por destino
+for (const t of ['cfg-avaliacoes', 'cfg-fid-minimo', 'cfg-fid-percentual', 'midia-destino']) ok(html.includes(`id="${t}"`), `AJUSTES ${t}`);
+for (const t of ['avaliacoes: lerAvaliacoesCfg()', 'fidelidade:', 'imagem: b.querySelector', 'unidade: midiaDestino()', 'absUrl(f.url)']) ok(html.includes(t), `AJUSTES ${t}`);
+for (const c of ['promo', 'avaliacoes', 'posts', 'instagram']) ok(html.includes(`<option value="${c}">`), `AJUSTES destino ${c}`);
 process.exit(falhas ? 1 : 0);
