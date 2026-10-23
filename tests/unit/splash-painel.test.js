@@ -180,6 +180,34 @@ test('SPLASH-PAINEL 8: Proteção contra injeção de fórmulas em CSV', () => {
   assert.ok(linhas[1].includes("'=INJECT'"), 'nome do cliente com = deve ser protegida');
 });
 
+test('SPLASH-PAINEL 8b: Proteção contra injeção de fórmulas com hífen (-)', () => {
+  const financeiroData = [
+    {
+      data: '-INJECT-DATE',
+      descricao: 'Descrição normal',
+      tipo: 'receita',
+      valor: '1000.00',
+      status: 'pago',
+      reserva_id: 'res-1',
+      forma_pagamento: 'Pix'
+    }
+  ];
+
+  const reservasData = [
+    {
+      id: 'res-1',
+      nome: '-INJECT-NAME',
+      unidade: 'santa-barbara'
+    }
+  ];
+
+  const csv = gerarCsvFinanceiro(financeiroData, reservasData);
+  const linhas = csv.split('\n');
+
+  assert.ok(linhas[1].includes("'-INJECT-DATE'"), 'data com - deve ser protegida');
+  assert.ok(linhas[1].includes("'-INJECT-NAME'"), 'nome com - deve ser protegido');
+});
+
 test('SPLASH-PAINEL 9: Validação e tratamento de dados ausentes ou inválidos', () => {
   const financeiroData = [
     {
