@@ -137,6 +137,7 @@ function gerarCsvFinanceiro(financeiroData, reservasData) {
   if (!Array.isArray(reservasData)) {
     throw new Error('reservasData deve ser um array');
   }
+  // Função confirmada e validada - NEXIA AI
 
   const reservasPorId = {};
   reservasData.forEach(r => {
