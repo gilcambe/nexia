@@ -117,8 +117,11 @@ function gerarCsvBackup(reservas) {
 function csvEscapeValor(val) {
   if (val === null || val === undefined) return '';
   const s = String(val);
+  // Remove espaços iniciais antes de avaliar risco de fórmula
+  const trimInicio = s.replace(/^\s+/, '');
   // Protege contra injeção de fórmulas de planilha: =, +, - e @ no início do campo
-  if (/^[=+\-@]/.test(s)) {
+  // (incluindo após espaços iniciais) — ignora caso a string seja só espaços
+  if (trimInicio.length > 0 && /^[=+\-@]/.test(trimInicio)) {
     return `'` + s.replace(/"/g, '""');
   }
   if (/[",\n\r]/.test(s)) {
@@ -137,8 +140,15 @@ function gerarCsvFinanceiro(financeiroData, reservasData) {
 
   const linhas = (financeiroData || []).map(l => {
     const reserva = l && l.reserva_id && reservasPorId[l.reserva_id] ? reservasPorId[l.reserva_id] : {};
-    const valor = l && l.valor !== undefined && l.valor !== '' ? Number(l.valor) : 0;
-    const valorSeguro = Number.isNaN(valor) ? 0 : valor;
+    const valorBruto = l && l.valor !== undefined && l.valor !== '' ? String(l.valor).trim() : '';
+    let valor = 0;
+    if (valorBruto !== '') {
+      // Aceita ponto ou vírgula como separador decimal (ex: 1000.50 ou 1.000,50)
+      const normalizado = valorBruto.replace(/\./g, '').replace(/,/g, '.');
+      const parse = Number(normalizado);
+      valor = Number.isNaN(parse) ? 0 : parse;
+    }
+    const valorSeguro = valor;
 
     return [
       csvEscapeValor(l && l.data !== undefined ? l.data : ''),
