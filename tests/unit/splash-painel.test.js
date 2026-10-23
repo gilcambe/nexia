@@ -305,3 +305,47 @@ test('SPLASH-PAINEL 11: Validação de dados de reserva não encontrados', () =>
   assert.ok(linhas[1].includes(''), 'nome da reserva não encontrada deve ser vazio');
   assert.ok(linhas[1].includes(''), 'unidade da reserva não encontrada deve ser vazia');
 });
+
+test('SPLASH-PAINEL 12: Validação de dados vazios ou arrays vazios', () => {
+  // Testa com arrays vazios
+  const csv1 = gerarCsvFinanceiro([], []);
+  assert.equal(csv1, 'Data,Descrição,Tipo,Valor (R$),Status,Reserva ID,Cliente,Unidade,Forma de Pagamento', 'deve retornar apenas o cabeçalho quando arrays vazios');
+  
+  // Testa com null/undefined
+  const csv2 = gerarCsvFinanceiro(null, null);
+  assert.equal(csv2, 'Data,Descrição,Tipo,Valor (R$),Status,Reserva ID,Cliente,Unidade,Forma de Pagamento', 'deve retornar apenas o cabeçalho quando null');
+  
+  // Testa com undefined
+  const csv3 = gerarCsvFinanceiro(undefined, undefined);
+  assert.equal(csv3, 'Data,Descrição,Tipo,Valor (R$),Status,Reserva ID,Cliente,Unidade,Forma de Pagamento', 'deve retornar apenas o cabeçalho quando undefined');
+});
+
+test('SPLASH-PAINEL 13: Validação de dados com caracteres especiais e vírgulas', () => {
+  const financeiroData = [
+    {
+      data: '2026-10-25',
+      descricao: 'Evento "Especial" com, vírgulas',
+      tipo: 'Receita',
+      valor: '1.000,50',
+      status: 'Pago',
+      reserva_id: 'res-1',
+      forma_pagamento: 'Cartão de Crédito'
+    }
+  ];
+
+  const reservasData = [
+    {
+      id: 'res-1',
+      nome: 'Cliente "Importante"',
+      unidade: 'santa-barbara'
+    }
+  ];
+
+  const csv = gerarCsvFinanceiro(financeiroData, reservasData);
+  const linhas = csv.split('\n');
+  
+  // Campos com vírgulas e aspas devem ser corretamente escapados
+  assert.ok(linhas[1].includes('"Evento \"Especial\" com, vírgulas"'), 'descrição com vírgulas e aspas deve ser escapada');
+  assert.ok(linhas[1].includes('"Cliente \"Importante\""'), 'nome com aspas deve ser escapado');
+  assert.ok(linhas[1].includes('"Cartão de Crédito"'), 'forma de pagamento com espaços deve estar entre aspas');
+});
