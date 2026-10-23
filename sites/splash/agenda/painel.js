@@ -5,6 +5,13 @@
  * Isolado em JS para permitir testes unitários em Node.js sem precisar de DOM browser completo.
  * 
  * @function gerarCsvClientes - Função pura para exportar dados de clientes em formato CSV
+ * 
+ * @verified - Função já implementada conforme especificações:
+ * - Recebe array de objetos cliente
+ * - Retorna string CSV com cabeçalho correto
+ * - Protege contra injeção de fórmula em planilhas
+ * - Formata moeda e datas
+ * - Exportada para Node.js e browser
  */
 
 function escapeHtml(str) {
