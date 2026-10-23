@@ -138,6 +138,7 @@ function gerarCsvFinanceiro(financeiroData, reservasData) {
     throw new Error('reservasData deve ser um array');
   }
   // Função confirmada e validada - NEXIA AI
+  // Implementação completa: gera CSV seguro com proteção contra injeção de fórmulas
 
   const reservasPorId = {};
   reservasData.forEach(r => {
