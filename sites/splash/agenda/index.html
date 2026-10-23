@@ -452,24 +452,62 @@
     <h3 style="font-size: 18px; margin-bottom: 12px; color: var(--cor-destaque);">Fotos e Vídeos da Unidade</h3>
     <p style="font-size:12px;color:var(--suave);margin-bottom:12px">Gerencie a galeria de fotos e vídeos exibidos no site para a unidade selecionada.</p>
 
-    <div style="border-bottom:1px solid var(--linha);padding-bottom:16px;margin-bottom:16px">
-      <h4 style="font-size:14px;color:#fff;margin-bottom:8px">Adicionar Foto</h4>
-      <input type="file" id="midia-foto-input" accept="image/jpeg,image/png,image/webp">
-      <label>Legenda da Foto (opcional)</label>
-      <input type="text" id="midia-foto-legenda" placeholder="Ex: Vista da piscina iluminada">
-      <button class="btn pequeno ouro" style="margin-top:8px" onclick="enviarFotoServidor()">Enviar Foto (<= 600 KB)</button>
+    <!-- Abas para diferentes tipos de mídia -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;border-bottom:1px solid var(--linha);padding-bottom:8px">
+      <button class="btn pequeno ouro" id="tab-fotos" onclick="mostrarAbaMidia('fotos')">Fotos</button>
+      <button class="btn pequeno claro" id="tab-videos" onclick="mostrarAbaMidia('videos')">Vídeos</button>
     </div>
 
-    <div>
+    <!-- Conteúdo da aba de fotos -->
+    <div id="aba-fotos" style="margin-bottom:20px">
+      <h4 style="font-size:14px;color:#fff;margin-bottom:8px">Adicionar Foto</h4>
+      
+      <!-- Seletor de categoria para fotos -->
+      <label>Categoria da Foto</label>
+      <select id="midia-foto-categoria">
+        <option value="galeria">Geral (Galeria Principal)</option>
+        <option value="promo">Promoções</option>
+        <option value="avaliacoes">Avaliações</option>
+        <option value="posts">Posts do Instagram</option>
+      </select>
+      
+      <!-- Upload múltiplo com barra de progresso -->
+      <div style="margin-top:12px">
+        <input type="file" id="midia-foto-input" accept="image/jpeg,image/png,image/webp" multiple>
+        <div id="upload-progress" class="oculto" style="margin-top:8px">
+          <div style="background:var(--linha);height:6px;border-radius:3px;overflow:hidden">
+            <div id="progress-bar" style="background:var(--cor-destaque);height:100%;width:0%;transition:width 0.3s"></div>
+          </div>
+          <div id="progress-text" style="font-size:11px;color:var(--suave);margin-top:4px">0%</div>
+        </div>
+      </div>
+      
+      <label>Legenda da Foto (opcional)</label>
+      <input type="text" id="midia-foto-legenda" placeholder="Ex: Vista da piscina iluminada">
+      <button class="btn pequeno ouro" style="margin-top:8px" onclick="enviarFotoServidor()">Enviar Foto(s) (<= 600 KB cada)</button>
+    </div>
+
+    <!-- Conteúdo da aba de vídeos -->
+    <div id="aba-videos" class="oculto" style="margin-bottom:20px">
       <h4 style="font-size:14px;color:#fff;margin-bottom:8px">Adicionar Vídeo</h4>
       <p style="font-size:12px;color:var(--suave);margin-bottom:8px">Envie o vídeo do celular para o YouTube (pode ser como não listado) e cole o link aqui.</p>
-      <label>Link do Vídeo (YouTube, Vimeo ou Instagram Reel)</label>
+      
+      <!-- Seletor de provedor para vídeos -->
+      <label>Provedor do Vídeo</label>
+      <select id="midia-video-provedor">
+        <option value="youtube">YouTube</option>
+        <option value="vimeo">Vimeo</option>
+        <option value="instagram">Instagram Reel</option>
+      </select>
+      
+      <label>Link do Vídeo</label>
       <input type="url" id="midia-video-url" placeholder="https://www.youtube.com/watch?v=...">
       <label>Título do Vídeo (opcional)</label>
       <input type="text" id="midia-video-titulo" placeholder="Ex: Tour do Salão Principal">
       <button class="btn pequeno ouro" style="margin-top:8px" onclick="salvarVideoServidor()">Salvar Vídeo</button>
     </div>
 
+    <!-- Lista de mídias com controles de ordem -->
     <div style="margin-top:20px" id="midia-lista-container"></div>
   </div>
 </div>
