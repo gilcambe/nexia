@@ -463,6 +463,18 @@
         <div id="cfg-promos"></div>
         <button type="button" class="btn pequeno claro" onclick="adicionarPromoCfg()"><i class="ri-add-line"></i> Adicionar promoção</button>
 
+        <h4 class="cfg-sub">Avaliações de clientes (texto)</h4>
+        <p class="cfg-ajuda">Para mostrar prints de avaliações, use "Fotos e vídeos" e escolha "Avaliações".</p>
+        <div id="cfg-avaliacoes"></div>
+        <button type="button" class="btn pequeno claro" onclick="adicionarAvaliacaoCfg()"><i class="ri-add-line"></i> Adicionar avaliação</button>
+
+        <h4 class="cfg-sub">Cliente fiel (desconto)</h4>
+        <label>Quantos aluguéis para ser cliente fiel</label>
+        <input type="number" id="cfg-fid-minimo" min="1" max="50">
+        <label>Desconto sugerido (%)</label>
+        <input type="number" id="cfg-fid-percentual" min="0" max="100" step="1">
+
+        <button type="button" class="btn largo claro" style="margin-top:18px" onclick="abrirModalMidia()"><i class="ri-image-add-line"></i> Fotos, vídeos, prints e posts</button>
         <button type="submit" class="btn largo ouro" style="margin-top:18px">Salvar Configurações</button>
       </form>
     </div>
@@ -494,7 +506,8 @@
   <div class="modal-box">
     <button class="modal-fechar" onclick="fecharModalMidia()">&times;</button>
     <h3 style="font-size: 18px; margin-bottom: 12px; color: var(--cor-destaque);">Fotos e Vídeos da Unidade</h3>
-    <p style="font-size:12px;color:var(--suave);margin-bottom:12px">Gerencie a galeria de fotos e vídeos exibidos no site para a unidade selecionada.</p>
+    <p style="font-size:12px;color:var(--suave);margin-bottom:8px">Escolha onde as fotos e vídeos aparecem no site:</p>
+    <select id="midia-destino" onchange="carregarMidiasModal()" style="margin-bottom:12px"></select>
 
     <div style="border-bottom:1px solid var(--linha);padding-bottom:16px;margin-bottom:16px">
       <h4 style="font-size:14px;color:#fff;margin-bottom:8px">Adicionar Foto</h4>
@@ -998,7 +1011,28 @@
       </div>`).join('');
     renderExtrasCfg(c.extras || []);
     renderPromosCfg(c.promocoes || []);
+    renderAvaliacoesCfg(c.avaliacoes || []);
+    document.getElementById('cfg-fid-minimo').value = (c.fidelidade && c.fidelidade.minimo) || 3;
+    document.getElementById('cfg-fid-percentual').value = c.fidelidade ? c.fidelidade.percentual : 10;
   }
+
+  function renderAvaliacoesCfg(lista) {
+    document.getElementById('cfg-avaliacoes').innerHTML = lista.map(x => `
+      <div class="cfg-bloco cfg-aval" data-id="${SplashPainel.escapeHtml(x.id || '')}">
+        <label>Nome do cliente</label><input type="text" class="av-nome" value="${SplashPainel.escapeHtml(x.nome || '')}" maxlength="80">
+        <label>O que ele disse</label><textarea class="av-texto" maxlength="400" rows="3">${SplashPainel.escapeHtml(x.texto || '')}</textarea>
+        <label>Estrelas (1 a 5)</label><input type="number" class="av-estrelas" min="1" max="5" value="${Number(x.estrelas) || 5}">
+        <label class="check-linha"><input type="checkbox" class="av-ativa" style="width:auto" ${x.ativa === false ? '' : 'checked'}> Mostrar no site</label>
+        <button type="button" class="btn pequeno vermelho" onclick="this.closest('.cfg-bloco').remove()">Remover</button>
+      </div>`).join('');
+  }
+  function lerAvaliacoesCfg() {
+    return Array.from(document.querySelectorAll('#cfg-avaliacoes .cfg-aval')).map(b => ({
+      id: b.dataset.id || '', nome: b.querySelector('.av-nome').value.trim(), texto: b.querySelector('.av-texto').value.trim(),
+      estrelas: Number(b.querySelector('.av-estrelas').value) || 5, ativa: b.querySelector('.av-ativa').checked
+    })).filter(x => x.texto);
+  }
+  function adicionarAvaliacaoCfg() { renderAvaliacoesCfg([...lerAvaliacoesCfg(), { nome: '', texto: 'Ótimo lugar!', estrelas: 5, ativa: true }]); }
 
   function renderExtrasCfg(lista) {
     document.getElementById('cfg-extras').innerHTML = lista.map(x => `
@@ -1015,6 +1049,9 @@
     document.getElementById('cfg-promos').innerHTML = lista.map(x => `
       <div class="cfg-bloco cfg-promo" data-id="${SplashPainel.escapeHtml(x.id || '')}">
         <label>Texto da promoção</label><input type="text" class="pr-texto" value="${SplashPainel.escapeHtml(x.texto || '')}" maxlength="200">
+        <input type="hidden" class="pr-imagem" value="${SplashPainel.escapeHtml(x.imagem || '')}">
+        ${x.imagem ? `<img src="${SplashPainel.escapeHtml(absUrl(x.imagem))}" alt="" style="max-width:120px;border-radius:8px;display:block;margin:6px 0">` : ''}
+        <label>Print ou imagem da promoção (opcional)</label><input type="file" class="pr-arquivo" accept="image/jpeg,image/png,image/webp" onchange="anexarImagemPromo(this)">
         <label class="check-linha"><input type="checkbox" class="pr-ativa" style="width:auto" ${x.ativa === false ? '' : 'checked'}> Mostrar no site</label>
         <button type="button" class="btn pequeno vermelho" onclick="this.closest('.cfg-bloco').remove()">Remover</button>
       </div>`).join('');
@@ -1029,12 +1066,27 @@
 
   function lerPromosCfg() {
     return Array.from(document.querySelectorAll('#cfg-promos .cfg-promo')).map(b => ({
-      id: b.dataset.id || '', texto: b.querySelector('.pr-texto').value.trim(), ativa: b.querySelector('.pr-ativa').checked
-    })).filter(x => x.texto);
+      id: b.dataset.id || '', texto: b.querySelector('.pr-texto').value.trim(), imagem: b.querySelector('.pr-imagem').value, ativa: b.querySelector('.pr-ativa').checked
+    })).filter(x => x.texto || x.imagem);
   }
 
   function adicionarExtraCfg() {
     renderExtrasCfg([...lerExtrasCfg(), { nome: 'Novo extra', valor: 0, ativo: true }]);
+  }
+
+  async function anexarImagemPromo(input) {
+    const file = input.files && input.files[0]; if (!file) return;
+    const bloco = input.closest('.cfg-promo');
+    try {
+      const b64 = await comprimirImagemClient(file, 600 * 1024);
+      const res = await apiPost({ acao: 'foto-enviar', unidade: 'promo', dados: b64.replace(/^data:image\/(jpeg|png|webp);base64,/, ''), tipo: file.type || 'image/jpeg', legenda: 'promoção' });
+      if (res.status !== 201) return alert((res.body && res.body.error) || 'Não consegui enviar a imagem.');
+      const url = (res.body.foto && res.body.foto.url) || res.body.url || '';
+      if (!url) return alert('Imagem enviada, mas não recebi o endereço. Tente de novo.');
+      bloco.querySelector('.pr-imagem').value = absUrl(url);
+      const lista = lerPromosCfg(); renderPromosCfg(lista);
+      alert('Imagem anexada. Toque em "Salvar Configurações" para publicar.');
+    } catch (e) { alert(e.message || 'Erro ao processar a imagem.'); }
   }
 
   function adicionarPromoCfg() {
@@ -1062,7 +1114,9 @@
         instagram: document.getElementById('cfg-instagram').value.trim(),
         unidades,
         extras: lerExtrasCfg(),
-        promocoes: lerPromosCfg()
+        promocoes: lerPromosCfg(),
+        avaliacoes: lerAvaliacoesCfg(),
+        fidelidade: { minimo: Number(document.getElementById('cfg-fid-minimo').value) || 3, percentual: Number(document.getElementById('cfg-fid-percentual').value) || 0 }
       }
     };
 
@@ -1286,7 +1340,13 @@
   }
 
   /* --- MODAL MÍDIA (FOTOS E VÍDEOS) --- */
+  function absUrl(u) { u = String(u || ''); return u.startsWith('/') ? new URL(API_LOCACAO).origin + u : u; }
+  function midiaDestino() { const s = document.getElementById('midia-destino'); return (s && s.value) || UNIDADE_ATUAL; }
   function abrirModalMidia() {
+    const s = document.getElementById('midia-destino');
+    s.innerHTML = ((CONFIG_CACHE && CONFIG_CACHE.unidades) || []).map(u => `<option value="${SplashPainel.escapeHtml(u.id)}">${SplashPainel.escapeHtml(u.nome)}: fotos e vídeos</option>`).join('')
+      + '<option value="promo">Promoções: prints e imagens</option><option value="avaliacoes">Avaliações: prints dos clientes</option><option value="posts">Instagram: fotos de posts</option><option value="instagram">Instagram: vídeos e Reels (link)</option>';
+    s.value = UNIDADE_ATUAL;
     document.getElementById('modal-midia').classList.remove('oculto');
     carregarMidiasModal();
   }
@@ -1296,8 +1356,8 @@
     cont.innerHTML = '<p style="font-size:12px;color:var(--suave)">Carregando fotos e vídeos da unidade...</p>';
 
     const [resF, resV] = await Promise.all([
-      apiGet({ foto_listar: '1', unidade: UNIDADE_ATUAL }),
-      apiGet({ video_listar: '1', unidade: UNIDADE_ATUAL })
+      apiGet({ foto_listar: '1', unidade: midiaDestino() }),
+      apiGet({ video_listar: '1', unidade: midiaDestino() })
     ]);
 
     const fotos = resF.body.fotos || [];
@@ -1309,7 +1369,7 @@
       html += fotos.map(f => `
         <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--linha)">
           <div style="display:flex;align-items:center;gap:8px">
-            <img src="${f.url}" style="width:40px;height:40px;object-fit:cover;border-radius:6px">
+            <img src="${SplashPainel.escapeHtml(absUrl(f.url))}" style="width:40px;height:40px;object-fit:cover;border-radius:6px">
             <span style="font-size:12px;color:var(--texto)">${SplashPainel.escapeHtml(f.legenda || 'Foto sem legenda')}</span>
           </div>
           <button class="btn pequeno vermelho" onclick="removerFotoServidor('${f.id}')">&times;</button>
@@ -1346,7 +1406,7 @@
 
       const res = await apiPost({
         acao: 'foto-enviar',
-        unidade: UNIDADE_ATUAL,
+        unidade: midiaDestino(),
         dados: rawBase64,
         tipo: file.type || 'image/jpeg',
         legenda
@@ -1382,7 +1442,7 @@
 
     const res = await apiPost({
       acao: 'video-salvar',
-      unidade: UNIDADE_ATUAL,
+      unidade: midiaDestino(),
       url,
       titulo
     });
