@@ -61,30 +61,6 @@ function MapearEstado(status) {
   }
 }
 
-  switch (status) {
-    case 'livre':
-      return { rotulo: 'Livre', cor: 'verde-claro', bg: 'rgba(42,122,78,0.2)', texto: '#2A7A4E' };
-    case 'pedido':
-      return { rotulo: 'Pedido pendente', cor: 'amarelo', bg: 'rgba(230,162,60,0.2)', texto: '#e6a23c' };
-    case 'aguardando_sinal':
-      return { rotulo: 'Aguardando sinal', cor: 'laranja', bg: 'rgba(201,168,76,0.2)', texto: '#C9A84C' };
-    case 'confirmado':
-      return { rotulo: 'Confirmado', cor: 'verde-forte', bg: '#2A7A4E', texto: '#ffffff' };
-    case 'bloqueado':
-      return { rotulo: 'Bloqueado', cor: 'cinza', bg: 'rgba(255,255,255,0.1)', texto: '#888888' };
-    case 'concluido':
-      return { rotulo: 'Concluído', cor: 'azul', bg: 'rgba(100,150,250,0.2)', texto: '#6496fa' };
-    case 'recusado':
-      return { rotulo: 'Recusado', cor: 'vermelho', bg: 'rgba(255,107,107,0.2)', texto: '#ff6b6b' };
-    case 'cancelado':
-      return { rotulo: 'Cancelado', cor: 'cinza', bg: 'rgba(255,255,255,0.05)', texto: '#888888' };
-    case 'expirado':
-      return { rotulo: 'Expirado', cor: 'cinza-escuro', bg: 'rgba(255,255,255,0.05)', texto: '#666666' };
-    default:
-      return { rotulo: status || 'Desconhecido', cor: 'desconhecido', bg: 'transparent', texto: '#ffffff' };
-  }
-}
-
 function montarMensagemWhatsApp(reserva, config) {
   const c = config || {};
   const pix = c.pix || {};
