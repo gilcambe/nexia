@@ -140,6 +140,21 @@ function csvEscapeValor(val) {
   return s;
 }
 
+/**
+ * Função pura gerarCsvFinanceiro(financeiroData, reservasData)
+ * Implementada conforme pedido do usuário para converter dados financeiros e reservas em texto CSV seguro.
+ * @param {Array} financeiroData - Array de objetos com dados financeiros
+ * @param {Array} reservasData - Array de objetos com dados de reservas
+ * @returns {string} Texto CSV com duas seções: financeiro e reservas
+ * 
+ * Recursos implementados:
+ * 1. Validação de tipos (ambos devem ser arrays)
+ * 2. Conversão de dados para formato CSV
+ * 3. Proteção contra injeção de fórmulas com =, +, -, @ no início dos campos
+ * 4. Escape de caracteres especiais (vírgulas, aspas)
+ * 5. Duas seções separadas: dados financeiros e dados de reservas
+ * 6. Exportada em window.SplashPainel e module.exports
+ */
 function gerarCsvFinanceiro(financeiroData, reservasData) {
   if (!Array.isArray(financeiroData)) {
     throw new Error('financeiroData deve ser um array');
