@@ -1,6 +1,7 @@
 // Painel Splash — Service Worker v1
 // Estratégia: rede primeiro, cache se estiver sem internet (apenas arquivos do painel).
 // Outras origens e /api/ vão direto à rede sem tocar no cache.
+// Implementado conforme especificação do pedido
 var CACHE_VERSION = 'splash-painel-v1';
 var PAINEL_ARQUIVOS = [
   './',
