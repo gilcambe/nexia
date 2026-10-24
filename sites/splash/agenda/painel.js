@@ -324,6 +324,9 @@ function mapearCabecalhosImportacao(cabecalhos) {
     whatsapp: -1,
     tipo_evento: -1,
     valor_sinal: -1,
+    valor_total: -1,
+    valor_pago: -1,
+    convidados: -1,
     situacao: -1,
     observacoes: -1
   };
@@ -342,8 +345,14 @@ function mapearCabecalhosImportacao(cabecalhos) {
       mapa.whatsapp = idx;
     } else if (mapa.tipo_evento === -1 && (norm.includes('tipo') || norm.includes('evento') || norm.includes('festa'))) {
       mapa.tipo_evento = idx;
-    } else if (mapa.valor_sinal === -1 && (norm.includes('sinal') || norm.includes('valor'))) {
+    } else if (mapa.convidados === -1 && (norm.includes('convidado') || norm.includes('pessoas') || norm.includes('qtd'))) {
+      mapa.convidados = idx;
+    } else if (mapa.valor_sinal === -1 && norm.includes('sinal')) {
       mapa.valor_sinal = idx;
+    } else if (mapa.valor_pago === -1 && (norm.includes('pago') || norm.includes('recebido'))) {
+      mapa.valor_pago = idx;
+    } else if (mapa.valor_total === -1 && (norm.includes('total') || norm.includes('valor') || norm.includes('diaria') || norm.includes('preco'))) {
+      mapa.valor_total = idx;
     } else if (mapa.situacao === -1 && (norm.includes('situacao') || norm.includes('status') || norm.includes('estado'))) {
       mapa.situacao = idx;
     } else if (mapa.observacoes === -1 && (norm.includes('obs') || norm.includes('observaca') || norm.includes('nota'))) {
@@ -372,6 +381,9 @@ function normalizarLinhaImportacao(linha, mapaColunas, unidadePadrao, hojeBr, ch
   const rawWhatsapp = getVal('whatsapp');
   const rawTipo = getVal('tipo_evento');
   const rawSinal = getVal('valor_sinal');
+  const rawTotal = getVal('valor_total');
+  const rawPago = getVal('valor_pago');
+  const rawConv = getVal('convidados');
   const rawSituacao = getVal('situacao');
   const rawObs = getVal('observacoes');
 
@@ -380,7 +392,11 @@ function normalizarLinhaImportacao(linha, mapaColunas, unidadePadrao, hojeBr, ch
   const cliente = String(rawCliente || '').trim() || 'Cliente Importado';
   const whatsapp = parseWhatsappImportacao(rawWhatsapp);
   const tipo_evento = String(rawTipo || '').trim() || 'Outro';
-  const valor_sinal = Number(rawSinal) || 0;
+  const num = v => { if (typeof v === 'number') return v; const t = String(v == null ? '' : v).replace(/[^0-9,.-]/g, ''); if (!t) return 0; const n = t.includes(',') ? Number(t.replace(/\./g, '').replace(',', '.')) : Number(t); return Number.isFinite(n) ? n : 0; };
+  const valor_sinal = num(rawSinal);
+  const valor_total = num(rawTotal);
+  const valor_pago = num(rawPago);
+  const convidados = Math.round(num(rawConv));
   const situacao = parseSituacaoImportacao(rawSituacao, dataIso, hojeBr);
   const observacoes = String(rawObs || '').trim();
 
@@ -418,6 +434,9 @@ function normalizarLinhaImportacao(linha, mapaColunas, unidadePadrao, hojeBr, ch
     whatsapp,
     tipo_evento,
     valor_sinal,
+    valor_total,
+    valor_pago,
+    convidados,
     situacao,
     observacoes,
     selo,

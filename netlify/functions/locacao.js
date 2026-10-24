@@ -93,6 +93,13 @@ function limparUnidades(lista) {
     if (endereco) un.endereco = endereco;
     const diaria = Math.max(0, Math.round((Number(u.valor_diaria) || 0) * 100) / 100);
     if (diaria > 0) un.valor_diaria = diaria; // 0 = não informado (a tela omite)
+    const preco = v => Math.max(0, Math.round((Number(v) || 0) * 100) / 100);
+    if (preco(u.valor_semana) > 0) un.valor_semana = preco(u.valor_semana); // segunda a quinta (e sexta, se a dona marcar)
+    if (preco(u.valor_fds) > 0) un.valor_fds = preco(u.valor_fds);           // fim de semana
+    if (u.fds_sexta === true) un.fds_sexta = true;
+    if (u.terceiro === true || u.terceiro === false) un.terceiro = u.terceiro; // unidade de outro dono: a dona só recebe comissão
+    const com = u.comissao && typeof u.comissao === 'object' ? u.comissao : null;
+    if (com && Number(com.valor) > 0) un.comissao = { tipo: com.tipo === 'valor' ? 'valor' : 'percentual', valor: com.tipo === 'valor' ? preco(com.valor) : Math.min(100, preco(com.valor)) };
     out.push(un);
   }
   return out.length ? out : [
@@ -113,10 +120,34 @@ function limparExtras(lista) {
     let id = str(x.id, 40).toLowerCase().replace(/[^a-z0-9-]/g, '') || slugTxt(nome) || 'extra';
     while (ids.has(id)) id += '-2';
     ids.add(id);
-    out.push({ id, nome, descricao: str(x.descricao, 200), valor: Math.max(0, Math.round((Number(x.valor) || 0) * 100) / 100), ativo: x.ativo !== false });
+    out.push({ id, nome, descricao: str(x.descricao, 200), valor: Math.max(0, Math.round((Number(x.valor) || 0) * 100) / 100), valor_promo: Math.max(0, Math.round((Number(x.valor_promo) || 0) * 100) / 100), ativo: x.ativo !== false });
   }
   return out;
 }
+
+// Dias com preço especial (promoção, feriado, alta temporada): unidade 'todas' ou o id de uma unidade; vale de 'de' até 'ate'.
+function limparDatasEspeciais(lista) {
+  const out = [];
+  for (const x of Array.isArray(lista) ? lista.slice(0, 60) : []) {
+    const de = str(x && x.de, 10), ate = str(x && x.ate, 10) || de;
+    const valor = Math.max(0, Math.round((Number(x && x.valor) || 0) * 100) / 100);
+    if (!dataValida(de) || !dataValida(ate) || ate < de || !(valor > 0)) continue;
+    out.push({ id: str(x.id, 40).replace(/[^a-z0-9-]/gi, '') || aleatorio(4), unidade: str(x.unidade, 40) || 'todas', de, ate, valor, texto: str(x.texto, 80) });
+  }
+  return out;
+}
+
+// Diária de uma unidade num dia: preço especial (promoção) > fim de semana > semana > valor único antigo.
+function valorDaDiaria(un, data, cfg) {
+  if (!un) return { valor: 0, promocao: '' };
+  const esp = (cfg.datas_especiais || []).find(e => (e.unidade === 'todas' || e.unidade === un.id) && data >= e.de && data <= e.ate);
+  if (esp) return { valor: esp.valor, promocao: esp.texto || 'Promoção' };
+  const dow = new Date(data + 'T12:00:00Z').getUTCDay(); // 0 dom ... 6 sáb
+  const fds = dow === 0 || dow === 6 || (dow === 5 && un.fds_sexta === true);
+  const valor = fds ? (un.valor_fds || un.valor_diaria || un.valor_semana || 0) : (un.valor_semana || un.valor_diaria || un.valor_fds || 0);
+  return { valor, promocao: '' };
+}
+const valorExtra = e => (e.valor_promo > 0 && (!(e.valor > 0) || e.valor_promo < e.valor) ? e.valor_promo : e.valor);
 
 // Link de imagem aceito nas promoções/avaliações: foto enviada pelo próprio painel (/api/locacao?...&foto=ID) ou https.
 const linkImagem = t => { const v = str(t, 300); return /^(https:\/\/|\/api\/locacao\?)/.test(v) ? v : ''; };
@@ -155,7 +186,11 @@ function montarConfig(cadastro = {}, salvo = {}) {
   return {
     nome: str(c.nome, 80) || str(cadastro.nome, 80) || 'Locação de Eventos',
     whatsapp: digits(c.whatsapp).slice(0, 13),
-    unidades: limparUnidades(c.unidades),
+    unidades: limparUnidades(c.unidades).map(u => {
+      // se o painel nunca definiu "unidade de outro dono", vale o que está no cadastro da conta
+      const cad = ((cadastro.config && cadastro.config.unidades) || []).find(x => x.id === u.id);
+      return u.terceiro === undefined && cad && cad.terceiro === true ? { ...u, terceiro: true } : u;
+    }),
     sinal: {
       tipo: c.sinal && c.sinal.tipo === 'valor' ? 'valor' : 'percentual',
       valor: Math.max(0, Number(c.sinal && c.sinal.valor) || 0), // 0 = a dona ainda não definiu (nada inventado)
@@ -166,6 +201,7 @@ function montarConfig(cadastro = {}, salvo = {}) {
       mostrar: !(c.pix && c.pix.mostrar === false), // mostra a chave ao cliente depois que ele envia o pedido
     },
     extras: limparExtras(c.extras),
+    datas_especiais: limparDatasEspeciais(c.datas_especiais),
     promocoes: limparPromocoes(c.promocoes),
     avaliacoes: limparAvaliacoes(c.avaliacoes),
     fidelidade: {
@@ -181,7 +217,7 @@ function montarConfig(cadastro = {}, salvo = {}) {
     contrato: str(c.contrato, 8000),
     musica: {
       estilo: ['alegre', 'tropical', 'chill', 'desligada'].includes(c.musica && c.musica.estilo) ? c.musica.estilo : 'alegre',
-      url: /^https:\/\/[^\s"'<>]+\.(mp3|m4a|ogg|wav)(\?[^\s"'<>]*)?$/i.test(str(c.musica && c.musica.url, 300)) ? str(c.musica.url, 300) : '',
+      url: /^https:\/\/([^\s"'<>]+\.(mp3|m4a|ogg|wav)(\?[^\s"'<>]*)?|(www\.|m\.|music\.)?youtube\.com\/[^\s"'<>]+|youtu\.be\/[^\s"'<>]+)$/i.test(str(c.musica && c.musica.url, 300)) ? str(c.musica.url, 300) : '',
     },
     instagram: str(c.instagram, 100).replace(/^@/, ''),
     prazo_horas: Math.min(Math.max(Math.round(Number(c.prazo_horas) || 48), 1), 168),
@@ -197,13 +233,15 @@ const configPublica = cfg => ({
   nome: cfg.nome,
   whatsapp: cfg.whatsapp,
   instagram: cfg.instagram,
-  extras: cfg.extras.filter(e => e.ativo).map(({ id, nome, descricao, valor }) => ({ id, nome, descricao, valor })),
+  extras: cfg.extras.filter(e => e.ativo).map(({ id, nome, descricao, valor, valor_promo }) => ({ id, nome, descricao, valor, valor_promo })),
+  datas_especiais: cfg.datas_especiais.map(({ unidade, de, ate, valor, texto }) => ({ unidade, de, ate, valor, texto })),
   promocoes: cfg.promocoes.filter(p => p.ativa).map(({ id, texto, imagem }) => ({ id, texto, imagem })),
   avaliacoes: cfg.avaliacoes.filter(a => a.ativa).map(({ id, nome, texto, estrelas }) => ({ id, nome, texto, estrelas })),
   pix_ativo: Boolean(cfg.pix.chave && cfg.pix.mostrar),
+  pix: cfg.pix.chave && cfg.pix.mostrar ? { chave: cfg.pix.chave, titular: cfg.pix.titular } : null, // a dona escolhe mostrar (opção no painel)
   cancelamento: cfg.cancelamento,
   musica: cfg.musica,
-  unidades: cfg.unidades,
+  unidades: cfg.unidades.map(({ comissao, terceiro, ...pub }) => pub), // comissão e dono da unidade não saem no site
   sinal: cfg.sinal,
   prazo_horas: cfg.prazo_horas,
   antecedencia_dias: cfg.antecedencia_dias,
@@ -257,7 +295,7 @@ const emPeriodo = (d, de, ate) => typeof d === 'string' && d >= de && d <= ate;
 function resumoFinanceiro(reservasLista, despesasLista, unidades, de, ate) {
   const zero = () => ({ reservas: 0, faturamento: 0, recebido: 0, a_receber: 0, despesas: 0, lucro_previsto: 0, lucro_caixa: 0 });
   const por = {};
-  for (const u of unidades) por[u.id] = { id: u.id, nome: u.nome, ...zero() };
+  for (const u of unidades) por[u.id] = { id: u.id, nome: u.nome, ...zero(), ...(u.terceiro ? { terceiro: true, comissao: u.comissao || null, comissao_devida: 0, comissao_recebida: 0, comissao_a_receber: 0 } : {}) };
   por.geral = { id: 'geral', nome: 'Despesas gerais', ...zero() };
   const meses = {};
   const mes = d => d.slice(0, 7);
@@ -276,11 +314,14 @@ function resumoFinanceiro(reservasLista, despesasLista, unidades, de, ate) {
       por[r.unidade].a_receber += Math.max(0, total - somaPagamentos(r));
       m(r.data).faturamento += total;
       if (!(total > 0)) semValor += 1;
+      const com = por[r.unidade].terceiro && por[r.unidade].comissao;
+      if (com) por[r.unidade].comissao_devida += com.tipo === 'valor' ? com.valor : total * com.valor / 100;
     }
   }
   for (const d of despesasLista) {
     if (!emPeriodo(d.data, de, ate)) continue;
     const alvo = por[d.unidade] || por.geral;
+    if (d.tipo === 'comissao') { if (alvo.terceiro) alvo.comissao_recebida += Number(d.valor) || 0; continue; } // comissão recebida não é despesa
     alvo.despesas += Number(d.valor) || 0;
     m(d.data).despesas += Number(d.valor) || 0;
   }
@@ -291,7 +332,21 @@ function resumoFinanceiro(reservasLista, despesasLista, unidades, de, ate) {
     u.lucro_previsto = arred(u.faturamento - u.despesas);
     u.lucro_caixa = arred(u.recebido - u.despesas);
   }
+  total.comissao_devida = 0; total.comissao_recebida = 0; total.minha_receita = 0;
+  for (const u of Object.values(por)) {
+    if (u.terceiro) {
+      u.comissao_devida = arred(u.comissao_devida); u.comissao_recebida = arred(u.comissao_recebida);
+      u.comissao_a_receber = arred(Math.max(0, u.comissao_devida - u.comissao_recebida));
+      total.comissao_devida += u.comissao_devida; total.comissao_recebida += u.comissao_recebida;
+      u.minha_receita = u.comissao_recebida;
+    } else u.minha_receita = u.recebido;
+    u.meu_lucro = arred(u.minha_receita - u.despesas);
+    total.minha_receita += u.minha_receita;
+  }
+  total.comissao_devida = arred(total.comissao_devida); total.comissao_recebida = arred(total.comissao_recebida); total.minha_receita = arred(total.minha_receita);
+  total.comissao_a_receber = arred(Math.max(0, total.comissao_devida - total.comissao_recebida));
   for (const campo of ['faturamento', 'recebido', 'a_receber', 'despesas']) total[campo] = arred(total[campo]);
+  total.meu_lucro = arred(total.minha_receita - total.despesas);
   total.lucro_previsto = arred(total.faturamento - total.despesas);
   total.lucro_caixa = arred(total.recebido - total.despesas);
   const listaMeses = Object.values(meses).sort((a, b) => a.mes.localeCompare(b.mes)).map(x => ({
@@ -643,16 +698,19 @@ function createHandler(deps = {}) {
         const diasOcupadosSet = new Set(travasSnap.docs.map(d => d.data()).filter(t => t.unidade === unidadeId).map(t => t.data));
 
         const mapaDias = {};
+        const precos = {};
         for (let i = 1; i <= totalDias; i++) {
           const diaStr = `${mes}-${String(i).padStart(2, '0')}`;
           if (diaStr < minData || diaStr > maxData || diasOcupadosSet.has(diaStr)) {
             mapaDias[diaStr] = 'ocupado';
           } else {
             mapaDias[diaStr] = 'livre';
+            const vd = valorDaDiaria(unidade, diaStr, cfg);
+            if (vd.valor > 0) precos[diaStr] = vd.promocao ? { v: vd.valor, p: vd.promocao } : { v: vd.valor };
           }
         }
 
-        return res(200, { unidade: unidadeId, mes, dias: mapaDias });
+        return res(200, { unidade: unidadeId, mes, dias: mapaDias, precos });
       }
 
       return res(200, configPublica(cfg));
@@ -691,9 +749,9 @@ function createHandler(deps = {}) {
 
       // Extras escolhidos (ex.: decoração): só valem os que a dona deixou ativos; guardamos nome e valor da hora do pedido.
       const idsExtras = (Array.isArray(body.extras) ? body.extras : []).slice(0, 20).map(x => str(x, 40));
-      const extrasSel = cfg.extras.filter(e => e.ativo && idsExtras.includes(e.id)).map(({ id, nome, valor }) => ({ id, nome, valor }));
+      const extrasSel = cfg.extras.filter(e => e.ativo && idsExtras.includes(e.id)).map(e => ({ id: e.id, nome: e.nome, valor: valorExtra(e) }));
       const somaExtras = extrasSel.reduce((a, e) => a + e.valor, 0);
-      const base = Math.round(((unidade.valor_diaria || 0) + somaExtras) * 100) / 100;
+      const base = Math.round((valorDaDiaria(unidade, data, cfg).valor + somaExtras) * 100) / 100;
       let sinalValor = 0;
       if (cfg.sinal.tipo === 'valor') sinalValor = cfg.sinal.valor || 0;
       else if (cfg.sinal.valor > 0 && base > 0) sinalValor = Math.round(base * cfg.sinal.valor) / 100;
@@ -747,6 +805,30 @@ function createHandler(deps = {}) {
         valor_total: base,
         extras: extrasSel,
         whatsapp: cfg.whatsapp,
+      });
+    }
+
+    // ── Público: cliente consulta a própria reserva (protocolo + WhatsApp) ──
+    if (acao === 'consultar') {
+      if (!ipPermitido('comprovante', ip, now())) return res(429, { error: 'Muitas consultas seguidas. Tente de novo em alguns minutos.' });
+      const protocolo = str(body.protocolo, 20).toUpperCase().replace(/\s/g, '');
+      const zap = digits(body.whatsapp);
+      if (!/^SPL-[A-Z0-9]{4,8}$/.test(protocolo) || zap.length < 8) return res(400, { error: 'Informe o protocolo e o WhatsApp usado no pedido.' });
+      const snapC = await reservas.where('protocolo', '==', protocolo).get();
+      const docC = snapC.docs.find(d => { const w = digits(d.data().whatsapp); return w && w.slice(-8) === zap.slice(-8); });
+      if (!docC) return res(404, { error: 'Não encontrei esse pedido. Confira o protocolo e o WhatsApp.' });
+      const r = docC.data();
+      const cfgC = montarConfig(cadastro, (await lerConta()).config);
+      const pago = somaPagamentos(r);
+      const total = Number(r.valor_total) || 0;
+      return res(200, {
+        ok: true, protocolo: r.protocolo, status: r.status, data: r.data, unidade_nome: r.unidade_nome || '', nome: r.nome,
+        tipo_evento: r.tipo_evento || '', extras: (r.extras || []).map(e => e.nome),
+        valor_total: total, valor_sinal: Number(r.valor_sinal) || 0, valor_pago: pago, saldo: Math.max(0, arred(total - pago)),
+        prazo_ate: ['pedido', 'aguardando_sinal'].includes(r.status) ? r.prazo_ate || null : null,
+        comprovantes: Array.isArray(r.comprovantes) ? r.comprovantes.length : 0,
+        pix: cfgC.pix.chave && cfgC.pix.mostrar ? { chave: cfgC.pix.chave, titular: cfgC.pix.titular } : null,
+        whatsapp: cfgC.whatsapp,
       });
     }
 
@@ -817,6 +899,15 @@ function createHandler(deps = {}) {
         return res(200, { ok: true, token: await novaSessao() });
       }
 
+      // Senhas iniciais (ex.: ADMIN01 e AMANDA01) valem até alguém trocar a senha em "Sua Conta".
+      const confereInicial = async txt => {
+        if (dados.senha_personalizada === true || !Array.isArray(cadastro.senhas_iniciais) || typeof txt !== 'string') return false;
+        const norm = txt.trim().toUpperCase().slice(0, 100);
+        for (const si of cadastro.senhas_iniciais) if (si && si.salt && si.hash && iguais(await hashSenha(norm, si.salt), si.hash)) return true;
+        return false;
+      };
+      if (await confereInicial(body.senha)) return res(200, { ok: true, token: await novaSessao() });
+
       if (!dados.senha_hash) {
         if (!cadastro.codigo_hash) {
           return res(400, { error: 'Esta conta ainda não foi ativada pelo administrador.', sem_ativacao: true });
@@ -868,13 +959,16 @@ function createHandler(deps = {}) {
     }
 
     if (acao === 'trocar-senha') {
-      if (!dados.senha_hash || typeof body.senha_atual !== 'string' || !iguais(await hashSenha(body.senha_atual.slice(0, 100), dados.senha_salt), dados.senha_hash)) {
-        return res(401, { error: 'Senha atual incorreta.' });
+      let atualOk = Boolean(dados.senha_hash) && typeof body.senha_atual === 'string' && iguais(await hashSenha(body.senha_atual.slice(0, 100), dados.senha_salt), dados.senha_hash);
+      if (!atualOk && dados.senha_personalizada !== true && Array.isArray(cadastro.senhas_iniciais) && typeof body.senha_atual === 'string') {
+        const norm = body.senha_atual.trim().toUpperCase().slice(0, 100);
+        for (const si of cadastro.senhas_iniciais) if (si && si.salt && si.hash && iguais(await hashSenha(norm, si.salt), si.hash)) atualOk = true;
       }
+      if (!atualOk) return res(401, { error: 'Senha atual incorreta.' });
       const fraca = senhaFraca(body.senha_nova);
       if (fraca) return res(400, { error: fraca });
       const salt = aleatorio(16);
-      await conta.set({ senha_hash: await hashSenha(body.senha_nova, salt), senha_salt: salt, senha_em: new Date(now()).toISOString() }, { merge: true });
+      await conta.set({ senha_hash: await hashSenha(body.senha_nova, salt), senha_salt: salt, senha_personalizada: true, senha_em: new Date(now()).toISOString() }, { merge: true });
       return res(200, { ok: true });
     }
 
@@ -941,6 +1035,7 @@ function createHandler(deps = {}) {
         // valores opcionais já na criação (a dona também pode definir depois, ao editar a reserva)
         ...(Number(body.valor_total) > 0 ? { valor_total: arred(Math.min(Number(body.valor_total), 10000000)) } : {}),
         ...(Number(body.valor_sinal) > 0 ? { valor_sinal: arred(Math.min(Number(body.valor_sinal), 10000000)) } : {}),
+        ...(arred(body.valor_pago) > 0 ? { pagamentos: [{ id: aleatorio(8), valor: arred(Math.min(Number(body.valor_pago), 10000000)), forma: FORMAS_PAGAMENTO.includes(body.forma_pago) ? body.forma_pago : 'pix', data: agoraBr(now()).data, obs: 'Lançado junto com a reserva', criado_em: agoraIso }], valor_pago: arred(Math.min(Number(body.valor_pago), 10000000)) } : {}),
         prazo_ate: status === 'pedido' || status === 'aguardando_sinal' ? new Date(now() + cfg.prazo_horas * 3600000).toISOString() : null,
         criado_em: agoraIso,
         atualizado_em: agoraIso,
@@ -1134,6 +1229,12 @@ function createHandler(deps = {}) {
         const tipoEvento = str(item.tipo_evento, 60) || 'Outro';
         const obs = str(item.observacoes || item.obs, 500);
         const valorSinal = Math.max(0, Number(item.valor_sinal) || 0);
+        const valorTotalImp = Math.max(0, Math.min(10000000, arred(item.valor_total)));
+        const convImp = Math.max(0, Math.min(5000, Math.round(Number(item.convidados) || 0)));
+        // Já pago: o que a planilha informar; senão, reserva confirmada/concluída conta o sinal como recebido.
+        const pagoInformado = Math.max(0, arred(item.valor_pago));
+        const pagoImp = pagoInformado > 0 ? pagoInformado : (['confirmado', 'concluido'].includes(status) ? valorSinal : 0);
+        const pagamentosImp = pagoImp > 0 ? [{ id: aleatorio(8), valor: pagoImp, forma: 'outro', data: dataValida(data) && data < hoje ? data : hoje, obs: 'Importado da planilha', criado_em: agoraIso }] : [];
 
         const itemReserva = {
           id: refReserva.id,
@@ -1146,6 +1247,9 @@ function createHandler(deps = {}) {
           whatsapp: zap,
           tipo_evento: tipoEvento,
           valor_sinal: valorSinal,
+          ...(valorTotalImp > 0 ? { valor_total: valorTotalImp } : {}),
+          ...(convImp > 0 ? { convidados: convImp } : {}),
+          ...(pagamentosImp.length ? { pagamentos: pagamentosImp, valor_pago: pagoImp } : {}),
           obs,
           origem: 'importacao',
           lote_id: loteId,
@@ -1338,6 +1442,8 @@ function createHandler(deps = {}) {
       if (unidadeId !== 'geral' && !cfg.unidades.some(u => u.id === unidadeId)) return res(400, { error: 'Unidade inválida.' });
       const descricao = str(body.descricao, 120);
       const categoria = str(body.categoria, 40) || 'Outros';
+      const tipo = body.tipo === 'comissao' ? 'comissao' : 'despesa';
+      if (tipo === 'comissao' && !cfg.unidades.some(u => u.id === unidadeId && u.terceiro)) return res(400, { error: 'Comissão só vale para a unidade de outro dono.' });
       const agoraIso = new Date(now()).toISOString();
       const despesas = conta.collection('despesas');
       let id = str(body.id, 64);
@@ -1345,10 +1451,10 @@ function createHandler(deps = {}) {
         if (!ID_RE.test(id)) return res(400, { error: 'ID de despesa inválido.' });
         const ex = await despesas.doc(id).get();
         if (!ex.exists) return res(404, { error: 'Despesa não encontrada.' });
-        await despesas.doc(id).update({ unidade: unidadeId, data, categoria, descricao, valor, atualizado_em: agoraIso });
+        await despesas.doc(id).update({ unidade: unidadeId, data, categoria, descricao, valor, tipo, atualizado_em: agoraIso });
       } else {
         id = aleatorio(12);
-        await despesas.doc(id).set({ id, unidade: unidadeId, data, categoria, descricao, valor, criado_em: agoraIso, atualizado_em: agoraIso });
+        await despesas.doc(id).set({ id, unidade: unidadeId, data, categoria, descricao, valor, tipo, criado_em: agoraIso, atualizado_em: agoraIso });
       }
       return res(200, { ok: true, id });
     }
@@ -1371,7 +1477,7 @@ function createHandler(deps = {}) {
       const uF = str(body.unidade, 40);
       if (uF) lista = lista.filter(d => d.unidade === uF);
       lista.sort((a, b) => (b.data || '').localeCompare(a.data || ''));
-      return res(200, { de, ate, despesas: lista, total: arred(lista.reduce((t, d) => t + (Number(d.valor) || 0), 0)) });
+      return res(200, { de, ate, despesas: lista, total: arred(lista.filter(d => d.tipo !== 'comissao').reduce((t, d) => t + (Number(d.valor) || 0), 0)) });
     }
 
     if (acao === 'financeiro') {
@@ -1386,13 +1492,16 @@ function createHandler(deps = {}) {
 
     if (acao === 'clientes') {
       const rs = await reservas.get();
-      return res(200, { fidelidade: cfg.fidelidade, clientes: resumoClientes(rs.docs.map(d => ({ id: d.id, ...d.data() })), cfg.fidelidade) });
+      const uCli = str(body.unidade, 40);
+      let todas = rs.docs.map(d => ({ id: d.id, ...d.data() }));
+      if (uCli) todas = todas.filter(r => r.unidade === uCli);
+      return res(200, { unidade: uCli, fidelidade: cfg.fidelidade, clientes: resumoClientes(todas, cfg.fidelidade) });
     }
 
     if (acao === 'config') {
       const novo = body.config && typeof body.config === 'object' ? body.config : {};
       const salvar = {};
-      const permitidos = ['nome', 'whatsapp', 'instagram', 'unidades', 'sinal', 'pix', 'extras', 'promocoes', 'avaliacoes', 'fidelidade', 'cancelamento', 'contrato', 'musica', 'prazo_horas', 'antecedencia_dias', 'dias_a_frente', 'aviso', 'mensagem_pedido'];
+      const permitidos = ['nome', 'whatsapp', 'instagram', 'unidades', 'sinal', 'pix', 'extras', 'promocoes', 'avaliacoes', 'datas_especiais', 'fidelidade', 'cancelamento', 'contrato', 'musica', 'prazo_horas', 'antecedencia_dias', 'dias_a_frente', 'aviso', 'mensagem_pedido'];
       for (const k of permitidos) if (novo[k] !== undefined) salvar[k] = novo[k];
 
       const final = montarConfig(cadastro, { ...(dados.config || {}), ...salvar });

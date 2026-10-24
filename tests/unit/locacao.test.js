@@ -299,14 +299,17 @@ test('LOC14. só valem as mudanças de situação previstas (finais não voltam)
   assert.equal((await st('confirmado')).statusCode, 400, 'concluído é final');
 });
 
-test('LOC15. a rota pública não mostra a chave Pix e o sinal não vem com valor inventado', async () => {
+test('LOC15. a rota pública só mostra a chave Pix se a dona deixar e o sinal não vem com valor inventado', async () => {
   const a = await montar();
   const tok = await logar(a);
   await a.post({ acao: 'config', token: tok, config: { pix: { chave: '123.456.789-00', titular: 'Amanda' } } });
   const pub = await a.get({});
   assert.equal(pub.statusCode, 200);
-  assert.ok(!JSON.stringify(pub.json).includes('123.456.789'), 'Pix não aparece no público');
-  assert.equal(pub.json.pix, undefined);
+  assert.equal(pub.json.pix.chave, '123.456.789-00', 'a dona deixou "mostrar" ligado: o Pix aparece para o cliente');
+  await a.post({ acao: 'config', token: tok, config: { pix: { chave: '123.456.789-00', titular: 'Amanda', mostrar: false } } });
+  const oculto = await a.get({});
+  assert.ok(!JSON.stringify(oculto.json).includes('123.456.789'), 'com "mostrar" desligado o Pix não sai no público');
+  assert.equal(oculto.json.pix, null);
   const limpa = montarConfig({}, {});
   assert.equal(limpa.sinal.valor, 0);
   const painel = await a.post({ acao: 'listar', token: tok });

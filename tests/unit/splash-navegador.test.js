@@ -100,6 +100,7 @@ test('SPLASH-NAV1. site público: pedir um dia com decoração mostra Pix, valor
     const erros = [];
     page.on('pageerror', e => erros.push(String(e)));
     await page.goto(a.base + '/index.html');
+    await page.click('#card-santa-adelia');
     await page.waitForSelector('#cal-dias-grid .cal-day.livre:not([disabled])');
     assert.match(await page.textContent('#promocoes-lista'), /promoção de teste/);
     assert.match(await page.textContent('#preco-santa-adelia'), /900,00/);
@@ -131,7 +132,7 @@ test('SPLASH-NAV1. site público: pedir um dia com decoração mostra Pix, valor
     assert.equal(r.nome, 'Cliente de Teste');
     assert.deepEqual(r.extras.map(e => e.nome), ['Decoração']);
     assert.equal(r.valor_total, 1150);
-    assert.ok(!JSON.stringify((await a.chamar('GET', null, { site: 'splash' })).json).includes('pix-teste'), 'a chave Pix não vaza na rota pública');
+    assert.equal((await a.chamar('GET', null, { site: 'splash' })).json.pix.chave, 'pix-teste@exemplo.com', 'a dona deixou mostrar: o Pix aparece já na reserva');
   } finally { await a.fechar(); }
 });
 
@@ -165,7 +166,11 @@ test('SPLASH-NAV2. painel da Amanda: primeiro acesso, pedido pendente, sinal pag
     await page.waitForTimeout(400);
     await page.evaluate(() => navegarAba('pedidos'));
     await page.click('#lista-pedidos-pendentes .reserva-item');
-    const zap = await page.getAttribute('#md-acoes a[href^="https://wa.me/"]', 'href');
+    await page.click('#md-acoes >> text=Aceitar e enviar o Pix');
+    await page.waitForTimeout(500);
+    await page.evaluate(() => navegarAba('pedidos'));
+    await page.click('#lista-pedidos-pendentes .reserva-item');
+    const zap = await page.getAttribute('#md-acoes a:has-text("Reenviar o Pix")', 'href');
     assert.match(decodeURIComponent(zap), /300,00/, 'a mensagem do WhatsApp traz o valor do sinal');
     await page.click('#md-acoes >> text=Recebi o sinal');
     await page.waitForTimeout(500);

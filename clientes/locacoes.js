@@ -7,6 +7,11 @@
 const LOCACOES = {
   splash: {
     nome: 'Splash Eventos',
+    // Senhas iniciais (só hash): ADMIN01 (dono do sistema) e AMANDA01 (a dona). Valem até alguém trocar a senha no painel ("Sua Conta").
+    senhas_iniciais: [
+      { salt: 'd3451e7f34a8549290d4cda5b069c80b', hash: '0752321472aaccfe5e23961d97417d85e6b25587c15a30b6f71e8a2ac650a35c' },
+      { salt: 'c7d54e0a28d81cf3d477ef61d83a438d', hash: '692ff6b63c04bd3227af63f93b72136ec186fe14f7938d5cbd157b85299318b9' },
+    ],
     versao: 1,
     codigo_salt: 'f880ae6ea10238de715a549b8abb05f2',
     codigo_hash: 'e2d165583a27c742b72aff5b13db118428b7fb093222087a37692a24dfe75a38',
@@ -16,7 +21,7 @@ const LOCACOES = {
       instagram: 'splash_santaadelia',
       unidades: [
         { id: 'santa-adelia', nome: 'Splash Santa Adélia', endereco: 'Região de São Mateus, zona leste de São Paulo (SP)' },
-        { id: 'santa-barbara', nome: 'Splash Santa Bárbara', endereco: 'Região de São Mateus, zona leste de São Paulo (SP)' },
+        { id: 'santa-barbara', nome: 'Splash Santa Bárbara', endereco: 'Região de São Mateus, zona leste de São Paulo (SP)', terceiro: true }, // unidade de outro dono: a Amanda recebe comissão (definida no painel)
       ],
       // Opções extras que o cliente escolhe no pedido. valor 0 = "valor combinado com a Amanda" (ela define o preço no painel).
       extras: [
