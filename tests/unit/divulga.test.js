@@ -234,28 +234,28 @@ test('histórico com formato e serie: último item deve ter formato definido', a
 });
 
   test('deve salvar formato no histórico após rodar', async () => {
-    const dados = tmp();
-    // Prepara estado inicial com fila definida
-    const estadoInicial = { rodizio: 0, feitos: [], historico: [] };
-    fs.writeFileSync(path.join(dados, 'divulga-estado.json'), JSON.stringify(estadoInicial));
-    
-    // Mock da função fetch para simular sucesso nas redes
-    const fetchImpl = async u => ok({ id: 'test-post' });
-    
-    // Chama a função rodar
-    const r = await rodar({ acao: 'rodar', dados, env: ENV_META, fetchImpl, log: silencio });
-    
-    // Lê o estado atualizado para acessar o histórico
-    const estadoFinal = JSON.parse(fs.readFileSync(path.join(dados, 'divulga-estado.json'), 'utf8'));
-    const historico = estadoFinal.historico;
-    
-    // Verifica que o histórico tem pelo menos um item
-    assert.ok(historico.length > 0, 'Histórico deve ter pelo menos um item após rodar');
-    
-    // Pega o último item do histórico
-    const ultimoItem = historico[historico.length - 1];
-    
-    // Verifica que o último item possui a chave 'formato'
-    assert.ok('formato' in ultimoItem, 'Último item do histórico deve ter a chave "formato"');
-    assert.ok(ultimoItem.formato !== undefined, 'Formato deve estar definido no último item');
-  });
+  const dados = tmp();
+  // Prepara estado inicial com fila definida
+  const estadoInicial = { rodizio: 0, feitos: [], historico: [] };
+  fs.writeFileSync(path.join(dados, 'divulga-estado.json'), JSON.stringify(estadoInicial));
+  
+  // Mock da função fetch para simular sucesso nas redes
+  const fetchImpl = async u => ok({ id: 'test-post' });
+  
+  // Chama a função rodar
+  const r = await rodar({ acao: 'rodar', dados, env: ENV_META, fetchImpl, log: silencio });
+  
+  // Lê o estado atualizado para acessar o histórico
+  const estadoFinal = JSON.parse(fs.readFileSync(path.join(dados, 'divulga-estado.json'), 'utf8'));
+  const historico = estadoFinal.historico;
+  
+  // Verifica que o histórico tem pelo menos um item
+  assert.ok(historico.length > 0, 'Histórico deve ter pelo menos um item após rodar');
+  
+  // Pega o último item do histórico
+  const ultimoItem = historico[historico.length - 1];
+  
+  // Verifica que o último item possui a chave 'formato'
+  assert.ok('formato' in ultimoItem, 'Último item do histórico deve ter a chave "formato"');
+  assert.ok(ultimoItem.formato !== undefined, 'Formato deve estar definido no último item');
+});
