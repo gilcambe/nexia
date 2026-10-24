@@ -53,12 +53,12 @@ function TamanhoDaLetra() {
 
 function InfoRow({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
-    <div className="flex items-center justify-between gap-2 rounded-lg bg-background-100/70 px-3 py-1.5">
-      <span className="flex items-center gap-2 text-sm text-foreground-500">
+    <div className="min-w-0 rounded-lg bg-background-100/70 px-2.5 py-1">
+      <span className="flex items-center gap-1 text-[11px] text-foreground-500">
         <i className={`${icon} text-primary-500`}></i>
         {label}
       </span>
-      <span className="text-right text-sm font-medium text-foreground-900">{value}</span>
+      <span className="block text-sm font-medium leading-snug text-foreground-900">{value}</span>
     </div>
   );
 }
@@ -143,12 +143,12 @@ export default function Profile() {
       {aba === 'voce' && (
         <>
           <SobreVoce />
-          <Card padding="p-4">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="font-heading text-base font-semibold text-foreground-950"><i className="ri-sword-line mr-1 text-primary-500"></i>Seus dados e treino</h2>
+          <Card padding="p-3">
+            <div className="mb-1.5 flex items-center justify-between">
+              <h2 className="font-heading text-sm font-semibold text-foreground-950"><i className="ri-sword-line mr-1 text-primary-500"></i>Seus dados e treino</h2>
               <Link to="/onboarding" className="text-xs font-semibold text-primary-600">Refazer</Link>
             </div>
-            <div className="space-y-1.5">
+            <div className="grid grid-cols-2 gap-1.5">
               <InfoRow icon="ri-user-3-line" label="Nome" value={name} />
               <InfoRow icon="ri-calendar-line" label="Idade · altura · peso" value={[text(ob.age, ' anos'), height, text(ob.weight, ' kg')].filter((x) => x !== MISSING).join(' · ') || MISSING} />
               <InfoRow icon="ri-trophy-line" label="Objetivos" value={Array.isArray(ob.goals) && ob.goals.length ? (ob.goals as string[]).join(' + ') : text(ob.goal)} />

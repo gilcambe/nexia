@@ -142,7 +142,7 @@ export default function ResumoEvolucao({
         />
       </Card>}
 
-      <Card padding="p-4">
+      <Card padding="p-3">
         <PainelCorpo serie={serie} perfil={perfil} volume={volume} metas={metas} onSalvarMedida={salvarMedida} avatar={profile?.avatar} onMudarAvatar={mudarAvatar} />
       </Card>
 

@@ -53,12 +53,12 @@ export default function LembretesRefeicoes() {
   };
 
   return (
-    <div className="rounded-2xl border border-background-200 bg-background-50 p-4" data-testid="lembretes-refeicoes">
+    <div className="rounded-2xl border border-background-200 bg-background-50 px-3 py-2" data-testid="lembretes-refeicoes">
       <button type="button" onClick={() => setAberto((v) => !v)} className="flex w-full items-center gap-2 text-left" aria-expanded={aberto}>
-        <i className="ri-alarm-line text-lg text-primary-500"></i>
+        <i className="ri-alarm-line text-xl text-primary-500"></i>
         <div className="flex-1">
-          <h2 className="font-heading text-base font-bold text-foreground-950">Horários e lembretes das refeições</h2>
-          <p className="text-xs text-foreground-500">Ajuste os horários à sua rotina e receba aviso no celular.</p>
+          <h2 className="font-heading text-sm font-bold text-foreground-950">Horários e lembretes das refeições</h2>
+          <p className="text-xs text-foreground-500">Aviso no celular na hora de comer.</p>
         </div>
         <i className={`ri-arrow-${aberto ? 'up' : 'down'}-s-line text-xl text-foreground-500`}></i>
       </button>

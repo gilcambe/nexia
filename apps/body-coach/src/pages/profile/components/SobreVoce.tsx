@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import Card, { CardHeader } from '@/components/base/Card';
+import Card from '@/components/base/Card';
 import { useAuth } from '@/components/feature/AuthContext';
 import { getUserDoc, setUserDoc } from '@/lib/userData';
 
@@ -66,33 +66,29 @@ export default function SobreVoce() {
   };
 
   return (
-    <Card padding="p-5">
-      <CardHeader title="Sobre você" icon="ri-user-heart-line" />
-      <div className="flex items-center gap-4">
-        <button type="button" onClick={() => arquivo.current?.click()} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-full border-2 border-primary-300 bg-background-100" aria-label="Escolher foto de perfil">
+    <Card padding="p-3">
+      <div className="flex items-center gap-3">
+        <button type="button" onClick={() => arquivo.current?.click()} className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 border-primary-300 bg-background-100" aria-label="Escolher foto de perfil">
           {foto ? <img src={foto} alt="Sua foto de perfil" className="h-full w-full object-cover" /> : <i className="ri-camera-line text-2xl text-foreground-400"></i>}
         </button>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium text-foreground-900">Foto de perfil</p>
-          <button type="button" onClick={() => arquivo.current?.click()} className="mt-1 text-sm font-semibold text-primary-600 hover:underline">{foto ? 'Trocar foto' : 'Escolher foto'}</button>
-          {foto && <button type="button" onClick={() => setFoto(null)} className="ml-3 text-sm text-foreground-500 hover:underline">Remover</button>}
+          <label className="flex flex-col gap-0.5">
+            <span className="text-xs font-medium text-foreground-600">Como você quer ser chamado(a)?</span>
+            <input type="text" maxLength={30} value={apelido} onChange={(e) => setApelido(e.target.value)} placeholder="Seu nome ou apelido" className="rounded-lg border border-background-200 bg-background-50 px-2.5 py-1.5 text-sm outline-none focus:border-primary-300" />
+          </label>
+          <button type="button" onClick={() => arquivo.current?.click()} className="mt-0.5 text-xs font-semibold text-primary-600 hover:underline">{foto ? 'Trocar foto' : 'Escolher foto'}</button>
+          {foto && <button type="button" onClick={() => setFoto(null)} className="ml-3 text-xs text-foreground-500 hover:underline">Remover</button>}
           <input ref={arquivo} type="file" accept="image/*" className="hidden" onChange={(e) => { void escolherFoto(e.target.files?.[0]); e.target.value = ''; }} />
         </div>
       </div>
 
-      <label className="mt-4 flex flex-col gap-1">
-        <span className="text-sm font-medium text-foreground-600">Como você quer ser chamado(a)?</span>
-        <input type="text" maxLength={30} value={apelido} onChange={(e) => setApelido(e.target.value)} placeholder="Seu nome ou apelido" className="rounded-lg border border-background-200 bg-background-50 px-3 py-2.5 text-sm outline-none focus:border-primary-300" />
-      </label>
-
-      <div className="mt-4">
-        <p className="text-sm font-medium text-foreground-600">Alguma condição que muda o treino?</p>
-        <p className="text-xs text-foreground-500">O treino e as dicas se adaptam. Pode deixar em branco.</p>
-        <div className="mt-2 flex flex-wrap gap-2">
+      <div className="mt-2">
+        <p className="text-xs font-medium text-foreground-600">Alguma condição que muda o treino? <span className="font-normal text-foreground-500">(opcional)</span></p>
+        <div className="mt-1 flex flex-wrap gap-1.5">
           {LIMITACOES.map((l) => {
             const ativo = limites.includes(l);
             return (
-              <button key={l} type="button" onClick={() => setLimites(ativo ? limites.filter((x) => x !== l) : [...limites, l])} className={`rounded-full border px-3 py-2 text-xs font-medium transition ${ativo ? 'border-primary-300 bg-primary-500 text-background-50' : 'border-background-200 bg-background-50 text-foreground-700 hover:bg-background-100'}`}>
+              <button key={l} type="button" onClick={() => setLimites(ativo ? limites.filter((x) => x !== l) : [...limites, l])} className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${ativo ? 'border-primary-300 bg-primary-500 text-background-50' : 'border-background-200 bg-background-50 text-foreground-700 hover:bg-background-100'}`}>
                 {l}
               </button>
             );
@@ -100,8 +96,8 @@ export default function SobreVoce() {
         </div>
       </div>
 
-      <div className="mt-5 flex items-center gap-3">
-        <button type="button" onClick={salvar} disabled={salvando} className="rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-background-50 hover:bg-primary-600 disabled:opacity-60">{salvando ? 'Salvando...' : 'Salvar'}</button>
+      <div className="mt-2 flex items-center gap-3">
+        <button type="button" onClick={salvar} disabled={salvando} className="rounded-lg bg-primary-500 px-4 py-1.5 text-sm font-semibold text-background-50 hover:bg-primary-600 disabled:opacity-60">{salvando ? 'Salvando...' : 'Salvar'}</button>
         {msg && <span className="text-sm text-foreground-600">{msg}</span>}
       </div>
     </Card>

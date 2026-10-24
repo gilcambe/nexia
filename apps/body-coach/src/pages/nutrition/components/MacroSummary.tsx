@@ -9,10 +9,10 @@ function Ring({ pct, label, value, unit }: { pct: number; label: string; value: 
   return (
     <div className="flex flex-col items-center">
       <div
-        className="relative flex h-24 w-24 items-center justify-center rounded-full"
+        className="relative flex h-20 w-20 items-center justify-center rounded-full"
         style={{ background: `conic-gradient(oklch(var(--primary-500)) ${clamped}%, oklch(var(--background-200)) 0)` }}
       >
-        <div className="flex h-[76px] w-[76px] flex-col items-center justify-center rounded-full bg-background-50">
+        <div className="flex h-[62px] w-[62px] flex-col items-center justify-center rounded-full bg-background-50">
           <span className="font-heading text-lg font-bold leading-none text-foreground-950">{value}</span>
           <span className="text-xs text-foreground-400">{unit}</span>
         </div>
@@ -58,13 +58,12 @@ export default function MacroSummary({ meals, targets }: { meals: MealFood[]; ta
   const protein = sum(meals, 'protein');
   const carbs = sum(meals, 'carbs');
   const fat = sum(meals, 'fat');
-  const fiber = sum(meals, 'fiber');
 
   const remainingCal = targets.calories - calories;
   const remainingProtein = targets.protein - protein;
 
   return (
-    <div className="grid grid-cols-[auto_1fr] items-center gap-4">
+    <div className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2">
       <Ring
         pct={(calories / targets.calories) * 100}
         label="Calorias"
@@ -72,11 +71,10 @@ export default function MacroSummary({ meals, targets }: { meals: MealFood[]; ta
         unit="kcal"
       />
 
-      <div className="space-y-1.5">
+      <div className="space-y-1">
         <MacroBar label="Proteína" current={protein} target={targets.protein} unit="g" color="bg-primary-500" />
         <MacroBar label="Carboidratos" current={carbs} target={targets.carbs} unit="g" color="bg-accent-500" />
         <MacroBar label="Gorduras" current={fat} target={targets.fat} unit="g" color="bg-secondary-500" />
-        <MacroBar label="Fibras" current={fiber} target={targets.fiber} unit="g" color="bg-foreground-400" />
       </div>
 
       <p className="col-span-2 rounded-lg bg-secondary-100/50 px-2.5 py-1.5 text-xs leading-snug text-foreground-700">

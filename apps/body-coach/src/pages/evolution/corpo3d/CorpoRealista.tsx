@@ -76,7 +76,7 @@ export default function CorpoRealista({ valores, sexo, altura, gordura, onSalvar
 
   return (
     <div>
-      <div className="relative mx-auto aspect-[592/800] w-full max-w-[290px] overflow-hidden rounded-2xl bg-[#d9d6d2]" data-testid="corpo-realista" data-corpo={chave ?? 'padrao'}>
+      <div className="relative mx-auto aspect-[592/800] h-[min(46vh,392px)] max-w-full overflow-hidden rounded-2xl bg-[#d9d6d2]" data-testid="corpo-realista" data-corpo={chave ?? 'padrao'}>
         <canvas ref={canvas} className="h-full w-full" aria-label="Seu corpo realista com as suas medidas" role="img" />
         {vista === 'frente' && (Object.keys(ALTURA_NA_FOTO) as ParteCorpo[]).map((p) => {
           const ativo = parte === p;
@@ -159,7 +159,7 @@ export default function CorpoRealista({ valores, sexo, altura, gordura, onSalvar
           )}
         </div>
       )}
-      <p className="mt-2 text-xs text-foreground-500">
+      <p className="mt-1 text-[11px] leading-snug text-foreground-500">
         {legenda ?? `Corpo realista moldado com o seu peso, altura e ${medidas} de 6 medidas da fita.`} {onSalvarMedida && medidas < 6 ? 'Toque no + para colocar as que faltam.' : ''}
       </p>
     </div>

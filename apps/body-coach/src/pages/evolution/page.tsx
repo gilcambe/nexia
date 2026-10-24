@@ -14,6 +14,13 @@ import AbaFotos from './fotos/AbaFotos';
 import TreinoDietaCorpo from './avaliacao/TreinoDietaCorpo';
 
 type Aba = 'resumo' | 'corpo' | 'avaliacoes' | 'fotos' | 'graficos';
+const GRAFICOS = [
+  { id: 'medidas', label: 'Peso e medidas', icone: 'ri-line-chart-line' },
+  { id: 'treino', label: 'Treino e dieta', icone: 'ri-scales-3-line' },
+  { id: 'musculos', label: 'Músculos', icone: 'ri-fire-line' },
+  { id: 'periodo', label: 'Período', icone: 'ri-calendar-line' },
+] as const;
+
 const ABAS: { id: Aba; label: string; icone: string }[] = [
   { id: 'resumo', label: 'Resumo', icone: 'ri-dashboard-line' },
   { id: 'corpo', label: 'Corpo', icone: 'ri-user-heart-line' },
@@ -33,6 +40,7 @@ export default function Evolution() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   const [rapido, setRapido] = useState(false);
+  const [grafico, setGrafico] = useState<(typeof GRAFICOS)[number]['id']>('medidas');
 
   // Séries por grupo muscular nos últimos 7 dias, a partir dos treinos salvos.
   const [volumeSemana, setVolumeSemana] = useState<Record<string, number>>({});
@@ -52,7 +60,7 @@ export default function Evolution() {
   }, [user?.id]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <h1 className="font-heading text-xl font-bold text-foreground-950">Evolução</h1>
 
       <nav className="sticky top-0 z-20 -mx-1 grid grid-cols-5 gap-1 rounded-2xl border border-background-200 bg-background-50/95 p-1 backdrop-blur" aria-label="Seções da evolução">
@@ -103,17 +111,25 @@ export default function Evolution() {
       {aba === 'fotos' && <AbaFotos uid={user?.id} entries={entries} serie={serie} onMudou={reload} />}
       {aba === 'graficos' && (
         <>
-          <GraficosEvolucao serie={serie} metaGordura={goalBodyFat || null} metaPeso={goalWeight} />
-          <TreinoDietaCorpo uid={user?.id} serie={serie} />
-          <Card padding="p-5">
-            <div className="mb-3 flex items-center gap-2">
+          {/* Um gráfico por vez, escolhido numa grade de 4 (cabe sem rolar). */}
+          <div className="grid grid-cols-4 gap-1.5" role="group" aria-label="Gráficos da evolução">
+            {GRAFICOS.map((g) => (
+              <button key={g.id} type="button" onClick={() => setGrafico(g.id)} aria-pressed={grafico === g.id} className={`flex flex-col items-center gap-0.5 rounded-xl border px-1 py-1.5 text-[11px] font-medium leading-tight ${grafico === g.id ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-background-200 bg-background-50 text-foreground-600'}`}>
+                <i className={`${g.icone} text-lg`}></i>{g.label}
+              </button>
+            ))}
+          </div>
+          {grafico === 'medidas' && <GraficosEvolucao serie={serie} metaGordura={goalBodyFat || null} metaPeso={goalWeight} />}
+          {grafico === 'treino' && <TreinoDietaCorpo uid={user?.id} serie={serie} />}
+          {grafico === 'musculos' && <Card padding="p-3">
+            <div className="mb-2 flex items-center gap-2">
               <i className="ri-fire-line text-lg text-primary-500"></i>
               <h2 className="font-heading text-base font-semibold text-foreground-950">Músculos treinados (7 dias)</h2>
             </div>
             {Object.keys(volumeSemana).length === 0 ? (
               <p className="text-sm text-foreground-500">Faça um treino para ver aqui quantas séries cada músculo recebeu.</p>
             ) : (
-              <ul className="space-y-2.5">
+              <ul className="space-y-1.5">
                 {Object.entries(volumeSemana).sort((x, y) => y[1] - x[1]).map(([g, n]) => {
                   const max = Math.max(...Object.values(volumeSemana), 1);
                   const faixa = n >= 18 ? 'bg-primary-600' : n >= 10 ? 'bg-primary-500' : n >= 5 ? 'bg-primary-400' : 'bg-primary-300';
@@ -131,10 +147,10 @@ export default function Evolution() {
                 })}
               </ul>
             )}
-            <p className="mt-3 text-xs text-foreground-500">Referência por semana: 10 a 20 séries por músculo costuma funcionar bem para hipertrofia.</p>
-          </Card>
+            <p className="mt-2 text-xs text-foreground-500">Referência por semana: 10 a 20 séries por músculo costuma funcionar bem para hipertrofia.</p>
+          </Card>}
 
-          <PeriodoEAnalise entries={entries} />
+          {grafico === 'periodo' && <PeriodoEAnalise entries={entries} />}
         </>
       )}
     </div>

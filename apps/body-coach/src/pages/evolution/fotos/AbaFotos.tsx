@@ -126,30 +126,29 @@ export default function AbaFotos({
     : [];
 
   return (
-    <div className="space-y-4">
-      {!somenteComparar && <Card padding="p-5">
-        <h2 className="font-heading text-base font-semibold text-foreground-950">Fotos de evolução</h2>
-        <p className="mb-3 text-sm text-foreground-600">Sempre as 4 posições, no mesmo lugar e com a mesma luz. A câmera mostra o contorno e a sua foto anterior para alinhar.</p>
-        <label className="mb-3 block max-w-[200px]">
-          <span className="mb-1 block text-xs font-medium text-foreground-600">Data das fotos</span>
-          <input type="date" value={data} onChange={(e) => setData(e.target.value)} className="w-full rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-sm" />
-        </label>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+    <div className="space-y-2">
+      {!somenteComparar && <Card padding="p-3">
+        <div className="flex items-center gap-2">
+          <h2 className="flex-1 font-heading text-base font-semibold text-foreground-950">Fotos de evolução</h2>
+          <input type="date" value={data} onChange={(e) => setData(e.target.value)} className="rounded-lg border border-background-300 bg-background-50 px-2 py-1 text-xs" aria-label="Data das fotos" />
+        </div>
+        <p className="mb-2 text-xs leading-snug text-foreground-600">As 4 posições, mesmo lugar e mesma luz. A câmera mostra o contorno para alinhar.</p>
+        <div className="grid grid-cols-4 gap-1.5">
           {POSES.map((p) => (
-            <div key={p.id} className="rounded-xl border border-background-200 p-2">
+            <div key={p.id} className="rounded-xl border border-background-200 p-1">
               <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-foreground-800">
                 {novas[p.id] ? (
                   <img src={novas[p.id]!} alt={`Nova foto ${p.label}`} className="h-full w-full object-cover object-top" />
                 ) : (
                   <Silhueta pose={p.id} className="h-full w-full opacity-60" />
                 )}
-                <span className="absolute left-1.5 top-1.5 rounded-full bg-black/60 px-2 py-0.5 text-xs font-semibold text-white">{p.label}</span>
+                <span className="absolute inset-x-1 top-1 truncate rounded-full bg-black/60 px-1.5 py-0.5 text-center text-[10px] font-semibold text-white">{p.label.replace('Lado ', '')}</span>
               </div>
-              <div className="mt-2 flex gap-1.5">
-                <button type="button" onClick={() => setCamera(p.id)} className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-primary-500 px-2 py-1.5 text-xs font-semibold text-background-50 dark:text-foreground-950" aria-label={`Câmera ${p.label}`}>
-                  <i className="ri-camera-line"></i>{novas[p.id] ? 'Refazer' : 'Câmera'}
+              <div className="mt-1 flex gap-1">
+                <button type="button" onClick={() => setCamera(p.id)} className="flex flex-1 items-center justify-center rounded-lg bg-primary-500 py-1.5 text-sm text-background-50 dark:text-foreground-950" aria-label={`${novas[p.id] ? 'Refazer' : 'Câmera'} ${p.label}`}>
+                  <i className={novas[p.id] ? 'ri-refresh-line' : 'ri-camera-line'}></i>
                 </button>
-                <button type="button" onClick={() => { poseGaleria.current = p.id; galeria.current?.click(); }} className="rounded-lg border border-background-300 px-2 py-1.5 text-xs text-foreground-700" aria-label={`Galeria ${p.label}`}>
+                <button type="button" onClick={() => { poseGaleria.current = p.id; galeria.current?.click(); }} className="flex flex-1 items-center justify-center rounded-lg border border-background-300 py-1.5 text-sm text-foreground-700" aria-label={`Galeria ${p.label}`}>
                   <i className="ri-image-line"></i>
                 </button>
               </div>
@@ -175,9 +174,9 @@ export default function AbaFotos({
         {erro && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p>}
       </Card>}
 
-      <Card padding="p-5">
-        <h2 className="mb-3 font-heading text-base font-semibold text-foreground-950">Antes e depois</h2>
-        <div className="mb-3 grid grid-cols-4 gap-1 rounded-xl bg-background-100 p-1">
+      <Card padding="p-3">
+        <h2 className="mb-2 font-heading text-base font-semibold text-foreground-950">Antes e depois</h2>
+        <div className="mb-2 grid grid-cols-4 gap-1 rounded-xl bg-background-100 p-1">
           {POSES.map((p) => (
             <button key={p.id} type="button" onClick={() => setPose(p.id)} className={`rounded-lg py-1.5 text-xs font-semibold ${pose === p.id ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>
               {p.label.replace('Lado ', '')}
@@ -185,7 +184,7 @@ export default function AbaFotos({
           ))}
         </div>
         {comFoto.length < 2 ? (
-          <p className="rounded-xl border-2 border-dashed border-background-300 p-6 text-center text-sm text-foreground-500">
+          <p className="rounded-xl border-2 border-dashed border-background-300 p-3 text-center text-xs text-foreground-500">
             Salve fotos dessa posição em pelo menos duas datas para comparar.
           </p>
         ) : (
