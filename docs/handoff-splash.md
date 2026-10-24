@@ -1,5 +1,9 @@
 # Handoff: Splash (site + painel da Amanda) — leia tudo antes de mexer
 
+> **Começo rápido para uma nova IA (Claude Code):** (1) leia este arquivo inteiro; (2) conecte ao repositório (seção 1); (3) rode os testes (seção 9) para ver que está tudo verde ANTES de mexer;
+> (4) trabalhe sempre num ramo novo `claude/<assunto>` e abra PR para `develop`; (5) peça ao Gildivan o "Merge pull request"; (6) publique (seção 4); (7) peça para ele conferir no celular.
+> Nunca faça push direto em `develop`/`main`. Nunca apague dados do Firestore. Nunca mexa em outros clientes (Adriano Blumer etc.) nem em `nexia-ai/` ou `cloudflare/` (exceto o gancho de lembretes já feito) sem pedido explícito.
+
 Dono do projeto: Gildivan (leigo em programação, fala português, repositório `gilcambe/nexia`, marca "KERNEX"). Regras dele:
 **não pode quebrar nada**; sempre explicar em passos curtos, com links clicáveis; gastar poucos créditos; trabalhar só no site e painel de PRODUÇÃO (nada de páginas de teste).
 Cliente final: **Amanda**, dona da unidade 1 (Splash Santa Adélia). A unidade 2 (Santa Bárbara) é de OUTRO dono: Amanda só recebe comissão.
@@ -35,7 +39,8 @@ Fotos ficam em base64 no Firestore (máx. 600 KB cada). Comprovantes do cliente 
 2. **Site + painel (páginas estáticas):** NÃO sobem sozinhos. Disparar:
    `gh api repos/gilcambe/nexia/actions/workflows/379320658/dispatches -f ref=develop -f 'inputs[slug]=splasheventos' -f 'inputs[pasta]=sites/splash'`
    (workflow "Publicar site de cliente (Cloudflare Pages)"). Conferir: `gh api 'repos/gilcambe/nexia/actions/workflows/379320658/runs?per_page=1'` → `completed success`.
-   O app instalado usa `sw.js`; ao mudar arquivos do painel, aumente `CACHE_VERSION` em `sites/splash/agenda/sw.js`.
+   O app instalado usa `sw.js`; ao mudar arquivos do painel, aumente `CACHE_VERSION` em `sites/splash/agenda/sw.js` (atual: `splash-painel-v8`). NÃO use `clients.claim()` no sw: quebra os testes de navegador (o sw passaria a interceptar `/api/`).
+   `sites/splash/_headers` força `no-cache` no painel para o celular não ficar com versão velha.
 3. A sessão da IA pode não alcançar `*.pages.dev`/workers.dev por curl/WebFetch (lista de domínios permitidos); peça ao Gildivan para abrir e conferir, e diga isso a ele.
 
 ## 5. Acesso (senhas)
@@ -44,6 +49,7 @@ Fotos ficam em base64 no Firestore (máx. 600 KB cada). Comprovantes do cliente 
   Para "resetar": subir `versao` em `clientes/locacoes.js` e gerar novo código com `node scripts/locacao-codigo.js`, ou remover `senha_personalizada` no Firestore.
 - Antes o Gildivan já criou uma senha pelo código de 1º acesso (`75P84-YNJXJ`, uso único). Ela segue valendo junto com as iniciais até a troca.
 - Aconselhe sempre trocar a senha ao entregar para a Amanda (painel tem dados e pagamentos de clientes).
+- O login fica guardado no aparelho por 30 dias (`localStorage.splash_token`); a sessão vale 30 dias no servidor (`SESSAO_DIAS`).
 
 ## 6. O que foi entregue (todos os PRs para `develop`)
 Site novo e alegre (#1436), painel PWA com Financeiro/Despesas/Clientes (#1465/#1467), cancelamento + contrato + comprovante + música + aviso de pedido novo (#1468),
@@ -67,14 +73,35 @@ e o PR "melhorias de 23/10" (este handoff vai nele):
 - Escape de HTML em tudo que vem do cliente (`SplashPainel.escapeHtml` no painel, `esc` no site).
 - Itens de CFN/ética do Adriano (outro cliente) não se aplicam aqui.
 
-## 8. Pendências / ideias (nada disso foi pedido ainda como obrigatório)
-- Avisos de pedido novo só funcionam com o painel aberto; aviso com app fechado exige Web Push (VAPID) — não implementado.
-- Upload de vídeo grande: precisa Cloudflare R2 (dono precisa ativar); hoje só link YouTube/Vimeo/Instagram.
+## 7b. Entregas depois do #1470 (todas já em `develop` e publicadas)
+- **#1471** painel PWA instalável: `sw.js` v3+, `skipWaiting`, `_headers` no-cache, botão "Instalar app" (`beforeinstallprompt`).
+- **#1472** apagar reserva recusada/cancelada/vencida (ação `excluir`, trava do dia é liberada); **avisos push no celular** (Web Push com `netlify/functions/body-coach/push.js`; ações `push-chave`, `push-assinar`, `push-testar`; subcoleção `locacao_contas/<slug>/push`; `avisarPainel()` dispara em pedido novo);
+  rádio Splash (playlist do YouTube em `musica.url`, módulo `Musica` no site); menu inferior com 7 abas sem rolagem; gráficos (`renderizarGraficos` na aba Calendário); calendário do site sem cache (`no-store`).
+- **#1473** Ajustes reorganizado: tela inicial com cartões (cada unidade + Geral + Ferramentas), `ajustesIr(pag, un)` / `ajustesSub(sub)`; por unidade: Valores, Fotos, Vídeos, Decoração (extras), Promoções;
+  `extras[]` e `promocoes[]` ganharam `unidade` ('todas' ou id) e o site filtra pela unidade escolhida (`daUnidade`, `renderExtras`);
+  gerenciador de mídia `montarMidia` (legenda, ordem ◀▶, Ocultar = campo `oculta`, Excluir; vídeos com título e Excluir; ações `foto-editar`, `video-editar`, `foto-remover`, `video-remover`);
+  o "Editar site" (iframe) recarrega sozinho via `postMessage {nx:'recarregar'}`; avaliações de clientes: ação pública `avaliar` (fica `aprovada:false` em `avaliacoes_clientes`), admin `avaliacoes-clientes` e `avaliacao-moderar`, aprovadas saem em `avaliacoes` da config pública; formulário "Conte como foi" no site (honeypot `empresa`).
+- **#1474** Divulgar datas livres (imagem 1080x1920 por canvas, `gerarDivulgacao`); Lembretes ao cliente (`netlify/functions/locacao-lib/lembretes.js`: tipos `antes` (1 ou 2 dias), `saldo`, `avaliacao`; ações `lembretes` e `lembrete-marcar`; cron do Worker às 9h BRT em `cloudflare/lembretes.js` → `rodarSplash`); Patrocinadores (`config.patrocinadores`, seção "Parceiros do Splash" no site, `valor_acordado`/`obs` só no painel).
+- **#1475** pedido de avaliação depois da festa; vantagens dos parceiros na mensagem de confirmação (`montarMensagemConfirmacao`).
+- **#1476** fotos/vídeos que já vêm FIXOS no HTML do site (chaves `data-ed` em `#fotos-<unidade>` e `#videos-<unidade>`) aparecem no painel com "Tirar do site/Voltar ao site" (grava `conteudo.ocultos[chave]` via `site-salvar`; o site esconde também o cartão `.foto`/`.vid-card`).
+Atenção: módulos novos do backend devem ficar em SUBPASTAS de `netlify/functions/` (ex.: `locacao-lib/`), senão o teste CF5 falha (ele exige que cada `.js` da raiz seja um handler do Worker).
+
+## 8. Pendências / ideias
+- Mensagem automática no Direct do Instagram quando alguém comenta uma palavra: ABORTADO por enquanto (exige app Meta + permissões + possível revisão; ferramentas como ManyChat têm plano grátis mas os limites mudaram em 2026). Só retomar se o Gildivan pedir.
+- QR code do site: não feito (sem biblioteca disponível offline). A Amanda pode gerar um no Chrome (Salvar e compartilhar > Criar código QR).
+- WhatsApp automático para lembretes é pago (API oficial); por isso o painel lista e a Amanda envia com 1 toque.
+- Upload de vídeo grande: precisa Cloudflare R2; hoje só link YouTube/Vimeo/Instagram.
 - WhatsApp do site (11 94124-7074) veio do Instagram; a Amanda deve confirmar. `clientes/splash/site.json` tem capacidades inventadas (500/350) que NÃO são usadas.
-- Verificar em celular real: música automática (iOS exige toque; já tratado no primeiro toque), instalação do app, importação de planilha grande (reservas até meados de 2027).
-- Se algo falhar no editor "Salvar mudanças" não aparecer no site: conferir `?conteudo=1` na API e o timeout de 9 s no site (`iniciarConteudo`).
+- Fotos fixas do site não podem ser apagadas de vez (são arquivos do site); só "Tirar do site".
+- Nada disso foi conferido em celular real pela IA (a sessão não alcança `*.pages.dev`): sempre peça ao Gildivan para testar e contar o que viu (aviso push com app fechado, rádio, instalação do app, importação grande).
+- Se o editor "Salvar mudanças" não aparecer no site: conferir `?conteudo=1` na API e o timeout de 9 s no site (`iniciarConteudo`).
 
 ## 9. Checklist antes de qualquer PR
-1. `node --test tests/unit/splash-*.test.js tests/unit/locacao*.test.js tests/unit/cloudflare-host.test.js` (precisa passar tudo; testes de navegador usam Chromium em `/opt/pw-browsers`).
+1. `timeout 170 node --test tests/unit/splash-*.test.js tests/unit/locacao*.test.js tests/unit/cloudflare-host.test.js` (precisa passar tudo, hoje ~90 testes; NÃO rode `tests/unit/*.test.js` inteiro: passa de 2 min; testes de navegador usam Chromium em `/opt/pw-browsers`).
 2. Não remover funções existentes; mudar só o necessário; manter ids usados pelos testes (`cal-dias-grid`, `req-nome`, `btn-enviar-pedido`, `pix-chave`, `btn-wa-me`, etc.).
 3. PR sempre para `develop`; avisar o Gildivan do link e do passo "Merge pull request"; depois publicar (seção 4) e pedir para ele conferir.
+
+## 10. Texto pronto para colar numa nova sessão do Claude Code
+> Você vai continuar um projeto já em produção: site e painel de locação "Splash" (cliente Amanda) no repositório `gilcambe/nexia`. Antes de qualquer coisa, leia `docs/handoff-splash.md` inteiro. O dono (Gildivan) é leigo e fala português: responda em português, em passos curtos, com links clicáveis.
+> Regras: NÃO PODE QUEBRAR NADA; trabalhe só no site e painel de PRODUÇÃO (sem páginas de teste); gaste poucos créditos; um ramo `claude/<assunto>` por mudança, PR para `develop`, e peça ao Gildivan o "Merge pull request". Depois do merge, publique o site/painel pelo workflow da seção 4 e peça para ele testar no celular.
+> Passos: (1) se o repositório não estiver na sessão, use `add_repo` com owner `gilcambe`, repo `nexia`, access `push`, e clone; (2) `git fetch && git checkout -B claude/<assunto> origin/develop`; (3) rode os testes da seção 9 e confirme que passam; (4) faça a mudança pedida; (5) rode os testes de novo; (6) commit, push e abra o PR via `gh api` (GraphQL é bloqueado).
