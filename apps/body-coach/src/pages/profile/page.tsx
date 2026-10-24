@@ -15,6 +15,7 @@ import Abas, { useAba } from '@/components/base/Abas';
 const ABAS = [
   { id: 'voce', label: 'Você', icone: 'ri-user-3-line' },
   { id: 'saude', label: 'Saúde', icone: 'ri-heart-pulse-line' },
+  { id: 'evitar', label: 'Exercícios evitados', icone: 'ri-sword-line' },
   { id: 'conta', label: 'App e conta', icone: 'ri-settings-3-line' },
 ] as const;
 
