@@ -1162,12 +1162,14 @@ function selecionarUnidade(id) {
   setTimeout(() => document.getElementById('calendario-box').scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
 }
 
+document.addEventListener('visibilitychange', () => { if (!document.hidden && typeof unidadeAtual !== 'undefined' && unidadeAtual && document.getElementById('calendario-box').style.display === 'block') carregarDiasCalendario(); });
+
 function mudarMes(delta) { mesAtualISO = SplashCalendario.somarMeses(mesAtualISO, delta); carregarDiasCalendario(); }
 
 async function carregarDiasCalendario() {
   document.getElementById('cal-mes-nome').textContent = SplashCalendario.nomeMesPt(mesAtualISO);
   try {
-    const res = await fetch(`${API_LOCACAO}?site=${SLUG}&unidade=${unidadeAtual}&mes=${mesAtualISO}`);
+    const res = await fetch(`${API_LOCACAO}?site=${SLUG}&unidade=${unidadeAtual}&mes=${mesAtualISO}&t=${Date.now()}`, { cache: 'no-store' });
     const j = res.ok ? await res.json() : {};
     mapaDiasMes = j.dias || {}; precosMes = j.precos || {};
   } catch (err) { mapaDiasMes = {}; precosMes = {}; }
@@ -1261,7 +1263,7 @@ async function enviarPedidoReserva(e) {
 
 /* ---------- música de fundo (gerada no aparelho, sem arquivo; só liga quando a pessoa toca no botão) ---------- */
 const Musica = (function () {
-  let ctx = null, master = null, timer = null, passo = 0, proximo = 0, ligada = false, audioUrl = null, el = null, yt = null, gesto = false, pronta = false, silenciada = false;
+  let ctx = null, master = null, timer = null, passo = 0, proximo = 0, ligada = false, audioUrl = null, el = null, yt = null, gesto = false, pronta = false, silenciada = false, ytOk = false, ytLista = null;
   let COLCHEIA = 60 / 98 / 2, VOL = 1;
   const ACORDES = [[48, 52, 55, 59], [45, 48, 52, 55], [41, 45, 48, 52], [43, 47, 50, 53]]; // C7M, Am7, F7M, G7
   let ESCALA = [60, 62, 64, 67, 69, 72, 74, 76];
@@ -1291,7 +1293,7 @@ const Musica = (function () {
     while (proximo < ctx.currentTime + 0.5) { tocar(proximo, passo); proximo += COLCHEIA; passo++; }
   }
   function ligar() {
-    if (yt) { ytCmd('playVideo'); ligada = true; return true; }
+    if (yt) { ytCmd('unMute'); if (ytLista) ytCmd('setShuffle', [true]); ytCmd('playVideo'); ligada = true; return true; }
     if (audioUrl) { if (!el) { el = new Audio(audioUrl); el.loop = true; el.volume = 0.6; } el.play().catch(() => {}); ligada = true; return true; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return false;
@@ -1310,7 +1312,9 @@ const Musica = (function () {
     clearInterval(timer); timer = null; ligada = false;
     setTimeout(() => { if (!ligada && ctx) ctx.suspend(); }, 800);
   }
-  function ytCmd(f) { try { if (yt && yt.contentWindow) yt.contentWindow.postMessage(JSON.stringify({ event: 'command', func: f, args: '' }), '*'); } catch (e) {} }
+  function ytCmd(f, args) { try { if (yt && yt.contentWindow) yt.contentWindow.postMessage(JSON.stringify({ event: 'command', func: f, args: args === undefined ? '' : args }), '*'); } catch (e) {} }
+  function ytPlaylist(u) { const m = String(u || '').match(/[?&]list=([A-Za-z0-9_-]{10,})/); return m ? m[1] : null; }
+  addEventListener('message', ev => { if (!yt || ev.source !== yt.contentWindow) return; let d = ev.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { return; } } if (!d) return; const st = d.event === 'onStateChange' ? d.info : (d.info && d.info.playerState); if (st === 1) { ytOk = true; ligada = true; mostrarBotao(true); } });
   function ytId(u) { const m = String(u || '').match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/); return m ? m[1] : null; }
   function mostrarBotao(on) { const b = document.getElementById('btn-musica'); if (!b) return; b.classList.add('visivel'); b.classList.toggle('tocando', on); b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Desligar a música' : 'Ligar a música'); b.querySelector('i').className = on ? 'ri-volume-up-fill' : 'ri-volume-mute-fill'; }
   function comecar() {
@@ -1322,11 +1326,14 @@ const Musica = (function () {
     m = m || {};
     const btn = document.getElementById('btn-musica');
     if (m.estilo === 'desligada' || NX.editar) { silenciada = true; if (btn) btn.classList.remove('visivel'); return; }
-    const id = ytId(m.url);
-    audioUrl = !id && /^https:\/\//.test(m.url || '') ? m.url : null;
-    if (id && !yt) {
+    const id = ytId(m.url), lista = ytPlaylist(m.url);
+    audioUrl = !id && !lista && /^https:\/\//.test(m.url || '') ? m.url : null;
+    if ((id || lista) && !yt) {
+      ytLista = lista;
       yt = document.createElement('iframe');
-      yt.src = 'https://www.youtube.com/embed/' + id + '?enablejsapi=1&controls=0&loop=1&playlist=' + id + '&playsinline=1&origin=' + encodeURIComponent(location.origin);
+      const base = 'enablejsapi=1&controls=0&loop=1&playsinline=1&origin=' + encodeURIComponent(location.origin);
+      yt.src = lista ? 'https://www.youtube.com/embed/' + (id || 'videoseries') + '?listType=playlist&list=' + lista + '&' + base : 'https://www.youtube.com/embed/' + id + '?playlist=' + id + '&' + base;
+      yt.addEventListener('load', () => { try { yt.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*'); } catch (e) {} });
       yt.allow = 'autoplay; encrypted-media'; yt.title = 'Música de fundo'; yt.setAttribute('aria-hidden', 'true'); yt.tabIndex = -1;
       yt.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;border:0;opacity:0.01;pointer-events:none';
       document.body.appendChild(yt);
@@ -1335,7 +1342,7 @@ const Musica = (function () {
     COLCHEIA = 60 / e.bpm / 2; ESCALA = e.escala; VOL = e.vol;
     if (!pronta) {
       pronta = true;
-      const iniciar = () => { gesto = true; ['pointerdown', 'touchend', 'keydown', 'click'].forEach(t => removeEventListener(t, iniciar, true)); setTimeout(comecar, yt ? 600 : 0); if (yt) { setTimeout(comecar, 1800); } };
+      const iniciar = () => { gesto = true; if (!yt || ytOk) ['pointerdown', 'touchend', 'keydown', 'click'].forEach(t => removeEventListener(t, iniciar, true)); setTimeout(comecar, 0); if (yt && !ytOk) { setTimeout(comecar, 800); setTimeout(comecar, 2000); } };
       ['pointerdown', 'touchend', 'keydown', 'click'].forEach(t => addEventListener(t, iniciar, true));
       if (gesto) comecar();
     }

@@ -592,6 +592,26 @@ function createHandler(deps = {}) {
     const conta = db.collection(COLLECTION).doc(slug);
     const reservas = conta.collection('reservas');
     const diasLock = conta.collection('dias');
+    const getPush = () => require('./body-coach/push.js');
+
+    /** Avisa no celular da dona (Web Push) que algo novo chegou; nunca atrapalha o pedido. */
+    async function avisarPainel(titulo, corpo) {
+      try {
+        const snap = await conta.collection('push').get();
+        const subs = snap.docs.map(d => ({ ref: d.ref, ...d.data() }));
+        if (!subs.length) return 0;
+        const push = getPush();
+        const corte = Promise.race([
+          Promise.all(subs.map(async sub => {
+            const st = await push.enviarUm(db, sub, { titulo, corpo, url: './', tag: 'pedido-novo', urgente: true }).catch(() => 0);
+            if (st === 404 || st === 410) await sub.ref.delete().catch(() => {});
+            return st >= 200 && st < 300 ? 1 : 0;
+          })),
+          new Promise(r => setTimeout(() => r([0]), 3500)),
+        ]);
+        return (await corte).reduce((a, b) => a + b, 0);
+      } catch { return 0; }
+    }
 
     const lerConta = async () => { const s = await conta.get(); return s.exists ? s.data() : {}; };
 
@@ -791,6 +811,8 @@ function createHandler(deps = {}) {
         }
         throw e;
       }
+
+      await avisarPainel('Reserva nova!', `${pessoa.nome || 'Cliente'} pediu ${data.split('-').reverse().join('/')} — ${unidade.nome || 'Splash'}`);
 
       // A chave Pix só é mostrada a quem acabou de fazer um pedido (e só se a dona deixar ligado no painel).
       const pix = cfg.pix.chave && cfg.pix.mostrar ? { chave: cfg.pix.chave, titular: cfg.pix.titular } : null;
@@ -1125,6 +1147,37 @@ function createHandler(deps = {}) {
       }
 
       return res(200, { ok: true });
+    }
+
+    if (acao === 'excluir') {
+      const id = str(body.id, 64);
+      if (!ID_RE.test(id)) return res(400, { error: 'Reserva inválida.' });
+      const snapEx = await reservas.doc(id).get();
+      if (!snapEx.exists) return res(200, { ok: true });
+      const ex = snapEx.data();
+      if (!['recusado', 'cancelado', 'expirado'].includes(ex.status)) return res(400, { error: 'Só dá para excluir pedido recusado, cancelado ou vencido. Recuse ou cancele antes.' });
+      const lockEx = await diasLock.doc(`${ex.unidade}_${ex.data}`).get();
+      if (lockEx.exists && lockEx.data().reserva_id === id) await lockEx.ref.delete();
+      await reservas.doc(id).delete();
+      return res(200, { ok: true });
+    }
+
+    if (acao === 'push-chave') {
+      try { return res(200, { chave: (await getPush().chavesVapid(db)).publica }); } catch { return res(503, { error: 'Avisos indisponíveis agora.' }); }
+    }
+
+    if (acao === 'push-assinar') {
+      const sub = body.assinatura && typeof body.assinatura === 'object' ? body.assinatura : {};
+      const k = sub.keys || {};
+      const endpoint = str(sub.endpoint, 600);
+      if (!/^https:\/\//.test(endpoint) || !str(k.p256dh, 200) || !str(k.auth, 100)) return res(400, { error: 'Assinatura de aviso inválida.' });
+      await conta.collection('push').doc(await sha256(endpoint)).set({ endpoint, p256dh: str(k.p256dh, 200), auth: str(k.auth, 100), criado_em: new Date(now()).toISOString() });
+      return res(200, { ok: true });
+    }
+
+    if (acao === 'push-testar') {
+      const n = await avisarPainel('Aviso de teste', 'Pronto! Você vai receber um aviso assim a cada reserva nova.');
+      return res(200, { ok: true, enviados: n });
     }
 
     if (acao === 'editar') {
