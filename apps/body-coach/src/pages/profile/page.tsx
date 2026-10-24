@@ -82,14 +82,15 @@ export default function Profile() {
     getUserDoc<SavedProfile>(user.id, 'profile', 'main').then(setSaved).catch(() => {});
     
     // Busca nomes dos exercícios evitados para exibir de forma mais amigável
-    if (Array.isArray(ob.evitar) && ob.evitar.length > 0) {
+    const profileDoc = saved || profile;
+    if (profileDoc?.onboarding?.evitar && Array.isArray(profileDoc.onboarding.evitar) && profileDoc.onboarding.evitar.length > 0) {
       const nomes: Record<string, string> = {};
-      ob.evitar.forEach(exercicioId => {
+      profileDoc.onboarding.evitar.forEach(exercicioId => {
         nomes[exercicioId] = `Exercício #${exercicioId}`;
       });
       setExerciciosNomes(nomes);
     }
-  }, [user, ob.evitar]);
+  }, [user, saved, profile]);
 
   const navigate = useNavigate();
   const [aba, setAba] = useAba(ABAS.map((a) => a.id), 'voce');
