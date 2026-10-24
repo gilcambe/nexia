@@ -64,7 +64,8 @@ export function sexoDe(r: R): Sexo {
 // Objetivos marcados (pode ser mais de um). Perfis antigos só têm "goal".
 export function objetivosDe(r: R): string[] {
   const lista = Array.isArray(r?.goals) ? (r!.goals as unknown[]) : [];
-  const todos = [...lista, ...(r?.goal ? [r.goal] : [])].map((x) => String(x ?? '').trim()).filter(Boolean);
+  // Com a lista marcada, "goal" é só o resumo dela (ex.: Recomposição) e não entra de novo.
+  const todos = (lista.length ? lista : r?.goal ? [r.goal] : []).map((x) => String(x ?? '').trim()).filter(Boolean);
   return [...new Set(todos)];
 }
 
@@ -108,6 +109,33 @@ function hash(t: string): number {
   for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); }
   return h >>> 0;
 }
+
+// Ciclo menstrual (opcional, desligado por padrão: a aluna liga no Perfil).
+// A ciência mostra efeito pequeno e diferente de mulher para mulher (McNulty 2020; Colenso-Semple 2023):
+// o app só sugere, nunca corta o treino. Dias 1 a 3 com um pouco mais de reserva; avisos curtos por fase.
+export type FaseCiclo = 'menstrual' | 'folicular' | 'ovulacao' | 'lutea' | 'pre';
+export interface Ciclo { ligado?: boolean; inicio?: string; duracao?: number }
+
+export function faseDoCiclo(c: Ciclo | null | undefined, agora = new Date()): { fase: FaseCiclo; dia: number } | null {
+  if (!c?.ligado || !c.inicio) return null;
+  const ini = new Date(`${c.inicio}T12:00:00`);
+  if (Number.isNaN(ini.getTime())) return null;
+  const dur = Math.min(45, Math.max(21, Number(c.duracao) || 28));
+  const passados = Math.floor((new Date(agora.getFullYear(), agora.getMonth(), agora.getDate(), 12).getTime() - ini.getTime()) / 86_400_000);
+  if (passados < 0) return null;
+  const dia = (passados % dur) + 1;
+  const ovul = dur - 14;
+  const fase: FaseCiclo = dia <= 5 ? 'menstrual' : dia < ovul - 1 ? 'folicular' : dia <= ovul + 1 ? 'ovulacao' : dia > dur - 5 ? 'pre' : 'lutea';
+  return { fase, dia };
+}
+
+const AVISO_CICLO: Record<FaseCiclo, string> = {
+  menstrual: 'Fase menstrual: se tiver cólica ou cansaço, pegue mais leve (deixei mais reserva nos primeiros dias). Treinar costuma até aliviar.',
+  folicular: 'Fase folicular: muitas mulheres se sentem mais fortes agora. Boa hora para tentar subir a carga.',
+  ovulacao: 'Perto da ovulação: aqueça bem as articulações antes de pegar pesado.',
+  lutea: 'Fase lútea: o corpo esquenta mais. Beba mais água e mantenha as cargas se sentir mais cansaço.',
+  pre: 'Pré-menstrual: inchaço e cansaço são normais. Foque na técnica; carga se ajusta pelo que você sentir.',
+};
 
 // Bloco de 4 semanas (mesociclo): os exercícios acessórios mudam a cada bloco para o corpo não se acostumar.
 export function blocoAtual(agora = Date.now()): number {
@@ -240,6 +268,11 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
   if (gestante) avisos.push('Gestante: sem exercícios de abdômen nem terra hoje. Combine o treino com a sua médica ou médico.');
   if (cadeirante) avisos.push('Treino adaptado para cadeirante: só exercícios feitos sentado, sem pernas em pé, esteira ou impacto.');
   for (const m of (Array.isArray(e.respostas.modality) ? (e.respostas.modality as string[]) : [])) if (DICAS_MODALIDADE[m] && !cadeirante) avisos.push(DICAS_MODALIDADE[m]);
+  const ciclo = sexo === 'F' ? faseDoCiclo(e.respostas.ciclo as Ciclo | undefined) : null;
+  if (ciclo) {
+    if (ciclo.fase === 'menstrual' && ciclo.dia <= 3) rir += 1;
+    avisos.push(`Dia ${ciclo.dia} do ciclo. ${AVISO_CICLO[ciclo.fase]}`);
+  }
   if (rotina === ROTINAS[2]) { series = Math.max(2, series - 1); avisos.push('Seu dia já é pesado: deixei uma série a menos por exercício para você recuperar bem.'); }
   if (lesoes.size) avisos.push(`Evitei exercícios que sobrecarregam: ${[...lesoes].join(', ')}. Se doer durante o movimento, pare e avise o coach.`);
 
