@@ -1,0 +1,10 @@
+/agenda/sw.js
+  Cache-Control: no-cache
+/agenda/index.html
+  Cache-Control: no-cache
+/agenda/
+  Cache-Control: no-cache
+/agenda/painel.js
+  Cache-Control: no-cache
+/agenda/gestao.js
+  Cache-Control: no-cache
