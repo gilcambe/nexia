@@ -52,7 +52,7 @@ export default function MetasCorpo({ serie, metas, fotoMeta, salvar }: { serie: 
   };
 
   return (
-    <Card padding="p-3">
+    <Card padding="p-3" className="flex flex-col">
       <div className="flex items-center gap-2">
         <i className="ri-focus-3-line text-lg text-primary-500"></i>
         <div className="min-w-0 flex-1">
@@ -78,6 +78,11 @@ export default function MetasCorpo({ serie, metas, fotoMeta, salvar }: { serie: 
             </li>
           ))}
         </ul>
+      )}
+      {!editar && progresso.length === 0 && !fotoMeta && (
+        <p className="mt-2 hidden flex-1 items-center justify-center rounded-xl border-2 border-dashed border-background-300 px-3 py-2 text-center text-sm text-foreground-600 alto:flex" data-testid="metas-vazio">
+          Diga onde quer chegar e o app mostra quanto falta.
+        </p>
       )}
       {!editar && fotoMeta && (
         <div className="mt-4 grid grid-cols-2 gap-2">

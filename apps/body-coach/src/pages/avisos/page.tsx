@@ -48,7 +48,7 @@ export default function Avisos() {
   );
 
   return (
-    <div className="mx-auto max-w-xl space-y-2">
+    <div className="tela mx-auto max-w-xl">
       <header>
         <h1 className="font-heading text-xl font-bold text-foreground-950">Avisos no celular <span className="align-middle text-xs font-normal text-foreground-600">· grátis</span></h1>
       </header>
@@ -65,7 +65,7 @@ export default function Avisos() {
         </div>
       )}
 
-      <div className={`rounded-2xl border border-background-200 bg-background-50 px-3 py-0.5 ${ligado ? '' : 'opacity-70'}`} data-testid="avisos-prefs">
+      <div className={`flex flex-1 flex-col justify-around rounded-2xl border border-background-200 bg-background-50 px-3 py-0.5 ${ligado ? '' : 'opacity-70'}`} data-testid="avisos-prefs">
         <Chave on={prefs.mensagens} onChange={(v) => mudar({ ...prefs, mensagens: v })} rotulo="Mensagens da conversa" detalhe="Mensagem, ficha nova, dieta, treino feito" />
         <div className="border-t border-background-200">
           <Chave on={prefs.treino.ativo} onChange={(v) => mudar({ ...prefs, treino: { ...prefs.treino, ativo: v } })} rotulo="Hora do treino" detalhe="Só nos dias sem treino"

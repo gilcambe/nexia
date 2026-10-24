@@ -9,11 +9,11 @@ function Ring({ pct, label, value, unit }: { pct: number; label: string; value: 
   return (
     <div className="flex flex-col items-center">
       <div
-        className="relative flex h-[72px] w-[72px] items-center justify-center rounded-full"
+        className="relative flex h-[72px] w-[72px] items-center alto:h-24 alto:w-24 justify-center rounded-full"
         style={{ background: `conic-gradient(oklch(var(--primary-500)) ${clamped}%, oklch(var(--background-200)) 0)` }}
       >
-        <div className="flex h-14 w-14 flex-col items-center justify-center rounded-full bg-background-50">
-          <span className="font-heading text-lg font-bold leading-none text-foreground-950">{value}</span>
+        <div className="flex h-14 w-14 flex-col items-center justify-center rounded-full bg-background-50 alto:h-[76px] alto:w-[76px]">
+          <span className="font-heading text-lg font-bold alto:text-2xl leading-none text-foreground-950">{value}</span>
           <span className="text-xs text-foreground-400">{unit}</span>
         </div>
       </div>
@@ -40,13 +40,13 @@ function MacroBar({
   return (
     <div>
       <div className="flex items-baseline justify-between">
-        <span className="text-xs font-medium text-foreground-600">{label}</span>
+        <span className="text-xs font-medium text-foreground-600 alto:text-sm">{label}</span>
         <span className="text-xs text-foreground-500">
           {current.toLocaleString('pt-BR')} / {target.toLocaleString('pt-BR')} {unit}
           {over && <span className="ml-1 font-semibold text-primary-600">· acima</span>}
         </span>
       </div>
-      <div className="mt-0.5 h-1.5 w-full overflow-hidden rounded-full bg-background-200">
+      <div className="mt-0.5 h-1.5 w-full overflow-hidden rounded-full bg-background-200 alto:h-2">
         <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${pct}%` }} />
       </div>
     </div>
@@ -71,7 +71,7 @@ export default function MacroSummary({ meals, targets }: { meals: MealFood[]; ta
         unit="kcal"
       />
 
-      <div className="space-y-1">
+      <div className="space-y-1 alto:space-y-2">
         <MacroBar label="Proteína" current={protein} target={targets.protein} unit="g" color="bg-primary-500" />
         <MacroBar label="Carboidratos" current={carbs} target={targets.carbs} unit="g" color="bg-accent-500" />
         <MacroBar label="Gorduras" current={fat} target={targets.fat} unit="g" color="bg-secondary-500" />

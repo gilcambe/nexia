@@ -3,6 +3,7 @@ import {
   CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, Legend,
 } from 'recharts';
 import Card from '@/components/base/Card';
+import EstadoVazio from '@/components/base/EstadoVazio';
 import { dataBr, metricaInfo, prever } from '@/lib/avaliacao/calculos';
 import type { ItemSerie } from '@/lib/avaliacao/serie';
 import TabelaEvolucao from './TabelaEvolucao';
@@ -32,8 +33,8 @@ export default function GraficosEvolucao({ serie, metaGordura, metaPeso }: { ser
 
   if (serie.length < 2 || !atual || !info) {
     return (
-      <Card padding="p-5">
-        <p className="text-sm text-foreground-500">Os gráficos aparecem quando houver pelo menos duas avaliações. Importe as antigas na aba Avaliações.</p>
+      <Card padding="p-3" className="flex flex-col">
+        <EstadoVazio icone="ri-line-chart-line" texto="Os gráficos aparecem quando houver pelo menos duas avaliações. Importe as antigas na aba Avaliações." testId="graficos-vazio" />
       </Card>
     );
   }

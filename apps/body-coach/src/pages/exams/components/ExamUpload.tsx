@@ -93,10 +93,11 @@ export default function ExamUpload({
     'w-full rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-sm text-foreground-800 outline-none focus:border-primary-400';
 
   return (
-    <div>
+    <div className="flex flex-1 flex-col">
       <p className="text-xs text-foreground-600">Sangue, raio-X, ressonância ou laudos. Ficam salvos no seu histórico.</p>
 
-      <div className="mt-2 space-y-2">
+      {/* No celular o formulário ocupa o cartão todo: o campo de observações cresce e o botão fica embaixo. */}
+      <div className="mt-2 flex flex-1 flex-col gap-2">
         <button
           onClick={() => fileRef.current?.click()}
           className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-background-300 bg-background-50 px-3 py-2 transition hover:border-primary-400 hover:bg-background-100"
@@ -142,7 +143,7 @@ export default function ExamUpload({
           </div>
         </div>
 
-        <div>
+        <div className="flex flex-1 flex-col">
           <label className="mb-0.5 block text-xs font-medium text-foreground-600">Observações (opcional)</label>
           <textarea
             maxLength={500}
@@ -150,7 +151,7 @@ export default function ExamUpload({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Resultados relevantes, recomendações do médico..."
-            className={`${inputClass} resize-none`}
+            className={`${inputClass} min-h-[2.75rem] flex-1 resize-none`}
           />
         </div>
 
@@ -158,7 +159,7 @@ export default function ExamUpload({
           <button
             onClick={handleSubmit}
             disabled={saving}
-            className="inline-flex items-center gap-2 whitespace-nowrap rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600 disabled:opacity-50 dark:text-foreground-950"
+            className="inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600 disabled:opacity-50 alto:py-3.5 alto:text-base sm:w-auto dark:text-foreground-950"
           >
             <i className={saving ? 'ri-loader-4-line animate-spin' : 'ri-save-line'}></i>
             {saving ? 'Enviando...' : 'Salvar exame'}

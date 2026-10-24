@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { ehPorTempo } from '@/lib/porTempo';
 
 export interface NewSet {
@@ -20,11 +20,11 @@ function modoSalvo(ex: string, padraoLado: boolean) {
 }
 
 // "Quantas repetições ainda dava?" no lugar do número RIR: 0 = foi até a falha.
-const SOBRA: { rir: number; rotulo: string }[] = [
-  { rir: 0, rotulo: 'Nenhuma (falha)' },
-  { rir: 1, rotulo: '1' },
-  { rir: 2, rotulo: '2' },
-  { rir: 3, rotulo: '3 ou mais' },
+const SOBRA: { rir: number; rotulo: string; nome: string }[] = [
+  { rir: 0, rotulo: 'Falha', nome: 'Nenhuma (falha)' },
+  { rir: 1, rotulo: '1', nome: '1' },
+  { rir: 2, rotulo: '2', nome: '2' },
+  { rir: 3, rotulo: '3+', nome: '3 ou mais' },
 ];
 
 export default function SetEntry({
@@ -36,6 +36,7 @@ export default function SetEntry({
   sugestao,
   exercicio = '',
   onSubmit,
+  acaoAoLado,
 }: {
   minWeight: number;
   maxWeight: number;
@@ -45,6 +46,8 @@ export default function SetEntry({
   sugestao?: { weight: number; reps: number; motivo: string } | null;
   exercicio?: string;
   onSubmit: (set: NewSet) => void;
+  // Botão que fica ao lado de "Registrar" na barra fixa (ex.: Próximo exercício).
+  acaoAoLado?: ReactNode;
 }) {
   const [modo, setModo] = useState(() => modoSalvo(exercicio, weightUnit === 'kg/lado'));
   const mudarModo = (m: { porLado: boolean; unilateral: boolean }) => { setModo(m); try { localStorage.setItem(chaveModo(exercicio), JSON.stringify(m)); } catch { /* sem armazenamento */ } };
@@ -90,13 +93,13 @@ export default function SetEntry({
   return (
     <div>
       {sugestao && (
-        <div className="mb-3 flex items-center gap-2 rounded-xl border border-primary-200 bg-primary-50 p-2.5" title={sugestao.motivo}>
+        <div className="mb-2 flex items-center gap-2 rounded-xl border border-primary-200 bg-primary-50 px-2.5 py-1.5" title={sugestao.motivo}>
           <p className="min-w-0 flex-1 text-sm font-semibold text-primary-700"><i className="ri-line-chart-line mr-1"></i>Sugestão: {sugestao.weight} {weightUnit} × {sugestao.reps}</p>
-          <button type="button" onClick={() => { setWeight(String(sugestao.weight)); setReps(String(sugestao.reps)); }} className="shrink-0 rounded-lg bg-primary-500 px-3 py-2 text-sm font-semibold text-background-50 active:scale-95">Usar</button>
+          <button type="button" onClick={() => { setWeight(String(sugestao.weight)); setReps(String(sugestao.reps)); }} className="shrink-0 rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-semibold text-background-50 active:scale-95">Usar</button>
         </div>
       )}
       {ultima && (
-        <button type="button" onClick={() => { enviar({ weight: ultima.weight, reps: ultima.reps, rir, falha: rir === 0, nota: nota.trim() || undefined, ...(tempo ? { porTempo: true } : modo) }); limpar(); }} className="mb-3 w-full rounded-2xl bg-primary-100 px-4 py-3 text-base font-bold text-primary-800 active:scale-[0.98]" data-testid="repetir-serie">
+        <button type="button" onClick={() => { enviar({ weight: ultima.weight, reps: ultima.reps, rir, falha: rir === 0, nota: nota.trim() || undefined, ...(tempo ? { porTempo: true } : modo) }); limpar(); }} className="mb-2 w-full rounded-xl bg-primary-100 px-4 py-2.5 text-base font-bold text-primary-800 active:scale-[0.98]" data-testid="repetir-serie">
           <i className="ri-repeat-line mr-1"></i>{tempo ? `Repetir: ${ultima.reps} s` : `Repetir: ${ultima.weight} ${unidade}${modo.porLado ? ' cada lado' : ''} × ${ultima.reps}`}
         </button>
       )}
@@ -146,8 +149,8 @@ export default function SetEntry({
         <p className="mt-2 text-sm font-semibold text-foreground-600">Quantas repetições ainda dava?</p>
         <div className="mt-1 grid grid-cols-4 gap-1.5" role="radiogroup" aria-label="Quantas repetições ainda dava">
           {SOBRA.map((o) => (
-            <button key={o.rir} type="button" role="radio" aria-checked={rir === o.rir} onClick={() => setRir(o.rir)}
-              className={`min-h-[44px] rounded-xl border-2 px-1 py-1.5 text-sm font-semibold leading-tight ${rir === o.rir ? (o.rir === 0 ? 'border-red-400 bg-red-50 text-red-700' : 'border-primary-500 bg-primary-50 text-primary-800') : 'border-background-200 bg-background-50 text-foreground-700'}`}>
+            <button key={o.rir} type="button" role="radio" aria-checked={rir === o.rir} aria-label={o.nome} onClick={() => setRir(o.rir)}
+              className={`min-h-[44px] rounded-xl border-2 px-1 py-1.5 text-base font-semibold leading-tight ${rir === o.rir ? (o.rir === 0 ? 'border-red-400 bg-red-50 text-red-700' : 'border-primary-500 bg-primary-50 text-primary-800') : 'border-background-200 bg-background-50 text-foreground-700'}`}>
               {o.rotulo}
             </button>
           ))}
@@ -161,15 +164,19 @@ export default function SetEntry({
         {anotando && (
           <input value={nota} onChange={(e) => setNota(e.target.value)} maxLength={200} placeholder="Ex.: senti o ombro, pegada escorregou..." aria-label="Nota desta série" className="mt-2 w-full rounded-xl border-2 border-background-200 bg-background-50 px-3 py-3 text-base text-foreground-900 outline-none focus:border-primary-400" autoFocus />
         )}
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-primary-500 px-4 py-4 text-base font-bold text-background-50 shadow-sm transition active:scale-[0.98] disabled:bg-background-300 disabled:text-foreground-600"
-          data-testid="registrar-serie"
-        >
-          <i className="ri-check-line text-xl"></i>
-          {canSubmit ? (tempo ? `Registrar ${repsUsadas} s` : `Registrar ${pesoUsado} ${unidade} × ${repsUsadas}`) : 'Coloque a carga para registrar'}
-        </button>
+        {/* No celular, Registrar (e o botão ao lado) ficam fixos logo acima do menu: sempre à vista, sem rolar. */}
+        <div className="fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] z-30 flex gap-2 border-t border-background-200 bg-background-50/95 px-3 py-2 backdrop-blur sm:static sm:mt-3 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-none" data-testid="barra-serie">
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-primary-500 px-3 py-3.5 text-base font-bold text-background-50 shadow-sm transition active:scale-[0.98] disabled:bg-background-300 disabled:text-foreground-600"
+            data-testid="registrar-serie"
+          >
+            <i className="ri-check-line text-xl"></i>
+            <span className="truncate">{canSubmit ? (tempo ? `Registrar ${repsUsadas} s` : `Registrar ${pesoUsado} ${unidade} × ${repsUsadas}`) : 'Coloque a carga'}</span>
+          </button>
+          {acaoAoLado}
+        </div>
       </form>
     </div>
   );

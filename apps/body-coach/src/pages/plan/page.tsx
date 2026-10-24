@@ -65,7 +65,7 @@ export default function Plan() {
   }
 
   return (
-    <div className="space-y-3">
+    <div className="tela">
       <h1 className="font-heading text-xl font-bold text-foreground-950">Ficha de treino</h1>
 
       <Card padding="p-3">
@@ -92,21 +92,21 @@ export default function Plan() {
         )}
       </Card>
 
-      <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
+      <div className="flex flex-1 flex-col gap-2 md:grid md:grid-cols-2 lg:grid-cols-3">
         {dias.map((d, i) => {
           const proximo = i === ficha.proximoDia;
           const lista = previa(i);
           const mostra = proximo || aberto === i;
           return (
-            <div key={d.titulo} className={`rounded-2xl border px-3 py-2 ${proximo ? 'border-primary-300 bg-primary-100/50' : 'border-background-200 bg-background-50'}`}>
+            <div key={d.titulo} className={`flex flex-col rounded-2xl border px-3 py-2 ${proximo ? 'flex-1 ' : ''}${proximo ? 'border-primary-300 bg-primary-100/50' : 'border-background-200 bg-background-50'}`}>
               <button type="button" onClick={() => !proximo && setAberto(aberto === i ? null : i)} aria-expanded={mostra} className="flex w-full items-center justify-between gap-2 text-left">
                 <span className="min-w-0 truncate font-heading text-sm font-semibold text-foreground-950">{d.titulo}</span>
                 {!mostra && <span className="ml-auto shrink-0 text-xs text-foreground-500" title={lista.join(', ')}>{lista.length} exercícios</span>}
                 {proximo ? <span className="shrink-0 rounded-full bg-primary-500 px-2 py-0.5 text-xs font-semibold text-background-50">Próximo</span> : <i className={`shrink-0 text-foreground-400 ${mostra ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'}`}></i>}
               </button>
               {mostra && (
-                <ul className="mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5">
-                  {lista.map((n) => <li key={n} className="truncate text-xs text-foreground-600"><i className="ri-checkbox-circle-line mr-1 text-accent-600"></i>{n}</li>)}
+                <ul className="mt-1 grid flex-1 grid-cols-2 content-around gap-x-2 gap-y-0.5 alto:grid-cols-1">
+                  {lista.map((n) => <li key={n} className="truncate text-xs text-foreground-600 alto:text-sm"><i className="ri-checkbox-circle-line mr-1 text-accent-600"></i>{n}</li>)}
                 </ul>
               )}
               {proximo && (
@@ -127,7 +127,7 @@ export default function Plan() {
 // Ficha montada pelo coach: todos os treinos com séries, repetições, descanso, carga e observações.
 function FichaDoCoach({ ficha, dia, onTreinar }: { ficha: FichaCoach; dia: number; onTreinar: () => void }) {
   return (
-    <div className="space-y-3">
+    <div className="tela tela-fim">
       <header>
         <h1 className="font-heading text-xl font-bold text-foreground-950">Ficha de treino</h1>
         <p className="text-sm text-foreground-600">

@@ -53,21 +53,21 @@ function TamanhoDaLetra() {
 
 function InfoRow({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
-    <div className="flex items-baseline gap-2 py-0.5">
-      <span className="flex w-24 shrink-0 items-center gap-1 text-xs text-foreground-500">
+    <div className="flex flex-1 items-center gap-2 py-0.5">
+      <span className="flex w-24 shrink-0 items-center gap-1 text-xs text-foreground-500 alto:w-32 alto:text-sm">
         <i className={`${icon} text-primary-500`}></i>
         {label}
       </span>
-      <span className="min-w-0 flex-1 text-[13px] font-medium leading-snug text-foreground-900">{value}</span>
+      <span className="min-w-0 flex-1 text-[13px] font-medium leading-snug text-foreground-900 alto:text-base">{value}</span>
     </div>
   );
 }
 
 function TextBlock({ label, value }: { label: string; value: unknown }) {
   return (
-    <div className="flex items-baseline gap-2 py-1">
-      <p className="w-24 shrink-0 text-xs text-foreground-500">{label}</p>
-      <p className="min-w-0 flex-1 text-[13px] text-foreground-800">{text(value)}</p>
+    <div className="flex flex-1 items-center gap-2 py-1">
+      <p className="w-24 shrink-0 text-xs text-foreground-500 alto:w-32 alto:text-sm">{label}</p>
+      <p className="min-w-0 flex-1 text-[13px] text-foreground-800 alto:text-base">{text(value)}</p>
     </div>
   );
 }
@@ -121,7 +121,7 @@ export default function Profile() {
   const modality = Array.isArray(ob.modality) ? ob.modality : [];
 
   return (
-    <div className="space-y-3">
+    <div className="tela tela-fim">
       <h1 className="font-heading text-xl font-bold text-foreground-950">Perfil</h1>
 
       {!data.onboarding && (
@@ -143,12 +143,13 @@ export default function Profile() {
       {aba === 'voce' && (
         <>
           <SobreVoce />
-          <Card padding="p-3">
+          <Card padding="p-3" className="flex flex-col">
             <div className="mb-1.5 flex items-center justify-between">
               <h2 className="font-heading text-sm font-semibold text-foreground-950"><i className="ri-sword-line mr-1 text-primary-500"></i>Seus dados e treino</h2>
               <Link to="/onboarding" className="text-xs font-semibold text-primary-600">Refazer</Link>
             </div>
-            <div className="divide-y divide-background-200">
+            {/* As linhas dividem a altura do cartão (tela cheia, sem faixa vazia embaixo). */}
+            <div className="flex flex-1 flex-col divide-y divide-background-200">
               <InfoRow icon="ri-user-3-line" label="Nome" value={name} />
               <InfoRow icon="ri-calendar-line" label="Idade e corpo" value={[text(ob.age, ' anos'), height, text(ob.weight, ' kg')].filter((x) => x !== MISSING).join(' · ') || MISSING} />
               <InfoRow icon="ri-trophy-line" label="Objetivos" value={Array.isArray(ob.goals) && ob.goals.length ? (ob.goals as string[]).join(' + ') : text(ob.goal)} />
@@ -164,10 +165,10 @@ export default function Profile() {
       {aba === 'saude' && (
         <>
           <CicloCard />
-          <Card padding="p-3">
+          <Card padding="p-3" className="flex flex-col">
             <h2 className="font-heading text-sm font-semibold text-foreground-950"><i className="ri-heart-pulse-line mr-1 text-primary-500"></i>Saúde e segurança</h2>
             <p className="text-[11px] text-foreground-500">O app não diagnostica e não altera remédios.</p>
-            <div className="divide-y divide-background-200">
+            <div className="flex flex-1 flex-col divide-y divide-background-200">
               <TextBlock label="Histórico médico" value={ob.history} />
               <TextBlock label="Lesões anteriores" value={ob.injuries} />
               <TextBlock label="Sintomas atuais" value={ob.symptoms} />

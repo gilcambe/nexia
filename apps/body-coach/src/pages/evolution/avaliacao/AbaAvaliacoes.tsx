@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '@/components/base/Card';
+import EstadoVazio from '@/components/base/EstadoVazio';
 import { dataBr, type Avaliacao } from '@/lib/avaliacao/calculos';
 import { apagarAvaliacao, salvarAvaliacao, type PerfilAvaliacao } from '@/lib/avaliacao/dados';
 import { hojeIso } from '@/lib/avaliacao/importar';
@@ -72,7 +73,7 @@ export default function AbaAvaliacoes({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="tela tela-fim">
       <Card padding="p-3">
         <h2 className="font-heading text-base font-semibold text-foreground-950">Nova avaliação</h2>
         <p className="mb-2 text-xs text-foreground-600">Envie o arquivo e o app põe cada número no lugar, ou preencha à mão.</p>
@@ -94,9 +95,9 @@ export default function AbaAvaliacoes({
         {erro && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p>}
       </Card>
 
-      <Card padding="p-3">
+      <Card padding="p-3" className="flex flex-col">
         <h2 className="mb-1.5 font-heading text-base font-semibold text-foreground-950">Histórico de avaliações</h2>
-        {serie.length === 0 && <p className="text-sm text-foreground-500">Nenhuma avaliação ainda.</p>}
+        {serie.length === 0 && <EstadoVazio icone="ri-file-list-3-line" texto="Nenhuma avaliação ainda. Importe o laudo ou preencha à mão aqui em cima." testId="avaliacoes-vazio" />}
         <ul className="space-y-2">
           {[...serie].reverse().map((item) => (
             <li key={item.id} className="rounded-xl border border-background-200 p-3">

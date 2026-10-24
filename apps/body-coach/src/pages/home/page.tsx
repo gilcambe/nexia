@@ -46,7 +46,7 @@ export default function Home() {
   const saudacao = hora < 5 ? 'Boa noite' : hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
 
   return (
-    <div className="space-y-2.5">
+    <div className={verTudo ? 'space-y-2.5' : 'flex flex-1 flex-col gap-2.5'}>
       <header className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <h1 className="truncate font-heading text-lg font-bold leading-tight text-foreground-950">

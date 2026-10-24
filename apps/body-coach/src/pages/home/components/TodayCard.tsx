@@ -65,18 +65,29 @@ export default function TodayCard() {
         ? `Ficha ${DIVISOES[ficha.divisao].nome} · ${treino.sessao.estimatedMinutes} min · ${treino.sessao.exercises.length} exercícios`
         : 'Responda o questionário e o treino do seu plano aparece aqui.';
 
+  const nomesExercicios = (andamento ? andamento.session.exercises : sessaoCoach ? sessaoCoach.exercises : treino ? treino.sessao.exercises : []).map((e) => e.name);
+
   return (
-    <Card className="relative overflow-hidden" padding="p-3">
+    <Card className="relative flex flex-1 flex-col overflow-hidden" padding="p-3 alto:p-4">
       <div className="absolute right-0 top-0 h-full w-1.5 bg-primary-500"></div>
-      <h1 className="font-heading text-xl font-bold leading-tight text-foreground-950 md:text-[28px]">
+      <h1 className="font-heading text-xl font-bold leading-tight text-foreground-950 alto:text-2xl md:text-[28px]">
         {title}
       </h1>
-      <p className="mt-1 text-xs text-foreground-600">{subtitle}</p>
+      <p className="mt-1 text-xs text-foreground-600 alto:text-sm">{subtitle}</p>
+
+      {/* Os exercícios do dia em 2 colunas (só em celular alto; no baixo não cabem sem rolar). */}
+      {nomesExercicios.length > 0 && (
+        <ul className="mt-2 hidden flex-1 grid-cols-2 content-center gap-x-2 gap-y-1.5 alto:grid" data-testid="exercicios-hoje">
+          {nomesExercicios.map((n) => (
+            <li key={n} className="truncate rounded-lg bg-background-100 px-2 py-1.5 text-xs text-foreground-700" title={n}><i className="ri-checkbox-blank-circle-line mr-1 text-[10px] text-primary-500"></i>{n}</li>
+          ))}
+        </ul>
+      )}
 
       <div className="mt-2 flex flex-col gap-2 sm:flex-row">
         <button
           onClick={() => navigate('/workout')}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600 whitespace-nowrap"
+          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600 alto:py-3.5 alto:text-base"
         >
           <i className="ri-play-circle-line text-lg"></i>
           {andamento ? 'CONTINUAR TREINO' : 'INICIAR TREINO'}

@@ -61,7 +61,7 @@ export default function Exams() {
   };
 
   return (
-    <div className="space-y-2">
+    <div className="tela tela-fim">
       <header>
         <h1 className="font-heading text-xl font-bold text-foreground-950">Saúde e exames</h1>
       </header>
@@ -69,9 +69,9 @@ export default function Exams() {
       {/* No celular: uma parte por aba (cabe sem rolar). No computador, tudo lado a lado. */}
       <div className="lg:hidden"><Abas abas={ABAS} atual={aba} onMudar={setAba} rotulo="Partes dos exames" /></div>
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_380px] lg:gap-6">
-        <div className="space-y-3">
-          <Card padding="p-3" className={aba === 'enviar' ? '' : 'hidden lg:block'}>
+      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[1fr_380px] lg:gap-6">
+        <div className={`${aba === 'marcadores' ? 'hidden' : 'flex flex-1 flex-col gap-3'} lg:block lg:space-y-3`}>
+          <Card padding="p-3" className={aba === 'enviar' ? 'flex flex-1 flex-col lg:block' : 'hidden lg:block'}>
             <div className="mb-1 flex items-center gap-2">
               <i className="ri-file-upload-line text-lg text-primary-500"></i>
               <h2 className="font-heading text-base font-semibold text-foreground-950">Enviar exame</h2>
@@ -79,7 +79,7 @@ export default function Exams() {
             <ExamUpload userId={user?.id} onSaved={() => { reload(); setAba('meus'); }} />
           </Card>
 
-          <Card padding="p-3" className={aba === 'meus' ? '' : 'hidden lg:block'}>
+          <Card padding="p-3" className={aba === 'meus' ? 'flex flex-1 flex-col lg:block' : 'hidden lg:block'}>
             <div className="mb-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <i className="ri-folder-open-line text-lg text-secondary-500"></i>
@@ -109,7 +109,7 @@ export default function Exams() {
           </Card>
         </div>
 
-        <Card padding="p-3" className={aba === 'marcadores' ? '' : 'hidden lg:block'}>
+        <Card padding="p-3" className={aba === 'marcadores' ? 'flex flex-1 flex-col justify-between lg:block' : 'hidden lg:block'}>
           <div className="mb-1 flex items-center gap-2">
             <i className="ri-stethoscope-line text-lg text-accent-500"></i>
             <h2 className="font-heading text-base font-semibold text-foreground-950">Marcadores de sangue</h2>

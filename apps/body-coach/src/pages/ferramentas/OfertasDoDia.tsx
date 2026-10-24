@@ -1,6 +1,7 @@
 // "Ofertas do dia" da Loja: produtos de treino que o robô de afiliados encontrou (links já com o código de afiliado).
 import { useEffect, useState } from 'react';
 import { chatApi } from '@/lib/chat';
+import EstadoVazio from '@/components/base/EstadoVazio';
 
 export interface OfertaLoja {
   id: string; loja: string; titulo: string; preco: number | null; preco_antigo: number | null;
@@ -69,6 +70,6 @@ export default function OfertasDoDia() {
     return () => { vivo = false; };
   }, []);
   if (ofertas === null) return <p className="text-sm text-foreground-500"><i className="ri-loader-4-line mr-1 animate-spin"></i>Carregando ofertas...</p>;
-  if (!ofertas.length) return <p className="text-sm text-foreground-500">Sem ofertas agora. Veja "Para você" ou o "Catálogo".</p>;
+  if (!ofertas.length) return <EstadoVazio icone="ri-price-tag-3-line" texto={<>Sem ofertas agora. Veja &quot;Para você&quot; ou o &quot;Catálogo&quot;.</>} testId="ofertas-vazio" />;
   return <OfertasLista ofertas={ofertas} />;
 }
