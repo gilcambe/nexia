@@ -329,3 +329,20 @@ test('LOC16. calendário e listagem por unidade funcionam sem índice composto d
   assert.equal(lista.statusCode, 200);
   assert.deepEqual(lista.json.itens.map(i => i.nome), ['Outra Pessoa']);
 });
+
+test('LOC17. painel: só dá para apagar reserva recusada/cancelada; ativa é protegida', async () => {
+  const a = await montar();
+  const token = await logar(a, '33.0.0.2');
+  await a.post(pedidoPadrao);
+  const id = [...a.db.docs.entries()].find(([k]) => k.includes('/reservas/'))[1].id;
+  const nega = await a.post({ acao: 'excluir', token, id });
+  assert.equal(nega.statusCode, 400, 'pedido ativo não pode ser apagado');
+  await a.post({ acao: 'status', token, id, status: 'recusado' });
+  const ok = await a.post({ acao: 'excluir', token, id });
+  assert.equal(ok.statusCode, 200);
+  assert.ok(![...a.db.docs.keys()].some(k => k.includes('/reservas/' + id)), 'reserva sumiu');
+  const mapa = await a.get({ unidade: 'santa-adelia', mes: '2026-10' });
+  assert.equal(mapa.json.dias['2026-10-15'], 'livre');
+  const sem = await a.post({ acao: 'excluir', id });
+  assert.equal(sem.statusCode, 401, 'sem login não apaga');
+});

@@ -153,8 +153,16 @@
 .cfg-bloco{border:1px solid var(--linha);border-radius:12px;padding:12px;margin:10px 0;background:rgba(255,255,255,.02)}
 .check-linha{display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:13px}
 .valores-reserva{margin-top:12px;padding-top:10px;border-top:1px solid var(--linha)}
-  .nav-abas { overflow-x: auto; justify-content: flex-start !important; }
-  .nav-aba-btn { flex: 0 0 auto; min-width: 74px; padding-left: 6px; padding-right: 6px; }
+  .nav-abas { justify-content: space-between !important; padding-left: 2px !important; padding-right: 2px !important; }
+  .nav-aba-btn { flex: 1 1 0; min-width: 0; padding: 6px 0; font-size: 10px; gap: 2px; letter-spacing: -.2px; }
+  .nav-aba-btn span:not(.badge-bolinha) { max-width: 100%; overflow: hidden; text-overflow: clip; white-space: nowrap; }
+  .nav-aba-btn i { font-size: 19px; }
+  .graf-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-top: 10px; }
+  .graf-caixa { background: rgba(255,255,255,.03); border: 1px solid var(--linha); border-radius: 12px; padding: 12px; }
+  .graf-caixa h4 { font-size: 14px; margin-bottom: 8px; color: var(--cor-destaque); }
+  .graf-leg { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 12px; color: var(--suave); margin-top: 6px; }
+  .graf-leg i { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; font-style: normal; }
+  .graf-barra { height: 18px; border-radius: 9px; overflow: hidden; display: flex; background: rgba(255,255,255,.08); }
   .grade-g { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin: 12px 0; }
   .cartao-g { background: var(--cartao); border: 1px solid var(--linha); border-radius: 12px; padding: 14px; margin-bottom: 10px; }
   .cartao-g h4 { margin-bottom: 6px; }
@@ -261,6 +269,10 @@
       <div id="grid-calendario-painel" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;"></div>
       <div class="legenda-cal" id="legenda-cal"></div>
       <p class="suave" style="margin-top:10px">Toque num dia para ver a reserva. Dia livre: toque para lançar uma reserva ou bloquear.</p>
+    </div>
+      <div class="card" id="painel-graficos">
+      <div class="card-header"><div class="card-title">Resumo visual</div></div>
+      <div id="graficos-corpo"><p class="suave">Carregando…</p></div>
     </div>
   </section>
 
@@ -530,9 +542,9 @@
         <h4 class="cfg-sub">Música do site</h4>
         <label>Estilo da música</label>
         <select id="cfg-musica-estilo"><option value="alegre">Alegre (padrão)</option><option value="tropical">Tropical, mais animada</option><option value="chill">Calma, para relaxar</option><option value="desligada">Sem música</option></select>
-        <label>Ou use a sua música: cole o link de um clipe do YouTube (a música do clipe toca no site) ou de um arquivo MP3 (opcional)</label>
-        <input type="url" id="cfg-musica-url" placeholder="https://www.youtube.com/watch?v=...">
-        <p class="cfg-ajuda">A música começa sozinha quando o cliente toca em qualquer lugar do site, e ele pode desligar no botãozinho de som.</p>
+        <label>Rádio Splash: cole o link de uma PLAYLIST do YouTube (ex.: youtube.com/playlist?list=...) e as músicas tocam em sequência, sem parar. Também aceita um clipe do YouTube ou um MP3 (opcional)</label>
+        <input type="url" id="cfg-musica-url" placeholder="https://www.youtube.com/playlist?list=...">
+        <p class="cfg-ajuda">O celular só deixa tocar som depois que a pessoa toca na tela. Por isso a música (ou a rádio) começa no primeiro toque em qualquer lugar do site, e ele pode desligar no botãozinho de som.</p>
 
         <h4 class="cfg-sub">Extras que o cliente pode escolher (ex.: decoração)</h4>
         <p class="cfg-ajuda">Deixe o valor em 0 para combinar o preço com o cliente pelo WhatsApp.</p>
@@ -606,7 +618,7 @@
       <h4 style="font-size:14px;color:#fff;margin-bottom:8px">Adicionar Vídeo</h4>
       <p style="font-size:12px;color:var(--suave);margin-bottom:8px">Envie o vídeo do celular para o YouTube (pode ser como não listado) e cole o link aqui.</p>
       <label>Link do Vídeo (YouTube, Vimeo ou Instagram Reel)</label>
-      <input type="url" id="midia-video-url" placeholder="https://www.youtube.com/watch?v=...">
+      <input type="url" id="midia-video-url" placeholder="https://www.youtube.com/playlist?list=...">
       <label>Título do Vídeo (opcional)</label>
       <input type="text" id="midia-video-titulo" placeholder="Ex: Tour do Salão Principal">
       <button class="btn pequeno ouro" style="margin-top:8px" onclick="salvarVideoServidor()">Salvar Vídeo</button>
@@ -799,9 +811,31 @@
       : Notification.permission === 'granted' ? 'Avisos ligados: você recebe um aviso e um som a cada pedido novo, com o painel aberto.'
       : Notification.permission === 'denied' ? 'Avisos bloqueados no navegador. Libere nas configurações do site e tente de novo.' : '';
   }
-  function ativarAvisos() {
+  function chaveVapid(b64) { const p = '='.repeat((4 - b64.length % 4) % 4); const r = atob((b64 + p).replace(/-/g, '+').replace(/_/g, '/')); return Uint8Array.from(r, c => c.charCodeAt(0)); }
+  async function assinarPush() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+    const reg = await navigator.serviceWorker.ready;
+    const k = await apiPost({ acao: 'push-chave' });
+    if (k.status !== 200 || !k.body.chave) return false;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: chaveVapid(k.body.chave) });
+    const r = await apiPost({ acao: 'push-assinar', assinatura: sub.toJSON() });
+    return r.status === 200;
+  }
+  async function ativarAvisos() {
     if (!('Notification' in window)) return estadoAvisos();
-    Notification.requestPermission().then(() => { estadoAvisos(); if (Notification.permission === 'granted') mostrarNotificacao('Avisos ligados', 'Você será avisada a cada pedido novo.'); });
+    try { await Notification.requestPermission(); } catch (e) {}
+    estadoAvisos();
+    if (Notification.permission !== 'granted') return;
+    let ok = false; try { ok = await assinarPush(); } catch (e) {}
+    const el = document.getElementById('avisos-estado');
+    if (ok) {
+      const t = await apiPost({ acao: 'push-testar' });
+      if (el) el.textContent = 'Avisos ligados! Você recebe no celular a cada pedido novo, mesmo com o app fechado. Enviei um aviso de teste' + (t.status === 200 && t.body.enviados ? '.' : ' (se não chegar em 1 minuto, toque de novo neste botão).');
+    } else {
+      mostrarNotificacao('Avisos ligados', 'Você será avisada a cada pedido novo (com o painel aberto).');
+      if (el) el.textContent += ' Aviso com o app fechado indisponível neste aparelho.';
+    }
   }
   async function verificarPedidosNovos() {
     if (!TOKEN) return;
@@ -823,7 +857,7 @@
   }
   setInterval(verificarPedidosNovos, 60000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) verificarPedidosNovos(); });
-  setTimeout(() => { verificarPedidosNovos(); estadoAvisos(); }, 3000);
+  setTimeout(() => { verificarPedidosNovos(); estadoAvisos(); if ('Notification' in window && Notification.permission === 'granted') assinarPush().catch(() => {}); }, 3000);
 
   function carregarTudo() {
     carregarConfiguracoes();
@@ -907,7 +941,48 @@
       if (res.body.config) CONFIG_CACHE = res.body.config;
       renderizarListasReservas();
       mostrarOcupados();
+      try { renderizarGraficos(); } catch (e) {}
     }
+  }
+
+  function renderizarGraficos() {
+    const el = document.getElementById('graficos-corpo'); if (!el) return;
+    const R = SplashPainel.formatarMoeda, esc = SplashPainel.escapeHtml;
+    const hoje = hojeBr();
+    const futuras = RESERVAS_CACHE.filter(r => r.data >= hoje);
+    const grupos = [
+      ['Pedidos novos', ['pedido'], '#e6a23c'], ['Aguardando sinal', ['aguardando_sinal'], '#d9b84a'],
+      ['Confirmadas', ['confirmado'], '#3fbf7f'], ['Realizadas', ['concluido'], '#4a90d9'],
+      ['Recusadas/canceladas', ['recusado', 'cancelado', 'expirado'], '#d9534f'],
+    ].map(([nome, sts, cor]) => ({ nome, cor, n: RESERVAS_CACHE.filter(r => sts.includes(r.status)).length })).filter(g => g.n > 0);
+    const tot = grupos.reduce((a, g) => a + g.n, 0);
+    let donut;
+    if (!tot) donut = '<p class="suave">Ainda não há reservas.</p>';
+    else {
+      let ac = 0; const C = 2 * Math.PI * 40;
+      const arcos = grupos.map(g => { const len = g.n / tot * C; const o = `<circle cx="60" cy="60" r="40" fill="none" stroke="${g.cor}" stroke-width="22" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-ac}" transform="rotate(-90 60 60)"/>`; ac += len; return o; }).join('');
+      donut = `<svg viewBox="0 0 120 120" style="width:140px;display:block;margin:0 auto" role="img" aria-label="Reservas por situação">${arcos}<text x="60" y="58" text-anchor="middle" fill="#fff" font-size="22" font-weight="800">${tot}</text><text x="60" y="73" text-anchor="middle" fill="#9aa" font-size="9">reservas</text></svg><div class="graf-leg">${grupos.map(g => `<span><i style="background:${g.cor}"></i>${esc(g.nome)}: ${g.n}</span>`).join('')}</div>`;
+    }
+    const ativas = RESERVAS_CACHE.filter(r => ['aguardando_sinal', 'confirmado', 'concluido'].includes(r.status));
+    const total = ativas.reduce((a, r) => a + (Number(r.valor_total) || 0), 0);
+    const pago = ativas.reduce((a, r) => a + Math.min(somaPag(r), Number(r.valor_total) || somaPag(r)), 0);
+    const falta = Math.max(0, total - pago);
+    const pc = total > 0 ? Math.round(pago / total * 100) : 0;
+    const pgto = `<div class="graf-barra"><div style="width:${pc}%;background:#3fbf7f"></div><div style="width:${total ? 100 - pc : 0}%;background:#e6a23c"></div></div>
+      <div class="graf-leg"><span><i style="background:#3fbf7f"></i>Recebido: ${R(pago)}</span><span><i style="background:#e6a23c"></i>A receber: ${R(falta)}</span></div>
+      <p class="suave" style="margin-top:6px">Total combinado: ${R(total)} (${pc}% já pago)</p>`;
+    const meses = []; const d0 = new Date(); for (let i = 0; i < 6; i++) { const d = new Date(d0.getFullYear(), d0.getMonth() + i, 1); meses.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')); }
+    const NM = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const porMes = meses.map(m => { const l = ativas.filter(r => r.data.slice(0, 7) === m); return { m, n: l.length, v: l.reduce((a, r) => a + (Number(r.valor_total) || 0), 0) }; });
+    const maxN = Math.max(1, ...porMes.map(x => x.n));
+    const barras = porMes.map((x, i) => { const h = Math.round(x.n / maxN * 70); return `<g><rect x="${i * 46 + 8}" y="${88 - h}" width="30" height="${h}" rx="5" fill="#d4af5a"/><text x="${i * 46 + 23}" y="${84 - h}" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">${x.n || ''}</text><text x="${i * 46 + 23}" y="102" text-anchor="middle" fill="#9aa" font-size="10">${NM[Number(x.m.slice(5)) - 1]}</text></g>`; }).join('');
+    const prox = futuras.filter(r => ['confirmado', 'aguardando_sinal'].includes(r.status)).sort((a, b) => a.data.localeCompare(b.data)).slice(0, 5);
+    el.innerHTML = `<div class="graf-grade">
+      <div class="graf-caixa"><h4>Reservas por situação</h4>${donut}</div>
+      <div class="graf-caixa"><h4>Pagamentos</h4>${pgto}</div>
+      <div class="graf-caixa"><h4>Reservas por mês</h4><svg viewBox="0 0 280 108" style="width:100%" role="img" aria-label="Reservas por mês">${barras}</svg></div>
+      <div class="graf-caixa"><h4>Próximas festas</h4>${prox.length ? prox.map(r => `<div class="fin-l"><span>${SplashPainel.formatarDataBr(r.data)} · ${esc(r.nome)}</span><span class="pg ${statusPagamento(r)[1]}">${esc(statusPagamento(r)[0])}</span></div>`).join('') : '<p class="suave">Nenhuma festa marcada.</p>'}</div>
+    </div>`;
   }
 
   function renderizarListasReservas() {
@@ -1029,7 +1104,15 @@
     } else if (r.status !== 'bloqueado') {
       acoes.innerHTML = zapSimples;
     }
+    if (['recusado', 'cancelado', 'expirado'].includes(r.status)) acoes.innerHTML += `<button class="btn pequeno vermelho" onclick="excluirReserva('${ab}')"><i class="ri-delete-bin-line"></i> Apagar do painel</button>`;
     modal.classList.remove('oculto');
+  }
+
+  async function excluirReserva(id) {
+    if (!confirm('Apagar esta reserva de vez? Ela some do painel e do site, e não dá para desfazer.')) return;
+    const res = await apiPost({ acao: 'excluir', id });
+    if (res.status !== 200) return alert((res.body && res.body.error) || 'Não foi possível apagar.');
+    fecharModal(); carregarReservas(); carregarCalendario();
   }
 
   async function aceitarPedido(id) {
