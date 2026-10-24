@@ -2,9 +2,9 @@
 // Estratégia: rede primeiro, cache se estiver sem internet (apenas arquivos do painel).
 // Outras origens e /api/ vão direto à rede sem tocar no cache.
 // Implementado conforme especificação do pedido
-// CACHE_VERSION: splash-painel-v2
+// CACHE_VERSION: splash-painel-v3
 // Arquivos em cache: index.html, painel.js, manifest.webmanifest, ícones e gestões
-var CACHE_VERSION = 'splash-painel-v2';
+var CACHE_VERSION = 'splash-painel-v3';
 var PAINEL_ARQUIVOS = [
   './',
   'index.html',
@@ -17,6 +17,7 @@ var PAINEL_ARQUIVOS = [
 ];
 
 self.addEventListener('install', function (e) {
+  self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_VERSION).then(function (cache) {
       return cache.addAll(PAINEL_ARQUIVOS);

@@ -197,6 +197,7 @@
     <img src="../logo-splash.png" alt="Splash">
     <span>Splash Piscina e Lazer</span>
   </div>
+  <button id="btn-instalar" class="btn pequeno claro oculto" onclick="instalarApp()"><i class="ri-download-2-line"></i> Instalar app</button>
   <div id="usuario-topo" class="oculto">
     <button class="btn pequeno claro" onclick="abrirModalConta()"><i class="ri-user-settings-line"></i> Conta</button>
   </div>
@@ -2024,7 +2025,9 @@
     carregarCalendario();
   }
 
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) try { Promise.resolve(navigator.serviceWorker.register('sw.js')).then(r => { try { r.update(); } catch (e) {} }).catch(() => {}); } catch (e) {}
+  window.addEventListener('beforeinstallprompt', ev => { ev.preventDefault(); window.__instalar = ev; const b = document.getElementById('btn-instalar'); if (b) b.classList.remove('oculto'); });
+  window.instalarApp = async function () { const ev = window.__instalar; if (!ev) return; ev.prompt(); try { await ev.userChoice; } catch (e) {} window.__instalar = null; const b = document.getElementById('btn-instalar'); if (b) b.classList.add('oculto'); };
   init();
 </script>
 </body>
