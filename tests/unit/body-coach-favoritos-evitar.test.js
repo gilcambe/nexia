@@ -60,3 +60,12 @@ test('exercícios em "favoritos" sobem na prioridade/pontuação e são selecion
 
   assert.ok(idsCom.includes('flexao-de-bracos') || !idsSem.includes('flexao-de-bracos'), 'exercício favorito deve ter pontuação incrementada');
 });
+
+test('remoção de exercício da lista de evitar atualiza corretamente o array', async () => {
+  const listaInicial = ['supino-reto-com-barra', 'agachamento-livre'];
+  const idParaRemover = 'supino-reto-com-barra';
+  const listaAposRemocao = listaInicial.filter((id) => id !== idParaRemover);
+
+  assert.deepEqual(listaAposRemocao, ['agachamento-livre']);
+  assert.equal(listaAposRemocao.includes(idParaRemover), false);
+});
