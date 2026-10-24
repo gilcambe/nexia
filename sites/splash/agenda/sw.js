@@ -2,9 +2,9 @@
 // Estratégia: rede primeiro, cache se estiver sem internet (apenas arquivos do painel).
 // Outras origens e /api/ vão direto à rede sem tocar no cache.
 // Implementado conforme especificação do pedido
-// CACHE_VERSION: splash-painel-v9
+// CACHE_VERSION: splash-painel-v10
 // Arquivos em cache: index.html, painel.js, manifest.webmanifest, ícones e gestões
-var CACHE_VERSION = 'splash-painel-v9';
+var CACHE_VERSION = 'splash-painel-v10';
 var PAINEL_ARQUIVOS = [
   './',
   'index.html',

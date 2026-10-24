@@ -21,7 +21,7 @@ test('SPLASH-KX1: vinheta Kernex de 2 s no site e no painel, com o nome SPLASH e
   const svg = s => (s.match(/<path d="M100,36[^']+/) || [])[0];
   assert.ok(svg(js) && svg(js) === svg(ts), 'mesmo símbolo do src/lib/abertura-nexia.ts');
   assert.doesNotMatch(js.slice(js.indexOf('function html'), js.indexOf('function mostrar')), /NEXIA/);
-  assert.match(R('sites/splash/index.html'), /<script src="abertura-kernex\.js" data-produto="SPLASH" defer><\/script>/);
+  assert.match(R('sites/splash/index.html'), /<script src="abertura-kernex\.js" data-produto="SPLASH" data-sempre defer><\/script>/);
   assert.match(R('sites/splash/agenda/index.html'), /<script src="\.\.\/abertura-kernex\.js" data-produto="SPLASH" defer><\/script>/);
 });
 
@@ -39,7 +39,7 @@ test('SPLASH-KX3: conta do site e do painel vem do meta (multi-cliente), padrão
   assert.match(site, /<meta name="locacao-site" content="splash">/);
   assert.match(site, /const SLUG = \(document\.querySelector\('meta\[name="locacao-site"\]'\) \|\| \{\}\)\.content \|\| 'splash';/);
   assert.match(R('sites/splash/agenda/index.html'), /const SITE_NAME = \(document\.querySelector\('meta\[name="agenda-site"\]'\) \|\| \{\}\)\.content \|\| 'splash';/);
-  assert.match(R('sites/splash/agenda/sw.js'), /CACHE_VERSION = 'splash-painel-v9'/);
+  assert.match(R('sites/splash/agenda/sw.js'), /CACHE_VERSION = 'splash-painel-v10'/);
 });
 
 test('SPLASH-KX4: gerador cria cópia para outra empresa sem fotos nem nome do Splash', () => {
@@ -91,4 +91,34 @@ test('SPLASH-KX8: playlist do painel já começa muda por baixo da vinheta e o s
   assert.match(site, /const tocando = yt \? ligada && ytOk && !ytMudo : ligada;/, 'botão usa o estado real do player');
   assert.match(site, /addEventListener\('kernex-fim', \(\) => \{ if \(pronta\) comecar\(\); \}\);/);
   assert.match(R('sites/splash/abertura-kernex.js'), /dispatchEvent\(new Event\('kernex-fim'\)\)/);
+});
+
+test('SPLASH-KX9: vinheta aparece em toda abertura do site (data-sempre); painel continua 1 vez por sessão', () => {
+  const js = R('sites/splash/abertura-kernex.js');
+  assert.match(js, /if \(!sempre && sessionStorage\.getItem\('nexia_splash'\)\) return;/);
+  const rodar = (sempre, visto) => {
+    const corpo = { filhos: [], appendChild(e) { this.filhos.push(e); } };
+    const el = () => ({ style: {}, setAttribute() {}, addEventListener() {}, remove() {} });
+    const ctx = { window: {}, setTimeout() {}, navigator: {}, sessionStorage: { getItem: () => visto, setItem() {} },
+      document: { body: corpo, head: { appendChild() {} }, createElement: el, currentScript: { getAttribute: () => 'SPLASH', hasAttribute: n => sempre && n === 'data-sempre' }, addEventListener() {} } };
+    ctx.window.self = ctx.window.top = ctx.window;
+    vm.runInNewContext(js, ctx);
+    return corpo.filhos.length;
+  };
+  assert.strictEqual(rodar(true, '1'), 1, 'site: mostra mesmo já tendo visto');
+  assert.strictEqual(rodar(false, '1'), 0, 'painel: 1 vez por sessão');
+  assert.strictEqual(rodar(false, null), 1);
+});
+
+test('SPLASH-KX10: fotos e vídeos por área (piscina, churrasqueira, jogos, decoração) do painel abrem no card do site', () => {
+  const site = R('sites/splash/index.html');
+  const painel = R('sites/splash/agenda/index.html');
+  assert.match(site, /const AREAS = \['piscina', 'churrasqueira', 'jogos', 'decoracao'\];/);
+  assert.match(site, /x\.unidade === 'area-' \+ a/);
+  assert.match(site, /id="galeria"/);
+  assert.match(site, /if \(NX\.editar\) return;/);
+  assert.match(painel, /onclick="ajustesIr\('areas'\)"/);
+  assert.match(painel, /\['piscina', 'Piscina', '🏊'\], \['churrasqueira', 'Churrasqueira', '🍖'\], \['jogos', 'Sala de jogos', '🎱'\], \['decoracao', 'Decoração', '🎈'\]/);
+  assert.match(painel, /montarMidia\('aj-midia-area-f', 'area-' \+ a, \{ fotos: true/);
+  assert.match(painel, /montarMidia\('aj-midia-area-v', 'area-' \+ a, \{ videos: true/);
 });

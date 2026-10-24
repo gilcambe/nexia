@@ -33,7 +33,8 @@
   function mostrar(produto) {
     try { if (window.self !== window.top || navigator.webdriver) return; } catch (e) { return; }
     try {
-      if (sessionStorage.getItem('nexia_splash')) return;
+      // data-sempre: aparece em toda abertura da página (site do cliente); sem ele, 1 vez por sessão (painel).
+      if (!sempre && sessionStorage.getItem('nexia_splash')) return;
       sessionStorage.setItem('nexia_splash', '1');
     } catch (e) { /* sem armazenamento: mostra mesmo assim */ }
     var calmo = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -80,6 +81,7 @@
 
   var eu = document.currentScript;
   var produto = (eu && eu.getAttribute('data-produto')) || '';
+  var sempre = !!(eu && eu.hasAttribute('data-sempre'));
   window.KernexAbertura = { mostrar: mostrar, html: html, DURACAO_MS: DURACAO_MS };
   if (document.body) mostrar(produto);
   else document.addEventListener('DOMContentLoaded', function () { mostrar(produto); });
