@@ -1397,7 +1397,7 @@ const Musica = (function () {
   }
   function ytCmd(f, args) { try { if (yt && yt.contentWindow) yt.contentWindow.postMessage(JSON.stringify({ event: 'command', func: f, args: args === undefined ? '' : args }), '*'); } catch (e) {} }
   function ytPlaylist(u) { const m = String(u || '').match(/[?&]list=([A-Za-z0-9_-]{10,})/); return m ? m[1] : null; }
-  addEventListener('message', ev => { if (!yt || ev.source !== yt.contentWindow) return; let d = ev.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { return; } } if (!d) return; const st = d.event === 'onStateChange' ? d.info : (d.info && d.info.playerState); if (st === 1) { ytOk = true; ligada = true; mostrarBotao(true); } });
+  addEventListener('message', ev => { if (!yt || ev.source !== yt.contentWindow) return; let d = ev.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { return; } } if (!d) return; if (d.event === 'onReady' && gesto && !ytOk) comecar(); const st = d.event === 'onStateChange' ? d.info : (d.info && d.info.playerState); if (st === 1) { ytOk = true; ligada = true; mostrarBotao(true); } });
   function ytId(u) { const m = String(u || '').match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/); return m ? m[1] : null; }
   function mostrarBotao(on) { const b = document.getElementById('btn-musica'); if (!b) return; b.classList.add('visivel'); b.classList.toggle('tocando', on); b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Desligar a música' : 'Ligar a música'); b.querySelector('i').className = on ? 'ri-volume-up-fill' : 'ri-volume-mute-fill'; }
   function comecar() {
@@ -1416,7 +1416,8 @@ const Musica = (function () {
       yt = document.createElement('iframe');
       const base = 'enablejsapi=1&controls=0&loop=1&playsinline=1&origin=' + encodeURIComponent(location.origin);
       yt.src = lista ? 'https://www.youtube.com/embed/' + (id || 'videoseries') + '?listType=playlist&list=' + lista + '&' + base : 'https://www.youtube.com/embed/' + id + '?playlist=' + id + '&' + base;
-      yt.addEventListener('load', () => { try { yt.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*'); } catch (e) {} });
+      // Toque que veio antes do player carregar (ex.: tocar para pular a vinheta Kernex): toca assim que o player fica pronto.
+      yt.addEventListener('load', () => { try { yt.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*'); } catch (e) {} if (gesto && !ytOk) { setTimeout(comecar, 300); setTimeout(comecar, 1500); } });
       yt.allow = 'autoplay; encrypted-media'; yt.title = 'Música de fundo'; yt.setAttribute('aria-hidden', 'true'); yt.tabIndex = -1;
       yt.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;border:0;opacity:0.01;pointer-events:none';
       document.body.appendChild(yt);

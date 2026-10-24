@@ -70,3 +70,9 @@ test('SPLASH-KX5: Splash aparece no site da Kernex como cliente e como produto L
   assert.ok(itens.some(i => i.title === 'Splash Eventos' && i.url === 'https://splasheventos.pages.dev'));
   assert.ok(itens.some(i => i.title === 'Locação de espaços'));
 });
+
+test('SPLASH-KX6: música do YouTube toca mesmo se o toque (ex.: pular a vinheta) vier antes do player carregar', () => {
+  const site = R('sites/splash/index.html');
+  assert.match(site, /yt\.addEventListener\('load', \(\) => \{[^\n]*if \(gesto && !ytOk\) \{ setTimeout\(comecar, 300\); setTimeout\(comecar, 1500\); \}/);
+  assert.match(site, /d\.event === 'onReady' && gesto && !ytOk\) comecar\(\)/);
+});
