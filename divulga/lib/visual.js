@@ -33,7 +33,7 @@ p{font-size:42px;line-height:1.3;color:#e7e5e4}
 .lista{display:grid;grid-template-columns:1fr 1fr;gap:26px;margin-top:20px}.lista div{background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.12);border-radius:32px;padding:34px;font-size:36px;font-weight:800;line-height:1.2}.lista span{display:block;font-size:64px;margin-bottom:14px}
 .img{width:100%;height:100%;object-fit:cover;border-radius:58px}`;
 
-const MARCA_BODY_COACH = `<i>${HALTERE}</i><div>Body Coach<small>by NEXIA</small></div>`;
+const MARCA_BODY_COACH = `<i>${HALTERE}</i><div>Body Coach</div>`;
 
 /** `marca` (HTML já escapado) e `css` extra são opcionais: sem eles, a página é a de sempre (Body Coach). */
 function pagina(largura, altura, miolo, { ordem, de, arroba = '@nexiabodycoach', rodape = true, marca = MARCA_BODY_COACH, css = '' } = {}) {
@@ -203,7 +203,7 @@ const MODELOS_TELA = {
   },
   citacao: ({ titulo, texto, autor }) => `<div class="m-aspas">“</div><div class="m-frase">${esc(titulo)}</div><div class="m-autor">${esc(autor || texto || '')}</div>`,
   prova: ({ titulo, texto, numero }) => `<div class="m-prova">${esc(numero || titulo)}</div>${numero ? `<h2>${esc(titulo)}</h2>` : ''}<p>${esc(texto)}</p>`,
-  cta: ({ titulo, texto }) => `<h1 style="font-size:92px">${esc(titulo)}</h1>${texto ? `<p style="margin-top:30px">${esc(texto)}</p>` : ''}<div class="m-acoes"><div>${ICONE.salvar}Salve</div><div>${ICONE.compartilhar}Compartilhe</div><div>${ICONE.comentar}Comente</div></div>`,
+  cta: ({ titulo, texto, siga }) => `<h1 style="font-size:92px">${esc(titulo)}</h1>${texto ? `<p style="margin-top:30px">${esc(texto)}</p>` : ''}<div class="m-acoes"><div>${ICONE.salvar}Salve</div><div>${ICONE.compartilhar}Compartilhe</div><div>${ICONE.comentar}Comente</div></div>${siga ? `<div class="m-faixa" style="text-align:center">Siga ${esc(siga)} para receber 1 dica nova por dia</div>` : ''}`,
 };
 const MODELOS = Object.keys(MODELOS_TELA);
 
@@ -221,16 +221,28 @@ const MODELO_DA_SERIE = { 'mito-verdade': 'mito-verdade', 'passo-a-passo': 'pass
 
 /** Roteiro (gancho, telas, cta) -> lista de HTML: capa + telas + cta, no máximo 10 (limite do Instagram). */
 function carrosselRoteiro(cliente, roteiro = {}) {
-  const meio = (roteiro.telas || []).slice(0, 8);
-  const de = meio.length + 2;
+  const meio = (roteiro.telas || []).slice(0, cliente.app ? 7 : 8);
+  const de = meio.length + (cliente.app ? 3 : 2);
   const modelo = MODELO_DA_SERIE[roteiro.serie] || 'lista';
   const telas = [telaModelo('capa', cliente, { titulo: roteiro.gancho, ordem: 1, de })];
   meio.forEach((t, i) => telas.push(telaModelo(modelo, cliente, {
     titulo: t.titulo, texto: t.texto, ordem: i + 2, de, numero: i + 1, passo: i + 1, total: meio.length,
     selo: modelo === 'mito-verdade' && !/^\s*(mito|verdade)/i.test(t.titulo || '') ? (i % 2 ? 'verdade' : 'mito') : undefined,
   })));
-  telas.push(telaModelo('cta', cliente, { titulo: roteiro.cta || 'Gostou?', texto: roteiro.pergunta, ordem: de, de }));
+  if (cliente.app) telas.push(telaApp(cliente, roteiro.serie, { ordem: de - 1, de }));
+  telas.push(telaModelo('cta', cliente, { titulo: roteiro.cta || 'Gostou?', texto: roteiro.pergunta, siga: arrobaDe(cliente), ordem: de, de }));
   return telas;
+}
+
+/** Tela do app no celular (cliente com `"app": true`): mostra o produto, não só texto. A tela muda com a série. */
+const TELA_DA_SERIE = { 'antes-depois': telaEvolucao, 'mito-verdade': telaDieta, bastidores: telaCoach, 'pergunta-enquete': telaCoach };
+function telaApp(cliente, serie, { ordem, de } = {}) {
+  const t = temaDe(cliente);
+  const cel = celular((TELA_DA_SERIE[serie] || telaHoje)());
+  const lado = `<h2>Tudo isso no <b>app</b></h2><p>Treino com vídeo, dieta que se ajusta e evolução num lugar só.</p><div class="m-faixa">Teste grátis · link na bio</div>`;
+  return pagina(1080, 1350, `<div style="display:flex;gap:30px;align-items:center;justify-content:space-between"><div style="flex:1">${lado}</div>${reduzido(cel, 0.78)}</div>`, {
+    ordem, de, arroba: arrobaDe(cliente), rodape: !!arrobaDe(cliente), marca: marcaDe(cliente), css: CSS_MODELO(t),
+  });
 }
 
 module.exports = { carrossel, story, antesDepois, postUnico, pagina, esc, contraste, telaModelo, carrosselRoteiro, MODELOS };

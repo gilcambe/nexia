@@ -62,7 +62,7 @@ test('fila feita: rodízio usa texto fixo quando a IA falha', async () => {
   const r = await rodar({ acao: 'rodar', dados, env: { ...ENV_META, GROQ_API_KEY: 'g' }, fetchImpl, log: silencio });
   assert.equal(r.postou, true);
   assert.equal(r.post.rodizio, true);
-  assert.match(r.post.porRede('facebook').texto, /NEXIA Body Coach: /);
+  assert.match(r.post.porRede('facebook').texto, /Body Coach: /);
   assert.match(r.post.porRede('facebook').texto.split('\n')[0], /[:?]$/); // gancho na 1ª linha
   const est = JSON.parse(fs.readFileSync(path.join(dados, 'divulga-estado.json'), 'utf8'));
   assert.equal(est.rodizio, 1);
