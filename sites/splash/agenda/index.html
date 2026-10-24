@@ -308,6 +308,7 @@
       <p style="font-size: 13px; color: var(--suave);">Passo a passo: toque no pedido, 1) envie a chave Pix, 2) quando o sinal cair, confirme. O contrato vai junto pelo WhatsApp.</p>
       <button type="button" class="btn pequeno claro" id="btn-avisos" onclick="ativarAvisos()"><i class="ri-notification-3-line"></i> Avisar quando chegar pedido novo</button>
       <p id="avisos-estado" style="font-size:12px;color:var(--suave)"></p>
+      <div id="lembretes-pedidos"></div>
       <div id="lista-pedidos-pendentes"></div>
     </div>
   </section>
@@ -531,6 +532,9 @@
           <button type="button" class="aj-card" onclick="ajustesIr('promo')"><i class="ri-price-tag-3-line"></i><b>Prints de promoções</b><small>Imagens de ofertas</small></button>
           <button type="button" class="aj-card" onclick="ajustesIr('insta')"><i class="ri-instagram-line"></i><b>Instagram</b><small>Posts e Reels</small></button>
           <button type="button" class="aj-card" onclick="ajustesIr('musica')"><i class="ri-music-2-line"></i><b>Música do site</b><small>Rádio Splash</small></button>
+          <button type="button" class="aj-card" onclick="ajustesIr('divulgar')"><i class="ri-share-circle-line"></i><b>Divulgar datas livres</b><small>Imagem para Story e texto</small></button>
+          <button type="button" class="aj-card" onclick="ajustesIr('lembretes')"><i class="ri-alarm-line"></i><b>Lembretes ao cliente</b><small>Saldo e véspera da festa</small></button>
+          <button type="button" class="aj-card" onclick="ajustesIr('patroc')"><i class="ri-hand-heart-line"></i><b>Patrocinadores</b><small>Marcas parceiras no site</small></button>
           <button type="button" class="aj-card" onclick="ajustesIr('contrato')"><i class="ri-file-text-line"></i><b>Contrato e cancelamento</b><small>Textos e multa</small></button>
         </div>
         <h4 class="cfg-sub">Ferramentas</h4>
@@ -633,6 +637,38 @@
           <p class="cfg-ajuda">Quando você confirma uma reserva, os dados do cliente entram sozinhos e o contrato vai junto da confirmação pelo WhatsApp. Escreva do seu jeito e use estes campos: {nome} {whatsapp} {unidade} {endereco} {data} {evento} {convidados} {extras} {valor_total} {sinal} {saldo} {cancelamento} {protocolo} {locadora}</p>
         <textarea id="cfg-contrato" rows="10" maxlength="8000"></textarea>
           <button type="button" class="btn pequeno claro" onclick="usarContratoModelo()">Usar contrato modelo pronto</button>
+        </div>
+
+        <div class="aj-pag" data-pag="divulgar">
+          <p class="cfg-ajuda">Gera uma imagem bonita com os dias livres do mês para você postar no Story ou mandar no WhatsApp. No Story, depois de escolher a imagem, toque no adesivo de <b>link</b> e cole o endereço do site.</p>
+          <label>Unidade</label><select id="dv-un"></select>
+          <label>Mês</label><select id="dv-mes"></select>
+          <button type="button" class="btn largo ouro" style="margin-top:12px" onclick="gerarDivulgacao()"><i class="ri-image-circle-line"></i> Gerar imagem</button>
+          <div id="dv-saida" style="margin-top:14px"></div>
+        </div>
+
+        <div class="aj-pag" data-pag="lembretes">
+          <p class="cfg-ajuda">O envio automático pelo WhatsApp é pago, então o painel faz assim: todo dia às 9h chega um aviso no seu celular, e aqui (e em <b>Pedidos</b>) aparece a lista pronta. É só tocar em <b>Enviar</b> em cada cliente.</p>
+          <label class="check-linha"><input type="checkbox" id="lb-ativo" style="width:auto"> <b>Ligar os lembretes</b></label>
+          <label class="check-linha"><input type="checkbox" id="lb-push" style="width:auto"> Avisar no meu celular às 9h quando houver lembrete</label>
+          <h4 class="cfg-sub">Faltando poucos dias para a festa</h4>
+          <label class="check-linha"><input type="checkbox" id="lb-antes-ativo" style="width:auto"> Lembrar o cliente</label>
+          <label>Quantos dias antes?</label><select id="lb-antes-dias"><option value="1">1 dia antes</option><option value="2">2 dias antes</option></select>
+          <label>Mensagem (use {nome} {data} {unidade} {quando})</label><textarea id="lb-msg-antes" rows="4" maxlength="600"></textarea>
+          <h4 class="cfg-sub">Saldo a pagar</h4>
+          <label class="check-linha"><input type="checkbox" id="lb-saldo-ativo" style="width:auto"> Lembrar de quem ainda deve</label>
+          <label>Lembrar quantos dias antes da festa?</label><input type="number" id="lb-saldo-dias" min="1" max="30">
+          <label>Mensagem (use {nome} {data} {unidade} {saldo} {pix})</label><textarea id="lb-msg-saldo" rows="4" maxlength="600"></textarea>
+          <button type="button" class="btn pequeno claro" onclick="usarMensagensLembrete()">Voltar às mensagens animadas prontas</button>
+          <h4 class="cfg-sub">Para enviar hoje</h4>
+          <div id="lb-lista-ajuste"></div>
+        </div>
+
+        <div class="aj-pag" data-pag="patroc">
+          <p class="cfg-ajuda">Empresas e comércios que queiram aparecer no site do Splash. A marca aparece na seção <b>Parceiros do Splash</b>, com link e uma vantagem para seus clientes (ex.: 10% de desconto). Você controla tudo: ligar, desligar e o período.</p>
+          <button type="button" class="btn pequeno ouro" onclick="copiarProposta()"><i class="ri-file-copy-line"></i> Copiar texto para oferecer a empresas</button>
+          <div id="cfg-patroc"></div>
+          <button type="button" class="btn pequeno claro" onclick="adicionarPatrocinadorCfg()"><i class="ri-add-line"></i> Adicionar patrocinador</button>
         </div>
 
         <div id="aj-salvar" class="aj-salvar">
@@ -1393,6 +1429,16 @@
     document.getElementById('cfg-musica-url').value = (c.musica && c.musica.url) || '';
     document.getElementById('cfg-fid-minimo').value = (c.fidelidade && c.fidelidade.minimo) || 3;
     document.getElementById('cfg-fid-percentual').value = c.fidelidade ? c.fidelidade.percentual : 10;
+    renderPatrocCfg(c.patrocinadores || []);
+    const L = c.lembretes || {};
+    document.getElementById('lb-ativo').checked = L.ativo === true;
+    document.getElementById('lb-push').checked = L.push !== false;
+    document.getElementById('lb-antes-ativo').checked = !(L.antes && L.antes.ativo === false);
+    document.getElementById('lb-antes-dias').value = String((L.antes && L.antes.dias) || 1);
+    document.getElementById('lb-saldo-ativo').checked = !(L.saldo && L.saldo.ativo === false);
+    document.getElementById('lb-saldo-dias').value = (L.saldo && L.saldo.dias) || 3;
+    document.getElementById('lb-msg-antes').value = L.msg_antes || MSG_LEMBRETE_ANTES;
+    document.getElementById('lb-msg-saldo').value = L.msg_saldo || MSG_LEMBRETE_SALDO;
     aplicarFiltroUnidade(); montarHubAjustes();
   }
 
@@ -1538,6 +1584,13 @@
         cancelamento: { horas: Number(document.getElementById('cfg-canc-horas').value) || 0, texto: document.getElementById('cfg-canc-texto').value.trim() },
         contrato: document.getElementById('cfg-contrato').value,
         musica: { estilo: document.getElementById('cfg-musica-estilo').value, url: document.getElementById('cfg-musica-url').value.trim() },
+        patrocinadores: lerPatrocCfg(),
+        lembretes: {
+          ativo: document.getElementById('lb-ativo').checked, push: document.getElementById('lb-push').checked,
+          antes: { ativo: document.getElementById('lb-antes-ativo').checked, dias: Number(document.getElementById('lb-antes-dias').value) || 1 },
+          saldo: { ativo: document.getElementById('lb-saldo-ativo').checked, dias: Number(document.getElementById('lb-saldo-dias').value) || 3 },
+          msg_antes: document.getElementById('lb-msg-antes').value, msg_saldo: document.getElementById('lb-msg-saldo').value
+        },
         fidelidade: { minimo: Number(document.getElementById('cfg-fid-minimo').value) || 3, percentual: Number(document.getElementById('cfg-fid-percentual').value) || 0 }
       }
     };
@@ -2175,7 +2228,7 @@
     const el = document.getElementById('aj-hub-un'); if (!el) return;
     el.innerHTML = un.map(u => `<button type="button" class="aj-card un" onclick="ajustesIr('un','${SplashPainel.escapeHtml(u.id)}')"><i class="ri-home-smile-2-line"></i><div><b>${SplashPainel.escapeHtml(u.nome)}</b><small>Fotos, vídeos, valores, endereço, decoração e promoções</small></div></button>`).join('');
   }
-  const TITULOS_AJ = { pix: 'Pix e sinal', contato: 'Contato', aval: 'Avaliações', promo: 'Prints de promoções', insta: 'Instagram', musica: 'Música do site', contrato: 'Contrato e cancelamento' };
+  const TITULOS_AJ = { pix: 'Pix e sinal', contato: 'Contato', aval: 'Avaliações', promo: 'Prints de promoções', insta: 'Instagram', musica: 'Música do site', contrato: 'Contrato e cancelamento', divulgar: 'Divulgar datas livres', lembretes: 'Lembretes ao cliente', patroc: 'Patrocinadores' };
   const SUBS_UN = [['valores', 'Valores', 'ri-money-dollar-circle-line'], ['fotos', 'Fotos', 'ri-image-line'], ['videos', 'Vídeos', 'ri-video-line'], ['extras', 'Decoração', 'ri-gift-line'], ['promos', 'Promoções', 'ri-price-tag-3-line']];
   function ajustesIr(pag, un) {
     AJ_PAG = pag;
@@ -2190,6 +2243,8 @@
     else atualizarBarraSalvar();
     aplicarFiltroUnidade();
     if (pag === 'aval') { carregarAvalClientes(); montarMidia('aj-midia-aval', 'avaliacoes', { fotos: true, titulo: 'Prints de avaliações' }); }
+    if (pag === 'divulgar') prepararDivulgacao();
+    if (pag === 'lembretes') carregarListaLembretes('lb-lista-ajuste');
     if (pag === 'promo') montarMidia('aj-midia-promo', 'promo', { fotos: true, titulo: 'Imagens de promoções' });
     if (pag === 'insta') montarMidia('aj-midia-insta', 'posts', { fotos: true, titulo: 'Fotos de posts do Instagram' }).then(() => { const d = document.createElement('div'); d.id = 'aj-midia-insta2'; document.getElementById('aj-midia-insta').appendChild(d); montarMidia('aj-midia-insta2', 'instagram', { videos: true, titulo: 'Reels e vídeos do Instagram (link)' }); });
     window.scrollTo(0, 0);
@@ -2203,7 +2258,7 @@
     atualizarBarraSalvar();
   }
   function atualizarBarraSalvar() {
-    const semSalvar = AJ_PAG === 'promo' || AJ_PAG === 'insta' || (AJ_PAG === 'un' && (AJ_SUB === 'fotos' || AJ_SUB === 'videos'));
+    const semSalvar = AJ_PAG === 'promo' || AJ_PAG === 'insta' || AJ_PAG === 'divulgar' || (AJ_PAG === 'un' && (AJ_SUB === 'fotos' || AJ_SUB === 'videos'));
     document.getElementById('aj-salvar').classList.toggle('oculto', semSalvar);
   }
   function desfazerConfig() { if (!confirm('Desfazer o que você mudou e ainda não salvou?')) return; preencherFormularioConfig(CONFIG_CACHE || {}); avisoRapido('Voltou ao que estava salvo.'); }
@@ -2319,6 +2374,129 @@
     if (r.status === 200) { avisoRapido('Vídeo excluído.'); remontarMidia(id); } else alert((r.body && r.body.error) || 'Não consegui excluir.');
   }
 
+
+  /* ===== Lembretes ao cliente ===== */
+  const MSG_LEMBRETE_ANTES = 'Oi {nome}! 🎉 {quando} a sua festa no {unidade} ({data})! Estamos preparando tudo com muito carinho para você e seus convidados. Qualquer dúvida é só me chamar! 🏊☀️';
+  const MSG_LEMBRETE_SALDO = 'Oi {nome}! 💛 Passando para lembrar do saldo da sua reserva no {unidade} ({data}): {saldo}. {pix}Qualquer dúvida estou aqui. Obrigada!';
+  function usarMensagensLembrete() { document.getElementById('lb-msg-antes').value = MSG_LEMBRETE_ANTES; document.getElementById('lb-msg-saldo').value = MSG_LEMBRETE_SALDO; }
+  async function carregarListaLembretes(idCont) {
+    const cont = document.getElementById(idCont); if (!cont) return 0;
+    const r = await apiPost({ acao: 'lembretes' });
+    const itens = (r.body && r.body.itens) || [];
+    const esc = SplashPainel.escapeHtml;
+    if (!(r.body && r.body.ativo)) { cont.innerHTML = idCont === 'lb-lista-ajuste' ? '<p class="suave">Os lembretes estão desligados. Ligue acima e toque em Salvar.</p>' : ''; return 0; }
+    cont.innerHTML = itens.length ? itens.map(i => `<div class="cfg-bloco"><b>${i.tipo === 'saldo' ? '💰 Saldo a pagar' : '🎉 Festa chegando'}</b> · ${esc(i.nome)} · ${SplashPainel.formatarDataBr(i.data)}${i.tipo === 'saldo' ? ' · deve ' + SplashPainel.formatarMoeda(i.saldo) : ''}<p class="suave" style="margin:6px 0">${esc(i.mensagem)}</p><div class="m-acoes"><a class="btn pequeno verde" target="_blank" rel="noopener" href="${esc(linkZapTexto(i.whatsapp, i.mensagem))}" onclick="marcarLembrete('${i.id}','${i.chave}','${idCont}')"><i class="ri-whatsapp-line"></i> Enviar</a><button class="btn pequeno claro" onclick="marcarLembrete('${i.id}','${i.chave}','${idCont}')">Já enviei</button></div></div>`).join('') : '<p class="suave">Nenhum lembrete para enviar agora. 🎉</p>';
+    return itens.length;
+  }
+  function linkZapTexto(zap, texto) { let n = String(zap || '').replace(/\D/g, ''); if (n.length <= 11) n = '55' + n; return 'https://wa.me/' + n + '?text=' + encodeURIComponent(texto); }
+  async function marcarLembrete(id, chave, idCont) { await apiPost({ acao: 'lembrete-marcar', id, chave }); setTimeout(() => { carregarListaLembretes(idCont); carregarListaLembretes('lembretes-pedidos'); }, 400); }
+
+  /* ===== Patrocinadores ===== */
+  function renderPatrocCfg(lista) {
+    const esc = SplashPainel.escapeHtml;
+    document.getElementById('cfg-patroc').innerHTML = lista.map(x => `
+      <div class="cfg-bloco cfg-pat" data-id="${esc(x.id || '')}">
+        <label>Nome da empresa</label><input type="text" class="pt-nome" value="${esc(x.nome || '')}" maxlength="80">
+        <input type="hidden" class="pt-logo" value="${esc(x.logo || '')}">
+        ${x.logo ? `<img src="${esc(absUrl(x.logo))}" alt="" style="max-width:140px;max-height:80px;object-fit:contain;background:#fff;border-radius:8px;padding:6px;display:block;margin:6px 0">` : ''}
+        <label>Logomarca (imagem)</label><input type="file" accept="image/jpeg,image/png,image/webp" onchange="anexarLogoPatroc(this)">
+        <label>Link do site ou Instagram da empresa (opcional)</label><input type="url" class="pt-link" value="${esc(x.link || '')}" placeholder="https://...">
+        <label>Vantagem para os clientes do Splash (opcional)</label><input type="text" class="pt-texto" value="${esc(x.texto || '')}" maxlength="120" placeholder="Ex.: 10% de desconto mostrando sua reserva">
+        <label>Destaque</label><select class="pt-nivel"><option value="ouro" ${x.nivel === 'ouro' ? 'selected' : ''}>Ouro (logo grande)</option><option value="prata" ${x.nivel === 'prata' ? 'selected' : ''}>Prata</option><option value="bronze" ${!x.nivel || x.nivel === 'bronze' ? 'selected' : ''}>Bronze (logo pequena)</option></select>
+        <label>Aparece de (opcional)</label><input type="date" class="pt-de" value="${esc(x.de || '')}">
+        <label>Até (opcional)</label><input type="date" class="pt-ate" value="${esc(x.ate || '')}">
+        <label>Quanto ela paga (R$, só você vê)</label><input type="number" class="pt-valor" min="0" step="0.01" value="${x.valor_acordado || ''}">
+        <label>Anotações (só você vê)</label><input type="text" class="pt-obs" value="${esc(x.obs || '')}" maxlength="300">
+        <label class="check-linha"><input type="checkbox" class="pt-ativo" style="width:auto" ${x.ativo === false ? '' : 'checked'}> Mostrar no site</label>
+        <button type="button" class="btn pequeno vermelho" onclick="this.closest('.cfg-bloco').remove()">Remover</button>
+      </div>`).join('') || '<p class="suave">Nenhum patrocinador ainda.</p>';
+  }
+  function lerPatrocCfg() {
+    return Array.from(document.querySelectorAll('#cfg-patroc .cfg-pat')).map(b => ({
+      id: b.dataset.id || '', nome: b.querySelector('.pt-nome').value.trim(), logo: b.querySelector('.pt-logo').value, link: b.querySelector('.pt-link').value.trim(),
+      texto: b.querySelector('.pt-texto').value.trim(), nivel: b.querySelector('.pt-nivel').value, de: b.querySelector('.pt-de').value, ate: b.querySelector('.pt-ate').value,
+      valor_acordado: Number(b.querySelector('.pt-valor').value) || 0, obs: b.querySelector('.pt-obs').value.trim(), ativo: b.querySelector('.pt-ativo').checked
+    })).filter(x => x.nome);
+  }
+  function adicionarPatrocinadorCfg() { renderPatrocCfg([...lerPatrocCfg(), { nome: 'Nova empresa', nivel: 'bronze', ativo: true }]); }
+  async function anexarLogoPatroc(input) {
+    const file = input.files && input.files[0]; if (!file) return;
+    const bloco = input.closest('.cfg-pat');
+    try {
+      const b64 = await comprimirImagemClient(file, 300 * 1024);
+      const r = await apiPost({ acao: 'foto-enviar', unidade: 'patrocinio', dados: b64.replace(/^data:image\/(jpeg|png|webp);base64,/, ''), tipo: file.type || 'image/jpeg', legenda: 'logo patrocinador' });
+      if (r.status !== 201) return alert((r.body && r.body.error) || 'Não consegui enviar a logo.');
+      bloco.querySelector('.pt-logo').value = absUrl((r.body.foto && r.body.foto.url) || '');
+      renderPatrocCfg(lerPatrocCfg());
+      avisoRapido('Logo anexada. Toque em Salvar.');
+    } catch (e) { alert(e.message || 'Erro ao processar a imagem.'); }
+  }
+  function copiarProposta() {
+    const txt = 'Olá! Aqui é do Splash Piscina e Lazer. 🏊\n\nQue tal colocar a sua marca no nosso site? Todo mês centenas de famílias visitam nosso site para reservar festas e eventos, e a sua empresa aparece na seção "Parceiros do Splash", com logo, link e uma vantagem exclusiva para os nossos clientes.\n\n✔ Sua marca vista por quem organiza festas na região\n✔ Link direto para o seu Instagram ou site\n✔ Divulgação também nos nossos Stories\n\nVamos conversar? Posso te passar os planos (Bronze, Prata e Ouro).';
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(() => avisoRapido('Texto copiado! Cole no WhatsApp.'), () => prompt('Copie o texto:', txt)); else prompt('Copie o texto:', txt);
+  }
+
+  /* ===== Divulgar datas livres (imagem para Story) ===== */
+  const NOMES_MES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+  function prepararDivulgacao() {
+    const un = (CONFIG_CACHE && CONFIG_CACHE.unidades) || [];
+    document.getElementById('dv-un').innerHTML = un.map(u => `<option value="${SplashPainel.escapeHtml(u.id)}">${SplashPainel.escapeHtml(u.nome)}</option>`).join('');
+    const h = new Date(); const ops = [];
+    for (let i = 0; i < 6; i++) { const d = new Date(h.getFullYear(), h.getMonth() + i, 1); ops.push(`<option value="${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}">${NOMES_MES[d.getMonth()]} de ${d.getFullYear()}</option>`); }
+    document.getElementById('dv-mes').innerHTML = ops.join('');
+    document.getElementById('dv-saida').innerHTML = '';
+  }
+  function carregarImg(src) { return new Promise(res => { const i = new Image(); i.onload = () => res(i); i.onerror = () => res(null); i.src = src; }); }
+  async function gerarDivulgacao() {
+    const un = document.getElementById('dv-un').value, mes = document.getElementById('dv-mes').value;
+    const saida = document.getElementById('dv-saida'); saida.innerHTML = '<p class="suave">Gerando…</p>';
+    const r = await apiGet({ unidade: un, mes });
+    const dias = (r.body && r.body.dias) || {};
+    const cfg = CONFIG_CACHE || {};
+    const u = (cfg.unidades || []).find(x => x.id === un) || { nome: un };
+    const [ano, m] = mes.split('-').map(Number);
+    const hoje = hojeBr();
+    const total = new Date(ano, m, 0).getDate();
+    const primeiro = new Date(ano, m - 1, 1).getDay();
+    const livres = []; for (let d = 1; d <= total; d++) { const iso = `${mes}-${String(d).padStart(2, '0')}`; if (dias[iso] === 'livre' && iso >= hoje) livres.push(d); }
+    const W = 1080, H = 1920, cv = document.createElement('canvas'); cv.width = W; cv.height = H; const g = cv.getContext('2d');
+    const gr = g.createLinearGradient(0, 0, 0, H); gr.addColorStop(0, '#0a2a33'); gr.addColorStop(1, '#0a0d08'); g.fillStyle = gr; g.fillRect(0, 0, W, H);
+    g.textAlign = 'center';
+    const logo = await carregarImg('../logo-splash.png');
+    if (logo) { g.save(); g.beginPath(); g.arc(W / 2, 190, 110, 0, Math.PI * 2); g.clip(); g.drawImage(logo, W / 2 - 110, 80, 220, 220); g.restore(); }
+    g.fillStyle = '#d4af5a'; g.font = '700 64px sans-serif'; g.fillText('DATAS LIVRES', W / 2, 400);
+    g.fillStyle = '#fff'; g.font = '600 52px sans-serif'; g.fillText(NOMES_MES[m - 1] + ' · ' + ano, W / 2, 470);
+    g.fillStyle = '#9fd8e6'; g.font = '500 44px sans-serif'; g.fillText(u.nome, W / 2, 535);
+    const x0 = 90, cw = (W - 180) / 7, y0 = 680, ch = 135;
+    ['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].forEach((t, i) => { g.fillStyle = '#d4af5a'; g.font = '700 38px sans-serif'; g.fillText(t, x0 + cw * i + cw / 2, y0 - 30); });
+    for (let d = 1; d <= total; d++) {
+      const pos = primeiro + d - 1, col = pos % 7, lin = Math.floor(pos / 7);
+      const cx = x0 + cw * col + cw / 2, cy = y0 + lin * ch + ch / 2 - 10;
+      const iso = `${mes}-${String(d).padStart(2, '0')}`; const livre = dias[iso] === 'livre' && iso >= hoje;
+      if (livre) { g.fillStyle = '#2fbf71'; g.beginPath(); g.arc(cx, cy, 52, 0, Math.PI * 2); g.fill(); g.fillStyle = '#04140b'; g.font = '800 50px sans-serif'; }
+      else { g.fillStyle = 'rgba(255,255,255,.28)'; g.font = '500 44px sans-serif'; }
+      g.fillText(String(d), cx, cy + 17);
+    }
+    const yb = y0 + Math.ceil((primeiro + total) / 7) * ch + 40;
+    g.fillStyle = '#2fbf71'; g.beginPath(); g.arc(W / 2 - 330, yb, 16, 0, Math.PI * 2); g.fill(); g.fillStyle = '#fff'; g.font = '500 36px sans-serif'; g.textAlign = 'left'; g.fillText('Livre', W / 2 - 300, yb + 12);
+    g.fillStyle = 'rgba(255,255,255,.35)'; g.beginPath(); g.arc(W / 2 - 100, yb, 16, 0, Math.PI * 2); g.fill(); g.fillStyle = '#fff'; g.fillText('Ocupado', W / 2 - 70, yb + 12);
+    g.textAlign = 'center';
+    const vs = u.valor_semana || u.valor_diaria || 0, vf = u.valor_fds || u.valor_diaria || 0;
+    if (vs || vf) { g.fillStyle = '#d4af5a'; g.font = '600 40px sans-serif'; g.fillText((vs && vf && vs !== vf ? 'Semana ' + SplashPainel.formatarMoeda(vs) + ' · Fim de semana ' + SplashPainel.formatarMoeda(vf) : 'Diária ' + SplashPainel.formatarMoeda(vs || vf)), W / 2, H - 330); }
+    g.fillStyle = '#fff'; g.font = '700 54px sans-serif'; g.fillText('Reserve sua data!', W / 2, H - 250);
+    g.font = '500 40px sans-serif'; g.fillStyle = '#9fd8e6'; g.fillText(SITE_URL.replace(/^https?:\/\//, '').replace(/\/$/, ''), W / 2, H - 190);
+    const ouro = ((cfg.patrocinadores || []).find(p => p.ativo !== false && p.nivel === 'ouro'));
+    if (ouro) { g.fillStyle = 'rgba(255,255,255,.6)'; g.font = '500 32px sans-serif'; g.fillText('Oferecimento: ' + ouro.nome, W / 2, H - 110); }
+    const url = cv.toDataURL('image/jpeg', 0.92);
+    const texto = `🏊 Datas livres em ${NOMES_MES[m - 1]} no ${u.nome}:\n${livres.length ? livres.map(d => String(d).padStart(2, '0') + '/' + String(m).padStart(2, '0')).join(', ') : 'sem datas livres neste mês'}\n\nReserve pelo site: ${SITE_URL}`;
+    saida.innerHTML = `<img src="${url}" alt="Prévia da imagem" style="width:100%;max-width:320px;border-radius:12px;display:block;margin:0 auto 10px"><div class="m-acoes"><button class="btn ouro" id="dv-compartilhar"><i class="ri-share-line"></i> Compartilhar / postar</button><a class="btn claro" download="datas-livres-${un}-${mes}.jpg" href="${url}"><i class="ri-download-2-line"></i> Baixar imagem</a></div><button class="btn pequeno claro" style="margin-top:8px" id="dv-copiar"><i class="ri-file-copy-line"></i> Copiar texto com as datas</button>`;
+    document.getElementById('dv-copiar').onclick = () => { if (navigator.clipboard) navigator.clipboard.writeText(texto).then(() => avisoRapido('Texto copiado!'), () => prompt('Copie:', texto)); else prompt('Copie:', texto); };
+    document.getElementById('dv-compartilhar').onclick = () => cv.toBlob(async blob => {
+      const arq = new File([blob], `datas-livres-${un}-${mes}.jpg`, { type: 'image/jpeg' });
+      try { if (navigator.canShare && navigator.canShare({ files: [arq] })) await navigator.share({ files: [arq], text: texto }); else { avisoRapido('Seu aparelho não abre o compartilhamento. Baixe a imagem.'); } } catch (e) { /* cancelou */ }
+    }, 'image/jpeg', 0.92);
+  }
+
   function navegarAba(nome) {
     const ABAS = ['calendario', 'pedidos', 'reservas', 'nova', 'financeiro', 'clientes', 'editor', 'importar', 'config'];
     const MENU = { editor: 'config', importar: 'config' }; // telas que ficam "dentro" de Ajustes
@@ -2331,6 +2509,7 @@
     // o seletor de unidade só faz sentido no calendário e no lançamento manual
     document.querySelector('.unidade-seletor').classList.toggle('oculto', !['calendario', 'nova'].includes(nome));
     if (window.Gestao) Gestao.abrir(nome);
+    if (nome === 'pedidos') carregarListaLembretes('lembretes-pedidos').then(n => { const c = document.getElementById('lembretes-pedidos'); if (c && n) c.insertAdjacentHTML('afterbegin', '<h4 class="cfg-sub">Lembretes para enviar hoje</h4>'); });
     if (nome === 'reservas') renderizarListasReservas();
     if (nome === 'nova') mostrarOcupados();
     if (nome === 'editor' && !SITE_EDITOR.aberto) abrirSiteEditor();

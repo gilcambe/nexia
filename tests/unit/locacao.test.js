@@ -384,3 +384,41 @@ test('LOC19. extras e promoções guardam a unidade; foto oculta some da lista p
   await a.post({ acao: 'foto-remover', token, id: f.json.id });
   assert.equal((await a.post({ acao: 'foto-listar', token, unidade: 'santa-adelia' })).json.fotos.length, 0);
 });
+
+test('LOC20. patrocinadores: só os ativos e dentro do período saem no site; valor combinado fica só no painel', async () => {
+  const a = await montar();
+  const token = await logar(a, '33.0.0.5');
+  const c = await a.post({ acao: 'config', token, config: { patrocinadores: [
+    { nome: 'Padaria Boa', link: 'https://exemplo.com', nivel: 'ouro', valor_acordado: 500, obs: 'pago em dinheiro' },
+    { nome: 'Loja Off', ativo: false },
+    { nome: 'Loja Vencida', ate: '2020-01-01' },
+    { nome: 'Link ruim', link: 'javascript:alert(1)' },
+  ] } });
+  assert.equal(c.statusCode, 200);
+  const pub = await a.get({});
+  const nomes = pub.json.patrocinadores.map(p => p.nome);
+  assert.deepEqual(nomes.sort(), ['Link ruim', 'Padaria Boa']);
+  const boa = pub.json.patrocinadores.find(p => p.nome === 'Padaria Boa');
+  assert.equal(boa.valor_acordado, undefined);
+  assert.equal(pub.json.patrocinadores.find(p => p.nome === 'Link ruim').link, '', 'link inseguro é descartado');
+});
+
+test('LOC21. lembretes: só aparecem ligados, só de reserva confirmada, e some depois de marcar como enviado', async () => {
+  const a = await montar();
+  const token = await logar(a, '33.0.0.6');
+  await a.post(pedidoPadrao, { ip: '44.0.0.9' });
+  const id = [...a.db.docs.entries()].find(([k]) => k.includes('/reservas/'))[1].id;
+  await a.post({ acao: 'status', token, id, status: 'confirmado' });
+  let l = await a.post({ acao: 'lembretes', token });
+  assert.equal(l.json.ativo, false);
+  assert.equal(l.json.itens.length, 0, 'desligado não lista nada');
+  await a.post({ acao: 'config', token, config: { lembretes: { ativo: true, saldo: { ativo: true, dias: 30 }, antes: { ativo: true, dias: 2 } } } });
+  await a.post({ acao: 'editar', token, id, campos: { valor_total: 1000 } });
+  l = await a.post({ acao: 'lembretes', token });
+  assert.ok(l.json.itens.length >= 1, 'há lembrete para enviar');
+  const it = l.json.itens[0];
+  assert.ok(it.mensagem.length > 10 && it.whatsapp);
+  await a.post({ acao: 'lembrete-marcar', token, id, chave: it.chave });
+  const l2 = await a.post({ acao: 'lembretes', token });
+  assert.ok(!l2.json.itens.some(x => x.chave === it.chave), 'marcado como enviado some da lista');
+});
