@@ -129,12 +129,12 @@ export default function Profile() {
         ? profileDoc.onboarding.evitar.filter(id => id !== exercicioId)
         : [];
       
-      await getUserDoc(user.id, 'profile', 'main', {
+      await setUserDoc(user.id, 'profile', 'main', {
         onboarding: {
           ...profileDoc.onboarding,
           evitar: evitarAtual
         }
-      });
+      }, true); // merge = true para atualizar apenas os campos fornecidos
       
       // Atualiza o estado local para refletir a mudança
       setSaved(prev => {
