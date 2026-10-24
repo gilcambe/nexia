@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm i --no-save playwright@1.47.2 > /dev/null 2>&1 && npx playwright install --with-deps chromium > /dev/null 2>&1; echo instalado
+      - run: npm i --no-save playwright@1.47.2 > /dev/null 2>&1 && node node_modules/playwright/cli.js install --with-deps chromium > /dev/null 2>&1; echo instalado
       - run: node scripts/diag-splash-no-ar.js > out.txt 2>&1 || true
       - if: always()
         env:
