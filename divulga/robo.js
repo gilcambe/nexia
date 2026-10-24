@@ -155,7 +155,14 @@ async function rodar({ acao = 'rodar', dados, env: envBruto = process.env, fetch
     if (post.id) estado.feitos = [...(estado.feitos || []), post.id];
     if (post.rodizio) estado.rodizio = (estado.rodizio || 0) + 1;
   }
-  estado.historico = [...(estado.historico || []), { quando: new Date().toISOString(), id: post.id, cliente: post.cliente, resultados, formato: post.id ? 'fila' : (post.formato || 'rodizio'), serie: post.serie || null }].slice(-60);
+    estado.historico = [...(estado.historico || []), { 
+    quando: new Date().toISOString(), 
+    id: post.id, 
+    cliente: post.cliente, 
+    resultados, 
+    formato: post.id ? 'fila' : (post.formato || 'rodizio'), 
+    serie: post.serie || null 
+  }].slice(-60);
 
   // Coleta diária de seguidores via Graph API da Meta (1 amostra por dia em divulg-estado.json)
   const tokenMeta = env.DIVULGA_META_PAGE_TOKEN || env.META_PAGE_TOKEN;
