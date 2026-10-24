@@ -556,12 +556,10 @@ exports.handler = async (event) => {
   const guardErr = await guard(event, 'cortex-agent', { skipTenant: true });
   if (guardErr) return guardErr;
 
-  if (!isCortexPermitido(event._email, event._email_verified ?? true)) {
-    return {
-      statusCode: 403,
-      headers,
-      body: JSON.stringify({ error: 'Seu usuário não tem acesso ao Cortex.' })
-    };
+  const { isMasterUser } = require('./lib/master-auth');
+  const isMaster = await isMasterUser(event);
+  if (!isMaster) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Acesso restrito ao usuário master.' }) };
   }
 
   // GET → consulta status de um job existente

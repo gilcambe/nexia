@@ -28,7 +28,7 @@ const SSE_HEADERS = {
   'Cache-Control': 'no-cache',
   'Connection': 'keep-alive',
   'Access-Control-Allow-Origin': (process.env.NEXIA_APP_URL ? process.env.NEXIA_APP_URL.split(',')[0].trim() : '*'),
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, User-Agent',
   'X-Accel-Buffering': 'no'
 };
 
@@ -283,6 +283,12 @@ exports.handler = async (event) => {
 
   const guardErr = await guard(event, 'cortex-chat');
   if (guardErr) return guardErr;
+
+  const { isMasterUser } = require('./lib/master-auth');
+  const isMaster = await isMasterUser(event);
+  if (!isMaster) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Acesso restrito ao usuário master.' }) };
+  }
 
   const start = Date.now();
   try {
