@@ -55,16 +55,13 @@ export default function BloodMarkers() {
 
   return (
     <div>
-      <p className="text-sm text-foreground-600">
-        Cole os valores do seu último exame de sangue. O app interpreta cada marcador e sugere
-        vitaminas, suplementos e encaminhamentos.
-      </p>
+      <p className="text-[11px] leading-snug text-foreground-600">Valores do último exame: o app interpreta e sugere o que fazer.</p>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-1.5 grid grid-cols-2 gap-2 lg:grid-cols-3">
         {markers.map((m) => (
-          <label key={m.key} className="flex flex-col gap-1.5">
-            <span className="text-xs font-medium text-foreground-600">
-              {m.label} <span className="text-foreground-400">({m.unit})</span>
+          <label key={m.key} className="flex flex-col gap-0.5">
+            <span className="truncate text-xs font-medium text-foreground-600" title={`${m.label} (${m.unit})`}>
+              {m.label.replace(/ \(.*\)$/, '')} <span className="text-foreground-400">({m.unit})</span>
             </span>
             <input
               type="number"
@@ -73,7 +70,7 @@ export default function BloodMarkers() {
               placeholder={`ex.: ${m.low}–${m.high}`}
               value={values[m.key] ?? ''}
               onChange={(e) => setValues((prev) => ({ ...prev, [m.key]: e.target.value }))}
-              className="rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-sm text-foreground-800 outline-none focus:border-primary-400"
+              className="rounded-lg border border-background-300 bg-background-50 px-2.5 py-1.5 text-sm text-foreground-800 outline-none focus:border-primary-400"
             />
           </label>
         ))}
@@ -81,7 +78,7 @@ export default function BloodMarkers() {
 
       <button
         onClick={handleInterpret}
-        className="mt-4 inline-flex items-center gap-2 whitespace-nowrap rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600 dark:text-foreground-950"
+        className="mt-2 inline-flex items-center gap-2 whitespace-nowrap rounded-lg bg-primary-500 px-4 py-2 text-sm font-semibold text-background-50 transition hover:bg-primary-600 dark:text-foreground-950"
       >
         <i className="ri-stethoscope-line text-lg"></i>
         Interpretar marcadores

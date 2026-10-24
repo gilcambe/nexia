@@ -21,7 +21,7 @@ const reais = (n: number) => n.toLocaleString('pt-BR', { style: 'currency', curr
 export function CartaoOferta({ o }: { o: OfertaLoja }) {
   return (
     <div className="flex min-w-0 flex-col overflow-hidden rounded-2xl border border-background-200 bg-background-50">
-      <div className="relative aspect-square bg-white">
+      <div className="relative aspect-[4/3] bg-white">
         {o.imagem ? <img src={o.imagem} alt="" loading="lazy" className="h-full w-full object-contain" /> : <i className="ri-shopping-bag-line absolute inset-0 m-auto h-fit w-fit text-3xl text-foreground-300"></i>}
         {o.desconto >= 5 && <span className="absolute left-1.5 top-1.5 rounded-md bg-red-600 px-1.5 py-0.5 text-[11px] font-bold text-white">-{o.desconto}%</span>}
       </div>
@@ -54,19 +54,21 @@ export function OfertasLista({ ofertas }: { ofertas: OfertaLoja[] }) {
         ))}
       </div>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{ofertas.filter((o) => o.categoria === atual).map((o) => <CartaoOferta key={o.id} o={o} />)}</div>
-      <p className="mt-2 text-[11px] text-foreground-400">Links de afiliado: a NEXIA pode ganhar uma comissão, sem custo extra para você.</p>
+      <p className="mt-2 text-[11px] text-foreground-400">Links de afiliado: o Body Coach pode ganhar uma comissão, sem custo extra para você.</p>
     </section>
   );
 }
 
 export default function OfertasDoDia() {
-  const [ofertas, setOfertas] = useState<OfertaLoja[]>([]);
+  const [ofertas, setOfertas] = useState<OfertaLoja[] | null>(null);
   useEffect(() => {
     let vivo = true;
     chatApi<{ ofertas?: OfertaLoja[] }>({ acao: 'loja_ofertas' })
       .then((r) => { if (vivo) setOfertas(Array.isArray(r.ofertas) ? r.ofertas : []); })
-      .catch(() => {});
+      .catch(() => { if (vivo) setOfertas([]); });
     return () => { vivo = false; };
   }, []);
+  if (ofertas === null) return <p className="text-sm text-foreground-500"><i className="ri-loader-4-line mr-1 animate-spin"></i>Carregando ofertas...</p>;
+  if (!ofertas.length) return <p className="text-sm text-foreground-500">Sem ofertas agora. Veja "Para você" ou o "Catálogo".</p>;
   return <OfertasLista ofertas={ofertas} />;
 }

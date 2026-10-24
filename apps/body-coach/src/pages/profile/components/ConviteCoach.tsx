@@ -49,7 +49,7 @@ export default function ConviteCoach() {
       ) : (
         <>
           <div className="mt-1 flex items-center gap-2">
-            <p className="min-w-0 flex-1 text-xs text-foreground-600">Treina outras pessoas? Tenha link de convite e conversa com cada aluno.</p>
+            <p className="min-w-0 flex-1 text-xs text-foreground-600">Treina outras pessoas? Ganhe seu link de convite.</p>
             <button onClick={() => void virarCoach()} className="shrink-0 rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-semibold text-background-50">Ativar modo coach</button>
           </div>
         </>

@@ -41,7 +41,7 @@ function TamanhoDaLetra() {
       <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Tamanho da letra" data-testid="tamanho-letra">
         {TAMANHOS.map((t) => (
           <button key={t.id} type="button" role="radio" aria-checked={atual === t.id} onClick={() => { definirLetra(t.id); setAtual(t.id); }}
-            className={`min-h-[44px] rounded-xl border-2 px-1 py-1 font-semibold leading-tight ${atual === t.id ? 'border-primary-500 bg-primary-50 text-primary-800' : 'border-background-200 text-foreground-700'}`}
+            className={`min-h-[40px] rounded-xl border-2 px-1 py-0.5 font-semibold leading-tight ${atual === t.id ? 'border-primary-500 bg-primary-50 text-primary-800' : 'border-background-200 text-foreground-700'}`}
             style={{ fontSize: `${t.pct / 100}rem` }}>
             A <span className="block whitespace-nowrap text-[11px] font-medium">{t.nome}</span>
           </button>
@@ -188,7 +188,7 @@ export default function Profile() {
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
           <Link
             to="/privacidade"
-            className="text-sm font-medium text-primary-600 hover:underline inline-flex items-center gap-1.5"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:underline"
           >
             <i className="ri-file-text-line"></i> Termos e privacidade
           </Link>
@@ -196,7 +196,7 @@ export default function Profile() {
             href={PRIVACIDADE_KERNEX}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm font-medium text-primary-600 hover:underline inline-flex items-center gap-1.5"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary-600 hover:underline"
           >
             <i className="ri-shield-check-line"></i> Privacidade e termos (Kernex)
           </a>
