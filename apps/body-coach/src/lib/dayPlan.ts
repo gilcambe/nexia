@@ -209,14 +209,24 @@ const PRECISA_APARELHO = new Set(['barra-fixa', 'mergulho-no-banco']);
 const DE_CASA = new Set(['supino-no-chao-com-halteres', 'flexao-inclinada-maos-no-sofa-ou-banco', 'remada-invertida-na-mesa', 'superman', 'flexao-pike',
   'rosca-com-elastico', 'flexao-diamante', 'agachamento-livre-sem-peso', 'ponte-de-posterior-no-solo', 'elevacao-pelvica-unilateral',
   'abducao-de-quadril-deitada', 'coice-em-quatro-apoios', 'panturrilha-em-pe-no-degrau', 'abdominal-curto-no-solo', 'elevacao-pelvica-com-halter']);
-function pontos(x: Exercicio, nivel: unknown, idade: number, semente: number, naAcademia: boolean): number {
+function listaDeArray(r: R, chave: string): string[] {
+  const direto = Array.isArray(r?.[chave]) ? (r![chave] as unknown[]) : [];
+  const noOnboarding = r?.onboarding && typeof r.onboarding === 'object' && Array.isArray((r.onboarding as Record<string, unknown>)[chave])
+    ? ((r.onboarding as Record<string, unknown>)[chave] as unknown[])
+    : [];
+  const unidos = [...direto, ...noOnboarding].map((x) => String(x ?? '').trim()).filter(Boolean);
+  return [...new Set(unidos)];
+}
+
+function pontos(x: Exercicio, nivel: unknown, idade: number, semente: number, naAcademia: boolean, favoritos: string[] = []): number {
   const ini = nivel === 'Iniciante' || idade >= 50;
   const avan = nivel === 'Avançado' || nivel === 'Alto desempenho';
   const tabela: Record<Equip, number> = ini
     ? { maquina: 3, cabo: 2, halter: 2, smith: 2, corpo: 1, barra: 0 }
     : avan ? { barra: 3, halter: 2, cabo: 1.5, maquina: 1, smith: 1, corpo: 0.5 }
       : { barra: 2, halter: 2, maquina: 2, cabo: 2, smith: 1, corpo: 1 };
-  return tabela[x.equip] + (hash(`${semente}|${x.id}`) % 1000) / 500 // até +2: varia de pessoa para pessoa
+  const fav = favoritos.includes(x.id) ? 1 : 0;
+  return tabela[x.equip] + fav + (hash(`${semente}|${x.id}`) % 1000) / 500 // até +2: varia de pessoa para pessoa
     - (naAcademia && DE_CASA.has(x.id) ? 4 : 0);
 }
 
@@ -240,7 +250,7 @@ const hoje = () => {
 export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
   const dias = DIVISOES[e.divisao].dias;
   const dia = dias[((e.diaDaDivisao % dias.length) + dias.length) % dias.length];
-  const lesoes = lesoesDoTexto(e.respostas.injuries, e.respostas.symptoms, e.respostas.history, e.estado.dores);
+  const lesoes = lesoesDoTexto(e.respostas?.injuries, e.respostas?.symptoms, e.respostas?.history, e.estado?.dores);
   const objetivos = objetivosDe(e.respostas);
   const sexo = sexoDe(e.respostas);
   const idade = idadeDe(e.respostas);
@@ -280,6 +290,11 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
   // Quantos exercícios cabem no tempo (cerca de 9 minutos cada, com descanso).
   const maxExercicios = Math.max(3, Math.floor(e.estado.tempoMin / 9) - corte);
 
+  // Exercícios a evitar e favoritos do aluno
+  const evitar = listaDeArray(e.respostas, 'evitar');
+  const favoritos = listaDeArray(e.respostas, 'favoritos');
+  const todosIndisponiveis = [...new Set([...(e.estado.indisponiveis ?? []), ...evitar])];
+
   // Escolha por grupo: compostos primeiro, ênfase ganha um exercício a mais.
   const escolhidos: Exercicio[] = [];
   const sobras: Exercicio[][] = [];
@@ -292,13 +307,13 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
   }
   if (gestante) grupos = grupos.filter((g) => g !== 'abdomen');
   for (const g of grupos) {
-    const seguros = EXERCICIOS.filter((x) => x.grupo === g && permitido(x, lesoes, e.estado.indisponiveis) && !(cadeirante && (NAO_SENTADO.test(x.nome) || x.equip === 'smith')) && !(gestante && /levantamento terra|stiff/i.test(x.nome)));
+    const seguros = EXERCICIOS.filter((x) => x.grupo === g && permitido(x, lesoes, todosIndisponiveis) && !(cadeirante && (NAO_SENTADO.test(x.nome) || x.equip === 'smith')) && !(gestante && /levantamento terra|stiff/i.test(x.nome)));
     // Onde a pessoa treina: só o que ela tem. Se não sobrar nada, vale o peso do corpo.
     let opcoes = equipOk ? seguros.filter((x) => equipOk.includes(x.equip) && !(local === 'Em casa sem equipamento' && PRECISA_APARELHO.has(x.id)) && !(local.startsWith('Em casa') && x.id === 'barra-fixa')) : seguros;
     if (!opcoes.length && equipOk) opcoes = seguros.filter((x) => x.equip === 'corpo' || x.equip === 'halter');
     if (!opcoes.length) { avisos.push(`Sem opção segura para ${g} hoje com suas limitações; pulei esse grupo.`); continue; }
     const naAcademia = !equipOk || equipOk.includes('maquina');
-    const porPontos = (a: Exercicio, b: Exercicio) => pontos(b, e.respostas.level, idade, semente, naAcademia) - pontos(a, e.respostas.level, idade, semente, naAcademia) || a.id.localeCompare(b.id);
+    const porPontos = (a: Exercicio, b: Exercicio) => pontos(b, e.respostas.level, idade, semente, naAcademia, favoritos) - pontos(a, e.respostas.level, idade, semente, naAcademia, favoritos) || a.id.localeCompare(b.id);
     const compostos = opcoes.filter((x) => x.composto).sort(porPontos);
     const isolados = opcoes.filter((x) => !x.composto).sort(porPontos);
     const pequeno = g === 'panturrilha' || g === 'abdomen' || g === 'biceps' || g === 'triceps';
