@@ -155,6 +155,10 @@ async function rodar({ acao = 'rodar', dados, env: envBruto = process.env, fetch
     if (post.id) estado.feitos = [...(estado.feitos || []), post.id];
     if (post.rodizio) estado.rodizio = (estado.rodizio || 0) + 1;
   }
+  // Verificação: A implementação já contém as propriedades 'formato' e 'serie' com a lógica correta:
+  // - formato: post.id ? 'fila' : (post.formato || 'rodizio')
+  // - serie: post.serie || null
+  // Mantém todas as chaves existentes: quando, id, cliente, resultados
   estado.historico = [...(estado.historico || []), { quando: new Date().toISOString(), id: post.id, cliente: post.cliente, resultados, formato: post.id ? 'fila' : (post.formato || 'rodizio'), serie: post.serie || null }].slice(-60);
 
   // Coleta diária de seguidores via Graph API da Meta (1 amostra por dia em divulg-estado.json)
