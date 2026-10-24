@@ -66,43 +66,40 @@ export default function TodayCard() {
         : 'Responda o questionário e o treino do seu plano aparece aqui.';
 
   return (
-    <Card className="relative overflow-hidden" padding="p-6">
+    <Card className="relative overflow-hidden" padding="p-3">
       <div className="absolute right-0 top-0 h-full w-1.5 bg-primary-500"></div>
-      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary-600">
-        <i className="ri-sun-line"></i>
-        Hoje
-      </div>
-      <h1 className="mt-3 font-heading text-2xl font-bold leading-tight text-foreground-950 md:text-[28px]">
+      <h1 className="font-heading text-xl font-bold leading-tight text-foreground-950 md:text-[28px]">
         {title}
       </h1>
-      <p className="mt-2 text-sm text-foreground-600">{subtitle}</p>
+      <p className="mt-1 text-xs text-foreground-600">{subtitle}</p>
 
-      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+      <div className="mt-2 flex flex-col gap-2 sm:flex-row">
         <button
           onClick={() => navigate('/workout')}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-500 px-6 py-3 text-sm font-semibold text-background-50 transition hover:bg-primary-600 whitespace-nowrap"
+          className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary-500 px-6 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600 whitespace-nowrap"
         >
           <i className="ri-play-circle-line text-lg"></i>
           {andamento ? 'CONTINUAR TREINO' : 'INICIAR TREINO'}
         </button>
-        <button
-          onClick={() => setOpen(true)}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-background-200 bg-background-50 px-6 py-3 text-sm font-medium text-foreground-700 transition hover:bg-background-100 whitespace-nowrap"
-        >
-          <i className="ri-mic-line text-lg"></i>
-          Falar com o Coach
-        </button>
       </div>
 
+      <div className="mt-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+        <button
+          onClick={() => setOpen(true)}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-foreground-700 hover:underline"
+        >
+          <i className="ri-mic-line"></i>
+          Falar com o Coach
+        </button>
       {opcoes.length > 1 && !andamento && (
-        <div className="mt-3">
+        <div>
           <button
             onClick={() => setTrocando((v) => !v)}
             className="inline-flex items-center gap-2 text-sm font-medium text-primary-600 hover:underline"
             data-testid="mudar-treino"
           >
             <i className="ri-shuffle-line"></i>
-            Mudar treino de hoje
+            Mudar treino
           </button>
           {trocando && (
             <ul className="mt-2 flex flex-col gap-2" data-testid="lista-treinos">
@@ -120,6 +117,7 @@ export default function TodayCard() {
           )}
         </div>
       )}
+      </div>
     </Card>
   );
 }

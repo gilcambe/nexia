@@ -367,8 +367,8 @@ function Shell() {
       )}
 
       {/* main */}
-      <main className="min-h-screen min-w-0 break-words lg:pl-60">
-        <div className="mx-auto max-w-6xl px-4 pb-24 pt-3 md:px-6 md:py-8 lg:pb-8">
+      <main className="min-w-0 break-words lg:min-h-screen lg:pl-60">
+        <div className="mx-auto max-w-6xl px-3 pb-20 pt-2 sm:px-4 md:px-6 md:py-8 lg:pb-8">
           <PortaoAcesso><Outlet /></PortaoAcesso>
         </div>
       </main>

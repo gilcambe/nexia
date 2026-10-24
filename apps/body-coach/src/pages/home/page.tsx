@@ -46,29 +46,34 @@ export default function Home() {
   const saudacao = hora < 5 ? 'Boa noite' : hora < 12 ? 'Bom dia' : hora < 18 ? 'Boa tarde' : 'Boa noite';
 
   return (
-    <div className="space-y-5">
-      <header className="flex items-start justify-between gap-3">
+    <div className="space-y-2.5">
+      <header className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-sm font-medium capitalize text-foreground-500">{dateStr}</p>
-          <h1 className="mt-1 truncate font-heading text-2xl font-bold capitalize text-foreground-950">
-            {saudacao}, {firstName}
+          <h1 className="truncate font-heading text-lg font-bold leading-tight text-foreground-950">
+            {saudacao}, <span className="capitalize">{firstName}</span>
           </h1>
+          <p className="text-xs font-medium capitalize text-foreground-500">{dateStr}</p>
         </div>
-        <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row">
+        <div className="flex shrink-0 items-center gap-1.5">
         <button
           onClick={() => setConvidando((v) => !v)}
-          className="inline-flex shrink-0 items-center gap-2 rounded-full border border-primary-300 px-3.5 py-1.5 text-xs font-semibold text-primary-700 transition hover:bg-primary-100"
+          className="inline-flex shrink-0 items-center gap-1 rounded-full border border-primary-300 px-2.5 py-1.5 text-xs font-semibold text-primary-700 transition hover:bg-primary-100"
         >
           <i className="ri-user-add-line"></i>
           Convidar
         </button>
         <button
           onClick={() => setOpen(true)}
-          className="inline-flex shrink-0 items-center gap-2 rounded-full bg-primary-500 px-3.5 py-1.5 text-xs font-semibold text-background-50 transition hover:bg-primary-600"
+          className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary-500 px-2.5 py-1.5 text-xs font-semibold text-background-50 transition hover:bg-primary-600"
         >
           <i className="ri-robot-2-line"></i>
-          Coach
+          <span className="sr-only min-[400px]:not-sr-only">Coach</span>
         </button>
+        {!verTudo && (
+          <button type="button" onClick={() => mudarVerTudo(true)} className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-background-200 text-foreground-700" aria-label="Ver tudo" data-testid="ver-tudo">
+            <i className="ri-layout-grid-line"></i>
+          </button>
+        )}
         </div>
       </header>
 
@@ -84,24 +89,20 @@ export default function Home() {
             const a = proximaAcao({ onboarding: !!profile?.onboarding, checkinHoje: hasCheckedToday || carregandoCheckin, hora: now.getHours() });
             const corpo = (
               <>
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-500 text-xl text-background-50"><i className={a.icone}></i></span>
-                <span className="min-w-0 flex-1 text-left">
-                  <span className="block text-xs font-semibold uppercase tracking-wide text-primary-700">Próxima ação</span>
-                  <span className="block font-semibold text-foreground-950">{a.titulo}</span>
-                  <span className="block text-xs text-foreground-600">{a.texto}</span>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary-500 text-lg text-background-50"><i className={a.icone}></i></span>
+                <span className="min-w-0 flex-1 text-left leading-tight">
+                  <span className="block text-[11px] font-semibold uppercase tracking-wide text-primary-700">Próxima ação</span>
+                  <span className="block truncate text-sm font-semibold text-foreground-950">{a.titulo}</span>
                 </span>
                 <i className="ri-arrow-right-s-line text-xl text-primary-700"></i>
               </>
             );
-            const cls = 'flex w-full items-center gap-3 rounded-2xl border border-primary-300 bg-primary-100 p-4';
+            const cls = 'flex w-full items-center gap-2.5 rounded-2xl border border-primary-300 bg-primary-100 px-3 py-2';
             return a.rota
               ? <Link to={a.rota} className={cls} data-testid="proxima-acao">{corpo}</Link>
               : <button type="button" onClick={() => setFazendoCheckin((v) => !v)} className={cls} data-testid="proxima-acao">{corpo}</button>;
           })()}
           {fazendoCheckin && !hasCheckedToday && <DailyCheckIn />}
-          <button type="button" onClick={() => mudarVerTudo(true)} className="flex w-full items-center justify-center gap-2 rounded-2xl border border-background-200 bg-background-50 p-4 text-sm font-semibold text-foreground-800" data-testid="ver-tudo">
-            <i className="ri-layout-grid-line"></i>Ver tudo
-          </button>
         </>
       ) : (
       <>
