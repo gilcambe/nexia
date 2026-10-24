@@ -14,94 +14,101 @@ import ReceitaIA from './components/ReceitaIA';
 import { RefeicaoRapida } from './components/RefeicaoRapida';
 import Favoritas from './components/Favoritas';
 import AjudaRefeicao from './components/AjudaRefeicao';
+import Abas, { useAba } from '@/components/base/Abas';
+
+const ABAS = [
+  { id: 'hoje', label: 'Hoje', icone: 'ri-restaurant-2-line' },
+  { id: 'cardapio', label: 'Cardápio', icone: 'ri-book-open-line' },
+  { id: 'ferramentas', label: 'Ideias', icone: 'ri-magic-line' },
+] as const;
 
 export default function Nutrition() {
   const { meals, water, waterGoal, targets, addMeal, removeMeal, addWater, resetWater, loading, error, reload } = useNutrition();
   const [showAdd, setShowAdd] = useState(false);
+  const [aba, setAba] = useAba(ABAS.map((a) => a.id), 'hoje');
 
   const mealCount = meals.length;
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-bold text-foreground-950">Nutrição</h1>
-          <p className="mt-1 text-sm text-foreground-600">
-            Acompanhe o que você come, quanto ainda pode comer e sua hidratação do dia.
-          </p>
-        </div>
+    <div className="space-y-3">
+      <header className="flex items-center justify-between gap-2">
+        <h1 className="font-heading text-xl font-bold text-foreground-950">Nutrição</h1>
         <button
           onClick={() => setShowAdd(true)}
-          className="inline-flex items-center gap-2 whitespace-nowrap rounded-lg bg-primary-500 px-4 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
+          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary-500 px-3 py-2 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
         >
           <i className="ri-add-line text-lg"></i>
           Registrar refeição
         </button>
       </header>
 
-      {/* macro summary */}
-      <Card padding="p-6">
-        <MacroSummary meals={meals} targets={targets} />
-      </Card>
+      <Abas abas={ABAS} atual={aba} onMudar={setAba} rotulo="Partes da nutrição" />
 
-      <Favoritas />
-      <AjudaRefeicao />
-      <AjusteSemanal />
-      <PlanoNutricionista />
-      <CardapioDoDia />
-      <LembretesRefeicoes />
-      <RefeicaoRapida />
-      <ReceitaIA />
-
-      {/* weekly trend */}
-      <Card padding="p-5">
-        <div className="mb-3 flex items-center gap-2">
-          <i className="ri-line-chart-line text-lg text-primary-500"></i>
-          <h2 className="font-heading text-base font-semibold text-foreground-950">Tendência semanal</h2>
-        </div>
-        <WeeklyTrend />
-      </Card>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
-        {/* meals */}
-        <Card padding="p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <i className="ri-restaurant-2-line text-lg text-secondary-500"></i>
-              <h2 className="font-heading text-base font-semibold text-foreground-950">Refeições</h2>
+      {/* Hoje: o que comeu, quanto falta e a água. O resto fica nas outras abas, sem rolar. */}
+      {aba === 'hoje' && (
+        <>
+          <Card padding="p-3">
+            <MacroSummary meals={meals} targets={targets} />
+          </Card>
+          <Favoritas />
+          <AjudaRefeicao />
+          <Card padding="p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="font-heading text-sm font-semibold text-foreground-950"><i className="ri-restaurant-2-line mr-1 text-secondary-500"></i>Refeições de hoje</h2>
+              <span className="text-xs text-foreground-400">{mealCount} registradas</span>
             </div>
-            <span className="text-xs text-foreground-400">{mealCount} registradas</span>
-          </div>
-          {error && !loading ? (
-            <div className="rounded-lg bg-primary-100/70 p-4 sm:p-6 text-center">
-              <p className="text-sm text-foreground-700">{error}</p>
-              <button
-                onClick={reload}
-                className="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary-500 px-4 py-2 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
-              >
-                <i className="ri-refresh-line"></i>
-                Tentar novamente
-              </button>
-            </div>
-          ) : loading ? (
-            <div className="flex items-center justify-center gap-2 p-6 text-sm text-foreground-500">
-              <i className="ri-loader-4-line animate-spin"></i>
-              Carregando...
-            </div>
-          ) : meals.length > 0 ? (
-            <MealList meals={meals} onRemove={removeMeal} />
-          ) : (
-            <p className="rounded-lg bg-background-100/70 p-4 sm:p-6 text-center text-sm text-foreground-500">
-              Nenhuma refeição registrada ainda. Adicione a primeira!
-            </p>
-          )}
-        </Card>
+            {error && !loading ? (
+              <div className="rounded-lg bg-primary-100/70 p-3 text-center">
+                <p className="text-sm text-foreground-700">{error}</p>
+                <button
+                  onClick={reload}
+                  className="mt-2 inline-flex items-center gap-2 rounded-lg bg-primary-500 px-4 py-2 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
+                >
+                  <i className="ri-refresh-line"></i>
+                  Tentar novamente
+                </button>
+              </div>
+            ) : loading ? (
+              <div className="flex items-center justify-center gap-2 p-3 text-sm text-foreground-500">
+                <i className="ri-loader-4-line animate-spin"></i>
+                Carregando...
+              </div>
+            ) : meals.length > 0 ? (
+              <MealList meals={meals} onRemove={removeMeal} />
+            ) : (
+              <p className="rounded-lg bg-background-100/70 p-3 text-center text-sm text-foreground-500">
+                Nenhuma refeição ainda. Toque em "Registrar refeição".
+              </p>
+            )}
+          </Card>
+          <Card padding="p-3">
+            <WaterTracker consumed={water} goal={waterGoal} onAdd={addWater} onReset={resetWater} />
+          </Card>
+        </>
+      )}
 
-        {/* water */}
-        <Card padding="p-5">
-          <WaterTracker consumed={water} goal={waterGoal} onAdd={addWater} onReset={resetWater} />
-        </Card>
-      </div>
+      {aba === 'cardapio' && (
+        <>
+          <CardapioDoDia />
+          <PlanoNutricionista />
+          <LembretesRefeicoes />
+        </>
+      )}
+
+      {aba === 'ferramentas' && (
+        <>
+          <RefeicaoRapida />
+          <ReceitaIA />
+          <AjusteSemanal />
+          <Card padding="p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <i className="ri-line-chart-line text-lg text-primary-500"></i>
+              <h2 className="font-heading text-base font-semibold text-foreground-950">Tendência semanal</h2>
+            </div>
+            <WeeklyTrend />
+          </Card>
+        </>
+      )}
 
       {showAdd && <AddMealModal onClose={() => setShowAdd(false)} onAdd={addMeal} />}
     </div>
