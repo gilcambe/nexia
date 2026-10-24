@@ -72,7 +72,7 @@
       saiu = true;
       el.style.opacity = '0';
       el.style.transform = 'scale(1.04)';
-      setTimeout(function () { el.remove(); st.remove(); }, SAIDA + 20);
+      setTimeout(function () { el.remove(); st.remove(); try { window.dispatchEvent(new Event('kernex-fim')); } catch (e) {} }, SAIDA + 20);
     }
     el.addEventListener('click', sair);
     setTimeout(sair, DURACAO);
