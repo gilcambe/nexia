@@ -1431,6 +1431,10 @@ const Musica = (function () {
       if (gesto) comecar();
     }
   }
+  // Toque que vem ANTES da configuração chegar da API (ex.: tocar para pular a vinheta Kernex com internet lenta):
+  // fica anotado e a música começa assim que a configuração chega (o "if (gesto) comecar()" de configurar).
+  const anotarGesto = () => { gesto = true; ['pointerdown', 'touchend', 'keydown', 'click'].forEach(t => removeEventListener(t, anotarGesto, true)); };
+  ['pointerdown', 'touchend', 'keydown', 'click'].forEach(t => addEventListener(t, anotarGesto, true));
   return { configurar, alternar() { const on = ligada ? (desligar(), false) : ligar(); try { localStorage.setItem('splash_som', on ? 'on' : 'off'); } catch (e) {} mostrarBotao(on); return on; }, ativa: () => ligada };
 })();
 
