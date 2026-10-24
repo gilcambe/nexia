@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import Card, { CardHeader } from '@/components/base/Card';
+import Card from '@/components/base/Card';
 import { useAuth } from '@/components/feature/AuthContext';
 import { setUserDoc } from '@/lib/userData';
 import { faseDoCiclo, sexoDe, type Ciclo } from '@/lib/dayPlan';
@@ -31,10 +31,9 @@ export default function CicloCard() {
   const agora = faseDoCiclo({ ligado, inicio, duracao: Number(duracao) });
 
   return (
-    <Card padding="p-5">
-      <CardHeader title="Treino e ciclo menstrual" icon="ri-drop-line" />
+    <Card padding="p-3">
       <label className="flex items-center justify-between gap-3">
-        <span className="text-sm text-foreground-700">Ajustar o treino ao meu ciclo (opcional)</span>
+        <span className="text-sm text-foreground-700"><i className="ri-drop-line mr-1 text-primary-500"></i><b className="font-heading font-semibold text-foreground-950">Ciclo menstrual:</b> ajustar o treino (opcional)</span>
         <input type="checkbox" role="switch" checked={ligado} data-testid="ciclo-ligar" className="h-6 w-6 accent-primary-500"
           onChange={(e) => { setLigado(e.target.checked); if (!e.target.checked) void guardar({ ligado: false, inicio, duracao: Number(duracao) }); }} />
       </label>
@@ -50,7 +49,7 @@ export default function CicloCard() {
           {agora && <p className="col-span-2 text-xs text-foreground-500">Hoje: dia {agora.dia}, fase {NOME_FASE[agora.fase]}.</p>}
         </div>
       )}
-      <p className="mt-2 text-xs text-foreground-400">O app só sugere: o efeito do ciclo muda de mulher para mulher, então vale o que você sentir.</p>
+      <p className="mt-1 text-[11px] text-foreground-400">O app só sugere: o efeito do ciclo muda de mulher para mulher, então vale o que você sentir.</p>
       {msg && <p className="mt-2 text-sm text-primary-700">{msg}</p>}
     </Card>
   );

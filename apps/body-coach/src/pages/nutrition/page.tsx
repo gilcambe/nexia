@@ -22,22 +22,30 @@ const ABAS = [
   { id: 'ferramentas', label: 'Ideias', icone: 'ri-magic-line' },
 ] as const;
 
+const FERRAMENTAS = [
+  { id: 'rapida', label: 'Comi algo', icone: 'ri-restaurant-line' },
+  { id: 'receita', label: 'Receita', icone: 'ri-bowl-line' },
+  { id: 'ajuste', label: 'Ajuste', icone: 'ri-scales-3-line' },
+  { id: 'tendencia', label: 'Semana', icone: 'ri-line-chart-line' },
+] as const;
+
 export default function Nutrition() {
   const { meals, water, waterGoal, targets, addMeal, removeMeal, addWater, resetWater, loading, error, reload } = useNutrition();
   const [showAdd, setShowAdd] = useState(false);
   const [aba, setAba] = useAba(ABAS.map((a) => a.id), 'hoje');
+  const [ferramenta, setFerramenta] = useState<(typeof FERRAMENTAS)[number]['id']>('rapida');
 
   const mealCount = meals.length;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <header className="flex items-center justify-between gap-2">
         <h1 className="font-heading text-xl font-bold text-foreground-950">Nutrição</h1>
         <button
           onClick={() => setShowAdd(true)}
-          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary-500 px-3 py-2 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
+          className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
         >
-          <i className="ri-add-line text-lg"></i>
+          <i className="ri-add-line text-base"></i>
           Registrar refeição
         </button>
       </header>
@@ -53,9 +61,9 @@ export default function Nutrition() {
           <Favoritas />
           <AjudaRefeicao />
           <Card padding="p-3">
-            <div className="mb-2 flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <h2 className="font-heading text-sm font-semibold text-foreground-950"><i className="ri-restaurant-2-line mr-1 text-secondary-500"></i>Refeições de hoje</h2>
-              <span className="text-xs text-foreground-400">{mealCount} registradas</span>
+              <span className="text-xs text-foreground-400">{mealCount ? `${mealCount} registradas` : 'nenhuma ainda'}</span>
             </div>
             {error && !loading ? (
               <div className="rounded-lg bg-primary-100/70 p-3 text-center">
@@ -75,14 +83,10 @@ export default function Nutrition() {
               </div>
             ) : meals.length > 0 ? (
               <MealList meals={meals} onRemove={removeMeal} />
-            ) : (
-              <p className="rounded-lg bg-background-100/70 p-3 text-center text-sm text-foreground-500">
-                Nenhuma refeição ainda. Toque em "Registrar refeição".
-              </p>
-            )}
-          </Card>
-          <Card padding="p-3">
-            <WaterTracker consumed={water} goal={waterGoal} onAdd={addWater} onReset={resetWater} />
+            ) : null}
+            <div className="mt-2 border-t border-background-200 pt-2">
+              <WaterTracker consumed={water} goal={waterGoal} onAdd={addWater} onReset={resetWater} />
+            </div>
           </Card>
         </>
       )}
@@ -95,18 +99,28 @@ export default function Nutrition() {
         </>
       )}
 
+      {/* Ideias: uma ferramenta por vez, escolhida numa grade de 4 (cabe sem rolar). */}
       {aba === 'ferramentas' && (
         <>
-          <RefeicaoRapida />
-          <ReceitaIA />
-          <AjusteSemanal />
-          <Card padding="p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <i className="ri-line-chart-line text-lg text-primary-500"></i>
-              <h2 className="font-heading text-base font-semibold text-foreground-950">Tendência semanal</h2>
-            </div>
-            <WeeklyTrend />
-          </Card>
+          <div className="grid grid-cols-4 gap-1.5" role="group" aria-label="Ferramentas de nutrição">
+            {FERRAMENTAS.map((f) => (
+              <button key={f.id} type="button" onClick={() => setFerramenta(f.id)} aria-pressed={ferramenta === f.id} className={`flex flex-col items-center gap-0.5 rounded-xl border px-1 py-1.5 text-[11px] font-medium leading-tight ${ferramenta === f.id ? 'border-primary-500 bg-primary-50 text-primary-700' : 'border-background-200 bg-background-50 text-foreground-600'}`}>
+                <i className={`${f.icone} text-lg`}></i>{f.label}
+              </button>
+            ))}
+          </div>
+          {ferramenta === 'rapida' && <RefeicaoRapida />}
+          {ferramenta === 'receita' && <ReceitaIA />}
+          {ferramenta === 'ajuste' && <AjusteSemanal />}
+          {ferramenta === 'tendencia' && (
+            <Card padding="p-3">
+              <div className="mb-2 flex items-center gap-2">
+                <i className="ri-line-chart-line text-lg text-primary-500"></i>
+                <h2 className="font-heading text-sm font-semibold text-foreground-950">Tendência semanal</h2>
+              </div>
+              <WeeklyTrend />
+            </Card>
+          )}
         </>
       )}
 

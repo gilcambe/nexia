@@ -98,16 +98,14 @@ export default function Plan() {
           const lista = previa(i);
           const mostra = proximo || aberto === i;
           return (
-            <div key={d.titulo} className={`rounded-2xl border px-3 py-2.5 ${proximo ? 'border-primary-300 bg-primary-100/50' : 'border-background-200 bg-background-50'}`}>
+            <div key={d.titulo} className={`rounded-2xl border px-3 py-2 ${proximo ? 'border-primary-300 bg-primary-100/50' : 'border-background-200 bg-background-50'}`}>
               <button type="button" onClick={() => !proximo && setAberto(aberto === i ? null : i)} aria-expanded={mostra} className="flex w-full items-center justify-between gap-2 text-left">
-                <span className="min-w-0">
-                  <span className="block truncate font-heading text-sm font-semibold text-foreground-950">{d.titulo}</span>
-                  {!mostra && <span className="block truncate text-xs text-foreground-500">{lista.length} exercícios: {lista.join(', ')}</span>}
-                </span>
+                <span className="min-w-0 truncate font-heading text-sm font-semibold text-foreground-950">{d.titulo}</span>
+                {!mostra && <span className="ml-auto shrink-0 text-xs text-foreground-500" title={lista.join(', ')}>{lista.length} exercícios</span>}
                 {proximo ? <span className="shrink-0 rounded-full bg-primary-500 px-2 py-0.5 text-xs font-semibold text-background-50">Próximo</span> : <i className={`shrink-0 text-foreground-400 ${mostra ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'}`}></i>}
               </button>
               {mostra && (
-                <ul className="mt-1.5 grid grid-cols-1 gap-0.5">
+                <ul className="mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5">
                   {lista.map((n) => <li key={n} className="truncate text-xs text-foreground-600"><i className="ri-checkbox-circle-line mr-1 text-accent-600"></i>{n}</li>)}
                 </ul>
               )}
