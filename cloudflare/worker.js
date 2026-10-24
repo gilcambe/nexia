@@ -38,7 +38,7 @@ export default {
       r => console.log('[splash-lembretes]', JSON.stringify(r)),
       e => console.error('[splash-lembretes]', e && e.message),
     ));
-    // Cortex: tarefa travada vai sozinha para o Jules (grátis), 1 por hora, sem esperar o dono.
+    // Cortex: escada para tarefa travada (Jules grátis, volta ao Cortex, por fim humano), a cada 15 min.
     ctx.waitUntil(julesAuto.rodar(at).then(
       r => console.log('[jules-auto]', JSON.stringify(r)),
       e => console.error('[jules-auto]', e && e.message),
