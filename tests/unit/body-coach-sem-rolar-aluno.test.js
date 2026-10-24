@@ -66,3 +66,36 @@ test('Treino: perguntas compactas e "Começar treino" fixo embaixo, sempre à vi
   assert.match(ler('pages/workout/components/MusicaTreino.tsx'), /data-testid="musica-cartao"/);
   assert.doesNotMatch(ler('pages/workout/components/MusicaTreino.tsx'), /volte para o NEXIA/);
 });
+
+test('Nutrição cabe numa tela: cardápio com só a próxima refeição aberta, Ideias e Gráficos mostram uma ferramenta por vez', () => {
+  const c = ler('pages/nutrition/components/CardapioDoDia.tsx');
+  assert.match(c, /const abertaAgora = aberta === undefined \? proxima : aberta/);
+  assert.match(c, /aria-expanded=\{aberto\}/);
+  const n = ler('pages/nutrition/page.tsx');
+  assert.match(n, /const FERRAMENTAS = \[/);
+  for (const f of ["ferramenta === 'rapida'", "ferramenta === 'receita'", "ferramenta === 'ajuste'", "ferramenta === 'tendencia'"]) assert.ok(n.includes(f), f);
+  assert.match(n, /<WaterTracker/);
+  const w = ler('pages/nutrition/components/WaterTracker.tsx');
+  for (const ml of ['250', '500', '100']) assert.ok(w.includes(`aria-label="Bebi ${ml} ml"`), ml);
+  const e = ler('pages/evolution/page.tsx');
+  assert.match(e, /const GRAFICOS = \[/);
+  for (const g of ["grafico === 'medidas'", "grafico === 'treino'", "grafico === 'musculos'", "grafico === 'periodo'"]) assert.ok(e.includes(g), g);
+});
+
+test('Corpo, fotos, perfil, avisos e acesso: compactos e sem perder nada', () => {
+  const corpo = ler('pages/evolution/corpo3d/CorpoRealista.tsx');
+  assert.match(corpo, /h-\[min\(35vh,392px\)\]/);
+  assert.match(corpo, /aria-label="Personalizar corpo"/);
+  const fotos = ler('pages/evolution/fotos/AbaFotos.tsx');
+  assert.match(fotos, /grid grid-cols-4 gap-1\.5/);
+  assert.match(fotos, /aria-label="Data das fotos"/);
+  const sobre = ler('pages/profile/components/SobreVoce.tsx');
+  assert.match(sobre, /aria-expanded=\{condicoes\}/);
+  assert.match(sobre, /Como você quer ser chamado\(a\)\?/);
+  const avisos = ler('pages/avisos/page.tsx');
+  assert.match(avisos, /aria-label="Horário do lembrete do treino"/);
+  assert.match(avisos, /Usar meus horários agora/);
+  const painel = ler('components/feature/PainelAcesso.tsx');
+  assert.match(painel, /Number\.isFinite\(acesso\.gratisAte\)/, 'sem "Invalid Date" quando a data do teste falta');
+  assert.doesNotMatch(ler('components/feature/PagarPix.tsx'), /avisar o NEXIA|Fale com o NEXIA/, 'na tela a marca é a do app (Body Coach)');
+});

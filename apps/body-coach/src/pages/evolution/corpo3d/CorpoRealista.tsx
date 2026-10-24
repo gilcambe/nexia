@@ -76,7 +76,8 @@ export default function CorpoRealista({ valores, sexo, altura, gordura, onSalvar
 
   return (
     <div>
-      <div className="relative mx-auto aspect-[592/800] w-full max-w-[290px] overflow-hidden rounded-2xl bg-[#d9d6d2]" data-testid="corpo-realista" data-corpo={chave ?? 'padrao'}>
+      {/* Frente/Lado/Costas e Personalizar ficam por cima do corpo (no alto da foto): cabe numa tela sem rolar. */}
+      <div className="relative mx-auto aspect-[592/800] h-[min(35vh,392px)] max-w-full overflow-hidden rounded-2xl bg-[#d9d6d2]" data-testid="corpo-realista" data-corpo={chave ?? 'padrao'}>
         <canvas ref={canvas} className="h-full w-full" aria-label="Seu corpo realista com as suas medidas" role="img" />
         {vista === 'frente' && (Object.keys(ALTURA_NA_FOTO) as ParteCorpo[]).map((p) => {
           const ativo = parte === p;
@@ -99,19 +100,22 @@ export default function CorpoRealista({ valores, sexo, altura, gordura, onSalvar
             </button>
           );
         })}
-      </div>
-      <div className="mt-2 flex flex-wrap justify-center gap-1.5">
+        <div className="absolute inset-x-1.5 top-1.5 flex items-center gap-1">
         {(['frente', 'lado', 'costas'] as const).map((v) => (
-          <button key={v} type="button" onClick={() => setVista(v)} className={`rounded-full px-3 py-1 text-xs font-semibold ${vista === v ? 'bg-foreground-900 text-background-50' : 'bg-background-100 text-foreground-700'}`}>
+          <button key={v} type="button" onClick={() => setVista(v)} aria-pressed={vista === v} className={`rounded-full px-2 py-0.5 text-[11px] font-semibold shadow-sm ${vista === v ? 'bg-foreground-900 text-background-50' : 'bg-white/80 text-foreground-800'}`}>
             {v === 'frente' ? 'Frente' : v === 'lado' ? 'Lado' : 'Costas'}
           </button>
         ))}
         {onMudarAvatar && (
-          <button type="button" onClick={() => setEditando((e) => !e)} aria-expanded={editando} className={`rounded-full px-3 py-1 text-xs font-semibold ${editando ? 'bg-primary-500 text-white' : 'bg-primary-500/10 text-primary-600'}`}>
-            <i className="ri-user-settings-line mr-1"></i>Personalizar corpo
+          <button type="button" onClick={() => setEditando((e) => !e)} aria-expanded={editando} className={`ml-auto flex h-6 w-6 items-center justify-center rounded-full shadow-sm ${editando ? 'bg-primary-500 text-white' : 'bg-white/80 text-primary-600'}`} aria-label="Personalizar corpo" title="Personalizar corpo">
+            <i className="ri-user-settings-line text-sm"></i>
           </button>
         )}
+        </div>
       </div>
+      <p className="mt-1 text-center text-[11px] leading-snug text-foreground-500">
+        {legenda ?? `Moldado com seu peso, altura e ${medidas} de 6 medidas.`}{onSalvarMedida && medidas < 6 ? ' Toque no + para medir.' : ''}
+      </p>
       {editando && onMudarAvatar && (
         <div className="mt-2 space-y-2.5 rounded-xl border border-background-200 bg-background-50 p-3" data-testid="personalizar-corpo">
           <div>
@@ -159,9 +163,6 @@ export default function CorpoRealista({ valores, sexo, altura, gordura, onSalvar
           )}
         </div>
       )}
-      <p className="mt-2 text-xs text-foreground-500">
-        {legenda ?? `Corpo realista moldado com o seu peso, altura e ${medidas} de 6 medidas da fita.`} {onSalvarMedida && medidas < 6 ? 'Toque no + para colocar as que faltam.' : ''}
-      </p>
     </div>
   );
 }
