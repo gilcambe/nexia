@@ -1208,14 +1208,14 @@ function createHandler(deps = {}) {
 
     if (acao === 'lembretes') {
       const cfgL = montarConfig(cadastro, (await lerConta()).config);
-      const snapL = await reservas.where('status', '==', 'confirmado').get();
-      const lista = require('./locacao-lib/lembretes').devidos(snapL.docs.map(d => ({ id: d.id, ...d.data() })), cfgL, agoraBr(now()).data);
+      const libL = require('./locacao-lib/lembretes');
+      const lista = libL.devidos(await libL.reservasAtivas(reservas), cfgL, agoraBr(now()).data);
       return res(200, { ativo: cfgL.lembretes.ativo, itens: lista });
     }
 
     if (acao === 'lembrete-marcar') {
       const idL = str(body.id, 64), chave = str(body.chave, 20);
-      if (!ID_RE.test(idL) || !['antes', 'saldo'].includes(chave)) return res(400, { error: 'Lembrete inválido.' });
+      if (!ID_RE.test(idL) || !['antes', 'saldo', 'avaliacao'].includes(chave)) return res(400, { error: 'Lembrete inválido.' });
       const refL = reservas.doc(idL);
       const snapL = await refL.get();
       if (!snapL.exists) return res(200, { ok: true });

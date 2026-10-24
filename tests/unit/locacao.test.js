@@ -422,3 +422,18 @@ test('LOC21. lembretes: só aparecem ligados, só de reserva confirmada, e some 
   const l2 = await a.post({ acao: 'lembretes', token });
   assert.ok(!l2.json.itens.some(x => x.chave === it.chave), 'marcado como enviado some da lista');
 });
+
+test('LOC22. lembrete de avaliação: só depois da festa, uma vez, e só se ligado', () => {
+  const lib = require('../../netlify/functions/locacao-lib/lembretes');
+  const r = { id: 'a', status: 'concluido', data: '2026-10-10', nome: 'Ana Souza', whatsapp: '11999999999', unidade_nome: 'Splash', valor_total: 0 };
+  const off = { lembretes: lib.limparLembretes({ ativo: true }) };
+  assert.equal(lib.devidos([r], off, '2026-10-11').length, 0, 'desligado não pede');
+  const on = { lembretes: lib.limparLembretes({ ativo: true, avaliacao: { ativo: true, dias: 1 } }) };
+  const l = lib.devidos([r], on, '2026-10-11');
+  assert.equal(l.length, 1);
+  assert.equal(l[0].tipo, 'avaliacao');
+  assert.ok(l[0].mensagem.includes('{link}'), 'o link entra no painel');
+  assert.equal(lib.devidos([r], on, '2026-10-10').length, 0, 'no dia da festa ainda não');
+  assert.equal(lib.devidos([r], on, '2026-10-30').length, 0, 'depois de 7 dias não insiste');
+  assert.equal(lib.devidos([{ ...r, lembretes_enviados: { avaliacao: 'x' } }], on, '2026-10-11').length, 0, 'já enviado');
+});

@@ -659,6 +659,10 @@
           <label class="check-linha"><input type="checkbox" id="lb-saldo-ativo" style="width:auto"> Lembrar de quem ainda deve</label>
           <label>Lembrar quantos dias antes da festa?</label><input type="number" id="lb-saldo-dias" min="1" max="30">
           <label>Mensagem (use {nome} {data} {unidade} {saldo} {pix})</label><textarea id="lb-msg-saldo" rows="4" maxlength="600"></textarea>
+          <h4 class="cfg-sub">Pedir avaliação depois da festa</h4>
+          <label class="check-linha"><input type="checkbox" id="lb-aval-ativo" style="width:auto"> Pedir ao cliente que avalie</label>
+          <label>Quantos dias depois da festa?</label><input type="number" id="lb-aval-dias" min="1" max="7">
+          <label>Mensagem (use {nome} {data} {unidade} {link})</label><textarea id="lb-msg-aval" rows="4" maxlength="600"></textarea>
           <button type="button" class="btn pequeno claro" onclick="usarMensagensLembrete()">Voltar às mensagens animadas prontas</button>
           <h4 class="cfg-sub">Para enviar hoje</h4>
           <div id="lb-lista-ajuste"></div>
@@ -1439,6 +1443,9 @@
     document.getElementById('lb-saldo-dias').value = (L.saldo && L.saldo.dias) || 3;
     document.getElementById('lb-msg-antes').value = L.msg_antes || MSG_LEMBRETE_ANTES;
     document.getElementById('lb-msg-saldo').value = L.msg_saldo || MSG_LEMBRETE_SALDO;
+    document.getElementById('lb-aval-ativo').checked = Boolean(L.avaliacao && L.avaliacao.ativo);
+    document.getElementById('lb-aval-dias').value = (L.avaliacao && L.avaliacao.dias) || 1;
+    document.getElementById('lb-msg-aval').value = L.msg_avaliacao || MSG_LEMBRETE_AVAL;
     aplicarFiltroUnidade(); montarHubAjustes();
   }
 
@@ -1589,6 +1596,7 @@
           ativo: document.getElementById('lb-ativo').checked, push: document.getElementById('lb-push').checked,
           antes: { ativo: document.getElementById('lb-antes-ativo').checked, dias: Number(document.getElementById('lb-antes-dias').value) || 1 },
           saldo: { ativo: document.getElementById('lb-saldo-ativo').checked, dias: Number(document.getElementById('lb-saldo-dias').value) || 3 },
+          avaliacao: { ativo: document.getElementById('lb-aval-ativo').checked, dias: Number(document.getElementById('lb-aval-dias').value) || 1 }, msg_avaliacao: document.getElementById('lb-msg-aval').value,
           msg_antes: document.getElementById('lb-msg-antes').value, msg_saldo: document.getElementById('lb-msg-saldo').value
         },
         fidelidade: { minimo: Number(document.getElementById('cfg-fid-minimo').value) || 3, percentual: Number(document.getElementById('cfg-fid-percentual').value) || 0 }
@@ -2378,14 +2386,15 @@
   /* ===== Lembretes ao cliente ===== */
   const MSG_LEMBRETE_ANTES = 'Oi {nome}! 🎉 {quando} a sua festa no {unidade} ({data})! Estamos preparando tudo com muito carinho para você e seus convidados. Qualquer dúvida é só me chamar! 🏊☀️';
   const MSG_LEMBRETE_SALDO = 'Oi {nome}! 💛 Passando para lembrar do saldo da sua reserva no {unidade} ({data}): {saldo}. {pix}Qualquer dúvida estou aqui. Obrigada!';
-  function usarMensagensLembrete() { document.getElementById('lb-msg-antes').value = MSG_LEMBRETE_ANTES; document.getElementById('lb-msg-saldo').value = MSG_LEMBRETE_SALDO; }
+  const MSG_LEMBRETE_AVAL = 'Oi {nome}! 💛 Foi um prazer receber você e seus convidados no {unidade}! Sua opinião é muito importante para nós. Pode deixar uma avaliaçãozinha rapidinho? {link} Obrigada! 🏊';
+  function usarMensagensLembrete() { document.getElementById('lb-msg-aval').value = MSG_LEMBRETE_AVAL; document.getElementById('lb-msg-antes').value = MSG_LEMBRETE_ANTES; document.getElementById('lb-msg-saldo').value = MSG_LEMBRETE_SALDO; }
   async function carregarListaLembretes(idCont) {
     const cont = document.getElementById(idCont); if (!cont) return 0;
     const r = await apiPost({ acao: 'lembretes' });
-    const itens = (r.body && r.body.itens) || [];
+    const itens = ((r.body && r.body.itens) || []).map(i => ({ ...i, mensagem: i.mensagem.replace('{link}', SITE_URL.replace(/\/$/, '') + '/#avaliacoes') }));
     const esc = SplashPainel.escapeHtml;
     if (!(r.body && r.body.ativo)) { cont.innerHTML = idCont === 'lb-lista-ajuste' ? '<p class="suave">Os lembretes estão desligados. Ligue acima e toque em Salvar.</p>' : ''; return 0; }
-    cont.innerHTML = itens.length ? itens.map(i => `<div class="cfg-bloco"><b>${i.tipo === 'saldo' ? '💰 Saldo a pagar' : '🎉 Festa chegando'}</b> · ${esc(i.nome)} · ${SplashPainel.formatarDataBr(i.data)}${i.tipo === 'saldo' ? ' · deve ' + SplashPainel.formatarMoeda(i.saldo) : ''}<p class="suave" style="margin:6px 0">${esc(i.mensagem)}</p><div class="m-acoes"><a class="btn pequeno verde" target="_blank" rel="noopener" href="${esc(linkZapTexto(i.whatsapp, i.mensagem))}" onclick="marcarLembrete('${i.id}','${i.chave}','${idCont}')"><i class="ri-whatsapp-line"></i> Enviar</a><button class="btn pequeno claro" onclick="marcarLembrete('${i.id}','${i.chave}','${idCont}')">Já enviei</button></div></div>`).join('') : '<p class="suave">Nenhum lembrete para enviar agora. 🎉</p>';
+    cont.innerHTML = itens.length ? itens.map(i => `<div class="cfg-bloco"><b>${i.tipo === 'saldo' ? '💰 Saldo a pagar' : i.tipo === 'avaliacao' ? '⭐ Pedir avaliação' : '🎉 Festa chegando'}</b> · ${esc(i.nome)} · ${SplashPainel.formatarDataBr(i.data)}${i.tipo === 'saldo' ? ' · deve ' + SplashPainel.formatarMoeda(i.saldo) : ''}<p class="suave" style="margin:6px 0">${esc(i.mensagem)}</p><div class="m-acoes"><a class="btn pequeno verde" target="_blank" rel="noopener" href="${esc(linkZapTexto(i.whatsapp, i.mensagem))}" onclick="marcarLembrete('${i.id}','${i.chave}','${idCont}')"><i class="ri-whatsapp-line"></i> Enviar</a><button class="btn pequeno claro" onclick="marcarLembrete('${i.id}','${i.chave}','${idCont}')">Já enviei</button></div></div>`).join('') : '<p class="suave">Nenhum lembrete para enviar agora. 🎉</p>';
     return itens.length;
   }
   function linkZapTexto(zap, texto) { let n = String(zap || '').replace(/\D/g, ''); if (n.length <= 11) n = '55' + n; return 'https://wa.me/' + n + '?text=' + encodeURIComponent(texto); }

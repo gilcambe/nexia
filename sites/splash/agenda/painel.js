@@ -163,6 +163,8 @@ function montarMensagemConfirmacao(reserva, config) {
     const canc = c.cancelamento || {};
     if (canc.horas > 0) msg += `\nCancelamento: avisar com pelo menos ${canc.horas} horas de antecedência; fora do prazo o sinal não é devolvido.\n`;
   }
+  const vant = (c.patrocinadores || []).filter(p => p.ativo !== false && p.texto);
+  if (vant.length) msg += `\n🎁 *Vantagens dos nossos parceiros para você:*\n${vant.map(p => `• ${p.nome}: ${p.texto}`).join('\n')}\n`;
   msg += `\nQualquer dúvida é só chamar por aqui. Obrigada!`;
   return msg;
 }
