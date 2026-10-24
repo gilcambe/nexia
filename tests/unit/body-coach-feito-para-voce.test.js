@@ -104,6 +104,44 @@ test('ciclo menstrual: desligado não muda nada; ligado dá a fase do dia e mais
   assert.ok(!treino(m, { ...BRUNO, ciclo: { ligado: true, inicio: ha(0) } }).t.avisos.some((a) => /ciclo/.test(a)));
 });
 
+test('exercícios evitados são excluídos e favoritos têm prioridade', async () => {
+  const m = await carregar();
+  const r = {
+    ...ANA,
+    evitar: ['agachamento-goblet'],
+    favoritos: ['supino-reto-com-halteres'],
+    place: 'Academia completa'
+  };
+
+  const entrada = {
+    respostas: r,
+    divisao: 'abc',
+    diaDaDivisao: 0,
+    enfase: [],
+    estado: {
+      sono: 'bom',
+      alimentacao: 'comi_bem',
+      energia: 4,
+      tempoMin: 60,
+      dores: '',
+      indisponiveis: []
+    },
+    variacao: 0
+  };
+
+  const treino = m.montarTreinoDoDia(entrada);
+
+  const ids = treino.sessao.exercises.map((e) => e.id);
+
+  // Exercício evitado não aparece
+  assert.ok(!ids.includes('agachamento-goblet'), 'Exercício evitado não deve aparecer no treino');
+
+  // Exercício favorito aparece e tem prioridade (entre os primeiros)
+  assert.ok(ids.includes('supino-reto-com-halteres'), 'Exercício favorito deve aparecer no treino');
+  const idx = ids.indexOf('supino-reto-com-halteres');
+  assert.ok(idx < 3, 'Exercício favorito deve ter prioridade (aparecer entre os primeiros)');
+});
+
 test('em casa (com ou sem halteres) nunca aparece barra fixa, e as costas continuam treinadas', async () => {
   const m = await carregar();
   for (const place of ['Em casa com halteres', 'Em casa sem equipamento']) {
