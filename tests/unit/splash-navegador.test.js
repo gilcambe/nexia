@@ -229,3 +229,52 @@ async function tokenDe(a) {
   assert.equal(r.status, 200, JSON.stringify(r.json));
   return r.json.token;
 }
+
+test('SPLASH-NAV3. o que a Amanda muda no painel aparece sozinho no site (textos, seção escondida, contatos, preços, endereço, extras, promoções, parceiros)', { skip: pulaSemNavegador, timeout: 60000 }, async () => {
+  const a = await ambiente();
+  if (!a) return;
+  try {
+    const login = await a.chamar('POST', { acao: 'primeiro-acesso', codigo: 'CODIGO123', senha_nova: 'senhaValida123' });
+    assert.equal(login.status, 200, JSON.stringify(login.json));
+    const token = login.json.token;
+    const unidades = [
+      { id: 'santa-adelia', nome: 'Splash Santa Adélia', endereco: 'Rua das Flores, 123 - São Mateus', valor_semana: 450, valor_fds: 650 },
+      { id: 'santa-barbara', nome: 'Splash Santa Bárbara', endereco: 'Rua B, 9', terceiro: true },
+    ];
+    const cfg = await a.chamar('POST', { acao: 'config', token, config: {
+      whatsapp: '11912345678', instagram: 'splash_novo', unidades,
+      extras: [{ id: 'pula', nome: 'Pula-pula gigante', descricao: '', valor: 150, ativo: true, unidade: 'todas' }],
+      promocoes: [{ texto: 'Promoção de primavera 20%', unidade: 'todas' }],
+      patrocinadores: [{ nome: 'Doceria Mel', nivel: 'ouro' }],
+    } });
+    assert.equal(cfg.status, 200, JSON.stringify(cfg.json));
+    const ct = await a.chamar('POST', { acao: 'site-salvar', token, conteudo: { textos: { 'hero-subtitulo': 'Texto novo escrito pela Amanda' }, ocultos: { 'secao-avaliacoes': true } } });
+    assert.equal(ct.status, 200, JSON.stringify(ct.json));
+
+    const page = await a.ctx.newPage();
+    const erros = [];
+    page.on('pageerror', e => erros.push(String(e)));
+    await page.goto(a.base + '/');
+    await page.waitForFunction(() => /Amanda/.test(document.querySelector('[data-ed="hero-subtitulo"]').textContent), null, { timeout: 15000 });
+    const v = await page.evaluate(() => ({
+      insta: document.getElementById('cta-instagram-texto').textContent,
+      zap: document.getElementById('rodape-whatsapp').getAttribute('href'),
+      preco: document.getElementById('preco-santa-adelia').textContent,
+      end: document.getElementById('endereco-santa-adelia').textContent,
+      extras: document.getElementById('extras-lista').textContent,
+      promo: document.getElementById('promocoes-lista').textContent,
+      parc: document.getElementById('parc-lista').textContent,
+      avalOculta: (() => { const s = document.querySelector('[data-secao="avaliacoes"]'); return !s || s.classList.contains('nx-oculto') || s.classList.contains('nx-escondido') || getComputedStyle(s).display === 'none'; })(),
+    }));
+    assert.equal(v.insta, '@splash_novo');
+    assert.match(v.zap, /5511912345678|11912345678/);
+    assert.match(v.preco, /450/);
+    assert.match(v.preco, /650/);
+    assert.equal(v.end, 'Rua das Flores, 123 - São Mateus');
+    assert.match(v.extras, /Pula-pula gigante/);
+    assert.match(v.promo, /Promoção de primavera 20%/);
+    assert.match(v.parc, /Doceria Mel/);
+    assert.ok(v.avalOculta, 'seção escondida no painel some do site');
+    assert.deepEqual(erros, []);
+  } finally { await a.fechar(); }
+});
