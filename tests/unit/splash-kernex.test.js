@@ -76,3 +76,10 @@ test('SPLASH-KX6: música do YouTube toca mesmo se o toque (ex.: pular a vinheta
   assert.match(site, /yt\.addEventListener\('load', \(\) => \{[^\n]*if \(gesto && !ytOk\) \{ setTimeout\(comecar, 300\); setTimeout\(comecar, 1500\); \}/);
   assert.match(site, /d\.event === 'onReady' && gesto && !ytOk\) comecar\(\)/);
 });
+
+test('SPLASH-KX7: toque antes da configuração chegar da API (internet lenta + pular a vinheta) fica anotado para a música começar', () => {
+  const site = R('sites/splash/index.html');
+  assert.match(site, /const anotarGesto = \(\) => \{ gesto = true;/);
+  assert.match(site, /\['pointerdown', 'touchend', 'keydown', 'click'\]\.forEach\(t => addEventListener\(t, anotarGesto, true\)\);/);
+  assert.match(site, /if \(gesto\) comecar\(\);/);
+});
