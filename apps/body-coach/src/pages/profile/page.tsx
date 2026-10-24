@@ -100,6 +100,18 @@ export default function Profile() {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deletingExercicio, setDeletingExercicio] = useState<string | null>(null);
   const [exerciciosNomes, setExerciciosNomes] = useState<Record<string, string>>({});
+  
+  // Busca nomes dos exercícios evitados para exibir de forma mais amigável
+  useEffect(() => {
+    const profileDoc = saved || profile;
+    if (profileDoc?.onboarding?.evitar && Array.isArray(profileDoc.onboarding.evitar) && profileDoc.onboarding.evitar.length > 0) {
+      const nomes: Record<string, string> = {};
+      profileDoc.onboarding.evitar.forEach(exercicioId => {
+        nomes[exercicioId] = `Exercício #${exercicioId}`;
+      });
+      setExerciciosNomes(nomes);
+    }
+  }, [saved, profile]);
   const deleteAccount = async () => {
     if (!user) return;
     if (!await confirmar('Isso apaga sua conta e todos os seus dados (perfil, refeições, check-ins, evolução e exames). Não dá para desfazer. Continuar?')) return;
