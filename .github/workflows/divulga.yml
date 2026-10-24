@@ -102,3 +102,35 @@ jobs:
           git diff --cached --quiet && exit 0
           git commit -qm "dados do Divulga"
           git push -q origin divulga-dados
+      - name: Mostrar estatísticas de seguidores
+        if: always()
+        continue-on-error: true
+        run: |
+          node -e "
+          const fs = require('fs');
+          try {
+            const data = JSON.parse(fs.readFileSync('dados/divulga-estado.json', 'utf8'));
+            if (!data.estado || !data.estado.seguidores || data.estado.seguidores.length === 0) {
+              console.log('## Sem dados de seguidores ainda');
+              process.exit(0);
+            }
+            
+            const seguidores = data.estado.seguidores.slice(-14);
+            const primeiro = seguidores[0].total;
+            const ultimo = seguidores[seguidores.length - 1].total;
+            const diferenca = ultimo - primeiro;
+            
+            console.log('## Estatísticas de seguidores (últimos 14 dias)');
+            console.log('| Dia | Total |');
+            console.log('|-----|-------|');
+            
+            seguidores.forEach(item => {
+              console.log('| ' + item.dia + ' | ' + item.total + ' |');
+            });
+            
+            const sinal = diferenca >= 0 ? '+' : '';
+            console.log('\n**' + sinal + diferenca + ' seguidores em 14 dias**');
+          } catch (error) {
+            console.log('## Sem dados de seguidores ainda');
+          }
+          " >> $GITHUB_STEP_SUMMARY
