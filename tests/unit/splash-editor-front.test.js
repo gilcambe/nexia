@@ -54,7 +54,7 @@ test('SPLASH-FRONT4. preservação da marca visível KERNEX e selo oficial no si
 test('SPLASH-FRONT5. painel do editor possui os botões, instruções e modals para fotos e vídeos', () => {
   const htmlPainel = fs.readFileSync(painelHtmlPath, 'utf8');
 
-  assert.ok(htmlPainel.includes('tab-editor'), 'Deve conter a aba tab-editor no menu inferior');
+  assert.ok(htmlPainel.includes("navegarAba('editor')"), 'Deve ter o atalho para editar o site dentro de Ajustes');
   assert.ok(htmlPainel.includes('Envie o vídeo do celular para o YouTube'), 'Deve conter a instrução em português simples para o envio de vídeo');
   assert.ok(htmlPainel.includes('id="midia-foto-input"'), 'Deve conter input para upload de fotos');
   assert.ok(htmlPainel.includes('id="midia-video-url"'), 'Deve conter input de link de vídeo');

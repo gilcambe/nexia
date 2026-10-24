@@ -166,8 +166,27 @@
   .linha-g input, .linha-g select { flex: 1 1 130px; min-width: 0; }
   .lista-g { list-style: none; margin: 6px 0; font-size: 13px; }
   .lista-g li { padding: 3px 0; }
+  .fin-l { display: flex; justify-content: space-between; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--linha); }
   #aba-config button[type=submit] { position: sticky; bottom: 84px; z-index: 5; box-shadow: 0 6px 20px rgba(0,0,0,.5); }
   #btn-avisos { margin: 8px 0; }
+  /* listas de escolha legíveis (texto claro no fundo escuro) */
+  select { color-scheme: dark; background-color: #1b2014; color: #fff; }
+  select option, select optgroup { background: #1b2014; color: #fff; }
+  .logo-tit img { height: 38px; width: 38px; border-radius: 50%; object-fit: cover; margin-right: 8px; vertical-align: middle; }
+  .logo-login { display: block; margin: 0 auto 12px; width: 84px; height: 84px; border-radius: 50%; object-fit: cover; }
+  .legenda-cal { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 12px; margin-top: 12px; color: var(--suave); }
+  .legenda-cal span::before { content: ''; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -2px; background: var(--c); border: 1px solid var(--b); }
+  .cal-dia { aspect-ratio: 1; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; line-height: 1.1; cursor: pointer; border: 1px solid var(--linha); overflow: hidden; }
+  .cal-dia small { font-size: 9px; font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; opacity: .95; }
+  .barra-filtros { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+  .barra-filtros input { grid-column: 1 / -1; }
+  .pg { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 800; }
+  .pg.total { background: var(--ok-f); color: #6fe0a0; } .pg.parcial { background: var(--alerta-f); color: var(--alerta); } .pg.nao { background: var(--erro-f); color: var(--erro); } .pg.neutro { background: rgba(255,255,255,.08); color: var(--suave); }
+  .btn-ver { margin-top: 8px; }
+  .chips-oc { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+  .chip-oc { background: rgba(230,162,60,.15); border: 1px solid var(--alerta); color: var(--alerta); border-radius: 16px; padding: 3px 10px; font-size: 12px; }
+  .abas-sub { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 12px; }
+  .voltar-aj { margin-bottom: 10px; }
 </style>
 </head>
 <body>
@@ -175,7 +194,7 @@
 <!-- Header Principal -->
 <header class="header-painel">
   <div class="logo-tit">
-    <i class="ri-sparkles-line"></i>
+    <img src="../logo-splash.png" alt="Splash">
     <span>Splash Piscina e Lazer</span>
   </div>
   <div id="usuario-topo" class="oculto">
@@ -186,6 +205,7 @@
 <!-- Área Deslogada / Primeiro Acesso -->
 <div id="area-deslogada" class="cont-main">
   <div class="card-login" id="card-entrar">
+    <img class="logo-login" src="../logo-splash.png" alt="Splash Piscina e Lazer">
     <h2>Painel da Amanda</h2>
     <p>Digite sua senha para gerenciar as reservas e o site.</p>
     <div id="msg-login" class="msg erro oculto"></div>
@@ -238,6 +258,8 @@
         <div>DOM</div><div>SEG</div><div>TER</div><div>QUA</div><div>QUI</div><div>SEX</div><div>SÁB</div>
       </div>
       <div id="grid-calendario-painel" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;"></div>
+      <div class="legenda-cal" id="legenda-cal"></div>
+      <p class="suave" style="margin-top:10px">Toque num dia para ver a reserva. Dia livre: toque para lançar uma reserva ou bloquear.</p>
     </div>
   </section>
 
@@ -259,9 +281,15 @@
   <section id="aba-reservas" class="oculto">
     <div class="card">
       <div class="card-header">
-        <div class="card-title">Histórico de Reservas</div>
+        <div class="card-title">Todas as Reservas</div>
         <button class="btn pequeno claro" onclick="baixarBackupCsv()"><i class="ri-download-line"></i> Baixar CSV</button>
       </div>
+      <div class="barra-filtros">
+        <input type="search" id="busca-reservas" placeholder="Buscar por nome, número da reserva, WhatsApp ou data" oninput="renderizarListasReservas()">
+        <select id="filtro-un-reservas" onchange="renderizarListasReservas()"><option value="">Todas as unidades</option><option value="santa-adelia">Santa Adélia</option><option value="santa-barbara">Santa Bárbara</option></select>
+        <select id="filtro-st-reservas" onchange="renderizarListasReservas()"><option value="">Todas as situações</option><option value="futuras">Próximas</option><option value="abertas">Esperando resposta/sinal</option><option value="confirmadas">Confirmadas</option><option value="falta">Falta pagar</option><option value="canceladas">Canceladas</option></select>
+      </div>
+      <p class="suave" id="cnt-reservas"></p>
       <div id="lista-todas-reservas"></div>
     </div>
   </section>
@@ -280,7 +308,9 @@
       <!-- Formulário Reserva Manual -->
       <form id="form-lanc-reserva" onsubmit="salvarReservaManual(event)">
         <label>Data da Locação</label>
-        <input type="date" id="lanc-res-data" required>
+        <div id="lanc-ocupados"></div>
+        <input type="date" id="lanc-res-data" required onchange="avisarDiaOcupado()">
+        <p id="lanc-aviso-dia" style="color:var(--erro);font-size:13px"></p>
         <label>Nome do Cliente</label>
         <input type="text" id="lanc-res-nome" required>
         <label>WhatsApp</label>
@@ -295,6 +325,12 @@
         </select>
         <label>Estimativa de Convidados</label>
         <input type="number" id="lanc-res-convidados" placeholder="Ex: 30">
+        <label>Valor combinado da locação (R$)</label>
+        <input type="number" id="lanc-res-total" min="0" step="0.01" placeholder="Ex: 1200">
+        <label>Quanto o cliente já pagou (R$)</label>
+        <input type="number" id="lanc-res-pago" min="0" step="0.01" placeholder="Ex: 360 (o sinal)">
+        <label>Situação</label>
+        <select id="lanc-res-status"><option value="confirmado">Reserva confirmada</option><option value="aguardando_sinal">Aguardando o sinal</option></select>
         <label>Observações</label>
         <textarea id="lanc-res-obs" rows="2"></textarea>
         <button type="submit" class="btn largo ouro"><i class="ri-check-line"></i> Confirmar Reserva Manual</button>
@@ -320,7 +356,8 @@
         <div class="card-title"><i class="ri-layout-edit-line"></i> Editar meu site</div>
         <a class="btn pequeno claro" id="link-ver-site-publico" target="_blank" rel="noopener"><i class="ri-external-link-line"></i> Ver no ar</a>
       </div>
-      <p style="font-size:13px;color:var(--suave)">Toque em qualquer texto, foto ou seção no site abaixo para alterar. As mudanças valem imediatamente.</p>
+      <button class="btn pequeno claro voltar-aj" onclick="navegarAba('config')"><i class="ri-arrow-left-line"></i> Voltar para Ajustes</button>
+      <p style="font-size:13px;color:var(--suave)">Toque em qualquer texto, foto ou seção no site abaixo para alterar. Depois toque em <b>Salvar mudanças</b>: o site no ar já mostra a mudança na próxima vez que alguém abrir.</p>
 
       <div class="acoes-editor">
         <button class="btn pequeno ouro" onclick="salvarAlteracoesSite()"><i class="ri-save-line"></i> Salvar mudanças</button>
@@ -344,7 +381,8 @@
           <button class="btn pequeno claro" onclick="baixarModeloXlsx()"><i class="ri-file-excel-line"></i> Modelo XLSX</button>
         </div>
       </div>
-      <p style="font-size: 13px; color: var(--suave);">Traga a sua agenda antiga do Excel ou do papel sem precisar digitar uma por uma. Escolha o arquivo no celular ou computador.</p>
+      <button class="btn pequeno claro voltar-aj" onclick="navegarAba('config')"><i class="ri-arrow-left-line"></i> Voltar para Ajustes</button>
+      <p style="font-size: 13px; color: var(--suave);">Traga todas as reservas de uma vez, sem digitar uma por uma. 1) Baixe o modelo (Excel ou CSV). 2) Preencha uma reserva por linha: data, unidade, cliente, WhatsApp, tipo, convidados, valor total, sinal, quanto já foi pago e situação. 3) Escolha o arquivo aqui. O sistema reconhece as colunas sozinho, mostra uma prévia para você conferir e só então importa. Datas passadas entram como "realizada"; o que já foi pago entra no financeiro.</p>
 
       <!-- PASSO 1: SELEÇÃO DE ARQUIVO E UNIDADE PADRÃO -->
       <div id="imp-passo-1" style="margin-top: 16px;">
@@ -406,26 +444,38 @@
   <!-- ABA 6: CONFIGURAÇÕES / AJUSTES -->
   <section id="aba-financeiro" class="oculto">
     <h2>Financeiro</h2>
-    <div class="linha-g"><input type="date" id="fin-de" aria-label="De"><input type="date" id="fin-ate" aria-label="Até"><button class="btn pequeno ouro" id="fin-atualizar">Atualizar</button></div>
+    <label>Ver</label>
+    <select id="fin-unidade" onchange="Gestao.abrir('financeiro')"></select>
+    <div class="linha-g"><input type="date" id="fin-de" aria-label="De"><input type="date" id="fin-ate" aria-label="Até"><button class="btn pequeno ouro" id="fin-atualizar" type="button">Atualizar</button></div>
     <div id="fin-resumo"></div>
-    <h3 class="tit-g">Reservas e pagamentos</h3>
-    <div id="fin-reservas"></div>
-  </section>
 
-  <section id="aba-despesas" class="oculto">
-    <h2>Despesas</h2>
+    <h3 class="tit-g">Despesas</h3>
     <form id="desp-form" class="cartao-g">
       <div class="linha-g"><select id="desp-unidade" aria-label="Unidade"></select><select id="desp-categoria" aria-label="Categoria"></select></div>
       <div class="linha-g"><input type="text" id="desp-descricao" maxlength="120" placeholder="Descrição (ex.: produto da piscina)"><input type="number" id="desp-valor" min="0.01" step="0.01" placeholder="Valor" required><input type="date" id="desp-data" required></div>
       <div class="linha-g"><button class="btn ouro" type="submit">Salvar despesa</button><span id="desp-msg" role="status"></span></div>
     </form>
-    <div class="linha-g"><input type="date" id="desp-de" aria-label="De"><input type="date" id="desp-ate" aria-label="Até"><button class="btn pequeno ouro" type="button" id="desp-atualizar">Atualizar</button></div>
+    <input type="hidden" id="desp-de"><input type="hidden" id="desp-ate">
     <p id="desp-total" style="margin:10px 0;font-weight:700"></p>
     <div id="desp-lista"></div>
+
+    <div id="com-bloco" style="display:none">
+      <h3 class="tit-g">Comissão recebida (unidade de outro dono)</h3>
+      <form id="com-form" class="cartao-g">
+        <div class="linha-g"><input type="number" id="com-valor" min="0.01" step="0.01" placeholder="Quanto você recebeu (R$)" required><input type="date" id="com-data" required><input type="text" id="com-obs" maxlength="120" placeholder="Observação (opcional)"></div>
+        <div class="linha-g"><button class="btn ouro" type="submit">Registrar comissão recebida</button><span id="com-msg" role="status"></span></div>
+      </form>
+      <div id="com-lista"></div>
+    </div>
+
+    <h3 class="tit-g">Reservas e pagamentos</h3>
+    <div id="fin-reservas"></div>
   </section>
 
   <section id="aba-clientes" class="oculto">
     <h2>Clientes</h2>
+    <label>Unidade</label>
+    <select id="cli-unidade" onchange="Gestao.abrir('clientes')"></select>
     <p class="suave" id="cli-regra"></p>
     <div id="cli-lista"></div>
   </section>
@@ -433,15 +483,21 @@
   <section id="aba-config" class="oculto">
     <div class="card">
       <div class="card-header">
-        <div class="card-title">Configurações Gerais</div>
+        <div class="card-title">Ajustes</div>
       </div>
+      <div class="abas-sub">
+        <button type="button" class="btn pequeno ouro" onclick="navegarAba('editor')"><i class="ri-layout-edit-line"></i> Editar o site (textos e fotos)</button>
+        <button type="button" class="btn pequeno claro" onclick="navegarAba('importar')"><i class="ri-file-upload-line"></i> Importar planilha de reservas</button>
+        <button type="button" class="btn pequeno claro" onclick="abrirModalMidia()"><i class="ri-image-add-line"></i> Fotos, vídeos, prints e posts</button>
+      </div>
+      <p class="cfg-ajuda">Preencha com calma e toque em <b>Salvar Configurações</b> no fim. Tudo aparece no site na hora.</p>
       <form onsubmit="salvarConfiguracoes(event)">
         <h4 class="cfg-sub">Pix para o sinal</h4>
         <label>Nome do titular da conta Pix</label>
         <input type="text" id="cfg-pix-titular">
         <label>Chave Pix</label>
         <input type="text" id="cfg-pix-chave" placeholder="E-mail, CPF, CNPJ, celular ou chave aleatória">
-        <label class="check-linha"><input type="checkbox" id="cfg-pix-mostrar" style="width:auto"> Mostrar a chave Pix para o cliente logo depois que ele enviar o pedido (ele paga e manda o comprovante pelo WhatsApp)</label>
+        <label class="check-linha"><input type="checkbox" id="cfg-pix-mostrar" style="width:auto"> Mostrar a chave Pix ao cliente já na hora de reservar e pagar (no site e depois do pedido)</label>
         <label>Tipo de sinal</label>
         <select id="cfg-sinal-tipo"><option value="percentual">Percentual do valor total (%)</option><option value="valor">Valor fixo (R$)</option></select>
         <label>Valor do sinal (% ou R$, conforme o tipo; deixe 0 para combinar com cada cliente)</label>
@@ -473,13 +529,19 @@
         <h4 class="cfg-sub">Música do site</h4>
         <label>Estilo da música</label>
         <select id="cfg-musica-estilo"><option value="alegre">Alegre (padrão)</option><option value="tropical">Tropical, mais animada</option><option value="chill">Calma, para relaxar</option><option value="desligada">Sem música</option></select>
-        <label>Ou use a sua música: link direto de um arquivo MP3 (opcional)</label>
-        <input type="url" id="cfg-musica-url" placeholder="https://.../musica.mp3">
+        <label>Ou use a sua música: cole o link de um clipe do YouTube (a música do clipe toca no site) ou de um arquivo MP3 (opcional)</label>
+        <input type="url" id="cfg-musica-url" placeholder="https://www.youtube.com/watch?v=...">
+        <p class="cfg-ajuda">A música começa sozinha quando o cliente toca em qualquer lugar do site, e ele pode desligar no botãozinho de som.</p>
 
         <h4 class="cfg-sub">Extras que o cliente pode escolher (ex.: decoração)</h4>
         <p class="cfg-ajuda">Deixe o valor em 0 para combinar o preço com o cliente pelo WhatsApp.</p>
         <div id="cfg-extras"></div>
         <button type="button" class="btn pequeno claro" onclick="adicionarExtraCfg()"><i class="ri-add-line"></i> Adicionar extra</button>
+
+        <h4 class="cfg-sub">Dias com preço especial (promoção, feriado, alta temporada)</h4>
+        <p class="cfg-ajuda">Nesses dias o valor da diária muda e o site mostra o dia em destaque 🔥. Fora desses dias valem os preços de semana e fim de semana.</p>
+        <div id="cfg-datas-esp"></div>
+        <button type="button" class="btn pequeno claro" onclick="adicionarDataEspecialCfg()"><i class="ri-add-line"></i> Adicionar dia com preço especial</button>
 
         <h4 class="cfg-sub">Promoções no site (ex.: "Dia 02/11 disponível por R$ 799,99")</h4>
         <div id="cfg-promos"></div>
@@ -569,38 +631,13 @@
 
 <!-- Menu Inferior Mobile-First -->
 <nav id="menu-inferior" class="nav-abas oculto">
-  <button class="nav-aba-btn ativa" onclick="navegarAba('calendario')" id="tab-calendario">
-    <i class="ri-calendar-line"></i>
-    <span>Calendário</span>
-  </button>
-  <button class="nav-aba-btn" onclick="navegarAba('pedidos')" id="tab-pedidos">
-    <i class="ri-notification-3-line"></i>
-    <span>Pedidos</span>
-    <span id="badge-pedidos" class="badge-bolinha oculto">0</span>
-  </button>
-  <button class="nav-aba-btn" onclick="navegarAba('reservas')" id="tab-reservas">
-    <i class="ri-list-check-2"></i>
-    <span>Reservas</span>
-  </button>
-  <button class="nav-aba-btn" onclick="navegarAba('nova')" id="tab-nova">
-    <i class="ri-add-circle-line"></i>
-    <span>Novo</span>
-  </button>
+  <button class="nav-aba-btn ativa" onclick="navegarAba('calendario')" id="tab-calendario"><i class="ri-calendar-line"></i><span>Calendário</span></button>
+  <button class="nav-aba-btn" onclick="navegarAba('pedidos')" id="tab-pedidos"><i class="ri-notification-3-line"></i><span>Pedidos</span><span id="badge-pedidos" class="badge-bolinha oculto">0</span></button>
+  <button class="nav-aba-btn" onclick="navegarAba('reservas')" id="tab-reservas"><i class="ri-list-check-2"></i><span>Reservas</span></button>
+  <button class="nav-aba-btn" onclick="navegarAba('nova')" id="tab-nova"><i class="ri-add-circle-line"></i><span>Novo</span></button>
   <button class="nav-aba-btn" onclick="navegarAba('financeiro')" id="tab-financeiro"><i class="ri-money-dollar-circle-line"></i><span>Financeiro</span></button>
-  <button class="nav-aba-btn" onclick="navegarAba('despesas')" id="tab-despesas"><i class="ri-wallet-3-line"></i><span>Despesas</span></button>
   <button class="nav-aba-btn" onclick="navegarAba('clientes')" id="tab-clientes"><i class="ri-user-star-line"></i><span>Clientes</span></button>
-  <button class="nav-aba-btn" onclick="navegarAba('editor')" id="tab-editor">
-    <i class="ri-layout-edit-line"></i>
-    <span>Editar Site</span>
-  </button>
-  <button class="nav-aba-btn" onclick="navegarAba('importar')" id="tab-importar">
-    <i class="ri-file-upload-line"></i>
-    <span>Importar</span>
-  </button>
-  <button class="nav-aba-btn" onclick="navegarAba('config')" id="tab-config">
-    <i class="ri-settings-4-line"></i>
-    <span>Ajustes</span>
-  </button>
+  <button class="nav-aba-btn" onclick="navegarAba('config')" id="tab-config"><i class="ri-settings-4-line"></i><span>Ajustes</span></button>
 </nav>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous"></script>
@@ -737,7 +774,7 @@
     document.getElementById('btn-u-santa-adelia').classList.toggle('ativo', id === 'santa-adelia');
     document.getElementById('btn-u-santa-barbara').classList.toggle('ativo', id === 'santa-barbara');
     carregarCalendario();
-    carregarReservas();
+    mostrarOcupados();
   }
 
   /* --- AVISO DE PEDIDO NOVO (com o painel aberto no celular ou no computador) --- */
@@ -806,53 +843,69 @@
     return new Date(Date.now() - 3 * 3600000 + (deslocDias || 0) * 86400000).toISOString().slice(0, 10);
   }
 
+  let CAL_RESERVAS = [];
+  const PRIO = { confirmado: 6, concluido: 5, aguardando_sinal: 4, pedido: 3, bloqueado: 2, cancelado: 1, recusado: 1, expirado: 1 };
+  const ESTILO_DIA = {
+    confirmado: ['#8a2323', '#e05555', 'Alugado'], concluido: ['#34465a', '#6f8aa6', 'Realizado'],
+    aguardando_sinal: ['#6e5600', '#e6b800', 'Falta sinal'], pedido: ['#6e5600', '#e6b800', 'Pedido'],
+    bloqueado: ['#3a3a3a', '#777', 'Bloqueado'], cancelado: ['transparent', '#e05555', 'Cancelado'], recusado: ['transparent', '#e05555', 'Recusado'], expirado: ['transparent', '#e05555', 'Expirado']
+  };
   async function carregarCalendario() {
     document.getElementById('titulo-mes-atual').textContent = SplashPainel.nomeMesAnoPt(MES_ATUAL);
-    const res = await apiGet({ unidade: UNIDADE_ATUAL, mes: MES_ATUAL });
-    if (res.status === 200) {
-      DIAS_MAPA = res.body.dias || {};
-    } else {
-      DIAS_MAPA = {};
-    }
+    const [a, m] = MES_ATUAL.split('-').map(Number);
+    const ult = String(new Date(a, m, 0).getDate()).padStart(2, '0');
+    const res = await apiPost({ acao: 'listar', unidade: UNIDADE_ATUAL, de: `${MES_ATUAL}-01`, ate: `${MES_ATUAL}-${ult}` });
+    CAL_RESERVAS = res.status === 200 ? (res.body.itens || []) : [];
     renderizarGridCalendario();
+  }
+  function reservaDoDia(dataIso) {
+    return CAL_RESERVAS.filter(r => r.data === dataIso).sort((x, y) => (PRIO[y.status] || 0) - (PRIO[x.status] || 0))[0] || null;
   }
 
   function renderizarGridCalendario() {
     const container = document.getElementById('grid-calendario-painel');
     container.innerHTML = '';
-    const dias = SplashPainel.gerarGridCalendarioPainel(MES_ATUAL, DIAS_MAPA);
-
+    const dias = SplashPainel.gerarGridCalendarioPainel(MES_ATUAL, {});
     dias.forEach(d => {
       const el = document.createElement('div');
-      el.style.aspectRatio = '1';
-      el.style.borderRadius = '10px';
-      el.style.display = 'flex';
-      el.style.alignItems = 'center';
-      el.style.justifyContent = 'center';
-      el.style.fontSize = '13px';
-      el.style.fontWeight = '600';
-      el.style.cursor = d.doMes ? 'pointer' : 'default';
-      el.style.border = '1px solid var(--linha)';
-
-      const corBg = SplashPainel.obterCorDiaEstado(d.status, d.doMes);
-      el.style.background = corBg;
-      el.style.color = d.doMes ? '#fff' : 'var(--suave)';
-      el.textContent = d.diaNum;
-
-      if (d.doMes) {
-        el.onclick = () => abrirDetalhesData(d.dataIso);
-      }
+      if (!d.doMes) { container.appendChild(el); return; }
+      const r = reservaDoDia(d.dataIso);
+      el.className = 'cal-dia';
+      const est = r ? ESTILO_DIA[r.status] : null;
+      el.style.background = est ? est[0] : 'var(--cartao)';
+      el.style.borderColor = est ? est[1] : 'var(--linha)';
+      if (r && ['cancelado', 'recusado', 'expirado'].includes(r.status)) el.style.borderStyle = 'dashed';
+      const nome = r ? String(r.nome || '').split(' ')[0] : '';
+      el.innerHTML = `<span>${d.diaNum}</span>${r ? `<small>${SplashPainel.escapeHtml(r.status === 'bloqueado' ? 'bloq.' : nome)}</small>` : ''}`;
+      el.setAttribute('aria-label', `Dia ${d.diaNum}${est ? ': ' + est[2] : ': livre'}`);
+      el.onclick = () => abrirDetalhesData(d.dataIso);
       container.appendChild(el);
     });
+    document.getElementById('legenda-cal').innerHTML = [['transparent', 'var(--linha)', 'Livre'], ['#8a2323', '#e05555', 'Alugado'], ['#6e5600', '#e6b800', 'Falta pagar o sinal'], ['#34465a', '#6f8aa6', 'Realizado'], ['#3a3a3a', '#777', 'Bloqueado'], ['transparent', '#e05555', 'Cancelado']]
+      .map(([c, b, t]) => `<span style="--c:${c};--b:${b}">${t}</span>`).join('');
+  }
+
+  const nomeUn = id => ((CONFIG_CACHE && CONFIG_CACHE.unidades) || []).find(u => u.id === id)?.nome || id;
+  const ROTULO_ST = { pedido: 'Pedido novo', aguardando_sinal: 'Aguardando sinal', confirmado: 'Confirmada', concluido: 'Realizada', recusado: 'Recusada', cancelado: 'Cancelada', expirado: 'Expirada', bloqueado: 'Bloqueio' };
+  const somaPag = r => (r.pagamentos || []).reduce((s, p) => s + (Number(p.valor) || 0), 0);
+  function statusPagamento(r) {
+    const total = Number(r.valor_total) || 0, pago = somaPag(r);
+    if (['cancelado', 'recusado', 'expirado'].includes(r.status)) return ['Sem cobrança', 'neutro'];
+    if (r.status === 'bloqueado') return ['Bloqueio', 'neutro'];
+    if (pago > 0 && total > 0 && pago >= total - 0.005) return ['Pago total', 'total'];
+    if (pago > 0) return ['Pago parcial: ' + SplashPainel.formatarMoeda(pago) + (total > 0 ? ' de ' + SplashPainel.formatarMoeda(total) : ''), 'parcial'];
+    return ['Ainda não pago', 'nao'];
   }
 
   async function carregarReservas() {
-    const res = await apiPost({ acao: 'listar', unidade: UNIDADE_ATUAL, de: hojeBr(-30), ate: hojeBr(335) });
+    const res = await apiPost({ acao: 'listar', de: hojeBr(-60), ate: hojeBr(305) });
     if (res.status === 200) {
-      RESERVAS_CACHE = res.body.itens || [];
-      PENDENTES_CACHE = (res.body.pendentes || []).filter(r => r.unidade === UNIDADE_ATUAL);
+      RESERVAS_CACHE = (res.body.itens || []).filter(r => r.status !== 'bloqueado');
+      BLOQ_CACHE = (res.body.itens || []).filter(r => r.status === 'bloqueado');
+      PENDENTES_CACHE = res.body.pendentes || [];
       if (res.body.config) CONFIG_CACHE = res.body.config;
       renderizarListasReservas();
+      mostrarOcupados();
     }
   }
 
@@ -866,88 +919,138 @@
     document.getElementById('badge-pedidos').textContent = pendentes.length;
     document.getElementById('badge-pedidos').classList.toggle('oculto', pendentes.length === 0);
     document.getElementById('cnt-pedidos-badge').textContent = `${pendentes.length} pendente(s)`;
+    if (pendentes.length === 0) pedCont.innerHTML = '<p class="suave" style="padding:12px 0">Nenhum pedido esperando. Quando chegar um, aparece aqui.</p>';
+    else pendentes.slice().sort((a, b) => (a.criado_em || '').localeCompare(b.criado_em || '')).forEach(r => pedCont.appendChild(criarCardReserva(r, true)));
 
-    if (pendentes.length === 0) {
-      pedCont.innerHTML = '<p style="font-size:13px;color:var(--suave);padding:12px 0">Nenhum pedido pendente nesta unidade.</p>';
-    } else {
-      pendentes.forEach(r => pedCont.appendChild(criarCardReserva(r)));
+    // Reservas: busca por nome, protocolo, WhatsApp ou data; filtros de unidade e situação
+    const termo = SplashPainel.removerAcentos ? SplashPainel.removerAcentos((document.getElementById('busca-reservas') || {}).value || '') : '';
+    const fu = (document.getElementById('filtro-un-reservas') || {}).value || '';
+    const fs = (document.getElementById('filtro-st-reservas') || {}).value || '';
+    let lista = RESERVAS_CACHE.slice().sort((a, b) => (a.data || '').localeCompare(b.data || ''));
+    if (fu) lista = lista.filter(r => r.unidade === fu);
+    if (fs === 'abertas') lista = lista.filter(r => ['pedido', 'aguardando_sinal'].includes(r.status));
+    else if (fs === 'confirmadas') lista = lista.filter(r => r.status === 'confirmado');
+    else if (fs === 'falta') lista = lista.filter(r => ['confirmado', 'concluido'].includes(r.status) && statusPagamento(r)[1] !== 'total');
+    else if (fs === 'canceladas') lista = lista.filter(r => ['cancelado', 'recusado', 'expirado'].includes(r.status));
+    else if (fs === 'futuras') lista = lista.filter(r => r.data >= hojeBr() && !['cancelado', 'recusado', 'expirado'].includes(r.status));
+    if (termo) {
+      lista = lista.filter(r => {
+        const dBr = SplashPainel.formatarDataBr(r.data);
+        const alvo = SplashPainel.removerAcentos([r.nome, r.protocolo, r.whatsapp, dBr, r.data, r.tipo_evento, r.obs].join(' '));
+        return alvo.includes(termo.replace(/\s+/g, ' '));
+      });
     }
-
-    if (RESERVAS_CACHE.length === 0) {
-      todCont.innerHTML = '<p style="font-size:13px;color:var(--suave);padding:12px 0">Nenhuma reserva cadastrada.</p>';
-    } else {
-      RESERVAS_CACHE.forEach(r => todCont.appendChild(criarCardReserva(r)));
-    }
+    document.getElementById('cnt-reservas').textContent = lista.length + ' reserva(s)';
+    if (lista.length === 0) todCont.innerHTML = '<p class="suave" style="padding:12px 0">Nenhuma reserva encontrada.</p>';
+    else lista.forEach(r => todCont.appendChild(criarCardReserva(r, false)));
   }
 
-  function criarCardReserva(r) {
+  function criarCardReserva(r, comoPedido) {
     const div = document.createElement('div');
     div.className = 'reserva-item';
+    div.style.flexWrap = 'wrap';
     const dataBr = SplashPainel.formatarDataBr(r.data);
-
+    const [txtPg, clsPg] = statusPagamento(r);
     div.innerHTML = `
-      <div class="reserva-info">
-        <h4>${SplashPainel.escapeHtml(r.nome)} — ${dataBr}</h4>
-        <p>${SplashPainel.escapeHtml(r.tipo_evento || 'Evento')} · ${SplashPainel.escapeHtml(r.whatsapp)} · Protocolo: ${r.protocolo || 'N/A'}</p>
+      <div class="reserva-info" style="flex:1 1 220px">
+        <h4>${SplashPainel.escapeHtml(r.nome)} · ${dataBr}</h4>
+        <p>${SplashPainel.escapeHtml(nomeUn(r.unidade))} · ${SplashPainel.escapeHtml(r.tipo_evento || 'Evento')}${r.convidados ? ' · ' + SplashPainel.escapeHtml(r.convidados) + ' pessoas' : ''}</p>
+        <p>${SplashPainel.escapeHtml(r.whatsapp)} · Nº ${SplashPainel.escapeHtml(r.protocolo || '')}</p>
+        ${r.obs ? `<p style="color:var(--alerta)">Obs.: ${SplashPainel.escapeHtml(String(r.obs).slice(0, 80))}${String(r.obs).length > 80 ? '...' : ''}</p>` : ''}
+        ${r.comprovantes && r.comprovantes.length ? '<p style="color:#6fe0a0">📎 Comprovante enviado pelo cliente</p>' : ''}
       </div>
-      <div>
-        <span class="badge-status ${r.status}">${r.status}</span>
-      </div>
-    `;
+      <div style="text-align:right">
+        <span class="badge-status ${r.status}">${ROTULO_ST[r.status] || r.status}</span><br>
+        ${comoPedido ? '' : `<span class="pg ${clsPg}" style="margin-top:6px">${SplashPainel.escapeHtml(txtPg)}</span>`}
+        <br><button class="btn pequeno ouro btn-ver" type="button">${comoPedido ? 'Ver pedido' : 'Ver'}</button>
+      </div>`;
     div.onclick = () => abrirModalDetalhesReserva(r);
     return div;
+  }
+
+  function linkZap(r, texto) {
+    return `https://wa.me/${String(r.whatsapp).replace(/\D/g, '')}${texto ? '?text=' + encodeURIComponent(texto) : ''}`;
   }
 
   function abrirModalDetalhesReserva(r) {
     const modal = document.getElementById('modal-detalhes');
     const corp = document.getElementById('md-corpo');
     const acoes = document.getElementById('md-acoes');
-    document.getElementById('md-titulo').textContent = `Reserva #${r.protocolo || ''}`;
-
-    const dataBr = SplashPainel.formatarDataBr(r.data);
+    document.getElementById('md-titulo').textContent = `Reserva ${r.protocolo || ''}`;
+    const money = SplashPainel.formatarMoeda;
+    const total = Number(r.valor_total) || 0, pago = somaPag(r);
+    const [txtPg, clsPg] = statusPagamento(r);
+    const ab = r.id.replace(/'/g, '');
+    const compUrl = id => absUrl('/api/locacao?site=' + SITE_NAME + '&foto=' + id);
     corp.innerHTML = `
+      <p><span class="badge-status ${r.status}">${ROTULO_ST[r.status] || r.status}</span> <span class="pg ${clsPg}">${SplashPainel.escapeHtml(txtPg)}</span></p>
+      <p><strong>Unidade:</strong> ${SplashPainel.escapeHtml(nomeUn(r.unidade))}</p>
+      <p><strong>Data:</strong> ${SplashPainel.formatarDataBr(r.data)}</p>
       <p><strong>Cliente:</strong> ${SplashPainel.escapeHtml(r.nome)}</p>
-      <p><strong>Data:</strong> ${dataBr}</p>
       <p><strong>WhatsApp:</strong> ${SplashPainel.escapeHtml(r.whatsapp)}</p>
       <p><strong>E-mail:</strong> ${SplashPainel.escapeHtml(r.email || 'Não informado')}</p>
-      <p><strong>Evento:</strong> ${SplashPainel.escapeHtml(r.tipo_evento)} (${r.convidados || 'N/A'} convidados)</p>
-      <p><strong>Status:</strong> <span class="badge-status ${r.status}">${r.status}</span></p>
-      ${r.obs ? `<p><strong>Obs:</strong> ${SplashPainel.escapeHtml(r.obs)}</p>` : ''}
-      ${(r.extras && r.extras.length) ? `<p><strong>Extras pedidos:</strong> ${r.extras.map(x => SplashPainel.escapeHtml(x.nome) + (x.valor > 0 ? ' (' + SplashPainel.formatarMoeda(x.valor) + ')' : ' (valor a combinar)')).join(', ')}</p>` : ''}
-      ${(r.comprovantes && r.comprovantes.length) ? `<div class="comprovantes-reserva"><p><strong>Comprovante enviado pelo cliente:</strong> toque para abrir</p><div style="display:flex;gap:8px;flex-wrap:wrap">${r.comprovantes.map(c => `<a href="${SplashPainel.escapeHtml(absUrl('/api/locacao?site=' + SITE_NAME + '&foto=' + c.id))}" target="_blank" rel="noopener"><img src="${SplashPainel.escapeHtml(absUrl('/api/locacao?site=' + SITE_NAME + '&foto=' + c.id))}" alt="Comprovante" style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--linha)"></a>`).join('')}</div></div>` : ''}
+      <p><strong>Evento:</strong> ${SplashPainel.escapeHtml(r.tipo_evento || '-')} (${SplashPainel.escapeHtml(r.convidados || 'N/A')} convidados)</p>
+      <p><strong>Extras:</strong> ${(r.extras && r.extras.length) ? r.extras.map(x => SplashPainel.escapeHtml(x.nome) + (x.valor > 0 ? ' (' + money(x.valor) + ')' : ' (a combinar)')).join(', ') : 'nenhum'}</p>
+      <p><strong>Observações do cliente:</strong> ${r.obs ? SplashPainel.escapeHtml(r.obs) : 'nenhuma'}</p>
+      <p><strong>Pedido feito em:</strong> ${r.criado_em ? new Date(r.criado_em).toLocaleString('pt-BR') : '-'}${['pedido', 'aguardando_sinal'].includes(r.status) && r.prazo_ate ? ' · dia segurado até ' + new Date(r.prazo_ate).toLocaleString('pt-BR') : ''}</p>
+      ${(r.comprovantes && r.comprovantes.length) ? `<div><p><strong>Comprovante enviado pelo cliente:</strong> toque para abrir</p><div style="display:flex;gap:8px;flex-wrap:wrap">${r.comprovantes.map(c => `<a href="${SplashPainel.escapeHtml(compUrl(c.id))}" target="_blank" rel="noopener"><img src="${SplashPainel.escapeHtml(compUrl(c.id))}" alt="Comprovante" style="width:90px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--linha)"></a>`).join('')}</div></div>` : ''}
       ${r.status === 'bloqueado' ? '' : `
       <div class="valores-reserva">
+        <p><strong>Pago:</strong> ${money(pago)} · <strong>Falta:</strong> ${total > 0 ? money(Math.max(0, total - pago)) : 'defina o valor total'}</p>
+        ${(r.pagamentos && r.pagamentos.length) ? `<ul class="lista-g">${r.pagamentos.map(p => `<li>${SplashPainel.formatarDataBr(p.data)} · ${SplashPainel.escapeHtml(p.forma)} · ${money(p.valor)}</li>`).join('')}</ul>` : ''}
         <label>Valor total combinado (R$)</label>
-        <input type="number" id="md-valor-total" min="0" step="0.01" value="${Number(r.valor_total) || ''}">
+        <input type="number" id="md-valor-total" min="0" step="0.01" value="${total || ''}">
         <label>Valor do sinal (R$)</label>
         <input type="number" id="md-valor-sinal" min="0" step="0.01" value="${Number(r.valor_sinal) || ''}">
-        <button class="btn pequeno claro" onclick="salvarValoresReserva('${SplashPainel.escapeHtml(r.id)}')">Salvar valores</button>
+        <button class="btn pequeno claro" onclick="salvarValoresReserva('${ab}')">Salvar valores</button>
+        <button class="btn pequeno claro" onclick="registrarPagamentoRapido('${ab}')"><i class="ri-money-dollar-circle-line"></i> Registrar pagamento</button>
       </div>`}
     `;
-
     acoes.innerHTML = '';
-
-    if (r.status === 'pedido' || r.status === 'aguardando_sinal') {
-      const msgZap = SplashPainel.gerarMensagemWhatsappSinal(r, CONFIG_CACHE || {});
-      const linkZap = `https://wa.me/${String(r.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent(msgZap)}`;
-
-      acoes.innerHTML += `
-        <a href="${linkZap}" target="_blank" class="btn pequeno ouro"><i class="ri-whatsapp-line"></i> 1. Enviar chave Pix</a>
-        <button class="btn pequeno verde" onclick="confirmarEEnviarContrato('${r.id}')"><i class="ri-check-double-line"></i> 2. Recebi o sinal: confirmar e enviar contrato</button>
-        <button class="btn pequeno vermelho" onclick="alterarStatusReserva('${r.id}', 'recusado')"><i class="ri-close-circle-line"></i> Recusar</button>
-      `;
+    const zapSimples = `<a href="${linkZap(r, '')}" target="_blank" rel="noopener" class="btn pequeno claro"><i class="ri-whatsapp-line"></i> Falar com o cliente</a>`;
+    if (r.status === 'pedido') {
+      acoes.innerHTML = `
+        <button class="btn pequeno verde" onclick="aceitarPedido('${ab}')"><i class="ri-check-line"></i> Aceitar e enviar o Pix</button>
+        ${zapSimples}
+        <button class="btn pequeno vermelho" onclick="if(confirm('Recusar este pedido? O dia volta a ficar livre.')) alterarStatusReserva('${ab}', 'recusado')"><i class="ri-close-circle-line"></i> Recusar</button>`;
+    } else if (r.status === 'aguardando_sinal') {
+      acoes.innerHTML = `
+        <button class="btn pequeno verde" onclick="confirmarEEnviarContrato('${ab}')"><i class="ri-check-double-line"></i> Recebi o sinal: confirmar e enviar contrato</button>
+        <a href="${linkZap(r, SplashPainel.gerarMensagemWhatsappSinal(r, CONFIG_CACHE || {}))}" target="_blank" rel="noopener" class="btn pequeno ouro"><i class="ri-whatsapp-line"></i> Reenviar o Pix</a>
+        ${zapSimples}
+        <button class="btn pequeno vermelho" onclick="if(confirm('Recusar este pedido? O dia volta a ficar livre.')) alterarStatusReserva('${ab}', 'recusado')"><i class="ri-close-circle-line"></i> Recusar</button>`;
     } else if (r.status === 'confirmado') {
-      const linkConf = `https://wa.me/${String(r.whatsapp).replace(/\D/g, '')}?text=${encodeURIComponent(SplashPainel.montarMensagemConfirmacao(r, CONFIG_CACHE || {}))}`;
-      acoes.innerHTML += `
-        <a href="${linkConf}" target="_blank" class="btn pequeno ouro"><i class="ri-whatsapp-line"></i> Enviar confirmação e contrato</a>
-      `;
-      acoes.innerHTML += `
-        <button class="btn pequeno claro" onclick="alterarStatusReserva('${r.id}', 'concluido')"><i class="ri-checkbox-circle-line"></i> Concluir Evento</button>
-        <button class="btn pequeno vermelho" onclick="alterarStatusReserva('${r.id}', 'cancelado')"><i class="ri-close-line"></i> Cancelar Reserva</button>
-      `;
+      acoes.innerHTML = `
+        <a href="${linkZap(r, SplashPainel.montarMensagemConfirmacao(r, CONFIG_CACHE || {}))}" target="_blank" rel="noopener" class="btn pequeno ouro"><i class="ri-whatsapp-line"></i> Enviar confirmação e contrato</a>
+        ${zapSimples}
+        <button class="btn pequeno claro" onclick="alterarStatusReserva('${ab}', 'concluido')"><i class="ri-checkbox-circle-line"></i> Evento realizado</button>
+        <button class="btn pequeno vermelho" onclick="if(confirm('Cancelar esta reserva? O dia volta a ficar livre.')) alterarStatusReserva('${ab}', 'cancelado')"><i class="ri-close-line"></i> Cancelar reserva</button>`;
+    } else if (r.status !== 'bloqueado') {
+      acoes.innerHTML = zapSimples;
     }
-
     modal.classList.remove('oculto');
+  }
+
+  async function aceitarPedido(id) {
+    const r0 = PENDENTES_CACHE.find(x => x.id === id) || RESERVAS_CACHE.find(x => x.id === id);
+    if (!r0) return;
+    const zap = window.open('', '_blank');
+    const res = await apiPost({ acao: 'status', id, status: 'aguardando_sinal' });
+    if (res.status !== 200) { if (zap) zap.close(); return alert((res.body && res.body.error) || 'Não foi possível aceitar este pedido.'); }
+    const url = linkZap(r0, SplashPainel.gerarMensagemWhatsappSinal(r0, CONFIG_CACHE || {}));
+    if (zap) zap.location.href = url; else window.open(url, '_blank');
+    fecharModal(); carregarCalendario(); carregarReservas();
+  }
+
+  async function registrarPagamentoRapido(id) {
+    const v = prompt('Quanto o cliente pagou? (somente números, ex.: 300)');
+    if (v === null) return;
+    const valor = Number(String(v).replace(',', '.'));
+    if (!(valor > 0)) return alert('Digite um valor maior que zero.');
+    const forma = (prompt('Forma: pix, dinheiro, cartao, transferencia ou outro', 'pix') || 'pix').trim().toLowerCase();
+    const res = await apiPost({ acao: 'pagamento-registrar', id, valor, forma });
+    if (res.status === 201) { await carregarReservas(); await carregarCalendario(); const r = RESERVAS_CACHE.find(x => x.id === id); if (r) abrirModalDetalhesReserva(r); }
+    else alert((res.body && res.body.error) || 'Não foi possível registrar.');
   }
 
   async function confirmarEEnviarContrato(id) {
@@ -965,12 +1068,14 @@
   }
 
   function abrirDetalhesData(dataIso) {
-    const res = RESERVAS_CACHE.find(r => r.data === dataIso);
-    if (res) {
+    const res = reservaDoDia(dataIso);
+    if (res && !['cancelado', 'recusado', 'expirado'].includes(res.status)) {
+      if (res.status === 'bloqueado') {
+        if (confirm('Dia bloqueado' + (res.obs || res.motivo ? ': ' + (res.motivo || res.obs) : '') + '.\n\nDesbloquear este dia?')) apiPost({ acao: 'desbloquear', id: res.id }).then(() => { carregarCalendario(); carregarReservas(); });
+        return;
+      }
       abrirModalDetalhesReserva(res);
-    } else {
-      abrirNovoNoDia(dataIso);
-    }
+    } else abrirNovoNoDia(dataIso);
   }
 
   function alterarStatusReserva(id, acaoStatus) {
@@ -1020,6 +1125,23 @@
     document.getElementById('modal-midia').classList.add('oculto');
   }
 
+  let BLOQ_CACHE = [];
+  function ocupadosDaUnidade() {
+    return [...RESERVAS_CACHE, ...BLOQ_CACHE].filter(r => r.unidade === UNIDADE_ATUAL && r.data >= hojeBr() && !['cancelado', 'recusado', 'expirado'].includes(r.status)).sort((a, b) => a.data.localeCompare(b.data));
+  }
+  function mostrarOcupados() {
+    const el = document.getElementById('lanc-ocupados'); if (!el) return;
+    const l = ocupadosDaUnidade();
+    el.innerHTML = `<p class="suave">Dias já ocupados em <b>${SplashPainel.escapeHtml(nomeUn(UNIDADE_ATUAL))}</b> (não dá para lançar neles):</p>` +
+      (l.length ? `<div class="chips-oc">${l.map(r => `<span class="chip-oc">${SplashPainel.formatarDataBr(r.data).slice(0, 5)} · ${SplashPainel.escapeHtml(r.status === 'bloqueado' ? 'bloqueado' : String(r.nome || '').split(' ')[0])}</span>`).join('')}</div>` : '<p class="suave">Nenhum dia ocupado.</p>');
+    avisarDiaOcupado();
+  }
+  function avisarDiaOcupado() {
+    const d = (document.getElementById('lanc-res-data') || {}).value, el = document.getElementById('lanc-aviso-dia'); if (!el) return;
+    const r = d && ocupadosDaUnidade().find(x => x.data === d);
+    el.textContent = r ? `Atenção: este dia já está ocupado (${r.status === 'bloqueado' ? 'bloqueado' : r.nome}). Escolha outra data.` : '';
+  }
+
   function alternarModoLancamento(tipo) {
     const isRes = tipo === 'reserva';
     document.getElementById('form-lanc-reserva').classList.toggle('oculto', !isRes);
@@ -1039,7 +1161,9 @@
       tipo_evento: document.getElementById('lanc-res-tipo').value,
       convidados: Number(document.getElementById('lanc-res-convidados').value) || 0,
       obs: document.getElementById('lanc-res-obs').value.trim(),
-      status: 'confirmado'
+      valor_total: Number(document.getElementById('lanc-res-total').value) || 0,
+      valor_pago: Number(document.getElementById('lanc-res-pago').value) || 0,
+      status: document.getElementById('lanc-res-status').value
     };
 
     if (!payload.data || !payload.nome) return alert('Preencha a data e o nome do cliente.');
@@ -1092,11 +1216,22 @@
     document.getElementById('cfg-unidades').innerHTML = (c.unidades || []).map(u => `
       <div class="cfg-bloco" data-id="${SplashPainel.escapeHtml(u.id)}" data-nome="${SplashPainel.escapeHtml(u.nome)}">
         <strong>${SplashPainel.escapeHtml(u.nome)}</strong>
-        <label>Endereço (aparece no site)</label>
-        <input type="text" class="un-endereco" value="${SplashPainel.escapeHtml(u.endereco || '')}" maxlength="200">
-        <label>Valor da diária (R$, deixe em branco para não mostrar no site)</label>
-        <input type="number" class="un-diaria" min="0" step="0.01" value="${u.valor_diaria || ''}">
+        <label>Endereço (aparece no site com botão do Waze e Google Maps)</label>
+        <input type="text" class="un-endereco" value="${SplashPainel.escapeHtml(u.endereco || '')}" maxlength="200" placeholder="Rua, número, bairro, cidade">
+        <label>Diária de segunda a quinta (R$)</label>
+        <input type="number" class="un-semana" min="0" step="0.01" value="${u.valor_semana || u.valor_diaria || ''}">
+        <label>Diária de fim de semana (R$)</label>
+        <input type="number" class="un-fds" min="0" step="0.01" value="${u.valor_fds || u.valor_diaria || ''}">
+        <label class="check-linha"><input type="checkbox" class="un-sexta" style="width:auto" ${u.fds_sexta ? 'checked' : ''}> A sexta-feira conta como fim de semana</label>
+        <label class="check-linha"><input type="checkbox" class="un-terceiro" style="width:auto" ${u.terceiro ? 'checked' : ''}> Esta unidade é de outro dono (eu recebo só uma comissão)</label>
+        <div class="un-comissao" ${u.terceiro ? '' : 'style="display:none"'}>
+          <label>Minha comissão por locação</label>
+          <select class="un-com-tipo"><option value="percentual" ${u.comissao && u.comissao.tipo === 'valor' ? '' : 'selected'}>Porcentagem do valor da locação (%)</option><option value="valor" ${u.comissao && u.comissao.tipo === 'valor' ? 'selected' : ''}>Valor fixo por locação (R$)</option></select>
+          <input type="number" class="un-com-valor" min="0" step="0.01" value="${(u.comissao && u.comissao.valor) || ''}" placeholder="Ex: 10 (%) ou 150 (R$)">
+        </div>
       </div>`).join('');
+    document.querySelectorAll('#cfg-unidades .un-terceiro').forEach(cb => cb.addEventListener('change', () => { cb.closest('.cfg-bloco').querySelector('.un-comissao').style.display = cb.checked ? '' : 'none'; }));
+    renderDatasEspeciaisCfg(c.datas_especiais || []);
     renderExtrasCfg(c.extras || []);
     renderPromosCfg(c.promocoes || []);
     renderAvaliacoesCfg(c.avaliacoes || []);
@@ -1132,12 +1267,36 @@
   }
   function adicionarAvaliacaoCfg() { renderAvaliacoesCfg([...lerAvaliacoesCfg(), { nome: '', texto: 'Ótimo lugar!', estrelas: 5, ativa: true }]); }
 
+  function renderDatasEspeciaisCfg(lista) {
+    const unid = (CONFIG_CACHE && CONFIG_CACHE.unidades) || [];
+    document.getElementById('cfg-datas-esp').innerHTML = lista.map(x => `
+      <div class="cfg-bloco cfg-esp" data-id="${SplashPainel.escapeHtml(x.id || '')}">
+        <label>Vale para</label>
+        <select class="es-un"><option value="todas" ${x.unidade === 'todas' ? 'selected' : ''}>As duas unidades</option>${unid.map(u => `<option value="${SplashPainel.escapeHtml(u.id)}" ${x.unidade === u.id ? 'selected' : ''}>${SplashPainel.escapeHtml(u.nome)}</option>`).join('')}</select>
+        <label>De (primeiro dia)</label><input type="date" class="es-de" value="${SplashPainel.escapeHtml(x.de || '')}">
+        <label>Até (último dia)</label><input type="date" class="es-ate" value="${SplashPainel.escapeHtml(x.ate || '')}">
+        <label>Valor da diária nesses dias (R$)</label><input type="number" class="es-valor" min="0" step="0.01" value="${x.valor || ''}">
+        <label>Nome que aparece no site (ex.: Promoção de feriado)</label><input type="text" class="es-texto" maxlength="80" value="${SplashPainel.escapeHtml(x.texto || '')}">
+        <button type="button" class="btn pequeno vermelho" onclick="this.closest('.cfg-bloco').remove()">Remover</button>
+      </div>`).join('');
+  }
+  function lerDatasEspeciaisCfg() {
+    return Array.from(document.querySelectorAll('#cfg-datas-esp .cfg-esp')).map(b => ({
+      id: b.dataset.id || '', unidade: b.querySelector('.es-un').value, de: b.querySelector('.es-de').value, ate: b.querySelector('.es-ate').value || b.querySelector('.es-de').value,
+      valor: Number(b.querySelector('.es-valor').value) || 0, texto: b.querySelector('.es-texto').value.trim() || 'Promoção'
+    })).filter(x => x.de && x.valor > 0);
+  }
+  function adicionarDataEspecialCfg() {
+    renderDatasEspeciaisCfg([...lerDatasEspeciaisCfg(), { unidade: 'todas', de: '', ate: '', valor: '', texto: 'Promoção' }]);
+  }
+
   function renderExtrasCfg(lista) {
     document.getElementById('cfg-extras').innerHTML = lista.map(x => `
       <div class="cfg-bloco cfg-extra" data-id="${SplashPainel.escapeHtml(x.id || '')}">
         <label>Nome</label><input type="text" class="ex-nome" value="${SplashPainel.escapeHtml(x.nome || '')}" maxlength="80">
         <label>Descrição curta (opcional)</label><input type="text" class="ex-desc" value="${SplashPainel.escapeHtml(x.descricao || '')}" maxlength="200">
         <label>Valor (R$)</label><input type="number" class="ex-valor" min="0" step="0.01" value="${x.valor || 0}">
+        <label>Valor com desconto ou promoção (R$, opcional: se preencher, o site mostra o valor antigo riscado)</label><input type="number" class="ex-promo" min="0" step="0.01" value="${x.valor_promo || ''}">
         <label class="check-linha"><input type="checkbox" class="ex-ativo" style="width:auto" ${x.ativo === false ? '' : 'checked'}> Mostrar no site</label>
         <button type="button" class="btn pequeno vermelho" onclick="this.closest('.cfg-bloco').remove()">Remover</button>
       </div>`).join('');
@@ -1158,7 +1317,7 @@
   function lerExtrasCfg() {
     return Array.from(document.querySelectorAll('#cfg-extras .cfg-extra')).map(b => ({
       id: b.dataset.id || '', nome: b.querySelector('.ex-nome').value.trim(), descricao: b.querySelector('.ex-desc').value.trim(),
-      valor: Number(b.querySelector('.ex-valor').value) || 0, ativo: b.querySelector('.ex-ativo').checked
+      valor: Number(b.querySelector('.ex-valor').value) || 0, valor_promo: Number(b.querySelector('.ex-promo').value) || 0, ativo: b.querySelector('.ex-ativo').checked
     })).filter(x => x.nome);
   }
 
@@ -1196,7 +1355,11 @@
     const unidades = Array.from(document.querySelectorAll('#cfg-unidades .cfg-bloco')).map(b => ({
       id: b.dataset.id, nome: b.dataset.nome,
       endereco: b.querySelector('.un-endereco').value.trim(),
-      valor_diaria: Number(b.querySelector('.un-diaria').value) || 0
+      valor_semana: Number(b.querySelector('.un-semana').value) || 0,
+      valor_fds: Number(b.querySelector('.un-fds').value) || 0,
+      fds_sexta: b.querySelector('.un-sexta').checked,
+      terceiro: b.querySelector('.un-terceiro').checked,
+      comissao: b.querySelector('.un-terceiro').checked ? { tipo: b.querySelector('.un-com-tipo').value, valor: Number(b.querySelector('.un-com-valor').value) || 0 } : null
     }));
     const payload = {
       acao: 'config',
@@ -1214,6 +1377,7 @@
         extras: lerExtrasCfg(),
         promocoes: lerPromosCfg(),
         avaliacoes: lerAvaliacoesCfg(),
+        datas_especiais: lerDatasEspeciaisCfg(),
         cancelamento: { horas: Number(document.getElementById('cfg-canc-horas').value) || 0, texto: document.getElementById('cfg-canc-texto').value.trim() },
         contrato: document.getElementById('cfg-contrato').value,
         musica: { estilo: document.getElementById('cfg-musica-estilo').value, url: document.getElementById('cfg-musica-url').value.trim() },
@@ -1578,6 +1742,9 @@
       ['map-col-whatsapp', 'whatsapp'],
       ['map-col-tipo', 'tipo_evento'],
       ['map-col-sinal', 'valor_sinal'],
+      ['map-col-total', 'valor_total'],
+      ['map-col-pago', 'valor_pago'],
+      ['map-col-conv', 'convidados'],
       ['map-col-situacao', 'situacao'],
       ['map-col-obs', 'observacoes']
     ];
@@ -1595,7 +1762,7 @@
       });
     });
 
-    document.getElementById('imp-mapeamento-manual').classList.remove('oculto');
+    const mm = document.getElementById('imp-mapeamento-manual'); if (mm) mm.classList.remove('oculto');
   }
 
   function atualizarMapeamentoManual() {
@@ -1627,10 +1794,14 @@
     renderizarPreviaImportacao();
   }
 
+  const MODELO_CAB = ['data', 'unidade', 'cliente', 'whatsapp', 'tipo_evento', 'convidados', 'valor_total', 'valor_sinal', 'valor_pago', 'situacao', 'observacoes'];
+  const MODELO_LINHAS = [
+    ['2027-03-13', 'Santa Adélia', 'Maria Silva', '11999998888', 'Aniversário', 40, 1200, 360, 360, 'confirmado', 'Festa de 15 anos, com decoração'],
+    ['2027-04-10', 'Santa Bárbara', 'João Souza', '11988887777', 'Confraternização', 60, 1500, 450, 450, 'confirmado', 'Chegam às 10h'],
+    ['2027-05-01', 'Santa Adélia', 'Ana Paula', '11977776666', 'Festa infantil', 30, 1100, 330, 0, 'aguardando_sinal', 'Falta o sinal']
+  ];
   function baixarModeloCsv() {
-    const csv = 'data,unidade,cliente,whatsapp,tipo_evento,valor_sinal,situacao,observacoes\n' +
-      '2026-11-10,Santa Adélia,Maria Silva,17999998888,Aniversário,200,confirmado,Festa de 15 anos\n' +
-      '2026-11-15,Santa Bárbara,João Souza,17988887777,Casamento,500,aguardando_sinal,Cerimônia no salão principal\n';
+    const csv = MODELO_CAB.join(';') + '\n' + MODELO_LINHAS.map(l => l.join(';')).join('\n') + '\n';
     const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -1641,12 +1812,8 @@
 
   function baixarModeloXlsx() {
     if (typeof XLSX !== 'undefined') {
-      const dados = [
-        ['data', 'unidade', 'cliente', 'whatsapp', 'tipo_evento', 'valor_sinal', 'situacao', 'observacoes'],
-        ['2026-11-10', 'Santa Adélia', 'Maria Silva', '17999998888', 'Aniversário', 200, 'confirmado', 'Festa de 15 anos'],
-        ['2026-11-15', 'Santa Bárbara', 'João Souza', '17988887777', 'Casamento', 500, 'aguardando_sinal', 'Cerimônia no salão principal']
-      ];
-      const ws = XLSX.utils.aoa_to_sheet(dados);
+      const ws = XLSX.utils.aoa_to_sheet([MODELO_CAB, ...MODELO_LINHAS]);
+      ws['!cols'] = MODELO_CAB.map(c => ({ wch: Math.max(12, c.length + 2) }));
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Agenda');
       XLSX.writeFile(wb, 'modelo_importacao_splash.xlsx');
@@ -1761,7 +1928,7 @@
     IMPORTACAO_ESTADO.mapaColunas = {};
     document.getElementById('imp-arquivo-input').value = '';
     document.getElementById('imp-passo-1').classList.remove('oculto');
-    document.getElementById('imp-mapeamento-manual').classList.add('oculto');
+    const mm2 = document.getElementById('imp-mapeamento-manual'); if (mm2) mm2.classList.add('oculto');
     document.getElementById('imp-passo-2').classList.add('oculto');
     document.getElementById('imp-passo-3').classList.add('oculto');
   }
@@ -1833,14 +2000,28 @@
   }
 
   function navegarAba(nome) {
-    ['calendario', 'pedidos', 'reservas', 'nova', 'financeiro', 'despesas', 'clientes', 'editor', 'importar', 'config'].forEach(a => {
+    const ABAS = ['calendario', 'pedidos', 'reservas', 'nova', 'financeiro', 'clientes', 'editor', 'importar', 'config'];
+    const MENU = { editor: 'config', importar: 'config' }; // telas que ficam "dentro" de Ajustes
+    ABAS.forEach(a => {
       document.getElementById(`aba-${a}`).classList.toggle('oculto', a !== nome);
-      document.getElementById(`tab-${a}`).classList.toggle('ativa', a === nome);
+      const t = document.getElementById(`tab-${a}`); if (t) t.classList.toggle('ativa', a === nome);
     });
+    const menuAtivo = MENU[nome] || nome;
+    const tm = document.getElementById(`tab-${menuAtivo}`); if (tm) tm.classList.add('ativa');
+    // o seletor de unidade só faz sentido no calendário e no lançamento manual
+    document.querySelector('.unidade-seletor').classList.toggle('oculto', !['calendario', 'nova'].includes(nome));
     if (window.Gestao) Gestao.abrir(nome);
-    if (nome === 'editor' && !SITE_EDITOR.aberto) {
-      abrirSiteEditor();
-    }
+    if (nome === 'reservas') renderizarListasReservas();
+    if (nome === 'nova') mostrarOcupados();
+    if (nome === 'editor' && !SITE_EDITOR.aberto) abrirSiteEditor();
+    window.scrollTo(0, 0);
+  }
+
+  function mudarMes(delta) {
+    const [a, m] = MES_ATUAL.split('-').map(Number);
+    const d = new Date(a, m - 1 + delta, 1);
+    MES_ATUAL = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    carregarCalendario();
   }
 
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});

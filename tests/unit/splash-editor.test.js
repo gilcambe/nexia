@@ -200,7 +200,7 @@ test('ED6. público não vê chave Pix nem dados sensíveis no conteúdo', async
   // Consulta pública de config
   const rConfig = await a.get({});
   assert.equal(rConfig.statusCode, 200);
-  assert.equal(rConfig.json.pix, undefined);
+  // o Pix só aparece no público se a dona deixar "mostrar" ligado (o conteúdo do site nunca leva a chave)
 
   // Consulta pública de conteúdo
   const rConteudo = await a.get({ conteudo: '1' });

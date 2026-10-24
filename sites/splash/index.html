@@ -273,6 +273,33 @@ footer{background:#021436;color:#c3d3ea;padding:54px clamp(16px,5vw,70px) 28px}
 .lightbox.on{display:flex}
 .lightbox img{max-height:92vh;max-width:96vw;border-radius:14px;object-fit:contain}
 .lightbox button{position:absolute;top:14px;right:14px;width:46px;height:46px;border-radius:50%;border:0;background:#fff;font-size:24px;cursor:pointer}
+
+/* melhorias: unidade selecionada bem visível, preço no dia, promoção, botão de som discreto */
+.unit-card{position:relative;scroll-margin-top:80px}
+.unit-card.selected{border-color:var(--sun2);border-width:4px;box-shadow:0 0 0 5px rgba(255,177,0,.35),0 14px 34px rgba(0,184,217,.3);transform:translateY(-2px)}
+.unit-card.apagada{opacity:.72}
+.unit-sel-tag{display:none;position:absolute;top:10px;right:10px;z-index:2;background:var(--sun2);color:var(--navy);font-weight:800;font-size:12.5px;padding:6px 12px;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.unit-card.selected .unit-sel-tag{display:inline-flex;gap:5px;align-items:center}
+.unit-toque{font-size:12.5px;color:var(--aqua2);font-weight:700;margin-top:6px}
+.unit-card.selected .unit-toque{display:none}
+.calendar-wrapper{scroll-margin-top:80px}
+.cal-day{flex-direction:column;gap:1px;line-height:1.05;position:relative}
+.cal-day .v{font-size:clamp(8.5px,2.4vw,10.5px);font-weight:700;color:#4b7a96}
+.cal-day.promo{background:#fff3c4;border-color:var(--sun2)}
+.cal-day.promo .v{color:#b35a00}
+.cal-day.promo::after{content:'🔥';font-size:10px;position:absolute;top:1px;right:3px}
+.cal-day.selected .v{color:var(--navy)}
+.leg.promo{background:#fff3c4;border:1.5px solid var(--sun2)}
+.promo-dias{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.promo-dia{background:#fff3c4;border:1.5px solid var(--sun2);color:#7a4300;border-radius:30px;padding:7px 13px;font-size:13px;font-weight:700}
+.btn-musica{width:44px;height:44px;padding:0;justify-content:center;display:none}
+.btn-musica.visivel{display:inline-flex}
+.btn-musica span{display:none}
+.mapa-links{display:inline-flex;gap:10px;margin-left:6px;flex-wrap:wrap}
+.mapa-links a{font-size:12.5px;font-weight:700;color:var(--aqua2);text-decoration:underline}
+.consulta-res{margin-top:14px;text-align:left;font-size:14.5px;line-height:1.6}
+.sit{display:inline-block;padding:4px 12px;border-radius:20px;font-weight:800;font-size:13px}
+.sit.ok{background:#d6f5e3;color:#13683a}.sit.ale{background:#fff3c4;color:#7a4300}.sit.ruim{background:#ffe3e3;color:#b3261e}
 </style>
 <script>document.documentElement.classList.add('nx-carregando'); setTimeout(function () { document.documentElement.classList.remove('nx-carregando'); }, 3000);</script>
 </head>
@@ -295,6 +322,7 @@ footer{background:#021436;color:#c3d3ea;padding:54px clamp(16px,5vw,70px) 28px}
       <a href="#espacos" data-ed="menu-link-espacos">Unidades</a>
       <a href="#instagram" data-ed="menu-link-instagram">Instagram</a>
       <a href="#processo" data-ed="menu-link-processo">Como funciona</a>
+      <a href="#consultar" data-ed="menu-link-minha-reserva">Minha reserva</a>
       <a href="#solicitar" class="nav-cta" data-ed="menu-link-reserva"><i class="ri-calendar-check-line"></i><span>Reservar um dia</span></a>
     </nav>
   </div>
@@ -345,24 +373,30 @@ footer{background:#021436;color:#c3d3ea;padding:54px clamp(16px,5vw,70px) 28px}
     <p class="section-sub rev" data-ed="solicitar-subtitulo">A locação é por dia inteiro. Escolha a unidade e um dia livre para fazer o seu pedido.</p>
 
     <div class="units-grid">
-      <button type="button" class="unit-card selected" id="card-santa-adelia" onclick="selecionarUnidade('santa-adelia')">
+      <button type="button" class="unit-card" id="card-santa-adelia" onclick="selecionarUnidade('santa-adelia')">
+        <span class="unit-sel-tag"><i class="ri-check-line"></i> Selecionada</span>
         <img data-ed="unidade1-foto" src="midia/adelia-piscina-deck.jpg" alt="Splash Santa Adélia" loading="lazy">
         <div class="unit-corpo">
-          <div class="unit-title"><span data-ed="unidade1-nome">Splash Santa Adélia</span><i class="ri-checkbox-circle-fill" id="icon-santa-adelia"></i></div>
+          <div class="unit-title"><span data-ed="unidade1-nome">Splash Santa Adélia</span><i class="ri-checkbox-circle-line" id="icon-santa-adelia"></i></div>
           <div class="unit-desc" data-ed="unidade1-desc">Unidade 1 · São Mateus, zona leste de SP</div>
           <div class="unit-preco" id="preco-santa-adelia"></div>
+          <div class="unit-toque">Toque para ver as datas livres</div>
         </div>
       </button>
       <button type="button" class="unit-card" id="card-santa-barbara" onclick="selecionarUnidade('santa-barbara')">
+        <span class="unit-sel-tag"><i class="ri-check-line"></i> Selecionada</span>
         <img data-ed="unidade2-foto" src="midia/barbara-decoracao-futebol.jpg" alt="Splash Santa Bárbara" loading="lazy">
         <div class="unit-corpo">
           <div class="unit-title"><span data-ed="unidade2-nome">Splash Santa Bárbara</span><i class="ri-checkbox-circle-line" id="icon-santa-barbara"></i></div>
           <div class="unit-desc" data-ed="unidade2-desc">Unidade 2 · São Mateus, zona leste de SP</div>
           <div class="unit-preco" id="preco-santa-barbara"></div>
+          <div class="unit-toque">Toque para ver as datas livres</div>
         </div>
       </button>
     </div>
 
+    <div id="calendario-box" style="display:none">
+    <div class="promo-dias" id="promo-dias"></div>
     <div class="calendar-wrapper">
       <div class="cal-header">
         <button class="cal-nav-btn" id="btn-mes-anterior" onclick="mudarMes(-1)" aria-label="Mês anterior"><i class="ri-arrow-left-s-line"></i></button>
@@ -373,7 +407,8 @@ footer{background:#021436;color:#c3d3ea;padding:54px clamp(16px,5vw,70px) 28px}
         <div class="cal-weekday">Dom</div><div class="cal-weekday">Seg</div><div class="cal-weekday">Ter</div><div class="cal-weekday">Qua</div><div class="cal-weekday">Qui</div><div class="cal-weekday">Sex</div><div class="cal-weekday">Sáb</div>
       </div>
       <div class="cal-days" id="cal-dias-grid"></div>
-      <p class="cal-legenda"><span><span class="leg livre"></span>livre</span><span><span class="leg ocupado"></span>ocupado</span></p>
+      <p class="cal-legenda"><span><span class="leg livre"></span>livre (valor da diária)</span><span><span class="leg promo"></span>promoção</span><span><span class="leg ocupado"></span>ocupado</span></p>
+    </div>
     </div>
 
     <div class="form-card" id="card-formulario">
@@ -469,6 +504,19 @@ footer{background:#021436;color:#c3d3ea;padding:54px clamp(16px,5vw,70px) 28px}
       <div id="zap-container" style="display:none">
         <a href="#" id="btn-wa-me" target="_blank" rel="noopener" class="btn btn-zap"><i class="ri-whatsapp-line"></i> <span id="btn-wa-texto">Enviar comprovante no WhatsApp</span></a>
       </div>
+    </div>
+
+    <div class="form-card" id="consultar" style="margin-top:28px;scroll-margin-top:80px">
+      <h3 class="form-title">Já fez um pedido? Consulte sua reserva</h3>
+      <p class="form-sub">Esqueceu o dia ou quer saber se o sinal foi confirmado? Digite o protocolo (está na mensagem do pedido) e o seu WhatsApp.</p>
+      <form id="form-consulta" onsubmit="consultarReserva(event)">
+        <div class="fc-row">
+          <div class="fc-group"><label class="fc-label" for="cons-protocolo">Protocolo (ex.: SPL-A1B2C3)</label><input class="fc-input" type="text" id="cons-protocolo" autocomplete="off" required></div>
+          <div class="fc-group"><label class="fc-label" for="cons-whatsapp">Seu WhatsApp com DDD</label><input class="fc-input" type="tel" id="cons-whatsapp" autocomplete="tel" required></div>
+        </div>
+        <button type="submit" class="fc-submit" id="btn-consultar"><span>Consultar minha reserva</span></button>
+      </form>
+      <div class="consulta-res" id="consulta-res" role="status"></div>
     </div>
   </div>
 </section>
@@ -646,7 +694,7 @@ footer{background:#021436;color:#c3d3ea;padding:54px clamp(16px,5vw,70px) 28px}
 </footer>
 
 <a id="fab-wa-float" href="#" target="_blank" rel="noopener" class="fab-whatsapp nx-oculto" aria-label="WhatsApp"><i class="ri-whatsapp-line"></i></a>
-<button type="button" id="btn-musica" class="btn-musica" aria-pressed="false" data-ed="musica-botao"><i class="ri-music-2-fill"></i><span>Ligar música</span></button>
+<button type="button" id="btn-musica" class="btn-musica" aria-pressed="false" aria-label="Ligar a música" data-ed="musica-botao"><i class="ri-volume-mute-fill"></i><span>Música</span></button>
 <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Foto ampliada"><button type="button" id="lightbox-fechar" aria-label="Fechar"><i class="ri-close-line"></i></button><img id="lightbox-img" alt=""></div>
 
 <script src="calendario.js"></script>
@@ -658,6 +706,7 @@ const UNIDADES_IDS = ['santa-adelia', 'santa-barbara'];
 
 let configLocacao = null;
 let unidadeAtual = 'santa-adelia';
+let precosMes = {};
 let mesAtualISO = SplashCalendario.mesAtualBr(); // AAAA-MM (fuso de Brasília)
 let diaSelecionado = null;
 let mapaDiasMes = {};
@@ -704,6 +753,10 @@ function nxListasPadrao() { return {}; }
 function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
 // Fotos do painel vêm com endereço relativo (/api/locacao?...): neste site (pages.dev) precisa do endereço completo da API.
+function linksMapa(endereco) {
+  const q = encodeURIComponent(endereco);
+  return `<span class="mapa-links"><a href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">Google Maps</a><a href="https://waze.com/ul?q=${q}&navigate=yes" target="_blank" rel="noopener">Waze</a></span>`;
+}
 function abs(url) { return String(url || '').startsWith('/') ? API_ORIGEM + url : String(url || ''); }
 
 function dinheiro(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
@@ -921,9 +974,11 @@ function atualizarContatoConfig() {
   }
 
   (cfg.unidades || []).forEach(u => {
-    const end = document.getElementById('endereco-' + u.id); if (end && u.endereco) end.textContent = u.endereco;
+    const end = document.getElementById('endereco-' + u.id);
+    if (end && u.endereco) { end.textContent = u.endereco; if (!end.parentNode.querySelector('.mapa-links')) end.insertAdjacentHTML('afterend', linksMapa(u.endereco)); }
     const rend = document.getElementById('rodape-end-' + u.id); if (rend && u.endereco) rend.textContent = u.endereco;
-    const txt = u.valor_diaria ? 'Diária a partir de ' + dinheiro(u.valor_diaria) : '';
+    const vs = u.valor_semana || u.valor_diaria || 0, vf = u.valor_fds || u.valor_diaria || 0;
+    const txt = vs && vf && vs !== vf ? 'Semana ' + dinheiro(vs) + ' · Fim de semana ' + dinheiro(vf) : (vs || vf ? 'Diária ' + dinheiro(vs || vf) : '');
     const preco = document.getElementById('preco-' + u.id); if (preco) preco.textContent = txt;
     const preco2 = document.getElementById('preco-unidade-' + u.id); if (preco2) preco2.textContent = txt;
   });
@@ -937,7 +992,7 @@ function atualizarContatoConfig() {
       <label class="extra-op">
         <input type="checkbox" name="extra" value="${esc(e.id)}">
         <span><span class="extra-nome">${esc(e.nome)}</span>${e.descricao ? `<span class="extra-desc">${esc(e.descricao)}</span>` : ''}</span>
-        <span class="extra-valor">${e.valor > 0 ? '+ ' + dinheiro(e.valor) : 'valor combinado com a Amanda'}</span>
+        <span class="extra-valor">${valorExtraSite(e) > 0 ? (valorExtraSite(e) < e.valor ? '<s style="opacity:.6">' + dinheiro(e.valor) + '</s> ' : '') + '+ ' + dinheiro(valorExtraSite(e)) : 'valor combinado com a Amanda'}</span>
       </label>`).join('');
   }
 
@@ -973,24 +1028,54 @@ function textoCancelamento() {
   if (c.texto) partes.push(c.texto);
   return partes.join(' ');
 }
+const valorExtraSite = e => (e.valor_promo > 0 && (!(e.valor > 0) || e.valor_promo < e.valor) ? e.valor_promo : e.valor);
 function atualizarResumoValores() {
   const box = document.getElementById('resumo-valores'), cx = document.getElementById('aviso-cancelamento');
   if (!box || !configLocacao) return;
   const u = (configLocacao.unidades || []).find(x => x.id === unidadeAtual);
+  const pr = diaSelecionado ? precosMes[diaSelecionado] : null;
+  const diaria = pr ? pr.v : 0;
   const linhas = [];
-  if (u && u.valor_diaria > 0) {
-    let total = Number(u.valor_diaria);
+  if (diaria > 0) {
+    let total = Number(diaria);
     const extras = Array.from(document.querySelectorAll('#extras-lista input[name=extra]:checked')).map(i => (configLocacao.extras || []).find(e => e.id === i.value)).filter(Boolean);
-    extras.forEach(e => { if (e.valor > 0) total += Number(e.valor); });
-    linhas.push('<b>' + esc(u.nome) + '</b>: diária ' + dinheiro(u.valor_diaria) + (total !== Number(u.valor_diaria) ? ' · total com extras ' + dinheiro(total) : ''));
+    extras.forEach(e => { total += Number(valorExtraSite(e)) || 0; });
+    linhas.push('<b>' + esc(u ? u.nome : '') + '</b>: diária ' + dinheiro(diaria) + (pr.p ? ' 🔥 <b>' + esc(pr.p) + '</b>' : '') + (total !== Number(diaria) ? ' · total com extras <b>' + dinheiro(total) + '</b>' : ''));
     const s = configLocacao.sinal || {};
     if (s.valor > 0) linhas.push('Sinal para garantir a data: <b>' + (s.tipo === 'percentual' ? dinheiro(total * s.valor / 100) + ' (' + s.valor + '%)' : dinheiro(s.valor)) + '</b>');
   } else linhas.push('Valores: combine com a Amanda pelo WhatsApp.');
+  const px = configLocacao.pix;
+  if (px && px.chave) linhas.push('Pix para o sinal: <b id="pix-form-chave">' + esc(px.chave) + '</b>' + (px.titular ? ' (' + esc(px.titular) + ')' : '') + ' <button type="button" class="btn-copiar" style="padding:4px 12px;font-size:12px" onclick="navigator.clipboard&&navigator.clipboard.writeText(document.getElementById(\'pix-form-chave\').textContent)">copiar</button>');
   box.style.display = 'flex'; document.getElementById('resumo-valores-texto').innerHTML = linhas.join('<br>');
   const t = textoCancelamento();
   cx.style.display = t ? 'flex' : 'none'; document.getElementById('aviso-cancelamento-texto').textContent = t;
 }
 document.addEventListener('change', e => { if (e.target.closest && e.target.closest('#extras-lista')) atualizarResumoValores(); });
+
+const SITUACOES = { pedido: ['Aguardando a locadora analisar', 'ale'], aguardando_sinal: ['Aguardando o pagamento do sinal', 'ale'], confirmado: ['Reserva confirmada ✅', 'ok'], concluido: ['Evento realizado', 'ok'], recusado: ['Pedido recusado', 'ruim'], cancelado: ['Reserva cancelada', 'ruim'], expirado: ['Prazo do sinal expirou', 'ruim'] };
+async function consultarReserva(e) {
+  e.preventDefault();
+  const out = document.getElementById('consulta-res'), btn = document.getElementById('btn-consultar');
+  btn.disabled = true; out.textContent = 'Consultando...';
+  try {
+    const r = await fetch(API_LOCACAO, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ acao: 'consultar', site: SLUG, protocolo: document.getElementById('cons-protocolo').value.trim(), whatsapp: document.getElementById('cons-whatsapp').value.trim() }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || 'Não consegui consultar agora.');
+    const [sit, cls] = SITUACOES[d.status] || [d.status, 'ale'];
+    const [a, m, dd] = String(d.data).split('-');
+    const linhas = [`<span class="sit ${cls}">${esc(sit)}</span>`, `<b>${esc(d.unidade_nome)}</b> · dia <b>${dd}/${m}/${a}</b>${d.extras && d.extras.length ? ' · com ' + esc(d.extras.join(', ')) : ''}`];
+    if (d.valor_total > 0) linhas.push(`Valor combinado: <b>${dinheiro(d.valor_total)}</b> · Pago: <b>${dinheiro(d.valor_pago)}</b> · Falta: <b>${dinheiro(d.saldo)}</b>`);
+    if (['pedido', 'aguardando_sinal'].includes(d.status)) {
+      if (d.valor_sinal > 0) linhas.push(`Sinal para garantir a data: <b>${dinheiro(d.valor_sinal)}</b>`);
+      if (d.prazo_ate) linhas.push('Dia segurado até ' + new Date(d.prazo_ate).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short', timeZone: 'America/Sao_Paulo' }));
+      if (d.pix && d.pix.chave) linhas.push(`Pix: <b>${esc(d.pix.chave)}</b>${d.pix.titular ? ' (' + esc(d.pix.titular) + ')' : ''}`);
+      if (d.comprovantes) linhas.push('Comprovante recebido: ' + d.comprovantes + ' (a locadora vai conferir).');
+    }
+    if (d.whatsapp) linhas.push(`<a href="https://wa.me/${String(d.whatsapp).replace(/\D/g, '')}" target="_blank" rel="noopener" style="color:var(--aqua2);font-weight:700">Falar com a Amanda no WhatsApp</a>`);
+    out.innerHTML = linhas.join('<br>');
+  } catch (err) { out.textContent = err.message; }
+  finally { btn.disabled = false; }
+}
 
 let ultimoPedido = null;
 function comprimirComprovante(file, max = 550 * 1024) {
@@ -1069,10 +1154,12 @@ function selecionarUnidade(id) {
     document.getElementById('card-' + uid).className = 'unit-card' + (on ? ' selected' : '');
     document.getElementById('icon-' + uid).className = on ? 'ri-checkbox-circle-fill' : 'ri-checkbox-circle-line';
   };
-  UNIDADES_IDS.forEach(u => marcar(u, u === id));
+  UNIDADES_IDS.forEach(u => { marcar(u, u === id); document.getElementById('card-' + u).classList.toggle('apagada', u !== id); });
   diaSelecionado = null;
   document.getElementById('card-formulario').style.display = 'none';
+  document.getElementById('calendario-box').style.display = 'block';
   carregarDiasCalendario();
+  setTimeout(() => document.getElementById('calendario-box').scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
 }
 
 function mudarMes(delta) { mesAtualISO = SplashCalendario.somarMeses(mesAtualISO, delta); carregarDiasCalendario(); }
@@ -1081,9 +1168,11 @@ async function carregarDiasCalendario() {
   document.getElementById('cal-mes-nome').textContent = SplashCalendario.nomeMesPt(mesAtualISO);
   try {
     const res = await fetch(`${API_LOCACAO}?site=${SLUG}&unidade=${unidadeAtual}&mes=${mesAtualISO}`);
-    mapaDiasMes = res.ok ? ((await res.json()).dias || {}) : {};
-  } catch (err) { mapaDiasMes = {}; }
+    const j = res.ok ? await res.json() : {};
+    mapaDiasMes = j.dias || {}; precosMes = j.precos || {};
+  } catch (err) { mapaDiasMes = {}; precosMes = {}; }
   renderizarGridCalendario();
+  renderizarPromoDias();
 }
 
 function renderizarGridCalendario() {
@@ -1100,10 +1189,19 @@ function renderizarGridCalendario() {
     if (item.passado) { classes.push('disabled'); btn.disabled = true; btn.setAttribute('aria-label', `Dia ${item.diaNum} (passado)`); }
     else if (status === 'ocupado') { classes.push('ocupado'); btn.disabled = true; btn.setAttribute('aria-label', `Dia ${item.diaNum} (indisponível)`); }
     else { classes.push('livre'); if (item.data === diaSelecionado) classes.push('selected'); btn.onclick = () => escolherDiaReserva(item.data); }
+    const pr = precosMes[item.data];
+    if (pr && classes.includes('livre')) { if (pr.p) classes.push('promo'); btn.setAttribute('aria-label', `Dia ${item.diaNum}, ${dinheiro(pr.v)}${pr.p ? ', promoção' : ''}`); }
     btn.className = classes.join(' ');
-    btn.textContent = item.diaNum;
+    btn.innerHTML = `<span class="d">${item.diaNum}</span>` + (pr && classes.includes('livre') && item.doMesAtual ? `<span class="v">${Math.round(pr.v)}</span>` : '');
     grid.appendChild(btn);
   });
+}
+
+function renderizarPromoDias() {
+  const el = document.getElementById('promo-dias'); if (!el) return;
+  const hojeISO = SplashCalendario.hojeBr();
+  const lista = Object.keys(precosMes).filter(d => precosMes[d].p && d >= hojeISO && mapaDiasMes[d] !== 'ocupado').sort();
+  el.innerHTML = lista.slice(0, 8).map(d => `<button type="button" class="promo-dia" onclick="escolherDiaReserva('${d}')">🔥 ${d.slice(8)}/${d.slice(5, 7)} · ${dinheiro(precosMes[d].v)}${precosMes[d].p && precosMes[d].p !== 'Promoção' ? ' · ' + esc(precosMes[d].p) : ''}</button>`).join('');
 }
 
 function escolherDiaReserva(dataISO) {
@@ -1163,7 +1261,7 @@ async function enviarPedidoReserva(e) {
 
 /* ---------- música de fundo (gerada no aparelho, sem arquivo; só liga quando a pessoa toca no botão) ---------- */
 const Musica = (function () {
-  let ctx = null, master = null, timer = null, passo = 0, proximo = 0, ligada = false, audioUrl = null, el = null;
+  let ctx = null, master = null, timer = null, passo = 0, proximo = 0, ligada = false, audioUrl = null, el = null, yt = null, gesto = false, pronta = false, silenciada = false;
   let COLCHEIA = 60 / 98 / 2, VOL = 1;
   const ACORDES = [[48, 52, 55, 59], [45, 48, 52, 55], [41, 45, 48, 52], [43, 47, 50, 53]]; // C7M, Am7, F7M, G7
   let ESCALA = [60, 62, 64, 67, 69, 72, 74, 76];
@@ -1193,6 +1291,7 @@ const Musica = (function () {
     while (proximo < ctx.currentTime + 0.5) { tocar(proximo, passo); proximo += COLCHEIA; passo++; }
   }
   function ligar() {
+    if (yt) { ytCmd('playVideo'); ligada = true; return true; }
     if (audioUrl) { if (!el) { el = new Audio(audioUrl); el.loop = true; el.volume = 0.6; } el.play().catch(() => {}); ligada = true; return true; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return false;
@@ -1204,22 +1303,44 @@ const Musica = (function () {
     return true;
   }
   function desligar() {
+    if (yt) { ytCmd('pauseVideo'); ligada = false; return; }
     if (audioUrl) { if (el) el.pause(); ligada = false; return; }
     if (!ctx) return;
     master.gain.cancelScheduledValues(ctx.currentTime); master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.6);
     clearInterval(timer); timer = null; ligada = false;
     setTimeout(() => { if (!ligada && ctx) ctx.suspend(); }, 800);
   }
+  function ytCmd(f) { try { if (yt && yt.contentWindow) yt.contentWindow.postMessage(JSON.stringify({ event: 'command', func: f, args: '' }), '*'); } catch (e) {} }
+  function ytId(u) { const m = String(u || '').match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/); return m ? m[1] : null; }
+  function mostrarBotao(on) { const b = document.getElementById('btn-musica'); if (!b) return; b.classList.add('visivel'); b.classList.toggle('tocando', on); b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Desligar a música' : 'Ligar a música'); b.querySelector('i').className = on ? 'ri-volume-up-fill' : 'ri-volume-mute-fill'; }
+  function comecar() {
+    let pref = ''; try { pref = localStorage.getItem('splash_som') || ''; } catch (e) {}
+    if (pref === 'off' || NX.editar || silenciada) return;
+    if (ligar()) mostrarBotao(true);
+  }
   function configurar(m) {
     m = m || {};
     const btn = document.getElementById('btn-musica');
-    if (m.estilo === 'desligada') { if (btn) btn.style.display = 'none'; return; }
-    audioUrl = /^https:\/\//.test(m.url || '') ? m.url : null;
+    if (m.estilo === 'desligada' || NX.editar) { silenciada = true; if (btn) btn.classList.remove('visivel'); return; }
+    const id = ytId(m.url);
+    audioUrl = !id && /^https:\/\//.test(m.url || '') ? m.url : null;
+    if (id && !yt) {
+      yt = document.createElement('iframe');
+      yt.src = 'https://www.youtube.com/embed/' + id + '?enablejsapi=1&controls=0&loop=1&playlist=' + id + '&playsinline=1&origin=' + encodeURIComponent(location.origin);
+      yt.allow = 'autoplay; encrypted-media'; yt.title = 'Música de fundo'; yt.setAttribute('aria-hidden', 'true'); yt.tabIndex = -1;
+      yt.style.cssText = 'position:fixed;left:0;bottom:0;width:2px;height:2px;border:0;opacity:0.01;pointer-events:none';
+      document.body.appendChild(yt);
+    }
     const e = ESTILOS[m.estilo] || ESTILOS.alegre;
     COLCHEIA = 60 / e.bpm / 2; ESCALA = e.escala; VOL = e.vol;
-    if (btn) btn.style.display = '';
+    if (!pronta) {
+      pronta = true;
+      const iniciar = () => { gesto = true; ['pointerdown', 'touchend', 'keydown', 'click'].forEach(t => removeEventListener(t, iniciar, true)); setTimeout(comecar, yt ? 600 : 0); if (yt) { setTimeout(comecar, 1800); } };
+      ['pointerdown', 'touchend', 'keydown', 'click'].forEach(t => addEventListener(t, iniciar, true));
+      if (gesto) comecar();
+    }
   }
-  return { configurar, alternar() { return ligada ? (desligar(), false) : ligar(); }, ativa: () => ligada };
+  return { configurar, alternar() { const on = ligada ? (desligar(), false) : ligar(); try { localStorage.setItem('splash_som', on ? 'on' : 'off'); } catch (e) {} mostrarBotao(on); return on; }, ativa: () => ligada };
 })();
 
 function iniciarInterface() {
@@ -1261,8 +1382,7 @@ function iniciarInterface() {
   const bm = document.getElementById('btn-musica');
   bm.addEventListener('click', () => {
     const on = Musica.alternar();
-    bm.classList.toggle('tocando', on); bm.setAttribute('aria-pressed', String(on));
-    bm.querySelector('span').textContent = on ? 'Desligar música' : 'Ligar música';
+
   });
 
   // entrada suave das seções
@@ -1277,8 +1397,8 @@ async function iniciarConteudo() {
   let c = null;
   try {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 2500);
-    const r = await fetch(API_LOCACAO + '?site=' + SLUG + '&conteudo=1', { signal: ctrl.signal });
+    const t = setTimeout(() => ctrl.abort(), 9000);
+    const r = await fetch(API_LOCACAO + '?site=' + SLUG + '&conteudo=1&t=' + Date.now(), { signal: ctrl.signal, cache: 'no-store' });
     clearTimeout(t);
     c = (await r.json()).conteudo || null;
   } catch (e) { c = null; }
