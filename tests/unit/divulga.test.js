@@ -199,3 +199,36 @@ test('visual de marca: post único traz a tela do app, a marca Body Coach e esca
   assert.match(h, /tela de exemplo/);
   assert.match(h, /Dieta &lt;x&gt;/);
 });
+
+test('histórico com formato e serie: último item deve ter formato definido', async () => {
+  const dados = tmp();
+  // Cria um estado com uma fila feita
+  const estadoInicial = { rodizio: 0, feitos: [], historico: [] };
+  fs.writeFileSync(path.join(dados, 'divulga-estado.json'), JSON.stringify(estadoInicial));
+  
+  const fetchImpl = async u => ok({ id: 'test' });
+  const r = await rodar({ acao: 'rodar', dados, env: ENV_META, fetchImpl, log: silencio });
+  
+  // Lê o estado atualizado
+  const estadoFinal = JSON.parse(fs.readFileSync(path.join(dados, 'divulga-estado.json'), 'utf8'));
+  const historico = estadoFinal.historico;
+  
+  // Verifica que o histórico tem pelo menos um item
+  assert.ok(historico.length > 0, 'Histórico deve ter pelo menos um item');
+  
+  // Pega o último item do histórico
+  const ultimoItem = historico[historico.length - 1];
+  
+  // Verifica que o formato existe e é uma string
+  assert.ok(ultimoItem.hasOwnProperty('formato'), 'Último item deve ter chave "formato"');
+  assert.equal(typeof ultimoItem.formato, 'string', 'Formato deve ser uma string');
+  
+  // Verifica que a série existe (pode ser null)
+  assert.ok(ultimoItem.hasOwnProperty('serie'), 'Último item deve ter chave "serie"');
+  
+  // Verifica outras chaves obrigatórias
+  assert.ok(ultimoItem.hasOwnProperty('quando'), 'Último item deve ter chave "quando"');
+  assert.ok(ultimoItem.hasOwnProperty('id'), 'Último item deve ter chave "id"');
+  assert.ok(ultimoItem.hasOwnProperty('cliente'), 'Último item deve ter chave "cliente"');
+  assert.ok(ultimoItem.hasOwnProperty('resultados'), 'Último item deve ter chave "resultados"');
+});
