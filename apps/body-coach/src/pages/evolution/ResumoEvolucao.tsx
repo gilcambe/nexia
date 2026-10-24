@@ -110,7 +110,7 @@ export default function ResumoEvolucao({
   const lembrete = () => void compartilharArquivo(new Blob([gerarIcsReavaliacao()], { type: 'text/calendar;charset=utf-8' }), 'reavaliacao-mensal.ics');
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       {parte === 'corpo' && (<>
       {/* Body Twin (corpo realista): usa a medição real mais recente. As fotos de exemplo são de um homem,
           então para mulher sem fotos próprias fica só o corpo moldado abaixo (que já é feminino). */}

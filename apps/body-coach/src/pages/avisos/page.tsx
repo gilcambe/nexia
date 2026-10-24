@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useAuth } from '@/components/feature/AuthContext';
 import { aplicarAprendido } from '@/lib/horariosAprendidos';
 import { aprenderDoUso, ativarAvisos, assinaturaAtual, desativarAvisos, ehIphoneSemInstalar, salvarPrefs, suportaAvisos, testarAviso, verAvisos, type PrefsAvisos } from '@/lib/avisos';
@@ -39,9 +39,10 @@ export default function Avisos() {
   };
   const mudar = (p: PrefsAvisos) => { setPrefs(p); if (ligado) void fazer(() => salvarPrefs(p), 'Salvo.'); };
 
-  const Chave = ({ on, onChange, rotulo, detalhe }: { on: boolean; onChange: (v: boolean) => void; rotulo: string; detalhe?: string }) => (
-    <label className="flex items-center justify-between gap-3 py-1.5">
+  const Chave = ({ on, onChange, rotulo, detalhe, extra }: { on: boolean; onChange: (v: boolean) => void; rotulo: string; detalhe?: string; extra?: ReactNode }) => (
+    <label className="flex items-center justify-between gap-3 py-1">
       <span><span className="block text-sm font-semibold text-foreground-900">{rotulo}</span>{detalhe && <span className="block text-[11px] leading-snug text-foreground-500">{detalhe}</span>}</span>
+      {extra}
       <input type="checkbox" role="switch" checked={on} onChange={(e) => onChange(e.target.checked)} aria-label={rotulo} className="h-5 w-9 shrink-0 accent-primary-500" />
     </label>
   );
@@ -49,16 +50,15 @@ export default function Avisos() {
   return (
     <div className="mx-auto max-w-xl space-y-2">
       <header>
-        <h1 className="font-heading text-xl font-bold text-foreground-950">Avisos no celular</h1>
-        <p className="text-xs text-foreground-600">Avisos mesmo com o app fechado. Grátis.</p>
+        <h1 className="font-heading text-xl font-bold text-foreground-950">Avisos no celular <span className="align-middle text-xs font-normal text-foreground-600">· grátis</span></h1>
       </header>
       {msg && <p role="status" className="rounded-lg bg-accent-50 px-3 py-2 text-sm font-medium text-accent-800"><i className="ri-check-line mr-1"></i>{msg}</p>}
       {erro && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p>}
 
       {ligado === false && (
-        <div className="rounded-2xl border border-primary-200 bg-primary-50 p-2.5" data-testid="avisos-desligados">
+        <div className="rounded-2xl border border-primary-200 bg-primary-50 p-2" data-testid="avisos-desligados">
           {!suportaAvisos() && ehIphoneSemInstalar() && <p className="mb-3 text-sm text-foreground-700"><b>iPhone:</b> toque em Compartilhar → “Adicionar à Tela de Início”, abra o app por lá e volte aqui.</p>}
-          <button type="button" disabled={ocupado} onClick={() => void fazer(async () => { const r = await ativarAvisos(prefs); setPrefs(r.prefs); setLigado(true); }, 'Avisos ligados neste celular!')} className="w-full rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-semibold text-background-50 disabled:opacity-50 dark:text-foreground-950">
+          <button type="button" disabled={ocupado} onClick={() => void fazer(async () => { const r = await ativarAvisos(prefs); setPrefs(r.prefs); setLigado(true); }, 'Avisos ligados neste celular!')} className="w-full rounded-xl bg-primary-500 px-4 py-2 text-sm font-semibold text-background-50 disabled:opacity-50 dark:text-foreground-950">
             <i className="ri-notification-3-line mr-1"></i>{ocupado ? 'Ligando...' : 'Ligar avisos neste celular'}
           </button>
           <p className="mt-1 text-center text-[11px] text-foreground-500">O celular vai perguntar: toque em Permitir.</p>
@@ -68,8 +68,8 @@ export default function Avisos() {
       <div className={`rounded-2xl border border-background-200 bg-background-50 px-3 py-0.5 ${ligado ? '' : 'opacity-70'}`} data-testid="avisos-prefs">
         <Chave on={prefs.mensagens} onChange={(v) => mudar({ ...prefs, mensagens: v })} rotulo="Mensagens da conversa" detalhe="Mensagem, ficha nova, dieta, treino feito" />
         <div className="border-t border-background-200">
-          <Chave on={prefs.treino.ativo} onChange={(v) => mudar({ ...prefs, treino: { ...prefs.treino, ativo: v } })} rotulo="Lembrete do treino" detalhe="Só nos dias em que você ainda não treinou" />
-          {prefs.treino.ativo && <label className="flex items-center gap-2 pb-1.5 text-xs text-foreground-600">Horário <input type="time" step={300} value={prefs.treino.hora} onChange={(e) => e.target.value && mudar({ ...prefs, treino: { ...prefs.treino, hora: e.target.value } })} aria-label="Horário do lembrete do treino" className={campo} /></label>}
+          <Chave on={prefs.treino.ativo} onChange={(v) => mudar({ ...prefs, treino: { ...prefs.treino, ativo: v } })} rotulo="Hora do treino" detalhe="Só nos dias sem treino"
+            extra={prefs.treino.ativo && <input type="time" step={300} value={prefs.treino.hora} onChange={(e) => e.target.value && mudar({ ...prefs, treino: { ...prefs.treino, hora: e.target.value } })} aria-label="Horário do lembrete do treino" className={`ml-auto w-[5.5rem] ${campo} px-1 text-xs`} />} />
         </div>
         <div className="border-t border-background-200">
           <Chave on={prefs.agua.ativo} onChange={(v) => mudar({ ...prefs, agua: { ...prefs.agua, ativo: v } })} rotulo="Beber água" />
@@ -97,12 +97,12 @@ export default function Avisos() {
         </div>
         <div className="border-t border-background-200">
           <Chave on={!!prefs.auto} onChange={(v) => mudar({ ...prefs, auto: v })} rotulo="Ajustar horários sozinho" detalhe="Usa a hora em que você costuma treinar e comer" />
-          <button type="button" disabled={ocupado || !user} onClick={() => void usarMeusHorarios()} className="mb-1.5 w-full rounded-xl border border-primary-300 px-3 py-1.5 text-xs font-semibold text-primary-700 disabled:opacity-50"><i className="ri-magic-line mr-1"></i>Usar meus horários agora</button>
+          <button type="button" disabled={ocupado || !user} onClick={() => void usarMeusHorarios()} className="mb-1.5 text-xs font-semibold text-primary-700 disabled:opacity-50"><i className="ri-magic-line mr-1"></i>Usar meus horários agora</button>
         </div>
         <div className="border-t border-background-200">
-          <Chave on={prefs.mensalidade} onChange={(v) => mudar({ ...prefs, mensalidade: v })} rotulo="Mensalidade" detalhe="Lembrete antes de vencer (alunos de coach com Pix)" />
+          <Chave on={prefs.mensalidade} onChange={(v) => mudar({ ...prefs, mensalidade: v })} rotulo="Mensalidade" detalhe="Antes de vencer (Pix do coach)" />
         </div>
-        <p className="border-t border-background-200 py-1.5 text-[11px] text-foreground-500"><i className="ri-timer-line mr-1"></i>Fim do descanso: o celular vibra mesmo bloqueado (Android).</p>
+        <p className="border-t border-background-200 py-1.5 text-[11px] text-foreground-500"><i className="ri-timer-line mr-1"></i>Fim do descanso: vibra mesmo bloqueado (Android). Funciona com o app fechado.</p>
       </div>
 
       {ligado && (

@@ -132,11 +132,11 @@ export default function AbaFotos({
           <h2 className="flex-1 font-heading text-base font-semibold text-foreground-950">Fotos de evolução</h2>
           <input type="date" value={data} onChange={(e) => setData(e.target.value)} className="rounded-lg border border-background-300 bg-background-50 px-2 py-1 text-xs" aria-label="Data das fotos" />
         </div>
-        <p className="mb-2 text-xs leading-snug text-foreground-600">As 4 posições, mesmo lugar e mesma luz. A câmera mostra o contorno para alinhar.</p>
+        <p className="mb-1.5 text-xs leading-snug text-foreground-600">Mesmo lugar e mesma luz. A câmera ajuda a alinhar.</p>
         <div className="grid grid-cols-4 gap-1.5">
           {POSES.map((p) => (
             <div key={p.id} className="rounded-xl border border-background-200 p-1">
-              <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-foreground-800">
+              <div className="relative aspect-square overflow-hidden rounded-lg bg-foreground-800">
                 {novas[p.id] ? (
                   <img src={novas[p.id]!} alt={`Nova foto ${p.label}`} className="h-full w-full object-cover object-top" />
                 ) : (

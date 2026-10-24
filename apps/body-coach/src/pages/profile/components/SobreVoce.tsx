@@ -33,6 +33,7 @@ export default function SobreVoce() {
   const [limites, setLimites] = useState<string[]>([]);
   const [msg, setMsg] = useState<string | null>(null);
   const [salvando, setSalvando] = useState(false);
+  const [condicoes, setCondicoes] = useState(false);
   const arquivo = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -82,9 +83,14 @@ export default function SobreVoce() {
         </div>
       </div>
 
+      {/* Condições ficam numa linha (toque em Mudar para ver as opções), assim o Perfil cabe sem rolar. */}
       <div className="mt-2">
-        <p className="text-xs font-medium text-foreground-600">Alguma condição que muda o treino? <span className="font-normal text-foreground-500">(opcional)</span></p>
-        <div className="mt-1 flex flex-wrap gap-1.5">
+        <div className="flex items-center gap-2">
+          <p className="min-w-0 flex-1 text-xs text-foreground-600">Condição que muda o treino: <b className="font-semibold text-foreground-900">{limites.length ? limites.join(', ') : 'nenhuma'}</b></p>
+          <button type="button" onClick={() => setCondicoes((v) => !v)} aria-expanded={condicoes} className="shrink-0 text-xs font-semibold text-primary-600">{condicoes ? 'Fechar' : 'Mudar'}</button>
+          <button type="button" onClick={salvar} disabled={salvando} className="shrink-0 rounded-lg bg-primary-500 px-3 py-1 text-xs font-semibold text-background-50 hover:bg-primary-600 disabled:opacity-60">{salvando ? 'Salvando...' : 'Salvar'}</button>
+        </div>
+        {condicoes && <div className="mt-1 flex flex-wrap gap-1.5">
           {LIMITACOES.map((l) => {
             const ativo = limites.includes(l);
             return (
@@ -93,12 +99,8 @@ export default function SobreVoce() {
               </button>
             );
           })}
-        </div>
-      </div>
-
-      <div className="mt-2 flex items-center gap-3">
-        <button type="button" onClick={salvar} disabled={salvando} className="rounded-lg bg-primary-500 px-4 py-1.5 text-sm font-semibold text-background-50 hover:bg-primary-600 disabled:opacity-60">{salvando ? 'Salvando...' : 'Salvar'}</button>
-        {msg && <span className="text-sm text-foreground-600">{msg}</span>}
+        </div>}
+        {msg && <p className="mt-1 text-xs text-foreground-600">{msg}</p>}
       </div>
     </Card>
   );

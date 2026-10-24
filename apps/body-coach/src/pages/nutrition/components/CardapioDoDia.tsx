@@ -65,15 +65,17 @@ export default function CardapioDoDia() {
 
   return (
     <div className="rounded-2xl border border-background-200 bg-background-50 p-3" data-testid="cardapio">
-      <h2 className="font-heading text-base font-bold text-foreground-950">Cardápio sugerido de hoje</h2>
-      <p className="text-xs text-foreground-500">Toque na refeição para ver e no alimento para trocar.</p>
+      <div className="flex items-baseline gap-2">
+        <h2 className="font-heading text-base font-bold text-foreground-950">Cardápio de hoje</h2>
+        <span className="ml-auto text-xs font-semibold text-foreground-700">{totalKcal} kcal · {totalProt} g prot.</span>
+      </div>
       <div className="mt-1.5 divide-y divide-background-200">
         {refeicoes.map((r) => {
           const aberto = abertaAgora === r.nome;
           const kcal = Math.round(r.itens.reduce((t, i, k) => t + (efetivo(`${r.nome}|${k}`, i).kcal ?? 0), 0));
           return (
-          <div key={r.nome} className="py-1">
-            <button type="button" onClick={() => setAberta(aberto ? null : r.nome)} aria-expanded={aberto} className="flex w-full items-center gap-2 py-1 text-left" data-testid="cardapio-refeicao">
+          <div key={r.nome} className="py-0.5">
+            <button type="button" onClick={() => setAberta(aberto ? null : r.nome)} aria-expanded={aberto} className="flex w-full items-center gap-2 py-0.5 text-left" data-testid="cardapio-refeicao">
               <span className="text-sm font-semibold text-foreground-900">{r.nome}</span>
               <span className="text-xs text-foreground-500">{horarios[r.nome] ?? r.horario}</span>
               {r.nome === proxima && <span className="rounded-full bg-primary-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">próxima</span>}
@@ -81,21 +83,21 @@ export default function CardapioDoDia() {
               <i className={`ri-arrow-${aberto ? 'up' : 'down'}-s-line text-foreground-400`}></i>
             </button>
             {aberto && (
-            <ul className="space-y-0.5 text-sm text-foreground-700">
+            <ul className="text-[13px] text-foreground-700">
               {r.itens.map((i, k) => {
                 const chave = `${r.nome}|${k}`;
                 const t = trocas[chave];
                 const v = efetivo(chave, i);
                 return (
                   <li key={chave}>
-                    <button type="button" onClick={() => { setTirar(false); setAberto({ chave, item: i }); }} className="flex w-full items-center justify-between gap-3 rounded-lg py-1 text-left active:bg-primary-50" data-testid="cardapio-item">
+                    <button type="button" onClick={() => { setTirar(false); setAberto({ chave, item: i }); }} className="flex w-full items-center justify-between gap-3 rounded-lg py-0.5 text-left active:bg-primary-50" data-testid="cardapio-item">
                       <span>
                         {v.nome} <span className="text-foreground-500">({v.porcao})</span>
                         {t && <span className="ml-1 rounded-full bg-primary-100 px-1.5 py-0.5 text-xs font-semibold text-primary-700">trocado</span>}
                       </span>
                       <span className="flex shrink-0 items-center gap-1.5 text-foreground-500">
                         {v.kcal != null && `${v.kcal} kcal`}
-                        <i className="ri-arrow-left-right-line text-primary-500" aria-hidden="true"></i>
+                        <i className="ri-arrow-left-right-line text-primary-500" aria-hidden="true" title="Trocar por um equivalente"></i>
                       </span>
                     </button>
                   </li>
@@ -107,7 +109,6 @@ export default function CardapioDoDia() {
           );
         })}
       </div>
-      <p className="mt-1 border-t border-background-200 pt-1.5 text-sm font-semibold text-foreground-900">Total: {totalKcal} kcal · {totalProt} g de proteína</p>
       {evitar.length > 0 && (
         <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-foreground-600">
           <span>Fora do seu cardápio:</span>

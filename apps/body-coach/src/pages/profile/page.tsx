@@ -36,14 +36,14 @@ const text = (v: unknown, suffix = '') => (typeof v === 'string' && v.trim() ? `
 function TamanhoDaLetra() {
   const [atual, setAtual] = useState(letraGuardada);
   return (
-    <Card padding="p-4">
-      <CardHeader title="Tamanho da letra" icon="ri-font-size-2" />
+    <Card padding="p-3">
+      <h2 className="mb-1.5 font-heading text-sm font-semibold text-foreground-950"><i className="ri-font-size-2 mr-1 text-primary-500"></i>Tamanho da letra</h2>
       <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Tamanho da letra" data-testid="tamanho-letra">
         {TAMANHOS.map((t) => (
           <button key={t.id} type="button" role="radio" aria-checked={atual === t.id} onClick={() => { definirLetra(t.id); setAtual(t.id); }}
-            className={`min-h-[48px] rounded-xl border-2 px-2 py-1.5 font-semibold ${atual === t.id ? 'border-primary-500 bg-primary-50 text-primary-800' : 'border-background-200 text-foreground-700'}`}
+            className={`min-h-[44px] rounded-xl border-2 px-1 py-1 font-semibold leading-tight ${atual === t.id ? 'border-primary-500 bg-primary-50 text-primary-800' : 'border-background-200 text-foreground-700'}`}
             style={{ fontSize: `${t.pct / 100}rem` }}>
-            A <span className="block text-xs font-medium">{t.nome}</span>
+            A <span className="block whitespace-nowrap text-[11px] font-medium">{t.nome}</span>
           </button>
         ))}
       </div>
@@ -53,21 +53,21 @@ function TamanhoDaLetra() {
 
 function InfoRow({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
-    <div className="min-w-0 rounded-lg bg-background-100/70 px-2.5 py-1">
-      <span className="flex items-center gap-1 text-[11px] text-foreground-500">
+    <div className="flex items-baseline gap-2 py-0.5">
+      <span className="flex w-24 shrink-0 items-center gap-1 text-xs text-foreground-500">
         <i className={`${icon} text-primary-500`}></i>
         {label}
       </span>
-      <span className="block text-sm font-medium leading-snug text-foreground-900">{value}</span>
+      <span className="min-w-0 flex-1 text-[13px] font-medium leading-snug text-foreground-900">{value}</span>
     </div>
   );
 }
 
 function TextBlock({ label, value }: { label: string; value: unknown }) {
   return (
-    <div>
-      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-foreground-400">{label}</p>
-      <div className="rounded-lg bg-background-100/70 px-3 py-2 text-sm text-foreground-700">{text(value)}</div>
+    <div className="flex items-baseline gap-2 py-1">
+      <p className="w-24 shrink-0 text-xs text-foreground-500">{label}</p>
+      <p className="min-w-0 flex-1 text-[13px] text-foreground-800">{text(value)}</p>
     </div>
   );
 }
@@ -148,9 +148,9 @@ export default function Profile() {
               <h2 className="font-heading text-sm font-semibold text-foreground-950"><i className="ri-sword-line mr-1 text-primary-500"></i>Seus dados e treino</h2>
               <Link to="/onboarding" className="text-xs font-semibold text-primary-600">Refazer</Link>
             </div>
-            <div className="grid grid-cols-2 gap-1.5">
+            <div className="divide-y divide-background-200">
               <InfoRow icon="ri-user-3-line" label="Nome" value={name} />
-              <InfoRow icon="ri-calendar-line" label="Idade · altura · peso" value={[text(ob.age, ' anos'), height, text(ob.weight, ' kg')].filter((x) => x !== MISSING).join(' · ') || MISSING} />
+              <InfoRow icon="ri-calendar-line" label="Idade e corpo" value={[text(ob.age, ' anos'), height, text(ob.weight, ' kg')].filter((x) => x !== MISSING).join(' · ') || MISSING} />
               <InfoRow icon="ri-trophy-line" label="Objetivos" value={Array.isArray(ob.goals) && ob.goals.length ? (ob.goals as string[]).join(' + ') : text(ob.goal)} />
               <InfoRow icon="ri-map-pin-line" label="Onde treina" value={text(ob.place)} />
               <InfoRow icon="ri-bar-chart-line" label="Nível" value={text(ob.level)} />
@@ -164,10 +164,10 @@ export default function Profile() {
       {aba === 'saude' && (
         <>
           <CicloCard />
-          <Card padding="p-4">
-            <CardHeader title="Saúde &amp; segurança" icon="ri-heart-pulse-line" />
-            <p className="mb-2 text-xs text-foreground-500">O sistema não diagnostica e não altera medicamentos.</p>
-            <div className="space-y-2">
+          <Card padding="p-3">
+            <h2 className="font-heading text-sm font-semibold text-foreground-950"><i className="ri-heart-pulse-line mr-1 text-primary-500"></i>Saúde e segurança</h2>
+            <p className="text-[11px] text-foreground-500">O app não diagnostica e não altera remédios.</p>
+            <div className="divide-y divide-background-200">
               <TextBlock label="Histórico médico" value={ob.history} />
               <TextBlock label="Lesões anteriores" value={ob.injuries} />
               <TextBlock label="Sintomas atuais" value={ob.symptoms} />
@@ -180,12 +180,12 @@ export default function Profile() {
       <TamanhoDaLetra />
       <ConviteCoach />
       {/* privacy */}
-      <Card padding="p-4">
-        <CardHeader title="Privacidade" icon="ri-shield-user-line" />
-        <p className="mb-3 text-sm text-foreground-600">
+      <Card padding="p-3">
+        <h2 className="font-heading text-sm font-semibold text-foreground-950"><i className="ri-shield-user-line mr-1 text-primary-500"></i>Privacidade</h2>
+        <p className="mb-1.5 text-[11px] text-foreground-600">
           Seus dados seguem a LGPD. Leia a política ou peça a exclusão definitiva.
         </p>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
           <Link
             to="/privacidade"
             className="text-sm font-medium text-primary-600 hover:underline inline-flex items-center gap-1.5"
@@ -204,7 +204,7 @@ export default function Profile() {
             type="button"
             onClick={deleteAccount}
             disabled={deleting}
-            className="rounded-xl bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700 inline-flex items-center gap-2 disabled:opacity-60"
+            className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700 inline-flex items-center gap-2 disabled:opacity-60"
           >
             <i className="ri-delete-bin-line"></i> {deleting ? 'Excluindo...' : 'Excluir minha conta'}
           </button>

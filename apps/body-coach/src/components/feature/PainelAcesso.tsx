@@ -13,17 +13,17 @@ export default function PainelAcesso({ acesso, onVerDeNovo, onFechar }: { acesso
     : acesso.situacao === 'pago' ? `Pago até ${dataCurta(acesso.pagoAte)}`
     : acesso.situacao === 'basico' ? 'Plano Grátis de coach (até 3 alunos)'
     : acesso.motivo === 'coach' ? 'O plano do seu coach venceu'
-    : `Teste grátis até ${dataCurta(acesso.gratisAte)}`;
+    : Number.isFinite(acesso.gratisAte) && acesso.gratisAte > 0 ? `Teste grátis até ${dataCurta(acesso.gratisAte)}` : 'Teste grátis';
   const precisaPagar = acesso.situacao !== 'isento' && acesso.situacao !== 'equipe';
   return (
-    <div className="mx-auto max-w-md space-y-4 rounded-2xl border border-background-200 bg-background-50 p-5 text-center" data-testid="painel-acesso">
-      <i className={`${semPremium ? 'ri-lock-2-line text-amber-500' : 'ri-vip-crown-line text-primary-500'} text-5xl`}></i>
-      <h1 className="font-heading text-2xl font-bold text-foreground-950">{titulo}</h1>
+    <div className="mx-auto max-w-md space-y-2.5 rounded-2xl border border-background-200 bg-background-50 p-4 text-center" data-testid="painel-acesso">
+      <i className={`${semPremium ? 'ri-lock-2-line text-amber-500' : 'ri-vip-crown-line text-primary-500'} text-3xl`}></i>
+      <h1 className="font-heading text-xl font-bold leading-tight text-foreground-950">{titulo}</h1>
       {semPremium && <p className="text-base text-foreground-700">{acesso.tipo === 'aluno' ? 'O seu coach não cobre mais o seu acesso. ' : ''}Assine o Premium para usar esta parte. Treino, ficha simples, água e refeições continuam grátis.</p>}
       {acesso.motivo === 'coach' && <p className="text-base text-foreground-700">Você ainda usa tudo por <b>{acesso.dias} dia(s)</b>. Avise o seu coach ou assine o Premium.</p>}
       {acesso.dias !== null && acesso.dias > 0 && !acesso.motivo && !semPremium && <p className="text-base text-foreground-700">Faltam <b>{acesso.dias} dia(s)</b>.</p>}
       {precisaPagar && <PagarPix acesso={acesso} avisar={setMsg} />}
-      <button onClick={onVerDeNovo} className="w-full rounded-xl border border-background-200 py-3 text-base font-medium text-foreground-700"><i className="ri-refresh-line mr-1"></i>Verificar de novo</button>
+      <button onClick={onVerDeNovo} className="w-full rounded-xl border border-background-200 py-2 text-sm font-medium text-foreground-700"><i className="ri-refresh-line mr-1"></i>Verificar de novo</button>
       {onFechar && <button onClick={onFechar} className="w-full py-2 text-sm text-foreground-500 underline">Voltar</button>}
       {msg && <p role="status" className="text-sm text-primary-700">{msg}</p>}
     </div>

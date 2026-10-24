@@ -79,14 +79,13 @@ export default function ImportarAvaliacao({
         type="button"
         onClick={() => ref.current?.click()}
         disabled={!!lendo}
-        className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-primary-300 bg-primary-50/50 p-4 text-left transition hover:bg-primary-50 disabled:opacity-60"
+        className="flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-primary-300 bg-primary-50/50 px-3 py-2 text-left transition hover:bg-primary-50 disabled:opacity-60"
       >
         <i className={`${lendo ? 'ri-loader-4-line animate-spin' : 'ri-file-upload-line'} text-2xl text-primary-600`}></i>
         <span>
           <span className="block text-sm font-semibold text-foreground-950">{lendo ?? 'Importar avaliação'}</span>
           <span className="block text-xs text-foreground-600">
-            PDF da balança (Tanita, InBody...), relatório do nutricionista (.mht/.html), planilha (.csv) ou foto do laudo.
-            Pode mandar mais de um arquivo.
+            PDF da balança, relatório do nutricionista, planilha ou foto do laudo.
           </span>
         </span>
       </button>

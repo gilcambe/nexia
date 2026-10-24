@@ -53,15 +53,14 @@ export default function MetasCorpo({ serie, metas, fotoMeta, salvar }: { serie: 
 
   return (
     <Card padding="p-3">
-      <div className="mb-1 flex items-center gap-2">
+      <div className="flex items-center gap-2">
         <i className="ri-focus-3-line text-lg text-primary-500"></i>
-        <h2 className="flex-1 font-heading text-base font-semibold text-foreground-950">Minhas metas</h2>
+        <div className="min-w-0 flex-1">
+          <h2 className="font-heading text-base font-semibold text-foreground-950">Minhas metas</h2>
+        </div>
         {!editar && <button type="button" onClick={abrir} className="rounded-lg border border-background-300 px-3 py-1.5 text-xs font-semibold text-foreground-700">{progresso.length || fotoMeta ? 'Editar' : 'Definir metas'}</button>}
       </div>
 
-      {!editar && progresso.length === 0 && !fotoMeta && (
-        <p className="text-xs text-foreground-600">Escolha a medida que quer em cada parte (ex.: cintura 80 cm) e veja quanto falta.</p>
-      )}
       {!editar && progresso.length > 0 && (
         <ul className="space-y-3" data-testid="metas-lista">
           {progresso.map((p) => (

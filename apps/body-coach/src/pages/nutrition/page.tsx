@@ -45,7 +45,7 @@ export default function Nutrition() {
           onClick={() => setShowAdd(true)}
           className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
         >
-          <i className="ri-add-line text-lg"></i>
+          <i className="ri-add-line text-base"></i>
           Registrar refeição
         </button>
       </header>
@@ -61,9 +61,9 @@ export default function Nutrition() {
           <Favoritas />
           <AjudaRefeicao />
           <Card padding="p-3">
-            <div className="mb-1 flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <h2 className="font-heading text-sm font-semibold text-foreground-950"><i className="ri-restaurant-2-line mr-1 text-secondary-500"></i>Refeições de hoje</h2>
-              <span className="text-xs text-foreground-400">{mealCount} registradas</span>
+              <span className="text-xs text-foreground-400">{mealCount ? `${mealCount} registradas` : 'nenhuma ainda'}</span>
             </div>
             {error && !loading ? (
               <div className="rounded-lg bg-primary-100/70 p-3 text-center">
@@ -83,11 +83,7 @@ export default function Nutrition() {
               </div>
             ) : meals.length > 0 ? (
               <MealList meals={meals} onRemove={removeMeal} />
-            ) : (
-              <p className="text-xs text-foreground-500">
-                Nenhuma ainda. Toque em "Registrar refeição" ou em "Comi isso".
-              </p>
-            )}
+            ) : null}
             <div className="mt-2 border-t border-background-200 pt-2">
               <WaterTracker consumed={water} goal={waterGoal} onAdd={addWater} onReset={resetWater} />
             </div>

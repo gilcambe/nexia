@@ -58,8 +58,8 @@ export default function AjudaRefeicao() {
         <>
           <div className="mt-1.5 space-y-2">
             {sugestoes.map((s, i) => (i !== vez % Math.max(1, sugestoes.length) ? null :
-              <div key={i} className="rounded-xl bg-background-100/70 p-2.5">
-                <p className="text-sm font-semibold leading-snug text-foreground-900">{s.itens.map((a) => `${a.nome} (${a.porcao})`).join(' + ')}</p>
+              <div key={i} className="rounded-xl bg-background-100/70 px-2.5 py-2">
+                <p className="text-[13px] font-semibold leading-snug text-foreground-900">{s.itens.map((a) => `${a.nome} (${a.porcao})`).join(' + ')}</p>
                 <div className="mt-1 flex items-center justify-between gap-2">
                   <span className="text-xs text-foreground-500">{s.kcal} kcal · P {s.p} g · C {s.c} g · G {s.g} g</span>
                   <button type="button" onClick={() => void adicionar(i)} disabled={adicionado === i} className="shrink-0 rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-semibold text-background-50 disabled:opacity-60 dark:text-foreground-950">{adicionado === i ? 'Registrado' : 'Comi isso'}</button>
