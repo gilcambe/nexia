@@ -3,7 +3,7 @@ on:
   push:
     branches: [claude/splash-diagnostico]
 permissions:
-  contents: read
+  contents: write
 jobs:
   diag:
     runs-on: ubuntu-latest
@@ -13,8 +13,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm i --no-save playwright@1.47.2 && npx playwright install --with-deps chromium
-      - run: node scripts/diag-splash-no-ar.js
+      - run: npm i --no-save playwright@1.47.2 > /dev/null 2>&1 && npx playwright install --with-deps chromium > /dev/null 2>&1; echo instalado
+      - run: node scripts/diag-splash-no-ar.js > out.txt 2>&1 || true
+      - if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo '```' > c.md; tail -c 60000 out.txt >> c.md; echo '```' >> c.md
+          gh api repos/${{ github.repository }}/commits/${{ github.sha }}/comments -F body=@c.md
       - uses: actions/upload-artifact@v4
         if: always()
         with:
