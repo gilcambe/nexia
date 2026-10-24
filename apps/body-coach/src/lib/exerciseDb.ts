@@ -74,6 +74,32 @@ export const EXERCICIOS: Exercicio[] = [
   ex('Abdominal na máquina', 'abdomen', 'maquina', false, ['pescoco']),
   ex('Elevação de pernas', 'abdomen', 'corpo', false, ['lombar', 'quadril']),
   ex('Dead bug', 'abdomen', 'corpo', false),
+  // Em casa (halteres, elástico ou só o corpo): o treino de quem não vai à academia também fica completo.
+  ex('Supino no chão com halteres', 'peito', 'halter', true, ['ombro']),
+  ex('Crucifixo com halteres', 'peito', 'halter', false, ['ombro']),
+  ex('Flexão inclinada (mãos no sofá ou banco)', 'peito', 'corpo', true, ['punho']),
+  ex('Remada curvada com halteres', 'costas', 'halter', true, ['lombar']),
+  ex('Remada invertida na mesa', 'costas', 'corpo', true, ['ombro']),
+  ex('Superman', 'costas', 'corpo', false, ['lombar']),
+  ex('Flexão pike', 'ombros', 'corpo', true, ['ombro', 'punho']),
+  ex('Elevação frontal com halter', 'ombros', 'halter', false, ['ombro']),
+  ex('Crucifixo inverso com halteres', 'ombros', 'halter', false),
+  ex('Rosca concentrada', 'biceps', 'halter', false, ['cotovelo']),
+  ex('Rosca com elástico', 'biceps', 'corpo', false),
+  ex('Tríceps coice com halter', 'triceps', 'halter', false, ['cotovelo']),
+  ex('Flexão diamante', 'triceps', 'corpo', true, ['punho', 'ombro', 'cotovelo']),
+  ex('Agachamento livre sem peso', 'quadriceps', 'corpo', true, ['joelho']),
+  ex('Agachamento búlgaro', 'quadriceps', 'halter', true, ['joelho', 'quadril']),
+  ex('Subida no banco com halteres', 'quadriceps', 'halter', true, ['joelho']),
+  ex('Stiff unilateral com halter', 'posterior', 'halter', true, ['lombar']),
+  ex('Ponte de posterior no solo', 'posterior', 'corpo', false),
+  ex('Elevação pélvica com halter', 'gluteos', 'halter', true),
+  ex('Elevação pélvica unilateral', 'gluteos', 'corpo', false),
+  ex('Abdução de quadril deitada', 'gluteos', 'corpo', false, ['quadril']),
+  ex('Coice em quatro apoios', 'gluteos', 'corpo', false, ['punho']),
+  ex('Panturrilha em pé no degrau', 'panturrilha', 'corpo', false, ['tornozelo']),
+  ex('Prancha lateral', 'abdomen', 'corpo', false, ['ombro']),
+  ex('Abdominal curto no solo', 'abdomen', 'corpo', false, ['pescoco']),
 ];
 
 export const POR_ID: Record<string, Exercicio> = Object.fromEntries(EXERCICIOS.map((e) => [e.id, e]));
@@ -141,7 +167,16 @@ export function alternativas(id: string, lesoes: Set<Lesao>, indisponiveis: stri
 // Demonstração própria (banco no repositório, em public/exercicios): dois quadros que alternam como um vídeo curto.
 // Fotos do free-exercise-db (domínio público). Sem YouTube, sem gasto de internet com vídeo pesado.
 export const IDS_COM_DEMO = new Set(['abdominal-na-maquina','abdominal-na-polia','abducao-de-quadril-na-maquina','afundo-com-halteres','agachamento-goblet','agachamento-livre','agachamento-no-smith','agachamento-sumo-com-halter','barra-fixa','cadeira-extensora','cadeira-flexora','coice-na-polia','crossover-na-polia','crucifixo-inverso-na-maquina','crucifixo-na-maquina','dead-bug','desenvolvimento-com-halteres','desenvolvimento-na-maquina','elevacao-de-pernas','elevacao-lateral','elevacao-lateral-no-cabo','elevacao-pelvica-com-barra','elevacao-pelvica-no-solo','encolhimento-com-halteres','face-pull','flexao-de-bracos','flexora-em-pe','hack-machine','leg-press-45','levantamento-terra','mergulho-no-banco','mesa-flexora','panturrilha-em-pe-na-maquina','panturrilha-no-leg-press','panturrilha-sentado','prancha','pulldown-com-bracos-estendidos','puxada-frontal','remada-baixa-no-cabo','remada-curvada-com-barra','remada-na-maquina','remada-unilateral-com-halter','rosca-alternada-com-halteres','rosca-direta-com-barra','rosca-martelo','rosca-no-cabo','stiff-com-barra','stiff-com-halteres','supino-inclinado-com-halteres','supino-na-maquina','supino-reto-com-barra','supino-reto-com-halteres','triceps-corda-na-polia','triceps-frances-com-halter','triceps-na-polia-com-barra']);
-export const demoDoExercicio = (id: string): [string, string] | null => {
+// Exercícios de casa sem foto própria usam a foto do movimento mais parecido.
+const DEMO_PARECIDA: Record<string, string> = {
+  'supino-no-chao-com-halteres': 'supino-reto-com-halteres', 'flexao-inclinada-maos-no-sofa-ou-banco': 'flexao-de-bracos', 'flexao-diamante': 'flexao-de-bracos',
+  'remada-curvada-com-halteres': 'remada-unilateral-com-halter', 'agachamento-livre-sem-peso': 'agachamento-goblet', 'agachamento-bulgaro': 'afundo-com-halteres',
+  'subida-no-banco-com-halteres': 'afundo-com-halteres', 'stiff-unilateral-com-halter': 'stiff-com-halteres', 'elevacao-pelvica-com-halter': 'elevacao-pelvica-no-solo',
+  'elevacao-pelvica-unilateral': 'elevacao-pelvica-no-solo', 'ponte-de-posterior-no-solo': 'elevacao-pelvica-no-solo', 'panturrilha-em-pe-no-degrau': 'panturrilha-em-pe-na-maquina',
+  'rosca-concentrada': 'rosca-alternada-com-halteres', 'rosca-com-elastico': 'rosca-alternada-com-halteres',
+};
+export const demoDoExercicio = (idPedido: string): [string, string] | null => {
+  const id = IDS_COM_DEMO.has(idPedido) ? idPedido : DEMO_PARECIDA[idPedido] ?? idPedido;
   if (!IDS_COM_DEMO.has(id)) return null;
   const b = `${import.meta.env.BASE_URL}exercicios/${id}`;
   return [`${b}-0.webp`, `${b}-1.webp`];

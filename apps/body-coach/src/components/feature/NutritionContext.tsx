@@ -1,4 +1,4 @@
-import { calcularMetas } from '@/lib/metas';
+import { calcularMetas, perfilMetasDe } from '@/lib/metas';
 import { metasDoPlano } from '@/lib/planoAlimentar';
 import {
   createContext,
@@ -186,7 +186,7 @@ export function NutritionProvider({ children }: { children: ReactNode }) {
     if (doPlano) return { targets: { ...nutritionTargets, ...doPlano }, waterGoal: agua };
     if (!(peso > 0)) return { targets: nutritionTargets, waterGoal: defaultWaterGoal };
     return {
-      targets: calcularMetas(peso, (profile as any)?.onboarding?.goal, Number((profile as any)?.ajuste_kcal) || 0),
+      targets: calcularMetas(peso, (profile as any)?.onboarding?.goal, Number((profile as any)?.ajuste_kcal) || 0, perfilMetasDe(profile as any)),
       waterGoal: Math.round(peso * 0.035 * 10) / 10,
     };
   }, [profile]);

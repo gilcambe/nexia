@@ -13,6 +13,9 @@ import { useAuth } from './AuthContext';
 import { perguntar, type TurnoConversa } from '@/lib/coachAI';
 import { cargasDoTexto } from '@/lib/cargasDoTexto';
 import { registrarSeries } from '@/lib/treinoAtivo';
+import { respostaLocal } from '@/lib/respostaLocal';
+import { DIVISOES, objetivosDe, sexoDe } from '@/lib/dayPlan';
+import { fichaDoPerfil } from '@/lib/ficha';
 
 export interface CoachContextSnapshot {
   name: string;
@@ -43,48 +46,7 @@ export function useCoach() {
 }
 
 function buildGreeting(name: string): string {
-  return `Olá, ${name}! Sou o Coach NEXIA e estou do seu lado na academia. Estou acompanhando seu contexto em tempo real — pode me dizer o que fez (ex.: "fiz 12 com 70"), como se sente, ou pedir um resumo do seu dia.`;
-}
-
-function buildReadinessReply(s?: CoachContextSnapshot): string {
-  if (s?.readinessScore == null) {
-    return 'Ainda não tenho seu check-in de hoje. Faça o check-in diário para eu calcular sua Prontidão e ajustar o treino na hora.';
-  }
-  const label =
-    s.readinessStatus === 'pronto'
-      ? 'pronto para treinar pesado'
-      : s.readinessStatus === 'reduzir'
-        ? 'em dia de recuperação'
-        : 'com atenção — treinar com ajustes';
-  return `Sua Prontidão hoje é ${s.readinessScore}/100. Você está ${label}. Se quiser saber o porquê, é só perguntar "por quê?".`;
-}
-
-function buildNutritionReply(s?: CoachContextSnapshot): string {
-  const cal = s?.calories ?? 0;
-  const calT = s?.caloriesTarget ?? 0;
-  const prot = s?.protein ?? 0;
-  const protT = s?.proteinTarget ?? 0;
-  if (calT <= 0) {
-    return 'Ainda não tenho suas metas de nutrição. Registre suas refeições para eu acompanhar quanto ainda pode comer.';
-  }
-  const remainingCal = Math.max(0, calT - cal);
-  const remainingProt = Math.max(0, protT - prot);
-  return `Você já consumiu ${cal.toLocaleString('pt-BR')} kcal / ${prot}g de proteína. Pode ingerir ~${remainingCal.toLocaleString('pt-BR')} kcal até bater a meta de ${calT.toLocaleString('pt-BR')}. Priorize ~${remainingProt}g de proteína nas próximas refeições.`;
-}
-
-function buildWeightReply(s?: CoachContextSnapshot): string {
-  if (s?.latestWeight == null) {
-    return 'Ainda não registrei seu peso. Vá em Evolução e registre seu primeiro progresso para eu acompanhar a tendência.';
-  }
-  return `Seu último registro de peso é ${s.latestWeight.toFixed(1).replace('.', ',')} kg. Posso acompanhar a tendência conforme você registra novos dados em Evolução.`;
-}
-
-function respostaLocal(texto: string, s?: CoachContextSnapshot): string {
-  const t = texto.toLowerCase();
-  if (/comer|caloria|kcal|prote[ií]na|dieta|fome/.test(t)) return buildNutritionReply(s);
-  if (/peso|balan[cç]a|gordura/.test(t)) return buildWeightReply(s);
-  if (/hoje|pront|readiness|cansad|recupera|treino|perna|peito|costas|bra[cç]o|ombro/.test(t)) return buildReadinessReply(s);
-  return 'Estou com dificuldade de conectar à IA agora, mas continuo aqui. Pergunte "Como estou hoje?" ou "Quanto ainda posso comer?" que respondo com os seus dados.';
+  return `Olá, ${name}! Sou seu coach no Body Coach. Me conta o que fez (ex.: "fiz 12 com 70"), como está se sentindo, ou pergunte do seu treino e da sua dieta.`;
 }
 
 export function CoachProvider({ children }: { children: ReactNode }) {
@@ -115,6 +77,23 @@ export function CoachProvider({ children }: { children: ReactNode }) {
     try { localStorage.setItem(chave, JSON.stringify(messages.slice(-60))); } catch { /* sem armazenamento */ }
   }, [messages, chave]);
   const mensagensRef = useRef<CoachMessage[]>([]);
+  const avisouErro = useRef(false);
+  // Título do treino de hoje (o mesmo que a tela Treino mostra), para o coach falar dele.
+  const treinoHoje = useCallback((): string | null => {
+    try {
+      const f = fichaDoPerfil({ onboarding: profile?.onboarding as Record<string, unknown> | undefined, ficha: (profile as { ficha?: { divisao?: never; proximoDia?: number } } | null)?.ficha });
+      return DIVISOES[f.divisao].dias[f.proximoDia].titulo;
+    } catch { return null; }
+  }, [profile]);
+  const dadosLocais = useCallback((s?: CoachContextSnapshot) => {
+    const ob = (profile?.onboarding ?? {}) as Record<string, unknown>;
+    return {
+      nome: firstName, objetivos: objetivosDe(ob), sexo: sexoDe({ ...ob, gender: profile?.gender }), local: String(ob.place ?? ''),
+      treinoHoje: treinoHoje(), prontidao: s?.readinessScore ?? null, status: s?.readinessStatus ?? null, peso: s?.latestWeight ?? null,
+      kcal: s?.calories ?? null, kcalMeta: s?.caloriesTarget ?? null, proteina: s?.protein ?? null, proteinaMeta: s?.proteinTarget ?? null,
+      hora: new Date().getHours(),
+    };
+  }, [profile, firstName, treinoHoje]);
   useEffect(() => { mensagensRef.current = messages; }, [messages]);
 
   const openRef = useRef(open);
@@ -164,10 +143,20 @@ export function CoachProvider({ children }: { children: ReactNode }) {
 
     setLoadingAI(true);
     try {
-      const ob = profile?.onboarding ?? {};
+      const ob = (profile?.onboarding ?? {}) as Record<string, unknown>;
       const contextData = {
         apelido: firstName,
         objetivo: ob.goal ?? null,
+        objetivos: objetivosDe(ob),
+        sexo: sexoDe({ ...ob, gender: profile?.gender }),
+        idade: ob.age ?? null,
+        peso_cadastro: ob.weight ?? null,
+        onde_treina: ob.place ?? null,
+        foco: ob.focus ?? null,
+        rotina: ob.lifestyle ?? null,
+        dias_por_semana: ob.days ?? null,
+        treino_de_hoje: treinoHoje(),
+        hora_local: new Date().getHours(),
         modalidades: ob.modality ?? null,
         nivel: ob.level ?? null,
         limitacoes: [...(profile?.mobility ?? []), ...(typeof ob.injuries === 'string' && ob.injuries ? [ob.injuries] : [])],
@@ -187,6 +176,7 @@ export function CoachProvider({ children }: { children: ReactNode }) {
         .slice(-10)
         .map((m) => ({ role: m.speaker === 'user' ? 'user' as const : 'assistant' as const, content: m.text }));
       const reply = await perguntar('coach', trimmed, contextData, undefined, historico);
+      avisouErro.current = false;
 
       setMessages((prev) => [
         ...prev,
@@ -195,16 +185,18 @@ export function CoachProvider({ children }: { children: ReactNode }) {
       if (!openRef.current) setUnread((u) => u + 1);
     } catch (err: any) {
       // Plano B: a IA falhou, mas o coach nunca fica mudo — responde com os dados que já tem do aluno.
-      const aviso = err?.message ? `${err.message}\n\n` : '';
+      // O aviso de falha aparece uma vez só (repetir a mesma frase a cada mensagem parece robô).
+      const texto = (avisouErro.current || !err?.message ? '' : `${err.message}\n\n`) + respostaLocal(trimmed, dadosLocais(snapshot));
+      avisouErro.current = true;
       setMessages((prev) => [
         ...prev,
-        { id: `c-${Date.now()}`, speaker: 'coach', text: aviso + respostaLocal(trimmed, snapshot), time: 'agora' },
+        { id: `c-${Date.now()}`, speaker: 'coach', text: texto, time: 'agora' },
       ]);
       if (!openRef.current) setUnread((u) => u + 1);
     } finally {
       setLoadingAI(false);
     }
-  }, [loadingAI, profile, firstName]);
+  }, [loadingAI, profile, firstName, treinoHoje, dadosLocais]);
 
   const value = useMemo(
     () => ({ open, setOpen: setOpenSafe, messages, send, unread, typing: loadingAI }),

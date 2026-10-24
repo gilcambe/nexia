@@ -145,6 +145,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         definirPerfilIA({
           apelido: data?.nickname || data?.full_name?.split(' ')[0] || null,
           objetivo: ob.goal ?? null,
+          objetivos: Array.isArray((ob as Record<string, unknown>).goals) ? (ob as Record<string, unknown>).goals : null,
+          sexo: (ob as Record<string, unknown>).sex ?? data?.gender ?? null,
+          idade: (ob as Record<string, unknown>).age ?? null,
+          onde_treina: (ob as Record<string, unknown>).place ?? null,
+          rotina: (ob as Record<string, unknown>).lifestyle ?? null,
           modalidades: ob.modality ?? null,
           nivel: ob.level ?? null,
           limitacoes: [...(data?.mobility ?? []), ...(typeof ob.injuries === 'string' && ob.injuries ? [ob.injuries] : [])],

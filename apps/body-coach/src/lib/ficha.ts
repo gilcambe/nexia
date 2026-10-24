@@ -20,7 +20,7 @@ export function tempoDoPerfil(respostas: Record<string, unknown> | null | undefi
 }
 
 export function fichaDoPerfil(perfil: { ficha?: Partial<Ficha>; onboarding?: Record<string, unknown> } | null | undefined): Ficha {
-  const padrao = divisaoSugerida(diasPorSemana(perfil?.onboarding));
+  const padrao = divisaoSugerida(diasPorSemana(perfil?.onboarding), perfil?.onboarding);
   const divisao = perfil?.ficha?.divisao && perfil.ficha.divisao in DIVISOES ? perfil.ficha.divisao : padrao;
   const n = DIVISOES[divisao].dias.length;
   const dia = Number(perfil?.ficha?.proximoDia ?? 0);
