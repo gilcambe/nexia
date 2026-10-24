@@ -83,3 +83,12 @@ test('SPLASH-KX7: toque antes da configuração chegar da API (internet lenta + 
   assert.match(site, /\['pointerdown', 'touchend', 'keydown', 'click'\]\.forEach\(t => addEventListener\(t, anotarGesto, true\)\);/);
   assert.match(site, /if \(gesto\) comecar\(\);/);
 });
+
+test('SPLASH-KX8: playlist do painel já começa muda por baixo da vinheta e o som liga no primeiro toque / fim da vinheta', () => {
+  const site = R('sites/splash/index.html');
+  assert.match(site, /\(pref === 'off' \? '' : 'autoplay=1&mute=1&'\) \+ 'enablejsapi=1/);
+  assert.match(site, /if \(!yt \|\| \(ytOk && !ytMudo\)\)/, 'continua ouvindo toques até tocar com som');
+  assert.match(site, /const tocando = yt \? ligada && ytOk && !ytMudo : ligada;/, 'botão usa o estado real do player');
+  assert.match(site, /addEventListener\('kernex-fim', \(\) => \{ if \(pronta\) comecar\(\); \}\);/);
+  assert.match(R('sites/splash/abertura-kernex.js'), /dispatchEvent\(new Event\('kernex-fim'\)\)/);
+});

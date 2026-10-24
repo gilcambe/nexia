@@ -5,6 +5,7 @@ import { useCoach } from '@/components/feature/CoachContext';
 import { useReadiness } from '@/components/feature/ReadinessContext';
 import DailyCheckIn from './components/DailyCheckIn';
 import TodayCard from './components/TodayCard';
+import RecuperacaoCard from './components/RecuperacaoCard';
 import NutritionCard from './components/NutritionCard';
 import NuncaFalhe from './components/NuncaFalhe';
 import AvisoAnamnese from './components/AvisoAnamnese';
@@ -77,6 +78,7 @@ export default function Home() {
         <>
           <AvisoAnamnese />
           <TodayCard />
+          <RecuperacaoCard />
           <NutritionCard />
           {(() => {
             const a = proximaAcao({ onboarding: !!profile?.onboarding, checkinHoje: hasCheckedToday || carregandoCheckin, hora: now.getHours() });
@@ -118,6 +120,7 @@ export default function Home() {
       <AvisoFotos />
       <NuncaFalhe />
       <TodayCard />
+      <RecuperacaoCard />
       <NutritionCard />
       <DailyCheckIn />
 

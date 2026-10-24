@@ -1346,7 +1346,8 @@ async function enviarPedidoReserva(e) {
 
 /* ---------- música de fundo (gerada no aparelho, sem arquivo; só liga quando a pessoa toca no botão) ---------- */
 const Musica = (function () {
-  let ctx = null, master = null, timer = null, passo = 0, proximo = 0, ligada = false, audioUrl = null, el = null, yt = null, gesto = false, pronta = false, silenciada = false, ytOk = false, ytLista = null;
+  let ctx = null, master = null, timer = null, passo = 0, proximo = 0, ligada = false, audioUrl = null, el = null, yt = null, gesto = false, pronta = false, silenciada = false, ytOk = false, ytLista = null, ytMudo = true;
+  const SOM = 'splash_som2'; // chave nova: quem desligou sem querer quando o botão mostrava "tocando" sem tocar volta a ouvir
   let COLCHEIA = 60 / 98 / 2, VOL = 1;
   const ACORDES = [[48, 52, 55, 59], [45, 48, 52, 55], [41, 45, 48, 52], [43, 47, 50, 53]]; // C7M, Am7, F7M, G7
   let ESCALA = [60, 62, 64, 67, 69, 72, 74, 76];
@@ -1376,7 +1377,7 @@ const Musica = (function () {
     while (proximo < ctx.currentTime + 0.5) { tocar(proximo, passo); proximo += COLCHEIA; passo++; }
   }
   function ligar() {
-    if (yt) { ytCmd('unMute'); if (ytLista) ytCmd('setShuffle', [true]); ytCmd('playVideo'); ligada = true; return true; }
+    if (yt) { ytCmd('unMute'); ytCmd('setVolume', [100]); if (ytLista && !ytOk) ytCmd('setShuffle', [true]); ytCmd('playVideo'); ligada = true; return true; }
     if (audioUrl) { if (!el) { el = new Audio(audioUrl); el.loop = true; el.volume = 0.6; } el.play().catch(() => {}); ligada = true; return true; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return false;
@@ -1397,11 +1398,11 @@ const Musica = (function () {
   }
   function ytCmd(f, args) { try { if (yt && yt.contentWindow) yt.contentWindow.postMessage(JSON.stringify({ event: 'command', func: f, args: args === undefined ? '' : args }), '*'); } catch (e) {} }
   function ytPlaylist(u) { const m = String(u || '').match(/[?&]list=([A-Za-z0-9_-]{10,})/); return m ? m[1] : null; }
-  addEventListener('message', ev => { if (!yt || ev.source !== yt.contentWindow) return; let d = ev.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { return; } } if (!d) return; if (d.event === 'onReady' && gesto && !ytOk) comecar(); const st = d.event === 'onStateChange' ? d.info : (d.info && d.info.playerState); if (st === 1) { ytOk = true; ligada = true; mostrarBotao(true); } });
+  addEventListener('message', ev => { if (!yt || ev.source !== yt.contentWindow) return; let d = ev.data; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { return; } } if (!d) return; if (d.event === 'onReady' && gesto && !ytOk) comecar(); if (d.info && typeof d.info.muted === 'boolean') ytMudo = d.info.muted; const st = d.event === 'onStateChange' ? d.info : (d.info && d.info.playerState); if (st === 1) ytOk = true; if (ligada && ytOk && !ytMudo) mostrarBotao(true); });
   function ytId(u) { const m = String(u || '').match(/(?:youtu\.be\/|[?&]v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/); return m ? m[1] : null; }
   function mostrarBotao(on) { const b = document.getElementById('btn-musica'); if (!b) return; b.classList.add('visivel'); b.classList.toggle('tocando', on); b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Desligar a música' : 'Ligar a música'); b.querySelector('i').className = on ? 'ri-volume-up-fill' : 'ri-volume-mute-fill'; }
   function comecar() {
-    let pref = ''; try { pref = localStorage.getItem('splash_som') || ''; } catch (e) {}
+    let pref = ''; try { pref = localStorage.getItem(SOM) || ''; } catch (e) {}
     if (pref === 'off' || NX.editar || silenciada) return;
     if (ligar()) mostrarBotao(true);
   }
@@ -1414,7 +1415,9 @@ const Musica = (function () {
     if ((id || lista) && !yt) {
       ytLista = lista;
       yt = document.createElement('iframe');
-      const base = 'enablejsapi=1&controls=0&loop=1&playsinline=1&origin=' + encodeURIComponent(location.origin);
+      // autoplay=1&mute=1: a playlist já começa MUDA por baixo da vinheta (todo navegador permite); o som liga no primeiro toque.
+      let pref = ''; try { pref = localStorage.getItem(SOM) || ''; } catch (e) {}
+      const base = (pref === 'off' ? '' : 'autoplay=1&mute=1&') + 'enablejsapi=1&controls=0&loop=1&playsinline=1&origin=' + encodeURIComponent(location.origin);
       yt.src = lista ? 'https://www.youtube.com/embed/' + (id || 'videoseries') + '?listType=playlist&list=' + lista + '&' + base : 'https://www.youtube.com/embed/' + id + '?playlist=' + id + '&' + base;
       // Toque que veio antes do player carregar (ex.: tocar para pular a vinheta Kernex): toca assim que o player fica pronto.
       yt.addEventListener('load', () => { try { yt.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*'); } catch (e) {} if (gesto && !ytOk) { setTimeout(comecar, 300); setTimeout(comecar, 1500); } });
@@ -1426,7 +1429,7 @@ const Musica = (function () {
     COLCHEIA = 60 / e.bpm / 2; ESCALA = e.escala; VOL = e.vol;
     if (!pronta) {
       pronta = true;
-      const iniciar = () => { gesto = true; if (!yt || ytOk) ['pointerdown', 'touchend', 'keydown', 'click'].forEach(t => removeEventListener(t, iniciar, true)); setTimeout(comecar, 0); if (yt && !ytOk) { setTimeout(comecar, 800); setTimeout(comecar, 2000); } };
+      const iniciar = () => { gesto = true; if (!yt || (ytOk && !ytMudo)) ['pointerdown', 'touchend', 'keydown', 'click'].forEach(t => removeEventListener(t, iniciar, true)); setTimeout(comecar, 0); if (yt && (!ytOk || ytMudo)) { setTimeout(comecar, 800); setTimeout(comecar, 2000); } };
       ['pointerdown', 'touchend', 'keydown', 'click'].forEach(t => addEventListener(t, iniciar, true));
       if (gesto) comecar();
     }
@@ -1435,7 +1438,9 @@ const Musica = (function () {
   // fica anotado e a música começa assim que a configuração chega (o "if (gesto) comecar()" de configurar).
   const anotarGesto = () => { gesto = true; ['pointerdown', 'touchend', 'keydown', 'click'].forEach(t => removeEventListener(t, anotarGesto, true)); };
   ['pointerdown', 'touchend', 'keydown', 'click'].forEach(t => addEventListener(t, anotarGesto, true));
-  return { configurar, alternar() { const on = ligada ? (desligar(), false) : ligar(); try { localStorage.setItem('splash_som', on ? 'on' : 'off'); } catch (e) {} mostrarBotao(on); return on; }, ativa: () => ligada };
+  // Fim da vinheta Kernex: tenta ligar o som (se a pessoa já tocou na tela, toca na hora; senão toca no primeiro toque).
+  addEventListener('kernex-fim', () => { if (pronta) comecar(); });
+  return { configurar, alternar() { const tocando = yt ? ligada && ytOk && !ytMudo : ligada; const on = tocando ? (desligar(), false) : ligar(); try { localStorage.setItem(SOM, on ? 'on' : 'off'); } catch (e) {} mostrarBotao(on); return on; }, ativa: () => ligada };
 })();
 
 function iniciarInterface() {
