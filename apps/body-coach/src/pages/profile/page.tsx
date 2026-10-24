@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/feature/AuthContext';
 import { deleteUser } from 'firebase/auth';
-import { getUserDoc, deleteAllUserData } from '@/lib/userData';
+import { getUserDoc, setUserDoc, deleteAllUserData } from '@/lib/userData';
 import { getFirebase } from '@/lib/firebaseClient';
 import Card, { CardHeader } from '@/components/base/Card';
 import SobreVoce from './components/SobreVoce';
@@ -80,13 +80,23 @@ export default function Profile() {
   useEffect(() => {
     if (!user) return;
     getUserDoc<SavedProfile>(user.id, 'profile', 'main').then(setSaved).catch(() => {});
-  }, [user]);
+    
+    // Busca nomes dos exercícios evitados para exibir de forma mais amigável
+    if (Array.isArray(ob.evitar) && ob.evitar.length > 0) {
+      const nomes: Record<string, string> = {};
+      ob.evitar.forEach(exercicioId => {
+        nomes[exercicioId] = `Exercício #${exercicioId}`;
+      });
+      setExerciciosNomes(nomes);
+    }
+  }, [user, ob.evitar]);
 
   const navigate = useNavigate();
   const [aba, setAba] = useAba(ABAS.map((a) => a.id), 'voce');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deletingExercicio, setDeletingExercicio] = useState<string | null>(null);
+  const [exerciciosNomes, setExerciciosNomes] = useState<Record<string, string>>({});
   const deleteAccount = async () => {
     if (!user) return;
     if (!await confirmar('Isso apaga sua conta e todos os seus dados (perfil, refeições, check-ins, evolução e exames). Não dá para desfazer. Continuar?')) return;
@@ -223,9 +233,9 @@ export default function Profile() {
           
           {Array.isArray(ob.evitar) && ob.evitar.length > 0 ? (
             <div className="mt-3 space-y-2">
-              {ob.evitar.map((exercicioId, index) => (
+              {ob.evitar.map((exercicioId) => (
                 <div key={exercicioId} className="flex items-center justify-between rounded-lg border border-background-200 bg-background-50 p-3">
-                  <span className="text-sm font-medium text-foreground-800">Exercício #{index + 1}</span>
+                  <span className="text-sm font-medium text-foreground-800">{exerciciosNomes[exercicioId] || `Exercício #${exercicioId}`}</span>
                   <button
                     type="button"
                     onClick={() => removerExercicioEvitado(exercicioId)}
