@@ -7,6 +7,7 @@ import jobs from '../nexia-ai/jobs/index.js';
 import { corpoIa } from './corpoIa.js';
 import lembretes from './lembretes.js';
 import saude from './saude.js';
+import julesAuto from './jules-auto.js';
 import cacheBorda from './cacheBorda.js';
 
 export default {
@@ -36,6 +37,11 @@ export default {
     ctx.waitUntil(lembretes.rodarSplash(at).then(
       r => console.log('[splash-lembretes]', JSON.stringify(r)),
       e => console.error('[splash-lembretes]', e && e.message),
+    ));
+    // Cortex: tarefa travada vai sozinha para o Jules (grátis), 1 por hora, sem esperar o dono.
+    ctx.waitUntil(julesAuto.rodar(at).then(
+      r => console.log('[jules-auto]', JSON.stringify(r)),
+      e => console.error('[jules-auto]', e && e.message),
     ));
     // Central: histórico de saúde (1 amostra por hora por rota pública, 30 dias).
     ctx.waitUntil(saude.rodar(at).then(

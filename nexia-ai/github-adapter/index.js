@@ -23,6 +23,29 @@ const WORKFLOW_RE = /^[A-Za-z0-9._-]{1,100}\.ya?ml$/;
 const DEPLOY_WORKFLOW_RE = /deploy|prod|release|publish/i;
 const PIPELINE_WORKFLOW = 'nexia-pipeline.yml'; // pipeline modelo da Fase 9: só deploy.* dispara
 const LIMITS = Object.freeze({ files: 20, edits: 40, fileBytes: 256 * 1024, totalBytes: 600 * 1024, readBytes: 512 * 1024, message: 1000, prBody: 20000 });
+// Arquivo acima disto não vai inteiro para a IA: um painel de 160 KB (~45 mil tokens) estoura o contexto e a
+// cota por minuto das IAs grátis, e a tarefa travava depois de 12 tentativas. Lê-se em partes (linhas ou busca).
+const LEITURA = Object.freeze({ grande: 40 * 1024, linhasInicio: 250, maxLinhas: 400, contexto: 8, maxAchados: 20 });
+
+// Recorte de arquivo grande: trecho por linhas (start_line/end_line) ou busca de texto (find) com contexto.
+function recortar(text, { start_line, end_line, find } = {}) {
+  const linhas = text.split('\n');
+  const total = linhas.length;
+  if (typeof find === 'string' && find.trim()) {
+    const alvo = find.trim().toLowerCase();
+    const achados = [];
+    for (let i = 0; i < total && achados.length < LEITURA.maxAchados; i++) {
+      if (!linhas[i].toLowerCase().includes(alvo)) continue;
+      const de = Math.max(0, i - LEITURA.contexto), ate = Math.min(total, i + LEITURA.contexto + 1);
+      achados.push({ line: i + 1, start_line: de + 1, end_line: ate, content: linhas.slice(de, ate).join('\n') });
+    }
+    return { total_lines: total, find, matches: achados,
+      hint: achados.length ? 'Para mudar, copie um trecho exato de "content" como "find" em github.edit_files.' : 'Nada encontrado. Tente outra palavra ou leia por start_line/end_line.' };
+  }
+  const de = Math.max(1, Number(start_line) || 1);
+  const ate = Math.min(total, Math.max(de, Number(end_line) || de + LEITURA.linhasInicio - 1), de + LEITURA.maxLinhas - 1);
+  return { total_lines: total, start_line: de, end_line: ate, content: linhas.slice(de - 1, ate).join('\n') };
+}
 
 const PERMS = Object.freeze({
   read: { metadata: 'read', contents: 'read' },
@@ -104,6 +127,7 @@ function createGithubAdapter(o) {
 
   // #830: leitura de arquivo repetida na mesma rodada sai da memória. Qualquer escrita limpa tudo.
   const leituras = new Map();
+  const parciais = new Set();   // arquivos grandes que a IA só viu em partes: não pode reescrever inteiros
   async function call(method, path, { body, write = false, permissions = PERMS.read, accept } = {}) {
     if (method !== 'GET') leituras.clear();
     const headers = { Accept: accept || 'application/vnd.github+json', 'User-Agent': 'nexia-ai-github-adapter', 'X-GitHub-Api-Version': '2022-11-28',
@@ -151,7 +175,7 @@ function createGithubAdapter(o) {
       return d.map(b => ({ name: b.name, sha: b.commit && b.commit.sha, protected: !!b.protected }));
     },
 
-    async getFile({ path, ref }) {
+    async getFile({ path, ref, start_line, end_line, find }) {
       checkPath(path);
       if (ref !== undefined) checkRef(ref);
       const rota = `/contents/${enc(path)}${ref ? `?ref=${encodeURIComponent(ref)}` : ''}`;
@@ -168,6 +192,14 @@ function createGithubAdapter(o) {
       if (d.size > LIMITS.readBytes || d.encoding !== 'base64') throw bad(`Arquivo grande demais para ler pelo NEXIA (limite ${LIMITS.readBytes / 1024} KB).`);
       const text = Buffer.from(d.content, 'base64').toString('utf8');
       const r = redactSecrets(text);
+      const pediuParte = start_line !== undefined || end_line !== undefined || (typeof find === 'string' && find.trim());
+      if (pediuParte || d.size > LEITURA.grande) {
+        const parte = recortar(r.text, { start_line, end_line, find });
+        if (d.size > LEITURA.grande) parciais.add(d.path);
+        const inteiro = !parte.matches && parte.start_line === 1 && parte.end_line === parte.total_lines;
+        return { path: d.path, sha: d.sha, size: d.size, redactions: r.count, ...parte, partial: !inteiro,
+          ...(!pediuParte ? { hint: `Arquivo grande (${Math.round(d.size / 1024)} KB, ${parte.total_lines} linhas): mostrei só o começo. Leia o resto com start_line/end_line ou procure com find, e mude com github.edit_files (não reescreva o arquivo inteiro).` } : {}) };
+      }
       return { path: d.path, sha: d.sha, size: d.size, content: r.text, redactions: r.count };
     },
 
@@ -244,6 +276,7 @@ function createGithubAdapter(o) {
       for (const f of files) {
         checkPath(f.path);
         if (seen.has(f.path)) throw bad('Arquivo repetido no commit.');
+        if (parciais.has(f.path)) throw bad(`O arquivo ${f.path} é grande e foi lido só em partes: use github.edit_files (trechos find/replace) em vez de reescrever o arquivo inteiro.`);
         seen.add(f.path);
         if (typeof f.content !== 'string') throw bad('content deve ser texto.');
         const n = Buffer.byteLength(f.content, 'utf8');
@@ -395,4 +428,4 @@ function isImportOnlyDiff(files) {
   return added > 0;
 }
 
-module.exports = { createGithubAdapter, looseFind, anchorFind, desescapaAspas, LIMITS, WORK_BRANCH_RE, PERMS, PIPELINE_WORKFLOW, isImportOnlyDiff };
+module.exports = { createGithubAdapter, recortar, LEITURA, looseFind, anchorFind, desescapaAspas, LIMITS, WORK_BRANCH_RE, PERMS, PIPELINE_WORKFLOW, isImportOnlyDiff };

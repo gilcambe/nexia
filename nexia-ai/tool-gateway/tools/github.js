@@ -62,7 +62,8 @@ module.exports = [
     async ({ gh, full }, i) => ({ repository: full, branches: await gh.listBranches(i) }),
     () => 'branches', r => `${r.repository}: ${r.branches.length} branch(es)`),
 
-  tool('github.get_file', 'LOW', 'Lê um arquivo de texto do repositório (até 512 KB; arquivos sensíveis nunca; secrets redigidos).', { path: STR, ref: STR }, ['path'],
+  tool('github.get_file', 'LOW', 'Lê um arquivo de texto do repositório (até 512 KB; arquivos sensíveis nunca; secrets redigidos). Arquivo acima de 40 KB vem em partes: use start_line/end_line (até 400 linhas) ou find (busca com contexto).',
+    { path: STR, ref: STR, start_line: { type: 'integer', minimum: 1 }, end_line: { type: 'integer', minimum: 1 }, find: STR }, ['path'],
     // Issue #221: ref vazio (ou só espaços) virava INVALID_INPUT; agora cai na branch padrão (develop).
     ({ gh, repo }, i) => gh.getFile({ ...i, ref: typeof i.ref === 'string' && i.ref.trim() ? i.ref.trim() : (repo.default_branch || 'develop') }),
     i => `arquivo ${i.path}${i.ref ? ` em ${short(i.ref)}` : ''}`, r => r.type === 'dir' ? `${r.path}/ (pasta, ${r.entries.length} entrada(s))` : `${r.path} (${r.size} bytes${r.redactions ? `, ${r.redactions} redação(ões)` : ''})`),
