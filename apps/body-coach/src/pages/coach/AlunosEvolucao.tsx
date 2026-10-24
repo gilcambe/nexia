@@ -29,11 +29,8 @@ export default function AlunosEvolucao() {
     .sort((x, y) => y.avisos.length - x.avisos.length || (y.dias ?? 999) - (x.dias ?? 999));
 
   return (
-    <div className="space-y-4">
-      <header>
-        <h1 className="font-heading text-2xl font-bold text-foreground-950">Evolução dos alunos</h1>
-        <p className="mt-1 text-sm text-foreground-600">Última avaliação de cada aluno, o que mudou e quem precisa de atenção.</p>
-      </header>
+    <div className="space-y-3">
+      <h1 className="font-heading text-xl font-bold text-foreground-950">Evolução dos alunos</h1>
       <div className="grid grid-cols-3 gap-1 rounded-xl bg-background-100 p-1" role="tablist">
         {([['todos', 'Todos'], ['atencao', 'Com alerta'], ['atrasados', 'Atrasados']] as const).map(([id, l]) => (
           <button key={id} type="button" onClick={() => setFiltro(id)} aria-pressed={filtro === id} className={`rounded-lg py-1.5 text-xs font-semibold ${filtro === id ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>{l}</button>
@@ -45,35 +42,37 @@ export default function AlunosEvolucao() {
         <Card padding="p-5"><p className="text-sm text-foreground-600">Nenhum aluno ainda. Passe o seu código em <Link to="/chat" className="font-semibold text-primary-600">Conversa</Link>.</p></Card>
       )}
       {alunos && alunos.length > 0 && linhas.length === 0 && <p className="text-center text-sm text-foreground-500">Ninguém neste filtro.</p>}
-      <ul className="space-y-3">
-        {linhas.map(({ a, ult, avisos, dias, dPeso, dGordura, atrasado }) => (
-          <li key={a.uid}>
-            <Link to={`/coach/evolucao/${a.uid}`} className="block rounded-2xl border border-background-200 bg-background-50 p-4 transition hover:border-primary-300" aria-label={`Evolução de ${a.nome}`}>
-              <div className="flex items-center gap-3">
-                {a.foto ? <img src={a.foto} alt="" className="h-10 w-10 rounded-full object-cover" /> : <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-100 text-primary-700"><i className="ri-user-3-line"></i></span>}
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-foreground-950">{a.nome}</p>
-                  <p className="text-xs text-foreground-500">
+      {/* Uma linha por aluno: peso e gordura com a mudança; o resto abre no toque. */}
+      <ul className="divide-y divide-background-200 overflow-hidden rounded-2xl border border-background-200 bg-background-50">
+        {linhas.map(({ a, ult, avisos, dias, dPeso, dGordura, atrasado }) => {
+          const marcas = [
+            ...avisos.map((x) => `⚠️ ${x.texto.split(/[:(]/)[0].trim()}`),
+            atrasado && a.partilha.avaliacoes ? 'Reavaliação atrasada' : '',
+            a.proximaAvaliacao ? `📅 ${dataBr(a.proximaAvaliacao.data)}${a.proximaAvaliacao.hora ? ` ${a.proximaAvaliacao.hora}` : ''}` : '',
+            a.partilha.fotos ? '📷' : '',
+          ].filter(Boolean);
+          return (
+            <li key={a.uid}>
+              <Link to={`/coach/evolucao/${a.uid}`} className="flex items-center gap-2.5 px-3 py-2 hover:bg-background-100" aria-label={`Evolução de ${a.nome}`}>
+                {a.foto ? <img src={a.foto} alt="" className="h-9 w-9 shrink-0 rounded-full object-cover" /> : <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-100 text-primary-700"><i className="ri-user-3-line"></i></span>}
+                <div className="min-w-0 flex-1 leading-tight">
+                  <p className="truncate text-sm font-semibold text-foreground-950">{a.nome}</p>
+                  <p className="truncate text-xs text-foreground-500">
                     {!a.partilha.avaliacoes ? 'Não compartilhou as avaliações' : ult ? `Última: ${dataBr(ult.data)} (há ${dias} dia${dias === 1 ? '' : 's'})` : 'Sem avaliação ainda'}
                   </p>
+                  {marcas.length > 0 && <p className={`truncate text-[11px] font-medium ${avisos.length || atrasado ? 'text-red-600' : 'text-foreground-500'}`}>{marcas.join(' · ')}</p>}
                 </div>
-                <i className="ri-arrow-right-s-line text-xl text-foreground-400"></i>
-              </div>
-              {ult && (
-                <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-                  <p className="rounded-lg bg-background-100 px-2 py-1.5">Peso <b>{fmt(ult.m.peso, 'kg')}</b>{dPeso ? <span className="ml-1 text-xs text-foreground-500">{dPeso > 0 ? '+' : ''}{dPeso}</span> : null}</p>
-                  <p className="rounded-lg bg-background-100 px-2 py-1.5">Gordura <b>{fmt(ult.m.gordura, '%')}</b>{dGordura ? <span className={`ml-1 text-xs ${dGordura < 0 ? 'text-accent-600' : 'text-red-500'}`}>{dGordura > 0 ? '+' : ''}{dGordura}</span> : null}</p>
-                </div>
-              )}
-              <div className="mt-2 flex flex-wrap gap-1.5 text-xs font-semibold">
-                {avisos.map((x) => <span key={x.texto} className="rounded-full bg-red-50 px-2 py-0.5 text-red-700">⚠️ {x.texto.split(/[:(]/)[0].trim()}</span>)}
-                {atrasado && a.partilha.avaliacoes && <span className="rounded-full bg-secondary-50 px-2 py-0.5 text-secondary-800">Reavaliação atrasada</span>}
-                {a.proximaAvaliacao && <span className="rounded-full bg-accent-50 px-2 py-0.5 text-accent-800">📅 {dataBr(a.proximaAvaliacao.data)}{a.proximaAvaliacao.hora ? ` ${a.proximaAvaliacao.hora}` : ''}</span>}
-                {a.partilha.fotos && <span className="rounded-full bg-background-100 px-2 py-0.5 text-foreground-600">📷 fotos liberadas</span>}
-              </div>
-            </Link>
-          </li>
-        ))}
+                {ult && (
+                  <div className="shrink-0 text-right text-xs leading-tight">
+                    <p><b className="text-foreground-950">{fmt(ult.m.peso, 'kg')}</b>{dPeso ? <span className="ml-1 text-foreground-500">{dPeso > 0 ? '+' : ''}{dPeso}</span> : null}</p>
+                    <p><b className="text-foreground-950">{fmt(ult.m.gordura, '%')}</b>{dGordura ? <span className={`ml-1 ${dGordura < 0 ? 'text-accent-600' : 'text-red-500'}`}>{dGordura > 0 ? '+' : ''}{dGordura}</span> : null}</p>
+                  </div>
+                )}
+                <i className="ri-arrow-right-s-line text-lg text-foreground-400"></i>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </div>
   );

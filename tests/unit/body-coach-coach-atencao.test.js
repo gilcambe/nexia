@@ -40,7 +40,7 @@ test('B13: mensagem pronta usa o primeiro nome e muda conforme o tempo sumido', 
 test('B13: painel mostra o bloco e a conversa abre com o texto escrito (sem enviar sozinha)', () => {
   const painel = ler('pages/coach/MeusAlunos.tsx');
   assert.match(painel, /Quem precisa de atenção hoje/);
-  assert.match(painel, /to=\{linkMensagem\(a\)\}/);
+  assert.match(painel, /to=\{alerta \? linkMensagem\(a\) :/);
   const chat = ler('pages/chat/page.tsx');
   assert.match(chat, /params\.get\('texto'\)/);
   assert.match(chat, /setTexto\(\(t\) => t \|\| textoParam\.slice\(0, 1500\)\)/);

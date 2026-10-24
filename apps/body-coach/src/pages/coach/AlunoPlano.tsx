@@ -60,6 +60,7 @@ export default function AlunoPlano() {
       <div className="flex gap-2 text-xs">
         <Link to={`/chat?com=${uid}`} className="rounded-lg border border-background-200 px-3 py-1.5 font-semibold text-foreground-700"><i className="ri-chat-3-line mr-1"></i>Conversar</Link>
         <Link to={`/coach/evolucao/${uid}`} className="rounded-lg border border-background-200 px-3 py-1.5 font-semibold text-foreground-700"><i className="ri-line-chart-line mr-1"></i>Evolução</Link>
+        <Link to={`/coach/presenca/${uid}`} className="rounded-lg border border-background-200 px-3 py-1.5 font-semibold text-foreground-700"><i className="ri-calendar-check-line mr-1"></i>Presença</Link>
       </div>
 
       {p?.equipe && (
