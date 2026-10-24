@@ -5,6 +5,8 @@
 const MSG_ANTES = 'Oi {nome}! 🎉 {quando} a sua festa no {unidade} ({data})! Estamos preparando tudo com muito carinho para você e seus convidados. Qualquer dúvida é só me chamar! 🏊☀️';
 const MSG_SALDO = 'Oi {nome}! 💛 Passando para lembrar do saldo da sua reserva no {unidade} ({data}): {saldo}. {pix}Qualquer dúvida estou aqui. Obrigada!';
 
+const MSG_AVALIACAO = 'Oi {nome}! 💛 Foi um prazer receber você e seus convidados no {unidade}! Sua opinião é muito importante para nós. Pode deixar uma avaliaçãozinha rapidinho? {link} Obrigada! 🏊';
+
 const str = (v, max) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max) : '');
 const R = n => 'R$ ' + (Math.round((Number(n) || 0) * 100) / 100).toFixed(2).replace('.', ',');
 
@@ -16,6 +18,8 @@ function limparLembretes(l) {
     push: l.push !== false,
     antes: { ativo: a.ativo !== false, dias: Number(a.dias) === 2 ? 2 : 1 },
     saldo: { ativo: s.ativo !== false, dias: Math.min(Math.max(Math.round(Number(s.dias) || 3), 1), 30) },
+    avaliacao: { ativo: !!(l.avaliacao && l.avaliacao.ativo === true), dias: Math.min(Math.max(Math.round(Number(l.avaliacao && l.avaliacao.dias) || 1), 1), 7) },
+    msg_avaliacao: str(l.msg_avaliacao, 600) || MSG_AVALIACAO,
     msg_antes: str(l.msg_antes, 600) || MSG_ANTES,
     msg_saldo: str(l.msg_saldo, 600) || MSG_SALDO,
   };
@@ -34,9 +38,19 @@ function devidos(reservas, cfg, hoje) {
   if (!L || !L.ativo) return [];
   const out = [];
   for (const r of reservas) {
-    if (r.status !== 'confirmado' || !r.data || !r.whatsapp) continue;
+    if (!['confirmado', 'concluido'].includes(r.status) || !r.data || !r.whatsapp) continue;
     const falta = diasEntre(hoje, r.data);
-    if (falta < 0) continue;
+    if (falta < 0) {
+      // depois da festa: pede a avaliação (por até 7 dias)
+      const env0 = r.lembretes_enviados || {};
+      if (L.avaliacao.ativo && -falta >= L.avaliacao.dias && -falta <= 7 && !env0.avaliacao) {
+        const [, m0, d0] = r.data.split('-');
+        out.push({ id: r.id, tipo: 'avaliacao', chave: 'avaliacao', data: r.data, nome: r.nome, whatsapp: r.whatsapp, unidade_nome: r.unidade_nome || '', falta,
+          mensagem: preencher(L.msg_avaliacao, { nome: String(r.nome || '').split(' ')[0] || 'tudo bem', data: `${d0}/${m0}`, unidade: r.unidade_nome || 'Splash' }) });
+      }
+      continue;
+    }
+    if (r.status !== 'confirmado') continue;
     const enviados = r.lembretes_enviados || {};
     const [, m, d] = r.data.split('-');
     const base = {
@@ -58,6 +72,12 @@ function devidos(reservas, cfg, hoje) {
   return out.sort((a, b) => a.data.localeCompare(b.data));
 }
 
+async function reservasAtivas(col) {
+  const out = [];
+  for (const st of ['confirmado', 'concluido']) { const sn = await col.where('status', '==', st).get(); sn.docs.forEach(d => out.push({ id: d.id, ...d.data() })); }
+  return out;
+}
+
 /** Todo dia às 9h (Brasília): avisa a dona no celular quantos lembretes esperam. Roda no cron do Worker. */
 async function rodar(db, at) {
   const t = new Date(at);
@@ -72,8 +92,7 @@ async function rodar(db, at) {
       const dados = c.data() || {};
       const cfg = montarConfig(dados, dados.config);
       if (!cfg.lembretes.ativo || !cfg.lembretes.push) continue;
-      const snap = await c.ref.collection('reservas').where('status', '==', 'confirmado').get();
-      const lista = devidos(snap.docs.map(d => ({ id: d.id, ...d.data() })), cfg, hoje);
+      const lista = devidos(await reservasAtivas(c.ref.collection('reservas')), cfg, hoje);
       if (!lista.length) continue;
       const subs = await c.ref.collection('push').get();
       for (const s of subs.docs) {
@@ -86,4 +105,4 @@ async function rodar(db, at) {
   return { avisos };
 }
 
-module.exports = { limparLembretes, devidos, rodar, MSG_ANTES, MSG_SALDO };
+module.exports = { limparLembretes, devidos, rodar, reservasAtivas, MSG_AVALIACAO, MSG_ANTES, MSG_SALDO };
