@@ -86,6 +86,7 @@ export default function Profile() {
   const [aba, setAba] = useAba(ABAS.map((a) => a.id), 'voce');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deletingExercicio, setDeletingExercicio] = useState<string | null>(null);
   const deleteAccount = async () => {
     if (!user) return;
     if (!await confirmar('Isso apaga sua conta e todos os seus dados (perfil, refeições, check-ins, evolução e exames). Não dá para desfazer. Continuar?')) return;
@@ -112,6 +113,44 @@ export default function Profile() {
       );
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const removerExercicioEvitado = async (exercicioId: string) => {
+    if (!user) return;
+    
+    setDeletingExercicio(exercicioId);
+    try {
+      // Atualiza o perfil removendo o exercício da lista de evitar
+      const profileDoc = await getUserDoc(user.id, 'profile', 'main');
+      if (!profileDoc?.onboarding) return;
+      
+      const evitarAtual = Array.isArray(profileDoc.onboarding.evitar) 
+        ? profileDoc.onboarding.evitar.filter(id => id !== exercicioId)
+        : [];
+      
+      await getUserDoc(user.id, 'profile', 'main', {
+        onboarding: {
+          ...profileDoc.onboarding,
+          evitar: evitarAtual
+        }
+      });
+      
+      // Atualiza o estado local para refletir a mudança
+      setSaved(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          onboarding: {
+            ...prev.onboarding,
+            evitar: evitarAtual
+          }
+        };
+      });
+    } catch (error) {
+      console.error('Erro ao remover exercício evitado:', error);
+    } finally {
+      setDeletingExercicio(null);
     }
   };
 
