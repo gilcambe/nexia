@@ -33,7 +33,7 @@ function listaSemanal(hoje = new Date()) {
 /** Convite pronto para colar na DM de um personal pequeno (collab). */
 function conviteCollab(nome = '') {
   const a = nome ? `Oi, ${nome}!` : 'Oi!';
-  return `${a} Sou do NEXIA Body Coach, um app grátis de treino e dieta com IA. Gostei do seu trabalho e queria te propor uma collab: um post a quatro mãos (você mostra um treino seu, eu mostro como ele fica no app) com marcação mútua. Sem custo nenhum. Topa conversar? 💪`;
+  return `${a} Sou do Body Coach, um app de treino e dieta com IA (teste grátis). Gostei do seu trabalho e queria te propor uma collab: um post a quatro mãos (você mostra um treino seu, eu mostro como ele fica no app) com marcação mútua. Sem custo nenhum. Topa conversar? 💪`;
 }
 
 function roteiroCollabs() {

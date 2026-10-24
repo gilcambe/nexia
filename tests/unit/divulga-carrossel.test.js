@@ -131,3 +131,15 @@ test('DC8. robo.montar repassa imagens para Instagram e Facebook só quando a fi
   assert.equal('imagens' in sem.porRede('instagram'), false);
   assert.equal('imagens' in sem.porRede('facebook'), false);
 });
+
+test('DC9. Body Coach: marca própria (sem NEXIA), tela do app no celular e chamada para seguir', () => {
+  const bc = require('../../divulga/clientes/body-coach.json');
+  assert.equal(bc.nome, 'Body Coach');
+  const telas = carrosselRoteiro(bc, { serie: 'antes-depois', gancho: 'G', telas: [1, 2, 3, 4, 5].map(i => ({ titulo: `T${i}`, texto: 'x' })), cta: 'Salve', pergunta: 'P?' });
+  assert.equal(telas.length, 8);
+  for (const h of telas) assert.doesNotMatch(h, /NEXIA/);
+  assert.match(telas[6], /class="cel"/);
+  assert.match(telas[6], /Sua evolução/);
+  assert.match(telas[7], /Siga @/);
+  assert.match(telas[0], /<svg viewBox="0 0 512 512">/, 'logo do haltere, não a inicial');
+});

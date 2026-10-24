@@ -1,8 +1,14 @@
 {
   "id": "body-coach",
-  "nome": "NEXIA Body Coach",
+  "nome": "Body Coach",
   "link": "https://nexiabodycoach.pages.dev/",
   "instagram": "nexiabodycoach",
+  "cores": {
+    "fundo": "#1c1917",
+    "destaque": "#f97316"
+  },
+  "logo": "<svg viewBox=\"0 0 512 512\"><g fill=\"#fff\"><rect x=\"96\" y=\"196\" width=\"44\" height=\"152\" rx=\"16\"/><rect x=\"146\" y=\"226\" width=\"34\" height=\"92\" rx=\"12\"/><rect x=\"372\" y=\"196\" width=\"44\" height=\"152\" rx=\"16\"/><rect x=\"332\" y=\"226\" width=\"34\" height=\"92\" rx=\"12\"/><rect x=\"176\" y=\"258\" width=\"160\" height=\"28\" rx=\"10\"/></g></svg>",
+  "app": true,
   "cidade": "",
   "chamada": "Teste grátis o app: nexiabodycoach.pages.dev",
   "assuntos": [
@@ -32,12 +38,30 @@
     "3-erros": {
       "gancho": "5 erros que travam seu treino (o 3º quase todo mundo comete)",
       "telas": [
-        { "titulo": "Erro 1: ficha copiada", "texto": "Treino de outra pessoa não conhece o seu objetivo nem a sua rotina." },
-        { "titulo": "Erro 2: carga sempre igual", "texto": "Sem anotar peso e repetições, fica difícil saber quando subir." },
-        { "titulo": "Erro 3: pular o descanso", "texto": "Descanso também faz parte do treino. Respeitar faz diferença." },
-        { "titulo": "Erro 4: tudo ou nada", "texto": "Treino curto feito é melhor que treino perfeito que não acontece." },
-        { "titulo": "Erro 5: não medir nada", "texto": "Sem fotos e medidas, você não enxerga a própria evolução." },
-        { "titulo": "Como o app ajuda", "texto": "Treino pelo seu objetivo, vídeo de cada exercício e evolução num lugar só." }
+        {
+          "titulo": "Erro 1: ficha copiada",
+          "texto": "Treino de outra pessoa não conhece o seu objetivo nem a sua rotina."
+        },
+        {
+          "titulo": "Erro 2: carga sempre igual",
+          "texto": "Sem anotar peso e repetições, fica difícil saber quando subir."
+        },
+        {
+          "titulo": "Erro 3: pular o descanso",
+          "texto": "Descanso também faz parte do treino. Respeitar faz diferença."
+        },
+        {
+          "titulo": "Erro 4: tudo ou nada",
+          "texto": "Treino curto feito é melhor que treino perfeito que não acontece."
+        },
+        {
+          "titulo": "Erro 5: não medir nada",
+          "texto": "Sem fotos e medidas, você não enxerga a própria evolução."
+        },
+        {
+          "titulo": "Como o app ajuda",
+          "texto": "Treino pelo seu objetivo, vídeo de cada exercício e evolução num lugar só."
+        }
       ],
       "cta": "Salve e mande para quem treina com você",
       "pergunta": "Qual desses erros você já cometeu?"
@@ -45,12 +69,30 @@
     "mito-verdade": {
       "gancho": "Mito ou verdade: você acerta todos esses da academia?",
       "telas": [
-        { "titulo": "Mito: treinar 2 horas por dia", "texto": "Constância costuma valer mais que treino longo. Treino curto bem feito conta." },
-        { "titulo": "Mito: sem dor não tem treino", "texto": "Dor não é medida de treino bom. Técnica e progressão importam mais." },
-        { "titulo": "Verdade: anotar a carga ajuda", "texto": "Registrar peso e repetições mostra quando dá para avançar." },
-        { "titulo": "Mito: dieta igual para todos", "texto": "Rotina, gosto e objetivo mudam de pessoa para pessoa." },
-        { "titulo": "Verdade: foto mostra progresso", "texto": "Fotos e medidas lado a lado revelam o que o espelho esconde." },
-        { "titulo": "No Body Coach", "texto": "Treino, dieta e evolução que se ajustam a você, com IA." }
+        {
+          "titulo": "Mito: treinar 2 horas por dia",
+          "texto": "Constância costuma valer mais que treino longo. Treino curto bem feito conta."
+        },
+        {
+          "titulo": "Mito: sem dor não tem treino",
+          "texto": "Dor não é medida de treino bom. Técnica e progressão importam mais."
+        },
+        {
+          "titulo": "Verdade: anotar a carga ajuda",
+          "texto": "Registrar peso e repetições mostra quando dá para avançar."
+        },
+        {
+          "titulo": "Mito: dieta igual para todos",
+          "texto": "Rotina, gosto e objetivo mudam de pessoa para pessoa."
+        },
+        {
+          "titulo": "Verdade: foto mostra progresso",
+          "texto": "Fotos e medidas lado a lado revelam o que o espelho esconde."
+        },
+        {
+          "titulo": "No Body Coach",
+          "texto": "Treino, dieta e evolução que se ajustam a você, com IA."
+        }
       ],
       "cta": "Salve e mande para quem treina com você",
       "pergunta": "Qual desses você achava que era verdade?"
@@ -58,13 +100,34 @@
     "checklist": {
       "gancho": "Desafio de 7 dias do Body Coach: topa?",
       "telas": [
-        { "titulo": "Dia 1", "texto": "Diga seu objetivo no app e receba o seu treino." },
-        { "titulo": "Dia 2", "texto": "Faça um treino de 20 minutos, em casa ou na academia." },
-        { "titulo": "Dia 3", "texto": "Tire a foto e anote as medidas do ponto de partida." },
-        { "titulo": "Dia 4", "texto": "Treine de novo e anote as cargas de cada exercício." },
-        { "titulo": "Dia 5", "texto": "Monte a lista de compras da semana com a dieta do app." },
-        { "titulo": "Dia 6", "texto": "Chame alguém para treinar junto e cobrar você." },
-        { "titulo": "Dia 7", "texto": "Compare a semana e comemore cada dia cumprido." }
+        {
+          "titulo": "Dia 1",
+          "texto": "Diga seu objetivo no app e receba o seu treino."
+        },
+        {
+          "titulo": "Dia 2",
+          "texto": "Faça um treino de 20 minutos, em casa ou na academia."
+        },
+        {
+          "titulo": "Dia 3",
+          "texto": "Tire a foto e anote as medidas do ponto de partida."
+        },
+        {
+          "titulo": "Dia 4",
+          "texto": "Treine de novo e anote as cargas de cada exercício."
+        },
+        {
+          "titulo": "Dia 5",
+          "texto": "Monte a lista de compras da semana com a dieta do app."
+        },
+        {
+          "titulo": "Dia 6",
+          "texto": "Chame alguém para treinar junto e cobrar você."
+        },
+        {
+          "titulo": "Dia 7",
+          "texto": "Compare a semana e comemore cada dia cumprido."
+        }
       ],
       "cta": "Comente EU VOU e marque quem treina com você",
       "pergunta": "Começa hoje ou na segunda?"
@@ -72,12 +135,30 @@
     "antes-depois": {
       "gancho": "Antes e depois do app (da rotina, não do corpo)",
       "telas": [
-        { "titulo": "Antes: ficha de papel", "texto": "Treino copiado, sem saber qual carga usar nem como fazer." },
-        { "titulo": "Depois: treino pelo objetivo", "texto": "O app monta o treino e mostra o vídeo de cada exercício." },
-        { "titulo": "Antes: dieta impossível", "texto": "Cardápio que não cabe na rotina e é abandonado na quarta." },
-        { "titulo": "Depois: dieta que se ajusta", "texto": "Ajuste toda semana e lista de compras pronta." },
-        { "titulo": "Antes: sem saber se evoluiu", "texto": "Nada anotado, nenhuma foto, só a sensação." },
-        { "titulo": "Depois: tudo lado a lado", "texto": "Fotos, medidas e cargas na mesma tela, semana a semana." }
+        {
+          "titulo": "Antes: ficha de papel",
+          "texto": "Treino copiado, sem saber qual carga usar nem como fazer."
+        },
+        {
+          "titulo": "Depois: treino pelo objetivo",
+          "texto": "O app monta o treino e mostra o vídeo de cada exercício."
+        },
+        {
+          "titulo": "Antes: dieta impossível",
+          "texto": "Cardápio que não cabe na rotina e é abandonado na quarta."
+        },
+        {
+          "titulo": "Depois: dieta que se ajusta",
+          "texto": "Ajuste toda semana e lista de compras pronta."
+        },
+        {
+          "titulo": "Antes: sem saber se evoluiu",
+          "texto": "Nada anotado, nenhuma foto, só a sensação."
+        },
+        {
+          "titulo": "Depois: tudo lado a lado",
+          "texto": "Fotos, medidas e cargas na mesma tela, semana a semana."
+        }
       ],
       "cta": "Salve e mande para quem treina com você",
       "pergunta": "Qual desses antes é o seu hoje?"
@@ -85,11 +166,26 @@
     "passo-a-passo": {
       "gancho": "Como montar seu treino em 2 minutos com IA",
       "telas": [
-        { "titulo": "Passo 1", "texto": "Abra o Body Coach e diga seu objetivo." },
-        { "titulo": "Passo 2", "texto": "Escolha onde treina: em casa ou na academia." },
-        { "titulo": "Passo 3", "texto": "Diga quantos dias e quanto tempo você tem." },
-        { "titulo": "Passo 4", "texto": "Receba o treino com vídeo de cada exercício." },
-        { "titulo": "Passo 5", "texto": "Anote as cargas e acompanhe a evolução no app." }
+        {
+          "titulo": "Passo 1",
+          "texto": "Abra o Body Coach e diga seu objetivo."
+        },
+        {
+          "titulo": "Passo 2",
+          "texto": "Escolha onde treina: em casa ou na academia."
+        },
+        {
+          "titulo": "Passo 3",
+          "texto": "Diga quantos dias e quanto tempo você tem."
+        },
+        {
+          "titulo": "Passo 4",
+          "texto": "Receba o treino com vídeo de cada exercício."
+        },
+        {
+          "titulo": "Passo 5",
+          "texto": "Anote as cargas e acompanhe a evolução no app."
+        }
       ],
       "cta": "Salve este passo a passo e mande para quem treina com você",
       "pergunta": "Você treina em casa ou na academia?"
@@ -97,11 +193,26 @@
     "bastidores": {
       "gancho": "Personal: e se seus alunos tivessem um app com a sua marca?",
       "telas": [
-        { "titulo": "Sua marca no app", "texto": "Logo e cores do seu trabalho na tela do aluno." },
-        { "titulo": "Fichas em minutos", "texto": "Monte treinos com vídeo de cada exercício." },
-        { "titulo": "Dieta junto", "texto": "Plano alimentar e lista de compras no mesmo app." },
-        { "titulo": "Evolução do aluno", "texto": "Fotos, medidas e cargas para acompanhar de perto." },
-        { "titulo": "Cobrança por Pix", "texto": "Mensalidade organizada sem planilha." }
+        {
+          "titulo": "Sua marca no app",
+          "texto": "Logo e cores do seu trabalho na tela do aluno."
+        },
+        {
+          "titulo": "Fichas em minutos",
+          "texto": "Monte treinos com vídeo de cada exercício."
+        },
+        {
+          "titulo": "Dieta junto",
+          "texto": "Plano alimentar e lista de compras no mesmo app."
+        },
+        {
+          "titulo": "Evolução do aluno",
+          "texto": "Fotos, medidas e cargas para acompanhar de perto."
+        },
+        {
+          "titulo": "Cobrança por Pix",
+          "texto": "Mensalidade organizada sem planilha."
+        }
       ],
       "cta": "Mande para um personal que precisa ver isso",
       "pergunta": "Você é aluno ou personal?"
@@ -109,11 +220,26 @@
     "pergunta-enquete": {
       "gancho": "Responda rápido: qual é o seu treino?",
       "telas": [
-        { "titulo": "Opção A", "texto": "Academia, com ficha montada pelo objetivo." },
-        { "titulo": "Opção B", "texto": "Em casa, com treino curto de 20 minutos." },
-        { "titulo": "Opção C", "texto": "Ainda não comecei, mas quero começar." },
-        { "titulo": "Para todo mundo", "texto": "O Body Coach monta o treino para A, B ou C." },
-        { "titulo": "Teste grátis", "texto": "Sem cartão. Treino, dieta e evolução num só app." }
+        {
+          "titulo": "Opção A",
+          "texto": "Academia, com ficha montada pelo objetivo."
+        },
+        {
+          "titulo": "Opção B",
+          "texto": "Em casa, com treino curto de 20 minutos."
+        },
+        {
+          "titulo": "Opção C",
+          "texto": "Ainda não comecei, mas quero começar."
+        },
+        {
+          "titulo": "Para todo mundo",
+          "texto": "O Body Coach monta o treino para A, B ou C."
+        },
+        {
+          "titulo": "Teste grátis",
+          "texto": "Sem cartão. Treino, dieta e evolução num só app."
+        }
       ],
       "cta": "Comente A, B ou C e marque quem treina com você",
       "pergunta": "Qual é a sua: A, B ou C?"

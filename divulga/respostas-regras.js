@@ -72,7 +72,7 @@ function decidir(post, resposta, usuario, sorteio = false) {
   
   // 6. Verifica se é pedido de link
   if (querLink(resposta)) {
-    return "Acesse nosso site: www.nexia.com.br ou entre em contato via WhatsApp: (11) 99999-9999";
+    return "O link está na bio do perfil: nexiabodycoach.pages.dev (teste grátis, sem cartão).";
   }
   
   // 8. Verifica se é pergunta
