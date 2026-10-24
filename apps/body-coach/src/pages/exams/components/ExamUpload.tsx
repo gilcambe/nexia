@@ -94,27 +94,24 @@ export default function ExamUpload({
 
   return (
     <div>
-      <p className="text-sm text-foreground-600">
-        Envie exames de sangue, raio-X, ressonância ou laudos. Ficam salvos no seu histórico,
-        protegidos e com a data real.
-      </p>
+      <p className="text-xs text-foreground-600">Sangue, raio-X, ressonância ou laudos. Ficam salvos no seu histórico.</p>
 
-      <div className="mt-4 space-y-4">
+      <div className="mt-2 space-y-2">
         <button
           onClick={() => fileRef.current?.click()}
-          className="flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-background-300 bg-background-50 px-4 py-6 transition hover:border-primary-400 hover:bg-background-100"
+          className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-background-300 bg-background-50 px-3 py-2 transition hover:border-primary-400 hover:bg-background-100"
         >
-          <i className="ri-file-upload-line text-3xl text-foreground-400"></i>
+          <i className="ri-file-upload-line text-2xl text-foreground-400"></i>
           {file ? (
             <span className="text-sm text-foreground-700">{file.name}</span>
           ) : (
-            <span className="text-sm text-foreground-500">Clique para enviar imagem ou PDF</span>
+            <span className="text-sm text-foreground-500">Toque para enviar imagem ou PDF</span>
           )}
         </button>
         <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFile} />
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-foreground-600">Título</label>
+          <label className="mb-0.5 block text-xs font-medium text-foreground-600">Título</label>
           <input
             type="text"
             value={title}
@@ -124,9 +121,9 @@ export default function ExamUpload({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-2">
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-foreground-600">Tipo de exame</label>
+            <label className="mb-0.5 block text-xs font-medium text-foreground-600">Tipo de exame</label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value)}
@@ -138,18 +135,18 @@ export default function ExamUpload({
             </select>
           </div>
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-foreground-600">Data (hoje)</label>
+            <label className="mb-0.5 block text-xs font-medium text-foreground-600">Data (hoje)</label>
             <p className="rounded-lg border border-background-200 bg-background-100/50 px-3 py-2 text-sm text-foreground-500">
-              {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}
+              {new Date().toLocaleDateString('pt-BR')}
             </p>
           </div>
         </div>
 
         <div>
-          <label className="mb-1.5 block text-xs font-medium text-foreground-600">Observações (opcional)</label>
+          <label className="mb-0.5 block text-xs font-medium text-foreground-600">Observações (opcional)</label>
           <textarea
             maxLength={500}
-            rows={2}
+            rows={1}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Resultados relevantes, recomendações do médico..."

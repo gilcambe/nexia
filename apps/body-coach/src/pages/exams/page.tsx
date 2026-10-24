@@ -5,10 +5,18 @@ import Card from '@/components/base/Card';
 import ExamUpload from './components/ExamUpload';
 import ExamList, { type ExamItem } from './components/ExamList';
 import BloodMarkers from './components/BloodMarkers';
+import Abas, { useAba } from '@/components/base/Abas';
+
+const ABAS = [
+  { id: 'enviar', label: 'Enviar', icone: 'ri-file-upload-line' },
+  { id: 'meus', label: 'Exames', icone: 'ri-folder-open-line' },
+  { id: 'marcadores', label: 'Marcadores', icone: 'ri-stethoscope-line' },
+] as const;
 
 export default function Exams() {
   const { user } = useAuth();
   const [exams, setExams] = useState<ExamItem[]>([]);
+  const [aba, setAba] = useAba(ABAS.map((a) => a.id), 'enviar');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -53,27 +61,26 @@ export default function Exams() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       <header>
-        <h1 className="font-heading text-2xl font-bold text-foreground-950">Saúde & Exames</h1>
-        <p className="mt-1 max-w-2xl text-sm text-foreground-600">
-          Seus exames de sangue, imagem e laudos em um só lugar, com interpretação dos marcadores
-          e sugestões de vitaminas, suplementos e encaminhamentos.
-        </p>
+        <h1 className="font-heading text-xl font-bold text-foreground-950">Saúde e exames</h1>
       </header>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_380px]">
-        <div className="space-y-6">
-          <Card padding="p-6">
-            <div className="mb-3 flex items-center gap-2">
+      {/* No celular: uma parte por aba (cabe sem rolar). No computador, tudo lado a lado. */}
+      <div className="lg:hidden"><Abas abas={ABAS} atual={aba} onMudar={setAba} rotulo="Partes dos exames" /></div>
+
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_380px] lg:gap-6">
+        <div className="space-y-3">
+          <Card padding="p-3" className={aba === 'enviar' ? '' : 'hidden lg:block'}>
+            <div className="mb-1 flex items-center gap-2">
               <i className="ri-file-upload-line text-lg text-primary-500"></i>
               <h2 className="font-heading text-base font-semibold text-foreground-950">Enviar exame</h2>
             </div>
-            <ExamUpload userId={user?.id} onSaved={reload} />
+            <ExamUpload userId={user?.id} onSaved={() => { reload(); setAba('meus'); }} />
           </Card>
 
-          <Card padding="p-5">
-            <div className="mb-3 flex items-center justify-between">
+          <Card padding="p-3" className={aba === 'meus' ? '' : 'hidden lg:block'}>
+            <div className="mb-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <i className="ri-folder-open-line text-lg text-secondary-500"></i>
                 <h2 className="font-heading text-base font-semibold text-foreground-950">Meus exames</h2>
@@ -102,13 +109,13 @@ export default function Exams() {
           </Card>
         </div>
 
-        <Card padding="p-6">
-          <div className="mb-3 flex items-center gap-2">
+        <Card padding="p-3" className={aba === 'marcadores' ? '' : 'hidden lg:block'}>
+          <div className="mb-1 flex items-center gap-2">
             <i className="ri-stethoscope-line text-lg text-accent-500"></i>
             <h2 className="font-heading text-base font-semibold text-foreground-950">Marcadores de sangue</h2>
           </div>
           <BloodMarkers />
-          <p className="mt-5 rounded-lg bg-accent-100/60 p-3 text-xs leading-relaxed text-foreground-600">
+          <p className="mt-2 rounded-lg bg-accent-100/60 px-2.5 py-1.5 text-[11px] leading-snug text-foreground-600">
             <i className="ri-information-line mr-1 text-accent-700"></i>
             Isto é <strong className="font-semibold">orientação de performance</strong>, não diagnóstico
             médico. Consulte sempre um profissional de saúde antes de suplementar.

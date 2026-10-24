@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom';
 import { carregar } from '@/router/carregar';
+import Abas, { useAba } from '@/components/base/Abas';
 
 // Cada ferramenta só baixa quando o aluno abre (app mais leve).
 const Conquistas = carregar(() => import('./Conquistas'));
@@ -75,66 +76,56 @@ export const MAIS_TELAS = [
   { to: '/feedback', nome: 'Enviar feedback', desc: 'Conte o que não funcionou ou uma ideia', icone: 'ri-feedback-line' },
 ] as const;
 
+const ABAS_FERRAMENTAS = [
+  { id: 'treino', label: 'Treino' },
+  { id: 'evolucao', label: 'Evolução' },
+  { id: 'saude', label: 'Saúde' },
+  { id: 'mais', label: 'Loja e mais' },
+] as const;
+const GRUPOS_DA_ABA = { treino: ['Treino'], evolucao: ['Evolução'], saude: ['Nutrição', 'Saúde'], mais: ['Loja e comunidade', 'Conta'] } as const;
+
 export default function Ferramentas() {
   const { id } = useParams();
+  const [aba, setAba] = useAba(ABAS_FERRAMENTAS.map((a) => a.id), 'treino');
   const atual = FERRAMENTAS.find((f) => f.id === id);
   if (atual) {
     const El = atual.el;
     return (
-      <div className="space-y-4">
+      <div className="space-y-2">
         <Link to="/ferramentas" className="inline-flex items-center gap-1 text-sm font-medium text-primary-700">
           <i className="ri-arrow-left-line"></i>Ferramentas
         </Link>
         <header className="flex items-center gap-3">
-          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary-100 text-xl text-primary-700"><i className={atual.icone}></i></span>
-          <div>
-            <h1 className="font-heading text-2xl font-bold text-foreground-950">{atual.nome}</h1>
-            <p className="text-sm text-foreground-500">{atual.desc}</p>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-lg text-primary-700"><i className={atual.icone}></i></span>
+          <div className="min-w-0">
+            <h1 className="font-heading text-lg font-bold leading-tight text-foreground-950">{atual.nome}</h1>
+            <p className="text-xs leading-snug text-foreground-500">{atual.desc}</p>
           </div>
         </header>
         <El />
       </div>
     );
   }
-  const grupos = [...new Set(FERRAMENTAS.map((f) => f.grupo))];
+  // Lista em abas e grade de ícones: cada grupo cabe numa tela do celular, sem rolar.
+  const lista = [
+    ...FERRAMENTAS.filter((f) => (GRUPOS_DA_ABA[aba] as readonly string[]).includes(f.grupo)).map((f) => ({ chave: f.id, to: `/ferramentas/${f.id}`, nome: f.nome, desc: f.desc, icone: f.icone })),
+    ...(aba === 'mais' ? MAIS_TELAS.map((f) => ({ chave: f.to, to: f.to, nome: f.nome, desc: f.desc, icone: f.icone })) : []),
+  ];
   return (
-    <div className="space-y-5">
+    <div className="space-y-2">
       <header>
-        <h1 className="font-heading text-2xl font-bold text-foreground-950">Ferramentas</h1>
-        <p className="mt-1 text-sm text-foreground-600">Tudo o que ajuda no treino, na dieta e na constância. Grátis e no seu celular.</p>
+        <h1 className="font-heading text-xl font-bold text-foreground-950">Ferramentas</h1>
+        <p className="text-xs text-foreground-600">Grátis e no seu celular. Toque para abrir.</p>
       </header>
-      {grupos.map((g) => (
-        <section key={g}>
-          <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">{g}</h2>
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {FERRAMENTAS.filter((f) => f.grupo === g).map((f) => (
-              <Link key={f.id} to={`/ferramentas/${f.id}`} className="flex items-center gap-3 rounded-2xl border border-background-200 bg-background-50 p-3.5 transition active:scale-[0.99] hover:border-primary-300">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-xl text-primary-700"><i className={f.icone}></i></span>
-                <span className="min-w-0 flex-1">
-                  <span className="block font-semibold text-foreground-950">{f.nome}</span>
-                  <span className="block text-xs text-foreground-500">{f.desc}</span>
-                </span>
-                <i className="ri-arrow-right-s-line text-xl text-foreground-400"></i>
-              </Link>
-            ))}
-          </div>
-        </section>
-      ))}
-      <section>
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Mais telas</h2>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {MAIS_TELAS.map((f) => (
-            <Link key={f.to} to={f.to} className="flex items-center gap-3 rounded-2xl border border-background-200 bg-background-50 p-3.5 transition active:scale-[0.99] hover:border-primary-300">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-100 text-xl text-primary-700"><i className={f.icone}></i></span>
-              <span className="min-w-0 flex-1">
-                <span className="block font-semibold text-foreground-950">{f.nome}</span>
-                <span className="block text-xs text-foreground-500">{f.desc}</span>
-              </span>
-              <i className="ri-arrow-right-s-line text-xl text-foreground-400"></i>
-            </Link>
-          ))}
-        </div>
-      </section>
+      <Abas abas={ABAS_FERRAMENTAS} atual={aba} onMudar={setAba} rotulo="Grupos de ferramentas" />
+      <div className="grid grid-cols-4 gap-1.5">
+        {lista.map((f) => (
+          <Link key={f.chave} to={f.to} title={f.desc} className="flex flex-col items-center gap-1 rounded-xl border border-background-200 bg-background-50 px-1 py-2 text-center transition active:scale-[0.98] hover:border-primary-300">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-100 text-lg text-primary-700"><i className={f.icone}></i></span>
+            <span className="text-[11px] font-semibold leading-tight text-foreground-950">{f.nome}</span>
+          </Link>
+        ))}
+      </div>
     </div>
   );
 }
