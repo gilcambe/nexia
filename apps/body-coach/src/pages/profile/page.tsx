@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/feature/AuthContext';
 import { deleteUser } from 'firebase/auth';
-import { getUserDoc, deleteAllUserData } from '@/lib/userData';
+import { getUserDoc, setUserDoc, deleteAllUserData } from '@/lib/userData';
 import { getFirebase } from '@/lib/firebaseClient';
+import { POR_ID } from '@/lib/exerciseDb';
 import Card, { CardHeader } from '@/components/base/Card';
 import SobreVoce from './components/SobreVoce';
 import CicloCard from './components/CicloCard';
@@ -73,9 +74,11 @@ function TextBlock({ label, value }: { label: string; value: unknown }) {
 }
 
 export default function Profile() {
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   // Lê o perfil salvo de novo ao abrir a página: o questionário pode ter acabado de gravar as respostas.
   const [saved, setSaved] = useState<SavedProfile | null>(null);
+  const [removendoId, setRemovendoId] = useState<string | null>(null);
+
   useEffect(() => {
     if (!user) return;
     getUserDoc<SavedProfile>(user.id, 'profile', 'main').then(setSaved).catch(() => {});
@@ -120,6 +123,29 @@ export default function Profile() {
   const height = data.height_cm ? `${data.height_cm} cm` : text(ob.height, ' cm');
   const modality = Array.isArray(ob.modality) ? ob.modality : [];
 
+  const rawEvitar = ob.evitar ?? (data as Record<string, unknown>).evitar;
+  const listaEvitar: string[] = Array.isArray(rawEvitar)
+    ? (rawEvitar as string[]).map((x) => String(x ?? '').trim()).filter(Boolean)
+    : typeof rawEvitar === 'string' && rawEvitar.trim()
+    ? rawEvitar.split(',').map((x) => x.trim()).filter(Boolean)
+    : [];
+
+  const removerEvitar = async (idRemover: string) => {
+    if (!user) return;
+    const novaLista = listaEvitar.filter((x) => x !== idRemover);
+    const novoOb = { ...ob, evitar: novaLista };
+    setRemovendoId(idRemover);
+    try {
+      await setUserDoc(user.id, 'profile', 'main', { onboarding: novoOb, evitar: novaLista }, true);
+      setSaved((prev) => (prev ? { ...prev, onboarding: novoOb } : { onboarding: novoOb }));
+      refreshProfile();
+    } catch (err) {
+      console.error('Erro ao remover exercício a evitar:', err);
+    } finally {
+      setRemovendoId(null);
+    }
+  };
+
   return (
     <div className="space-y-3">
       <h1 className="font-heading text-xl font-bold text-foreground-950">Perfil</h1>
@@ -156,6 +182,36 @@ export default function Profile() {
               <InfoRow icon="ri-bar-chart-line" label="Nível" value={text(ob.level)} />
               <InfoRow icon="ri-calendar-check-line" label="Treinos" value={[text(ob.days, 'x/semana'), text(ob.minutes, ' min')].filter((x) => x !== MISSING).join(' · ') || MISSING} />
               <InfoRow icon="ri-run-line" label="Modalidades" value={modality.length ? modality.join(', ') : MISSING} />
+            </div>
+            <div className="mt-3 pt-2 border-t border-background-200">
+              <span className="flex items-center gap-1 text-xs font-semibold text-foreground-700 mb-1.5">
+                <i className="ri-close-circle-line text-primary-500"></i>
+                Exercícios a evitar
+              </span>
+              {listaEvitar.length === 0 ? (
+                <p className="text-[13px] text-foreground-500">Nenhum exercício marcado para evitar.</p>
+              ) : (
+                <ul className="space-y-1" data-testid="lista-exercicios-evitar">
+                  {listaEvitar.map((id) => {
+                    const ex = POR_ID[id];
+                    const nome = ex?.nome ?? id;
+                    return (
+                      <li key={id} className="flex items-center justify-between rounded-lg bg-background-100 px-2.5 py-1.5 text-xs text-foreground-800">
+                        <span className="font-medium">{nome}</span>
+                        <button
+                          type="button"
+                          onClick={() => void removerEvitar(id)}
+                          disabled={removendoId === id}
+                          className="rounded bg-background-200 px-2 py-0.5 text-[11px] font-semibold text-foreground-700 hover:bg-background-300 hover:text-foreground-900 disabled:opacity-50"
+                          aria-label={`Remover ${nome}`}
+                        >
+                          Remover
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           </Card>
         </>
