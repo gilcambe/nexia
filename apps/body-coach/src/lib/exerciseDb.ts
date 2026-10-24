@@ -166,7 +166,19 @@ export function alternativas(id: string, lesoes: Set<Lesao>, indisponiveis: stri
 
 // Demonstração própria (banco no repositório, em public/exercicios): dois quadros que alternam como um vídeo curto.
 // Fotos do free-exercise-db (domínio público). Sem YouTube, sem gasto de internet com vídeo pesado.
-export const IDS_COM_DEMO = new Set(['abdominal-na-maquina','abdominal-na-polia','abducao-de-quadril-na-maquina','afundo-com-halteres','agachamento-goblet','agachamento-livre','agachamento-no-smith','agachamento-sumo-com-halter','barra-fixa','cadeira-extensora','cadeira-flexora','coice-na-polia','crossover-na-polia','crucifixo-inverso-na-maquina','crucifixo-na-maquina','dead-bug','desenvolvimento-com-halteres','desenvolvimento-na-maquina','elevacao-de-pernas','elevacao-lateral','elevacao-lateral-no-cabo','elevacao-pelvica-com-barra','elevacao-pelvica-no-solo','encolhimento-com-halteres','face-pull','flexao-de-bracos','flexora-em-pe','hack-machine','leg-press-45','levantamento-terra','mergulho-no-banco','mesa-flexora','panturrilha-em-pe-na-maquina','panturrilha-no-leg-press','panturrilha-sentado','prancha','pulldown-com-bracos-estendidos','puxada-frontal','remada-baixa-no-cabo','remada-curvada-com-barra','remada-na-maquina','remada-unilateral-com-halter','rosca-alternada-com-halteres','rosca-direta-com-barra','rosca-martelo','rosca-no-cabo','stiff-com-barra','stiff-com-halteres','supino-inclinado-com-halteres','supino-na-maquina','supino-reto-com-barra','supino-reto-com-halteres','triceps-corda-na-polia','triceps-frances-com-halter','triceps-na-polia-com-barra','crucifixo-com-halteres','remada-invertida-na-mesa','superman','flexao-pike','elevacao-frontal-com-halter','crucifixo-inverso-com-halteres','triceps-coice-com-halter','abducao-de-quadril-deitada','coice-em-quatro-apoios','prancha-lateral','abdominal-curto-no-solo']);
+export const IDS_COM_DEMO = [
+  'crucifixo-com-halteres',
+  'remada-invertida-na-mesa',
+  'superman',
+  'flexao-pike',
+  'elevacao-frontal-com-halter',
+  'crucifixo-inverso-com-halteres',
+  'triceps-coice-com-halter',
+  'abducao-de-quadril-deitada',
+  'coice-em-quatro-apoios',
+  'prancha-lateral',
+  'abdominal-curto-no-solo',
+];
 // Exercícios de casa sem foto própria usam a foto do movimento mais parecido.
 const DEMO_PARECIDA: Record<string, string> = {
   'supino-no-chao-com-halteres': 'supino-reto-com-halteres', 'flexao-inclinada-maos-no-sofa-ou-banco': 'flexao-de-bracos', 'flexao-diamante': 'flexao-de-bracos',
