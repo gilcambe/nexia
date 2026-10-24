@@ -36,6 +36,8 @@ export default function AjudaRefeicao() {
     }
     setCopiado(true);
   };
+  // Uma sugestão por vez (cabe na tela); "Outra opção" troca.
+  const [vez, setVez] = useState(0);
   const adicionar = async (i: number) => {
     const s = sugestoes[i];
     const hora = new Date().toTimeString().slice(0, 5);
@@ -44,7 +46,7 @@ export default function AjudaRefeicao() {
   };
 
   return (
-    <Card>
+    <Card padding="p-4">
       <div className="flex items-center gap-2">
         <i className="ri-magic-line text-lg text-primary-500"></i>
         <h2 className="font-heading text-base font-semibold text-foreground-950">O que comer agora?</h2>
@@ -53,10 +55,9 @@ export default function AjudaRefeicao() {
         <p className="mt-2 text-sm text-foreground-600">Você já bateu as calorias de hoje. {falta.p > 10 ? `Faltam ${Math.round(falta.p)} g de proteína: prefira algo leve e proteico (whey, iogurte, ovo).` : 'Agora é hidratar e descansar.'}</p>
       ) : (
         <>
-          <p className="mt-1 text-xs text-foreground-500">Faltam hoje: <b>{Math.round(falta.kcal)} kcal</b> · {Math.max(0, Math.round(falta.p))} g proteína · {Math.max(0, Math.round(falta.c))} g carbo · {Math.max(0, Math.round(falta.g))} g gordura</p>
-          <div className="mt-3 space-y-2">
-            {sugestoes.map((s, i) => (
-              <div key={i} className="rounded-xl bg-background-100/70 p-3">
+          <div className="mt-2 space-y-2">
+            {sugestoes.map((s, i) => (i !== vez % Math.max(1, sugestoes.length) ? null :
+              <div key={i} className="rounded-xl bg-background-100/70 p-2.5">
                 <p className="text-sm font-semibold text-foreground-900">{s.itens.map((a) => `${a.nome} (${a.porcao})`).join(' + ')}</p>
                 <div className="mt-1 flex items-center justify-between gap-2">
                   <span className="text-xs text-foreground-500">{s.kcal} kcal · P {s.p} g · C {s.c} g · G {s.g} g</span>
@@ -64,6 +65,7 @@ export default function AjudaRefeicao() {
                 </div>
               </div>
             ))}
+            {sugestoes.length > 1 && <button type="button" onClick={() => setVez((v) => v + 1)} className="text-xs font-semibold text-primary-600"><i className="ri-refresh-line mr-0.5"></i>Outra opção ({(vez % sugestoes.length) + 1}/{sugestoes.length})</button>}
           </div>
         </>
       )}

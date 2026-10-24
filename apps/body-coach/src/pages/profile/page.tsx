@@ -10,6 +10,13 @@ import CicloCard from './components/CicloCard';
 import ConviteCoach from './components/ConviteCoach';
 import { definirLetra, letraGuardada, TAMANHOS } from '@/lib/letra';
 import { confirmar } from '../../lib/dialogo';
+import Abas, { useAba } from '@/components/base/Abas';
+
+const ABAS = [
+  { id: 'voce', label: 'Você', icone: 'ri-user-3-line' },
+  { id: 'saude', label: 'Saúde', icone: 'ri-heart-pulse-line' },
+  { id: 'conta', label: 'App e conta', icone: 'ri-settings-3-line' },
+] as const;
 
 // Política única da Kernex (LGPD). Trocar para https://kernex.com.br/privacidade.html quando o domínio ligar.
 const PRIVACIDADE_KERNEX = 'https://kernex.pages.dev/privacidade.html';
@@ -29,12 +36,12 @@ const text = (v: unknown, suffix = '') => (typeof v === 'string' && v.trim() ? `
 function TamanhoDaLetra() {
   const [atual, setAtual] = useState(letraGuardada);
   return (
-    <Card padding="p-5">
+    <Card padding="p-4">
       <CardHeader title="Tamanho da letra" icon="ri-font-size-2" />
       <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Tamanho da letra" data-testid="tamanho-letra">
         {TAMANHOS.map((t) => (
           <button key={t.id} type="button" role="radio" aria-checked={atual === t.id} onClick={() => { definirLetra(t.id); setAtual(t.id); }}
-            className={`min-h-[56px] rounded-xl border-2 px-2 py-2 font-semibold ${atual === t.id ? 'border-primary-500 bg-primary-50 text-primary-800' : 'border-background-200 text-foreground-700'}`}
+            className={`min-h-[48px] rounded-xl border-2 px-2 py-1.5 font-semibold ${atual === t.id ? 'border-primary-500 bg-primary-50 text-primary-800' : 'border-background-200 text-foreground-700'}`}
             style={{ fontSize: `${t.pct / 100}rem` }}>
             A <span className="block text-xs font-medium">{t.nome}</span>
           </button>
@@ -46,12 +53,12 @@ function TamanhoDaLetra() {
 
 function InfoRow({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
-    <div className="flex items-center justify-between rounded-lg bg-background-100/70 px-4 py-3">
+    <div className="flex items-center justify-between gap-2 rounded-lg bg-background-100/70 px-3 py-1.5">
       <span className="flex items-center gap-2 text-sm text-foreground-500">
         <i className={`${icon} text-primary-500`}></i>
         {label}
       </span>
-      <span className="text-sm font-medium text-foreground-900">{value}</span>
+      <span className="text-right text-sm font-medium text-foreground-900">{value}</span>
     </div>
   );
 }
@@ -59,8 +66,8 @@ function InfoRow({ label, value, icon }: { label: string; value: string; icon: s
 function TextBlock({ label, value }: { label: string; value: unknown }) {
   return (
     <div>
-      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">{label}</p>
-      <div className="rounded-lg bg-background-100/70 p-3 text-sm text-foreground-700">{text(value)}</div>
+      <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-foreground-400">{label}</p>
+      <div className="rounded-lg bg-background-100/70 px-3 py-2 text-sm text-foreground-700">{text(value)}</div>
     </div>
   );
 }
@@ -75,6 +82,7 @@ export default function Profile() {
   }, [user]);
 
   const navigate = useNavigate();
+  const [aba, setAba] = useAba(ABAS.map((a) => a.id), 'voce');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const deleteAccount = async () => {
@@ -113,83 +121,69 @@ export default function Profile() {
   const modality = Array.isArray(ob.modality) ? ob.modality : [];
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="font-heading text-2xl font-bold text-foreground-950">Perfil</h1>
-        <p className="mt-1 text-sm text-foreground-600">Identidade, saúde e preferências do atleta.</p>
-      </header>
+    <div className="space-y-3">
+      <h1 className="font-heading text-xl font-bold text-foreground-950">Perfil</h1>
 
       {!data.onboarding && (
-        <Card padding="p-5">
+        <Card padding="p-4">
           <CardHeader title="Complete seu perfil" icon="ri-user-add-line" />
           <p className="text-sm text-foreground-600">Responda o questionário inicial para o coach montar seu plano.</p>
           <Link
             to="/onboarding"
-            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
+            className="mt-3 inline-flex items-center gap-2 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-background-50 transition hover:bg-primary-600"
           >
             Responder agora <i className="ri-arrow-right-line"></i>
           </Link>
         </Card>
       )}
 
+      {/* Três abas curtas no lugar de uma página comprida. */}
+      <Abas abas={ABAS} atual={aba} onMudar={setAba} rotulo="Partes do perfil" />
+
+      {aba === 'voce' && (
+        <>
+          <SobreVoce />
+          <Card padding="p-4">
+            <div className="mb-2 flex items-center justify-between">
+              <h2 className="font-heading text-base font-semibold text-foreground-950"><i className="ri-sword-line mr-1 text-primary-500"></i>Seus dados e treino</h2>
+              <Link to="/onboarding" className="text-xs font-semibold text-primary-600">Refazer</Link>
+            </div>
+            <div className="space-y-1.5">
+              <InfoRow icon="ri-user-3-line" label="Nome" value={name} />
+              <InfoRow icon="ri-calendar-line" label="Idade · altura · peso" value={[text(ob.age, ' anos'), height, text(ob.weight, ' kg')].filter((x) => x !== MISSING).join(' · ') || MISSING} />
+              <InfoRow icon="ri-trophy-line" label="Objetivos" value={Array.isArray(ob.goals) && ob.goals.length ? (ob.goals as string[]).join(' + ') : text(ob.goal)} />
+              <InfoRow icon="ri-map-pin-line" label="Onde treina" value={text(ob.place)} />
+              <InfoRow icon="ri-bar-chart-line" label="Nível" value={text(ob.level)} />
+              <InfoRow icon="ri-calendar-check-line" label="Treinos" value={[text(ob.days, 'x/semana'), text(ob.minutes, ' min')].filter((x) => x !== MISSING).join(' · ') || MISSING} />
+              <InfoRow icon="ri-run-line" label="Modalidades" value={modality.length ? modality.join(', ') : MISSING} />
+            </div>
+          </Card>
+        </>
+      )}
+
+      {aba === 'saude' && (
+        <>
+          <CicloCard />
+          <Card padding="p-4">
+            <CardHeader title="Saúde &amp; segurança" icon="ri-heart-pulse-line" />
+            <p className="mb-2 text-xs text-foreground-500">O sistema não diagnostica e não altera medicamentos.</p>
+            <div className="space-y-2">
+              <TextBlock label="Histórico médico" value={ob.history} />
+              <TextBlock label="Lesões anteriores" value={ob.injuries} />
+              <TextBlock label="Sintomas atuais" value={ob.symptoms} />
+            </div>
+          </Card>
+        </>
+      )}
+
+      {aba === 'conta' && (<>
       <TamanhoDaLetra />
-      <SobreVoce />
-      <CicloCard />
       <ConviteCoach />
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* identity */}
-        <Card padding="p-5">
-          <CardHeader title="Identidade" icon="ri-user-3-line" />
-          <div className="space-y-2">
-            <InfoRow icon="ri-user-3-line" label="Nome" value={name} />
-            <InfoRow icon="ri-calendar-line" label="Idade" value={text(ob.age, ' anos')} />
-            <InfoRow icon="ri-ruler-line" label="Altura" value={height} />
-            <InfoRow icon="ri-scales-3-line" label="Peso" value={text(ob.weight, ' kg')} />
-          </div>
-        </Card>
-
-        {/* goal & training */}
-        <Card padding="p-5">
-          <CardHeader title="Objetivo &amp; treino" icon="ri-sword-line" />
-          <div className="space-y-2">
-            <InfoRow icon="ri-trophy-line" label="Objetivos" value={Array.isArray(ob.goals) && ob.goals.length ? (ob.goals as string[]).join(' + ') : text(ob.goal)} />
-            <InfoRow icon="ri-map-pin-line" label="Onde treina" value={text(ob.place)} />
-            <InfoRow icon="ri-bar-chart-line" label="Nível" value={text(ob.level)} />
-            <InfoRow icon="ri-calendar-check-line" label="Disponibilidade" value={text(ob.days, 'x/semana')} />
-            <InfoRow icon="ri-time-line" label="Duração" value={text(ob.minutes, ' min')} />
-          </div>
-          <div className="mt-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-foreground-400">Modalidades</p>
-            {modality.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {modality.map((m) => (
-                  <span key={m} className="rounded-full bg-background-100 px-3 py-1.5 text-xs text-foreground-700">{m}</span>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-foreground-500">{MISSING}</p>
-            )}
-          </div>
-        </Card>
-
-        {/* health */}
-        <Card padding="p-5">
-          <CardHeader title="Saúde &amp; segurança" icon="ri-heart-pulse-line" />
-          <p className="mb-3 text-xs text-foreground-500">O sistema não diagnostica e não altera medicamentos.</p>
-          <div className="space-y-3">
-            <TextBlock label="Histórico médico" value={ob.history} />
-            <TextBlock label="Lesões anteriores" value={ob.injuries} />
-            <TextBlock label="Sintomas atuais" value={ob.symptoms} />
-          </div>
-        </Card>
-      </div>
-
       {/* privacy */}
-      <Card padding="p-5">
+      <Card padding="p-4">
         <CardHeader title="Privacidade" icon="ri-shield-user-line" />
-        <p className="mb-4 text-sm text-foreground-600">
-          Gerencie seus dados e privacidade conforme a LGPD. Você pode ler nossa política ou solicitar a exclusão definitiva dos seus dados.
+        <p className="mb-3 text-sm text-foreground-600">
+          Seus dados seguem a LGPD. Leia a política ou peça a exclusão definitiva.
         </p>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <Link
@@ -217,6 +211,7 @@ export default function Profile() {
         </div>
         {deleteError && <p className="mt-3 text-sm text-red-600">{deleteError}</p>}
       </Card>
+      </>)}
     </div>
   );
 }

@@ -17,7 +17,7 @@ import MetasCorpo, { useMetas } from './MetasCorpo';
 const fmt = (n: number | undefined | null, c = 1) => (n == null ? '—' : n.toLocaleString('pt-BR', { maximumFractionDigits: c }));
 
 export default function ResumoEvolucao({
-  uid, serie, perfil, volume, metaGordura, metaPeso, altura, irPara, onMudou,
+  uid, serie, perfil, volume, metaGordura, metaPeso, altura, irPara, onMudou, parte = 'resumo',
 }: {
   altura: number;
   uid: string | undefined;
@@ -28,6 +28,7 @@ export default function ResumoEvolucao({
   metaPeso: number | null;
   irPara: (aba: 'avaliacoes' | 'fotos' | 'graficos') => void;
   onMudou?: () => void;
+  parte?: 'resumo' | 'corpo';
 }) {
   const navigate = useNavigate();
   const { profile, refreshProfile } = useAuth();
@@ -37,6 +38,7 @@ export default function ResumoEvolucao({
   const ult = comMedidas[comMedidas.length - 1] ?? null;
   const medido = [...serie].reverse().find((s) => s.m.peso != null && s.m.gordura != null) ?? null;
   const comFotos = [...serie].reverse().find((s) => s.fotos.frente || s.fotos.costas) ?? null;
+  const mulher = perfil.sexo === 'F' || /^f/i.test(String(profile?.gender ?? ''));
   const ant = comMedidas.length > 1 ? comMedidas[comMedidas.length - 2] : null;
   const pts = serie.map((s) => ({ data: s.data, m: s.m }));
   const avisos = alertas(pts);
@@ -108,9 +110,11 @@ export default function ResumoEvolucao({
   const lembrete = () => void compartilharArquivo(new Blob([gerarIcsReavaliacao()], { type: 'text/calendar;charset=utf-8' }), 'reavaliacao-mensal.ics');
 
   return (
-    <div className="space-y-4">
-      {/* Body Twin (corpo realista): mantido como estava; usa a medição real mais recente (peso + % de gordura). */}
-      <Card padding="p-5">
+    <div className="space-y-3">
+      {parte === 'corpo' && (<>
+      {/* Body Twin (corpo realista): usa a medição real mais recente. As fotos de exemplo são de um homem,
+          então para mulher sem fotos próprias fica só o corpo moldado abaixo (que já é feminino). */}
+      {(!mulher || comFotos) && <Card padding="p-4">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <i className="ri-body-scan-line text-lg text-primary-500"></i>
@@ -136,10 +140,18 @@ export default function ResumoEvolucao({
           onSalvarMedida={medidaTwin}
           fotosReais={comFotos ? { frente: comFotos.fotos.frente, lado: comFotos.fotos.direita ?? comFotos.fotos.esquerda, costas: comFotos.fotos.costas } : undefined}
         />
+      </Card>}
+
+      <Card padding="p-4">
+        <PainelCorpo serie={serie} perfil={perfil} volume={volume} metas={metas} onSalvarMedida={salvarMedida} avatar={profile?.avatar} onMudarAvatar={mudarAvatar} />
       </Card>
 
-      <Card padding="p-5">
-        <div className="mb-3 flex items-center gap-2">
+      <MetasCorpo key={fotoMeta ?? 'sem'} serie={serie} metas={metas} fotoMeta={fotoMeta} salvar={salvar} />
+      </>)}
+
+      {parte === 'resumo' && (<>
+      <Card padding="p-4">
+        <div className="mb-2 flex items-center gap-2">
           <i className="ri-ruler-line text-lg text-primary-500"></i>
           <h2 className="font-heading text-base font-semibold text-foreground-950">Última avaliação</h2>
           <span className="ml-auto text-xs text-foreground-500">{ult ? dataBr(ult.data) : 'nenhuma ainda'}</span>
@@ -153,7 +165,7 @@ export default function ResumoEvolucao({
           <>
             <div className="grid grid-cols-2 gap-2">
               {kpis.map((x) => (
-                <div key={x.k} className="rounded-xl bg-background-100/70 p-3">
+                <div key={x.k} className="rounded-xl bg-background-100/70 px-2.5 py-2">
                   <p className="text-xs text-foreground-500">{x.l}</p>
                   <p className="font-heading text-lg font-bold text-foreground-950">{fmt(x.v)} <span className="text-xs font-medium text-foreground-500">{x.u}</span></p>
                   {x.d ? (
@@ -164,7 +176,7 @@ export default function ResumoEvolucao({
                 </div>
               ))}
             </div>
-            <div className="mt-3 flex gap-2">
+            <div className="mt-2 flex gap-2">
               <button type="button" onClick={() => navigate(`/evolution/relatorio/${ult.id}`)} className="flex-1 rounded-lg bg-primary-500 px-3 py-2 text-sm font-semibold text-background-50 dark:text-foreground-950">
                 <i className="ri-file-chart-line mr-1"></i>Ver relatório
               </button>
@@ -176,17 +188,11 @@ export default function ResumoEvolucao({
         )}
       </Card>
 
-      <Card padding="p-4">
-        <PainelCorpo serie={serie} perfil={perfil} volume={volume} metas={metas} onSalvarMedida={salvarMedida} avatar={profile?.avatar} onMudarAvatar={mudarAvatar} />
-      </Card>
-
-      <MetasCorpo key={fotoMeta ?? 'sem'} serie={serie} metas={metas} fotoMeta={fotoMeta} salvar={salvar} />
-
       <CoachEvolucao />
 
       {(avisos.length > 0 || recs.length > 0 || prevGordura || prevPeso || lados.length > 0) && (
-        <Card padding="p-5">
-          <h2 className="mb-3 font-heading text-base font-semibold text-foreground-950">Destaques</h2>
+        <Card padding="p-4">
+          <h2 className="mb-2 font-heading text-base font-semibold text-foreground-950">Destaques</h2>
           <ul className="space-y-2 text-sm">
             {recs.map((r) => (
               <li key={r.key} className="flex gap-2 rounded-lg bg-secondary-50 px-3 py-2 text-secondary-900"><span>🏆</span><span>Recorde: <b>{r.label}</b> {fmt(r.valor)} {r.unidade}</span></li>
@@ -207,13 +213,13 @@ export default function ResumoEvolucao({
         </Card>
       )}
 
-      <Card padding="p-5">
+      <Card padding="p-3">
         <div className="flex items-center gap-3">
           <i className="ri-calendar-check-line text-2xl text-primary-500"></i>
           <div className="flex-1">
             <p className="text-sm font-semibold text-foreground-950">Reavaliação todo mês</p>
             <p className="text-xs text-foreground-600">
-              {diasDesde != null ? `Última há ${diasDesde} dia(s). ` : ''}Coloque um lembrete na agenda do celular para refazer fotos e medidas.
+              {diasDesde != null ? `Última há ${diasDesde} dia(s). ` : ''}Lembrete na agenda para refazer fotos e medidas.
             </p>
           </div>
           <button type="button" onClick={lembrete} className="rounded-lg border border-background-300 px-3 py-2 text-xs font-semibold text-foreground-800">Lembrar</button>
@@ -222,6 +228,7 @@ export default function ResumoEvolucao({
           <button type="button" onClick={() => irPara('fotos')} className="mt-3 w-full rounded-lg bg-primary-500 px-3 py-2 text-sm font-semibold text-background-50 dark:text-foreground-950">Está na hora: tirar as fotos de hoje</button>
         )}
       </Card>
+      </>)}
     </div>
   );
 }

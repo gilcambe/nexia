@@ -103,3 +103,17 @@ test('ciclo menstrual: desligado não muda nada; ligado dá a fase do dia e mais
   // homem com o campo por engano: ignorado
   assert.ok(!treino(m, { ...BRUNO, ciclo: { ligado: true, inicio: ha(0) } }).t.avisos.some((a) => /ciclo/.test(a)));
 });
+
+test('em casa (com ou sem halteres) nunca aparece barra fixa, e as costas continuam treinadas', async () => {
+  const m = await carregar();
+  for (const place of ['Em casa com halteres', 'Em casa sem equipamento']) {
+    for (const name of ['Ana', 'Bia', 'Carla', 'Duda', 'Eva', 'Gil', 'Hugo', 'Iara']) {
+      const r = { ...ANA, name, place, days: '4' };
+      const f = m.fichaDoPerfil({ onboarding: r });
+      for (let i = 0; i < 4; i++) {
+        const ids = m.treinoDaFicha(r, f.divisao, i).sessao.exercises.map((e) => e.id);
+        assert.ok(!ids.includes('barra-fixa'), `${place} / ${name} / dia ${i}`);
+      }
+    }
+  }
+});

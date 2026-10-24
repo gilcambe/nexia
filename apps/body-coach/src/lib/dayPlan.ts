@@ -204,6 +204,7 @@ function dose(nivel: unknown, objetivos: string[], sexo: Sexo = null, idade = 0)
 // Preferência de equipamento pelo nível e pela idade: iniciante e 50+ começam pelas máquinas (mais seguras para aprender).
 // Peso do corpo, mas precisa de barra ou banco: fora de "em casa sem equipamento".
 const PRECISA_APARELHO = new Set(['barra-fixa', 'mergulho-no-banco']);
+// Barra fixa quase ninguém tem em casa, nem quem tem halteres: em casa ela sai sempre (a remada com halter entra no lugar).
 // Versões de casa (supino no chão, rosca com elástico...): na academia, só se não houver outra opção.
 const DE_CASA = new Set(['supino-no-chao-com-halteres', 'flexao-inclinada-maos-no-sofa-ou-banco', 'remada-invertida-na-mesa', 'superman', 'flexao-pike',
   'rosca-com-elastico', 'flexao-diamante', 'agachamento-livre-sem-peso', 'ponte-de-posterior-no-solo', 'elevacao-pelvica-unilateral',
@@ -293,7 +294,7 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
   for (const g of grupos) {
     const seguros = EXERCICIOS.filter((x) => x.grupo === g && permitido(x, lesoes, e.estado.indisponiveis) && !(cadeirante && (NAO_SENTADO.test(x.nome) || x.equip === 'smith')) && !(gestante && /levantamento terra|stiff/i.test(x.nome)));
     // Onde a pessoa treina: só o que ela tem. Se não sobrar nada, vale o peso do corpo.
-    let opcoes = equipOk ? seguros.filter((x) => equipOk.includes(x.equip) && !(local === 'Em casa sem equipamento' && PRECISA_APARELHO.has(x.id))) : seguros;
+    let opcoes = equipOk ? seguros.filter((x) => equipOk.includes(x.equip) && !(local === 'Em casa sem equipamento' && PRECISA_APARELHO.has(x.id)) && !(local.startsWith('Em casa') && x.id === 'barra-fixa')) : seguros;
     if (!opcoes.length && equipOk) opcoes = seguros.filter((x) => x.equip === 'corpo' || x.equip === 'halter');
     if (!opcoes.length) { avisos.push(`Sem opção segura para ${g} hoje com suas limitações; pulei esse grupo.`); continue; }
     const naAcademia = !equipOk || equipOk.includes('maquina');

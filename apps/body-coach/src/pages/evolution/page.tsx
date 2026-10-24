@@ -13,9 +13,10 @@ import GraficosEvolucao from './avaliacao/GraficosEvolucao';
 import AbaFotos from './fotos/AbaFotos';
 import TreinoDietaCorpo from './avaliacao/TreinoDietaCorpo';
 
-type Aba = 'resumo' | 'avaliacoes' | 'fotos' | 'graficos';
+type Aba = 'resumo' | 'corpo' | 'avaliacoes' | 'fotos' | 'graficos';
 const ABAS: { id: Aba; label: string; icone: string }[] = [
-  { id: 'resumo', label: 'Resumo', icone: 'ri-body-scan-line' },
+  { id: 'resumo', label: 'Resumo', icone: 'ri-dashboard-line' },
+  { id: 'corpo', label: 'Corpo', icone: 'ri-user-heart-line' },
   { id: 'avaliacoes', label: 'Avaliações', icone: 'ri-file-list-3-line' },
   { id: 'fotos', label: 'Fotos', icone: 'ri-camera-line' },
   { id: 'graficos', label: 'Gráficos', icone: 'ri-line-chart-line' },
@@ -51,13 +52,10 @@ export default function Evolution() {
   }, [user?.id]);
 
   return (
-    <div className="space-y-4">
-      <header>
-        <h1 className="font-heading text-2xl font-bold text-foreground-950">Evolução</h1>
-        <p className="mt-1 text-sm text-foreground-600">Avaliações, fotos, gráficos e o seu corpo realista.</p>
-      </header>
+    <div className="space-y-3">
+      <h1 className="font-heading text-xl font-bold text-foreground-950">Evolução</h1>
 
-      <nav className="sticky top-0 z-20 -mx-1 grid grid-cols-4 gap-1 rounded-2xl border border-background-200 bg-background-50/95 p-1 backdrop-blur" aria-label="Seções da evolução">
+      <nav className="sticky top-0 z-20 -mx-1 grid grid-cols-5 gap-1 rounded-2xl border border-background-200 bg-background-50/95 p-1 backdrop-blur" aria-label="Seções da evolução">
         {ABAS.map((a) => (
           <button
             key={a.id}
@@ -86,9 +84,9 @@ export default function Evolution() {
 
       {aba === 'resumo' && (
         <>
-          <ResumoEvolucao uid={user?.id} altura={height} serie={serie} perfil={perfil} volume={volumeSemana} metaGordura={goalBodyFat || null} metaPeso={goalWeight} irPara={irPara} onMudou={reload} />
+          <ResumoEvolucao parte="resumo" uid={user?.id} altura={height} serie={serie} perfil={perfil} volume={volumeSemana} metaGordura={goalBodyFat || null} metaPeso={goalWeight} irPara={irPara} onMudou={reload} />
 
-          <Card padding="p-5">
+          <Card padding="p-3">
             <button type="button" onClick={() => setRapido((r) => !r)} className="flex w-full items-center gap-2 text-left" aria-expanded={rapido}>
               <i className="ri-add-circle-line text-lg text-primary-500"></i>
               <h2 className="font-heading text-base font-semibold text-foreground-950">Registro rápido de peso</h2>
@@ -97,6 +95,16 @@ export default function Evolution() {
             {rapido && <div className="mt-4"><RegisterProgress userId={user?.id} onSaved={reload} /></div>}
           </Card>
 
+        </>
+      )}
+
+      {aba === 'corpo' && <ResumoEvolucao parte="corpo" uid={user?.id} altura={height} serie={serie} perfil={perfil} volume={volumeSemana} metaGordura={goalBodyFat || null} metaPeso={goalWeight} irPara={irPara} onMudou={reload} />}
+      {aba === 'avaliacoes' && <AbaAvaliacoes uid={user?.id} perfil={perfil} entries={entries} serie={serie} onMudou={reload} />}
+      {aba === 'fotos' && <AbaFotos uid={user?.id} entries={entries} serie={serie} onMudou={reload} />}
+      {aba === 'graficos' && (
+        <>
+          <GraficosEvolucao serie={serie} metaGordura={goalBodyFat || null} metaPeso={goalWeight} />
+          <TreinoDietaCorpo uid={user?.id} serie={serie} />
           <Card padding="p-5">
             <div className="mb-3 flex items-center gap-2">
               <i className="ri-fire-line text-lg text-primary-500"></i>
@@ -127,15 +135,6 @@ export default function Evolution() {
           </Card>
 
           <PeriodoEAnalise entries={entries} />
-        </>
-      )}
-
-      {aba === 'avaliacoes' && <AbaAvaliacoes uid={user?.id} perfil={perfil} entries={entries} serie={serie} onMudou={reload} />}
-      {aba === 'fotos' && <AbaFotos uid={user?.id} entries={entries} serie={serie} onMudou={reload} />}
-      {aba === 'graficos' && (
-        <>
-          <GraficosEvolucao serie={serie} metaGordura={goalBodyFat || null} metaPeso={goalWeight} />
-          <TreinoDietaCorpo uid={user?.id} serie={serie} />
         </>
       )}
     </div>
