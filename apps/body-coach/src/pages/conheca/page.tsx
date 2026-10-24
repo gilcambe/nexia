@@ -69,7 +69,7 @@ export default function Conheca() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="h-9 w-9 rounded-xl" />
-              <span className="font-heading text-lg font-bold tracking-tight">NEXIA <span className="text-[#fb923c]">Body Coach</span></span>
+              <span className="font-heading text-lg font-bold tracking-tight">Body <span className="text-[#fb923c]">Coach</span></span>
             </div>
             <Link to="/auth" className="rounded-full border border-white/20 px-3 py-1.5 text-sm font-semibold">Entrar</Link>
           </div>

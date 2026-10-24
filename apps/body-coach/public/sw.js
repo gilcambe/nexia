@@ -1,13 +1,20 @@
 // Versão do cache: suba a cada mudança deste arquivo (o activate apaga os caches antigos).
 // Regras: HTML e API sempre pela rede primeiro; /api/ e o login do Firebase (/__/) nunca vão para o cache.
-const CACHE = 'body-coach-v4';
+const CACHE = 'body-coach-v5';
 // Abertura instantânea: sem resposta da rede neste tempo, abre a casca guardada e a rede atualiza depois.
 const ESPERA_REDE_MS = 3500;
 const MAX_ITENS = 120;
 // Vídeo e áudio não ficam no aparelho (ocupam muito); o resto guarda só os 120 mais recentes.
 const PESADO = /\.(mp4|webm|mov|mp3|m4a|wav)$/i;
+// A casca (index.html e os arquivos principais que ele pede) nunca sai: sem ela o app abriria em branco sem internet.
 function aparar(c) {
-  return c.keys().then((keys) => {
+  return Promise.all([c.keys(), c.match('./index.html').then((r) => (r ? r.clone().text() : '')).catch(() => '')]).then(([todas, html]) => {
+    const keys = todas.filter((k) => {
+      const u = k.url || String(k);
+      if (/\/(index\.html)?$/.test(u)) return false;
+      const nome = /\/assets\/[^/?]+$/.exec(u);
+      return !(nome && html.includes(nome[0]));
+    });
     if (keys.length <= MAX_ITENS) return;
     const toDelete = keys.slice(0, keys.length - MAX_ITENS);
     return Promise.all(toDelete.map((k) => c.delete(k)));
@@ -42,7 +49,7 @@ self.addEventListener('fetch', (e) => {
       const responder = (r) => { if (!feito && r) { feito = true; ok(r); } };
       const t = setTimeout(() => { cascaPronta().then(responder); }, ESPERA_REDE_MS);
       rede.then((r) => { clearTimeout(t); responder(r); })
-        .catch(() => { clearTimeout(t); guardada().then((r) => { if (r) responder(r); else if (!feito) { feito = true; ok(Response.error()); } }); });
+        .catch(() => { clearTimeout(t); cascaPronta().then((r) => { if (r) responder(r); else if (!feito) { feito = true; ok(Response.error()); } }); });
     }));
     e.waitUntil(rede.catch(() => undefined));
     return;
@@ -71,7 +78,7 @@ self.addEventListener('fetch', (e) => {
 self.addEventListener('push', (e) => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch { d = { corpo: e.data ? e.data.text() : '' }; }
-  e.waitUntil(self.registration.showNotification(d.titulo || 'NEXIA Body Coach', {
+  e.waitUntil(self.registration.showNotification(d.titulo || 'Body Coach', {
     body: d.corpo || '', icon: 'icon-192.png', badge: 'badge-96.png', tag: d.tag || undefined, renotify: !!d.tag,
     vibrate: [200, 100, 200], data: { url: d.url || '' },
   }));

@@ -101,10 +101,10 @@ function BrandMark({ size = 'md' }: { size?: 'md' | 'sm' }) {
       )}
       <div className="min-w-0 leading-none">
         <p className="max-w-[11rem] truncate font-heading font-bold tracking-tight text-foreground-950">
-          {marca?.nome || 'NEXIA'}
+          {marca?.nome || 'Body Coach'}
         </p>
-        <p className="mt-0.5 text-xs font-medium tracking-[0.18em] text-foreground-400 uppercase">
-          {marca?.nome ? 'com NEXIA Body Coach' : 'Body Coach AI'}
+        <p className="mt-0.5 text-xs font-medium tracking-[0.08em] text-foreground-400">
+          {marca?.nome ? 'com Body Coach' : 'Seu treino, do seu jeito'}
         </p>
       </div>
     </div>

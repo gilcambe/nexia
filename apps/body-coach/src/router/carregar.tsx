@@ -1,4 +1,5 @@
 import { Suspense, lazy, type ComponentType } from 'react';
+import { recuperarApp, recuperouAgora } from '../lib/recuperar';
 
 // Depois de uma atualização, o celular pode pedir um pedaço antigo do app que já não existe.
 // Nesse caso recarrega a página uma vez (vem a versão nova); se falhar de novo, mostra o erro.
@@ -15,6 +16,11 @@ function importarComRecarga<T>(importar: () => Promise<T>): Promise<T> {
       try { jaTentou = sessionStorage.getItem(CHAVE) === '1'; sessionStorage.setItem(CHAVE, '1'); } catch { /* sem armazenamento */ }
       if (!jaTentou) {
         location.reload();
+        return new Promise<T>(() => {});
+      }
+      // Recarregar não bastou (cópia velha guardada no aparelho): limpa a cópia e abre a versão nova, uma vez.
+      if (!recuperouAgora()) {
+        void recuperarApp();
         return new Promise<T>(() => {});
       }
       throw erro;

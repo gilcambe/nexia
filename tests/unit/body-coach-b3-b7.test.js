@@ -124,7 +124,7 @@ function rodarSW({ rede }) {
 
 test('B7: service worker versionado, rede primeiro no HTML e nunca guarda /api nem o login do Firebase', async () => {
   const sw = fs.readFileSync(path.join(APP, 'public', 'sw.js'), 'utf8');
-  assert.match(sw, /const CACHE = 'body-coach-v4'/);
+  assert.match(sw, /const CACHE = 'body-coach-v5'/);
   assert.match(sw, /skipWaiting\(\)/);
   assert.match(sw, /clients\.claim\(\)/);
   assert.match(sw, /k !== CACHE/);
@@ -144,9 +144,20 @@ test('B7: service worker versionado, rede primeiro no HTML e nunca guarda /api n
 
 test('B7: sem internet a casca guardada abre na hora', async () => {
   const { disparar, guardado } = rodarSW({ rede: async () => { throw new Error('offline'); } });
-  guardado.set('./index.html', { corpo: 'casca' });
+  const html = '<script src="/body-coach/assets/index-A.js">';
+  const casca = { corpo: html, clone() { return this; }, text: async () => html };
+  guardado.set('./index.html', casca);
+  guardado.set('https://app.test/body-coach/assets/index-A.js', { corpo: 'js' });
   const nav = await disparar('https://app.test/body-coach/', { mode: 'navigate' });
-  assert.equal(nav.corpo, 'casca');
+  assert.equal(nav.corpo, html);
+});
+
+test('Nunca branco: sem internet e sem o arquivo principal guardado, não abre casca quebrada', async () => {
+  const { disparar, guardado } = rodarSW({ rede: async () => { throw new Error('offline'); } });
+  const html = '<script src="/body-coach/assets/index-SUMIU.js">';
+  guardado.set('./index.html', { corpo: html, clone() { return this; }, text: async () => html });
+  const nav = await disparar('https://app.test/body-coach/', { mode: 'navigate' });
+  assert.equal(nav.erro, true, 'mostra o aviso de sem internet do celular, não uma tela branca');
 });
 
 test('A8 (#811). Body Coach abre com a config guardada e atualiza pela rede depois', () => {
