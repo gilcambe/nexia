@@ -30,6 +30,7 @@ export default function FichaEditor({ nomeAluno, respostas, inicial, salvando, o
   const [ficha, setFicha] = useState<FichaCoach | null>(inicial);
   const [dia, setDia] = useState(0);
   const [escolhendo, setEscolhendo] = useState(false);
+  const [aberto, setAberto] = useState<number | null>(null); // só um exercício aberto por vez: a ficha cabe na tela
   const temQuestionario = Object.keys(respostas).some((k) => k !== 'mobility');
 
   if (!ficha) {
@@ -73,19 +74,19 @@ export default function FichaEditor({ nomeAluno, respostas, inicial, salvando, o
   const vazios = ficha.dias.filter((x) => !x.exercicios.length).length;
 
   return (
-    <div className="space-y-4" data-testid="ficha-editor">
+    <div className="space-y-3" data-testid="ficha-editor">
       <div className="space-y-2">
         <label className="block text-xs font-semibold text-foreground-600">Nome da ficha
           <input value={ficha.nome} onChange={(e) => setFicha({ ...ficha, nome: e.target.value })} maxLength={60} className={`${campo} mt-1`} />
         </label>
         <label className="block text-xs font-semibold text-foreground-600">Recado para o aluno (opcional)
-          <textarea value={ficha.obs} onChange={(e) => setFicha({ ...ficha, obs: e.target.value })} maxLength={500} rows={2} placeholder="Ex.: aqueça bem os ombros antes do supino." className={`${campo} mt-1`} />
+          <textarea value={ficha.obs} onChange={(e) => setFicha({ ...ficha, obs: e.target.value })} maxLength={500} rows={1} placeholder="Ex.: aqueça bem os ombros antes do supino." className={`${campo} mt-1`} />
         </label>
       </div>
 
       <div className="flex flex-wrap gap-2" role="group" aria-label="Treinos da ficha">
         {ficha.dias.map((x, i) => (
-          <button key={i} type="button" onClick={() => setDia(i)} aria-pressed={i === iDia} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${i === iDia ? 'bg-primary-500 text-background-50' : 'border border-background-200 bg-background-50 text-foreground-700'}`}>
+          <button key={i} type="button" onClick={() => { setDia(i); setAberto(null); }} aria-pressed={i === iDia} className={`rounded-full px-3 py-1.5 text-xs font-semibold ${i === iDia ? 'bg-primary-500 text-background-50' : 'border border-background-200 bg-background-50 text-foreground-700'}`}>
             {x.titulo.split('·')[0].trim() || `Treino ${LETRAS[i]}`} ({x.exercicios.length})
           </button>
         ))}
@@ -108,17 +109,21 @@ export default function FichaEditor({ nomeAluno, respostas, inicial, salvando, o
           )}
         </div>
 
-        <ol className="mt-3 space-y-3">
+        <ol className="mt-2 space-y-1.5">
           {d.exercicios.map((x, j) => (
-            <li key={`${x.id}-${j}`} className="rounded-xl bg-background-100/70 p-3" data-testid="ficha-exercicio">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-sm font-semibold text-foreground-950">{j + 1}. {x.nome}</p>
+            <li key={`${x.id}-${j}`} className="rounded-xl bg-background-100/70 px-2.5 py-2" data-testid="ficha-exercicio">
+              <div className="flex items-center justify-between gap-2">
+                <button type="button" onClick={() => setAberto(aberto === j ? null : j)} aria-expanded={aberto === j} className="min-w-0 flex-1 text-left leading-tight">
+                  <span className="block truncate text-sm font-semibold text-foreground-950">{j + 1}. {x.nome}</span>
+                  <span className="block truncate text-xs text-foreground-500">{x.series} × {x.reps || '—'} · {fmtDescanso(x.descanso)}{x.carga ? ` · ${x.carga}` : ''}{x.obs ? ` · ${x.obs}` : ''} <i className={`ri-pencil-line ml-0.5 ${aberto === j ? 'text-primary-600' : ''}`}></i></span>
+                </button>
                 <div className="flex shrink-0 gap-1">
-                  <button type="button" onClick={() => moverEx(j, j - 1)} disabled={j === 0} aria-label={`Subir ${x.nome}`} className="rounded p-1 text-foreground-600 disabled:opacity-30"><i className="ri-arrow-up-line"></i></button>
-                  <button type="button" onClick={() => moverEx(j, j + 1)} disabled={j === d.exercicios.length - 1} aria-label={`Descer ${x.nome}`} className="rounded p-1 text-foreground-600 disabled:opacity-30"><i className="ri-arrow-down-line"></i></button>
-                  <button type="button" onClick={() => mudarDia((y) => ({ ...y, exercicios: y.exercicios.filter((_, k) => k !== j) }))} aria-label={`Tirar ${x.nome}`} className="rounded p-1 text-red-600"><i className="ri-close-line"></i></button>
+                  <button type="button" onClick={() => { moverEx(j, j - 1); setAberto(null); }} disabled={j === 0} aria-label={`Subir ${x.nome}`} className="rounded p-1 text-foreground-600 disabled:opacity-30"><i className="ri-arrow-up-line"></i></button>
+                  <button type="button" onClick={() => { moverEx(j, j + 1); setAberto(null); }} disabled={j === d.exercicios.length - 1} aria-label={`Descer ${x.nome}`} className="rounded p-1 text-foreground-600 disabled:opacity-30"><i className="ri-arrow-down-line"></i></button>
+                  <button type="button" onClick={() => { mudarDia((y) => ({ ...y, exercicios: y.exercicios.filter((_, k) => k !== j) })); setAberto(null); }} aria-label={`Tirar ${x.nome}`} className="rounded p-1 text-red-600"><i className="ri-close-line"></i></button>
                 </div>
               </div>
+              {aberto === j && (<>
               <div className="mt-2 grid grid-cols-3 gap-2">
                 <label className="text-xs font-semibold text-foreground-500">Séries
                   <input type="number" inputMode="numeric" min={1} max={10} value={x.series} onChange={(e) => mudarEx(j, { series: Math.min(10, Math.max(1, Number(e.target.value) || 1)) })} className={`${campo} mt-0.5`} aria-label={`Séries de ${x.nome}`} />
@@ -128,7 +133,7 @@ export default function FichaEditor({ nomeAluno, respostas, inicial, salvando, o
                 </label>
                 <label className="text-xs font-semibold text-foreground-500">Descanso
                   <select value={x.descanso} onChange={(e) => mudarEx(j, { descanso: Number(e.target.value) })} className={`${campo} mt-0.5`} aria-label={`Descanso de ${x.nome}`}>
-                    {[...new Set([...DESCANSOS, x.descanso])].sort((a, b) => a - b).map((s) => <option key={s} value={s}>{s >= 60 ? `${Math.floor(s / 60)}min${s % 60 ? ` ${s % 60}s` : ''}` : `${s}s`}</option>)}
+                    {[...new Set([...DESCANSOS, x.descanso])].sort((a, b) => a - b).map((s) => <option key={s} value={s}>{fmtDescanso(s)}</option>)}
                   </select>
                 </label>
               </div>
@@ -140,6 +145,7 @@ export default function FichaEditor({ nomeAluno, respostas, inicial, salvando, o
                   <input value={x.obs} onChange={(e) => mudarEx(j, { obs: e.target.value })} maxLength={200} placeholder="ex.: descida em 3 segundos" className={`${campo} mt-0.5`} aria-label={`Observação de ${x.nome}`} />
                 </label>
               </div>
+              </>)}
             </li>
           ))}
         </ol>
@@ -154,7 +160,7 @@ export default function FichaEditor({ nomeAluno, respostas, inicial, salvando, o
         <EscolherExercicio
           jaNoTreino={d.exercicios.map((x) => x.id)}
           onFechar={() => setEscolhendo(false)}
-          onEscolher={(x) => { mudarDia((y) => ({ ...y, exercicios: [...y.exercicios, x] })); setEscolhendo(false); }}
+          onEscolher={(x) => { mudarDia((y) => ({ ...y, exercicios: [...y.exercicios, x] })); setAberto(d.exercicios.length); setEscolhendo(false); }}
         />
       )}
 
@@ -170,6 +176,8 @@ export default function FichaEditor({ nomeAluno, respostas, inicial, salvando, o
     </div>
   );
 }
+
+const fmtDescanso = (s: number) => (s >= 60 ? `${Math.floor(s / 60)}min${s % 60 ? ` ${s % 60}s` : ''}` : `${s}s`);
 
 function EscolherExercicio({ jaNoTreino, onEscolher, onFechar }: { jaNoTreino: string[]; onEscolher: (x: ExercicioCoach) => void; onFechar: () => void }) {
   const [busca, setBusca] = useState('');

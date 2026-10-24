@@ -54,7 +54,7 @@ export default function AlunoEvolucao() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <header className="flex items-center gap-2">
         <button type="button" onClick={() => navigate('/coach/evolucao')} aria-label="Voltar para os alunos" className="rounded-lg p-2 text-foreground-700 hover:bg-background-100"><i className="ri-arrow-left-line text-lg"></i></button>
         <div className="min-w-0 flex-1">
@@ -73,45 +73,43 @@ export default function AlunoEvolucao() {
         ))}
       </nav>
 
+      {/* Resumo: números e próxima avaliação primeiro (cabem numa tela); o corpo em 3D vem depois. */}
       {aba === 'resumo' && (
         <>
-          <Card padding="p-4"><PainelCorpo serie={serie} perfil={perfil} volume={{}} nome={dados.nome} /></Card>
-          <Card padding="p-5">
-            <h2 className="mb-3 font-heading text-base font-semibold text-foreground-950">Última avaliação {ult ? `· ${dataBr(ult.data)}` : ''}</h2>
-            {!ult ? <p className="text-sm text-foreground-500">O aluno ainda não registrou avaliação.</p> : (
-              <>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <p className="rounded-xl bg-background-100 p-3">Peso<br /><b className="text-lg">{fmt(ult.m.peso, 'kg')}</b></p>
-                  <p className="rounded-xl bg-background-100 p-3">Gordura<br /><b className="text-lg">{fmt(ult.m.gordura, '%')}</b></p>
-                  <p className="rounded-xl bg-background-100 p-3">Massa magra<br /><b className="text-lg">{fmt(ult.m.mlg, 'kg')}</b></p>
-                  <p className="rounded-xl bg-background-100 p-3">Cintura<br /><b className="text-lg">{fmt(ult.m.cintura, 'cm')}</b></p>
-                </div>
-                <button type="button" onClick={() => navigate(`/coach/evolucao/${uid}/relatorio/${ult.id}`)} className="mt-3 w-full rounded-lg bg-primary-500 px-3 py-2 text-sm font-semibold text-background-50 dark:text-foreground-950"><i className="ri-file-chart-line mr-1"></i>Relatório e comentários</button>
-              </>
+          <Card padding="p-3">
+            <div className="flex items-center justify-between gap-2">
+              <h2 className="font-heading text-sm font-semibold text-foreground-950">Última avaliação {ult ? `· ${dataBr(ult.data)}` : ''}</h2>
+              {ult && <button type="button" onClick={() => navigate(`/coach/evolucao/${uid}/relatorio/${ult.id}`)} className="shrink-0 rounded-lg bg-primary-500 px-2.5 py-1.5 text-xs font-semibold text-background-50 dark:text-foreground-950"><i className="ri-file-chart-line mr-1"></i>Relatório</button>}
+            </div>
+            {!ult ? <p className="mt-1 text-sm text-foreground-500">O aluno ainda não registrou avaliação.</p> : (
+              <div className="mt-2 grid grid-cols-4 gap-1.5 text-center text-[11px] text-foreground-500">
+                <p className="rounded-lg bg-background-100 px-1 py-1.5">Peso<b className="block text-sm text-foreground-950">{fmt(ult.m.peso, 'kg')}</b></p>
+                <p className="rounded-lg bg-background-100 px-1 py-1.5">Gordura<b className="block text-sm text-foreground-950">{fmt(ult.m.gordura, '%')}</b></p>
+                <p className="rounded-lg bg-background-100 px-1 py-1.5">Massa magra<b className="block text-sm text-foreground-950">{fmt(ult.m.mlg, 'kg')}</b></p>
+                <p className="rounded-lg bg-background-100 px-1 py-1.5">Cintura<b className="block text-sm text-foreground-950">{fmt(ult.m.cintura, 'cm')}</b></p>
+              </div>
             )}
             {(avisos.length > 0 || lados.length > 0) && (
-              <ul className="mt-3 space-y-2 text-sm">
-                {avisos.map((a) => <li key={a.texto} className={`rounded-lg px-3 py-2 ${a.nivel === 'atencao' ? 'bg-red-50 text-red-700' : 'bg-accent-50 text-accent-800'}`}>{a.nivel === 'atencao' ? '⚠️' : '✅'} {a.texto}</li>)}
-                {lados.map((l) => <li key={l.label} className="rounded-lg bg-secondary-50 px-3 py-2 text-secondary-900">↔️ {l.label}: {fmt(l.diferenca, l.unidade)} de diferença, lado {l.menor} menor.</li>)}
+              <ul className="mt-2 space-y-1 text-xs">
+                {avisos.map((a) => <li key={a.texto} className={`rounded-lg px-2.5 py-1.5 ${a.nivel === 'atencao' ? 'bg-red-50 text-red-700' : 'bg-accent-50 text-accent-800'}`}>{a.nivel === 'atencao' ? '⚠️' : '✅'} {a.texto}</li>)}
+                {lados.map((l) => <li key={l.label} className="rounded-lg bg-secondary-50 px-2.5 py-1.5 text-secondary-900">↔️ {l.label}: {fmt(l.diferenca, l.unidade)} de diferença, lado {l.menor} menor.</li>)}
               </ul>
             )}
           </Card>
-          <Card padding="p-5">
-            <h2 className="mb-1 font-heading text-base font-semibold text-foreground-950"><i className="ri-calendar-event-line mr-1 text-primary-500"></i>Próxima avaliação</h2>
-            {dados.proximaAvaliacao ? (
-              <p className="mb-3 text-sm text-foreground-700">Marcada para <b>{dataBr(dados.proximaAvaliacao.data)}{dados.proximaAvaliacao.hora ? ` às ${dados.proximaAvaliacao.hora}` : ''}</b>.</p>
-            ) : <p className="mb-3 text-sm text-foreground-600">O aluno recebe o aviso na conversa, com as dicas de preparo.</p>}
-            <div className="flex gap-2">
-              <input type="date" min={hojeIso()} value={data} onChange={(e) => setData(e.target.value)} aria-label="Data da avaliação" className="min-w-0 flex-1 rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-sm" />
-              <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} aria-label="Hora da avaliação" className="w-28 rounded-lg border border-background-300 bg-background-50 px-3 py-2 text-sm" />
+          <Card padding="p-3">
+            <h2 className="font-heading text-sm font-semibold text-foreground-950"><i className="ri-calendar-event-line mr-1 text-primary-500"></i>Próxima avaliação{dados.proximaAvaliacao ? <span className="font-normal text-foreground-700">: <b>{dataBr(dados.proximaAvaliacao.data)}{dados.proximaAvaliacao.hora ? ` às ${dados.proximaAvaliacao.hora}` : ''}</b></span> : null}</h2>
+            <div className="mt-2 flex gap-1.5">
+              <input type="date" min={hojeIso()} value={data} onChange={(e) => setData(e.target.value)} aria-label="Data da avaliação" className="min-w-0 flex-1 rounded-lg border border-background-300 bg-background-50 px-2 py-1.5 text-sm" />
+              <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} aria-label="Hora da avaliação" className="w-24 rounded-lg border border-background-300 bg-background-50 px-2 py-1.5 text-sm" />
+              <button type="button" disabled={!data} onClick={() => void agendar()} className="shrink-0 rounded-lg bg-primary-500 px-3 py-1.5 text-sm font-semibold text-background-50 disabled:opacity-40 dark:text-foreground-950">Marcar</button>
             </div>
-            <div className="mt-2 flex gap-2">
-              <button type="button" disabled={!data} onClick={() => void agendar()} className="flex-1 rounded-lg bg-primary-500 px-3 py-2 text-sm font-semibold text-background-50 disabled:opacity-40 dark:text-foreground-950">Marcar avaliação</button>
-              {dados.proximaAvaliacao && <button type="button" onClick={() => void agendar(true)} className="rounded-lg border border-background-300 px-3 py-2 text-sm font-semibold text-foreground-700">Desmarcar</button>}
+            <div className="mt-1.5 flex items-center justify-between gap-2 text-xs text-foreground-600">
+              <details><summary className="cursor-pointer font-semibold">Dicas de preparo que o aluno recebe</summary><ul className="mt-1 list-disc pl-5">{PREPARO.map((p) => <li key={p}>{p}</li>)}</ul></details>
+              {dados.proximaAvaliacao && <button type="button" onClick={() => void agendar(true)} className="shrink-0 font-semibold text-foreground-700 underline">Desmarcar</button>}
             </div>
-            <details className="mt-3 text-xs text-foreground-600"><summary className="cursor-pointer font-semibold">Dicas de preparo que o aluno recebe</summary><ul className="mt-1 list-disc pl-5">{PREPARO.map((p) => <li key={p}>{p}</li>)}</ul></details>
-            {agMsg && <p className="mt-2 text-sm text-foreground-700">{agMsg}</p>}
+            {agMsg && <p className="mt-1 text-sm text-foreground-700">{agMsg}</p>}
           </Card>
+          <Card padding="p-3"><PainelCorpo serie={serie} perfil={perfil} volume={{}} nome={dados.nome} /></Card>
         </>
       )}
 
