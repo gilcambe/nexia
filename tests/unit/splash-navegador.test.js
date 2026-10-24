@@ -191,6 +191,9 @@ test('SPLASH-NAV2. painel da Amanda: primeiro acesso, pedido pendente, sinal pag
     await page.waitForTimeout(500);
     await page.evaluate(() => ajustesSub('fotos'));
     await page.waitForSelector('#aj-midia-fotos .m-envio');
+    await page.waitForSelector('#aj-midia-fotos >> text=Fotos que já estão no site');
+    await page.click('#aj-midia-fotos >> text=Tirar do site >> nth=0');
+    await page.waitForSelector('#aj-midia-fotos >> text=Voltar ao site');
     await page.evaluate(() => ajustesSub('videos'));
     await page.waitForSelector('#aj-midia-videos .m-envio');
     await page.evaluate(() => ajustesIr('aval'));

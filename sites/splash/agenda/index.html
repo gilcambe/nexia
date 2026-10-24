@@ -2261,8 +2261,8 @@
     AJ_SUB = sub;
     document.querySelectorAll('#aj-chips button').forEach(b => b.classList.toggle('ativa', b.dataset.sub === sub));
     document.querySelectorAll('.aj-sub').forEach(d => d.classList.toggle('oculto', d.dataset.sub !== sub));
-    if (sub === 'fotos') montarMidia('aj-midia-fotos', AJ_UN, { fotos: true, titulo: 'Fotos de ' + nomeUnCfg(AJ_UN) });
-    if (sub === 'videos') montarMidia('aj-midia-videos', AJ_UN, { videos: true, titulo: 'Vídeos de ' + nomeUnCfg(AJ_UN) });
+    if (sub === 'fotos') document.getElementById('aj-midia-fotos').dataset.estaticos = '1'; montarMidia('aj-midia-fotos', AJ_UN, { fotos: true, estaticos: true, titulo: 'Adicionar fotos novas em ' + nomeUnCfg(AJ_UN) });
+    if (sub === 'videos') document.getElementById('aj-midia-videos').dataset.estaticos = '1'; montarMidia('aj-midia-videos', AJ_UN, { videos: true, estaticos: true, titulo: 'Adicionar vídeos novos em ' + nomeUnCfg(AJ_UN) });
     atualizarBarraSalvar();
   }
   function atualizarBarraSalvar() {
@@ -2304,6 +2304,7 @@
     cont.innerHTML = '<p class="suave">Carregando…</p>';
     const esc = SplashPainel.escapeHtml;
     let html = '';
+    if (op.estaticos) html += await htmlEstaticos(idCont, destino, op.fotos ? 'fotos' : 'videos');
     if (op.fotos) {
       const r = await apiPost({ acao: 'foto-listar', unidade: destino });
       const fotos = (r.body && r.body.fotos) || [];
@@ -2332,9 +2333,37 @@
     }
     cont.innerHTML = html;
   }
+  /* Fotos e vídeos que já vêm no site (não ficam no banco): dá para tirar do site e voltar. */
+  async function htmlEstaticos(idCont, un, tipo) {
+    const esc = SplashPainel.escapeHtml;
+    let itens = [];
+    try {
+      const html = await (await fetch('../index.html', { cache: 'no-store' })).text();
+      const doc = new DOMParser().parseFromString(html, 'text/html');
+      itens = Array.from(doc.querySelectorAll(`#${tipo}-${un} [data-ed]`)).map(el => ({ chave: el.dataset.ed, src: el.getAttribute('src') || '', alt: el.getAttribute('alt') || '' }));
+    } catch (e) { return ''; }
+    if (!itens.length) return '';
+    const r = await apiGet({ conteudo: '1' });
+    const c = (r.body && r.body.conteudo) || {};
+    const ocultos = c.ocultos || {};
+    const nome = tipo === 'fotos' ? 'Fotos que já estão no site' : 'Vídeos que já estão no site';
+    return `<h4 class="cfg-sub">${nome}</h4><p class="cfg-ajuda">Toque em <b>Tirar do site</b> para esconder. Dá para <b>Voltar ao site</b> a qualquer momento. Para trocar uma foto por outra, use <b>Editar o site</b>.</p>
+      <div class="m-grade">${itens.map(i => `<div class="m-item ${ocultos[i.chave] ? 'oculta' : ''}"><img src="${esc(new URL(i.src, new URL('../index.html', location.href)).href)}" alt="" loading="lazy"><span style="font-size:12px;color:var(--suave)">${esc(i.alt)}</span><div class="m-acoes"><button class="btn pequeno ${ocultos[i.chave] ? 'verde' : 'vermelho'}" onclick="alternarEstatico('${idCont}','${esc(i.chave)}')">${ocultos[i.chave] ? 'Voltar ao site' : 'Tirar do site'}</button></div></div>`).join('')}</div>`;
+  }
+  async function alternarEstatico(idCont, chave) {
+    const r = await apiGet({ conteudo: '1' });
+    const c = (r.body && r.body.conteudo) || {};
+    c.ocultos = c.ocultos || {};
+    if (c.ocultos[chave]) delete c.ocultos[chave]; else c.ocultos[chave] = true;
+    const w = await apiPost({ acao: 'site-salvar', conteudo: c });
+    if (w.status !== 200) return alert((w.body && w.body.error) || 'Não consegui salvar.');
+    avisoRapido(c.ocultos[chave] ? 'Tirado do site.' : 'Voltou ao site.');
+    if (SITE_EDITOR.aberto) { SITE_EDITOR.conteudo = c; enviarConteudoIframe(); }
+    remontarMidia(idCont);
+  }
   const opMidia = id => ({ fotos: Boolean(document.getElementById(id) && document.getElementById(id)._fotos), videos: !document.getElementById(id) || !document.getElementById(id)._fotos, titulo: '' });
   async function remontarMidia(id) {
-    const c = document.getElementById(id); const titulo = c.querySelector('.cfg-sub'); const op = { fotos: Boolean(c._fotos), videos: !c._fotos, titulo: titulo ? titulo.textContent : '' };
+    const c = document.getElementById(id); const titulo = c.querySelector('.cfg-sub'); const op = { fotos: Boolean(c._fotos), videos: !c._fotos, titulo: titulo ? titulo.textContent : '', estaticos: Boolean(c.dataset.estaticos) };
     await montarMidia(id, c.dataset.destino, op); recarregarEditorSeAberto();
   }
   async function enviarFotosMidia(id) {
