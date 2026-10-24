@@ -39,7 +39,7 @@ Fotos ficam em base64 no Firestore (máx. 600 KB cada). Comprovantes do cliente 
 2. **Site + painel (páginas estáticas):** NÃO sobem sozinhos. Disparar:
    `gh api repos/gilcambe/nexia/actions/workflows/379320658/dispatches -f ref=develop -f 'inputs[slug]=splasheventos' -f 'inputs[pasta]=sites/splash'`
    (workflow "Publicar site de cliente (Cloudflare Pages)"). Conferir: `gh api 'repos/gilcambe/nexia/actions/workflows/379320658/runs?per_page=1'` → `completed success`.
-   O app instalado usa `sw.js`; ao mudar arquivos do painel, aumente `CACHE_VERSION` em `sites/splash/agenda/sw.js` (atual: `splash-painel-v8`). NÃO use `clients.claim()` no sw: quebra os testes de navegador (o sw passaria a interceptar `/api/`).
+   O app instalado usa `sw.js`; ao mudar arquivos do painel, aumente `CACHE_VERSION` em `sites/splash/agenda/sw.js` (atual: `splash-painel-v9`). NÃO use `clients.claim()` no sw: quebra os testes de navegador (o sw passaria a interceptar `/api/`).
    `sites/splash/_headers` força `no-cache` no painel para o celular não ficar com versão velha.
 3. A sessão da IA pode não alcançar `*.pages.dev`/workers.dev por curl/WebFetch (lista de domínios permitidos); peça ao Gildivan para abrir e conferir, e diga isso a ele.
 
@@ -105,3 +105,12 @@ Atenção: módulos novos do backend devem ficar em SUBPASTAS de `netlify/functi
 > Você vai continuar um projeto já em produção: site e painel de locação "Splash" (cliente Amanda) no repositório `gilcambe/nexia`. Antes de qualquer coisa, leia `docs/handoff-splash.md` inteiro. O dono (Gildivan) é leigo e fala português: responda em português, em passos curtos, com links clicáveis.
 > Regras: NÃO PODE QUEBRAR NADA; trabalhe só no site e painel de PRODUÇÃO (sem páginas de teste); gaste poucos créditos; um ramo `claude/<assunto>` por mudança, PR para `develop`, e peça ao Gildivan o "Merge pull request". Depois do merge, publique o site/painel pelo workflow da seção 4 e peça para ele testar no celular.
 > Passos: (1) se o repositório não estiver na sessão, use `add_repo` com owner `gilcambe`, repo `nexia`, access `push`, e clone; (2) `git fetch && git checkout -B claude/<assunto> origin/develop`; (3) rode os testes da seção 9 e confirme que passam; (4) faça a mudança pedida; (5) rode os testes de novo; (6) commit, push e abra o PR via `gh api` (GraphQL é bloqueado).
+
+## 11. Splash como produto da Kernex (vender para outras empresas)
+- Vinheta Kernex de 2 s (mesma do Body Coach/Cortex) em `sites/splash/abertura-kernex.js`, carregada no site e no painel com `data-produto="SPLASH"`.
+  Uma vez por sessão, um toque pula, não aparece dentro do "Editar site" (iframe) nem em navegador automatizado (testes). Ícone continua o do Splash.
+- O site lê a conta de `<meta name="locacao-site">` e o painel de `<meta name="agenda-site">` (padrão `splash`). O backend já é multi-cliente (`clientes/locacoes.js`, `?site=<slug>`).
+- Novo cliente: `node scripts/novo-cliente-locacao.js --slug chacara-sol --nome "Chácara do Sol" [--instagram x] [--unidades 1|2]`
+  → cria `sites/<slug>` sem fotos nem nome do Splash e mostra o código de 1º acesso + bloco para colar em `clientes/locacoes.js`.
+  Depois: trocar logo/ícones pelo do cliente, PR, merge e publicar (seção 4 com `inputs[slug]=<slug>` e `inputs[pasta]=sites/<slug>`). Com 1 unidade, o site esconde a segunda.
+- Teste: `tests/unit/splash-kernex.test.js` (já entra no comando da seção 9).

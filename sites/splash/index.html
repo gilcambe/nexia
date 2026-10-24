@@ -11,6 +11,8 @@
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://splasheventos.pages.dev/midia/adelia-piscina-deck.jpg">
 <link rel="icon" href="logo-splash.png" type="image/png">
+<meta name="locacao-site" content="splash">
+<script src="abertura-kernex.js" data-produto="SPLASH" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -728,7 +730,7 @@ footer{background:#021436;color:#c3d3ea;padding:54px clamp(16px,5vw,70px) 28px}
 
 <script src="calendario.js"></script>
 <script>
-const SLUG = 'splash';
+const SLUG = (document.querySelector('meta[name="locacao-site"]') || {}).content || 'splash'; // conta em clientes/locacoes.js
 const API_ORIGEM = 'https://nexia.gcbezerra.workers.dev';
 const API_LOCACAO = API_ORIGEM + '/api/locacao';
 const UNIDADES_IDS = ['santa-adelia', 'santa-barbara'];
@@ -1016,6 +1018,12 @@ function atualizarContatoConfig() {
     const txt = vs && vf && vs !== vf ? 'Semana ' + dinheiro(vs) + ' · Fim de semana ' + dinheiro(vf) : (vs || vf ? 'Diária ' + dinheiro(vs || vf) : '');
     const preco = document.getElementById('preco-' + u.id); if (preco) preco.textContent = txt;
     const preco2 = document.getElementById('preco-unidade-' + u.id); if (preco2) preco2.textContent = txt;
+  });
+  // Outro cliente (cópia Kernex Locação) com só 1 unidade: esconde a unidade que não está na conta.
+  if ((cfg.unidades || []).length) ['santa-adelia', 'santa-barbara'].forEach(id => {
+    if (cfg.unidades.some(u => u.id === id)) return;
+    ['card-', 'bloco-'].forEach(p => { const el = document.getElementById(p + id); if (el) el.style.display = 'none'; });
+    const r = document.getElementById('rodape-end-' + id); if (r && r.closest('li')) r.closest('li').style.display = 'none';
   });
 
   renderExtras();
