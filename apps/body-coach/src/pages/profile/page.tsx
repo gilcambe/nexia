@@ -239,7 +239,9 @@ export default function Profile() {
             </div>
           ) : (
             <div className="mt-3 rounded-lg border border-background-200 bg-background-50 p-4 text-center">
+              <i className="ri-sword-line text-2xl text-foreground-300 mb-2 block"></i>
               <p className="text-sm text-foreground-600">Nenhum exercício marcado como evitado</p>
+              <p className="text-xs text-foreground-500 mt-1">Você pode marcar exercícios para evitar durante o onboarding</p>
             </div>
           )}
         </Card>
