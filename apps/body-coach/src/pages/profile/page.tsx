@@ -177,6 +177,35 @@ export default function Profile() {
         </>
       )}
 
+      {aba === 'evitar' && (
+        <Card padding="p-3">
+          <h2 className="font-heading text-sm font-semibold text-foreground-950"><i className="ri-sword-line mr-1 text-primary-500"></i>Exercícios evitados</h2>
+          <p className="text-[11px] text-foreground-500">Você pode remover exercícios que não quer fazer</p>
+          
+          {Array.isArray(ob.evitar) && ob.evitar.length > 0 ? (
+            <div className="mt-3 space-y-2">
+              {ob.evitar.map((exercicioId, index) => (
+                <div key={exercicioId} className="flex items-center justify-between rounded-lg border border-background-200 bg-background-50 p-3">
+                  <span className="text-sm font-medium text-foreground-800">Exercício #{index + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => removerExercicioEvitado(exercicioId)}
+                    disabled={deletingExercicio === exercicioId}
+                    className="rounded-md bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 transition hover:bg-red-200 disabled:opacity-60"
+                  >
+                    {deletingExercicio === exercicioId ? 'Removendo...' : 'Remover'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-3 rounded-lg border border-background-200 bg-background-50 p-4 text-center">
+              <p className="text-sm text-foreground-600">Nenhum exercício marcado como evitado</p>
+            </div>
+          )}
+        </Card>
+      )}
+
       {aba === 'conta' && (<>
       <TamanhoDaLetra />
       <ConviteCoach />
