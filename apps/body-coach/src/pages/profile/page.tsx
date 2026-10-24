@@ -80,8 +80,10 @@ export default function Profile() {
   useEffect(() => {
     if (!user) return;
     getUserDoc<SavedProfile>(user.id, 'profile', 'main').then(setSaved).catch(() => {});
-    
-    // Busca nomes dos exercícios evitados para exibir de forma mais amigável
+  }, [user]);
+
+  // Busca nomes dos exercícios evitados para exibir de forma mais amigável
+  useEffect(() => {
     const profileDoc = saved || profile;
     if (profileDoc?.onboarding?.evitar && Array.isArray(profileDoc.onboarding.evitar) && profileDoc.onboarding.evitar.length > 0) {
       const nomes: Record<string, string> = {};
@@ -90,7 +92,7 @@ export default function Profile() {
       });
       setExerciciosNomes(nomes);
     }
-  }, [user, saved, profile]);
+  }, [saved, profile]);
 
   const navigate = useNavigate();
   const [aba, setAba] = useAba(ABAS.map((a) => a.id), 'voce');
