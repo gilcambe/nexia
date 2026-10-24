@@ -43,25 +43,23 @@ export default function AlunoPlano() {
 
   const nome = p?.nome ?? 'Aluno';
   return (
-    <div className="mx-auto max-w-2xl space-y-4">
-      <Link to="/coach/alunos" className="text-sm font-semibold text-primary-600"><i className="ri-arrow-left-line mr-1"></i>Meus alunos</Link>
-      <header className="flex items-center gap-3">
-        {p?.foto ? <img src={p.foto} alt="" className="h-12 w-12 rounded-full object-cover" /> : <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-100 text-primary-700"><i className="ri-user-3-line text-xl"></i></span>}
-        <div className="min-w-0">
-          <h1 className="truncate font-heading text-2xl font-bold text-foreground-950">{nome}</h1>
-          <p className="text-xs text-foreground-500">
-            {p && [p.respostas.goal, p.respostas.level, p.respostas.days ? `${p.respostas.days} dias/sem` : null].filter(Boolean).join(' · ')}
+    <div className="mx-auto max-w-2xl space-y-3">
+      <header className="flex items-center gap-2.5">
+        {p?.foto ? <img src={p.foto} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" /> : <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-100 text-primary-700"><i className="ri-user-3-line text-lg"></i></span>}
+        <div className="min-w-0 flex-1 leading-tight">
+          <h1 className="truncate font-heading text-xl font-bold text-foreground-950">{nome}</h1>
+          <p className="truncate text-xs text-foreground-500">
+            {p && [Array.isArray(p.respostas.goals) && p.respostas.goals.length ? (p.respostas.goals as string[]).join(' + ') : p.respostas.goal, p.respostas.level, p.respostas.days ? `${p.respostas.days} dias/sem` : null].filter(Boolean).join(' · ')}
           </p>
         </div>
+        {/* Atalhos do aluno num toque, sem ocupar uma linha inteira. */}
+        <Link to={`/chat?com=${uid}`} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-background-200 text-foreground-700" aria-label={`Conversar com ${nome}`}><i className="ri-chat-3-line"></i></Link>
+        <Link to={`/coach/evolucao/${uid}`} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-background-200 text-foreground-700" aria-label={`Evolução de ${nome}`}><i className="ri-line-chart-line"></i></Link>
+        <Link to={`/coach/presenca/${uid}`} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-background-200 text-foreground-700" aria-label={`Presença de ${nome}`}><i className="ri-calendar-check-line"></i></Link>
       </header>
       {p && (Array.isArray(p.respostas.mobility) && p.respostas.mobility.length > 0 || p.respostas.injuries) ? (
-        <p className="rounded-lg bg-secondary-50 px-3 py-2 text-xs text-secondary-900"><i className="ri-alert-line mr-1"></i>Atenção: {[...(Array.isArray(p.respostas.mobility) ? p.respostas.mobility as string[] : []), p.respostas.injuries].filter(Boolean).join(', ')}</p>
+        <p className="truncate rounded-lg bg-secondary-50 px-3 py-1.5 text-xs text-secondary-900"><i className="ri-alert-line mr-1"></i>Atenção: {[...(Array.isArray(p.respostas.mobility) ? p.respostas.mobility as string[] : []), p.respostas.injuries].filter(Boolean).join(', ')}</p>
       ) : null}
-      <div className="flex gap-2 text-xs">
-        <Link to={`/chat?com=${uid}`} className="rounded-lg border border-background-200 px-3 py-1.5 font-semibold text-foreground-700"><i className="ri-chat-3-line mr-1"></i>Conversar</Link>
-        <Link to={`/coach/evolucao/${uid}`} className="rounded-lg border border-background-200 px-3 py-1.5 font-semibold text-foreground-700"><i className="ri-line-chart-line mr-1"></i>Evolução</Link>
-        <Link to={`/coach/presenca/${uid}`} className="rounded-lg border border-background-200 px-3 py-1.5 font-semibold text-foreground-700"><i className="ri-calendar-check-line mr-1"></i>Presença</Link>
-      </div>
 
       {p?.equipe && (
         <p className="rounded-lg bg-primary-50 px-3 py-2 text-xs text-primary-800" data-testid="aviso-equipe">
@@ -75,7 +73,7 @@ export default function AlunoPlano() {
 
       <div className="grid grid-cols-2 gap-1 rounded-xl bg-background-100 p-1" role="tablist">
         {([['treino', 'Ficha de treino'], ['dieta', 'Dieta']] as const).map(([id, l]) => (
-          <button key={id} type="button" role="tab" aria-selected={aba === id} onClick={() => { setOk(''); setParams({ aba: id }, { replace: true }); }} className={`rounded-lg py-2 text-sm font-semibold ${aba === id ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>{l}</button>
+          <button key={id} type="button" role="tab" aria-selected={aba === id} onClick={() => { setOk(''); setParams({ aba: id }, { replace: true }); }} className={`rounded-lg py-1.5 text-sm font-semibold ${aba === id ? 'bg-background-50 text-foreground-950 shadow-sm' : 'text-foreground-500'}`}>{l}</button>
         ))}
       </div>
 
@@ -125,7 +123,7 @@ function RespostasAnamnese({ a, nome }: { a: AnamneseDoAluno; nome: string }) {
   const valor = (v: string | undefined) => (v === 'sim' ? 'Sim' : v === 'nao' ? 'Não' : v || '—');
   return (
     <div className="rounded-2xl border border-background-200 bg-background-50" data-testid="anamnese-respostas">
-      <button type="button" onClick={() => setAberto(!aberto)} aria-expanded={aberto} className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-semibold text-foreground-900">
+      <button type="button" onClick={() => setAberto(!aberto)} aria-expanded={aberto} className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-semibold text-foreground-900">
         <span><i className="ri-survey-line mr-1 text-primary-600"></i>Anamnese{a.situacao === 'pendente' ? ' (respostas antigas: você mudou as perguntas)' : ''}{a.em ? <span className="ml-1 text-xs font-normal text-foreground-500">· {new Date(a.em).toLocaleDateString('pt-BR')}</span> : null}</span>
         <i className={aberto ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'}></i>
       </button>

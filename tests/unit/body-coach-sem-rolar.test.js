@@ -30,3 +30,21 @@ test('Coach: Evolução e Financeiro em linhas compactas', () => {
   assert.match(fin, /mt-1 h-24" data-testid="fin-grafico"/);
   assert.match(fin, /Cobrar \$\{a\.nome\} no WhatsApp/);
 });
+
+test('Coach: ficha do aluno com exercícios fechados (abre um por vez) e atalhos no topo', () => {
+  const f = ler('pages/coach/components/FichaEditor.tsx');
+  assert.match(f, /const \[aberto, setAberto\] = useState<number \| null>\(null\)/);
+  assert.match(f, /aria-expanded=\{aberto === j\}/);
+  assert.match(f, /\{aberto === j && \(<>/, 'séries, reps, descanso, carga e observação só aparecem no exercício aberto');
+  assert.match(f, /setAberto\(d\.exercicios\.length\)/, 'exercício novo já abre para editar');
+  const a = ler('pages/coach/AlunoPlano.tsx');
+  assert.match(a, /aria-label=\{`Presença de \$\{nome\}`\}/);
+});
+
+test('Coach: evolução do aluno mostra números e próxima avaliação antes do corpo', () => {
+  const s = ler('pages/coach/AlunoEvolucao.tsx');
+  const resumo = s.slice(s.indexOf("{aba === 'resumo' && ("));
+  assert.ok(resumo.indexOf('Última avaliação') < resumo.indexOf('<PainelCorpo'));
+  assert.ok(resumo.indexOf('Próxima avaliação') < resumo.indexOf('<PainelCorpo'));
+  assert.match(resumo, /grid grid-cols-4/);
+});
