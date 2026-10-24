@@ -99,30 +99,24 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
 
   return (
     <div className="max-w-2xl mx-auto sm:px-4 sm:py-6 text-slate-800 dark:text-slate-100">
-      <div className="mb-6 sm:mb-8">
-        <span className="inline-block px-3 py-1 text-xs font-semibold uppercase tracking-wider bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 rounded-full mb-2">
-          Antes de Treinar
-        </span>
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Treino de hoje</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Seguindo a sua ficha. Conte como você está hoje: o treino se ajusta ao seu sono, alimentação, energia, tempo e dores.
-        </p>
+      {/* Tudo numa tela: o treino da ficha no topo, as perguntas compactas e o botão "Começar" sempre à vista (fixo embaixo). */}
+      <div className="mb-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Treino de hoje · {DIVISOES[divisao].nome}</p>
+        <h1 className="text-xl font-bold leading-tight tracking-tight">{diasDaDivisaoAtual[diaDaDivisao]?.titulo ?? diasDaDivisaoAtual[0].titulo}</h1>
       </div>
 
-      <div className="mb-5 sm:mb-8"><MusicaTreino variante="cartao" /></div>
+      <div className="mb-2"><MusicaTreino variante="cartao" /></div>
 
-      <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-2.5 pb-16 sm:space-y-6 sm:pb-0">
         {/* Treino da ficha */}
-        <div className="bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900 rounded-2xl p-4 sm:p-5 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Na sua ficha ({DIVISOES[divisao].nome})</p>
-          <p className="mt-1 text-lg font-bold">{diasDaDivisaoAtual[diaDaDivisao]?.titulo ?? diasDaDivisaoAtual[0].titulo}</p>
+        <div className={mudando ? 'rounded-xl border border-amber-200 px-3 py-1.5' : 'hidden'}>
           {mudando && <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">Treino diferente só por hoje. A sua ficha continua a mesma.</p>}
         </div>
 
         {/* Como você está hoje */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-sm space-y-6">
-          <h2 className="text-base font-semibold flex items-center gap-2">
-            Como você está HOJE?
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 sm:p-5 shadow-sm space-y-2.5 sm:space-y-6">
+          <h2 className="text-sm font-semibold flex items-center gap-2">
+            Como você está hoje? <span className="text-xs font-normal text-slate-500 dark:text-slate-400">o treino se ajusta</span>
           </h2>
           {today && prontidao && (
             <p className="-mt-3 text-xs text-slate-500 dark:text-slate-400" data-testid="pre-prontidao">
@@ -130,52 +124,54 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
             </p>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-4">
             {/* Sono */}
-            <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Sono</label>
+            <div className="grid grid-cols-[4.5rem_1fr] items-center gap-2 sm:block">
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 sm:mb-1">Sono</label>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: 'bom', label: 'Dormi bem' },
-                  { id: 'regular', label: 'Regular' },
-                  { id: 'ruim', label: 'Dormi mal' },
+                  { id: 'bom', label: 'Dormi bem', curto: 'Bem' },
+                  { id: 'regular', label: 'Regular', curto: 'Regular' },
+                  { id: 'ruim', label: 'Dormi mal', curto: 'Mal' },
                 ].map((item) => (
                   <button
                     type="button"
                     key={item.id}
                     onClick={() => setSono(item.id as EstadoDoDia['sono'])}
-                    className={`py-2.5 px-1.5 text-xs font-medium rounded-xl border text-center transition-all ${
+                    aria-label={item.label}
+                    className={`py-1.5 px-1.5 text-xs font-medium rounded-lg border text-center transition-all ${
                       sono === item.id
                         ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 font-semibold'
                         : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-600 dark:text-slate-300'
                     }`}
                   >
-                    {item.label}
+                    <span className="sm:hidden">{item.curto}</span><span className="hidden sm:inline">{item.label}</span>
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Alimentação */}
-            <div>
-              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">Alimentação pré-treino</label>
+            <div className="grid grid-cols-[4.5rem_1fr] items-center gap-2 sm:block">
+              <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 sm:mb-1">Comida antes</label>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { id: 'comi_bem', label: 'Comi bem' },
-                  { id: 'comi_pouco', label: 'Comi pouco' },
-                  { id: 'jejum', label: 'Em jejum' },
+                  { id: 'comi_bem', label: 'Comi bem', curto: 'Bem' },
+                  { id: 'comi_pouco', label: 'Comi pouco', curto: 'Pouco' },
+                  { id: 'jejum', label: 'Em jejum', curto: 'Jejum' },
                 ].map((item) => (
                   <button
                     type="button"
                     key={item.id}
                     onClick={() => setAlimentacao(item.id as EstadoDoDia['alimentacao'])}
-                    className={`py-2.5 px-1.5 text-xs font-medium rounded-xl border text-center transition-all ${
+                    aria-label={item.label}
+                    className={`py-1.5 px-1.5 text-xs font-medium rounded-lg border text-center transition-all ${
                       alimentacao === item.id
                         ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 font-semibold'
                         : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-600 dark:text-slate-300'
                     }`}
                   >
-                    {item.label}
+                    <span className="sm:hidden">{item.curto}</span><span className="hidden sm:inline">{item.label}</span>
                   </button>
                 ))}
               </div>
@@ -184,7 +180,7 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
 
           {/* Energia */}
           <div>
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex justify-between items-center mb-1">
               <label className="block text-xs font-medium text-slate-500 dark:text-slate-400">Nível de energia</label>
               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
                 {energia === 1 && '1 - Exausto'}
@@ -200,7 +196,7 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
                   type="button"
                   key={n}
                   onClick={() => setEnergia(n)}
-                  className={`py-2.5 text-xs font-semibold rounded-xl border transition-all ${
+                  className={`py-1.5 text-xs font-semibold rounded-lg border transition-all ${
                     energia === n
                       ? 'border-emerald-500 bg-emerald-500 text-white shadow-sm'
                       : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 text-slate-700 dark:text-slate-300'
@@ -214,7 +210,7 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
 
           {/* Tempo disponível */}
           <div>
-            <div className="flex justify-between items-center mb-2">
+            <div className="flex justify-between items-center mb-1">
               <label className="block text-xs font-medium text-slate-500 dark:text-slate-400">Tempo disponível</label>
               <span className="text-xs font-bold text-slate-700 dark:text-slate-200">{tempoMin} minutos</span>
             </div>
@@ -227,7 +223,7 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
               onChange={(e) => setTempoMin(Number(e.target.value))}
               className="w-full accent-emerald-500 cursor-pointer"
             />
-            <div className="flex justify-between text-xs text-slate-400 mt-1">
+            <div className="hidden justify-between text-xs text-slate-400 mt-1 sm:flex">
               <span>20 min</span>
               <span>60 min</span>
               <span>120 min</span>
@@ -236,7 +232,7 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
 
           {/* Dores ou desconfortos hoje */}
           <div>
-            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
               Alguma dor ou desconforto hoje? (opcional)
             </label>
             <input
@@ -244,7 +240,7 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
               value={dores}
               onChange={(e) => setDores(e.target.value)}
               placeholder="Ex: Leve dor no ombro direito, joelho estalando..."
-              className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-slate-400"
+              className="w-full bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder:text-slate-400"
             />
           </div>
         </div>
@@ -286,7 +282,7 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
 
           {/* Seleção do dia específico dentro da divisão */}
           <div className="pt-2">
-            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">
+            <label className="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">
               Qual treino do ciclo você quer fazer hoje?
             </label>
             <select
@@ -345,19 +341,19 @@ export default function PreTreino({ respostas, divisaoInicial, diaInicial, onSta
         )}
 
         {/* Botões */}
-        <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="fixed inset-x-0 bottom-[68px] z-30 flex gap-2 bg-gradient-to-t from-background-50 via-background-50/95 to-transparent px-3 pb-2 pt-3 sm:static sm:flex-row sm:bg-none sm:p-0 lg:bottom-0">
           <button
             type="submit"
-            className="flex-1 py-4 px-6 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold rounded-2xl shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
+            className="flex-1 py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold rounded-2xl shadow-lg shadow-emerald-600/20 transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
           >
-            <span>Começar treino de hoje</span>
+            <span className="whitespace-nowrap">Começar treino</span>
           </button>
           <button
             type="button"
             onClick={() => { if (mudando) { setDivisao(divisaoPadrao); setDiaDaDivisao(diaInicial ?? 0); setEnfase([]); } setMudando((v) => !v); }}
-            className="py-4 px-6 rounded-2xl border border-slate-300 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
+            className="shrink-0 py-2.5 px-3 rounded-2xl border border-slate-300 bg-background-50 dark:border-slate-700 text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
           >
-            {mudando ? 'Voltar para a ficha' : 'Mudar treino de hoje'}
+            {mudando ? 'Voltar à ficha' : 'Mudar treino'}
           </button>
         </div>
       </form>

@@ -7,6 +7,7 @@ import { Grupo } from '@/lib/exerciseDb';
 export default function RecuperacaoCard() {
   const { user } = useAuth();
   const [recuperacao, setRecuperacao] = useState<Record<Grupo, number> | null>(null);
+  const [aberto, setAberto] = useState(false);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -23,17 +24,21 @@ export default function RecuperacaoCard() {
 
   if (!recuperacao) return null;
 
-  return (
-    <div className="rounded-2xl border border-background-200 bg-background-50 p-3.5 shadow-sm" data-testid="recuperacao-muscular">
-      <div className="mb-2 flex items-center justify-between">
-        <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-foreground-700">
-          <i className="ri-heart-pulse-line text-primary-600 text-sm"></i>
-          <span>Recuperação Muscular</span>
-        </div>
-        <span className="text-[11px] text-foreground-500">0–100%</span>
-      </div>
+  // Uma linha: quem ainda está cansado (ou "tudo pronto"). O quadro completo abre no toque.
+  const cansados = GRUPOS_RECUPE.map((g) => ({ g, pct: recuperacao[g.id] ?? 100 })).filter((x) => x.pct < 85).sort((a, b) => a.pct - b.pct);
+  const resumo = cansados.length ? `Descansando: ${cansados.slice(0, 3).map((x) => `${x.g.rotulo} ${x.pct}%`).join(', ')}${cansados.length > 3 ? '…' : ''}` : 'Todos os músculos recuperados';
 
-      <div className="grid grid-cols-5 gap-y-1.5 gap-x-1 sm:grid-cols-10">
+  return (
+    <div className="rounded-2xl border border-background-200 bg-background-50 px-3 py-2 shadow-sm" data-testid="recuperacao-muscular">
+      <button type="button" onClick={() => setAberto((v) => !v)} aria-expanded={aberto} className="flex w-full items-center gap-1.5 text-left text-xs">
+        <i className="ri-heart-pulse-line text-sm text-primary-600"></i>
+        <span className="font-semibold uppercase tracking-wider text-foreground-700">Recuperação</span>
+        <span className={`min-w-0 flex-1 truncate ${cansados.length ? 'text-secondary-800' : 'text-accent-700'}`}>· {resumo}</span>
+        <i className={`text-foreground-400 ${aberto ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'}`}></i>
+      </button>
+
+      {aberto && (
+      <div className="mt-2 grid grid-cols-5 gap-y-1.5 gap-x-1 sm:grid-cols-10">
         {GRUPOS_RECUPE.map((g) => {
           const pct = recuperacao[g.id] ?? 100;
           const status = statusRecuperacao(pct);
@@ -50,6 +55,7 @@ export default function RecuperacaoCard() {
           );
         })}
       </div>
+      )}
     </div>
   );
 }

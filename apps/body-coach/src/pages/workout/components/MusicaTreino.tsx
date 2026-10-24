@@ -45,25 +45,20 @@ export default function MusicaTreino({ variante = 'cartao' }: { variante?: 'cart
           <i className="ri-headphone-fill text-base text-primary-400"></i>Música
         </button>
       ) : (
-        <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#1f2226] via-[#121315] to-black p-4 text-white" data-testid="musica-cartao">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-500"><i className="ri-headphone-fill text-2xl"></i></span>
-            <div className="min-w-0 flex-1">
-              <p className="font-heading text-base font-bold">Treine com a sua música</p>
-              <p className="text-xs text-white/70">{pref.link ? 'Sua playlist está salva. Um toque e ela começa.' : `Playlists de treino de ${estilo.toLowerCase()}. Toque no seu app.`}</p>
-            </div>
-          </div>
-          <div className="mt-3 grid grid-cols-4 gap-2">
+        // Uma linha só: fone, os 4 apps e o ajuste. Um toque abre a música (a tela do treino continua cabendo sem rolar).
+        <div className="flex items-center gap-1.5 overflow-hidden rounded-2xl bg-gradient-to-br from-[#1f2226] via-[#121315] to-black px-2.5 py-2 text-white" data-testid="musica-cartao">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-500" title={pref.link ? 'Sua playlist está salva' : `Playlists de treino de ${estilo.toLowerCase()}`}><i className="ri-headphone-fill text-lg"></i></span>
+          <span className="hidden min-w-0 flex-1 truncate text-xs font-semibold min-[400px]:block">Treine com a sua música</span>
+          <div className="flex flex-1 justify-end gap-1 min-[400px]:flex-none">
             {APPS_MUSICA.map((a) => (
-              <button key={a.id} type="button" onClick={() => tocarNoApp(a.id)} className={`flex flex-col items-center gap-1 rounded-xl px-1 py-2 text-xs font-medium ${app === a.id ? 'bg-white/15 ring-1 ring-white/40' : 'bg-white/5'}`} aria-label={`Tocar no ${a.nome}`}>
-                <i className={`${a.icone} text-2xl`} style={{ color: a.cor }}></i>
-                {a.nome.replace(' Music', '')}
+              <button key={a.id} type="button" onClick={() => tocarNoApp(a.id)} className={`flex h-8 w-9 items-center justify-center rounded-lg ${app === a.id ? 'bg-white/15 ring-1 ring-white/40' : 'bg-white/5'}`} aria-label={`Tocar no ${a.nome}`}>
+                <i className={`${a.icone} text-lg`} style={{ color: a.cor }}></i>
               </button>
             ))}
+            <button type="button" onClick={() => setAberto(true)} className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 text-white/90" data-testid="musica-botao" aria-label={pref.link ? 'Trocar playlist ou estilo' : 'Escolher estilo ou colar minha playlist'}>
+              <i className="ri-equalizer-line"></i>
+            </button>
           </div>
-          <button type="button" onClick={() => setAberto(true)} className="mt-2 w-full rounded-xl border border-white/20 px-3 py-2 text-xs font-semibold text-white/90" data-testid="musica-botao">
-            <i className="ri-equalizer-line mr-1"></i>{pref.link ? 'Trocar playlist ou estilo' : 'Escolher estilo ou colar minha playlist'}
-          </button>
         </div>
       )}
       {aberto && (
@@ -73,7 +68,7 @@ export default function MusicaTreino({ variante = 'cartao' }: { variante?: 'cart
               <h3 className="font-heading text-lg font-bold text-foreground-950">Música no treino</h3>
               <button type="button" onClick={() => setAberto(false)} className="rounded-full p-2 text-foreground-500" aria-label="Fechar"><i className="ri-close-line text-xl"></i></button>
             </div>
-            <p className="text-xs text-foreground-500">O app de música abre por cima. Dê play e volte para o NEXIA: a música continua.</p>
+            <p className="text-xs text-foreground-500">O app de música abre por cima. Dê play e volte para o Body Coach: a música continua.</p>
 
             <p className="mt-3 text-sm font-semibold text-foreground-800">Seu app</p>
             <div className="mt-1.5 grid grid-cols-2 gap-2">

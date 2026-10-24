@@ -44,3 +44,25 @@ test('Ficha: só o próximo treino aberto, divisão e lembretes abrem no toque',
   assert.match(s, /const \[trocando, setTrocando\] = useState\(false\)/);
   assert.match(s, /Lembretes de treino no celular/);
 });
+
+test('Nenhuma tela rola só por causa do layout: o miolo não tem altura mínima de uma tela inteira no celular', () => {
+  const shell = ler('components/feature/AppShell.tsx');
+  assert.match(shell, /<main className="min-w-0 break-words lg:min-h-screen lg:pl-60">/);
+});
+
+test('Hoje cabe numa tela: recuperação em uma linha, nutrição com 4 barras numa linha, "Ver tudo" no topo', () => {
+  const home = ler('pages/home/page.tsx');
+  assert.match(home, /aria-label="Ver tudo" data-testid="ver-tudo"/);
+  assert.match(ler('pages/home/components/RecuperacaoCard.tsx'), /aria-expanded=\{aberto\}/);
+  const n = ler('pages/home/components/NutritionCard.tsx');
+  assert.match(n, /grid grid-cols-4 gap-2/);
+  assert.match(n, /faltam \$\{remainingCal/);
+});
+
+test('Treino: perguntas compactas e "Começar treino" fixo embaixo, sempre à vista', () => {
+  const p = ler('pages/workout/components/PreTreino.tsx');
+  assert.match(p, /fixed inset-x-0 bottom-\[68px\] z-30/);
+  assert.match(p, /aria-label=\{item\.label\}/);
+  assert.match(ler('pages/workout/components/MusicaTreino.tsx'), /data-testid="musica-cartao"/);
+  assert.doesNotMatch(ler('pages/workout/components/MusicaTreino.tsx'), /volte para o NEXIA/);
+});
