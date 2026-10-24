@@ -32,6 +32,11 @@ export default {
       r => console.log('[bc-lembretes]', JSON.stringify(r)),
       e => console.error('[bc-lembretes]', e && e.message),
     ));
+    // Splash: lembretes de cliente (saldo e véspera da festa) avisam a dona no celular às 9h.
+    ctx.waitUntil(lembretes.rodarSplash(at).then(
+      r => console.log('[splash-lembretes]', JSON.stringify(r)),
+      e => console.error('[splash-lembretes]', e && e.message),
+    ));
     // Central: histórico de saúde (1 amostra por hora por rota pública, 30 dias).
     ctx.waitUntil(saude.rodar(at).then(
       r => console.log('[saude-historico]', JSON.stringify(r)),

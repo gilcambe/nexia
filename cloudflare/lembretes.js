@@ -6,4 +6,10 @@ async function rodar(at) {
   return require('../netlify/functions/body-coach/lembretes.js').rodarLembretes(db, at);
 }
 
-module.exports = { rodar };
+async function rodarSplash(at) {
+  const { db } = require('../netlify/functions/firebase-init.js');
+  if (!db) return { skipped: 'sem banco' };
+  return require('../netlify/functions/locacao-lib/lembretes.js').rodar(db, at);
+}
+
+module.exports = { rodar, rodarSplash };

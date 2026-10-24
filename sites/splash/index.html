@@ -16,6 +16,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
 <style>
+.parc-grid{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;align-items:stretch;margin-top:18px}
+.parc-item{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:14px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:inherit;text-decoration:none;width:150px}
+.parc-item img{max-width:100%;object-fit:contain;background:#fff;border-radius:10px;padding:6px;height:70px;width:100%}
+.parc-item.ouro{width:260px;border-color:#d4af5a}.parc-item.ouro img{height:130px}
+.parc-item.prata{width:200px}.parc-item.prata img{height:95px}
+.parc-item b{font-size:14px}.parc-item small{font-size:12px;opacity:.8}
+.parc-cta{text-align:center;margin-top:20px;font-size:15px}.parc-cta a{color:var(--sun,#d4af5a)}
 .aval-form{max-width:560px;margin:28px auto 0;display:flex;flex-direction:column;gap:10px;padding:18px;border-radius:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12)}
 .aval-form h3{font-size:18px}
 .aval-form input,.aval-form select,.aval-form textarea{padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.35);color:#fff;font:inherit;font-size:16px}
@@ -646,6 +653,15 @@ footer{background:#021436;color:#c3d3ea;padding:54px clamp(16px,5vw,70px) 28px}
   </div>
 </section>
 
+<section class="section" id="parceiros" data-secao="parceiros">
+  <div class="section-inner">
+    <div class="section-eyebrow rev"><i class="ri-hand-heart-line"></i> Parceiros</div>
+    <h2 class="section-title rev">Parceiros do <em>Splash</em></h2>
+    <div class="parc-grid" id="parc-lista"></div>
+    <p class="parc-cta"><a id="parc-cta" href="#" target="_blank" rel="noopener"><i class="ri-whatsapp-line"></i> Quer sua marca aqui? Fale com a gente</a></p>
+  </div>
+</section>
+
 <section class="section alt" id="processo" data-secao="processo">
   <div class="section-inner">
     <div class="section-eyebrow rev" data-ed="processo-eyebrow"><i class="ri-footprint-line"></i> Passo a passo</div>
@@ -731,6 +747,7 @@ const NX = {
 };
 
 const NX_SECOES = {
+  parceiros: 'Parceiros',
   inicio: 'Banner de entrada',
   promocoes: 'Promoções',
   solicitar: 'Agenda & Reserva',
@@ -867,6 +884,8 @@ function atualizarVisibilidades() {
   const temAval = (cfg.avaliacoes || []).length > 0 || PRINTS_AVAL > 0;
   const sec = document.getElementById('avaliacoes');
   if (sec) { sec.classList.remove('nx-oculto', 'nx-escondido'); if (ocultos['secao-avaliacoes']) sec.classList.add(classe); }
+  const spc = document.getElementById('parceiros');
+  if (spc) { spc.classList.remove('nx-oculto', 'nx-escondido'); if (ocultos['secao-parceiros']) spc.classList.add(classe); }
   const sp = document.getElementById('promocoes');
   const temPromo = (cfg.promocoes || []).length > 0 || PROMO_FOTOS.length > 0;
   if (sp) { sp.classList.remove('nx-oculto', 'nx-escondido'); if ((!temPromo && !NX.editar) || ocultos['secao-promocoes']) sp.classList.add(classe); }
@@ -1001,6 +1020,7 @@ function atualizarContatoConfig() {
   renderExtras();
   renderPromocoes();
   renderAvaliacoes();
+  renderPatrocinadores();
   atualizarVisibilidades();
   atualizarResumoValores();
   Musica.configurar(cfg.musica);
@@ -1029,6 +1049,20 @@ function renderPromocoes() {
   if (listaPromo) {
     listaPromo.innerHTML = (cfg.promocoes || []).map(p => `<div class="promo-item">${p.imagem ? `<img src="${esc(abs(p.imagem))}" alt="${esc(p.texto || 'Promoção do Splash')}" loading="lazy" data-zoom="1">` : ''}${p.texto ? `<div class="promo-texto">${esc(p.texto)}</div>` : ''}</div>`).join('');
   }
+}
+
+function renderPatrocinadores() {
+  const cfg = configLocacao || {};
+  const lista = document.getElementById('parc-lista');
+  if (lista) {
+    const ordem = { ouro: 0, prata: 1, bronze: 2 };
+    lista.innerHTML = (cfg.patrocinadores || []).slice().sort((a, b) => (ordem[a.nivel] ?? 3) - (ordem[b.nivel] ?? 3)).map(p => {
+      const corpo = (p.logo ? `<img src="${esc(abs(p.logo))}" alt="${esc(p.nome)}" loading="lazy">` : '') + `<b>${esc(p.nome)}</b>` + (p.texto ? `<small>${esc(p.texto)}</small>` : '');
+      return p.link ? `<a class="parc-item ${esc(p.nivel)}" href="${esc(p.link)}" target="_blank" rel="sponsored noopener">${corpo}</a>` : `<div class="parc-item ${esc(p.nivel)}">${corpo}</div>`;
+    }).join('');
+  }
+  const cta = document.getElementById('parc-cta');
+  if (cta) { const h = linkWhatsapp('Olá! Tenho interesse em ser parceiro/patrocinador do Splash.'); if (h) cta.href = h; else cta.parentNode.style.display = 'none'; }
 }
 
 function renderAvaliacoes() {

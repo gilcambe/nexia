@@ -181,6 +181,24 @@ function limparAvaliacoes(lista) {
   return out;
 }
 
+// Patrocinadores (empresas que colocam a marca no site). valor_acordado e obs são só da dona (não saem no site).
+function limparPatrocinadores(lista) {
+  const out = [];
+  for (const x of Array.isArray(lista) ? lista.slice(0, 12) : []) {
+    const nome = str(x && x.nome, 80);
+    if (!nome) continue;
+    const link = str(x.link, 300);
+    const de = dataValida(str(x.de, 10)) ? str(x.de, 10) : '', ate = dataValida(str(x.ate, 10)) ? str(x.ate, 10) : '';
+    out.push({
+      id: str(x.id, 40).replace(/[^a-z0-9-]/gi, '') || aleatorio(4), nome,
+      link: /^https:\/\//.test(link) ? link : '', texto: str(x.texto, 120), logo: linkImagem(x.logo),
+      nivel: ['ouro', 'prata', 'bronze'].includes(x.nivel) ? x.nivel : 'bronze', ativo: x.ativo !== false, de, ate,
+      valor_acordado: Math.max(0, Math.round((Number(x.valor_acordado) || 0) * 100) / 100), obs: str(x.obs, 300),
+    });
+  }
+  return out;
+}
+
 function montarConfig(cadastro = {}, salvo = {}) {
   const c = { ...(cadastro.config || {}), ...(salvo || {}) };
   return {
@@ -204,6 +222,8 @@ function montarConfig(cadastro = {}, salvo = {}) {
     datas_especiais: limparDatasEspeciais(c.datas_especiais),
     promocoes: limparPromocoes(c.promocoes),
     avaliacoes: limparAvaliacoes(c.avaliacoes),
+    patrocinadores: limparPatrocinadores(c.patrocinadores),
+    lembretes: require('./locacao-lib/lembretes').limparLembretes(c.lembretes),
     fidelidade: {
       minimo: Math.min(Math.max(Math.round(Number(c.fidelidade && c.fidelidade.minimo) || 3), 1), 50), // a partir de quantas reservas o cliente é "fiel"
       percentual: Math.min(Math.max(Number(c.fidelidade && c.fidelidade.percentual) || 10, 0), 100), // desconto sugerido (a dona decide se aplica)
@@ -229,7 +249,8 @@ function montarConfig(cadastro = {}, salvo = {}) {
 }
 
 // A chave Pix NÃO sai na rota pública (pode ser o CPF da dona): ela só aparece no painel e na mensagem que a dona manda pelo WhatsApp.
-const configPublica = cfg => ({
+const configPublica = (cfg, hoje = '') => ({
+  patrocinadores: cfg.patrocinadores.filter(p => p.ativo && (!p.de || !hoje || hoje >= p.de) && (!p.ate || !hoje || hoje <= p.ate)).map(({ id, nome, link, texto, logo, nivel }) => ({ id, nome, link, texto, logo, nivel })),
   nome: cfg.nome,
   whatsapp: cfg.whatsapp,
   instagram: cfg.instagram,
@@ -734,7 +755,7 @@ function createHandler(deps = {}) {
         return res(200, { unidade: unidadeId, mes, dias: mapaDias, precos });
       }
 
-      const pub = configPublica(cfg);
+      const pub = configPublica(cfg, agoraBr(now()).data);
       try {
         const sa = await conta.collection('avaliacoes_clientes').where('aprovada', '==', true).get();
         const dosClientes = sa.docs.map(d => d.data()).sort((a, b) => (b.criado_em || '').localeCompare(a.criado_em || '')).slice(0, 20).map(a => ({ id: a.id, nome: a.nome, texto: a.texto, estrelas: a.estrelas }));
@@ -1185,6 +1206,23 @@ function createHandler(deps = {}) {
       return res(200, { ok: true });
     }
 
+    if (acao === 'lembretes') {
+      const cfgL = montarConfig(cadastro, (await lerConta()).config);
+      const snapL = await reservas.where('status', '==', 'confirmado').get();
+      const lista = require('./locacao-lib/lembretes').devidos(snapL.docs.map(d => ({ id: d.id, ...d.data() })), cfgL, agoraBr(now()).data);
+      return res(200, { ativo: cfgL.lembretes.ativo, itens: lista });
+    }
+
+    if (acao === 'lembrete-marcar') {
+      const idL = str(body.id, 64), chave = str(body.chave, 20);
+      if (!ID_RE.test(idL) || !['antes', 'saldo'].includes(chave)) return res(400, { error: 'Lembrete inválido.' });
+      const refL = reservas.doc(idL);
+      const snapL = await refL.get();
+      if (!snapL.exists) return res(200, { ok: true });
+      await refL.update({ lembretes_enviados: { ...(snapL.data().lembretes_enviados || {}), [chave]: new Date(now()).toISOString() } });
+      return res(200, { ok: true });
+    }
+
     if (acao === 'avaliacoes-clientes') {
       const sa = await conta.collection('avaliacoes_clientes').get();
       const itens = sa.docs.map(d => d.data()).sort((a, b) => (b.criado_em || '').localeCompare(a.criado_em || ''));
@@ -1606,7 +1644,7 @@ function createHandler(deps = {}) {
     if (acao === 'config') {
       const novo = body.config && typeof body.config === 'object' ? body.config : {};
       const salvar = {};
-      const permitidos = ['nome', 'whatsapp', 'instagram', 'unidades', 'sinal', 'pix', 'extras', 'promocoes', 'avaliacoes', 'datas_especiais', 'fidelidade', 'cancelamento', 'contrato', 'musica', 'prazo_horas', 'antecedencia_dias', 'dias_a_frente', 'aviso', 'mensagem_pedido'];
+      const permitidos = ['nome', 'whatsapp', 'instagram', 'unidades', 'sinal', 'pix', 'extras', 'promocoes', 'avaliacoes', 'patrocinadores', 'lembretes', 'datas_especiais', 'fidelidade', 'cancelamento', 'contrato', 'musica', 'prazo_horas', 'antecedencia_dias', 'dias_a_frente', 'aviso', 'mensagem_pedido'];
       for (const k of permitidos) if (novo[k] !== undefined) salvar[k] = novo[k];
 
       const final = montarConfig(cadastro, { ...(dados.config || {}), ...salvar });
