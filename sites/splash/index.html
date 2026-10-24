@@ -914,6 +914,7 @@ function nxAplicar(c) {
     const k = el.dataset.ed, o = NX.originais[k];
     if (!o) return;
     el.classList.toggle(classe, !!ocultos[k]);
+    const cx = el.closest('.foto, .vid-card'); if (cx) cx.classList.toggle(classe, !!ocultos[k]);
     if (o.img !== undefined) {
       const im = c && c.imagens && c.imagens[k];
       el.setAttribute('src', im ? abs(im.url) : o.img);
