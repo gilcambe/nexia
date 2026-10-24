@@ -59,6 +59,12 @@
           "url": "https://nexiabodycoach.pages.dev"
         },
         {
+          "title": "Locação de espaços",
+          "text": "Site com calendário + painel de reservas, Pix e financeiro.",
+          "icon": "calendar",
+          "url": "https://splasheventos.pages.dev"
+        },
+        {
           "title": "Sites para negócios",
           "text": "Site + agenda + assistente.",
           "icon": "calendar"
@@ -90,7 +96,7 @@
       "items": [
         { "title": "Bezsan Leilões", "icon": "star", "url": "https://bezsan.pages.dev" },
         { "title": "Studio Lima", "icon": "star", "url": "https://studiolima.pages.dev" },
-        { "title": "Splash Eventos", "icon": "star", "url": "https://nexia.gcbezerra.workers.dev/splash/landing" },
+        { "title": "Splash Eventos", "icon": "star", "url": "https://splasheventos.pages.dev" },
         { "title": "Viajante Pro", "icon": "star", "url": "https://nexia.gcbezerra.workers.dev/viajante-pro/landing" },
         { "title": "CES Brasil 2027", "icon": "star", "url": "https://nexia.gcbezerra.workers.dev/ces/landing" },
         { "title": "Adriano Blumer", "icon": "star", "url": "https://adrianoblumer.pages.dev" }

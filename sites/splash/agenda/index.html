@@ -10,6 +10,7 @@
 <link rel="apple-touch-icon" href="icone-192.png">
 <meta name="agenda-site" content="splash">
 <meta name="agenda-api" content="https://nexia.gcbezerra.workers.dev/api/locacao">
+<script src="../abertura-kernex.js" data-produto="SPLASH" defer></script>
 <title>Painel da Amanda — Splash</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
 <style>
@@ -773,7 +774,7 @@
   let DIAS_MAPA = {};
   let SITE_EDITOR = { aberto: false, conteudo: null, pronto: false, chaveTocada: null, tipoTocado: null };
 
-  const SITE_NAME = 'splash';
+  const SITE_NAME = (document.querySelector('meta[name="agenda-site"]') || {}).content || 'splash';
   const API_LOCACAO = 'https://nexia.gcbezerra.workers.dev/api/locacao';
   const SITE_URL = '/';
 
