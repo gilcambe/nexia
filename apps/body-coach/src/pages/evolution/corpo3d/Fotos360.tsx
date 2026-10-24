@@ -41,7 +41,7 @@ export default function Fotos360({ fotos }: { fotos: Fotos }) {
   return (
     <div>
       <div
-        className="relative h-[380px] w-full touch-pan-y select-none overflow-hidden rounded-2xl bg-[#efedea]"
+        className="relative h-[min(46vh,380px)] w-full touch-pan-y select-none overflow-hidden rounded-2xl bg-[#efedea]"
         onPointerDown={down}
         onPointerMove={move}
         onPointerUp={up}

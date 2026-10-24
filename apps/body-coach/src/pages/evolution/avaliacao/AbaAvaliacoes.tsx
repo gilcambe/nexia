@@ -72,18 +72,18 @@ export default function AbaAvaliacoes({
   };
 
   return (
-    <div className="space-y-4">
-      <Card padding="p-5">
-        <h2 className="mb-1 font-heading text-base font-semibold text-foreground-950">Nova avaliação</h2>
-        <p className="mb-4 text-sm text-foreground-600">Envie o arquivo e o app coloca cada número no lugar certo, ou preencha à mão.</p>
+    <div className="space-y-2">
+      <Card padding="p-3">
+        <h2 className="font-heading text-base font-semibold text-foreground-950">Nova avaliação</h2>
+        <p className="mb-2 text-xs text-foreground-600">Envie o arquivo e o app põe cada número no lugar, ou preencha à mão.</p>
         <ImportarAvaliacao uid={uid} perfil={perfil} existentes={entries} onSalvo={(m) => { setMsg(m); onMudou(); }} />
         {!nova ? (
           <button
             type="button"
             onClick={() => { setNova(true); setEditar(null); }}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-background-300 px-4 py-3 text-sm font-semibold text-foreground-800 hover:bg-background-100"
+            className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-background-300 px-3 py-2 text-sm font-semibold text-foreground-800 hover:bg-background-100"
           >
-            <i className="ri-edit-2-line"></i> Preencher à mão (dobras, medidas, balança)
+            <i className="ri-edit-2-line"></i> Preencher à mão
           </button>
         ) : (
           <div className="mt-4 rounded-xl border border-background-200 p-3">
@@ -94,8 +94,8 @@ export default function AbaAvaliacoes({
         {erro && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p>}
       </Card>
 
-      <Card padding="p-5">
-        <h2 className="mb-3 font-heading text-base font-semibold text-foreground-950">Histórico de avaliações</h2>
+      <Card padding="p-3">
+        <h2 className="mb-1.5 font-heading text-base font-semibold text-foreground-950">Histórico de avaliações</h2>
         {serie.length === 0 && <p className="text-sm text-foreground-500">Nenhuma avaliação ainda.</p>}
         <ul className="space-y-2">
           {[...serie].reverse().map((item) => (

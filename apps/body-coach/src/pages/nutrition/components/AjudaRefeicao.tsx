@@ -46,26 +46,26 @@ export default function AjudaRefeicao() {
   };
 
   return (
-    <Card padding="p-4">
+    <Card padding="p-3">
       <div className="flex items-center gap-2">
-        <i className="ri-magic-line text-lg text-primary-500"></i>
-        <h2 className="font-heading text-base font-semibold text-foreground-950">O que comer agora?</h2>
+        <i className="ri-magic-line text-primary-500"></i>
+        <h2 className="font-heading text-sm font-semibold text-foreground-950">O que comer agora?</h2>
+        {falta.kcal >= 80 && sugestoes.length > 1 && <button type="button" onClick={() => setVez((v) => v + 1)} className="ml-auto text-xs font-semibold text-primary-600"><i className="ri-refresh-line mr-0.5"></i>Outra ({(vez % sugestoes.length) + 1}/{sugestoes.length})</button>}
       </div>
       {falta.kcal < 80 ? (
         <p className="mt-2 text-sm text-foreground-600">Você já bateu as calorias de hoje. {falta.p > 10 ? `Faltam ${Math.round(falta.p)} g de proteína: prefira algo leve e proteico (whey, iogurte, ovo).` : 'Agora é hidratar e descansar.'}</p>
       ) : (
         <>
-          <div className="mt-2 space-y-2">
+          <div className="mt-1.5 space-y-2">
             {sugestoes.map((s, i) => (i !== vez % Math.max(1, sugestoes.length) ? null :
-              <div key={i} className="rounded-xl bg-background-100/70 p-2.5">
-                <p className="text-sm font-semibold text-foreground-900">{s.itens.map((a) => `${a.nome} (${a.porcao})`).join(' + ')}</p>
+              <div key={i} className="rounded-xl bg-background-100/70 px-2.5 py-2">
+                <p className="text-[13px] font-semibold leading-snug text-foreground-900">{s.itens.map((a) => `${a.nome} (${a.porcao})`).join(' + ')}</p>
                 <div className="mt-1 flex items-center justify-between gap-2">
                   <span className="text-xs text-foreground-500">{s.kcal} kcal · P {s.p} g · C {s.c} g · G {s.g} g</span>
                   <button type="button" onClick={() => void adicionar(i)} disabled={adicionado === i} className="shrink-0 rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-semibold text-background-50 disabled:opacity-60 dark:text-foreground-950">{adicionado === i ? 'Registrado' : 'Comi isso'}</button>
                 </div>
               </div>
             ))}
-            {sugestoes.length > 1 && <button type="button" onClick={() => setVez((v) => v + 1)} className="text-xs font-semibold text-primary-600"><i className="ri-refresh-line mr-0.5"></i>Outra opção ({(vez % sugestoes.length) + 1}/{sugestoes.length})</button>}
           </div>
         </>
       )}
