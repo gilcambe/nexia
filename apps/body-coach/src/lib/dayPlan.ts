@@ -1,9 +1,9 @@
 // Treino do dia personalizado: junta o que o aluno respondeu no cadastro (nível, lesões, objetivo),
 // a divisão e a ênfase que ele escolheu e como ele está HOJE (sono, comida, dor, tempo, equipamento).
 import type { Exercise, Session } from '@/mocks/workout';
-import { EXERCICIOS, POR_ID, lesoesDoTexto, permitido, demoDoExercicio, type Exercicio, type Grupo, type Lesao } from './exerciseDb';
+import { EXERCICIOS, POR_ID, lesoesDoTexto, permitido, demoDoExercicio, type Equip, type Exercicio, type Grupo, type Lesao } from './exerciseDb';
 
-export type Divisao = 'abc' | 'abcd' | 'ppl' | 'upper_lower' | 'fullbody';
+export type Divisao = 'abc' | 'abcd' | 'ppl' | 'upper_lower' | 'fullbody' | 'fullbody_ab' | 'inferior_enfase' | 'abcd_gluteo';
 export const DIVISOES: Record<Divisao, { nome: string; dias: { titulo: string; grupos: Grupo[] }[] }> = {
   abc: { nome: 'ABC', dias: [
     { titulo: 'A · Peito, ombros e tríceps', grupos: ['peito', 'ombros', 'triceps'] },
@@ -28,11 +28,105 @@ export const DIVISOES: Record<Divisao, { nome: string; dias: { titulo: string; g
   fullbody: { nome: 'Corpo inteiro', dias: [
     { titulo: 'Corpo inteiro', grupos: ['quadriceps', 'peito', 'costas', 'ombros', 'posterior', 'abdomen'] },
   ] },
+  // Iniciante, 60+ ou foco em saúde: cada músculo 2 a 3 vezes por semana, sessões simples (A e B se alternam).
+  fullbody_ab: { nome: 'Corpo inteiro A/B', dias: [
+    { titulo: 'A · Corpo inteiro (pernas e empurrar)', grupos: ['quadriceps', 'peito', 'costas', 'ombros', 'abdomen'] },
+    { titulo: 'B · Corpo inteiro (glúteos e puxar)', grupos: ['gluteos', 'posterior', 'costas', 'peito', 'biceps', 'triceps'] },
+  ] },
+  // Foco em pernas e glúteos (padrão para mulheres, ou quem marcar esse foco), 3 dias.
+  inferior_enfase: { nome: 'ABC foco pernas e glúteos', dias: [
+    { titulo: 'A · Pernas e glúteos', grupos: ['quadriceps', 'gluteos', 'posterior', 'panturrilha'] },
+    { titulo: 'B · Superior completo', grupos: ['costas', 'peito', 'ombros', 'biceps', 'triceps'] },
+    { titulo: 'C · Glúteos, posterior e abdômen', grupos: ['gluteos', 'posterior', 'abdomen'] },
+  ] },
+  // Foco em glúteos com 4 dias ou mais: dois dias de inferior por semana.
+  abcd_gluteo: { nome: 'ABCD foco glúteos', dias: [
+    { titulo: 'A · Pernas (quadríceps e glúteos)', grupos: ['quadriceps', 'gluteos', 'panturrilha'] },
+    { titulo: 'B · Costas, bíceps e abdômen', grupos: ['costas', 'biceps', 'abdomen'] },
+    { titulo: 'C · Glúteos e posterior', grupos: ['gluteos', 'posterior', 'abdomen'] },
+    { titulo: 'D · Peito, ombros e tríceps', grupos: ['peito', 'ombros', 'triceps'] },
+  ] },
 };
 
-// Sugestão inicial pela quantidade de dias por semana que o aluno informou.
-export function divisaoSugerida(diasPorSemana: number): Divisao {
+// ===== Personalização pela anamnese =====
+// Cada resposta do cadastro muda o treino: sexo, objetivo(s), nível, idade, onde treina, foco, rotina e dias.
+// Pessoas diferentes recebem exercícios diferentes (escolha estável por pessoa, renovada a cada 4 semanas).
+export type Sexo = 'F' | 'M' | null;
+type R = Record<string, unknown> | null | undefined;
+
+export function sexoDe(r: R): Sexo {
+  const v = String(r?.sex ?? r?.sexo ?? r?.gender ?? '').trim().toLowerCase();
+  if (/^(f|mulher)/.test(v)) return 'F';
+  if (/^(m|homem)/.test(v)) return 'M';
+  return null;
+}
+
+// Objetivos marcados (pode ser mais de um). Perfis antigos só têm "goal".
+export function objetivosDe(r: R): string[] {
+  const lista = Array.isArray(r?.goals) ? (r!.goals as unknown[]) : [];
+  const todos = [...lista, ...(r?.goal ? [r.goal] : [])].map((x) => String(x ?? '').trim()).filter(Boolean);
+  return [...new Set(todos)];
+}
+
+// Objetivo principal (calorias e textos): emagrecer + ganhar músculo vira Recomposição.
+export function objetivoPrincipal(objetivos: string[]): string {
+  const perder = objetivos.includes('Perda de gordura');
+  const ganhar = objetivos.includes('Hipertrofia') || objetivos.includes('Estética');
+  if (perder && ganhar) return 'Recomposição';
+  return objetivos[0] ?? '';
+}
+
+export const LOCAIS_TREINO: Record<string, Equip[]> = {
+  'Academia completa': ['barra', 'halter', 'maquina', 'cabo', 'corpo', 'smith'],
+  'Academia pequena': ['barra', 'halter', 'maquina', 'cabo', 'corpo'],
+  'Em casa com halteres': ['halter', 'corpo'],
+  'Em casa sem equipamento': ['corpo'],
+};
+
+export const FOCOS: Record<string, Grupo[]> = {
+  'Glúteos': ['gluteos'], 'Pernas': ['quadriceps', 'posterior'], 'Abdômen': ['abdomen'], 'Braços': ['biceps', 'triceps'],
+  'Peito': ['peito'], 'Costas': ['costas'], 'Ombros': ['ombros'],
+};
+
+export const ROTINAS = ['Fico sentado quase o dia todo', 'Ando e fico em pé boa parte do dia', 'Trabalho pesado ou muito ativo'];
+
+export function focoDe(r: R): Grupo[] {
+  const marcados = Array.isArray(r?.focus) ? (r!.focus as string[]) : [];
+  const grupos = [...new Set(marcados.flatMap((f) => FOCOS[f] ?? []))];
+  if (grupos.length) return grupos;
+  return sexoDe(r) === 'F' ? ['gluteos'] : [];
+}
+
+function idadeDe(r: R): number {
+  const n = Number(r?.age);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+// Número estável a partir de um texto (mesma pessoa = mesma escolha; pessoas diferentes = escolhas diferentes).
+function hash(t: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+
+// Bloco de 4 semanas (mesociclo): os exercícios acessórios mudam a cada bloco para o corpo não se acostumar.
+export function blocoAtual(agora = Date.now()): number {
+  return Math.floor(agora / (28 * 86_400_000));
+}
+
+// Sugestão inicial pelos dias por semana e pelo resto da anamnese (nível, idade, sexo, foco, objetivo).
+export function divisaoSugerida(diasPorSemana: number, r?: R): Divisao {
   if (diasPorSemana <= 2) return 'fullbody';
+  if (r) {
+    const objs = objetivosDe(r);
+    const iniciante = /^inic/i.test(String(r.level ?? ''));
+    const saude = objs.length > 0 && objs.every((o) => o === 'Saúde' || o === 'Condicionamento');
+    if (idadeDe(r) >= 60 || saude || (iniciante && diasPorSemana === 3)) return 'fullbody_ab';
+    if (iniciante) return 'upper_lower';
+    const inferior = focoDe(r).some((g) => g === 'gluteos' || g === 'quadriceps' || g === 'posterior');
+    if (inferior) return diasPorSemana === 3 ? 'inferior_enfase' : 'abcd_gluteo';
+    if (diasPorSemana >= 5 && /^avan/i.test(String(r.level ?? ''))) return 'ppl';
+  }
   if (diasPorSemana === 3) return 'abc';
   if (diasPorSemana === 4) return 'upper_lower';
   return 'abcd';
@@ -58,15 +152,43 @@ export interface EntradaDoDia {
 
 export interface TreinoDoDia { sessao: Session; avisos: string[]; lesoes: Lesao[] }
 
-function dose(nivel: unknown, objetivo?: unknown) {
-  let d = { series: 3, reps: '8–12', rir: 2, descanso: 120 };
-  if (nivel === 'Iniciante') d = { series: 3, reps: '10–12', rir: 3, descanso: 90 };
-  else if (nivel === 'Avançado' || nivel === 'Alto desempenho') d = { series: 4, reps: '6–10', rir: 1, descanso: 150 };
-  // O objetivo muda a faixa de repetições e o descanso.
-  if (objetivo === 'Força' || objetivo === 'Performance' || objetivo === 'Competição') d = { ...d, reps: '4–6', rir: Math.max(d.rir, 2), descanso: 180 };
-  else if (objetivo === 'Perda de gordura' || objetivo === 'Condicionamento') d = { ...d, reps: '12–15', descanso: 60 };
-  else if (objetivo === 'Saúde' || objetivo === 'Recuperação') d = { ...d, reps: '10–15', rir: Math.max(d.rir, 3), descanso: 90 };
+// Dose (séries, repetições, reserva e descanso) pelo nível, pelos objetivos (pode ser mais de um), sexo e idade.
+// Base: posicionamentos do ACSM (2009/2026) e Schoenfeld (hipertrofia 6–30 reps perto da falha; força 1–6).
+function dose(nivel: unknown, objetivos: string[], sexo: Sexo = null, idade = 0) {
+  let d = { series: 3, reps: '8–12', rir: 2, descanso: 120, isoReps: '12–15', isoDescanso: 75, finalizar: false };
+  if (nivel === 'Iniciante') d = { ...d, series: 3, reps: '10–12', rir: 3, descanso: 90 };
+  else if (nivel === 'Avançado' || nivel === 'Alto desempenho') d = { ...d, series: 4, reps: '6–10', rir: 1, descanso: 150 };
+  const tem = (...o: string[]) => o.some((x) => objetivos.includes(x));
+  const forca = tem('Força', 'Performance', 'Competição');
+  const massa = tem('Hipertrofia', 'Estética', 'Recomposição');
+  const queimar = tem('Perda de gordura', 'Condicionamento');
+  if (forca && massa) d = { ...d, reps: '5–8', rir: Math.max(d.rir, 2), descanso: 150 };
+  else if (forca) d = { ...d, reps: '4–6', rir: Math.max(d.rir, 2), descanso: 180 };
+  else if (massa && queimar) d = { ...d, reps: '8–12', descanso: 75, isoDescanso: 45, finalizar: true };
+  else if (queimar) d = { ...d, reps: '12–15', descanso: 60, isoDescanso: 45, finalizar: true };
+  else if (tem('Saúde', 'Recuperação')) d = { ...d, reps: '10–15', rir: Math.max(d.rir, 3), descanso: 90 };
+  // Mulheres se recuperam mais rápido entre séries (Hunter 2014): descanso um pouco menor e mais repetições nos isolados.
+  if (sexo === 'F') d = { ...d, descanso: Math.max(45, d.descanso - 15), isoReps: '12–20', isoDescanso: Math.max(40, d.isoDescanso - 10) };
+  if (idade >= 50) d = { ...d, rir: Math.max(d.rir, 2), descanso: d.descanso + 15 };
   return d;
+}
+
+// Preferência de equipamento pelo nível e pela idade: iniciante e 50+ começam pelas máquinas (mais seguras para aprender).
+// Peso do corpo, mas precisa de barra ou banco: fora de "em casa sem equipamento".
+const PRECISA_APARELHO = new Set(['barra-fixa', 'mergulho-no-banco']);
+// Versões de casa (supino no chão, rosca com elástico...): na academia, só se não houver outra opção.
+const DE_CASA = new Set(['supino-no-chao-com-halteres', 'flexao-inclinada-maos-no-sofa-ou-banco', 'remada-invertida-na-mesa', 'superman', 'flexao-pike',
+  'rosca-com-elastico', 'flexao-diamante', 'agachamento-livre-sem-peso', 'ponte-de-posterior-no-solo', 'elevacao-pelvica-unilateral',
+  'abducao-de-quadril-deitada', 'coice-em-quatro-apoios', 'panturrilha-em-pe-no-degrau', 'abdominal-curto-no-solo', 'elevacao-pelvica-com-halter']);
+function pontos(x: Exercicio, nivel: unknown, idade: number, semente: number, naAcademia: boolean): number {
+  const ini = nivel === 'Iniciante' || idade >= 50;
+  const avan = nivel === 'Avançado' || nivel === 'Alto desempenho';
+  const tabela: Record<Equip, number> = ini
+    ? { maquina: 3, cabo: 2, halter: 2, smith: 2, corpo: 1, barra: 0 }
+    : avan ? { barra: 3, halter: 2, cabo: 1.5, maquina: 1, smith: 1, corpo: 0.5 }
+      : { barra: 2, halter: 2, maquina: 2, cabo: 2, smith: 1, corpo: 1 };
+  return tabela[x.equip] + (hash(`${semente}|${x.id}`) % 1000) / 500 // até +2: varia de pessoa para pessoa
+    - (naAcademia && DE_CASA.has(x.id) ? 4 : 0);
 }
 
 // Limitações de mobilidade do aluno (perfil) e o que cada uma exclui do treino.
@@ -79,6 +201,8 @@ const DICAS_MODALIDADE: Record<string, string> = {
   Ciclismo: 'Seu foco inclui ciclismo: força de pernas e core ajudam; mantenha os pedais leves em dias de perna pesada.',
 };
 
+const NOME_GRUPO_CURTO: Record<Grupo, string> = { peito: 'peito', costas: 'costas', ombros: 'ombros', biceps: 'bíceps', triceps: 'tríceps', quadriceps: 'quadríceps', posterior: 'posterior', gluteos: 'glúteos', panturrilha: 'panturrilha', abdomen: 'abdômen' };
+
 const hoje = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -88,7 +212,15 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
   const dias = DIVISOES[e.divisao].dias;
   const dia = dias[((e.diaDaDivisao % dias.length) + dias.length) % dias.length];
   const lesoes = lesoesDoTexto(e.respostas.injuries, e.respostas.symptoms, e.respostas.history, e.estado.dores);
-  const base = dose(e.respostas.level, e.respostas.goal);
+  const objetivos = objetivosDe(e.respostas);
+  const sexo = sexoDe(e.respostas);
+  const idade = idadeDe(e.respostas);
+  const base = dose(e.respostas.level, objetivos, sexo, idade);
+  const local = String(e.respostas.place ?? '');
+  const equipOk = LOCAIS_TREINO[local] ?? null;
+  const foco = focoDe(e.respostas);
+  const rotina = String(e.respostas.lifestyle ?? '');
+  const semente = hash(`${String(e.respostas.name ?? '')}|${sexo}|${objetivos.join(',')}|${local}|${blocoAtual()}`) + e.variacao;
   const mob = Array.isArray(e.respostas.mobility) ? (e.respostas.mobility as string[]) : [];
   const cadeirante = mob.includes('Cadeirante');
   const idoso = mob.includes('60 anos ou mais');
@@ -108,6 +240,7 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
   if (gestante) avisos.push('Gestante: sem exercícios de abdômen nem terra hoje. Combine o treino com a sua médica ou médico.');
   if (cadeirante) avisos.push('Treino adaptado para cadeirante: só exercícios feitos sentado, sem pernas em pé, esteira ou impacto.');
   for (const m of (Array.isArray(e.respostas.modality) ? (e.respostas.modality as string[]) : [])) if (DICAS_MODALIDADE[m] && !cadeirante) avisos.push(DICAS_MODALIDADE[m]);
+  if (rotina === ROTINAS[2]) { series = Math.max(2, series - 1); avisos.push('Seu dia já é pesado: deixei uma série a menos por exercício para você recuperar bem.'); }
   if (lesoes.size) avisos.push(`Evitei exercícios que sobrecarregam: ${[...lesoes].join(', ')}. Se doer durante o movimento, pare e avise o coach.`);
 
   // Quantos exercícios cabem no tempo (cerca de 9 minutos cada, com descanso).
@@ -116,6 +249,7 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
   // Escolha por grupo: compostos primeiro, ênfase ganha um exercício a mais.
   const escolhidos: Exercicio[] = [];
   const sobras: Exercicio[][] = [];
+  const posNoGrupo = new Map<string, number>(); // 0 = o principal do grupo; o tempo corta primeiro os de número maior
   let grupos = dia.grupos;
   let tituloDia = dia.titulo;
   if (cadeirante) {
@@ -124,13 +258,24 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
   }
   if (gestante) grupos = grupos.filter((g) => g !== 'abdomen');
   for (const g of grupos) {
-    const opcoes = EXERCICIOS.filter((x) => x.grupo === g && permitido(x, lesoes, e.estado.indisponiveis) && !(cadeirante && (NAO_SENTADO.test(x.nome) || x.equip === 'smith')) && !(gestante && /levantamento terra|stiff/i.test(x.nome)));
+    const seguros = EXERCICIOS.filter((x) => x.grupo === g && permitido(x, lesoes, e.estado.indisponiveis) && !(cadeirante && (NAO_SENTADO.test(x.nome) || x.equip === 'smith')) && !(gestante && /levantamento terra|stiff/i.test(x.nome)));
+    // Onde a pessoa treina: só o que ela tem. Se não sobrar nada, vale o peso do corpo.
+    let opcoes = equipOk ? seguros.filter((x) => equipOk.includes(x.equip) && !(local === 'Em casa sem equipamento' && PRECISA_APARELHO.has(x.id))) : seguros;
+    if (!opcoes.length && equipOk) opcoes = seguros.filter((x) => x.equip === 'corpo' || x.equip === 'halter');
     if (!opcoes.length) { avisos.push(`Sem opção segura para ${g} hoje com suas limitações; pulei esse grupo.`); continue; }
-    const compostos = opcoes.filter((x) => x.composto);
-    const isolados = opcoes.filter((x) => !x.composto);
-    const quantos = e.enfase.includes(g) ? 3 : g === 'panturrilha' || g === 'abdomen' || g === 'biceps' || g === 'triceps' ? 1 : 2;
-    const ordem = [...compostos.slice(e.variacao % Math.max(compostos.length, 1)), ...compostos.slice(0, e.variacao % Math.max(compostos.length, 1)),
-      ...isolados.slice(e.variacao % Math.max(isolados.length, 1)), ...isolados.slice(0, e.variacao % Math.max(isolados.length, 1))];
+    const naAcademia = !equipOk || equipOk.includes('maquina');
+    const porPontos = (a: Exercicio, b: Exercicio) => pontos(b, e.respostas.level, idade, semente, naAcademia) - pontos(a, e.respostas.level, idade, semente, naAcademia) || a.id.localeCompare(b.id);
+    const compostos = opcoes.filter((x) => x.composto).sort(porPontos);
+    const isolados = opcoes.filter((x) => !x.composto).sort(porPontos);
+    const pequeno = g === 'panturrilha' || g === 'abdomen' || g === 'biceps' || g === 'triceps';
+    const quantos = e.enfase.includes(g) ? 3 : (pequeno ? 1 : 2) + (foco.includes(g) ? 1 : 0);
+    // Músculo grande: dois compostos de equipamentos diferentes (ex.: supino com barra + com halteres).
+    // Os outros e o foco da pessoa: um composto e um isolado (ex.: glúteo: elevação pélvica + abdução).
+    const grande = (g === 'peito' || g === 'costas' || g === 'quadriceps') && !foco.includes(g);
+    const segundo = grande ? compostos.slice(1).find((x) => x.equip !== compostos[0].equip) ?? compostos[1] : isolados[0];
+    const primeiros = [compostos[0] ?? isolados[0], segundo].filter((x, i, l): x is Exercicio => !!x && l.indexOf(x) === i);
+    const ordem = [...primeiros, ...compostos.filter((x) => !primeiros.includes(x)), ...isolados.filter((x) => !primeiros.includes(x))];
+    ordem.forEach((x, i) => posNoGrupo.set(x.id, i - (foco.includes(g) || e.enfase.includes(g) ? 1 : 0)));
     escolhidos.push(...ordem.slice(0, quantos));
     sobras.push(ordem.slice(quantos));
   }
@@ -141,18 +286,22 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
   }
   if (e.enfase.length) avisos.push(`Dei prioridade a: ${e.enfase.join(', ')}.`);
 
-  // Compostos antes dos isolados; corta o excesso pelo tempo (a ênfase é a última a sair).
+  // Compostos antes dos isolados; corta o excesso pelo tempo (o foco e a ênfase são os últimos a sair).
+  // Pouco tempo: sai primeiro o 2º exercício de cada grupo, depois o 3º... (todo grupo do dia fica com o principal).
+  const ficam = new Set([...escolhidos].map((x, i) => ({ x, i })).sort((a, b) => (posNoGrupo.get(a.x.id) ?? 9) - (posNoGrupo.get(b.x.id) ?? 9) || a.i - b.i)
+    .slice(0, maxExercicios).map((p) => p.x));
   escolhidos.sort((a, b) => Number(b.composto) - Number(a.composto));
-  const lista = escolhidos.slice(0, maxExercicios);
-  if (lista.length < escolhidos.length) avisos.push(`Com ${e.estado.tempoMin} min, deixei ${lista.length} exercícios.`);
+  const lista = escolhidos.filter((x) => ficam.has(x));
+  const tempoDoCadastro = Number(e.respostas.minutes) || 60;
+  if (lista.length < escolhidos.length && e.estado.tempoMin < tempoDoCadastro) avisos.push(`Com ${e.estado.tempoMin} min, deixei ${lista.length} exercícios.`);
 
   const exercicios: Exercise[] = lista.map((x) => ({
     id: x.id,
     name: x.nome,
     muscleGroup: x.grupo,
-    targetReps: x.composto ? base.reps : '12–15',
+    targetReps: x.composto ? base.reps : base.isoReps,
     targetSets: x.composto ? series : Math.max(2, series),
-    restSec: (x.composto ? base.descanso : 75) + (idoso || mobReduzida ? 30 : 0),
+    restSec: (x.composto ? base.descanso : base.isoDescanso) + (idoso || mobReduzida ? 30 : 0),
     note: `Alvo RIR ${rir}.`,
     videoUrl: demoDoExercicio(x.id)?.[0] ?? '',
     minWeight: 0,
@@ -162,9 +311,24 @@ export function montarTreinoDoDia(e: EntradaDoDia): TreinoDoDia {
     sets: [],
   }));
 
+  if (base.finalizar && !cadeirante && !gestante && !cansado) {
+    avisos.push(equipOk && !equipOk.includes('maquina')
+      ? 'Para fechar: 8 min de polichinelo e agachamento em intervalos (30 s forte, 30 s leve). Ajuda a queimar gordura sem perder músculo.'
+      : 'Para fechar: 10 min de cardio intervalado (30 s forte, 60 s leve) na bike ou esteira. Ajuda a queimar gordura sem perder músculo.');
+  }
+  const paraVoce = [
+    sexo === 'F' ? 'mulher' : sexo === 'M' ? 'homem' : '',
+    objetivos.length ? objetivos.join(' + ').toLowerCase() : '',
+    String(e.respostas.level ?? '').toLowerCase(),
+    local ? local.toLowerCase() : '',
+    foco.length ? `foco em ${foco.map((g) => NOME_GRUPO_CURTO[g]).join(', ')}` : '',
+  ].filter(Boolean);
+  if (paraVoce.length >= 2) avisos.unshift(`Feito para você: ${paraVoce.join(' · ')}.`);
+
   const aquecimento = [
-    { name: cadeirante ? 'Aquecimento de ombros, punhos e braços (rotações e elásticos)' : 'Aquecimento leve (bike ou esteira)', durationSec: 300 },
+    { name: cadeirante ? 'Aquecimento de ombros, punhos e braços (rotações e elásticos)' : equipOk && !equipOk.includes('maquina') ? 'Aquecimento leve (marcha no lugar e polichinelo)' : 'Aquecimento leve (bike ou esteira)', durationSec: 300 },
     { name: 'Mobilidade articular', durationSec: 180 },
+    ...(rotina === ROTINAS[0] ? [{ name: 'Mobilidade de quadril e coluna (para quem fica muito sentado)', durationSec: 120 }] : []),
     ...[...lesoes].map((l) => ({ name: `Mobilidade e ativação leve: ${l}`, durationSec: 120 })),
   ];
 

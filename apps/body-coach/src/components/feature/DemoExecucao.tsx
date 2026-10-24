@@ -14,12 +14,10 @@ export default function DemoExecucao({ id, nome, className = '' }: { id: string;
   }, [frames, rodando]);
   if (!frames) {
     return (
-      <div className={`flex items-center justify-center bg-background-900 text-background-50 ${className}`}>
-        <div className="p-4 text-center">
-          <i className="ri-body-scan-line text-4xl text-primary-400"></i>
-          <p className="mt-1 text-xs text-background-400">Sem demonstração para este exercício. Pergunte ao coach como executar.</p>
-        </div>
-      </div>
+      // Sem foto: uma linha só (não ocupa meia tela com uma caixa vazia).
+      <p className="flex items-center gap-2 rounded-xl bg-background-100/70 px-3 py-2 text-xs text-foreground-600">
+        <i className="ri-body-scan-line text-lg text-primary-500"></i>Sem foto deste exercício. Dúvida na execução? Pergunte ao coach.
+      </p>
     );
   }
   return (

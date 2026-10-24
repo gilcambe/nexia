@@ -151,7 +151,8 @@ export default function Profile() {
         <Card padding="p-5">
           <CardHeader title="Objetivo &amp; treino" icon="ri-sword-line" />
           <div className="space-y-2">
-            <InfoRow icon="ri-trophy-line" label="Objetivo" value={text(ob.goal)} />
+            <InfoRow icon="ri-trophy-line" label="Objetivos" value={Array.isArray(ob.goals) && ob.goals.length ? (ob.goals as string[]).join(' + ') : text(ob.goal)} />
+            <InfoRow icon="ri-map-pin-line" label="Onde treina" value={text(ob.place)} />
             <InfoRow icon="ri-bar-chart-line" label="Nível" value={text(ob.level)} />
             <InfoRow icon="ri-calendar-check-line" label="Disponibilidade" value={text(ob.days, 'x/semana')} />
             <InfoRow icon="ri-time-line" label="Duração" value={text(ob.minutes, ' min')} />

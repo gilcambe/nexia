@@ -2,20 +2,29 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/feature/AuthContext';
 import { setUserDoc } from '@/lib/userData';
-import { calcularMetas } from '@/lib/metas';
+import { calcularMetas, perfilMetasDe } from '@/lib/metas';
 import { montarCardapio } from '@/lib/dietPlan';
-import { DIVISOES } from '@/lib/dayPlan';
-import { fichaDoPerfil, treinoDaFicha, type Ficha } from '@/lib/ficha';
+import { DIVISOES, FOCOS, LOCAIS_TREINO, ROTINAS, divisaoSugerida, objetivoPrincipal, objetivosDe } from '@/lib/dayPlan';
+import { diasPorSemana, fichaDoPerfil, treinoDaFicha } from '@/lib/ficha';
 import { papelGuardado } from '@/lib/papelCoach';
 import EscolherPapel from './EscolherPapel';
 
-// Primeiro acesso guiado (~1 minuto): 4 telas curtas e o aluno sai com treino e dieta prontos.
-// Grava as mesmas respostas de antes (profile/main.onboarding), que a ficha, o treino e a dieta já usam.
+// Primeiro acesso guiado (~1 minuto): 5 telas curtas e o aluno sai com treino e dieta prontos.
+// Grava em profile/main.onboarding. CADA resposta muda o treino (lib/dayPlan.ts) e a dieta (lib/metas.ts):
+// sexo, objetivos (mais de um), nível, dias, tempo, onde treina, foco, rotina, lesões e restrições.
 const steps = [
   { key: 'voce', title: 'Sobre você', icon: 'ri-user-3-line' },
-  { key: 'objetivo', title: 'Qual é o seu objetivo?', icon: 'ri-trophy-line' },
+  { key: 'objetivo', title: 'Quais são seus objetivos?', icon: 'ri-trophy-line' },
   { key: 'treino', title: 'Como você treina?', icon: 'ri-run-line' },
-  { key: 'comida', title: 'Comida e saúde', icon: 'ri-restaurant-line' },
+  { key: 'onde', title: 'Onde e o que priorizar', icon: 'ri-map-pin-line' },
+  { key: 'comida', title: 'Rotina, comida e saúde', icon: 'ri-restaurant-line' },
+];
+const sexos = [{ v: 'F', l: 'Mulher', icon: 'ri-women-line' }, { v: 'M', l: 'Homem', icon: 'ri-men-line' }];
+const locais = [
+  { v: 'Academia completa', icon: 'ri-building-2-line' },
+  { v: 'Academia pequena', icon: 'ri-home-gear-line' },
+  { v: 'Em casa com halteres', icon: 'ri-home-4-line' },
+  { v: 'Em casa sem equipamento', icon: 'ri-body-scan-line' },
 ];
 
 const goals = [
@@ -77,8 +86,11 @@ export default function Onboarding() {
     if (preenchido || !profile) return;
     setPreenchido(true);
     const ob = (profile.onboarding ?? {}) as Form;
+    const antigos = objetivosDe(ob as Record<string, unknown>).filter((g) => goals.some((x) => x.v === g));
     setForm((f) => ({
       ...f,
+      ...(antigos.length ? { goals: antigos } : {}),
+      ...(!ob.sex && /^f/i.test(String(profile.gender ?? '')) ? { sex: 'F' } : !ob.sex && /^m/i.test(String(profile.gender ?? '')) ? { sex: 'M' } : {}),
       ...Object.fromEntries(Object.entries(ob).filter(([, v]) => v !== undefined && v !== '')),
       ...(!ob.name && profile.full_name ? { name: profile.full_name } : {}),
     }));
@@ -93,11 +105,22 @@ export default function Onboarding() {
 
   const peso = Number(form.weight);
   const podeAvancar = [
-    String(form.name ?? '').trim().length > 0 && peso > 25 && peso < 350,
-    !!form.goal,
-    !!form.level && !!form.days && lista('modality').length > 0,
+    String(form.name ?? '').trim().length > 0 && peso > 25 && peso < 350 && !!form.sex,
+    lista('goals').length > 0,
+    !!form.level && !!form.days,
+    !!form.place && lista('modality').length > 0,
     true,
   ][step];
+  // Objetivos: pode marcar até 3 (ex.: emagrecer e ganhar músculo ao mesmo tempo).
+  const marcarObjetivo = (v: string) => {
+    const cur = lista('goals');
+    if (cur.includes(v)) setVal('goals', cur.filter((x) => x !== v));
+    else setVal('goals', [...cur, v].slice(-3));
+  };
+
+  // "goal" (texto) continua existindo para as telas antigas: é o objetivo principal dos marcados.
+  const goalsMarcados = lista('goals');
+  const respostasFinais: Form = { ...form, goals: goalsMarcados, goal: objetivoPrincipal(goalsMarcados) || String(form.goal ?? '') };
 
   const finish = async () => {
     setSaving(true);
@@ -108,7 +131,10 @@ export default function Onboarding() {
         await setUserDoc(user.id, 'profile', 'main', {
           ...(name ? { full_name: name } : {}),
           ...(height > 0 ? { height_cm: height } : {}),
-          onboarding: form,
+          ...(form.sex ? { gender: form.sex === 'F' ? 'Feminino' : 'Masculino' } : {}),
+          onboarding: respostasFinais,
+          // Respostas novas = ficha nova, montada para elas (começa no dia A).
+          ficha: { divisao: divisaoSugerida(diasPorSemana(respostasFinais), respostasFinais), proximoDia: 0 },
           onboarding_done: true,
         }, true);
         refreshProfile();
@@ -123,10 +149,10 @@ export default function Onboarding() {
   // Resumo do que ficou pronto: o mesmo treino e a mesma dieta que as telas do app vão mostrar.
   const resumo = useMemo(() => {
     if (!pronto) return null;
-    const respostas = form as Record<string, unknown>;
+    const respostas = respostasFinais as Record<string, unknown>;
     let treino: { titulo: string; min: number; n: number; nomes: string[] } | null = null;
     try {
-      const ficha = fichaDoPerfil({ onboarding: respostas, ficha: (profile as { ficha?: Partial<Ficha> } | null)?.ficha });
+      const ficha = fichaDoPerfil({ onboarding: respostas });
       const t = treinoDaFicha({ ...respostas, mobility: profile?.mobility ?? [] }, ficha.divisao, ficha.proximoDia);
       treino = {
         titulo: DIVISOES[ficha.divisao].dias[ficha.proximoDia].titulo,
@@ -135,7 +161,7 @@ export default function Onboarding() {
         nomes: t.sessao.exercises.slice(0, 3).map((e) => e.name),
       };
     } catch { treino = null; }
-    const m = peso > 0 ? calcularMetas(peso, String(form.goal ?? '')) : null;
+    const m = peso > 0 ? calcularMetas(peso, String(respostas.goal ?? ''), 0, perfilMetasDe({ onboarding: respostas })) : null;
     let refeicao: { nome: string; itens: string } | null = null;
     if (m) {
       try {
@@ -144,6 +170,7 @@ export default function Onboarding() {
       } catch { refeicao = null; }
     }
     return { treino, metas: m, agua: peso > 0 ? Math.round(peso * 0.035 * 10) / 10 : null, refeicao };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pronto, form, peso, profile]);
 
   if (pronto && resumo) {
@@ -250,26 +277,40 @@ export default function Onboarding() {
                   />
                 </label>
               ))}
-              <p className="col-span-2 text-xs text-foreground-400">O peso define as calorias e a água do dia.</p>
+              <div className="col-span-2 grid grid-cols-2 gap-2" role="group" aria-label="Sexo">
+                {sexos.map((x) => (
+                  <button key={x.v} type="button" onClick={() => setVal('sex', x.v)} aria-pressed={form.sex === x.v}
+                    className={`flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-sm font-semibold transition active:scale-95 ${form.sex === x.v ? 'border-primary-300 bg-primary-500 text-background-50' : 'border-background-200 bg-background-50 text-foreground-700'}`}>
+                    <i className={`${x.icon} text-lg`}></i>{x.l}
+                  </button>
+                ))}
+              </div>
+              <p className="col-span-2 text-xs text-foreground-400">Sexo, idade e peso mudam o treino, as calorias e a água do dia.</p>
             </div>
           )}
 
           {step === 1 && (
-            <div className="grid grid-cols-2 gap-2">
-              {goals.map((g) => (
-                <button
-                  key={g.v}
-                  type="button"
-                  onClick={() => setVal('goal', g.v)}
-                  aria-pressed={form.goal === g.v}
-                  className={`flex items-center gap-2 rounded-xl border px-3 py-3.5 text-left text-sm font-medium transition active:scale-95 ${
-                    form.goal === g.v ? 'border-primary-300 bg-primary-500 text-background-50' : 'border-background-200 bg-background-50 text-foreground-700 hover:bg-background-100'
-                  }`}
-                >
-                  <i className={`${g.icon} text-lg`}></i>{g.v}
-                </button>
-              ))}
-            </div>
+            <>
+              <p className="-mt-2 text-sm text-foreground-500">Pode marcar mais de um (até 3).</p>
+              <div className="grid grid-cols-2 gap-2">
+                {goals.map((g) => {
+                  const ativo = lista('goals').includes(g.v);
+                  return (
+                    <button
+                      key={g.v}
+                      type="button"
+                      onClick={() => marcarObjetivo(g.v)}
+                      aria-pressed={ativo}
+                      className={`flex items-center gap-2 rounded-xl border px-3 py-3.5 text-left text-sm font-medium transition active:scale-95 ${
+                        ativo ? 'border-primary-300 bg-primary-500 text-background-50' : 'border-background-200 bg-background-50 text-foreground-700 hover:bg-background-100'
+                      }`}
+                    >
+                      <i className={`${ativo ? 'ri-checkbox-circle-fill' : g.icon} text-lg`}></i>{g.v}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
 
           {step === 2 && (
@@ -283,14 +324,36 @@ export default function Onboarding() {
               <Grupo titulo="Tempo por treino">
                 {minutes.map((m) => <Chip key={m} ativo={form.minutes === m} onClick={() => setVal('minutes', m)}>{m} min</Chip>)}
               </Grupo>
+            </>
+          )}
+
+          {step === 3 && (
+            <>
+              <div>
+                <p className="mb-2 text-sm font-medium text-foreground-600">Onde você treina?</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {locais.filter((l) => l.v in LOCAIS_TREINO).map((l) => (
+                    <button key={l.v} type="button" onClick={() => setVal('place', l.v)} aria-pressed={form.place === l.v}
+                      className={`flex items-center gap-2 rounded-xl border px-3 py-3 text-left text-sm font-medium transition active:scale-95 ${form.place === l.v ? 'border-primary-300 bg-primary-500 text-background-50' : 'border-background-200 bg-background-50 text-foreground-700'}`}>
+                      <i className={`${l.icon} text-lg`}></i>{l.v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <Grupo titulo="Quer caprichar em alguma parte? (opcional)">
+                {Object.keys(FOCOS).map((f) => <Chip key={f} ativo={lista('focus').includes(f)} onClick={() => toggleMulti('focus', f)}>{f}</Chip>)}
+              </Grupo>
               <Grupo titulo="O que você pratica (pode marcar vários)">
                 {modalities.map((m) => <Chip key={m} ativo={lista('modality').includes(m)} onClick={() => toggleMulti('modality', m)}>{m}</Chip>)}
               </Grupo>
             </>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <>
+              <Grupo titulo="Seu dia a dia">
+                {ROTINAS.map((r) => <Chip key={r} ativo={form.lifestyle === r} onClick={() => setVal('lifestyle', r)}>{r}</Chip>)}
+              </Grupo>
               <Grupo titulo="Refeições por dia">
                 {meals.map((m) => <Chip key={m} ativo={form.meals === m} onClick={() => setVal('meals', m)}>{m}</Chip>)}
               </Grupo>

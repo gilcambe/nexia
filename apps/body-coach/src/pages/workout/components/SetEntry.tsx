@@ -56,7 +56,11 @@ export default function SetEntry({
   const [anotando, setAnotando] = useState(false);
 
   const tempo = ehPorTempo(exercicio);
-  const canSubmit = (tempo || weight !== '') && reps !== '';
+  // Campo vazio usa o que aparece nele (a última série ou o alvo): o número na tela é o que vale.
+  const topoAlvo = Number(/(\d+)\D*$/.exec(targetReps)?.[1]) || 12;
+  const pesoUsado = weight !== '' ? weight : ultima ? String(ultima.weight) : '';
+  const repsUsadas = reps !== '' ? reps : String(ultima?.reps ?? (tempo ? 30 : topoAlvo));
+  const canSubmit = (tempo || pesoUsado !== '') && repsUsadas !== '';
   // Um toque só por série: toques repetidos em menos de 2 s não registram de novo.
   const ultimoToque = useRef(0);
   const enviar = (s: NewSet) => { if (Date.now() - ultimoToque.current < 2000) return; ultimoToque.current = Date.now(); onSubmit(s); };
@@ -70,7 +74,7 @@ export default function SetEntry({
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!canSubmit) return;
-    enviar({ weight: tempo ? 0 : Number(weight), reps: Number(reps), rir, falha: rir === 0, nota: nota.trim() || undefined, ...(tempo ? { porTempo: true } : modo) });
+    enviar({ weight: tempo ? 0 : Number(pesoUsado), reps: Number(repsUsadas), rir, falha: rir === 0, nota: nota.trim() || undefined, ...(tempo ? { porTempo: true } : modo) });
     limpar();
   };
 
@@ -79,16 +83,16 @@ export default function SetEntry({
     const atual = Number(campo === 'weight' ? weight : reps) || (ultima ? (campo === 'weight' ? ultima.weight : ultima.reps) : 0);
     set(String(Math.max(0, Math.round((atual + delta) * 100) / 100)));
   };
-  const campo = 'w-full min-w-0 rounded-xl border-2 border-background-200 bg-background-50 px-2 py-2.5 text-center text-2xl font-bold text-foreground-950 outline-none focus:border-primary-400';
-  const mais = 'flex h-14 w-14 shrink-0 items-center justify-center rounded-xl bg-background-100 text-xl font-bold text-foreground-800 active:scale-95';
+  // Compacto: carga e repetições lado a lado no celular, para registrar sem rolar a tela.
+  const campo = 'w-full min-w-0 rounded-xl border-2 border-background-200 bg-background-50 px-1 py-2 text-center text-xl font-bold text-foreground-950 outline-none focus:border-primary-400 placeholder:text-foreground-500';
+  const mais = 'flex h-12 w-10 shrink-0 items-center justify-center rounded-xl bg-background-100 text-xl font-bold text-foreground-800 active:scale-95';
 
   return (
     <div>
       {sugestao && (
-        <div className="mb-3 rounded-xl border border-primary-200 bg-primary-50 p-3">
-          <p className="text-sm font-semibold text-primary-700"><i className="ri-line-chart-line mr-1"></i>Sugestão de hoje: {sugestao.weight} {weightUnit} × {sugestao.reps}</p>
-          <p className="mt-0.5 text-sm text-foreground-600">{sugestao.motivo}</p>
-          <button type="button" onClick={() => { setWeight(String(sugestao.weight)); setReps(String(sugestao.reps)); }} className="mt-2 rounded-xl bg-primary-500 px-4 py-2.5 text-sm font-semibold text-background-50 active:scale-95">Usar a sugestão</button>
+        <div className="mb-3 flex items-center gap-2 rounded-xl border border-primary-200 bg-primary-50 p-2.5" title={sugestao.motivo}>
+          <p className="min-w-0 flex-1 text-sm font-semibold text-primary-700"><i className="ri-line-chart-line mr-1"></i>Sugestão: {sugestao.weight} {weightUnit} × {sugestao.reps}</p>
+          <button type="button" onClick={() => { setWeight(String(sugestao.weight)); setReps(String(sugestao.reps)); }} className="shrink-0 rounded-lg bg-primary-500 px-3 py-2 text-sm font-semibold text-background-50 active:scale-95">Usar</button>
         </div>
       )}
       {ultima && (
@@ -110,55 +114,61 @@ export default function SetEntry({
             </button>
           </label>
         ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <>
+        <div className="grid grid-cols-2 gap-2">
           <label className="block">
-            <span className="flex flex-wrap items-center justify-between gap-2">
-              <span className="text-sm font-semibold text-foreground-600">Carga ({unidade}){modo.porLado ? ' de cada lado' : ''}</span>
-              <span className="flex gap-1.5">
-                <button type="button" onClick={() => mudarModo({ ...modo, porLado: !modo.porLado })} aria-pressed={modo.porLado} data-testid="carga-lado" className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${modo.porLado ? 'border-primary-500 bg-primary-100 text-primary-800' : 'border-background-300 text-foreground-600'}`}>{modo.porLado ? 'Cada lado' : 'Total'}</button>
-                <button type="button" onClick={() => mudarModo({ ...modo, unilateral: !modo.unilateral })} aria-pressed={modo.unilateral} data-testid="carga-unilateral" className={`rounded-full border px-3 py-1.5 text-sm font-semibold ${modo.unilateral ? 'border-primary-500 bg-primary-100 text-primary-800' : 'border-background-300 text-foreground-600'}`}>{modo.unilateral ? 'Unilateral' : 'Bilateral'}</button>
-              </span>
-            </span>
-            <span className="mt-1 flex items-center gap-1.5">
+            <span className="text-sm font-semibold text-foreground-600">Carga ({unidade}){modo.porLado ? '/lado' : ''}</span>
+            <span className="mt-1 flex items-center gap-1">
               <button type="button" onClick={() => ajustar('weight', -2.5)} className={mais} aria-label="Menos 2,5 de carga">−</button>
-              <input type="number" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder={ultima ? String(ultima.weight) : `${minWeight}–${maxWeight}`} aria-label={`Carga (${weightUnit})`} className={campo} />
+              <input type="number" inputMode="decimal" value={weight} onChange={(e) => setWeight(e.target.value)} placeholder={ultima ? String(ultima.weight) : 'kg'} aria-label={`Carga (${weightUnit}) de ${minWeight} a ${maxWeight}`} className={campo} />
               <button type="button" onClick={() => ajustar('weight', 2.5)} className={mais} aria-label="Mais 2,5 de carga">+</button>
             </span>
           </label>
           <label className="block">
-            <span className="text-sm font-semibold text-foreground-600">Repetições ({targetReps})</span>
-            <span className="mt-1 flex items-center gap-1.5">
+            <span className="text-sm font-semibold text-foreground-600">Reps ({targetReps})</span>
+            <span className="mt-1 flex items-center gap-1">
               <button type="button" onClick={() => ajustar('reps', -1)} className={mais} aria-label="Menos uma repetição">−</button>
-              <input type="number" inputMode="numeric" value={reps} onChange={(e) => setReps(e.target.value)} placeholder={ultima ? String(ultima.reps) : '12'} aria-label="Repetições" className={campo} />
+              <input type="number" inputMode="numeric" value={reps} onChange={(e) => setReps(e.target.value)} placeholder={repsUsadas} aria-label="Repetições" className={campo} />
               <button type="button" onClick={() => ajustar('reps', 1)} className={mais} aria-label="Mais uma repetição">+</button>
             </span>
           </label>
         </div>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <button type="button" onClick={() => mudarModo({ ...modo, porLado: !modo.porLado })} aria-pressed={modo.porLado} data-testid="carga-lado" className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${modo.porLado ? 'border-primary-500 bg-primary-100 text-primary-800' : 'border-background-300 text-foreground-600'}`}>{modo.porLado ? 'Carga de cada lado' : 'Carga total'}</button>
+          <button type="button" onClick={() => mudarModo({ ...modo, unilateral: !modo.unilateral })} aria-pressed={modo.unilateral} data-testid="carga-unilateral" className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${modo.unilateral ? 'border-primary-500 bg-primary-100 text-primary-800' : 'border-background-300 text-foreground-600'}`}>{modo.unilateral ? 'Unilateral' : 'Bilateral'}</button>
+          <button type="button" onClick={() => setAnotando(!anotando)} aria-pressed={anotando || !!nota} className={`ml-auto text-xs font-semibold ${nota ? 'text-primary-700' : 'text-foreground-600'} underline`}>
+            <i className="ri-sticky-note-line mr-0.5"></i>{nota ? 'Nota ✓' : 'Nota p/ coach'}
+          </button>
+        </div>
+        </>
         )}
         {!tempo && <>
-        <p className="mt-3 text-sm font-semibold text-foreground-600">Quantas repetições ainda dava?</p>
+        <p className="mt-2 text-sm font-semibold text-foreground-600">Quantas repetições ainda dava?</p>
         <div className="mt-1 grid grid-cols-4 gap-1.5" role="radiogroup" aria-label="Quantas repetições ainda dava">
           {SOBRA.map((o) => (
             <button key={o.rir} type="button" role="radio" aria-checked={rir === o.rir} onClick={() => setRir(o.rir)}
-              className={`min-h-[48px] rounded-xl border-2 px-1 py-2 text-sm font-semibold leading-tight ${rir === o.rir ? (o.rir === 0 ? 'border-red-400 bg-red-50 text-red-700' : 'border-primary-500 bg-primary-50 text-primary-800') : 'border-background-200 bg-background-50 text-foreground-700'}`}>
+              className={`min-h-[44px] rounded-xl border-2 px-1 py-1.5 text-sm font-semibold leading-tight ${rir === o.rir ? (o.rir === 0 ? 'border-red-400 bg-red-50 text-red-700' : 'border-primary-500 bg-primary-50 text-primary-800') : 'border-background-200 bg-background-50 text-foreground-700'}`}>
               {o.rotulo}
             </button>
           ))}
         </div>
         </>}
-        <button type="button" onClick={() => setAnotando(!anotando)} aria-pressed={anotando || !!nota} className={`mt-3 text-sm font-semibold ${nota ? 'text-primary-700' : 'text-foreground-600'} underline`}>
-          <i className="ri-sticky-note-line mr-1"></i>{nota ? 'Nota para o coach ✓' : 'Anotar algo para o coach'}
-        </button>
+        {tempo && (
+          <button type="button" onClick={() => setAnotando(!anotando)} aria-pressed={anotando || !!nota} className={`mt-3 text-sm font-semibold ${nota ? 'text-primary-700' : 'text-foreground-600'} underline`}>
+            <i className="ri-sticky-note-line mr-1"></i>{nota ? 'Nota para o coach ✓' : 'Anotar algo para o coach'}
+          </button>
+        )}
         {anotando && (
           <input value={nota} onChange={(e) => setNota(e.target.value)} maxLength={200} placeholder="Ex.: senti o ombro, pegada escorregou..." aria-label="Nota desta série" className="mt-2 w-full rounded-xl border-2 border-background-200 bg-background-50 px-3 py-3 text-base text-foreground-900 outline-none focus:border-primary-400" autoFocus />
         )}
         <button
           type="submit"
           disabled={!canSubmit}
-          className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-foreground-950 px-4 py-4 text-base font-bold text-background-50 transition disabled:opacity-40"
+          className="mt-3 inline-flex w-full items-center justify-center gap-1.5 rounded-2xl bg-primary-500 px-4 py-4 text-base font-bold text-background-50 shadow-sm transition active:scale-[0.98] disabled:bg-background-300 disabled:text-foreground-600"
+          data-testid="registrar-serie"
         >
           <i className="ri-check-line text-xl"></i>
-          Registrar série
+          {canSubmit ? (tempo ? `Registrar ${repsUsadas} s` : `Registrar ${pesoUsado} ${unidade} × ${repsUsadas}`) : 'Coloque a carga para registrar'}
         </button>
       </form>
     </div>

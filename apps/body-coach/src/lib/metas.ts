@@ -12,9 +12,36 @@ const RITMO_SEMANAL: Record<string, number> = {
   'Hipertrofia': 0.25, 'Força': 0.15, 'Performance': 0.15, 'Competição': 0,
 };
 
-export function calcularMetas(peso: number, objetivo?: string | null, ajusteKcal = 0): Metas {
+// Dados da anamnese que deixam a conta pessoal (Mifflin-St Jeor × nível de atividade). Sem eles, usa ~33 kcal/kg.
+export interface PerfilMetas { sexo?: 'F' | 'M' | null; idade?: number; alturaCm?: number; rotina?: string; diasTreino?: number }
+
+const ATIVIDADE: Record<string, number> = {
+  'Fico sentado quase o dia todo': 1.3, 'Ando e fico em pé boa parte do dia': 1.45, 'Trabalho pesado ou muito ativo': 1.65,
+};
+
+// Lê o perfil salvo (profile/main) e devolve o que a conta pessoal precisa.
+export function perfilMetasDe(perfil: { onboarding?: Record<string, unknown> | null; height_cm?: number | null; gender?: string | null } | null | undefined): PerfilMetas {
+  const ob = perfil?.onboarding ?? {};
+  const sx = String(ob.sex ?? perfil?.gender ?? '').toLowerCase();
+  return {
+    sexo: /^(f|mulher)/.test(sx) ? 'F' : /^(m|homem)/.test(sx) ? 'M' : null,
+    idade: Number(ob.age) || undefined,
+    alturaCm: Number(ob.height) || Number(perfil?.height_cm) || undefined,
+    rotina: typeof ob.lifestyle === 'string' ? ob.lifestyle : undefined,
+    diasTreino: Number(ob.days) || undefined,
+  };
+}
+
+export function manutencao(peso: number, p?: PerfilMetas): number {
+  if (!p?.sexo || !p.idade || !p.alturaCm || p.alturaCm < 120) return peso * 33;
+  const tmb = 10 * peso + 6.25 * p.alturaCm - 5 * p.idade + (p.sexo === 'M' ? 5 : -161);
+  const fator = (ATIVIDADE[p.rotina ?? ''] ?? 1.4) + Math.min(6, Math.max(0, p.diasTreino ?? 3)) * 0.035;
+  return tmb * fator;
+}
+
+export function calcularMetas(peso: number, objetivo?: string | null, ajusteKcal = 0, perfil?: PerfilMetas): Metas {
   const cortando = objetivo === 'Perda de gordura' || objetivo === 'Recomposição' || objetivo === 'Estética';
-  const base = Math.round(peso * 33 * (FATOR[objetivo ?? ''] ?? 1));
+  const base = Math.round(manutencao(peso, perfil) * (FATOR[objetivo ?? ''] ?? 1));
   const calories = Math.max(1200, base + Math.max(-500, Math.min(500, ajusteKcal)));
   const protein = Math.round(peso * (cortando ? 2.2 : 2));
   const fat = Math.round(peso * (cortando ? 0.8 : 0.9));
