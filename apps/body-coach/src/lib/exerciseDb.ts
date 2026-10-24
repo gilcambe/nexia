@@ -167,9 +167,6 @@ export function alternativas(id: string, lesoes: Set<Lesao>, indisponiveis: stri
 // Demonstração própria (banco no repositório, em public/exercicios): dois quadros que alternam como um vídeo curto.
 // Fotos do free-exercise-db (domínio público). Sem YouTube, sem gasto de internet com vídeo pesado.
 export const IDS_COM_DEMO = new Set([
-  // IDs existentes (preservados para manter funcionalidades)
-  ...Array.from(IDS_COM_DEMO),
-  // Novos IDs adicionados conforme solicitado
   'crucifixo-com-halteres',
   'remada-invertida-na-mesa',
   'superman',
