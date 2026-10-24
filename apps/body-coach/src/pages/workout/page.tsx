@@ -131,7 +131,7 @@ export default function Workout() {
       />
     );
   }
-  return <WorkoutFlow session={treino.sessao} lesoes={treino.lesoes} origem={origem} inicial={retomado} onSessionChange={(sessao) => setTreino({ ...treino, sessao })} onSaved={() => treinoSalvo(origem)} />;
+  return <WorkoutFlow session={treino.sessao} lesoes={treino.lesoes} avisos={treino.avisos} origem={origem} inicial={retomado} onSessionChange={(sessao) => setTreino({ ...treino, sessao })} onSaved={() => treinoSalvo(origem)} />;
 }
 
 // Treino que ficou pela metade (saiu da tela, fechou o app, acabou a bateria): continuar ou começar outro.
@@ -169,7 +169,7 @@ function WorkoutEmpty({ estado }: { estado: string }) {
 // "Alvo RIR 2." vira "deixe 2 sobrando" no subtítulo (sem caixa extra ocupando a tela).
 const rirDaNota = (nota?: string): number | null => { const m = /Alvo RIR (\d+)/.exec(nota ?? ''); return m ? Number(m[1]) : null; };
 
-function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, onSaved }: { session: Session; lesoes?: Lesao[]; origem: Origem; inicial?: TreinoAndamento | null; onSessionChange?: (s: Session) => void; onSaved?: () => void }) {
+function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSessionChange, onSaved }: { session: Session; lesoes?: Lesao[]; avisos?: string[]; origem: Origem; inicial?: TreinoAndamento | null; onSessionChange?: (s: Session) => void; onSaved?: () => void }) {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const pesoAluno = Number(profile?.onboarding?.weight) || 70;
@@ -364,6 +364,14 @@ function WorkoutFlow({ session, lesoes = [], origem, inicial, onSessionChange, o
             <p className="mt-2 text-sm text-foreground-600">
               {session.exercises.length} exercícios · {session.estimatedMinutes} min.
             </p>
+            {/* Por que este treino é assim (anamnese, dia, ciclo): linhas curtas, no máximo 4 */}
+            {avisos.length > 0 && (
+              <ul className="mt-3 space-y-1.5" data-testid="avisos-treino">
+                {avisos.slice(0, 4).map((a) => (
+                  <li key={a} className="flex gap-2 text-sm text-foreground-700"><i className="ri-sparkling-2-line mt-0.5 text-primary-500"></i><span>{a}</span></li>
+                ))}
+              </ul>
+            )}
             <div className="mt-4 flex flex-wrap gap-2">
               {session.exercises.map((e) => (
                 <span key={e.id} className="rounded-full bg-background-100 px-3 py-1.5 text-xs text-foreground-700">

@@ -84,3 +84,22 @@ test('perfil antigo (só goal, sem sexo) continua funcionando', async () => {
   assert.deepEqual(m.objetivosDe({ goal: 'Hipertrofia' }), ['Hipertrofia']);
   assert.equal(m.objetivoPrincipal(['Perda de gordura', 'Hipertrofia']), 'Recomposição');
 });
+
+test('ciclo menstrual: desligado não muda nada; ligado dá a fase do dia e mais reserva nos dias 1 a 3', async () => {
+  const m = await carregar();
+  const iso = (d) => d.toISOString().slice(0, 10);
+  const ha = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return iso(d); };
+  assert.equal(m.faseDoCiclo({ ligado: false, inicio: ha(1) }), null);
+  assert.deepEqual(m.faseDoCiclo({ ligado: true, inicio: ha(1), duracao: 28 }), { fase: 'menstrual', dia: 2 });
+  assert.equal(m.faseDoCiclo({ ligado: true, inicio: ha(8), duracao: 28 }).fase, 'folicular');
+  assert.equal(m.faseDoCiclo({ ligado: true, inicio: ha(13), duracao: 28 }).fase, 'ovulacao');
+  assert.equal(m.faseDoCiclo({ ligado: true, inicio: ha(25), duracao: 28 }).fase, 'pre');
+  const base = { ...ANA, place: 'Academia completa' };
+  const sem = treino(m, base).t;
+  const com = treino(m, { ...base, ciclo: { ligado: true, inicio: ha(0), duracao: 28 } }).t;
+  assert.ok(!sem.avisos.some((a) => /ciclo/.test(a)));
+  assert.ok(com.avisos.some((a) => /Dia 1 do ciclo/.test(a)));
+  assert.equal(Number(/\d+/.exec(com.sessao.exercises[0].note)[0]), Number(/\d+/.exec(sem.sessao.exercises[0].note)[0]) + 1);
+  // homem com o campo por engano: ignorado
+  assert.ok(!treino(m, { ...BRUNO, ciclo: { ligado: true, inicio: ha(0) } }).t.avisos.some((a) => /ciclo/.test(a)));
+});
