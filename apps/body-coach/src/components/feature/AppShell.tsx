@@ -103,9 +103,11 @@ function BrandMark({ size = 'md' }: { size?: 'md' | 'sm' }) {
         <p className="max-w-[11rem] truncate font-heading font-bold tracking-tight text-foreground-950">
           {marca?.nome || 'Body Coach'}
         </p>
-        <p className="mt-0.5 text-xs font-medium tracking-[0.08em] text-foreground-400">
-          {marca?.nome ? 'com Body Coach' : 'Seu treino, do seu jeito'}
-        </p>
+        {size === 'md' && (
+          <p className="mt-0.5 text-xs font-medium tracking-[0.08em] text-foreground-400">
+            {marca?.nome ? 'com Body Coach' : 'Seu treino, do seu jeito'}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -321,7 +323,7 @@ function Shell() {
       </aside>
 
       {/* mobile top bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-background-200 bg-background-50/90 px-4 py-3 backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-background-200 bg-background-50/90 px-3 py-1.5 backdrop-blur lg:hidden">
         <div className="flex items-center gap-2">
           {location.pathname !== '/' && (
             <button
@@ -366,7 +368,7 @@ function Shell() {
 
       {/* main */}
       <main className="min-h-screen min-w-0 break-words lg:pl-60">
-        <div className="mx-auto max-w-6xl px-4 pb-28 pt-6 md:px-6 md:py-8 lg:pb-8">
+        <div className="mx-auto max-w-6xl px-4 pb-24 pt-3 md:px-6 md:py-8 lg:pb-8">
           <PortaoAcesso><Outlet /></PortaoAcesso>
         </div>
       </main>
