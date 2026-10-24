@@ -346,3 +346,41 @@ test('LOC17. painel: só dá para apagar reserva recusada/cancelada; ativa é pr
   const sem = await a.post({ acao: 'excluir', id });
   assert.equal(sem.statusCode, 401, 'sem login não apaga');
 });
+
+test('LOC18. avaliações de clientes: ficam esperando, só a dona aprova e aí aparecem na rota pública', async () => {
+  const a = await montar();
+  const token = await logar(a, '33.0.0.3');
+  const env = await a.post({ acao: 'avaliar', nome: 'Cliente Feliz', estrelas: 5, texto: 'Festa maravilhosa, adoramos!' }, { ip: '44.0.0.1' });
+  assert.equal(env.statusCode, 201);
+  let pub = await a.get({});
+  assert.equal((pub.json.avaliacoes || []).length, 0, 'não aparece antes de aprovar');
+  const lista = await a.post({ acao: 'avaliacoes-clientes', token });
+  assert.equal(lista.json.itens.length, 1);
+  const bot = await a.post({ acao: 'avaliar', nome: 'Robo', texto: 'spam spam spam', empresa: 'x' }, { ip: '44.0.0.2' });
+  assert.equal(bot.json.ok, true);
+  assert.equal((await a.post({ acao: 'avaliacoes-clientes', token })).json.itens.length, 1, 'robô não grava');
+  await a.post({ acao: 'avaliacao-moderar', token, id: lista.json.itens[0].id, aprovar: true });
+  pub = await a.get({});
+  assert.equal(pub.json.avaliacoes.length, 1);
+  assert.equal(pub.json.avaliacoes[0].nome, 'Cliente Feliz');
+  assert.equal((await a.post({ acao: 'avaliacao-moderar', id: 'x' })).statusCode, 401);
+});
+
+test('LOC19. extras e promoções guardam a unidade; foto oculta some da lista pública', async () => {
+  const a = await montar();
+  const token = await logar(a, '33.0.0.4');
+  const c = await a.post({ acao: 'config', token, config: { extras: [{ nome: 'Decoração Adélia', valor: 100, unidade: 'santa-adelia' }, { nome: 'Bolo', valor: 50 }] } });
+  assert.equal(c.statusCode, 200);
+  const pub = await a.get({});
+  assert.equal(pub.json.extras.find(e => e.nome === 'Decoração Adélia').unidade, 'santa-adelia');
+  assert.equal(pub.json.extras.find(e => e.nome === 'Bolo').unidade, 'todas');
+  const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+  const f = await a.post({ acao: 'foto-enviar', token, unidade: 'santa-adelia', dados: png, tipo: 'image/png' });
+  assert.equal(f.statusCode, 201);
+  assert.equal((await a.get({ foto_listar: '1', unidade: 'santa-adelia' })).json.fotos.length, 1);
+  await a.post({ acao: 'foto-editar', token, id: f.json.id, oculta: true });
+  assert.equal((await a.get({ foto_listar: '1', unidade: 'santa-adelia' })).json.fotos.length, 0, 'oculta some do site');
+  assert.equal((await a.post({ acao: 'foto-listar', token, unidade: 'santa-adelia' })).json.fotos.length, 1, 'painel ainda vê');
+  await a.post({ acao: 'foto-remover', token, id: f.json.id });
+  assert.equal((await a.post({ acao: 'foto-listar', token, unidade: 'santa-adelia' })).json.fotos.length, 0);
+});

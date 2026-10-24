@@ -120,7 +120,7 @@ function limparExtras(lista) {
     let id = str(x.id, 40).toLowerCase().replace(/[^a-z0-9-]/g, '') || slugTxt(nome) || 'extra';
     while (ids.has(id)) id += '-2';
     ids.add(id);
-    out.push({ id, nome, descricao: str(x.descricao, 200), valor: Math.max(0, Math.round((Number(x.valor) || 0) * 100) / 100), valor_promo: Math.max(0, Math.round((Number(x.valor_promo) || 0) * 100) / 100), ativo: x.ativo !== false });
+    out.push({ id, nome, descricao: str(x.descricao, 200), valor: Math.max(0, Math.round((Number(x.valor) || 0) * 100) / 100), valor_promo: Math.max(0, Math.round((Number(x.valor_promo) || 0) * 100) / 100), ativo: x.ativo !== false, unidade: str(x.unidade, 40) || 'todas' });
   }
   return out;
 }
@@ -159,7 +159,7 @@ function limparPromocoes(lista) {
     const texto = str(x && x.texto, 200);
     const imagem = linkImagem(x && x.imagem);
     if (!texto && !imagem) continue;
-    out.push({ id: str(x.id, 40).replace(/[^a-z0-9-]/gi, '') || aleatorio(4), texto, imagem, ativa: x.ativa !== false });
+    out.push({ id: str(x.id, 40).replace(/[^a-z0-9-]/gi, '') || aleatorio(4), texto, imagem, ativa: x.ativa !== false, unidade: str(x.unidade, 40) || 'todas' });
   }
   return out;
 }
@@ -233,9 +233,9 @@ const configPublica = cfg => ({
   nome: cfg.nome,
   whatsapp: cfg.whatsapp,
   instagram: cfg.instagram,
-  extras: cfg.extras.filter(e => e.ativo).map(({ id, nome, descricao, valor, valor_promo }) => ({ id, nome, descricao, valor, valor_promo })),
+  extras: cfg.extras.filter(e => e.ativo).map(({ id, nome, descricao, valor, valor_promo, unidade }) => ({ id, nome, descricao, valor, valor_promo, unidade })),
   datas_especiais: cfg.datas_especiais.map(({ unidade, de, ate, valor, texto }) => ({ unidade, de, ate, valor, texto })),
-  promocoes: cfg.promocoes.filter(p => p.ativa).map(({ id, texto, imagem }) => ({ id, texto, imagem })),
+  promocoes: cfg.promocoes.filter(p => p.ativa).map(({ id, texto, imagem, unidade }) => ({ id, texto, imagem, unidade })),
   avaliacoes: cfg.avaliacoes.filter(a => a.ativa).map(({ id, nome, texto, estrelas }) => ({ id, nome, texto, estrelas })),
   pix_ativo: Boolean(cfg.pix.chave && cfg.pix.mostrar),
   pix: cfg.pix.chave && cfg.pix.mostrar ? { chave: cfg.pix.chave, titular: cfg.pix.titular } : null, // a dona escolhe mostrar (opção no painel)
@@ -665,11 +665,12 @@ function createHandler(deps = {}) {
           legenda: data.legenda || '',
           ordem: Number(data.ordem) || 0,
           capa: Boolean(data.capa),
+          oculta: Boolean(data.oculta),
           url: `/api/locacao?site=${slug}&foto=${d.id}`,
           criado_em: data.criado_em || null,
         };
       });
-      fotos = fotos.filter(f => f.unidade !== 'comprovantes'); // comprovantes nunca aparecem na lista pública
+      fotos = fotos.filter(f => f.unidade !== 'comprovantes' && !f.oculta); // comprovantes e fotos ocultas nunca aparecem na lista pública
       const uFiltro = str(q.unidade, 40);
       if (uFiltro) fotos = fotos.filter(f => f.unidade === uFiltro);
       fotos.sort((a, b) => (a.ordem - b.ordem) || (b.criado_em || '').localeCompare(a.criado_em || ''));
@@ -733,7 +734,13 @@ function createHandler(deps = {}) {
         return res(200, { unidade: unidadeId, mes, dias: mapaDias, precos });
       }
 
-      return res(200, configPublica(cfg));
+      const pub = configPublica(cfg);
+      try {
+        const sa = await conta.collection('avaliacoes_clientes').where('aprovada', '==', true).get();
+        const dosClientes = sa.docs.map(d => d.data()).sort((a, b) => (b.criado_em || '').localeCompare(a.criado_em || '')).slice(0, 20).map(a => ({ id: a.id, nome: a.nome, texto: a.texto, estrelas: a.estrelas }));
+        pub.avaliacoes = [...pub.avaliacoes, ...dosClientes];
+      } catch { /* sem avaliações de clientes */ }
+      return res(200, pub);
     }
 
     const acao = str(body.acao, 30);
@@ -828,6 +835,22 @@ function createHandler(deps = {}) {
         extras: extrasSel,
         whatsapp: cfg.whatsapp,
       });
+    }
+
+    // ── Público: cliente deixa uma avaliação (fica esperando a dona aprovar) ──
+    if (acao === 'avaliar') {
+      if (str(body.site_url, 100) || str(body.empresa, 100)) return res(200, { ok: true });
+      if (!ipPermitido('comprovante', ip, now())) return res(429, { error: 'Muitos envios seguidos. Tente de novo em alguns minutos.' });
+      const texto = str(body.texto, 400);
+      const nome = str(body.nome, 80);
+      if (texto.length < 5 || !nome) return res(400, { error: 'Escreva seu nome e um comentário.' });
+      const idA = aleatorio(10);
+      await conta.collection('avaliacoes_clientes').doc(idA).set({
+        id: idA, nome, texto, estrelas: Math.min(Math.max(Math.round(Number(body.estrelas) || 5), 1), 5),
+        aprovada: false, criado_em: new Date(now()).toISOString(),
+      });
+      await avisarPainel('Avaliação nova!', `${nome} deixou uma avaliação para você aprovar.`);
+      return res(201, { ok: true, mensagem: 'Obrigado! Sua avaliação aparece no site assim que for aprovada.' });
     }
 
     // ── Público: cliente consulta a própria reserva (protocolo + WhatsApp) ──
@@ -1159,6 +1182,35 @@ function createHandler(deps = {}) {
       const lockEx = await diasLock.doc(`${ex.unidade}_${ex.data}`).get();
       if (lockEx.exists && lockEx.data().reserva_id === id) await lockEx.ref.delete();
       await reservas.doc(id).delete();
+      return res(200, { ok: true });
+    }
+
+    if (acao === 'avaliacoes-clientes') {
+      const sa = await conta.collection('avaliacoes_clientes').get();
+      const itens = sa.docs.map(d => d.data()).sort((a, b) => (b.criado_em || '').localeCompare(a.criado_em || ''));
+      return res(200, { itens });
+    }
+
+    if (acao === 'avaliacao-moderar') {
+      const idA = str(body.id, 64);
+      if (!ID_RE.test(idA)) return res(400, { error: 'Avaliação inválida.' });
+      const refA = conta.collection('avaliacoes_clientes').doc(idA);
+      const snapA = await refA.get();
+      if (!snapA.exists) return res(200, { ok: true });
+      if (body.excluir) await refA.delete();
+      else await refA.update({ aprovada: body.aprovar !== false });
+      return res(200, { ok: true });
+    }
+
+    if (acao === 'video-editar') {
+      const idV = str(body.id, 64);
+      if (!ID_RE.test(idV)) return res(400, { error: 'Vídeo inválido.' });
+      const refV = conta.collection('videos').doc(idV);
+      if (!(await refV.get()).exists) return res(404, { error: 'Vídeo não encontrado.' });
+      const upd = { atualizado_em: new Date(now()).toISOString() };
+      if (body.titulo !== undefined) upd.titulo = str(body.titulo, 120);
+      if (body.unidade !== undefined) upd.unidade = str(body.unidade, 40);
+      await refV.update(upd);
       return res(200, { ok: true });
     }
 
@@ -1693,6 +1745,7 @@ function createHandler(deps = {}) {
           legenda: data.legenda || '',
           ordem: Number(data.ordem) || 0,
           capa: Boolean(data.capa),
+          oculta: Boolean(data.oculta),
           url: `/api/locacao?site=${slug}&foto=${d.id}`,
           criado_em: data.criado_em || null,
         };
@@ -1715,6 +1768,7 @@ function createHandler(deps = {}) {
       if (body.legenda !== undefined) updateData.legenda = str(body.legenda, 200);
       if (body.ordem !== undefined) updateData.ordem = Number(body.ordem) || 0;
       if (body.capa !== undefined) updateData.capa = Boolean(body.capa);
+      if (body.oculta !== undefined) updateData.oculta = Boolean(body.oculta);
       if (body.unidade !== undefined) updateData.unidade = str(body.unidade, 40);
 
       await refFoto.update(updateData);

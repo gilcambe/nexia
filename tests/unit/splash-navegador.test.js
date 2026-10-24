@@ -180,12 +180,21 @@ test('SPLASH-NAV2. painel da Amanda: primeiro acesso, pedido pendente, sinal pag
 
     // configurações: Pix, extras e promoção
     await page.evaluate(() => navegarAba('config'));
+    await page.click('#aj-hub >> text=Pix e sinal');
     await page.fill('#cfg-pix-chave', 'chave-da-amanda@exemplo.com');
     await page.fill('#cfg-pix-titular', 'Amanda');
+    await page.evaluate(() => { ajustesIr('un', 'santa-adelia'); ajustesSub('extras'); });
     await page.click('text=Adicionar extra');
+    await page.evaluate(() => ajustesSub('promos'));
     await page.click('text=Adicionar promoção');
-    await page.click('#aba-config button[type=submit]');
+    await page.click('#aj-salvar >> text=Salvar');
     await page.waitForTimeout(500);
+    await page.evaluate(() => ajustesSub('fotos'));
+    await page.waitForSelector('#aj-midia-fotos .m-envio');
+    await page.evaluate(() => ajustesSub('videos'));
+    await page.waitForSelector('#aj-midia-videos .m-envio');
+    await page.evaluate(() => ajustesIr('aval'));
+    await page.waitForSelector('#aj-aval-clientes .suave, #aj-aval-clientes .cfg-bloco');
     const l2 = (await a.chamar('POST', { acao: 'listar', token: await tokenDe(a), de: dia(0), ate: dia(1) })).json;
     assert.equal(l2.config.pix.chave, 'chave-da-amanda@exemplo.com');
     assert.ok(l2.config.extras.length >= 2 && l2.config.promocoes.length === 1);

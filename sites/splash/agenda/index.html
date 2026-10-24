@@ -195,6 +195,28 @@
   .chip-oc { background: rgba(230,162,60,.15); border: 1px solid var(--alerta); color: var(--alerta); border-radius: 16px; padding: 3px 10px; font-size: 12px; }
   .abas-sub { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 12px; }
   .voltar-aj { margin-bottom: 10px; }
+
+  .aj-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .aj-card { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; background: var(--cartao); border: 1px solid var(--linha); border-radius: 14px; padding: 14px 12px; color: var(--texto); min-height: 96px; }
+  .aj-card i { font-size: 26px; color: var(--cor-destaque); }
+  .aj-card b { font-size: 15px; }
+  .aj-card small { font-size: 12px; color: var(--suave); }
+  .aj-card.un { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 14px; }
+  .aj-card.un div { display: flex; flex-direction: column; gap: 2px; }
+  .aj-topo { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .aj-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 14px; }
+  .aj-chips button { flex: 1 1 30%; padding: 10px 6px; border-radius: 12px; border: 1px solid var(--linha); background: var(--cartao); color: var(--texto); font-size: 13px; font-weight: 600; }
+  .aj-chips button.ativa { background: var(--cor-destaque); color: #1b1608; border-color: var(--cor-destaque); }
+  .aj-salvar { position: sticky; bottom: 84px; z-index: 5; display: flex; gap: 8px; margin-top: 18px; padding: 8px; background: rgba(10,13,8,.92); border: 1px solid var(--linha); border-radius: 14px; }
+  .aj-salvar .btn { flex: 1; }
+  .m-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
+  .m-item { background: var(--cartao); border: 1px solid var(--linha); border-radius: 12px; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+  .m-item img { width: 100%; aspect-ratio: 4/3; object-fit: cover; border-radius: 8px; }
+  .m-item.oculta img { opacity: .35; }
+  .m-item input { font-size: 13px; padding: 8px; }
+  .m-acoes { display: flex; gap: 6px; flex-wrap: wrap; }
+  .m-acoes .btn { flex: 1 1 auto; padding: 8px 6px; font-size: 12px; }
+  .m-envio { border: 1px dashed var(--linha); border-radius: 12px; padding: 12px; margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -495,85 +517,129 @@
 
   <section id="aba-config" class="oculto">
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">Ajustes</div>
+      <!-- INÍCIO: o que você quer mudar? -->
+      <div id="aj-hub">
+        <div class="card-header"><div class="card-title">Ajustes</div></div>
+        <p class="cfg-ajuda">Toque no que você quer mudar. Cada unidade tem tudo separado: fotos, vídeos, valores, decoração e promoções.</p>
+        <h4 class="cfg-sub">Minhas unidades</h4>
+        <div class="aj-grade" id="aj-hub-un"></div>
+        <h4 class="cfg-sub">Geral</h4>
+        <div class="aj-grade">
+          <button type="button" class="aj-card" onclick="ajustesIr('pix')"><i class="ri-bank-card-line"></i><b>Pix e sinal</b><small>Chave Pix, sinal, cliente fiel</small></button>
+          <button type="button" class="aj-card" onclick="ajustesIr('contato')"><i class="ri-whatsapp-line"></i><b>Contato</b><small>WhatsApp, Instagram, mensagens</small></button>
+          <button type="button" class="aj-card" onclick="ajustesIr('aval')"><i class="ri-star-smile-line"></i><b>Avaliações</b><small>Clientes e prints</small></button>
+          <button type="button" class="aj-card" onclick="ajustesIr('promo')"><i class="ri-price-tag-3-line"></i><b>Prints de promoções</b><small>Imagens de ofertas</small></button>
+          <button type="button" class="aj-card" onclick="ajustesIr('insta')"><i class="ri-instagram-line"></i><b>Instagram</b><small>Posts e Reels</small></button>
+          <button type="button" class="aj-card" onclick="ajustesIr('musica')"><i class="ri-music-2-line"></i><b>Música do site</b><small>Rádio Splash</small></button>
+          <button type="button" class="aj-card" onclick="ajustesIr('contrato')"><i class="ri-file-text-line"></i><b>Contrato e cancelamento</b><small>Textos e multa</small></button>
+        </div>
+        <h4 class="cfg-sub">Ferramentas</h4>
+        <div class="aj-grade">
+          <button type="button" class="aj-card" onclick="navegarAba('editor')"><i class="ri-layout-edit-line"></i><b>Editar o site</b><small>Textos e fotos do site</small></button>
+          <button type="button" class="aj-card" onclick="navegarAba('importar')"><i class="ri-file-upload-line"></i><b>Importar reservas</b><small>Planilha</small></button>
+          <button type="button" class="aj-card" onclick="abrirModalConta()"><i class="ri-lock-password-line"></i><b>Minha senha</b><small>Trocar a senha</small></button>
+        </div>
       </div>
-      <div class="abas-sub">
-        <button type="button" class="btn pequeno ouro" onclick="navegarAba('editor')"><i class="ri-layout-edit-line"></i> Editar o site (textos e fotos)</button>
-        <button type="button" class="btn pequeno claro" onclick="navegarAba('importar')"><i class="ri-file-upload-line"></i> Importar planilha de reservas</button>
-        <button type="button" class="btn pequeno claro" onclick="abrirModalMidia()"><i class="ri-image-add-line"></i> Fotos, vídeos, prints e posts</button>
-      </div>
-      <p class="cfg-ajuda">Preencha com calma e toque em <b>Salvar Configurações</b> no fim. Tudo aparece no site na hora.</p>
-      <form onsubmit="salvarConfiguracoes(event)">
-        <h4 class="cfg-sub">Pix para o sinal</h4>
-        <label>Nome do titular da conta Pix</label>
-        <input type="text" id="cfg-pix-titular">
-        <label>Chave Pix</label>
-        <input type="text" id="cfg-pix-chave" placeholder="E-mail, CPF, CNPJ, celular ou chave aleatória">
-        <label class="check-linha"><input type="checkbox" id="cfg-pix-mostrar" style="width:auto"> Mostrar a chave Pix ao cliente já na hora de reservar e pagar (no site e depois do pedido)</label>
-        <label>Tipo de sinal</label>
-        <select id="cfg-sinal-tipo"><option value="percentual">Percentual do valor total (%)</option><option value="valor">Valor fixo (R$)</option></select>
-        <label>Valor do sinal (% ou R$, conforme o tipo; deixe 0 para combinar com cada cliente)</label>
-        <input type="number" id="cfg-sinal-valor" min="0" step="0.01">
-        <label>Prazo para o cliente pagar o sinal (horas)</label>
-        <input type="number" id="cfg-prazo-horas" min="1" max="168">
 
-        <h4 class="cfg-sub">Contato</h4>
-        <label>WhatsApp da Amanda (com DDD)</label>
-        <input type="tel" id="cfg-whatsapp">
-        <label>Instagram (sem @)</label>
-        <input type="text" id="cfg-instagram" placeholder="splash_santaadelia">
+      <!-- TELAS DE AJUSTE -->
+      <div id="aj-tela" class="oculto">
+        <div class="aj-topo">
+          <button type="button" class="btn pequeno claro" onclick="ajustesIr('hub')"><i class="ri-arrow-left-line"></i> Voltar</button>
+          <div class="card-title" id="aj-titulo"></div>
+        </div>
+        <div id="aj-chips" class="aj-chips oculto"></div>
 
-        <h4 class="cfg-sub">Unidades: endereço e valor da diária</h4>
-        <div id="cfg-unidades"></div>
+        <!-- Unidade -->
+        <div class="aj-pag" data-pag="un">
+          <div class="aj-sub" data-sub="valores">
+            <p class="cfg-ajuda">Endereço e valores desta unidade. O site mostra tudo na hora, depois que você tocar em Salvar.</p>
+            <div id="cfg-unidades"></div>
+            <h4 class="cfg-sub">Dias com preço especial (promoção, feriado)</h4>
+            <p class="cfg-ajuda">Nesses dias o valor da diária muda e o site mostra o dia em destaque.</p>
+            <div id="cfg-datas-esp"></div>
+            <button type="button" class="btn pequeno claro" onclick="adicionarDataEspecialCfg()"><i class="ri-add-line"></i> Adicionar dia com preço especial</button>
+          </div>
+          <div class="aj-sub" data-sub="fotos"><div id="aj-midia-fotos"></div></div>
+          <div class="aj-sub" data-sub="videos"><div id="aj-midia-videos"></div></div>
+          <div class="aj-sub" data-sub="extras">
+            <p class="cfg-ajuda">Extras que o cliente pode escolher (ex.: decoração). Deixe o valor em 0 para combinar o preço pelo WhatsApp.</p>
+            <div id="cfg-extras"></div>
+            <button type="button" class="btn pequeno claro" onclick="adicionarExtraCfg()"><i class="ri-add-line"></i> Adicionar extra</button>
+          </div>
+          <div class="aj-sub" data-sub="promos">
+            <p class="cfg-ajuda">Avisos de promoção que aparecem no site (ex.: "Dia 02/11 disponível por R$ 799,99").</p>
+            <div id="cfg-promos"></div>
+            <button type="button" class="btn pequeno claro" onclick="adicionarPromoCfg()"><i class="ri-add-line"></i> Adicionar promoção</button>
+          </div>
+        </div>
 
-        <h4 class="cfg-sub">Cancelamento (multa)</h4>
-        <p class="cfg-ajuda">Aparece no site na hora da reserva e vai no contrato.</p>
-        <label>Avisar com quantas horas de antecedência? (0 = não informar)</label>
-        <input type="number" id="cfg-canc-horas" min="0" max="720">
-        <label>Mensagem (opcional). Ex.: "Cancelando fora do prazo, o sinal não é devolvido."</label>
-        <textarea id="cfg-canc-texto" rows="3" maxlength="600"></textarea>
+        <div class="aj-pag" data-pag="pix">
+          <label>Nome do titular da conta Pix</label>
+          <input type="text" id="cfg-pix-titular">
+          <label>Chave Pix</label>
+          <input type="text" id="cfg-pix-chave" placeholder="E-mail, CPF, CNPJ, celular ou chave aleatória">
+          <label class="check-linha"><input type="checkbox" id="cfg-pix-mostrar" style="width:auto"> Mostrar a chave Pix ao cliente na hora de reservar</label>
+          <label>Tipo de sinal</label>
+          <select id="cfg-sinal-tipo"><option value="percentual">Percentual do valor total (%)</option><option value="valor">Valor fixo (R$)</option></select>
+          <label>Valor do sinal (% ou R$, conforme o tipo; 0 = combinar com cada cliente)</label>
+          <input type="number" id="cfg-sinal-valor" min="0" step="0.01">
+          <label>Prazo para o cliente pagar o sinal (horas)</label>
+          <input type="number" id="cfg-prazo-horas" min="1" max="168">
+          <h4 class="cfg-sub">Cliente fiel (desconto)</h4>
+          <label>Quantos aluguéis para ser cliente fiel</label>
+          <input type="number" id="cfg-fid-minimo" min="1" max="50">
+          <label>Desconto sugerido (%)</label>
+          <input type="number" id="cfg-fid-percentual" min="0" max="100" step="1">
+        </div>
 
-        <h4 class="cfg-sub">Contrato de locação</h4>
-        <p class="cfg-ajuda">Quando você confirma uma reserva, os dados do cliente entram sozinhos e o contrato vai junto da confirmação pelo WhatsApp. Escreva do seu jeito e use estes campos: {nome} {whatsapp} {unidade} {endereco} {data} {evento} {convidados} {extras} {valor_total} {sinal} {saldo} {cancelamento} {protocolo} {locadora}</p>
+        <div class="aj-pag" data-pag="contato">
+          <label>WhatsApp da Amanda (com DDD)</label>
+          <input type="tel" id="cfg-whatsapp">
+          <label>Instagram (sem @)</label>
+          <input type="text" id="cfg-instagram" placeholder="splash_santaadelia">
+        </div>
+
+        <div class="aj-pag" data-pag="aval">
+          <p class="cfg-ajuda">Os clientes podem avaliar direto no site. O que chegar aparece aqui para você <b>aprovar</b> antes de ir para o site.</p>
+          <button type="button" class="btn pequeno ouro" onclick="copiarLinkAvaliacao()"><i class="ri-share-forward-line"></i> Copiar link para o cliente avaliar</button>
+          <h4 class="cfg-sub">Chegaram dos clientes</h4>
+          <div id="aj-aval-clientes"><p class="suave">Carregando…</p></div>
+          <h4 class="cfg-sub">Avaliações que eu escrevi</h4>
+          <div id="cfg-avaliacoes"></div>
+          <button type="button" class="btn pequeno claro" onclick="adicionarAvaliacaoCfg()"><i class="ri-add-line"></i> Adicionar avaliação</button>
+          <h4 class="cfg-sub">Prints de avaliações (imagens)</h4>
+          <div id="aj-midia-aval"></div>
+        </div>
+
+        <div class="aj-pag" data-pag="promo"><p class="cfg-ajuda">Imagens de promoções que aparecem no site.</p><div id="aj-midia-promo"></div></div>
+        <div class="aj-pag" data-pag="insta"><div id="aj-midia-insta"></div></div>
+
+        <div class="aj-pag" data-pag="musica">
+          <label>Estilo da música</label>
+          <select id="cfg-musica-estilo"><option value="alegre">Alegre (padrão)</option><option value="tropical">Tropical, mais animada</option><option value="chill">Calma, para relaxar</option><option value="desligada">Sem música</option></select>
+          <label>Rádio Splash: cole o link de uma PLAYLIST do YouTube (ex.: youtube.com/playlist?list=...) e as músicas tocam em sequência, sem parar. Também aceita um clipe do YouTube ou um MP3 (opcional)</label>
+          <input type="url" id="cfg-musica-url" placeholder="https://www.youtube.com/playlist?list=...">
+          <p class="cfg-ajuda">O celular só deixa tocar som depois que a pessoa toca na tela. Por isso a música (ou a rádio) começa no primeiro toque em qualquer lugar do site, e ele pode desligar no botãozinho de som.</p>
+        </div>
+
+        <div class="aj-pag" data-pag="contrato">
+          <h4 class="cfg-sub">Cancelamento (multa)</h4>
+          <p class="cfg-ajuda">Aparece no site na hora da reserva e vai no contrato.</p>
+          <label>Avisar com quantas horas de antecedência? (0 = não informar)</label>
+          <input type="number" id="cfg-canc-horas" min="0" max="720">
+          <label>Mensagem (opcional). Ex.: "Cancelando fora do prazo, o sinal não é devolvido."</label>
+          <textarea id="cfg-canc-texto" rows="3" maxlength="600"></textarea>
+          <h4 class="cfg-sub">Contrato de locação</h4>
+          <p class="cfg-ajuda">Quando você confirma uma reserva, os dados do cliente entram sozinhos e o contrato vai junto da confirmação pelo WhatsApp. Escreva do seu jeito e use estes campos: {nome} {whatsapp} {unidade} {endereco} {data} {evento} {convidados} {extras} {valor_total} {sinal} {saldo} {cancelamento} {protocolo} {locadora}</p>
         <textarea id="cfg-contrato" rows="10" maxlength="8000"></textarea>
-        <button type="button" class="btn pequeno claro" onclick="usarContratoModelo()">Usar contrato modelo pronto</button>
+          <button type="button" class="btn pequeno claro" onclick="usarContratoModelo()">Usar contrato modelo pronto</button>
+        </div>
 
-        <h4 class="cfg-sub">Música do site</h4>
-        <label>Estilo da música</label>
-        <select id="cfg-musica-estilo"><option value="alegre">Alegre (padrão)</option><option value="tropical">Tropical, mais animada</option><option value="chill">Calma, para relaxar</option><option value="desligada">Sem música</option></select>
-        <label>Rádio Splash: cole o link de uma PLAYLIST do YouTube (ex.: youtube.com/playlist?list=...) e as músicas tocam em sequência, sem parar. Também aceita um clipe do YouTube ou um MP3 (opcional)</label>
-        <input type="url" id="cfg-musica-url" placeholder="https://www.youtube.com/playlist?list=...">
-        <p class="cfg-ajuda">O celular só deixa tocar som depois que a pessoa toca na tela. Por isso a música (ou a rádio) começa no primeiro toque em qualquer lugar do site, e ele pode desligar no botãozinho de som.</p>
-
-        <h4 class="cfg-sub">Extras que o cliente pode escolher (ex.: decoração)</h4>
-        <p class="cfg-ajuda">Deixe o valor em 0 para combinar o preço com o cliente pelo WhatsApp.</p>
-        <div id="cfg-extras"></div>
-        <button type="button" class="btn pequeno claro" onclick="adicionarExtraCfg()"><i class="ri-add-line"></i> Adicionar extra</button>
-
-        <h4 class="cfg-sub">Dias com preço especial (promoção, feriado, alta temporada)</h4>
-        <p class="cfg-ajuda">Nesses dias o valor da diária muda e o site mostra o dia em destaque 🔥. Fora desses dias valem os preços de semana e fim de semana.</p>
-        <div id="cfg-datas-esp"></div>
-        <button type="button" class="btn pequeno claro" onclick="adicionarDataEspecialCfg()"><i class="ri-add-line"></i> Adicionar dia com preço especial</button>
-
-        <h4 class="cfg-sub">Promoções no site (ex.: "Dia 02/11 disponível por R$ 799,99")</h4>
-        <div id="cfg-promos"></div>
-        <button type="button" class="btn pequeno claro" onclick="adicionarPromoCfg()"><i class="ri-add-line"></i> Adicionar promoção</button>
-
-        <h4 class="cfg-sub">Avaliações de clientes (texto)</h4>
-        <p class="cfg-ajuda">Para mostrar prints de avaliações, use "Fotos e vídeos" e escolha "Avaliações".</p>
-        <div id="cfg-avaliacoes"></div>
-        <button type="button" class="btn pequeno claro" onclick="adicionarAvaliacaoCfg()"><i class="ri-add-line"></i> Adicionar avaliação</button>
-
-        <h4 class="cfg-sub">Cliente fiel (desconto)</h4>
-        <label>Quantos aluguéis para ser cliente fiel</label>
-        <input type="number" id="cfg-fid-minimo" min="1" max="50">
-        <label>Desconto sugerido (%)</label>
-        <input type="number" id="cfg-fid-percentual" min="0" max="100" step="1">
-
-        <button type="button" class="btn largo claro" style="margin-top:18px" onclick="abrirModalMidia()"><i class="ri-image-add-line"></i> Fotos, vídeos, prints e posts</button>
-        <button type="submit" class="btn largo ouro" style="margin-top:18px">Salvar Configurações</button>
-      </form>
+        <div id="aj-salvar" class="aj-salvar">
+          <button type="button" class="btn ouro" onclick="salvarConfiguracoes(event)"><i class="ri-save-line"></i> Salvar</button>
+          <button type="button" class="btn claro" onclick="desfazerConfig()"><i class="ri-arrow-go-back-line"></i> Desfazer</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -657,7 +723,8 @@
 <script src="painel.js"></script>
 <script src="gestao.js"></script>
 <script>
-  let TOKEN = sessionStorage.getItem('splash_token') || '';
+  const guardaToken = { ler() { try { return localStorage.getItem('splash_token') || sessionStorage.getItem('splash_token') || ''; } catch (e) { return ''; } }, gravar(t) { try { localStorage.setItem('splash_token', t); } catch (e) {} try { sessionStorage.setItem('splash_token', t); } catch (e) {} }, apagar() { try { localStorage.removeItem('splash_token'); } catch (e) {} try { guardaToken.apagar(); } catch (e) {} } };
+  let TOKEN = guardaToken.ler();
   let UNIDADE_ATUAL = 'santa-adelia';
   let MES_ATUAL = new Date().toISOString().slice(0, 7);
   let CONFIG_CACHE = {};
@@ -748,7 +815,7 @@
     const res = await apiPost({ acao: 'entrar', senha });
     if (res.status === 200 && res.body.token) {
       TOKEN = res.body.token;
-      sessionStorage.setItem('splash_token', TOKEN);
+      guardaToken.gravar(TOKEN);
       exibirAreaLogada();
       carregarTudo();
     } else {
@@ -767,7 +834,7 @@
     const res = await apiPost({ acao: 'primeiro-acesso', codigo, senha_nova });
     if (res.status === 200 && res.body.token) {
       TOKEN = res.body.token;
-      sessionStorage.setItem('splash_token', TOKEN);
+      guardaToken.gravar(TOKEN);
       exibirAreaLogada();
       carregarTudo();
     } else {
@@ -778,7 +845,7 @@
 
   function logout() {
     TOKEN = '';
-    sessionStorage.removeItem('splash_token');
+    guardaToken.apagar();
     exibirAreaDeslogada();
   }
 
@@ -1326,6 +1393,7 @@
     document.getElementById('cfg-musica-url').value = (c.musica && c.musica.url) || '';
     document.getElementById('cfg-fid-minimo').value = (c.fidelidade && c.fidelidade.minimo) || 3;
     document.getElementById('cfg-fid-percentual').value = c.fidelidade ? c.fidelidade.percentual : 10;
+    aplicarFiltroUnidade(); montarHubAjustes();
   }
 
   function renderAvaliacoesCfg(lista) {
@@ -1363,6 +1431,7 @@
         <label>Nome que aparece no site (ex.: Promoção de feriado)</label><input type="text" class="es-texto" maxlength="80" value="${SplashPainel.escapeHtml(x.texto || '')}">
         <button type="button" class="btn pequeno vermelho" onclick="this.closest('.cfg-bloco').remove()">Remover</button>
       </div>`).join('');
+    aplicarFiltroUnidade();
   }
   function lerDatasEspeciaisCfg() {
     return Array.from(document.querySelectorAll('#cfg-datas-esp .cfg-esp')).map(b => ({
@@ -1371,7 +1440,7 @@
     })).filter(x => x.de && x.valor > 0);
   }
   function adicionarDataEspecialCfg() {
-    renderDatasEspeciaisCfg([...lerDatasEspeciaisCfg(), { unidade: 'todas', de: '', ate: '', valor: '', texto: 'Promoção' }]);
+    renderDatasEspeciaisCfg([...lerDatasEspeciaisCfg(), { unidade: AJ_UN || 'todas', de: '', ate: '', valor: '', texto: 'Promoção' }]);
   }
 
   function renderExtrasCfg(lista) {
@@ -1379,16 +1448,19 @@
       <div class="cfg-bloco cfg-extra" data-id="${SplashPainel.escapeHtml(x.id || '')}">
         <label>Nome</label><input type="text" class="ex-nome" value="${SplashPainel.escapeHtml(x.nome || '')}" maxlength="80">
         <label>Descrição curta (opcional)</label><input type="text" class="ex-desc" value="${SplashPainel.escapeHtml(x.descricao || '')}" maxlength="200">
+        <label>Aparece em</label>${selUnidadeHtml('ex-un', x.unidade)}
         <label>Valor (R$)</label><input type="number" class="ex-valor" min="0" step="0.01" value="${x.valor || 0}">
         <label>Valor com desconto ou promoção (R$, opcional: se preencher, o site mostra o valor antigo riscado)</label><input type="number" class="ex-promo" min="0" step="0.01" value="${x.valor_promo || ''}">
         <label class="check-linha"><input type="checkbox" class="ex-ativo" style="width:auto" ${x.ativo === false ? '' : 'checked'}> Mostrar no site</label>
         <button type="button" class="btn pequeno vermelho" onclick="this.closest('.cfg-bloco').remove()">Remover</button>
       </div>`).join('');
+    aplicarFiltroUnidade();
   }
 
   function renderPromosCfg(lista) {
     document.getElementById('cfg-promos').innerHTML = lista.map(x => `
       <div class="cfg-bloco cfg-promo" data-id="${SplashPainel.escapeHtml(x.id || '')}">
+        <label>Aparece em</label>${selUnidadeHtml('pr-un', x.unidade)}
         <label>Texto da promoção</label><input type="text" class="pr-texto" value="${SplashPainel.escapeHtml(x.texto || '')}" maxlength="200">
         <input type="hidden" class="pr-imagem" value="${SplashPainel.escapeHtml(x.imagem || '')}">
         ${x.imagem ? `<img src="${SplashPainel.escapeHtml(absUrl(x.imagem))}" alt="" style="max-width:120px;border-radius:8px;display:block;margin:6px 0">` : ''}
@@ -1396,23 +1468,24 @@
         <label class="check-linha"><input type="checkbox" class="pr-ativa" style="width:auto" ${x.ativa === false ? '' : 'checked'}> Mostrar no site</label>
         <button type="button" class="btn pequeno vermelho" onclick="this.closest('.cfg-bloco').remove()">Remover</button>
       </div>`).join('');
+    aplicarFiltroUnidade();
   }
 
   function lerExtrasCfg() {
     return Array.from(document.querySelectorAll('#cfg-extras .cfg-extra')).map(b => ({
       id: b.dataset.id || '', nome: b.querySelector('.ex-nome').value.trim(), descricao: b.querySelector('.ex-desc').value.trim(),
-      valor: Number(b.querySelector('.ex-valor').value) || 0, valor_promo: Number(b.querySelector('.ex-promo').value) || 0, ativo: b.querySelector('.ex-ativo').checked
+      unidade: b.querySelector('.ex-un').value, valor: Number(b.querySelector('.ex-valor').value) || 0, valor_promo: Number(b.querySelector('.ex-promo').value) || 0, ativo: b.querySelector('.ex-ativo').checked
     })).filter(x => x.nome);
   }
 
   function lerPromosCfg() {
     return Array.from(document.querySelectorAll('#cfg-promos .cfg-promo')).map(b => ({
-      id: b.dataset.id || '', texto: b.querySelector('.pr-texto').value.trim(), imagem: b.querySelector('.pr-imagem').value, ativa: b.querySelector('.pr-ativa').checked
+      id: b.dataset.id || '', unidade: b.querySelector('.pr-un').value, texto: b.querySelector('.pr-texto').value.trim(), imagem: b.querySelector('.pr-imagem').value, ativa: b.querySelector('.pr-ativa').checked
     })).filter(x => x.texto || x.imagem);
   }
 
   function adicionarExtraCfg() {
-    renderExtrasCfg([...lerExtrasCfg(), { nome: 'Novo extra', valor: 0, ativo: true }]);
+    renderExtrasCfg([...lerExtrasCfg(), { nome: 'Novo extra', valor: 0, ativo: true, unidade: AJ_UN || 'todas' }]);
   }
 
   async function anexarImagemPromo(input) {
@@ -1431,11 +1504,11 @@
   }
 
   function adicionarPromoCfg() {
-    renderPromosCfg([...lerPromosCfg(), { texto: 'Nova promoção', ativa: true }]);
+    renderPromosCfg([...lerPromosCfg(), { texto: 'Nova promoção', ativa: true, unidade: AJ_UN || 'todas' }]);
   }
 
   function salvarConfiguracoes(e) {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const unidades = Array.from(document.querySelectorAll('#cfg-unidades .cfg-bloco')).map(b => ({
       id: b.dataset.id, nome: b.dataset.nome,
       endereco: b.querySelector('.un-endereco').value.trim(),
@@ -1471,9 +1544,10 @@
 
     apiPost(payload).then(res => {
       if (res.status === 200) {
-        alert('Configurações salvas com sucesso!');
         CONFIG_CACHE = res.body.config || CONFIG_CACHE;
         preencherFormularioConfig(CONFIG_CACHE);
+        avisoRapido('Salvo! Já está no site.');
+        recarregarEditorSeAberto();
       } else {
         alert((res.body && res.body.error) || 'Erro ao salvar configurações.');
       }
@@ -2083,6 +2157,168 @@
     link.click();
   }
 
+
+  /* ===== AJUSTES: início por unidade ===== */
+  let AJ_UN = '', AJ_PAG = 'hub', AJ_SUB = 'valores';
+  const nomeUnCfg = id => { const u = ((CONFIG_CACHE && CONFIG_CACHE.unidades) || []).find(x => x.id === id); return u ? u.nome : id; };
+  function selUnidadeHtml(cls, atual) {
+    const un = (CONFIG_CACHE && CONFIG_CACHE.unidades) || [];
+    return `<select class="${cls}"><option value="todas" ${!atual || atual === 'todas' ? 'selected' : ''}>As duas unidades</option>${un.map(u => `<option value="${SplashPainel.escapeHtml(u.id)}" ${atual === u.id ? 'selected' : ''}>Só ${SplashPainel.escapeHtml(u.nome)}</option>`).join('')}</select>`;
+  }
+  function aplicarFiltroUnidade() {
+    const ok = v => !AJ_UN || !v || v === 'todas' || v === AJ_UN;
+    document.querySelectorAll('#cfg-unidades .cfg-bloco').forEach(b => { b.style.display = !AJ_UN || b.dataset.id === AJ_UN ? '' : 'none'; });
+    [['.cfg-extra', '.ex-un'], ['.cfg-promo', '.pr-un'], ['.cfg-esp', '.es-un']].forEach(([bl, sl]) => document.querySelectorAll(bl).forEach(b => { const e = b.querySelector(sl); b.style.display = ok(e && e.value) ? '' : 'none'; }));
+  }
+  function montarHubAjustes() {
+    const un = (CONFIG_CACHE && CONFIG_CACHE.unidades) || [];
+    const el = document.getElementById('aj-hub-un'); if (!el) return;
+    el.innerHTML = un.map(u => `<button type="button" class="aj-card un" onclick="ajustesIr('un','${SplashPainel.escapeHtml(u.id)}')"><i class="ri-home-smile-2-line"></i><div><b>${SplashPainel.escapeHtml(u.nome)}</b><small>Fotos, vídeos, valores, endereço, decoração e promoções</small></div></button>`).join('');
+  }
+  const TITULOS_AJ = { pix: 'Pix e sinal', contato: 'Contato', aval: 'Avaliações', promo: 'Prints de promoções', insta: 'Instagram', musica: 'Música do site', contrato: 'Contrato e cancelamento' };
+  const SUBS_UN = [['valores', 'Valores', 'ri-money-dollar-circle-line'], ['fotos', 'Fotos', 'ri-image-line'], ['videos', 'Vídeos', 'ri-video-line'], ['extras', 'Decoração', 'ri-gift-line'], ['promos', 'Promoções', 'ri-price-tag-3-line']];
+  function ajustesIr(pag, un) {
+    AJ_PAG = pag;
+    if (pag === 'un') AJ_UN = un || AJ_UN; else AJ_UN = '';
+    document.getElementById('aj-hub').classList.toggle('oculto', pag !== 'hub');
+    document.getElementById('aj-tela').classList.toggle('oculto', pag === 'hub');
+    document.querySelectorAll('.aj-pag').forEach(p => p.classList.toggle('oculto', p.dataset.pag !== pag));
+    const chips = document.getElementById('aj-chips');
+    chips.classList.toggle('oculto', pag !== 'un');
+    document.getElementById('aj-titulo').textContent = pag === 'un' ? nomeUnCfg(AJ_UN) : (TITULOS_AJ[pag] || '');
+    if (pag === 'un') { chips.innerHTML = SUBS_UN.map(([id, nome, ic]) => `<button type="button" data-sub="${id}" onclick="ajustesSub('${id}')"><i class="${ic}"></i> ${nome}</button>`).join(''); ajustesSub(AJ_SUB); }
+    else atualizarBarraSalvar();
+    aplicarFiltroUnidade();
+    if (pag === 'aval') { carregarAvalClientes(); montarMidia('aj-midia-aval', 'avaliacoes', { fotos: true, titulo: 'Prints de avaliações' }); }
+    if (pag === 'promo') montarMidia('aj-midia-promo', 'promo', { fotos: true, titulo: 'Imagens de promoções' });
+    if (pag === 'insta') montarMidia('aj-midia-insta', 'posts', { fotos: true, titulo: 'Fotos de posts do Instagram' }).then(() => { const d = document.createElement('div'); d.id = 'aj-midia-insta2'; document.getElementById('aj-midia-insta').appendChild(d); montarMidia('aj-midia-insta2', 'instagram', { videos: true, titulo: 'Reels e vídeos do Instagram (link)' }); });
+    window.scrollTo(0, 0);
+  }
+  function ajustesSub(sub) {
+    AJ_SUB = sub;
+    document.querySelectorAll('#aj-chips button').forEach(b => b.classList.toggle('ativa', b.dataset.sub === sub));
+    document.querySelectorAll('.aj-sub').forEach(d => d.classList.toggle('oculto', d.dataset.sub !== sub));
+    if (sub === 'fotos') montarMidia('aj-midia-fotos', AJ_UN, { fotos: true, titulo: 'Fotos de ' + nomeUnCfg(AJ_UN) });
+    if (sub === 'videos') montarMidia('aj-midia-videos', AJ_UN, { videos: true, titulo: 'Vídeos de ' + nomeUnCfg(AJ_UN) });
+    atualizarBarraSalvar();
+  }
+  function atualizarBarraSalvar() {
+    const semSalvar = AJ_PAG === 'promo' || AJ_PAG === 'insta' || (AJ_PAG === 'un' && (AJ_SUB === 'fotos' || AJ_SUB === 'videos'));
+    document.getElementById('aj-salvar').classList.toggle('oculto', semSalvar);
+  }
+  function desfazerConfig() { if (!confirm('Desfazer o que você mudou e ainda não salvou?')) return; preencherFormularioConfig(CONFIG_CACHE || {}); avisoRapido('Voltou ao que estava salvo.'); }
+  function avisoRapido(txt) {
+    let t = document.getElementById('aviso-rapido');
+    if (!t) { t = document.createElement('div'); t.id = 'aviso-rapido'; t.style.cssText = 'position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#2e7d4f;color:#fff;padding:12px 18px;border-radius:24px;z-index:9999;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.5);max-width:90%;text-align:center'; document.body.appendChild(t); }
+    t.textContent = txt; t.style.display = 'block'; clearTimeout(t._t); t._t = setTimeout(() => { t.style.display = 'none'; }, 2600);
+  }
+  function recarregarEditorSeAberto() {
+    if (!SITE_EDITOR.aberto) return;
+    try { quadroIframe().postMessage({ nx: 'recarregar' }, location.origin); } catch (e) {}
+  }
+  function copiarLinkAvaliacao() {
+    const url = SITE_URL.replace(/\/$/, '') + '/#avaliacoes';
+    if (navigator.clipboard) navigator.clipboard.writeText(url).then(() => avisoRapido('Link copiado! Cole no WhatsApp do cliente.'), () => prompt('Copie o link:', url)); else prompt('Copie o link:', url);
+  }
+
+  /* ===== Avaliações dos clientes ===== */
+  async function carregarAvalClientes() {
+    const cont = document.getElementById('aj-aval-clientes');
+    const r = await apiPost({ acao: 'avaliacoes-clientes' });
+    const lista = (r.body && r.body.itens) || [];
+    cont.innerHTML = lista.length ? lista.map(a => `<div class="cfg-bloco"><div>${'★'.repeat(a.estrelas)}${'☆'.repeat(5 - a.estrelas)} <b>${SplashPainel.escapeHtml(a.nome)}</b> <span class="pg ${a.aprovada ? 'total' : 'parcial'}">${a.aprovada ? 'No site' : 'Esperando você'}</span></div><p style="margin:6px 0">“${SplashPainel.escapeHtml(a.texto)}”</p><div class="m-acoes">${a.aprovada ? `<button class="btn pequeno claro" onclick="moderarAval('${a.id}',false)">Tirar do site</button>` : `<button class="btn pequeno verde" onclick="moderarAval('${a.id}',true)">Mostrar no site</button>`}<button class="btn pequeno vermelho" onclick="moderarAval('${a.id}','excluir')">Excluir</button></div></div>`).join('') : '<p class="suave">Nenhuma avaliação de cliente ainda. Mande o link acima para quem já alugou.</p>';
+  }
+  async function moderarAval(id, acao) {
+    if (acao === 'excluir' && !confirm('Excluir esta avaliação?')) return;
+    const r = await apiPost({ acao: 'avaliacao-moderar', id, aprovar: acao === true, excluir: acao === 'excluir' });
+    if (r.status === 200) { carregarAvalClientes(); recarregarEditorSeAberto(); } else alert((r.body && r.body.error) || 'Não consegui.');
+  }
+
+  /* ===== Fotos e vídeos: ver, trocar de lugar, ocultar, editar legenda, excluir ===== */
+  async function montarMidia(idCont, destino, op) {
+    const cont = document.getElementById(idCont); if (!cont) return;
+    cont.dataset.destino = destino;
+    cont.innerHTML = '<p class="suave">Carregando…</p>';
+    const esc = SplashPainel.escapeHtml;
+    let html = '';
+    if (op.fotos) {
+      const r = await apiPost({ acao: 'foto-listar', unidade: destino });
+      const fotos = (r.body && r.body.fotos) || [];
+      cont._fotos = fotos;
+      html += `<h4 class="cfg-sub">${esc(op.titulo || 'Fotos')}</h4>
+        <div class="m-envio"><b>Adicionar foto</b><input type="file" id="${idCont}-arq" accept="image/jpeg,image/png,image/webp" multiple><button type="button" class="btn pequeno ouro" style="margin-top:8px" onclick="enviarFotosMidia('${idCont}')"><i class="ri-image-add-line"></i> Enviar foto(s)</button></div>
+        ${fotos.length ? `<div class="m-grade">${fotos.map((f, i) => `<div class="m-item ${f.oculta ? 'oculta' : ''}"><img src="${esc(absUrl(f.url))}" alt="" loading="lazy">
+          <input type="text" value="${esc(f.legenda || '')}" placeholder="Legenda (opcional)" maxlength="200" onchange="editarFotoMidia('${idCont}','${f.id}',{legenda:this.value})">
+          <div class="m-acoes">
+            <button class="btn pequeno claro" ${i === 0 ? 'disabled' : ''} onclick="moverFotoMidia('${idCont}',${i},-1)" aria-label="Mover para antes">◀</button>
+            <button class="btn pequeno claro" ${i === fotos.length - 1 ? 'disabled' : ''} onclick="moverFotoMidia('${idCont}',${i},1)" aria-label="Mover para depois">▶</button>
+            <button class="btn pequeno claro" onclick="editarFotoMidia('${idCont}','${f.id}',{oculta:${!f.oculta}},true)">${f.oculta ? 'Mostrar' : 'Ocultar'}</button>
+            <button class="btn pequeno vermelho" onclick="excluirFotoMidia('${idCont}','${f.id}')"><i class="ri-delete-bin-line"></i></button>
+          </div></div>`).join('')}</div>` : '<p class="suave">Nenhuma foto ainda.</p>'}`;
+    }
+    if (op.videos) {
+      const r = await apiPost({ acao: 'video-listar', unidade: destino });
+      const vids = (r.body && r.body.videos) || [];
+      html += `<h4 class="cfg-sub">${esc(op.titulo || 'Vídeos')}</h4>
+        <div class="m-envio"><b>Adicionar vídeo</b><p class="cfg-ajuda">Envie o vídeo do celular para o YouTube (pode ser "não listado") ou use um Reel do Instagram, e cole o link aqui.</p>
+        <input type="url" id="${idCont}-url" placeholder="Link do vídeo"><input type="text" id="${idCont}-tit" placeholder="Título (opcional)" maxlength="120" style="margin-top:6px">
+        <button type="button" class="btn pequeno ouro" style="margin-top:8px" onclick="salvarVideoMidia('${idCont}')"><i class="ri-video-add-line"></i> Salvar vídeo</button></div>
+        ${vids.length ? `<div class="m-grade">${vids.map(v => `<div class="m-item"><b style="font-size:13px">${esc(v.provedor || 'Vídeo')}</b>
+          <input type="text" value="${esc(v.titulo || '')}" placeholder="Título" maxlength="120" onchange="editarVideoMidia('${idCont}','${v.id}',this.value)">
+          <div class="m-acoes"><a class="btn pequeno claro" href="${esc(v.url_original || v.embed_url || '#')}" target="_blank" rel="noopener">Ver</a><button class="btn pequeno vermelho" onclick="excluirVideoMidia('${idCont}','${v.id}')"><i class="ri-delete-bin-line"></i> Excluir</button></div></div>`).join('')}</div>` : '<p class="suave">Nenhum vídeo ainda.</p>'}`;
+    }
+    cont.innerHTML = html;
+  }
+  const opMidia = id => ({ fotos: Boolean(document.getElementById(id) && document.getElementById(id)._fotos), videos: !document.getElementById(id) || !document.getElementById(id)._fotos, titulo: '' });
+  async function remontarMidia(id) {
+    const c = document.getElementById(id); const titulo = c.querySelector('.cfg-sub'); const op = { fotos: Boolean(c._fotos), videos: !c._fotos, titulo: titulo ? titulo.textContent : '' };
+    await montarMidia(id, c.dataset.destino, op); recarregarEditorSeAberto();
+  }
+  async function enviarFotosMidia(id) {
+    const c = document.getElementById(id); const inp = document.getElementById(id + '-arq');
+    if (!inp.files || !inp.files.length) return alert('Escolha a foto no seu celular primeiro.');
+    let ok = 0;
+    for (const file of Array.from(inp.files).slice(0, 10)) {
+      try {
+        const b64 = await comprimirImagemClient(file, 600 * 1024);
+        const r = await apiPost({ acao: 'foto-enviar', unidade: c.dataset.destino, dados: b64.replace(/^data:image\/(jpeg|png|webp);base64,/, ''), tipo: file.type || 'image/jpeg', legenda: '', ordem: ((c._fotos || []).length + ok + 1) * 10 });
+        if (r.status === 201) ok++; else { alert((r.body && r.body.error) || 'Erro ao enviar a foto.'); break; }
+      } catch (e) { alert(e.message || 'Erro ao processar a foto.'); break; }
+    }
+    if (ok) avisoRapido(ok + ' foto(s) enviada(s)! Já está no site.');
+    remontarMidia(id);
+  }
+  async function editarFotoMidia(id, fid, dados, recarregar) {
+    const r = await apiPost({ acao: 'foto-editar', id: fid, ...dados });
+    if (r.status !== 200) return alert((r.body && r.body.error) || 'Não consegui salvar.');
+    avisoRapido('Salvo!'); if (recarregar) remontarMidia(id); else recarregarEditorSeAberto();
+  }
+  async function moverFotoMidia(id, i, d) {
+    const c = document.getElementById(id); const f = (c._fotos || []).slice(); const j = i + d; if (j < 0 || j >= f.length) return;
+    [f[i], f[j]] = [f[j], f[i]];
+    await Promise.all(f.map((x, k) => (Number(x.ordem) === (k + 1) * 10 ? null : apiPost({ acao: 'foto-editar', id: x.id, ordem: (k + 1) * 10 }))));
+    remontarMidia(id);
+  }
+  async function excluirFotoMidia(id, fid) {
+    if (!confirm('Excluir esta foto de vez? (Se só quer tirar do site por um tempo, use "Ocultar".)')) return;
+    const r = await apiPost({ acao: 'foto-remover', id: fid });
+    if (r.status === 200) { avisoRapido('Foto excluída.'); remontarMidia(id); } else alert((r.body && r.body.error) || 'Não consegui excluir.');
+  }
+  async function salvarVideoMidia(id) {
+    const c = document.getElementById(id); const url = document.getElementById(id + '-url').value.trim(); if (!url) return alert('Cole o link do vídeo.');
+    const r = await apiPost({ acao: 'video-salvar', unidade: c.dataset.destino, url, titulo: document.getElementById(id + '-tit').value.trim() });
+    if (r.status === 201) { avisoRapido('Vídeo salvo! Já está no site.'); remontarMidia(id); } else alert((r.body && r.body.error) || 'Link de vídeo não aceito.');
+  }
+  async function editarVideoMidia(id, vid, titulo) {
+    const r = await apiPost({ acao: 'video-editar', id: vid, titulo });
+    if (r.status === 200) { avisoRapido('Salvo!'); recarregarEditorSeAberto(); } else alert((r.body && r.body.error) || 'Não consegui salvar.');
+  }
+  async function excluirVideoMidia(id, vid) {
+    if (!confirm('Excluir este vídeo?')) return;
+    const r = await apiPost({ acao: 'video-remover', id: vid });
+    if (r.status === 200) { avisoRapido('Vídeo excluído.'); remontarMidia(id); } else alert((r.body && r.body.error) || 'Não consegui excluir.');
+  }
+
   function navegarAba(nome) {
     const ABAS = ['calendario', 'pedidos', 'reservas', 'nova', 'financeiro', 'clientes', 'editor', 'importar', 'config'];
     const MENU = { editor: 'config', importar: 'config' }; // telas que ficam "dentro" de Ajustes
@@ -2098,6 +2334,7 @@
     if (nome === 'reservas') renderizarListasReservas();
     if (nome === 'nova') mostrarOcupados();
     if (nome === 'editor' && !SITE_EDITOR.aberto) abrirSiteEditor();
+    if (nome === 'config') ajustesIr('hub');
     window.scrollTo(0, 0);
   }
 
