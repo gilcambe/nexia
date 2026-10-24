@@ -39,7 +39,7 @@ Fotos ficam em base64 no Firestore (máx. 600 KB cada). Comprovantes do cliente 
 2. **Site + painel (páginas estáticas):** NÃO sobem sozinhos. Disparar:
    `gh api repos/gilcambe/nexia/actions/workflows/379320658/dispatches -f ref=develop -f 'inputs[slug]=splasheventos' -f 'inputs[pasta]=sites/splash'`
    (workflow "Publicar site de cliente (Cloudflare Pages)"). Conferir: `gh api 'repos/gilcambe/nexia/actions/workflows/379320658/runs?per_page=1'` → `completed success`.
-   O app instalado usa `sw.js`; ao mudar arquivos do painel, aumente `CACHE_VERSION` em `sites/splash/agenda/sw.js` (atual: `splash-painel-v9`). NÃO use `clients.claim()` no sw: quebra os testes de navegador (o sw passaria a interceptar `/api/`).
+   O app instalado usa `sw.js`; ao mudar arquivos do painel, aumente `CACHE_VERSION` em `sites/splash/agenda/sw.js` (atual: `splash-painel-v10`). NÃO use `clients.claim()` no sw: quebra os testes de navegador (o sw passaria a interceptar `/api/`).
    `sites/splash/_headers` força `no-cache` no painel para o celular não ficar com versão velha.
 3. A sessão da IA pode não alcançar `*.pages.dev`/workers.dev por curl/WebFetch (lista de domínios permitidos); peça ao Gildivan para abrir e conferir, e diga isso a ele.
 
@@ -114,3 +114,8 @@ Atenção: módulos novos do backend devem ficar em SUBPASTAS de `netlify/functi
   → cria `sites/<slug>` sem fotos nem nome do Splash e mostra o código de 1º acesso + bloco para colar em `clientes/locacoes.js`.
   Depois: trocar logo/ícones pelo do cliente, PR, merge e publicar (seção 4 com `inputs[slug]=<slug>` e `inputs[pasta]=sites/<slug>`). Com 1 unidade, o site esconde a segunda.
 - Teste: `tests/unit/splash-kernex.test.js` (já entra no comando da seção 9).
+
+### Fotos das áreas (2026-10-24)
+- Painel: Ajustes > **Fotos das áreas** (Piscina, Churrasqueira, Sala de jogos, Decoração). Usa o mesmo `montarMidia` com unidade `area-<id>` (sem mudança no backend).
+- Site: o card N de "O que tem no Splash" (`#estrutura-grid`, `data-i`) mapeia para `AREAS[N]`; com mídia, mostra "Ver fotos e vídeos" e abre a `#galeria`. No "Editar site" (NX.editar) o toque não abre a galeria.
+- Vinheta: no site público `data-sempre` (toda abertura); no painel, 1 vez por sessão.

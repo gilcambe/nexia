@@ -530,6 +530,7 @@
           <button type="button" class="aj-card" onclick="ajustesIr('pix')"><i class="ri-bank-card-line"></i><b>Pix e sinal</b><small>Chave Pix, sinal, cliente fiel</small></button>
           <button type="button" class="aj-card" onclick="ajustesIr('contato')"><i class="ri-whatsapp-line"></i><b>Contato</b><small>WhatsApp, Instagram, mensagens</small></button>
           <button type="button" class="aj-card" onclick="ajustesIr('aval')"><i class="ri-star-smile-line"></i><b>Avaliações</b><small>Clientes e prints</small></button>
+          <button type="button" class="aj-card" onclick="ajustesIr('areas')"><i class="ri-gallery-line"></i><b>Fotos das áreas</b><small>Piscina, churrasqueira, jogos, decoração</small></button>
           <button type="button" class="aj-card" onclick="ajustesIr('promo')"><i class="ri-price-tag-3-line"></i><b>Prints de promoções</b><small>Imagens de ofertas</small></button>
           <button type="button" class="aj-card" onclick="ajustesIr('insta')"><i class="ri-instagram-line"></i><b>Instagram</b><small>Posts e Reels</small></button>
           <button type="button" class="aj-card" onclick="ajustesIr('musica')"><i class="ri-music-2-line"></i><b>Música do site</b><small>Rádio Splash</small></button>
@@ -618,6 +619,7 @@
 
         <div class="aj-pag" data-pag="promo"><p class="cfg-ajuda">Imagens de promoções que aparecem no site.</p><div id="aj-midia-promo"></div></div>
         <div class="aj-pag" data-pag="insta"><div id="aj-midia-insta"></div></div>
+        <div class="aj-pag" data-pag="areas"><p class="cfg-ajuda">Escolha a área e envie fotos e vídeos. No site, o cliente toca no card da área (em "O que tem no Splash") e vê tudo.</p><div class="aj-chips" id="aj-areas-chips"></div><div id="aj-midia-area-f"></div><div id="aj-midia-area-v"></div></div>
 
         <div class="aj-pag" data-pag="musica">
           <label>Estilo da música</label>
@@ -2237,7 +2239,7 @@
     const el = document.getElementById('aj-hub-un'); if (!el) return;
     el.innerHTML = un.map(u => `<button type="button" class="aj-card un" onclick="ajustesIr('un','${SplashPainel.escapeHtml(u.id)}')"><i class="ri-home-smile-2-line"></i><div><b>${SplashPainel.escapeHtml(u.nome)}</b><small>Fotos, vídeos, valores, endereço, decoração e promoções</small></div></button>`).join('');
   }
-  const TITULOS_AJ = { pix: 'Pix e sinal', contato: 'Contato', aval: 'Avaliações', promo: 'Prints de promoções', insta: 'Instagram', musica: 'Música do site', contrato: 'Contrato e cancelamento', divulgar: 'Divulgar datas livres', lembretes: 'Lembretes ao cliente', patroc: 'Patrocinadores' };
+  const TITULOS_AJ = { pix: 'Pix e sinal', contato: 'Contato', aval: 'Avaliações', promo: 'Prints de promoções', insta: 'Instagram', areas: 'Fotos das áreas', musica: 'Música do site', contrato: 'Contrato e cancelamento', divulgar: 'Divulgar datas livres', lembretes: 'Lembretes ao cliente', patroc: 'Patrocinadores' };
   const SUBS_UN = [['valores', 'Valores', 'ri-money-dollar-circle-line'], ['fotos', 'Fotos', 'ri-image-line'], ['videos', 'Vídeos', 'ri-video-line'], ['extras', 'Decoração', 'ri-gift-line'], ['promos', 'Promoções', 'ri-price-tag-3-line']];
   function ajustesIr(pag, un) {
     AJ_PAG = pag;
@@ -2255,8 +2257,19 @@
     if (pag === 'divulgar') prepararDivulgacao();
     if (pag === 'lembretes') carregarListaLembretes('lb-lista-ajuste');
     if (pag === 'promo') montarMidia('aj-midia-promo', 'promo', { fotos: true, titulo: 'Imagens de promoções' });
+    if (pag === 'areas') areaIr(AJ_AREA);
     if (pag === 'insta') montarMidia('aj-midia-insta', 'posts', { fotos: true, titulo: 'Fotos de posts do Instagram' }).then(() => { const d = document.createElement('div'); d.id = 'aj-midia-insta2'; document.getElementById('aj-midia-insta').appendChild(d); montarMidia('aj-midia-insta2', 'instagram', { videos: true, titulo: 'Reels e vídeos do Instagram (link)' }); });
     window.scrollTo(0, 0);
+  }
+  // Fotos das áreas: mesma ordem dos cards "O que tem no Splash" no site (AREAS em index.html).
+  const AREAS_AJ = [['piscina', 'Piscina', '🏊'], ['churrasqueira', 'Churrasqueira', '🍖'], ['jogos', 'Sala de jogos', '🎱'], ['decoracao', 'Decoração', '🎈']];
+  let AJ_AREA = 'piscina';
+  function areaIr(a) {
+    AJ_AREA = a;
+    const nome = (AREAS_AJ.find(x => x[0] === a) || [])[1] || '';
+    document.getElementById('aj-areas-chips').innerHTML = AREAS_AJ.map(([id, n, ic]) => `<button type="button" class="${id === a ? 'ativa' : ''}" onclick="areaIr('${id}')">${ic} ${n}</button>`).join('');
+    montarMidia('aj-midia-area-f', 'area-' + a, { fotos: true, titulo: 'Fotos: ' + nome });
+    montarMidia('aj-midia-area-v', 'area-' + a, { videos: true, titulo: 'Vídeos: ' + nome });
   }
   function ajustesSub(sub) {
     AJ_SUB = sub;
@@ -2267,7 +2280,7 @@
     atualizarBarraSalvar();
   }
   function atualizarBarraSalvar() {
-    const semSalvar = AJ_PAG === 'promo' || AJ_PAG === 'insta' || AJ_PAG === 'divulgar' || (AJ_PAG === 'un' && (AJ_SUB === 'fotos' || AJ_SUB === 'videos'));
+    const semSalvar = AJ_PAG === 'promo' || AJ_PAG === 'insta' || AJ_PAG === 'areas' || AJ_PAG === 'divulgar' || (AJ_PAG === 'un' && (AJ_SUB === 'fotos' || AJ_SUB === 'videos'));
     document.getElementById('aj-salvar').classList.toggle('oculto', semSalvar);
   }
   function desfazerConfig() { if (!confirm('Desfazer o que você mudou e ainda não salvou?')) return; preencherFormularioConfig(CONFIG_CACHE || {}); avisoRapido('Voltou ao que estava salvo.'); }
