@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import 'remixicon/fonts/remixicon.css';
 import './index.css'
 import App from './App.tsx'
+import ErroGeral from './components/feature/ErroGeral'
 import { mostrarAbertura } from './abertura'
 import { aplicarMarca, marcaGuardada } from './lib/coach/profissionais'
 import { aplicarLetra } from './lib/letra'
@@ -15,7 +16,9 @@ aplicarLetra()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <App />
+    <ErroGeral>
+      <App />
+    </ErroGeral>
   </StrictMode>,
 )
 

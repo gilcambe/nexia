@@ -54,8 +54,8 @@ export default function Marca() {
         <div className="flex items-center gap-2.5">
           {logo ? <img src={logo} alt="Logo escolhido" className="h-10 w-10 rounded-xl object-contain" /> : <img src={`${import.meta.env.BASE_URL}icon.svg`} alt="" className="h-10 w-10 rounded-xl" />}
           <div className="leading-none">
-            <p className="font-heading font-bold text-foreground-950">{nome.trim() || 'NEXIA'}</p>
-            <p className="mt-0.5 text-xs font-medium uppercase tracking-[0.18em] text-foreground-400">{nome.trim() ? 'com NEXIA Body Coach' : 'Body Coach AI'}</p>
+            <p className="font-heading font-bold text-foreground-950">{nome.trim() || 'Body Coach'}</p>
+            <p className="mt-0.5 text-xs font-medium uppercase tracking-[0.18em] text-foreground-400">{nome.trim() ? 'com Body Coach' : 'Seu treino, do seu jeito'}</p>
           </div>
         </div>
         <span className="mt-3 block rounded-xl px-4 py-2.5 text-center text-sm font-semibold text-white" style={{ background: corCss(cor) }}>Iniciar treino</span>

@@ -75,7 +75,7 @@ export default function RelatorioView({
       <article className="relatorio mx-auto my-3 max-w-[820px] bg-white p-4 text-[#1f2328] shadow-sm sm:my-6 sm:p-8 print:my-0 print:max-w-none print:p-0">
         <header className="flex items-start justify-between gap-3 border-b-2 border-[#e8590c] pb-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-[#e8590c]">NEXIA Body Coach</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-[#e8590c]">Body Coach</p>
             <h1 className="text-xl font-bold">Relatório de avaliação física</h1>
             <p className="text-sm">{nome}</p>
             {avaliador && (

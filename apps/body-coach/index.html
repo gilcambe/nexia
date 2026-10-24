@@ -9,12 +9,12 @@
     <meta name="apple-mobile-web-app-title" content="Body Coach" />
     <link rel="apple-touch-icon" href="/icon-180.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>NEXIA Body Coach AI — Treino, Recuperação e Evolução</title>
-    <meta name="description" content="NEXIA Body Coach AI é o sistema de acompanhamento esportivo que sabe o que você fez, entende como você está e decide com você o que fazer agora. Treino adaptativo, recuperação, nutrição e evolução." />
+    <title>Body Coach — Treino, Recuperação e Evolução</title>
+    <meta name="description" content="Body Coach é o sistema de acompanhamento esportivo que sabe o que você fez, entende como você está e decide com você o que fazer agora. Treino adaptativo, recuperação, nutrição e evolução." />
 
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="NEXIA Body Coach" />
-    <meta property="og:title" content="NEXIA Body Coach: treino, dieta e evolução com coach de IA" />
+    <meta property="og:site_name" content="Body Coach" />
+    <meta property="og:title" content="Body Coach: treino, dieta e evolução com coach de IA" />
     <meta property="og:description" content="Seu treino, sua dieta e a sua evolução num app só. Comece grátis." />
     <meta property="og:url" content="https://nexiabodycoach.pages.dev/body-coach/" />
     <meta property="og:image" content="https://nexiabodycoach.pages.dev/body-coach/og-image.png" />
@@ -22,10 +22,43 @@
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Body Coach","applicationCategory":"HealthApplication","operatingSystem":"Android, Web","url":"https://nexiabodycoach.pages.dev/","image":"https://nexiabodycoach.pages.dev/body-coach/icon-512.png","description":"App de treino e dieta com coach de IA: treino, refeições, medidas e evolução num lugar só.","offers":{"@type":"Offer","price":"0","priceCurrency":"BRL","description":"Plano Básico grátis; Premium R$ 19,90 por mês ou R$ 179 por ano, com 14 dias grátis"},"publisher":{"@type":"Organization","name":"Kernex","url":"https://kernex.com.br"}}</script>
-    <meta name="keywords" content="NEXIA, Body Coach AI, treino adaptativo, performance esportiva, recuperação, nutrição, hipertrofia, atleta" />
+    <meta name="keywords" content="Body Coach, treino adaptativo, performance esportiva, recuperação, nutrição, hipertrofia, atleta" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" />
+    <!-- Nunca abrir em branco: se o app não aparecer, limpa só a cópia guardada do app (não o login nem os dados) e abre de novo.
+         Se mesmo assim falhar, mostra um aviso com botão em vez da tela branca. Teste: tests/unit/body-coach-nunca-branco.test.js -->
+    <script>
+      (function () {
+        var CH = 'bc_recuperou_em', ESPERA = 12000;
+        function vivo() { var r = document.getElementById('root'); return !!(window.__bcVivo || (r && r.children.length)); }
+        function aviso() {
+          var r = document.getElementById('root'); if (!r || vivo()) return;
+          r.innerHTML = '<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;font-family:Inter,system-ui,sans-serif;background:#fbfbf7;color:#1f1d1a">' +
+            '<div style="font-size:20px;font-weight:700">Body Coach</div><div style="font-size:15px;max-width:300px">O app n\u00e3o abriu direito. Confira a internet e toque abaixo.</div>' +
+            '<button id="bc-abrir" style="padding:14px 22px;border:0;border-radius:14px;background:#cf6a3a;color:#fff;font-size:16px;font-weight:700">Abrir de novo</button></div>';
+          document.getElementById('bc-abrir').onclick = function () { recuperar(true); };
+        }
+        function recuperar(forcar) {
+          if (vivo() && !forcar) return;
+          var ultima = 0; try { ultima = +localStorage.getItem(CH) || 0; } catch (e) {}
+          if (!forcar && Date.now() - ultima < 120000) { aviso(); return; }
+          try { localStorage.setItem(CH, String(Date.now())); } catch (e) {}
+          var tarefas = [];
+          try { if (navigator.serviceWorker) tarefas.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (g) { return g.unregister(); })); })); } catch (e) {}
+          try { if (window.caches) tarefas.push(caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); })); } catch (e) {}
+          var ir = function () { var u = new URL(location.href); u.searchParams.set('v', String(Date.now())); location.replace(u.href); };
+          Promise.all(tarefas).then(ir, ir); setTimeout(ir, 3000);
+        }
+        window.__bcRecuperar = recuperar;
+        // Arquivo do app que não carregou (versão velha, rede caiu no meio): recupera na hora.
+        window.addEventListener('error', function (e) {
+          var t = e && e.target; var src = t && (t.src || t.href) || '';
+          if (/\/assets\//.test(src)) recuperar(false);
+        }, true);
+        setTimeout(function () { if (!vivo()) recuperar(false); }, ESPERA);
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
