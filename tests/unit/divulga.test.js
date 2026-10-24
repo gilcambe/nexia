@@ -233,7 +233,7 @@ test('histórico com formato e serie: último item deve ter formato definido', a
   assert.ok(ultimoItem.hasOwnProperty('resultados'), 'Último item deve ter chave "resultados"');
 });
 
-  test('deve salvar formato no histórico após rodar', async () => {
+test('deve salvar formato no histórico após rodar', async () => {
   const dados = tmp();
   // Prepara estado inicial com fila definida
   const estadoInicial = { rodizio: 0, feitos: [], historico: [] };
