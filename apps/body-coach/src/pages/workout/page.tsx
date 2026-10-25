@@ -20,7 +20,7 @@ import EntretenimentoTreino from './components/EntretenimentoTreino';
 import { minutosDoTexto } from '@/lib/entretenimento';
 import GravarParaCoach from '@/components/feature/GravarParaCoach';
 import { dicaAoVivo } from '@/lib/liveCoach';
-import { getUserDoc, listUserDocs } from '@/lib/userData';
+import { getUserDoc, setUserDoc, listUserDocs } from '@/lib/userData';
 import { useAuth } from '@/components/feature/AuthContext';
 import SetEntry, { type NewSet } from './components/SetEntry';
 import { ehPorTempo } from '@/lib/porTempo';
@@ -171,7 +171,7 @@ const rirDaNota = (nota?: string): number | null => { const m = /Alvo RIR (\d+)/
 
 function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSessionChange, onSaved }: { session: Session; lesoes?: Lesao[]; avisos?: string[]; origem: Origem; inicial?: TreinoAndamento | null; onSessionChange?: (s: Session) => void; onSaved?: () => void }) {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const pesoAluno = Number(profile?.onboarding?.weight) || 70;
   const { setOpen } = useCoach();
   const [startedAt] = useState(() => inicial?.startedAt ?? new Date().toISOString());
@@ -217,6 +217,28 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
   const [showSwapModal, setShowSwapModal] = useState(false);
 
   const exercise = session.exercises[exIndex] ?? session.exercises[0];
+
+  const addEvitar = async (id: string) => {
+    if (!user) return;
+    const ob = (profile?.onboarding ?? {}) as Record<string, unknown>;
+    const rawEvitar = ob.evitar ?? (profile as unknown as Record<string, unknown> | null)?.evitar;
+    const listaAtual: string[] = Array.isArray(rawEvitar)
+      ? (rawEvitar as string[]).map((x) => String(x ?? '').trim()).filter(Boolean)
+      : typeof rawEvitar === 'string' && rawEvitar.trim()
+      ? rawEvitar.split(',').map((x) => x.trim()).filter(Boolean)
+      : [];
+    if (!listaAtual.includes(id)) {
+      const novaLista = [...listaAtual, id];
+      const novoOb = { ...ob, evitar: novaLista };
+      try {
+        await setUserDoc(user.id, 'profile', 'main', { onboarding: novoOb, evitar: novaLista }, true);
+        refreshProfile();
+      } catch (err) {
+        console.error('Erro ao adicionar exercício a evitar:', err);
+      }
+    }
+    setShowSwapModal(false);
+  };
 
   // Coach por voz: anuncia cada exercício com a carga sugerida (liga e desliga na barra do treino).
   const [voz, setVoz] = useState(vozLigada);
@@ -632,6 +654,9 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
                   </div>
                   <button type="button" onClick={() => { setShowSwapModal(false); setExtraModo('trocar'); }} className="mt-3 w-full rounded-2xl border-2 border-dashed border-primary-300 bg-primary-50 px-4 py-3 text-left text-base font-semibold text-primary-700" data-testid="escrever-exercicio">
                     <i className="ri-edit-2-line mr-1"></i>Não está na lista? Escreva o nome
+                  </button>
+                  <button type="button" onClick={() => void addEvitar(exercise.id)} className="mt-2 w-full rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-left text-base font-semibold text-red-700 transition hover:bg-red-100" data-testid="evitar-exercicio">
+                    <i className="ri-close-circle-line mr-1"></i>Não gosto deste, nunca mais sugerir
                   </button>
                   <p className="mt-3 text-sm text-foreground-600">Ou escolha uma opção para {exercise.name}:</p>
                   <div className="mt-2 flex-1 space-y-2 overflow-y-auto">

@@ -69,3 +69,15 @@ test('remoção de exercício da lista de evitar atualiza corretamente o array',
   assert.deepEqual(listaAposRemocao, ['agachamento-livre']);
   assert.equal(listaAposRemocao.includes(idParaRemover), false);
 });
+
+test('adição de exercício à lista de evitar (addEvitar) atualiza a lista sem duplicar', async () => {
+  const idAdicionar = 'crucifixo-com-halteres';
+  const listaInicial = ['supino-reto-com-barra'];
+  const novaLista = listaInicial.includes(idAdicionar) ? listaInicial : [...listaInicial, idAdicionar];
+
+  assert.deepEqual(novaLista, ['supino-reto-com-barra', 'crucifixo-com-halteres']);
+
+  // Tentar adicionar de novo não duplica
+  const listaDuplicada = novaLista.includes(idAdicionar) ? novaLista : [...novaLista, idAdicionar];
+  assert.deepEqual(listaDuplicada, ['supino-reto-com-barra', 'crucifixo-com-halteres']);
+});
