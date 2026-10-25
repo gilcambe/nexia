@@ -645,8 +645,14 @@ function createOrchestrator(deps) {
           // Issue #225: sem diff contra a base, nada de PR vazio: falha já, para a fila tentar outro modelo grátis.
           const cmp = await tool(ctx, state, plan[i].agent, 'github.compare', { base: repo.default_branch, head: state.work_branch });
           if (cmp.status === 'succeeded' && !(cmp.result.files || []).length) {
-            stepFail(i, { tool_call_ids: addIds(i, ids(cmp)), error_code: 'EMPTY_DIFF', summary: `A branch ${state.work_branch} não tem mudanças; PR não aberto.` });
-            stop = { status: 'failed', error_code: 'EMPTY_DIFF', result_summary: `Nenhum arquivo mudou na branch ${state.work_branch}; PR vazio não foi aberto.` };
+            if (cmp.result.ahead_by > 0) {
+              const msg = 'Já entregue: o conteúdo desta branch já está na develop; nada a abrir.';
+              stepDone(i, { tool_call_ids: addIds(i, ids(cmp)), summary: msg });
+              stop = { status: 'succeeded', result_summary: msg };
+            } else {
+              stepFail(i, { tool_call_ids: addIds(i, ids(cmp)), error_code: 'EMPTY_DIFF', summary: `A branch ${state.work_branch} não tem mudanças; PR não aberto.` });
+              stop = { status: 'failed', error_code: 'EMPTY_DIFF', result_summary: `Nenhum arquivo mudou na branch ${state.work_branch}; PR vazio não foi aberto.` };
+            }
           } else {
           // #984/#1015: já existe PR aberto deste branch (tentativa anterior da mesma tarefa)? Reaproveita, sem abrir outro.
           const lp = await tool(ctx, state, plan[i].agent, 'github.list_pulls', { state: 'open', limit: 100 });
