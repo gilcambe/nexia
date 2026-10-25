@@ -6,6 +6,25 @@ const { TEMPLATES } = require('../../robots/templates.js');
 
 const router = express.Router();
 
+// Armazenamento em memória para simular banco de dados
+// Em um ambiente real, isso seria substituído por um banco de dados real
+let automationsStorage = [];
+
+// Gerador de ID simples
+function generateId() {
+  return `auto_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// Busca automações por tenant
+function getAutomationsByTenant(tenantId) {
+  return automationsStorage.filter(auto => auto.tenant_id === tenantId);
+}
+
+// Busca automação por ID e tenant
+function getAutomationById(id, tenantId) {
+  return automationsStorage.find(auto => auto.id === id && auto.tenant_id === tenantId);
+}
+
 // Middleware para validar tenant ID
 const validateTenant = (req, res, next) => {
   const tenantId = req.get('X-Tenant-Id') || req.body.tenant_id || req.query.tenant_id;
@@ -19,12 +38,15 @@ const validateTenant = (req, res, next) => {
 // Lista automações ativas do tenant
 router.get('/', validateTenant, async (req, res) => {
   try {
-    // Aqui seria a lógica para buscar automações do tenant do banco de dados
-    // Por enquanto retornando uma lista vazia como exemplo
-    const automations = [];
+    // Busca automações do tenant do armazenamento
+    const automations = getAutomationsByTenant(req.tenantId);
+    
+    // Filtra apenas automações ativas
+    const activeAutomations = automations.filter(auto => auto.status === 'active');
+    
     res.json({
       success: true,
-      data: automations,
+      data: activeAutomations,
       message: 'Lista de automações retornada com sucesso'
     });
   } catch (error) {
@@ -105,9 +127,9 @@ router.post('/', validateTenant, async (req, res) => {
       task = custom_task;
     }
     
-    // Aqui seria a lógica para salvar no banco de dados
+    // Salva no armazenamento
     const newAutomation = {
-      id: `auto_${Date.now()}`,
+      id: generateId(),
       tenant_id: req.tenantId,
       name,
       task,
@@ -117,8 +139,8 @@ router.post('/', validateTenant, async (req, res) => {
       template_id: template_id || null
     };
     
-    // Simulação de salvamento no banco
-    // await db.collection('automations').insert(newAutomation);
+    // Adiciona ao armazenamento
+    automationsStorage.push(newAutomation);
     
     res.status(201).json({
       success: true,
@@ -147,24 +169,27 @@ router.put('/:id/pause', validateTenant, async (req, res) => {
       });
     }
     
-    // Aqui seria a lógica para buscar e atualizar no banco
-    // const automation = await db.collection('automations').findOne({ id, tenant_id: req.tenantId });
-    // if (!automation) {
-    //   return res.status(404).json({ 
-    //     success: false, 
-    //     error: 'Automação não encontrada' 
-    //   });
-    // }
+    // Busca automação pelo ID e tenant (garante isolamento)
+    const automation = getAutomationById(id, req.tenantId);
+    if (!automation) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Automação não encontrada' 
+      });
+    }
     
-    // const updatedAutomation = await db.collection('automations').updateOne(
-    //   { id, tenant_id: req.tenantId },
-    //   { $set: { status: 'paused' } }
-    // );
+    // Atualiza automação no armazenamento
+    const index = automationsStorage.findIndex(auto => auto.id === id && auto.tenant_id === req.tenantId);
+    if (index !== -1) {
+      automationsStorage[index] = {
+        ...automationsStorage[index],
+        status: 'paused',
+        paused_at: new Date().toISOString()
+      };
+    }
     
-    // Simulação de atualização
     const updatedAutomation = {
-      id,
-      tenant_id: req.tenantId,
+      ...automation,
       status: 'paused',
       paused_at: new Date().toISOString()
     };
@@ -196,17 +221,21 @@ router.delete('/:id', validateTenant, async (req, res) => {
       });
     }
     
-    // Aqui seria a lógica para deletar no banco
-    // const result = await db.collection('automations').deleteOne({ id, tenant_id: req.tenantId });
-    // if (result.deletedCount === 0) {
-    //   return res.status(404).json({ 
-    //     success: false, 
-    //     error: 'Automação não encontrada' 
-    //   });
-    // }
+    // Busca automação pelo ID e tenant (garante isolamento)
+    const automation = getAutomationById(id, req.tenantId);
+    if (!automation) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'Automação não encontrada' 
+      });
+    }
+    
+    // Remove automação do armazenamento
+    automationsStorage = automationsStorage.filter(auto => !(auto.id === id && auto.tenant_id === req.tenantId));
     
     res.json({
       success: true,
+      data: automation,
       message: 'Automação deletada com sucesso'
     });
   } catch (error) {
