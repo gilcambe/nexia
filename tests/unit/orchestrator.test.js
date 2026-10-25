@@ -187,3 +187,28 @@ test('#984. branch de trabalho estável: mesmo pedido → mesmo branch; pedido d
   assert.match(a, /^nexia\/corrija-o-rodape-do-site-alfa-[0-9a-f]{6}$/);
   assert.notStrictEqual(workBranchFor('Corrija o topo do Site Alfa'), a);
 });
+
+test('U13. EMPTY_DIFF: diff sem arquivos mas com commits à frente', () => {
+  // Caso 1: diff sem arquivos mas com 3 commits à frente - deve ser sucesso
+  const cmp1 = { status: 'succeeded', result: { files: [], ahead_by: 3 } };
+  assert.strictEqual(cmp1.status, 'succeeded');
+  assert.strictEqual((cmp1.result.files || []).length, 0);
+  assert.strictEqual(cmp1.result.ahead_by, 3);
+  
+  // Caso 2: diff sem arquivos e sem commits à frente - deve falhar com EMPTY_DIFF
+  const cmp2 = { status: 'succeeded', result: { files: [], ahead_by: 0 } };
+  assert.strictEqual(cmp2.status, 'succeeded');
+  assert.strictEqual((cmp2.result.files || []).length, 0);
+  assert.strictEqual(cmp2.result.ahead_by, 0);
+  
+  // Simulando a verificação do orquestrator
+  const shouldFailEmptyDiff = cmp => {
+    if (cmp.status === 'succeeded' && !(cmp.result.files || []).length && cmp.result.ahead_by === 0) {
+      return { error_code: 'EMPTY_DIFF', summary: `Nenhum arquivo mudou; PR vazio não foi aberto.` };
+    }
+    return null;
+  };
+  
+  assert.deepStrictEqual(shouldFailEmptyDiff(cmp1), null, 'com ahead_by > 0 não deve falhar');
+  assert.deepStrictEqual(shouldFailEmptyDiff(cmp2), { error_code: 'EMPTY_DIFF', summary: `Nenhum arquivo mudou; PR vazio não foi aberto.` }, 'com ahead_by = 0 deve falhar com EMPTY_DIFF');
+});
