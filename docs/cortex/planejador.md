@@ -22,3 +22,16 @@ Quando você faz um pedido grande, o Planejador do Cortex faz o seguinte:
 ### Quando a inteligência artificial tem dificuldades
 
 Se a IA que cria o plano completo não conseguir ou não entender bem o pedido, o Cortex tem um "plano simples". Nesse caso, ele divide o trabalho em partes onde cada parte cuida de um arquivo citado no seu pedido, e todas essas partes rodam ao mesmo tempo.
+
+### Como o plano é criado (detalhes técnicos)
+
+O planejador é implementado no arquivo `scripts/cortex-plano.js` e funciona da seguinte forma:
+
+1.  **Classificação do pedido**: O sistema verifica se o pedido é grande, médio ou pequeno com base no texto, nos arquivos citados e no tamanho deles.
+2.  **Divisão em partes**: Pedidos grandes são divididos em até 8 partes, cada uma com:
+    *   Até **3 arquivos** para modificar
+    *   Até **400 linhas** mudadas (acréscimos + exclusões)
+    *   Uma lista das partes de que depende
+    *   Um critério claro de quando a parte está "pronta"
+3.  **Dependências**: Cada parte indica de quais outras partes ela depende. Por exemplo, uma parte que adiciona um botão pode depender de uma parte anterior que criou a página onde esse botão vai estar.
+4.  **Execução paralela**: Partes sem dependência mútua rodam ao mesmo tempo em pistas diferentes (até 6 pistas), mas duas partes nunca mexem no mesmo arquivo ao mesmo tempo.
