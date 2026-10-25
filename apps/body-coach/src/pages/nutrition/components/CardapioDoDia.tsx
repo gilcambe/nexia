@@ -64,26 +64,29 @@ export default function CardapioDoDia() {
   };
 
   return (
-    <div className="rounded-2xl border border-background-200 bg-background-50 p-3" data-testid="cardapio">
+    <div className="flex flex-1 flex-col rounded-2xl border border-background-200 bg-background-50 p-3 alto:p-4" data-testid="cardapio">
       <div className="flex items-baseline gap-2">
         <h2 className="font-heading text-base font-bold text-foreground-950">Cardápio de hoje</h2>
         <span className="ml-auto text-xs font-semibold text-foreground-700">{totalKcal} kcal · {totalProt} g prot.</span>
       </div>
-      <div className="mt-1.5 divide-y divide-background-200">
+      {/* As refeições dividem a altura do cartão: a tela fica cheia e cada linha fica fácil de tocar. */}
+      <div className="mt-1.5 flex flex-1 flex-col divide-y divide-background-200">
         {refeicoes.map((r) => {
           const aberto = abertaAgora === r.nome;
           const kcal = Math.round(r.itens.reduce((t, i, k) => t + (efetivo(`${r.nome}|${k}`, i).kcal ?? 0), 0));
           return (
-          <div key={r.nome} className="py-0.5">
+          <div key={r.nome} className="flex flex-1 flex-col justify-center py-0.5 alto:py-1.5">
             <button type="button" onClick={() => setAberta(aberto ? null : r.nome)} aria-expanded={aberto} className="flex w-full items-center gap-2 py-0.5 text-left" data-testid="cardapio-refeicao">
-              <span className="text-sm font-semibold text-foreground-900">{r.nome}</span>
-              <span className="text-xs text-foreground-500">{horarios[r.nome] ?? r.horario}</span>
-              {r.nome === proxima && <span className="rounded-full bg-primary-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">próxima</span>}
-              <span className="ml-auto text-xs text-foreground-500">{kcal} kcal</span>
+              <span className="flex min-w-0 items-baseline gap-2 leading-tight alto:flex-col alto:items-start alto:gap-0">
+                <span className="whitespace-nowrap text-sm font-semibold text-foreground-900 alto:text-base">{r.nome}</span>
+                <span className="text-xs text-foreground-500">{horarios[r.nome] ?? r.horario}</span>
+              </span>
+              {r.nome === proxima && <span className="shrink-0 rounded-full bg-primary-500 px-1.5 py-0.5 text-[10px] font-semibold text-white">próxima</span>}
+              <span className="ml-auto whitespace-nowrap text-xs text-foreground-500 alto:text-sm">{kcal} kcal</span>
               <i className={`ri-arrow-${aberto ? 'up' : 'down'}-s-line text-foreground-400`}></i>
             </button>
             {aberto && (
-            <ul className="text-[13px] text-foreground-700">
+            <ul className="text-[13px] text-foreground-700 alto:text-sm">
               {r.itens.map((i, k) => {
                 const chave = `${r.nome}|${k}`;
                 const t = trocas[chave];

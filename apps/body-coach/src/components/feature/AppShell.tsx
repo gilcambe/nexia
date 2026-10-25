@@ -368,7 +368,8 @@ function Shell() {
 
       {/* main */}
       <main className="min-w-0 break-words lg:min-h-screen lg:pl-60">
-        <div className="mx-auto max-w-6xl px-3 pb-20 pt-2 sm:px-4 md:px-6 md:py-8 lg:pb-8">
+        {/* Coluna da altura da tela (menos o cabeçalho): cada página pode crescer até o menu de baixo, sem sobrar vazio. */}
+        <div className="mx-auto flex min-h-[calc(100dvh-52px)] max-w-6xl flex-col px-3 [&>*]:w-full pb-[calc(5rem+env(safe-area-inset-bottom))] pt-2 sm:px-4 md:px-6 md:py-8 lg:min-h-screen lg:pb-8">
           <PortaoAcesso><Outlet /></PortaoAcesso>
         </div>
       </main>

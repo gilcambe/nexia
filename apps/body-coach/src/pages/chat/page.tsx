@@ -5,6 +5,7 @@ import { esquecerPapel } from '@/lib/papelCoach';
 import { chatApi, type Contato, type Mensagem } from '@/lib/chat';
 import DesafioCard from './Desafio';
 import GravadorVideo from '@/components/feature/GravadorVideo';
+import EstadoVazio from '@/components/base/EstadoVazio';
 
 function BolhaVideo({ id }: { id: string }) {
   const [src, setSrc] = useState('');
@@ -145,7 +146,7 @@ export default function Chat() {
 
   if (papel === null) {
     return (
-      <div className="mx-auto max-w-md space-y-4">
+      <div className="mx-auto flex max-w-md flex-1 flex-col justify-center gap-4">
         <h1 className="font-heading text-2xl font-bold text-foreground-950">Conversa com o coach</h1>
         <p className="text-sm text-foreground-600">Fale direto com o seu coach, como num WhatsApp. Primeiro, diga quem você é:</p>
         <button onClick={() => void escolher('aluno')} className="w-full rounded-xl bg-primary-500 px-4 py-3 text-left text-sm font-semibold text-background-50"><i className="ri-user-line mr-2"></i>Sou aluno<span className="block text-xs font-normal opacity-90">Vou usar o código que o meu coach me passar</span></button>
@@ -157,7 +158,7 @@ export default function Chat() {
 
   if (papel === 'aluno' && !lista?.contatos.length) {
     return (
-      <div className="mx-auto max-w-md space-y-4">
+      <div className="mx-auto flex max-w-md flex-1 flex-col justify-center gap-4">
         <h1 className="font-heading text-2xl font-bold text-foreground-950">Conversa com o coach</h1>
         <p className="text-sm text-foreground-600">Digite o código que o seu coach passou:</p>
         <input value={codigo} onChange={(e) => setCodigo(e.target.value.toUpperCase())} maxLength={10} placeholder="Ex.: K7PQ2M" aria-label="Código do coach" className="w-full rounded-lg border border-background-200 bg-background-50 px-3 py-3 text-center text-lg font-bold tracking-widest outline-none focus:border-primary-300" />
@@ -168,7 +169,7 @@ export default function Chat() {
   }
 
   return (
-    <div className="mx-auto flex max-w-3xl flex-col gap-3">
+    <div className="mx-auto flex max-w-3xl flex-1 flex-col gap-3">
       <h1 className="font-heading text-2xl font-bold text-foreground-950">{papel === 'coach' ? 'Conversa com os alunos' : (lista?.contatos.length ?? 0) > 1 ? 'Conversa com a sua equipe' : 'Conversa com o coach'}</h1>
       {papel === 'coach' && (
         <div className="rounded-xl border border-primary-200 bg-primary-50 p-3 text-sm text-foreground-700">
@@ -180,7 +181,13 @@ export default function Chat() {
         </div>
       )}
       <DesafioCard papel={papel} />
-      {papel === 'coach' && !lista?.contatos.length && <p className="text-sm text-foreground-500">Ainda não entrou nenhum aluno.</p>}
+      {!aberto && (
+        <EstadoVazio
+          icone="ri-chat-smile-3-line"
+          texto={!lista ? 'Carregando conversas…' : papel === 'coach' && !lista.contatos.length ? 'Ainda não entrou nenhum aluno. Quando entrar com o seu código, a conversa aparece aqui.' : (lista.contatos.length > 1 ? 'Toque num nome acima para abrir a conversa.' : 'Abrindo a conversa…')}
+          testId="chat-vazio"
+        />
+      )}
       {(papel === 'coach' ? !!lista?.contatos.length : (lista?.contatos.length ?? 0) > 1) && lista && (
         <div className="flex gap-2 overflow-x-auto pb-1">
           {lista.contatos.map((c) => (
@@ -192,7 +199,7 @@ export default function Chat() {
         </div>
       )}
       {aberto && (
-        <div className="flex h-[60vh] flex-col overflow-hidden rounded-2xl border border-background-200 bg-background-100/50">
+        <div className="flex min-h-[16rem] flex-1 flex-col overflow-hidden rounded-2xl lg:h-[60vh] lg:flex-none border border-background-200 bg-background-100/50">
           <div className="border-b border-background-200 bg-background-50 px-4 py-2 text-sm font-semibold text-foreground-800">{aberto.nome}</div>
           {papel === 'coach' && <div className="border-b border-background-200 bg-background-50 px-4 py-2"><ResumoSemana uid={aberto.uid} /></div>}
           <div className="flex-1 space-y-2 overflow-y-auto p-3" aria-live="polite">

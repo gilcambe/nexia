@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState, type ChangeEvent } from 'react';
 import Card from '@/components/base/Card';
+import EstadoVazio from '@/components/base/EstadoVazio';
 import { compressImageToDataUrl } from '@/lib/userData';
 import { dataBr } from '@/lib/avaliacao/calculos';
 import { MAX_FOTO_BYTES, POSES, salvarAvaliacao, type Fotos, type Pose } from '@/lib/avaliacao/dados';
@@ -126,7 +127,7 @@ export default function AbaFotos({
     : [];
 
   return (
-    <div className="space-y-2">
+    <div className="tela tela-fim">
       {!somenteComparar && <Card padding="p-3">
         <div className="flex items-center gap-2">
           <h2 className="flex-1 font-heading text-base font-semibold text-foreground-950">Fotos de evolução</h2>
@@ -174,7 +175,7 @@ export default function AbaFotos({
         {erro && <p className="mt-3 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p>}
       </Card>}
 
-      <Card padding="p-3">
+      <Card padding="p-3" className="flex flex-col">
         <h2 className="mb-2 font-heading text-base font-semibold text-foreground-950">Antes e depois</h2>
         <div className="mb-2 grid grid-cols-4 gap-1 rounded-xl bg-background-100 p-1">
           {POSES.map((p) => (
@@ -184,9 +185,7 @@ export default function AbaFotos({
           ))}
         </div>
         {comFoto.length < 2 ? (
-          <p className="rounded-xl border-2 border-dashed border-background-300 p-3 text-center text-xs text-foreground-500">
-            Salve fotos dessa posição em pelo menos duas datas para comparar.
-          </p>
+          <EstadoVazio icone="ri-contrast-2-line" texto="Salve fotos dessa posição em pelo menos duas datas para comparar." testId="antes-depois-vazio" />
         ) : (
           <>
             <div className="mb-3 grid grid-cols-2 gap-2">

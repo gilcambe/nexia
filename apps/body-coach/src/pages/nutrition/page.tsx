@@ -38,7 +38,7 @@ export default function Nutrition() {
   const mealCount = meals.length;
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-1 flex-col gap-2 alto:gap-2.5">
       <header className="flex items-center justify-between gap-2">
         <h1 className="font-heading text-xl font-bold text-foreground-950">Nutrição</h1>
         <button
@@ -60,7 +60,7 @@ export default function Nutrition() {
           </Card>
           <Favoritas />
           <AjudaRefeicao />
-          <Card padding="p-3">
+          <Card padding="p-3" className="flex flex-1 flex-col">
             <div className="flex items-center justify-between">
               <h2 className="font-heading text-sm font-semibold text-foreground-950"><i className="ri-restaurant-2-line mr-1 text-secondary-500"></i>Refeições de hoje</h2>
               <span className="text-xs text-foreground-400">{mealCount ? `${mealCount} registradas` : 'nenhuma ainda'}</span>
@@ -83,8 +83,13 @@ export default function Nutrition() {
               </div>
             ) : meals.length > 0 ? (
               <MealList meals={meals} onRemove={removeMeal} />
-            ) : null}
-            <div className="mt-2 border-t border-background-200 pt-2">
+            ) : (
+              <button type="button" onClick={() => setShowAdd(true)} className="my-1.5 hidden flex-1 flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-background-200 px-3 py-2 text-center text-sm text-foreground-500 alto:flex" data-testid="refeicoes-vazio">
+                <i className="ri-restaurant-2-line text-2xl text-secondary-500 alto:text-3xl"></i>
+                Toque para registrar a primeira refeição.
+              </button>
+            )}
+            <div className="mt-auto border-t border-background-200 pt-2">
               <WaterTracker consumed={water} goal={waterGoal} onAdd={addWater} onReset={resetWater} />
             </div>
           </Card>

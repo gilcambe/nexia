@@ -152,3 +152,11 @@ h1, h2, h3, h4, h5, h6 {
     scrollbar-width: none;
   }
 }
+/* Telas do celular do mesmo jeito: a página ocupa a altura até o menu de baixo, com o mesmo espaço entre os blocos.
+   "tela-fim": o último bloco cresce até o menu (sem faixa vazia embaixo). */
+@layer components {
+  .tela { display: flex; flex: 1 1 auto; flex-direction: column; gap: 0.5rem; min-height: 0; }
+  .tela > * { margin-top: 0; margin-bottom: 0; }
+  .tela-fim > :last-child { flex-grow: 1; }
+  @media (min-height: 740px) { .tela { gap: 0.625rem; } }
+}

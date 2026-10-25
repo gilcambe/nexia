@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import Card from '@/components/base/Card';
+import EstadoVazio from '@/components/base/EstadoVazio';
 import { alertas, dataBr, prever, recordes, simetria } from '@/lib/avaliacao/calculos';
 import { MAX_FOTO_BYTES, salvarAvaliacao, type PerfilAvaliacao } from '@/lib/avaliacao/dados';
 import { hojeIso } from '@/lib/avaliacao/importar';
@@ -110,7 +111,8 @@ export default function ResumoEvolucao({
   const lembrete = () => void compartilharArquivo(new Blob([gerarIcsReavaliacao()], { type: 'text/calendar;charset=utf-8' }), 'reavaliacao-mensal.ics');
 
   return (
-    <div className="space-y-2">
+    // No resumo sem avaliação, o cartão "Última avaliação" é que ocupa o espaço (não o lembrete do fim).
+    <div className={`tela ${parte === 'resumo' ? '' : 'tela-fim'}`}>
       {parte === 'corpo' && (<>
       {/* Body Twin (corpo realista): usa a medição real mais recente. As fotos de exemplo são de um homem,
           então para mulher sem fotos próprias fica só o corpo moldado abaixo (que já é feminino). */}
@@ -150,17 +152,19 @@ export default function ResumoEvolucao({
       </>)}
 
       {parte === 'resumo' && (<>
-      <Card padding="p-4">
+      <Card padding="p-4" className={ult ? '' : 'flex flex-1 flex-col'}>
         <div className="mb-2 flex items-center gap-2">
           <i className="ri-ruler-line text-lg text-primary-500"></i>
           <h2 className="font-heading text-base font-semibold text-foreground-950">Última avaliação</h2>
           <span className="ml-auto text-xs text-foreground-500">{ult ? dataBr(ult.data) : 'nenhuma ainda'}</span>
         </div>
         {!ult ? (
-          <div className="text-center">
-            <p className="mb-3 text-sm text-foreground-600">Comece importando o laudo da balança ou do nutricionista, ou preencha suas medidas.</p>
-            <button type="button" onClick={() => irPara('avaliacoes')} className="rounded-lg bg-primary-500 px-4 py-2 text-sm font-semibold text-background-50 dark:text-foreground-950">Fazer minha primeira avaliação</button>
-          </div>
+          <EstadoVazio
+            icone="ri-ruler-line"
+            texto="Comece importando o laudo da balança ou do nutricionista, ou preencha suas medidas."
+            acao={<button type="button" onClick={() => irPara('avaliacoes')} className="mt-1 rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-background-50 alto:py-3 alto:text-base dark:text-foreground-950">Fazer minha primeira avaliação</button>}
+            testId="resumo-vazio"
+          />
         ) : (
           <>
             <div className="grid grid-cols-2 gap-2">

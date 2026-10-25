@@ -13,7 +13,7 @@ export default function Guia() {
   const atual = passos[aberto] ?? passos[0];
   // Grade de ícones e o texto do item escolhido embaixo: o guia todo cabe numa tela do celular.
   return (
-    <div className="mx-auto max-w-2xl space-y-2">
+    <div className="tela tela-fim mx-auto max-w-2xl">
       <div className="flex items-center gap-2">
         <div className="min-w-0 flex-1">
           <h1 className="font-heading text-xl font-bold text-foreground-950">Guia do app</h1>
@@ -30,10 +30,12 @@ export default function Guia() {
         ))}
       </div>
       {atual && (
-        <div className="rounded-2xl border border-background-200 bg-background-50 p-3" role="tabpanel">
-          <p className="font-semibold text-foreground-900"><i className={`${atual.icone} mr-1 text-primary-500`}></i>{atual.titulo}</p>
-          <p className="mt-1 text-sm text-foreground-700">{atual.texto}</p>
-          {atual.rota && atual.rota !== '/guia' && <Link to={atual.rota} className="mt-1 inline-block text-sm font-semibold text-primary-600 underline">Abrir esta tela</Link>}
+        // O item escolhido ocupa o resto da tela: ícone grande, texto maior e o botão para abrir a tela.
+        <div className="flex flex-col items-center justify-center gap-2 rounded-2xl border border-background-200 bg-background-50 p-4 text-center" role="tabpanel">
+          <i className={`${atual.icone} hidden text-5xl text-primary-500 alto:block`} aria-hidden="true"></i>
+          <p className="font-heading text-base font-semibold text-foreground-900 alto:text-lg"><i className={`${atual.icone} mr-1 text-primary-500 alto:hidden`}></i>{atual.titulo}</p>
+          <p className="max-w-sm text-sm text-foreground-700 alto:text-base">{atual.texto}</p>
+          {atual.rota && atual.rota !== '/guia' && <Link to={atual.rota} className="mt-1 inline-flex rounded-xl bg-primary-500 px-5 py-2.5 text-sm font-semibold text-background-50 alto:text-base dark:text-foreground-950">Abrir esta tela</Link>}
         </div>
       )}
     </div>

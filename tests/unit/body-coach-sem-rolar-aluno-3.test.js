@@ -20,7 +20,7 @@ test('Guia, Respirar, Exames, Ferramentas e Loja cabem numa tela: grades, abas e
   assert.match(ler('pages/exams/components/BloodMarkers.tsx'), /grid grid-cols-2 gap-2/);
   const fer = ler('pages/ferramentas/page.tsx');
   assert.match(fer, /const ABAS_FERRAMENTAS = \[/);
-  assert.match(fer, /grid grid-cols-4 gap-1\.5/);
+  assert.match(fer, /grid flex-1 grid-cols-3/);
   assert.match(fer, /MAIS_TELAS\.map/, 'as telas que saíram do menu continuam a um toque');
   const loja = ler('pages/ferramentas/Loja.tsx');
   for (const p of ["parte === 'ofertas'", "parte === 'voce'", "parte === 'catalogo'"]) assert.ok(loja.includes(p), p);

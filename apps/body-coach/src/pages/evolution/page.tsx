@@ -60,7 +60,7 @@ export default function Evolution() {
   }, [user?.id]);
 
   return (
-    <div className="space-y-2">
+    <div className="tela">
       <h1 className="font-heading text-xl font-bold text-foreground-950">Evolução</h1>
 
       <nav className="sticky top-0 z-20 -mx-1 grid grid-cols-5 gap-1 rounded-2xl border border-background-200 bg-background-50/95 p-1 backdrop-blur" aria-label="Seções da evolução">
@@ -70,9 +70,9 @@ export default function Evolution() {
             type="button"
             onClick={() => irPara(a.id)}
             aria-current={aba === a.id ? 'page' : undefined}
-            className={`flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-xs font-semibold transition ${aba === a.id ? 'bg-primary-500 text-background-50 dark:text-foreground-950' : 'text-foreground-600'}`}
+            className={`flex flex-col items-center gap-0.5 rounded-xl py-2 text-xs font-semibold transition alto:py-1.5 ${aba === a.id ? 'bg-primary-500 text-background-50 dark:text-foreground-950' : 'text-foreground-600'}`}
           >
-            <i className={`${a.icone} text-base`}></i>
+            <i className={`${a.icone} hidden text-base alto:block`}></i>
             {a.label}
           </button>
         ))}
@@ -110,7 +110,7 @@ export default function Evolution() {
       {aba === 'avaliacoes' && <AbaAvaliacoes uid={user?.id} perfil={perfil} entries={entries} serie={serie} onMudou={reload} />}
       {aba === 'fotos' && <AbaFotos uid={user?.id} entries={entries} serie={serie} onMudou={reload} />}
       {aba === 'graficos' && (
-        <>
+        <div className="tela tela-fim">
           {/* Um gráfico por vez, escolhido numa grade de 4 (cabe sem rolar). */}
           <div className="grid grid-cols-4 gap-1.5" role="group" aria-label="Gráficos da evolução">
             {GRAFICOS.map((g) => (
@@ -151,7 +151,7 @@ export default function Evolution() {
           </Card>}
 
           {grafico === 'periodo' && <PeriodoEAnalise entries={entries} />}
-        </>
+        </div>
       )}
     </div>
   );

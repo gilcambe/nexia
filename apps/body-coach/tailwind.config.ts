@@ -7,6 +7,8 @@ export default {
   ],
   theme: {
     extend: {
+      // Celulares altos (ex.: 360x780): as telas aproveitam a altura com elementos maiores.
+      screens: { alto: { raw: '(min-height: 740px)' } },
       colors: {
         background: {
           50: 'oklch(var(--background-50) / <alpha-value>)',

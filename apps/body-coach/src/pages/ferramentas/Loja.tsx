@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useAuth } from '@/components/feature/AuthContext';
 import { interpretMarker } from '@/pages/exams/components/markerRules';
 import OfertasDoDia from './OfertasDoDia';
+import EstadoVazio from '@/components/base/EstadoVazio';
 import { PRODUTOS, linkAmazon, linkMercadoLivre, recomendados, type ProdutoLoja } from '@/lib/ferramentas/loja';
 
 function Produto({ p }: { p: ProdutoLoja }) {
@@ -39,7 +40,7 @@ export default function Loja() {
 
   // Em abas (ofertas, para você, catálogo) e cartões em 2 colunas: menos rolagem no celular.
   return (
-    <div className="space-y-2">
+    <div className="tela">
       <form onSubmit={(e) => { e.preventDefault(); if (busca.trim()) window.open(linkAmazon(busca.trim()), '_blank', 'noopener'); }} className="flex gap-2">
         <input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar produto (ex.: whey, tênis)" className="min-w-0 flex-1 rounded-xl border border-background-200 bg-background-50 px-3 py-2 text-sm" aria-label="Buscar produto" />
         <button type="submit" className="rounded-xl bg-primary-500 px-4 text-background-50 dark:text-foreground-950" aria-label="Buscar"><i className="ri-search-line"></i></button>
@@ -55,7 +56,7 @@ export default function Loja() {
 
       {parte === 'voce' && (recs.length > 0
         ? <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{recs.map((p) => <Produto key={p.id} p={p} />)}</div>
-        : <p className="text-sm text-foreground-500">Responda o questionário e registre seus exames para ver indicações para você.</p>)}
+        : <EstadoVazio icone="ri-user-heart-line" texto="Responda o questionário e registre seus exames para ver indicações para você." testId="loja-voce-vazio" />)}
 
       {parte === 'catalogo' && (
         <section>
@@ -66,7 +67,7 @@ export default function Loja() {
         </section>
       )}
 
-      <p className="text-[11px] leading-snug text-foreground-400"><i className="ri-information-line mr-1"></i>Compra direto na Amazon ou no Mercado Livre. O Body Coach pode receber uma pequena comissão, sem custo extra. Suplementos: confira com seu nutricionista e, se for atleta federado, no Anti-Doping.</p>
+      <p className="mt-auto text-[11px] leading-snug text-foreground-400"><i className="ri-information-line mr-1"></i>Compra direto na Amazon ou no Mercado Livre. O Body Coach pode receber uma pequena comissão, sem custo extra. Suplementos: confira com seu nutricionista e, se for atleta federado, no Anti-Doping.</p>
     </div>
   );
 }

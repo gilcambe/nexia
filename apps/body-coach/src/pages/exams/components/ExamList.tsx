@@ -1,3 +1,4 @@
+import EstadoVazio from '@/components/base/EstadoVazio';
 export interface ExamItem {
   id: number;
   exam_type: string | null;
@@ -21,9 +22,7 @@ export default function ExamList({
 }) {
   if (exams.length === 0) {
     return (
-      <p className="rounded-lg bg-background-100/70 p-4 sm:p-6 text-center text-sm text-foreground-500">
-        Nenhum exame enviado ainda. Envie o primeiro acima.
-      </p>
+      <EstadoVazio icone="ri-folder-open-line" texto="Nenhum exame enviado ainda. Envie o primeiro na aba Enviar." testId="exames-vazio" />
     );
   }
 

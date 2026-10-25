@@ -213,6 +213,7 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
       .catch(() => setHistoricoSeries({}));
   }, [user?.id]);
   const [showVideo, setShowVideo] = useState(false);
+  const [maisOpcoes, setMaisOpcoes] = useState(false);
   const [showSwapModal, setShowSwapModal] = useState(false);
 
   const exercise = session.exercises[exIndex] ?? session.exercises[0];
@@ -321,14 +322,14 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
   return (
     <div className="mx-auto max-w-3xl">
       {/* top progress */}
-      <div className="mb-3">
+      <div className="mb-2">
         <div className="flex items-center justify-between text-sm">
           <span className="font-heading font-semibold text-foreground-950">{session.title}</span>
           <span className="text-foreground-500">
             {exIndex + 1}/{session.exercises.length} exercícios
           </span>
         </div>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-background-200">
+        <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-background-200">
           <div
             className="h-full rounded-full bg-primary-500 transition-all"
             style={{ width: `${(exIndex / session.exercises.length) * 100}%` }}
@@ -338,7 +339,7 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
 
       {/* barra de música/entretenimento/coach: fica no fluxo da página, nunca por cima dos botões */}
       {phase !== 'PRE_SESSION' && phase !== 'SESSION_COMPLETE' && (
-        <div className="mb-3 flex items-center gap-1.5 overflow-x-auto pb-1 [&>*]:shrink-0" data-testid="barra-treino">
+        <div className="mb-2 flex items-center gap-1.5 overflow-x-auto pb-0.5 [&>*]:shrink-0" data-testid="barra-treino">
           <MusicaTreino variante="pilula" />
           <EntretenimentoTreino variante="pilula" />
           {vozDisponivel() && (
@@ -355,7 +356,7 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
           </button>
         </div>
       )}
-      <div className="space-y-4">
+      <div className="space-y-2">
         {phase === 'PRE_SESSION' && <MusicaTreino variante="cartao" />}
         {phase !== 'SESSION_COMPLETE' && phase !== 'SESSION_REVIEW' && <MonitorCardiaco compacto soConectado={phase !== 'PRE_SESSION' && phase !== 'WARMUP'} />}
         {phase === 'PRE_SESSION' && (
@@ -411,39 +412,39 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
         )}
 
         {phase === 'EXERCISE_ACTIVE' && (
-          <div className="rounded-2xl border border-background-200 bg-background-50 p-4 sm:p-6">
-            <h2 className="font-heading text-xl font-bold leading-tight text-foreground-950 sm:text-3xl">{exercise.name}</h2>
-            <p className="mt-0.5 text-sm text-foreground-600">
+          <div className="rounded-2xl border border-background-200 bg-background-50 p-3 sm:p-6">
+            <h2 className="font-heading text-lg font-bold leading-tight text-foreground-950 sm:text-3xl">{exercise.name}</h2>
+            <p className="mt-0.5 text-sm leading-snug text-foreground-600">
               <strong className="text-foreground-900">Série {Math.min(currentSets.length + 1, exercise.targetSets || 3)} de {exercise.targetSets || 3}</strong> · {ehPorTempo(exercise.name) ? 'por tempo' : `${exercise.targetReps} reps`} · descanso {exercise.restSec || 60} s
               {rirDaNota(exercise.note) !== null && !ehPorTempo(exercise.name) && <> · deixe {rirDaNota(exercise.note)} sobrando</>}
             </p>
 
             {/* Demonstração pequena (toque para pausar); grande em "Ver execução" */}
             {currentSets.length === 0 ? (
-              <VideoDoCoach id={exercise.id} nome={exercise.name} className="aspect-[16/9] max-h-[24vh] w-full rounded-xl sm:max-w-sm" gravar={false} />
+              <VideoDoCoach id={exercise.id} nome={exercise.name} className="mt-1.5 hidden aspect-[16/9] max-h-[16dvh] w-full rounded-xl alto:block sm:max-w-sm" gravar={false} />
             ) : (
               <button type="button" onClick={() => setShowVideo(true)} className="mt-2 text-sm font-semibold text-primary-700 underline"><i className="ri-play-circle-line mr-1"></i>Ver execução</button>
             )}
 
             {exercise.note && !/^Alvo RIR \d+\.$/.test(exercise.note.trim()) && (
-              <p className="mt-3 rounded-xl bg-background-100/70 p-3 text-sm text-foreground-700">
+              <p className="mt-2 rounded-xl bg-background-100/70 px-3 py-1.5 text-sm leading-snug text-foreground-700">
                 <i className="ri-information-line mr-1 text-primary-500"></i>{exercise.note}
               </p>
             )}
             {exercise.prevSession.sets.length > 0 && (
-              <p className="mt-2 text-sm text-foreground-600">
+              <p className="mt-1 text-sm text-foreground-600">
                 <i className="ri-history-line mr-1 text-accent-600"></i>Última vez: {exercise.prevSession.sets.map((s) => `${s.weight} × ${s.reps}`).join(' · ')}
               </p>
             )}
 
             {/* séries feitas */}
             {currentSets.length > 0 && (
-              <div className="mt-4 space-y-2">
+              <div className="mt-2 space-y-1.5">
                 {currentSets.map((s) => {
                   const prevSame = exercise.prevSession.sets[s.set - 1];
                   const delta = prevSame ? s.reps - prevSame.reps : null;
                   return (
-                    <div key={s.id} className="flex items-center justify-between gap-2 rounded-xl bg-background-100/70 px-4 py-3">
+                    <div key={s.id} className="flex items-center justify-between gap-2 rounded-xl bg-background-100/70 px-3 py-1.5">
                       <span className="flex items-center gap-2 text-base text-foreground-600">
                         <span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-500 text-sm font-bold text-background-50">{s.set}</span>
                         Série
@@ -501,7 +502,7 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
             )}
 
             {/* registrar série */}
-            <div className="mt-4 border-t border-background-200 pt-4">
+            <div className="mt-2 border-t border-background-200 pt-2">
               <SetEntry
                 key={exercise.id}
                 minWeight={exercise.minWeight}
@@ -511,6 +512,22 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
                 targetReps={exercise.targetReps}
                 sugestao={exercise.sets.length === 0 && !ehPorTempo(exercise.name) ? sugerirCarga(historicoSeries[exercise.name], exercise.targetReps) : null}
                 ultima={(() => { const l = currentSets[currentSets.length - 1] ?? exercise.sets[exercise.sets.length - 1]; return l ? { weight: l.weight, reps: l.reps } : null; })()}
+                acaoAoLado={
+                  <button
+                    type="button"
+                    onClick={finishExercise}
+                    data-testid="concluir-exercicio"
+                    className={`shrink-0 rounded-2xl px-4 py-3.5 text-base font-bold transition ${
+                      currentSets.length < (exercise.targetSets || 3)
+                        ? 'border-2 border-background-300 bg-background-50 text-foreground-700'
+                        : exIndex < session.exercises.length - 1
+                          ? 'bg-accent-500 text-background-50 hover:bg-accent-600'
+                          : 'bg-accent-600 text-background-50 hover:bg-accent-700'
+                    }`}
+                  >
+                    {exIndex < session.exercises.length - 1 ? <>Próximo <i className="ri-arrow-right-line"></i></> : 'Finalizar'}
+                  </button>
+                }
                 onSubmit={(s) => {
                   addSet(s);
                   if (dica && dica.descansoSeg) {
@@ -520,33 +537,17 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
               />
             </div>
 
-            <div className="mt-3 flex gap-2">
+            {/* mais opções: fechadas numa linha (abrem no toque), para o treino caber na tela */}
+            <button type="button" onClick={() => setMaisOpcoes((v) => !v)} aria-expanded={maisOpcoes} className="mt-1 flex w-full items-center justify-center gap-1 py-0.5 text-sm alto:mt-2 alto:py-1 font-semibold text-foreground-600" data-testid="abrir-mais-opcoes">
+              <i className="ri-more-line text-lg"></i>Mais opções
+              <i className={maisOpcoes ? 'ri-arrow-up-s-line' : 'ri-arrow-down-s-line'}></i>
+            </button>
+            {maisOpcoes && <div className="mt-1 grid grid-cols-2 gap-2" data-testid="mais-opcoes">
               {exIndex > 0 && (
-                <button
-                  onClick={() => { setResting(false); setExIndex((i) => Math.max(0, i - 1)); }}
-                  aria-label="Voltar ao exercício anterior"
-                  className="shrink-0 rounded-2xl border-2 border-background-200 bg-background-50 px-4 py-4 text-base font-bold text-foreground-700 transition hover:bg-background-100"
-                >
-                  ← ANTERIOR
+                <button type="button" onClick={() => { setResting(false); setExIndex((i) => Math.max(0, i - 1)); }} aria-label="Voltar ao exercício anterior" className="flex min-h-[52px] items-center gap-2 rounded-xl border border-background-200 bg-background-50 px-3 py-2 text-left text-sm font-semibold text-foreground-800 hover:bg-background-100">
+                  <i className="ri-arrow-left-line text-xl text-primary-600"></i>Exercício anterior
                 </button>
               )}
-              <button
-                onClick={finishExercise}
-                className={`min-w-0 flex-1 rounded-2xl px-4 py-4 text-base font-bold transition ${
-                  currentSets.length < (exercise.targetSets || 3)
-                    ? 'border-2 border-background-300 bg-background-50 text-foreground-700'
-                    : exIndex < session.exercises.length - 1
-                      ? 'bg-primary-500 text-background-50 hover:bg-primary-600'
-                      : 'bg-accent-500 text-background-50 hover:bg-accent-600'
-                }`}
-              >
-                {exIndex < session.exercises.length - 1 ? 'CONCLUIR → PRÓXIMO' : 'FINALIZAR FORÇA'}
-              </button>
-            </div>
-
-            {/* mais opções: botões grandes, um toque cada */}
-            <p className="mb-2 mt-5 text-sm font-semibold text-foreground-500">Mais opções</p>
-            <div className="grid grid-cols-2 gap-2" data-testid="mais-opcoes">
               {[
                 { rotulo: 'Ver execução', icone: 'ri-play-circle-line', acao: () => setShowVideo(true) },
                 { rotulo: 'Trocar exercício', icone: 'ri-refresh-line', acao: () => setShowSwapModal(true) },
@@ -593,7 +594,9 @@ function WorkoutFlow({ session, lesoes = [], avisos = [], origem, inicial, onSes
                   </button>
                 </span>
               </div>
-            </div>
+            </div>}
+            {/* espaço para a barra fixa de Registrar não cobrir o fim da tela */}
+            <div className="h-14 sm:hidden" aria-hidden="true"></div>
 
             {/* modal vídeo */}
             {showVideo && (
