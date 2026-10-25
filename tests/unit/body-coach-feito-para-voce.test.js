@@ -104,6 +104,166 @@ test('ciclo menstrual: desligado não muda nada; ligado dá a fase do dia e mais
   assert.ok(!treino(m, { ...BRUNO, ciclo: { ligado: true, inicio: ha(0) } }).t.avisos.some((a) => /ciclo/.test(a)));
 });
 
+test('exercícios evitados são excluídos e favoritos têm prioridade', async () => {
+  const m = await carregar();
+  const r = {
+    ...ANA,
+    evitar: ['agachamento-goblet'],
+    favoritos: ['supino-reto-com-halteres'],
+    place: 'Academia completa'
+  };
+
+  const entrada = {
+    respostas: r,
+    divisao: 'abc',
+    diaDaDivisao: 0,
+    enfase: [],
+    estado: {
+      sono: 'bom',
+      alimentacao: 'comi_bem',
+      energia: 4,
+      tempoMin: 60,
+      dores: '',
+      indisponiveis: []
+    },
+    variacao: 0
+  };
+
+  const treino = m.montarTreinoDoDia(entrada);
+
+  const ids = treino.sessao.exercises.map((e) => e.id);
+
+  // Exercício evitado não aparece
+  assert.ok(!ids.includes('agachamento-goblet'), 'Exercício evitado não deve aparecer no treino');
+
+  // Exercício favorito aparece e tem prioridade (entre os primeiros)
+  assert.ok(ids.includes('supino-reto-com-halteres'), 'Exercício favorito deve aparecer no treino');
+  const idx = ids.indexOf('supino-reto-com-halteres');
+  assert.ok(idx < 3, 'Exercício favorito deve ter prioridade (aparecer entre os primeiros)');
+});
+
+test('exercícios evitados são excluídos e favoritos têm prioridade com múltiplos itens', async () => {
+  const m = await carregar();
+  const r = {
+    ...ANA,
+    evitar: ['agachamento-goblet', 'supino-reto-com-halteres'],
+    favoritos: ['rosca-alternada-com-halteres', 'desenvolvimento-militar-com-halteres'],
+    place: 'Academia completa'
+  };
+
+  const entrada = {
+    respostas: r,
+    divisao: 'abc',
+    diaDaDivisao: 0,
+    enfase: [],
+    estado: {
+      sono: 'bom',
+      alimentacao: 'comi_bem',
+      energia: 4,
+      tempoMin: 60,
+      dores: '',
+      indisponiveis: []
+    },
+    variacao: 0
+  };
+
+  const treino = m.montarTreinoDoDia(entrada);
+  const ids = treino.sessao.exercises.map((e) => e.id);
+
+  // Todos os exercícios evitados não devem aparecer
+  assert.ok(!ids.includes('agachamento-goblet'), 'Exercício evitado 1 não deve aparecer no treino');
+  assert.ok(!ids.includes('supino-reto-com-halteres'), 'Exercício evitado 2 não deve aparecer no treino');
+
+  // Todos os favoritos devem aparecer
+  assert.ok(ids.includes('rosca-alternada-com-halteres'), 'Exercício favorito 1 deve aparecer no treino');
+  assert.ok(ids.includes('desenvolvimento-militar-com-halteres'), 'Exercício favorito 2 deve aparecer no treino');
+
+  // Favoritos devem ter prioridade (aparecerem antes dos não favoritos)
+  const idx1 = ids.indexOf('rosca-alternada-com-halteres');
+  const idx2 = ids.indexOf('desenvolvimento-militar-com-halteres');
+  assert.ok(idx1 < 4, 'Exercício favorito 1 deve ter prioridade (aparecer entre os primeiros)');
+  assert.ok(idx2 < 4, 'Exercício favorito 2 deve ter prioridade (aparecer entre os primeiros)');
+
+  // Verificar que os favoritos não estão nas últimas posições
+  const lastThree = ids.slice(-3);
+  assert.ok(!lastThree.includes('rosca-alternada-com-halteres'), 'Favorito 1 não deve estar nas últimas posições');
+  assert.ok(!lastThree.includes('desenvolvimento-militar-com-halteres'), 'Favorito 2 não deve estar nas últimas posições');
+});
+
+test('exercicios evitados nao aparecem e favoritos sao promovidos', async () => {
+  const m = await carregar();
+  const r = {
+    ...ANA,
+    evitar: ['agachamento-goblet'],
+    favoritos: ['supino-reto-com-halteres'],
+    place: 'Academia completa'
+  };
+
+  const entrada = {
+    respostas: r,
+    divisao: 'abc',
+    diaDaDivisao: 0,
+    enfase: [],
+    estado: {
+      sono: 'bom',
+      alimentacao: 'comi_bem',
+      energia: 4,
+      tempoMin: 60,
+      dores: '',
+      indisponiveis: []
+    },
+    variacao: 0
+  };
+
+  const treino = m.montarTreinoDoDia(entrada);
+  const ids = treino.sessao.exercises.map((e) => e.id);
+
+  // Exercício evitado não aparece na lista retornada
+  assert.ok(!ids.includes('agachamento-goblet'), 'Exercício evitado não deve aparecer no treino');
+
+  // Exercício favorito aparece e tem prioridade na ordenação (por causa do +1 ponto)
+  assert.ok(ids.includes('supino-reto-com-halteres'), 'Exercício favorito deve aparecer no treino');
+  const idx = ids.indexOf('supino-reto-com-halteres');
+  assert.ok(idx < 3, 'Exercício favorito deve ter prioridade (aparecer entre os primeiros)');
+});
+
+test('teste de evitados e favoritos: evitados excluídos e favoritos promovidos', async () => {
+  const m = await carregar();
+  const r = {
+    ...ANA,
+    evitar: ['agachamento-goblet'],
+    favoritos: ['supino-reto-com-halteres'],
+    place: 'Academia completa'
+  };
+
+  const entrada = {
+    respostas: r,
+    divisao: 'abc',
+    diaDaDivisao: 0,
+    enfase: [],
+    estado: {
+      sono: 'bom',
+      alimentacao: 'comi_bem',
+      energia: 4,
+      tempoMin: 60,
+      dores: '',
+      indisponiveis: []
+    },
+    variacao: 0
+  };
+
+  const treino = m.montarTreinoDoDia(entrada);
+  const ids = treino.sessao.exercises.map((e) => e.id);
+
+  // Exercício evitado não aparece na lista retornada
+  assert.ok(!ids.includes('agachamento-goblet'), 'Exercício evitado não deve aparecer no treino');
+
+  // Exercício favorito aparece e tem prioridade na ordenação (por causa do +1 ponto)
+  assert.ok(ids.includes('supino-reto-com-halteres'), 'Exercício favorito deve aparecer no treino');
+  const idx = ids.indexOf('supino-reto-com-halteres');
+  assert.ok(idx < 3, 'Exercício favorito deve ter prioridade (aparecer entre os primeiros)');
+});
+
 test('em casa (com ou sem halteres) nunca aparece barra fixa, e as costas continuam treinadas', async () => {
   const m = await carregar();
   for (const place of ['Em casa com halteres', 'Em casa sem equipamento']) {
@@ -116,4 +276,115 @@ test('em casa (com ou sem halteres) nunca aparece barra fixa, e as costas contin
       }
     }
   }
+});
+
+test('evitados são excluídos e favoritos promovidos na ordenação', async () => {
+  const m = await carregar();
+  const r = {
+    ...ANA,
+    evitar: ['agachamento-goblet'],
+    favoritos: ['supino-reto-com-halteres'],
+    place: 'Academia completa'
+  };
+
+  const entrada = {
+    respostas: r,
+    divisao: 'abc',
+    diaDaDivisao: 0,
+    enfase: [],
+    estado: {
+      sono: 'bom',
+      alimentacao: 'comi_bem',
+      energia: 4,
+      tempoMin: 60,
+      dores: '',
+      indisponiveis: []
+    },
+    variacao: 0
+  };
+
+  const treino = m.montarTreinoDoDia(entrada);
+  const ids = treino.sessao.exercises.map((e) => e.id);
+
+  // Exercício evitado não aparece na lista retornada
+  assert.ok(!ids.includes('agachamento-goblet'), 'Exercício evitado não deve aparecer no treino');
+
+  // Exercício favorito aparece e tem prioridade na ordenação (por causa do +1 ponto)
+  assert.ok(ids.includes('supino-reto-com-halteres'), 'Exercício favorito deve aparecer no treino');
+  const idx = ids.indexOf('supino-reto-com-halteres');
+  assert.ok(idx < 3, 'Exercício favorito deve ter prioridade (aparecer entre os primeiros)');
+});
+
+test('teste de evitados e favoritos: confirma exclusão e prioridade', async () => {
+  const m = await carregar();
+  const r = {
+    ...ANA,
+    evitar: ['agachamento-com-barra'],
+    favoritos: ['rosca-direta-com-halter'],
+    place: 'Academia completa'
+  };
+
+  const entrada = {
+    respostas: r,
+    divisao: 'abc',
+    diaDaDivisao: 0,
+    enfase: [],
+    estado: {
+      sono: 'bom',
+      alimentacao: 'comi_bem',
+      energia: 4,
+      tempoMin: 60,
+      dores: '',
+      indisponiveis: []
+    },
+    variacao: 0
+  };
+
+  const treino = m.montarTreinoDoDia(entrada);
+  const ids = treino.sessao.exercises.map((e) => e.id);
+
+  // Exercício evitado não aparece na lista retornada
+  assert.ok(!ids.includes('agachamento-com-barra'), 'Exercício evitado não deve aparecer no treino');
+
+  // Exercício favorito aparece e tem prioridade na ordenação (por causa do +1 ponto)
+  assert.ok(ids.includes('rosca-direta-com-halter'), 'Exercício favorito deve aparecer no treino');
+  const idx = ids.indexOf('rosca-direta-com-halter');
+  assert.ok(idx < 3, 'Exercício favorito deve ter prioridade (aparecer entre os primeiros)');
+});
+
+test('teste evitados e favoritos: evitados excluídos e favoritos promovidos na ordenação', async () => {
+  const m = await carregar();
+  const r = {
+    ...ANA,
+    evitar: ['agachamento-bulgaro'],
+    favoritos: ['desenvolvimento-militar-com-halteres'],
+    place: 'Academia completa'
+  };
+
+  const entrada = {
+    respostas: r,
+    divisao: 'abc',
+    diaDaDivisao: 0,
+    enfase: [],
+    estado: {
+      sono: 'bom',
+      alimentacao: 'comi_bem',
+      energia: 4,
+      tempoMin: 60,
+      dores: '',
+      indisponiveis: []
+    },
+    variacao: 0
+  };
+
+  const treino = m.montarTreinoDoDia(entrada);
+  const ids = treino.sessao.exercises.map((e) => e.id);
+
+  // Exercício evitado não aparece na lista retornada
+  assert.ok(!ids.includes('agachamento-bulgaro'), 'Exercício evitado não deve aparecer no treino');
+
+  // Exercício favorito aparece e tem prioridade na ordenação (por causa do +1 ponto)
+  assert.ok(ids.includes('desenvolvimento-militar-com-halteres'), 'Exercício favorito deve aparecer no treino');
+  const idx = ids.indexOf('desenvolvimento-militar-com-halteres');
+  assert.ok(idx < 3, 'Exercício favorito deve ter prioridade (aparecer entre os primeiros)');
 });
