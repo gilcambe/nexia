@@ -1,39 +1,155 @@
 {
   "spec": {
     "kind": "system",
-    "name": "Cortex-p1 Teste",
-    "tagline": "Controle total e monitoramento em um só lugar",
-    "photo_theme": "mobile app dashboard interface",
-    "description": "Acesse o painel Cortex-p1 via app nativo para uma experiência fluida, segura e sem barreiras de URL. Gerencie usuários, acompanhe instalações e visualize relatórios em tempo real.",
+    "name": "Cortex-p1",
+    "tagline": "Painel de cadastros e controle do sistema",
+    "photo_theme": "software dashboard",
+    "description": "Painel de cadastros e controle do sistema",
     "folder": "sites/cortex-p1",
     "fonts": {
       "heading": "Outfit",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#2563eb",
-      "accent": "#10b981",
-      "bg": "#f8fafc",
+      "primary": "#111827",
+      "accent": "#2563eb",
+      "bg": "#fbfaf7",
       "surface": "#ffffff",
-      "text": "#1e293b",
-      "muted": "#64748b",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
       "dark": "#0f172a"
     },
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "(11) 91234-5678",
-      "email": "contato@cortexp1.com.br",
-      "address": "Av. Paulista, 1000 - São Paulo, SP",
-      "city": "São Paulo",
-      "hours": "Seg - Sex: 09:00 - 18:00",
+      "phone": "",
+      "email": "contato@cortex-p1.com",
+      "address": "",
+      "city": "",
+      "hours": "",
       "instagram": "",
       "facebook": "",
       "youtube": "",
       "tiktok": "",
       "linkedin": ""
     },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=cortex-p1&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
     "entities": [
+      {
+        "key": "clientes",
+        "label": "Clientes",
+        "singular": "Cliente",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome completo",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cidade",
+            "label": "Cidade",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "plano",
+            "label": "Plano",
+            "type": "select",
+            "options": [
+              "Gratuito",
+              "Profissional",
+              "Empresarial"
+            ],
+            "required": true
+          },
+          {
+            "key": "criado_em",
+            "label": "Data de cadastro",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "observacoes",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Ana Silva",
+            "email": "ana.silva@email.com",
+            "telefone": "(11) 98765-4321",
+            "cidade": "São Paulo",
+            "plano": "Profissional",
+            "criado_em": "2026-01-15",
+            "observacoes": "Cliente corporativo do setor varejo"
+          },
+          {
+            "nome": "Bruno Costa",
+            "email": "bruno.costa@email.com",
+            "telefone": "(21) 91234-5678",
+            "cidade": "Rio de Janeiro",
+            "plano": "Gratuito",
+            "criado_em": "2026-02-10",
+            "observacoes": "Avaliação da plataforma"
+          },
+          {
+            "nome": "Carla Mendes",
+            "email": "carla.mendes@email.com",
+            "telefone": "(31) 99876-5432",
+            "cidade": "Belo Horizonte",
+            "plano": "Empresarial",
+            "criado_em": "2026-03-05",
+            "observacoes": "Contrato anual assinado"
+          },
+          {
+            "nome": "Daniel Oliveira",
+            "email": "daniel.oliveira@email.com",
+            "telefone": "(41) 97654-3210",
+            "cidade": "Curitiba",
+            "plano": "Profissional",
+            "criado_em": "2026-03-20",
+            "observacoes": "Indicação de parceiro"
+          },
+          {
+            "nome": "Fernanda Lima",
+            "email": "fernanda.lima@email.com",
+            "telefone": "(51) 96543-2109",
+            "cidade": "Porto Alegre",
+            "plano": "Gratuito",
+            "criado_em": "2026-04-02",
+            "observacoes": "Pequeno negócio local"
+          }
+        ]
+      },
       {
         "key": "usuarios",
         "label": "Usuários",
@@ -48,34 +164,27 @@
           },
           {
             "key": "email",
-            "label": "E‑mail",
+            "label": "E-mail",
             "type": "email",
             "options": [],
             "required": true
           },
           {
-            "key": "telefone",
-            "label": "Telefone",
-            "type": "phone",
+            "key": "senha",
+            "label": "Senha",
+            "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "perfil",
-            "label": "Perfil",
+            "key": "papel",
+            "label": "Papel",
             "type": "select",
             "options": [
-              "Admin",
-              "Editor",
-              "Visualizador"
+              "Administrador",
+              "Operador",
+              "Leitura"
             ],
-            "required": true
-          },
-          {
-            "key": "data_cadastro",
-            "label": "Data de cadastro",
-            "type": "date",
-            "options": [],
             "required": true
           },
           {
@@ -89,8 +198,96 @@
             "required": true
           },
           {
-            "key": "observacoes",
-            "label": "Observações",
+            "key": "ultimo_login",
+            "label": "Último acesso",
+            "type": "date",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Administrador Master",
+            "email": "admin@cortex-p1.com",
+            "senha": "********",
+            "papel": "Administrador",
+            "status": "Ativo",
+            "ultimo_login": "2026-04-10"
+          },
+          {
+            "nome": "João Pereira",
+            "email": "joao.pereira@cortex-p1.com",
+            "senha": "********",
+            "papel": "Operador",
+            "status": "Ativo",
+            "ultimo_login": "2026-04-09"
+          },
+          {
+            "nome": "Maria Souza",
+            "email": "maria.souza@cortex-p1.com",
+            "senha": "********",
+            "papel": "Leitura",
+            "status": "Ativo",
+            "ultimo_login": "2026-04-08"
+          },
+          {
+            "nome": "Antigo Funcionário",
+            "email": "antigo@cortex-p1.com",
+            "senha": "********",
+            "papel": "Operador",
+            "status": "Inativo",
+            "ultimo_login": "2026-02-15"
+          }
+        ]
+      },
+      {
+        "key": "produtos",
+        "label": "Produtos",
+        "singular": "Produto",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome do produto",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "sku",
+            "label": "SKU",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "preco",
+            "label": "Preço",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "quantidade",
+            "label": "Estoque",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "categoria",
+            "label": "Categoria",
+            "type": "select",
+            "options": [
+              "Software",
+              "Serviço",
+              "Hardware",
+              "Assinatura"
+            ],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
             "type": "textarea",
             "options": [],
             "required": false
@@ -98,79 +295,78 @@
         ],
         "sample": [
           {
-            "nome": "Mariana Silva",
-            "email": "mariana@exemplo.com",
-            "telefone": "(11) 98765-4321",
-            "perfil": "Admin",
-            "data_cadastro": "2026-09-15",
-            "status": "Ativo",
-            "observacoes": ""
+            "nome": "Cortex CRM",
+            "sku": "CRM-001",
+            "preco": "299,00",
+            "quantidade": "150",
+            "categoria": "Software",
+            "descricao": "Gestão de relacionamento com clientes"
           },
           {
-            "nome": "Pedro Alves",
-            "email": "pedro@exemplo.com",
-            "telefone": "(11) 92345-6789",
-            "perfil": "Editor",
-            "data_cadastro": "2026-09-20",
-            "status": "Ativo",
-            "observacoes": ""
+            "nome": "Implantação Cortex",
+            "sku": "SVC-010",
+            "preco": "1500,00",
+            "quantidade": "10",
+            "categoria": "Serviço",
+            "descricao": "Configuração inicial da plataforma"
           },
           {
-            "nome": "Laura Costa",
-            "email": "laura@exemplo.com",
-            "telefone": "(11) 93456-7890",
-            "perfil": "Visualizador",
-            "data_cadastro": "2026-09-25",
-            "status": "Inativo",
-            "observacoes": ""
+            "nome": "Servidor Dedicado",
+            "sku": "HW-005",
+            "preco": "890,00",
+            "quantidade": "5",
+            "categoria": "Hardware",
+            "descricao": "Máquina de alto desempenho"
           },
           {
-            "nome": "Rafael Mendes",
-            "email": "rafael@exemplo.com",
-            "telefone": "(11) 94567-8901",
-            "perfil": "Editor",
-            "data_cadastro": "2026-10-01",
-            "status": "Ativo",
-            "observacoes": ""
+            "nome": "Suporte Premium Anual",
+            "sku": "SUB-020",
+            "preco": "1200,00",
+            "quantidade": "1000",
+            "categoria": "Assinatura",
+            "descricao": "Atendimento prioritário 24h"
+          },
+          {
+            "nome": "Treinamento Equipe",
+            "sku": "TRN-030",
+            "preco": "600,00",
+            "quantidade": "20",
+            "categoria": "Serviço",
+            "descricao": "Capacitação de usuários finais"
           }
         ]
       },
       {
-        "key": "instalacoes",
-        "label": "Instalações",
-        "singular": "Instalação",
+        "key": "contratos",
+        "label": "Contratos",
+        "singular": "Contrato",
         "fields": [
           {
-            "key": "usuario",
-            "label": "Usuário",
+            "key": "cliente",
+            "label": "Cliente",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "versao_app",
-            "label": "Versão do App",
-            "type": "text",
+            "key": "valor",
+            "label": "Valor",
+            "type": "money",
             "options": [],
             "required": true
           },
           {
-            "key": "data_instalacao",
-            "label": "Data da Instalação",
+            "key": "data_inicio",
+            "label": "Data de início",
             "type": "date",
             "options": [],
             "required": true
           },
           {
-            "key": "dispositivo",
-            "label": "Dispositivo",
-            "type": "select",
-            "options": [
-              "Pixel 7",
-              "Galaxy S23",
-              "OnePlus 11",
-              "Xiaomi 13"
-            ],
+            "key": "data_fim",
+            "label": "Data de fim",
+            "type": "date",
+            "options": [],
             "required": true
           },
           {
@@ -178,14 +374,15 @@
             "label": "Status",
             "type": "select",
             "options": [
-              "Instalado",
-              "Falha"
+              "Ativo",
+              "Expirado",
+              "Renovado"
             ],
             "required": true
           },
           {
-            "key": "observacoes",
-            "label": "Observações",
+            "key": "termos",
+            "label": "Termos",
             "type": "textarea",
             "options": [],
             "required": false
@@ -193,44 +390,45 @@
         ],
         "sample": [
           {
-            "usuario": "Mariana Silva",
-            "versao_app": "1.0.3",
-            "data_instalacao": "2026-10-05",
-            "dispositivo": "Pixel 7",
-            "status": "Instalado",
-            "observacoes": ""
+            "cliente": "Ana Silva",
+            "valor": "3588,00",
+            "data_inicio": "2026-01-15",
+            "data_fim": "2027-01-14",
+            "status": "Ativo",
+            "termos": "Plano Profissional com renovação automática"
           },
           {
-            "usuario": "Pedro Alves",
-            "versao_app": "1.0.3",
-            "data_instalacao": "2026-10-06",
-            "dispositivo": "Galaxy S23",
-            "status": "Instalado",
-            "observacoes": ""
+            "cliente": "Bruno Costa",
+            "valor": "0,00",
+            "data_inicio": "2026-02-10",
+            "data_fim": "2026-05-10",
+            "status": "Ativo",
+            "termos": "Plano Gratuito período de avaliação"
           },
           {
-            "usuario": "Laura Costa",
-            "versao_app": "1.0.2",
-            "data_instalacao": "2026-10-04",
-            "dispositivo": "OnePlus 11",
-            "status": "Falha",
-            "observacoes": ""
+            "cliente": "Carla Mendes",
+            "valor": "14400,00",
+            "data_inicio": "2026-03-05",
+            "data_fim": "2027-03-04",
+            "status": "Ativo",
+            "termos": "Plano Empresarial anual"
           },
           {
-            "usuario": "Rafael Mendes",
-            "versao_app": "1.0.3",
-            "data_instalacao": "2026-10-07",
-            "dispositivo": "Xiaomi 13",
-            "status": "Instalado",
-            "observacoes": ""
+            "cliente": "Daniel Oliveira",
+            "valor": "3588,00",
+            "data_inicio": "2026-03-20",
+            "data_fim": "2026-09-20",
+            "status": "Expirado",
+            "termos": "Plano Profissional sem renovação"
           }
         ]
       }
     ],
     "modules": [
-      "Gerenciamento de Usuários",
-      "Instalações",
-      "Relatórios"
+      "Clientes",
+      "Usuários",
+      "Produtos",
+      "Contratos"
     ]
   },
   "media": {}
