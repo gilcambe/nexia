@@ -12,25 +12,30 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   const handleSubmit = useCallback(async () => {
     if (!email || !password) { setLocalError("Preencha e-mail e senha."); return; }
+    if (mode === "register" && !termsAccepted) {
+      setLocalError("Você precisa aceitar os Termos de Uso e a Política de Privacidade para continuar.");
+      return;
+    }
     setLocalError(null);
     setSubmitting(true);
     try {
       if (mode === "login") {
         await login(email, password);
       } else {
-        await register(email, password, name);
+        await register(email, password, name, termsAccepted);
       }
       navigate(destino);
     } catch (err) {
       setLocalError(err instanceof Error ? err.message : "Erro na autenticação");
     }
     setSubmitting(false);
-  }, [email, password, name, mode, login, register, navigate, destino]);
+  }, [email, password, name, mode, termsAccepted, login, register, navigate, destino]);
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center px-4">
@@ -67,6 +72,28 @@ export default function LoginPage() {
               <label className="text-xs text-nexia-muted mb-1.5 block">Senha</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }} className="w-full px-3 py-2.5 text-sm bg-nexia-surface2 border border-nexia-border rounded-lg text-white placeholder-nexia-muted outline-none focus:border-nexia-cyan/40" />
             </div>
+
+            {mode === "register" && (
+              <div className="flex items-start gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="termsAccepted"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="mt-1 rounded border-nexia-border bg-nexia-surface2 text-nexia-cyan focus:ring-nexia-cyan cursor-pointer"
+                />
+                <label htmlFor="termsAccepted" className="text-xs text-nexia-muted leading-tight cursor-pointer">
+                  Li e aceito os{" "}
+                  <a href="/cortex/termos" target="_blank" rel="noreferrer" className="text-nexia-cyan underline hover:text-nexia-cyan-dim">
+                    Termos de Uso
+                  </a>{" "}
+                  e a{" "}
+                  <a href="/cortex/privacidade" target="_blank" rel="noreferrer" className="text-nexia-cyan underline hover:text-nexia-cyan-dim">
+                    Política de Privacidade
+                  </a>.
+                </label>
+              </div>
+            )}
 
             {(localError || error) && (
               <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20">

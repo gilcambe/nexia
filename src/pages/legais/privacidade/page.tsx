@@ -1,14 +1,50 @@
 import LegalLayout from "../components/LegalLayout";
 export default function PrivacidadePage() {
   return (
-    <LegalLayout title="Política de Privacidade" subtitle="Como a KERNEX coleta, processa e protege seus dados pessoais" lastUpdated="04 de Maio de 2026">
+    <LegalLayout title="Política de Privacidade e LGPD do Cortex / KERNEX" subtitle="Como a plataforma coleta, trata e protege seus dados pessoais" lastUpdated="10 de Maio de 2026">
       <div className="space-y-8 text-sm text-nexia-muted leading-relaxed">
-        <section><h2 className="text-lg font-semibold text-white mb-3">1. Introdução</h2><p>A KERNEX, operada por Gilson Cambe, respeita sua privacidade e está comprometida em proteger seus dados pessoais em conformidade com a LGPD (Lei nº 13.709/2018).</p></section>
-        <section><h2 className="text-lg font-semibold text-white mb-3">2. Dados que Coletamos</h2><ul className="list-disc list-inside space-y-1 ml-4"><li>Dados de cadastro: nome, e-mail, telefone</li><li>Dados de uso: logs de interação com CORTEX e agentes</li><li>Dados técnicos: IP, navegador, sistema operacional</li><li>Conteúdo: mensagens enviadas ao CORTEX, documentos para RAG</li></ul></section>
-        <section><h2 className="text-lg font-semibold text-white mb-3">3. Finalidade do Tratamento</h2><ul className="list-disc list-inside space-y-1 ml-4"><li>Fornecer e melhorar os serviços de orquestração de IA</li><li>Processar pagamentos e gerenciar assinaturas</li><li>Cumprir obrigações legais e regulatórias (LGPD)</li><li>Prevenir fraudes e garantir segurança da plataforma</li></ul></section>
-        <section><h2 className="text-lg font-semibold text-white mb-3">4. Seus Direitos (LGPD)</h2><ul className="list-disc list-inside space-y-1 ml-4"><li>Acessar seus dados pessoais</li><li>Corrigir dados incompletos ou desatualizados</li><li>Solicitar anonimização, bloqueio ou eliminação</li><li>Revogar consentimento a qualquer momento</li><li>Portabilidade dos dados</li></ul></section>
-        <section><h2 className="text-lg font-semibold text-white mb-3">5. Segurança</h2><p>Criptografia AES-256 em trânsito (TLS 1.3) e em repouso, autenticação JWT, rate limiting e auditoria contínua via Sentinel QA.</p></section>
-        <section><h2 className="text-lg font-semibold text-white mb-3">6. Contato</h2><p>E-mail: contato@nexiaos.com.br · WhatsApp: +55 11 94403-7259 · Responsável: Gilson Cambe</p></section>
+        <section>
+          <h2 className="text-lg font-semibold text-white mb-3">1. Introdução</h2>
+          <p>A KERNEX respeita sua privacidade e cumpre integralmente a Lei Geral de Proteção de Dados (LGPD - Lei nº 13.709/2018). Esta política explica de forma clara e simples como os dados são coletados e utilizados pelos serviços do Cortex.</p>
+        </section>
+        <section>
+          <h2 className="text-lg font-semibold text-white mb-3">2. O que é Coletado</h2>
+          <ul className="list-disc list-inside space-y-1 ml-4">
+            <li><strong className="text-white">Dados de Cadastro:</strong> Nome, e-mail e data/hora do aceite dos termos.</li>
+            <li><strong className="text-white">Dados de Uso do Cortex:</strong> Prompts, mensagens, códigos e históricos de conversas submetidos ao sistema.</li>
+            <li><strong className="text-white">Informações Técnicas:</strong> Endereço IP, tipo de navegador e logs de acesso para auditoria e segurança.</li>
+          </ul>
+        </section>
+        <section>
+          <h2 className="text-lg font-semibold text-white mb-3">3. Para quê Coletamos</h2>
+          <ul className="list-disc list-inside space-y-1 ml-4">
+            <li>Fornecer as funcionalidades de orquestração de IA e assistente de programação do Cortex.</li>
+            <li>Autenticação de usuários e isolamento de permissões/dados por cliente.</li>
+            <li>Cumprimento de obrigações legais, prevenção a fraudes e garantia da segurança da plataforma.</li>
+          </ul>
+        </section>
+        <section>
+          <h2 className="text-lg font-semibold text-white mb-3">4. Compartilhamento com IAs de Terceiros</h2>
+          <p>Para gerar respostas e automações, o texto das requisições pode ser processado por APIs parceiras de Inteligência Artificial de terceiros (como OpenAI, Anthropic, Google, Cloudflare). Os dados são encaminhados exclusivamente com o propósito de executar a requisição solicitada pelo próprio usuário.</p>
+        </section>
+        <section>
+          <h2 className="text-lg font-semibold text-white mb-3">5. Uso Aceitável e Proibições</h2>
+          <p>É estritamente proibida a utilização do Cortex para envio ou geração de conteúdo ilegal, propagação de spam, realização de golpes ou qualquer atividade maliciosa. Violações resultarão em bloqueio imediato da conta.</p>
+        </section>
+        <section>
+          <h2 className="text-lg font-semibold text-white mb-3">6. Seus Direitos (LGPD) e Como Apagar a Conta</h2>
+          <p className="mb-2">Você possui total controle sobre seus dados pessoais de acordo com a LGPD. Você pode a qualquer momento:</p>
+          <ul className="list-disc list-inside space-y-1 ml-4 mb-2">
+            <li>Solicitar confirmação e acesso aos dados armazenados;</li>
+            <li>Solicitar a correção ou atualização de dados incompletos;</li>
+            <li>Solicitar a revogação de consentimento e a <strong className="text-white">exclusão definitiva de sua conta e dados</strong>.</li>
+          </ul>
+          <p>Para apagar sua conta e todos os dados associados, basta enviar uma mensagem solicitando a exclusão para nosso e-mail oficial de contato.</p>
+        </section>
+        <section>
+          <h2 className="text-lg font-semibold text-white mb-3">7. Contato do Encarregado de Dados</h2>
+          <p>Para exercer seus direitos de privacidade, dúvidas ou pedidos de exclusão, entre em contato através do e-mail: <strong className="text-white">contato.nexia.os@gmail.com</strong>.</p>
+        </section>
       </div>
     </LegalLayout>
   );

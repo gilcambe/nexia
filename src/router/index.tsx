@@ -56,6 +56,8 @@ const routes: RouteObject[] = [
   { path: "/splash", element: <TenantPage tenant="splash" /> },
   { path: "/privacidade", element: <PrivacidadePage /> },
   { path: "/termos", element: <TermosPage /> },
+  { path: "/cortex/privacidade", element: <PrivacidadePage /> },
+  { path: "/cortex/termos", element: <TermosPage /> },
   { path: "/cookies", element: <CookiesPage /> },
   { path: "/lgpd", element: <LGPDPage /> },
   { path: "*", element: <NotFound /> },
