@@ -21,14 +21,14 @@
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "",
-      "phone": "(11) 90000-0000",
-      "email": "suporte@cortex-p1.test",
-      "address": "",
-      "city": "",
-      "hours": "",
-      "instagram": "",
-      "facebook": "",
+      "whatsapp": "5511987654321",
+      "phone": "(11) 3045-8721",
+      "email": "suporte@cortex-p1.com.br",
+      "address": "Av. Paulista, 1000, 14º andar",
+      "city": "São Paulo",
+      "hours": "Seg a Sex, 9h às 18h",
+      "instagram": "cortexp1",
+      "facebook": "cortexp1",
       "youtube": "",
       "tiktok": "",
       "linkedin": ""
@@ -81,6 +81,17 @@
             "required": true
           },
           {
+            "key": "idioma",
+            "label": "Idioma",
+            "type": "select",
+            "options": [
+              "pt",
+              "en",
+              "es"
+            ],
+            "required": true
+          },
+          {
             "key": "data_cadastro",
             "label": "Data de Cadastro",
             "type": "date",
@@ -112,6 +123,7 @@
             "email": "ana@exemplo.com.br",
             "telefone": "(11) 91234-5678",
             "plano": "Grátis",
+            "idioma": "pt",
             "data_cadastro": "2026-10-01",
             "status": "Ativo",
             "observacoes": ""
@@ -121,6 +133,7 @@
             "email": "bruno@exemplo.com.br",
             "telefone": "(21) 92345-6789",
             "plano": "Profissional",
+            "idioma": "pt",
             "data_cadastro": "2026-09-15",
             "status": "Ativo",
             "observacoes": "Contato comercial"
@@ -130,6 +143,7 @@
             "email": "carla@exemplo.com.br",
             "telefone": "(31) 93456-7890",
             "plano": "Empresarial",
+            "idioma": "pt",
             "data_cadastro": "2026-08-20",
             "status": "Ativo",
             "observacoes": "Prioritário"
@@ -139,6 +153,7 @@
             "email": "davi@exemplo.com.br",
             "telefone": "(41) 94567-8901",
             "plano": "Grátis",
+            "idioma": "pt",
             "data_cadastro": "2026-07-10",
             "status": "Pendente",
             "observacoes": "Aguardando documentação"
@@ -148,6 +163,7 @@
             "email": "elena@exemplo.com.br",
             "telefone": "(51) 95678-9012",
             "plano": "Profissional",
+            "idioma": "pt",
             "data_cadastro": "2026-10-05",
             "status": "Inativo",
             "observacoes": "Solicitou cancelamento"
