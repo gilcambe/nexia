@@ -58,7 +58,7 @@ describe('Módulo de Memória de Lições', () => {
       }).toThrow('lessonData deve ser um objeto com data, tentativa, erro e regra');
       
       expect(() => {
-        addLesson [], 'string');
+        addLesson([], 'string');
       }).toThrow('lessonData deve ser um objeto com data, tentativa, erro e regra');
     });
     
