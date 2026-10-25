@@ -422,7 +422,8 @@ async function resumoDiario(token, issues) {
     const feitas = ((await gh(token, 'GET', `/issues?state=closed&labels=${L.feito}&since=${desde}&per_page=100`)).json || []).filter(i => !i.pull_request && i.closed_at >= desde);
     const abertas = issues.filter(i => !i.pull_request && !nomes(i).includes(L.dividido));
     const travadas = abertas.filter(i => nomes(i).includes(L.travado));
-    const texto = av.textoResumo({ feitas, travadas, naFila: abertas.length - travadas.length });
+    const planos = feitas.filter(i => /montei um plano|Todas as partes/.test(i.body || '') || (i.labels || []).some(l => (l.name || l) === 'cortex-dividido'));
+    const texto = av.textoResumo({ feitas, travadas, naFila: abertas.length - travadas.length, planos });
     await av.ref(db).set({ resumoEm: dia }, { merge: true });
     await av.avisarPush(db, { titulo: '☀️ Resumo do Cortex', corpo: texto, tag: 'cx-resumo' });
     await av.avisarEmail('Resumo do Cortex', texto);
@@ -673,5 +674,5 @@ async function main() {
   }
 }
 
-module.exports = { planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
+module.exports = { planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS, resumoDiario };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
