@@ -52,6 +52,18 @@ export interface CortexStreamChunk {
   usage?: { calls: number; limit: number; unlimited?: boolean };
 }
 
+export interface AutomationItem {
+  id: string;
+  name: string;
+  template?: string;
+  scheduleTime: string;
+  channel: string;
+  active: boolean;
+  status: "ativa" | "pausada";
+  lastRun?: string;
+  createdAt: string;
+}
+
 export interface CortexReply {
   reply: string;
   type: string;
@@ -244,6 +256,23 @@ export const api = {
     _fetch<unknown>(apiPath("/observe") + "?tenantId=" + encodeURIComponent(tenantId)),
   kpiSummary: (tenantId: string) =>
     _fetch<unknown>(apiPath("/kpi") + "?action=summary&tenantId=" + encodeURIComponent(tenantId)),
+  automations: (tenantId?: string) =>
+    _fetch<{ items: AutomationItem[] }>(apiPath("/automations") + (tenantId ? `?tenantId=${encodeURIComponent(tenantId)}` : "")),
+  createAutomation: (payload: { name: string; template?: string; scheduleTime: string; channel: string; tenantId?: string }) =>
+    _fetch<{ record: AutomationItem }>(apiPath("/automations"), {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
+  updateAutomation: (id: string, payload: Partial<AutomationItem> & { tenantId?: string }) =>
+    _fetch<{ record: AutomationItem }>(apiPath(`/automations/${id}`), {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  deleteAutomation: (id: string, tenantId?: string) =>
+    _fetch<{ ok: boolean }>(apiPath(`/automations/${id}`), {
+      method: "DELETE",
+      body: JSON.stringify({ tenantId }),
+    }),
 };
 
 export default api;

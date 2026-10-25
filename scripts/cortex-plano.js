@@ -13,8 +13,10 @@ const ARQ_GRANDE = 40 * 1024;      // mesmo corte do get_file em partes (#1479):
 const MAX_PARTES = 8;
 const MAX_ARQ_PARTE = 3;
 const MAX_LINHAS_PARTE = 400;      // linhas acrescentadas + apagadas que uma parte pode mudar sem ir para revisão
-const ESPERA_PR_MAX_H = 6;         // dependente espera o PR da parte anterior entrar no máximo isto (a fila nunca para)
-const JULES_DESISTE_MIN = 180;     // parte marcada para o Jules que ele não aceitou (limite do dia) volta ao Cortex
+// Pedido do dono (25/10/2026): nada pode ficar horas esperando. O Cortex roda a cada 15 min e o auto-merge a cada 30 min,
+// então 1 h e 20 min já são folga de sobra — nunca mais 3 h nem 6 h.
+const ESPERA_PR_MAX_H = 1;         // dependente espera o PR da parte anterior entrar no máximo isto (a fila nunca para)
+const JULES_DESISTE_MIN = 20;      // parte marcada para o Jules que ele não aceitou (lote ocupado) volta ao Cortex rápido
 const EXT = '(?:js|mjs|cjs|ts|tsx|jsx|css|html|json|md|yml|yaml|svg|webmanifest)';
 
 const arquivosCitados = corpo => [...new Set((String(corpo || '').match(new RegExp(`[\\w./-]+\\.${EXT}\\b`, 'g')) || [])

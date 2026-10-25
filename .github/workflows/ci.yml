@@ -26,6 +26,7 @@ jobs:
   secrets:
     name: Secret scan
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -44,6 +45,9 @@ jobs:
   build-test:
     name: Typecheck, testes e build
     runs-on: ubuntu-latest
+    # Pedido do dono (25/10/2026): nunca mais travado por horas. O job inteiro leva ~8 min normalmente;
+    # 20 min já é folga de sobra. Sem isto, um passo preso (ex.: emulador do Firebase) ficava até 6 h (padrão do Actions).
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
@@ -60,6 +64,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - name: Firebase Emulator (regras, autorização da API, Vault e /api/nexia)
+        timeout-minutes: 5   # leva ~1-2 min normalmente; achado real (25/10/2026) o viu travado 44 min sem terminar
         env:
           # Token efêmero do próprio Actions (contents: read), só para ler gilcambe/nexia no teste de onboarding
           NEXIA_TEST_GITHUB_TOKEN: ${{ github.token }}
@@ -86,6 +91,7 @@ jobs:
   bridge-windows:
     name: Bridge no Windows
     runs-on: windows-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0

@@ -27,6 +27,7 @@ jobs:
   merge:
     name: Merge automático
     runs-on: ubuntu-latest
+    timeout-minutes: 10   # 25/10/2026: nenhum job sem limite; este só chama a API do GitHub, não devia passar de minutos
     steps:
       # Sem checkout: nenhum código do PR roda aqui.
       # Gate objetivo (autorizado pelo dono em 2026-10-06: "pense em algo que eu não precise ficar aprovando nada"):

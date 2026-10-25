@@ -18,6 +18,7 @@ const AprovacoesPage = lazy(() => import("../pages/aprovacoes/page"));
 const ExecucoesPage = lazy(() => import("../pages/execucoes/page"));
 const AuditoriaPage = lazy(() => import("../pages/auditoria/page"));
 const RobosPage = lazy(() => import("../pages/robos/page"));
+const AutomationsPage = lazy(() => import("../pages/automations/page"));
 const LeadsPage = lazy(() => import("../pages/leads/page"));
 const ClientesPage = lazy(() => import("../pages/clientes/page"));
 const CentralPage = lazy(() => import("../pages/central/page"));
@@ -44,6 +45,8 @@ const routes: RouteObject[] = [
   { path: "/execucoes", element: <ExecucoesPage /> },
   { path: "/auditoria", element: <AuditoriaPage /> },
   { path: "/robos", element: <RobosPage /> },
+  { path: "/automations", element: <AutomationsPage /> },
+  { path: "/automacoes", element: <AutomationsPage /> },
   { path: "/leads", element: <LeadsPage /> },
   { path: "/clientes", element: <ClientesPage /> },
   { path: "/central", element: <CentralPage /> },

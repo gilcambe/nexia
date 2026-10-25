@@ -1,12 +1,14 @@
 // Cortex nunca fica parado numa tarefa travada. Escada automática (a cada 15 min, cron do Worker):
 //   1) o Cortex tenta até 12 vezes, dividindo a tarefa em partes no caminho (scripts/cortex-fila.js);
 //   2) travou → vai sozinha para o Jules (Google, grátis: 15 por dia, 3 ao mesmo tempo), que abre o PR;
-//   3) 24 h no Jules sem PR aberto → volta para o Cortex do zero (rótulo cortex-retomada, tentativas zeradas);
-//   4) travou de novo → Jules de novo; 24 h sem PR outra vez → rótulo so-humano + comentário (o vigia avisa no celular).
+//   3) ESPERA_JULES_H sem PR aberto → volta para o Cortex do zero (rótulo cortex-retomada, tentativas zeradas);
+//   4) travou de novo → Jules de novo; mesmo tempo sem PR outra vez → rótulo so-humano + comentário (o vigia avisa no celular).
 // No máximo 2 envios ao Jules e 1 retomada por tarefa: nunca fica em laço nem repete rascunhos.
 // Usa o mesmo envio do botão "Mandar para o Jules" do /meu-cortex. Desliga com JULES_AUTO=0.
 const REPO = '/repos/gilcambe/nexia';
-const ESPERA_JULES_H = 24;
+// Pedido do dono (25/10/2026): nada de horas esperando. 2 h já dá tempo real para o Jules codar e testar
+// uma tarefa pequena; passou disso, volta ao Cortex (pode ir ao Jules de novo depois).
+const ESPERA_JULES_H = 2;
 const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'so-humano'];
 
 // Decide o que fazer com as issues travadas (função pura, testada).
