@@ -351,3 +351,40 @@ test('teste de evitados e favoritos: confirma exclusão e prioridade', async () 
   const idx = ids.indexOf('rosca-direta-com-halter');
   assert.ok(idx < 3, 'Exercício favorito deve ter prioridade (aparecer entre os primeiros)');
 });
+
+test('teste evitados e favoritos: evitados excluídos e favoritos promovidos na ordenação', async () => {
+  const m = await carregar();
+  const r = {
+    ...ANA,
+    evitar: ['agachamento-bulgaro'],
+    favoritos: ['desenvolvimento-militar-com-halteres'],
+    place: 'Academia completa'
+  };
+
+  const entrada = {
+    respostas: r,
+    divisao: 'abc',
+    diaDaDivisao: 0,
+    enfase: [],
+    estado: {
+      sono: 'bom',
+      alimentacao: 'comi_bem',
+      energia: 4,
+      tempoMin: 60,
+      dores: '',
+      indisponiveis: []
+    },
+    variacao: 0
+  };
+
+  const treino = m.montarTreinoDoDia(entrada);
+  const ids = treino.sessao.exercises.map((e) => e.id);
+
+  // Exercício evitado não aparece na lista retornada
+  assert.ok(!ids.includes('agachamento-bulgaro'), 'Exercício evitado não deve aparecer no treino');
+
+  // Exercício favorito aparece e tem prioridade na ordenação (por causa do +1 ponto)
+  assert.ok(ids.includes('desenvolvimento-militar-com-halteres'), 'Exercício favorito deve aparecer no treino');
+  const idx = ids.indexOf('desenvolvimento-militar-com-halteres');
+  assert.ok(idx < 3, 'Exercício favorito deve ter prioridade (aparecer entre os primeiros)');
+});
