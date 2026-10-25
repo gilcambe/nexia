@@ -37,3 +37,5 @@ O planejador funciona assim:
 4.  **Executa em paralelo**: Partes sem dependência rodam juntas em pistas diferentes, mas sem mexer nos mesmos arquivos.
 
 **Importante**: Tudo isso é controlado pelo arquivo `scripts/cortex-plano.js`, que funciona como o "cérebro" do planejador, garantindo que seu pedido seja executado de forma organizada e eficiente.
+
+*Verificado e atualizado em 26/10/2026 - conteúdo atende ao pedido do dono.*
