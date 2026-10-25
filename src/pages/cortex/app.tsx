@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/Layout/AppLayout';
+import AIChoiceSelector from '@/components/AIChoiceSelector';
 
 const CortexApp = () => {
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [selectedAI, setSelectedAI] = useState<'automatic' | 'fast' | 'strong'>('automatic');
+  const [credits, setCredits] = useState<number>(100); // Valor inicial de créditos
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -35,6 +38,14 @@ const CortexApp = () => {
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
               Sua inteligência artificial integrada para automação e produtividade
             </p>
+            
+            {/* Exibição de créditos no topo */}
+            <div className="inline-flex items-center bg-nexia-cyan/10 text-nexia-cyan px-4 py-2 rounded-full mb-6">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="font-medium">{credits} créditos restantes</span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
@@ -69,6 +80,13 @@ const CortexApp = () => {
             </div>
           </div>
 
+          {/* Seletor de IA */}
+          <AIChoiceSelector 
+            credits={credits} 
+            selectedAI={selectedAI} 
+            onAIChange={setSelectedAI} 
+          />
+          
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg mb-8">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Recursos Disponíveis</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
