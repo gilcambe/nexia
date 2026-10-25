@@ -51,9 +51,9 @@ const L = (...n) => n.map(name => ({ name }));
 const nomes = i => (i.labels || []).map(l => l.name);
 const H = 36e5;
 
-test('JULES-AUTO3: escada: 24 h no Jules sem PR volta ao Cortex do zero; 2ª vez vai para humano; com PR espera', () => {
+test('JULES-AUTO3: escada: Jules sem PR no tempo volta ao Cortex do zero; 2ª vez vai para humano; com PR espera', () => {
   const agora = Date.UTC(2026, 9, 25, 12, 0);
-  const velho = new Date(agora - 25 * H).toISOString(), novo = new Date(agora - 2 * H).toISOString();
+  const velho = new Date(agora - 3 * H).toISOString(), novo = new Date(agora - 1 * H).toISOString();
   const issues = [
     { number: 10, labels: L('cortex-travado', 'jules-enviado'), updated_at: velho },
     { number: 11, labels: L('cortex-travado', 'jules-enviado', 'cortex-retomada'), updated_at: velho },
