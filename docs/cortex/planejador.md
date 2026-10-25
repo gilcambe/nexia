@@ -15,13 +15,17 @@ Quando você faz um pedido grande, o Planejador do Cortex quebra o trabalho em p
 
 ### Como o trabalho é executado
 
-*   **Pistas paralelas**: Partes que não dependem uma da outra podem rodar ao mesmo tempo, como carros em diferentes pistas. O Cortex usa até **6 pistas** para acelerar.
+*   **Pistas paralelas**: Partes que não dependem uma da outra podem rodar ao mesmo tempo, como carros em diferentes pistas. Imagine 6 pistas de corrida: o Cortex pode até 6 partes ao mesmo tempo, cada uma em sua "pista", desde que não mexam nos mesmos arquivos.
 *   **Esperando as dependências**: Se uma parte precisa do resultado de outra, ela espera a parte anterior terminar e o código dela (o "PR" - Pull Request) ser aprovado e juntado na branch principal (`develop`). Essa espera dura no máximo **6 horas**.
 *   **Sem conflitos**: Duas partes nunca mexem no mesmo arquivo ao mesmo tempo, para evitar erros.
 
 ### Quando a IA tem dificuldades
 
-Se a IA que cria o plano não conseguir entender seu pedido, o Cortex usa um "plano simples". Nesse caso, cada parte cuida de um arquivo específico do seu pedido, e todas rodam ao mesmo tempo.
+Se a IA que cria o plano não conseguir entender seu pedido, o Cortex usa um "plano simples". Nesse caso:
+- Cada parte cuida de um arquivo específico do seu pedido
+- Todas as partes rodam ao mesmo tempo, sem dependências
+- Se você citou 5 arquivos, serão criadas 5 partes, cada uma cuidando de um arquivo
+- Isso evita que o plano fique travado e garante que o trabalho comece rápido
 
 ### Detalhes do planejador (em `scripts/cortex-plano.js`)
 
@@ -31,3 +35,5 @@ O planejador funciona assim:
 2.  **Cria as partes**: Divide em até 8 partes, cada uma com seus limites de arquivos e linhas.
 3.  **Define dependências**: Cada parte indica quais outras partes ela precisa para funcionar.
 4.  **Executa em paralelo**: Partes sem dependência rodam juntas em pistas diferentes, mas sem mexer nos mesmos arquivos.
+
+**Importante**: Tudo isso é controlado pelo arquivo `scripts/cortex-plano.js`, que funciona como o "cérebro" do planejador, garantindo que seu pedido seja executado de forma organizada e eficiente.
