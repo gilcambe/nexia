@@ -73,13 +73,18 @@ function criarDetalhe(gh) {
           estado,
           pista,
           depende: plano ? (plano.depende || []) : [],
-          arquivos: plano ? (plano.arquivos || []) : [],
-          numeroParte
+          arquivos: plano ? (plano.arquivos || []) : []
         });
       }
       
-      // Ordena pelo número da parte
-      partes.sort((a, b) => a.numeroParte - b.numeroParte);
+      // Ordena pelo número da parte extraído do título
+      partes.sort((a, b) => {
+        const matchA = a.titulo.match(/\[Parte (\d+)\/\d+ de #\d+\]/);
+        const matchB = b.titulo.match(/\[Parte (\d+)\/\d+ de #\d+\]/);
+        const numA = matchA ? parseInt(matchA[1]) : 0;
+        const numB = matchB ? parseInt(matchB[1]) : 0;
+        return numA - numB;
+      });
     }
     
     return { ...resumo(i), rotulos: nomes(i), conversa, prs, partes };
