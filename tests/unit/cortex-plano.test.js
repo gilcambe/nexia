@@ -40,16 +40,16 @@ test('PL3. partes independentes saem JUNTAS; a dependente espera; mesmo arquivo 
   assert.deepEqual(r.map(x => [x.tipo, x.numero, x.pista]), [['despachar', 101, 1], ['despachar', 102, 2]]);
   assert.doesNotMatch(r[0].tarefa, /cortex-plano/, 'o cabeçalho do plano não vai para a IA');
   // Parte 1 concluída (saiu da fila), mas o PR dela ainda está aberto: a 3 espera o PR entrar.
-  const prs = [{ arquivos: ['src/a.ts'], criadoEm: '2026-10-25T17:00:00Z' }];
+  const prs = [{ arquivos: ['src/a.ts'], criadoEm: '2026-10-25T17:30:00Z' }];
   assert.deepEqual(decidir({ issues: [c], runs: [], agora: AGORA, prs }).length, 0);
   assert.deepEqual(decidir({ issues: [c], runs: [], agora: AGORA }).map(x => x.numero), [103]);
-  // PR esquecido há mais de 6 h não segura a fila para sempre.
+  // PR esquecido há mais de 1 h não segura a fila para sempre.
   assert.deepEqual(decidir({ issues: [c], runs: [], agora: AGORA, prs: [{ arquivos: ['src/a.ts'], criadoEm: '2026-10-25T10:00:00Z' }] }).map(x => x.numero), [103]);
   const outra = parte(201, { pai: 200, k: 1, arquivos: ['src/a.ts'] }, ['cortex-rodando', 'pista-1']);
   assert.deepEqual(decidir({ issues: [outra, a], runs: [{ id: 1, name: 'Cortex #201', status: 'in_progress', created_at: '2026-10-25T17:50:00Z' }], agora: AGORA }).length, 0);
 });
 
-test('PL4. parte grande vai ao Jules (não ocupa pista); sem resposta em 3 h volta ao Cortex', () => {
+test('PL4. parte grande vai ao Jules (não ocupa pista); sem resposta rápida volta ao Cortex', () => {
   assert.equal(P.vaiParaJules({ grande: false, arquivos: ['s/p.html'] }, { 's/p.html': 100000 }), true);
   const j = parte(301, { pai: 300, k: 1, arquivos: ['s/p.html'] }, ['cortex-jules']);
   assert.deepEqual(decidir({ issues: [j], runs: [], agora: AGORA }), []);
