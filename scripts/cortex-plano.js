@@ -134,8 +134,10 @@ function dependenciasProntas(i, irmas, prs = [], agora = Date.now(), nomes = x =
     // Dependência aberta e não concluída segura. Travada não segura para sempre (regra do dono: a fila nunca para).
     if (dep && !nomes(dep).includes('cortex-feito') && !nomes(dep).includes('cortex-travado')) return false;
   }
-  // Fusão em ordem: o PR da parte anterior (mesmos arquivos ou arquivos dela) ainda aberto e recente = espera ele entrar.
-  const precisa = new Set([...meta.arquivos, ...(meta.antes || [])]);
+  // Fusão em ordem: o PR da parte anterior (arquivos dela) ainda aberto e recente = espera ele entrar.
+  // Só os arquivos das partes de que depende: os próprios arquivos não entram, senão o rascunho que a própria parte
+  // abriu numa tentativa anterior a seguraria por 6 h (teste real de #1538, PR #1549 segurava #1541).
+  const precisa = new Set(meta.antes || []);
   return !prs.some(pr => (agora - Date.parse(pr.criadoEm || 0)) / 36e5 < ESPERA_PR_MAX_H && (pr.arquivos || []).some(a => precisa.has(a)));
 }
 
