@@ -29,3 +29,80 @@ test('PED7. lista e detalhe usam a busca do GitHub e juntam os PRs', async () =>
   assert.strictEqual(d.conversa.length, 2); assert.strictEqual(d.conversa[1].texto, 'ok');
   assert.strictEqual(d.prs[0].estado, 'juntado');
 });
+
+test('PED8. detalhe com partes divididas', async () => {
+  const urls = [];
+  const fetchFn = async (u) => {
+    urls.push(u);
+    
+    if (u.includes('/search/issues') && u.includes('is%3Aissue') && u.includes('de #%5B1%5D')) {
+      // Busca por partes
+      return {
+        total_count: 2,
+        items: [
+          {
+            number: 101,
+            title: '[Parte 1/2 de #1] Primeira parte',
+            state: 'closed',
+            labels: [{ name: 'cortex-feito' }],
+            body: 'Plano: {"depende": [], "arquivos": ["file1.ts"]}'
+          },
+          {
+            number: 102,
+            title: '[Parte 2/2 de #1] Segunda parte',
+            state: 'open',
+            labels: [{ name: 'cortex-rodando' }, { name: 'pista-2' }],
+            body: 'Plano: {"depende": ["file1.ts"], "arquivos": ["file2.ts"]}'
+          }
+        ]
+      };
+    }
+    
+    if (u.endsWith('/issues/1')) {
+      // Pedido principal
+      return {
+        number: 1,
+        body: 'Fazer uma grande feature',
+        state: 'open',
+        labels: [{ name: 'cortex-dividido' }],
+        user: { login: 'gilcambe' },
+        created_at: '2023-01-01T00:00:00Z'
+      };
+    }
+    
+    if (u.includes('/comments')) {
+      // Comentários do pedido principal
+      return [
+        {
+          user: { login: 'bot' },
+          body: 'Montei um plano para dividir este pedido em partes.'
+        }
+      ];
+    }
+    
+    return { ok: true, status: 200, json: async () => ({}) };
+  };
+  
+  const p = criarPedidos({ NEXIA_JOBS_TOKEN: 't' }, fetchFn);
+  const d = await criarDetalhe(p.gh)(1);
+  
+  // Verifica que partes foi adicionado
+  assert.ok(Array.isArray(d.partes));
+  assert.strictEqual(d.partes.length, 2);
+  
+  // Verifica primeira parte
+  assert.strictEqual(d.partes[0].numero, 101);
+  assert.strictEqual(d.partes[0].titulo, '[Parte 1/2 de #1] Primeira parte');
+  assert.strictEqual(d.partes[0].estado, 'feita');
+  assert.strictEqual(d.partes[0].pista, null);
+  assert.deepStrictEqual(d.partes[0].depende, []);
+  assert.deepStrictEqual(d.partes[0].arquivos, ['file1.ts']);
+  
+  // Verifica segunda parte
+  assert.strictEqual(d.partes[1].numero, 102);
+  assert.strictEqual(d.partes[1].titulo, '[Parte 2/2 de #1] Segunda parte');
+  assert.strictEqual(d.partes[1].estado, 'rodando');
+  assert.strictEqual(d.partes[1].pista, 2);
+  assert.deepStrictEqual(d.partes[1].depende, ['file1.ts']);
+  assert.deepStrictEqual(d.partes[1].arquivos, ['file2.ts']);
+});
