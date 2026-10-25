@@ -13,7 +13,9 @@ const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'so-humano'];
 function decidir(issues, prs, agora, nomes) {
   const prDe = (n) => prs.some(p => new RegExp(`#${n}(?!\\d)`).test(`${p.title || ''}\n${p.body || ''}`));
   const travadas = issues.filter(i => !i.pull_request && nomes(i).includes('cortex-travado') && !nomes(i).some(n => IGNORAR.includes(n)));
-  const enviar = travadas.find(i => !nomes(i).includes('jules-enviado'));
+  // Parte grande do plano do Cortex (rótulo cortex-jules, scripts/cortex-plano.js) vai antes das travadas: ela nem tentou na IA grátis.
+  const planejada = issues.find(i => !i.pull_request && nomes(i).includes('cortex-jules') && !nomes(i).includes('jules-enviado') && !nomes(i).some(n => IGNORAR.includes(n)));
+  const enviar = planejada || travadas.find(i => !nomes(i).includes('jules-enviado'));
   const voltar = travadas.filter(i => nomes(i).includes('jules-enviado') && !prDe(i.number)
     && (agora - Date.parse(i.updated_at || 0)) / 36e5 >= ESPERA_JULES_H);
   return {
@@ -31,7 +33,10 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
   const { mandarParaJules } = require('../netlify/functions/central/pedidos-jules.js');
   const p = criarPedidos(env, fetchFn);
   if (!p.temToken) return { skipped: 'sem token do GitHub' };
-  const issues = await p.gh(`${REPO}/issues?state=open&labels=cortex-travado&per_page=100&sort=created&direction=asc`);
+  const travadas = await p.gh(`${REPO}/issues?state=open&labels=cortex-travado&per_page=100&sort=created&direction=asc`);
+  const planejadas = await p.gh(`${REPO}/issues?state=open&labels=cortex-jules&per_page=50&sort=created&direction=asc`).catch(() => []);
+  const pl = Array.isArray(planejadas) ? planejadas : [];
+  const issues = [...pl, ...(Array.isArray(travadas) ? travadas : []).filter(t => !pl.some(x => x.number === t.number))];
   const prs = await p.gh(`${REPO}/pulls?state=open&per_page=100`);
   const d = decidir(issues || [], prs || [], at, nomes);
   const out = { retomadas: [], humano: [] };

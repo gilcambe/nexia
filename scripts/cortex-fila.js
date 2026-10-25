@@ -18,7 +18,7 @@ function depoisSemEntrega(labels) {
   return { n, travar: n >= MAX_SEM_ENTREGA };
 }
 const CONFIAVEIS = ['OWNER', 'MEMBER', 'COLLABORATOR'];
-const L = { fila: 'cortex-fila', rodando: 'cortex-rodando', feito: 'cortex-feito', travado: 'cortex-travado', dividido: 'cortex-dividido', parte: 'cortex-parte', semDivisao: 'cortex-sem-divisao', prioridade: 'cortex-prioridade', semCota: 'cortex-reserva-sem-cota' };
+const L = { jules: 'cortex-jules', fila: 'cortex-fila', rodando: 'cortex-rodando', feito: 'cortex-feito', travado: 'cortex-travado', dividido: 'cortex-dividido', parte: 'cortex-parte', semDivisao: 'cortex-sem-divisao', prioridade: 'cortex-prioridade', semCota: 'cortex-reserva-sem-cota' };
 const MAX_CORPO = 2500;      // tarefa maior que isso é dividida em partes pequenas
 const MAX_ARQUIVOS = 4;      // ou que mexe em mais arquivos do que isso
 
@@ -28,14 +28,16 @@ const numeroDe = (labels, prefixo) => {
   return m ? Number(m[1]) : 0;
 };
 // Tarefa grande demais para uma rodada só: texto longo ou muitos arquivos citados. Partes e tarefas já tentadas não se dividem de novo.
-function precisaDividir(i) {
+const plano = require('./cortex-plano');
+// tamanhos = { caminho: bytes } dos arquivos citados (opcional): arquivo enorme também conta para o planejador.
+function precisaDividir(i, tamanhos = {}) {
   const ls = nomes(i);
   if (ls.includes(L.parte) || ls.includes(L.dividido) || ls.includes(L.semDivisao)) return false;
   const corpo = String(i.body || '');
   // Cópia exata ("Copie EXATAMENTE") é gravada direto, sem IA: dividir apagaria o código do pedido.
   if (require('./cortex-literal-direto').arquivosDiretos(i).length) return false;
   const arquivos = new Set(corpo.match(/[\w./-]+\.(?:js|ts|tsx|jsx|css|html|json|md|yml)\b/g) || []);
-  return corpo.length > MAX_CORPO || arquivos.size > MAX_ARQUIVOS;
+  return corpo.length > MAX_CORPO || arquivos.size > MAX_ARQUIVOS || plano.classificar({ corpo, tamanhos }).tamanho === 'grande';
 }
 // Pais (rótulo "dividido") cujas partes já foram todas feitas: viram concluídos.
 function paisConcluidos({ pais, partes }) {
@@ -109,8 +111,10 @@ async function reservasQueVoltam(token, issues, agora = Date.now()) {
 }
 
 // Função pura: recebe issues e execuções e devolve a lista de ações. Fácil de testar.
-function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
+// prs = PRs nexia/* abertos ({ arquivos, criadoEm }) e tamanhos = { caminho: bytes }: usados pelo planejador (opcionais).
+function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], tamanhos = {} }) {
   const acoes = [];
+  const tamanhosDe = corpo => Object.fromEntries(plano.arquivosCitados(corpo).filter(a => tamanhos[a]).map(a => [a, tamanhos[a]]));
   const ultimaRun = n => runs.filter(r => r.name === `Cortex #${n}`).sort((a, b) => b.id - a.id)[0] || null;
   const validas = issues.filter(i => !i.pull_request && confiavel(i) && nomes(i).includes(L.fila));
   const pistasEmUso = new Set();
@@ -130,7 +134,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
       const t = numeroDe(ls, 'tentativa') + 1;
       // Falhou 3 vezes inteira: o modelo grátis não dá conta do tamanho. Divide em partes pequenas em vez de repetir até travar.
       if (t === TENTATIVAS_ATE_DIVIDIR && !parteDe(i) && !ls.includes(L.parte) && !ls.includes(L.dividido) && !ls.includes(L.semDivisao)) {
-        acoes.push({ tipo: 'dividir', numero: i.number, titulo: i.title || '', tarefa: String(i.body || '').trim(), limpar: true, tentativa: t }); continue;
+        acoes.push({ tipo: 'dividir', numero: i.number, titulo: i.title || '', tarefa: String(i.body || '').trim(), limpar: true, tentativa: t, tamanhos: tamanhosDe(i.body) }); continue;
       }
       acoes.push(t >= MAX_TENTATIVAS
         ? { tipo: 'travar', numero: i.number, tentativas: t, run: run.id, titulo: String(i.title || '') }
@@ -149,18 +153,28 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS }) {
     // Rótulo cortex-prioridade passa na frente (ex.: correções que impedem o próprio Cortex de parar); depois, por número.
     .sort((a, b) => (nomes(b).includes(L.prioridade) - nomes(a).includes(L.prioridade)) || a.number - b.number);
   // Partes da mesma tarefa rodam em ordem: a parte 2 só sai quando a 1 terminou (uma costuma usar o arquivo da outra).
+  // Parte com plano (cortex-plano) espera só as partes de que depende: as independentes rodam juntas, em pistas diferentes.
   const esperaAnterior = i => {
+    const pronta = plano.dependenciasProntas(i, validas, prs, agora, nomes);
+    if (pronta !== null) return !pronta;
     const p = parteDe(i);
     // Parte anterior travada não segura as seguintes para sempre (regra do dono: a fila nunca para).
     return !!p && validas.some(o => o !== i && !nomes(o).includes(L.feito) && !nomes(o).includes(L.travado) && (x => x && x.pai === p.pai && x.k < p.k)(parteDe(o)));
   };
+  const rodando = validas.filter(i => nomes(i).includes(L.rodando));
   for (const i of fila) {
+    // Parte grande do plano vai para o Jules (cloudflare/jules-auto.js). Se ele não aceitar em 3 h (limite do dia), volta ao Cortex.
+    if (nomes(i).includes(L.jules)) {
+      if (!nomes(i).includes('jules-enviado') && minutos(agora, i.updated_at) > plano.JULES_DESISTE_MIN) acoes.push({ tipo: 'jules-volta', numero: i.number });
+      continue;
+    }
     if (esperaAnterior(i)) continue;
-    if (precisaDividir(i)) { acoes.push({ tipo: 'dividir', numero: i.number, titulo: i.title || '', tarefa: String(i.body || '').trim() }); continue; }
+    if (plano.conflitaCom(i, rodando)) continue;   // outra parte rodando mexe no mesmo arquivo: espera ela
+    if (precisaDividir(i, tamanhos)) { acoes.push({ tipo: 'dividir', numero: i.number, titulo: i.title || '', tarefa: String(i.body || '').trim(), tamanhos: tamanhosDe(i.body) }); continue; }
     if (ativas >= pistas) break;
     let pista = 1; while (pistasEmUso.has(pista)) pista++;
-    pistasEmUso.add(pista); ativas++;
-    acoes.push({ tipo: 'despachar', numero: i.number, pista, tarefa: String(i.body || '').trim() });
+    pistasEmUso.add(pista); ativas++; rodando.push(i);
+    acoes.push({ tipo: 'despachar', numero: i.number, pista, tarefa: String(i.body || '').replace(/<!-- cortex-plano [\s\S]*?-->\n?/, '').trim() });
   }
   // Reenfileirados neste ciclo voltam à fila no próximo (o rótulo "rodando" sai agora).
   return acoes;
@@ -244,6 +258,47 @@ async function dividirComIA(tarefa, router, lista) {
   return null;
 }
 
+// Planejador: pede o PLANO (partes com arquivos, dependências e critério de pronto) aos modelos grátis, um de cada vez.
+// Nenhum válido: tenta o divisor antigo (só textos, em sequência); nada ainda: plano simples, uma parte por arquivo.
+// Só devolve null quando o pedido não cita nem 2 arquivos — aí ele segue inteiro, como antes.
+async function planejarComIA(tarefa, router, lista, tamanhos = {}) {
+  const contexto = Object.keys(tamanhos).length ? `\n\nTamanho dos arquivos citados (bytes): ${JSON.stringify(tamanhos)}` : '';
+  for (const d of lista) {
+    try {
+      if (!router.capabilities(d).available) continue;
+      const out = await Promise.race([router.chat(d, { system: plano.SISTEMA_PLANO, messages: [{ role: 'user', content: tarefa.slice(0, 12000) + contexto }], maxTokens: 4000, cache: true }), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 40000))]);
+      const m = out && out.text && /\[[\s\S]*\]/.exec(out.text);
+      const partes = m && plano.validarPlano(JSON.parse(m[0]));
+      if (partes) return { partes, origem: `plano da IA (${d.model || d.provider || 'grátis'})` };
+    } catch { /* tenta o próximo modelo */ }
+  }
+  const textos = await dividirComIA(tarefa, router, lista.slice(0, 2));
+  if (textos) return { partes: plano.planoDeTextos(textos), origem: 'divisor antigo (em sequência)' };
+  const simples = plano.planoSimples(tarefa);
+  return simples ? { partes: simples, origem: 'plano simples (uma parte por arquivo)' } : null;
+}
+
+// Revisão automática do PR de uma parte com plano: fora dos arquivos do plano ou grande demais = rótulo revisao-manual
+// (o portão do auto-merge não junta) e um comentário dizendo o porquê. Dentro do plano, o portão + CI decidem como sempre.
+async function revisarParte(token, corpo, desde) {
+  const meta = plano.lerPlano(corpo);
+  if (!meta) return '';
+  try {
+    const prs = ((await gh(token, 'GET', '/pulls?state=open&sort=created&direction=desc&per_page=30')).json || [])
+      .filter(pr => /^nexia\//.test((pr.head || {}).ref || '') && (!desde || pr.created_at >= desde));
+    for (const pr of prs) {
+      const files = (await gh(token, 'GET', `/pulls/${pr.number}/files?per_page=100`)).json || [];
+      if (!files.some(f => meta.arquivos.includes(f.filename))) continue;
+      const problemas = plano.revisarDiff(meta, files);
+      if (!problemas.length) return `\nRevisão automática do PR #${pr.number}: dentro do plano (${files.length} arquivo(s)). Entra quando o CI ficar verde.`;
+      await gh(token, 'POST', `/issues/${pr.number}/labels`, { labels: ['revisao-manual'] });
+      await gh(token, 'POST', `/issues/${pr.number}/comments`, { body: `Revisão automática da parte ${meta.k}/${meta.n} de #${meta.pai}: ${problemas.join('; ')}. Não entra sozinho; precisa de olhar humano.\n\n---\n_Generated by [Claude Code](https://claude.ai/code)_` });
+      return `\nRevisão automática do PR #${pr.number}: ${problemas.join('; ')}. Marquei revisao-manual.`;
+    }
+  } catch (e) { console.log(`revisão da parte: ${e.message}`); }
+  return '';
+}
+
 async function executar(token, acao, dividir) {
   const n = acao.numero;
   const addLabel = l => gh(token, 'POST', `/issues/${n}/labels`, { labels: [l] });
@@ -258,19 +313,27 @@ async function executar(token, acao, dividir) {
       await limparPistas();
       if (acao.tentativa) await addLabel(`tentativa-${acao.tentativa}`);
     }
-    const partes = dividir ? await dividir(acao.tarefa) : null;
+    let feito = dividir ? await dividir(acao.tarefa, acao.tamanhos || {}) : null;
+    if (Array.isArray(feito)) feito = { partes: plano.planoDeTextos(feito), origem: 'divisor' };
+    const partes = feito && feito.partes;
     if (!partes) { await addLabel(L.semDivisao); await comentar('Não consegui dividir esta tarefa agora; ela segue inteira.'); return; }
     const criadas = [];
     for (let k = 0; k < partes.length; k++) {
-      const r = await gh(token, 'POST', '/issues', { title: `[Parte ${k + 1}/${partes.length} de #${n}] ${String(acao.titulo).replace(/^NEXIA:\s*/, '').slice(0, 60)}`, body: partes[k], labels: [L.fila, L.parte] });
+      const p = partes[k];
+      const labels = [L.fila, L.parte];
+      if (plano.vaiParaJules(p, acao.tamanhos || {})) labels.push(L.jules);
+      const r = await gh(token, 'POST', '/issues', { title: `[Parte ${k + 1}/${partes.length} de #${n}] ${String(p.titulo || acao.titulo).replace(/^NEXIA:\s*/, '').slice(0, 60)}`, body: plano.corpoDaParte(p, k + 1, partes.length, n, partes), labels });
       if (r.status === 201) criadas.push(r.json.number);
     }
     if (criadas.length !== partes.length) { await comentar(`Só criei ${criadas.length} de ${partes.length} partes; deixei a tarefa inteira.`); await addLabel(L.semDivisao); return; }
     await addLabel(L.dividido);
-    await comentar(`Tarefa grande dividida em ${partes.length} partes pequenas: ${criadas.map(c => `#${c}`).join(', ')}. Quando todas terminarem, esta é concluída.`);
+    const juntas = partes.filter(p => !p.depende.length).length;
+    const linhas = partes.map((p, k) => `- #${criadas[k]} ${p.titulo}: ${p.arquivos.map(a => '`' + a + '`').join(', ')}${p.depende.length ? ` (depois de ${p.depende.map(d => `#${criadas[d - 1]}`).join(', ')})` : ''}${plano.vaiParaJules(p, acao.tamanhos || {}) ? ' (Jules)' : ''}`);
+    await comentar(`Pedido grande: montei um plano com ${partes.length} partes pequenas (${feito.origem}). ${juntas} começam juntas, em pistas diferentes; as outras esperam só a parte de que dependem.\n${linhas.join('\n')}\nCada PR é conferido (só os arquivos do plano, poucas linhas) e, no fim, roda o teste de pessoa.`);
   } else if (acao.tipo === 'concluir-pai') {
     await delLabel(L.dividido); await addLabel(L.feito);
-    await comentar('Todas as partes foram concluídas.');
+    await comentar(`Todas as partes foram concluídas. ${plano.textoTempo(acao.tempo)}\nPassada final de integração: disparei o teste de pessoa na develop.`.trim());
+    await gh(token, 'POST', '/actions/workflows/teste-humano.yml/dispatches', { ref: 'develop' });
     await gh(token, 'PATCH', `/issues/${n}`, { state: 'closed', state_reason: 'completed' });
   } else if (acao.tipo === 'despachar') {
     await limparPistas(acao.pista);
@@ -293,8 +356,9 @@ async function executar(token, acao, dividir) {
       if (travar) await avisarDono('travado', n, acao.titulo);
       return;
     }
+    const revisao = await revisarParte(token, acao.corpo, acao.desde);
     await delLabel(L.rodando); await limparPistas(); await addLabel(L.feito);
-    await comentar(`Concluída pelo Cortex: https://github.com/${REPO}/actions/runs/${acao.run}`);
+    await comentar(`Concluída pelo Cortex: https://github.com/${REPO}/actions/runs/${acao.run}${revisao}`);
     await gh(token, 'PATCH', `/issues/${n}`, { state: 'closed', state_reason: 'completed' });
     await avisarDono('feito', n, acao.titulo);
   } else if (acao.tipo === 'reenfileirar') {
@@ -304,6 +368,14 @@ async function executar(token, acao, dividir) {
   } else if (acao.tipo === 'fechar-feito') {
     await delLabel(L.rodando); await limparPistas();
     await comentar('Esta tarefa já tinha o rótulo cortex-feito; fechei como concluída.');
+    await gh(token, 'PATCH', `/issues/${n}`, { state: 'closed', state_reason: 'completed' });
+  } else if (acao.tipo === 'jules-volta') {
+    await delLabel(L.jules);
+    await comentar('O Jules não aceitou esta parte em 3 h (limite grátis do dia). Ela volta para o Cortex, que lê arquivos grandes por trechos.');
+  } else if (acao.tipo === 'jules-feito') {
+    for (const l of [L.travado, L.rodando, L.jules]) await delLabel(l).catch(() => null);
+    await limparPistas(); await addLabel(L.feito);
+    await comentar(`O PR do Jules (#${acao.pr}) entrou na develop. Parte concluída.`);
     await gh(token, 'PATCH', `/issues/${n}`, { state: 'closed', state_reason: 'completed' });
   } else if (acao.tipo === 'reserva-volta') {
     // #803: novo dia, nova cota: volta para a fila do zero (tentativa-N, sem-entrega-N e travado saem).
@@ -482,6 +554,45 @@ async function corrigirCiDosPrs(token, runs) {
   return null;
 }
 
+// Dados extras que o planejador precisa, buscados só quando há partes com plano ou pedidos novos:
+// tamanho dos arquivos citados (pela listagem da pasta, sem baixar o arquivo), arquivos dos PRs nexia/* abertos
+// e partes enviadas ao Jules cujo PR já entrou na develop.
+async function dadosDoPlanejador(token, issues) {
+  const out = { tamanhos: {}, prs: [], julesFeitos: [] };
+  try {
+    const novas = issues.filter(i => !i.pull_request && !nomes(i).some(l => [L.rodando, L.feito, L.travado, L.dividido, L.parte, L.semDivisao].includes(l))).slice(0, 15);
+    const pastas = new Map();
+    for (const i of novas) for (const a of plano.arquivosCitados(i.body)) { const d = a.slice(0, a.lastIndexOf('/')); (pastas.get(d) || pastas.set(d, new Set()).get(d)).add(a); }
+    for (const [d, arqs] of [...pastas].slice(0, 20)) {
+      const lista = (await gh(token, 'GET', `/contents/${d}?ref=develop`)).json;
+      if (Array.isArray(lista)) for (const f of lista) if (arqs.has(f.path)) out.tamanhos[f.path] = f.size;
+    }
+    const comPlano = issues.some(i => plano.lerPlano(i.body));
+    if (comPlano) {
+      const abertos = ((await gh(token, 'GET', '/pulls?state=open&per_page=30')).json || []).filter(pr => /^nexia\//.test((pr.head || {}).ref || ''));
+      for (const pr of abertos) out.prs.push({ numero: pr.number, criadoEm: pr.created_at, arquivos: (((await gh(token, 'GET', `/pulls/${pr.number}/files?per_page=100`)).json) || []).map(f => f.filename) });
+    }
+    const noJules = issues.filter(i => !i.pull_request && nomes(i).includes('jules-enviado'));
+    if (noJules.length) {
+      const fechados = ((await gh(token, 'GET', '/pulls?state=closed&sort=updated&direction=desc&per_page=50')).json || []).filter(pr => pr.merged_at);
+      for (const i of noJules) {
+        const pr = fechados.find(x => new RegExp(`#${i.number}(?!\\d)`).test(`${x.title || ''}\n${x.body || ''}`));
+        if (pr) out.julesFeitos.push({ tipo: 'jules-feito', numero: i.number, pr: pr.number });
+      }
+    }
+  } catch (e) { console.log(`planejador: ${e.message}`); }
+  return out;
+}
+
+// Placar de cada ciclo (aparece no resumo do workflow): pistas em uso, esperando dependência, no Jules, travadas.
+function placar(issues, acoes) {
+  const abertas = issues.filter(i => !i.pull_request);
+  const c = l => abertas.filter(i => nomes(i).includes(l)).length;
+  const linha = `Pistas: ${c(L.rodando) + acoes.filter(a => a.tipo === 'despachar').length}/${PISTAS} · na fila: ${abertas.length} · planos: ${c(L.dividido)} · Jules: ${c(L.jules) + c('jules-enviado')} · travadas: ${c(L.travado)} · ações: ${acoes.map(a => a.tipo).join(', ') || 'nenhuma'}`;
+  console.log(linha);
+  if (process.env.GITHUB_STEP_SUMMARY) try { require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Fila do Cortex\n${linha}\n`); } catch { /* sem resumo */ }
+}
+
 async function main() {
   const token = process.env.GITHUB_TOKEN;
   if (!token) throw new Error('Falta GITHUB_TOKEN.');
@@ -506,7 +617,9 @@ async function main() {
   }
   // Cópia literal ("Copie EXATAMENTE") não passa por IA: grava direto e a fila normal não despacha essas tarefas.
   const direto = await literalDireto(token, issues);
-  let acoes = decidir({ issues: issues.filter(i => !direto.has(i.number)), runs });
+  const extra = await dadosDoPlanejador(token, issues);
+  let acoes = decidir({ issues: issues.filter(i => !direto.has(i.number)), runs, ...extra });
+  acoes.push(...extra.julesFeitos);
   try { acoes.push(...await reservasQueVoltam(token, issues)); } catch (e) { console.log(`reserva sem cota: ${e.message}`); }
   // Sem escrita disponível no banco, despachar só queima mais cota: segura as tarefas novas (o resto segue).
   if (acoes.some(a => a.tipo === 'despachar')) {
@@ -518,7 +631,11 @@ async function main() {
   const pais = issues.filter(i => !i.pull_request && nomes(i).includes(L.dividido));
   if (pais.length) {
     const partes = ((await gh(token, 'GET', `/issues?state=all&labels=${L.parte}&per_page=100`)).json || []).filter(i => !i.pull_request);
-    for (const n of paisConcluidos({ pais, partes })) acoes.push({ tipo: 'concluir-pai', numero: n });
+    for (const n of paisConcluidos({ pais, partes })) {
+      const pai = pais.find(x => x.number === n);
+      const minhas = partes.filter(p => new RegExp(`de #${n}\\]`).test(p.title || ''));
+      acoes.push({ tipo: 'concluir-pai', numero: n, tempo: plano.medirTempo(pai.created_at, minhas) });
+    }
   }
   // O divisor usa só modelos grátis (rodízio); o roteador só é carregado se houver algo para dividir.
   let dividir = null;
@@ -526,10 +643,14 @@ async function main() {
     const { getRouter } = require('../nexia-ai/model-router');
     const { listFor } = require('../nexia-ai/orchestrator/models');
     const router = getRouter();
-    dividir = t => dividirComIA(t, router, listFor('fast'));
+    // Planejar pede raciocínio: modelos de raciocínio primeiro, depois os rápidos. Só grátis (Anthropic fica de fora: é pago).
+    const vistos = new Set();
+    const lista = [...listFor('reasoning'), ...listFor('fast')].filter(d => d.provider !== 'anthropic' && !vistos.has(`${d.provider}/${d.model}`) && vistos.add(`${d.provider}/${d.model}`));
+    dividir = (t, tam) => planejarComIA(t, router, lista, tam);
   }
   for (const a of acoes) { console.log(`${a.tipo} #${a.numero}${a.pista ? ` pista ${a.pista}` : ''}${a.tentativa ? ` tentativa ${a.tentativa}` : ''}`); await executar(token, a, dividir); }
   console.log(`${issues.length} na fila, ${acoes.length} ação(ões).`);
+  placar(issues, acoes);
   try { await fecharRascunhosParados(token); } catch (e) { console.log(`rascunhos parados: ${e.message}`); }
   try { await corrigirCiDosPrs(token, runs); } catch (e) { console.log(`correção de CI: ${e.message}`); }
   await resumoDiario(token, issues);
@@ -545,5 +666,5 @@ async function main() {
   }
 }
 
-module.exports = { corrigirCiDosPrs, reservaVolta, reservasQueVoltam, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
+module.exports = { planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
