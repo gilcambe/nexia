@@ -28,7 +28,7 @@ export default function EntrarPage() {
           setFirebaseReady(true);
         }
       } catch (e) {
-        if (!cancelado) setErro(e.message || "Erro ao iniciar a autenticação");
+        if (!cancelado)       setErro("Erro ao carregar a configuração de autenticação. Tente novamente mais tarde.");
       }
     }
     init();
@@ -50,7 +50,7 @@ export default function EntrarPage() {
       await signInWithPopup(firebaseAuth, provider);
       setSucesso("Login com Google realizado com sucesso.");
     } catch (e) {
-      setErro(e.message || "Erro ao entrar com o Google");
+      setErro("Erro ao realizar login com Google. Tente novamente.");
     } finally {
       setCarregando(false);
     }
@@ -80,7 +80,7 @@ export default function EntrarPage() {
         setSucesso("Cadastro realizado com sucesso. Você já está logado.");
       }
     } catch (e) {
-      setErro(e.message || "Erro ao autenticar");
+      setErro("Erro ao realizar a operação. Verifique seus dados e tente novamente.");
     } finally {
       setCarregando(false);
     }
@@ -130,7 +130,7 @@ export default function EntrarPage() {
               id="senha-input"
               type="password"
               required
-              minLength={mode === "login" ? 1 : 6}
+              minLength={6}
               autoComplete={mode === "login" ? "current-password" : "new-password"}
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
