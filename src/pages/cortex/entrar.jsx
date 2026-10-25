@@ -45,7 +45,6 @@ export default function EntrarPage() {
       const provider = new GoogleAuthProvider();
       const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
       if (clientId) {
-        provider.setCustomParameters({ login_hint: "", hosted_domain: "" });
         provider.setCustomParameters({ client_id: clientId });
       }
       await signInWithPopup(firebaseAuth, provider);
@@ -112,8 +111,9 @@ export default function EntrarPage() {
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-[#d1d5db] mb-1">E-mail</label>
+            <label htmlFor="email-input" className="block text-sm font-medium text-[#d1d5db] mb-1">E-mail</label>
             <input
+              id="email-input"
               type="email"
               required
               autoComplete="email"
@@ -125,8 +125,9 @@ export default function EntrarPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-[#d1d5db] mb-1">Senha</label>
+            <label htmlFor="senha-input" className="block text-sm font-medium text-[#d1d5db] mb-1">Senha</label>
             <input
+              id="senha-input"
               type="password"
               required
               minLength={mode === "login" ? 1 : 6}
@@ -140,8 +141,9 @@ export default function EntrarPage() {
 
           {mode === "cadastro" && (
             <div>
-              <label className="block text-sm font-medium text-[#d1d5db] mb-1">Confirme a senha</label>
+              <label htmlFor="confirmar-senha-input" className="block text-sm font-medium text-[#d1d5db] mb-1">Confirme a senha</label>
               <input
+                id="confirmar-senha-input"
                 type="password"
                 required
                 minLength={6}
