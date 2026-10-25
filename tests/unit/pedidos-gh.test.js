@@ -45,14 +45,14 @@ test('PED8. detalhe com partes divididas', async () => {
             title: '[Parte 1/2 de #1] Primeira parte',
             state: 'closed',
             labels: [{ name: 'cortex-feito' }],
-            body: 'Plano: {"depende": [], "arquivos": ["file1.ts"]}'
+            body: '<!-- cortex-plano {"pai":1,"k":1,"n":2,"depende":[],"arquivos":["file1.ts"],"pronto":"p1","antes":[]} -->\nPlano: {"depende": [], "arquivos": ["file1.ts"]}'
           },
           {
             number: 102,
             title: '[Parte 2/2 de #1] Segunda parte',
             state: 'open',
             labels: [{ name: 'cortex-rodando' }, { name: 'pista-2' }],
-            body: 'Plano: {"depende": ["file1.ts"], "arquivos": ["file2.ts"]}'
+            body: '<!-- cortex-plano {"pai":1,"k":2,"n":2,"depende":[1],"arquivos":["file2.ts"],"pronto":"p2","antes":[]} -->\nPlano: {"depende": ["file1.ts"], "arquivos": ["file2.ts"]}'
           }
         ]
       };

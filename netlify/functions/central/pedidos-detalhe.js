@@ -50,7 +50,6 @@ function criarDetalhe(gh) {
       
       for (const parte of partesEncontradas) {
         const plano = lerPlano(parte.body);
-        if (!plano) continue;
         
         // Extrai número da parte do título [Parte k/n de #N]
         const match = parte.title.match(/\[Parte (\d+)\/\d+ de #\d+\]/);
@@ -65,17 +64,16 @@ function criarDetalhe(gh) {
         else if (rotulosParte.includes('cortex-jules') || rotulosParte.includes('jules-enviado')) estado = 'no Jules';
         
         // Extrai pista (rótulo pista-N)
-        const pista = rotulosParte.find(l => l.startsWith('pista-'))
-          ? parseInt(rotulosParte.find(l => l.startsWith('pista-')).replace('pista-', ''))
-          : null;
+        const pistaLabel = rotulosParte.find(l => l.startsWith('pista-'));
+        const pista = pistaLabel ? parseInt(pistaLabel.replace('pista-', '')) : null;
         
         partes.push({
           numero: parte.number,
           titulo: parte.title,
           estado,
           pista,
-          depende: plano.depende || [],
-          arquivos: plano.arquivos || [],
+          depende: plano ? (plano.depende || []) : [],
+          arquivos: plano ? (plano.arquivos || []) : [],
           numeroParte
         });
       }
