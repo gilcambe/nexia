@@ -76,3 +76,12 @@ test('JULES-AUTO4: retomada tira travado, jules-enviado e tentativas e põe cort
   assert.ok(f.chamadas.some(c => c.url.endsWith('/issues/20/labels') && /cortex-retomada/.test(c.body)));
   assert.strictEqual(f.chamadas.filter(c => c.url.includes('jules.googleapis.com')).length, 0);
 });
+
+test('JULES-AUTO-PLANO: parte grande do plano (cortex-jules) vai antes das travadas', () => {
+  const nomes = i => i.labels.map(l => l.name);
+  const issues = [
+    { number: 5, labels: [{ name: 'cortex-travado' }] },
+    { number: 9, labels: [{ name: 'cortex-fila' }, { name: 'cortex-parte' }, { name: 'cortex-jules' }] },
+  ];
+  assert.equal(decidir(issues, [], Date.now(), nomes).enviar, 9);
+});
