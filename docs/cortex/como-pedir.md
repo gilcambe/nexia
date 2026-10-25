@@ -68,3 +68,4 @@ Evita misturar várias tarefas em um único pedido. Se você precisa fazer coisa
 4. **Restrições**: Alguma tecnologia específica a ser usada?
 
 Lembre-se: quanto mais claro e detalhado for seu pedido, melhor será o resultado final!
+
