@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+import { initFirebase, auth as firebaseAuth } from "@/lib/firebase-lite";
 
 export default function EntrarPage() {
   const [mode, setMode] = useState("login"); // "login" | "cadastro"
@@ -10,13 +9,12 @@ export default function EntrarPage() {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
-  const [auth, setAuth] = useState(null);
   const [firebaseReady, setFirebaseReady] = useState(false);
   const formRef = useRef(null);
 
   useEffect(() => {
     let cancelado = false;
-    async function initFirebase() {
+    async function init() {
       try {
         const resposta = await fetch("/api/firebase-config", {
           cache: "no-store",
@@ -25,30 +23,32 @@ export default function EntrarPage() {
         const config = await resposta.json();
         if (!config || !config.apiKey) throw new Error("Config do Firebase incompleta");
 
-        const { initializeApp } = await import("firebase/app");
-        const { getAuth } = await import("firebase/auth");
-        const app = initializeApp(config);
+        await initFirebase(config);
         if (!cancelado) {
-          setAuth(getAuth(app));
           setFirebaseReady(true);
         }
       } catch (e) {
         if (!cancelado) setErro(e.message || "Erro ao iniciar a autenticação");
       }
     }
-    initFirebase();
+    init();
     return () => { cancelado = true; };
   }, []);
 
   async function handleGoogle() {
-    if (!auth) return;
+    if (!firebaseReady) return;
     setCarregando(true);
     setErro("");
     setSucesso("");
     try {
       const { GoogleAuthProvider, signInWithPopup } = await import("firebase/auth");
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
+      if (clientId) {
+        provider.setCustomParameters({ login_hint: "", hosted_domain: "" });
+        provider.setCustomParameters({ client_id: clientId });
+      }
+      await signInWithPopup(firebaseAuth, provider);
       setSucesso("Login com Google realizado com sucesso.");
     } catch (e) {
       setErro(e.message || "Erro ao entrar com o Google");
@@ -59,7 +59,7 @@ export default function EntrarPage() {
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!auth) {
+    if (!firebaseReady) {
       setErro("Autenticação ainda não está pronta. Tente novamente.");
       return;
     }
@@ -68,17 +68,16 @@ export default function EntrarPage() {
     setSucesso("");
 
     try {
+      const { signInWithEmailAndPassword, createUserWithEmailAndPassword } = await import("firebase/auth");
       if (mode === "login") {
-        const { signInWithEmailAndPassword } = await import("firebase/auth");
-        await signInWithEmailAndPassword(auth, email, senha);
+        await signInWithEmailAndPassword(firebaseAuth, email, senha);
         setSucesso("Bem-vindo! Você entrou com sucesso.");
       } else {
         if (senha !== confirmarSenha) {
           setErro("A senha e a confirmação não são iguais.");
           return;
         }
-        const { createUserWithEmailAndPassword } = await import("firebase/auth");
-        await createUserWithEmailAndPassword(auth, email, senha);
+        await createUserWithEmailAndPassword(firebaseAuth, email, senha);
         setSucesso("Cadastro realizado com sucesso. Você já está logado.");
       }
     } catch (e) {
