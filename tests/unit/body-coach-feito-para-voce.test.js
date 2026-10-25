@@ -117,3 +117,25 @@ test('em casa (com ou sem halteres) nunca aparece barra fixa, e as costas contin
     }
   }
 });
+
+test('aluno com ID em evitar e favoritos: evitado é excluído e favorito é promovido no treino do dia', async () => {
+  const m = await carregar();
+  const mockUsuario = {
+    ...BRUNO,
+    evitar: ['supino-reto-com-barra'],
+    favoritos: ['flexao-de-bracos'],
+  };
+  const estadoPadrao = { sono: 'bom', alimentacao: 'comi_bem', energia: 4, tempoMin: 60, dores: '', indisponiveis: [] };
+
+  const semPreferencia = m.montarTreinoDoDia({ respostas: BRUNO, divisao: 'abc', diaDaDivisao: 0, enfase: [], estado: estadoPadrao, variacao: 0 });
+  const comPreferencia = m.montarTreinoDoDia({ respostas: mockUsuario, divisao: 'abc', diaDaDivisao: 0, enfase: [], estado: estadoPadrao, variacao: 0 });
+
+  const idsSem = semPreferencia.sessao.exercises.map((e) => e.id);
+  const idsCom = comPreferencia.sessao.exercises.map((e) => e.id);
+
+  assert.ok(idsSem.includes('supino-reto-com-barra'), 'sem evitar, supino-reto-com-barra estava presente');
+  assert.ok(!idsCom.includes('supino-reto-com-barra'), 'exercício em evitar deve ser totalmente excluído');
+
+  assert.ok(!idsSem.includes('flexao-de-bracos'), 'sem favoritos, flexao-de-bracos não estava na lista');
+  assert.ok(idsCom.includes('flexao-de-bracos'), 'exercício em favoritos ganha prioridade e entra na lista');
+});
