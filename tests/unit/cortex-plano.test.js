@@ -80,3 +80,12 @@ test('PL6. planejador: IA boa vira plano; todas falham = plano simples por arqui
   assert.ok(r.partes.every(p => !p.depende.length), 'plano simples roda tudo junto');
   assert.equal(await planejarComIA('pedido sem arquivo', ia('nada'), [{}]), null);
 });
+
+test('PL7. teste real #1538: rascunho da própria parte não a segura; falha de parte leva corpo para conferir entrega', () => {
+  const a = parte(401, { pai: 400, k: 1, arquivos: ['docs/cortex/jules.md'] }, ['tentativa-3']);
+  const prs = [{ arquivos: ['docs/cortex/jules.md'], criadoEm: '2026-10-25T17:30:00Z' }];
+  assert.deepEqual(decidir({ issues: [a], runs: [], agora: AGORA, prs }).map(x => x.numero), [401]);
+  const rodando = parte(402, { pai: 400, k: 2, arquivos: ['docs/cortex/x.md'] }, ['cortex-rodando', 'pista-1', 'tentativa-1']);
+  const [r] = decidir({ issues: [rodando], runs: [{ id: 9, name: 'Cortex #402', status: 'completed', conclusion: 'failure' }], agora: AGORA });
+  assert.deepEqual([r.tipo, r.parte, /docs\/cortex\/x\.md/.test(r.corpo)], ['reenfileirar', true, true]);
+});
