@@ -1,19 +1,23 @@
-# Como o Jules (nossa IA mais forte) trabalha
+# Como o Jules (nossa IA mais forte) entra em ação
 
-O Jules é uma inteligência artificial mais potente que usamos para tarefas complexas. Veja como ele entra em ação:
+O Jules é a inteligência artificial mais avançada que temos para resolver tarefas complexas. Ele entra em ação em algumas situações específicas para garantir que o trabalho seja feito de forma eficiente.
 
-- **Rótulo `cortex-jules`**: Se uma tarefa recebe este rótulo, ela vai direto para o Jules. Se o Jules não aceitar a tarefa em até 3 horas, ela volta para o Cortex (nossa IA padrão).
+## Tarefas grandes e importantes
 
-- **Tarefa travada**: Se uma tarefa ficar travada e não tiver progresso, o Jules tentará ajudar a cada 15 minutos.
+Se uma parte grande de uma tarefa receber o rótulo `cortex-jules`, ela será enviada diretamente para o Jules. Se, por algum motivo, o Jules não aceitar começar essa tarefa dentro de 3 horas, ela volta para o Cortex (nossa IA principal) para ser reavaliada.
 
-- **Sem retorno do Jules**: Se o Jules não enviar um Pull Request (uma proposta de código) em 24 horas, a tarefa volta para o Cortex do zero. Ela receberá o rótulo `cortex-retomada`.
+## Tarefas que estão travadas
 
-- **Travou de novo**: Se a mesma tarefa que voltou do Jules travar novamente, ela será enviada para o Jules mais uma vez.
+Quando uma tarefa não consegue progredir, o Jules pode ser acionado para ajudar a destravar.
 
-- **`so-humano`**: Depois de voltar do Jules, travar de novo e ir para o Jules novamente, se a tarefa ainda não for resolvida, ela receberá o rótulo `so-humano`. Isso significa que ela precisa de ajuda de uma pessoa.
+-   **Tentativa inicial**: Se uma tarefa estiver travada, ela será enviada ao Jules automaticamente a cada 15 minutos até que ele comece a trabalhar nela.
+-   **Volta ao Cortex**: Se o Jules não conseguir enviar um Pull Request (uma proposta de código) em 24 horas, a tarefa é considerada "travada demais" para ele. Nesse caso, ela volta para o Cortex do zero e recebe o rótulo `cortex-retomada`. Isso indica que o Cortex precisa tentar novamente, talvez de uma forma diferente.
+-   **Nova chance para o Jules**: Se a tarefa voltar para o Cortex e travar novamente, ela será enviada de novo para o Jules.
+-   **Situação `so-humano`**: Se a tarefa ainda não for resolvida mesmo após essa segunda tentativa do Jules, ela receberá o rótulo `so-humano`. Isso significa que a tarefa é tão complexa ou peculiar que precisa de uma pessoa para resolvê-la.
 
-## Plano Grátis do Jules
+## Limites do plano grátis do Jules
 
-O Jules tem um plano grátis com as seguintes limitações:
-- 15 tarefas por dia.
-- Até 3 tarefas rodando ao mesmo tempo.
+Para que possamos usar o Jules de forma sustentável, temos um limite para o seu uso:
+
+-   **Tarefas por dia**: Podemos enviar até 15 tarefas para o Jules por dia.
+-   **Tarefas ao mesmo tempo**: O Jules consegue trabalhar em até 3 tarefas simultaneamente.
