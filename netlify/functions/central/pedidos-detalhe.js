@@ -73,6 +73,7 @@ function criarDetalhe(gh) {
             
             return {
               numero: parte.number,
+              k: k,
               titulo: String(parte.title || '').slice(0, 120),
               link: parte.html_url,
               estado,
@@ -85,7 +86,7 @@ function criarDetalhe(gh) {
         );
         
         // Ordenar as partes pelo número k
-        partes = partesProcessadas.sort((a, b) => a.numero - b.numero);
+        partes = partesProcessadas.sort((a, b) => a.k - b.k);
       }
     }
     
