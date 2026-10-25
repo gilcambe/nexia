@@ -1,5 +1,5 @@
 {
-  "rodizio": 25,
+  "rodizio": 26,
   "feitos": [
     "body-coach-01",
     "body-coach-02",
@@ -568,6 +568,25 @@
         }
       ],
       "formato": "foto",
+      "serie": "bastidores"
+    },
+    {
+      "quando": "2026-10-25T00:22:45.622Z",
+      "id": null,
+      "cliente": "body-coach",
+      "resultados": [
+        {
+          "canal": "facebook",
+          "ok": true,
+          "ref": "1380111745183159_122102536563518156"
+        },
+        {
+          "canal": "instagram",
+          "ok": true,
+          "ref": "18110535226897507"
+        }
+      ],
+      "formato": "reel",
       "serie": "bastidores"
     }
   ],
