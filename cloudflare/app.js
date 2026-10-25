@@ -11,6 +11,7 @@ const { publicErrorBody } = require('../lib/safe-error');
 const { isStreamResult } = require('../lib/stream-response');
 const { TENANT_PAGES, resolveFunctionName } = require('../lib/routes');
 const { createTokenSource } = require('../lib/firebase-lite/google-auth');
+const { validarAcessoCliente } = require('../lib/cortex-cliente');
 const rid = require('../lib/rid');
 
 const MAX_BODY_SIZE = 1 * 1024 * 1024;
@@ -315,6 +316,17 @@ async function atender(request, env, { getFunction }, reqId) {
   }
   if (pathname === '/__/firebase/init.json' || pathname.startsWith('/__/auth/')) return proxyAuth(request, url);
   if (pathname === '/api/firebase-config') return firebaseConfig(env, undefined, request);
+  if (pathname.startsWith('/api/cortex-cliente/')) {
+    try {
+      await validarAcessoCliente(request, pathname);
+    } catch (e) {
+      const msg = String(e.message || e);
+      const status = msg.startsWith('401') ? 401 : 403;
+      const codigo = msg.replace(/^\d{2}:\s*/, '');
+      return json(status, { error: codigo }, { 'Access-Control-Allow-Origin': '*' });
+    }
+    return json(200, { ok: true, mensagem: 'Acesso autorizado a cortexClientes/{uid}/...' });
+  }
   if (pathname.startsWith('/api/') || pathname.startsWith('/.netlify/functions/')) {
     return runFunction(resolveFunctionName(pathname), request, url, env, getFunction, reqId);
   }
