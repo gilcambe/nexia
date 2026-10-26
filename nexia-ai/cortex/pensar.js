@@ -39,7 +39,8 @@ async function avaliarComSeguranca(codigo) {
       const fn = new Function('return (' + codigo + ')');
       resolve({ ok: true, resultado: fn() });
     } catch (e) {
-      reject(new Error('erro ao executar código'));\n    }
+      reject(new Error('erro ao executar código'));
+    }
   });
   return Promise.race([exec, timeout]).then(r => r, e => ({ ok: false, erro: e.message }));
 }
