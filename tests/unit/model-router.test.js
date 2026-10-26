@@ -112,7 +112,8 @@ test('M7. fallback: troca de provedor antes do primeiro token; erro depois do pr
   fake.state.status = {};
   fake.state.failMidStream = true;
   const ev2 = await collect(router.streamWithFallback([GROQ, GEMINI], { messages: [{ role: 'user', content: 'oi' }] }));
-  assert.deepStrictEqual(ev2.map(e => e.type), ['model', 'text', 'error']);
+  // #1631: se a resposta falhar no meio e houver outro provedor, continua com o próximo
+  assert.deepStrictEqual(ev2.map(e => e.type), ['model', 'text', 'text', 'error']);
   assert.strictEqual(ev2[0].provider, 'groq');
 
   fake.state.failMidStream = false;

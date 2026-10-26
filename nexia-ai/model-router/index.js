@@ -119,35 +119,125 @@ function createRouter(o = {}) {
   }
 
   /**
-   * Streaming com fallback: troca de provedor só enquanto nenhum texto foi entregue.
-   * Emite { type:'model', provider, model, attempts } antes do primeiro texto; um erro
-   * depois disso vira { type:'error', code } e encerra (o texto já saiu para o cliente).
+   * Streaming com fallback resiliente:
+   * 1. Primeiro token: se não chegar em 4 s (firstChunkTimeoutMs), troca de provedor.
+   * 2. Meio da resposta: se parar por mais de 8 s (stallTimeoutMs), continua com outro provedor a partir do que já foi escrito.
+   * 3. Limite total: 60 s máximo.
    */
-  async function* streamWithFallback(descs, req) {
+  async function* streamWithFallback(descs, req, options = {}) {
+    const firstChunkTimeoutMs = options.firstChunkTimeoutMs || (req && req.firstChunkTimeoutMs) || 4000;
+    const stallTimeoutMs = options.stallTimeoutMs || (req && req.stallTimeoutMs) || 8000;
+    const totalTimeoutMs = options.totalTimeoutMs || (req && req.totalTimeoutMs) || 60000;
+    const startTime = Date.now();
     const attempts = [];
-    for (const d of dedupe(descs)) {
-      const it = stream(d, req)[Symbol.asyncIterator]();
-      let first;
-      try {
-        first = await it.next();
-      } catch (e) {
-        if (e && e.code === CODES.ABORTED) throw e;
-        attempts.push({ provider: d.provider, model: d.model, code: e.code || 'ERROR' });
+    const getPlacar = () => { try { return require('./cota').getPlacar(); } catch { return null; } };
+
+    const remainingTime = () => Math.max(10, totalTimeoutMs - (Date.now() - startTime));
+
+    const timeoutPromise = (ms, msg) => new Promise((_, reject) => {
+      const timer = setTimeout(() => {
+        const err = new ModelError(CODES.UPSTREAM, msg || 'Timeout');
+        err.isTimeout = true;
+        reject(err);
+      }, ms);
+      if (timer.unref) timer.unref();
+    });
+
+    let currentReq = req;
+    let accumulatedText = '';
+    const dedupped = dedupe(descs);
+
+    for (let i = 0; i < dedupped.length; i++) {
+      if (Date.now() - startTime >= totalTimeoutMs) {
+        break;
+      }
+      const d = dedupped[i];
+
+      const placar = getPlacar();
+      if (placar && placar.bloqueado(d) && dedupped.length > 1) {
+        attempts.push({ provider: d.provider, model: d.model, code: 'BLOCKED' });
         continue;
       }
-      yield { type: 'model', provider: d.provider, model: d.model, attempts };
+
+      let contReq = currentReq;
+      if (accumulatedText) {
+        const history = [...(currentReq.messages || [])];
+        contReq = {
+          ...currentReq,
+          messages: [
+            ...history,
+            { role: 'assistant', content: accumulatedText },
+            { role: 'user', content: '[INSTRUÇÃO DE CONTINUAÇÃO: Continue exatamente de onde parou a resposta anterior, sem repetir o que já foi escrito.]' }
+          ]
+        };
+      }
+
+      const it = stream(d, contReq)[Symbol.asyncIterator]();
+      let first;
+      const tFirst = Math.min(firstChunkTimeoutMs, remainingTime());
+
       try {
-        if (!first.done) yield first.value;
-        while (true) {
-          const n = await it.next();
-          if (n.done) break;
-          yield n.value;
+        first = await Promise.race([
+          it.next(),
+          timeoutPromise(tFirst, 'Primeira palavra não chegou em 4 s')
+        ]);
+      } catch (e) {
+        if (typeof it.return === 'function') { try { await it.return(); } catch {} }
+        if (placar) placar.marcar(d, 'transient');
+        if (e && e.code === CODES.ABORTED) throw e;
+        attempts.push({ provider: d.provider, model: d.model, code: e.isTimeout ? 'TIMEOUT_4S' : (e.code || 'ERROR') });
+        continue;
+      }
+
+      if (!accumulatedText) {
+        yield { type: 'model', provider: d.provider, model: d.model, attempts };
+      }
+
+      let currentStreamDone = false;
+      try {
+        let nextItem = first;
+        while (!nextItem.done) {
+          const val = nextItem.value;
+          if (val && val.type === 'text' && val.text) {
+            accumulatedText += val.text;
+          }
+          yield val;
+
+          if (Date.now() - startTime >= totalTimeoutMs) {
+            currentStreamDone = true;
+            break;
+          }
+
+          const tStall = Math.min(stallTimeoutMs, remainingTime());
+          nextItem = await Promise.race([
+            it.next(),
+            timeoutPromise(tStall, 'Resposta parou por mais de 8 s')
+          ]);
+        }
+        if (nextItem.done) {
+          currentStreamDone = true;
         }
       } catch (e) {
-        yield { type: 'error', code: (e && e.code) || 'ERROR' };
+        if (typeof it.return === 'function') { try { await it.return(); } catch {} }
+        if (placar) placar.marcar(d, 'transient');
+        attempts.push({ provider: d.provider, model: d.model, code: e.isTimeout ? 'STALL_8S' : (e.code || 'ERROR') });
+        if (i < dedupped.length - 1 && Date.now() - startTime < totalTimeoutMs) {
+          continue;
+        }
+        yield { type: 'error', code: e.isTimeout ? 'STALL_8S' : ((e && e.code) || 'ERROR') };
+        return;
       } finally {
-        if (typeof it.return === 'function') { try { await it.return(); } catch { /* encerrado */ } }
+        if (typeof it.return === 'function') { try { await it.return(); } catch {} }
       }
+
+      if (currentStreamDone) {
+        return;
+      }
+    }
+
+    if (!accumulatedText && Date.now() - startTime >= totalTimeoutMs) {
+      yield { type: 'text', text: 'Não consegui agora, tente de novo.' };
+      yield { type: 'done', error: 'TIMEOUT_60S' };
       return;
     }
     throw new ModelError(CODES.ALL_FAILED, 'Nenhum modelo respondeu.', { attempts });
