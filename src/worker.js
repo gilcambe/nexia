@@ -178,6 +178,12 @@ export default {
     // 2. Rotas existentes da API (preservadas)
     // /api/cortex, /api/pedidos, /api/central, etc. seguem para os handlers do Netlify/Cloudflare.
     // Mantemos a passagem adiante para não quebrar nada que já existe.
-    return chatRoutes(request, env, ctx);
+    const response = await chatRoutes(request, env, ctx);
+    if (response && response.status !== 404) {
+      return response;
+    }
+    
+    // Se não encontrou rota existente, retorna erro
+    return new Response('Not found', { status: 404 });
   },
 };
