@@ -60,3 +60,14 @@ test('ANX7. ação "entender" do Cortex responde sem usar o GitHub', async () =>
   const x = await agir({ gh: async () => { throw new Error('não usa'); } }, { acao: 'entender', nome: 'n.txt', base64: b64('abc') }, 'dono');
   assert.deepStrictEqual(x, { status: 200, corpo: { ok: true, tipo: 'texto', texto: 'abc', mensagem: 'Anexo entendido.' } });
 });
+
+test('ANX8. áudio falha no Workers AI → reserva Groq Whisper funciona', async () => {
+  const envGroq = { ...env, GROQ_API_KEY: 'gsk_test_key' };
+  const fetchImpl = async (u) => {
+    if (String(u).includes('cloudflare.com')) return resp(500, { error: 'Workers AI offline' });
+    if (String(u).includes('api.groq.com')) return resp(200, { text: 'transcrição pelo groq whisper' });
+    return resp(404, {});
+  };
+  const r = await a.entenderAnexo({ nome: 'voz.wav', base64: b64('WAVDATA') }, envGroq, { fetchImpl });
+  assert.deepStrictEqual(r, { tipo: 'audio', texto: 'transcrição pelo groq whisper' });
+});

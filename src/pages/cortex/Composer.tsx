@@ -94,14 +94,64 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
     } catch { setAviso(`Não consegui ler o arquivo \`${f.name}\`.`); }
   };
 
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const [gravando, setGravando] = useState(false);
+
+  const iniciarGravacao = async () => {
+    if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      setAviso("Seu navegador não suporta gravação de áudio.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+      const mr = new MediaRecorder(stream);
+      mediaRecorderRef.current = mr;
+      mr.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+      mr.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        const blob = new Blob(audioChunksRef.current, { type: mr.mimeType || "audio/webm" });
+        if (blob.size < 100) { setGravando(false); return; }
+        setOcupado(true);
+        try {
+          const file = new File([blob], "voz.webm", { type: blob.type });
+          const ent = await entender(file);
+          if (ent) {
+            const t = ent.replace(/^Anexo `.*` \([^)]+\):\n```\n?/, "").replace(/\n?```$/, "").trim();
+            if (t) setTexto((prev) => `${prev}${prev ? " " : ""}${t}`);
+          } else {
+            setAviso("Não foi possível transcrever o áudio.");
+          }
+        } catch {
+          setAviso("Erro ao processar o áudio.");
+        } finally {
+          setOcupado(false);
+          setGravando(false);
+        }
+      };
+      mr.start();
+      setGravando(true);
+      setAviso(null);
+    } catch {
+      setAviso("Permissão do microfone negada.");
+    }
+  };
+
   const ditar = () => {
-    if (ouvindo) { voz.current?.stop(); return; }
+    if (gravando) { mediaRecorderRef.current?.stop(); return; }
+    if (ouvindo) { voz.current?.stop(); setOuvindo(false); return; }
+
     const r = criarReconhecedor();
-    if (!r) { setAviso("Este navegador não tem ditado por voz. Use o Chrome."); return; }
-    r.lang = "pt-BR"; r.interimResults = false;
-    r.onresult = (e) => { const frase = Array.from(e.results).map((x) => x[0].transcript).join(" "); setTexto((t) => `${t}${t ? " " : ""}${frase}`); };
-    r.onend = () => setOuvindo(false);
-    voz.current = r; setOuvindo(true); r.start();
+    if (r) {
+      r.lang = "pt-BR"; r.interimResults = false;
+      r.onresult = (e) => { const frase = Array.from(e.results).map((x) => x[0].transcript).join(" "); setTexto((t) => `${t}${t ? " " : ""}${frase}`); };
+      r.onend = () => setOuvindo(false);
+      voz.current = r; setOuvindo(true); r.start();
+      return;
+    }
+
+    void iniciarGravacao();
   };
 
   const btn = "w-11 h-11 rounded-full flex items-center justify-center text-[var(--cx-mut)] hover:bg-[var(--cx-hover)] shrink-0";
@@ -118,7 +168,7 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
           </button>
           <input ref={arquivo} type="file" hidden onChange={(e) => { anexar(e.target.files?.[0]); e.target.value = ""; }} />
           <span className="flex-1 text-xs text-[var(--cx-mut)] px-2 truncate">{texto.length > MAX - 300 ? `${texto.length}/${MAX}` : "Ctrl+Enter envia"}</span>
-          <button type="button" className={`${btn} ${ouvindo ? "!text-red-400 animate-pulse" : ""}`} aria-label={ouvindo ? "Parar de ouvir" : "Ditar por voz"} onClick={ditar} data-testid="cx-mic">
+          <button type="button" className={`${btn} ${ouvindo || gravando ? "!text-red-400 animate-pulse bg-red-500/10" : ""}`} aria-label={ouvindo || gravando ? "Parar de ouvir" : "Ditar por voz"} onClick={ditar} data-testid="cx-mic">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5 11a7 7 0 0 0 14 0M12 18v3" /></svg>
           </button>
           

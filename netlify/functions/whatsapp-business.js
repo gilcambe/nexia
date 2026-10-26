@@ -340,6 +340,13 @@ async function handleWebhookReceive(event, headers) {
       } else if (msg.type === 'audio') {
         msgData.type = 'audio';
         msgData.mediaId = msg.audio?.id;
+        if (msg.audio?.id) {
+          const transcricao = await transcreverAudioWhatsApp(msg.audio.id, process.env.META_WHATSAPP_TOKEN, _fetchTimeout);
+          if (transcricao) {
+            msgData.text = `🎤 [Áudio]: ${transcricao}`;
+            msgData.transcription = transcricao;
+          }
+        }
       } else if (msg.type === 'image') {
         msgData.type = 'image';
         msgData.mediaId = msg.image?.id;
@@ -379,6 +386,28 @@ async function handleWebhookReceive(event, headers) {
     return { statusCode: 200, headers, body: 'OK' }; // Always 200 to Meta
   }
 }
+
+async function transcreverAudioWhatsApp(mediaId, token = process.env.META_WHATSAPP_TOKEN, fetchImpl = fetch, entenderImpl = require('../../lib/anexos-entender').entenderAnexo) {
+  if (!mediaId || !token) return null;
+  try {
+    const mediaRes = await fetchImpl(`https://graph.facebook.com/v18.0/${mediaId}`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!mediaRes.ok) return null;
+    const mediaInfo = await mediaRes.json();
+    if (!mediaInfo || !mediaInfo.url) return null;
+
+    const fileRes = await fetchImpl(mediaInfo.url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!fileRes.ok) return null;
+    const ab = await fileRes.arrayBuffer();
+    const b64 = Buffer.from(ab).toString('base64');
+
+    const result = await entenderImpl({ nome: 'whatsapp.ogg', tipo: 'audio/ogg', base64: b64 }, process.env);
+    return result && result.texto ? result.texto : null;
+  } catch {
+    return null;
+  }
+}
+
+exports.transcreverAudioWhatsApp = transcreverAudioWhatsApp;
 
 function sanitizePhone(phone) {
   return phone.replace(/\D/g, '').replace(/^0/, '55');
