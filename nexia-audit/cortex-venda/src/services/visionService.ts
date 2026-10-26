@@ -6,6 +6,7 @@ interface VisionOptions {
   imageBase64: string;
   prompt?: string;
   model?: string;
+  env?: any;
 }
 
 interface VisionResult {
@@ -119,6 +120,7 @@ export async function describeImage(options: VisionOptions, ai?: any): Promise<V
   const imageBase64 = options.imageBase64;
   const prompt = options.prompt || DEFAULT_PROMPT;
   const model = options.model || WORKERS_AI_MODEL;
+  const env = options.env;
 
   if (!imageBase64 || !isBase64Image(imageBase64)) {
     throw new Error('Imagem inválida: envie base64 ou data URL de imagem');
@@ -141,7 +143,7 @@ export async function describeImage(options: VisionOptions, ai?: any): Promise<V
 
   // 2) Fallback: Gemini gratuito
   try {
-    const result = await callGemini(imageBase64, prompt, options);
+    const result = await callGemini(imageBase64, prompt, env);
     return {
       description: result.description,
       provider: 'gemini',
