@@ -100,13 +100,25 @@ function createPlacar({ agora = () => Date.now() } = {}) {
     exportar() {
       const out = {};
       for (const k of Object.keys(placar)) out[k] = { ...placar[k] };
+      try {
+        out['_cache_stats'] = require('./cache').getSharedCache().stats();
+      } catch {}
       return out;
+    },
+    /** Economia de cota gerada pelo cache. */
+    economiaCache() {
+      try {
+        return require('./cache').getSharedCache().stats();
+      } catch {
+        return { hits: 0, economiaTokens: 0, size: 0 };
+      }
     },
     /** Importa objeto simples; ignora entradas vencidas. */
     importar(obj) {
       if (!obj || typeof obj !== 'object') return;
       const agora_ = agora();
       for (const k of Object.keys(obj)) {
+        if (k === '_cache_stats') continue;
         const e = obj[k];
         if (!e || typeof e.ate !== 'number') continue;
         if (e.ate <= agora_) continue; // vencido: ignora

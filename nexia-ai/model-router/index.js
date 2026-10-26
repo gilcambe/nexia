@@ -147,6 +147,20 @@ function createRouter(o = {}) {
     let accumulatedText = '';
     const dedupped = dedupe(descs);
 
+    if (cacheavel(req)) {
+      const generalK = `gen|${chave(req)}`;
+      for (const d of dedupped) {
+        const k = `${d.provider}|${d.model}|${chave(req)}`;
+        const hit = cache.get(k) || cache.get(generalK);
+        if (hit) {
+          yield { type: 'model', provider: hit.provider || d.provider, model: hit.model || d.model, attempts: [], cached: true };
+          if (hit.text) yield { type: 'text', text: hit.text };
+          yield { type: 'done', usage: hit.usage || {}, stop_reason: 'stop', cached: true };
+          return;
+        }
+      }
+    }
+
     for (let i = 0; i < dedupped.length; i++) {
       if (Date.now() - startTime >= totalTimeoutMs) {
         break;
@@ -231,6 +245,14 @@ function createRouter(o = {}) {
       }
 
       if (currentStreamDone) {
+        if (cacheavel(req) && accumulatedText) {
+          const d = dedupped[i] || descs[0];
+          const k = `${d.provider}|${d.model}|${chave(req)}`;
+          const generalK = `gen|${chave(req)}`;
+          const cacheVal = { text: accumulatedText, provider: d.provider, model: d.model, usage: { total_tokens: Math.ceil(accumulatedText.length / 4) } };
+          cache.set(k, cacheVal);
+          cache.set(generalK, cacheVal);
+        }
         return;
       }
     }

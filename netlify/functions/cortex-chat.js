@@ -21,6 +21,7 @@ const { guard, sanitizePrompt, validateAIAction, checkPermission, HEADERS, makeH
 const { publicErrorBody } = require('../../lib/safe-error');
 const nexiaCortex = require('../../nexia-ai/cortex'); // NEXIA AI (Fase 4): resolver + contexto do Vault
 const modos = require('../../nexia-ai/cortex/modos'); // #831: Rápido / Pensar / Pesquisar
+const { classificarDificuldade, podeUsarCache } = require('../../nexia-ai/cortex/classificador'); // Q4 - Issue #1632
 const { TEXTO: DECISOES_DONO } = require('../../nexia-ai/orchestrator/decisoes-dono'); // #824: memória do Cortex
 
 const SSE_HEADERS = {
@@ -340,21 +341,31 @@ exports.handler = async (event) => {
     if (modo) {
       decision.intent = modos.MODOS[modo].intent;   // escolha do dono: pula o passo do orquestrador (mais rápido)
     } else if (model === 'auto') {
-      try {
-        // Orchestrator com fallback multi-provider
-        let orchRaw = null;
-        const orchModels = chain('groq_llama3_fast', 'gemini_25_flash', 'deepseek_v3', 'groq_llama4_scout');
-        for (const om of orchModels) {
-          try {
-            orchRaw = await callSync(STATIC_AGENTS.orchestrator.system, fullCtx.slice(-12), om, 600);
-            if (orchRaw) break;
-          } catch { }
+      const dif = classificarDificuldade(message, { ragEnabled, code_request: body.code_request, image_request: body.image_request });
+      if (dif === 'simples') {
+        decision.intent = 'fast';
+      } else {
+        try {
+          // Orchestrator com fallback multi-provider para perguntas complexas
+          let orchRaw = null;
+          const orchModels = chain('groq_llama3_fast', 'gemini_25_flash', 'deepseek_v3', 'groq_llama4_scout');
+          for (const om of orchModels) {
+            try {
+              orchRaw = await callSync(STATIC_AGENTS.orchestrator.system, fullCtx.slice(-12), om, 600);
+              if (orchRaw) break;
+            } catch { }
+          }
+          if (orchRaw) {
+            const p = await parseOrchestrator(orchRaw);
+            decision = p.decision; layer = p.layer;
+          } else {
+            decision.intent = 'reasoning';
+          }
+        } catch (e) {
+          console.warn('[CORTEX] Orchestrator:', 'Internal error');
+          decision.intent = 'reasoning';
         }
-        if (orchRaw) {
-          const p = await parseOrchestrator(orchRaw);
-          decision = p.decision; layer = p.layer;
-        }
-      } catch (e) { console.warn('[CORTEX] Orchestrator:', 'Internal error'); }
+      }
     } else { decision.intent = model; }
 
     if (process.env.NODE_ENV !== 'production') console.warn(`[CORTEX v16] type:${decision.type} intent:${decision.intent} tenant:${tenantId} plan:${usage.plan}`);
@@ -420,6 +431,8 @@ exports.handler = async (event) => {
 
       const systemPrompt = buildSystemPrompt(tenantId, usage.plan, ragCtx, learningCtx) + nexiaCortex.promptSection(projectCtx);
       const tokLimit = maxTokens || (modo && modos.MODOS[modo].maxTokens) || 100000; // NEXIA: sem limite — máximo absoluto do modelo
+      const historyLen = (Array.isArray(context) ? context.length : 0) || (mem && Array.isArray(mem.history) ? mem.history.length : 0);
+      const elegivelCache = podeUsarCache(message, { historyLength: historyLen, projectMode: projectCtx ? projectCtx.mode : 'none', learningCtx, ragEnabled });
 
       if (stream) {
         // NEXIA AI (Fase 5): streaming real. Cada token vai para o cliente assim que o
@@ -433,7 +446,7 @@ exports.handler = async (event) => {
           let used = modelUsed;
           try {
             try {
-              for await (const ev of modelRouter.getRouter().streamWithFallback(order, { system: systemPrompt, messages: fullCtx.slice(-30), maxTokens: tokLimit, signal: abort.signal })) {
+              for await (const ev of modelRouter.getRouter().streamWithFallback(order, { system: systemPrompt, messages: fullCtx.slice(-30), maxTokens: tokLimit, cache: elegivelCache, signal: abort.signal })) {
                 if (ev.type === 'model') {
                   used = labelOf(ev.provider, ev.model);
                   if (ev.attempts.length) console.warn('[CORTEX] Providers indisponíveis antes do stream:', ev.attempts.map(x => `${x.provider}:${x.code}`).join(', '));
