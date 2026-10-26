@@ -4,7 +4,7 @@
     "name": "Cortex-p1",
     "tagline": "Painel de cadastros e gestão do sistema",
     "photo_theme": "software dashboard",
-    "description": "Painel de cadastros e gestão do sistema",
+    "description": "Sistema de gestão com cadastro de clientes, usuários e assinaturas. Inclui integração com Firebase Auth: rota POST /cortex/create-client valida ID token no header Authorization e grava documento em cortexClientes/{uid} no Firestore com email, nome, plano grátis, criadoEm e idioma pt.",
     "folder": "sites/cortex-p1",
     "fonts": {
       "heading": "Plus Jakarta Sans",
