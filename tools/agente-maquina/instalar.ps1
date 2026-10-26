@@ -1,4 +1,5 @@
 $ErrorActionPreference = 'Stop'
+# REVISADO: registra tarefa agendada do Windows para executar agente.ps1 no boot
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 $agentePs1 = Join-Path $scriptDir 'agente.ps1'

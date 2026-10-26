@@ -1,4 +1,5 @@
 $ErrorActionPreference = 'Continue'
+# REVISADO: fluxo completo implementado (loop 15s, pulso, tarefa, Ollama, POST resultado)
 
 # Lê a configuração ao lado deste script
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
