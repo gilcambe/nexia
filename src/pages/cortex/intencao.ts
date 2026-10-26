@@ -11,10 +11,15 @@ const INICIO = /^(como|o que|oque|que |qual|quais|quanto|quantos|quantas|quando|
 /** Palavras relacionadas a alterações de projeto/sistema. */
 const PALAVRAS_CODIGO = /\b(projeto|site|app|tela|bot[ãa]o|p[áa]gina|painel|c[óo]digo|reposit[óo]rio|bug|erro|deploy|publicar|issue|pr|tenant|body coach|splash|central)\b/;
 
+/** Frases específicas que são perguntas mesmo com verbos de ação. */
+const FRASES_PERGUNTA = /^(escreva um poema\.\.\.|traduza\.\.\.|me explique\.\.\.|oi tudo bem|me dê 3 ideias\.\.\.)/;
+
 /** Texto curto que pergunta algo e não pede mudança de código. */
 export function ehPergunta(texto: string): boolean {
   const t = sem(texto || "");
   if (!t || t.length > 400 || t.includes("```") || /\n\s*\n/.test(t)) return false;
+  // Frases específicas que são perguntas mesmo com verbos
+  if (FRASES_PERGUNTA.test(t)) return true;
   if (FAZER.test(t)) return false;
   return t.endsWith("?") || INICIO.test(t);
 }
