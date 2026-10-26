@@ -193,4 +193,4 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
   };
 }
 
-module.exports = { createOpenAICompatibleProvider, PROVIDERS, estimateInputTokens };
+module.exports = { createOpenAICompatibleProvider, PROVIDERS, estimateInputTokens, tools };
