@@ -2,9 +2,9 @@
   "spec": {
     "kind": "system",
     "name": "Cortex-p1",
-    "tagline": "Painel de Gestão de Clientes e Integração Firebase",
+    "tagline": "Painel de gestão de clientes com Firebase",
     "photo_theme": "modern dashboard interface",
-    "description": "Painel de Gestão de Clientes e Integração Firebase",
+    "description": "Cadastre e acompanhe clientes no painel Cortex-p1 com integração ao Firestore e Auth.",
     "folder": "sites/cortex-p1",
     "fonts": {
       "heading": "Plus Jakarta Sans",
@@ -21,12 +21,12 @@
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "",
-      "phone": "",
+      "whatsapp": "11900000000",
+      "phone": "(11) 3000-0000",
       "email": "suporte@cortex-p1.com.br",
-      "address": "",
-      "city": "",
-      "hours": "",
+      "address": "Av. Paulista, 1000",
+      "city": "São Paulo",
+      "hours": "Seg a Sex, 9h às 18h",
       "instagram": "",
       "facebook": "",
       "youtube": "",
@@ -67,9 +67,9 @@
             "label": "Plano",
             "type": "select",
             "options": [
-              "Gratis",
-              "Pro",
-              "Enterprise"
+              "gratis",
+              "pro",
+              "enterprise"
             ],
             "required": true
           },
@@ -90,50 +90,36 @@
             "type": "date",
             "options": [],
             "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
-            "type": "select",
-            "options": [
-              "Ativo",
-              "Inativo"
-            ],
-            "required": true
           }
         ],
         "sample": [
           {
             "nome": "Roberto Alves",
             "email": "roberto.alves@tech.com",
-            "plano": "Enterprise",
+            "plano": "enterprise",
             "idioma": "pt",
-            "criadoem": "",
-            "status": "Ativo"
+            "criadoem": ""
           },
           {
             "nome": "Juliana Costa",
             "email": "juliana.costa@design.com",
-            "plano": "Pro",
+            "plano": "pro",
             "idioma": "pt",
-            "criadoem": "",
-            "status": "Ativo"
+            "criadoem": ""
           },
           {
             "nome": "Marcos Silva",
             "email": "marcos.silva@startup.com",
-            "plano": "Gratis",
+            "plano": "gratis",
             "idioma": "en",
-            "criadoem": "",
-            "status": "Inativo"
+            "criadoem": ""
           },
           {
             "nome": "Carla Souza",
             "email": "carla.souza@agency.com",
-            "plano": "Pro",
+            "plano": "pro",
             "idioma": "pt",
-            "criadoem": "",
-            "status": "Ativo"
+            "criadoem": ""
           }
         ]
       }

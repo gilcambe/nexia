@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cortex-p1 — Painel de Gestão de Clientes e Integração Firebase</title>
-  <meta name="description" content="Painel de Gestão de Clientes e Integração Firebase">
+  <title>Cortex-p1 — Painel de gestão de clientes com Firebase</title>
+  <meta name="description" content="Cadastre e acompanhe clientes no painel Cortex-p1 com integração ao Firestore e Auth.">
   <meta name="theme-color" content="#595cd9">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -35,7 +35,7 @@
         <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
         <div class="topbar__title">
           <h1 id="view-title">Painel</h1>
-          <p id="view-sub">Painel de Gestão de Clientes e Integração Firebase</p>
+          <p id="view-sub">Painel de gestão de clientes com Firebase</p>
         </div>
         <label class="search">
           <span class="sr-only">Buscar</span>
@@ -99,7 +99,7 @@
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1","name":"Cortex-p1","entities":[{"key":"cortex_clientes","label":"Clientes","singular":"Cliente","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"email","label":"E-mail","type":"email","options":[],"required":true},{"key":"plano","label":"Plano","type":"select","options":["Gratis","Pro","Enterprise"],"required":true},{"key":"idioma","label":"Idioma","type":"select","options":["pt","en","es"],"required":true},{"key":"criadoem","label":"Data de Criação","type":"date","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Ativo","Inativo"],"required":true}],"sample":[{"nome":"Roberto Alves","email":"roberto.alves@tech.com","plano":"Enterprise","idioma":"pt","criadoem":"","status":"Ativo"},{"nome":"Juliana Costa","email":"juliana.costa@design.com","plano":"Pro","idioma":"pt","criadoem":"","status":"Ativo"},{"nome":"Marcos Silva","email":"marcos.silva@startup.com","plano":"Gratis","idioma":"en","criadoem":"","status":"Inativo"},{"nome":"Carla Souza","email":"carla.souza@agency.com","plano":"Pro","idioma":"pt","criadoem":"","status":"Ativo"}]}]}</script>
+  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1","name":"Cortex-p1","entities":[{"key":"cortex_clientes","label":"Clientes","singular":"Cliente","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"email","label":"E-mail","type":"email","options":[],"required":true},{"key":"plano","label":"Plano","type":"select","options":["gratis","pro","enterprise"],"required":true},{"key":"idioma","label":"Idioma","type":"select","options":["pt","en","es"],"required":true},{"key":"criadoem","label":"Data de Criação","type":"date","options":[],"required":true}],"sample":[{"nome":"Roberto Alves","email":"roberto.alves@tech.com","plano":"enterprise","idioma":"pt","criadoem":""},{"nome":"Juliana Costa","email":"juliana.costa@design.com","plano":"pro","idioma":"pt","criadoem":""},{"nome":"Marcos Silva","email":"marcos.silva@startup.com","plano":"gratis","idioma":"en","criadoem":""},{"nome":"Carla Souza","email":"carla.souza@agency.com","plano":"pro","idioma":"pt","criadoem":""}]}]}</script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
   <script src="app.js" defer></script>
 </body>
