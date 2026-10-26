@@ -14,13 +14,16 @@ interface VisionResult {
   model: string;
 }
 
+interface WorkersAIResponse {
+  description?: string;
+  answer?: string;
+}
+
 const WORKERS_AI_MODEL = '@cf/llama-3.2-11b-vision-instruct';
 const GEMINI_MODEL = 'gemini-1.5-flash';
 
 function getApiKey(env?: any): string | undefined {
-  if (env?.GEMINI_API_KEY) return env.GEMINI_API_KEY;
-  if (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) return process.env.GEMINI_API_KEY;
-  return undefined;
+  return env?.GEMINI_API_KEY;
 }
 
 const DEFAULT_PROMPT =
