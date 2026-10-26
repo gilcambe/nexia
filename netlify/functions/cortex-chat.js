@@ -278,11 +278,19 @@ async function cxLog(tenantId, userId, data) {
 //  HANDLER PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════
 exports.handler = async (event) => {
+  const startTime = Date.now();
+  const stepStart = Date.now();
+  console.log('[CORTEX-STEP] Início do handler');
+  
   const headers = makeHeaders(event);
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
+  
+  console.log('[CORTEX-STEP] Headers e método validados em', Date.now() - stepStart, 'ms');
 
+  const guardStart = Date.now();
   const guardErr = await guard(event, 'cortex-chat');
+  console.log('[CORTEX-STEP] Guard validation em', Date.now() - guardStart, 'ms');
   if (guardErr) return guardErr;
 
   const start = Date.now();
@@ -301,7 +309,9 @@ exports.handler = async (event) => {
     try { message = sanitizePrompt(rawMessage); }
     catch (se) { return { statusCode: 400, headers, body: JSON.stringify({ error: se.message }) }; }
 
+    const usageStart = Date.now();
     const usage = await checkAndTrackUsage(tenantId, effectiveUserId);
+    console.log('[CORTEX-STEP] Usage check em', Date.now() - usageStart, 'ms');
     if (!usage.ok) return { statusCode: 429, headers, body: JSON.stringify({ error: usage.error, plan: usage.plan, limit: usage.limit, calls: usage.calls }) };
 
     if (image_request?.prompt) {
@@ -309,12 +319,20 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers, body: JSON.stringify({ type: 'image', ...r }) };
     }
 
+    const memStart = Date.now();
     let mem = { history: [], summaries: [], entities: {} };
     try { mem = await memModule.load(effectiveUserId, tenantId, conversationId); } catch { }
+    console.log('[CORTEX-STEP] Mem load em', Date.now() - memStart, 'ms');
     const context = typeof memModule.buildContext === 'function' ? memModule.buildContext(mem.history, mem.summaries, 30) : (mem.history || []).slice(-30);
+    const learningStart = Date.now();
     const learningCtx = await learnModule.buildLearningContext(tenantId, message).catch(() => null);
     let ragCtx = '';
-    if (ragEnabled) { try { ragCtx = await ragModule.buildRAGContext(tenantId, message) || ''; } catch { } }
+    if (ragEnabled) { 
+      const ragStart = Date.now();
+      try { ragCtx = await ragModule.buildRAGContext(tenantId, message) || ''; } catch { }
+      console.log('[CORTEX-STEP] RAG context em', Date.now() - ragStart, 'ms');
+    }
+    console.log('[CORTEX-STEP] Learning context em', Date.now() - learningStart, 'ms');
     // #831: modo escolhido no composer. Sem modo, nada muda.
     const modo = model === 'auto' ? modos.modoValido(body.modo) : null;
     if (modo && modos.MODOS[modo].web) { try { const w = await modos.buscarWeb(rawMessage); if (w) ragCtx = ragCtx ? `${ragCtx}\n\n${w}` : w; } catch { } }
