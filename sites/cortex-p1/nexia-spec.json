@@ -2,31 +2,31 @@
   "spec": {
     "kind": "system",
     "name": "Cortex-p1",
-    "tagline": "Gestão inteligente de clientes, planos e relatórios em um só painel",
-    "photo_theme": "business dashboard",
-    "description": "Sistema inteligente de gestão de clientes e cadastros com integração Firebase, controle de planos e emissão de relatórios gerenciais.",
+    "tagline": "Painel de cadastros e gestão do sistema",
+    "photo_theme": "software dashboard",
+    "description": "Painel de cadastros e gestão do sistema",
     "folder": "sites/cortex-p1",
     "fonts": {
       "heading": "Plus Jakarta Sans",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#4f46e5",
-      "accent": "#06b6d4",
+      "primary": "#2563eb",
+      "accent": "#0ea5e9",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#111827"
+      "dark": "#0f172a"
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "11900000000",
-      "phone": "(11) 90000-0000",
+      "whatsapp": "",
+      "phone": "",
       "email": "suporte@cortex-p1.com.br",
-      "address": "Av. Paulista, 1000",
-      "city": "São Paulo",
-      "hours": "Seg a Sex, 9h às 18h",
+      "address": "",
+      "city": "",
+      "hours": "",
       "instagram": "",
       "facebook": "",
       "youtube": "",
@@ -57,8 +57,22 @@
           },
           {
             "key": "email",
-            "label": "Email",
+            "label": "E-mail",
             "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cidade",
+            "label": "Cidade",
+            "type": "text",
             "options": [],
             "required": true
           },
@@ -67,173 +81,72 @@
             "label": "Plano",
             "type": "select",
             "options": [
-              "gratis",
-              "basico",
+              "grátis",
+              "básico",
               "premium"
             ],
             "required": true
           },
           {
-            "key": "idioma",
-            "label": "Idioma",
-            "type": "select",
-            "options": [
-              "pt",
-              "en",
-              "es"
-            ],
-            "required": true
-          },
-          {
-            "key": "criadoem",
-            "label": "Criado em",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "ultimoacesso",
-            "label": "Último acesso",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
-            "type": "select",
-            "options": [
-              "ativo",
-              "inativo"
-            ],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "nome": "Ana Silva",
-            "email": "ana.silva@example.com",
-            "plano": "premium",
-            "idioma": "pt",
-            "criadoem": "2024-03-10",
-            "ultimoacesso": "2024-06-15",
-            "status": "ativo"
-          },
-          {
-            "nome": "João Santos",
-            "email": "joao.santos@example.com",
-            "plano": "basico",
-            "idioma": "en",
-            "criadoem": "2024-01-22",
-            "ultimoacesso": "2024-06-20",
-            "status": "ativo"
-          },
-          {
-            "nome": "Maria Oliveira",
-            "email": "maria.oliveira@example.com",
-            "plano": "gratis",
-            "idioma": "pt",
-            "criadoem": "2023-11-05",
-            "ultimoacesso": "2024-05-30",
-            "status": "ativo"
-          },
-          {
-            "nome": "Carlos Mendes",
-            "email": "carlos.mendes@example.com",
-            "plano": "basico",
-            "idioma": "es",
-            "criadoem": "2024-02-14",
-            "ultimoacesso": "2024-04-10",
-            "status": "inativo"
-          }
-        ]
-      },
-      {
-        "key": "planos",
-        "label": "Planos",
-        "singular": "Plano",
-        "fields": [
-          {
-            "key": "nome",
-            "label": "Nome do plano",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "preco",
-            "label": "Preço",
+            "key": "limite_credito",
+            "label": "Limite de Crédito",
             "type": "money",
             "options": [],
             "required": true
           },
           {
-            "key": "limite_clientes",
-            "label": "Limite de clientes",
-            "type": "number",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "periodo",
-            "label": "Cobrança",
-            "type": "select",
-            "options": [
-              "mensal",
-              "anual"
-            ],
-            "required": true
-          },
-          {
-            "key": "descricao",
-            "label": "Descrição",
+            "key": "observacoes",
+            "label": "Observações",
             "type": "textarea",
             "options": [],
-            "required": true
-          },
-          {
-            "key": "destaque",
-            "label": "Destaque",
-            "type": "select",
-            "options": [
-              "não",
-              "sim"
-            ],
-            "required": true
+            "required": false
           }
         ],
         "sample": [
           {
-            "nome": "Gratuito",
-            "preco": "0,00",
-            "limite_clientes": "10",
-            "periodo": "mensal",
-            "descricao": "Plano inicial para testes e pequenos negócios.",
-            "destaque": "não"
+            "nome": "Ana Paula Oliveira",
+            "email": "ana.oliveira@email.com",
+            "telefone": "(11) 98765-4321",
+            "cidade": "São Paulo",
+            "plano": "premium",
+            "limite_credito": "1500,00",
+            "observacoes": "Cliente corporativo, prioridade no atendimento."
           },
           {
-            "nome": "Básico",
-            "preco": "89,00",
-            "limite_clientes": "50",
-            "periodo": "mensal",
-            "descricao": "Ideal para empreendedores que estão crescendo.",
-            "destaque": "não"
+            "nome": "Carlos Eduardo Santos",
+            "email": "carlos.santos@email.com",
+            "telefone": "(21) 91234-5678",
+            "cidade": "Rio de Janeiro",
+            "plano": "básico",
+            "limite_credito": "500,00",
+            "observacoes": "Prefere contato por WhatsApp."
           },
           {
-            "nome": "Premium",
-            "preco": "249,00",
-            "limite_clientes": "200",
-            "periodo": "mensal",
-            "descricao": "Recursos avançados e suporte prioritário.",
-            "destaque": "sim"
+            "nome": "Fernanda Lima Costa",
+            "email": "fernanda.costa@email.com",
+            "telefone": "(31) 99887-7665",
+            "cidade": "Belo Horizonte",
+            "plano": "grátis",
+            "limite_credito": "0,00",
+            "observacoes": "Cadastro recente via indicação."
           },
           {
-            "nome": "Premium Anual",
-            "preco": "2490,00",
-            "limite_clientes": "200",
-            "periodo": "anual",
-            "descricao": "Plano anual com desconto e faturamento simplificado.",
-            "destaque": "sim"
+            "nome": "Ricardo Almeida Pereira",
+            "email": "ricardo.pereira@email.com",
+            "telefone": "(41) 98712-3456",
+            "cidade": "Curitiba",
+            "plano": "premium",
+            "limite_credito": "2000,00",
+            "observacoes": "Contrato anual renovado em janeiro."
+          },
+          {
+            "nome": "Juliana Mendes Silva",
+            "email": "juliana.silva@email.com",
+            "telefone": "(85) 97654-3210",
+            "cidade": "Fortaleza",
+            "plano": "básico",
+            "limite_credito": "800,00",
+            "observacoes": "Aguardando liberação de crédito."
           }
         ]
       },
@@ -251,19 +164,20 @@
           },
           {
             "key": "email",
-            "label": "Email",
+            "label": "E-mail",
             "type": "email",
             "options": [],
             "required": true
           },
           {
-            "key": "papel",
-            "label": "Papel",
+            "key": "cargo",
+            "label": "Cargo",
             "type": "select",
             "options": [
-              "admin",
-              "operador",
-              "visualizador"
+              "Administrador",
+              "Gerente",
+              "Atendimento",
+              "Suporte"
             ],
             "required": true
           },
@@ -272,66 +186,168 @@
             "label": "Telefone",
             "type": "phone",
             "options": [],
-            "required": false
+            "required": true
           },
           {
-            "key": "ativo",
-            "label": "Ativo",
+            "key": "data_admissao",
+            "label": "Data de Admissão",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
             "type": "select",
             "options": [
-              "sim",
-              "não"
+              "ativo",
+              "inativo"
             ],
             "required": true
           },
           {
-            "key": "ultimo_login",
-            "label": "Último login",
-            "type": "date",
+            "key": "salario",
+            "label": "Salário",
+            "type": "money",
             "options": [],
-            "required": false
+            "required": true
           }
         ],
         "sample": [
           {
-            "nome": "Admin Cortex",
-            "email": "admin@cortex-p1.com.br",
-            "papel": "admin",
-            "telefone": "(11) 90000-0001",
-            "ativo": "sim",
-            "ultimo_login": "2024-06-20"
+            "nome": "Marcos Vinícius Rocha",
+            "email": "marcos.rocha@cortex-p1.com.br",
+            "cargo": "Administrador",
+            "telefone": "(11) 91122-3344",
+            "data_admissao": "2023-02-10",
+            "status": "ativo",
+            "salario": "7500,00"
           },
           {
-            "nome": "Carla Ferreira",
-            "email": "carla@cortex-p1.com.br",
-            "papel": "operador",
-            "telefone": "(11) 90000-0002",
-            "ativo": "sim",
-            "ultimo_login": "2024-06-18"
+            "nome": "Beatriz Ferreira",
+            "email": "beatriz.ferreira@cortex-p1.com.br",
+            "cargo": "Gerente",
+            "telefone": "(11) 92233-4455",
+            "data_admissao": "2023-05-18",
+            "status": "ativo",
+            "salario": "6200,00"
           },
           {
-            "nome": "Roberto Lima",
-            "email": "roberto@cortex-p1.com.br",
-            "papel": "visualizador",
-            "telefone": "(11) 90000-0003",
-            "ativo": "sim",
-            "ultimo_login": "2024-06-15"
+            "nome": "Lucas Almeida",
+            "email": "lucas.almeida@cortex-p1.com.br",
+            "cargo": "Atendimento",
+            "telefone": "(11) 93344-5566",
+            "data_admissao": "2024-01-12",
+            "status": "ativo",
+            "salario": "3400,00"
           },
           {
-            "nome": "Beatriz Souza",
-            "email": "beatriz@cortex-p1.com.br",
-            "papel": "operador",
-            "telefone": "(11) 90000-0004",
-            "ativo": "não",
-            "ultimo_login": "2024-05-20"
+            "nome": "Camila Souza",
+            "email": "camila.souza@cortex-p1.com.br",
+            "cargo": "Suporte",
+            "telefone": "(11) 94455-6677",
+            "data_admissao": "2024-03-05",
+            "status": "inativo",
+            "salario": "3200,00"
+          }
+        ]
+      },
+      {
+        "key": "assinaturas",
+        "label": "Assinaturas",
+        "singular": "Assinatura",
+        "fields": [
+          {
+            "key": "cliente",
+            "label": "Cliente",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "plano",
+            "label": "Plano",
+            "type": "select",
+            "options": [
+              "grátis",
+              "básico",
+              "premium"
+            ],
+            "required": true
+          },
+          {
+            "key": "valor_mensal",
+            "label": "Valor Mensal",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_inicio",
+            "label": "Data de Início",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_vencimento",
+            "label": "Data de Vencimento",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "ativa",
+              "atrasada",
+              "cancelada"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "cliente": "Ana Paula Oliveira",
+            "plano": "premium",
+            "valor_mensal": "199,00",
+            "data_inicio": "2024-01-10",
+            "data_vencimento": "2025-01-10",
+            "status": "ativa"
+          },
+          {
+            "cliente": "Carlos Eduardo Santos",
+            "plano": "básico",
+            "valor_mensal": "79,00",
+            "data_inicio": "2024-03-15",
+            "data_vencimento": "2025-03-15",
+            "status": "ativa"
+          },
+          {
+            "cliente": "Fernanda Lima Costa",
+            "plano": "grátis",
+            "valor_mensal": "0,00",
+            "data_inicio": "2024-11-01",
+            "data_vencimento": "2025-11-01",
+            "status": "ativa"
+          },
+          {
+            "cliente": "Ricardo Almeida Pereira",
+            "plano": "premium",
+            "valor_mensal": "199,00",
+            "data_inicio": "2023-08-20",
+            "data_vencimento": "2024-08-20",
+            "status": "atrasada"
           }
         ]
       }
     ],
     "modules": [
       "Clientes",
-      "Planos",
       "Usuários",
+      "Assinaturas",
       "Relatórios"
     ]
   },
