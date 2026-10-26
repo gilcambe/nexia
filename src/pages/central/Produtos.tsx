@@ -6,7 +6,7 @@ import { Cartao, Sinal, Botao, Carregando } from "./ui";
 export default function Produtos({ d }: { d: Dados }) {
   const { entrarSuporte } = useCentral();
   const [msg, setMsg] = useState<string | null>(null);
-  const [busca, setBusca] = useState("");
+  const [busca, setBusca] = useState(() => { try { return sessionStorage.getItem("central-busca") || ""; } catch { return ""; } });
   if (!d.lista) return <Carregando />;
   const simples = (t: string) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   const produtos = d.lista.produtos.filter((p) => simples(`${p.nome} ${p.frase}`).includes(simples(busca.trim())));
