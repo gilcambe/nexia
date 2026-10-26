@@ -60,7 +60,7 @@ test('SSE3. app Cortex: aba "Perguntar agora" usa o streaming e mostra a respost
   assert.match(api, /application\\\/json/, 'resposta pronta em JSON também aparece');
   const p = R('src/pages/cortex/Pergunta.tsx');
   assert.match(p, /streamCortex\(/);
-  assert.match(p, /texto: x\.texto \+ c\.token/, 'cada pedaço soma ao texto já mostrado');
+  assert.match(p, /x\.texto \+ (?:c\.token|tok)/, 'cada pedaço soma ao texto já mostrado');
   assert.match(p, /abort\(\)/, 'botão Parar corta a resposta');
   assert.match(p, /virarPedido/);
   const page = R('src/pages/cortex/page.tsx');
