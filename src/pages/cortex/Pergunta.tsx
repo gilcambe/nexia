@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from \"react\";
-import BlocoCodigo from \"@/components/BlocoCodigo\";
+import React, { useState, useEffect, useRef } from "react";
+import CodeBlockRunner from "@/components/CodeBlockRunner";
 
 interface Fala {
   id: string;
@@ -40,14 +40,53 @@ export default function Pergunta({ idPedido, perguntaInicial, onVoltar }: Pergun
     setCarregando(true);
 
     try {
-      // Simulação ou chamada real de streaming do Cortex
-      const respostaCortex: Fala = {
-        id: Math.random().toString(),
-        quem: "cortex",
-        texto: "Aqui está o código solicitado:\\n\\n```python\\n# Fibonacci em Python\\ndef fib(n):\\n    a, b = 0, 1\\n    for _ in range(n):\\n        print(a)\\n        a, b = b, a + b\\n\\nfib(5)\\n```\\n\\nE um exemplo em JavaScript:\\n\\n```js\\nconsole.log('Olá do JS isolado!');\\n```",
-        modelo: "Claude 3.5 Sonnet"
-      };
-      setMensagens((prev) => [...prev, respostaCortex]);
+          // Chamada real de streaming do Cortex
+      const respostaStream = await fetch('/api/cortex', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          acao: 'perguntar',
+          texto: textoMsg,
+          idPedido: idPedido
+        })
+      });
+      
+      if (!respostaStream.ok) {
+        throw new Error('Falha ao comunicar com o Cortex');
+      }
+      
+      const reader = respostaStream.body?.getReader();
+      const decoder = new TextDecoder();
+      
+      if (reader) {
+        let acumulado = '';
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          
+          if (done) break;
+          
+          const chunk = decoder.decode(value, { stream: true });
+          acumulado += chunk;
+          
+          // Atualiza a mensagem do Cortex em tempo real
+          setMensagens((prev) => {
+            const novas = [...prev];
+            if (novas.length > 0 && novas[novas.length - 1].quem === 'cortex') {
+              novas[novas.length - 1].texto = acumulado;
+            } else {
+              novas.push({
+                id: Date.now().toString(),
+                quem: 'cortex',
+                texto: acumulado
+              });
+            }
+            return novas;
+          });
+        }
+      }
     } catch (err) {
       setMensagens((prev) => [...prev, { id: Math.random().toString(), quem: "cortex", texto: "Erro ao consultar o Cortex." }]);
     } finally {
@@ -59,9 +98,9 @@ export default function Pergunta({ idPedido, perguntaInicial, onVoltar }: Pergun
     setInput(`Por favor, corrija o seguinte erro no código:\\nErro: ${erro}\\nCódigo:\\n${codigo}`);
   };
 
-  // Renderizador simples de texto com suporte a blocos de código
+  // Renderizador de texto com suporte a blocos de código usando CodeBlockRunner
   const renderizarTextoComCodigo = (texto: string) => {
-    const regex = /```([a-zA-Z]*)\\n([\\s\\S]*?)```/g;
+    const regex = /```([a-zA-Z]*)\n([\s\S]*?)```/g;
     const partes = [];
     let ultimoIndice = 0;
     let match;
@@ -72,14 +111,31 @@ export default function Pergunta({ idPedido, perguntaInicial, onVoltar }: Pergun
       }
       const linguagem = match[1] || 'text';
       const codigo = match[2];
-      partes.push(
-        <BlocoCodigo
-          key={match.index}
-          linguagem={linguagem}
-          codigo={codigo}
-          onCorrigir={handleCorrigir}
-        />
-      );
+      
+      // Ignora blocos de código que não são executáveis
+      const linguagemLower = linguagem.toLowerCase();
+      if (['python', 'py', 'javascript', 'js', 'html'].includes(linguagemLower)) {
+        partes.push(
+          <CodeBlockRunner
+            key={match.index}
+            language={linguagem}
+            code={codigo}
+            onCorrigir={handleCorrigir}
+          />
+        );
+      } else {
+        // Para linguagens não executáveis, mostra como bloco de código normal
+        partes.push(
+          <div key={match.index} className="my-3 rounded-2xl border border-[var(--cx-line)] bg-[var(--cx-card)] overflow-hidden shadow-sm">
+            <div className="flex items-center justify-between px-4 py-2 bg-[var(--cx-hover)] border-b border-[var(--cx-line)] text-xs font-mono">
+              <span className="text-[var(--cx-mut)] uppercase tracking-wider">{linguagem}</span>
+            </div>
+            <pre className="p-4 overflow-x-auto text-sm font-mono leading-relaxed bg-transparent text-[var(--cx-txt)]">
+              <code>{codigo}</code>
+            </pre>
+          </div>
+        );
+      }
       ultimoIndice = regex.lastIndex;
     }
 
