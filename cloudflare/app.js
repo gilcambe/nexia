@@ -349,15 +349,33 @@ async function handleCortexCliente(request, url, env, reqId) {
   } catch (e) {
     return json(e.status || 401, { error: e.message || 'Token de autenticação ausente.' }, baseHeaders);
   }
-  const m = url.pathname.match(/^\/api\/cortex-cliente\/([^/]+)(\/.*)?$/);
+
+  const m = url.pathname.match(/^\/api\/cortex-cliente\/(.*)$/);
   if (!m) return json(404, { error: 'Not Found' }, baseHeaders);
-  const routeUid = m[1];
-  const subpath = m[2] || '/';
-  if (routeUid !== uid) {
-    return json(403, { error: 'Acesso negado a outro cliente.' }, baseHeaders);
+  const resto = m[1];
+
+  // Recursos que não trazem uid na URL usam o uid do token (ex.: /api/cortex-cliente/conversas).
+  const SEM_UID = new Set(['conversas']);
+  const primeiro = (resto.split('/'))[0];
+  let routeUid;
+  let subpath;
+  if (SEM_UID.has(primeiro)) {
+    routeUid = undefined;
+    subpath = '/' + resto;
+  } else {
+    const m2 = resto.match(/^([^/]+)(\/.*)?$/);
+    if (!m2) return json(404, { error: 'Not Found' }, baseHeaders);
+    routeUid = m2[1];
+    subpath = m2[2] || '/}';
+    if (routeUid !== uid) {
+      return json(403, { error: 'Acesso negado a outro cliente.' }, baseHeaders);
+    }
   }
+
+  const uidFirestore = routeUid || uid;
+
   if (request.method === 'GET' && subpath === '/conversas') {
-    return await listConversas(env, uid, baseHeaders, reqId);
+    return await listConversas(env, uidFirestore, baseHeaders, reqId);
   }
   return json(404, { error: 'Not Found' }, baseHeaders);
 }
