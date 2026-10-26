@@ -52,11 +52,12 @@ async function processarMultimodal(param1, param2, param3 = {}) {
           }
         });
         parts.push({ text: `[Identificação do Anexo ${index + 1}: ${att.nome || 'arquivo'} (tipo: ${mime})]` });
+        // vídeo (video/*) é aceito por inline_data e listado junto aos demais tipos suportados
       });
 
       let promptText = message || 'Analise estes arquivos em conjunto e correlacione as informações.';
-      promptText += ' Nota sobre o tom de voz: se houver áudio ou vídeo, diga o tom de quem fala, se for relevante.';
-      promptText += ' Na sua resposta, cite explicitamente de qual anexo veio cada informação (ex: "no áudio...", "na planilha...", "na foto...", "no vídeo...").';
+      promptText += ' Nota sobre o tom de voz: note o tom de voz de quem fala (áudio ou vídeo) e o tom de cada texto (imagem, documento, vídeo), se for relevante.';
+      promptText += ' Na sua resposta, cite explicitamente de qual anexo veio cada informação (ex: "no áudio...", "na planilha...", "na foto...", "no vídeo...", "no texto...").';
 
       parts.push({ text: promptText });
 
