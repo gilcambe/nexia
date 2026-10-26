@@ -254,12 +254,6 @@ async function serveStatic(request, url, env) {
  * @param {{ getFunction: (name: string) => any }} deps
  */
 async function handleRequest(request, env, deps) {
-  // Aplica rate limiting antes de qualquer processamento
-  const rateLimitResponse = rateLimiter(request, {}, () => {});
-  if (rateLimitResponse && rateLimitResponse.status === 429) {
-    return rateLimitResponse;
-  }
-
   // #815: um rid por pedido, devolvido em X-Request-Id; erro 5xx vira log JSON e vai para "últimos erros" da Central.
   const reqId = rid.ridDe(request.headers.get('x-request-id'));
   let resp = await atender(request, env, deps, reqId);
