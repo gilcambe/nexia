@@ -15,19 +15,12 @@ const modoValido = m => (Object.prototype.hasOwnProperty.call(MODOS, m) ? m : nu
 const buscaWebEngine = require('../../lib/busca-web');
 
 /** Resultados da web (grátis, sem chave). Devolve o contexto formatado da busca. */
-async function buscarWeb(pergunta, fetchImpl = fetch, ms = 5000) {
+async function buscarWeb(pergunta, fetchImpl = fetch, ms = 4000) {
   try {
-    const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    const t = ctl ? setTimeout(() => ctl.abort(), ms) : null;
-    const fetchWithSignal = (url, opts = {}) => fetchImpl(url, ctl ? { ...opts, signal: opts.signal || ctl.signal } : opts);
-    try {
-      const res = await buscaWebEngine.buscar(pergunta, { fetchImpl: fetchWithSignal, max: 5 });
-      return res.contexto || '';
-    } finally {
-      if (t) clearTimeout(t);
-    }
+    const res = await buscaWebEngine.buscar(pergunta, { fetchImpl, max: 5, ms });
+    return res.contexto || buscaWebEngine.contexto([]);
   } catch {
-    return 'Resultados da busca na web feita agora:\nNenhuma fonte encontrada na web para esta pesquisa.\nREGRA OBRIGATÓRIA: Diga "não encontrei fontes agora". NUNCA invente notícias, leis, projetos de lei, datas, valores ou links.';
+    return buscaWebEngine.contexto([]);
   }
 }
 
