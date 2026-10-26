@@ -2,7 +2,6 @@
 'use strict';
 
 const fs = require('fs');
-const pLimit = require('p-limit');
 
 const BASE_URL =
   process.env.CORTEX_URL ||
@@ -93,25 +92,40 @@ async function requisicaoReal(indice) {
   }
 }
 
+async function comConcorrencia(tarefas, limite) {
+  const resultados = new Array(tarefas.length);
+  let indice = 0;
+  async function trabalhar() {
+    while (indice < tarefas.length) {
+      const i = indice++;
+      resultados[i] = await tarefas[i]();
+    }
+  }
+  const workers = [];
+  for (let w = 0; w < Math.min(limite, tarefas.length); w++) {
+    workers.push(trabalhar());
+  }
+  await Promise.all(workers);
+  return resultados;
+}
+
 async function main() {
   const { modo, pessoas } = parseArgs(process.argv);
   const concorrencia = 10;
-  const limit = pLimit(concorrencia);
 
-  const promessas = [];
+  const tarefas = [];
   for (let i = 0; i < pessoas; i++) {
-    promessas.push(
-      limit(async () => {
-        if (modo === 'falso') return requisicaoFalsa();
-        return requisicaoReal(i);
-      })
-    );
+    if (modo === 'falso') {
+      tarefas.push(() => requisicaoFalsa());
+    } else {
+      tarefas.push(() => requisicaoReal(i));
+    }
   }
 
-  const resultados = await Promise.allSettled(promessas);
+  const resultados = await comConcorrencia(tarefas, concorrencia);
 
   const finais = resultados.map((r) =>
-    r.status === 'fulfilled' ? r.value : {
+    r && r.ok !== undefined ? r : {
       ok: false,
       status: 0,
       ttfb: 0,
@@ -119,7 +133,7 @@ async function main() {
       queueTime: 0,
       provider: 'erro',
       erro5xx: false,
-      excecao: String(r.reason),
+      excecao: r && r.reason ? String(r.reason) : 'desconhecido',
     }
   );
 
