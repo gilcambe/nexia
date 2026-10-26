@@ -8,7 +8,7 @@ const { FREE } = require('../../nexia-ai/orchestrator/models');
 const A = { provider: 'groq', model: 'a' };
 const B = { provider: 'google', model: 'b' };
 
-test('C3a. 3 falhas seguidas por instabilidade abrem o disjuntor por 1 hora', () => {
+test('C3a. 3 falhas seguidas por instabilidade abrem o disjuntor por 5 minutos (#1631)', () => {
   let t = 0;
   const p = createPlacar({ agora: () => t });
   for (let i = 0; i < CIRCUITO_FALHAS - 1; i++) p.marcar(A, 'transient');
@@ -16,8 +16,8 @@ test('C3a. 3 falhas seguidas por instabilidade abrem o disjuntor por 1 hora', ()
   p.marcar(A, 'transient');
   assert.equal(p.bloqueado(A), true);
   assert.deepEqual(p.ordenar([A, B]), [B], 'rebaixado: o próximo modelo vai primeiro');
-  t += 59 * 60e3; assert.equal(p.bloqueado(A), true);
-  t += 2 * 60e3; assert.equal(p.bloqueado(A), false, 'volta depois de 1 hora');
+  t += 4 * 60e3; assert.equal(p.bloqueado(A), true);
+  t += 2 * 60e3; assert.equal(p.bloqueado(A), false, 'volta depois de 5 minutos');
 });
 
 test('C3b. sucesso no meio zera a conta; castigo curto não encurta o disjuntor', () => {
@@ -29,7 +29,7 @@ test('C3b. sucesso no meio zera a conta; castigo curto não encurta o disjuntor'
   p.marcar(A, 'busy'); p.marcar(A, 'busy');
   assert.equal(p.exportar()['groq|a'].motivo, 'circuito');
   p.marcar(A, 'busy');
-  assert.ok(p.exportar()['groq|a'].ate - t > 30 * 60e3, 'busy (2 min) não encurta a 1 h');
+  assert.ok(p.exportar()['groq|a'].ate - t >= 4 * 60e3, 'busy (2 min) não encurta os 5 min');
   assert.deepEqual(p.ordenar([A]), [A], 'todos bloqueados: lista nunca fica vazia');
 });
 

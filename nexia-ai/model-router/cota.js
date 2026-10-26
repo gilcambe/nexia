@@ -10,6 +10,7 @@ const DOIS_MIN = 2 * 60 * 1000;
 const SESSENTA_S = 60 * 1000;
 // #821: disjuntor (circuit breaker). Modelo que falha CIRCUITO_FALHAS vezes seguidas por instabilidade
 // (busy/transient: 5xx, "high demand", timeout) é rebaixado por 1 hora. Um sucesso zera a conta.
+const CINCO_MIN = 5 * 60 * 1000;
 const UMA_H = 60 * 60 * 1000;
 const CIRCUITO_FALHAS = 3;
 const INSTAVEL = new Set(['busy', 'transient']);
@@ -58,7 +59,7 @@ function createPlacar({ agora = () => Date.now() } = {}) {
       const k = chaveDe(desc);
       if (INSTAVEL.has(tipo) && (seguidas[k] = (seguidas[k] || 0) + 1) >= CIRCUITO_FALHAS) {
         seguidas[k] = 0;
-        placar[k] = { ate: agora() + UMA_H, motivo: 'circuito' };
+        placar[k] = { ate: agora() + CINCO_MIN, motivo: 'circuito' };
         return;
       }
       const ms = castigo(tipo, retryAfterMs);

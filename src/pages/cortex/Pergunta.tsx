@@ -47,7 +47,8 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
 
   const perguntar = async (texto: string, modo?: "rapido" | "pensar" | "pesquisar") => {
     const id = "c" + Date.now();
-    setFalas((l) => [...l, { id: "d" + Date.now(), quem: "dono", texto }, { id, quem: "cortex", texto: "", vivo: true }]);
+    // Exibe "pensando..." imediatamente (< 300 ms)
+    setFalas((l) => [...l, { id: "d" + Date.now(), quem: "dono", texto }, { id, quem: "cortex", texto: "pensando...", vivo: true }]);
     const ctl = new AbortController();
     corte.current = ctl;
     const mudar = (f: (x: Fala) => Fala) => setFalas((l) => l.map((x) => (x.id === id ? f(x) : x)));
@@ -58,15 +59,32 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
       const antes = [ctx, web.contexto].filter(Boolean).join("\n\n");
       const message = antes ? `${antes}\n\nPergunta do dono: ${texto}` : texto;
       for await (const c of streamCortex({ message, tenantId: "nexia", conversationId: conversa, modo }, ctl.signal)) {
-        if (c.token) mudar((x) => ({ ...x, texto: x.texto + c.token }));
+        if (typeof c.token === "string" && c.token) {
+          const tok = c.token;
+          mudar((x) => ({
+            ...x,
+            texto: x.texto === "pensando..." ? tok : x.texto + tok,
+          }));
+        }
         if (c.model) mudar((x) => ({ ...x, modelo: c.model }));
         if (c.done) break;
       }
       if (web.rodape) mudar((x) => ({ ...x, texto: x.texto + web.rodape }));
     } catch (e) {
-      if (!ctl.signal.aborted) mudar((x) => ({ ...x, texto: x.texto + `\n\n❌ ${(e as Error).message || "A resposta foi interrompida."}` }));
+      if (!ctl.signal.aborted) {
+        mudar((x) => ({
+          ...x,
+          texto: (x.texto === "pensando..." ? "" : x.texto) + `\n\n❌ ${(e as Error).message || "não consegui agora, tente de novo"}`,
+        }));
+      }
     } finally {
-      mudar((x) => ({ ...x, vivo: false, texto: x.texto || (ctl.signal.aborted ? "(parado)" : "Sem resposta agora. Tente de novo.") }));
+      mudar((x) => {
+        const limpo = !x.texto || x.texto === "pensando...";
+        const txtFinal = limpo
+          ? (ctl.signal.aborted ? "(parado)" : "não consegui agora, tente de novo")
+          : x.texto;
+        return { ...x, vivo: false, texto: txtFinal };
+      });
       corte.current = null;
     }
   };
@@ -97,7 +115,12 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
                 </p>
                 {f.vivo && <button onClick={() => corte.current?.abort()} className="mt-2 h-9 px-3 rounded-xl border border-[var(--cx-line)] text-xs" data-testid="cx-parar">Parar</button>}
                 {!f.vivo && k > 0 && (
-                  <button onClick={() => virarPedido(falas[k - 1].texto)} className="mt-2 h-9 px-3 rounded-xl border border-[var(--cx-line)] text-xs" data-testid="cx-virar-pedido">Virar pedido</button>
+                  <div className="flex gap-2 mt-2">
+                    {(f.texto.includes("não consegui agora") || f.texto.includes("tente de novo") || f.texto === "(parado)") && (
+                      <button onClick={() => perguntar(falas[k - 1].texto)} className="h-9 px-3 rounded-xl bg-[var(--cx-ac)] text-black font-semibold text-xs" data-testid="cx-tentar-novamente">Tentar de novo</button>
+                    )}
+                    <button onClick={() => virarPedido(falas[k - 1].texto)} className="h-9 px-3 rounded-xl border border-[var(--cx-line)] text-xs" data-testid="cx-virar-pedido">Virar pedido</button>
+                  </div>
                 )}
               </div>
             </div>
