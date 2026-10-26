@@ -1,5 +1,5 @@
 'use strict';
-const rateLimiter = require('../src/middleware/rateLimiter');
+
 
 // NEXIA no Cloudflare Worker grátis (ADR-FREE-01). Faz o papel do server.js:
 //  - /health e /api/firebase-config;
