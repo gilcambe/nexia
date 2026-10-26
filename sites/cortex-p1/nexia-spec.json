@@ -3,7 +3,7 @@
     "kind": "system",
     "name": "Cortex-p1",
     "tagline": "Painel de cadastros e gestão do sistema",
-    "photo_theme": "",
+    "photo_theme": "dashboard business",
     "description": "Painel de cadastros e gestão do sistema",
     "folder": "sites/cortex-p1",
     "fonts": {
