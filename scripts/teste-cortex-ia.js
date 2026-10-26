@@ -1,5 +1,5 @@
 'use strict';
-// Rodada: 2026-10-26T18:47:44Z (12, perguntas difíceis)
+// Rodada: 2026-10-26T20:25:06Z (13)
 // Teste de IA do Cortex "como uma pessoa": cria uma conta temporária (papel master, só durante o teste),
 // faz perguntas reais ao Cortex publicado (/api/cortex, mesmos modos do app: rapido/pensar/pesquisar),
 // manda anexos (PDF, imagem, planilha) pelo mesmo caminho do app (/api/pedidos acao=entender), pede imagem,
