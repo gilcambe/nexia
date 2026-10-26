@@ -1,6 +1,6 @@
 /* PromoVideoBuilder - Formulário, barra de progresso e download */
 
-.promo-builder {
+.promo-video-builder {
   max-width: 600px;
   margin: 0 auto;
   padding: 1rem;
@@ -8,18 +8,18 @@
   color: #111827;
 }
 
-.promo-builder .form-group {
+.promo-video-builder .form-group {
   margin-bottom: 1rem;
 }
 
-.promo-builder label {
+.promo-video-builder label {
   display: block;
   font-weight: 600;
   margin-bottom: 0.35rem;
   font-size: 0.95rem;
 }
 
-.promo-builder textarea {
+.promo-video-builder textarea {
   width: 100%;
   min-height: 120px;
   padding: 0.6rem 0.75rem;
@@ -31,27 +31,20 @@
   box-sizing: border-box;
 }
 
-.promo-builder textarea:focus {
+.promo-video-builder textarea:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-.promo-builder .file-input {
-  margin-top: 0.5rem;
-  margin-bottom: 1rem;
-  font-size: 0.95rem;
-  color: #4b5563;
-}
-
-.promo-builder .error-message {
+.promo-video-builder .error-message {
   color: #dc2626;
   font-size: 0.9rem;
   margin-top: 0.5rem;
   text-align: center;
 }
 
-.promo-builder button.gerar-button {
+.promo-video-builder button.gerar-button {
   width: 100%;
   padding: 0.75rem 1rem;
   margin-top: 0.5rem;
@@ -65,16 +58,16 @@
   transition: background 0.2s ease;
 }
 
-.promo-builder button.gerar:not(:disabled):hover {
+.promo-video-builder button.gerar-button:not(:disabled):hover {
   background: #1d4ed8;
 }
 
-.promo-builder button.gerar:disabled {
+.promo-video-builder button.gerar-button:disabled {
   background: #9ca3af;
   cursor: not-allowed;
 }
 
-.promo-builder .progress-container {
+.promo-video-builder .progress-container {
   margin-top: 1.25rem;
   background: #e5e7eb;
   border-radius: 6px;
@@ -82,21 +75,36 @@
   overflow: hidden;
 }
 
-.promo-builder .progress-fill {
+.promo-video-builder .progress-bar {
+  width: 100%;
+  height: 100%;
+}
+
+.promo-video-builder .progress-fill {
   height: 100%;
   background: #2563eb;
   width: 0%;
   transition: width 0.3s ease;
 }
 
-.promo-builder .progress-texto {
+.promo-video-builder .progress-texto {
   font-size: 0.85rem;
   color: #4b5563;
   margin-top: 0.4rem;
   text-align: right;
 }
 
-.promo-builder .download-button {
+.promo-video-builder .download-section {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.promo-video-builder .download-section h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+}
+
+.promo-video-builder .download-button {
   margin-top: 1rem;
   display: inline-block;
   padding: 0.75rem 1rem;
@@ -108,13 +116,13 @@
   text-align: center;
 }
 
-.promo-builder .download-button:hover {
+.promo-video-builder .download-button:hover {
   background: #047857;
 }
 
 /* Responsivo: celular primeiro */
 @media (max-width: 480px) {
-  .promo-builder {
+  .promo-video-builder {
     padding: 0.75rem;
   }
 }
