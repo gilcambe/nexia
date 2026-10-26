@@ -26,10 +26,27 @@ export class SimpleORM {
     if (fs.existsSync(migrationPath)) {
       const sql = fs.readFileSync(migrationPath, 'utf8');
       console.log(`[DB] Aplicando migração: ${migrationName}`);
+      
+      // Para migrações SQL, verificamos se é uma criação de tabela
+      if (sql.includes('CREATE TABLE IF NOT EXISTS cortex_memoria')) {
+        const tablePath = this.getTablePath('cortex_memoria');
+        
+        // Verificar se o arquivo já existe
+        if (!fs.existsSync(tablePath)) {
+          // Criar arquivo vazio para a nova tabela
+          fs.writeFileSync(tablePath, '[]', 'utf8');
+          console.log(`[DB] Tabela cortex_memoria criada: ${tablePath}`);
+        }
+      }
     }
   }
 
   public insert(table: string, record: DBRecord): void {
+    // Validação estrita do DBRecord
+    if (!record.uid || !record.id) {
+      throw new Error('DBRecord deve conter uid e id');
+    }
+    
     const filePath = this.getTablePath(table);
     let records: DBRecord[] = [];
     if (fs.existsSync(filePath)) {
@@ -53,7 +70,8 @@ export class SimpleORM {
     if (!fs.existsSync(filePath)) return null;
     try {
       const records: DBRecord[] = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-      return records.find(r => r.id === id) || null;
+      const found = records.find(r => r.id === id);
+      return found || null;
     } catch {
       return null;
     }
