@@ -1,0 +1,116 @@
+/* PromoVideoBuilder - Formulário, barra de progresso e download */
+
+.promo-builder {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 1rem;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  color: #111827;
+}
+
+.promo-builder label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  font-size: 0.95rem;
+}
+
+.promo-builder textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.promo-builder textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.promo-builder .file-input {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  color: #4b5563;
+}
+
+.promo-builder .erro {
+  color: #dc2626;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  text-align: center;
+}
+
+.promo-builder button.gerar {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-top: 0.5rem;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.promo-builder button.gerar:not(:disabled):hover {
+  background: #1d4ed8;
+}
+
+.promo-builder button.gerar:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.promo-builder .progress-container {
+  margin-top: 1.25rem;
+  background: #e5e7eb;
+  border-radius: 6px;
+  height: 10px;
+  overflow: hidden;
+}
+
+.promo-builder .progress-bar {
+  height: 100%;
+  background: #2563eb;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.promo-builder .progress-texto {
+  font-size: 0.85rem;
+  color: #4b5563;
+  margin-top: 0.4rem;
+  text-align: right;
+}
+
+.promo-builder .download-link {
+  margin-top: 1rem;
+  display: inline-block;
+  padding: 0.75rem 1rem;
+  background: #059669;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.promo-builder .download-link:hover {
+  background: #047857;
+}
+
+/* Responsivo: celular primeiro */
+@media (max-width: 480px) {
+  .promo-builder {
+    padding: 0.75rem;
+  }
+}
