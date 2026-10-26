@@ -16,25 +16,12 @@ export { VazaoController };
 
 export default {
   async fetch(request, env, ctx) {
-    if (new URL(request.url).pathname === '/api/corpo-ia') return corpoIa(request, env);
-    // #807: leituras públicas (config do Firebase etc.) passam pelo cache de borda (60 a 300 s).
-    // Adiciona as rotas da API OpenAI
     const url = new URL(request.url);
-    if (url.pathname === '/v1/chat/completions') {
-      // Chama o handler do Cortex, que vai tratar a lógica da API OpenAI
-      // Precisa garantir que o handler do Cortex lide com streaming e formato OpenAI
+    if (url.pathname === '/api/corpo-ia') return corpoIa(request, env);
+    
+    // Tratamento direto para OpenAI API (/v1/chat/completions e /v1/models) no Worker
+    if (url.pathname === '/v1/chat/completions' || url.pathname === '/v1/models') {
       return app.handleRequest(request, env, { getFunction: functions.getFunction, isOpenAI: true });
-    }
-    if (url.pathname === '/v1/models') {
-      // Retorna os modelos disponíveis no formato OpenAI
-      return new Response(JSON.stringify({
-        object: 'list',
-        data: [
-          { id: 'cortex-rapido', object: 'model', created: Date.now(), owned_by: 'ollama', permission: [] },
-          { id: 'cortex-pensar', object: 'model', created: Date.now(), owned_by: 'ollama', permission: [] },
-          { id: 'cortex-pesquisar', object: 'model', created: Date.now(), owned_by: 'ollama', permission: [] },
-        ]
-      }), { headers: { 'Content-Type': 'application/json' } });
     }
 
     // Requisições normais para o site/API
@@ -42,9 +29,6 @@ export default {
       () => app.handleRequest(request, env, { getFunction: functions.getFunction }));
   },
 
-  // ADR-F12-03 + ADR-FREE-02 + ADR-AUTO-01: a cada 5 min procura Robôs NEXIA vencidos e, de hora
-  // em hora, execuções paradas; havendo algo, dispara a tarefa no GitHub Actions (sem processo
-  // longo dentro do Worker). Sem nada vencido, não dispara nada.
   async scheduled(controller, env, ctx) {
     app.populateProcessEnv(env);
     const at = Number(controller && controller.scheduledTime) || Date.now();
@@ -52,22 +36,18 @@ export default {
       r => console.log('[nexia-cron]', JSON.stringify(r).slice(0, 500)),
       e => console.error('[nexia-cron]', e && e.message),
     ));
-    // Body Coach: lembretes no celular (treino, água) de quem tem lembrete neste bloco de 5 min.
     ctx.waitUntil(lembretes.rodar(at).then(
       r => console.log('[bc-lembretes]', JSON.stringify(r)),
       e => console.error('[bc-lembretes]', e && e.message),
     ));
-    // Splash: lembretes de cliente (saldo e véspera da festa) avisam a dona no celular às 9h.
     ctx.waitUntil(lembretes.rodarSplash(at).then(
       r => console.log('[splash-lembretes]', JSON.stringify(r)),
       e => console.error('[splash-lembretes]', e && e.message),
     ));
-    // Cortex: escada para tarefa travada (Jules grátis, volta ao Cortex, por fim humano), a cada 15 min.
     ctx.waitUntil(julesAuto.rodar(at).then(
       r => console.log('[jules-auto]', JSON.stringify(r)),
       e => console.error('[jules-auto]', e && e.message),
     ));
-    // Central: histórico de saúde (1 amostra por hora por rota pública, 30 dias).
     ctx.waitUntil(saude.rodar(at).then(
       r => console.log('[saude-historico]', JSON.stringify(r)),
       e => console.error('[saude-historico]', e && e.message),
