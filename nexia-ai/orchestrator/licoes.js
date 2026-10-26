@@ -13,6 +13,7 @@ const LICOES = Object.freeze([
   'No YAML de workflow, um "#" fora de aspas vira comentário e corta a expressão ${{ }}; coloque o valor inteiro entre aspas.',
   'Mudança pequena e exata funciona melhor que reescrever: faça só o que o pedido manda, nos arquivos que ele cita, e copie os trechos "find" exatamente como estão no arquivo.',
   'Todo workflow novo em .github/workflows entra no teste de detecção; todo arquivo novo de teste fica em tests/unit com final .test.js.',
+  'Use só o que o projeto já usa: antes de criar arquivo, confira com github.list_dir que a pasta e o framework existem. Exemplo real: um Answer.vue criado numa pasta que não existe (o projeto não usa Vue) e arquivos src/models com Mongoose/Express, que o projeto também não usa.',
 ]);
 
 const TEXTO = `LIÇÕES APRENDIDAS (erros reais de tarefas anteriores; não repita):\n${LICOES.map(l => `- ${l}`).join('\n')}`;

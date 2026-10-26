@@ -20,6 +20,11 @@ Contas web de chat (ChatGPT, Claude.ai, Gemini web) **não** entram na automaç�
 
 Cada vez que a tarefa sobe ou desce de degrau, a escada comenta na issue: **"🪜 Degrau N: quem, por quê, cota que restava"**. Assim fica registrado quem fez o quê.
 
+## O que já roda sozinho (26/10/2026)
+- **Revisor grátis** (`scripts/revisor-gratis.js`, a cada 20 min): PR do Cortex ou do Jules com CI verde é revisado por 2 IAs grátis de provedores diferentes. Aprovou → `automerge`. Recusou → `revisor-recusou`, o motivo vai para a issue e a tarefa sobe de degrau. Workflows, regras do Firestore e segredos nunca são aprovados por ele. Desliga com a variável `REVISOR_GRATIS=0`.
+- **Escada do Jules** (`cloudflare/jules-auto.js`, a cada 15 min): Jules sem PR em 1 h volta ao Cortex; 2ª falha vai para `vez-do-claude`.
+- **Claude (degrau 3)**: tarefa agendada a cada 2 h; só age se existir issue `vez-do-claude`. O dono liga e desliga pelo botão da Central.
+
 ## O Claude se retira sozinho
 - Antes de pegar uma tarefa `vez-do-claude`, o Claude confere o placar de cota (`nexia-ai/model-router/cota.js`). Se algum ajudante grátis já tem cota de novo, devolve a tarefa ao degrau 2 e não escreve código.
 - Ao terminar, o Claude escreve uma **lição** curta (erro do Cortex + jeito certo) para `nexia-ai/orchestrator/licoes.js`. É assim que o Cortex aprende e o Claude é chamado cada vez menos.

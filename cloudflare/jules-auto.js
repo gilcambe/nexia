@@ -2,18 +2,20 @@
 //   1) o Cortex tenta até 12 vezes, dividindo a tarefa em partes no caminho (scripts/cortex-fila.js);
 //   2) travou → vai sozinha para o Jules (Google, grátis: 15 por dia, 3 ao mesmo tempo), que abre o PR;
 //   3) ESPERA_JULES_H sem PR aberto → volta para o Cortex do zero (rótulo cortex-retomada, tentativas zeradas);
-//   4) travou de novo → Jules de novo; mesmo tempo sem PR outra vez → rótulo so-humano + comentário (o vigia avisa no celular).
+//   4) travou de novo → Jules de novo; mesmo tempo sem PR outra vez → rótulo vez-do-claude (degrau 3 da docs/ESCADA-IA.md).
+// PR recusado pelo revisor grátis (scripts/revisor-gratis.js, rótulo revisor-recusou) conta como "sem PR": a tarefa sobe de degrau.
 // No máximo 2 envios ao Jules e 1 retomada por tarefa: nunca fica em laço nem repete rascunhos.
 // Usa o mesmo envio do botão "Mandar para o Jules" do /meu-cortex. Desliga com JULES_AUTO=0.
 const REPO = '/repos/gilcambe/nexia';
-// Pedido do dono (25/10/2026): nada de horas esperando. 2 h já dá tempo real para o Jules codar e testar
-// uma tarefa pequena; passou disso, volta ao Cortex (pode ir ao Jules de novo depois).
-const ESPERA_JULES_H = 2;
-const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'so-humano'];
+// Pedido do dono (25 e 26/10/2026): nada de horas esperando. 1 h dá para o Jules codar e testar uma tarefa pequena;
+// passou disso, volta ao Cortex (pode ir ao Jules de novo depois).
+const ESPERA_JULES_H = 1;
+const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'so-humano', 'vez-do-claude'];
 
 // Decide o que fazer com as issues travadas (função pura, testada).
 function decidir(issues, prs, agora, nomes) {
-  const prDe = (n) => prs.some(p => new RegExp(`#${n}(?!\\d)`).test(`${p.title || ''}\n${p.body || ''}`));
+  const recusado = (p) => (p.labels || []).some(l => (l.name || l) === 'revisor-recusou');
+  const prDe = (n) => prs.some(p => !recusado(p) && new RegExp(`#${n}(?!\\d)`).test(`${p.title || ''}\n${p.body || ''}`));
   const travadas = issues.filter(i => !i.pull_request && nomes(i).includes('cortex-travado') && !nomes(i).some(n => IGNORAR.includes(n)));
   // Parte grande do plano do Cortex (rótulo cortex-jules, scripts/cortex-plano.js) vai antes das travadas: ela nem tentou na IA grátis.
   const planejada = issues.find(i => !i.pull_request && nomes(i).includes('cortex-jules') && !nomes(i).includes('jules-enviado') && !nomes(i).some(n => IGNORAR.includes(n)));
@@ -54,8 +56,8 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
     out.retomadas.push(n);
   }
   for (const n of d.humano) {
-    await por(n, ['so-humano']);
-    await comentar(n, 'O Cortex e o Jules tentaram 2 vezes cada e não entregaram. Precisa de você: abra o /meu-cortex e mande um pedido menor, ou peça para a Claude fazer esta tarefa.');
+    await por(n, ['vez-do-claude']);
+    await comentar(n, '🪜 Degrau 3: o Cortex e as IAs grátis (Jules) tentaram 2 vezes cada e não entregaram. Vez do Claude, que faz só esta tarefa e devolve a fila ao Cortex (docs/ESCADA-IA.md).');
     out.humano.push(n);
   }
   if (d.enviar) {

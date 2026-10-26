@@ -1,0 +1,53 @@
+# Revisor grátis (docs/ESCADA-IA.md): PRs do Cortex e do Jules com CI verde não esperam mais a Claude.
+# 2 IAs grátis de provedores diferentes revisam; aprovado → automerge; recusado → a tarefa sobe de degrau.
+name: Revisor grátis
+
+on:
+  schedule:
+    - cron: '*/20 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  checks: read
+  models: read
+
+concurrency:
+  group: revisor-gratis
+  cancel-in-progress: false
+
+jobs:
+  revisar:
+    name: Revisar PRs parados
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: develop
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Revisar
+        run: node scripts/revisor-gratis.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          REVISOR_GRATIS: ${{ vars.REVISOR_GRATIS }}
+          FIREBASE_SERVICE_ACCOUNT_B: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_B }}
+          FIREBASE_SERVICE_ACCOUNT_C: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_C }}
+          NEXIA_D1_TOKEN: ${{ secrets.NEXIA_D1_TOKEN }}
+          NEXIA_D1_ACCOUNT_ID: ${{ secrets.NEXIA_D1_ACCOUNT_ID }}
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          CODESTRAL_API_KEY: ${{ secrets.CODESTRAL_API_KEY }}
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          KILO_API_KEY: ${{ secrets.KILO_API_KEY }}
+          CLOUDFLARE_AI_TOKEN: ${{ secrets.CLOUDFLARE_AI_TOKEN }}
+          CLOUDFLARE_AI_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_AI_ACCOUNT_ID }}

@@ -53,17 +53,20 @@ const H = 36e5;
 
 test('JULES-AUTO3: escada: Jules sem PR no tempo volta ao Cortex do zero; 2ª vez vai para humano; com PR espera', () => {
   const agora = Date.UTC(2026, 9, 25, 12, 0);
-  const velho = new Date(agora - 3 * H).toISOString(), novo = new Date(agora - 1 * H).toISOString();
+  const velho = new Date(agora - 3 * H).toISOString(), novo = new Date(agora - 0.5 * H).toISOString();
   const issues = [
     { number: 10, labels: L('cortex-travado', 'jules-enviado'), updated_at: velho },
     { number: 11, labels: L('cortex-travado', 'jules-enviado', 'cortex-retomada'), updated_at: velho },
     { number: 12, labels: L('cortex-travado', 'jules-enviado'), updated_at: novo },
     { number: 13, labels: L('cortex-travado', 'jules-enviado'), updated_at: velho },
     { number: 14, labels: L('cortex-travado', 'so-humano', 'jules-enviado', 'cortex-retomada'), updated_at: velho },
+    { number: 15, labels: L('cortex-travado', 'jules-enviado'), updated_at: velho },
+    { number: 16, labels: L('cortex-travado', 'vez-do-claude', 'jules-enviado', 'cortex-retomada'), updated_at: velho },
   ];
-  const prs = [{ title: 'fix', body: 'Refs #13' }, { title: 'outro', body: 'Refs #130' }];
+  // PR recusado pelo revisor grátis conta como "sem PR": a #15 sobe de degrau.
+  const prs = [{ title: 'fix', body: 'Refs #13' }, { title: 'outro', body: 'Refs #130' }, { title: 'x', body: 'Fecha #15', labels: L('revisor-recusou') }];
   const d = decidir(issues, prs, agora, nomes);
-  assert.deepStrictEqual(d, { enviar: null, retomar: [10], humano: [11] });
+  assert.deepStrictEqual(d, { enviar: null, retomar: [10, 15], humano: [11] });
 });
 
 test('JULES-AUTO4: retomada tira travado, jules-enviado e tentativas e põe cortex-retomada', async () => {
