@@ -144,7 +144,8 @@ async function save(userId, history, existingSummaries = [], tenantId = 'nexia',
     entities,
     tenantId,
     userId,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
+    usado_em: new Date().toISOString()
   });
 
 
@@ -153,12 +154,31 @@ async function save(userId, history, existingSummaries = [], tenantId = 'nexia',
 
 
 // ── Extrai entidades mencionadas (clientes, tarefas, etc) ─────
+const SENSITIVE_PATTERNS = [
+  /senha[\s:]*[\S]+/gi,
+  /cpf[\s:]*[\d\.\-]+/gi,
+  /chave[\s:]*[\S]+/gi,
+  /saúde[\s:]*[\S]+/gi,
+  /health[\s:]*[\S]+/gi,
+  /\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/g,
+  /\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b/g,
+];
+
+function removeSensitive(text) {
+  let out = text;
+  for (const pat of SENSITIVE_PATTERNS) {
+    out = out.replace(pat, '[DADO SENSÍTIVO OCULTO]');
+  }
+  return out;
+}
+
 function extractEntities(messages, existingEntities = {}) {
   const entities = { ...existingEntities };
   for (const m of messages) {
     if (!m.content) continue;
+    const content = removeSensitive(m.content);
     // Detecta IDs de recursos nas respostas do assistente
-    const idMatches = m.content.matchAll(/`?(createClient|createTask|createMeeting|createFinance)`?.+?ID[:\s]+`?([A-Za-z0-9]{15,30})`?/g);
+    const idMatches = content.matchAll(/`?(createClient|createTask|createMeeting|createFinance)`?.+?ID[:\s]+`?([A-Za-z0-9]{15,30})`?/g);
     for (const match of idMatches) {
       const [, type, id] = match;
       const key = type.replace('create', '').toLowerCase() + 's';
