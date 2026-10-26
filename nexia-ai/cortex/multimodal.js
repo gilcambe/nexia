@@ -36,8 +36,10 @@ async function processarMultimodal(param1, param2, param3 = {}) {
   // Validação de limites
   let totalBytes = 0;
   for (const att of validAttachments) {
-    if (att.base64) {
+    if (att.base64 && base64Valida(att.base64)) {
       totalBytes += Buffer.from(att.base64, 'base64').length;
+    } else if (att.base64) {
+      return { ok: false, error: `Anexo ${sanitizarTexto(att.nome || 'arquivo')} tem base64 inválido.` };
     }
   }
   if (totalBytes > MAX_TOTAL_BYTES) {
@@ -59,7 +61,9 @@ async function processarMultimodal(param1, param2, param3 = {}) {
             data: att.base64
           }
         });
-        parts.push({ text: `[Identificação do Anexo ${index + 1}: ${att.nome || 'arquivo'} (tipo: ${mime})]` });
+        const nomeSeguro = sanitizarTexto(att.nome || 'arquivo');
+        const mimeSeguro = sanitizarTexto(mime || 'application/octet-stream');
+        parts.push({ text: `[Identificação do Anexo ${index + 1}: ${nomeSeguro} (tipo: ${mimeSeguro})]` });
         // vídeo (video/*) é aceito por inline_data e listado junto aos demais tipos suportados
       });
 
@@ -70,11 +74,19 @@ async function processarMultimodal(param1, param2, param3 = {}) {
       parts.push({ text: promptText });
 
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-      const res = await fetchImpl(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts }] })
-      });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      let res;
+      try {
+        res = await fetchImpl(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts }] }),
+          signal: controller.signal
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       if (res.ok) {
         const data = await res.json();
@@ -91,6 +103,7 @@ async function processarMultimodal(param1, param2, param3 = {}) {
         }
       }
     } catch (err) {
+      console.error('[multimodal] Gemini falhou:', String((err && err.message) || err).slice(0, 200));
       // Cai no fallback se Gemini falhar
     }
   }
@@ -100,7 +113,7 @@ async function processarMultimodal(param1, param2, param3 = {}) {
   for (let i = 0; i < validAttachments.length; i++) {
     const att = validAttachments[i];
     const resp = await entenderAnexo(att, env, { fetchImpl });
-    const nomeAnexo = att.nome || `anexo ${i + 1}`;
+    const nomeAnexo = sanitizarTexto(att.nome || `anexo ${i + 1}`);
     if (resp.erro) {
       results.push(`[Anexo ${i + 1} (${nomeAnexo}): erro - ${resp.erro}]`);
     } else {
