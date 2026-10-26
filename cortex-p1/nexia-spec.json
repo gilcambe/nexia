@@ -3,7 +3,7 @@
     "kind": "system",
     "name": "Cortex-p1",
     "tagline": "Gestão Inteligente de Clientes e Planos",
-    "photo_theme": "business dashboard analytics interface",
+    "photo_theme": "business dashboard",
     "description": "Plataforma completa para gestão de assinaturas, transações e perfis de usuários.",
     "folder": "cortex-p1",
     "fonts": {
