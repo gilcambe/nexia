@@ -424,6 +424,31 @@ exports.handler = async (event) => {
     // 5. CHAT COM STREAMING
     if (!finalResponse.trim()) {
       const intentKey = decision.model_override || decision.intent || model || 'auto';
+      
+      // Se for o modo Pensar (intent === 'reasoning'), usamos o fluxo de raciocínio com autocorreção
+      if (intentKey === 'reasoning') {
+        const pensarModule = require('../../nexia-ai/cortex/pensar');
+        const systemPromptPensar = buildSystemPrompt(tenantId, usage.plan, ragCtx, learningCtx) + nexiaCortex.promptSection(projectCtx);
+        const pensarRes = await pensarModule.executarPensamento(message, fullCtx.slice(-30), systemPromptPensar, {
+          callSync,
+          chain,
+          AI_CATALOG,
+          modelRouter
+        });
+        
+        finalResponse = pensarRes.textoFinal;
+        modelUsed = pensarRes.modelUsed || 'GPT-OSS 120B / Gemini 2.5 Flash';
+        
+        if (stream) {
+          const sse = o => `data: ${JSON.stringify(o)}\\n\\n`;
+          async function* pensarStream() {
+            yield sse({ token: finalResponse, done: false });
+            yield sse({ done: true, model: modelUsed, intent: decision.type, usage: { calls: usage.calls, limit: usage.limit, unlimited: !!usage.unlimited } });
+            yield 'data: [DONE]\\n\\n';
+          }
+          return { statusCode: 200, headers: SSE_HEADERS, stream: pensarStream() };
+        }
+      } else {
       const wanted = (intentKey === 'auto') ? 'groq_llama4_scout' : (INTENT_ROUTER[intentKey] || intentKey);
       const keys = chain(wanted, 'deepseek_v3', 'groq_llama3');
       const resolvedKey = keys[0] || wanted;
@@ -489,6 +514,7 @@ exports.handler = async (event) => {
           console.warn('[CORTEX] Nenhuma IA respondeu:', e && (e.code || e.message));
           finalResponse = keys.length ? '❌ As IAs configuradas não responderam agora. Tente de novo em instantes.' : '❌ Nenhuma IA configurada. Cadastre GEMINI_API_KEY (grátis) nos segredos do repositório e publique de novo.';
         }
+      }
       }
     }
 
