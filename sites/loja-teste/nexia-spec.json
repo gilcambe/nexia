@@ -55,7 +55,7 @@
         },
         "cta2": {
           "label": "Nossa história",
-          "href": "#sobre"
+          "href": "#sobre-a-loja-teste"
         },
         "image_query": "retail store interior",
         "video_query": ""
@@ -264,7 +264,7 @@
         "subtitle": "Venha conhecer nossos produtos e serviços pessoalmente.",
         "cta": {
           "label": "Ver endereço",
-          "href": "#contato"
+          "href": "#fale-conosco"
         }
       },
       {
@@ -334,22 +334,6 @@
       "credit": "Wikimedia Commons (Public domain, via Wikimedia Commons)",
       "provider": "wikimedia"
     },
-    "s3.g7": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/DLT_Department_Store_Entrance.jpg/1280px-DLT_Department_Store_Entrance.jpg",
-      "width": 1280,
-      "height": 848,
-      "alt": "DLT Department Store Entrance",
-      "credit": "DLT Department Store Entrance — Florstein (WikiPhotoSpace) (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s5.m1": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/SMALL_RETAIL_BUSINESSES_ON_ST._CLAUDE_AVENUE_-_NARA_-_546034.jpg/1280px-SMALL_RETAIL_BUSINESSES_ON_ST._CLAUDE_AVENUE_-_NARA_-_546034.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 865,
-      "alt": "SMALL RETAIL BUSINESSES ON ST. CLAUDE AVENUE - NARA - 546034",
-      "credit": "John Messina (Public domain, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
     "s3.g0": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/A_Lacoste_retail_store_in_Delaware%2C_United_States.jpg/1280px-A_Lacoste_retail_store_in_Delaware%2C_United_States.jpg",
       "width": 1280,
@@ -406,6 +390,14 @@
       "credit": "Playstation 5 being displayed in electronics retail store - 2 — KKPCW (BY-SA 4.0, via Openverse)",
       "provider": "openverse"
     },
+    "s3.g7": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/DLT_Department_Store_Entrance.jpg/1280px-DLT_Department_Store_Entrance.jpg",
+      "width": 1280,
+      "height": 848,
+      "alt": "DLT Department Store Entrance",
+      "credit": "DLT Department Store Entrance — Florstein (WikiPhotoSpace) (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
     "s5.m0": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/A_Michael_Kors_retail_store_in_Rehoboth_Beach%2C_Delaware.jpg/1280px-A_Michael_Kors_retail_store_in_Rehoboth_Beach%2C_Delaware.jpg",
       "width": 1280,
@@ -413,6 +405,14 @@
       "alt": "A Michael Kors retail store in Rehoboth Beach, Delaware",
       "credit": "A Michael Kors retail store in Rehoboth Beach, Delaware — Harrison Keely (BY 4.0, via Openverse)",
       "provider": "openverse"
+    },
+    "s5.m1": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/SMALL_RETAIL_BUSINESSES_ON_ST._CLAUDE_AVENUE_-_NARA_-_546034.jpg/1280px-SMALL_RETAIL_BUSINESSES_ON_ST._CLAUDE_AVENUE_-_NARA_-_546034.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 865,
+      "alt": "SMALL RETAIL BUSINESSES ON ST. CLAUDE AVENUE - NARA - 546034",
+      "credit": "John Messina (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
     },
     "s5.m2": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/8/8a/Rawimpact_Lifestyle_Brand_Retail_Store_Locations_in_Kalamazoo%2C_MI.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
