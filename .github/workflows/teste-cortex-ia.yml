@@ -1,0 +1,37 @@
+# Teste de IA do Cortex como uma pessoa (perguntas reais, anexos, código, prints). Roda ao enviar esta branch.
+name: Teste de IA do Cortex
+
+on:
+  push:
+    branches: [claude/teste-cortex-ia]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Instalar o navegador
+        run: |
+          npm i --no-save --no-audit --no-fund playwright@1.59.1
+          npx playwright install --with-deps chromium
+      - name: Testar
+        timeout-minutes: 25
+        env:
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
+          OUT: ${{ github.workspace }}/relatorio
+        run: node scripts/teste-cortex-ia.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: teste-cortex-ia
+          path: relatorio
