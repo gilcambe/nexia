@@ -1,0 +1,520 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex-p1",
+    "tagline": "Plataforma completa para gestão de projetos e clientes",
+    "photo_theme": "",
+    "description": "Plataforma completa para gestão de projetos e clientes",
+    "folder": "cortex-p1",
+    "fonts": {
+      "heading": "Plus Jakarta Sans",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#4f46e5",
+      "accent": "#06b6d4",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#111827"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 90000-0000",
+      "email": "suporte@cortex-p1.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=cortex-p1&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "clientes",
+        "label": "Clientes",
+        "singular": "Cliente",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "plano",
+            "label": "Plano",
+            "type": "select",
+            "options": [
+              "Gratis",
+              "Básico",
+              "Profissional",
+              "Empresarial"
+            ],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Inativo",
+              "Aguardando ativação"
+            ],
+            "required": true
+          },
+          {
+            "key": "criadoem",
+            "label": "Criado em",
+            "type": "date",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Ana Souza",
+            "email": "ana.souza@email.com",
+            "telefone": "(11) 91234-5678",
+            "plano": "Profissional",
+            "status": "Ativo",
+            "criadoem": ""
+          },
+          {
+            "nome": "Bruno Lima",
+            "email": "bruno.lima@empresa.com",
+            "telefone": "(21) 98765-4321",
+            "plano": "Empresarial",
+            "status": "Ativo",
+            "criadoem": ""
+          },
+          {
+            "nome": "Carla Dias",
+            "email": "carla.dias@consultoria.com",
+            "telefone": "(31) 91122-3344",
+            "plano": "Básico",
+            "status": "Aguardando ativação",
+            "criadoem": ""
+          },
+          {
+            "nome": "Davi Reis",
+            "email": "davi.reis@startup.com",
+            "telefone": "(41) 95566-7788",
+            "plano": "Gratis",
+            "status": "Ativo",
+            "criadoem": ""
+          },
+          {
+            "nome": "Eduarda Costa",
+            "email": "eduarda.costa@agencia.com",
+            "telefone": "(51) 99900-1122",
+            "plano": "Profissional",
+            "status": "Inativo",
+            "criadoem": ""
+          },
+          {
+            "nome": "Fernando Gomes",
+            "email": "fernando.gomes@tecnologia.com",
+            "telefone": "(62) 93344-5566",
+            "plano": "Básico",
+            "status": "Ativo",
+            "criadoem": ""
+          }
+        ]
+      },
+      {
+        "key": "projetos",
+        "label": "Projetos",
+        "singular": "Projeto",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cliente",
+            "label": "Cliente",
+            "type": "select",
+            "options": [
+              "Ana Souza",
+              "Bruno Lima",
+              "Carla Dias",
+              "Davi Reis",
+              "Eduarda Costa",
+              "Fernando Gomes"
+            ],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Planejamento",
+              "Em andamento",
+              "Em revisão",
+              "Concluído",
+              "Cancelado"
+            ],
+            "required": true
+          },
+          {
+            "key": "datainicio",
+            "label": "Data de início",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "dataprevista",
+            "label": "Data prevista",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "orcamento",
+            "label": "Orçamento",
+            "type": "money",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Redesign do site Ana Souza",
+            "cliente": "Ana Souza",
+            "status": "Em andamento",
+            "datainicio": "",
+            "dataprevista": "",
+            "orcamento": "15000"
+          },
+          {
+            "nome": "App Bruno Lima",
+            "cliente": "Bruno Lima",
+            "status": "Em revisão",
+            "datainicio": "",
+            "dataprevista": "",
+            "orcamento": "25000"
+          },
+          {
+            "nome": "Loja virtual Carla Dias",
+            "cliente": "Carla Dias",
+            "status": "Planejamento",
+            "datainicio": "",
+            "dataprevista": "",
+            "orcamento": "18000"
+          },
+          {
+            "nome": "Site Davi Reis",
+            "cliente": "Davi Reis",
+            "status": "Concluído",
+            "datainicio": "",
+            "dataprevista": "",
+            "orcamento": "8000"
+          },
+          {
+            "nome": "Portal Eduarda Costa",
+            "cliente": "Eduarda Costa",
+            "status": "Em andamento",
+            "datainicio": "",
+            "dataprevista": "",
+            "orcamento": "22000"
+          },
+          {
+            "nome": "API Fernando Gomes",
+            "cliente": "Fernando Gomes",
+            "status": "Cancelado",
+            "datainicio": "",
+            "dataprevista": "",
+            "orcamento": "12000"
+          }
+        ]
+      },
+      {
+        "key": "tarefas",
+        "label": "Tarefas",
+        "singular": "Tarefa",
+        "fields": [
+          {
+            "key": "titulo",
+            "label": "Título",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "projeto",
+            "label": "Projeto",
+            "type": "select",
+            "options": [
+              "Redesign do site Ana Souza",
+              "App Bruno Lima",
+              "Loja virtual Carla Dias",
+              "Site Davi Reis",
+              "Portal Eduarda Costa",
+              "API Fernando Gomes"
+            ],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Pendente",
+              "Em andamento",
+              "Concluída",
+              "Atrasada"
+            ],
+            "required": true
+          },
+          {
+            "key": "responsavel",
+            "label": "Responsável",
+            "type": "select",
+            "options": [
+              "Ana Souza",
+              "Bruno Lima",
+              "Carla Dias",
+              "Davi Reis",
+              "Eduarda Costa",
+              "Fernando Gomes"
+            ],
+            "required": true
+          },
+          {
+            "key": "dataprevista",
+            "label": "Data prevista",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "prioridade",
+            "label": "Prioridade",
+            "type": "select",
+            "options": [
+              "Baixa",
+              "Média",
+              "Alta",
+              "Urgente"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "titulo": "Design homepage",
+            "projeto": "Redesign do site Ana Souza",
+            "status": "Em andamento",
+            "responsavel": "Ana Souza",
+            "dataprevista": "",
+            "prioridade": "Alta"
+          },
+          {
+            "titulo": "Integração de pagamento",
+            "projeto": "App Bruno Lima",
+            "status": "Pendente",
+            "responsavel": "Bruno Lima",
+            "dataprevista": "",
+            "prioridade": "Urgente"
+          },
+          {
+            "titulo": "Configuração de estoque",
+            "projeto": "Loja virtual Carla Dias",
+            "status": "Em andamento",
+            "responsavel": "Carla Dias",
+            "dataprevista": "",
+            "prioridade": "Média"
+          },
+          {
+            "titulo": "Otimização SEO",
+            "projeto": "Site Davi Reis",
+            "status": "Concluída",
+            "responsavel": "Davi Reis",
+            "dataprevista": "",
+            "prioridade": "Baixa"
+          },
+          {
+            "titulo": "Autenticação de usuários",
+            "projeto": "Portal Eduarda Costa",
+            "status": "Em andamento",
+            "responsavel": "Eduarda Costa",
+            "dataprevista": "",
+            "prioridade": "Alta"
+          },
+          {
+            "titulo": "Documentação API",
+            "projeto": "API Fernando Gomes",
+            "status": "Atrasada",
+            "responsavel": "Fernando Gomes",
+            "dataprevista": "",
+            "prioridade": "Média"
+          }
+        ]
+      },
+      {
+        "key": "pagamentos",
+        "label": "Pagamentos",
+        "singular": "Pagamento",
+        "fields": [
+          {
+            "key": "cliente",
+            "label": "Cliente",
+            "type": "select",
+            "options": [
+              "Ana Souza",
+              "Bruno Lima",
+              "Carla Dias",
+              "Davi Reis",
+              "Eduarda Costa",
+              "Fernando Gomes"
+            ],
+            "required": true
+          },
+          {
+            "key": "projeto",
+            "label": "Projeto",
+            "type": "select",
+            "options": [
+              "Redesign do site Ana Souza",
+              "App Bruno Lima",
+              "Loja virtual Carla Dias",
+              "Site Davi Reis",
+              "Portal Eduarda Costa",
+              "API Fernando Gomes"
+            ],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Pendente",
+              "Pago",
+              "Cancelado"
+            ],
+            "required": true
+          },
+          {
+            "key": "metodo",
+            "label": "Método",
+            "type": "select",
+            "options": [
+              "Cartão de crédito",
+              "Boleto",
+              "Transferência",
+              "Pix"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "cliente": "Ana Souza",
+            "projeto": "Redesign do site Ana Souza",
+            "valor": "5000",
+            "data": "2023-08-10",
+            "status": "Pago",
+            "metodo": "Cartão de crédito"
+          },
+          {
+            "cliente": "Bruno Lima",
+            "projeto": "App Bruno Lima",
+            "valor": "7500",
+            "data": "2023-07-15",
+            "status": "Pago",
+            "metodo": "Transferência"
+          },
+          {
+            "cliente": "Carla Dias",
+            "projeto": "Loja virtual Carla Dias",
+            "valor": "6000",
+            "data": "2023-09-05",
+            "status": "Pendente",
+            "metodo": "Boleto"
+          },
+          {
+            "cliente": "Davi Reis",
+            "projeto": "Site Davi Reis",
+            "valor": "2000",
+            "data": "2023-08-20",
+            "status": "Pago",
+            "metodo": "Pix"
+          },
+          {
+            "cliente": "Eduarda Costa",
+            "projeto": "Portal Eduarda Costa",
+            "valor": "5500",
+            "data": "2023-06-30",
+            "status": "Pago",
+            "metodo": "Cartão de crédito"
+          },
+          {
+            "cliente": "Fernando Gomes",
+            "projeto": "API Fernando Gomes",
+            "valor": "3000",
+            "data": "2023-07-25",
+            "status": "Cancelado",
+            "metodo": "Boleto"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Clientes",
+      "Projetos",
+      "Tarefas",
+      "Financeiro"
+    ]
+  },
+  "media": {}
+}
