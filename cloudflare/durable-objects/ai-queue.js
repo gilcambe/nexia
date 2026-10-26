@@ -1,11 +1,15 @@
 'use strict';
 
+import { cotas } from '../../lib/cotas.js';
+
 // Durable Object para controle de vazão de IA
 // Implementa:
 // - 1 requisição por pessoa por vez
 // - Limite por provedor de IA
 // - Fila com prioridade por plano
-// - Integração com sistema de cotas
+// - Integração com sistema de cotas existente
+// - Limite diário por plano
+// - Fallback para modelo menor
 
 class AIQueue {
   constructor(state, env) {
@@ -23,8 +27,17 @@ class AIQueue {
     // Configuração dos planos (vai vir do arquivo de planos)
     this.planosConfig = null;
     
-    // Limite de requisições simultâneas por provedor
-    this.limitePorProvedor = 5;
+    // Limite de requisições simultâneas por provedor (vai vir da configuração)
+    this.limitePorProvedor = null;
+    
+    // Sistema de cotas existente
+    this.cotas = cotas;
+    
+    // Contadores de uso diário por usuário
+    this.usoDiario = new Map(); // userId -> { timestamp: number, count: number }
+    
+    // Contadores de uso por minuto por usuário
+    this.usoPorMinuto = new Map(); // userId -> { timestamp: number, count: number }
   }
   
   async fetch(request) {
@@ -61,21 +74,53 @@ class AIQueue {
         return;
       }
       
-      // Implementar leitura do arquivo de planos
-      // Por enquanto, usa configuração padrão
+      // Tentar carregar do arquivo de planos
+      // Para agora, usamos a configuração padrão que já implementa os limites corretos
       this.planosConfig = this.getPlanosPadrao();
+      
+      // Configurar limite por provedor baseado no plano
+      this.limitePorProvedor = this.planosConfig.gratis.limitePorMinuto;
     } catch (error) {
       console.error('Erro ao carregar planos:', error);
       this.planosConfig = this.getPlanosPadrao();
+      this.limitePorProvedor = 5; // fallback
     }
   }
   
   getPlanosPadrao() {
     return {
-      'pro': { limitePorMinuto: 100, prioridade: 1 },
-      'plus': { limitePorMinuto: 50, prioridade: 2 },
-      'essencial': { limitePorMinuto: 20, prioridade: 3 },
-      'gratis': { limitePorMinuto: 10, prioridade: 4 }
+      'pro': { 
+        prioridade: 1, 
+        respostasSimultaneas: 3, 
+        limiteDiario: 1000, 
+        limitePorMinuto: 60, 
+        modelos: ['claude-3-opus', 'gpt-4', 'gemini-ultra'],
+        fallbackModelos: ['claude-3-sonnet', 'gpt-3.5', 'gemini-pro']
+      },
+      'plus': { 
+        prioridade: 2, 
+        respostasSimultaneas: 2, 
+        limiteDiario: 500, 
+        limitePorMinuto: 30, 
+        modelos: ['claude-3-sonnet', 'gpt-3.5', 'gemini-pro'],
+        fallbackModelos: ['claude-3-haiku', 'gpt-3.5-turbo', 'gemini-flash']
+      },
+      'essencial': { 
+        prioridade: 3, 
+        respostasSimultaneas: 1, 
+        limiteDiario: 200, 
+        limitePorMinuto: 15, 
+        modelos: ['claude-3-haiku', 'gpt-3.5-turbo', 'gemini-flash'],
+        fallbackModelos: ['claude-instant', 'gpt-3.5-turbo', 'gemini-nano']
+      },
+      'gratis': { 
+        prioridade: 4, 
+        respostasSimultaneas: 1, 
+        limiteDiario: 30, 
+        limitePorMinuto: 5, 
+        modelos: ['claude-instant', 'gpt-3.5-turbo', 'gemini-nano'],
+        fallbackModelos: ['claude-instant', 'gpt-3.5-turbo', 'gemini-nano']
+      }
     };
   }
   
