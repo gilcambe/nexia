@@ -50,7 +50,11 @@ const props = defineProps({
   tipoConversa: { type: String, default: '' },
 });
 
-const tiposOmitidos = ['poema', 'tradução', 'código', 'conversa pessoal'];
+const tiposOmitidos = ['poema', 'traducao', 'codigo', 'conversa pessoal'];
+
+function semAcento(texto) {
+  return String(texto).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
 
 function urlValida(url) {
   try {
@@ -66,7 +70,7 @@ const fontesValidas = computed(() =>
 );
 
 const deveMostrarSeloOuAviso = computed(() =>
-  !tiposOmitidos.includes(props.tipoConversa)
+  !tiposOmitidos.includes(semAcento(props.tipoConversa))
 );
 
 const textoCerteza = computed(() => {
