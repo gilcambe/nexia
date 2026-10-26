@@ -14,6 +14,9 @@ const MAX_ADICOES = 400;   // dono (26/10): só PR pequeno entra sozinho; nunca 
 const NOTA_MIN = 8;
 const MARCA = (sha) => `<!-- revisor-gratis ${sha} -->`;
 // Nunca aprovado pelo revisor: workflows/deploy, regras, segredos, login, Worker principal, dependências e dados de clientes.
+// Chat do Cortex ao vivo (regressão real: o PR #1898 mudou o model-router e derrubou o chat). Estes arquivos
+// nunca entram pelo revisor grátis: precisam do teste rápido do chat ao vivo (resposta + tempo) antes do merge.
+const CHAT_VIVO = /^(nexia-ai\/(model-router|orchestrator)\/|netlify\/functions\/cortex-|lib\/cortex-chat)/;
 const PROIBIDO = /^(\.github\/|firestore\.rules|firestore\.indexes|storage\.rules|\.env|wrangler|package(-lock)?\.json|cloudflare\/(worker|app)\.js|lib\/firebase-lite|sites\/[^/]+\/dados)|(secret|credential|auth|login|senha|\.pem$|\.key$)/i;
 
 const SISTEMA = `Você é um revisor de código rigoroso do projeto NEXIA (Node 20, Cloudflare Worker grátis, Firebase sem Blaze, React/Vite).
@@ -52,6 +55,8 @@ function barreira(arquivos, pr) {
   const nomes = arquivos.map(a => a.filename);
   const ruim = nomes.find(n => PROIBIDO.test(n));
   if (ruim) return `mexe em ${ruim} (só o dono ou a Claude aprovam isso)`;
+  const chat = nomes.find(n => CHAT_VIVO.test(n));
+  if (chat) return `mexe no chat do Cortex (${chat}): só entra depois do teste do chat ao vivo (resposta e tempo)`;
   if ((pr.additions || 0) > MAX_ADICOES || nomes.length > 10) return `grande demais (${nomes.length} arquivos, +${pr.additions}); precisa ser dividido`;
   if (!nomes.length) return 'PR vazio';
   return null;

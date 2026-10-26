@@ -24,6 +24,8 @@ test('REVISOR3: barreiras objetivas (workflow, regras, segredo, tamanho) recusam
   assert.match(r.barreira([{ filename: 'firestore.rules' }], pr()), /firestore/);
   assert.match(r.barreira([{ filename: 'lib/a.js' }], pr({ additions: 5000 })), /grande/);
   assert.match(r.barreira([{ filename: 'lib/auth.js' }], pr()), /auth/);
+  assert.match(r.barreira([{ filename: 'nexia-ai/model-router/providers/openai-compatible.js' }], pr()), /chat do Cortex/);
+  assert.match(r.barreira([{ filename: 'netlify/functions/cortex-chat.js' }], pr()), /chat ao vivo/);
   assert.match(r.barreira([{ filename: 'cloudflare/worker.js' }], pr()), /worker/);
   assert.match(r.barreira([{ filename: 'lib/a.js' }], pr({ additions: 401 })), /grande/);
   assert.strictEqual(r.barreira([{ filename: 'scripts/a.js' }, { filename: 'cloudflare/b.js' }], pr()), null);

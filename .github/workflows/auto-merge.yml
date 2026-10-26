@@ -47,7 +47,7 @@ jobs:
             case "$n" in 50|54|57) continue;; esac
             files=$(gh api "repos/$REPO/pulls/$n/files?per_page=100" --paginate --jq '.[].filename' || true)
             [ -z "$files" ] && continue
-            if echo "$files" | grep -Eq '^(\.github/|scripts/|firestore\.rules|firestore\.indexes|cloudflare/|server\.js|lib/|nexia-ai/(policy-engine|tool-gateway|vault)/|package(-lock)?\.json|\.env|.*secret|.*credential|.*auth)'; then
+            if echo "$files" | grep -Eq '^(\.github/|scripts/|firestore\.rules|firestore\.indexes|cloudflare/|server\.js|lib/|nexia-ai/(policy-engine|tool-gateway|vault|model-router|orchestrator)/|netlify/functions/cortex-|package(-lock)?\.json|\.env|.*secret|.*credential|.*auth)'; then
               echo "PR #$n: mexe em área sensível; espera a revisão da Claude."
               continue
             fi
