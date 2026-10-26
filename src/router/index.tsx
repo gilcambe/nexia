@@ -4,6 +4,7 @@ import type { RouteObject } from "react-router-dom";
 import RotaProtegida from "@/components/RotaProtegida";
 
 const Home = lazy(() => import("../pages/home/page"));
+const SiteCliente = lazy(() => import("../components/SiteCliente"));
 const Sentinel = lazy(() => import("../pages/sentinel/page"));
 const Pipeline = lazy(() => import("../pages/pipeline/page"));
 const Codigo = lazy(() => import("../pages/codigo/page"));
@@ -54,6 +55,7 @@ const routes: RouteObject[] = [
   { path: "/vp", element: <TenantPage tenant="vp" /> },
   { path: "/viajante-pro", element: <TenantPage tenant="vp" /> },
   { path: "/splash", element: <TenantPage tenant="splash" /> },
+  { path: "/ces2027", element: <SiteCliente configPath="clientes/ces2027/site.json" /> },
   { path: "/privacidade", element: <PrivacidadePage /> },
   { path: "/termos", element: <TermosPage /> },
   { path: "/cortex/privacidade", element: <PrivacidadePage /> },
