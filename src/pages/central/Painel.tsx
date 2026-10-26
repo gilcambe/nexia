@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useState } from "react";
 import type { Dados, Parte, Tarefa } from "./api";
 import { haQuanto } from "./api";
 import type { Aviso, Aba } from "./avisos";
@@ -88,6 +89,19 @@ function Rosca({ fatias, centro, sub }: { fatias: { valor: number; cor: string }
 
 const NOME_IA: Record<string, string> = { groq: "Groq", gemini: "Gemini", google: "Gemini", nvidia: "NVIDIA", mistral: "Mistral", codestral: "Codestral", openrouter: "OpenRouter", "workers-ai": "Workers AI", cloudflare: "Workers AI", kilo: "Kilo", github: "GitHub Models" };
 const CORES_IA = ["#6366f1", "#0ea5e9", "#f59e0b", "#10b981", "#ec4899", "#8b5cf6"];
+
+// Liga os avisos no aparelho (a page.tsx manda a notificação quando algo fica vermelho). Veio do Início antigo.
+function BotaoAvisar() {
+  const suporta = typeof Notification !== "undefined";
+  const [estado, setEstado] = useState(suporta ? Notification.permission : "denied");
+  if (!suporta || estado === "granted") return null;
+  if (estado === "denied") return <p className="text-xs text-slate-500">Os avisos no aparelho estão bloqueados no navegador.</p>;
+  return (
+    <button onClick={async () => setEstado(await Notification.requestPermission())} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 cursor-pointer" data-testid="central-avisar">
+      🔔 Avisar no celular quando algo parar
+    </button>
+  );
+}
 
 export default function Painel({ d, erros, avisos, ir, conferir, carregando }: {
   d: Dados; erros: Partial<Record<Parte, string>>; avisos: Aviso[]; ir: (a: Aba) => void; conferir: () => void; carregando: boolean;
@@ -370,6 +384,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando }: {
             )}
           </Caixa>
           <InstalarApp />
+          <BotaoAvisar />
         </div>
       </div>
     </div>
