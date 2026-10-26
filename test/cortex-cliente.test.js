@@ -83,38 +83,39 @@ function generateTestToken(uid) {
 const uidAToken = generateTestToken('uidA');
 const uidBToken = generateTestToken('uidB');
 
-test('cortex-cliente API - Testes de autenticação', async () => {
-  // Teste 1: Acesso com token uidA deve retornar dados do uidA
-  const response1 = await mf.dispatchFetch('http://localhost:8787/api/cortex-cliente/conversas', {
+test('cortex-cliente: 200 com token uidA', async () => {
+  const response = await mf.dispatchFetch('http://localhost:8787/api/cortex-cliente/conversas', {
     headers: {
       'Authorization': `Bearer ${uidAToken}`
     }
   });
   
-  const result1 = await response1.json();
-  assert.strictEqual(response1.status, 200);
-  assert.strictEqual(result1.success, true);
-  assert.strictEqual(result1.uid, 'uidA');
-  assert.strictEqual(result1.conversations.length, 2);
-  assert.strictEqual(result1.conversations[0].title, 'Conversa 1');
-  
-  // Teste 2: Acesso com token uidB deve retornar 403
-  const response2 = await mf.dispatchFetch('http://localhost:8787/api/cortex-cliente/conversas', {
+  const result = await response.json();
+  assert.strictEqual(response.status, 200);
+  assert.strictEqual(result.success, true);
+  assert.strictEqual(result.uid, 'uidA');
+  assert.strictEqual(result.conversations.length, 2);
+  assert.strictEqual(result.conversations[0].title, 'Conversa 1');
+});
+
+test('cortex-cliente: 403 com token uidB', async () => {
+  const response = await mf.dispatchFetch('http://localhost:8787/api/cortex-cliente/conversas', {
     headers: {
       'Authorization': `Bearer ${uidBToken}`
     }
   });
   
-  const result2 = await response2.json();
-  assert.strictEqual(response2.status, 403);
-  assert.strictEqual(result2.error, 'Forbidden');
+  const result = await response.json();
+  assert.strictEqual(response.status, 403);
+  assert.strictEqual(result.error, 'Forbidden');
+});
+
+test('cortex-cliente: 401 sem token Authorization', async () => {
+  const response = await mf.dispatchFetch('http://localhost:8787/api/cortex-cliente/conversas');
   
-  // Teste 3: Sem token Authorization deve retornar 401
-  const response3 = await mf.dispatchFetch('http://localhost:8787/api/cortex-cliente/conversas');
-  
-  const result3 = await response3.json();
-  assert.strictEqual(response3.status, 401);
-  assert.strictEqual(result3.error, 'Unauthorized');
+  const result = await response.json();
+  assert.strictEqual(response.status, 401);
+  assert.strictEqual(result.error, 'Unauthorized');
 });
 
 console.log('Testes do cortex-cliente configurados com sucesso!');
