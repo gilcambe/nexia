@@ -88,6 +88,18 @@ const textoCerteza = computed(() => {
 </script>
 
 <style scoped>
+:root {
+  --answer-badge-alta-bg: #dcfce7;
+  --answer-badge-alta-text: #166534;
+  --answer-badge-media-bg: #fef3c7;
+  --answer-badge-media-text: #92400e;
+  --answer-badge-baixa-bg: #e5e7eb;
+  --answer-badge-baixa-text: #374151;
+  --answer-warning-bg: #fef2f2;
+  --answer-warning-text: #991b1b;
+  --answer-link-color: #2563eb;
+}
+
 .answer {
   font-family: system-ui, -apple-system, sans-serif;
   line-height: 1.6;
@@ -117,18 +129,18 @@ const textoCerteza = computed(() => {
 }
 
 .answer__badge--alta {
-  background: #dcfce7;
-  color: #166534;
+  background: var(--answer-badge-alta-bg);
+  color: var(--answer-badge-alta-text);
 }
 
 .answer__badge--media {
-  background: #fef3c7;
-  color: #92400e;
+  background: var(--answer-badge-media-bg);
+  color: var(--answer-badge-media-text);
 }
 
 .answer__badge--baixa {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--answer-badge-baixa-bg);
+  color: var(--answer-badge-baixa-text);
 }
 
 .answer__warning {
@@ -138,8 +150,8 @@ const textoCerteza = computed(() => {
   border-radius: 999px;
   font-size: 0.875rem;
   font-weight: 600;
-  background: #fef2f2;
-  color: #991b1b;
+  background: var(--answer-warning-bg);
+  color: var(--answer-warning-text);
 }
 
 .answer__sources {
@@ -153,11 +165,16 @@ const textoCerteza = computed(() => {
 }
 
 .answer__source-link {
-  color: #2563eb;
+  color: var(--answer-link-color);
   text-decoration: none;
 }
 
 .answer__source-link:hover {
   text-decoration: underline;
+}
+
+.answer__source-link:focus-visible {
+  outline: 2px solid var(--answer-link-color);
+  outline-offset: 2px;
 }
 </style>
