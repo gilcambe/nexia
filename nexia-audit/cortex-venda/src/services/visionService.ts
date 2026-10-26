@@ -56,7 +56,7 @@ async function callWorkersAI(
 
   const description = (response as any)?.description || (response as any)?.answer || String(response);
 
-  return { description, model: WORKERS_AI_MODEL };
+  return { description, model };
 }
 
 async function callGemini(imageBase64: string, prompt: string, env?: any): Promise<{ description: string; model: string }> {
@@ -138,7 +138,7 @@ export async function describeImage(options: VisionOptions, ai?: any): Promise<V
 
   // 2) Fallback: Gemini gratuito
   try {
-    const result = await callGemini(imageBase64, prompt);
+    const result = await callGemini(imageBase64, prompt, env);
     return {
       description: result.description,
       provider: 'gemini',
