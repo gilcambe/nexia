@@ -13,10 +13,8 @@ export async function aiPromptService(prompt, options = {}) {
   // ... lógica existente do serviço ...
   const rawResponse = `Resposta gerada para: ${prompt}`;
   
-  // Analisa a saída da IA e aplica o filtro de conteúdo (reutilizando contentFilter)
-  if (hasContentViolation(rawResponse)) {
-    return "Desculpe, não posso ajudar com isso.";
-  }
+  // Analisa a saída da IA e aplica o filtro de conteúdo (reutilizando filterAIResponse ou hasContentViolation)
+  return filterAIResponse(rawResponse);
 
   return rawResponse;
 }
