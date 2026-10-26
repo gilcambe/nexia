@@ -134,6 +134,8 @@ function createRouter(o = {}) {
 
     const remainingTime = () => Math.max(10, totalTimeoutMs - (Date.now() - startTime));
 
+    const dedupped = dedupe(descs);
+    const tDispatch0 = performance.now();
     const tDispatchMs = performance.now() - tDispatch0;
     console.log(`[model-router] dispatch start providers=${dedupped.length} dispatchMs=${Math.round(tDispatchMs)}`);
 
@@ -151,10 +153,10 @@ function createRouter(o = {}) {
     };
 
     let currentReq = req;
-    const chunks = [];
+    const chunkBuffer = [];
     let accumulatedText = '';
-    const dedupped = dedupe(descs);
-    const tDispatch0 = performance.now();
+    let firstChunkEmitted = false;
+    const abortControllers = new Map();
 
     if (cacheavel(req)) {
       const generalK = `gen|${chave(req)}`;
