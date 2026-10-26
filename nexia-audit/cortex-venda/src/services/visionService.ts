@@ -31,7 +31,7 @@ const DEFAULT_PROMPT =
   'Descreva o que aparece nesta imagem de forma objetiva e direta, em português, frases curtas.';
 
 function isBase64Image(value: string): boolean {
-  return /^data:image/[a-zA-Z]+;base64,/.test(value) || /^[A-Za-z0-9+/=]+$/.test(value);
+  return /^data:image\/(jpeg|jpg|png|gif|webp);base64,/[a-zA-Z0-9+/=]+$/.test(value);
 }
 
 function stripDataUrl(imageBase64: string): { data: string; mimeType: string } {
