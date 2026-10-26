@@ -26,8 +26,18 @@ export async function criarTarefaLocal(params: {
   return id;
 }
 
-/** Atualiza o status de uma tarefa local. */
+/** Status permitidos na tabela tarefas_locais. */
+export const STATUS_TAREFAS = ['pendente', 'rodando', 'feito', 'cancelado'] as const;
+
+export function statusValido(status: string): status is (typeof STATUS_TAREFAS)[number] {
+  return STATUS_TAREFAS.includes(status as any);
+}
+
+/** Atualiza o status de uma tarefa local (só status permitidos). */
 export async function atualizarStatusTarefa(id: string, status: string): Promise<void> {
+  if (!statusValido(status)) {
+    throw new Error(`Status não permitido para tarefa local: ${status}`);
+  }
   await driver.run(`UPDATE tarefas_locais SET status = ? WHERE id = ?`, [status, id]);
 }
 
@@ -46,7 +56,7 @@ export async function cancelarTarefasAntigas(minutos: number): Promise<number> {
     `UPDATE tarefas_locais SET status = 'cancelado'
      WHERE status = 'pendente'
        AND criado_em <= datetime('now', ? || ' minutes')`,
-    [`-${minutos}`]
+    [`-${minutos} minutes`]
   );
   return resultado.changes ?? 0;
 }
