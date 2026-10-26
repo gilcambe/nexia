@@ -4,7 +4,7 @@
     "name": "Cortex-p1 Admin",
     "tagline": "Painel de controle, métricas de provedores e status do sistema em tempo real",
     "photo_theme": "server dashboard metrics data",
-    "description": "Painel de controle, métricas de provedores e status do sistema em tempo real",
+    "description": "Painel de controle, métricas de provedores e status do sistema em tempo real com rota protegida /admin/status, controlador adminStatusController e view adminStatus integrados ao metricsService.",
     "folder": "sites/cortex-p1-admin",
     "fonts": {
       "heading": "Plus Jakarta Sans",
