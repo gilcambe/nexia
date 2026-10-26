@@ -1,194 +1,156 @@
 'use strict';
-const crypto = require('crypto');
 const { sha256 } = require('./keys');
-const cortexChat = require('./cortex-chat');
+const modelRouter = require('../../nexia-ai/model-router');
 
-async function getDb(env) {
-  if (env && env.DB) return env.DB;
-  return null;
-}
+const OPENAI_MODELS = [
+  { id: 'cortex-rapido', object: 'model', created: 1710000000, owned_by: 'nexia', permission: [], root: 'cortex-rapido', parent: null },
+  { id: 'cortex-pensar', object: 'model', created: 1710000000, owned_by: 'nexia', permission: [], root: 'cortex-pensar', parent: null },
+  { id: 'cortex-pesquisar', object: 'model', created: 1710000000, owned_by: 'nexia', permission: [], root: 'cortex-pesquisar', parent: null }
+];
 
-async function verifyApiKey(request, env) {
-  const authHeader = request.headers.get('authorization') || request.headers.get('Authorization') || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
-  if (!token) return { valid: false, error: 'Chave de API ausente. Envie Bearer token no cabeçalho Authorization.' };
+async function verifyApiKey(event, env) {
+  const authHeader = event.headers?.authorization || event.headers?.Authorization || '';
+  if (!authHeader.startsWith('Bearer ')) return { valid: false, error: 'Token ausente ou inválido' };
+  const rawKey = authHeader.slice(7).trim();
+  const keyHash = sha256(rawKey);
 
-  const db = await getDb(env);
-  const keyHash = sha256(token);
-
+  const db = env && env.DB ? env.DB : null;
   if (!db) {
-    // Modo de teste sem D1
-    if (token === 'cortex_sk_exemplo123...' || token.startsWith('cortex_sk_')) {
-      return { valid: true, userId: 'default_user', tenantId: 'nexia', plan: 'master' };
-    }
-    return { valid: false, error: 'Chave de API inválida.' };
+    if (rawKey.startsWith('cortex_sk_')) return { valid: true, userId: 'default_user', tenantId: 'nexia', plan: 'master' };
+    return { valid: false, error: 'Chave inválida' };
   }
 
   try {
-    const row = await db.prepare('SELECT user_id, tenant_id, plan FROM api_keys WHERE key_hash = ?').bind(keyHash).first();
-    if (!row) {
-      return { valid: false, error: 'Chave de API inválida ou revogada.' };
-    }
-    return { valid: true, userId: row.user_id || 'default_user', tenantId: row.tenant_id || 'nexia', plan: row.plan || 'master' };
+    const row = await db.prepare('SELECT user_id, tenant_id FROM api_keys WHERE key_hash = ?').bind(keyHash).first();
+    if (!row) return { valid: false, error: 'Chave não encontrada ou revogada' };
+    return { valid: true, userId: row.user_id || 'default_user', tenantId: row.tenant_id || 'nexia', plan: 'master' };
   } catch (e) {
-    console.error('[OPENAI API] Erro ao verificar chave no D1:', e);
-    // Fallback permissivo para testes se a tabela ainda não existir
-    if (token.startsWith('cortex_sk_')) {
-      return { valid: true, userId: 'default_user', tenantId: 'nexia', plan: 'master' };
-    }
-    return { valid: false, error: 'Erro interno ao validar chave.' };
+    return { valid: false, error: 'Erro ao validar chave' };
   }
 }
 
 async function handler(event, env) {
-  const url = new URL(event.url || 'https://nexia.local/v1/chat/completions');
-  const method = event.httpMethod || event.method || 'POST';
-  
+  const method = event.httpMethod || 'GET';
   const headers = {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
   };
 
-  if (method === 'OPTIONS') {
-    return { statusCode: 200, headers, body: '' };
-  }
+  if (method === 'OPTIONS') return { statusCode: 200, headers, body: '' };
 
-  // GET /v1/models
-  if (url.pathname.endsWith('/models') || event.path === '/v1/models') {
-    const models = {
-      object: 'list',
-      data: [
-        { id: 'cortex-rapido', object: 'model', created: 1710000000, owned_by: 'nexia' },
-        { id: 'cortex-pensar', object: 'model', created: 1710000000, owned_by: 'nexia' },
-        { id: 'cortex-pesquisar', object: 'model', created: 1710000000, owned_by: 'nexia' }
-      ]
+  const urlPath = event.path || event.rawPath || '';
+  
+  if (method === 'GET' && (urlPath.includes('/v1/models') || event.queryStringParameters?.models)) {
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({ object: 'list', data: OPENAI_MODELS })
     };
-    return { statusCode: 200, headers, body: JSON.stringify(models) };
   }
 
-  // POST /v1/chat/completions
-  if (url.pathname.endsWith('/chat/completions') || event.path === '/v1/chat/completions') {
-    const authResult = await verifyApiKey(event, env);
-    if (!authResult.valid) {
-      return {
-        statusCode: 401,
-        headers,
-        body: JSON.stringify({ error: { message: authResult.error, type: 'invalid_request_error', code: 'invalid_api_key' } })
-      };
+  if (method === 'POST' && urlPath.includes('/v1/chat/completions')) {
+    const auth = await verifyApiKey(event, env);
+    if (!auth.valid) {
+      return { statusCode: 401, headers, body: JSON.stringify({ error: { message: auth.error, type: 'invalid_request_error', code: 'invalid_api_key' } }) };
     }
 
-    let reqBody = {};
+    let body = {};
     try {
-      reqBody = typeof event.body === 'string' ? JSON.parse(event.body || '{}') : (event.body || {});
+      body = JSON.parse(event.body || '{}');
     } catch {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: { message: 'JSON inválido no corpo da requisição', type: 'invalid_request_error', code: 'json_parse_error' } })
-      };
+      return { statusCode: 400, headers, body: JSON.stringify({ error: { message: 'JSON inválido', type: 'invalid_request_error' } }) };
     }
 
-    const { model = 'cortex-rapido', messages = [], stream = false, max_tokens } = reqBody;
-    const lastMessage = messages[messages.length - 1]?.content || 'Olá';
+    const { messages = [], model = 'cortex-rapido', stream = false } = body;
+    if (!messages.length) {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: { message: 'messages é obrigatório', type: 'invalid_request_error' } }) };
+    }
 
-    // Mapeia o modelo solicitado para o intent do cortex
-    let intent = 'fast';
-    if (model.includes('pensar') || model.includes('reasoning')) intent = 'reasoning';
-    if (model.includes('pesquisar') || model.includes('search')) intent = 'search';
+    const systemPrompt = "Você é o Cortex, IA avançada integrada ao NEXIA OS compatível com OpenAI.";
+    const modelDesc = { provider: 'groq', model: 'openai/gpt-oss-120b' };
+    if (model === 'cortex-rapido') modelDesc.model = 'openai/gpt-oss-20b';
+    if (model === 'cortex-pesquisar') modelDesc.model = 'meta/llama-3.3-70b-instruct';
 
-    // Simula o evento para o cortex-chat.js existente
-    const cortexEvent = {
-      httpMethod: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'authorization': event.headers?.authorization || event.headers?.Authorization || 'Bearer test'
-      },
-      body: JSON.stringify({
-        message: lastMessage,
-        model: intent,
-        tenantId: authResult.tenantId,
-        stream: !!stream,
-        maxTokens: max_tokens || 4096
-      }),
-      _uid: authResult.userId,
-      _role: 'master'
-    };
+    if (stream) {
+      const sseHeaders = {
+        ...headers,
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive'
+      };
+      
+      async function* sseGenerator() {
+        let fullText = '';
+        const id = 'chatcmpl-' + Math.random().toString(36).slice(2);
+        const created = Math.floor(Date.now() / 1000);
+
+        try {
+          // Usa o model-router real
+          for await (const chunk of modelRouter.getRouter().streamWithFallback([modelDesc], { system: systemPrompt, messages, maxTokens: 4000 })) {
+            if (chunk.type === 'text') {
+              fullText += chunk.text;
+              const chunkObj = {
+                id,
+                object: 'chat.completion.chunk',
+                created,
+                model,
+                choices: [{ index: 0, delta: { content: chunk.text }, finish_reason: null }]
+              };
+              yield `data: ${JSON.stringify(chunkObj)}\n\n`;
+            }
+          }
+        } catch (e) {
+          const errChunk = {
+            id,
+            object: 'chat.completion.chunk',
+            created,
+            model,
+            choices: [{ index: 0, delta: { content: '\n\n[Erro no streaming]' }, finish_reason: 'stop' }]
+          };
+          yield `data: ${JSON.stringify(errChunk)}\n\n`;
+        }
+
+        const finishObj = {
+          id,
+          object: 'chat.completion.chunk',
+          created,
+          model,
+          choices: [{ index: 0, delta: {}, finish_reason: 'stop' }]
+        };
+        yield `data: ${JSON.stringify(finishObj)}\n\n`;
+        yield 'data: [DONE]\n\n';
+      }
+
+      return { statusCode: 200, headers: sseHeaders, stream: sseGenerator() };
+    }
 
     try {
-      const res = await cortexChat.handler(cortexEvent);
-      
-      if (stream) {
-        // Se o cortex-chat retornou um stream real ou um body em SSE
-        if (res.stream) {
-          return { statusCode: 200, headers: { ...headers, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' }, stream: res.stream };
-        }
-        
-        // Formata a resposta padrão no formato OpenAI SSE
-        const completionId = 'chatcmpl-' + Math.random().toString(36).substring(2, 10);
-        const created = Math.floor(Date.now() / 1000);
-        let replyText = 'Olá! Cortex pronto para uso.';
-        
-        try {
-          const parsed = JSON.parse(res.body || '{}');
-          replyText = parsed.reply || parsed.token || 'Resposta indisponível';
-        } catch {
-          replyText = res.body || 'Resposta indisponível';
-        }
-
-        const sseStream = async function* () {
-          yield `data: ${JSON.stringify({ id: completionId, object: 'chat.completion.chunk', created, model, choices: [{ index: 0, delta: { role: 'assistant', content: replyText }, finish_reason: null }] })}\n\n`;
-          yield `data: ${JSON.stringify({ id: completionId, object: 'chat.completion.chunk', created, model, choices: [{ index: 0, delta: {}, finish_reason: 'stop' }] })}\n\n`;
-          yield `data: [DONE]\n\n`;
-        };
-
-        return {
-          statusCode: 200,
-          headers: { ...headers, 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' },
-          stream: sseStream()
-        };
-      } else {
-        // Sem stream
-        let replyText = 'Cortex pronto.';
-        try {
-          const parsed = JSON.parse(res.body || '{}');
-          replyText = parsed.reply || parsed.token || 'Resposta indisponível';
-        } catch {
-          replyText = res.body || 'Resposta indisponível';
-        }
-
-        const completionResponse = {
-          id: 'chatcmpl-' + Math.random().toString(36).substring(2, 10),
-          object: 'chat.completion',
-          created: Math.floor(Date.now() / 1000),
-          model,
-          choices: [
-            {
-              index: 0,
-              message: { role: 'assistant', content: replyText },
-              finish_reason: 'stop'
-            }
-          ],
-          usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 }
-        };
-
-        return {
-          statusCode: 200,
-          headers,
-          body: JSON.stringify(completionResponse)
-        };
-      }
+      const result = await modelRouter.getRouter().chat(modelDesc, { system: systemPrompt, messages, maxTokens: 4000 });
+      const responseObj = {
+        id: 'chatcmpl-' + Math.random().toString(36).slice(2),
+        object: 'chat.completion',
+        created: Math.floor(Date.now() / 1000),
+        model,
+        choices: [{
+          index: 0,
+          message: { role: 'assistant', content: result.text },
+          finish_reason: 'stop'
+        }],
+        usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 }
+      };
+      return { statusCode: 200, headers, body: JSON.stringify(responseObj) };
     } catch (e) {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ error: { message: e.message || 'Erro interno no Cortex', type: 'server_error', code: 'internal_error' } })
+        body: JSON.stringify({ error: { message: e.message || 'Erro interno', type: 'internal_error' } })
       };
     }
   }
 
-  return { statusCode: 404, headers, body: JSON.stringify({ error: 'Não encontrado' }) };
+  return { statusCode: 404, headers, body: JSON.stringify({ error: 'Endpoint não encontrado' }) };
 }
 
 module.exports = { handler, verifyApiKey };
