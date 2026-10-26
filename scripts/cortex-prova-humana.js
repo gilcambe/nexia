@@ -138,7 +138,9 @@ async function main() {
   const cfg = await fetch(`${BASE}/api/firebase-config`).then(r => r.json()).catch(() => ({}));
   conexoes.push(['Firebase (config pública)', !!cfg.apiKey]);
   let token = null;
-  try { token = await idToken(sa, cfg.apiKey, { tenantSlug: 'nexia' }); conexoes.push(['Login de cliente comum', true]); } catch (e) { conexoes.push([`Login de cliente comum (${e.message})`, false]); }
+  try { token = await idToken(sa, cfg.apiKey, { role: 'master', tenantSlug: 'nexia' }); conexoes.push(['Login (conta de teste do dono)', true]); } catch (e) { conexoes.push([`Login (${e.message})`, false]); }
+  // Cliente novo sem cadastro no Firestore: hoje recebe 403 (ver #1581).
+  try { const tc = await idToken(sa, cfg.apiKey, { tenantSlug: 'nexia' }); const c = await perguntar(tc, 'Oi'); conexoes.push([`Cliente novo sem cadastro consegue conversar (status ${c.status})`, c.status === 200]); } catch { conexoes.push(['Cliente novo sem cadastro', false]); }
   const sem = await perguntar(null, 'Oi, tudo bem?');
   conexoes.push([`Chat sem login (status ${sem.status}) — deveria pedir login ou limitar`, sem.status === 401 || sem.status === 403 || sem.status === 429]);
 
