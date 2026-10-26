@@ -4,7 +4,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { AppRoutes } from "./router";
 import i18n from "./i18n";
 
-declare const __BASE_PATH__: string;
+declare const __BASE_PATH__: string | undefined;
 
 function App() {
   return (

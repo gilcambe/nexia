@@ -206,6 +206,12 @@ exports.handler = async (event) => {
   const guardErr = await guard(event, 'cortex-memory', { skipTenant: true });
   if (guardErr) return guardErr;
 
+  const { isMasterUser } = require('./lib/master-auth');
+  const isMaster = await isMasterUser(event);
+  if (!isMaster) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: 'Acesso restrito ao usuário master.' }) };
+  }
+
   if (!db) return { statusCode: 503, headers, body: JSON.stringify({ ok: false, error: 'Firebase indisponível — configure FIREBASE_SERVICE_ACCOUNT nos segredos do Worker.' }) };
 
 
