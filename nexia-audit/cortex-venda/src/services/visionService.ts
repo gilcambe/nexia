@@ -50,7 +50,7 @@ async function callWorkersAI(
   const cleanImage = stripDataUrl(imageBase64);
 
   const response = await ai.run(model, {
-    image: cleanImage,
+    image: cleanImage.data,
     prompt,
   });
 
