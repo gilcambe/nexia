@@ -11,13 +11,14 @@ export default function ChatPage() {
   const turnstileRef = useRef(null);
 
   useEffect(() => {
-    if (!isVerified && turnstileRef.current) {
+    // Inicializa Turnstile apenas se ainda não tiver token e container existir
+    if (!isVerified && !turnstileToken && turnstileRef.current) {
       initTurnstile(turnstileRef.current, (token) => {
         setTurnstileToken(token);
         setIsVerified(true);
       });
     }
-  }, [isVerified]);
+  }, [isVerified, turnstileToken]);
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
