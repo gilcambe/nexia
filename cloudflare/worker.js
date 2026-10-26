@@ -18,6 +18,26 @@ export default {
   async fetch(request, env, ctx) {
     if (new URL(request.url).pathname === '/api/corpo-ia') return corpoIa(request, env);
     // #807: leituras públicas (config do Firebase etc.) passam pelo cache de borda (60 a 300 s).
+    // Adiciona as rotas da API OpenAI
+    const url = new URL(request.url);
+    if (url.pathname === '/v1/chat/completions') {
+      // Chama o handler do Cortex, que vai tratar a lógica da API OpenAI
+      // Precisa garantir que o handler do Cortex lide com streaming e formato OpenAI
+      return app.handleRequest(request, env, { getFunction: functions.getFunction, isOpenAI: true });
+    }
+    if (url.pathname === '/v1/models') {
+      // Retorna os modelos disponíveis no formato OpenAI
+      return new Response(JSON.stringify({
+        object: 'list',
+        data: [
+          { id: 'cortex-rapido', object: 'model', created: Date.now(), owned_by: 'ollama', permission: [] },
+          { id: 'cortex-pensar', object: 'model', created: Date.now(), owned_by: 'ollama', permission: [] },
+          { id: 'cortex-pesquisar', object: 'model', created: Date.now(), owned_by: 'ollama', permission: [] },
+        ]
+      }), { headers: { 'Content-Type': 'application/json' } });
+    }
+
+    // Requisições normais para o site/API
     return cacheBorda.comCacheDeBorda(request, env, ctx,
       () => app.handleRequest(request, env, { getFunction: functions.getFunction }));
   },
