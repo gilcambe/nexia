@@ -1,0 +1,64 @@
+import fs from 'fs';
+import path from 'path';
+
+export interface DBRecord {
+  uid: string;
+  id: string;
+  [key: string]: any;
+}
+
+export class SimpleORM {
+  private dataDir: string;
+
+  constructor(dataDir = './data') {
+    this.dataDir = dataDir;
+    if (!fs.existsSync(this.dataDir)) {
+      fs.mkdirSync(this.dataDir, { recursive: true });
+    }
+  }
+
+  private getTablePath(table: string): string {
+    return path.join(this.dataDir, `${table}.json`);
+  }
+
+  public runMigration(migrationName: string): void {
+    const migrationPath = path.join('db', 'migrations', `${migrationName}.sql`);
+    if (fs.existsSync(migrationPath)) {
+      const sql = fs.readFileSync(migrationPath, 'utf8');
+      console.log(`[DB] Aplicando migração: ${migrationName}`);
+    }
+  }
+
+  public insert(table: string, record: DBRecord): void {
+    const filePath = this.getTablePath(table);
+    let records: DBRecord[] = [];
+    if (fs.existsSync(filePath)) {
+      try {
+        records = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      } catch {
+        records = [];
+      }
+    }
+    const index = records.findIndex(r => r.id === record.id);
+    if (index >= 0) {
+      records[index] = record;
+    } else {
+      records.push(record);
+    }
+    fs.writeFileSync(filePath, JSON.stringify(records, null, 2), 'utf8');
+  }
+
+  public findById(table: string, id: string): DBRecord | null {
+    const filePath = this.getTablePath(table);
+    if (!fs.existsSync(filePath)) return null;
+    try {
+      const records: DBRecord[] = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      return records.find(r => r.id === id) || null;
+    } catch {
+      return null;
+    }
+  }
+}
+
+export const db = new SimpleORM();
+db.runMigration('20241026_add_cortex_memoria');

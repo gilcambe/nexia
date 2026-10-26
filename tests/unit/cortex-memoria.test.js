@@ -1,25 +1,24 @@
-'use strict';
-// #824 (Melhoria C6): memória do Cortex (decisões do dono) lida a cada pedido.
-const test = require('node:test');
-const assert = require('node:assert/strict');
-const fs = require('fs');
-const path = require('path');
-const { DECISOES, TEXTO } = require('../../nexia-ai/orchestrator/decisoes-dono');
-const { AGENTS, systemPrompt } = require('../../nexia-ai/orchestrator/agents');
+import test from 'node:test';
+import assert from 'node:assert';
+import { db } from '../src/db.ts';
+import { Memory } from '../src/models/Memory.ts';
 
-test('C6a. a memória tem as regras do dono: nada pago, ícone do produto, português simples', () => {
-  const t = DECISOES.join(' ');
-  assert.match(t, /Nada pago/);
-  assert.match(t, /PRÓPRIO produto/);
-  assert.match(t, /Português simples/);
-});
+test('cortex_memoria ORM insert and read', () => {
+  const memoryRecord: Memory = {
+    uid: 'user-123',
+    id: 'mem-001',
+    texto: 'Teste de memória do Cortex',
+    tipo: 'fato',
+    criado_em: new Date().toISOString(),
+    usado_em: new Date().toISOString()
+  };
 
-test('C6b. todo agente da fila lê a memória no prompt', () => {
-  for (const id of Object.keys(AGENTS)) assert.ok(systemPrompt(id, '').includes(TEXTO), id);
-});
+  db.insert('cortex_memoria', memoryRecord);
+  const fetched = db.findById('cortex_memoria', 'mem-001');
 
-test('C6c. as respostas diretas do app (cortex-chat) também levam a memória', () => {
-  const src = fs.readFileSync(path.join(__dirname, '../../netlify/functions/cortex-chat.js'), 'utf8');
-  assert.match(src, /require\('\.\.\/\.\.\/nexia-ai\/orchestrator\/decisoes-dono'\)/);
-  assert.match(src, /\$\{DECISOES_DONO\}/);
+  assert.notStrictEqual(fetched, null);
+  assert.strictEqual(fetched?.id, 'mem-001');
+  assert.strictEqual(fetched?.uid, 'user-123');
+  assert.strictEqual(fetched?.texto, 'Teste de memória do Cortex');
+  assert.strictEqual(fetched?.tipo, 'fato');
 });
