@@ -8,6 +8,10 @@
   color: #111827;
 }
 
+.promo-builder .form-group {
+  margin-bottom: 1rem;
+}
+
 .promo-builder label {
   display: block;
   font-weight: 600;
@@ -40,14 +44,14 @@
   color: #4b5563;
 }
 
-.promo-builder .erro {
+.promo-builder .error-message {
   color: #dc2626;
   font-size: 0.9rem;
   margin-top: 0.5rem;
   text-align: center;
 }
 
-.promo-builder button.gerar {
+.promo-builder button.gerar-button {
   width: 100%;
   padding: 0.75rem 1rem;
   margin-top: 0.5rem;
@@ -78,7 +82,7 @@
   overflow: hidden;
 }
 
-.promo-builder .progress-bar {
+.promo-builder .progress-fill {
   height: 100%;
   background: #2563eb;
   width: 0%;
@@ -92,7 +96,7 @@
   text-align: right;
 }
 
-.promo-builder .download-link {
+.promo-builder .download-button {
   margin-top: 1rem;
   display: inline-block;
   padding: 0.75rem 1rem;
@@ -104,7 +108,7 @@
   text-align: center;
 }
 
-.promo-builder .download-link:hover {
+.promo-builder .download-button:hover {
   background: #047857;
 }
 
