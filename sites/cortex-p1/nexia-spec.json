@@ -4,7 +4,7 @@
     "name": "Cortex-p1",
     "tagline": "Painel de cadastros e gestão do sistema",
     "photo_theme": "dashboard business",
-    "description": "Painel de cadastros e gestão do sistema",
+    "description": "Painel de cadastros e gestão do sistema com integração Firebase",
     "folder": "sites/cortex-p1",
     "fonts": {
       "heading": "Plus Jakarta Sans",
@@ -22,7 +22,7 @@
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "",
+      "phone": "(11) 90000-0000",
       "email": "suporte@cortex-p1.com.br",
       "address": "",
       "city": "",
@@ -111,6 +111,17 @@
             "type": "date",
             "options": [],
             "required": true
+          },
+          {
+            "key": "idioma",
+            "label": "Idioma",
+            "type": "select",
+            "options": [
+              "pt",
+              "en",
+              "es"
+            ],
+            "required": true
           }
         ],
         "sample": [
@@ -122,7 +133,8 @@
             "plano": "pro",
             "status": "ativo",
             "limite_acesso": "50",
-            "criado_em": "2026-09-15"
+            "criado_em": "2026-09-15",
+            "idioma": "pt"
           },
           {
             "nome": "Bruno Lima",
@@ -132,7 +144,8 @@
             "plano": "gratis",
             "status": "ativo",
             "limite_acesso": "10",
-            "criado_em": "2026-09-20"
+            "criado_em": "2026-09-20",
+            "idioma": "pt"
           },
           {
             "nome": "Carla Dias",
@@ -142,7 +155,8 @@
             "plano": "enterprise",
             "status": "ativo",
             "limite_acesso": "500",
-            "criado_em": "2026-08-10"
+            "criado_em": "2026-08-10",
+            "idioma": "pt"
           },
           {
             "nome": "Davi Reis",
@@ -152,7 +166,8 @@
             "plano": "pro",
             "status": "pendente",
             "limite_acesso": "50",
-            "criado_em": "2026-09-25"
+            "criado_em": "2026-09-25",
+            "idioma": "pt"
           },
           {
             "nome": "Elena Martins",
@@ -162,7 +177,8 @@
             "plano": "gratis",
             "status": "inativo",
             "limite_acesso": "10",
-            "criado_em": "2026-07-05"
+            "criado_em": "2026-07-05",
+            "idioma": "pt"
           }
         ]
       }
