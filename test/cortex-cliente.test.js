@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken';
 const mf = new Miniflare({
   kvNamespaces: ['TEST'],
   modules: true,
+  vars: { JWT_SECRET: TEST_SECRET },
   script: `
     export default {
       async fetch(request, env, ctx) {
