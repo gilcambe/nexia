@@ -4,7 +4,7 @@
     "name": "Cortex-p1 Admin",
     "tagline": "Monitoramento e infraestrutura do Cortex-p1",
     "photo_theme": "technology dashboard server analytics",
-    "description": "Monitoramento, rotas protegidas e infraestrutura do Cortex-p1 com painel de métricas em tempo real.",
+    "description": "Monitoramento, rotas protegidas e infraestrutura do Cortex-p1 com painel de métricas em tempo real, cota de provedores, filas e erros na última hora.",
     "folder": "demos/cortex-p1-admin",
     "fonts": {
       "heading": "Space Grotesk",
@@ -278,7 +278,9 @@
       "Métricas de Provedores",
       "Gestão de Filas",
       "Auditoria de Erros",
-      "adminStatusController"
+      "adminStatusController",
+      "adminStatus.js route",
+      "adminStatus.ejs view"
     ]
   },
   "media": {}
