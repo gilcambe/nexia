@@ -1,0 +1,43 @@
+# Cortex — prova humana: perguntas de pessoa ao Cortex no ar; respostas publicadas como comentário na issue.
+name: Cortex prova humana
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Endereço do Cortex'
+        required: false
+        default: 'https://nexia.gcbezerra.workers.dev'
+      issue:
+        description: 'Issue que recebe as respostas'
+        required: false
+        default: '1636'
+  push:
+    branches: [nexia/cortex-prova-humana]
+    paths: [scripts/cortex-prova-humana.js, .github/workflows/cortex-prova-humana.yml]
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: cortex-prova-humana
+  cancel-in-progress: false
+
+jobs:
+  prova:
+    name: Perguntar como uma pessoa
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Prova
+        run: node scripts/cortex-prova-humana.js
+        env:
+          BASE: ${{ inputs.url || 'https://nexia.gcbezerra.workers.dev' }}
+          ISSUE: ${{ inputs.issue || '1636' }}
+          GH_TOKEN: ${{ github.token }}
+          FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
