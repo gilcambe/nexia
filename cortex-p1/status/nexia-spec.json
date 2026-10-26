@@ -3,7 +3,7 @@
     "kind": "system",
     "name": "Cortex Status Monitor",
     "tagline": "Monitoramento em tempo real do seu sistema",
-    "photo_theme": "",
+    "photo_theme": "server monitoring",
     "description": "Monitoramento em tempo real do seu sistema",
     "folder": "cortex-p1/status",
     "fonts": {
