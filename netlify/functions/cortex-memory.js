@@ -273,3 +273,82 @@ exports.save         = save;
 exports.clear        = clear;
 exports.buildContext = buildContext;
 exports.extractEntities = extractEntities;
+
+// ── Funções puras para gerenciamento de lições ────────────────────
+
+/**
+ * Adiciona uma nova lição à lista, garantindo que contenha os campos obrigatórios
+ * e mantendo no máximo as últimas 30 lições
+ * @param {Array} lessons - Array atual de lições
+ * @param {Object} lessonData - Objeto com data, tentativa, erro e regra
+ * @returns {Array} Nova lista de lições com a nova lição adicionada e limitada a 30
+ */
+function addLesson(lessons = [], lessonData) {
+  // Validação dos campos obrigatórios
+  if (!lessonData || typeof lessonData !== 'object') {
+    throw new Error('lessonData deve ser um objeto com data, tentativa, erro e regra');
+  }
+  
+  const requiredFields = ['data', 'tentativa', 'erro', 'regra'];
+  for (const field of requiredFields) {
+    if (lessonData[field] === undefined || lessonData[field] === null) {
+      throw new Error(`Campo obrigatório '${field}' está faltando na lição`);
+    }
+  }
+  
+  // Adiciona a nova lição com timestamp
+  const newLesson = {
+    ...lessonData,
+    createdAt: new Date().toISOString()
+  };
+  
+  // Adiciona ao início do array (mais recente primeiro) e limita a 30
+  const updatedLessons = [newLesson, ...lessons].slice(0, 30);
+  
+  return updatedLessons;
+}
+
+/**
+ * Retorna a lista atual de lições
+ * @param {Array} lessons - Array de lições
+ * @returns {Array} Lista de lições
+ */
+function getLessons(lessons = []) {
+  return Array.isArray(lessons) ? lessons : [];
+}
+
+/**
+ * Formata as últimas 5 a 8 lições para injetar no prompt dos agentes
+ * @param {Array} lessons - Array de lições
+ * @param {number} minCount - Número mínimo de lições a formatar (padrão: 5)
+ * @param {number} maxCount - Número máximo de lições a formatar (padrão: 8)
+ * @returns {string} Lições formatadas para o prompt
+ */
+function formatLessonsForPrompt(lessons = [], minCount = 5, maxCount = 8) {
+  const lessonsList = getLessons(lessons);
+  
+  // Valida os parâmetros de contagem
+  if (minCount < 1) minCount = 1;
+  if (maxCount < minCount) maxCount = minCount;
+  
+  // Seleciona as lições mais recentes (últimas do array)
+  const selectedCount = Math.min(
+    Math.max(minCount, maxCount),
+    lessonsList.length
+  );
+  
+  const selectedLessons = lessonsList.slice(0, selectedCount);
+  
+  // Formata as lições para o prompt
+  return selectedLessons.map((lesson, index) => {
+    return `Lição ${index + 1} (${new Date(lesson.createdAt).toLocaleDateString()}):
+- Tentativa: ${lesson.tentativa}
+- Erro: ${lesson.erro}
+- Regra: ${lesson.regra}`;
+  }).join('\n\n');
+}
+
+// Exporta as funções de lições
+exports.addLesson = addLesson;
+exports.getLessons = getLessons;
+exports.formatLessonsForPrompt = formatLessonsForPrompt;
