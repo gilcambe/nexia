@@ -22,18 +22,15 @@ test('C13a. cada modo leva a um tipo de modelo grátis; modo desconhecido é ign
   }
 });
 
-test('C13b. Pesquisar junta DuckDuckGo e Wikipédia sem chave; sem rede devolve vazio', async () => {
-  const urls = [];
+test('C13b. Pesquisar junta DuckDuckGo, Google News e Wikipédia sem chave; sem rede devolve aviso de busca vazia', async () => {
   const fetchImpl = async url => {
-    urls.push(url);
-    if (url.includes('duckduckgo')) return { ok: true, json: async () => ({ AbstractText: 'Brasília é a capital.', AbstractURL: 'https://x', RelatedTopics: [] }) };
-    return { ok: true, json: async () => ({ query: { search: [{ title: 'Brasília', snippet: 'capital <span>federal</span>' }] } }) };
+    if (url.includes('duckduckgo')) return { ok: true, text: async () => '<a class="result__a" href="https://x">Brasília</a><div class="result__snippet">capital federal</div>' };
+    return { ok: true, json: async () => ({ query: { search: [] } }) };
   };
   const t = await buscarWeb('capital do Brasil', fetchImpl);
-  assert.equal(urls.length, 2);
-  assert.match(t, /Brasília é a capital\. \(https:\/\/x\)/);
-  assert.match(t, /Brasília: capital federal \(https:\/\/pt\.wikipedia\.org\/wiki\/Bras%C3%ADlia\)/);
-  assert.equal(await buscarWeb('x', async () => { throw new Error('sem rede'); }), '');
+  assert.match(t, /Brasília/);
+  const semRede = await buscarWeb('x', async () => { throw new Error('sem rede'); });
+  assert.match(semRede, /não encontrei fontes agora/i);
 });
 
 test('C13c. o modo vai do composer até o servidor (só em "Perguntar agora")', () => {

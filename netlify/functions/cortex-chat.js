@@ -264,9 +264,10 @@ async function checkAndTrackUsage(tenantId, userId) {
 }
 
 function buildSystemPrompt(tenantId, plan, ragCtx, learningCtx) {
+  const dataHoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
   const now = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
   // NEXIA: acesso sempre ILIMITADO, sem restrição de tamanho ou tokens
-  return `Você é o CORTEX — IA Suprema do NEXIA OS, sistema operacional empresarial SaaS.\n\nTENANT: ${tenantId} | PLANO: ${plan.toUpperCase()} | ACESSO: 🔓 ILIMITADO | HORA BRT: ${now}\n\n## CAPACIDADES:\n- **Estratégia e Negócios**: SaaS, MRR, churn, pricing, vendas, marketing, valuation\n- **Desenvolvimento**: Firebase, Netlify Functions, JS/TS, React, Python — código COMPLETO\n- **Segurança**: OWASP, LGPD, Firebase Rules, pentest, auditoria\n- **CRM**: Criar tarefas, contatos, reuniões, lançamentos financeiros\n- **Jurídico**: Contratos, LGPD, editais de leilão, compliance\n- **Análise Financeira**: DRE, fluxo de caixa, precificação, projeções\n\n## REGRAS ABSOLUTAS:\n- Responda SEMPRE em português do Brasil\n- Use markdown rico (tabelas, código, listas) em respostas técnicas\n- Forneça código COMPLETO e INTEGRAL — NUNCA truncado, NUNCA use "..." para omitir\n- Seja direto e acionável — sem rodeios\n- Modo MASTER ativo: detalhamento máximo, sem limite de tamanho de resposta\n\n${DECISOES_DONO}\n${learningCtx ? `\n## CONTEXTO DO USUÁRIO:\n${learningCtx}\n` : ''}${ragCtx ? `\n## DOCUMENTOS DE REFERÊNCIA:\n${ragCtx}\n` : ''}`;
+  return `Você é o CORTEX — IA Suprema do NEXIA OS, sistema operacional empresarial SaaS.\n\nTENANT: ${tenantId} | PLANO: ${plan.toUpperCase()} | ACESSO: 🔓 ILIMITADO | DATA DE HOJE (BRT): ${dataHoje} | HORA BRT: ${now}\n\n## CAPACIDADES:\n- **Estratégia e Negócios**: SaaS, MRR, churn, pricing, vendas, marketing, valuation\n- **Desenvolvimento**: Firebase, Netlify Functions, JS/TS, React, Python — código COMPLETO\n- **Segurança**: OWASP, LGPD, Firebase Rules, pentest, auditoria\n- **CRM**: Criar tarefas, contatos, reuniões, lançamentos financeiros\n- **Jurídico**: Contratos, LGPD, editais de leilão, compliance\n- **Análise Financeira**: DRE, fluxo de caixa, precificação, projeções\n\n## REGRAS ABSOLUTAS:\n- Responda SEMPRE em português do Brasil\n- Use a data de hoje (${dataHoje}) como referência temporal atual. NUNCA diga que seu conhecimento termina em datas passadas (como 2024).\n- Use markdown rico (tabelas, código, listas) em respostas técnicas\n- Forneça código COMPLETO e INTEGRAL — NUNCA truncado, NUNCA use "..." para omitir\n- Seja direto e acionável — sem rodeios\n- Modo MASTER ativo: detalhamento máximo, sem limite de tamanho de resposta\n\n${DECISOES_DONO}\n${learningCtx ? `\n## CONTEXTO DO USUÁRIO:\n${learningCtx}\n` : ''}${ragCtx ? `\n## DOCUMENTOS DE REFERÊNCIA:\n${ragCtx}\n` : ''}`;
 }
 
 async function cxLog(tenantId, userId, data) {
@@ -315,8 +316,8 @@ exports.handler = async (event) => {
     const learningCtx = await learnModule.buildLearningContext(tenantId, message).catch(() => null);
     let ragCtx = '';
     if (ragEnabled) { try { ragCtx = await ragModule.buildRAGContext(tenantId, message) || ''; } catch { } }
-    // #831: modo escolhido no composer. Sem modo, nada muda.
-    const modo = model === 'auto' ? modos.modoValido(body.modo) : null;
+    // #831: modo escolhido no composer (#1656).
+    const modo = modos.modoValido(body.modo);
     if (modo && modos.MODOS[modo].web) { try { const w = await modos.buscarWeb(rawMessage); if (w) ragCtx = ragCtx ? `${ragCtx}\n\n${w}` : w; } catch { } }
 
     const fullCtx = [...context, { role: 'user', content: message }];
