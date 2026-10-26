@@ -40,6 +40,8 @@ function populateProcessEnv(env) {
   // porque o build do wrangler troca `process.env.NODE_ENV` escrito por extenso por uma constante.
   const NODE_ENV = 'NODE_ENV';
   if (!process.env[NODE_ENV]) process.env[NODE_ENV] = 'production';
+  // #1671: o binding do Workers AI não é texto, então não cabe em process.env; fica num global para os anexos.
+  if (env && env.AI) globalThis.__NEXIA_AI__ = env.AI;
 }
 
 async function readBody(request) {
