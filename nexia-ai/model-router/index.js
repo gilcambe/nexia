@@ -134,14 +134,18 @@ function createRouter(o = {}) {
 
     const remainingTime = () => Math.max(10, totalTimeoutMs - (Date.now() - startTime));
 
-    const timeoutPromise = (ms, msg) => new Promise((_, reject) => {
-      const timer = setTimeout(() => {
-        const err = new ModelError(CODES.UPSTREAM, msg || 'Timeout');
-        err.isTimeout = true;
-        reject(err);
-      }, ms);
-      if (timer.unref) timer.unref();
-    });
+    const timeoutPromise = (ms, msg) => {
+      let timer;
+      const promise = new Promise((_, reject) => {
+        timer = setTimeout(() => {
+          const err = new ModelError(CODES.UPSTREAM, msg || 'Timeout');
+          err.isTimeout = true;
+          reject(err);
+        }, ms);
+        if (timer.unref) timer.unref();
+      });
+      return { promise, cancel: () => clearTimeout(timer) };
+    };
 
     let currentReq = req;
     let accumulatedText = '';
