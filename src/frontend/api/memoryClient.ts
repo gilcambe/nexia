@@ -28,21 +28,13 @@ const getAuthHeaders = () => {
   };
 };
 
-// Função para gerar token CSRF (simulação - no real seria do servidor)
-const getCsrfToken = () => {
-  return typeof window !== 'undefined' ? localStorage.getItem('csrfToken') : null;
-};
-
-// Função para adicionar delay e simular rate limiting
-const rateLimitDelay = () => {
-  return new Promise(resolve => setTimeout(resolve, 100));
-};
+// NOTA: CSRF tokens agora são gerados pelo backend e enviados via HttpOnly cookies
+// O navegador envia automaticamente o cookie com as requisições, sem exposição a XSS
+// A proteção real contra rate limiting é implementada no backend, não no frontend
 
 export const memoryClient = {
   // Lista todos os fatos do usuário
   async getMemoryItems(): Promise<MemoryItem[]> {
-    await rateLimitDelay();
-    
     const response = await fetch(`${API_BASE_URL}/items`, {
       headers: getAuthHeaders(),
     });
@@ -64,14 +56,9 @@ export const memoryClient = {
 
   // Exclui um fato individual
   async deleteMemoryItem(id: string): Promise<void> {
-    await rateLimitDelay();
-    
     const response = await fetch(`${API_BASE_URL}/items/${id}`, {
       method: 'DELETE',
-      headers: {
-        ...getAuthHeaders(),
-        'X-CSRF-Token': getCsrfToken() || '',
-      },
+      headers: getAuthHeaders(), // CSRF token enviado automaticamente via HttpOnly cookie
     });
     
     if (!response.ok) {
@@ -87,14 +74,9 @@ export const memoryClient = {
 
   // Exclui todos os fatos
   async deleteAllMemoryItems(): Promise<void> {
-    await rateLimitDelay();
-    
     const response = await fetch(`${API_BASE_URL}/items`, {
       method: 'DELETE',
-      headers: {
-        ...getAuthHeaders(),
-        'X-CSRF-Token': getCsrfToken() || '',
-      },
+      headers: getAuthHeaders(), // CSRF token enviado automaticamente via HttpOnly cookie
     });
     
     if (!response.ok) {
@@ -109,15 +91,14 @@ export const memoryClient = {
   },
 
   // Atualiza o flag "lembrar de mim"
+  // NOTA: O backend deve validar e impor as regras de LGPD para armazenamento de novos fatos
+  // quando esta opção estiver desativada, garantindo conformidade total
   async updateRememberMe(enabled: boolean): Promise<void> {
-    await rateLimitDelay();
-    
     const response = await fetch(`${API_BASE_URL}/profile`, {
       method: 'PATCH',
       headers: {
         ...getAuthHeaders(),
         'Content-Type': 'application/json',
-        'X-CSRF-Token': getCsrfToken() || '',
       },
       body: JSON.stringify({ rememberMe: enabled }),
     });
@@ -135,8 +116,6 @@ export const memoryClient = {
 
   // Obtém o perfil do usuário
   async getUserProfile(): Promise<UserProfile> {
-    await rateLimitDelay();
-    
     const response = await fetch(`${API_BASE_URL}/profile`, {
       headers: getAuthHeaders(),
     });
