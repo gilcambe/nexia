@@ -15,7 +15,7 @@ export default function Footer() {
           </nav>
         </div>
         <div className="mt-8 border-t border-gray-800 pt-8 text-center sm:text-left">
-          <p className="text-xs text-gray-500">© 2026 NEXIA. Todos os direitos reservados.</p>
+          <p className="text-xs text-gray-500">© {new Date().getFullYear()} NEXIA. Todos os direitos reservados.</p>
         </div>
       </div>
     </footer>
