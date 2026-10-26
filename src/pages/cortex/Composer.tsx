@@ -84,15 +84,14 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
       if (entendido && f.type.startsWith("image/")) bloco = `![${f.name}](${await reduzirImagem(f).catch(() => "")})\n\n${entendido}`;
       else if (entendido) bloco = entendido;
       else if (f.type.startsWith("image/")) bloco = `![${f.name}](${await reduzirImagem(f)})`;
-      else if (f.type.startsWith("text/") || /\.(txt|md|js|ts|tsx|jsx|json|css|html|yml|yaml|csv|log|sql|sh|py)$/i.test(f.name)) {
+      else if (f.type.startsWith("text/") || /\.(txt|md|js|ts|tsx|jsx|json|css|html|yml|yaml|csv|log|sql|sh|py|xlsx|xls|ods)$/i.test(f.name)) {
         if (f.size > 60_000) { setAviso("Esse arquivo de texto passa de 60 KB. Mande só o trecho que importa."); return; }
         bloco = `Arquivo \`${f.name}\`:\n\`\`\`\n${await f.text()}\n\`\`\``;
       } else {
-        if (f.size > 30_000) { setAviso("Esse tipo de arquivo só entra até 30 KB. Para PDF ou arquivo grande, mande para a Claude pelo chat."); return; }
-        bloco = `Arquivo \`${f.name}\` (${f.type || "tipo desconhecido"}): [abrir](data:${f.type || "application/octet-stream"};base64,${await paraBase64(f)})`;
+        setAviso(`Não consegui ler o arquivo \`${f.name}\`.`); return;
       }
       setAnexos((a) => [...a, { nome: f.name, md: bloco }]);
-    } catch { setAviso("Não consegui ler esse arquivo."); }
+    } catch { setAviso(`Não consegui ler o arquivo \`${f.name}\`.`); }
   };
 
   const ditar = () => {
