@@ -4,7 +4,6 @@
  * e expõe o roteador de chat/SSE usado pelo worker principal.
  */
 
-const API_BASE = env.NEXIA_APP_URL || 'https://api.nexia.example';
 
 const existingRoutes = [
   '/api/cortex',
@@ -78,6 +77,7 @@ export function chatRoutes(request, env, ctx) {
 }
 
 async function forwardToHandler(route, request, env) {
+  const API_BASE = env.NEXIA_APP_URL || 'https://api.nexia.example';
   // Adicionar autenticação básica para rotas existentes
   if (!request.headers.get('Authorization')) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
