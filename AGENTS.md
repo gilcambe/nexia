@@ -6,6 +6,7 @@ Este arquivo vale para Jules, Codex, Copilot, Antigravity/Gemini, Claude ou qual
 Gildivan (gcbezerra@gmail.com). Não é programador e escreve em português. Responda curto, simples e em passos numerados.
 
 ## Regras que nunca mudam
+0. **Escada de trabalho (regra do dono):** primeiro o Cortex, depois as IAs grátis ajudantes (Jules, Gemini CLI), e só por último o Claude Code, que termina a tarefa e se retira. Detalhes e rótulos em `docs/ESCADA-IA.md`.
 1. **O Cortex escreve o código.** Funcionalidade nova ou correção simples vira uma issue com o rótulo `cortex-fila`. Escreva código direto só para tarefa difícil em que o Cortex já falhou, e depois devolva ao Cortex. Exceção: no Body Coach, quando o Cortex faria o dono esperar, a IA pode fazer e depois fecha a issue do Cortex.
 2. **Nada pago.** Use só planos grátis: Firebase sem Blaze, Cloudflare Workers grátis e GitHub Actions. Nunca ligue um provedor ou serviço que cobre.
 3. **Nunca mostre, peça ou grave segredos.** Chaves ficam só em GitHub Secrets ou nas variáveis do Cloudflare. Se precisar de uma chave nova, diga o nome do segredo, e o dono coloca.

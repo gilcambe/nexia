@@ -8,6 +8,7 @@ Atualizado em 26/10/2026. Complementa `docs/CONTEXTO-IA.md` (regras). A Central 
 - Marca pública **Kernex**; nomes internos seguem `nexia`.
 
 ## Como o trabalho é dividido
+- **Escada obrigatória:** 1) Cortex; 2) IAs grátis ajudantes (Jules, Gemini CLI); 3) Claude Code só se a cota grátis do dia acabou, e ele se retira quando a cota volta. Ver `docs/ESCADA-IA.md`.
 - O Cortex escreve o código (issues `cortex-fila`, cada uma com menos de 4.000 letras; diga "Copie EXATAMENTE" quando passar código pronto).
 - Tarefas grandes podem ir para o Jules (grátis) pelo auto-Jules do Cortex.
 - Claude (ou outra IA) só revisa PRs, testa e escreve código quando o Cortex falhou.
