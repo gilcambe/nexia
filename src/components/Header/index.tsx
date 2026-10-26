@@ -38,17 +38,17 @@ export default function Header() {
           </div>
         </div>
       </div>
-      <nav id="menu-mobile" className={`md:hidden ${aberto ? 'block' : 'hidden'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 border-t border-slate-100">
-          <ul className="space-y-2 text-sm font-medium">
+      <nav id="menu-mobile" className={`md:hidden fixed inset-0 z-40 bg-slate-900/95 ${aberto ? 'block' : 'hidden'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <ul className="space-y-4 text-sm font-medium">
             <li>
-              <a href="#" className="block px-3 py-2 rounded hover:bg-slate-100 text-slate-600 hover:text-indigo-600">Início</a>
+              <a href="/cortex" className="block px-3 py-2 rounded hover:bg-white/10 text-white hover:text-indigo-300">Início</a>
             </li>
             <li>
-              <a href="#" className="block px-3 py-2 rounded hover:bg-slate-100 text-slate-600 hover:text-indigo-600">Conversa</a>
+              <a href="/cortex/conversa" className="block px-3 py-2 rounded hover:bg-white/10 text-white hover:text-indigo-300">Conversa</a>
             </li>
             <li>
-              <a href="#" className="block px-3 py-2 rounded hover:bg-slate-100 text-slate-600 hover:text-indigo-600">Pedidos</a>
+              <a href="/cortex/pedidos" className="block px-3 py-2 rounded hover:bg-white/10 text-white hover:text-indigo-300">Pedidos</a>
             </li>
           </ul>
         </div>
