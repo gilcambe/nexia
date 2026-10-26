@@ -28,6 +28,7 @@ export default function MemorySettings() {
   const handleDeleteAll = () => {
     setIsDeletingAll(true);
     deleteAllItems();
+    setMemoryItems([]);
     setIsDeletingAll(false);
   };
 
