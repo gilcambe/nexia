@@ -3,8 +3,8 @@
     "kind": "system",
     "name": "Cortex-p1",
     "tagline": "Sistema inteligente de gestão de clientes e cadastros",
-    "photo_theme": "",
-    "description": "Sistema inteligente de gestão de clientes e cadastros",
+    "photo_theme": "business dashboard",
+    "description": "Sistema inteligente de gestão de clientes e cadastros com integração Firebase",
     "folder": "sites/cortex-p1",
     "fonts": {
       "heading": "Plus Jakarta Sans",
