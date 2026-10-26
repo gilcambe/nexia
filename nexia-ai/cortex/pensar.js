@@ -20,6 +20,11 @@ async function pensar(params) {
     throw new Error('Prompt é obrigatório para o modo Pensar');
   }
   
+  // Timeout global para toda a operação
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Timeout global de 40s excedido')), timeout);
+  });
+  
   const resultado = {
     modo: 'pensar',
     prompt,
@@ -36,7 +41,10 @@ async function pensar(params) {
   let tentativa = 0;
   const maxTentativas = 2;
   
-  while (tentativa <= maxTentativas) {
+  // Executa o modo Pensar com timeout global
+  const resultadoOperacao = await Promise.race([
+    (async () => {
+      while (tentativa < maxTentativas) {
     tentativa++;
     resultado.voltas = tentativa;
     
@@ -147,18 +155,14 @@ async function pensar(params) {
       
       resultado.status = 'erro';
       resultado.erro = error.message;
-    }
-  }
+        }
+      }
+      return resultado;
+    })(),
+    timeoutPromise
+  ]);
   
-  // Define certeza final (baixa se falhou após 2 voltas)
-  if (resultado.status === 'falha') {
-    resultado.certeza = 'Baixa';
-  } else if (resultado.certezas.length > 0) {
-    const mediaCerteza = resultado.certezas.reduce((a, b) => a + b, 0) / resultado.certezas.length;
-    resultado.certeza = mediaCerteza > 0.7 ? 'Alta' : mediaCerteza > 0.4 ? 'Média' : 'Baixa';
-  }
-  
-  return resultado;
+  return resultadoOperacao;
 }
 
 /**
@@ -173,38 +177,59 @@ async function conferirResposta(params) {
       setTimeout(() => reject(new Error('Timeout na conferência')), timeout);
     });
     
-    // Prepara uma função de verificação simples
-    const verificarResposta = async () => {
-      // Verifica básica: resposta não vazia e contém conteúdo relevante
-      if (!resposta || typeof resposta !== 'string' || resposta.trim().length < 10) {
-        return { ok: false, output: 'Resposta vazia ou muito curta', erro: 'Resposta inválida' };
-      }
-      
-      // Verificação de consistência: prompt e resposta devem ter relação
-      const promptPalavras = prompt.toLowerCase().split(' ').filter(p => p.length > 2);
-      const respostaPalavras = resposta.toLowerCase().split(' ').filter(r => r.length > 2);
-      
-      const palavrasComuns = promptPalavras.filter(p => respostaPalavras.includes(p));
-      const consistencia = palavrasComuns.length / promptPalavras.length;
-      
-      if (consistencia < 0.1) {
-        return { 
-          ok: false, 
-          output: `Baixa consistência: ${Math.round(consistencia * 100)}% de palavras em comum`,
-          erro: 'Resposta não parece relacionada ao prompt'
-        };
-      }
-      
-      // Verificação de estrutura básica
-      if (!resposta.includes('.') && !resposta.includes('?') && !resposta.includes('!')) {
-        return { 
-          ok: false, 
-          output: 'Resposta sem pontuação básica',
-          erro: 'Formato de resposta inválido'
-        };
-      }
-      
-      return { ok: true, output: 'Conferência passou', erro: null };
+    // Função de verificação isolada em new Function com timeout
+    const verificarResposta = () => {
+      return new Promise((resolve) => {
+        // Timeout para a execução isolada
+        const execTimeout = setTimeout(() => {
+          resolve({ ok: false, output: 'Timeout na execução isolada', erro: 'Execução muito longa' });
+        }, Math.min(timeout, 5000)); // Máximo 5s para execução isolada
+        
+        try {
+          // Execução isolada do código de verificação
+          const resultadoVerificacao = (new Function(
+            'prompt', 'resposta',
+            `
+              // Verifica básica: resposta não vazia e contém conteúdo relevante
+              if (!resposta || typeof resposta !== 'string' || resposta.trim().length < 10) {
+                return { ok: false, output: 'Resposta vazia ou muito curta', erro: 'Resposta inválida' };
+              }
+              
+              // Verificação de consistência: prompt e resposta devem ter relação
+              const promptPalavras = prompt.toLowerCase().split(' ').filter(p => p.length > 2);
+              const respostaPalavras = resposta.toLowerCase().split(' ').filter(r => r.length > 2);
+              
+              const palavrasComuns = promptPalavras.filter(p => respostaPalavras.includes(p));
+              const consistencia = palavrasComuns.length / promptPalavras.length;
+              
+              if (consistencia < 0.1) {
+                return { 
+                  ok: false, 
+                  output: 'Baixa consistência: resposta não parece relacionada ao prompt',
+                  erro: 'Consistência insuficiente'
+                };
+              }
+              
+              // Verificação de estrutura básica
+              if (!resposta.includes('.') && !resposta.includes('?') && !resposta.includes('!')) {
+                return { 
+                  ok: false, 
+                  output: 'Resposta sem pontuação básica',
+                  erro: 'Formato de resposta inválido'
+                };
+              }
+              
+              return { ok: true, output: 'Conferência passou', erro: null };
+            `
+          ))(prompt, resposta);
+          
+          clearTimeout(execTimeout);
+          resolve(resultadoVerificacao);
+        } catch (error) {
+          clearTimeout(execTimeout);
+          resolve({ ok: false, output: 'Erro na execução isolada: ' + error.message, erro: error.message });
+        }
+      });
     };
     
     // Executa com timeout
