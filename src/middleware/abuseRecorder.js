@@ -8,7 +8,7 @@ const INJECTION_PATTERNS = [
   /<script/i,
   /javascript:/i,
   /onerror\\s*=/i,
-  /eval\\s*\\(/i,
+  /eval\s*\(/i,
   /\\$\\s*where/i,
   /this\\.constructor/i,
   /__proto__/i,
