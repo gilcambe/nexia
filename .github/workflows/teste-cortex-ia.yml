@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   testar:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # Ubuntu 26 (ubuntu-latest desde 19/10) quebra o playwright install --with-deps
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
