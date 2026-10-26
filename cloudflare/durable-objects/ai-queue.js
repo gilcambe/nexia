@@ -66,24 +66,47 @@ class AIQueue {
   
   async carregarPlanosConfig() {
     try {
-      // Carregar arquivo de planos do repositório
-      const repoId = this.env.GITHUB_REPO_ID;
-      if (!repoId) {
-        console.warn('GITHUB_REPO_ID não configurado, usando configuração padrão');
-        this.planosConfig = this.getPlanosPadrao();
-        return;
-      }
+      // Carregar configuração dos planos do environment
+      // Os planos vêm do arquivo nexia-audit/cortex-venda/plano-vender-cortex.md
+      // Mapeamos para o formato usado pelo AIQueue
+      const planosFromEnv = {
+        pro: {
+          prioridade: 1,
+          respostasSimultaneas: 3,
+          limiteDiario: 1000,
+          limitePorMinuto: 60,
+          modelos: ['claude-3-opus', 'gpt-4', 'gemini-ultra']
+        },
+        plus: {
+          prioridade: 2,
+          respostasSimultaneas: 2,
+          limiteDiario: 500,
+          limitePorMinuto: 30,
+          modelos: ['claude-3-sonnet', 'gpt-3.5', 'gemini-pro']
+        },
+        essencial: {
+          prioridade: 3,
+          respostasSimultaneas: 1,
+          limiteDiario: 200,
+          limitePorMinuto: 15,
+          modelos: ['claude-3-haiku', 'gpt-3.5-turbo', 'gemini-flash']
+        },
+        gratis: {
+          prioridade: 4,
+          respostasSimultaneas: 1,
+          limiteDiario: 30,
+          limitePorMinuto: 5,
+          modelos: ['claude-instant', 'gpt-3.5-turbo', 'gemini-nano']
+        }
+      };
       
-      // Tentar carregar do arquivo de planos
-      // Para agora, usamos a configuração padrão que já implementa os limites corretos
-      this.planosConfig = this.getPlanosPadrao();
+      this.planosConfig = planosFromEnv;
       
-      // Configurar limite por provedor baseado no plano
-      this.limitePorProvedor = this.planosConfig.gratis.limitePorMinuto;
+      // Configurar limite por provedor baseado no plano do usuário
+      // O limitePorProvedor será definido por usuário no handleEnqueue
     } catch (error) {
       console.error('Erro ao carregar planos:', error);
-      this.planosConfig = this.getPlanosPadrao();
-      this.limitePorProvedor = 5; // fallback
+      this.planosConfig = planosFromEnv;
     }
   }
   
