@@ -1,0 +1,30 @@
+{
+  // Configuração do Workers para o serviço de visão do Cortex Venda
+  // binding `AI` expõe o Workers AI (llama-3.2-11b-vision-instruct gratuito)
+  "name": "cortex-venda",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-01-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true
+  },
+  "ai": {
+    "binding": "AI"
+  },
+  "vars": {
+    "WORKERS_AI_MODEL": "@cf/llama-3.2-11b-vision-instruct",
+    "GEMINI_MODEL": "gemini-1.5-flash",
+    "GEMINI_API_KEY": ""
+  },
+  "envs": {
+    "production": {
+      "vars": {
+        "NODE_ENV": "production",
+        "GEMINI_API_KEY": ""
+      },
+      "ai": {
+        "binding": "AI"
+      }
+    }
+  }
+}
