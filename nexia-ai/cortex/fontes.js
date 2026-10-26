@@ -6,7 +6,7 @@
 // "(fonte não confirmada)". Também calcula o grau de certeza (alta/média/baixa) e
 // detecta assunto sensível (saúde, lei, dinheiro).
 
-const NUM = /^\[(\d+)\]$/;
+const NUM = /\[(\d+)\]$/;
 
 // Assuntos sensíveis (saúde, lei, dinheiro) — com certeza baixa, pede confirmação profissional.
 const SENSIVEIS = [
