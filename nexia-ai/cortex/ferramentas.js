@@ -186,7 +186,7 @@ async function calcular({ expressao }) {
     .replace(/\^/g, '**');
   
   // Validar: apenas números, operadores e parêntesis permitidos
-  if (!/^\d+[\d %*/^().]+$/.test(processed.replace(/%/g, ''))) {
+  if (!/^\d+[\d %*/\^().]+$/.test(processed.replace(/%/g, ''))) {
     return '❌ Expressão inválida: use apenas números e + - * / ^ ( ) %';
   }
   
