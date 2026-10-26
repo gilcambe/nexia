@@ -22,6 +22,30 @@ self.onmessage = function (event) {
         return String(a);
       });
       stdout += parts.join(' ') + '\n';
+    },
+    error: function () {
+      const parts = Array.prototype.map.call(arguments, function (a) {
+        return String(a);
+      });
+      stdout += 'ERROR: ' + parts.join(' ') + '\n';
+    },
+    warn: function () {
+      const parts = Array.prototype.map.call(arguments, function (a) {
+        return String(a);
+      });
+      stdout += 'WARN: ' + parts.join(' ') + '\n';
+    },
+    info: function () {
+      const parts = Array.prototype.map.call(arguments, function (a) {
+        return String(a);
+      });
+      stdout += 'INFO: ' + parts.join(' ') + '\n';
+    },
+    debug: function () {
+      const parts = Array.prototype.map.call(arguments, function (a) {
+        return String(a);
+      });
+      stdout += 'DEBUG: ' + parts.join(' ') + '\n';
     }
   };
 
