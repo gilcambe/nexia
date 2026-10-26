@@ -20,16 +20,18 @@ async function createAbuseLog(data) {
     userId: data.userId || null,
     tipo: data.tipo || 'outro',
     detalhes: data.detalhes || '',
-    timestamp: data.timestamp || admin.firestore.FieldValue.serverTimestamp(),
-    createdAt: admin.firestore.FieldValue.serverTimestamp()
+    timestamp: data.timestamp || admin.firestore.FieldValue.serverTimestamp()
   };
-  
+
   const docRef = db.collection('abuseLogs').doc();
   await docRef.set(logData);
-  
+
   return {
     id: docRef.id,
-    ...logData,
+    ip: logData.ip,
+    userId: logData.userId,
+    tipo: logData.tipo,
+    detalhes: logData.detalhes,
     timestamp: logData.timestamp.toDate ? logData.timestamp.toDate() : logData.timestamp
   };
 }
