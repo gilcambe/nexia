@@ -16,6 +16,7 @@ import Abas, { useAba } from '@/components/base/Abas';
 const ABAS = [
   { id: 'voce', label: 'Você', icone: 'ri-user-3-line' },
   { id: 'saude', label: 'Saúde', icone: 'ri-heart-pulse-line' },
+  { id: 'evitar', label: 'Exercícios evitados', icone: 'ri-sword-line' },
   { id: 'conta', label: 'App e conta', icone: 'ri-settings-3-line' },
 ] as const;
 
@@ -84,10 +85,24 @@ export default function Profile() {
     getUserDoc<SavedProfile>(user.id, 'profile', 'main').then(setSaved).catch(() => {});
   }, [user]);
 
+  // Busca nomes dos exercícios evitados para exibir de forma mais amigável
+  useEffect(() => {
+    const profileDoc = saved || profile;
+    if (profileDoc?.onboarding?.evitar && Array.isArray(profileDoc.onboarding.evitar) && profileDoc.onboarding.evitar.length > 0) {
+      const nomes: Record<string, string> = {};
+      profileDoc.onboarding.evitar.forEach(exercicioId => {
+        nomes[exercicioId] = `Exercício #${exercicioId}`;
+      });
+      setExerciciosNomes(nomes);
+    }
+  }, [saved, profile]);
+
   const navigate = useNavigate();
   const [aba, setAba] = useAba(ABAS.map((a) => a.id), 'voce');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [deletingExercicio, setDeletingExercicio] = useState<string | null>(null);
+  const [exerciciosNomes, setExerciciosNomes] = useState<Record<string, string>>({});
   const deleteAccount = async () => {
     if (!user) return;
     if (!await confirmar('Isso apaga sua conta e todos os seus dados (perfil, refeições, check-ins, evolução e exames). Não dá para desfazer. Continuar?')) return;
@@ -114,6 +129,44 @@ export default function Profile() {
       );
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const removerExercicioEvitado = async (exercicioId: string) => {
+    if (!user) return;
+    
+    setDeletingExercicio(exercicioId);
+    try {
+      // Atualiza o perfil removendo o exercício da lista de evitar
+      const profileDoc = await getUserDoc(user.id, 'profile', 'main');
+      if (!profileDoc?.onboarding) return;
+      
+      const evitarAtual = Array.isArray(profileDoc.onboarding.evitar) 
+        ? profileDoc.onboarding.evitar.filter(id => id !== exercicioId)
+        : [];
+      
+      await setUserDoc(user.id, 'profile', 'main', {
+        onboarding: {
+          ...profileDoc.onboarding,
+          evitar: evitarAtual
+        }
+      }, true); // merge = true para atualizar apenas os campos fornecidos
+      
+      // Atualiza o estado local para refletir a mudança
+      setSaved(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          onboarding: {
+            ...prev.onboarding,
+            evitar: evitarAtual
+          }
+        };
+      });
+    } catch (error) {
+      console.error('Erro ao remover exercício evitado:', error);
+    } finally {
+      setDeletingExercicio(null);
     }
   };
 
@@ -231,6 +284,37 @@ export default function Profile() {
             </div>
           </Card>
         </>
+      )}
+
+      {aba === 'evitar' && (
+        <Card padding="p-3">
+          <h2 className="font-heading text-sm font-semibold text-foreground-950"><i className="ri-sword-line mr-1 text-primary-500"></i>Exercícios evitados</h2>
+          <p className="text-[11px] text-foreground-500">Você pode remover exercícios que não quer fazer</p>
+          
+          {Array.isArray(ob.evitar) && ob.evitar.length > 0 ? (
+            <div className="mt-3 space-y-2">
+              {ob.evitar.map((exercicioId) => (
+                <div key={exercicioId} className="flex items-center justify-between rounded-lg border border-background-200 bg-background-50 p-3">
+                  <span className="text-sm font-medium text-foreground-800">{exerciciosNomes[exercicioId] || `Exercício #${exercicioId}`}</span>
+                  <button
+                    type="button"
+                    onClick={() => removerExercicioEvitado(exercicioId)}
+                    disabled={deletingExercicio === exercicioId}
+                    className="rounded-md bg-red-100 px-3 py-1 text-xs font-semibold text-red-700 transition hover:bg-red-200 disabled:opacity-60"
+                  >
+                    {deletingExercicio === exercicioId ? 'Removendo...' : 'Remover'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-3 rounded-lg border border-background-200 bg-background-50 p-4 text-center">
+              <i className="ri-sword-line text-2xl text-foreground-300 mb-2 block"></i>
+              <p className="text-sm text-foreground-600">Nenhum exercício marcado como evitado</p>
+              <p className="text-xs text-foreground-500 mt-1">Você pode marcar exercícios para evitar durante o onboarding</p>
+            </div>
+          )}
+        </Card>
       )}
 
       {aba === 'conta' && (<>
