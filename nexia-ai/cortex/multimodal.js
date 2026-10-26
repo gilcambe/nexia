@@ -10,7 +10,18 @@ const WORKERS_AI_FALLBACK = true;
  * Cada anexo é enviado como inline_data. Se houver falha ou falta de cota,
  * faz fallback para o Workers AI consolidado (#1671, #1638, #1639).
  */
-async function processarMultimodal(env, fetchImpl, opts = {}) {
+async function processarMultimodal(param1, param2, param3 = {}) {
+  // Suporte a chamada posicional (env, fetchImpl, opts) ou via objeto único ({ env, fetchImpl, mensagem, anexos, ... })
+  let env, fetchImpl, opts;
+  if (param1 && typeof param1 === 'object' && (param1.env || param1.fetchImpl || param1.mensagem || param1.anexos || param1.message || param1.attachments)) {
+    env = param1.env || {};
+    fetchImpl = param1.fetchImpl || global.fetch;
+    opts = param1;
+  } else {
+    env = param1 || {};
+    fetchImpl = param2 || global.fetch;
+    opts = param3 || {};
+  }
   const apiKey = env.GEMINI_API_KEY;
   const message = opts.message ?? opts.mensagem;
   const attachments = Array.isArray(opts.attachments) ? opts.attachments : Array.isArray(opts.anexos) ? opts.anexos : [];
