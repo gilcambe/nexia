@@ -3,53 +3,56 @@
 // Responde: { stdout: string } ou { error: string }
 
 self.onmessage = function (event) {
-  const data = event.data || {};
-  const code = data.code;
-  const timeoutMs = data.timeout && data.timeout > 0 ? data.timeout : 10000;
+  var data = event.data || {};
+  var code = data.code;
+  var timeoutMs = data.timeout && data.timeout > 0 ? data.timeout : 10000;
 
   if (typeof code !== 'string' || code.trim() === '') {
     self.postMessage({ error: 'Código não fornecido' });
     return;
   }
 
-  let stdout = '';
-  let timer = null;
+  var stdout = '';
+  var timer = null;
 
   // Sandbox: expõe apenas console, sem acesso a window, document, localStorage, etc.
-  const sandboxConsole = {
+  var sandboxConsole = {
     log: function () {
-      const parts = Array.prototype.map.call(arguments, function (a) {
+      var parts = Array.prototype.map.call(arguments, function (a) {
         return String(a);
       });
       stdout += parts.join(' ') + '\n';
     },
     error: function () {
-      const parts = Array.prototype.map.call(arguments, function (a) {
+      var parts = Array.prototype.map.call(arguments, function (a) {
         return String(a);
       });
       stdout += 'ERROR: ' + parts.join(' ') + '\n';
     },
     warn: function () {
-      const parts = Array.prototype.map.call(arguments, function (a) {
+      var parts = Array.prototype.map.call(arguments, function (a) {
         return String(a);
       });
       stdout += 'WARN: ' + parts.join(' ') + '\n';
     },
     info: function () {
-      const parts = Array.prototype.map.call(arguments, function (a) {
+      var parts = Array.prototype.map.call(arguments, function (a) {
         return String(a);
       });
       stdout += 'INFO: ' + parts.join(' ') + '\n';
     },
     debug: function () {
-      const parts = Array.prototype.map.call(arguments, function (a) {
+      var parts = Array.prototype.map.call(arguments, function (a) {
         return String(a);
       });
       stdout += 'DEBUG: ' + parts.join(' ') + '\n';
     },
-    assert: function (condition, ...args) {
+    assert: function (condition) {
       if (!condition) {
-        const message = args.length > 0 ? args.map(String).join(' ') : 'Assertion failed';
+        var message = Array.prototype.slice.call(arguments, 1).map(String).join(' ');
+        if (message === '') {
+          message = 'Assertion failed';
+        }
         stdout += 'ASSERTION FAILED: ' + message + '\n';
       }
     }
@@ -58,22 +61,18 @@ self.onmessage = function (event) {
   // Timer de interrupção (equivalente a worker.terminate() do lado de fora)
   timer = setTimeout(function () {
     self.postMessage({ error: 'Tempo esgotado (timeout de ' + timeoutMs + 'ms)' });
-    try { self.close(); } catch (e) { /* ignora */ }
+    try {
+      self.close();
+    } catch (e) {
+      /* ignora */
+    }
   }, timeoutMs);
 
   try {
-    // Função anônima com o código do usuário; apenas 'console' é injetado
-    // O código roda em um ambiente restrito sem acesso a globais
-    var fn = new Function('console', '
-      "use strict";
-      try {
-        ' + code + '
-      } catch (e) {
-        console.error(e.message || String(e));
-        throw e;
-      }
-    ');
-    
+    // Função anônima com o código do usuário; apenas 'console' é injetado.
+    // O código roda em ambiente restrito sem acesso a globais (window, document, localStorage).
+    var fn = new Function('console', '\n      "use strict";\n      try {\n        ' + code + '\n      } catch (e) {\n        console.error(e.message || String(e));\n        throw e;\n      }\n    ');
+
     fn(sandboxConsole);
 
     clearTimeout(timer);
@@ -81,15 +80,19 @@ self.onmessage = function (event) {
   } catch (err) {
     clearTimeout(timer);
     // Captura erros de referência a objetos não permitidos
-    let errorMessage = err.message || String(err);
-    if (errorMessage.includes('is not defined') || 
-        errorMessage.includes('ReferenceError') ||
-        errorMessage.includes('window') ||
-        errorMessage.includes('document') ||
-        errorMessage.includes('localStorage')) {
+    var errorMessage = err.message || String(err);
+    if (errorMessage.indexOf('is not defined') !== -1 ||
+        errorMessage.indexOf('ReferenceError') !== -1 ||
+        errorMessage.indexOf('window') !== -1 ||
+        errorMessage.indexOf('document') !== -1 ||
+        errorMessage.indexOf('localStorage') !== -1) {
       errorMessage = 'Acesso não permitido a objeto global: ' + errorMessage;
     }
     self.postMessage({ error: errorMessage });
-    try { self.close(); } catch (e) { /* ignora */ }
+    try {
+      self.close();
+    } catch (e) {
+      /* ignora */
+    }
   }
 };
