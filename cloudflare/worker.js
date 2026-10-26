@@ -10,17 +10,37 @@ import saude from './saude.js';
 import julesAuto from './jules-auto.js';
 import cacheBorda from './cacheBorda.js';
 import { VazaoController } from '../src/durable/VazaoController.js';
+import { ChatDurableObject } from '../src/worker.js';
 
 // #1662: o Cloudflare só publica se a classe do Durable Object sair do arquivo de entrada.
-export { VazaoController };
+export { VazaoController, ChatDurableObject };
 
 export default {
   async fetch(request, env, ctx) {
-    if (new URL(request.url).pathname === '/api/corpo-ia') return corpoIa(request, env);
+    const url = new URL(request.url);
+    if (url.pathname === '/api/corpo-ia') return corpoIa(request, env);
+    // Encaminha chat e SSE para o Durable Object da fila (posição + tempo estimado).
+    // Quando o binding CHAT_DO não estiver configurado, segue o fluxo normal sem quebrar nada.
+    if (url.pathname === '/chat' || url.pathname === '/sse' || url.pathname === '/api/chat' || url.pathname === '/api/sse') {
+      const doResp = await chatDurableObject(request, env);
+      if (doResp) return doResp;
+    }
     // #807: leituras públicas (config do Firebase etc.) passam pelo cache de borda (60 a 300 s).
     return cacheBorda.comCacheDeBorda(request, env, ctx,
       () => app.handleRequest(request, env, { getFunction: functions.getFunction }));
   },
+
+  // Encaminha requisições de chat/SSE para o Durable Object da fila.
+  // Retorna null quando o binding CHAT_DO não está configurado (não quebra rotas existentes).
+  async function chatDurableObject(request, env) {
+    try {
+      const id = env.CHAT_DO.idFromName('chat-fila');
+      const stub = env.CHAT_DO.get(id);
+      return stub.fetch(request);
+    } catch {
+      return null;
+    }
+  }
 
   // ADR-F12-03 + ADR-FREE-02 + ADR-AUTO-01: a cada 5 min procura Robôs NEXIA vencidos e, de hora
   // em hora, execuções paradas; havendo algo, dispara a tarefa no GitHub Actions (sem processo
