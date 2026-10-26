@@ -3,9 +3,12 @@
 .promo-video-builder {
   max-width: 600px;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1.5rem;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
   color: #111827;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .promo-video-builder .form-group {
@@ -47,7 +50,7 @@
 .promo-video-builder button.gerar-button {
   width: 100%;
   padding: 0.75rem 1rem;
-  margin-top: 0.5rem;
+  margin-top: 1rem;
   background: #2563eb;
   color: #fff;
   border: none;
@@ -55,7 +58,12 @@
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s ease;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.3);
+}
+
+.promo-video-builder button.gerar-button:active {
+  transform: translateY(1px);
 }
 
 .promo-video-builder button.gerar-button:not(:disabled):hover {
@@ -120,9 +128,66 @@
   background: #047857;
 }
 
+/* Lista de arquivos */
+.promo-video-builder .file-list {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: #f3f4f6;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.promo-video-builder .file-list p {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.promo-video-builder .file-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.promo-video-builder .file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.promo-video-builder .file-item:last-child {
+  border-bottom: none;
+}
+
+.promo-video-builder .file-name {
+  font-size: 0.9rem;
+  color: #374151;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 70%;
+}
+
+.promo-video-builder .file-size {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
 /* Responsivo: celular primeiro */
 @media (max-width: 480px) {
   .promo-video-builder {
-    padding: 0.75rem;
+    padding: 1rem;
+  }
+  
+  .promo-video-builder .file-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .promo-video-builder .file-name {
+    max-width: 100%;
+    margin-bottom: 0.25rem;
   }
 }
