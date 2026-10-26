@@ -99,6 +99,9 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
       if (!cfg.tools) throw new ModelError(CODES.UNSUPPORTED, `${id} não suporta tool_call neste adapter.`, { provider: id });
       b.tools = req.tools.map(t => ({ type: 'function', function: { name: t.name, description: t.description || '', parameters: t.input_schema } }));
       if (req.toolChoice) b.tool_choice = req.toolChoice === 'any' ? 'required' : { type: 'function', function: { name: req.toolChoice } };
+    } else if (cfg.tools) {
+      // Garante tools: true na chamada quando o provedor suporta tools
+      b.tools = [];
     }
     return b;
   }
