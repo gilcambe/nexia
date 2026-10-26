@@ -1,0 +1,289 @@
+{
+  "spec": {
+    "kind": "site",
+    "name": "Loja Teste",
+    "tagline": "Moda que inspira seu estilo",
+    "photo_theme": "fashion store",
+    "description": "Loja Teste oferece roupas, acessórios e serviços de personalização para homens e mulheres, com atendimento personalizado e entrega rápida.",
+    "folder": "demos/loja-teste",
+    "fonts": {
+      "heading": "Montserrat",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#3b73b5",
+      "accent": "#f5a623",
+      "bg": "#f0f4f8",
+      "surface": "#ffffff",
+      "text": "#1a1a1a",
+      "muted": "#616971",
+      "dark": "#0c0c0c"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "5511987654321",
+      "phone": "(11) 98765-4321",
+      "email": "contato@lojate.com.br",
+      "address": "Av. Paulista, 1000",
+      "city": "São Paulo - SP",
+      "hours": "Seg a Sex, 10h às 20h",
+      "instagram": "lojate",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=loja-teste&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "sections": [
+      {
+        "type": "hero",
+        "id": "descubra-seu-estilo",
+        "title": "Descubra seu estilo",
+        "subtitle": "Coleções exclusivas para cada ocasião.",
+        "eyebrow": "Moda urbana",
+        "cta": {
+          "label": "Comprar Agora",
+          "href": "#loja"
+        },
+        "cta2": {
+          "label": "Conheça a coleção",
+          "href": "#colecao"
+        },
+        "image_query": "fashion boutique interior",
+        "video_query": "fashion store"
+      },
+      {
+        "type": "services",
+        "id": "servicos",
+        "title": "Nossos Serviços",
+        "subtitle": "Tudo que você precisa para brilhar.",
+        "items": [
+          {
+            "title": "Roupas",
+            "text": "Trajes modernos para todas as faixas etárias.",
+            "price": "a partir de R$ 99",
+            "image_query": "clothing assortment",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Acessórios",
+            "text": "Bijuterias, bolsas e mais.",
+            "price": "a partir de R$ 29",
+            "image_query": "accessories display",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Personalização",
+            "text": "Customize seu look com nossos designers.",
+            "price": "a partir de R$ 149",
+            "image_query": "custom fashion design",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Entrega Rápida",
+            "text": "Entrega em até 24h nas regiões metropolitanas.",
+            "price": "Grátis",
+            "image_query": "delivery service",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          }
+        ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-a-loja",
+        "title": "Sobre a Loja",
+        "subtitle": "Com 5 anos de tradição no mercado de moda, a Loja Teste oferece qualidade e estilo.",
+        "text": "Com 5 anos de tradição no mercado de moda, a Loja Teste oferece qualidade e estilo.",
+        "image_query": "store interior",
+        "stats": [
+          {
+            "value": "5",
+            "label": "anos"
+          },
+          {
+            "value": "2000+",
+            "label": "clientes"
+          },
+          {
+            "value": "500+",
+            "label": "produtos"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "nossa-colecao",
+        "title": "Nossa Coleção",
+        "subtitle": "",
+        "image_queries": [
+          "fashion outfit 1",
+          "fashion outfit 2",
+          "fashion outfit 3",
+          "fashion outfit 4",
+          "fashion outfit 5",
+          "fashion outfit 6"
+        ],
+        "gif_queries": []
+      },
+      {
+        "type": "video",
+        "id": "visite-a-loja",
+        "title": "Visite a Loja",
+        "subtitle": "Explore nossos ambientes.",
+        "youtube": "dQw4w9WgXcQ",
+        "video_query": ""
+      },
+      {
+        "type": "team",
+        "id": "equipe",
+        "title": "Equipe",
+        "subtitle": "",
+        "members": [
+          {
+            "name": "Ana Silva",
+            "role": "Designer de Moda",
+            "image_query": "female fashion designer portrait"
+          }
+        ]
+      },
+      {
+        "type": "testimonials",
+        "id": "depoimentos",
+        "title": "Depoimentos",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Carlos M.",
+            "role": "",
+            "text": "Minha primeira compra foi incrível!",
+            "rating": 5
+          },
+          {
+            "name": "Mariana P.",
+            "role": "",
+            "text": "Sempre encontro algo que gosto.",
+            "rating": 5
+          },
+          {
+            "name": "José L.",
+            "role": "",
+            "text": "Entrega rápida e atendimento excelente.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "perguntas-frequentes",
+        "title": "Perguntas Frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Como faço a compra?",
+            "a": "Escolha o produto, adicione ao carrinho e conclua o pagamento."
+          },
+          {
+            "q": "Qual o prazo de entrega?",
+            "a": "Entrega em até 24h na região metropolitana."
+          },
+          {
+            "q": "Aceitam trocas?",
+            "a": "Aceitamos trocas em até 30 dias, com nota fiscal."
+          },
+          {
+            "q": "Preciso de assistência técnica?",
+            "a": "Sim, oferecemos suporte técnico via chat e telefone."
+          },
+          {
+            "q": "Como rastrear meu pedido?",
+            "a": "Você receberá um link de rastreamento no e‑mail."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "peca-agora",
+        "title": "Peça agora",
+        "subtitle": "Receba seu pedido em 24h.",
+        "cta": {
+          "label": "Comprar Agora",
+          "href": "#loja"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "fale-com-a-gente",
+        "title": "Fale com a gente",
+        "subtitle": "",
+        "map": true,
+        "form": true
+      }
+    ]
+  },
+  "media": {
+    "s0.hero": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Stockmannin_Boutique_muotin%C3%A4yt%C3%B6s_vuonna_1959.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 966,
+      "alt": "Stockmann Boutique’s fashion show in 1959.",
+      "credit": "Stockmann Museum (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s2.about": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/General_store_interior_Alabama_Walker_Evans.jpg/1280px-General_store_interior_Alabama_Walker_Evans.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1010,
+      "alt": "General store interior. Moundville, Alabama",
+      "credit": "Walker Evans (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g0": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/Bode_outfit_at_In_America_an_Anthology_of_Fashion_at_the_MET.jpg/1280px-Bode_outfit_at_In_America_an_Anthology_of_Fashion_at_the_MET.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1707,
+      "alt": "Bode outfit at In America a Lexicon of Fashion at the MET",
+      "credit": "Computer-ergonomics (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Outfit%2C_two-piece_%28AM_2005.21.2-9%29.jpg/1280px-Outfit%2C_two-piece_%28AM_2005.21.2-9%29.jpg",
+      "width": 1280,
+      "height": 1316,
+      "alt": "Outfit, two-piece",
+      "credit": "Outfit, two-piece — LANVIN (fashion house); Alber Elbaz (BY 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Gazette_of_Fashion%2C_August_1865%2C_RP-P-2009-2676.jpg/1280px-Gazette_of_Fashion%2C_August_1865%2C_RP-P-2009-2676.jpg",
+      "width": 1280,
+      "height": 895,
+      "alt": "Gazette of Fashion, August 1865, RP-P-2009-2676",
+      "credit": "Gazette of Fashion, August 1865, RP-P-2009-2676 — Rijksmuseum (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g4": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/44/Fusion_outfit_with_a_draped_panel.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 2686,
+      "alt": "A fashion design illustration of a contemporary women's outfit featuring a dark ",
+      "credit": "Sanjana Krishnamoorthy (CC BY 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    }
+  }
+}
