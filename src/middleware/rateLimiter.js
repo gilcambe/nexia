@@ -1,7 +1,12 @@
+'use strict';
+/**
+ * src/middleware/rateLimiter.js — Rate limiter usando express-rate-limit
+ * 10 requisições/10s por IP ou 10 mensagens/10s por conta autenticada,
+ * bloqueando por 1 min após excesso.
+ */
 const rateLimit = require('express-rate-limit');
 const rateLimitConfig = require('../config/rateLimit');
 
-// Armazena bloqueios temporários: { chave: timestampExpiracao }
 const bloqueios = new Map();
 
 function estaBloqueada(chave) {
@@ -16,36 +21,36 @@ function bloquear(chave) {
   bloqueios.set(chave, Date.now() + rateLimitConfig.blockDurationMs);
 }
 
-// Rate limit geral: 10 requisições por 10 segundos por IP (anônimos)
 const globalLimiter = rateLimit({
   windowMs: rateLimitConfig.windowMs,
   max: rateLimitConfig.max,
-  keyGenerator: (req) => req.ip,
-  message: rateLimitConfig.message,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.ip || '127.0.0.1',
   handler: (req, res) => {
-    bloquear(req.ip);
-    res.set('Retry-After', Math.ceil(rateLimitConfig.blockDurationMs / 1000));
-    res.status(429).json(rateLimitConfig.message);
-  }
-});
-
-// Rate limit por conta (autenticado): 10 mensagens por 10 segundos
-const authLimiter = rateLimit({
-  windowMs: rateLimitConfig.windowMs,
-  max: rateLimitConfig.max,
-  keyGenerator: (req) => (req.usuario && req.usuario.id) ? req.usuario.id : req.ip,
-  message: rateLimitConfig.message,
-  handler: (req, res) => {
-    const chave = (req.usuario && req.usuario.id) ? req.usuario.id : req.ip;
+    const chave = req.ip || '127.0.0.1';
     bloquear(chave);
     res.set('Retry-After', Math.ceil(rateLimitConfig.blockDurationMs / 1000));
     res.status(429).json(rateLimitConfig.message);
   }
 });
 
-// Middleware que aplica o rate limit correto baseado em auth status
+const authLimiter = rateLimit({
+  windowMs: rateLimitConfig.windowMs,
+  max: rateLimitConfig.max,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => (req.usuario && req.usuario.id) ? req.usuario.id : (req.user && req.user.id ? req.user.id : (req.ip || '127.0.0.1')),
+  handler: (req, res) => {
+    const chave = (req.usuario && req.usuario.id) ? req.usuario.id : (req.user && req.user.id ? req.user.id : (req.ip || '127.0.0.1'));
+    bloquear(chave);
+    res.set('Retry-After', Math.ceil(rateLimitConfig.blockDurationMs / 1000));
+    res.status(429).json(rateLimitConfig.message);
+  }
+});
+
 const rateLimiter = (req, res, next) => {
-  const chave = (req.usuario && req.usuario.id) ? req.usuario.id : req.ip;
+  const chave = (req.usuario && req.usuario.id) ? req.usuario.id : (req.user && req.user.id ? req.user.id : (req.ip || '127.0.0.1'));
 
   if (estaBloqueada(chave)) {
     const restante = Math.ceil((bloqueios.get(chave) - Date.now()) / 1000);
@@ -53,10 +58,10 @@ const rateLimiter = (req, res, next) => {
     return res.status(429).json(rateLimitConfig.message);
   }
 
-  if (req.usuario && req.usuario.id) {
-    authLimiter(req, res, next);
+  if ((req.usuario && req.usuario.id) || (req.user && req.user.id)) {
+    return authLimiter(req, res, next);
   } else {
-    globalLimiter(req, res, next);
+    return globalLimiter(req, res, next);
   }
 };
 
