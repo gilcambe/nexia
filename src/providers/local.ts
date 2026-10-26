@@ -10,7 +10,13 @@ export class ProvedorLocal {
    * inicia o loop de espera em segundo plano e retorna imediatamente o id.
    * Apenas classes internas leves são aceitas: classificar, resumir, título.
    */
-  async executar(params: { classe: string; payload: unknown }): Promise<{ id: string }> {
+  async executar(params: { classe: string; payload: unknown; actor?: { uid: string; role: string } }): Promise<{ id: string }> {
+    if (!params.actor?.uid) {
+      console.log('[local-provider] execução rejeitada sem autenticação', {
+        classe: params.classe
+      });
+      throw new Error('Autenticação obrigatória para executar no provedor local.');
+    }
     if (!CLASSES_LEVES.includes(params.classe)) {
       console.log('[local-provider] classe rejeitada', {
         classe: params.classe,
@@ -20,7 +26,11 @@ export class ProvedorLocal {
     }
 
     const id = await criarTarefaLocal(params);
-    console.log('[local-provider] tarefa inserida', { id, classe: params.classe });
+    console.log('[local-provider] tarefa inserida', {
+      id,
+      classe: params.classe,
+      actor: params.actor?.uid
+    });
 
     // Loop de espera não bloqueante: responde já com o id.
     this.aguardarResultado(id).catch(err => {

@@ -39,6 +39,9 @@ export async function obterTarefaLocal(id: string): Promise<any | null> {
 
 /** Marca como 'cancelado' as tarefas pendentes mais velhas que o limite (minutos). */
 export async function cancelarTarefasAntigas(minutos: number): Promise<number> {
+  if (!Number.isInteger(minutos) || minutos < 1 || minutos > 1440) {
+    throw new Error(`minutos inválido para cancelarTarefasAntigas: ${minutos}`);
+  }
   const resultado = await driver.run(
     `UPDATE tarefas_locais SET status = 'cancelado'
      WHERE status = 'pendente'
