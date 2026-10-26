@@ -105,6 +105,54 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
                   {imagemDe(f.texto) ? <img src={imagemDe(f.texto)!} alt="Imagem criada pelo Cortex" className="rounded-2xl max-w-full w-[512px]" data-testid="cx-imagem" /> : <Markdown texto={f.texto} />}{f.vivo && <span className="inline-block w-2 h-4 align-middle ml-0.5 bg-[var(--cx-ac)] animate-pulse" />}
                 </div>
                 {f.vivo && <button onClick={() => corte.current?.abort()} className="mt-2 h-9 px-3 rounded-xl border border-[var(--cx-line)] text-xs" data-testid="cx-parar">Parar</button>}
+                {/* Fontes, certeza e aviso de sensibilidade */}
+                {!f.vivo && f.fontes && f.fontes.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-xs text-[var(--cx-mut)] mb-1 font-medium">Fontes:</p>
+                    <div className="space-y-1">
+                      {f.fontes.map((fonte, idx) => (
+                        <button 
+                          key={idx}
+                          onClick={() => window.open(fonte, '_blank', 'noopener,noreferrer')}
+                          className="text-xs text-[var(--cx-ac)] hover:underline flex items-center gap-1"
+                        >
+                          <span className="font-mono">[{idx + 1}]</span>
+                          {fonte.length > 40 ? `${fonte.substring(0, 40)}...` : fonte}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Selo de certeza */}
+                {!f.vivo && f.certeza && !deveOmitirSelo(f) && (
+                  <div className="mt-2">
+                    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                      f.certeza === 'alta' ? 'bg-green-100 text-green-800' : 
+                      f.certeza === 'média' ? 'bg-yellow-100 text-yellow-800' : 
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      <span className="w-2 h-2 rounded-full ${
+                        f.certeza === 'alta' ? 'bg-green-500' : 
+                        f.certeza === 'média' ? 'bg-yellow-500' : 
+                        'bg-gray-500'
+                      }"></span>
+                      {f.certeza === 'alta' ? 'Alta certeza' : 
+                       f.certeza === 'média' ? 'Média certeza' : 
+                       'Baixa certeza'}
+                    </span>
+                  </div>
+                )}
+
+                {/* Aviso de sensibilidade */}
+                {!f.vivo && f.avisoSensivel && !deveOmitirSelo(f) && (
+                  <div className="mt-2">
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-2 text-xs text-amber-800">
+                      ⚠️ Esta resposta pode conter informações sensíveis. Confirme com um profissional.
+                    </div>
+                  </div>
+                )}
+
                 {!f.vivo && k > 0 && (
                   <div className="flex gap-2 mt-2">
                     {(f.texto.includes("não consegui agora") || f.texto.includes("tente de novo") || f.texto === "(parado)") && (
