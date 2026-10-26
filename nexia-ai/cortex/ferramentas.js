@@ -1,544 +1,133 @@
-/**
- * Ferramentas para o NEXIA AI Cortex
- * Exportadas no formato compatível com OpenAI tool calling
- */
+'use strict';
+// #1694 (pilar 3): ferramentas do chat do Cortex no formato de tool calling da OpenAI. Tudo grátis e sem chave.
+// Cada ferramenta recebe { fetchImpl } para rodar no Worker e nos testes; devolve texto curto para o modelo.
 
-// Importações necessárias
-const fetch = require('node-fetch');
-const { JSDOM } = require('jsdom');
+const buscaWeb = require('../../lib/busca-web');
 
-// ---------- Rate limiting e cache (proteção contra abuso) ----------
+const PRAZO_MS = 6000;
+const MAX_PAGINA = 8000;
 
-const RATE_LIMIT_MAX = 10;      // requisições por janela
-const RATE_LIMIT_WINDOW_MS = 60000; // 1 minuto
-const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
-
-const rateMap = new Map(); // chave -> { contagem, inicio }
-const cacheMap = new Map(); // chave -> { valor, expira }
-
-function agoraMs() {
-  return Date.now();
-}
-
-function verificarRateLimit(chave) {
-  const agora = agoraMs();
-  const registro = rateMap.get(chave);
-  if (!registro || agora - registro.inicio > RATE_LIMIT_WINDOW_MS) {
-    rateMap.set(chave, { contagem: 1, inicio: agora });
-    return true;
-  }
-  if (registro.contagem >= RATE_LIMIT_MAX) {
-    return false;
-  }
-  registro.contagem++;
-  return true;
-}
-
-function lerCache(chave) {
-  const entrada = cacheMap.get(chave);
-  if (!entrada) return null;
-  if (agoraMs() > entrada.expira) {
-    cacheMap.delete(chave);
-    return null;
-  }
-  return entrada.valor;
-}
-
-function gravarCache(chave, valor) {
-  cacheMap.set(chave, { valor, expira: agoraMs() + CACHE_TTL_MS });
-}
-
-// ---------- Logging estruturado (sem expor segredos) ----------
-
-function log(evento, dados = {}) {
-  const linha = {
-    ts: new Date().toISOString(),
-    evento,
-    ...dados
+function comPrazo(fetchImpl, ms = PRAZO_MS) {
+  return (url, opts = {}) => {
+    const ctl = new AbortController();
+    const t = setTimeout(() => ctl.abort(), ms);
+    return Promise.resolve(fetchImpl(url, { ...opts, signal: ctl.signal })).finally(() => clearTimeout(t));
   };
-  console.log(JSON.stringify(linha));
 }
 
-// ---------- Timeout para requisições HTTP ----------
-
-function fetchComTimeout(url, opts, ms = 10000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), ms);
-  const fetchOpts = { ...opts, signal: controller.signal };
-  return fetch(url, fetchOpts).then((res) => {
-    clearTimeout(timer);
-    return res;
-  }).catch((err) => {
-    clearTimeout(timer);
-    throw err;
-  });
+/** Bloqueia endereços internos (SSRF): localhost, IPs privados, file:, porta fora do padrão. */
+function urlPermitida(texto) {
+  let u;
+  try { u = new URL(String(texto)); } catch { return null; }
+  if (u.protocol !== 'https:' && u.protocol !== 'http:') return null;
+  if (u.username || u.password || (u.port && !['80', '443'].includes(u.port))) return null;
+  const h = u.hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  if (h === 'localhost' || h.endsWith('.localhost') || h.endsWith('.local') || h.endsWith('.internal') || !h.includes('.') && !h.includes(':')) return null;
+  if (/^(127\.|10\.|0\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(h)) return null;
+  if (h.includes(':') && (h === '::1' || /^(fc|fd|fe80)/.test(h))) return null;
+  return u;
 }
 
-// ---------- User-Agent com identificação do produto ----------
+const semHtml = (html) => String(html)
+  .replace(/<(script|style|noscript|svg)[\s\S]*?<\/\1>/gi, ' ')
+  .replace(/<[^>]+>/g, ' ')
+  .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+  .replace(/\s+/g, ' ').trim();
 
-const USER_AGENT = 'NEXIA-Cortex/1.0 (+https://nexia.ai)';
-
-// ---------- Busca na web (reutiliza busca de modos.js + RSS Google Notícias) ----------
-
-/**
- * Busca na web usando DuckDuckGo e RSS Google Notícias
- * @param {string} q - Termo de busca
- * @returns {Promise<Object>} - Resultados da busca
- */
-async function buscar_web(q) {
-  const chave = `buscar_web:${q}`;
-  if (!verificarRateLimit(chave)) {
-    return { error: true, message: 'Limite de requisições excedido. Tente novamente mais tarde.' };
-  }
-  const cache = lerCache(chave);
-  if (cache) return cache;
-  try {
-    const searchUrl = `https://api.duckduckgo.com/?q=${encodeURIComponent(q)}&format=json&no_html=1`;
-    const response = await fetchComTimeout(searchUrl, { headers: { 'User-Agent': USER_AGENT } });
-    const data = await response.json();
-    
-    const newsUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=pt-BR&gl=BR&ceid=BR:pt`;
-    const newsResponse = await fetchComTimeout(newsUrl, { headers: { 'User-Agent': USER_AGENT } });
-    const newsText = await newsResponse.text();
-    
-    const resultado = {
-      search: {
-        query: q,
-        results: data.Abstract ? [data] : [],
-        timestamp: new Date().toISOString()
-      },
-      news: {
-        rss: newsText,
-        timestamp: new Date().toISOString()
-      }
-    };
-    gravarCache(chave, resultado);
-    log('buscar_web.ok', { query: q });
-    return resultado;
-  } catch (error) {
-    log('buscar_web.erro', { query: q, mensagem: 'Falha ao buscar na web' });
-    return {
-      error: true,
-      message: 'Falha ao buscar na web'
-    };
-  }
-}
-
-// ---------- Abrir página (fetch, remove HTML, limite 8000 chars, bloqueia localhost/file/IP interno) ----------
-
-/**
- * Abre uma página web e extrai texto (removendo HTML)
- * @param {string} url - URL da página
- * @returns {Promise<Object>} - Conteúdo da página
- */
-async function abrir_pagina(url) {
-  const chave = `abrir_pagina:${url}`;
-  if (!verificarRateLimit(chave)) {
-    return { error: true, message: 'Limite de requisições excedido. Tente novamente mais tarde.' };
-  }
-  const cache = lerCache(chave);
-  if (cache) return cache;
-  try {
-    let urlObj;
-    try {
-      urlObj = new URL(url);
-    } catch (_) {
-      return { error: true, message: 'URL inválida' };
-    }
-    
-    const protocolo = urlObj.protocol;
-    const host = urlObj.hostname.toLowerCase();
-    
-    // Bloqueia protocolos perigosos
-    if (protocolo !== 'http:' && protocolo !== 'https:') {
-      return { error: true, message: 'Protocolo não permitido' };
-    }
-    
-    // Bloqueia localhost e IPs internos (RFC 1918 + loopback + link-local)
-    if (
-      host === 'localhost' ||
-      host === '127.0.0.1' ||
-      host === '::1' ||
-      host.startsWith('127.') ||
-      host.startsWith('192.168.') ||
-      host.startsWith('10.') ||
-      host.startsWith('172.16.') ||
-      host.startsWith('172.17.') ||
-      host.startsWith('172.18.') ||
-      host.startsWith('172.19.') ||
-      host.startsWith('172.20.') ||
-      host.startsWith('172.21.') ||
-      host.startsWith('172.22.') ||
-      host.startsWith('172.23.') ||
-      host.startsWith('172.24.') ||
-      host.startsWith('172.25.') ||
-      host.startsWith('172.26.') ||
-      host.startsWith('172.27.') ||
-      host.startsWith('172.28.') ||
-      host.startsWith('172.29.') ||
-      host.startsWith('172.30.') ||
-      host.startsWith('172.31.') ||
-      host.endsWith('.local') ||
-      host.endsWith('.invalid')
-    ) {
-      return { error: true, message: 'Falha ao acessar página' };
-    }
-    
-    const response = await fetchComTimeout(url, {
-      headers: { 'User-Agent': USER_AGENT }
-    });
-    
-    if (!response.ok) {
-      return { error: true, message: 'Falha ao acessar página' };
-    }
-    
-    const html = await response.text();
-    const dom = new JSDOM(html);
-    const text = dom.window.document.body.textContent || '';
-    
-    // Limita a 8000 caracteres
-    const content = text.substring(0, 8000);
-    
-    const resultado = {
-      url: url,
-      content: content,
-      length: content.length,
-      timestamp: new Date().toISOString()
-    };
-    gravarCache(chave, resultado);
-    log('abrir_pagina.ok', { url, length: content.length });
-    return resultado;
-  } catch (_) {
-    log('abrir_pagina.erro', { url, mensagem: 'Falha ao acessar página' });
-    return {
-      error: true,
-      message: 'Falha ao acessar página'
-    };
-  }
-}
-
-// ---------- Calcular expressão matemática (parser seguro) ----------
-
-/**
- * Calcula expressão matemática básica (apenas números, + - * / ^ % e parênteses)
- * @param {string} expressao - Expressão matemática
- * @returns {Object} - Resultado do cálculo
- */
+/** Conta segura, sem eval: + - * / ^ % e parênteses. "17% de 2350" vira 0.17*2350. */
 function calcular(expressao) {
+  const src = String(expressao || '').replace(/(\d+(?:[.,]\d+)?)\s*%\s*(de|of)\s*/gi, '($1/100)*').replace(/(\d),(\d)/g, '$1.$2').replace(/\s+/g, '');
+  if (!src || src.length > 200 || /[^0-9.+\-*/^%()]/.test(src)) return { erro: 'Expressão inválida.' };
+  let i = 0;
+  const ver = () => src[i];
+  function numero() {
+    if (ver() === '(') { i++; const v = soma(); if (ver() !== ')') throw new Error('parêntese'); i++; return v; }
+    if (ver() === '-') { i++; return -numero(); }
+    if (ver() === '+') { i++; return numero(); }
+    const m = /^\d+(?:\.\d+)?/.exec(src.slice(i));
+    if (!m) throw new Error('número');
+    i += m[0].length;
+    let v = Number(m[0]);
+    if (ver() === '%') { i++; v /= 100; }
+    return v;
+  }
+  function potencia() { const b = numero(); if (ver() === '^') { i++; return b ** potencia(); } return b; }
+  function produto() { let v = potencia(); while (ver() === '*' || ver() === '/') { const op = src[i++]; const d = potencia(); v = op === '*' ? v * d : v / d; } return v; }
+  function soma() { let v = produto(); while (ver() === '+' || ver() === '-') { const op = src[i++]; const d = produto(); v = op === '+' ? v + d : v - d; } return v; }
   try {
-    if (typeof expressao !== 'string' || expressao.trim().length === 0) {
-      throw new Error('Expressão inválida');
-    }
-    // Remove caracteres perigosos - permitindo apenas números, operadores básicos e parênteses
-    const cleaned = expressao.replace(/[^0-9+\-*/^%().\s]/g, '');
-    
-    // Valida expressão - deve começar com número ou parêntese e conter apenas operadores válidos
-    if (!/^[\d(]+(?:[+\-*/^%](?:\d+|\([^)]+\)))*$/.test(cleaned) ||
-        /[\^%]{2,}/.test(cleaned)) {
-      throw new Error('Expressão inválida');
-    }
-    
-    // Substitui ^ por ** para potência (JS)
-    const jsExpr = cleaned.replace(/\^/g, '**');
-    
-    // Avalia expressão de forma controlada
-    const result = Function('"use strict"; return (' + jsExpr + ')')();
-    
-    if (!Number.isFinite(result)) {
-      throw new Error('Resultado não é um número válido');
-    }
-    
-    return {
-      expression: expressao,
-      result: result,
-      timestamp: new Date().toISOString()
-    };
-  } catch (_) {
-    log('calcular.erro', { expressao, mensagem: 'Falha no cálculo' });
-    return {
-      error: true,
-      message: 'Falha no cálculo'
-    };
-  }
+    const v = soma();
+    if (i !== src.length || !Number.isFinite(v)) return { erro: 'Expressão inválida.' };
+    return { resultado: Math.round(v * 1e10) / 1e10 };
+  } catch { return { erro: 'Expressão inválida.' }; }
 }
 
-// ---------- Cotação de moeda (AwesomeAPI) ----------
-
-const MOEDAS_VALIDAS = new Set([
-  'USD', 'EUR', 'GBP', 'BTC', 'ARS', 'CAD', 'AUD', 'JPY', 'CHF', 'CNY',
-  'BRL', 'ETH', 'LTC', 'XRP', 'DOGE', 'SOL', 'ADA', 'DOT', 'AVAX', 'MATIC'
-]);
-
-function ehMoedaValida(moeda) {
-  return typeof moeda === 'string' && MOEDAS_VALIDAS.has(moeda.toUpperCase());
+function dataHora(agora = new Date()) {
+  return { agora: agora.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }), fuso: 'America/Sao_Paulo' };
 }
 
-/**
- * Busca cotação de moeda usando AwesomeAPI
- * @param {string} moeda - Código da moeda (ex: USD, EUR)
- * @returns {Promise<Object>} - Dados da cotação
- */
-async function cotacao(moeda) {
-  const chave = `cotacao:${moeda}`;
-  if (!verificarRateLimit(chave)) {
-    return { error: true, message: 'Limite de requisições excedido. Tente novamente mais tarde.' };
-  }
-  const cache = lerCache(chave);
-  if (cache) return cache;
-  try {
-    if (!ehMoedaValida(moeda)) {
-      return { error: true, message: 'Código de moeda inválido', currency: moeda };
-    }
-    const codigo = moeda.toUpperCase();
-    const url = `https://economia.awesomeapi.com.br/last/${codigo}-BRL`;
-    const response = await fetchComTimeout(url, { headers: { 'User-Agent': USER_AGENT } });
-    const data = await response.json();
-    
-    const key = `${codigo}BRL`;
-    if (data[key]) {
-      const resultado = {
-        currency: codigo,
-        code: data[key].code,
-        codein: data[key].codein,
-        name: data[key].name,
-        high: data[key].high,
-        low: data[key].low,
-        varBid: data[key].varBid,
-        pctChange: data[key].pctChange,
-        timestamp: data[key].createDate,
-        fetchedAt: new Date().toISOString()
-      };
-      gravarCache(chave, resultado);
-      log('cotacao.ok', { moeda: codigo });
-      return resultado;
-    } else {
-      return { error: true, message: 'Moeda não encontrada', currency: codigo };
-    }
-  } catch (_) {
-    log('cotacao.erro', { moeda, mensagem: 'Falha ao buscar cotação' });
-    return {
-      error: true,
-      message: 'Falha ao buscar cotação',
-      currency: moeda
-    };
-  }
+async function buscarWebFerramenta({ q }, { fetchImpl }) {
+  const r = await buscaWeb.buscar(String(q || ''), { fetchImpl, max: 5 });
+  return { fontes: r.fontes, contexto: r.contexto };
 }
 
-// ---------- Clima (Open-Meteo geocoding + forecast) ----------
-
-/**
- * Busca clima usando Open-Meteo
- * @param {string} cidade - Nome da cidade
- * @returns {Promise<Object>} - Dados do clima
- */
-async function clima(cidade) {
-  const chave = `clima:${cidade}`;
-  if (!verificarRateLimit(chave)) {
-    return { error: true, message: 'Limite de requisições excedido. Tente novamente mais tarde.' };
+async function abrirPagina({ url }, { fetchImpl }) {
+  const u = urlPermitida(url);
+  if (!u) return { erro: 'Endereço não permitido.' };
+  const r = await comPrazo(fetchImpl)(u.toString(), { headers: { 'User-Agent': 'Mozilla/5.0 (compatible; Cortex/1.0)', Accept: 'text/html,text/plain' }, redirect: 'manual' });
+  if (r.status >= 300 && r.status < 400) {
+    const destino = urlPermitida(new URL(r.headers.get('location') || '', u).toString());
+    if (!destino) return { erro: 'Redirecionamento não permitido.' };
+    return abrirPagina({ url: destino.toString() }, { fetchImpl });
   }
-  const cache = lerCache(chave);
-  if (cache) return cache;
-  try {
-    if (typeof cidade !== 'string' || cidade.trim().length === 0) {
-      return { error: true, message: 'Nome da cidade inválido', city: cidade };
-    }
-    // Geocoding para obter coordenadas
-    const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cidade)}&count=1&language=pt&format=json`;
-    const geoResponse = await fetchComTimeout(geoUrl, { headers: { 'User-Agent': USER_AGENT } });
-    const geoData = await geoResponse.json();
-    
-    if (!geoData.results || geoData.results.length === 0) {
-      return { error: true, message: 'Cidade não encontrada', city: cidade };
-    }
-    
-    const location = geoData.results[0];
-    const { latitude, longitude } = location;
-    
-    // Previsão do tempo
-    const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto&forecast_days=1`;
-    const weatherResponse = await fetchComTimeout(weatherUrl, { headers: { 'User-Agent': USER_AGENT } });
-    const weatherData = await weatherResponse.json();
-    
-    const current = weatherData.current;
-    const daily = weatherData.daily;
-    
-    const resultado = {
-      location: {
-        name: location.name,
-        country: location.country,
-        latitude: latitude,
-        longitude: longitude,
-        elevation: location.elevation
-      },
-      current: {
-        temperature: current.temperature_2m,
-        humidity: current.relative_humidity_2m,
-        windSpeed: current.wind_speed_10m,
-        weatherCode: current.weather_code,
-        timestamp: current.time
-      },
-      daily: {
-        date: daily.time[0],
-        maxTemp: daily.temperature_2m_max[0],
-        minTemp: daily.temperature_2m_min[0],
-        precipitation: daily.precipitation_sum[0]
-      },
-      fetchedAt: new Date().toISOString()
-    };
-    gravarCache(chave, resultado);
-    log('clima.ok', { cidade });
-    return resultado;
-  } catch (_) {
-    log('clima.erro', { cidade, mensagem: 'Falha ao buscar clima' });
-    return {
-      error: true,
-      message: 'Falha ao buscar clima',
-      city: cidade
-    };
-  }
+  if (!r.ok) return { erro: `A página respondeu ${r.status}.` };
+  const texto = semHtml(await r.text());
+  return { url: u.toString(), texto: texto.slice(0, MAX_PAGINA), cortado: texto.length > MAX_PAGINA };
 }
 
-// ---------- Data e hora (Brasília) ----------
-
-/**
- * Retorna data e hora atuais de Brasília
- * @returns {Object} - Data e hora formatadas
- */
-function data_hora() {
-  try {
-    const now = new Date();
-    // Usa Intl para horário de Brasília (America/Sao_Paulo)
-    const brasiliaTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }));
-    
-    return {
-      datetime: brasiliaTime.toISOString(),
-      date: brasiliaTime.toISOString().split('T')[0],
-      time: brasiliaTime.toTimeString().split(' ')[0],
-      timezone: 'America/Sao_Paulo',
-      timestamp: brasiliaTime.getTime(),
-      formatted: {
-        date: brasiliaTime.toLocaleDateString('pt-BR'),
-        time: brasiliaTime.toLocaleTimeString('pt-BR'),
-        full: brasiliaTime.toLocaleString('pt-BR')
-      }
-    };
-  } catch (_) {
-    log('data_hora.erro', { mensagem: 'Falha ao obter data/hora' });
-    return {
-      error: true,
-      message: 'Falha ao obter data/hora'
-    };
-  }
+async function cotacao({ moeda = 'USD' }, { fetchImpl }) {
+  const m = String(moeda).toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3);
+  if (!/^[A-Z]{3}$/.test(m)) return { erro: 'Moeda inválida (use USD, EUR, BTC…).' };
+  const r = await comPrazo(fetchImpl)(`https://economia.awesomeapi.com.br/json/last/${m}-BRL`);
+  const j = await r.json().catch(() => ({}));
+  const c = j[`${m}BRL`];
+  if (!c) return { erro: 'Cotação não encontrada.' };
+  return { moeda: m, compra: Number(c.bid), venda: Number(c.ask), variacao: Number(c.pctChange), quando: c.create_date, fonte: 'https://economia.awesomeapi.com.br' };
 }
 
-// ---------- Objeto de ferramentas compatível com OpenAI tool calling ----------
+async function clima({ cidade }, { fetchImpl }) {
+  const f = comPrazo(fetchImpl);
+  const g = await (await f(`https://geocoding-api.open-meteo.com/v1/search?count=1&language=pt&name=${encodeURIComponent(String(cidade || '').slice(0, 80))}`)).json().catch(() => ({}));
+  const lugar = (g.results || [])[0];
+  if (!lugar) return { erro: 'Cidade não encontrada.' };
+  const p = await (await f(`https://api.open-meteo.com/v1/forecast?latitude=${lugar.latitude}&longitude=${lugar.longitude}&current=temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=America%2FSao_Paulo&forecast_days=3`)).json().catch(() => ({}));
+  return { cidade: `${lugar.name}${lugar.admin1 ? ', ' + lugar.admin1 : ''}`, agora: p.current || null, proximos_dias: p.daily || null, fonte: 'https://open-meteo.com' };
+}
 
-const tools = {
-  buscar_web: {
-    type: 'function',
-    function: {
-      name: 'buscar_web',
-      description: 'Busca informações na web usando DuckDuckGo e RSS Google Notícias',
-      parameters: {
-        type: 'object',
-        properties: {
-          q: {
-            type: 'string',
-            description: 'Termo de busca'
-          }
-        },
-        required: ['q']
-      }
-    }
-  },
-  abrir_pagina: {
-    type: 'function',
-    function: {
-      name: 'abrir_pagina',
-      description: 'Abre uma página web e extrai texto (removendo HTML)',
-      parameters: {
-        type: 'object',
-        properties: {
-          url: {
-            type: 'string',
-            description: 'URL da página para abrir'
-          }
-        },
-        required: ['url']
-      }
-    }
-  },
-  calcular: {
-    type: 'function',
-    function: {
-      name: 'calcular',
-      description: 'Calcula expressão matemática básica',
-      parameters: {
-        type: 'object',
-        properties: {
-          expressao: {
-            type: 'string',
-            description: 'Expressão matemática (ex: 2 + 2 * 3)'
-          }
-        },
-        required: ['expressao']
-      }
-    }
-  },
-  cotacao: {
-    type: 'function',
-    function: {
-      name: 'cotacao',
-      description: 'Busca cotação de moeda usando AwesomeAPI',
-      parameters: {
-        type: 'object',
-        properties: {
-          moeda: {
-            type: 'string',
-            description: 'Código da moeda (ex: USD, EUR)'
-          }
-        },
-        required: ['moeda']
-      }
-    }
-  },
-  clima: {
-    type: 'function',
-    function: {
-      name: 'clima',
-      description: 'Busca informações climáticas usando Open-Meteo',
-      parameters: {
-        type: 'object',
-        properties: {
-          cidade: {
-            type: 'string',
-            description: 'Nome da cidade'
-          }
-        },
-        required: ['cidade']
-      }
-    }
-  },
-  data_hora: {
-    type: 'function',
-    function: {
-      name: 'data_hora',
-      description: 'Retorna data e hora atuais de Brasília',
-      parameters: {
-        type: 'object',
-        properties: {},
-        required: []
-      }
-    }
-  }
+const FERRAMENTAS = {
+  buscar_web: { run: buscarWebFerramenta, description: 'Pesquisa na web agora (notícias, fatos recentes). Devolve fontes com link.', parameters: { q: { type: 'string', description: 'termos da busca' } }, required: ['q'] },
+  abrir_pagina: { run: abrirPagina, description: 'Abre um link e devolve o texto da página (até 8.000 letras).', parameters: { url: { type: 'string' } }, required: ['url'] },
+  calcular: { run: async (a) => calcular(a.expressao), description: 'Faz contas exatas: + - * / ^ % e parênteses.', parameters: { expressao: { type: 'string' } }, required: ['expressao'] },
+  cotacao: { run: cotacao, description: 'Cotação atual de uma moeda em reais (USD, EUR, BTC…).', parameters: { moeda: { type: 'string' } }, required: ['moeda'] },
+  clima: { run: clima, description: 'Tempo agora e nos próximos 3 dias numa cidade.', parameters: { cidade: { type: 'string' } }, required: ['cidade'] },
+  data_hora: { run: async () => dataHora(), description: 'Data, dia da semana e hora de Brasília.', parameters: {}, required: [] },
 };
 
-module.exports = {
-  buscar_web,
-  abrir_pagina,
-  calcular,
-  cotacao,
-  clima,
-  data_hora,
-  tools
-};
+/** Lista no formato `tools` da OpenAI (Groq e Gemini aceitam igual). */
+const tools = Object.entries(FERRAMENTAS).map(([name, f]) => ({
+  type: 'function',
+  function: { name, description: f.description, parameters: { type: 'object', properties: f.parameters, required: f.required } },
+}));
+
+/** Roda uma chamada de ferramenta do modelo. O resultado vai para o modelo como dado, nunca como instrução. */
+async function executar(nome, args, { fetchImpl = (...a) => fetch(...a) } = {}) {
+  const f = Object.prototype.hasOwnProperty.call(FERRAMENTAS, nome) ? FERRAMENTAS[nome] : null;
+  if (!f) return { erro: `Ferramenta desconhecida: ${nome}` };
+  let a = args;
+  if (typeof a === 'string') { try { a = JSON.parse(a || '{}'); } catch { return { erro: 'Argumentos inválidos.' }; } }
+  try { return await f.run(a || {}, { fetchImpl }); } catch (e) { return { erro: e && e.name === 'AbortError' ? 'Demorou demais.' : 'Falhou agora.' }; }
+}
+
+/** Embrulha o resultado para o prompt (#1685: conteúdo externo nunca é instrução). */
+const comoDado = (nome, resultado) => `<dados_externos ferramenta="${nome}">\n${JSON.stringify(resultado).slice(0, MAX_PAGINA + 500)}\n</dados_externos>`;
+
+module.exports = { tools, executar, comoDado, calcular, urlPermitida, dataHora, FERRAMENTAS };
