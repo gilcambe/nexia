@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { resizeImageToFile } from '../utils/imageResize';
+import { resizeImageToFile, needsResize } from '../utils/imageResize';
 
 export interface ChatInputProps {
   onSend: (files: File[], text: string) => void | Promise<void>;
@@ -9,7 +9,9 @@ export interface ChatInputProps {
 export default function ChatInput({ onSend, disabled = false }: ChatInputProps) {
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [processingImages, setProcessingImages] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageStatus, setImageStatus] = useState<{[key: string]: string}>({});
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
@@ -34,27 +36,54 @@ export default function ChatInput({ onSend, disabled = false }: ChatInputProps) 
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
     setSending(true);
+    setProcessingImages(true);
     setError(null);
+    setImageStatus({});
+    
     try {
       const resized: File[] = [];
+      
       for (const file of files) {
-        if (!file.type.startsWith('image/')) {
-          setError('Arquivo não é uma imagem');
-          return;
+        const fileId = file.name + file.size + file.lastModified;
+        
+        try {
+          if (!file.type.startsWith('image/')) {
+            setError(`"${file.name}" não é uma imagem`);
+            continue;
+          }
+          
+          // Verifica se precisa redimensionar
+          const needsResizing = await needsResize(file, 1024);
+          
+          if (needsResizing) {
+            setImageStatus(prev => ({...prev, [fileId]: 'Redimensionando...'}));
+            const resizedFile = await resizeImageToFile(file, {
+              maxDimension: 1024,
+              quality: 0.8,
+              outputFormat: 'webp',
+            });
+            resized.push(resizedFile);
+            setImageStatus(prev => ({...prev, [fileId]: '✓ Redimensionado'}));
+          } else {
+            setImageStatus(prev => ({...prev, [fileId]: '✓ Já no tamanho correto'}));
+            resized.push(file);
+          }
+        } catch (err) {
+          setError(`Erro ao processar "${file.name}": ${err instanceof Error ? err.message : 'Erro desconhecido'}`);
+          setImageStatus(prev => ({...prev, [fileId]: '✗ Falhou'}));
         }
-        const resizedFile = await resizeImage(file, {
-          maxDimension: 1024,
-          quality: 0.8,
-          outputFormat: 'webp',
-        });
-        resized.push(resizedFile as unknown as File);
       }
-      await onSend(resized, text.trim());
-      setText('');
+      
+      if (resized.length > 0) {
+        await onSend(resized, text.trim());
+        setText('');
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao processar imagem');
+      setError(err instanceof Error ? err.message : 'Erro ao enviar imagens');
     } finally {
       setSending(false);
+      setProcessingImages(false);
+      setTimeout(() => setImageStatus({}), 3000); // Limpa status após 3 segundos
       e.target.value = '';
     }
   };
@@ -68,28 +97,40 @@ export default function ChatInput({ onSend, disabled = false }: ChatInputProps) 
           accept="image/*"
           multiple
           onChange={handleImage}
-          disabled={disabled}
+          disabled={disabled || processingImages}
           style={{ display: 'none' }}
         />
-        📷
+        {processingImages ? '⏳' : '📷'}
       </label>
       <input
         type="text"
         value={text}
         onChange={handleChange}
         placeholder="Escreva uma mensagem ou anexe uma imagem…"
-        disabled={disabled || sending}
+        disabled={disabled || sending || processingImages}
         className="text-input"
         autoComplete="off"
       />
       <button
         type="submit"
-        disabled={disabled || sending || !text.trim()}
+        disabled={disabled || sending || processingImages || !text.trim()}
         className="send-button"
       >
-        Enviar
+        {sending ? 'Enviando...' : 'Enviar'}
       </button>
       {error && <span className="error" role="alert">{error}</span>}
+      
+      {/* Status do processamento de imagens */}
+      {Object.keys(imageStatus).length > 0 && (
+        <div className="image-status" role="status">
+          {Object.entries(imageStatus).map(([id, status]) => (
+            <div key={id} className="image-status-item">
+              <span className="status-icon">{status.includes('✓') ? '✓' : status.includes('✗') ? '✗' : '⏳'}</span>
+              <span>{status}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </form>
   );
 }
