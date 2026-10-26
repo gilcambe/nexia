@@ -38,8 +38,9 @@ async function buscar_web(q) {
   } catch (error) {
     console.error('Erro na busca web:', error);
     return {
-      error: 'Falha ao buscar na web',
-      message: error.message
+      error: true,
+      message: 'Falha ao buscar na web',
+      details: error.message
     };
   }
 }
@@ -84,8 +85,9 @@ async function abrir_pagina(url) {
   } catch (error) {
     console.error('Erro ao abrir página:', error);
     return {
-      error: 'Falha ao acessar página',
-      message: error.message,
+      error: true,
+      message: 'Falha ao acessar página',
+      details: error.message,
       url: url
     };
   }
@@ -98,12 +100,13 @@ async function abrir_pagina(url) {
  */
 function calcular(expressao) {
   try {
-    // Remove caracteres perigosos
+    // Remove caracteres perigosos - permitindo apenas números, operadores básicos e parênteses
     const cleaned = expressao.replace(/[^0-9+\-*/^%().\s]/g, '');
     
-    // Valida expressão simples
-    if (!/^\d[+\-*/^%().\s]+$/.test(cleaned)) {
-      throw new Error('Expressão contém caracteres inválidos');
+    // Valida expressão - deve começar com número e conter apenas operadores válidos
+    if (!/^\d+(?:[+\-*/^%](?:\d+|\([^)]+\)))*$/.test(cleaned) || 
+        /[\^%]{2,}/.test(cleaned)) {
+      throw new Error('Expressão inválida: contém caracteres ou operadores não permitidos');
     }
     
     // Avalia expressão (usando Function para eval controlado)
@@ -117,8 +120,9 @@ function calcular(expressao) {
   } catch (error) {
     console.error('Erro no cálculo:', error);
     return {
-      error: 'Falha no cálculo',
-      message: error.message,
+      error: true,
+      message: 'Falha no cálculo',
+      details: error.message,
       expression: expressao
     };
   }
@@ -155,8 +159,9 @@ async function cotacao(moeda) {
   } catch (error) {
     console.error('Erro na cotação:', error);
     return {
-      error: 'Falha ao buscar cotação',
-      message: error.message,
+      error: true,
+      message: 'Falha ao buscar cotação',
+      details: error.message,
       currency: moeda
     };
   }
@@ -192,10 +197,10 @@ async function clima(cidade) {
     return {
       location: {
         name: location.name,
-        country: country,
+        country: location.country,
         latitude: latitude,
         longitude: longitude,
-        elevation: elevation
+        elevation: location.elevation
       },
       current: {
         temperature: current.temperature_2m,
@@ -215,8 +220,9 @@ async function clima(cidade) {
   } catch (error) {
     console.error('Erro no clima:', error);
     return {
-      error: 'Falha ao buscar clima',
-      message: error.message,
+      error: true,
+      message: 'Falha ao buscar clima',
+      details: error.message,
       city: cidade
     };
   }
@@ -247,8 +253,9 @@ function data_hora() {
   } catch (error) {
     console.error('Erro na data/hora:', error);
     return {
-      error: 'Falha ao obter data/hora',
-      message: error.message
+      error: true,
+      message: 'Falha ao obter data/hora',
+      details: error.message
     };
   }
 }
