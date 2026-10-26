@@ -88,7 +88,7 @@ async function perguntar(token, message, modo, conversationId) {
       }
     }
   } catch (e) { erro = e.message; }
-  return { status, primeiroMs: primeiro, ms: Date.now() - t0, texto, modelo: fim && fim.model, erro };
+  return { status, primeiroMs: primeiro, ms: Date.now() - t0, texto, modelo: fim && fim.model, busca: fim && fim.busca, erro };
 }
 
 async function entender(token, nome, tipo, arquivo) {
