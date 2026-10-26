@@ -13,7 +13,7 @@ import Markdown from "./Markdown";
 // #1816: o texto da resposta passa pelo Markdown (negrito, listas, tabelas, código).
 // #1640: resposta que é só uma imagem gerada (markdown ![..](data:image/...)) aparece como imagem.
 const imagemDe = (t: string): string | null => (/^!\[[^\]]*\]\((data:image\/[a-z]+;base64,[A-Za-z0-9+/=]+)\)$/.exec((t || "").trim()) || [])[1] || null;
-interface Fala { id: string; quem: "dono" | "cortex"; texto: string; vivo?: boolean; modelo?: string }
+interface Fala { id: string; quem: "dono" | "cortex"; texto: string; vivo?: boolean; modelo?: string; fontes?: string[]; certeza?: "alta" | "média" | "baixa"; avisoSensivel?: boolean; tipoConversa?: string }
 
 // #823: "como estamos?" / "o que falta?" leem a Central (fila do Cortex) antes de responder. Sem acesso, responde sem esse contexto.
 // #826 / #1656: modo "Pesquisar" busca na web (grátis, pelo servidor em /api/cortex) e a resposta cita as fontes reais.
