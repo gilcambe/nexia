@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   testar:
@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
-          persist-credentials: false
+          persist-credentials: true
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '20'
@@ -38,9 +38,7 @@ jobs:
       - name: Guardar resultados na branch
         timeout-minutes: 3
         if: always()
-        env:
-          TOK: ${{ secrets.NEXIA_GITHUB_TOKEN }}
         run: |
           git config user.name "nexia-teste"; git config user.email "noreply@github.com"
           rm -rf resultados-teste-ia && mv relatorio resultados-teste-ia && git add resultados-teste-ia
-          git commit -qm "resultados do teste de IA do Cortex" && git push "https://x-access-token:${TOK}@github.com/${{ github.repository }}.git" HEAD:claude/teste-cortex-ia-resultados --force
+          git commit -qm "resultados do teste de IA do Cortex" || true; git push origin HEAD:refs/heads/claude/teste-cortex-ia-resultados --force 2>&1 | tail -3 | sed 's/^/::warning::/'
