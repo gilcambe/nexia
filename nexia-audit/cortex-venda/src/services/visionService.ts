@@ -125,7 +125,7 @@ export async function describeImage(options: VisionOptions, ai?: any): Promise<V
 
   // 1) Workers AI (binding AI) — modelo gratuito com visão
   try {
-    const result = await callWorkersAI(imageBase64, prompt, ai);
+    const result = await callWorkersAI(imageBase64, prompt, ai, model);
     return {
       description: result.description,
       provider: 'workers-ai',
@@ -138,7 +138,7 @@ export async function describeImage(options: VisionOptions, ai?: any): Promise<V
 
   // 2) Fallback: Gemini gratuito
   try {
-    const result = await callGemini(imageBase64, prompt, env);
+    const result = await callGemini(imageBase64, prompt, options);
     return {
       description: result.description,
       provider: 'gemini',
