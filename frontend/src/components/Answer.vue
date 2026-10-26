@@ -16,7 +16,7 @@
       </span>
     </div>
 
-    <ul v-if="fontes && fontes.length" class="answer__sources">
+    <ul v-if="fontes && fontes.length" class="answer__sources" aria-label="Fontes">
       <li
         v-for="(fonte, i) in fontesValidas"
         :key="i"
