@@ -56,6 +56,25 @@ test('BW5. cotação do dólar pela AwesomeAPI e fonte lenta não derruba as out
   assert.match(lento.contexto, /Argentina campeã/);
 });
 
+test('BW6. AwesomeAPI recusada → cotação pela open.er-api (#1733)', async () => {
+  const er = { result: 'success', time_last_update_utc: 'Mon, 26 Oct 2026 00:02:31 +0000', rates: { BRL: 5.4321 } };
+  const r = await b.buscar('Qual é a cotação do dólar em reais hoje?', { fetchImpl: async (u) => (String(u).includes('open.er-api.com/v6/latest/USD') ? resp(200, er) : resp(403, '')) });
+  assert.strictEqual(r.de, 'cotacao');
+  assert.match(r.contexto, /1 USD = R\$ 5,4321/);
+  assert.strictEqual(r.porFonte.cotacao, 1);
+});
+
+test('BW7. notícias pelo Bing News (link real) e pela GDELT quando o Google News é bloqueado (#1733)', async () => {
+  const rss = '<rss><channel><item><title>IA avança no Brasil</title><link>http://www.bing.com/news/apiclick.aspx?ref=FexRss&amp;url=https%3a%2f%2fg1.globo.com%2fia.html&amp;c=1</link><pubDate>Mon, 26 Oct 2026 10:00:00 GMT</pubDate></item></channel></rss>';
+  const gd = { articles: [{ url: 'https://www.folha.uol.com.br/ia', title: 'Nova lei de IA', seendate: '20261026T100000Z', domain: 'folha.uol.com.br' }] };
+  const r = await b.buscar('Quais as notícias mais recentes sobre inteligência artificial nesta semana? Cite as fontes com link.', {
+    fetchImpl: async (u) => (String(u).includes('bing.com') ? resp(200, rss, 'xml') : String(u).includes('gdeltproject') ? resp(200, gd) : resp(403, '')),
+  });
+  assert.strictEqual(r.de, 'bing_news');
+  assert.deepStrictEqual(r.fontes.map((f) => f.url), ['https://g1.globo.com/ia.html', 'https://www.folha.uol.com.br/ia']);
+  assert.deepStrictEqual([r.porFonte.google_news, r.porFonte.bing_news, r.porFonte.gdelt], [0, 1, 1]);
+});
+
 test('BW4. Central parte=busca (só master)', async () => {
   const { createHandler } = require('../../netlify/functions/central.js');
   const master = { verifyBearerToken: async () => ({ ok: true, role: 'master' }) };

@@ -353,7 +353,8 @@ exports.handler = async (event) => {
     if (ragEnabled) { try { ragCtx = await ragModule.buildRAGContext(tenantId, message) || ''; } catch { } }
     // #831: modo escolhido no composer (#1656).
     const modo = modos.modoValido(body.modo);
-    if (modo && modos.MODOS[modo].web) { try { const w = await modos.buscarWeb(rawMessage); if (w) ragCtx = ragCtx ? `${ragCtx}\n\n${w}` : w; } catch { } }
+    let buscaDiag;
+    if (modo && modos.MODOS[modo].web) { try { const b = await modos.buscarWebDetalhe(rawMessage); const w = b.contexto; buscaDiag = b.porFonte; if (w) ragCtx = ragCtx ? `${ragCtx}\n\n${w}` : w; } catch { } }
 
     let messageWithMultimodal = message;
     if (listaAnexos.length > 0) {
@@ -518,7 +519,7 @@ exports.handler = async (event) => {
               if (fallbackText && typeof memModule.save === 'function') await memModule.save(effectiveUserId, [...(mem.history || []), { role: 'user', content: message }, { role: 'assistant', content: fallbackText }], mem.summaries, tenantId, {}, conversationId).catch(() => {});
               if (!fallbackText) fallbackText = '❌ Todas as IAs estão indisponíveis. Verifique as API keys nos segredos do Worker (Cloudflare).';
               yield sse({ token: fallbackText, done: false });
-              yield sse({ done: true, model: usedFb });
+              yield sse({ done: true, model: usedFb, ...(buscaDiag ? { busca: buscaDiag } : {}) });
               yield 'data: [DONE]\n\n';
               return;
             }
@@ -527,7 +528,7 @@ exports.handler = async (event) => {
             const nm = [{ role: 'user', content: message }, { role: 'assistant', content: fullText }];
             if (typeof memModule.save === 'function') await memModule.save(effectiveUserId, [...(mem.history || []), ...nm], mem.summaries, tenantId, memModule.extractEntities ? memModule.extractEntities(nm, mem.entities) : {}, conversationId).catch(() => {});
             cxLog(tenantId, userId, { type: 'cortex_execution', conversationId, intent: decision.type, layer, ms: Date.now() - start, modelUsed: used, stream: true, plan: usage.plan }).catch(() => {});
-            yield sse({ done: true, model: used, intent: decision.type, actions: execActions, swarm: swarmOut, usage: { calls: usage.calls, limit: usage.limit, unlimited: !!usage.unlimited }, ...(projectCtx.mode === 'context' ? { project: { project_id: projectCtx.project.project_id, confidence: projectCtx.project.confidence } } : {}) });
+            yield sse({ done: true, model: used, ...(buscaDiag ? { busca: buscaDiag } : {}), intent: decision.type, actions: execActions, swarm: swarmOut, usage: { calls: usage.calls, limit: usage.limit, unlimited: !!usage.unlimited }, ...(projectCtx.mode === 'context' ? { project: { project_id: projectCtx.project.project_id, confidence: projectCtx.project.confidence } } : {}) });
             yield 'data: [DONE]\n\n';
           } finally {
             abort.abort();

@@ -16,13 +16,18 @@ const buscaWebEngine = require('../../lib/busca-web');
 
 /** Resultados da web (grátis, sem chave). Devolve o contexto formatado da busca. */
 async function buscarWeb(pergunta, fetchImpl = fetch, ms = 4000) {
+  return (await buscarWebDetalhe(pergunta, fetchImpl, ms)).contexto;
+}
+
+/** Igual a buscarWeb, mais quantas fontes cada serviço trouxe (porFonte). */
+async function buscarWebDetalhe(pergunta, fetchImpl = fetch, ms = 4000) {
   // #1733: cada fonte tem o próprio prazo dentro de busca-web (antes um prazo só para todas fazia a busca voltar vazia).
   try {
     const res = await buscaWebEngine.buscar(pergunta, { fetchImpl, max: 6, ms });
-    return res.contexto || '';
+    return { contexto: res.contexto || '', porFonte: res.porFonte || {} };
   } catch {
-    return buscaWebEngine.contexto([]);
+    return { contexto: buscaWebEngine.contexto([]), porFonte: {} };
   }
 }
 
-module.exports = { MODOS, modoValido, buscarWeb };
+module.exports = { MODOS, modoValido, buscarWeb, buscarWebDetalhe };
