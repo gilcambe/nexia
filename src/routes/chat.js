@@ -4,7 +4,7 @@
  * e expõe o roteador de chat/SSE usado pelo worker principal.
  */
 
-const API_BASE = 'https://api.nexia.example'; // ajuste conforme env.NEXIA_APP_URL
+const API_BASE = env.NEXIA_APP_URL || 'https://api.nexia.example';
 
 const existingRoutes = [
   '/api/cortex',
@@ -78,19 +78,33 @@ export function chatRoutes(request, env, ctx) {
 }
 
 async function forwardToHandler(route, request, env) {
+  // Adicionar autenticação básica para rotas existentes
+  if (!request.headers.get('Authorization')) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   try {
     const target = `${API_BASE}${route}`;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    
     const response = await fetch(target, {
       method: request.method,
       headers: request.headers,
       body: request.body,
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
     return new Response(response.body, {
       status: response.status,
       headers: response.headers,
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: 'Erro ao encaminhar rota existente' }), {
+    return new Response(JSON.stringify({ error: 'Erro ao encaminhar rota existente', details: err.message }), {
       status: 502,
       headers: { 'Content-Type': 'application/json' },
     });
