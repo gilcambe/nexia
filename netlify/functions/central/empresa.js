@@ -12,7 +12,9 @@ function fornecedores(lista, env, robos = []) {
     let situacao = 'ok';
     if (f.chave && !temChave(env, f.chave)) situacao = 'desligado';
     else if (robo) situacao = robo.situacao === 'erro' ? 'erro' : robo.situacao === 'nunca' ? 'desligado' : 'ok';
-    return { id: f.id, nome: f.nome, grupo: f.grupo, paraQue: f.paraQue, gratis: f.gratis, link: f.link, situacao, quando: robo ? robo.quando : null };
+    // chave = só o NOME da variável; chaveEstado diz se existe. O valor nunca sai do servidor (#1872).
+    const chaveEstado = f.chave ? (temChave(env, f.chave) ? 'existe' : 'falta') : null;
+    return { id: f.id, nome: f.nome, grupo: f.grupo, paraQue: f.paraQue, gratis: f.gratis, link: f.link, situacao, quando: robo ? robo.quando : null, chave: f.chave || null, chaveEstado };
   });
 }
 

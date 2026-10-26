@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Dados, Parte, Situacao, TesteIA } from "./api";
+import type { Dados, Fornecedor, Parte, Situacao, TesteIA } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
 import type { Cor } from "./ui";
@@ -47,6 +47,21 @@ const LINK = "inline-flex items-center justify-center gap-1 rounded-xl px-3 py-2
 // Verifica se sobrou algum padrão de chave no texto (após sanitização).
 // Focado apenas nos padrões críticos mencionados no pedido original
 const TEM_CHAVE = /sk-[A-Za-z0-9]+|AIza[A-Za-z0-9_-]+|ghp_[A-Za-z0-9]+|-----BEGIN[^\n]+/;
+
+// "Chaves e IAs" (#1872): estado de cada chave sem nunca mostrar o valor, juntando o "Testar agora" das IAs.
+const simples = (t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, "");
+function estadoChave(f: Fornecedor, ias: TesteIA[] | null): { cor: Cor; texto: string; fazer?: string } {
+  if (f.chaveEstado === "falta") return { cor: "amarelo", texto: "Falta", fazer: `Cadastrar no Cloudflare (Workers → nexia → Settings → Variables) com o nome ${f.chave}.` };
+  const t = ias?.find((i) => simples(i.provedor) === simples(f.id) || simples(f.nome).startsWith(simples(i.provedor)));
+  if (t?.situacao === "ok") return { cor: "verde", texto: "Funcionando ✓" };
+  if (t?.situacao === "erro") {
+    const m = t.motivo || "";
+    if (/\b429\b|quota|cota|rate/i.test(m)) return { cor: "amarelo", texto: "Cota do dia acabou", fazer: "Volta sozinha amanhã. O Cortex usa outra IA grátis enquanto isso." };
+    if (/\b40[13]\b|invalid|unauthor|forbidden/i.test(m)) return { cor: "vermelho", texto: "Chave recusada", fazer: "Criar uma chave nova no site do serviço e trocar no Cloudflare." };
+    return { cor: "vermelho", texto: "Com erro", fazer: m.slice(0, 80) };
+  }
+  return { cor: "cinza", texto: "Existe, não testada" };
+}
 
 export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<Parte, string>> }) {
   const { agir } = useCentral();
@@ -141,6 +156,28 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
     <div className="space-y-4">
       <SaudeHistorico />
       <UltimosErros />
+
+      <Cartao titulo="Chaves e IAs" acao={<Botao onClick={testar} disabled={testando} testid="testar-chaves">{testando ? "Testando…" : "🧪 Testar todas agora"}</Botao>}>
+        {!d.empresa ? <Carregando /> : (
+          <ul className="space-y-2" data-testid="chaves">
+            {d.empresa.fornecedores.filter((f) => f.chaveEstado).map((f) => {
+              const e = estadoChave(f, ias);
+              return (
+                <li key={f.id} className="rounded-xl bg-nexia-surface2 p-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Sinal cor={e.cor} />
+                    <a href={f.link} target="_blank" rel="noopener noreferrer" className="font-semibold flex-1 truncate">{f.nome}</a>
+                    <span className="text-xs">{e.texto}</span>
+                  </div>
+                  <div className="text-xs text-nexia-muted mt-1">{f.paraQue} · chave {f.chave}{ias ? " · testado agora" : ""}</div>
+                  {e.fazer && <div className="text-xs mt-1">O que fazer: {e.fazer}</div>}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        <p className="text-xs text-nexia-muted">Escada: o Cortex usa primeiro as IAs grátis que estão verdes; a ordem fica no roteador de modelos. O valor das chaves nunca aparece aqui.</p>
+      </Cartao>
 
       <Cartao titulo="IAs que trabalham para a Kernex" acao={<Botao onClick={testar} disabled={testando} testid="testar-ias">{testando ? "Testando…" : "🧪 Testar agora"}</Botao>}>
         {erroIA && <p className="text-sm text-red-400" role="alert">{erroIA}</p>}
