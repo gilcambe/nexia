@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cortex-p1 Admin — Monitoramento e infraestrutura do Cortex-p1</title>
+  <meta name="description" content="Monitoramento e infraestrutura do Cortex-p1">
+  <meta name="theme-color" content="#595cd9">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
+</head>
+<body>
+  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
+      <div class="sidebar__brand">
+        <span class="logo" aria-hidden="true">C</span>
+        <span>Cortex-p1 Admin</span>
+      </div>
+      <nav class="sidebar__nav" aria-label="Seções">
+        <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
+        <a href="#/provedores" data-route="provedores"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Provedores</span></a>
+        <a href="#/filas" data-route="filas"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Filas de Processamento</span></a>
+        <a href="#/logs_erros" data-route="logs_erros"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Logs de Erros</span></a>
+      </nav>
+      <div class="sidebar__foot">
+        <p>Suporte: admin@cortex-p1.internal</p>
+        <p>Dados salvos neste navegador.</p>
+      </div>
+    </aside>
+    <div class="backdrop" data-close-menu hidden></div>
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="topbar__title">
+          <h1 id="view-title">Painel</h1>
+          <p id="view-sub">Monitoramento e infraestrutura do Cortex-p1</p>
+        </div>
+        <label class="search">
+          <span class="sr-only">Buscar</span>
+          <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search" type="search" placeholder="Buscar..." autocomplete="off">
+        </label>
+        <button class="icon-btn" type="button" id="theme" aria-label="Alternar modo escuro"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </header>
+      <main id="conteudo" class="content">
+        <section id="view-painel" class="view" aria-labelledby="view-title">
+          <div class="kpis" id="kpis"></div>
+          <div class="grid2">
+            <article class="card">
+              <header class="card__head"><h2 id="chart-title">Resumo</h2></header>
+              <div class="chart-box"><canvas id="chart" aria-label="Gráfico do resumo" role="img"></canvas></div>
+            </article>
+            <article class="card">
+              <header class="card__head"><h2>Últimos cadastros</h2></header>
+              <ul class="recent" id="recent"></ul>
+            </article>
+          </div>
+        </section>
+        <section id="view-entity" class="view" hidden>
+          <div class="toolbar">
+            <p class="count" id="count"></p>
+            <div class="toolbar__actions">
+              <button class="btn btn--ghost" type="button" id="export"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Exportar CSV</button>
+              <button class="btn btn--primary" type="button" id="add"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> <span id="add-label">Novo</span></button>
+            </div>
+          </div>
+          <div class="card table-card">
+            <div class="table-wrap">
+              <table class="table">
+                <thead id="thead"></thead>
+                <tbody id="tbody"></tbody>
+              </table>
+            </div>
+            <div class="empty" id="empty" hidden>
+              <svg class="i" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg>
+              <h2>Nada por aqui ainda</h2>
+              <p>Clique em “Adicionar” para fazer o primeiro cadastro.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="modal" id="modal" aria-labelledby="modal-title">
+    <form id="form" novalidate>
+      <header class="modal__head">
+        <h2 id="modal-title">Novo</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </header>
+      <div class="modal__body" id="form-fields"></div>
+      <footer class="modal__foot">
+        <button class="btn btn--ghost" type="button" data-close>Cancelar</button>
+        <button class="btn btn--primary" type="submit">Salvar</button>
+      </footer>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="application/json" id="app-config">{"key":"nexia-app:demos/cortex-p1-admin","name":"Cortex-p1 Admin","entities":[{"key":"provedores","label":"Provedores","singular":"Provedor","fields":[{"key":"nome","label":"Nome do Provedor","type":"text","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Ativo","Degradado","Inativo"],"required":true},{"key":"cota_usada","label":"Cota Usada Hoje","type":"number","options":[],"required":true},{"key":"latencia","label":"Latência Média (ms)","type":"number","options":[],"required":true},{"key":"atualizado_em","label":"Última Verificação","type":"text","options":[],"required":true}],"sample":[{"nome":"OpenAI GPT-4o","status":"Ativo","cota_usada":"142500","latencia":"320","atualizado_em":"2026-06-06 14:32"},{"nome":"Anthropic Claude 3.5","status":"Ativo","cota_usada":"98200","latencia":"285","atualizado_em":"2026-06-06 14:31"},{"nome":"Google Gemini Pro","status":"Degradado","cota_usada":"45100","latencia":"780","atualizado_em":"2026-06-06 14:30"},{"nome":"DeepSeek V3","status":"Ativo","cota_usada":"210400","latencia":"190","atualizado_em":"2026-06-06 14:32"}]},{"key":"filas","label":"Filas de Processamento","singular":"Fila","fields":[{"key":"nome_fila","label":"Nome da Fila","type":"text","options":[],"required":true},{"key":"tamanho","label":"Tamanho Atual","type":"number","options":[],"required":true},{"key":"taxa_mpm","label":"Mensagens/Minuto (MPM)","type":"number","options":[],"required":true},{"key":"workers","label":"Workers Ativos","type":"number","options":[],"required":true},{"key":"estado","label":"Estado","type":"select","options":["Normal","Congestionada","Pausada"],"required":true}],"sample":[{"nome_fila":"priority-jobs","tamanho":"3","taxa_mpm":"120","workers":"8","estado":"Normal"},{"nome_fila":"default-queue","tamanho":"47","taxa_mpm":"450","workers":"16","estado":"Normal"},{"nome_fila":"webhook-dispatch","tamanho":"312","taxa_mpm":"890","workers":"12","estado":"Congestionada"},{"nome_fila":"analytics-sync","tamanho":"0","taxa_mpm":"15","workers":"2","estado":"Normal"}]},{"key":"logs_erros","label":"Logs de Erros","singular":"Log de Erro","fields":[{"key":"horario","label":"Horário","type":"text","options":[],"required":true},{"key":"modulo","label":"Módulo / Provedor","type":"text","options":[],"required":true},{"key":"codigo","label":"Código HTTP","type":"number","options":[],"required":true},{"key":"mensagem","label":"Mensagem de Erro","type":"textarea","options":[],"required":true},{"key":"severidade","label":"Severidade","type":"select","options":["Baixa","Média","Alta","Crítica"],"required":true}],"sample":[{"horario":"14:28:12","modulo":"Google Gemini Pro","codigo":"504","mensagem":"Gateway Timeout ao aguardar resposta do upstream LLM.","severidade":"Alta"},{"horario":"14:15:40","modulo":"webhook-dispatch","codigo":"429","mensagem":"Too Many Requests na API destino do cliente XYZ.","severidade":"Média"},{"horario":"13:59:02","modulo":"Database Pool","codigo":"500","mensagem":"Connection pool exhausted temporariamente.","severidade":"Crítica"},{"horario":"13:4218","modulo":"Auth Service","codigo":"401","mensagem":"Token JWT expirado na tentativa de refresh.","severidade":"Baixa"}]}]}</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
