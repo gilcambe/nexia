@@ -23,3 +23,8 @@ test('sem binding ou sem resposta devolve null (mensagem de erro continua)', asy
   assert.strictEqual(await chat.reservaWorkersAI('s', [], null), null);
   assert.strictEqual(await chat.reservaWorkersAI('s', [], { run: async () => ({ response: '' }) }), null);
 });
+
+test('resposta em JSON (objeto) vira texto JSON, não "[object Object]"', async () => {
+  const r = await chat.reservaWorkersAI('s', [{ role: 'user', content: 'json' }], { run: async () => ({ response: { nome: 'Ana', idade: 31 } }) });
+  assert.deepStrictEqual(JSON.parse(r.text), { nome: 'Ana', idade: 31 });
+});
