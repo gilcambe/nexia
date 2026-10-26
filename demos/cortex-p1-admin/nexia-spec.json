@@ -3,8 +3,8 @@
     "kind": "system",
     "name": "Cortex-p1 Admin",
     "tagline": "Painel de monitoramento e status de provedores",
-    "photo_theme": "",
-    "description": "Painel de monitoramento e status de provedores",
+    "photo_theme": "server analytics technology",
+    "description": "Painel de monitoramento e status de provedores, cota usada, mensagens por minuto, tamanho da fila e erros na última hora.",
     "folder": "demos/cortex-p1-admin",
     "fonts": {
       "heading": "Space Grotesk",
@@ -24,9 +24,9 @@
       "whatsapp": "",
       "phone": "",
       "email": "admin@cortex-p1.internal",
-      "address": "",
-      "city": "",
-      "hours": "",
+      "address": "Data Center Principal",
+      "city": "São Paulo, SP",
+      "hours": "24/7 Monitoring",
       "instagram": "",
       "facebook": "",
       "youtube": "",
@@ -41,7 +41,7 @@
       "label": "Feito com Kernex",
       "url": "https://kernex.com.br/?utm_source=cortex-p1-admin&utm_medium=selo&utm_campaign=clientes"
     },
-    "leads_origem": "",
+    "leads_origem": "admin-status-panel",
     "entities": [
       {
         "key": "provedores",
@@ -189,7 +189,8 @@
       "Dashboard",
       "Status Provedores",
       "Métricas de Fila",
-      "Logs de Erros"
+      "Logs de Erros",
+      "Admin Status route"
     ]
   },
   "media": {}
