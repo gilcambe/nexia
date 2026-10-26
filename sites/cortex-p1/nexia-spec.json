@@ -1,29 +1,29 @@
 {
   "spec": {
     "kind": "system",
-    "name": "Cortex-p1",
-    "tagline": "Painel de cadastros e controle do sistema",
-    "photo_theme": "software dashboard",
-    "description": "Painel de cadastros e controle do sistema",
+    "name": "Site de Teste do Cortex-p1",
+    "tagline": "Painel de métricas e controle do Cortex",
+    "photo_theme": "",
+    "description": "Painel de métricas e controle do Cortex",
     "folder": "sites/cortex-p1",
     "fonts": {
-      "heading": "Outfit",
+      "heading": "Montserrat",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#111827",
-      "accent": "#2563eb",
+      "primary": "#4f46e5",
+      "accent": "#06b6d4",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#0f172a"
+      "dark": "#111827"
     },
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "",
-      "email": "contato@cortex-p1.com",
+      "phone": "(11) 4002-8922",
+      "email": "suporte@cortexp1.com.br",
       "address": "",
       "city": "",
       "hours": "",
@@ -44,147 +44,43 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "clientes",
-        "label": "Clientes",
-        "singular": "Cliente",
+        "key": "metrics",
+        "label": "Métricas",
+        "singular": "Métrica",
         "fields": [
           {
-            "key": "nome",
-            "label": "Nome completo",
+            "key": "provedor",
+            "label": "Provedor",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "email",
-            "label": "E-mail",
-            "type": "email",
+            "key": "cota_usada_hoje",
+            "label": "Cota Usada Hoje",
+            "type": "number",
             "options": [],
             "required": true
           },
           {
-            "key": "telefone",
-            "label": "Telefone",
-            "type": "phone",
+            "key": "mensagens_por_minuto",
+            "label": "Mensagens por Minuto",
+            "type": "number",
             "options": [],
             "required": true
           },
           {
-            "key": "cidade",
-            "label": "Cidade",
-            "type": "text",
+            "key": "tamanho_da_fila",
+            "label": "Tamanho da Fila",
+            "type": "number",
             "options": [],
             "required": true
           },
           {
-            "key": "plano",
-            "label": "Plano",
-            "type": "select",
-            "options": [
-              "Gratuito",
-              "Profissional",
-              "Empresarial"
-            ],
-            "required": true
-          },
-          {
-            "key": "criado_em",
-            "label": "Data de cadastro",
-            "type": "date",
+            "key": "erros_ultima_hora",
+            "label": "Erros na Última Hora",
+            "type": "number",
             "options": [],
-            "required": true
-          },
-          {
-            "key": "observacoes",
-            "label": "Observações",
-            "type": "textarea",
-            "options": [],
-            "required": false
-          }
-        ],
-        "sample": [
-          {
-            "nome": "Ana Silva",
-            "email": "ana.silva@email.com",
-            "telefone": "(11) 98765-4321",
-            "cidade": "São Paulo",
-            "plano": "Profissional",
-            "criado_em": "2026-01-15",
-            "observacoes": "Cliente corporativo do setor varejo"
-          },
-          {
-            "nome": "Bruno Costa",
-            "email": "bruno.costa@email.com",
-            "telefone": "(21) 91234-5678",
-            "cidade": "Rio de Janeiro",
-            "plano": "Gratuito",
-            "criado_em": "2026-02-10",
-            "observacoes": "Avaliação da plataforma"
-          },
-          {
-            "nome": "Carla Mendes",
-            "email": "carla.mendes@email.com",
-            "telefone": "(31) 99876-5432",
-            "cidade": "Belo Horizonte",
-            "plano": "Empresarial",
-            "criado_em": "2026-03-05",
-            "observacoes": "Contrato anual assinado"
-          },
-          {
-            "nome": "Daniel Oliveira",
-            "email": "daniel.oliveira@email.com",
-            "telefone": "(41) 97654-3210",
-            "cidade": "Curitiba",
-            "plano": "Profissional",
-            "criado_em": "2026-03-20",
-            "observacoes": "Indicação de parceiro"
-          },
-          {
-            "nome": "Fernanda Lima",
-            "email": "fernanda.lima@email.com",
-            "telefone": "(51) 96543-2109",
-            "cidade": "Porto Alegre",
-            "plano": "Gratuito",
-            "criado_em": "2026-04-02",
-            "observacoes": "Pequeno negócio local"
-          }
-        ]
-      },
-      {
-        "key": "usuarios",
-        "label": "Usuários",
-        "singular": "Usuário",
-        "fields": [
-          {
-            "key": "nome",
-            "label": "Nome",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "email",
-            "label": "E-mail",
-            "type": "email",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "senha",
-            "label": "Senha",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "papel",
-            "label": "Papel",
-            "type": "select",
-            "options": [
-              "Administrador",
-              "Operador",
-              "Leitura"
-            ],
             "required": true
           },
           {
@@ -196,239 +92,48 @@
               "Inativo"
             ],
             "required": true
-          },
-          {
-            "key": "ultimo_login",
-            "label": "Último acesso",
-            "type": "date",
-            "options": [],
-            "required": true
           }
         ],
         "sample": [
           {
-            "nome": "Administrador Master",
-            "email": "admin@cortex-p1.com",
-            "senha": "********",
-            "papel": "Administrador",
-            "status": "Ativo",
-            "ultimo_login": "2026-04-10"
+            "provedor": "Twilio",
+            "cota_usada_hoje": "12000",
+            "mensagens_por_minuto": "5",
+            "tamanho_da_fila": "200",
+            "erros_ultima_hora": "1",
+            "status": "Ativo"
           },
           {
-            "nome": "João Pereira",
-            "email": "joao.pereira@cortex-p1.com",
-            "senha": "********",
-            "papel": "Operador",
-            "status": "Ativo",
-            "ultimo_login": "2026-04-09"
+            "provedor": "Nexmo",
+            "cota_usada_hoje": "8000",
+            "mensagens_por_minuto": "3",
+            "tamanho_da_fila": "150",
+            "erros_ultima_hora": "0",
+            "status": "Ativo"
           },
           {
-            "nome": "Maria Souza",
-            "email": "maria.souza@cortex-p1.com",
-            "senha": "********",
-            "papel": "Leitura",
-            "status": "Ativo",
-            "ultimo_login": "2026-04-08"
+            "provedor": "Plivo",
+            "cota_usada_hoje": "5000",
+            "mensagens_por_minuto": "4",
+            "tamanho_da_fila": "100",
+            "erros_ultima_hora": "2",
+            "status": "Inativo"
           },
           {
-            "nome": "Antigo Funcionário",
-            "email": "antigo@cortex-p1.com",
-            "senha": "********",
-            "papel": "Operador",
-            "status": "Inativo",
-            "ultimo_login": "2026-02-15"
-          }
-        ]
-      },
-      {
-        "key": "produtos",
-        "label": "Produtos",
-        "singular": "Produto",
-        "fields": [
-          {
-            "key": "nome",
-            "label": "Nome do produto",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "sku",
-            "label": "SKU",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "preco",
-            "label": "Preço",
-            "type": "money",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "quantidade",
-            "label": "Estoque",
-            "type": "number",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "categoria",
-            "label": "Categoria",
-            "type": "select",
-            "options": [
-              "Software",
-              "Serviço",
-              "Hardware",
-              "Assinatura"
-            ],
-            "required": true
-          },
-          {
-            "key": "descricao",
-            "label": "Descrição",
-            "type": "textarea",
-            "options": [],
-            "required": false
-          }
-        ],
-        "sample": [
-          {
-            "nome": "Cortex CRM",
-            "sku": "CRM-001",
-            "preco": "299,00",
-            "quantidade": "150",
-            "categoria": "Software",
-            "descricao": "Gestão de relacionamento com clientes"
-          },
-          {
-            "nome": "Implantação Cortex",
-            "sku": "SVC-010",
-            "preco": "1500,00",
-            "quantidade": "10",
-            "categoria": "Serviço",
-            "descricao": "Configuração inicial da plataforma"
-          },
-          {
-            "nome": "Servidor Dedicado",
-            "sku": "HW-005",
-            "preco": "890,00",
-            "quantidade": "5",
-            "categoria": "Hardware",
-            "descricao": "Máquina de alto desempenho"
-          },
-          {
-            "nome": "Suporte Premium Anual",
-            "sku": "SUB-020",
-            "preco": "1200,00",
-            "quantidade": "1000",
-            "categoria": "Assinatura",
-            "descricao": "Atendimento prioritário 24h"
-          },
-          {
-            "nome": "Treinamento Equipe",
-            "sku": "TRN-030",
-            "preco": "600,00",
-            "quantidade": "20",
-            "categoria": "Serviço",
-            "descricao": "Capacitação de usuários finais"
-          }
-        ]
-      },
-      {
-        "key": "contratos",
-        "label": "Contratos",
-        "singular": "Contrato",
-        "fields": [
-          {
-            "key": "cliente",
-            "label": "Cliente",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "valor",
-            "label": "Valor",
-            "type": "money",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "data_inicio",
-            "label": "Data de início",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "data_fim",
-            "label": "Data de fim",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
-            "type": "select",
-            "options": [
-              "Ativo",
-              "Expirado",
-              "Renovado"
-            ],
-            "required": true
-          },
-          {
-            "key": "termos",
-            "label": "Termos",
-            "type": "textarea",
-            "options": [],
-            "required": false
-          }
-        ],
-        "sample": [
-          {
-            "cliente": "Ana Silva",
-            "valor": "3588,00",
-            "data_inicio": "2026-01-15",
-            "data_fim": "2027-01-14",
-            "status": "Ativo",
-            "termos": "Plano Profissional com renovação automática"
-          },
-          {
-            "cliente": "Bruno Costa",
-            "valor": "0,00",
-            "data_inicio": "2026-02-10",
-            "data_fim": "2026-05-10",
-            "status": "Ativo",
-            "termos": "Plano Gratuito período de avaliação"
-          },
-          {
-            "cliente": "Carla Mendes",
-            "valor": "14400,00",
-            "data_inicio": "2026-03-05",
-            "data_fim": "2027-03-04",
-            "status": "Ativo",
-            "termos": "Plano Empresarial anual"
-          },
-          {
-            "cliente": "Daniel Oliveira",
-            "valor": "3588,00",
-            "data_inicio": "2026-03-20",
-            "data_fim": "2026-09-20",
-            "status": "Expirado",
-            "termos": "Plano Profissional sem renovação"
+            "provedor": "Vonage",
+            "cota_usada_hoje": "2000",
+            "mensagens_por_minuto": "1",
+            "tamanho_da_fila": "50",
+            "erros_ultima_hora": "0",
+            "status": "Ativo"
           }
         ]
       }
     ],
     "modules": [
-      "Clientes",
-      "Usuários",
-      "Produtos",
-      "Contratos"
+      "Admin",
+      "Métricas",
+      "Relatórios"
     ]
   },
   "media": {}
