@@ -73,9 +73,15 @@ function linhaEvento(tipo, n, titulo) {
 }
 
 /** Resumo das 8h: o que ficou pronto nas últimas 24 h, o que travou e o que está na fila. */
-function textoResumo({ feitas = [], travadas = [], naFila = 0 }) {
+function textoResumo({ feitas = [], travadas = [], naFila = 0, planos = [] }) {
   const nomes = (l) => l.slice(0, 5).map((i) => `#${i.number}`).join(', ');
-  return `Ontem: ${feitas.length} feita(s)${feitas.length ? ` (${nomes(feitas)})` : ''}. Travadas: ${travadas.length}${travadas.length ? ` (${nomes(travadas)})` : ''}. Na fila: ${naFila}.`;
+  let texto = `Ontem: ${feitas.length} feita(s)${feitas.length ? ` (${nomes(feitas)})` : ''}. Travadas: ${travadas.length}${travadas.length ? ` (${nomes(travadas)})` : ''}. Na fila: ${naFila}.`;
+  
+  if (planos.length > 0) {
+    texto += `\nPedidos grandes: ${planos.length} concluídos em partes`;
+  }
+  
+  return texto;
 }
 
 /** Hora do resumo (8h de Brasília, UTC-3) e ainda não mandado hoje? */

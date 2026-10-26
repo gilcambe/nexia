@@ -49,7 +49,19 @@ test('C15d. assinatura só com endpoint https e chaves válidas', async () => {
   assert.equal(await av.acoesAvisos({ acao: 'outra' }, db), null);
 });
 
-test('C15e. fila avisa em feito/travado e manda o resumo; o app tem o botão e o service worker mostra o aviso', () => {
+test('C15d. textoResumo com planos vazios ou ausentes', () => {
+  assert.match(av.textoResumo({ feitas: [{ number: 1 }], travadas: [], naFila: 3 }), /1 feita\(s\) \(#1\)\. Travadas: 0\. Na fila: 3\./);
+  assert.match(av.textoResumo({ feitas: [{ number: 1 }], travadas: [], naFila: 3, planos: [] }), /1 feita\(s\) \(#1\)\. Travadas: 0\. Na fila: 3\./);
+  assert.match(av.textoResumo({ feitas: [{ number: 1 }], travadas: [], naFila: 3, planos: null }), /1 feita\(s\) \(#1\)\. Travadas: 0\. Na fila: 3\./);
+});
+
+test('C15e. textoResumo com planos contendo itens', () => {
+  const resumoComPlanos = av.textoResumo({ feitas: [{ number: 1 }], travadas: [], naFila: 3, planos: [{}, {}] });
+  assert.match(resumoComPlanos, /1 feita\(s\) \(#1\)\. Travadas: 0\. Na fila: 3\./);
+  assert.match(resumoComPlanos, /Pedidos grandes: 2 concluídos em partes/);
+});
+
+test('C15f. fila avisa em feito/travado e manda o resumo; o app tem o botão e o service worker mostra o aviso', () => {
   const R = (f) => fs.readFileSync(path.join(__dirname, '../..', f), 'utf8');
   const fila = R('scripts/cortex-fila.js');
   assert.match(fila, /avisarDono\('feito'/);
