@@ -44,7 +44,7 @@ function Chamar-Ollama {
   $body = @{ model = $modelo; prompt = $mensagem; stream = $false } | ConvertTo-Json
   try {
     # curl nativo (sem dependências externas)
-    $resposta = curl -s -X POST "$ollamaUrl" -H 'Content-Type: application/json' -d "$body"
+    $resposta = curl.exe -s -X POST "$ollamaUrl" -H 'Content-Type: application/json' -d "$body"
     $json = $resposta | ConvertFrom-Json
     return $json.response
   } catch {
