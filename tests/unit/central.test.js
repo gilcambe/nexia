@@ -101,3 +101,46 @@ test('CENT9. testar IAs: 1 teste por provedor, sem chave = desligado, erro escon
   assert.deepStrictEqual(r.ias.map((i) => [i.provedor, i.situacao]), [['groq', 'ok'], ['google', 'erro'], ['mistral', 'desligado']]);
   assert.ok(!JSON.stringify(r).includes('SEGREDO'));
 });
+
+test('CENT10. clientes traz pixAguardando e usoIa; acao confirmar_pix e recusar_pix no POST', async () => {
+  const agora = Date.now();
+  let liberado = null;
+  const db = {
+    collection: (col) => {
+      if (col === 'bc_acesso_pedidos') {
+        return {
+          orderBy: () => ({ limit: () => ({ get: async () => ({ docs: [{ id: 'p1', data: () => ({ uid: 'u1', email: 'p@x', plano: 'mensal', valor: 49, em: agora, status: 'pendente', dias: 30 }) }] }) }) }),
+          doc: (id) => ({
+            get: async () => ({ exists: true, data: () => ({ uid: 'u1', email: 'p@x', plano: 'mensal', valor: 49, em: agora, status: 'pendente', dias: 30 }) }),
+            set: async (dados) => { liberado = { id, ...dados }; },
+          }),
+        };
+      }
+      if (col === 'bc_acesso') {
+        return {
+          where: () => ({ limit: () => ({ get: async () => ({ docs: [{ data: () => ({ email: 'c@x', tipo: 'coach', gratisAte: agora + 864e5 }) }] }) }) }),
+          doc: () => ({ set: async () => {}, get: async () => ({ data: () => ({ email: 'c@x' }) }) }),
+        };
+      }
+      if (col === 'bc_acesso_pagamentos') {
+        return { add: async () => {} };
+      }
+      return { where: () => ({ limit: () => ({ get: async () => ({ docs: [] }) }) }) };
+    },
+  };
+
+  const h = createHandler({ getMw: () => master, getDb: () => db, getAgendas: () => ({}) });
+  const c = JSON.parse((await h(ev({ queryStringParameters: { parte: 'clientes' } }))).body);
+  assert.ok(Array.isArray(c.pixAguardando));
+  assert.strictEqual(c.pixAguardando.length, 1);
+  assert.strictEqual(c.pixAguardando[0].id, 'p1');
+
+  // Teste confirmação de Pix
+  const resConf = await h(ev({ httpMethod: 'POST', body: JSON.stringify({ acao: 'confirmar_pix', id: 'p1' }) }));
+  assert.strictEqual(resConf.statusCode, 200);
+  assert.strictEqual(liberado.status, 'confirmado');
+
+  // Teste permissão 403 para usuário comum
+  const resUser = await createHandler({ getMw: () => outro, getDb: () => db })(ev({ httpMethod: 'POST', body: JSON.stringify({ acao: 'confirmar_pix', id: 'p1' }) }));
+  assert.strictEqual(resUser.statusCode, 403);
+});
