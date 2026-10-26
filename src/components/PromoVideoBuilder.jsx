@@ -10,7 +10,18 @@ const PromoVideoBuilder = () => {
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
-    setArquivos(files);
+    
+    // Validar tipos de arquivo
+    const validFiles = files.filter(file => {
+      const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/quicktime'];
+      return validTypes.includes(file.type);
+    });
+    
+    if (validFiles.length !== files.length) {
+      setErro('Alguns arquivos não são suportados. Use apenas JPG, PNG, GIF, MP4 ou MOV.');
+    }
+    
+    setArquivos(validFiles);
     setErro(null);
   };
 
@@ -23,6 +34,11 @@ const PromoVideoBuilder = () => {
     
     if (arquivos.length === 0) {
       setErro('Por favor, selecione pelo menos uma foto ou vídeo');
+      return;
+    }
+    
+    if (prompt.length < 10) {
+      setErro('O prompt deve ter pelo menos 10 caracteres');
       return;
     }
 
@@ -87,7 +103,10 @@ const PromoVideoBuilder = () => {
               <p>{arquivos.length} arquivo(s) selecionado(s):</p>
               <ul>
                 {arquivos.map((file, index) => (
-                  <li key={index}>{file.name}</li>
+                  <li key={index} className="file-item">
+                    <span className="file-name">{file.name}</span>
+                    <span className="file-size">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                  </li>
                 ))}
               </ul>
             </div>
@@ -117,7 +136,7 @@ const PromoVideoBuilder = () => {
               style={{ width: `${progresso}%` }}
             ></div>
           </div>
-          <span>{progresso}%</span>
+          <span className="progress-texto">{progresso}% - Processando seus arquivos...</span>
         </div>
       )}
       
