@@ -55,7 +55,7 @@
         },
         "cta2": {
           "label": "Fale conosco",
-          "href": "#contato"
+          "href": "#fale-com-a-loja-teste"
         },
         "image_query": "retail store interior",
         "video_query": ""
@@ -297,38 +297,6 @@
       "credit": "Man smiling while carrying potted plants in a home decor store — Shixart1985 (BY 2.0, via Openverse)",
       "provider": "openverse"
     },
-    "s2.about": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Modern_retail_stores%2C_Hexham_-_geograph.org.uk_-_4937635.jpg/1280px-Modern_retail_stores%2C_Hexham_-_geograph.org.uk_-_4937635.jpg",
-      "width": 1280,
-      "height": 960,
-      "alt": "Modern retail stores, Hexham - geograph.org.uk - 4937635",
-      "credit": "Modern retail stores, Hexham - geograph.org.uk - 4937635 — Graham Robson (BY-SA 2.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s3.g0": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Entrance_to_Tesco_retail_store_on_Greyhound_retail_park_-_geograph.org.uk_-_1731885.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
-      "width": 1280,
-      "height": 960,
-      "alt": "Entrance to Tesco retail store on Greyhound retail park",
-      "credit": "John Firth (CC BY-SA 2.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s3.g4": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Shopping_experience_-_geograph.org.uk_-_1594287.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
-      "width": 1280,
-      "height": 960,
-      "alt": "Shopping experience View over The House of Bruar retail outlet, located in the m",
-      "credit": "Ian Paterson (CC BY-SA 2.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s3.g5": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/Svenskt_Tenn_02.JPG/1280px-Svenskt_Tenn_02.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 857,
-      "alt": "Retailer Svenkt Tenn, Strandvägen, Stockholm",
-      "credit": "Bengt Oberger (CC BY-SA 3.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
     "s1.item3": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/A_Lacoste_retail_store_in_Delaware%2C_United_States.jpg/1280px-A_Lacoste_retail_store_in_Delaware%2C_United_States.jpg",
       "width": 1280,
@@ -344,6 +312,22 @@
       "alt": "Airpods and Airpods Pro being displayed in electronics retail store",
       "credit": "Airpods and Airpods Pro being displayed in electronics retail store — KKPCW (BY-SA 4.0, via Openverse)",
       "provider": "openverse"
+    },
+    "s2.about": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Modern_retail_stores%2C_Hexham_-_geograph.org.uk_-_4937635.jpg/1280px-Modern_retail_stores%2C_Hexham_-_geograph.org.uk_-_4937635.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "Modern retail stores, Hexham - geograph.org.uk - 4937635",
+      "credit": "Modern retail stores, Hexham - geograph.org.uk - 4937635 — Graham Robson (BY-SA 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Entrance_to_Tesco_retail_store_on_Greyhound_retail_park_-_geograph.org.uk_-_1731885.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 960,
+      "alt": "Entrance to Tesco retail store on Greyhound retail park",
+      "credit": "John Firth (CC BY-SA 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
     },
     "s3.g1": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Sprint_retail_store_frontage%2C_New_Mexico.jpg/1280px-Sprint_retail_store_frontage%2C_New_Mexico.jpg",
@@ -368,6 +352,22 @@
       "alt": "Playstation 5 being displayed in electronics retail store - 1",
       "credit": "Playstation 5 being displayed in electronics retail store - 1 — KKPCW (BY-SA 4.0, via Openverse)",
       "provider": "openverse"
+    },
+    "s3.g4": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/2/21/Shopping_experience_-_geograph.org.uk_-_1594287.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 960,
+      "alt": "Shopping experience View over The House of Bruar retail outlet, located in the m",
+      "credit": "Ian Paterson (CC BY-SA 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g5": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/91/Svenskt_Tenn_02.JPG/1280px-Svenskt_Tenn_02.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 857,
+      "alt": "Retailer Svenkt Tenn, Strandvägen, Stockholm",
+      "credit": "Bengt Oberger (CC BY-SA 3.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
     },
     "s3.g6": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Camera_World%27s_retail_store_-_downtown_Portland%2C_Oregon_%282015%29.jpg/1280px-Camera_World%27s_retail_store_-_downtown_Portland%2C_Oregon_%282015%29.jpg",
