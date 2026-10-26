@@ -10,10 +10,11 @@
 const REPO = process.env.REPO || 'gilcambe/nexia';
 const MAX_POR_RODADA = 6;
 const MAX_DIFF = 45000;
-const MAX_ADICOES = 1500;
+const MAX_ADICOES = 400;   // dono (26/10): só PR pequeno entra sozinho; nunca quebrar o que funciona
 const NOTA_MIN = 8;
 const MARCA = (sha) => `<!-- revisor-gratis ${sha} -->`;
-const PROIBIDO = /^(\.github\/|firestore\.rules|firestore\.indexes|storage\.rules|\.env)|(secret|credential|\.pem$|\.key$)/i;
+// Nunca aprovado pelo revisor: workflows/deploy, regras, segredos, login, Worker principal, dependências e dados de clientes.
+const PROIBIDO = /^(\.github\/|firestore\.rules|firestore\.indexes|storage\.rules|\.env|wrangler|package(-lock)?\.json|cloudflare\/(worker|app)\.js|lib\/firebase-lite|sites\/[^/]+\/dados)|(secret|credential|auth|login|senha|\.pem$|\.key$)/i;
 
 const SISTEMA = `Você é um revisor de código rigoroso do projeto NEXIA (Node 20, Cloudflare Worker grátis, Firebase sem Blaze, React/Vite).
 Regras do dono que o PR NÃO pode quebrar:
@@ -51,7 +52,7 @@ function barreira(arquivos, pr) {
   const nomes = arquivos.map(a => a.filename);
   const ruim = nomes.find(n => PROIBIDO.test(n));
   if (ruim) return `mexe em ${ruim} (só o dono ou a Claude aprovam isso)`;
-  if ((pr.additions || 0) > MAX_ADICOES || nomes.length > 30) return `grande demais (${nomes.length} arquivos, +${pr.additions}); precisa ser dividido`;
+  if ((pr.additions || 0) > MAX_ADICOES || nomes.length > 10) return `grande demais (${nomes.length} arquivos, +${pr.additions}); precisa ser dividido`;
   if (!nomes.length) return 'PR vazio';
   return null;
 }

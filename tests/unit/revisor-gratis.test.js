@@ -23,6 +23,9 @@ test('REVISOR3: barreiras objetivas (workflow, regras, segredo, tamanho) recusam
   assert.match(r.barreira([{ filename: '.github/workflows/x.yml' }], pr()), /\.github/);
   assert.match(r.barreira([{ filename: 'firestore.rules' }], pr()), /firestore/);
   assert.match(r.barreira([{ filename: 'lib/a.js' }], pr({ additions: 5000 })), /grande/);
+  assert.match(r.barreira([{ filename: 'lib/auth.js' }], pr()), /auth/);
+  assert.match(r.barreira([{ filename: 'cloudflare/worker.js' }], pr()), /worker/);
+  assert.match(r.barreira([{ filename: 'lib/a.js' }], pr({ additions: 401 })), /grande/);
   assert.strictEqual(r.barreira([{ filename: 'scripts/a.js' }, { filename: 'cloudflare/b.js' }], pr()), null);
 });
 
