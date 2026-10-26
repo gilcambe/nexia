@@ -50,7 +50,7 @@ const props = defineProps({
   tipoConversa: { type: String, default: '' },
 });
 
-const tiposOmitidos = ['poema', 'tradução', 'codigo', 'conversa pessoal'];
+const tiposOmitidos = ['poema', 'tradução', 'código', 'conversa pessoal'];
 
 function urlValida(url) {
   try {
