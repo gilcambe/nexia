@@ -270,6 +270,14 @@
       "credit": "Scott Brody (CC BY-SA 4.0, via Wikimedia Commons)",
       "provider": "wikimedia"
     },
+    "s2.about": {
+      "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZmw0OTE3NDkwMjU2My1pbWFnZS1reWJlZm1oOC5qcGc.jpg",
+      "width": 6000,
+      "height": 4000,
+      "alt": "Woman clothes store",
+      "credit": "Woman clothes store — autor desconhecido (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
     "s3.g0": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Warby_Parker_eyeglasses_retail_store_interior_at_Washington_Union_Station.jpg/1280px-Warby_Parker_eyeglasses_retail_store_interior_at_Washington_Union_Station.jpg",
       "width": 1280,
@@ -318,12 +326,12 @@
       "credit": "PNG People shopping sticker, transparent — autor desconhecido (CC0 1.0, via Openverse)",
       "provider": "openverse"
     },
-    "s2.about": {
-      "url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvZmw0OTE3NDkwMjU2My1pbWFnZS1reWJlZm1oOC5qcGc.jpg",
-      "width": 6000,
-      "height": 4000,
-      "alt": "Woman clothes store",
-      "credit": "Woman clothes store — autor desconhecido (CC0 1.0, via Openverse)",
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Airpods_and_Airpods_Pro_being_displayed_in_electronics_retail_store.jpg/1280px-Airpods_and_Airpods_Pro_being_displayed_in_electronics_retail_store.jpg",
+      "width": 1280,
+      "height": 862,
+      "alt": "Airpods and Airpods Pro being displayed in electronics retail store",
+      "credit": "Airpods and Airpods Pro being displayed in electronics retail store — KKPCW (BY-SA 4.0, via Openverse)",
       "provider": "openverse"
     }
   }
