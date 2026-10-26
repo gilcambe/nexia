@@ -136,8 +136,7 @@ function createRouter(o = {}) {
 
     const dedupped = dedupe(descs);
     const tDispatch0 = performance.now();
-    const tDispatchMs = performance.now() - tDispatch0;
-    console.log(`[model-router] dispatch start providers=${dedupped.length} dispatchMs=${Math.round(tDispatchMs)}`);
+    console.log(`[model-router] dispatch start providers=${dedupped.length}`);
 
     const timeoutPromise = (ms, msg) => {
       let timer;
@@ -211,7 +210,15 @@ function createRouter(o = {}) {
         // Primeiro chunk válido recebido: cancela o timer de primeiro chunk.
         if (cancelFirst) cancelFirst();
         const tFirstMs = performance.now() - tFirst0;
-        console.log(`[model-router] dispatch ${d.provider}/${d.model} firstChunkMs=${Math.round(tFirstMs)}`);
+        const tDispatchTotalMs = performance.now() - tDispatch0;
+        console.log(`[model-router] dispatch ${d.provider}/${d.model} firstChunkMs=${Math.round(tFirstMs)} totalDispatchMs=${Math.round(tDispatchTotalMs)}`);
+        // Primeiro chunk válido recebido: cancela timer de primeiro chunk e aborta quaisquer conexões secundárias pendentes.
+        if (cancelFirst) cancelFirst();
+        abortControllers.forEach((ctrl, key) => {
+          if (key !== d.provider) {
+            try { ctrl.abort(); } catch {}
+          }
+        });
       } catch (e) {
         if (cancelFirst) cancelFirst();
         if (typeof it.return === 'function') { try { await it.return(); } catch {} }
@@ -231,8 +238,7 @@ function createRouter(o = {}) {
         while (!nextItem.done) {
           const val = nextItem.value;
           if (val && val.type === 'text' && val.text) {
-            chunks.push(val.text);
-            accumulatedText += val.text;
+            chunkBuffer.push(val.text);
           }
           yield val;
 
@@ -250,11 +256,16 @@ function createRouter(o = {}) {
           ]);
           if (cancelStall) cancelStall();
           const tStallMs = performance.now() - tStall0;
-          console.log(`[model-router] stream ${d.provider}/${d.model} stallWaitMs=${Math.round(tStallMs)}`);
+          const tStreamTotalMs = performance.now() - tFirst0;
+          console.log(`[model-router] stream ${d.provider}/${d.model} stallWaitMs=${Math.round(tStallMs)} streamTotalMs=${Math.round(tStreamTotalMs)}`);
         }
-        if (nextItem.done) {
-          currentStreamDone = true;
-        }
+                  if (nextItem.done) {
+            currentStreamDone = true;
+          }
+          // Atualiza o texto acumulado via join() apenas quando necessário (fora do loop quente de chunks).
+          if (chunkBuffer.length) {
+            accumulatedText = chunkBuffer.join('');
+          }
       } catch (e) {
         if (typeof it.return === 'function') { try { await it.return(); } catch {} }
         if (placar) placar.marcar(d, 'transient');
@@ -269,6 +280,10 @@ function createRouter(o = {}) {
       }
 
       if (currentStreamDone) {
+        // Garante accumulatedText atualizado via join() antes de gravar em cache.
+        if (chunkBuffer.length && !accumulatedText) {
+          accumulatedText = chunkBuffer.join('');
+        }
         if (cacheavel(req) && accumulatedText) {
           const d = dedupped[i] || descs[0];
           const k = `${d.provider}|${d.model}|${chave(req)}`;
@@ -281,6 +296,10 @@ function createRouter(o = {}) {
       }
     }
 
+    // Garante accumulatedText atualizado via join() antes da verificação final.
+    if (chunkBuffer.length && !accumulatedText) {
+      accumulatedText = chunkBuffer.join('');
+    }
     if (!accumulatedText && Date.now() - startTime >= totalTimeoutMs) {
       yield { type: 'text', text: 'Não consegui agora, tente de novo.' };
       yield { type: 'done', error: 'TIMEOUT_60S' };
