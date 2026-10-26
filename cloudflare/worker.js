@@ -25,6 +25,11 @@ export default {
       const doResp = await chatDurableObject(request, env);
       if (doResp) return doResp;
     }
+    
+    // Encaminha requisições de chat para o handler Netlify existente quando o Durable Object não está disponível
+    if ((url.pathname === '/api/chat' || url.pathname.startsWith('/api/chat/')) && !env.CHAT_DO) {
+      return forwardToChatHandler(request, env);
+    }
     // #807: leituras públicas (config do Firebase etc.) passam pelo cache de borda (60 a 300 s).
     return cacheBorda.comCacheDeBorda(request, env, ctx,
       () => app.handleRequest(request, env, { getFunction: functions.getFunction }));
