@@ -204,7 +204,9 @@ async function reservaWorkersAI(system, msgs, ai = globalThis.__NEXIA_AI__) {
   for (const modelo of MODELOS_RESERVA) {
     try {
       const r = await ai.run(modelo, { messages, max_tokens: 2048 });
-      const texto = r && (r.response || (r.result && r.result.response));
+      let texto = r && (r.response || (r.result && r.result.response));
+      // O Workers AI devolve objeto quando a resposta é um JSON; sem isso o chat mostrava "[object Object]".
+      if (texto && typeof texto === 'object') texto = JSON.stringify(texto);
       if (texto && String(texto).trim()) return { text: String(texto), modelo: 'Workers AI ' + modelo.split('/').pop() };
     } catch (e) { console.warn('[CORTEX] Reserva Workers AI falhou:', modelo, e && e.message); }
   }
