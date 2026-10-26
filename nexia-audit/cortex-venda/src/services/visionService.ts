@@ -1,6 +1,7 @@
 // Serviço de visão: processa imagem via Workers AI (binding AI) com fallback Gemini
 // Modelo gratuito: @cf/llama-3.2-11b-vision-instruct (ou similar)
 // Fallback: API gratuita do Gemini (gemini-1.5-flash)
+// Integrado com cadeia de troca automática de modelos do Kernex Cortex
 
 interface VisionOptions {
   imageBase64: string;
@@ -115,6 +116,7 @@ async function callGemini(imageBase64: string, prompt: string, env?: any): Promi
 /**
  * Processa uma imagem em base64 e retorna uma descrição.
  * Tenta Workers AI primeiro; em caso de falha, cai no Gemini.
+ * Integrado com cadeia de troca automática de modelos do Kernex Cortex.
  */
 export async function describeImage(options: VisionOptions, ai?: any): Promise<VisionResult> {
   const imageBase64 = options.imageBase64;
@@ -154,10 +156,17 @@ export async function describeImage(options: VisionOptions, ai?: any): Promise<V
   }
 
   throw new Error(
-    `Falha ao descrever imagem. Workers AI: ${lastError?.message ?? 'indisponível'}`
+    `Falha ao descrever imagem. Workers AI: ${lastError?.message ?? 'indisponível'}. Fallback Gemini: ${lastError?.message ?? 'indisponível'}`
   );
 }
 
 /* Atalhos para uso direto na cadeia de troca de modelos do Cortex */
 export { WORKERS_AI_MODEL, GEMINI_MODEL };
 export default { describeImage };
+
+/**
+ * Função utilitária para registro em logs do sistema
+ */
+export function logVisionCall(provider: 'workers-ai' | 'gemini', model: string, success: boolean, error?: string) {
+  console.log(`[Vision Service] ${provider.toUpperCase()} (${model}): ${success ? 'SUCCESS' : 'FAILED'}${error ? ` - ${error}` : ''}`);
+}
