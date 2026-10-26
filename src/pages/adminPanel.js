@@ -31,7 +31,7 @@ export default function AdminPanel() {
         </thead>
         <tbody>
           {logs.map((log) => (
-            <tr key={log._id} style={{ borderBottom: '1px solid #eee' }}>
+            <tr key={log.id} style={{ borderBottom: '1px solid #eee' }}>
               <td style={{ padding: '0.5rem' }}>{log.ip}</td>
               <td style={{ padding: '0.5rem' }}>{log.userId || '-'}</td>
               <td style={{ padding: '0.5rem' }}>{log.tipo}</td>
