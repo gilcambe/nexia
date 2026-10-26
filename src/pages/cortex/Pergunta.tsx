@@ -9,6 +9,8 @@ import Composer from "./Composer";
 
 // Pergunta direta ao Cortex: a resposta chega palavra por palavra (SSE do Worker em /api/cortex), sem abrir pedido.
 // Para mudar código, "Virar pedido" manda a pergunta para a fila do Cortex como um pedido normal.
+// #1640: resposta que é só uma imagem gerada (markdown ![..](data:image/...)) aparece como imagem.
+const imagemDe = (t: string): string | null => (/^!\[[^\]]*\]\((data:image\/[a-z]+;base64,[A-Za-z0-9+/=]+)\)$/.exec((t || "").trim()) || [])[1] || null;
 interface Fala { id: string; quem: "dono" | "cortex"; texto: string; vivo?: boolean; modelo?: string }
 
 // #823: "como estamos?" / "o que falta?" leem a Central (fila do Cortex) antes de responder. Sem acesso, responde sem esse contexto.
@@ -98,7 +100,7 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
               <div className="min-w-0 flex-1">
                 <p className="text-xs text-[var(--cx-mut)] mb-1">Cortex{f.modelo ? ` · ${f.modelo}` : ""}{f.vivo ? " · escrevendo…" : ""}</p>
                 <p className="whitespace-pre-wrap break-words text-[15px] leading-6" aria-live="polite" aria-busy={f.vivo ? "true" : "false"}>
-                  {f.texto}{f.vivo && <span className="inline-block w-2 h-4 align-middle ml-0.5 bg-[var(--cx-ac)] animate-pulse" />}
+                  {imagemDe(f.texto) ? <img src={imagemDe(f.texto)!} alt="Imagem criada pelo Cortex" className="rounded-2xl max-w-full w-[512px]" data-testid="cx-imagem" /> : f.texto}{f.vivo && <span className="inline-block w-2 h-4 align-middle ml-0.5 bg-[var(--cx-ac)] animate-pulse" />}
                 </p>
                 {f.vivo && <button onClick={() => corte.current?.abort()} className="mt-2 h-9 px-3 rounded-xl border border-[var(--cx-line)] text-xs" data-testid="cx-parar">Parar</button>}
                 {!f.vivo && k > 0 && (

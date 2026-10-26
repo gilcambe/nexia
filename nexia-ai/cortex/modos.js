@@ -2,7 +2,7 @@
 // #831 (Melhoria C13): modos "Rápido / Pensar / Pesquisar" do composer do Cortex. Tudo grátis.
 //   rapido    → modelo pequeno e rápido (Groq GPT-OSS 20B), sem o passo do orquestrador
 //   pensar    → modelo de raciocínio (cadeia grátis de reasoning)
-//   pesquisar → busca na web sem chave (DuckDuckGo, Google News RSS e Wikipédia) e o modelo lê os resultados
+//   pesquisar → busca na web sem chave (DuckDuckGo, Google News RSS, Wikipédia e cotação de moedas) e o modelo lê os resultados
 
 const MODOS = Object.freeze({
   rapido: { intent: 'fast', maxTokens: 2048 },
@@ -16,9 +16,10 @@ const buscaWebEngine = require('../../lib/busca-web');
 
 /** Resultados da web (grátis, sem chave). Devolve o contexto formatado da busca. */
 async function buscarWeb(pergunta, fetchImpl = fetch, ms = 4000) {
+  // #1733: cada fonte tem o próprio prazo dentro de busca-web (antes um prazo só para todas fazia a busca voltar vazia).
   try {
-    const res = await buscaWebEngine.buscar(pergunta, { fetchImpl, max: 5, ms });
-    return res.contexto || buscaWebEngine.contexto([]);
+    const res = await buscaWebEngine.buscar(pergunta, { fetchImpl, max: 6, ms });
+    return res.contexto || '';
   } catch {
     return buscaWebEngine.contexto([]);
   }

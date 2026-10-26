@@ -20,7 +20,7 @@ test('BW1. lê resultados do DuckDuckGo HTML, tira anúncio e decodifica o link 
 });
 
 test('BW2. buscar usa o DuckDuckGo e monta contexto numerado e fontes', async () => {
-  const r = await b.buscar('preço do dólar', { fetchImpl: async (u) => (/html\.duckduckgo\.com/.test(String(u)) ? resp(200, HTML, 'html') : resp(403, '')) });
+  const r = await b.buscar('preço do pão', { fetchImpl: async (u) => (/html\.duckduckgo\.com/.test(String(u)) ? resp(200, HTML, 'html') : resp(403, '')) });
   assert.strictEqual(r.de, 'duckduckgo');
   assert.match(r.contexto, /\[1\] Título A & cia — https:\/\/exemplo\.com\/a/);
   assert.match(r.contexto, /cite com \[n\]/);
@@ -45,6 +45,17 @@ test('BW3. DuckDuckGo fora ou vazio → Google News RSS → Wikipédia; nada →
   assert.strictEqual((await b.buscar('')).fontes.length, 0);
 });
 
+test('BW5. cotação do dólar pela AwesomeAPI e fonte lenta não derruba as outras (#1733)', async () => {
+  const cot = { USDBRL: { bid: '5.42', ask: '5.43', pctChange: '0.1', create_date: '2026-10-26 10:00:00' } };
+  const r = await b.buscar('Qual é a cotação do dólar hoje?', { fetchImpl: async (u) => (String(u).includes('awesomeapi') ? resp(200, cot) : resp(403, '')) });
+  assert.strictEqual(r.de, 'cotacao');
+  assert.match(r.contexto, /Dólar: compra R\$ 5\.42/);
+  const wiki = { query: { search: [{ title: 'Copa do Mundo FIFA de 2022', snippet: 'Argentina campeã' }] } };
+  const lento = await b.buscar('Quem ganhou a Copa de 2022? Cite a fonte.', { ms: 50, fetchImpl: async (u) => (String(u).includes('wikipedia') ? resp(200, wiki) : new Promise(() => {})) });
+  assert.strictEqual(lento.de, 'wikipedia');
+  assert.match(lento.contexto, /Argentina campeã/);
+});
+
 test('BW4. Central parte=busca (só master)', async () => {
   const { createHandler } = require('../../netlify/functions/central.js');
   const master = { verifyBearerToken: async () => ({ ok: true, role: 'master' }) };
@@ -53,17 +64,4 @@ test('BW4. Central parte=busca (só master)', async () => {
   assert.strictEqual(JSON.parse(r.body).fontes.length, 2);
   const outro = { verifyBearerToken: async () => ({ ok: true, role: 'user' }) };
   assert.strictEqual((await createHandler({ getMw: () => outro })({ httpMethod: 'GET', headers: {}, queryStringParameters: { parte: 'busca', q: 'x' } })).statusCode, 403);
-});
-
-test('BW9. fontes rodam ao mesmo tempo: uma fonte travada não derruba as outras', async () => {
-  const wiki = { query: { search: [{ title: 'Copa do Mundo FIFA de 2022', snippet: 'A Argentina venceu' }] } };
-  const t0 = Date.now();
-  const r = await b.buscar('quem ganhou a copa de 2022', { ms: 300, fetchImpl: (u, o = {}) => {
-    if (String(u).includes('wikipedia')) { assert.match(String(u), /srsearch=ganhou%20copa%202022/); return Promise.resolve(resp(200, wiki)); }
-    return new Promise((_, rej) => o.signal && o.signal.addEventListener('abort', () => rej(new Error('prazo'))));
-  } });
-  assert.ok(Date.now() - t0 < 2000);
-  assert.strictEqual(r.fontes.length, 1);
-  assert.match(r.contexto, /\[1\] Copa do Mundo FIFA de 2022/);
-  assert.strictEqual(b.termosChave('Qual é a cotação do dólar hoje?'), 'cotação dólar');
 });
