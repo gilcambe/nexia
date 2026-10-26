@@ -1,0 +1,383 @@
+{
+  "spec": {
+    "kind": "site",
+    "name": "Teste",
+    "tagline": "Loja especializada em produtos exclusivos",
+    "photo_theme": "retail store",
+    "description": "A melhor experiência de compra com produtos selecionados e atendimento personalizado.",
+    "folder": "sites/teste",
+    "fonts": {
+      "heading": "Playfair Display",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2c3e50",
+      "accent": "#e74c3c",
+      "bg": "#f8f9fa",
+      "surface": "#ffffff",
+      "text": "#2c3e50",
+      "muted": "#667071",
+      "dark": "#1a252f"
+    },
+    "style": "elegant",
+    "contact": {
+      "whatsapp": "5511999998888",
+      "phone": "(11) 99999-8888",
+      "email": "contato@lojateste.com.br",
+      "address": "Rua das Lojas, 123",
+      "city": "São Paulo - SP",
+      "hours": "Seg a Dom, 9h às 21h",
+      "instagram": "lojateste",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=teste&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "sections": [
+      {
+        "type": "hero",
+        "id": "descubra-produtos-exclusivos",
+        "title": "Descubra produtos exclusivos",
+        "subtitle": "Qualidade e variedade para todos os gostos.",
+        "eyebrow": "Loja Teste",
+        "cta": {
+          "label": "Ver produtos",
+          "href": "#produtos"
+        },
+        "cta2": {
+          "label": "Fale conosco",
+          "href": "#contato"
+        },
+        "image_query": "retail store interior",
+        "video_query": ""
+      },
+      {
+        "type": "services",
+        "id": "produtos",
+        "title": "Nossos produtos",
+        "subtitle": "Seleção curada com os melhores itens do mercado.",
+        "items": [
+          {
+            "title": "Eletrônicos",
+            "text": "Últimos modelos com tecnologia de ponta.",
+            "price": "",
+            "image_query": "electronic store",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Moda",
+            "text": "Roupas e acessórios para todas as ocasiões.",
+            "price": "",
+            "image_query": "fashion boutique",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Casa & Decoração",
+            "text": "Itens para transformar seu espaço.",
+            "price": "",
+            "image_query": "home decor",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Livros",
+            "text": "Variedade de títulos para todos os gostos.",
+            "price": "",
+            "image_query": "bookstore",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          }
+        ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-a-loja",
+        "title": "Sobre a loja",
+        "subtitle": "Há 15 anos oferecendo os melhores produtos e atendimento excepcional.",
+        "text": "Há 15 anos oferecendo os melhores produtos e atendimento excepcional.",
+        "image_query": "modern retail store",
+        "stats": [
+          {
+            "value": "15",
+            "label": "anos"
+          },
+          {
+            "value": "5000+",
+            "label": "clientes"
+          },
+          {
+            "value": "1000+",
+            "label": "produtos"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "nossa-loja",
+        "title": "Nossa loja",
+        "subtitle": "",
+        "image_queries": [
+          "retail store interior",
+          "store products display",
+          "customer shopping",
+          "store counter",
+          "retail signage",
+          "store entrance",
+          "product shelves",
+          "cashier area"
+        ],
+        "gif_queries": []
+      },
+      {
+        "type": "video",
+        "id": "conheca-nossa-loja",
+        "title": "Conheça nossa loja",
+        "subtitle": "Um tour virtual por nossos espaços.",
+        "youtube": "",
+        "video_query": "retail store tour"
+      },
+      {
+        "type": "team",
+        "id": "nossa-equipe",
+        "title": "Nossa equipe",
+        "subtitle": "",
+        "members": [
+          {
+            "name": "Ana Silva",
+            "role": "Gerente",
+            "image_query": "female store manager"
+          },
+          {
+            "name": "Carlos Mendes",
+            "role": "Atendente",
+            "image_query": "male retail employee"
+          }
+        ]
+      },
+      {
+        "type": "testimonials",
+        "id": "depoimentos",
+        "title": "Depoimentos",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Maria L.",
+            "role": "",
+            "text": "Atendimento rápido e produtos de qualidade!",
+            "rating": 5
+          },
+          {
+            "name": "João P.",
+            "role": "",
+            "text": "Sempre encontro o que preciso aqui.",
+            "rating": 5
+          },
+          {
+            "name": "Clara S.",
+            "role": "",
+            "text": "A melhor loja da região!",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "links",
+        "id": "fale-conosco",
+        "title": "Fale conosco",
+        "subtitle": "",
+        "items": [
+          {
+            "label": "WhatsApp",
+            "url": "https://wa.me/5511999998888",
+            "icon": "whatsapp"
+          },
+          {
+            "label": "Instagram",
+            "url": "https://instagram.com/lojateste",
+            "icon": "instagram"
+          },
+          {
+            "label": "Email",
+            "url": "mailto:contato@lojateste.com.br",
+            "icon": "mail"
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "perguntas-frequentes",
+        "title": "Perguntas frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Aceitam cartão?",
+            "a": "Sim, todas as bandeiras."
+          },
+          {
+            "q": "Tem estacionamento?",
+            "a": "Sim, estacionamento gratuito."
+          },
+          {
+            "q": "Trabalhamos com conserto?",
+            "a": "Sim, para eletrônicos e eletrodomésticos."
+          },
+          {
+            "q": "Enviamos para todo o Brasil?",
+            "a": "Sim, via transportadora parceira."
+          },
+          {
+            "q": "Tem loja física?",
+            "a": "Sim, na Rua das Lojas, 123."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "visite-nossa-loja",
+        "title": "Visite nossa loja",
+        "subtitle": "Estamos esperando por você!",
+        "cta": {
+          "label": "Ver mapa",
+          "href": "#contato"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "informacoes-de-contato",
+        "title": "Informações de contato",
+        "subtitle": "",
+        "map": true,
+        "form": true
+      }
+    ]
+  },
+  "media": {
+    "s0.hero": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Warby_Parker_eyeglasses_retail_store_interior_at_Washington_Union_Station.jpg/1280px-Warby_Parker_eyeglasses_retail_store_interior_at_Washington_Union_Station.jpg",
+      "width": 1280,
+      "height": 909,
+      "alt": "Warby Parker eyeglasses retail store interior at Washington Union Station",
+      "credit": "Warby Parker eyeglasses retail store interior at Washington Union Station — Harrison Keely (BY 4.0, via Openve",
+      "provider": "openverse"
+    },
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Computer_and_Consumer_Electronics_store_in_Ghana.jpg/1280px-Computer_and_Consumer_Electronics_store_in_Ghana.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "Computer and Consumer Electronics store in Ghana",
+      "credit": "Computer and Consumer Electronics store in Ghana — oneVillage Initiative (BY-SA 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s2.about": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Modern_retail_stores%2C_Hexham_-_geograph.org.uk_-_4937635.jpg/1280px-Modern_retail_stores%2C_Hexham_-_geograph.org.uk_-_4937635.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "Modern retail stores, Hexham - geograph.org.uk - 4937635",
+      "credit": "Modern retail stores, Hexham - geograph.org.uk - 4937635 — Graham Robson (BY-SA 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Kiwi_on_the_store_counter.jpg/1280px-Kiwi_on_the_store_counter.jpg",
+      "width": 1280,
+      "height": 720,
+      "alt": "Kiwi on the store counter",
+      "credit": "Kiwi on the store counter — JustKronos (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g4": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Signage_for_Brooklands_Retail_Park_-_geograph.org.uk_-_5819830.jpg/1280px-Signage_for_Brooklands_Retail_Park_-_geograph.org.uk_-_5819830.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Signage for Brooklands Retail Park",
+      "credit": "David Smith (CC BY-SA 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g5": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/DLT_Department_Store_Entrance.jpg/1280px-DLT_Department_Store_Entrance.jpg",
+      "width": 1280,
+      "height": 848,
+      "alt": "DLT Department Store Entrance",
+      "credit": "DLT Department Store Entrance — Florstein (WikiPhotoSpace) (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s5.m1": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/SMALL_RETAIL_BUSINESSES_ON_ST._CLAUDE_AVENUE_-_NARA_-_546034.jpg/1280px-SMALL_RETAIL_BUSINESSES_ON_ST._CLAUDE_AVENUE_-_NARA_-_546034.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 865,
+      "alt": "SMALL RETAIL BUSINESSES ON ST. CLAUDE AVENUE - NARA - 546034",
+      "credit": "John Messina (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/A_Lacoste_retail_store_in_Delaware%2C_United_States.jpg/1280px-A_Lacoste_retail_store_in_Delaware%2C_United_States.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "A Lacoste retail store in Delaware, United States",
+      "credit": "A Lacoste retail store in Delaware, United States — Harrison Keely (BY 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Airpods_and_Airpods_Pro_being_displayed_in_electronics_retail_store.jpg/1280px-Airpods_and_Airpods_Pro_being_displayed_in_electronics_retail_store.jpg",
+      "width": 1280,
+      "height": 862,
+      "alt": "Airpods and Airpods Pro being displayed in electronics retail store",
+      "credit": "Airpods and Airpods Pro being displayed in electronics retail store — KKPCW (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Sprint_retail_store_frontage%2C_New_Mexico.jpg/1280px-Sprint_retail_store_frontage%2C_New_Mexico.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "File:Sprint retail store frontage, New Mexico.jpg",
+      "credit": "File:Sprint retail store frontage, New Mexico.jpg — Chris Potter, stockmonkeys.com (BY 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/An_AT%26T_wireless_retail_store_in_Asheville%2C_North_Carolina_02.jpg/1280px-An_AT%26T_wireless_retail_store_in_Asheville%2C_North_Carolina_02.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "An AT&T wireless retail store in Asheville, North Carolina 02",
+      "credit": "An AT&T wireless retail store in Asheville, North Carolina 02 — Harrison Keely (BY 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Playstation_5_being_displayed_in_electronics_retail_store_-_1.jpg/1280px-Playstation_5_being_displayed_in_electronics_retail_store_-_1.jpg",
+      "width": 1280,
+      "height": 2276,
+      "alt": "Playstation 5 being displayed in electronics retail store - 1",
+      "credit": "Playstation 5 being displayed in electronics retail store - 1 — KKPCW (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Camera_World%27s_retail_store_-_downtown_Portland%2C_Oregon_%282015%29.jpg/1280px-Camera_World%27s_retail_store_-_downtown_Portland%2C_Oregon_%282015%29.jpg",
+      "width": 1280,
+      "height": 811,
+      "alt": "Camera World's retail store - downtown Portland, Oregon (2015)",
+      "credit": "Camera World's retail store - downtown Portland, Oregon (2015) — Steve Morgan (BY-SA 3.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g6": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Playstation_5_being_displayed_in_electronics_retail_store_-_2.jpg/1280px-Playstation_5_being_displayed_in_electronics_retail_store_-_2.jpg",
+      "width": 1280,
+      "height": 720,
+      "alt": "Playstation 5 being displayed in electronics retail store - 2",
+      "credit": "Playstation 5 being displayed in electronics retail store - 2 — KKPCW (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    }
+  }
+}
