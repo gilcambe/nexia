@@ -1,0 +1,182 @@
+[
+  {
+    "id": 1,
+    "categoria": "redes_sociais",
+    "pergunta": "Crie uma legenda atrativa para um post no Instagram de uma padaria artesanal, divulgando fornada de pão de fermentação natural quentinho às 16h.",
+    "deve_conter": ["padaria", "fermentação natural", "horário", "chamada para ação"]
+  },
+  {
+    "id": 2,
+    "categoria": "atendimento",
+    "pergunta": "Escreva uma mensagem educada de WhatsApp explicando ao cliente um atraso de 2 dias na entrega de um móvel planejado de marcenaria por conta de atraso do fornecedor de MDF.",
+    "deve_conter": ["pedido de desculpas", "motivo do atraso", "novo prazo", "transparência"]
+  },
+  {
+    "id": 3,
+    "categoria": "precificacao",
+    "pergunta": "Como calcular o preço de venda de um bolo caseiro que custou R$ 15,00 em ingredientes e leva 1 hora de trabalho (valor da hora R$ 20,00), garantindo margem de lucro de 30%?",
+    "deve_conter": ["custo dos ingredientes", "mão de obra", "margem de lucro", "preço final"]
+  },
+  {
+    "id": 4,
+    "categoria": "juridico",
+    "pergunta": "Elabore um contrato simples de prestação de serviços de limpeza comercial semanal entre uma diarista/empresa de limpeza e uma loja de roupas.",
+    "deve_conter": ["partes contratantes", "objeto do serviço", "valor e forma de pagamento", "rescisão"]
+  },
+  {
+    "id": 5,
+    "categoria": "mei",
+    "pergunta": "Qual é o limite atual de faturamento anual do MEI em 2026 e o que acontece se o microempreendedor ultrapassar esse limite em até 20%?",
+    "deve_conter": ["limite de faturamento", "tolerância de 20%", "desenquadramento", "DAS"]
+  },
+  {
+    "id": 6,
+    "categoria": "resumo",
+    "pergunta": "Resuma em 3 pontos principais o seguinte relatório: 'No mês de setembro, tivemos 150 vendas com faturamento total de R$ 30.000,00. O produto mais vendido foi a camiseta de algodão (60 unidades). Tivemos 5 devoluções por tamanho incorreto e a principal reclamação foi a demora no frete da Região Sul.'",
+    "deve_conter": ["faturamento total", "produto mais vendido", "devoluções ou frete"]
+  },
+  {
+    "id": 7,
+    "categoria": "codigo",
+    "pergunta": "Escreva uma função simples em JavaScript que receba o valor total de uma compra e retorne o valor com 10% de desconto para compras acima de R$ 100,00 e 5% para valores menores.",
+    "deve_conter": ["função javascript", "desconto 10%", "desconto 5%", "retorno"]
+  },
+  {
+    "id": 8,
+    "categoria": "treino",
+    "pergunta": "Monte uma ficha de treino A/B simples para um aluno iniciante que deseja começar musculação em uma academia de bairro, treinando 3 vezes por semana.",
+    "deve_conter": ["treino A", "treino B", "exercícios básicos", "séries e repetições"]
+  },
+  {
+    "id": 9,
+    "categoria": "gastronomia",
+    "pergunta": "Crie a receita e o modo de preparo de um café gelado especial (Iced Coffee) cremoso com xarope de baunilha para o cardápio de uma cafeteria artesanal.",
+    "deve_conter": ["ingredientes", "café", "modo de preparo", "apresentação/dica"]
+  },
+  {
+    "id": 10,
+    "categoria": "cobranca",
+    "pergunta": "Escreva um e-mail de cobrança amigável e respeitoso lembrando um cliente que a fatura de prestação de serviços de consultoria venceu há 5 dias.",
+    "deve_conter": ["tom respeitoso", "lembrete do vencimento", "link ou código PIX/boleto", "canal de dúvidas"]
+  },
+  {
+    "id": 11,
+    "categoria": "pos_venda",
+    "pergunta": "Crie uma mensagem de pós-venda para enviar pelo WhatsApp 3 dias após a cliente receber um vestido sob medida feito por um ateliê de costura.",
+    "deve_conter": ["pergunta sobre o produto", "agradecimento", "satisfação", "disponibilidade para ajustes"]
+  },
+  {
+    "id": 12,
+    "categoria": "politica",
+    "pergunta": "Redija um texto claro sobre a política de troca e devolução de uma loja física de calçados (prazo de 30 dias com cupom fiscal e produto sem uso).",
+    "deve_conter": ["prazo de troca", "cupom fiscal", "estado do produto", "condições"]
+  },
+  {
+    "id": 13,
+    "categoria": "redes_sociais",
+    "pergunta": "Crie um roteiro de vídeo de 30 segundos (Reels/TikTok) para um salão de beleza explicando a diferença entre hidratação e nutrição capilar.",
+    "deve_conter": ["gancho inicial", "diferença entre tratamentos", "demonstração visual", "chamada para agendamento"]
+  },
+  {
+    "id": 14,
+    "categoria": "e_commerce",
+    "pergunta": "Escreva a descrição de produto para uma vela aromática artesanal de lavanda e baunilha feita com cera vegetal de coco para um e-commerce.",
+    "deve_conter": ["notas aromáticas", "cera de coco", "tempo de queima", "benefícios do aroma"]
+  },
+  {
+    "id": 15,
+    "categoria": "vendas",
+    "pergunta": "Elabore uma mensagem promocional curta para envio em massa no WhatsApp divulgando queima de estoque de peças de autopeças no final de semana.",
+    "deve_conter": ["chamada de impacto", "desconto", "prazo da promoção", "local da loja ou link"]
+  },
+  {
+    "id": 16,
+    "categoria": "comunicacao",
+    "pergunta": "Escreva um comunicado para clientes de um pet shop informando o reajuste anual de 8% nos serviços de banho e tosa a partir do próximo mês.",
+    "deve_conter": ["justificativa", "porcentagem ou data", "qualidade mantida", "agradecimento"]
+  },
+  {
+    "id": 17,
+    "categoria": "atendimento",
+    "pergunta": "Crie um script para o recepcionista de um consultório odontológico ao atender ligações confirmando consulta de rotina.",
+    "deve_conter": ["saudação profissional", "confirmação de data e hora", "endereço/orientações", "confirmação final"]
+  },
+  {
+    "id": 18,
+    "categoria": "reputacao",
+    "pergunta": "Como responder a uma avaliação negativa de 2 estrelas no Google Meu Negócio onde o cliente reclama de demora de 40 minutos na entrega de uma pizzaria?",
+    "deve_conter": ["empatia", "pedido de desculpas", "contato privado", "compromisso de melhoria"]
+  },
+  {
+    "id": 19,
+    "categoria": "vendas",
+    "pergunta": "Monte uma proposta comercial sucinta enviada por e-mail para um eletricista oferecer a troca do quadro de distribuição elétrica de um condomínio.",
+    "deve_conter": ["escopo do serviço", "materiais inclusos", "valor e prazos", "garantia do serviço"]
+  },
+  {
+    "id": 20,
+    "categoria": "processos",
+    "pergunta": "Crie um checklist de onboarding para uma pequena agência de marketing ao receber um novo cliente de tráfego pago.",
+    "deve_conter": ["acesso às contas", "briefing", "definição de orçamento", "alinhamento de expectativas"]
+  },
+  {
+    "id": 21,
+    "categoria": "juridico",
+    "pergunta": "Escreva um termo curto de consentimento de uso de dados pessoais (LGPD) para cadastro de clientes em uma clínica estéticas ou salão.",
+    "deve_conter": ["finalidade dos dados", "não compartilhamento", "direitos do titular", "opção de cancelamento"]
+  },
+  {
+    "id": 22,
+    "categoria": "estrategia",
+    "pergunta": "Dê 3 sugestões estratégicas para uma barbearia tradicional se diferenciar da concorrência no seu bairro sem precisar baixar preços.",
+    "deve_conter": ["experiência do cliente", "agendamento online ou fidelidade", "atendimento personalizado"]
+  },
+  {
+    "id": 23,
+    "categoria": "fidelizacao",
+    "pergunta": "Escreva uma mensagem comemorativa de aniversário para um lava-rápido/estética automotiva enviar ao cliente oferecendo uma ducha grátis ou desconto.",
+    "deve_conter": ["parabéns", "presente ou desconto", "validade", "como resgatar"]
+  },
+  {
+    "id": 24,
+    "categoria": "financeiro",
+    "pergunta": "Explique a estrutura básica de um fechamento de caixa diário para um atendente de lanchonete (saldo inicial, entradas, saídas, fechamento).",
+    "deve_conter": ["fundo de troco", "vendas por forma de pagamento", "retiradas/sangrias", "conferência final"]
+  },
+  {
+    "id": 25,
+    "categoria": "rh",
+    "pergunta": "Escreva um anúncio de vaga de emprego para atendente de loja de tintas exigindo ensino médio completo e boa comunicação.",
+    "deve_conter": ["titulo da vaga", "responsabilidades", "requisitos", "como se candidatar"]
+  },
+  {
+    "id": 26,
+    "categoria": "qualidade",
+    "pergunta": "Crie uma mensagem curta de pesquisa de satisfação NPS (nota de 0 a 10) para mandar por WhatsApp após a prestação de serviço de chaveiro.",
+    "deve_conter": ["agradecimento", "pergunta de 0 a 10", "rapidez do envio", "espaço para comentários"]
+  },
+  {
+    "id": 27,
+    "categoria": "vendas",
+    "pergunta": "Crie um script de mensagem de WhatsApp para reativar clientes de uma oficina mecânica que não fazem revisão há mais de 6 meses.",
+    "deve_conter": ["saudação personalizada", "lembrete de segurança/revisão", "oferta de cortesia/alinhamento", "agendamento fácil"]
+  },
+  {
+    "id": 28,
+    "categoria": "comunicacao",
+    "pergunta": "Escreva uma nota para redes sociais informando o horário especial de funcionamento de uma livraria no feriado de 7 de setembro.",
+    "deve_conter": ["motivo/feriado", "horário de abertura e fechamento", "bom feriado", "convite para visitar"]
+  },
+  {
+    "id": 29,
+    "categoria": "vendas",
+    "pergunta": "Elabore as regras simples de utilização de um vale-presente de R$ 50,00 de uma loja de cosméticos (validade, não cumulativo, sem troco em dinheiro).",
+    "deve_conter": ["valor", "validade", "regras de uso", "sem troco em dinheiro"]
+  },
+  {
+    "id": 30,
+    "categoria": "boas_vindas",
+    "pergunta": "Escreva um e-mail acolhedor de boas-vindas para um novo aluno matriculado em uma escola de música de bairro.",
+    "deve_conter": ["boas-vindas", "detalhes do curso ou professor", "localização e horários", "canal de dúvidas"]
+  }
+]
