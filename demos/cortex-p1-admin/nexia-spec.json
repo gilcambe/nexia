@@ -4,7 +4,7 @@
     "name": "Cortex-p1 Admin",
     "tagline": "Painel de monitoramento e status de provedores",
     "photo_theme": "server analytics technology",
-    "description": "Painel de monitoramento e status de provedores, cota usada, mensagens por minuto, tamanho da fila e erros na última hora.",
+    "description": "Painel de monitoramento e status de provedores, cota usada, mensagens por minuto, tamanho da fila e erros na última hora utilizando metricsService.",
     "folder": "demos/cortex-p1-admin",
     "fonts": {
       "heading": "Space Grotesk",
