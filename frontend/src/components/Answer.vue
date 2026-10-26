@@ -1,6 +1,6 @@
 <template>
   <div class="answer">
-    <div class="answer__response" v-html="resposta"></div>
+    <div class="answer__response">{{ resposta }}</div>
 
     <div v-if="deveMostrarSeloOuAviso" class="answer__meta">
       <span
@@ -18,7 +18,7 @@
 
     <ul v-if="fontes && fontes.length" class="answer__sources">
       <li
-        v-for="(fonte, i) in fontes"
+        v-for="(fonte, i) in fontesValidas"
         :key="i"
         class="answer__source"
       >
@@ -41,12 +41,29 @@ import { computed } from 'vue';
 const props = defineProps({
   resposta: { type: String, default: '' },
   fontes: { type: Array, default: () => [] },
-  certeza: { type: String, default: '' },
+  certeza: {
+    type: String,
+    default: '',
+    validator: (v) => ['alta', 'media', 'baixa', ''].includes(v),
+  },
   avisoSensivel: { type: Boolean, default: false },
   tipoConversa: { type: String, default: '' },
 });
 
 const tiposOmitidos = ['poema', 'tradução', 'codigo', 'conversa pessoal'];
+
+function urlValida(url) {
+  try {
+    const u = new URL(url);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+const fontesValidas = computed(() =>
+  props.fontes.filter((f) => f && typeof f.url === 'string' && urlValida(f.url))
+);
 
 const deveMostrarSeloOuAviso = computed(() =>
   !tiposOmitidos.includes(props.tipoConversa)
