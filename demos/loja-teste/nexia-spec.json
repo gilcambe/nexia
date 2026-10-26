@@ -51,11 +51,11 @@
         "eyebrow": "Moda urbana",
         "cta": {
           "label": "Comprar Agora",
-          "href": "#loja"
+          "href": "#peca-agora"
         },
         "cta2": {
           "label": "Conheça a coleção",
-          "href": "#colecao"
+          "href": "#nossa-colecao"
         },
         "image_query": "fashion boutique interior",
         "video_query": "fashion store"
@@ -142,14 +142,6 @@
         "gif_queries": []
       },
       {
-        "type": "video",
-        "id": "visite-a-loja",
-        "title": "Visite a Loja",
-        "subtitle": "Explore nossos ambientes.",
-        "youtube": "dQw4w9WgXcQ",
-        "video_query": ""
-      },
-      {
         "type": "team",
         "id": "equipe",
         "title": "Equipe",
@@ -223,7 +215,7 @@
         "subtitle": "Receba seu pedido em 24h.",
         "cta": {
           "label": "Comprar Agora",
-          "href": "#loja"
+          "href": "#peca-agora"
         }
       },
       {
@@ -284,6 +276,14 @@
       "alt": "A fashion design illustration of a contemporary women's outfit featuring a dark ",
       "credit": "Sanjana Krishnamoorthy (CC BY 4.0, via Wikimedia Commons)",
       "provider": "wikimedia"
+    },
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Aim%C3%A9_Leon_Dore_store_interior.jpg/1280px-Aim%C3%A9_Leon_Dore_store_interior.jpg",
+      "width": 1280,
+      "height": 843,
+      "alt": "Aimé Leon Dore store interior",
+      "credit": "Aimé Leon Dore store interior — Chive Cream Cheese (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
     }
   }
 }
