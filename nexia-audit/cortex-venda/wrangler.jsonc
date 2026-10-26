@@ -13,12 +13,14 @@
   },
   "vars": {
     "WORKERS_AI_MODEL": "@cf/llama-3.2-11b-vision-instruct",
-    "GEMINI_MODEL": "gemini-1.5-flash"
+    "GEMINI_MODEL": "gemini-1.5-flash",
+    "GEMINI_API_KEY": ""
   },
   "envs": {
     "production": {
       "vars": {
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "GEMINI_API_KEY": ""
       },
       "ai": {
         "binding": "AI"
