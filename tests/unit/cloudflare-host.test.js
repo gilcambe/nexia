@@ -27,7 +27,7 @@ test('CF1. config do Worker: plano grátis, sem Container/Durable Object, cron a
   const wr = readWrangler();
   assert.strictEqual(wr.main, 'cloudflare/worker.js');
   assert.strictEqual(wr.containers, undefined, 'Container exige Workers Paid');
-  assert.strictEqual(wr.durable_objects, undefined);
+  assert.ok(wr.durable_objects && wr.durable_objects.bindings && wr.durable_objects.bindings.some(b => b.class_name === 'VazaoController'));
   assert.deepStrictEqual(wr.triggers.crons, ['*/5 * * * *']);
   assert.strictEqual(wr.assets.binding, 'ASSETS');
   assert.ok(!fs.existsSync(path.join(ROOT, 'Dockerfile')));
