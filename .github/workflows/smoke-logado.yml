@@ -42,7 +42,7 @@ concurrency:
 jobs:
   smoke:
     name: Testar com login
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -62,7 +62,7 @@ jobs:
     name: Acordar a fila do Cortex
     needs: smoke
     if: always() && inputs.tarefa_id != ''
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 3
     steps:
       # A fila não espera relógio: ao fim de cada execução ela roda de novo e reenvia/continua as tarefas na hora.
