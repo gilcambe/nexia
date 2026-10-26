@@ -36,7 +36,7 @@ test('C5b. pergunta sobre a situação lê a Central e monta contexto com númer
 
 test('C5c. "Pedir tarefa" manda pergunta para "Perguntar agora"; "Virar pedido" força a tarefa', () => {
   const page = fs.readFileSync(path.join(DIR, 'page.tsx'), 'utf8');
-  assert.match(page, /!forcarPedido && ehPergunta\(texto\)/);
+  assert.match(page, /!forcarPedido && !ehPedidoDeCodigo\(texto\)/);
   assert.match(page, /setForcarPedido\(true\)/);
   const perg = fs.readFileSync(path.join(DIR, 'Pergunta.tsx'), 'utf8');
   assert.match(perg, /\?parte=cortex/);
