@@ -2,9 +2,9 @@
   "spec": {
     "kind": "system",
     "name": "Cortex-p1",
-    "tagline": "Gestão inteligente de clientes e planos",
-    "photo_theme": "",
-    "description": "Gestão inteligente de clientes e planos",
+    "tagline": "Gestão Inteligente de Clientes e Planos",
+    "photo_theme": "business dashboard analytics interface",
+    "description": "Plataforma completa para gestão de assinaturas, transações e perfis de usuários.",
     "folder": "cortex-p1",
     "fonts": {
       "heading": "Outfit",
@@ -13,10 +13,10 @@
     "palette": {
       "primary": "#4f46e5",
       "accent": "#06b6d4",
-      "bg": "#fbfaf7",
+      "bg": "#f3f4f6",
       "surface": "#ffffff",
-      "text": "#1d2426",
-      "muted": "#5d6b6e",
+      "text": "#111827",
+      "muted": "#606773",
       "dark": "#111827"
     },
     "style": "modern",
@@ -24,24 +24,24 @@
       "whatsapp": "",
       "phone": "(11) 90000-0000",
       "email": "suporte@cortex-p1.com.br",
-      "address": "",
-      "city": "",
-      "hours": "",
+      "address": "Av. Paulista, 1000 - São Paulo, SP",
+      "city": "São Paulo",
+      "hours": "Seg - Sex: 9h - 18h",
       "instagram": "",
       "facebook": "",
       "youtube": "",
       "tiktok": "",
       "linkedin": ""
     },
-    "logo": "",
-    "logo_scrolled": "",
-    "favicon": "",
-    "brand_text": false,
+    "logo": "https://images.unsplash.com/photo-1558494949-ef526b0042a0?auto=format&fit=crop&q=80&w=200&h=200",
+    "logo_scrolled": "https://images.unsplash.com/photo-1558494949-ef526b0042a0?auto=format&fit=crop&q=80&w=200&h=200",
+    "favicon": "https://images.unsplash.com/photo-1558494949-ef526b0042a0?auto=format&fit=crop&q=80&w=64&h=64",
+    "brand_text": true,
     "selo": {
       "label": "Feito com Kernex",
       "url": "https://kernex.com.br/?utm_source=cortex-p1&utm_medium=selo&utm_campaign=clientes"
     },
-    "leads_origem": "",
+    "leads_origem": "website",
     "entities": [
       {
         "key": "clientes",
@@ -110,7 +110,7 @@
             "nome": "João Silva",
             "email": "joao.silva@cortex.com",
             "plano": "premium",
-            "criadoem": "",
+            "criadoem": "2023-10-01",
             "idioma": "pt",
             "status": "ativo"
           },
@@ -118,7 +118,7 @@
             "nome": "Maria Oliveira",
             "email": "maria.olv@cortex.com",
             "plano": "basico",
-            "criadoem": "",
+            "criadoem": "2023-10-02",
             "idioma": "en",
             "status": "ativo"
           },
@@ -126,7 +126,7 @@
             "nome": "Pedro Santos",
             "email": "pedro.santos@cortex.com",
             "plano": "gratis",
-            "criadoem": "",
+            "criadoem": "2023-10-03",
             "idioma": "es",
             "status": "pendente"
           },
@@ -134,7 +134,7 @@
             "nome": "Ana Costa",
             "email": "ana.costa@cortex.com",
             "plano": "enterprise",
-            "criadoem": "",
+            "criadoem": "2023-10-04",
             "idioma": "fr",
             "status": "ativo"
           }
@@ -268,28 +268,28 @@
         ],
         "sample": [
           {
-            "clienteid": "",
+            "clienteid": "uid-123",
             "plano": "basico",
             "valor": "29.90",
             "data": "2023-10-05",
             "status": "pago"
           },
           {
-            "clienteid": "",
+            "clienteid": "uid-456",
             "plano": "premium",
             "valor": "79.90",
             "data": "2023-10-12",
             "status": "pago"
           },
           {
-            "clienteid": "",
+            "clienteid": "uid-789",
             "plano": "gratis",
             "valor": "0.00",
             "data": "2023-10-18",
             "status": "pendente"
           },
           {
-            "clienteid": "",
+            "clienteid": "uid-101",
             "plano": "enterprise",
             "valor": "199.90",
             "data": "2023-10-22",
