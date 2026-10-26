@@ -5,7 +5,6 @@ const { ModelError, CODES } = require('../errors');
 const { withTimeout, sseData } = require('../messages');
 const { createKiloCatalog, isFree } = require('./kilo-catalog');
 const { getPlacar } = require('../cota');
-const { tools: FerramentasTools } = require('../../cortex/ferramentas');
 const { tools } = require('../../cortex/ferramentas');
 
 // max_output: teto aplicado ao max_tokens pedido. Os chamadores legados pediam até
