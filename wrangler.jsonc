@@ -1,5 +1,5 @@
-// NEXIA — Cloudflare Worker no plano GRÁTIS (ADR-FREE-01). Sem Container, sem Durable Object,
-// sem nada pago. Deploy só pelo workflow manual "Deploy Cloudflare" ou por `npx wrangler deploy`.
+// NEXIA — Cloudflare Worker com Durable Object de controle de vazao (#1662).
+// Deploy só pelo workflow manual "Deploy Cloudflare" ou por `npx wrangler deploy`.
 // Segredos: `npx wrangler secret put NOME` (lista em .env.example). Nada de valor real aqui.
 {
   "$schema": "node_modules/wrangler/config-schema.json",
@@ -26,6 +26,12 @@
   },
   // Workers AI (plano grátis, 10 mil neurônios por dia): fotos do corpo realista do Body Coach.
   "ai": { "binding": "AI" },
+  // Durable Object para controle de vazao e fila (#1662)
+  "durable_objects": {
+    "bindings": [
+      { "name": "VAZAO_CONTROLLER", "class_name": "VazaoController" }
+    ]
+  },
   // ADR-FREE-02: tarefas longas (agentes, onboarding, retomada) rodam no GitHub Actions.
   "vars": {
     "NEXIA_JOBS": "github",
@@ -35,9 +41,10 @@
   // ADR-AUTO-01: a cada 5 min procura Robôs NEXIA vencidos; execuções paradas continuam de hora
   // em hora (ADR-F12-03). Cron é grátis no Worker; 288 tiques por dia, uma consulta cada.
   "triggers": { "crons": ["*/5 * * * *"] },
-  // O deploy de 2026-10-04 (Container, ADR-HOST-01) pode ter criado esta classe; v2 a remove.
+  // Migrações do Durable Object SQLite
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["NexiaBackend"] },
-    { "tag": "v2", "deleted_classes": ["NexiaBackend"] }
+    { "tag": "v2", "deleted_classes": ["NexiaBackend"] },
+    { "tag": "v3", "new_sqlite_classes": ["VazaoController"] }
   ]
 }
