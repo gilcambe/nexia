@@ -78,6 +78,12 @@ test('BW7. notícias pelo Bing News (link real) e pela GDELT quando o Google New
   assert.match(urls.find((u) => u.includes('bing.com')), /qft=sortbydate%3d%221%22\+interval%3d%227%22/);
 });
 
+test('BW8. pergunta longa vira palavras-chave para o buscador (#1733)', () => {
+  assert.strictEqual(b.termoDeBusca('Quais são as notícias mais recentes sobre inteligência artificial nesta semana? Cite as fontes com link.'), 'inteligência artificial');
+  assert.strictEqual(b.termoDeBusca('Quem ganhou a Copa de 2022? Cite a fonte.'), 'Quem ganhou Copa 2022');
+  assert.strictEqual(b.termoDeBusca('Qual é a notícia?'), 'Qual é a notícia');
+});
+
 test('BW4. Central parte=busca (só master)', async () => {
   const { createHandler } = require('../../netlify/functions/central.js');
   const master = { verifyBearerToken: async () => ({ ok: true, role: 'master' }) };
