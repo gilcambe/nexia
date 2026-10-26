@@ -1,16 +1,16 @@
 const AbuseLog = require('../models/abuseLog');
 
 const INJECTION_PATTERNS = [
-  /union\s+select/i,
-  /drop\s+table/i,
-  /insert\s+into/i,
-  /delete\s+from/i,
+  /union\\s+select/i,
+  /drop\\s+table/i,
+  /insert\\s+into/i,
+  /delete\\s+from/i,
   /<script/i,
   /javascript:/i,
-  /onerror\s*=/i,
-  /eval\s*\(/i,
-  /\$\s*where/i,
-  /this\.constructor/i,
+  /onerror\\s*=/i,
+  /eval\\s*\\(/i,
+  /\\$\\s*where/i,
+  /this\\.constructor/i,
   /__proto__/i,
 ];
 
@@ -44,7 +44,6 @@ function detectarAbuso(req) {
         tipo: 'injection',
         detalhes: 'Padrão proibido detectado',
         ip,
-        userId,
       };
     }
   }
