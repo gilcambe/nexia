@@ -3,7 +3,7 @@
     "kind": "system",
     "name": "Site de Teste do Cortex-p1",
     "tagline": "Painel de métricas e controle do Cortex",
-    "photo_theme": "",
+    "photo_theme": "dashboard metrics",
     "description": "Painel de métricas e controle do Cortex",
     "folder": "sites/cortex-p1",
     "fonts": {
@@ -21,7 +21,7 @@
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "",
+      "whatsapp": "11900000000",
       "phone": "(11) 4002-8922",
       "email": "suporte@cortexp1.com.br",
       "address": "",
