@@ -12,59 +12,58 @@ const mf = new Miniflare({
   modules: true,
   vars: { JWT_SECRET: TEST_SECRET },
   script: `
+    import { authenticate } from '../lib/cortex-cliente.js';
+    
     export default {
       async fetch(request, env, ctx) {
         const url = new URL(request.url);
         
         if (url.pathname === '/api/cortex-cliente/conversas') {
-          const authHeader = request.headers.get('Authorization');
+          // Criar objeto de requisição simulado para o middleware
+          const mockReq = {
+            headers: {
+              authorization: request.headers.get('Authorization')
+            }
+          };
           
-          if (!authHeader) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-              status: 401,
-              headers: { 'Content-Type': 'application/json' }
-            });
-          }
+          const mockRes = {
+            status: (code) => ({
+              json: (data) => new Response(JSON.stringify(data), {
+                status: code,
+                headers: { 'Content-Type': 'application/json' }
+              })
+            })
+          };
           
-          if (!authHeader.startsWith('Bearer ')) {
-            return new Response(JSON.stringify({ error: 'Invalid token format' }), {
-              status: 401,
-              headers: { 'Content-Type': 'application/json' }
+          // Usar o middleware de autenticação
+          return new Promise((resolve) => {
+            authenticate(mockReq, mockRes, () => {
+              // Se autenticado, continuar com a lógica
+              const decoded = mockReq.user;
+              
+              // Simular dados do usuário
+              const userConversations = {
+                uidA: [
+                  { id: 'conv1', title: 'Conversa 1', messages: 5 },
+                  { id: 'conv2', title: 'Conversa 2', messages: 3 }
+                ],
+                uidB: [
+                  { id: 'conv3', title: 'Conversa 3', messages: 8 }
+                ]
+              };
+              
+              const conversations = userConversations[decoded.uid] || [];
+              
+              resolve(new Response(JSON.stringify({
+                success: true,
+                uid: decoded.uid,
+                conversations
+              }), {
+                status: 200,
+                headers: { 'Content-Type': 'application/json' }
+              }));
             });
-          }
-          
-          const token = authHeader.substring(7);
-          
-          try {
-            const decoded = jwt.verify(token, env.JWT_SECRET);
-            
-            // Simular dados do usuário
-            const userConversations = {
-              uidA: [
-                { id: 'conv1', title: 'Conversa 1', messages: 5 },
-                { id: 'conv2', title: 'Conversa 2', messages: 3 }
-              ],
-              uidB: [
-                { id: 'conv3', title: 'Conversa 3', messages: 8 }
-              ]
-            };
-            
-            const conversations = userConversations[decoded.uid] || [];
-            
-            return new Response(JSON.stringify({
-              success: true,
-              uid: decoded.uid,
-              conversations
-            }), {
-              status: 200,
-              headers: { 'Content-Type': 'application/json' }
-            });
-          } catch (error) {
-            return new Response(JSON.stringify({ error: 'Forbidden' }), {
-              status: 403,
-              headers: { 'Content-Type': 'application/json' }
-            });
-          }
+          });
         }
         
         return new Response('Not Found', { status: 404 });
@@ -72,9 +71,6 @@ const mf = new Miniflare({
     };
   `
 });
-
-// Chave de teste simulada
-const TEST_SECRET = 'test-secret-key-for-jwt-signing';
 
 // Gerar tokens de teste
 function generateTestToken(uid) {
@@ -122,4 +118,3 @@ test('cortex-cliente: 401 sem token Authorization', async () => {
   assert.strictEqual(result.error, 'Unauthorized');
 });
 
-console.log('Testes do cortex-cliente configurados com sucesso!');
