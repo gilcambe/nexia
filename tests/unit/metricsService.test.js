@@ -1,286 +1,291 @@
-// Testes unitários do src/services/metricsService.js
-// Rode com: npm test  (node --test)
+const metricsService = require('../../src/services/metricsService');
 
-// Simula ambiente de navegador (window.location.origin) antes de importar o serviço.
-globalThis.window = { location: { origin: 'http://localhost:3000' } };
+// Mock para fetchJson para simular respostas de API
+jest.mock('../../src/services/metricsService');
+const originalFetchJson = metricsService.fetchJson;
 
-const { test } = require('node:test');
-const assert = require('node:assert/strict');
+beforeEach(() => {
+  // Restaurar a função original antes de cada teste
+  metricsService.fetchJson = originalFetchJson;
+});
 
-// Mock de fetch controlado por endpoint.
-const dadosPorEndpoint = {};
-
-globalThis.fetch = async (url) => {
-  const caminho = typeof url === 'string' ? new URL(url).pathname : (url.url ? new URL(url.url).pathname : '');
-  if (!(caminho in dadosPorEndpoint)) {
-    return new Response(JSON.stringify(null), {
-      status: 404,
-      headers: { 'Content-Type': 'application/json' },
+describe('metricsService', () => {
+  describe('estadoCortex', () => {
+    it('deve retornar estado online se dados recentes', async () => {
+      const agora = new Date().toISOString();
+      const umaHoraAtras = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      
+      metricsService.fetchJson = jest.fn().mockResolvedValue([
+        { timestamp: umaHoraAtras, status: 'online' }
+      ]);
+      
+      const resultado = await metricsService.estadoCortex();
+      
+      expect(resultado).toEqual({
+        estado: 'online',
+        ultimaAtualizacao: umaHoraAtras
+      });
     });
-  }
-  return new Response(JSON.stringify(dadosPorEndpoint[caminho]), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
+    
+    it('deve retornar estado degradado se dados antigos', async () => {
+      const antigo = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+      
+      metricsService.fetchJson = jest.fn().mockResolvedValue([
+        { timestamp: antigo, status: 'online' }
+      ]);
+      
+      const resultado = await metricsService.estadoCortex();
+      
+      expect(resultado).toEqual({
+        estado: 'degradado',
+        ultimaAtualizacao: antigo
+      });
+    });
+    
+    it('deve retornar estado offline se sem dados', async () => {
+      metricsService.fetchJson = jest.fn().mockResolvedValue(null);
+      
+      const resultado = await metricsService.estadoCortex();
+      
+      expect(resultado).toEqual({
+        estado: 'offline',
+        ultimaAtualizacao: expect.any(String)
+      });
+    });
   });
-};
-
-const metricsService = require('../../src/services/metricsService.js');
-
-function resetarDados() {
-  Object.keys(dadosPorEndpoint).forEach((k) => delete dadosPorEndpoint[k]);
-}
-
-test('estadoCortex retorna objeto com strings (estado e ultimaAtualizacao)', async (t) => {
-  resetarDados();
-  dadosPorEndpoint['/api/cortex'] = [
-    { timestamp: new Date().toISOString(), status: 'ok' },
-  ];
-
-  const resultado = await metricsService.estadoCortex();
-
-  assert.ok(resultado, 'deve retornar objeto');
-  assert.strictEqual(typeof resultado.estado, 'string', 'estado deve ser string');
-  assert.strictEqual(typeof resultado.ultimaAtualizacao, 'string', 'ultimaAtualizacao deve ser string');
-  assert.ok(['online', 'degradado', 'offline'].includes(resultado.estado), 'estado deve ser um dos valores esperados');
-});
-
-test('estadoCortex fallback retorna strings quando fonte indisponível', async (t) => {
-  resetarDados();
-  // Nenhum endpoint mockado → fetch retorna 404 → fallback
-
-  const resultado = await metricsService.estadoCortex();
-
-  assert.strictEqual(typeof resultado.estado, 'string');
-  assert.strictEqual(typeof resultado.ultimaAtualizacao, 'string');
-});
-
-test('tempoMedioRespostaUltimaHora retorna número', async (t) => {
-  resetarDados();
-  const agora = new Date().toISOString();
-  dadosPorEndpoint['/api/logs'] = [
-    { timestamp: agora, tempo_resposta: 120 },
-    { timestamp: agora, tempo_resposta: 280 },
-    { timestamp: agora, tempo_resposta: 200 },
-  ];
-
-  const resultado = await metricsService.tempoMedioRespostaUltimaHora();
-
-  assert.strictEqual(typeof resultado, 'number', 'deve retornar número');
-  assert.ok(Number.isFinite(resultado), 'deve ser número finito');
-  assert.ok(resultado >= 0, 'deve ser não negativo');
-});
-
-test('tempoMedioRespostaUltimaHora retorna 0 quando não há dados', async (t) => {
-  resetarDados();
-  dadosPorEndpoint['/api/logs'] = [];
-
-  const resultado = await metricsService.tempoMedioRespostaUltimaHora();
-
-  assert.strictEqual(resultado, 0);
-  assert.strictEqual(typeof resultado, 'number');
-});
-
-test('statusIAS retorna objeto com geral (string) e provedores (objeto)', async (t) => {
-  resetarDados();
-  dadosPorEndpoint['/api/models'] = [
-    { nome: 'provedor-a', status: 'ok' },
-    { nome: 'provedor-b', status: 'lento' },
-    { nome: 'provedor-c', status: 'erro' },
-  ];
-
-  const resultado = await metricsService.statusIAS();
-
-  assert.ok(resultado, 'deve retornar objeto');
-  assert.strictEqual(typeof resultado.geral, 'string', 'geral deve ser string');
-  assert.ok(['verde', 'amarelo', 'vermelho'].includes(resultado.geral), 'geral deve ser verde/amarelo/vermelho');
-  assert.strictEqual(typeof resultado.provedores, 'object', 'provedores deve ser objeto');
-  assert.notStrictEqual(resultado.provedores, null, 'provedores não deve ser null');
-});
-
-test('statusIAS fallback retorna vermelho quando não há provedores', async (t) => {
-  resetarDados();
-  dadosPorEndpoint['/api/models'] = [];
-  dadosPorEndpoint['/api/agents'] = [];
-  dadosPorEndpoint['/api/ia-status'] = [];
-
-  const resultado = await metricsService.statusIAS();
-
-  assert.strictEqual(resultado.geral, 'vermelho');
-  assert.strictEqual(typeof resultado.geral, 'string');
-  assert.strictEqual(typeof resultado.provedores, 'object');
-});
-
-test('cotaUsadaPorProvedor retorna objeto com uso por provedor', async (t) => {
-  resetarDados();
-  dadosPorEndpoint['/api/usage'] = [
-    { provedor: 'anthropic', usado: 1200, limite: 5000 },
-    { provedor: 'groq', usado: 800, limite: 2000 },
-  ];
-
-  const resultado = await metricsService.cotaUsadaPorProvedor();
-
-  assert.strictEqual(typeof resultado, 'object', 'deve retornar objeto');
-  assert.notStrictEqual(resultado, null);
-  const chaves = Object.keys(resultado);
-  assert.ok(chaves.length > 0, 'deve conter pelo menos um provedor');
-  for (const chave of chaves) {
-    const item = resultado[chave];
-    assert.strictEqual(typeof item.usado, 'number', `usado de ${chave} deve ser número`);
-    assert.strictEqual(typeof item.limite, 'number', `limite de ${chave} deve ser número`);
-    assert.strictEqual(typeof item.percentual, 'number', `percentual de ${chave} deve ser número`);
-  }
-});
-
-test('cotaUsadaPorProvedor retorna objeto vazio quando não há dados', async (t) => {
-  resetarDados();
-  dadosPorEndpoint['/api/usage'] = [];
-
-  const resultado = await metricsService.cotaUsadaPorProvedor();
-
-  assert.strictEqual(typeof resultado, 'object');
-  assert.strictEqual(Object.keys(resultado).length, 0);
-});
-
-test('mensagensPorMinuto retorna número', async (t) => {
-  resetarDados();
-  const agora = new Date().toISOString();
-  dadosPorEndpoint['/api/events'] = [
-    { timestamp: agora, tipo: 'mensagem' },
-    { timestamp: agora, tipo: 'mensagem' },
-    { timestamp: agora, tipo: 'mensagem' },
-  ];
-
-  const resultado = await metricsService.mensagensPorMinuto();
-
-  assert.strictEqual(typeof resultado, 'number', 'deve retornar número');
-  assert.ok(Number.isInteger(resultado), 'deve ser inteiro');
-  assert.ok(resultado >= 0, 'deve ser não negativo');
-});
-
-test('mensagensPorMinuto retorna 0 quando não há eventos recentes', async (t) => {
-  resetarDados();
-  const haDuasHoras = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
-  dadosPorEndpoint['/api/events'] = [
-    { timestamp: haDuasHoras, tipo: 'mensagem' },
-  ];
-
-  const resultado = await metricsService.mensagensPorMinuto();
-
-  assert.strictEqual(resultado, 0);
-  assert.strictEqual(typeof resultado, 'number');
-});
-
-test('tamanhoFila retorna objeto com números (tamanho, pendentes, processando)', async (t) => {
-  resetarDados();
-  dadosPorEndpoint['/api/pedidos'] = [
-    { status: 'pendente' },
-    { status: 'pendente' },
-    { status: 'processando' },
-    { status: 'concluido' },
-  ];
-
-  const resultado = await metricsService.tamanhoFila();
-
-  assert.ok(resultado, 'deve retornar objeto');
-  assert.strictEqual(typeof resultado.tamanho, 'number', 'tamanho deve ser número');
-  assert.strictEqual(typeof resultado.pendentes, 'number', 'pendentes deve ser número');
-  assert.strictEqual(typeof resultado.processando, 'number', 'processando deve ser número');
-  assert.strictEqual(resultado.tamanho, 4);
-  assert.strictEqual(resultado.pendentes, 2);
-  assert.strictEqual(resultado.processando, 1);
-});
-
-test('tamanhoFila retorna zeros quando não há dados', async (t) => {
-  resetarDados();
-  dadosPorEndpoint['/api/pedidos'] = [];
-
-  const resultado = await metricsService.tamanhoFila();
-
-  assert.strictEqual(resultado.tamanho, 0);
-  assert.strictEqual(resultado.pendentes, 0);
-  assert.strictEqual(resultado.processando, 0);
-  assert.strictEqual(typeof resultado.tamanho, 'number');
-});
-
-test('errosUltimaHora retorna número', async (t) => {
-  resetarDados();
-  const agora = new Date().toISOString();
-  dadosPorEndpoint['/api/logs'] = [
-    { timestamp: agora, nivel: 'erro', mensagem: 'falha de rede' },
-    { timestamp: agora, nivel: 'info', mensagem: 'ok' },
-    { timestamp: agora, nivel: 'error', mensagem: 'exception' },
-  ];
-
-  const resultado = await metricsService.errosUltimaHora();
-
-  assert.strictEqual(typeof resultado, 'number', 'deve retornar número');
-  assert.ok(Number.isInteger(resultado), 'deve ser inteiro');
-  assert.ok(resultado >= 0, 'deve ser não negativo');
-});
-
-test('errosUltimaHora retorna 0 quando não há erros na última hora', async (t) => {
-  resetarDados();
-  const haDuasHoras = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
-  dadosPorEndpoint['/api/logs'] = [
-    { timestamp: haDuasHoras, nivel: 'erro', mensagem: 'falha antiga' },
-  ];
-
-  const resultado = await metricsService.errosUltimaHora();
-
-  assert.strictEqual(resultado, 0);
-  assert.strictEqual(typeof resultado, 'number');
-});
-
-test('resumo retorna objeto com todas as métricas', async (t) => {
-  resetarDados();
-  const agora = new Date().toISOString();
-  dadosPorEndpoint['/api/cortex'] = [{ timestamp: agora, status: 'ok' }];
-  dadosPorEndpoint['/api/logs'] = [
-    { timestamp: agora, tempo_resposta: 100, nivel: 'info' },
-    { timestamp: agora, tempo_resposta: 200, nivel: 'erro' },
-  ];
-  dadosPorEndpoint['/api/models'] = [{ nome: 'ia-x', status: 'ok' }];
-  dadosPorEndpoint['/api/usage'] = [{ provedor: 'ia-x', usado: 100, limite: 1000 }];
-  dadosPorEndpoint['/api/events'] = [{ timestamp: agora, tipo: 'mensagem' }];
-  dadosPorEndpoint['/api/pedidos'] = [{ status: 'pendente' }];
-
-  const resultado = await metricsService.resumo();
-
-  assert.ok(resultado, 'deve retornar objeto');
-  assert.strictEqual(typeof resultado.estadoCortex, 'object');
-  assert.strictEqual(typeof resultado.tempoMedioRespostaUltimaHoraMs, 'number');
-  assert.strictEqual(typeof resultado.statusIAS, 'object');
-  assert.strictEqual(typeof resultado.cotaUsadaPorProvedor, 'object');
-  assert.strictEqual(typeof resultado.mensagensPorMinuto, 'number');
-  assert.strictEqual(typeof resultado.fila, 'object');
-  assert.strictEqual(typeof resultado.errosUltimaHora, 'number');
-  assert.strictEqual(typeof resultado.geradoEm, 'string');
-});
-
-test('todas as funções retornam valores seguros quando a fonte cai', async (t) => {
-  resetarDados();
-  // Sem nenhum endpoint mockado → fetch retorna 404 para todos
-
-  const estado = await metricsService.estadoCortex();
-  assert.strictEqual(typeof estado.estado, 'string');
-  assert.strictEqual(typeof estado.ultimaAtualizacao, 'string');
-
-  const tempo = await metricsService.tempoMedioRespostaUltimaHora();
-  assert.strictEqual(typeof tempo, 'number');
-
-  const statusIA = await metricsService.statusIAS();
-  assert.strictEqual(typeof statusIA.geral, 'string');
-  assert.strictEqual(typeof statusIA.provedores, 'object');
-
-  const cota = await metricsService.cotaUsadaPorProvedor();
-  assert.strictEqual(typeof cota, 'object');
-
-  const msgs = await metricsService.mensagensPorMinuto();
-  assert.strictEqual(typeof msgs, 'number');
-
-  const fila = await metricsService.tamanhoFila();
-  assert.strictEqual(typeof fila.tamanho, 'number');
-
-  const erros = await metricsService.errosUltimaHora();
-  assert.strictEqual(typeof erros, 'number');
+  
+  describe('tempoMedioRespostaUltimaHora', () => {
+    it('deve calcular tempo médio correto', async () => {
+      const agora = new Date().toISOString();
+      const umaHoraAtras = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      
+      metricsService.fetchJson = jest.fn().mockResolvedValue([
+        { timestamp: umaHoraAtras, tempo_resposta: 100 },
+        { timestamp: agora, tempo_resposta: 200 },
+        { timestamp: agora, tempo_resposta: 300 },
+        { timestamp: '2023-01-01T00:00:00.000Z', tempo_resposta: 400 } // fora do período
+      ]);
+      
+      const resultado = await metricsService.tempoMedioRespostaUltimaHora();
+      
+      expect(resultado).toBe(200); // (100 + 200 + 300) / 3 = 200
+    });
+    
+    it('deve retornar 0 se sem dados', async () => {
+      metricsService.fetchJson = jest.fn().mockResolvedValue([]);
+      
+      const resultado = await metricsService.tempoMedioRespostaUltimaHora();
+      
+      expect(resultado).toBe(0);
+    });
+  });
+  
+  describe('statusIAS', () => {
+    it('deve retornar status verde para provedores saudáveis', async () => {
+      metricsService.fetchJson = jest.fn().mockResolvedValue([
+        [{ nome: 'provedor1', status: 'ok' }],
+        [{ nome: 'provedor2', saudavel: true }]
+      ]);
+      
+      const resultado = await metricsService.statusIAS();
+      
+      expect(resultado).toEqual({
+        geral: 'verde',
+        provedores: {
+          'provedor1': 'verde',
+          'provedor2': 'verde'
+        }
+      });
+    });
+    
+    it('deve retornar status amarelo para provedores lentos', async () => {
+      metricsService.fetchJson = jest.fn().mockResolvedValue([
+        [{ nome: 'provedor1', status: 'lento' }],
+        [{ nome: 'provedor2', tempo_resposta: 6000 }]
+      ]);
+      
+      const resultado = await metricsService.statusIAS();
+      
+      expect(resultado).toEqual({
+        geral: 'amarelo',
+        provedores: {
+          'provedor1': 'amarelo',
+          'provedor2': 'amarelo'
+        }
+      });
+    });
+    
+    it('deve retornar status vermelho para provedores com falha', async () => {
+      metricsService.fetchJson = jest.fn().mockResolvedValue([
+        [{ nome: 'provedor1', status: 'falha' }],
+        [{ nome: 'provedor2', degradado: true }]
+      ]);
+      
+      const resultado = await metricsService.statusIAS();
+      
+      expect(resultado).toEqual({
+        geral: 'vermelho',
+        provedores: {
+          'provedor1': 'vermelho',
+          'provedor2': 'vermelho'
+        }
+      });
+    });
+  });
+  
+  describe('cotaUsadaPorProvedor', () => {
+    it('deve calcular cota corretamente', async () => {
+      metricsService.fetchJson = jest.fn().mockResolvedValue([
+        { provedor: 'openai', usado: 100, limite: 1000 },
+        { provedor: 'anthropic', used: 500, limit: 2000 }
+      ]);
+      
+      const resultado = await metricsService.cotaUsadaPorProvedor();
+      
+      expect(resultado).toEqual({
+        'openai': { usado: 100, limite: 1000, percentual: 10 },
+        'anthropic': { usado: 500, limite: 2000, percentual: 25 }
+      });
+    });
+    
+    it('deve usar valores padrão quando limite for 0', async () => {
+      metricsService.fetchJson = jest.fn().mockResolvedValue([
+        { provedor: 'test', usado: 100, limite: 0 }
+      ]);
+      
+      const resultado = await metricsService.cotaUsadaPorProvedor();
+      
+      expect(resultado).toEqual({
+        'test': { usado: 100, limite: 0, percentual: 0 }
+      });
+    });
+  });
+  
+  describe('mensagensPorMinuto', () => {
+    it('deve contar mensagens corretamente', async () => {
+      const agora = new Date().toISOString();
+      const umMinutoAtras = new Date(Date.now() - 30 * 1000).toISOString();
+      
+      metricsService.fetchJson = jest.fn().mockResolvedValue([
+        { timestamp: umMinutoAtras, tipo: 'mensagem' },
+        { timestamp: agora, tipo: 'mensagem' },
+        { timestamp: agora, tipo: 'mensagem' },
+        { timestamp: '2023-01-01T00:00:00.000Z', tipo: 'mensagem' } // fora do período
+      ]);
+      
+      const resultado = await metricsService.mensagensPorMinuto();
+      
+      expect(resultado).toBe(3);
+    });
+    
+    it('deve retornar 0 se sem mensagens', async () => {
+      metricsService.fetchJson = jest.fn().mockResolvedValue([]);
+      
+      const resultado = await metricsService.mensagensPorMinuto();
+      
+      expect(resultado).toBe(0);
+    });
+  });
+  
+  describe('tamanhoFila', () => {
+    it('deve contar fila corretamente', async () => {
+      metricsService.fetchJson = jest.fn().mockResolvedValue([
+        { status: 'pendente' },
+        { status: 'pendente' },
+        { status: 'processando' },
+        { status: 'concluido' }
+      ]);
+      
+      const resultado = await metricsService.tamanhoFila();
+      
+      expect(resultado).toEqual({
+        tamanho: 4,
+        pendentes: 2,
+        processando: 1
+      });
+    });
+    
+    it('deve lidar com diferentes formatos de status', async () => {
+      metricsService.fetchJson = jest.fn().mockResolvedValue([
+        { estado: 'aguardando' },
+        { estado: 'em_andamento' },
+        { status: 'waiting' },
+        { status: 'processing' }
+      ]);
+      
+      const resultado = await metricsService.tamanhoFila();
+      
+      expect(resultado).toEqual({
+        tamanho: 4,
+        pendentes: 2,
+        processando: 2
+      });
+    });
+  });
+  
+  describe('errosUltimaHora', () => {
+    it('deve contar erros corretamente', async () => {
+      const agora = new Date().toISOString();
+      const umaHoraAtras = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      
+      metricsService.fetchJson = jest.fn().mockResolvedValue([
+        { timestamp: umaHoraAtras, nivel: 'error', mensagem: 'falha crítica' },
+        { timestamp: agora, level: 'erro', message: 'erro de conexão' },
+        { timestamp: agora, tipo: 'erro', mensagem: 'timeout' },
+        { timestamp: agora, mensagem: 'algum erro aconteceu' },
+        { timestamp: '2023-01-01T00:00:00.000Z', nivel: 'error' } // fora do período
+      ]);
+      
+      const resultado = await metricsService.errosUltimaHora();
+      
+      expect(resultado).toBe(4);
+    });
+    
+    it('deve retornar 0 se sem erros', async () => {
+      metricsService.fetchJson = jest.fn().mockResolvedValue([
+        { timestamp: new Date().toISOString(), nivel: 'info' }
+      ]);
+      
+      const resultado = await metricsService.errosUltimaHora();
+      
+      expect(resultado).toBe(0);
+    });
+  });
+  
+  describe('resumo', () => {
+    it('deve retornar resumo com todas as métricas', async () => {
+      const agora = new Date().toISOString();
+      
+      metricsService.fetchJson = jest.fn().mockImplementation((path) => {
+        if (path === '/api/cortex') return [{ timestamp: agora }];
+        if (path === '/api/logs') return [{ timestamp: agora, tempo_resposta: 100 }];
+        if (path === '/api/models') return [{ nome: 'test', status: 'ok' }];
+        if (path === '/api/usage') return [{ provedor: 'test', usado: 100, limite: 1000 }];
+        if (path === '/api/events') return [{ timestamp: agora }];
+        if (path === '/api/pedidos') return [{ status: 'pendente' }];
+        if (path === '/api/logs') return [{ timestamp: agora, nivel: 'error' }];
+        return [];
+      });
+      
+      const resultado = await metricsService.resumo();
+      
+      expect(resultado).toEqual({
+        estadoCortex: {
+          estado: 'online',
+          ultimaAtualizacao: expect.any(String)
+        },
+        tempoMedioRespostaUltimaHoraMs: 100,
+        statusIAS: expect.any(Object),
+        cotaUsadaPorProvedor: expect.any(Object),
+        mensagensPorMinuto: 1,
+        fila: {
+          tamanho: 1,
+          pendentes: 1,
+          processando: 0
+        },
+        errosUltimaHora: 1,
+        geradoEm: expect.any(String)
+      });
+    });
+  });
 });
