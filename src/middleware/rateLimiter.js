@@ -1,24 +1,27 @@
 const rateLimit = require('express-rate-limit');
+const rateLimitConfig = require('../config/rateLimit');
 
 // Rate limit geral: 10 requisições por 10 segundos por IP
 const globalLimiter = rateLimit({
-  windowMs: 10 * 1000, // 10 segundos
-  max: 10, // máximo 10 requisições
-  standard: true,
-  message: { error: 'Muitas requisições. Tente novamente em 10 segundos.' },
+  windowMs: rateLimitConfig.windowMs,
+  max: rateLimitConfig.max,
+  standard: rateLimitConfig.standard,
+  message: rateLimitConfig.message,
   handler: (req, res) => {
-    res.status(429).json({ error: 'Muitas requisições. Tente novamente em 10 segundos.' });
+    res.set('Retry-After', Math.ceil(rateLimitConfig.blockDurationMs / 1000));
+    res.status(429).json(rateLimitConfig.message);
   }
 });
 
 // Rate limit por conta (autenticado): 10 mensagens por 10 segundos
 const authLimiter = rateLimit({
-  windowMs: 10 * 1000, // 10 segundos
-  max: 10, // máximo 10 mensagens
-  standard: true,
-  message: { error: 'Limite de mensagens atingido. Tente novamente em 10 segundos.' },
+  windowMs: rateLimitConfig.windowMs,
+  max: rateLimitConfig.max,
+  standard: rateLimitConfig.standard,
+  message: rateLimitConfig.message,
   handler: (req, res) => {
-    res.status(429).json({ error: 'Limite de mensagens atingido. Tente novamente em 10 segundos.' });
+    res.set('Retry-After', Math.ceil(rateLimitConfig.blockDurationMs / 1000));
+    res.status(429).json(rateLimitConfig.message);
   }
 });
 
