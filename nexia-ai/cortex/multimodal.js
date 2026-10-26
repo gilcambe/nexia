@@ -10,9 +10,11 @@ const WORKERS_AI_FALLBACK = true;
  * Cada anexo é enviado como inline_data. Se houver falha ou falta de cota,
  * faz fallback para o Workers AI consolidado (#1671, #1638, #1639).
  */
-async function processarMultimodal(env, fetchImpl, { message, attachments = [] }) {
+async function processarMultimodal(env, fetchImpl, opts = {}) {
   const apiKey = env.GEMINI_API_KEY;
-  const validAttachments = Array.isArray(attachments) ? attachments.filter(a => a && a.base64) : [];
+  const message = opts.message ?? opts.mensagem;
+  const attachments = Array.isArray(opts.attachments) ? opts.attachments : Array.isArray(opts.anexos) ? opts.anexos : [];
+  const validAttachments = attachments.filter(a => a && a.base64);
 
   // Se houver chave do Gemini e arquivos/áudio/vídeo, tenta primeiro o Gemini 2.5 Flash nativo
   if (apiKey && validAttachments.length > 0) {
@@ -54,9 +56,9 @@ async function processarMultimodal(env, fetchImpl, { message, attachments = [] }
           const textParts = candidate.content.parts.map(p => p.text || '').join('\n');
           if (textParts.trim()) {
             return {
-              provider: 'gemini-2.5-flash',
-              text: textParts,
-              correlated: true
+              ok: true,
+              provedor: 'gemini',
+              resposta: textParts
             };
           }
         }
@@ -81,9 +83,9 @@ async function processarMultimodal(env, fetchImpl, { message, attachments = [] }
 
   const fallbackText = `(Resposta gerada via fallback Workers AI por anexo)\nMensagem do usuário: ${message}\n\n` + results.join('\n\n');
   return {
-    provider: 'workers-ai-fallback',
-    text: fallbackText,
-    correlated: false
+    ok: true,
+    provedor: 'workers-ai',
+    resposta: fallbackText
   };
 }
 
