@@ -21,7 +21,7 @@ async function processarMultimodal(param1, param2, param3 = {}) {
     opts = param3 || {};
   }
   const apiKey = env.GEMINI_API_KEY;
-  const message = opts.message ?? opts.mensagem || '';
+  const message = (opts.message ?? opts.mensagem) || '';
   const attachments = Array.isArray(opts.attachments) ? opts.attachments : Array.isArray(opts.anexos) ? opts.anexos : [];
   const validAttachments = attachments.filter(a => a && a.base64);
 
