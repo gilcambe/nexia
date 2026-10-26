@@ -39,13 +39,14 @@ function detectarAbuso(req) {
   // Conteúdo proibido / tentativas de injection na query, params e body
   const texto = extrairTextoRequisicao(req);
   for (const pattern of INJECTION_PATTERNS) {
-    if (pattern.test(texto)) {
-      return {
-        tipo: 'injection',
-        detalhes: 'Padrão proibido detectado',
-        ip,
-      };
-    }
+      if (pattern.test(texto)) {
+    return {
+      tipo: 'injection',
+      detalhes: 'Padrão proibido detectado',
+      ip,
+      userId,
+    };
+  }
   }
 
   return null;
