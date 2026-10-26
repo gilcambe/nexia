@@ -1,0 +1,426 @@
+{
+  "spec": {
+    "kind": "site",
+    "name": "Loja Teste",
+    "tagline": "Tudo que você precisa em um só lugar",
+    "photo_theme": "retail store",
+    "description": "Loja de varejo com produtos de qualidade e atendimento personalizado.",
+    "folder": "sites/loja-teste",
+    "fonts": {
+      "heading": "Montserrat",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2c3e50",
+      "accent": "#e74c3c",
+      "bg": "#f8f9fa",
+      "surface": "#ffffff",
+      "text": "#2c3e50",
+      "muted": "#667071",
+      "dark": "#1a252f"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "5511999998888",
+      "phone": "(11) 99999-8888",
+      "email": "contato@lojateste.com.br",
+      "address": "Rua das Lojas, 123",
+      "city": "São Paulo - SP",
+      "hours": "Seg a dom, 9h às 21h",
+      "instagram": "lojateste",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=loja-teste&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "sections": [
+      {
+        "type": "hero",
+        "id": "encontre-tudo-o-que-voce-procura",
+        "title": "Encontre tudo o que você procura",
+        "subtitle": "Produtos de qualidade com preços acessíveis e atendimento personalizado.",
+        "eyebrow": "Loja de varejo",
+        "cta": {
+          "label": "Ver produtos",
+          "href": "#produtos"
+        },
+        "cta2": {
+          "label": "Nossa história",
+          "href": "#sobre"
+        },
+        "image_query": "retail store interior",
+        "video_query": ""
+      },
+      {
+        "type": "services",
+        "id": "produtos",
+        "title": "Nossos produtos",
+        "subtitle": "Qualidade e variedade para todas as necessidades.",
+        "items": [
+          {
+            "title": "Eletrônicos",
+            "text": "Smartphones, tablets e acessórios das melhores marcas.",
+            "price": "a partir de R$ 299",
+            "image_query": "electronics store",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Moda",
+            "text": "Roupas, calçados e acessórios para todas as idades.",
+            "price": "",
+            "image_query": "fashion store",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Casa e Decoração",
+            "text": "Móveis, utensílios e itens para decorar seu lar.",
+            "price": "",
+            "image_query": "home decor store",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Esportes e Lazer",
+            "text": "Equipamentos e roupas para prática de esportes.",
+            "price": "",
+            "image_query": "sports equipment store",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Beleza e Cosméticos",
+            "text": "Produtos de beleza e cuidados pessoais.",
+            "price": "",
+            "image_query": "beauty products store",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          }
+        ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-a-loja-teste",
+        "title": "Sobre a Loja Teste",
+        "subtitle": "Há 15 anos no mercado, oferecendo produtos de qualidade com o melhor atendimento.",
+        "text": "Há 15 anos no mercado, oferecendo produtos de qualidade com o melhor atendimento.",
+        "image_query": "retail store team",
+        "stats": [
+          {
+            "value": "15",
+            "label": "anos"
+          },
+          {
+            "value": "5000+",
+            "label": "produtos"
+          },
+          {
+            "value": "50.000+",
+            "label": "clientes satisfeitos"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "nossa-loja",
+        "title": "Nossa loja",
+        "subtitle": "",
+        "image_queries": [
+          "retail store interior",
+          "product display",
+          "cashier counter",
+          "clothing section",
+          "electronics section",
+          "home decor section",
+          "happy customers shopping",
+          "store entrance"
+        ],
+        "gif_queries": [
+          "shopping experience"
+        ]
+      },
+      {
+        "type": "video",
+        "id": "conheca-nossa-loja",
+        "title": "Conheça nossa loja",
+        "subtitle": "Um tour virtual por nossa loja física.",
+        "youtube": "",
+        "video_query": "retail store tour"
+      },
+      {
+        "type": "team",
+        "id": "nossa-equipe",
+        "title": "Nossa equipe",
+        "subtitle": "",
+        "members": [
+          {
+            "name": "Maria Silva",
+            "role": "Gerente de Loja",
+            "image_query": "female retail manager"
+          },
+          {
+            "name": "João Santos",
+            "role": "Atendente",
+            "image_query": "male retail employee"
+          },
+          {
+            "name": "Ana Oliveira",
+            "role": "Caixa",
+            "image_query": "female cashier"
+          }
+        ]
+      },
+      {
+        "type": "testimonials",
+        "id": "depoimentos-de-clientes",
+        "title": "Depoimentos de clientes",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Carlos Mendes",
+            "role": "",
+            "text": "Excelente atendimento e produtos de qualidade!",
+            "rating": 5
+          },
+          {
+            "name": "Fernanda Lima",
+            "role": "",
+            "text": "Encontrei tudo o que precisava em um só lugar.",
+            "rating": 5
+          },
+          {
+            "name": "Ricardo Alves",
+            "role": "",
+            "text": "Preços competitivos e equipe muito atenciosa.",
+            "rating": 4
+          }
+        ]
+      },
+      {
+        "type": "links",
+        "id": "links-uteis",
+        "title": "Links úteis",
+        "subtitle": "",
+        "items": [
+          {
+            "label": "WhatsApp",
+            "url": "https://wa.me/5511999998888",
+            "icon": "whatsapp"
+          },
+          {
+            "label": "Instagram",
+            "url": "https://instagram.com/lojateste",
+            "icon": "instagram"
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "perguntas-frequentes",
+        "title": "Perguntas frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Trabalhamos com frete?",
+            "a": "Sim, oferecemos frete para todo o Brasil."
+          },
+          {
+            "q": "Possui loja física?",
+            "a": "Sim, estamos localizados em São Paulo - SP."
+          },
+          {
+            "q": "Aceitam cartão?",
+            "a": "Aceitamos todos os cartões de crédito e débito."
+          },
+          {
+            "q": "Tem garantia nos produtos?",
+            "a": "Todos os produtos possuem garantia fabricante."
+          },
+          {
+            "q": "Como fazer devolução?",
+            "a": "Você pode devolver em até 30 dias com nota fiscal."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "visite-nossa-loja",
+        "title": "Visite nossa loja",
+        "subtitle": "Venha conhecer nossos produtos e serviços pessoalmente.",
+        "cta": {
+          "label": "Ver endereço",
+          "href": "#contato"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "fale-conosco",
+        "title": "Fale conosco",
+        "subtitle": "",
+        "map": true,
+        "form": true
+      }
+    ]
+  },
+  "media": {
+    "s0.hero": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Warby_Parker_eyeglasses_retail_store_interior_at_Washington_Union_Station.jpg/1280px-Warby_Parker_eyeglasses_retail_store_interior_at_Washington_Union_Station.jpg",
+      "width": 1280,
+      "height": 909,
+      "alt": "Warby Parker eyeglasses retail store interior at Washington Union Station",
+      "credit": "Warby Parker eyeglasses retail store interior at Washington Union Station — Harrison Keely (BY 4.0, via Openve",
+      "provider": "openverse"
+    },
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/22/Computer_and_Consumer_Electronics_store_in_Ghana.jpg/1280px-Computer_and_Consumer_Electronics_store_in_Ghana.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "Computer and Consumer Electronics store in Ghana",
+      "credit": "Computer and Consumer Electronics store in Ghana — oneVillage Initiative (BY-SA 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/25/202308_Fashion_Store_of_Jinhua_No.1_Department_Store_Group_on_Xishi_Street%2C_Jinhua.jpg/1280px-202308_Fashion_Store_of_Jinhua_No.1_Department_Store_Group_on_Xishi_Street%2C_Jinhua.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "202308 Fashion Store of Jinhua No.1 Department Store Group on Xishi Street, Jinh",
+      "credit": "202308 Fashion Store of Jinhua No.1 Department Store Group on Xishi Street, Jinhua — MNXANL (BY-SA 4.0, via Op",
+      "provider": "openverse"
+    },
+    "s1.item2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Man_smiling_while_carrying_potted_plants_in_a_home_decor_store.jpg/1280px-Man_smiling_while_carrying_potted_plants_in_a_home_decor_store.jpg",
+      "width": 1280,
+      "height": 852,
+      "alt": "Man smiling while carrying potted plants in a home decor store",
+      "credit": "Man smiling while carrying potted plants in a home decor store — Shixart1985 (BY 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f3/Sports_store_in_New_York_with_Novak_%C4%90okovi%C4%87_equipments.JPG/1280px-Sports_store_in_New_York_with_Novak_%C4%90okovi%C4%87_equipments.JPG",
+      "width": 1280,
+      "height": 857,
+      "alt": "Sports store in New York with Novak Đoković equipments",
+      "credit": "Sports store in New York with Novak Đoković equipments — Neshy (BY-SA 3.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item4": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c9/A_man_with_Beauty_products_and_Woman_products_in_Electric_store.jpg/1280px-A_man_with_Beauty_products_and_Woman_products_in_Electric_store.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "A man with Beauty products and Woman products in Electric store",
+      "credit": "A man with Beauty products and Woman products in Electric store — Peachyeung316 (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s2.about": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/fb/StateLibQld_1_54416_Bullock_team_outside_James_McKenzie%27s_General_Store_at_Blackall%2C_Queensland%2C_ca.1885.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 781,
+      "alt": "Bullock team outside James McKenzie's General Store at Blackall, Queensland, ca.",
+      "credit": "Wikimedia Commons (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g7": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/DLT_Department_Store_Entrance.jpg/1280px-DLT_Department_Store_Entrance.jpg",
+      "width": 1280,
+      "height": 848,
+      "alt": "DLT Department Store Entrance",
+      "credit": "DLT Department Store Entrance — Florstein (WikiPhotoSpace) (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s5.m1": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/SMALL_RETAIL_BUSINESSES_ON_ST._CLAUDE_AVENUE_-_NARA_-_546034.jpg/1280px-SMALL_RETAIL_BUSINESSES_ON_ST._CLAUDE_AVENUE_-_NARA_-_546034.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 865,
+      "alt": "SMALL RETAIL BUSINESSES ON ST. CLAUDE AVENUE - NARA - 546034",
+      "credit": "John Messina (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/A_Lacoste_retail_store_in_Delaware%2C_United_States.jpg/1280px-A_Lacoste_retail_store_in_Delaware%2C_United_States.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "A Lacoste retail store in Delaware, United States",
+      "credit": "A Lacoste retail store in Delaware, United States — Harrison Keely (BY 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Airpods_and_Airpods_Pro_being_displayed_in_electronics_retail_store.jpg/1280px-Airpods_and_Airpods_Pro_being_displayed_in_electronics_retail_store.jpg",
+      "width": 1280,
+      "height": 862,
+      "alt": "Airpods and Airpods Pro being displayed in electronics retail store",
+      "credit": "Airpods and Airpods Pro being displayed in electronics retail store — KKPCW (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Sprint_retail_store_frontage%2C_New_Mexico.jpg/1280px-Sprint_retail_store_frontage%2C_New_Mexico.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "File:Sprint retail store frontage, New Mexico.jpg",
+      "credit": "File:Sprint retail store frontage, New Mexico.jpg — Chris Potter, stockmonkeys.com (BY 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/df/An_AT%26T_wireless_retail_store_in_Asheville%2C_North_Carolina_02.jpg/1280px-An_AT%26T_wireless_retail_store_in_Asheville%2C_North_Carolina_02.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "An AT&T wireless retail store in Asheville, North Carolina 02",
+      "credit": "An AT&T wireless retail store in Asheville, North Carolina 02 — Harrison Keely (BY 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g4": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Playstation_5_being_displayed_in_electronics_retail_store_-_1.jpg/1280px-Playstation_5_being_displayed_in_electronics_retail_store_-_1.jpg",
+      "width": 1280,
+      "height": 2276,
+      "alt": "Playstation 5 being displayed in electronics retail store - 1",
+      "credit": "Playstation 5 being displayed in electronics retail store - 1 — KKPCW (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g5": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f6/Camera_World%27s_retail_store_-_downtown_Portland%2C_Oregon_%282015%29.jpg/1280px-Camera_World%27s_retail_store_-_downtown_Portland%2C_Oregon_%282015%29.jpg",
+      "width": 1280,
+      "height": 811,
+      "alt": "Camera World's retail store - downtown Portland, Oregon (2015)",
+      "credit": "Camera World's retail store - downtown Portland, Oregon (2015) — Steve Morgan (BY-SA 3.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g6": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Playstation_5_being_displayed_in_electronics_retail_store_-_2.jpg/1280px-Playstation_5_being_displayed_in_electronics_retail_store_-_2.jpg",
+      "width": 1280,
+      "height": 720,
+      "alt": "Playstation 5 being displayed in electronics retail store - 2",
+      "credit": "Playstation 5 being displayed in electronics retail store - 2 — KKPCW (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s5.m0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/A_Michael_Kors_retail_store_in_Rehoboth_Beach%2C_Delaware.jpg/1280px-A_Michael_Kors_retail_store_in_Rehoboth_Beach%2C_Delaware.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "A Michael Kors retail store in Rehoboth Beach, Delaware",
+      "credit": "A Michael Kors retail store in Rehoboth Beach, Delaware — Harrison Keely (BY 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s5.m2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/8/8a/Rawimpact_Lifestyle_Brand_Retail_Store_Locations_in_Kalamazoo%2C_MI.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "width": 1254,
+      "height": 1254,
+      "alt": "Rawimpact Lifestyle Brand Retail Store Locations in Kalamazoo, MI",
+      "credit": "Rawimpact Lifestyle Brand Retail Store Locations in Kalamazoo, MI — Mk00325 (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    }
+  }
+}
