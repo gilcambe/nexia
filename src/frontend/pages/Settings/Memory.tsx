@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useMemory } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemType } from '../../api/memoryClient';
-import MemoryItemComponent from '../../components/MemoryItem';
+import { MemoryItem as MemoryItemComponent } from '../../components/MemoryItem';
 
 type MemoryItemProps = MemoryItemType & {
   onDelete: (id: string) => void;
