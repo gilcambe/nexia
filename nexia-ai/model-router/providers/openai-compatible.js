@@ -50,6 +50,10 @@ const PROVIDERS = Object.freeze({
 
 const DEFAULT_TIMEOUT = 120000;
 
+// Quando um provedor não suporta tools e o pedido exige tools, encadeia
+// fallback para o próximo provedor gratuito (Groq → Gemini/Google).
+const FALLBACK_PROVIDERS = Object.freeze(['groq', 'google']);
+
 const AUTO = /^auto:(\d{1,2})$/;
 /** Estimativa conservadora de tokens de entrada (~3,5 caracteres por token em português e código). */
 function estimateInputTokens(b) {
@@ -152,47 +156,82 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
     capabilities,
 
     async chat(model, req) {
-      const { res, t, model: real } = await post(model, req, false);
       try {
-        try { getPlacar().registrarCabecalhos({ provider: id, model }, res.headers); } catch {}
+        const { res, t, model: real } = await post(model, req, false);
+        try {
+          try { getPlacar().registrarCabecalhos({ provider: id, model }, res.headers); } catch {}
 
-        const d = await res.json();
-        const msg = (d.choices && d.choices[0] && d.choices[0].message) || {};
-        const tool_calls = (msg.tool_calls || []).map(tc => {
-          let input = {};
-          try { input = JSON.parse(tc.function.arguments || '{}'); } catch { input = { _raw: String(tc.function.arguments || '') }; }
-          return { id: tc.id, name: tc.function.name, input };
-        });
-        return { provider: id, model: d.model || real, text: msg.content || '', tool_calls, usage: usageOf(d.usage), stop_reason: (d.choices && d.choices[0] && d.choices[0].finish_reason) || null };
+          const d = await res.json();
+          const msg = (d.choices && d.choices[0] && d.choices[0].message) || {};
+          const tool_calls = (msg.tool_calls || []).map(tc => {
+            let input = {};
+            try { input = JSON.parse(tc.function.arguments || '{}'); } catch { input = { _raw: String(tc.function.arguments || '') }; }
+            return { id: tc.id, name: tc.function.name, input };
+          });
+          return { provider: id, model: d.model || real, text: msg.content || '', tool_calls, usage: usageOf(d.usage), stop_reason: (d.choices && d.choices[0] && d.choices[0].finish_reason) || null };
+        } catch (e) {
+          throw new ModelError(CODES.UPSTREAM, `${id} resposta inválida`, { provider: id });
+        } finally { t.done(); }
       } catch (e) {
-        throw new ModelError(CODES.UPSTREAM, `${id} resposta inválida`, { provider: id });
-      } finally { t.done(); }
+        if (e.code === CODES.UNSUPPORTED && req.tools && req.tools.length) {
+          for (const fbId of FALLBACK_PROVIDERS) {
+            if (fbId === id) continue;
+            const fbCfg = PROVIDERS[fbId];
+            if (!fbCfg || !fbCfg.tools) continue;
+            try {
+              const fbProvider = createOpenAICompatibleProvider(fbId, { env, fetchImpl, baseUrl });
+              return await fbProvider.chat(model, req);
+            } catch (fbErr) {
+              continue;
+            }
+          }
+        }
+        throw e;
+      }
     },
 
     async *stream(model, req) {
-      const { res, t } = await post(model, req, true);
-      try { getPlacar().registrarCabecalhos({ provider: id, model }, res.headers); } catch {}
-      let usage = { input_tokens: 0, output_tokens: 0 };
-      let stop = null;
       try {
-        for await (const data of sseData(res.body)) {
-          if (!data || data === '[DONE]') continue;
-          let p;
-          try { p = JSON.parse(data); } catch { continue; }
-          if (p.usage) usage = usageOf(p.usage);
-          const ch = p.choices && p.choices[0];
-          if (ch && ch.finish_reason) stop = ch.finish_reason;
-          const txt = ch && ch.delta && ch.delta.content;
-          if (txt) yield { type: 'text', text: txt };
+        const { res, t } = await post(model, req, true);
+        try { getPlacar().registrarCabecalhos({ provider: id, model }, res.headers); } catch {}
+        let usage = { input_tokens: 0, output_tokens: 0 };
+        let stop = null;
+        try {
+          for await (const data of sseData(res.body)) {
+            if (!data || data === '[DONE]') continue;
+            let p;
+            try { p = JSON.parse(data); } catch { continue; }
+            if (p.usage) usage = usageOf(p.usage);
+            const ch = p.choices && p.choices[0];
+            if (ch && ch.finish_reason) stop = ch.finish_reason;
+            const txt = ch && ch.delta && ch.delta.content;
+            if (txt) yield { type: 'text', text: txt };
+          }
+          yield { type: 'done', usage, stop_reason: stop, tool_calls: [] };
+        } catch (e) {
+          if (e instanceof ModelError) throw e;
+          if (t.signal.aborted) throw new ModelError(CODES.ABORTED, `Stream de ${id} cancelado ou expirado.`, { provider: id });
+          throw new ModelError(CODES.UPSTREAM, `${id} stream interrompido`, { provider: id });
+        } finally {
+          t.done();
+          try { await res.body.cancel(); } catch { /* já consumido */ }
         }
-        yield { type: 'done', usage, stop_reason: stop, tool_calls: [] };
       } catch (e) {
-        if (e instanceof ModelError) throw e;
-        if (t.signal.aborted) throw new ModelError(CODES.ABORTED, `Stream de ${id} cancelado ou expirado.`, { provider: id });
-        throw new ModelError(CODES.UPSTREAM, `${id} stream interrompido`, { provider: id });
-      } finally {
-        t.done();
-        try { await res.body.cancel(); } catch { /* já consumido */ }
+        if (e.code === CODES.UNSUPPORTED && req.tools && req.tools.length) {
+          for (const fbId of FALLBACK_PROVIDERS) {
+            if (fbId === id) continue;
+            const fbCfg = PROVIDERS[fbId];
+            if (!fbCfg || !fbCfg.tools) continue;
+            try {
+              const fbProvider = createOpenAICompatibleProvider(fbId, { env, fetchImpl, baseUrl });
+              yield* fbProvider.stream(model, req);
+              return;
+            } catch (fbErr) {
+              continue;
+            }
+          }
+        }
+        throw e;
       }
     },
   };
