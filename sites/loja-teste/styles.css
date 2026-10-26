@@ -1,13 +1,13 @@
 /* Loja Teste — gerado pelo NEXIA Site Kit (ADR-Q-04) */
 :root {
-  --primary: #2c3e50;
-  --accent: #e74c3c;
-  --bg: #f8f9fa;
-  --surface: #ffffff;
-  --text: #2c3e50;
-  --muted: #667071;
-  --dark: #1a252f;
-  --font-head: "Montserrat", Georgia, serif;
+  --primary: #2563eb;
+  --accent: #f59e0b;
+  --bg: #ffffff;
+  --surface: #f8fafc;
+  --text: #0f172a;
+  --muted: #64748b;
+  --dark: #020617;
+  --font-head: "Outfit", Georgia, serif;
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --radius: 14px;
   --radius-lg: 24px;
