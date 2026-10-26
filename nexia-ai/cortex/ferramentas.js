@@ -62,7 +62,7 @@ async function agente(pergunta, tools, options = {}) {
             toolName = 'abrir_pagina';
             toolArgs = { url: urlMatch[0] };
           }
-        } else if (/\d+[%,]+\s*\d+/test(pergunta) || /\d+\s*\*\s*\d+/test(pergunta)) {
+        } else if (/\d+[%,]+\s*\d+/.test(pergunta) || /\d+\s*\*\s*\d+/.test(pergunta)) {
           toolName = 'calcular';
           // Extrair expressão matemática
           const exprMatch = pergunta.match(/(\d+[\d %*/^()]+)/);
@@ -210,7 +210,7 @@ async function cotacao({ moeda = 'USD' }) {
     const resp = await fetch('https://economia.awesomeapi.com.br/json/last/USD-BRL', { headers: { 'User-Agent': 'NEXIA-Cortex' } });
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const dados = await resp.json();
-    const dolar = dados.USD ? dados.USD : dados[madea] || {};
+    const dolar = dados.USD ? dados.USD : dados[moeda] || {};
     const price = parseFloat(dolar.price || 0);
     const hora = dolar.create_time || new Date().toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo' });
     return `💧 Cotação do ${moeda}: R$ ${price.toFixed(2)} (${hora})`;
@@ -228,7 +228,7 @@ async function clima({ cidade }) {
   try {
     // Geocoding simples: converter cidade em coordenadas
     const encodedCity = encodeURIComponent(cidade || 'Brasilia');
-    const geoResp = await fetch(`https://geocoding-api.open-meteo.com.v1/forecast?latitude=&longitude=&current_weather=true&timezone=America%2FSao_Paulo&query=${encodedCity}`, {
+    const geoResp = await fetch(`https://geocoding-api.open-meteo.com/v1/forecast?latitude=&longitude=&current_weather=true&timezone=America%2FSao_Paulo&query=${encodedCity}`, {
       headers: { 'User-Agent': 'NEXIA-Cortex' }
     });
     if (!geoResp.ok) throw new Error('Cidade não encontrada');
