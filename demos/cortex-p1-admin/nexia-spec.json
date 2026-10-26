@@ -3,8 +3,8 @@
     "kind": "system",
     "name": "Cortex-p1 Admin",
     "tagline": "Monitoramento e infraestrutura do Cortex-p1",
-    "photo_theme": "",
-    "description": "Monitoramento e infraestrutura do Cortex-p1",
+    "photo_theme": "technology dashboard server analytics",
+    "description": "Monitoramento, rotas protegidas e infraestrutura do Cortex-p1 com painel de métricas em tempo real.",
     "folder": "demos/cortex-p1-admin",
     "fonts": {
       "heading": "Space Grotesk",
@@ -24,9 +24,9 @@
       "whatsapp": "",
       "phone": "(11) 98888-7777",
       "email": "admin@cortex-p1.internal",
-      "address": "",
-      "city": "",
-      "hours": "",
+      "address": "Av. Paulista, 1000 - São Paulo, SP",
+      "city": "São Paulo",
+      "hours": "24/7 SRE Operations",
       "instagram": "",
       "facebook": "",
       "youtube": "",
@@ -41,7 +41,7 @@
       "label": "Feito com Kernex",
       "url": "https://kernex.com.br/?utm_source=cortex-p1-admin&utm_medium=selo&utm_campaign=clientes"
     },
-    "leads_origem": "",
+    "leads_origem": "admin-status-panel",
     "entities": [
       {
         "key": "provedores",
@@ -264,7 +264,7 @@
             "severidade": "Crítica"
           },
           {
-            "horario": "13:4218",
+            "horario": "13:42:18",
             "modulo": "Auth Service",
             "codigo": "401",
             "mensagem": "Token JWT expirado na tentativa de refresh.",
@@ -277,7 +277,8 @@
       "Status em Tempo Real",
       "Métricas de Provedores",
       "Gestão de Filas",
-      "Auditoria de Erros"
+      "Auditoria de Erros",
+      "adminStatusController"
     ]
   },
   "media": {}
