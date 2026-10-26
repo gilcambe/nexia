@@ -8,12 +8,21 @@ const FAZER = /\b(cri[ae]r?|crie|fa[cz]a|fazer|mud[ae]r?|mude|corrij[ae]|corrigi
 // Começo típico de pergunta em português.
 const INICIO = /^(como|o que|oque|que |qual|quais|quanto|quantos|quantas|quando|onde|por que|porque|pq|quem|sera|existe|tem |ha |status|resumo|situacao)/;
 
+/** Palavras relacionadas a alterações de projeto/sistema. */
+const PALAVRAS_CODIGO = /\b(projeto|site|app|tela|bot[ãa]o|p[áa]gina|painel|c[óo]digo|reposit[óo]rio|bug|erro|deploy|publicar|issue|pr|tenant|body coach|splash|central)\b/;
+
 /** Texto curto que pergunta algo e não pede mudança de código. */
 export function ehPergunta(texto: string): boolean {
   const t = sem(texto || "");
   if (!t || t.length > 400 || t.includes("```") || /\n\s*\n/.test(t)) return false;
   if (FAZER.test(t)) return false;
   return t.endsWith("?") || INICIO.test(t);
+}
+
+/** Detecta se o texto contém palavras relacionadas a alterações de projeto/sistema. */
+export function ehPedidoDeCodigo(texto: string): boolean {
+  const t = sem(texto || "");
+  return PALAVRAS_CODIGO.test(t);
 }
 
 /** Pergunta sobre como andam as tarefas: a resposta lê a Central (fila do Cortex) antes. */
