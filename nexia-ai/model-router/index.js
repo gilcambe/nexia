@@ -134,6 +134,9 @@ function createRouter(o = {}) {
 
     const remainingTime = () => Math.max(10, totalTimeoutMs - (Date.now() - startTime));
 
+    const tDispatchMs = performance.now() - tDispatch0;
+    console.log(`[model-router] dispatch start providers=${dedupped.length} dispatchMs=${Math.round(tDispatchMs)}`);
+
     const timeoutPromise = (ms, msg) => {
       let timer;
       const promise = new Promise((_, reject) => {
@@ -149,6 +152,7 @@ function createRouter(o = {}) {
 
     let currentReq = req;
     const chunks = [];
+    let accumulatedText = '';
     const dedupped = dedupe(descs);
     const tDispatch0 = performance.now();
 
@@ -179,7 +183,6 @@ function createRouter(o = {}) {
       }
 
       let contReq = currentReq;
-      const accumulatedText = chunks.join('');
       if (accumulatedText) {
         const history = [...(currentReq.messages || [])];
         contReq = {
@@ -227,6 +230,7 @@ function createRouter(o = {}) {
           const val = nextItem.value;
           if (val && val.type === 'text' && val.text) {
             chunks.push(val.text);
+            accumulatedText += val.text;
           }
           yield val;
 
@@ -267,7 +271,6 @@ function createRouter(o = {}) {
           const d = dedupped[i] || descs[0];
           const k = `${d.provider}|${d.model}|${chave(req)}`;
           const generalK = `gen|${chave(req)}`;
-          const accumulatedText = chunks.join('');
           const cacheVal = { text: accumulatedText, provider: d.provider, model: d.model, usage: { total_tokens: Math.ceil(accumulatedText.length / 4) } };
           cache.set(k, cacheVal);
           cache.set(generalK, cacheVal);
