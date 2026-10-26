@@ -148,6 +148,7 @@ async function prints(browser, email, senha, r) {
     await page.keyboard.press('Enter'); await sleep(6000);
     if (!/\/cortex/.test(page.url())) await page.goto(page.url().replace(/\/[^/]*$/, '/cortex'), { waitUntil: 'networkidle' }).catch(() => {});
     await sleep(3000); await page.screenshot({ path: path.join(OUT, 'ui-01-inicio.png') }); log.push('url ' + page.url());
+    await page.locator('[data-testid=cx-modo-pergunta]').click({ timeout: 5000 }).catch(() => log.push('sem aba Perguntar agora'));
     const caixa = page.locator('[data-testid=cx-texto]');
     if (await caixa.count()) {
       const t0 = Date.now();
