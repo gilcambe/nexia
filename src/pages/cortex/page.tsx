@@ -9,7 +9,7 @@ import Pergunta from "./Pergunta";
 import Lateral from "./Lateral";
 import type { Vista } from "./Lateral";
 import Logo from "./Logo";
-import { ehPergunta } from "./intencao";
+import { ehPergunta, ehPedidoDeCodigo } from "./intencao";
 import { mostrarAbertura } from "@/lib/abertura-nexia";
 import { Artefatos, Config, Conexoes, Tarefas } from "./Paineis";
 
@@ -22,7 +22,7 @@ const CSS = `
 `;
 
 type ModoInicio = "pedido" | "pergunta";
-const lerModo = (): ModoInicio => { try { return localStorage.getItem("cx_modo") === "pergunta" ? "pergunta" : "pedido"; } catch { return "pedido"; } };
+const lerModo = (): ModoInicio => { try { const m = localStorage.getItem("cx_modo"); return m === "pedido" || m === "pergunta" ? m : "pergunta"; } catch { return "pergunta"; } };
 
 const lerTema = (): Tema => { try { const t = localStorage.getItem("cx_tema"); return t === "claro" || t === "escuro" ? t : "auto"; } catch { return "auto"; } };
 
@@ -163,7 +163,7 @@ export default function CortexPage() {
               {erro && <p className="text-sm text-red-400 mt-4" role="alert">{erro}</p>}
             </div>
             <Composer modo="pedido" inicial={inicial} enviar={async (texto) => {
-              if (!forcarPedido && ehPergunta(texto)) { setPrimeira(texto); mudarModo("pergunta"); return; }
+              if (!forcarPedido && !ehPedidoDeCodigo(texto)) { setPrimeira(texto); mudarModo("pergunta"); return; }
               setForcarPedido(false);
               const r = await agir({ acao: "pedir", texto }); buscar(busca); if (r.numero) abrir(r.numero);
             }} />
