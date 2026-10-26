@@ -8,6 +8,7 @@
 
 // FIX v53: Usa firebase-init.js como source of truth — evita double-init race condition
 const { admin, db } = require('./firebase-init');
+const abuseRecorder = require('../middleware/abuseRecorder');
 
 function getCorsOrigin(event) {
   const allowed = (process.env.NEXIA_APP_URL || '').split(',').map(u => u.trim()).filter(Boolean);
