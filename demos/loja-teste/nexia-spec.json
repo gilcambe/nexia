@@ -220,7 +220,7 @@
       },
       {
         "type": "contact",
-        "id": "fale-com-a-gente",
+        "id": "fale-conosco",
         "title": "Fale com a gente",
         "subtitle": "",
         "map": true,
@@ -236,6 +236,14 @@
       "alt": "Stockmann Boutique’s fashion show in 1959.",
       "credit": "Stockmann Museum (Public domain, via Wikimedia Commons)",
       "provider": "wikimedia"
+    },
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Aim%C3%A9_Leon_Dore_store_interior.jpg/1280px-Aim%C3%A9_Leon_Dore_store_interior.jpg",
+      "width": 1280,
+      "height": 843,
+      "alt": "Aimé Leon Dore store interior",
+      "credit": "Aimé Leon Dore store interior — Chive Cream Cheese (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
     },
     "s2.about": {
       "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8c/General_store_interior_Alabama_Walker_Evans.jpg/1280px-General_store_interior_Alabama_Walker_Evans.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
@@ -276,14 +284,6 @@
       "alt": "A fashion design illustration of a contemporary women's outfit featuring a dark ",
       "credit": "Sanjana Krishnamoorthy (CC BY 4.0, via Wikimedia Commons)",
       "provider": "wikimedia"
-    },
-    "s1.item0": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Aim%C3%A9_Leon_Dore_store_interior.jpg/1280px-Aim%C3%A9_Leon_Dore_store_interior.jpg",
-      "width": 1280,
-      "height": 843,
-      "alt": "Aimé Leon Dore store interior",
-      "credit": "Aimé Leon Dore store interior — Chive Cream Cheese (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
     }
   }
 }
