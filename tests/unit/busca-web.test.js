@@ -73,6 +73,9 @@ test('BW7. notícias pelo Bing News (link real) e pela GDELT quando o Google New
   assert.strictEqual(r.de, 'bing_news');
   assert.deepStrictEqual(r.fontes.map((f) => f.url), ['https://g1.globo.com/ia.html', 'https://www.folha.uol.com.br/ia']);
   assert.deepStrictEqual([r.porFonte.google_news, r.porFonte.bing_news, r.porFonte.gdelt], [0, 1, 1]);
+  const urls = [];
+  await b.buscar('notícias de IA nesta semana', { fetchImpl: async (u) => { urls.push(String(u)); return resp(403, ''); } });
+  assert.match(urls.find((u) => u.includes('bing.com')), /qft=sortbydate%3d%221%22\+interval%3d%227%22/);
 });
 
 test('BW4. Central parte=busca (só master)', async () => {
