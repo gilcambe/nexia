@@ -12,6 +12,7 @@ const LOADERS = {
   'architect': () => require('../netlify/functions/architect.js'),
   'audit-log': () => require('../netlify/functions/audit-log.js'),
   'auth': () => require('../netlify/functions/auth.js'),
+  'abuse': () => require('../netlify/functions/abuse.js'),
   'autodev-engine': () => require('../netlify/functions/autodev-engine.js'),
   'billing': () => require('../netlify/functions/billing.js'),
   'body-coach-ai': () => require('../netlify/functions/body-coach-ai.js'),
