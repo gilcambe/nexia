@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { resizeImage } from '../utils/imageResize';
+import { resizeImageToFile } from '../utils/imageResize';
 
 export interface ChatInputProps {
   onSend: (files: File[], text: string) => void | Promise<void>;
