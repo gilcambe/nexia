@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cortex-p1 — Plataforma completa para gestão de projetos e clientes</title>
+  <meta name="description" content="Plataforma completa para gestão de projetos e clientes">
+  <meta name="theme-color" content="#4f46e5">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
+</head>
+<body>
+  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
+      <div class="sidebar__brand">
+        <span class="logo" aria-hidden="true">C</span>
+        <span>Cortex-p1</span>
+      </div>
+      <nav class="sidebar__nav" aria-label="Seções">
+        <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
+        <a href="#/clientes" data-route="clientes"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Clientes</span></a>
+        <a href="#/projetos" data-route="projetos"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Projetos</span></a>
+        <a href="#/tarefas" data-route="tarefas"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Tarefas</span></a>
+        <a href="#/pagamentos" data-route="pagamentos"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Pagamentos</span></a>
+      </nav>
+      <div class="sidebar__foot">
+        <p>Suporte: suporte@cortex-p1.com.br</p>
+        <p>Dados salvos neste navegador.</p>
+      </div>
+    </aside>
+    <div class="backdrop" data-close-menu hidden></div>
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="topbar__title">
+          <h1 id="view-title">Painel</h1>
+          <p id="view-sub">Plataforma completa para gestão de projetos e clientes</p>
+        </div>
+        <label class="search">
+          <span class="sr-only">Buscar</span>
+          <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search" type="search" placeholder="Buscar..." autocomplete="off">
+        </label>
+        <button class="icon-btn" type="button" id="theme" aria-label="Alternar modo escuro"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </header>
+      <main id="conteudo" class="content">
+        <section id="view-painel" class="view" aria-labelledby="view-title">
+          <div class="kpis" id="kpis"></div>
+          <div class="grid2">
+            <article class="card">
+              <header class="card__head"><h2 id="chart-title">Resumo</h2></header>
+              <div class="chart-box"><canvas id="chart" aria-label="Gráfico do resumo" role="img"></canvas></div>
+            </article>
+            <article class="card">
+              <header class="card__head"><h2>Últimos cadastros</h2></header>
+              <ul class="recent" id="recent"></ul>
+            </article>
+          </div>
+        </section>
+        <section id="view-entity" class="view" hidden>
+          <div class="toolbar">
+            <p class="count" id="count"></p>
+            <div class="toolbar__actions">
+              <button class="btn btn--ghost" type="button" id="export"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Exportar CSV</button>
+              <button class="btn btn--primary" type="button" id="add"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> <span id="add-label">Novo</span></button>
+            </div>
+          </div>
+          <div class="card table-card">
+            <div class="table-wrap">
+              <table class="table">
+                <thead id="thead"></thead>
+                <tbody id="tbody"></tbody>
+              </table>
+            </div>
+            <div class="empty" id="empty" hidden>
+              <svg class="i" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg>
+              <h2>Nada por aqui ainda</h2>
+              <p>Clique em “Adicionar” para fazer o primeiro cadastro.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="modal" id="modal" aria-labelledby="modal-title">
+    <form id="form" novalidate>
+      <header class="modal__head">
+        <h2 id="modal-title">Novo</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </header>
+      <div class="modal__body" id="form-fields"></div>
+      <footer class="modal__foot">
+        <button class="btn btn--ghost" type="button" data-close>Cancelar</button>
+        <button class="btn btn--primary" type="submit">Salvar</button>
+      </footer>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="application/json" id="app-config">{"key":"nexia-app:cortex-p1","name":"Cortex-p1","entities":[{"key":"clientes","label":"Clientes","singular":"Cliente","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"email","label":"E-mail","type":"email","options":[],"required":true},{"key":"telefone","label":"Telefone","type":"phone","options":[],"required":true},{"key":"plano","label":"Plano","type":"select","options":["Gratis","Básico","Profissional","Empresarial"],"required":true},{"key":"status","label":"Status","type":"select","options":["Ativo","Inativo","Aguardando ativação"],"required":true},{"key":"criadoem","label":"Criado em","type":"date","options":[],"required":true}],"sample":[{"nome":"Ana Souza","email":"ana.souza@email.com","telefone":"(11) 91234-5678","plano":"Profissional","status":"Ativo","criadoem":""},{"nome":"Bruno Lima","email":"bruno.lima@empresa.com","telefone":"(21) 98765-4321","plano":"Empresarial","status":"Ativo","criadoem":""},{"nome":"Carla Dias","email":"carla.dias@consultoria.com","telefone":"(31) 91122-3344","plano":"Básico","status":"Aguardando ativação","criadoem":""},{"nome":"Davi Reis","email":"davi.reis@startup.com","telefone":"(41) 95566-7788","plano":"Gratis","status":"Ativo","criadoem":""},{"nome":"Eduarda Costa","email":"eduarda.costa@agencia.com","telefone":"(51) 99900-1122","plano":"Profissional","status":"Inativo","criadoem":""},{"nome":"Fernando Gomes","email":"fernando.gomes@tecnologia.com","telefone":"(62) 93344-5566","plano":"Básico","status":"Ativo","criadoem":""}]},{"key":"projetos","label":"Projetos","singular":"Projeto","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"cliente","label":"Cliente","type":"select","options":["Ana Souza","Bruno Lima","Carla Dias","Davi Reis","Eduarda Costa","Fernando Gomes"],"required":true},{"key":"status","label":"Status","type":"select","options":["Planejamento","Em andamento","Em revisão","Concluído","Cancelado"],"required":true},{"key":"datainicio","label":"Data de início","type":"date","options":[],"required":true},{"key":"dataprevista","label":"Data prevista","type":"date","options":[],"required":true},{"key":"orcamento","label":"Orçamento","type":"money","options":[],"required":true}],"sample":[{"nome":"Redesign do site Ana Souza","cliente":"Ana Souza","status":"Em andamento","datainicio":"","dataprevista":"","orcamento":"15000"},{"nome":"App Bruno Lima","cliente":"Bruno Lima","status":"Em revisão","datainicio":"","dataprevista":"","orcamento":"25000"},{"nome":"Loja virtual Carla Dias","cliente":"Carla Dias","status":"Planejamento","datainicio":"","dataprevista":"","orcamento":"18000"},{"nome":"Site Davi Reis","cliente":"Davi Reis","status":"Concluído","datainicio":"","dataprevista":"","orcamento":"8000"},{"nome":"Portal Eduarda Costa","cliente":"Eduarda Costa","status":"Em andamento","datainicio":"","dataprevista":"","orcamento":"22000"},{"nome":"API Fernando Gomes","cliente":"Fernando Gomes","status":"Cancelado","datainicio":"","dataprevista":"","orcamento":"12000"}]},{"key":"tarefas","label":"Tarefas","singular":"Tarefa","fields":[{"key":"titulo","label":"Título","type":"text","options":[],"required":true},{"key":"projeto","label":"Projeto","type":"select","options":["Redesign do site Ana Souza","App Bruno Lima","Loja virtual Carla Dias","Site Davi Reis","Portal Eduarda Costa","API Fernando Gomes"],"required":true},{"key":"status","label":"Status","type":"select","options":["Pendente","Em andamento","Concluída","Atrasada"],"required":true},{"key":"responsavel","label":"Responsável","type":"select","options":["Ana Souza","Bruno Lima","Carla Dias","Davi Reis","Eduarda Costa","Fernando Gomes"],"required":true},{"key":"dataprevista","label":"Data prevista","type":"date","options":[],"required":true},{"key":"prioridade","label":"Prioridade","type":"select","options":["Baixa","Média","Alta","Urgente"],"required":true}],"sample":[{"titulo":"Design homepage","projeto":"Redesign do site Ana Souza","status":"Em andamento","responsavel":"Ana Souza","dataprevista":"","prioridade":"Alta"},{"titulo":"Integração de pagamento","projeto":"App Bruno Lima","status":"Pendente","responsavel":"Bruno Lima","dataprevista":"","prioridade":"Urgente"},{"titulo":"Configuração de estoque","projeto":"Loja virtual Carla Dias","status":"Em andamento","responsavel":"Carla Dias","dataprevista":"","prioridade":"Média"},{"titulo":"Otimização SEO","projeto":"Site Davi Reis","status":"Concluída","responsavel":"Davi Reis","dataprevista":"","prioridade":"Baixa"},{"titulo":"Autenticação de usuários","projeto":"Portal Eduarda Costa","status":"Em andamento","responsavel":"Eduarda Costa","dataprevista":"","prioridade":"Alta"},{"titulo":"Documentação API","projeto":"API Fernando Gomes","status":"Atrasada","responsavel":"Fernando Gomes","dataprevista":"","prioridade":"Média"}]},{"key":"pagamentos","label":"Pagamentos","singular":"Pagamento","fields":[{"key":"cliente","label":"Cliente","type":"select","options":["Ana Souza","Bruno Lima","Carla Dias","Davi Reis","Eduarda Costa","Fernando Gomes"],"required":true},{"key":"projeto","label":"Projeto","type":"select","options":["Redesign do site Ana Souza","App Bruno Lima","Loja virtual Carla Dias","Site Davi Reis","Portal Eduarda Costa","API Fernando Gomes"],"required":true},{"key":"valor","label":"Valor","type":"money","options":[],"required":true},{"key":"data","label":"Data","type":"date","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Pendente","Pago","Cancelado"],"required":true},{"key":"metodo","label":"Método","type":"select","options":["Cartão de crédito","Boleto","Transferência","Pix"],"required":true}],"sample":[{"cliente":"Ana Souza","projeto":"Redesign do site Ana Souza","valor":"5000","data":"2023-08-10","status":"Pago","metodo":"Cartão de crédito"},{"cliente":"Bruno Lima","projeto":"App Bruno Lima","valor":"7500","data":"2023-07-15","status":"Pago","metodo":"Transferência"},{"cliente":"Carla Dias","projeto":"Loja virtual Carla Dias","valor":"6000","data":"2023-09-05","status":"Pendente","metodo":"Boleto"},{"cliente":"Davi Reis","projeto":"Site Davi Reis","valor":"2000","data":"2023-08-20","status":"Pago","metodo":"Pix"},{"cliente":"Eduarda Costa","projeto":"Portal Eduarda Costa","valor":"5500","data":"2023-06-30","status":"Pago","metodo":"Cartão de crédito"},{"cliente":"Fernando Gomes","projeto":"API Fernando Gomes","valor":"3000","data":"2023-07-25","status":"Cancelado","metodo":"Boleto"}]}]}</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
