@@ -35,7 +35,8 @@ test('REVISOR4: veredito JSON e decisão com 2 provedores', () => {
   assert.strictEqual(r.lerVeredito('sem json'), null);
   const a = (provider, nota = 9, aprovar = true) => ({ provider, nota, aprovar, motivo: '', problemas: [] });
   assert.strictEqual(r.decidir([a('groq'), a('gemini')]).acao, 'aprovar');
-  assert.strictEqual(r.decidir([a('groq', 9)]).acao, 'aprovar');
+  assert.strictEqual(r.decidir([a('groq', 10)]).acao, 'esperar');
+  assert.strictEqual(r.decidir([a('groq'), a('groq')]).acao, 'esperar');
   assert.strictEqual(r.decidir([a('groq', 8)]).acao, 'esperar');
   assert.strictEqual(r.decidir([a('groq'), a('gemini', 5)]).acao, 'recusar');
   assert.strictEqual(r.decidir([a('groq', 9, false)]).acao, 'recusar');

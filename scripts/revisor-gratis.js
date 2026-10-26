@@ -77,14 +77,14 @@ function lerVeredito(texto) {
   } catch { return null; }
 }
 
-// Decisão final: 2 provedores diferentes aprovando com nota mínima. Só 1 voto possível → precisa de nota 9+.
+// Decisão final: SEMPRE 2 provedores diferentes aprovando com nota mínima; 1 voto só nunca aprova.
 function decidir(votos) {
   const validos = votos.filter(Boolean);
   if (!validos.length) return { acao: 'esperar' };
   const recusa = validos.find(v => !v.aprovar || v.nota < NOTA_MIN);
   if (recusa) return { acao: 'recusar', voto: recusa };
   const provedores = new Set(validos.map(v => v.provider));
-  if (provedores.size >= 2 || (validos.length === 1 && validos[0].nota >= 9)) return { acao: 'aprovar' };
+  if (provedores.size >= 2) return { acao: 'aprovar' };
   return { acao: 'esperar' };
 }
 
