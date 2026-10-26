@@ -2,9 +2,9 @@
   "spec": {
     "kind": "system",
     "name": "Cortex-p1",
-    "tagline": "Sistema inteligente de gestão de clientes e cadastros",
+    "tagline": "Gestão inteligente de clientes, planos e relatórios em um só painel",
     "photo_theme": "business dashboard",
-    "description": "Sistema inteligente de gestão de clientes e cadastros com integração Firebase",
+    "description": "Sistema inteligente de gestão de clientes e cadastros com integração Firebase, controle de planos e emissão de relatórios gerenciais.",
     "folder": "sites/cortex-p1",
     "fonts": {
       "heading": "Plus Jakarta Sans",
@@ -21,12 +21,12 @@
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "",
+      "whatsapp": "11900000000",
       "phone": "(11) 90000-0000",
       "email": "suporte@cortex-p1.com.br",
-      "address": "",
-      "city": "",
-      "hours": "",
+      "address": "Av. Paulista, 1000",
+      "city": "São Paulo",
+      "hours": "Seg a Sex, 9h às 18h",
       "instagram": "",
       "facebook": "",
       "youtube": "",
@@ -115,8 +115,8 @@
             "email": "ana.silva@example.com",
             "plano": "premium",
             "idioma": "pt",
-            "criadoem": "",
-            "ultimoacesso": "",
+            "criadoem": "2024-03-10",
+            "ultimoacesso": "2024-06-15",
             "status": "ativo"
           },
           {
@@ -124,8 +124,8 @@
             "email": "joao.santos@example.com",
             "plano": "basico",
             "idioma": "en",
-            "criadoem": "",
-            "ultimoacesso": "",
+            "criadoem": "2024-01-22",
+            "ultimoacesso": "2024-06-20",
             "status": "ativo"
           },
           {
@@ -133,8 +133,8 @@
             "email": "maria.oliveira@example.com",
             "plano": "gratis",
             "idioma": "pt",
-            "criadoem": "",
-            "ultimoacesso": "",
+            "criadoem": "2023-11-05",
+            "ultimoacesso": "2024-05-30",
             "status": "ativo"
           },
           {
@@ -142,16 +142,196 @@
             "email": "carlos.mendes@example.com",
             "plano": "basico",
             "idioma": "es",
-            "criadoem": "",
-            "ultimoacesso": "",
+            "criadoem": "2024-02-14",
+            "ultimoacesso": "2024-04-10",
             "status": "inativo"
+          }
+        ]
+      },
+      {
+        "key": "planos",
+        "label": "Planos",
+        "singular": "Plano",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome do plano",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "preco",
+            "label": "Preço",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "limite_clientes",
+            "label": "Limite de clientes",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "periodo",
+            "label": "Cobrança",
+            "type": "select",
+            "options": [
+              "mensal",
+              "anual"
+            ],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "destaque",
+            "label": "Destaque",
+            "type": "select",
+            "options": [
+              "não",
+              "sim"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Gratuito",
+            "preco": "0,00",
+            "limite_clientes": "10",
+            "periodo": "mensal",
+            "descricao": "Plano inicial para testes e pequenos negócios.",
+            "destaque": "não"
+          },
+          {
+            "nome": "Básico",
+            "preco": "89,00",
+            "limite_clientes": "50",
+            "periodo": "mensal",
+            "descricao": "Ideal para empreendedores que estão crescendo.",
+            "destaque": "não"
+          },
+          {
+            "nome": "Premium",
+            "preco": "249,00",
+            "limite_clientes": "200",
+            "periodo": "mensal",
+            "descricao": "Recursos avançados e suporte prioritário.",
+            "destaque": "sim"
+          },
+          {
+            "nome": "Premium Anual",
+            "preco": "2490,00",
+            "limite_clientes": "200",
+            "periodo": "anual",
+            "descricao": "Plano anual com desconto e faturamento simplificado.",
+            "destaque": "sim"
+          }
+        ]
+      },
+      {
+        "key": "usuarios",
+        "label": "Usuários",
+        "singular": "Usuário",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "Email",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "papel",
+            "label": "Papel",
+            "type": "select",
+            "options": [
+              "admin",
+              "operador",
+              "visualizador"
+            ],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": false
+          },
+          {
+            "key": "ativo",
+            "label": "Ativo",
+            "type": "select",
+            "options": [
+              "sim",
+              "não"
+            ],
+            "required": true
+          },
+          {
+            "key": "ultimo_login",
+            "label": "Último login",
+            "type": "date",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Admin Cortex",
+            "email": "admin@cortex-p1.com.br",
+            "papel": "admin",
+            "telefone": "(11) 90000-0001",
+            "ativo": "sim",
+            "ultimo_login": "2024-06-20"
+          },
+          {
+            "nome": "Carla Ferreira",
+            "email": "carla@cortex-p1.com.br",
+            "papel": "operador",
+            "telefone": "(11) 90000-0002",
+            "ativo": "sim",
+            "ultimo_login": "2024-06-18"
+          },
+          {
+            "nome": "Roberto Lima",
+            "email": "roberto@cortex-p1.com.br",
+            "papel": "visualizador",
+            "telefone": "(11) 90000-0003",
+            "ativo": "sim",
+            "ultimo_login": "2024-06-15"
+          },
+          {
+            "nome": "Beatriz Souza",
+            "email": "beatriz@cortex-p1.com.br",
+            "papel": "operador",
+            "telefone": "(11) 90000-0004",
+            "ativo": "não",
+            "ultimo_login": "2024-05-20"
           }
         ]
       }
     ],
     "modules": [
       "Clientes",
-      "Plano",
+      "Planos",
+      "Usuários",
       "Relatórios"
     ]
   },
