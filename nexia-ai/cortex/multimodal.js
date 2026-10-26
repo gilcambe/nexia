@@ -67,20 +67,26 @@ async function processarMultimodal(param1, param2, param3 = {}) {
         // vídeo (video/*) é aceito por inline_data e listado junto aos demais tipos suportados
       });
 
-      let promptText = message || 'Analise estes arquivos em conjunto e correlacione as informações.';
-      promptText += ' Nota sobre o tom de voz: note o tom de voz de quem fala (áudio ou vídeo) e o tom de cada texto (imagem, documento, vídeo), se for relevante.';
-      promptText += ' Na sua resposta, cite explicitamente de qual anexo veio cada informação (ex: "no áudio...", "na planilha...", "na foto...", "no vídeo...", "no texto...").';
+      let promptText = 'Analise estes arquivos em conjunto e correlacione as informações.';
+      if (message) {
+        promptText += `\n\n[Mensagem do usuário]: "${sanitizarTexto(message)}"`;
+      }
+      promptText += '\n\nNota sobre o tom de voz: note o tom de voz de quem fala (áudio ou vídeo) e o tom de cada texto (imagem, documento, vídeo), se for relevante.';
+      promptText += '\nNa sua resposta, cite explicitamente de qual anexo veio cada informação (ex: "no áudio...", "na planilha...", "na foto...", "no vídeo...", "no texto...").';
 
       parts.push({ text: promptText });
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000);
       let res;
       try {
         res = await fetchImpl(url, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          },
           body: JSON.stringify({ contents: [{ parts }] }),
           signal: controller.signal
         });
@@ -103,7 +109,7 @@ async function processarMultimodal(param1, param2, param3 = {}) {
         }
       }
     } catch (err) {
-      console.error('[multimodal] Gemini falhou:', String((err && err.message) || err).slice(0, 200));
+      console.error('[multimodal] Gemini falhou: Erro na requisição ao modelo Gemini');
       // Cai no fallback se Gemini falhar
     }
   }
