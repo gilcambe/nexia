@@ -8,29 +8,20 @@ import React, { useState } from 'react';
  * 3) Chama fluxWorker.generateImage() para três formatos (quadrado, 9:16, 16:9)
  * 4) Exibe resultados com botões 'Baixar' e 'Fazer variação'
  * 5) Registra contagem de imagens no plano
+ *
+ * Props (todas obrigatórias, vindas do pai que integra o plano do usuário):
+ * - canGenerate(): retorna { ok, remaining }
+ * - isContentAllowed(text): retorna { allowed, reason }
+ * - translatePtToEnImproved(text): retorna promise com prompt em inglês
+ * - fluxWorker.generateImage(prompt, aspectRatio): retorna promise com URL da imagem
+ * - onImageGeneratedCountUpdate(count): callback para registrar contagem no plano
  */
-
-// Mock de funções auxiliares ou utilitários para atender estritamente ao requisito se não existirem externamente:
-const defaultCanGenerate = () => ({ ok: true, remaining: 10 });
-const defaultIsContentAllowed = (text) => ({ allowed: true, reason: '' });
-const defaultTranslatePtToEn = async (text) => {
-  // Tradução simulada/aprimorada para inglês
-  return `High quality, detailed ${text}, photorealistic, 4k`;
-};
-const defaultFluxGenerate = async (prompt, aspectRatio) => {
-  // Simula a geração de imagem retornando uma URL (placeholder estilizado ou SVG/DataURL)
-  // Formatos: 'square' (1:1), 'portrait' (9:16), 'landscape' (16:9)
-  await new Promise(r => setTimeout(r, 1200));
-  const seed = Math.floor(Math.random() * 1000);
-  return `https://picsum.photos/seed/${seed}/800/${aspectRatio === '9:16' ? 1422 : aspectRatio === '16:9' ? 450 : 800}`;
-};
-
 export default function ChatImageGenerator({
   initialPrompt = '',
-  canGenerate = defaultCanGenerate,
-  isContentAllowed = defaultIsContentAllowed,
-  translatePtToEnImproved = defaultTranslatePtToEn,
-  fluxWorker = { generateImage: defaultFluxGenerate },
+  canGenerate,
+  isContentAllowed,
+  translatePtToEnImproved,
+  fluxWorker,
   onImageGeneratedCountUpdate = () => {}
 }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -75,6 +66,11 @@ export default function ChatImageGenerator({
     setError('');
 
     try {
+      if (!canGenerate || !isContentAllowed || !translatePtToEnImproved || !fluxWorker || !fluxWorker.generateImage) {
+        setError('Serviços de geração não configurados.');
+        return;
+      }
+
       // 2) Traduz prompt pt -> en
       const translated = await translatePtToEnImproved(currentPrompt);
 
@@ -88,6 +84,7 @@ export default function ChatImageGenerator({
       const results = await Promise.all(
         formats.map(async (f) => {
           const url = await fluxWorker.generateImage(translated, f.ratio);
+          if (!url) throw new Error(`Falha ao gerar formato ${f.label}`);
           return {
             id: Math.random().toString(36).substring(2, 9),
             label: f.label,
@@ -99,10 +96,10 @@ export default function ChatImageGenerator({
       );
 
       setImages(results);
-      // 5) Registrar contagem de imagens no plano
+      // 5) Registrar contagem de imagens no plano (uma contagem por imagem gerada)
       onImageGeneratedCountUpdate(results.length);
     } catch (err) {
-      setError('Erro ao gerar imagens. Tente novamente.');
+      setError(err.message || 'Erro ao gerar imagens. Tente novamente.');
       console.error(err);
     } finally {
       setLoading(false);
@@ -110,23 +107,38 @@ export default function ChatImageGenerator({
   };
 
   const handleVariation = async (imgItem) => {
+    if (!fluxWorker || !fluxWorker.generateImage) {
+      setError('Serviço de geração não disponível.');
+      return;
+    }
+
     setLoading(true);
     setError('');
     try {
-      // Reexecuta com prompt levemente modificado
-      const variedPrompt = `${imgItem.promptUsed}, variation style detail enhancer #${Math.floor(Math.random() * 100)}`;
+      // Reexecuta com prompt levemente modificado (adiciona descritor de variação)
+      const variedPrompt = `${imgItem.promptUsed}, slight variation, different composition, unique details`;
       const newUrl = await fluxWorker.generateImage(variedPrompt, imgItem.ratio);
-      
+
+      if (!newUrl) {
+        setError('A variação não retornou uma imagem válida.');
+        return;
+      }
+
       setImages(prev => prev.map(item => item.id === imgItem.id ? { ...item, url: newUrl, promptUsed: variedPrompt } : item));
       onImageGeneratedCountUpdate(1);
     } catch (err) {
-      setError('Erro ao criar variação.');
+      setError('Erro ao criar variação. Tente novamente.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDownload = (url, label) => {
+    if (!url) {
+      setError('Não há imagem para baixar.');
+      return;
+    }
     const a = document.createElement('a');
     a.href = url;
     a.download = `imagem-${label.toLowerCase().replace(/[^a-z0-9]/g, '-')}.jpg`;
