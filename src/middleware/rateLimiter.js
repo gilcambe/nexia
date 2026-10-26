@@ -1,13 +1,29 @@
 const rateLimit = require('express-rate-limit');
 const rateLimitConfig = require('../config/rateLimit');
 
-// Rate limit geral: 10 requisições por 10 segundos por IP
+// Armazena bloqueios temporários: { chave: timestampExpiracao }
+const bloqueios = new Map();
+
+function estaBloqueada(chave) {
+  const expiraEm = bloqueios.get(chave);
+  if (!expiraEm) return false;
+  if (Date.now() < expiraEm) return true;
+  bloqueios.delete(chave);
+  return false;
+}
+
+function bloquear(chave) {
+  bloqueios.set(chave, Date.now() + rateLimitConfig.blockDurationMs);
+}
+
+// Rate limit geral: 10 requisições por 10 segundos por IP (anônimos)
 const globalLimiter = rateLimit({
   windowMs: rateLimitConfig.windowMs,
   max: rateLimitConfig.max,
-  standard: rateLimitConfig.standard,
+  keyGenerator: (req) => req.ip,
   message: rateLimitConfig.message,
   handler: (req, res) => {
+    bloquear(req.ip);
     res.set('Retry-After', Math.ceil(rateLimitConfig.blockDurationMs / 1000));
     res.status(429).json(rateLimitConfig.message);
   }
@@ -17,9 +33,11 @@ const globalLimiter = rateLimit({
 const authLimiter = rateLimit({
   windowMs: rateLimitConfig.windowMs,
   max: rateLimitConfig.max,
-  standard: rateLimitConfig.standard,
+  keyGenerator: (req) => (req.usuario && req.usuario.id) ? req.usuario.id : req.ip,
   message: rateLimitConfig.message,
   handler: (req, res) => {
+    const chave = (req.usuario && req.usuario.id) ? req.usuario.id : req.ip;
+    bloquear(chave);
     res.set('Retry-After', Math.ceil(rateLimitConfig.blockDurationMs / 1000));
     res.status(429).json(rateLimitConfig.message);
   }
@@ -27,8 +45,15 @@ const authLimiter = rateLimit({
 
 // Middleware que aplica o rate limit correto baseado em auth status
 const rateLimiter = (req, res, next) => {
-  // Se usuário estiver autenticado (req.user disponível), usa o limiter de conta
-  if (req.user) {
+  const chave = (req.usuario && req.usuario.id) ? req.usuario.id : req.ip;
+
+  if (estaBloqueada(chave)) {
+    const restante = Math.ceil((bloqueios.get(chave) - Date.now()) / 1000);
+    res.set('Retry-After', restante > 0 ? restante : 1);
+    return res.status(429).json(rateLimitConfig.message);
+  }
+
+  if (req.usuario && req.usuario.id) {
     authLimiter(req, res, next);
   } else {
     globalLimiter(req, res, next);
