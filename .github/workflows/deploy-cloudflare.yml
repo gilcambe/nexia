@@ -76,6 +76,7 @@ jobs:
           NEXIA_APP_URL: ${{ secrets.NEXIA_APP_URL }}
           NEXIA_CNAME_TARGET: ${{ secrets.NEXIA_CNAME_TARGET }}
           NEXIA_CRON_SECRET: ${{ secrets.NEXIA_CRON_SECRET }}
+          NEXIA_MAQUINA_TOKEN: ${{ secrets.NEXIA_MAQUINA_TOKEN }}
           NEXIA_JOBS_TOKEN: ${{ secrets.NEXIA_JOBS_TOKEN }}
           NEXIA_GITHUB_TOKEN: ${{ secrets.NEXIA_GITHUB_TOKEN }}
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
