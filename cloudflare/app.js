@@ -11,6 +11,7 @@ const { publicErrorBody } = require('../lib/safe-error');
 const { isStreamResult } = require('../lib/stream-response');
 const { TENANT_PAGES, resolveFunctionName } = require('../lib/routes');
 const { createTokenSource } = require('../lib/firebase-lite/google-auth');
+const { getUidFromRequest } = require('../lib/cortex-cliente');
 const rid = require('../lib/rid');
 
 const MAX_BODY_SIZE = 1 * 1024 * 1024;
@@ -315,10 +316,64 @@ async function atender(request, env, { getFunction }, reqId) {
   }
   if (pathname === '/__/firebase/init.json' || pathname.startsWith('/__/auth/')) return proxyAuth(request, url);
   if (pathname === '/api/firebase-config') return firebaseConfig(env, undefined, request);
+  if (pathname.startsWith('/api/cortex-cliente/')) {
+    return await handleCortexCliente(request, url, env, reqId);
+  }
   if (pathname.startsWith('/api/') || pathname.startsWith('/.netlify/functions/')) {
     return runFunction(resolveFunctionName(pathname), request, url, env, getFunction, reqId);
   }
   return serveStatic(request, url, env);
 }
 
+let adminDb = null;
+function getFirestoreDb(env) {
+  if (adminDb) return adminDb;
+  const admin = require('firebase-admin');
+  if (!admin.apps.length) {
+    const sa = JSON.parse(Buffer.from(String(env.FIREBASE_SERVICE_ACCOUNT_BASE64), 'base64').toString('utf8'));
+    admin.initializeApp({ credential: admin.credential.cert(sa) });
+  }
+  adminDb = admin.firestore();
+  return adminDb;
+}
+
+async function handleCortexCliente(request, url, env, reqId) {
+  const origin = corsOrigin(env, request.headers);
+  const baseHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': origin,
+  };
+  let uid;
+  try {
+    uid = getUidFromRequest(request).uid;
+  } catch (e) {
+    return json(e.status || 401, { error: e.message || 'Token de autenticação ausente.' }, baseHeaders);
+  }
+  const m = url.pathname.match(/^\/api\/cortex-cliente\/([^/]+)(\/.*)?$/);
+  if (!m) return json(404, { error: 'Not Found' }, baseHeaders);
+  const routeUid = m[1];
+  const subpath = m[2] || '/';
+  if (routeUid !== uid) {
+    return json(403, { error: 'Acesso negado a outro cliente.' }, baseHeaders);
+  }
+  if (request.method === 'GET' && subpath === '/conversas') {
+    return await listConversas(env, uid, baseHeaders, reqId);
+  }
+  return json(404, { error: 'Not Found' }, baseHeaders);
+}
+
+async function listConversas(env, uid, baseHeaders, reqId) {
+  try {
+    const db = getFirestoreDb(env);
+    const snap = await db.collection(`cortexClientes/${uid}/conversas`).get();
+    const docs = [];
+    snap.forEach((doc) => { docs.push({ id: doc.id, ...doc.data() }); });
+    return json(200, docs, baseHeaders);
+  } catch (e) {
+    rid.logJson('error', 'cortex-cliente conversas falhou', { rid: reqId, uid, erro: String((e && e.message) || e).slice(0, 300) });
+    return json(500, { error: 'Erro ao listar conversas.' }, baseHeaders);
+  }
+}
+
 module.exports = { handleRequest, populateProcessEnv, toEvent, firebaseConfig, _resetWebConfigCache, MAX_BODY_SIZE, authDomainProprio, KERNEX_HOSTS };
+
