@@ -1,103 +1,91 @@
 'use strict';
-// NEXIA — Gestão de Chaves de API para OpenAI Compatible (Pilar 6)
-// Armazena hash SHA-256 no D1 ou Firebase e valida nas rotas /v1/*
+const crypto = require('crypto');
 
-async function sha256(text) {
-  const data = new TextEncoder().encode(text);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+function sha256(text) {
+  return crypto.createHash('sha256').update(text).digest('hex');
 }
 
-async function validateApiKey(authHeader, env) {
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return { valid: false, status: 401, error: 'Chave de API ausente ou inválida (Bearer token obrigatório).' };
-  }
-  const token = authHeader.substring(7).trim();
-  if (!token.startsWith('cortex_sk_')) {
-    return { valid: false, status: 401, error: 'Formato de chave inválido (deve iniciar com cortex_sk_).' };
-  }
-  const keyHash = await sha256(token);
+async function getDb(env) {
+  if (env && env.DB) return env.DB;
+  return null;
+}
 
-  // Se D1 estiver configurado, checa no D1. Caso contrário, valida master ou cache local.
-  if (env && env.DB) {
-    try {
-      const row = await env.DB.prepare('SELECT * FROM api_keys WHERE key_hash = ? AND active = 1').bind(keyHash).first();
-      if (!row) {
-        return { valid: false, status: 401, error: 'Chave de API inválida ou revogada.' };
-      }
-      return { valid: true, userId: row.user_id, tenantId: row.tenant_id || 'default' };
-    } catch (e) {
-      // Fallback se a tabela não existir ainda
-      console.warn('[API-KEYS] D1 error, checking fallback:', e.message);
-    }
+async function ensureTable(db) {
+  if (!db) return;
+  try {
+    await db.prepare(`
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        key_hash TEXT NOT NULL,
+        name TEXT,
+        created_at INTEGER NOT NULL
+      )
+    `).run();
+  } catch (e) {
+    console.error('[API KEYS] Error creating table:', e);
   }
-
-  // Fallback para chave de teste/master padrão no ambiente
-  const masterHash = env.CORTEX_MASTER_KEY_HASH || await sha256('cortex_sk_master_demo_key_2026');
-  if (keyHash === masterHash) {
-    return { valid: true, userId: 'master', tenantId: 'master' };
-  }
-
-  return { valid: false, status: 401, error: 'Chave de API não encontrada ou inativa.' };
 }
 
 async function handler(event, env) {
   const method = event.httpMethod || 'GET';
   const headers = { 'Content-Type': 'application/json' };
+  const db = await getDb(env);
+  await ensureTable(db);
+
+  const authHeader = event.headers?.authorization || event.headers?.Authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  const userId = event.queryStringParameters?.userId || event.headers?.['x-user-id'] || 'default_user';
+
+  if (!db) {
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, keys: [], warning: 'D1 not configured, using mock' }) };
+  }
+
+  if (method === 'GET') {
+    try {
+      const { results } = await db.prepare('SELECT id, name, created_at FROM api_keys WHERE user_id = ?').bind(userId).all();
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true, keys: results || [] }) };
+    } catch (e) {
+      return { statusCode: 500, headers, body: JSON.stringify({ error: e.message }) };
+    }
+  }
 
   if (method === 'POST') {
     try {
       const body = JSON.parse(event.body || '{}');
-      const name = body.name || 'Minha Chave';
-      const rawKey = 'cortex_sk_' + Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
-      const keyHash = await sha256(rawKey);
+      const name = body.name || 'Chave Padrão';
+      const rawKey = 'cortex_sk_' + crypto.randomBytes(24).toString('hex');
+      const keyHash = sha256(rawKey);
+      const id = 'key_' + crypto.randomBytes(8).toString('hex');
+      const createdAt = Date.now();
 
-      if (env && env.DB) {
-        try {
-          await env.DB.prepare('CREATE TABLE IF NOT EXISTS api_keys (id TEXT PRIMARY KEY, key_hash TEXT, name TEXT, user_id TEXT, tenant_id TEXT, active INTEGER, created_at TEXT)').run();
-          await env.DB.prepare('INSERT INTO api_keys (id, key_hash, name, user_id, tenant_id, active, created_at) VALUES (?, ?, ?, ?, ?, 1, ?)').bind(
-            'key_' + Date.now(), keyHash, name, body.userId || 'user_demo', body.tenantId || 'default', new Date().toISOString()
-          ).run();
-        } catch (dbErr) {
-          console.warn('[KEYS] DB insert error:', dbErr.message);
-        }
-      }
+      await db.prepare('INSERT INTO api_keys (id, user_id, key_hash, name, created_at) VALUES (?, ?, ?, ?, ?)')
+        .bind(id, userId, keyHash, name, createdAt)
+        .run();
 
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ ok: true, apiKey: rawKey, name, message: 'Guarde esta chave agora. Ela não será exibida novamente.' })
+        body: JSON.stringify({ ok: true, id, name, apiKey: rawKey, message: 'Guarde esta chave agora. Ela não será mostrada novamente.' })
       };
     } catch (e) {
-      return { statusCode: 400, headers, body: JSON.stringify({ error: e.message }) };
+      return { statusCode: 500, headers, body: JSON.stringify({ error: e.message }) };
     }
   }
 
   if (method === 'DELETE') {
-    const keyId = event.queryStringParameters && event.queryStringParameters.id;
-    if (env && env.DB && keyId) {
-      try {
-        await env.DB.prepare('UPDATE api_keys SET active = 0 WHERE id = ?').bind(keyId).run();
-      } catch {}
-    }
-    return { statusCode: 200, headers, body: JSON.stringify({ ok: true, message: 'Chave revogada.' }) };
-  }
-
-  // GET: lista chaves (mascaradas)
-  let keys = [];
-  if (env && env.DB) {
     try {
-      const res = await env.DB.prepare('SELECT id, name, active, created_at FROM api_keys ORDER BY created_at DESC').all();
-      keys = res.results || [];
-    } catch {}
+      const keyId = event.queryStringParameters?.id || JSON.parse(event.body || '{}').id;
+      if (!keyId) return { statusCode: 400, headers, body: JSON.stringify({ error: 'ID obrigatório' }) };
+
+      await db.prepare('DELETE FROM api_keys WHERE id = ? AND user_id = ?').bind(keyId, userId).run();
+      return { statusCode: 200, headers, body: JSON.stringify({ ok: true }) };
+    } catch (e) {
+      return { statusCode: 500, headers, body: JSON.stringify({ error: e.message }) };
+    }
   }
 
-  return {
-    statusCode: 200,
-    headers,
-    body: JSON.stringify({ ok: true, keys })
-  };
+  return { statusCode: 405, headers, body: JSON.stringify({ error: 'Método não permitido' }) };
 }
 
-module.exports = { handler, validateApiKey, sha256 };
+module.exports = { handler, sha256, ensureTable };
