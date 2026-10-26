@@ -96,7 +96,7 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
     if (req.temperature !== undefined) b.temperature = req.temperature;
     if (stream) { b.stream = true; if (cfg.usage_option) b.stream_options = { include_usage: true }; }
     if (req.tools && req.tools.length) {
-      if (!cfg.tools) return; // provedor não suporta tools; router encadeará fallback (Groq → Gemini etc.)
+      if (!cfg.tools) throw new ModelError(CODES.UNSUPPORTED, `${id}: provedor não suporta tools; encadeando fallback (Groq → Gemini etc.)`, { provider: id });
       b.tools = req.tools.map(t => ({ type: 'function', function: { name: t.name, description: t.description || '', parameters: t.input_schema } }));
       if (req.toolChoice) b.tool_choice = req.toolChoice === 'any' ? 'required' : { type: 'function', function: { name: req.toolChoice } };
     } else if (cfg.tools) {
