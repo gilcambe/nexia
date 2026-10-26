@@ -101,7 +101,7 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
       if (req.toolChoice) b.tool_choice = req.toolChoice === 'any' ? 'required' : { type: 'function', function: { name: req.toolChoice } };
     } else if (cfg.tools) {
       // Garante tools: true na chamada quando o provedor suporta tools, usando as ferramentas importadas. Erro UNSUPPORTED é capturado pelo router chatWithFallback para encadear provedor seguinte (Groq → Gemini etc.).
-      b.tools = tools.map(t => ({ type: 'function', function: { name: t.name, description: t.description || '', parameters: t.input_schema } }));
+      b.tools = tools.map(t => ({ type: 'function', function: { name: t.name, description: t.description || '', parameters: t.function.parameters } }));
     }
     return b;
   }
