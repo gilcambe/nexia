@@ -18,9 +18,9 @@ export default function Header() {
             <span className="text-xl font-bold tracking-tight text-slate-900">{NOME_PRODUTO}</span>
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
-            <a href="#" className="hover:text-indigo-600 transition-colors">Início</a>
-            <a href="#" className="hover:text-indigo-600 transition-colors">Conversa</a>
-            <a href="#" className="hover:text-indigo-600 transition-colors">Pedidos</a>
+            <a href="/cortex" className="hover:text-indigo-600 transition-colors">Início</a>
+            <a href="/cortex/conversa" className="hover:text-indigo-600 transition-colors">Conversa</a>
+            <a href="/cortex/pedidos" className="hover:text-indigo-600 transition-colors">Pedidos</a>
           </nav>
           <div className="flex items-center gap-3">
             <button
