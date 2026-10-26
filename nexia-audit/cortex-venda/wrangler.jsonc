@@ -15,9 +15,14 @@
     "WORKERS_AI_MODEL": "@cf/llama-3.2-11b-vision-instruct",
     "GEMINI_MODEL": "gemini-1.5-flash"
   },
-  "[env.production]": {
-    "vars": {
-      "NODE_ENV": "production"
+  "envs": {
+    "production": {
+      "vars": {
+        "NODE_ENV": "production"
+      },
+      "ai": {
+        "binding": "AI"
+      }
     }
   }
 }
