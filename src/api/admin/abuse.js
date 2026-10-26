@@ -13,6 +13,11 @@ module.exports = async (req, res) => {
     return { statusCode: 200, headers: h, body: '' };
   }
 
+  if (req.method !== 'GET') {
+    res.status(405).json({ error: 'Método não permitido. Use GET.' });
+    return;
+  }
+
   // Verificar autenticação
   const authResult = await verifyBearerToken(req);
   if (!authResult.ok) {
