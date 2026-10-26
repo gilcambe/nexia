@@ -55,10 +55,8 @@ async function processarMultimodal(param1, param2, param3 = {}) {
       });
 
       let promptText = message || 'Analise estes arquivos em conjunto e correlacione as informações.';
-      if (validAttachments.some(a => (a.tipo || '').startsWith('audio/'))) {
-        promptText += ' Nota sobre áudio: diga também o tom de quem fala, se for relevante.';
-      }
-      promptText += ' Na sua resposta, cite explicitamente de qual anexo veio cada informação (ex: "no áudio...", "na planilha...", "na foto...").';
+      promptText += ' Nota sobre o tom de voz: se houver áudio ou vídeo, diga o tom de quem fala, se for relevante.';
+      promptText += ' Na sua resposta, cite explicitamente de qual anexo veio cada informação (ex: "no áudio...", "na planilha...", "na foto...", "no vídeo...").';
 
       parts.push({ text: promptText });
 
