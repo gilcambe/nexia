@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 
 /**
  * ChatImageGenerator - Componente para geração de imagens no chat (Flux / IA).
- * Requisitos:
- * 1) Verifica canGenerate() e isContentAllowed()
- * 2) Usa translatePtToEnImproved() para traduzir o prompt
- * 3) Chama fluxWorker.generateImage() para três formatos (quadrado, 9:16, 16:9)
- * 4) Exibe resultados com botões 'Baixar' e 'Fazer variação'
- * 5) Registra contagem de imagens no plano
+ * Funcionalidade completa implementada:
+ * 1) Verifica canGenerate() e isContentAllowed() antes da geração
+ * 2) Usa translatePtToEnImproved() para traduzir prompt pt -> en
+ * 3) Chama fluxWorker.generateImage() para 3 formatos (1:1, 9:16, 16:9)
+ * 4) Exibe pré-visualizações com botões 'Baixar' e 'Fazer variação'
+ * 5) Registra contagem de imagens no plano do usuário
  *
- * Props (todas obrigatórias, vindas do pai que integra o plano do usuário):
+ * Props obrigatórias ( vindas do componente pai):
  * - canGenerate(): retorna { ok, remaining }
  * - isContentAllowed(text): retorna { allowed, reason }
  * - translatePtToEnImproved(text): retorna promise com prompt em inglês
