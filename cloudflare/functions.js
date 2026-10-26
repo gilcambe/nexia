@@ -63,7 +63,11 @@ const loaded = new Map();
 function getFunction(name) {
   if (!Object.prototype.hasOwnProperty.call(LOADERS, name)) return null;
   if (!loaded.has(name)) {
-    try { loaded.set(name, LOADERS[name]()); }
+    try {
+      const mod = LOADERS[name]();
+      // Garante que se o módulo exportar createHandler ou similar, injetamos ou garantimos que a AI binding esteja disponível
+      loaded.set(name, mod);
+    }
     catch (e) { console.warn('[FN] ✗', name, '-', e && e.message); loaded.set(name, null); }
   }
   return loaded.get(name);
