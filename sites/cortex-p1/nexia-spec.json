@@ -55,7 +55,7 @@
         },
         "cta2": {
           "label": "Ver exemplos",
-          "href": "#gallery"
+          "href": "#exemplos-reais"
         },
         "image_query": "modern office workspace ai laptop",
         "video_query": ""
@@ -251,22 +251,6 @@
     ]
   },
   "media": {
-    "s1.item1": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Romzan_Bangladesh_Logo.png/1280px-Romzan_Bangladesh_Logo.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 1280,
-      "alt": "Official logo of Romzan Bangladesh",
-      "credit": "Md Sheam Hossain (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s2.about": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/150606-N-PO203-286_%2818529305732%29.jpg/1280px-150606-N-PO203-286_%2818529305732%29.jpg",
-      "width": 1280,
-      "height": 833,
-      "alt": "150606-N-PO203-286 (18529305732)",
-      "credit": "150606-N-PO203-286 (18529305732) — Office of Naval Research from Arlington, United States (BY 2.0, via Openver",
-      "provider": "openverse"
-    },
     "s0.hero": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/1/11/Thunaivi_Logo.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
       "width": 1280,
@@ -283,6 +267,14 @@
       "credit": "Greenville Police's Technology Officer A.F — autor desconhecido (CC0 1.0, via Openverse)",
       "provider": "openverse"
     },
+    "s1.item1": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e4/Romzan_Bangladesh_Logo.png/1280px-Romzan_Bangladesh_Logo.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1280,
+      "alt": "Official logo of Romzan Bangladesh",
+      "credit": "Md Sheam Hossain (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
     "s1.item2": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/S2S_Technologies_Office_-_Inside.jpg/1280px-S2S_Technologies_Office_-_Inside.jpg",
       "width": 1280,
@@ -297,6 +289,14 @@
       "height": 960,
       "alt": "Gigaworkz Technologies Office At Sugbutel Bldg",
       "credit": "Gigaworkz Technologies Office At Sugbutel Bldg — Gibson Torreon C (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s2.about": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/150606-N-PO203-286_%2818529305732%29.jpg/1280px-150606-N-PO203-286_%2818529305732%29.jpg",
+      "width": 1280,
+      "height": 833,
+      "alt": "150606-N-PO203-286 (18529305732)",
+      "credit": "150606-N-PO203-286 (18529305732) — Office of Naval Research from Arlington, United States (BY 2.0, via Openver",
       "provider": "openverse"
     },
     "s3.g0": {
