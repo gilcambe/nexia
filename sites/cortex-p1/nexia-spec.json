@@ -2,31 +2,31 @@
   "spec": {
     "kind": "system",
     "name": "Cortex-p1",
-    "tagline": "Painel de gestão de clientes com Firebase",
-    "photo_theme": "modern dashboard interface",
-    "description": "Cadastre e acompanhe clientes no painel Cortex-p1 com integração ao Firestore e Auth.",
+    "tagline": "Gerenciamento de clientes em tempo real com Firebase",
+    "photo_theme": "",
+    "description": "Gerenciamento de clientes em tempo real com Firebase",
     "folder": "sites/cortex-p1",
     "fonts": {
       "heading": "Plus Jakarta Sans",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#595cd9",
-      "accent": "#10b981",
+      "primary": "#4f46e5",
+      "accent": "#06b6d4",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#0f172a"
+      "dark": "#111827"
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "11900000000",
-      "phone": "(11) 3000-0000",
+      "whatsapp": "",
+      "phone": "(11) 90000-0000",
       "email": "suporte@cortex-p1.com.br",
-      "address": "Av. Paulista, 1000",
-      "city": "São Paulo",
-      "hours": "Seg a Sex, 9h às 18h",
+      "address": "",
+      "city": "",
+      "hours": "",
       "instagram": "",
       "facebook": "",
       "youtube": "",
@@ -44,7 +44,7 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "cortex_clientes",
+        "key": "clientes",
         "label": "Clientes",
         "singular": "Cliente",
         "fields": [
@@ -68,8 +68,8 @@
             "type": "select",
             "options": [
               "gratis",
-              "pro",
-              "enterprise"
+              "basico",
+              "premium"
             ],
             "required": true
           },
@@ -86,7 +86,14 @@
           },
           {
             "key": "criadoem",
-            "label": "Data de Criação",
+            "label": "Criado em",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "ultimaatualizacao",
+            "label": "Última atualização",
             "type": "date",
             "options": [],
             "required": true
@@ -94,32 +101,216 @@
         ],
         "sample": [
           {
-            "nome": "Roberto Alves",
-            "email": "roberto.alves@tech.com",
-            "plano": "enterprise",
-            "idioma": "pt",
-            "criadoem": ""
-          },
-          {
-            "nome": "Juliana Costa",
-            "email": "juliana.costa@design.com",
-            "plano": "pro",
-            "idioma": "pt",
-            "criadoem": ""
-          },
-          {
-            "nome": "Marcos Silva",
-            "email": "marcos.silva@startup.com",
+            "nome": "João Silva",
+            "email": "joao@cortex-p1.com",
             "plano": "gratis",
-            "idioma": "en",
-            "criadoem": ""
+            "idioma": "pt",
+            "criadoem": "",
+            "ultimaatualizacao": ""
           },
           {
-            "nome": "Carla Souza",
-            "email": "carla.souza@agency.com",
-            "plano": "pro",
+            "nome": "Maria Oliveira",
+            "email": "maria@cortex-p1.com",
+            "plano": "premium",
+            "idioma": "en",
+            "criadoem": "",
+            "ultimaatualizacao": ""
+          },
+          {
+            "nome": "Pedro Santos",
+            "email": "pedro@cortex-p1.com",
+            "plano": "basico",
+            "idioma": "es",
+            "criadoem": "",
+            "ultimaatualizacao": ""
+          },
+          {
+            "nome": "Ana Costa",
+            "email": "ana@cortex-p1.com",
+            "plano": "gratis",
             "idioma": "pt",
-            "criadoem": ""
+            "criadoem": "",
+            "ultimaatualizacao": ""
+          }
+        ]
+      },
+      {
+        "key": "projetos",
+        "label": "Projetos",
+        "singular": "Projeto",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "planejando",
+              "em-andamento",
+              "concluido",
+              "pausado"
+            ],
+            "required": true
+          },
+          {
+            "key": "datainicio",
+            "label": "Data de início",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "dataprevista",
+            "label": "Data prevista",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "orcamento",
+            "label": "Orçamento",
+            "type": "money",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Site Redesign",
+            "descricao": "Redesign completo do site da empresa",
+            "status": "em-andamento",
+            "datainicio": "",
+            "dataprevista": "",
+            "orcamento": "15000"
+          },
+          {
+            "nome": "App Móvel",
+            "descricao": "Desenvolvimento de aplicativo para iOS e Android",
+            "status": "planejando",
+            "datainicio": "",
+            "dataprevista": "",
+            "orcamento": "50000"
+          },
+          {
+            "nome": "Sistema de CRM",
+            "descricao": "Implementação de sistema de CRM",
+            "status": "concluido",
+            "datainicio": "",
+            "dataprevista": "",
+            "orcamento": "25000"
+          },
+          {
+            "nome": "API de Integração",
+            "descricao": "Desenvolvimento de API para integração com terceiros",
+            "status": "em-andamento",
+            "datainicio": "",
+            "dataprevista": "",
+            "orcamento": "32000"
+          }
+        ]
+      },
+      {
+        "key": "tarefas",
+        "label": "Tarefas",
+        "singular": "Tarefa",
+        "fields": [
+          {
+            "key": "titulo",
+            "label": "Título",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "projeto",
+            "label": "Projeto",
+            "type": "select",
+            "options": [
+              "Site Redesign",
+              "App Móvel",
+              "Sistema de CRM",
+              "API de Integração"
+            ],
+            "required": true
+          },
+          {
+            "key": "responsavel",
+            "label": "Responsável",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "prazo",
+            "label": "Prazo",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "prioridade",
+            "label": "Prioridade",
+            "type": "select",
+            "options": [
+              "baixa",
+              "media",
+              "alta"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "titulo": "Design homepage",
+            "descricao": "Criar mockup da homepage",
+            "projeto": "Site Redesign",
+            "responsavel": "Ana",
+            "prazo": "2023-05-30",
+            "prioridade": "alta"
+          },
+          {
+            "titulo": "API de autenticação",
+            "descricao": "Desenvolver API de login com Firebase",
+            "projeto": "App Móvel",
+            "responsavel": "Bruno",
+            "prazo": "2023-06-15",
+            "prioridade": "media"
+          },
+          {
+            "titulo": "Testes finais",
+            "descricao": "Realizar testes de aceitação",
+            "projeto": "Sistema de CRM",
+            "responsavel": "Carlos",
+            "prazo": "2023-04-10",
+            "prioridade": "baixa"
+          },
+          {
+            "titulo": "Documentação técnica",
+            "descricao": "Elaborar documentação da API",
+            "projeto": "API de Integração",
+            "responsavel": "Diana",
+            "prazo": "2023-07-05",
+            "prioridade": "media"
           }
         ]
       }
@@ -127,7 +318,8 @@
     "modules": [
       "Dashboard",
       "Clientes",
-      "Logs"
+      "Projetos",
+      "Tarefas"
     ]
   },
   "media": {}
