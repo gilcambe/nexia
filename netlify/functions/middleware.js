@@ -8,8 +8,8 @@
 
 // FIX v53: Usa firebase-init.js como source of truth — evita double-init race condition
 const { admin, db } = require('./firebase-init');
-const AbuseLog = require('../models/abuseLog');
-const abuseRecorder = require('../middleware/abuseRecorder');
+const AbuseLog = require('../../src/models/abuseLog');
+const abuseRecorder = require('../../src/middleware/abuseRecorder');
 
 function getCorsOrigin(event) {
   const allowed = (process.env.NEXIA_APP_URL || '').split(',').map(u => u.trim()).filter(Boolean);
@@ -146,7 +146,7 @@ async function _cleanExpiredRateLimits() {
  */
 async function recordAbuse(ip, userId, tipo, detalhes = '') {
   try {
-    await AbuseLog.create({
+    await AbuseLog.createAbuseLog({
       ip: ip || 'desconhecido',
       userId: userId || null,
       tipo,
@@ -155,6 +155,7 @@ async function recordAbuse(ip, userId, tipo, detalhes = '') {
     });
   } catch (err) {
     console.error('[recordAbuse] Falha ao gravar log:', err.message);
+    console.error('[recordAbuse] Detalhes do erro:', err);
   }
 }
 
