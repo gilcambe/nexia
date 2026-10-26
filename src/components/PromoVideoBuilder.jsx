@@ -17,7 +17,7 @@ const PromoVideoBuilder = () => {
   const handleGerar = async () => {
     // Validação
     if (!prompt.trim()) {
-      setErro('Por favor, digite um prompt para o vídeo');
+      setErro('Digite um prompt para descrever o vídeo');
       return;
     }
     
