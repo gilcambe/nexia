@@ -44,7 +44,7 @@ concurrency:
 jobs:
   clonar:
     name: Clonar site
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     env:
       CLONE_URL: ${{ inputs.url }}

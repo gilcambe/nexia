@@ -25,7 +25,7 @@ env:
 jobs:
   secrets:
     name: Secret scan
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -44,7 +44,7 @@ jobs:
 
   build-test:
     name: Typecheck, testes e build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # Pedido do dono (25/10/2026): nunca mais travado por horas. O job inteiro leva ~8 min normalmente;
     # 20 min já é folga de sobra. Sem isto, um passo preso (ex.: emulador do Firebase) ficava até 6 h (padrão do Actions).
     timeout-minutes: 20
