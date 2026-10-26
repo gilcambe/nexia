@@ -2,12 +2,12 @@
   "spec": {
     "kind": "system",
     "name": "Cortex-p1",
-    "tagline": "Sistema de gestão de projetos e clientes",
+    "tagline": "Gestão inteligente de clientes e planos",
     "photo_theme": "",
-    "description": "Sistema de gestão de projetos e clientes",
+    "description": "Gestão inteligente de clientes e planos",
     "folder": "cortex-p1",
     "fonts": {
-      "heading": "Plus Jakarta Sans",
+      "heading": "Outfit",
       "body": "Inter"
     },
     "palette": {
@@ -22,7 +22,7 @@
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "",
+      "phone": "(11) 90000-0000",
       "email": "suporte@cortex-p1.com.br",
       "address": "",
       "city": "",
@@ -50,7 +50,7 @@
         "fields": [
           {
             "key": "nome",
-            "label": "Nome",
+            "label": "Nome Completo",
             "type": "text",
             "options": [],
             "required": true
@@ -63,240 +63,91 @@
             "required": true
           },
           {
-            "key": "telefone",
-            "label": "Telefone",
-            "type": "phone",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "empresa",
-            "label": "Empresa",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
             "key": "plano",
-            "label": "Plano",
+            "label": "Plano Ativo",
             "type": "select",
             "options": [
-              "Grátis",
-              "Básico",
-              "Profissional",
-              "Enterprise"
+              "gratis",
+              "basico",
+              "premium",
+              "enterprise"
             ],
             "required": true
           },
           {
-            "key": "data_criacao",
+            "key": "criadoem",
             "label": "Data de Cadastro",
             "type": "date",
             "options": [],
             "required": true
-          }
-        ],
-        "sample": [
-          {
-            "nome": "Ana Souza",
-            "email": "ana.souza@empresa.com",
-            "telefone": "(11) 98765-4321",
-            "empresa": "Tech Solutions",
-            "plano": "Profissional",
-            "data_criacao": "2023-05-15"
           },
           {
-            "nome": "Bruno Lima",
-            "email": "bruno.lima@consultoria.com",
-            "telefone": "(21) 99876-5432",
-            "empresa": "Consultoria Ltda",
-            "plano": "Básico",
-            "data_criacao": "2023-06-20"
-          },
-          {
-            "nome": "Carla Dias",
-            "email": "carla.dias@startup.com",
-            "telefone": "(31) 97654-3210",
-            "empresa": "InovaTech",
-            "plano": "Enterprise",
-            "data_criacao": "2023-04-10"
-          },
-          {
-            "nome": "Davi Reis",
-            "email": "davi.reis@freelancer.com",
-            "telefone": "(41) 96543-2109",
-            "empresa": "",
-            "plano": "Grátis",
-            "data_criacao": "2023-07-05"
-          }
-        ]
-      },
-      {
-        "key": "projetos",
-        "label": "Projetos",
-        "singular": "Projeto",
-        "fields": [
-          {
-            "key": "nome",
-            "label": "Nome",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "cliente",
-            "label": "Cliente",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
+            "key": "idioma",
+            "label": "Idioma Preferencial",
             "type": "select",
             "options": [
-              "Planejamento",
-              "Em Andamento",
-              "Revisão",
-              "Concluído",
-              "Cancelado"
+              "pt",
+              "en",
+              "es",
+              "fr"
             ],
             "required": true
           },
           {
-            "key": "data_inicio",
-            "label": "Data de Início",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "data_prevista",
-            "label": "Data Prevista",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "orcamento",
-            "label": "Orçamento",
-            "type": "money",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "responsavel",
-            "label": "Responsável",
-            "type": "text",
-            "options": [],
+            "key": "status",
+            "label": "Status da Conta",
+            "type": "select",
+            "options": [
+              "ativo",
+              "inativo",
+              "pendente"
+            ],
             "required": true
           }
         ],
         "sample": [
           {
-            "nome": "Redesign do Site",
-            "cliente": "Tech Solutions",
-            "status": "Em Andamento",
-            "data_inicio": "2023-06-01",
-            "data_prevista": "2023-08-15",
-            "orcamento": "15000",
-            "responsavel": "Ana Souza"
+            "nome": "João Silva",
+            "email": "joao.silva@cortex.com",
+            "plano": "premium",
+            "criadoem": "",
+            "idioma": "pt",
+            "status": "ativo"
           },
           {
-            "nome": "App Mobile",
-            "cliente": "InovaTech",
-            "status": "Planejamento",
-            "data_inicio": "2023-07-10",
-            "data_prevista": "2023-12-20",
-            "orcamento": "35000",
-            "responsavel": "Bruno Lima"
+            "nome": "Maria Oliveira",
+            "email": "maria.olv@cortex.com",
+            "plano": "basico",
+            "criadoem": "",
+            "idioma": "en",
+            "status": "ativo"
           },
           {
-            "nome": "Sistema de Gestão",
-            "cliente": "Consultoria Ltda",
-            "status": "Revisão",
-            "data_inicio": "2023-03-15",
-            "data_prevista": "2023-07-30",
-            "orcamento": "28000",
-            "responsavel": "Carla Dias"
+            "nome": "Pedro Santos",
+            "email": "pedro.santos@cortex.com",
+            "plano": "gratis",
+            "criadoem": "",
+            "idioma": "es",
+            "status": "pendente"
           },
           {
-            "nome": "E-commerce",
-            "cliente": "Tech Solutions",
-            "status": "Concluído",
-            "data_inicio": "2023-01-10",
-            "data_prevista": "2023-05-20",
-            "orcamento": "42000",
-            "responsavel": "Davi Reis"
-          },
-          {
-            "nome": "Integração API",
-            "cliente": "InovaTech",
-            "status": "Em Andamento",
-            "data_inicio": "2023-05-05",
-            "data_prevista": "2023-09-10",
-            "orcamento": "18000",
-            "responsavel": "Ana Souza"
-          },
-          {
-            "nome": "Campanha Marketing",
-            "cliente": "Consultoria Ltda",
-            "status": "Cancelado",
-            "data_inicio": "2023-04-01",
-            "data_prevista": "2023-08-30",
-            "orcamento": "12000",
-            "responsavel": "Bruno Lima"
+            "nome": "Ana Costa",
+            "email": "ana.costa@cortex.com",
+            "plano": "enterprise",
+            "criadoem": "",
+            "idioma": "fr",
+            "status": "ativo"
           }
         ]
       },
       {
-        "key": "tarefas",
-        "label": "Tarefas",
-        "singular": "Tarefa",
+        "key": "planos",
+        "label": "Planos",
+        "singular": "Plano",
         "fields": [
           {
             "key": "nome",
-            "label": "Nome",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "projeto",
-            "label": "Projeto",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
-            "type": "select",
-            "options": [
-              "Pendente",
-              "Em Progresso",
-              "Concluída",
-              "Atrasada"
-            ],
-            "required": true
-          },
-          {
-            "key": "data_inicio",
-            "label": "Data de Início",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "data_conclusao",
-            "label": "Data de Conclusão",
-            "type": "date",
-            "options": [],
-            "required": false
-          },
-          {
-            "key": "responsavel",
-            "label": "Responsável",
+            "label": "Nome do Plano",
             "type": "text",
             "options": [],
             "required": true
@@ -306,156 +157,151 @@
             "label": "Descrição",
             "type": "textarea",
             "options": [],
-            "required": false
-          }
-        ],
-        "sample": [
-          {
-            "nome": "Design Homepage",
-            "projeto": "Redesign do Site",
-            "status": "Concluída",
-            "data_inicio": "2023-06-05",
-            "data_conclusao": "2023-06-25",
-            "responsavel": "Ana Souza",
-            "descricao": "Criação do layout principal do site"
-          },
-          {
-            "nome": "API Backend",
-            "projeto": "App Mobile",
-            "status": "Em Progresso",
-            "data_inicio": "2023-07-15",
-            "data_conclusao": "",
-            "responsavel": "Bruno Lima",
-            "descricao": "Desenvolvimento da API para o aplicativo"
-          },
-          {
-            "nome": "Testes Usabilidade",
-            "projeto": "Sistema de Gestão",
-            "status": "Pendente",
-            "data_inicio": "2023-08-01",
-            "data_conclusao": "",
-            "responsavel": "Carla Dias",
-            "descricao": "Testes com usuários finais"
-          },
-          {
-            "nome": "Configuração Pagamento",
-            "projeto": "E-commerce",
-            "status": "Concluída",
-            "data_inicio": "2023-04-10",
-            "data_conclusao": "2023-05-05",
-            "responsavel": "Davi Reis",
-            "descricao": "Integração com gateways de pagamento"
-          },
-          {
-            "nome": "Documentação",
-            "projeto": "Integração API",
-            "status": "Atrasada",
-            "data_inicio": "2023-06-10",
-            "data_conclusao": "",
-            "responsavel": "Ana Souza",
-            "descricao": "Criação de documentação técnica"
-          }
-        ]
-      },
-      {
-        "key": "pagamentos",
-        "label": "Pagamentos",
-        "singular": "Pagamento",
-        "fields": [
-          {
-            "key": "cliente",
-            "label": "Cliente",
-            "type": "text",
-            "options": [],
             "required": true
           },
           {
-            "key": "projeto",
-            "label": "Projeto",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "valor",
-            "label": "Valor",
+            "key": "preco",
+            "label": "Preço Mensal",
             "type": "money",
             "options": [],
             "required": true
           },
           {
-            "key": "data_pagamento",
-            "label": "Data do Pagamento",
+            "key": "recursos",
+            "label": "Recursos Incluídos",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "ativo",
+            "label": "Status do Plano",
+            "type": "select",
+            "options": [
+              "ativo",
+              "inativo"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Plano Básico",
+            "descricao": "Ideal para iniciantes com funcionalidades essenciais",
+            "preco": "29.90",
+            "recursos": "Até 5 usuários, Suporte básico, 10GB de armazenamento",
+            "ativo": "ativo"
+          },
+          {
+            "nome": "Plano Premium",
+            "descricao": "Para equipes que precisam de mais recursos",
+            "preco": "79.90",
+            "recursos": "Até 20 usuários, Suporte prioritário, 100GB de armazenamento, Relatórios avançados",
+            "ativo": "ativo"
+          },
+          {
+            "nome": "Plano Enterprise",
+            "descricao": "Solução completa para grandes organizações",
+            "preco": "199.90",
+            "recursos": "Usuários ilimitados, Suporte 24/7, Armazenamento ilimitado, API dedicada, Segurança avançada",
+            "ativo": "ativo"
+          },
+          {
+            "nome": "Plano Gratuito",
+            "descricao": "Versão gratuita com funcionalidades limitadas",
+            "preco": "0.00",
+            "recursos": "1 usuário, Suporte por e-mail, 1GB de armazenamento",
+            "ativo": "ativo"
+          }
+        ]
+      },
+      {
+        "key": "transacoes",
+        "label": "Transações",
+        "singular": "Transação",
+        "fields": [
+          {
+            "key": "clienteid",
+            "label": "ID do Cliente",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "plano",
+            "label": "Plano Comprado",
+            "type": "select",
+            "options": [
+              "gratis",
+              "basico",
+              "premium",
+              "enterprise"
+            ],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor da Transação",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data da Transação",
             "type": "date",
             "options": [],
             "required": true
           },
           {
             "key": "status",
-            "label": "Status",
+            "label": "Status do Pagamento",
             "type": "select",
             "options": [
-              "Pendente",
-              "Pago",
-              "Atrasado",
-              "Cancelado"
-            ],
-            "required": true
-          },
-          {
-            "key": "forma_pagamento",
-            "label": "Forma de Pagamento",
-            "type": "select",
-            "options": [
-              "Boleto",
-              "Cartão de Crédito",
-              "Transferência",
-              "PIX"
+              "pendente",
+              "pago",
+              "cancelado",
+              "reembolsado"
             ],
             "required": true
           }
         ],
         "sample": [
           {
-            "cliente": "Tech Solutions",
-            "projeto": "Redesign do Site",
-            "valor": "5000",
-            "data_pagamento": "2023-06-10",
-            "status": "Pago",
-            "forma_pagamento": "Cartão de Crédito"
+            "clienteid": "",
+            "plano": "basico",
+            "valor": "29.90",
+            "data": "2023-10-05",
+            "status": "pago"
           },
           {
-            "cliente": "InovaTech",
-            "projeto": "App Mobile",
-            "valor": "8750",
-            "data_pagamento": "2023-07-20",
-            "status": "Pendente",
-            "forma_pagamento": "Boleto"
+            "clienteid": "",
+            "plano": "premium",
+            "valor": "79.90",
+            "data": "2023-10-12",
+            "status": "pago"
           },
           {
-            "cliente": "Consultoria Ltda",
-            "projeto": "Sistema de Gestão",
-            "valor": "7000",
-            "data_pagamento": "2023-07-05",
-            "status": "Pago",
-            "forma_pagamento": "Transferência"
+            "clienteid": "",
+            "plano": "gratis",
+            "valor": "0.00",
+            "data": "2023-10-18",
+            "status": "pendente"
           },
           {
-            "cliente": "Tech Solutions",
-            "projeto": "E-commerce",
-            "valor": "10500",
-            "data_pagamento": "2023-05-15",
-            "status": "Pago",
-            "forma_pagamento": "PIX"
+            "clienteid": "",
+            "plano": "enterprise",
+            "valor": "199.90",
+            "data": "2023-10-22",
+            "status": "cancelado"
           }
         ]
       }
     ],
     "modules": [
       "Clientes",
-      "Projetos",
-      "Tarefas",
-      "Financeiro"
+      "Planos",
+      "Transações"
     ]
   },
   "media": {}
