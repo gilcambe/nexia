@@ -1,24 +1,25 @@
 'use strict';
 // Central Kernex: lista dos produtos e clientes que aparecem na página /central.
+// logo = arquivo real em public/central/logos (sem logo, a tela mostra ícone provisório). segmento = ramo do cliente.
 // "site" é o que o público vê, "painel" é a área do dono. "suporte" = cliente com agenda (entrar sem senha).
 // Produto novo: acrescente uma linha aqui. "pendente: true" = ainda sem site no ar (a tela mostra "em breve"). Links grátis do dia a dia ficam em LINKS.
 
 const BASE = 'https://nexia.gcbezerra.workers.dev';
 
 const PRODUTOS = [
-  { id: 'body-coach', nome: 'Body Coach', icone: '💪', frase: 'App de treino e dieta (vende assinatura)', site: 'https://nexiabodycoach.pages.dev/', painel: 'https://nexiabodycoach.pages.dev/body-coach/admin/acessos' },
-  { id: 'cortex', nome: 'Cortex', icone: '🧠', frase: 'O robô que programa a Kernex', site: BASE + '/health', painel: BASE + '/cortex-app' },
-  { id: 'achados', nome: 'Achados (ofertas)', icone: '🛍️', frase: 'Vitrine de ofertas com link de afiliado', site: 'https://achados-nexia.pages.dev/', painel: 'https://github.com/gilcambe/nexia/actions/workflows/afiliados.yml' },
-  { id: 'divulga', nome: 'Divulga', icone: '📣', frase: 'Posta os clientes no Facebook e Instagram', site: 'https://www.instagram.com/nexiabodycoach/', painel: 'https://github.com/gilcambe/nexia/actions/workflows/divulga.yml' },
-  { id: 'bezsan', nome: 'Bezsan Leilões', icone: '🏛️', frase: 'Cliente: site e agenda de reuniões', site: 'https://bezsan.pages.dev/', painel: 'https://bezsan.pages.dev/agenda/', suporte: 'bezsan' },
-  { id: 'studiolima', nome: 'Studio Lima', icone: '✨', frase: 'Cliente: estética, site e agenda', site: 'https://studiolima.pages.dev/', painel: 'https://studiolima.pages.dev/agenda/', suporte: 'studiolima' },
+  { id: 'body-coach', logo: '/central/logos/body-coach.svg', segmento: 'Fitness', nome: 'Body Coach', icone: '💪', frase: 'App de treino e dieta (vende assinatura)', site: 'https://nexiabodycoach.pages.dev/', painel: 'https://nexiabodycoach.pages.dev/body-coach/admin/acessos' },
+  { id: 'cortex', logo: '/central/logos/cortex.svg', segmento: 'IA', nome: 'Cortex', icone: '🧠', frase: 'O robô que programa a Kernex', site: BASE + '/health', painel: BASE + '/cortex-app' },
+  { id: 'achados', segmento: 'Ofertas', nome: 'Achados (ofertas)', icone: '🛍️', frase: 'Vitrine de ofertas com link de afiliado', site: 'https://achados-nexia.pages.dev/', painel: 'https://github.com/gilcambe/nexia/actions/workflows/afiliados.yml' },
+  { id: 'divulga', segmento: 'Marketing', nome: 'Divulga', icone: '📣', frase: 'Posta os clientes no Facebook e Instagram', site: 'https://www.instagram.com/nexiabodycoach/', painel: 'https://github.com/gilcambe/nexia/actions/workflows/divulga.yml' },
+  { id: 'bezsan', logo: '/central/logos/bezsan.svg', segmento: 'Leilões', nome: 'Bezsan Leilões', icone: '🏛️', frase: 'Cliente: site e agenda de reuniões', site: 'https://bezsan.pages.dev/', painel: 'https://bezsan.pages.dev/agenda/', suporte: 'bezsan' },
+  { id: 'studiolima', segmento: 'Estética', nome: 'Studio Lima', icone: '✨', frase: 'Cliente: estética, site e agenda', site: 'https://studiolima.pages.dev/', painel: 'https://studiolima.pages.dev/agenda/', suporte: 'studiolima' },
   // Clientes antigos (#1003). EV Supplements não é mais cliente e MyCoach virou o Body Coach: não entram.
-  { id: 'ces', nome: 'CES Brasil 2027', icone: '🌐', frase: 'Cliente: missão empresarial (evento)', site: BASE + '/ces', painel: BASE + '/ces' },
-  { id: 'vp', nome: 'Viajante Pro', icone: '✈️', frase: 'Cliente: agência de viagens', site: BASE + '/vp', painel: BASE + '/vp' },
-  { id: 'splash', nome: 'Splash Eventos', icone: '💧', frase: 'Cliente: locação de espaços para eventos', site: BASE + '/splash', painel: BASE + '/splash' },
+  { id: 'ces', logo: '/central/logos/ces.svg', segmento: 'Eventos', nome: 'CES Brasil 2027', icone: '🌐', frase: 'Cliente: missão empresarial (evento)', site: BASE + '/ces', painel: BASE + '/ces' },
+  { id: 'vp', logo: '/central/logos/vp.svg', segmento: 'Viagens', nome: 'Viajante Pro', icone: '✈️', frase: 'Cliente: agência de viagens', site: BASE + '/vp', painel: BASE + '/vp' },
+  { id: 'splash', logo: '/central/logos/splash.png', segmento: 'Eventos', nome: 'Splash Eventos', icone: '💧', frase: 'Cliente: locação de espaços para eventos', site: BASE + '/splash', painel: BASE + '/splash' },
   // O site do Adriano entra quando a landing nova for publicada em https://adrianoblumer.pages.dev.
-  { id: 'adriano', nome: 'Adriano Blumer', icone: '🥗', frase: 'Cliente: nutricionista (landing com WhatsApp e redes)', pendente: true },
-  { id: 'arqia', nome: 'Arqia', icone: '📐', frase: 'Produto futuro: sistema para arquitetos', pendente: true },
+  { id: 'adriano', logo: '/central/logos/adriano.png', segmento: 'Nutrição', nome: 'Adriano Blumer', icone: '🥗', frase: 'Cliente: nutricionista (landing com WhatsApp e redes)', pendente: true },
+  { id: 'arqia', segmento: 'Arquitetura', nome: 'Arqia', icone: '📐', frase: 'Produto futuro: sistema para arquitetos', pendente: true },
 ];
 
 // Só os que têm site no ar entram nas medições de saúde.
