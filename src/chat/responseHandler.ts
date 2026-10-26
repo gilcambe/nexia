@@ -5,16 +5,21 @@ export async function handleResponse(responseText: string, userId: string, conve
   if (ctx) {
     ctx.waitUntil(
       (async () => {
-        const fatos = await extractFacts(responseText, 3);
-        if (fatos.length) {
-          await Promise.all(
-            fatos.map(fato =>
-              memoryService.upsertFact(userId, conversationId, {
-                ...fato,
-                usado_em: new Date().toISOString(),
-              })
-            )
-          );
+        try {
+          const fatos = await extractFacts(responseText, 3);
+          if (fatos.length) {
+            await Promise.all(
+              fatos.map(fato =>
+                memoryService.upsertFact(userId, conversationId, {
+                  ...fato,
+                  usado_em: new Date().toISOString(),
+                })
+              )
+            );
+          }
+        } catch (error) {
+          console.error('Erro na persistência de fatos:', error);
+          // Não bloqueia o fluxo principal, apenas loga o erro
         }
       })()
     );
