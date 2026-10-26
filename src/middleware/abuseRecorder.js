@@ -10,7 +10,7 @@ module.exports = async (req, res, next) => {
 
   if (tipo) {
     try {
-      await AbuseLog.create({ ip, userId, tipo, detalhes });
+      await AbuseLog.createAbuseLog({ ip, userId, tipo, detalhes });
       console.log(`Abuso registrado: ${tipo} por ${ip}`);
     } catch (err) {
       console.error('abuseRecorder: falha ao gravar log', err.message);
