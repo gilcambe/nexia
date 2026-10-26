@@ -9,6 +9,10 @@ import lembretes from './lembretes.js';
 import saude from './saude.js';
 import julesAuto from './jules-auto.js';
 import cacheBorda from './cacheBorda.js';
+import { VazaoController } from '../src/durable/VazaoController.js';
+
+// #1662: o Cloudflare só publica se a classe do Durable Object sair do arquivo de entrada.
+export { VazaoController };
 
 export default {
   async fetch(request, env, ctx) {
