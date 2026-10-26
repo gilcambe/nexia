@@ -148,8 +148,9 @@ function createRouter(o = {}) {
     };
 
     let currentReq = req;
-    let accumulatedText = '';
+    const chunks = [];
     const dedupped = dedupe(descs);
+    const tDispatch0 = performance.now();
 
     if (cacheavel(req)) {
       const generalK = `gen|${chave(req)}`;
@@ -178,6 +179,7 @@ function createRouter(o = {}) {
       }
 
       let contReq = currentReq;
+      const accumulatedText = chunks.join('');
       if (accumulatedText) {
         const history = [...(currentReq.messages || [])];
         contReq = {
@@ -193,13 +195,20 @@ function createRouter(o = {}) {
       const it = stream(d, contReq)[Symbol.asyncIterator]();
       let first;
       const tFirst = Math.min(firstChunkTimeoutMs, remainingTime());
+      const tFirst0 = performance.now();
 
+      let cancelFirst;
       try {
         first = await Promise.race([
           it.next(),
-          timeoutPromise(tFirst, 'Primeira palavra não chegou em 4 s')
+          (() => { const r = timeoutPromise(tFirst, 'Primeira palavra não chegou em 4 s'); cancelFirst = r.cancel; return r.promise; })()
         ]);
+        // Primeiro chunk válido recebido: cancela o timer de primeiro chunk.
+        if (cancelFirst) cancelFirst();
+        const tFirstMs = performance.now() - tFirst0;
+        console.log(`[model-router] dispatch ${d.provider}/${d.model} firstChunkMs=${Math.round(tFirstMs)}`);
       } catch (e) {
+        if (cancelFirst) cancelFirst();
         if (typeof it.return === 'function') { try { await it.return(); } catch {} }
         if (placar) placar.marcar(d, 'transient');
         if (e && e.code === CODES.ABORTED) throw e;
@@ -217,7 +226,7 @@ function createRouter(o = {}) {
         while (!nextItem.done) {
           const val = nextItem.value;
           if (val && val.type === 'text' && val.text) {
-            accumulatedText += val.text;
+            chunks.push(val.text);
           }
           yield val;
 
@@ -227,10 +236,15 @@ function createRouter(o = {}) {
           }
 
           const tStall = Math.min(stallTimeoutMs, remainingTime());
+          let cancelStall;
+          const tStall0 = performance.now();
           nextItem = await Promise.race([
             it.next(),
-            timeoutPromise(tStall, 'Resposta parou por mais de 8 s')
+            (() => { const r = timeoutPromise(tStall, 'Resposta parou por mais de 8 s'); cancelStall = r.cancel; return r.promise; })()
           ]);
+          if (cancelStall) cancelStall();
+          const tStallMs = performance.now() - tStall0;
+          console.log(`[model-router] stream ${d.provider}/${d.model} stallWaitMs=${Math.round(tStallMs)}`);
         }
         if (nextItem.done) {
           currentStreamDone = true;
@@ -253,6 +267,7 @@ function createRouter(o = {}) {
           const d = dedupped[i] || descs[0];
           const k = `${d.provider}|${d.model}|${chave(req)}`;
           const generalK = `gen|${chave(req)}`;
+          const accumulatedText = chunks.join('');
           const cacheVal = { text: accumulatedText, provider: d.provider, model: d.model, usage: { total_tokens: Math.ceil(accumulatedText.length / 4) } };
           cache.set(k, cacheVal);
           cache.set(generalK, cacheVal);
