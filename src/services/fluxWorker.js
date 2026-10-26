@@ -1,5 +1,5 @@
 // Serviço do Workers AI (FLUX.1 schnell)
-export async function generateImageWithFlux(prompt: string): Promise<{ url: string; format: string }> {
+export async function generateImageWithFlux(prompt) {
   // Chamada para o binding AI do Workers AI / Cloudflare Workers
   // Em ambiente de worker do Cloudflare, env.AI é injetado. Caso contrário, tenta fetch na API ou endpoint interno de IA.
   try {
@@ -37,7 +37,7 @@ export async function generateImageWithFlux(prompt: string): Promise<{ url: stri
     });
     
     if (res.ok) {
-      const data = await res.json() as { url?: string; image?: string };
+      const data = await res.json();
       if (data && data.url) {
         return { url: data.url, format: 'image/jpeg' };
       }
@@ -48,6 +48,6 @@ export async function generateImageWithFlux(prompt: string): Promise<{ url: stri
 
     throw new Error('Workers AI binding or endpoint unavailable');
   } catch (error) {
-    throw new Error(`FluxWorker error: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`FluxWorker error: ${error && error.message ? error.message : String(error)}`);
   }
 }

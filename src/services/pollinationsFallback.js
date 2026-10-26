@@ -1,7 +1,7 @@
 import { generateImageWithFlux } from './fluxWorker';
 
 // Serviço de fallback para Pollinations AI
-export async function generateImageWithPollinations(prompt: string): Promise<{ url: string; format: string }> {
+export async function generateImageWithPollinations(prompt) {
   const encoded = encodeURIComponent(prompt);
   const url = `https://image.pollinations.ai/prompt/${encoded}`;
   return {
@@ -11,7 +11,7 @@ export async function generateImageWithPollinations(prompt: string): Promise<{ u
 }
 
 // Função principal solicitada que tenta o FLUX.1 schnell e usa o Pollinations como fallback
-export async function generateImage(prompt: string): Promise<{ url: string; format: string }> {
+export async function generateImage(prompt) {
   try {
     return await generateImageWithFlux(prompt);
   } catch (err) {
