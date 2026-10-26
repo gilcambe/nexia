@@ -12,6 +12,7 @@ import Logo from "./Logo";
 import { ehPergunta, ehPedidoDeCodigo } from "./intencao";
 import { mostrarAbertura } from "@/lib/abertura-nexia";
 import { Artefatos, Config, Conexoes, Tarefas } from "./Paineis";
+import { Assistentes } from "./Assistentes";
 
 export type Tema = "auto" | "escuro" | "claro";
 
@@ -169,6 +170,7 @@ export default function CortexPage() {
             }} />
           </div>
         )}
+        {user && vista === "assistentes" && <div className="flex-1 overflow-y-auto"><Assistentes /></div>}
         {user && vista === "conexoes" && <div className="flex-1 overflow-y-auto"><Conexoes email={email} /></div>}
         {user && vista === "tarefas" && <div className="flex-1 overflow-y-auto"><Tarefas abrir={abrir} /></div>}
         {user && vista === "artefatos" && <div className="flex-1 overflow-y-auto"><Artefatos abrir={abrir} /></div>}
