@@ -2,8 +2,6 @@
 // Modelo gratuito: @cf/llama-3.2-11b-vision-instruct (ou similar)
 // Fallback: API gratuita do Gemini (gemini-1.5-flash)
 
-import { env } from '$env/static/private';
-
 interface VisionOptions {
   imageBase64: string;
   prompt?: string;
@@ -26,15 +24,18 @@ function isBase64Image(value: string): boolean {
   return /^data:image/[a-zA-Z]+;base64,/.test(value) || /^[A-Za-z0-9+/=]+$/.test(value);
 }
 
-function stripDataUrl(imageBase64: string): string {
-  return imageBase64.replace(/^data:image/[a-zA-Z]+;base64,/, '');
+function stripDataUrl(imageBase64: string): { data: string; mimeType: string } {
+  const match = imageBase64.match(/^data:image\/([a-zA-Z]+);base64,/);
+  const mimeType = match ? `image/${match[1]}` : 'image/jpeg';
+  const data = imageBase64.replace(/^data:image\/[^;]+;base64,/, '');
+  return { data, mimeType };
 }
 
 async function callWorkersAI(
   imageBase64: string,
-  prompt: string
+  prompt: string,
+  ai: any
 ): Promise<{ description: string; model: string }> {
-  const ai = (globalThis as any).AI;
   if (!ai || !ai.run) {
     throw new Error('Binding AI não disponível no ambiente Workers');
   }
@@ -52,12 +53,12 @@ async function callWorkersAI(
 }
 
 async function callGemini(imageBase64: string, prompt: string): Promise<{ description: string; model: string }> {
-  const apiKey = env?.GEMINI_API_KEY || (globalThis as any).env?.GEMINI_API_KEY;
-  if (!apiKey) {
+  // A chave será injetada via wrangler vars
+  if (!process.env.GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY não configurada');
   }
 
-  const cleanImage = stripDataUrl(imageBase64);
+  const { data: cleanImage, mimeType } = stripDataUrl(imageBase64);
 
   const body = {
     contents: [
@@ -66,7 +67,7 @@ async function callGemini(imageBase64: string, prompt: string): Promise<{ descri
           { text: prompt },
           {
             inline_data: {
-              mime_type: 'image/jpeg',
+              mime_type: mimeType,
               data: cleanImage,
             },
           },
@@ -104,9 +105,10 @@ async function callGemini(imageBase64: string, prompt: string): Promise<{ descri
  * Processa uma imagem em base64 e retorna uma descrição.
  * Tenta Workers AI primeiro; em caso de falha, cai no Gemini.
  */
-export async function describeImage(options: VisionOptions): Promise<VisionResult> {
+export async function describeImage(options: VisionOptions, ai?: any): Promise<VisionResult> {
   const imageBase64 = options.imageBase64;
   const prompt = options.prompt || DEFAULT_PROMPT;
+  const model = options.model || WORKERS_AI_MODEL;
 
   if (!imageBase64 || !isBase64Image(imageBase64)) {
     throw new Error('Imagem inválida: envie base64 ou data URL de imagem');
@@ -116,7 +118,7 @@ export async function describeImage(options: VisionOptions): Promise<VisionResul
 
   // 1) Workers AI (binding AI) — modelo gratuito com visão
   try {
-    const result = await callWorkersAI(imageBase64, prompt);
+    const result = await callWorkersAI(imageBase64, prompt, ai);
     return {
       description: result.description,
       provider: 'workers-ai',
