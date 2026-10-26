@@ -1,4 +1,4 @@
-import { hasContentViolation } from '../utils/contentFilter.js';
+import { hasContentViolation, filterAIResponse } from '../utils/contentFilter.js';
 
 /**
  * Serviço responsável por processar prompts para a IA.
@@ -13,10 +13,8 @@ export async function aiPromptService(prompt, options = {}) {
   // ... lógica existente do serviço ...
   const rawResponse = `Resposta gerada para: ${prompt}`;
   
-  // Analisa a saída da IA e aplica o filtro de conteúdo (reutilizando filterAIResponse ou hasContentViolation)
+  // Analisa a saída da IA e aplica o filtro de conteúdo (reutilizando filterAIResponse)
   return filterAIResponse(rawResponse);
-
-  return rawResponse;
 }
 
 export default aiPromptService;
