@@ -13,4 +13,16 @@ export function hasContentViolation(text) {
   return prohibitedWords.some(word => lowerText.includes(word.toLowerCase()));
 }
 
-export default { hasContentViolation };
+/**
+ * Filtra a resposta gerada pela IA, substituindo por mensagem de recusa caso contenha termos proibidos.
+ * @param {string} responseText - O texto da resposta gerada pela IA.
+ * @returns {string} - A resposta original ou a mensagem de recusa educada.
+ */
+export function filterAIResponse(responseText) {
+  if (hasContentViolation(responseText)) {
+    return "Desculpe, não posso ajudar com isso.";
+  }
+  return responseText;
+}
+
+export default { hasContentViolation, filterAIResponse };
