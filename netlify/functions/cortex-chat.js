@@ -291,7 +291,8 @@ exports.handler = async (event) => {
     let body = {};
     try { body = JSON.parse(event.body || '{}'); } catch { return { statusCode: 400, headers, body: JSON.stringify({ error: 'JSON inválido no body' }) }; }
 
-    const { message: rawMessage, tenantId = 'nexia', ragEnabled = false, model = 'auto', conversationId = 'default', stream = true, image_request, maxTokens = 0 } = body;
+    const { message: rawMessage, tenantId = 'nexia', ragEnabled = false, model = 'auto', conversationId = 'default', stream = true, image_request, maxTokens = 0, anexos, attachments } = body;
+    const listaAnexos = anexos || attachments || [];
 
     // FIX IDOR: userId SEMPRE do token verificado — nunca do body
     const userId = event._uid || body.userId;
@@ -320,7 +321,21 @@ exports.handler = async (event) => {
     const modo = modos.modoValido(body.modo);
     if (modo && modos.MODOS[modo].web) { try { const w = await modos.buscarWeb(rawMessage); if (w) ragCtx = ragCtx ? `${ragCtx}\n\n${w}` : w; } catch { } }
 
-    const fullCtx = [...context, { role: 'user', content: message }];
+    let messageWithMultimodal = message;
+    if (listaAnexos.length > 0) {
+      try {
+        const { processarMultimodal } = require('../../nexia-ai/cortex/multimodal');
+        const envObj = { GEMINI_API_KEY: process.env.GEMINI_API_KEY, CLOUDFLARE_AI_TOKEN: process.env.CLOUDFLARE_AI_TOKEN, CLOUDFLARE_AI_ACCOUNT_ID: process.env.CLOUDFLARE_AI_ACCOUNT_ID };
+        const mmResult = await processarMultimodal({ env: envObj, mensagem: message, anexos: listaAnexos });
+        if (mmResult && mmResult.ok && mmResult.resposta) {
+          messageWithMultimodal = `${message}\n\n[Análise Multimodal / Anexos Correlacionados (${mmResult.provedor}):]\n${mmResult.resposta}`;
+        }
+      } catch (mmErr) {
+        console.warn('[CORTEX] Erro no processamento multimodal:', mmErr.message);
+      }
+    }
+
+    const fullCtx = [...context, { role: 'user', content: messageWithMultimodal }];
 
     // NEXIA AI (Fase 4): com projeto em jogo, resolve o projeto e traz o contexto do Vault.
     // Sem projeto em jogo (ou sem acesso ao Vault), o fluxo abaixo segue igual ao anterior.
