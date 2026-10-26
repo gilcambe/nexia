@@ -3,7 +3,7 @@
     "kind": "system",
     "name": "Cortex-p1",
     "tagline": "Cadastro de clientes com Firebase e Firestore",
-    "photo_theme": "",
+    "photo_theme": "saas dashboard",
     "description": "Cadastro de clientes com Firebase e Firestore",
     "folder": "sites/cortex-p1",
     "fonts": {
