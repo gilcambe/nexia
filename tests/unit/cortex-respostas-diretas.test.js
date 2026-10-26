@@ -17,8 +17,8 @@ async function carregar() {
 
 test('C5a. perguntas viram resposta direta; pedidos de mudança continuam virando tarefa', async () => {
   const { ehPergunta } = await carregar();
-  for (const p of ['como estamos?', 'O que falta?', 'quantas tarefas estão travadas', 'Qual modelo grátis é o mais rápido?', 'status']) assert.equal(ehPergunta(p), true, p);
-  for (const p of ['Crie a tela de login', 'pode corrigir o botão do Body Coach?', 'Mude o texto da Central', 'adicionar ícone no app', '']) assert.equal(ehPergunta(p), false, p);
+  for (const p of ['como estamos?', 'O que falta?', 'quantas tarefas estão travadas', 'Qual modelo grátis é o mais rápido?', 'status', 'escreva um poema...', 'traduza...', 'me explique...', 'oi tudo bem', 'me dê 3 ideias...']) assert.equal(ehPergunta(p), true, p);
+  for (const p of ['Crie a tela de login', 'pode corrigir o botão do Body Coach?', 'Mude o texto da Central', 'adicionar ícone no app', '', 'Crie no Body Coach um botão de compartilhar treino', 'Corrija o erro no painel da Splash']) assert.equal(ehPergunta(p), false, p);
   assert.equal(ehPergunta('como faço?\n\n```js\nx()\n```'), false, 'texto com código vira pedido');
 });
 
