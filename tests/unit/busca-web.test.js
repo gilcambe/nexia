@@ -27,13 +27,21 @@ test('BW2. buscar usa o DuckDuckGo e monta contexto numerado e fontes', async ()
   assert.match(r.rodape, /\*\*Fontes\*\*\n1\. \[Título A & cia\]\(https:\/\/exemplo\.com\/a\)\n2\. \[B\]/);
 });
 
-test('BW3. DuckDuckGo fora ou vazio → Wikipédia; nada → vazio sem erro', async () => {
+test('BW3. DuckDuckGo fora ou vazio → Google News RSS → Wikipédia; nada → aviso de busca vazia', async () => {
+  const rssXml = `<rss><channel><item><title>Notícia de Teste IA</title><link>https://noticias.com/ia</link><pubDate>Mon, 26 Oct 2026 10:00:00 GMT</pubDate></item></channel></rss>`;
+  const rNews = await b.buscar('noticias ia', { fetchImpl: async (u) => (String(u).includes('news.google.com') ? resp(200, rssXml, 'xml') : resp(403, '')) });
+  assert.strictEqual(rNews.de, 'google_news');
+  assert.strictEqual(rNews.fontes[0].titulo, 'Notícia de Teste IA');
+  assert.strictEqual(rNews.fontes[0].url, 'https://noticias.com/ia');
+
   const wiki = { query: { search: [{ title: 'Cloudflare Workers', snippet: '<span>plataforma</span> serverless' }] } };
-  const r = await b.buscar('workers', { fetchImpl: async (u) => (String(u).includes('wikipedia') ? resp(200, wiki) : resp(403, '')) });
-  assert.strictEqual(r.de, 'wikipedia');
-  assert.deepStrictEqual(r.fontes, [{ titulo: 'Cloudflare Workers', url: 'https://pt.wikipedia.org/wiki/Cloudflare_Workers', trecho: 'plataforma serverless' }]);
+  const rWiki = await b.buscar('workers', { fetchImpl: async (u) => (String(u).includes('wikipedia') ? resp(200, wiki) : resp(403, '')) });
+  assert.strictEqual(rWiki.de, 'wikipedia');
+  assert.deepStrictEqual(rWiki.fontes, [{ titulo: 'Cloudflare Workers', url: 'https://pt.wikipedia.org/wiki/Cloudflare_Workers', trecho: 'plataforma serverless' }]);
+
   const nada = await b.buscar('x y', { fetchImpl: async () => { throw new Error('sem rede'); } });
-  assert.deepStrictEqual(nada, { fontes: [], de: null, contexto: '', rodape: '' });
+  assert.deepStrictEqual(nada.fontes, []);
+  assert.match(nada.contexto, /não encontrei fontes agora/i);
   assert.strictEqual((await b.buscar('')).fontes.length, 0);
 });
 
