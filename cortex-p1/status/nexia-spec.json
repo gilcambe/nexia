@@ -1,10 +1,10 @@
 {
   "spec": {
     "kind": "system",
-    "name": "Cortex Status Monitor",
-    "tagline": "Monitoramento em tempo real do seu sistema",
-    "photo_theme": "server monitoring",
-    "description": "Monitoramento em tempo real do seu sistema",
+    "name": "Cortex Admin Monitor",
+    "tagline": "Painel administrativo de monitoramento em tempo real",
+    "photo_theme": "admin dashboard monitoring",
+    "description": "Painel administrativo protegido para monitoramento de métricas do sistema: cota por provedor, mensagens por minuto, tamanho da fila e erros na última hora.",
     "folder": "cortex-p1/status",
     "fonts": {
       "heading": "Plus Jakarta Sans",
@@ -273,7 +273,7 @@
       }
     ],
     "modules": [
-      "Monitoramento",
+      "Admin Monitoramento",
       "Provedores",
       "Filas",
       "Erros"
