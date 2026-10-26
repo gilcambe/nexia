@@ -195,6 +195,22 @@ async function callSync(system, messages, modelKey, maxTok) {
 // #1640: pedido de imagem em português comum ("crie uma imagem de...", "desenhe um logo...").
 const PEDE_IMAGEM = /\b(cri[ea]r?|ger[ea]r?|fa[cç]a|fazer|desenh[ea]r?|ilustr[ea]r?|mont[ea]r?)\b[^.?!\n]{0,40}\b(imagem|imagens|foto|desenho|ilustra[cç][aã]o|logo|logotipo|figura|arte)\b/i;
 
+// #1815: última reserva quando Groq e os outros provedores falham (limite por minuto): o Workers AI do
+// próprio Cloudflare (binding "AI", grátis), sem chave. Tenta o modelo grande e depois o pequeno.
+const MODELOS_RESERVA = ['@cf/meta/llama-3.3-70b-instruct-fp8-fast', '@cf/meta/llama-3.1-8b-instruct'];
+async function reservaWorkersAI(system, msgs, ai = globalThis.__NEXIA_AI__) {
+  if (!ai || typeof ai.run !== 'function') return null;
+  const messages = [{ role: 'system', content: String(system || '').slice(0, 12000) }, ...(msgs || []).filter(m => m && m.content).slice(-10).map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: String(m.content).slice(0, 6000) }))];
+  for (const modelo of MODELOS_RESERVA) {
+    try {
+      const r = await ai.run(modelo, { messages, max_tokens: 2048 });
+      const texto = r && (r.response || (r.result && r.result.response));
+      if (texto && String(texto).trim()) return { text: String(texto), modelo: 'Workers AI ' + modelo.split('/').pop() };
+    } catch (e) { console.warn('[CORTEX] Reserva Workers AI falhou:', modelo, e && e.message); }
+  }
+  return null;
+}
+
 async function generateImage(prompt, style) {
   // Grátis primeiro: FLUX schnell pelo binding do Workers AI (o mesmo que lê os anexos, #1671).
   const ai = globalThis.__NEXIA_AI__;
@@ -496,10 +512,13 @@ exports.handler = async (event) => {
               if (e && e.code === 'ABORTED') return;
               // Nenhum streaming funcionou: chamada completa como último recurso (igual ao anterior)
               let fallbackText = '';
+              let usedFb = 'fallback';
               try { fallbackText = (await callChain(systemPrompt, fullCtx.slice(-15), keys, 4096)).text; } catch { }
+              if (!fallbackText) { const rw = await reservaWorkersAI(systemPrompt, fullCtx.slice(-15)); if (rw) { fallbackText = rw.text; usedFb = rw.modelo; } }
+              if (fallbackText && typeof memModule.save === 'function') await memModule.save(effectiveUserId, [...(mem.history || []), { role: 'user', content: message }, { role: 'assistant', content: fallbackText }], mem.summaries, tenantId, {}, conversationId).catch(() => {});
               if (!fallbackText) fallbackText = '❌ Todas as IAs estão indisponíveis. Verifique as API keys nos segredos do Worker (Cloudflare).';
               yield sse({ token: fallbackText, done: false });
-              yield sse({ done: true, model: 'fallback' });
+              yield sse({ done: true, model: usedFb });
               yield 'data: [DONE]\n\n';
               return;
             }
@@ -522,7 +541,8 @@ exports.handler = async (event) => {
           modelUsed = (AI_CATALOG[r.key] && AI_CATALOG[r.key].label) || r.key;
         } catch (e) {
           console.warn('[CORTEX] Nenhuma IA respondeu:', e && (e.code || e.message));
-          finalResponse = keys.length ? '❌ As IAs configuradas não responderam agora. Tente de novo em instantes.' : '❌ Nenhuma IA configurada. Cadastre GEMINI_API_KEY (grátis) nos segredos do repositório e publique de novo.';
+          const rw = await reservaWorkersAI(systemPrompt, fullCtx.slice(-15));
+          if (rw) { finalResponse = rw.text; modelUsed = rw.modelo; } else finalResponse = keys.length ? '❌ As IAs configuradas não responderam agora. Tente de novo em instantes.' : '❌ Nenhuma IA configurada. Cadastre GEMINI_API_KEY (grátis) nos segredos do repositório e publique de novo.';
         }
       }
     }
@@ -548,3 +568,4 @@ exports.handler = async (event) => {
 // #1640: usados nos testes.
 exports.PEDE_IMAGEM = PEDE_IMAGEM;
 exports.generateImage = generateImage;
+exports.reservaWorkersAI = reservaWorkersAI;
