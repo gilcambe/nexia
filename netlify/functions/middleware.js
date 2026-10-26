@@ -8,6 +8,7 @@
 
 // FIX v53: Usa firebase-init.js como source of truth — evita double-init race condition
 const { admin, db } = require('./firebase-init');
+const AbuseLog = require('../models/abuseLog');
 const abuseRecorder = require('../middleware/abuseRecorder');
 
 function getCorsOrigin(event) {
@@ -78,7 +79,7 @@ const DANGEROUS_ACTIONS = [
 // Memória in-process para rate limit quando Firebase não disponível
 const _localRL = new Map();
 
-async function checkRateLimit(userId, functionName) {
+async function checkRateLimit(userId, functionName, ip = null) {
   if (!userId) return { ok: true };
   const limit = RATE_LIMITS[functionName] || RATE_LIMITS.default;
   const key = `${userId}:${functionName}`;
@@ -134,6 +135,27 @@ async function _cleanExpiredRateLimits() {
     expired.docs.forEach(d => batch.delete(d.ref));
     await batch.commit();
   } catch (_) { /* intentional: cleanup failure is non-critical */ }
+}
+
+/**
+ * Grava log de abuso no banco
+ * @param {string} ip - Endereço IP do usuário
+ * @param {string} userId - ID do usuário
+ * @param {string} tipo - Tipo de abuso (rate-limit, conteudo-proibido, injection, outro)
+ * @param {string} detalhes - Detalhes do abuso
+ */
+async function recordAbuse(ip, userId, tipo, detalhes = '') {
+  try {
+    await AbuseLog.create({
+      ip: ip || 'desconhecido',
+      userId: userId || null,
+      tipo,
+      detalhes,
+      timestamp: new Date()
+    });
+  } catch (err) {
+    console.error('[recordAbuse] Falha ao gravar log:', err.message);
+  }
 }
 
 const _tenantCache = new Map();
@@ -197,11 +219,28 @@ async function validateTenant(userId, tenantId) {
   }
 }
 
-function sanitizePrompt(text) {
+function sanitizePrompt(text, userId = null, ip = null) {
   if (typeof text !== 'string') return '';
   let clean = text.replace(/\0/g, '').replace(/[\x01-\x08\x0b-\x1f\x7f]/g, '');
-  for (const p of INJECTION_PATTERNS) if (p.test(clean)) throw new Error('Padrão de prompt injection detectado e bloqueado.');
-  for (const p of DANGEROUS_ACTIONS)  if (p.test(clean)) throw new Error('Operação destrutiva em massa não permitida.');
+  
+  // Verifica por padrões de injection
+  for (const p of INJECTION_PATTERNS) {
+    if (p.test(clean)) {
+      const detalhes = `Padrão de injection detectado: ${p.toString()}`;
+      recordAbuse(ip, userId, 'injection', detalhes).catch(console.error);
+      throw new Error('Padrão de prompt injection detectado e bloqueado.');
+    }
+  }
+  
+  // Verifica por ações destrutivas
+  for (const p of DANGEROUS_ACTIONS) {
+    if (p.test(clean)) {
+      const detalhes = `Ação destrutiva detectada: ${p.toString()}`;
+      recordAbuse(ip, userId, 'conteudo-proibido', detalhes).catch(console.error);
+      throw new Error('Operação destrutiva em massa não permitida.');
+    }
+  }
+  
   return clean.trim().slice(0, 32000);
 }
 
@@ -256,8 +295,16 @@ async function guard(event, functionName, opts = {}) {
 
   // ── RATE LIMIT ─────────────────────────────────────────────────────────────
   if (userId) {
-    const rl = await checkRateLimit(userId, functionName);
-    if (!rl.ok) return { statusCode: 429, headers: h, body: JSON.stringify({ error: rl.reason }) };
+    const rl = await checkRateLimit(userId, functionName, event.headers && (event.headers['x-forwarded-for'] || event.headers['X-Forwarded-For']));
+    if (!rl.ok) {
+      await recordAbuse(
+        event.headers && (event.headers['x-forwarded-for'] || event.headers['X-Forwarded-For']),
+        userId,
+        'rate-limit',
+        `Limite de taxa excedido para a função: ${functionName}`
+      );
+      return { statusCode: 429, headers: h, body: JSON.stringify({ error: rl.reason }) };
+    }
   }
 
   // ── TENANT VALIDATION ──────────────────────────────────────────────────────
