@@ -15,7 +15,7 @@ self.onmessage = function (event) {
   let stdout = '';
   let timer = null;
 
-  // Sandbox: expõe apenas console, sem window/document/localStorage
+  // Sandbox: expõe apenas console, sem acesso a window, document, localStorage, etc.
   const sandboxConsole = {
     log: function () {
       const parts = Array.prototype.map.call(arguments, function (a) {
@@ -46,6 +46,12 @@ self.onmessage = function (event) {
         return String(a);
       });
       stdout += 'DEBUG: ' + parts.join(' ') + '\n';
+    },
+    assert: function (condition, ...args) {
+      if (!condition) {
+        const message = args.length > 0 ? args.map(String).join(' ') : 'Assertion failed';
+        stdout += 'ASSERTION FAILED: ' + message + '\n';
+      }
     }
   };
 
@@ -57,14 +63,33 @@ self.onmessage = function (event) {
 
   try {
     // Função anônima com o código do usuário; apenas 'console' é injetado
-    var fn = new Function('console', code);
+    // O código roda em um ambiente restrito sem acesso a globais
+    var fn = new Function('console', '
+      "use strict";
+      try {
+        ' + code + '
+      } catch (e) {
+        console.error(e.message || String(e));
+        throw e;
+      }
+    ');
+    
     fn(sandboxConsole);
 
     clearTimeout(timer);
     self.postMessage({ stdout: stdout.replace(/\n$/, '') });
   } catch (err) {
     clearTimeout(timer);
-    self.postMessage({ error: err.message || String(err) });
+    // Captura erros de referência a objetos não permitidos
+    let errorMessage = err.message || String(err);
+    if (errorMessage.includes('is not defined') || 
+        errorMessage.includes('ReferenceError') ||
+        errorMessage.includes('window') ||
+        errorMessage.includes('document') ||
+        errorMessage.includes('localStorage')) {
+      errorMessage = 'Acesso não permitido a objeto global: ' + errorMessage;
+    }
+    self.postMessage({ error: errorMessage });
     try { self.close(); } catch (e) { /* ignora */ }
   }
 };
