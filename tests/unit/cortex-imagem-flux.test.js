@@ -19,3 +19,10 @@ test('generateImage usa o binding do Workers AI (FLUX) e devolve data URL', asyn
     assert.deepStrictEqual([r.ok, r.url], [true, 'data:image/jpeg;base64,QUJD']);
   } finally { globalThis.__NEXIA_AI__ = antes; }
 });
+
+test('#1657: a memória da conversa é gravada antes do "done" do stream', () => {
+  const src = require('fs').readFileSync(require('path').join(__dirname, '../../netlify/functions/cortex-chat.js'), 'utf8');
+  const salvar = src.indexOf('await memModule.save(effectiveUserId');
+  const done = src.indexOf("yield sse({ done: true, model: used");
+  assert.ok(salvar > 0 && done > 0 && salvar < done);
+});

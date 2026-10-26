@@ -488,11 +488,13 @@ exports.handler = async (event) => {
               yield 'data: [DONE]\n\n';
               return;
             }
+            // #1657: grava a memória ANTES do "done". O app para de ler no "done", e o código depois dele nunca rodava,
+            // então a conversa não era salva e o Cortex esquecia o que a pessoa tinha dito.
+            const nm = [{ role: 'user', content: message }, { role: 'assistant', content: fullText }];
+            if (typeof memModule.save === 'function') await memModule.save(effectiveUserId, [...(mem.history || []), ...nm], mem.summaries, tenantId, memModule.extractEntities ? memModule.extractEntities(nm, mem.entities) : {}, conversationId).catch(() => {});
+            cxLog(tenantId, userId, { type: 'cortex_execution', conversationId, intent: decision.type, layer, ms: Date.now() - start, modelUsed: used, stream: true, plan: usage.plan }).catch(() => {});
             yield sse({ done: true, model: used, intent: decision.type, actions: execActions, swarm: swarmOut, usage: { calls: usage.calls, limit: usage.limit, unlimited: !!usage.unlimited }, ...(projectCtx.mode === 'context' ? { project: { project_id: projectCtx.project.project_id, confidence: projectCtx.project.confidence } } : {}) });
             yield 'data: [DONE]\n\n';
-            const nm = [{ role: 'user', content: message }, { role: 'assistant', content: fullText }];
-            if (typeof memModule.save === 'function') memModule.save(userId, [...(mem.history || []), ...nm], mem.summaries, tenantId, memModule.extractEntities ? memModule.extractEntities(nm, mem.entities) : {}, conversationId).catch(() => {});
-            cxLog(tenantId, userId, { type: 'cortex_execution', conversationId, intent: decision.type, layer, ms: Date.now() - start, modelUsed: used, stream: true, plan: usage.plan }).catch(() => {});
           } finally {
             abort.abort();
           }
