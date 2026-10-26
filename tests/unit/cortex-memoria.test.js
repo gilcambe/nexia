@@ -1,10 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { db } from '../src/db.ts';
-import { Memory } from '../src/models/Memory.ts';
+import { db } from '../../src/db.ts';
 
+// Testes antigos mantidos para cobertura
+test('C6a - Verificação básica do módulo DB', () => {
+  assert.ok(db);
+});
+
+test('C6b - Método runMigration existe', () => {
+  assert.strictEqual(typeof db.runMigration, 'function');
+});
+
+test('C6c - Método insert e findById existem', () => {
+  assert.strictEqual(typeof db.insert, 'function');
+  assert.strictEqual(typeof db.findById, 'function');
+});
+
+// Novo teste obrigatório: insere e lê um registro da tabela cortex_memoria com sucesso
 test('cortex_memoria ORM insert and read', () => {
-  const memoryRecord: Memory = {
+  const memoryRecord = {
     uid: 'user-123',
     id: 'mem-001',
     texto: 'Teste de memória do Cortex',
