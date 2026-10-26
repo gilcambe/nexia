@@ -19,7 +19,7 @@ interface AuthContextType {
   loading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name?: string) => Promise<void>;
+  register: (email: string, password: string, name?: string, termsAccepted?: boolean) => Promise<void>;
   logout: () => Promise<void>;
   getToken: () => Promise<string | null>;
 }
@@ -65,7 +65,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const register = useCallback(async (email: string, password: string, name?: string) => {
+  const register = useCallback(async (email: string, password: string, name?: string, termsAccepted?: boolean) => {
     setError(null);
     try {
       const result = await initFirebase();
@@ -73,6 +73,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { createUserWithEmailAndPassword, updateProfile } = await import("firebase/auth");
       const cred = await createUserWithEmailAndPassword(result.auth, email, password);
       if (name && cred.user) await updateProfile(cred.user, { displayName: name });
+
+      if (cred.user) {
+        try {
+          const { getFirestore, doc, setDoc } = await import("firebase/firestore");
+          const db = getFirestore(result.app);
+          const acceptedAt = new Date().toISOString();
+          await setDoc(doc(db, "users", cred.user.uid), {
+            uid: cred.user.uid,
+            email: cred.user.email,
+            displayName: name || cred.user.displayName || cred.user.email,
+            tenantSlug: "guest",
+            role: "user",
+            termsAccepted: termsAccepted ?? true,
+            termsAcceptedAt: acceptedAt,
+            createdAt: acceptedAt,
+          }, { merge: true });
+        } catch (dbErr) {
+          console.warn("[AUTH] Erro ao gravar termos no perfil do Firestore:", dbErr);
+        }
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro no cadastro";
       setError(msg);
