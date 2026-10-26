@@ -2,12 +2,16 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/Layout/AppLayout';
 import AIChoiceSelector from '@/components/AIChoiceSelector';
+import Splashscreen from '@/components/Splashscreen';
+import ErrorMessage from '@/components/ErrorMessage';
 
 const CortexApp = () => {
   const navigate = useNavigate();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [selectedAI, setSelectedAI] = useState<'automatic' | 'fast' | 'strong'>('automatic');
   const [credits, setCredits] = useState<number>(100); // Valor inicial de créditos
+  const [isFirstVisit, setIsFirstVisit] = useState<boolean | null>(null);
+  const [iaError, setIaError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -21,6 +25,38 @@ const CortexApp = () => {
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Detectar primeira abertura do PWA para exibir a vinheta
+  useEffect(() => {
+    const firstVisit = localStorage.getItem('cortex-first-visit');
+    if (firstVisit === null) {
+      setIsFirstVisit(true);
+      localStorage.setItem('cortex-first-visit', 'false');
+    } else {
+      setIsFirstVisit(false);
+    }
+  }, []);
+
+  if (isFirstVisit === null) {
+    return null;
+  }
+
+  if (isFirstVisit) {
+    return <Splashscreen isFirstVisit={true} />;
+  }
+
+  if (iaError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+        <ErrorMessage
+          message={iaError}
+          onRetry={() => {
+            setIaError(null);
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <AppLayout>
