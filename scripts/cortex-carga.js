@@ -2,6 +2,7 @@
 'use strict';
 
 const fs = require('fs');
+const pLimit = require('p-limit');
 
 const BASE_URL =
   process.env.CORTEX_URL ||
@@ -93,19 +94,8 @@ async function requisicaoReal(indice) {
 }
 
 async function comConcorrencia(tarefas, limite) {
-  const resultados = new Array(tarefas.length);
-  let indice = 0;
-  async function trabalhar() {
-    while (indice < tarefas.length) {
-      const i = indice++;
-      resultados[i] = await tarefas[i]();
-    }
-  }
-  const workers = [];
-  for (let w = 0; w < Math.min(limite, tarefas.length); w++) {
-    workers.push(trabalhar());
-  }
-  await Promise.all(workers);
+  const limit = pLimit(limite);
+  const resultados = await Promise.all(tarefas.map((t) => limit(t)));
   return resultados;
 }
 
