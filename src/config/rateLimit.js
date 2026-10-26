@@ -1,3 +1,5 @@
+'use strict';
+
 module.exports = {
   windowMs: 10 * 1000, // 10 segundos
   max: 10, // 10 requisições / mensagens por janela
