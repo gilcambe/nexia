@@ -37,7 +37,7 @@ function percentil(valores, p) {
 async function requisicaoFalsa() {
   const atraso = 10 + Math.random() * 490; // 10-500 ms
   const inicio = Date.now();
-  await new Promise((r) => setTimeout(r, atraso));
+  await new Promise((resolve) => setTimeout(resolve, atraso));
   const total = Date.now() - inicio;
   return {
     ok: true,
@@ -95,7 +95,8 @@ async function requisicaoReal(indice) {
 
 async function main() {
   const { modo, pessoas } = parseArgs(process.argv);
-  const limit = pLimit(10);
+  const concorrencia = 10;
+  const limit = pLimit(concorrencia);
 
   const promessas = [];
   for (let i = 0; i < pessoas; i++) {
@@ -141,7 +142,7 @@ async function main() {
     timestamp: new Date().toISOString(),
     modo,
     pessoas,
-    concorrencia: 10,
+    concorrencia: concorrencia,
     p50: percentil(ttfbVals, 50),
     p95: percentil(ttfbVals, 95),
     totalTime: {
