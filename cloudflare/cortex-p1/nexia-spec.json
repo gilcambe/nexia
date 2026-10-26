@@ -1,0 +1,255 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex P1",
+    "tagline": "Gestão Inteligente de Clientes",
+    "photo_theme": "dashboard interface technology",
+    "description": "Gestão Inteligente de Clientes",
+    "folder": "cloudflare/cortex-p1",
+    "fonts": {
+      "heading": "Space Grotesk",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#595cd9",
+      "accent": "#ec4899",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "",
+      "email": "suporte@cortex-p1.com",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=cortex-p1&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "clientes",
+        "label": "Clientes",
+        "singular": "Cliente",
+        "fields": [
+          {
+            "key": "uid",
+            "label": "ID do Usuário",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "nome",
+            "label": "Nome Completo",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "plano",
+            "label": "Plano Atual",
+            "type": "select",
+            "options": [
+              "Gratis",
+              "Pro",
+              "Enterprise"
+            ],
+            "required": true
+          },
+          {
+            "key": "idioma",
+            "label": "Idioma",
+            "type": "select",
+            "options": [
+              "Português",
+              "Inglês",
+              "Espanhol"
+            ],
+            "required": true
+          },
+          {
+            "key": "criadoem",
+            "label": "Data de Criação",
+            "type": "date",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "uid": "user_8921",
+            "nome": "Roberto Mendes",
+            "email": "roberto.dev@startup.io",
+            "plano": "Pro",
+            "idioma": "Português",
+            "criadoem": ""
+          },
+          {
+            "uid": "user_3340",
+            "nome": "Ana Clara Souza",
+            "email": "ana.c.souza@gmail.com",
+            "plano": "Gratis",
+            "idioma": "Português",
+            "criadoem": ""
+          },
+          {
+            "uid": "user_7751",
+            "nome": "Carlos Eduardo",
+            "email": "carlos.tech@globalnet.com",
+            "plano": "Enterprise",
+            "idioma": "Inglês",
+            "criadoem": ""
+          },
+          {
+            "uid": "user_1122",
+            "nome": "Mariana Costa",
+            "email": "mari.costa@design.com",
+            "plano": "Pro",
+            "idioma": "Português",
+            "criadoem": ""
+          },
+          {
+            "uid": "user_5566",
+            "nome": "João Pedro",
+            "email": "jpereira@tech.com.br",
+            "plano": "Gratis",
+            "idioma": "Português",
+            "criadoem": ""
+          },
+          {
+            "uid": "user_9988",
+            "nome": "Juliana Lima",
+            "email": "juliana@analytics.org",
+            "plano": "Enterprise",
+            "idioma": "Espanhol",
+            "criadoem": ""
+          }
+        ]
+      },
+      {
+        "key": "logs",
+        "label": "Logs do Sistema",
+        "singular": "Log",
+        "fields": [
+          {
+            "key": "tipo",
+            "label": "Ação",
+            "type": "select",
+            "options": [
+              "Login",
+              "Atualização de Plano",
+              "Cadastro",
+              "Erro"
+            ],
+            "required": true
+          },
+          {
+            "key": "usuario",
+            "label": "Usuário",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "detalhes",
+            "label": "Detalhes",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Sucesso",
+              "Falha"
+            ],
+            "required": true
+          },
+          {
+            "key": "timestamp",
+            "label": "Data/Hora",
+            "type": "date",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "tipo": "Login",
+            "usuario": "admin",
+            "detalhes": "Acesso via IP 192.168.1.10",
+            "status": "Sucesso",
+            "timestamp": "2023-11-16 08:45"
+          },
+          {
+            "tipo": "Atualização de Plano",
+            "usuario": "user_8921",
+            "detalhes": "Upgrade para Enterprise",
+            "status": "Sucesso",
+            "timestamp": "2023-11-15 14:30"
+          },
+          {
+            "tipo": "Erro",
+            "usuario": "user_3340",
+            "detalhes": "Token expirado",
+            "status": "Falha",
+            "timestamp": "2023-11-15 09:15"
+          },
+          {
+            "tipo": "Cadastro",
+            "usuario": "user_7751",
+            "detalhes": "Novo cadastro realizado",
+            "status": "Sucesso",
+            "timestamp": "2023-11-14 18:20"
+          },
+          {
+            "tipo": "Login",
+            "usuario": "user_1122",
+            "detalhes": "Acesso via IP 10.0.0.5",
+            "status": "Sucesso",
+            "timestamp": "2023-11-14 11:00"
+          },
+          {
+            "tipo": "Erro",
+            "usuario": "user_5566",
+            "detalhes": "Email já cadastrado",
+            "status": "Falha",
+            "timestamp": "2023-11-13 16:45"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Dashboard",
+      "Clientes",
+      "Logs"
+    ]
+  },
+  "media": {}
+}
