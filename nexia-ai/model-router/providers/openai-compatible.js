@@ -5,6 +5,7 @@ const { ModelError, CODES } = require('../errors');
 const { withTimeout, sseData } = require('../messages');
 const { createKiloCatalog, isFree } = require('./kilo-catalog');
 const { getPlacar } = require('../cota');
+const { tools } = require('../../cortex/ferramentas');
 
 // max_output: teto aplicado ao max_tokens pedido. Os chamadores legados pediam até
 // 100000 tokens, e vários provedores recusam com 400 acima do próprio limite.
@@ -48,6 +49,10 @@ const PROVIDERS = Object.freeze({
 });
 
 const DEFAULT_TIMEOUT = 120000;
+
+// Quando um provedor não suporta tools e o pedido exige tools, encadeia
+// fallback para o próximo provedor gratuito (Groq → Gemini/Google).
+const FALLBACK_PROVIDERS = Object.freeze(['groq', 'google']);
 
 const AUTO = /^auto:(\d{1,2})$/;
 /** Estimativa conservadora de tokens de entrada (~3,5 caracteres por token em português e código). */
@@ -94,11 +99,19 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
     };
     if (req.temperature !== undefined) b.temperature = req.temperature;
     if (stream) { b.stream = true; if (cfg.usage_option) b.stream_options = { include_usage: true }; }
+    // Chamador passou tools explicitamente: se o provedor não suporta, erro UNSUPPORTED
+    // faz o router encadear fallback para o próximo provedor gratuito (Groq → Gemini etc.).
     if (req.tools && req.tools.length) {
-      if (!cfg.tools) throw new ModelError(CODES.UNSUPPORTED, `${id} não suporta tool_call neste adapter.`, { provider: id });
+      if (!cfg.tools) throw new ModelError(CODES.UNSUPPORTED, `${id}: provedor não suporta tools; encadeando fallback (Groq → Gemini etc.)`, { provider: id });
       b.tools = req.tools.map(t => ({ type: 'function', function: { name: t.name, description: t.description || '', parameters: t.input_schema } }));
       if (req.toolChoice) b.tool_choice = req.toolChoice === 'any' ? 'required' : { type: 'function', function: { name: req.toolChoice } };
+    } else if (cfg.tools) {
+      // Chamador não passou tools: garante tools na chamada quando o provedor suporta,
+      // usando a lista importada de ferramentas.js.
+      b.tools = tools.map(t => ({ type: 'function', function: { name: t.name, description: t.description || '', parameters: t.function.parameters } }));
     }
+    // Sem req.tools e provedor não suporta tools: não lança erro; a chamada prossegue
+    // sem tools. O router (chatWithFallback/streamWithFallback) decide se tenta outro provedor.
     return b;
   }
 
@@ -143,50 +156,85 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
     capabilities,
 
     async chat(model, req) {
-      const { res, t, model: real } = await post(model, req, false);
       try {
-        try { getPlacar().registrarCabecalhos({ provider: id, model }, res.headers); } catch {}
+        const { res, t, model: real } = await post(model, req, false);
+        try {
+          try { getPlacar().registrarCabecalhos({ provider: id, model }, res.headers); } catch {}
 
-        const d = await res.json();
-        const msg = (d.choices && d.choices[0] && d.choices[0].message) || {};
-        const tool_calls = (msg.tool_calls || []).map(tc => {
-          let input = {};
-          try { input = JSON.parse(tc.function.arguments || '{}'); } catch { input = { _raw: String(tc.function.arguments || '') }; }
-          return { id: tc.id, name: tc.function.name, input };
-        });
-        return { provider: id, model: d.model || real, text: msg.content || '', tool_calls, usage: usageOf(d.usage), stop_reason: (d.choices && d.choices[0] && d.choices[0].finish_reason) || null };
+          const d = await res.json();
+          const msg = (d.choices && d.choices[0] && d.choices[0].message) || {};
+          const tool_calls = (msg.tool_calls || []).map(tc => {
+            let input = {};
+            try { input = JSON.parse(tc.function.arguments || '{}'); } catch { input = { _raw: String(tc.function.arguments || '') }; }
+            return { id: tc.id, name: tc.function.name, input };
+          });
+          return { provider: id, model: d.model || real, text: msg.content || '', tool_calls, usage: usageOf(d.usage), stop_reason: (d.choices && d.choices[0] && d.choices[0].finish_reason) || null };
+        } catch (e) {
+          throw new ModelError(CODES.UPSTREAM, `${id} resposta inválida`, { provider: id });
+        } finally { t.done(); }
       } catch (e) {
-        throw new ModelError(CODES.UPSTREAM, `${id} resposta inválida`, { provider: id });
-      } finally { t.done(); }
+        if (e.code === CODES.UNSUPPORTED && req.tools && req.tools.length) {
+          for (const fbId of FALLBACK_PROVIDERS) {
+            if (fbId === id) continue;
+            const fbCfg = PROVIDERS[fbId];
+            if (!fbCfg || !fbCfg.tools) continue;
+            try {
+              const fbProvider = createOpenAICompatibleProvider(fbId, { env, fetchImpl, baseUrl });
+              return await fbProvider.chat(model, req);
+            } catch (fbErr) {
+              continue;
+            }
+          }
+        }
+        throw e;
+      }
     },
 
     async *stream(model, req) {
-      const { res, t } = await post(model, req, true);
-      try { getPlacar().registrarCabecalhos({ provider: id, model }, res.headers); } catch {}
-      let usage = { input_tokens: 0, output_tokens: 0 };
-      let stop = null;
       try {
-        for await (const data of sseData(res.body)) {
-          if (!data || data === '[DONE]') continue;
-          let p;
-          try { p = JSON.parse(data); } catch { continue; }
-          if (p.usage) usage = usageOf(p.usage);
-          const ch = p.choices && p.choices[0];
-          if (ch && ch.finish_reason) stop = ch.finish_reason;
-          const txt = ch && ch.delta && ch.delta.content;
-          if (txt) yield { type: 'text', text: txt };
+        const { res, t } = await post(model, req, true);
+        try { getPlacar().registrarCabecalhos({ provider: id, model }, res.headers); } catch {}
+        let usage = { input_tokens: 0, output_tokens: 0 };
+        let stop = null;
+        try {
+          for await (const data of sseData(res.body)) {
+            if (!data || data === '[DONE]') continue;
+            let p;
+            try { p = JSON.parse(data); } catch { continue; }
+            if (p.usage) usage = usageOf(p.usage);
+            const ch = p.choices && p.choices[0];
+            if (ch && ch.finish_reason) stop = ch.finish_reason;
+            const txt = ch && ch.delta && ch.delta.content;
+            if (txt) yield { type: 'text', text: txt };
+          }
+          yield { type: 'done', usage, stop_reason: stop, tool_calls: [] };
+        } catch (e) {
+          if (e instanceof ModelError) throw e;
+          if (t.signal.aborted) throw new ModelError(CODES.ABORTED, `Stream de ${id} cancelado ou expirado.`, { provider: id });
+          throw new ModelError(CODES.UPSTREAM, `${id} stream interrompido`, { provider: id });
+        } finally {
+          t.done();
+          try { await res.body.cancel(); } catch { /* já consumido */ }
         }
-        yield { type: 'done', usage, stop_reason: stop, tool_calls: [] };
       } catch (e) {
-        if (e instanceof ModelError) throw e;
-        if (t.signal.aborted) throw new ModelError(CODES.ABORTED, `Stream de ${id} cancelado ou expirado.`, { provider: id });
-        throw new ModelError(CODES.UPSTREAM, `${id} stream interrompido`, { provider: id });
-      } finally {
-        t.done();
-        try { await res.body.cancel(); } catch { /* já consumido */ }
+        if (e.code === CODES.UNSUPPORTED && req.tools && req.tools.length) {
+          for (const fbId of FALLBACK_PROVIDERS) {
+            if (fbId === id) continue;
+            const fbCfg = PROVIDERS[fbId];
+            if (!fbCfg || !fbCfg.tools) continue;
+            try {
+              const fbProvider = createOpenAICompatibleProvider(fbId, { env, fetchImpl, baseUrl });
+              yield* fbProvider.stream(model, req);
+              return;
+            } catch (fbErr) {
+              continue;
+            }
+          }
+        }
+        throw e;
       }
     },
   };
 }
 
-module.exports = { createOpenAICompatibleProvider, PROVIDERS, estimateInputTokens };
+module.exports = { createOpenAICompatibleProvider, PROVIDERS, estimateInputTokens, tools };
