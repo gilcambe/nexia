@@ -3,6 +3,9 @@ import assert from 'node:assert';
 import { Miniflare } from 'miniflare';
 import jwt from 'jsonwebtoken';
 
+// Chave de teste simulada
+const TEST_SECRET = 'test-secret-key-for-jwt-signing';
+
 // Configuração do Miniflare para testes
 const mf = new Miniflare({
   kvNamespaces: ['TEST'],
