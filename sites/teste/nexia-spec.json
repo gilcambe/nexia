@@ -55,7 +55,7 @@
         },
         "cta2": {
           "label": "Fale conosco",
-          "href": "#contato"
+          "href": "#informacoes-de-contato"
         },
         "image_query": "retail store interior",
         "video_query": ""
@@ -253,7 +253,7 @@
         "subtitle": "Estamos esperando por você!",
         "cta": {
           "label": "Ver mapa",
-          "href": "#contato"
+          "href": "#informacoes-de-contato"
         }
       },
       {
@@ -283,46 +283,6 @@
       "credit": "Computer and Consumer Electronics store in Ghana — oneVillage Initiative (BY-SA 2.0, via Openverse)",
       "provider": "openverse"
     },
-    "s2.about": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Modern_retail_stores%2C_Hexham_-_geograph.org.uk_-_4937635.jpg/1280px-Modern_retail_stores%2C_Hexham_-_geograph.org.uk_-_4937635.jpg",
-      "width": 1280,
-      "height": 960,
-      "alt": "Modern retail stores, Hexham - geograph.org.uk - 4937635",
-      "credit": "Modern retail stores, Hexham - geograph.org.uk - 4937635 — Graham Robson (BY-SA 2.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s3.g3": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Kiwi_on_the_store_counter.jpg/1280px-Kiwi_on_the_store_counter.jpg",
-      "width": 1280,
-      "height": 720,
-      "alt": "Kiwi on the store counter",
-      "credit": "Kiwi on the store counter — JustKronos (CC0 1.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s3.g4": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Signage_for_Brooklands_Retail_Park_-_geograph.org.uk_-_5819830.jpg/1280px-Signage_for_Brooklands_Retail_Park_-_geograph.org.uk_-_5819830.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 960,
-      "alt": "Signage for Brooklands Retail Park",
-      "credit": "David Smith (CC BY-SA 2.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s3.g5": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/DLT_Department_Store_Entrance.jpg/1280px-DLT_Department_Store_Entrance.jpg",
-      "width": 1280,
-      "height": 848,
-      "alt": "DLT Department Store Entrance",
-      "credit": "DLT Department Store Entrance — Florstein (WikiPhotoSpace) (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s5.m1": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/SMALL_RETAIL_BUSINESSES_ON_ST._CLAUDE_AVENUE_-_NARA_-_546034.jpg/1280px-SMALL_RETAIL_BUSINESSES_ON_ST._CLAUDE_AVENUE_-_NARA_-_546034.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 865,
-      "alt": "SMALL RETAIL BUSINESSES ON ST. CLAUDE AVENUE - NARA - 546034",
-      "credit": "John Messina (Public domain, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
     "s1.item1": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/A_Lacoste_retail_store_in_Delaware%2C_United_States.jpg/1280px-A_Lacoste_retail_store_in_Delaware%2C_United_States.jpg",
       "width": 1280,
@@ -345,6 +305,14 @@
       "height": 853,
       "alt": "File:Sprint retail store frontage, New Mexico.jpg",
       "credit": "File:Sprint retail store frontage, New Mexico.jpg — Chris Potter, stockmonkeys.com (BY 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s2.about": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/Modern_retail_stores%2C_Hexham_-_geograph.org.uk_-_4937635.jpg/1280px-Modern_retail_stores%2C_Hexham_-_geograph.org.uk_-_4937635.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "Modern retail stores, Hexham - geograph.org.uk - 4937635",
+      "credit": "Modern retail stores, Hexham - geograph.org.uk - 4937635 — Graham Robson (BY-SA 2.0, via Openverse)",
       "provider": "openverse"
     },
     "s3.g0": {
@@ -371,6 +339,30 @@
       "credit": "Camera World's retail store - downtown Portland, Oregon (2015) — Steve Morgan (BY-SA 3.0, via Openverse)",
       "provider": "openverse"
     },
+    "s3.g3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Kiwi_on_the_store_counter.jpg/1280px-Kiwi_on_the_store_counter.jpg",
+      "width": 1280,
+      "height": 720,
+      "alt": "Kiwi on the store counter",
+      "credit": "Kiwi on the store counter — JustKronos (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g4": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Signage_for_Brooklands_Retail_Park_-_geograph.org.uk_-_5819830.jpg/1280px-Signage_for_Brooklands_Retail_Park_-_geograph.org.uk_-_5819830.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Signage for Brooklands Retail Park",
+      "credit": "David Smith (CC BY-SA 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g5": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/DLT_Department_Store_Entrance.jpg/1280px-DLT_Department_Store_Entrance.jpg",
+      "width": 1280,
+      "height": 848,
+      "alt": "DLT Department Store Entrance",
+      "credit": "DLT Department Store Entrance — Florstein (WikiPhotoSpace) (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
     "s3.g6": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a1/Playstation_5_being_displayed_in_electronics_retail_store_-_2.jpg/1280px-Playstation_5_being_displayed_in_electronics_retail_store_-_2.jpg",
       "width": 1280,
@@ -378,6 +370,14 @@
       "alt": "Playstation 5 being displayed in electronics retail store - 2",
       "credit": "Playstation 5 being displayed in electronics retail store - 2 — KKPCW (BY-SA 4.0, via Openverse)",
       "provider": "openverse"
+    },
+    "s5.m1": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/SMALL_RETAIL_BUSINESSES_ON_ST._CLAUDE_AVENUE_-_NARA_-_546034.jpg/1280px-SMALL_RETAIL_BUSINESSES_ON_ST._CLAUDE_AVENUE_-_NARA_-_546034.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 865,
+      "alt": "SMALL RETAIL BUSINESSES ON ST. CLAUDE AVENUE - NARA - 546034",
+      "credit": "John Messina (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
     }
   }
 }
