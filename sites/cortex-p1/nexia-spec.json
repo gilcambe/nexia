@@ -2,9 +2,9 @@
   "spec": {
     "kind": "system",
     "name": "Cortex-p1",
-    "tagline": "Painel de cadastros e gestão do sistema",
-    "photo_theme": "dashboard business",
-    "description": "Painel de cadastros e gestão do sistema com integração Firebase",
+    "tagline": "Painel de cadastros e controle empresarial",
+    "photo_theme": "business dashboard",
+    "description": "Painel de cadastros e controle empresarial",
     "folder": "sites/cortex-p1",
     "fonts": {
       "heading": "Plus Jakarta Sans",
@@ -70,8 +70,8 @@
             "required": true
           },
           {
-            "key": "documento",
-            "label": "CPF / CNPJ",
+            "key": "cidade",
+            "label": "Cidade",
             "type": "text",
             "options": [],
             "required": true
@@ -82,9 +82,163 @@
             "type": "select",
             "options": [
               "gratis",
-              "pro",
-              "enterprise"
+              "basico",
+              "premium"
             ],
+            "required": true
+          },
+          {
+            "key": "observacoes",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Ana Souza",
+            "email": "ana.souza@email.com",
+            "telefone": "(11) 91234-5678",
+            "cidade": "São Paulo",
+            "plano": "premium",
+            "observacoes": "Cliente desde 2023, prefere contato por e-mail."
+          },
+          {
+            "nome": "Bruno Lima",
+            "email": "bruno.lima@email.com",
+            "telefone": "(21) 92345-6789",
+            "cidade": "Rio de Janeiro",
+            "plano": "basico",
+            "observacoes": "Aguardando liberação de limite."
+          },
+          {
+            "nome": "Carla Dias",
+            "email": "carla.dias@email.com",
+            "telefone": "(31) 93456-7890",
+            "cidade": "Belo Horizonte",
+            "plano": "gratis",
+            "observacoes": "Cadastro realizado via site."
+          },
+          {
+            "nome": "Davi Reis",
+            "email": "davi.reis@email.com",
+            "telefone": "(41) 94567-8901",
+            "cidade": "Curitiba",
+            "plano": "premium",
+            "observacoes": "Contrato anual ativo."
+          },
+          {
+            "nome": "Elena Martins",
+            "email": "elena.martins@email.com",
+            "telefone": "(51) 95678-9012",
+            "cidade": "Porto Alegre",
+            "plano": "basico",
+            "observacoes": "Prefere contato telefônico."
+          }
+        ]
+      },
+      {
+        "key": "produtos",
+        "label": "Produtos",
+        "singular": "Produto",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          },
+          {
+            "key": "preco",
+            "label": "Preço",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "estoque",
+            "label": "Estoque",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "categoria",
+            "label": "Categoria",
+            "type": "select",
+            "options": [
+              "Eletrônicos",
+              "Móveis",
+              "Vestuário",
+              "Alimentos"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Fone de ouvido sem fio",
+            "descricao": "Cancelamento de ruído e 30h de bateria",
+            "preco": "499,00",
+            "estoque": "120",
+            "categoria": "Eletrônicos"
+          },
+          {
+            "nome": "Cadeira ergonômica",
+            "descricao": "Apoio lombar e ajuste de altura",
+            "preco": "899,00",
+            "estoque": "45",
+            "categoria": "Móveis"
+          },
+          {
+            "nome": "Camiseta algodão orgânico",
+            "descricao": "Modelagem tradicional, várias cores",
+            "preco": "79,90",
+            "estoque": "200",
+            "categoria": "Vestuário"
+          },
+          {
+            "nome": "Café especial torrado médio",
+            "descricao": "Pacote de 500g, notas de caramelo",
+            "preco": "32,50",
+            "estoque": "300",
+            "categoria": "Alimentos"
+          }
+        ]
+      },
+      {
+        "key": "pedidos",
+        "label": "Pedidos",
+        "singular": "Pedido",
+        "fields": [
+          {
+            "key": "cliente",
+            "label": "Cliente",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor",
+            "type": "money",
+            "options": [],
             "required": true
           },
           {
@@ -92,102 +246,70 @@
             "label": "Status",
             "type": "select",
             "options": [
-              "ativo",
-              "inativo",
-              "pendente"
+              "Pendente",
+              "Pago",
+              "Enviado",
+              "Entregue",
+              "Cancelado"
             ],
             "required": true
           },
           {
-            "key": "limite_acesso",
-            "label": "Limite de Acessos",
-            "type": "number",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "criado_em",
-            "label": "Criado em",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "idioma",
-            "label": "Idioma",
+            "key": "forma_pagamento",
+            "label": "Forma de pagamento",
             "type": "select",
             "options": [
-              "pt",
-              "en",
-              "es"
+              "Cartão de crédito",
+              "PIX",
+              "Boleto",
+              "Transferência"
             ],
             "required": true
           }
         ],
         "sample": [
           {
-            "nome": "Ana Souza",
-            "email": "ana.souza@email.com.br",
-            "telefone": "(11) 98765-4321",
-            "documento": "123.456.789-00",
-            "plano": "pro",
-            "status": "ativo",
-            "limite_acesso": "50",
-            "criado_em": "2026-09-15",
-            "idioma": "pt"
+            "cliente": "Ana Souza",
+            "data": "2026-10-01",
+            "valor": "499,00",
+            "status": "Entregue",
+            "forma_pagamento": "Cartão de crédito"
           },
           {
-            "nome": "Bruno Lima",
-            "email": "bruno.lima@email.com.br",
-            "telefone": "(21) 91234-5678",
-            "documento": "987.654.321-00",
-            "plano": "gratis",
-            "status": "ativo",
-            "limite_acesso": "10",
-            "criado_em": "2026-09-20",
-            "idioma": "pt"
+            "cliente": "Bruno Lima",
+            "data": "2026-10-03",
+            "valor": "899,00",
+            "status": "Enviado",
+            "forma_pagamento": "PIX"
           },
           {
-            "nome": "Carla Dias",
-            "email": "carla.dias@empresa.com.br",
-            "telefone": "(31) 99887-7665",
-            "documento": "11.222.333/0001-44",
-            "plano": "enterprise",
-            "status": "ativo",
-            "limite_acesso": "500",
-            "criado_em": "2026-08-10",
-            "idioma": "pt"
+            "cliente": "Carla Dias",
+            "data": "2026-10-04",
+            "valor": "79,90",
+            "status": "Pago",
+            "forma_pagamento": "Cartão de crédito"
           },
           {
-            "nome": "Davi Reis",
-            "email": "davi.reis@email.com.br",
-            "telefone": "(41) 95555-1234",
-            "documento": "456.789.123-00",
-            "plano": "pro",
-            "status": "pendente",
-            "limite_acesso": "50",
-            "criado_em": "2026-09-25",
-            "idioma": "pt"
+            "cliente": "Davi Reis",
+            "data": "2026-10-05",
+            "valor": "32,50",
+            "status": "Pendente",
+            "forma_pagamento": "Boleto"
           },
           {
-            "nome": "Elena Martins",
-            "email": "elena.martins@startup.io",
-            "telefone": "(51) 90000-1111",
-            "documento": "22.333.444/0001-55",
-            "plano": "gratis",
-            "status": "inativo",
-            "limite_acesso": "10",
-            "criado_em": "2026-07-05",
-            "idioma": "pt"
+            "cliente": "Elena Martins",
+            "data": "2026-10-06",
+            "valor": "999,00",
+            "status": "Cancelado",
+            "forma_pagamento": "Transferência"
           }
         ]
       }
     ],
     "modules": [
       "Clientes",
-      "Planos",
-      "Acessos",
-      "Relatórios"
+      "Produtos",
+      "Pedidos"
     ]
   },
   "media": {}
