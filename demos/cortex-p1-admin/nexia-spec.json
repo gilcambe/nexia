@@ -1,0 +1,284 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex-p1 Admin",
+    "tagline": "Monitoramento e infraestrutura do Cortex-p1",
+    "photo_theme": "",
+    "description": "Monitoramento e infraestrutura do Cortex-p1",
+    "folder": "demos/cortex-p1-admin",
+    "fonts": {
+      "heading": "Space Grotesk",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#595cd9",
+      "accent": "#10b981",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 98888-7777",
+      "email": "admin@cortex-p1.internal",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=cortex-p1-admin&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "provedores",
+        "label": "Provedores",
+        "singular": "Provedor",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome do Provedor",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Degradado",
+              "Inativo"
+            ],
+            "required": true
+          },
+          {
+            "key": "cota_usada",
+            "label": "Cota Usada Hoje",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "latencia",
+            "label": "Latência Média (ms)",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "atualizado_em",
+            "label": "Última Verificação",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "OpenAI GPT-4o",
+            "status": "Ativo",
+            "cota_usada": "142500",
+            "latencia": "320",
+            "atualizado_em": "2026-06-06 14:32"
+          },
+          {
+            "nome": "Anthropic Claude 3.5",
+            "status": "Ativo",
+            "cota_usada": "98200",
+            "latencia": "285",
+            "atualizado_em": "2026-06-06 14:31"
+          },
+          {
+            "nome": "Google Gemini Pro",
+            "status": "Degradado",
+            "cota_usada": "45100",
+            "latencia": "780",
+            "atualizado_em": "2026-06-06 14:30"
+          },
+          {
+            "nome": "DeepSeek V3",
+            "status": "Ativo",
+            "cota_usada": "210400",
+            "latencia": "190",
+            "atualizado_em": "2026-06-06 14:32"
+          }
+        ]
+      },
+      {
+        "key": "filas",
+        "label": "Filas de Processamento",
+        "singular": "Fila",
+        "fields": [
+          {
+            "key": "nome_fila",
+            "label": "Nome da Fila",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tamanho",
+            "label": "Tamanho Atual",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "taxa_mpm",
+            "label": "Mensagens/Minuto (MPM)",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "workers",
+            "label": "Workers Ativos",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "estado",
+            "label": "Estado",
+            "type": "select",
+            "options": [
+              "Normal",
+              "Congestionada",
+              "Pausada"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome_fila": "priority-jobs",
+            "tamanho": "3",
+            "taxa_mpm": "120",
+            "workers": "8",
+            "estado": "Normal"
+          },
+          {
+            "nome_fila": "default-queue",
+            "tamanho": "47",
+            "taxa_mpm": "450",
+            "workers": "16",
+            "estado": "Normal"
+          },
+          {
+            "nome_fila": "webhook-dispatch",
+            "tamanho": "312",
+            "taxa_mpm": "890",
+            "workers": "12",
+            "estado": "Congestionada"
+          },
+          {
+            "nome_fila": "analytics-sync",
+            "tamanho": "0",
+            "taxa_mpm": "15",
+            "workers": "2",
+            "estado": "Normal"
+          }
+        ]
+      },
+      {
+        "key": "logs_erros",
+        "label": "Logs de Erros",
+        "singular": "Log de Erro",
+        "fields": [
+          {
+            "key": "horario",
+            "label": "Horário",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "modulo",
+            "label": "Módulo / Provedor",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "codigo",
+            "label": "Código HTTP",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "mensagem",
+            "label": "Mensagem de Erro",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "severidade",
+            "label": "Severidade",
+            "type": "select",
+            "options": [
+              "Baixa",
+              "Média",
+              "Alta",
+              "Crítica"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "horario": "14:28:12",
+            "modulo": "Google Gemini Pro",
+            "codigo": "504",
+            "mensagem": "Gateway Timeout ao aguardar resposta do upstream LLM.",
+            "severidade": "Alta"
+          },
+          {
+            "horario": "14:15:40",
+            "modulo": "webhook-dispatch",
+            "codigo": "429",
+            "mensagem": "Too Many Requests na API destino do cliente XYZ.",
+            "severidade": "Média"
+          },
+          {
+            "horario": "13:59:02",
+            "modulo": "Database Pool",
+            "codigo": "500",
+            "mensagem": "Connection pool exhausted temporariamente.",
+            "severidade": "Crítica"
+          },
+          {
+            "horario": "13:4218",
+            "modulo": "Auth Service",
+            "codigo": "401",
+            "mensagem": "Token JWT expirado na tentativa de refresh.",
+            "severidade": "Baixa"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Status em Tempo Real",
+      "Métricas de Provedores",
+      "Gestão de Filas",
+      "Auditoria de Erros"
+    ]
+  },
+  "media": {}
+}
