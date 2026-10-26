@@ -198,6 +198,9 @@ function createHandler(deps = {}) {
     return json(event, 405, { error: 'Método não permitido.' });
   }
 
+  let maquinas = null;
+  const getMaquinas = () => maquinas || (maquinas = require('../maquinas').createMaquinas({ env: deps.env || process.env, driver: deps.maquinasDriver }));
+
   return async function handler(event) {
     if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers: headersFor(event), body: '' };
     try {
@@ -210,6 +213,9 @@ function createHandler(deps = {}) {
       if ((event.path || '').replace(/\/+$/, '') === '/api/nexia/bridge/events') {
         return await bridgeEvents(event);
       }
+      // #1846: PCs do dono (token próprio NEXIA_MAQUINA_TOKEN, não de pessoa).
+      const doPc = await getMaquinas().rotaDoPc(event, json);
+      if (doPc) return doPc;
       const auth = await verify(event);
       if (!auth.ok) return json(event, 401, { error: auth.reason || 'Não autenticado.' });
 
@@ -218,6 +224,11 @@ function createHandler(deps = {}) {
       const q = event.queryStringParameters || {};
       const isMaster = auth.role === 'master';
 
+      if (parts[0] === 'maquinas' && parts.length === 1 && method === 'GET') {
+        if (!isMaster) return json(event, 403, { error: 'Só master.' });
+        const m = getMaquinas();
+        return json(event, 200, { ligado: m.ligado(), maquinas: m.ligado() ? await m.listar() : [] });
+      }
       if (parts[0] === 'me' && parts.length === 1 && method === 'GET') {
         return json(event, 200, { uid: auth.uid, role: auth.role, tenantSlug: auth.tenantSlug || (isMaster ? 'nexia' : null),
           canUseVault: isMaster || (auth.role === 'admin' && !!auth.tenantSlug) });
