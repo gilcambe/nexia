@@ -25,7 +25,7 @@ export interface Divulga {
   melhorTema?: string;
 }
 export type Situacao = "ok" | "erro" | "desligado";
-export interface Fornecedor { id: string; nome: string; grupo: string; paraQue: string; gratis: string; link: string; situacao: Situacao; quando: string | null }
+export interface Fornecedor { id: string; nome: string; grupo: string; paraQue: string; gratis: string; link: string; situacao: Situacao; quando: string | null; chave?: string | null; chaveEstado?: "existe" | "falta" | null }
 export interface Personal { email: string; plano: string; faixa: number; situacao: "isento" | "pagando" | "teste" | "vencido"; desde: number; gratisAte?: number; diasRestantes?: number }
 export interface PixPendente { id: string; uid: string; email: string; nome?: string; plano: string; valor: number; em: number; dias: number }
 export interface UsoIaProvedor { provedor: string; usado: number; limite: number; pct: number }
