@@ -1,0 +1,283 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex Status Monitor",
+    "tagline": "Monitoramento em tempo real do seu sistema",
+    "photo_theme": "",
+    "description": "Monitoramento em tempo real do seu sistema",
+    "folder": "cortex-p1/status",
+    "fonts": {
+      "heading": "Plus Jakarta Sans",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2f68c5",
+      "accent": "#10b981",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#1f2937"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 90000-0000",
+      "email": "admin@cortex-p1.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=status&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "provedores",
+        "label": "Provedores",
+        "singular": "Provedor",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cota_usada",
+            "label": "Cota Usada (GB)",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cota_total",
+            "label": "Cota Total (GB)",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "porcentagem_usada",
+            "label": "Uso (%)",
+            "type": "number",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "AWS",
+            "cota_usada": "45.2",
+            "cota_total": "100",
+            "porcentagem_usada": "45.2"
+          },
+          {
+            "nome": "Google Cloud",
+            "cota_usada": "78.5",
+            "cota_total": "100",
+            "porcentagem_usada": "78.5"
+          },
+          {
+            "nome": "Azure",
+            "cota_usada": "32.1",
+            "cota_total": "100",
+            "porcentagem_usada": "32.1"
+          },
+          {
+            "nome": "Oracle",
+            "cota_usada": "89.7",
+            "cota_total": "100",
+            "porcentagem_usada": "89.7"
+          }
+        ]
+      },
+      {
+        "key": "mensagens",
+        "label": "Mensagens",
+        "singular": "Mensagem",
+        "fields": [
+          {
+            "key": "minuto",
+            "label": "Minuto",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "quantidade",
+            "label": "Quantidade",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "timestamp",
+            "label": "Timestamp",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "minuto": "09:00",
+            "quantidade": "125",
+            "timestamp": "2026-10-06 09:00:00"
+          },
+          {
+            "minuto": "09:01",
+            "quantidade": "142",
+            "timestamp": "2026-10-06 09:01:00"
+          },
+          {
+            "minuto": "09:02",
+            "quantidade": "98",
+            "timestamp": "2026-10-06 09:02:00"
+          },
+          {
+            "minuto": "09:03",
+            "quantidade": "156",
+            "timestamp": "2026-10-06 09:03:00"
+          }
+        ]
+      },
+      {
+        "key": "fila",
+        "label": "Fila",
+        "singular": "Item",
+        "fields": [
+          {
+            "key": "tamanho",
+            "label": "Tamanho",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tempo_medio_espera",
+            "label": "Tempo Médio (seg)",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "timestamp",
+            "label": "Timestamp",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "tamanho": "42",
+            "tempo_medio_espera": "12.5",
+            "timestamp": "2026-10-06 09:00:00"
+          },
+          {
+            "tamanho": "38",
+            "tempo_medio_espera": "10.2",
+            "timestamp": "2026-10-06 09:01:00"
+          },
+          {
+            "tamanho": "45",
+            "tempo_medio_espera": "15.3",
+            "timestamp": "2026-10-06 09:02:00"
+          },
+          {
+            "tamanho": "51",
+            "tempo_medio_espera": "18.7",
+            "timestamp": "2026-10-06 09:03:00"
+          }
+        ]
+      },
+      {
+        "key": "erros",
+        "label": "Erros",
+        "singular": "Erro",
+        "fields": [
+          {
+            "key": "tipo",
+            "label": "Tipo",
+            "type": "select",
+            "options": [
+              "500",
+              "404",
+              "403",
+              "400",
+              "Timeout"
+            ],
+            "required": true
+          },
+          {
+            "key": "quantidade",
+            "label": "Quantidade",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "timestamp",
+            "label": "Timestamp",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "tipo": "500",
+            "quantidade": "3",
+            "timestamp": "2026-10-06 08:30:00",
+            "descricao": "Erro interno no servidor"
+          },
+          {
+            "tipo": "404",
+            "quantidade": "12",
+            "timestamp": "2026-10-06 08:45:00",
+            "descricao": "Página não encontrada"
+          },
+          {
+            "tipo": "403",
+            "quantidade": "5",
+            "timestamp": "2026-10-06 08:50:00",
+            "descricao": "Acesso negado"
+          },
+          {
+            "tipo": "Timeout",
+            "quantidade": "7",
+            "timestamp": "2026-10-06 09:00:00",
+            "descricao": "Tempo de espera excedido"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Monitoramento",
+      "Provedores",
+      "Filas",
+      "Erros"
+    ]
+  },
+  "media": {}
+}
