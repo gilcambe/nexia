@@ -77,6 +77,27 @@ function createHandler(deps = {}) {
           const r = await gh.pedirAoCortex(titulo, texto, auth.email || 'admin');
           return res(200, { ok: true, ...r, mensagem: 'Pedido entregue ao Cortex (tarefa #' + r.numero + ').' });
         }
+        if (body.acao === 'confirmar_pix' || body.acao === 'recusar_pix') {
+          const pedidoId = String(body.id || body.pedidoId || '').trim();
+          if (!pedidoId) return res(400, { error: 'ID do pedido é obrigatório.' });
+          const db = getDb();
+          const docRef = db.collection('bc_acesso_pedidos').doc(pedidoId);
+          const docSnap = await docRef.get();
+          if (!docSnap.exists) return res(404, { error: 'Pedido Pix não encontrado.' });
+          const p = docSnap.data() || {};
+          if (body.acao === 'confirmar_pix') {
+            const { liberarAcesso } = require('./body-coach/acesso');
+            const dias = Number(p.dias) || (p.plano === 'anual' ? 365 : 30);
+            const valor = Number(p.valor) || 0;
+            const uid = p.uid || pedidoId;
+            await liberarAcesso(db, uid, dias, Date.now(), { valor });
+            await docRef.set({ status: 'confirmado', confirmadoEm: Date.now(), confirmadoPor: auth.email || 'admin' }, { merge: true });
+            return res(200, { ok: true, mensagem: 'Pix confirmado com sucesso e plano ativado.' });
+          } else {
+            await docRef.set({ status: 'recusado', recusadoEm: Date.now(), recusadoPor: auth.email || 'admin' }, { merge: true });
+            return res(200, { ok: true, mensagem: 'Pix recusado com sucesso.' });
+          }
+        }
         return res(400, { error: 'Ação desconhecida.' });
       }
 

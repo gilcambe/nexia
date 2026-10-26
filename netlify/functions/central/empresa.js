@@ -17,16 +17,73 @@ function fornecedores(lista, env, robos = []) {
 }
 
 /** Clientes da NEXIA: empresas com painel (agendas) e personais que usam o Body Coach. */
-async function clientes(db, agendas, agora = Date.now()) {
+async function clientes(db, agendas, agora = Date.now(), opts = {}) {
   const empresas = Object.entries(agendas).filter(([, c]) => !c.codigo_sempre)
     .map(([site, c]) => ({ site, nome: c.nome || site, leilao: c.leilao === true }));
   const snap = await db.collection('bc_acesso').where('tipo', '==', 'coach').limit(200).get();
-  const personais = snap.docs.map((d) => d.data()).map((x) => ({
-    email: x.email || '', plano: x.plano || '', faixa: x.faixa || 0,
-    situacao: x.isento ? 'isento' : x.pagoAte > agora ? 'pagando' : x.gratisAte > agora ? 'teste' : 'vencido',
-    desde: x.inicio || 0,
-  })).sort((a, b) => b.desde - a.desde);
-  return { empresas, personais };
+  const personais = snap.docs.map((d) => d.data()).map((x) => {
+    const gratisAte = x.gratisAte || 0;
+    const diasRestantes = gratisAte > agora ? Math.ceil((gratisAte - agora) / DIA) : 0;
+    return {
+      email: x.email || '', plano: x.plano || '', faixa: x.faixa || 0,
+      situacao: x.isento ? 'isento' : x.pagoAte > agora ? 'pagando' : gratisAte > agora ? 'teste' : 'vencido',
+      desde: x.inicio || 0,
+      gratisAte,
+      diasRestantes,
+    };
+  }).sort((a, b) => b.desde - a.desde);
+
+  // Pix aguardando confirmação (pedidos pendentes em bc_acesso_pedidos)
+  let pixAguardando = [];
+  try {
+    const pSnap = await db.collection('bc_acesso_pedidos').orderBy('em', 'desc').limit(50).get();
+    pixAguardando = pSnap.docs
+      .map((doc) => ({ id: doc.id, ...doc.data() }))
+      .filter((p) => !p.status || p.status === 'pendente')
+      .map((p) => ({
+        id: p.id,
+        uid: p.uid || '',
+        email: p.email || '',
+        nome: p.nome || '',
+        plano: p.plano || 'mensal',
+        valor: Number(p.valor) || 0,
+        em: p.em || 0,
+        dias: p.dias || (p.plano === 'anual' ? 365 : 30),
+      }));
+  } catch { /* se nao existir collection, segue array vazio */ }
+
+  // Receita do mês (pagamentos confirmados) e uso por cliente
+  let receitaMes = 0;
+  const mesAtual = new Date(agora - 3 * 3600000).toISOString().slice(0, 7);
+  try {
+    const pagSnap = await db.collection('bc_acesso_pagamentos').where('mes', '==', mesAtual).limit(500).get();
+    receitaMes = pagSnap.docs.reduce((tot, doc) => tot + (Number(doc.data().valor) || 0), 0);
+  } catch { /* se falhar, fica 0 */ }
+
+  // Uso de IA do mês por cliente e por provedor
+  let usoIa = { porCliente: [], porProvedor: [], frear80: false };
+  try {
+    const env = opts.env || process.env;
+    const cotasModule = opts.cotasModule || require('../../lib/cotas');
+    const med = await cotasModule.medir(env, { fetchImpl: opts.fetchImpl }).catch(() => null);
+    if (med) {
+      const iaItem = med.itens.find((i) => i.id === 'ia');
+      const pct = iaItem ? iaItem.pct || 0 : 0;
+      usoIa.frear80 = pct >= 80;
+      usoIa.porProvedor.push({ provedor: 'Workers AI', usado: iaItem?.usado || 0, limite: iaItem?.limite || 10000, pct });
+    }
+
+    // Uso de IA por cliente (leitura de registros em bc_uso_ia se houver)
+    const usoSnap = await db.collection('bc_uso_ia').where('mes', '==', mesAtual).limit(100).get().catch(() => null);
+    if (usoSnap && !usoSnap.empty) {
+      usoIa.porCliente = usoSnap.docs.map((d) => {
+        const x = d.data();
+        return { email: x.email || d.id, requisicoes: Number(x.requisicoes) || 0, tokens: Number(x.tokens) || 0 };
+      });
+    }
+  } catch { /* fallback gracioso */ }
+
+  return { empresas, personais, pixAguardando, usoIa, receitaMes };
 }
 
 /** Contatos interessados (leads) de todos os sites e apps: quantos, de onde e os mais novos. */

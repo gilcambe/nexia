@@ -26,7 +26,11 @@ export interface Divulga {
 }
 export type Situacao = "ok" | "erro" | "desligado";
 export interface Fornecedor { id: string; nome: string; grupo: string; paraQue: string; gratis: string; link: string; situacao: Situacao; quando: string | null }
-export interface Personal { email: string; plano: string; faixa: number; situacao: "isento" | "pagando" | "teste" | "vencido"; desde: number }
+export interface Personal { email: string; plano: string; faixa: number; situacao: "isento" | "pagando" | "teste" | "vencido"; desde: number; gratisAte?: number; diasRestantes?: number }
+export interface PixPendente { id: string; uid: string; email: string; nome?: string; plano: string; valor: number; em: number; dias: number }
+export interface UsoIaProvedor { provedor: string; usado: number; limite: number; pct: number }
+export interface UsoIaCliente { email: string; requisicoes: number; tokens: number }
+export interface UsoIaResumo { porCliente: UsoIaCliente[]; porProvedor: UsoIaProvedor[]; frear80: boolean }
 export interface Lead { id: string; nome: string; produto: string; status: string; whatsapp: string; email: string; quando: string; origem: string; indicadoPor?: string }
 export interface Leads { total: number; semana: number; novos: number; porStatus: Record<string, number>; porProduto: Record<string, number>; porOrigem: Record<string, number>; ultimos: Lead[] }
 export interface TesteIA { provedor: string; modelo: string; situacao: Situacao; tempo?: number; motivo?: string }
@@ -49,7 +53,7 @@ export interface Dados {
   cloudflare?: { configurado: boolean; pedidos?: number; limite: number; erro?: string };
   cotas?: Cotas;
   empresa?: { fornecedores: Fornecedor[] };
-  clientes?: { empresas: { site: string; nome: string; leilao: boolean }[]; personais: Personal[] };
+  clientes?: { empresas: { site: string; nome: string; leilao: boolean }[]; personais: Personal[]; pixAguardando?: PixPendente[]; usoIa?: UsoIaResumo; receitaMes?: number };
   leads?: Leads;
   erros?: { erros: ErroRecente[] }; // aba Sistema, só quando abre
   historico?: Historico; // só a aba Sistema pede (lê 30 dias; não entra no "conferir" de 5 em 5 min)
