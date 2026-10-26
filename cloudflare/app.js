@@ -280,7 +280,8 @@ async function guardarErroPadrao(env, item) {
   return rid.guardarErro(db, item);
 }
 
-async function atender(request, env, { getFunction }, reqId) {
+async function atender(request, env, deps = {}, reqId) {
+  const getFunction = deps.getFunction;
   populateProcessEnv(env);
   const url = new URL(request.url);
   const pathname = url.pathname.replace(/\/\/+/g, '/').replace(/(.+)\/$/, '$1') || '/';
@@ -303,6 +304,58 @@ async function atender(request, env, { getFunction }, reqId) {
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Tenant-Id',
     } });
   }
+
+  if (pathname === '/cortex/create-client') {
+    const origin = corsOrigin(env, request.headers) || '*';
+    const corsHeaders = { 'Access-Control-Allow-Origin': origin };
+    if (request.method !== 'POST') return json(405, { error: 'Method Not Allowed' }, corsHeaders);
+
+    const authHeader = request.headers.get('authorization') || request.headers.get('Authorization') || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return json(401, { error: 'Header Authorization ausente ou inválido.' }, corsHeaders);
+    }
+    const token = authHeader.slice(7).trim();
+    if (!token) {
+      return json(401, { error: 'Token de autenticação ausente.' }, corsHeaders);
+    }
+
+    try {
+      const fbAdmin = (deps && deps.firebaseAdmin) || require('../lib/firebase-admin');
+      const decodedToken = await fbAdmin.verifyIdToken(token, env);
+      const uid = decodedToken.uid || decodedToken.sub;
+      if (!uid) {
+        return json(401, { error: 'Token sem identificador de usuário.' }, corsHeaders);
+      }
+
+      const { body } = await readBody(request);
+      let bodyData = {};
+      if (body) {
+        try { bodyData = JSON.parse(body); } catch {}
+      }
+
+      const email = decodedToken.email || bodyData.email || '';
+      const nome = decodedToken.name || bodyData.nome || bodyData.displayName || '';
+
+      const db = fbAdmin.getDb ? fbAdmin.getDb(env) : fbAdmin.db;
+      const adminObj = fbAdmin.admin || fbAdmin;
+      const FieldValue = (adminObj.firestore && adminObj.firestore.FieldValue) || require('../lib/firebase-lite').FieldValue;
+
+      const docData = {
+        email,
+        nome,
+        plano: 'gratis',
+        criadoEm: FieldValue.serverTimestamp(),
+        idioma: 'pt',
+      };
+
+      await db.collection('cortexClientes').doc(uid).set(docData, { merge: true });
+
+      return json(200, { ok: true, uid, cliente: { uid, email, nome, plano: 'gratis', idioma: 'pt' } }, corsHeaders);
+    } catch (e) {
+      return json(401, { error: 'Token inválido ou erro de autenticação: ' + ((e && e.message) || String(e)) }, corsHeaders);
+    }
+  }
+
   if (pathname === '/.well-known/assetlinks.json') {
     const base = require('../apps/body-coach/android/assetlinks.json');
     // Digitais extras do app (ASSETLINKS_SHA256, separadas por vírgula): sem elas o Android abre o app como aba do Chrome.
