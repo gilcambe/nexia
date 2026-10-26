@@ -17,6 +17,12 @@ interface VisionResult {
 const WORKERS_AI_MODEL = '@cf/llama-3.2-11b-vision-instruct';
 const GEMINI_MODEL = 'gemini-1.5-flash';
 
+function getApiKey(env?: any): string | undefined {
+  if (env?.GEMINI_API_KEY) return env.GEMINI_API_KEY;
+  if (typeof process !== 'undefined' && process.env?.GEMINI_API_KEY) return process.env.GEMINI_API_KEY;
+  return undefined;
+}
+
 const DEFAULT_PROMPT =
   'Descreva o que aparece nesta imagem de forma objetiva e direta, em português, frases curtas.';
 
@@ -34,7 +40,8 @@ function stripDataUrl(imageBase64: string): { data: string; mimeType: string } {
 async function callWorkersAI(
   imageBase64: string,
   prompt: string,
-  ai: any
+  ai: any,
+  model: string
 ): Promise<{ description: string; model: string }> {
   if (!ai || !ai.run) {
     throw new Error('Binding AI não disponível no ambiente Workers');
@@ -42,7 +49,7 @@ async function callWorkersAI(
 
   const cleanImage = stripDataUrl(imageBase64);
 
-  const response = await ai.run(WORKERS_AI_MODEL, {
+  const response = await ai.run(model, {
     image: cleanImage,
     prompt,
   });
@@ -52,9 +59,9 @@ async function callWorkersAI(
   return { description, model: WORKERS_AI_MODEL };
 }
 
-async function callGemini(imageBase64: string, prompt: string): Promise<{ description: string; model: string }> {
-  // A chave será injetada via wrangler vars
-  if (!process.env.GEMINI_API_KEY) {
+async function callGemini(imageBase64: string, prompt: string, env?: any): Promise<{ description: string; model: string }> {
+  const apiKey = getApiKey(env);
+  if (!apiKey) {
     throw new Error('GEMINI_API_KEY não configurada');
   }
 
