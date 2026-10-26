@@ -192,9 +192,20 @@ async function callSync(system, messages, modelKey, maxTok) {
 }
 
 // ═══ IMAGEM ═══════════════════════════════════════════════════════════
+// #1640: pedido de imagem em português comum ("crie uma imagem de...", "desenhe um logo...").
+const PEDE_IMAGEM = /\b(cri[ea]r?|ger[ea]r?|fa[cç]a|fazer|desenh[ea]r?|ilustr[ea]r?|mont[ea]r?)\b[^.?!\n]{0,40}\b(imagem|imagens|foto|desenho|ilustra[cç][aã]o|logo|logotipo|figura|arte)\b/i;
+
 async function generateImage(prompt, style) {
+  // Grátis primeiro: FLUX schnell pelo binding do Workers AI (o mesmo que lê os anexos, #1671).
+  const ai = globalThis.__NEXIA_AI__;
+  if (ai && typeof ai.run === 'function') {
+    try {
+      const r = await ai.run('@cf/black-forest-labs/flux-1-schnell', { prompt: String(prompt).slice(0, 2000), steps: 4 });
+      if (r && r.image) return { ok: true, url: `data:image/jpeg;base64,${r.image}`, revised_prompt: prompt, modelo: 'FLUX schnell (Workers AI)' };
+    } catch (e) { console.warn('[CORTEX] FLUX falhou:', e && e.message); }
+  }
   const key = process.env.OPENAI_API_KEY;
-  if (!key) return { ok: false, error: 'OPENAI_API_KEY não configurada para DALL-E.' };
+  if (!key) return { ok: false, error: 'não consegui criar a imagem agora. Tente de novo em instantes.' };
   try {
     const res = await fetch('https://api.openai.com/v1/images/generations', { method: 'POST', headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'dall-e-3', prompt, n: 1, size: '1024x1024', style: style === 'artistic' ? 'vivid' : 'natural', response_format: 'url' }) });
     if (!res.ok) throw new Error(`DALL-E ${res.status}: ${await res.text()}`);
@@ -309,6 +320,13 @@ exports.handler = async (event) => {
     if (image_request?.prompt) {
       const r = await generateImage(image_request.prompt, image_request.style);
       return { statusCode: 200, headers, body: JSON.stringify({ type: 'image', ...r }) };
+    }
+    if (stream && PEDE_IMAGEM.test(message)) {
+      const r = await generateImage(message, 'artistic');
+      const txt = r.ok ? `![Imagem criada pelo Cortex](${r.url})` : `❌ ${r.error}`;
+      const sse = o => `data: ${JSON.stringify(o)}\n\n`;
+      async function* imagem() { yield sse({ token: txt, done: false }); yield sse({ done: true, model: r.modelo || 'imagem', intent: 'image' }); yield 'data: [DONE]\n\n'; }
+      return { statusCode: 200, headers: SSE_HEADERS, stream: imagem() };
     }
 
     let mem = { history: [], summaries: [], entities: {} };
@@ -433,7 +451,7 @@ exports.handler = async (event) => {
     if (!finalResponse.trim() && decision.type === 'image' && decision.image_request) {
       const r = await generateImage(decision.image_request.prompt, decision.image_request.style);
       finalResponse = r.ok ? `🖼️ **Imagem gerada!**\n\n${r.url}\n\n*Prompt: ${r.revised_prompt || decision.image_request.prompt}*` : `❌ Erro imagem: ${r.error}`;
-      modelUsed = 'dall-e-3';
+      modelUsed = r.modelo || 'imagem';
     }
 
     // 5. CHAT COM STREAMING
@@ -485,11 +503,13 @@ exports.handler = async (event) => {
               yield 'data: [DONE]\n\n';
               return;
             }
+            // #1657: grava a memória ANTES do "done". O app para de ler no "done", e o código depois dele nunca rodava,
+            // então a conversa não era salva e o Cortex esquecia o que a pessoa tinha dito.
+            const nm = [{ role: 'user', content: message }, { role: 'assistant', content: fullText }];
+            if (typeof memModule.save === 'function') await memModule.save(effectiveUserId, [...(mem.history || []), ...nm], mem.summaries, tenantId, memModule.extractEntities ? memModule.extractEntities(nm, mem.entities) : {}, conversationId).catch(() => {});
+            cxLog(tenantId, userId, { type: 'cortex_execution', conversationId, intent: decision.type, layer, ms: Date.now() - start, modelUsed: used, stream: true, plan: usage.plan }).catch(() => {});
             yield sse({ done: true, model: used, intent: decision.type, actions: execActions, swarm: swarmOut, usage: { calls: usage.calls, limit: usage.limit, unlimited: !!usage.unlimited }, ...(projectCtx.mode === 'context' ? { project: { project_id: projectCtx.project.project_id, confidence: projectCtx.project.confidence } } : {}) });
             yield 'data: [DONE]\n\n';
-            const nm = [{ role: 'user', content: message }, { role: 'assistant', content: fullText }];
-            if (typeof memModule.save === 'function') memModule.save(userId, [...(mem.history || []), ...nm], mem.summaries, tenantId, memModule.extractEntities ? memModule.extractEntities(nm, mem.entities) : {}, conversationId).catch(() => {});
-            cxLog(tenantId, userId, { type: 'cortex_execution', conversationId, intent: decision.type, layer, ms: Date.now() - start, modelUsed: used, stream: true, plan: usage.plan }).catch(() => {});
           } finally {
             abort.abort();
           }
@@ -524,3 +544,7 @@ exports.handler = async (event) => {
     return { statusCode: status, headers, body: JSON.stringify(body) };
   }
 };exports.AI_CATALOG = AI_CATALOG; exports.chain = chain; // NEXIA AI (Fase 5): teste de cobertura do catálogo pelo Model Router
+
+// #1640: usados nos testes.
+exports.PEDE_IMAGEM = PEDE_IMAGEM;
+exports.generateImage = generateImage;
