@@ -29,7 +29,6 @@ export default function MemorySettings() {
     setIsDeletingAll(true);
     try {
       await deleteAllItems();
-      setMemoryItems([]);
     } catch {
       // deleteAllItems já define o erro via useMemory
     } finally {
@@ -74,6 +73,9 @@ export default function MemorySettings() {
                 onClick={() => handleToggleRememberMe(!profile.rememberMe)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${profile.rememberMe ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'}`}
                 data-testid="memory-remember-me-toggle"
+                role="switch"
+                aria-checked={profile.rememberMe}
+                aria-label="Lembrar de mim"
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${profile.rememberMe ? 'translate-x-6' : 'translate-x-1'}`}
