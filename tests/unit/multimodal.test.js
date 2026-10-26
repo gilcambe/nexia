@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert');
-const { processarMultimodal } = require('../nexia-ai/cortex/multimodal');
+const { processarMultimodal } = require('../../nexia-ai/cortex/multimodal');
 
 test('processarMultimodal com Gemini bem sucedido', async () => {
   const env = { GEMINI_API_KEY: 'fake-key' };
