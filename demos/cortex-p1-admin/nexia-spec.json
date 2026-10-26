@@ -2,17 +2,17 @@
   "spec": {
     "kind": "system",
     "name": "Cortex-p1 Admin",
-    "tagline": "Monitoramento e infraestrutura do Cortex-p1",
-    "photo_theme": "technology dashboard server analytics",
-    "description": "Monitoramento, rotas protegidas e infraestrutura do Cortex-p1 com painel de métricas em tempo real, cota de provedores, filas e erros na última hora.",
+    "tagline": "Painel de monitoramento e status de provedores",
+    "photo_theme": "server analytics technology",
+    "description": "Painel de monitoramento e status de provedores, cota usada, mensagens por minuto, tamanho da fila e erros na última hora utilizando metricsService.",
     "folder": "demos/cortex-p1-admin",
     "fonts": {
       "heading": "Space Grotesk",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#595cd9",
-      "accent": "#10b981",
+      "primary": "#0a73a3",
+      "accent": "#6366f1",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
@@ -22,11 +22,11 @@
     "style": "modern",
     "contact": {
       "whatsapp": "",
-      "phone": "(11) 98888-7777",
+      "phone": "",
       "email": "admin@cortex-p1.internal",
-      "address": "Av. Paulista, 1000 - São Paulo, SP",
-      "city": "São Paulo",
-      "hours": "24/7 SRE Operations",
+      "address": "Data Center Principal",
+      "city": "São Paulo, SP",
+      "hours": "24/7 Monitoring",
       "instagram": "",
       "facebook": "",
       "youtube": "",
@@ -67,23 +67,23 @@
             "required": true
           },
           {
-            "key": "cota_usada",
+            "key": "cotausada",
             "label": "Cota Usada Hoje",
             "type": "number",
             "options": [],
             "required": true
           },
           {
-            "key": "latencia",
-            "label": "Latência Média (ms)",
+            "key": "mpm",
+            "label": "Mensagens/Minuto",
             "type": "number",
             "options": [],
             "required": true
           },
           {
-            "key": "atualizado_em",
-            "label": "Última Verificação",
-            "type": "text",
+            "key": "erros",
+            "label": "Erros (Última Hora)",
+            "type": "number",
             "options": [],
             "required": true
           }
@@ -92,30 +92,30 @@
           {
             "nome": "OpenAI GPT-4o",
             "status": "Ativo",
-            "cota_usada": "142500",
-            "latencia": "320",
-            "atualizado_em": "2026-06-06 14:32"
+            "cotausada": "1420500",
+            "mpm": "124",
+            "erros": "2"
           },
           {
             "nome": "Anthropic Claude 3.5",
             "status": "Ativo",
-            "cota_usada": "98200",
-            "latencia": "285",
-            "atualizado_em": "2026-06-06 14:31"
+            "cotausada": "980200",
+            "mpm": "85",
+            "erros": "0"
           },
           {
             "nome": "Google Gemini Pro",
             "status": "Degradado",
-            "cota_usada": "45100",
-            "latencia": "780",
-            "atualizado_em": "2026-06-06 14:30"
+            "cotausada": "450100",
+            "mpm": "42",
+            "erros": "12"
           },
           {
-            "nome": "DeepSeek V3",
+            "nome": "Cohere Command R+",
             "status": "Ativo",
-            "cota_usada": "210400",
-            "latencia": "190",
-            "atualizado_em": "2026-06-06 14:32"
+            "cotausada": "120000",
+            "mpm": "15",
+            "erros": "1"
           }
         ]
       },
@@ -125,7 +125,7 @@
         "singular": "Fila",
         "fields": [
           {
-            "key": "nome_fila",
+            "key": "nomefila",
             "label": "Nome da Fila",
             "type": "text",
             "options": [],
@@ -139,103 +139,19 @@
             "required": true
           },
           {
-            "key": "taxa_mpm",
-            "label": "Mensagens/Minuto (MPM)",
+            "key": "processadas",
+            "label": "Processadas Hoje",
             "type": "number",
             "options": [],
             "required": true
           },
           {
-            "key": "workers",
-            "label": "Workers Ativos",
-            "type": "number",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "estado",
-            "label": "Estado",
+            "key": "statusfila",
+            "label": "Status da Fila",
             "type": "select",
             "options": [
               "Normal",
-              "Congestionada",
-              "Pausada"
-            ],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "nome_fila": "priority-jobs",
-            "tamanho": "3",
-            "taxa_mpm": "120",
-            "workers": "8",
-            "estado": "Normal"
-          },
-          {
-            "nome_fila": "default-queue",
-            "tamanho": "47",
-            "taxa_mpm": "450",
-            "workers": "16",
-            "estado": "Normal"
-          },
-          {
-            "nome_fila": "webhook-dispatch",
-            "tamanho": "312",
-            "taxa_mpm": "890",
-            "workers": "12",
-            "estado": "Congestionada"
-          },
-          {
-            "nome_fila": "analytics-sync",
-            "tamanho": "0",
-            "taxa_mpm": "15",
-            "workers": "2",
-            "estado": "Normal"
-          }
-        ]
-      },
-      {
-        "key": "logs_erros",
-        "label": "Logs de Erros",
-        "singular": "Log de Erro",
-        "fields": [
-          {
-            "key": "horario",
-            "label": "Horário",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "modulo",
-            "label": "Módulo / Provedor",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "codigo",
-            "label": "Código HTTP",
-            "type": "number",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "mensagem",
-            "label": "Mensagem de Erro",
-            "type": "textarea",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "severidade",
-            "label": "Severidade",
-            "type": "select",
-            "options": [
-              "Baixa",
-              "Média",
-              "Alta",
+              "Atenção",
               "Crítica"
             ],
             "required": true
@@ -243,44 +159,38 @@
         ],
         "sample": [
           {
-            "horario": "14:28:12",
-            "modulo": "Google Gemini Pro",
-            "codigo": "504",
-            "mensagem": "Gateway Timeout ao aguardar resposta do upstream LLM.",
-            "severidade": "Alta"
+            "nomefila": "priority-queue",
+            "tamanho": "3",
+            "processadas": "45200",
+            "statusfila": "Normal"
           },
           {
-            "horario": "14:15:40",
-            "modulo": "webhook-dispatch",
-            "codigo": "429",
-            "mensagem": "Too Many Requests na API destino do cliente XYZ.",
-            "severidade": "Média"
+            "nomefila": "standard-queue",
+            "tamanho": "142",
+            "processadas": "189000",
+            "statusfila": "Normal"
           },
           {
-            "horario": "13:59:02",
-            "modulo": "Database Pool",
-            "codigo": "500",
-            "mensagem": "Connection pool exhausted temporariamente.",
-            "severidade": "Crítica"
+            "nomefila": "bulk-embeddings",
+            "tamanho": "1820",
+            "processadas": "890000",
+            "statusfila": "Atenção"
           },
           {
-            "horario": "13:42:18",
-            "modulo": "Auth Service",
-            "codigo": "401",
-            "mensagem": "Token JWT expirado na tentativa de refresh.",
-            "severidade": "Baixa"
+            "nomefila": "webhook-delivery",
+            "tamanho": "0",
+            "processadas": "12450",
+            "statusfila": "Normal"
           }
         ]
       }
     ],
     "modules": [
-      "Status em Tempo Real",
-      "Métricas de Provedores",
-      "Gestão de Filas",
-      "Auditoria de Erros",
-      "adminStatusController",
-      "adminStatus.js route",
-      "adminStatus.ejs view"
+      "Dashboard",
+      "Status Provedores",
+      "Métricas de Fila",
+      "Logs de Erros",
+      "Admin Status route"
     ]
   },
   "media": {}

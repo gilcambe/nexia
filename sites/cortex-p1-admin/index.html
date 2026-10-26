@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cortex-p1 Admin — Painel de controle, métricas de provedores e status do sistema em tempo real</title>
+  <meta name="description" content="Painel de controle, métricas de provedores e status do sistema em tempo real com rota protegida /admin/status, controlador adminStatusController e view adminStatus integrados ao metricsService.">
+  <meta name="theme-color" content="#2f68c5">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
+</head>
+<body>
+  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
+      <div class="sidebar__brand">
+        <span class="logo" aria-hidden="true">C</span>
+        <span>Cortex-p1 Admin</span>
+      </div>
+      <nav class="sidebar__nav" aria-label="Seções">
+        <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
+        <a href="#/provedores" data-route="provedores"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Provedores de IA</span></a>
+        <a href="#/filas" data-route="filas"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Filas de Mensagens</span></a>
+      </nav>
+      <div class="sidebar__foot">
+        <p>Suporte: admin@cortex-p1.local</p>
+        <p>Dados salvos neste navegador.</p>
+      </div>
+    </aside>
+    <div class="backdrop" data-close-menu hidden></div>
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="topbar__title">
+          <h1 id="view-title">Painel</h1>
+          <p id="view-sub">Painel de controle, métricas de provedores e status do sistema em tempo real</p>
+        </div>
+        <label class="search">
+          <span class="sr-only">Buscar</span>
+          <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search" type="search" placeholder="Buscar..." autocomplete="off">
+        </label>
+        <button class="icon-btn" type="button" id="theme" aria-label="Alternar modo escuro"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </header>
+      <main id="conteudo" class="content">
+        <section id="view-painel" class="view" aria-labelledby="view-title">
+          <div class="kpis" id="kpis"></div>
+          <div class="grid2">
+            <article class="card">
+              <header class="card__head"><h2 id="chart-title">Resumo</h2></header>
+              <div class="chart-box"><canvas id="chart" aria-label="Gráfico do resumo" role="img"></canvas></div>
+            </article>
+            <article class="card">
+              <header class="card__head"><h2>Últimos cadastros</h2></header>
+              <ul class="recent" id="recent"></ul>
+            </article>
+          </div>
+        </section>
+        <section id="view-entity" class="view" hidden>
+          <div class="toolbar">
+            <p class="count" id="count"></p>
+            <div class="toolbar__actions">
+              <button class="btn btn--ghost" type="button" id="export"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Exportar CSV</button>
+              <button class="btn btn--primary" type="button" id="add"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> <span id="add-label">Novo</span></button>
+            </div>
+          </div>
+          <div class="card table-card">
+            <div class="table-wrap">
+              <table class="table">
+                <thead id="thead"></thead>
+                <tbody id="tbody"></tbody>
+              </table>
+            </div>
+            <div class="empty" id="empty" hidden>
+              <svg class="i" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg>
+              <h2>Nada por aqui ainda</h2>
+              <p>Clique em “Adicionar” para fazer o primeiro cadastro.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="modal" id="modal" aria-labelledby="modal-title">
+    <form id="form" novalidate>
+      <header class="modal__head">
+        <h2 id="modal-title">Novo</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </header>
+      <div class="modal__body" id="form-fields"></div>
+      <footer class="modal__foot">
+        <button class="btn btn--ghost" type="button" data-close>Cancelar</button>
+        <button class="btn btn--primary" type="submit">Salvar</button>
+      </footer>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1-admin","name":"Cortex-p1 Admin","entities":[{"key":"provedores","label":"Provedores de IA","singular":"Provedor","fields":[{"key":"nome","label":"Nome do Provedor","type":"text","options":[],"required":true},{"key":"modelo","label":"Modelo Padrão","type":"text","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Ativo","Degradado","Inativo"],"required":true},{"key":"cotahora","label":"Cota Usada Hoje (%)","type":"number","options":[],"required":true},{"key":"latencia","label":"Latência Média (ms)","type":"number","options":[],"required":true}],"sample":[{"nome":"OpenAI API","modelo":"gpt-4o","status":"Ativo","cotahora":"42","latencia":"320"},{"nome":"Anthropic Claude","modelo":"claude-3-5-sonnet","status":"Ativo","cotahora":"68","latencia":"410"},{"nome":"Google Vertex","modelo":"gemini-1.5-pro","status":"Degradado","cotahora":"89","latencia":"780"},{"nome":"Local LLM (Ollama)","modelo":"llama3:70b","status":"Ativo","cotahora":"15","latencia":"120"}]},{"key":"filas","label":"Filas de Mensagens","singular":"Fila","fields":[{"key":"nome_fila","label":"Nome da Fila","type":"text","options":[],"required":true},{"key":"tamanho","label":"Tamanho Atual","type":"number","options":[],"required":true},{"key":"mpm","label":"Mensagens por Minuto (MPM)","type":"number","options":[],"required":true},{"key":"erros","label":"Erros (Última Hora)","type":"number","options":[],"required":true}],"sample":[{"nome_fila":"priority-jobs","tamanho":"3","mpm":"142","erros":"0"},{"nome_fila":"standard-requests","tamanho":"47","mpm":"385","erros":"2"},{"nome_fila":"batch-processing","tamanho":"1280","mpm":"1200","erros":"14"},{"nome_fila":"webhook-deliveries","tamanho":"0","mpm":"45","erros":"0"}]}]}</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
