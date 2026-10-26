@@ -19,6 +19,8 @@ const PromoVideoBuilder = () => {
     
     if (validFiles.length !== files.length) {
       setErro('Alguns arquivos não são suportados. Use apenas JPG, PNG, GIF, MP4 ou MOV.');
+      setArquivos(validFiles);
+      return;
     }
     
     setArquivos(validFiles);
