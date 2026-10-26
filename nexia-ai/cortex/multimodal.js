@@ -5,6 +5,14 @@ const { entenderAnexo } = require('../../lib/anexos-entender');
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const MAX_TOTAL_BYTES = 20 * 1024 * 1024; // 20 MB limite total para inline_data
 
+const BASE64_RE = /^[A-Za-z0-9+/=]+$/;
+function base64Valida(b64) {
+  return typeof b64 === 'string' && BASE64_RE.test(b64) && b64.length % 4 === 0 && b64.length >= 4;
+}
+function sanitizarTexto(t) {
+  return String(t || '').replace(/[`*_\\[\]#()<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+}
+
 /**
  * Envia mensagem e anexos para o Gemini 2.5 Flash de forma nativa e multimodal.
  * Cita explicitamente de qual anexo veio cada informação.
