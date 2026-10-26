@@ -25,11 +25,16 @@ export default function MemorySettings() {
     deleteItem(id);
   };
 
-  const handleDeleteAll = () => {
+  const handleDeleteAll = async () => {
     setIsDeletingAll(true);
-    deleteAllItems();
-    setMemoryItems([]);
-    setIsDeletingAll(false);
+    try {
+      await deleteAllItems();
+      setMemoryItems([]);
+    } catch {
+      // deleteAllItems já define o erro via useMemory
+    } finally {
+      setIsDeletingAll(false);
+    }
   };
 
   const handleToggleRememberMe = (enabled: boolean) => {
