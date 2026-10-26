@@ -18,33 +18,36 @@ export { VazaoController, ChatDurableObject };
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    if (url.pathname === '/api/corpo-ia') return corpoIa(request, env);
-    // Encaminha chat e SSE para o Durable Object da fila (posição + tempo estimado).
-    // Quando o binding CHAT_DO não estiver configurado, segue o fluxo normal sem quebrar nada.
-    if (url.pathname === '/chat' || url.pathname === '/sse' || url.pathname === '/api/chat' || url.pathname === '/api/sse') {
-      const doResp = await chatDurableObject(request, env);
-      if (doResp) return doResp;
+    
+    // 1. Chat e SSE -> Durable Object (fila com posição e tempo estimado)
+    if (
+      url.pathname.startsWith('/api/chat') ||
+      url.pathname.startsWith('/api/sse') ||
+      url.pathname.startsWith('/chat') ||
+      url.pathname.startsWith('/sse')
+    ) {
+      try {
+        const id = env.CHAT_DO.idFromName('chat-fila');
+        const stub = env.CHAT_DO.get(id);
+        return stub.fetch(request);
+      } catch {
+        // Se CHAT_DO não estiver configurado, segue para fluxo normal
+      }
     }
     
-    // Encaminha requisições de chat para o handler Netlify existente quando o Durable Object não está disponível
-    if ((url.pathname === '/api/chat' || url.pathname.startsWith('/api/chat/')) && !env.CHAT_DO) {
-      return forwardToChatHandler(request, env);
+    // 2. Rotas específicas existentes
+    if (url.pathname === '/api/corpo-ia') return corpoIa(request, env);
+    
+    // 3. Rotas da API existentes (preservadas)
+    // /api/cortex, /api/pedidos, /api/central, etc. seguem para os handlers do Netlify/Cloudflare
+    const response = await functions.getFunction(request, env);
+    if (response && response.status !== 404) {
+      return response;
     }
-    // #807: leituras públicas (config do Firebase etc.) passam pelo cache de borda (60 a 300 s).
+    
+    // #807: leituras públicas (config do Firebase etc.) passam pelo cache de borda (60 a 300 s)
     return cacheBorda.comCacheDeBorda(request, env, ctx,
       () => app.handleRequest(request, env, { getFunction: functions.getFunction }));
-  },
-
-  // Encaminha requisições de chat/SSE para o Durable Object da fila.
-  // Retorna null quando o binding CHAT_DO não está configurado (não quebra rotas existentes).
-  async function chatDurableObject(request, env) {
-    try {
-      const id = env.CHAT_DO.idFromName('chat-fila');
-      const stub = env.CHAT_DO.get(id);
-      return stub.fetch(request);
-    } catch {
-      return null;
-    }
   }
 
   // ADR-F12-03 + ADR-FREE-02 + ADR-AUTO-01: a cada 5 min procura Robôs NEXIA vencidos e, de hora
