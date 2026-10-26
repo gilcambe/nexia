@@ -95,14 +95,19 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
     };
     if (req.temperature !== undefined) b.temperature = req.temperature;
     if (stream) { b.stream = true; if (cfg.usage_option) b.stream_options = { include_usage: true }; }
+    // Chamador passou tools explicitamente: se o provedor não suporta, erro UNSUPPORTED
+    // faz o router encadear fallback para o próximo provedor gratuito (Groq → Gemini etc.).
     if (req.tools && req.tools.length) {
       if (!cfg.tools) throw new ModelError(CODES.UNSUPPORTED, `${id}: provedor não suporta tools; encadeando fallback (Groq → Gemini etc.)`, { provider: id });
       b.tools = req.tools.map(t => ({ type: 'function', function: { name: t.name, description: t.description || '', parameters: t.input_schema } }));
       if (req.toolChoice) b.tool_choice = req.toolChoice === 'any' ? 'required' : { type: 'function', function: { name: req.toolChoice } };
     } else if (cfg.tools) {
-      // Garante tools: true na chamada quando o provedor suporta tools, usando as ferramentas importadas. Erro UNSUPPORTED é capturado pelo router chatWithFallback para encadear provedor seguinte (Groq → Gemini etc.).
+      // Chamador não passou tools: garante tools na chamada quando o provedor suporta,
+      // usando a lista importada de ferramentas.js.
       b.tools = tools.map(t => ({ type: 'function', function: { name: t.name, description: t.description || '', parameters: t.function.parameters } }));
     }
+    // Sem req.tools e provedor não suporta tools: não lança erro; a chamada prossegue
+    // sem tools. O router (chatWithFallback/streamWithFallback) decide se tenta outro provedor.
     return b;
   }
 
