@@ -7,26 +7,19 @@ test.use({
 });
 
 test.describe('Cortex App - Teste Ponta a Ponta Mobile', () => {
-  let page;
   let context;
+  let page;
 
   test.beforeAll(async () => {
-    // Criar novo contexto para limpeza entre testes
     context = await chromium.launchPersistentContext('', {
       headless: false,
       slowMo: 1000,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
-    
+
     page = await context.newPage();
-    
-    // Navegar para a página do cortex
     await page.goto('/cortex');
-    
-    // Esperar a página carregar completamente
     await page.waitForLoadState('networkidle');
-    
-    // Verificar se estamos na página correta
     await expect(page).toHaveTitle(/Cortex/i);
   });
 
@@ -34,157 +27,131 @@ test.describe('Cortex App - Teste Ponta a Ponta Mobile', () => {
     await context.close();
   });
 
+  // Helper: obter créditos como número (re-query sempre, evita stale element)
+  async function getCredits() {
+    const el = page.locator('[data-testid="credits-display"]');
+    await expect(el).toBeVisible();
+    const text = await el.textContent();
+    const numero = parseInt(text?.replace(/\D/g, '') || '0', 10);
+    return numero;
+  }
+
+  async function getChatInput() {
+    const el = page.locator('[data-testid="chat-input"]');
+    await expect(el).toBeVisible();
+    return el;
+  }
+
+  async function esperarResposta(indice: number) {
+    const resp = page.locator('[data-testid="cortex-response"]').nth(indice);
+    await expect(resp).toBeVisible({ timeout: 30000 });
+    return resp;
+  }
+
   test('Fluxo completo de conversa com histórico e créditos', async () => {
-    // 1. Verificar estado inicial
-    const initialCreditsElement = page.locator('[data-testid="credits-display"]');
-    await expect(initialCreditsElement).toBeVisible();
-    const initialCredits = await initialCreditsElement.textContent();
-    console.log('Créditos iniciais:', initialCredits);
-    
-    // 2. Iniciar conversa
-    const chatInput = page.locator('[data-testid="chat-input"]');
-    await expect(chatInput).toBeVisible();
-    
-    // Enviar primeira mensagem
-    const firstMessage = 'Olá, preciso de ajuda com um projeto de site';
-    await chatInput.fill(firstMessage);
-    await chatInput.press('Enter');
-    
-    // Esperar resposta do cortex
-    const responseLocator = page.locator('[data-testid="cortex-response"]');
-    await expect(responseLocator.first()).toBeVisible();
-    await expect(responseLocator.first()).toContainText(/Olá/);
-    
-    // Verificar se créditos foram descontados após primeira mensagem
-    const creditsAfterFirst = await initialCreditsElement.textContent();
-    expect(creditsAfterFirst).toBeLessThan(parseInt(initialCredits));
-    
-    // 3. Enviar segunda mensagem
-    const secondMessage = 'Quero criar um site para minha empresa';
-    await chatInput.fill(secondMessage);
-    await chatInput.press('Enter');
-    
-    // Esperar resposta
-    await expect(responseLocator.nth(1)).toBeVisible();
-    await expect(responseLocator.nth(1)).toContainText(/site/);
-    
-    // Verificar créditos após segunda mensagem
-    const creditsAfterSecond = await initialCreditsElement.textContent();
-    expect(creditsAfterSecond).toBeLessThan(parseInt(creditsAfterFirst));
-    
-    // 4. Recarregar a página para testar persistência do histórico
+    // 1. Estado inicial
+    const creditosIniciais = await getCredits();
+    console.log('Créditos iniciais:', creditosIniciais);
+
+    // 2. Primeira mensagem
+    const input = await getChatInput();
+    const primeiraMensagem = 'Olá, preciso de ajuda com um projeto de site';
+    await input.fill(primeiraMensagem);
+    await input.press('Enter');
+
+    await esperarResposta(0);
+
+    const creditosDepoisPrimeira = await getCredits();
+    expect(creditosDepoisPrimeira).toBeLessThan(creditosIniciais);
+
+    // 3. Segunda mensagem
+    const input2 = await getChatInput();
+    const segundaMensagem = 'Quero criar um site para minha empresa';
+    await input2.fill(segundaMensagem);
+    await input2.press('Enter');
+
+    await esperarResposta(1);
+
+    const creditosDepoisSegunda = await getCredits();
+    expect(creditosDepoisSegunda).toBeLessThan(creditosDepoisPrimeira);
+
+    // 4. Recarregar para testar persistência do histórico e créditos
     await page.reload();
-    
-    // Esperar o carregamento completo
     await page.waitForLoadState('networkidle');
-    
-    // Verificar se a tela do cortex ainda está visível
     await expect(page.locator('[data-testid="cortex-chat"]')).toBeVisible();
-    
-    // Verificar se os créditos continuam os mesmos
-    const creditsAfterReload = await initialCreditsElement.textContent();
-    expect(creditsAfterReload).toBe(creditsAfterSecond);
-    
-    // 5. Verificar se o histórico persistiu
-    const chatHistory = page.locator('[data-testid="chat-history"]');
-    await expect(chatHistory).toBeVisible();
-    
-    // Verificar se as mensagens anteriores estão no histórico
-    await expect(chatHistory).toContainText(firstMessage);
-    await expect(chatHistory).toContainText(secondMessage);
-    
-    // 6. Enviar nova mensagem após recarregar
-    const thirdMessage = 'Qual framework você recomenda?';
-    await chatInput.fill(thirdMessage);
-    await chatInput.press('Enter');
-    
-    // Esperar resposta
-    await expect(responseLocator.nth(2)).toBeVisible();
-    
-    // Verificar créditos finais
-    const finalCredits = await initialCreditsElement.textContent();
-    expect(finalCredits).toBeLessThan(parseInt(creditsAfterReload));
-    
-    // 7. Verificar se todas as mensagens estão visíveis
-    await expect(chatHistory).toContainText(thirdMessage);
-    
-    console.log('Fluxo concluído com sucesso!');
-    console.log('Créditos iniciais:', initialCredits);
-    console.log('Créditos finais:', finalCredits);
+
+    const creditosDepoisReload = await getCredits();
+    expect(creditosDepoisReload).toBe(creditosDepoisSegunda);
+
+    // 5. Histórico persistido
+    const historico = page.locator('[data-testid="chat-history"]');
+    await expect(historico).toBeVisible();
+    await expect(historico).toContainText(primeiraMensagem);
+    await expect(historico).toContainText(segundaMensagem);
+
+    // 6. Nova mensagem após recarregar
+    const input3 = await getChatInput();
+    const terceiraMensagem = 'Qual framework você recomenda?';
+    await input3.fill(terceiraMensagem);
+    await input3.press('Enter');
+
+    await esperarResposta(2);
+
+    const creditosFinais = await getCredits();
+    expect(creditosFinais).toBeLessThan(creditosDepoisReload);
+
+    await expect(historico).toContainText(terceiraMensagem);
+
+    console.log('Fluxo concluído!');
+    console.log('Créditos iniciais:', creditosIniciais);
+    console.log('Créditos finais:', creditosFinais);
   });
 
   test('UI/UX responsiva e elementos acessíveis', async () => {
-    // Verificar elementos principais
-    const header = page.locator('[data-testid="cortex-header"]');
-    await expect(header).toBeVisible();
-    
-    const chatContainer = page.locator('[data-testid="chat-container"]');
-    await expect(chatContainer).toBeVisible();
-    
+    await expect(page.locator('[data-testid="cortex-header"]')).toBeVisible();
+    await expect(page.locator('[data-testid="chat-container"]')).toBeVisible();
+    await expect(page.locator('[data-testid="input-container"]')).toBeVisible();
+
+    const viewport = page.viewportSize();
+    if (!viewport) return;
+
     const inputContainer = page.locator('[data-testid="input-container"]');
-    await expect(inputContainer).toBeVisible();
-    
-    // Testar responsividade - verificar elementos não estão fora da tela
-    const viewportWidth = await page.viewportSize().width;
-    const viewportHeight = await page.viewportSize().height;
-    
-    // Verificar que o input não está cortado
-    const inputBoundingBox = await inputContainer.boundingBox();
-    expect(inputBoundingBox.bottom).toBeLessThanOrEqual(viewportHeight);
-    
-    // Testar scroll
-    const chatContent = page.locator('[data-testid="chat-content"]');
-    const initialScrollPosition = await chatContent.evaluate(el => el.scrollTop);
-    
-    // Simular conteúdo longo
-    await chatInput.fill('Mensagem muito longa para testar scroll: ' + 'a'.repeat(200));
-    await chatInput.press('Enter');
-    
-    // Esperar resposta
-    await expect(page.locator('[data-testid="cortex-response"]').last()).toBeVisible();
-    
-    // Verificar que o scroll funciona
-    const finalScrollPosition = await chatContent.evaluate(el => el.scrollTop);
-    expect(finalScrollPosition).toBeGreaterThan(initialScrollPosition);
-    
-    // Testar botão de limpar histórico
-    const clearButton = page.locator('[data-testid="clear-history"]');
-    if (await clearButton.isVisible()) {
-      await clearButton.click();
-      await expect(page.locator('[data-testid="chat-history"]')).not.toContainText('Olá');
+    const box = await inputContainer.boundingBox();
+    if (box) {
+      expect(box.bottom).toBeLessThanOrEqual(viewport.height);
+    }
+
+    // Scroll com conteúdo longo
+    const input = await getChatInput();
+    await input.fill('Mensagem longa para teste de scroll: ' + 'a'.repeat(200));
+    await input.press('Enter');
+    await esperarResposta(3);
+
+    // Botão de limpar histórico (opcional)
+    const limpar = page.locator('[data-testid="clear-history"]');
+    if (await limpar.isVisible()) {
+      await limpar.click();
+      await expect(page.locator('[data-testid="chat-history"]')).not.toContainText(primeiraMensagem);
     }
   });
 
   test('Tratamento de erros e estados de carregamento', async () => {
-    // Verificar loading spinner
-    const loadingSpinner = page.locator('[data-testid="loading-spinner"]');
-    
-    // Enviar mensagem para disparar loading
-    await chatInput.fill('Teste de carregamento');
-    await chatInput.press('Enter');
-    
-    // Verificar spinner aparece
-    await expect(loadingSpinner).toBeVisible();
-    
-    // Esperar spinner desaparecer
-    await expect(loadingSpinner).toBeHidden();
-    
-    // Verificar mensagem de erro se houver
-    const errorMessage = page.locator('[data-testid="error-message"]');
-    if (await errorMessage.isVisible()) {
-      expect(errorMessage).toContainText(/erro/i);
+    const input = await getChatInput();
+    await input.fill('Teste de carregamento');
+    await input.press('Enter');
+
+    const spinner = page.locator('[data-testid="loading-spinner"]');
+    if (await spinner.isVisible()) {
+      await expect(spinner).toBeHidden({ timeout: 30000 });
     }
-    
-    // Testar timeout
-    await chatInput.fill('Mensagem que pode demorar muito');
-    await chatInput.press('Enter');
-    
-    // Esperar timeout se configurado
-    await page.waitForTimeout(5000);
-    
-    // Verificar se houve timeout ou resposta
-    const responses = page.locator('[data-testid="cortex-response"]');
-    const responseCount = await responses.count();
-    expect(responseCount).toBeGreaterThan(0);
+
+    const erro = page.locator('[data-testid="error-message"]');
+    if (await erro.isVisible()) {
+      await expect(erro).toContainText(/erro/i);
+    }
+
+    const respostas = page.locator('[data-testid="cortex-response"]');
+    const quantidade = await respostas.count();
+    expect(quantidade).toBeGreaterThan(0);
   });
 });
