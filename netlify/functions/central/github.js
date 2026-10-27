@@ -259,7 +259,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     return montarReservas(repo, prod, semCota);
   }
 
-  return { cortex, robos, rodar, pedirAoCortex, divulga, estadoDivulga, reservas, api: gh, temToken: !!token };
+  return { cortex, robos, rodar, pedirAoCortex, divulga, estadoDivulga, reservas, api: gh, temToken: !!token, nomeToken: env.NEXIA_JOBS_TOKEN ? 'NEXIA_JOBS_TOKEN' : env.NEXIA_GITHUB_TOKEN ? 'NEXIA_GITHUB_TOKEN' : env.GITHUB_TOKEN ? 'GITHUB_TOKEN' : null };
 }
 
 module.exports = { criarGithub, REPO, RESERVAS, montarReservas, decodificarBase64, BRANCH_DIVULGA, ARQUIVO_ESTADO };
