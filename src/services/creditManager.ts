@@ -149,15 +149,22 @@ export class CreditManager {
   }
 
   async canPublish(userId: string): Promise<{ allowed: boolean; message?: string }> {
-    return this.canCreateSite(userId);
+    // Verificar se o usuário pode criar mais sites (mesmo que não consuma crédito aqui)
+    const canCreate = await this.canCreateSite(userId);
+    return canCreate;
   }
 
   async registerSiteCreated(userId: string): Promise<{ success: boolean; message?: string }> {
     await this.requireAuth(userId);
-    const can = this._canCreateSite(userId);
-    if (!can.allowed) return { success: false, message: can.message };
+    // Verificar limite de sites primeiro
+    const canCreate = this._canCreateSite(userId);
+    if (!canCreate.allowed) return { success: false, message: canCreate.message };
+    
+    // Consumir crédito para a criação do site
     const credited = this._consumeCredit(userId);
     if (!credited.success) return { success: false, message: credited.message };
+    
+    // Registrar o site criado
     const user = this.users.get(userId)!;
     user.sitesCreated += 1;
     this.users.set(userId, user);
@@ -167,19 +174,27 @@ export class CreditManager {
 
   async registerGeneration(userId: string): Promise<{ success: boolean; message?: string; creditsRemaining?: number }> {
     await this.requireAuth(userId);
-    const can = this._canGenerateOrEdit(userId);
-    if (!can.allowed) return { success: false, message: can.message };
+    // Verificar se o usuário tem créditos para geração
+    const canGenerate = this._canGenerateOrEdit(userId);
+    if (!canGenerate.allowed) return { success: false, message: canGenerate.message };
+    
+    // Consumir crédito para a geração
     const credited = this._consumeCredit(userId);
     if (!credited.success) return { success: false, message: credited.message };
+    
     return { success: true, creditsRemaining: credited.creditsRemaining };
   }
 
   async registerEdit(userId: string): Promise<{ success: boolean; message?: string; creditsRemaining?: number }> {
     await this.requireAuth(userId);
-    const can = this._canGenerateOrEdit(userId);
-    if (!can.allowed) return { success: false, message: can.message };
+    // Verificar se o usuário tem créditos para edição
+    const canEdit = this._canGenerateOrEdit(userId);
+    if (!canEdit.allowed) return { success: false, message: canEdit.message };
+    
+    // Consumir crédito para a edição
     const credited = this._consumeCredit(userId);
     if (!credited.success) return { success: false, message: credited.message };
+    
     return { success: true, creditsRemaining: credited.creditsRemaining };
   }
 }
