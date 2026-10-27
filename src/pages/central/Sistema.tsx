@@ -7,6 +7,7 @@ import Mais from "./Mais";
 import SaudeHistorico from "./SaudeHistorico";
 import ConectarIAs from "./ConectarIAs";
 import UltimosErros from "./UltimosErros";
+import { Abre, useModo } from "./celular";
 import { buscarContextoIA, sanitizarTexto } from "@/lib/fetch-contexto-ia";
 
 // Aba Sistema: a saúde dos sites em 30 dias, as IAs que trabalham para a NEXIA, os fornecedores (serviços grátis que usamos) e os robôs.
@@ -66,6 +67,7 @@ function estadoChave(f: Fornecedor, ias: TesteIA[] | null): { cor: Cor; texto: s
 
 export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<Parte, string>> }) {
   const { agir } = useCentral();
+  const { compacto } = useModo();
   const [ias, setIas] = useState<TesteIA[] | null>(null);
   const [testando, setTestando] = useState(false);
   const [erroIA, setErroIA] = useState<string | null>(null);
@@ -155,7 +157,12 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
 
   return (
     <div className="space-y-4">
-      <ConectarIAs inicial={d.vagas} />
+      {compacto ? (
+        <Abre id="conectar-ias" titulo="Conectar IAs" icone="chave" solto
+          resumo={d.vagas ? `${d.vagas.vagas.filter((v) => v.ligada).length} de ${d.vagas.vagas.length} vagas conectadas` : "Conferindo…"}>
+          <ConectarIAs inicial={d.vagas} />
+        </Abre>
+      ) : <ConectarIAs inicial={d.vagas} />}
       <SaudeHistorico />
       <UltimosErros />
 

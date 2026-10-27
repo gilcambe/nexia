@@ -30,7 +30,7 @@ export default function Dinheiro({ d, erro }: { d: Dados; erro?: string }) {
   const total6 = x.receitaPorMes.reduce((t, m) => t + m.valor, 0);
   return (
     <div className="space-y-4">
-      <Cartao titulo="Body Coach">
+      <Cartao titulo="Body Coach" aberto>
         <div className="grid grid-cols-2 gap-2">
           <Numero valor={reais(x.receitaMes)} rotulo="entrou este mês" destaque />
           <Numero valor={reais(total6)} rotulo="nos últimos 6 meses" />

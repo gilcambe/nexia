@@ -36,7 +36,7 @@ export default function CortexAba({ d, erro }: { d: Dados; erro?: string }) {
 
   return (
     <div className="space-y-4">
-      <Cartao titulo="Escada das IAs">
+      <Cartao titulo="Escada das IAs" icone="ia" resumo={`Degrau ${degrauAtivo} de 3 ativo agora`}>
         <p className="text-xs text-nexia-muted">
           Regra: primeiro o Cortex, depois as IAs grátis ajudantes, e só por último o Claude Code.
         </p>
@@ -66,7 +66,7 @@ export default function CortexAba({ d, erro }: { d: Dados; erro?: string }) {
           </li>
         </ol>
       </Cartao>
-      <Cartao titulo="Pedir ao Cortex">
+      <Cartao titulo="Pedir ao Cortex" aberto>
         <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={3} placeholder="Ex.: colocar um botão de WhatsApp no site do Studio Lima"
           className="w-full rounded-xl bg-nexia-surface2 border border-nexia-border p-3 text-sm text-white" data-testid="cortex-pedido" />
         <div className="grid grid-cols-2 gap-2">
@@ -83,10 +83,10 @@ export default function CortexAba({ d, erro }: { d: Dados; erro?: string }) {
             <Numero valor={x.travadas.length} rotulo="travadas" />
             <Numero valor={x.feitas7} rotulo="feitas em 7 dias" destaque />
           </div>
-          <Cartao titulo="Fazendo agora"><Lista itens={x.fazendo} vazio="Nada rodando neste momento." /></Cartao>
-          <Cartao titulo="Travadas (precisam de ajuda)"><Lista itens={x.travadas} vazio="Nenhuma travada. 🎉" /></Cartao>
-          <Cartao titulo="Últimas entregas"><Lista itens={x.ultimas} vazio="Nenhuma entrega nos últimos 7 dias." /></Cartao>
-          <Cartao titulo="Próximas da fila"><Lista itens={x.proximas} vazio="Fila vazia." /></Cartao>
+          <Cartao titulo="Fazendo agora" icone="cortex" resumo={x.fazendo.length ? x.fazendo[0].titulo : "Nada rodando"}><Lista itens={x.fazendo} vazio="Nada rodando neste momento." /></Cartao>
+          <Cartao titulo="Travadas (precisam de ajuda)" icone="alerta" resumo={x.travadas.length ? `${x.travadas.length} travada(s)` : "Nenhuma travada"}><Lista itens={x.travadas} vazio="Nenhuma travada. 🎉" /></Cartao>
+          <Cartao titulo="Últimas entregas" icone="ok" resumo={`${x.feitas7} entregues em 7 dias`}><Lista itens={x.ultimas} vazio="Nenhuma entrega nos últimos 7 dias." /></Cartao>
+          <Cartao titulo="Próximas da fila" icone="lista" resumo={`${x.naFila} esperando`}><Lista itens={x.proximas} vazio="Fila vazia." /></Cartao>
           <ContasReserva />
         </>
       )}

@@ -7,6 +7,7 @@ import InstalarApp from "./InstalarApp";
 import Logo, { logoServico } from "./Logo";
 import { Icone } from "./icones";
 import { estadoVaga } from "./ConectarIAs";
+import { Abre, Compacto, Grupo, NaFolha, pedirAbrir, useCelular, useModo } from "./celular";
 
 // Início da Central Kernex: visão geral com dados reais. Sem dado, mostra "sem dado ainda"; nunca número inventado.
 type Estado = "ok" | "atencao" | "erro" | "cinza";
@@ -19,7 +20,18 @@ function Pilula({ e, children }: { e: Estado; children: ReactNode }) {
   return <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap ${PILULA[e]}`}><span className={`w-1.5 h-1.5 rounded-full ${PONTO[e]}`} />{children}</span>;
 }
 
-function Caixa({ titulo, acao, children, className = "" }: { titulo: string; acao?: ReactNode; children: ReactNode; className?: string }) {
+function Caixa({ id, titulo, acao, children, className = "", resumo, icone, tom }: {
+  id?: string; titulo: string; acao?: ReactNode; children: ReactNode; className?: string; resumo?: ReactNode; icone?: string; tom?: Estado;
+}) {
+  const { compacto, naFolha, emGrupo } = useModo();
+  // Celular: o cartão vira uma linha com resumo; o toque abre a tela só dele.
+  if (compacto && resumo !== undefined) return <Abre id={id} titulo={titulo} resumo={resumo} icone={icone} tom={tom} solto={!emGrupo}><Caixa titulo={titulo} acao={acao}>{children}</Caixa></Abre>;
+  if (naFolha) return (
+    <section className="rounded-2xl bg-white border border-slate-200/80 p-4">
+      {acao && <div className="flex justify-end mb-3">{acao}</div>}
+      <NaFolha.Provider value={false}>{children}</NaFolha.Provider>
+    </section>
+  );
   return (
     <section className={`rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-5 ${className}`}>
       <div className="flex items-center justify-between gap-2 mb-4">
@@ -92,7 +104,7 @@ const NOME_IA: Record<string, string> = { groq: "Groq", gemini: "Gemini", google
 const CORES_IA = ["#6366f1", "#0ea5e9", "#f59e0b", "#10b981", "#ec4899", "#8b5cf6"];
 
 // Liga os avisos no aparelho (a page.tsx manda a notificação quando algo fica vermelho). Veio do Início antigo.
-function BotaoAvisar() {
+export function BotaoAvisar() {
   const suporta = typeof Notification !== "undefined";
   const [estado, setEstado] = useState(suporta ? Notification.permission : "denied");
   if (!suporta || estado === "granted") return null;
@@ -104,9 +116,10 @@ function BotaoAvisar() {
   );
 }
 
-export default function Painel({ d, erros, avisos, ir, conferir, carregando, abrirAlerta }: {
-  d: Dados; erros: Partial<Record<Parte, string>>; avisos: Aviso[]; ir: (a: Aba) => void; conferir: () => void; carregando: boolean; abrirAlerta: (k: number | null) => void;
+export default function Painel({ d, erros, avisos, ir, conferir, carregando, abrirAlerta, conferidoEm }: {
+  d: Dados; erros: Partial<Record<Parte, string>>; avisos: Aviso[]; ir: (a: Aba) => void; conferir: () => void; carregando: boolean; abrirAlerta: (k: number | null) => void; conferidoEm?: string | null;
 }) {
+  const celular = useCelular();
   const cx = d.cortex;
   const semana = cx ? cx.feitas7 + cx.naFila + cx.travadas.length + cx.fazendo.length : 0;
   const pctSemana = cx && semana ? (cx.feitas7 / semana) * 100 : null;
@@ -145,7 +158,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
   const ecossistema = forn.filter((f) => f.grupo === "Inteligência artificial" || f.grupo === "Infraestrutura").slice(0, 15);
 
   // #1958: leva à aba IA e Infraestrutura, direto no cartão Conectar IAs.
-  const irVagas = () => { ir("sistema"); setTimeout(() => document.getElementById("conectar-ias")?.scrollIntoView({ behavior: "smooth" }), 300); };
+  const irVagas = () => { pedirAbrir("conectar-ias"); ir("sistema"); setTimeout(() => document.getElementById("conectar-ias")?.scrollIntoView({ behavior: "smooth" }), 300); };
   const vagas = d.vagas;
   const PONTO_VAGA = { verde: "ok", amarelo: "atencao", vermelho: "erro", cinza: "cinza" } as const;
 
@@ -167,6 +180,276 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
     { nome: "Cloudflare", logo: "/central/logos/cloudflare.svg", e: servicos[2].e },
     { nome: "IAs grátis", logo: null, icone: "ia", e: forn.some((f) => f.grupo === "Inteligência artificial" && f.situacao === "ok") ? "ok" : "cinza" },
   ];
+
+  const cxEcossistema = (
+    <Caixa titulo="Ecossistema" icone="infra" resumo={d.empresa ? `${ecossistema.filter((f) => f.situacao === "ok").length} de ${ecossistema.length} serviços ativos` : "Conferindo…"} tom={!d.empresa ? "cinza" : ecossistema.some((f) => f.situacao === "erro") ? "atencao" : "ok"} acao={<VerTodos onClick={() => ir("sistema")} />}>
+      {!d.empresa ? <div className="h-40 rounded-xl bg-slate-100 animate-pulse" /> : (
+        <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3" data-testid="ecossistema">
+          {ecossistema.map((f) => {
+            const e: Estado = f.situacao === "ok" ? "ok" : f.situacao === "erro" ? "erro" : "cinza";
+            return (
+              <button key={f.id} onClick={() => ir("sistema")} className="flex flex-col items-center gap-2 rounded-xl border border-slate-200/80 p-3 text-center cursor-pointer hover:bg-slate-50" title={f.paraQue}>
+                <Logo nome={f.nome} src={logoServico(f.id)} tam={40} />
+                <span className="text-xs font-semibold text-slate-800 leading-tight">{f.nome.replace(/ \(.*\)/, "")}</span>
+                <Pilula e={e}>{e === "ok" ? "Ativo" : e === "erro" ? "Erro" : "Desligado"}</Pilula>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </Caixa>
+  );
+  const cxTenants = (
+    <Caixa titulo="Tenants" icone="tenants" resumo={medidos.length ? `${noAr} de ${medidos.length} sites no ar · ${produtos.filter((p) => !p.pendente).length} no total` : "Conferindo…"} tom={servicos[4].e} acao={<VerTodos onClick={() => ir("clientes")} />}>
+      {!d.lista ? <div className="h-40 rounded-xl bg-slate-100 animate-pulse" /> : (
+        <ul className="divide-y divide-slate-100" data-testid="tenants">
+          {produtos.filter((p) => !p.pendente).slice(0, 6).map((p) => {
+            const m = saudeDe(p.id);
+            const e: Estado = !m ? "cinza" : !m.ok ? "erro" : m.lento ? "atencao" : "ok";
+            return (
+              <li key={p.id} className="flex items-center gap-3 py-2.5">
+                <Logo nome={p.nome} src={p.logo} tam={36} />
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm font-medium text-slate-900 truncate">{p.nome}</span>
+                  <span className="block text-xs text-slate-500 truncate">{p.segmento || p.frase}</span>
+                </span>
+                <Pilula e={e}>{e === "ok" ? "Online" : e === "erro" ? "Fora do ar" : e === "atencao" ? "Lento" : "Sem medição"}</Pilula>
+                {p.site && <a href={p.site} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50" title="Abrir site"><Icone nome="site" className="w-4 h-4" /></a>}
+                {p.painel && p.painel !== p.site && <a href={p.painel} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50" title="Abrir painel do dono"><Icone nome="externo" className="w-4 h-4" /></a>}
+              </li>
+            );
+          })}
+          <li>
+            <a href="/projetos" className="flex items-center gap-3 py-2.5 group">
+              <span className="w-9 h-9 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400"><Icone nome="mais" className="w-4 h-4" /></span>
+              <span><span className="block text-sm font-medium text-slate-900 group-hover:text-indigo-600">Novo tenant</span><span className="block text-xs text-slate-500">Clonar ou criar</span></span>
+            </a>
+          </li>
+        </ul>
+      )}
+    </Caixa>
+  );
+  const cxTarefas = (
+    <Caixa titulo="Tarefas recentes" icone="cortex" resumo={cx ? `${cx.fazendo.length} rodando · ${cx.naFila} na fila · ${cx.travadas.length} travadas` : "Conferindo…"} tom={servicos[0].e} acao={<VerTodos onClick={() => ir("cortex")}>Ver todas</VerTodos>}>
+      {!cx ? <div className="h-40 rounded-xl bg-slate-100 animate-pulse" /> : !tarefas.length ? <p className="text-sm text-slate-500">Nenhuma tarefa agora.</p> : (
+        <ul className="space-y-3" data-testid="tarefas-recentes">
+          {tarefas.map(({ t, e, texto }) => (
+            <li key={t.numero}>
+              <a href={`/meu-cortex#p${t.numero}`} className="flex items-center gap-3 group">
+                <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${PILULA[e]}`}><Icone nome={e === "ok" ? "ok" : e === "erro" ? "alerta" : "cortex"} className="w-4 h-4" /></span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-sm text-slate-800 truncate group-hover:text-indigo-600">{t.titulo}</span>
+                  <span className="flex items-center gap-2 text-xs text-slate-400 whitespace-nowrap">#{t.numero} · {haQuanto(t.quando)} <Pilula e={e}>{texto}</Pilula></span>
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Caixa>
+  );
+  const cxTopologia = (
+    <Caixa titulo="Topologia do ecossistema" icone="topologia" resumo="Como as peças da Kernex se ligam" acao={<span className="text-[11px] text-slate-400">ligações reais</span>}>
+      <div className="relative flex flex-col items-center gap-3" data-testid="topologia">
+        <div className="grid grid-cols-3 gap-2 w-full">
+          {topo.slice(0, 3).map((n) => <No key={n.nome} {...n} />)}
+        </div>
+        <div className="flex items-center gap-2 w-full">
+          <No {...topo[3]} />
+          <div className="flex-1 flex flex-col items-center rounded-xl bg-indigo-50 border border-indigo-100 py-2">
+            <img src="/central/logos/kernex.svg" alt="" className="w-9 h-9" />
+            <span className="text-[11px] font-semibold text-indigo-700">Central Kernex</span>
+          </div>
+          <No {...topo[4]} />
+        </div>
+        <div className="grid grid-cols-2 gap-2 w-full">
+          {topo.slice(5).map((n) => <No key={n.nome} {...n} />)}
+        </div>
+        <p className="text-[11px] text-slate-400 text-center">Verde = medido agora · cinza = sem medição. O mapa clicável está a caminho (tarefa #1861).</p>
+      </div>
+    </Caixa>
+  );
+  const cxUsoIa = (
+    <Caixa titulo="Uso de IA" icone="ia" resumo={totalIa ? `${totalIa} pedidos hoje em ${usoIa.length} IAs` : "Sem dado ainda"} acao={<VerTodos onClick={() => ir("sistema")}>Ver detalhes</VerTodos>}>
+      {!totalIa ? <p className="text-sm text-slate-500">Sem dado ainda. O medidor de uso por IA está sendo feito (tarefas #1805 a #1809).</p> : (
+        <div className="flex items-center gap-4">
+          <Rosca fatias={usoIa.map((p, i) => ({ valor: p.usado, cor: CORES_IA[i % CORES_IA.length] }))} centro={String(totalIa)} sub="pedidos hoje" />
+          <ul className="space-y-1.5 text-xs flex-1 min-w-0">
+            {usoIa.map((p, i) => (
+              <li key={p.provedor} className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full shrink-0" style={{ background: CORES_IA[i % CORES_IA.length] }} />
+                <span className="flex-1 truncate text-slate-700">{NOME_IA[p.provedor] || p.provedor}</span>
+                <span className="text-slate-500">{Math.round((p.usado / totalIa) * 100)}%</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </Caixa>
+  );
+  const cxMaquinas = (
+    <Caixa titulo="Máquinas locais" icone="pc" resumo={!d.maquinas ? "Conferindo…" : d.maquinas.maquinas.length ? `${d.maquinas.maquinas.filter((m) => m.online).length} de ${d.maquinas.maquinas.length} PCs ligados` : "Nenhum PC mandou sinal"} tom={!d.maquinas?.maquinas.length ? "cinza" : d.maquinas.maquinas.every((m) => m.online) ? "ok" : "atencao"}>
+      {!d.maquinas ? <div className="h-16 rounded-xl bg-slate-100 animate-pulse" /> : !d.maquinas.maquinas.length ? (
+        <div className="flex items-start gap-3 text-sm">
+          <span className="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0"><Icone nome="pc" /></span>
+          <p className="text-slate-500">{d.maquinas.ligado ? "Nenhum PC mandou sinal ainda. No PC, deixe o agente da Kernex aberto (ele manda um sinal por minuto)." : "A ligação dos PCs está desligada no servidor (falta NEXIA_MAQUINA_TOKEN)."}</p>
+        </div>
+      ) : (
+        <ul className="space-y-3" data-testid="maquinas">
+          {d.maquinas.maquinas.map((m) => {
+            const gb = (v?: number | null) => (v ? `${String(v).replace(".", ",")} GB` : "?"); // o agente já manda em GB
+            return (
+              <li key={m.nome} className="flex items-start gap-3 text-sm">
+                <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${m.online ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-400"}`}><Icone nome="pc" /></span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2"><span className="font-medium text-slate-900 truncate">{m.nome}</span><Pilula e={m.online ? "ok" : "cinza"}>{m.online ? "Ligado" : "Sem sinal"}</Pilula></div>
+                  <div className="text-xs text-slate-500 truncate">{m.cpu || "CPU ?"} · RAM livre {gb(m.ramLivre)} de {gb(m.ramTotal)}</div>
+                  <div className="text-xs text-slate-500 truncate">IA local: {m.ollamaOk ? (m.modelos?.length ? m.modelos.join(", ") : "Ollama sem modelo") : "Ollama desligado"} · sinal {haQuanto(m.visto_em)}</div>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Caixa>
+  );
+  const cxServicos = (
+    <Caixa titulo="Status dos serviços" icone="ok" resumo={todosOk ? "Todos operacionais" : `${servicos.filter((s) => s.e === "erro" || s.e === "atencao").length} pedem atenção`} tom={todosOk ? "ok" : servicos.some((s) => s.e === "erro") ? "erro" : "atencao"} acao={<Pilula e={todosOk ? "ok" : servicos.some((s) => s.e === "erro") ? "erro" : "atencao"}>{todosOk ? "Todos operacionais" : "Atenção"}</Pilula>}>
+      <ul className="space-y-1" data-testid="status-servicos">
+        {servicos.map((s) => (
+          <li key={s.nome}>
+            <button onClick={() => ir(s.aba)} className="w-full flex items-center gap-3 rounded-lg px-1 py-2 text-left cursor-pointer hover:bg-slate-50">
+              <Logo nome={s.nome} src={s.logo} tam={32} />
+              <span className="flex-1 text-sm text-slate-800 truncate">{s.nome}</span>
+              <Pilula e={s.e}>{s.texto}</Pilula>
+              <Icone nome="seta" className="w-4 h-4 text-slate-300" />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </Caixa>
+  );
+  const cxVagas = (
+    <Caixa id="vagas" titulo="IAs que ajudam o Cortex" icone="chave" resumo={vagas ? `${vagas.vagas.filter((v) => v.ligada).length} de ${vagas.vagas.length} vagas conectadas` : "Conferindo…"} acao={<VerTodos onClick={irVagas}>Conectar</VerTodos>}>
+      {!vagas ? <div className="h-16 rounded-xl bg-slate-100 animate-pulse" /> : (
+        <ul className="space-y-2" data-testid="painel-vagas">
+          {vagas.vagas.filter((v, i, todas) => v.ligada || v === todas.find((x) => !x.ligada)).map((v) => {
+            const p = vagas.provedores.find((x) => x.id === v.provedor);
+            const e = estadoVaga(v);
+            return (
+              <li key={v.vaga}>
+                <button onClick={irVagas} className="w-full flex items-center gap-3 text-left cursor-pointer">
+                  {p ? <Logo nome={p.nome} src={p.logo} tam={28} /> : <span className="w-7 h-7 rounded-lg border-2 border-dashed border-slate-300 text-slate-400 text-xs font-bold flex items-center justify-center">{v.vaga}</span>}
+                  <span className="flex-1 text-sm text-slate-700 truncate">{p ? p.nome : `Vaga ${v.vaga} livre`}</span>
+                  <Pilula e={PONTO_VAGA[e.e]}>{e.texto}</Pilula>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Caixa>
+  );
+  const cxAcoes = (
+    <Caixa titulo="Ações rápidas">
+      <div className="space-y-2">
+        {acoes.map((a) => {
+          const cls = `w-full flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium cursor-pointer ${a.cor}`;
+          const dentro = <><Icone nome={a.icone} className="w-5 h-5" />{a.nome}</>;
+          return a.href
+            ? <a key={a.nome} href={a.href} target={a.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className={cls}>{dentro}</a>
+            : <button key={a.nome} onClick={() => (a.onClick ? a.onClick() : a.aba && ir(a.aba))} className={cls} data-testid={a.onClick ? "acao-conectar-ias" : undefined}>{dentro}</button>;
+        })}
+      </div>
+    </Caixa>
+  );
+
+  // Celular: um resumo curto e uma lista de assuntos. Cada assunto abre a sua tela (nada de página comprida).
+  if (celular) {
+    const vermelho = avisos.some((a) => a.cor === "vermelho");
+    const estadoGeral: Estado = !d.saude ? "cinza" : vermelho ? "erro" : avisos.length ? "atencao" : "ok";
+    return (
+      <div className="space-y-5" data-testid="inicio-celular">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">Olá, Gil</h1>
+            <button onClick={conferir} disabled={carregando} className="mt-1 flex items-center gap-1.5 text-xs text-slate-500 cursor-pointer" data-testid="central-conferir">
+              <span className={`w-2 h-2 rounded-full ${PONTO[estadoGeral]}`} />
+              {!d.saude ? "Conferindo…" : vermelho ? "Algo parou" : avisos.length ? "Funcionando, com pontos de atenção" : "Tudo funcionando"} · {carregando ? "atualizando…" : `atualizado ${haQuanto(conferidoEm || null)}`}
+              <Icone nome="atualizar" className={`w-3.5 h-3.5 ${carregando ? "animate-spin" : ""}`} />
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3" data-testid="numeros-celular">
+          {[
+            { t: "Tarefas", v: cx ? cx.fazendo.length : null, s: cx ? `rodando · ${cx.naFila} na fila` : "", i: "cortex", c: "text-violet-600 bg-violet-50", a: () => ir("cortex") },
+            { t: "Sites no ar", v: medidos.length ? `${noAr}/${medidos.length}` : null, s: medidos.length && noAr < medidos.length ? `${medidos.length - noAr} fora do ar` : "todos respondendo", i: "tenants", c: "text-emerald-600 bg-emerald-50", a: () => ir("clientes") },
+            { t: "Cota de IA", v: maiorCota ? `${Math.round(maiorCota.pct || 0)}%` : null, s: maiorCota ? maiorCota.nome : "", i: "ia", c: "text-sky-600 bg-sky-50", a: () => ir("sistema") },
+            { t: "Alertas", v: d.saude ? avisos.length : null, s: avisos.length ? "precisam de você" : "nada pendente", i: "alerta", c: "text-amber-600 bg-amber-50", a: () => abrirAlerta(null) },
+          ].map((n) => (
+            <button key={n.t} onClick={n.a} className="rounded-2xl bg-white border border-slate-200/80 p-3.5 text-left cursor-pointer active:bg-slate-50 shadow-[0_1px_2px_rgba(15,23,42,0.05)]">
+              <span className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                <span className={`w-7 h-7 rounded-lg flex items-center justify-center ${n.c}`}><Icone nome={n.i} className="w-4 h-4" /></span>{n.t}
+              </span>
+              <span className="block mt-2 text-2xl font-bold text-slate-900 leading-none">{n.v ?? <span className="inline-block w-10 h-6 rounded bg-slate-100 animate-pulse" />}</span>
+              <span className="block mt-1 text-[11px] text-slate-500 truncate">{n.s}</span>
+            </button>
+          ))}
+        </div>
+
+        {avisos.length > 0 && (
+          <section className="rounded-2xl bg-white border border-amber-200 overflow-hidden" data-testid="alertas-celular">
+            <div className="flex items-center justify-between px-4 pt-3 pb-1">
+              <h2 className="text-sm font-semibold text-slate-900">Precisa de você</h2>
+              <button onClick={() => abrirAlerta(null)} className="text-xs font-medium text-indigo-600 cursor-pointer">Ver todos ({avisos.length})</button>
+            </div>
+            <ul className="divide-y divide-slate-100">
+              {avisos.slice(0, 2).map((a, k) => (
+                <li key={k}>
+                  <button onClick={() => abrirAlerta(k)} className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 cursor-pointer active:bg-slate-50">
+                    <span className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${a.cor === "vermelho" ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-600"}`}><Icone nome="alerta" className="w-4 h-4" /></span>
+                    <span className="flex-1 min-w-0 line-clamp-2">{a.texto}</span>
+                    <Icone nome="seta" className="w-4 h-4 text-slate-300 shrink-0" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <Compacto.Provider value={true}>
+          <Grupo titulo="Agora">
+            {cxServicos}
+            {cxTarefas}
+            {cxTenants}
+          </Grupo>
+          <Grupo titulo="IA e máquinas">
+            {cxVagas}
+            {cxUsoIa}
+            {cxMaquinas}
+          </Grupo>
+          <Grupo titulo="Mapa">
+            {cxEcossistema}
+            {cxTopologia}
+          </Grupo>
+        </Compacto.Provider>
+
+        <section>
+          <h2 className="px-1 mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Ações rápidas</h2>
+          <div className="grid grid-cols-3 gap-2" data-testid="acoes-celular">
+            {acoes.map((a) => {
+              const cls = `flex flex-col items-center justify-center gap-1.5 rounded-2xl border px-2 py-3 text-[11px] font-medium leading-tight text-center cursor-pointer min-h-[84px] ${a.cor}`;
+              const dentro = <><Icone nome={a.icone} className="w-6 h-6" />{a.nome}</>;
+              return a.href
+                ? <a key={a.nome} href={a.href} target={a.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className={cls}>{dentro}</a>
+                : <button key={a.nome} onClick={() => (a.onClick ? a.onClick() : a.aba && ir(a.aba))} className={cls} data-testid={a.onClick ? "acao-conectar-ias" : undefined}>{dentro}</button>;
+            })}
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -233,184 +516,29 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
           )}
 
           <div className="grid grid-cols-1 2xl:grid-cols-[1.4fr_1fr] gap-6">
-            <Caixa titulo="Ecossistema" acao={<VerTodos onClick={() => ir("sistema")} />}>
-              {!d.empresa ? <div className="h-40 rounded-xl bg-slate-100 animate-pulse" /> : (
-                <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-3" data-testid="ecossistema">
-                  {ecossistema.map((f) => {
-                    const e: Estado = f.situacao === "ok" ? "ok" : f.situacao === "erro" ? "erro" : "cinza";
-                    return (
-                      <button key={f.id} onClick={() => ir("sistema")} className="flex flex-col items-center gap-2 rounded-xl border border-slate-200/80 p-3 text-center cursor-pointer hover:bg-slate-50" title={f.paraQue}>
-                        <Logo nome={f.nome} src={logoServico(f.id)} tam={40} />
-                        <span className="text-xs font-semibold text-slate-800 leading-tight">{f.nome.replace(/ \(.*\)/, "")}</span>
-                        <Pilula e={e}>{e === "ok" ? "Ativo" : e === "erro" ? "Erro" : "Desligado"}</Pilula>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </Caixa>
+            {cxEcossistema}
 
-            <Caixa titulo="Tenants" acao={<VerTodos onClick={() => ir("clientes")} />}>
-              {!d.lista ? <div className="h-40 rounded-xl bg-slate-100 animate-pulse" /> : (
-                <ul className="divide-y divide-slate-100" data-testid="tenants">
-                  {produtos.filter((p) => !p.pendente).slice(0, 6).map((p) => {
-                    const m = saudeDe(p.id);
-                    const e: Estado = !m ? "cinza" : !m.ok ? "erro" : m.lento ? "atencao" : "ok";
-                    return (
-                      <li key={p.id} className="flex items-center gap-3 py-2.5">
-                        <Logo nome={p.nome} src={p.logo} tam={36} />
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-medium text-slate-900 truncate">{p.nome}</span>
-                          <span className="block text-xs text-slate-500 truncate">{p.segmento || p.frase}</span>
-                        </span>
-                        <Pilula e={e}>{e === "ok" ? "Online" : e === "erro" ? "Fora do ar" : e === "atencao" ? "Lento" : "Sem medição"}</Pilula>
-                        {p.site && <a href={p.site} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50" title="Abrir site"><Icone nome="site" className="w-4 h-4" /></a>}
-                        {p.painel && p.painel !== p.site && <a href={p.painel} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50" title="Abrir painel do dono"><Icone nome="externo" className="w-4 h-4" /></a>}
-                      </li>
-                    );
-                  })}
-                  <li>
-                    <a href="/projetos" className="flex items-center gap-3 py-2.5 group">
-                      <span className="w-9 h-9 rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400"><Icone nome="mais" className="w-4 h-4" /></span>
-                      <span><span className="block text-sm font-medium text-slate-900 group-hover:text-indigo-600">Novo tenant</span><span className="block text-xs text-slate-500">Clonar ou criar</span></span>
-                    </a>
-                  </li>
-                </ul>
-              )}
-            </Caixa>
+            {cxTenants}
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-[1.4fr_1fr_1fr] gap-6">
-            <Caixa titulo="Tarefas recentes" acao={<VerTodos onClick={() => ir("cortex")}>Ver todas</VerTodos>}>
-              {!cx ? <div className="h-40 rounded-xl bg-slate-100 animate-pulse" /> : !tarefas.length ? <p className="text-sm text-slate-500">Nenhuma tarefa agora.</p> : (
-                <ul className="space-y-3" data-testid="tarefas-recentes">
-                  {tarefas.map(({ t, e, texto }) => (
-                    <li key={t.numero}>
-                      <a href={`/meu-cortex#p${t.numero}`} className="flex items-center gap-3 group">
-                        <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${PILULA[e]}`}><Icone nome={e === "ok" ? "ok" : e === "erro" ? "alerta" : "cortex"} className="w-4 h-4" /></span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-sm text-slate-800 truncate group-hover:text-indigo-600">{t.titulo}</span>
-                          <span className="flex items-center gap-2 text-xs text-slate-400 whitespace-nowrap">#{t.numero} · {haQuanto(t.quando)} <Pilula e={e}>{texto}</Pilula></span>
-                        </span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Caixa>
+            {cxTarefas}
 
-            <Caixa titulo="Topologia do ecossistema" acao={<span className="text-[11px] text-slate-400">ligações reais</span>}>
-              <div className="relative flex flex-col items-center gap-3" data-testid="topologia">
-                <div className="grid grid-cols-3 gap-2 w-full">
-                  {topo.slice(0, 3).map((n) => <No key={n.nome} {...n} />)}
-                </div>
-                <div className="flex items-center gap-2 w-full">
-                  <No {...topo[3]} />
-                  <div className="flex-1 flex flex-col items-center rounded-xl bg-indigo-50 border border-indigo-100 py-2">
-                    <img src="/central/logos/kernex.svg" alt="" className="w-9 h-9" />
-                    <span className="text-[11px] font-semibold text-indigo-700">Central Kernex</span>
-                  </div>
-                  <No {...topo[4]} />
-                </div>
-                <div className="grid grid-cols-2 gap-2 w-full">
-                  {topo.slice(5).map((n) => <No key={n.nome} {...n} />)}
-                </div>
-                <p className="text-[11px] text-slate-400 text-center">Verde = medido agora · cinza = sem medição. O mapa clicável está a caminho (tarefa #1861).</p>
-              </div>
-            </Caixa>
+            {cxTopologia}
 
             <div className="space-y-6">
-              <Caixa titulo="Uso de IA" acao={<VerTodos onClick={() => ir("sistema")}>Ver detalhes</VerTodos>}>
-                {!totalIa ? <p className="text-sm text-slate-500">Sem dado ainda. O medidor de uso por IA está sendo feito (tarefas #1805 a #1809).</p> : (
-                  <div className="flex items-center gap-4">
-                    <Rosca fatias={usoIa.map((p, i) => ({ valor: p.usado, cor: CORES_IA[i % CORES_IA.length] }))} centro={String(totalIa)} sub="pedidos hoje" />
-                    <ul className="space-y-1.5 text-xs flex-1 min-w-0">
-                      {usoIa.map((p, i) => (
-                        <li key={p.provedor} className="flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full shrink-0" style={{ background: CORES_IA[i % CORES_IA.length] }} />
-                          <span className="flex-1 truncate text-slate-700">{NOME_IA[p.provedor] || p.provedor}</span>
-                          <span className="text-slate-500">{Math.round((p.usado / totalIa) * 100)}%</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </Caixa>
-              <Caixa titulo="Máquinas locais">
-                {!d.maquinas ? <div className="h-16 rounded-xl bg-slate-100 animate-pulse" /> : !d.maquinas.maquinas.length ? (
-                  <div className="flex items-start gap-3 text-sm">
-                    <span className="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0"><Icone nome="pc" /></span>
-                    <p className="text-slate-500">{d.maquinas.ligado ? "Nenhum PC mandou sinal ainda. No PC, deixe o agente da Kernex aberto (ele manda um sinal por minuto)." : "A ligação dos PCs está desligada no servidor (falta NEXIA_MAQUINA_TOKEN)."}</p>
-                  </div>
-                ) : (
-                  <ul className="space-y-3" data-testid="maquinas">
-                    {d.maquinas.maquinas.map((m) => {
-                      const gb = (v?: number | null) => (v ? `${String(v).replace(".", ",")} GB` : "?"); // o agente já manda em GB
-                      return (
-                        <li key={m.nome} className="flex items-start gap-3 text-sm">
-                          <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${m.online ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-400"}`}><Icone nome="pc" /></span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2"><span className="font-medium text-slate-900 truncate">{m.nome}</span><Pilula e={m.online ? "ok" : "cinza"}>{m.online ? "Ligado" : "Sem sinal"}</Pilula></div>
-                            <div className="text-xs text-slate-500 truncate">{m.cpu || "CPU ?"} · RAM livre {gb(m.ramLivre)} de {gb(m.ramTotal)}</div>
-                            <div className="text-xs text-slate-500 truncate">IA local: {m.ollamaOk ? (m.modelos?.length ? m.modelos.join(", ") : "Ollama sem modelo") : "Ollama desligado"} · sinal {haQuanto(m.visto_em)}</div>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </Caixa>
+              {cxUsoIa}
+              {cxMaquinas}
             </div>
           </div>
         </div>
 
         <div className="space-y-6">
-          <Caixa titulo="Status dos serviços" acao={<Pilula e={todosOk ? "ok" : servicos.some((s) => s.e === "erro") ? "erro" : "atencao"}>{todosOk ? "Todos operacionais" : "Atenção"}</Pilula>}>
-            <ul className="space-y-1" data-testid="status-servicos">
-              {servicos.map((s) => (
-                <li key={s.nome}>
-                  <button onClick={() => ir(s.aba)} className="w-full flex items-center gap-3 rounded-lg px-1 py-2 text-left cursor-pointer hover:bg-slate-50">
-                    <Logo nome={s.nome} src={s.logo} tam={32} />
-                    <span className="flex-1 text-sm text-slate-800 truncate">{s.nome}</span>
-                    <Pilula e={s.e}>{s.texto}</Pilula>
-                    <Icone nome="seta" className="w-4 h-4 text-slate-300" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </Caixa>
+          {cxServicos}
 
-          <Caixa titulo="IAs que ajudam o Cortex" acao={<VerTodos onClick={irVagas}>Conectar</VerTodos>}>
-            {!vagas ? <div className="h-16 rounded-xl bg-slate-100 animate-pulse" /> : (
-              <ul className="space-y-2" data-testid="painel-vagas">
-                {vagas.vagas.filter((v, i, todas) => v.ligada || v === todas.find((x) => !x.ligada)).map((v) => {
-                  const p = vagas.provedores.find((x) => x.id === v.provedor);
-                  const e = estadoVaga(v);
-                  return (
-                    <li key={v.vaga}>
-                      <button onClick={irVagas} className="w-full flex items-center gap-3 text-left cursor-pointer">
-                        {p ? <Logo nome={p.nome} src={p.logo} tam={28} /> : <span className="w-7 h-7 rounded-lg border-2 border-dashed border-slate-300 text-slate-400 text-xs font-bold flex items-center justify-center">{v.vaga}</span>}
-                        <span className="flex-1 text-sm text-slate-700 truncate">{p ? p.nome : `Vaga ${v.vaga} livre`}</span>
-                        <Pilula e={PONTO_VAGA[e.e]}>{e.texto}</Pilula>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </Caixa>
+          {cxVagas}
 
-          <Caixa titulo="Ações rápidas">
-            <div className="space-y-2">
-              {acoes.map((a) => {
-                const cls = `w-full flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium cursor-pointer ${a.cor}`;
-                const dentro = <><Icone nome={a.icone} className="w-5 h-5" />{a.nome}</>;
-                return a.href
-                  ? <a key={a.nome} href={a.href} target={a.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className={cls}>{dentro}</a>
-                  : <button key={a.nome} onClick={() => (a.onClick ? a.onClick() : a.aba && ir(a.aba))} className={cls} data-testid={a.onClick ? "acao-conectar-ias" : undefined}>{dentro}</button>;
-              })}
-            </div>
-          </Caixa>
+          {cxAcoes}
 
           <Caixa className="hidden lg:block" titulo="Alertas e notificações" acao={<button onClick={conferir} disabled={carregando} className="text-xs font-medium text-indigo-600 cursor-pointer disabled:opacity-50" data-testid="central-conferir">{carregando ? "Conferindo…" : "Conferir agora"}</button>}>
             {!d.saude ? <div className="h-24 rounded-xl bg-slate-100 animate-pulse" /> : !avisos.length ? (
