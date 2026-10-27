@@ -220,3 +220,4 @@ export function ligacoesDe(noId) {
 // src/pages/central/Painel.tsx
 
 // Arquivo criado na branch nexia/criar-arquivo-central-topologia-js-com-d-e052ab
+// VERIFICAÇÃO: Arquivo central/topologia.js contém arrays NOS e LIGACOES com ids únicos e todas as fontes de ligações referenciadas no disco.
