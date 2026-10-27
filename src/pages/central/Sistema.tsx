@@ -6,7 +6,7 @@ import type { Cor } from "./ui";
 import Mais from "./Mais";
 import SaudeHistorico from "./SaudeHistorico";
 import ConectarIAs from "./ConectarIAs";
-import UltimosErros from "./UltimosErros";
+import UltimosErros from "./UltimosErros";\nimport EscadaCard from "../../components/EscadaCard";
 
 import { Abre, useModo } from "./celular";
 import { buscarContextoIA, sanitizarTexto } from "@/lib/fetch-contexto-ia";
@@ -166,6 +166,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
       ) : <ConectarIAs inicial={d.vagas} />}
       <SaudeHistorico />
       <UltimosErros />
+      <EscadaCard />
 
       <Cartao titulo="Chaves e IAs" acao={<Botao onClick={testar} disabled={testando} testid="testar-chaves">{testando ? "Testando…" : "🧪 Testar todas agora"}</Botao>}>
         {!d.empresa ? <Carregando /> : (
