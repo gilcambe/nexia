@@ -3,7 +3,7 @@
  * @brief Manipulador principal para processar mensagens de chat com base nas intenções detectadas.
  */
 
-import { detectIntent } from './intents';
+import { detectIntent, IntentPatterns } from './intents';
 import { clearUserMemory, forgetSpecificFact } from '../controllers/memoryController'; // Supondo que memoryController esteja um nível acima
 
 export async function handleChatMessage(message: string, userId: string): Promise<string> {
