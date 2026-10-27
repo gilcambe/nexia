@@ -99,3 +99,21 @@ test('FV8. #2188: banco novo sem índice (FAILED_PRECONDITION de índice) é pul
   assert.equal(snap.size, 0);
   assert.equal(db.projectId, 'e');
 });
+
+test('FV9. #2188: banco novo (D) sem índice composto pronto nem chega a receber pedido; vai direto ao próximo', async () => {
+  const { Firestore } = require('../../lib/firebase-lite/firestore');
+  const vistos = [];
+  const fetchImpl = async url => {
+    vistos.push(url);
+    if (url.endsWith('/indexes')) return { ok: true, status: 200, text: async () => (url.includes('/projects/d/') ? '{}' : JSON.stringify({ indexes: [{ state: 'READY' }] })) };
+    return { ok: true, status: 200, text: async () => JSON.stringify({ commitTime: '2026-10-27T00:00:00Z', writeResults: [{}] }) };
+  };
+  const bancos = ['d', 'e'].map(p => ({ projectId: p, getToken: async () => 't', conferirIndices: true }));
+  const db = new Firestore({ projectId: 'd', getToken: bancos[0].getToken, fetchImpl });
+  db.enableFailover(bancos);
+  await db.collection('x').doc('1').set({ a: 1 });
+  await db.collection('x').doc('2').set({ a: 1 });
+  assert.equal(db.projectId, 'e');
+  assert.ok(!vistos.some(u => u.includes('/projects/d/') && !u.endsWith('/indexes')), 'nada foi gravado no D');
+  assert.equal(vistos.filter(u => u.endsWith('/indexes')).length, 2, 'confere cada banco uma vez só');
+});
