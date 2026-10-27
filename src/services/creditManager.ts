@@ -1,3 +1,5 @@
+import plansData from '../../config/plans.json';
+
 export type PlanId = 'free' | 'plus' | 'pro';
 
 export interface Plan {
@@ -17,11 +19,14 @@ export interface UserCredits {
 
 export type AuthCheck = (userId: string) => Promise<boolean> | boolean;
 
-const PLANS: Record<PlanId, Plan> = {
-  free: { id: 'free', name: 'Gratuito', sites: 1, credits: 10, price: 0 },
-  plus: { id: 'plus', name: 'Plus', sites: 3, credits: 50, price: 29 },
-  pro: { id: 'pro', name: 'Pro', sites: -1, credits: -1, price: 99 },
-};
+const rawPlans: { plans: Plan[] } = plansData as { plans: Plan[] };
+const PLANS: Record<PlanId, Plan> = (() => {
+  const map: Record<string, Plan> = {};
+  for (const p of rawPlans.plans) {
+    map[p.id] = p;
+  }
+  return map as Record<PlanId, Plan>;
+})();
 
 const STORAGE_KEY = 'nexia-credit-manager';
 
@@ -73,10 +78,16 @@ export class CreditManager {
     const plan = PLANS[planId];
     if (!plan) throw new Error('Plano inválido');
     const existing = this.users.get(userId);
+    const sitesCreated = existing ? existing.sitesCreated : 0;
+    if (plan.sites !== -1 && sitesCreated > plan.sites) {
+      throw new Error(
+        `Não é possível mudar para o plano ${plan.name}: você já tem ${sitesCreated} site(s), acima do limite de ${plan.sites} do novo plano.`
+      );
+    }
     this.users.set(userId, {
       userId,
       planId,
-      sitesCreated: existing ? existing.sitesCreated : 0,
+      sitesCreated,
       creditsRemaining: plan.credits === -1 ? -1 : plan.credits,
     });
     saveUsers(this.users);
@@ -88,6 +99,10 @@ export class CreditManager {
 
   async canCreateSite(userId: string): Promise<{ allowed: boolean; message?: string }> {
     await this.requireAuth(userId);
+    return this._canCreateSite(userId);
+  }
+
+  private _canCreateSite(userId: string): { allowed: boolean; message?: string } {
     const user = this.users.get(userId);
     if (!user) return { allowed: false, message: 'Usuário não encontrado' };
     const plan = PLANS[user.planId];
@@ -114,6 +129,10 @@ export class CreditManager {
 
   async consumeCredit(userId: string): Promise<{ success: boolean; message?: string; creditsRemaining?: number }> {
     await this.requireAuth(userId);
+    return this._consumeCredit(userId);
+  }
+
+  private _consumeCredit(userId: string): { success: boolean; message?: string; creditsRemaining?: number } {
     const user = this.users.get(userId);
     if (!user) return { success: false, message: 'Usuário não encontrado' };
     const plan = PLANS[user.planId];
@@ -133,8 +152,11 @@ export class CreditManager {
   }
 
   async registerSiteCreated(userId: string): Promise<{ success: boolean; message?: string }> {
-    const can = await this.canCreateSite(userId);
+    await this.requireAuth(userId);
+    const can = this._canCreateSite(userId);
     if (!can.allowed) return { success: false, message: can.message };
+    const credited = this._consumeCredit(userId);
+    if (!credited.success) return { success: false, message: credited.message };
     const user = this.users.get(userId)!;
     user.sitesCreated += 1;
     this.users.set(userId, user);
