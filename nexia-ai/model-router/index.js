@@ -179,6 +179,8 @@ function createRouter(o = {}) {
         break;
       }
       const d = dedupped[i];
+      // Novo provedor: buffer de chunks começa vazio (nunca mistura chunks de provedores diferentes).
+      chunkBuffer = [];
 
       const placar = getPlacar();
       if (placar && placar.bloqueado(d) && dedupped.length > 1) {
@@ -221,8 +223,7 @@ function createRouter(o = {}) {
         tFirstChunkMs = tFirstMs;
         tStreamStartMs = performance.now();
         console.log(`[model-router] dispatch ${d.provider}/${d.model} firstChunkMs=${Math.round(tFirstMs)} totalDispatchMs=${Math.round(tDispatchMs)}`);
-        // Primeiro chunk válido recebido: cancela timer de primeiro chunk e aborta quaisquer conexões secundárias pendentes.
-        if (cancelFirst) cancelFirst();
+        // Aborta conexões secundárias pendentes assim que o primeiro chunk válido chega.
         abortControllers.forEach((ctrlSec, key) => {
           if (key !== d.provider) {
             try { ctrlSec.abort(); } catch {}
@@ -230,6 +231,7 @@ function createRouter(o = {}) {
         });
       } catch (e) {
         if (cancelFirst) cancelFirst();
+        tDispatchMs = performance.now() - tDispatch0;
         try { ctrl.abort(); } catch {}
         abortControllers.delete(d.provider);
         if (typeof it.return === 'function') { try { await it.return(); } catch {} }
@@ -270,9 +272,9 @@ function createRouter(o = {}) {
           const tStreamTotalMs = performance.now() - tStreamStartMs;
           console.log(`[model-router] stream ${d.provider}/${d.model} stallWaitMs=${Math.round(tStallMs)} streamTotalMs=${Math.round(tStreamTotalMs)} dispatchMs=${Math.round(tDispatchMs)} firstChunkMs=${Math.round(tFirstChunkMs)}`);
         }
-                  if (nextItem.done) {
-            currentStreamDone = true;
-          }
+        if (nextItem.done) {
+          currentStreamDone = true;
+        }
       } catch (e) {
         if (typeof it.return === 'function') { try { await it.return(); } catch {} }
         if (placar) placar.marcar(d, 'transient');
@@ -305,10 +307,6 @@ function createRouter(o = {}) {
       }
     }
 
-    // accumulatedText montado uma única vez via join() (sem concatenação por chunk).
-    if (!accumulatedText && chunkBuffer.length) {
-      accumulatedText = chunkBuffer.join('');
-    }
     if (!accumulatedText && Date.now() - startTime >= totalTimeoutMs) {
       const tTotalMs = performance.now() - tDispatch0;
       console.log(`[model-router] timeout totalMs=${Math.round(tTotalMs)} providers=${dedupped.length}`);
