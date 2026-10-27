@@ -16,7 +16,6 @@ const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'so-humano', 'vez-do-claude
 // Início do dia em UTC (00:00) para contar envios de jules-enviado.
 const inicioDiaUtc = (agora) => new Date(new Date(agora).toISOString().split('T')[0] + 'T00:00:00Z').getTime();
 
-// Decide o que fazer com as issues travadas (função pura, testada).
 // Garante que o rótulo vez-do-claude exista (cor #d97706).
 async function garantirRotulo(p) {
   try {
