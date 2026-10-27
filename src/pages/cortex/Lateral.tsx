@@ -2,9 +2,10 @@ import type { Resumo } from "../meu-cortex/api";
 import { agruparPorData } from "./agrupar";
 import Logo from "./Logo";
 
-export type Vista = "chat" | "conexoes" | "tarefas" | "artefatos" | "config" | "central";
+export type Vista = "chat" | "assistentes" | "conexoes" | "tarefas" | "artefatos" | "config" | "central";
 
 const MENU: { id: Vista; nome: string; d: string }[] = [
+  { id: "assistentes", nome: "Meus assistentes", d: "M12 2a2 2 0 0 1 2 2v2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h2V4a2 2 0 0 1 2-2h4zm0 10a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" },
   { id: "conexoes", nome: "Conexões", d: "M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" },
   { id: "tarefas", nome: "Tarefas", d: "M9 11l3 3L22 4M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" },
   { id: "artefatos", nome: "Artefatos", d: "M12 2l9 5v10l-9 5-9-5V7zM12 12l9-5M12 12v10M12 12L3 7" },
