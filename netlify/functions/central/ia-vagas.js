@@ -55,9 +55,9 @@ const CONFERIR = {
   mistral: (k) => ({ url: 'https://api.mistral.ai/v1/models', headers: { Authorization: 'Bearer ' + k } }),
   cohere: (k) => ({ url: 'https://api.cohere.com/v1/models?page_size=1', headers: { Authorization: 'Bearer ' + k } }),
   huggingface: (k) => ({ url: 'https://huggingface.co/api/whoami-v2', headers: { Authorization: 'Bearer ' + k } }),
-  // NVIDIA: a lista de modelos é aberta (não confere a chave); uma conversa de 1 palavra confere.
+  // NVIDIA: a lista de modelos é aberta (não confere a chave); uma conversa de 1 palavra, no mesmo modelo que a reserva usa, confere.
   nvidia: (k) => ({ url: 'https://integrate.api.nvidia.com/v1/chat/completions', method: 'POST', headers: { Authorization: 'Bearer ' + k, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'meta/llama-3.1-8b-instruct', messages: [{ role: 'user', content: 'ok' }], max_tokens: 1 }) }),
+    body: JSON.stringify({ model: PROVEDORES.nvidia.modelo, messages: [{ role: 'user', content: 'ok' }], max_tokens: 1 }) }),
 };
 
 async function conferirDireto(provedor, chave, fetchImpl, ms) {
@@ -73,6 +73,8 @@ async function conferirDireto(provedor, chave, fetchImpl, ms) {
     const nome = PROVEDORES[provedor].nome;
     if (r.status === 401 || r.status === 403 || /API_KEY_INVALID|invalid api key|invalid_api_key/i.test(corpo)) return { situacao: 'recusada', tempo, motivo: `${nome} recusou a chave (${r.status}).` };
     if (r.status === 429) return { situacao: 'sem-cota', tempo, motivo: `${nome}: cota de hoje acabou (429).` };
+    // NVIDIA confere a chave antes do modelo: 404/410 = chave aceita, só o modelo de teste saiu do catálogo.
+    if (provedor === 'nvidia' && (r.status === 404 || r.status === 410)) return { situacao: 'ok', tempo };
     return { situacao: 'erro', tempo, motivo: `${nome} respondeu ${r.status}.` };
   } catch (e) {
     return { situacao: 'erro', tempo: Date.now() - t0, motivo: ctl.signal.aborted ? `${PROVEDORES[provedor].nome} demorou mais de ${ms / 1000} s.` : `Sem conexão com ${PROVEDORES[provedor].nome} agora.` };

@@ -148,3 +148,12 @@ test('VAGAS12: Cerebras saiu (pede cartão); Cohere e Hugging Face entraram; NVI
   assert.deepStrictEqual([j.ligado, j.comEle, j.prsHoje, j.ultimoPr.numero], [true, 1, 1, 9]);
   assert.strictEqual(v.estadoJules({}, null, []).ligado, false);
 });
+
+test('VAGAS13: NVIDIA testa no modelo da reserva; 410 (modelo saiu) com chave aceita conta como ok', async () => {
+  let corpo;
+  const r = await v.testarChave('nvidia', 'nvapi-' + 'z'.repeat(30), { fetchImpl: async (url, init) => { corpo = JSON.parse(init.body); return { ok: false, status: 410, text: async () => '' }; } });
+  assert.strictEqual(corpo.model, v.PROVEDORES.nvidia.modelo);
+  assert.strictEqual(r.situacao, 'ok');
+  const g = await v.testarChave('groq', CHAVE, { fetchImpl: async () => ({ ok: false, status: 410, text: async () => '' }) });
+  assert.strictEqual(g.situacao, 'erro');
+});
