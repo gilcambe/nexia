@@ -165,7 +165,7 @@ export const LIGACOES = [
     de: 'cortex',
     para: 'ias',
     tipo: 'ia',
-    fonte: 'nexia-ai/model-router/'
+    fonte: 'nexia-ai/model-router/index.js'
   },
   {
     id: 'l-fila-github',
