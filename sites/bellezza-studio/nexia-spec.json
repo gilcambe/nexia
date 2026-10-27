@@ -1,0 +1,304 @@
+{
+  "spec": {
+    "kind": "site",
+    "name": "Bellezza Studio",
+    "tagline": "Estética e autocuidado com atenção de verdade",
+    "photo_theme": "beauty spa",
+    "description": "Estúdio de estética em São Paulo especializado em limpeza de pele, design de sobrancelha, massagens e drenagem linfática. Atendimento individualizado e acolhedor.",
+    "folder": "sites/bellezza-studio",
+    "fonts": {
+      "heading": "Playfair Display",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#7a5c46",
+      "accent": "#c9a87e",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#2e241e",
+      "muted": "#7a6e63",
+      "dark": "#14100d"
+    },
+    "style": "elegant",
+    "contact": {
+      "whatsapp": "5511900000000",
+      "phone": "(11) 90000-0000",
+      "email": "contato@bellezzastudio.com.br",
+      "address": "Rua das Flores, 450",
+      "city": "São Paulo - SP",
+      "hours": "Ter a Sáb, 9h às 19h",
+      "instagram": "bellezzastudio",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=bellezza-studio&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "sections": [
+      {
+        "type": "hero",
+        "id": "sua-beleza-merece-atencao-real",
+        "title": "Sua beleza merece atenção real",
+        "subtitle": "Tratamentos de pele, sobrancelhas e massagens com acolhimento e técnica.",
+        "eyebrow": "Estética facial e corporal",
+        "cta": {
+          "label": "Agendar pelo WhatsApp",
+          "href": "whatsapp"
+        },
+        "cta2": {
+          "label": "Ver todos os serviços",
+          "href": "#servicos"
+        },
+        "image_query": "woman receiving facial treatment beauty salon",
+        "video_query": "beauty spa treatment"
+      },
+      {
+        "type": "services",
+        "id": "servicos",
+        "title": "Nossos tratamentos",
+        "subtitle": "Cuidado feito para a sua rotina.",
+        "items": [
+          {
+            "title": "Limpeza de Pele Profunda",
+            "text": "Extração de cravos, esfoliação e máscara hidratante.",
+            "price": "a partir de R$ 140",
+            "image_query": "facial cleansing beauty salon",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Design de Sobrancelha",
+            "text": "Mapeamento facial e acabamento com pinça e henna.",
+            "price": "",
+            "image_query": "eyebrow design beauty studio",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Massagem Relaxante",
+            "text": "Técnicas suaves para aliviar tensão e estresse.",
+            "price": "a partir de R$ 180",
+            "image_query": "relaxing massage spa",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Drenagem Linfática",
+            "text": "Estimula a circulação e reduz inchaço corporal.",
+            "price": "",
+            "image_query": "lymphatic drainage massage",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          }
+        ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-o-estudio",
+        "title": "Sobre o estúdio",
+        "subtitle": "Criado para quem quer cuidar de si sem pressa. Usamos produtos dermocosméticos de confiança e atendemos cada cliente com horário dedicado e atenção aos detalhes.",
+        "text": "Criado para quem quer cuidar de si sem pressa. Usamos produtos dermocosméticos de confiança e atendemos cada cliente com horário dedicado e atenção aos detalhes.",
+        "image_query": "modern beauty salon interior reception desk",
+        "stats": [
+          {
+            "value": "5+",
+            "label": "anos"
+          },
+          {
+            "value": "1500+",
+            "label": "clientes atendidas"
+          },
+          {
+            "value": "4.9",
+            "label": "estrelas no Google"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "conheca-o-estudio",
+        "title": "Conheça o estúdio",
+        "subtitle": "",
+        "image_queries": [
+          "beauty salon interior",
+          "facial treatment bed",
+          "spa reception desk",
+          "skincare products shelf",
+          "makeup artist applying makeup",
+          "massage room candles",
+          "eyebrow shaping studio",
+          "natural light beauty room"
+        ],
+        "gif_queries": [
+          "face mask beauty"
+        ]
+      },
+      {
+        "type": "testimonials",
+        "id": "depoimentos",
+        "title": "Depoimentos",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Fernanda L.",
+            "role": "",
+            "text": "Sai com a pele renovada e a sobrancelha perfeita.",
+            "rating": 5
+          },
+          {
+            "name": "Aline T.",
+            "role": "",
+            "text": "Massagem maravilhosa, ambiente super aconchegante.",
+            "rating": 5
+          },
+          {
+            "name": "Carla S.",
+            "role": "",
+            "text": "Atendimento sem pressa e muito cuidadoso.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "perguntas-frequentes",
+        "title": "Perguntas frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Preciso agendar horário?",
+            "a": "Sim, todos os atendimentos são por agendamento prévio."
+          },
+          {
+            "q": "Aceitam cartão?",
+            "a": "Aceitamos cartão, Pix e dinheiro."
+          },
+          {
+            "q": "Quanto tempo dura a limpeza de pele?",
+            "a": "Em média, 60 minutos, com todas as etapas incluídas."
+          },
+          {
+            "q": "Tem estacionamento?",
+            "a": "Há vagas rotativas na rua e estacionamento próximo."
+          },
+          {
+            "q": "Atendem gestantes?",
+            "a": "Sim, com avaliação e produtos adequados para gestantes."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "marque-seu-horario",
+        "title": "Marque seu horário",
+        "subtitle": "Resposta rápida pelo WhatsApp.",
+        "cta": {
+          "label": "Chamar pelo WhatsApp",
+          "href": "whatsapp"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "fale-com-a-bellezza-studio",
+        "title": "Fale com a Bellezza Studio",
+        "subtitle": "",
+        "map": true,
+        "form": true
+      }
+    ]
+  },
+  "media": {
+    "s0.hero": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Interior_view_of_modern_beauty_salon.jpg/1280px-Interior_view_of_modern_beauty_salon.jpg",
+      "width": 1280,
+      "height": 854,
+      "alt": "Interior view of modern beauty salon",
+      "credit": "Interior view of modern beauty salon — Shixart1985 (BY 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/The_Little_Church_%28Miracles_Beauty_Spa_and_Fitness_Centre%29%2C_51_Anglesey_Road%2C_Alverstoke%2C_Gosport_%28April_2019%29_%284%29.JPG/1280px-The_Little_Church_%28Miracles_Beauty_Spa_and_Fitness_Centre%29%2C_51_Anglesey_Road%2C_Alverstoke%2C_Gosport_%28April_2019%29_%284%29.JPG",
+      "width": 1280,
+      "height": 886,
+      "alt": "File:The Little Church (Miracles Beauty Spa and Fitness Centre), 51 Anglesey Roa",
+      "credit": "File:The Little Church (Miracles Beauty Spa and Fitness Centre), 51 Anglesey Road, Alverstoke, Gosport (April ",
+      "provider": "openverse"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Dead_Sea%2C_Israel_-_Breathtaking_natural_beauty%2C_Spas%2C_healing_qualities%2C_salty_water%2C_a_unique_experience_and_great_hotels._You_can_stay_or_make_a_same_day_trip_from_Jerusalem.jpg/1280px-Dead_Sea%2C_Israel_-_Breathtaking_natural_beauty%2C_Spas%2C_healing_qualities%2C_salty_water%2C_a_unique_experience_and_great_hotels._You_can_stay_or_make_a_same_day_trip_from_Jerusalem.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "Dead Sea, Israel - Breathtaking natural beauty, Spas, healing qualities, salty w",
+      "credit": "Dead Sea, Israel - Breathtaking natural beauty, Spas, healing qualities, salty water, a unique experience and ",
+      "provider": "openverse"
+    },
+    "s1.item2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Dead_Sea%2C_Israel_-_Breathtaking_natural_beauty%2C_Spas%2C_healing_qualities%2C_salty_water_and_a_unique_experience_would_aptly_describe_one_of_a_unique_wonder_that_the_Dead_Sea_is.jpg/1280px-Dead_Sea%2C_Israel_-_Breathtaking_natural_beauty%2C_Spas%2C_healing_qualities%2C_salty_water_and_a_unique_experience_would_aptly_describe_one_of_a_unique_wonder_that_the_Dead_Sea_is.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "Dead Sea, Israel - Breathtaking natural beauty, Spas, healing qualities, salty w",
+      "credit": "Dead Sea, Israel - Breathtaking natural beauty, Spas, healing qualities, salty water and a unique experience w",
+      "provider": "openverse"
+    },
+    "s1.item3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/41/Health%2C_Beauty_%26_Spa_Treatments_-_50887327683.jpg/1280px-Health%2C_Beauty_%26_Spa_Treatments_-_50887327683.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "Health, Beauty & Spa Treatments - 50887327683",
+      "credit": "Health, Beauty & Spa Treatments - 50887327683 — geehairimages (BY 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s2.about": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/Dead_Sea%2C_Israel-_Travel_from_Jerusalem_visit_Masada_then_enjoy_outstanding_natural_beauty%2C_Spas%2C_salty_water_and_a_unique_experience_in_Dead_Sea._You_can_choose_to_stay_in_a_resort_or_return_to_Jerusalem_same_day.jpg/1280px-Dead_Sea%2C_Israel-_Travel_from_Jerusalem_visit_Masada_then_enjoy_outstanding_natural_beauty%2C_Spas%2C_salty_water_and_a_unique_experience_in_Dead_Sea._You_can_choose_to_stay_in_a_resort_or_return_to_Jerusalem_same_day.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "Dead Sea, Israel- Travel from Jerusalem visit Masada then enjoy outstanding natu",
+      "credit": "Dead Sea, Israel- Travel from Jerusalem visit Masada then enjoy outstanding natural beauty, Spas, salty water ",
+      "provider": "openverse"
+    },
+    "s3.g0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/The_Little_Church_%28Miracles_Beauty_Spa_and_Fitness_Centre%29%2C_51_Anglesey_Road%2C_Alverstoke%2C_Gosport_%28April_2019%29_%283%29.JPG/1280px-The_Little_Church_%28Miracles_Beauty_Spa_and_Fitness_Centre%29%2C_51_Anglesey_Road%2C_Alverstoke%2C_Gosport_%28April_2019%29_%283%29.JPG",
+      "width": 1280,
+      "height": 960,
+      "alt": "File:The Little Church (Miracles Beauty Spa and Fitness Centre), 51 Anglesey Roa",
+      "credit": "File:The Little Church (Miracles Beauty Spa and Fitness Centre), 51 Anglesey Road, Alverstoke, Gosport (April ",
+      "provider": "openverse"
+    },
+    "s3.g1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/The_Little_Church_%28Miracles_Beauty_Spa_and_Fitness_Centre%29%2C_51_Anglesey_Road%2C_Alverstoke%2C_Gosport_%28April_2019%29_%282%29.JPG/1280px-The_Little_Church_%28Miracles_Beauty_Spa_and_Fitness_Centre%29%2C_51_Anglesey_Road%2C_Alverstoke%2C_Gosport_%28April_2019%29_%282%29.JPG",
+      "width": 1280,
+      "height": 886,
+      "alt": "File:The Little Church (Miracles Beauty Spa and Fitness Centre), 51 Anglesey Roa",
+      "credit": "File:The Little Church (Miracles Beauty Spa and Fitness Centre), 51 Anglesey Road, Alverstoke, Gosport (April ",
+      "provider": "openverse"
+    },
+    "s3.g2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/The_Little_Church_%28Miracles_Beauty_Spa_and_Fitness_Centre%29%2C_51_Anglesey_Road%2C_Alverstoke%2C_Gosport_%28April_2019%29_%281%29.JPG/1280px-The_Little_Church_%28Miracles_Beauty_Spa_and_Fitness_Centre%29%2C_51_Anglesey_Road%2C_Alverstoke%2C_Gosport_%28April_2019%29_%281%29.JPG",
+      "width": 1280,
+      "height": 853,
+      "alt": "File:The Little Church (Miracles Beauty Spa and Fitness Centre), 51 Anglesey Roa",
+      "credit": "File:The Little Church (Miracles Beauty Spa and Fitness Centre), 51 Anglesey Road, Alverstoke, Gosport (April ",
+      "provider": "openverse"
+    },
+    "s3.g3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Salon_and_beauty_spa.jpg/1280px-Salon_and_beauty_spa.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "Salon and beauty spa",
+      "credit": "Salon and beauty spa — Claireneon (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    }
+  }
+}
