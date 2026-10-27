@@ -68,7 +68,7 @@
         "items": [
           {
             "title": "Clonagem Inteligente",
-            "text": "Leitura de variáveis SLUG e persistência segura em clientes/<slug>/design.json.",
+            "text": "Leitura de variáveis SLUG e persistência segura em clientes/<slug>/design.json com tratamento de erros.",
             "price": "Nativo",
             "image_query": "code files structure",
             "tag": "",
@@ -77,7 +77,7 @@
           },
           {
             "title": "Validação de Erros",
-            "text": "Tratamento de exceções de escrita e verificação automática de diretórios.",
+            "text": "Tratamento de exceções de escrita e verificação automática de diretórios com limite de 400 linhas.",
             "price": "Robusto",
             "image_query": "bug fixing code",
             "tag": "",
