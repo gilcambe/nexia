@@ -11,6 +11,7 @@ const REPO = '/repos/gilcambe/nexia';
 // Pedido do dono (25 e 26/10/2026): nada de horas esperando. 1 h dá para o Jules codar e testar uma tarefa pequena;
 // passou disso, volta ao Cortex (pode ir ao Jules de novo depois).
 const ESPERA_JULES_H = 1;
+const COR_VEZ_DO_CLAUDE = '#d97706';
 const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'vez-do-claude'];
 
 // Início do dia em UTC (00:00) para contar envios de jules-enviado.
@@ -23,7 +24,7 @@ async function garantirRotulo(p) {
   } catch (_) {
     await p.gh(`${REPO}/labels`, {
       method: 'POST',
-      body: JSON.stringify({ name: 'vez-do-claude', color: 'd97706' }),
+      body: JSON.stringify({ name: 'vez-do-claude', color: COR_VEZ_DO_CLAUDE }),
     }).catch(() => null);
   }
 }
