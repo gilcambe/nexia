@@ -183,9 +183,9 @@ class VazaoController {
     return res;
   }
 
-  verificarCota(provedor, limite = null) {
+  verificarCota(provedor, limite = null, data = null) {
     const prov = String(provedor).toLowerCase();
-    const contadores = this.obterContadores();
+    const contadores = this.obterContadores(data);
     const usado = contadores[prov] || 0;
     const lim = limite || (cotas.LIMITES && cotas.LIMITES[prov] ? cotas.LIMITES[prov].limite : 10000);
     const perto = usado >= lim * cotas.LIMIAR;
