@@ -14,9 +14,12 @@ async function main() {
   const dry = process.argv.includes('--dry-run');
   const sa = JSON.parse(Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || '', 'base64').toString('utf8') || '{}');
   if (!sa.project_id) throw new Error('Falta FIREBASE_SERVICE_ACCOUNT_BASE64.');
-  await publicar(sa, dry);
-  // Projetos grátis extras do Vault/Cortex (B e C): mesmos índices.
-  for (const letra of ['B', 'C']) {
+  // --so-cofre: publica só nos bancos extras do Vault (B..H), sem tocar no projeto principal.
+  const soCofre = process.argv.includes('--so-cofre');
+  if (!soCofre) await publicar(sa, dry);
+  // Projetos grátis extras do Vault/Cortex (B..H, criados com scripts/criar-banco.bat): mesmos índices.
+  // #2188: sem os índices compostos, o banco novo responde FAILED_PRECONDITION e a execução do Cortex falha.
+  for (const letra of ['B', 'C', 'D', 'E', 'F', 'G', 'H']) {
     const raw = (process.env[`FIREBASE_SERVICE_ACCOUNT_${letra}`] || '').trim();
     if (!raw) continue;
     const b = JSON.parse(raw);
