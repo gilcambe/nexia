@@ -17,6 +17,19 @@ const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'so-humano', 'vez-do-claude
 const inicioDiaUtc = (agora) => new Date(new Date(agora).toISOString().split('T')[0] + 'T00:00:00Z').getTime();
 
 // Decide o que fazer com as issues travadas (função pura, testada).
+// Garante que o rótulo vez-do-claude exista (cor #d97706).
+async function garantirRotulo(p) {
+  try {
+    await p.gh(`${REPO}/labels/vez-do-claude`);
+  } catch (_) {
+    await p.gh(`${REPO}/labels`, {
+      method: 'POST',
+      body: JSON.stringify({ name: 'vez-do-claude', color: 'd97706' }),
+    }).catch(() => null);
+  }
+}
+
+// Decide o que fazer com as issues travadas (função pura, testada).
 function decidir(issues, prs, agora, nomes) {
   const recusado = (p) => (p.labels || []).some(l => (l.name || l) === 'revisor-recusou');
   const prDe = (n) => prs.some(p => !recusado(p) && new RegExp(`#${n}(?!\\d)`).test(`${p.title || ''}\n${p.body || ''}`));
@@ -53,13 +66,14 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
   const { mandarParaJules } = require('../netlify/functions/central/pedidos-jules.js');
   const p = criarPedidos(env, fetchFn);
   if (!p.temToken) return { skipped: 'sem token do GitHub' };
+  await garantirRotulo(p);
   const travadas = await p.gh(`${REPO}/issues?state=open&labels=cortex-travado&per_page=100&sort=created&direction=asc`);
   const planejadas = await p.gh(`${REPO}/issues?state=open&labels=cortex-jules&per_page=50&sort=created&direction=asc`).catch(() => []);
   const pl = Array.isArray(planejadas) ? planejadas : [];
   const issues = [...pl, ...(Array.isArray(travadas) ? travadas : []).filter(t => !pl.some(x => x.number === t.number))];
   const prs = await p.gh(`${REPO}/pulls?state=open&per_page=100`);
   const d = decidir(issues || [], prs || [], at, nomes);
-  const out = { retomadas: [], reserva: [], humano: [] };
+  const out = { retomadas: [], reserva: [], humano: [], claude: [], devolver: [] };
   const tirar = (n, l) => p.gh(`${REPO}/issues/${n}/labels/${encodeURIComponent(l)}`, { method: 'DELETE' }).catch(() => null);
   const por = (n, ls) => p.gh(`${REPO}/issues/${n}/labels`, { method: 'POST', body: JSON.stringify({ labels: ls }) }).catch(() => null);
   const comentar = (n, body) => p.gh(`${REPO}/issues/${n}/comments`, { method: 'POST', body: JSON.stringify({ body }) }).catch(() => null);
@@ -81,8 +95,21 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
   }
   for (const n of d.humano) {
     await por(n, ['vez-do-claude']);
-    await comentar(n, '🪜 Degrau 3: o Cortex e as IAs grátis (Jules) tentaram 2 vezes cada e não entregaram. Vez do Claude, que faz só esta tarefa e devolve a fila ao Cortex (docs/ESCADA-IA.md).');
+    await comentar(n, `🪜 Degrau 3: vez-do-claude — o Cortex e as IAs grátis (Jules) tentaram 2 vezes cada e não entregaram. Vez do Claude, que faz só esta tarefa e devolve a fila ao Cortex (docs/ESCADA-IA.md). (Jules hoje: ${enviadosHoje}/15)`);
     out.humano.push(n);
+  }
+  for (const n of d.claude) {
+    const i = issues.find(x => x.number === n);
+    await por(n, ['vez-do-claude']);
+    await comentar(n, `🪜 Degrau 3: vez-do-claude — ${enviadosHoje} envios ao Jules hoje (limite 15), tarefa sem jules-enviado é redirecionada para o Claude (docs/ESCADA-IA.md). (Jules hoje: ${enviadosHoje}/15)`);
+    out.claude.push(n);
+  }
+  for (const n of d.devolver) {
+    const i = issues.find(x => x.number === n);
+    for (const l of nomes(i)) await tirar(n, l);
+    await por(n, ['cortex-travado']);
+    await comentar(n, `🪜 Degrau 2: cortex-travado — envios do Júles abaixo do limite (${enviadosHoje}/15), a tarefa volta ao degrau 2 e fica travada para nova tentativa. (Jules hoje: ${enviadosHoje}/15)`);
+    out.devolver.push(n);
   }
   if (d.enviar) {
     const r = await mandarParaJules(p, d.enviar, 'o robô (automático, tarefa travada)', { env, fetchFn });
