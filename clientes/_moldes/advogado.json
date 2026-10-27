@@ -1,0 +1,46 @@
+{
+  "estilo": {
+    "primario": "#1a3a6d",
+    "secundario": "#8a7f72",
+    "terciario": "#b1a79a",
+    "neutro": "#f8f8f8",
+    "sucesso": "#28a745",
+    "alerta": "#ffc107",
+    "erro": "#dc3545",
+    "info": "#17a2b8"
+  },
+  "paleta": {
+    "cores": [
+      "#1a3a6d",
+      "#8a7f72",
+      "#b1a79a",
+      "#6a7a8f",
+      "#d8c3a5"
+    ]
+  },
+  "fontes": {
+    "primaria": "[TROCAR] Merriweather",
+    "secundaria": "[TROCAR] Lato"
+  },
+  "photo_theme": "advocacia, escritório de advocacia, justiça, consultoria legal",
+  "image_query": "advogado sério no escritório, sala de tribunal, balança da justiça, documentos legais",
+  "secoes": [
+    {
+      "titulo": "[TROCAR] Soluções Jurídicas Abrangentes",
+      "conteudo": "[TROCAR] Oferecemos assessoria jurídica completa para indivíduos e empresas, com foco em resultados e na defesa dos seus direitos. Nossa equipe é experiente e dedicada a cada caso."
+    },
+    {
+      "titulo": "[TROCAR] Áreas de Atuação",
+      "conteudo": "[TROCAR] Atuamos nas áreas de Direito Civil, Trabalhista, Empresarial, Imobiliário e Previdenciário, sempre com a máxima atenção aos detalhes."
+    },
+    {
+      "titulo": "[TROCAR] Entre em Contato",
+      "conteudo": "[TROCAR] Entre em contato conosco para uma consultoria inicial sem compromisso. Estamos prontos para analisar seu caso e oferecer a melhor estratégia jurídica possível."
+    }
+  ],
+  "contato": {
+    "email": "[TROCAR] contato@advocaciaprime.com",
+    "telefone": "[TROCAR] (31) 3333-4444",
+    "endereco": "[TROCAR] Av. da Justiça, 777, Belo Horizonte, MG"
+  }
+}

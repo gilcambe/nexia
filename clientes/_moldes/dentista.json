@@ -1,0 +1,46 @@
+{
+  "estilo": {
+    "primario": "#009688",
+    "secundario": "#8bc34a",
+    "terciario": "#ff5722",
+    "neutro": "#f5f7f8",
+    "sucesso": "#28a745",
+    "alerta": "#ffc107",
+    "erro": "#dc3545",
+    "info": "#17a2b8"
+  },
+  "paleta": {
+    "cores": [
+      "#009688",
+      "#8bc34a",
+      "#00bcd4",
+      "#4caf50",
+      "#ff9800"
+    ]
+  },
+  "fontes": {
+    "primaria": "Montserrat",
+    "secundaria": "Open Sans"
+  },
+  "photo_theme": "odontologia, dentista, sorriso, clínica odontológica",
+  "image_query": "modern dental clinic, dentist smiling, dental care equipment, clean teeth",
+  "secoes": [
+    {
+      "titulo": "Sorriso Saudável e Bonito",
+      "conteudo": "Nossa clínica odontológica oferece tratamentos modernos e humanizados para cuidar do seu sorriso com toda a segurança, conforto e tecnologia de ponta."
+    },
+    {
+      "titulo": "Tratamentos Especializados",
+      "conteudo": "Realizamos desde limpezas preventivas e clareamento dental até implantes, ortodontia e reabilitação oral completa com profissionais especializados."
+    },
+    {
+      "titulo": "Agende sua Avaliação",
+      "conteudo": "Venha fazer uma avaliação com nossa equipe. Cuidamos do seu sorriso para que você possa sorrir com confiança e qualidade de vida."
+    }
+  ],
+  "contato": {
+    "email": "contato@odontoprime.com",
+    "telefone": "(11) 98888-7777",
+    "endereco": "Rua dos Sorrisos, 100, São Paulo, SP"
+  }
+}
