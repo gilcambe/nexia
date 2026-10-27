@@ -51,7 +51,122 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
     return { total, pagina: p, temMais: p * 30 < total, itens: (r.items || []).map(resumo) };
   }
 
-  return { lista, gh, temToken: !!token };
+  async function githubRequest(caminho, init = {}) {
+    return gh(caminho, init);
+  }
+
+  async function ehDono(login) {
+    try {
+      const usuario = await gh('/user');
+      const loginToken = usuario.login || '';
+      if (!login) return true;
+      return login === loginToken;
+    } catch (_) {
+      return login === (env.NEXIA_DONO_LOGIN || '');
+    }
+  }
+
+  return { lista, gh, githubRequest, ehDono, temToken: !!token };
 }
 
-module.exports = { criarPedidos, situacao, resumo, nomes, frase, REPO };
+async function handleAjudaIas(event, context) {
+  const pedidos = criarPedidos(process.env, fetch);
+  const { githubRequest, ehDono } = pedidos;
+
+  const headers = event.headers || {};
+  const login = headers['x-github-login'] || headers['x-nexia-login'] || '';
+
+  if (!(await ehDono(login))) {
+    return { statusCode: 403, body: JSON.stringify({ erro: 'não autorizado' }) };
+  }
+
+  if (event.httpMethod === 'GET') {
+    // 1. Estado do interruptor
+    const qInterruptor = encodeURIComponent('repo:' + REPO + ' is:issue label:interruptor-ajuda "⚙️ Interruptor da ajuda das IAs"');
+    const buscaInterruptor = await githubRequest('/search/issues?per_page=1&q=' + qInterruptor);
+    let interruptor = 'ligado';
+    if (buscaInterruptor.total_count > 0) {
+      interruptor = buscaInterruptor.items[0].state === 'open' ? 'ligado' : 'desligado';
+    }
+
+    // 2. Última execução do revisor-gratis.yml
+    const runs = await githubRequest('/actions/workflows/revisor-gratis.yml/runs?per_page=1');
+    const listaRuns = runs.workflow_runs || runs.runs || [];
+    const ultimaExecucao = listaRuns[0] || null;
+
+    // 3. Comentários últimas 24h
+    const ISO_24H_AGO = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const comentarios = await githubRequest('/issues/comments?since=' + encodeURIComponent(ISO_24H_AGO) + '&per_page=100');
+    let aprovou = 0;
+    let recusou = 0;
+    for (const c of (comentarios || [])) {
+      const corpo = String(c.body || '');
+      if (corpo.startsWith('🪜 Revisor grátis aprovou')) aprovou++;
+      if (corpo.startsWith('🪜 Revisor grátis recusou')) recusou++;
+    }
+
+    // 4. Issues abertas por label
+    const qBase = 'repo:' + REPO + ' is:issue is:open';
+    const jules = await githubRequest('/search/issues?per_page=1&q=' + encodeURIComponent(qBase + ' label:jules-enviado'));
+    const vez = await githubRequest('/search/issues?per_page=30&q=' + encodeURIComponent(qBase + ' label:vez-do-claude'));
+    const travado = await githubRequest('/search/issues?per_page=1&q=' + encodeURIComponent(qBase + ' label:cortex-travado'));
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        interruptor,
+        ultima_execucao_revisor_gratis: ultimaExecucao ? { created_at: ultimaExecucao.created_at, conclusion: ultimaExecucao.conclusion } : null,
+        comentarios_24h: { aprovou, recusou },
+        issues_abertas: {
+          jules_enviado: jules.total_count || 0,
+          vez_do_claude: (vez.items || []).map((i) => ({ number: i.number, title: i.title })),
+          cortex_travado: travado.total_count || 0,
+        },
+      }),
+    };
+  }
+
+  if (event.httpMethod === 'POST') {
+    const body = JSON.parse(event.body || '{}');
+    const ligar = body.ligar === true;
+
+    const qInterruptor = encodeURIComponent('repo:' + REPO + ' is:issue label:interruptor-ajuda "⚙️ Interruptor da ajuda das IAs"');
+    const buscaInterruptor = await githubRequest('/search/issues?per_page=1&q=' + qInterruptor);
+    let numero;
+    if (buscaInterruptor.total_count > 0) {
+      numero = buscaInterruptor.items[0].number;
+    } else {
+      const criada = await githubRequest('/repos/' + REPO + '/issues', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: '⚙️ Interruptor da ajuda das IAs',
+          body: 'Interruptor da ajuda das IAs.',
+          labels: ['interruptor-ajuda'],
+        }),
+      });
+      numero = criada.number;
+    }
+
+    await githubRequest('/repos/' + REPO + '/issues/' + numero, {
+      method: 'PATCH',
+      body: JSON.stringify({ state: ligar ? 'open' : 'closed' }),
+    });
+
+    const usuario = await pedidos.gh('/user');
+    const loginDono = usuario.login || '';
+    const iso = new Date().toISOString();
+    await githubRequest('/repos/' + REPO + '/issues/' + numero + '/comments', {
+      method: 'POST',
+      body: JSON.stringify({ body: 'Interruptor alterado por @' + loginDono + ' em ' + iso }),
+    });
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ ok: true, ligar, issue: numero }),
+    };
+  }
+
+  return { statusCode: 405, body: JSON.stringify({ erro: 'método não permitido' }) };
+}
+
+module.exports = { criarPedidos, situacao, resumo, nomes, frase, REPO, handleAjudaIas };
