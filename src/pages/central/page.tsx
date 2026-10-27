@@ -27,11 +27,10 @@ const ABAS: { id: Aba; nome: string; frase: string; icone: string }[] = [
 const NO_CELULAR: Aba[] = ["inicio", "cortex", "clientes", "sistema"];
 
 const ACESSO_RAPIDO = [
-  { nome: "Abrir Cortex", href: "/cortex-app", logo: "/central/logos/cortex.svg" },
-  { nome: "Abrir Vault", href: "/projetos", logo: null },
-  { nome: "Abrir GitHub", href: "https://github.com/gilcambe/nexia", logo: "/central/logos/github.svg" },
-  { nome: "Abrir Firebase", href: "https://console.firebase.google.com/project/nexia-c8710", logo: "/central/logos/firebase.svg" },
-  { nome: "Abrir Cloudflare", href: "https://dash.cloudflare.com/", logo: "/central/logos/cloudflare.svg" },
+  { nome: "Abrir Cortex", href: "/cortex-app" },
+  { nome: "Abrir Vault", href: "/projetos" },
+  { nome: "Abrir GitHub", href: "https://github.com/gilcambe/nexia" },
+  { nome: "Abrir Firebase", href: "https://console.firebase.google.com/project/nexia-c8710" },
 ];
 
 export default function CentralPage() {
@@ -39,15 +38,16 @@ export default function CentralPage() {
   const { user, loading: authLoading } = useAuth();
   const { buscar } = useCentral();
   const [tema, setTema] = useState<boolean>(() => {
-    const savedChoice = sessionStorage.getItem("central-tema") === "true";
-    return savedChoice !== null ? savedChoice : true; // Tema claro como padrão
+    const savedChoice = sessionStorage.getItem("central-tema");
+    if (savedChoice === null) return true; // Tema claro como padrão
+    return savedChoice === "true";
   });
-  
+
   useEffect(() => {
     document.documentElement.classList.toggle("central-claro", tema);
-    sessionStorage.setItem("central-tema", tema.toString());
+    try { sessionStorage.setItem("central-tema", tema.toString()); } catch { /* sem storage */ }
   }, [tema]);
-  
+
   const [aba, setAba] = useState<Aba>(() => {
     const savedChoice = sessionStorage.getItem("central-aba") as Aba | undefined;
     const hashAba = location.hash.slice(1) as Aba;
@@ -64,7 +64,6 @@ export default function CentralPage() {
 
   const conferir = useCallback(async () => {
     setCarregando(true); setErros({});
-    // No máximo 3 pedidos ao mesmo tempo: 11 de uma vez derrubavam as partes mais pesadas no celular ("Failed to fetch").
     const fila = [...PARTES];
     const trabalhador = async () => {
       for (let p = fila.shift(); p; p = fila.shift()) {
@@ -83,7 +82,6 @@ export default function CentralPage() {
   const ir = (a: Aba) => { setAba(a); setMenu(false); history.replaceState(null, "", `#${a}`); window.scrollTo(0, 0); };
   const avisos = useMemo(() => calcularAvisos(d), [d]);
 
-  // Com a Central aberta, confere de novo a cada 5 minutos e avisa no aparelho quando algo novo fica vermelho.
   useEffect(() => {
     if (!user) return;
     const t = setInterval(conferir, 5 * 60000);
@@ -102,9 +100,9 @@ export default function CentralPage() {
   const vermelho = avisos.some((a) => a.cor === "vermelho");
   const buscar2 = (texto: string) => {
     setBusca(texto);
-    try { 
+    try {
       sessionStorage.setItem("central-busca", texto);
-      location.hash = 'clientes'; // Gravar hash quando busca não está vazia
+      location.hash = 'clientes';
     } catch { /* sem storage */ }
     if (texto.trim()) ir("clientes");
   };
@@ -112,10 +110,9 @@ export default function CentralPage() {
   const MenuLateral = (
     <nav className="flex flex-col h-full" aria-label="Módulos da Central">
       <div className="flex items-center gap-3 px-5 py-5">
-        <img src="/central/logos/kernex.svg" alt="" className="w-10 h-10" />
+        <img src="/central-icon.svg" alt="logo Kernex Central" className="w-10 h-10" />
         <div className="leading-tight">
-          <div className="text-xl font-bold text-slate-900">Kernex</div>
-          <div className="text-sm text-slate-500">Central</div>
+          <div className="text-xl font-bold text-slate-900">Kernex Central</div>
         </div>
       </div>
       <div className="px-3 space-y-1">
@@ -133,15 +130,15 @@ export default function CentralPage() {
       <div className="px-5 mt-6 text-xs font-medium text-slate-500">Acesso rápido</div>
       <div className="px-3 mt-2 space-y-0.5">
         {ACESSO_RAPIDO.map((l) => (
-          <a key={l.nome} href={l.href} target={l.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"
+          <a key={l.nome} href={l.href} target="_blank" rel="noopener noreferrer"
             className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50">
-            {l.logo ? <img src={l.logo} alt="" className="w-5 h-5" /> : <Icone nome="vault" className="w-5 h-5 text-emerald-600" />}
+            <Icone nome="vault" className="w-5 h-5 text-emerald-600" />
             {l.nome}
           </a>
         ))}
       </div>
       <div className="mt-auto px-5 py-4 flex items-center gap-2 text-xs text-slate-400">
-        <img src="/central/logos/kernex.svg" alt="" className="w-6 h-6" />
+        <img src="/central-icon.svg" alt="logo Kernex Central" className="w-6 h-6" />
         <span><b className="text-slate-600">Kernex</b> Central</span>
       </div>
     </nav>
@@ -161,7 +158,7 @@ export default function CentralPage() {
           <div className="flex items-center gap-3 px-4 lg:px-8 h-16">
             <button className="lg:hidden p-2 -ml-2 text-slate-600 cursor-pointer" onClick={() => setMenu(true)} aria-label="Abrir menu"><Icone nome="menu" className="w-6 h-6" /></button>
             <div className="lg:hidden flex items-center gap-2 flex-1" data-testid="central-title">
-              <img src="/central/logos/kernex.svg" alt="" className="w-7 h-7" /><span className="font-bold">Kernex</span>
+              <img src="/central-icon.svg" alt="" className="w-7 h-7" /><span className="font-bold">Kernex</span>
             </div>
             <label className="hidden md:flex flex-1 max-w-xl items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 h-10 text-slate-400">
               <Icone nome="busca" className="w-5 h-5" />
