@@ -69,8 +69,10 @@ const fontesValidas = computed(() =>
   props.fontes.filter((f) => f && typeof f.url === 'string' && urlValida(f.url))
 );
 
+const tipoConversaNormalizado = computed(() => semAcento(props.tipoConversa));
+
 const deveMostrarSeloOuAviso = computed(() =>
-  !tiposOmitidos.includes(semAcento(props.tipoConversa))
+  !tiposOmitidos.includes(tipoConversaNormalizado.value)
 );
 
 const textoCerteza = computed(() => {
