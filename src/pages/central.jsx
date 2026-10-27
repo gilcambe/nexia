@@ -17,12 +17,10 @@ export default function Central() {
     let ignorar = false;
     const buscar = async () => {
       try {
-        const token = import.meta.env.VITE_NEXIA_JOBS_TOKEN || '';
         const resposta = await fetch('/api/custos', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({}),
         });
@@ -76,7 +74,7 @@ export default function Central() {
           <span className="text-lg font-bold">{formatarMoeda(dados.custoTotal)}</span>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
-          <span className="block text-sm text-slate-500 mb-2">Custo médio por plano</span>
+          <span className="block text-sm text-slate-500 mb-2">Custo médio geral</span>
           <span className="text-lg font-bold">{formatarMoeda(dados.custoMedioGeral || 0)}</span>
         </div>
         <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
