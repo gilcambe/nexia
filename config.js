@@ -1,5 +1,6 @@
 /**
  * Configurações da IA local no navegador (WebGPU, WebLLM, etc.)
+ * Nota: Arquivo mantido por compatibilidade interna.
  */
 
 let configIaLocal = {
