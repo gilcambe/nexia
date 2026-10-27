@@ -26,10 +26,10 @@ export default function ApiKeysPage() {
   const [sucesso, setSucesso] = useState<string | null>(null);
   const [abrirForm, setAbrirForm] = useState(false);
 
-  const call = useCallback(async (init: RequestInit = {}): Promise<Response> => {
+  const call = useCallback(async (init: RequestInit = {}, path = "/api-keys"): Promise<Response> => {
     const token = await getToken();
     if (!token) throw new Error("Faça login para continuar.");
-    return fetch(apiPath("/api-keys"), {
+    return fetch(apiPath(path), {
       ...init,
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     });
@@ -55,7 +55,7 @@ export default function ApiKeysPage() {
     if (!window.confirm("Remover esta chave de API? Essa ação não pode ser desfeita.")) return;
     setError(null);
     try {
-      const res = await call({ method: "DELETE", body: JSON.stringify({ id }) });
+      const res = await call({ method: "DELETE" }, `/api-keys?id=${encodeURIComponent(id)}`);
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
       setSucesso("Chave removida com sucesso.");
@@ -82,7 +82,7 @@ export default function ApiKeysPage() {
           </div>
           <button
             onClick={() => setAbrirForm(true)}
-            className="bg-nexia-cyan text-black font-semibold px-4 py-2 rounded-lg hover:bg-nexia-cyan-hover transition"
+            className="bg-nexia-cyan text-black font-semibold px-4 py-2 rounded-lg hover:bg-nexia-cyan-dim transition"
           >
             Nova chave
           </button>

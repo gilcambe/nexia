@@ -78,7 +78,7 @@ export default function ApiKeyForm({ onCriado }: ApiKeyFormProps) {
         <button
           type="submit"
           disabled={carregando}
-          className="w-full md:w-auto bg-nexia-cyan text-black font-semibold px-4 py-2 rounded-lg hover:bg-nexia-cyan-hover disabled:opacity-50 disabled:cursor-not-allowed transition"
+          className="w-full md:w-auto bg-nexia-cyan text-black font-semibold px-4 py-2 rounded-lg hover:bg-nexia-cyan-dim disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           {carregando ? "Criando..." : "Criar chave"}
         </button>
