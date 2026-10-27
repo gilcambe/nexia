@@ -19,6 +19,7 @@ export default async function handler(req, res) {
     const top10 = top10ClientesQueMaisGastam(lancamentos);
     const percentual = percentualCustoSobreReceita(custoTotal, receitaTotal);
     const alerta = tetoGlobalExcedido(custoTotal, config);
+    const custoMedioGeral = calcularCustoMedioGeral(lancamentos);
 
     return res.status(200).json({
       ok: true,
