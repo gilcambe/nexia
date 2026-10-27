@@ -164,6 +164,24 @@ export class CreditManager {
     saveUsers(this.users);
     return { success: true };
   }
+
+  async registerGeneration(userId: string): Promise<{ success: boolean; message?: string; creditsRemaining?: number }> {
+    await this.requireAuth(userId);
+    const can = this._canGenerateOrEdit(userId);
+    if (!can.allowed) return { success: false, message: can.message };
+    const credited = this._consumeCredit(userId);
+    if (!credited.success) return { success: false, message: credited.message };
+    return { success: true, creditsRemaining: credited.creditsRemaining };
+  }
+
+  async registerEdit(userId: string): Promise<{ success: boolean; message?: string; creditsRemaining?: number }> {
+    await this.requireAuth(userId);
+    const can = this._canGenerateOrEdit(userId);
+    if (!can.allowed) return { success: false, message: can.message };
+    const credited = this._consumeCredit(userId);
+    if (!credited.success) return { success: false, message: credited.message };
+    return { success: true, creditsRemaining: credited.creditsRemaining };
+  }
 }
 
 export const creditManager = new CreditManager();
