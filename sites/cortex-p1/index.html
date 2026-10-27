@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Site de Teste do Cortex-p1 — Painel de métricas e controle do Cortex</title>
-  <meta name="description" content="Painel de métricas e controle do Cortex">
-  <meta name="theme-color" content="#4f46e5">
+  <title>Cortex-p1 — Painel de controle e fila de desenvolvimento inteligente</title>
+  <meta name="description" content="Painel de controle e fila de desenvolvimento inteligente">
+  <meta name="theme-color" content="#7c3aed">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
 </head>
@@ -17,15 +17,16 @@
   <div class="shell">
     <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
       <div class="sidebar__brand">
-        <span class="logo" aria-hidden="true">S</span>
-        <span>Site de Teste do Cortex-p1</span>
+        <span class="logo" aria-hidden="true">C</span>
+        <span>Cortex-p1</span>
       </div>
       <nav class="sidebar__nav" aria-label="Seções">
         <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
-        <a href="#/metrics" data-route="metrics"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Métricas</span></a>
+        <a href="#/fila" data-route="fila"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Fila do Sistema</span></a>
+        <a href="#/issues" data-route="issues"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Issues Monitoradas</span></a>
       </nav>
       <div class="sidebar__foot">
-        <p>Suporte: suporte@cortexp1.com.br</p>
+        <p>Suporte: suporte@cortex.dev</p>
         <p>Dados salvos neste navegador.</p>
       </div>
     </aside>
@@ -35,7 +36,7 @@
         <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
         <div class="topbar__title">
           <h1 id="view-title">Painel</h1>
-          <p id="view-sub">Painel de métricas e controle do Cortex</p>
+          <p id="view-sub">Painel de controle e fila de desenvolvimento inteligente</p>
         </div>
         <label class="search">
           <span class="sr-only">Buscar</span>
@@ -99,7 +100,7 @@
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1","name":"Site de Teste do Cortex-p1","entities":[{"key":"metrics","label":"Métricas","singular":"Métrica","fields":[{"key":"provedor","label":"Provedor","type":"text","options":[],"required":true},{"key":"cota_usada_hoje","label":"Cota Usada Hoje","type":"number","options":[],"required":true},{"key":"mensagens_por_minuto","label":"Mensagens por Minuto","type":"number","options":[],"required":true},{"key":"tamanho_da_fila","label":"Tamanho da Fila","type":"number","options":[],"required":true},{"key":"erros_ultima_hora","label":"Erros na Última Hora","type":"number","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Ativo","Inativo"],"required":true}],"sample":[{"provedor":"Twilio","cota_usada_hoje":"12000","mensagens_por_minuto":"5","tamanho_da_fila":"200","erros_ultima_hora":"1","status":"Ativo"},{"provedor":"Nexmo","cota_usada_hoje":"8000","mensagens_por_minuto":"3","tamanho_da_fila":"150","erros_ultima_hora":"0","status":"Ativo"},{"provedor":"Plivo","cota_usada_hoje":"5000","mensagens_por_minuto":"4","tamanho_da_fila":"100","erros_ultima_hora":"2","status":"Inativo"},{"provedor":"Vonage","cota_usada_hoje":"2000","mensagens_por_minuto":"1","tamanho_da_fila":"50","erros_ultima_hora":"0","status":"Ativo"}]}]}</script>
+  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1","name":"Cortex-p1","entities":[{"key":"fila","label":"Fila do Sistema","singular":"Tarefa na Fila","fields":[{"key":"titulo","label":"Título da Tarefa","type":"text","options":[],"required":true},{"key":"etapa","label":"Etapa","type":"select","options":["Na fila","Travada: precisa de ajuda","Em execução","Com o Jules (IA grátis)","Com o Claude"],"required":true},{"key":"autor","label":"Autor","type":"text","options":[],"required":true},{"key":"tentativa","label":"Tentativa","type":"number","options":[],"required":true},{"key":"criado","label":"Criado em","type":"date","options":[],"required":true}],"sample":[{"titulo":"Atualizar dependências de segurança","etapa":"Em execução (pista 1) · tentativa 2","autor":"Equipe Central","tentativa":"2","criado":"2026-06-01"},{"titulo":"Correção de layout no painel","etapa":"Na fila · parte de um pedido maior","autor":"João Silva","tentativa":"1","criado":"2026-06-02"},{"titulo":"Implementar integração de IA","etapa":"Com o Claude · tentativa 3","autor":"Maria Souza","tentativa":"3","criado":"2026-06-03"},{"titulo":"Refatoração de API de pagamentos","etapa":"Travada: precisa de ajuda","autor":"Carlos Lima","tentativa":"1","criado":"2026-06-04"}]},{"key":"issues","label":"Issues Monitoradas","singular":"Issue","fields":[{"key":"numero","label":"Número #","type":"number","options":[],"required":true},{"key":"repositorio","label":"Repositório","type":"text","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Aberta","Fechada","Em análise"],"required":true},{"key":"rotulo_principal","label":"Rótulo Principal","type":"text","options":[],"required":true}],"sample":[{"numero":"142","repositorio":"central/github.js","status":"Aberta","rotulo_principal":"cortex-fila"},{"numero":"143","repositorio":"central/github.js","status":"Em análise","rotulo_principal":"cortex-rodando"},{"numero":"144","repositorio":"site/landing","status":"Aberta","rotulo_principal":"cortex-travado"},{"numero":"145","repositorio":"app/core","status":"Fechada","rotulo_principal":"jules-enviado"}]}]}</script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
   <script src="app.js" defer></script>
 </body>
