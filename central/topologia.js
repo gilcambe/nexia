@@ -211,3 +211,10 @@ export function nosPorId(id) {
 export function ligacoesDe(noId) {
   return LIGACOES.filter((l) => l.de === noId || l.para === noId);
 }
+
+// Fontes de ligação verificadas no disco:
+// src/pages/central/api.ts, netlify/functions/central/github.js,
+// .github/workflows/fila-cortex.yml, cloudflare/jules-auto.js
+// cloudflare/worker.js, cloudflare/app.js, nexia-ai/github-adapter/index.js,
+// nexia-ai/model-router/index.js, .github/workflows/body-coach-pages.yml,
+// src/pages/central/Painel.tsx
