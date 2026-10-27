@@ -152,6 +152,7 @@ export default function MemorySettings() {
             <p>⚠️ Ao desativar, novos fatos não serão armazenados, mas os existentes permanecerão até serem excluídos manualmente.</p>
           </div>
         </div>
+      </div>
       {/* Seção IA no meu aparelho (grátis, offline) */}
       <div className="mb-8">
         <div className="bg-[var(--cx-card)] border border-[var(--cx-line)] rounded-xl p-6">
