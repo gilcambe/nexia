@@ -1,5 +1,6 @@
 // src/api/custos.js
 // Endpoint /api/custos - agregados de custo para o painel central.
+// Branch: nexia/atualizar-src-pages-central-jsx-ou-equiv-bbd554
 import {
   calcularCustoTotalMes,
   calcularCustoMedioPorPlano,
