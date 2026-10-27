@@ -48,9 +48,10 @@ function saveUsers(users: Map<string, UserCredits>): void {
 
 export class CreditManager {
   private users: Map<string, UserCredits>;
-  private authCheck?: AuthCheck;
+  private authCheck: AuthCheck;
 
-  constructor(authCheck?: AuthCheck) {
+  constructor(authCheck: AuthCheck) {
+    if (!authCheck) throw new Error('authCheck é obrigatório');
     this.users = loadUsers();
     this.authCheck = authCheck;
   }
