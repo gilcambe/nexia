@@ -19,9 +19,9 @@ function lerConta(env, letra = 'B') {
   return sa;
 }
 
-// Bancos grátis do Vault em ordem (B, depois C): o primeiro é o ativo e, se a cota dele acabar, passa para o próximo.
+// Bancos grátis do Vault em ordem (B, C, D... H: cada um é um projeto Firebase grátis criado com scripts/criar-banco.bat): o primeiro é o ativo e, se a cota dele acabar, passa para o próximo.
 function criarBancoB(env = process.env) {
-  const contas = ['B', 'C'].map(l => lerConta(env, l)).filter(Boolean);
+  const contas = ['B', 'C', 'D', 'E', 'F', 'G', 'H'].map(l => lerConta(env, l)).filter(Boolean);
   if (!contas.length) return null;
   const { Firestore } = require('../../lib/firebase-lite/firestore');
   const { createTokenSource } = require('../../lib/firebase-lite/google-auth');
@@ -32,6 +32,15 @@ function criarBancoB(env = process.env) {
   if (env.NEXIA_D1_TOKEN && env.NEXIA_D1_ACCOUNT_ID) {
     const { createD1Backend, createD1Driver } = require('../../lib/firebase-lite/d1-backend');
     const backend = createD1Backend({ driver: createD1Driver({ token: env.NEXIA_D1_TOKEN, accountId: env.NEXIA_D1_ACCOUNT_ID, databaseName: env.NEXIA_D1_NAME || 'nexia-cortex' }) });
+    bancos.push({ projectId: backend.projectId, getToken: async () => '', backend });
+  }
+  // #2188: depois do D1, o banco dentro do próprio Worker (Durable Object SQLite, cota grátis separada).
+  const cofre = globalThis.__NEXIA_COFRE__;
+  if (cofre) {
+    const { createD1Backend, createD1Driver } = require('../../lib/firebase-lite/d1-backend');
+    const stub = cofre.get(cofre.idFromName('cofre'));
+    const fetchImpl = (url, init) => stub.fetch('https://cofre/query', { method: 'POST', body: init && init.body });
+    const backend = createD1Backend({ driver: createD1Driver({ token: 'do', accountId: 'do', databaseId: 'do', fetchImpl }), projectId: 'nexia-do' });
     bancos.push({ projectId: backend.projectId, getToken: async () => '', backend });
   }
   db.enableFailover(bancos);
