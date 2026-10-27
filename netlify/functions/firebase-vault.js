@@ -50,30 +50,57 @@ function vaultDb(env = process.env) {
 
 /**
  * Limpa tarefas_locais antigas no D1: remove documentos com status 'feito' ou 'erro'
- * e atualizado_em com mais de 1 dia. Retorna a quantidade deletada.
+ * e atualizado_em com mais de 1 dia. Executa DELETE com filtro SQL na API D1.
+ * Retorna a quantidade deletada.
  */
 async function limparTarefasLocais(env = process.env) {
   if (!env.NEXIA_D1_TOKEN || !env.NEXIA_D1_ACCOUNT_ID) {
     throw new Error('NEXIA_D1_TOKEN e NEXIA_D1_ACCOUNT_ID são obrigatórios para limpar tarefas_locais no D1.');
   }
-  const { createD1Driver } = require('../../lib/firebase-lite/d1-backend');
-  const driver = createD1Driver({
-    token: env.NEXIA_D1_TOKEN,
-    accountId: env.NEXIA_D1_ACCOUNT_ID,
-    databaseName: env.NEXIA_D1_NAME || 'nexia-cortex',
-  });
-  const limite = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-  const docs = await driver.list('', 'tarefas_locais', false);
-  const deletar = [];
-  for (const d of docs) {
-    const status = (d.fields && d.fields.status && d.fields.status.stringValue) || '';
-    const ts = (d.fields && d.fields.atualizado_em && d.fields.atualizado_em.timestampValue) || '';
-    if ((status === 'feito' || status === 'erro') && ts && ts < limite) {
-      deletar.push({ type: 'delete', path: d.path });
-    }
+  const accountId = env.NEXIA_D1_ACCOUNT_ID;
+  const token = env.NEXIA_D1_TOKEN;
+  const databaseName = env.NEXIA_D1_NAME || 'nexia-cortex';
+  const api = `https://api.cloudflare.com/client/v4/accounts/${accountId}`;
+  const H = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
+
+  // Resolve o UUID do banco D1 pelo nome.
+  const lista = await fetch(`${api}/d1/database?name=${encodeURIComponent(databaseName)}`, { headers: H });
+  const jLista = await lista.json();
+  if (!jLista || jLista.success === false) {
+    throw new Error(`D1: falha ao listar bancos: ${JSON.stringify(jLista.errors || jLista)}`);
   }
-  if (deletar.length) await driver.apply(deletar);
-  return deletar.length;
+  const hit = (jLista.result || []).find((d) => d && d.name === databaseName);
+  if (!hit) {
+    throw new Error(`Banco D1 '${databaseName}' não encontrado na conta ${accountId}.`);
+  }
+  const dbId = hit.uuid;
+
+  const limite = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+
+  const sql = [
+    "DELETE FROM docs",
+    "WHERE col = 'tarefas_locais'",
+    "AND parent = ''",
+    "AND json_extract(fields, '$.status.stringValue') IN ('feito', 'erro')",
+    "AND json_extract(fields, '$.atualizado_em.timestampValue') < ?",
+  ].join(' ');
+
+  const resposta = await fetch(`${api}/d1/database/${dbId}/query`, {
+    method: 'POST',
+    headers: H,
+    body: JSON.stringify({ sql, params: [limite] }),
+  });
+  const j = await resposta.json();
+  if (!resposta.ok || j.success === false) {
+    const msg = (j.errors && j.errors[0] && j.errors[0].message) || `Cloudflare respondeu ${resposta.status}`;
+    throw new Error(`D1: ${msg}`);
+  }
+
+  const resultado = (j.result && Array.isArray(j.result) && j.result[0] && j.result[0].results)
+    ? j.result[0].results
+    : [];
+  const deletados = resultado.reduce((s, r) => s + (r.meta && r.meta.changes ? Number(r.meta.changes) : 0), 0);
+  return deletados;
 }
 
 module.exports = { vaultDb, criarBancoB, lerConta, limparTarefasLocais, _reset: () => { cache = undefined; } };
