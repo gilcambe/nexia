@@ -29,13 +29,52 @@ const PLANS: Record<PlanId, Plan> = (() => {
 })();
 
 const STORAGE_KEY = 'nexia-credit-manager';
+const RATE_LIMIT_KEY = 'nexia-credit-manager-ratelimit';
+// Chave de assinatura para detectar adulteração de dados no localStorage.
+// Não substitui criptografia; impede tampering casual do usuário.
+const SIG_KEY = 'nexia-cm-v1';
+
+function sign(payload: string): string {
+  let h = 0;
+  for (let i = 0; i < payload.length; i++) {
+    h = ((h << 5) - h + payload.charCodeAt(i)) | 0;
+  }
+  return `${SIG_KEY}:${Math.abs(h)}`;
+}
+
+function loadRateLimits(): Map<string, number[]> {
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(RATE_LIMIT_KEY) : undefined;
+    if (!raw) return new Map();
+    const data: Record<string, number[]> = JSON.parse(raw);
+    return new Map(Object.entries(data));
+  } catch {
+    return new Map();
+  }
+}
+
+function saveRateLimits(limits: Map<string, number[]>): void {
+  if (typeof localStorage === 'undefined') return;
+  const data: Record<string, number[]> = Object.fromEntries(limits);
+  localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(data));
+}
+
+interface SignedPayload {
+  users: UserCredits[];
+  sig: string;
+}
 
 function loadUsers(): Map<string, UserCredits> {
   try {
     const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : undefined;
     if (!raw) return new Map();
-    const arr: UserCredits[] = JSON.parse(raw);
-    return new Map(arr.map((u) => [u.userId, u]));
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return new Map();
+    const payload = parsed as SignedPayload;
+    if (!payload.users || !Array.isArray(payload.users) || !payload.sig) return new Map();
+    const expected = sign(JSON.stringify(payload.users));
+    if (payload.sig !== expected) return new Map();
+    return new Map(payload.users.map((u) => [u.userId, u]));
   } catch {
     return new Map();
   }
@@ -43,7 +82,9 @@ function loadUsers(): Map<string, UserCredits> {
 
 function saveUsers(users: Map<string, UserCredits>): void {
   if (typeof localStorage === 'undefined') return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(users.values())));
+  const usersArr = Array.from(users.values());
+  const payload: SignedPayload = { users: usersArr, sig: sign(JSON.stringify(usersArr)) };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 }
 
 export class CreditManager {
@@ -54,7 +95,7 @@ export class CreditManager {
     if (!authCheck) throw new Error('authCheck é obrigatório');
     this.users = loadUsers();
     this.authCheck = authCheck;
-    this.callTimestamps = new Map();
+    this.callTimestamps = loadRateLimits();
   }
 
   private callTimestamps: Map<string, number[]>;
@@ -71,6 +112,7 @@ export class CreditManager {
     }
     recent.push(now);
     this.callTimestamps.set(key, recent);
+    saveRateLimits(this.callTimestamps);
   }
 
   setAuthCheck(authCheck: AuthCheck): void {
@@ -186,8 +228,13 @@ export class CreditManager {
     if (!user) return { allowed: false, message: 'Usuário não encontrado' };
     const plan = PLANS[user.planId];
     if (!plan) return { allowed: false, message: 'Plano inválido' };
-    // Publicar um site existente não consome slot de criação de sites.
-    // Apenas exige usuário autenticado com plano válido.
+    // Publicar exige que o usuário tenha ao menos um site criado e créditos disponíveis.
+    if (user.sitesCreated <= 0) {
+      return { allowed: false, message: 'Você não tem sites para publicar' };
+    }
+    if (plan.credits !== -1 && user.creditsRemaining <= 0) {
+      return { allowed: false, message: 'Créditos esgotados' };
+    }
     return { allowed: true };
   }
 
