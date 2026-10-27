@@ -1,0 +1,55 @@
+{
+  \"versao\": 1,
+  \"molde\": \"loja\",
+  \"nome\": \"Loja e Comércio\",
+  \"descricao\": \"Molde para gestão de produtos, estoque, vendas e pedidos\",
+  \"entities\": [
+    {
+      \"key\": \"produtos\",
+      \"label\": \"Produtos\",
+      \"singular\": \"Produto\",
+      \"fields\": [
+        {
+          \"key\": \"nome\",
+          \"label\": \"Nome do Produto\",
+          \"type\": \"text\",
+          \"required\": true
+        },
+        {
+          \"key\": \"categoria\",
+          \"label\": \"Categoria\",
+          \"type\": \"text\",
+          \"required\": true
+        },
+        {
+          \"key\": \"preco\",
+          \"label\": \"Preço\",
+          \"type\": \"money\",
+          \"required\": true
+        },
+        {
+          \"key\": \"estoque\",
+          \"label\": \"Estoque\",
+          \"type\": \"number\",
+          \"required\": true
+        },
+        {
+          \"key\": \"status\",
+          \"label\": \"Status\",
+          \"type\": \"select\",
+          \"options\": [\"Ativo\", \"Inativo\", \"Esgotado\"],
+          \"required\": true
+        }
+      ],
+      \"sample\": [
+        {
+          \"nome\": \"Produto Exemplo\",
+          \"categoria\": \"Geral\",
+          \"preco\": \"99.90\",
+          \"estoque\": 10,
+          \"status\": \"Ativo\"
+        }
+      ]
+    }
+  ]
+}

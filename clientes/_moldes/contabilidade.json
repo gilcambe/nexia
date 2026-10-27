@@ -1,0 +1,49 @@
+{
+  \"versao\": 1,
+  \"molde\": \"contabilidade\",
+  \"nome\": \"Contabilidade e Serviços\",
+  \"descricao\": \"Molde para gestão de clientes, obrigações fiscais, documentos e honorários\",
+  \"entities\": [
+    {
+      \"key\": \"clientes_contabeis\",
+      \"label\": \"Clientes\",
+      \"singular\": \"Cliente\",
+      \"fields\": [
+        {
+          \"key\": \"razao_social\",
+          \"label\": \"Razão Social\",
+          \"type\": \"text\",
+          \"required\": true
+        },
+        {
+          \"key\": \"cnpj\",
+          \"label\": \"CNPJ\",
+          \"type\": \"text\",
+          \"required\": true
+        },
+        {
+          \"key\": \"regime\",
+          \"label\": \"Regime Tributário\",
+          \"type\": \"select\",
+          \"options\": [\"Simples Nacional\", \"Lucro Presumido\", \"Lucro Real\", \"MEI\"],
+          \"required\": true
+        },
+        {
+          \"key\": \"status\",
+          \"label\": \"Status\",
+          \"type\": \"select\",
+          \"options\": [\"Ativo\", \"Em Abertuira\", \"Inativo\"],
+          \"required\": true
+        }
+      ],
+      \"sample\": [
+        {
+          \"razao_social\": \"Empresa Exemplo Ltda\",
+          \"cnpj\": \"00.000.000/0001-00\",
+          \"regime\": \"Simples Nacional\",
+          \"status\": \"Ativo\"
+        }
+      ]
+    }
+  ]
+}
