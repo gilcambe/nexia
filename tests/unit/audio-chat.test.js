@@ -18,16 +18,33 @@ test('AUDIO-CHAT-2. Métodos não permitidos retornam 405', async () => {
   assert.strictEqual(res.status, 405);
 });
 
-test('AUDIO-CHAT-3. Requisição sem chave de API retorna 401 Unauthorized', async () => {
+test('AUDIO-CHAT-3. Sem CORTEX_API_KEY configurada na env retorna 503 Rota de voz desligada', async () => {
   const audioData = new Uint8Array([82, 73, 70, 70, 36, 0, 0, 0, 87, 65, 86, 69]);
   const req = new Request('https://nexia.test/v1/audio/chat', { method: 'POST', body: audioData });
   const res = await worker.fetch(req, {});
-  assert.strictEqual(res.status, 401);
+  assert.strictEqual(res.status, 503);
   const j = await res.json();
-  assert.match(j.error, /requerida/i);
+  assert.match(j.error, /desligada/i);
 });
 
-test('AUDIO-CHAT-4. Requisição sem áudio com chave válida retorna 400 Bad Request', async () => {
+test('AUDIO-CHAT-4. Chave inválida ou ausente com CORTEX_API_KEY configurado retorna 401', async () => {
+  const env = { CORTEX_API_KEY: 'segredo123' };
+  const audioData = new Uint8Array([82, 73, 70, 70, 36, 0, 0, 0, 87, 65, 86, 69]);
+
+  const reqSemChave = new Request('https://nexia.test/v1/audio/chat', { method: 'POST', body: audioData });
+  const res401 = await worker.fetch(reqSemChave, env);
+  assert.strictEqual(res401.status, 401);
+
+  const reqChaveErrada = new Request('https://nexia.test/v1/audio/chat', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer errada' },
+    body: audioData,
+  });
+  const res401Errada = await worker.fetch(reqChaveErrada, env);
+  assert.strictEqual(res401Errada.status, 401);
+});
+
+test('AUDIO-CHAT-5. Requisição sem áudio com chave válida retorna 400 Bad Request', async () => {
   const env = { CORTEX_API_KEY: 'segredo123' };
   const req = new Request('https://nexia.test/v1/audio/chat', {
     method: 'POST',
@@ -40,7 +57,7 @@ test('AUDIO-CHAT-4. Requisição sem áudio com chave válida retorna 400 Bad Re
   assert.match(j.error, /não fornecido/i);
 });
 
-test('AUDIO-CHAT-5. Áudio acima de 5 MB retorna 413 Payload Too Large', async () => {
+test('AUDIO-CHAT-6. Áudio acima de 5 MB retorna 413 Payload Too Large', async () => {
   const env = { CORTEX_API_KEY: 'segredo123' };
   const bigAudio = new Uint8Array(5 * 1024 * 1024 + 1);
   const req = new Request('https://nexia.test/v1/audio/chat', {
@@ -54,7 +71,7 @@ test('AUDIO-CHAT-5. Áudio acima de 5 MB retorna 413 Payload Too Large', async (
   assert.match(j.error, /5 MB/i);
 });
 
-test('AUDIO-CHAT-6. Falha no Whisper ou LLM retorna erro 502 sem resposta inventada', async () => {
+test('AUDIO-CHAT-7. Falha no Whisper ou LLM retorna erro 502 sem resposta inventada', async () => {
   const env = {
     CORTEX_API_KEY: 'k123',
     AI: {
@@ -74,12 +91,14 @@ test('AUDIO-CHAT-6. Falha no Whisper ou LLM retorna erro 502 sem resposta invent
   assert.match(j.error, /Falha na transcrição/i);
 });
 
-test('AUDIO-CHAT-7. Requisição válida com .wav binário recebe SSE com transcrição e chunks de áudio', async () => {
+test('AUDIO-CHAT-8. Requisição válida com .wav binário recebe base64 no Whisper e gera SSE', async () => {
+  let whisperInputAudio = null;
   const env = {
     CORTEX_API_KEY: 'k123',
     AI: {
       async run(model, input) {
         if (model.includes('whisper')) {
+          whisperInputAudio = input.audio;
           return { text: 'Olá Cortex, como você está?' };
         }
         if (model.includes('llama')) {
@@ -104,6 +123,10 @@ test('AUDIO-CHAT-7. Requisição válida com .wav binário recebe SSE com transc
   assert.strictEqual(res.status, 200);
   assert.strictEqual(res.headers.get('content-type'), 'text/event-stream');
 
+  // Verifica que Whisper recebeu áudio em formato string base64
+  assert.strictEqual(typeof whisperInputAudio, 'string');
+  assert.strictEqual(whisperInputAudio, Buffer.from(wavBytes).toString('base64'));
+
   const sseContent = await res.text();
   assert.match(sseContent, /event: transcription/);
   assert.match(sseContent, /Olá Cortex, como você está\?/);
@@ -112,7 +135,7 @@ test('AUDIO-CHAT-7. Requisição válida com .wav binário recebe SSE com transc
   assert.match(sseContent, /event: done/);
 });
 
-test('AUDIO-CHAT-8. Requisição multipart/form-data com chave recebe SSE com áudio real', async () => {
+test('AUDIO-CHAT-9. Requisição multipart/form-data com chave recebe SSE com áudio real', async () => {
   const env = {
     CORTEX_API_KEY: 'k123',
     AI: {

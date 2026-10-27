@@ -45,7 +45,14 @@ export async function audioChat(request, env) {
   const token = authHeader.replace(/^Bearer\s+/i, '') || apiKeyHeader || queryKey;
 
   const expectedKey = env.CORTEX_API_KEY || env.NEXIA_API_KEY;
-  if (expectedKey ? token !== expectedKey : !token) {
+  if (!expectedKey) {
+    return new Response(JSON.stringify({ error: 'Rota de voz desligada (falta CORTEX_API_KEY)' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+
+  if (!token || token !== expectedKey) {
     return new Response(JSON.stringify({ error: 'Chave de API requerida' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -109,13 +116,13 @@ export async function audioChat(request, env) {
     });
   }
 
-  // 3. Transcrever áudio via @cf/openai/whisper-large-v3-turbo (sem criar array/base64 antecipadamente)
+  // 3. Transcrever áudio via @cf/openai/whisper-large-v3-turbo usando áudio em base64
   let transcriptionText = '';
 
   if (env && env.AI && typeof env.AI.run === 'function') {
     try {
-      const audioArray = Array.from(audioBytes);
-      const r = await env.AI.run('@cf/openai/whisper-large-v3-turbo', { audio: audioArray, language: 'pt' });
+      const audioB64Binding = Buffer.from(audioBytes).toString('base64');
+      const r = await env.AI.run('@cf/openai/whisper-large-v3-turbo', { audio: audioB64Binding, language: 'pt' });
       transcriptionText = (r && (r.text || (r.transcription_info && r.transcription_info.text) || (r.result && r.result.text))) || '';
     } catch (e) {
       console.warn('[audioChat] Whisper binding falhou:', e && e.message);
@@ -124,12 +131,12 @@ export async function audioChat(request, env) {
 
   if (!transcriptionText && env && env.CLOUDFLARE_AI_ACCOUNT_ID && env.CLOUDFLARE_AI_TOKEN) {
     try {
-      const audioB64 = Buffer.from(audioBytes).toString('base64');
+      const audioB64Rest = Buffer.from(audioBytes).toString('base64');
       const endpoint = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(env.CLOUDFLARE_AI_ACCOUNT_ID)}/ai/run/@cf/openai/whisper-large-v3-turbo`;
       const res = await (env.fetch || fetch)(endpoint, {
         method: 'POST',
         headers: { Authorization: `Bearer ${env.CLOUDFLARE_AI_TOKEN}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ audio: audioB64, language: 'pt' }),
+        body: JSON.stringify({ audio: audioB64Rest, language: 'pt' }),
       });
       const j = await res.json().catch(() => ({}));
       const resObj = j.result || j;
