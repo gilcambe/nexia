@@ -19,6 +19,8 @@ const PRODUTOS = [
   { id: 'splash', logo: '/central/logos/splash.png', segmento: 'Eventos', nome: 'Splash Eventos', icone: '💧', frase: 'Cliente: locação de espaços para eventos', site: BASE + '/splash', painel: BASE + '/splash', tipo: 'cliente' },
   // O site do Adriano entra quando a landing nova for publicada em https://adrianoblumer.pages.dev.
   { id: 'adriano', logo: '/central/logos/adriano.png', segmento: 'Nutrição', nome: 'Adriano Blumer', icone: '🥗', frase: 'Cliente: nutricionista (landing com WhatsApp e redes)', pendente: true, tipo: 'cliente' },
+  // Copiloto e treino para atendentes de call center (nome neutro; nada de material de empresa anterior entra no produto).
+  { id: 'atende', segmento: 'Atendimento', nome: 'Atende', icone: '🎧', frase: 'Em preparação: copiloto e treino de ligação para atendentes', pendente: true, tipo: 'produto' },
   { id: 'arqia', segmento: 'Arquitetura', nome: 'Arqia', icone: '📐', frase: 'Produto futuro: sistema para arquitetos', pendente: true, tipo: 'produto' },
 ];
 
