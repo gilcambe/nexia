@@ -139,10 +139,12 @@ test('GH7. GitHub real (gilcambe/nexia): branches, arquivo, histórico, diff, PR
   await setAutonomy(0);
   const g = createGateway({ db, vault, env: { GITHUB_TOKEN: process.env.NEXIA_TEST_GITHUB_TOKEN } });
   const run = async (tool, input) => {
-    const r = await g.invoke(agent, { projectId: ids.project, tool, input });
+    const fn = () => g.invoke(agent, { projectId: ids.project, tool, input });
+    const r = await comRetentativa(fn, assert);
     assert.strictEqual(r.status, 'succeeded', `${tool}: ${JSON.stringify(r.error)}`);
     return r.result;
   };
+  const { comRetentativa } = require('./_github-real');
   assert.ok((await run('github.list_branches', {})).branches.some(b => b.name === 'develop'));
   const pkg = await run('github.get_file', { path: 'package.json', ref: 'develop' });
   assert.match(pkg.content, /"name"/);
