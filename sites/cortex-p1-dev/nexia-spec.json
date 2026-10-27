@@ -1,0 +1,354 @@
+{
+  "spec": {
+    "kind": "site",
+    "name": "Cortex-p1 Dev Lab",
+    "tagline": "Ambiente de testes automatizados e automação de código",
+    "photo_theme": "code terminal developer",
+    "description": "Plataforma de validação de scripts, engenharia de prompts e geração estruturada de sites.",
+    "folder": "sites/cortex-p1-dev",
+    "fonts": {
+      "heading": "Space Grotesk",
+      "body": "Plus Jakarta Sans"
+    },
+    "palette": {
+      "primary": "#595cd9",
+      "accent": "#10b981",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#4a4b4c",
+      "muted": "#687281",
+      "dark": "#090d16"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "5511988887777",
+      "phone": "(11) 98888-7777",
+      "email": "dev@cortex-p1.test",
+      "address": "Rua do Código, 404",
+      "city": "São Paulo - SP",
+      "hours": "24/7 Automações",
+      "instagram": "cortex_p1",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=cortex-p1-dev&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "sections": [
+      {
+        "type": "hero",
+        "id": "automatize-a-criacao-de-sites-com-precis",
+        "title": "Automatize a criação de sites com precisão absoluta",
+        "subtitle": "Validação de scripts, gravação de design.json e fluxos robustos para desenvolvedores.",
+        "eyebrow": "NEXIA Site Kit Engine",
+        "cta": {
+          "label": "Ver documentação",
+          "href": "#servicos"
+        },
+        "cta2": {
+          "label": "Testar no WhatsApp",
+          "href": "whatsapp"
+        },
+        "image_query": "coding developer screen",
+        "video_query": "coding terminal"
+      },
+      {
+        "type": "services",
+        "id": "servicos",
+        "title": "Módulos do Sistema",
+        "subtitle": "Recursos essenciais para o seu pipeline de engenharia.",
+        "items": [
+          {
+            "title": "Clonagem Inteligente",
+            "text": "Leitura de variáveis SLUG e persistência segura em clientes/<slug>/design.json.",
+            "price": "Nativo",
+            "image_query": "code files structure",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Validação de Erros",
+            "text": "Tratamento de exceções de escrita e verificação automática de diretórios.",
+            "price": "Robusto",
+            "image_query": "bug fixing code",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Exportação JSON",
+            "text": "Geração idêntica de tokens visuais enviados diretamente ao Site Kit.",
+            "price": "Instantâneo",
+            "image_query": "json data code",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          }
+        ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-o-cortex-p1",
+        "title": "Sobre o Cortex-p1",
+        "subtitle": "Desenvolvido para otimizar fluxos de entrega em larga escala, garantindo que nenhum arquivo fique fora do padrão exigido.",
+        "text": "Desenvolvido para otimizar fluxos de entrega em larga escala, garantindo que nenhum arquivo fique fora do padrão exigido.",
+        "image_query": "developer team meeting",
+        "stats": [
+          {
+            "value": "100%",
+            "label": "Conformidade"
+          },
+          {
+            "value": "<400",
+            "label": "Linhas por PR"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "ambiente-de-trabalho",
+        "title": "Ambiente de Trabalho",
+        "subtitle": "",
+        "image_queries": [
+          "dark mode code editor",
+          "dual monitor developer",
+          "server racks data",
+          "cybersecurity matrix",
+          "laptop keyboard typing",
+          "minimalist desk setup"
+        ],
+        "gif_queries": [
+          "terminal command line"
+        ]
+      },
+      {
+        "type": "video",
+        "id": "demonstracao-do-script",
+        "title": "Demonstração do Script",
+        "subtitle": "Veja o clonar-site.js em ação gerando os artefatos.",
+        "youtube": "",
+        "video_query": "coding timelapse"
+      },
+      {
+        "type": "team",
+        "id": "core-maintainers",
+        "title": "Core Maintainers",
+        "subtitle": "",
+        "members": [
+          {
+            "name": "Alexandre Silva",
+            "role": "Lead Architect",
+            "image_query": "male software engineer portrait"
+          },
+          {
+            "name": "Beatriz Souza",
+            "role": "DevOps & QA",
+            "image_query": "female programmer working"
+          }
+        ]
+      },
+      {
+        "type": "testimonials",
+        "id": "o-que-dizem-os-devs",
+        "title": "O que dizem os devs",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Lucas M.",
+            "role": "",
+            "text": "A gravação automática do design.json salvou horas do nosso fluxo de deploy.",
+            "rating": 5
+          },
+          {
+            "name": "Camila R.",
+            "role": "",
+            "text": "Tratamento de erros impecável e limite de linhas respeitado com perfeição.",
+            "rating": 5
+          },
+          {
+            "name": "Rafael T.",
+            "role": "",
+            "text": "Estrutura limpa, direta ao ponto e totalmente integrada ao kit.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "links",
+        "id": "links-uteis",
+        "title": "Links Úteis",
+        "subtitle": "",
+        "items": [
+          {
+            "label": "Fale com o suporte no WhatsApp",
+            "url": "https://wa.me/5511988887777",
+            "icon": "whatsapp"
+          },
+          {
+            "label": "Repositório no GitHub",
+            "url": "https://github.com",
+            "icon": "link"
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "perguntas-frequentes",
+        "title": "Perguntas Frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Onde o arquivo design.json é salvo?",
+            "a": "Ele é gravado automaticamente em clientes/<slug>/design.json."
+          },
+          {
+            "q": "O diretório é criado caso não exista?",
+            "a": "Sim, o script garante que a árvore de diretórios seja criada antes da escrita."
+          },
+          {
+            "q": "Como os erros de escrita são tratados?",
+            "a": "Qualquer falha de I/O é capturada e reportada sem quebrar o processo principal."
+          },
+          {
+            "q": "Qual o limite de linhas alteradas?",
+            "a": "A tarefa restringe as alterações a até 400 linhas no arquivo scripts/clonar-site.js."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "pronto-para-integrar",
+        "title": "Pronto para integrar?",
+        "subtitle": "Adicione o script ao seu projeto e automatize sua pipeline.",
+        "cta": {
+          "label": "Falar com suporte",
+          "href": "whatsapp"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "contato-tecnico",
+        "title": "Contato Técnico",
+        "subtitle": "",
+        "map": true,
+        "form": true
+      }
+    ]
+  },
+  "media": {
+    "s0.hero": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/f8/Awesomewm-screen-thumb.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 720,
+      "alt": "awesomewm developer provided screenshot",
+      "credit": "awesomewm.org (GPLv2, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/18/OxyHemoglobin_active_site_structure_%28PDB_code_2DN1%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 832,
+      "alt": "This image was made using the Protein Data Bank PDB code 2DN1, and shows one of ",
+      "credit": "PDB code 2DN1 1.25 a resolution crystal structures of human haemoglobin in the oxy, deoxy and carbonmonoxy for",
+      "provider": "wikimedia"
+    },
+    "s1.item2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/05/SerenityOS_Filetype-json.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 1280,
+      "alt": "Icon from SerenityOS.",
+      "credit": "Copyright (c) 2018-2024, the SerenityOS developers (BSD, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.gif0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/06/TerminalOSXscreenshot.gif",
+      "width": 817,
+      "height": 817,
+      "alt": "File:TerminalOSXscreenshot.gif",
+      "credit": "File:TerminalOSXscreenshot.gif — ZeaForUs (BY-SA 3.0, via Openverse)",
+      "provider": "openverse",
+      "mime": "image/gif"
+    },
+    "s2.about": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6b/Hackathon_Screen_reader.png/1280px-Hackathon_Screen_reader.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1039,
+      "alt": "Three visually-impaired developers using screen readers to code. The code on the",
+      "credit": "Mam'Gobozi Design Factory (MDF) (CC BY-SA 3.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Text_on_UploadWizard%27s_%22Describe%22_page_is_too_narrow_due_to_a_code_bug_%2815_October_2020%29_Mobile_view_02.png/1280px-Text_on_UploadWizard%27s_%22Describe%22_page_is_too_narrow_due_to_a_code_bug_%2815_October_2020%29_Mobile_view_02.png",
+      "width": 1280,
+      "height": 720,
+      "alt": "Text on UploadWizard's 'Describe' page is too narrow due to a code bug (15 Octob",
+      "credit": "Text on UploadWizard's 'Describe' page is too narrow due to a code bug (15 October 2020) Mobile view 02 — Vari",
+      "provider": "openverse"
+    },
+    "s3.g0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Knoppix-3.8-boot.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 960,
+      "alt": "I took a screenshot of Knoppix 3.8 booting in the QEMU emulator. The image shows",
+      "credit": "Knoppix developers (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/f/f0/Joe-help-options.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 587,
+      "alt": "Screenshot of the text editor joe with the help screen turned on (Ctrl+K+H) and ",
+      "credit": "JOE developers / User:Joy (GPL, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/e2/Wifiway_13a_%28Terminal%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 1015,
+      "alt": "wifiway",
+      "credit": "Wifiway developers (GPL, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/3/38/Konsole_21.12.0_screenshot.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 1181,
+      "alt": "Konsole 21.12.0 in KDE Plasma 5",
+      "credit": "Software: KDE and developers Screenshot: VulcanSphere (GPL, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g4": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Nheko_0.9.3_terminal_log_screenshot.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 257,
+      "alt": "A screenshot of Nheko 0.9.3 terminal log",
+      "credit": "Software: Nheko developers Screenshot: VulcanSphere (GPL, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g5": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/e/ef/LibQuotient_terminal_log_screenshot.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 290,
+      "alt": "A screenshot of libQuotient terminal log",
+      "credit": "Software: libQuotient developers Screenshot: VulcanSphere (LGPL, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s5.m0": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b3/UwUntu_22.10_Kitty_0.21.2_-_English.png/1280px-UwUntu_22.10_Kitty_0.21.2_-_English.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 720,
+      "alt": "UwUntu 22.10 with the Kitty 0.21.2 terminal emulator.",
+      "credit": "Two anon Spanish student developers (GPL, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    }
+  }
+}
