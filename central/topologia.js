@@ -218,3 +218,5 @@ export function ligacoesDe(noId) {
 // cloudflare/worker.js, cloudflare/app.js, nexia-ai/github-adapter/index.js,
 // nexia-ai/model-router/index.js, .github/workflows/body-coach-pages.yml,
 // src/pages/central/Painel.tsx
+
+// Arquivo criado na branch nexia/criar-arquivo-central-topologia-js-com-d-e052ab
