@@ -100,7 +100,7 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
   const issues = [...pl, ...(Array.isArray(travadas) ? travadas : []).filter(t => !pl.some(x => x.number === t.number))];
   const prs = await p.gh(`${REPO}/pulls?state=open&per_page=100`);
   const d = decidir(issues || [], prs || [], at, nomes);
-  const out = { retomadas: [], humano: [] };
+  const out = { retomadas: [], humano: [], claude: [], devolver: [] };
   const tirar = (n, l) => p.gh(`${REPO}/issues/${n}/labels/${encodeURIComponent(l)}`, { method: 'DELETE' }).catch(() => null);
   const por = (n, ls) => p.gh(`${REPO}/issues/${n}/labels`, { method: 'POST', body: JSON.stringify({ labels: ls }) }).catch(() => null);
   const comentar = (n, body) => p.gh(`${REPO}/issues/${n}/comments`, { method: 'POST', body: JSON.stringify({ body }) }).catch(() => null);
@@ -114,8 +114,23 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
   }
   for (const n of d.humano) {
     await por(n, ['vez-do-claude']);
-    await comentar(n, '🪜 Degrau 3: o Cortex e as IAs grátis (Jules) tentaram 2 vezes cada e não entregaram. Vez do Claude, que faz só esta tarefa e devolve a fila ao Cortex (docs/ESCADA-IA.md).');
+    await comentar(n, `🪜 Degrau 3: o Cortex e as IAs grátis (Jules) tentaram 2 vezes cada e não entregaram. Vez do Claude, que faz só esta tarefa e devolve a fila ao Cortex (docs/ESCADA-IA.md). (Jules hoje: ${d.enviadosHoje}/15)`);
     out.humano.push(n);
+  }
+  for (const n of d.claude) {
+    const i = issues.find(x => x.number === n);
+    await por(n, ['vez-do-claude']);
+    await comentar(n, `🪜 Degrau 3: cota do Jules do dia esgotada (${d.enviadosHoje}/15) ou tarefa já voltou do Jules 2 vezes. Vez do Claude Code, que faz só esta tarefa e se retira (docs/ESCADA-IA.md).`);
+    out.claude.push(n);
+  }
+  for (const n of d.devolver) {
+    const i = issues.find(x => x.number === n);
+    for (const l of ['vez-do-claude', 'cortex-travado', 'jules-enviado', 'cortex-retomada']) {
+      if (nomes(i).includes(l)) await tirar(n, l);
+    }
+    await por(n, ['cortex-travado']);
+    await comentar(n, `🪜 Degrau 2: o Claude se retirou e a cota grátis voltou (${d.enviadosHoje}/15). A tarefa volta ao Cortex do zero para o Jules pegar na próxima batida.`);
+    out.devolver.push(n);
   }
   if (d.enviar) {
     const r = await mandarParaJules(p, d.enviar, 'o robô (automático, tarefa travada)', { env, fetchFn });
