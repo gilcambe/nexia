@@ -152,3 +152,56 @@ test('K7. vídeo (YouTube e arquivo), GIF, música e links: renderizam, passam n
   assert.deepStrictEqual(r.warnings, []);
   assert.strictEqual(kit.normalizeSpec({ ...SITE, sections: [...SITE.sections, { type: 'video', title: 'sem nada' }] }, { kind: 'site' }).spec.sections.filter(s => s.type === 'video').length, 1);
 });
+
+test('K8. moldes de app: salvar, recuperar, listar e aplicar molde de entidades e campos', () => {
+  const { salvarMoldeApp, carregarMoldeApp, listarMoldesApp, aplicarMoldeApp, renderApp } = require('../../nexia-ai/site-kit/app');
+
+  const agendaMolde = carregarMoldeApp('agenda');
+  assert.ok(agendaMolde, 'deve carregar o molde agenda');
+  assert.strictEqual(agendaMolde.nome, 'Agenda e Atendimentos');
+  assert.ok(Array.isArray(agendaMolde.entities));
+
+  const novoMolde = salvarMoldeApp('crm-vendas', {
+    nome: 'CRM de Vendas',
+    descricao: 'Gestão de leads e oportunidades',
+    entities: [
+      {
+        key: 'leads',
+        label: 'Leads',
+        singular: 'Lead',
+        fields: [
+          { key: 'nome', label: 'Nome', type: 'text', required: true },
+          { key: 'email', label: 'E-mail', type: 'email', required: true }
+        ]
+      }
+    ]
+  });
+  assert.strictEqual(novoMolde.nome, 'CRM de Vendas');
+
+  const todos = listarMoldesApp();
+  assert.ok(todos['crm-vendas']);
+
+  const specApp = {
+    kind: 'system',
+    name: 'Meu App',
+    folder: 'demos/meu-app',
+    molde: 'crm-vendas',
+    entities: []
+  };
+
+  const specComMolde = aplicarMoldeApp(specApp);
+  assert.strictEqual(specComMolde.entities.length, 1);
+  assert.strictEqual(specComMolde.entities[0].key, 'leads');
+
+  const files = renderApp({
+    kind: 'system',
+    name: 'Sistema Vendas',
+    folder: 'demos/sistema-vendas',
+    molde: 'crm-vendas',
+    fonts: { heading: 'Plus Jakarta Sans', body: 'Inter' },
+    palette: { primary: '#4f46e5', accent: '#06b6d4', dark: '#111827' },
+    contact: { email: 'contato@vendas.test' }
+  });
+  assert.ok(files['index.html']);
+  assert.ok(files['index.html'].includes('Leads'));
+});

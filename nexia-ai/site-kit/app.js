@@ -2,10 +2,79 @@
 // Renderiza um sistema (painel/CRUD) a partir do spec (ADR-Q-04): menu lateral, painel com indicadores e
 // gráfico (Chart.js via CDN), tabelas com busca, ordenação e exportação CSV, formulário em modal com
 // validação, dados salvos no navegador (localStorage), modo escuro e layout responsivo.
+const fs = require('node:fs');
+const path = require('node:path');
 const { icon } = require('./icons');
 const { esc } = require('./site');
+const { slugify } = require('./spec');
 
 const attr = esc;
+const INDICE_PATH = path.join(__dirname, '../../clientes/_moldes/indice.json');
+const memoryMoldes = {};
+
+function carregarIndiceMoldes() {
+  const index = { versao: 1, moldes: {} };
+  try {
+    if (fs.existsSync(INDICE_PATH)) {
+      const content = fs.readFileSync(INDICE_PATH, 'utf8');
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === 'object' && parsed.moldes) {
+        Object.assign(index.moldes, parsed.moldes);
+      }
+    }
+  } catch (e) {
+    // Leitura resiliente em ambientes serverless
+  }
+  Object.assign(index.moldes, memoryMoldes);
+  return index;
+}
+
+function carregarMoldeApp(chave) {
+  if (!chave) return null;
+  const key = slugify(chave) || String(chave).trim().toLowerCase();
+  const index = carregarIndiceMoldes();
+  return index.moldes[key] || null;
+}
+
+function salvarMoldeApp(chave, moldeData) {
+  const key = slugify(chave || (moldeData && moldeData.nome)) || 'molde-app';
+  if (!moldeData || typeof moldeData !== 'object') return null;
+  const obj = {
+    nome: String(moldeData.nome || key),
+    descricao: String(moldeData.descricao || ''),
+    entities: Array.isArray(moldeData.entities) ? moldeData.entities : [],
+    atualizado_em: new Date().toISOString()
+  };
+  memoryMoldes[key] = obj;
+  return obj;
+}
+
+function listarMoldesApp() {
+  const index = carregarIndiceMoldes();
+  return index.moldes || {};
+}
+
+function aplicarMoldeApp(spec, chaveMolde) {
+  if (!spec || typeof spec !== 'object') return spec;
+  const key = chaveMolde || spec.molde;
+  if (!key) return spec;
+  const molde = carregarMoldeApp(key);
+  if (!molde || !Array.isArray(molde.entities)) return spec;
+
+  const currentEntities = Array.isArray(spec.entities) ? spec.entities : [];
+  const existingKeys = new Set(currentEntities.map(e => e.key));
+  const newEntities = [...currentEntities];
+
+  for (const e of molde.entities) {
+    if (e && e.key && !existingKeys.has(e.key)) {
+      newEntities.push(e);
+      existingKeys.add(e.key);
+    }
+  }
+
+  spec.entities = newEntities;
+  return spec;
+}
 const CHART_JS = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js';
 const fontsHref = f => `https://fonts.googleapis.com/css2?family=${encodeURIComponent(f.heading).replace(/%20/g, '+')}:wght@600;700;800&family=${encodeURIComponent(f.body).replace(/%20/g, '+')}:wght@400;500;600&display=swap`;
 const ENTITY_ICONS = ['list', 'grid', 'clock', 'chart', 'star', 'mail'];
@@ -520,7 +589,20 @@ const JS = `// Gerado pelo NEXIA Site Kit (ADR-Q-04). Dados salvos no navegador 
 `;
 
 function renderApp(spec) {
+  if (spec && spec.molde) {
+    aplicarMoldeApp(spec, spec.molde);
+  }
   return { 'index.html': html(spec), 'styles.css': css(spec), 'app.js': JS };
 }
 
-module.exports = { renderApp };
+module.exports = {
+  renderApp,
+  salvarMoldeApp,
+  carregarMoldeApp,
+  listarMoldesApp,
+  aplicarMoldeApp,
+  salvarMolde: salvarMoldeApp,
+  obterMolde: carregarMoldeApp,
+  listarMoldes: listarMoldesApp,
+  aplicarMolde: aplicarMoldeApp,
+};
