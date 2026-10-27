@@ -1,0 +1,64 @@
+{
+  \"versao\": 1,
+  \"molde\": \"imobiliaria\",
+  \"nome\": \"Imobiliária\",
+  \"descricao\": \"Molde para gestão de imóveis, locações, vendas e corretores\",
+  \"entities\": [
+    {
+      \"key\": \"imoveis\",
+      \"label\": \"Imóveis\",
+      \"singular\": \"Imóvel\",
+      \"fields\": [
+        {
+          \"key\": \"titulo\",
+          \"label\": \"Título do Imóvel\",
+          \"type\": \"text\",
+          \"required\": true
+        },
+        {
+          \"key\": \"tipo\",
+          \"label\": \"Tipo\",
+          \"type\": \"select\",
+          \"options\": [\"Casa\", \"Apartamento\", \"Terreno\", \"Comercial\"],
+          \"required\": true
+        },
+        {
+          \"key\": \"operacao\",
+          \"label\": \"Operação\",
+          \"type\": \"select\",
+          \"options\": [\"Venda\", \"Aluguel\"],
+          \"required\": true
+        },
+        {
+          \"key\": \"valor\",
+          \"label\": \"Valor\",
+          \"type\": \"money\",
+          \"required\": true
+        },
+        {
+          \"key\": \"quartos\",
+          \"label\": \"Quartos\",
+          \"type\": \"number\",
+          \"required\": false
+        },
+        {
+          \"key\": \"status\",
+          \"label\": \"Status\",
+          \"type\": \"select\",
+          \"options\": [\"Disponível\", \"Reservado\", \"Vendido\", \"Alugado\"],
+          \"required\": true
+        }
+      ],
+      \"sample\": [
+        {
+          \"titulo\": \"Apartamento Exemplo 2 Quartos\",
+          \"tipo\": \"Apartamento\",
+          \"operacao\": \"Venda\",
+          \"valor\": \"350000\",
+          \"quartos\": 2,
+          \"status\": \"Disponível\"
+        }
+      ]
+    }
+  ]
+}
