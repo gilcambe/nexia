@@ -15,6 +15,8 @@ import { VazaoController } from '../src/durable/VazaoController.js';
 // #1662: o Cloudflare só publica se a classe do Durable Object sair do arquivo de entrada.
 export { VazaoController };
 
+const MAX_AUDIO_BYTES = 5 * 1024 * 1024; // 5 MB
+
 export async function audioChat(request, env) {
   const url = new URL(request.url);
 
@@ -36,15 +38,15 @@ export async function audioChat(request, env) {
     });
   }
 
-  // 1. Validar chave e freio de cota
+  // 1. Validar chave de API
   const authHeader = request.headers.get('authorization') || '';
   const apiKeyHeader = request.headers.get('x-api-key') || '';
   const queryKey = url.searchParams.get('k') || url.searchParams.get('key') || '';
   const token = authHeader.replace(/^Bearer\s+/i, '') || apiKeyHeader || queryKey;
 
   const expectedKey = env.CORTEX_API_KEY || env.NEXIA_API_KEY;
-  if (expectedKey && token !== expectedKey) {
-    return new Response(JSON.stringify({ error: 'Chave de API inválida ou não fornecida' }), {
+  if (expectedKey ? token !== expectedKey : !token) {
+    return new Response(JSON.stringify({ error: 'Chave de API requerida' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     });
@@ -57,7 +59,15 @@ export async function audioChat(request, env) {
     });
   }
 
-  // 2. Extrair bytes de áudio
+  // 2. Limite de tamanho e extração de bytes de áudio
+  const contentLength = Number(request.headers.get('content-length') || 0);
+  if (contentLength > MAX_AUDIO_BYTES) {
+    return new Response(JSON.stringify({ error: 'Áudio excedeu o limite máximo de 5 MB' }), {
+      status: 413,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+
   let audioBytes = null;
   const contentType = request.headers.get('content-type') || '';
 
@@ -92,13 +102,19 @@ export async function audioChat(request, env) {
     });
   }
 
-  // 3. Transcrever áudio via @cf/openai/whisper-large-v3-turbo
+  if (audioBytes.length > MAX_AUDIO_BYTES) {
+    return new Response(JSON.stringify({ error: 'Áudio excedeu o limite máximo de 5 MB' }), {
+      status: 413,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+
+  // 3. Transcrever áudio via @cf/openai/whisper-large-v3-turbo (sem criar array/base64 antecipadamente)
   let transcriptionText = '';
-  const audioB64 = Buffer.from(audioBytes).toString('base64');
-  const audioArray = Array.from(audioBytes);
 
   if (env && env.AI && typeof env.AI.run === 'function') {
     try {
+      const audioArray = Array.from(audioBytes);
       const r = await env.AI.run('@cf/openai/whisper-large-v3-turbo', { audio: audioArray, language: 'pt' });
       transcriptionText = (r && (r.text || (r.transcription_info && r.transcription_info.text) || (r.result && r.result.text))) || '';
     } catch (e) {
@@ -108,6 +124,7 @@ export async function audioChat(request, env) {
 
   if (!transcriptionText && env && env.CLOUDFLARE_AI_ACCOUNT_ID && env.CLOUDFLARE_AI_TOKEN) {
     try {
+      const audioB64 = Buffer.from(audioBytes).toString('base64');
       const endpoint = `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(env.CLOUDFLARE_AI_ACCOUNT_ID)}/ai/run/@cf/openai/whisper-large-v3-turbo`;
       const res = await (env.fetch || fetch)(endpoint, {
         method: 'POST',
@@ -123,7 +140,10 @@ export async function audioChat(request, env) {
   }
 
   if (!transcriptionText) {
-    transcriptionText = 'Áudio recebido com sucesso.';
+    return new Response(JSON.stringify({ error: 'Falha na transcrição do áudio' }), {
+      status: 502,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
   }
 
   // 4. Gerar resposta de texto via LLM
@@ -143,7 +163,10 @@ export async function audioChat(request, env) {
   }
 
   if (!textResponse) {
-    textResponse = `Olá! Recebi o seu áudio: "${transcriptionText}". Como posso te ajudar?`;
+    return new Response(JSON.stringify({ error: 'Falha no processamento do modelo de linguagem' }), {
+      status: 502,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
   }
 
   // 5. Divisão frase a frase e síntese de voz com @cf/myshell-ai/melotts
@@ -174,10 +197,10 @@ export async function audioChat(request, env) {
           }
 
           if (!audioChunkB64) {
-            audioChunkB64 = Buffer.from(`AUDIO:${sentence}`).toString('base64');
+            controller.enqueue(encoder.encode(`event: error\ndata: ${JSON.stringify({ error: 'Falha na conversão de áudio da frase', text: sentence })}\n\n`));
+          } else {
+            controller.enqueue(encoder.encode(`event: audio\ndata: ${JSON.stringify({ text: sentence, audio: audioChunkB64 })}\n\n`));
           }
-
-          controller.enqueue(encoder.encode(`event: audio\ndata: ${JSON.stringify({ text: sentence, audio: audioChunkB64 })}\n\n`));
         }
 
         controller.enqueue(encoder.encode(`event: done\ndata: ${JSON.stringify({ done: true })}\n\n`));
