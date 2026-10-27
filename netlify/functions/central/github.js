@@ -259,7 +259,25 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     return montarReservas(repo, prod, semCota);
   }
 
-  return { cortex, robos, rodar, pedirAoCortex, divulga, estadoDivulga, reservas, temToken: !!token };
+  // Pacote para continuar o trabalho em qualquer IA web grátis (botão da aba Cortex)
+  async function arquivoTexto(caminho) {
+    try {
+      const a = await gh('/contents/' + caminho + '?ref=develop');
+      return decodificarBase64(a.content || '').slice(0, 20000);
+    } catch (e) {
+      return '';
+    }
+  }
+  async function pacoteIA() {
+    const [contexto, estado, fila] = await Promise.all([
+      arquivoTexto('docs/CONTEXTO-IA.md'),
+      arquivoTexto('docs/ESTADO-IA.md'),
+      cortex().catch(() => null),
+    ]);
+    return { contexto, estado, cortex: fila, em: new Date().toISOString() };
+  }
+
+  return { cortex, robos, rodar, pedirAoCortex, divulga, estadoDivulga, reservas, pacoteIA, temToken: !!token };
 }
 
 module.exports = { criarGithub, REPO, RESERVAS, montarReservas, decodificarBase64, BRANCH_DIVULGA, ARQUIVO_ESTADO };
