@@ -55,6 +55,14 @@ export default function MemorySettings() {
       return;
     }
 
+    const memoriaMinimaGb = 4;
+    if (typeof suporte.memoriaGb === 'number' && suporte.memoriaGb < memoriaMinimaGb) {
+      setBloqueado(true);
+      setMotivoBloqueio(`Memória insuficiente: são necessários pelo menos ${memoriaMinimaGb} GB de RAM para rodar a IA localmente. Seu dispositivo tem ${suporte.memoriaGb} GB.`);
+      setIaLocalAtivo(false);
+      return;
+    }
+
     setBloqueado(false);
     setMotivoBloqueio('');
     setConfirmandoDownload(true);

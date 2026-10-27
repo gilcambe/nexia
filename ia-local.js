@@ -125,22 +125,27 @@ export async function verificarSuporteWebGPU() {
 export async function carregarWebLLM() {
   try {
     // Validação de integridade (SHA-256) do WebLLM do CDN
-    // Hash SHA-256 conhecido da versão 0.2.46 (obtido de fontes confiáveis)
-    const expectedHash = 'a1b2c3d4e5f67890...'; // Hash real a ser obtido da distribuição oficial
-    const response = await fetch(WEBLLM_CDN_URL, { 
-      headers: { 'Cache-Control': 'no-cache' } 
+    const response = await fetch(WEBLLM_CDN_URL, {
+      headers: { 'Cache-Control': 'no-cache' }
     });
-    
+
     if (!response.ok) {
       throw new Error(`Falha ao buscar WebLLM: ${response.status} ${response.statusText}`);
     }
-    
+
     const content = await response.text();
-    // Em produção, calcular hash e comparar com expectedHash
-    // Exemplo: const actualHash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content));
-    // if (actualHash !== expectedHash) throw new Error('Hash do WebLLM inválido!');
-    
-    // Para este exemplo, pulamos a validação real mas deixamos o framework pronto
+
+    // Calcula hash SHA-256 real do conteúdo baixado
+    const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(content));
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const actualHash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+
+    const expectedHash = import.meta.env.VITE_WEBLLM_SHA256 || '';
+
+    if (expectedHash && actualHash !== expectedHash) {
+      throw new Error('Hash do WebLLM inválido! O arquivo do CDN foi alterado ou corrompido.');
+    }
+
     const module = await import(/* @vite-ignore */ WEBLLM_CDN_URL);
     return module;
   } catch (err) {
