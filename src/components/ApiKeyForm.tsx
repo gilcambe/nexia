@@ -86,13 +86,13 @@ export default function ApiKeyForm({ onCriado }: ApiKeyFormProps) {
       </form>
 
       {erro && (
-        <div className="rounded-lg bg-red-900/20 border border-red-500/30 p-3 text-red-400 text-sm" role="alert">
+        <div className="rounded-lg bg-red-900/20 border border-red-500/30 p-3 text-red-400 text-sm" role="alert" aria-live="polite">
           {erro}
         </div>
       )}
 
       {sucesso && (
-        <div className="rounded-lg bg-green-900/20 border border-green-500/30 p-3 text-green-400 text-sm" role="status">
+        <div className="rounded-lg bg-green-900/20 border border-green-500/30 p-3 text-green-400 text-sm" role="status" aria-live="polite">
           {sucesso}
         </div>
       )}
