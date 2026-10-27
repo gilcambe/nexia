@@ -5,6 +5,159 @@
 // pula o teste em vez de falhar. Qualquer outro erro continua falhando.
 const ESPERAS = [2000, 5000, 10000];
 
+// Testes de unidade para comRetentativa
+if (typeof module !== 'undefined' && module.exports && typeof require !== 'undefined') {
+  const { test } = require('node:test');
+  const assert = require('node:assert');
+  
+  // Mock para simular setTimeout controlado
+  let mockTimeoutDelay = 0;
+  let mockTimeoutCallback = null;
+  
+  // Sobrescreve setTimeout para testes
+  global.setTimeout = (callback, delay) => {
+    mockTimeoutDelay = delay;
+    mockTimeoutCallback = callback;
+    return { mockTimeoutDelay, mockTimeoutCallback };
+  };
+  
+  // Função para avançar o tempo nos testes
+  const advanceTime = (ms) => {
+    if (mockTimeoutCallback) {
+      mockTimeoutCallback();
+      mockTimeoutCallback = null;
+    }
+  };
+  
+  // Teste: sucesso na primeira tentativa
+  test('comRetentativa - sucesso na primeira tentativa', async () => {
+    const mockFn = async () => ({ status: 200, data: 'success' });
+    const mockT = { skip: () => {} };
+    
+    const result = await comRetentativa(mockFn, mockT);
+    
+    assert.strictEqual(result.status, 200);
+    assert.strictEqual(result.data, 'success');
+  });
+  
+  // Teste: retentativa com sucesso na segunda tentativa (403)
+  test('comRetentativa - sucesso na segunda tentativa (403)', async () => {
+    let callCount = 0;
+    const mockFn = async () => {
+      callCount++;
+      if (callCount === 1) {
+        const error = new Error('Rate limit');
+        error.status = 403;
+        throw error;
+      }
+      return { status: 200, data: 'success' };
+    };
+    const mockT = { skip: () => {} };
+    
+    const result = await comRetentativa(mockFn, mockT);
+    
+    assert.strictEqual(callCount, 2);
+    assert.strictEqual(result.status, 200);
+    assert.strictEqual(result.data, 'success');
+    assert.strictEqual(mockTimeoutDelay, 2000); // Primeira espera
+  });
+  
+  // Teste: retentativa com sucesso na terceira tentativa (429)
+  test('comRetentativa - sucesso na terceira tentativa (429)', async () => {
+    let callCount = 0;
+    const mockFn = async () => {
+      callCount++;
+      if (callCount <= 2) {
+        const error = new Error('Too many requests');
+        error.status = 429;
+        throw error;
+      }
+      return { status: 200, data: 'success' };
+    };
+    const mockT = { skip: () => {} };
+    
+    const result = await comRetentativa(mockFn, mockT);
+    
+    assert.strictEqual(callCount, 3);
+    assert.strictEqual(result.status, 200);
+    assert.strictEqual(result.data, 'success');
+    assert.strictEqual(mockTimeoutDelay, 10000); // Terceira espera
+  });
+  
+  // Teste: erro 5xx propagado após 3 tentativas
+  test('comRetentativa - erro 5xx propagado após 3 tentativas', async () => {
+    let callCount = 0;
+    const mockFn = async () => {
+      callCount++;
+      const error = new Error('Server error');
+      error.status = 500;
+      throw error;
+    };
+    const mockT = { skip: () => {} };
+    
+    await assert.rejects(
+      comRetentativa(mockFn, mockT),
+      /Server error/
+    );
+    
+    assert.strictEqual(callCount, 3);
+  });
+  
+  // Teste: skip quando 403 com x-ratelimit-remaining: 0
+  test('comRetentativa - skip quando 403 com x-ratelimit-remaining: 0', async () => {
+    let callCount = 0;
+    const mockFn = async () => {
+      callCount++;
+      const error = new Error('Rate limit exceeded');
+      error.status = 403;
+      error.headers = { 'x-ratelimit-remaining': '0' };
+      throw error;
+    };
+    let skipCalled = false;
+    const mockT = { skip: () => { skipCalled = true; } };
+    
+    const result = await comRetentativa(mockFn, mockT);
+    
+    assert.strictEqual(callCount, 3);
+    assert.strictEqual(skipCalled, true);
+    assert.strictEqual(result, undefined);
+  });
+  
+  // Teste: skip quando 403 com mensagem "GitHub respondeu 403"
+  test('comRetentativa - skip quando mensagem "GitHub respondeu 403"', async () => {
+    let callCount = 0;
+    const mockFn = async () => {
+      callCount++;
+      const error = new Error('GitHub respondeu 403');
+      error.status = 403;
+      throw error;
+    };
+    let skipCalled = false;
+    const mockT = { skip: () => { skipCalled = true; } };
+    
+    const result = await comRetentativa(mockFn, mockT);
+    
+    assert.strictEqual(callCount, 3);
+    assert.strictEqual(skipCalled, true);
+    assert.strictEqual(result, undefined);
+  });
+  
+  // Teste: erro não-rate limit propagado imediatamente
+  test('comRetentativa - erro não-rate limit propagado imediatamente', async () => {
+    const mockFn = async () => {
+      const error = new Error('Not found');
+      error.status = 404;
+      throw error;
+    };
+    const mockT = { skip: () => {} };
+    
+    await assert.rejects(
+      comRetentativa(mockFn, mockT),
+      /Not found/
+    );
+  });
+}
+
 function ehRateLimit(status) {
   return status === 403 || status === 429 || (status >= 500 && status <= 599);
 }
