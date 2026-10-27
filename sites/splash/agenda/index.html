@@ -765,6 +765,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous"></script>
 <script src="painel.js"></script>
 <script src="gestao.js"></script>
+<script src="instagram-config.js"></script>
 <script>
   const guardaToken = { ler() { try { return localStorage.getItem('splash_token') || sessionStorage.getItem('splash_token') || ''; } catch (e) { return ''; } }, gravar(t) { try { localStorage.setItem('splash_token', t); } catch (e) {} try { sessionStorage.setItem('splash_token', t); } catch (e) {} }, apagar() { try { localStorage.removeItem('splash_token'); } catch (e) {} try { guardaToken.apagar(); } catch (e) {} } };
   let TOKEN = guardaToken.ler();
