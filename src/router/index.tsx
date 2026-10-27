@@ -28,7 +28,7 @@ const NotFound = lazy(() => import("../pages/NotFound"));
 const PrivacidadePage = lazy(() => import("../pages/legais/privacidade/page"));
 const TermosPage = lazy(() => import("../pages/legais/termos/page"));
 const CookiesPage = lazy(() => import("../pages/legais/cookies/page"));
-const LGPDPage = lazy(() => import("../pages/legais/lgpd/page"));
+const LGPDPage = lazy(() => import("../pages/legais/lgpd/page"));\nconst MemorySettingsPage = lazy(() => import("../pages/Settings/Memory"));
 
 const routes: RouteObject[] = [
   { path: "/", element: <Home /> },
@@ -61,7 +61,7 @@ const routes: RouteObject[] = [
   { path: "/cortex/privacidade", element: <PrivacidadePage /> },
   { path: "/cortex/termos", element: <TermosPage /> },
   { path: "/cookies", element: <CookiesPage /> },
-  { path: "/lgpd", element: <LGPDPage /> },
+  { path: "/lgpd", element: <LGPDPage /> },\n  { path: "/settings/memory", element: <RotaProtegida><MemorySettingsPage /></RotaProtegida> },
   { path: "*", element: <NotFound /> },
 ];
 
