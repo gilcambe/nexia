@@ -190,7 +190,7 @@ async function main() {
     if (TASK && project) {
       const ex = await api('/nexia/executions', { method: 'POST', body: { message: TASK, project_id: project.id }, headers: { 'Idempotency-Key': `smoke-exec-${Date.now()}` } });
       const exec = ex.json && ex.json.execution;
-      report([200, 202].includes(ex.status) && !!exec, 'Execução: pedido aceito', `${ex.status} ${ex.json && (ex.json.error || (exec && exec.status) || ex.json.decision || '')}`);
+      report([200, 202].includes(ex.status) && !!exec, 'Execução: pedido aceito', `${ex.status} ${ex.json && (ex.json.error || (exec && exec.status) || ex.json.decision || '')} ${(ex.json && (ex.json.causa || ex.json.tipo)) || ''}`);
       let last = exec;
       // Economia da cota grátis do Firestore: o intervalo cresce (20 s -> 60 s) em vez de ler a cada 20 s.
       // Com todos os passos feitos, a execução só espera o CI do PR: pede a reavaliação dos gates (no
