@@ -1,29 +1,29 @@
 {
   "spec": {
     "kind": "system",
-    "name": "Site de Teste do Cortex-p1",
-    "tagline": "Painel de métricas e controle do Cortex",
-    "photo_theme": "dashboard metrics",
-    "description": "Painel de métricas e controle do Cortex",
+    "name": "Cortex-p1",
+    "tagline": "Painel de controle e fila de desenvolvimento inteligente",
+    "photo_theme": "code terminal dashboard",
+    "description": "Painel de controle e fila de desenvolvimento inteligente",
     "folder": "sites/cortex-p1",
     "fonts": {
-      "heading": "Montserrat",
+      "heading": "Syne",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#4f46e5",
+      "primary": "#7c3aed",
       "accent": "#06b6d4",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#111827"
+      "dark": "#0f172a"
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "11900000000",
-      "phone": "(11) 4002-8922",
-      "email": "suporte@cortexp1.com.br",
+      "whatsapp": "",
+      "phone": "(11) 99888-7766",
+      "email": "suporte@cortex.dev",
       "address": "",
       "city": "",
       "hours": "",
@@ -44,42 +44,99 @@
     "leads_origem": "",
     "entities": [
       {
-        "key": "metrics",
-        "label": "Métricas",
-        "singular": "Métrica",
+        "key": "fila",
+        "label": "Fila do Sistema",
+        "singular": "Tarefa na Fila",
         "fields": [
           {
-            "key": "provedor",
-            "label": "Provedor",
+            "key": "titulo",
+            "label": "Título da Tarefa",
             "type": "text",
             "options": [],
             "required": true
           },
           {
-            "key": "cota_usada_hoje",
-            "label": "Cota Usada Hoje",
+            "key": "etapa",
+            "label": "Etapa",
+            "type": "select",
+            "options": [
+              "Na fila",
+              "Travada: precisa de ajuda",
+              "Em execução",
+              "Com o Jules (IA grátis)",
+              "Com o Claude"
+            ],
+            "required": true
+          },
+          {
+            "key": "autor",
+            "label": "Autor",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "tentativa",
+            "label": "Tentativa",
             "type": "number",
             "options": [],
             "required": true
           },
           {
-            "key": "mensagens_por_minuto",
-            "label": "Mensagens por Minuto",
+            "key": "criado",
+            "label": "Criado em",
+            "type": "date",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "titulo": "Atualizar dependências de segurança",
+            "etapa": "Em execução (pista 1) · tentativa 2",
+            "autor": "Equipe Central",
+            "tentativa": "2",
+            "criado": "2026-06-01"
+          },
+          {
+            "titulo": "Correção de layout no painel",
+            "etapa": "Na fila · parte de um pedido maior",
+            "autor": "João Silva",
+            "tentativa": "1",
+            "criado": "2026-06-02"
+          },
+          {
+            "titulo": "Implementar integração de IA",
+            "etapa": "Com o Claude · tentativa 3",
+            "autor": "Maria Souza",
+            "tentativa": "3",
+            "criado": "2026-06-03"
+          },
+          {
+            "titulo": "Refatoração de API de pagamentos",
+            "etapa": "Travada: precisa de ajuda",
+            "autor": "Carlos Lima",
+            "tentativa": "1",
+            "criado": "2026-06-04"
+          }
+        ]
+      },
+      {
+        "key": "issues",
+        "label": "Issues Monitoradas",
+        "singular": "Issue",
+        "fields": [
+          {
+            "key": "numero",
+            "label": "Número #",
             "type": "number",
             "options": [],
             "required": true
           },
           {
-            "key": "tamanho_da_fila",
-            "label": "Tamanho da Fila",
-            "type": "number",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "erros_ultima_hora",
-            "label": "Erros na Última Hora",
-            "type": "number",
+            "key": "repositorio",
+            "label": "Repositório",
+            "type": "text",
             "options": [],
             "required": true
           },
@@ -88,52 +145,53 @@
             "label": "Status",
             "type": "select",
             "options": [
-              "Ativo",
-              "Inativo"
+              "Aberta",
+              "Fechada",
+              "Em análise"
             ],
+            "required": true
+          },
+          {
+            "key": "rotulo_principal",
+            "label": "Rótulo Principal",
+            "type": "text",
+            "options": [],
             "required": true
           }
         ],
         "sample": [
           {
-            "provedor": "Twilio",
-            "cota_usada_hoje": "12000",
-            "mensagens_por_minuto": "5",
-            "tamanho_da_fila": "200",
-            "erros_ultima_hora": "1",
-            "status": "Ativo"
+            "numero": "142",
+            "repositorio": "central/github.js",
+            "status": "Aberta",
+            "rotulo_principal": "cortex-fila"
           },
           {
-            "provedor": "Nexmo",
-            "cota_usada_hoje": "8000",
-            "mensagens_por_minuto": "3",
-            "tamanho_da_fila": "150",
-            "erros_ultima_hora": "0",
-            "status": "Ativo"
+            "numero": "143",
+            "repositorio": "central/github.js",
+            "status": "Em análise",
+            "rotulo_principal": "cortex-rodando"
           },
           {
-            "provedor": "Plivo",
-            "cota_usada_hoje": "5000",
-            "mensagens_por_minuto": "4",
-            "tamanho_da_fila": "100",
-            "erros_ultima_hora": "2",
-            "status": "Inativo"
+            "numero": "144",
+            "repositorio": "site/landing",
+            "status": "Aberta",
+            "rotulo_principal": "cortex-travado"
           },
           {
-            "provedor": "Vonage",
-            "cota_usada_hoje": "2000",
-            "mensagens_por_minuto": "1",
-            "tamanho_da_fila": "50",
-            "erros_ultima_hora": "0",
-            "status": "Ativo"
+            "numero": "145",
+            "repositorio": "app/core",
+            "status": "Fechada",
+            "rotulo_principal": "jules-enviado"
           }
         ]
       }
     ],
     "modules": [
-      "Admin",
-      "Métricas",
-      "Relatórios"
+      "Painel Principal",
+      "Fila de Tarefas",
+      "Issues & Rótulos",
+      "Configurações"
     ]
   },
   "media": {}
