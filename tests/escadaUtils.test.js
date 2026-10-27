@@ -2,8 +2,8 @@
  * Teste unitário de escadaUtils - lógica pura que conta issues por degrau.
  * Roda com `npm test` (node --test).
  */
-import { describe, it, expect } from 'node:test';
-import { semana, percentCortex, fila, faseB, contarPorDegrau } from '../src/lib/escadaUtils.js';
+const { describe, it, expect } = require('node:test');
+const { semana, percentCortex, fila, faseB, contarPorDegrau } = require('../src/lib/escadaUtils.js');
 
 function issue(sobrescrito = {}) {
   return {
