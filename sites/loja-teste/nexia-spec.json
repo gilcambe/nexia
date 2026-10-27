@@ -1,7 +1,7 @@
 {
   "spec": {
     "kind": "site",
-    "name": "Loja Teste",
+    "name": "Cortex-p1",
     "tagline": "Produtos de qualidade para o seu dia a dia",
     "photo_theme": "retail store shopping",
     "description": "Loja completa com variedade de produtos, preço justo e entrega rápida para todo o Brasil.",
@@ -23,11 +23,11 @@
     "contact": {
       "whatsapp": "5511900000000",
       "phone": "(11) 3000-0000",
-      "email": "contato@lojateste.com.br",
+      "email": "contato@cortex-p1.com.br",
       "address": "Rua das Lojas, 100",
       "city": "São Paulo - SP",
       "hours": "Seg a sex, 9h às 18h",
-      "instagram": "lojateste",
+      "instagram": "cortexp1",
       "facebook": "",
       "youtube": "",
       "tiktok": "",
@@ -39,7 +39,7 @@
     "brand_text": false,
     "selo": {
       "label": "Feito com Kernex",
-      "url": "https://kernex.com.br/?utm_source=loja-teste&utm_medium=selo&utm_campaign=clientes"
+      "url": "https://kernex.com.br/?utm_source=cortex-p1&utm_medium=selo&utm_campaign=clientes"
     },
     "leads_origem": "",
     "sections": [
@@ -48,7 +48,7 @@
         "id": "tudo-que-voce-precisa-em-um-so-lugar",
         "title": "Tudo que você precisa em um só lugar",
         "subtitle": "Produtos selecionados com preço justo e entrega rápida.",
-        "eyebrow": "Loja Teste",
+        "eyebrow": "Cortex-p1",
         "cta": {
           "label": "Comprar agora",
           "href": "whatsapp"
@@ -107,7 +107,7 @@
       {
         "type": "about",
         "id": "sobre-a-loja-teste",
-        "title": "Sobre a Loja Teste",
+        "title": "Sobre a Cortex-p1",
         "subtitle": "Mais de 5 anos atendendo clientes com confiança e produtos de qualidade.",
         "text": "Mais de 5 anos atendendo clientes com confiança e produtos de qualidade.",
         "image_query": "friendly shopkeeper store",
@@ -144,7 +144,7 @@
       {
         "type": "video",
         "id": "conheca-a-loja-teste",
-        "title": "Conheça a Loja Teste",
+        "title": "Conheça a Cortex-p1",
         "subtitle": "Veja como é fácil comprar conosco.",
         "youtube": "",
         "video_query": "shopping store retail"
@@ -188,7 +188,7 @@
           },
           {
             "label": "Instagram",
-            "url": "https://instagram.com/lojateste",
+            "url": "https://instagram.com/cortexp1",
             "icon": "instagram"
           }
         ]
@@ -229,8 +229,8 @@
       },
       {
         "type": "contact",
-        "id": "fale-com-a-loja-teste",
-        "title": "Fale com a Loja Teste",
+        "id": "secao-fale-com-a-loja-teste",
+        "title": "Fale com a Cortex-p1",
         "subtitle": "",
         "map": true,
         "form": true
@@ -244,6 +244,14 @@
       "height": 854,
       "alt": "Interior of Cabot Creamery Retail Store",
       "credit": "Interior of Cabot Creamery Retail Store — Tessa Bury (BY 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Airpods_and_Airpods_Pro_being_displayed_in_electronics_retail_store.jpg/1280px-Airpods_and_Airpods_Pro_being_displayed_in_electronics_retail_store.jpg",
+      "width": 1280,
+      "height": 862,
+      "alt": "Airpods and Airpods Pro being displayed in electronics retail store",
+      "credit": "Airpods and Airpods Pro being displayed in electronics retail store — KKPCW (BY-SA 4.0, via Openverse)",
       "provider": "openverse"
     },
     "s1.item1": {
@@ -326,13 +334,13 @@
       "credit": "PNG People shopping sticker, transparent — autor desconhecido (CC0 1.0, via Openverse)",
       "provider": "openverse"
     },
-    "s1.item0": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Airpods_and_Airpods_Pro_being_displayed_in_electronics_retail_store.jpg/1280px-Airpods_and_Airpods_Pro_being_displayed_in_electronics_retail_store.jpg",
+    "s3.g2": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/ff/DG_%E6%9D%B1%E8%8E%9E_DongGuan_%E5%8D%97%E5%9F%8E%E5%8D%80_Nancheng_%E9%B4%BB%E7%A6%8F%E8%B7%AF_HongFu_Road_%E6%9D%B1%E8%8E%9E%E4%BA%AC%E6%9D%B1%E5%95%86%E5%A0%B4_JD_Shopping_Mall_Electronics_Showroom_December_2024_R12S_28_Keyboards.jpg/1280px-DG_%E6%9D%B1%E8%8E%9E_DongGuan_%E5%8D%97%E5%9F%8E%E5%8D%80_Nancheng_%E9%B4%BB%E7%A6%8F%E8%B7%AF_HongFu_Road_%E6%9D%B1%E8%8E%9E%E4%BA%AC%E6%9D%B1%E5%95%86%E5%A0%B4_JD_Shopping_Mall_Electronics_Showroom_December_2024_R12S_28_Keyboards.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "width": 1280,
-      "height": 862,
-      "alt": "Airpods and Airpods Pro being displayed in electronics retail store",
-      "credit": "Airpods and Airpods Pro being displayed in electronics retail store — KKPCW (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
+      "height": 1707,
+      "alt": "DG 東莞 DongGuan 南城區 Nancheng 鴻福路 HongFu Road 東莞京東商場 JD Shopping Mall in December ",
+      "credit": "NAS 238 WMMNO (CC0, via Wikimedia Commons)",
+      "provider": "wikimedia"
     }
   }
 }
