@@ -2,6 +2,8 @@
 // ADR-FREE-01: lista fixa dos handlers para o bundle do Worker (o esbuild não segue require dinâmico).
 // Cada módulo só é avaliado no primeiro pedido que o usa (menos CPU por pedido no plano grátis).
 // O teste CF4 confere que esta lista bate com netlify/functions/.
+const { handleAjudaIas } = require('../netlify/functions/central/pedidos-gh.js');
+
 const LOADERS = {
   'account-recovery': () => require('../netlify/functions/account-recovery.js'),
   'action-engine': () => require('../netlify/functions/action-engine.js'),
@@ -69,4 +71,8 @@ function getFunction(name) {
   return loaded.get(name);
 }
 
-module.exports = { LOADERS, getFunction };
+const ROTAS_CENTRAIS = {
+  '/central/ajuda-ias': { GET: handleAjudaIas, POST: handleAjudaIas },
+};
+
+module.exports = { LOADERS, getFunction, ROTAS_CENTRAIS };
