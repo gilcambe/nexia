@@ -4,6 +4,8 @@ const test = require('node:test');
 const assert = require('node:assert');
 const { VazaoController, calcularPrioridade } = require('../../src/durable/VazaoController.js');
 
+const hojeUtc = () => new Date().toISOString().slice(0, 10);
+
 // Helper para criar mock de SQLite em memória para o test runner
 function criarMockSqlite() {
   const tabelas = {
@@ -155,15 +157,16 @@ test('VazaoController: 1 resposta em andamento por usuário', () => {
 
 test('VazaoController: contadores por provedor e verificação de cotas', () => {
   const ctrl = new VazaoController();
+  const d = hojeUtc();
 
-  const inc1 = ctrl.incrementarProvedor('openai', 500, '2026-10-26');
+  const inc1 = ctrl.incrementarProvedor('openai', 500, d);
   assert.strictEqual(inc1.ok, true);
   assert.strictEqual(inc1.contagem, 500);
 
-  const inc2 = ctrl.incrementarProvedor('openai', 300, '2026-10-26');
+  const inc2 = ctrl.incrementarProvedor('openai', 300, d);
   assert.strictEqual(inc2.contagem, 800);
 
-  const contadores = ctrl.obterContadores('2026-10-26');
+  const contadores = ctrl.obterContadores(d);
   assert.strictEqual(contadores.openai, 800);
 
   const cota = ctrl.verificarCota('openai', 1000, '2026-10-26');
@@ -203,6 +206,7 @@ test('VazaoController: fila de espera ordenada por plano e chegada', () => {
 test('VazaoController: persistência com SQLite mock', () => {
   const state = { storage: { sql: criarMockSqlite() } };
   const ctrl = new VazaoController(state);
+  const d = hojeUtc();
 
   // 1. Resposta em andamento com SQLite
   assert.strictEqual(ctrl.iniciarResposta('u-sql', 'req-sql').ok, true);
@@ -210,8 +214,8 @@ test('VazaoController: persistência com SQLite mock', () => {
   assert.strictEqual(ctrl.finalizarResposta('u-sql').ok, true);
 
   // 2. Contadores com SQLite
-  ctrl.incrementarProvedor('anthropic', 100, '2026-10-26');
-  assert.strictEqual(ctrl.obterContadores('2026-10-26').anthropic, 100);
+  ctrl.incrementarProvedor('anthropic', 100, d);
+  assert.strictEqual(ctrl.obterContadores(d).anthropic, 100);
 
   // 3. Fila com SQLite
   ctrl.enfileirar({ id: 'sql-f1', usuario_id: 'u1', plano: 'gratis' }, 100);
