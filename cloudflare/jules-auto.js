@@ -111,10 +111,10 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
   }
   for (const n of d.devolver) {
     const i = issues.find(x => x.number === n);
-    // Remove apenas o rótulo de degrau 3 (sem apagar rótulos de negócio/segurança).
-    await tirar(n, 'vez-do-claude');
+    // Remove todos os rótulos de degrau (cortex-travado, vez-do-claude, etc.) antes de reaplicar cortex-travado
+    for (const l of nomes(i).filter(l => l === 'cortex-travado' || l === 'vez-do-claude' || l === 'cortex-rodando' || l === 'cortex-retomada' || l === 'reserva-tentou' || /^(tentativa|sem-entrega|pista)-\d+$/.test(l))) await tirar(n, l);
     await por(n, ['cortex-travado']);
-    await comentar(n, `🪜 Degrau 2: cortex-travado — envios do Júles abaixo do limite (${enviadosHoje}/15), a tarefa volta ao degrau 2 e fica travada para nova tentativa. (Jules hoje: ${enviadosHoje}/15)`);
+    await comentar(n, `🪜 Degrau 2: cortex-travado — envios do Jules abaixo do limite (${enviadosHoje}/15), a tarefa volta ao degrau 2 e fica travada para nova tentativa. (Jules hoje: ${enviadosHoje}/15)`);
     out.devolver.push(n);
   }
   if (d.enviar) {
