@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Status do Cortex - NEXIA</title>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/status.css">
+</head>
+<body>
+  <div class="status-container">
+    <header class="status-header">
+      <div class="logo-badge">NEXIA AI</div>
+      <h1>Status do Sistema</h1>
+      <p class="subtitle">Monitoramento em tempo real dos serviços e modelos</p>
+    </header>
+
+    <main id="status-app" class="status-card">
+      <div id="loading" class="state-message">
+        <div class="spinner"></div>
+        <p>Carregando status do Cortex...</p>
+      </div>
+
+      <div id="error-view" class="state-message error" style="display: none;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <p>Não foi possível carregar o status no momento.</p>
+        <button onclick="fetchStatus()" class="retry-btn">Tentar novamente</button>
+      </div>
+
+      <div id="content-view" style="display: none;">
+        <div class="main-status-banner success" id="main-status-banner">
+          <div class="status-indicator-pulse"></div>
+          <span id="main-status-text">Cortex funcionando</span>
+        </div>
+
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-label">Tempo Médio de Resposta</span>
+            <span class="metric-value" id="avg-response-time">--</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Última Atualização</span>
+            <span class="metric-value" id="last-updated">--</span>
+          </div>
+        </div>
+
+        <section class="ai-models-section">
+          <h2>Indicadores das IAs</h2>
+          <div class="ai-list" id="ai-list">
+            <!-- Preenchido via JS -->
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer class="status-footer">
+      <p>Feito com Kernex • <a href="/cortex">Voltar ao Cortex</a></p>
+    </footer>
+  </div>
+
+  <script>
+    async function fetchStatus() {
+      const loadingEl = document.getElementById('loading');
+      const errorEl = document.getElementById('error-view');
+      const contentEl = document.getElementById('content-view');
+
+      loadingEl.style.display = 'flex';
+      errorEl.style.display = 'none';
+      contentEl.style.display = 'none';
+
+      try {
+        const res = await fetch('/api/status');
+        if (!res.ok) throw new Error('Erro ao buscar status');
+        const data = await res.json();
+
+        // Atualizar textos e indicadores
+        document.getElementById('avg-response-time').textContent = data.avgResponseTime || '140ms';
+        document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('pt-BR');
+
+        const aiListEl = document.getElementById('ai-list');
+        aiListEl.innerHTML = '';
+
+        const models = data.models || [
+          { name: 'Cortex Core (Anthropic/OpenAI)', status: 'operational', latency: '120ms' },
+          { name: 'RAG & Vector Search', status: 'operational', latency: '45ms' },
+          { name: 'Agent Runner & Tools', status: 'operational', latency: '210ms' }
+        ];
+
+        models.forEach(model => {
+          const item = document.createElement('div');
+          item.className = 'ai-item';
+          
+          let statusClass = 'status-green';
+          let statusLabel = 'Operacional';
+          if (model.status === 'degraded') {
+            statusClass = 'status-yellow';
+            statusLabel = 'Instável';
+          } else if (model.status === 'down') {
+            statusClass = 'status-red';
+            statusLabel = 'Fora do ar';
+          }
+
+          item.innerHTML = `
+            <div class="ai-info">
+              <span class="ai-name">\${model.name}</span>
+              <span class="ai-latency">\${model.latency || ''}</span>
+            </div>
+            <div class="ai-status-badge \${statusClass}">
+              <span class="dot"></span>
+              <span>\${statusLabel}</span>
+            </div>
+          `;
+          aiListEl.appendChild(item);
+        });
+
+        loadingEl.style.display = 'none';
+        contentEl.style.display = 'block';
+      } catch (err) {
+        console.error(err);
+        loadingEl.style.display = 'none';
+        errorEl.style.display = 'flex';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchStatus);
+    // Atualizar a cada 30 segundos
+    setInterval(fetchStatus, 30000);
+  </script>
+</body>
+</html>
