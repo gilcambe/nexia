@@ -15,7 +15,7 @@
     "mapa": "node scripts/gerar-mapa.js",
     "start": "node server.js",
     "typecheck": "tsc --noEmit -p .",
-    "test": "node --test tests/unit/*.test.js",
+    "test": "node --test tests/unit/*.test.js tests/*.test.js",
     "test:rules": "npx -y firebase-tools@13.35.1 emulators:exec --only auth,firestore --project demo-nexia \"node --test --test-concurrency=1 tests/integration/*.test.js\"",
     "test:e2e": "playwright test -c tests/e2e/playwright.config.js",
     "test:e2e:no-ar": "playwright test -c tests/e2e/playwright.no-ar.config.js",
