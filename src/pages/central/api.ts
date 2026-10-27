@@ -43,6 +43,7 @@ export interface Cota { id: string; nome: string; limite: number; usado: number 
 export interface Cotas { itens: Cota[]; perto: string[]; frear: boolean; limiar: number; firestoreErro?: string; em: string }
 export interface ErroRecente { em: number; rid: string; rota: string; metodo: string; codigo: number; msg: string }
 export interface Historico { dias: number; amostras: number; desde: string | null; rotas: RotaSaude[]; porDia: { dia: string; disponibilidade: number }[] }
+export interface AjudaIas { ligado: boolean; revisorMin: number; aprovados: number; recusados: number; jules: number; claude: number; claudePrimeiro?: { numero: number; titulo: string } | null; travadas: number }
 // Conectar IAs (#1958): 3 vagas de chave grátis. A chave nunca vem para a página.
 export type VagaSituacao = "ok" | "sem-cota" | "recusada" | "erro";
 export interface VagaTeste { situacao: VagaSituacao; tempo: number; motivo?: string; resposta?: string; em: string; onde: "central" | "robo" }
@@ -68,9 +69,10 @@ export interface Dados {
   maquinas?: { ligado: boolean; maquinas: Maquina[] };
   erros?: { erros: ErroRecente[] }; // aba Sistema, só quando abre
   historico?: Historico; // só a aba Sistema pede (lê 30 dias; não entra no "conferir" de 5 em 5 min)
+  ajudaIas?: AjudaIas;
 }
 export type Parte = keyof Dados;
-export const PARTES: Parte[] = ["lista", "saude", "dinheiro", "cortex", "robos", "divulga", "banco", "cloudflare", "cotas", "empresa", "clientes", "leads", "vagas", "maquinas"];
+export const PARTES: Parte[] = ["lista", "saude", "dinheiro", "cortex", "robos", "divulga", "banco", "cloudflare", "cotas", "empresa", "clientes", "leads", "vagas", "maquinas", "ajuda-ias"];
 
 export function useCentral() {
   const { getToken } = useAuth();

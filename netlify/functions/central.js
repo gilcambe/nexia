@@ -84,7 +84,7 @@ function createHandler(deps = {}) {
           const texto = String(body.texto || '').trim().slice(0, 3000);
           if (texto.length < 10) return res(400, { error: 'Escreva com um pouco mais de detalhe o que você quer.' });
           const titulo = texto.split('\n')[0].slice(0, 80);
-          const r = await gh.pedirAoCortex(titulo, texto, auth.email || 'admin');
+          const r = await gh.pedirAoCortex(titulo, texto, auth.email);
           return res(200, { ok: true, ...r, mensagem: 'Pedido entregue ao Cortex (tarefa #' + r.numero + ').' });
         }
         if (body.acao === 'confirmar_pix' || body.acao === 'recusar_pix') {
@@ -101,12 +101,25 @@ function createHandler(deps = {}) {
             const valor = Number(p.valor) || 0;
             const uid = p.uid || pedidoId;
             await liberarAcesso(db, uid, dias, Date.now(), { valor });
-            await docRef.set({ status: 'confirmado', confirmadoEm: Date.now(), confirmadoPor: auth.email || 'admin' }, { merge: true });
+            await docRef.set({ status: 'confirmado', confirmadoEm: Date.now(), confirmadoPor: auth.email }, { merge: true });
             return res(200, { ok: true, mensagem: 'Pix confirmado com sucesso e plano ativado.' });
           } else {
-            await docRef.set({ status: 'recusado', recusadoEm: Date.now(), recusadoPor: auth.email || 'admin' }, { merge: true });
+            await docRef.set({ status: 'recusado', recusadoEm: Date.now(), recusadoPor: auth.email }, { merge: true });
             return res(200, { ok: true, mensagem: 'Pix recusado com sucesso.' });
           }
+        }
+        if (body.acao === 'ajuda-ias') {
+          const db = getDb();
+          const ref = db.collection('central_ajuda_ias').doc('estado');
+          const snap = await ref.get();
+          const atual = snap.exists ? (snap.data() || {}) : {};
+          const ligar = body.ligar === true;
+          await ref.set({
+            ligado: ligar,
+            atualizadoEm: Date.now(),
+            atualizadoPor: auth.email
+          }, { merge: true });
+          return res(200, { ok: true, ligado: ligar });
         }
         return res(400, { error: 'Ação desconhecida.' });
       }
@@ -156,6 +169,24 @@ function createHandler(deps = {}) {
         // #815: últimos erros 5xx do Worker, com o rid (o mesmo do cabeçalho X-Request-Id e do log).
         const db = deps.getHistoricoDb ? deps.getHistoricoDb() : getHistorico().abrirBanco(env);
         return res(200, { erros: await require('../../lib/rid').listarErros(db, 50) });
+      }
+      if (parte === 'ajuda-ias') {
+        const db = getDb();
+        const snap = await db.collection('central_ajuda_ias').doc('estado').get();
+        const atual = snap.exists ? (snap.data() || {}) : {};
+        const ligado = atual.ligado === true;
+        const agora = Date.now();
+        const revisorMin = atual.revisorAtualizadoEm ? Math.round((agora - Number(atual.revisorAtualizadoEm)) / 60000) : null;
+        return res(200, {
+          ligado,
+          revisorMin: revisorMin === null ? null : Math.max(0, revisorMin),
+          aprovados: Number(atual.aprovadosHoje || 0),
+          recusados: Number(atual.recusadosHoje || 0),
+          jules: Number(atual.julesAgora || 0),
+          claude: Number(atual.claudeVez || 0),
+          claudePrimeiro: atual.claudePrimeiro || null,
+          travadas: Number(atual.travadas || 0)
+        });
       }
       const gh = getGithub();
       if (parte === 'empresa') {
