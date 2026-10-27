@@ -3,7 +3,7 @@ import type { Vaga, Vagas, VagaTeste } from "./api";
 import { useCentral, haQuanto } from "./api";
 import Logo from "./Logo";
 
-// Conectar IAs (#1958): 3 vagas de chave grátis que ajudam o Cortex quando ele trava.
+// Conectar IAs (#1958): 10 vagas de chave grátis que ajudam o Cortex quando ele trava.
 // A chave é testada na hora e vira segredo criptografado do GitHub; nunca volta para esta página.
 type Estado = "verde" | "amarelo" | "vermelho" | "cinza";
 const PILULA: Record<Estado, string> = {
@@ -125,6 +125,7 @@ export default function ConectarIAs({ inicial }: { inicial?: Vagas }) {
   const { buscar, agir } = useCentral();
   const [dados, setDados] = useState<Vagas | undefined>(inicial);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [livresVisiveis, setLivresVisiveis] = useState(1);
   const [testando, setTestando] = useState(false);
   const atual = dados || inicial;
   const recarregar = async () => { try { setDados(await buscar("vagas")); } catch { /* fica o que já tinha */ } };
@@ -141,21 +142,27 @@ export default function ConectarIAs({ inicial }: { inicial?: Vagas }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="font-semibold text-slate-900 text-lg">🔌 Conectar IAs</h2>
-          <p className="text-sm text-slate-500">IAs grátis que entram sozinhas quando o Cortex trava. {atual ? `${ligadas} de 3 conectadas, ${verdes} funcionando.` : ""}</p>
+          <p className="text-sm text-slate-500">IAs grátis que entram sozinhas quando o Cortex trava. {atual ? `${ligadas} de ${atual.vagas.length} conectadas, ${verdes} funcionando.` : ""}</p>
         </div>
         {ligadas > 0 && <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} onClick={testar} disabled={testando} data-testid="vagas-testar">{testando ? "Mandando…" : "🧪 Testar agora"}</button>}
       </div>
       {aviso && <p className="text-sm text-slate-700" role="status">{aviso}</p>}
       {!atual ? <div className="h-24 rounded-xl bg-slate-100 animate-pulse" /> : (
         <ul className="grid grid-cols-1 gap-3">
-          {atual.vagas.map((v) => <CartaoVaga key={`${v.vaga}-${v.ligada}-${v.provedor}`} v={v} dados={atual} aoMudar={recarregar} />)}
+          {/* Vagas ligadas sempre aparecem; das livres, só uma por vez (o botão abaixo abre a próxima). */}
+          {[...atual.vagas.filter((v) => v.ligada), ...atual.vagas.filter((v) => !v.ligada).slice(0, livresVisiveis)].map((v) => <CartaoVaga key={`${v.vaga}-${v.ligada}-${v.provedor}`} v={v} dados={atual} aoMudar={recarregar} />)}
         </ul>
+      )}
+      {atual && atual.vagas.length - ligadas > livresVisiveis && (
+        <button className={`${BOTAO} w-full border-2 border-dashed border-slate-300 bg-white text-slate-600`} onClick={() => setLivresVisiveis((n) => n + 1)} data-testid="vagas-mais">
+          + Conectar mais uma IA ({atual.vagas.length - ligadas - livresVisiveis} vagas livres)
+        </button>
       )}
       <details className="rounded-xl bg-slate-50 p-3 text-sm text-slate-700" data-testid="vagas-explica">
         <summary className="font-medium cursor-pointer">Por que não dá para entrar com a conta do ChatGPT, Claude ou Gemini?</summary>
         <div className="mt-2 space-y-2 text-xs text-slate-600">
           <p><b>Conta de chat (site):</b> ChatGPT, Claude.ai e Gemini são para uma pessoa conversar. Um robô entrando nelas sozinho é proibido pelos termos e pode bloquear a conta. Para usar essas contas, toque em "Copiar contexto" no cartão "Usar outra IA" e cole na conversa você mesmo.</p>
-          <p><b>Chave de API (o que estas vagas usam):</b> é o "login" feito para robôs. Gemini, Groq, OpenRouter, Mistral e NVIDIA dão chave grátis, com limite por dia. Quando o limite acaba, a vaga fica amarela e volta sozinha no dia seguinte.</p>
+          <p><b>Chave de API (o que estas vagas usam):</b> é o "login" feito para robôs. Gemini, Groq, OpenRouter, Mistral, Codestral, Cerebras e NVIDIA dão chave grátis, com limite por dia. Quando o limite acaba, a vaga fica amarela e volta sozinha no dia seguinte.</p>
           <p><b>GPT e Claude por API</b> cobram por uso. Pela regra "nada pago", não entram aqui.</p>
           <p><b>3 iguais?</b> Pode pôr o mesmo serviço em mais de uma vaga se forem contas de verdade diferentes (por exemplo, de outra pessoa da equipe). Criar contas falsas só para fugir do limite vai contra os termos.</p>
           <p><b>Segurança:</b> a chave é testada, criptografada e guardada como segredo do GitHub. Ela nunca aparece de novo, nem aqui, nem no banco, nem nos registros.</p>

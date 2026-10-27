@@ -1,5 +1,5 @@
 'use strict';
-// Central: "Conectar IAs" (#1958). 3 vagas para chaves grátis de IA que ajudam o Cortex quando ele trava.
+// Central: "Conectar IAs" (#1958). 10 vagas para chaves grátis de IA que ajudam o Cortex quando ele trava.
 // A chave passa pelo servidor só uma vez: é testada com uma pergunta curta e, se responder, vira segredo do
 // GitHub Actions (IA_VAGA_N, criptografado com a chave pública do repositório). Nunca volta para a página,
 // nunca vai para o Firestore nem para log. O que fica guardado (provedor, último teste) está numa issue de estado.
@@ -9,7 +9,8 @@ const nacl = require('tweetnacl');
 const { blake2b } = require('blakejs');
 const { redactSecrets } = require('../../../nexia-ai/vault/secrets');
 
-const VAGAS = [1, 2, 3];
+// 10 vagas: cada uma é um segredo listado um a um nos workflows (cortex-reserva.yml e ia-vagas.yml).
+const VAGAS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const segredo = (n) => `IA_VAGA_${n}`;
 const ROTULO_ESTADO = 'ia-vagas-estado';
 
@@ -23,6 +24,10 @@ const PROVEDORES = {
     passos: ['Abra openrouter.ai e entre com o Google (não pede cartão).', 'Em Keys, toque em "Create Key" e copie.'] },
   mistral: { nome: 'Mistral', router: 'mistral', modelo: 'mistral-small-latest', env: 'MISTRAL_API_KEY', site: 'https://console.mistral.ai/api-keys',
     passos: ['Abra console.mistral.ai, entre e escolha o plano "Experiment" (grátis).', 'Em API Keys, crie uma chave e copie.'] },
+  cerebras: { nome: 'Cerebras', router: 'cerebras', modelo: 'llama-3.3-70b', env: 'CEREBRAS_API_KEY', site: 'https://cloud.cerebras.ai/platform',
+    passos: ['Abra cloud.cerebras.ai e entre (grátis).', 'Em API Keys, crie uma chave e copie.'] },
+  codestral: { nome: 'Codestral (Mistral, código)', router: 'codestral', modelo: 'codestral-latest', env: 'CODESTRAL_API_KEY', site: 'https://console.mistral.ai/codestral',
+    passos: ['Abra console.mistral.ai/codestral e entre (grátis).', 'Gere a chave do Codestral e copie.'] },
   nvidia: { nome: 'NVIDIA', router: 'nvidia', modelo: 'meta/llama-3.3-70b-instruct', env: 'NVIDIA_API_KEY', site: 'https://build.nvidia.com/settings/api-keys', logo: '/central/logos/nvidia.svg',
     passos: ['Abra build.nvidia.com e entre (grátis).', 'Em API Keys, toque em "Generate API Key" e copie.'] },
 };
@@ -45,6 +50,7 @@ const CONFERIR = {
   groq: (k) => ({ url: 'https://api.groq.com/openai/v1/models', headers: { Authorization: 'Bearer ' + k } }),
   openrouter: (k) => ({ url: 'https://openrouter.ai/api/v1/key', headers: { Authorization: 'Bearer ' + k } }),
   mistral: (k) => ({ url: 'https://api.mistral.ai/v1/models', headers: { Authorization: 'Bearer ' + k } }),
+  cerebras: (k) => ({ url: 'https://api.cerebras.ai/v1/models', headers: { Authorization: 'Bearer ' + k } }),
 };
 
 async function conferirDireto(provedor, chave, fetchImpl, ms) {
@@ -142,7 +148,7 @@ function provasDeUso(prs) {
   const out = [];
   for (const p of prs || []) {
     if (!String((p.head && p.head.ref) || '').startsWith('nexia/reserva-')) continue;
-    const m = String(p.body || '').match(/conta vaga-(\d)-([a-z]+)/);
+    const m = String(p.body || '').match(/conta vaga-(\d+)-([a-z]+)/);
     if (!m) continue;
     const tarefa = (String(p.body || '').match(/Fecha #(\d+)/) || [])[1];
     out.push({ vaga: Number(m[1]), provedor: m[2], pr: p.number, link: p.html_url, tarefa: tarefa ? Number(tarefa) : null, quando: p.created_at, entrou: !!p.merged_at });
@@ -171,7 +177,7 @@ async function estado(gh) {
 async function salvar(gh, { vaga, provedor, chave }, deps = {}) {
   const n = Number(vaga);
   const k = String(chave || '').trim();
-  if (!VAGAS.includes(n)) return { status: 400, corpo: { error: 'Vaga inválida (use 1, 2 ou 3).' } };
+  if (!VAGAS.includes(n)) return { status: 400, corpo: { error: 'Vaga inválida (use de 1 a 10).' } };
   if (!PROVEDORES[provedor]) return { status: 400, corpo: { error: 'Escolha uma das IAs grátis da lista.' } };
   if (k.length < 16 || k.length > 300 || /\s/.test(k)) return { status: 400, corpo: { error: 'Essa chave não parece certa. Copie de novo, sem espaços.' } };
   const teste = await testarChave(provedor, k, deps);

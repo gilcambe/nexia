@@ -40,6 +40,13 @@ jobs:
       IA_VAGA_1: ${{ secrets.IA_VAGA_1 }}
       IA_VAGA_2: ${{ secrets.IA_VAGA_2 }}
       IA_VAGA_3: ${{ secrets.IA_VAGA_3 }}
+      IA_VAGA_4: ${{ secrets.IA_VAGA_4 }}
+      IA_VAGA_5: ${{ secrets.IA_VAGA_5 }}
+      IA_VAGA_6: ${{ secrets.IA_VAGA_6 }}
+      IA_VAGA_7: ${{ secrets.IA_VAGA_7 }}
+      IA_VAGA_8: ${{ secrets.IA_VAGA_8 }}
+      IA_VAGA_9: ${{ secrets.IA_VAGA_9 }}
+      IA_VAGA_10: ${{ secrets.IA_VAGA_10 }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -67,7 +74,7 @@ jobs:
           git checkout -q -b "nexia/reserva-$NUMERO-$GITHUB_RUN_NUMBER"
           PROMPT="Aplique esta tarefa no repositório. Só grátis, não remova nenhuma função existente. $(cat "$RUNNER_TEMP/tarefa.md")"
           contas=()
-          for N in 1 2 3; do
+          for N in 1 2 3 4 5 6 7 8 9 10; do
             V="IA_VAGA_$N"; V="${!V}"
             [ -z "$V" ] && continue
             PROV="${V%%:*}"; CH="${V#*:}"
@@ -77,6 +84,8 @@ jobs:
               groq) contas+=("vaga-$N-groq|groq/llama-3.3-70b-versatile|GROQ_API_KEY|$CH") ;;
               openrouter) contas+=("vaga-$N-openrouter|openrouter/deepseek/deepseek-chat-v3-0324:free|OPENROUTER_API_KEY|$CH") ;;
               mistral) contas+=("vaga-$N-mistral|mistral/codestral-latest|MISTRAL_API_KEY|$CH") ;;
+              cerebras) contas+=("vaga-$N-cerebras|cerebras/llama-3.3-70b|CEREBRAS_API_KEY|$CH") ;;
+              codestral) contas+=("vaga-$N-codestral|codestral/codestral-latest|CODESTRAL_API_KEY|$CH") ;;
               nvidia) contas+=("vaga-$N-nvidia|nvidia_nim/meta/llama-3.3-70b-instruct|NVIDIA_NIM_API_KEY|$CH") ;;
             esac
           done

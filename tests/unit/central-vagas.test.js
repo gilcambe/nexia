@@ -70,7 +70,7 @@ test('VAGAS4: cota acabou ainda salva (chave boa); provedor pago ou vaga 4 são 
   assert.strictEqual(r.corpo.ok, true);
   assert.strictEqual(r.corpo.teste.situacao, 'sem-cota');
   assert.strictEqual((await v.salvar(f.gh, { vaga: 1, provedor: 'openai', chave: CHAVE }, roteador())).status, 400);
-  assert.strictEqual((await v.salvar(f.gh, { vaga: 4, provedor: 'groq', chave: CHAVE }, roteador())).status, 400);
+  assert.strictEqual((await v.salvar(f.gh, { vaga: 11, provedor: 'groq', chave: CHAVE }, roteador())).status, 400);
 });
 
 test('VAGAS5: estado junta segredos, último teste e prova de uso dos PRs de reserva', async () => {
@@ -82,7 +82,8 @@ test('VAGAS5: estado junta segredos, último teste e prova de uso dos PRs de res
       { number: 8, head: { ref: 'nexia/outra' }, body: 'conta vaga-1-groq' }],
   });
   const e = await v.estado(f.gh);
-  assert.deepStrictEqual(e.vagas.map((x) => [x.vaga, x.ligada, x.provedor]), [[1, true, 'groq'], [2, false, null], [3, false, null]]);
+  assert.strictEqual(e.vagas.length, 10);
+  assert.deepStrictEqual(e.vagas.slice(0, 3).map((x) => [x.vaga, x.ligada, x.provedor]), [[1, true, 'groq'], [2, false, null], [3, false, null]]);
   assert.deepStrictEqual(e.vagas[0].usos.map((u) => [u.pr, u.tarefa, u.entrou]), [[7, 12, true]]);
   assert.ok(e.provedores.every((p) => !('env' in p) && p.passos.length));
 });
@@ -119,4 +120,11 @@ test('VAGAS9: Groq confere no GET /models com a chave no cabeçalho; NVIDIA vai 
   assert.strictEqual(pedido.url, 'https://api.groq.com/openai/v1/models');
   assert.strictEqual(pedido.init.headers.Authorization, 'Bearer ' + CHAVE);
   assert.strictEqual((await v.testarChave('nvidia', 'nvapi-' + 'z'.repeat(30), roteador())).situacao, 'ok');
+});
+
+test('VAGAS10: as 10 vagas estão listadas uma a uma nos dois workflows', () => {
+  const ler = (f) => require('fs').readFileSync(require('path').join(__dirname, '../../.github/workflows', f), 'utf8');
+  for (const f of ['cortex-reserva.yml', 'ia-vagas.yml']) for (const n of v.VAGAS) assert.ok(ler(f).includes(`IA_VAGA_${n}: \${{ secrets.IA_VAGA_${n} }}`), `${f} sem IA_VAGA_${n}`);
+  const yml = ler('cortex-reserva.yml');
+  for (const p of Object.keys(v.PROVEDORES)) assert.ok(yml.includes(`vaga-$N-${p}|`), `reserva sem ${p}`);
 });
