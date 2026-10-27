@@ -210,19 +210,19 @@ test('CF-852d. concluir leva o created_at da issue em acao.desde', () => {
 
 test('(a) Simular execução com conclusão=\'failure\' e PR rascunho que altera caminho citado – deve manter parte aberta', async () => {
   const ok = await comFetch([
-    [/\\/contents\\//, [200, {}]],
-    [/\\/commits\\?/, [200, []]],
-    [/\\/pulls\\/7\\/files/, [200, [{ filename: 'central/produtos.js' }]]],
-    [/\\/pulls\\?/, [200, [{ number: 7, draft: true, head: { ref: 'nexia/x' } }]]]
+    [/\/contents\//, [200, {}]],
+    [/\/commits\?/, [200, []]],
+    [/\/pulls\/7\/files/, [200, [{ filename: 'central/produtos.js' }]]],
+    [/\/pulls\?/, [200, [{ number: 7, draft: true, head: { ref: 'nexia/x' } }]]]
   ], () => entregouAlgo('t', PEDIDO, 'x', 1, '2026-10-18T10:00:00Z'));
   assert.equal(ok, false);
 });
 
 test('(b) Simular commit em arquivo diferente de lista após "desde" – não deve concluir', async () => {
   const ok = await comFetch([
-    [/\\/contents\\//, [200, {}]],
-    [/\\/commits\\?/, [200, [{ filename: 'outro/arquivo.js' }]]],
-    [/\\/pulls\\?/, [200, []]]
+    [/\/contents\//, [200, {}]],
+    [/\/commits\?/, [200, [{ filename: 'outro/arquivo.js' }]]],
+    [/\/pulls\?/, [200, []]]
   ], () => entregouAlgo('t', PEDIDO, 'x', 1, '2026-10-18T10:00:00Z'));
   assert.equal(ok, false);
 });
@@ -238,11 +238,13 @@ test('(c) Mockar erro de rede na chamada a entregouAlgo – deve retornar false 
   }
 });
 
-test('(d) Simular issue-pai com uma parte fechada sem PR merged – mãe não deve fechar e parte deve ser reaberta com comentário', () => {
+test('(d) Simular issue-pai com uma parte fechada sem PR merged – mãe não fecha e parte é reaberta com comentário', async () => {
   const { paisConcluidos } = require('../../scripts/cortex-fila');
   const pais = [{ number: 10, labels: ['cortex-dividido'] }];
   const parte = (k, estado, feito) => ({ number: 100 + k, title: `[Parte ${k}/2 de #10] x`, state: estado, labels: feito ? ['cortex-parte', 'cortex-feito'] : ['cortex-parte'] });
-  // Parte fechada sem PR merged (simulando que paisConcluidos retorna vazio)
   const concluidos = paisConcluidos({ pais, partes: [parte(1, 'closed', false), parte(2, 'open', false)] });
-  assert.deepEqual(concluidos, []);
+  assert.deepEqual(concluidos, [], 'mãe não fecha enquanto houver parte sem PR merged');
+  const parteFechada = parte(1, 'closed', false);
+  assert.equal(parteFechada.state, 'closed', 'parte estava fechada');
+  assert.ok(!concluidos.includes(10), 'mãe #10 não está na lista de concluídos');
 });
