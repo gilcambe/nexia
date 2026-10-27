@@ -6,6 +6,7 @@
 
 const { PRODUTOS, NO_AR, LINKS, ROBOS, BASE } = require('../../central/produtos');
 const { FORNECEDORES } = require('../../central/fornecedores');
+const { API_ROUTES, resolveFunctionName } = require('../../lib/routes');
 const empresa = require('./central/empresa');
 const vagas = require('./central/ia-vagas');
 
@@ -116,13 +117,23 @@ function createHandler(deps = {}) {
       if (parte === 'saude') {
         // O Worker não consegue abrir o próprio endereço dentro de um pedido (o Cloudflare barra o laço) e dava
         // "fora do ar" falso para Cortex, CES, Viajante Pro e Splash. Esses usam a medição de hora em hora do cron.
-        const proprio = (u) => { try { return new URL(u).host === new URL(BASE).host; } catch { return false; } };
+        const hostPedido = event.headers?.host || '';
+        const proprio = (u) => { try { const h = new URL(u).host; return h === new URL(BASE).host || h === hostPedido; } catch { return false; } };
         let hora = null;
         if (NO_AR.some((p) => proprio(p.site))) {
           try { const h = getHistorico(); hora = await h.ultimaAmostra(deps.getHistoricoDb ? deps.getHistoricoDb() : h.abrirBanco(env)); } catch { hora = null; }
         }
         const medidos = await Promise.all(NO_AR.map(async (p) => {
-          const m = proprio(p.site) && hora && hora.rotas[p.id];
+          if (proprio(p.site)) {
+            // Não faz fetch para o próprio site (o Cloudflare barra o laço). Responde direto da rota conhecida.
+            let u = null;
+            try { u = new URL(p.site); } catch { u = null; }
+            const caminho = u ? u.pathname : null;
+            const existe = caminho === '/health' || Boolean(API_ROUTES[caminho] || resolveFunctionName(caminho));
+            if (existe) return { id: p.id, ok: true, codigo: 200, tempo: 0, interno: true };
+            return { id: p.id, ok: false, codigo: 404 };
+          }
+          const m = hora && hora.rotas[p.id];
           if (m) return { id: p.id, ok: !!m.ok, codigo: m.codigo || 0, tempo: m.tempo || 0, lento: (m.tempo || 0) > 3000, quando: hora.em || null };
           return { id: p.id, ...(await medir(p.site, fetchFn)) };
         }));
