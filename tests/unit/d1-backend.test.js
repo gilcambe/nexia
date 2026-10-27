@@ -89,3 +89,48 @@ test('D1-5. o Vault inteiro funciona em cima do D1 (criar, ler, listar, atualiza
   await vault.Client.softDelete(ctx, c.record.id, { expectedVersion: up.version });
   assert.ok(p.record.id);
 });
+
+// #2222: D1 de verdade é SQLite; aqui um fetch falso executa o SQL num SQLite em memória (Node 22+).
+function d1Falso() {
+  let sqlite = null;
+  try { sqlite = require('node:sqlite'); } catch { return null; }
+  const db = new sqlite.DatabaseSync(':memory:');
+  const sqls = [];
+  const run = st => { sqls.push(st.sql); const p = db.prepare(st.sql); return /^\s*select/i.test(st.sql) ? p.all(...(st.params || [])) : (p.run(...(st.params || [])), []); };
+  const fetchImpl = async (url, init) => {
+    const b = JSON.parse(init.body);
+    const result = (b.batch || [b]).map(st => ({ results: run(st) }));
+    return { ok: true, status: 200, json: async () => ({ success: true, result }) };
+  };
+  return { fetchImpl, sqls, db };
+}
+
+test('D1-6. #2222: igualdade em texto vai para o SQL com índice e o resultado continua igual', async () => {
+  const f = d1Falso();
+  const { createD1Driver } = require('../../lib/firebase-lite/d1-backend');
+  const { Firestore } = require('../../lib/firebase-lite/firestore');
+  if (!f) {
+    const sqls = [];
+    const fetchImpl = async (u, i) => { sqls.push(JSON.parse(i.body)); return { ok: true, status: 200, json: async () => ({ success: true, result: [{ results: [] }] }) }; };
+    const backend = createD1Backend({ driver: createD1Driver({ token: 't', accountId: 'a', databaseId: 'id', fetchImpl }) });
+    const db = new Firestore({ projectId: backend.projectId, getToken: async () => '' });
+    db._backend = backend;
+    await db.collection('vault_projects').where('tenant_id', '==', 't1').get();
+    const sel = sqls.map(s => s.sql || '').find(s => /^SELECT/.test(s));
+    assert.match(sel, /json_extract\(fields, '\$\.tenant_id\.stringValue'\) = \?/);
+    assert.ok(sqls.some(s => /CREATE INDEX IF NOT EXISTS docs_eq_tenant_id/.test(s.sql || '')));
+    return;
+  }
+  const backend = createD1Backend({ driver: createD1Driver({ token: 't', accountId: 'a', databaseId: 'id', fetchImpl: f.fetchImpl }) });
+  const db = new Firestore({ projectId: backend.projectId, getToken: async () => '' });
+    db._backend = backend;
+  for (let i = 0; i < 20; i++) await db.collection('vault_projects').doc(`p${i}`).set({ tenant_id: i < 3 ? 't1' : 't2', status: i === 1 ? 'ok' : 'novo', n: i });
+  const s1 = await db.collection('vault_projects').where('tenant_id', '==', 't1').get();
+  assert.deepEqual(s1.docs.map(d => d.id).sort(), ['p0', 'p1', 'p2']);
+  const s2 = await db.collection('vault_projects').where('tenant_id', '==', 't1').where('status', '==', 'ok').get();
+  assert.deepEqual(s2.docs.map(d => d.id), ['p1']);
+  const s3 = await db.collection('vault_projects').where('n', '>=', 18).get();
+  assert.equal(s3.size, 2);
+  const plano = f.db.prepare("EXPLAIN QUERY PLAN SELECT * FROM docs WHERE col = ? AND parent = ? AND json_extract(fields, '$.tenant_id.stringValue') = ?").all('vault_projects', '', 't1');
+  assert.ok(plano.some(r => /docs_eq_tenant_id/.test(r.detail)), JSON.stringify(plano));
+});
