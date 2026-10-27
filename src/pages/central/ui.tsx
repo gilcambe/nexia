@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Abre, NaFolha, useModo } from "./celular";
 
 // Peças simples da Central: cartão, sinal colorido, botão e número grande.
 
@@ -9,7 +10,16 @@ export function Sinal({ cor }: { cor: Cor }) {
   return <span className={`inline-block w-3 h-3 rounded-full shrink-0 ${CORES[cor]}`} aria-label={cor} />;
 }
 
-export function Cartao({ titulo, children, acao }: { titulo?: string; children: ReactNode; acao?: ReactNode }) {
+// No celular, cartão com título vira uma linha que abre a tela dele (resumo = o que aparece na linha). aberto = fica aberto sempre.
+export function Cartao({ titulo, children, acao, resumo, icone, aberto }: { titulo?: string; children: ReactNode; acao?: ReactNode; resumo?: ReactNode; icone?: string; aberto?: boolean }) {
+  const { compacto, naFolha, emGrupo } = useModo();
+  if (compacto && titulo && !aberto) return <Abre titulo={titulo} resumo={resumo} icone={icone} solto={!emGrupo}><Cartao acao={acao}>{children}</Cartao></Abre>;
+  if (naFolha) return (
+    <section className="rounded-2xl border border-nexia-border bg-nexia-surface p-4 space-y-3">
+      {acao && <div className="flex justify-end">{acao}</div>}
+      <NaFolha.Provider value={false}>{children}</NaFolha.Provider>
+    </section>
+  );
   return (
     <section className="rounded-2xl border border-nexia-border bg-nexia-surface p-4 space-y-3">
       {(titulo || acao) && (

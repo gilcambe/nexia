@@ -11,7 +11,7 @@ export interface Aviso {
   conserto?: string;
   sozinho?: boolean; // resolve sozinho, sem o dono fazer nada
 }
-export type Aba = "inicio" | "clientes" | "dinheiro" | "divulgar" | "cortex" | "prs" | "sistema";
+export type Aba = "inicio" | "clientes" | "dinheiro" | "divulgar" | "cortex" | "prs" | "sistema" | "mais";
 
 const ACOES = "https://github.com/gilcambe/nexia/actions";
 
