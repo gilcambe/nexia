@@ -61,7 +61,6 @@ export class CreditManager {
   }
 
   private async requireAuth(userId: string): Promise<void> {
-    if (!this.authCheck) return;
     const ok = await this.authCheck(userId);
     if (!ok) throw new Error('Usuário não autenticado');
   }
@@ -153,9 +152,18 @@ export class CreditManager {
   }
 
   async canPublish(userId: string): Promise<{ allowed: boolean; message?: string }> {
-    // Verificar se o usuário pode criar mais sites (mesmo que não consuma crédito aqui)
-    const canCreate = await this.canCreateSite(userId);
-    return canCreate;
+    await this.requireAuth(userId);
+    return this._canPublish(userId);
+  }
+
+  private _canPublish(userId: string): { allowed: boolean; message?: string } {
+    const user = this.users.get(userId);
+    if (!user) return { allowed: false, message: 'Usuário não encontrado' };
+    const plan = PLANS[user.planId];
+    if (!plan) return { allowed: false, message: 'Plano inválido' };
+    // Publicar um site existente não consome slot de criação de sites.
+    // Apenas exige usuário autenticado com plano válido.
+    return { allowed: true };
   }
 
   async registerSiteCreated(userId: string): Promise<{ success: boolean; message?: string }> {
