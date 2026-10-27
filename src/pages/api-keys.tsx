@@ -82,6 +82,7 @@ export default function ApiKeysPage() {
           </div>
           <button
             onClick={() => setAbrirForm(true)}
+            aria-label="Criar nova chave de API"
             className="bg-nexia-cyan text-black font-semibold px-4 py-2 rounded-lg hover:bg-nexia-cyan-dim transition"
           >
             Nova chave
@@ -96,8 +97,8 @@ export default function ApiKeysPage() {
           </p>
         )}
 
-        {error && <div className="rounded-lg bg-red-900/20 border border-red-500/30 p-3 text-red-400 text-sm" role="alert">{error}</div>}
-        {sucesso && <div className="rounded-lg bg-green-900/20 border border-green-500/30 p-3 text-green-400 text-sm" role="status">{sucesso}</div>}
+        {error && <div className="rounded-lg bg-red-900/20 border border-red-500/30 p-3 text-red-400 text-sm" role="alert" aria-live="polite">{error}</div>}
+        {sucesso && <div className="rounded-lg bg-green-900/20 border border-green-500/30 p-3 text-green-400 text-sm" role="status" aria-live="polite">{sucesso}</div>}
 
         {items && (
           <>
@@ -117,6 +118,7 @@ export default function ApiKeysPage() {
                     </div>
                     <button
                       onClick={() => remover(k.id)}
+                      aria-label={`Remover chave ${k.nome}`}
                       className="text-xs text-red-400 underline hover:text-red-300 cursor-pointer"
                     >
                       Remover

@@ -78,6 +78,7 @@ export default function ApiKeyForm({ onCriado }: ApiKeyFormProps) {
         <button
           type="submit"
           disabled={carregando}
+          aria-label="Criar chave de API"
           className="w-full md:w-auto bg-nexia-cyan text-black font-semibold px-4 py-2 rounded-lg hover:bg-nexia-cyan-dim disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           {carregando ? "Criando..." : "Criar chave"}
@@ -105,6 +106,7 @@ export default function ApiKeyForm({ onCriado }: ApiKeyFormProps) {
             </div>
             <button
               onClick={copiar}
+              aria-label="Copiar chave de API para a área de transferência"
               className="text-xs bg-white text-black px-3 py-1.5 rounded-lg hover:bg-nexia-cyan transition"
             >
               Copiar
