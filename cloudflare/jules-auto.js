@@ -64,24 +64,12 @@ function decidir(issues, prs, agora, nomes, enviadosHoje = 0) {
     });
   }
   
-  // Issues que o Claude deve devolver ao degrau 2 (se não estiver trabalhando e sem PR)
+    // Issues que o Claude deve devolver ao degrau 2 (se não estiver trabalhando e sem PR)
   const devolver = [];
   const issuesVezDoClaude = issues.filter(i => nomes(i).includes('vez-do-claude') && !nomes(i).includes('claude-trabalhando'));
-  
+
   issuesVezDoClaude.forEach(i => {
     if (!prDe(i.number) && !cotaEsgotada) {
-      // Se não tem PR e a cota não está esgotada, devolve ao degrau 2
-      devolver.push(i.number);
-    }
-  })
-  
-  // Issues que o Claude deve devolver ao degrau 2 (se não estiver trabalhando e sem PR)
-  const devolver = [];
-  const issuesVezDoClaude = issues.filter(i => nomes(i).includes('vez-do-claude') && !nomes(i).includes('claude-trabalhando'));
-  
-  issuesVezDoClaude.forEach(i => {
-    if (!prDe(i.number) && !cotaEsgotada) {
-      // Se não tem PR e a cota não está esgotada, devolve ao degrau 2
       devolver.push(i.number);
     }
   });
