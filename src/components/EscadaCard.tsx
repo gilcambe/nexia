@@ -1,22 +1,22 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface EscadaDados {
   faseB?: boolean;
   fila?: number;
   julesHoje?: string;
+  cortexProgresso?: number;
+  iasGratisProgresso?: number;
+  claudeProgresso?: number;
   semana?: {
     cortex?: number;
     iasGratis?: number;
     claude?: number;
   };
-  cortexProgresso?: number;
-  iasGratisProgresso?: number;
-  claudeProgresso?: number;
 }
 
 export default function EscadaCard() {
   const [dados, setDados] = useState<EscadaDados | null>(null);
-  const [carregando, setCarregando] = useState(true);
+  const [carregando, setCarregando] = useState<boolean>(true);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function EscadaCard() {
         const json = await res.json();
         setDados(json);
       } catch (e) {
-        // Fallback para demonstração se a rota não estiver disponível
+        // Fallback para demonstração caso o endpoint não esteja ativo
         setDados({
           faseB: true,
           fila: 12,
