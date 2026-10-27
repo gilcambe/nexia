@@ -3,7 +3,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const crypto = require('crypto');
 
-const { lerConta, criarBancoB } = require('../../netlify/functions/firebase-vault');
+const { lerConta, criarBancoB, limparTarefasLocais } = require('../../netlify/functions/firebase-vault');
 
 function conta() {
   const { privateKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
@@ -43,4 +43,66 @@ test('FV4. rodÃ­zio: B esgotado troca para C e repete o pedido; C esgotado tambÃ
   const so = new Firestore({ projectId: 'b', getToken: async () => 't', fetchImpl });
   so.enableFailover([bancos[0]]);
   await assert.rejects(() => so.collection('x').doc('1').set({ a: 1 }), /RESOURCE_EXHAUSTED/);
+});
+
+test('FV5. limparTarefasLocais remove apenas tarefas_locais antigas (feito/erro > 1 dia)', async () => {
+  const docs = [
+    {
+      path: 'tarefas_locais/antiga',
+      fields: {
+        status: { stringValue: 'feito' },
+        atualizado_em: { timestampValue: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() },
+      },
+    },
+    {
+      path: 'tarefas_locais/recente',
+      fields: {
+        status: { stringValue: 'feito' },
+        atualizado_em: { timestampValue: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString() },
+      },
+    },
+  ];
+
+  const originalFetch = global.fetch;
+  global.fetch = async (url, init) => {
+    const u = new URL(url);
+    if (u.pathname === '/d1/database' && u.searchParams.get('name')) {
+      return {
+        ok: true, status: 200,
+        json: async () => ({ success: true, result: [{ uuid: 'd1-db', name: 'nexia-cortex' }] }),
+      };
+    }
+    if (u.pathname === '/d1/database/d1-db/query') {
+      const { sql, params } = JSON.parse(init.body || '{}');
+      if (String(sql).trim().startsWith('DELETE FROM docs')) {
+        const [limite] = params;
+        const antes = docs.length;
+        docs.splice(
+          0,
+          docs.length,
+          ...docs.filter((d) => {
+            const st = d.fields.status?.stringValue;
+            const ts = d.fields.atualizado_em?.timestampValue;
+            return !((st === 'feito' || st === 'erro') && ts < limite);
+          })
+        );
+        const deletados = antes - docs.length;
+        return {
+          ok: true, status: 200,
+          json: async () => ({ success: true, result: [{ results: [{ meta: { changes: deletados } }] }] }),
+        };
+      }
+      return { ok: true, status: 200, json: async () => ({ success: true, result: [{ results: [] }] }) };
+    }
+    return { ok: false, status: 404, json: async () => ({ success: false, errors: [{ message: 'not found' }] }) };
+  };
+
+  try {
+    const deletados = await limparTarefasLocais({ NEXIA_D1_TOKEN: 'tok', NEXIA_D1_ACCOUNT_ID: 'acc' });
+    assert.equal(deletados, 1);
+    assert.equal(docs.length, 1);
+    assert.equal(docs[0].path, 'tarefas_locais/recente');
+  } finally {
+    global.fetch = originalFetch;
+  }
 });
