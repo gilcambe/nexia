@@ -30,7 +30,7 @@ export function limparChaves(texto: string): string {
     /sk-[A-Za-z0-9]+/g,
     /AIza[A-Za-z0-9_-]+/g,
     /ghp_[A-Za-z0-9]+/g,
-    /-----BEGIN[\\n]+/g
+    /-----BEGIN[\n]+/g
   ];
   
   let textoLimpo = texto;
@@ -255,5 +255,10 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
         </div>
       </Cartao>
 
-      <div className="pt-2">\n        <EscadaCard />\n      </div>\n      <Mais d={d} erro={erros.robos} />\n    </div>\n  );
+      <div className="pt-2">
+        <EscadaCard />
+      </div>
+      <Mais d={d} erro={erros.robos} />
+    </div>
+  );
 }
