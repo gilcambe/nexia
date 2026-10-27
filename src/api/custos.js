@@ -10,7 +10,9 @@ import {
 
 export default async function handler(req, res) {
   try {
-    const { lancamentos = [], receitaTotal = 0, config = {} } = req.body || {};
+    // Se body não existir ou for vazio, usar valores padrão
+    const body = req.body || {};
+    const { lancamentos = [], receitaTotal = 0, config = {} } = body;
 
     const custoTotal = calcularCustoTotalMes(lancamentos);
     const custoMedioPorPlano = calcularCustoMedioPorPlano(lancamentos);
