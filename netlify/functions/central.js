@@ -129,9 +129,13 @@ function createHandler(deps = {}) {
             let u = null;
             try { u = new URL(p.site); } catch { u = null; }
             const caminho = u ? u.pathname : null;
+            // Verifica se a rota existe em lib/routes.js ou se é /health
             const existe = caminho === '/health' || Boolean(API_ROUTES[caminho] || resolveFunctionName(caminho));
-            if (existe) return { id: p.id, ok: true, codigo: 200, tempo: 0, interno: true };
-            return { id: p.id, ok: false, codigo: 404 };
+            if (existe) {
+              return { id: p.id, ok: true, codigo: 200, tempo: 0, interno: true };
+            } else {
+              return { id: p.id, ok: false, codigo: 404 };
+            }
           }
           const m = hora && hora.rotas[p.id];
           if (m) return { id: p.id, ok: !!m.ok, codigo: m.codigo || 0, tempo: m.tempo || 0, lento: (m.tempo || 0) > 3000, quando: hora.em || null };
