@@ -1,0 +1,76 @@
+{
+  "versao": 1,
+  "moldes": {
+    "servicos": {
+      "nome": "Serviços de Salão de Estética",
+      "descricao": "Molde para agendamento de serviços de beleza",
+      "entities": [
+        {
+          "key": "servicos",
+          "label": "Serviços",
+          "singular": "Serviço",
+          "fields": [
+            {
+              "key": "cliente",
+              "label": "Cliente",
+              "type": "text",
+              "required": true
+            },
+            {
+              "key": "servico",
+              "label": "Serviço",
+              "type": "text",
+              "required": true
+            },
+            {
+              "key": "data",
+              "label": "Data",
+              "type": "date",
+              "required": true
+            },
+            {
+              "key": "hora",
+              "label": "Horário",
+              "type": "text",
+              "required": true
+            },
+            {
+              "key": "status",
+              "label": "Status",
+              "type": "select",
+              "options": [
+                "Agendado",
+                "Confirmado",
+                "Concluído",
+                "Cancelado"
+              ],
+              "required": true
+            },
+            {
+              "key": "valor",
+              "label": "Valor",
+              "type": "money",
+              "required": false
+            },
+            {
+              "key": "observacoes",
+              "label": "Observações",
+              "type": "textarea",
+              "required": false
+            }
+          ],
+          "sample": [
+            {
+              "cliente": "Maria Santos",
+              "servico": "Manicure",
+              "data": "2026-10-28",
+              "hora": "10:00",
+              "status": "Confirmado",
+              "valor": "80"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
