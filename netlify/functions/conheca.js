@@ -2,7 +2,7 @@
 // Link na bio do Instagram: /conheca (página) → botão "Teste grátis" → GET /api/conheca?r=<rede>
 // Conta o clique do dia (sem guardar nada de quem clicou) e manda para o app com UTM. Público, nunca falha para o visitante.
 
-const APP = 'https://nexiabodycoach.pages.dev/';
+const APP = 'https://bodycoach.kernex.com.br/';
 const REDES = new Set(['bio', 'instagram', 'story', 'reel', 'threads', 'pinterest', 'bluesky', 'facebook']);
 
 function destino(rede) {

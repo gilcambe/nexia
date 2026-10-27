@@ -72,7 +72,7 @@ function decidir(post, resposta, usuario, sorteio = false) {
   
   // 6. Verifica se é pedido de link
   if (querLink(resposta)) {
-    return "O link está na bio do perfil: nexiabodycoach.pages.dev (teste grátis, sem cartão).";
+    return "O link está na bio do perfil: bodycoach.kernex.com.br (teste grátis, sem cartão).";
   }
   
   // 8. Verifica se é pergunta
