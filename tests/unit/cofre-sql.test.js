@@ -43,3 +43,21 @@ test('CS2. limite do banco do Worker vira 429 (o rodízio entende como falta de 
   const r = await objeto.fetch(new Request('https://cofre/query', { method: 'POST', body: JSON.stringify({ sql: 'SELECT 1' }) }));
   assert.equal(r.status, 429);
 });
+
+test('CS3. #2188: ponte do Actions — sem o segredo certo a rota recusa; com ele chega no banco do Worker', async () => {
+  const { pontaCofre } = require('../../src/durable/CofreSql');
+  const secret = 'x'.repeat(40);
+  let chegou = null;
+  const env = { NEXIA_CRON_SECRET: secret, COFRE_SQL: { idFromName: n => n, get: () => ({ fetch: async (u, i) => { chegou = i.body; return new Response('{"success":true,"result":[]}'); } }) } };
+  const pedir = h => pontaCofre(new Request('https://w/api/cofre-sql', { method: 'POST', headers: h, body: '{"sql":"SELECT 1"}' }), env);
+  assert.equal((await pedir({ 'x-nexia-cron': 'errado' })).status, 401);
+  assert.equal((await pontaCofre(new Request('https://w/api/cofre-sql', { method: 'POST' }), { COFRE_SQL: env.COFRE_SQL })).status, 404);
+  assert.equal((await pedir({ 'x-nexia-cron': secret })).status, 200);
+  assert.equal(chegou, '{"sql":"SELECT 1"}');
+  const { criarBancoB } = require('../../netlify/functions/firebase-vault');
+  const crypto = require('crypto');
+  const { privateKey } = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
+  const sa = { project_id: 'b', client_email: 'x@b.iam.gserviceaccount.com', private_key: privateKey.export({ type: 'pkcs8', format: 'pem' }) };
+  const db = criarBancoB({ FIREBASE_SERVICE_ACCOUNT_B: JSON.stringify(sa), NEXIA_APP_URL: 'https://w', NEXIA_CRON_SECRET: secret });
+  assert.deepEqual(db._bancos.map(b => b.projectId), ['b', 'nexia-do']);
+});

@@ -22,4 +22,18 @@ class CofreSql {
   }
 }
 
-module.exports = { CofreSql };
+// Ponte para o GitHub Actions (jobs fora do Worker): POST /api/cofre-sql com o segredo NEXIA_CRON_SECRET
+// no cabeçalho x-nexia-cron. Sem o segredo (ou curto), a rota não existe.
+async function pontaCofre(request, env) {
+  const secret = String((env && env.NEXIA_CRON_SECRET) || '');
+  if (secret.length < 32 || !env.COFRE_SQL) return new Response('Not Found', { status: 404 });
+  if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+  const enc = new TextEncoder();
+  const a = enc.encode(request.headers.get('x-nexia-cron') || ''), b = enc.encode(secret);
+  let dif = a.length ^ b.length;
+  for (let i = 0; i < b.length; i++) dif |= (a[i] || 0) ^ b[i];
+  if (dif) return new Response('Unauthorized', { status: 401 });
+  return env.COFRE_SQL.get(env.COFRE_SQL.idFromName('cofre')).fetch('https://cofre/query', { method: 'POST', body: await request.text() });
+}
+
+module.exports = { CofreSql, pontaCofre };

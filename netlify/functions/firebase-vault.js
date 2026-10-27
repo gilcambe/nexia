@@ -36,6 +36,15 @@ function criarBancoB(env = process.env) {
   }
   // #2188: depois do D1, o banco dentro do próprio Worker (Durable Object SQLite, cota grátis separada).
   const cofre = globalThis.__NEXIA_COFRE__;
+  // Fora do Worker (GitHub Actions): o mesmo banco, pela rota /api/cofre-sql do Worker, com o segredo do cron.
+  const ponte = !cofre && env.NEXIA_APP_URL && String(env.NEXIA_CRON_SECRET || '').length >= 32;
+  if (ponte) {
+    const { createD1Backend, createD1Driver } = require('../../lib/firebase-lite/d1-backend');
+    const url = `${String(env.NEXIA_APP_URL).replace(/\/+$/, '')}/api/cofre-sql`;
+    const fetchImpl = (u, init) => fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-nexia-cron': env.NEXIA_CRON_SECRET }, body: init && init.body });
+    const backend = createD1Backend({ driver: createD1Driver({ token: 'do', accountId: 'do', databaseId: 'do', fetchImpl }), projectId: 'nexia-do' });
+    bancos.push({ projectId: backend.projectId, getToken: async () => '', backend });
+  }
   if (cofre) {
     const { createD1Backend, createD1Driver } = require('../../lib/firebase-lite/d1-backend');
     // O Worker não deixa um pedido usar o stub criado em outro pedido: pega o stub na hora, com o binding atual.

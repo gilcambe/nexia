@@ -10,7 +10,7 @@ import saude from './saude.js';
 import julesAuto from './jules-auto.js';
 import cacheBorda from './cacheBorda.js';
 import { VazaoController } from '../src/durable/VazaoController.js';
-import { CofreSql } from '../src/durable/CofreSql.js';
+import { CofreSql, pontaCofre } from '../src/durable/CofreSql.js';
 
 // #1662: o Cloudflare só publica se a classe do Durable Object sair do arquivo de entrada.
 export { VazaoController, CofreSql };
@@ -18,6 +18,8 @@ export { VazaoController, CofreSql };
 export default {
   async fetch(request, env, ctx) {
     if (new URL(request.url).pathname === '/api/corpo-ia') return corpoIa(request, env);
+    // #2188: jobs do GitHub Actions usam o banco do Worker do cofre por esta rota (com segredo).
+    if (new URL(request.url).pathname === '/api/cofre-sql') return pontaCofre(request, env);
     // #807: leituras públicas (config do Firebase etc.) passam pelo cache de borda (60 a 300 s).
     return cacheBorda.comCacheDeBorda(request, env, ctx,
       () => app.handleRequest(request, env, { getFunction: functions.getFunction }));
