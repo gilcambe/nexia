@@ -9,6 +9,7 @@
  */
 
 const { admin, db } = require('./firebase-init');
+const { getD1Db } = require('../../lib/firebase-lite/d1-backend');
 
 let memModule, actionModule, learnModule, autodevModule, ragModule;
 try { memModule = require('./cortex-memory'); } catch { memModule = { load: async () => ({ history: [], summaries: [] }), save: async () => {}, buildContext: (h) => h, extractEntities: () => ({}) }; }
@@ -266,14 +267,14 @@ async function parseOrchestrator(raw) {
 
 // ═══ USAGE ════════════════════════════════════════════════════════════
 async function checkAndTrackUsage(tenantId, userId) {
-  // SECURITY: Firebase offline → fail-closed (free), NUNCA unlimited
-  if (!db) return { ok: true, unlimited: false, plan: 'free', calls: 0, limit: PLAN_LIMITS.free };
+  const activeDb = getD1Db(process.env) || db;
+  if (!activeDb && !db) return { ok: true, unlimited: false, plan: 'free', calls: 0, limit: PLAN_LIMITS.free };
   const today = new Date().toISOString().split('T')[0];
   try {
-    const tenantDoc = await db.collection('tenants').doc(tenantId).get().catch(() => null);
+    const tenantDoc = db ? await db.collection('tenants').doc(tenantId).get().catch(() => null) : null;
     const plan = tenantDoc?.exists ? (tenantDoc.data().plan || 'free') : 'free';
     const limit = PLAN_LIMITS[plan] ?? PLAN_LIMITS.free;
-    const ref = db.collection('tenants').doc(tenantId).collection('usage').doc(today);
+    const ref = activeDb.collection('tenants').doc(tenantId).collection('usage').doc(today);
     const inc = { cortexCalls: admin.firestore.FieldValue.increment(1), [`userBreakdown.${userId}`]: admin.firestore.FieldValue.increment(1) };
     if (limit === -1) {
       const doc = await ref.get();
@@ -281,7 +282,7 @@ async function checkAndTrackUsage(tenantId, userId) {
       else await ref.update(inc).catch(() => {});
       return { ok: true, unlimited: true, plan, calls: 0, limit: -1 };
     }
-    return await db.runTransaction(async tx => {
+    return await activeDb.runTransaction(async tx => {
       const doc = await tx.get(ref);
       if (!doc.exists) { tx.set(ref, { date: today, cortexCalls: 1, tenantId, plan, userBreakdown: { [userId]: 1 } }); return { ok: true, calls: 1, limit, plan }; }
       const calls = (doc.data().cortexCalls || 0) + 1;

@@ -11,8 +11,13 @@
  */
 
 
-const { admin, db } = require('./firebase-init');
+const { admin, db: firebaseDb } = require('./firebase-init');
+const { getD1Db } = require('../../lib/firebase-lite/d1-backend');
 const { guard, HEADERS, makeHeaders } = require('./middleware');
+
+function getUsageDb(opts = {}) {
+  return getD1Db(process.env, opts) || firebaseDb;
+}
 
 
 const PLAN_LIMITS = {
@@ -24,13 +29,14 @@ const PLAN_LIMITS = {
 
 
 // ── Busca stats de uso ─────────────────────────────────────────
-async function getUsageStats(tenantId, days = 7) {
-  if (!db) return { daily: [], totalCalls: 0, todayCalls: 0, plan: 'free', limits: PLAN_LIMITS.free, firebase: false };
+async function getUsageStats(tenantId, days = 7, opts = {}) {
+  const usageDb = getUsageDb(opts);
+  if (!usageDb) return { daily: [], totalCalls: 0, todayCalls: 0, plan: 'free', limits: PLAN_LIMITS.free, firebase: false };
   const since = new Date();
   since.setDate(since.getDate() - days);
 
 
-  const snap = await db.collection('tenants').doc(tenantId)
+  const snap = await usageDb.collection('tenants').doc(tenantId)
     .collection('usage')
     .where('date', '>=', since.toISOString().split('T')[0])
     .orderBy('date', 'desc')
@@ -45,10 +51,18 @@ async function getUsageStats(tenantId, days = 7) {
   const todayCalls = todayData?.cortexCalls || 0;
 
 
-  // Pega plano do tenant
-  if (!db) return { tenantId, plan: 'free', limits: PLAN_LIMITS.free, today: { calls: 0, limit: 20, pct: 0 }, period: { days, totalCalls: 0, daily: [] }, features: { swarmEnabled: false, autodevEnabled: false }, firebase: false };
-  const tenantDoc = await db.collection('tenants').doc(tenantId).get();
-  const plan = tenantDoc.exists ? (tenantDoc.data().plan || 'free') : 'free';
+  // Pega plano do tenant sempre do Firestore principal (conta/plano continuam no Firestore)
+  let plan = 'free';
+  let ragDocsCount = 0;
+  if (firebaseDb) {
+    try {
+      const tenantDoc = await firebaseDb.collection('tenants').doc(tenantId).get();
+      if (tenantDoc.exists) {
+        plan = tenantDoc.data().plan || 'free';
+        ragDocsCount = tenantDoc.data()?.ragDocsCount || 0;
+      }
+    } catch { }
+  }
   const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
 
 
@@ -59,24 +73,29 @@ async function getUsageStats(tenantId, days = 7) {
     features: {
       swarmEnabled: limits.swarmEnabled,
       autodevEnabled: limits.autodevEnabled,
-      ragDocsLeft: limits.maxRAGDocs > 0 ? Math.max(0, limits.maxRAGDocs - (tenantDoc.data()?.ragDocsCount || 0)) : -1
+      ragDocsLeft: limits.maxRAGDocs > 0 ? Math.max(0, limits.maxRAGDocs - ragDocsCount) : -1
     }
   };
 }
 
 
 // ── Verifica se pode chamar o Cortex ──────────────────────────
-async function checkLimit(tenantId, userId, feature = 'cortex') {
-  if (!db) return { ok: true, allowed: true, plan: 'free', limits: PLAN_LIMITS.free, calls: 0, firebase: false };
+async function checkLimit(tenantId, userId, feature = 'cortex', opts = {}) {
+  const usageDb = getUsageDb(opts);
+  if (!usageDb && !firebaseDb) return { ok: true, allowed: true, plan: 'free', limits: PLAN_LIMITS.free, calls: 0, firebase: false };
   const today = new Date().toISOString().split('T')[0];
-  const [usageDoc, tenantDoc] = await Promise.all([
-    db.collection('tenants').doc(tenantId).collection('usage').doc(today).get(),
-    db.collection('tenants').doc(tenantId).get()
-  ]);
 
-
-  const plan   = tenantDoc.exists ? (tenantDoc.data().plan || 'free') : 'free';
+  let plan = 'free';
+  if (firebaseDb) {
+    try {
+      const tenantDoc = await firebaseDb.collection('tenants').doc(tenantId).get();
+      if (tenantDoc.exists) plan = tenantDoc.data().plan || 'free';
+    } catch { }
+  }
   const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
+
+  const activeUsageDb = usageDb || firebaseDb;
+  const usageDoc = activeUsageDb ? await activeUsageDb.collection('tenants').doc(tenantId).collection('usage').doc(today).get().catch(() => null) : null;
 
 
   if (feature === 'swarm' && !limits.swarmEnabled) {
@@ -141,8 +160,9 @@ exports.handler = async (event) => {
 };
 
 
-// Exporta checkLimit para uso direto (usado em cortex-chat, autodev, swarm)
+// Exporta checkLimit e getUsageStats para uso direto (usado em cortex-chat, autodev, swarm, etc)
 module.exports.checkLimit = checkLimit;
+module.exports.getUsageStats = getUsageStats;
 module.exports.PLAN_LIMITS = PLAN_LIMITS;
 
 

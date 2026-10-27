@@ -20,9 +20,14 @@ async function _fetchTimeout(url, opts = {}, ms = 30000) {
  */
 
 
-const { admin, db } = require('./firebase-init');
+const { admin, db: firebaseDb } = require('./firebase-init');
+const { getD1Db } = require('../../lib/firebase-lite/d1-backend');
 const modelRouter = require('../../nexia-ai/model-router'); // Fase 10: chamadas de IA via Model Router
 const { guard, assertTenantAccess, makeHeaders} = require('./middleware'); // SEC Fase 1: import faltante (antes /api/memory respondia 500)
+
+function getMemoryDb(opts = {}) {
+  return getD1Db(process.env, opts) || firebaseDb;
+}
 
 
 const MAX_RAW_MESSAGES  = 30;
@@ -73,16 +78,20 @@ function classifyMessage(content) {
 
 
 // ── Rota de storage isolada por tenant ────────────────────────
-function memRef(tenantId, userId, conversationId = 'default') {
-  return db.collection("tenants").doc(tenantId)
+function memRef(tenantId, userId, conversationId = 'default', opts = {}) {
+  const targetDb = getMemoryDb(opts);
+  if (!targetDb) return null;
+  return targetDb.collection("tenants").doc(tenantId)
     .collection("cortex_memory").doc(`${userId}_${conversationId}`);
 }
 
 
 // ── Carrega memória ────────────────────────────────────────────
-async function load(userId, tenantId = 'nexia', conversationId = 'default') {
+async function load(userId, tenantId = 'nexia', conversationId = 'default', opts = {}) {
   try {
-    const doc = await memRef(tenantId, userId, conversationId).get();
+    const ref = memRef(tenantId, userId, conversationId, opts);
+    if (!ref) return { history: [], summaries: [], stats: {}, entities: {} };
+    const doc = await ref.get();
     if (!doc.exists) return { history: [], summaries: [], stats: {}, entities: {} };
     return {
       history:   doc.data().history   || [],
@@ -98,7 +107,7 @@ async function load(userId, tenantId = 'nexia', conversationId = 'default') {
 
 
 // ── Salva memória com sumarização automática ───────────────────
-async function save(userId, history, existingSummaries = [], tenantId = 'nexia', entities = {}, conversationId = 'default') {
+async function save(userId, history, existingSummaries = [], tenantId = 'nexia', entities = {}, conversationId = 'default', opts = {}) {
   let summaries = [...existingSummaries];
 
 
@@ -137,15 +146,18 @@ async function save(userId, history, existingSummaries = [], tenantId = 'nexia',
   };
 
 
-  await memRef(tenantId, userId, conversationId).set({
-    history,
-    summaries,
-    stats,
-    entities,
-    tenantId,
-    userId,
-    updatedAt: new Date().toISOString()
-  });
+  const ref = memRef(tenantId, userId, conversationId, opts);
+  if (ref) {
+    await ref.set({
+      history,
+      summaries,
+      stats,
+      entities,
+      tenantId,
+      userId,
+      updatedAt: new Date().toISOString()
+    });
+  }
 
 
   return { history, summaries, stats, entities };
@@ -191,8 +203,9 @@ function buildContext(history, summaries, maxRecent = 20) {
 
 
 // ── Deleta memória de um usuário ───────────────────────────────
-async function clear(userId, tenantId = 'nexia', conversationId = 'default') {
-  await memRef(tenantId, userId, conversationId).delete();
+async function clear(userId, tenantId = 'nexia', conversationId = 'default', opts = {}) {
+  const ref = memRef(tenantId, userId, conversationId, opts);
+  if (ref) await ref.delete();
   return { ok: true, cleared: true };
 }
 
@@ -206,7 +219,8 @@ exports.handler = async (event) => {
   const guardErr = await guard(event, 'cortex-memory', { skipTenant: true });
   if (guardErr) return guardErr;
 
-  if (!db) return { statusCode: 503, headers, body: JSON.stringify({ ok: false, error: 'Firebase indisponível — configure FIREBASE_SERVICE_ACCOUNT nos segredos do Worker.' }) };
+  const activeDb = getMemoryDb();
+  if (!activeDb) return { statusCode: 503, headers, body: JSON.stringify({ ok: false, error: 'Banco indisponível — configure FIREBASE_SERVICE_ACCOUNT ou NEXIA_D1_TOKEN nos segredos.' }) };
 
 
   try {
