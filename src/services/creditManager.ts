@@ -204,12 +204,4 @@ export function createCreditManager(authCheck: AuthCheck): CreditManager {
   return new CreditManager(authCheck);
 }
 
-// Instância padrão (será configurada quando authCheck estiver disponível)
-let defaultCreditManager: CreditManager | null = null;
 
-export function getDefaultCreditManager(): CreditManager {
-  if (!defaultCreditManager) {
-    defaultCreditManager = new CreditManager(() => true); // Placeholder, será configurado corretamente
-  }
-  return defaultCreditManager;
-}
