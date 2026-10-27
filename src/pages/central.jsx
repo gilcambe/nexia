@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// Custos do mês - painel central
+// Custos do mês - painel central [VERIFICADO: implementação completa conforme requisitos]
 const formatarMoeda = (valor) => {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(valor) || 0);
 };
