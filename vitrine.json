@@ -34,7 +34,7 @@
   "link_produto": "https://shopee.com.br/product/405481102/23998684746",
   "categoria": "em-casa",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 191
  },
  {
@@ -53,7 +53,7 @@
   "link_produto": "https://shopee.com.br/product/1242044379/23293253949",
   "categoria": "suplementos",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 130.9
  },
  {
@@ -72,7 +72,7 @@
   "link_produto": "https://shopee.com.br/product/1242044379/22392993399",
   "categoria": "suplementos",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 108.8
  },
  {
@@ -110,7 +110,7 @@
   "link_produto": "https://shopee.com.br/product/1078948622/22192592734",
   "categoria": "em-casa",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 101.1
  },
  {
@@ -167,7 +167,7 @@
   "link_produto": "https://shopee.com.br/product/1638805020/58264360363",
   "categoria": "em-casa",
   "desde": 1792110441072,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 85.4
  },
  {
@@ -186,7 +186,7 @@
   "link_produto": "https://shopee.com.br/product/1242044379/23197485445",
   "categoria": "suplementos",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 81.4
  },
  {
@@ -207,25 +207,6 @@
   "desde": 1793048593453,
   "visto": 1793048593453,
   "pontos": 78.6
- },
- {
-  "id": "shopee-22397739181",
-  "loja": "shopee",
-  "titulo": "【15KG/20KG/26KG】Kit Halteres 6 Em 1 15/20/26Kg Musculação Ajustável Kettlebell Barra Anilha",
-  "preco": 311.9,
-  "preco_antigo": 503.06,
-  "desconto": 38,
-  "nota": 5,
-  "vendas": 174,
-  "comissao": 0.08,
-  "imagem": "https://cf.shopee.com.br/file/br-11134207-820lc-mnfqa324x1xg04",
-  "vendedor": "Pluggei Select",
-  "link": "https://s.shopee.com.br/6fiNOA0slF",
-  "link_produto": "https://shopee.com.br/product/1095160737/22397739181",
-  "categoria": "em-casa",
-  "desde": 1791985654341,
-  "visto": 1793064639809,
-  "pontos": 78
  },
  {
   "id": "shopee-23094334327",
@@ -262,7 +243,7 @@
   "link_produto": "https://shopee.com.br/product/1379077822/41764459171",
   "categoria": "em-casa",
   "desde": 1792543193359,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 76.6
  },
  {
@@ -281,7 +262,7 @@
   "link_produto": "https://shopee.com.br/product/1397772996/29842873054",
   "categoria": "suplementos",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 69.5
  },
  {
@@ -300,7 +281,7 @@
   "link_produto": "https://shopee.com.br/product/1397772996/23198212585",
   "categoria": "suplementos",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 68.4
  },
  {
@@ -357,8 +338,27 @@
   "link_produto": "https://shopee.com.br/product/1737311113/58262951414",
   "categoria": "em-casa",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 63.3
+ },
+ {
+  "id": "shopee-22397739181",
+  "loja": "shopee",
+  "titulo": "【15KG/20KG/26KG】Kit Halteres 6 Em 1 15/20/26Kg Musculação Ajustável Kettlebell Barra Anilha",
+  "preco": 212.9,
+  "preco_antigo": 495.12,
+  "desconto": 57,
+  "nota": 5,
+  "vendas": 174,
+  "comissao": 0.08,
+  "imagem": "https://cf.shopee.com.br/file/br-11134207-820lc-mnfqa324x1xg04",
+  "vendedor": "Pluggei Select",
+  "link": "https://s.shopee.com.br/6fiNOA0slF",
+  "link_produto": "https://shopee.com.br/product/1095160737/22397739181",
+  "categoria": "em-casa",
+  "desde": 1791985654341,
+  "visto": 1793111742749,
+  "pontos": 60.6
  },
  {
   "id": "shopee-23699413977",
@@ -414,7 +414,7 @@
   "link_produto": "https://shopee.com.br/product/1476725419/58259979943",
   "categoria": "em-casa",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 58.3
  },
  {
@@ -456,25 +456,6 @@
   "pontos": 54.1
  },
  {
-  "id": "shopee-55816802474",
-  "loja": "shopee",
-  "titulo": "Whey Protein Concentrado Growth Supplements",
-  "preco": 263.05,
-  "preco_antigo": null,
-  "desconto": 0,
-  "nota": 4.9,
-  "vendas": 2241,
-  "comissao": 0.06,
-  "imagem": "https://cf.shopee.com.br/file/sg-11134201-8258y-msdkb3hgwi6ade",
-  "vendedor": "GROWTH SUPPLEMENTS",
-  "link": "https://s.shopee.com.br/4VdsoB0KaQ",
-  "link_produto": "https://shopee.com.br/product/1876581966/55816802474",
-  "categoria": "suplementos",
-  "desde": 1791985654341,
-  "visto": 1793064639809,
-  "pontos": 50.8
- },
- {
   "id": "shopee-23098028068",
   "loja": "shopee",
   "titulo": "Pré Treino Diabo Verde Pre-Workout 150g - FTW",
@@ -511,6 +492,25 @@
   "desde": 1792019825978,
   "visto": 1793048593453,
   "pontos": 49.7
+ },
+ {
+  "id": "shopee-55816802474",
+  "loja": "shopee",
+  "titulo": "Whey Protein Concentrado Growth Supplements",
+  "preco": 210.9,
+  "preco_antigo": 263.63,
+  "desconto": 20,
+  "nota": 4.9,
+  "vendas": 2241,
+  "comissao": 0.06,
+  "imagem": "https://cf.shopee.com.br/file/sg-11134201-8258y-msdkb3hgwi6ade",
+  "vendedor": "GROWTH SUPPLEMENTS",
+  "link": "https://s.shopee.com.br/4VdsoB0KaQ",
+  "link_produto": "https://shopee.com.br/product/1876581966/55816802474",
+  "categoria": "suplementos",
+  "desde": 1791985654341,
+  "visto": 1793111742749,
+  "pontos": 48.9
  },
  {
   "id": "shopee-20298322054",
@@ -566,7 +566,7 @@
   "link_produto": "https://shopee.com.br/product/1397772996/21099598473",
   "categoria": "suplementos",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 47.2
  },
  {
@@ -585,7 +585,7 @@
   "link_produto": "https://shopee.com.br/product/338537405/40128790649",
   "categoria": "suplementos",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 46.5
  },
  {
@@ -642,7 +642,7 @@
   "link_produto": "https://shopee.com.br/product/1379957406/23998938097",
   "categoria": "roupas",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 45.4
  },
  {
@@ -718,7 +718,7 @@
   "link_produto": "https://shopee.com.br/product/260477274/58208527055",
   "categoria": "em-casa",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 43.7
  },
  {
@@ -756,7 +756,7 @@
   "link_produto": "https://shopee.com.br/product/554865709/23194389000",
   "categoria": "suplementos",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 42.4
  },
  {
@@ -1045,25 +1045,6 @@
   "pontos": 30.3
  },
  {
-  "id": "shopee-58250487610",
-  "loja": "shopee",
-  "titulo": "Epsilon Balança Digital Corporal Bioimpedancia Corporal 140kg Aplicativo Profissional Bluetooth",
-  "preco": 32.95,
-  "preco_antigo": 59.91,
-  "desconto": 45,
-  "nota": 4.9,
-  "vendas": 4552,
-  "comissao": 0.18,
-  "imagem": "https://cf.shopee.com.br/file/br-11134207-81z1k-mielzhrvg0zq9e",
-  "vendedor": "Invention Hunters",
-  "link": "https://s.shopee.com.br/4B10DVqNta",
-  "link_produto": "https://shopee.com.br/product/1661007426/58250487610",
-  "categoria": "relogios",
-  "desde": 1792003253760,
-  "visto": 1792974370752,
-  "pontos": 30.2
- },
- {
   "id": "shopee-58256078419",
   "loja": "shopee",
   "titulo": "Tênis Esportivo Leve Macio Confortável Tênis Branco Esportivo Caminhada Corrida Academia Fitness",
@@ -1155,7 +1136,7 @@
   "link_produto": "https://shopee.com.br/product/517548452/58253253743",
   "categoria": "roupas",
   "desde": 1791963784009,
-  "visto": 1793087842815,
+  "visto": 1793111742749,
   "pontos": 27.8
  },
  {
@@ -1235,6 +1216,25 @@
   "pontos": 27.1
  },
  {
+  "id": "shopee-58250487610",
+  "loja": "shopee",
+  "titulo": "Epsilon Balança Digital Corporal Bioimpedancia Corporal 140kg Aplicativo Profissional Bluetooth",
+  "preco": 27.55,
+  "preco_antigo": 59.89,
+  "desconto": 54,
+  "nota": 4.9,
+  "vendas": 4600,
+  "comissao": 0.18,
+  "imagem": "https://cf.shopee.com.br/file/br-11134207-81z1k-mielzhrvg0zq9e",
+  "vendedor": "Invention Hunters",
+  "link": "https://s.shopee.com.br/9Kj9QyVBZu",
+  "link_produto": "https://shopee.com.br/product/1661007426/58250487610",
+  "categoria": "relogios",
+  "desde": 1792003253760,
+  "visto": 1793111742749,
+  "pontos": 26.9
+ },
+ {
   "id": "shopee-8230756624",
   "loja": "shopee",
   "titulo": "Multivitamínico Revigoran A-Z - 60 Cápsulas",
@@ -1269,7 +1269,7 @@
   "link_produto": "https://shopee.com.br/product/393272747/23299450539",
   "categoria": "em-casa",
   "desde": 1792762282249,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 26.4
  },
  {
@@ -1307,7 +1307,7 @@
   "link_produto": "https://shopee.com.br/product/422764082/22194331598",
   "categoria": "suplementos",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 26
  },
  {
@@ -1375,16 +1375,16 @@
   "preco_antigo": 99.94,
   "desconto": 64,
   "nota": 4.9,
-  "vendas": 1873,
+  "vendas": 1802,
   "comissao": 0.13,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-7ra3v-mbg5xql5j04le8",
   "vendedor": "WDJ TECH LTDA",
-  "link": "https://s.shopee.com.br/2qVcd3vSbS",
+  "link": "https://s.shopee.com.br/80DlqWaGHm",
   "link_produto": "https://shopee.com.br/product/1660293952/22899279721",
   "categoria": "relogios",
   "desde": 1792003253760,
-  "visto": 1792974370752,
-  "pontos": 24.1
+  "visto": 1793111742749,
+  "pontos": 24
  },
  {
   "id": "shopee-22495781689",
@@ -1421,7 +1421,7 @@
   "link_produto": "https://shopee.com.br/product/1858087626/58215946864",
   "categoria": "roupas",
   "desde": 1792197138966,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 23.5
  },
  {
@@ -1432,16 +1432,16 @@
   "preco_antigo": 99.94,
   "desconto": 64,
   "nota": 4.9,
-  "vendas": 2739,
+  "vendas": 2827,
   "comissao": 0.12,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-7ra2q-mb9ua7mhd30625",
   "vendedor": "WDJ TECH LTDA",
-  "link": "https://s.shopee.com.br/5AtXPLmZro",
+  "link": "https://s.shopee.com.br/906J2MWSFs",
   "link_produto": "https://shopee.com.br/product/1660293952/22794788395",
   "categoria": "relogios",
   "desde": 1792003253760,
-  "visto": 1792974370752,
-  "pontos": 23.4
+  "visto": 1793111742749,
+  "pontos": 23.5
  },
  {
   "id": "shopee-58259312483",
@@ -1459,7 +1459,7 @@
   "link_produto": "https://shopee.com.br/product/1789740063/58259312483",
   "categoria": "roupas",
   "desde": 1792762282249,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 23.4
  },
  {
@@ -1516,7 +1516,7 @@
   "link_produto": "https://shopee.com.br/product/1566556194/22099191110",
   "categoria": "acessorios",
   "desde": 1791936932793,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 22.9
  },
  {
@@ -1537,6 +1537,25 @@
   "desde": 1792039687458,
   "visto": 1793027698398,
   "pontos": 22.7
+ },
+ {
+  "id": "shopee-58251614514",
+  "loja": "shopee",
+  "titulo": "Belifou Glitter Garrafa Térmica Portátil De 800 Ml Com Isolamento Duplo Adequada Para Academia",
+  "preco": 34.5,
+  "preco_antigo": 93.24,
+  "desconto": 63,
+  "nota": 4.9,
+  "vendas": 1470,
+  "comissao": 0.13,
+  "imagem": "https://cf.shopee.com.br/file/br-11134207-820lt-mouu57r72adhf3",
+  "vendedor": "Belifou Talheres",
+  "link": "https://s.shopee.com.br/4qGjCn7zy2",
+  "link_produto": "https://shopee.com.br/product/1224363395/58251614514",
+  "categoria": "acessorios",
+  "desde": 1791936932793,
+  "visto": 1793111742749,
+  "pontos": 22.3
  },
  {
   "id": "shopee-22894934956",
@@ -1592,7 +1611,7 @@
   "link_produto": "https://shopee.com.br/product/1615206258/45205938921",
   "categoria": "em-casa",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 21.8
  },
  {
@@ -1668,7 +1687,7 @@
   "link_produto": "https://shopee.com.br/product/1103918873/58267636006",
   "categoria": "roupas",
   "desde": 1792110441072,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 21.4
  },
  {
@@ -1706,7 +1725,7 @@
   "link_produto": "https://shopee.com.br/product/492286672/22599345666",
   "categoria": "roupas",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 20.8
  },
  {
@@ -1725,27 +1744,8 @@
   "link_produto": "https://shopee.com.br/product/446247790/9787295031",
   "categoria": "suplementos",
   "desde": 1792543193359,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 20.8
- },
- {
-  "id": "shopee-58251614514",
-  "loja": "shopee",
-  "titulo": "Belifou Glitter Garrafa Térmica Portátil De 800 Ml Com Isolamento Duplo Adequada Para Academia",
-  "preco": 31.21,
-  "preco_antigo": 94.58,
-  "desconto": 67,
-  "nota": 4.9,
-  "vendas": 1470,
-  "comissao": 0.13,
-  "imagem": "https://cf.shopee.com.br/file/br-11134207-820lt-mouu57r72adhf3",
-  "vendedor": "Belifou Talheres",
-  "link": "https://s.shopee.com.br/4qGjCn7zy2",
-  "link_produto": "https://shopee.com.br/product/1224363395/58251614514",
-  "categoria": "acessorios",
-  "desde": 1791936932793,
-  "visto": 1793064639809,
-  "pontos": 20.6
  },
  {
   "id": "shopee-22498554325",
@@ -1763,7 +1763,7 @@
   "link_produto": "https://shopee.com.br/product/453562856/22498554325",
   "categoria": "roupas",
   "desde": 1792974370752,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 20.3
  },
  {
@@ -1774,15 +1774,15 @@
   "preco_antigo": 100,
   "desconto": 70,
   "nota": 4.9,
-  "vendas": 5646,
+  "vendas": 5586,
   "comissao": 0.11,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-7rcdt-lt6ul9keg9hf19",
   "vendedor": "ZSZ_SHOP",
-  "link": "https://s.shopee.com.br/4LKQPopkYb",
+  "link": "https://s.shopee.com.br/9pfQ1tTHYz",
   "link_produto": "https://shopee.com.br/product/987393610/22797412872",
   "categoria": "relogios",
   "desde": 1792003253760,
-  "visto": 1792974370752,
+  "visto": 1793111742749,
   "pontos": 20.2
  },
  {
@@ -1843,6 +1843,25 @@
   "pontos": 19.4
  },
  {
+  "id": "shopee-58219203155",
+  "loja": "shopee",
+  "titulo": "Balança Inteligente Bioimpedância App Integrado e Capacidade de até 180kg com Pilha",
+  "preco": 33.99,
+  "preco_antigo": 69.37,
+  "desconto": 51,
+  "nota": 4.9,
+  "vendas": 1063,
+  "comissao": 0.13,
+  "imagem": "https://cf.shopee.com.br/file/br-11134207-820lu-mtoi8kv4r8jm87",
+  "vendedor": "Fest&Fun",
+  "link": "https://s.shopee.com.br/8AXC2pZcwp",
+  "link_produto": "https://shopee.com.br/product/418386328/58219203155",
+  "categoria": "relogios",
+  "desde": 1792003253760,
+  "visto": 1793111742749,
+  "pontos": 19.4
+ },
+ {
   "id": "shopee-26734497572",
   "loja": "shopee",
   "titulo": "Coqueteleira Fuse com Rede 700ml Preta - Dark Lab",
@@ -1859,25 +1878,6 @@
   "categoria": "acessorios",
   "desde": 1792019825978,
   "visto": 1793048593453,
-  "pontos": 19.3
- },
- {
-  "id": "shopee-58219203155",
-  "loja": "shopee",
-  "titulo": "Balança Inteligente Bioimpedância App Integrado e Capacidade de até 180kg com Pilha",
-  "preco": 33.99,
-  "preco_antigo": 69.37,
-  "desconto": 51,
-  "nota": 4.9,
-  "vendas": 1029,
-  "comissao": 0.13,
-  "imagem": "https://cf.shopee.com.br/file/br-11134207-820lu-mtoi8kv4r8jm87",
-  "vendedor": "Fest&Fun",
-  "link": "https://s.shopee.com.br/2gCCQkw5wR",
-  "link_produto": "https://shopee.com.br/product/418386328/58219203155",
-  "categoria": "relogios",
-  "desde": 1792003253760,
-  "visto": 1792974370752,
   "pontos": 19.3
  },
  {
@@ -1915,7 +1915,7 @@
   "link_produto": "https://shopee.com.br/product/1126064857/20599370356",
   "categoria": "roupas",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 19.2
  },
  {
@@ -1964,16 +1964,16 @@
   "preco_antigo": 75.54,
   "desconto": 59,
   "nota": 4.9,
-  "vendas": 922,
+  "vendas": 911,
   "comissao": 0.13,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-7r98o-m0562fkmkzmved",
   "vendedor": "Life Hack Homeware",
-  "link": "https://s.shopee.com.br/3qO9otreZg",
+  "link": "https://s.shopee.com.br/7favRubWxk",
   "link_produto": "https://shopee.com.br/product/1345719405/23293257603",
   "categoria": "relogios",
   "desde": 1792689347146,
-  "visto": 1792974370752,
-  "pontos": 18.3
+  "visto": 1793111742749,
+  "pontos": 18.2
  },
  {
   "id": "shopee-45605939014",
@@ -1991,27 +1991,8 @@
   "link_produto": "https://shopee.com.br/product/1615206249/45605939014",
   "categoria": "em-casa",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 18.1
- },
- {
-  "id": "shopee-23693565350",
-  "loja": "shopee",
-  "titulo": "Multivitamínico de A a Z / 120 cápsulas de 1000mg / Polivitaminico - Homem e Mulher",
-  "preco": 28.99,
-  "preco_antigo": 35.35,
-  "desconto": 18,
-  "nota": 4.9,
-  "vendas": 226,
-  "comissao": 0.23,
-  "imagem": "https://cf.shopee.com.br/file/sg-11134201-7rat3-manfm7rvzif716",
-  "vendedor": "VC SAUDAVEL PRODUTOS NATURAIS",
-  "link": "https://s.shopee.com.br/AKbbc11PJg",
-  "link_produto": "https://shopee.com.br/product/1178155742/23693565350",
-  "categoria": "suplementos",
-  "desde": 1792840204535,
-  "visto": 1792840204535,
-  "pontos": 17.9
  },
  {
   "id": "shopee-16720227042",
@@ -2048,7 +2029,7 @@
   "link_produto": "https://shopee.com.br/product/338537405/52352168399",
   "categoria": "suplementos",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 17.4
  },
  {
@@ -2059,16 +2040,16 @@
   "preco_antigo": 49.83,
   "desconto": 40,
   "nota": 4.9,
-  "vendas": 1774,
+  "vendas": 1670,
   "comissao": 0.13,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-820mc-mrm1d5ophc0654",
   "vendedor": "Larsul",
-  "link": "https://s.shopee.com.br/4fxGoQoTsl",
+  "link": "https://s.shopee.com.br/8pmsq3X5at",
   "link_produto": "https://shopee.com.br/product/372753581/20351119108",
   "categoria": "relogios",
   "desde": 1792003253760,
-  "visto": 1792974370752,
-  "pontos": 17
+  "visto": 1793111742749,
+  "pontos": 16.9
  },
  {
   "id": "shopee-20499072504",
@@ -2087,25 +2068,6 @@
   "categoria": "roupas",
   "desde": 1792039687458,
   "visto": 1793027698398,
-  "pontos": 16.4
- },
- {
-  "id": "shopee-58264225333",
-  "loja": "shopee",
-  "titulo": "Kit 4 Vitamina A-Z Neo Química 60 Comprimidos Total 240 Cpr Multivitamínico Completo Energia 8 Meses Original NF",
-  "preco": 35.8,
-  "preco_antigo": 41.15,
-  "desconto": 13,
-  "nota": 5,
-  "vendas": 236,
-  "comissao": 0.17,
-  "imagem": "https://cf.shopee.com.br/file/sg-11134201-825ae-mqngcgac4bnxcf",
-  "vendedor": "Super Popular Plus",
-  "link": "https://s.shopee.com.br/9zylDP2fze",
-  "link_produto": "https://shopee.com.br/product/1797964418/58264225333",
-  "categoria": "suplementos",
-  "desde": 1792840204535,
-  "visto": 1792840204535,
   "pontos": 16.4
  },
  {
@@ -2238,7 +2200,7 @@
   "link_produto": "https://shopee.com.br/product/482868041/42830618132",
   "categoria": "em-casa",
   "desde": 1792974370752,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 14.8
  },
  {
@@ -2295,7 +2257,7 @@
   "link_produto": "https://shopee.com.br/product/1046776023/19798269477",
   "categoria": "acessorios",
   "desde": 1791936932793,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 14.5
  },
  {
@@ -2352,7 +2314,7 @@
   "link_produto": "https://shopee.com.br/product/646539763/28088314056",
   "categoria": "roupas",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 13.6
  },
  {
@@ -2466,7 +2428,7 @@
   "link_produto": "https://shopee.com.br/product/1103918873/58267118987",
   "categoria": "roupas",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 12.8
  },
  {
@@ -2489,25 +2451,6 @@
   "pontos": 12.7
  },
  {
-  "id": "shopee-19367390487",
-  "loja": "shopee",
-  "titulo": "Multivitaminico (90CAPS E 30 CAPS) 17 VITAMINAS E MINERAIS - DUX HUMAN HEALTH",
-  "preco": 46.99,
-  "preco_antigo": 60.24,
-  "desconto": 22,
-  "nota": 4.9,
-  "vendas": 192,
-  "comissao": 0.1,
-  "imagem": "https://cf.shopee.com.br/file/br-11134207-7r98o-ma9z4w67f54m6a",
-  "vendedor": "Suplementos Mobile",
-  "link": "https://s.shopee.com.br/AUv1oK0lyj",
-  "link_produto": "https://shopee.com.br/product/904040298/19367390487",
-  "categoria": "suplementos",
-  "desde": 1792840204535,
-  "visto": 1792840204535,
-  "pontos": 12.7
- },
- {
   "id": "shopee-22494409131",
   "loja": "shopee",
   "titulo": "Kit Halteres 20Kg Ajustável 2 em 1 Barra Extensora Academia Casa",
@@ -2523,7 +2466,7 @@
   "link_produto": "https://shopee.com.br/product/1551464198/22494409131",
   "categoria": "em-casa",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 12.7
  },
  {
@@ -2581,25 +2524,6 @@
   "categoria": "acessorios",
   "desde": 1791963784009,
   "visto": 1793087842815,
-  "pontos": 12.3
- },
- {
-  "id": "shopee-58201865924",
-  "loja": "shopee",
-  "titulo": "Multivitamínico Glp-1 Support Vitafor 90 Cápsulas- NOVA EMBALAGEM",
-  "preco": 169.89,
-  "preco_antigo": 178.83,
-  "desconto": 5,
-  "nota": 4.9,
-  "vendas": 238,
-  "comissao": 0.03,
-  "imagem": "https://cf.shopee.com.br/file/br-11134207-81z1k-mi62fmp9ecjl25",
-  "vendedor": "FARMAVIP PRINCESA",
-  "link": "https://s.shopee.com.br/5VWLr8Jo7j",
-  "link_produto": "https://shopee.com.br/product/1494107647/58201865924",
-  "categoria": "suplementos",
-  "desde": 1792019825978,
-  "visto": 1792840204535,
   "pontos": 12.3
  },
  {
@@ -2675,7 +2599,7 @@
   "link_produto": "https://shopee.com.br/product/1836615562/58212657626",
   "categoria": "acessorios",
   "desde": 1791936932793,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 11.8
  },
  {
@@ -2777,19 +2701,19 @@
   "id": "shopee-22494457990",
   "loja": "shopee",
   "titulo": "Balança Inteligente de Bioimpedância Bluetooth até 180KG",
-  "preco": 29.97,
-  "preco_antigo": 59.94,
+  "preco": 29.77,
+  "preco_antigo": 59.54,
   "desconto": 50,
   "nota": 4.9,
-  "vendas": 2513,
+  "vendas": 2624,
   "comissao": 0.07,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-820m7-mtjz4qw9plvm93",
   "vendedor": "Boutique da Deh",
-  "link": "https://s.shopee.com.br/40ha1Cr1EZ",
+  "link": "https://s.shopee.com.br/9V2ZdHUYEx",
   "link_produto": "https://shopee.com.br/product/1046584933/22494457990",
   "categoria": "relogios",
   "desde": 1792003253760,
-  "visto": 1792974370752,
+  "visto": 1793111742749,
   "pontos": 10.3
  },
  {
@@ -2846,7 +2770,7 @@
   "link_produto": "https://shopee.com.br/product/1045932166/22694963227",
   "categoria": "roupas",
   "desde": 1791963784009,
-  "visto": 1793087842815,
+  "visto": 1793111742749,
   "pontos": 9.9
  },
  {
@@ -2941,7 +2865,7 @@
   "link_produto": "https://shopee.com.br/product/1384597727/22194424824",
   "categoria": "roupas",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 9.4
  },
  {
@@ -3112,7 +3036,7 @@
   "link_produto": "https://shopee.com.br/product/411130779/17182717593",
   "categoria": "acessorios",
   "desde": 1791936932793,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 8.2
  },
  {
@@ -3344,25 +3268,6 @@
   "pontos": 7.1
  },
  {
-  "id": "shopee-23699513929",
-  "loja": "shopee",
-  "titulo": "Tenis Masculino + Relogio + 1 Par de Meia Esportivo Corrida Treino Super leve e Macio",
-  "preco": 55.95,
-  "preco_antigo": 99.91,
-  "desconto": 44,
-  "nota": 4.7,
-  "vendas": 1959,
-  "comissao": 0.03,
-  "imagem": "https://cf.shopee.com.br/file/br-11134207-820lc-mnmv3zn9gete60",
-  "vendedor": "FREECTOM",
-  "link": "https://s.shopee.com.br/gR5Iv6Uud",
-  "link_produto": "https://shopee.com.br/product/1833187804/23699513929",
-  "categoria": "roupas",
-  "desde": 1792019825978,
-  "visto": 1792840204535,
-  "pontos": 7
- },
- {
   "id": "shopee-58259568049",
   "loja": "shopee",
   "titulo": "Tapete de Yoga XPE Espesso 10mm 60x180cm Antiderrapante Isolante Acústico Para Pilates Treino Exercício em Casa",
@@ -3442,20 +3347,20 @@
   "id": "shopee-22394186914",
   "loja": "shopee",
   "titulo": "Balança Inteligente com Bioimpedância, App Integrado e Capacidade de até 180kg",
-  "preco": 36.49,
-  "preco_antigo": 74.47,
+  "preco": 35.99,
+  "preco_antigo": 73.45,
   "desconto": 51,
   "nota": 4.9,
-  "vendas": 14312,
+  "vendas": 13761,
   "comissao": 0.03,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-7ra3v-mbg5xql5j04le8",
   "vendedor": "Luxor Comercial",
-  "link": "https://s.shopee.com.br/6VOtnomOKw",
+  "link": "https://s.shopee.com.br/9fLzpaTutw",
   "link_produto": "https://shopee.com.br/product/222975446/22394186914",
   "categoria": "relogios",
   "desde": 1792003253760,
-  "visto": 1792974370752,
-  "pontos": 6.6
+  "visto": 1793111742749,
+  "pontos": 6.5
  },
  {
   "id": "shopee-22798035553",
@@ -3511,7 +3416,7 @@
   "link_produto": "https://shopee.com.br/product/1861366520/58214494309",
   "categoria": "suplementos",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 6.5
  },
  {
@@ -3549,7 +3454,7 @@
   "link_produto": "https://shopee.com.br/product/1438124849/21498326018",
   "categoria": "roupas",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 6.4
  },
  {
@@ -3720,7 +3625,7 @@
   "link_produto": "https://shopee.com.br/product/1861366520/58214711664",
   "categoria": "suplementos",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 6
  },
  {
@@ -3948,7 +3853,7 @@
   "link_produto": "https://shopee.com.br/product/810726528/20098102574",
   "categoria": "suplementos",
   "desde": 1791985654341,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 5.4
  },
  {
@@ -3997,15 +3902,15 @@
   "preco_antigo": 79.65,
   "desconto": 45,
   "nota": 4.9,
-  "vendas": 833,
+  "vendas": 850,
   "comissao": 0.03,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-822xv-mi3eod0m641vb1",
   "vendedor": "Onive",
-  "link": "https://s.shopee.com.br/3g4jcasHuf",
+  "link": "https://s.shopee.com.br/7puLeDatcn",
   "link_produto": "https://shopee.com.br/product/943206066/27975990756",
   "categoria": "relogios",
   "desde": 1792362454401,
-  "visto": 1792974370752,
+  "visto": 1793111742749,
   "pontos": 5.4
  },
  {
@@ -4138,7 +4043,7 @@
   "link_produto": "https://shopee.com.br/product/413044505/22894428476",
   "categoria": "acessorios",
   "desde": 1792543193359,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 5.1
  },
  {
@@ -4149,15 +4054,15 @@
   "preco_antigo": 99.97,
   "desconto": 67,
   "nota": 4.9,
-  "vendas": 1586,
+  "vendas": 1706,
   "comissao": 0.03,
   "imagem": "https://cf.shopee.com.br/file/sg-11134201-8261y-mkd9eud8fv9i7e",
   "vendedor": "MaisClickStore",
-  "link": "https://s.shopee.com.br/50a7D2nDCn",
+  "link": "https://s.shopee.com.br/9APjEfVouv",
   "link_produto": "https://shopee.com.br/product/1607577276/58204762457",
   "categoria": "relogios",
   "desde": 1792362454401,
-  "visto": 1792974370752,
+  "visto": 1793111742749,
   "pontos": 5.1
  },
  {
@@ -4168,16 +4073,16 @@
   "preco_antigo": 81.05,
   "desconto": 63,
   "nota": 4.9,
-  "vendas": 3367,
+  "vendas": 3214,
   "comissao": 0.03,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-820lo-mmum8npa8t8gab",
   "vendedor": "True Deals",
-  "link": "https://s.shopee.com.br/4qGh0jnqXm",
+  "link": "https://s.shopee.com.br/8fTSdkXivq",
   "link_produto": "https://shopee.com.br/product/409359479/23899286286",
   "categoria": "relogios",
   "desde": 1792261982240,
-  "visto": 1792974370752,
-  "pontos": 5
+  "visto": 1793111742749,
+  "pontos": 4.9
  },
  {
   "id": "shopee-18699557899",
@@ -4301,15 +4206,15 @@
   "preco_antigo": 60.14,
   "desconto": 37,
   "nota": 4.9,
-  "vendas": 1612,
+  "vendas": 1605,
   "comissao": 0.03,
   "imagem": "https://cf.shopee.com.br/file/br-11134207-7r98o-lkr21clgu6qg6b",
   "vendedor": "LUCKY BAZAR",
-  "link": "https://s.shopee.com.br/30p2pMupGT",
+  "link": "https://s.shopee.com.br/8VA2RRYMGr",
   "link_produto": "https://shopee.com.br/product/375201738/21163105419",
   "categoria": "relogios",
   "desde": 1792945769952,
-  "visto": 1792974370752,
+  "visto": 1793111742749,
   "pontos": 4.8
  },
  {
@@ -4366,7 +4271,7 @@
   "link_produto": "https://shopee.com.br/product/1847771333/58214309634",
   "categoria": "acessorios",
   "desde": 1792974370752,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 4.7
  },
  {
@@ -4499,7 +4404,7 @@
   "link_produto": "https://shopee.com.br/product/1754952251/58255822645",
   "categoria": "acessorios",
   "desde": 1793064639809,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
   "pontos": 4.3
  },
  {
@@ -4518,7 +4423,26 @@
   "link_produto": "https://shopee.com.br/product/1258055012/58212475748",
   "categoria": "roupas",
   "desde": 1793064639809,
-  "visto": 1793064639809,
+  "visto": 1793111742749,
+  "pontos": 4.2
+ },
+ {
+  "id": "shopee-58256297823",
+  "loja": "shopee",
+  "titulo": "Balança Corporal Bioimpedância Profissional Bluetooth Digital",
+  "preco": 29.88,
+  "preco_antigo": 56.38,
+  "desconto": 47,
+  "nota": 4.9,
+  "vendas": 2132,
+  "comissao": 0.03,
+  "imagem": "https://cf.shopee.com.br/file/br-11134207-820m8-mlgdm3r6d05gb4",
+  "vendedor": "Romanti Prime",
+  "link": "https://s.shopee.com.br/8KqcF8Yzbo",
+  "link_produto": "https://shopee.com.br/product/1749702291/58256297823",
+  "categoria": "relogios",
+  "desde": 1793111742749,
+  "visto": 1793111742749,
   "pontos": 4.2
  },
  {
@@ -4558,5 +4482,81 @@
   "desde": 1793087842815,
   "visto": 1793087842815,
   "pontos": 4.1
+ },
+ {
+  "id": "shopee-58264795983",
+  "loja": "shopee",
+  "titulo": "Kit 3 Garrafas Água 1.2L 800ml 300ml Squeeze BPA Free Com Canudo Para Academia",
+  "preco": 29.99,
+  "preco_antigo": 69.74,
+  "desconto": 57,
+  "nota": 4.8,
+  "vendas": 1434,
+  "comissao": 0.03,
+  "imagem": "https://cf.shopee.com.br/file/sg-11134201-8258f-ms1m666e6addc6",
+  "vendedor": "P&L COMERCIAL",
+  "link": "https://s.shopee.com.br/gRAF8NrQ7",
+  "link_produto": "https://shopee.com.br/product/502621376/58264795983",
+  "categoria": "acessorios",
+  "desde": 1793111742749,
+  "visto": 1793111742749,
+  "pontos": 4.1
+ },
+ {
+  "id": "shopee-23393820140",
+  "loja": "shopee",
+  "titulo": "Garrafa Térmica 900ML Com Bico Com Alça Flip Tumbl Aço Inoxidável Academia Trabalho",
+  "preco": 28.89,
+  "preco_antigo": 45.14,
+  "desconto": 36,
+  "nota": 4.9,
+  "vendas": 3518,
+  "comissao": 0.03,
+  "imagem": "https://cf.shopee.com.br/file/br-11134207-7r98o-m79yy1wpr0wa03",
+  "vendedor": "Behemoth Eletrônicos",
+  "link": "https://s.shopee.com.br/1BTRuQOlv",
+  "link_produto": "https://shopee.com.br/product/393887125/23393820140",
+  "categoria": "acessorios",
+  "desde": 1793111742749,
+  "visto": 1793111742749,
+  "pontos": 4
+ },
+ {
+  "id": "shopee-23494340552",
+  "loja": "shopee",
+  "titulo": "Pochete Corrida Celular Esportiva Sem Volume Compacta Leve Impermeável Porta Celular Porta Garrafa Academia",
+  "preco": 9.99,
+  "preco_antigo": 49.95,
+  "desconto": 80,
+  "nota": 4.9,
+  "vendas": 897,
+  "comissao": 0.08,
+  "imagem": "https://cf.shopee.com.br/file/br-11134207-820lf-mnhru8m7vmrk23",
+  "vendedor": "WISH BOLSAS",
+  "link": "https://s.shopee.com.br/4fxJ0U8dJ1",
+  "link_produto": "https://shopee.com.br/product/1439190466/23494340552",
+  "categoria": "acessorios",
+  "desde": 1793111742749,
+  "visto": 1793111742749,
+  "pontos": 3.9
+ },
+ {
+  "id": "shopee-18199709755",
+  "loja": "shopee",
+  "titulo": "Garrafa Térmica 900ML Com Bico Com Alça Flip Tumbl Aço Inoxidável Academia Trabalho",
+  "preco": 28.89,
+  "preco_antigo": 45.14,
+  "desconto": 36,
+  "nota": 4.9,
+  "vendas": 2228,
+  "comissao": 0.03,
+  "imagem": "https://cf.shopee.com.br/file/sg-11134201-7rd59-m79z3zuul386dd",
+  "vendedor": "Behemoth's Cornucopia",
+  "link": "https://s.shopee.com.br/1BNQq3LxPA",
+  "link_produto": "https://shopee.com.br/product/544374309/18199709755",
+  "categoria": "acessorios",
+  "desde": 1793111742749,
+  "visto": 1793111742749,
+  "pontos": 3.8
  }
 ]
