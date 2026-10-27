@@ -1,5 +1,5 @@
 {
-  "rodizio": 30,
+  "rodizio": 31,
   "feitos": [
     "body-coach-01",
     "body-coach-02",
@@ -663,6 +663,25 @@
         }
       ],
       "formato": "foto",
+      "serie": "3-erros"
+    },
+    {
+      "quando": "2026-10-27T01:31:28.525Z",
+      "id": null,
+      "cliente": "body-coach",
+      "resultados": [
+        {
+          "canal": "facebook",
+          "ok": true,
+          "ref": "1380111745183159_122104539291518156"
+        },
+        {
+          "canal": "instagram",
+          "ok": true,
+          "ref": "18141446698613132"
+        }
+      ],
+      "formato": "reel",
       "serie": "3-erros"
     }
   ],
