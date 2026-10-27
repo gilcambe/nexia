@@ -52,6 +52,10 @@ async function comRetentativa(fn, t) {
       await new Promise(resolve => setTimeout(resolve, ESPERAS[i]));
       continue;
     }
+    // aplica espera da tentativa atual antes da próxima (inclui a 3ª)
+    await new Promise(resolve => setTimeout(resolve, ESPERAS[i]));
+    continue;
+    }
 
     if (erro) throw ultimoErro;
     return resultado;

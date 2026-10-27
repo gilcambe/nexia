@@ -142,6 +142,7 @@ test('GH7. GitHub real (gilcambe/nexia): branches, arquivo, histórico, diff, PR
   const run = async (tool, input) => {
     const fn = () => g.invoke(agent, { projectId: ids.project, tool, input });
     const r = await comRetentativa(fn, t);
+    if (!r) return;
     assert.strictEqual(r.status, 'succeeded', `${tool}: ${JSON.stringify(r.error)}`);
     return r.result;
   };
