@@ -15,18 +15,18 @@ const modoValido = m => (Object.prototype.hasOwnProperty.call(MODOS, m) ? m : nu
 const buscaWebEngine = require('../../lib/busca-web');
 
 /** Resultados da web (grátis, sem chave). Devolve o contexto formatado da busca. */
-async function buscarWeb(pergunta, fetchImpl = fetch, ms = 4000) {
-  return (await buscarWebDetalhe(pergunta, fetchImpl, ms)).contexto;
+async function buscarWeb(pergunta, fetchImpl = fetch, ms = 2500) {
+  return await buscarWebDetalhe(pergunta, fetchImpl, ms);
 }
 
 /** Igual a buscarWeb, mais quantas fontes cada serviço trouxe (porFonte). */
-async function buscarWebDetalhe(pergunta, fetchImpl = fetch, ms = 4000) {
+async function buscarWebDetalhe(pergunta, fetchImpl = fetch, ms = 2500) {
   // #1733: cada fonte tem o próprio prazo dentro de busca-web (antes um prazo só para todas fazia a busca voltar vazia).
   try {
     const res = await buscaWebEngine.buscar(pergunta, { fetchImpl, max: 6, ms });
-    return { contexto: res.contexto || '', porFonte: res.porFonte || {} };
+    return { contexto: res.contexto || '', rodape: res.rodape || '' };
   } catch {
-    return { contexto: buscaWebEngine.contexto([]), porFonte: {} };
+    return { contexto: buscaWebEngine.contexto([]), rodape: '' };
   }
 }
 
