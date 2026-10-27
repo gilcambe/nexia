@@ -36,4 +36,7 @@ Cada vez que a tarefa sobe ou desce de degrau, a escada comenta na issue: **"�
 - A Central mostra o placar: % de tarefas por degrau na semana, nota do teste humano e a cota restante de cada IA.
 
 ## Para o prompt direto no chat do Cortex
-Mesma escada em tempo real: o Cortex responde; se a resposta falhar (erro de ferramenta, teste vermelho, nota baixa do revisor), uma IA grátis maior (NVIDIA ou Gemini Pro) refaz a parte que falhou; se as cotas grátis acabaram, o Cortex cria a issue `vez-do-claude` e avisa o dono.
+
+Mesma escada em tempo real: o Cortex responde; se a resposta falhar (erro de ferramenta, teste vermelho, nota baixa do revisor), uma IA grátis maior (NVIDIA ou Gemini 2.5) refaz a parte que falhou; se as cotas grátis acabaram, o Cortex cria a issue `vez-do-claude` e avisa o dono.
+
+Fluxo de resgate: ao falhar, o Cortex tenta uma única vez com o modelo maior (NVIDIA NIM ou Gemini 2.5). Se essa tentativa falhar, cria a issue com o rótulo `vez-do-claude` e marca o campo `resolvidoPor`. Toda essa etapa só roda quando a variável de controle **CORTEX_RESGATE** estiver ligada.
