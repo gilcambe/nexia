@@ -3,7 +3,7 @@
 import qrcode from 'qrcode-generator';
 
 // Endereço oficial do app (o QR e o link de indicação sempre apontam para cá, nunca para o endereço antigo).
-export const APP_URL = 'https://nexiabodycoach.pages.dev';
+export const APP_URL = 'https://bodycoach.kernex.com.br';
 
 export interface DadosCartao {
   titulo: string;
