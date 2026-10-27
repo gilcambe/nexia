@@ -22,6 +22,7 @@ const LOADERS = {
   'cortex-learn': () => require('../netlify/functions/cortex-learn.js'),
   'cortex-logs': () => require('../netlify/functions/cortex-logs.js'),
   'cortex-memory': () => require('../netlify/functions/cortex-memory.js'),
+  'cortex-tts': () => require('../netlify/functions/cortex-tts.js'),
   'dunning-scheduler': () => require('../netlify/functions/dunning-scheduler.js'),
   'dynamic-pricing': () => require('../netlify/functions/dynamic-pricing.js'),
   'event-processor': () => require('../netlify/functions/event-processor.js'),
