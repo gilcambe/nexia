@@ -7,6 +7,7 @@ import InstalarApp from "./InstalarApp";
 import Logo, { logoServico } from "./Logo";
 import { Icone } from "./icones";
 import { estadoVaga } from "./ConectarIAs";
+import { formatarMoeda, formatarPercentual } from "./central";
 
 // Início da Central Kernex: visão geral com dados reais. Sem dado, mostra "sem dado ainda"; nunca número inventado.
 type Estado = "ok" | "atencao" | "erro" | "cinza";
@@ -168,6 +169,44 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando }: {
     { nome: "IAs grátis", logo: null, icone: "ia", e: forn.some((f) => f.grupo === "Inteligência artificial" && f.situacao === "ok") ? "ok" : "cinza" },
   ];
 
+  // Seção de custos
+  const [custos, setCustos] = useState(null);
+  const [erroCustos, setErroCustos] = useState(null);
+  const [carregandoCustos, setCarregandoCustos] = useState(true);
+
+  useEffect(() => {
+    let ignorar = false;
+    const buscarCustos = async () => {
+      try {
+        const resposta = await fetch('/api/custos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+        if (!resposta.ok) {
+          throw new Error('Erro ' + resposta.status + ' ao buscar custos');
+        }
+        const json = await resposta.json();
+        if (!json.ok) {
+          throw new Error(json.erro || 'Falha ao calcular custos');
+        }
+        if (!ignorar) {
+          setCustos(json);
+          setErroCustos(null);
+        }
+      } catch (e) {
+        if (!ignorar) {
+          setErroCustos(e.message || 'Não foi possível carregar os custos.');
+          setCustos(null);
+        }
+      } finally {
+        if (!ignorar) setCarregandoCustos(false);
+      }
+    };
+    buscarCustos();
+    return () => { ignorar = true; };
+  }, []);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col xl:flex-row gap-4 xl:items-center">
@@ -205,6 +244,79 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando }: {
 
       <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] 2xl:grid-cols-[1fr_340px] gap-6">
         <div className="space-y-6 min-w-0">
+          {/* Seção de custos */}
+          {custos && (
+            <div className="xl:col-span-4">
+              <div className="rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-5">
+                <div className="flex items-center justify-between gap-2 mb-4">
+                  <h2 className="font-semibold text-slate-900">Custos do mês</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div className="text-sm text-slate-600 mb-1">Custo total do mês</div>
+                    <div className="text-xl font-bold text-slate-900">{formatarMoeda(custos.custoTotal)}</div>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div className="text-sm text-slate-600 mb-1">Custo médio por plano</div>
+                    <div className="text-xl font-bold text-slate-900">{formatarMoeda(custos.custoMedioGeral || 0)}</div>
+                  </div>
+                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+                    <div className="text-sm text-slate-600 mb-1">% do custo sobre a receita</div>
+                    <div className="text-xl font-bold text-slate-900">{formatarPercentual(custos.percentualCustoReceita)}</div>
+                  </div>
+                </div>
+
+                {custos.circuitoGlobalAtivo && (
+                  <div className={`rounded-xl p-4 mb-6 ${custos.alertaTetoGlobal ? 'bg-red-50 border border-red-200 text-red-700' : 'bg-amber-50 border border-amber-200 text-amber-700'}`}>
+                    ⚠️ Circuito global {custos.alertaTetoGlobal ? 'excedeu o teto global' : 'está ativo'}.
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="font-semibold text-slate-900 mb-3">Custo médio por plano</h3>
+                    <div className="space-y-2">
+                      {Object.entries(custos.custoMedioPorPlano || {}).map(([plano, media]) => (
+                        <div key={plano} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                          <span className="text-sm font-medium text-slate-700">{plano}</span>
+                          <span className="font-semibold text-slate-900">{formatarMoeda(media)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 mb-3">Top 10 clientes que mais gastam</h3>
+                    <div className="space-y-2">
+                      {(custos.top10Clientes || []).map((c, i) => (
+                        <div key={i} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-200">
+                          <span className="text-sm font-medium text-slate-700">{c.cliente || 'Desconhecido'}</span>
+                          <span className="font-semibold text-slate-900">{formatarMoeda(c.total)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {carregandoCustos && (
+            <div className="xl:col-span-4">
+              <div className="rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-5">
+                <div className="h-32 rounded-xl bg-slate-100 animate-pulse" />
+              </div>
+            </div>
+          )}
+
+          {erroCustos && (
+            <div className="xl:col-span-4">
+              <div className="rounded-2xl bg-red-50 border border-red-200 p-5">
+                <p className="text-red-700">{erroCustos}</p>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
             <Numero titulo="Tarefas" icone="cortex" cor="from-violet-500 to-fuchsia-500" onClick={() => ir("cortex")}
               valor={cx ? cx.fazendo.length : null} sub={cx ? `em andamento · ${cx.naFila} na fila · ${cx.travadas.length} travadas` : ""}
