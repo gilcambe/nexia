@@ -164,6 +164,7 @@ function createHandler(deps = {}) {
         return res(200, { fornecedores: empresa.fornecedores(FORNECEDORES, env, robos) });
       }
       if (parte === 'cortex') return res(200, await gh.cortex());
+      if (parte === 'pacote-ia') return res(200, await gh.pacoteIA());
       if (parte === 'maquinas') {
         // #1846: PCs do dono (agente local manda o pulso a cada minuto). Só leitura.
         const m = deps.getMaquinas ? deps.getMaquinas() : require('../../nexia-ai/maquinas').createMaquinas({ env });
