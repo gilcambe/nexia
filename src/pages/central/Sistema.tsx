@@ -6,7 +6,8 @@ import type { Cor } from "./ui";
 import Mais from "./Mais";
 import SaudeHistorico from "./SaudeHistorico";
 import ConectarIAs from "./ConectarIAs";
-import UltimosErros from "./UltimosErros";\nimport EscadaCard from "../../components/EscadaCard";
+import UltimosErros from "./UltimosErros";
+import EscadaCard from "./EscadaCard";
 import { Abre, useModo } from "./celular";
 import { buscarContextoIA, sanitizarTexto } from "@/lib/fetch-contexto-ia";
 
