@@ -19,28 +19,28 @@
     ]
   },
   "fontes": {
-    "primaria": "[TROCAR] Montserrat",
-    "secundaria": "[TROCAR] Open Sans"
+    "primaria": "Montserrat",
+    "secundaria": "Open Sans"
   },
   "photo_theme": "odontologia, dentista, sorriso, clínica odontológica",
   "image_query": "modern dental clinic, dentist smiling, dental care equipment, clean teeth",
   "secoes": [
     {
-      "titulo": "[TROCAR] Sorriso Saudável e Bonito",
-      "conteudo": "[TROCAR] Nossa clínica odontológica oferece tratamentos modernos e humanizados para cuidar do seu sorriso com toda a segurança, conforto e tecnologia de ponta."
+      "titulo": "Sorriso Saudável e Bonito",
+      "conteudo": "Nossa clínica odontológica oferece tratamentos modernos e humanizados para cuidar do seu sorriso com toda a segurança, conforto e tecnologia de ponta."
     },
     {
-      "titulo": "[TROCAR] Tratamentos Especializados",
-      "conteudo": "[TROCAR] Realizamos desde limpezas preventivas e clareamento dental até implantes, ortodontia e reabilitação oral completa com profissionais especializados."
+      "titulo": "Tratamentos Especializados",
+      "conteudo": "Realizamos desde limpezas preventivas e clareamento dental até implantes, ortodontia e reabilitação oral completa com profissionais especializados."
     },
     {
-      "titulo": "[TROCAR] Agende sua Avaliação",
-      "conteudo": "[TROCAR] Venha fazer uma avaliação com nossa equipe. Cuidamos do seu sorriso para que você possa sorrir com confiança e qualidade de vida."
+      "titulo": "Agende sua Avaliação",
+      "conteudo": "Venha fazer uma avaliação com nossa equipe. Cuidamos do seu sorriso para que você possa sorrir com confiança e qualidade de vida."
     }
   ],
   "contato": {
-    "email": "[TROCAR] contato@odontoprime.com",
-    "telefone": "[TROCAR] (11) 98888-7777",
-    "endereco": "[TROCAR] Rua dos Sorrisos, 100, São Paulo, SP"
+    "email": "contato@odontoprime.com",
+    "telefone": "(11) 98888-7777",
+    "endereco": "Rua dos Sorrisos, 100, São Paulo, SP"
   }
 }

@@ -19,28 +19,15 @@
     ]
   },
   "fontes": {
-    "primaria": "[TROCAR] Roboto",
-    "secundaria": "[TROCAR] Open Sans"
+    "primaria": "Roboto",
+    "secundaria": "Open Sans"
   },
   "photo_theme": "clínica médica, hospital, saúde, bem-estar",
   "image_query": "consultório médico moderno, equipe de saúde, pacientes felizes",
   "secoes": [
     {
-      "titulo": "[TROCAR] Sobre Nossa Clínica",
-      "conteudo": "[TROCAR] Somos uma clínica dedicada a oferecer atendimento de saúde de alta qualidade, com foco no bem-estar e na recuperação de nossos pacientes. Nossa equipe é composta por profissionais experientes e atenciosos."
+      "titulo": "Sobre Nossa Clínica",
+      "conteudo": "Somos uma clínica dedicada a oferecer atendimento de saúde de alta qualidade, com foco no bem-estar e na recuperação de nossos pacientes. Nossa equipe é composta por profissionais experientes e atenciosos."
     },
     {
-      "titulo": "[TROCAR] Nossos Serviços",
-      "conteudo": "[TROCAR] Oferecemos uma ampla gama de serviços médicos, incluindo consultas de rotina, exames especializados, procedimentos ambulatoriais e acompanhamento personalizado para diversas condições de saúde."
-    },
-    {
-      "titulo": "[TROCAR] Agende Sua Consulta",
-      "conteudo": "[TROCAR] Use nosso sistema de agendamento online para marcar sua consulta. É rápido, fácil e você pode escolher o melhor horário para você."
-    }
-  ],
-  "contato": {
-    "email": "[TROCAR] contato@clinicabemestar.com",
-    "telefone": "[TROCAR] (11) 98765-4321",
-    "endereco": "[TROCAR] Rua da Saúde, 123, São Paulo, SP"
-  }
-}
+      "titulo": "Noss
