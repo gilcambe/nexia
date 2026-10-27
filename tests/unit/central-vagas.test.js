@@ -33,6 +33,11 @@ function ghFalso({ segredos = [], issues = [], prs = [] } = {}) {
   return { gh, chamadas };
 }
 const roteador = (resultado) => ({ createRouter: () => ({ chat: async () => { if (resultado instanceof Error) throw resultado; return { text: 'ok' }; } }) });
+// GET direto no serviço: status HTTP falso (ou erro de rede).
+const servico = (status, corpo = '') => ({ fetchImpl: async (url, init) => {
+  if (status === 'rede') throw new TypeError('fetch failed');
+  return { ok: status < 300, status, text: async () => corpo, url, init };
+} });
 
 test('VAGAS1: sealed box abre com a chave privada do repositório', () => {
   assert.strictEqual(abrir(v.selar('groq:' + CHAVE, PUB)), 'groq:' + CHAVE);
@@ -40,7 +45,7 @@ test('VAGAS1: sealed box abre com a chave privada do repositório', () => {
 
 test('VAGAS2: salvar testa, grava segredo selado e não devolve nem guarda a chave', async () => {
   const f = ghFalso();
-  const r = await v.salvar(f.gh, { vaga: 2, provedor: 'groq', chave: CHAVE }, roteador());
+  const r = await v.salvar(f.gh, { vaga: 2, provedor: 'groq', chave: CHAVE }, servico(200));
   assert.strictEqual(r.corpo.ok, true);
   const put = f.chamadas.find((c) => c.metodo === 'PUT');
   assert.strictEqual(put.caminho, '/actions/secrets/IA_VAGA_2');
@@ -52,7 +57,7 @@ test('VAGAS2: salvar testa, grava segredo selado e não devolve nem guarda a cha
 
 test('VAGAS3: chave recusada não é gravada e o motivo não mostra a chave', async () => {
   const f = ghFalso();
-  const r = await v.salvar(f.gh, { vaga: 1, provedor: 'groq', chave: CHAVE }, roteador(new Error(`401 Invalid API Key ${CHAVE}`)));
+  const r = await v.salvar(f.gh, { vaga: 1, provedor: 'groq', chave: CHAVE }, servico(401, `Invalid API Key ${CHAVE}`));
   assert.strictEqual(r.corpo.ok, false);
   assert.strictEqual(r.corpo.teste.situacao, 'recusada');
   assert.ok(!f.chamadas.some((c) => c.metodo === 'PUT'));
@@ -61,7 +66,7 @@ test('VAGAS3: chave recusada não é gravada e o motivo não mostra a chave', as
 
 test('VAGAS4: cota acabou ainda salva (chave boa); provedor pago ou vaga 4 são recusados', async () => {
   const f = ghFalso();
-  const r = await v.salvar(f.gh, { vaga: 3, provedor: 'gemini', chave: 'AIza' + 'x'.repeat(35) }, roteador(new Error('429 quota exceeded')));
+  const r = await v.salvar(f.gh, { vaga: 3, provedor: 'gemini', chave: 'AIza' + 'x'.repeat(35) }, servico(429));
   assert.strictEqual(r.corpo.ok, true);
   assert.strictEqual(r.corpo.teste.situacao, 'sem-cota');
   assert.strictEqual((await v.salvar(f.gh, { vaga: 1, provedor: 'openai', chave: CHAVE }, roteador())).status, 400);
@@ -93,4 +98,25 @@ test('VAGAS7: reserva usa as vagas primeiro e mascara a chave no log', () => {
   assert.ok(/IA_VAGA_1: \$\{\{ secrets\.IA_VAGA_1 \}\}/.test(yml));
   assert.ok(yml.includes('::add-mask::$CH'));
   assert.ok(yml.indexOf('IA_VAGA_$N') < yml.indexOf('if [ -n "$RESERVA_GEMINI_KEY" ]'));
+});
+
+test('VAGAS8: sem conexão daqui ainda salva (não testada) e chama o robô; Google API_KEY_INVALID é recusa', async () => {
+  const f = ghFalso();
+  let robo = 0;
+  const r = await v.salvar(f.gh, { vaga: 1, provedor: 'mistral', chave: CHAVE }, { ...servico('rede'), rodarRobo: async () => { robo++; } });
+  assert.strictEqual(r.corpo.ok, true);
+  assert.ok(f.chamadas.some((c) => c.metodo === 'PUT'));
+  assert.ok(f.chamadas.some((c) => c.caminho === '/issues' && JSON.parse(c.body).body.includes('"teste": null')));
+  assert.strictEqual(robo, 1);
+  const g = await v.testarChave('gemini', 'AIza' + 'y'.repeat(35), servico(400, '{"error":{"details":[{"reason":"API_KEY_INVALID"}]}}'));
+  assert.strictEqual(g.situacao, 'recusada');
+});
+
+test('VAGAS9: Groq confere no GET /models com a chave no cabeçalho; NVIDIA vai pela conversa', async () => {
+  let pedido;
+  const r = await v.testarChave('groq', CHAVE, { fetchImpl: async (url, init) => { pedido = { url, init }; return { ok: true, status: 200, text: async () => '' }; } });
+  assert.strictEqual(r.situacao, 'ok');
+  assert.strictEqual(pedido.url, 'https://api.groq.com/openai/v1/models');
+  assert.strictEqual(pedido.init.headers.Authorization, 'Bearer ' + CHAVE);
+  assert.strictEqual((await v.testarChave('nvidia', 'nvapi-' + 'z'.repeat(30), roteador())).situacao, 'ok');
 });

@@ -66,7 +66,7 @@ function createHandler(deps = {}) {
         const gh = getGithub();
         // #1958: Conectar IAs. A chave nunca volta na resposta nem vai para log.
         if (body.acao === 'vaga-salvar' || body.acao === 'vaga-apagar') {
-          const r = body.acao === 'vaga-salvar' ? await vagas.salvar(gh.api, body, deps.vagasDeps || {}) : await vagas.apagar(gh.api, body);
+          const r = body.acao === 'vaga-salvar' ? await vagas.salvar(gh.api, body, { rodarRobo: () => gh.rodar('ia-vagas.yml', {}), ...(deps.vagasDeps || {}) }) : await vagas.apagar(gh.api, body);
           return res(r.status, r.corpo);
         }
         if (body.acao === 'vaga-testar') {
