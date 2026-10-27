@@ -14,7 +14,7 @@ import Sistema from "./Sistema";
 import PrsAba from "./PrsAba";
 import { Icone } from "./icones";
 
-// Central Kernex: painel de controle de toda a Kernex. No computador, menu lateral + cabeçalho; no celular, barra embaixo.
+// Central Kernex: painel de controle de toda a Kernex. No computador, menu lateral fixo + cabeçalho à direita; no celular, barra inferior.
 const ABAS: { id: Aba; nome: string; frase: string; icone: string }[] = [
   { id: "inicio", nome: "Início", frase: "Visão geral", icone: "inicio" },
   { id: "cortex", nome: "Cortex", frase: "Tarefas e IA", icone: "cortex" },
