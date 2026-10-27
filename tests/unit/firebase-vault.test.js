@@ -86,3 +86,16 @@ test('FV7. #2188: limite diário do D1 grátis vira RESOURCE_EXHAUSTED (falta de
   const d = createD1Driver({ token: 't', accountId: 'a', databaseId: 'id', fetchImpl });
   await assert.rejects(() => d.get(['x/1']), e => (e.firestoreStatus || e.status) === 'RESOURCE_EXHAUSTED');
 });
+
+test('FV8. #2188: banco novo sem índice (FAILED_PRECONDITION de índice) é pulado e o pedido vai ao próximo', async () => {
+  const { Firestore } = require('../../lib/firebase-lite/firestore');
+  const fetchImpl = async url => (url.includes('/projects/d/')
+    ? { ok: false, status: 400, text: async () => JSON.stringify({ error: { status: 'FAILED_PRECONDITION', message: 'The query requires an index.' } }) }
+    : { ok: true, status: 200, text: async () => JSON.stringify([{ readTime: '2026-10-27T00:00:00Z' }]) });
+  const bancos = ['d', 'e'].map(p => ({ projectId: p, getToken: async () => 't' }));
+  const db = new Firestore({ projectId: 'd', getToken: bancos[0].getToken, fetchImpl });
+  db.enableFailover(bancos);
+  const snap = await db.collection('x').where('a', '==', 1).orderBy('b').get();
+  assert.equal(snap.size, 0);
+  assert.equal(db.projectId, 'e');
+});

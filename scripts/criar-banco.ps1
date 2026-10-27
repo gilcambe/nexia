@@ -39,6 +39,8 @@ Passo 'Gerando a chave de acesso'
 $sa = "firebase-adminsdk-nexia@$projeto.iam.gserviceaccount.com"
 Roda "gcloud iam service-accounts create firebase-adminsdk-nexia --display-name=`"NEXIA Cortex`" --project=$projeto"
 Roda "gcloud projects add-iam-policy-binding $projeto --member=serviceAccount:$sa --role=roles/datastore.user"
+# #2188: sem indexAdmin a chave não cria os índices compostos e o banco novo responde FAILED_PRECONDITION.
+Roda "gcloud projects add-iam-policy-binding $projeto --member=serviceAccount:$sa --role=roles/datastore.indexAdmin"
 $chave = Join-Path $env:TEMP "nexia-$letra.json"
 Roda "gcloud iam service-accounts keys create `"$chave`" --iam-account=$sa --project=$projeto"
 
@@ -46,6 +48,9 @@ Passo "Gravando o segredo $segredo no GitHub"
 Get-Content $chave -Raw | & gh secret set $segredo --repo $repo
 if ($LASTEXITCODE -ne 0) { Remove-Item $chave -Force; throw 'Nao consegui gravar o segredo.' }
 Remove-Item $chave -Force
+
+Passo 'Criando os indices no banco novo (GitHub Actions)'
+& gh workflow run publicar-indices.yml --repo $repo --ref develop -f confirm=COFRE
 
 Write-Host ''
 Write-Host "PRONTO. Banco $letra criado ($projeto) e segredo $segredo gravado. Pode fechar. O Cortex passa a usa-lo sozinho." -ForegroundColor Green
