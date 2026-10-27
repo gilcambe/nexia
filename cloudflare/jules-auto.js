@@ -13,6 +13,9 @@ const REPO = '/repos/gilcambe/nexia';
 const ESPERA_JULES_H = 1;
 const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'so-humano', 'vez-do-claude'];
 
+// Início do dia em UTC (00:00) para contar envios de jules-enviado.
+const inicioDiaUtc = (agora) => new Date(new Date(agora).toISOString().split('T')[0] + 'T00:00:00Z').getTime();
+
 // Decide o que fazer com as issues travadas (função pura, testada).
 function decidir(issues, prs, agora, nomes) {
   const recusado = (p) => (p.labels || []).some(l => (l.name || l) === 'revisor-recusou');
@@ -24,12 +27,21 @@ function decidir(issues, prs, agora, nomes) {
   const voltar = travadas.filter(i => nomes(i).includes('jules-enviado') && !prDe(i.number)
     && (agora - Date.parse(i.updated_at || 0)) / 36e5 >= ESPERA_JULES_H);
   const segunda = voltar.filter(i => nomes(i).includes('cortex-retomada'));
+  // Conta envios do dia: issues com jules-enviado atualizadas desde 00:00 UTC.
+  const desde = inicioDiaUtc(agora);
+  const enviadosHoje = issues.filter(i => nomes(i).includes('jules-enviado') && Date.parse(i.updated_at || 0) >= desde).length;
+  // claude: travadas SEM jules-enviado, quando envios >= 15 (redirecionar para vez-do-claude).
+  const claude = enviadosHoje >= 15 ? travadas.filter(i => !nomes(i).includes('jules-enviado')).map(i => i.number) : [];
+  // devolver: travadas abertas sem claude-trabalhando e sem PR citando #N, quando envios < 15 → degrau 2 + cortex-travado.
+  const devolver = enviadosHoje < 15 ? travadas.filter(i => !nomes(i).includes('claude-trabalhando') && !prDe(i.number)).map(i => i.number) : [];
   return {
     enviar: enviar ? enviar.number : null,
     retomar: voltar.filter(i => !nomes(i).includes('cortex-retomada')).map(i => i.number),
     // #1958: antes do Claude, as IAs conectadas na Central tentam uma vez (rótulo reserva-tentou).
     reserva: segunda.filter(i => !nomes(i).includes('reserva-tentou')).map(i => i.number),
     humano: segunda.filter(i => nomes(i).includes('reserva-tentou')).map(i => i.number),
+    claude,
+    devolver,
   };
 }
 
