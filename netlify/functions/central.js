@@ -84,7 +84,7 @@ function createHandler(deps = {}) {
           const texto = String(body.texto || '').trim().slice(0, 3000);
           if (texto.length < 10) return res(400, { error: 'Escreva com um pouco mais de detalhe o que você quer.' });
           const titulo = texto.split('\n')[0].slice(0, 80);
-          const r = await gh.pedirAoCortex(titulo, texto, auth.email || 'admin');
+          const r = await gh.pedirAoCortex(titulo, texto, auth.email);
           return res(200, { ok: true, ...r, mensagem: 'Pedido entregue ao Cortex (tarefa #' + r.numero + ').' });
         }
         if (body.acao === 'confirmar_pix' || body.acao === 'recusar_pix') {
@@ -101,10 +101,10 @@ function createHandler(deps = {}) {
             const valor = Number(p.valor) || 0;
             const uid = p.uid || pedidoId;
             await liberarAcesso(db, uid, dias, Date.now(), { valor });
-            await docRef.set({ status: 'confirmado', confirmadoEm: Date.now(), confirmadoPor: auth.email || 'admin' }, { merge: true });
+            await docRef.set({ status: 'confirmado', confirmadoEm: Date.now(), confirmadoPor: auth.email }, { merge: true });
             return res(200, { ok: true, mensagem: 'Pix confirmado com sucesso e plano ativado.' });
           } else {
-            await docRef.set({ status: 'recusado', recusadoEm: Date.now(), recusadoPor: auth.email || 'admin' }, { merge: true });
+            await docRef.set({ status: 'recusado', recusadoEm: Date.now(), recusadoPor: auth.email }, { merge: true });
             return res(200, { ok: true, mensagem: 'Pix recusado com sucesso.' });
           }
         }
@@ -117,7 +117,7 @@ function createHandler(deps = {}) {
           await ref.set({
             ligado: ligar,
             atualizadoEm: Date.now(),
-            atualizadoPor: auth.email || 'admin'
+            atualizadoPor: auth.email
           }, { merge: true });
           return res(200, { ok: true, ligado: ligar });
         }
