@@ -22,6 +22,9 @@ const PRODUTOS = [
   // Copiloto e treino para atendentes de call center (nome neutro; nada de material de empresa anterior entra no produto).
   { id: 'atende', segmento: 'Atendimento', nome: 'Atende', icone: '🎧', frase: 'Em preparação: copiloto e treino de ligação para atendentes', pendente: true, tipo: 'produto' },
   { id: 'arqia', segmento: 'Arquitetura', nome: 'Arqia', icone: '📐', frase: 'Produto futuro: sistema para arquitetos', pendente: true, tipo: 'produto' },
+  { id: 'kernex', segmento: 'Sites', nome: 'Site da Kernex', icone: '🌐', frase: 'Site institucional da Kernex', site: 'https://kernex.com.br/', tipo: 'produto' },
+  { id: 'vault', segmento: 'Dados', nome: 'Vault', icone: '🔐', frase: 'Cofre de segredos e configurações', tipo: 'produto' },
+  { id: 'sitekit', segmento: 'Sites', nome: 'Site Kit', icone: '🧰', frase: 'Kit de sites para clientes', tipo: 'produto' },
 ];
 
 // Só os que têm site no ar entram nas medições de saúde.
