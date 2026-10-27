@@ -128,6 +128,10 @@ export class CreditManager {
     return { success: true, creditsRemaining: user.creditsRemaining };
   }
 
+  async canPublish(userId: string): Promise<{ allowed: boolean; message?: string }> {
+    return this.canCreateSite(userId);
+  }
+
   async registerSiteCreated(userId: string): Promise<{ success: boolean; message?: string }> {
     const can = await this.canCreateSite(userId);
     if (!can.allowed) return { success: false, message: can.message };
