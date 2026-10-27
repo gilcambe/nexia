@@ -155,15 +155,16 @@ test('VazaoController: 1 resposta em andamento por usuário', () => {
 
 test('VazaoController: contadores por provedor e verificação de cotas', () => {
   const ctrl = new VazaoController();
+  const hoje = new Date().toISOString().slice(0, 10);
 
-  const inc1 = ctrl.incrementarProvedor('openai', 500, '2026-10-26');
+  const inc1 = ctrl.incrementarProvedor('openai', 500, hoje);
   assert.strictEqual(inc1.ok, true);
   assert.strictEqual(inc1.contagem, 500);
 
-  const inc2 = ctrl.incrementarProvedor('openai', 300, '2026-10-26');
+  const inc2 = ctrl.incrementarProvedor('openai', 300, hoje);
   assert.strictEqual(inc2.contagem, 800);
 
-  const contadores = ctrl.obterContadores('2026-10-26');
+  const contadores = ctrl.obterContadores(hoje);
   assert.strictEqual(contadores.openai, 800);
 
   const cota = ctrl.verificarCota('openai', 1000, '2026-10-26');

@@ -19,6 +19,7 @@ try { ragModule = require('./rag-engine'); } catch { ragModule = { buildRAGConte
 
 const { guard, sanitizePrompt, validateAIAction, checkPermission, HEADERS, makeHeaders } = require('./middleware');
 const { publicErrorBody } = require('../../lib/safe-error');
+const { estimarTokens, otimizarHistorico } = require('../../lib/cortex-tokens');
 const nexiaCortex = require('../../nexia-ai/cortex'); // NEXIA AI (Fase 4): resolver + contexto do Vault
 const modos = require('../../nexia-ai/cortex/modos'); // #831: Rápido / Pensar / Pesquisar
 const { classificarDificuldade, podeUsarCache } = require('../../nexia-ai/cortex/classificador'); // Q4 - Issue #1632
@@ -349,7 +350,13 @@ exports.handler = async (event) => {
 
     let mem = { history: [], summaries: [], entities: {} };
     try { mem = await memModule.load(effectiveUserId, tenantId, conversationId); } catch { }
-    const context = typeof memModule.buildContext === 'function' ? memModule.buildContext(mem.history, mem.summaries, 30) : (mem.history || []).slice(-30);
+    const rawContext = typeof memModule.buildContext === 'function' ? memModule.buildContext(mem.history, mem.summaries, 30) : (mem.history || []).slice(-30);
+
+    const optResult = await otimizarHistorico(rawContext, { budgetTokens: maxTokens || 2000, keepRecent: 4 });
+    const context = optResult.messages;
+    const tokensBefore = optResult.tokensBefore + estimarTokens(message);
+    const tokensAfter = optResult.tokensAfter + estimarTokens(message);
+
     const learningCtx = await learnModule.buildLearningContext(tenantId, message).catch(() => null);
     let ragCtx = '';
     if (ragEnabled) { try { ragCtx = await ragModule.buildRAGContext(tenantId, message) || ''; } catch { } }
@@ -529,8 +536,8 @@ exports.handler = async (event) => {
             // então a conversa não era salva e o Cortex esquecia o que a pessoa tinha dito.
             const nm = [{ role: 'user', content: message }, { role: 'assistant', content: fullText }];
             if (typeof memModule.save === 'function') await memModule.save(effectiveUserId, [...(mem.history || []), ...nm], mem.summaries, tenantId, memModule.extractEntities ? memModule.extractEntities(nm, mem.entities) : {}, conversationId).catch(() => {});
-            cxLog(tenantId, userId, { type: 'cortex_execution', conversationId, intent: decision.type, layer, ms: Date.now() - start, modelUsed: used, stream: true, plan: usage.plan }).catch(() => {});
-            yield sse({ done: true, model: used, ...(buscaDiag ? { busca: buscaDiag } : {}), intent: decision.type, actions: execActions, swarm: swarmOut, usage: { calls: usage.calls, limit: usage.limit, unlimited: !!usage.unlimited }, ...(projectCtx.mode === 'context' ? { project: { project_id: projectCtx.project.project_id, confidence: projectCtx.project.confidence } } : {}) });
+            cxLog(tenantId, userId, { type: 'cortex_execution', conversationId, intent: decision.type, layer, ms: Date.now() - start, modelUsed: used, stream: true, plan: usage.plan, tokensBefore, tokensAfter }).catch(() => {});
+            yield sse({ done: true, model: used, ...(buscaDiag ? { busca: buscaDiag } : {}), intent: decision.type, actions: execActions, swarm: swarmOut, usage: { calls: usage.calls, limit: usage.limit, unlimited: !!usage.unlimited, tokensBefore, tokensAfter }, ...(projectCtx.mode === 'context' ? { project: { project_id: projectCtx.project.project_id, confidence: projectCtx.project.confidence } } : {}) });
             yield 'data: [DONE]\n\n';
           } finally {
             abort.abort();
@@ -553,11 +560,11 @@ exports.handler = async (event) => {
     const nm = [{ role: 'user', content: message }, { role: 'assistant', content: finalResponse }];
     if (typeof memModule.save === 'function') await memModule.save(userId, [...(mem.history || []), ...nm], mem.summaries, tenantId, {}, conversationId).catch(() => {});
     if (typeof learnModule.saveExample === 'function') learnModule.saveExample(tenantId, userId, message, finalResponse, decision.type, conversationId).catch(() => {});
-    await cxLog(tenantId, userId, { type: 'cortex_execution', conversationId, intent: decision.type, layer, ms: Date.now() - start, actionsCount: execActions.length, modelUsed, plan: usage.plan }).catch(() => {});
+    await cxLog(tenantId, userId, { type: 'cortex_execution', conversationId, intent: decision.type, layer, ms: Date.now() - start, actionsCount: execActions.length, modelUsed, plan: usage.plan, tokensBefore, tokensAfter }).catch(() => {});
 
     return {
       statusCode: 200, headers,
-      body: JSON.stringify({ reply: finalResponse, type: decision.type, intent: decision.intent, actions: execActions, swarm: swarmOut, _meta: { layer, ms: Date.now() - start, modelUsed, version: 'v16.0', conversationId, plan: usage.plan, unlimited: !!usage.unlimited, usage: { calls: usage.calls, limit: usage.limit }, ...(projectCtx.mode === 'context' ? { project: { project_id: projectCtx.project.project_id, confidence: projectCtx.project.confidence } } : {}) } })
+      body: JSON.stringify({ reply: finalResponse, type: decision.type, intent: decision.intent, actions: execActions, swarm: swarmOut, _meta: { layer, ms: Date.now() - start, modelUsed, version: 'v16.0', conversationId, plan: usage.plan, unlimited: !!usage.unlimited, usage: { calls: usage.calls, limit: usage.limit, tokensBefore, tokensAfter }, ...(projectCtx.mode === 'context' ? { project: { project_id: projectCtx.project.project_id, confidence: projectCtx.project.confidence } } : {}) } })
     };
 
   } catch (err) {
