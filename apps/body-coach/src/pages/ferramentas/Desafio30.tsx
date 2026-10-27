@@ -36,7 +36,7 @@ export default function Desafio30() {
   const dia = p ? diaAtual(p.inicio, hoje) : 0;
   const certificado = !!p && temCertificado(p, hoje);
   const nome = profile?.full_name || user?.user_metadata.full_name || '';
-  const link = user ? linkIndicacao(user.id) : 'https://nexiabodycoach.pages.dev';
+  const link = user ? linkIndicacao(user.id) : 'https://bodycoach.kernex.com.br';
 
   useEffect(() => {
     if (!certificado || !tela.current || !p || !desafio) return;

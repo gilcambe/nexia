@@ -5,7 +5,7 @@ import { TESTADOR } from './testador';
 
 export type Aparelho = 'instalado' | 'android' | 'iphone' | 'computador';
 export const LINK_PLAY = TESTADOR.instalar;
-export const LINK_APP = 'https://nexiabodycoach.pages.dev/body-coach/';
+export const LINK_APP = 'https://bodycoach.kernex.com.br/body-coach/';
 
 export function qualAparelho(ua: string, standalone = false, toque = 0, plataforma = ''): Aparelho {
   if (standalone) return 'instalado';
