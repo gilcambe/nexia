@@ -2,6 +2,9 @@
 # pega 1 tarefa leve, roda no Ollama local e devolve o resultado. Só saída de internet; nada fica aberto.
 # Config em agente.config.json (ao lado deste arquivo): url, token, nome, modelo.
 $ErrorActionPreference = 'Continue'
+# PowerShell 5.1 reaproveita conexões que o Cloudflare já fechou ("conexão subjacente estava fechada"):
+# TLS 1.2 fixo e conexão nova a cada chamada.
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $dir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $cfg = Get-Content (Join-Path $dir 'agente.config.json') -Raw | ConvertFrom-Json
 $base = ($cfg.url.TrimEnd('/')) + '/api/nexia/maquinas'
@@ -16,11 +19,11 @@ function Pulso {
   try { $modelos = @((Invoke-RestMethod 'http://localhost:11434/api/tags' -TimeoutSec 5).models.name); $ok = $true } catch {}
   $b = @{ nome = $cfg.nome; cpu = $cpu; ramTotal = [math]::Round($os.TotalVisibleMemorySize / 1MB, 1)
           ramLivre = [math]::Round($os.FreePhysicalMemory / 1MB, 1); modelos = $modelos; ollamaOk = $ok } | ConvertTo-Json -Compress
-  Invoke-RestMethod "$base/pulso" -Method Post -Headers $H -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($b)) -TimeoutSec 20 | Out-Null
+  Invoke-RestMethod "$base/pulso" -Method Post -Headers $H -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($b)) -TimeoutSec 20 -DisableKeepAlive | Out-Null
 }
 
 function Trabalhar {
-  $r = Invoke-WebRequest "$base/tarefa?nome=$($cfg.nome)" -Headers $H -TimeoutSec 20 -UseBasicParsing
+  $r = Invoke-WebRequest "$base/tarefa?nome=$($cfg.nome)" -Headers $H -TimeoutSec 20 -DisableKeepAlive -UseBasicParsing
   if ($r.StatusCode -ne 200) { return }
   $t = [Text.Encoding]::UTF8.GetString($r.RawContentStream.ToArray()) | ConvertFrom-Json
   $modelo = if ($t.modelo) { $t.modelo } else { $cfg.modelo }
@@ -31,7 +34,7 @@ function Trabalhar {
     $res = @{ nome = $cfg.nome; id = $t.id; texto = $resp.choices[0].message.content; tokens = $resp.usage.completion_tokens; ms = [int]((Get-Date) - $ini).TotalMilliseconds }
   } catch { $res = @{ nome = $cfg.nome; id = $t.id; erro = "$_" } }
   $j = $res | ConvertTo-Json -Compress
-  Invoke-RestMethod "$base/resultado" -Method Post -Headers $H -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($j)) -TimeoutSec 20 | Out-Null
+  Invoke-RestMethod "$base/resultado" -Method Post -Headers $H -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($j)) -TimeoutSec 20 -DisableKeepAlive | Out-Null
   Log "tarefa $($t.id) feita"
 }
 
