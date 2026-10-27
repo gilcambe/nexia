@@ -1,5 +1,38 @@
 import { useState, useRef, useEffect } from 'react';
 
+// Função para sanitizar código e remover possíveis secrets
+const sanitizeCode = (code) => {
+  if (!code || typeof code !== 'string') return '';
+  // Remove linhas que contêm padrões de segredos (API keys, senhas, etc.)
+  return code
+    .split('\n')
+    .filter(line => {
+      const trimmed = line.trim();
+      // Ignora linhas vazias e comentários
+      if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('//')) return true;
+      // Remove linhas com padrões de segredos
+      return !(
+        /api[_-]?key|secret|password|token|bearer|auth|credential|private[_-]?key|access[_-]?token/i.test(trimmed) ||
+        /sk-[a-zA-Z0-9]{20,}|ghp_[a-zA-Z0-9]{20,}/.test(trimmed)
+      );
+    })
+    .join('\n');
+};
+
+// Função para sanitizar mensagem de erro
+const sanitizeError = (error) => {
+  if (!error) return 'Ocorreu um erro desconhecido';
+  const message = String(error);
+  // Remove caminhos de arquivo, stack traces e informações internas
+  return message
+    .replace(/\/[^\s]+\.js:\d+:/g, '[arquivo]')
+    .replace(/at .+\/[^\/]+\.js:\d+/g, '[local]')
+    .replace(/Error: /g, '')
+    .replace(/TypeError: /g, '')
+    .replace(/ReferenceError: /g, '')
+    .replace(/SyntaxError: /g, '')
+    .substring(0, 500); // Limita tamanho
+
 // Bloco de código executável com botão 🛠 Corrigir com o Cortex.
 // Quando a execução retorna erro, o botão fica ativo. Ao clicar, envia
 // o código original + mensagem de erro para POST /api/autocorrect e,
@@ -22,19 +55,31 @@ export default function CodeBlock({ codigo, linguagem = 'python', autoRun = true
     setSaida(null);
     setCarregando(true);
     try {
+      // Sanitiza código antes de enviar
+      const codigoSanitizado = sanitizeCode(codigo);
+      
       const resposta = await fetch('/api/executar', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ codigo, linguagem })
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+        },
+        body: JSON.stringify({ codigo: codigoSanitizado, linguagem }),
+        signal: AbortSignal.timeout(30000) // Timeout de 30 segundos
       });
+      
+      if (!resposta.ok) {
+        throw new Error(`Erro ${resposta.status}: ${resposta.statusText}`);
+      }
+      
       const dados = await resposta.json();
       if (dados.erro) {
-        setErro(dados.erro);
+        setErro(sanitizeError(dados.erro));
       } else {
         setSaida(dados.saida);
       }
     } catch (e) {
-      setErro(String(e?.message || e));
+      setErro(sanitizeError(e?.message || e));
     } finally {
       setCarregando(false);
     }
@@ -44,16 +89,28 @@ export default function CodeBlock({ codigo, linguagem = 'python', autoRun = true
     if (!erro || corrigindo) return;
     setCorrigindo(true);
     try {
+      // Sanitiza código e erro antes de enviar
+      const codigoSanitizado = sanitizeCode(conteudo);
+      const erroSanitizado = sanitizeError(erro);
+      
       const resposta = await fetch('/api/autocorrect', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+        },
         body: JSON.stringify({
-          codigo: conteudo,
-          erro: erro,
+          codigo: codigoSanitizado,
+          erro: erroSanitizado,
           linguagem: linguagem
-        })
+        }),
+        signal: AbortSignal.timeout(60000) // Timeout de 60 segundos para correção
       });
-      if (!resposta.ok) throw new Error('Falha ao corrigir');
+      
+      if (!resposta.ok) {
+        throw new Error(`Falha ao corrigir: ${resposta.status} ${resposta.statusText}`);
+      }
+      
       const dados = await resposta.json();
       if (dados.codigo_corrigido) {
         setConteudo(dados.codigo_corrigido);
@@ -61,10 +118,10 @@ export default function CodeBlock({ codigo, linguagem = 'python', autoRun = true
       } else if (dados.codigo) {
         setConteudo(dados.codigo);
       } else {
-        setErro('Não foi possível corrigir o código.');
+        setErro('Não foi possível corrigir o código. Tente novamente.');
       }
     } catch (e) {
-      setErro(String(e?.message || 'Erro ao corrigir com o Cortex'));
+      setErro(sanitizeError(e?.message || 'Erro ao corrigir com o Cortex'));
     } finally {
       setCorrigindo(false);
     }
