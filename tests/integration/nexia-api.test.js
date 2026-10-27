@@ -12,6 +12,7 @@ const { createVault, createExecutionContext } = require('../../nexia-ai/vault');
 const { onboardProject } = require('../../nexia-ai/onboarding');
 const { createLocalSource } = require('../../nexia-ai/onboarding/sources');
 const { fakeSecrets } = require('../vault-fixtures');
+const { comRetentativa } = require('./_github-real');
 
 const AUTH = process.env.FIREBASE_AUTH_EMULATOR_HOST;
 const RUN = crypto.randomBytes(4).toString('hex');
@@ -182,13 +183,14 @@ test('A6. onboarding (módulo, fonte local = este repositório): repo, ambiente,
 // CI: token efêmero do Actions (somente leitura) em NEXIA_TEST_GITHUB_TOKEN, usado só durante este teste.
 const githubReachable = !!(process.env.NEXIA_TEST_GITHUB_TOKEN || process.env.NODE_USE_ENV_PROXY);
 test('A7. onboarding HTTP lendo gilcambe/nexia no GitHub (projeto real cadastrado com snapshot)',
-  { skip: !githubReachable && 'sem acesso ao GitHub neste ambiente (defina NEXIA_TEST_GITHUB_TOKEN)' }, async () => {
+  { skip: !githubReachable && 'sem acesso ao GitHub neste ambiente (defina NEXIA_TEST_GITHUB_TOKEN)' }, async (t) => {
     const previous = process.env.GITHUB_TOKEN;
     if (process.env.NEXIA_TEST_GITHUB_TOKEN) process.env.GITHUB_TOKEN = process.env.NEXIA_TEST_GITHUB_TOKEN;
     try {
     const c = await call('adminB', 'POST', '/clients', { name: 'NEXIA', slug: 'nexia', status: 'active' });
     const p = await call('adminB', 'POST', '/projects', { client_id: c.body.record.id, name: 'NEXIA OS', slug: 'nexia-os', type: 'saas', status: 'active' });
-    const r = await call('adminB', 'POST', `/projects/${p.body.record.id}/onboard`, { repository: { owner: 'gilcambe', repo: 'nexia' } });
+    const r = await comRetentativa(async () => call('adminB', 'POST', `/projects/${p.body.record.id}/onboard`, { repository: { owner: 'gilcambe', repo: 'nexia' } }), t);
+    if (!r) return;
     assert.strictEqual(r.status, 201, r.raw);
     assert.strictEqual(r.headers['x-execution-id'], r.body.execution_id);
     const repo = (await call('adminB', 'GET', `/repos/${r.body.repository_id}`)).body.record;

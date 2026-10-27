@@ -136,16 +136,15 @@ test('GH6. catálogo: risco e autonomia mínima de cada ferramenta do GitHub em 
   });
 });
 
-test('GH7. GitHub real (gilcambe/nexia): branches, arquivo, histórico, diff, PRs e Actions pelo gateway', { skip: !process.env.NEXIA_TEST_GITHUB_TOKEN && 'sem NEXIA_TEST_GITHUB_TOKEN' }, async () => {
+test('GH7. GitHub real (gilcambe/nexia): branches, arquivo, histórico, diff, PRs e Actions pelo gateway', { skip: !process.env.NEXIA_TEST_GITHUB_TOKEN && 'sem NEXIA_TEST_GITHUB_TOKEN' }, async (t) => {
   await setAutonomy(0);
   const g = createGateway({ db, vault, env: { GITHUB_TOKEN: process.env.NEXIA_TEST_GITHUB_TOKEN } });
   const run = async (tool, input) => {
     const fn = () => g.invoke(agent, { projectId: ids.project, tool, input });
-    const r = await comRetentativa(fn, assert);
+    const r = await comRetentativa(fn, t);
     assert.strictEqual(r.status, 'succeeded', `${tool}: ${JSON.stringify(r.error)}`);
     return r.result;
   };
-  const { comRetentativa } = require('./_github-real');
   assert.ok((await run('github.list_branches', {})).branches.some(b => b.name === 'develop'));
   const pkg = await run('github.get_file', { path: 'package.json', ref: 'develop' });
   assert.match(pkg.content, /"name"/);
