@@ -17,15 +17,17 @@ const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'vez-do-claude'];
 // Início do dia em UTC (00:00) para contar envios de jules-enviado.
 const inicioDiaUtc = (agora) => new Date(new Date(agora).toISOString().split('T')[0] + 'T00:00:00Z').getTime();
 
-// Garante que o rótulo vez-do-claude exista (cor #d97706).
+// Garante que o rótulo vez-do-claude exista (cor #d97706). Retorna ok=false se não pôde criar/ler.
 async function garantirRotulo(p) {
   try {
     await p.gh(`${REPO}/labels/vez-do-claude`);
+    return { ok: true };
   } catch (_) {
-    await p.gh(`${REPO}/labels`, {
+    const criado = await p.gh(`${REPO}/labels`, {
       method: 'POST',
       body: JSON.stringify({ name: 'vez-do-claude', color: COR_VEZ_DO_CLAUDE }),
     }).catch(() => null);
+    return { ok: Boolean(criado) };
   }
 }
 
@@ -40,9 +42,11 @@ function decidir(issues, prs, agora, nomes) {
   const voltar = travadas.filter(i => nomes(i).includes('jules-enviado') && !prDe(i.number)
     && (agora - Date.parse(i.updated_at || 0)) / 36e5 >= ESPERA_JULES_H);
   const segunda = voltar.filter(i => nomes(i).includes('cortex-retomada'));
+  // Parse seguro de updated_at: datas inválidas (NaN) não contam como envio nem devolvem.
+  const atualizadoEm = (i) => { const t = Date.parse(i.updated_at || ''); return Number.isFinite(t) ? t : 0; };
   // Conta envios do dia: issues com jules-enviado atualizadas desde 00:00 UTC.
   const desde = inicioDiaUtc(agora);
-  const enviadosHoje = issues.filter(i => nomes(i).includes('jules-enviado') && Date.parse(i.updated_at || 0) >= desde).length;
+  const enviadosHoje = issues.filter(i => nomes(i).includes('jules-enviado') && atualizadoEm(i) >= desde).length;
   // claude: travadas SEM jules-enviado, quando envios >= 15 (redirecionar para vez-do-claude).
   const claude = enviadosHoje >= 15 ? travadas.filter(i => !nomes(i).includes('jules-enviado')).map(i => i.number) : [];
   // devolver: travadas abertas sem claude-trabalhando e sem PR citando #N, quando envios < 15 → degrau 2 + cortex-travado.
@@ -66,7 +70,8 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
   const { mandarParaJules } = require('../netlify/functions/central/pedidos-jules.js');
   const p = criarPedidos(env, fetchFn);
   if (!p.temToken) return { skipped: 'sem token do GitHub' };
-  await garantirRotulo(p);
+  const rotulo = await garantirRotulo(p);
+  if (!rotulo.ok) return { skipped: 'sem permissão para criar/ler rótulo vez-do-claude' };
   const travadas = await p.gh(`${REPO}/issues?state=open&labels=cortex-travado&per_page=100&sort=created&direction=asc`);
   const planejadas = await p.gh(`${REPO}/issues?state=open&labels=cortex-jules&per_page=50&sort=created&direction=asc`).catch(() => []);
   const pl = Array.isArray(planejadas) ? planejadas : [];
@@ -106,7 +111,8 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
   }
   for (const n of d.devolver) {
     const i = issues.find(x => x.number === n);
-    for (const l of nomes(i)) await tirar(n, l);
+    // Remove apenas o rótulo de degrau 3 (sem apagar rótulos de negócio/segurança).
+    await tirar(n, 'vez-do-claude');
     await por(n, ['cortex-travado']);
     await comentar(n, `🪜 Degrau 2: cortex-travado — envios do Júles abaixo do limite (${enviadosHoje}/15), a tarefa volta ao degrau 2 e fica travada para nova tentativa. (Jules hoje: ${enviadosHoje}/15)`);
     out.devolver.push(n);
