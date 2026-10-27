@@ -15,7 +15,7 @@ const { createGeminiProvider } = require('./providers/gemini');
 const { createCohereProvider } = require('./providers/cohere');
 const { createCache, chave, cacheavel } = require('./cache');
 
-const PROVIDER_IDS = Object.freeze(['anthropic', 'gemini', 'cohere', ...Object.keys(OPENAI_COMPATIBLE)]);
+const PROVIDER_IDS = Object.freeze(['anthropic', 'gemini', 'cohere', ...Object.keys(OPENAI_COMPATIBLE), 'workers-ai-binding']);
 
 /**
  * @param {{ env?, fetchImpl?, baseUrls?: Record<string,string>, anthropicClientOptions?, providers?: Record<string, object> }} [o]
@@ -32,6 +32,28 @@ function createRouter(o = {}) {
   for (const id of Object.keys(OPENAI_COMPATIBLE)) {
     providers[id] = createOpenAICompatibleProvider(id, { env, ...(fetchImpl ? { fetchImpl } : {}), ...(base[id] ? { baseUrl: base[id] } : {}) });
   }
+
+  // workers-ai-binding: delega para globalThis.__NEXIA_AI__ quando disponível.
+  // Último item da cadeia (fast → reasoning → analysis → workers-ai-binding).
+  providers['workers-ai-binding'] = {
+    id: 'workers-ai-binding',
+    envKey: 'WORKERS_AI_BINDING',
+    available: () => typeof globalThis !== 'undefined' && !!globalThis.__NEXIA_AI__,
+    capabilities: model => ({ chat: true, streaming: false, tool_call: false, structured_output: false }),
+    async chat(model, req) {
+      const binding = globalThis.__NEXIA_AI__;
+      if (!binding) throw new ModelError(CODES.NO_API_KEY, 'workers-ai-binding não disponível.', { provider: 'workers-ai-binding' });
+      let out;
+      if (typeof binding.chat === 'function') {
+        out = await binding.chat(model, req);
+      } else if (typeof binding.run === 'function') {
+        out = await binding.run(model, req);
+      } else {
+        throw new ModelError(CODES.UPSTREAM, 'workers-ai-binding sem função chat/run.', { provider: 'workers-ai-binding' });
+      }
+      return { provider: 'workers-ai-binding', model, ...out };
+    },
+  };
   Object.assign(providers, o.providers || {});
 
   const providerFor = desc => {
