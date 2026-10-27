@@ -108,7 +108,7 @@ export function calcularAvisos(d: Dados): Aviso[] {
     passos: ["Abra a aba Divulgar e veja o motivo ao lado de cada rede.", "Se for a chave da Meta, rode o configurar-meta.bat no PC."],
   });
   if (d.cloudflare && !d.cloudflare.configurado) a.push({
-    cor: "cinza", texto: "A Central não vê o uso do Cloudflare", aba: "sistema",
+    cor: "cinza", texto: "Falta ligar", aba: "sistema",
     oque: "Falta a chave de leitura do Cloudflare (CLOUDFLARE_ANALYTICS_TOKEN).", impacto: "O site funciona normal; só o número de visitas do dia não aparece aqui.",
     passos: [
       "Abra https://dash.cloudflare.com/profile/api-tokens e clique Create Token.",
