@@ -83,6 +83,7 @@ export default function ApiKeysPage() {
           <button
             onClick={() => setAbrirForm(true)}
             aria-label="Criar nova chave de API"
+            data-testid="nova-chave-button"
             className="bg-nexia-cyan text-black font-semibold px-4 py-2 rounded-lg hover:bg-nexia-cyan-dim transition"
           >
             Nova chave
