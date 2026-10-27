@@ -92,4 +92,12 @@ async function resumo(db, { agora = Date.now(), rotas = ROTAS } = {}) {
   };
 }
 
-module.exports = { ROTAS, COLECAO, DIAS, horaDe, abrirBanco, guardarAmostra, resumo };
+/** Última medição de hora em hora (o cron do Worker mede o próprio Worker sem problema; um pedido da página não consegue). */
+async function ultimaAmostra(db, agora = Date.now()) {
+  if (!db) return null;
+  const snap = await db.collection(COLECAO).where('hora', '>=', horaDe(agora - 3 * HORA)).get();
+  const horas = snap.docs.map((d) => d.data()).filter((h) => h && h.rotas).sort((a, b) => (a.hora < b.hora ? 1 : -1));
+  return horas[0] || null;
+}
+
+module.exports = { ultimaAmostra, ROTAS, COLECAO, DIAS, horaDe, abrirBanco, guardarAmostra, resumo };

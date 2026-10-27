@@ -5,7 +5,8 @@ import { apiPath } from "@/config/env";
 // Central NEXIA: conversa com /api/central (só o administrador). Cada parte vem num pedido separado.
 
 export interface Produto { id: string; nome: string; icone: string; frase: string; logo?: string; segmento?: string; site?: string; painel?: string; suporte?: string; pendente?: boolean; tipo?: "produto" | "cliente" | "tenant" | string }
-export interface Medida { id: string; ok: boolean; codigo: number; tempo: number; lento: boolean }
+export interface Medida { id: string; ok: boolean; codigo: number; tempo: number; lento: boolean; quando?: string | null }
+export interface Maquina { nome: string; cpu?: string; ramTotal?: number | null; ramLivre?: number | null; modelos?: string[]; ollamaOk?: boolean; visto_em?: string; online: boolean }
 export interface Tarefa { numero: number; titulo: string; link: string; quando: string }
 export interface Robo { arquivo: string; nome: string; podeRodar: boolean; situacao: "ok" | "erro" | "rodando" | "nunca" | "sem-acesso"; quando: string | null; link: string | null }
 export interface Dinheiro {
@@ -64,11 +65,12 @@ export interface Dados {
   clientes?: { empresas: { site: string; nome: string; leilao: boolean }[]; personais: Personal[]; pixAguardando?: PixPendente[]; usoIa?: UsoIaResumo; receitaMes?: number };
   leads?: Leads;
   vagas?: Vagas;
+  maquinas?: { ligado: boolean; maquinas: Maquina[] };
   erros?: { erros: ErroRecente[] }; // aba Sistema, só quando abre
   historico?: Historico; // só a aba Sistema pede (lê 30 dias; não entra no "conferir" de 5 em 5 min)
 }
 export type Parte = keyof Dados;
-export const PARTES: Parte[] = ["lista", "saude", "dinheiro", "cortex", "robos", "divulga", "banco", "cloudflare", "cotas", "empresa", "clientes", "leads", "vagas"];
+export const PARTES: Parte[] = ["lista", "saude", "dinheiro", "cortex", "robos", "divulga", "banco", "cloudflare", "cotas", "empresa", "clientes", "leads", "vagas", "maquinas"];
 
 export function useCentral() {
   const { getToken } = useAuth();
