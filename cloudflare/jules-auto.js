@@ -93,6 +93,7 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
   const { mandarParaJules } = require('../netlify/functions/central/pedidos-jules.js');
   const p = criarPedidos(env, fetchFn);
   if (!p.temToken) return { skipped: 'sem token do GitHub' };
+  await garantirRotulo(p);
   const travadas = await p.gh(`${REPO}/issues?state=open&labels=cortex-travado&per_page=100&sort=created&direction=asc`);
   const planejadas = await p.gh(`${REPO}/issues?state=open&labels=cortex-jules&per_page=50&sort=created&direction=asc`).catch(() => []);
   const pl = Array.isArray(planejadas) ? planejadas : [];
