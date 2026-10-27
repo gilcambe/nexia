@@ -1,4 +1,25 @@
-import { groqChat } from '../config/aiProviders';
+import { AI_PROVIDERS } from '../config/aiProviders';
+
+async function groqChat(messages: Array<{ role: string; content: string }>, options?: { temperature?: number; maxTokens?: number }): Promise<string> {
+  const resp = await fetch(AI_PROVIDERS.groq.baseUrl, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${process.env.GROQ_API_KEY || ''}`,
+    },
+    body: JSON.stringify({
+      model: AI_PROVIDERS.groq.model,
+      messages,
+      temperature: options?.temperature ?? 0,
+      max_tokens: options?.maxTokens ?? 300,
+    }),
+  });
+  if (!resp.ok) {
+    throw new Error(`Erro na API Groq: ${resp.statusText}`);
+  }
+  const data = await resp.json() as any;
+  return data.choices?.[0]?.message?.content || '';
+}
 
 const SENSITIVE_PATTERNS = [
   // Senhas e credenciais
