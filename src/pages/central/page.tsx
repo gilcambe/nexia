@@ -170,7 +170,6 @@ export default function CentralPage() {
               <span className="leading-tight">
                 <span className="block text-xs font-medium text-slate-700">
                   {carregando && !conferidoEm ? "Conferindo…" : 
-                   vermelho ? "Algo parou" : 
                    avisos.length ? `${avisos.length} coisas precisam de você` : 
                    "Tudo funcionando"}
                 </span>
