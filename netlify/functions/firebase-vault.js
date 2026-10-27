@@ -21,11 +21,12 @@ function lerConta(env, letra = 'B') {
 
 // Bancos grátis do Vault em ordem (B, C, D... H: cada um é um projeto Firebase grátis criado com scripts/criar-banco.bat): o primeiro é o ativo e, se a cota dele acabar, passa para o próximo.
 function criarBancoB(env = process.env) {
-  const contas = ['B', 'C', 'D', 'E', 'F', 'G', 'H'].map(l => lerConta(env, l)).filter(Boolean);
+  const contas = ['B', 'C', 'D', 'E', 'F', 'G', 'H'].map(l => { const sa = lerConta(env, l); return sa && Object.assign(sa, { _letra: l }); }).filter(Boolean);
   if (!contas.length) return null;
   const { Firestore } = require('../../lib/firebase-lite/firestore');
   const { createTokenSource } = require('../../lib/firebase-lite/google-auth');
-  const bancos = contas.map(sa => { const tokens = createTokenSource(sa); return { projectId: sa.project_id, getToken: () => tokens.getToken() }; });
+  // #2188: os bancos novos (D..H) só entram no rodízio depois de terem os índices compostos (senão a tarefa pula de banco no meio).
+  const bancos = contas.map(sa => { const tokens = createTokenSource(sa); return { projectId: sa.project_id, getToken: () => tokens.getToken(), conferirIndices: !['B', 'C'].includes(sa._letra) }; });
   const db = new Firestore({ projectId: bancos[0].projectId, getToken: bancos[0].getToken });
   // Último recurso fora do Firebase: Cloudflare D1 (grátis). Só entra se o token e a conta da Cloudflare estiverem no ambiente.
   // Token próprio (só D1 Edit): NEXIA_D1_TOKEN + NEXIA_D1_ACCOUNT_ID. Nunca o token de deploy.
