@@ -3,9 +3,8 @@
 // GET /api/escada  → { semana, percentCortex, fila, julesHoje, julesLimite, cota, faseB }
 // Usa o token do servidor (NEXIA_GITHUB_TOKEN) para ler as issues do repositório.
 
-const { getMw } = require('./middleware');
-
 async function createHandler(deps = {}) {
+  const getMw = deps.getMw || (() => require('./middleware'));
   const getGithub = deps.getGithub || (() => require('./central/github').criarGithub());
   const env = deps.env || process.env;
   const fetchFn = deps.fetch || ((...a) => fetch(...a));
@@ -25,8 +24,8 @@ async function createHandler(deps = {}) {
       const owner = env.GITHUB_REPO_OWNER || 'gilcambe';
       const repo = env.GITHUB_REPO || 'nexia';
 
-      // Lista as issues do repositório (token do servidor)
-      const issues = await gh.listIssues(owner, repo, { estado: 'open', perPage: 100 });
+      // Lista as issues abertas do repositório (token do servidor)
+      const issues = await gh.api('/issues?state=open&per_page=100');
 
       const agora = new Date();
       const inicioSemana = new Date(agora);
@@ -48,10 +47,11 @@ async function createHandler(deps = {}) {
       // fila: issues com label cortex-fila abertas
       const fila = issues.filter((i) => (i.labels || []).some((l) => String(l.name || l).includes('cortex-fila'))).length;
 
-      // julesHoje: issues fechadas hoje com label jules
+      // julesHoje: issues fechadas hoje com label jules (busca também fechadas)
       const inicioHoje = new Date(agora);
       inicioHoje.setHours(0, 0, 0, 0);
-      const julesHoje = issues.filter((i) => {
+      const fechadasHoje = await gh.api('/issues?state=closed&per_page=100').catch(() => []);
+      const julesHoje = fechadasHoje.filter((i) => {
         const fechado = new Date(i.closed_at || 0);
         return fechado >= inicioHoje && (i.labels || []).some((l) => String(l.name || l).includes('jules'));
       }).length;
