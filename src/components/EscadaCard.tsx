@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface EscadaDados {
   faseB?: boolean;
@@ -20,28 +20,28 @@ export default function EscadaCard() {
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    async function carregarDados() {
-      try {
-        const res = await fetch('/escada');
-        if (!res.ok) throw new Error('Falha ao carregar /escada');
-        const json = await res.json();
+    fetch("/escada")
+      .then((res) => {
+        if (!res.ok) throw new Error("Falha ao carregar /escada");
+        return res.json();
+      })
+      .then((json) => {
         setDados(json);
-      } catch (e) {
+        setCarregando(false);
+      })
+      .catch(() => {
         setDados({
           faseB: true,
           fila: 12,
-          julesHoje: '8/15',
+          julesHoje: "8/15",
           semana: {
             cortex: 80,
             iasGratis: 95,
             claude: 70
           }
         });
-      } finally {
         setCarregando(false);
-      }
-    }
-    carregarDados();
+      });
   }, []);
 
   const progressoCortex = dados?.semana?.cortex ?? dados?.cortexProgresso ?? 75;
@@ -49,14 +49,14 @@ export default function EscadaCard() {
   const progressoClaude = dados?.semana?.claude ?? dados?.claudeProgresso ?? 60;
 
   return (
-    <div className="rounded-xl bg-nexia-surface p-4 border border-nexia-border space-y-3 shadow-sm" data-testid="escada-card">
+    <div className="rounded-xl bg-nexia-surface p-4 border border-nexia-border space-y-3 shadow-sm">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-xl">🪜</span>
           <h3 className="font-semibold text-white">Escada</h3>
         </div>
         {dados?.faseB && (
-          <span className="px-2 py-0.5 text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center gap-1" data-testid="selo-fase-b">
+          <span className="px-2 py-0.5 text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
             Pronto para fase B
           </span>
@@ -121,7 +121,7 @@ export default function EscadaCard() {
             </div>
             <div className="bg-nexia-surface2 p-2 rounded-lg">
               <div className="text-nexia-muted">Jules hoje</div>
-              <div className="font-semibold text-white mt-0.5 text-sm">Jules hoje {dados?.julesHoje ?? '0/15'}</div>
+              <div className="font-semibold text-white mt-0.5 text-sm">{dados?.julesHoje ?? "0/15"}</div>
             </div>
           </div>
         </div>
