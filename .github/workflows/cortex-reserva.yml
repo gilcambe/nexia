@@ -1,4 +1,4 @@
-# NEXIA — Reserva do Cortex: quando a Claude fica sem créditos, uma conta grátis ligada (Gemini, OpenAI, Anthropic, OpenRouter)
+# NEXIA — Reserva do Cortex: quando o Cortex e o Jules travam (cloudflare/jules-auto.js) ou a Claude fica sem créditos, uma conta grátis ligada (Gemini, OpenAI, Anthropic, OpenRouter)
 # aplica a issue cortex-fila e abre PR nexia/reserva-N. Tenta cada conta na ordem; em erro de cota passa para a próxima.
 name: Cortex Reserva
 
@@ -36,6 +36,10 @@ jobs:
       MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      # #1958: vagas da Central (Conectar IAs). Valor "provedor:chave"; entram primeiro.
+      IA_VAGA_1: ${{ secrets.IA_VAGA_1 }}
+      IA_VAGA_2: ${{ secrets.IA_VAGA_2 }}
+      IA_VAGA_3: ${{ secrets.IA_VAGA_3 }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -63,6 +67,19 @@ jobs:
           git checkout -q -b "nexia/reserva-$NUMERO-$GITHUB_RUN_NUMBER"
           PROMPT="Aplique esta tarefa no repositório. Só grátis, não remova nenhuma função existente. $(cat "$RUNNER_TEMP/tarefa.md")"
           contas=()
+          for N in 1 2 3; do
+            V="IA_VAGA_$N"; V="${!V}"
+            [ -z "$V" ] && continue
+            PROV="${V%%:*}"; CH="${V#*:}"
+            echo "::add-mask::$CH"
+            case "$PROV" in
+              gemini) contas+=("vaga-$N-gemini|gemini/gemini-2.5-flash|GEMINI_API_KEY|$CH") ;;
+              groq) contas+=("vaga-$N-groq|groq/llama-3.3-70b-versatile|GROQ_API_KEY|$CH") ;;
+              openrouter) contas+=("vaga-$N-openrouter|openrouter/deepseek/deepseek-chat-v3-0324:free|OPENROUTER_API_KEY|$CH") ;;
+              mistral) contas+=("vaga-$N-mistral|mistral/codestral-latest|MISTRAL_API_KEY|$CH") ;;
+              nvidia) contas+=("vaga-$N-nvidia|nvidia_nim/meta/llama-3.3-70b-instruct|NVIDIA_NIM_API_KEY|$CH") ;;
+            esac
+          done
           if [ -n "$RESERVA_GEMINI_KEY" ]; then
             # Modelo do Gemini muda com o tempo (o 2.0 foi desligado): pergunta ao Google qual "flash" está disponível agora.
             # Vários modelos candidatos: alguns não têm cota grátis (limit 0); o laço abaixo passa para o próximo.

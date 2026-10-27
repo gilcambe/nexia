@@ -44,7 +44,7 @@ test('JULES-AUTO2: fora da batida, sem chave ou desligado não faz nada', async 
   assert.ok((await rodar(AS_20, { env: { ...env, JULES_AUTO: '0' }, fetchFn: f.fetchFn })).skipped);
   assert.strictEqual(f.chamadas.length, 0);
   const vazio = falso([]);
-  assert.deepStrictEqual(await rodar(AS_20, { env, fetchFn: vazio.fetchFn }), { retomadas: [], humano: [], enviados: 0 });
+  assert.deepStrictEqual(await rodar(AS_20, { env, fetchFn: vazio.fetchFn }), { retomadas: [], reserva: [], humano: [], enviados: 0 });
 });
 
 const L = (...n) => n.map(name => ({ name }));
@@ -62,11 +62,13 @@ test('JULES-AUTO3: escada: Jules sem PR no tempo volta ao Cortex do zero; 2ª ve
     { number: 14, labels: L('cortex-travado', 'so-humano', 'jules-enviado', 'cortex-retomada'), updated_at: velho },
     { number: 15, labels: L('cortex-travado', 'jules-enviado'), updated_at: velho },
     { number: 16, labels: L('cortex-travado', 'vez-do-claude', 'jules-enviado', 'cortex-retomada'), updated_at: velho },
+    { number: 17, labels: L('cortex-travado', 'jules-enviado', 'cortex-retomada', 'reserva-tentou'), updated_at: velho },
   ];
   // PR recusado pelo revisor grátis conta como "sem PR": a #15 sobe de degrau.
   const prs = [{ title: 'fix', body: 'Refs #13' }, { title: 'outro', body: 'Refs #130' }, { title: 'x', body: 'Fecha #15', labels: L('revisor-recusou') }];
   const d = decidir(issues, prs, agora, nomes);
-  assert.deepStrictEqual(d, { enviar: null, retomar: [10, 15], humano: [11] });
+  // #1958: 2ª volta sem PR → IAs conectadas (reserva); reserva também sem PR → Claude.
+  assert.deepStrictEqual(d, { enviar: null, retomar: [10, 15], reserva: [11], humano: [17] });
 });
 
 test('JULES-AUTO4: retomada tira travado, jules-enviado e tentativas e põe cortex-retomada', async () => {

@@ -42,6 +42,13 @@ export interface Cota { id: string; nome: string; limite: number; usado: number 
 export interface Cotas { itens: Cota[]; perto: string[]; frear: boolean; limiar: number; firestoreErro?: string; em: string }
 export interface ErroRecente { em: number; rid: string; rota: string; metodo: string; codigo: number; msg: string }
 export interface Historico { dias: number; amostras: number; desde: string | null; rotas: RotaSaude[]; porDia: { dia: string; disponibilidade: number }[] }
+// Conectar IAs (#1958): 3 vagas de chave grátis. A chave nunca vem para a página.
+export type VagaSituacao = "ok" | "sem-cota" | "recusada" | "erro";
+export interface VagaTeste { situacao: VagaSituacao; tempo: number; motivo?: string; resposta?: string; em: string; onde: "central" | "robo" }
+export interface VagaUso { vaga: number; provedor: string; pr: number; link: string; tarefa: number | null; quando: string; entrou: boolean }
+export interface Vaga { vaga: number; ligada: boolean; provedor: string | null; salvaEm: string | null; teste: VagaTeste | null; usos: VagaUso[] }
+export interface ProvedorVaga { id: string; nome: string; site: string; logo: string | null; passos: string[] }
+export interface Vagas { vagas: Vaga[]; provedores: ProvedorVaga[]; podeLerSegredos: boolean }
 export interface Dados {
   lista?: { produtos: Produto[]; links: { nome: string; url: string }[] };
   saude?: { produtos: Medida[]; em: string };
@@ -55,11 +62,12 @@ export interface Dados {
   empresa?: { fornecedores: Fornecedor[] };
   clientes?: { empresas: { site: string; nome: string; leilao: boolean }[]; personais: Personal[]; pixAguardando?: PixPendente[]; usoIa?: UsoIaResumo; receitaMes?: number };
   leads?: Leads;
+  vagas?: Vagas;
   erros?: { erros: ErroRecente[] }; // aba Sistema, só quando abre
   historico?: Historico; // só a aba Sistema pede (lê 30 dias; não entra no "conferir" de 5 em 5 min)
 }
 export type Parte = keyof Dados;
-export const PARTES: Parte[] = ["lista", "saude", "dinheiro", "cortex", "robos", "divulga", "banco", "cloudflare", "cotas", "empresa", "clientes", "leads"];
+export const PARTES: Parte[] = ["lista", "saude", "dinheiro", "cortex", "robos", "divulga", "banco", "cloudflare", "cotas", "empresa", "clientes", "leads", "vagas"];
 
 export function useCentral() {
   const { getToken } = useAuth();

@@ -1,0 +1,35 @@
+# Central → Conectar IAs (#1958): testa as chaves das 3 vagas (IA_VAGA_1..3) e grava só o resultado na issue de estado.
+# Roda pelo botão "Testar agora" da Central e uma vez por dia.
+name: IA Vagas (teste)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 11 * * *'
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: ia-vagas
+  cancel-in-progress: true
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Testar as vagas
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IA_VAGA_1: ${{ secrets.IA_VAGA_1 }}
+          IA_VAGA_2: ${{ secrets.IA_VAGA_2 }}
+          IA_VAGA_3: ${{ secrets.IA_VAGA_3 }}
+        run: node scripts/ia-vagas-teste.js
