@@ -1,0 +1,25 @@
+{
+  "plans": [
+    {
+      "id": "free",
+      "name": "Gratuito",
+      "sites": 1,
+      "credits": 10,
+      "price": 0
+    },
+    {
+      "id": "plus",
+      "name": "Plus",
+      "sites": 3,
+      "credits": 50,
+      "price": 29
+    },
+    {
+      "id": "pro",
+      "name": "Pro",
+      "sites": -1,
+      "credits": -1,
+      "price": 99
+    }
+  ]
+}
