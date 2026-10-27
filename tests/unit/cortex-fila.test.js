@@ -208,7 +208,7 @@ test('CF-852d. concluir leva o created_at da issue em acao.desde', () => {
   assert.equal(a[0].desde, '2026-10-18T10:00:00Z');
 });
 
-test('(a) Simular execução com conclusão=\'failure\' e PR rascunho que altera caminho citado – deve manter parte aberta', async () => {
+test('(a) Simular execução com conclusão failure e PR rascunho que altera caminho citado – deve manter parte aberta', async () => {
   const ok = await comFetch([
     [/\/contents\//, [200, {}]],
     [/\/commits\?/, [200, []]],
@@ -218,7 +218,7 @@ test('(a) Simular execução com conclusão=\'failure\' e PR rascunho que altera
   assert.equal(ok, false);
 });
 
-test('(b) Simular commit em arquivo diferente de lista após "desde" – não deve concluir', async () => {
+test('(b) Simular commit em arquivo diferente de lista após desde – não deve concluir', async () => {
   const ok = await comFetch([
     [/\/contents\//, [200, {}]],
     [/\/commits\?/, [200, [{ filename: 'outro/arquivo.js' }]]],
