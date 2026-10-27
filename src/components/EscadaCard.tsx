@@ -33,9 +33,9 @@ export default function EscadaCard() {
     carregarDados();
   }, []);
 
-  const progressoCortex = dados?.semana?.cortex ?? dados?.semana?.cortex ?? 75;
-  const progressoIasGratis = dados?.semana?.iasGratis ?? dados?.semana?.iasGratis ?? 90;
-  const progressoClaude = dados?.semana?.claude ?? dados?.semana?.claude ?? 60;
+  const progressoCortex = dados?.semana?.cortex ?? 0;
+  const progressoIasGratis = dados?.semana?.iasGratis ?? 0;
+  const progressoClaude = dados?.semana?.claude ?? 0;
 
   if (carregando) {
     return (
