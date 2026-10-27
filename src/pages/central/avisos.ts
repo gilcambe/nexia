@@ -111,10 +111,11 @@ export function calcularAvisos(d: Dados): Aviso[] {
     cor: "cinza", texto: "A Central não vê o uso do Cloudflare", aba: "sistema",
     oque: "Falta a chave de leitura do Cloudflare (CLOUDFLARE_ANALYTICS_TOKEN).", impacto: "O site funciona normal; só o número de visitas do dia não aparece aqui.",
     passos: [
-      "Abra o link \"Criar a chave no Cloudflare\" e toque em \"Create Token\".",
-      "Escolha \"Create Custom Token\". Em Permissions: Account → Account Analytics → Read. Toque em \"Continue\" e \"Create Token\". Copie.",
-      "Abra o GitHub: Settings → Secrets and variables → Actions → New repository secret. Nome: CLOUDFLARE_ANALYTICS_TOKEN. Cole e salve.",
-      "Na próxima publicação (ou em até 1 dia) o número aparece aqui.",
+      "Abra https://dash.cloudflare.com/profile/api-tokens e clique Create Token.",
+      "Em \"Read analytics and logs\" clique Use template (só leitura, grátis).",
+      "Clique Continue to summary e Create Token. Copie o código.",
+      "Abra https://dash.cloudflare.com → Workers & Pages → nexia → Settings → Variables and Secrets → Add → tipo Secret, nome CLOUDFLARE_ANALYTICS_TOKEN, cole o código, Deploy.",
+      "Volte na Central e clique Conferir agora.",
     ],
     link: { rotulo: "Criar a chave no Cloudflare", url: "https://dash.cloudflare.com/profile/api-tokens" },
   });
