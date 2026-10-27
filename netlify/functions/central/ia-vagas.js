@@ -38,11 +38,44 @@ function classificar(motivo) {
   return 'erro';
 }
 
-/** Manda "Responda só: ok" usando só esta chave. Devolve { situacao: ok|sem-cota|recusada|erro, tempo, motivo? }. */
+// Conferência direta da chave (#1958): um GET simples no serviço, sem depender de modelo nem do roteador.
+// 200 = chave boa; 401/403 (ou API_KEY_INVALID do Google) = recusada; 429 = cota. NVIDIA não tem GET com chave: vai pela conversa.
+const CONFERIR = {
+  gemini: (k) => ({ url: 'https://generativelanguage.googleapis.com/v1beta/models?pageSize=1&key=' + encodeURIComponent(k), headers: {} }),
+  groq: (k) => ({ url: 'https://api.groq.com/openai/v1/models', headers: { Authorization: 'Bearer ' + k } }),
+  openrouter: (k) => ({ url: 'https://openrouter.ai/api/v1/key', headers: { Authorization: 'Bearer ' + k } }),
+  mistral: (k) => ({ url: 'https://api.mistral.ai/v1/models', headers: { Authorization: 'Bearer ' + k } }),
+};
+
+async function conferirDireto(provedor, chave, fetchImpl, ms) {
+  const { url, headers } = CONFERIR[provedor](chave);
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), ms);
+  const t0 = Date.now();
+  try {
+    const r = await fetchImpl(url, { method: 'GET', headers: { ...headers, 'User-Agent': 'kernex-central' }, signal: ctl.signal });
+    const tempo = Date.now() - t0;
+    if (r.ok) return { situacao: 'ok', tempo };
+    const corpo = (await r.text().catch(() => '')).slice(0, 400);
+    const nome = PROVEDORES[provedor].nome;
+    if (r.status === 401 || r.status === 403 || /API_KEY_INVALID|invalid api key|invalid_api_key/i.test(corpo)) return { situacao: 'recusada', tempo, motivo: `${nome} recusou a chave (${r.status}).` };
+    if (r.status === 429) return { situacao: 'sem-cota', tempo, motivo: `${nome}: cota de hoje acabou (429).` };
+    return { situacao: 'erro', tempo, motivo: `${nome} respondeu ${r.status}.` };
+  } catch (e) {
+    return { situacao: 'erro', tempo: Date.now() - t0, motivo: ctl.signal.aborted ? `${PROVEDORES[provedor].nome} demorou mais de ${ms / 1000} s.` : `Sem conexão com ${PROVEDORES[provedor].nome} agora.` };
+  } finally { clearTimeout(timer); }
+}
+
+/** Confere a chave (GET direto; NVIDIA manda "Responda só: ok"). Devolve { situacao: ok|sem-cota|recusada|erro, tempo, motivo? }. */
 async function testarChave(provedor, chave, { createRouter = require('../../../nexia-ai/model-router').createRouter, fetchImpl, ms = 15000 } = {}) {
   const p = PROVEDORES[provedor];
   if (!p) return { situacao: 'erro', tempo: 0, motivo: 'Provedor não aceito.' };
-  const router = createRouter({ env: { [p.env]: chave }, ...(fetchImpl ? { fetchImpl } : {}) });
+  const f = fetchImpl || ((...a) => fetch(...a));
+  if (CONFERIR[provedor]) {
+    const r = await conferirDireto(provedor, chave, f, ms);
+    return r.motivo ? { ...r, motivo: limpar(r.motivo).split(chave).join('***') } : r;
+  }
+  const router = createRouter({ env: { [p.env]: chave }, fetchImpl: f });
   const t0 = Date.now();
   let timer;
   try {
@@ -143,12 +176,19 @@ async function salvar(gh, { vaga, provedor, chave }, deps = {}) {
   if (k.length < 16 || k.length > 300 || /\s/.test(k)) return { status: 400, corpo: { error: 'Essa chave não parece certa. Copie de novo, sem espaços.' } };
   const teste = await testarChave(provedor, k, deps);
   const em = new Date().toISOString();
-  if (teste.situacao === 'recusada' || teste.situacao === 'erro') {
-    return { status: 200, corpo: { ok: false, teste, mensagem: teste.situacao === 'recusada' ? 'A IA recusou essa chave. Confira se copiou inteira, ou crie outra.' : 'A IA não respondeu agora; não salvei. Tente de novo em 1 minuto.' } };
+  if (teste.situacao === 'recusada') {
+    return { status: 200, corpo: { ok: false, teste, mensagem: `${teste.motivo} Confira se copiou a chave inteira, ou crie outra.` } };
   }
   await gravarSegredo(gh, n, provedor, k);
-  await gravarEstado(gh, (v) => { v[n] = { provedor, salvaEm: em, teste: { ...teste, em, onde: 'central' } }; }).catch(() => null);
-  return { status: 200, corpo: { ok: true, teste, mensagem: teste.situacao === 'ok' ? `Vaga ${n} ligada: ${PROVEDORES[provedor].nome} respondeu em ${(teste.tempo / 1000).toFixed(1)} s.` : `Vaga ${n} salva. A chave é boa, mas a cota de hoje acabou; volta amanhã sozinha.` } };
+  // Sem conexão daqui (o servidor não alcançou o serviço): salva assim mesmo e o robô ia-vagas.yml testa pelo GitHub.
+  const guardado = teste.situacao === 'erro' ? null : { ...teste, em, onde: 'central' };
+  await gravarEstado(gh, (v) => { v[n] = { provedor, salvaEm: em, teste: guardado }; }).catch(() => null);
+  if (!guardado && deps.rodarRobo) await deps.rodarRobo().catch(() => null);
+  const nome = PROVEDORES[provedor].nome;
+  const mensagem = teste.situacao === 'ok' ? `Vaga ${n} ligada: ${nome} aceitou a chave em ${(teste.tempo / 1000).toFixed(1)} s.`
+    : teste.situacao === 'sem-cota' ? `Vaga ${n} salva. A chave é boa, mas a cota de hoje acabou; volta amanhã sozinha.`
+      : `Vaga ${n} salva. Daqui não deu para testar (${teste.motivo}); o robô do GitHub testa em 1 ou 2 minutos.`;
+  return { status: 200, corpo: { ok: true, teste, mensagem } };
 }
 
 async function apagar(gh, { vaga }) {
