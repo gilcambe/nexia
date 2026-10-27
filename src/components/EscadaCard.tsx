@@ -1,12 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
+import { useCentral } from '../central/api';
 
 interface EscadaDados {
   faseB?: boolean;
   fila?: number;
   julesHoje?: string;
-  cortexProgresso?: number;
-  iasGratisProgresso?: number;
-  claudeProgresso?: number;
   semana?: {
     cortex?: number;
     iasGratis?: number;
@@ -15,41 +13,34 @@ interface EscadaDados {
 }
 
 export default function EscadaCard() {
+  const { agir } = useCentral();
   const [dados, setDados] = useState<EscadaDados | null>(null);
-  const [carregando, setCarregando] = useState<boolean>(true);
+  const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/escada")
-      .then((res) => {
-        if (!res.ok) throw new Error("Falha ao carregar /escada");
-        return res.json();
-      })
-      .then((json) => {
-        setDados(json);
+    const carregarDados = async () => {
+      setCarregando(true);
+      try {
+        const resultado = await agir<EscadaDados>({ acao: 'escada' });
+        setDados(resultado);
+      } catch (e) {
+        setErro('Falha ao carregar dados da escada');
+        // Não usar dados hardcode, deixar em branco ou mensagem de erro
+      } finally {
         setCarregando(false);
-      })
-      .catch(() => {
-        setDados({
-          faseB: true,
-          fila: 12,
-          julesHoje: "8/15",
-          semana: {
-            cortex: 80,
-            iasGratis: 95,
-            claude: 70
-          }
-        });
-        setCarregando(false);
-      });
-  }, []);
+      }
+    };
 
-  const progressoCortex = dados?.semana?.cortex ?? dados?.cortexProgresso ?? 75;
-  const progressoIasGratis = dados?.semana?.iasGratis ?? dados?.iasGratisProgresso ?? 90;
-  const progressoClaude = dados?.semana?.claude ?? dados?.claudeProgresso ?? 60;
+    carregarDados();
+  }, [agir]);
+
+  const progressoCortex = dados?.semana?.cortex || 0;
+  const progressoIasGratis = dados?.semana?.iasGratis || 0;
+  const progressoClaude = dados?.semana?.claude || 0;
 
   return (
-    <div className="rounded-xl bg-nexia-surface p-4 border border-nexia-border space-y-3 shadow-sm">
+    <div className="rounded-xl bg-nexia-surface p-4 border border-nexia-border space-y-3 shadow-sm" data-testid="escada-card">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-xl">🪜</span>
@@ -63,11 +54,15 @@ export default function EscadaCard() {
         )}
       </div>
 
-      {carregando ? (
+      {carregando && (
         <div className="text-xs text-nexia-muted py-2">Carregando dados da escada...</div>
-      ) : erro ? (
+      )}
+      
+      {erro && (
         <div className="text-xs text-red-400 py-2">{erro}</div>
-      ) : (
+      )}
+      
+      {!carregando && !erro && (
         <div className="space-y-3">
           <div className="space-y-2">
             <div className="text-xs font-medium text-nexia-muted">Progresso da semana (meta: 100%)</div>
@@ -117,11 +112,11 @@ export default function EscadaCard() {
           <div className="grid grid-cols-2 gap-2 pt-1 border-t border-nexia-border/50 text-xs">
             <div className="bg-nexia-surface2 p-2 rounded-lg">
               <div className="text-nexia-muted">Números da fila</div>
-              <div className="font-semibold text-white mt-0.5 text-sm">{dados?.fila ?? 0} itens</div>
+              <div className="font-semibold text-white mt-0.5 text-sm">{dados?.fila || 0} itens</div>
             </div>
             <div className="bg-nexia-surface2 p-2 rounded-lg">
               <div className="text-nexia-muted">Jules hoje</div>
-              <div className="font-semibold text-white mt-0.5 text-sm">{dados?.julesHoje ?? "0/15"}</div>
+              <div className="font-semibold text-white mt-0.5 text-sm">{dados?.julesHoje || "0/15"}</div>
             </div>
           </div>
         </div>
