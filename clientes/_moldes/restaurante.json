@@ -1,0 +1,76 @@
+{
+  "versao": 1,
+  "moldes": {
+    "reservas": {
+      "nome": "Reservas de Restaurante",
+      "descricao": "Molde para agendamento de mesas em restaurantes",
+      "entities": [
+        {
+          "key": "reservas",
+          "label": "Reservas",
+          "singular": "Reserva",
+          "fields": [
+            {
+              "key": "cliente",
+              "label": "Cliente",
+              "type": "text",
+              "required": true
+            },
+            {
+              "key": "mesa",
+              "label": "Mesa",
+              "type": "text",
+              "required": false
+            },
+            {
+              "key": "data",
+              "label": "Data",
+              "type": "date",
+              "required": true
+            },
+            {
+              "key": "hora",
+              "label": "Horário",
+              "type": "text",
+              "required": true
+            },
+            {
+              "key": "status",
+              "label": "Status",
+              "type": "select",
+              "options": [
+                "Agendado",
+                "Confirmado",
+                "Concluído",
+                "Cancelado"
+              ],
+              "required": true
+            },
+            {
+              "key": "valor",
+              "label": "Valor",
+              "type": "money",
+              "required": false
+            },
+            {
+              "key": "observacoes",
+              "label": "Observações",
+              "type": "textarea",
+              "required": false
+            }
+          ],
+          "sample": [
+            {
+              "cliente": "João Silva",
+              "mesa": "12",
+              "data": "2026-10-28",
+              "hora": "19:00",
+              "status": "Confirmado",
+              "valor": "200"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
