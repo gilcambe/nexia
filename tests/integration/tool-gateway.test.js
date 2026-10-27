@@ -12,6 +12,7 @@ const { initializeTestEnvironment, assertFails } = require('@firebase/rules-unit
 const { createVault, createExecutionContext } = require('../../nexia-ai/vault');
 const { createGateway, DEFAULT_TOOLS, QUEUE_COLLECTION } = require('../../nexia-ai/tool-gateway');
 const { createHandler } = require('../../nexia-ai/api');
+const { comRetentativa } = require('./_github-real');
 
 const RUN = crypto.randomBytes(4).toString('hex');
 const T = `tools-${RUN}`;
@@ -204,12 +205,14 @@ test('G9. regras: a fila (entrada completa) é inacessível a clientes; o log se
   } finally { await env.cleanup(); }
 });
 
-test('G10. GitHub real (gilcambe/nexia): get_repo e get_checks pelo gateway', { skip: !process.env.NEXIA_TEST_GITHUB_TOKEN && 'sem NEXIA_TEST_GITHUB_TOKEN' }, async () => {
+test('G10. GitHub real (gilcambe/nexia): get_repo e get_checks pelo gateway', { skip: !process.env.NEXIA_TEST_GITHUB_TOKEN && 'sem NEXIA_TEST_GITHUB_TOKEN' }, async (t) => {
   const g = createGateway({ db, vault, env: { GITHUB_TOKEN: process.env.NEXIA_TEST_GITHUB_TOKEN } });
-  const repo = await g.invoke(agent, { projectId: ids.project, tool: 'github.get_repo', input: {} });
+  const repo = await comRetentativa(async () => g.invoke(agent, { projectId: ids.project, tool: 'github.get_repo', input: {} }), t);
+  if (!repo) return;
   assert.strictEqual(repo.status, 'succeeded', JSON.stringify(repo.error));
   assert.strictEqual(repo.result.full_name, 'gilcambe/nexia');
-  const checks = await g.invoke(agent, { projectId: ids.project, tool: 'github.get_checks', input: { ref: 'develop' } });
+  const checks = await comRetentativa(async () => g.invoke(agent, { projectId: ids.project, tool: 'github.get_checks', input: { ref: 'develop' } }), t);
+  if (!checks) return;
   assert.strictEqual(checks.status, 'succeeded', JSON.stringify(checks.error));
   assert.ok(checks.result.total >= 1, `checks em develop: ${checks.result.total}`);
 });

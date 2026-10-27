@@ -10,6 +10,7 @@ const { createVault, createExecutionContext } = require('../../nexia-ai/vault');
 const { createGateway, QUEUE_COLLECTION } = require('../../nexia-ai/tool-gateway');
 const { createHandler } = require('../../nexia-ai/api');
 const { createFakeGithub } = require('../fake-github');
+const { comRetentativa } = require('./_github-real');
 
 const RUN = crypto.randomBytes(4).toString('hex');
 const T = `gh-${RUN}`;
@@ -135,11 +136,13 @@ test('GH6. catálogo: risco e autonomia mínima de cada ferramenta do GitHub em 
   });
 });
 
-test('GH7. GitHub real (gilcambe/nexia): branches, arquivo, histórico, diff, PRs e Actions pelo gateway', { skip: !process.env.NEXIA_TEST_GITHUB_TOKEN && 'sem NEXIA_TEST_GITHUB_TOKEN' }, async () => {
+test('GH7. GitHub real (gilcambe/nexia): branches, arquivo, histórico, diff, PRs e Actions pelo gateway', { skip: !process.env.NEXIA_TEST_GITHUB_TOKEN && 'sem NEXIA_TEST_GITHUB_TOKEN' }, async (t) => {
   await setAutonomy(0);
   const g = createGateway({ db, vault, env: { GITHUB_TOKEN: process.env.NEXIA_TEST_GITHUB_TOKEN } });
   const run = async (tool, input) => {
-    const r = await g.invoke(agent, { projectId: ids.project, tool, input });
+    const fn = () => g.invoke(agent, { projectId: ids.project, tool, input });
+    const r = await comRetentativa(fn, t);
+    if (!r) return;
     assert.strictEqual(r.status, 'succeeded', `${tool}: ${JSON.stringify(r.error)}`);
     return r.result;
   };
