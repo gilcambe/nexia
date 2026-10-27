@@ -140,9 +140,13 @@ export async function carregarWebLLM() {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const actualHash = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
 
-    const expectedHash = import.meta.env.VITE_WEBLLM_SHA256 || '';
+    const expectedHash = import.meta.env.VITE_WEBLLM_SHA256;
 
-    if (expectedHash && actualHash !== expectedHash) {
+    if (!expectedHash) {
+      throw new Error('VITE_WEBLLM_SHA256 não configurada. Não é permitido carregar WebLLM do CDN sem validação de integridade.');
+    }
+
+    if (actualHash !== expectedHash) {
       throw new Error('Hash do WebLLM inválido! O arquivo do CDN foi alterado ou corrompido.');
     }
 
