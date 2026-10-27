@@ -1,9 +1,7 @@
 // Teste unitário: valida a lista de produtos da Central.
-import { describe, it, ok, equal } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { PRODUTOS } from '../../central/produtos.js';
-
-descritivos: null;
 
 describe('central/produtos.js', () => {
   it('todos os itens possuem o campo tipo', () => {
