@@ -146,7 +146,10 @@ async function assembleWithWebCodecs({images, audio, srt, size, progress}) {
   }
 
   const stream = canvas.captureStream(30);
-  const recorderMimeType = 'video/mp4; codecs=avc1.42E01E,mp4a.40.2';
+  let recorderMimeType = 'video/mp4; codecs=avc1.42E01E,mp4a.40.2';
+  if (!MediaRecorder.isTypeSupported(recorderMimeType)) {
+    recorderMimeType = 'video/webm';
+  }
   const recorder = new MediaRecorder(stream, {
     mimeType: recorderMimeType,
     videoBitsPerSecond: 2500000
