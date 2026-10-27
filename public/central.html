@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Central NEXIA — Ajuda das IAs</title>
+  <meta name="description" content="Central de controle da NEXIA — aba Cortex com cartão Ajuda das IAs">
+  <meta property="og:title" content="Central NEXIA — Ajuda das IAs">
+  <meta property="og:description" content="Gerencie as IAs da Central NEXIA">
+  <meta property="og:type" content="website">
+  <style>
+    :root {
+      --primary: #16a34a;
+      --accent: #15803d;
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface2: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: #334155;
+      --radius: 12px;
+      --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: 16px;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem); margin-bottom: 12px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: var(--shadow);
+    }
+    .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .status-line {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.9rem;
+    }
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .status-row:last-child { border-bottom: none; }
+    .status-label { color: var(--muted); }
+    .status-value { font-weight: 700; }
+    .btn-group { display: flex; gap: 8px; margin-top: 12px; }
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+    }
+    button:active { transform: scale(0.98); }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-ligar { background: var(--primary); color: #fff; }
+    .btn-ligar:hover:not(:disabled) { background: var(--accent); }
+    .btn-desligar { background: var(--surface2); color: var(--text); }
+    .btn-desligar:hover:not(:disabled) { background: #475569; }
+    .loading { color: var(--muted); font-size: 0.9rem; }
+    .erro { color: #ef4444; font-size: 0.85rem; margin-top: 8px; }
+    @media (max-width: 640px) {
+      body { padding: 12px; }
+      .btn-group { flex-direction: column; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧠 Cortex — Central NEXIA</h1>
+    <div class="card" id="card-ajuda-ias">
+      <div class="card-title">🤝 Ajuda das IAs</div>
+      <div class="status-line" id="linhas-ajuda-ias">
+        <div class="status-row">
+          <span class="status-label">Revisor grátis</span>
+          <span class="status-value" id="revisor-min">—</span> min
+        </div>
+        <div class="status-row">
+          <span class="status-label">Aprovados hoje</span>
+          <span class="status-value" id="aprovados">0</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">Recusados hoje</span>
+          <span class="status-value" id="recusados">0</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">Com o Jules agora</span>
+          <span class="status-value" id="jules">0</span>
+        </div>
+        <div class="status-row" id="linha-claude" style="display:none">
+          <span class="status-label">Na vez do Claude</span>
+          <span class="status-value" id="claude">0</span>
+        </div>
+        <div class="status-row">
+          <span class="status-label">Travadas</span>
+          <span class="status-value" id="travadas">0</span>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button id="btn-ajuda-ias" class="btn-ligar">Ligar</button>
+      </div>
+      <div class="loading" id="status-ajuda-ias">Aguardando…</div>
+      <div class="erro" id="erro-ajuda-ias" style="display:none"></div>
+    </div>
+  </div>
+  <script>
+    (function() {
+      const btn = document.getElementById('btn-ajuda-ias');
+      const linhas = document.getElementById('linhas-ajuda-ias');
+      const linhaClaude = document.getElementById('linha-claude');
+      const elRevisor = document.getElementById('revisor-min');
+      const elAprovados = document.getElementById('aprovados');
+      const elRecusados = document.getElementById('recusados');
+      const elJules = document.getElementById('jules');
+      const elClaude = document.getElementById('claude');
+      const elTravadas = document.getElementById('travadas');
+      const elStatus = document.getElementById('status-ajuda-ias');
+      const elErro = document.getElementById('erro-ajuda-ias');
+
+      let estadoAtual = null;
+
+      function atualizarUI(dados) {
+        if (!dados) return;
+        estadoAtual = dados.ligado;
+        btn.textContent = estadoAtual ? 'Desligar' : 'Ligar';
+        btn.className = estadoAtual ? 'btn-desligar' : 'btn-ligar';
+        btn.disabled = false;
+        elRevisor.textContent = dados.revisorMin === null ? '—' : dados.revisorMin;
+        elAprovados.textContent = dados.aprovados ?? 0;
+        elRecusados.textContent = dados.recusados ?? 0;
+        elJules.textContent = dados.jules ?? 0;
+        elTravadas.textContent = dados.travadas ?? 0;
+
+        if (dados.claude && dados.claude > 0) {
+          linhaClaude.style.display = 'flex';
+          elClaude.textContent = dados.claude;
+          if (dados.claudePrimeiro && dados.claudePrimeiro.titulo) {
+            elClaude.textContent += ' · ' + dados.claudePrimeiro.titulo;
+          }
+        } else {
+          linhaClaude.style.display = 'none';
+        }
+      }
+
+      function mostrarErro(msg) {
+        elErro.textContent = msg;
+        elErro.style.display = 'block';
+      }
+
+      function esconderErro() {
+        elErro.style.display = 'none';
+      }
+
+      async function buscarDados() {
+        try {
+          const res = await fetch('/central/ajuda-ias', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          if (!res.ok) throw new Error('Erro ' + res.status);
+          const dados = await res.json();
+          atualizarUI(dados);
+          esconderErro();
+        } catch (e) {
+          // erro silencioso
+        }
+      }
+
+      async function toggleEstado() {
+        if (estadoAtual === null) return;
+        btn.disabled = true;
+        try {
+          const res = await fetch('/central/ajuda-ias', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ligar: !estadoAtual })
+          });
+          if (!res.ok) throw new Error('Erro ' + res.status);
+          const dados = await res.json();
+          estadoAtual = dados.ligado;
+          btn.textContent = estadoAtual ? 'Desligar' : 'Ligar';
+          btn.className = estadoAtual ? 'btn-desligar' : 'btn-ligar';
+          btn.disabled = false;
+          esconderErro();
+        } catch (e) {
+          // erro silencioso
+          btn.disabled = false;
+        }
+      }
+
+      btn.addEventListener('click', toggleEstado);
+
+      buscarDados();
+      const timer = setInterval(buscarDados, 60000);
+    })();
+  </script>
+</body>
+</html>
