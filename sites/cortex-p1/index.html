@@ -1,106 +1,217 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="no-js">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Site de Teste do Cortex-p1 — Painel de métricas e controle do Cortex</title>
-  <meta name="description" content="Painel de métricas e controle do Cortex">
-  <meta name="theme-color" content="#4f46e5">
+  <title>Cortex-p1 — Encontre clientes ideais e otimize recursos</title>
+  <meta name="description" content="Sistema inteligente para recomendar clientes similares, identificar recursos disponíveis e lacunas no mercado.">
+  <meta name="theme-color" content="#2563eb">
+  <meta property="og:title" content="Cortex-p1">
+  <meta property="og:description" content="Sistema inteligente para recomendar clientes similares, identificar recursos disponíveis e lacunas no mercado.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://thumb.wikimedia.org/wikipedia/commons/thumb/8/86/Oracle_Analytics_Cloud_Dashboard_by_Benjamin_Arnulf_presented_by_Larry_Ellison.jpg/1280px-Oracle_Analytics_Cloud_Dashboard_by_Benjamin_Arnulf_presented_by_Larry_Ellison.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=thumbnail">
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
 </head>
 <body>
   <a class="skip" href="#conteudo">Pular para o conteúdo</a>
-  <div class="shell">
-    <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
-      <div class="sidebar__brand">
-        <span class="logo" aria-hidden="true">S</span>
-        <span>Site de Teste do Cortex-p1</span>
-      </div>
-      <nav class="sidebar__nav" aria-label="Seções">
-        <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
-        <a href="#/metrics" data-route="metrics"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Métricas</span></a>
+  <header class="topbar" id="topo">
+    <div class="container topbar__inner">
+      <a class="brand" href="#topo">Cortex-p1</a>
+      <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu" aria-label="Abrir menu"><svg class="i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <nav id="menu" class="menu" aria-label="Menu principal">
+        <a href="#funcionamento">Serviços</a>
+        <a href="#sobre-o-cortex-p1">Sobre o Cortex</a>
+        <a href="#interface-do-sistema">Galeria</a>
+        <a href="#equipe-de-desenvolvimento">Equipe</a>
+        <a href="#depoimentos">Depoimentos</a>
+        <a href="#links-rapidos">Links Rápidos</a>
+        <a class="btn btn--primary btn--sm" href="https://wa.me/5511999998888?text=Ol%C3%A1!%20Vim%20pelo%20site%20da%20Cortex-p1." target="_blank" rel="noopener"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.6-4.8A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 10c0 3 2 5 5 5l1.2-1.2 2 .8-.4 1.6c-4 .6-8.5-3.9-7.9-7.9l1.6-.4.8 2z" fill="currentColor" stroke="none"/></svg> WhatsApp</a>
       </nav>
-      <div class="sidebar__foot">
-        <p>Suporte: suporte@cortexp1.com.br</p>
-        <p>Dados salvos neste navegador.</p>
-      </div>
-    </aside>
-    <div class="backdrop" data-close-menu hidden></div>
-    <div class="main">
-      <header class="topbar">
-        <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-        <div class="topbar__title">
-          <h1 id="view-title">Painel</h1>
-          <p id="view-sub">Painel de métricas e controle do Cortex</p>
-        </div>
-        <label class="search">
-          <span class="sr-only">Buscar</span>
-          <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input id="search" type="search" placeholder="Buscar..." autocomplete="off">
-        </label>
-        <button class="icon-btn" type="button" id="theme" aria-label="Alternar modo escuro"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
-      </header>
-      <main id="conteudo" class="content">
-        <section id="view-painel" class="view" aria-labelledby="view-title">
-          <div class="kpis" id="kpis"></div>
-          <div class="grid2">
-            <article class="card">
-              <header class="card__head"><h2 id="chart-title">Resumo</h2></header>
-              <div class="chart-box"><canvas id="chart" aria-label="Gráfico do resumo" role="img"></canvas></div>
-            </article>
-            <article class="card">
-              <header class="card__head"><h2>Últimos cadastros</h2></header>
-              <ul class="recent" id="recent"></ul>
-            </article>
-          </div>
-        </section>
-        <section id="view-entity" class="view" hidden>
-          <div class="toolbar">
-            <p class="count" id="count"></p>
-            <div class="toolbar__actions">
-              <button class="btn btn--ghost" type="button" id="export"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Exportar CSV</button>
-              <button class="btn btn--primary" type="button" id="add"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> <span id="add-label">Novo</span></button>
-            </div>
-          </div>
-          <div class="card table-card">
-            <div class="table-wrap">
-              <table class="table">
-                <thead id="thead"></thead>
-                <tbody id="tbody"></tbody>
-              </table>
-            </div>
-            <div class="empty" id="empty" hidden>
-              <svg class="i" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg>
-              <h2>Nada por aqui ainda</h2>
-              <p>Clique em “Adicionar” para fazer o primeiro cadastro.</p>
-            </div>
-          </div>
-        </section>
-      </main>
+    </div>
+  </header>
+  <main id="conteudo">
+<section class="hero" id="encontre-clientes-ideais-em-segundos">
+  <div class="hero__media" aria-hidden="true"><img class="hero__img" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/8/86/Oracle_Analytics_Cloud_Dashboard_by_Benjamin_Arnulf_presented_by_Larry_Ellison.jpg/1280px-Oracle_Analytics_Cloud_Dashboard_by_Benjamin_Arnulf_presented_by_Larry_Ellison.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=thumbnail" alt="Oracle Analytics Cloud Dashboard by Benjamin Arnulf presented by Larry Ellison" width="1280" height="960" fetchpriority="high" decoding="async"></div>
+  <div class="hero__overlay" aria-hidden="true"></div>
+  <div class="container hero__content">
+    
+    
+    <p class="eyebrow hero__in" style="--d:0s">Sistema de Inteligência de Clientes</p>
+    <h1 class="hero__in" style="--d:.1s">Encontre clientes ideais em segundos</h1>
+    <p class="hero__lead hero__in" style="--d:.2s">Análise inteligente para identificar oportunidades e otimizar recursos.</p>
+    <div class="hero__actions hero__in" style="--d:.3s">
+      <a class="btn btn--primary" href="mailto:demo@cortex-p1.com.br">Solicitar Demonstração <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn btn--ghost" href="#funcionamento">Ver como funciona</a>
     </div>
   </div>
-
-  <dialog class="modal" id="modal" aria-labelledby="modal-title">
-    <form id="form" novalidate>
-      <header class="modal__head">
-        <h2 id="modal-title">Novo</h2>
-        <button class="icon-btn" type="button" data-close aria-label="Fechar"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-      </header>
-      <div class="modal__body" id="form-fields"></div>
-      <footer class="modal__foot">
-        <button class="btn btn--ghost" type="button" data-close>Cancelar</button>
-        <button class="btn btn--primary" type="submit">Salvar</button>
-      </footer>
+  <a class="hero__scroll" href="#funcionamento" aria-label="Rolar para a próxima seção"><span></span></a>
+</section>
+<section class="section" id="funcionamento">
+  <div class="container">
+    <header class="section__head reveal">
+      <h2>Recursos do Cortex-p1</h2>
+      <p>Tudo que você precisa para gerenciar clientes.</p>
+    </header>
+    <div class="cards">
+      <article class="card reveal" style="--d:0s">
+        <div class="card__media"><img class="card__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Lotus_Super_Seven_S4_LHD_in_Black%2C_dashboard.jpg/1280px-Lotus_Super_Seven_S4_LHD_in_Black%2C_dashboard.jpg" alt="Lotus Super Seven S4 LHD in Black, dashboard" width="1280" height="857" loading="lazy" decoding="async" sizes="(max-width: 700px) 100vw, 33vw"></div>
+        <div class="card__body">
+          
+          <h3>Análise de Similaridade</h3>
+          <p>Compara texto de busca com nossos clientes e encontra os mais parecidos.</p>
+          
+          
+        </div>
+      </article>
+      <article class="card reveal" style="--d:0.08s">
+        <div class="card__media"><img class="card__img" src="https://upload.wikimedia.org/wikipedia/commons/4/4a/Social_Cockpit_Dashboard_Measuring_Buzz_About_CES_2012.jpg" alt="Social Cockpit Dashboard Measuring Buzz About CES 2012" width="1600" height="1200" loading="lazy" decoding="async" sizes="(max-width: 700px) 100vw, 33vw"></div>
+        <div class="card__body">
+          
+          <h3>Recomendação de Recursos</h3>
+          <p>Mostra o que você pode reaproveitar de clientes existentes.</p>
+          
+          
+        </div>
+      </article>
+      <article class="card reveal" style="--d:0.16s">
+        <div class="card__media"><img class="card__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/2023_Renault_Austral_1.2_E-Tech_Hybrid_techno_at_Renault_Manchester_03.jpg/1280px-2023_Renault_Austral_1.2_E-Tech_Hybrid_techno_at_Renault_Manchester_03.jpg" alt="2023 Renault Austral 1.2 E-Tech Hybrid techno at Renault Manchester 03" width="1280" height="720" loading="lazy" decoding="async" sizes="(max-width: 700px) 100vw, 33vw"></div>
+        <div class="card__body">
+          
+          <h3>Identificação de Lacunas</h3>
+          <p>Aponta recursos que nenhum cliente oferece, novas oportunidades.</p>
+          
+          
+        </div>
+      </article>
+      <article class="card reveal" style="--d:0s">
+        <div class="card__media"><img class="card__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Dashboard_-_Jaguar_-_SS_One_-_1936_-_26_hp_-_6_cyl_-_Kolkata_2013-01-13_3098.JPG/1280px-Dashboard_-_Jaguar_-_SS_One_-_1936_-_26_hp_-_6_cyl_-_Kolkata_2013-01-13_3098.JPG" alt="Dashboard - Jaguar - SS One - 1936 - 26 hp - 6 cyl - Kolkata 2013-01-13 3098" width="1280" height="851" loading="lazy" decoding="async" sizes="(max-width: 700px) 100vw, 33vw"></div>
+        <div class="card__body">
+          
+          <h3>Integração Centralizada</h3>
+          <p>Acesso a todos os produtos e painéis em um só lugar.</p>
+          
+          
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+<section class="section section--alt" id="sobre-o-cortex-p1">
+  <div class="container split">
+    <div class="split__media reveal"><img class="split__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Dashboard_-_Jeep_-_1975_-_1300_cc_-_4_cyl_-_NL_08_2451_-_Kolkata_2015-01-11_3631.JPG/1280px-Dashboard_-_Jeep_-_1975_-_1300_cc_-_4_cyl_-_NL_08_2451_-_Kolkata_2015-01-11_3631.JPG" alt="Dashboard - Jeep - 1975 - 1300 cc - 4 cyl - NL 08 2451 - Kolkata 2015-01-11 3631" width="1280" height="851" loading="lazy" decoding="async" sizes="(max-width: 900px) 100vw, 50vw"><span class="split__badge"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg> Encontre clientes ideais e otimize recursos</span></div>
+    <div class="split__text reveal" style="--d:.1s">
+      <p class="eyebrow">Sobre o Cortex-p1</p>
+      <h2>Cortex-p1</h2>
+      <p>Desenvolvido para otimizar a expansão de negócios, o Cortex-p1 analisa milhares de dados para recomendar os próximos passos com base em clientes reais.</p>
+      <dl class="stats"><div><dt><span class="count" data-to="500+">500+</span></dt><dd>Clientes Analisados</dd></div><div><dt><span class="count" data-to="95%">95%</span></dt><dd>Precisão</dd></div></dl>
+    </div>
+  </div>
+</section>
+<section class="section" id="interface-do-sistema">
+  <div class="container">
+    <header class="section__head reveal">
+      <h2>Interface do Sistema</h2>
+      
+    </header>
+    <div class="gallery"><figure class="gallery__item reveal" style="--d:0s"><img class="gallery__img" src="https://upload.wikimedia.org/wikipedia/commons/1/16/Wikistats_2.0_Prototype_Dashboard.png" alt="Wikistats 2.0 Prototype Dashboard" width="1119" height="1428" loading="lazy" decoding="async" sizes="(max-width: 700px) 50vw, 25vw"></figure><figure class="gallery__item reveal" style="--d:0.06s"><img class="gallery__img" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Programs_dashboard_explore.jpg/1280px-Programs_dashboard_explore.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=thumbnail" alt="Programs &amp;amp; Events Dashboard - Explore page" width="1280" height="828" loading="lazy" decoding="async" sizes="(max-width: 700px) 50vw, 25vw"></figure><figure class="gallery__item reveal" style="--d:0.12s"><img class="gallery__img" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Programs_dashboard_-_create.jpg/1280px-Programs_dashboard_-_create.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=thumbnail" alt="Screenshot from the Programs Dashboard, on WMF Tool Labs" width="1280" height="820" loading="lazy" decoding="async" sizes="(max-width: 700px) 50vw, 25vw"></figure><figure class="gallery__item reveal" style="--d:0.18s"><img class="gallery__img" src="https://upload.wikimedia.org/wikipedia/commons/7/72/Programs_dashboard_-_permissions.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=thumbnail_unscaled" alt="Programs Dashboard - Permissions screen" width="1280" height="867" loading="lazy" decoding="async" sizes="(max-width: 700px) 50vw, 25vw"></figure></div>
+  </div>
+</section>
+<section class="section section--alt" id="equipe-de-desenvolvimento">
+  <div class="container">
+    <header class="section__head reveal">
+      <h2>Equipe de Desenvolvimento</h2>
+      
+    </header>
+    <div class="team"><article class="person reveal" style="--d:0s">
+      <div class="person__avatar" aria-hidden="true">EC</div>
+      <h3>Equipe Cortex</h3><p>Desenvolvedores de Sistemas</p></article></div>
+  </div>
+</section>
+<section class="section" id="depoimentos">
+  <div class="container">
+    <header class="section__head reveal">
+      <h2>Depoimentos</h2>
+      
+    </header>
+    <div class="quotes"><figure class="quote reveal" style="--d:0s">
+      <div class="stars" aria-label="5 de 5 estrelas"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg></div>
+      <blockquote><p>O Cortex-p1 nos ajudou a encontrar 3 novos clientes parecidos com o nosso melhor.</p></blockquote>
+      <figcaption><span class="quote__avatar" aria-hidden="true">JS</span><span><strong>João Silva</strong></span></figcaption>
+    </figure><figure class="quote reveal" style="--d:0.08s">
+      <div class="stars" aria-label="5 de 5 estrelas"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg></div>
+      <blockquote><p>Identificamos recursos que estávamos perdendo e otimizamos nosso tempo.</p></blockquote>
+      <figcaption><span class="quote__avatar" aria-hidden="true">MS</span><span><strong>Maria Santos</strong></span></figcaption>
+    </figure><figure class="quote reveal" style="--d:0.16s">
+      <div class="stars" aria-label="5 de 5 estrelas"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg></div>
+      <blockquote><p>A análise de lacunas nos deu uma nova direção para o negócio.</p></blockquote>
+      <figcaption><span class="quote__avatar" aria-hidden="true">CM</span><span><strong>Carlos Mendes</strong></span></figcaption>
+    </figure></div>
+  </div>
+</section>
+<section class="section" id="links-rapidos">
+  <div class="container container--narrow">
+    <header class="section__head reveal">
+      <h2>Links Rápidos</h2>
+      
+    </header>
+    <div class="links"><a class="links__item reveal" style="--d:0s" href="mailto:suporte@cortex-p1.com.br"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg><span>Fale com suporte</span><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+  </div>
+</section>
+<section class="section section--alt" id="duvidas-frequentes">
+  <div class="container container--narrow">
+    <header class="section__head reveal">
+      <h2>Dúvidas Frequentes</h2>
+      
+    </header>
+    <div class="faq"><details class="faq__item reveal"><summary>Como o Cortex-p1 encontra clientes parecidos?<span aria-hidden="true"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></summary><p>Ele analisa o texto digitado e compara com os segmentos e recursos de nossos clientes existentes.</p></details><details class="faq__item reveal"><summary>Quais dados são usados na análise?<span aria-hidden="true"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></summary><p>Usamos apenas segmentos e recursos disponíveis, sem dados sensíveis ou credenciais.</p></details><details class="faq__item reveal"><summary>O sistema é integrado com meus atuais clientes?<span aria-hidden="true"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></summary><p>Sim, ele acessa a central de produtos e painéis existentes.</p></details><details class="faq__item reveal"><summary>Posso adicionar novos clientes à base?<span aria-hidden="true"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></summary><p>Ainda não, mas estamos trabalhando nessa funcionalidade.</p></details><details class="faq__item reveal"><summary>Qual a precisão das recomendações?<span aria-hidden="true"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></summary><p>Nossa análise é baseada em palavras-chave e tem alta precisão, mas sempre validamos com o plano detalhado.</p></details></div>
+  </div>
+</section>
+<section class="band" id="pronto-para-otimizar-seu-negocio">
+  <div class="container band__inner reveal">
+    <div><h2>Pronto para otimizar seu negócio?</h2><p>Solicite uma demonstração e veja como o Cortex-p1 pode ajudar.</p></div>
+    <a class="btn btn--light" href="mailto:demo@cortex-p1.com.br">Solicitar Demonstração <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+  </div>
+</section>
+<section class="section" id="contato">
+  <div class="container contact">
+    <div class="contact__info reveal">
+      <p class="eyebrow">Contato</p>
+      <h2>Entre em contato</h2>
+      
+      <ul class="contact__list"><li><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.6-4.8A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 10c0 3 2 5 5 5l1.2-1.2 2 .8-.4 1.6c-4 .6-8.5-3.9-7.9-7.9l1.6-.4.8 2z" fill="currentColor" stroke="none"/></svg><a href="https://wa.me/5511999998888" target="_blank" rel="noopener">WhatsApp (11) 99999-8888</a></li><li><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg><a href="mailto:contato@cortex-p1.com.br">contato@cortex-p1.com.br</a></li><li><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Av. Paulista, 1000 — São Paulo - SP</span></li><li><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Seg a sex, 9h às 18h</span></li></ul>
+      <div class="map"><iframe title="Mapa: Av. Paulista, 1000 — São Paulo - SP" src="https://maps.google.com/maps?q=Av.%20Paulista%2C%201000%20%E2%80%94%20S%C3%A3o%20Paulo%20-%20SP&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+    </div>
+    <form class="form reveal" style="--d:.1s" novalidate data-whatsapp="5511999998888" data-email="contato@cortex-p1.com.br" data-name="Cortex-p1" data-leads="https://nexia.gcbezerra.workers.dev/api/leads">
+      <div class="field"><label for="f-nome">Nome</label><input id="f-nome" name="nome" autocomplete="name" required minlength="2"><small class="field__err" aria-live="polite"></small></div>
+      <div class="field"><label for="f-tel">Telefone / WhatsApp</label><input id="f-tel" name="telefone" type="tel" autocomplete="tel" inputmode="tel" required pattern="[0-9()+\-\s]{10,}"><small class="field__err" aria-live="polite"></small></div>
+      <div class="field"><label for="f-email">E-mail <span class="opt">(opcional)</span></label><input id="f-email" name="email" type="email" autocomplete="email"><small class="field__err" aria-live="polite"></small></div>
+      <div class="field"><label for="f-msg">Mensagem</label><textarea id="f-msg" name="mensagem" rows="4" required minlength="10"></textarea><small class="field__err" aria-live="polite"></small></div>
+      <div class="field field--check"><input id="f-ok" type="checkbox" name="consentimento" required><label for="f-ok">Aceito receber contato sobre este assunto.</label><small class="field__err" aria-live="polite"></small></div>
+      <div class="hp" aria-hidden="true"><input name="site_url" tabindex="-1" autocomplete="off" aria-label="Não preencha"></div>
+      <button class="btn btn--primary btn--block" type="submit">Enviar mensagem <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      <p class="form__ok" role="status" hidden><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Recebemos sua mensagem! Vamos responder em breve.</p>
     </form>
-  </dialog>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1","name":"Site de Teste do Cortex-p1","entities":[{"key":"metrics","label":"Métricas","singular":"Métrica","fields":[{"key":"provedor","label":"Provedor","type":"text","options":[],"required":true},{"key":"cota_usada_hoje","label":"Cota Usada Hoje","type":"number","options":[],"required":true},{"key":"mensagens_por_minuto","label":"Mensagens por Minuto","type":"number","options":[],"required":true},{"key":"tamanho_da_fila","label":"Tamanho da Fila","type":"number","options":[],"required":true},{"key":"erros_ultima_hora","label":"Erros na Última Hora","type":"number","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Ativo","Inativo"],"required":true}],"sample":[{"provedor":"Twilio","cota_usada_hoje":"12000","mensagens_por_minuto":"5","tamanho_da_fila":"200","erros_ultima_hora":"1","status":"Ativo"},{"provedor":"Nexmo","cota_usada_hoje":"8000","mensagens_por_minuto":"3","tamanho_da_fila":"150","erros_ultima_hora":"0","status":"Ativo"},{"provedor":"Plivo","cota_usada_hoje":"5000","mensagens_por_minuto":"4","tamanho_da_fila":"100","erros_ultima_hora":"2","status":"Inativo"},{"provedor":"Vonage","cota_usada_hoje":"2000","mensagens_por_minuto":"1","tamanho_da_fila":"50","erros_ultima_hora":"0","status":"Ativo"}]}]}</script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
-  <script src="app.js" defer></script>
+  </div>
+</section>
+  </main>
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div><p class="brand brand--light">Cortex-p1</p><p>Encontre clientes ideais e otimize recursos</p></div>
+      <div><h3>Contato</h3><ul><li>(11) 99999-8888</li><li>contato@cortex-p1.com.br</li><li>Av. Paulista, 1000, São Paulo - SP</li><li>Seg a sex, 9h às 18h</li></ul></div>
+      <div><h3>Redes</h3><p class="social"><a href="https://instagram.com/cortex_p1" target="_blank" rel="noopener" aria-label="Instagram"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a><a href="https://wa.me/5511999998888" target="_blank" rel="noopener" aria-label="WhatsApp"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.6-4.8A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 10c0 3 2 5 5 5l1.2-1.2 2 .8-.4 1.6c-4 .6-8.5-3.9-7.9-7.9l1.6-.4.8 2z" fill="currentColor" stroke="none"/></svg></a></p></div>
+    </div>
+    <div class="container footer__bottom">
+      <p>© <span data-year>2026</span> Cortex-p1. Todos os direitos reservados.</p>
+      <a class="selo-nexia" href="https://kernex.com.br/?utm_source=cortex-p1&amp;utm_medium=selo&amp;utm_campaign=clientes" target="_blank" rel="noopener">Feito com Kernex</a>
+      <details class="credits"><summary>Créditos das imagens</summary><ul><li>GeneralAB13 (CC BY-SA 4.0, via Wikimedia Commons)</li><li>Dashboard - Jaguar - SS One - 1936 - 26 hp - 6 cyl - Kolkata 2013-01-13 3098 — Biswarup Ganguly (BY 3.0, via O</li><li>Wikistats 2.0 Prototype Dashboard — Milimetric (WMF) (BY-SA 4.0, via Openverse)</li><li>Dashboard - Jeep - 1975 - 1300 cc - 4 cyl - NL 08 2451 - Kolkata 2015-01-11 3631 — Biswarup Ganguly (BY 3.0, v</li><li>Lotus Super Seven S4 LHD in Black, dashboard — Mr.choppers (BY-SA 3.0, via Openverse)</li><li>Social Cockpit Dashboard Measuring Buzz About CES 2012 — Intel Free Press (BY 2.0, via Openverse)</li><li>2023 Renault Austral 1.2 E-Tech Hybrid techno at Renault Manchester 03 — MoCars (CC0 1.0, via Openverse)</li><li>DannyH (WMF) (CC BY-SA 4.0, via Wikimedia Commons)</li><li>DannyH (WMF) (CC BY-SA 4.0, via Wikimedia Commons)</li><li>Screenshot by DannyH (WMF) (CC BY-SA 4.0, via Wikimedia Commons)</li></ul></details>
+    </div>
+  </footer>
+  <a class="wa-float" href="https://wa.me/5511999998888?text=Ol%C3%A1!%20Vim%20pelo%20site%20da%20Cortex-p1." target="_blank" rel="noopener" aria-label="Falar no WhatsApp"><svg class="i" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.6-4.8A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 10c0 3 2 5 5 5l1.2-1.2 2 .8-.4 1.6c-4 .6-8.5-3.9-7.9-7.9l1.6-.4.8 2z" fill="currentColor" stroke="none"/></svg></a>
+  <a class="to-top" href="#topo" aria-label="Voltar ao topo"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></a>
+  <script src="script.js" defer></script>
 </body>
 </html>
