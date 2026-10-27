@@ -44,7 +44,7 @@ test('JULES-AUTO2: fora da batida, sem chave ou desligado não faz nada', async 
   assert.ok((await rodar(AS_20, { env: { ...env, JULES_AUTO: '0' }, fetchFn: f.fetchFn })).skipped);
   assert.strictEqual(f.chamadas.length, 0);
   const vazio = falso([]);
-  assert.deepStrictEqual(await rodar(AS_20, { env, fetchFn: vazio.fetchFn }), { retomadas: [], reserva: [], humano: [], enviados: 0 });
+  assert.deepStrictEqual(await rodar(AS_20, { env, fetchFn: vazio.fetchFn }), { retomadas: [], reserva: [], humano: [], claude: [], devolver: [], enviados: 0 });
 });
 
 const L = (...n) => n.map(name => ({ name }));
