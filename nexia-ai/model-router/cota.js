@@ -175,7 +175,16 @@ async function carregarDoD1(env = process.env, o = {}) {
   try {
     const d = driverD1(env, o);
     if (!d) return false;
-    const doc = (await d.get([DOC])).get(DOC);
+    const cacheKey = `ia_cota/${DOC}`;
+    const { getSharedCache } = require('../../lib/firebase-lite/cache');
+    const cache = getSharedCache();
+    let doc = cache.get(cacheKey);
+    if (!doc) {
+      doc = (await d.get([DOC])).get(DOC);
+      if (doc) {
+        cache.set(cacheKey, doc, 60000);
+      }
+    }
     if (doc && doc.fields) {
       (o.placar || getPlacar()).importar(doc.fields.placar);
       (o.qualidade || require('./qualidade').getQualidade()).importar(doc.fields.qualidade);   // #832
