@@ -116,6 +116,17 @@ export function BotaoAvisar() {
   );
 }
 
+function abrirCloudflareSetup() {
+  alert(
+    "Passo a passo para ligar o Cloudflare Analytics:\n\n" +
+    "1. Abra https://dash.cloudflare.com/profile/api-tokens e clique **Create Token**.\n" +
+    "2. Em "Read analytics and logs" clique **Use template** (só leitura, grátis).\n" +
+    "3. Clique **Continue to summary** e **Create Token**. Copie o código.\n" +
+    "4. Abra https://dash.cloudflare.com → **Workers & Pages** → **nexia** → **Settings** → **Variables and Secrets** → **Add** → tipo **Secret**, nome `CLOUDFLARE_ANALYTICS_TOKEN`, cole o código, **Deploy**.\n" +
+    "5. Volte na Central e clique **Conferir agora**."
+  );
+}
+
 export default function Painel({ d, erros, avisos, ir, conferir, carregando, abrirAlerta, conferidoEm }: {
   d: Dados; erros: Partial<Record<Parte, string>>; avisos: Aviso[]; ir: (a: Aba) => void; conferir: () => void; carregando: boolean; abrirAlerta: (k: number | null) => void; conferidoEm?: string | null;
 }) {
