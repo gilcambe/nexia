@@ -125,7 +125,17 @@ function createRouter(o = {}) {
    * 3. Limite total: 60 s máximo.
    */
   async function* streamWithFallback(descs, req, options = {}) {
-    const firstChunkTimeoutMs = options.firstChunkTimeoutMs || (req && req.firstChunkTimeoutMs) || 4000;
+    // Identificar provedores que "pensam" (precisam de mais tempo para o primeiro chunk)
+    const thinkingProviders = ['gpt-oss', 'deepseek-r1', 'qwen3'];
+    
+    // Definir timeout do primeiro chunk baseado no provedor
+    const getFirstChunkTimeout = (provider) => {
+      if (thinkingProviders.includes(provider)) {
+        return options.firstChunkTimeoutMs || (req && req.firstChunkTimeoutMs) || 12000;
+      }
+      return options.firstChunkTimeoutMs || (req && req.firstChunkTimeoutMs) || 4000;
+    };
+    
     const stallTimeoutMs = options.stallTimeoutMs || (req && req.stallTimeoutMs) || 8000;
     const totalTimeoutMs = options.totalTimeoutMs || (req && req.totalTimeoutMs) || 60000;
     const startTime = Date.now();
