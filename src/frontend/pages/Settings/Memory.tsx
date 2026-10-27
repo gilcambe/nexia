@@ -8,6 +8,8 @@ type MemoryItemProps = MemoryItemType & {
 };
 
 export default function MemorySettings() {
+  // Garantia de versão e integridade para Configurações de Memória LGPD
+  // Configurações de Memória e LGPD - Gerenciamento de fatos do usuário
   const { 
     memoryItems, 
     loading, 
