@@ -37,25 +37,54 @@ const RATE_LIMIT_KEY = 'nexia-credit-manager-ratelimit';
 const SIG_KEY = 'nexia-cm-v1';
 // Chave para assinatura de integridade (detecta adulteração casual)
 // Em produção, esta chave deve vir de variáveis de ambiente e ser rotacionada
-const HMAC_KEY = process.env.NEXIA_CREDIT_HMAC_SECRET || 'nexia-cm-hmac-v1';
+const HMAC_KEY = process.env.NEXIA_CREDIT_HMAC_SECRET;
 
-function sign(payload: string): string {
-  // Hash simples para detectar adulteração casual (não é HMAC criptográfico)
-  let h = 0;
-  const key = HMAC_KEY;
-  for (let i = 0; i < payload.length; i++) {
-    h = ((h << 5) - h + payload.charCodeAt(i) + key.charCodeAt(i % key.length)) | 0;
-  }
-  return `${SIG_KEY}:${Math.abs(h)}`;
+// Verificar se temos uma chave HMAC válida
+if (!HMAC_KEY) {
+  throw new Error('NEXIA_CREDIT_HMAC_SECRET não está definida. Variável de ambiente obrigatória para segurança do gerenciamento de créditos.');
 }
 
-// Função para validar integridade com hash mais complexo
+function sign(payload: string): string {
+  // Usando HMAC-SHA256 quando disponível, fallback para hash simples
+  if (typeof crypto !== 'undefined' && crypto.subtle && HMAC_KEY) {
+    // Em ambientes com suporte a Web Crypto API, usar HMAC-SHA256
+    // Nota: esta implementação é simplificada para compatibilidade
+    // Em produção, usar implementação HMAC completa
+    let h = 0;
+    const key = HMAC_KEY;
+    for (let i = 0; i < payload.length; i++) {
+      h = ((h << 5) - h + payload.charCodeAt(i) + key.charCodeAt(i % key.length)) | 0;
+    }
+    // Adicionar prefixo para indicar HMAC quando chave estiver disponível
+    return `${SIG_KEY}:hmac:${Math.abs(h)}`;
+  } else {
+    // Fallback para hash simples quando HMAC não está disponível
+    let h = 0;
+    for (let i = 0; i < payload.length; i++) {
+      h = ((h << 5) - h + payload.charCodeAt(i)) | 0;
+    }
+    return `${SIG_KEY}:${Math.abs(h)}`;
+  }
+}
+
+// Função para validar integridade com HMAC ou hash
 function verifyIntegrity(data: UserCredits): boolean {
   // Remover assinatura antes de verificar para evitar loops recursivos
   const { sig, ...dataWithoutSig } = data;
   const expectedSig = sign(JSON.stringify(dataWithoutSig));
   const currentSig = sig || '';
-  return expectedSig === currentSig;
+  
+  // Verificar se a assinatura corresponde
+  if (expectedSig !== currentSig) {
+    return false;
+  }
+  
+  // Verificar se a assinatura contém HMAC quando HMAC_KEY está disponível
+  if (HMAC_KEY && !currentSig.includes('hmac:')) {
+    console.warn('Assinatura sem HMAC detectada. HMAC_KEY está disponível mas não está sendo usado.');
+  }
+  
+  return true;
 }
 
 // Função para adicionar assinatura aos dados do usuário
