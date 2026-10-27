@@ -5,7 +5,7 @@
 
 async function createHandler(deps = {}) {
   const getMw = deps.getMw || (() => require('./middleware'));
-  const getGithub = deps.getGithub || (() => require('./central/github').criarGithub());
+  const getGithub = deps.getGithub || (() => require('./github').criarGithub());
   const env = deps.env || process.env;
   const fetchFn = deps.fetch || ((...a) => fetch(...a));
 
@@ -73,4 +73,8 @@ async function createHandler(deps = {}) {
 }
 
 module.exports = { createHandler };
-module.exports.handler = createHandler();
+
+// Handler criado só ao ser invocado (não no require), permitindo injeção de deps em testes.
+module.exports.handler = async (event) => {
+  return createHandler()(event);
+};
