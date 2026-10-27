@@ -9,8 +9,19 @@ import {
   tetoGlobalExcedido,
 } from '../../lib/cortex-custo.js';
 
+function verificarAutorizacao(req) {
+  const auth = req.headers && (req.headers.authorization || req.headers.Authorization);
+  if (!auth || !auth.startsWith('Bearer ')) return false;
+  const token = auth.slice(7).trim();
+  return token === (process.env.NEXIA_JOBS_TOKEN || '');
+}
+
 export default async function handler(req, res) {
   try {
+    if (!verificarAutorizacao(req)) {
+      return res.status(401).json({ ok: false, erro: 'Não autorizado' });
+    }
+
     // Se body não existir ou for vazio, usar valores padrão
     const body = req.body || {};
     const { lancamentos = [], receitaTotal = 0, config = {} } = body;
