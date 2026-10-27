@@ -11,7 +11,7 @@ const REPO = '/repos/gilcambe/nexia';
 // Pedido do dono (25 e 26/10/2026): nada de horas esperando. 1 h dá para o Jules codar e testar uma tarefa pequena;
 // passou disso, volta ao Cortex (pode ir ao Jules de novo depois).
 const ESPERA_JULES_H = 1;
-const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'so-humano', 'vez-do-claude'];
+const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'vez-do-claude'];
 
 // Início do dia em UTC (00:00) para contar envios de jules-enviado.
 const inicioDiaUtc = (agora) => new Date(new Date(agora).toISOString().split('T')[0] + 'T00:00:00Z').getTime();
