@@ -460,6 +460,7 @@ footer{background:#021436;color:#c3d3ea;padding:54px clamp(16px,5vw,70px) 28px}
           <div class="fc-group">
             <label class="fc-label" for="req-whatsapp">WhatsApp com DDD</label>
             <input class="fc-input" type="tel" id="req-whatsapp" required placeholder="(11) 99999-8888" autocomplete="tel">
+            <label class="lgpd-check" style="margin-top:6px;margin-bottom:0"><input type="checkbox" name="promo_whatsapp" value="1"> Quero receber promoções do Splash pelo WhatsApp</label>
           </div>
           <div class="fc-group">
             <label class="fc-label" for="req-email">E-mail (opcional)</label>
@@ -1374,6 +1375,7 @@ async function enviarPedidoReserva(e) {
     convidados: Number(document.getElementById('req-convidados').value) || 0,
     extras: Array.from(document.querySelectorAll('#extras-lista input[name=extra]:checked')).map(i => i.value),
     obs: document.getElementById('req-obs').value.trim(),
+    promo_whatsapp: document.querySelector('input[name="promo_whatsapp"]')?.checked ? '1' : '0',
     consentimento: document.getElementById('req-consentimento').checked,
     campo_extra: document.getElementById('campo_extra').value,
     site_url: document.getElementById('site_url').value
