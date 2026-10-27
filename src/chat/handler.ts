@@ -4,7 +4,7 @@
  */
 
 import { detectIntent, IntentPatterns } from './intents';
-import { clearUserMemory, forgetSpecificFact } from '../controllers/memoryController'; // Supondo que memoryController esteja um nível acima
+import { clearUserMemory, forgetSpecificFact } from '../controllers/memoryController';
 
 export async function handleChatMessage(message: string, userId: string): Promise<string> {
   const intent = detectIntent(message);
