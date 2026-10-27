@@ -108,6 +108,19 @@ function createHandler(deps = {}) {
             return res(200, { ok: true, mensagem: 'Pix recusado com sucesso.' });
           }
         }
+        if (body.acao === 'ajuda-ias') {
+          const db = getDb();
+          const ref = db.collection('central_ajuda_ias').doc('estado');
+          const snap = await ref.get();
+          const atual = snap.exists ? (snap.data() || {}) : {};
+          const ligar = body.ligar === true;
+          await ref.set({
+            ligado: ligar,
+            atualizadoEm: Date.now(),
+            atualizadoPor: auth.email || 'admin'
+          }, { merge: true });
+          return res(200, { ok: true, ligado: ligar });
+        }
         return res(400, { error: 'Ação desconhecida.' });
       }
 
