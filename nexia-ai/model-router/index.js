@@ -198,7 +198,7 @@ function createRouter(o = {}) {
 
       const it = stream(d, contReq)[Symbol.asyncIterator]();
       let first;
-      const tFirst = Math.min(firstChunkTimeoutMs, remainingTime());
+      const tFirst = Math.min(getFirstChunkTimeout(d.provider), remainingTime());
 
       try {
         first = await Promise.race([
@@ -226,6 +226,15 @@ function createRouter(o = {}) {
             accumulatedText += val.text;
           }
           yield val;
+          
+          // Resetar timer de stall para qualquer chunk recebido (incluindo vazios ou reasoning)
+          if (val) {
+            nextItem = await Promise.race([
+              it.next(),
+              timeoutPromise(Math.min(stallTimeoutMs, remainingTime()), 'Resposta parou por mais de 8 s')
+            ]);
+            continue;
+          }
 
           if (Date.now() - startTime >= totalTimeoutMs) {
             currentStreamDone = true;
