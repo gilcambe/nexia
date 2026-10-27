@@ -19,9 +19,9 @@ function lerConta(env, letra = 'B') {
   return sa;
 }
 
-// Bancos grátis do Vault em ordem (B, depois C): o primeiro é o ativo e, se a cota dele acabar, passa para o próximo.
+// Bancos grátis do Vault em ordem (B, C, D... H: cada um é um projeto Firebase grátis criado com scripts/criar-banco.bat): o primeiro é o ativo e, se a cota dele acabar, passa para o próximo.
 function criarBancoB(env = process.env) {
-  const contas = ['B', 'C'].map(l => lerConta(env, l)).filter(Boolean);
+  const contas = ['B', 'C', 'D', 'E', 'F', 'G', 'H'].map(l => lerConta(env, l)).filter(Boolean);
   if (!contas.length) return null;
   const { Firestore } = require('../../lib/firebase-lite/firestore');
   const { createTokenSource } = require('../../lib/firebase-lite/google-auth');
