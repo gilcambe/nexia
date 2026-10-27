@@ -24,6 +24,7 @@ const CentralPage = lazy(() => import("../pages/central/page"));
 const MeuCortexPage = lazy(() => import("../pages/meu-cortex/page"));
 const CortexPage = lazy(() => import("../pages/cortex/page"));
 const AssistentePublico = lazy(() => import("../pages/cortex/Assistentes").then(m => ({ default: m.AssistentePublico })));
+const BriefingPublico = lazy(() => import("../pages/BriefingPublico"));
 const NotFound = lazy(() => import("../pages/NotFound"));
 const PrivacidadePage = lazy(() => import("../pages/legais/privacidade/page"));
 const TermosPage = lazy(() => import("../pages/legais/termos/page"));
@@ -50,6 +51,7 @@ const routes: RouteObject[] = [
   { path: "/central", element: <CentralPage /> },
   { path: "/cortex", element: <CortexPage /> },
   { path: "/cortex/a/:id", element: <AssistentePublico /> },
+  { path: "/briefing/:codigo", element: <BriefingPublico /> },
   { path: "/meu-cortex", element: <MeuCortexPage /> },
   { path: "/ces", element: <TenantPage tenant="ces" /> },
   { path: "/bezsan", element: <TenantPage tenant="bezsan" /> },
