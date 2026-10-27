@@ -2,6 +2,7 @@
 
 # Script para limpar referências NEXIA nos diretórios especificados
 # Substitui NEXIA CORTEX por Cortex e ajusta títulos e metadados
+# Deve ser executado ao final da PR.
 
 set -e
 
