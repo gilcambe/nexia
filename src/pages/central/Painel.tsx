@@ -150,7 +150,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando }: {
   const PONTO_VAGA = { verde: "ok", amarelo: "atencao", vermelho: "erro", cinza: "cinza" } as const;
 
   const acoes: { nome: string; icone: string; cor: string; aba?: Aba; href?: string; onClick?: () => void }[] = [
-    { nome: "Conectar IAs (3 vagas)", icone: "chave", cor: "bg-indigo-50 text-indigo-700 border-indigo-100", onClick: irVagas },
+    { nome: "Conectar IAs (10 vagas)", icone: "chave", cor: "bg-indigo-50 text-indigo-700 border-indigo-100", onClick: irVagas },
     { nome: "Pedir algo ao Cortex", icone: "mais", cor: "bg-blue-50 text-blue-700 border-blue-100", aba: "cortex" },
     { nome: "Clonar tenant", icone: "clonar", cor: "bg-violet-50 text-violet-700 border-violet-100", href: "/projetos" },
     { nome: "Ver entregas e testes", icone: "lista", cor: "bg-slate-50 text-slate-700 border-slate-200", aba: "prs" },
@@ -365,7 +365,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando }: {
           <Caixa titulo="IAs que ajudam o Cortex" acao={<VerTodos onClick={irVagas}>Conectar</VerTodos>}>
             {!vagas ? <div className="h-16 rounded-xl bg-slate-100 animate-pulse" /> : (
               <ul className="space-y-2" data-testid="painel-vagas">
-                {vagas.vagas.map((v) => {
+                {vagas.vagas.filter((v, i, todas) => v.ligada || v === todas.find((x) => !x.ligada)).map((v) => {
                   const p = vagas.provedores.find((x) => x.id === v.provedor);
                   const e = estadoVaga(v);
                   return (

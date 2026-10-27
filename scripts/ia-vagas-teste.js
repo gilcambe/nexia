@@ -1,5 +1,5 @@
 'use strict';
-// Robô ia-vagas.yml (#1958): testa as chaves guardadas nas vagas IA_VAGA_1..3 (botão "Testar agora" da Central e 1x por dia)
+// Robô ia-vagas.yml (#1958): testa as chaves guardadas nas vagas IA_VAGA_1..10 (botão "Testar agora" da Central e 1x por dia)
 // e grava só o resultado (nunca a chave) na issue de estado que a Central lê.
 const vagas = require('../netlify/functions/central/ia-vagas');
 

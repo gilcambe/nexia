@@ -63,7 +63,7 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
     await por(n, ['reserva-tentou']);
     const r = await p.gh(`${REPO}/actions/workflows/cortex-reserva.yml/dispatches`, { method: 'POST', body: JSON.stringify({ ref: 'develop', inputs: { numero: String(n) } }) }).then(() => true).catch(() => false);
     await comentar(n, r
-      ? '🔌 O Jules não entregou de novo. Agora tentam as IAs conectadas na Central (Conectar IAs, vagas 1 a 3) pelo robô Cortex Reserva. Se elas também não entregarem, é a vez do Claude.'
+      ? '🔌 O Jules não entregou de novo. Agora tentam as IAs conectadas na Central (Conectar IAs, vagas 1 a 10) pelo robô Cortex Reserva. Se elas também não entregarem, é a vez do Claude.'
       : 'Não consegui ligar o robô Cortex Reserva agora; tento de novo no próximo ciclo.');
     if (r) out.reserva.push(n);
   }
