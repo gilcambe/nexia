@@ -54,6 +54,23 @@ export class CreditManager {
     if (!authCheck) throw new Error('authCheck é obrigatório');
     this.users = loadUsers();
     this.authCheck = authCheck;
+    this.callTimestamps = new Map();
+  }
+
+  private callTimestamps: Map<string, number[]>;
+
+  private checkRateLimit(userId: string, action: string): void {
+    const now = Date.now();
+    const windowMs = 60 * 1000;
+    const maxCalls = 30;
+    const key = `${userId}:${action}`;
+    const timestamps = this.callTimestamps.get(key) ?? [];
+    const recent = timestamps.filter((t) => now - t < windowMs);
+    if (recent.length >= maxCalls) {
+      throw new Error(`Muitas chamadas de ${action}. Tente novamente em instantes.`);
+    }
+    recent.push(now);
+    this.callTimestamps.set(key, recent);
   }
 
   setAuthCheck(authCheck: AuthCheck): void {
@@ -84,11 +101,18 @@ export class CreditManager {
         `Não é possível mudar para o plano ${plan.name}: você já tem ${sitesCreated} site(s), acima do limite de ${plan.sites} do novo plano.`
       );
     }
+    // Nunca recarrega créditos ao trocar de plano: mantém o saldo existente.
+    // Um plano pago não é um "refill" de créditos de geração/edição.
+    const currentCredits = existing
+      ? existing.creditsRemaining
+      : plan.credits === -1
+        ? -1
+        : plan.credits;
     this.users.set(userId, {
       userId,
       planId,
       sitesCreated,
-      creditsRemaining: plan.credits === -1 ? -1 : plan.credits,
+      creditsRemaining: currentCredits,
     });
     saveUsers(this.users);
   }
@@ -133,6 +157,7 @@ export class CreditManager {
 
   async consumeCredit(userId: string): Promise<{ success: boolean; message?: string; creditsRemaining?: number }> {
     await this.requireAuth(userId);
+    this.checkRateLimit(userId, 'consumeCredit');
     return this._consumeCredit(userId);
   }
 
@@ -168,6 +193,7 @@ export class CreditManager {
 
   async registerSiteCreated(userId: string): Promise<{ success: boolean; message?: string }> {
     await this.requireAuth(userId);
+    this.checkRateLimit(userId, 'registerSiteCreated');
     // Verificar limite de sites primeiro
     const canCreate = this._canCreateSite(userId);
     if (!canCreate.allowed) return { success: false, message: canCreate.message };
@@ -182,6 +208,7 @@ export class CreditManager {
 
   async registerGeneration(userId: string): Promise<{ success: boolean; message?: string; creditsRemaining?: number }> {
     await this.requireAuth(userId);
+    this.checkRateLimit(userId, 'registerGeneration');
     // Verificar se o usuário tem créditos para geração
     const canGenerate = this._canGenerateOrEdit(userId);
     if (!canGenerate.allowed) return { success: false, message: canGenerate.message };
@@ -195,6 +222,7 @@ export class CreditManager {
 
   async registerEdit(userId: string): Promise<{ success: boolean; message?: string; creditsRemaining?: number }> {
     await this.requireAuth(userId);
+    this.checkRateLimit(userId, 'registerEdit');
     // Verificar se o usuário tem créditos para edição
     const canEdit = this._canGenerateOrEdit(userId);
     if (!canEdit.allowed) return { success: false, message: canEdit.message };
