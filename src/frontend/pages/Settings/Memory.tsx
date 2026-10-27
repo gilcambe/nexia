@@ -206,7 +206,7 @@ export default function MemorySettings() {
           )}
 
           {confirmandoDownload && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4" data-testid="settings-ia-local-download-alert">
               <p className="text-blue-800 text-sm font-medium">📥 Download do modelo (~1 GB)</p>
               <p className="text-blue-700 text-sm mt-1">
                 Recomendamos usar Wi-Fi para evitar consumo da franquia de dados móveis.
