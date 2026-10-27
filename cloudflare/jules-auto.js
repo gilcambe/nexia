@@ -14,7 +14,7 @@ const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'vez-do-claude'];
 
 // Decide o que fazer com as issues travadas (função pura, testada).
 function decidir(issues, prs, agora, nomes, enviadosHoje = 0) {
-  const recusado = (p) => (p.labels || []).some(l => (l.name || l) === 'revisor-recusado');
+  const recusado = (p) => (p.labels || []).some(l => (l.name || l) === 'revisor-recusou');
   const prDe = (n) => prs.some(p => !recusado(p) && new RegExp(`#${n}(?!\\d)`).test(`${p.title || ''}\n${p.body || ''}`));
   const travadas = issues.filter(i => !i.pull_request && nomes(i).includes('cortex-travado') && !nomes(i).some(n => IGNORAR.includes(n)));
   // Parte grande do plano do Cortex (rótulo cortex-jules, scripts/cortex-plano.js) vai antes das travadas: ela nem tentou na IA grátis.
