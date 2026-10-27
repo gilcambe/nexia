@@ -119,7 +119,7 @@ test('VAGAS9: Groq confere no GET /models com a chave no cabeçalho; NVIDIA vai 
   assert.strictEqual(r.situacao, 'ok');
   assert.strictEqual(pedido.url, 'https://api.groq.com/openai/v1/models');
   assert.strictEqual(pedido.init.headers.Authorization, 'Bearer ' + CHAVE);
-  assert.strictEqual((await v.testarChave('nvidia', 'nvapi-' + 'z'.repeat(30), roteador())).situacao, 'ok');
+  
 });
 
 test('VAGAS10: as 10 vagas estão listadas uma a uma nos dois workflows', () => {
@@ -133,4 +133,18 @@ test('VAGAS11: sem permissão, a mensagem diz o passo, o código do GitHub e o n
   const gh = async (caminho) => { if (caminho === '/actions/secrets/public-key') { const e = new Error('Resource not accessible by personal access token'); e.status = 403; throw e; } return {}; };
   await assert.rejects(v.salvar(gh, { vaga: 1, provedor: 'groq', chave: CHAVE }, { ...servico(200), nomeToken: 'NEXIA_JOBS_TOKEN' }),
     (e) => /NEXIA_JOBS_TOKEN/.test(e.message) && /ler a chave pública do repositório: GitHub 403: Resource not accessible/.test(e.message) && !e.message.includes(CHAVE));
+});
+
+test('VAGAS12: Cerebras saiu (pede cartão); Cohere e Hugging Face entraram; NVIDIA confere com POST; Jules mostra estado real', async () => {
+  assert.ok(!v.PROVEDORES.cerebras);
+  assert.ok(v.PROVEDORES.cohere && v.PROVEDORES.huggingface);
+  let pedido;
+  const r = await v.testarChave('nvidia', 'nvapi-' + 'z'.repeat(30), { fetchImpl: async (url, init) => { pedido = { url, init }; return { ok: false, status: 401, text: async () => '' }; } });
+  assert.strictEqual(r.situacao, 'recusada');
+  assert.strictEqual(pedido.init.method, 'POST');
+  const agora = Date.parse('2026-10-27T15:00:00Z');
+  const j = v.estadoJules({ JULES_API_KEY: 'x' }, [{ number: 1 }, { number: 2, pull_request: {} }],
+    [{ number: 9, user: { login: 'google-labs-jules[bot]' }, created_at: '2026-10-27T12:00:00Z', html_url: 'u' }, { number: 8, user: { login: 'outro' }, created_at: '2026-10-27T12:00:00Z' }], agora);
+  assert.deepStrictEqual([j.ligado, j.comEle, j.prsHoje, j.ultimoPr.numero], [true, 1, 1, 9]);
+  assert.strictEqual(v.estadoJules({}, null, []).ligado, false);
 });

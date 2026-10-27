@@ -84,7 +84,8 @@ jobs:
               groq) contas+=("vaga-$N-groq|groq/llama-3.3-70b-versatile|GROQ_API_KEY|$CH") ;;
               openrouter) contas+=("vaga-$N-openrouter|openrouter/deepseek/deepseek-chat-v3-0324:free|OPENROUTER_API_KEY|$CH") ;;
               mistral) contas+=("vaga-$N-mistral|mistral/codestral-latest|MISTRAL_API_KEY|$CH") ;;
-              cerebras) contas+=("vaga-$N-cerebras|cerebras/llama-3.3-70b|CEREBRAS_API_KEY|$CH") ;;
+              cohere) contas+=("vaga-$N-cohere|cohere_chat/command-a-03-2025|COHERE_API_KEY|$CH") ;;
+              huggingface) contas+=("vaga-$N-huggingface|huggingface/meta-llama/Llama-3.3-70B-Instruct|HUGGINGFACE_API_KEY|$CH") ;;
               codestral) contas+=("vaga-$N-codestral|codestral/codestral-latest|CODESTRAL_API_KEY|$CH") ;;
               nvidia) contas+=("vaga-$N-nvidia|nvidia_nim/meta/llama-3.3-70b-instruct|NVIDIA_NIM_API_KEY|$CH") ;;
             esac
