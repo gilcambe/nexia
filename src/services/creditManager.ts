@@ -15,6 +15,8 @@ export interface UserCredits {
   planId: PlanId;
   sitesCreated: number;
   creditsRemaining: number;
+  sig?: string; // Assinatura individual para cada usuário
+  lastUpdated: number; // Timestamp da última atualização
 }
 
 export type AuthCheck = (userId: string, sessionId?: string) => Promise<boolean> | boolean;
@@ -33,13 +35,12 @@ const RATE_LIMIT_KEY = 'nexia-credit-manager-ratelimit';
 // Chave de assinatura para detectar adulteração de dados no localStorage.
 // Não substitui criptografia; impede tampering casual do usuário.
 const SIG_KEY = 'nexia-cm-v1';
-// Chave HMAC para assinatura criptográfica mais segura
+// Chave para assinatura de integridade (detecta adulteração casual)
 // Em produção, esta chave deve vir de variáveis de ambiente e ser rotacionada
 const HMAC_KEY = process.env.NEXIA_HMAC_KEY || 'nexia-cm-hmac-v1';
 
 function sign(payload: string): string {
-  // Usar HMAC-SHA256 para assinatura criptográfica mais segura
-  // Simulação de HMAC (em produção usar crypto.subtle)
+  // Hash simples para detectar adulteração casual (não é HMAC criptográfico)
   let h = 0;
   const key = HMAC_KEY;
   for (let i = 0; i < payload.length; i++) {
@@ -59,9 +60,10 @@ function verifyIntegrity(data: UserCredits): boolean {
 
 // Função para adicionar assinatura aos dados do usuário
 function signUserData(data: UserCredits): UserCredits {
+  const { sig, ...dataWithoutSig } = data;
   return {
     ...data,
-    sig: sign(JSON.stringify(data))
+    sig: sign(JSON.stringify(dataWithoutSig))
   };
 }
 
@@ -86,15 +88,6 @@ interface SignedPayload {
   users: UserCredits[];
   sig: string;
   timestamp: number; // Timestamp para detectar dados muito antigos
-}
-
-interface UserCredits {
-  userId: string;
-  planId: PlanId;
-  sitesCreated: number;
-  creditsRemaining: number;
-  sig?: string; // Assinatura individual para cada usuário
-  lastUpdated: number; // Timestamp da última atualização
 }
 
 function loadUsers(): Map<string, UserCredits> {
@@ -136,13 +129,6 @@ function loadUsers(): Map<string, UserCredits> {
         return false;
       }
       
-      // Para planos ilimitados, garantir que os valores sejam -1
-      if (plan.sites === -1 && u.sitesCreated !== -1) {
-        return false;
-      }
-      if (plan.credits === -1 && u.creditsRemaining !== -1) {
-        return false;
-      }
       
       return true;
     });
@@ -176,28 +162,10 @@ export class CreditManager {
     this.users = loadUsers();
     this.authCheck = authCheck;
     this.callTimestamps = loadRateLimits();
-    
-    // Inicializar dados do usuário se não existir
-    this.initializeDefaultUsers();
   }
 
   private callTimestamps: Map<string, number[]>;
   
-  // Inicializar usuários padrão para testes
-  private initializeDefaultUsers(): void {
-    // Criar usuário padrão para testes se não existir
-    if (!this.users.has('test-user')) {
-      const defaultUser: UserCredits = {
-        userId: 'test-user',
-        planId: 'plus',
-        sitesCreated: 0,
-        creditsRemaining: 50,
-        lastUpdated: Date.now()
-      };
-      this.users.set('test-user', defaultUser);
-      saveUsers(this.users);
-    }
-  }
 
   private checkRateLimit(userId: string, action: string): void {
     const now = Date.now();
