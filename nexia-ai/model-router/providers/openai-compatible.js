@@ -5,6 +5,7 @@ const { ModelError, CODES } = require('../errors');
 const { withTimeout, sseData } = require('../messages');
 const { createKiloCatalog, isFree } = require('./kilo-catalog');
 const { getPlacar } = require('../cota');
+const lerVaga = require('../../scripts/ia-vagas-teste').lerVaga;
 
 // max_output: teto aplicado ao max_tokens pedido. Os chamadores legados pediam até
 // 100000 tokens, e vários provedores recusam com 400 acima do próprio limite.
