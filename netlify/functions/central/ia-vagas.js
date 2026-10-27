@@ -24,8 +24,11 @@ const PROVEDORES = {
     passos: ['Abra openrouter.ai e entre com o Google (não pede cartão).', 'Em Keys, toque em "Create Key" e copie.'] },
   mistral: { nome: 'Mistral', router: 'mistral', modelo: 'mistral-small-latest', env: 'MISTRAL_API_KEY', site: 'https://console.mistral.ai/api-keys',
     passos: ['Abra console.mistral.ai, entre e escolha o plano "Experiment" (grátis).', 'Em API Keys, crie uma chave e copie.'] },
-  cerebras: { nome: 'Cerebras', router: 'cerebras', modelo: 'llama-3.3-70b', env: 'CEREBRAS_API_KEY', site: 'https://cloud.cerebras.ai/platform',
-    passos: ['Abra cloud.cerebras.ai e entre (grátis).', 'Em API Keys, crie uma chave e copie.'] },
+  // Cerebras saiu (27/10): pede cartão para liberar a chave. Regra do dono: nada pago, nada de cartão.
+  cohere: { nome: 'Cohere', router: 'cohere', modelo: 'command-a-03-2025', env: 'COHERE_API_KEY', site: 'https://dashboard.cohere.com/api-keys',
+    passos: ['Abra dashboard.cohere.com e crie a conta (sem cartão).', 'Em API Keys, copie a "Trial key" (1.000 pedidos por mês).'] },
+  huggingface: { nome: 'Hugging Face', router: 'huggingface', modelo: 'meta-llama/Llama-3.3-70B-Instruct', env: 'HF_API_KEY', site: 'https://huggingface.co/settings/tokens',
+    passos: ['Abra huggingface.co e crie a conta (sem cartão).', 'Em Settings → Access Tokens, crie um token "Read" e copie (crédito grátis pequeno por mês).'] },
   codestral: { nome: 'Codestral (Mistral, código)', router: 'codestral', modelo: 'codestral-latest', env: 'CODESTRAL_API_KEY', site: 'https://console.mistral.ai/codestral',
     passos: ['Abra console.mistral.ai/codestral e entre (grátis).', 'Gere a chave do Codestral e copie.'] },
   nvidia: { nome: 'NVIDIA', router: 'nvidia', modelo: 'meta/llama-3.3-70b-instruct', env: 'NVIDIA_API_KEY', site: 'https://build.nvidia.com/settings/api-keys', logo: '/central/logos/nvidia.svg',
@@ -50,16 +53,20 @@ const CONFERIR = {
   groq: (k) => ({ url: 'https://api.groq.com/openai/v1/models', headers: { Authorization: 'Bearer ' + k } }),
   openrouter: (k) => ({ url: 'https://openrouter.ai/api/v1/key', headers: { Authorization: 'Bearer ' + k } }),
   mistral: (k) => ({ url: 'https://api.mistral.ai/v1/models', headers: { Authorization: 'Bearer ' + k } }),
-  cerebras: (k) => ({ url: 'https://api.cerebras.ai/v1/models', headers: { Authorization: 'Bearer ' + k } }),
+  cohere: (k) => ({ url: 'https://api.cohere.com/v1/models?page_size=1', headers: { Authorization: 'Bearer ' + k } }),
+  huggingface: (k) => ({ url: 'https://huggingface.co/api/whoami-v2', headers: { Authorization: 'Bearer ' + k } }),
+  // NVIDIA: a lista de modelos é aberta (não confere a chave); uma conversa de 1 palavra confere.
+  nvidia: (k) => ({ url: 'https://integrate.api.nvidia.com/v1/chat/completions', method: 'POST', headers: { Authorization: 'Bearer ' + k, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model: 'meta/llama-3.1-8b-instruct', messages: [{ role: 'user', content: 'ok' }], max_tokens: 1 }) }),
 };
 
 async function conferirDireto(provedor, chave, fetchImpl, ms) {
-  const { url, headers } = CONFERIR[provedor](chave);
+  const { url, headers, method = 'GET', body } = CONFERIR[provedor](chave);
   const ctl = new AbortController();
   const timer = setTimeout(() => ctl.abort(), ms);
   const t0 = Date.now();
   try {
-    const r = await fetchImpl(url, { method: 'GET', headers: { ...headers, 'User-Agent': 'kernex-central' }, signal: ctl.signal });
+    const r = await fetchImpl(url, { method, headers: { ...headers, 'User-Agent': 'kernex-central' }, ...(body ? { body } : {}), signal: ctl.signal });
     const tempo = Date.now() - t0;
     if (r.ok) return { situacao: 'ok', tempo };
     const corpo = (await r.text().catch(() => '')).slice(0, 400);
@@ -164,12 +171,26 @@ function provasDeUso(prs) {
 }
 
 /** GET ?parte=vagas: o que a tela mostra. */
-async function estado(gh) {
+// Jules (Google): não usa chave de API na vaga; entra pela conta Google (JULES_API_KEY no servidor). Mostra o estado real.
+function estadoJules(env, julesAbertas, prs, agora = Date.now()) {
+  const hoje = new Date(agora - 3 * 36e5).toISOString().slice(0, 10); // dia em Brasília
+  const dele = (prs || []).filter((p) => /jules/i.test(String((p.user && p.user.login) || '')));
+  return {
+    ligado: !!(env.JULES_API_KEY || env.JULES_API_KEY1),
+    comEle: Array.isArray(julesAbertas) ? julesAbertas.filter((i) => !i.pull_request).length : null,
+    prsHoje: dele.filter((p) => new Date(Date.parse(p.created_at) - 3 * 36e5).toISOString().slice(0, 10) === hoje).length,
+    ultimoPr: dele[0] ? { numero: dele[0].number, link: dele[0].html_url, quando: dele[0].created_at } : null,
+  };
+}
+
+async function estado(gh, env = {}) {
+  let julesAbertas = null;
   const [nomes, est, prs] = await Promise.all([
     gh('/actions/secrets?per_page=100').then((r) => (r.secrets || [])).catch(() => null),
     lerEstado(gh),
     gh('/pulls?state=all&per_page=40&sort=created&direction=desc').catch(() => []),
-  ]);
+    gh('/issues?state=open&labels=jules-enviado&per_page=50').catch(() => null),
+  ]).then(([a, b, c, d]) => { julesAbertas = d; return [a, b, c]; });
   const usos = provasDeUso(prs);
   const vagas = VAGAS.map((n) => {
     const s = nomes ? nomes.find((x) => x.name === segredo(n)) : null;
@@ -177,7 +198,7 @@ async function estado(gh) {
     const ligada = nomes ? !!s : !!e.provedor;
     return { vaga: n, ligada, provedor: ligada ? e.provedor || null : null, salvaEm: s ? s.updated_at : e.salvaEm || null, teste: ligada ? e.teste || null : null, usos: usos.filter((u) => u.vaga === n) };
   });
-  return { vagas, provedores: provedoresPublicos(), podeLerSegredos: nomes !== null };
+  return { vagas, provedores: provedoresPublicos(), podeLerSegredos: nomes !== null, jules: estadoJules(env, julesAbertas, prs) };
 }
 
 /** POST vaga-salvar: testa e só grava se a IA respondeu (ou se só acabou a cota de hoje: a chave é boa). */
@@ -212,4 +233,4 @@ async function apagar(gh, { vaga }) {
   return { status: 200, corpo: { ok: true, mensagem: `Vaga ${n} desligada e chave apagada.` } };
 }
 
-module.exports = { VAGAS, PROVEDORES, segredo, provedoresPublicos, testarChave, selar, lerEstado, gravarEstado, corpoEstado, provasDeUso, estado, salvar, apagar, classificar, ROTULO_ESTADO, SEM_PERMISSAO };
+module.exports = { estadoJules, VAGAS, PROVEDORES, segredo, provedoresPublicos, testarChave, selar, lerEstado, gravarEstado, corpoEstado, provasDeUso, estado, salvar, apagar, classificar, ROTULO_ESTADO, SEM_PERMISSAO };

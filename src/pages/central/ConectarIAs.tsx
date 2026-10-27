@@ -147,6 +147,22 @@ export default function ConectarIAs({ inicial }: { inicial?: Vagas }) {
         {ligadas > 0 && <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} onClick={testar} disabled={testando} data-testid="vagas-testar">{testando ? "Mandando…" : "🧪 Testar agora"}</button>}
       </div>
       {aviso && <p className="text-sm text-slate-700" role="status">{aviso}</p>}
+      {atual?.jules && (
+        <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4" data-testid="jules">
+          <Logo nome="Jules" tam={40} />
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-slate-900">Jules (Google) · entra pela conta Google</div>
+            <div className="text-xs text-slate-500">
+              {atual.jules.ligado
+                ? `${atual.jules.comEle ?? "?"} tarefa(s) com ele agora · ${atual.jules.prsHoje} PR(s) hoje${atual.jules.ultimoPr ? ` · último PR #${atual.jules.ultimoPr.numero} ${haQuanto(atual.jules.ultimoPr.quando)}` : ""}`
+                : "Falta a chave JULES_API_KEY no Cloudflare (jules.google.com → Settings → API)."}
+            </div>
+          </div>
+          <span className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-medium whitespace-nowrap ${atual.jules.ligado ? PILULA.verde : PILULA.amarelo}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${atual.jules.ligado ? PONTO.verde : PONTO.amarelo}`} />{atual.jules.ligado ? "Ligado" : "Falta ligar"}
+          </span>
+        </div>
+      )}
       {!atual ? <div className="h-24 rounded-xl bg-slate-100 animate-pulse" /> : (
         <ul className="grid grid-cols-1 gap-3">
           {/* Vagas ligadas sempre aparecem; das livres, só uma por vez (o botão abaixo abre a próxima). */}
@@ -162,7 +178,7 @@ export default function ConectarIAs({ inicial }: { inicial?: Vagas }) {
         <summary className="font-medium cursor-pointer">Por que não dá para entrar com a conta do ChatGPT, Claude ou Gemini?</summary>
         <div className="mt-2 space-y-2 text-xs text-slate-600">
           <p><b>Conta de chat (site):</b> ChatGPT, Claude.ai e Gemini são para uma pessoa conversar. Um robô entrando nelas sozinho é proibido pelos termos e pode bloquear a conta. Para usar essas contas, toque em "Copiar contexto" no cartão "Usar outra IA" e cole na conversa você mesmo.</p>
-          <p><b>Chave de API (o que estas vagas usam):</b> é o "login" feito para robôs. Gemini, Groq, OpenRouter, Mistral, Codestral, Cerebras e NVIDIA dão chave grátis, com limite por dia. Quando o limite acaba, a vaga fica amarela e volta sozinha no dia seguinte.</p>
+          <p><b>Chave de API (o que estas vagas usam):</b> é o "login" feito para robôs. Gemini, Groq, OpenRouter, Mistral, Codestral, NVIDIA, Cohere e Hugging Face dão chave grátis, sem cartão, com limite por dia. Quando o limite acaba, a vaga fica amarela e volta sozinha no dia seguinte.</p>
           <p><b>GPT e Claude por API</b> cobram por uso. Pela regra "nada pago", não entram aqui.</p>
           <p><b>3 iguais?</b> Pode pôr o mesmo serviço em mais de uma vaga se forem contas de verdade diferentes (por exemplo, de outra pessoa da equipe). Criar contas falsas só para fugir do limite vai contra os termos.</p>
           <p><b>Segurança:</b> a chave é testada, criptografada e guardada como segredo do GitHub. Ela nunca aparece de novo, nem aqui, nem no banco, nem nos registros.</p>
