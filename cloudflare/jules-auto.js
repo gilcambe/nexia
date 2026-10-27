@@ -10,7 +10,7 @@ const REPO = '/repos/gilcambe/nexia';
 // Pedido do dono (25 e 26/10/2026): nada de horas esperando. 1 h dá para o Jules codar e testar uma tarefa pequena;
 // passou disso, volta ao Cortex (pode ir ao Jules de novo depois).
 const ESPERA_JULES_H = 1;
-const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'vez-do-claude'];
+const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'so-humano', 'vez-do-claude'];
 
 // Decide o que fazer com as issues travadas (função pura, testada).
 function decidir(issues, prs, agora, nomes, enviadosHoje = 0) {
