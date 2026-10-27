@@ -259,7 +259,36 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     return montarReservas(repo, prod, semCota);
   }
 
-  return { cortex, robos, rodar, pedirAoCortex, divulga, estadoDivulga, reservas, api: gh, temToken: !!token, nomeToken: env.NEXIA_JOBS_TOKEN ? 'NEXIA_JOBS_TOKEN' : env.NEXIA_GITHUB_TOKEN ? 'NEXIA_GITHUB_TOKEN' : env.GITHUB_TOKEN ? 'GITHUB_TOKEN' : null };
+  async function arquivoTexto(caminho) {
+    try {
+      const arquivo = await gh('/contents/' + encodeURIComponent(caminho) + '?ref=develop');
+      if (!arquivo || !arquivo.content) return null;
+      return decodificarBase64(arquivo.content);
+    } catch { return null; }
+  }
+
+  async function pacoteIA() {
+    const em = new Date().toISOString();
+    let estado = null;
+    let cx = 0;
+    try {
+      estado = await reservas();
+    } catch { estado = null; }
+    try {
+      const [abertas] = await Promise.all([
+        gh('/issues?state=open&labels=cortex-fila&per_page=100'),
+      ]);
+      cx = abertas.filter((i) => !i.pull_request).length;
+    } catch { cx = 0; }
+    return {
+      contexto: 'pacote-ia',
+      estado,
+      cortex: cx,
+      em,
+    };
+  }
+
+  return { cortex, robos, rodar, pedirAoCortex, divulga, estadoDivulga, reservas, pacoteIA, api: gh, temToken: !!token, nomeToken: env.NEXIA_JOBS_TOKEN ? 'NEXIA_JOBS_TOKEN' : env.NEXIA_GITHUB_TOKEN ? 'NEXIA_GITHUB_TOKEN' : env.GITHUB_TOKEN ? 'GITHUB_TOKEN' : null };
 }
 
 module.exports = { criarGithub, REPO, RESERVAS, montarReservas, decodificarBase64, BRANCH_DIVULGA, ARQUIVO_ESTADO };
