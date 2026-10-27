@@ -21,6 +21,15 @@ test('CENTRAL-CLIENTES: lista tem CES, Viajante Pro, Splash, Adriano e Arqia sem
   assert.match(fs.readFileSync(path.join(raiz, 'src/pages/central/Produtos.tsx'), 'utf8'), /em breve/i);
 });
 
+test('CENTRAL-TIPO: produtos e clientes separados por tipo com contadores na interface (#1947)', () => {
+  assert.ok(PRODUTOS.every((p) => p.tipo === 'produto' || p.tipo === 'cliente'));
+  const produtosTsx = fs.readFileSync(path.join(raiz, 'src/pages/central/Produtos.tsx'), 'utf8');
+  assert.match(produtosTsx, /Nossos produtos/);
+  assert.match(produtosTsx, /Clientes \(tenants\)/);
+  assert.match(produtosTsx, /bloco-nossos-produtos/);
+  assert.match(produtosTsx, /bloco-clientes-tenants/);
+});
+
 test('CENTRAL-KERNEX: nenhum texto entre aspas exibido nas telas da Central diz NEXIA', () => {
   const dir = path.join(raiz, 'src/pages/central');
   for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.tsx'))) {
