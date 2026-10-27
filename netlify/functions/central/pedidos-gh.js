@@ -54,4 +54,17 @@ function criarPedidos(env = process.env, fetchFn = fetch) {
   return { lista, gh, temToken: !!token };
 }
 
-module.exports = { criarPedidos, situacao, resumo, nomes, frase, REPO };
+async function handleAjudaIas(event) {
+  const cors = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, Authorization' };
+  const res = (statusCode, body) => ({ statusCode, headers: cors, body: JSON.stringify(body) });
+  if (String(event.httpMethod || '').toUpperCase() === 'OPTIONS') return res(204, '');
+  const { verifyBearerToken } = require('./middleware');
+  const auth = await verifyBearerToken(event).catch(() => ({ ok: false }));
+  if (!auth.ok || auth.role !== 'master') return res(403, { error: 'Só o administrador da NEXIA abre a Central.' });
+  if (String(event.httpMethod || '').toUpperCase() === 'GET') return res(200, { ok: true, ajuda: 'Ajuda IAs: use POST com {acao} para testar as IAs da Central.' });
+  let body = {};
+  try { body = JSON.parse(event.body || '{}') || {}; } catch { return res(400, { error: 'Pedido inválido.' }); }
+  return res(200, { ok: true, acao: body.acao || 'ajuda-ias', mensagem: 'Rota de ajuda IAs da Central recebida.' });
+}
+
+module.exports = { criarPedidos, situacao, resumo, nomes, frase, REPO, handleAjudaIas };
