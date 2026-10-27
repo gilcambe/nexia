@@ -11,6 +11,8 @@ const CODES = Object.freeze({
   ALL_FAILED: 'ALL_FAILED',
   // Pedido maior que o teto por pedido do modelo (ex.: GitHub Models grátis, ~8 mil tokens de entrada).
   TOO_LARGE: 'TOO_LARGE',
+  // Provedor não disponível no ambiente (ex.: binding __NEXIA_AI__ ausente no Worker).
+  UNAVAILABLE: 'UNAVAILABLE',
 });
 
 class ModelError extends Error {

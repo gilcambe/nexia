@@ -13,6 +13,10 @@ function binding() {
   return globalThis && globalThis.__NEXIA_AI__;
 }
 
+function indisponivel() {
+  return !binding() || typeof binding().run !== 'function';
+}
+
 module.exports = {
   id: 'workers-ai-binding',
   available: () => Boolean(binding()),
@@ -23,12 +27,12 @@ module.exports = {
    * Devolve async iterator yieldando { content: string, done: boolean }.
    */
   async *run(req = {}) {
-    const b = binding();
-    if (!b || typeof b.run !== 'function') {
+    if (indisponivel()) {
       throw new ModelError(CODES.UNAVAILABLE, 'Workers AI binding (__NEXIA_AI__) não disponível.', {
         provider: 'workers-ai-binding',
       });
     }
+    const b = binding();
 
     const messages = Array.isArray(req.messages) ? req.messages : [];
     const max_tokens = req.maxTokens !== undefined ? Number(req.maxTokens) : 4096;
