@@ -2,12 +2,45 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
+const ts = require('typescript');
+const { pathToFileURL } = require('node:url');
 
-const { handlePostResponse } = require('../../src/chat/responseHandler.ts');
-const { getFacts, clearInMemoryFacts } = require('../../src/services/memoryService.ts');
+let moduloCache = null;
+
+async function carregarModulos() {
+  if (moduloCache) return moduloCache;
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fact-ext-integ-'));
+
+  const files = [
+    ['src/config/aiProviders.ts', 'aiProviders.mjs'],
+    ['src/services/factExtractor.ts', 'factExtractor.mjs'],
+    ['src/services/memoryService.ts', 'memoryService.mjs'],
+    ['src/chat/responseHandler.ts', 'responseHandler.mjs'],
+  ];
+
+  for (const [relPath, outName] of files) {
+    let src = fs.readFileSync(path.join(__dirname, '../../', relPath), 'utf8');
+    src = src.replace(/['"]\.\.\/config\/aiProviders(?:\.ts)?['"]/g, "'./aiProviders.mjs'");
+    src = src.replace(/['"]\.\.\/services\/factExtractor(?:\.ts)?['"]/g, "'./factExtractor.mjs'");
+    src = src.replace(/['"]\.\.\/services\/memoryService(?:\.ts)?['"]/g, "'./memoryService.mjs'");
+    const out = ts.transpileModule(src, { compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 } }).outputText;
+    fs.writeFileSync(path.join(dir, outName), out);
+  }
+
+  const responseHandler = await import(pathToFileURL(path.join(dir, 'responseHandler.mjs')).href);
+  const memoryService = await import(pathToFileURL(path.join(dir, 'memoryService.mjs')).href);
+
+  moduloCache = { responseHandler, memoryService };
+  return moduloCache;
+}
 
 test('Integration Test: confirma chamada assíncrona (waitUntil) e persistência de fatos', async () => {
-  clearInMemoryFacts();
+  const { responseHandler, memoryService } = await carregarModulos();
+  memoryService.clearInMemoryFacts();
 
   let waitUntilCalled = false;
   let capturedPromise = null;
@@ -28,7 +61,7 @@ test('Integration Test: confirma chamada assíncrona (waitUntil) e persistência
     ]);
   };
 
-  const result = handlePostResponse({
+  const result = responseHandler.handlePostResponse({
     responseText: 'Seu perfil foi atualizado com sucesso!',
     userMessage: 'Meu nome é Gildivan Bezerra, moro em São Paulo e prefiro usar dark mode.',
     tenantId: 'tenant_integ',
@@ -62,7 +95,7 @@ test('Integration Test: confirma chamada assíncrona (waitUntil) e persistência
   }
 
   // Confirma busca via memoryService
-  const storedFacts = await getFacts('user_integ_1', 'tenant_integ', 'conv_integ_1');
+  const storedFacts = await memoryService.getFacts('user_integ_1', 'tenant_integ', 'conv_integ_1');
   assert.equal(storedFacts.length, 3);
   assert.equal(storedFacts[0].fact, 'Usuário é Gildivan Bezerra');
 });
