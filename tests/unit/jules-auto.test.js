@@ -68,7 +68,7 @@ test('JULES-AUTO3: escada: Jules sem PR no tempo volta ao Cortex do zero; 2ª ve
   const prs = [{ title: 'fix', body: 'Refs #13' }, { title: 'outro', body: 'Refs #130' }, { title: 'x', body: 'Fecha #15', labels: L('revisor-recusou') }];
   const d = decidir(issues, prs, agora, nomes);
   // #1958: 2ª volta sem PR → IAs conectadas (reserva); reserva também sem PR → Claude.
-  assert.deepStrictEqual(d, { enviar: null, retomar: [10, 15], reserva: [11], humano: [17] });
+  assert.deepStrictEqual(d, { enviar: null, retomar: [10, 15], reserva: [11], humano: [17], claude: [], devolver: [10, 11, 12, 15, 17] });
 });
 
 test('JULES-AUTO4: retomada tira travado, jules-enviado e tentativas e põe cortex-retomada', async () => {
