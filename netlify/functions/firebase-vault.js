@@ -38,8 +38,11 @@ function criarBancoB(env = process.env) {
   const cofre = globalThis.__NEXIA_COFRE__;
   if (cofre) {
     const { createD1Backend, createD1Driver } = require('../../lib/firebase-lite/d1-backend');
-    const stub = cofre.get(cofre.idFromName('cofre'));
-    const fetchImpl = (url, init) => stub.fetch('https://cofre/query', { method: 'POST', body: init && init.body });
+    // O Worker não deixa um pedido usar o stub criado em outro pedido: pega o stub na hora, com o binding atual.
+    const fetchImpl = (url, init) => {
+      const ns = globalThis.__NEXIA_COFRE__ || cofre;
+      return ns.get(ns.idFromName('cofre')).fetch('https://cofre/query', { method: 'POST', body: init && init.body });
+    };
     const backend = createD1Backend({ driver: createD1Driver({ token: 'do', accountId: 'do', databaseId: 'do', fetchImpl }), projectId: 'nexia-do' });
     bancos.push({ projectId: backend.projectId, getToken: async () => '', backend });
   }
