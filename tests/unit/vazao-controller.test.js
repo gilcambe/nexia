@@ -167,7 +167,7 @@ test('VazaoController: contadores por provedor e verificação de cotas', () => 
   const contadores = ctrl.obterContadores(hoje);
   assert.strictEqual(contadores.openai, 800);
 
-  const cota = ctrl.verificarCota('openai', 1000, '2026-10-26');
+  const cota = ctrl.verificarCota('openai', 1000, hoje);
   assert.strictEqual(cota.usado, 800);
   assert.strictEqual(cota.perto, true); // 800 >= 80% de 1000
   assert.strictEqual(cota.excedido, false);
