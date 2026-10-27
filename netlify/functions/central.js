@@ -170,6 +170,24 @@ function createHandler(deps = {}) {
         const db = deps.getHistoricoDb ? deps.getHistoricoDb() : getHistorico().abrirBanco(env);
         return res(200, { erros: await require('../../lib/rid').listarErros(db, 50) });
       }
+      if (parte === 'ajuda-ias') {
+        const db = getDb();
+        const snap = await db.collection('central_ajuda_ias').doc('estado').get();
+        const atual = snap.exists ? (snap.data() || {}) : {};
+        const ligado = atual.ligado === true;
+        const agora = Date.now();
+        const revisorMin = atual.revisorAtualizadoEm ? Math.round((agora - Number(atual.revisorAtualizadoEm)) / 60000) : null;
+        return res(200, {
+          ligado,
+          revisorMin: revisorMin === null ? null : Math.max(0, revisorMin),
+          aprovados: Number(atual.aprovadosHoje || 0),
+          recusados: Number(atual.recusadosHoje || 0),
+          jules: Number(atual.julesAgora || 0),
+          claude: Number(atual.claudeVez || 0),
+          claudePrimeiro: atual.claudePrimeiro || null,
+          travadas: Number(atual.travadas || 0)
+        });
+      }
       const gh = getGithub();
       if (parte === 'empresa') {
         const usados = ROBOS.filter((r) => FORNECEDORES.some((f) => f.robo === r.arquivo));
