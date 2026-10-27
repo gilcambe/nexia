@@ -12,7 +12,7 @@ const { TEMPLATE_IDS } = require('../robots/templates');
 const PRIORITY = ['low', 'medium', 'high', 'critical'];
 // Fase 10: agentes especializados (spec §7) e intenções do Orchestrator
 const AGENT_IDS = ['orchestrator', 'architect', 'coder', 'frontend', 'backend', 'database', 'qa', 'security', 'devops', 'reviewer', 'designer'];
-const EXECUTION_INTENTS = ['question', 'status', 'change', 'review', 'pipeline', 'deploy_staging', 'deploy_production', 'unknown'];
+const EXECUTION_INTENTS = ['question', 'status', 'change', 'review', 'pipeline', 'deploy_staging', 'deploy_production', 'forget_fact', 'clear_memory', 'unknown'];
 const ENV_NAMES = ['development', 'staging', 'production', 'preview'];
 const HOSTING_PROVIDERS = ['render', 'firebase', 'cloudflare', 'vercel', 'netlify', 'github_pages', 'local', 'other'];
 const SECRET_STORES = ['env', 'render', 'github_actions', 'gcp_secret_manager', 'firebase', 'cloudflare', 'vercel', 'netlify', 'local_env_file', 'other'];
