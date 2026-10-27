@@ -259,7 +259,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     return montarReservas(repo, prod, semCota);
   }
 
-  return { cortex, robos, rodar, pedirAoCortex, divulga, estadoDivulga, reservas, temToken: !!token };
+  return { cortex, robos, rodar, pedirAoCortex, divulga, estadoDivulga, reservas, api: gh, temToken: !!token };
 }
 
 module.exports = { criarGithub, REPO, RESERVAS, montarReservas, decodificarBase64, BRANCH_DIVULGA, ARQUIVO_ESTADO };

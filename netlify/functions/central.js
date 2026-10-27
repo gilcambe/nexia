@@ -1,12 +1,13 @@
 'use strict';
 // Central NEXIA (/central): uma página para o dono cuidar de toda a NEXIA. Só o master entra.
 //   GET  /api/central?parte=busca&q=…|saude|historico|erros|cotas|dinheiro|cortex|robos|divulga|banco|cloudflare|lista|empresa|clientes|leads
-//   POST /api/central {acao:'rodar', arquivo, ensaio?} | {acao:'pedir', texto} | {acao:'testar-ias'}
+//   POST /api/central {acao:'rodar', arquivo, ensaio?} | {acao:'pedir', texto} | {acao:'testar-ias'} | {acao:'vaga-salvar'|'vaga-apagar'|'vaga-testar'}
 // Cada parte é um pedido separado: a página mostra o que já chegou sem esperar o resto.
 
 const { PRODUTOS, NO_AR, LINKS, ROBOS } = require('../../central/produtos');
 const { FORNECEDORES } = require('../../central/fornecedores');
 const empresa = require('./central/empresa');
+const vagas = require('./central/ia-vagas');
 
 async function medir(url, fetchFn, ms = 6000) {
   const t0 = Date.now();
@@ -63,6 +64,15 @@ function createHandler(deps = {}) {
         try { body = JSON.parse(event.body || '{}') || {}; } catch { return res(400, { error: 'Pedido inválido.' }); }
         if (body.acao === 'testar-ias') return res(200, { ias: await empresa.testarIAs(getRouter(), getIAs()), em: new Date().toISOString() });
         const gh = getGithub();
+        // #1958: Conectar IAs. A chave nunca volta na resposta nem vai para log.
+        if (body.acao === 'vaga-salvar' || body.acao === 'vaga-apagar') {
+          const r = body.acao === 'vaga-salvar' ? await vagas.salvar(gh.api, body, deps.vagasDeps || {}) : await vagas.apagar(gh.api, body);
+          return res(r.status, r.corpo);
+        }
+        if (body.acao === 'vaga-testar') {
+          await gh.rodar('ia-vagas.yml', {});
+          return res(200, { ok: true, mensagem: 'Mandei o robô testar as 3 vagas com as chaves guardadas. Em 1 ou 2 minutos o resultado aparece aqui.' });
+        }
         if (body.acao === 'rodar') {
           const robo = ROBOS.find((r) => r.arquivo === body.arquivo && r.inputs);
           if (!robo) return res(400, { error: 'Esse robô não pode ser ligado por aqui.' });
@@ -143,6 +153,7 @@ function createHandler(deps = {}) {
         return res(200, { fornecedores: empresa.fornecedores(FORNECEDORES, env, robos) });
       }
       if (parte === 'cortex') return res(200, await gh.cortex());
+      if (parte === 'vagas') return res(200, await vagas.estado(gh.api));
       if (parte === 'reservas') return res(200, await gh.reservas());   // #802: contas de reserva (só nomes de segredos)
       if (parte === 'robos') return res(200, { robos: await gh.robos(ROBOS) });
       if (parte === 'divulga') return res(200, await gh.divulga());

@@ -6,6 +6,7 @@ import type { Aviso, Aba } from "./avisos";
 import InstalarApp from "./InstalarApp";
 import Logo, { logoServico } from "./Logo";
 import { Icone } from "./icones";
+import { estadoVaga } from "./ConectarIAs";
 
 // Início da Central Kernex: visão geral com dados reais. Sem dado, mostra "sem dado ainda"; nunca número inventado.
 type Estado = "ok" | "atencao" | "erro" | "cinza";
@@ -143,7 +144,13 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando }: {
 
   const ecossistema = forn.filter((f) => f.grupo === "Inteligência artificial" || f.grupo === "Infraestrutura").slice(0, 15);
 
-  const acoes: { nome: string; icone: string; cor: string; aba?: Aba; href?: string }[] = [
+  // #1958: leva à aba IA e Infraestrutura, direto no cartão Conectar IAs.
+  const irVagas = () => { ir("sistema"); setTimeout(() => document.getElementById("conectar-ias")?.scrollIntoView({ behavior: "smooth" }), 300); };
+  const vagas = d.vagas;
+  const PONTO_VAGA = { verde: "ok", amarelo: "atencao", vermelho: "erro", cinza: "cinza" } as const;
+
+  const acoes: { nome: string; icone: string; cor: string; aba?: Aba; href?: string; onClick?: () => void }[] = [
+    { nome: "Conectar IAs (3 vagas)", icone: "chave", cor: "bg-indigo-50 text-indigo-700 border-indigo-100", onClick: irVagas },
     { nome: "Pedir algo ao Cortex", icone: "mais", cor: "bg-blue-50 text-blue-700 border-blue-100", aba: "cortex" },
     { nome: "Clonar tenant", icone: "clonar", cor: "bg-violet-50 text-violet-700 border-violet-100", href: "/projetos" },
     { nome: "Ver entregas e testes", icone: "lista", cor: "bg-slate-50 text-slate-700 border-slate-200", aba: "prs" },
@@ -355,6 +362,26 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando }: {
             </ul>
           </Caixa>
 
+          <Caixa titulo="IAs que ajudam o Cortex" acao={<VerTodos onClick={irVagas}>Conectar</VerTodos>}>
+            {!vagas ? <div className="h-16 rounded-xl bg-slate-100 animate-pulse" /> : (
+              <ul className="space-y-2" data-testid="painel-vagas">
+                {vagas.vagas.map((v) => {
+                  const p = vagas.provedores.find((x) => x.id === v.provedor);
+                  const e = estadoVaga(v);
+                  return (
+                    <li key={v.vaga}>
+                      <button onClick={irVagas} className="w-full flex items-center gap-3 text-left cursor-pointer">
+                        {p ? <Logo nome={p.nome} src={p.logo} tam={28} /> : <span className="w-7 h-7 rounded-lg border-2 border-dashed border-slate-300 text-slate-400 text-xs font-bold flex items-center justify-center">{v.vaga}</span>}
+                        <span className="flex-1 text-sm text-slate-700 truncate">{p ? p.nome : `Vaga ${v.vaga} livre`}</span>
+                        <Pilula e={PONTO_VAGA[e.e]}>{e.texto}</Pilula>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Caixa>
+
           <Caixa titulo="Ações rápidas">
             <div className="space-y-2">
               {acoes.map((a) => {
@@ -362,7 +389,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando }: {
                 const dentro = <><Icone nome={a.icone} className="w-5 h-5" />{a.nome}</>;
                 return a.href
                   ? <a key={a.nome} href={a.href} target={a.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className={cls}>{dentro}</a>
-                  : <button key={a.nome} onClick={() => a.aba && ir(a.aba)} className={cls}>{dentro}</button>;
+                  : <button key={a.nome} onClick={() => (a.onClick ? a.onClick() : a.aba && ir(a.aba))} className={cls} data-testid={a.onClick ? "acao-conectar-ias" : undefined}>{dentro}</button>;
               })}
             </div>
           </Caixa>

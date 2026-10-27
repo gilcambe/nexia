@@ -5,6 +5,7 @@ import { Cartao, Sinal, Botao, Carregando } from "./ui";
 import type { Cor } from "./ui";
 import Mais from "./Mais";
 import SaudeHistorico from "./SaudeHistorico";
+import ConectarIAs from "./ConectarIAs";
 import UltimosErros from "./UltimosErros";
 import { buscarContextoIA, sanitizarTexto } from "@/lib/fetch-contexto-ia";
 
@@ -154,6 +155,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
 
   return (
     <div className="space-y-4">
+      <ConectarIAs inicial={d.vagas} />
       <SaudeHistorico />
       <UltimosErros />
 
