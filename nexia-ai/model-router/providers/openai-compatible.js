@@ -63,6 +63,18 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
   const urlFor = model => baseUrl || (typeof cfg.url === 'function' ? cfg.url(model, env) : cfg.url);
   const catalog = cfg.catalog ? createKiloCatalog({ fetchImpl, env, url: cfg.catalogUrl, ordem: cfg.catalogOrder }) : null;
 
+  // Contas extras de fallback (IA_VAGA_1..IA_VAGA_10), parseadas com lerVaga.
+  // A chave nunca é gravada em log nem exposta em issues.
+  function montarContasExtra(env) {
+    const contas = [];
+    for (let n = 1; n <= 10; n++) {
+      const v = lerVaga(env[`IA_VAGA_${n}`]);
+      if (v) contas.push({ provedor: v.provedor, chave: v.chave });
+    }
+    return contas;
+  }
+  const contasExtra = montarContasExtra(env);
+
   /** "auto:N" → N-ésimo modelo grátis do catálogo; nome explícito passa direto (com a trava de ":free"). */
   async function resolveModel(model) {
     const m = catalog && AUTO.exec(model);
@@ -112,27 +124,38 @@ function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (..
       const est = estimateInputTokens(b);
       if (est > cfg.max_input) throw new ModelError(CODES.TOO_LARGE, `${id}: pedido de ~${est} tokens passa do teto de ${cfg.max_input} por pedido`, { provider: id, model, status: 413, estimated: est, limit: cfg.max_input });
     }
-    const t = withTimeout(req.signal, req.timeoutMs || DEFAULT_TIMEOUT);
-    let res;
-    try {
-      res = await fetchImpl(urlFor(model), {
-        method: 'POST',
-        headers: { ...(key ? { Authorization: `Bearer ${key}` } : {}), 'Content-Type': 'application/json', ...(cfg.extraHeaders ? cfg.extraHeaders(env) : {}) },
-        body: JSON.stringify(b),
-        signal: t.signal,
-      });
-    } catch (e) {
-      t.done();
-      if (e instanceof ModelError) throw e;
-      if (t.signal.aborted) throw new ModelError(CODES.ABORTED, `Chamada a ${id} cancelada ou expirada.`, { provider: id });
-      throw new ModelError(CODES.UPSTREAM, `${id} erro de rede`, { provider: id });
-    }
-    if (!res.ok) {
+
+    const tentativas = [];
+    if (key) tentativas.push({ origem: 'principal', chave: key });
+    for (const conta of contasExtra) tentativas.push({ origem: `extra:${conta.provedor}`, chave: conta.chave });
+
+    let ultimoErro = null;
+    for (const { origem, chave } of tentativas) {
+      const t = withTimeout(req.signal, req.timeoutMs || DEFAULT_TIMEOUT);
+      let res;
+      try {
+        res = await fetchImpl(urlFor(model), {
+          method: 'POST',
+          headers: { ...(chave ? { Authorization: `Bearer ${chave}` } : {}), 'Content-Type': 'application/json', ...(cfg.extraHeaders ? cfg.extraHeaders(env) : {}) },
+          body: JSON.stringify(b),
+          signal: t.signal,
+        });
+      } catch (e) {
+        t.done();
+        if (e instanceof ModelError) throw e;
+        if (t.signal.aborted) throw new ModelError(CODES.ABORTED, `Chamada a ${id} cancelada ou expirada.`, { provider: id });
+        throw new ModelError(CODES.UPSTREAM, `${id} erro de rede`, { provider: id });
+      }
+      if (res.ok) return { res, t, model };
       const snippet = (await res.text().catch(() => '')).slice(0, 300);
+      if (res.status !== 429) {
+        t.done();
+        throw new ModelError(CODES.UPSTREAM, `${id} ${res.status}`, { provider: id, model, status: res.status, upstream: snippet });
+      }
       t.done();
-      throw new ModelError(CODES.UPSTREAM, `${id} ${res.status}`, { provider: id, model, status: res.status, upstream: snippet });
+      ultimoErro = new ModelError(CODES.UPSTREAM, `${id} ${res.status}`, { provider: id, model, status: res.status, upstream: snippet });
     }
-    return { res, t, model };
+    throw ultimoErro;
   }
 
   const usageOf = u => ({ input_tokens: (u && (u.prompt_tokens ?? u.input_tokens)) || 0, output_tokens: (u && (u.completion_tokens ?? u.output_tokens)) || 0 });
