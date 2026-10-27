@@ -14,8 +14,6 @@ const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'vez-do-claude'];
 
 // Decide o que fazer com as issues travadas (função pura, testada).
 function decidir(issues, prs, agora, nomes, enviadosHoje = 0) {
-  const nomesSet = (i) => new Set((i.labels || []).map(l => l.name || l));
-=======
   const recusado = (p) => (p.labels || []).some(l => (l.name || l) === 'revisor-recusado');
   const prDe = (n) => prs.some(p => !recusado(p) && new RegExp(`#${n}(?!\\d)`).test(`${p.title || ''}\n${p.body || ''}`));
   const travadas = issues.filter(i => !i.pull_request && nomes(i).includes('cortex-travado') && !nomes(i).some(n => IGNORAR.includes(n)));
