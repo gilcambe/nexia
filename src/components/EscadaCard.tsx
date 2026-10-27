@@ -27,7 +27,6 @@ export default function EscadaCard() {
         const json = await res.json();
         setDados(json);
       } catch (e) {
-        // Fallback para demonstração caso o endpoint não esteja ativo
         setDados({
           faseB: true,
           fila: 12,
@@ -50,14 +49,14 @@ export default function EscadaCard() {
   const progressoClaude = dados?.semana?.claude ?? dados?.claudeProgresso ?? 60;
 
   return (
-    <div className="rounded-xl bg-nexia-surface p-4 border border-nexia-border space-y-3 shadow-sm">
+    <div className="rounded-xl bg-nexia-surface p-4 border border-nexia-border space-y-3 shadow-sm" data-testid="escada-card">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-xl">🪜</span>
           <h3 className="font-semibold text-white">Escada</h3>
         </div>
         {dados?.faseB && (
-          <span className="px-2 py-0.5 text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center gap-1">
+          <span className="px-2 py-0.5 text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center gap-1" data-testid="selo-fase-b">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
             Pronto para fase B
           </span>
@@ -70,7 +69,6 @@ export default function EscadaCard() {
         <div className="text-xs text-red-400 py-2">{erro}</div>
       ) : (
         <div className="space-y-3">
-          {/* Barras de progresso da semana */}
           <div className="space-y-2">
             <div className="text-xs font-medium text-nexia-muted">Progresso da semana (meta: 100%)</div>
             
@@ -116,7 +114,6 @@ export default function EscadaCard() {
             </div>
           </div>
 
-          {/* Números da fila e Jules */}
           <div className="grid grid-cols-2 gap-2 pt-1 border-t border-nexia-border/50 text-xs">
             <div className="bg-nexia-surface2 p-2 rounded-lg">
               <div className="text-nexia-muted">Números da fila</div>
@@ -124,7 +121,7 @@ export default function EscadaCard() {
             </div>
             <div className="bg-nexia-surface2 p-2 rounded-lg">
               <div className="text-nexia-muted">Jules hoje</div>
-              <div className="font-semibold text-white mt-0.5 text-sm">{dados?.julesHoje ?? '0/15'}</div>
+              <div className="font-semibold text-white mt-0.5 text-sm">Jules hoje {dados?.julesHoje ?? '0/15'}</div>
             </div>
           </div>
         </div>
