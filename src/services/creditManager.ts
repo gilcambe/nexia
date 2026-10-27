@@ -117,6 +117,10 @@ export class CreditManager {
 
   async canGenerateOrEdit(userId: string): Promise<{ allowed: boolean; message?: string }> {
     await this.requireAuth(userId);
+    return this._canGenerateOrEdit(userId);
+  }
+
+  private _canGenerateOrEdit(userId: string): { allowed: boolean; message?: string } {
     const user = this.users.get(userId);
     if (!user) return { allowed: false, message: 'Usuário não encontrado' };
     const plan = PLANS[user.planId];
