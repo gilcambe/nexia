@@ -10,9 +10,10 @@ import saude from './saude.js';
 import julesAuto from './jules-auto.js';
 import cacheBorda from './cacheBorda.js';
 import { VazaoController } from '../src/durable/VazaoController.js';
+import { CofreSql } from '../src/durable/CofreSql.js';
 
 // #1662: o Cloudflare só publica se a classe do Durable Object sair do arquivo de entrada.
-export { VazaoController };
+export { VazaoController, CofreSql };
 
 export default {
   async fetch(request, env, ctx) {

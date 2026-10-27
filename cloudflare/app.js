@@ -42,6 +42,8 @@ function populateProcessEnv(env) {
   if (!process.env[NODE_ENV]) process.env[NODE_ENV] = 'production';
   // #1671: o binding do Workers AI não é texto, então não cabe em process.env; fica num global para os anexos.
   if (env && env.AI) globalThis.__NEXIA_AI__ = env.AI;
+  // #2188: banco extra do Vault (Durable Object SQLite grátis), usado no rodízio depois do D1.
+  if (env && env.COFRE_SQL) globalThis.__NEXIA_COFRE__ = env.COFRE_SQL;
 }
 
 async function readBody(request) {

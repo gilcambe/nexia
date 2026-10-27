@@ -29,7 +29,8 @@
   // Durable Object para controle de vazao e fila (#1662)
   "durable_objects": {
     "bindings": [
-      { "name": "VAZAO_CONTROLLER", "class_name": "VazaoController" }
+      { "name": "VAZAO_CONTROLLER", "class_name": "VazaoController" },
+      { "name": "COFRE_SQL", "class_name": "CofreSql" }
     ]
   },
   // ADR-FREE-02: tarefas longas (agentes, onboarding, retomada) rodam no GitHub Actions.
@@ -45,6 +46,7 @@
   "migrations": [
     { "tag": "v1", "new_sqlite_classes": ["NexiaBackend"] },
     { "tag": "v2", "deleted_classes": ["NexiaBackend"] },
-    { "tag": "v3", "new_sqlite_classes": ["VazaoController"] }
+    { "tag": "v3", "new_sqlite_classes": ["VazaoController"] },
+    { "tag": "v4", "new_sqlite_classes": ["CofreSql"] }
   ]
 }
