@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Digite PUBLICAR para criar os índices que faltam (ou conferir para só listar)'
+        description: 'PUBLICAR = cria os índices que faltam em todos; COFRE = só nos bancos extras do Vault (B..H); conferir = só lista'
         required: true
         default: 'conferir'
 
@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: '20'
       - name: Conferir ou publicar
-        run: node scripts/publicar-indices.js ${{ inputs.confirm == 'PUBLICAR' && ' ' || '--dry-run' }}
+        run: node scripts/publicar-indices.js ${{ inputs.confirm == 'PUBLICAR' && ' ' || inputs.confirm == 'COFRE' && '--so-cofre' || '--dry-run' }}
         env:
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
           FIREBASE_SERVICE_ACCOUNT_B: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_B }}
