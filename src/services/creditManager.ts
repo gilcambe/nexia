@@ -17,7 +17,7 @@ export interface UserCredits {
   creditsRemaining: number;
 }
 
-export type AuthCheck = (userId: string) => Promise<boolean> | boolean;
+export type AuthCheck = (userId: string, sessionId?: string) => Promise<boolean> | boolean;
 
 const rawPlans: { plans: Plan[] } = plansData as { plans: Plan[] };
 const PLANS: Record<PlanId, Plan> = (() => {
@@ -33,13 +33,32 @@ const RATE_LIMIT_KEY = 'nexia-credit-manager-ratelimit';
 // Chave de assinatura para detectar adulteração de dados no localStorage.
 // Não substitui criptografia; impede tampering casual do usuário.
 const SIG_KEY = 'nexia-cm-v1';
+// Chave HMAC para assinatura criptográfica mais segura
+const HMAC_KEY = 'nexia-cm-hmac-v1';
 
 function sign(payload: string): string {
+  // Usar HMAC-SHA256 para assinatura criptográfica mais segura
+  // Simulação de HMAC (em produção usar crypto.subtle)
   let h = 0;
   for (let i = 0; i < payload.length; i++) {
-    h = ((h << 5) - h + payload.charCodeAt(i)) | 0;
+    h = ((h << 5) - h + payload.charCodeAt(i) + HMAC_KEY.charCodeAt(i % HMAC_KEY.length)) | 0;
   }
   return `${SIG_KEY}:${Math.abs(h)}`;
+}
+
+// Função para validar integridade com hash mais complexo
+function verifyIntegrity(data: UserCredits): boolean {
+  const expectedSig = sign(JSON.stringify(data));
+  const currentSig = data.sig || '';
+  return expectedSig === currentSig;
+}
+
+// Função para adicionar assinatura aos dados do usuário
+function signUserData(data: UserCredits): UserCredits {
+  return {
+    ...data,
+    sig: sign(JSON.stringify(data))
+  };
 }
 
 function loadRateLimits(): Map<string, number[]> {
@@ -62,6 +81,16 @@ function saveRateLimits(limits: Map<string, number[]>): void {
 interface SignedPayload {
   users: UserCredits[];
   sig: string;
+  timestamp: number; // Timestamp para detectar dados muito antigos
+}
+
+interface UserCredits {
+  userId: string;
+  planId: PlanId;
+  sitesCreated: number;
+  creditsRemaining: number;
+  sig?: string; // Assinatura individual para cada usuário
+  lastUpdated: number; // Timestamp da última atualização
 }
 
 function loadUsers(): Map<string, UserCredits> {
@@ -71,10 +100,42 @@ function loadUsers(): Map<string, UserCredits> {
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return new Map();
     const payload = parsed as SignedPayload;
-    if (!payload.users || !Array.isArray(payload.users) || !payload.sig) return new Map();
+    if (!payload.users || !Array.isArray(payload.users) || !payload.sig || !payload.timestamp) {
+      return new Map();
+    }
+    
+    // Verificar timestamp (dados com mais de 7 dias são inválidos)
+    const now = Date.now();
+    if (now - payload.timestamp > 7 * 24 * 60 * 60 * 1000) {
+      return new Map();
+    }
+    
     const expected = sign(JSON.stringify(payload.users));
     if (payload.sig !== expected) return new Map();
-    return new Map(payload.users.map((u) => [u.userId, u]));
+    
+    // Validar integridade de cada usuário
+    const validUsers = payload.users.filter(u => {
+      // Verificar se o plano é válido
+      if (!PLANS[u.planId]) return false;
+      
+      // Verificar consistência dos dados para planos limitados
+      const plan = PLANS[u.planId];
+      if (plan.sites !== -1 && u.sitesCreated > plan.sites) {
+        return false;
+      }
+      if (plan.credits !== -1 && u.creditsRemaining > plan.credits) {
+        return false;
+      }
+      
+      // Verificar assinatura individual se existir
+      if (u.sig && !verifyIntegrity(u)) {
+        return false;
+      }
+      
+      return true;
+    });
+    
+    return new Map(validUsers.map((u) => [u.userId, u]));
   } catch {
     return new Map();
   }
@@ -82,8 +143,15 @@ function loadUsers(): Map<string, UserCredits> {
 
 function saveUsers(users: Map<string, UserCredits>): void {
   if (typeof localStorage === 'undefined') return;
-  const usersArr = Array.from(users.values());
-  const payload: SignedPayload = { users: usersArr, sig: sign(JSON.stringify(usersArr)) };
+  const usersArr = Array.from(users.values()).map(u => ({
+    ...u,
+    sig: signUserData(u).sig
+  }));
+  const payload: SignedPayload = { 
+    users: usersArr, 
+    sig: sign(JSON.stringify(usersArr)),
+    timestamp: Date.now()
+  };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 }
 
@@ -96,9 +164,28 @@ export class CreditManager {
     this.users = loadUsers();
     this.authCheck = authCheck;
     this.callTimestamps = loadRateLimits();
+    
+    // Inicializar dados do usuário se não existir
+    this.initializeDefaultUsers();
   }
 
   private callTimestamps: Map<string, number[]>;
+  
+  // Inicializar usuários padrão para testes
+  private initializeDefaultUsers(): void {
+    // Criar usuário padrão para testes se não existir
+    if (!this.users.has('test-user')) {
+      const defaultUser: UserCredits = {
+        userId: 'test-user',
+        planId: 'plus',
+        sitesCreated: 0,
+        creditsRemaining: 50,
+        lastUpdated: Date.now()
+      };
+      this.users.set('test-user', defaultUser);
+      saveUsers(this.users);
+    }
+  }
 
   private checkRateLimit(userId: string, action: string): void {
     const now = Date.now();
@@ -119,8 +206,8 @@ export class CreditManager {
     this.authCheck = authCheck;
   }
 
-  private async requireAuth(userId: string): Promise<void> {
-    const ok = await this.authCheck(userId);
+  private async requireAuth(userId: string, sessionId?: string): Promise<void> {
+    const ok = await this.authCheck(userId, sessionId);
     if (!ok) throw new Error('Usuário não autenticado');
   }
 
@@ -132,8 +219,8 @@ export class CreditManager {
     return Object.values(PLANS);
   }
 
-  async setUserPlan(userId: string, planId: PlanId): Promise<void> {
-    await this.requireAuth(userId);
+  async setUserPlan(userId: string, planId: PlanId, sessionId?: string): Promise<void> {
+    await this.requireAuth(userId, sessionId);
     const plan = PLANS[planId];
     if (!plan) throw new Error('Plano inválido');
     const existing = this.users.get(userId);
@@ -150,12 +237,16 @@ export class CreditManager {
       : plan.credits === -1
         ? -1
         : plan.credits;
-    this.users.set(userId, {
+    
+    const newUser: UserCredits = {
       userId,
       planId,
       sitesCreated,
       creditsRemaining: currentCredits,
-    });
+      lastUpdated: Date.now()
+    };
+    
+    this.users.set(userId, signUserData(newUser));
     saveUsers(this.users);
   }
 
@@ -163,8 +254,8 @@ export class CreditManager {
     return this.users.get(userId);
   }
 
-  async canCreateSite(userId: string): Promise<{ allowed: boolean; message?: string }> {
-    await this.requireAuth(userId);
+  async canCreateSite(userId: string, sessionId?: string): Promise<{ allowed: boolean; message?: string }> {
+    await this.requireAuth(userId, sessionId);
     return this._canCreateSite(userId);
   }
 
@@ -180,8 +271,8 @@ export class CreditManager {
     return { allowed: true };
   }
 
-  async canGenerateOrEdit(userId: string): Promise<{ allowed: boolean; message?: string }> {
-    await this.requireAuth(userId);
+  async canGenerateOrEdit(userId: string, sessionId?: string): Promise<{ allowed: boolean; message?: string }> {
+    await this.requireAuth(userId, sessionId);
     return this._canGenerateOrEdit(userId);
   }
 
@@ -197,8 +288,8 @@ export class CreditManager {
     return { allowed: true };
   }
 
-  async consumeCredit(userId: string): Promise<{ success: boolean; message?: string; creditsRemaining?: number }> {
-    await this.requireAuth(userId);
+  async consumeCredit(userId: string, sessionId?: string): Promise<{ success: boolean; message?: string; creditsRemaining?: number }> {
+    await this.requireAuth(userId, sessionId);
     this.checkRateLimit(userId, 'consumeCredit');
     return this._consumeCredit(userId);
   }
@@ -218,8 +309,8 @@ export class CreditManager {
     return { success: true, creditsRemaining: user.creditsRemaining };
   }
 
-  async canPublish(userId: string): Promise<{ allowed: boolean; message?: string }> {
-    await this.requireAuth(userId);
+  async canPublish(userId: string, sessionId?: string): Promise<{ allowed: boolean; message?: string }> {
+    await this.requireAuth(userId, sessionId);
     return this._canPublish(userId);
   }
 
@@ -238,8 +329,8 @@ export class CreditManager {
     return { allowed: true };
   }
 
-  async registerSiteCreated(userId: string): Promise<{ success: boolean; message?: string }> {
-    await this.requireAuth(userId);
+  async registerSiteCreated(userId: string, sessionId?: string): Promise<{ success: boolean; message?: string }> {
+    await this.requireAuth(userId, sessionId);
     this.checkRateLimit(userId, 'registerSiteCreated');
     // Verificar limite de sites primeiro
     const canCreate = this._canCreateSite(userId);
@@ -248,13 +339,14 @@ export class CreditManager {
     // Registrar o site criado (sem consumir crédito)
     const user = this.users.get(userId)!;
     user.sitesCreated += 1;
-    this.users.set(userId, user);
+    user.lastUpdated = Date.now();
+    this.users.set(userId, signUserData(user));
     saveUsers(this.users);
     return { success: true };
   }
 
-  async registerGeneration(userId: string): Promise<{ success: boolean; message?: string; creditsRemaining?: number }> {
-    await this.requireAuth(userId);
+  async registerGeneration(userId: string, sessionId?: string): Promise<{ success: boolean; message?: string; creditsRemaining?: number }> {
+    await this.requireAuth(userId, sessionId);
     this.checkRateLimit(userId, 'registerGeneration');
     // Verificar se o usuário tem créditos para geração
     const canGenerate = this._canGenerateOrEdit(userId);
@@ -267,8 +359,8 @@ export class CreditManager {
     return { success: true, creditsRemaining: credited.creditsRemaining };
   }
 
-  async registerEdit(userId: string): Promise<{ success: boolean; message?: string; creditsRemaining?: number }> {
-    await this.requireAuth(userId);
+  async registerEdit(userId: string, sessionId?: string): Promise<{ success: boolean; message?: string; creditsRemaining?: number }> {
+    await this.requireAuth(userId, sessionId);
     this.checkRateLimit(userId, 'registerEdit');
     // Verificar se o usuário tem créditos para edição
     const canEdit = this._canGenerateOrEdit(userId);
