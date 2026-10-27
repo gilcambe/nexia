@@ -123,7 +123,7 @@ export async function sendMessage({
 
   // 2) Extrai modelo usado da resposta (fallback para o solicitado).
   const meta = (resposta.data && resposta.data._meta) || {};
-  const modeloUsado = meta.modelUsed || modeloSolicitado || "desconhecido";
+  const modeloUsado = validarModelo(meta.modelUsed || modeloSolicitado || "desconhecido");
 
   // 3) Tokens de entrada e saída (da resposta usage ou estimativa).
   const { tokensIn, tokensOut } = extrairUsage(resposta, mensagem);
