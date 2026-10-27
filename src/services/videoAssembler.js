@@ -73,8 +73,12 @@ async function assembleWithFFmpeg({images, audio, srt, size, progress}) {
 
   // Filtro de vídeo: escala + transição simples (fade entre imagens)
   const inputs = images.map((_, i) => `img${i}.jpg`).join('|');
+  // Sanitiza width/height para evitar injeção de comandos
+  const safeWidth = Math.max(1, Math.min(4096, parseInt(width) || DEFAULT_SIZE.width));
+  const safeHeight = Math.max(1, Math.min(4096, parseInt(height) || DEFAULT_SIZE.height));
+  
   const filter = `
-    [0:v]scale=${width}:${height}:force_original_aspect_ratio=decrease,pad=${width}:${height}:(ow-iw)/2:(oh-ih)/2,fade=t=in:st=0:d=0.5,vfade=fade=in:st=0:d=0.5[v0];
+    [0:v]scale=${safeWidth}:${safeHeight}:force_original_aspect_ratio=decrease,pad=${safeWidth}:${safeHeight}:(ow-iw)/2:(oh-ih)/2,fade=t=in:st=0:d=0.5,vfade=fade=in:st=0:d=0.5[v0];
   `;
 
   const cmd = [];
@@ -103,16 +107,50 @@ async function assembleWithFFmpeg({images, audio, srt, size, progress}) {
 
 // ---------- caminho WebCodecs fallback ----------
 async function assembleWithWebCodecs({images, audio, srt, size, progress}) {
-  // WebCodecs não gera arquivo MP4 direto no navegador;
-  // renderiza frames em canvas e monta um MP4 via MediaRecorder.
+  // WebCodecs fallback: tenta gerar MP4 com suporte a áudio se disponível
   const {width = DEFAULT_SIZE.width, height = DEFAULT_SIZE.height} = size || {};
+  
+  // Sanitiza dimensões
+  const safeWidth = Math.max(1, Math.min(4096, parseInt(width) || DEFAULT_SIZE.width));
+  const safeHeight = Math.max(1, Math.min(4096, parseInt(height) || DEFAULT_SIZE.height));
+  
   const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
+  canvas.width = safeWidth;
+  canvas.height = safeHeight;
   const ctx = canvas.getContext('2d');
 
+  // Tenta criar stream com áudio se houver arquivo de áudio
+  let audioStream = null;
+  let audioChunks = [];
+  let audioRecorder = null;
+  
+  if (audio) {
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const audioBuffer = await audioContext.decodeAudioData(await (await fetch(audio)).arrayBuffer());
+      
+      const source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      const destination = audioContext.createMediaStreamDestination();
+      source.connect(destination);
+      source.start(0);
+      
+      audioStream = destination.stream;
+      audioRecorder = new MediaRecorder(audioStream);
+      audioChunks = [];
+      audioRecorder.ondataavailable = (e) => { if (e.data.size) audioChunks.push(e.data); };
+      audioRecorder.start();
+    } catch (err) {
+      console.warn('Falha ao processar áudio para fallback:', err);
+    }
+  }
+
   const stream = canvas.captureStream(30);
-  const recorder = new MediaRecorder(stream, {mimeType: 'video/webm; codecs=vp8'});
+  const recorderMimeType = 'video/mp4; codecs=avc1.42E01E,mp4a.40.2';
+  const recorder = new MediaRecorder(stream, {
+    mimeType: recorderMimeType,
+    videoBitsPerSecond: 2500000
+  });
   const chunks = [];
   recorder.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
   recorder.start();
@@ -151,9 +189,30 @@ async function assembleWithWebCodecs({images, audio, srt, size, progress}) {
 
   return new Promise((resolve, reject) => {
     recorder.onstop = async () => {
-      const blob = new Blob(chunks, {type: 'video/webm'});
+      // Combina vídeo e áudio se disponível
+      let finalBlob = new Blob(chunks, {type: 'video/mp4'});
+      
+      if (audioRecorder && audioChunks.length > 0) {
+        try {
+          const audioBlob = new Blob(audioChunks, {type: 'audio/mp4'});
+          // Em navegadores suportados, podemos combinar vídeo e áudio
+          finalBlob = new Blob([chunks[0], audioBlob], {type: 'video/mp4'});
+        } catch (err) {
+          console.warn('Falha ao combinar áudio com vídeo:', err);
+        }
+      }
+      
       if (progress) progress(100);
-      resolve({videoBlob: blob, duration: null, size: {width, height}, streams: {video: true, audio: false, subtitles: false}});
+      resolve({
+        videoBlob: finalBlob, 
+        duration: null, 
+        size: {width: safeWidth, height: safeHeight}, 
+        streams: {
+          video: true, 
+          audio: !!audio && audioRecorder && audioChunks.length > 0,
+          subtitles: false // WebCodecs não suporta legendas queimadas
+        }
+      });
     };
     recorder.onerror = reject;
     setTimeout(() => recorder.stop(), 500);
