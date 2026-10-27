@@ -27,7 +27,7 @@ jobs:
           BASE="${BASE%/}"
           fail=0
           check() { # caminho, códigos aceitos, método
-            code=$(curl -s -o /tmp/body -w '%{http_code}' -X "${3:-GET}" "$BASE$1" || echo 000)
+            code=$(curl -s --max-time 15 --retry 2 --retry-delay 2 -o /tmp/body -w '%{http_code}' -X "${3:-GET}" "$BASE$1" || echo 000)
             if echo " $2 " | grep -q " $code "; then r=OK; else r=FALHOU; fail=1; fi
             echo "$r $code ${3:-GET} $1 $(head -c 160 /tmp/body | tr -d '\n')"
           }
@@ -42,4 +42,5 @@ jobs:
           check /server.js 404
           check /package.json 404
           check / 405 POST
+          echo "\nResultado: $([ $fail -eq 0 ] && echo 'TUDO OK' || echo 'ALGUM CHECK FALHOU')"
           exit $fail
