@@ -1,0 +1,50 @@
+{
+  "versao": 1,
+  "molde": {
+    "eventos": {
+      "nome": "Eventos e Inscrições",
+      "descricao": "Molde para gerenciamento de eventos, com opção de inscrições.",
+      "entities": [
+        {
+          "key": "eventos",
+          "label": "Eventos",
+          "singular": "Evento",
+          "fields": [
+            {
+              "key": "nome",
+              "label": "Nome do Evento",
+              "type": "text",
+              "required": true
+            },
+            {
+              "key": "data",
+              "label": "Data",
+              "type": "date",
+              "required": true
+            },
+            {
+              "key": "local",
+              "label": "Local",
+              "type": "text",
+              "required": false
+            },
+            {
+              "key": "descricao",
+              "label": "Descrição",
+              "type": "textarea",
+              "required": false
+            }
+          ],
+          "sample": [
+            {
+              "nome": "Webinar de Lançamento",
+              "data": "2026-11-15",
+              "local": "Online",
+              "descricao": "Apresentação do novo produto NEXIA."
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
