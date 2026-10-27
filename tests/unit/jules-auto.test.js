@@ -90,3 +90,105 @@ test('JULES-AUTO-PLANO: parte grande do plano (cortex-jules) vai antes das trava
   ];
   assert.equal(decidir(issues, [], Date.now(), nomes).enviar, 9);
 });
+
+test('JULES-AUTO5: contar envios do dia (issues com jules-enviado desde 00:00 UTC)', () => {
+  const agora = Date.UTC(2026, 9, 25, 12, 0); // 25/10/2026 12:00 UTC
+  const inicioDia = new Date(new Date(agora).toISOString().split('T')[0] + 'T00:00:00Z').getTime();
+  const ontem = new Date(inicioDia - 1).toISOString();
+  const hoje = new Date(agora).toISOString();
+  
+  const issues = [
+    { number: 20, labels: [{ name: 'jules-enviado' }], updated_at: hoje },
+    { number: 21, labels: [{ name: 'jules-enviado' }], updated_at: hoje },
+    { number: 22, labels: [{ name: 'jules-enviado' }], updated_at: ontem }, // ontem, não conta
+    { number: 23, labels: [{ name: 'jules-enviado' }], updated_at: hoje },
+    { number: 24, labels: [{ name: 'cortex-travado' }], updated_at: hoje }, // sem jules-enviado, não conta
+  ];
+  
+  const d = decidir(issues, [], agora, nomes);
+  // Deve ter 3 envios hoje (20, 21, 23)
+  assert.strictEqual(d.enviadosHoje || 0, 3);
+});
+
+test('JULES-AUTO6: redirecionar travadas sem jules-enviado para vez-do-claude quando >=15 envios', () => {
+  const agora = Date.UTC(2026, 9, 25, 12, 0);
+  
+  // Issues com jules-enviado para atingir 15 envios
+  const enviados = Array.from({ length: 15 }, (_, i) => ({
+    number: 30 + i,
+    labels: [{ name: 'jules-enviado' }],
+    updated_at: new Date(agora).toISOString(),
+  }));
+  
+  // Issue travada sem jules-enviado
+  const travada = {
+    number: 50,
+    labels: [{ name: 'cortex-travado' }],
+    updated_at: new Date(agoro).toISOString(),
+  };
+  
+  const issues = [...enviados, travada];
+  const d = decidir(issues, [], agora, nomes);
+  
+  // A issue 50 deve ir para vez-do-claude
+  assert.deepStrictEqual(d.claude, [50]);
+  assert.strictEqual(d.devolver.length, 0);
+});
+
+test('JULES-AUTO7: devolver issues ao degrau 2 quando <15 envios e sem claude-trabalhando/PR', () => {
+  const agora = Date.UTC(2026, 9, 25, 12, 0);
+  
+  // Apenas 5 envios hoje
+  const enviados = Array.from({ length: 5 }, (_, i) => ({
+    number: 40 + i,
+    labels: [{ name: 'jules-enviado' }],
+    updated_at: new Date(agora).toISOString(),
+  }));
+  
+  // Issue travada sem jules-enviado, sem claude-trabalhando, sem PR
+  const travada = {
+    number: 60,
+    labels: [{ name: 'cortex-travado' }],
+    updated_at: new Date(agora).toISOString(),
+  };
+  
+  const issues = [...enviados, travada];
+  const d = decidir(issues, [], agora, nomes);
+  
+  // A issue 60 deve voltar ao degrau 2
+  assert.deepStrictEqual(d.devolver, [60]);
+  assert.strictEqual(d.claude.length, 0);
+});
+
+test('JULES-AUTO8: não devolver se tiver claude-trabalhando ou PR citando #N', () => {
+  const agora = Date.UTC(2026, 9, 25, 12, 0);
+  
+  // Apenas 5 envios hoje
+  const enviados = Array.from({ length: 5 }, (_, i) => ({
+    number: 70 + i,
+    labels: [{ name: 'jules-enviado' }],
+    updated_at: new Date(agora).toISOString(),
+  }));
+  
+  // Issue com claude-trabalhando
+  const comClaude = {
+    number: 80,
+    labels: [{ name: 'cortex-travado' }, { name: 'claude-trabalhando' }],
+    updated_at: new Date(agora).toISOString(),
+  };
+  
+  // Issue com PR citando #90
+  const comPR = {
+    number: 90,
+    labels: [{ name: 'cortex-travado' }],
+    updated_at: new Date(agora).toISOString(),
+  };
+  
+  const issues = [...enviados, comClaude, comPR];
+  const prs = [{ title: 'fix', body: 'Refs #90' }];
+  const d = decidir(issues, prs, agora, nomes);
+  
+  // Nenhuma deve voltar ao degrau 2
+  assert.strictEqual(d.devolver.length, 0);
+  assert.strictEqual(d.claude.length, 0);
+});
