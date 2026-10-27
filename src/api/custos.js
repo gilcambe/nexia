@@ -3,6 +3,7 @@
 import {
   calcularCustoTotalMes,
   calcularCustoMedioPorPlano,
+  calcularCustoMedioGeral,
   top10ClientesQueMaisGastam,
   percentualCustoSobreReceita,
   tetoGlobalExcedido,
