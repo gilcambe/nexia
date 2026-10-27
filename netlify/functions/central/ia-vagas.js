@@ -108,14 +108,21 @@ function selar(texto, chavePublicaB64) {
 }
 
 const SEM_PERMISSAO = 'A chave do GitHub que a Central usa (NEXIA_JOBS_TOKEN) não pode gravar segredos. No GitHub, dê a ela a permissão "Secrets: Read and write" do repositório nexia.';
+// Diz a causa exata (passo, código e mensagem do GitHub) para saber qual token e qual permissão faltam.
+function erroGithub(e, passo, nomeToken) {
+  const cod = e && e.status ? `GitHub ${e.status}` : 'sem resposta do GitHub';
+  const msg = e && e.message && !/^GitHub respondeu \d+$/.test(e.message) ? `: ${limpar(e.message).slice(0, 100)}` : '';
+  const base = e && (e.status === 403 || e.status === 404) ? SEM_PERMISSAO.replace('NEXIA_JOBS_TOKEN', nomeToken || 'sem token') : 'O GitHub não aceitou agora.';
+  return new Error(`${base} (${passo}: ${cod}${msg})`);
+}
 
 /** Grava a vaga como segredo do Actions. O valor é "provedor:chave" (o robô de reserva separa os dois). */
-async function gravarSegredo(gh, n, provedor, chave) {
+async function gravarSegredo(gh, n, provedor, chave, nomeToken) {
   let pub;
-  try { pub = await gh('/actions/secrets/public-key'); } catch (e) { throw new Error(e.status === 403 || e.status === 404 ? SEM_PERMISSAO : 'O GitHub não respondeu agora.'); }
+  try { pub = await gh('/actions/secrets/public-key'); } catch (e) { throw erroGithub(e, 'ler a chave pública do repositório', nomeToken); }
   try {
     await gh(`/actions/secrets/${segredo(n)}`, { method: 'PUT', body: JSON.stringify({ encrypted_value: selar(`${provedor}:${chave}`, pub.key), key_id: pub.key_id }) });
-  } catch (e) { throw new Error(e.status === 403 || e.status === 404 ? SEM_PERMISSAO : 'O GitHub não aceitou gravar agora.'); }
+  } catch (e) { throw erroGithub(e, `gravar ${segredo(n)}`, nomeToken); }
 }
 
 // Estado (sem chave): bloco JSON no corpo de uma issue fechada com o rótulo ia-vagas-estado.
@@ -185,7 +192,7 @@ async function salvar(gh, { vaga, provedor, chave }, deps = {}) {
   if (teste.situacao === 'recusada') {
     return { status: 200, corpo: { ok: false, teste, mensagem: `${teste.motivo} Confira se copiou a chave inteira, ou crie outra.` } };
   }
-  await gravarSegredo(gh, n, provedor, k);
+  await gravarSegredo(gh, n, provedor, k, deps.nomeToken);
   // Sem conexão daqui (o servidor não alcançou o serviço): salva assim mesmo e o robô ia-vagas.yml testa pelo GitHub.
   const guardado = teste.situacao === 'erro' ? null : { ...teste, em, onde: 'central' };
   await gravarEstado(gh, (v) => { v[n] = { provedor, salvaEm: em, teste: guardado }; }).catch(() => null);
@@ -200,7 +207,7 @@ async function salvar(gh, { vaga, provedor, chave }, deps = {}) {
 async function apagar(gh, { vaga }) {
   const n = Number(vaga);
   if (!VAGAS.includes(n)) return { status: 400, corpo: { error: 'Vaga inválida.' } };
-  try { await gh(`/actions/secrets/${segredo(n)}`, { method: 'DELETE' }); } catch (e) { if (e.status !== 404) throw new Error(e.status === 403 ? SEM_PERMISSAO : 'O GitHub não respondeu agora.'); }
+  try { await gh(`/actions/secrets/${segredo(n)}`, { method: 'DELETE' }); } catch (e) { if (e.status !== 404) throw erroGithub(e, `apagar ${segredo(n)}`); }
   await gravarEstado(gh, (v) => { delete v[n]; }).catch(() => null);
   return { status: 200, corpo: { ok: true, mensagem: `Vaga ${n} desligada e chave apagada.` } };
 }

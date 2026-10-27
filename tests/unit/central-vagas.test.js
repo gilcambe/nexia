@@ -128,3 +128,9 @@ test('VAGAS10: as 10 vagas estão listadas uma a uma nos dois workflows', () => 
   const yml = ler('cortex-reserva.yml');
   for (const p of Object.keys(v.PROVEDORES)) assert.ok(yml.includes(`vaga-$N-${p}|`), `reserva sem ${p}`);
 });
+
+test('VAGAS11: sem permissão, a mensagem diz o passo, o código do GitHub e o nome do token', async () => {
+  const gh = async (caminho) => { if (caminho === '/actions/secrets/public-key') { const e = new Error('Resource not accessible by personal access token'); e.status = 403; throw e; } return {}; };
+  await assert.rejects(v.salvar(gh, { vaga: 1, provedor: 'groq', chave: CHAVE }, { ...servico(200), nomeToken: 'NEXIA_JOBS_TOKEN' }),
+    (e) => /NEXIA_JOBS_TOKEN/.test(e.message) && /ler a chave pública do repositório: GitHub 403: Resource not accessible/.test(e.message) && !e.message.includes(CHAVE));
+});
