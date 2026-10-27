@@ -164,11 +164,7 @@ export class CreditManager {
     const canCreate = this._canCreateSite(userId);
     if (!canCreate.allowed) return { success: false, message: canCreate.message };
     
-    // Consumir crédito para a criação do site
-    const credited = this._consumeCredit(userId);
-    if (!credited.success) return { success: false, message: credited.message };
-    
-    // Registrar o site criado
+    // Registrar o site criado (sem consumir crédito)
     const user = this.users.get(userId)!;
     user.sitesCreated += 1;
     this.users.set(userId, user);
