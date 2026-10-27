@@ -32,10 +32,11 @@ const sanitizeError = (error) => {
     .replace(/ReferenceError: /g, '')
     .replace(/SyntaxError: /g, '')
     .substring(0, 500); // Limita tamanho
+};
 
 // Bloco de código executável com botão 🛠 Corrigir com o Cortex.
 // Quando a execução retorna erro, o botão fica ativo. Ao clicar, envia
-// o código original + mensagem de erro para POST /api/autocorrect e,
+// o código original + mensagem de erro para POST /autocorrect e,
 // ao receber o código corrigido, substitui o conteúdo e dispara nova execução.
 export default function CodeBlock({ codigo, linguagem = 'python', autoRun = true }) {
   const [conteudo, setConteudo] = useState(codigo);
