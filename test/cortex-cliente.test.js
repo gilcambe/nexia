@@ -1,13 +1,12 @@
-import { test } from 'node:test';
+import { test, before, after } from 'node:test';
 import assert from 'node:assert';
+import { Miniflare } from 'miniflare';
 import jwt from 'jsonwebtoken';
-import { authenticate } from '../lib/cortex-cliente.js';
 
-// Chave de teste simulada (o middleware usa esta chave via env JWT_SECRET)
-process.env.NODE_ENV = 'test';
 const JWT_SECRET = 'test-secret-key-for-jwt-signing';
+process.env.NODE_ENV = 'test';
+process.env.JWT_SECRET = JWT_SECRET;
 
-// Gerar tokens JWT de teste assinados com a mesma chave
 function generateTestToken(uid) {
   return jwt.sign(
     { uid, type: 'access', exp: Math.floor(Date.now() / 1000) + (60 * 60) },
@@ -18,72 +17,72 @@ function generateTestToken(uid) {
 const uidAToken = generateTestToken('uidA');
 const uidBToken = generateTestToken('uidB');
 
-// Dados simulados de conversas por uid
-const userConversations = {
-  uidA: [
-    { id: 'conv1', title: 'Conversa 1', messages: 5 },
-    { id: 'conv2', title: 'Conversa 2', messages: 3 }
-  ],
-  uidB: [
-    { id: 'conv3', title: 'Conversa 3', messages: 8 }
-  ]
-};
+let mf;
+let baseUrl;
 
-// Resposta simulada (Express-like)
-function makeRes() {
-  let statusCode = 200;
-  let body = null;
-  return {
-    status(code) {
-      statusCode = code;
-      return this;
-    },
-    json(data) {
-      body = data;
-      return this;
-    },
-    get status() {
-      return statusCode;
-    },
-    get jsonBody() {
-      return body;
+before(async () => {
+  mf = new Miniflare({
+    modules: true,
+    script: `
+      import app from './cloudflare/app.js';
+      import functions from './cloudflare/functions.js';
+      
+      export default {
+        async fetch(request, env, ctx) {
+          return app.handleRequest(request, env, { getFunction: functions.getFunction });
+        }
+      };
+    `,
+    modulesRules: [
+      { type: 'ESModule', include: ['**/*.js'] }
+    ],
+    compatibilityDate: '2024-01-01',
+    bindings: {
+      NODE_ENV: 'test',
+      JWT_SECRET: JWT_SECRET
     }
-  };
-}
+  });
 
-test('cortex-cliente: 200 com token uidA', () => {
-  const req = { headers: { authorization: `Bearer ${uidAToken}` } };
-  const res = makeRes();
-  authenticate(req, res, () => {
-    const conversations = userConversations[req.user.uid] || [];
-    res.status(200).json({
-      success: true,
-      uid: req.user.uid,
-      conversations
-    });
+  const url = await mf.ready;
+  baseUrl = url.toString().replace(/\\/$/, '');
+});
+
+after(async () => {
+  if (mf) {
+    await mf.dispose();
+  }
+});
+
+test('GET /api/cortex-cliente/conversas com uidA retorna 200 e dados do uidA', async () => {
+  const res = await fetch(`${baseUrl}/api/cortex-cliente/conversas`, {
+    headers: {
+      'Authorization': `Bearer ${uidAToken}`
+    }
   });
 
   assert.strictEqual(res.status, 200);
-  assert.strictEqual(res.jsonBody.success, true);
-  assert.strictEqual(res.jsonBody.uid, 'uidA');
-  assert.strictEqual(res.jsonBody.conversations.length, 2);
-  assert.strictEqual(res.jsonBody.conversations[0].title, 'Conversa 1');
+  const data = await res.json();
+  assert.strictEqual(data.success, true);
+  assert.strictEqual(data.uid, 'uidA');
+  assert.ok(Array.isArray(data.conversas));
 });
 
-test('cortex-cliente: 403 com token uidB', () => {
-  const req = { headers: { authorization: `Bearer ${uidBToken}` } };
-  const res = makeRes();
-  const result = authenticate(req, res, () => {});
+test('GET /api/cortex-cliente/conversas com uidB retorna 403', async () => {
+  const res = await fetch(`${baseUrl}/api/cortex-cliente/conversas`, {
+    headers: {
+      'Authorization': `Bearer ${uidBToken}`
+    }
+  });
 
-  assert.strictEqual(result.status, 403);
-  assert.strictEqual(result.jsonBody.error, 'Forbidden');
+  assert.strictEqual(res.status, 403);
+  const data = await res.json();
+  assert.strictEqual(data.error, 'Forbidden');
 });
 
-test('cortex-cliente: 401 sem token Authorization', () => {
-  const req = { headers: {} };
-  const res = makeRes();
-  const result = authenticate(req, res, () => {});
+test('GET /api/cortex-cliente/conversas sem Authorization retorna 401', async () => {
+  const res = await fetch(`${baseUrl}/api/cortex-cliente/conversas`);
 
-  assert.strictEqual(result.status, 401);
-  assert.strictEqual(result.jsonBody.error, 'Unauthorized');
+  assert.strictEqual(res.status, 401);
+  const data = await res.json();
+  assert.strictEqual(data.error, 'Unauthorized');
 });
