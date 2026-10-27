@@ -6,6 +6,7 @@ import type { Dados, Parte } from "./api";
 import { calcularAvisos } from "./avisos";
 import type { Aba } from "./avisos";
 import Painel from "./Painel";
+import AvisoDetalhe from "./AvisoDetalhe";
 import Clientes from "./Clientes";
 import Dinheiro from "./Dinheiro";
 import Divulgar from "./Divulgar";
@@ -45,6 +46,9 @@ export default function CentralPage() {
   const [conferidoEm, setConferidoEm] = useState<string | null>(null);
   const [menu, setMenu] = useState(false);
   const [busca, setBusca] = useState("");
+  // Alerta aberto: undefined = fechado; null = lista de todos; número = um alerta.
+  const [alerta, setAlerta] = useState<number | null | undefined>(undefined);
+  const [versaoNova, setVersaoNova] = useState(false);
 
   const conferir = useCallback(async () => {
     setCarregando(true); setErros({});
@@ -61,6 +65,13 @@ export default function CentralPage() {
     await Promise.all([trabalhador(), trabalhador(), trabalhador()]);
     setCarregando(false);
     setConferidoEm(new Date().toISOString());
+    // Aba aberta há muito tempo fica com a tela antiga: compara o script da página publicada com o desta aba.
+    try {
+      const html = await (await fetch(location.pathname, { cache: "no-store" })).text();
+      const publicado = (html.match(/\/assets\/index-[\w-]+\.js/) || [])[0];
+      const aqui = [...document.scripts].map((s) => s.src).find((s) => /\/assets\/index-[\w-]+\.js/.test(s));
+      if (publicado && aqui && !aqui.endsWith(publicado)) setVersaoNova(true);
+    } catch { /* sem rede: confere na próxima */ }
   }, [buscar]);
 
   useEffect(() => { if (!authLoading && user) conferir(); }, [authLoading, user, conferir]);
@@ -156,7 +167,7 @@ export default function CentralPage() {
                 <span className="block text-[11px] text-slate-400">Atualizado {haQuanto(conferidoEm)}</span>
               </span>
             </div>
-            <button onClick={() => ir("inicio")} className="relative p-2 text-slate-600 cursor-pointer lg:ml-0 ml-auto" aria-label={`${avisos.length} avisos`}>
+            <button onClick={() => setAlerta(null)} className="relative p-2 text-slate-600 cursor-pointer lg:ml-0 ml-auto" aria-label={`${avisos.length} avisos`} data-testid="central-sino">
               <Icone nome="sino" className="w-6 h-6" />
               {avisos.length > 0 && <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-[#fff] text-[10px] leading-4 text-center">{avisos.length}</span>}
             </button>
@@ -174,7 +185,7 @@ export default function CentralPage() {
           {semAcesso && <p className="text-red-600" role="alert">{erros.lista}</p>}
           {user && !semAcesso && (
             <>
-              {aba === "inicio" && <Painel d={d} erros={erros} avisos={avisos} ir={ir} conferir={conferir} carregando={carregando} />}
+              {aba === "inicio" && <Painel d={d} erros={erros} avisos={avisos} ir={ir} conferir={conferir} carregando={carregando} abrirAlerta={setAlerta} />}
               {aba !== "inicio" && (
                 <div className="max-w-3xl">
                   {aba === "clientes" && <Clientes d={d} erros={erros} />}
@@ -188,6 +199,12 @@ export default function CentralPage() {
             </>
           )}
         </main>
+        {alerta !== undefined && <AvisoDetalhe avisos={avisos} inicial={alerta} fechar={() => setAlerta(undefined)} ir={ir} />}
+        {versaoNova && (
+          <button onClick={() => location.reload()} className="fixed bottom-20 lg:bottom-6 right-4 z-40 rounded-xl bg-indigo-600 text-[#fff] px-4 py-3 text-sm font-medium shadow-lg cursor-pointer" data-testid="central-versao-nova">
+            🔄 Tem versão nova da Central. Toque para atualizar.
+          </button>
+        )}
       </div>
 
       {user && !semAcesso && (

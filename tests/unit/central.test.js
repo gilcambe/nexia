@@ -144,3 +144,22 @@ test('CENT10. clientes traz pixAguardando e usoIa; acao confirmar_pix e recusar_
   const resUser = await createHandler({ getMw: () => outro, getDb: () => db })(ev({ httpMethod: 'POST', body: JSON.stringify({ acao: 'confirmar_pix', id: 'p1' }) }));
   assert.strictEqual(resUser.statusCode, 403);
 });
+
+test('CENT-PROPRIO. sites no próprio Worker usam a medição de hora em hora (o Worker não abre o próprio endereço)', async () => {
+  const pedidos = [];
+  const fetch = async (u) => { pedidos.push(u); return { status: 200 }; };
+  const hora = new Date().toISOString().slice(0, 13);
+  const db = { collection: () => ({ where: () => ({ get: async () => ({ docs: [{ data: () => ({ hora, em: 'agora', rotas: { cortex: { ok: true, codigo: 200, tempo: 40 }, ces: { ok: false, codigo: 503, tempo: 10 } } }) }] }) }) }) };
+  const b = JSON.parse((await createHandler({ getMw: () => master, fetch, getHistoricoDb: () => db })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
+  assert.strictEqual(b.produtos.find((p) => p.id === 'cortex').ok, true);
+  assert.strictEqual(b.produtos.find((p) => p.id === 'ces').ok, false);
+  assert.strictEqual(b.produtos.find((p) => p.id === 'ces').quando, 'agora');
+  assert.ok(!pedidos.some((u) => u.includes('nexia.gcbezerra.workers.dev/health') || u.endsWith('/ces')), 'não abre o próprio Worker');
+  assert.ok(pedidos.some((u) => u.includes('pages.dev')), 'sites de fora continuam medidos ao vivo');
+});
+
+test('CENT-MAQ. máquinas do dono vêm do agente (só leitura)', async () => {
+  const h = createHandler({ getMw: () => master, getMaquinas: () => ({ ligado: () => true, listar: async () => [{ nome: 'PC1', online: true, ramTotal: 16 }] }) });
+  const b = JSON.parse((await h(ev({ queryStringParameters: { parte: 'maquinas' } }))).body);
+  assert.deepStrictEqual([b.ligado, b.maquinas[0].nome, b.maquinas[0].online], [true, 'PC1', true]);
+});

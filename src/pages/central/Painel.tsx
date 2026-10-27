@@ -104,8 +104,8 @@ function BotaoAvisar() {
   );
 }
 
-export default function Painel({ d, erros, avisos, ir, conferir, carregando }: {
-  d: Dados; erros: Partial<Record<Parte, string>>; avisos: Aviso[]; ir: (a: Aba) => void; conferir: () => void; carregando: boolean;
+export default function Painel({ d, erros, avisos, ir, conferir, carregando, abrirAlerta }: {
+  d: Dados; erros: Partial<Record<Parte, string>>; avisos: Aviso[]; ir: (a: Aba) => void; conferir: () => void; carregando: boolean; abrirAlerta: (k: number | null) => void;
 }) {
   const cx = d.cortex;
   const semana = cx ? cx.feitas7 + cx.naFila + cx.travadas.length + cx.fazendo.length : 0;
@@ -217,7 +217,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando }: {
               valor={maiorCota ? `${Math.round(maiorCota.pct || 0)}%` : null} sub={maiorCota ? `a mais usada hoje: ${maiorCota.nome}` : ""}
               pct={maiorCota ? maiorCota.pct : null} barra={maiorCota && (maiorCota.pct || 0) >= 80 ? "bg-amber-500" : "bg-sky-500"}
               conta={maiorCota ? `${maiorCota.usado} de ${maiorCota.limite}` : ""} />
-            <Numero titulo="Alertas" icone="alerta" cor="from-orange-400 to-amber-500" onClick={() => ir("inicio")}
+            <Numero titulo="Alertas" icone="alerta" cor="from-orange-400 to-amber-500" onClick={() => abrirAlerta(null)}
               valor={d.saude ? avisos.length : null} sub={avisos.length ? "precisam de você" : "nada pendente"} />
           </div>
 
@@ -225,7 +225,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando }: {
             <section className="lg:hidden rounded-2xl bg-white border border-amber-200 p-4 space-y-2" data-testid="alertas-celular">
               <h2 className="font-semibold text-slate-900">Precisa de você</h2>
               {avisos.map((a, k) => (
-                <button key={k} onClick={() => ir(a.aba)} className="w-full flex items-start gap-2 text-left text-sm text-slate-700 cursor-pointer">
+                <button key={k} onClick={() => abrirAlerta(k)} className="w-full flex items-start gap-2 text-left text-sm text-slate-700 cursor-pointer">
                   <Icone nome="alerta" className={`w-4 h-4 mt-0.5 shrink-0 ${a.cor === "vermelho" ? "text-red-600" : "text-amber-600"}`} />{a.texto}
                 </button>
               ))}
@@ -337,10 +337,28 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando }: {
                 )}
               </Caixa>
               <Caixa titulo="Máquinas locais">
-                <div className="flex items-start gap-3 text-sm">
-                  <span className="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0"><Icone nome="pc" /></span>
-                  <p className="text-slate-500">Os 2 PCs ainda não estão ligados à Central. O agente que mostra CPU, memória e IA local de cada PC está sendo feito (tarefa #1846).</p>
-                </div>
+                {!d.maquinas ? <div className="h-16 rounded-xl bg-slate-100 animate-pulse" /> : !d.maquinas.maquinas.length ? (
+                  <div className="flex items-start gap-3 text-sm">
+                    <span className="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 flex items-center justify-center shrink-0"><Icone nome="pc" /></span>
+                    <p className="text-slate-500">{d.maquinas.ligado ? "Nenhum PC mandou sinal ainda. No PC, deixe o agente da Kernex aberto (ele manda um sinal por minuto)." : "A ligação dos PCs está desligada no servidor (falta NEXIA_MAQUINA_TOKEN)."}</p>
+                  </div>
+                ) : (
+                  <ul className="space-y-3" data-testid="maquinas">
+                    {d.maquinas.maquinas.map((m) => {
+                      const gb = (v?: number | null) => (v ? `${String(v).replace(".", ",")} GB` : "?"); // o agente já manda em GB
+                      return (
+                        <li key={m.nome} className="flex items-start gap-3 text-sm">
+                          <span className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${m.online ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-400"}`}><Icone nome="pc" /></span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2"><span className="font-medium text-slate-900 truncate">{m.nome}</span><Pilula e={m.online ? "ok" : "cinza"}>{m.online ? "Ligado" : "Sem sinal"}</Pilula></div>
+                            <div className="text-xs text-slate-500 truncate">{m.cpu || "CPU ?"} · RAM livre {gb(m.ramLivre)} de {gb(m.ramTotal)}</div>
+                            <div className="text-xs text-slate-500 truncate">IA local: {m.ollamaOk ? (m.modelos?.length ? m.modelos.join(", ") : "Ollama sem modelo") : "Ollama desligado"} · sinal {haQuanto(m.visto_em)}</div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
               </Caixa>
             </div>
           </div>
@@ -401,7 +419,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando }: {
               <ul className="space-y-3" data-testid="alertas">
                 {avisos.map((a, k) => (
                   <li key={k}>
-                    <button onClick={() => ir(a.aba)} className="w-full flex items-start gap-3 text-left cursor-pointer group" data-testid="central-aviso">
+                    <button onClick={() => abrirAlerta(k)} className="w-full flex items-start gap-3 text-left cursor-pointer group" data-testid="central-aviso">
                       <span className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${a.cor === "vermelho" ? "bg-red-50 text-red-600" : "bg-amber-50 text-amber-600"}`}><Icone nome="alerta" className="w-4 h-4" /></span>
                       <span className="text-sm text-slate-700 group-hover:text-indigo-600">{a.texto}</span>
                     </button>

@@ -4,7 +4,7 @@
 //   POST /api/central {acao:'rodar', arquivo, ensaio?} | {acao:'pedir', texto} | {acao:'testar-ias'} | {acao:'vaga-salvar'|'vaga-apagar'|'vaga-testar'}
 // Cada parte é um pedido separado: a página mostra o que já chegou sem esperar o resto.
 
-const { PRODUTOS, NO_AR, LINKS, ROBOS } = require('../../central/produtos');
+const { PRODUTOS, NO_AR, LINKS, ROBOS, BASE } = require('../../central/produtos');
 const { FORNECEDORES } = require('../../central/fornecedores');
 const empresa = require('./central/empresa');
 const vagas = require('./central/ia-vagas');
@@ -114,7 +114,18 @@ function createHandler(deps = {}) {
       const parte = String((event.queryStringParameters || {}).parte || 'lista');
       if (parte === 'lista') return res(200, { produtos: PRODUTOS, links: LINKS });
       if (parte === 'saude') {
-        const medidos = await Promise.all(NO_AR.map(async (p) => ({ id: p.id, ...(await medir(p.site, fetchFn)) })));
+        // O Worker não consegue abrir o próprio endereço dentro de um pedido (o Cloudflare barra o laço) e dava
+        // "fora do ar" falso para Cortex, CES, Viajante Pro e Splash. Esses usam a medição de hora em hora do cron.
+        const proprio = (u) => { try { return new URL(u).host === new URL(BASE).host; } catch { return false; } };
+        let hora = null;
+        if (NO_AR.some((p) => proprio(p.site))) {
+          try { const h = getHistorico(); hora = await h.ultimaAmostra(deps.getHistoricoDb ? deps.getHistoricoDb() : h.abrirBanco(env)); } catch { hora = null; }
+        }
+        const medidos = await Promise.all(NO_AR.map(async (p) => {
+          const m = proprio(p.site) && hora && hora.rotas[p.id];
+          if (m) return { id: p.id, ok: !!m.ok, codigo: m.codigo || 0, tempo: m.tempo || 0, lento: (m.tempo || 0) > 3000, quando: hora.em || null };
+          return { id: p.id, ...(await medir(p.site, fetchFn)) };
+        }));
         return res(200, { produtos: medidos, em: new Date().toISOString() });
       }
       if (parte === 'historico') {
@@ -153,6 +164,11 @@ function createHandler(deps = {}) {
         return res(200, { fornecedores: empresa.fornecedores(FORNECEDORES, env, robos) });
       }
       if (parte === 'cortex') return res(200, await gh.cortex());
+      if (parte === 'maquinas') {
+        // #1846: PCs do dono (agente local manda o pulso a cada minuto). Só leitura.
+        const m = deps.getMaquinas ? deps.getMaquinas() : require('../../nexia-ai/maquinas').createMaquinas({ env });
+        return res(200, { ligado: m.ligado(), maquinas: m.ligado() ? await m.listar() : [] });
+      }
       if (parte === 'vagas') return res(200, await vagas.estado(gh.api, env));
       if (parte === 'reservas') return res(200, await gh.reservas());   // #802: contas de reserva (só nomes de segredos)
       if (parte === 'robos') return res(200, { robos: await gh.robos(ROBOS) });
