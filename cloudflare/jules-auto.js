@@ -11,6 +11,13 @@ const REPO = '/repos/gilcambe/nexia';
 // passou disso, volta ao Cortex (pode ir ao Jules de novo depois).
 const ESPERA_JULES_H = 1;
 const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'so-humano', 'vez-do-claude'];
+const ROTULO_CLAUDE = 'vez-do-claude';
+const COR_CLAUDE = '#d97706';
+
+// Cria o rótulo vez-do-claude (cor #d97706) se ainda não existir.
+async function garantirRotulo(p) {
+  await p.gh(`${REPO}/labels`, { method: 'POST', body: JSON.stringify({ name: ROTULO_CLAUDE, color: COR_CLAUDE }) }).catch(() => null);
+}
 
 // Decide o que fazer com as issues travadas (função pura, testada).
 function decidir(issues, prs, agora, nomes, enviadosHoje = 0) {
