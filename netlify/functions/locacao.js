@@ -764,7 +764,7 @@ function createHandler(deps = {}) {
       return res(200, pub);
     }
 
-    const acao = str(body.acao, 30);
+    const acao = str(body.acao || body.action, 40);
 
     // ── Público: Fazer Pedido de Reserva ──
     if (acao === 'pedir') {
@@ -924,6 +924,19 @@ function createHandler(deps = {}) {
       await conta.collection('fotos').doc(fid).set({ id: fid, tipo, dados: base64, bytes, unidade: 'comprovantes', legenda: 'comprovante ' + protocolo, ordem: 0, capa: false, criado_em: agoraIso, atualizado_em: agoraIso });
       await reservas.doc(docR.id).update({ comprovantes: [...anteriores, { id: fid, em: agoraIso }], atualizado_em: agoraIso });
       return res(201, { ok: true });
+    }
+
+    if (acao === 'obterHandleInstagram' || acao === 'obter-handle-instagram' || acao === 'instagram-obter-handle') {
+      const dados = await lerConta();
+      const handle = dados.instagramHandle || dados.instagram_handle || (dados.config && dados.config.instagram) || '';
+      return res(200, { ok: true, handle, instagram: handle });
+    }
+
+    if (acao === 'listarCampanhas' || acao === 'listar-campanhas' || acao === 'campanha-listar') {
+      const snap = await conta.collection('campanhas').get();
+      let list = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      list.sort((a, b) => (b.criado_em || '').localeCompare(a.criado_em || ''));
+      return res(200, { ok: true, campanhas: list.slice(0, 30) });
     }
 
     // ── Painel: Autenticação (Entrar / Primeiro Acesso) ──
@@ -1867,6 +1880,81 @@ function createHandler(deps = {}) {
 
       await refFoto.delete();
       _fotos.delete(slug + '/' + id);
+      return res(200, { ok: true });
+    }
+
+    if (acao === 'salvarCampanha' || acao === 'salvar-campanha' || acao === 'campanha-salvar') {
+      const titulo = str(body.titulo, 120);
+      if (!titulo) return res(400, { error: 'Título da campanha é obrigatório.' });
+      const id = aleatorio(12);
+      const agoraIso = new Date(now()).toISOString();
+      const item = {
+        id,
+        titulo,
+        texto: str(body.texto, 1000),
+        foto: str(body.foto, 500),
+        link: str(body.link, 500),
+        tipo: str(body.tipo, 50) || 'geral',
+        criado_em: agoraIso,
+        atualizado_em: agoraIso,
+      };
+      await conta.collection('campanhas').doc(id).set(item);
+      return res(201, { ok: true, id, campanha: item });
+    }
+
+    if (acao === 'salvarHandleInstagram' || acao === 'salvar-handle-instagram' || acao === 'instagram-salvar-handle') {
+      let handle = str(body.handle || body.instagram || body.handleInstagram || body.handle_instagram, 100).trim();
+      if (handle.startsWith('@')) handle = handle.slice(1).trim();
+      if (!/^[A-Za-z0-9._]{1,30}$/.test(handle)) {
+        return res(400, { error: 'Handle do Instagram inválido. Use de 1 a 30 caracteres (letras, números, ponto e underline).' });
+      }
+      await conta.set({ instagramHandle: handle, instagram_handle: handle, config: { ...(dados.config || {}), instagram: handle } }, { merge: true });
+      return res(200, { ok: true, handle, instagram: handle });
+    }
+
+    if (acao === 'obterContatosComConsentimento' || acao === 'obter-contatos-com-consentimento' || acao === 'contatos-consentimento') {
+      const snap = await reservas.where('consentimento', '==', true).get();
+      let contatos = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(r => !r.contato_removido && !r.removido);
+      contatos.sort((a, b) => (b.criado_em || '').localeCompare(a.criado_em || ''));
+      const list = contatos.map(r => ({
+        id: r.id,
+        nome: r.nome || '',
+        whatsapp: r.whatsapp || '',
+        email: r.email || '',
+        data: r.data || '',
+        unidade_nome: r.unidade_nome || '',
+        consentimento: true,
+        enviado: Boolean(r.enviado || r.marcado_enviado),
+        criado_em: r.criado_em || null,
+      }));
+      return res(200, { ok: true, contatos: list });
+    }
+
+    if (acao === 'marcarEnviado' || acao === 'marcar-enviado' || acao === 'contato-marcar-enviado') {
+      const rawIds = Array.isArray(body.ids) ? body.ids : [body.id];
+      const ids = rawIds.map(i => str(i, 64)).filter(i => ID_RE.test(i));
+      if (!ids.length) return res(400, { error: 'ID de contato/reserva inválido.' });
+      const agoraIso = new Date(now()).toISOString();
+      for (const id of ids) {
+        const ref = reservas.doc(id);
+        const snap = await ref.get();
+        if (snap.exists) {
+          await ref.update({ enviado: true, marcado_enviado: true, enviado_em: agoraIso, atualizado_em: agoraIso });
+        }
+      }
+      return res(200, { ok: true });
+    }
+
+    if (acao === 'removerContato' || acao === 'remover-contato' || acao === 'contato-remover') {
+      const id = str(body.id, 64);
+      if (!ID_RE.test(id)) return res(400, { error: 'ID de contato inválido.' });
+      const ref = reservas.doc(id);
+      const snap = await ref.get();
+      if (!snap.exists) return res(404, { error: 'Contato não encontrado.' });
+      const agoraIso = new Date(now()).toISOString();
+      await ref.update({ consentimento: false, contato_removido: true, removido: true, atualizado_em: agoraIso });
       return res(200, { ok: true });
     }
 
