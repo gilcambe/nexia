@@ -13,19 +13,68 @@ const ESPERA_JULES_H = 1;
 const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'so-humano', 'vez-do-claude'];
 
 // Decide o que fazer com as issues travadas (função pura, testada).
-function decidir(issues, prs, agora, nomes) {
-  const recusado = (p) => (p.labels || []).some(l => (l.name || l) === 'revisor-recusou');
+function decidir(issues, prs, agora, nomes, enviadosHoje = 0) {
+  const recusado = (p) => (p.labels || []).some(l => (l.name || l) === 'revisor-recusado');
   const prDe = (n) => prs.some(p => !recusado(p) && new RegExp(`#${n}(?!\\d)`).test(`${p.title || ''}\n${p.body || ''}`));
   const travadas = issues.filter(i => !i.pull_request && nomes(i).includes('cortex-travado') && !nomes(i).some(n => IGNORAR.includes(n)));
   // Parte grande do plano do Cortex (rótulo cortex-jules, scripts/cortex-plano.js) vai antes das travadas: ela nem tentou na IA grátis.
   const planejada = issues.find(i => !i.pull_request && nomes(i).includes('cortex-jules') && !nomes(i).includes('jules-enviado') && !nomes(i).some(n => IGNORAR.includes(n)));
-  const enviar = planejada || travadas.find(i => !nomes(i).includes('jules-enviado'));
+  
+  // Conta envios reais do dia (issues com jules-enviado atualizadas desde 00:00 UTC)
+  const inicioDia = new Date(agora);
+  inicioDia.setUTCHours(0, 0, 0, 0);
+  const enviadosHojeReais = issues.filter(i => 
+    nomes(i).includes('jules-enviado') && 
+    Date.parse(i.updated_at || 0) >= inicioDia.getTime()
+  ).length;
+  
+  const totalHoje = Math.max(enviadosHoje, enviadosHojeReais);
+  const cotaEsgotada = totalHoje >= 15;
+  
+  // Define o que enviar para o Jules (se a cota não estiver esgotada)
+  let enviarParaJules = planejada || travadas.find(i => !nomes(i).includes('jules-enviado'));
+  if (cotaEsgotada && enviarParaJules) {
+    // Se a cota estiver esgotada, não envia, mas marca como vez-do-claude
+    enviarParaJules = null;
+  }
+  
+  // Issues que voltaram do Jules e vão para vez-do-claude
   const voltar = travadas.filter(i => nomes(i).includes('jules-enviado') && !prDe(i.number)
     && (agora - Date.parse(i.updated_at || 0)) / 36e5 >= ESPERA_JULES_H);
+  
+  // Issues que vão para vez-do-claude (já voltaram do Jules ou cota esgotada)
+  const claude = [];
+  
+  // Item 1: travadas que já voltaram do Jules (têm cortex-retomada), sem PR → vez-do-claude
+  voltar.filter(i => nomes(i).includes('cortex-retomada')).forEach(i => {
+    claude.push(i.number);
+  });
+  
+  // Item 2: se cota esgotada, a travada sem jules-enviado vai para vez-do-claude
+  if (cotaEsgotada && enviarParaJules === null) {
+    travadas.filter(i => !nomes(i).includes('jules-enviado')).forEach(i => {
+      claude.push(i.number);
+    });
+  }
+  
+  // Issues que o Claude deve devolver ao degrau 2 (se não estiver trabalhando e sem PR)
+  const devolver = [];
+  const issuesVezDoClaude = issues.filter(i => nomes(i).includes('vez-do-claude') && !nomes(i).includes('claude-trabalhando'));
+  
+  issuesVezDoClaude.forEach(i => {
+    if (!prDe(i.number) && !cotaEsgotada) {
+      // Se não tem PR e a cota não está esgotada, devolve ao degrau 2
+      devolver.push(i.number);
+    }
+  });
+  
   return {
-    enviar: enviar ? enviar.number : null,
+    enviar: enviarParaJules ? enviarParaJules.number : null,
     retomar: voltar.filter(i => !nomes(i).includes('cortex-retomada')).map(i => i.number),
     humano: voltar.filter(i => nomes(i).includes('cortex-retomada')).map(i => i.number),
+    claude: claude,
+    devolver: devolver,
+    enviadosHoje: totalHoje
   };
 }
 
