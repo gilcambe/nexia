@@ -38,7 +38,13 @@ export default function CentralPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { buscar } = useCentral();
-  const [aba, setAba] = useState<Aba>(() => ({ produtos: "clientes", mais: "sistema" } as Record<string, Aba>)[location.hash.slice(1)] || (location.hash.slice(1) as Aba) || "inicio");
+  const [aba, setAba] = useState<Aba>(() => {
+    const savedChoice = sessionStorage.getItem("central-aba") as Aba | undefined;
+    const hashAba = location.hash.slice(1) as Aba;
+    if (savedChoice && !hashAba) return savedChoice;
+    if (hashAba && ABAS.some(a => a.id === hashAba)) return hashAba;
+    return "inicio";
+  });
   const [d, setD] = useState<Dados>({});
   const [erros, setErros] = useState<Partial<Record<Parte, string>>>({});
   const [carregando, setCarregando] = useState(false);
@@ -167,7 +173,7 @@ export default function CentralPage() {
           </div>
         </header>
 
-        <main className="px-4 lg:px-8 py-6 max-w-[1600px]">
+        <main className="px-4 lg:px-8 py-6 max-w-7xl">
           {!authLoading && !user && (
             <p className="text-slate-500">Faça <button className="text-indigo-600 underline cursor-pointer" onClick={() => navigate("/login")}>login</button> como administrador para abrir a Central.</p>
           )}
