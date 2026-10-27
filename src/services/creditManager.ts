@@ -34,22 +34,26 @@ const RATE_LIMIT_KEY = 'nexia-credit-manager-ratelimit';
 // Não substitui criptografia; impede tampering casual do usuário.
 const SIG_KEY = 'nexia-cm-v1';
 // Chave HMAC para assinatura criptográfica mais segura
-const HMAC_KEY = 'nexia-cm-hmac-v1';
+// Em produção, esta chave deve vir de variáveis de ambiente e ser rotacionada
+const HMAC_KEY = process.env.NEXIA_HMAC_KEY || 'nexia-cm-hmac-v1';
 
 function sign(payload: string): string {
   // Usar HMAC-SHA256 para assinatura criptográfica mais segura
   // Simulação de HMAC (em produção usar crypto.subtle)
   let h = 0;
+  const key = HMAC_KEY;
   for (let i = 0; i < payload.length; i++) {
-    h = ((h << 5) - h + payload.charCodeAt(i) + HMAC_KEY.charCodeAt(i % HMAC_KEY.length)) | 0;
+    h = ((h << 5) - h + payload.charCodeAt(i) + key.charCodeAt(i % key.length)) | 0;
   }
   return `${SIG_KEY}:${Math.abs(h)}`;
 }
 
 // Função para validar integridade com hash mais complexo
 function verifyIntegrity(data: UserCredits): boolean {
-  const expectedSig = sign(JSON.stringify(data));
-  const currentSig = data.sig || '';
+  // Remover assinatura antes de verificar para evitar loops recursivos
+  const { sig, ...dataWithoutSig } = data;
+  const expectedSig = sign(JSON.stringify(dataWithoutSig));
+  const currentSig = sig || '';
   return expectedSig === currentSig;
 }
 
@@ -129,6 +133,14 @@ function loadUsers(): Map<string, UserCredits> {
       
       // Verificar assinatura individual se existir
       if (u.sig && !verifyIntegrity(u)) {
+        return false;
+      }
+      
+      // Para planos ilimitados, garantir que os valores sejam -1
+      if (plan.sites === -1 && u.sitesCreated !== -1) {
+        return false;
+      }
+      if (plan.credits === -1 && u.creditsRemaining !== -1) {
         return false;
       }
       
