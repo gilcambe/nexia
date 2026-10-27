@@ -437,3 +437,85 @@ test('LOC22. lembrete de avaliação: só depois da festa, uma vez, e só se lig
   assert.equal(lib.devidos([r], on, '2026-10-30').length, 0, 'depois de 7 dias não insiste');
   assert.equal(lib.devidos([{ ...r, lembretes_enviados: { avaliacao: 'x' } }], on, '2026-10-11').length, 0, 'já enviado');
 });
+
+test('LOC23. campanhas: salvarCampanha e listarCampanhas persistem e retornam últimas 30', async () => {
+  const a = await montar();
+  const token = await logar(a, '55.0.0.1');
+
+  // Sem título -> 400
+  const semTitulo = await a.post({ action: 'salvarCampanha', token, texto: 'Sem titulo' }, { ip: '55.0.0.2' });
+  assert.equal(semTitulo.statusCode, 400);
+
+  // Criar campanha válida via action
+  const c1 = await a.post({
+    action: 'salvarCampanha',
+    token,
+    titulo: 'Promoção Verão',
+    texto: 'Super desconto de verão',
+    foto: 'https://exemplo.com/foto.jpg',
+    link: 'https://exemplo.com',
+    tipo: 'promo',
+  }, { ip: '55.0.0.3' });
+  assert.equal(c1.statusCode, 201);
+  assert.equal(c1.json.ok, true);
+  assert.ok(c1.json.id);
+
+  // Listar campanhas
+  const lista = await a.post({ action: 'listarCampanhas' }, { ip: '55.0.0.4' });
+  assert.equal(lista.statusCode, 200);
+  assert.equal(lista.json.ok, true);
+  assert.equal(lista.json.campanhas.length, 1);
+  assert.equal(lista.json.campanhas[0].titulo, 'Promoção Verão');
+});
+
+test('LOC24. instagram handle: salvarHandleInstagram valida regex e obterHandleInstagram recupera', async () => {
+  const a = await montar();
+  const token = await logar(a, '56.0.0.1');
+
+  // Handle inválido com caracteres proibidos
+  const inv = await a.post({ action: 'salvarHandleInstagram', token, handle: '@splash!!' }, { ip: '56.0.0.2' });
+  assert.equal(inv.statusCode, 400);
+
+  // Handle válido (com @ inicial para ser removido automaticamente)
+  const val = await a.post({ action: 'salvarHandleInstagram', token, handle: '@splash_oficial.1' }, { ip: '56.0.0.3' });
+  assert.equal(val.statusCode, 200);
+  assert.equal(val.json.ok, true);
+  assert.equal(val.json.handle, 'splash_oficial.1');
+
+  // Obter handle
+  const obt = await a.post({ action: 'obterHandleInstagram' }, { ip: '56.0.0.4' });
+  assert.equal(obt.statusCode, 200);
+  assert.equal(obt.json.ok, true);
+  assert.equal(obt.json.handle, 'splash_oficial.1');
+});
+
+test('LOC25. contatos: obterContatosComConsentimento, marcarEnviado e removerContato', async () => {
+  const a = await montar();
+  const token = await logar(a, '57.0.0.1');
+
+  // Faz um pedido com consentimento = true
+  const ped = await a.post({ ...pedidoPadrao, consentimento: true }, { ip: '99.0.0.1' });
+  assert.equal(ped.statusCode, 201);
+
+  // Obter contatos com consentimento
+  const contatos1 = await a.post({ action: 'obterContatosComConsentimento', token }, { ip: '57.0.0.2' });
+  assert.equal(contatos1.statusCode, 200);
+  assert.equal(contatos1.json.ok, true);
+  assert.equal(contatos1.json.contatos.length, 1);
+  const idContato = contatos1.json.contatos[0].id;
+  assert.equal(contatos1.json.contatos[0].enviado, false);
+
+  // Marcar como enviado
+  const env = await a.post({ action: 'marcarEnviado', token, id: idContato }, { ip: '57.0.0.3' });
+  assert.equal(env.statusCode, 200);
+
+  const contatos2 = await a.post({ action: 'obterContatosComConsentimento', token }, { ip: '57.0.0.4' });
+  assert.equal(contatos2.json.contatos[0].enviado, true);
+
+  // Remover contato
+  const rem = await a.post({ action: 'removerContato', token, id: idContato }, { ip: '57.0.0.5' });
+  assert.equal(rem.statusCode, 200);
+
+  const contatos3 = await a.post({ action: 'obterContatosComConsentimento', token }, { ip: '57.0.0.6' });
+  assert.equal(contatos3.json.contatos.length, 0, 'contato removido não deve mais aparecer na lista');
+});
