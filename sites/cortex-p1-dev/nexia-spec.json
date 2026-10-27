@@ -261,6 +261,14 @@
       "credit": "PDB code 2DN1 1.25 a resolution crystal structures of human haemoglobin in the oxy, deoxy and carbonmonoxy for",
       "provider": "wikimedia"
     },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Text_on_UploadWizard%27s_%22Describe%22_page_is_too_narrow_due_to_a_code_bug_%2815_October_2020%29_Mobile_view_02.png/1280px-Text_on_UploadWizard%27s_%22Describe%22_page_is_too_narrow_due_to_a_code_bug_%2815_October_2020%29_Mobile_view_02.png",
+      "width": 1280,
+      "height": 720,
+      "alt": "Text on UploadWizard's 'Describe' page is too narrow due to a code bug (15 Octob",
+      "credit": "Text on UploadWizard's 'Describe' page is too narrow due to a code bug (15 October 2020) Mobile view 02 — Vari",
+      "provider": "openverse"
+    },
     "s1.item2": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/0/05/SerenityOS_Filetype-json.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
       "width": 1280,
@@ -269,15 +277,6 @@
       "credit": "Copyright (c) 2018-2024, the SerenityOS developers (BSD, via Wikimedia Commons)",
       "provider": "wikimedia"
     },
-    "s3.gif0": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/0/06/TerminalOSXscreenshot.gif",
-      "width": 817,
-      "height": 817,
-      "alt": "File:TerminalOSXscreenshot.gif",
-      "credit": "File:TerminalOSXscreenshot.gif — ZeaForUs (BY-SA 3.0, via Openverse)",
-      "provider": "openverse",
-      "mime": "image/gif"
-    },
     "s2.about": {
       "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6b/Hackathon_Screen_reader.png/1280px-Hackathon_Screen_reader.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "width": 1280,
@@ -285,14 +284,6 @@
       "alt": "Three visually-impaired developers using screen readers to code. The code on the",
       "credit": "Mam'Gobozi Design Factory (MDF) (CC BY-SA 3.0, via Wikimedia Commons)",
       "provider": "wikimedia"
-    },
-    "s1.item1": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Text_on_UploadWizard%27s_%22Describe%22_page_is_too_narrow_due_to_a_code_bug_%2815_October_2020%29_Mobile_view_02.png/1280px-Text_on_UploadWizard%27s_%22Describe%22_page_is_too_narrow_due_to_a_code_bug_%2815_October_2020%29_Mobile_view_02.png",
-      "width": 1280,
-      "height": 720,
-      "alt": "Text on UploadWizard's 'Describe' page is too narrow due to a code bug (15 Octob",
-      "credit": "Text on UploadWizard's 'Describe' page is too narrow due to a code bug (15 October 2020) Mobile view 02 — Vari",
-      "provider": "openverse"
     },
     "s3.g0": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Knoppix-3.8-boot.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
@@ -341,6 +332,15 @@
       "alt": "A screenshot of libQuotient terminal log",
       "credit": "Software: libQuotient developers Screenshot: VulcanSphere (LGPL, via Wikimedia Commons)",
       "provider": "wikimedia"
+    },
+    "s3.gif0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/0/06/TerminalOSXscreenshot.gif",
+      "width": 817,
+      "height": 817,
+      "alt": "File:TerminalOSXscreenshot.gif",
+      "credit": "File:TerminalOSXscreenshot.gif — ZeaForUs (BY-SA 3.0, via Openverse)",
+      "provider": "openverse",
+      "mime": "image/gif"
     },
     "s5.m0": {
       "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b3/UwUntu_22.10_Kitty_0.21.2_-_English.png/1280px-UwUntu_22.10_Kitty_0.21.2_-_English.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
