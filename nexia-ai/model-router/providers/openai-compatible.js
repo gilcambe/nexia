@@ -45,6 +45,8 @@ const PROVIDERS = Object.freeze({
   // ADR-FREE-05: Kilo Gateway. Sem chave, só modelos grátis (":free"; 200 pedidos/hora por IP). KILO_API_KEY é opcional.
   // O modelo "auto:N" é o N-ésimo grátis do catálogo vivo do gateway (kilo-catalog.js); nunca chama modelo pago.
   kilo:        { url: 'https://api.kilo.ai/api/gateway/chat/completions', env: 'KILO_API_KEY', keyless: true, free_only: true, catalog: true, max_output: 16384, tools: true },
+  // Ollama: rodando localmente com OLLAMA_URL + OLLAMA_TOKEN (opcional), modelo padrão qwen2.5-coder:7b
+  ollama:      { url: (m, env) => `${env.OLLAMA_URL}/v1/chat/completions`, env: 'OLLAMA_TOKEN', max_output: 8192, tools: true },
 });
 
 const DEFAULT_TIMEOUT = 120000;
