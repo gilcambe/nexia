@@ -1,33 +1,33 @@
 {
   "spec": {
-    "kind": "system",
-    "name": "Site de Teste do Cortex-p1",
-    "tagline": "Painel de métricas e controle do Cortex",
-    "photo_theme": "dashboard metrics",
-    "description": "Painel de métricas e controle do Cortex",
+    "kind": "site",
+    "name": "Cortex-p1",
+    "tagline": "Encontre clientes ideais e otimize recursos",
+    "photo_theme": "tech dashboard",
+    "description": "Sistema inteligente para recomendar clientes similares, identificar recursos disponíveis e lacunas no mercado.",
     "folder": "sites/cortex-p1",
     "fonts": {
-      "heading": "Montserrat",
+      "heading": "Manrope",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#4f46e5",
-      "accent": "#06b6d4",
-      "bg": "#fbfaf7",
+      "primary": "#2563eb",
+      "accent": "#f59e0b",
+      "bg": "#f3f4f6",
       "surface": "#ffffff",
-      "text": "#1d2426",
-      "muted": "#5d6b6e",
+      "text": "#1f2937",
+      "muted": "#606773",
       "dark": "#111827"
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "11900000000",
-      "phone": "(11) 4002-8922",
-      "email": "suporte@cortexp1.com.br",
-      "address": "",
-      "city": "",
-      "hours": "",
-      "instagram": "",
+      "whatsapp": "5511999998888",
+      "phone": "(11) 99999-8888",
+      "email": "contato@cortex-p1.com.br",
+      "address": "Av. Paulista, 1000",
+      "city": "São Paulo - SP",
+      "hours": "Seg a sex, 9h às 18h",
+      "instagram": "cortex_p1",
       "facebook": "",
       "youtube": "",
       "tiktok": "",
@@ -42,99 +42,291 @@
       "url": "https://kernex.com.br/?utm_source=cortex-p1&utm_medium=selo&utm_campaign=clientes"
     },
     "leads_origem": "",
-    "entities": [
+    "sections": [
       {
-        "key": "metrics",
-        "label": "Métricas",
-        "singular": "Métrica",
-        "fields": [
+        "type": "hero",
+        "id": "encontre-clientes-ideais-em-segundos",
+        "title": "Encontre clientes ideais em segundos",
+        "subtitle": "Análise inteligente para identificar oportunidades e otimizar recursos.",
+        "eyebrow": "Sistema de Inteligência de Clientes",
+        "cta": {
+          "label": "Solicitar Demonstração",
+          "href": "mailto:demo@cortex-p1.com.br"
+        },
+        "cta2": {
+          "label": "Ver como funciona",
+          "href": "#funcionamento"
+        },
+        "image_query": "business dashboard analytics",
+        "video_query": ""
+      },
+      {
+        "type": "services",
+        "id": "funcionamento",
+        "title": "Recursos do Cortex-p1",
+        "subtitle": "Tudo que você precisa para gerenciar clientes.",
+        "items": [
           {
-            "key": "provedor",
-            "label": "Provedor",
-            "type": "text",
-            "options": [],
-            "required": true
+            "title": "Análise de Similaridade",
+            "text": "Compara texto de busca com nossos clientes e encontra os mais parecidos.",
+            "price": "",
+            "image_query": "comparison chart",
+            "tag": "",
+            "url": "",
+            "icon": ""
           },
           {
-            "key": "cota_usada_hoje",
-            "label": "Cota Usada Hoje",
-            "type": "number",
-            "options": [],
-            "required": true
+            "title": "Recomendação de Recursos",
+            "text": "Mostra o que você pode reaproveitar de clientes existentes.",
+            "price": "",
+            "image_query": "resource management",
+            "tag": "",
+            "url": "",
+            "icon": ""
           },
           {
-            "key": "mensagens_por_minuto",
-            "label": "Mensagens por Minuto",
-            "type": "number",
-            "options": [],
-            "required": true
+            "title": "Identificação de Lacunas",
+            "text": "Aponta recursos que nenhum cliente oferece, novas oportunidades.",
+            "price": "",
+            "image_query": "gap analysis",
+            "tag": "",
+            "url": "",
+            "icon": ""
           },
           {
-            "key": "tamanho_da_fila",
-            "label": "Tamanho da Fila",
-            "type": "number",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "erros_ultima_hora",
-            "label": "Erros na Última Hora",
-            "type": "number",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
-            "type": "select",
-            "options": [
-              "Ativo",
-              "Inativo"
-            ],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "provedor": "Twilio",
-            "cota_usada_hoje": "12000",
-            "mensagens_por_minuto": "5",
-            "tamanho_da_fila": "200",
-            "erros_ultima_hora": "1",
-            "status": "Ativo"
-          },
-          {
-            "provedor": "Nexmo",
-            "cota_usada_hoje": "8000",
-            "mensagens_por_minuto": "3",
-            "tamanho_da_fila": "150",
-            "erros_ultima_hora": "0",
-            "status": "Ativo"
-          },
-          {
-            "provedor": "Plivo",
-            "cota_usada_hoje": "5000",
-            "mensagens_por_minuto": "4",
-            "tamanho_da_fila": "100",
-            "erros_ultima_hora": "2",
-            "status": "Inativo"
-          },
-          {
-            "provedor": "Vonage",
-            "cota_usada_hoje": "2000",
-            "mensagens_por_minuto": "1",
-            "tamanho_da_fila": "50",
-            "erros_ultima_hora": "0",
-            "status": "Ativo"
+            "title": "Integração Centralizada",
+            "text": "Acesso a todos os produtos e painéis em um só lugar.",
+            "price": "",
+            "image_query": "centralized dashboard",
+            "tag": "",
+            "url": "",
+            "icon": ""
           }
         ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-o-cortex-p1",
+        "title": "Sobre o Cortex-p1",
+        "subtitle": "Desenvolvido para otimizar a expansão de negócios, o Cortex-p1 analisa milhares de dados para recomendar os próximos passos com base em clientes reais.",
+        "text": "Desenvolvido para otimizar a expansão de negócios, o Cortex-p1 analisa milhares de dados para recomendar os próximos passos com base em clientes reais.",
+        "image_query": "tech team working",
+        "stats": [
+          {
+            "value": "500+",
+            "label": "Clientes Analisados"
+          },
+          {
+            "value": "95%",
+            "label": "Precisão"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "interface-do-sistema",
+        "title": "Interface do Sistema",
+        "subtitle": "",
+        "image_queries": [
+          "dashboard analytics",
+          "client comparison",
+          "resource planning",
+          "gap analysis chart",
+          "centralized data",
+          "client profile",
+          "search results",
+          "recommendation list"
+        ],
+        "gif_queries": []
+      },
+      {
+        "type": "video",
+        "id": "como-funciona",
+        "title": "Como funciona",
+        "subtitle": "Veja uma demonstração rápida do Cortex-p1 em ação.",
+        "youtube": "",
+        "video_query": "software demo"
+      },
+      {
+        "type": "team",
+        "id": "equipe-de-desenvolvimento",
+        "title": "Equipe de Desenvolvimento",
+        "subtitle": "",
+        "members": [
+          {
+            "name": "Equipe Cortex",
+            "role": "Desenvolvedores de Sistemas",
+            "image_query": "software developers"
+          }
+        ]
+      },
+      {
+        "type": "testimonials",
+        "id": "depoimentos",
+        "title": "Depoimentos",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "João Silva",
+            "role": "",
+            "text": "O Cortex-p1 nos ajudou a encontrar 3 novos clientes parecidos com o nosso melhor.",
+            "rating": 5
+          },
+          {
+            "name": "Maria Santos",
+            "role": "",
+            "text": "Identificamos recursos que estávamos perdendo e otimizamos nosso tempo.",
+            "rating": 5
+          },
+          {
+            "name": "Carlos Mendes",
+            "role": "",
+            "text": "A análise de lacunas nos deu uma nova direção para o negócio.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "links",
+        "id": "links-rapidos",
+        "title": "Links Rápidos",
+        "subtitle": "",
+        "items": [
+          {
+            "label": "Fale com suporte",
+            "url": "mailto:suporte@cortex-p1.com.br",
+            "icon": "mail"
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "duvidas-frequentes",
+        "title": "Dúvidas Frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Como o Cortex-p1 encontra clientes parecidos?",
+            "a": "Ele analisa o texto digitado e compara com os segmentos e recursos de nossos clientes existentes."
+          },
+          {
+            "q": "Quais dados são usados na análise?",
+            "a": "Usamos apenas segmentos e recursos disponíveis, sem dados sensíveis ou credenciais."
+          },
+          {
+            "q": "O sistema é integrado com meus atuais clientes?",
+            "a": "Sim, ele acessa a central de produtos e painéis existentes."
+          },
+          {
+            "q": "Posso adicionar novos clientes à base?",
+            "a": "Ainda não, mas estamos trabalhando nessa funcionalidade."
+          },
+          {
+            "q": "Qual a precisão das recomendações?",
+            "a": "Nossa análise é baseada em palavras-chave e tem alta precisão, mas sempre validamos com o plano detalhado."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "pronto-para-otimizar-seu-negocio",
+        "title": "Pronto para otimizar seu negócio?",
+        "subtitle": "Solicite uma demonstração e veja como o Cortex-p1 pode ajudar.",
+        "cta": {
+          "label": "Solicitar Demonstração",
+          "href": "mailto:demo@cortex-p1.com.br"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "entre-em-contato",
+        "title": "Entre em contato",
+        "subtitle": "",
+        "map": true,
+        "form": true
       }
-    ],
-    "modules": [
-      "Admin",
-      "Métricas",
-      "Relatórios"
     ]
   },
-  "media": {}
+  "media": {
+    "s0.hero": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/86/Oracle_Analytics_Cloud_Dashboard_by_Benjamin_Arnulf_presented_by_Larry_Ellison.jpg/1280px-Oracle_Analytics_Cloud_Dashboard_by_Benjamin_Arnulf_presented_by_Larry_Ellison.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Oracle Analytics Cloud Dashboard by Benjamin Arnulf presented by Larry Ellison",
+      "credit": "GeneralAB13 (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Dashboard_-_Jaguar_-_SS_One_-_1936_-_26_hp_-_6_cyl_-_Kolkata_2013-01-13_3098.JPG/1280px-Dashboard_-_Jaguar_-_SS_One_-_1936_-_26_hp_-_6_cyl_-_Kolkata_2013-01-13_3098.JPG",
+      "width": 1280,
+      "height": 851,
+      "alt": "Dashboard - Jaguar - SS One - 1936 - 26 hp - 6 cyl - Kolkata 2013-01-13 3098",
+      "credit": "Dashboard - Jaguar - SS One - 1936 - 26 hp - 6 cyl - Kolkata 2013-01-13 3098 — Biswarup Ganguly (BY 3.0, via O",
+      "provider": "openverse"
+    },
+    "s3.g0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/16/Wikistats_2.0_Prototype_Dashboard.png",
+      "width": 1119,
+      "height": 1428,
+      "alt": "Wikistats 2.0 Prototype Dashboard",
+      "credit": "Wikistats 2.0 Prototype Dashboard — Milimetric (WMF) (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s2.about": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/Dashboard_-_Jeep_-_1975_-_1300_cc_-_4_cyl_-_NL_08_2451_-_Kolkata_2015-01-11_3631.JPG/1280px-Dashboard_-_Jeep_-_1975_-_1300_cc_-_4_cyl_-_NL_08_2451_-_Kolkata_2015-01-11_3631.JPG",
+      "width": 1280,
+      "height": 851,
+      "alt": "Dashboard - Jeep - 1975 - 1300 cc - 4 cyl - NL 08 2451 - Kolkata 2015-01-11 3631",
+      "credit": "Dashboard - Jeep - 1975 - 1300 cc - 4 cyl - NL 08 2451 - Kolkata 2015-01-11 3631 — Biswarup Ganguly (BY 3.0, v",
+      "provider": "openverse"
+    },
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Lotus_Super_Seven_S4_LHD_in_Black%2C_dashboard.jpg/1280px-Lotus_Super_Seven_S4_LHD_in_Black%2C_dashboard.jpg",
+      "width": 1280,
+      "height": 857,
+      "alt": "Lotus Super Seven S4 LHD in Black, dashboard",
+      "credit": "Lotus Super Seven S4 LHD in Black, dashboard — Mr.choppers (BY-SA 3.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Social_Cockpit_Dashboard_Measuring_Buzz_About_CES_2012.jpg",
+      "width": 1600,
+      "height": 1200,
+      "alt": "Social Cockpit Dashboard Measuring Buzz About CES 2012",
+      "credit": "Social Cockpit Dashboard Measuring Buzz About CES 2012 — Intel Free Press (BY 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/03/2023_Renault_Austral_1.2_E-Tech_Hybrid_techno_at_Renault_Manchester_03.jpg/1280px-2023_Renault_Austral_1.2_E-Tech_Hybrid_techno_at_Renault_Manchester_03.jpg",
+      "width": 1280,
+      "height": 720,
+      "alt": "2023 Renault Austral 1.2 E-Tech Hybrid techno at Renault Manchester 03",
+      "credit": "2023 Renault Austral 1.2 E-Tech Hybrid techno at Renault Manchester 03 — MoCars (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g1": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Programs_dashboard_explore.jpg/1280px-Programs_dashboard_explore.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 828,
+      "alt": "Programs &amp; Events Dashboard - Explore page",
+      "credit": "DannyH (WMF) (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g2": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Programs_dashboard_-_create.jpg/1280px-Programs_dashboard_-_create.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 820,
+      "alt": "Screenshot from the Programs Dashboard, on WMF Tool Labs",
+      "credit": "DannyH (WMF) (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/7/72/Programs_dashboard_-_permissions.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 867,
+      "alt": "Programs Dashboard - Permissions screen",
+      "credit": "Screenshot by DannyH (WMF) (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    }
+  }
 }
