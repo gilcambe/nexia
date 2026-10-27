@@ -1,10 +1,12 @@
 import { assert } from 'node:test';
+import { existsSync } from 'fs';
 import { LIGACOES, NOS } from '../../central/topologia.js';
 
 export const tests = {
   'cada LIGACAO.fonte existe no disco': () => {
     for (const ligacao of LIGACOES) {
       assert(ligacao.fonte, 'LIGACAO sem fonte');
+      assert(existsSync(ligacao.fonte), `Arquivo não existe no disco: ${ligacao.fonte}`);
     }
   },
   'cada de/para corresponde a um id valido em NOS': () => {
