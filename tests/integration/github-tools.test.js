@@ -10,6 +10,7 @@ const { createVault, createExecutionContext } = require('../../nexia-ai/vault');
 const { createGateway, QUEUE_COLLECTION } = require('../../nexia-ai/tool-gateway');
 const { createHandler } = require('../../nexia-ai/api');
 const { createFakeGithub } = require('../fake-github');
+const { comRetentativa } = require('./_github-real');
 
 const RUN = crypto.randomBytes(4).toString('hex');
 const T = `gh-${RUN}`;
