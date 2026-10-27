@@ -37,7 +37,7 @@ const RATE_LIMIT_KEY = 'nexia-credit-manager-ratelimit';
 const SIG_KEY = 'nexia-cm-v1';
 // Chave para assinatura de integridade (detecta adulteração casual)
 // Em produção, esta chave deve vir de variáveis de ambiente e ser rotacionada
-const HMAC_KEY = process.env.NEXIA_HMAC_KEY || 'nexia-cm-hmac-v1';
+const HMAC_KEY = process.env.NEXIA_CREDIT_HMAC_SECRET || 'nexia-cm-hmac-v1';
 
 function sign(payload: string): string {
   // Hash simples para detectar adulteração casual (não é HMAC criptográfico)
