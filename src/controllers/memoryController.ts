@@ -9,16 +9,14 @@ const userMemoryStore: { [userId: string]: string[] } = {}; // Exemplo simples d
 export async function forgetSpecificFact(userId: string, fact: string): Promise<void> {
   console.log(`Tentando esquecer o fato "${fact}" para o usuário ${userId}`);
   if (userMemoryStore[userId]) {
-    userMemoryStore[userId] = userMemoryStore[userId].filter(f => !f.includes(fact)); // Filtra fatos que contenham o termo
+    userMemoryStore[userId] = userMemoryStore[userId].filter(f => !f.toLowerCase().includes(fact.toLowerCase()));
   }
-  // Em um cenário real, aqui haveria uma chamada a uma API de memória do NEXIA
   console.log(`Fato "${fact}" removido para o usuário ${userId} (se existia). Memória atual:`, userMemoryStore[userId]);
 }
 
 export async function clearUserMemory(userId: string): Promise<void> {
   console.log(`Limpando toda a memória para o usuário ${userId}`);
   userMemoryStore[userId] = [];
-  // Em um cenário real, aqui haveria uma chamada a uma API de memória do NEXIA para apagar tudo
   console.log(`Memória do usuário ${userId} limpa. Memória atual:`, userMemoryStore[userId]);
 }
 
