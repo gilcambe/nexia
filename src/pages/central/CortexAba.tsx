@@ -1,5 +1,5 @@
-import { useState } from "react";
-import type { Dados, Tarefa } from "./api";
+import { useState, useEffect } from "react";
+import type { Dados, Tarefa, AjudaIas } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Numero, Botao, Carregando, Sinal } from "./ui";
 import ContasReserva from "../cortex/Reservas";
@@ -21,14 +21,49 @@ function Lista({ itens, vazio }: { itens: Tarefa[]; vazio: string }) {
 }
 
 export default function CortexAba({ d, erro }: { d: Dados; erro?: string }) {
-  const { agir } = useCentral();
+  const { agir, buscar } = useCentral();
   const [texto, setTexto] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
+  const [estadoAtual, setEstadoAtual] = useState<boolean | null>(null);
+  const [dadosAjuda, setDadosAjuda] = useState<AjudaIas | null>(null);
+  const [carregandoAjuda, setCarregandoAjuda] = useState(false);
+  const [erroAjuda, setErroAjuda] = useState<string | null>(null);
   const pedir = async () => {
     setOcupado(true); setMsg(null);
     try { setMsg((await agir({ acao: "pedir", texto })).mensagem); setTexto(""); } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
   };
+  const buscarAjuda = async () => {
+    setCarregandoAjuda(true);
+    try {
+      const j = await buscar<AjudaIas>("ajuda-ias");
+      setDadosAjuda(j);
+      setEstadoAtual(j.ligado);
+      setErroAjuda(null);
+    } catch {
+      // erro silencioso
+    } finally {
+      setCarregandoAjuda(false);
+    }
+  };
+  const toggleAjuda = async () => {
+    if (estadoAtual === null) return;
+    setOcupado(true);
+    try {
+      await agir({ acao: "ajuda-ias", ligar: !estadoAtual });
+      setEstadoAtual(!estadoAtual);
+      setErroAjuda(null);
+    } catch {
+      // erro silencioso
+    } finally {
+      setOcupado(false);
+    }
+  };
+  useEffect(() => {
+    buscarAjuda();
+    const t = setInterval(buscarAjuda, 60000);
+    return () => clearInterval(t);
+  }, []);
   const x = d.cortex;
   const gratisOk = !d.cotas?.frear;
   const temTravadas = (x?.travadas?.length || 0) > 0;
@@ -36,6 +71,23 @@ export default function CortexAba({ d, erro }: { d: Dados; erro?: string }) {
 
   return (
     <div className="space-y-4">
+      {dadosAjuda ? (
+        <Cartao titulo="🤝 Ajuda das IAs" acao={
+          <Botao onClick={toggleAjuda} disabled={ocupado || estadoAtual === null} tipo="forte">
+            {estadoAtual ? "Desligar" : "Ligar"}
+          </Botao>
+        }>
+          <p className="text-xs text-nexia-muted">{estadoAtual === null ? "Aguardando…" : estadoAtual ? "Ligado" : "Desligado"}</p>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div className="rounded-xl bg-nexia-surface2 p-2"><div className="text-xs text-nexia-muted">Revisor grátis</div><div className="font-bold">{dadosAjuda.revisorMin === null ? "—" : dadosAjuda.revisorMin} min</div></div>
+            <div className="rounded-xl bg-nexia-surface2 p-2"><div className="text-xs text-nexia-muted">Aprovados hoje</div><div className="font-bold">{dadosAjuda.aprovados}</div></div>
+            <div className="rounded-xl bg-nexia-surface2 p-2"><div className="text-xs text-nexia-muted">Recusados hoje</div><div className="font-bold">{dadosAjuda.recusados}</div></div>
+            <div className="rounded-xl bg-nexia-surface2 p-2"><div className="text-xs text-nexia-muted">Com o Jules agora</div><div className="font-bold">{dadosAjuda.jules}</div></div>
+            <div className="rounded-xl bg-nexia-surface2 p-2"><div className="text-xs text-nexia-muted">Na vez do Claude</div><div className="font-bold">{dadosAjuda.claude}{dadosAjuda.claudePrimeiro ? " · " + dadosAjuda.claudePrimeiro.titulo : ""}</div></div>
+            <div className="rounded-xl bg-nexia-surface2 p-2"><div className="text-xs text-nexia-muted">Travadas</div><div className="font-bold">{dadosAjuda.travadas}</div></div>
+          </div>
+        </Cartao>
+      ) : carregandoAjuda ? <Carregando /> : null}
       <Cartao titulo="Escada das IAs" icone="ia" resumo={`Degrau ${degrauAtivo} de 3 ativo agora`}>
         <p className="text-xs text-nexia-muted">
           Regra: primeiro o Cortex, depois as IAs grátis ajudantes, e só por último o Claude Code.
