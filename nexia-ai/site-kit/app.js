@@ -2,26 +2,19 @@
 // Renderiza um sistema (painel/CRUD) a partir do spec (ADR-Q-04): menu lateral, painel com indicadores e
 // gráfico (Chart.js via CDN), tabelas com busca, ordenação e exportação CSV, formulário em modal com
 // validação, dados salvos no navegador (localStorage), modo escuro e layout responsivo.
-const fs = require('node:fs');
-const path = require('node:path');
 const { icon } = require('./icons');
 const { esc } = require('./site');
 const { slugify } = require('./spec');
 
 const attr = esc;
-const INDICE_PATH = path.join(__dirname, '../../clientes/_moldes/indice.json');
 const memoryMoldes = {};
 
 function carregarIndiceMoldes() {
   const index = { versao: 1, moldes: {} };
+  // #2188: require do JSON (o build do Worker embute o arquivo). fs/__dirname no topo derrubavam a /api/nexia no Worker.
   try {
-    if (fs.existsSync(INDICE_PATH)) {
-      const content = fs.readFileSync(INDICE_PATH, 'utf8');
-      const parsed = JSON.parse(content);
-      if (parsed && typeof parsed === 'object' && parsed.moldes) {
-        Object.assign(index.moldes, parsed.moldes);
-      }
-    }
+    const parsed = require('../../clientes/_moldes/indice.json');
+    if (parsed && typeof parsed === 'object' && parsed.moldes) Object.assign(index.moldes, parsed.moldes);
   } catch (e) {
     // Leitura resiliente em ambientes serverless
   }
