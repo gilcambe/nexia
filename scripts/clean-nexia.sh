@@ -6,29 +6,40 @@
 set -e
 
 # Diretórios para processar
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
+# Inclui viajante-pro conforme solicitado no pedido
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro"
 
 # Função para processar um arquivo
 process_file() {
     local file="$1"
     
     # Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
+    # Apenas substituição exata para evitar substituições incorretas
     sed -i 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
     
-    # Substituir títulos contendo NEXIA
-    sed -i 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/g' "$file"
+    # Substituir títulos completos contendo NEXIA por "Cortex"
+    # Usamos uma regex mais precisa para evitar substituir títulos complexos
+    sed -i 's/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/g' "$file"
     
-    # Substituir og:site_name contendo NEXIA
-    sed -i 's/og:site_name=".*NEXIA.*"/og:site_name="Cortex"/g' "$file"
-    sed -i 's/property="og:site_name" content=".*NEXIA.*"/property="og:site_name" content="Cortex"/g' "$file"
+    # Substituir og:site_name contendo NEXIA por "Cortex"
+    # Formato: og:site_name="..."
+    sed -i 's/og:site_name="[^"]*NEXIA[^"]*"/og:site_name="Cortex"/g' "$file"
+    # Formato: property="og:site_name" content="..."
+    sed -i 's/property="og:site_name" content="[^"]*NEXIA[^"]*"/property="og:site_name" content="Cortex"/g' "$file"
     
     # Remover NEXIA de outros títulos mantendo o restante
+    # Remove NEXIA do início do título
+    sed -i 's/<title>NEXIA\([^<]*\)<\/title>/<title>\1<\/title>/g' "$file"
+    # Remove NEXIA do meio do título
     sed -i 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/g' "$file"
-    sed -i 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/g' "$file"
+    # Remove NEXIA do final do título
+    sed -i 's/<title>\([^<]*\)NEXIA<\/title>/<title>\1<\/title>/g' "$file"
     
     # Remover NEXIA de outros atributos og:site_name mantendo o restante
+    # Remove NEXIA do valor do atributo og:site_name
     sed -i 's/og:site_name="\([^"]*\)NEXIA\([^"]*\)"/og:site_name="\1\2"/g' "$file"
-    sed -i 's/property="og:site_name" content="\([^\"]*\)NEXIA\([^\"]*\)"/property="og:site_name" content="\1\2"/g' "$file"
+    # Remove NEXIA do conteúdo do atributo og:site_name com property
+    sed -i 's/property="og:site_name" content="\([^"]*\)NEXIA\([^"]*\)"/property="og:site_name" content="\1\2"/g' "$file"
 }
 
 # Função para processar diretórios recursivamente
@@ -38,7 +49,8 @@ process_directories() {
             echo "Processando diretório: $dir"
             
             # Encontrar todos os arquivos HTML relevantes
-            find "$dir" -type f \( -name "*.html" -o -name "*.htm" -o -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" \) -print0 | while IFS= read -r -d '' file; do
+            # Processa apenas arquivos HTML para evitar substituições incorretas em JavaScript
+            find "$dir" -type f \( -name "*.html" -o -name "*.htm" \) -print0 | while IFS= read -r -d '' file; do
                 echo "Processando arquivo: $file"
                 process_file "$file"
             done
@@ -55,7 +67,8 @@ echo "Limpeza concluída!"
 
 # Verificar se ainda existem ocorrências de NEXIA em títulos
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html $DIRECTORIES 2>/dev/null; then
+# Comando de verificação conforme solicitado no pedido, incluindo viajante-pro
+if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro 2>/dev/null; then
     echo "AVISO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     grep -rnE "<title>[^<]*NEXIA" --include=*.html $DIRECTORIES 2>/dev/null
     exit 1
