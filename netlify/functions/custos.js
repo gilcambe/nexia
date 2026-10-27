@@ -1,5 +1,6 @@
 // netlify/functions/custos.js
 // Endpoint /api/custos - agregados de custo para o painel central.
+// Formato Netlify (req, res). Usado pelo Worker do Cloudflare via lib/routes.js.
 import {
   calcularCustoTotalMes,
   calcularCustoMedioPorPlano,
@@ -10,7 +11,6 @@ import {
 
 export default async function handler(req, res) {
   try {
-    // Se body não existir ou for vazio, usar valores padrão
     const body = req.body || {};
     const { lancamentos = [], receitaTotal = 0, config = {} } = body;
 
