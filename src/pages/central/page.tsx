@@ -38,6 +38,16 @@ export default function CentralPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { buscar } = useCentral();
+  const [tema, setTema] = useState<boolean>(() => {
+    const savedChoice = sessionStorage.getItem("central-tema") === "true";
+    return savedChoice !== null ? savedChoice : true; // Tema claro como padrão
+  });
+  
+  useEffect(() => {
+    document.documentElement.classList.toggle("central-claro", tema);
+    sessionStorage.setItem("central-tema", tema.toString());
+  }, [tema]);
+  
   const [aba, setAba] = useState<Aba>(() => {
     const savedChoice = sessionStorage.getItem("central-aba") as Aba | undefined;
     const hashAba = location.hash.slice(1) as Aba;
@@ -92,7 +102,10 @@ export default function CentralPage() {
   const vermelho = avisos.some((a) => a.cor === "vermelho");
   const buscar2 = (texto: string) => {
     setBusca(texto);
-    try { sessionStorage.setItem("central-busca", texto); } catch { /* sem storage */ }
+    try { 
+      sessionStorage.setItem("central-busca", texto);
+      location.hash = 'clientes'; // Gravar hash quando busca não está vazia
+    } catch { /* sem storage */ }
     if (texto.trim()) ir("clientes");
   };
 
@@ -135,7 +148,7 @@ export default function CentralPage() {
   );
 
   return (
-    <div className="central-claro min-h-screen bg-[#f5f7fb] text-slate-900 font-display antialiased pb-20 lg:pb-0">
+    <div className={`min-h-screen ${tema ? 'central-claro bg-slate-50 text-slate-900' : 'central-escuro bg-slate-900 text-slate-100'} font-display antialiased pb-20 lg:pb-0`}>
       <aside className="hidden lg:block fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 overflow-y-auto z-20">{MenuLateral}</aside>
       {menu && (
         <div className="lg:hidden fixed inset-0 z-40 bg-slate-900/30" onClick={() => setMenu(false)}>
@@ -158,7 +171,12 @@ export default function CentralPage() {
             <div className="hidden lg:flex ml-auto items-center gap-2 rounded-xl border border-slate-200 px-3 py-1.5" data-testid="central-estado">
               <span className={`w-2.5 h-2.5 rounded-full ${carregando && !conferidoEm ? "bg-slate-300" : vermelho ? "bg-red-500" : avisos.length ? "bg-amber-400" : "bg-emerald-500"}`} />
               <span className="leading-tight">
-                <span className="block text-xs font-medium text-slate-700">{carregando && !conferidoEm ? "Conferindo…" : vermelho ? "Algo parou" : avisos.length ? `${avisos.length} pontos de atenção` : "Sistema online"}</span>
+                <span className="block text-xs font-medium text-slate-700">
+                  {carregando && !conferidoEm ? "Conferindo…" : 
+                   vermelho ? "Algo parou" : 
+                   avisos.length ? `${avisos.length} coisas precisam de você` : 
+                   "Tudo funcionando"}
+                </span>
                 <span className="block text-[11px] text-slate-400">Atualizado {haQuanto(conferidoEm)}</span>
               </span>
             </div>
@@ -169,6 +187,17 @@ export default function CentralPage() {
             <div className="hidden sm:flex items-center gap-2">
               <span className="w-9 h-9 rounded-full bg-slate-800 text-[#fff] flex items-center justify-center text-sm font-semibold">{(user?.email || "?").charAt(0).toUpperCase()}</span>
               <span className="hidden xl:block text-sm text-slate-700 max-w-[180px] truncate">{user?.email}</span>
+              <button 
+                onClick={() => setTema(!tema)}
+                className="p-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors"
+                aria-label={tema ? "Mudar para tema escuro" : "Mudar para tema claro"}
+              >
+                {tema ? (
+                  <Icone nome="lua" className="w-5 h-5" />
+                ) : (
+                  <Icone nome="sol" className="w-5 h-5" />
+                )}
+              </button>
             </div>
           </div>
         </header>
