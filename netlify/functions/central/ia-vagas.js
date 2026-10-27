@@ -235,4 +235,4 @@ async function apagar(gh, { vaga }) {
   return { status: 200, corpo: { ok: true, mensagem: `Vaga ${n} desligada e chave apagada.` } };
 }
 
-module.exports = { estadoJules, VAGAS, PROVEDORES, segredo, provedoresPublicos, testarChave, selar, lerEstado, gravarEstado, corpoEstado, provasDeUso, estado, salvar, apagar, classificar, ROTULO_ESTADO, SEM_PERMISSAO };
+module.exports = { estadoJules, VAGAS, PROVEDORES, SUPORTED_PROVIDERS: PROVEDORES, segredo, provedoresPublicos, testarChave, selar, lerEstado, gravarEstado, corpoEstado, provasDeUso, estado, salvar, apagar, classificar, ROTULO_ESTADO, SEM_PERMISSAO };
