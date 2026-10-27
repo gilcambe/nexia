@@ -130,7 +130,7 @@ async function main() {
     }
 
     const list = await api('/nexia/projects');
-    report(list.status === 200 && (list.json.items || []).some(p => project && p.id === project.id), 'Vault: listar projetos', `${list.status} ${(list.json.items || []).length} projeto(s)`);
+    report(list.status === 200 && (list.json.items || []).some(p => project && p.id === project.id), 'Vault: listar projetos', `${list.status} ${(list.json.items || []).length} projeto(s)${list.status === 200 ? '' : ' ' + String(list.json.error || '').slice(0, 120) + ' ' + String(list.json.causa || '').slice(0, 160)}`);
 
     if (project && !RAPIDO) {
       const hist = await api(`/nexia/projects/${project.id}/history`);
