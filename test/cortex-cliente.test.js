@@ -1,68 +1,85 @@
 import { test } from 'node:test';
 import assert from 'node:assert';
 import { Miniflare } from 'miniflare';
+import { authenticate } from '../lib/cortex-cliente.js';
+
+// Chave de teste simulada (o middleware usa esta chave via env JWT_SECRET)
+const JWT_SECRET = 'test-secret-key-for-jwt-signing';
+
+// Gerar tokens JWT de teste assinados com a mesma chave
 import jwt from 'jsonwebtoken';
+function generateTestToken(uid) {
+  return jwt.sign(
+    { uid, type: 'access', exp: Math.floor(Date.now() / 1000) + (60 * 60) },
+    JWT_SECRET
+  );
+}
 
-// Chave de teste simulada
-const TEST_SECRET = 'test-secret-key-for-jwt-signing';
+const uidAToken = generateTestToken('uidA');
+const uidBToken = generateTestToken('uidB');
 
-// Configuração do Miniflare para testes
+// Dados simulados de conversas por uid
+const userConversations = {
+  uidA: [
+    { id: 'conv1', title: 'Conversa 1', messages: 5 },
+    { id: 'conv2', title: 'Conversa 2', messages: 3 }
+  ],
+  uidB: [
+    { id: 'conv3', title: 'Conversa 3', messages: 8 }
+  ]
+};
+
+// Worker real que importa e usa o middleware authenticate de lib/cortex-cliente.js
 const mf = new Miniflare({
-  kvNamespaces: ['TEST'],
   modules: true,
-  vars: { JWT_SECRET: TEST_SECRET },
+  vars: { JWT_SECRET },
   script: `
     import { authenticate } from '../lib/cortex-cliente.js';
+    
+    const userConversations = {
+      uidA: [
+        { id: 'conv1', title: 'Conversa 1', messages: 5 },
+        { id: 'conv2', title: 'Conversa 2', messages: 3 }
+      ],
+      uidB: [
+        { id: 'conv3', title: 'Conversa 3', messages: 8 }
+      ]
+    };
     
     export default {
       async fetch(request, env, ctx) {
         const url = new URL(request.url);
         
         if (url.pathname === '/api/cortex-cliente/conversas') {
-          // Criar objeto de requisição simulado para o middleware
-          const mockReq = {
-            headers: {
-              authorization: request.headers.get('Authorization')
-            }
-          };
-          
-          const mockRes = {
-            status: (code) => ({
-              json: (data) => new Response(JSON.stringify(data), {
-                status: code,
-                headers: { 'Content-Type': 'application/json' }
-              })
-            })
-          };
-          
-          // Usar o middleware de autenticação
+          // Usar o middleware real de autenticação
           return new Promise((resolve) => {
-            authenticate(mockReq, mockRes, () => {
-              // Se autenticado, continuar com a lógica
-              const decoded = mockReq.user;
-              
-              // Simular dados do usuário
-              const userConversations = {
-                uidA: [
-                  { id: 'conv1', title: 'Conversa 1', messages: 5 },
-                  { id: 'conv2', title: 'Conversa 2', messages: 3 }
-                ],
-                uidB: [
-                  { id: 'conv3', title: 'Conversa 3', messages: 8 }
-                ]
-              };
-              
-              const conversations = userConversations[decoded.uid] || [];
-              
-              resolve(new Response(JSON.stringify({
-                success: true,
-                uid: decoded.uid,
-                conversations
-              }), {
-                status: 200,
-                headers: { 'Content-Type': 'application/json' }
-              }));
-            });
+            authenticate(
+              {
+                headers: { authorization: request.headers.get('Authorization') }
+              },
+              {
+                status: (code) => ({
+                  json: (data) => new Response(JSON.stringify(data), {
+                    status: code,
+                    headers: { 'Content-Type': 'application/json' }
+                  })
+                })
+              },
+              () => {
+                // Autenticado: retornar conversas do usuário
+                // eslint-disable-next-line no-undef
+                const decoded = req.user;
+                const conversations = userConversations[decoded.uid] || [];
+                resolve(new Response(JSON.stringify({
+                  success: true,
+                  uid: decoded.uid,
+                  conversations
+                }), {
+                  status: 200,
+                  headers: { 'Content-Type': 'application/json' }
+                }));
+              }
+            );
           });
         }
         
@@ -71,17 +88,6 @@ const mf = new Miniflare({
     };
   `
 });
-
-// Gerar tokens de teste
-function generateTestToken(uid) {
-  return jwt.sign(
-    { uid, type: 'access', exp: Math.floor(Date.now() / 1000) + (60 * 60) },
-    TEST_SECRET
-  );
-}
-
-const uidAToken = generateTestToken('uidA');
-const uidBToken = generateTestToken('uidB');
 
 test('cortex-cliente: 200 com token uidA', async () => {
   const response = await mf.dispatchFetch('http://localhost:8787/api/cortex-cliente/conversas', {
@@ -117,4 +123,3 @@ test('cortex-cliente: 401 sem token Authorization', async () => {
   assert.strictEqual(response.status, 401);
   assert.strictEqual(result.error, 'Unauthorized');
 });
-
