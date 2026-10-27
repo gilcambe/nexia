@@ -220,33 +220,26 @@ function createRouter(o = {}) {
       let currentStreamDone = false;
       try {
         let nextItem = first;
-        while (!nextItem.done) {
-          const val = nextItem.value;
-          if (val && val.type === 'text' && val.text) {
-            accumulatedText += val.text;
-          }
-          yield val;
-          
-          // Resetar timer de stall para qualquer chunk recebido (incluindo vazios ou reasoning)
-          if (val) {
-            nextItem = await Promise.race([
-              it.next(),
-              timeoutPromise(Math.min(stallTimeoutMs, remainingTime()), 'Resposta parou por mais de 8 s')
-            ]);
-            continue;
-          }
-
-          if (Date.now() - startTime >= totalTimeoutMs) {
-            currentStreamDone = true;
-            break;
-          }
-
-          const tStall = Math.min(stallTimeoutMs, remainingTime());
-          nextItem = await Promise.race([
-            it.next(),
-            timeoutPromise(tStall, 'Resposta parou por mais de 8 s')
-          ]);
+              while (!nextItem.done) {
+        const val = nextItem.value;
+        if (val && val.type === 'text' && val.text) {
+          accumulatedText += val.text;
         }
+        yield val;
+
+        // Verificar timeout total antes de processar próximo chunk
+        if (Date.now() - startTime >= totalTimeoutMs) {
+          currentStreamDone = true;
+          break;
+        }
+
+        // Resetar timer de stall para qualquer chunk recebido (incluindo vazios ou reasoning)
+        const tStall = Math.min(stallTimeoutMs, remainingTime());
+        nextItem = await Promise.race([
+          it.next(),
+          timeoutPromise(tStall, 'Resposta parou por mais de 8 s')
+        ]);
+      }
         if (nextItem.done) {
           currentStreamDone = true;
         }
