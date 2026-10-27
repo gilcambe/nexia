@@ -45,9 +45,9 @@ export default function Central() {
         </div>
       </div>
 
-      {dados.alertaTetoGlobal && (
-        <div className="alerta global">
-          ⚠️ Circuito global ativo: teto global excedido.
+      {dados.circuitoGlobalAtivo && (
+        <div className={`alerta global ${dados.alertaTetoGlobal ? 'excedido' : 'ativo'}`}>
+          ⚠️ Circuito global {dados.alertaTetoGlobal ? 'excedido' : 'ativo'}.
         </div>
       )}
 
