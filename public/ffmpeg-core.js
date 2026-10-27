@@ -1,40 +1,25 @@
 // public/ffmpeg-core.js
-// Configuração do ffmpeg.wasm para uso no navegador
-// Deve ser carregado antes de usar videoAssembler.js
+// Carrega o SDK real do ffmpeg.wasm de CDN grátis e expõe window.FFmpeg.
+// Deve ser carregado antes de usar videoAssembler.js.
 
-(function() {
+(function () {
   'use strict';
-  
-  // Carrega os scripts necessários do ffmpeg.wasm
-  if (typeof window !== 'undefined') {
-    // Verifica se já foi carregado
-    if (window.FFmpeg) return;
-    
-    // URLs dos arquivos do ffmpeg.wasm
-    const ffmpegCoreUrl = '/ffmpeg-core.js';
-    const ffmpegWasmUrl = '/ffmpeg-core.wasm';
-    
-    // Configuração global
-    window.FFmpegConfig = {
-      corePath: ffmpegCoreUrl,
-      wasmPath: ffmpegWasmUrl,
-      log: true
+  if (window.FFmpeg) return;
+
+  const FFMPEG_VERSION = '0.12.1';
+
+  async function load() {
+    const [ffmpegMod, utilMod] = await Promise.all([
+      import(`https://esm.sh/@ffmpeg/ffmpeg@${FFMPEG_VERSION}`),
+      import(`https://esm.sh/@ffmpeg/util@${FFMPEG_VERSION}`)
+    ]);
+    window.FFmpeg = {
+      createFFmpeg: ffmpegMod.createFFmpeg,
+      fetchFile: utilMod.fetchFile
     };
-    
-    // Carrega o script principal do ffmpeg.wasm
-    const script = document.createElement('script');
-    script.src = ffmpegCoreUrl;
-    script.async = true;
-    script.onload = function() {
-      console.log('FFmpeg.wasm carregado com sucesso');
-    };
-    script.onerror = function() {
-      console.error('Falha ao carregar FFmpeg.wasm');
-    };
-    
-    // Adiciona ao head se não existir
-    if (!document.querySelector(`script[src="${ffmpegCoreUrl}"]`)) {
-      document.head.appendChild(script);
-    }
   }
+
+  load().catch((err) => {
+    console.error('Falha ao carregar ffmpeg.wasm do CDN:', err);
+  });
 })();
