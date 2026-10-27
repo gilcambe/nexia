@@ -48,4 +48,32 @@ function vaultDb(env = process.env) {
   return cache || primary.db;
 }
 
-module.exports = { vaultDb, criarBancoB, lerConta, _reset: () => { cache = undefined; } };
+/**
+ * Limpa tarefas_locais antigas no D1: remove documentos com status 'feito' ou 'erro'
+ * e atualizado_em com mais de 1 dia. Retorna a quantidade deletada.
+ */
+async function limparTarefasLocais(env = process.env) {
+  if (!env.NEXIA_D1_TOKEN || !env.NEXIA_D1_ACCOUNT_ID) {
+    throw new Error('NEXIA_D1_TOKEN e NEXIA_D1_ACCOUNT_ID são obrigatórios para limpar tarefas_locais no D1.');
+  }
+  const { createD1Driver } = require('../../lib/firebase-lite/d1-backend');
+  const driver = createD1Driver({
+    token: env.NEXIA_D1_TOKEN,
+    accountId: env.NEXIA_D1_ACCOUNT_ID,
+    databaseName: env.NEXIA_D1_NAME || 'nexia-cortex',
+  });
+  const limite = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const docs = await driver.list('', 'tarefas_locais', false);
+  const deletar = [];
+  for (const d of docs) {
+    const status = (d.fields && d.fields.status && d.fields.status.stringValue) || '';
+    const ts = (d.fields && d.fields.atualizado_em && d.fields.atualizado_em.timestampValue) || '';
+    if ((status === 'feito' || status === 'erro') && ts && ts < limite) {
+      deletar.push({ type: 'delete', path: d.path });
+    }
+  }
+  if (deletar.length) await driver.apply(deletar);
+  return deletar.length;
+}
+
+module.exports = { vaultDb, criarBancoB, lerConta, limparTarefasLocais, _reset: () => { cache = undefined; } };
