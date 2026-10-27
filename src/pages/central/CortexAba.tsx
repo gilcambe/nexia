@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Dados, Tarefa } from "./api";
 import { useCentral, haQuanto } from "./api";
-import { Cartao, Numero, Botao, Carregando } from "./ui";
+import { Cartao, Numero, Botao, Carregando, Sinal } from "./ui";
 import ContasReserva from "../cortex/Reservas";
 
 function Lista({ itens, vazio }: { itens: Tarefa[]; vazio: string }) {
@@ -30,8 +30,42 @@ export default function CortexAba({ d, erro }: { d: Dados; erro?: string }) {
     try { setMsg((await agir({ acao: "pedir", texto })).mensagem); setTexto(""); } catch (e) { setMsg((e as Error).message); } finally { setOcupado(false); }
   };
   const x = d.cortex;
+  const gratisOk = !d.cotas?.frear;
+  const temTravadas = (x?.travadas?.length || 0) > 0;
+  const degrauAtivo = !gratisOk ? 3 : temTravadas ? 2 : 1;
+
   return (
     <div className="space-y-4">
+      <Cartao titulo="Escada das IAs">
+        <p className="text-xs text-nexia-muted">
+          Regra: primeiro o Cortex, depois as IAs grátis ajudantes, e só por último o Claude Code.
+        </p>
+        <ol className="space-y-2 text-sm font-medium">
+          <li className="flex items-center justify-between rounded-xl bg-nexia-surface2 p-3">
+            <span className="flex items-center gap-2">
+              <span className="text-nexia-muted font-normal">1.</span>
+              <span>Cortex</span>
+            </span>
+            {degrauAtivo === 1 && <span className="text-xs font-bold text-nexia-cyan">← agora</span>}
+          </li>
+          <li className="flex items-center justify-between rounded-xl bg-nexia-surface2 p-3">
+            <span className="flex items-center gap-2">
+              <span className="text-nexia-muted font-normal">2.</span>
+              <span>IAs grátis</span>
+              <Sinal cor={gratisOk ? "verde" : "vermelho"} />
+            </span>
+            {degrauAtivo === 2 && <span className="text-xs font-bold text-nexia-cyan">← agora</span>}
+          </li>
+          <li className="flex items-center justify-between rounded-xl bg-nexia-surface2 p-3">
+            <span className="flex items-center gap-2">
+              <span className="text-nexia-muted font-normal">3.</span>
+              <span>Claude Code</span>
+              <span className="text-xs text-nexia-muted font-normal">(se as grátis acabarem)</span>
+            </span>
+            {degrauAtivo === 3 && <span className="text-xs font-bold text-nexia-cyan">← agora</span>}
+          </li>
+        </ol>
+      </Cartao>
       <Cartao titulo="Pedir ao Cortex">
         <textarea value={texto} onChange={(e) => setTexto(e.target.value)} rows={3} placeholder="Ex.: colocar um botão de WhatsApp no site do Studio Lima"
           className="w-full rounded-xl bg-nexia-surface2 border border-nexia-border p-3 text-sm text-white" data-testid="cortex-pedido" />
