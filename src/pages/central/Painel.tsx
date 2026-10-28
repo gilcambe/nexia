@@ -180,7 +180,10 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando }: {
       try {
         const resposta = await fetch('/api/custos', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.NEXIA_JOBS_TOKEN || ''}`
+          },
           body: JSON.stringify({}),
         });
         if (!resposta.ok) {
