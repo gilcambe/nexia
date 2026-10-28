@@ -38,10 +38,10 @@ let nOk = 0;
 function confere(cond, msg) {
   if (cond) {
     nOk++;
-    console.log('  ✓ ' + msg);
+    console.log('  OK ' + msg);
   } else {
     falhas.push(msg);
-    console.log('  ✗ ' + msg);
+    console.log('  FALHA ' + msg);
   }
 }
 
@@ -98,7 +98,7 @@ function confere(cond, msg) {
       await route.fulfill({
         status: 404,
         contentType: 'text/plain',
-        body: 'Link inválido'
+        body: 'Link invalido'
       });
     }
   });
@@ -134,7 +134,7 @@ function confere(cond, msg) {
   await page.click('#tab-roteiro');
   await page.waitForTimeout(300);
   const textoRoteiro = await page.textContent('#app-conteudo');
-  confere(textoRoteiro.includes('Louvre') && textoRoteiro.includes('Abrir no Mapa'), 'Roteiro com boto de mapa visivel');
+  confere(textoRoteiro.includes('Louvre') && textoRoteiro.includes('Abrir no Mapa'), 'Roteiro com botao de mapa visivel');
   await tirarFoto('03-roteiro');
 
   console.log('4. Navegando para Mostre ao Motorista');
@@ -156,7 +156,7 @@ function confere(cond, msg) {
   await page.waitForSelector('#app-conteudo');
   await page.waitForTimeout(500);
   const textoTokenInvalido = await page.innerText('#app-conteudo');
-  confere(textoTokenInvalido.includes('Link inválido'), 'Mensagem de link inválido aparece com token errado');
+  confere(textoTokenInvalido.includes('Link invalido'), 'Mensagem de link invalido aparece com token errado');
   await tirarFoto('05-token-invalido');
 
   console.log('6. Simulando modo Offline');
@@ -166,7 +166,7 @@ function confere(cond, msg) {
   await page.waitForTimeout(500);
 
   const carimboTexto = await page.textContent('#carimbo-atualizacao');
-  confere(carimboTexto.includes('Atualizado às'), 'Mostra aviso de horario atualizado mesmo offline');
+  confere(carimboTexto.includes('Atualizado'), 'Mostra aviso de horario atualizado mesmo offline');
 
   await page.click('#tab-voos');
   await page.waitForTimeout(300);
