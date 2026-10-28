@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 concurrency:
   group: e2e-no-ar
@@ -39,11 +40,122 @@ jobs:
       - name: Testar o site no ar (sem login)
         env:
           BASE_URL: ${{ inputs.url || 'https://nexia.gcbezerra.workers.dev' }}
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results-no-ar/results.json
         run: |
           case "$BASE_URL" in https://*) ;; *) echo "use https://"; exit 2;; esac
-          npx playwright test -c tests/e2e/playwright.no-ar.config.js
-      - name: Guardar relatório e prints
+          mkdir -p test-results-no-ar
+          npx playwright test -c tests/e2e/playwright.no-ar.config.js --reporter=list,json
+      - name: Tratar falhas e notificar Sentinel / GitHub Issues
         if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const resultsPath = path.join(process.cwd(), 'test-results-no-ar', 'results.json');
+            let failures = [];
+            let total = 0;
+            let passed = 0;
+            let failedCount = 0;
+
+            if (fs.existsSync(resultsPath)) {
+              try {
+                const data = JSON.parse(fs.readFileSync(resultsPath, 'utf8'));
+                function extrairSuites(suites) {
+                  for (const s of suites) {
+                    if (s.specs) {
+                      for (const spec of s.specs) {
+                        for (const t of spec.tests) {
+                          total++;
+                          if (t.status === 'passed') passed++;
+                          else if (t.status === 'failed' || t.status === 'timedOut') {
+                            failedCount++;
+                            const lastResult = t.results[t.results.length - 1];
+                            failures.push({
+                              title: spec.title,
+                              file: spec.file,
+                              error: lastResult?.error?.message || 'Falha desconhecida no teste'
+                            });
+                          }
+                        }
+                      }
+                    }
+                    if (s.suites) extrairSuites(s.suites);
+                  }
+                }
+                if (data.suites) extrairSuites(data.suites);
+              } catch (e) {
+                console.error('Erro ao ler results.json:', e);
+              }
+            }
+
+            // Gerar resumo do Sentinel para exibição na Central / Painel
+            const summary = {
+              ts: new Date().toISOString(),
+              runId: context.runId,
+              status: failures.length > 0 ? 'FAIL' : 'PASS',
+              total,
+              passed,
+              failed: failedCount,
+              failures
+            };
+            fs.writeFileSync(
+              path.join(process.cwd(), 'test-results-no-ar', 'sentinel-summary.json'),
+              JSON.stringify(summary, null, 2)
+            );
+
+            // Criar ou comentar issues para cada falha
+            for (const f of failures) {
+              const label = (f.title.toLowerCase().includes('api') || f.title.toLowerCase().includes('código') || f.title.toLowerCase().includes('crash'))
+                ? 'cortex-fila'
+                : 'sentinel';
+
+              const issueTitle = `[Falha E2E] ${f.title}`;
+              const body = `### ⚠️ Falha no Teste E2E (Ponta a ponta no ar)
+
+**Teste:** \`${f.title}\`
+**Arquivo:** \`${f.file}\`
+**Execução:** [#${context.runId}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})
+
+#### Erro reportado:
+\`\`\`
+${f.error}
+\`\`\`
+
+#### Instruções:
+1. Verifique os prints e relatórios do teste anexados nos Artifacts da execução do Workflow (\`e2e-no-ar\`).
+2. Investigue se a rota ou serviço no ar (\`${process.env.BASE_URL || 'https://nexia.gcbezerra.workers.dev'}\`) sofreu instabilidade ou erro de código.
+3. Se for falha de código ou API, corrija o endpoint ou ajuste a asserção no arquivo de teste correspondente.`;
+
+              const { data: existingIssues } = await github.rest.issues.listForRepo({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                state: 'open',
+                labels: label
+              });
+
+              const issueExistente = existingIssues.find(i => i.title === issueTitle);
+
+              if (issueExistente) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issueExistente.number,
+                  body: `🔁 **Nova ocorrência de falha detectada na execução [#${context.runId}](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}):**\n\n\`\`\`\n${f.error}\n\`\`\``
+                });
+              } else {
+                await github.rest.issues.create({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  title: issueTitle,
+                  body,
+                  labels: [label]
+                });
+              }
+            }
+      - name: Guardar relatório, prints e resumo do Sentinel
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: e2e-no-ar

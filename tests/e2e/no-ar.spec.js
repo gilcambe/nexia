@@ -16,6 +16,14 @@ test.beforeEach(async ({ page, baseURL }) => {
   });
 });
 
+test.afterEach(async ({ page }, testInfo) => {
+  if (testInfo.status !== testInfo.expectedStatus) {
+    const nomeSanitizado = testInfo.title.replace(/[^a-zA-Z0-9_-]/g, '_');
+    const screenshotPath = testInfo.outputPath(`falha-${nomeSanitizado}.png`);
+    await page.screenshot({ path: screenshotPath, fullPage: true }).catch(() => null);
+  }
+});
+
 async function abrir(page, caminho) {
   const erros = [];
   page.on('pageerror', (e) => erros.push(e.message));
