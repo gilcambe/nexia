@@ -1,0 +1,36 @@
+{
+  "title": "Basic Customer Support Call",
+  "description": "A script for a basic customer support call in English.",
+  "steps": [
+    {
+      "customer": "Hello, I need help with my internet connection.",
+      "expectedKeywords": ["help", "internet", "connection"],
+      "translation": "Olá, preciso de ajuda com minha conexão de internet."
+    },
+    {
+      "customer": "My internet is down and I can't access any websites.",
+      "expectedKeywords": ["internet", "down", "access", "websites"],
+      "translation": "Minha internet está fora do ar e não consigo acessar nenhum site."
+    },
+    {
+      "customer": "I have tried restarting my router, but it didn't work.",
+      "expectedKeywords": ["restart", "router", "work"],
+      "translation": "Eu tentei reiniciar meu roteador, mas não funcionou."
+    },
+    {
+      "customer": "I need to reset my password, can you help me with that?",
+      "expectedKeywords": ["reset", "password", "help"],
+      "translation": "Preciso redefinir minha senha, você pode me ajudar com isso?"
+    },
+    {
+      "customer": "I forgot my password and I can't log in to my account.",
+      "expectedKeywords": ["forgot", "password", "log", "account"],
+      "translation": "Esqueci minha senha e não consigo entrar na minha conta."
+    },
+    {
+      "customer": "Thank you for your help, I appreciate it.",
+      "expectedKeywords": ["thank", "help", "appreciate"],
+      "translation": "Obrigado pela sua ajuda, eu aprecio."
+    }
+  ]
+}
