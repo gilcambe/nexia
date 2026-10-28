@@ -114,16 +114,42 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
     return toPlain(data);
   }
 
-  // Economia de cota (Firestore grátis): tenant que existe fica 10 min em memória, sem reler a cada escrita.
-  const tenantOk = new Map();
-  async function assertTenant(tx, tenantId) {
-    if ((tenantOk.get(tenantId) || 0) > Date.now()) return;
-    let t = await tx.get(db.collection('tenants').doc(tenantId));
-    // Não está no banco B: confere no banco principal (leitura).
-    if (!t.exists && tenantDb) t = await tenantDb.collection('tenants').doc(tenantId).get();
-    if (t.exists) { tenantOk.set(tenantId, Date.now() + 10 * 60 * 1000); return; }
-    if (!t.exists) throw new VaultError(CODES.TENANT_NOT_FOUND, 'Tenant do contexto não existe.');
-  }
+      // Economia de cota (Firestore grátis): tenant que existe fica 10 min em memória, sem reler a cada escrita.
+    const tenantOk = new Map();
+    
+    // Cache em memória (TTL 60 s) para leituras repetidas do mesmo documento no Vault (cliente, projeto, tenant), limpo em toda escrita.
+    const vaultReadCache = new Map(); // key -> { expiresAt, record }
+    function getCachedVaultRead(tenantId, entity, id) {
+      const k = `${tenantId}:${entity}:${id}`;
+      const entry = vaultReadCache.get(k);
+      if (entry && entry.expiresAt > Date.now()) return entry.record;
+      vaultReadCache.delete(k);
+      return null;
+    }
+    function setCachedVaultRead(tenantId, entity, id, record) {
+      const k = `${tenantId}:${entity}:${id}`;
+      vaultReadCache.set(k, { expiresAt: Date.now() + 60 * 1000, record });
+    }
+    function invalidateVaultCache(tenantId, entity, id) {
+      if (id) {
+        vaultReadCache.delete(`${tenantId}:${entity}:${id}`);
+      } else {
+        for (const k of vaultReadCache.keys()) {
+          if (k.startsWith(`${tenantId}:${entity}:`) || k.startsWith(`${tenantId}:`)) {
+            vaultReadCache.delete(k);
+          }
+        }
+      }
+    }
+
+    async function assertTenant(tx, tenantId) {
+      if ((tenantOk.get(tenantId) || 0) > Date.now()) return;
+      let t = await tx.get(db.collection('tenants').doc(tenantId));
+      // Não está no banco B: confere no banco principal (leitura).
+      if (!t.exists && tenantDb) t = await tenantDb.collection('tenants').doc(tenantId).get();
+      if (t.exists) { tenantOk.set(tenantId, Date.now() + 10 * 60 * 1000); return; }
+      if (!t.exists) throw new VaultError(CODES.TENANT_NOT_FOUND, 'Tenant do contexto não existe.');
+    }
 
   /**
    * Integridade referencial (dentro da transação):
@@ -291,6 +317,7 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         return { id };
       });
 
+      invalidateVaultCache(ctx.tenantId, entity, outcome.replayedId || outcome.id);
       if (outcome.replayedId) return { record: await get(ctx, outcome.replayedId, { includeDeleted: true }), replayed: true };
       return { record: await get(ctx, outcome.id), replayed: false };
     }
@@ -299,10 +326,16 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
     async function get(ctx, id, { includeDeleted = false } = {}) {
       assertContext(ctx);
       assertId(entity, id);
+      if (!includeDeleted) {
+        const cached = getCachedVaultRead(ctx.tenantId, entity, id);
+        if (cached) return cached;
+      }
       const snap = await col.doc(id).get();
       if (!snap.exists || snap.data().tenant_id !== ctx.tenantId) throw new VaultError(CODES.NOT_FOUND, `${entity}: registro não encontrado.`);
       if (snap.data().deleted_at && !includeDeleted) throw new VaultError(CODES.NOT_FOUND, `${entity}: registro não encontrado.`, { deleted: true });
-      return toRecord(entity, snap);
+      const record = toRecord(entity, snap);
+      if (!includeDeleted) setCachedVaultRead(ctx.tenantId, entity, id, record);
+      return record;
     }
 
     /**
@@ -395,6 +428,7 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         });
         emitAudit(tx, auditEntry(ctx, { operation: 'update', entity, id, version, value, changed }));
       });
+      invalidateVaultCache(ctx.tenantId, entity, id);
       return get(ctx, id);
     }
 
@@ -418,6 +452,7 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         });
         emitAudit(tx, auditEntry(ctx, { operation: 'soft_delete', entity, id, version, value: domainOf(schema, current), changed: ['deleted_at'] }));
       });
+      invalidateVaultCache(ctx.tenantId, entity, id);
       return get(ctx, id, { includeDeleted: true });
     }
 
@@ -446,6 +481,7 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         });
         emitAudit(tx, auditEntry(ctx, { operation: 'restore', entity, id, version, value, changed: ['deleted_at'] }));
       });
+      invalidateVaultCache(ctx.tenantId, entity, id);
       return get(ctx, id);
     }
 
