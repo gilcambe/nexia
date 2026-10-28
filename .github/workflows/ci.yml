@@ -68,7 +68,14 @@ jobs:
         env:
           # Token efêmero do próprio Actions (contents: read), só para ler gilcambe/nexia no teste de onboarding
           NEXIA_TEST_GITHUB_TOKEN: ${{ github.token }}
-        run: npm run test:rules
+        run: |
+          # Mostra o nome do teste que falhou como anotação do job (o log completo nem sempre é acessível).
+          RC=0
+          npm run test:rules 2>&1 | tee "$RUNNER_TEMP/rules.log" || RC=$?
+          if [ "$RC" -ne 0 ]; then
+            grep -E "^\s*not ok|^\s*(error|code|expected|actual):|Error:" "$RUNNER_TEMP/rules.log" | head -25 | while IFS= read -r l; do echo "::error::${l:0:300}"; done
+          fi
+          exit "$RC"
       - name: Build
         run: npm run build
       - name: Orçamento de tamanho do JS inicial (#810)
