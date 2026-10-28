@@ -1,0 +1,300 @@
+{
+  "spec": {
+    "kind": "site",
+    "name": "Sorriso Leve",
+    "tagline": "Odontologia gentil para toda a família",
+    "photo_theme": "dentist dental",
+    "description": "Clínica odontológica em São Paulo com clareamento, implantes e ortodontia.",
+    "folder": "demos/sorriso-leve",
+    "fonts": {
+      "heading": "Fraunces",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2a7f8e",
+      "accent": "#f4a259",
+      "bg": "#f7fbfb",
+      "surface": "#ffffff",
+      "text": "#16302f",
+      "muted": "#5b6f70",
+      "dark": "#0f2e33"
+    },
+    "style": "soft",
+    "contact": {
+      "whatsapp": "5511999998888",
+      "phone": "(11) 99999-8888",
+      "email": "contato@sorrisoleve.com.br",
+      "address": "Rua das Flores, 120",
+      "city": "São Paulo - SP",
+      "hours": "Seg a sex, 8h às 19h",
+      "instagram": "sorrisoleve",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=sorriso-leve&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "sections": [
+      {
+        "type": "hero",
+        "id": "seu-sorriso-merece-cuidado-sem-medo",
+        "title": "Seu sorriso merece cuidado sem medo",
+        "subtitle": "Tratamentos modernos e atendimento acolhedor.",
+        "eyebrow": "Clínica odontológica",
+        "cta": {
+          "label": "Agendar avaliação",
+          "href": "whatsapp"
+        },
+        "cta2": {
+          "label": "Ver tratamentos",
+          "href": "#tratamentos"
+        },
+        "image_query": "smiling woman dentist clinic",
+        "video_query": ""
+      },
+      {
+        "type": "services",
+        "id": "tratamentos",
+        "title": "Tratamentos",
+        "subtitle": "Do check-up à estética.",
+        "items": [
+          {
+            "title": "Clareamento",
+            "text": "Até 8 tons mais brancos.",
+            "price": "a partir de R$ 690",
+            "image_query": "teeth whitening professional",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Implantes",
+            "text": "Dente fixo com segurança.",
+            "price": "",
+            "image_query": "dental implant titanium",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Ortodontia",
+            "text": "Aparelhos fixos e invisíveis.",
+            "price": "",
+            "image_query": "dental braces clear aligners",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          }
+        ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-a-clinica",
+        "title": "Sobre a clínica",
+        "subtitle": "Há 12 anos cuidando de famílias.",
+        "text": "Há 12 anos cuidando de famílias.",
+        "image_query": "modern dental office reception",
+        "stats": [
+          {
+            "value": "12",
+            "label": "anos"
+          },
+          {
+            "value": "8000+",
+            "label": "pacientes"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "nosso-espaco",
+        "title": "Nosso espaço",
+        "subtitle": "",
+        "image_queries": [
+          "dental office interior",
+          "dentist chair modern",
+          "happy patient smile",
+          "dental tools set",
+          "dental hygiene tools",
+          "smiling family dentist"
+        ],
+        "gif_queries": [
+          "tooth brushing animation"
+        ]
+      },
+      {
+        "type": "video",
+        "id": "conheca-a-clinica",
+        "title": "Conheça a clínica",
+        "subtitle": "Um minuto por dentro do nosso consultório.",
+        "youtube": "",
+        "video_query": "dentist patient consultation"
+      },
+      {
+        "type": "team",
+        "id": "equipe",
+        "title": "Equipe",
+        "subtitle": "",
+        "members": [
+          {
+            "name": "Dra. Ana Lima",
+            "role": "Ortodontista",
+            "image_query": "female dentist professional portrait"
+          }
+        ]
+      },
+      {
+        "type": "testimonials",
+        "id": "depoimentos",
+        "title": "Depoimentos",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Carla M.",
+            "role": "",
+            "text": "Perdi o medo de dentista!",
+            "rating": 5
+          },
+          {
+            "name": "João P.",
+            "role": "",
+            "text": "Implante perfeito, sem dor.",
+            "rating": 5
+          },
+          {
+            "name": "Bia R.",
+            "role": "",
+            "text": "Equipe atenciosa demais.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "links",
+        "id": "links-rapidos",
+        "title": "Links rápidos",
+        "subtitle": "",
+        "items": [
+          {
+            "label": "Agendar pelo WhatsApp",
+            "url": "https://wa.me/5511999998888",
+            "icon": "whatsapp"
+          },
+          {
+            "label": "Instagram",
+            "url": "https://instagram.com/sorrisoleve",
+            "icon": "instagram"
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "duvidas-frequentes",
+        "title": "Dúvidas frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Aceitam convênio?",
+            "a": "Sim, os principais planos."
+          },
+          {
+            "q": "Atendem aos sábados?",
+            "a": "Sim, das 8h às 12h."
+          },
+          {
+            "q": "Clareamento dói?",
+            "a": "Pode dar sensibilidade leve por 1 a 2 dias."
+          },
+          {
+            "q": "Parcelam?",
+            "a": "Em até 12x no cartão."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "agende-sua-avaliacao",
+        "title": "Agende sua avaliação",
+        "subtitle": "Resposta rápida pelo WhatsApp.",
+        "cta": {
+          "label": "Chamar no WhatsApp",
+          "href": "whatsapp"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "fale-com-a-gente",
+        "title": "Fale com a gente",
+        "subtitle": "",
+        "map": true,
+        "form": true
+      }
+    ]
+  },
+  "media": {
+    "s1.item1": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Root_analogue_ceramic_dental_implant_vs_titanium_screw_type_implant.jpg/1280px-Root_analogue_ceramic_dental_implant_vs_titanium_screw_type_implant.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 721,
+      "alt": "The picture shows a truly anatomic ceramic multi-rooted dental implant (RAI- roo",
+      "credit": "Logicwhatelse (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/6/62/Dental_office%2C_USS_Kroonland%2C_March_1919.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 1740,
+      "alt": "USS Kroonland (ID # 1541) Scene in the ship's dental office, 23 March 1919. U.S.",
+      "credit": "U.S. Navy (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/c/cf/WilliamGeorgeBeers.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 1687,
+      "alt": "Picture of William George Beers, a noted Canadian dentist and patriot, who is re",
+      "credit": "William Notman (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g3": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/US_Navy_060516-N-1745W-039_Hospital_Corpsman_Steffon_Corna_sets_up_dental_tools_for_a_tooth_extraction_in_the_Dental_Department_aboard_the_Nimitz-class_aircraft_carrier_USS_Abraham_Lincoln_%28CVN_72%29.jpg/1280px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 914,
+      "alt": "South China Sea (May 16, 2006) - Hospital Corpsman Steffon Corna sets up dental ",
+      "credit": "U.S. Navy photo by Photographer's Mate Airman Apprentice Brandon C. Wilson (Public domain, via Wikimedia Commo",
+      "provider": "wikimedia"
+    },
+    "s3.g4": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/USMC-120718-M-BC491-003.jpg/1280px-USMC-120718-M-BC491-003.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 855,
+      "alt": "Seaman Apprentice Cody M. Frink, a Robert M. Casey Medical and Dental Clinic den",
+      "credit": "Wikimedia Commons (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s0.hero": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/34/Dentist_Office_IMG_2448_Oslo.JPG/1280px-Dentist_Office_IMG_2448_Oslo.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Modernly equipped dental Office in Oslo, Norway",
+      "credit": "Bjoertvedt (CC BY-SA 3.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s2.about": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/Dentist_Office_IMG_2447_Oslo.JPG/1280px-Dentist_Office_IMG_2447_Oslo.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Modernly equipped dental Office in Oslo, Norway",
+      "credit": "Bjoertvedt (CC BY-SA 3.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    }
+  }
+}
