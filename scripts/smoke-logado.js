@@ -125,15 +125,15 @@ async function main() {
 
       console.error('\n=== FALHA DETALHADA: VAULT - CRIAR CLIENTE ===');
       console.error('Status HTTP: ' + cl.status);
-      console.error('Mensagem de erro: ' + causa);
+      console.error('Mensagem de erro exata: ' + causa);
       console.error('Corpo da resposta (texto bruto):');
       console.error(corpoTexto || '(vazio)');
       console.error('Resposta completa (JSON):');
       console.error(detalhes);
-      console.error('\nINTERRUPÇÃO: O teste foi interrompido porque a criação do cliente falhou.');
-      console.error('Isso evita tentar criar um projeto com dados vazios (sem client_id válido).\n');
+      console.error('\nINTERRUPÇÃO: O passo "criar projeto" foi interrompido com mensagem clara porque a criação do cliente falhou.');
+      console.error('Nenhum projeto será criado com dados vazios.\n');
 
-      throw new Error('Falha ao criar cliente: ' + causa + ' (status ' + cl.status + '). Detalhes: ' + detalhes + (corpoTexto ? ' | corpo: ' + corpoTexto : ''));
+      throw new Error('Vault: criar cliente falhou com status ' + cl.status + '. Causa exata: ' + causa + '. Detalhes: ' + detalhes + (corpoTexto ? ' | corpo: ' + corpoTexto : ''));
     }
 
     let project;
