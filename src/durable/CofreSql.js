@@ -4,18 +4,48 @@
 // (lib/firebase-lite/d1-backend.js) serve igual. Cota própria, separada do D1 da conta.
 
 class CofreSql {
-  constructor(state) {
-    this.sql = state?.storage?.sql || null;
-  }
+      constructor(state) {
+      this.sql = state?.storage?.sql || null;
+      if (this.sql) {
+        try {
+          this.sql.exec(`CREATE TABLE IF NOT EXISTS vazaosql (
+            banco TEXT PRIMARY KEY,
+            data TEXT NOT NULL,
+            leituras INTEGER NOT NULL DEFAULT 0,
+            escritas INTEGER NOT NULL DEFAULT 0
+          );`);
+        } catch {}
+      }
+    }
 
   async fetch(request) {
     const resposta = (status, corpo) => new Response(JSON.stringify(corpo), { status, headers: { 'Content-Type': 'application/json' } });
     if (!this.sql) return resposta(500, { success: false, errors: [{ message: 'CofreSql: storage.sql indisponível.' }] });
-    try {
-      const b = await request.json();
-      const result = (b.batch || [b]).map(st => ({ results: this.sql.exec(st.sql, ...(st.params || [])).toArray() }));
-      return resposta(200, { success: true, result });
-    } catch (e) {
+          try {
+        const url = new URL(request.url);
+        const path = url.pathname;
+        if (path.includes('/vazao') && request.method === 'POST') {
+          const body = await request.json();
+          const { banco, data, leituras = 0, escritas = 0 } = body || {};
+          if (banco && data) {
+            this.sql.exec(`INSERT INTO vazaosql (banco, data, leituras, escritas) VALUES (?, ?, ?, ?)
+              ON CONFLICT(banco) DO UPDATE SET data = ?, leituras = leituras + ?, escritas = escritas + ?`,
+              banco, data, leituras, escritas, data, leituras, escritas);
+          }
+          return resposta(200, { success: true });
+        }
+        if (path.includes('/vazao-get') && request.method === 'GET') {
+          const rows = this.sql.exec(`SELECT banco, data, leituras, escritas FROM vazaosql`).toArray();
+          const uso = {};
+          for (const r of rows) {
+            uso[r.banco] = { data: r.data, leituras: r.leituras, escritas: r.escritas };
+          }
+          return resposta(200, { success: true, uso });
+        }
+        const b = await request.json();
+        const result = (b.batch || [b]).map(st => ({ results: this.sql.exec(st.sql, ...(st.params || [])).toArray() }));
+        return resposta(200, { success: true, result });
+      } catch (e) {
       const message = String((e && e.message) || e);
       return resposta(/exceeded|limit/i.test(message) ? 429 : 500, { success: false, errors: [{ message }] });
     }
