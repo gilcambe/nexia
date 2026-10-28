@@ -135,12 +135,12 @@ async function main() {
       console.error('Isso evita tentar criar um projeto com dados vazios (sem client_id válido).\n');
 
       throw new Error('Falha ao criar cliente: ' + causa + ' (status ' + cl.status + '). Detalhes: ' + detalhes + (corpoTexto ? ' | corpo: ' + corpoTexto : ''));
-    } else {
-      const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
-      project = pr.json && pr.json.record;
-      if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PROJ}`);
-      report(!!project, 'Vault: criar projeto', `${pr.status} ${pr.json && (pr.json.error || '')}`);
     }
+
+    const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
+    project = pr.json && pr.json.record;
+    if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PROJ}`);
+    report(!!project, 'Vault: criar projeto', `${pr.status} ${pr.json && (pr.json.error || '')}`);
     // Usa o projeto que já tem o repositório (ele só pode estar ligado a UM projeto por tenant;
     // sem isso o onboarding do teste completo falha com UNIQUE quando uma pista ligou o repositório antes).
     {
