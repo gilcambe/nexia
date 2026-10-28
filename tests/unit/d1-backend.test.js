@@ -134,3 +134,13 @@ test('D1-6. #2222: igualdade em texto vai para o SQL com índice e o resultado c
   const plano = f.db.prepare("EXPLAIN QUERY PLAN SELECT * FROM docs WHERE col = ? AND parent = ? AND json_extract(fields, '$.tenant_id.stringValue') = ?").all('vault_projects', '', 't1');
   assert.ok(plano.some(r => /docs_eq_tenant_id/.test(r.detail)), JSON.stringify(plano));
 });
+
+test('D1-7. list() com limit respeita o limite máximo de linhas lidas do D1', async () => {
+  const db = novoDb();
+  for (let i = 1; i <= 10; i++) {
+    await db.collection('itens').doc(`d${i}`).set({ valor: i });
+  }
+  const snapshot = await db.collection('itens').orderBy('valor').limit(5).get();
+  assert.equal(snapshot.size, 5);
+  assert.deepEqual(snapshot.docs.map(d => d.id), ['d1', 'd2', 'd3', 'd4', 'd5']);
+});
