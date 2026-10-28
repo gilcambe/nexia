@@ -20,7 +20,7 @@
     "muted": "#7F8C8D",
     "dark": "#1A252F"
   },
-  "favicon": "",
+  "favicon": "VP",
   "contact": {
     "whatsapp": "",
     "phone": "",
@@ -51,59 +51,132 @@
       "video_query": "travel"
     },
     {
+      "type": "como-cuidamos",
+      "title": "Como cuidamos de você",
+      "steps": [
+        {
+          "title": "Antes da viagem",
+          "text": "Consultoria personalizada para entender seu perfil, orçamento e desejos. Montamos um itinerário único com destinos selecionados e atividades que combinam com você.",
+          "icon": "plane"
+        },
+        {
+          "title": "Durante a viagem",
+          "text": "Suporte 24h com assistência local em cada destino. Garantimos tudo organizado: passagens, hotéis, traslado e atividades, para que você aproveite sem preocupações.",
+          "icon": "map"
+        },
+        {
+          "title": "Depois da viagem",
+          "text": "Acompanhamos sua experiência e oferecemos suporte pós-viagem. Recebemos feedback e utilizamos cada experiência para melhorar seus próximos planos.",
+          "icon": "heart"
+        }
+      ]
+    },
+    {
       "type": "services",
       "id": "servicos",
       "title": "Nossos Serviços",
-      "subtitle": "Viagens personalizadas para você.",
+      "subtitle": "Tudo o que você precisa em uma só agência.",
       "items": [
         {
           "title": "Pacotes Exclusivos",
-          "text": "Destinos selecionados com alto padrão de qualidade.",
+          "text": "Pacotes pré-montados com destinos selecionados e alta qualidade. Incluem hospedagem, traslados e atividades, com atendimento personalizado.",
           "price": "a partir de R$ 5.000",
           "image_query": "luxury resort pool"
         },
         {
-          "title": "Consultoria de Viagens",
-          "text": "Planejamento personalizado conforme seu estilo e orçamento.",
-          "image_query": "travel consultant"
+          "title": "Passagens Aéreas",
+          "text": "Buscamos as melhores tarifas em todas as companhias aéreas. Reservas online e gestão de passagens com reembolso e alteração facilitada.",
+          "image_query": "airplane"
         },
         {
-          "title": "Gestão de Itinerários",
-          "text": "Tudo organizado para você aproveitar cada momento.",
-          "image_query": "travel itinerary"
+          "title": "Hotéis e Resorts",
+          "text": "Seleção de hospedagens de alto padrão em todo o mundo. Desde hotéis boutique até resorts all-inclusive, com preços competitivos.",
+          "image_query": "luxury hotel room"
+        },
+        {
+          "title": "Aluguel de Carro",
+          "text": "Carros de diferentes categorias para você explorar os destinos. Seguro completo incluso, entrega e devolução em múltiplos locais.",
+          "image_query": "car rental"
+        },
+        {
+          "title": "Seguro Viagem",
+          "text": "Seguro com cobertura completa para emergências médicas, perda de bagagem e cancelamento de viagem. Válido em todo o mundo.",
+          "image_query": "travel insurance"
+        },
+        {
+          "title": "Vistos e Documentação",
+          "text": "Assistência completa para vistos de turismo, negócios e estudo. Inclui pré-análise, formulários preenchidos e acompanhamento do processo.",
+          "image_query": "passport"
         }
       ]
     },
     {
       "type": "about",
       "title": "Sobre a Viajante Pro",
-      "text": "Há 8 anos criando experiências memoráveis para nossos clientes.",
+      "text": "Somos uma agência de viagens especializada em criar experiências únicas para nossos clientes. Com 8 anos de experiência, já realizamos mais de 2.000 viagens com satisfação acima de 95%.",
       "image_query": "luxury travel agency office",
       "stats": [
         {
           "value": "8",
-          "label": "anos"
+          "label": "anos de experiência"
         },
         {
-          "value": "2000+",
-          "label": "clientes"
+          "value": "2.000+",
+          "label": "viagens realizadas"
         },
         {
           "value": "50+",
-          "label": "destinos"
+          "label": "destinos nacionais e internacionais"
         }
       ]
     },
     {
-      "type": "gallery",
-      "title": "Nossos Destinos",
+      "type": "destinos-brasil",
+      "title": "Destinos no Brasil",
+      "subtitle": "Exploração completa do nosso país.",
       "image_queries": [
-        "luxury beach resort",
-        "mountain travel",
-        "city tour",
-        "luxury cruise",
-        "desert safari",
-        "tropical paradise"
+        "paris beach brazil",
+        "rio de janeiro beach",
+        "salvador bahia",
+        "anavilhanas national park",
+        "foz do iguacu",
+        "gramado snow"
+      ]
+    },
+    {
+      "type": "destinos-exterior",
+      "title": "Destinos no Exterior",
+      "subtitle": "Mundo todo a um clique de distância.",
+      "image_queries": [
+        "paris city travel",
+        "london city travel",
+        "new york city travel",
+        "tokyo city travel",
+        "rome italy travel",
+        "barcelona spain travel"
+      ]
+    },
+    {
+      "type": "seu-app",
+      "title": "Seu app da viagem",
+      "subtitle": "Gerencie sua viagem no seu celular, a qualquer momento.",
+      "image_query": "travel app on smartphone",
+      "features": [
+        {
+          "title": "Itinerário em tempo real",
+          "text": "Acesse seu roteiro completo, horários e localizações.",
+          "icon": "list"
+        },
+        {
+          "title": "Contato direto",
+          "text": "Fale com nossa equipe a qualquer hora.",
+          "icon": "chat"
+        },
+        {
+          "title": "Documentos na palma da mão",
+          "text": "Passaportes, vistos e vouchers em um só lugar.",
+          "icon": "folder"
+        }
       ]
     },
     {
@@ -118,19 +191,32 @@
       "title": "Depoimentos de Clientes",
       "items": [
         {
-          "name": "Ana P.",
-          "text": "Viagem perfeita, tudo organizado com excelência!",
+          "name": "Ana Paula S. - São Paulo, SP",
+          "text": "Viagem de lua de mel para Maldivas organizada pela Viajante Pro. Tudo perfeito: ares, hospedagem, passeios. Nossa equipe esteve disponível sempre que precisamos. Recomendo demais!",
+          "rating": 5,
+          "example": true
+        },
+        {
+          "name": "Carlos Mendes - Curitiba, PR",
+          "text": "Contratei um pacote de cruzeiro pelo Caribe e foi excelente. A agência cuidou de tudo: passagens, embarque, seguro, documentação. Valor muito bom pelo que oferecem.",
           "rating": 5
         },
         {
-          "name": "Carlos M.",
-          "text": "Consultoria super personalizada, atendeu todas nossas expectativas.",
+          "name": "Juliana Silva - Rio de Janeiro, RJ",
+          "text": "Fiz um roteiro personalizado para viagem com minha família. Cada detalhe foi pensado: dias de praias, passeios culturais, restaurantes indicados. Voltamos super satisfeitos!",
+          "rating": 5,
+          "example": true
+        },
+        {
+          "name": "Roberto Alves - Belo Horizonte, MG",
+          "text": "Já fiz três viagens com a Viajante Pro e sempre recomendo. Eles encontraram preços melhores que eu conseguia sozinho e me orientaram sobre vistos e documentação.",
           "rating": 5
         },
         {
-          "name": "Juliana S.",
-          "text": "Destinos incríveis, voltamos ano que vem!",
-          "rating": 5
+          "name": "Mariana Costa - Salvador, BA",
+          "text": "Viagem de negócios para Europa com 4 pessoas. A consultoria foi super profissional: sugerimos destinos, hotéis e passeios que combinaram com todos. Excelente trabalho!",
+          "rating": 5,
+          "example": true
         }
       ]
     },
