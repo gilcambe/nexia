@@ -263,9 +263,9 @@ async function main() {
     const donoDoRepo = project && project.id;
     const apagarProjeto = !!projetoCriado && projetoCriado !== donoDoRepo;
     const apagarCliente = !!clienteCriado && (!projetoCriado || apagarProjeto);
-      const bad = results.filter(r => !r.ok);
-  const limpezaFalhou = [];
-  if (apagarProjeto) {
+
+    const limpezaFalhou = [];
+    if (apagarProjeto) {
       const apagado = await deleteTestRecord(api, 'projects', projetoCriado).catch(() => false);
       console.log(`limpeza: projeto de teste ${apagado ? 'apagado' : 'não apagado (segue)'}`);
       if (!apagado) limpezaFalhou.push('projeto');
@@ -278,13 +278,14 @@ async function main() {
     const apagadoUsuario = await deleteTestUser(sa).catch(() => false);
     console.log(`limpeza: usuário de teste ${apagadoUsuario ? 'apagado' : 'não apagado (segue)'}`);
     if (!apagadoUsuario) limpezaFalhou.push('usuário');
-      if (limpezaFalhou.length > 0) {
-    console.log(`  AVISO: falha na limpeza: ${limpezaFalhou.join(', ')}`);
-    // Se a limpeza falhar, o teste deve falhar com código 1
-    if (bad.length === 0) {
-      bad.push({ ok: false, name: 'limpeza de teste' });
+    if (limpezaFalhou.length > 0) {
+      console.log(`  AVISO: falha na limpeza: ${limpezaFalhou.join(', ')}`);
+      // Se a limpeza falhar e nada mais falhou, o teste sai com código 1
+      const jaFalhou = results.filter(r => !r.ok).length > 0;
+      if (!jaFalhou) {
+        results.push({ ok: false, name: 'limpeza de teste' });
+      }
     }
-  }
   }
 
   const bad = results.filter(r => !r.ok);
