@@ -142,8 +142,9 @@ async function reservasQueVoltam(token, issues, agora = Date.now()) {
 
 // Tarefas que travaram enquanto o Cofre estava fora do ar (503 do D1) não falharam por culpa da tarefa:
 // voltam à fila do zero uma vez. Conserto: PR #2221 (27/10/2026 19:37 UTC).
-const CONSERTO_COFRE = '2026-10-27T19:37:39Z';
-function travouAntesDoConserto(travadoEm) { return !!travadoEm && Date.parse(travadoEm) < Date.parse(CONSERTO_COFRE); }
+// 28/10: a limpeza do smoke (PR #2297) reprovou toda tarefa até o PR #2301 entrar. Quem travou antes disso volta do zero.
+const CONSERTO_SMOKE = '2026-10-28T15:22:46Z';
+function travouAntesDoConserto(travadoEm) { return !!travadoEm && Date.parse(travadoEm) < Date.parse(CONSERTO_SMOKE); }
 async function travadasPeloCofre(token, issues) {
   const voltar = [];
   for (const i of issues.filter(x => !x.pull_request && nomes(x).includes(L.travado)).slice(0, 15)) {
@@ -457,7 +458,7 @@ async function executar(token, acao, dividir) {
     // #803: novo dia, nova cota: volta para a fila do zero (tentativa-N, sem-entrega-N e travado saem).
     for (const l of acao.rotulos.filter(x => x === L.semCota || x === L.travado || x === L.rodando || /^(tentativa|sem-entrega|pista)-\d+$/.test(x) || (acao.motivo === 'cofre' && x === 'reserva-tentou'))) await delLabel(l).catch(() => null);
     await comentar(acao.motivo === 'cofre'
-      ? 'O Cofre estava fora do ar quando esta tarefa travou (conserto no PR #2221). Ela volta para a fila do zero.'
+      ? 'Esta tarefa travou por erro de ambiente, não por culpa dela (Cofre fora do ar, PR #2221, ou limpeza do teste com login, PR #2301). Ela volta para a fila do zero.'
       : 'Novo dia: a cota das IAs voltou. A tarefa voltou para a fila do zero.');
   } else if (acao.tipo === 'travar') {
     await delLabel(L.rodando); await limparPistas(); await addLabel(L.travado);
