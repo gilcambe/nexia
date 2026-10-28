@@ -50,6 +50,7 @@ const routes: RouteObject[] = [
   { path: "/clientes", element: <ClientesPage /> },
   { path: "/central", element: <CentralPage /> },
   { path: "/cortex", element: <CortexPage /> },
+  { path: "/cortex/api", element: <ApiDocsPage /> },
   { path: "/cortex/a/:id", element: <AssistentePublico /> },
   { path: "/briefing/:codigo", element: <BriefingPublico /> },
   { path: "/meu-cortex", element: <MeuCortexPage /> },
