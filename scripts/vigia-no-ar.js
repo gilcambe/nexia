@@ -91,11 +91,13 @@ async function rollbackSite(url) {
     if (executarRollback) {
       return executarRollback(url, 'workers');
     }
-    // Fallback: chama wrangler rollback (executa de verdade)
-    const { execSync } = require('child_process');
+    // Fallback: chama wrangler rollback com argumentos separados (sem shell)
+    const { execFileSync } = require('child_process');
     try {
-      const comando = `wrangler rollback ${url}`;
-      execSync(comando, { stdio: 'inherit' });
+      if (!isValidUrl(url)) {
+        return { tipo: 'wrangler', url, acao: 'rollback', erro: 'URL invalida' };
+      }
+      execFileSync('wrangler', ['rollback', url], { stdio: 'pipe' });
       return { tipo: 'wrangler', url, acao: 'rollback', sucesso: true };
     } catch (erro) {
       return { tipo: 'wrangler', url, acao: 'rollback', erro: String(erro) };
