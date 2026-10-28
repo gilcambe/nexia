@@ -112,8 +112,11 @@ async function main() {
     // Vault: cliente e projeto de teste (idempotentes: rodar de novo reaproveita)
     const cl = await api('/nexia/clients', { method: 'POST', body: { name: 'Teste automático NEXIA', slug: `teste-automatico${PROJ}`, status: 'active' }, headers: { 'Idempotency-Key': `smoke-client-v1${PROJ}` } });
     let client = cl.json && cl.json.record;
-    if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === `teste-automatico${PROJ}`);
-      const causa = cl.json ? (cl.json.error || '') + ' ' + (cl.json.causa || '') : 'status ' + cl.status;
+    if (!client && cl.status === 409) {
+      const lista = await api('/nexia/clients');
+      client = (lista.json && lista.json.items || []).find(c => c.slug === `teste-automatico${PROJ}`);
+    }
+    const causa = cl.json ? (cl.json.error || '') + ' ' + (cl.json.causa || '') : 'status ' + cl.status;
     report(!!client, 'Vault: criar cliente', `${cl.status} ${causa}`);
 
     if (!client) {
