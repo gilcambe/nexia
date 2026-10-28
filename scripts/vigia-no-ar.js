@@ -67,6 +67,25 @@ function ehPagesDev(url) {
   return url.includes('pages.dev');
 }
 
+function isValidUrl(string) {
+  try {
+    const url = new URL(string);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function extractProjectName(url) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace('www.', '');
+    return host.split('.')[0];
+  } catch {
+    return null;
+  }
+}
+
 async function rollbackSite(url) {
   if (ehWorkersDev(url)) {
     if (executarRollback) {
@@ -86,16 +105,28 @@ async function rollbackSite(url) {
     if (executarRollback) {
       return executarRollback(url, 'pages');
     }
-    // Fallback: chama API do Cloudflare Pages
+    // Fallback: chama API do Cloudflare Pages via HTTP (sem execSync)
     try {
       const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
-      const projectName = url.split('.')[0].replace('https://', '');
-      const comando = `curl -X POST "https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${projectName}/rollback" \
-        -H "Authorization: Bearer ${process.env.CLOUDFLARE_API_TOKEN}" \
-        -H "Content-Type: application/json"`;
-      const { execSync } = require('child_process');
-      execSync(comando, { stdio: 'inherit' });
-      return { tipo: 'cloudflare-pages', url, acao: 'rollback', sucesso: true };
+      const projectName = extractProjectName(url);
+      if (!projectName || !isValidUrl(url)) {
+        return { tipo: 'cloudflare-pages', url, acao: 'rollback', erro: 'URL inválida ou projectName vazio' };
+      }
+      const resposta = await fetchHttp(
+        `https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${projectName}/rollback`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.CLOUDFLARE_API_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      if (resposta && resposta.ok) {
+        return { tipo: 'cloudflare-pages', url, acao: 'rollback', sucesso: true };
+      }
+      const erroMsg = resposta ? resposta.statusText : 'erro desconhecido';
+      return { tipo: 'cloudflare-pages', url, acao: 'rollback', erro: erroMsg };
     } catch (erro) {
       return { tipo: 'cloudflare-pages', url, acao: 'rollback', erro: String(erro) };
     }
@@ -145,6 +176,9 @@ async function verificarSite(produto) {
   const { site, id } = produto;
   if (!site) {
     return { id, site: null, status: 'sem-site' };
+  }
+  if (!isValidUrl(site)) {
+    return { id, site, status: 'url-invalida', falhas: 0, erro: 'URL malformada' };
   }
   try {
     await requisitarComTentativas(site);
