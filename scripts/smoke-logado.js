@@ -116,23 +116,23 @@ async function main() {
       const lista = await api('/nexia/clients');
       client = (lista.json && lista.json.items || []).find(c => c.slug === `teste-automatico${PROJ}`);
     }
-    const causa = cl.json ? (cl.json.error || '') + ' ' + (cl.json.causa || '') : 'status ' + cl.status;
+    const causa = cl.json ? String(cl.json.error || '') + ' ' + String(cl.json.causa || '') : 'status ' + cl.status;
     report(!!client, 'Vault: criar cliente', `${cl.status} ${causa}`);
 
     let project;
     if (!client) {
-      const detalhes = cl.json ? JSON.stringify(cl.json, null, 2) : 'Resposta: ' + cl.text;
+      const detalhes = cl.json ? JSON.stringify(cl.json, null, 2) : 'Resposta: ' + String(cl.text || '');
 
       // Mostra a causa exata detalhadamente (status + corpo da resposta), sem mascarar a falha.
       console.error(
-        '\n❌ FALHA: Vault — criar cliente\n' +
+        '\nFALHA: Vault - criar cliente\n' +
         'Status: ' + cl.status + '\n' +
         'Causa: ' + causa + '\n' +
         'Resposta completa: ' + detalhes + '\n' +
-        '\n⚠️  A criação do projeto será PULADA (sem client_id válido) e não será tentada com dados vazios.\n' +
-        '⚠️  O restante do teste continua rodando.\n'
+        '\nAVISO: A criacao do projeto será PULADA (sem client_id valido) e nao sera tentada com dados vazios.\n' +
+        'AVISO: O restante do teste continua rodando.\n'
       );
-      report(false, 'Vault: criar projeto — pulado', 'cliente não criado; sem client_id válido para criar projeto');
+      report(false, 'Vault: criar projeto - pulado', 'cliente nao criado; sem client_id valido para criar projeto');
     } else {
       const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
       project = pr.json && pr.json.record;
