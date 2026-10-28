@@ -30,7 +30,17 @@ test('deve gerar index.html para cada molde sem erros', async () => {
 
     try {
       // Executa o script renderizar-site.js como processo externo
-      const { stdout, stderr } = await execAsync(`node scripts/renderizar-site.js "${moldePath}" "${outputDir}"`);
+      console.log(`Processando molde: ${moldeFile}`);
+      console.log(`Comando: node scripts/renderizar-site.js "${moldePath}" "${outputDir}"`);
+      
+      const { stdout, stderr } = await execAsync(`node scripts/renderizar-site.js "${moldePath}" "${outputDir}"`, {
+        timeout: 30000 // 30 segundos de timeout
+      });
+
+      console.log(`stdout: ${stdout}`);
+      if (stderr) {
+        console.warn(`stderr: ${stderr}`);
+      }
 
       // Verifica se o index.html foi gerado
       const indexPath = path.join(outputDir, 'index.html');
@@ -40,7 +50,7 @@ test('deve gerar index.html para cada molde sem erros', async () => {
       const indexContent = fs.readFileSync(indexPath, 'utf8');
       assert.ok(indexContent.length > 0, `index.html vazio para ${moldeFile}`);
 
-      console.log(`Sucesso ao gerar ${indexPath}`);
+      console.log(`Sucesso ao gerar ${indexPath} (${indexContent.length} bytes)`);
     } catch (error) {
       console.error(`Erro ao processar ${moldeFile}:`, error);
       throw new Error(`Falha ao renderizar o molde ${moldeFile}: ${error.message}`);
