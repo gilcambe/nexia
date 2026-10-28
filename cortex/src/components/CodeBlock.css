@@ -1,0 +1,173 @@
+/* CodeBlock.css – posicionamento e estilo dos blocos de código no Cortex */
+
+.code-block-wrapper {
+  width: 100%;
+  max-width: 100%;
+  background: #1e1e1e;
+  border-radius: var(--radius, 8px);
+  border: 1px solid #333;
+  overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  box-sizing: border-box;
+}
+
+.code-block-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #2d2d2d;
+  border-bottom: 1px solid #333;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.code-language {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #888;
+  background: #3a3a3a;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.code-block-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.code-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.code-btn.run {
+  background: #0e639c;
+  color: #fff;
+}
+
+.code-btn.run:hover:not(:disabled) {
+  background: #1177bb;
+  transform: translateY(-1px);
+}
+
+.code-btn.run:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.code-btn.stop {
+  background: #b3261e;
+  color: #fff;
+}
+
+.code-btn.stop:hover:not(:disabled) {
+  background: #d32f2f;
+  transform: translateY(-1px);
+}
+
+.code-btn.stop:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.code-btn.fix {
+  background: #2d5a27;
+  color: #fff;
+}
+
+.code-btn.fix:hover:not(:disabled) {
+  background: #3a7a33;
+  transform: translateY(-1px);
+}
+
+.code-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.code-block-code {
+  margin: 0;
+  padding: 12px;
+  overflow-x: auto;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.code-block-code code {
+  display: block;
+  white-space: pre;
+  word-wrap: normal;
+}
+
+.code-block-output,
+.code-block-error {
+  padding: 10px 12px;
+  border-top: 1px solid #333;
+  font-size: 0.85rem;
+}
+
+.code-block-output {
+  background: #252526;
+  color: #ce9178;
+}
+
+.code-block-output strong {
+  color: #dcdcaa;
+}
+
+.code-block-error {
+  background: #2d1b1b;
+  color: #f48771;
+}
+
+.code-block-error strong {
+  color: #ce9178;
+}
+
+.code-block-output pre,
+.code-block-error pre {
+  margin: 4px 0 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Responsivo: empilha botões em telas pequenas */
+@media (max-width: 640px) {
+  .code-block-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .code-block-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .code-btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+/* Respeita preferência de reduzir movimento */
+@media (prefers-reduced-motion: reduce) {
+  .code-btn {
+    transition: none;
+  }
+  .code-btn:hover:not(:disabled) {
+    transform: none;
+  }
+}
