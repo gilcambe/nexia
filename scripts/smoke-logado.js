@@ -130,7 +130,7 @@ async function main() {
       console.error(corpoTexto || '(vazio)');
       console.error('Resposta completa (JSON):');
       console.error(detalhes);
-      console.error('\nINTERRUPÇÃO: O passo "criar projeto" foi interrompido com mensagem clara porque a criação do cliente falhou.');
+      console.error('\nINTERRUPÇÃO: O passo criar projeto foi interrompido com mensagem clara porque a criação do cliente falhou.');
       console.error('Nenhum projeto será criado com dados vazios.\n');
 
       throw new Error('Vault: criar cliente falhou com status ' + cl.status + '. Causa exata: ' + causa + '. Detalhes: ' + detalhes + (corpoTexto ? ' | corpo: ' + corpoTexto : ''));
