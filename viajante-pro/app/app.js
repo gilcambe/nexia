@@ -444,11 +444,12 @@
 
     var params = new URLSearchParams(window.location.search);
     var tokenUrl = params.get('t');
-    var token = tokenUrl || localStorage.getItem('vp_token');
-
+    
     if (tokenUrl) {
       localStorage.setItem('vp_token', tokenUrl);
     }
+
+    var token = localStorage.getItem('vp_token') || tokenUrl;
 
     if (!token) {
       dadosViagem = null;
@@ -458,24 +459,19 @@
 
     buscarViagem(token).then(function (res) {
       dadosViagem = converter(res);
-      dadosViagem._token_salvo = token;
+      dadosViagem.token = token;
       salvarNoIndexedDB('viagem_ativa', dadosViagem).catch(function () {});
       renderizarTela();
     }).catch(function (err) {
       if (err && err.codigo === 404) {
         localStorage.removeItem('vp_token');
-        obterDoIndexedDB('viagem_ativa').then(function (dadosSalvos) {
-          if (dadosSalvos) {
-            // Se houver necessidade de limpar IndexedDB ou apenas ignorar
-          }
-        }).catch(function () {});
         salvarNoIndexedDB('viagem_ativa', null).catch(function () {});
         dadosViagem = null;
         mostrarMensagem('Link inválido ou vencido. Peça um novo à Viajante Pro.');
         return;
       }
 
-      // Falha de rede/servidor (exceto 404) -> tentar ler cópia do IndexedDB
+      // Falha de rede/servidor (exceto 404) -> tentar ler cópia do IndexedDB se o token for o mesmo
       obterDoIndexedDB('viagem_ativa').then(function (dadosSalvos) {
         if (dadosSalvos && dadosSalvos.token === token) {
           dadosViagem = dadosSalvos;
