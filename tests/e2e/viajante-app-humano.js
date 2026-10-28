@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 'use strict';
-  // NEXIA: teste Playwright E2E do PWA Viajante Pro (celular 360px) - mock de API, token inválido, layout 360px, modo offline
-// Abre o link com ?t=TOKEN, ve voos e roteiro, desliga a rede (setOffline), recarrega e ve tudo salvo offline.
+// NEXIA: teste Playwright E2E do PWA Viajante Pro (celular 360px)
+// Mock de API /api/viagem*, token invalido 404, layout 360px, modo offline
 // Uso: node tests/e2e/viajante-app-humano.js [pasta-para-fotos]
+
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -46,11 +47,13 @@ function confere(cond, msg) {
 }
 
 (async () => {
-  await new Promise(r => servidor.listen(0, '127.0.0.1', r));
+  await new Promise((r) => servidor.listen(0, '127.0.0.1', r));
   const base = 'http://127.0.0.1:' + servidor.address().port;
   if (FOTOS) fs.mkdirSync(FOTOS, { recursive: true });
 
-  const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
+  const browser = await chromium.launch(
+    process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}
+  );
   const ctx = await browser.newContext({
     viewport: { width: 360, height: 800 },
     deviceScaleFactor: 2,
@@ -86,7 +89,9 @@ function confere(cond, msg) {
   // Qualquer outro token responde 404 com 'Link invalido'
   await page.route('**/api/viagem*', async (route) => {
     const url = route.request().url();
-    const token = url.includes('?') ? new URLSearchParams(new URL(url).search).get('t') : null;
+    const token = url.includes('?')
+      ? new URLSearchParams(new URL(url).search).get('t')
+      : null;
 
     if (token === TOKEN_TESTE_VP) {
       await route.fulfill({
@@ -106,17 +111,22 @@ function confere(cond, msg) {
   let nFoto = 0;
   const tirarFoto = async (nome) => {
     if (FOTOS) {
-      await page.screenshot({ path: path.join(FOTOS, String(++nFoto).padStart(2, '0') + '-' + nome + '.png') });
+      await page.screenshot({
+        path: path.join(FOTOS, String(++nFoto).padStart(2, '0') + '-' + nome + '.png')
+      });
     }
   };
 
   console.log('1. Abrindo app com token valido');
-  await page.goto(base + '/?t=TOKEN_TESTE_VP', { waitUntil: 'load' });
+  await page.goto(base + '/?t=' + TOKEN_TESTE_VP, { waitUntil: 'load' });
   await page.waitForSelector('#app-conteudo');
   await page.waitForTimeout(500);
   confere(await page.isVisible('#carimbo-atualizacao'), 'Carimbo de atualizacao visivel');
   const conteudoInicio = await page.textContent('#app-conteudo');
-  confere(conteudoInicio && conteudoInicio.includes(viagemTeste.voos[0].companhia), 'Viagem de teste carregada');
+  confere(
+    conteudoInicio && conteudoInicio.includes(viagemTeste.voos[0].companhia),
+    'Viagem de teste carregada'
+  );
   await tirarFoto('01-hoje');
 
   // Verificar sem rolagem horizontal (layout responsivo 360px)
@@ -127,28 +137,42 @@ function confere(cond, msg) {
   await page.click('#tab-voos');
   await page.waitForTimeout(300);
   const textoVoos = await page.textContent('#app-conteudo');
-  confere(textoVoos.includes('Air France') && textoVoos.includes('Fazer Check-in'), 'Detalhes do voo e botao check-in visiveis');
+  confere(
+    textoVoos.includes('Air France') && textoVoos.includes('Fazer Check-in'),
+    'Detalhes do voo e botao check-in visiveis'
+  );
   await tirarFoto('02-voos');
 
   console.log('3. Navegando para Roteiro');
   await page.click('#tab-roteiro');
   await page.waitForTimeout(300);
   const textoRoteiro = await page.textContent('#app-conteudo');
-  confere(textoRoteiro.includes('Louvre') && textoRoteiro.includes('Abrir no Mapa'), 'Roteiro com botao de mapa visivel');
+  confere(
+    textoRoteiro.includes('Louvre') && textoRoteiro.includes('Abrir no Mapa'),
+    'Roteiro com botao de mapa visivel'
+  );
   await tirarFoto('03-roteiro');
 
   console.log('4. Navegando para Mostre ao Motorista');
   await page.click('#tab-motorista');
   await page.waitForTimeout(300);
   const textoMotorista = await page.textContent('#app-conteudo');
-  confere(textoMotorista.includes('Le Meurice Paris') && textoMotorista.includes('228 Rue de Rivoli'), 'Cartao para motorista com letras grandes visivel');
+  confere(
+    textoMotorista.includes('Le Meurice Paris') &&
+      textoMotorista.includes('228 Rue de Rivoli'),
+    'Cartao para motorista com letras grandes visivel'
+  );
   await tirarFoto('04-motorista');
 
   console.log('5. Navegando para Emergencia');
   await page.click('#tab-emergencia');
   await page.waitForTimeout(300);
   const textoEmergencia = await page.textContent('#app-conteudo');
-  confere(textoEmergencia.includes('Consulado do Brasil') && textoEmergencia.includes('Viajante Pro'), 'Contatos de emergencia visiveis');
+  confere(
+    textoEmergencia.includes('Consulado do Brasil') &&
+      textoEmergencia.includes('Viajante Pro'),
+    'Contatos de emergencia visiveis'
+  );
   await tirarFoto('05-emergencia');
 
   console.log('5.5. Testando token invalido');
@@ -156,7 +180,10 @@ function confere(cond, msg) {
   await page.waitForSelector('#app-conteudo');
   await page.waitForTimeout(500);
   const textoTokenInvalido = await page.innerText('#app-conteudo');
-  confere(textoTokenInvalido.includes('Link invalido'), 'Mensagem de link invalido aparece com token errado');
+  confere(
+    textoTokenInvalido.includes('Link invalido'),
+    'Mensagem de link invalido aparece com token errado'
+  );
   await tirarFoto('05-token-invalido');
 
   console.log('6. Simulando modo Offline');
@@ -171,20 +198,30 @@ function confere(cond, msg) {
   await page.click('#tab-voos');
   await page.waitForTimeout(300);
   const textoVoosOffline = await page.textContent('#app-conteudo');
-  confere(textoVoosOffline.includes('Air France') && textoVoosOffline.includes('AF1234'), 'Voos continuam visiveis offline a partir do IndexedDB');
+  confere(
+    textoVoosOffline.includes('Air France') && textoVoosOffline.includes('AF1234'),
+    'Voos continuam visiveis offline a partir do IndexedDB'
+  );
   await tirarFoto('06-offline-voos');
 
   await page.click('#tab-motorista');
   await page.waitForTimeout(300);
   const textoMotoristaOffline = await page.textContent('#app-conteudo');
-  confere(textoMotoristaOffline.includes('Le Meurice Paris'), 'Cartao do motorista disponivel offline');
+  confere(
+    textoMotoristaOffline.includes('Le Meurice Paris'),
+    'Cartao do motorista disponivel offline'
+  );
 
   await browser.close();
   servidor.close();
 
-  console.log(falhas.length ? '\n' + falhas.length + ' falha(s):\n - ' + falhas.join('\n - ') : '\nApp Viajante Pro E2E: ' + nOk + ' verificacoes bem-sucedidas.');
+  console.log(
+    falhas.length
+      ? '\n' + falhas.length + ' falha(s):\n - ' + falhas.join('\n - ')
+      : '\nApp Viajante Pro E2E: ' + nOk + ' verificacoes bem-sucedidas.'
+  );
   process.exit(falhas.length ? 1 : 0);
-})().catch(e => {
+})().catch((e) => {
   console.error(e);
   process.exit(1);
 });
