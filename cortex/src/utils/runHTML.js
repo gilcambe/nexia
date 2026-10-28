@@ -69,8 +69,40 @@ export default function runHTML(html) {
       '<head><meta charset="utf-8"><title>runHTML</title></head>' +
       '<body>' +
       '<script>' +
-      'window.parent.postMessage({ stdout: console.log }, "*");' +
+      '// Intercepta console.log, console.error, etc e envia para o parent' +
+      '(function() {' +
+      '  const originalLog = console.log;' +
+      '  const originalError = console.error;' +
+      '  const originalWarn = console.warn;' +
+      '  const originalInfo = console.info;' +
+      '  ' +
+      '  console.log = function(...args) {' +
+      '    originalLog.apply(console, args);' +
+      '    window.parent.postMessage({ stdout: args.join(" ") }, "*");' +
+      '  };' +
+      '  ' +
+      '  console.error = function(...args) {' +
+      '    originalError.apply(console, args);' +
+      '    window.parent.postMessage({ error: args.join(" ") }, "*");' +
+      '  };' +
+      '  ' +
+      '  console.warn = function(...args) {' +
+      '    originalWarn.apply(console, args);' +
+      '    window.parent.postMessage({ stdout: args.join(" ") }, "*");' +
+      '  };' +
+      '  ' +
+      '  console.info = function(...args) {' +
+      '    originalInfo.apply(console, args);' +
+      '    window.parent.postMessage({ stdout: args.join(" ") }, "*");' +
+      '  };' +
+      '})();' +
+      'try {' +
       html +
+      '} catch (e) {' +
+      '  window.parent.postMessage({ error: e.message }, "*");' +
+      '}' +
+      '// Sinaliza que terminou' +
+      'window.parent.postMessage({ done: true }, "*");' +
       '</script>' +
       '</body>' +
       '</html>'
