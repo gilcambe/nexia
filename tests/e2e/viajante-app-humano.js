@@ -188,3 +188,4 @@ function confere(cond, msg) {
   console.error(e);
   process.exit(1);
 });
+// NEXIA: Teste E2E Viajante Pro - mock de API, token invalido, layout 360px, modo offline
