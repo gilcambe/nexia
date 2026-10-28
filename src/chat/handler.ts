@@ -3,7 +3,7 @@
  * @brief Manipulador principal para processar mensagens de chat com base nas intenções detectadas.
  */
 
-import { detectIntent, IntentPatterns } from './intents';
+import { detectIntent, extractFact } from './intents';
 import { clearUserMemory, forgetSpecificFact } from '../controllers/memoryController';
 
 export async function handleChatMessage(message: string, userId: string): Promise<string> {
@@ -11,9 +11,7 @@ export async function handleChatMessage(message: string, userId: string): Promis
 
   switch (intent) {
     case 'FORGET_FACT': {
-      // Extrair o fato específico da mensagem após o padrão de esquecimento
-      const factMatch = message.match(IntentPatterns.FORGET_FACT);
-      const factToForget = factMatch ? message.substring(factMatch[0].length).trim() : message.trim();
+      const factToForget = extractFact(message);
       if (factToForget) {
         try {
           await forgetSpecificFact(userId, factToForget);
@@ -33,6 +31,25 @@ export async function handleChatMessage(message: string, userId: string): Promis
         console.error('Erro ao limpar memória:', error);
         return 'Desculpe, ocorreu um erro ao tentar limpar sua memória. Por favor, tente novamente.';
       }
+
+export async function handleMemoryAction(action: string, userId: string, data?: any): Promise<string> {
+  try {
+    switch (action) {
+      case 'clear':
+        await clearUserMemory(userId);
+        return 'Toda a sua memória foi apagada com sucesso. Começaremos do zero!';
+      case 'forget':
+        if (!data?.fact) return 'Por favor, diga qual fato você gostaria que eu esquecesse.';
+        await forgetSpecificFact(userId, data.fact);
+        return `Entendido. Removi o fato "${data.fact}" da sua memória.`;
+      default:
+        return 'Ação de memória não reconhecida.';
+    }
+  } catch (error) {
+    console.error('Erro na ação de memória:', error);
+    return 'Desculpe, ocorreu um erro ao processar sua solicitação de memória. Por favor, tente novamente.';
+  }
+}
     case 'UNKNOWN':
     default:
       return 'Desculpe, não entendi o que você quis dizer. Posso ajudar de outra forma?';
