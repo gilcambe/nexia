@@ -206,6 +206,11 @@ const WRITE_TOOLS = new Set(['github.commit_files', 'github.edit_files']);
 // e ainda não gravou nada recebe até MAX_NUDGES lembretes com um exemplo concreto, e o texto com
 // blocos de edição é aplicado pelo runtime (ADR-CORTEX-01) em vez de terminar vazio.
 const MAX_NUDGES = 2;
+// Issue #2321: modelos grátis imitam o marcador do histórico ("[ferramentas pedidas: x]") em texto, sem
+// chamar nada; antes isso virava resposta final "succeeded". Agora: até 2 lembretes, depois troca de modelo.
+const FAKE_CALL = /\[ferramentas pedidas:|\(o NEXIA executou:/i;
+const FAKE_CALL_HELP = 'Você escreveu em texto que ia usar uma ferramenta, mas não chamou nenhuma. Texto não executa nada. '
+  + 'Chame a ferramenta de verdade (tool call) agora, ou dê a resposta final sem esse marcador.';
 const LAST_STEPS = branch => `ATENÇÃO: restam 2 passos. Pare de ler arquivos e grave agora o que já tem com github.edit_files (ou github.commit_files) na branch ${branch}; uma mudança parcial gravada vale mais que nenhuma.`;
 function nudgeSave(branch, n, cut) {
   const b = branch || 'nexia/...';
@@ -283,6 +288,7 @@ async function runAgent(o) {
   let wrote = false;
   let nudges = 0;
   let verdictNudges = 0;
+  let fakeNudges = 0;
   const applied = new Set();   // blocos de texto já enviados ao gateway
   const branch = o.branch || ((/Branch de trabalho: (nexia\/\S+)/.exec(o.goal || '') || [])[1]) || null;
   const localErrors = [];   // gravações recusadas (diagnóstico no resumo do passo quando nada foi gravado)
@@ -381,7 +387,7 @@ async function runAgent(o) {
     return { results };
   };
   const pushResults = (assistantText, names, results) => {
-    messages.push({ role: 'assistant', content: `${assistantText ? `${assistantText}\n` : ''}[ferramentas pedidas: ${names.join(', ')}]` });
+    messages.push({ role: 'assistant', content: `${assistantText ? `${assistantText}\n` : ''}(o NEXIA executou: ${names.join(', ')})` });
     messages.push({ role: 'user', content: `${RESULT_HEAD}${capResult(JSON.stringify(results))}`, _results: results });
   };
 
@@ -432,6 +438,13 @@ async function runAgent(o) {
       calls = calls.filter(c => allowed(o.agentId, fromModelName(c.name)));
       viaText = calls.length > 0;
       if (!viaText && blocks.problems.length) localErrors.push(`texto: ${blocks.problems.slice(0, 2).join('; ')}`);
+    }
+    if (!calls.length && FAKE_CALL.test(String(out.text || ''))) {
+      messages.push({ role: 'assistant', content: String(out.text || '').replace(/\[ferramentas pedidas:[^\]]*\]|\(o NEXIA executou:[^)]*\)/gi, '').slice(0, 4000) || '(sem texto)' });
+      messages.push({ role: 'user', content: FAKE_CALL_HELP });
+      if (++fakeNudges <= MAX_NUDGES) continue;
+      if (fo.switchModel()) { fakeNudges = 0; continue; }
+      return { status: 'failed', error_code: 'FAKE_TOOL_CALL', text: `Os modelos escreveram "ferramentas pedidas" em texto sem chamar a ferramenta. ${clip(out.text, 1200)}`, tool_call_ids: toolCallIds, model };
     }
     if (!calls.length && canWrite && !wrote && nudges < MAX_NUDGES) {
       nudges++;

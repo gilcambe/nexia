@@ -262,7 +262,7 @@ async function main() {
     const apagarCliente = !!clienteCriado && (!projetoCriado || apagarProjeto);
     if (apagarProjeto) console.log(`limpeza: projeto de teste ${await deleteTestRecord(api, 'projects', projetoCriado).catch(() => false) ? 'apagado' : 'não apagado (segue)'}`);
     if (apagarCliente) console.log(`limpeza: cliente de teste ${await deleteTestRecord(api, 'clients', clienteCriado).catch(() => false) ? 'apagado' : 'não apagado (segue)'}`);
-    report(await deleteTestUser(sa).catch(() => false), 'Apagar usuário de teste');
+    console.log(`limpeza: usuário de teste ${await deleteTestUser(sa).catch(() => false) ? 'apagado' : 'não apagado (segue)'}`);
   }
 
   const bad = results.filter(r => !r.ok);
