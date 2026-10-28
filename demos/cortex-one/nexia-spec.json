@@ -1,0 +1,367 @@
+{
+  "spec": {
+    "kind": "site",
+    "name": "Cortex One",
+    "tagline": "Tecnologia que faz seu negócio crescer",
+    "photo_theme": "technology office",
+    "description": "Consultoria de tecnologia, automação e inteligência artificial para empresas em São Paulo.",
+    "folder": "demos/cortex-one",
+    "fonts": {
+      "heading": "Outfit",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#0a73a3",
+      "accent": "#6366f1",
+      "bg": "#f8fafc",
+      "surface": "#ffffff",
+      "text": "#0f172a",
+      "muted": "#64748b",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "5511900000000",
+      "phone": "(11) 3000-0000",
+      "email": "contato@cortexone.com.br",
+      "address": "Av. Paulista, 1000",
+      "city": "São Paulo - SP",
+      "hours": "Seg a sex, 9h às 18h",
+      "instagram": "cortexone",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=cortex-one&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "sections": [
+      {
+        "type": "hero",
+        "id": "sistemas-que-fazem-sua-empresa-crescer",
+        "title": "Sistemas que fazem sua empresa crescer",
+        "subtitle": "Automação, inteligência artificial e desenvolvimento sob medida.",
+        "eyebrow": "Tecnologia para negócios",
+        "cta": {
+          "label": "Falar com especialista",
+          "href": "whatsapp"
+        },
+        "cta2": {
+          "label": "Conhecer soluções",
+          "href": "#solucoes"
+        },
+        "image_query": "modern tech office team",
+        "video_query": "technology office"
+      },
+      {
+        "type": "services",
+        "id": "solucoes",
+        "title": "Nossas soluções",
+        "subtitle": "Tudo o que seu negócio precisa para escalar.",
+        "items": [
+          {
+            "title": "Desenvolvimento Web",
+            "text": "Sites e sistemas rápidos e seguros.",
+            "price": "a partir de R$ 4.500",
+            "image_query": "website development laptop",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Automação de Processos",
+            "text": "Menos trabalho manual, mais resultado.",
+            "price": "",
+            "image_query": "automation workflow dashboard",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Inteligência Artificial",
+            "text": "Chatbots e análise de dados para decisões rápidas.",
+            "price": "",
+            "image_query": "artificial intelligence robot brain",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Consultoria de TI",
+            "text": "Estratégia e infraestrutura para crescer com tranquilidade.",
+            "price": "",
+            "image_query": "IT consulting meeting",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          }
+        ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-a-cortex-one",
+        "title": "Sobre a Cortex One",
+        "subtitle": "Criamos tecnologia que entende gente e entrega resultado.",
+        "text": "Criamos tecnologia que entende gente e entrega resultado.",
+        "image_query": "modern office workspace team",
+        "stats": [
+          {
+            "value": "5",
+            "label": "anos"
+          },
+          {
+            "value": "120+",
+            "label": "projetos"
+          },
+          {
+            "value": "98%",
+            "label": "satisfação"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "nosso-ambiente",
+        "title": "Nosso ambiente",
+        "subtitle": "",
+        "image_queries": [
+          "modern office workspace",
+          "team brainstorming",
+          "developer coding",
+          "digital dashboard",
+          "video call meeting",
+          "creative agency",
+          "laptop coworking",
+          "tech startup office"
+        ],
+        "gif_queries": [
+          "office work typing"
+        ]
+      },
+      {
+        "type": "video",
+        "id": "conheca-a-cortex-one",
+        "title": "Conheça a Cortex One",
+        "subtitle": "Veja como transformamos ideias em tecnologia.",
+        "youtube": "",
+        "video_query": "technology startup office"
+      },
+      {
+        "type": "team",
+        "id": "nosso-time",
+        "title": "Nosso time",
+        "subtitle": "",
+        "members": [
+          {
+            "name": "Lucas Mendes",
+            "role": "CEO & Fundador",
+            "image_query": "business man portrait"
+          },
+          {
+            "name": "Ana Costa",
+            "role": "Lead Developer",
+            "image_query": "female developer portrait"
+          }
+        ]
+      },
+      {
+        "type": "testimonials",
+        "id": "o-que-dizem-nossos-clientes",
+        "title": "O que dizem nossos clientes",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Marcos Silva",
+            "role": "",
+            "text": "Nosso sistema ficou muito mais rápido.",
+            "rating": 5
+          },
+          {
+            "name": "Fernanda Lima",
+            "role": "",
+            "text": "Suporte excelente e entrega no prazo.",
+            "rating": 5
+          },
+          {
+            "name": "Ricardo Gomes",
+            "role": "",
+            "text": "A IA da Cortex mudou nosso atendimento.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "links",
+        "id": "links-rapidos",
+        "title": "Links rápidos",
+        "subtitle": "",
+        "items": [
+          {
+            "label": "Falar pelo WhatsApp",
+            "url": "https://wa.me/5511900000000",
+            "icon": "whatsapp"
+          },
+          {
+            "label": "Instagram",
+            "url": "https://instagram.com/cortexone",
+            "icon": "instagram"
+          },
+          {
+            "label": "LinkedIn",
+            "url": "https://linkedin.com/company/cortex-one",
+            "icon": "linkedin"
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "perguntas-frequentes",
+        "title": "Perguntas frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Quanto custa um projeto?",
+            "a": "Depende da complexidade. Orçamento sob medida."
+          },
+          {
+            "q": "Quanto tempo leva para entregar?",
+            "a": "Em média de 4 a 8 semanas."
+          },
+          {
+            "q": "Vocês dão suporte após a entrega?",
+            "a": "Sim, contratos de manutenção disponíveis."
+          },
+          {
+            "q": "Atendem todo o Brasil?",
+            "a": "Sim, atendimento 100% remoto e presencial em São Paulo."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "vamos-comecar-seu-projeto",
+        "title": "Vamos começar seu projeto?",
+        "subtitle": "Fale com um especialista hoje mesmo.",
+        "cta": {
+          "label": "Chamar no WhatsApp",
+          "href": "whatsapp"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "fale-com-a-gente",
+        "title": "Fale com a gente",
+        "subtitle": "",
+        "map": true,
+        "form": true
+      }
+    ]
+  },
+  "media": {
+    "s1.item0": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fd/2015_FDA_Science_Writers_Symposium_-_0988_%2821545150306%29.jpg/1280px-2015_FDA_Science_Writers_Symposium_-_0988_%2821545150306%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 850,
+      "alt": "Right: Karen Riley, M.P.H., Deputy Director for Strategy, Office of External Aff",
+      "credit": "The U.S. Food and Drug Administration (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s2.about": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Modern_office_workspace_featuring_a_computer.jpg/1280px-Modern_office_workspace_featuring_a_computer.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 852,
+      "alt": "Modern office workspace featuring a computer",
+      "credit": "Shixart1985 (CC BY 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g0": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d6/Modern_office_workspace_with_a_stylish_desk.jpg/1280px-Modern_office_workspace_with_a_stylish_desk.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1924,
+      "alt": "Modern office workspace with a stylish desk",
+      "credit": "Shixart1985 (CC BY 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.gif0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/7/71/GPO_LogoType.gif?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "width": 410,
+      "height": 254,
+      "alt": "logo",
+      "credit": "US Govt. Printing Office (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia",
+      "mime": "image/gif"
+    },
+    "s4.clip": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/7/71/Every_Open_Source_Beats_Billions_Dollar_Tech.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "width": 1280,
+      "height": 720,
+      "alt": "#opensource #bigtech #linux #startup #technology Every Open Source Beats Billion",
+      "credit": "Beo Beo (CC BY 3.0, via Wikimedia Commons)",
+      "provider": "wikimedia",
+      "mime": "video/webm"
+    },
+    "s5.m1": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b4/Kellee_Santiago_-_Game_Developers_Conference_2010_-_Day_1.jpg/1280px-Kellee_Santiago_-_Game_Developers_Conference_2010_-_Day_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1699,
+      "alt": "Kellee Santiago at the Game Developers Conference in 2010 (first day), speaking ",
+      "credit": "Official GDC (CC BY 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s0.hero": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Science_and_Technology_park_800_bradbury.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 960,
+      "alt": "This is a picture of the 800 Bradbury building on the UNM Science and Technology",
+      "credit": "NMSEC (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/a/aa/Cognizant_Technology_Solutions_office%2C_Calcutta.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 850,
+      "alt": "The Calcutta office of CTS is in Salt Lake sector V. Uploaded on June 6, 2006 by",
+      "credit": "seaview99 (CC BY-SA 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/1/1b/Office_Technology_Corporation_Ltd_-_Tadcaster_Road_-_geograph.org.uk_-_1728195.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 1118,
+      "alt": "Office Technology Corporation Ltd - Tadcaster Road",
+      "credit": "Betty Longbottom (CC BY-SA 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s1.item3": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c7/Eric_Lander%27s_swearing_in_as_Director_of_the_Office_of_Science_and_Technology_Policy.jpg/1280px-Eric_Lander%27s_swearing_in_as_Director_of_the_Office_of_Science_and_Technology_Policy.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 923,
+      "alt": "Vice President Kamala Harris swears-in Eric Lander as Director of the Office of ",
+      "credit": "Cameron Smith, White House Photographer (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g1": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ef/Software_Technology_Parks_of_India_Amritsar_Office.jpg/1280px-Software_Technology_Parks_of_India_Amritsar_Office.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 721,
+      "alt": "Software Technology Parks of India Amritsar Office",
+      "credit": "Er.Jaskaran.Singh (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g2": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a6/Rector%27s_office_of_the_West_Pomeranian_University_of_Technology_in_Szczecin%2C_June_2022.jpg/1280px-Rector%27s_office_of_the_West_Pomeranian_University_of_Technology_in_Szczecin%2C_June_2022.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 960,
+      "alt": "Rector's office of the West Pomeranian University of Technology in Szczecin, Jun",
+      "credit": "Szczecinolog (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    }
+  }
+}
