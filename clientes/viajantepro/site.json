@@ -20,12 +20,12 @@
     "muted": "#7F8C8D",
     "dark": "#1A252F"
   },
-  "favicon": "favicon-vp.svg",
+  "favicon": "",
   "contact": {
-    "whatsapp": "+55 11 99999-9999",
-    "phone": "+55 11 99999-9999",
-    "email": "contato@viajantepro.com",
-    "address": "Rua das Viagens, 123",
+    "whatsapp": "",
+    "phone": "",
+    "email": "",
+    "address": "",
     "city": "São Paulo - SP",
     "hours": "Seg a sex, 9h às 18h",
     "instagram": "viajantepro",
@@ -138,11 +138,6 @@
       "type": "links",
       "title": "Fale Conosco",
       "items": [
-        {
-          "label": "Agendar pelo WhatsApp",
-          "url": "https://wa.me/5511999999999",
-          "icon": "whatsapp"
-        },
         {
           "label": "Instagram",
           "url": "https://instagram.com/viajantepro",
