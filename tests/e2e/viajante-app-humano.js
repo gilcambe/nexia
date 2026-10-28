@@ -155,7 +155,7 @@ function confere(cond, msg) {
   await page.waitForSelector('#app-conteudo');
   await page.waitForTimeout(500);
   const textoTokenInvalido = await page.innerText('#app-conteudo');
-  confere(textoTokenInvalido.includes('Link invalido'), 'Mensagem de link invalido aparece com token errado');
+  confere(textoTokenInvalido.includes('Link inválido'), 'Mensagem de link inválido aparece com token errado');
   await tirarFoto('05-token-invalido');
 
   console.log('6. Simulando modo Offline');
