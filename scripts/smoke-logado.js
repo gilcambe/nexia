@@ -130,7 +130,8 @@ async function main() {
     if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === `teste-automatico${PROJ}`);
     if (!client) {
       report(false, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
-      throw new Error('Falha ao criar cliente de teste');
+      report(false, 'Vault: criar projeto', 'não testado: cliente não foi criado');
+      return;
     }
     report(true, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
 
