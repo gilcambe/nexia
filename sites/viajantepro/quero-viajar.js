@@ -136,6 +136,10 @@
         b.type = 'button';
         b.className = 'qv-opcao';
         b.textContent = o;
+        if (dados[p.chave] === o) {
+          b.classList.add('ativo');
+          proximo.disabled = false;
+        }
         b.addEventListener('click', () => {
           grid.querySelectorAll('.qv-opcao').forEach(x => x.classList.remove('ativo'));
           b.classList.add('ativo');
@@ -151,6 +155,10 @@
       input.className = 'qv-campo';
       input.placeholder = p.placeholder;
       input.required = true;
+      if (dados[p.chave]) {
+        input.value = dados[p.chave];
+        proximo.disabled = false;
+      }
       input.addEventListener('input', () => {
         dados[p.chave] = input.value.trim();
         proximo.disabled = !dados[p.chave];
@@ -195,6 +203,12 @@
     panel.style.display = 'flex';
     btn.setAttribute('aria-expanded', 'true');
     indice = 0;
+    const pendente = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+    if (pendente) {
+      for (const chave of ['destino', 'datas', 'pessoas', 'nome', 'whatsapp']) {
+        if (pendente[chave] !== undefined) dados[chave] = pendente[chave];
+      }
+    }
     montarPasso();
     const primeiro = body.querySelector('.qv-campo, .qv-opcao');
     if (primeiro) primeiro.focus();
