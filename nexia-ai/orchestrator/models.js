@@ -29,6 +29,7 @@
 // semRepetir() garante que não haja descritores repetidos (mesmo provider e model) em nenhuma classe.
 const { getPlacar } = require('../model-router/cota');
 const { getQualidade } = require('../model-router/qualidade');
+const { contasExtra } = require('../model-router/providers/openai-compatible');
 const g = model => ({ provider: 'groq', model });
 const KILO = [1, 2, 3, 4, 5].map(n => ({ provider: 'kilo', model: `auto:${n}` }));
 const TAIL = [
@@ -103,4 +104,31 @@ function candidates(router, cls, env = process.env) {
 }
 const key = cls => (Object.prototype.hasOwnProperty.call(CLASSES, cls) ? cls : 'coding');
 
-module.exports = { CLASSES, FREE, semRepetir, candidates, listFor, parseList };
+/** @returns {{ provider, model, contasExtra }[]} candidatos disponíveis para a classe, incluindo contas extras */
+function candidatesWithExtraAccounts(router, cls, env = process.env) {
+  const lista = listFor(cls, env).filter(d => {
+    try { const c = router.capabilities(d); return c && c.available !== false && c.tool_call; } catch { return false; }
+  }).map(d => ({ ...d, contasExtra: contasExtra(d.provider) }));
+  // Placar de cota (cota.js): modelo sem cota fica de fora até a cota voltar, em todas as execuções.
+  // #832: placar de qualidade: comprovado bom nesta classe sobe, comprovado ruim desce.
+  return getQualidade().ordenar(getPlacar().ordenar(lista), key(cls));
+}
+
+/** @returns {{ provider, model }[]} candidatos disponíveis para a classe, incluindo dinamicamente cohere e huggingface */
+function dynamicCandidates(router, cls, env = process.env) {
+  const lista = listFor(cls, env).filter(d => {
+    try { const c = router.capabilities(d); return c && c.available !== false && c.tool_call; } catch { return false; }
+  });
+  // Adiciona provedores dinâmicos se existirem em PROVEDORES do central
+  if (env.PROVEDORES && env.PROVEDORES.includes('cohere')) {
+    lista.push({ provider: 'cohere', model: 'command-r' });
+  }
+  if (env.PROVEDORES && env.PROVEDORES.includes('huggingface')) {
+    lista.push({ provider: 'huggingface', model: 'mistralai/Mistral-7B-Instruct-v0.3' });
+  }
+  // Placar de cota (cota.js): modelo sem cota fica de fora até a cota voltar, em todas as execuções.
+  // #832: placar de qualidade: comprovado bom nesta classe sobe, comprovado ruim desce.
+  return getQualidade().ordenar(getPlacar().ordenar(lista), key(cls));
+}
+
+module.exports = { CLASSES, FREE, semRepetir, candidates, candidatesWithExtraAccounts, dynamicCandidates, listFor, parseList };
