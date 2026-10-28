@@ -108,8 +108,10 @@ async function main() {
   let project = null;
 
     try {
-      const me = await api('/nexia/me');
-      report(me.status === 200 && me.json.role === 'master' && me.json.canUseVault, 'Quem sou eu (/me)', `${me.status} ${me.json && me.json.role}`);
+      if (!RAPIDO) {
+        const me = await api('/nexia/me');
+        report(me.status === 200 && me.json.role === 'master' && me.json.canUseVault, 'Quem sou eu (/me)', `${me.status} ${me.json && me.json.role}`);
+      }
 
       // Suporte NEXIA (só no teste completo, não em cada tarefa do Cortex): o master lista os clientes e abre
       // uma sessão de suporte na agenda de teste (nunca na de um cliente de verdade).
