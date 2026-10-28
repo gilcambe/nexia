@@ -135,6 +135,12 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
         <button type="button" onClick={tentarAlgumas} data-testid="cx-tentar-algumas"
           className="h-10 px-4 rounded-xl bg-[var(--cx-ac)] text-black text-xs font-semibold shrink-0">Tentar travadas</button>
       </div>
+      {f === "travados" && itens.some((t) => t.situacao === "travado") && (
+        <button type="button" onClick={tentarAlgumas} data-testid="cx-tentar-travadas"
+          className="w-full mb-4 h-11 rounded-xl bg-[var(--cx-ac)] text-black font-semibold text-sm flex items-center justify-center gap-2">
+          Tentar novamente todas as travadas
+        </button>
+      )}
       {erro && <p className="text-red-400 text-sm mb-2" role="alert">{erro}</p>}
       {msg && <p className="text-[var(--cx-ac)] text-sm mb-2" role="status">{msg}</p>}
       <ListaPedidos itens={itens} abrir={abrir} fazer={fazer} />
