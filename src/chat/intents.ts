@@ -4,8 +4,8 @@
  */
 
 export const IntentPatterns = {
-  FORGET_FACT: /(esqueça isso|não guarde|remover este fato|apagar este dado)/i,
-  CLEAR_MEMORY: /(apagar tudo|limpar toda a memória|resetar minha memória)/i,
+  FORGET_FACT: /(esqueça isso|não guarde|remover este fato|apagar este dado|apagar isso|apagar este|esquecer isso|esquecer este|remover isso|remover este)/i,
+  CLEAR_MEMORY: /(apagar tudo|limpar toda a memória|resetar minha memória|limpar tudo|zerar memória|apagar tudo|limpar tudo|esqueça tudo|não guarde nada)/i,
 };
 
 export type Intent = 'FORGET_FACT' | 'CLEAR_MEMORY' | 'UNKNOWN';
