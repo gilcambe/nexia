@@ -14,9 +14,10 @@ interface TriggerWorkflowResult {
 
 const GITHUB_TOKEN = process.env.NEXIA_GITHUB_TOKEN;
 const GITHUB_REPO = process.env.GITHUB_REPO || 'gilcambe/nexia';
-const OWNER = 'gilcambe';
-const REPO = 'nexia';
-const WORKFLOW_FILE = '.github/workflows/lote-sites.yml';
+const OWNER = process.env.GITHUB_OWNER || 'gilcambe';
+const REPO = process.env.GITHUB_REPO_NAME || 'nexia';
+const WORKFLOW_FILE = process.env.LOTE_WORKFLOW_FILE || '.github/workflows/lote-sites.yml';
+const GITHUB_REF = process.env.GITHUB_REF || 'develop';
 
 const MAX_SLUGS = 50;
 const MAX_CALLS_PER_WINDOW = 10;
@@ -45,7 +46,6 @@ function checkRateLimit(): { ok: boolean; retryAfter?: number } {
 }
 
 function sanitizeError(error: unknown): string {
-  console.error('Workflow trigger error:', error);
   return 'Falha ao disparar o workflow de lote de sites.';
 }
 
@@ -97,7 +97,7 @@ export async function triggerWorkflow({ slugs, publicar }: TriggerWorkflowParams
       owner: OWNER,
       repo: REPO,
       workflow_id: 'lote-sites.yml',
-      ref: 'develop',
+      ref: GITHUB_REF,
       inputs: {
         slugs: slugs.join(','),
         publicar,

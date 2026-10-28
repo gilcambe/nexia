@@ -87,7 +87,7 @@ export default async function handler(req, res) {
       publicar
     });
 
-    console.log('Disparando workflow lote-sites.yml:', { slugs, publicar, jobId: result.jobId, url: result.url });
+    console.log('Workflow lote-sites.yml disparado:', { slugCount: uniqueSlugs.length, jobId: result.jobId });
 
     if (!result.success) {
       return res.status(500).json(result);
