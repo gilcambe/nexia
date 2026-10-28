@@ -136,6 +136,11 @@ async function fecharIssueAlerta() {
   return { fechada: true };
 }
 
+function resetarEstado() {
+  Object.keys(falhasConsecutivas).forEach((k) => delete falhasConsecutivas[k]);
+  issuesAbertas.clear();
+}
+
 async function verificarSite(produto) {
   const { site, id } = produto;
   if (!site) {
@@ -190,6 +195,7 @@ module.exports = {
   rollbackSite,
   abrirIssueAlerta,
   fecharIssueAlerta,
+  resetarEstado,
   setInjetaveis,
   falhasConsecutivas,
   issuesAbertas,
