@@ -37,7 +37,7 @@ test('deve gerar index.html para cada molde sem erros', async () => {
       const molde = JSON.parse(fs.readFileSync(moldePath, 'utf-8'));
       
       // Chama a função renderizar diretamente
-      renderizar(molde, outputDir);
+      renderizar(molde, outputDir, {}, { base: moldesDir });
 
       const indexPath = path.join(outputDir, 'index.html');
       expect(fs.existsSync(indexPath)).toBe(true);
