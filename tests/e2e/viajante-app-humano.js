@@ -103,7 +103,7 @@ function confere(cond, msg) {
       await route.fulfill({
         status: 404,
         contentType: 'text/plain',
-        body: 'Link invalido'
+        body: 'Link inválido'
       });
     }
   });
@@ -181,8 +181,8 @@ function confere(cond, msg) {
   await page.waitForTimeout(500);
   const textoTokenInvalido = await page.innerText('#app-conteudo');
   confere(
-    textoTokenInvalido.includes('Link invalido'),
-    'Mensagem de link invalido aparece com token errado'
+    textoTokenInvalido.includes('Link inválido'),
+    'Mensagem de link inválido aparece com token errado'
   );
   await tirarFoto('05-token-invalido');
 
