@@ -328,7 +328,7 @@ body { width: 100%; display: flex; align-items: center; justify-content: center;
       <div class="quick-grid">
         <button class="quick-btn" onclick="goScreen('itinerario')"><i class="ri-map-2-line" style="color:var(--gold)"></i><span>Roteiro</span></button>
         <button class="quick-btn" onclick="goScreen('documentos')"><i class="ri-folder-open-line" style="color:var(--blu)"></i><span>Docs</span></button>
-        <button class="quick-btn" onclick="showFlightInfo()"><i class="ri-plane-line" style="color:var(--grn)"></i><span>Voo</span></button>
+        <button class="quick-btn" onclick="goScreen('chat')"><i class="ri-chat-3-line" style="color:var(--grn)"></i><span>Chat</span></button>
         <button class="quick-btn" onclick="goScreen('panico')"><i class="ri-alarm-warning-line" style="color:var(--red)"></i><span>Emergência</span></button>
       </div>
 
@@ -422,6 +422,40 @@ body { width: 100%; display: flex; align-items: center; justify-content: center;
       <div class="doc-card"><div class="doc-icon ok"><i class="ri-plane-line"></i></div><div class="doc-info"><div class="doc-name">LAS → GRU (09/jan)</div><div class="doc-detail">LA546 · Assento 22C</div></div><span class="doc-status ds-ok">✓ Conf.</span></div>
     </div><!-- /screen-documentos -->
 
+    <!-- ── CHAT ───────────────────────────────────────────────── -->
+    <div class="screen" id="screen-chat" style="height:100%;flex-direction:column;padding:0">
+      <div style="background:var(--ink);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--gold);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px">VP</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#fff">Agência Viajante Pro</div>
+            <div style="font-size:10px;color:rgba(255,255,255,.6)">Suporte 24h em viagem</div>
+          </div>
+        </div>
+        <div id="chat-online-badge" style="font-size:10px;padding:3px 8px;border-radius:10px;background:var(--grn2);color:var(--grn);font-weight:700">Online</div>
+      </div>
+
+      <!-- Container das mensagens -->
+      <div id="chat-stream" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg2);min-height:300px">
+        <!-- Renderizado dinamicamente -->
+      </div>
+
+      <!-- Banner offline (+1 min) -->
+      <div id="chat-offline-options" style="display:none;background:var(--amb2);border-top:1px solid rgba(181,98,10,.2);padding:10px 14px;font-size:11px;color:var(--amb)">
+        <div style="font-weight:700;margin-bottom:6px">Sem internet há mais de 1 min. Envie direto:</div>
+        <div style="display:flex;gap:8px">
+          <button onclick="sendViaSMS()" style="flex:1;padding:8px;background:var(--blu);color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">📱 Mandar por SMS</button>
+          <button onclick="sendViaWhatsApp()" style="flex:1;padding:8px;background:#25D366;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer">💬 WhatsApp</button>
+        </div>
+      </div>
+
+      <!-- Input bar -->
+      <div style="padding:12px;background:var(--sur);border-top:1px solid var(--brd);display:flex;gap:8px;align-items:center">
+        <input type="text" id="chat-input" placeholder="Digite sua mensagem..." style="flex:1;padding:10px 14px;border-radius:20px;border:1px solid var(--brd2);font-family:var(--ff);font-size:13px;outline:none" onkeypress="if(event.key==='Enter')sendChatMessage()">
+        <button onclick="sendChatMessage()" style="width:38px;height:38px;border-radius:50%;background:var(--gold);border:none;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer"><i class="ri-send-plane-2-fill"></i></button>
+      </div>
+    </div><!-- /screen-chat -->
+
     <!-- ── BOTÃO DE PÂNICO ────────────────────────────────────── -->
     <div class="screen" id="screen-panico">
       <div class="panic-section">
@@ -456,7 +490,7 @@ body { width: 100%; display: flex; align-items: center; justify-content: center;
               </div>
             </div>
 
-            <button class="panic-btn emergency" onclick="panicAlert()">
+            <button class="panic-btn emergency" onclick="triggerSOS()">
               <i class="ri-alarm-warning-line"></i> ACIONAR EMERGÊNCIA AGORA
             </button>
             <button class="panic-btn guide" onclick="callNumber('+1 702 555-0100')">
@@ -485,6 +519,7 @@ body { width: 100%; display: flex; align-items: center; justify-content: center;
     <button class="nav-tab active" onclick="goScreen('home',this)"><i class="ri-home-2-line"></i><span>Início</span></button>
     <button class="nav-tab" onclick="goScreen('itinerario',this)"><i class="ri-map-2-line"></i><span>Roteiro</span></button>
     <button class="nav-tab" onclick="goScreen('documentos',this)"><i class="ri-folder-open-line"></i><span>Docs</span></button>
+    <button class="nav-tab" onclick="goScreen('chat',this)"><i class="ri-chat-3-line"></i><span>Chat</span></button>
     <button class="nav-tab" onclick="goScreen('panico',this)" style="color:var(--red)"><i class="ri-alarm-warning-line" style="color:var(--red)"></i><span style="color:var(--red)">S.O.S.</span></button>
   </nav>
 
@@ -726,6 +761,239 @@ async function uploadSeguroViagem(input) {
     input.value = '';
   }
 }
+
+// ── VP Chat Offline & SOS Logic ────────────────────────────────────
+const VP_EMERGENCY_NUMBER = '5511999990001';
+let vpOfflineTimer = null;
+let vpOfflineStartTime = null;
+
+// IndexedDB Helper para Mensagens do Chat
+function getVpDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('vp_chat_db', 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains('outbox')) {
+        db.createObjectStore('outbox', { keyPath: 'id_local' });
+      }
+      if (!db.objectStoreNames.contains('messages')) {
+        db.createObjectStore('messages', { keyPath: 'id_local' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function saveVpMessageLocal(msg) {
+  try {
+    const db = await getVpDB();
+    const tx = db.transaction(['messages'], 'readwrite');
+    tx.objectStore('messages').put(msg);
+  } catch (e) {
+    console.warn('[VP] erro ao salvar msg local:', e);
+  }
+}
+
+async function queueVpOutbox(msg) {
+  try {
+    const db = await getVpDB();
+    const tx = db.transaction(['outbox'], 'readwrite');
+    tx.objectStore('outbox').put(msg);
+  } catch (e) {
+    console.warn('[VP] erro ao enfileirar outbox:', e);
+  }
+}
+
+async function getVpOutbox() {
+  try {
+    const db = await getVpDB();
+    return new Promise((res) => {
+      const tx = db.transaction(['outbox'], 'readonly');
+      const req = tx.objectStore('outbox').getAll();
+      req.onsuccess = () => res(req.result || []);
+      req.onerror = () => res([]);
+    });
+  } catch (e) {
+    return [];
+  }
+}
+
+async function removeVpOutbox(id_local) {
+  try {
+    const db = await getVpDB();
+    const tx = db.transaction(['outbox'], 'readwrite');
+    tx.objectStore('outbox').delete(id_local);
+  } catch (e) {}
+}
+
+async function getVpLocalMessages() {
+  try {
+    const db = await getVpDB();
+    return new Promise((res) => {
+      const tx = db.transaction(['messages'], 'readonly');
+      const req = tx.objectStore('messages').getAll();
+      req.onsuccess = () => res(req.result || []);
+      req.onerror = () => res([]);
+    });
+  } catch (e) {
+    return [];
+  }
+}
+
+async function flushVpOutbox() {
+  if (!navigator.onLine) return;
+  const pending = await getVpOutbox();
+  if (!pending.length) return;
+
+  const viagem_id = 'ces-2027';
+  for (const msg of pending) {
+    try {
+      const res = await fetch('/api/viagem', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          acao: 'msg_enviar',
+          viagem_id,
+          de: msg.de,
+          texto: msg.texto,
+          id_local: msg.id_local,
+        })
+      });
+      if (res.ok) {
+        msg.sent = true;
+        await saveVpMessageLocal(msg);
+        await removeVpOutbox(msg.id_local);
+      }
+    } catch (e) {
+      console.warn('[VP] Reenvio falhou para ' + msg.id_local);
+    }
+  }
+  renderVpChatMessages();
+}
+
+async function renderVpChatMessages() {
+  const container = document.getElementById('chat-stream');
+  if (!container) return;
+
+  const localMsgs = await getVpLocalMessages();
+  localMsgs.sort((a, b) => (a.criado_em || '').localeCompare(b.criado_em || ''));
+
+  let html = '';
+  for (const m of localMsgs) {
+    const isMe = m.de === 'cliente';
+    const statusMark = m.sent ? '✓' : '<i class="ri-time-line"></i>';
+    html += `
+      <div style="align-self:${isMe ? 'flex-end' : 'flex-start'};max-width:80%;background:${isMe ? 'var(--gold2)' : 'var(--sur)'};border:1px solid ${isMe ? 'rgba(184,147,90,.3)' : 'var(--brd)'};padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.4">
+        <div>${m.texto}</div>
+        <div style="font-size:9px;color:var(--ink4);text-align:right;margin-top:4px;display:flex;align-items:center;justify-content:flex-end;gap:4px">
+          <span>${m.criado_em ? m.criado_em.slice(11,16) : ''}</span>
+          ${isMe ? `<span>${statusMark}</span>` : ''}
+        </div>
+      </div>
+    `;
+  }
+  container.innerHTML = html || '<div style="text-align:center;font-size:11px;color:var(--ink4);margin-top:20px">Nenhuma mensagem ainda</div>';
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendChatMessage(textOverride) {
+  const input = document.getElementById('chat-input');
+  const text = textOverride || (input ? input.value.trim() : '');
+  if (!text) return;
+  if (input && !textOverride) input.value = '';
+
+  const id_local = 'msg_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  const msgObj = {
+    id_local,
+    de: 'cliente',
+    texto: text,
+    criado_em: new Date().toISOString(),
+    sent: false
+  };
+
+  await saveVpMessageLocal(msgObj);
+  await queueVpOutbox(msgObj);
+  await renderVpChatMessages();
+
+  if (navigator.onLine) {
+    flushVpOutbox();
+  }
+}
+
+function updateVpOnlineStatus() {
+  const badge = document.getElementById('chat-online-badge');
+  const options = document.getElementById('chat-offline-options');
+
+  if (navigator.onLine) {
+    if (badge) { badge.textContent = 'Online'; badge.style.background = 'var(--grn2)'; badge.style.color = 'var(--grn)'; }
+    if (options) options.style.display = 'none';
+    if (vpOfflineTimer) clearTimeout(vpOfflineTimer);
+    vpOfflineTimer = null;
+    vpOfflineStartTime = null;
+    flushVpOutbox();
+  } else {
+    if (badge) { badge.textContent = 'Offline'; badge.style.background = 'var(--amb2)'; badge.style.color = 'var(--amb)'; }
+    if (!vpOfflineStartTime) {
+      vpOfflineStartTime = Date.now();
+      vpOfflineTimer = setTimeout(() => {
+        if (options) options.style.display = 'block';
+      }, 60000); // 1 minuto offline
+    }
+  }
+}
+
+window.addEventListener('online', updateVpOnlineStatus);
+window.addEventListener('offline', updateVpOnlineStatus);
+
+function sendViaSMS(customText) {
+  const text = encodeURIComponent(customText || 'Olá, estou sem internet na viagem CES 2027 e preciso de suporte.');
+  window.location.href = `sms:${VP_EMERGENCY_NUMBER}?body=${text}`;
+}
+
+function sendViaWhatsApp(customText) {
+  const text = encodeURIComponent(customText || 'Olá, preciso de ajuda com minha viagem CES 2027.');
+  window.open(`https://wa.me/${VP_EMERGENCY_NUMBER}?text=${text}`, '_blank');
+}
+
+// SOS com GPS
+function triggerSOS() {
+  nexiaConfirm('Confirmar acionamento de emergência SOS com localização GPS?', async () => {
+    const name = document.getElementById('pax-name')?.textContent || 'Passageiro';
+    const viagem = 'CES 2027';
+
+    let locationStr = '';
+    if (navigator.geolocation) {
+      showToast('Obtendo localização GPS...', 'gold');
+      try {
+        const pos = await new Promise((res, rej) => {
+          navigator.geolocation.getCurrentPosition(res, rej, { timeout: 8000, enableHighAccuracy: true });
+        });
+        const lat = pos.coords.latitude.toFixed(6);
+        const lon = pos.coords.longitude.toFixed(6);
+        locationStr = ` estou em https://maps.google.com/?q=${lat},${lon}`;
+      } catch (e) {
+        showToast('Não foi possível obter GPS preciso.', 'gold');
+      }
+    }
+
+    const sosMessage = `SOS Viajante Pro - ${name} - ${viagem} -${locationStr}`;
+
+    // Tenta enviar via chat se online
+    if (navigator.onLine) {
+      sendChatMessage(sosMessage);
+    }
+
+    // Sempre abre SMS pronto para número 24h
+    sendViaSMS(sosMessage);
+  });
+}
+
+// Inicializar na carga da página
+document.addEventListener('DOMContentLoaded', () => {
+  updateVpOnlineStatus();
+  renderVpChatMessages();
+});
 </script>
   <script src="/core/nexia-engine.js"></script>
 
