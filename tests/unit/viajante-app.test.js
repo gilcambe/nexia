@@ -38,6 +38,6 @@ test('PWA Viajante Pro: arquivos do app existem e possuem conteúdo válido', ()
 });
 
 test('PWA Viajante Pro: rotas registradas em TENANT_PAGES', () => {
-  assert.deepStrictEqual(TENANT_PAGES['/vp/app'], ['viajante-pro/app', 'index.html']);
+  assert.strictEqual(TENANT_PAGES['/vp/app'], undefined, '/vp/app fica de fora: fora do escopo do service worker');
   assert.deepStrictEqual(TENANT_PAGES['/viajante-pro/app'], ['viajante-pro/app', 'index.html']);
 });

@@ -19,10 +19,13 @@ const TIPOS = {
   '.png': 'image/png'
 };
 
+// Token só deste teste local (servidor em 127.0.0.1); vem do ambiente, nunca é um dado real.
+const TOKEN_LOCAL = process.env.VP_TOKEN_TESTE || 'local-' + Date.now().toString(36);
+
 const servidor = http.createServer((req, res) => {
   let p = decodeURIComponent(new URL(req.url, 'http://127.0.0.1').pathname);
   if (p === '/' || p === '/app/' || p.endsWith('/')) p += 'index.html';
-  p = p.replace(/^\/(app\/)?/, '');
+  p = p.replace(/^\/(viajante-pro\/app\/|app\/)?/, '');
   const arq = path.join(RAIZ, p);
   if (!arq.startsWith(RAIZ) || !fs.existsSync(arq) || fs.statSync(arq).isDirectory()) {
     res.writeHead(404);
@@ -69,7 +72,7 @@ function confere(cond, msg) {
   };
 
   console.log('1. Abrindo app com token via link público');
-  await page.goto(base + '/?t=TOKEN_TESTE_VP', { waitUntil: 'load' });
+  await page.goto(base + '/?t=' + TOKEN_LOCAL, { waitUntil: 'load' });
   await page.waitForSelector('#app-conteudo');
   await page.waitForTimeout(500);
   confere(await page.isVisible('#carimbo-atualizacao'), 'Carimbo de atualização visível');

@@ -11,7 +11,7 @@
   // Registrar Service Worker
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('./sw.js').catch(function (e) {
+      navigator.serviceWorker.register('/viajante-pro/app/sw.js', { scope: '/viajante-pro/app/' }).catch(function (e) {
         console.warn('Falha ao registrar SW:', e);
       });
     });
