@@ -118,7 +118,7 @@ async function main() {
       const detalhes = cl.json ? JSON.stringify(cl.json, null, 2) : `Resposta: ${cl.text}`;
       
       // Mostra detalhes específicos da resposta da API para ajudar no diagnóstico
-      let mensagemDetalhada = `\n❌ ERRO CRÍTICO: Falha ao criar cliente no Vault`;
+      let mensagemDetalhada = '\n❌ ERRO CRÍTICO: Falha ao criar cliente no Vault';
       mensagemDetalhada += `\nStatus: ${cl.status}`;
       mensagemDetalhada += `\nDetalhes do erro: ${causa}`;
       
@@ -131,8 +131,8 @@ async function main() {
       }
       
       mensagemDetalhada += `\nResposta completa: ${detalhes}`;
-      mensagemDetalhada += `\n\n⚠️  O teste será interrompido aqui, sem tentar criar projeto com dados vazios.`;
-      mensagemDetalhada += `\n⚠️  Verifique os logs acima para identificar a causa do problema.`;
+      mensagemDetalhada += '\n\n⚠️  O teste será interrompido aqui, sem tentar criar projeto com dados vazios.';
+      mensagemDetalhada += '\n⚠️  Verifique os logs acima para identificar a causa do problema.';
       
       console.error(mensagemDetalhada);
       throw new Error(`Vault: criar cliente falhou — ${cl.status} ${causa}`);
@@ -141,9 +141,9 @@ async function main() {
 
     // Verifica se o cliente foi criado antes de tentar criar o projeto
     if (!client) {
-      console.error(`\n❌ ERRO CRÍTICO: Cliente não foi criado, não é possível criar projeto`);
-      console.error(`Este erro não deveria ocorrer, pois a verificação anterior já deveria ter interrompido o teste.`);
-      console.error(`O teste será interrompido aqui.`);
+      console.error('\n❌ ERRO CRÍTICO: Cliente não foi criado, não é possível criar projeto');
+      console.error('Este erro não deveria ocorrer, pois a verificação anterior já deveria ter interrompido o teste.');
+      console.error('O teste será interrompido aqui.');
       throw new Error('Cliente não foi criado, não é possível criar projeto');
     }
 
