@@ -123,16 +123,17 @@ function createHandler(deps = {}) {
           try { const h = getHistorico(); hora = await h.ultimaAmostra(deps.getHistoricoDb ? deps.getHistoricoDb() : h.abrirBanco(env)); } catch { hora = null; }
         }
         const medidos = await Promise.all(NO_AR.map(async (p) => {
-          const m = proprio(p.site) && hora && hora.rotas[p.id];
-          if (m) {
-            // Se a medição existir, usa ela
-            return { id: p.id, ok: !!m.ok, codigo: m.codigo || 0, tempo: m.tempo || 0, lento: (m.tempo || 0) > 3000, quando: hora.em || null };
-          }
-          // Se for do próprio host mas não tem medição, exibe estado cinza (sem medição)
+          // URL do próprio host: usa medição interna (cron/SELF) em vez de tentar abrir o próprio endereço.
           if (proprio(p.site)) {
+            const m = hora && hora.rotas[p.id];
+            if (m) {
+              // Medição recente existe: usa o valor do D1/cron.
+              return { id: p.id, ok: !!m.ok, codigo: m.codigo || 0, tempo: m.tempo || 0, lento: (m.tempo || 0) > 3000, quando: hora.em || null };
+            }
+            // Falta amostra recente: exibe estado cinza (sem medição) em vez de vermelho (fora do ar).
             return { id: p.id, ok: null, codigo: 0, tempo: 0, lento: false, quando: null, estado: 'sem-medição' };
           }
-          // Para outros sites, mede normalmente
+          // Outros sites: mede normalmente.
           return { id: p.id, ...(await medir(p.site, fetchFn)) };
         }));
         return res(200, { produtos: medidos, em: new Date().toISOString() });
