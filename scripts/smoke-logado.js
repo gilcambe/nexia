@@ -122,18 +122,32 @@ async function main() {
 
     if (!client) {
       const detalhes = cl.json ? JSON.stringify(cl.json, null, 2) : 'Resposta: ' + String(cl.text || '');
+      const headers = cl.headers ? JSON.stringify(cl.headers, null, 2) : '(nenhum header disponível)';
 
-      console.error('\n=== FALHA DETALHADA: VAULT - CRIAR CLIENTE ===');
-      console.error('Status HTTP: ' + cl.status);
-      console.error('Mensagem de erro exata: ' + causa);
-      console.error('Corpo da resposta (texto bruto):');
+      console.error('\n===============================================');
+      console.error('=== FALHA CRÍTICA: VAULT - CRIAR CLIENTE ===');
+      console.error('===============================================');
+      console.error('\n[DETALHES DO ERRO]');
+      console.error('• Status HTTP: ' + cl.status);
+      console.error('• URL da requisição: ' + BASE + '/api/nexia/clients');
+      console.error('• Método: POST');
+      console.error('• Payload enviado: { name: "Teste automático NEXIA", slug: "teste-automatico' + PROJ + '", status: "active" }');
+      console.error('• Idempotency-Key: smoke-client-v1' + PROJ);
+      console.error('\n[RESPOSTA DO SERVIDOR]');
+      console.error('• Causa do erro: ' + causa);
+      console.error('• Corpo da resposta (texto bruto):');
       console.error(corpoTexto || '(vazio)');
-      console.error('Resposta completa (JSON):');
+      console.error('• Resposta completa (JSON):');
       console.error(detalhes);
-      console.error('\nINTERRUPÇÃO: O passo criar projeto foi interrompido com mensagem clara porque a criação do cliente falhou.');
-      console.error('Nenhum projeto será criado com dados vazios.\n');
+      console.error('• Headers da resposta:');
+      console.error(headers);
+      console.error('\n[AÇÃO TOMADA]');
+      console.error('✗ O passo "criar projeto" foi INTERROMPIDO porque a criação do cliente falhou.');
+      console.error('✗ Nenhum projeto será criado com dados vazios ou inválidos.');
+      console.error('✗ O teste continuará com falha para que o problema seja investigado.');
+      console.error('\n===============================================\n');
 
-      throw new Error('Vault: criar cliente falhou com status ' + cl.status + '. Causa exata: ' + causa + '. Detalhes: ' + detalhes + (corpoTexto ? ' | corpo: ' + corpoTexto : ''));
+      throw new Error('FALHA CRÍTICA: Vault: criar cliente falhou com status ' + cl.status + '. Causa: ' + causa + '. Detalhes: ' + detalhes + (corpoTexto ? ' | corpo: ' + corpoTexto.slice(0, 500) : '') + '. Nenhum projeto será criado.' );
     }
 
     let project;
