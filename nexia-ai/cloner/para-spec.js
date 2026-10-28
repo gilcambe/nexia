@@ -14,7 +14,7 @@ function _lerJson(caminho) {
     const limpo = texto
       .replace(/^\uFEFF/, '')        // remove BOM
       .replace(/\/\/[^\n]*\n/g, '\n') // remove // comentário
-      .replace(/\/\*[\s\S]*?\*\//g, ''); // remove /* comentário */
+      .replace(/\/\*[\s\S]*?\*\//g, ''); // remove /* comentário */;
     const obj = JSON.parse(limpo);
     return obj && typeof obj === 'object' && !Array.isArray(obj) ? obj : {};
   } catch {
