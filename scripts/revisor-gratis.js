@@ -50,6 +50,14 @@ function escolher(prs) {
     && !(pr.labels || []).some(l => ['automerge', 'revisor-recusou', 'so-humano'].includes(l.name)));
 }
 
+// Verifica se o PR cita uma issue cortex-fila
+function temIssueCortexFila(pr) {
+  const issueNum = issueDoPr(pr);
+  if (!issueNum) return false;
+  const labels = (pr.labels || []).map(l => l.name || l);
+  return labels.includes('cortex-fila');
+}
+
 // Barreiras objetivas antes de gastar IA. Devolve um motivo (string) ou null.
 function barreira(arquivos, pr) {
   const nomes = arquivos.map(a => a.filename);
