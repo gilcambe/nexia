@@ -71,15 +71,18 @@ async function deleteTestUser(sa) {
   return r.ok;
 }
 
-// Apaga um registro de teste. O Vault exige If-Match com a versão ATUAL (senão responde 428), por isso lê antes.
-async function deleteTestRecord(api, tipo, id) {
-  if (!id) return false;
-  const cur = await api(`/nexia/${tipo}/${id}`);
-  const v = cur.json && cur.json.record && cur.json.record.version;
-  if (v === undefined || v === null) return false;
-  const r = await api(`/nexia/${tipo}/${id}`, { method: 'DELETE', headers: { 'If-Match': `"v${v}"` } });
-  return r.status === 200;
-}
+  // Apaga um registro de teste. O Vault exige If-Match com a versão ATUAL (senão responde 428), por isso lê antes.
+  async function deleteTestRecord(api, tipo, id) {
+    if (!id) return false;
+    const cur = await api(`/nexia/${tipo}/${id}`);
+    const v = cur.json && cur.json.record && cur.json.record.version;
+    if (v === undefined || v === null) return false;
+    const r = await api(`/nexia/${tipo}/${id}`, { method: 'DELETE', headers: { 'If-Match': `"v${v}"` } });
+    if (r.status !== 200) {
+      console.log(`  AVISO: falha ao apagar registro de teste ${tipo}/${id} (status=${r.status})`);
+    }
+    return r.status === 200;
+  }
 
 async function main() {
   if (!/^https:\/\//.test(BASE)) throw new Error('BASE precisa começar com https://');
@@ -260,13 +263,30 @@ async function main() {
     const donoDoRepo = project && project.id;
     const apagarProjeto = !!projetoCriado && projetoCriado !== donoDoRepo;
     const apagarCliente = !!clienteCriado && (!projetoCriado || apagarProjeto);
-    if (apagarProjeto) console.log(`limpeza: projeto de teste ${await deleteTestRecord(api, 'projects', projetoCriado).catch(() => false) ? 'apagado' : 'não apagado (segue)'}`);
-    if (apagarCliente) console.log(`limpeza: cliente de teste ${await deleteTestRecord(api, 'clients', clienteCriado).catch(() => false) ? 'apagado' : 'não apagado (segue)'}`);
-    console.log(`limpeza: usuário de teste ${await deleteTestUser(sa).catch(() => false) ? 'apagado' : 'não apagado (segue)'}`);
+    const limpezaFalhou = [];
+    if (apagarProjeto) {
+      const apagado = await deleteTestRecord(api, 'projects', projetoCriado).catch(() => false);
+      console.log(`limpeza: projeto de teste ${apagado ? 'apagado' : 'não apagado (segue)'}`);
+      if (!apagado) limpezaFalhou.push('projeto');
+    }
+    if (apagarCliente) {
+      const apagado = await deleteTestRecord(api, 'clients', clienteCriado).catch(() => false);
+      console.log(`limpeza: cliente de teste ${apagado ? 'apagado' : 'não apagado (segue)'}`);
+      if (!apagado) limpezaFalhou.push('cliente');
+    }
+    const apagadoUsuario = await deleteTestUser(sa).catch(() => false);
+    console.log(`limpeza: usuário de teste ${apagadoUsuario ? 'apagado' : 'não apagado (segue)'}`);
+    if (!apagadoUsuario) limpezaFalhou.push('usuário');
+    if (limpezaFalhou.length > 0) {
+      console.log(`  AVISO: falha na limpeza: ${limpezaFalhou.join(', ')}`);
+    }
   }
 
   const bad = results.filter(r => !r.ok);
   console.log(`\n${results.length - bad.length}/${results.length} OK`);
+  if (bad.length > 0) {
+    console.log(`  AVISO: testes falharam`);
+  }
   process.exit(bad.length ? 1 : 0);
 }
 
