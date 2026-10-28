@@ -88,6 +88,36 @@ async function entregouAlgo(token, corpo, titulo, runId, desde) {
   } catch { return true; }
 }
 const minutos = (agora, iso) => (agora - new Date(iso).getTime()) / 60000;
+// #2322: o mesmo passo falhando em várias tarefas diferentes é erro de AMBIENTE (ex.: limpeza do smoke, PR #2297),
+// não da tarefa. Assinatura = checagens "FALHOU" do resumo do smoke, menos as que medem a própria tarefa.
+const MIN_AMBIENTE = 3;
+const DA_TAREFA = /^(Execução|Onboarding)/;
+function assinaturaDoSmoke(resumo) {
+  const falhas = [...String(resumo || '').matchAll(/^FALHOU\s+(.+?)(?:\s+—.*)?$/gm)].map(m => m[1].trim());
+  if (!falhas.length || falhas.some(f => DA_TAREFA.test(f))) return null;
+  return [...new Set(falhas)].sort().join(' | ');
+}
+// runs com .assinatura (preenchida no main): marca .ambiente nas que repetem em >= MIN_AMBIENTE tarefas na última hora.
+function errosDeAmbiente(runs, agora = Date.now()) {
+  const porAssinatura = new Map();
+  for (const r of runs) {
+    if (!r.assinatura || minutos(agora, r.updated_at || r.created_at) > 60) continue;
+    const n = (/^Cortex #(\d+)/.exec(r.name || '') || [])[1];
+    if (!n) continue;
+    if (!porAssinatura.has(r.assinatura)) porAssinatura.set(r.assinatura, { tarefas: new Set(), runs: [] });
+    const g = porAssinatura.get(r.assinatura); g.tarefas.add(n); g.runs.push(r);
+  }
+  const alertas = [];
+  for (const [assinatura, g] of porAssinatura) {
+    if (g.tarefas.size < MIN_AMBIENTE) continue;
+    for (const r of g.runs) r.ambiente = assinatura;
+    alertas.push({ assinatura, tarefas: [...g.tarefas].map(Number), runs: g.runs.map(r => r.id) });
+  }
+  return alertas;
+}
+// #2323: o app do Cortex/Reserva não grava .github/workflows/ (falta a permissão "workflows"): vai direto ao Jules.
+// Só conta linha que cita um arquivo de workflow sem negar ("não edite .github/workflows/").
+const mexeEmWorkflow = i => `${i.title || ''}\n${i.body || ''}`.split('\n').some(l => /\.github\/workflows\/[\w.-]+\.ya?ml/.test(l) && !/\bn[ãa]o\b/i.test(l));
 // As partes de uma tarefa dividida são criadas pela própria fila (conta github-actions[bot], que o GitHub marca
 // como CONTRIBUTOR). Elas contam como confiáveis: só quem tem acesso ao repositório consegue pôr rótulos.
 const ROBO = 'github-actions[bot]';
@@ -112,8 +142,9 @@ async function reservasQueVoltam(token, issues, agora = Date.now()) {
 
 // Tarefas que travaram enquanto o Cofre estava fora do ar (503 do D1) não falharam por culpa da tarefa:
 // voltam à fila do zero uma vez. Conserto: PR #2221 (27/10/2026 19:37 UTC).
-const CONSERTO_COFRE = '2026-10-27T19:37:39Z';
-function travouAntesDoConserto(travadoEm) { return !!travadoEm && Date.parse(travadoEm) < Date.parse(CONSERTO_COFRE); }
+// 28/10: a limpeza do smoke (PR #2297) reprovou toda tarefa até o PR #2301 entrar. Quem travou antes disso volta do zero.
+const CONSERTO_SMOKE = '2026-10-28T15:22:46Z';
+function travouAntesDoConserto(travadoEm) { return !!travadoEm && Date.parse(travadoEm) < Date.parse(CONSERTO_SMOKE); }
 async function travadasPeloCofre(token, issues) {
   const voltar = [];
   for (const i of issues.filter(x => !x.pull_request && nomes(x).includes(L.travado)).slice(0, 15)) {
@@ -163,6 +194,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
     if (run && run.status === 'completed') {
       if (run.conclusion === 'success') { acoes.push({ tipo: 'concluir', numero: i.number, run: run.id, corpo: String(i.body || ''), titulo: String(i.title || ''), desde: i.created_at || null }); continue; }
       if (run.cota) { acoes.push({ tipo: 'reenfileirar', numero: i.number, tentativa: numeroDe(ls, 'tentativa'), run: run.id, conclusao: 'cota do banco' }); continue; }
+      if (run.ambiente) { acoes.push({ tipo: 'reenfileirar', numero: i.number, tentativa: numeroDe(ls, 'tentativa'), run: run.id, conclusao: 'erro de ambiente' }); continue; }
       const t = numeroDe(ls, 'tentativa') + 1;
       // Falhou 3 vezes inteira: o modelo grátis não dá conta do tamanho. Divide em partes pequenas em vez de repetir até travar.
       if (t === TENTATIVAS_ATE_DIVIDIR && !parteDe(i) && !ls.includes(L.parte) && !ls.includes(L.dividido) && !ls.includes(L.semDivisao)) {
@@ -200,9 +232,10 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
   for (const i of fila) {
     // Parte grande do plano vai para o Jules (cloudflare/jules-auto.js). Se ele não aceitar em 3 h (limite do dia), volta ao Cortex.
     if (nomes(i).includes(L.jules)) {
-      if (!nomes(i).includes('jules-enviado') && minutos(agora, i.updated_at) > plano.JULES_DESISTE_MIN) acoes.push({ tipo: 'jules-volta', numero: i.number });
+      if (!nomes(i).includes('jules-enviado') && !mexeEmWorkflow(i) && minutos(agora, i.updated_at) > plano.JULES_DESISTE_MIN) acoes.push({ tipo: 'jules-volta', numero: i.number });
       continue;
     }
+    if (mexeEmWorkflow(i)) { acoes.push({ tipo: 'para-jules', numero: i.number }); continue; }
     if (esperaAnterior(i)) continue;
     if (plano.conflitaCom(i, rodando)) continue;   // outra parte rodando mexe no mesmo arquivo: espera ela
     if (precisaDividir(i, tamanhos)) { acoes.push({ tipo: 'dividir', numero: i.number, titulo: i.title || '', tarefa: String(i.body || '').trim(), tamanhos: tamanhosDe(i.body) }); continue; }
@@ -410,6 +443,9 @@ async function executar(token, acao, dividir) {
     await delLabel(L.rodando); await limparPistas();
     await comentar('Esta tarefa já tinha o rótulo cortex-feito; fechei como concluída.');
     await gh(token, 'PATCH', `/issues/${n}`, { state: 'closed', state_reason: 'completed' });
+  } else if (acao.tipo === 'para-jules') {
+    await addLabel(L.jules);
+    await comentar('Esta tarefa mexe em `.github/workflows/`. O app do Cortex não tem a permissão "workflows", então ela vai direto para o Jules (que usa a conta do dono) e não gasta tentativas.');
   } else if (acao.tipo === 'jules-volta') {
     await delLabel(L.jules);
     await comentar('O Jules não aceitou esta parte em 3 h (limite grátis do dia). Ela volta para o Cortex, que lê arquivos grandes por trechos.');
@@ -422,7 +458,7 @@ async function executar(token, acao, dividir) {
     // #803: novo dia, nova cota: volta para a fila do zero (tentativa-N, sem-entrega-N e travado saem).
     for (const l of acao.rotulos.filter(x => x === L.semCota || x === L.travado || x === L.rodando || /^(tentativa|sem-entrega|pista)-\d+$/.test(x) || (acao.motivo === 'cofre' && x === 'reserva-tentou'))) await delLabel(l).catch(() => null);
     await comentar(acao.motivo === 'cofre'
-      ? 'O Cofre estava fora do ar quando esta tarefa travou (conserto no PR #2221). Ela volta para a fila do zero.'
+      ? 'Esta tarefa travou por erro de ambiente, não por culpa dela (Cofre fora do ar, PR #2221, ou limpeza do teste com login, PR #2301). Ela volta para a fila do zero.'
       : 'Novo dia: a cota das IAs voltou. A tarefa voltou para a fila do zero.');
   } else if (acao.tipo === 'travar') {
     await delLabel(L.rodando); await limparPistas(); await addLabel(L.travado);
@@ -638,6 +674,16 @@ function placar(issues, acoes) {
   if (process.env.GITHUB_STEP_SUMMARY) try { require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY, `### Fila do Cortex\n${linha}\n`); } catch { /* sem resumo */ }
 }
 
+async function abrirAlertaAmbiente(token, alertas) {
+  const abertos = ((await gh(token, 'GET', '/issues?state=open&labels=cortex-alerta&per_page=20')).json || []).filter(i => !i.pull_request);
+  for (const a of alertas) {
+    const corpo = `Erro de AMBIENTE: o mesmo passo falhou em ${a.tarefas.length} tarefas diferentes na última hora. Não é culpa das tarefas; elas não perdem tentativas e a fila segura novos despachos até isto passar.\n\nPasso(s) que falharam: \`${a.assinatura}\`\nTarefas: ${a.tarefas.map(n => `#${n}`).join(', ')}\nExecuções: ${a.runs.map(id => `https://github.com/${REPO}/actions/runs/${id}`).join(' ')}\n\nPronto quando: o passo acima volta a passar em scripts/smoke-logado.js.`;
+    const igual = abertos.find(i => String(i.body || '').includes(`\`${a.assinatura}\``));
+    if (igual) { await gh(token, 'POST', `/issues/${igual.number}/comments`, { body: `Repetiu agora em ${a.tarefas.map(n => `#${n}`).join(', ')}.` }); continue; }
+    await gh(token, 'POST', '/issues', { title: `Alerta: erro de ambiente na fila (${a.assinatura.slice(0, 60)})`, body: corpo, labels: ['cortex-alerta', L.prioridade, L.fila] });
+  }
+}
+
 async function main() {
   const token = process.env.GITHUB_TOKEN;
   if (!token) throw new Error('Falta GITHUB_TOKEN.');
@@ -651,19 +697,27 @@ async function main() {
   }
   const runs = ((await gh(token, 'GET', '/actions/workflows/smoke-logado.yml/runs?per_page=60')).json || {}).workflow_runs || [];
   // Marca as falhas causadas pela cota do banco (o resumo do smoke traz o código do Firestore).
-  for (const r of runs.filter(x => x.status === 'completed' && x.conclusion !== 'success' && /^Cortex #/.test(x.name || '')).slice(0, 6)) {
+  for (const r of runs.filter(x => x.status === 'completed' && x.conclusion !== 'success' && /^Cortex #/.test(x.name || '') && minutos(Date.now(), x.updated_at || x.created_at) <= 60).slice(0, 12)) {
     try {
       const jobs = ((await gh(token, 'GET', `/actions/runs/${r.id}/jobs`)).json || {}).jobs || [];
       for (const j of jobs) {
         const an = (await gh(token, 'GET', `/check-runs/${j.id}/annotations?per_page=50`)).json || [];
         if (an.some(a => /RESOURCE_EXHAUSTED/.test(`${a.message || ''}`))) r.cota = true;
+        const resumo = an.find(a => a.title === 'Resumo do smoke');
+        if (resumo && !r.assinatura) r.assinatura = assinaturaDoSmoke(resumo.message);
       }
     } catch { /* sem anotação: segue como falha comum */ }
   }
   // Cópia literal ("Copie EXATAMENTE") não passa por IA: grava direto e a fila normal não despacha essas tarefas.
   const direto = await literalDireto(token, issues);
   const extra = await dadosDoPlanejador(token, issues);
+  const alertas = errosDeAmbiente(runs);
   let acoes = decidir({ issues: issues.filter(i => !direto.has(i.number)), runs, ...extra });
+  if (alertas.length) {
+    // Erro de ambiente: 1 alerta (não 12 tentativas em cada tarefa) e não despacha mais neste ciclo, para não queimar execuções.
+    try { await abrirAlertaAmbiente(token, alertas); } catch (e) { console.log(`alerta de ambiente: ${e.message}`); }
+    acoes = acoes.filter(a => a.tipo !== 'despachar');
+  }
   acoes.push(...extra.julesFeitos);
   try { acoes.push(...await reservasQueVoltam(token, issues)); } catch (e) { console.log(`reserva sem cota: ${e.message}`); }
   try { acoes.push(...(await travadasPeloCofre(token, issues)).filter(a => !acoes.some(x => x.numero === a.numero))); } catch (e) { console.log(`travadas pelo cofre: ${e.message}`); }
@@ -712,5 +766,5 @@ async function main() {
   }
 }
 
-module.exports = { planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
+module.exports = { assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });

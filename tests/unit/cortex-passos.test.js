@@ -48,3 +48,23 @@ test('PS2. perto do limite de passos sem gravar, o agente recebe o aviso para gr
   assert.deepStrictEqual(avisos, [seen.length - 2], `aviso só no penúltimo passo (${seen.length} passos)`);
   assert.match(seen[seen.length - 2], /nexia\/ps2/);
 });
+
+test('PS3. #2321: "[ferramentas pedidas: ...]" só em texto não termina como pronto; insiste e troca de modelo', async () => {
+  const seen = [];
+  const router = {
+    capabilities: () => ({ available: true, tool_call: true }),
+    async toolCall(desc, req) {
+      seen.push(req.messages[req.messages.length - 1].content);
+      if (seen.length <= 3) return { text: 'Agora vou verificar o arquivo.\n[ferramentas pedidas: github.get_file]', tool_calls: [], usage: {} };
+      if (seen.length === 4) return { tool_calls: [{ id: 'c4', name: 'github__get_file', input: { path: 'a.js' } }], usage: {} };
+      return { text: 'Pronto: a.js tem x.', tool_calls: [], usage: {} };
+    },
+  };
+  const gateway = { describe: () => [{ name: 'github.get_file', risk: 'LOW', description: 'ler', input_schema: { type: 'object' } }],
+    async invoke() { return { tool_call: { id: 't' }, status: 'succeeded', result: { path: 'a.js', size: 1, content: 'x' } }; } };
+  const meter = createMeter({ max_steps: 100, max_tool_calls: 100, max_tokens: 1e9, max_ms: 60000 });
+  const r = await runAgent({ agentId: 'architect', goal: 'Veja a.js', router, gateway, ctx: {}, projectId: 'p1', meter });
+  assert.strictEqual(r.status, 'done');
+  assert.match(r.text, /Pronto/);
+  assert.match(String(seen[1]), /não chamou nenhuma/);
+});

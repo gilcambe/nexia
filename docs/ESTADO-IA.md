@@ -1,10 +1,11 @@
 # Estado do projeto e memória (para qualquer IA continuar)
 
-Atualizado em 26/10/2026. Complementa `docs/CONTEXTO-IA.md` (regras). A Central junta os dois arquivos com a fila do Cortex ao vivo no botão **📦 Continuar em outra IA** (aba 🧠 Cortex). **Nunca coloque chave ou senha aqui.**
+Atualizado em 28/10/2026. Complementa `docs/CONTEXTO-IA.md` (regras). A Central junta os dois arquivos com a fila do Cortex ao vivo no botão **📦 Continuar em outra IA** (aba 🧠 Cortex). **Nunca coloque chave ou senha aqui.**
 
 ## Foco atual
 - **Body Coach** é o produto para vender agora: https://nexiabodycoach.pages.dev (PWA, nada de dado falso). Play Store: conta paga, esperando verificação do Google; precisa de 12 testadores.
-- **Cortex** vai virar produto vendido (planos baratos em reais). Custo de IA alvo ~R$ 0,0035 por mensagem.
+- **Cortex é de uso INTERNO** (decisão do dono em 27/10): não vai ser vendido por enquanto. Ele serve para construir de graça os sites, páginas, SaaS e apps dos clientes (fábrica de sites: a IA preenche `clientes/<slug>/site.json`).
+- **Viajante Pro 2.0** é o grande teste do Cortex: epic #2201, fases #2202-#2212 (`vp-aguardando` = espera a fase anterior).
 - Marca pública **Kernex**; nomes internos seguem `nexia`.
 
 ## Como o trabalho é dividido
@@ -29,10 +30,15 @@ Atualizado em 26/10/2026. Complementa `docs/CONTEXTO-IA.md` (regras). A Central 
 - Adriano Blumer (nutricionista): só landing. O WhatsApp dele é real: nunca mandar mensagem nem testar.
 - Antigos: CES (`/ces`), Viajante Pro (`/vp`), Splash (`/splash`).
 
+## Fila do Cortex (28/10)
+- 28/10 a fila parou: desde o PR #2297 a limpeza do teste com login reprovava toda tarefa (98 travadas). Consertado no PR #2301; a limpeza agora só avisa no log.
+- Proteções novas: o mesmo passo falhando em 3+ tarefas na mesma hora vira 1 issue `cortex-alerta` e não gasta tentativas (#2322); IA grátis que escreve "[ferramentas pedidas: ...]" sem chamar ferramenta recebe lembrete e depois troca de modelo (#2321); tarefa que cita um arquivo `.github/workflows/*.yml` vai direto ao Jules (#2323).
+- Passo do dono pendente: aceitar a permissão **workflows** do app do NEXIA em github.com/settings/installations.
+
 ## Trabalho aberto importante (26/10)
 - IA própria do Cortex: #1823 (IA no aparelho), #1824 (cache), #1825 (contador de tokens), #1787 (medidor de custo, partes #1805-#1809), #1788 (Ollama do PC como reserva).
 - Teste humano do Cortex: nota 7,4; abertas #1815 (quedas), #1733 (busca), #1639 (foto), #1816 (markdown).
-- Venda do Cortex: #1629-#1644 e #1581-#1589. Falta CNPJ e IA paga por uso.
+- Venda do Cortex (#1629-#1644, #1581-#1589): PARADA, o Cortex é interno desde 27/10.
 - Instagram Body Coach: plano de 30 dias, #1481-#1483.
 
 ## Onde está o resto
