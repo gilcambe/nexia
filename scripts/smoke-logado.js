@@ -113,15 +113,17 @@ async function main() {
     const cl = await api('/nexia/clients', { method: 'POST', body: { name: 'Teste automático NEXIA', slug: `teste-automatico${PROJ}`, status: 'active' }, headers: { 'Idempotency-Key': `smoke-client-v1${PROJ}` } });
     let client = cl.json && cl.json.record;
     if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === `teste-automatico${PROJ}`);
+        const causa = cl.json ? (cl.json.error || '') + ' ' + (cl.json.causa || '') : 'status ' + cl.status;
+    report(!!client, 'Vault: criar cliente', `${cl.status} ${causa}`);
+
     if (!client) {
-      const causa = cl.json ? (cl.json.error || '') + ' ' + (cl.json.causa || '') : 'status ' + cl.status;
       const detalhes = cl.json ? JSON.stringify(cl.json, null, 2) : 'Resposta: ' + cl.text;
-      
+
       // Mostra detalhes específicos da resposta da API para ajudar no diagnóstico
       let mensagemDetalhada = '\n❌ ERRO CRÍTICO: Falha ao criar cliente no Vault';
       mensagemDetalhada += '\nStatus: ' + cl.status;
       mensagemDetalhada += '\nDetalhes do erro: ' + causa;
-      
+
       // Adiciona informações úteis para diagnóstico
       if (cl.json) {
         if (cl.json.error) mensagemDetalhada += '\nCódigo de erro: ' + cl.json.error;
@@ -129,15 +131,14 @@ async function main() {
         if (cl.json.message) mensagemDetalhada += '\nMensagem: ' + cl.json.message;
         if (cl.json.details) mensagemDetalhada += '\nDetalhes: ' + cl.json.details;
       }
-      
+
       mensagemDetalhada += '\nResposta completa: ' + detalhes;
       mensagemDetalhada += '\n\n⚠️  O teste será interrompido aqui, sem tentar criar projeto com dados vazios.';
       mensagemDetalhada += '\n⚠️  Verifique os logs acima para identificar a causa do problema.';
-      
+
       console.error(mensagemDetalhada);
       throw new Error('Vault: criar cliente falhou — ' + cl.status + ' ' + causa);
     }
-    report(!!client, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
 
     // Verifica se o cliente foi criado antes de tentar criar o projeto
     if (!client) {
