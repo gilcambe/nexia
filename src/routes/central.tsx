@@ -102,6 +102,7 @@ export function LoteClientes() {
             type="text"
             value={slugsInput}
             onChange={(e) => setSlugsInput(e.target.value)}
+            aria-label="Slugs dos clientes do novo lote"
             placeholder="Insira os slugs separados por vírgula (ex: clinica-alpha, salao-bella)"
             className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
             data-testid="input-slugs-lote"
