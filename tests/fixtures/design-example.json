@@ -1,0 +1,7 @@
+{
+  "nome": "Verde Vida",
+  "nicho": "plantas e jardinagem",
+  "secoes": ["hero", "produtos", "sobre", "contato"],
+  "cores": { "primario": "#22c55e", "secundario": "#a16207" },
+  "fonte": "Inter"
+}
