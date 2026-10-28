@@ -9,7 +9,6 @@ import RegrasAcesso, { type Config } from './RegrasAcesso';
 import VerComo from './VerComo';
 import TestadoresAcesso from './TestadoresAcesso';
 
-
 // Só o admin do NEXIA: quem pagou (Pix), liberar dias e faixa do coach, contas de teste, dias grátis e receita do mês.
 export default function Acessos() {
   const [dados, setDados] = useState<{ contas: Conta[]; pedidos: Pedido[]; config: Config; receitaMes: number } | null>(null);
