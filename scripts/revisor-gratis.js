@@ -42,12 +42,13 @@ function ciVerde(runs) {
     && r.every(c => c.status === 'completed' && ['success', 'skipped', 'neutral'].includes(c.conclusion));
 }
 
-// Quais PRs revisar: branch nexia/ deste repositório, para develop, sem automerge e sem recusa anterior.
+// Quais PRs revisar: branch nexia/ deste repositório, para develop, sem automerge e sem recusa anterior, com issue cortex-fila
 function escolher(prs) {
   return (prs || []).filter(pr => pr.base && pr.base.ref === 'develop'
     && pr.head && pr.head.repo && pr.head.repo.full_name === REPO && /^nexia\//.test(pr.head.ref || '')
     && !/demo/i.test(pr.title || '')
-    && !(pr.labels || []).some(l => ['automerge', 'revisor-recusou', 'so-humano'].includes(l.name)));
+    && !(pr.labels || []).some(l => ['automerge', 'revisor-recusou', 'so-humano'].includes(l.name))
+    && temIssueCortexFila(pr));
 }
 
 // Verifica se o PR cita uma issue cortex-fila
