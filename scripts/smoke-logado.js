@@ -71,6 +71,18 @@ async function deleteTestUser(sa) {
   return r.ok;
 }
 
+async function deleteTestClient(api, clientId) {
+  if (!clientId) return false;
+  const r = await api(`/nexia/clients/${clientId}`, { method: 'DELETE' });
+  return r.status === 200;
+}
+
+async function deleteTestProject(api, projectId) {
+  if (!projectId) return false;
+  const r = await api(`/nexia/projects/${projectId}`, { method: 'DELETE' });
+  return r.status === 200;
+}
+
 async function main() {
   if (!/^https:\/\//.test(BASE)) throw new Error('BASE precisa começar com https://');
   if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) throw new Error('Falta FIREBASE_SERVICE_ACCOUNT_BASE64.');
@@ -92,6 +104,9 @@ async function main() {
     return { status: r.status, json, text, etag: r.headers.get('etag') };
   };
 
+  let client = null;
+  let project = null;
+
   try {
     const me = await api('/nexia/me');
     report(me.status === 200 && me.json.role === 'master' && me.json.canUseVault, 'Quem sou eu (/me)', `${me.status} ${me.json && me.json.role}`);
@@ -111,12 +126,16 @@ async function main() {
 
     // Vault: cliente e projeto de teste (idempotentes: rodar de novo reaproveita)
     const cl = await api('/nexia/clients', { method: 'POST', body: { name: 'Teste automático NEXIA', slug: `teste-automatico${PROJ}`, status: 'active' }, headers: { 'Idempotency-Key': `smoke-client-v1${PROJ}` } });
-    let client = cl.json && cl.json.record;
+    client = cl.json && cl.json.record;
     if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === `teste-automatico${PROJ}`);
-    report(!!client, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
+    if (!client) {
+      report(false, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
+      throw new Error('Falha ao criar cliente de teste');
+    }
+    report(true, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
 
     const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client && client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
-    let project = pr.json && pr.json.record;
+    project = pr.json && pr.json.record;
     if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PROJ}`);
     report(!!project, 'Vault: criar projeto', `${pr.status} ${pr.json && (pr.json.error || '')}`);
     // Usa o projeto que já tem o repositório (ele só pode estar ligado a UM projeto por tenant;
@@ -234,6 +253,13 @@ async function main() {
     report(ec.status === 200, 'Execuções recentes', `${ec.status} ${(ec.json && ec.json.items || []).length}`);
     }
   } finally {
+    // Clean up resources
+    if (project) {
+      report(await deleteTestProject(api, project.id), 'Apagar projeto de teste');
+    }
+    if (client) {
+      report(await deleteTestClient(api, client.id), 'Apagar cliente de teste');
+    }
     report(await deleteTestUser(sa).catch(() => false), 'Apagar usuário de teste');
   }
 
