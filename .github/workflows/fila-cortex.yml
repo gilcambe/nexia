@@ -63,6 +63,16 @@ jobs:
           NEXIA_MODELS_FAST: ${{ secrets.NEXIA_MODELS_FAST }}
           BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
           LEADS_NOTIFY_EMAIL: ${{ secrets.LEADS_NOTIFY_EMAIL }}
+          IA_VAGA_1: ${{ secrets.IA_VAGA_1 }}
+          IA_VAGA_2: ${{ secrets.IA_VAGA_2 }}
+          IA_VAGA_3: ${{ secrets.IA_VAGA_3 }}
+          IA_VAGA_4: ${{ secrets.IA_VAGA_4 }}
+          IA_VAGA_5: ${{ secrets.IA_VAGA_5 }}
+          IA_VAGA_6: ${{ secrets.IA_VAGA_6 }}
+          IA_VAGA_7: ${{ secrets.IA_VAGA_7 }}
+          IA_VAGA_8: ${{ secrets.IA_VAGA_8 }}
+          IA_VAGA_9: ${{ secrets.IA_VAGA_9 }}
+          IA_VAGA_10: ${{ secrets.IA_VAGA_10 }}
       - name: Reenviar tarefas guardadas por falta de cota do Firestore
         if: always()
         run: node scripts/nexia-job-pendente.js reenviar
