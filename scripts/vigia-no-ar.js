@@ -2,6 +2,11 @@
 
 const { NO_AR: NO_AR_DEFAULT } = require('../central/produtos.js');
 
+// Função para ler NO_AR (injetável para teste).
+function lerNO_AR(produtos = NO_AR_DEFAULT) {
+  return produtos.filter((p) => p.site && !p.pendente);
+}
+
 // Estado de falhas consecutivas por site (memória da execução).
 const falhasConsecutivas = {};
 
@@ -44,10 +49,13 @@ async function requisitarComTentativas(url) {
   let ultimoErro;
   for (let i = 0; i < MAX_TENTATIVAS; i++) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
       const resposta = await Promise.race([
-        fetchHttp(url),
-        timeoutPromise(TIMEOUT_MS),
+        fetchHttp(url, { signal: controller.signal }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), TIMEOUT_MS)),
       ]);
+      clearTimeout(timeoutId);
       if (resposta && resposta.ok) {
         return true;
       }
@@ -133,7 +141,7 @@ async function rollbackSite(url) {
       return { tipo: 'cloudflare-pages', url, acao: 'rollback', erro: String(erro) };
     }
   }
-  return null;
+  return { tipo: 'outro', url, acao: 'rollback', erro: 'Tipo de site não suportado' };
 }
 
 async function issueJaAberta() {
@@ -182,14 +190,14 @@ async function verificarSite(produto) {
   if (!isValidUrl(site)) {
     return { id, site, status: 'url-invalida', falhas: 0, erro: 'URL malformada' };
   }
-      try {
-      await requisitarComTentativas(site);
-      // Voltou ao normal: zera sempre o contador de falhas consecutivas
-      // (mesmo que seja 1) e fecha a issue aberta, se houver.
-      falhasConsecutivas[id] = 0;
-      await fecharIssueAlerta();
-      return { id, site, status: 'ok', falhas: 0 };
-    } catch (erro) {
+  try {
+    await requisitarComTentativas(site);
+    // Voltou ao normal: zera sempre o contador de falhas consecutivas
+    // (mesmo que seja 1) e fecha a issue aberta, se houver.
+    falhasConsecutivas[id] = 0;
+    await fecharIssueAlerta();
+    return { id, site, status: 'ok', falhas: 0 };
+  } catch (erro) {
     falhasConsecutivas[id] = (falhasConsecutivas[id] || 0) + 1;
     const falhas = falhasConsecutivas[id];
     if (falhas >= LIMITE_ROLLBACK) {
