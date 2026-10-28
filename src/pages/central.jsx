@@ -21,7 +21,8 @@ export default function Central() {
         const resposta = await fetch('/api/custos', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.NEXIA_JOBS_TOKEN || ''}`
           },
           body: JSON.stringify({}),
         });
