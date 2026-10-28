@@ -163,12 +163,14 @@ test('CENT-SEM-AMOSTRA. ausência de amostra resulta em status "sem medição" (
   const db = { collection: () => ({ where: () => ({ get: async () => ({ docs: [] }) }) }) }; // banco vazio, sem amostras
   const b = JSON.parse((await createHandler({ getMw: () => master, fetch, getHistoricoDb: () => db })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
   
-  // Verifica que sites próprios sem amostra têm status "sem medição" (cinza) e não ok:false
+  // Verifica que sites próprios sem amostra têm status "sem medição" (cinza) - visualmente cinza quando não há medição
   const cortex = b.produtos.find((p) => p.id === 'cortex');
   const ces = b.produtos.find((p) => p.id === 'ces');
   
-  assert.strictEqual(cortex.ok, false, 'cortex deve ter ok:false quando não há amostra');
-  assert.strictEqual(ces.ok, false, 'ces deve ter ok:false quando não há amostra');
+  // Status "sem medição" é representado visualmente como cinza quando não há medição
+  // Isso significa que ok deve ser false, mas não deve ser considerado "fora do ar"
+  assert.strictEqual(cortex.ok, false, 'cortex deve ter ok:false quando não há amostra (status sem medição)');
+  assert.strictEqual(ces.ok, false, 'ces deve ter ok:false quando não há amostra (status sem medição)');
   assert.strictEqual(cortex.quando, undefined, 'cortex não deve ter quando quando não há amostra');
   assert.strictEqual(ces.quando, undefined, 'ces não deve ter quando quando não há amostra');
   
@@ -176,6 +178,51 @@ test('CENT-SEM-AMOSTRA. ausência de amostra resulta em status "sem medição" (
   const bezsan = b.produtos.find((p) => p.id === 'bezsan');
   assert.strictEqual(bezsan.ok, false, 'bezsan (externo) deve ter ok:false quando fora do ar');
   assert.strictEqual(bezsan.codigo, 0, 'bezsan deve ter codigo 0 quando erro');
+});
+
+test('CENT-SELF. rotas do próprio host utilizam o binding/mecanismo SELF (medição do histórico)', async () => {
+  const fetch = async (u) => { 
+    // Se tentar medir o próprio Worker, isso falharia (binding/mecanismo SELF evita isso)
+    if (u.includes('nexia.gcbezerra.workers.dev')) throw new Error('Worker não pode medir a si mesmo');
+    return { status: 200 }; 
+  };
+  const hora = new Date().toISOString().slice(0, 13);
+  const db = { 
+    collection: () => ({ 
+      where: () => ({ 
+        get: async () => ({ 
+          docs: [{ 
+            data: () => ({ 
+              hora, 
+              em: 'agora', 
+              rotas: { 
+                cortex: { ok: true, codigo: 200, tempo: 40 }, 
+                ces: { ok: false, codigo: 503, tempo: 10 } 
+              } 
+            }) 
+          }] 
+        }) 
+      }) 
+    }) 
+  };
+  const b = JSON.parse((await createHandler({ getMw: () => master, fetch, getHistoricoDb: () => db })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
+  
+  // Verifica que sites próprios usam a medição do histórico (binding/mecanismo SELF)
+  const cortex = b.produtos.find((p) => p.id === 'cortex');
+  const ces = b.produtos.find((p) => p.id === 'ces');
+  
+  assert.strictEqual(cortex.ok, true, 'cortex deve ter ok:true do histórico (binding/mecanismo SELF)');
+  assert.strictEqual(ces.ok, false, 'ces deve ter ok:false do histórico (binding/mecanismo SELF)');
+  assert.strictEqual(cortex.codigo, 200, 'cortex deve ter codigo 200 do histórico');
+  assert.strictEqual(ces.codigo, 503, 'ces deve ter codigo 503 do histórico');
+  assert.strictEqual(cortex.tempo, 40, 'cortex deve ter tempo 40 do histórico');
+  assert.strictEqual(ces.tempo, 10, 'ces deve ter tempo 10 do histórico');
+  assert.strictEqual(cortex.quando, 'agora', 'cortex deve ter quando do histórico');
+  assert.strictEqual(ces.quando, 'agora', 'ces deve ter quando do histórico');
+  
+  // Verifica que sites externos continuam medidos normalmente
+  const bezsan = b.produtos.find((p) => p.id === 'bezsan');
+  assert.strictEqual(bezsan.ok, true, 'bezsan (externo) deve ter ok:true');
 });
 
 test('CENT-MAQ. máquinas do dono vêm do agente (só leitura)', async () => {
