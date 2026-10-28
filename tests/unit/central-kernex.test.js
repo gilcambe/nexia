@@ -92,16 +92,16 @@ test('CENTRAL-STATUS-FETCH: fetch falso testando sites base e pages.dev', async 
         // tratamos como falha na verificação, a menos que seja um erro específico esperado.
         // A revisão indica que o teste deve verificar o resultado de 'ok', não apenas se houve erro.
         // Se chegarmos aqui, significa que checkStatus não tratou o erro do fakeFetch como esperado.
-        console.error(\`Erro inesperado ao chamar checkStatus para \${item.id}:\`, error);
+        console.error(`Erro inesperado ao chamar checkStatus para ${item.id}:`, error);
         // Dependendo do que checkStatus deveria fazer com um erro total, podemos Assertar aqui.
         // Se o esperado é que ele retorne {ok: false} em caso de erro, e ele lançou um erro, então falhou.
         if (item.site.includes('pages.dev')) {
           // Para pages.dev, um erro lançado por checkStatus pode ser interpretado como ok: false.
           // Mas o teste ideal é que checkStatus retorne o objeto {ok: false}.
-          assert.fail(\`checkStatus lançou erro em vez de retornar {ok: false} para pages.dev (\${item.id}): \${error.message}\`);
+          assert.fail(`checkStatus lançou erro em vez de retornar {ok: false} para pages.dev (${item.id}): ${error.message}`);
         } else {
           // Para sites base, um erro lançado pelo checkStatus é problemático, pois esperamos ok: true.
-          assert.fail(\`checkStatus lançou erro inesperado para site base (\${item.id}): \${error.message}\`);
+          assert.fail(`checkStatus lançou erro inesperado para site base (${item.id}): ${error.message}`);
         }
       }
     }
