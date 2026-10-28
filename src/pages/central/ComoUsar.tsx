@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Icone } from './icones';
 import { useCelular } from './celular';
 
@@ -23,13 +23,22 @@ export function ComoUsar({ guia }: ComoUsarProps) {
   const [aberto, setAberto] = useState(false);
   const celular = useCelular();
 
+  useEffect(() => {
+    if (!aberto) return;
+    const tecla = (e: KeyboardEvent) => { if (e.key === 'Escape') setAberto(false); };
+    window.addEventListener('keydown', tecla);
+    return () => window.removeEventListener('keydown', tecla);
+  }, [aberto]);
+
   return (
     <>
       {/* Botão de interrogação no canto do card */}
       <button
+        type="button"
         onClick={() => setAberto(true)}
-        className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition-colors"
+        aria-expanded={aberto}
         aria-label="Como usar"
+        className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center rounded-full bg-indigo-100 text-indigo-600 hover:bg-indigo-200 transition-colors"
         data-testid="botao-comousar"
       >
         <Icone nome="interrogacao" className="w-4 h-4" />
@@ -37,10 +46,18 @@ export function ComoUsar({ guia }: ComoUsarProps) {
 
       {/* Painel lateral/modal responsivo */}
       {aberto && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-end md:items-center md:justify-center p-4">
-          <div className="bg-white rounded-t-2xl md:rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-end md:items-center md:justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setAberto(false); }}
+        >
+                      <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="como-usar-titulo"
+              className="bg-white rounded-t-2xl md:rounded-2xl w-full max-w-2xl max-h-[90vh] flex flex-col"
+            >
             <div className="flex items-center justify-between p-4 border-b border-slate-200">
-              <h3 className="text-lg font-semibold text-slate-900">{guia.titulo}</h3>
+              <h3 id="como-usar-titulo" className="text-lg font-semibold text-slate-900">{guia.titulo}</h3>
               <button
                 onClick={() => setAberto(false)}
                 className="p-1 text-slate-400 hover:text-slate-600"
