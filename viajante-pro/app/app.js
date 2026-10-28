@@ -403,6 +403,20 @@
     return html;
   }
 
+  function mostrarMensagem(texto) {
+    var container = document.getElementById('app-conteudo');
+    if (container) {
+      container.innerHTML = '<div class="bg-brand-card p-6 rounded-2xl border border-white/10 text-center space-y-3">' +
+        '<div class="text-3xl">ℹ️</div>' +
+        '<p class="text-xs text-brand-muted">' + texto + '</p>' +
+      '</div>';
+    }
+    var carimboEl = document.getElementById('carimbo-atualizacao');
+    if (carimboEl) {
+      carimboEl.innerText = '';
+    }
+  }
+
   function renderizarTela() {
     var container = document.getElementById('app-conteudo');
     if (!container || !dadosViagem) return;
@@ -429,43 +443,54 @@
     atualizarStatusRede();
 
     var params = new URLSearchParams(window.location.search);
-    var token = params.get('t') || params.get('token');
+    var tokenUrl = params.get('t');
+    var token = tokenUrl || localStorage.getItem('vp_token');
 
-    // Tentar obter dados do IndexedDB primeiro, senão buscar da API
-    obterDoIndexedDB('viagem_ativa').then(function (dadosSalvos) {
-      if (dadosSalvos) {
-        dadosViagem = dadosSalvos;
-        renderizarTela();
-      } else {
-        if (!token) {
-          console.warn('Token não fornecido.');
-          return;
-        }
-        buscarViagem(token).then(function (res) {
-          dadosViagem = converter(res);
-          salvarNoIndexedDB('viagem_ativa', dadosViagem);
-          renderizarTela();
-        }).catch(function (err) {
-          console.error('Erro ao buscar viagem:', err);
-          if (err && err.codigo === 404) {
-            var container = document.getElementById('app-conteudo');
-            if (container) {
-              container.innerHTML = '<div class="bg-red-950/80 border border-red-500/50 p-6 rounded-2xl text-center text-red-200 space-y-2">' +
-                '<h2 class="text-lg font-bold text-white">Link Inválido ou Expirado</h2>' +
-                '<p class="text-xs text-brand-muted">Verifique o link recebido ou entre em contato com o suporte.</p>' +
-              '</div>';
-            }
+    if (tokenUrl) {
+      localStorage.setItem('vp_token', tokenUrl);
+    }
+
+    if (!token) {
+      dadosViagem = null;
+      mostrarMensagem('Abra o link que a Viajante Pro enviou para você.');
+      return;
+    }
+
+    buscarViagem(token).then(function (res) {
+      dadosViagem = converter(res);
+      dadosViagem._token_salvo = token;
+      salvarNoIndexedDB('viagem_ativa', dadosViagem).catch(function () {});
+      renderizarTela();
+    }).catch(function (err) {
+      if (err && err.codigo === 404) {
+        localStorage.removeItem('vp_token');
+        obterDoIndexedDB('viagem_ativa').then(function (dadosSalvos) {
+          if (dadosSalvos) {
+            // Se houver necessidade de limpar IndexedDB ou apenas ignorar
           }
-        });
+        }).catch(function () {});
+        salvarNoIndexedDB('viagem_ativa', null).catch(function () {});
+        dadosViagem = null;
+        mostrarMensagem('Link inválido ou vencido. Peça um novo à Viajante Pro.');
+        return;
       }
-    }).catch(function (e) {
-      console.warn('IndexedDB indisponível:', e);
-      if (!token) return;
-      buscarViagem(token).then(function (res) {
-        dadosViagem = converter(res);
-        renderizarTela();
-      }).catch(function (err) {
-        console.error('Erro ao buscar viagem:', err);
+
+      // Falha de rede/servidor (exceto 404) -> tentar ler cópia do IndexedDB
+      obterDoIndexedDB('viagem_ativa').then(function (dadosSalvos) {
+        if (dadosSalvos && dadosSalvos.token === token) {
+          dadosViagem = dadosSalvos;
+          renderizarTela();
+          var carimboEl = document.getElementById('carimbo-atualizacao');
+          if (carimboEl) {
+            carimboEl.innerText = 'atualizado às ' + (dadosViagem.atualizado_em || '12:00');
+          }
+        } else {
+          dadosViagem = null;
+          mostrarMensagem('Sem internet e sem cópia salva. Tente de novo com internet.');
+        }
+      }).catch(function () {
+        dadosViagem = null;
+        mostrarMensagem('Sem internet e sem cópia salva. Tente de novo com internet.');
       });
     });
 
