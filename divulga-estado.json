@@ -1,5 +1,5 @@
 {
-  "rodizio": 32,
+  "rodizio": 33,
   "feitos": [
     "body-coach-01",
     "body-coach-02",
@@ -702,6 +702,25 @@
       ],
       "formato": "rodizio",
       "serie": null
+    },
+    {
+      "quando": "2026-10-28T01:23:49.033Z",
+      "id": null,
+      "cliente": "body-coach",
+      "resultados": [
+        {
+          "canal": "facebook",
+          "ok": true,
+          "ref": "1380111745183159_122105442945518156"
+        },
+        {
+          "canal": "instagram",
+          "ok": true,
+          "ref": "18109156547529031"
+        }
+      ],
+      "formato": "reel",
+      "serie": "passo-a-passo"
     }
   ],
   "seguidores": [
