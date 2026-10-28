@@ -122,15 +122,16 @@ async function main() {
     let project;
     if (!client) {
       const detalhes = cl.json ? JSON.stringify(cl.json, null, 2) : 'Resposta: ' + String(cl.text || '');
-
-      console.error(
-        '\nFALHA: Vault - criar cliente\n' +
-        'Status: ' + cl.status + '\n' +
-        'Causa: ' + causa + '\n' +
-        'Resposta completa: ' + detalhes + '\n' +
-        '\nINTERRUPÇÃO: A criação do projeto foi interrompida pois o cliente não pôde ser criado (sem client_id válido), evitando dados vazios.\n'
-      );
-      throw new Error(`Vault: criar cliente falhou com status ${cl.status}: ${causa}. Resposta: ${detalhes}`);
+      
+      console.error('\n=== FALHA DETALHADA: VAULT - CRIAR CLIENTE ===');
+      console.error('Status HTTP: ' + cl.status);
+      console.error('Mensagem de erro: ' + causa);
+      console.error('Resposta completa:');
+      console.error(detalhes);
+      console.error('\nINTERRUPÇÃO: O teste foi interrompido porque a criação do cliente falhou.');
+      console.error('Isso evita tentar criar um projeto com dados vazios (sem client_id válido).\n');
+      
+      throw new Error('Falha ao criar cliente: ' + causa + ' (status ' + cl.status + '). Detalhes: ' + detalhes);
     } else {
       const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
       project = pr.json && pr.json.record;
