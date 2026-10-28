@@ -26,6 +26,11 @@ export default function runHTML(html) {
       } catch (_) {
         // ignora erro na remoção
       }
+      try {
+        window.removeEventListener('message', handleMessage);
+      } catch (_) {
+        // ignora erro ao remover listener
+      }
       resolve(result);
     };
 
@@ -56,57 +61,62 @@ export default function runHTML(html) {
 
     window.addEventListener('message', handleMessage);
 
-    iframe = document.createElement('iframe');
-    iframe.sandbox = 'allow-scripts';
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
+    try {
+      iframe = document.createElement('iframe');
+      iframe.sandbox = 'allow-scripts';
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
 
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    doc.open();
-    doc.write(
-      '<!DOCTYPE html>' +
-      '<html>' +
-      '<head><meta charset="utf-8"><title>runHTML</title></head>' +
-      '<body>' +
-      '<script>' +
-      '// Intercepta console.log, console.error, etc e envia para o parent' +
-      '(function() {' +
-      '  const originalLog = console.log;' +
-      '  const originalError = console.error;' +
-      '  const originalWarn = console.warn;' +
-      '  const originalInfo = console.info;' +
-      '  ' +
-      '  console.log = function(...args) {' +
-      '    originalLog.apply(console, args);' +
-      '    window.parent.postMessage({ stdout: args.join(" ") }, "*");' +
-      '  };' +
-      '  ' +
-      '  console.error = function(...args) {' +
-      '    originalError.apply(console, args);' +
-      '    window.parent.postMessage({ error: args.join(" ") }, "*");' +
-      '  };' +
-      '  ' +
-      '  console.warn = function(...args) {' +
-      '    originalWarn.apply(console, args);' +
-      '    window.parent.postMessage({ stdout: args.join(" ") }, "*");' +
-      '  };' +
-      '  ' +
-      '  console.info = function(...args) {' +
-      '    originalInfo.apply(console, args);' +
-      '    window.parent.postMessage({ stdout: args.join(" ") }, "*");' +
-      '  };' +
-      '})();' +
-      'try {' +
-      html +
-      '} catch (e) {' +
-      '  window.parent.postMessage({ error: e.message }, "*");' +
-      '}' +
-      '// Sinaliza que terminou' +
-      'window.parent.postMessage({ done: true }, "*");' +
-      '</script>' +
-      '</body>' +
-      '</html>'
-    );
-    doc.close();
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      doc.open();
+      doc.write(
+        '<!DOCTYPE html>' +
+        '<html>' +
+        '<head><meta charset="utf-8"><title>runHTML</title></head>' +
+        '<body>' +
+        '<script>' +
+        '// Intercepta console.log, console.error, etc e envia para o parent' +
+        '(function() {' +
+        '  const originalLog = console.log;' +
+        '  const originalError = console.error;' +
+        '  const originalWarn = console.warn;' +
+        '  const originalInfo = console.info;' +
+        '  ' +
+        '  console.log = function(...args) {' +
+        '    originalLog.apply(console, args);' +
+        '    window.parent.postMessage({ stdout: args.join(" ") }, "*");' +
+        '  };' +
+        '  ' +
+        '  console.error = function(...args) {' +
+        '    originalError.apply(console, args);' +
+        '    window.parent.postMessage({ error: args.join(" ") }, "*");' +
+        '  };' +
+        '  ' +
+        '  console.warn = function(...args) {' +
+        '    originalWarn.apply(console, args);' +
+        '    window.parent.postMessage({ stdout: args.join(" ") }, "*");' +
+        '  };' +
+        '  ' +
+        '  console.info = function(...args) {' +
+        '    originalInfo.apply(console, args);' +
+        '    window.parent.postMessage({ stdout: args.join(" ") }, "*");' +
+        '  };' +
+        '})();' +
+        'try {' +
+        html +
+        '} catch (e) {' +
+        '  window.parent.postMessage({ error: e.message }, "*");' +
+        '}' +
+        '// Sinaliza que terminou' +
+        'window.parent.postMessage({ done: true }, "*");' +
+        '</script>' +
+        '</body>' +
+        '</html>'
+      );
+      doc.close();
+    } catch (err) {
+      finish({ stdout, error: error || err.message || 'erro ao criar iframe' });
+      return;
+    }
   });
 }
