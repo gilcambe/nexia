@@ -158,6 +158,71 @@ test('CENT-PROPRIO. sites no próprio Worker usam a medição de hora em hora (o
   assert.ok(pedidos.some((u) => u.includes('pages.dev')), 'sites de fora continuam medidos ao vivo');
 });
 
+test('CENT-SEM-AMOSTRA. ausência de amostra resulta em status "sem medição" (cinza) e nunca ok:false', async () => {
+  const fetch = async (u) => { if (u.includes('bezsan')) throw new Error('fora'); return { status: 200 }; };
+  const db = { collection: () => ({ where: () => ({ get: async () => ({ docs: [] }) }) }) }; // banco vazio, sem amostras
+  const b = JSON.parse((await createHandler({ getMw: () => master, fetch, getHistoricoDb: () => db })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
+  
+  // Sem amostra no histórico: sites próprios não têm medição (sem quando) e nunca ficam ok:false só por falta de amostra
+  const cortex = b.produtos.find((p) => p.id === 'cortex');
+  const ces = b.produtos.find((p) => p.id === 'ces');
+  
+  assert.strictEqual(cortex.quando, undefined, 'cortex sem amostra não tem quando (status sem medição/cinza)');
+  assert.strictEqual(ces.quando, undefined, 'ces sem amostra não tem quando (status sem medição/cinza)');
+  assert.ok(cortex.ok !== false, 'cortex sem amostra nunca fica ok:false apenas por falta de amostra');
+  assert.ok(ces.ok !== false, 'ces sem amostra nunca fica ok:false apenas por falta de amostra');
+  
+  // Sites externos continuam medidos ao vivo mesmo sem amostra histórica
+  const bezsan = b.produtos.find((p) => p.id === 'bezsan');
+  assert.strictEqual(bezsan.ok, false, 'bezsan (externo) fica ok:false quando está fora do ar');
+  assert.strictEqual(bezsan.codigo, 0, 'bezsan fica com codigo 0 quando dá erro');
+});
+
+test('CENT-SELF. rotas do próprio host utilizam o binding/mecanismo SELF (medição do histórico)', async () => {
+  const fetch = async (u) => { 
+    // Se tentar medir o próprio Worker, isso falharia (binding/mecanismo SELF evita isso)
+    if (u.includes('nexia.gcbezerra.workers.dev')) throw new Error('Worker não pode medir a si mesmo');
+    return { status: 200 }; 
+  };
+  const hora = new Date().toISOString().slice(0, 13);
+  const db = { 
+    collection: () => ({ 
+      where: () => ({ 
+        get: async () => ({ 
+          docs: [{ 
+            data: () => ({ 
+              hora, 
+              em: 'agora', 
+              rotas: { 
+                cortex: { ok: true, codigo: 200, tempo: 40 }, 
+                ces: { ok: false, codigo: 503, tempo: 10 } 
+              } 
+            }) 
+          }] 
+        }) 
+      }) 
+    }) 
+  };
+  const b = JSON.parse((await createHandler({ getMw: () => master, fetch, getHistoricoDb: () => db })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
+  
+  // Verifica que sites próprios usam a medição do histórico (binding/mecanismo SELF)
+  const cortex = b.produtos.find((p) => p.id === 'cortex');
+  const ces = b.produtos.find((p) => p.id === 'ces');
+  
+  assert.strictEqual(cortex.ok, true, 'cortex deve ter ok:true do histórico (binding/mecanismo SELF)');
+  assert.strictEqual(ces.ok, false, 'ces deve ter ok:false do histórico (binding/mecanismo SELF)');
+  assert.strictEqual(cortex.codigo, 200, 'cortex deve ter codigo 200 do histórico');
+  assert.strictEqual(ces.codigo, 503, 'ces deve ter codigo 503 do histórico');
+  assert.strictEqual(cortex.tempo, 40, 'cortex deve ter tempo 40 do histórico');
+  assert.strictEqual(ces.tempo, 10, 'ces deve ter tempo 10 do histórico');
+  assert.strictEqual(cortex.quando, 'agora', 'cortex deve ter quando do histórico');
+  assert.strictEqual(ces.quando, 'agora', 'ces deve ter quando do histórico');
+  
+  // Verifica que sites externos continuam medidos normalmente
+  const bezsan = b.produtos.find((p) => p.id === 'bezsan');
+  assert.strictEqual(bezsan.ok, true, 'bezsan (externo) deve ter ok:true');
+});
+
 test('CENT-MAQ. máquinas do dono vêm do agente (só leitura)', async () => {
   const h = createHandler({ getMw: () => master, getMaquinas: () => ({ ligado: () => true, listar: async () => [{ nome: 'PC1', online: true, ramTotal: 16 }] }) });
   const b = JSON.parse((await h(ev({ queryStringParameters: { parte: 'maquinas' } }))).body);

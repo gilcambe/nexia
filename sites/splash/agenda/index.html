@@ -478,6 +478,19 @@
     </div>
   </section>
 
+  <!-- ABA 5.6: AVISAR CLIENTES -->
+  <section id="aba-avisar" class="oculto">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title"><i class="ri-notification-badge-line"></i> 📣 Avisar clientes</div>
+      </div>
+      <button class="btn pequeno claro voltar-aj" onclick="navegarAba('config')"><i class="ri-arrow-left-line"></i> Voltar para Ajustes</button>
+      <p style="font-size: 13px; color: var(--suave);">Crie comunicados e artes personalizadas em imagem (1:1 e 9:16) com QR Code para enviar aos clientes ou compartilhar nas redes sociais.</p>
+
+      <div id="container-avisar"></div>
+    </div>
+  </section>
+
   <!-- ABA 6: CONFIGURAÇÕES / AJUSTES -->
   <section id="aba-financeiro" class="oculto">
     <h2>Financeiro</h2>
@@ -543,8 +556,10 @@
         <div class="aj-grade">
           <button type="button" class="aj-card" onclick="navegarAba('editor')"><i class="ri-layout-edit-line"></i><b>Editar o site</b><small>Textos e fotos do site</small></button>
           <button type="button" class="aj-card" onclick="navegarAba('importar')"><i class="ri-file-upload-line"></i><b>Importar reservas</b><small>Planilha</small></button>
+          <button type="button" class="aj-card" onclick="navegarAba('avisar')"><i class="ri-notification-badge-line"></i><b>Avisar clientes</b><small>Divulgação e artes</small></button>
           <button type="button" class="aj-card" onclick="abrirModalConta()"><i class="ri-lock-password-line"></i><b>Minha senha</b><small>Trocar a senha</small></button>
         </div>
+        <ul style="display:none"><li><a href="#avisar" onclick="navegarAba('avisar'); return false;">📣 Avisar clientes</a></li></ul>
       </div>
 
       <!-- TELAS DE AJUSTE -->
@@ -765,6 +780,8 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" crossorigin="anonymous"></script>
 <script src="painel.js"></script>
 <script src="gestao.js"></script>
+<script src="instagram-config.js"></script>
+<script type="module" src="avisar.js"></script>
 <script>
   const guardaToken = { ler() { try { return localStorage.getItem('splash_token') || sessionStorage.getItem('splash_token') || ''; } catch (e) { return ''; } }, gravar(t) { try { localStorage.setItem('splash_token', t); } catch (e) {} try { sessionStorage.setItem('splash_token', t); } catch (e) {} }, apagar() { try { localStorage.removeItem('splash_token'); } catch (e) {} try { guardaToken.apagar(); } catch (e) {} } };
   let TOKEN = guardaToken.ler();
@@ -2550,8 +2567,8 @@
   }
 
   function navegarAba(nome) {
-    const ABAS = ['calendario', 'pedidos', 'reservas', 'nova', 'financeiro', 'clientes', 'editor', 'importar', 'config'];
-    const MENU = { editor: 'config', importar: 'config' }; // telas que ficam "dentro" de Ajustes
+    const ABAS = ['calendario', 'pedidos', 'reservas', 'nova', 'financeiro', 'clientes', 'editor', 'importar', 'avisar', 'config'];
+    const MENU = { editor: 'config', importar: 'config', avisar: 'config' }; // telas que ficam "dentro" de Ajustes
     ABAS.forEach(a => {
       document.getElementById(`aba-${a}`).classList.toggle('oculto', a !== nome);
       const t = document.getElementById(`tab-${a}`); if (t) t.classList.toggle('ativa', a === nome);
@@ -2565,6 +2582,7 @@
     if (nome === 'reservas') renderizarListasReservas();
     if (nome === 'nova') mostrarOcupados();
     if (nome === 'editor' && !SITE_EDITOR.aberto) abrirSiteEditor();
+    if (nome === 'avisar' && window.AvisarClientes && window.AvisarClientes.init) window.AvisarClientes.init();
     if (nome === 'config') ajustesIr('hub');
     window.scrollTo(0, 0);
   }
