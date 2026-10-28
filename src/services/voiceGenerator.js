@@ -9,7 +9,14 @@ async function fetchAudio(text) {
   if (!response.ok) {
     throw new Error(`TTS API error: ${response.status}`);
   }
-  return await response.blob();
+  const audioBlob = await response.blob();
+  
+  // Verificar se o blob tem conteúdo
+  if (audioBlob.size === 0) {
+    throw new Error('API TTS retornou áudio vazio');
+  }
+  
+  return audioBlob;
 }
 
 /**
@@ -33,5 +40,13 @@ export async function generateVoice(scenes) {
     blobs.push(blob);
   }
 
-  return new Blob(blobs, { type: 'audio/mpeg' });
+  // Concatenar blobs de áudio
+  const audioBuffers = [];
+  for (const blob of blobs) {
+    const arrayBuffer = await blob.arrayBuffer();
+    audioBuffers.push(arrayBuffer);
+  }
+  
+  // Criar um novo blob concatenado
+  return new Blob(audioBuffers, { type: 'audio/mpeg' });
 }
