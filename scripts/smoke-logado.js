@@ -133,7 +133,6 @@ async function main() {
       report(false, 'Vault: criar projeto', 'não testado: cliente não foi criado');
       return;
     }
-    report(true, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
 
     const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client && client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
     project = pr.json && pr.json.record;
