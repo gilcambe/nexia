@@ -128,7 +128,8 @@ async function detect(files, read) {
       if (!text) continue;
       for (const m of text.matchAll(/projectId\s*:\s*["']([a-z0-9-]{4,30})["']/g)) {
         if (PLACEHOLDER_PROJECT.test(m[1])) continue;
-        (votes[m[1]] = votes[m[1]] || []).push(f);
+        // um voto por arquivo: um arquivo que repete o mesmo projectId (ex.: firebase-vault.js) não pesa mais que uma página
+        if (!(votes[m[1]] || []).includes(f)) (votes[m[1]] = votes[m[1]] || []).push(f);
       }
     }
     const best = Object.entries(votes).sort((a, b) => b[1].length - a[1].length)[0];
