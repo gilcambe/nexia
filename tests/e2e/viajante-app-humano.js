@@ -115,7 +115,8 @@ function confere(cond, msg) {
   await page.waitForSelector('#app-conteudo');
   await page.waitForTimeout(500);
   confere(await page.isVisible('#carimbo-atualizacao'), 'Carimbo de atualizacao visivel');
-  confere(await page.textContent('#app-conteudo').includes(viagemTeste.voos[0].cia), 'Viagem de teste carregada');
+  const conteudoInicio = await page.textContent('#app-conteudo');
+  confere(conteudoInicio && conteudoInicio.includes(viagemTeste.voos[0].companhia), 'Viagem de teste carregada');
   await tirarFoto('01-hoje');
 
   // Verificar sem rolagem horizontal (layout responsivo 360px)
