@@ -123,7 +123,6 @@ async function main() {
     if (!client) {
       const detalhes = cl.json ? JSON.stringify(cl.json, null, 2) : 'Resposta: ' + String(cl.text || '');
 
-      // Exibe a causa exata e detalhada da falha ao criar cliente e interrompe com erro claro
       console.error(
         '\nFALHA: Vault - criar cliente\n' +
         'Status: ' + cl.status + '\n' +
