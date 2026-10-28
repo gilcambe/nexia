@@ -10,7 +10,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/svg+xml" href="/cortex-icon.svg" />
     <link rel="apple-touch-icon" href="/cortex-icon-180.png" />
-    <link rel="manifest" href="/cortex.webmanifest" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.5.0/remixicon.min.css" />
@@ -25,5 +25,6 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/sw.js").then(function(r){console.log("SW registrado:",r.scope)}).catch(function(e){console.error("Falha ao registrar SW:",e)})}</script>
   </body>
 </html>
