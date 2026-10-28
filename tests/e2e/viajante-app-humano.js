@@ -148,7 +148,7 @@ function confere(cond, msg) {
   await page.goto(base + '/?t=' + TOKEN_ERRADO, { waitUntil: 'load' });
   await page.waitForSelector('#app-conteudo');
   await page.waitForTimeout(500);
-  const textoTokenInvalido = await page.textContent('#app-conteudo');
+  const textoTokenInvalido = await page.innerText('#app-conteudo');
   confere(textoTokenInvalido.includes('Link inválido'), 'Mensagem de link inválido aparece com token errado');
   await tirarFoto('05-token-invalido');
 
