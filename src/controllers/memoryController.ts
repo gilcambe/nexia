@@ -3,10 +3,7 @@
  * @brief Funções para interagir com a API de memória do usuário, removendo fatos ou limpando a memória.
  */
 
-// Assume que 'fetch' está disponível no ambiente de execução e que a URL base da API é conhecida.
-// Em um ambiente Node.js real, você importaria 'node-fetch' ou usaria o fetch global se disponível.
-// Para este exemplo, vamos supor que podemos chamar diretamente a API.
-const API_BASE_URL = '/api/memory'; // Ajuste se o caminho for diferente
+const API_BASE_URL = process.env.NEXIA_MEMORY_API_URL || '/api/memory';
 
 async function callMemoryAPI(userId: string, action: string, data: any = {}): Promise<any> {
   try {
@@ -51,15 +48,10 @@ export async function clearUserMemory(userId: string): Promise<void> {
 // neste pedido específico, e sua implementação em memória não se alinha com a API de backend.
 // Elas seriam refatoradas para também chamar a API se necessário para funcionalidades futuras.
 export async function addUserFact(userId: string, fact: string): Promise<void> {
-   console.warn("addUserFact não implementado via API de memória neste escopo.");
-   // Em um cenário real, seria:
-   // await callMemoryAPI(userId, 'add', { fact });
+  await callMemoryAPI(userId, 'add', { fact });
 }
 
 export async function getUserFacts(userId: string): Promise<string[]> {
-   console.warn("getUserFacts não implementado via API de memória neste escopo.");
-   // Em um cenário real, seria:
-   // const response = await callMemoryAPI(userId, 'get');
-   // return response.history || []; // ou a estrutura de dados correta
-   return [];
+  const response = await callMemoryAPI(userId, 'get');
+  return response?.history?.map((m: any) => m.content) || [];
 }
