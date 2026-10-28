@@ -277,9 +277,13 @@ async function main() {
     const apagadoUsuario = await deleteTestUser(sa).catch(() => false);
     console.log(`limpeza: usuário de teste ${apagadoUsuario ? 'apagado' : 'não apagado (segue)'}`);
     if (!apagadoUsuario) limpezaFalhou.push('usuário');
-    if (limpezaFalhou.length > 0) {
-      console.log(`  AVISO: falha na limpeza: ${limpezaFalhou.join(', ')}`);
+      if (limpezaFalhou.length > 0) {
+    console.log(`  AVISO: falha na limpeza: ${limpezaFalhou.join(', ')}`);
+    // Se a limpeza falhar, o teste deve falhar com código 1
+    if (bad.length === 0) {
+      bad.push({ ok: false, name: 'limpeza de teste' });
     }
+  }
   }
 
   const bad = results.filter(r => !r.ok);
