@@ -63,21 +63,21 @@ function confere(cond, msg) {
   const page = await ctx.newPage();
 
   // Dados da viagem de teste mockada (definida dentro do proprio teste)
+  const TOKEN_TESTE_VP = 'TOKEN_TESTE_VP';
   const viagemTeste = {
-    id: 'viagem-teste-123',
-    origem: { cidade: 'São Paulo', pais: 'Brasil' },
-    destino: { cidade: 'Paris', pais: 'França' },
-    datas: { saida: '2024-12-10', volta: '2024-12-20' },
-    voos: [
-      { cia: 'Air France', num: 'AF457', saida: '2024-12-10T22:00:00Z', volta: '2024-12-11T17:00:00Z' },
-      { cia: 'Air France', num: 'AF458', saida: '2024-12-20T10:00:00Z', volta: '2024-12-20T18:00:00Z' }
-    ],
-    roteiro: [
-      { dia: 1, local: 'Louvre', atividade: 'Visita ao museu', info: 'Abrir no Mapa' },
-      { dia: 5, local: 'Torre Eiffel', atividade: 'Subir ate o topo', info: 'Verificar horario' }
-    ],
-    motorista: { hotel: 'Le Meurice Paris', endereco: '228 Rue de Rivoli', info: 'Chamar por volta das 18h' },
-    emergencia: { contato: 'Consulado do Brasil em Paris', telefone: '+33 1 44 59 22 00', info: 'Viajante Pro' }
+    id: 'viagem-teste-1',
+    origem: 'Paris',
+    destino: 'Lisboa',
+    voos: [{ companhia: 'Air France', numero: 'AF1234' }],
+    roteiro: [{ local: 'Louvre', acao: 'Visitar museu' }],
+    motorista: {
+      nome: 'Le Meurice Paris',
+      endereco: '228 Rue de Rivoli, Paris'
+    },
+    emergencia: {
+      consulado: 'Consulado do Brasil',
+      telefone: '+33 1 42 86 82 00'
+    }
   };
   const TOKEN_ERRADO = 'TOKEN_ERRADO_INVALIDO';
 
