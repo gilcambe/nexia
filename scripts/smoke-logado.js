@@ -120,7 +120,6 @@ async function main() {
     const corpoTexto = cl.text ? String(cl.text).slice(0, 2000) : '';
     report(!!client, 'Vault: criar cliente', `${cl.status} ${causa}${corpoTexto ? ' | corpo: ' + corpoTexto : ''}`);
 
-    let project;
     if (!client) {
       const detalhes = cl.json ? JSON.stringify(cl.json, null, 2) : 'Resposta: ' + String(cl.text || '');
 
@@ -137,6 +136,7 @@ async function main() {
       throw new Error('Falha ao criar cliente: ' + causa + ' (status ' + cl.status + '). Detalhes: ' + detalhes + (corpoTexto ? ' | corpo: ' + corpoTexto : ''));
     }
 
+    let project;
     const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
     project = pr.json && pr.json.record;
     if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PROJ}`);
