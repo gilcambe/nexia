@@ -212,3 +212,8 @@ test('U13. EMPTY_DIFF: diff sem arquivos mas com commits à frente', () => {
   assert.deepStrictEqual(shouldFailEmptyDiff(cmp1), null, 'com ahead_by > 0 não deve falhar');
   assert.deepStrictEqual(shouldFailEmptyDiff(cmp2), { error_code: 'EMPTY_DIFF', summary: `Nenhum arquivo mudou; PR vazio não foi aberto.` }, 'com ahead_by = 0 deve falhar com EMPTY_DIFF');
 });
+
+test('pedido que cita arquivo concreto é mudança de código, não o pipeline modelo', () => {
+  assert.strictEqual(classifyIntent('No arquivo .github/workflows/vigia-no-ar.yml, crie um workflow que roda a cada 15 minutos'), 'change');
+  assert.strictEqual(classifyIntent('Crie o pipeline de CI/CD'), 'pipeline');
+});

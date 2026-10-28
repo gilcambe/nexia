@@ -64,10 +64,19 @@ async function entregouPr(token, titulo, runId) {
     const desde = new Date(run.created_at || 0).getTime();
     const alvo = palavras(titulo);
     const prs = (await gh(token, 'GET', '/pulls?state=all&sort=created&direction=desc&per_page=40')).json || [];
-    return prs.some(pr => /^nexia\//.test((pr.head || {}).ref || '') && new Date(pr.created_at).getTime() >= desde
-      && [...palavras(pr.title)].filter(w => alvo.has(w)).length >= 2);
+    for (const pr of prs) {
+      if (!(/^nexia\//.test((pr.head || {}).ref || '') && new Date(pr.created_at).getTime() >= desde
+        && [...palavras(pr.title)].filter(w => alvo.has(w)).length >= 2)) continue;
+      // PR só com o pipeline modelo (nexia-pipeline.yml) não é a entrega do pedido: o Cortex errou de plano.
+      const fs = (await gh(token, 'GET', `/pulls/${pr.number}/files?per_page=100`)).json || [];
+      if (!soPipelineModelo(fs.map(f => f.filename))) return true;
+    }
+    return false;
   } catch { return true; }
 }
+// Função pura: a lista de arquivos do PR é só o pipeline modelo gerado pelo NEXIA?
+const ARQ_PIPELINE_MODELO = '.github/workflows/nexia-pipeline.yml';
+function soPipelineModelo(arquivos) { return Array.isArray(arquivos) && arquivos.length > 0 && arquivos.every(a => a === ARQ_PIPELINE_MODELO); }
 // #852: arquivo que já existia na develop só conta se teve commit na develop depois do início da tarefa (`desde`).
 async function entregouAlgo(token, corpo, titulo, runId, desde) {
   const caminhos = caminhosDoPedido(corpo);
@@ -766,5 +775,5 @@ async function main() {
   }
 }
 
-module.exports = { assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
+module.exports = { soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
