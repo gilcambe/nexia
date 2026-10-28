@@ -119,34 +119,28 @@ async function main() {
     const causa = cl.json ? (cl.json.error || '') + ' ' + (cl.json.causa || '') : 'status ' + cl.status;
     report(!!client, 'Vault: criar cliente', `${cl.status} ${causa}`);
 
+    let project;
     if (!client) {
       const detalhes = cl.json ? JSON.stringify(cl.json, null, 2) : 'Resposta: ' + cl.text;
 
-      // Mostra detalhes específicos da resposta da API para ajudar no diagnóstico
-      let mensagemDetalhada = '\n❌ ERRO CRÍTICO: Falha ao criar cliente no Vault';
-      mensagemDetalhada += '\nStatus: ' + cl.status;
-      mensagemDetalhada += '\nDetalhes do erro: ' + causa;
-
-      // Adiciona informações úteis para diagnóstico
-      if (cl.json) {
-        if (cl.json.error) mensagemDetalhada += '\nCódigo de erro: ' + cl.json.error;
-        if (cl.json.causa) mensagemDetalhada += '\nCausa específica: ' + cl.json.causa;
-        if (cl.json.message) mensagemDetalhada += '\nMensagem: ' + cl.json.message;
-        if (cl.json.details) mensagemDetalhada += '\nDetalhes: ' + cl.json.details;
-      }
-
-      mensagemDetalhada += '\nResposta completa: ' + detalhes;
-      mensagemDetalhada += '\n\n⚠️  O teste será interrompido aqui, sem tentar criar projeto com dados vazios.';
-      mensagemDetalhada += '\n⚠️  Verifique os logs acima para identificar a causa do problema.';
-
-      console.error(mensagemDetalhada);
-      throw new Error('Vault: criar cliente falhou — ' + cl.status + ' ' + causa);
+      // Mostra a causa exata detalhadamente (status + corpo da resposta), sem mascarar a falha.
+      const linhasErro = [
+        '\\n❌ FALHA: Vault — criar cliente',
+        'Status: ' + cl.status,
+        'Causa: ' + causa,
+        'Resposta completa: ' + detalhes,
+        '',
+        '⚠️  A criação do projeto será pulada (sem client_id válido) e não será tentada com dados vazios.',
+        '⚠️  O restante do teste continua rodando.',
+      ];
+      console.error(linhasErro.join('\\n'));
+      report(false, 'Vault: criar projeto — pulado', 'cliente não criado; sem client_id válido para criar projeto');
+    } else {
+      const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
+      project = pr.json && pr.json.record;
+      if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PROJ}`);
+      report(!!project, 'Vault: criar projeto', `${pr.status} ${pr.json && (pr.json.error || '')}`);
     }
-
-    const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
-    let project = pr.json && pr.json.record;
-    if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PROJ}`);
-    report(!!project, 'Vault: criar projeto', `${pr.status} ${pr.json && (pr.json.error || '')}`);
     // Usa o projeto que já tem o repositório (ele só pode estar ligado a UM projeto por tenant;
     // sem isso o onboarding do teste completo falha com UNIQUE quando uma pista ligou o repositório antes).
     {
