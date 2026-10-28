@@ -5,7 +5,6 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "nexia",
   "main": "cloudflare/worker.js",
-  "services": [{ "binding": "SELF", "service": "nexia" }],
   "compatibility_date": "2026-09-01",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },

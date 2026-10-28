@@ -21,7 +21,7 @@ concurrency:
 jobs:
   reserva:
     name: Reserva #${{ inputs.numero }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 40
     environment: production
     env:
@@ -57,10 +57,7 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - name: Instalar Aider
-        run: |
-          python3 -m venv "$RUNNER_TEMP/aider-venv"
-          "$RUNNER_TEMP/aider-venv/bin/pip" install --quiet --prefer-binary aider-chat
-          echo "$RUNNER_TEMP/aider-venv/bin" >> "$GITHUB_PATH"
+        run: pip install --quiet aider-chat
       - name: Ler a issue
         run: |
           gh issue view "$NUMERO" --json title,body --jq '"# " + .title + "\n\n" + .body' > "$RUNNER_TEMP/tarefa.md"
