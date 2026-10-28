@@ -31,6 +31,11 @@ export async function handleChatMessage(message: string, userId: string): Promis
         console.error('Erro ao limpar memória:', error);
         return 'Desculpe, ocorreu um erro ao tentar limpar sua memória. Por favor, tente novamente.';
       }
+    case 'UNKNOWN':
+    default:
+      return 'Desculpe, não entendi o que você quis dizer. Posso ajudar de outra forma?';
+  }
+}
 
 export async function handleMemoryAction(action: string, userId: string, data?: any): Promise<string> {
   try {
@@ -48,10 +53,5 @@ export async function handleMemoryAction(action: string, userId: string, data?: 
   } catch (error) {
     console.error('Erro na ação de memória:', error);
     return 'Desculpe, ocorreu um erro ao processar sua solicitação de memória. Por favor, tente novamente.';
-  }
-}
-    case 'UNKNOWN':
-    default:
-      return 'Desculpe, não entendi o que você quis dizer. Posso ajudar de outra forma?';
   }
 }
