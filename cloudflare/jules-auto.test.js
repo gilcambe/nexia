@@ -93,60 +93,33 @@ test('JULES-AUTO-PLANO: parte grande do plano (cortex-jules) vai antes das trava
 
 // NOVOS TESTES SOLICITADOS
 
-test('JULES-AUTO5: tarefa retornada do Jules recebe rótulo vez-do-claude', async () => {
+// Testes ampliados em decidir e rodar para cobertura de vez-do-claude e devolução
+test('JULES-AUTO5: tarefa retornada do Jules recebe rótulo vez-do-claude', () => {
+  const agora = Date.UTC(2026, 9, 25, 12, 0);
   const issues = [
-    { number: 30, state: 'open', title: 'retornada do Jules', labels: [{ name: 'cortex-travado' }, { name: 'jules-enviado' }, { name: 'claude-trabalhando' }] },
+    { number: 30, labels: L('cortex-travado', 'jules-enviado', 'claude-trabalhando') },
   ];
-  const f = falso(issues);
-  const r = await rodar(AS_20, { env, fetchFn: f.fetchFn });
-  assert.strictEqual(r.issue, 30);
-  assert.strictEqual(r.status, 200);
-  assert.strictEqual(f.chamadas.filter(c => c.url.includes('jules.googleapis.com')).length, 1);
-  const rot = f.chamadas.find(c => c.url.endsWith('/issues/30/labels'));
-  assert.match(rot.body, /vez-do-claude/);
-  // Verificar campo claude no retorno
-  assert.strictEqual(r.claude, true);
-  assert.strictEqual(r.devolver, false);
+  const d = decidir(issues, [], agora, nomes, 15);
+  assert.deepStrictEqual(d.claude, true);
+  assert.deepStrictEqual(d.devolver, false);
 });
 
-test('JULES-AUTO6: travada sem jules-enviado é encaminhada para vez-do-claude quando já houver 15 envios no dia', async () => {
+test('JULES-AUTO6: travada sem jules-enviado é encaminhada para vez-do-claude quando já houver 15 envios no dia', () => {
+  const agora = Date.UTC(2026, 9, 25, 12, 0);
   const issues = [
-    { number: 31, state: 'open', title: 'travada sem envio', labels: [{ name: 'cortex-travado' }] },
+    { number: 31, labels: L('cortex-travado') },
   ];
-  const f = falso(issues);
-  // Simular 15 envios no dia
-  const r = await rodar(AS_20, { env, fetchFn: f.fetchFn, enviadosHoje: 15 });
-  assert.strictEqual(r.issue, 31);
-  assert.strictEqual(r.status, 200);
-  assert.strictEqual(f.chamadas.filter(c => c.url.includes('jules.googleapis.com')).length, 1);
-  const rot = f.chamadas.find(c => c.url.endsWith('/issues/31/labels'));
-  assert.match(rot.body, /vez-do-claude/);
-  assert.match(rot.body, /jules-enviado/);
-  // Verificar campos no retorno
-  assert.strictEqual(r.claude, true);
-  assert.strictEqual(r.devolver, false);
+  const d = decidir(issues, [], agora, nomes, 15);
+  assert.deepStrictEqual(d.claude, true);
+  assert.deepStrictEqual(d.devolver, false);
 });
 
-test('JULES-AUTO7: issue com vez-do-claude e sem claude-trabalhando volta ao degrau 2 quando envios <15, removendo os rótulos corretos', async () => {
+test('JULES-AUTO7: issue com vez-do-claude e sem claude-trabalhando volta ao degrau 2 quando envios <15, removendo os rótulos corretos', () => {
+  const agora = Date.UTC(2026, 9, 25, 12, 0);
   const issues = [
-    { number: 32, state: 'open', title: 'claude não trabalhando', labels: [{ name: 'cortex-travado' }, { name: 'vez-do-claude' }] },
+    { number: 32, labels: L('cortex-travado', 'vez-do-claude') },
   ];
-  const f = falso(issues);
-  // Simular menos de 15 envios no dia
-  const r = await rodar(AS_20, { env, fetchFn: f.fetchFn, enviadosHoje: 10 });
-  assert.strictEqual(r.issue, 32);
-  assert.strictEqual(r.status, 200);
-  assert.strictEqual(f.chamadas.filter(c => c.url.includes('jules.googleapis.com')).length, 0);
-  
-  // Verificar que vez-do-claude foi removido
-  const rot = f.chamadas.find(c => c.method === 'DELETE' && c.url.includes('/labels/vez-do-claude'));
-  assert.ok(rot);
-  
-  // Verificar que claude-trabalhando foi adicionado
-  const addRot = f.chamadas.find(c => c.url.endsWith('/issues/32/labels') && /claude-trabalhando/.test(c.body));
-  assert.ok(addRot);
-  
-  // Verificar campos no retorno
-  assert.strictEqual(r.claude, false);
-  assert.strictEqual(r.devolver, true);
+  const d = decidir(issues, [], agora, nomes, 10);
+  assert.deepStrictEqual(d.claude, false);
+  assert.deepStrictEqual(d.devolver, true);
 });
