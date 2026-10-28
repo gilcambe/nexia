@@ -34,3 +34,12 @@ test('RF6. travouAntesDoConserto: antes dos PRs #2221/#2301 volta, depois não',
   assert.equal(travouAntesDoConserto('2026-10-28T16:00:00Z'), false);
   assert.equal(travouAntesDoConserto(null), false);
 });
+
+// PR que só traz o pipeline modelo não é a entrega do pedido (Cortex errou de plano).
+const { soPipelineModelo } = require('../../scripts/cortex-fila');
+test('PL1. soPipelineModelo: só o nexia-pipeline.yml não conta como entrega', () => {
+  assert.equal(soPipelineModelo(['.github/workflows/nexia-pipeline.yml']), true);
+  assert.equal(soPipelineModelo(['.github/workflows/nexia-pipeline.yml', 'scripts/x.js']), false);
+  assert.equal(soPipelineModelo(['scripts/x.js']), false);
+  assert.equal(soPipelineModelo([]), false);
+});

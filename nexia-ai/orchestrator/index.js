@@ -48,9 +48,18 @@ const changeFirst = m => {
   const c = m.search(INTENT_RULES.find(r => r[0] === 'change')[1]), q = m.search(INTENT_RULES.find(r => r[0] === 'status')[1]);
   return c >= 0 && c < q;
 };
+// Pedido que cita um arquivo concreto ("No arquivo .github/workflows/x.yml, ...", "crie scripts/y.js") é mudança de código,
+// mesmo que mencione "workflow": gerar o pipeline modelo no lugar entregava o arquivo errado (PRs só com nexia-pipeline.yml).
+const NOMEIA_ARQUIVO = /[\w./-]+\.(?:ya?ml|js|ts|tsx|jsx|json|md|sh|html|css)\b/i;
+const pedeArquivoConcreto = message => {
+  const t = withoutUrls(message);
+  return NOMEIA_ARQUIVO.test(t) && !/nexia-pipeline/i.test(t);
+};
 function classifyIntent(message) {
   const m = normalize(withoutUrls(message));
+  const mudaCodigo = INTENT_RULES.find(r => r[0] === 'change')[1].test(m);
   for (const [intent, re] of INTENT_RULES) {
+    if (intent === 'pipeline' && re.test(m) && mudaCodigo && pedeArquivoConcreto(message)) return 'change';
     // Criar site ou sistema ("desenvolva um sistema", "monte uma landing") é mudança, mesmo sem os verbos da regra.
     if (intent === 'status' && buildKind(message)) return 'change';
     // "Altere X ... e mostre 'Salvando...'" é mudança: palavra de consulta depois de um verbo de mudança não manda.
