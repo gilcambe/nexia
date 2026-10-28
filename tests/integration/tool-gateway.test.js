@@ -206,8 +206,8 @@ test('G9. regras: a fila (entrada completa) é inacessível a clientes; o log se
 });
 
 test('G10. GitHub real (gilcambe/nexia): get_repo e get_checks pelo gateway', { skip: !process.env.NEXIA_TEST_GITHUB_TOKEN && 'sem NEXIA_TEST_GITHUB_TOKEN' }, async (t) => {
-  const g = createGateway({ db, vault, env: { GHTOKEN: process.env.NEXIA_TEST_GITHUB_TOKEN } });
-  const repo = await comRetentativa(async () => g.invoke(agent, { projectId: ids.project, tool: 'github.get_tool', input: {} }), t);
+  const g = create.createGateway({ db, vault, env: { GITHUB_TOKEN: process.env.NEXIA_TEST_GITHUB_TOKEN } });
+  const repo = await comRetentativa(async () => g.invoke(agent, { projectId: ids.project, tool: 'github.get_repo', input: {} }), t);
   if (!repo) return;
   assert.strictEqual(repo.status, 'succeeded', JSON.stringify(repo.error));
   assert.strictEqual(repo.result.full_name, 'gilcambe/nexia');
