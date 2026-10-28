@@ -1,7 +1,7 @@
 import { test, expect, beforeAll, afterAll } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import { renderSite } from '../scripts/renderizar-site'; // Ajuste o caminho se necessário
+import { renderizar } from '../scripts/renderizar-site'; // Ajuste o caminho se necessário
 
 // Carrega os moldes
 const moldesDir = path.join(__dirname, '../clientes/_moldes'); // Ajuste o caminho se necessário
