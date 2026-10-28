@@ -8,7 +8,7 @@
   var abaAtual = 'hoje';
   var dadosViagem = null;
 
-  // Registrar Service Worker
+  // Registrar Service Worker com escopo explícito
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('/viajante-pro/app/sw.js', { scope: '/viajante-pro/app/' }).catch(function (e) {
