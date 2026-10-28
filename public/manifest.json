@@ -9,28 +9,10 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "https://cdn.jsdelivr.net/gh/gilcambe/nexia@develop/public/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
+      "src": "/cortex-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
-    },
-    {
-      "src": "https://cdn.jsdelivr.net/gh/gilcambe/nexia@develop/public/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "https://cdn.jsdelivr.net/gh/gilcambe/nexia@develop/public/icon-maskable-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "https://cdn.jsdelivr.net/gh/gilcambe/nexia@develop/public/icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
     }
   ],
   "categories": ["productivity", "ai", "automation"],
