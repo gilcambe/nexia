@@ -157,8 +157,36 @@ async function cenarioTreino(browser, base, viewport) {
     }
     onde = 'abrir o treino';
     await page.goto(base + 'workout', { waitUntil: 'load', timeout: 45000 });
+    
+    // Primeiro responde a tela "Como você está hoje?" (sono, comida, energia) - PR 1497
+    onde = 'tela "Como você está hoje?"';
     await page.getByRole('button', { name: /Montar Treino de Hoje|Come[cç]ar treino de hoje/i }).click({ timeout: 8000 });
+    
+    // Aguarda e responde aos campos de sono, comida e energia
+    await page.waitForTimeout(1000);
+    
+    // Responde aos campos de sono (0-10)
+    const sonoInputs = page.locator('input[type="range"]').filter({ hasText: /Sono/i });
+    if (await sonoInputs.count() > 0) {
+      await sonoInputs.first().fill('7');
+    }
+    
+    // Responde aos campos de comida (0-10)
+    const comidaInputs = page.locator('input[type="range"]').filter({ hasText: /Comida/i });
+    if (await comidaInputs.count() > 0) {
+      await comidaInputs.first().fill('8');
+    }
+    
+    // Responde aos campos de energia (0-10)
+    const energiaInputs = page.locator('input[type="range"]').filter({ hasText: /Energia/i });
+    if (await energiaInputs.count() > 0) {
+      await energiaInputs.first().fill('6');
+    }
+    
+    // Clica em INICIAR TREINO
     await page.getByRole('button', { name: /^\s*INICIAR TREINO/i }).last().click({ timeout: 8000 });
+    
+    // Clica em COMEÇAR EXERCÍCIOS
     await page.getByRole('button', { name: /COMEÇAR EXERCÍCIOS/i }).click({ timeout: 8000 });
     const largura = () => page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     if ((await largura()) > 2) nota(tela, 'exercício ativo', 'a tela do exercício é mais larga que o aparelho (rolagem lateral)');
