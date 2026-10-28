@@ -116,6 +116,7 @@ function createHandler(deps = {}) {
       if (parte === 'saude') {
         // O Worker não consegue abrir o próprio endereço dentro de um pedido (o Cloudflare barra o laço) e dava
         // "fora do ar" falso para Cortex, CES, Viajante Pro e Splash. Esses usam a medição de hora em hora do cron.
+        // Se não houver medição recente, exibe estado cinza (sem medição) em vez de vermelho (fora do ar).
         const proprio = (u) => { try { return new URL(u).host === new URL(BASE).host; } catch { return false; } };
         let hora = null;
         if (NO_AR.some((p) => proprio(p.site))) {
@@ -123,7 +124,15 @@ function createHandler(deps = {}) {
         }
         const medidos = await Promise.all(NO_AR.map(async (p) => {
           const m = proprio(p.site) && hora && hora.rotas[p.id];
-          if (m) return { id: p.id, ok: !!m.ok, codigo: m.codigo || 0, tempo: m.tempo || 0, lento: (m.tempo || 0) > 3000, quando: hora.em || null };
+          if (m) {
+            // Se a medição existir, usa ela
+            return { id: p.id, ok: !!m.ok, codigo: m.codigo || 0, tempo: m.tempo || 0, lento: (m.tempo || 0) > 3000, quando: hora.em || null };
+          }
+          // Se for do próprio host mas não tem medição, exibe estado cinza (sem medição)
+          if (proprio(p.site)) {
+            return { id: p.id, ok: null, codigo: 0, tempo: 0, lento: false, quando: null, estado: 'sem-medição' };
+          }
+          // Para outros sites, mede normalmente
           return { id: p.id, ...(await medir(p.site, fetchFn)) };
         }));
         return res(200, { produtos: medidos, em: new Date().toISOString() });
