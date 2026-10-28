@@ -263,8 +263,9 @@ async function main() {
     const donoDoRepo = project && project.id;
     const apagarProjeto = !!projetoCriado && projetoCriado !== donoDoRepo;
     const apagarCliente = !!clienteCriado && (!projetoCriado || apagarProjeto);
-    const limpezaFalhou = [];
-    if (apagarProjeto) {
+      const bad = results.filter(r => !r.ok);
+  const limpezaFalhou = [];
+  if (apagarProjeto) {
       const apagado = await deleteTestRecord(api, 'projects', projetoCriado).catch(() => false);
       console.log(`limpeza: projeto de teste ${apagado ? 'apagado' : 'não apagado (segue)'}`);
       if (!apagado) limpezaFalhou.push('projeto');
