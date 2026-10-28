@@ -260,9 +260,18 @@ async function main() {
     const donoDoRepo = project && project.id;
     const apagarProjeto = !!projetoCriado && projetoCriado !== donoDoRepo;
     const apagarCliente = !!clienteCriado && (!projetoCriado || apagarProjeto);
-    if (apagarProjeto) console.log(`limpeza: projeto de teste ${await deleteTestRecord(api, 'projects', projetoCriado).catch(() => false) ? 'apagado' : 'não apagado (segue)'}`);
-    if (apagarCliente) console.log(`limpeza: cliente de teste ${await deleteTestRecord(api, 'clients', clienteCriado).catch(() => false) ? 'apagado' : 'não apagado (segue)'}`);
-    report(await deleteTestUser(sa).catch(() => false), 'Apagar usuário de teste');
+    if (apagarProjeto) {
+      const apagouProjeto = await deleteTestRecord(api, 'projects', projetoCriado).catch(() => false);
+      console.log(`limpeza: projeto de teste ${apagouProjeto ? 'apagado' : 'não apagado (segue)'}`);
+      if (!apagouProjeto) console.log('AVISO: Falha ao apagar projeto de teste - continuando teste');
+    }
+    if (apagarCliente) {
+      const apagouCliente = await deleteTestRecord(api, 'clients', clienteCriado).catch(() => false);
+      console.log(`limpeza: cliente de teste ${apagouCliente ? 'apagado' : 'não apagado (segue)'}`);
+      if (!apagouCliente) console.log('AVISO: Falha ao apagar cliente de teste - continuando teste');
+    }
+    const apagouUsuario = await deleteTestUser(sa).catch(() => false);
+    report(apagouUsuario, 'Apagar usuário de teste');
   }
 
   const bad = results.filter(r => !r.ok);
