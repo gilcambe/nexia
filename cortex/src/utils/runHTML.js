@@ -40,6 +40,11 @@ export default function runHTML(html) {
 
     const handleMessage = (event) => {
       try {
+        // Verifica se a mensagem vem do iframe atual
+        if (event.origin !== window.location.origin && event.origin !== 'null') {
+          return;
+        }
+        
         const data = event.data;
         if (data && typeof data === 'object') {
           if (data.stdout !== undefined) {
@@ -84,22 +89,22 @@ export default function runHTML(html) {
         '  ' +
         '  console.log = function(...args) {' +
         '    originalLog.apply(console, args);' +
-        '    window.parent.postMessage({ stdout: args.join(" ") }, "*");' +
+        '    window.parent.postMessage({ stdout: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
         '  };' +
         '  ' +
         '  console.error = function(...args) {' +
         '    originalError.apply(console, args);' +
-        '    window.parent.postMessage({ error: args.join(" ") }, "*");' +
+        '    window.parent.postMessage({ error: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
         '  };' +
         '  ' +
         '  console.warn = function(...args) {' +
         '    originalWarn.apply(console, args);' +
-        '    window.parent.postMessage({ stdout: args.join(" ") }, "*");' +
+        '    window.parent.postMessage({ stdout: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
         '  };' +
         '  ' +
         '  console.info = function(...args) {' +
         '    originalInfo.apply(console, args);' +
-        '    window.parent.postMessage({ stdout: args.join(" ") }, "*");' +
+        '    window.parent.postMessage({ stdout: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
         '  };' +
         '})();' +
         'try {' +
