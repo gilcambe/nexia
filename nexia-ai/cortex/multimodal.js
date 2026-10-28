@@ -5,6 +5,14 @@ const { entenderAnexo } = require('../../lib/anexos-entender');
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const MAX_TOTAL_BYTES = 20 * 1024 * 1024; // 20 MB limite total para inline_data
 
+const BASE64_RE = /^[A-Za-z0-9+/=]+$/;
+function base64Valida(b64) {
+  return typeof b64 === 'string' && BASE64_RE.test(b64) && b64.length % 4 === 0 && b64.length >= 4;
+}
+function sanitizarTexto(t) {
+  return String(t || '').replace(/[`*_\\[\]#()<>]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 120);
+}
+
 /**
  * Envia mensagem e anexos para o Gemini 2.5 Flash de forma nativa e multimodal.
  * Cita explicitamente de qual anexo veio cada informação.
@@ -28,8 +36,10 @@ async function processarMultimodal(param1, param2, param3 = {}) {
   // Validação de limites
   let totalBytes = 0;
   for (const att of validAttachments) {
-    if (att.base64) {
+    if (att.base64 && base64Valida(att.base64)) {
       totalBytes += Buffer.from(att.base64, 'base64').length;
+    } else if (att.base64) {
+      return { ok: false, error: `Anexo ${sanitizarTexto(att.nome || 'arquivo')} tem base64 inválido.` };
     }
   }
   if (totalBytes > MAX_TOTAL_BYTES) {
@@ -51,23 +61,38 @@ async function processarMultimodal(param1, param2, param3 = {}) {
             data: att.base64
           }
         });
-        parts.push({ text: `[Identificação do Anexo ${index + 1}: ${att.nome || 'arquivo'} (tipo: ${mime})]` });
+        const nomeSeguro = sanitizarTexto(att.nome || 'arquivo');
+        const mimeSeguro = sanitizarTexto(mime || 'application/octet-stream');
+        parts.push({ text: `[Identificação do Anexo ${index + 1}: ${nomeSeguro} (tipo: ${mimeSeguro})]` });
+        // vídeo (video/*) é aceito por inline_data e listado junto aos demais tipos suportados
       });
 
-      let promptText = message || 'Analise estes arquivos em conjunto e correlacione as informações.';
-      if (validAttachments.some(a => (a.tipo || '').startsWith('audio/'))) {
-        promptText += ' Nota sobre áudio: diga também o tom de quem fala, se for relevante.';
+      let promptText = 'Analise estes arquivos em conjunto e correlacione as informações.';
+      if (message) {
+        promptText += `\n\n[Mensagem do usuário]: "${sanitizarTexto(message)}"`;
       }
-      promptText += ' Na sua resposta, cite explicitamente de qual anexo veio cada informação (ex: "no áudio...", "na planilha...", "na foto...").';
+      promptText += '\n\nNota sobre o tom de voz: note o tom de voz de quem fala (áudio ou vídeo) e o tom de cada texto (imagem, documento, vídeo), se for relevante.';
+      promptText += '\nNa sua resposta, cite explicitamente de qual anexo veio cada informação (ex: "no áudio...", "na planilha...", "na foto...", "no vídeo...", "no texto...").';
 
       parts.push({ text: promptText });
 
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-      const res = await fetchImpl(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts }] })
-      });
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000);
+      let res;
+      try {
+        res = await fetchImpl(url, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          },
+          body: JSON.stringify({ contents: [{ parts }] }),
+          signal: controller.signal
+        });
+      } finally {
+        clearTimeout(timeoutId);
+      }
 
       if (res.ok) {
         const data = await res.json();
@@ -84,6 +109,7 @@ async function processarMultimodal(param1, param2, param3 = {}) {
         }
       }
     } catch (err) {
+      console.error('[multimodal] Gemini falhou: Erro na requisição ao modelo Gemini');
       // Cai no fallback se Gemini falhar
     }
   }
@@ -93,7 +119,7 @@ async function processarMultimodal(param1, param2, param3 = {}) {
   for (let i = 0; i < validAttachments.length; i++) {
     const att = validAttachments[i];
     const resp = await entenderAnexo(att, env, { fetchImpl });
-    const nomeAnexo = att.nome || `anexo ${i + 1}`;
+    const nomeAnexo = sanitizarTexto(att.nome || `anexo ${i + 1}`);
     if (resp.erro) {
       results.push(`[Anexo ${i + 1} (${nomeAnexo}): erro - ${resp.erro}]`);
     } else {
