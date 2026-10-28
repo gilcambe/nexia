@@ -123,6 +123,7 @@ async function main() {
     if (!client) {
       const detalhes = cl.json ? JSON.stringify(cl.json, null, 2) : 'Resposta: ' + String(cl.text || '');
       const headers = cl.headers ? JSON.stringify(cl.headers, null, 2) : '(nenhum header disponível)';
+      const payloadEnviado = JSON.stringify({ name: 'Teste automático NEXIA', slug: `teste-automatico${PROJ}`, status: 'active' }, null, 2);
 
       console.error('\n===============================================');
       console.error('=== FALHA CRÍTICA: VAULT - CRIAR CLIENTE ===');
@@ -131,7 +132,8 @@ async function main() {
       console.error('• Status HTTP: ' + cl.status);
       console.error('• URL da requisição: ' + BASE + '/api/nexia/clients');
       console.error('• Método: POST');
-      console.error('• Payload enviado: { name: "Teste automático NEXIA", slug: "teste-automatico' + PROJ + '", status: "active" }');
+      console.error('• Payload enviado:');
+      console.error(payloadEnviado);
       console.error('• Idempotency-Key: smoke-client-v1' + PROJ);
       console.error('\n[RESPOSTA DO SERVIDOR]');
       console.error('• Causa do erro: ' + causa);
@@ -147,7 +149,16 @@ async function main() {
       console.error('✗ O teste continuará com falha para que o problema seja investigado.');
       console.error('\n===============================================\n');
 
-      throw new Error('FALHA CRÍTICA: Vault: criar cliente falhou com status ' + cl.status + '. Causa: ' + causa + '. Detalhes: ' + detalhes + (corpoTexto ? ' | corpo: ' + corpoTexto.slice(0, 500) : '') + '. Nenhum projeto será criado.' );
+      // Lançar erro explícito para parar imediatamente o fluxo
+      const erroFinal = `FALHA CRÍTICA: Vault: criar cliente falhou\n` +
+                       `Status: ${cl.status}\n` +
+                       `Causa: ${causa}\n` +
+                       `Detalhes: ${detalhes}\n` +
+                       (corpoTexto ? `Corpo: ${corpoTexto.slice(0, 500)}\n` : '') +
+                       'Nenhum projeto será criado.';
+      
+      console.error('ERRO FINAL:', erroFinal);
+      throw new Error(erroFinal);
     }
 
     let project;
