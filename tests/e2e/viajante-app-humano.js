@@ -84,7 +84,7 @@ function confere(cond, msg) {
   // Interceptar todas as chamadas à API de viagens
   // Com o token TOKEN_TESTE_VP responde a viagem de teste definida dentro do teste
   // Qualquer outro token responde 404 com 'Link invalido'
-  await page.route('**/api/viagem*', async route => {
+  await page.route('**/api/viagem*', async (route) => {
     const url = route.request().url();
     const token = url.includes('?') ? new URLSearchParams(new URL(url).search).get('t') : null;
 
