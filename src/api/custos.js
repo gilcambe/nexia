@@ -17,6 +17,26 @@ function verificarAutorizacao(req) {
   return token === (process.env.NEXIA_JOBS_TOKEN || '');
 }
 
+function validarCORS(req, res) {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://nexia.ai',
+    'https://www.nexia.ai',
+    'https://app.nexia.ai'
+  ];
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Max-Age', '86400');
+  }
+  
+  return origin && allowedOrigins.includes(origin);
+}
+
 export default async function handler(req, res) {
   try {
     if (!verificarAutorizacao(req)) {
