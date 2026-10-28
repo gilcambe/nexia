@@ -63,6 +63,7 @@ function confere(cond, msg) {
   const page = await ctx.newPage();
 
   // Interceptar rota da API de viagens para mockar o token e a viagem de teste
+  // Dados da viagem de teste mockada
   const viagemTeste = {
     id: 'viagem-teste-123',
     origem: { cidade: 'São Paulo', pais: 'Brasil' },
@@ -81,15 +82,20 @@ function confere(cond, msg) {
   };
   const TOKEN_ERRADO = 'TOKEN_ERRADO_INVALIDO';
 
+  // Interceptar todas as chamadas à API de viagens
   await page.route('**/api/viagem*', async route => {
-    const token = route.request().url().includes('?') ? new URLSearchParams(new URL(route.request().url()).search).get('t') : null;
+    const url = route.request().url();
+    const token = url.includes('?') ? new URLSearchParams(new URL(url).search).get('t') : null;
+    
     if (token === 'TOKEN_TESTE_VP') {
+      // Responder com viagem de teste para token válido
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify(viagemTeste),
       });
     } else {
+      // Responder 404 com mensagem "Link inválido" para token inválido
       await route.fulfill({
         status: 404,
         contentType: 'text/plain',
@@ -109,7 +115,7 @@ function confere(cond, msg) {
   await page.waitForSelector('#app-conteudo');
   await page.waitForTimeout(500);
   confere(await page.isVisible('#carimbo-atualizacao'), 'Carimbo de atualização visível');
-  confere(await page.textContent('#app-conteudo'), viagemTeste.voos[0].cia, 'Viagem de teste carregada');
+  confere(await page.textContent('#app-conteudo').includes(viagemTeste.voos[0].cia), 'Viagem de teste carregada');
   await tirarFoto('01-hoje');
 
   // Verificar sem rolagem horizontal
@@ -164,7 +170,7 @@ function confere(cond, msg) {
   await page.click('#tab-voos');
   await page.waitForTimeout(300);
   const textoVoosOffline = await page.textContent('#app-conteudo');
-  confere(textoVoosOffline.includes('Air France') && textoVoosOffline.includes('VPX982'), 'Voos continuam visíveis offline a partir do IndexedDB');
+  confere(textoVoosOffline.includes('Air France') && textoVoosOffline.includes('AF457'), 'Voos continuam visíveis offline a partir do IndexedDB');
   await tirarFoto('06-offline-voos');
 
   await page.click('#tab-motorista');
