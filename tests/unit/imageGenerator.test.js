@@ -1,4 +1,5 @@
-import { generateImages, generateSRT } from '../src/services/imageGenerator.js';
+import { generateImages } from '../src/services/imageGenerator.js';
+import { generateSRT } from '../src/utils/captionGenerator.js';
 import { mockFluxWorker } from '../src/services/fluxWorker.mock.js';
 
 // Mock do fluxWorker para simular a API de geração de imagens
@@ -9,8 +10,18 @@ jest.mock('../src/services/fluxWorker.js', () => ({
 const mockGenerateImage = require('../src/services/fluxWorker.js').generateImage;
 
 /**
- * Teste para generateImages(scenes)
+ * Testes para generateImages (src/services/imageGenerator.js)
  */
+import { generateImages } from '../src/services/imageGenerator.js';
+import { mockFluxWorker } from '../src/services/fluxWorker.mock.js';
+
+// Mock do fluxWorker para simular a API de geração de imagens
+jest.mock('../src/services/fluxWorker.js', () => ({
+  generateImage: jest.fn()
+}));
+
+const mockGenerateImage = require('../src/services/fluxWorker.js').generateImage;
+
 describe('generateImages', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -48,16 +59,23 @@ describe('generateImages', () => {
       .mockResolvedValueOnce('https://example.com/image9.jpg')
       .mockResolvedValueOnce('https://example.com/image10.jpg');
 
-    const result = await generateImages(scenes);
+    const result = await generateImages(scenes, mockFluxWorker);
 
-    // Verificar que retornou um array de blobs/URLs
+    // Verificar que retornou um array de objetos com imagens
     expect(result).toBeInstanceOf(Array);
     expect(result.length).toBeGreaterThan(0);
 
-    // Verificar que cada imagem é uma URL válida
-    result.forEach(url => {
-      expect(typeof url).toBe('string');
-      expect(url).toMatch(/^https?:\/\//);
+    // Verificar que cada imagem é um objeto com as propriedades esperadas
+    result.forEach(img => {
+      expect(img).toHaveProperty('id');
+      expect(img).toHaveProperty('sceneId');
+      expect(img).toHaveProperty('sceneIndex');
+      expect(img).toHaveProperty('prompt');
+      expect(img).toHaveProperty('aspectRatio');
+      expect(img).toHaveProperty('url');
+      expect(img).toHaveProperty('blob');
+      expect(img).toHaveProperty('index');
+      expect(img.url).toMatch(/^https?:\/\//);
     });
 
     // Verificar que a API foi chamada corretamente
@@ -79,18 +97,26 @@ describe('generateImages', () => {
     // Simular erro na API
     mockGenerateImage.mockRejectedValueOnce(new Error('API de geração de imagens indisponível'));
 
-    await expect(generateImages(scenes)).rejects.toThrow('API de geração de imagens indisponível');
+    await expect(generateImages(scenes, mockFluxWorker)).rejects.toThrow('API de geração de imagens indisponível');
   });
 
   test('deve retornar array vazio se scenes estiver vazio', async () => {
-    const result = await generateImages([]);
+    const result = await generateImages([], mockFluxWorker);
     expect(result).toEqual([]);
+  });
+
+  test('deve validar fluxWorker obrigatório', async () => {
+    const scenes = [{ id: 'scene-1', prompt: 'Teste' }];
+    
+    await expect(generateImages(scenes)).rejects.toThrow('fluxWorker não está disponível ou não tem método generateImage');
   });
 });
 
 /**
- * Teste para generateSRT(scenes)
+ * Testes para generateSRT (src/utils/captionGenerator.js)
  */
+import { generateSRT } from '../src/utils/captionGenerator.js';
+
 describe('generateSRT', () => {
   test('deve gerar string SRT válida com 2 cenas', () => {
     const scenes = [
@@ -114,6 +140,7 @@ describe('generateSRT', () => {
 
     // Verificar que é uma string
     expect(typeof result).toBe('string');
+    expect(result.length).toBeGreaterThan(0);
 
     // Verificar que está no formato SRT válido
     expect(result).toContain('1');
@@ -129,10 +156,38 @@ describe('generateSRT', () => {
     expect(blankLineIndex).toBeGreaterThan(0);
   });
 
-  test('deve lidar com erro ao gerar SRT', () => {
-    const scenes = null;
+  test('deve lidar com timestamps inválidos', () => {
+    const scenes = [
+      {
+        id: 'scene-1',
+        prompt: 'Cena 1',
+        dialogue: 'Falando...',
+        startTime: -1, // Timestamp negativo
+        endTime: 5
+      }
+    ];
 
-    expect(() => generateSRT(scenes)).toThrow();
+    // Não deve lançar erro, mas deve corrigir timestamps
+    expect(() => generateSRT(scenes)).not.toThrow();
+    const result = generateSRT(scenes);
+    expect(result).toContain('00:00:00,000 --> 00:00:05,000');
+  });
+
+  test('deve validar que endTime > startTime', () => {
+    const scenes = [
+      {
+        id: 'scene-1',
+        prompt: 'Cena 1',
+        dialogue: 'Falando...',
+        startTime: 10,
+        endTime: 5 // endTime menor que startTime
+      }
+    ];
+
+    // Não deve lançar erro, mas deve corrigir timestamps
+    expect(() => generateSRT(scenes)).not.toThrow();
+    const result = generateSRT(scenes);
+    expect(result).toContain('00:00:10,000 --> 00:00:15,000'); // Adiciona 5 segundos
   });
 
   test('deve retornar string vazia se scenes estiver vazio', () => {
@@ -161,11 +216,37 @@ describe('generateSRT', () => {
     const result = generateSRT(scenes);
 
     // Verificar que o timestamp 1 está correto
-    expect(result).toMatch(/1\s*-->\s*[0-9:]+\.[0-9]+\s*$/m);
-    expect(result).toContain('Bom dia, mundo!');
+    expect(result).toMatch(/1\s*-->\s*00:00:05,000\s*$/m);
+    expect(result).toContain('Falando...');
 
     // Verificar que o timestamp 2 está correto
-    expect(result).toMatch(/2\s*-->\s*[0-9:]+\.[0-9]+\s*$/m);
-    expect(result).toContain('Que dia lindo!');
+    expect(result).toMatch(/2\s*-->\s*00:00:10,000\s*$/m);
+    expect(result).toContain('Falando mais...');
+  });
+
+  test('deve lidar com cenas sem timestamps usando duration', () => {
+    const scenes = [
+      {
+        id: 'scene-1',
+        prompt: 'Cena 1',
+        dialogue: 'Falando...',
+        duration: 5
+      }
+    ];
+
+    const result = generateSRT(scenes);
+    expect(result).toContain('00:00:00,000 --> 00:00:05,000');
+  });
+
+  test('deve lidar com cenas sem dados obrigatórios', () => {
+    const scenes = [
+      {
+        id: 'scene-1'
+        // sem prompt, speech, startTime, endTime, duration
+      }
+    ];
+
+    const result = generateSRT(scenes);
+    expect(result).toContain('1\n00:00:00,000 --> 00:00:05,000\n');
   });
 });
