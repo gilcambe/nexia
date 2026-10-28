@@ -108,11 +108,20 @@ jobs:
           [ -n "$RESERVA_OPENAI_KEY" ] && contas+=("openai|gpt-4o-mini|OPENAI_API_KEY|$RESERVA_OPENAI_KEY")
           [ -n "$RESERVA_ANTHROPIC_KEY" ] && contas+=("anthropic|claude-3-5-haiku-20241022|ANTHROPIC_API_KEY|$RESERVA_ANTHROPIC_KEY")
           if [ ${#contas[@]} -eq 0 ]; then echo "Nenhuma conta de reserva ligada."; echo "ok=0" >> "$GITHUB_OUTPUT"; exit 0; fi
+          # Só conta como resultado se houver linha de código de verdade: arquivo novo VAZIO (a IA "terminou" sem escrever) não vale.
+          tem_conteudo() {
+            local f n=0
+            while IFS= read -r f; do
+              case "$f" in .aider*|.gitignore) continue ;; esac
+              [ -s "$f" ] && n=$((n+1))
+            done < <(git ls-files -m -o --exclude-standard)
+            [ "$n" -gt 0 ]
+          }
           for c in "${contas[@]}"; do
             IFS='|' read -r nome modelo var chave <<< "$c"
             echo "Tentando conta: $nome"
             git reset -q --hard "origin/${GITHUB_REF_NAME}" || true
-            if env "$var=$chave" aider --yes-always --no-auto-commits --no-gitignore --no-detect-urls --no-check-update --no-analytics --model "$modelo" --message "$PROMPT" $(tr '\n' ' ' < "$RUNNER_TEMP/arquivos.txt") 2>&1 | tail -40; [ -n "$(git status --porcelain | grep -v -E '\.aider|\.gitignore')" ]; then
+            if env "$var=$chave" aider --yes-always --no-auto-commits --no-gitignore --no-detect-urls --no-check-update --no-analytics --model "$modelo" --message "$PROMPT" $(tr '\n' ' ' < "$RUNNER_TEMP/arquivos.txt") 2>&1 | tail -40; tem_conteudo; then
               echo "ok=1" >> "$GITHUB_OUTPUT"; echo "conta=$nome" >> "$GITHUB_OUTPUT"; exit 0
             fi
             echo "Conta $nome sem resultado (cota/limite); próxima."
