@@ -84,6 +84,16 @@ jobs:
           NEXIA_MODELS_CODING: ${{ secrets.NEXIA_MODELS_CODING }}
           NEXIA_MODELS_REASONING: ${{ secrets.NEXIA_MODELS_REASONING }}
           NEXIA_MODELS_FAST: ${{ secrets.NEXIA_MODELS_FAST }}
+          IA_VAGA_1: ${{ secrets.IA_VAGA_1 }}
+          IA_VAGA_2: ${{ secrets.IA_VAGA_2 }}
+          IA_VAGA_3: ${{ secrets.IA_VAGA_3 }}
+          IA_VAGA_4: ${{ secrets.IA_VAGA_4 }}
+          IA_VAGA_5: ${{ secrets.IA_VAGA_5 }}
+          IA_VAGA_6: ${{ secrets.IA_VAGA_6 }}
+          IA_VAGA_7: ${{ secrets.IA_VAGA_7 }}
+          IA_VAGA_8: ${{ secrets.IA_VAGA_8 }}
+          IA_VAGA_9: ${{ secrets.IA_VAGA_9 }}
+          IA_VAGA_10: ${{ secrets.IA_VAGA_10 }}
           METRICS_SECRET: ${{ secrets.METRICS_SECRET }}
           DUNNING_SECRET: ${{ secrets.DUNNING_SECRET }}
           GITHUB_REPO: ${{ secrets.NEXIA_GITHUB_REPO }}
