@@ -26,11 +26,12 @@ class CofreSql {
         const path = url.pathname;
         if (path.includes('/vazao') && request.method === 'POST') {
           const body = await request.json();
-          const { banco, data, leituras = 0, escritas = 0 } = body || {};
-          if (banco && data) {
+          const { banco, data, leituras = 0, escritas = 0, projectId = '' } = body || {};
+          const bancoKey = banco || projectId;
+          if (bancoKey && data) {
             this.sql.exec(`INSERT INTO vazaosql (banco, data, leituras, escritas) VALUES (?, ?, ?, ?)
               ON CONFLICT(banco) DO UPDATE SET data = ?, leituras = leituras + ?, escritas = escritas + ?`,
-              banco, data, leituras, escritas, data, leituras, escritas);
+              bancoKey, data, leituras, escritas, data, leituras, escritas);
           }
           return resposta(200, { success: true });
         }
