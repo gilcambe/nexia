@@ -144,6 +144,14 @@ function confere(cond, msg) {
   confere(textoEmergencia.includes('Consulado do Brasil') && textoEmergencia.includes('Viajante Pro'), 'Contatos de emergência visíveis');
   await tirarFoto('05-emergencia');
 
+  console.log('5.5. Testando token inválido');
+  await page.goto(base + '/?t=' + TOKEN_ERRADO, { waitUntil: 'load' });
+  await page.waitForSelector('#app-conteudo');
+  await page.waitForTimeout(500);
+  const textoTokenInvalido = await page.textContent('#app-conteudo');
+  confere(textoTokenInvalido.includes('Link inválido'), 'Mensagem de link inválido aparece com token errado');
+  await tirarFoto('05-token-invalido');
+
   console.log('6. Simulando modo Offline');
   await ctx.setOffline(true);
   await page.reload({ waitUntil: 'load' });
