@@ -68,3 +68,22 @@ test('PS3. #2321: "[ferramentas pedidas: ...]" só em texto não termina como pr
   assert.match(r.text, /Pronto/);
   assert.match(String(seen[1]), /não chamou nenhuma/);
 });
+
+test('PS4. Architect não chama github.get_file em arquivos novos inexistentes', async () => {
+  const calledPaths = [];
+  const router = {
+    capabilities: () => ({ available: true, tool_call: true }),
+    async toolCall() {
+      return { text: 'ARQUIVOS: src/config/turnstile.js\nPronto.', tool_calls: [], usage: {} };
+    },
+  };
+  const gateway = { describe: () => [{ name: 'github.get_file', risk: 'LOW', description: 'ler', input_schema: { type: 'object' } }],
+    async invoke(ctx, { tool, input }) {
+      calledPaths.push(input.path);
+      return { status: 'failed', error: { code: 'UPSTREAM_NOT_FOUND', message: 'Not found' } };
+    } };
+  const meter = createMeter({ max_steps: 10, max_tool_calls: 10, max_tokens: 1e9, max_ms: 60000 });
+  const r = await runAgent({ agentId: 'architect', goal: 'Criar arquivo src/config/turnstile.js', router, gateway, ctx: {}, projectId: 'p1', meter });
+  assert.strictEqual(r.status, 'done');
+  assert.strictEqual(calledPaths.length, 0, 'não chamou get_file para arquivo novo');
+});
