@@ -50,6 +50,18 @@ function confere(cond, msg) {
   const base = `http://127.0.0.1:${servidor.address().port}`;
   if (FOTOS) fs.mkdirSync(FOTOS, { recursive: true });
 
+  const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
+  const ctx = await browser.newContext({
+    viewport: { width: 360, height: 800 },
+    deviceScaleFactor: 2,
+    isMobile: true,
+    hasTouch: true,
+    locale: 'pt-BR',
+    timezoneId: 'America/Sao_Paulo'
+  });
+
+  const page = await ctx.newPage();
+
   // Interceptar rota da API de viagens para mockar o token e a viagem de teste
   const viagemTeste = {
     id: 'viagem-teste-123',
@@ -77,32 +89,14 @@ function confere(cond, msg) {
         contentType: 'application/json',
         body: JSON.stringify(viagemTeste),
       });
-    } else if (token === TOKEN_ERRADO) {
+    } else {
       await route.fulfill({
         status: 404,
         contentType: 'text/plain',
         body: 'Link inválido',
       });
-    } else {
-      await route.fulfill({
-        status: 404,
-        contentType: 'text/plain',
-        body: 'Token inválido ou ausente',
-      });
     }
   });
-
-  const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
-  const ctx = await browser.newContext({
-    viewport: { width: 360, height: 800 },
-    deviceScaleFactor: 2,
-    isMobile: true,
-    hasTouch: true,
-    locale: 'pt-BR',
-    timezoneId: 'America/Sao_Paulo'
-  });
-
-  const page = await ctx.newPage();
   let nFoto = 0;
   const tirarFoto = async (nome) => {
     if (FOTOS) {
