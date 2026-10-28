@@ -4,6 +4,7 @@
 import {
   calcularCustoTotalMes,
   calcularCustoMedioPorPlano,
+  calcularCustoMedioGeral,
   top10ClientesQueMaisGastam,
   percentualCustoSobreReceita,
   tetoGlobalExcedido,
@@ -14,6 +15,26 @@ function verificarAutorizacao(req) {
   if (!auth || !auth.startsWith('Bearer ')) return false;
   const token = auth.slice(7).trim();
   return token === (process.env.NEXIA_JOBS_TOKEN || '');
+}
+
+function validarCORS(req, res) {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://nexia.ai',
+    'https://www.nexia.ai',
+    'https://app.nexia.ai'
+  ];
+
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.setHeader('Access-Control-Max-Age', '86400');
+  }
+
+  return origin && allowedOrigins.includes(origin);
 }
 
 function validarEntrada(body) {
@@ -33,6 +54,16 @@ function validarEntrada(body) {
 
 export default async function handler(req, res) {
   try {
+    // Responder preflight CORS
+    if (req.method === 'OPTIONS') {
+      const corsOk = validarCORS(req, res);
+      return res.status(corsOk ? 204 : 403).end();
+    }
+
+    if (!validarCORS(req, res)) {
+      return res.status(403).json({ ok: false, erro: 'Origem não permitida' });
+    }
+
     if (!verificarAutorizacao(req)) {
       return res.status(401).json({ ok: false, erro: 'Não autorizado' });
     }
@@ -59,6 +90,7 @@ export default async function handler(req, res) {
       percentualCustoReceita: percentual,
       circuitoGlobalAtivo: config.circuitoGlobal === true,
       alertaTetoGlobal: alerta,
+      custoMedioGeral: calcularCustoMedioGeral(lancamentos),
     });
   } catch (erro) {
     return res.status(500).json({ ok: false, erro: 'Falha ao calcular custos' });
