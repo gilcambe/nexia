@@ -73,112 +73,51 @@
     });
   }
 
-  // Dados Padrão de Exemplo (fallback realista quando sem API)
-  function dadosPadrao(token) {
+  // Buscar Viagem da API
+  function buscarViagem(token) {
+    return fetch('/api/viagem?site=viajantepro', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ acao: 'app_obter', token: token })
+    }).then(function (res) {
+      if (res.status === 404) {
+        var err = new Error('link_invalido');
+        err.codigo = 404;
+        err.mensagem = 'link_invalido';
+        throw err;
+      }
+      if (!res.ok) {
+        var errHttp = new Error('Erro HTTP: ' + res.status);
+        errHttp.codigo = res.status;
+        errHttp.mensagem = 'erro_http';
+        throw errHttp;
+      }
+      return res.json();
+    });
+  }
+
+  // Converter resposta para o formato esperado por renderizarTela
+  function converter(resposta) {
+    var raw = resposta.viagem || resposta || {};
     var agora = new Date();
     var horaFormatada = ('0' + agora.getHours()).slice(-2) + ':' + ('0' + agora.getMinutes()).slice(-2);
+
     return {
-      token: token || 'DEMO-VP',
+      token: raw.token || '',
       atualizado_em: horaFormatada,
-      passageiro: 'Carlos Eduardo Santos',
-      destino: 'Paris, França',
-      data_inicio: '2026-11-10',
-      data_fim: '2026-11-20',
-      status_viagem: 'em_andamento', // 'antes' ou 'em_andamento'
-      alerta_imprevisto: {
-        ativo: true,
-        tipo: 'atraso', // 'atraso', 'cancelado', 'portao'
-        mensagem: 'Voo VP-402 atrasado em 35 minutos. Novo horário de embarque: 14:20 no Portão B12.'
-      },
-      hoje: {
-        dia_numero: 2,
-        data: '11/11/2026',
-        eventos: [
-          { hora: '08:30', titulo: 'Café da manhã no Hotel Le Meurice', tipo: 'hotel' },
-          { hora: '10:00', titulo: 'Passeio Guiado ao Museu do Louvre', tipo: 'passeio', endereco: 'Rue de Rivoli, 75001 Paris' },
-          { hora: '13:00', titulo: 'Almoço Reservado - Le Train Bleu', tipo: 'refeicao' },
-          { hora: '16:00', titulo: 'Transfer para Palácio de Versalhes', tipo: 'transfer' }
-        ]
-      },
-      voos: [
-        {
-          id: 'v1',
-          cia: 'Air France',
-          numero: 'AF 457',
-          origem: 'GRU (São Paulo)',
-          destino: 'CDG (Paris)',
-          data: '10/11/2026',
-          horario_partida: '19:10',
-          horario_chegada: '11:00 (+1d)',
-          terminal: 'T3',
-          portao: '24',
-          assento: '04A (Executive Class)',
-          localizador: 'VPX982',
-          bagagem_mao: '1 mala (10kg) + 1 item pessoal',
-          bagagem_despachada: '2 malas (23kg cada)',
-          status: 'Confirmado',
-          link_checkin: 'https://www.airfrance.com.br/check-in',
-          aviso_checkin: 'Check-in online abre 30h antes do voo.'
-        },
-        {
-          id: 'v2',
-          cia: 'Air France',
-          numero: 'AF 458',
-          origem: 'CDG (Paris)',
-          destino: 'GRU (São Paulo)',
-          data: '20/11/2026',
-          horario_partida: '23:20',
-          horario_chegada: '06:15 (+1d)',
-          terminal: '2E',
-          portao: 'K32',
-          assento: '04C (Executive Class)',
-          localizador: 'VPX982',
-          bagagem_mao: '1 mala (10kg) + 1 item pessoal',
-          bagagem_despachada: '2 malas (23kg cada)',
-          status: 'Confirmado',
-          link_checkin: 'https://www.airfrance.com.br/check-in',
-          aviso_checkin: 'Check-in abre 30h antes do voo.'
-        }
-      ],
-      roteiro: [
-        { dia: 1, data: '10/11', titulo: 'Embarque Rumo a Paris', descricao: 'Voo noturno partindo de Guarulhos.', endereco: 'Aeroporto Internacional de Guarulhos - Rod. Hélio Smidt, s/n - Cumbica, Guarulhos - SP' },
-        { dia: 2, data: '11/11', titulo: 'Chegada e Museu do Louvre', descricao: 'Check-in no hotel e visita ao Louvre.', endereco: '228 Rue de Rivoli, 75001 Paris, França' },
-        { dia: 3, data: '12/11', titulo: 'Torre Eiffel e Cruzeiro no Sena', descricao: 'Subida na Torre Eiffel e cruzeiro ao pôr do sol.', endereco: 'Champ de Mars, 5 Av. Anatole France, 75007 Paris, França' }
-      ],
-      hotel_carro: {
-        hotel: {
-          nome: 'Le Meurice Paris',
-          endereco: '228 Rue de Rivoli, 75001 Paris, France',
-          telefone: '+33 1 44 58 10 10',
-          checkin: '15:00',
-          checkout: '12:00',
-          voucher: 'HTL-LEM-9821'
-        },
-        carro: {
-          empresa: 'Hertz Prestige',
-          modelo: 'BMW Série 5 ou similar',
-          retirada: 'Aeroporto CDG - Terminal 2E',
-          devolucao: 'Aeroporto CDG - Terminal 2E',
-          telefone: '+33 1 70 96 80 00',
-          voucher: 'CAR-HRZ-4410'
-        }
-      },
-      documentos: [
-        { titulo: 'Voucher Hotel Le Meurice', tipo: 'Voucher', codigo: 'HTL-LEM-9821', arquivo: '#pdf-hotel' },
-        { titulo: 'Seguro Viagem Euromedic Premium', tipo: 'Seguro', codigo: 'SEG-EUR-5501', arquivo: '#pdf-seguro' },
-        { titulo: 'Bilhetes de Voo Air France (Ida e Volta)', tipo: 'Bilhete', codigo: 'VPX982', arquivo: '#pdf-voo' }
-      ],
-      motorista: {
-        hotel_nome: 'Le Meurice Paris',
-        hotel_endereco: '228 Rue de Rivoli, 75001 Paris',
-        instrucoes_idioma_local: 'S\'il vous plaît, emmenez-moi à l\'Hôtel Le Meurice: 228 Rue de Rivoli, 75001 Paris.'
-      },
-      emergencia: {
-        atendimento_vp_24h: '+55 11 98888-7777',
-        emergencia_pais: '112 (União Europeia)',
-        consulado_brasil: '+33 1 45 61 63 00 (Paris)',
-        seguro_viagem: '+55 11 3003-9988 (Apólice #982100)'
-      }
+      passageiro: raw.passageiro || '',
+      destino: raw.destino || '',
+      data_inicio: raw.data_inicio || '',
+      data_fim: raw.data_fim || '',
+      status_viagem: raw.status_viagem || 'antes',
+      alerta_imprevisto: raw.alerta_imprevisto || null,
+      hoje: raw.hoje || {},
+      voos: raw.voos || [],
+      roteiro: raw.roteiro || [],
+      hotel_carro: raw.hotel_carro || {},
+      documentos: raw.documentos || [],
+      motorista: raw.motorista || {},
+      emergencia: raw.emergencia || {}
     };
   }
 
@@ -492,19 +431,42 @@
     var params = new URLSearchParams(window.location.search);
     var token = params.get('t') || params.get('token');
 
-    // Tentar obter dados do IndexedDB primeiro
+    // Tentar obter dados do IndexedDB primeiro, senão buscar da API
     obterDoIndexedDB('viagem_ativa').then(function (dadosSalvos) {
       if (dadosSalvos) {
         dadosViagem = dadosSalvos;
+        renderizarTela();
       } else {
-        dadosViagem = dadosPadrao(token);
-        salvarNoIndexedDB('viagem_ativa', dadosViagem);
+        if (!token) {
+          console.warn('Token não fornecido.');
+          return;
+        }
+        buscarViagem(token).then(function (res) {
+          dadosViagem = converter(res);
+          salvarNoIndexedDB('viagem_ativa', dadosViagem);
+          renderizarTela();
+        }).catch(function (err) {
+          console.error('Erro ao buscar viagem:', err);
+          if (err && err.codigo === 404) {
+            var container = document.getElementById('app-conteudo');
+            if (container) {
+              container.innerHTML = '<div class="bg-red-950/80 border border-red-500/50 p-6 rounded-2xl text-center text-red-200 space-y-2">' +
+                '<h2 class="text-lg font-bold text-white">Link Inválido ou Expirado</h2>' +
+                '<p class="text-xs text-brand-muted">Verifique o link recebido ou entre em contato com o suporte.</p>' +
+              '</div>';
+            }
+          }
+        });
       }
-      renderizarTela();
     }).catch(function (e) {
-      console.warn('IndexedDB indisponível, usando memória:', e);
-      dadosViagem = dadosPadrao(token);
-      renderizarTela();
+      console.warn('IndexedDB indisponível:', e);
+      if (!token) return;
+      buscarViagem(token).then(function (res) {
+        dadosViagem = converter(res);
+        renderizarTela();
+      }).catch(function (err) {
+        console.error('Erro ao buscar viagem:', err);
+      });
     });
 
     // Evento de Botão de Conversa
