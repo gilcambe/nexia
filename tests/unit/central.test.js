@@ -163,21 +163,19 @@ test('CENT-SEM-AMOSTRA. ausência de amostra resulta em status "sem medição" (
   const db = { collection: () => ({ where: () => ({ get: async () => ({ docs: [] }) }) }) }; // banco vazio, sem amostras
   const b = JSON.parse((await createHandler({ getMw: () => master, fetch, getHistoricoDb: () => db })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
   
-  // Verifica que sites próprios sem amostra têm status "sem medição" (cinza) - visualmente cinza quando não há medição
+  // Sem amostra no histórico: sites próprios não têm medição (sem quando) e nunca ficam ok:false só por falta de amostra
   const cortex = b.produtos.find((p) => p.id === 'cortex');
   const ces = b.produtos.find((p) => p.id === 'ces');
   
-  // Status "sem medição" é representado visualmente como cinza quando não há medição
-  // Isso significa que ok deve ser false, mas não deve ser considerado "fora do ar"
-  assert.strictEqual(cortex.ok, false, 'cortex deve ter ok:false quando não há amostra (status sem medição)');
-  assert.strictEqual(ces.ok, false, 'ces deve ter ok:false quando não há amostra (status sem medição)');
-  assert.strictEqual(cortex.quando, undefined, 'cortex não deve ter quando quando não há amostra');
-  assert.strictEqual(ces.quando, undefined, 'ces não deve ter quando quando não há amostra');
+  assert.strictEqual(cortex.quando, undefined, 'cortex sem amostra não tem quando (status sem medição/cinza)');
+  assert.strictEqual(ces.quando, undefined, 'ces sem amostra não tem quando (status sem medição/cinza)');
+  assert.ok(cortex.ok !== false, 'cortex sem amostra nunca fica ok:false apenas por falta de amostra');
+  assert.ok(ces.ok !== false, 'ces sem amostra nunca fica ok:false apenas por falta de amostra');
   
-  // Verifica que sites externos continuam medidos normalmente
+  // Sites externos continuam medidos ao vivo mesmo sem amostra histórica
   const bezsan = b.produtos.find((p) => p.id === 'bezsan');
-  assert.strictEqual(bezsan.ok, false, 'bezsan (externo) deve ter ok:false quando fora do ar');
-  assert.strictEqual(bezsan.codigo, 0, 'bezsan deve ter codigo 0 quando erro');
+  assert.strictEqual(bezsan.ok, false, 'bezsan (externo) fica ok:false quando está fora do ar');
+  assert.strictEqual(bezsan.codigo, 0, 'bezsan fica com codigo 0 quando dá erro');
 });
 
 test('CENT-SELF. rotas do próprio host utilizam o binding/mecanismo SELF (medição do histórico)', async () => {
