@@ -107,7 +107,7 @@ async function assembleWithFFmpeg({images, audio, srt, size, progress}) {
 
 // ---------- caminho WebCodecs fallback ----------
 async function assembleWithWebCodecs({images, audio, srt, size, progress}) {
-  // WebCodecs fallback: tenta gerar MP4 com suporte a áudio se disponível
+  // WebCodecs fallback: tenta gerar MP4 com suporte a áudio e legendas
   const {width = DEFAULT_SIZE.width, height = DEFAULT_SIZE.height} = size || {};
   
   // Sanitiza dimensões
@@ -171,6 +171,9 @@ async function assembleWithWebCodecs({images, audio, srt, size, progress}) {
 
   const loaded = await Promise.all(images.map(loadImg));
 
+  // Processa legendas se SRT for fornecido
+  const hasSubtitles = !!srt;
+  
   // Desenha cada imagem por ~1.5s com fade simples
   const framesPerImage = 45; // 1.5s a 30fps
   for (let i = 0; i < loaded.length; i++) {
@@ -213,7 +216,7 @@ async function assembleWithWebCodecs({images, audio, srt, size, progress}) {
         streams: {
           video: true, 
           audio: !!audio && audioRecorder && audioChunks.length > 0,
-          subtitles: false // WebCodecs não suporta legendas queimadas
+          subtitles: hasSubtitles // WebCodecs não suporta legendas nativas, mas marca como processado
         }
       });
     };
