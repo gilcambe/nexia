@@ -175,7 +175,7 @@ function confere(cond, msg) {
   );
   await tirarFoto('05-emergencia');
 
-  console.log('5.5. Testando token invalido');
+  console.log('6. Testando token invalido');
   await page.goto(base + '/?t=' + TOKEN_ERRADO, { waitUntil: 'load' });
   await page.waitForSelector('#app-conteudo');
   await page.waitForTimeout(500);
