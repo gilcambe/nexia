@@ -182,8 +182,8 @@ async function verificarSite(produto) {
   }
   try {
     await requisitarComTentativas(site);
-    // Voltou ao normal.
-    if (falhasConsecutivas[id] >= LIMITE_ROLLBACK) {
+    // Voltou ao normal: zera falhas consecutivas e fecha issue aberta.
+    if (falhasConsecutivas[id]) {
       falhasConsecutivas[id] = 0;
       await fecharIssueAlerta();
     }
