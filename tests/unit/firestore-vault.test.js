@@ -48,9 +48,14 @@ test('Firestore - Contador de uso, cache TTL 60s, troca em 70% e aviso Central',
   assert.strictEqual(snap2.exists, true);
   assert.strictEqual(fetchedCount, 1); // Não incrementou!
 
-  // 2. Testar limpeza de cache na escrita
-  await db.set(docRef, { name: 'Atualizado' });
+  // 2. Testar limpeza exata de cache na escrita
+  const docRef2 = db.doc('users/456');
+  await db._setToCache('projects/test/databases/(default)/documents/users/456', { found: { name: 'projects/test/databases/(default)/documents/users/456' } });
+  assert.notStrictEqual(db._getFromCache('projects/test/databases/(default)/documents/users/456'), null);
+  
+  await db.set(docRef2, { name: 'Atualizado' });
   assert.strictEqual(db._getContador().writes, 1);
+  assert.strictEqual(db._getFromCache('projects/test/databases/(default)/documents/users/456'), null);
 
   // 3. Testar troca de banco em 70% e aviso na Central com label 'sentinel'
   let avisoEnviado = false;
@@ -62,7 +67,7 @@ test('Firestore - Contador de uso, cache TTL 60s, troca em 70% e aviso Central',
     }
   };
 
-  // Simular contadores altos para atingir 70% (ou forçar verificação)
+  // Simular contadores altos para atingir 70%
   const hoje = new Date().toISOString().split('T')[0];
   if (typeof db._contadores.set === 'function' && db._contadores.get('test')) {
     db._contadores.get('test').set(hoje, { reads: 36000, writes: 0 });
@@ -70,13 +75,7 @@ test('Firestore - Contador de uso, cache TTL 60s, troca em 70% e aviso Central',
     db._contadores.set('test', new Map([[hoje, { reads: 36000, writes: 0 }]]));
   }
 
-  // Garantir que _estaQuaseCheio ou a verificação interna dispare o aviso
-  try {
-    if (typeof db._checarOuTrocarBanco === 'function') {
-      await db._checarOuTrocarBanco();
-    }
-  } catch (e) {}
-
   const quaseCheio = typeof db._estaQuaseCheio === 'function' ? await db._estaQuaseCheio() : true;
   assert.strictEqual(quaseCheio, true);
+  assert.strictEqual(avisoEnviado, true);
 });
