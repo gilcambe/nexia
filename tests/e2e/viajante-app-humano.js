@@ -186,7 +186,7 @@ function confere(cond, msg) {
   );
   await tirarFoto('05-token-invalido');
 
-  console.log('6. Simulando modo Offline');
+  console.log('7. Simulando modo Offline');
   await ctx.setOffline(true);
   await page.reload({ waitUntil: 'load' });
   await page.waitForSelector('#app-conteudo');
