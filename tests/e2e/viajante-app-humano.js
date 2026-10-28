@@ -98,7 +98,7 @@ function confere(cond, msg) {
       await route.fulfill({
         status: 404,
         contentType: 'text/plain',
-        body: 'Token invalido'
+        body: 'Link inválido'
       });
     }
   });
@@ -170,7 +170,7 @@ function confere(cond, msg) {
   await page.click('#tab-voos');
   await page.waitForTimeout(300);
   const textoVoosOffline = await page.textContent('#app-conteudo');
-  confere(textoVoosOffline.includes('Air France') && textoVoosOffline.includes('AF457'), 'Voos continuam visiveis offline a partir do IndexedDB');
+  confere(textoVoosOffline.includes('Air France') && textoVoosOffline.includes('AF1234'), 'Voos continuam visiveis offline a partir do IndexedDB');
   await tirarFoto('06-offline-voos');
 
   await page.click('#tab-motorista');
