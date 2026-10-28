@@ -107,49 +107,51 @@ async function main() {
   let client = null;
   let project = null;
 
-  try {
-    const me = await api('/nexia/me');
-    report(me.status === 200 && me.json.role === 'master' && me.json.canUseVault, 'Quem sou eu (/me)', `${me.status} ${me.json && me.json.role}`);
+    try {
+      const me = await api('/nexia/me');
+      report(me.status === 200 && me.json.role === 'master' && me.json.canUseVault, 'Quem sou eu (/me)', `${me.status} ${me.json && me.json.role}`);
 
-    // Suporte NEXIA (só no teste completo, não em cada tarefa do Cortex): o master lista os clientes e abre
-    // uma sessão de suporte na agenda de teste (nunca na de um cliente de verdade).
-    if (!TASK) {
-      const ag = (q, init = {}) => fetch(`${BASE}/api/agenda${q}`, { ...init, headers: { 'Content-Type': 'text/plain;charset=UTF-8', Authorization: `Bearer ${idToken}` } }).then(async r => ({ status: r.status, json: await r.json().catch(() => ({})) }));
-      const lista = await ag('?suporte=lista');
-      const sites = ((lista.json && lista.json.agendas) || []).map(a => a.site);
-      report(lista.status === 200 && sites.includes('studiolima') && sites.includes('bezsan'), 'Suporte NEXIA: lista de clientes', `${lista.status} ${sites.join(',')}`);
-      const sup = await ag('', { method: 'POST', body: JSON.stringify({ acao: 'suporte', site: 'agenda-teste' }) });
-      const ok = sup.status === 200 && /^[a-f0-9]{64}$/.test(sup.json.token || '');
-      const dentro = ok ? await ag('', { method: 'POST', body: JSON.stringify({ acao: 'sair', site: 'agenda-teste', token: sup.json.token }) }) : { status: 0 };
-      report(ok && dentro.status === 200, 'Suporte NEXIA: entrar e sair do painel da agenda de teste', `${sup.status} ${dentro.status}`);
-    }
+      // Suporte NEXIA (só no teste completo, não em cada tarefa do Cortex): o master lista os clientes e abre
+      // uma sessão de suporte na agenda de teste (nunca na de um cliente de verdade).
+      if (!TASK && !RAPIDO) {
+        const ag = (q, init = {}) => fetch(`${BASE}/api/agenda${q}`, { ...init, headers: { 'Content-Type': 'text/plain;charset=UTF-8', Authorization: `Bearer ${idToken}` } }).then(async r => ({ status: r.status, json: await r.json().catch(() => ({})) }));
+        const lista = await ag('?suporte=lista');
+        const sites = ((lista.json && lista.json.agendas) || []).map(a => a.site);
+        report(lista.status === 200 && sites.includes('studiolima') && sites.includes('bezsan'), 'Suporte NEXIA: lista de clientes', `${lista.status} ${sites.join(',')}`);
+        const sup = await ag('', { method: 'POST', body: JSON.stringify({ acao: 'suporte', site: 'agenda-teste' }) });
+        const ok = sup.status === 200 && /^[a-f0-9]{64}$/.test(sup.json.token || '');
+        const dentro = ok ? await ag('', { method: 'POST', body: JSON.stringify({ acao: 'sair', site: 'agenda-teste', token: sup.json.token }) }) : { status: 0 };
+        report(ok && dentro.status === 200, 'Suporte NEXIA: entrar e sair do painel da agenda de teste', `${sup.status} ${dentro.status}`);
+      }
 
-    // Vault: cliente e projeto de teste (idempotentes: rodar de novo reaproveita)
-    const cl = await api('/nexia/clients', { method: 'POST', body: { name: 'Teste automático NEXIA', slug: `teste-automatico${PROJ}`, status: 'active' }, headers: { 'Idempotency-Key': `smoke-client-v1${PROJ}` } });
-    client = cl.json && cl.json.record;
-    if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === `teste-automatico${PROJ}`);
-    if (!client) {
-      report(false, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
-      throw new Error('Falha ao criar cliente de teste');
-    }
-    report(true, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
+      // Vault: cliente e projeto de teste (idempotentes: rodar de novo reaproveita)
+      const cl = await api('/nexia/clients', { method: 'POST', body: { name: 'Teste automático NEXIA', slug: `teste-automatico${PROJ}`, status: 'active' }, headers: { 'Idempotency-Key': `smoke-client-v1${PROJ}` } });
+      client = cl.json && cl.json.record;
+      if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === `teste-automatico${PROJ}`);
+      if (!client) {
+        report(false, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
+        throw new Error('Falha ao criar cliente de teste');
+      }
+      report(true, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
 
-    const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client && client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
-    project = pr.json && pr.json.record;
-    if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PROJ}`);
-    report(!!project, 'Vault: criar projeto', `${pr.status} ${pr.json && (pr.json.error || '')}`);
-    // Usa o projeto que já tem o repositório (ele só pode estar ligado a UM projeto por tenant;
-    // sem isso o onboarding do teste completo falha com UNIQUE quando uma pista ligou o repositório antes).
-    {
-      const [ow, rp] = REPO.split('/');
-      const rs = (await api('/nexia/repos')).json;
-      const hit = ((rs && rs.items) || []).find(r => String(r.owner).toLowerCase() === ow.toLowerCase() && String(r.repo).toLowerCase() === rp.toLowerCase());
-      const pj = hit && (await api(`/nexia/projects/${hit.project_id}`)).json;
-      if (pj && pj.record) { project = pj.record; console.log(`  projeto com o repositório: ${project.slug}`); }
-    }
+      const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client && client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
+      project = pr.json && pr.json.record;
+      if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PROJ}`);
+      report(!!project, 'Vault: criar projeto', `${pr.status} ${pr.json && (pr.json.error || '')}`);
+      // Usa o projeto que já tem o repositório (ele só pode estar ligado a UM projeto por tenant;
+      // sem isso o onboarding do teste completo falha com UNIQUE quando uma pista ligou o repositório antes).
+      {
+        const [ow, rp] = REPO.split('/');
+        const rs = (await api('/nexia/repos')).json;
+        const hit = ((rs && rs.items) || []).find(r => String(r.owner).toLowerCase() === ow.toLowerCase() && String(r.repo).toLowerCase() === rp.toLowerCase());
+        const pj = hit && (await api(`/nexia/projects/${hit.project_id}`)).json;
+        if (pj && pj.record) { project = pj.record; console.log(`  projeto com o repositório: ${project.slug}`); }
+      }
 
-    const list = await api('/nexia/projects');
-    report(list.status === 200 && (list.json.items || []).some(p => project && p.id === project.id), 'Vault: listar projetos', `${list.status} ${(list.json.items || []).length} projeto(s)${list.status === 200 ? '' : ' ' + String(list.json.error || '').slice(0, 120) + ' ' + String(list.json.causa || '').slice(0, 160)}`);
+      if (!RAPIDO) {
+        const list = await api('/nexia/projects');
+        report(list.status === 200 && (list.json.items || []).some(p => project && p.id === project.id), 'Vault: listar projetos', `${list.status} ${(list.json.items || []).length} projeto(s)${list.status === 200 ? '' : ' ' + String(list.json.error || '').slice(0, 120) + ' ' + String(list.json.causa || '').slice(0, 160)}`);
+      }
 
     if (project && !RAPIDO) {
       const hist = await api(`/nexia/projects/${project.id}/history`);
