@@ -34,6 +34,18 @@ async function runTests() {
   facts = await getUserFacts(userId);
   assert.equal(facts.length, 0, 'A memória deve estar totalmente vazia');
 
+  // Teste: mensagem ambígua (não corresponde a nenhum padrão)
+  const responseAmbiguous = await handleChatMessage('talvez seja melhor esquecer alguma coisa', userId);
+  assert(responseAmbiguous.includes('não entendi') || responseAmbiguous.includes('outra forma'), 'Mensagem ambígua deve retornar desconhecido');
+
+  // Teste: edge case - esqueça isso sem fato específico
+  const responseNoFact = await handleChatMessage('esqueça isso', userId);
+  assert(responseNoFact.includes('qual fato'), 'Esqueça isso sem fato deve pedir o fato');
+
+  // Teste: padrão de limpeza total com variantes
+  const responseClear2 = await handleChatMessage('limpar tudo', userId);
+  assert(responseClear2.includes('toda a sua memória foi apagada'), 'Limpar tudo deve limpar memória');
+
   console.log('✅ Todos os testes de intenção e memória passaram com sucesso!');
 }
 
