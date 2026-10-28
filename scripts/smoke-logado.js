@@ -140,14 +140,6 @@ async function main() {
       throw new Error('Vault: criar cliente falhou — ' + cl.status + ' ' + causa);
     }
 
-    // Verifica se o cliente foi criado antes de tentar criar o projeto
-    if (!client) {
-      console.error('\n❌ ERRO CRÍTICO: Cliente não foi criado, não é possível criar projeto');
-      console.error('Este erro não deveria ocorrer, pois a verificação anterior já deveria ter interrompido o teste.');
-      console.error('O teste será interrompido aqui.');
-      throw new Error('Cliente não foi criado, não é possível criar projeto');
-    }
-
     const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
     let project = pr.json && pr.json.record;
     if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PROJ}`);
