@@ -1,10 +1,10 @@
 {
-  "name": "Cortex App",
-  "short_name": "Cortex",
-  "description": "Sua inteligência artificial integrada para automação e produtividade",
-  "start_url": "/cortex/app",
+  "name": "KERNEX — Sistema Operacional de Inteligência Artificial",
+  "short_name": "KERNEX",
+  "description": "Orquestre Claude, GPT-4o, Gemini, Grok e 15+ IAs em uma única plataforma SaaS.",
+  "start_url": "/cortex",
   "display": "standalone",
-  "background_color": "#f9fafb",
+  "background_color": "#0b0b10",
   "theme_color": "#06b6d4",
   "orientation": "portrait-primary",
   "icons": [
