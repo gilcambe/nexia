@@ -52,8 +52,13 @@ jobs:
               gh api -X PATCH "repos/$REPO/issues/$n" -f state=closed >/dev/null
               continue
             }
-            if echo "$files" | grep -Eq '^(\.github/|scripts/|firestore\.rules|firestore\.indexes|cloudflare/|server\.js|lib/|nexia-ai/(policy-engine|tool-gateway|vault|model-router|orchestrator)/|netlify/functions/cortex-|package(-lock)?\.json|\.env|.*secret|.*credential|.*auth)'; then
-              echo "PR #$n: mexe em área sensível; espera a revisão da Claude."
+            # Nunca dar automerge se mexer em firestore.rules, segredos ou .github/workflows (esses continuam esperando o dono)
+            if echo "$files" | grep -Eq 'firestore\.rules|storage\.rules|\.github/workflows|\.env|.*secret|.*credential|.*auth|\.pem$|\.key$'; then
+              echo "PR #$n: mexe em área sensível (firestore.rules, storage.rules, .github/workflows, segredos); espera a revisão do dono."
+              continue
+            fi
+            if echo "$files" | grep -Eq '^(\.github/|scripts/|firestore\.indexes|cloudflare/|server\.js|lib/|nexia-ai/(policy-engine|tool-gateway|vault|model-router|orchestrator)/|netlify/functions/cortex-|package(-lock)?\.json)'; then
+              echo "PR #$n: mexe em área sensível (scripts/, cloudflare/, lib/, nexia-ai/core); espera a revisão da Claude."
               continue
             fi
             if gh api "repos/$REPO/pulls/$n/files?per_page=100" --paginate --jq '.[]|select(.patch != null)|.patch' | grep -E "^\+.*(from ['\"]@/mocks/|from ['\"]\.\./mocks/)" >/dev/null; then
