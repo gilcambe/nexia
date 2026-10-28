@@ -4,6 +4,8 @@
 name: Ponta a ponta no ar
 
 on:
+  schedule:
+    - cron: '23 */6 * * *'
   workflow_run:
     workflows: ['Deploy Cloudflare']
     types: [completed]
@@ -22,7 +24,7 @@ concurrency:
 
 jobs:
   e2e:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
