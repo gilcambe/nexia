@@ -46,8 +46,44 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Missing required parameters' });
     }
 
+    // Converter slugs string para array e validar
+    let slugsArray: string[];
+    if (typeof slugs === 'string') {
+      if (!slugs.trim()) {
+        return res.status(400).json({ error: 'slugs cannot be empty string.' });
+      }
+      // Se for uma única slug sem vírgula, trata como array com um item
+      if (slugs.includes(',')) {
+        slugsArray = slugs.split(',').map(s => s.trim()).filter(s => s);
+      } else {
+        slugsArray = [slugs.trim()];
+      }
+    } else if (Array.isArray(slugs)) {
+      slugsArray = slugs.map(s => typeof s === 'string' ? s.trim() : String(s)).filter(s => s);
+    } else {
+      return res.status(400).json({ error: 'slugs must be a string or array of strings.' });
+    }
+
+    if (slugsArray.length === 0) {
+      return res.status(400).json({ error: 'slugs must contain at least one non-empty slug.' });
+    }
+
+    // Remover duplicatas e validar caracteres inválidos
+    const uniqueSlugs = [...new Set(slugsArray)];
+    if (uniqueSlugs.length !== slugsArray.length) {
+      return res.status(400).json({ error: 'slugs contains duplicates.' });
+    }
+
+    // Validação de caracteres permitidos (apenas alfanumérico, hífens, underlines e espaços)
+    const slugRegex = /^[\w\s-]+$/;
+    for (const s of uniqueSlugs) {
+      if (!slugRegex.test(s)) {
+        return res.status(400).json({ error: `Invalid character in slug: ${s}` });
+      }
+    }
+
     const result = await triggerWorkflow({
-      slugs,
+      slugs: uniqueSlugs,
       publicar
     });
 
