@@ -1,6 +1,6 @@
 'use strict';
 
-const { NO_AR } = require('../central/produtos.js');
+const { NO_AR: NO_AR_DEFAULT } = require('../central/produtos.js');
 
 // Estado de falhas consecutivas por site (memória da execução).
 const falhasConsecutivas = {};
@@ -11,6 +11,13 @@ const issuesAbertas = new Set();
 const TIMEOUT_MS = 10000;
 const MAX_TENTATIVAS = 3;
 const LIMITE_ROLLBACK = 2;
+
+// Lista de produtos para verificar (pode ser injetada ou vir do ambiente)
+let NO_AR = NO_AR_DEFAULT;
+
+function setProdutos(produtos) {
+  NO_AR = produtos;
+}
 
 // Funções injetáveis para testes (substituídas pelo teste unitário).
 let fetchHttp = globalThis.fetch;
@@ -65,14 +72,33 @@ async function rollbackSite(url) {
     if (executarRollback) {
       return executarRollback(url, 'workers');
     }
-    // Fallback: chama wrangler rollback (apenas nome, não executa de verdade em teste).
-    return { tipo: 'wrangler', url, acao: 'rollback' };
+    // Fallback: chama wrangler rollback (executa de verdade)
+    const { execSync } = require('child_process');
+    try {
+      const comando = `wrangler rollback ${url}`;
+      execSync(comando, { stdio: 'inherit' });
+      return { tipo: 'wrangler', url, acao: 'rollback', sucesso: true };
+    } catch (erro) {
+      return { tipo: 'wrangler', url, acao: 'rollback', erro: String(erro) };
+    }
   }
   if (ehPagesDev(url)) {
     if (executarRollback) {
       return executarRollback(url, 'pages');
     }
-    return { tipo: 'cloudflare-pages', url, acao: 'rollback' };
+    // Fallback: chama API do Cloudflare Pages
+    try {
+      const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+      const projectName = url.split('.')[0].replace('https://', '');
+      const comando = `curl -X POST "https://api.cloudflare.com/client/v4/accounts/${accountId}/pages/projects/${projectName}/rollback" \
+        -H "Authorization: Bearer ${process.env.CLOUDFLARE_API_TOKEN}" \
+        -H "Content-Type: application/json"`;
+      const { execSync } = require('child_process');
+      execSync(comando, { stdio: 'inherit' });
+      return { tipo: 'cloudflare-pages', url, acao: 'rollback', sucesso: true };
+    } catch (erro) {
+      return { tipo: 'cloudflare-pages', url, acao: 'rollback', erro: String(erro) };
+    }
   }
   return null;
 }
@@ -135,6 +161,21 @@ async function verificarSite(produto) {
 }
 
 async function vigiar() {
+  // Verifica se temos produtos injetados ou do ambiente
+  if (process.env.NO_AR_URLS) {
+    try {
+      const produtosEnv = JSON.parse(process.env.NO_AR_URLS);
+      const resultados = [];
+      for (const produto of produtosEnv) {
+        resultados.push(await verificarSite(produto));
+      }
+      return resultados;
+    } catch (erro) {
+      console.error('Erro ao processar NO_AR_URLS:', erro);
+    }
+  }
+  
+  // Usa a lista padrão de central/produtos.js
   const resultados = [];
   for (const produto of NO_AR) {
     resultados.push(await verificarSite(produto));
