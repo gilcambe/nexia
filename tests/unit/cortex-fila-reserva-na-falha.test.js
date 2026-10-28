@@ -1,0 +1,35 @@
+'use strict';
+// Reserva na 1ª falha e reabertura das tarefas travadas pela queda do Cofre (decisões puras, sem rede).
+const test = require('node:test');
+const assert = require('node:assert');
+const { devePedirReserva, travouAntesDoConserto } = require('../../scripts/cortex-fila');
+
+test('RF1. reenfileirar por falha, sem reserva-tentou: chama a reserva', () => {
+  assert.equal(devePedirReserva({ tipo: 'reenfileirar', conclusao: 'failure' }, ['cortex-fila'], {}), true);
+  assert.equal(devePedirReserva({ tipo: 'reenfileirar', conclusao: 'timed_out' }, [], {}), true);
+});
+
+test('RF2. cota do banco e execução parada não contam como falha da tarefa', () => {
+  assert.equal(devePedirReserva({ tipo: 'reenfileirar', conclusao: 'cota do banco' }, [], {}), false);
+  assert.equal(devePedirReserva({ tipo: 'reenfileirar', conclusao: 'sem execução' }, [], {}), false);
+});
+
+test('RF3. só uma vez por tarefa (reserva-tentou)', () => {
+  assert.equal(devePedirReserva({ tipo: 'reenfileirar', conclusao: 'failure' }, ['reserva-tentou'], {}), false);
+  assert.equal(devePedirReserva({ tipo: 'travar' }, ['reserva-tentou'], {}), false);
+});
+
+test('RF4. travar sem reserva-tentou chama a reserva; outras ações não', () => {
+  assert.equal(devePedirReserva({ tipo: 'travar' }, [], {}), true);
+  assert.equal(devePedirReserva({ tipo: 'concluir' }, [], {}), false);
+});
+
+test('RF5. RESERVA_NA_FALHA=0 desliga', () => {
+  assert.equal(devePedirReserva({ tipo: 'travar' }, [], { RESERVA_NA_FALHA: '0' }), false);
+});
+
+test('RF6. travouAntesDoConserto: antes do PR #2221 volta, depois não', () => {
+  assert.equal(travouAntesDoConserto('2026-10-27T10:00:00Z'), true);
+  assert.equal(travouAntesDoConserto('2026-10-27T20:00:00Z'), false);
+  assert.equal(travouAntesDoConserto(null), false);
+});
