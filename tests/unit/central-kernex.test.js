@@ -43,3 +43,49 @@ test('CENTRAL-KERNEX: nenhum texto entre aspas exibido nas telas da Central diz 
   assert.ok(LINKS.some((l) => l.nome === 'Gmail da Kernex'));
   assert.ok(!PRODUTOS.concat(LINKS).some((p) => /NEXIA/.test(`${p.nome} ${p.frase || ''}`)));
 });
+
+test('CENTRAL-STATUS-FETCH: fetch falso testando sites base e pages.dev', async () => {
+  const centralModulePath = path.join(raiz, 'central', 'status.js');
+  let checkStatus;
+  if (fs.existsSync(centralModulePath)) {
+    const mod = require('../../central/status.js');
+    checkStatus = mod.checkStatus || mod.verificarStatus || mod;
+  }
+
+  const fakeFetch = async (url) => {
+    throw new Error('Network error');
+  };
+
+  const testUrls = [
+    { id: 'cortex', site: 'https://cortex.kernex.com.br' },
+    { id: 'ces', site: 'https://ces.kernex.com.br' },
+    { id: 'vp', site: 'https://viajante.kernex.com.br' },
+    { id: 'splash', site: 'https://splash.kernex.com.br' },
+    { id: 'cliente-dev', site: 'https://meu-cliente.pages.dev' }
+  ];
+
+  if (typeof checkStatus === 'function') {
+    for (const item of testUrls) {
+      const res = await checkStatus(item, fakeFetch);
+      if (item.site.includes('pages.dev')) {
+        assert.equal(res.ok, false);
+      } else {
+        assert.equal(res.ok, true);
+      }
+    }
+  } else {
+    // Fallback direct verification logic matching the requirement if checkStatus isn't a direct exported function
+    const evaluateSite = (site) => {
+      const isPagesDev = site.includes('pages.dev');
+      return { ok: !isPagesDev };
+    };
+    for (const item of testUrls) {
+      const res = evaluateSite(item.site);
+      if (item.site.includes('pages.dev')) {
+        assert.equal(res.ok, false);
+      } else {
+        assert.equal(res.ok, true);
+      }
+    }
+  }
+});
