@@ -10,7 +10,6 @@ process.env.GITHUB_TOKEN = 'token-teste';
 process.env.GITHUB_REPO = 'gilcambe/nexia';
 
 function novoVigia() {
-  delete require.cache[require.resolve('../scripts/vigia-no-ar.js')];
   const vigia = require('../scripts/vigia-no-ar.js');
   vigia.resetarEstado();
   return vigia;

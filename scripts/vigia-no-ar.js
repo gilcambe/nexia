@@ -180,15 +180,14 @@ async function verificarSite(produto) {
   if (!isValidUrl(site)) {
     return { id, site, status: 'url-invalida', falhas: 0, erro: 'URL malformada' };
   }
-  try {
-    await requisitarComTentativas(site);
-    // Voltou ao normal: zera falhas consecutivas e fecha issue aberta.
-    if (falhasConsecutivas[id]) {
+      try {
+      await requisitarComTentativas(site);
+      // Voltou ao normal: zera sempre o contador de falhas consecutivas
+      // (mesmo que seja 1) e fecha a issue aberta, se houver.
       falhasConsecutivas[id] = 0;
       await fecharIssueAlerta();
-    }
-    return { id, site, status: 'ok', falhas: 0 };
-  } catch (erro) {
+      return { id, site, status: 'ok', falhas: 0 };
+    } catch (erro) {
     falhasConsecutivas[id] = (falhasConsecutivas[id] || 0) + 1;
     const falhas = falhasConsecutivas[id];
     if (falhas >= LIMITE_ROLLBACK) {
