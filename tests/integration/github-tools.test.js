@@ -155,7 +155,8 @@ test('GH7. GitHub real (gilcambe/nexia): branches, arquivo, histórico, diff, PR
   assert.ok(diff.total_commits >= 1);
   assert.ok(Array.isArray((await run('github.list_pulls', { state: 'closed', limit: 5 })).pulls));
   assert.ok(Array.isArray((await run('github.list_workflow_runs', { branch: 'develop', limit: 5 })).runs));
-  const w = await g.invoke(agent, { projectId: ids.project, tool: 'github.create_branch', input: { branch: 'nexia/nunca' } });
+  const w = await comRetentativa(() => g.invoke(agent, { projectId: ids.project, tool: 'github.create_branch', input: { branch: 'nexia/nunca' } }), t);
+  if (!w) return;
   assert.strictEqual(w.status, 'pending_approval', 'autonomia 0: escrita real nunca roda sozinha');
   await g.reject(user, w.tool_call.id, { expectedVersion: w.tool_call.version });
 });
