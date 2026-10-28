@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict';
-// NEXIA: teste Playwright E2E do PWA Viajante Pro (celular 360px).
+  // NEXIA: teste Playwright E2E do PWA Viajante Pro (celular 360px) - mock de API, token inválido, layout 360px, modo offline
 // Abre o link com ?t=TOKEN, ve voos e roteiro, desliga a rede (setOffline), recarrega e ve tudo salvo offline.
 // Uso: node tests/e2e/viajante-app-humano.js [pasta-para-fotos]
 const http = require('http');
