@@ -88,7 +88,7 @@ function confere(cond, msg) {
     const url = route.request().url();
     const token = url.includes('?') ? new URLSearchParams(new URL(url).search).get('t') : null;
 
-    if (token === 'TOKEN_TESTE_VP') {
+    if (token === TOKEN_TESTE_VP) {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
