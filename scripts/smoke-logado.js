@@ -124,16 +124,14 @@ async function main() {
       const detalhes = cl.json ? JSON.stringify(cl.json, null, 2) : 'Resposta: ' + cl.text;
 
       // Mostra a causa exata detalhadamente (status + corpo da resposta), sem mascarar a falha.
-      const linhasErro = [
-        '\\n❌ FALHA: Vault — criar cliente',
-        'Status: ' + cl.status,
-        'Causa: ' + causa,
-        'Resposta completa: ' + detalhes,
-        '',
-        '⚠️  A criação do projeto será pulada (sem client_id válido) e não será tentada com dados vazios.',
-        '⚠️  O restante do teste continua rodando.',
-      ];
-      console.error(linhasErro.join('\\n'));
+      console.error(
+        '\n❌ FALHA: Vault — criar cliente\n' +
+        'Status: ' + cl.status + '\n' +
+        'Causa: ' + causa + '\n' +
+        'Resposta completa: ' + detalhes + '\n' +
+        '\n⚠️  A criação do projeto será PULADA (sem client_id válido) e não será tentada com dados vazios.\n' +
+        '⚠️  O restante do teste continua rodando.\n'
+      );
       report(false, 'Vault: criar projeto — pulado', 'cliente não criado; sem client_id válido para criar projeto');
     } else {
       const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
