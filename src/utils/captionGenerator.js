@@ -7,13 +7,14 @@
  * Cenário de uso:
  * - Recebe array de cenas com { prompt, speech, startTime, endTime, duration } ou { prompt, speech, duration }.
  * - Gera timestamps no formato HH:MM:SS,mmm
+ * - Valida que startTime e endTime são números positivos e endTime > startTime
  * - Produz string SRT válida para ser usada em players de vídeo.
  *
  * @param {Array} scenes - Array de objetos de cena.
  * @param {string} scenes[].prompt - Descrição da cena (opcional).
  * @param {string} scenes[].speech - Texto da fala (opcional).
- * @param {number} scenes[].startTime - Timestamp de início (em segundos, opcional).
- * @param {number} scenes[].endTime - Timestamp de fim (em segundos, opcional).
+ * @param {number} scenes[].startTime - Timestamp de início (em segundos, opcional). Deve ser positivo.
+ * @param {number} scenes[].endTime - Timestamp de fim (em segundos, opcional). Deve ser positivo e > startTime.
  * @param {number} scenes[].duration - Duração da cena (em segundos, opcional).
  * @returns {string} - String SRT formatada.
  */
@@ -55,7 +56,7 @@ export function generateSRT(scenes) {
       const speech = scene.speech || '';
       const prompt = scene.prompt || '';
 
-      // Determinar timestamps
+      // Determinar e validar timestamps
       let startTime = scene.startTime;
       let endTime = scene.endTime;
 
@@ -73,6 +74,15 @@ export function generateSRT(scenes) {
       } else if (startTime === undefined) {
         // Fallback: usa 0 como início
         startTime = 0;
+      }
+
+      // Validar que startTime e endTime são números positivos
+      startTime = typeof startTime === 'number' && startTime >= 0 ? startTime : 0;
+      endTime = typeof endTime === 'number' && endTime >= 0 ? endTime : 0;
+
+      // Validar que endTime > startTime
+      if (endTime <= startTime) {
+        endTime = startTime + 5; // Fallback: adiciona 5 segundos se endTime <= startTime
       }
 
       // Formatar timestamps
