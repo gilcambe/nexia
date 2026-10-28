@@ -3,6 +3,7 @@ import { SEMANA, temaDoDia } from '../../lib/calendario';
 import type { Dados } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
+import { Icone } from "./icones";
 
 const REDE: Record<string, string> = { facebook: "Facebook", instagram: "Instagram" };
 const HORARIOS = ["07h15", "12h15", "19h15"];
@@ -40,7 +41,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
   const x = d.divulga;
   return (
     <div className="space-y-4">
-      <Cartao titulo="Propaganda grátis">
+      <Cartao titulo="Propaganda grátis" resumo="Conferindo…" icone={<Icone nome="divulgar" />}>
         <p className="text-sm text-nexia-muted">O robô posta sozinho todo dia às 7h15, 12h15 e 19h15 no Facebook e no Instagram.</p>
         <div className="grid grid-cols-2 gap-2">
           <Botao onClick={() => rodar({ acao: "rodar", arquivo: "divulga.yml" })} disabled={ocupado} tipo="forte" testid="divulga-postar">📣 Postar agora</Botao>
@@ -49,7 +50,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
         {msg && <p className="text-sm text-nexia-cyan" role="status">{msg}</p>}
       </Cartao>
 
-      <Cartao titulo="Temas da semana">
+      <Cartao titulo="Temas da semana" resumo="Conferindo…" icone={<Icone nome="divulgar" />}>
         <p className="text-sm text-nexia-muted">Cada dia tem um tema. Escolha o horário e o robô cria e publica o texto na hora.</p>
         <div className="space-y-2">
           {temasSemana.map((t) => (
@@ -79,7 +80,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
 
       {!x ? <Carregando erro={erro} /> : (
         <>
-          <Cartao titulo="Desempenho de seguidores (Últimos 30 dias)">
+          <Cartao titulo="Desempenho de seguidores (Últimos 30 dias)" resumo="Conferindo…" icone={<Icone nome="lista" />}>
             <p className="text-sm text-nexia-muted mb-3">Evolução do público nas redes sociais e insights de picos de engajamento.</p>
             <div className="grid grid-cols-2 gap-2 mb-4">
               <div className="rounded-xl bg-nexia-surface2 p-3">
@@ -105,7 +106,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
             )}
           </Cartao>
 
-          <Cartao titulo="Últimos posts">
+          <Cartao titulo="Últimos posts" resumo="Conferindo…" icone={<Icone nome="lista" />}>
             {x.historico.length === 0 && <p className="text-sm text-nexia-muted">Nenhum post ainda.</p>}
             <ul className="space-y-2">
               {x.historico.map((h, k) => (
@@ -121,7 +122,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
               ))}
             </ul>
           </Cartao>
-          <Cartao titulo={`Próximos posts (${x.naFila} na fila)`}>
+          <Cartao titulo={`Próximos posts (${x.naFila} na fila)`} resumo="Conferindo…" icone={<Icone nome="lista" />}>
             {x.proximos.length === 0 && <p className="text-sm text-nexia-muted">Fila vazia: o robô cria textos sozinho com a IA grátis.</p>}
             <ul className="space-y-2">
               {x.proximos.map((p) => <li key={p.id} className="rounded-xl bg-nexia-surface2 p-3 text-sm whitespace-pre-line">{p.texto || p.id}</li>)}
@@ -130,12 +131,12 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
         </>
       )}
 
-      <Cartao titulo="De onde vêm as visitas">
+      <Cartao titulo="De onde vêm as visitas" resumo="Conferindo…" icone={<Icone nome="externo" />}>
         <p className="text-sm text-nexia-muted">Cada post leva um link marcado com a rede de onde a pessoa veio (Instagram ou Facebook). As visitas aparecem no Google Search Console.</p>
         <Botao href="https://search.google.com/search-console">Ver visitas no Google</Botao>
       </Cartao>
 
-      <Cartao titulo="Robô de ofertas">
+      <Cartao titulo="Robô de ofertas" resumo="Conferindo…" icone={<Icone nome="dinheiro" />}>
         <p className="text-sm text-nexia-muted">Busca ofertas fitness na Shopee e na Amazon e monta a vitrine.</p>
         <div className="grid grid-cols-2 gap-2">
           <Botao onClick={() => rodar({ acao: "rodar", arquivo: "afiliados.yml" })} disabled={ocupado}>🛍️ Buscar ofertas</Botao>
@@ -143,7 +144,7 @@ export default function Divulgar({ d, erro }: { d: Dados; erro?: string }) {
         </div>
       </Cartao>
 
-      <Cartao titulo="Rede de crescimento de seguidores (sem automação proibida)">
+      <Cartao titulo="Rede de crescimento de seguidores (sem automação proibida)" resumo="Conferindo…" icone={<Icone nome="topologia" />}>
         <p className="text-sm text-nexia-muted">Roteiro diário de colaborações, enquetes e Reels com ganchos. O robô só prepara e agenda; a interação em massa nunca é automática (evita bloqueio da conta). Risco de banimento da conta é maior que o ganho. Custo 0.</p>
         <div className="space-y-3 text-sm text-nexia-muted pt-2">\n          <div className="rounded-xl bg-nexia-surface2 p-3 space-y-1">\n            <p className="font-medium text-nexia-text">1. Colaborações (Collabs)</p>\n            <p>Parcerias semanais com perfis do mesmo nicho. Publicação cruzada de Reels para alcançar novas audiências organicamente sem custo.</p>\n          </div>\n          <div className="rounded-xl bg-nexia-surface2 p-3 space-y-1">\n            <p className="font-medium text-nexia-text">2. Enquetes e Caixas de Perguntas</p>\n            <p>Engajamento diário nos Stories para reter seguidores e entender dores do público para novos conteúdos.</p>\n          </div>\n          <div className="rounded-xl bg-nexia-surface2 p-3 space-y-1">\n            <p className="font-medium text-nexia-text">3. Reels com Ganchos Fortes</p>\n            <p>Vídeos curtos focados nos primeiros 3 segundos (gancho de curiosidade ou dor imediata) e chamada para ação nos comentários.</p>\n          </div>\n          <div className="rounded-xl bg-nexia-surface2 p-3 space-y-1">\n            <p className="font-medium text-nexia-text">⚠️ Regra de Ouro da Segurança</p>\n            <p>O robô prepara os roteiros e materiais, mas a interação e postagem manual ou agendada respeitam os limites da plataforma. Interação em massa automatizada é proibida para evitar banimentos.</p>\n          </div>\n        </div>
       </Cartao>
