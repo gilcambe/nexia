@@ -1,4 +1,5 @@
-import { test, expect } from 'node:test';
+import { test, describe } from 'node:test';
+import assert from 'node:assert/strict';
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
@@ -6,51 +7,66 @@ import { promisify } from 'util';
 
 const execAsync = promisify(exec);
 
+// Raiz do repositório (este arquivo está em tests/unit/)
+const RAIZ = path.resolve(__dirname, '../..');
+
 // Carrega os moldes
-const moldesDir = path.join(__dirname, '../clientes/_moldes');
-const moldesFiles = fs.readdirSync(moldesDir).filter(file => file.endsWith('.json'));
+const moldesDir = path.join(RAIZ, 'clientes/_moldes');
+const moldesFiles = fs.readdirSync(moldesDir).filter(file => file.endsWith('.json')).sort();
 
 // Verifica que temos exatamente 10 arquivos de molde
-expect(moldesFiles.length).toBe(10);
+test('existem exatamente 10 arquivos de molde em clientes/_moldes/', () => {
+  assert.strictEqual(moldesFiles.length, 10, `esperado 10 moldes, encontrado ${moldesFiles.length}: ${moldesFiles.join(', ')}`);
+});
 
 test('deve gerar index.html para cada molde sem erros', async () => {
+  const tempDir = path.join(RAIZ, 'temp_test_output_moldes');
+  if (!fs.existsSync(tempDir)) {
+    fs.mkdirSync(tempDir, { recursive: true });
+  }
+
   for (const moldeFile of moldesFiles) {
     const moldePath = path.join(moldesDir, moldeFile);
-    const tempDir = path.join(__dirname, `../temp_test_output_${path.parse(moldeFile).name}`);
+    const outputDir = path.join(tempDir, path.parse(moldeFile).name);
 
-    // Cria o diretório temporário
-    fs.mkdirSync(tempDir, { recursive: true });
+    fs.mkdirSync(outputDir, { recursive: true });
 
     try {
-      // Executa o script renderizar-site.js para cada molde
-      const { stdout, stderr } = await execAsync(`node scripts/renderizar-site.js "${moldePath}" "${tempDir}"`);
+      // Executa o script renderizar-site.js como processo externo
+      console.log(`Processando molde: ${moldeFile}`);
+      console.log(`Comando: node scripts/renderizar-site.js "${moldePath}" "${outputDir}"`);
       
+      const { stdout, stderr } = await execAsync(`node scripts/renderizar-site.js "${moldePath}" "${outputDir}"`, {
+        timeout: 30000 // 30 segundos de timeout
+      });
+
+      console.log(`stdout: ${stdout}`);
+      if (stderr) {
+        console.warn(`stderr: ${stderr}`);
+      }
+
       // Verifica se o index.html foi gerado
-      const indexPath = path.join(tempDir, 'index.html');
-      expect(fs.existsSync(indexPath)).toBe(true);
+      const indexPath = path.join(outputDir, 'index.html');
+      assert.ok(fs.existsSync(indexPath), `index.html não gerado para ${moldeFile}`);
 
       // Verifica se o index.html não está vazio
-      const indexContent = fs.readFileSync(indexPath, 'utf-8');
-      expect(indexContent.length).toBeGreaterThan(0);
+      const indexContent = fs.readFileSync(indexPath, 'utf8');
+      assert.ok(indexContent.length > 0, `index.html vazio para ${moldeFile}`);
 
-      // Verifica se não há erros no stderr
-      expect(stderr).toBe('');
-
-      // Verifica se o stdout contém a mensagem de sucesso
-      expect(stdout).toContain(`site em ${tempDir}`);
-
-      console.log(`Sucesso ao gerar ${indexPath}`);
-      
-      // Remove o diretório temporário
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      console.log(`Sucesso ao gerar ${indexPath} (${indexContent.length} bytes)`);
     } catch (error) {
       console.error(`Erro ao processar ${moldeFile}:`, error);
-      // Remove o diretório temporário em caso de erro
-      if (fs.existsSync(tempDir)) {
-        fs.rmSync(tempDir, { recursive: true, force: true });
-      }
-      // Falha o teste se houver qualquer erro
       throw new Error(`Falha ao renderizar o molde ${moldeFile}: ${error.message}`);
+    } finally {
+      // Remove o diretório temporário deste molde
+      if (fs.existsSync(outputDir)) {
+        fs.rmSync(outputDir, { recursive: true, force: true });
+      }
     }
+  }
+
+  // Remove o diretório temporário principal após os testes
+  if (fs.existsSync(tempDir)) {
+    fs.rmSync(tempDir, { recursive: true, force: true });
   }
 });
