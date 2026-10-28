@@ -98,7 +98,7 @@ function confere(cond, msg) {
       await route.fulfill({
         status: 404,
         contentType: 'text/plain',
-        body: 'Link invalido'
+        body: 'Link inválido'
       });
     }
   });
