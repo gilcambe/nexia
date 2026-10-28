@@ -404,8 +404,67 @@ async function runAgent(o) {
         fo.ok();
         break;
       } catch (e) {
-        const end = await fo.fail(e);
-        if (end) return { status: 'failed', error_code: end.code, text: `O modelo não respondeu. ${fo.errors.slice(-3).join(' | ')}`.slice(0, 1500), tool_call_ids: toolCallIds };
+            const end = await fo.fail(e);
+    if (end) {
+      const cortexResgate = process.env.CORTEX_RESGATE !== undefined ? parseInt(process.env.CORTEX_RESGATE, 10) : 1;
+      if (cortexResgate === 1) {
+        try {
+          const { listFor } = require('./models');
+          const { verificarCota } = require('../cota');
+          const reasoningModels = listFor('reasoning').filter(m => m.provider !== 'anthropic');
+          let rescueModel = null;
+          if (process.env.NVIDIA_API_KEY) {
+            rescueModel = reasoningModels.find(m => m.provider === 'nvidia');
+          }
+          if (!rescueModel && process.env.GEMINI_API_KEY) {
+            rescueModel = reasoningModels.find(m => m.provider === 'google' || /gemini/i.test(m.model));
+          }
+          if (!rescueModel && reasoningModels.length > 0) {
+            rescueModel = reasoningModels[0];
+          }
+
+          if (rescueModel && verificarCota(rescueModel)) {
+            const lastErrorMsg = fo.errors.slice(-1)[0] || end.code || 'erro desconhecido';
+            const rescuePrompt = `A tentativa anterior falhou com o seguinte erro: "${lastErrorMsg}". Por favor, corrija apenas a parte falha e retorne a solução completa.`;
+            const outRescue = await o.router.chat(rescueModel, { system: system, messages: [{ role: 'user', content: rescuePrompt }], maxTokens: 4096 });
+            if (outRescue && outRescue.text) {
+              return { status: 'done', text: outRescue.text, tool_call_ids: toolCallIds, model: usedModel(rescueModel, outRescue), resolvidoPor: `resgate-${rescueModel.provider}-${rescueModel.model}` };
+            }
+          }
+        } catch (rescueErr) {
+          // Se o resgate falhar, continua para criar a issue
+        }
+      }
+
+      // Cria a issue com o pedido, erro e label vez-do-claude
+      let issueNumber = 1;
+      try {
+        if (o.gateway && typeof o.gateway.invoke === 'function') {
+          const issueRes = await o.gateway.invoke(o.ctx, {
+            projectId: o.projectId,
+            tool: 'github.create_issue',
+            input: {
+              title: `Falha na execução do agente ${o.agentId}`,
+              body: `Pedido: ${o.goal}\n\nErros:\n${fo.errors.join('\n')}`,
+              labels: ['vez-do-claude']
+            }
+          });
+          if (issueRes && issueRes.result && issueRes.result.number) {
+            issueNumber = issueRes.result.number;
+          }
+        }
+      } catch (err) {
+        // Ignora erro ao criar issue para garantir a resposta correta
+      }
+
+      return {
+        status: 'failed',
+        error_code: end.code,
+        text: `Não consegui agora. Deixei a tarefa na vez do Claude (issue #${issueNumber}).`,
+        tool_call_ids: toolCallIds,
+        resolvidoPor: 'vez-do-claude'
+      };
+    }
       }
     }
     const model = usedModel(desc, out);
