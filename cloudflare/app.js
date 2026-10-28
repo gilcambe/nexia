@@ -14,7 +14,7 @@ const { createTokenSource } = require('../lib/firebase-lite/google-auth');
 const rid = require('../lib/rid');
 
 const MAX_BODY_SIZE = 1 * 1024 * 1024;
-const CORS_ABERTO = new Set(['/api/locacao', '/api/nutri']);
+const CORS_ABERTO = new Set(['/api/locacao', '/api/nutri', '/api/viagem']);
 const VERSION = '60.0.0';
 
 function corsOrigin(env, headers) {
