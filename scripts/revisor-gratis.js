@@ -144,12 +144,29 @@ async function main() {
   for (const pr of candidatos) {
     if (feitos >= MAX_POR_RODADA) break;
     const runs = ((await gh(token, 'GET', `/commits/${pr.head.sha}/check-runs?per_page=100`)).json || {}).check_runs || [];
-    if (!ciVerde(runs)) continue;
+    const criadoEm = new Date(pr.created_at || 0);
+    const horas = (Date.now() - criadoEm.getTime()) / (1000 * 60 * 60);
+    if (!ciVerde(runs)) {
+      if (pr.draft && horas > 48) {
+        await gh(token, 'POST', `/issues/${pr.number}/comments`, { body: `${MARCA(pr.head.sha)}Rascunho do Cortex com mais de 48 h e sem CI verde. Fechando e devolvendo a parte à fila.` });
+        await gh(token, 'PATCH', `/repos/${REPO}/issues/${pr.number}`, { state: 'closed' });
+        if (n) {
+          await gh(token, 'POST', `/repos/${REPO}/issues/${n}/comments`, { body: `Rascunho do PR #${pr.number} fechado (mais de 48 h sem CI verde). A tarefa segue de volta à fila cortex-fila.` });
+        }
+        continue;
+      }
+      continue;
+    }
     const comentarios = (await gh(token, 'GET', `/issues/${pr.number}/comments?per_page=100`)).json || [];
     if (comentarios.some(c => String(c.body || '').includes(MARCA(pr.head.sha)))) continue;
     feitos++;
     const arquivos = (await gh(token, 'GET', `/pulls/${pr.number}/files?per_page=100`)).json || [];
     const n = issueDoPr(pr);
+    if (!arquivos || arquivos.length === 0) {
+      await gh(token, 'POST', `/issues/${pr.number}/comments`, { body: `${MARCA(pr.head.sha)}PR vazio (0 arquivos). Fechado automaticamente. Abra um novo PR com as mudanças necessárias.` });
+      await gh(token, 'PATCH', `/repos/${REPO}/issues/${pr.number}`, { state: 'closed' });
+      continue;
+    }
     const tarefa = n ? ((await gh(token, 'GET', `/issues/${n}`)).json || {}).body || '' : '';
     const pare = barreira(arquivos, pr);
     let d;
