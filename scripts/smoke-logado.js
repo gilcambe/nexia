@@ -107,8 +107,7 @@ async function main() {
   let client = null;
   let project = null;
 
-    try {
-      if (!RAPIDO) {
+  if (!RAPIDO) {
         const me = await api('/nexia/me');
         report(me.status === 200 && me.json.role === 'master' && me.json.canUseVault, 'Quem sou eu (/me)', `${me.status} ${me.json && me.json.role}`);
       }
