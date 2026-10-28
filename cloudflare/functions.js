@@ -30,6 +30,7 @@ const LOADERS = {
   'leads': () => require('../netlify/functions/leads.js'),
   'agenda': () => require('../netlify/functions/agenda.js'),
   'locacao': () => require('../netlify/functions/locacao.js'),
+  'viagem': () => require('../netlify/functions/viagem.js'),
   'nutri': () => require('../netlify/functions/nutri.js'),
   'instagram-dm': () => require('../netlify/functions/instagram-dm.js'),
   'leilao': () => require('../netlify/functions/leilao.js'),
