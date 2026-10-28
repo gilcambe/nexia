@@ -101,6 +101,26 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
     }
   };
 
+  const tentarAlgumas = async () => {
+    setMsg(null);
+    setErro(undefined);
+    try {
+      const travadas = itens.filter((t) => t.situacao === "travado").slice(0, 3);
+      if (!travadas.length) {
+        setMsg("Nenhuma tarefa travada encontrada.");
+        return;
+      }
+      for (const t of travadas) {
+        await agir({ acao: "tentar", n: t.numero });
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+      setMsg(`Tentativa concluída para ${travadas.length} tarefa(s) travada(s).`);
+      carregar();
+    } catch (e) {
+      setErro((e as Error).message);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-6">
       <Titulo t="Tarefas" s="A fila do Cortex, do jeito que ele enxerga." />
@@ -108,9 +128,13 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
         <input type="text" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Pesquisar tarefas..." data-testid="cx-tarefas-busca"
           className="w-full h-10 px-4 rounded-xl border border-[var(--cx-line)] bg-[var(--cx-card)] text-sm text-[var(--cx-txt)] outline-none focus:border-[var(--cx-ac)]" />
       </div>
-      <div className="flex gap-2 mb-4 overflow-x-auto">{FILTROS.map((x) => (
-        <button key={x.id} onClick={() => setF(x.id)} data-testid={`cx-filtro-${x.id}`}
-          className={`px-4 h-10 rounded-full text-sm border ${f === x.id ? "bg-[var(--cx-ac)] text-black border-transparent font-semibold" : "border-[var(--cx-line)]"}`}>{x.nome}</button>))}</div>
+      <div className="flex items-center justify-between gap-2 mb-4 overflow-x-auto">
+        <div className="flex gap-2">{FILTROS.map((x) => (
+          <button key={x.id} onClick={() => setF(x.id)} data-testid={`cx-filtro-${x.id}`}
+            className={`px-4 h-10 rounded-full text-sm border ${f === x.id ? "bg-[var(--cx-ac)] text-black border-transparent font-semibold" : "border-[var(--cx-line)]"}`}>{x.nome}</button>))}</div>
+        <button type="button" onClick={tentarAlgumas} data-testid="cx-tentar-algumas"
+          className="h-10 px-4 rounded-xl bg-[var(--cx-ac)] text-black text-xs font-semibold shrink-0">Tentar travadas</button>
+      </div>
       {erro && <p className="text-red-400 text-sm mb-2" role="alert">{erro}</p>}
       {msg && <p className="text-[var(--cx-ac)] text-sm mb-2" role="status">{msg}</p>}
       <ListaPedidos itens={itens} abrir={abrir} fazer={fazer} />
