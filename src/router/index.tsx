@@ -23,6 +23,7 @@ const ClientesPage = lazy(() => import("../pages/clientes/page"));
 const CentralPage = lazy(() => import("../pages/central/page"));
 const MeuCortexPage = lazy(() => import("../pages/meu-cortex/page"));
 const CortexPage = lazy(() => import("../pages/cortex/page"));
+const ApiDocsPage = lazy(() => import("../pages/api-docs/page"));
 const AssistentePublico = lazy(() => import("../pages/cortex/Assistentes").then(m => ({ default: m.AssistentePublico })));
 const BriefingPublico = lazy(() => import("../pages/BriefingPublico"));
 const NotFound = lazy(() => import("../pages/NotFound"));
