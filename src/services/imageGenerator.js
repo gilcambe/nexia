@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { isUrl } from '../utils/urlValidator.js';
 
 /**
  * Gerador de imagens por cena do roteiro.
@@ -23,6 +24,23 @@ export async function generateImages(scenes, fluxWorker, imagesPerScene = 5) {
   // Formatos de aspecto suportados
   const aspectRatios = ['square', '9:16', '16:9'];
 
+  // Função auxiliar para validar e converter URL para Blob
+  async function fetchImageAsBlob(url) {
+    if (!url || !isUrl(url)) {
+      throw new Error(`URL inválida: ${url}`);
+    }
+
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Falha ao baixar imagem: ${response.status} ${response.statusText}`);
+      }
+      return await response.blob();
+    } catch (error) {
+      throw new Error(`Erro ao baixar imagem: ${error.message}`);
+    }
+  }
+
   for (const scene of scenes) {
     const sceneId = scene.id || uuidv4();
     const scenePrompt = scene.prompt || 'Image';
@@ -41,10 +59,8 @@ export async function generateImages(scenes, fluxWorker, imagesPerScene = 5) {
         throw new Error(`Falha ao gerar imagem para cena ${sceneId}`);
       }
 
-      // Converte URL para Blob (simulação - na prática a API retorna URL)
-      // Aqui estamos retornando URLs, mas a função promise retorna Array<Blob>
-      // Em produção, a API retornaria Blob ou ArrayBuffer
-      const imageBlob = await fetch(imageUrl).then(res => res.blob());
+      // Converte URL para Blob com validação de segurança
+      const imageBlob = await fetchImageAsBlob(imageUrl);
 
       allImages.push({
         id: uuidv4(),
@@ -56,6 +72,8 @@ export async function generateImages(scenes, fluxWorker, imagesPerScene = 5) {
         blob: imageBlob,
         index: i
       });
+
+      // O array allImages contém objetos com { id, sceneId, sceneIndex, prompt, aspectRatio, url, blob, index }
     }
   }
 
@@ -64,7 +82,8 @@ export async function generateImages(scenes, fluxWorker, imagesPerScene = 5) {
 
 /**
  * Gera imagens em lote (para testes).
- * @returns {Promise<Array<Blob>>}
+ * @param {Object} fluxWorker - Objeto com método generateImage(prompt, aspectRatio)
+ * @returns {Promise<Array>} - Array de objetos com { id, sceneId, sceneIndex, prompt, aspectRatio, url, blob, index }
  */
 export async function generateImagesBatch(fluxWorker) {
   const scenes = [
