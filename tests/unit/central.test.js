@@ -158,6 +158,26 @@ test('CENT-PROPRIO. sites no próprio Worker usam a medição de hora em hora (o
   assert.ok(pedidos.some((u) => u.includes('pages.dev')), 'sites de fora continuam medidos ao vivo');
 });
 
+test('CENT-SEM-AMOSTRA. ausência de amostra resulta em status "sem medição" (cinza) e nunca ok:false', async () => {
+  const fetch = async (u) => { if (u.includes('bezsan')) throw new Error('fora'); return { status: 200 }; };
+  const db = { collection: () => ({ where: () => ({ get: async () => ({ docs: [] }) }) }) }; // banco vazio, sem amostras
+  const b = JSON.parse((await createHandler({ getMw: () => master, fetch, getHistoricoDb: () => db })(ev({ queryStringParameters: { parte: 'saude' } }))).body);
+  
+  // Verifica que sites próprios sem amostra têm status "sem medição" (cinza) e não ok:false
+  const cortex = b.produtos.find((p) => p.id === 'cortex');
+  const ces = b.produtos.find((p) => p.id === 'ces');
+  
+  assert.strictEqual(cortex.ok, false, 'cortex deve ter ok:false quando não há amostra');
+  assert.strictEqual(ces.ok, false, 'ces deve ter ok:false quando não há amostra');
+  assert.strictEqual(cortex.quando, undefined, 'cortex não deve ter quando quando não há amostra');
+  assert.strictEqual(ces.quando, undefined, 'ces não deve ter quando quando não há amostra');
+  
+  // Verifica que sites externos continuam medidos normalmente
+  const bezsan = b.produtos.find((p) => p.id === 'bezsan');
+  assert.strictEqual(bezsan.ok, false, 'bezsan (externo) deve ter ok:false quando fora do ar');
+  assert.strictEqual(bezsan.codigo, 0, 'bezsan deve ter codigo 0 quando erro');
+});
+
 test('CENT-MAQ. máquinas do dono vêm do agente (só leitura)', async () => {
   const h = createHandler({ getMw: () => master, getMaquinas: () => ({ ligado: () => true, listar: async () => [{ nome: 'PC1', online: true, ramTotal: 16 }] }) });
   const b = JSON.parse((await h(ev({ queryStringParameters: { parte: 'maquinas' } }))).body);
