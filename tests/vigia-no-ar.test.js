@@ -66,7 +66,7 @@ describe('vigia-no-ar', () => {
       return { ok: true, status: 200, json: async () => ({}) };
     };
 
-    await vigia.verificarTodos();
+    await vigia.verificarSite({ id: 'produto-falha', site: 'https://produto-falha.pages.dev/' });
     expect(rollbackChamado).toBe(false);
     expect(issueCriada).toBe(false);
     expect(vigia.falhasConsecutivas('produto-falha')).toBe(1);
@@ -82,8 +82,8 @@ describe('vigia-no-ar', () => {
       return { ok: true, status: 200, json: async () => ({}) };
     };
 
-    await vigia.verificarTodos();
-    await vigia.verificarTodos();
+    await vigia.verificarSite({ id: 'produto-falha', site: 'https://produto-falha.pages.dev/' });
+    await vigia.verificarSite({ id: 'produto-falha', site: 'https://produto-falha.pages.dev/' });
     expect(rollbackChamado).toBe(true);
     expect(issueCriada).toBe(true);
     expect(vigia.falhasConsecutivas('produto-falha')).toBe(2);
@@ -108,7 +108,7 @@ describe('vigia-no-ar', () => {
     global.fetch = async function () {
       return { ok: true, status: 200, json: async () => ({}) };
     };
-    await vigia.verificarTodos();
+    await vigia.verificarSite({ id: 'produto-falha', site: 'https://produto-falha.pages.dev/' });
     expect(issueFechada).toBe(true);
     expect(vigia.falhasConsecutivas('produto-falha')).toBe(0);
   });
