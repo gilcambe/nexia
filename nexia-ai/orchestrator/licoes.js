@@ -19,4 +19,6 @@ const LICOES = Object.freeze([
 
 const TEXTO = `LIÇÕES APRENDIDAS (erros reais de tarefas anteriores; não repita):\n${LICOES.map(l => `- ${l}`).join('\n')}`;
 
-module.exports = { LICOES, TEXTO };
+const { montarPedidoLicao } = require('../../scripts/licao-auto.js');
+
+module.exports = { LICOES, TEXTO, montarPedidoLicao };
