@@ -71,15 +71,13 @@ async function deleteTestUser(sa) {
   return r.ok;
 }
 
-async function deleteTestClient(api, clientId) {
-  if (!clientId) return false;
-  const r = await api(`/nexia/clients/${clientId}`, { method: 'DELETE' });
-  return r.status === 200;
-}
-
-async function deleteTestProject(api, projectId) {
-  if (!projectId) return false;
-  const r = await api(`/nexia/projects/${projectId}`, { method: 'DELETE' });
+// Apaga um registro de teste. O Vault exige If-Match com a versão ATUAL (senão responde 428), por isso lê antes.
+async function deleteTestRecord(api, tipo, id) {
+  if (!id) return false;
+  const cur = await api(`/nexia/${tipo}/${id}`);
+  const v = cur.json && cur.json.record && cur.json.record.version;
+  if (v === undefined || v === null) return false;
+  const r = await api(`/nexia/${tipo}/${id}`, { method: 'DELETE', headers: { 'If-Match': `"v${v}"` } });
   return r.status === 200;
 }
 
@@ -106,6 +104,8 @@ async function main() {
 
   let client = null;
   let project = null;
+  let clienteCriado = null; // só o que ESTA rodada criou pode ser apagado (o projeto com o repositório é compartilhado entre pistas)
+  let projetoCriado = null;
 
   try {
     const me = await api('/nexia/me');
@@ -127,6 +127,7 @@ async function main() {
     // Vault: cliente e projeto de teste (idempotentes: rodar de novo reaproveita)
     const cl = await api('/nexia/clients', { method: 'POST', body: { name: 'Teste automático NEXIA', slug: `teste-automatico${PROJ}`, status: 'active' }, headers: { 'Idempotency-Key': `smoke-client-v1${PROJ}` } });
     client = cl.json && cl.json.record;
+    clienteCriado = client ? client.id : null;
     if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === `teste-automatico${PROJ}`);
     if (!client) {
       report(false, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
@@ -136,6 +137,7 @@ async function main() {
 
     const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client && client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
     project = pr.json && pr.json.record;
+    projetoCriado = project ? project.id : null;
     if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PROJ}`);
     report(!!project, 'Vault: criar projeto', `${pr.status} ${pr.json && (pr.json.error || '')}`);
     // Usa o projeto que já tem o repositório (ele só pode estar ligado a UM projeto por tenant;
@@ -253,13 +255,13 @@ async function main() {
     report(ec.status === 200, 'Execuções recentes', `${ec.status} ${(ec.json && ec.json.items || []).length}`);
     }
   } finally {
-    // Clean up resources
-    if (project) {
-      report(await deleteTestProject(api, project.id), 'Apagar projeto de teste');
-    }
-    if (client) {
-      report(await deleteTestClient(api, client.id), 'Apagar cliente de teste');
-    }
+    // Limpeza dos dados de teste: só informa no log; nunca reprova o teste (quem libera a fila é o resto do smoke).
+    // Nunca apaga o projeto dono do repositório (outras pistas usam) nem o que esta rodada não criou.
+    const donoDoRepo = project && project.id;
+    const apagarProjeto = !!projetoCriado && projetoCriado !== donoDoRepo;
+    const apagarCliente = !!clienteCriado && (!projetoCriado || apagarProjeto);
+    if (apagarProjeto) console.log(`limpeza: projeto de teste ${await deleteTestRecord(api, 'projects', projetoCriado).catch(() => false) ? 'apagado' : 'não apagado (segue)'}`);
+    if (apagarCliente) console.log(`limpeza: cliente de teste ${await deleteTestRecord(api, 'clients', clienteCriado).catch(() => false) ? 'apagado' : 'não apagado (segue)'}`);
     report(await deleteTestUser(sa).catch(() => false), 'Apagar usuário de teste');
   }
 
