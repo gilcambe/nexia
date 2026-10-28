@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Viajante Pro — App do Viajante</title>
+  <link rel="manifest" href="/viajante-pro/app/manifest.webmanifest">
+  <meta name="theme-color" content="#0B132B">
+  <link rel="icon" type="image/png" href="/viajante-pro/app/icone-192.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              dark: '#0B132B',
+              card: '#1C2541',
+              accent: '#00E5FF',
+              alert: '#FF3B30',
+              text: '#F8F9FA',
+              muted: '#8D99AE'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { box-sizing: border-box; touch-action: manipulation; }
+    body { background-color: #0B132B; color: #F8F9FA; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; overflow-x: hidden; }
+    .nav-btn.active { color: #00E5FF; border-bottom: 2px solid #00E5FF; font-weight: 600; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-brand-dark min-h-screen flex flex-col justify-between select-none">
+
+  <!-- Header -->
+  <header class="bg-brand-card/90 backdrop-blur sticky top-0 z-30 px-4 py-3 border-b border-white/10 flex justify-between items-center">
+    <div class="flex items-center space-x-2">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center font-bold text-white text-sm shadow">VP</div>
+      <div>
+        <h1 class="font-bold text-sm leading-none text-white">Viajante Pro</h1>
+        <span id="carimbo-atualizacao" class="text-[10px] text-brand-muted">Carregando dados...</span>
+      </div>
+    </div>
+    <div class="flex items-center space-x-2">
+      <button id="btn-instalar" class="hidden bg-brand-accent/20 text-brand-accent text-xs px-2.5 py-1 rounded-full font-medium border border-brand-accent/30">Instalar</button>
+      <span id="badge-status-rede" class="w-2.5 h-2.5 rounded-full bg-emerald-500" title="Online"></span>
+    </div>
+  </header>
+
+  <!-- Sub-Barra de Navegação por Abas (Horizontal Scrollable) -->
+  <nav class="bg-brand-card/50 border-b border-white/5 overflow-x-auto no-scrollbar sticky top-[53px] z-20">
+    <div class="flex whitespace-nowrap px-2 py-1 space-x-1 text-xs">
+      <button onclick="navegarAba('hoje')" id="tab-hoje" class="nav-btn active px-3 py-2 text-brand-muted hover:text-white transition-colors">Hoje</button>
+      <button onclick="navegarAba('voos')" id="tab-voos" class="nav-btn px-3 py-2 text-brand-muted hover:text-white transition-colors">Voos</button>
+      <button onclick="navegarAba('roteiro')" id="tab-roteiro" class="nav-btn px-3 py-2 text-brand-muted hover:text-white transition-colors">Roteiro</button>
+      <button onclick="navegarAba('hotel-carro')" id="tab-hotel-carro" class="nav-btn px-3 py-2 text-brand-muted hover:text-white transition-colors">Hotel & Carro</button>
+      <button onclick="navegarAba('documentos')" id="tab-documentos" class="nav-btn px-3 py-2 text-brand-muted hover:text-white transition-colors">Documentos</button>
+      <button onclick="navegarAba('motorista')" id="tab-motorista" class="nav-btn px-3 py-2 text-brand-muted hover:text-white transition-colors">Mostre ao Motorista</button>
+      <button onclick="navegarAba('emergencia')" id="tab-emergencia" class="nav-btn px-3 py-2 text-brand-muted hover:text-white transition-colors">Emergência</button>
+    </div>
+  </nav>
+
+  <!-- Conteúdo Principal -->
+  <main id="app-conteudo" class="flex-1 p-4 pb-20">
+    <!-- Renderizado via app.js -->
+  </main>
+
+  <!-- Botão Flutuante de Conversa/Suporte -->
+  <div class="fixed bottom-4 right-4 z-40">
+    <button id="btn-conversa" class="w-12 h-12 rounded-full bg-brand-accent text-brand-dark flex items-center justify-center shadow-lg shadow-cyan-500/20 hover:scale-105 active:scale-95 transition-transform font-bold text-xl">
+      💬
+    </button>
+  </div>
+
+  <script src="/viajante-pro/app/app.js"></script>
+</body>
+</html>
