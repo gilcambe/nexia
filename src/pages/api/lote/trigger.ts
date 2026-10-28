@@ -51,6 +51,8 @@ export default async function handler(req, res) {
       publicar
     });
 
+    console.log('Disparando workflow lote-sites.yml:', { slugs, publicar, jobId: result.jobId, url: result.url });
+
     if (!result.success) {
       return res.status(500).json(result);
     }
