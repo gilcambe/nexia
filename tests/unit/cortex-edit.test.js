@@ -262,6 +262,7 @@ test('CE10. prompts: quem grava aprende o formato de texto; o Architect termina 
   for (const a of ['coder', 'frontend', 'backend', 'database']) assert.ok(AGENTS[a].prompt.includes('<<<<<<< SEARCH') && AGENTS[a].max_steps >= 16, a);
   for (const a of ['reviewer', 'security', 'architect']) assert.ok(!AGENTS[a].prompt.includes('<<<<<<< SEARCH'), a);
   assert.match(AGENTS.architect.prompt, /ARQUIVOS:/);
+  assert.match(AGENTS.architect.prompt, /novo e ainda não existir/);
 });
 
 test('CE12. revisor que termina só com texto: lembrete e veredito em JSON no texto valem (antes: changes_requested sem motivo)', async () => {
