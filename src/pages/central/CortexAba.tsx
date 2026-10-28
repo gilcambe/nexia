@@ -4,16 +4,28 @@ import { useCentral, haQuanto } from "./api";
 import { Cartao, Numero, Botao, Carregando, Sinal } from "./ui";
 import ContasReserva from "../cortex/Reservas";
 
+function corEtapa(etapa?: string) {
+  if (!etapa) return "text-nexia-muted";
+  if (etapa.startsWith("Travada")) return "text-red-500";
+  if (etapa.startsWith("Em execução")) return "text-orange-500";
+  return "text-gray-400";
+}
+
 function Lista({ itens, vazio }: { itens: Tarefa[]; vazio: string }) {
   if (!itens.length) return <p className="text-sm text-nexia-muted">{vazio}</p>;
   return (
     <ul className="space-y-2">
       {itens.map((t) => (
-        <li key={t.numero}>
-          <a href={t.link} target="_blank" rel="noopener noreferrer" className="block rounded-xl bg-nexia-surface2 p-3 text-sm">
+        <li key={t.numero} className="rounded-xl bg-nexia-surface2 p-3">
+          <div className="flex items-center gap-2 mb-1">
             <span className="text-nexia-muted">#{t.numero}</span> {t.titulo}
-            <span className="block text-xs text-nexia-muted mt-1">{haQuanto(t.quando)}</span>
-          </a>
+            {t.etapa && <span className={`text-xs font-semibold ${corEtapa(t.etapa)}`}>{t.etapa}</span>}
+          </div>
+          <div className="flex items-center gap-2 text-xs text-nexia-muted">
+            <span>{haQuanto(t.quando)}</span>
+            <a href={`/meu-cortex#p${t.numero}`} className="text-nexia-cyan hover:underline">Ver detalhes</a>
+            <a href={t.link} target="_blank" rel="noopener noreferrer" className="text-nexia-cyan hover:underline">GitHub</a>
+          </div>
         </li>
       ))}
     </ul>
