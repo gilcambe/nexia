@@ -50,6 +50,48 @@ function confere(cond, msg) {
   const base = `http://127.0.0.1:${servidor.address().port}`;
   if (FOTOS) fs.mkdirSync(FOTOS, { recursive: true });
 
+  // Interceptar rota da API de viagens para mockar o token e a viagem de teste
+  const viagemTeste = {
+    id: 'viagem-teste-123',
+    origem: { cidade: 'São Paulo', pais: 'Brasil' },
+    destino: { cidade: 'Paris', pais: 'França' },
+    datas: { saida: '2024-12-10', volta: '2024-12-20' },
+    voos: [
+      { cia: 'Air France', num: 'AF457', saida: '2024-12-10T22:00:00Z', volta: '2024-12-11T17:00:00Z' },
+      { cia: 'Air France', num: 'AF458', saida: '2024-12-20T10:00:00Z', volta: '2024-12-20T18:00:00Z' }
+    ],
+    roteiro: [
+      { dia: 1, local: 'Louvre', atividade: 'Visita ao museu', info: 'Abrir no Mapa' },
+      { dia: 5, local: 'Torre Eiffel', atividade: 'Subir até o topo', info: 'Verificar horário' }
+    ],
+    motorista: { hotel: 'Le Meurice Paris', endereco: '228 Rue de Rivoli', info: 'Chamar por volta das 18h' },
+    emergencia: { contato: 'Consulado do Brasil em Paris', telefone: '+33 1 44 59 22 00', info: 'Viajante Pro' }
+  };
+  const TOKEN_ERRADO = 'TOKEN_ERRADO_INVALIDO';
+
+  await page.route('**/api/viagem*', async route => {
+    const token = route.request().url().includes('?') ? new URLSearchParams(new URL(route.request().url()).search).get('t') : null;
+    if (token === 'TOKEN_TESTE_VP') {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(viagemTeste),
+      });
+    } else if (token === TOKEN_ERRADO) {
+      await route.fulfill({
+        status: 404,
+        contentType: 'text/plain',
+        body: 'Link inválido',
+      });
+    } else {
+      await route.fulfill({
+        status: 404,
+        contentType: 'text/plain',
+        body: 'Token inválido ou ausente',
+      });
+    }
+  });
+
   const browser = await chromium.launch(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {});
   const ctx = await browser.newContext({
     viewport: { width: 360, height: 800 },
@@ -68,11 +110,12 @@ function confere(cond, msg) {
     }
   };
 
-  console.log('1. Abrindo app com token via link público');
+  console.log('1. Abrindo app com token válido');
   await page.goto(base + '/?t=TOKEN_TESTE_VP', { waitUntil: 'load' });
   await page.waitForSelector('#app-conteudo');
   await page.waitForTimeout(500);
   confere(await page.isVisible('#carimbo-atualizacao'), 'Carimbo de atualização visível');
+  confere(await page.textContent('#app-conteudo'), viagemTeste.voos[0].cia, 'Viagem de teste carregada');
   await tirarFoto('01-hoje');
 
   // Verificar sem rolagem horizontal
