@@ -141,7 +141,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
     { nome: "Firebase", logo: "/central/logos/firebase.svg", aba: "sistema",
       ...(!d.banco ? { e: "cinza" as Estado, texto: "Conferindo" } : d.banco.ok ? { e: "ok" as Estado, texto: "Online" } : { e: "erro" as Estado, texto: d.banco.cheio ? "Limite do dia" : "Sem resposta" }) },
     { nome: "Cloudflare", logo: "/central/logos/cloudflare.svg", aba: "sistema",
-      ...(!d.cloudflare ? { e: "cinza" as Estado, texto: "Conferindo" } : d.cloudflare.erro ? { e: "atencao" as Estado, texto: "Erro na leitura" } : d.cloudflare.configurado ? { e: "ok" as Estado, texto: "Online" } : { e: "cinza" as Estado, texto: "Sem acesso" }) },
+      ...(!d.cloudflare ? { e: "cinza" as Estado, texto: "Conferindo" } : d.cloudflare.erro ? { e: "atencao" as Estado, texto: "Erro na leitura" } : d.cloudflare.configurado ? { e: "ok" as Estado, texto: "Online" } : { e: "cinza" as Estado, texto: "Falta ligar" }) },
     { nome: "GitHub", logo: "/central/logos/github.svg", aba: "prs",
       ...(!d.robos ? { e: "cinza" as Estado, texto: "Conferindo" } : robos.some((r) => r.situacao === "sem-acesso") ? { e: "atencao" as Estado, texto: "Sem acesso" } : robos.some((r) => r.situacao === "erro") ? { e: "atencao" as Estado, texto: "Robô com erro" } : { e: "ok" as Estado, texto: "Online" }) },
     { nome: "Sites dos clientes", logo: "/central/logos/kernex.svg", aba: "clientes",
