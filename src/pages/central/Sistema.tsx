@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Dados, Fornecedor, Parte, Situacao, TesteIA } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
+import EscadaCard from "@/components/EscadaCard.tsx";
 import type { Cor } from "./ui";
 import Mais from "./Mais";
 import SaudeHistorico from "./SaudeHistorico";
@@ -165,6 +166,10 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
       ) : <ConectarIAs inicial={d.vagas} />}
       <SaudeHistorico />
       <UltimosErros />
+
+      <Cartao titulo="🪜 Escada">
+        <EscadaCard />
+      </Cartao>
 
       <Cartao titulo="Chaves e IAs" acao={<Botao onClick={testar} disabled={testando} testid="testar-chaves">{testando ? "Testando…" : "🧪 Testar todas agora"}</Botao>}>
         {!d.empresa ? <Carregando /> : (
