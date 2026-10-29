@@ -35,15 +35,16 @@ export default async function handler(req, res) {
       const docSnap = await docRef.get();
       if (docSnap.exists) {
         const stored = docSnap.data();
-        if (stored) {
+        if (stored && typeof stored === 'object') {
+          const semana = stored.semana && typeof stored.semana === 'object' ? stored.semana : {};
           data = {
-            faseB: Boolean(stored.faseB),
-            fila: Number(stored.fila) || 0,
-            julesHoje: Number(stored.julesHoje) || 0,
+            faseB: stored.faseB === true,
+            fila: Number.isFinite(Number(stored.fila)) ? Math.max(0, Math.floor(Number(stored.fila))) : 0,
+            julesHoje: Number.isFinite(Number(stored.julesHoje)) ? Math.max(0, Math.floor(Number(stored.julesHoje))) : 0,
             semana: {
-              cortex: Math.max(0, Math.min(100, Number(stored.semana?.cortex) || 0)),
-              iasGratis: Math.max(0, Math.min(100, Number(stored.semana?.iasGratis) || 0)),
-              claude: Math.max(0, Math.min(100, Number(stored.semana?.claude) || 0))
+              cortex: Number.isFinite(Number(semana.cortex)) ? Math.max(0, Math.min(100, Math.floor(Number(semana.cortex)))) : 0,
+              iasGratis: Number.isFinite(Number(semana.iasGratis)) ? Math.max(0, Math.min(100, Math.floor(Number(semana.iasGratis)))) : 0,
+              claude: Number.isFinite(Number(semana.claude)) ? Math.max(0, Math.min(100, Math.floor(Number(semana.claude)))) : 0
             }
           };
         }
