@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { Historico, RotaSaude } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando, Barras } from "./ui";
+import { IcSaude } from "./icones";
 import type { Cor } from "./ui";
 
 // Aba Sistema: saúde dos sites nos últimos 30 dias (o Worker guarda 1 amostra por hora de cada rota).
@@ -25,7 +26,7 @@ export default function SaudeHistorico() {
   useEffect(() => { ler(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <Cartao titulo="Saúde dos sites (30 dias)" acao={<Botao onClick={ler} disabled={lendo} testid="ler-historico">{lendo ? "Lendo…" : "🔄 Atualizar"}</Botao>}>
+    <Cartao titulo="Saúde dos sites (30 dias)" resumo="Conferindo…" icone={<IcSaude />} acao={<Botao onClick={ler} disabled={lendo} testid="ler-historico">{lendo ? "Lendo…" : "🔄 Atualizar"}</Botao>}>
       {!h ? <Carregando erro={erro} /> : !h.amostras ? (
         <p className="text-sm text-nexia-muted">Ainda sem medições guardadas. O Worker mede cada site uma vez por hora; a primeira aparece em até 1 hora.</p>
       ) : (
