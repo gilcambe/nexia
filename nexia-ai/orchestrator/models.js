@@ -90,7 +90,9 @@ function parseList(text) {
 function listFor(cls, env = process.env) {
   const key = Object.prototype.hasOwnProperty.call(CLASSES, cls) ? cls : 'coding';
   const custom = parseList(env[`NEXIA_MODELS_${key.toUpperCase()}`]);
-  return custom.length ? custom : CLASSES[key];
+  const base = CLASSES[key];
+  const res = custom.length ? custom : base;
+  return Array.isArray(res) ? res : [];
 }
 
 /** @returns {{ provider, model }[]} candidatos disponíveis para a classe */

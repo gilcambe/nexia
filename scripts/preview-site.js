@@ -26,8 +26,8 @@ const server = http.createServer((req, res) => {
   const browser = await chromium.launch();
   const problems = [];
   const shots = isApp
-    ? [['painel', '/', 1440, 900], ['cadastro', `/#/${(JSON.parse((fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/id="app-config">([^<]*)</) || [0, '{"entities":[{"key":""}]}'])[1]).entities[0] || {}).key}`, 1440, 900], ['celular', '/', 390, 844]]
-    : [['computador', '/', 1440, 900, true], ['celular', '/', 390, 844, false]];
+    ? [['painel', '/', 1440, 900], ['cadastro', `/#/${(JSON.parse((fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8').match(/id="app-config">([^<]*)</) || [0, '{"entities":[{"key":""}]}'])[1]).entities[0] || {}).key}`, 1440, 900], ['celular', '/', 375, 844]]
+    : [['computador', '/', 1440, 900, true], ['celular', '/', 375, 844, false]];
   for (const [name, url, width, height, full] of shots) {
     const page = await browser.newPage({ viewport: { width, height }, deviceScaleFactor: 1 });
     page.on('pageerror', e => problems.push(`${name}: ${e.message}`));

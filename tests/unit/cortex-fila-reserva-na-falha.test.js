@@ -28,10 +28,10 @@ test('RF5. RESERVA_NA_FALHA=0 desliga', () => {
   assert.equal(devePedirReserva({ tipo: 'travar' }, [], { RESERVA_NA_FALHA: '0' }), false);
 });
 
-test('RF6. travouAntesDoConserto: antes dos PRs #2221/#2301 volta, depois não', () => {
+test('RF6. travouAntesDoConserto: antes do corte do conserto volta, depois não', () => {
   assert.equal(travouAntesDoConserto('2026-10-27T10:00:00Z'), true);
   assert.equal(travouAntesDoConserto('2026-10-28T13:00:00Z'), true);
-  assert.equal(travouAntesDoConserto('2026-10-28T16:00:00Z'), false);
+  assert.equal(travouAntesDoConserto('2026-10-30T10:00:00Z'), false);
   assert.equal(travouAntesDoConserto(null), false);
 });
 

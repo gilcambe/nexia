@@ -7,7 +7,7 @@ import { apiPath } from "@/config/env";
 export interface Produto { id: string; nome: string; icone: string; frase: string; logo?: string; segmento?: string; site?: string; painel?: string; suporte?: string; pendente?: boolean; tipo?: "produto" | "cliente" | "tenant" | string }
 export interface Medida { id: string; ok: boolean; codigo: number; tempo: number; lento: boolean; quando?: string | null }
 export interface Maquina { nome: string; cpu?: string; ramTotal?: number | null; ramLivre?: number | null; modelos?: string[]; ollamaOk?: boolean; visto_em?: string; online: boolean }
-export interface Tarefa { numero: number; titulo: string; link: string; quando: string }
+export interface Tarefa { numero: number; titulo: string; link: string; quando: string; atribuidoA?: string } // Adicionado atribuidoA
 export interface Robo { arquivo: string; nome: string; podeRodar: boolean; situacao: "ok" | "erro" | "rodando" | "nunca" | "sem-acesso"; quando: string | null; link: string | null }
 export interface Dinheiro {
   total: number; pagantes: number; emTeste: number; vencendo7: number; receitaMes: number; avisos7: number;
@@ -50,7 +50,7 @@ export interface VagaUso { vaga: number; provedor: string; pr: number; link: str
 export interface Vaga { vaga: number; ligada: boolean; provedor: string | null; salvaEm: string | null; teste: VagaTeste | null; usos: VagaUso[] }
 export interface ProvedorVaga { id: string; nome: string; site: string; logo: string | null; passos: string[] }
 export interface JulesEstado { ligado: boolean; comEle: number | null; prsHoje: number; ultimoPr: { numero: number; link: string; quando: string } | null }
-export interface Vagas { vagas: Vaga[]; provedores: ProvedorVaga[]; podeLerSegredos: boolean; jules?: JulesEstado }
+export interface Vagas { vagas: Vaga[]; provedores: ProvedorVaga[]; podeLerSegados: boolean; jules?: JulesEstado }
 export interface Dados {
   lista?: { produtos: Produto[]; links: { nome: string; url: string }[] };
   saude?: { produtos: Medida[]; em: string };

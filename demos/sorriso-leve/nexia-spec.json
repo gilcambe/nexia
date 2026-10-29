@@ -58,7 +58,7 @@
           "href": "#tratamentos"
         },
         "image_query": "smiling woman dentist clinic",
-        "video_query": ""
+        "video_query": "dentist"
       },
       {
         "type": "services",
@@ -70,7 +70,7 @@
             "title": "Clareamento",
             "text": "Até 8 tons mais brancos.",
             "price": "a partir de R$ 690",
-            "image_query": "teeth whitening professional",
+            "image_query": "teeth whitening",
             "tag": "",
             "url": "",
             "icon": ""
@@ -79,7 +79,7 @@
             "title": "Implantes",
             "text": "Dente fixo com segurança.",
             "price": "",
-            "image_query": "dental implant titanium",
+            "image_query": "dental implant",
             "tag": "",
             "url": "",
             "icon": ""
@@ -88,7 +88,7 @@
             "title": "Ortodontia",
             "text": "Aparelhos fixos e invisíveis.",
             "price": "",
-            "image_query": "dental braces clear aligners",
+            "image_query": "dental braces",
             "tag": "",
             "url": "",
             "icon": ""
@@ -101,7 +101,7 @@
         "title": "Sobre a clínica",
         "subtitle": "Há 12 anos cuidando de famílias.",
         "text": "Há 12 anos cuidando de famílias.",
-        "image_query": "modern dental office reception",
+        "image_query": "modern dental office",
         "stats": [
           {
             "value": "12",
@@ -120,23 +120,15 @@
         "subtitle": "",
         "image_queries": [
           "dental office interior",
-          "dentist chair modern",
+          "dentist chair",
           "happy patient smile",
-          "dental tools set",
-          "dental hygiene tools",
-          "smiling family dentist"
+          "dental tools",
+          "dental hygiene",
+          "smiling family"
         ],
         "gif_queries": [
-          "tooth brushing animation"
+          "tooth brushing"
         ]
-      },
-      {
-        "type": "video",
-        "id": "conheca-a-clinica",
-        "title": "Conheça a clínica",
-        "subtitle": "Um minuto por dentro do nosso consultório.",
-        "youtube": "",
-        "video_query": "dentist patient consultation"
       },
       {
         "type": "team",
@@ -147,7 +139,7 @@
           {
             "name": "Dra. Ana Lima",
             "role": "Ortodontista",
-            "image_query": "female dentist professional portrait"
+            "image_query": "female dentist portrait"
           }
         ]
       },
@@ -240,61 +232,77 @@
     ]
   },
   "media": {
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Preparing_Teeth_Whitening_Materials_for_Dental_Treatment.jpg/1280px-Preparing_Teeth_Whitening_Materials_for_Dental_Treatment.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "Preparing Teeth Whitening Materials for Dental Treatment",
+      "credit": "Preparing Teeth Whitening Materials for Dental Treatment — Jameswasswa (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
     "s1.item1": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Root_analogue_ceramic_dental_implant_vs_titanium_screw_type_implant.jpg/1280px-Root_analogue_ceramic_dental_implant_vs_titanium_screw_type_implant.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/X-ray_of_root_analogue_dental_implant_two_rooted_left_lower_molar.jpg/1280px-X-ray_of_root_analogue_dental_implant_two_rooted_left_lower_molar.jpg",
       "width": 1280,
-      "height": 721,
-      "alt": "The picture shows a truly anatomic ceramic multi-rooted dental implant (RAI- roo",
-      "credit": "Logicwhatelse (CC BY-SA 4.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
+      "height": 1007,
+      "alt": "X-ray of root analogue dental implant two rooted left lower molar",
+      "credit": "X-ray of root analogue dental implant two rooted left lower molar — Logicwhatelse (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
     },
-    "s3.g0": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/6/62/Dental_office%2C_USS_Kroonland%2C_March_1919.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+    "s1.item2": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e1/Orthobraces_-_dental_braces_lower_upper_jaw.jpg/1280px-Orthobraces_-_dental_braces_lower_upper_jaw.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "width": 1280,
-      "height": 1740,
-      "alt": "USS Kroonland (ID # 1541) Scene in the ship's dental office, 23 March 1919. U.S.",
-      "credit": "U.S. Navy (Public domain, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s3.g1": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/c/cf/WilliamGeorgeBeers.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
-      "width": 1280,
-      "height": 1687,
-      "alt": "Picture of William George Beers, a noted Canadian dentist and patriot, who is re",
-      "credit": "William Notman (Public domain, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s3.g3": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/16/US_Navy_060516-N-1745W-039_Hospital_Corpsman_Steffon_Corna_sets_up_dental_tools_for_a_tooth_extraction_in_the_Dental_Department_aboard_the_Nimitz-class_aircraft_carrier_USS_Abraham_Lincoln_%28CVN_72%29.jpg/1280px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 914,
-      "alt": "South China Sea (May 16, 2006) - Hospital Corpsman Steffon Corna sets up dental ",
-      "credit": "U.S. Navy photo by Photographer's Mate Airman Apprentice Brandon C. Wilson (Public domain, via Wikimedia Commo",
-      "provider": "wikimedia"
-    },
-    "s3.g4": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/USMC-120718-M-BC491-003.jpg/1280px-USMC-120718-M-BC491-003.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 855,
-      "alt": "Seaman Apprentice Cody M. Frink, a Robert M. Casey Medical and Dental Clinic den",
-      "credit": "Wikimedia Commons (Public domain, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s0.hero": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/34/Dentist_Office_IMG_2448_Oslo.JPG/1280px-Dentist_Office_IMG_2448_Oslo.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-      "width": 1280,
-      "height": 960,
-      "alt": "Modernly equipped dental Office in Oslo, Norway",
-      "credit": "Bjoertvedt (CC BY-SA 3.0, via Wikimedia Commons)",
+      "height": 536,
+      "alt": "Dental braces on lower and upper jaw.",
+      "credit": "MAKY.OREL (CC BY-SA 3.0, via Wikimedia Commons)",
       "provider": "wikimedia"
     },
     "s2.about": {
-      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/40/Dentist_Office_IMG_2447_Oslo.JPG/1280px-Dentist_Office_IMG_2447_Oslo.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c7/Caulk%C2%B4s_cement%3BThe_Dental_cosmos_%281914%29.jpg/1280px-Caulk%C2%B4s_cement%3BThe_Dental_cosmos_%281914%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "width": 1280,
-      "height": 960,
-      "alt": "Modernly equipped dental Office in Oslo, Norway",
-      "credit": "Bjoertvedt (CC BY-SA 3.0, via Wikimedia Commons)",
+      "height": 1906,
+      "alt": "Identifier: dentalcosmos5619whit (find matches) Title: The Dental cosmos Year: 1",
+      "credit": "Internet Archive Book Images (No restrictions, via Wikimedia Commons)",
       "provider": "wikimedia"
+    },
+    "s3.g0": {
+      "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9zdGF0aWMvaW1hZ2Uvd2Vic2l0ZS8yMDIyLTA0L2xyL2Zyb2ZmaWNlX2RlbnRpc3RfMTYzOTY3NS1pbWFnZS1reWJiMGZxci5qcGc.jpg",
+      "width": 3616,
+      "height": 2421,
+      "alt": "Dental clinic",
+      "credit": "Dental clinic — autor desconhecido (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g1": {
+      "url": "https://media.sketchfab.com/models/a32f9033a335492e9087664d56af3673/thumbnails/1f48f81e6fa34b2487ee943bb9ac90de/1920x1080.jpeg",
+      "width": 1920,
+      "height": 1080,
+      "alt": "Dr. Cureton's Dentist Chair",
+      "credit": "Dr. Cureton's Dentist Chair — Santa Cruz Museum of Art and History (BY 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g3": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7e/Dental_instrument_to_remove_Calculus_5.JPG/1280px-Dental_instrument_to_remove_Calculus_5.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1707,
+      "alt": "Dental instrument to remove Calculus",
+      "credit": "RosarioVanTulpe (CC BY-SA 3.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g4": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/Dental_Hygiene-19.jpg/1280px-Dental_Hygiene-19.jpg",
+      "width": 1280,
+      "height": 854,
+      "alt": "Dental Hygiene-19",
+      "credit": "Dental Hygiene-19 — waketechcc (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s0.hero": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/b/b6/X-ray_of_root_analogue_three_rooted_dental_implant_right_first_upper_molar.jpg",
+      "width": 1593,
+      "height": 1251,
+      "alt": "X-ray of root analogue three rooted dental implant right first upper molar",
+      "credit": "X-ray of root analogue three rooted dental implant right first upper molar — Logicwhatelse (BY-SA 4.0, via Ope",
+      "provider": "openverse"
     }
   }
 }

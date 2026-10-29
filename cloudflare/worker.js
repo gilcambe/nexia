@@ -22,7 +22,7 @@ export default {
     if (new URL(request.url).pathname === '/api/cofre-sql') return pontaCofre(request, env);
     // #807: leituras públicas (config do Firebase etc.) passam pelo cache de borda (60 a 300 s).
     return cacheBorda.comCacheDeBorda(request, env, ctx,
-      () => app.handleRequest(request, env, { getFunction: functions.getFunction }));
+      () => app.handleRequest(request, env, { getFunction: functions.getFunction, fetch: env.SELF.fetch.bind(env.SELF) }));
   },
 
   // ADR-F12-03 + ADR-FREE-02 + ADR-AUTO-01: a cada 5 min procura Robôs NEXIA vencidos e, de hora
