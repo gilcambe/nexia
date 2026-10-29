@@ -161,7 +161,7 @@ export default function MemorySettings() {
             </div>
           </div>
           {bloqueado && (
-            <div className="text-xs text-red-400 mt-4">
+            <div className="text-xs text-red-400 mt-4" role="alert" aria-live="assertive">
               <p>⚠️ {motivoBloqueio}</p>
             </div>
           )}
