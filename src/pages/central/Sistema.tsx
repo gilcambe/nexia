@@ -2,7 +2,6 @@ import { useState } from "react";
 import type { Dados, Fornecedor, Parte, Situacao, TesteIA } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
-import EscadaCard from "@/components/EscadaCard";
 import type { Cor } from "./ui";
 import Mais from "./Mais";
 import SaudeHistorico from "./SaudeHistorico";\n
@@ -259,7 +258,6 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
       </Cartao>
 
       <Mais d={d} erro={erros.robos} />
-      <EscadaCard />
     </div>
   );
 }
