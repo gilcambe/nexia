@@ -65,7 +65,7 @@ const claudePct = computed(() => Math.min(100, Math.max(0, claude.value)));
 onMounted(async () => {
   try {
     const token = localStorage.getItem('nexia_token') || undefined;
-    const res = await fetch('/escada', {
+    const res = await fetch('/api/escada', {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     const data = await res.json();
@@ -73,7 +73,7 @@ onMounted(async () => {
     iasGratis.value = data.iasGratis ?? data.ias_gratis ?? data.progresso?.iasGratis ?? 0;
     claude.value = data.claude ?? data.progresso?.claude ?? 0;
     fila.value = data.fila ?? data.filaSemana ?? 0;
-    julesToday.value = data.julesToday ?? data.jules_hoje ?? 0;
+    julesToday.value = data.julesHoje ?? data.jules_hoje ?? data.julesToday ?? 0;
     faseB.value = data.faseB === true;
   } catch (e) {
     // valores padrão já definidos (0 e false)
