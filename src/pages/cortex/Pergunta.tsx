@@ -6,7 +6,7 @@ import { contextoCentral, ehSobreSituacao } from "./intencao";
 import type { SituacaoCortex } from "./intencao";
 import Logo from "./Logo";
 import Composer from "./Composer";
-import Markdown from "./Markdown";
+import MarkdownRenderer from "../../components/MarkdownRenderer";
 import { falarTexto } from "@/lib/voz";
 import { usePedidos } from "../meu-cortex/api";
 
@@ -193,7 +193,7 @@ export default function Pergunta({ virarPedido, primeira }: { virarPedido: (text
               <div className="min-w-0 flex-1">
                 <p className="text-xs text-[var(--cx-mut)] mb-1">Cortex{f.modelo ? ` · ${f.modelo}` : ""}{f.vivo ? " · escrevendo…" : ""}</p>
                 <div className="break-words text-[15px] leading-6" aria-live="polite" aria-busy={f.vivo ? "true" : "false"} data-testid="cx-resposta-texto">
-                  {imagemDe(f.texto) ? <img src={imagemDe(f.texto)!} alt="Imagem criada pelo Cortex" className="rounded-2xl max-w-full w-[512px]" data-testid="cx-imagem" /> : <Markdown texto={f.texto} />}
+                  {imagemDe(f.texto) ? <img src={imagemDe(f.texto)!} alt="Imagem criada pelo Cortex" className="rounded-2xl max-w-full w-[512px]" data-testid="cx-imagem" /> : <MarkdownRenderer markdown={f.texto} />}
                   {f.vivo && <span className="inline-block w-2 h-4 align-middle ml-0.5 bg-[var(--cx-ac)] animate-pulse" />}
                 </div>
                 {!f.vivo && f.texto && (
