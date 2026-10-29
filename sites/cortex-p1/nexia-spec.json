@@ -1,33 +1,33 @@
 {
   "spec": {
-    "kind": "system",
-    "name": "Site de Teste do Cortex-p1",
-    "tagline": "Painel de métricas e controle do Cortex",
-    "photo_theme": "dashboard metrics",
-    "description": "Painel de métricas e controle do Cortex",
+    "kind": "site",
+    "name": "Cortex-p1",
+    "tagline": "Tecnologia que impulsiona o seu negócio",
+    "photo_theme": "technology office",
+    "description": "Institucional da Cortex-p1: soluções digitais, automação e consultoria para empresas que querem escalar com inteligência.",
     "folder": "sites/cortex-p1",
     "fonts": {
-      "heading": "Montserrat",
+      "heading": "Outfit",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#4f46e5",
-      "accent": "#06b6d4",
-      "bg": "#fbfaf7",
+      "primary": "#1e3a8a",
+      "accent": "#38bdf8",
+      "bg": "#f8fafc",
       "surface": "#ffffff",
-      "text": "#1d2426",
-      "muted": "#5d6b6e",
-      "dark": "#111827"
+      "text": "#0f172a",
+      "muted": "#64748b",
+      "dark": "#020617"
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "11900000000",
-      "phone": "(11) 4002-8922",
-      "email": "suporte@cortexp1.com.br",
-      "address": "",
-      "city": "",
-      "hours": "",
-      "instagram": "",
+      "whatsapp": "5511900000000",
+      "phone": "(11) 90000-0000",
+      "email": "contato@cortexp1.com.br",
+      "address": "Av. Paulista, 1000",
+      "city": "São Paulo - SP",
+      "hours": "Seg a sex, 9h às 18h",
+      "instagram": "cortexp1",
       "facebook": "",
       "youtube": "",
       "tiktok": "",
@@ -42,99 +42,295 @@
       "url": "https://kernex.com.br/?utm_source=cortex-p1&utm_medium=selo&utm_campaign=clientes"
     },
     "leads_origem": "",
-    "entities": [
+    "sections": [
       {
-        "key": "metrics",
-        "label": "Métricas",
-        "singular": "Métrica",
-        "fields": [
+        "type": "hero",
+        "id": "sistemas-que-pensam-pelo-seu-negocio",
+        "title": "Sistemas que pensam pelo seu negócio",
+        "subtitle": "Desenvolvemos software sob medida, automação de processos e inteligência aplicada para times crescerem com menos esforço.",
+        "eyebrow": "Cortex-p1",
+        "cta": {
+          "label": "Falar com especialista",
+          "href": "whatsapp"
+        },
+        "cta2": {
+          "label": "Ver cases",
+          "href": "#servicos"
+        },
+        "image_query": "modern office team working laptops",
+        "video_query": "office technology"
+      },
+      {
+        "type": "services",
+        "id": "servicos",
+        "title": "Nossos serviços",
+        "subtitle": "Do diagnóstico à entrega em produção.",
+        "items": [
           {
-            "key": "provedor",
-            "label": "Provedor",
-            "type": "text",
-            "options": [],
-            "required": true
+            "title": "Desenvolvimento de Software",
+            "text": "Sistemas web e mobile feitos sob medida.",
+            "price": "a partir de R$ 15.000",
+            "image_query": "developer coding laptop",
+            "tag": "",
+            "url": "",
+            "icon": ""
           },
           {
-            "key": "cota_usada_hoje",
-            "label": "Cota Usada Hoje",
-            "type": "number",
-            "options": [],
-            "required": true
+            "title": "Automação de Processos",
+            "text": "Elimine tarefas repetitivas com bots e integrações.",
+            "price": "",
+            "image_query": "automation workflow dashboard",
+            "tag": "",
+            "url": "",
+            "icon": ""
           },
           {
-            "key": "mensagens_por_minuto",
-            "label": "Mensagens por Minuto",
-            "type": "number",
-            "options": [],
-            "required": true
+            "title": "Inteligência Artificial",
+            "text": "Modelos treinados para sua operação.",
+            "price": "",
+            "image_query": "ai robot brain digital",
+            "tag": "",
+            "url": "",
+            "icon": ""
           },
           {
-            "key": "tamanho_da_fila",
-            "label": "Tamanho da Fila",
-            "type": "number",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "erros_ultima_hora",
-            "label": "Erros na Última Hora",
-            "type": "number",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
-            "type": "select",
-            "options": [
-              "Ativo",
-              "Inativo"
-            ],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "provedor": "Twilio",
-            "cota_usada_hoje": "12000",
-            "mensagens_por_minuto": "5",
-            "tamanho_da_fila": "200",
-            "erros_ultima_hora": "1",
-            "status": "Ativo"
-          },
-          {
-            "provedor": "Nexmo",
-            "cota_usada_hoje": "8000",
-            "mensagens_por_minuto": "3",
-            "tamanho_da_fila": "150",
-            "erros_ultima_hora": "0",
-            "status": "Ativo"
-          },
-          {
-            "provedor": "Plivo",
-            "cota_usada_hoje": "5000",
-            "mensagens_por_minuto": "4",
-            "tamanho_da_fila": "100",
-            "erros_ultima_hora": "2",
-            "status": "Inativo"
-          },
-          {
-            "provedor": "Vonage",
-            "cota_usada_hoje": "2000",
-            "mensagens_por_minuto": "1",
-            "tamanho_da_fila": "50",
-            "erros_ultima_hora": "0",
-            "status": "Ativo"
+            "title": "Consultoria de TI",
+            "text": "Estratégia, arquitetura e governança de dados.",
+            "price": "",
+            "image_query": "consultant meeting whiteboard",
+            "tag": "",
+            "url": "",
+            "icon": ""
           }
         ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-a-cortex-p1",
+        "title": "Sobre a Cortex-p1",
+        "subtitle": "Criada para transformar empresas com tecnologia acessível e entrega rápida.",
+        "text": "Criada para transformar empresas com tecnologia acessível e entrega rápida.",
+        "image_query": "modern tech office interior",
+        "stats": [
+          {
+            "value": "5+",
+            "label": "anos"
+          },
+          {
+            "value": "100+",
+            "label": "projetos"
+          },
+          {
+            "value": "98%",
+            "label": "retenção"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "nosso-dia-a-dia",
+        "title": "Nosso dia a dia",
+        "subtitle": "",
+        "image_queries": [
+          "team brainstorming office",
+          "developers coding",
+          "server room rack",
+          "person using tablet",
+          "agile standup meeting",
+          "office coworking space",
+          "digital interface design",
+          "handshake business partnership"
+        ],
+        "gif_queries": [
+          "coding animation"
+        ]
+      },
+      {
+        "type": "testimonials",
+        "id": "o-que-dizem-nossos-clientes",
+        "title": "O que dizem nossos clientes",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Marina Souza",
+            "role": "",
+            "text": "Entregaram o sistema em tempo recorde.",
+            "rating": 5
+          },
+          {
+            "name": "Lucas Almeida",
+            "role": "",
+            "text": "Automação que economizou horas por semana.",
+            "rating": 5
+          },
+          {
+            "name": "Fernanda Costa",
+            "role": "",
+            "text": "Suporte excelente e atendimento humano.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "perguntas-frequentes",
+        "title": "Perguntas frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Quanto tempo leva um projeto?",
+            "a": "Depende da complexidade, geralmente de 4 a 12 semanas."
+          },
+          {
+            "q": "Vocês dão suporte após a entrega?",
+            "a": "Sim, planos de manutenção mensal incluídos."
+          },
+          {
+            "q": "Trabalham com qual stack?",
+            "a": "React, Node.js, Python e tecnologias modernas de nuvem."
+          },
+          {
+            "q": "É possível integrar com meus sistemas atuais?",
+            "a": "Sim, conectamos via APIs com ERPs, CRMs e e-commerces."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "quer-evoluir-sua-operacao",
+        "title": "Quer evoluir sua operação?",
+        "subtitle": "Agende uma conversa sem compromisso.",
+        "cta": {
+          "label": "Falar pelo WhatsApp",
+          "href": "whatsapp"
+        }
+      },
+      {
+        "type": "links",
+        "id": "acessos-rapidos",
+        "title": "Acessos rápidos",
+        "subtitle": "",
+        "items": [
+          {
+            "label": "WhatsApp",
+            "url": "https://wa.me/5511900000000",
+            "icon": "whatsapp"
+          },
+          {
+            "label": "Instagram",
+            "url": "https://instagram.com/cortexp1",
+            "icon": "instagram"
+          },
+          {
+            "label": "LinkedIn",
+            "url": "https://linkedin.com/company/cortexp1",
+            "icon": "linkedin"
+          },
+          {
+            "label": "YouTube",
+            "url": "https://youtube.com/@cortexp1",
+            "icon": "youtube"
+          }
+        ]
+      },
+      {
+        "type": "contact",
+        "id": "fale-com-a-gente",
+        "title": "Fale com a gente",
+        "subtitle": "",
+        "map": true,
+        "form": true
       }
-    ],
-    "modules": [
-      "Admin",
-      "Métricas",
-      "Relatórios"
     ]
   },
-  "media": {}
+  "media": {
+    "s0.hero": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/TechnologyHub_2020_Office_Space_Cubicles.jpg/1280px-TechnologyHub_2020_Office_Space_Cubicles.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "TechnologyHub 2020 Office Space Cubicles",
+      "credit": "TechnologyHub 2020 Office Space Cubicles — Missionedit (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item0": {
+      "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTExL2ZsNTE5NTU5NzE5NzctaW1hZ2UuanBn.jpg",
+      "width": 4000,
+      "height": 2661,
+      "alt": "Greenville Police's Technology Officer A.F",
+      "credit": "Greenville Police's Technology Officer A.F — autor desconhecido (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/S2S_Technologies_Office_-_Inside.jpg/1280px-S2S_Technologies_Office_-_Inside.jpg",
+      "width": 1280,
+      "height": 720,
+      "alt": "S2S Technologies Office - Inside",
+      "credit": "S2S Technologies Office - Inside — S2S Technologies (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Gigaworkz_Technologies_Office_At_Sugbutel_Bldg.JPG/1280px-Gigaworkz_Technologies_Office_At_Sugbutel_Bldg.JPG",
+      "width": 1280,
+      "height": 960,
+      "alt": "Gigaworkz Technologies Office At Sugbutel Bldg",
+      "credit": "Gigaworkz Technologies Office At Sugbutel Bldg — Gibson Torreon C (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/TVSR_Technologies_Office.jpg/1280px-TVSR_Technologies_Office.jpg",
+      "width": 1280,
+      "height": 843,
+      "alt": "TVSR Technologies Office",
+      "credit": "TVSR Technologies Office — Amarnathreddy528 (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s2.about": {
+      "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTExL2ZsNTE5NTU5NzI1NjItaW1hZ2UuanBn.jpg",
+      "width": 4000,
+      "height": 2665,
+      "alt": "Greenville Police's Technology Officer A.F",
+      "credit": "Greenville Police's Technology Officer A.F — autor desconhecido (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Seagate_Technology_Office_-_Shakopee%2C_Minnesota.jpg/1280px-Seagate_Technology_Office_-_Shakopee%2C_Minnesota.jpg",
+      "width": 1280,
+      "height": 886,
+      "alt": "Seagate Technology Office - Shakopee, Minnesota",
+      "credit": "Seagate Technology Office - Shakopee, Minnesota — Tony Webster (BY-SA 2.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g1": {
+      "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTExL2ZsNTE5NTY5NjExMzEtaW1hZ2UuanBn.jpg",
+      "width": 4000,
+      "height": 2661,
+      "alt": "Greenville Police's Technology Officer A.F",
+      "credit": "Greenville Police's Technology Officer A.F — autor desconhecido (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Mayor_Eric_Garcetti_looks_on_as_Chief_Innovation_and_Technology_Officer%2C_Peter_Marx%2C_discusses_the_salience_of_the_TechLA_Initiative_to_the_future_prosperity_and_welfare_Los_Angeles_%2814197806270%29.jpg/1280px-Mayor_Eric_Garcetti_looks_on_as_Chief_Innovation_and_Technology_Officer%2C_Peter_Marx%2C_discusses_the_salience_of_the_TechLA_Initiative_to_the_future_prosperity_and_welfare_Los_Angeles_%2814197806270%29.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "File:Mayor Eric Garcetti looks on as Chief Innovation and Technology Officer, Pe",
+      "credit": "File:Mayor Eric Garcetti looks on as Chief Innovation and Technology Officer, Peter Marx, discusses the salien",
+      "provider": "openverse"
+    },
+    "s3.g3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/FUT.Minna_School_of_Agric_Technology_Offices.jpg/1280px-FUT.Minna_School_of_Agric_Technology_Offices.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "FUT.Minna School of Agric Technology Offices",
+      "credit": "FUT.Minna School of Agric Technology Offices — Baleegraphy (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g4": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/FUT.Minna_School_of_Innovative_Technology_Offices.jpg/1280px-FUT.Minna_School_of_Innovative_Technology_Offices.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "FUT.Minna School of Innovative Technology Offices",
+      "credit": "FUT.Minna School of Innovative Technology Offices — Baleegraphy (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    }
+  }
 }
