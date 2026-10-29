@@ -3,12 +3,16 @@ const path = require('path');
 const { Octokit } = require('@octokit/rest');
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const REPO_OWNER = 'gilcambe';
-const REPO_NAME = 'nexia';
+const REPO_OWNER = process.env.GITHUB_REPO_OWNER ?? 'gilcambe';
+const REPO_NAME = process.env.GITHUB_REPO_NAME ?? 'nexia';
 const STATE_BRANCH = 'cortex-dados';
 const STATE_PATH = 'sentinel/estado.json';
 
-const octokit = new Octokit({ auth: GITHUB_TOKEN });
+if (!GITHUB_TOKEN || typeof GITHUB_TOKEN !== 'string' || !GITHUB_TOKEN.trim()) {
+  throw new Error('GITHUB_TOKEN não está definido. Defina a variável de ambiente GITHUB_TOKEN antes de executar o script.');
+}
+
+const octokit = new Octokit({ auth: GITHUB_TOKEN.trim() });
 
 const CAMPOS_OBRIGATORIOS = [
   'O que aconteceu:',
@@ -115,16 +119,45 @@ async function writeStateToGitHub(state, branch, filePath) {
   return commit.commit.sha;
 }
 
+async function verificarEscoposToken() {
+  try {
+    const { headers } = await octokit.rest.repos.get({
+      owner: REPO_OWNER,
+      repo: REPO_NAME,
+    });
+    const scopes = (headers['x-oauth-scopes'] || '')
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+    const necessarios = ['repo', 'issues', 'contents'];
+    const faltando = necessarios.filter(escopo => !scopes.includes(escopo));
+    if (faltando.length) {
+      throw new Error(
+        `Token do GitHub sem escopos necessários: ${faltando.join(', ')}. ` +
+        `Escopos encontrados: ${scopes.length ? scopes.join(', ') : '(nenhum)'}.`
+      );
+    }
+  } catch (error) {
+    if (error.status === 401 || error.status === 403) {
+      throw new Error(
+        `Token do GitHub inválido ou sem acesso ao repositório ${REPO_OWNER}/${REPO_NAME}: ${error.message}`
+      );
+    }
+    throw error;
+  }
+}
+
 async function createOrUpdateIssue(problem) {
   const { title, body, status } = validarProblema(problem);
   const label = 'sentinel';
 
   try {
-    const { data: issues } = await octokit.issues.listForRepo({
+    const issues = await octokit.paginate(octokit.issues.listForRepo, {
       owner: REPO_OWNER,
       repo: REPO_NAME,
       labels: label,
       state: 'all',
+      per_page: 100,
     });
 
     const existingIssue = issues.find(issue => issue.title === title);
@@ -194,6 +227,13 @@ async function main() {
   try {
     const problemas = lerProblemasDeEntrada();
     state = { problems: problemas, atualizado_em: new Date().toISOString() };
+  } catch (error) {
+    console.error(error.message);
+    process.exit(1);
+  }
+
+  try {
+    await verificarEscoposToken();
   } catch (error) {
     console.error(error.message);
     process.exit(1);
