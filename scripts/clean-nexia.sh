@@ -13,7 +13,7 @@
 set -e
 
 # Diretórios para processar conforme solicitado no pedido
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 
 # Função para processar um arquivo
 process_file() {
