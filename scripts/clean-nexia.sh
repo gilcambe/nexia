@@ -5,15 +5,13 @@
 #
 # REGRAS DE SUBSTITUIÇÃO:
 # 1. Substitui "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
-# 2. Remove apenas a palavra NEXIA de títulos e metadatos, mantendo o restante
+#    Ex: "NEXIA CORTEX — Plataforma de IA" → "Cortex — Plataforma de IA"
+# 2. Remove apenas a palavra NEXIA de títulos, mantendo o restante
 #    Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Meu Site CORTEX — Plataforma de IA</title>
+# 3. Remove apenas a palavra NEXIA de og:site_name, mantendo o restante
 #    Ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site"
-# 3. Para <title>: substitui títulos que ainda contenham NEXIA por <title>Cortex</title>
-#    Ex: <title>Meu Site CORTEX — Plataforma de IA</title> → <title>Cortex</title>
-# 4. Para og:site_name: substitui og:site_name que ainda contenha NEXIA por og:site_name="Cortex"
-#    Ex: og:site_name="Meu Site" (após remoção parcial) → og:site_name="Cortex"
-# 5. Para property="og:site_name" content="...": substitui conteúdo que ainda contenha NEXIA por "Cortex"
-#    Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Cortex"
+# 4. Remove apenas a palavra NEXIA de property="og:site_name" content, mantendo o restante
+#    Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Meu Site"
 #
 # COMO EXECUTAR AO FINAL DA PR:
 #   1. Abra um terminal na raiz do repositório
@@ -23,20 +21,29 @@
 #
 # EXECUÇÃO AUTOMÁTICA NA PR:
 # Para adicionar execução automática ao final da PR:
-#   1. Adicione um arquivo .github/workflows/clean-nexia-pr.yml com:
-#      name: Clean NEXIA References
-#      on: pull_request
-#      jobs:
-#        clean:
-#          runs-on: ubuntu-latest
-#          steps:
-#            - uses: actions/checkout@v4
-#            - name: Clean NEXIA references
-#              run: bash scripts/clean-nexia.sh
-#              continue-on-error: true
-#   2. Configure o workflow para rodar apenas quando a PR for criada ou atualizada
+#   1. Crie o arquivo .github/workflows/clean-nexia-pr.yml com o conteúdo abaixo
+#   2. Adicione o arquivo à PR
 #   3. O script será executado automaticamente antes do merge
 #   4. Se alterações forem feitas, o commit será adicionado automaticamente à PR
+#
+# Conteúdo para .github/workflows/clean-nexia-pr.yml:
+# ---
+# name: Clean NEXIA References
+# on:
+#   pull_request:
+#     branches: [ develop ]
+#     types: [opened, synchronize]
+# jobs:
+#   clean:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#         with:
+#           token: ${{ secrets.GITHUB_TOKEN }}
+#       - name: Clean NEXIA references
+#         run: bash scripts/clean-nexia.sh
+#         continue-on-error: true
+# ---
 
 # --- VARIAVEIS E DIRETORIOS ---
 
@@ -68,39 +75,22 @@ process_file() {
         changes_made=1
     fi
 
-    # (2) Substitui apenas a palavra NEXIA por Cortex dentro de <title>, mantendo o resto
+    # (2) Remove apenas a palavra NEXIA de títulos, mantendo o resto
     # Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Meu Site CORTEX — Plataforma de IA</title>
-    #    OBS: Remove apenas a palavra NEXIA, mantendo o resto do conteúdo do título
-    if sed -E -i '' 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1Cortex\2<\/title>/g' "$file" 2>/dev/null; then
-        changes_made=1
-    fi
-    
-    # (3) Remover apenas a palavra NEXIA de outros atributos ou textos, mantendo o restante
-    # Para <title>: remove apenas a palavra NEXIA do conteúdo, mantendo o resto
-    # Ex: <title>Meu Site CORTEX — Plataforma de IA</title> → <title>Meu Site CORTEX — Plataforma de IA</title>
-    # Note: Esta regra aplica para casos que não foram capturados pela regra 2
+    # Usa regex para capturar conteúdo antes e depois de NEXIA e mantê-los
     if sed -E -i '' 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
     
-    # Para og:site_name: remove apenas a palavra NEXIA do valor do atributo, mantendo o resto
+    # (3) Remove apenas a palavra NEXIA de og:site_name, mantendo o resto
     # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site"
     if sed -E -i '' 's/og:site_name="([^"]*)NEXIA([^"]*)"/og:site_name="\1\2"/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
     
-    # Para property="og:site_name" content: remove apenas a palavra NEXIA do valor, mantendo o resto
+    # (4) Remove apenas a palavra NEXIA de property="og:site_name" content, mantendo o resto
     # Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Meu Site"
     if sed -E -i '' 's/property="og:site_name" content="([^"]*)NEXIA([^"]*)"/property="og:site_name" content="\1\2"/g' "$file" 2>/dev/null; then
-        changes_made=1
-    fi
-    
-    # (4) Substitui og:site_name contendo NEXIA por og:site_name="Cortex"
-    # Para og:site_name="...": substitui qualquer og:site_name que ainda contenha NEXIA por "Cortex"
-    # Ex: og:site_name="Meu Site" (após remoção parcial) → og:site_name="Cortex" (se ainda tiver NEXIA)
-    # Padrão: og:site_name="[^"]*NEXIA[^"]*"
-    # Substitui por: og:site_name="Cortex"
-    if sed -E -i '' 's/og:site_name="[^"]*NEXIA[^"]*"/og:site_name="Cortex"/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
     
