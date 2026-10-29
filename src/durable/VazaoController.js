@@ -52,6 +52,14 @@ class VazaoController {
         PRIMARY KEY (provedor, data)
       );
 
+      CREATE TABLE IF NOT EXISTS contadores_banco (
+        banco TEXT NOT NULL,
+        data TEXT NOT NULL,
+        leituras INTEGER NOT NULL DEFAULT 0,
+        escritas INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (banco, data)
+      );
+
       CREATE TABLE IF NOT EXISTS fila_espera (
         id TEXT PRIMARY KEY,
         usuario_id TEXT NOT NULL,
