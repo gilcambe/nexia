@@ -5,7 +5,7 @@ import { Cartao, Sinal, Botao, Carregando } from "./ui";
 import EscadaCard from "@/components/EscadaCard.tsx";
 import type { Cor } from "./ui";
 import Mais from "./Mais";
-import SaudeHistorico from "./SaudeHistorico";\nimport EscadaCard from "@/components/EscadaCard";
+import SaudeHistorico from "./SaudeHistorico";\n
 import ConectarIAs from "./ConectarIAs";
 import UltimosErros from "./UltimosErros";
 import { Abre, useModo } from "./celular";
