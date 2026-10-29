@@ -78,36 +78,42 @@ process_file() {
 
     # (2) Substitui completamente <title> contendo NEXIA por 'Cortex'
     # Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Cortex</title>
-    if sed -i 's/<title>\([^<]*NEXIA[^<]*\)<\/title>/<title>Cortex<\/title>/g' "$file"; then
+    # Ex: <title>Qualquer texto com NEXIA no meio</title> → <title>Cortex</title>
+    if sed -i 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/g' "$file"; then
         changes_made=1
     fi
     
     # (3) Substitui completamente og:site_name contendo NEXIA por 'Cortex'
     # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Cortex"
-    if sed -i 's/og:site_name="\([^"]*NEXIA[^"]*\)"/og:site_name="Cortex"/g' "$file"; then
+    # Ex: og:site_name="Qualquer texto com NEXIA" → og:site_name="Cortex"
+    if sed -i 's/og:site_name=".*NEXIA.*"/og:site_name="Cortex"/g' "$file"; then
         changes_made=1
     fi
     
     # (4) Substitui completamente property="og:site_name" content contendo NEXIA por 'Cortex'
     # Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Cortex"
-    if sed -i 's/property="og:site_name" content="\([^"]*NEXIA[^"]*\)"/property="og:site_name" content="Cortex"/g' "$file"; then
+    # Ex: property="og:site_name" content="Qualquer texto com NEXIA" → property="og:site_name" content="Cortex"
+    if sed -i 's/property="og:site_name" content=".*NEXIA.*"/property="og:site_name" content="Cortex"/g' "$file"; then
         changes_made=1
     fi
     
     # (5) Remove apenas a palavra NEXIA de outros atributos ou textos dentro de <title>
     # Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Meu Site Cortex — Plataforma de IA</title>
+    # Ex: <title>Meu Site NEXIA</title> → <title>Meu Site</title>
     if sed -i 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/g' "$file"; then
         changes_made=1
     fi
     
     # (6) Remove apenas a palavra NEXIA de outros atributos ou textos dentro de og:site_name
     # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site"
+    # Ex: og:site_name="Site NEXIA Legal" → og:site_name="Site Legal"
     if sed -i 's/og:site_name="\([^"]*\)NEXIA\([^"]*\)"/og:site_name="\1\2"/g' "$file"; then
         changes_made=1
     fi
     
     # (7) Remove apenas a palavra NEXIA de outros atributos ou textos dentro de property="og:site_name" content
     # Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Meu Site"
+    # Ex: property="og:site_name" content="Site NEXIA Legal" → property="og:site_name" content="Site Legal"
     if sed -i 's/property="og:site_name" content="\([^"]*\)NEXIA\([^"]*\)"/property="og:site_name" content="\1\2"/g' "$file"; then
         changes_made=1
     fi
@@ -189,7 +195,6 @@ echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 
 # Comando exato conforme solicitado no pedido
-# Verifica apenas os diretórios especificados: public, apps e nexia-ai/site-kit
 # Verifica apenas os diretórios especificados: public, apps e nexia-ai/site-kit
 if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
     echo ""
