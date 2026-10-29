@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# Script para limpar referências NEXIA nos diretórios public/, apps/, nexia-ai/ e viajante-pro/
+# Script para limpar referências NEXIA nos diretórios public/, apps/ e nexia-ai/site-kit/
 # - Substitui "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
-# - Remove apenas a palavra NEXIA dentro de <title> e og:site_name, mantendo o restante do conteúdo
+# - Substitui completamente títulos e og:site_name contendo NEXIA por "Cortex"
 # - Executa verificação final ao término
 
 set -e
@@ -25,11 +25,13 @@ for dir in $DIRECTORIES; do
 
             # (2) Qualquer ocorrência de <title> contendo a palavra NEXIA deve ser substituída por "Cortex"
             sed -i 's/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/ig' "$file"
-
+            sed -i 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/ig' "$file"
+            
             # (2b) Qualquer ocorrência de og:site_name contendo a palavra NEXIA deve ser substituída por "Cortex"
             sed -i 's/og:site_name="[^"]*NEXIA[^"]*"/og:site_name="Cortex"/ig' "$file"
             sed -i 's/content="[^"]*NEXIA[^"]*" *property="og:site_name"/content="Cortex" property="og:site_name"/ig' "$file"
             sed -i 's/property="og:site_name" *content="[^"]*NEXIA[^"]*"/property="og:site_name" content="Cortex"/ig' "$file"
+            sed -i 's/<meta property="og:site_name" content="[^"]*NEXIA[^"]*">/<meta property="og:site_name" content="Cortex">/ig' "$file"
         done
     else
         echo "Diretório não encontrado: $dir"
@@ -46,7 +48,7 @@ echo ""
 echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit/ viajante-pro 2>/dev/null; then
     echo ""
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
