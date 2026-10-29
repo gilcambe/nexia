@@ -39,11 +39,16 @@ for dir in $DIRECTORIES; do
             # (substituição específica de frase, não genérica)
             sed -i.bak 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
             
-            # Passo 2: Substituir completamente <title> contendo NEXIA por <title>Cortex</title>
+            # Passo 2: Substituir completamente <title> e og:site_name contendo NEXIA por "Cortex"
+            # Substitui qualquer <title> que contenha NEXIA por <title>Cortex</title>
             sed -i.bak 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/gi' "$file"
-            
-            # Passo 3: Substituir completamente og:site_name contendo NEXIA por og:site_name="Cortex"
-            sed -i.bak 's/og:site_name=["'\''].*NEXIA.*['\'"']/og:site_name="Cortex"/gi' "$file"
+            # Substitui qualquer <title> que contenha NEXIA parcialmente por <title>Cortex</title>
+            sed -i.bak 's/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/gi' "$file"
+            # Substitui completamente og:site_name contendo NEXIA por og:site_name="Cortex"
+            sed -i.bak 's/og:site_name=["'\''][^"'\']*NEXIA[^"'\']*['\'"']/og:site_name="Cortex"/gi' "$file"
+            # Remove NEXIA de outros textos dentro de <title> ou og:site_name
+            sed -i.bak 's/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/gi' "$file"
+            sed -i.bak 's/og:site_name=["'\''][^"'\']*NEXIA[^"'\']*['\'"']/og:site_name="Cortex"/gi' "$file"
             
             # Remove backup temporário após processamento
             rm -f "$file.bak"
@@ -68,7 +73,7 @@ echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 echo ""
 
 # Padrão solicitado para detectar NEXIA em <title> e og:site_name
-# Verificar apenas os diretórios processados
+# Verificar apenas os diretórios processados conforme pedido
 if grep -rnE "(<title>[^<]*NEXIA|og:site_name=["'\''][^"'\']*NEXIA)" --include="*.html" public apps "nexia-ai/site-kit" 2>/dev/null; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos ou metadados:"
     echo ""
