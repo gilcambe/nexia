@@ -23,15 +23,11 @@ for dir in $DIRECTORIES; do
             # (1) Substitui a string literal, mantendo o restante do texto
             sed -i 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
 
-            # (2) Qualquer ocorrência de <title> contendo a palavra NEXIA deve ser substituída por "Cortex"
-            sed -i 's/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/ig' "$file"
-            sed -i 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/ig' "$file"
+            # (2) Remove NEXIA de títulos mantendo o restante do texto
+            sed -i 's/<title>.*NEXIA.*<\/title>/<title>\U\&\E<\/title>/ig' "$file"
             
             # (2b) Qualquer ocorrência de og:site_name contendo a palavra NEXIA deve ser substituída por "Cortex"
             sed -i 's/og:site_name="[^"]*NEXIA[^"]*"/og:site_name="Cortex"/ig' "$file"
-            sed -i 's/content="[^"]*NEXIA[^"]*" *property="og:site_name"/content="Cortex" property="og:site_name"/ig' "$file"
-            sed -i 's/property="og:site_name" *content="[^"]*NEXIA[^"]*"/property="og:site_name" content="Cortex"/ig' "$file"
-            sed -i 's/<meta property="og:site_name" content="[^"]*NEXIA[^"]*">/<meta property="og:site_name" content="Cortex">/ig' "$file"
         done
     else
         echo "Diretório não encontrado: $dir"
