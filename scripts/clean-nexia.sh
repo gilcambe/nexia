@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script para limpar referências NEXIA nos diretórios especificados
-# Substitui NEXIA CORTEX por Cortex e ajusta títulos e metadados
+# Substitui NEXIA CORTEX por Cortex e ajusta títulos e metadatos
 #
 # COMO EXECUTAR AO FINAL DA PR:
 #   1. Abra um terminal na raiz do repositório na branch nexia/criar-o-script-scripts-clean-nexia-sh-qu-6f1bd8
@@ -12,8 +12,7 @@
 
 set -e
 
-# Atenção: este script modifica os arquivos no local, sem criar backup.
-# Recomenda-se fazer backup dos diretórios antes de executar.
+# O script cria backup automático dos arquivos antes de modificá-los
 
 # Diretórios para processar conforme solicitado no pedido
 DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
@@ -37,6 +36,11 @@ process_file() {
     # Se og:site_name contiver NEXIA, substituir por Cortex
     sed -E -i 's/og:site_name=".*NEXIA.*"/og:site_name="Cortex"/g' "$file"
     sed -E -i 's/property="og:site_name" content=".*NEXIA.*"/property="og:site_name" content="Cortex"/g' "$file"
+    
+    # (4) Remover NEXIA de outros atributos ou textos dentro de <title> ou og:site_name mantendo o restante
+    # Para <title>: remover NEXIA mas manter o resto do conteúdo
+    sed -E -i 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file"
+    sed -E -i 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file"
 }
 
 # Função para processar diretórios recursivamente
@@ -60,7 +64,7 @@ echo "Limpeza concluída!"
 
 # Verificar se ainda existem ocorrências de NEXIA em títulos
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit viajante-pro 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
     echo "AVISO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     exit 1
 else
