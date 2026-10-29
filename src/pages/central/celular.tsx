@@ -146,3 +146,23 @@ export function GerenciarTarefasGratuitas({ cortex }: { cortex: Cortex }) {
     </div>
   );
 }
+
+// Novo componente para exibir tarefas gratuitas na interface
+export function TarefasGratuitas({ cortex }: { cortex: Cortex }) {
+  return (
+    <div className="p-4">
+      <h3 className="text-lg font-semibold mb-4">Tarefas Gratuitas</h3>
+      <p className="text-sm text-slate-600 mb-4">
+        Há {cortex.gratuitas.length} tarefas gratuitas disponíveis.
+      </p>
+      <ul className="space-y-2">
+        {cortex.gratuitas.map((tarefa) => (
+          <li key={tarefa.numero} className="p-2 bg-white rounded-lg shadow-sm">
+            <p className="font-medium">{tarefa.titulo}</p>
+            <p className="text-sm text-slate-500">{new Date(tarefa.quando).toLocaleString()}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
