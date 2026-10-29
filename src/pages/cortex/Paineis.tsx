@@ -171,16 +171,40 @@ function AvisosCelular() {
 
 export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema; mudarTema: (t: Tema) => void; email: string; instalar: (() => void) | null; sair: () => void }) {
   const op: { id: Tema; nome: string }[] = [{ id: "auto", nome: "Automático" }, { id: "escuro", nome: "Escuro" }, { id: "claro", nome: "Claro" }];
+  const [iaNoAparelho, setIaNoAparelho] = useState(false);
+  const [bloqueio, setBloqueio] = useState<{ tipo: "webgpu" | "memoria" | null }>(null);
+  const [downloadMsg, setDownloadMsg] = useState<string | null>(null);
+  const podeWebGPU = typeof window !== "undefined" && typeof navigator.gpu === "object" && navigator.gpu !== null;
+  const memoriaSuficiente = typeof navigator.deviceMemory === "number" ? navigator.deviceMemory >= 6 : true;
+  const podeLigar = podeWebGPU && memoriaSuficiente;
+  const ligarIaNoAparelho = () => {
+    if (!podeLigar) return;
+    setDownloadMsg("O Cortex vai baixar um modelo de IA (~1 GB) para rodar no seu aparelho, sem precisar de internet. É recomendado usar Wi-Fi para economizar dados.");
+    setTimeout(() => setDownloadMsg(null), 8000);
+  };
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-3">
       <Titulo t="Configurações" s={email} />
       <Cartao><p className="font-medium mb-3">Aparência</p>
         <div className="flex gap-2">{op.map((o) => (
-          <button key={o.id} onClick={() => mudarTema(o.id)} data-testid={`cx-tema-${o.id}`}
+          <button key={o.id} onClick={() => mudarTema(o.id)} data-testid={`cx-tema-${o.id`}
             className={`flex-1 h-11 rounded-xl border text-sm ${tema === o.id ? "border-[var(--cx-ac)] bg-[var(--cx-hover)] font-semibold" : "border-[var(--cx-line)]"}`}>{o.nome}</button>))}</div></Cartao>
       <Cartao><p className="font-medium">App no celular</p>
         <p className="text-sm text-[var(--cx-mut)] mt-1">{instalar ? "Instale o Cortex na tela inicial." : "No Chrome do celular: menu ⋮ → Instalar app (ou Adicionar à tela inicial)."}</p>
         {instalar && <button onClick={instalar} className="mt-3 h-11 px-5 rounded-xl bg-[var(--cx-ac)] text-black font-semibold" data-testid="cx-instalar">Instalar app</button>}</Cartao>
+      <Cartao><p className="font-medium">IA no meu aparelho (grátis, offline)</p>
+        <p className="text-sm text-[var(--cx-mut)] mt-1">Roda modelos de IA diretamente no seu aparelho, sem precisar de internet.</p>
+        <label className="inline-flex items-center gap-2 mt-3 cursor-pointer">
+          <input type="checkbox" checked={iaNoAparelho} onChange={(e) => { setIaNoAparelho(e.target.checked); if (!podeLigar) setBloqueio(e.target.checked ? (podeWebGPU ? "memoria" : "webgpu") : null); if (e.target.checked && podeLigar) ligarIaNoAparelho(); }} disabled={!podeLigar} className="w-5 h-5 rounded border-[var(--cx-line)] text-[var(--cx-ac)] focus:ring-[var(--cx-ac)] focus:ring-offset-0" data-testid="cx-ia-aparelho-switch" />
+          <span className="text-sm">Ativar</span>
+        </label>
+        {bloqueio && (
+          <p className="text-sm text-red-400 mt-2" role="alert">Este aparelho não suporta IA no aparelho: {bloqueio === "webgpu" ? "WebGPU não disponível." : "Memória insuficiente (mínimo 6 GB)."}</p>
+        )}
+        {downloadMsg && (
+          <p className="text-sm text-[var(--cx-ac)] mt-2" role="status">{downloadMsg}</p>
+        )}
+      </Cartao>
       <AvisosCelular />
       <Cartao><a href="/central" className="block font-medium">Central KERNEX</a><p className="text-sm text-[var(--cx-mut)] mt-1">Vendas, produtos e divulgação.</p></Cartao>
       <button onClick={sair} className="w-full h-12 rounded-xl border border-[var(--cx-line)] text-red-400" data-testid="cx-sair">Sair</button>
