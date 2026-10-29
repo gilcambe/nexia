@@ -4,9 +4,12 @@
 #
 # Requisitos:
 #   (1) "NEXIA CORTEX — Plataforma de IA"  →  "Cortex — Plataforma de IA"
-#   (2) <title> ou og:site_name contendo a palavra NEXIA → substituído inteiramente por "Cortex"
-#   (3) remover apenas a palavra "NEXIA" de outros atributos/textos dentro de
+#   (2) <title> ou og:site_name contendo "NEXIA CORTEX" → substituído por "Cortex"
+#   (3) remover apenas a palavra "NEXIA" (isolada) de outros atributos/textos dentro de
 #       <title> ou og:site_name, mantendo o restante do conteúdo
+#
+# Para execução automática em PRs:
+#   Adicionar este script ao workflow da PR e executar após merge para develop
 #
 # Processa cada arquivo com segurança, criando backup e validando entradas.
 # Executa verificação final ao término.
@@ -21,11 +24,6 @@ echo "Iniciando limpeza de referências NEXIA..."
 echo "=========================================="
 echo ""
 
-# Função para escapar caracteres especiais em padrões
-escape_pattern() {
-    echo "$1" | sed 's/[][\^$*.]/\\&/g'
-}
-
 # Processa cada diretório recursivamente
 for dir in $DIRECTORIES; do
     if [ -d "$dir" ]; then
@@ -35,20 +33,27 @@ for dir in $DIRECTORIES; do
             cp "$file" "$file.backup"
             
             # Aplica todas as substituições em uma única passagem de sed para otimizar
+            
             # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
             sed -i.bak 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
             
-            # Passo 2: Remover NEXIA de <title> mantendo o restante
-            sed -i.bak 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
-            sed -i.bak 's/<title>NEXIA\([^<]*\)<\/title>/<title>\1<\/title>/gi' "$file"
-            sed -i.bak 's/<title>\([^<]*\)NEXIA<\/title>/<title>\1<\/title>/gi' "$file"
-            sed -i.bak 's/<title>NEXIA<\/title>/<title>Cortex<\/title>/gi' "$file"
+            # Passo 2: Substituir "NEXIA CORTEX" por "Cortex" em <title> e og:site_name
+            sed -i.bak 's/<title>\([^<]*\)NEXIA CORTEX\([^<]*\)<\/title>/<title>\1Cortex\2<\/title>/gi' "$file"
+            sed -i.bak 's/<title>NEXIA CORTEX<\/title>/<title>Cortex<\/title>/gi' "$file"
+            sed -i.bak 's/og:site_name=["'\'']?\([^"'\'']*\)NEXIA CORTEX\([^"'\'']*\)["'\'']?/og:site_name="\1Cortex\2"/gi' "$file"
+            sed -i.bak 's/og:site_name=["'\'']?NEXIA CORTEX["'\'']?/og:site_name="Cortex"/gi' "$file"
             
-            # Passo 3: Remover NEXIA de og:site_name mantendo o restante
-            sed -i.bak 's/og:site_name=["'\'']?\([^"'\'']*\)NEXIA\([^"'\'']*\)["'\'']?/og:site_name="\1\2"/gi' "$file"
-            sed -i.bak 's/og:site_name=["'\'']?NEXIA\([^"'\'']*\)["'\'']?/og:site_name="Cortex\1"/gi' "$file"
-            sed -i.bak 's/og:site_name=["'\'']?\([^"'\'']*\)NEXIA["'\'']?/og:site_name="\1"/gi' "$file"
-            sed -i.bak 's/og:site_name=["'\'']?NEXIA["'\'']?/og:site_name="Cortex"/gi' "$file"
+            # Passo 3: Remover apenas a palavra "NEXIA" (isolada) de <title> mantendo o restante
+            sed -i.bak 's/<title>\([^<]*\)\bNEXIA\b\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
+            sed -i.bak 's/<title>\bNEXIA\b\([^<]*\)<\/title>/<title>\1<\/title>/gi' "$file"
+            sed -i.bak 's/<title>\([^<]*\)\bNEXIA\b<\/title>/<title>\1<\/title>/gi' "$file"
+            sed -i.bak 's/<title>\bNEXIA\b<\/title>/<title>Cortex<\/title>/gi' "$file"
+            
+            # Passo 4: Remover apenas a palavra "NEXIA" (isolada) de og:site_name mantendo o restante
+            sed -i.bak 's/og:site_name=["'\'']?\([^"'\'']*\)\bNEXIA\b\([^"'\'']*\)["'\'']?/og:site_name="\1\2"/gi' "$file"
+            sed -i.bak 's/og:site_name=["'\'']?\bNEXIA\b\([^"'\'']*\)["'\'']?/og:site_name="Cortex\1"/gi' "$file"
+            sed -i.bak 's/og:site_name=["'\'']?\([^"'\'']*\)\bNEXIA\b["'\'']?/og:site_name="\1"/gi' "$file"
+            sed -i.bak 's/og:site_name=["'\'']?\bNEXIA\b["'\'']?/og:site_name="Cortex"/gi' "$file"
             
             # Remover backup temporário
             rm -f "$file.bak"
@@ -71,11 +76,11 @@ echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 echo ""
 
-        # Padrão solicitado para detectar NEXIA em <title>
-        if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai nexia-ai/site-kit 2>/dev/null; then
+# Padrão solicitado para detectar NEXIA em <title>
+if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro 2>/dev/null; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos ou metadados:"
     echo ""
-    grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai nexia-ai/site-kit 2>/dev/null
+    grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro 2>/dev/null
     echo ""
     echo "Por favor, revise os arquivos e tente novamente."
     exit 1
@@ -88,3 +93,8 @@ echo "=========================================="
 echo "Script concluído com sucesso!"
 echo "=========================================="
 echo ""
+
+# Nota: Para execução automática em PRs, adicionar este script ao workflow
+# e executar após merge para develop. Exemplo:
+# - name: Limpar referências NEXIA
+#   run: bash scripts/clean-nexia.sh
