@@ -1,11 +1,16 @@
 import { useState } from 'react';
 import EscadaCard from '../components/EscadaCard';
 
-export default function Central() {
-  const [abaAtiva, setAbaAtiva] = useState<'geral' | 'cortex'>('geral');
+export default function Central({
+  abaInicial = 'geral',
+}: {
+  abaInicial?: string;
+}) {
+  const [abaAtiva, setAbaAtiva] = useState(abaInicial);
+
   const abas = [
     { id: 'geral', nome: 'Geral' },
-    { id: 'cortex', nome: '🧠 Cortex' }
+    { id: 'cortex', nome: '🧠 Cortex' },
   ];
 
   return (

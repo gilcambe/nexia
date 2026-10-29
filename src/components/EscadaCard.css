@@ -1,0 +1,109 @@
+.escada-card {
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: var(--radius, 12px);
+  padding: 1.5rem;
+  box-shadow: var(--shadow, 0 1px 3px rgba(0,0,0,0.08));
+}
+
+.escada-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.escada-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--text, #111827);
+}
+
+.escada-sub {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted, #6b7280);
+}
+
+.barras {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.barra {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.rotulo {
+  width: 110px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text, #111827);
+}
+
+.progresso {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-progress, #e5e7eb);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.preenchido {
+  height: 100%;
+  background: var(--primary, #2563eb);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.valor {
+  width: 36px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text, #111827);
+  text-align: right;
+}
+
+.numeros {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border, #e5e7eb);
+}
+
+.numero {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.numero .rotulo {
+  font-size: 0.75rem;
+  color: var(--muted, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.numero .valor {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text, #111827);
+}
+
+.selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--success-bg, #dcfce7);
+  color: var(--success-text, #166534);
+  border-radius: var(--radius, 12px);
+  font-size: 0.875rem;
+  font-weight: 700;
+  border: 1px solid var(--success-border, #86efac);
+}
