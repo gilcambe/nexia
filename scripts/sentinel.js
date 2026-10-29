@@ -395,15 +395,6 @@ function lerProblemasDeEntrada() {
 }
 
 async function main() {
-  let state;
-  try {
-    const problemas = lerProblemasDeEntrada();
-    state = { problems: problemas, atualizado_em: new Date().toISOString() };
-  } catch (error) {
-    console.error(error.message);
-    process.exit(1);
-  }
-
   try {
     await verificarEscoposToken();
   } catch (error) {
@@ -411,15 +402,23 @@ async function main() {
     process.exit(1);
   }
 
+  // Executa o scan dos endpoints
+  const scanState = await runScan();
+  
+  // Grava o estado do scan no GitHub
   try {
-    await writeStateToGitHub(state, STATE_BRANCH, STATE_PATH);
+    await writeStateToGitHub(scanState, STATE_BRANCH, STATE_PATH);
   } catch (error) {
-    console.error(`Falha ao gravar estado no GitHub: ${error.message}`);
+    console.error(`Falha ao gravar estado do scan no GitHub: ${error.message}`);
     process.exit(1);
   }
 
+  // Fecha issues que foram resolvidas
+  await closeResolvedIssues(scanState.problemas);
+
+  // Gerencia issues para problemas atuais
   let falhou = false;
-  for (const problem of state.problems) {
+  for (const problem of scanState.problemas) {
     try {
       await createOrUpdateIssue(problem);
     } catch (error) {
@@ -428,7 +427,14 @@ async function main() {
     }
   }
 
-  if (falhou) process.exit(1);
+  if (falhou) {
+    console.error('Falha ao gerenciar algumas issues');
+    process.exit(1);
+  }
+
+  console.log('Sentinel executado com sucesso');
+  console.log(`Status: ${scanState.health}`);
+  console.log(`Endpoints: ${scanState.okCount}/${scanState.okCount + scanState.errorCount} OK`);
 }
 
 main().catch(error => {
