@@ -4,15 +4,15 @@
 #
 # Requisitos:
 #   (1) "NEXIA CORTEX — Plataforma de IA"  →  "Cortex — Plataforma de IA"
-#   (2) <title> ou og:site_name contendo "NEXIA" → substituído por "Cortex"
-#   (3) remover apenas a palavra "NEXIA" (isolada) de outros atributos/textos dentro de
-#       <title> ou og:site_name, mantendo o restante do conteúdo
+#   (2) Para <title> e og:site_name contendo "NEXIA": remover apenas a palavra "NEXIA"
+#       mantendo o restante do conteúdo (ex: <title>Meu Site NEXIA</title> → <title>Meu Site</title>)
+#   (3) Não substituir completamente o conteúdo por "Cortex", apenas remover "NEXIA"
 #
 # Para execução automática em PRs:
 #   Adicionar este script ao workflow da PR e executar após merge para develop
 #
-# Processa cada arquivo com segurança, criando backup e validando entradas.
-# Executa verificação final ao término.
+# Processa cada arquivo com segurança, criando backup antes de modificar.
+# Executa verificação final ao término para garantir que NEXIA foi removido de títulos.
 
 set -euo pipefail
 
@@ -30,38 +30,36 @@ for dir in $DIRECTORIES; do
         echo "Processando diretório: $dir"
         find "$dir" -type f \( -name "*.html" -o -name "*.htm" \) -print0 | while IFS= read -r -d '' file; do
             # Cria backup do arquivo (cross-platform)
+            echo "  Criando backup de: $file"
             cp "$file" "$file.bak"
             
             # Aplica substituições de forma organizada para evitar conflitos
             
             # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
+            # (substituição específica de frase, não genérica)
             sed -i.bak 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
             
-            # Passo 2: Para <title> com NEXIA - substituir completamente por <title>Cortex</title>
-            sed -i.bak 's/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/gi' "$file"
-            
-            # Passo 3: Para <title> com NEXIA no início - remover apenas NEXIA
+            # Passo 2: Remover NEXIA de <title> em diferentes posições
+            # NEXIA no início: <title>NEXIA Meu Site</title> → <title>Meu Site</title>
             sed -i.bak 's/<title>NEXIA\([^<]*\)<\/title>/<title>\1<\/title>/gi' "$file"
             
-            # Passo 4: Para <title> com NEXIA no meio - remover apenas NEXIA
+            # NEXIA no meio: <title>Meu Site NEXIA Legal</title> → <title>Meu Site Legal</title>
             sed -i.bak 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
             
-            # Passo 5: Para <title> com NEXIA no final - remover apenas NEXIA
+            # NEXIA no final: <title>Meu Site NEXIA</title> → <title>Meu Site</title>
             sed -i.bak 's/<title>\([^<]*\)NEXIA<\/title>/<title>\1<\/title>/gi' "$file"
             
-            # Passo 6: Para og:site_name com NEXIA - substituir completamente por og:site_name="Cortex"
-            sed -i.bak 's/og:site_name=["'\''][^'\'']*NEXIA[^'\'']*['\'"']/og:site_name="Cortex"/gi' "$file"
-            
-            # Passo 7: Para og:site_name com NEXIA no início - remover apenas NEXIA
+            # Passo 3: Remover NEXIA de og:site_name em diferentes posições
+            # NEXIA no início: og:site_name="NEXIA Meu Site" → og:site_name="Meu Site"
             sed -i.bak 's/og:site_name=["'\'']NEXIA\([^'\'"']*\)['\'"']/og:site_name="\1"/gi' "$file"
             
-            # Passo 8: Para og:site_name com NEXIA no meio - remover apenas NEXIA
+            # NEXIA no meio: og:site_name="Meu Site NEXIA Legal" → og:site_name="Meu Site Legal"
             sed -i.bak 's/og:site_name=["'\'']\([^'\'"']*\)NEXIA\([^'\'"']*\)['\'"']/og:site_name="\1\2"/gi' "$file"
             
-            # Passo 9: Para og:site_name com NEXIA no final - remover apenas NEXIA
+            # NEXIA no final: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site"
             sed -i.bak 's/og:site_name=["'\'']\([^'\'"']*\)NEXIA['\'"']/og:site_name="\1"/gi' "$file"
             
-            # Remover backup temporário
+            # Remove backup temporário após processamento
             rm -f "$file.bak"
             
             echo "  Processado: $file"
