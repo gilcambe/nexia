@@ -36,8 +36,8 @@ process_file() {
     perl -i -pe 's/property="og:site_name" content="[^"]*NEXIA[^"]*"/property="og:site_name" content="Cortex"/g' "$file"
     
     # Remover NEXIA de outros atributos og:site_name mantendo o restante (várias ocorrências)
-    perl -i -pe '1 while s/og:site_name="\([^"]*\)NEXIA\([^"]*\)"/og:site_name="\1\2"/g' "$file"
-    perl -i -pe '1 while s/property="og:site_name" content="\([^"]*\)NEXIA\([^"]*\)"/property="og:site_name" content="\1\2"/g' "$file"
+    perl -i -pe '1 while s{og:site_name="([^"]*)NEXIA([^"]*)"}{og:site_name="$1$2"}g' "$file"
+    perl -i -pe '1 while s{property="og:site_name" content="([^"]*)NEXIA([^"]*)"}{property="og:site_name" content="$1$2"}g' "$file"
 }
 
 # Função para processar diretórios recursivamente
