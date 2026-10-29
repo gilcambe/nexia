@@ -1,16 +1,4 @@
-import { test } from 'node:test';
-import assert from 'node:assert/strict';
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import { exec } from 'child_process';
-import { promisify } from 'util';
 
-const execAsync = promisify(exec);
-
-// Carrega os moldes
-const moldesDir = path.join(__dirname, '../clientes/_moldes');
-const moldesFiles = fs.readdirSync(moldesDir).filter(file => file.endsWith('.json')).sort();
 
 // Verifica que temos exatamente 10 arquivos de molde
 test('existem exatamente 10 arquivos de molde em clientes/_moldes/', () => {
