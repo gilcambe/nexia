@@ -110,9 +110,9 @@ export default function EscadaCard() {
       
       const data = await response.json();
       setEscadaData({
-        cortex: data.cortex || 0,
-        iasGratis: data.iasGratis || 0,
-        claude: data.claude || 0,
+        cortex: data.semana?.cortex || 0,
+        iasGratis: data.semana?.iasGratis || 0,
+        claude: data.semana?.claude || 0,
         fila: data.fila || 0,
         faseB: data.faseB || false
       });
