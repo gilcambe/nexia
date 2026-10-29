@@ -47,7 +47,7 @@ export default function EscadaCard() {
   useEffect(() => {
     let ignorar = false;
     const controller = new AbortController();
-    fetch('/api/escada', {
+    fetch('/escada', {
       signal: controller.signal,
       headers: { 'Content-Type': 'application/json' },
     })
