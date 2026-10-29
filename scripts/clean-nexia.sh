@@ -63,9 +63,6 @@ process_file() {
     if sed -E -i 's/(og:site_name="[^"]*)NEXIA([^"]*")/\1\2/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
-    if sed -E -i 's/(og:site_name="[^"]*)NEXIA([^"]*")/\1\2/g' "$file" 2>/dev/null; then
-        changes_made=1
-    fi
     
     # (4) Remove apenas a palavra NEXIA de property="og:site_name" content="...", mantendo o resto do conteúdo
     # Para property="og:site_name" content="...": remove apenas a palavra NEXIA mantendo o resto do conteúdo
