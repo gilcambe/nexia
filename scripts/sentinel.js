@@ -164,13 +164,17 @@ async function createOrUpdateIssue(problem) {
 
     if (existingIssue) {
       if (status === 'ok') {
-        await octokit.issues.update({
-          owner: REPO_OWNER,
-          repo: REPO_NAME,
-          issue_number: existingIssue.number,
-          state: 'closed',
-        });
-        console.log(`Issue #${existingIssue.number} fechada (problema voltou ao normal).`);
+        if (existingIssue.state === 'open') {
+          await octokit.issues.update({
+            owner: REPO_OWNER,
+            repo: REPO_NAME,
+            issue_number: existingIssue.number,
+            state: 'closed',
+          });
+          console.log(`Issue #${existingIssue.number} fechada (problema voltou ao normal).`);
+        } else {
+          console.log(`Issue #${existingIssue.number} já está fechada.`);
+        }
       } else if (corpoTemCamposObrigatorios(body)) {
         await octokit.issues.createComment({
           owner: REPO_OWNER,
