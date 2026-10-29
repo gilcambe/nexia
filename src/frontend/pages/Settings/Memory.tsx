@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMemory } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemType } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemComponent } from '../../components/MemoryItem';
+import ConfigLocalAI from '../../config.js';
 
 
 type MemoryItemProps = MemoryItemType & {
@@ -52,6 +53,12 @@ export default function MemorySettings() {
         <p className="text-[var(--cx-mut)]">
           Gerencie os fatos armazenados pelo Cortex e suas preferências de privacidade.
         </p>
+      </div>
+
+      {/* Seção de IA Local */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">IA Local</h2>
+        <ConfigLocalAI />
       </div>
 
       {/* Seção de privacidade */}
