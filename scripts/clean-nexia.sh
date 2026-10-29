@@ -33,7 +33,7 @@ for dir in $DIRECTORIES; do
         echo "Processando diretório: $dir"
         find "$dir" -type f \( -name "*.html" -o -name "*.htm" \) -print0 | while IFS= read -r -d '' file; do
             # Aplica todas as substituições em uma única passagem de sed para otimizar
-# Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
+                # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
             sed -i \\
                 -e 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' \\
                 # Passo 2: Qualquer <title> que contenha NEXIA vira <title>Cortex</title>
