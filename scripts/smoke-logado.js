@@ -128,18 +128,24 @@ async function main() {
     const cl = await api('/nexia/clients', { method: 'POST', body: { name: 'Teste automático NEXIA', slug: `teste-automatico${PROJ}`, status: 'active' }, headers: { 'Idempotency-Key': `smoke-client-v1${PROJ}` } });
     client = cl.json && cl.json.record;
     clienteCriado = client ? client.id : null;
-    if (!client && cl.status === 409) client = ((await api('/nexia/clients')).json.items || []).find(c => c.slug === `teste-automatico${PROJ}`);
+    if (!client && cl.status === 409) client = (((await api('/nexia/clients')).json || {}).items || []).find(c => c.slug === `teste-automatico${PROJ}`);
     if (!client) {
-      report(false, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
-      throw new Error('Falha ao criar cliente de teste');
+      const errDetail = (cl.json && (cl.json.causa || cl.json.error || cl.json.message)) || cl.text || 'sem resposta';
+      report(false, 'Vault: criar cliente', `${cl.status} ${errDetail}`);
+      throw new Error(`Falha ao criar cliente de teste: ${cl.status} ${short(errDetail)}`);
     }
     report(true, 'Vault: criar cliente', `${cl.status} ${cl.json && (cl.json.error || '')} ${(cl.json && cl.json.causa) || ''}`);
 
-    const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client && client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
+    const pr = await api('/nexia/projects', { method: 'POST', body: { client_id: client.id, name: `Site de teste do Cortex${PROJ}`, slug: `site-teste-cortex${PROJ}`, type: 'website', status: 'active' }, headers: { 'Idempotency-Key': `smoke-project-v1${PROJ}` } });
     project = pr.json && pr.json.record;
     projetoCriado = project ? project.id : null;
-    if (!project && pr.status === 409) project = ((await api('/nexia/projects')).json.items || []).find(p => p.slug === `site-teste-cortex${PROJ}`);
-    report(!!project, 'Vault: criar projeto', `${pr.status} ${pr.json && (pr.json.error || '')}`);
+    if (!project && pr.status === 409) project = (((await api('/nexia/projects')).json || {}).items || []).find(p => p.slug === `site-teste-cortex${PROJ}`);
+    if (!project) {
+      const errDetail = (pr.json && (pr.json.causa || pr.json.error || pr.json.message)) || pr.text || 'sem resposta';
+      report(false, 'Vault: criar projeto', `${pr.status} ${errDetail}`);
+      throw new Error(`Falha ao criar projeto de teste: ${pr.status} ${short(errDetail)}`);
+    }
+    report(true, 'Vault: criar projeto', `${pr.status} ${pr.json && (pr.json.error || '')}`);
     // Usa o projeto que já tem o repositório (ele só pode estar ligado a UM projeto por tenant;
     // sem isso o onboarding do teste completo falha com UNIQUE quando uma pista ligou o repositório antes).
     {
