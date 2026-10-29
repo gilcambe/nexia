@@ -57,7 +57,7 @@ async function votar(router, lista, conteudo, usados) {
         router.chat(d, { system: SISTEMA, messages: [{ role: 'user', content: conteudo }], maxTokens: 1200 }),
         new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 60000)),
       ]);
-      const v = lerVeredito(out && out.text);
+      const v = require('./revisor-gratis').lerVeredito(out && out.text);
       if (v) { usados.add(d.provider); return { ...v, provider: d.provider, model: d.model }; }
     } catch { /* cota ou erro: próximo modelo */ }
   }
