@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMemory } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemType } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemComponent } from '../../components/MemoryItem';
-import ConfigLocalAI from '../../../../config';
+
 
 type MemoryItemProps = MemoryItemType & {
   onDelete: (id: string) => void;
@@ -90,8 +90,7 @@ export default function MemorySettings() {
         </div>
       </div>
 
-      {/* Seção IA no meu aparelho (grátis, offline) - usa ConfigLocalAI de config.js */}
-      <ConfigLocalAI />
+
 
       {/* Seção de fatos */}
       <div>
