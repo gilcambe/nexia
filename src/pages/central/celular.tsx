@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Icone } from "./icones";
-import { useCentral, TarefaGratis } from "./api";
+import { useCentral, TarefaGratis, Cortex } from "./api";
 
 // Central no celular: cada assunto vira um cartão compacto (uma linha) que abre a sua própria tela.
 // No computador nada muda: os cartões aparecem abertos, como antes.
@@ -106,8 +106,8 @@ export function useModo() {
   return { compacto: useContext(Compacto), naFolha: useContext(NaFolha), emGrupo: useContext(EmGrupo) };
 }
 
-// Componente para distribuir tarefas gratuitas
-export function DistribuirTarefas({ tarefas }: { tarefas: TarefaGratis[] }) {
+// Componente para exibir e distribuir tarefas gratuitas
+export function GerenciarTarefasGratuitas({ cortex }: { cortex: Cortex }) {
   const { distribuirTarefas } = useCentral();
   const [distribuindo, setDistribuindo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -116,7 +116,7 @@ export function DistribuirTarefas({ tarefas }: { tarefas: TarefaGratis[] }) {
     setDistribuindo(true);
     setErro(null);
     try {
-      const resultado = await distribuirTarefas(tarefas);
+      const resultado = await distribuirTarefas(cortex.gratuitas);
       if (resultado.ok) {
         alert("Tarefas distribuídas com sucesso!");
       } else {
@@ -131,9 +131,13 @@ export function DistribuirTarefas({ tarefas }: { tarefas: TarefaGratis[] }) {
 
   return (
     <div className="p-4">
+      <h3 className="text-lg font-semibold mb-4">Tarefas Gratuitas</h3>
+      <p className="text-sm text-slate-600 mb-4">
+        Há {cortex.gratuitas.length} tarefas gratuitas disponíveis para distribuição.
+      </p>
       <button
         onClick={handleDistribuir}
-        disabled={distribuindo}
+        disabled={distribuindo || cortex.gratuitas.length === 0}
         className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-300"
       >
         {distribuindo ? "Distribuindo..." : "Distribuir Tarefas Gratuitas"}
