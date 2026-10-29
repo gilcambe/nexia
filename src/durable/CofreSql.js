@@ -29,9 +29,10 @@ class CofreSql {
           const { banco, data, leituras = 0, escritas = 0, projectId = '' } = body || {};
           const bancoKey = banco || projectId;
           if (bancoKey && data) {
+            // Se mudou de dia, reseta as contagens ou acumula. Aqui acumulamos por banco/data, ou limpamos se for data nova.
             this.sql.exec(`INSERT INTO vazaosql (banco, data, leituras, escritas) VALUES (?, ?, ?, ?)
-              ON CONFLICT(banco) DO UPDATE SET data = ?, leituras = leituras + ?, escritas = escritas + ?`,
-              bancoKey, data, leituras, escritas, data, leituras, escritas);
+              ON CONFLICT(banco) DO UPDATE SET leituras = CASE WHEN data = ? THEN leituras + ? ELSE ? END, escritas = CASE WHEN data = ? THEN escritas + ? ELSE ? END, data = ?`,
+              bancoKey, data, leituras, escritas, data, leituras, leituras, data, escritas, escritas, data);
           }
           return resposta(200, { success: true });
         }
