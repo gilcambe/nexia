@@ -110,7 +110,6 @@ export async function configurarSwitchIALocal(checkboxElement, containerAvisoEle
     if (containerAvisoElement) {
       containerAvisoElement.style.display = 'block';
       containerAvisoElement.textContent = `Bloqueado: ${suporte.motivo}`;
-      containerAvisoElement.className = 'bg-red-50 border border-red-100 rounded-lg p-4 text-sm text-red-700';
     }
     return configAtual.ativo;
   }
@@ -121,45 +120,34 @@ export async function configurarSwitchIALocal(checkboxElement, containerAvisoEle
     if (!containerAvisoElement) return;
     containerAvisoElement.textContent = '';
     containerAvisoElement.style.display = 'none';
-    containerAvisoElement.className = '';
   };
 
   const mostrarAviso = (texto, tipo = 'aviso') => {
     if (!containerAvisoElement) return;
-    let classe = 'bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-700';
-    if (tipo === 'erro') classe = 'bg-red-50 border border-red-100 rounded-lg p-4 text-sm text-red-700';
-    if (tipo === 'ok') classe = 'bg-green-50 border border-green-100 rounded-lg p-4 text-sm text-green-700';
-    containerAvisoElement.className = classe;
     containerAvisoElement.textContent = texto;
     containerAvisoElement.style.display = 'block';
   };
 
   const mostrarAvisoDownload = (onConfirmar, onCancelar) => {
     if (!containerAvisoElement) return;
-    containerAvisoElement.className = 'bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-700';
     containerAvisoElement.style.display = 'block';
     containerAvisoElement.textContent = '';
 
     const titulo = document.createElement('div');
-    titulo.className = 'font-semibold text-amber-800 mb-2';
     titulo.textContent = '⚠ Download necessário';
 
     const texto = document.createElement('p');
-    texto.className = 'text-sm text-amber-700 mb-3';
     texto.textContent = 'Será baixado aproximadamente 1 GB de dados para o modelo de IA local. Recomendado usar Wi-Fi.';
 
     const botoes = document.createElement('div');
-    botoes.className = 'flex gap-2';
 
     const btnConfirmar = document.createElement('button');
     btnConfirmar.id = 'ia-local-confirmar-download';
-    btnConfirmar.className = 'px-3 py-1.5 text-sm bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors';
     btnConfirmar.textContent = 'Confirmar download';
     btnConfirmar.onclick = () => { limparAviso(); onConfirmar(); };
 
     const btnCancelar = document.createElement('button');
     btnCancelar.id = 'ia-local-cancelar-download';
-    btnCancelar.className = 'px-3 py-1.5 text-sm border border-amber-200 text-amber-700 rounded hover:bg-amber-100 transition-colors';
     btnCancelar.textContent = 'Cancelar';
     btnCancelar.onclick = () => { limparAviso(); onCancelar(); };
 
