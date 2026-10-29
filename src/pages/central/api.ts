@@ -50,7 +50,7 @@ export interface VagaUso { vaga: number; provedor: string; pr: number; link: str
 export interface Vaga { vaga: number; ligada: boolean; provedor: string | null; salvaEm: string | null; teste: VagaTeste | null; usos: VagaUso[] }
 export interface ProvedorVaga { id: string; nome: string; site: string; logo: string | null; passos: string[] }
 export interface JulesEstado { ligado: boolean; comEle: number | null; prsHoje: number; ultimoPr: { numero: number; link: string; quando: string } | null }
-export interface Vagas { vagas: Vaga[]; provedores: ProvedorVaga[]; podeLerSegredos: boolean; jules?: JulesEstado }
+export interface Vagas { vagas: Vaga[]; provedores: ProvedorVaga[]; podeLerSegados: boolean; jules?: JulesEstado }
 export interface Dados {
   lista?: { produtos: Produto[]; links: { nome: string; url: string }[] };
   saude?: { produtos: Medida[]; em: string };
