@@ -16,7 +16,7 @@ set -e
 # Recomenda-se fazer backup dos diretórios antes de executar.
 
 # Diretórios para processar conforme solicitado no pedido
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
 
 # Função para processar um arquivo
 process_file() {
@@ -26,14 +26,27 @@ process_file() {
     sed -i 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
 
     # (2) Remover NEXIA de <title> mantendo o restante do conteúdo
-    sed -E -i 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file"
+    # Remove NEXIA no início do título
+    sed -E -i 's/<title>NEXIA\s*([^<]*)<\/title>/<title>\1<\/title>/g' "$file"
+    # Remove NEXIA no meio do título
+    sed -E -i 's/<title>([^<]*)\s*NEXIA\s*([^<]*)<\/title>/<title>\1 \2<\/title>/g' "$file"
+    # Remove NEXIA no final do título
+    sed -E -i 's/<title>([^<]*)\s*NEXIA<\/title>/<title>\1<\/title>/g' "$file"
 
     # Se o título ficou vazio (ou só espaços), preencher com "Cortex"
     sed -E -i 's/<title>[[:space:]]*<\/title>/<title>Cortex<\/title>/g' "$file"
 
     # (3) Remover NEXIA de og:site_name mantendo o restante do conteúdo
+    # Remove NEXIA de og:site_name (formato abreviado)
     sed -E -i 's/og:site_name="([^"]*)NEXIA([^"]*)"/og:site_name="\1\2"/g' "$file"
+    # Remove NEXIA de og:site_name (formato completo)
     sed -E -i 's/property="og:site_name" content="([^"]*)NEXIA([^"]*)"/property="og:site_name" content="\1\2"/g' "$file"
+    # Remove NEXIA no início de og:site_name
+    sed -E -i 's/og:site_name="NEXIA\s*([^"]*)"/og:site_name="\1"/g' "$file"
+    sed -E -i 's/property="og:site_name" content="NEXIA\s*([^"]*)"/property="og:site_name" content="\1"/g' "$file"
+    # Remove NEXIA no final de og:site_name
+    sed -E -i 's/og:site_name="([^"]*)\s*NEXIA"/og:site_name="\1"/g' "$file"
+    sed -E -i 's/property="og:site_name" content="([^"]*)\s*NEXIA"/property="og:site_name" content="\1"/g' "$file"
 
     # Se o og:site_name ficou vazio, preencher com "Cortex"
     sed -E -i 's/og:site_name=""/og:site_name="Cortex"/g' "$file"
@@ -61,7 +74,7 @@ echo "Limpeza concluída!"
 
 # Verificar se ainda existem ocorrências de NEXIA em títulos
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit viajante-pro 2>/dev/null; then
     echo "AVISO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     exit 1
 else
