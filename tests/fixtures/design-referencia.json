@@ -1,0 +1,12 @@
+{
+  "gerado_por": "NEXIA Clone (modo design)",
+  "fonte": { "host": "exemplo-de-referencia.test" },
+  "layout": [{ "type": "faq", "titulo": "TEXTO DO SITE DE ORIGEM QUE NUNCA PODE ENTRAR" }],
+  "spec_base": {
+    "source": { "host": "exemplo-de-referencia.test" },
+    "style": "bold",
+    "fonts": { "heading": "Poppins", "body": "Inter" },
+    "palette": { "primary": "#0a7d3b", "accent": "#f2a900" },
+    "sections": [{ "type": "hero" }, { "type": "faq" }, { "type": "services" }, { "type": "about" }, { "type": "gallery" }, { "type": "testimonials" }, { "type": "cta" }, { "type": "contact" }]
+  }
+}
