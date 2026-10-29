@@ -22,8 +22,7 @@ export default function MemorySettings() {
 
   const [isDeletingAll, setIsDeletingAll] = useState(false);
 
-  const configIaLocal = obterConfig();
-  const [iaLocalAtivo, setIaLocalAtivo] = useState(configIaLocal.ativo);
+  const [iaLocalAtivo, setIaLocalAtivo] = useState(false);
   const [iaLocalSuportado, setIaLocalSuportado] = useState<boolean | null>(null);
   const [iaLocalBloqueado, setIaLocalBloqueado] = useState(false);
   const [iaLocalMotivoBloqueio, setIaLocalMotivoBloqueio] = useState('');
@@ -53,17 +52,24 @@ export default function MemorySettings() {
   };
 
   useEffect(() => {
-    verificarSuporteWebGPU().then((suporte) => {
-      setIaLocalSuportado(suporte.suportado);
-      if (!suporte.suportado) {
-        setIaLocalBloqueado(true);
-        setIaLocalMotivoBloqueio(suporte.motivo);
-      }
-    });
+    const gpuCheck = typeof navigator !== 'undefined' && Boolean((navigator as any).gpu);
+    const memoryCheck = typeof navigator !== 'undefined' && (navigator as any).deviceMemory ? (navigator as any).deviceMemory >= 2 : true;
+    
+    if (!gpuCheck || !memoryCheck) {
+      setIaLocalSuportado(false);
+      setIaLocalBloqueado(true);
+      setIaLocalMotivoBloqueio('WebGPU não suportada ou memória insuficiente no navegador.');
+    } else {
+      setIaLocalSuportado(true);
+      setIaLocalBloqueado(false);
+    }
   }, []);
 
-  const handleToggleIaLocal = async () => {
-    if (iaLocalBloqueado || !iaLocalSuportado) return;
+  const handleToggleIaLocal = () => {
+    if (iaLocalBloqueado || !iaLocalSuportado) {
+      setIaLocalBloqueado(true);
+      return;
+    }
 
     if (!iaLocalAtivo) {
       setIaLocalAvisoDownload(true);
@@ -72,13 +78,11 @@ export default function MemorySettings() {
 
     setIaLocalAtivo(false);
     setIaLocalAvisoDownload(false);
-    salvarConfig({ ativo: false });
   };
 
   const handleConfirmarDownload = () => {
     setIaLocalAtivo(true);
     setIaLocalAvisoDownload(false);
-    salvarConfig({ ativo: true });
   };
 
   return (
