@@ -23,12 +23,6 @@ export default function MemorySettings() {
 
   const [isDeletingAll, setIsDeletingAll] = useState(false);
 
-  const [iaLocalAtivo, setIaLocalAtivo] = useState(false);
-  const [iaLocalSuportado, setIaLocalSuportado] = useState<boolean | null>(null);
-  const [iaLocalBloqueado, setIaLocalBloqueado] = useState(false);
-  const [iaLocalMotivoBloqueio, setIaLocalMotivoBloqueio] = useState('');
-  const [iaLocalAvisoDownload, setIaLocalAvisoDownload] = useState(false);
-
   const handleDeleteItem = (id: string) => {
     deleteItem(id);
   };
