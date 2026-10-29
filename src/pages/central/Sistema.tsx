@@ -4,6 +4,7 @@ import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
 import type { Cor } from "./ui";
 import Mais from "./Mais";
+import EscadaCard from "@/components/EscadaCard";
 import SaudeHistorico from "./SaudeHistorico";
 import ConectarIAs from "./ConectarIAs";
 import UltimosErros from "./UltimosErros";
@@ -256,6 +257,10 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
       </Cartao>
 
       <Mais d={d} erro={erros.robos} />
+
+      <Cartao titulo="🪜 Escada">
+        <EscadaCard />
+      </Cartao>
     </div>
   );
 }
