@@ -11,6 +11,7 @@ export interface PrefsAvisos {
   mensalidade: boolean;
   refeicao?: { ativo: boolean; horas: string[] };
   auto?: boolean; // ajustar os horários sozinho pelo uso
+  iaOffline?: { ativo: boolean; modelo?: string }; // IA no meu aparelho (grátis, offline)
 }
 
 export const suportaAvisos = () => typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
