@@ -256,9 +256,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
         </div>
       </Cartao>
 
-      <Cartao titulo="🪜 Escada">
-        <EscadaCard />
-      </Cartao>
+      <EscadaCard />
 
       <Mais d={d} erro={erros.robos} />
     </div>
