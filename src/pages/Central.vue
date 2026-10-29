@@ -4,18 +4,18 @@
     <nav class="tabs" role="tablist">
       <button
         v-for="aba in abas"
-        :key="key-geral"
+        :key="aba.id"
         :aria-selected="abaAtiva === aba.id"
-        :class="['tab-btn', 'tab-' + aba.id, { active: abaAtiva === ab.id }"
-        :data-tab="aba-id"
-        :data-test="test-test"
+        :class="['tab-btn', 'tab-' + aba.id, { active: abaAtiva === aba.id }]"
+        :data-tab="aba.id"
+        :data-testid="'tab-' + aba.id"
         @click="abaAtiva = aba.id"
       >
         {{ aba.nome }}
       </button>
     </nav>
     <div class="tab-content">
-      <div v-if="aba-córtex" :class="{ abaAtiva === 'córtex' ? 'cards-container córtex-tab' : 'cards-container geral-tab'">
+      <div v-if="abaAtiva === 'córtex'" class="cards-container cortex-tab">
         <EscadaCard />
       </div>
       <div v-else class="cards-container geral-tab">
@@ -37,15 +37,16 @@ export default {
     abaInicial: {
       type: String,
       default: 'geral'
-    }},
-    data() {
-      return {
-        abaAtiva: this.abInicial,
-        abas: [
-          { id: 'geral', nome: 'Geral' },
-          { id: 'córtex', nome: '�0 Córtex' }]
-      };
     }
+  },
+  data() {
+    return {
+      abaAtiva: this.abaInicial,
+      abas: [
+        { id: 'geral', nome: 'Geral' },
+        { id: 'córtex', nome: '🧠 Córtex' }
+      ]
+    };
   }
 };
 </script>
@@ -67,11 +68,10 @@ export default {
   border: none;
   padding: 10px 16px;
   font-size: 15px;
-  color: ##666;
+  color: #666;
   cursor: pointer;
-  transition: alltransition;
-  border-bottom: 2px solid;
   transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
 }
 
 .tab-btn:hover {
