@@ -87,6 +87,60 @@
       </div>
     </section>
 
+    <section class="section" id="destinos">
+      <div class="container">
+        <header class="section__head reveal">
+          <h2>Destinos em Destaque</h2>
+          <p>Conheça os destinos mais procurados por nossos clientes para lazer e negócios.</p>
+        </header>
+        <div class="cards">
+          <article class="card reveal">
+            <div class="card__body">
+              <h3>Maldivas & Tailândia</h3>
+              <p>Praias paradisíacas e bangalôs exclusivos.</p>
+            </div>
+          </article>
+          <article class="card reveal">
+            <div class="card__body">
+              <h3>Europa Clássica</h3>
+              <p>França, Itália, Grécia e Portugal sob medida.</p>
+            </div>
+          </article>
+          <article class="card reveal">
+            <div class="card__body">
+              <h3>Serras & Praias do Brasil</h3>
+              <p>Gramado, Noronha, Jalapão e Resorts All-Inclusive.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--alt" id="pacotes">
+      <div class="container">
+        <header class="section__head reveal">
+          <h2>Pacotes Selecionados</h2>
+          <p>Roteiros e opções pré-estruturadas para sua próxima experiência de viagem.</p>
+        </header>
+        <div class="cards">
+          <article class="card reveal">
+            <div class="card__body">
+              <h3>Grécia: Atenas & Ilhas</h3>
+              <p>Roteiro de 8 dias incluindo voos, hospedagem 4★ e ferries.</p>
+              <a href="#contato" class="btn btn--primary" style="margin-top:10px;">Solicitar Cotação</a>
+            </div>
+          </article>
+          <article class="card reveal">
+            <div class="card__body">
+              <h3>Resorts All Inclusive Nordeste</h3>
+              <p>Hospedagem completa com lazer e transfer aeroporto incluso.</p>
+              <a href="#contato" class="btn btn--primary" style="margin-top:10px;">Solicitar Cotação</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
     <section class="section section--alt" id="sobre-a-viajante-pro">
       <div class="container split">
         <div class="split__media reveal"><span class="split__badge"><i class="ri-shield-star-line"></i> Sua agência de viagens completa</span></div>
@@ -134,6 +188,7 @@
           <div class="field"><label for="f-msg">Destino Desejado & Detalhes da Viagem *</label><textarea id="f-msg" name="mensagem" rows="4" required minlength="5" placeholder="Informe o destino, número de viajantes e período pretendido..."></textarea></div>
           <button class="btn btn--primary btn--block" type="submit" id="btnSiteSubmit">Enviar solicitação <i class="ri-send-plane-fill"></i></button>
           <p class="form__ok" id="siteFormOk" role="status" hidden><i class="ri-checkbox-circle-line"></i> Recebemos sua solicitação! Vamos responder em breve.</p>
+          <p class="form__err" id="siteFormErr" role="alert" style="color:#f87171;margin-top:10px;" hidden><i class="ri-error-warning-line"></i> Ocorreu um erro ao enviar. Por favor, tente novamente.</p>
         </form>
       </div>
     </section>
@@ -158,14 +213,18 @@
     async function submitLead(form) {
       const btn = document.getElementById('btnSiteSubmit');
       const okMsg = document.getElementById('siteFormOk');
+      const errMsg = document.getElementById('siteFormErr');
       const nome = form.nome.value;
       const tel = form.telefone.value;
       const email = form.email.value;
       const msg = form.mensagem.value;
 
       btn.disabled = true;
+      okMsg.hidden = true;
+      errMsg.hidden = true;
+
       try {
-        await fetch('/api/leads', {
+        const response = await fetch('/api/leads', {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
@@ -176,12 +235,18 @@
             mensagem: msg
           })
         });
+
+        if (response.ok || response.status === 200 || response.status === 201) {
+          okMsg.hidden = false;
+          form.reset();
+        } else {
+          errMsg.hidden = false;
+        }
       } catch(e) {
-        console.warn(e);
+        console.warn('Erro ao enviar orçamento:', e);
+        errMsg.hidden = false;
       } finally {
         btn.disabled = false;
-        okMsg.hidden = false;
-        form.reset();
       }
     }
   </script>
