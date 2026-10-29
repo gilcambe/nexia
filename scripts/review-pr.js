@@ -125,10 +125,11 @@ async function main() {
     const quem = (d.votos || [d.voto]).filter(Boolean).map(v => `${v.provider}${v.model ? `/${v.model}` : ''} nota ${v.nota}`).join(', ');
 
     if (d.acao === 'aprovar') {
+      // Aprovação via IA grátis (modelo gratuito do NEXIA)
       await gh(token, 'POST', `/issues/${pr.number}/labels`, { labels: ['automerge'] });
-      await gh(token, 'DELETE', `/issues/${pr.number}/labels/revisao-manual`);
+      await gh(token, 'DELETE', `/issues/${pr.number}/labels/revisao-manual` });
       await gh(token, 'POST', `/issues/${pr.number}/comments`, { body: `${MARCA(pr.head.sha)}🪜 review-pr aprovado (${quem}). Aprovado via IA grátis. Entra sozinho com o CI verde.` });
-      console.log(`PR #${pr.number}: aprovado (${quem}).`);
+      console.log(`PR #${pr.number}: aprovado via IA grátis (${quem}).`);
     } else if (d.acao === 'recusar') {
       const v = d.voto;
       const texto = `🪜 review-pr recusado (${quem}): ${v.motivo}${v.problemas.length ? `\n${v.problemas.map(p => `- ${p}`).join('\n')}` : ''}`;
