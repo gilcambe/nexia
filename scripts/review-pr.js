@@ -26,15 +26,7 @@ Aprove só se tiver certeza de que está correto, completo e seguro.`;
 // Importar funções utilitárias do revisor-gratis
 const { issueDoPr, ciVerde, isRestrictedChange, isEmptyPR, escolher, mencionaCortexFila } = require('./revisor-gratis');
 
-function lerVeredito(texto) {
-  const m = /\{[\s\S]*\}/.exec(String(texto || ''));
-  if (!m) return null;
-  try {
-    const v = JSON.parse(m[0]);
-    if (typeof v.aprovar !== 'boolean') return null;
-    return { aprovar: v.aprovar, nota: Number(v.nota) || 0, motivo: String(v.motivo || '').slice(0, 300), problemas: (Array.isArray(v.problemas) ? v.problemas : []).map(String).slice(0, 6) };
-  } catch { return null; }
-}
+
 
 function decidir(votos) {
   const validos = votos.filter(Boolean);
