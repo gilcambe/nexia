@@ -1,0 +1,340 @@
+{
+  "spec": {
+    "kind": "site",
+    "name": "Cortex-p1",
+    "tagline": "Inovação e tecnologia para o seu negócio",
+    "photo_theme": "business technology",
+    "description": "Site institucional de teste da plataforma Cortex-p1. Soluções digitais, tecnologia e transformação para empresas.",
+    "folder": "sites/cortex-p1-teste",
+    "fonts": {
+      "heading": "Outfit",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#0f172a",
+      "accent": "#38bdf8",
+      "bg": "#f8fafc",
+      "surface": "#ffffff",
+      "text": "#0f172a",
+      "muted": "#64748b",
+      "dark": "#020617"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "5511900000000",
+      "phone": "(11) 3000-0000",
+      "email": "contato@cortexp1.com.br",
+      "address": "Av. das Nações Unidas, 500",
+      "city": "São Paulo - SP",
+      "hours": "Seg a sex, 9h às 18h",
+      "instagram": "cortexp1",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=cortex-p1-teste&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "sections": [
+      {
+        "type": "hero",
+        "id": "cortex-p1",
+        "title": "Cortex-p1",
+        "subtitle": "Soluções digitais e tecnologia para transformar negócios.",
+        "eyebrow": "Institucional",
+        "cta": {
+          "label": "Fale com nossos especialistas",
+          "href": "whatsapp"
+        },
+        "cta2": {
+          "label": "Conheça nossos serviços",
+          "href": "#servicos"
+        },
+        "image_query": "modern office technology team",
+        "video_query": ""
+      },
+      {
+        "type": "services",
+        "id": "servicos",
+        "title": "Nossos Serviços",
+        "subtitle": "Tecnologia e inovação para empresas de todos os tamanhos.",
+        "items": [
+          {
+            "title": "Consultoria de TI",
+            "text": "Estratégia e implantação de tecnologia.",
+            "price": "",
+            "image_query": "IT consulting meeting",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Desenvolvimento Web",
+            "text": "Sites e sistemas sob medida.",
+            "price": "a partir de R$ 5.000",
+            "image_query": "web development code",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Marketing Digital",
+            "text": "Presença e performance online.",
+            "price": "",
+            "image_query": "digital marketing analytics",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Cloud e Segurança",
+            "text": "Infraestrutura segura na nuvem.",
+            "price": "",
+            "image_query": "cloud security server",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          }
+        ]
+      },
+      {
+        "type": "about",
+        "id": "sobre-a-cortex-p1",
+        "title": "Sobre a Cortex-p1",
+        "subtitle": "Mais de 8 anos entregando projetos digitais com excelência e compromisso com o resultado.",
+        "text": "Mais de 8 anos entregando projetos digitais com excelência e compromisso com o resultado.",
+        "image_query": "modern corporate office lobby",
+        "stats": [
+          {
+            "value": "8+",
+            "label": "anos de mercado"
+          },
+          {
+            "value": "120+",
+            "label": "projetos entregues"
+          },
+          {
+            "value": "50+",
+            "label": "clientes atendidos"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "nosso-ambiente",
+        "title": "Nosso Ambiente",
+        "subtitle": "",
+        "image_queries": [
+          "modern office workspace",
+          "team collaboration meeting",
+          "corporate headquarters",
+          "technology workspace",
+          "professional team working",
+          "modern meeting room",
+          "office interior design",
+          "business team brainstorming"
+        ],
+        "gif_queries": [
+          "office work"
+        ]
+      },
+      {
+        "type": "video",
+        "id": "conheca-a-cortex-p1",
+        "title": "Conheça a Cortex-p1",
+        "subtitle": "Um minuto por dentro da nossa empresa e soluções.",
+        "youtube": "",
+        "video_query": "office technology corporate"
+      },
+      {
+        "type": "testimonials",
+        "id": "o-que-dizem-nossos-clientes",
+        "title": "O que dizem nossos clientes",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "Marina Silva",
+            "role": "",
+            "text": "A Cortex-p1 transformou nossa presença digital.",
+            "rating": 5
+          },
+          {
+            "name": "Ricardo Alves",
+            "role": "",
+            "text": "Equipe técnica excelente e entrega pontual.",
+            "rating": 5
+          },
+          {
+            "name": "Fernanda Costa",
+            "role": "",
+            "text": "Melhor parceira de tecnologia que já tivemos.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "duvidas-frequentes",
+        "title": "Dúvidas frequentes",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "Quais serviços vocês oferecem?",
+            "a": "Consultoria de TI, desenvolvimento web, marketing digital e cloud."
+          },
+          {
+            "q": "Atendem pequenas empresas?",
+            "a": "Sim, temos planos para empresas de todos os portes."
+          },
+          {
+            "q": "Qual o prazo de entrega?",
+            "a": "Depende do escopo, geralmente de 4 a 8 semanas."
+          },
+          {
+            "q": "Oferecem suporte após a entrega?",
+            "a": "Sim, suporte técnico e manutenção inclusos."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "pronto-para-inovar",
+        "title": "Pronto para inovar?",
+        "subtitle": "Entre em contato e leve seu negócio ao próximo nível.",
+        "cta": {
+          "label": "Fale pelo WhatsApp",
+          "href": "whatsapp"
+        }
+      },
+      {
+        "type": "links",
+        "id": "links-rapidos",
+        "title": "Links rápidos",
+        "subtitle": "",
+        "items": [
+          {
+            "label": "WhatsApp",
+            "url": "https://wa.me/5511900000000",
+            "icon": "whatsapp"
+          },
+          {
+            "label": "Instagram",
+            "url": "https://instagram.com/cortexp1",
+            "icon": "instagram"
+          },
+          {
+            "label": "LinkedIn",
+            "url": "https://linkedin.com/company/cortexp1",
+            "icon": "linkedin"
+          }
+        ]
+      },
+      {
+        "type": "contact",
+        "id": "fale-com-a-gente",
+        "title": "Fale com a gente",
+        "subtitle": "",
+        "map": true,
+        "form": true
+      }
+    ]
+  },
+  "media": {
+    "s4.clip": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/7/71/Every_Open_Source_Beats_Billions_Dollar_Tech.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "width": 1280,
+      "height": 720,
+      "alt": "#opensource #bigtech #linux #startup #technology Every Open Source Beats Billion",
+      "credit": "Beo Beo (CC BY 3.0, via Wikimedia Commons)",
+      "provider": "wikimedia",
+      "mime": "video/webm"
+    },
+    "s0.hero": {
+      "url": "https://cdn.stocksnap.io/img-thumbs/960w/W6PNBNYHM6.jpg",
+      "width": 6450,
+      "height": 4300,
+      "alt": "Business Team",
+      "credit": "Business Team — Direct Media (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item0": {
+      "url": "https://cdn.stocksnap.io/img-thumbs/960w/OGLUHZAPGF.jpg",
+      "width": 2509,
+      "height": 1673,
+      "alt": "Business Technology",
+      "credit": "Business Technology — Maliha Mannan (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Central_College_of_Business_%26_Technology_Logo.jpg/1280px-Central_College_of_Business_%26_Technology_Logo.jpg",
+      "width": 1280,
+      "height": 932,
+      "alt": "Central College of Business & Technology Logo",
+      "credit": "Central College of Business & Technology Logo — Maemoon.naseer (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Africa_Alumni_TIES_%E2%80%93_Accra_business-technology-innovation-how-fintech-and-ict-are-transforming-business-processes_48259284401_o_%2853874514160%29.jpg/1280px-Africa_Alumni_TIES_%E2%80%93_Accra_business-technology-innovation-how-fintech-and-ict-are-transforming-business-processes_48259284401_o_%2853874514160%29.jpg",
+      "width": 1280,
+      "height": 1707,
+      "alt": "Africa Alumni TIES – Accra business-technology-innovation-how-fintech-and-ict-ar",
+      "credit": "Africa Alumni TIES – Accra business-technology-innovation-how-fintech-and-ict-are-transforming-business-proces",
+      "provider": "openverse"
+    },
+    "s1.item3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Africa_Alumni_TIES_%E2%80%93_Accra_business-technology-innovation-how-fintech-and-ict-are-transforming-business-processes_48259284361_o_%2853874453629%29.jpg/1280px-Africa_Alumni_TIES_%E2%80%93_Accra_business-technology-innovation-how-fintech-and-ict-are-transforming-business-processes_48259284361_o_%2853874453629%29.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "Africa Alumni TIES – Accra business-technology-innovation-how-fintech-and-ict-ar",
+      "credit": "Africa Alumni TIES – Accra business-technology-innovation-how-fintech-and-ict-are-transforming-business-proces",
+      "provider": "openverse"
+    },
+    "s2.about": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/2/21/Africa_Alumni_TIES_%E2%80%93_Accra_business-technology-innovation-how-fintech-and-ict-are-transforming-business-processes_48259284281_o_%2853874514215%29.jpg/1280px-Africa_Alumni_TIES_%E2%80%93_Accra_business-technology-innovation-how-fintech-and-ict-are-transforming-business-processes_48259284281_o_%2853874514215%29.jpg",
+      "width": 1280,
+      "height": 1707,
+      "alt": "Africa Alumni TIES – Accra business-technology-innovation-how-fintech-and-ict-ar",
+      "credit": "Africa Alumni TIES – Accra business-technology-innovation-how-fintech-and-ict-are-transforming-business-proces",
+      "provider": "openverse"
+    },
+    "s3.g0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/Suresh_Sriskandarajah_-_law%2C_business%2C_technology.jpg/1280px-Suresh_Sriskandarajah_-_law%2C_business%2C_technology.jpg",
+      "width": 1280,
+      "height": 1920,
+      "alt": "Suresh Sriskandarajah - law, business, technology",
+      "credit": "Suresh Sriskandarajah - law, business, technology — Loosechange (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Applied_Business_Technology_student_leaders_%286842097887%29.jpg/1280px-Applied_Business_Technology_student_leaders_%286842097887%29.jpg",
+      "width": 1280,
+      "height": 848,
+      "alt": "Applied Business Technology student leaders (6842097887)",
+      "credit": "Applied Business Technology student leaders (6842097887) — University of the Fraser Valley (BY 2.0, via Openve",
+      "provider": "openverse"
+    },
+    "s3.g2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Applied_Business_Technology_student_leaders_%286842099855%29.jpg/1280px-Applied_Business_Technology_student_leaders_%286842099855%29.jpg",
+      "width": 1280,
+      "height": 848,
+      "alt": "Applied Business Technology student leaders (6842099855)",
+      "credit": "Applied Business Technology student leaders (6842099855) — University of the Fraser Valley (BY 2.0, via Openve",
+      "provider": "openverse"
+    },
+    "s3.g3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Gleville_Business_Technology_Park_in_Glenville%2C_New_York.jpg/1280px-Gleville_Business_Technology_Park_in_Glenville%2C_New_York.jpg",
+      "width": 1280,
+      "height": 853,
+      "alt": "Gleville Business Technology Park in Glenville, New York",
+      "credit": "Gleville Business Technology Park in Glenville, New York — Tyler A. McNeil (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    }
+  }
+}
