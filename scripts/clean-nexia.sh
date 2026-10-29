@@ -2,12 +2,18 @@
 
 # Script para limpar referências NEXIA nos diretórios especificados
 # Substitui NEXIA CORTEX por Cortex e ajusta títulos e metadados
-# Deve ser executado ao final da PR.
+#
+# COMO EXECUTAR AO FINAL DA PR:
+#   1. Abra um terminal na raiz do repositório na branch nexia/criar-o-script-scripts-clean-nexia-sh-qu-6f1bd8
+#   2. Rode: bash scripts/clean-nexia.sh
+#   3. Confirme que o script termina com 'Nenhuma ocorrência de NEXIA encontrada em títulos.'
+#   4. Se houver arquivos alterados, faça commit e abra a PR normalmente.
+
 
 set -e
 
 # Diretórios para processar conforme solicitado no pedido
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
 
 # Função para processar um arquivo
 process_file() {
@@ -54,7 +60,7 @@ echo "Limpeza concluída!"
 
 # Verificar se ainda existem ocorrências de NEXIA em títulos
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit viajante-pro 2>/dev/null; then
     echo "AVISO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     exit 1
 else
