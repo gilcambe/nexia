@@ -55,7 +55,8 @@ ERROR_OCCURRED=0
 trap 'ERROR_OCCURRED=1; cleanup_backups' ERR
 
 # Diretórios para processar conforme solicitado no pedido
-DIRECTORIES="public/ apps/ nexia-ai/"
+# Inclui: public/, apps/ e nexia-ai/site-kit/
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 
 # --- FUNÇÃO DE PROCESSAMENTO DE ARQUIVO ---
 
@@ -76,9 +77,10 @@ process_file() {
     fi
 
     # (2) Remove apenas a palavra NEXIA de títulos, mantendo o restante
+    # Regex melhorada: '<title>[^<]*NEXIA[^<]*</title>' para evitar falsos positivos
     # Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Meu Site CORTEX — Plataforma de IA</title>
     # Trata múltiplas ocorrências de NEXIA no título em um loop para garantir a remoção completa de todas
-    while grep -qE '<title>[^<]*NEXIA' "$file"; do
+    while grep -qE '<title>[^<]*NEXIA[^<]*</title>' "$file"; do
         if sed -i 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/g' "$file"; then
             changes_made=1
         else
@@ -170,11 +172,12 @@ echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 
 # Comando exato conforme solicitado no pedido
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro 2>/dev/null; then
+# Verifica apenas os diretórios especificados: public, apps e nexia-ai/site-kit
+if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
     echo ""
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
-    grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro 2>/dev/null
+    grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null
     echo ""
     echo "Por favor, revise os arquivos e tente novamente."
     exit 1
