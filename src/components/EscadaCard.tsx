@@ -1,20 +1,13 @@
 import { useState, useEffect } from 'react';
 
 interface EscadaData {
-  progresso: {
+  semana: {
     cortex: number;
-    iaGratis: number;
+    iasGratis: number;
     claude: number;
   };
-  fila: {
-    esperando: number;
-    processando: number;
-    concluido: number;
-  };
-  jules: {
-    feito: number;
-    meta: number;
-  };
+  fila: number;
+  julesHoje: number;
   faseB: boolean;
 }
 
@@ -24,18 +17,19 @@ interface ProgressBarProps {
 }
 
 function ProgressBar({ label, valor }: ProgressBarProps) {
+  const pct = Math.max(0, Math.min(100, valor));
   return (
-    <div className="progress-item" data-testid={`progress-${label.toLowerCase()}`}>
-      <div className="progress-header">
-        <span className="progress-label">{label}</span>
-        <span className="progress-valor">{valor}%</span>
+    <div className="escada-progress-item" data-testid={`escada-progress-${label.toLowerCase().replace(/ /g, '-')}`}>
+      <div className="escada-progress-header">
+        <span className="escada-progress-label">{label}</span>
+        <span className="escada-progress-valor">{valor}%</span>
       </div>
-      <div className="progress-track">
+      <div className="escada-progress-track">
         <div
-          className="progress-fill"
-          style={{ width: `${Math.max(0, Math.min(100, valor))}%` }}
+          className="escada-progress-fill"
+          style={{ width: `${pct}%` }}
           role="progressbar"
-          aria-valuenow={valor}
+          aria-valuenow={pct}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label={label}
@@ -51,77 +45,59 @@ export default function EscadaCard() {
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch('/escada')
+    let ignorar = false;
+    const controller = new AbortController();
+    fetch('/escada', {
+      signal: controller.signal,
+      headers: { 'Content-Type': 'application/json' },
+    })
       .then((res) => {
         if (!res.ok) throw new Error('Falha ao carregar escada');
         return res.json();
       })
       .then((json: EscadaData) => {
-        setData(json);
-        setCarregando(false);
+        if (!ignorar) {
+          setData(json);
+          setCarregando(false);
+        }
       })
       .catch((e) => {
-        setErro(e.message);
-        setCarregando(false);
+        if (!ignorar && e.name !== 'AbortError') {
+          setErro(e.message);
+          setCarregando(false);
+        }
       });
+    return () => {
+      ignorar = true;
+      controller.abort();
+    };
   }, []);
 
   if (carregando) {
-    return (
-      <div className="escada-card" data-testid="escada-card">
-        <p>Carregando...</p>
-      </div>
-    );
+    return <div className="escada-carregando" role="status" aria-label="Carregando">Carregando escada…</div>;
   }
-
-  if (erro || !data) {
-    return (
-      <div className="escada-card" data-testid="escada-card">
-        <p className="erro">Erro: {erro || 'dados não encontrados'}</p>
-      </div>
-    );
+  if (erro) {
+    return <div className="escada-erro" role="alert">{erro}</div>;
   }
+  if (!data) return null;
 
   return (
-    <div className="escada-card" data-testid="escada-card">
+    <section className="escada-card" data-testid="escada-card">
       <h2 className="escada-titulo">🪜 Escada</h2>
-
-      <section className="escada-progresso" aria-label="Progresso da semana">
-        <h3>Progresso da semana</h3>
-        <ProgressBar label="Cortex" valor={data.progresso.cortex} />
-        <ProgressBar label="IAs grátis" valor={data.progresso.iaGratis} />
-        <ProgressBar label="Claude" valor={data.progresso.claude} />
-      </section>
-
-      <section className="escada-fila" aria-label="Números da fila">
-        <h3>Fila</h3>
-        <div className="fila-numeros">
-          <span className="fila-item" data-testid="fila-esperando">
-            Esperando: {data.fila.esperando}
-          </span>
-          <span className="fila-item" data-testid="fila-processando">
-            Processando: {data.fila.processando}
-          </span>
-          <span className="fila-item" data-testid="fila-concluido">
-            Concluído: {data.fila.concluido}
-          </span>
-        </div>
-      </section>
-
-      <section className="escada-jules" aria-label="Jules hoje">
-        <h3>Jules hoje</h3>
-        <p className="jules-texto" data-testid="jules-hoje">
-          Jules hoje {data.jules.feito}/{data.jules.meta}
-        </p>
-      </section>
-
+      <div className="escada-barras" role="region" aria-label="Progresso da semana">
+        <ProgressBar label="Cortex" valor={data.semana.cortex} />
+        <ProgressBar label="IAs grátis" valor={data.semana.iasGratis} />
+        <ProgressBar label="Claude" valor={data.semana.claude} />
+      </div>
+      <div className="escada-numeros" data-testid="escada-fila">
+        Fila: {data.fila}
+      </div>
+      <div className="escada-jules" data-testid="escada-jules">
+        Jules hoje {data.julesHoje}/15
+      </div>
       {data.faseB && (
-        <section className="escada-selo" aria-label="Selo fase B">
-          <span className="selo verde" data-testid="selo-fase-b">
-            ✅ Pronto para fase B
-          </span>
-        </section>
+        <span className="escada-selo escada-selo-pronto" data-testid="escada-selo-fase-b" role="status" aria-label="Pronto para fase B">Pronto para fase B</span>
       )}
-    </div>
+    </section>
   );
 }
