@@ -82,7 +82,7 @@ export default function ConfigLocalAI() {
           <span className="text-sm text-[var(--cx-mut,rgba(248,244,237,0.72))]">
             {config.ativo ? 'Ativado' : 'Desativado'}
           </span>
-          <label className="relative inline-flex h-6 w-11 items-center rounded-full transition-colors cursor-pointer">
+          <label className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${(verificando || suporteWebGPU === null || (suporteWebGPU && !suporteWebGPU.suportado)) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
             <input
               type="checkbox"
               checked={config.ativo}
