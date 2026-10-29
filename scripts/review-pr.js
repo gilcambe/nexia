@@ -23,8 +23,8 @@ Regras do dono que o PR NÃO pode quebrar:
 Responda SOMENTE um JSON: {"aprovar": true|false, "nota": 0-10, "motivo": "uma frase", "problemas": ["..."]}.
 Aprove só se tiver certeza de que está correto, completo e seguro.`;
 
-// Importar funções utilitárias do módulo utils
-const { issueDoPr, ciVerde, isRestrictedChange, isEmptyPR, escolher, mencionaCortexFila } = require('./utils');
+// Importar funções utilitárias do revisor-gratis
+const { issueDoPr, ciVerde, isRestrictedChange, isEmptyPR, escolher, mencionaCortexFila } = require('./revisor-gratis');
 
 function lerVeredito(texto) {
   const m = /\{[\s\S]*\}/.exec(String(texto || ''));
