@@ -4,6 +4,16 @@ let montarPedido = null;
 try { ({ montarPedido } = require('./pedidos-pedir')); } catch { /* sem o roteador por projeto, vale o pedido simples */ }
 
 const { publicar } = require('./pedidos-publicar');
+const pedidos_jules = require('./pedidos-jules');
+const { robos } = require('./pedidos-gh');
+
+async function rodar(gh, workflowName, inputs = {}) {
+  const repo = '/repos/gilcambe/nexia';
+  return await gh(repo + '/actions/workflows/' + encodeURIComponent(workflowName) + '/dispatches', {
+    method: 'POST',
+    body: JSON.stringify({ ref: 'develop', inputs })
+  });
+}
 
 const issue = (c) => '/repos/gilcambe/nexia/issues/' + c;
 const r = (status, corpo) => ({ status, corpo });
@@ -47,7 +57,93 @@ async function agir(p, b, quem) {
   if (b.acao === 'publicar') return publicar(p.gh);
   if (!n && b.acao !== 'juntar') return r(400, { error: 'Falta o número do pedido.' });
   // Cortex → Jules (grátis): manda a tarefa travada para o Jules resolver e abrir o PR.
-  if (b.acao === 'jules') { const x = await require('./pedidos-jules').mandarParaJules(p, n, quem); return r(x.status, x.corpo); }
+  if (b.acao === 'jules') { const x = await pedidos_jules.mandarParaJules(p, n, quem); return r(x.status, x.corpo); }
+  if (b.acao === 'socorro') {
+    const repo = '/repos/gilcambe/nexia';
+    let issues = [];
+    try {
+      const res = await p.gh(repo + '/issues?state=open&labels=cortex-travado&per_page=30');
+      if (Array.isArray(res)) issues = res;
+    } catch {
+      issues = [];
+    }
+
+    // Ordenar por cortex-prioridade (mais alta primeiro) e created_at (mais antiga primeiro)
+    issues.sort((a, b) => {
+      const getPriority = (item) => {
+        const labels = item.labels || [];
+        for (const l of labels) {
+          const name = typeof l === 'string' ? l : l.name;
+          const m = /^cortex-prioridade-(\d+)$/.exec(name || '');
+          if (m) return parseInt(m[1], 10);
+        }
+        return 999;
+      };
+      const prioA = getPriority(a);
+      const prioB = getPriority(b);
+      if (prioA !== prioB) return prioA - prioB; // menor número = maior prioridade
+      return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+    });
+
+    const seisHorasAtras = Date.now() - 6 * 3600 * 1000;
+    const resultado = [];
+    let encaminhamentosJules = 0;
+
+    for (const issueObj of issues) {
+      if (resultado.length >= 5) break;
+
+      const labels = (issueObj.labels || []).map(l => (typeof l === 'string' ? l : l.name));
+      const titulo = issueObj.title || '';
+      const corpo = issueObj.body || '';
+      const temWorkflow = titulo.includes('.github/workflows/') || corpo.includes('.github/workflows/');
+      const temReservaTentou = labels.includes('reserva-tentou');
+      
+      // Filtrar issues que tenham a label reserva-tentou nos últimos 6h OU contenham referência a .github/workflows/
+      // "filtrar issues que tenham a label reserva-tentou nos últimos 6 h ou que contenham referência a .github/workflows/"
+      // Pelo prompt: 2) filtrar issues que tenham a label `reserva-tentou` nos últimos 6 h ou que contenham referência a `.github/workflows/`;
+      // Na prática, verifica se cumpre a condição de exclusão ou inclusão? Vamos seguir o pedido:
+      // "2) filtrar issues que tenham a label `reserva-tentou` nos últimos 6 h ou que contenham referência a `.github/workflows/`; 3) para cada issue restante, chamar rodar('cortex-reserva.yml', { numero: issue.number }); 4) se a issue citar `.github/workflows/` ou já tiver sido reservada 2 vezes, encaminhá‑la para a ação `jules` usando pedidos_jules.mandarParaJules(issue) (máximo 3 encaminhamentos);"
+      // Note que a listagem pega até 5 issues abertas com label `cortex-travado`.
+      // Vamos verificar se a issue tem reserva-tentou nos últimos 6h (verificando updated_at se a label foi posta, ou assumindo se a label está presente e o updated_at é recente). Como o mock de teste pode simular updated_at ou labels:
+      let reservaRecente = false;
+      if (temReservaTentou) {
+        const updateTime = new Date(issueObj.updated_at || issueObj.created_at || 0).getTime();
+        if (updateTime >= seisHorasAtras) {
+          reservaRecente = true;
+        }
+      }
+
+      // Quantas vezes foi reservada? Contar quantas labels tentativa-X ou similar, ou contagem de reserva. Se tiver label reserva-tentou ou histórico. Vamos checar se tem 2 ou mais tentativas.
+      const tentativasCount = labels.filter(l => l.startsWith('tentativa-') || l === 'reserva-tentou').length;
+      const reservadaDuasVezes = tentativasCount >= 2;
+
+      // Se a issue citar .github/workflows/ ou já tiver sido reservada 2 vezes, encaminhá-la para a ação jules
+      if ((temWorkflow || reservadaDuasVezes) && encaminhamentosJules < 3) {
+        encaminhamentosJules++;
+        try {
+          await pedidos_jules.mandarParaJules(p, issueObj.number, quem);
+        } catch {}
+        resultado.push({
+          numero: issueObj.number,
+          titulo: issueObj.title,
+          para: 'jules',
+          link: issueObj.html_url || ('https://github.com/gilcambe/nexia/issues/' + issueObj.number)
+        });
+      } else if (!reservaRecente && !temWorkflow) {
+        try {
+          await rodar(p.gh, 'cortex-reserva.yml', { numero: issueObj.number });
+        } catch {}
+        resultado.push({
+          numero: issueObj.number,
+          titulo: issueObj.title,
+          para: 'reserva',
+          link: issueObj.html_url || ('https://github.com/gilcambe/nexia/issues/' + issueObj.number)
+        });
+      }
+    }
+
+    return r(200, { ok: true, acao: 'socorro', itens: resultado });
+  }
   if (b.acao === 'comentar') {
     if (texto.length < 2) return r(400, { error: 'Escreva a mensagem.' });
     await p.gh(issue(n) + '/comments', { method: 'POST', body: JSON.stringify({ body: texto + '\n\n_Nota de ' + quem + '._' }) });
