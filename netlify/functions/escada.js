@@ -4,7 +4,7 @@ const handler = async (event, context) => {
     const dados = {
       faseB: true,
       fila: 12,
-      julesHoje: "8/15",
+      julesHoje: 8,
       semana: {
         cortex: 80,
         iasGratis: 95,
