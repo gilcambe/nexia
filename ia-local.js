@@ -352,4 +352,159 @@ export async function executarPromptComFallback(prompt, opcoes = {}) {
   }
 }
 
+/**
+ * Cria e renderiza o switch de IA local na página.
+ * @param {HTMLElement} container - Elemento HTML onde o switch será inserido
+ * @param {Function} onChange - Callback chamado quando o switch é alterado
+ */
+export function renderizarSwitchIaLocal(container, onChange) {
+  if (!container) return;
+  
+  // Verifica suporte a WebGPU
+  verificarSuporteWebGPU().then(suporte => {
+    const switchContainer = document.createElement('div');
+    switchContainer.className = 'ia-local-switch-container';
+    switchContainer.style.cssText = `
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px;
+      margin: 16px 0;
+    `;
+    
+    const switchLabel = document.createElement('label');
+    switchLabel.className = 'ia-local-switch-label';
+    switchLabel.style.cssText = `
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    `;
+    
+    const switchTitle = document.createElement('div');
+    switchTitle.innerHTML = `
+      <div style="font-weight: 600; font-size: 14px; margin-bottom: 4px;">IA no meu aparelho</div>
+      <div style="font-size: 12px; color: rgba(255, 255, 255, 0.7);">Grátis, offline e sem conexão com a nuvem</div>
+    `;
+    
+    const switchWrapper = document.createElement('div');
+    switchWrapper.className = 'switch-wrapper';
+    switchWrapper.style.cssText = `
+      position: relative;
+      width: 48px;
+      height: 24px;
+      background: ${suporte.suportado ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 107, 107, 0.2)'};
+      border-radius: 12px;
+      transition: background 0.3s;
+    `;
+    
+    const switchSlider = document.createElement('div');
+    switchSlider.className = 'switch-slider';
+    switchSlider.style.cssText = `
+      position: absolute;
+      top: 2px;
+      left: ${suporte.suportado ? '2px' : 'calc(100% - 22px)'};
+      width: 20px;
+      height: 20px;
+      background: ${suporte.suportado ? '#fff' : '#ff6b6b'};
+      border-radius: 50%;
+      transition: transform 0.3s;
+    `;
+    
+    const switchInput = document.createElement('input');
+    switchInput.type = 'checkbox';
+    switchInput.className = 'ia-local-switch';
+    switchInput.disabled = !suporte.suportado;
+    switchInput.checked = obterConfig().ativo;
+    switchInput.style.cssText = `
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    `;
+    
+    switchWrapper.appendChild(switchSlider);
+    switchLabel.appendChild(switchTitle);
+    switchLabel.appendChild(switchWrapper);
+    switchContainer.appendChild(switchLabel);
+    switchContainer.appendChild(switchInput);
+    
+    // Adiciona aviso se não suportado
+    if (!suporte.suportado) {
+      const aviso = document.createElement('div');
+      aviso.className = 'ia-local-aviso';
+      aviso.style.cssText = `
+        margin-top: 8px;
+        padding: 8px 12px;
+        background: rgba(255, 107, 107, 0.1);
+        border: 1px solid rgba(255, 107, 107, 0.3);
+        border-radius: 8px;
+        font-size: 12px;
+        color: #ff6b6b;
+      `;
+      aviso.textContent = `❌ Bloqueado: ${suporte.motivo}`;
+      switchContainer.appendChild(aviso);
+    }
+    
+    // Adiciona container de aviso de download
+    const avisoDownload = document.createElement('div');
+    avisoDownload.className = 'ia-local-aviso-download';
+    avisoDownload.style.cssText = `
+      margin-top: 8px;
+      padding: 12px;
+      background: rgba(230, 162, 60, 0.1);
+      border: 1px solid rgba(230, 162, 60, 0.3);
+      border-radius: 8px;
+      font-size: 12px;
+      color: #e6a23c;
+      display: none;
+    `;
+    avisoDownload.innerHTML = `
+      <div style="font-weight: 600; margin-bottom: 4px;">⚠ Download necessário</div>
+      <div style="margin-bottom: 8px;">Será baixado aproximadamente 1 GB de dados para o modelo de IA local. Recomendado Wi-Fi.</div>
+      <button id="btn-confirmar-download" style="
+        background: #e6a23c;
+        color: #000;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+      ">Confirmar download</button>
+    `;
+    switchContainer.appendChild(avisoDownload);
+    
+    container.appendChild(switchContainer);
+    
+    // Event listener para o switch
+    switchInput.addEventListener('change', (e) => {
+      if (!suporte.suportado) return;
+      
+      const ativo = e.target.checked;
+      
+      if (ativo) {
+        // Mostra aviso de download
+        avisoDownload.style.display = 'block';
+      } else {
+        // Esconde aviso e desativa
+        avisoDownload.style.display = 'none';
+        salvarConfig({ ativo: false });
+        if (onChange) onChange(false);
+      }
+    });
+    
+    // Event listener para botão de confirmação
+    const btnConfirmar = avisoDownload.querySelector('#btn-confirmar-download');
+    if (btnConfirmar) {
+      btnConfirmar.addEventListener('click', () => {
+        salvarConfig({ ativo: true });
+        avisoDownload.style.display = 'none';
+        if (onChange) onChange(true);
+      });
+    }
+  });
+}
+
 export { MODELOS_SUPORTADOS, WEBLLM_CDN_URL };
