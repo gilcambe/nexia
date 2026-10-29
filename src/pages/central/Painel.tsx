@@ -133,6 +133,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
   const totalIa = usoIa.reduce((s, p) => s + p.usado, 0);
   const forn = d.empresa?.fornecedores || [];
   const robos = d.robos?.robos || [];
+  const [mostrarPassoAPasso, setMostrarPassoAPasso] = useState(false);
 
   // Estado dos serviços principais: só o que a Central consegue medir de verdade.
   const servicos: { nome: string; logo: string | null; e: Estado; texto: string; aba: Aba }[] = [
@@ -141,7 +142,7 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
     { nome: "Firebase", logo: "/central/logos/firebase.svg", aba: "sistema",
       ...(!d.banco ? { e: "cinza" as Estado, texto: "Conferindo" } : d.banco.ok ? { e: "ok" as Estado, texto: "Online" } : { e: "erro" as Estado, texto: d.banco.cheio ? "Limite do dia" : "Sem resposta" }) },
     { nome: "Cloudflare", logo: "/central/logos/cloudflare.svg", aba: "sistema",
-      ...(!d.cloudflare ? { e: "cinza" as Estado, texto: "Conferindo" } : d.cloudflare.erro ? { e: "atencao" as Estado, texto: "Erro na leitura" } : d.cloudflare.configurado ? { e: "ok" as Estado, texto: "Online" } : { e: "cinza" as Estado, texto: "Sem acesso" }) },
+      ...(!d.cloudflare ? { e: "cinza" as Estado, texto: "Conferindo" } : d.cloudflare.erro ? { e: "atencao" as Estado, texto: "Erro na leitura" } : d.cloudflare.configurado ? { e: "ok" as Estado, texto: "Online" } : { e: "cinza" as Estado, texto: "Falta ligar" }) },
     { nome: "GitHub", logo: "/central/logos/github.svg", aba: "prs",
       ...(!d.robos ? { e: "cinza" as Estado, texto: "Conferindo" } : robos.some((r) => r.situacao === "sem-acesso") ? { e: "atencao" as Estado, texto: "Sem acesso" } : robos.some((r) => r.situacao === "erro") ? { e: "atencao" as Estado, texto: "Robô com erro" } : { e: "ok" as Estado, texto: "Online" }) },
     { nome: "Sites dos clientes", logo: "/central/logos/kernex.svg", aba: "clientes",
@@ -560,6 +561,26 @@ export default function Painel({ d, erros, avisos, ir, conferir, carregando, abr
           <BotaoAvisar />
         </div>
       </div>
+
+      {mostrarPassoAPasso && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-bold text-slate-900">Passo a passo para configurar Cloudflare</h2>
+              <button onClick={() => setMostrarPassoAPasso(false)} className="text-slate-500 hover:text-slate-700">
+                <Icone nome="fechar" className="w-5 h-5" />
+              </button>
+            </div>
+            <ol className="list-decimal list-inside space-y-2 text-slate-700">
+              <li>Abra <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">https://dash.cloudflare.com/profile/api-tokens</a> e clique em Create Token.</li>
+              <li>Em "Read analytics and logs" clique em Use template (só leitura, grátis).</li>
+              <li>Clique em Continue to summary e Create Token. Copie o código.</li>
+              <li>Abra <a href="https://dash.cloudflare.com" target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline">https://dash.cloudflare.com</a> → Workers & Pages → nexia → Settings → Variables and Secrets → Add → tipo Secret, nome CLOUDFLARE_ANALYTICS_TOKEN, cole o código, Deploy.</li>
+              <li>Volte na Central e clique em Conferir agora.</li>
+            </ol>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
