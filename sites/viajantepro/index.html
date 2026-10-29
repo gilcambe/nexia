@@ -228,10 +228,14 @@
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
           body: JSON.stringify({
+            nome: nome,
             name: nome,
             email: email,
+            whatsapp: tel,
             phone: tel,
+            site: 'viajante-pro',
             produto: 'viajante-pro',
+            consentimento: true,
             mensagem: msg
           })
         });

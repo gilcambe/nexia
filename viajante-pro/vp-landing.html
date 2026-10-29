@@ -821,7 +821,7 @@
       <span class="card-tag" style="position:static;display:inline-block;margin-bottom:12px;">Ecossistema Kernex</span>
       <h3 style="font-size: 24px; color: #FFF; margin-bottom: 12px;" class="font-serif">Viajante Pro · Powered by Kernex</h3>
       <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px;">
-        Bem-vindo à Viajante Pro. Nossa agência combina curadoria humana personalizada de viagens com o ecossistema e tecnologia de inteligência de processos **Kernex OS**.
+        Bem-vindo à Viajante Pro. Nossa agência combina curadoria humana personalizada de viagens com o ecossistema e tecnologia de inteligência de processos <strong>Kernex OS</strong>.
       </p>
       <button class="btn btn-gold" style="width: 100%;" onclick="closeModal('kernexPresentationModal')">Conhecer Destinos & Roteiros</button>
     </div>
@@ -831,7 +831,10 @@
   <header id="vpNav">
     <div class="container nav-inner">
       <a href="#hero" class="brand-logo">
-        <img src="../public/central/logos/vp.svg" alt="Viajante Pro Logo" width="40" height="40" style="object-fit:contain" onerror="this.onerror=null;this.src='/public/central/logos/vp.svg'">
+        <img src="/public/central/logos/vp.svg" alt="Viajante Pro Logo" width="40" height="40" style="object-fit:contain; border-radius:10px;" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex'">
+        <span class="brand-icon-fallback" style="display:none; width:40px; height:40px; background:linear-gradient(135deg, #d4af37, #f3e5ab); border-radius:10px; align-items:center; justify-content:center;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0b0f19" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
+        </span>
         <div class="brand-text">
           <span class="brand-name">Viajante Pro</span>
           <span class="brand-sub">Agência de Viagens</span>
@@ -1280,10 +1283,10 @@
           <span class="section-subtitle">Sobre a Viajante Pro</span>
           <h2 class="section-title" style="text-align: left;">Sua Agência de Confiança para Conhecer o Mundo</h2>
           <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 15px;">
-            A **Viajante Pro** nasceu com o propósito de transformar o planejamento de viagens em uma experiência simples, prazerosa e segura. Entendemos que cada viajante possui expectativas únicas.
+            A <strong>Viajante Pro</strong> nasceu com o propósito de transformar o planejamento de viagens em uma experiência simples, prazerosa e segura. Entendemos que cada viajante possui expectativas únicas.
           </p>
           <p style="color: var(--text-muted); margin-bottom: 28px; font-size: 15px;">
-            Integrada ao ecossistema de tecnologia e inteligência comercial **Kernex**, a Viajante Pro combina curadoria humana qualificada com inovação para garantir as melhores condições e suporte contínuo aos nossos clientes.
+            Integrada ao ecossistema de tecnologia e inteligência comercial <strong>Kernex</strong>, a Viajante Pro combina curadoria humana qualificada com inovação para garantir as melhores condições e suporte contínuo aos nossos clientes.
           </p>
 
           <div style="display: flex; gap: 24px;">
@@ -1513,7 +1516,10 @@
       <div class="footer-grid">
         <div>
           <a href="#hero" class="brand-logo" style="margin-bottom: 16px;">
-        <img src="/public/central/logos/vp.svg" alt="Viajante Pro Logo" width="40" height="40" style="object-fit:contain" onerror="this.onerror=null;this.src='/favicon-vp.svg'">
+            <img src="/public/central/logos/vp.svg" alt="Viajante Pro Logo" width="40" height="40" style="object-fit:contain; border-radius:10px;" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex'">
+            <span class="brand-icon-fallback" style="display:none; width:40px; height:40px; background:linear-gradient(135deg, #d4af37, #f3e5ab); border-radius:10px; align-items:center; justify-content:center;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0b0f19" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
+            </span>
             <div class="brand-text">
               <span class="brand-name">Viajante Pro</span>
               <span class="brand-sub">Agência de Viagens</span>
@@ -1745,10 +1751,14 @@
       formStatus.style.display = 'none';
 
       const payload = {
+        nome: nome,
         name: nome,
         email: email,
+        whatsapp: telefone,
         phone: telefone,
+        site: 'viajante-pro',
         produto: 'viajante-pro',
+        consentimento: true,
         mensagem: `Solicitação de Orçamento - Viajante Pro:\n` +
                   `Destino: ${destino}\n` +
                   `Origem: ${origem}\n` +

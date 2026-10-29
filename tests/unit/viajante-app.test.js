@@ -42,7 +42,11 @@ test('PWA Viajante Pro: arquivos do app existem e possuem conteúdo válido', ()
 test('PWA Viajante Pro: rotas registradas em TENANT_PAGES', () => {
   assert.deepStrictEqual(TENANT_PAGES['/viajante-pro/app'], ['viajante-pro/app', 'index.html']);
   assert.deepStrictEqual(TENANT_PAGES['/vp/passageiro'], ['viajante-pro', 'vp-passenger.html']);
+  assert.deepStrictEqual(TENANT_PAGES['/viajante-pro/pax'], ['viajante-pro', 'vp-passenger.html']);
   assert.deepStrictEqual(TENANT_PAGES['/vp/admin'], ['viajante-pro', 'vp-admin.html']);
+  assert.deepStrictEqual(TENANT_PAGES['/viajante-pro/admin'], ['viajante-pro', 'vp-admin.html']);
+  assert.deepStrictEqual(TENANT_PAGES['/viajante-pro'], ['viajante-pro', 'vp-landing.html']);
+  assert.deepStrictEqual(TENANT_PAGES['/vp'], ['viajante-pro', 'vp-landing.html']);
 });
 
 test('App do Viajante (vp-passenger.html): acesso por token, itinerário e chat offline', () => {
