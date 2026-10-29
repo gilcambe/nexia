@@ -8,6 +8,7 @@ import SaudeHistorico from "./SaudeHistorico";
 import ConectarIAs from "./ConectarIAs";
 import UltimosErros from "./UltimosErros";
 import { Abre, useModo } from "./celular";
+import { Icone } from "./icones";
 import { buscarContextoIA, sanitizarTexto } from "@/lib/fetch-contexto-ia";
 
 // Aba Sistema: a saúde dos sites em 30 dias, as IAs que trabalham para a NEXIA, os fornecedores (serviços grátis que usamos) e os robôs.
@@ -166,7 +167,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
       <SaudeHistorico />
       <UltimosErros />
 
-      <Cartao titulo="Chaves e IAs" acao={<Botao onClick={testar} disabled={testando} testid="testar-chaves">{testando ? "Testando…" : "🧪 Testar todas agora"}</Botao>}>
+      <Cartao titulo="Chaves e IAs" resumo="Conferindo…" icone={<Icone nome="chave" />} acao={<Botao onClick={testar} disabled={testando} testid="testar-chaves">{testando ? "Testando…" : "🧪 Testar todas agora"}</Botao>}>
         {!d.empresa ? <Carregando /> : (
           <ul className="space-y-2" data-testid="chaves">
             {d.empresa.fornecedores.filter((f) => f.chaveEstado).map((f) => {
@@ -188,7 +189,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
         <p className="text-xs text-nexia-muted">Escada: o Cortex usa primeiro as IAs grátis que estão verdes; a ordem fica no roteador de modelos. O valor das chaves nunca aparece aqui.</p>
       </Cartao>
 
-      <Cartao titulo="IAs que trabalham para a Kernex" acao={<Botao onClick={testar} disabled={testando} testid="testar-ias">{testando ? "Testando…" : "🧪 Testar agora"}</Botao>}>
+      <Cartao titulo="IAs que trabalham para a Kernex" resumo="Conferindo…" icone={<Icone nome="chave" />} acao={<Botao onClick={testar} disabled={testando} testid="testar-ias">{testando ? "Testando…" : "🧪 Testar agora"}</Botao>}>
         {erroIA && <p className="text-sm text-red-400" role="alert">{erroIA}</p>}
         {!ias ? (
           <p className="text-sm text-nexia-muted">O Cortex e o coach usam só IAs grátis. Se uma cair, a próxima entra sozinha. Toque em "Testar agora" para ver quais estão respondendo.</p>
@@ -212,7 +213,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
         )}
       </Cartao>
 
-      <Cartao titulo="Fornecedores e integrações">
+      <Cartao titulo="Fornecedores e integrações" resumo="Conferindo…" icone={<Icone nome="site" />}>
         {!d.empresa ? <Carregando erro={erros.empresa} /> : (
           <div className="space-y-3" data-testid="fornecedores">
             {grupos.map((g) => (
@@ -238,7 +239,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
         )}
       </Cartao>
 
-      <Cartao titulo="Usar outra IA">
+      <Cartao titulo="Usar outra IA" resumo="Conferindo…" icone={<Icone nome="site" />}>
         <div className="space-y-3">
           <p className="text-sm text-nexia-muted">Cole na conversa e a IA já sabe tudo.</p>
           <Botao onClick={copiarContexto} disabled={carregandoIA} testid="btn-copiar-contexto">
