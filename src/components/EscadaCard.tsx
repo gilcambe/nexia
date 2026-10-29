@@ -73,12 +73,8 @@ export default function EscadaCard() {
     };
   }, []);
 
-  if (carregando) {
-    return <div className="escada-carregando" role="status" aria-label="Carregando">Carregando escada…</div>;
-  }
-  if (erro) {
-    return <div className="escada-erro" role="alert">{erro}</div>;
-  }
+  if (carregando) return <div className="escada-carregando" role="status" aria-label="Carregando">Carregando escada…</div>;
+  if (erro) return <div className="escada-erro" role="alert">{erro}</div>;
   if (!data) return null;
 
   return (
@@ -89,14 +85,12 @@ export default function EscadaCard() {
         <ProgressBar label="IAs grátis" valor={data.semana.iasGratis} />
         <ProgressBar label="Claude" valor={data.semana.claude} />
       </div>
-      <div className="escada-numeros" data-testid="escada-fila">
-        Fila: {data.fila}
-      </div>
-      <div className="escada-jules" data-testid="escada-jules">
-        Jules hoje {data.julesHoje}/15
-      </div>
+      <div className="escada-numeros" data-testid="escada-fila">Fila: {data.fila}</div>
+      <div className="escada-jules" data-testid="escada-jules">Jules hoje {data.julesHoje}/15</div>
       {data.faseB && (
-        <span className="escada-selo escada-selo-pronto" data-testid="escada-selo-fase-b" role="status" aria-label="Pronto para fase B">Pronto para fase B</span>
+        <span className="escada-selo escada-selo-pronto" data-testid="escada-selo-fase-b" role="status" aria-label="Pronto para fase B">
+          Pronto para fase B
+        </span>
       )}
     </section>
   );
