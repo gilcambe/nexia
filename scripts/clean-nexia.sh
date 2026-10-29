@@ -55,7 +55,7 @@ ERROR_OCCURRED=0
 trap 'ERROR_OCCURRED=1; cleanup_backups' ERR
 
 # Diretórios para processar conforme solicitado no pedido
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
+DIRECTORIES="public/ apps/ nexia-ai/"
 
 # --- FUNÇÃO DE PROCESSAMENTO DE ARQUIVO ---
 
