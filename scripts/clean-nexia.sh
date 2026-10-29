@@ -15,8 +15,7 @@ set -e
 # O script cria backup automático dos arquivos antes de modificá-los
 
 # Diretórios para processar conforme solicitado no pedido
-# Inclui viajante-pro conforme verificação final solicitada
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 
 # Função para processar um arquivo
 process_file() {
@@ -29,14 +28,16 @@ process_file() {
     # (1) Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
     sed -i 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
 
-    # (2) Remover NEXIA de <title> mantendo o resto do conteúdo
-    # Para <title>: remover NEXIA mas manter o resto do conteúdo (ex: <title>Meu Projeto NEXIA</title> → <title>Meu Projeto</title>)
-    sed -E -i 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file"
+    # (2) Substituir <title> contendo NEXIA por <title>Cortex</title>
+    # Para <title>: substituir por Cortex quando encontrar NEXIA (ex: <title>Meu Projeto NEXIA</title> → <title>Cortex</title>)
+    sed -E -i 's/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/g' "$file"
     
-    # (3) Remover NEXIA de og:site_name mantendo o resto do conteúdo
-    # Para og:site_name: remover NEXIA mas manter o resto do conteúdo (ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site")
-    sed -E -i 's/og:site_name="([^"]*)NEXIA([^"]*)"/og:site_name="\1\2"/g' "$file"
-    sed -E -i 's/property="og:site_name" content="([^"]*)NEXIA([^"]*)"/property="og:site_name" content="\1\2"/g' "$file"
+    # (3) Substituir og:site_name contendo NEXIA por og:site_name="Cortex"
+    # Para og:site_name: substituir por Cortex quando encontrar NEXIA (ex: og:site_name="Meu Site NEXIA" → og:site_name="Cortex")
+    sed -E -i 's/og:site_name="[^"]*NEXIA[^"]*"/og:site_name="Cortex"/g' "$file"
+    
+    # (4) Substituir property="og:site_name" content="...NEXIA..." por property="og:site_name" content="Cortex"
+    sed -E -i 's/property="og:site_name" content="[^"]*NEXIA[^"]*"/property="og:site_name" content="Cortex"/g' "$file"
 }
 
 # Função para processar diretórios recursivamente
@@ -60,7 +61,7 @@ echo "Limpeza concluída!"
 
 # Verificar se ainda existem ocorrências de NEXIA em títulos
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit viajante-pro 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
     echo "AVISO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     exit 1
 else
