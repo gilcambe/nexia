@@ -1,3 +1,36 @@
 {
-  "services": [{ "binding": "SELF", "service": "nexia" }]
+  "$schema": "https://json.schemastore.org/wrangler",
+  "name": "nexia",
+  "main": "cloudflare/worker.js",
+  "compatibility_date": "2024-03-20",
+  "services": [{ "binding": "SELF", "service": "nexia" }],
+  "assets": {
+    "directory": "dist",
+    "binding": "ASSETS"
+  },
+  "triggers": {
+    "crons": [
+      "*/5 * * * *"
+    ]
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "VAZAO_CONTROLLER",
+        "class_name": "VazaoController"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": [
+        "VazaoController"
+      ]
+    }
+  ],
+  "vars": {
+    "NODE_ENV": "production"
+  },
+  "keep_vars": true
 }
