@@ -10,6 +10,12 @@
 #
 # Processa cada arquivo uma única vez com múltiplas expressões sed.
 # Executa verificação final ao término.
+#
+# NOTAS:
+# - O script usa sed com múltiplas expressões (-e) para aplicar todas as substituições
+#   em uma única passagem por arquivo, otimizando o desempenho.
+# - A verificação final usa grep para garantir que não restou nenhum NEXIA em
+#   <title> ou og:site_name nos diretórios processados.
 
 set -euo pipefail
 
@@ -27,13 +33,12 @@ for dir in $DIRECTORIES; do
         echo "Processando diretório: $dir"
         find "$dir" -type f \( -name "*.html" -o -name "*.htm" \) -print0 | while IFS= read -r -d '' file; do
             # Aplica todas as substituições em uma única passagem de sed para otimizar
+            # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
             sed -i \
                 -e 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' \
-                -e 's/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/gi' \
-                -e 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' \
-                -e 's/<title>\s*<\/title>/<title>Cortex<\/title>/gi' \
+                -e "s/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/gi" \
+                -e "s/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/gi" \
                 -e "s/og:site_name='\([^']*\)NEXIA\([^']*\)'/og:site_name='\1\2'/gi" \
-                -e "s/og:site_name='\s*'/og:site_name='Cortex'/gi" \
                 "$file"
         done
     else
