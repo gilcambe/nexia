@@ -79,43 +79,17 @@ process_directories() {
 echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 
-# Buscar em todos os diretórios processados
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html $DIRECTORIES 2>/dev/null; then
+# Comando exato conforme solicitado no pedido (sem viajante-pro)
+if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai 2>/dev/null; then
     echo ""
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
-    grep -rnE "<title>[^<]*NEXIA" --include=*.html $DIRECTORIES 2>/dev/null
+    grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai 2>/dev/null
     echo ""
     echo "Por favor, revise os arquivos e tente novamente."
     exit 1
 else
     echo "✓ Nenhuma ocorrência de NEXIA encontrada em títulos."
-fi
-
-# Verificar se ainda existem ocorrências de NEXIA em og:site_name
-if grep -rnE "og:site_name.*NEXIA" --include=*.html $DIRECTORIES 2>/dev/null; then
-    echo ""
-    echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em og:site_name:"
-    echo ""
-    grep -rnE "og:site_name.*NEXIA" --include=*.html $DIRECTORIES 2>/dev/null
-    echo ""
-    echo "Por favor, revise os arquivos e tente novamente."
-    exit 1
-else
-    echo "✓ Nenhuma ocorrência de NEXIA encontrada em og:site_name."
-fi
-
-# Verificar se ainda existem ocorrências de NEXIA em property="og:site_name"
-if grep -rnE 'property="og:site_name".*NEXIA' --include=*.html $DIRECTORIES 2>/dev/null; then
-    echo ""
-    echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em property="og:site_name":"
-    echo ""
-    grep -rnE 'property="og:site_name".*NEXIA' --include=*.html $DIRECTORIES 2>/dev/null
-    echo ""
-    echo "Por favor, revise os arquivos e tente novamente."
-    exit 1
-else
-    echo "✓ Nenhuma ocorrência de NEXIA encontrada em property="og:site_name"."
 fi
 
 # --- EXECUÇÃO ---
