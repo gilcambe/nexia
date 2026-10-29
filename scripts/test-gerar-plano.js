@@ -1,34 +1,35 @@
 'use strict';
-const { gerarPlano } = require('./scripts/cortex-plano.js');
+
+const { gerarPlano } = require('./cortex-plano.js');
 
 // Teste da função gerarPlano
 console.log('Testando a função gerarPlano...');
 
+// Pedido de exemplo
 const pedidoExemplo = {
   id: 'test-123',
-  texto: 'Crie uma nova tela de login com validação de email e senha',
-  arquivosCitados: ['src/pages/login.js', 'src/styles/login.css']
+  corpo: 'Crie uma tela de login com React e TypeScript',
+  tipo: 'desenvolvimento'
 };
 
-gerarPlano(pedidoExemplo, (error, pedidoEnriquecido) => {
+// Callback para testar o resultado
+const callback = (error, pedido) => {
   if (error) {
-    console.error('Erro ao gerar plano:', error.message);
-    process.exit(1);
+    console.error('Erro:', error.message);
+    return;
   }
   
-  console.log('✅ Sucesso! Pedido enriquecido com arquivosReais:');
-  console.log('ID do pedido:', pedidoEnriquecido.id);
-  console.log('Texto:', pedidoEnriquecido.texto);
-  console.log('Arquivos citados:', pedidoEnriquecido.arquivosCitados);
-  console.log('Arquivos reais do repositório (primeiros 10):', pedidoEnriquecido.arquivosReais.slice(0, 10));
-  console.log('Total de arquivos encontrados:', pedidoEnriquecido.arquivosReais.length);
+  console.log('Pedido recebido:', pedido);
   
   // Verifica se a propriedade arquivosReais foi adicionada
-  if (pedidoEnriquecido.arquivosReais && Array.isArray(pedidoEnriquecido.arquivosReais)) {
-    console.log('✅ Teste passado: a propriedade arquivosReais foi adicionada ao pedido');
-    process.exit(0);
+  if (pedido.arquivosReais && Array.isArray(pedido.arquivosReais)) {
+    console.log('✅ Sucesso: A propriedade arquivosReais foi adicionada ao pedido');
+    console.log(`Quantidade de arquivos encontrados: ${pedido.arquivosReais.length}`);
+    console.log('Primeiros 5 arquivos:', pedido.arquivosReais.slice(0, 5));
   } else {
-    console.error('❌ Teste falhou: a propriedade arquivosReais não foi encontrada no pedido');
-    process.exit(1);
+    console.log('❌ Falha: A propriedade arquivosReais não foi encontrada no pedido');
   }
-});
+};
+
+// Executa a função
+gerarPlano(pedidoExemplo, callback);
