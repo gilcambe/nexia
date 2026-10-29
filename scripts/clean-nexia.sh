@@ -4,7 +4,7 @@
 #
 # Requisitos:
 #   (1) "NEXIA CORTEX — Plataforma de IA"  →  "Cortex — Plataforma de IA"
-#   (2) <title> ou og:site_name contendo "NEXIA CORTEX" → substituído por "Cortex"
+#   (2) <title> ou og:site_name contendo "NEXIA" → substituído por "Cortex"
 #   (3) remover apenas a palavra "NEXIA" (isolada) de outros atributos/textos dentro de
 #       <title> ou og:site_name, mantendo o restante do conteúdo
 #
@@ -37,23 +37,19 @@ for dir in $DIRECTORIES; do
             # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
             sed -i.nexia-backup 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
             
-            # Passo 2: Substituir "NEXIA CORTEX" por "Cortex" em <title> e og:site_name
-            sed -i.nexia-backup 's/<title>\([^<]*\)NEXIA CORTEX\([^<]*\)<\/title>/<title>\1Cortex\2<\/title>/gi' "$file"
-            sed -i.nexia-backup 's/<title>NEXIA CORTEX<\/title>/<title>Cortex<\/title>/gi' "$file"
-            sed -i.nexia-backup 's/og:site_name=["'\'']?\([^"'\'']*\)NEXIA CORTEX\([^"'\'']*\)["'\'']?/og:site_name="\1Cortex\2"/gi' "$file"
-            sed -i.nexia-backup 's/og:site_name=["'\'']?NEXIA CORTEX["'\'']?/og:site_name="Cortex"/gi' "$file"
+            # Passo 2: Substituir "NEXIA" por "Cortex" em <title> e og:site_name (quando for a única palavra)
+            sed -i.nexia-backup 's/<title>\bNEXIA\b<\/title>/<title>Cortex<\/title>/gi' "$file"
+            sed -i.nexia-backup 's/og:site_name=["'\'']?\bNEXIA\b["'\'']?/og:site_name="Cortex"/gi' "$file"
             
             # Passo 3: Remover apenas a palavra "NEXIA" (isolada) de <title> mantendo o restante
             sed -i.nexia-backup 's/<title>\([^<]*\)\bNEXIA\b\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
             sed -i.nexia-backup 's/<title>\bNEXIA\b\([^<]*\)<\/title>/<title>\1<\/title>/gi' "$file"
             sed -i.nexia-backup 's/<title>\([^<]*\)\bNEXIA\b<\/title>/<title>\1<\/title>/gi' "$file"
-            sed -i.nexia-backup 's/<title>\bNEXIA\b<\/title>/<title>Cortex<\/title>/gi' "$file"
             
             # Passo 4: Remover apenas a palavra "NEXIA" (isolada) de og:site_name mantendo o restante
             sed -i.nexia-backup 's/og:site_name=["'\'']?\([^"'\'']*\)\bNEXIA\b\([^"'\'']*\)["'\'']?/og:site_name="\1\2"/gi' "$file"
             sed -i.nexia-backup 's/og:site_name=["'\'']?\bNEXIA\b\([^"'\'']*\)["'\'']?/og:site_name="Cortex\1"/gi' "$file"
             sed -i.nexia-backup 's/og:site_name=["'\'']?\([^"'\'']*\)\bNEXIA\b["'\'']?/og:site_name="\1"/gi' "$file"
-            sed -i.nexia-backup 's/og:site_name=["'\'']?\bNEXIA\b["'\'']?/og:site_name="Cortex"/gi' "$file"
             
             # Remover backup temporário
             rm -f "$file.nexia-backup"
