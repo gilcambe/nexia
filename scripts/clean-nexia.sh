@@ -36,9 +36,10 @@ for dir in $DIRECTORIES; do
             # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
             sed -i \
                 -e 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' \
-                -e "s/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/gi" \
                 -e "s/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/gi" \
                 -e "s/og:site_name='\([^']*\)NEXIA\([^']*\)'/og:site_name='\1\2'/gi" \
+                -e "s/og:site_name="\([^"]*\)NEXIA\([^"]*\)"/og:site_name="\1\2"/gi" \
+                -e "s/og:site_name=([^)]*NEXIA[^)]*)/og:site_name=\1/g" \
                 "$file"
         done
     else
