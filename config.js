@@ -6,10 +6,14 @@ export default function ConfigLocalAI() {
   const [verificando, setVerificando] = useState(false);
   const [modalAvisoDownload, setModalAvisoDownload] = useState(false);
   const [modalIncompativel, setModalIncompativel] = useState<{ aberto: boolean; motivo: string }>({ aberto: false, motivo: '' });
+  const [suporteWebGPU, setSuporteWebGPU] = useState<{ suportado: boolean; motivo?: string } | null>(null);
 
   useEffect(() => {
     const atual = obterConfig();
     setConfig(atual);
+
+    // Verifica suporte a WebGPU ao montar o componente
+    verificarSuporteWebGPU().then(setSuporteWebGPU);
   }, []);
 
   const handleToggle = async (e: React.ChangeEvent<HTMLInputElement>) => {
