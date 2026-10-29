@@ -159,6 +159,7 @@ export default function MemorySettings() {
                 aria-checked={iaLocalAtivo}
                 aria-label="IA no meu aparelho"
                 aria-disabled={iaLocalBloqueado || !iaLocalSuportado}
+                aria-describedby="ia-local-desc ia-local-aviso"
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${iaLocalAtivo && iaLocalSuportado ? 'translate-x-6' : 'translate-x-1'}`}
