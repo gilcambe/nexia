@@ -11,7 +11,7 @@ const NOTA_MIN = 8;
 const MARCA = (sha) => `<!-- review-pr ${sha} -->`;
 
 // Arquivos que nunca recebem 'automerge' pelo revisor automático.
-const RESTritos = /^(\.github\/|firestore\.rules|firestore\.indexes|storage\.rules|\.env|wrangler|package(-lock)?\.json|cloudflare\/(worker|app)\.js|lib\/firebase-lite|sites\/[^/]+\/dados)|(secret|credential|auth|login|senha|\.pem$|\.key$)/i;
+const PROIBIDO = /^(\.github\/|firestore\.rules|firestore\.indexes|storage\.rules|\.env|wrangler|package(-lock)?\.json|cloudflare\/(worker|app)\.js|lib\/firebase-lite|sites\/[^/]+\/dados)|(secret|credential|auth|login|senha|\.pem$|\.key$)/i;
 
 const SISTEMA = `Você é um revisor de código rigoroso do projeto NEXIA.
 Regras do dono que o PR NÃO pode quebrar:
