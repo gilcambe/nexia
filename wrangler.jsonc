@@ -3,7 +3,12 @@
   "name": "nexia",
   "main": "cloudflare/worker.js",
   "compatibility_date": "2024-03-20",
-  "services": [{ "binding": "SELF", "service": "nexia" }],
+  "services": [
+    {
+      "binding": "SELF",
+      "service": "nexia"
+    }
+  ],
   "assets": {
     "directory": "dist",
     "binding": "ASSETS"
