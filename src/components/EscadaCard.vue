@@ -40,12 +40,8 @@
 
       <div class="numeros">
         <div class="numero">
-          <span class="rotulo">Fila pendente</span>
-          <span class="valor">{{ fila.pendentes }}</span>
-        </div>
-        <div class="numero">
-          <span class="rotulo">Fila processando</span>
-          <span class="valor">{{ fila.processando }}</span>
+          <span class="rotulo">Fila</span>
+          <span class="valor">{{ fila }}</span>
         </div>
       </div>
 
@@ -68,7 +64,7 @@ export default {
       carregando: true,
       erro: null,
       barras: { cortex: 0, iasGratis: 0, claude: 0 },
-      fila: { pendentes: 0, processando: 0 },
+      fila: 0,
       jules: 0,
       faseB: false
     };
@@ -78,7 +74,7 @@ export default {
       this.carregando = true;
       this.erro = null;
       try {
-        const resposta = await fetch('/escada');
+        const resposta = await fetch('/api/escada');
         if (!resposta.ok) throw new Error('Falha ao buscar Escada');
         const dados = await resposta.json();
         this.barras = {
@@ -86,10 +82,7 @@ export default {
           iasGratis: dados.semana?.iasGratis ?? 0,
           claude: dados.semana?.claude ?? 0
         };
-        this.fila = {
-          pendentes: dados.fila?.pendentes ?? 0,
-          processando: dados.fila?.processando ?? 0
-        };
+        this.fila = Number(dados.fila) || 0;
         this.jules = dados.jules ?? 0;
         this.faseB = !!dados.faseB;
       } catch (e) {
