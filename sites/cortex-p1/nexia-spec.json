@@ -1,18 +1,18 @@
 {
   "spec": {
     "kind": "site",
-    "name": "Cortex-p1",
-    "tagline": "Tecnologia que impulsiona o seu negócio",
-    "photo_theme": "technology office",
-    "description": "Institucional da Cortex-p1: soluções digitais, automação e consultoria para empresas que querem escalar com inteligência.",
+    "name": "Cortex Systems",
+    "tagline": "Tecnologia para o seu negócio crescer.",
+    "photo_theme": "tech office",
+    "description": "Agência digital especializada em desenvolvimento web, apps mobile e consultoria de TI para empresas de todos os tamanhos.",
     "folder": "sites/cortex-p1",
     "fonts": {
       "heading": "Outfit",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#1e3a8a",
-      "accent": "#38bdf8",
+      "primary": "#0e64e5",
+      "accent": "#00d4ff",
       "bg": "#f8fafc",
       "surface": "#ffffff",
       "text": "#0f172a",
@@ -22,12 +22,12 @@
     "style": "modern",
     "contact": {
       "whatsapp": "5511900000000",
-      "phone": "(11) 90000-0000",
-      "email": "contato@cortexp1.com.br",
+      "phone": "(11) 3000-0000",
+      "email": "contato@cortexsystems.com.br",
       "address": "Av. Paulista, 1000",
       "city": "São Paulo - SP",
       "hours": "Seg a sex, 9h às 18h",
-      "instagram": "cortexp1",
+      "instagram": "cortexsystems",
       "facebook": "",
       "youtube": "",
       "tiktok": "",
@@ -45,59 +45,59 @@
     "sections": [
       {
         "type": "hero",
-        "id": "sistemas-que-pensam-pelo-seu-negocio",
-        "title": "Sistemas que pensam pelo seu negócio",
-        "subtitle": "Desenvolvemos software sob medida, automação de processos e inteligência aplicada para times crescerem com menos esforço.",
-        "eyebrow": "Cortex-p1",
+        "id": "cortex-systems",
+        "title": "Cortex Systems",
+        "subtitle": "Desenvolvimento de software que impulsiona resultados reais.",
+        "eyebrow": "Soluções digitais",
         "cta": {
-          "label": "Falar com especialista",
+          "label": "Fale conosco",
           "href": "whatsapp"
         },
         "cta2": {
-          "label": "Ver cases",
+          "label": "Conheça nossos serviços",
           "href": "#servicos"
         },
-        "image_query": "modern office team working laptops",
-        "video_query": "office technology"
+        "image_query": "modern office tech team",
+        "video_query": "tech company office"
       },
       {
         "type": "services",
         "id": "servicos",
-        "title": "Nossos serviços",
-        "subtitle": "Do diagnóstico à entrega em produção.",
+        "title": "Nossos Serviços",
+        "subtitle": "Do desenvolvimento à consultoria.",
         "items": [
           {
-            "title": "Desenvolvimento de Software",
-            "text": "Sistemas web e mobile feitos sob medida.",
-            "price": "a partir de R$ 15.000",
-            "image_query": "developer coding laptop",
-            "tag": "",
-            "url": "",
-            "icon": ""
-          },
-          {
-            "title": "Automação de Processos",
-            "text": "Elimine tarefas repetitivas com bots e integrações.",
-            "price": "",
-            "image_query": "automation workflow dashboard",
-            "tag": "",
-            "url": "",
-            "icon": ""
-          },
-          {
-            "title": "Inteligência Artificial",
-            "text": "Modelos treinados para sua operação.",
-            "price": "",
-            "image_query": "ai robot brain digital",
+            "title": "Desenvolvimento Web",
+            "text": "Sites e sistemas sob medida para sua marca.",
+            "price": "a partir de R$ 4.500",
+            "image_query": "web development coding",
             "tag": "",
             "url": "",
             "icon": ""
           },
           {
             "title": "Consultoria de TI",
-            "text": "Estratégia, arquitetura e governança de dados.",
+            "text": "Estratégia e infraestrutura para escalar com segurança.",
             "price": "",
-            "image_query": "consultant meeting whiteboard",
+            "image_query": "it consulting meeting",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Apps Mobile",
+            "text": "Aplicativos iOS e Android focados em conversão.",
+            "price": "",
+            "image_query": "mobile app design",
+            "tag": "",
+            "url": "",
+            "icon": ""
+          },
+          {
+            "title": "Cloud & Segurança",
+            "text": "Hospedagem em nuvem e proteção de dados.",
+            "price": "",
+            "image_query": "cloud security server",
             "tag": "",
             "url": "",
             "icon": ""
@@ -106,44 +106,52 @@
       },
       {
         "type": "about",
-        "id": "sobre-a-cortex-p1",
-        "title": "Sobre a Cortex-p1",
-        "subtitle": "Criada para transformar empresas com tecnologia acessível e entrega rápida.",
-        "text": "Criada para transformar empresas com tecnologia acessível e entrega rápida.",
-        "image_query": "modern tech office interior",
+        "id": "sobre-a-cortex",
+        "title": "Sobre a Cortex",
+        "subtitle": "Transformamos ideias em produtos digitais com desempenho, design e suporte próximo.",
+        "text": "Transformamos ideias em produtos digitais com desempenho, design e suporte próximo.",
+        "image_query": "modern tech workspace",
         "stats": [
           {
             "value": "5+",
             "label": "anos"
           },
           {
-            "value": "100+",
+            "value": "50+",
             "label": "projetos"
           },
           {
-            "value": "98%",
-            "label": "retenção"
+            "value": "100%",
+            "label": "satisfação"
           }
         ]
       },
       {
         "type": "gallery",
-        "id": "nosso-dia-a-dia",
-        "title": "Nosso dia a dia",
+        "id": "nosso-espaco",
+        "title": "Nosso Espaço",
         "subtitle": "",
         "image_queries": [
-          "team brainstorming office",
-          "developers coding",
-          "server room rack",
-          "person using tablet",
-          "agile standup meeting",
-          "office coworking space",
-          "digital interface design",
-          "handshake business partnership"
+          "modern tech office",
+          "team working laptop",
+          "code review meeting",
+          "data center server",
+          "software engineering workspace",
+          "digital agency meeting",
+          "programming workspace",
+          "office collaboration"
         ],
         "gif_queries": [
-          "coding animation"
+          "tech coding animation"
         ]
+      },
+      {
+        "type": "video",
+        "id": "conheca-a-cortex",
+        "title": "Conheça a Cortex",
+        "subtitle": "Veja como transformamos ideias em software.",
+        "youtube": "",
+        "video_query": "tech company office"
       },
       {
         "type": "testimonials",
@@ -152,21 +160,21 @@
         "subtitle": "",
         "items": [
           {
-            "name": "Marina Souza",
+            "name": "Marina S.",
             "role": "",
-            "text": "Entregaram o sistema em tempo recorde.",
+            "text": "O site ficou além do esperado.",
             "rating": 5
           },
           {
-            "name": "Lucas Almeida",
+            "name": "Ricardo T.",
             "role": "",
-            "text": "Automação que economizou horas por semana.",
+            "text": "Aplicativo entregue no prazo e funcionando perfeitamente.",
             "rating": 5
           },
           {
-            "name": "Fernanda Costa",
+            "name": "Luciana P.",
             "role": "",
-            "text": "Suporte excelente e atendimento humano.",
+            "text": "Suporte ágil e equipe muito competente.",
             "rating": 5
           }
         ]
@@ -178,37 +186,27 @@
         "subtitle": "",
         "items": [
           {
+            "q": "Quais tecnologias vocês usam?",
+            "a": "Trabalhamos com stacks modernas como React, Vue, Node.js, Flutter e serviços em nuvem."
+          },
+          {
             "q": "Quanto tempo leva um projeto?",
-            "a": "Depende da complexidade, geralmente de 4 a 12 semanas."
+            "a": "Depende da complexidade, mas projetos médios ficam prontos entre 4 e 8 semanas."
           },
           {
-            "q": "Vocês dão suporte após a entrega?",
-            "a": "Sim, planos de manutenção mensal incluídos."
+            "q": "Dão suporte após a entrega?",
+            "a": "Sim, oferecemos planos de manutenção e suporte contínuo."
           },
           {
-            "q": "Trabalham com qual stack?",
-            "a": "React, Node.js, Python e tecnologias modernas de nuvem."
-          },
-          {
-            "q": "É possível integrar com meus sistemas atuais?",
-            "a": "Sim, conectamos via APIs com ERPs, CRMs e e-commerces."
+            "q": "Atendem pequenas empresas?",
+            "a": "Sim, temos pacotes acessíveis para empreendedores e negócios locais."
           }
         ]
       },
       {
-        "type": "cta",
-        "id": "quer-evoluir-sua-operacao",
-        "title": "Quer evoluir sua operação?",
-        "subtitle": "Agende uma conversa sem compromisso.",
-        "cta": {
-          "label": "Falar pelo WhatsApp",
-          "href": "whatsapp"
-        }
-      },
-      {
         "type": "links",
-        "id": "acessos-rapidos",
-        "title": "Acessos rápidos",
+        "id": "links-uteis",
+        "title": "Links úteis",
         "subtitle": "",
         "items": [
           {
@@ -218,20 +216,30 @@
           },
           {
             "label": "Instagram",
-            "url": "https://instagram.com/cortexp1",
+            "url": "https://instagram.com/cortexsystems",
             "icon": "instagram"
           },
           {
             "label": "LinkedIn",
-            "url": "https://linkedin.com/company/cortexp1",
+            "url": "https://linkedin.com/company/cortex-systems",
             "icon": "linkedin"
           },
           {
-            "label": "YouTube",
-            "url": "https://youtube.com/@cortexp1",
-            "icon": "youtube"
+            "label": "Portfólio",
+            "url": "https://cortexsystems.com.br",
+            "icon": "link"
           }
         ]
+      },
+      {
+        "type": "cta",
+        "id": "pronto-para-comecar",
+        "title": "Pronto para começar?",
+        "subtitle": "Fale com nossa equipe pelo WhatsApp.",
+        "cta": {
+          "label": "Chamar no WhatsApp",
+          "href": "whatsapp"
+        }
       },
       {
         "type": "contact",
@@ -244,93 +252,62 @@
     ]
   },
   "media": {
-    "s0.hero": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/TechnologyHub_2020_Office_Space_Cubicles.jpg/1280px-TechnologyHub_2020_Office_Space_Cubicles.jpg",
-      "width": 1280,
-      "height": 853,
-      "alt": "TechnologyHub 2020 Office Space Cubicles",
-      "credit": "TechnologyHub 2020 Office Space Cubicles — Missionedit (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s1.item0": {
-      "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTExL2ZsNTE5NTU5NzE5NzctaW1hZ2UuanBn.jpg",
-      "width": 4000,
-      "height": 2661,
-      "alt": "Greenville Police's Technology Officer A.F",
-      "credit": "Greenville Police's Technology Officer A.F — autor desconhecido (CC0 1.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s1.item1": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/S2S_Technologies_Office_-_Inside.jpg/1280px-S2S_Technologies_Office_-_Inside.jpg",
-      "width": 1280,
-      "height": 720,
-      "alt": "S2S Technologies Office - Inside",
-      "credit": "S2S Technologies Office - Inside — S2S Technologies (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s1.item2": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Gigaworkz_Technologies_Office_At_Sugbutel_Bldg.JPG/1280px-Gigaworkz_Technologies_Office_At_Sugbutel_Bldg.JPG",
-      "width": 1280,
-      "height": 960,
-      "alt": "Gigaworkz Technologies Office At Sugbutel Bldg",
-      "credit": "Gigaworkz Technologies Office At Sugbutel Bldg — Gibson Torreon C (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s1.item3": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/TVSR_Technologies_Office.jpg/1280px-TVSR_Technologies_Office.jpg",
-      "width": 1280,
-      "height": 843,
-      "alt": "TVSR Technologies Office",
-      "credit": "TVSR Technologies Office — Amarnathreddy528 (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s2.about": {
-      "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTExL2ZsNTE5NTU5NzI1NjItaW1hZ2UuanBn.jpg",
-      "width": 4000,
-      "height": 2665,
-      "alt": "Greenville Police's Technology Officer A.F",
-      "credit": "Greenville Police's Technology Officer A.F — autor desconhecido (CC0 1.0, via Openverse)",
-      "provider": "openverse"
-    },
     "s3.g0": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Seagate_Technology_Office_-_Shakopee%2C_Minnesota.jpg/1280px-Seagate_Technology_Office_-_Shakopee%2C_Minnesota.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Modern_Day_Marine_2015_150923-N-PO203-205.jpg/1280px-Modern_Day_Marine_2015_150923-N-PO203-205.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "width": 1280,
-      "height": 886,
-      "alt": "Seagate Technology Office - Shakopee, Minnesota",
-      "credit": "Seagate Technology Office - Shakopee, Minnesota — Tony Webster (BY-SA 2.0, via Openverse)",
-      "provider": "openverse"
+      "height": 852,
+      "alt": "150923-N-PO203-205 QUANTICO, Virginia (Jun. 3, 2015) Electronics Technician Mast",
+      "credit": "John Williams (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
     },
     "s3.g1": {
-      "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTExL2ZsNTE5NTY5NjExMzEtaW1hZ2UuanBn.jpg",
-      "width": 4000,
-      "height": 2661,
-      "alt": "Greenville Police's Technology Officer A.F",
-      "credit": "Greenville Police's Technology Officer A.F — autor desconhecido (CC0 1.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s3.g2": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Mayor_Eric_Garcetti_looks_on_as_Chief_Innovation_and_Technology_Officer%2C_Peter_Marx%2C_discusses_the_salience_of_the_TechLA_Initiative_to_the_future_prosperity_and_welfare_Los_Angeles_%2814197806270%29.jpg/1280px-Mayor_Eric_Garcetti_looks_on_as_Chief_Innovation_and_Technology_Officer%2C_Peter_Marx%2C_discusses_the_salience_of_the_TechLA_Initiative_to_the_future_prosperity_and_welfare_Los_Angeles_%2814197806270%29.jpg",
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/86/Day_342_-_West_Midlands_Police_-_Student_Laptop_safety_%288251738935%29.jpg/1280px-Day_342_-_West_Midlands_Police_-_Student_Laptop_safety_%288251738935%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "width": 1280,
       "height": 960,
-      "alt": "File:Mayor Eric Garcetti looks on as Chief Innovation and Technology Officer, Pe",
-      "credit": "File:Mayor Eric Garcetti looks on as Chief Innovation and Technology Officer, Peter Marx, discusses the salien",
-      "provider": "openverse"
+      "alt": "Officers in Coventry have been working with students to ensure laptops have trac",
+      "credit": "West Midlands Police from West Midlands, United Kingdom (CC BY-SA 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
     },
-    "s3.g3": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/FUT.Minna_School_of_Agric_Technology_Offices.jpg/1280px-FUT.Minna_School_of_Agric_Technology_Offices.jpg",
+    "s3.g2": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1f/Wikimedia_Code_Review_Meeting.jpg/1280px-Wikimedia_Code_Review_Meeting.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1251,
+      "alt": "The Wikimedia tech team during the monthly code review meeting at the Wikimedia ",
+      "credit": "Matthew (WMF) (CC BY-SA 3.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g7": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/49/Collaboration_with_Armenian_Education_Foundation_at_WMAM_office%2C_December_2018_01.jpg/1280px-Collaboration_with_Armenian_Education_Foundation_at_WMAM_office%2C_December_2018_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "width": 1280,
       "height": 853,
-      "alt": "FUT.Minna School of Agric Technology Offices",
-      "credit": "FUT.Minna School of Agric Technology Offices — Baleegraphy (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
+      "alt": "Collaboration with Armenian Education Foundation at WMAM office, December 2018",
+      "credit": "Dato (WMAM) (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
     },
-    "s3.g4": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/FUT.Minna_School_of_Innovative_Technology_Offices.jpg/1280px-FUT.Minna_School_of_Innovative_Technology_Offices.jpg",
+    "s4.clip": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/5/59/February_2024_Future_Audiences_office_hours.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "width": 1280,
+      "height": 770,
+      "alt": "Recording of October 2023 Future Audiences open community office hours. Project ",
+      "credit": "LWyatt (WMF) (CC BY-SA 4.0, via Wikimedia Commons)",
+      "provider": "wikimedia",
+      "mime": "video/webm"
+    },
+    "s0.hero": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b7/Phd_Student_Working_In_Light_During_The_Gstreamer_Spring_2018_Hackfest_%28257698691%29.jpeg/1280px-Phd_Student_Working_In_Light_During_The_Gstreamer_Spring_2018_Hackfest_%28257698691%29.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
       "width": 1280,
       "height": 853,
-      "alt": "FUT.Minna School of Innovative Technology Offices",
-      "credit": "FUT.Minna School of Innovative Technology Offices — Baleegraphy (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
+      "alt": "500px provided description: * [#people ,#technology]",
+      "credit": "Oliver Propst (CC BY-SA 3.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s2.about": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fc/President_Ronald_Reagan_Meeting_with_Special_Review_Board_Tower_Commission_with_John_Tower_Brent_Scowcroft_Edmund_Muskie_in_Oval_Office_-_DPLA_-_63bb1be0b13724ab3395696dc3c2ca3d.jpg/1280px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 855,
+      "alt": "President Ronald Reagan Meeting with Special Review Board Tower Commission with ",
+      "credit": "President (1981-1989 : Reagan). White House Photographic Office. 1981-1989 (Public domain, via Wikimedia Commo",
+      "provider": "wikimedia"
     }
   }
 }
