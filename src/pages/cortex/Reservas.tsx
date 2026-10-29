@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiPath } from "@/config/env";
+import { Cartao } from "./ui";
 
 // #802: contas de reserva do Cortex (Conexões do Cortex e aba Cortex da Central). Mostra "ligada" ou "não ligada"
 // só pelo NOME do segredo no GitHub (o valor nunca sai de lá), com o passo a passo de 3 linhas para ligar.
@@ -25,10 +26,11 @@ export default function ContasReserva() {
     })();
     return () => { vivo = false; };
   }, [getToken]);
+  const resumo = !d ? "Verificando…" : `${d.contas.length} conta(s)`;
+
   return (
-    <div className="rounded-2xl border border-[var(--cx-line,#26262f)] p-4" data-testid="cx-reservas">
-      <p className="font-medium">Contas de reserva</p>
-      <p className="text-sm opacity-70 mt-1">Entram quando as IAs do dia acabam. Só as grátis devem ficar ligadas.</p>
+    <Cartao titulo="Contas de reserva" icone="chave" resumo={resumo} data-testid="cx-reservas">
+      <p className="text-sm opacity-70">Entram quando as IAs do dia acabam. Só as grátis devem ficar ligadas.</p>
       {erro && <p className="text-sm text-red-400 mt-2" role="alert">{erro}</p>}
       {!d && !erro && <p className="text-sm opacity-70 mt-2">Verificando…</p>}
       {d?.semAcesso && <p className="text-sm mt-2">O token da Central não pode ler os nomes dos segredos. Dê ao NEXIA_JOBS_TOKEN a permissão "Secrets: Read".</p>}
@@ -42,7 +44,7 @@ export default function ContasReserva() {
           </button>
           {aberta === c.id && <ol className="list-decimal ml-5 mt-2 text-sm opacity-80 space-y-1">{c.passos.map((p) => <li key={p}>{p}</li>)}</ol>}
         </li>
-      ))}</ul>
-    </div>
+      ))}      </ul>
+    </Cartao>
   );
 }
