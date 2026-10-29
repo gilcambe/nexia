@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { Icone } from "../pages/central/icones";
+import { NaFolha, Compacto } from "../pages/central/celular";
 
 // Tela cheia por cima de tudo, com "voltar".
 // Detecta quando a tela é fechada SEM usar o botão voltar (popstate, tecla de voltar do celular,
@@ -35,7 +36,11 @@ export function Folha({ titulo, fechar, acao, children }: { titulo: string; fech
         {acao && <div className="shrink-0 pr-2">{acao}</div>}
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))]">
-        {children}
+        <NaFolha.Provider value={true}>
+          <Compacto.Provider value={false}>
+            {children}
+          </Compacto.Provider>
+        </NaFolha.Provider>
       </div>
     </div>
   );
