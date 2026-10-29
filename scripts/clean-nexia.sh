@@ -56,7 +56,7 @@ echo ""
 echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
     echo ""
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
