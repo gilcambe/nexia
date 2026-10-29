@@ -172,23 +172,12 @@ function AvisosCelular() {
 
 export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema; mudarTema: (t: Tema) => void; email: string; instalar: (() => void) | null; sair: () => void }) {
   const op: { id: Tema; nome: string }[] = [{ id: "auto", nome: "Automático" }, { id: "escuro", nome: "Escuro" }, { id: "claro", nome: "Claro" }];
-  const [iaNoAparelho, setIaNoAparelho] = useState(false);
-  const [bloqueio, setBloqueio] = useState<{ tipo: "webgpu" | "memoria" | null }>(null);
-  const [downloadMsg, setDownloadMsg] = useState<string | null>(null);
-  const podeWebGPU = typeof window !== "undefined" && typeof navigator.gpu === "object" && navigator.gpu !== null;
-  const memoriaSuficiente = typeof navigator.deviceMemory === "number" ? navigator.deviceMemory >= 6 : true;
-  const podeLigar = podeWebGPU && memoriaSuficiente;
-  const ligarIaNoAparelho = () => {
-    if (!podeLigar) return;
-    setDownloadMsg("O Cortex vai baixar um modelo de IA (~1 GB) para rodar no seu aparelho, sem precisar de internet. É recomendado usar Wi-Fi para economizar dados.");
-    setTimeout(() => setDownloadMsg(null), 8000);
-  };
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-3">
       <Titulo t="Configurações" s={email} />
       <Cartao><p className="font-medium mb-3">Aparência</p>
         <div className="flex gap-2">{op.map((o) => (
-          <button key={o.id} onClick={() => mudarTema(o.id)} data-testid={`cx-tema-${o.id`}
+          <button key={o.id} onClick={() => mudarTema(o.id)} data-testid={`cx-tema-${o.id}`}
             className={`flex-1 h-11 rounded-xl border text-sm ${tema === o.id ? "border-[var(--cx-ac)] bg-[var(--cx-hover)] font-semibold" : "border-[var(--cx-line)]"}`}>{o.nome}</button>))}</div></Cartao>
       <Cartao><p className="font-medium">App no celular</p>
         <p className="text-sm text-[var(--cx-mut)] mt-1">{instalar ? "Instale o Cortex na tela inicial." : "No Chrome do celular: menu ⋮ → Instalar app (ou Adicionar à tela inicial)."}</p>
