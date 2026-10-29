@@ -32,7 +32,7 @@ export function limparChaves(texto: string): string {
     /sk-[A-Za-z0-9]+/g,
     /AIza[A-Za-z0-9_-]+/g,
     /ghp_[A-Za-z0-9]+/g,
-    /-----BEGIN[\n]+/g
+    /-----BEGIN[^\n]+/g
   ];
   
   let textoLimpo = texto;
