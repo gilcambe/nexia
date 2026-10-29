@@ -21,6 +21,8 @@
     <script>(function(){var h={"cortex.kernex.com.br":"/cortex"}[location.hostname];if(h&&location.pathname==="/")location.replace(h+location.search+location.hash)})()</script>
     <script>if(location.pathname.indexOf("/central")===0){var m=document.querySelector('link[rel="manifest"]');if(m)m.href="/central.webmanifest";var ic=document.querySelector('link[rel="apple-touch-icon"]');if(ic)ic.href="/central-icon-180.png";var fv=document.querySelector('link[rel="icon"]');if(fv)fv.href="/central-icon.svg";window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__ctInstall=e});if("serviceWorker"in navigator)navigator.serviceWorker.register("/central-sw.js",{scope:"/central"}).catch(function(){})}</script>
     <script>if(location.pathname.indexOf("/cortex")===0){document.documentElement.className="cx-boot";window.addEventListener("beforeinstallprompt",function(e){e.preventDefault();window.__cxInstall=e});if("serviceWorker"in navigator)navigator.serviceWorker.register("/cortex-sw.js",{scope:"/cortex"}).catch(function(){})}</script>
+    <!-- Adicionando meta tag para PWA Viajante Pro -->
+    <meta name="theme-color" content="#ffffff" />
   </head>
   <body>
     <div id="root"></div>
