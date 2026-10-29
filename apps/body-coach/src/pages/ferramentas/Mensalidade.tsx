@@ -85,7 +85,7 @@ function Coach({ r, mes, setMes, recarregar }: { r: Extract<Resposta, { papel: '
     <div className="space-y-3">
       {editar ? (
         <Card>
-          <h2 className="font-semibold text-foreground-950">Sua chave Pix</h2>
+          <h2 className="font-semibold text-foreground-900">Sua chave Pix</h2>
           <p className="text-sm text-foreground-600">Os alunos pagam direto para você, sem taxa. Nada de gateway.</p>
           <div className="mt-3 grid gap-2">
             <select value={f.tipo} onChange={(e) => setF({ ...f, tipo: e.target.value as TipoChave })} className={input} aria-label="Tipo de chave">
