@@ -20,6 +20,23 @@
 #   2. Rode: bash scripts/clean-nexia.sh
 #   3. Confirme que o script termina com 'Nenhuma ocorrência de NEXIA encontrada em títulos.'
 #   4. Se houver arquivos alterados, faça commit e abra a PR normalmente.
+#
+# EXECUÇÃO AUTOMÁTICA NA PR:
+# Para adicionar execução automática ao final da PR:
+#   1. Adicione um arquivo .github/workflows/clean-nexia-pr.yml com:
+#      name: Clean NEXIA References
+#      on: pull_request
+#      jobs:
+#        clean:
+#          runs-on: ubuntu-latest
+#          steps:
+#            - uses: actions/checkout@v4
+#            - name: Clean NEXIA references
+#              run: bash scripts/clean-nexia.sh
+#              continue-on-error: true
+#   2. Configure o workflow para rodar apenas quando a PR for criada ou atualizada
+#   3. O script será executado automaticamente antes do merge
+#   4. Se alterações forem feitas, o commit será adicionado automaticamente à PR
 
 # --- VARIAVEIS E DIRETORIOS ---
 
@@ -51,18 +68,17 @@ process_file() {
         changes_made=1
     fi
 
-    # (2) Substitui <title>.*NEXIA.*</title> por <title>Cortex</title>
-    # Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Cortex</title>
-    #    OBS: Remove todo o conteúdo existente do título e substitui por 'Cortex'
-    # Esta regra deve ser executada antes da regra de remoção parcial para garantir que títulos com NEXIA sejam substituídos por 'Cortex'
-    if sed -E -i '' 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/g' "$file" 2>/dev/null; then
+    # (2) Substitui apenas a palavra NEXIA por Cortex dentro de <title>, mantendo o resto
+    # Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Meu Site CORTEX — Plataforma de IA</title>
+    #    OBS: Remove apenas a palavra NEXIA, mantendo o resto do conteúdo do título
+    if sed -E -i '' 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1Cortex\2<\/title>/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
     
-    # (3) Remover apenas a palavra NEXIA de títulos e metadatos, mantendo o restante
+    # (3) Remover apenas a palavra NEXIA de outros atributos ou textos, mantendo o restante
     # Para <title>: remove apenas a palavra NEXIA do conteúdo, mantendo o resto
     # Ex: <title>Meu Site CORTEX — Plataforma de IA</title> → <title>Meu Site CORTEX — Plataforma de IA</title>
-    # Note: Esta regra só aplica se não houver NEXIA em títulos (pois a regra 2 já substituiu)
+    # Note: Esta regra aplica para casos que não foram capturados pela regra 2
     if sed -E -i '' 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
