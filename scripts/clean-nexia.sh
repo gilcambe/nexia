@@ -16,7 +16,7 @@
 
 set -euo pipefail
 
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
 
 echo ""
 echo "=========================================="
@@ -30,33 +30,33 @@ for dir in $DIRECTORIES; do
         echo "Processando diretório: $dir"
         find "$dir" -type f \( -name "*.html" -o -name "*.htm" \) -print0 | while IFS= read -r -d '' file; do
             # Cria backup do arquivo
-            cp "$file" "$file.backup"
+            cp "$file" "$file.nexia-backup"
             
             # Aplica todas as substituições em uma única passagem de sed para otimizar
             
             # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
-            sed -i.bak 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
+            sed -i.nexia-backup 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
             
             # Passo 2: Substituir "NEXIA CORTEX" por "Cortex" em <title> e og:site_name
-            sed -i.bak 's/<title>\([^<]*\)NEXIA CORTEX\([^<]*\)<\/title>/<title>\1Cortex\2<\/title>/gi' "$file"
-            sed -i.bak 's/<title>NEXIA CORTEX<\/title>/<title>Cortex<\/title>/gi' "$file"
-            sed -i.bak 's/og:site_name=["'\'']?\([^"'\'']*\)NEXIA CORTEX\([^"'\'']*\)["'\'']?/og:site_name="\1Cortex\2"/gi' "$file"
-            sed -i.bak 's/og:site_name=["'\'']?NEXIA CORTEX["'\'']?/og:site_name="Cortex"/gi' "$file"
+            sed -i.nexia-backup 's/<title>\([^<]*\)NEXIA CORTEX\([^<]*\)<\/title>/<title>\1Cortex\2<\/title>/gi' "$file"
+            sed -i.nexia-backup 's/<title>NEXIA CORTEX<\/title>/<title>Cortex<\/title>/gi' "$file"
+            sed -i.nexia-backup 's/og:site_name=["'\'']?\([^"'\'']*\)NEXIA CORTEX\([^"'\'']*\)["'\'']?/og:site_name="\1Cortex\2"/gi' "$file"
+            sed -i.nexia-backup 's/og:site_name=["'\'']?NEXIA CORTEX["'\'']?/og:site_name="Cortex"/gi' "$file"
             
             # Passo 3: Remover apenas a palavra "NEXIA" (isolada) de <title> mantendo o restante
-            sed -i.bak 's/<title>\([^<]*\)\bNEXIA\b\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
-            sed -i.bak 's/<title>\bNEXIA\b\([^<]*\)<\/title>/<title>\1<\/title>/gi' "$file"
-            sed -i.bak 's/<title>\([^<]*\)\bNEXIA\b<\/title>/<title>\1<\/title>/gi' "$file"
-            sed -i.bak 's/<title>\bNEXIA\b<\/title>/<title>Cortex<\/title>/gi' "$file"
+            sed -i.nexia-backup 's/<title>\([^<]*\)\bNEXIA\b\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
+            sed -i.nexia-backup 's/<title>\bNEXIA\b\([^<]*\)<\/title>/<title>\1<\/title>/gi' "$file"
+            sed -i.nexia-backup 's/<title>\([^<]*\)\bNEXIA\b<\/title>/<title>\1<\/title>/gi' "$file"
+            sed -i.nexia-backup 's/<title>\bNEXIA\b<\/title>/<title>Cortex<\/title>/gi' "$file"
             
             # Passo 4: Remover apenas a palavra "NEXIA" (isolada) de og:site_name mantendo o restante
-            sed -i.bak 's/og:site_name=["'\'']?\([^"'\'']*\)\bNEXIA\b\([^"'\'']*\)["'\'']?/og:site_name="\1\2"/gi' "$file"
-            sed -i.bak 's/og:site_name=["'\'']?\bNEXIA\b\([^"'\'']*\)["'\'']?/og:site_name="Cortex\1"/gi' "$file"
-            sed -i.bak 's/og:site_name=["'\'']?\([^"'\'']*\)\bNEXIA\b["'\'']?/og:site_name="\1"/gi' "$file"
-            sed -i.bak 's/og:site_name=["'\'']?\bNEXIA\b["'\'']?/og:site_name="Cortex"/gi' "$file"
+            sed -i.nexia-backup 's/og:site_name=["'\'']?\([^"'\'']*\)\bNEXIA\b\([^"'\'']*\)["'\'']?/og:site_name="\1\2"/gi' "$file"
+            sed -i.nexia-backup 's/og:site_name=["'\'']?\bNEXIA\b\([^"'\'']*\)["'\'']?/og:site_name="Cortex\1"/gi' "$file"
+            sed -i.nexia-backup 's/og:site_name=["'\'']?\([^"'\'']*\)\bNEXIA\b["'\'']?/og:site_name="\1"/gi' "$file"
+            sed -i.nexia-backup 's/og:site_name=["'\'']?\bNEXIA\b["'\'']?/og:site_name="Cortex"/gi' "$file"
             
             # Remover backup temporário
-            rm -f "$file.bak"
+            rm -f "$file.nexia-backup"
             
             echo "  Processado: $file"
         done
@@ -77,10 +77,10 @@ echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 echo ""
 
 # Padrão solicitado para detectar NEXIA em <title>
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit/ 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai/site-kit/ viajante-pro/ 2>/dev/null; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos ou metadados:"
     echo ""
-    grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit/ 2>/dev/null
+    grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai/site-kit/ viajante-pro/ 2>/dev/null
     echo ""
     echo "Por favor, revise os arquivos e tente novamente."
     exit 1
