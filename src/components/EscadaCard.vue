@@ -84,7 +84,6 @@ export default {
           throw new Error(`Campo obrigatório ausente: ${key}`);
         }
       }
-      // Validar ranges
       ['cortexPercent', 'freeAIPercent', 'claudePercent'].forEach(key => {
         const val = Number(raw[key]);
         if (isNaN(val) || val < 0 || val > 100) {
@@ -116,7 +115,6 @@ export default {
       } catch (err) {
         console.error('[EscadaCard] Erro ao buscar dados:', err);
         this.error = err.message || 'Erro desconhecido';
-        // Reset para valores seguros
         this.data = {
           cortexPercent: 0,
           freeAIPercent: 0,
