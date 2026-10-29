@@ -25,6 +25,7 @@
       </div>
     </div>
     <div class="queue-info">
+      <span v-if="fila !== null">Na fila: {{ fila }}</span>
       <span>Jules hoje {{ julesToday }}/15</span>
       <span v-if="faseB" class="badge">Pronto para fase B</span>
     </div>
@@ -39,6 +40,7 @@ export default {
       cortexProgress: 0,
       freeIAsProgress: 0,
       claudeProgress: 0,
+      fila: 0,
       julesToday: 0,
       faseB: false
     };
@@ -46,12 +48,14 @@ export default {
   async created() {
     try {
       const response = await fetch('/escada');
+      if (!response.ok) return;
       const data = await response.json();
-      this.cortexProgress = data.cortexProgress;
-      this.freeIAsProgress = data.freeIAsProgress;
-      this.claudeProgress = data.claudeProgress;
-      this.julesToday = data.julesToday;
-      this.faseB = data.faseB;
+      this.cortexProgress = data.cortexProgress ?? data.cortex ?? 0;
+      this.freeIAsProgress = data.freeIAsProgress ?? data.freeIAs ?? data.iasGratis ?? 0;
+      this.claudeProgress = data.claudeProgress ?? data.claude ?? 0;
+      this.fila = data.fila ?? data.queue ?? data.emFila ?? 0;
+      this.julesToday = data.julesToday ?? data.jules ?? 0;
+      this.faseB = Boolean(data.faseB);
     } catch (error) {
       console.error('Failed to fetch escada data:', error);
     }
@@ -85,6 +89,7 @@ export default {
 
 .progress-bar span {
   width: 80px;
+  font-size: 14px;
 }
 
 .bar {
@@ -93,18 +98,23 @@ export default {
   background: #e0e0e0;
   border-radius: 4px;
   margin: 0 8px;
+  overflow: hidden;
 }
 
 .fill {
   height: 100%;
   background: #4CAF50;
   border-radius: 4px;
+  transition: width 0.3s ease;
 }
 
 .queue-info {
   display: flex;
-  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   align-items: center;
+  font-size: 13px;
+  color: #555;
 }
 
 .badge {
@@ -113,5 +123,6 @@ export default {
   padding: 4px 8px;
   border-radius: 12px;
   font-size: 12px;
+  font-weight: bold;
 }
 </style>
