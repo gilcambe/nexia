@@ -5,18 +5,59 @@
     </header>
 
     <main class="central-main">
-      <section class="aba" id="cortex" aria-label="Aba Cortex">
-        <h2>🦐 Cortex</h2>
-        <div class="cards-container">
-          <EscadaCard />
-        </div>
-      </section>
+      <div class="abas">
+        <nav class="ablist" role="tablist" aria-label="Abas da Central">
+          <button
+            role="tab"
+            :aria-selected="ativaTab === 'cortex'"
+            aria-controls="tab-cortex"
+            :class="['tab', { ativo: ativaTab === 'cortex' }]"
+            @click="selecionarTab('cortex')"
+          >🧠 Cortex</button>
+          <button
+            role="tab"
+            :aria-selected="ativaTab === 'resumo'"
+            aria-controls="tab-resumo"
+            :class="['tab', { ativo: ativaTab === 'resumo' }]"
+            @click="selecionarTab('resumo')"
+          >📊 Resumo</button>
+        </nav>
+        <section
+          id="tab-cortex"
+          role="tabpanel"
+          aria-labelledby="tab-cortex"
+          :class="['tabpanel', { ativo: ativaTab === 'cortex' }]"
+          v-show="ativaTab === 'cortex'"
+        >
+          <h2>🧠 Cortex</h2>
+          <div class="cards-container">
+            <EscadaCard />
+          </div>
+        </section>
+        <section
+          id="tab-resumo"
+          role="tabpanel"
+          aria-labelledby="tab-resumo"
+          :class="['tabpanel', { ativo: ativaTab === 'resumo' }]"
+          v-show="ativaTab === 'resumo'"
+        >
+          <h2>📊 Resumo</h2>
+          <p>Resumo da Central será exibido aqui.</p>
+        </section>
+      </div>
     </main>
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import EscadaCard from '@/components/EscadaCard.vue';
+
+const ativaTab = ref('cortex');
+
+function selecionarTab(id) {
+  ativaTab.value = id;
+}
 </script>
 
 <style scoped>
@@ -54,5 +95,48 @@ import EscadaCard from '@/components/EscadaCard.vue';
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.abas {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ablist {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 8px;
+}
+
+.tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 8px 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.tab.ativo {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+}
+
+.tab:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.tabpanel {
+  display: none;
+}
+
+.tabpanel.ativo {
+  display: block;
 }
 </style>
