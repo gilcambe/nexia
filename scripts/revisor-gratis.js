@@ -72,6 +72,24 @@ function montarDiff(arquivos) {
   return out;
 }
 
+// Funções adicionadas para review-pr.js
+function isRestrictedChange(pr) {
+  const nomes = (pr.files || []).map(a => a.filename);
+  return nomes.some(n => PROIBIDO.test(n));
+}
+
+function isEmptyPR(pr) {
+  return !pr.files || !pr.files.length || (pr.files.length === 1 && pr.files[0].filename === '');
+}
+
+function mencionaCortexFila(pr, issuesPorNumero) {
+  const n = issueDoPr(pr);
+  if (n && issuesPorNumero[n]) {
+    return String(issuesPorNumero[n]).includes('cortex-fila');
+  }
+  return false;
+}
+
 function lerVeredito(texto) {
   const m = /\{[\s\S]*\}/.exec(String(texto || ''));
   if (!m) return null;
