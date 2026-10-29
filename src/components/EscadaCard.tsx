@@ -128,7 +128,7 @@ export default function EscadaCard() {
           Fila: <span className="font-semibold text-white">{Number(fila) || 0}</span>
         </div>
         <div className="text-nexia-muted">
-          Jules hoje <span className="font-semibold text-white">{Number(julesHoje) || 0} / 15</span>
+          Jules hoje <span className="font-semibold text-white">{Number(julesHoje) || 0}/15</span>
         </div>
       </div>
     </div>
