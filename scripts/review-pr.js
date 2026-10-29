@@ -141,4 +141,4 @@ async function main() {
 }
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
-module.exports = { lerVeredito, decidir, MARCA, NOTA_MIN };
+module.exports = { decidir, MARCA, NOTA_MIN };
