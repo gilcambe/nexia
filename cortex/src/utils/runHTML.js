@@ -1,4 +1,4 @@
-const TIMEOUT_MS = 10000;
+const TIMEOUT_MS = 10000; // Timeout de 10 segundos para execução segura
 
 /**
  * Executa um HTML dentro de um <iframe sandbox="allow-scripts">,
