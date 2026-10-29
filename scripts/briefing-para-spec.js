@@ -87,8 +87,14 @@ async function llmChat(modelo, system, user) {
   clearTimeout(t);
   if (!res.ok) throw new Error(modelo.nome + ' ' + res.status);
   const data = await res.json();
-  if (modelo.nome === 'Gemini') return data.candidates ? data.candidates[0] ? data.candidates[0].content ? data.candidates[0].content.parts ? data.candidates[0].content.parts[0] ? data.candidates[0].content.parts[0].text : '' : '' : '' : '' : '';
-  return data.choices ? data.choices[0] ? data.choices[0].message ? data.choices[0].message.content : '' : '' : '';
+  let texto = '';
+  if (modelo.nome === 'Gemini') {
+    const c = data.candidates?.[0]?.content?.parts?.[0];
+    texto = c?.text || '';
+  } else {
+    texto = data.choices?.[0]?.message?.content || '';
+  }
+  return texto;
 }
 
 async function gerarComIA(message, project) {
