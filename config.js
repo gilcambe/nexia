@@ -162,10 +162,11 @@ export default function ConfigLocalAI() {
               Certifique-se de usar um navegador moderno (como Google Chrome ou Microsoft Edge atualizados) com suporte a WebGPU habilitado nas configurações de hardware.
             </div>
             <div className="flex justify-end">
-              <button
+                              <button
                 type="button"
                 onClick={() => setModalIncompativel({ aberto: false, motivo: '' })}
                 className="px-4 py-2 text-sm bg-red-500/20 text-red-300 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition-colors font-semibold"
+                aria-label="Fechar aviso de incompatibilidade WebGPU"
               >
                 Entendi
               </button>
