@@ -1,94 +1,42 @@
-<template>
-  <div class="central-page">
-    <h1>Central</h1>
-    <nav class="tabs" role="tablist">
-      <button
-        v-for="aba in abas"
-        :key="aba.id"
-        role="tab"
-        :aria-selected="abaAtiva === aba.id"
-        :class="['tab-btn', 'tab-' + aba.id, { active: abaAtiva === aba.id }]"
-        :data-tab="aba.id"
-        :data-testid="'tab-' + aba.id"
-        @click="abaAtiva = aba.id"
-      >
-        {{ aba.nome }}
-      </button>
-    </nav>
-    <div class="tab-content">
-      <div v-if="abaAtiva === 'cortex'" class="cards-container cortex-tab" data-testid="aba-cortex">
-        <EscadaCard />
-      </div>
-      <div v-else class="cards-container geral-tab">
-        <!-- Other cards would go here -->
+import { useState } from 'react';
+import EscadaCard from '../components/EscadaCard.tsx';
+
+export default function Central() {
+  const [abaAtiva, setAbaAtiva] = useState<'geral' | 'cortex'>('geral');
+  const abas = [
+    { id: 'geral', nome: 'Geral' },
+    { id: 'cortex', nome: '🧠 Cortex' }
+  ];
+
+  return (
+    <div className="central-page">
+      <h1>Central</h1>
+      <nav className="tabs" role="tablist">
+        {abas.map((aba) => (
+          <button
+            key={aba.id}
+            role="tab"
+            aria-selected={abaAtiva === aba.id}
+            className={`tab-btn tab-${aba.id} ${abaAtiva === aba.id ? 'active' : ''}`}
+            data-tab={aba.id}
+            data-testid={`tab-${aba.id}`}
+            onClick={() => setAbaAtiva(aba.id)}
+          >
+            {aba.nome}
+          </button>
+        ))}
+      </nav>
+      <div className="tab-content">
+        {abaAtiva === 'cortex' ? (
+          <div className="cards-container cortex-tab" data-testid="aba-cortex">
+            <EscadaCard />
+          </div>
+        ) : (
+          <div className="cards-container geral-tab">
+            {/* Other cards would go here */}
+          </div>
+        )}
       </div>
     </div>
-  </div>
-</template>
-
-<script>
-import EscadaCard from '../components/EscadaCard.vue';
-
-export default {
-  name: 'Central',
-  components: {
-    EscadaCard
-  },
-  props: {
-    abaInicial: {
-      type: String,
-      default: 'geral'
-    }
-  },
-  data() {
-    return {
-      abaAtiva: this.abaInicial,
-      abas: [
-        { id: 'geral', nome: 'Geral' },
-        { id: 'cortex', nome: '🧠 Cortex' }
-      ]
-    };
-  }
-};
-</script>
-
-<style scoped>
-.central-page {
-  padding: 20px;
+  );
 }
-
-.tabs {
-  display: flex;
-  gap: 8px;
-  border-bottom: 1px solid #e0e0e0;
-  margin-bottom: 20px;
-}
-
-.tab-btn {
-  background: none;
-  border: none;
-  padding: 10px 16px;
-  font-size: 15px;
-  font-weight: 500;
-  color: #666;
-  cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: all 0.2s ease;
-}
-
-.tab-btn:hover {
-  color: #333;
-}
-
-.tab-btn.active {
-  color: #1976d2;
-  border-bottom-color: #1976d2;
-  font-weight: 600;
-}
-
-.cards-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-</style>
