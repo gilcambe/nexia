@@ -31,9 +31,10 @@ for dir in $DIRECTORIES; do
                 # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
                 -e 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' \\
                 # Passo 2: Qualquer <title> que contenha NEXIA vira <title>Cortex</title>
-                -e "s/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/gi" \\
-                # Passo 3: Qualquer og:site_name que contenha NEXIA vira og:site_name='Cortex'
+                -e "s/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/gi" \\
+                # Passo 3: Qualquer og:site_name que contenha NEXIA vira og:site_name='Cortex' ou og:site_name="Cortex"
                 -e "s/og:site_name=['"]?[^'"]*NEXIA[^'"]*['"]?/og:site_name='Cortex'/gi" \\
+                -e "s/og:site_name=['"]?[^'"]*NEXIA[^'"]*['"]?/og:site_name="Cortex"/gi" \\
                 # Passo 4: Remover apenas "NEXIA" de <title> mantendo o restante (qualquer posição)
                 -e "s/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/gi" \\
                 -e "s/<title>NEXIA\([^<]*\)<\/title>/<title>\1<\/title>/gi" \\
@@ -60,11 +61,11 @@ echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 echo ""
 
-        # Padrão completo para detectar NEXIA em <title> (conforme pedido)
-        if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro 2>/dev/null; then
+        # Padrão completo para detectar NEXIA em <title> ou og:site_name (conforme pedido)
+        if grep -rnE "<title>[^<]*NEXIA|og:site_name=[^>]*NEXIA" --include=*.html public apps nexia-ai/site-kit viajante-pro 2>/dev/null; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos ou metadados:"
     echo ""
-    grep -rnE "<title>[^<]*NEXIA|og:site_name=[^>]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null
+    grep -rnE "<title>[^<]*NEXIA|og:site_name=[^>]*NEXIA" --include=*.html public apps nexia-ai/site-kit viajante-pro 2>/dev/null
     echo ""
     echo "Por favor, revise os arquivos e tente novamente."
     exit 1
