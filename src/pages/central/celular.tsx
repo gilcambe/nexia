@@ -104,3 +104,13 @@ export const EmGrupo = createContext(false);
 export function useModo() {
   return { compacto: useContext(Compacto), naFolha: useContext(NaFolha), emGrupo: useContext(EmGrupo) };
 }
+
+// Nova funcionalidade: exibir tarefas gratuitas
+export function TarefaGratuita({ tarefa }: { tarefa: Tarefa }) {
+  if (!tarefa.gratuita) return null;
+  return (
+    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+      Grátis
+    </span>
+  );
+}

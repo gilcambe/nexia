@@ -7,7 +7,7 @@ import { apiPath } from "@/config/env";
 export interface Produto { id: string; nome: string; icone: string; frase: string; logo?: string; segmento?: string; site?: string; painel?: string; suporte?: string; pendente?: boolean; tipo?: "produto" | "cliente" | "tenant" | string }
 export interface Medida { id: string; ok: boolean; codigo: number; tempo: number; lento: boolean; quando?: string | null }
 export interface Maquina { nome: string; cpu?: string; ramTotal?: number | null; ramLivre?: number | null; modelos?: string[]; ollamaOk?: boolean; visto_em?: string; online: boolean }
-export interface Tarefa { numero: number; titulo: string; link: string; quando: string; atribuidoA?: string } // Adicionado atribuidoA
+export interface Tarefa { numero: number; titulo: string; link: string; quando: string; atribuidoA?: string; gratuita?: boolean } // Adicionado gratuita
 export interface Robo { arquivo: string; nome: string; podeRodar: boolean; situacao: "ok" | "erro" | "rodando" | "nunca" | "sem-acesso"; quando: string | null; link: string | null }
 export interface Dinheiro {
   total: number; pagantes: number; emTeste: number; vencendo7: number; receitaMes: number; avisos7: number;
