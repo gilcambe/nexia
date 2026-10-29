@@ -1,5 +1,4 @@
-<template>
-  <div class="central">
+
     <header class="central-header">
       <h1>Central Kernex</h1>
     </header>

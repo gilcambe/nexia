@@ -1,5 +1,4 @@
-<template>
-  <div class="escada-card">
+
     <div class="card-header">
       <h2>🗚️ Escada</h2>
       <span v-if="faseB" class="fase-badge">Pronto para fase B</span>

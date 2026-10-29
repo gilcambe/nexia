@@ -4,7 +4,7 @@ import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
 import type { Cor } from "./ui";
 import Mais from "./Mais";
-import EscadaCard from "@/components/EscadaCard";
+import EscadaCard from "@/components/EscadaCard.tsx";
 import SaudeHistorico from "./SaudeHistorico";
 import ConectarIAs from "./ConectarIAs";
 import UltimosErros from "./UltimosErros";
