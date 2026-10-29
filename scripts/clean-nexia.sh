@@ -16,7 +16,8 @@ set -e
 # O script cria backup automático dos arquivos antes de modificá-los
 
 # Diretórios para processar conforme solicitado no pedido
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
+# Inclui viajante-pro/ conforme comando de verificação final
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
 
 # --- FUNÇÃO DE PROCESSAMENTO DE ARQUIVO ---
 
@@ -35,19 +36,20 @@ process_file() {
         changes_made=1
     fi
 
-    # (2) Substitui todo o conteúdo de <title> que contenha NEXIA por "Cortex"
-    # Para <title>: substitui todo o conteúdo (ex: <title>Meu Projeto NEXIA</title> → <title>Cortex</title>)
-    if sed -E -i 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/g' "$file" 2>/dev/null; then
+    # (2) Remove apenas a palavra NEXIA de <title> mantendo o restante do conteúdo
+    # Para <title>: remove apenas NEXIA mantendo o resto (ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Meu Site Cortex — Plataforma de IA</title>)
+    if sed -E -i 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
     
     # (3) Remove apenas a palavra NEXIA de og:site_name, mantendo o restante do atributo
-    # Para og:site_name="...": remove somente NEXIA (ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site ")
+    # Para og:site_name="...": remove somente NEXIA mantendo o resto (ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site ")
     if sed -E -i 's/(og:site_name="[^"]*)NEXIA([^"]*")/\1\2/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
     
-    # (4) Remove apenas a palavra NEXIA de property="og:site_name" content="...", mantendo o restante
+    # (4) Remove apenas a palavra NEXIA de property="og:site_name" content="...", mantendo o resto do conteúdo
+    # Para property="og:site_name" content="...": remove apenas NEXIA mantendo o resto (ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Meu Site ")
     if sed -E -i 's/(property="og:site_name" content="[^"]*)NEXIA([^"]*")/\1\2/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
@@ -79,8 +81,8 @@ process_directories() {
 echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 
-# Comando exato conforme solicitado no pedido (sem viajante-pro)
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai 2>/dev/null; then
+# Comando exato conforme solicitado no pedido (incluindo viajante-pro)
+if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro 2>/dev/null; then
     echo ""
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
