@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import ConfigLocalAI from "../../config.js";
 import { haQuanto } from "../central/api";
 import { NOME_SITUACAO, usePedidos } from "../meu-cortex/api";
 import type { Deploy, Filtro, Resumo } from "../meu-cortex/api";
@@ -192,19 +193,7 @@ export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema;
       <Cartao><p className="font-medium">App no celular</p>
         <p className="text-sm text-[var(--cx-mut)] mt-1">{instalar ? "Instale o Cortex na tela inicial." : "No Chrome do celular: menu ⋮ → Instalar app (ou Adicionar à tela inicial)."}</p>
         {instalar && <button onClick={instalar} className="mt-3 h-11 px-5 rounded-xl bg-[var(--cx-ac)] text-black font-semibold" data-testid="cx-instalar">Instalar app</button>}</Cartao>
-      <Cartao><p className="font-medium">IA no meu aparelho (grátis, offline)</p>
-        <p className="text-sm text-[var(--cx-mut)] mt-1">Roda modelos de IA diretamente no seu aparelho, sem precisar de internet.</p>
-        <label className="inline-flex items-center gap-2 mt-3 cursor-pointer">
-          <input type="checkbox" checked={iaNoAparelho} onChange={(e) => { setIaNoAparelho(e.target.checked); if (!podeLigar) setBloqueio(e.target.checked ? (podeWebGPU ? "memoria" : "webgpu") : null); if (e.target.checked && podeLigar) ligarIaNoAparelho(); }} disabled={!podeLigar} className="w-5 h-5 rounded border-[var(--cx-line)] text-[var(--cx-ac)] focus:ring-[var(--cx-ac)] focus:ring-offset-0" data-testid="cx-ia-aparelho-switch" />
-          <span className="text-sm">Ativar</span>
-        </label>
-        {bloqueio && (
-          <p className="text-sm text-red-400 mt-2" role="alert">Este aparelho não suporta IA no aparelho: {bloqueio === "webgpu" ? "WebGPU não disponível." : "Memória insuficiente (mínimo 6 GB)."}</p>
-        )}
-        {downloadMsg && (
-          <p className="text-sm text-[var(--cx-ac)] mt-2" role="status">{downloadMsg}</p>
-        )}
-      </Cartao>
+      <ConfigLocalAI />
       <AvisosCelular />
       <Cartao><a href="/central" className="block font-medium">Central KERNEX</a><p className="text-sm text-[var(--cx-mut)] mt-1">Vendas, produtos e divulgação.</p></Cartao>
       <button onClick={sair} className="w-full h-12 rounded-xl border border-[var(--cx-line)] text-red-400" data-testid="cx-sair">Sair</button>
