@@ -26,9 +26,12 @@
 set -e
 
 # O script cria backup automático dos arquivos antes de modificá-los
+# Flag para limpar backups em caso de erro
+ERROR_OCCURRED=0
+trap 'ERROR_OCCURRED=1; cleanup_backups' ERR
 
 # Diretórios para processar conforme solicitado no pedido
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
 
 # --- FUNÇÃO DE PROCESSAMENTO DE ARQUIVO ---
 
@@ -48,29 +51,31 @@ process_file() {
         changes_made=1
     fi
 
+    # (2) Substitui <title>.*NEXIA.*</title> por <title>Cortex</title>
+    # Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Cortex</title>
+    #    OBS: Remove todo o conteúdo existente do título e substitui por 'Cortex'
+    # Esta regra deve ser executada antes da regra de remoção parcial para garantir que títulos com NEXIA sejam substituídos por 'Cortex'
+    if sed -E -i '' 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/g' "$file" 2>/dev/null; then
+        changes_made=1
+    fi
+    
     # (3) Remover apenas a palavra NEXIA de títulos e metadatos, mantendo o restante
     # Para <title>: remove apenas a palavra NEXIA do conteúdo, mantendo o resto
-    # Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Meu Site CORTEX — Plataforma de IA</title>
-    if sed -E -i 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file" 2>/dev/null; then
+    # Ex: <title>Meu Site CORTEX — Plataforma de IA</title> → <title>Meu Site CORTEX — Plataforma de IA</title>
+    # Note: Esta regra só aplica se não houver NEXIA em títulos (pois a regra 2 já substituiu)
+    if sed -E -i '' 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
     
     # Para og:site_name: remove apenas a palavra NEXIA do valor do atributo, mantendo o resto
     # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site"
-    if sed -E -i 's/og:site_name="([^"]*)NEXIA([^"]*)"/og:site_name="\1\2"/g' "$file" 2>/dev/null; then
+    if sed -E -i '' 's/og:site_name="([^"]*)NEXIA([^"]*)"/og:site_name="\1\2"/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
     
     # Para property="og:site_name" content: remove apenas a palavra NEXIA do valor, mantendo o resto
     # Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Meu Site"
-    if sed -E -i 's/property="og:site_name" content="([^"]*)NEXIA([^"]*)"/property="og:site_name" content="\1\2"/g' "$file" 2>/dev/null; then
-        changes_made=1
-    fi
-    
-    # (2) Substitui <title>.*NEXIA.*</title> por <title>Cortex</title>
-    # Ex: <title>Meu Site CORTEX — Plataforma de IA</title> → <title>Cortex</title>
-    #    OBS: Remove todo o conteúdo existente do título e substitui por 'Cortex'
-    if sed -E -i 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/g' "$file" 2>/dev/null; then
+    if sed -E -i '' 's/property="og:site_name" content="([^"]*)NEXIA([^"]*)"/property="og:site_name" content="\1\2"/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
     
@@ -79,7 +84,7 @@ process_file() {
     # Ex: og:site_name="Meu Site" (após remoção parcial) → og:site_name="Cortex" (se ainda tiver NEXIA)
     # Padrão: og:site_name="[^"]*NEXIA[^"]*"
     # Substitui por: og:site_name="Cortex"
-    if sed -E -i 's/og:site_name="[^"]*NEXIA[^"]*"/og:site_name="Cortex"/g' "$file" 2>/dev/null; then
+    if sed -E -i '' 's/og:site_name="[^"]*NEXIA[^"]*"/og:site_name="Cortex"/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
     
@@ -136,7 +141,15 @@ echo ""
 # Limpar backups após a execução
 cleanup_backups
 
-echo "Script executado com sucesso!"
+# Se houve erro, sair com código de erro
+echo ""
+echo "========================================"
+if [ "$ERROR_OCCURRED" -eq 1 ]; then
+    echo "ERRO ocorreu durante a execução."
+    exit 1
+else
+    echo "Script executado com sucesso!"
+fi
 echo "========================================"
 echo ""
 
