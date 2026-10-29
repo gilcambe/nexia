@@ -87,7 +87,7 @@ export default function ConfigLocalAI() {
               type="checkbox"
               checked={config.ativo}
               onChange={handleToggle}
-              disabled={verificando || (suporteWebGPU && !suporteWebGPU.suportado)}
+              disabled={verificando || suporteWebGPU === null || (suporteWebGPU && !suporteWebGPU.suportado)}
               className="sr-only peer"
               aria-label="IA no meu aparelho (grátis, offline)"
               data-testid="switch-ia-local"
