@@ -171,7 +171,7 @@ function AvisosCelular() {
 
 export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema; mudarTema: (t: Tema) => void; email: string; instalar: (() => void) | null; sair: () => void }) {
   const op: { id: Tema; nome: string }[] = [{ id: "auto", nome: "Automático" }, { id: "escuro", nome: "Escuro" }, { id: "claro", nome: "Claro" }];
-  
+
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-3">
       <Titulo t="Configurações" s={email} />
@@ -183,45 +183,7 @@ export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema;
         <p className="text-sm text-[var(--cx-mut)] mt-1">{instalar ? "Instale o Cortex na tela inicial." : "No Chrome do celular: menu ⋮ → Instalar app (ou Adicionar à tela inicial)."}</p>
         {instalar && <button onClick={instalar} className="mt-3 h-11 px-5 rounded-xl bg-[var(--cx-ac)] text-black font-semibold" data-testid="cx-instalar">Instalar app</button>}</Cartao>
       <AvisosCelular />
-      
-      {/* Novo card: IA no meu aparelho (grátis, offline) */}
-      <Cartao testid="cx-ia-local">
-        <p className="font-medium">IA no meu aparelho (grátis, offline)</p>
-        <p className="text-sm text-[var(--cx-mut)] mt-1">
-          {suporteIaLocal === null ? "Verificando suporte…" : suporteIaLocal ? "Use IA local diretamente no seu aparelho, sem internet." : "Não suportado neste aparelho."}
-        </p>
-        
-        {/* Switch */}
-        <div className="mt-3 flex items-center justify-between">
-          <span className="text-sm">Ativar IA local</span>
-          <button 
-            onClick={alternarIaLocal}
-            disabled={!suporteIaLocal}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${iaLocal ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'} ${!suporteIaLocal ? 'opacity-50 cursor-not-allowed' : ''}`}
-            data-testid="cx-ia-local-switch"
-            aria-label={iaLocal ? "Desativar IA local" : "Ativar IA local"}
-          >
-            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${iaLocal ? 'translate-x-6' : 'translate-x-1'}`} />
-          </button>
-        </div>
-        
-        {/* Avisos */}
-        {mensagemSuporte && (
-          <div className="mt-3 p-3 rounded-lg bg-[var(--cx-card)] border border-[var(--cx-line)]">
-            <p className="text-sm" role="alert">{mensagemSuporte}</p>
-          </div>
-        )}
-        
-        {/* Aviso de bloqueio quando não suportado */}
-        {!suporteIaLocal && suporteIaLocal !== null && (
-          <div className="mt-3 p-3 rounded-lg bg-[var(--cx-card)] border border-[var(--cx-line)]">
-            <p className="text-sm text-red-400" role="alert">
-              ⚠️ {mensagemSuporte || "Este aparelho não suporta IA local."}
-            </p>
-          </div>
-        )}
-      </Cartao>
-      
+
       <Cartao><a href="/central" className="block font-medium">Central KERNEX</a><p className="text-sm text-[var(--cx-mut)] mt-1">Vendas, produtos e divulgação.</p></Cartao>
       <button onClick={sair} className="w-full h-12 rounded-xl border border-[var(--cx-line)] text-red-400" data-testid="cx-sair">Sair</button>
     </div>
