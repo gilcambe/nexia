@@ -3,36 +3,6 @@ import { useMemory } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemType } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemComponent } from '../../components/MemoryItem';
 
-// Simulação de verificação de suporte e configuração local para config.js
-const obterConfig = () => {
-  try {
-    const salvo = localStorage.getItem('cortex_ia_local_config');
-    if (salvo) return JSON.parse(salvo);
-  } catch {}
-  return { ativo: false };
-};
-
-const salvarConfig = (cfg: { ativo: boolean }) => {
-  try {
-    localStorage.setItem('cortex_ia_local_config', JSON.stringify(cfg));
-  } catch {}
-};
-
-const verificarSuporteWebGPU = async () => {
-  if (typeof navigator === 'undefined') return { suportado: false, motivo: 'Ambiente não suportado' };
-  
-  const nav = navigator as any;
-  if (!nav.gpu) {
-    return { suportado: false, motivo: 'Seu navegador não suporta WebGPU (necessário para IA offline).' };
-  }
-  
-  if (nav.deviceMemory && nav.deviceMemory < 4) {
-    return { suportado: false, motivo: `Memória RAM insuficiente (${nav.deviceMemory} GB). Mínimo recomendado: 4 GB.` };
-  }
-
-  return { suportado: true, motivo: '' };
-};
-
 
 type MemoryItemProps = MemoryItemType & {
   onDelete: (id: string) => void;
