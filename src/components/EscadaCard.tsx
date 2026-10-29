@@ -35,7 +35,6 @@ const EscadaCard = () => {
       throw new Error('Resposta inválida da API');
     }
     
-    // Validar campos obrigatórios
     const required = ['faseB', 'fila', 'julesHoje', 'semana'];
     for (const key of required) {
       if (!(key in raw)) {
@@ -43,12 +42,10 @@ const EscadaCard = () => {
       }
     }
     
-    // Validar faseB
     if (typeof raw.faseB !== 'boolean') {
       throw new Error('faseB deve ser booleano');
     }
     
-    // Validar números
     ['fila', 'julesHoje'].forEach(key => {
       const val = Number(raw[key]);
       if (isNaN(val) || val < 0) {
@@ -56,7 +53,6 @@ const EscadaCard = () => {
       }
     });
     
-    // Validar semana
     if (!raw.semana || typeof raw.semana !== 'object') {
       throw new Error('semana deve ser objeto');
     }
@@ -96,7 +92,6 @@ const EscadaCard = () => {
     } catch (err) {
       console.error('[EscadaCard] Erro ao buscar dados:', err);
       setError(err instanceof Error ? err.message : 'Erro desconhecido');
-      // Reset para valores seguros
       setData({
         faseB: false,
         fila: 0,
@@ -124,58 +119,58 @@ const EscadaCard = () => {
 
   if (error) {
     return (
-      <div className="escada-card error-state">
-        <p>Erro ao carregar Escada: {error}</p>
-        <button onClick={fetchData} className="retry-btn">Tentar novamente</button>
+      <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-900 shadow-sm">
+        <p className="text-sm">Erro ao carregar Escada: {error}</p>
+        <button onClick={fetchData} className="mt-2 text-xs font-semibold underline hover:opacity-80">Tentar novamente</button>
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="escada-card loading-state">
-        <div className="loading-spinner"></div>
-        <p>Carregando dados da Escada...</p>
+      <div className="rounded-xl border border-nexia-border bg-nexia-surface p-4 shadow-sm flex flex-col items-center justify-center gap-2 min-h-[140px]">
+        <div className="w-6 h-6 border-2 border-nexia-border border-t-blue-600 rounded-full animate-spin"></div>
+        <p className="text-xs text-nexia-muted">Carregando dados da Escada...</p>
       </div>
     );
   }
 
   return (
-    <div className="escada-card">
-      <div className="card-header">
-        <h2>🪜 Escada</h2>
+    <div className="rounded-xl border border-nexia-border bg-nexia-surface p-4 shadow-sm space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-base font-semibold text-white flex items-center gap-2">🪜 Escada</h3>
         {data.faseB && (
-          <span className="fase-badge">Pronto para fase B</span>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
+            Pronto para fase B
+          </span>
         )}
       </div>
 
-      <div className="progress-bars">
+      <div className="space-y-3">
         {progressItems.map((item) => (
-          <div key={item.label} className="progress-item">
-            <div className="progress-label">{item.label}</div>
-            <div className="progress-bar">
+          <div key={item.label} className="space-y-1">
+            <div className="flex justify-between text-xs font-medium text-nexia-muted">
+              <span>{item.label}</span>
+              <span>{item.percent}%</span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-nexia-surface2 overflow-hidden">
               <div
-                className="progress-fill"
+                className="h-full rounded-full bg-blue-600 transition-all duration-500"
                 style={{ width: `${item.percent}%` }}
                 role="progressbar"
                 aria-valuenow={item.percent}
-                aria-valuemin="0"
-                aria-valuemax="100"
+                aria-valuemin={0}
+                aria-valuemax={100}
                 aria-label={`${item.label}: ${item.percent}%`}
-              >
-                <span className="progress-text">{item.percent}%</span>
-              </div>
+              />
             </div>
           </div>
         ))}
       </div>
 
-      <div className="queue-info">
-        <div className="queue-item">Fila: {data.fila}</div>
-      </div>
-
-      <div className="jules-info">
-        Jules hoje {data.julesHoje} / 15
+      <div className="pt-2 border-t border-nexia-border/50 flex items-center justify-between text-sm text-nexia-muted">
+        <div>Fila: <span className="font-semibold text-white">{data.fila}</span></div>
+        <div>Jules hoje <span className="font-semibold text-white">{data.julesHoje} / 15</span></div>
       </div>
     </div>
   );
