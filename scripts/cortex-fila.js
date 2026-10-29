@@ -14,7 +14,12 @@ const TENTATIVAS_ATE_DIVIDIR = 3;
 const MAX_SEM_ENTREGA = 2;
 // Rótulo sem-entrega-N: N = quantas rodadas terminaram sem entrega. Devolve o próximo passo depois de mais uma.
 function depoisSemEntrega(labels) {
-  const n = Math.max(0, ...labels.map(l => /^sem-entrega-(\d+)$/.exec(l)).filter(Boolean).map(m => Number(m[1]))) + 1;
+  const arr = Array.isArray(labels) ? labels : [];
+  const nums = arr.map(l => {
+    const m = /^sem-entrega-(\d+)$/.exec(String(l || ''));
+    return m ? Number(m[1]) : 0;
+  });
+  const n = Math.max(0, ...nums) + 1;
   return { n, travar: n >= MAX_SEM_ENTREGA };
 }
 const CONFIAVEIS = ['OWNER', 'MEMBER', 'COLLABORATOR'];
@@ -727,9 +732,9 @@ async function main() {
     try { await abrirAlertaAmbiente(token, alertas); } catch (e) { console.log(`alerta de ambiente: ${e.message}`); }
     acoes = acoes.filter(a => a.tipo !== 'despachar');
   }
-  acoes.push(...extra.julesFeitos);
-  try { acoes.push(...await reservasQueVoltam(token, issues)); } catch (e) { console.log(`reserva sem cota: ${e.message}`); }
-  try { acoes.push(...(await travadasPeloCofre(token, issues)).filter(a => !acoes.some(x => x.numero === a.numero))); } catch (e) { console.log(`travadas pelo cofre: ${e.message}`); }
+  acoes.push(...(extra.julesFeitos || []));
+  try { acoes.push(...(await reservasQueVoltam(token, issues) || [])); } catch (e) { console.log(`reserva sem cota: ${e.message}`); }
+  try { acoes.push(...((await travadasPeloCofre(token, issues) || [])).filter(a => !acoes.some(x => x.numero === a.numero))); } catch (e) { console.log(`travadas pelo cofre: ${e.message}`); }
   // Sem escrita disponível no banco, despachar só queima mais cota: segura as tarefas novas (o resto segue).
   if (acoes.some(a => a.tipo === 'despachar')) {
     const sonda = await sondarCota();
