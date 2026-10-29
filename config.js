@@ -104,6 +104,7 @@ export async function configurarSwitchIALocal(checkboxElement, containerAvisoEle
 
   const configAtual = obterConfig();
   checkboxElement.checked = configAtual.ativo;
+  checkboxElement.disabled = false;
 
   // Verifica suporte a WebGPU e memória; se não suportado, bloqueia o switch
   const suporte = await verificarSuporteWebGPU();
