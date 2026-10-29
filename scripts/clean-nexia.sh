@@ -90,7 +90,7 @@ process_file() {
     fi
 }
 
-# --- FUNÇÃO DE PROCESSAMENTO DE DIRETÓRIOS ---
+# --- FUNÇÃO DE PROCESSAMENTO DE DIRETORIOS ---
 
 # Função para processar diretórios recursivamente
 process_directories() {
@@ -158,4 +158,3 @@ if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-
 else
     echo "✓ Nenhuma ocorrência de NEXIA encontrada em títulos."
 fi
-
