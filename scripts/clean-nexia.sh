@@ -3,6 +3,15 @@
 # Script para limpar referências NEXIA nos diretórios especificados
 # Substitui NEXIA CORTEX por Cortex e ajusta títulos e metadatos
 #
+# REGRAS DE SUBSTITUIÇÃO:
+# 1. Substitui "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
+# 2. Para <title>: remove apenas a palavra NEXIA mantendo o resto do conteúdo
+#    Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Meu Site Cortex — Plataforma de IA</title>
+# 3. Para og:site_name: remove apenas a palavra NEXIA mantendo o resto do atributo
+#    Ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site "
+# 4. Para property="og:site_name" content="...": remove apenas NEXIA mantendo o resto
+#    Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Meu Site "
+#
 # COMO EXECUTAR AO FINAL DA PR:
 #   1. Abra um terminal na raiz do repositório na branch nexia/criar-o-script-scripts-clean-nexia-sh-qu-6f1bd8
 #   2. Rode: bash scripts/clean-nexia.sh
@@ -32,24 +41,43 @@ process_file() {
     echo "Backup criado: $file.bak"
 
     # (1) Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
+    # Esta substituição é direta e mantém o resto do texto intacto
     if sed -i 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
 
     # (2) Remove apenas a palavra NEXIA de <title> mantendo o restante do conteúdo
-    # Para <title>: remove apenas NEXIA mantendo o resto (ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Meu Site Cortex — Plataforma de IA</title>)
+    # Para <title>: remove apenas a palavra NEXIA mantendo o resto do conteúdo
+    # Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Meu Site Cortex — Plataforma de IA</title>
+    # Padrão: <title>(qualquer coisa que não seja <)NEXIA(qualquer coisa que não seja <)</title>
+    # Substitui por: <title>(qualquer coisa) + (qualquer coisa)</title>
+    if sed -E -i 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file" 2>/dev/null; then
+        changes_made=1
+    fi
     if sed -E -i 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
     
     # (3) Remove apenas a palavra NEXIA de og:site_name, mantendo o restante do atributo
-    # Para og:site_name="...": remove somente NEXIA mantendo o resto (ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site ")
+    # Para og:site_name="...": remove somente a palavra NEXIA mantendo o resto do atributo
+    # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site "
+    # Padrão: og:site_name="(qualquer coisa)NEXIA(qualquer coisa)"
+    # Substitui por: og:site_name="(qualquer coisa) + (qualquer coisa)"
+    if sed -E -i 's/(og:site_name="[^"]*)NEXIA([^"]*")/\1\2/g' "$file" 2>/dev/null; then
+        changes_made=1
+    fi
     if sed -E -i 's/(og:site_name="[^"]*)NEXIA([^"]*")/\1\2/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
     
     # (4) Remove apenas a palavra NEXIA de property="og:site_name" content="...", mantendo o resto do conteúdo
-    # Para property="og:site_name" content="...": remove apenas NEXIA mantendo o resto (ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Meu Site ")
+    # Para property="og:site_name" content="...": remove apenas a palavra NEXIA mantendo o resto do conteúdo
+    # Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Meu Site "
+    # Padrão: property="og:site_name" content="(qualquer coisa)NEXIA(qualquer coisa)"
+    # Substitui por: property="og:site_name" content="(qualquer coisa) + (qualquer coisa)"
+    if sed -E -i 's/(property="og:site_name" content="[^"]*)NEXIA([^"]*")/\1\2/g' "$file" 2>/dev/null; then
+        changes_made=1
+    fi
     if sed -E -i 's/(property="og:site_name" content="[^"]*)NEXIA([^"]*")/\1\2/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
@@ -82,17 +110,17 @@ echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 
 # Comando exato conforme solicitado no pedido (incluindo viajante-pro)
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro 2>/dev/null; then
-    echo ""
-    echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
-    echo ""
-    grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai 2>/dev/null
-    echo ""
-    echo "Por favor, revise os arquivos e tente novamente."
-    exit 1
-else
-    echo "✓ Nenhuma ocorrência de NEXIA encontrada em títulos."
-fi
+    if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro 2>/dev/null; then
+        echo ""
+        echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
+        echo ""
+        grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro 2>/dev/null
+        echo ""
+        echo "Por favor, revise os arquivos e tente novamente."
+        exit 1
+    else
+        echo "✓ Nenhuma ocorrência de NEXIA encontrada em títulos."
+    fi
 
 # --- EXECUÇÃO ---
 
