@@ -6,7 +6,14 @@ async function rodar(at) {
   const h = require('../netlify/functions/central/saude-historico.js');
   const { medir } = require('../netlify/functions/central.js');
   const db = h.abrirBanco(process.env);
-  const medir10 = (url) => medir(url, (...a) => fetch(...a), 10000); // tempo limite 10 s
+  const medir10 = (url) => {
+    const baseHost = new URL(process.env.SELF).hostname;
+    const targetHost = new URL(url).hostname;
+    if (baseHost === targetHost && process.env.SELF) {
+      return medir(url, (...a) => process.env.SELF.fetch(...a), 10000); // tempo limite 10 s
+    }
+    return medir(url, (...a) => fetch(...a), 10000); // tempo limite 10 s
+  };
   const r = await h.guardarAmostra(db, { at, medir: medir10 });
   // Vigia (#1014): 2 falhas seguidas no mesmo endereço → 1 issue cortex-alerta. Nunca derruba a amostra.
   if (r && r.porRota) {
