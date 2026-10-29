@@ -281,11 +281,10 @@ async function main() {
     if (!apagadoUsuario) limpezaFalhou.push('usuário');
     if (limpezaFalhou.length > 0) {
       console.log(`  AVISO: falha na limpeza: ${limpezaFalhou.join(', ')}`);
-      // Se a limpeza falhar e nada mais falhou, o teste sai com código 1
       const jaFalhou = results.filter(r => !r.ok).length > 0;
       if (!jaFalhou) {
         results.push({ ok: false, name: 'limpeza de teste' });
-        process.exitCode = 1; // Define o código de saída para 1 em caso de falha na limpeza
+        process.exitCode = 1;
       }
     }
   }
