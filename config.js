@@ -28,7 +28,16 @@ export async function verificarSuporteWebGPU() {
     return { suportado: false, motivo: `Erro ao solicitar adaptador WebGPU: ${err?.message || err}` };
   }
 
+  const MEMORIA_MINIMA_GB = 2;
   const memoriaGb = typeof navigator.deviceMemory === 'number' ? navigator.deviceMemory : 4;
+
+  if (memoriaGb < MEMORIA_MINIMA_GB) {
+    return {
+      suportado: false,
+      motivo: `Memória insuficiente para IA local offline (${memoriaGb} GB, mínimo recomendado: ${MEMORIA_MINIMA_GB} GB).`,
+      memoriaGb
+    };
+  }
 
   return {
     suportado: true,
@@ -81,8 +90,9 @@ export function salvarConfig(novaConfig = {}) {
 
 /**
  * Função utilitária de UI para gerenciar o switch de IA no meu aparelho (grátis, offline)
- * nas configurações. Verifica suporte a WebGPU, exibe aviso de bloqueio se não suportado,
- * e exibe aviso de download de ~1 GB com recomendação de Wi-Fi ao ligar.
+ * nas configurações. Verifica suporte a WebGPU e memória, exibe aviso de bloqueio se não
+ * suportado, e exibe aviso de download de ~1 GB com recomendação de Wi-Fi ao ligar.
+ * Tudo usando elementos de UI integrados (sem window.confirm nativo).
  * 
  * @param {HTMLInputElement} checkboxElement O elemento input do switch
  * @param {HTMLElement} [containerAvisoElement] Elemento opcional para exibir mensagens/avisos
@@ -94,64 +104,83 @@ export async function configurarSwitchIALocal(checkboxElement, containerAvisoEle
   const configAtual = obterConfig();
   checkboxElement.checked = configAtual.ativo;
 
+  const MEMORIA_MINIMA_GB = 2;
+
+  const limparAviso = () => {
+    if (!containerAvisoElement) return;
+    containerAvisoElement.textContent = '';
+    containerAvisoElement.style.display = 'none';
+    containerAvisoElement.className = '';
+  };
+
+  const mostrarAviso = (texto, tipo = 'aviso') => {
+    if (!containerAvisoElement) return;
+    let classe = 'bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-700';
+    if (tipo === 'erro') classe = 'bg-red-50 border border-red-100 rounded-lg p-4 text-sm text-red-700';
+    if (tipo === 'ok') classe = 'bg-green-50 border border-green-100 rounded-lg p-4 text-sm text-green-700';
+    containerAvisoElement.className = classe;
+    containerAvisoElement.textContent = texto;
+    containerAvisoElement.style.display = 'block';
+  };
+
+  const mostrarAvisoDownload = (onConfirmar, onCancelar) => {
+    if (!containerAvisoElement) return;
+    containerAvisoElement.className = 'bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-700';
+    containerAvisoElement.style.display = 'block';
+    containerAvisoElement.innerHTML = '
+      <div class="font-semibold text-amber-800 mb-2">⚠ Download necessário</div>
+      <p class="text-sm text-amber-700 mb-3">
+        Será baixado aproximadamente 1 GB de dados para o modelo de IA local. Recomendado usar Wi-Fi.
+      </p>
+      <div class="flex gap-2">
+        <button id="ia-local-confirmar-download" class="px-3 py-1.5 text-sm bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors">Confirmar download</button>
+        <button id="ia-local-cancelar-download" class="px-3 py-1.5 text-sm border border-amber-200 text-amber-700 rounded hover:bg-amber-100 transition-colors">Cancelar</button>
+      </div>
+    ';
+    const btnConfirmar = containerAvisoElement.querySelector('#ia-local-confirmar-download');
+    const btnCancelar = containerAvisoElement.querySelector('#ia-local-cancelar-download');
+    if (btnConfirmar) btnConfirmar.onclick = () => { limparAviso(); onConfirmar(); };
+    if (btnCancelar) btnCancelar.onclick = () => { limparAviso(); onCancelar(); };
+  };
+
   checkboxElement.onchange = async (e) => {
     const ativar = checkboxElement.checked;
 
     if (!ativar) {
+      limparAviso();
       salvarConfig({ ativo: false });
-      if (containerAvisoElement) {
-        containerAvisoElement.textContent = 'IA local desativada.';
-        containerAvisoElement.className = 'msg aviso';
-        containerAvisoElement.style.display = 'block';
-      }
       return;
     }
 
-    // Ao tentar ligar, verifica suporte a WebGPU
+    // Ao tentar ligar, verifica suporte a WebGPU e memória
     checkboxElement.checked = false; // reverte temporariamente até confirmar suporte
-    if (containerAvisoElement) {
-      containerAvisoElement.textContent = 'Verificando suporte a WebGPU no aparelho...';
-      containerAvisoElement.className = 'msg aviso';
-      containerAvisoElement.style.display = 'block';
-    }
+    limparAviso();
+    mostrarAviso('Verificando suporte a WebGPU no aparelho...', 'aviso');
 
     const suporte = await verificarSuporteWebGPU();
 
     if (!suporte.suportado) {
       checkboxElement.checked = false;
       salvarConfig({ ativo: false });
-      if (containerAvisoElement) {
-        containerAvisoElement.textContent = `Aviso de bloqueio: Seu navegador ou dispositivo não suporta IA local offline. (${suporte.motivo})`;
-        containerAvisoElement.className = 'msg erro';
-        containerAvisoElement.style.display = 'block';
-      }
+      mostrarAviso(`Bloqueado: ${suporte.motivo}`, 'erro');
       return;
     }
 
     // Suportado: exibe aviso de download de ~1 GB com recomendação de Wi-Fi
-    const confirmarDownload = window.confirm(
-      'Aviso: Ativar a "IA no meu aparelho (grátis, offline)" fará o download de aproximadamente 1 GB de dados do modelo de IA. Recomendamos fortemente o uso de uma rede Wi-Fi estável.\n\nDeseja continuar e ativar a IA local?'
-    );
-
-    if (!confirmarDownload) {
-      checkboxElement.checked = false;
-      salvarConfig({ ativo: false });
-      if (containerAvisoElement) {
-        containerAvisoElement.textContent = 'Ativação cancelada pelo usuário.';
-        containerAvisoElement.className = 'msg aviso';
-        containerAvisoElement.style.display = 'block';
+    mostrarAvisoDownload(
+      () => {
+        // Confirmado e suportado
+        checkboxElement.checked = true;
+        salvarConfig({ ativo: true });
+        mostrarAviso('IA no meu aparelho ativada com sucesso! O modelo (~1 GB) será baixado sob demanda ao iniciar o uso.', 'ok');
+      },
+      () => {
+        // Cancelado pelo usuário
+        checkboxElement.checked = false;
+        salvarConfig({ ativo: false });
+        mostrarAviso('Ativação cancelada pelo usuário.', 'aviso');
       }
-      return;
-    }
-
-    // Confirmado e suportado
-    checkboxElement.checked = true;
-    salvarConfig({ ativo: true });
-    if (containerAvisoElement) {
-      containerAvisoElement.textContent = 'IA no meu aparelho ativada com sucesso! O modelo (~1 GB) será baixado sob demanda ao iniciar o uso.';
-      containerAvisoElement.className = 'msg ok';
-      containerAvisoElement.style.display = 'block';
-    }
+    );
   };
 
   return configAtual.ativo;
