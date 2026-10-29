@@ -83,3 +83,24 @@ O que você faz: Passos exatos para resolver o problema.`,
 }
 
 main().catch(console.error);
+
+class Sentinel {
+  constructor(octokit, statePath) {
+    this.octokit = octokit;
+    this.statePath = statePath || path.join(__dirname, '..', 'sentinel', 'estado.json');
+  }
+
+  async writeState(state) {
+    return writeState(state);
+  }
+
+  async createOrUpdateIssue(problem) {
+    return createOrUpdateIssue(problem);
+  }
+
+  async main() {
+    return main();
+  }
+}
+
+module.exports = { Sentinel, writeState, createOrUpdateIssue, main };
