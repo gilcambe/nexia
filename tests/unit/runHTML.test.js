@@ -1,12 +1,16 @@
 import runHTML from '../../cortex/src/utils/runHTML.js';
 
-// Mock global para testes
-const mockParentPostMessage = jest.fn();
-const mockConsoleLog = jest.fn();
-const mockConsoleError = jest.fn();
+// Mocks isolados para cada teste
+let mockParentPostMessage;
+let mockConsoleLog;
+let mockConsoleError;
 
-beforeAll(() => {
-  // Mock window.parent.postMessage
+beforeEach(() => {
+  // Limpa mocks anteriores
+  jest.clearAllMocks();
+  
+  // Mock window.parent.postMessage para cada teste
+  mockParentPostMessage = jest.fn();
   Object.defineProperty(window, 'parent', {
     value: {
       postMessage: mockParentPostMessage
@@ -14,13 +18,26 @@ beforeAll(() => {
     writable: true
   });
   
-  // Mock console methods no iframe
+  // Mock console methods para cada teste
+  mockConsoleLog = jest.fn();
+  mockConsoleError = jest.fn();
+  
+  // Salva o console original
+  const originalConsole = global.console;
+  
   global.console = {
     log: mockConsoleLog,
     error: mockConsoleError,
     warn: jest.fn(),
-    info: jest.fn()
+    info: jest.fn(),
+    // Preserva outros métodos do console original
+    ...originalConsole
   };
+});
+
+afterEach(() => {
+  // Restaura o console original
+  global.console = Object.getPrototypeOf(global.console);
 });
 
 beforeEach(() => {
