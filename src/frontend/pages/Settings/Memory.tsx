@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useMemory } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemType } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemComponent } from '../../components/MemoryItem';
+import { verificarSuporteWebGPU, salvarConfig } from '../../../ia-local';
 
 type MemoryItemProps = MemoryItemType & {
   onDelete: (id: string) => void;
@@ -20,6 +21,12 @@ export default function MemorySettings() {
   } = useMemory();
 
   const [isDeletingAll, setIsDeletingAll] = useState(false);
+
+  // Estados para IA local
+  const [iaLocalAtivo, setIaLocalAtivo] = useState(false);
+  const [bloqueado, setBloqueado] = useState(false);
+  const [motivoBloqueio, setMotivoBloqueio] = useState('');
+  const [mostrarAvisoDownload, setMostrarAvisoDownload] = useState(false);
 
   const handleDeleteItem = (id: string) => {
     deleteItem(id);
@@ -40,8 +47,37 @@ export default function MemorySettings() {
     toggleRememberMe(enabled);
   };
 
+  // Verificar suporte WebGPU ao montar
+  useEffect(() => {
+    (async () => {
+      try {
+        const suporte = await verificarSuporteWebGPU();
+        if (!suporte.suportado) {
+          setBloqueado(true);
+          setMotivoBloqueio(suporte.motivo || 'Não suportado');
+        }
+      } catch (err) {
+        setBloqueado(true);
+        setMotivoBloqueio(err instanceof Error ? err.message : 'Erro ao verificar suporte');
+      }
+    })();
+  }, []);
+
   const handleReload = () => {
     loadMemory();
+  };
+
+  const handleToggleIaLocal = async (ativo: boolean) => {
+    if (bloqueado) return;
+
+    if (ativo) {
+      setMostrarAvisoDownload(true);
+    } else {
+      setMostrarAvisoDownload(false);
+    }
+
+    setIaLocalAtivo(ativo);
+    salvarConfig({ ativo });
   };
 
     return (
@@ -88,6 +124,53 @@ export default function MemorySettings() {
           <div className="text-xs text-[var(--cx-mut)] mt-4">
             <p>⚠️ Ao desativar, novos fatos não serão armazenados, mas os existentes permanecerão até serem excluídos manualmente.</p>
           </div>
+        </div>
+      </div>
+
+
+
+      {/* Seção de IA local */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">IA no meu aparelho (grátis, offline)</h2>
+        <div className="bg-[var(--cx-card)] border border-[var(--cx-line)] rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-medium">IA Local</h3>
+              <p className="text-sm text-[var(--cx-mut)] mt-1">
+                Execute o Cortex offline no seu dispositivo. Requer WebGPU e ~1 GB de armazenamento.
+                Os dados são processados localmente, sem envio para a nuvem.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-[var(--cx-mut)]">
+                {iaLocalAtivo ? 'Ativado' : 'Desativado'}
+              </span>
+              <button
+                onClick={() => handleToggleIaLocal(!iaLocalAtivo)}
+                disabled={bloqueado}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${iaLocalAtivo ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'}`}
+                data-testid="memory-ia-local-toggle"
+                role="switch"
+                aria-checked={iaLocalAtivo}
+                aria-label="IA local"
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${iaLocalAtivo ? 'translate-x-6' : 'translate-x-1'}`}
+                />
+              </button>
+            </div>
+          </div>
+          {bloqueado && (
+            <div className="text-xs text-red-400 mt-4">
+              <p>⚠️ {motivoBloqueio}</p>
+            </div>
+          )}
+          {mostrarAvisoDownload && (
+            <div className="text-xs text-yellow-400 mt-4 bg-yellow-400/10 p-3 rounded-lg">
+              <p>⚠️ O download da IA local requer aproximadamente 1 GB de armazenamento.</p>
+              <p className="mt-1">Recomendamos usar uma conexão Wi-Fi estável.</p>
+            </div>
+          )}
         </div>
       </div>
 
