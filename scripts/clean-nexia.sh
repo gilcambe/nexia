@@ -16,14 +16,6 @@ set -e
 # O script cria backup automático dos arquivos antes de modificá-los
 
 # Diretórios para processar conforme solicitado no pedido
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
-
-
-set -e
-
-# O script cria backup automático dos arquivos antes de modificá-los
-
-# Diretórios para processar conforme solicitado no pedido
 DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 
 # --- FUNÇÃO DE PROCESSAMENTO DE ARQUIVO ---
