@@ -129,7 +129,12 @@ process_directories() {
 cleanup_backups() {
     echo ""
     echo "Removendo arquivos de backup..."
-    find $DIRECTORIES -name "*.bak" -type f -delete 2>/dev/null || true
+    # Garante que só remove backups dos diretórios processados
+    for dir in $DIRECTORIES; do
+        if [ -d "$dir" ]; then
+            find "$dir" -name "*.bak" -type f -delete 2>/dev/null || true
+        fi
+    done
     echo "✓ Backups removidos com sucesso."
 }
 
@@ -173,6 +178,7 @@ echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 
 # Comando exato conforme solicitado no pedido
 # Verifica apenas os diretórios especificados: public, apps e nexia-ai/site-kit
+# NOTA: viajante-pro foi removido conforme revisão pois não estava na lista de diretórios solicitados
 if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
     echo ""
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
