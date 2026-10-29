@@ -28,16 +28,16 @@ process_file() {
     # (1) Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
     sed -i 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
 
-    # (2) Substituir <title> contendo NEXIA por <title>Cortex</title>
-    # Para <title>: substituir por Cortex quando encontrar NEXIA (ex: <title>Meu Projeto NEXIA</title> → <title>Cortex</title>)
-    sed -E -i 's/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/g' "$file"
+    # (2) Remove apenas a palavra NEXIA de <title>, mantendo o restante
+    # Para <title>: remove somente NEXIA (ex: <title>Meu Projeto NEXIA</title> → <title>Meu Projeto </title>)
+    sed -E -i 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file"
     
-    # (3) Substituir og:site_name contendo NEXIA por og:site_name="Cortex"
-    # Para og:site_name: substituir por Cortex quando encontrar NEXIA (ex: og:site_name="Meu Site NEXIA" → og:site_name="Cortex")
-    sed -E -i 's/og:site_name="[^"]*NEXIA[^"]*"/og:site_name="Cortex"/g' "$file"
+    # (3) Remove apenas a palavra NEXIA de og:site_name, mantendo o restante do atributo
+    # Para og:site_name="...": remove somente NEXIA (ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site ")
+    sed -E -i 's/(og:site_name="[^"]*)NEXIA([^"]*")/\1\2/g' "$file"
     
-    # (4) Substituir property="og:site_name" content="...NEXIA..." por property="og:site_name" content="Cortex"
-    sed -E -i 's/property="og:site_name" content="[^"]*NEXIA[^"]*"/property="og:site_name" content="Cortex"/g' "$file"
+    # (4) Remove apenas a palavra NEXIA de property="og:site_name" content="...", mantendo o restante
+    sed -E -i 's/(property="og:site_name" content="[^"]*)NEXIA([^"]*")/\1\2/g' "$file"
 }
 
 # Função para processar diretórios recursivamente
