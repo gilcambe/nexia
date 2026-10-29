@@ -101,7 +101,7 @@ jobs:
         run: |
           f="$RUNNER_TEMP/auditoria.jsonl"
           if [ -s "$f" ]; then { echo '### Auditoria do Vault (JSONL)'; echo '```'; tail -c 900000 "$f"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"; fi
-      - name: Guardar o pedido se os dois bancos estiverem sem cota
+      - name: Guardar o pedido se os dois bancos estiverem sem cota ou Vault indisponível
         if: failure()
         run: node scripts/nexia-job-pendente.js guardar
         env:
