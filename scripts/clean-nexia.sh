@@ -77,9 +77,14 @@ process_file() {
 
     # (2) Remove apenas a palavra NEXIA de títulos, mantendo o restante
     # Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Meu Site CORTEX — Plataforma de IA</title>
-    if sed -i 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/g' "$file"; then
-        changes_made=1
-    fi
+    # Trata múltiplas ocorrências de NEXIA no título em um loop para garantir a remoção completa de todas
+    while grep -qE '<title>[^<]*NEXIA' "$file"; do
+        if sed -i 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/g' "$file"; then
+            changes_made=1
+        else
+            break
+        fi
+    done
     
     # (3) Remove apenas a palavra NEXIA de og:site_name, mantendo o restante
     # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site"
