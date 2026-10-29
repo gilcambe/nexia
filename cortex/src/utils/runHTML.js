@@ -14,6 +14,7 @@ export default function runHTML(html) {
     let error = '';
     let resolved = false;
     let iframe = null;
+    const iframeId = 'runHTML-iframe-' + Math.random().toString(36).substr(2, 9);
 
     const finish = (result) => {
       if (resolved) return;
@@ -45,6 +46,11 @@ export default function runHTML(html) {
           return;
         }
         
+        // Verifica se a mensagem tem o identificador correto
+        if (event.data && event.data.iframeId !== iframeId) {
+          return;
+        }
+        
         const data = event.data;
         if (data && typeof data === 'object') {
           if (data.stdout !== undefined) {
@@ -68,6 +74,7 @@ export default function runHTML(html) {
 
     try {
       iframe = document.createElement('iframe');
+      iframe.id = iframeId;
       iframe.sandbox = 'allow-scripts';
       iframe.style.display = 'none';
       document.body.appendChild(iframe);
@@ -79,42 +86,37 @@ export default function runHTML(html) {
         '<html>' +
         '<head><meta charset="utf-8"><title>runHTML</title></head>' +
         '<body>' +
+        // Script para interceptar console e enviar mensagens
         '<script>' +
-        '// Intercepta console.log, console.error, etc e envia para o parent' +
         '(function() {' +
-        '  const originalLog = console.log;' +
-        '  const originalError = console.error;' +
+        '  const originalLog = console.log;'n        '  const originalError = console.error;' +
         '  const originalWarn = console.warn;' +
         '  const originalInfo = console.info;' +
         '  ' +
         '  console.log = function(...args) {' +
         '    originalLog.apply(console, args);' +
-        '    window.parent.postMessage({ stdout: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
+        '    window.parent.postMessage({ iframeId: "' + iframeId + '", stdout: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
         '  };' +
         '  ' +
         '  console.error = function(...args) {' +
         '    originalError.apply(console, args);' +
-        '    window.parent.postMessage({ error: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
+        '    window.parent.postMessage({ iframeId: "' + iframeId + '", error: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
         '  };' +
         '  ' +
         '  console.warn = function(...args) {' +
         '    originalWarn.apply(console, args);' +
-        '    window.parent.postMessage({ stdout: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
+        '    window.parent.postMessage({ iframeId: "' + iframeId + '", stdout: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
         '  };' +
         '  ' +
         '  console.info = function(...args) {' +
         '    originalInfo.apply(console, args);' +
-        '    window.parent.postMessage({ stdout: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
+        '    window.parent.postMessage({ iframeId: "' + iframeId + '", stdout: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
         '  };' +
         '})();' +
-        'try {' +
+        // Injeta o HTML recebido como conteúdo do body
         html +
-        '} catch (e) {' +
-        '  window.parent.postMessage({ error: e.message }, "*");' +
-        '}' +
-        '// Sinaliza que terminou' +
-        'window.parent.postMessage({ done: true }, "*");' +
-        '</script>' +
+        // Sinaliza que terminou
+        '<script>window.parent.postMessage({ iframeId: "' + iframeId + '", done: true }, "*");</script>' +
         '</body>' +
         '</html>'
       );
