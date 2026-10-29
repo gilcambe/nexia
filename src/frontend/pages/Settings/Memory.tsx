@@ -44,41 +44,7 @@ export default function MemorySettings() {
     loadMemory();
   };
 
-  useEffect(() => {
-    const gpuCheck = typeof navigator !== 'undefined' && Boolean((navigator as any).gpu);
-    const memoryCheck = typeof navigator !== 'undefined' && (navigator as any).deviceMemory ? (navigator as any).deviceMemory >= 2 : true;
-    
-    if (!gpuCheck || !memoryCheck) {
-      setIaLocalSuportado(false);
-      setIaLocalBloqueado(true);
-      setIaLocalMotivoBloqueio('WebGPU não suportada ou memória insuficiente no navegador.');
-    } else {
-      setIaLocalSuportado(true);
-      setIaLocalBloqueado(false);
-    }
-  }, []);
-
-  const handleToggleIaLocal = () => {
-    if (iaLocalBloqueado || !iaLocalSuportado) {
-      setIaLocalBloqueado(true);
-      return;
-    }
-
-    if (!iaLocalAtivo) {
-      setIaLocalAvisoDownload(true);
-      return;
-    }
-
-    setIaLocalAtivo(false);
-    setIaLocalAvisoDownload(false);
-  };
-
-  const handleConfirmarDownload = () => {
-    setIaLocalAtivo(true);
-    setIaLocalAvisoDownload(false);
-  };
-
-  return (
+    return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Configurações de Memória</h1>
@@ -126,75 +92,6 @@ export default function MemorySettings() {
       </div>
 
 
-
-      {/* Seção IA no meu aparelho */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">IA no meu aparelho (grátis, offline)</h2>
-        <div className="bg-[var(--cx-card)] border border-[var(--cx-line)] rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-medium">IA no meu aparelho</h3>
-              <p className="text-sm text-[var(--cx-mut)] mt-1">
-                Rode a IA localmente, sem enviar dados para a nuvem. Baixa cerca de 1 GB de modelo na primeira ativação.
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-[var(--cx-mut)]">
-                {iaLocalAtivo ? 'Ativado' : 'Desativado'}
-              </span>
-              <button
-                onClick={handleToggleIaLocal}
-                disabled={iaLocalBloqueado || !iaLocalSuportado}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${iaLocalAtivo && iaLocalSuportado ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'}${' '}
-                ${iaLocalBloqueado || !iaLocalSuportado ? 'opacity-50 cursor-not-allowed' : ''}`}
-                data-testid="ia-local-toggle"
-                role="switch"
-                aria-checked={iaLocalAtivo}
-                aria-label="IA no meu aparelho"
-                aria-disabled={iaLocalBloqueado || !iaLocalSuportado}
-                aria-describedby="ia-local-desc ia-local-aviso"
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${iaLocalAtivo && iaLocalSuportado ? 'translate-x-6' : 'translate-x-1'}`}
-                />
-              </button>
-            </div>
-          </div>
-
-          {iaLocalBloqueado && (
-            <div className="bg-red-50 border border-red-100 rounded-lg p-4 text-sm text-red-700">
-              ⚠️ Bloqueado: {iaLocalMotivoBloqueio}
-            </div>
-          )}
-
-          {!iaLocalSuportado && !iaLocalBloqueado && (
-            <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 text-sm text-amber-700">
-              Verificando suporte do navegador...
-            </div>
-          )}
-
-          {iaLocalAvisoDownload && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <div className="font-semibold text-amber-800 mb-2">⚠ Download necessário</div>
-              <p className="text-sm text-amber-700 mb-3">
-                Será baixado aproximadamente 1 GB de dados para o modelo de IA local. Recomendado usar Wi-Fi.
-              </p>
-              <button
-                onClick={handleConfirmarDownload}
-                className="px-3 py-1.5 text-sm bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors"
-              >
-                Confirmar download
-              </button>
-            </div>
-          )}
-
-          {!iaLocalAtivo && iaLocalSuportado && !iaLocalBloqueado && (
-            <div className="text-xs text-[var(--cx-mut)] mt-4">
-              Quando ativado, o Cortex usa IA offline no seu aparelho, sem conexão com a nuvem.
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Seção de fatos */}
       <div>
