@@ -4,7 +4,6 @@ import { apiPath } from "@/config/env";
 import type { Dados, Tarefa } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Numero, Botao, Carregando, Sinal } from "./ui";
-import ContasReserva from "../cortex/ContasReserva";
 
 function Lista({ itens, vazio }: { itens: Tarefa[]; vazio: string }) {
   if (!itens.length) return <p className="text-sm text-nexia-muted">{vazio}</p>;
