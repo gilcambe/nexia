@@ -71,8 +71,8 @@ async function deleteTestUser(sa) {
   return r.ok;
 }
 
-  // Apaga um registro de teste. O Vault exige If-Match com a versão ATUAL (senão responde 428), por isso lê antes.
-  async function deleteTestRecord(api, tipo, id) {
+// Apaga um registro de teste. O Vault exige If-Match com a versão ATUAL (senão responde 428), por isso lê antes.
+async function deleteTestRecord(api, tipo, id) {
     if (!id) return false;
     const cur = await api(`/nexia/${tipo}/${id}`);
     const v = cur.json && cur.json.record && cur.json.record.version;
@@ -80,6 +80,7 @@ async function deleteTestUser(sa) {
     const r = await api(`/nexia/${tipo}/${id}`, { method: 'DELETE', headers: { 'If-Match': `"v${v}"` } });
     if (r.status !== 200) {
       console.log(`  AVISO: falha ao apagar registro de teste ${tipo}/${id} (status=${r.status})`);
+      return false;
     }
     return r.status === 200;
   }
