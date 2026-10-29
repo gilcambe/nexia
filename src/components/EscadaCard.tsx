@@ -1,140 +1,112 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from "react";
+import { apiPath } from "@/config/env";
+import { Cartao, Sinal } from "../pages/central/ui";
 
-interface EscadaDados {
-  faseB?: boolean;
-  fila?: number;
-  julesHoje?: string;
-  semana?: {
-    cortex?: number;
-    iasGratis?: number;
-    claude?: number;
+export interface EscadaData {
+  faseB: boolean;
+  fila: number;
+  julesHoje: string;
+  semana: {
+    cortex: number;
+    iasGratis: number;
+    claude: number;
   };
 }
 
 export default function EscadaCard() {
-  const [dados, setDados] = useState<EscadaDados | null>(null);
-  const [carregando, setCarregando] = useState<boolean>(true);
+  const [dados, setDados] = useState<EscadaData | null>(null);
+  const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    const carregarDados = async () => {
+    const buscarDados = async () => {
       try {
-        const res = await fetch('/escada');
-        if (!res.ok) throw new Error('Falha ao carregar /escada');
-        const json = await res.json();
+        const resp = await fetch(apiPath("/escada"));
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const json = await resp.json();
         setDados(json);
       } catch (e) {
-        setErro(e instanceof Error ? e.message : 'Erro desconhecido');
+        setErro((e as Error).message);
       } finally {
         setCarregando(false);
       }
     };
-
-    carregarDados();
+    buscarDados();
   }, []);
-
-  const progressoCortex = dados?.semana?.cortex ?? 0;
-  const progressoIasGratis = dados?.semana?.iasGratis ?? 0;
-  const progressoClaude = dados?.semana?.claude ?? 0;
 
   if (carregando) {
     return (
-      <div className="rounded-xl bg-nexia-surface p-4 border border-nexia-border space-y-3 shadow-sm" data-testid="escada-card">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🪜</span>
-            <h3 className="font-semibold text-white">Escada</h3>
-          </div>
+      <Cartao titulo="🪜 Escada" icone="lista" resumo="Carregando...">
+        <div className="space-y-3">
+          <div className="h-2 bg-nexia-surface2 rounded animate-pulse" />
+          <div className="h-2 bg-nexia-surface2 rounded animate-pulse" />
+          <div className="h-2 bg-nexia-surface2 rounded animate-pulse" />
         </div>
-        <div className="text-xs text-nexia-muted py-2">Carregando dados da escada...</div>
-      </div>
+      </Cartao>
     );
   }
 
-  if (erro) {
+  if (erro || !dados) {
     return (
-      <div className="rounded-xl bg-nexia-surface p-4 border border-nexia-border space-y-3 shadow-sm" data-testid="escada-card">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">🪜</span>
-            <h3 className="font-semibold text-white">Escada</h3>
-          </div>
-        </div>
-        <div className="text-xs text-red-400 py-2">{erro}</div>
-      </div>
+      <Cartao titulo="🪜 Escada" icone="alerta" resumo="Erro ao carregar">
+        <p className="text-sm text-nexia-muted">Não foi possível buscar os dados da escada.</p>
+      </Cartao>
     );
   }
+
+  const { faseB, fila, julesHoje, semana } = dados;
 
   return (
-    <div className="rounded-xl bg-nexia-surface p-4 border border-nexia-border space-y-3 shadow-sm" data-testid="escada-card">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-xl">🪜</span>
-          <h3 className="font-semibold text-white">Escada</h3>
+    <Cartao titulo="🪜 Escada" icone="lista">
+      <div className="space-y-4">
+        {/* Barras de progresso da semana */}
+        <div className="space-y-3">
+          <ProgressBar label="Cortex" value={semana.cortex} cor="cyan" />
+          <ProgressBar label="IAs grátis" value={semana.iasGratis} cor="verde" />
+          <ProgressBar label="Claude" value={semana.claude} cor="roxo" />
         </div>
-        {dados?.faseB && (
-          <span className="px-2 py-0.5 text-xs font-medium bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+
+        {/* Números da fila e Jules */}
+        <div className="grid grid-cols-2 gap-3 text-center">
+          <div className="rounded-xl bg-nexia-surface2 p-3">
+            <p className="text-2xl font-bold text-white">{fila}</p>
+            <p className="text-xs text-nexia-muted">na fila</p>
+          </div>
+          <div className="rounded-xl bg-nexia-surface2 p-3">
+            <p className="text-2xl font-bold text-white">{julesHoje}</p>
+            <p className="text-xs text-nexia-muted">Jules hoje</p>
+          </div>
+        </div>
+
+        {/* Selo verde quando faseB for true */}
+        {faseB && (
+          <Sinal cor="verde" className="inline-flex items-center gap-1 text-sm font-medium" style={{ fontSize: "0.875rem" }}>
             Pronto para fase B
-          </span>
+          </Sinal>
         )}
       </div>
+    </Cartao>
+  );
+}
 
-      <div className="space-y-3">
-        <div className="space-y-2">
-          <div className="text-xs font-medium text-nexia-muted">Progresso da semana (meta: 100%)</div>
-          
-          <div className="space-y-1.5">
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span>Cortex</span>
-                <span className="font-medium text-white">{progressoCortex}%</span>
-              </div>
-              <div className="h-2 w-full bg-nexia-surface2 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-indigo-500 rounded-full transition-all duration-500" 
-                  style={{ width: `${Math.min(100, Math.max(0, progressoCortex))}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span>IAs grátis</span>
-                <span className="font-medium text-white">{progressoIasGratis}%</span>
-              </div>
-              <div className="h-2 w-full bg-nexia-surface2 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
-                  style={{ width: `${Math.min(100, Math.max(0, progressoIasGratis))}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div>
-              <div className="flex justify-between text-xs mb-1">
-                <span>Claude</span>
-                <span className="font-medium text-white">{progressoClaude}%</span>
-              </div>
-              <div className="h-2 w-full bg-nexia-surface2 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-amber-500 rounded-full transition-all duration-500" 
-                  style={{ width: `${Math.min(100, Math.max(0, progressoClaude))}%` }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 pt-1 border-t border-nexia-border/50 text-xs">
-          <div className="bg-nexia-surface2 p-2 rounded-lg">
-            <div className="text-nexia-muted">Números da fila</div>
-            <div className="font-semibold text-white mt-0.5 text-sm">{dados?.fila ?? 0} itens</div>
-          </div>
-          <div className="bg-nexia-surface2 p-2 rounded-lg">
-            <div className="text-nexia-muted">Jules hoje</div>
-            <div className="font-semibold text-white mt-0.5 text-sm">{dados?.julesHoje ?? "0/15"}</div>
-          </div>
+function ProgressBar({ label, value, cor }: { label: string; value: number; cor: "cyan" | "verde" | "roxo" }) {
+  const CORES = {
+    cyan: "bg-nexia-cyan",
+    verde: "bg-emerald-400",
+    roxo: "bg-purple-500",
+  };
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between text-xs font-medium">
+        <span>{label}</span>
+        <span className="text-nexia-muted">{value}%</span>
+      </div>
+      <div className="h-2 bg-nexia-surface2 rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${value}%` }}
+        >
+          <span className={`${CORES[cor]} h-full block rounded-full`} />
         </div>
       </div>
     </div>
