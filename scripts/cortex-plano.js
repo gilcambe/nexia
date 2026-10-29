@@ -178,8 +178,22 @@ function medirTempo(paiCriado, partes) {
 }
 const textoTempo = t => !t ? '' : `Tempo total: ${t.totalMin} min (somando as partes uma depois da outra seriam ${t.somaMin} min). Até ${t.pico} partes ao mesmo tempo. ${t.dur.map(d => `#${d.numero}: ${d.min} min`).join(' · ')}`;
 
+// Função para gerar o plano com a lista real de arquivos do repositório
+function gerarPlano(pedido, callback) {
+  const { exec } = require('child_process');
+  exec('git ls-files', (error, stdout, stderr) => {
+    if (error) {
+      callback(error, null);
+      return;
+    }
+    const arquivosReais = stdout.split('\n').filter(Boolean);
+    const pedidoEnriquecido = { ...pedido, arquivosReais };
+    callback(null, pedidoEnriquecido);
+  });
+}
+
 module.exports = {
   ARQ_GRANDE, MAX_PARTES, MAX_ARQ_PARTE, MAX_LINHAS_PARTE, ESPERA_PR_MAX_H, JULES_DESISTE_MIN, SISTEMA_PLANO,
   arquivosCitados, classificar, validarPlano, planoSimples, planoDeTextos, vaiParaJules, cabecalho, lerPlano, corpoDaParte,
-  dependenciasProntas, conflitaCom, revisarDiff, medirTempo, textoTempo,
+  dependenciasProntas, conflitaCom, revisarDiff, medirTempo, textoTempo, gerarPlano,
 };
