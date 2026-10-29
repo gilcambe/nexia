@@ -19,6 +19,8 @@ const WEBLLM_CDN_URL = 'https://cdn.jsdelivr.net/npm/@mlc-ai/web-llm@0.2.46/+esm
 let engineInstancia = null;
 let modeloCarregado = null;
 
+export { MODELOS_SUPORTADOS, WEBLLM_CDN_URL };
+
 /**
  * Obtém as configurações salvas da IA local no localStorage.
  * @returns {Object} Configuração da IA local.
