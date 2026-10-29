@@ -333,6 +333,8 @@ textarea.fi{resize:vertical;min-height:80px}
     <div class="grp-items">
       <div class="nav-item" onclick="nav('cortex',this)"><i class="ri-chat-ai-line"></i>Co-Pilot<span class="nbadge live">IA</span></div>
       <div class="nav-item" onclick="nav('predictive',this)"><i class="ri-alarm-warning-line"></i>Alertas Preditivos<span class="nbadge hot">!</span></div>
+      <div class="nav-item" onclick="nav('chat-pax',this)"><i class="ri-chat-3-line"></i>Atendimento PAX</div>
+      <div class="nav-item" onclick="nav('editor-site',this)"><i class="ri-pages-line"></i>Editor do Site<span class="nbadge live">KERNEX</span></div>
     </div>
   </div>
   <div class="sdiv"></div>
@@ -663,6 +665,68 @@ textarea.fi{resize:vertical;min-height:80px}
     <div id="alertas-list" style="display:flex;flex-direction:column;gap:12px"></div>
   </div>
 
+  <!-- PAGE CHAT PAX -->
+  <div class="page" id="pg-chat-pax">
+    <div class="ph"><div class="phl"><div class="ey">ATENDIMENTO</div><div class="pt">Chat com <span class="ac">Passageiro</span></div></div></div>
+    <div class="card" style="padding:20px">
+      <div style="display:flex;gap:20px">
+        <div style="width:280px;border-right:1px solid var(--cbrd);padding-right:16px">
+          <div style="font-size:12px;font-weight:700;margin-bottom:12px;color:var(--text)">Passageiros Recentes</div>
+          <div style="padding:10px;border-radius:8px;background:var(--cbg);margin-bottom:8px;cursor:pointer">
+            <strong style="font-size:13px;color:#fff">João Pereira</strong>
+            <div style="font-size:11px;color:var(--text2)">Missão CES 2027 · Las Vegas</div>
+          </div>
+          <div style="padding:10px;border-radius:8px;background:var(--cbg);margin-bottom:8px;cursor:pointer">
+            <strong style="font-size:13px;color:#fff">Ana Souza</strong>
+            <div style="font-size:11px;color:var(--text2)">Pacote Maldivas Paradise</div>
+          </div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:12px">
+          <div id="admin-chat-history" style="height:280px;background:var(--bg);border:1px solid var(--cbrd);border-radius:10px;padding:14px;overflow-y:auto">
+            <div style="background:var(--cbg);padding:10px;border-radius:8px;max-width:80%;margin-bottom:10px;font-size:12px">
+              <strong>João Pereira:</strong> Olá! Gostaria de confirmar o horário da conexão em Miami.
+            </div>
+            <div style="background:rgba(0,229,255,.1);padding:10px;border-radius:8px;max-width:80%;margin-left:auto;font-size:12px;color:#fff">
+              <strong>Agência VP:</strong> Olá João! Sua conexão em Miami é às 15:45, com tempo de 1h55. Tudo pronto no seu voucher!
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="admin-chat-input" class="fi" placeholder="Responder ao cliente..." style="flex:1">
+            <button class="btn bc" onclick="sendAdminChatMessage()"><i class="ri-send-plane-fill"></i>Enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE EDITOR SITE -->
+  <div class="page" id="pg-editor-site">
+    <div class="ph"><div class="phl"><div class="ey">WEBSITE</div><div class="pt">Editor do Site <span class="ac">Kernex</span></div></div></div>
+    <div class="card" style="padding:20px;max-width:800px">
+      <div class="fg" style="margin-bottom:14px">
+        <label class="fl">Nome Comercial da Agência</label>
+        <input class="fi" id="edt-site-name" value="Viajante Pro — Agência de Viagens">
+      </div>
+      <div class="fg" style="margin-bottom:14px">
+        <label class="fl">Slogan / Proposta de Valor</label>
+        <input class="fi" id="edt-site-slogan" value="Sua próxima viagem inesquecível começa aqui">
+      </div>
+      <div class="fg" style="margin-bottom:14px">
+        <label class="fl">E-mail de Atendimento</label>
+        <input class="fi" id="edt-site-email" value="contato@viajantepro.com.br">
+      </div>
+      <div class="fg" style="margin-bottom:14px">
+        <label class="fl">Telefone / WhatsApp de Suporte</label>
+        <input class="fi" id="edt-site-phone" value="+55 11 99999-0001">
+      </div>
+      <div class="fg" style="margin-bottom:20px">
+        <label class="fl">Identidade Institucional</label>
+        <input class="fi" value="Powered by Kernex" readonly style="opacity:0.8">
+      </div>
+      <button class="btn bc" onclick="saveSiteConfig()"><i class="ri-save-line"></i>Salvar Alterações do Site</button>
+    </div>
+  </div>
+
   <!-- CONFIGURAÇÕES -->
   <div class="page" id="pg-configuracoes">
     <div class="ph"><div class="phl"><div class="ey">SISTEMA</div><div class="pt">Configurações <span class="ac">Viajante Pro</span></div></div><div class="pha"><button class="btn bc" onclick="saveSettings()"><i class="ri-save-line"></i>Salvar</button></div></div>
@@ -818,7 +882,7 @@ function nav(p,el){
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
   const pg=document.getElementById('pg-'+p);if(pg)pg.classList.add('active');
   if(el)el.classList.add('active');
-  const titles={dashboard:'✈️ Dashboard',roteiros:'🗺️ Roteiros & Pacotes',rooming:'🏨 Rooming List',checkin:'✅ Check-in PAX',pipeline:'👥 Pipeline CRM',passageiros:'👤 Passageiros',gps:'📍 GPS Tempo Real',pabx:'📞 PABX Cloud',financeiro:'💰 NEXIA Pay Split',cortex:'🤖 CORTEX Co-Pilot',predictive:'⚠️ Alertas Preditivos',configuracoes:'⚙️ Configurações'};
+  const titles={dashboard:'✈️ Dashboard',roteiros:'🗺️ Roteiros & Pacotes',rooming:'🏨 Rooming List',checkin:'✅ Check-in PAX',pipeline:'👥 Pipeline CRM',passageiros:'👤 Passageiros',gps:'📍 GPS Tempo Real',pabx:'📞 PABX Cloud',financeiro:'💰 NEXIA Pay Split',cortex:'🤖 CORTEX Co-Pilot',predictive:'⚠️ Alertas Preditivos','chat-pax':'💬 Atendimento & Chat PAX','editor-site':'🎨 Editor do Site Kernex',configuracoes:'⚙️ Configurações'};
   document.getElementById('tb-title').textContent=titles[p]||p;
   if(p==='dashboard')loadDashboard();
   if(p==='roteiros')loadRoteiros();
@@ -1473,6 +1537,37 @@ if (!window.nexiaConfirm) {
 
 <script>
 /* ═══ authFetch — envia token Firebase em TODOS os requests /api ═══ */
+function sendAdminChatMessage() {
+  const input = document.getElementById('admin-chat-input');
+  if (!input) return;
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  const history = document.getElementById('admin-chat-history');
+  if (history) {
+    const bubble = document.createElement('div');
+    bubble.style.cssText = 'background:rgba(0,229,255,.1);padding:10px;border-radius:8px;max-width:80%;margin-left:auto;font-size:12px;color:#fff;margin-bottom:10px';
+    bubble.innerHTML = '<strong>Agência VP:</strong> ' + msg;
+    history.appendChild(bubble);
+    history.scrollTop = history.scrollHeight;
+  }
+  nexiaToast('Mensagem enviada ao passageiro com sucesso!', 'ok');
+}
+
+function saveSiteConfig() {
+  const name = document.getElementById('edt-site-name')?.value;
+  const email = document.getElementById('edt-site-email')?.value;
+  const phone = document.getElementById('edt-site-phone')?.value;
+
+  if (window.NEXIA && NEXIA._ready && NEXIA.db) {
+    NEXIA.db.collection('tenants').doc('viajante-pro').collection('config').doc('site').set({
+      name, email, phone, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true}).catch(()=>{});
+  }
+  nexiaToast('Configurações do site salvas com sucesso!', 'ok');
+}
+
 async function authFetch(url, options = {}) {
   const user = (NEXIA.auth ? NEXIA.auth.currentUser : null);
   if (!user) {

@@ -41,6 +41,11 @@ test('Viajante Pro Site: vp-landing.html existe e contém estrutura comercial co
   assert.ok(html.includes('orcTelefone'), 'Formulário deve ter campo de telefone');
 });
 
+test('Viajante Pro Site: filtro de categorias por lista exata (split)', (t) => {
+  const html = fs.readFileSync(VP_LANDING_PATH, 'utf8');
+  assert.ok(html.includes('.split('), 'Função de filtro deve dividir data-cat por espaço para evitar correspondência parcial de substring');
+});
+
 test('Viajante Pro Site: sites/viajantepro/index.html e rota /api/leads estao alinhados', (t) => {
   assert.ok(fs.existsSync(SITE_INDEX_PATH), 'sites/viajantepro/index.html deve existir');
   const html = fs.readFileSync(SITE_INDEX_PATH, 'utf8');

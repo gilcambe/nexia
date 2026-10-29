@@ -14,7 +14,10 @@ const TENTATIVAS_ATE_DIVIDIR = 3;
 const MAX_SEM_ENTREGA = 2;
 // Rótulo sem-entrega-N: N = quantas rodadas terminaram sem entrega. Devolve o próximo passo depois de mais uma.
 function depoisSemEntrega(labels) {
-  const n = Math.max(0, ...labels.map(l => /^sem-entrega-(\d+)$/.exec(l)).filter(Boolean).map(m => Number(m[1]))) + 1;
+  const list = Array.isArray(labels) ? labels : [];
+  const arr = list.map(l => (typeof l === 'string' ? l : (l && l.name) || ''));
+  const nums = arr.map(l => /^sem-entrega-(\d+)$/.exec(l)).filter(Boolean).map(m => Number(m[1]));
+  const n = (nums.length > 0 ? Math.max(0, ...nums) : 0) + 1;
   return { n, travar: n >= MAX_SEM_ENTREGA };
 }
 const CONFIAVEIS = ['OWNER', 'MEMBER', 'COLLABORATOR'];
@@ -120,7 +123,7 @@ function errosDeAmbiente(runs, agora = Date.now()) {
   for (const [assinatura, g] of porAssinatura) {
     if (g.tarefas.size < MIN_AMBIENTE) continue;
     for (const r of g.runs) r.ambiente = assinatura;
-    alertas.push({ assinatura, tarefas: [...g.tarefas].map(Number), runs: g.runs.map(r => r.id) });
+    alertas.push({ assinatura, tarefas: Array.from(g.tarefas || []).map(Number), runs: g.runs.map(r => r.id) });
   }
   return alertas;
 }

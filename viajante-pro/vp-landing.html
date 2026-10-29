@@ -803,14 +803,35 @@
       };
     })();
   </script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="/core/nexia-boot.js"></script>
+  <script src="/core/auth.js"></script>
+  <script src="/core/bridge.js"></script>
+  <script src="/core/nav-guard.js"></script>
 </head>
 <body>
+
+  <!-- KERNEX INSTITUTIONAL PRESENTATION MODAL -->
+  <div id="kernexPresentationModal" class="modal-overlay active">
+    <div class="modal-container" style="text-align:center;">
+      <button class="modal-close" onclick="closeModal('kernexPresentationModal')"><i class="ri-close-line"></i></button>
+      <img src="/public/central/logos/kernex.svg" alt="Kernex OS" width="90" height="90" style="margin: 0 auto 16px; display:block;" onerror="this.onerror=null;this.src='/public/central/logos/vp.svg'">
+      <span class="card-tag" style="position:static;display:inline-block;margin-bottom:12px;">Ecossistema Kernex</span>
+      <h3 style="font-size: 24px; color: #FFF; margin-bottom: 12px;" class="font-serif">Viajante Pro · Powered by Kernex</h3>
+      <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px;">
+        Bem-vindo à Viajante Pro. Nossa agência combina curadoria humana personalizada de viagens com o ecossistema e tecnologia de inteligência de processos **Kernex OS**.
+      </p>
+      <button class="btn btn-gold" style="width: 100%;" onclick="closeModal('kernexPresentationModal')">Conhecer Destinos & Roteiros</button>
+    </div>
+  </div>
 
   <!-- HEADER / NAV -->
   <header id="vpNav">
     <div class="container nav-inner">
       <a href="#hero" class="brand-logo">
-        <div class="brand-icon">VP</div>
+        <img src="../public/central/logos/vp.svg" alt="Viajante Pro Logo" width="40" height="40" style="object-fit:contain" onerror="this.onerror=null;this.src='/public/central/logos/vp.svg'">
         <div class="brand-text">
           <span class="brand-name">Viajante Pro</span>
           <span class="brand-sub">Agência de Viagens</span>
@@ -991,7 +1012,7 @@
         <!-- CARD 4 -->
         <div class="card dest-card" data-cat="nacional cultura">
           <div class="card-img-wrap">
-            <img src="https://images.unsplash.com/photo-1511527667028-356427a15964?w=800&q=80" alt="Gramado" class="card-img">
+            <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop&q=80" alt="Gramado" class="card-img">
             <span class="card-tag">Nacional · Serra</span>
           </div>
           <div class="card-body">
@@ -1492,7 +1513,7 @@
       <div class="footer-grid">
         <div>
           <a href="#hero" class="brand-logo" style="margin-bottom: 16px;">
-            <div class="brand-icon">VP</div>
+        <img src="/public/central/logos/vp.svg" alt="Viajante Pro Logo" width="40" height="40" style="object-fit:contain" onerror="this.onerror=null;this.src='/favicon-vp.svg'">
             <div class="brand-text">
               <span class="brand-name">Viajante Pro</span>
               <span class="brand-sub">Agência de Viagens</span>
@@ -1622,12 +1643,12 @@
     // Destination Filter
     function filterDestinations(category, btnEl) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      btnEl.classList.add('active');
+      if (btnEl) btnEl.classList.add('active');
 
       const cards = document.querySelectorAll('.dest-card');
       cards.forEach(card => {
-        const cats = card.getAttribute('data-cat') || '';
-        if (category === 'all' || cats.includes(category)) {
+        const catList = (card.getAttribute('data-cat') || '').split(/\s+/);
+        if (category === 'all' || catList.includes(category)) {
           card.style.display = 'flex';
         } else {
           card.style.display = 'none';
