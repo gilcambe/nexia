@@ -40,3 +40,22 @@ test('PWA Viajante Pro: arquivos do app existem e possuem conteúdo válido', ()
 test('PWA Viajante Pro: rotas registradas em TENANT_PAGES', () => {
   assert.deepStrictEqual(TENANT_PAGES['/viajante-pro/app'], ['viajante-pro/app', 'index.html']);
 });
+
+test('PWA Viajante Pro: app.js não contém dados falsos e contém app_obter', () => {
+  const appJs = path.join(RAIZ, 'app.js');
+  assert.ok(fs.existsSync(appJs), 'app.js deve existir');
+  
+  const appJsContent = fs.readFileSync(appJs, 'utf8');
+  
+  // Verificar que não contém dados falsos removidos
+  assert.ok(!appJsContent.includes('dadosPadrao'), 'app.js não deve conter dadosPadrao');
+  assert.ok(!appJsContent.includes('Carlos Eduardo'), 'app.js não deve conter Carlos Eduardo');
+  assert.ok(!appJsContent.includes('Apólice #982100'), 'app.js não deve conter Apólice #982100');
+  
+  // Verificar que contém a chamada para app_obter
+  assert.ok(appJsContent.includes('app_obter'), 'app.js deve conter app_obter');
+  
+  // Verificar que a chamada app_obter está na função buscarViagem
+  assert.ok(appJsContent.includes('acao: \'app_obter\''), 'app.js deve chamar app_obter na API');
+});
+
