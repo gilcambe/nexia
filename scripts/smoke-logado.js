@@ -284,6 +284,7 @@ async function main() {
       const jaFalhou = results.filter(r => !r.ok).length > 0;
       if (!jaFalhou) {
         results.push({ ok: false, name: 'limpeza de teste' });
+        process.exitCode = 1; // Define o código de saída para 1 em caso de falha na limpeza
       }
     }
   }
@@ -293,6 +294,9 @@ async function main() {
   if (bad.length > 0) {
     console.log(`  AVISO: testes falharam`);
   }
+  // O código de saída já foi definido em process.exitCode se a limpeza falhou.
+  // Se nenhum outro teste falhou e a limpeza foi bem-sucedida, o código de saída será 0.
+  // Se outros testes falharam, process.exitCode já será 1.
   process.exit(bad.length ? 1 : 0);
 }
 
