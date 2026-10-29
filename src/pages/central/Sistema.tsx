@@ -167,9 +167,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
       <SaudeHistorico />
       <UltimosErros />
 
-      <Cartao titulo="🪜 Escada">
-        <EscadaCard />
-      </Cartao>
+
 
       <Cartao titulo="Chaves e IAs" acao={<Botao onClick={testar} disabled={testando} testid="testar-chaves">{testando ? "Testando…" : "🧪 Testar todas agora"}</Botao>}>
         {!d.empresa ? <Carregando /> : (
