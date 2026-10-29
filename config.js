@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { obterConfig, salvarConfig, verificarSuporteWebGPU, MODELOS_SUPORTADOS } from '../../ia-local';
+import { obterConfig, salvarConfig, verificarSuporteWebGPU, MODELOS_SUPORTADOS } from './ia-local';
 
 export default function ConfigLocalAI() {
   const [config, setConfig] = useState(() => obterConfig());
