@@ -14,6 +14,23 @@ export interface PrefsAvisos {
 }
 
 export const suportaAvisos = () => typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+// WebGPU + memória mínima para IA local no aparelho.
+export const memoriarMinima = () => typeof navigator !== 'undefined' && typeof navigator.deviceMemory === 'number';
+
+export const suportaIAOffline = async (): Promise<{ suportado: boolean; motivo?: string; memoriaGb?: number }> => {
+  if (typeof navigator === 'undefined') return { suportado: false, motivo: 'Navegador não detectado.' };
+  if (!navigator.gpu) return { suportado: false, motivo: 'WebGPU não suportado neste navegador.' };
+  try {
+    const adapter = await navigator.gpu.requestAdapter();
+    if (!adapter) return { suportado: false, motivo: 'WebGPU não suportou um adaptador no seu aparelho.' };
+  } catch (err: any) {
+    return { suportado: false, motivo: `Falha ao solicitar WebGPU: ${err?.message || err}` };
+  }
+  const memoriaGb = typeof navigator.deviceMemory === 'number' ? navigator.deviceMemory : 4;
+  const temMemoria = memoriaGb >= 4;
+  return { suportado: temMemoria, motivo: temMemoria ? undefined : `Memória insuficiente (${memoriaGb} GB).`, memoriaGb };
+};
 export const ehIphoneSemInstalar = () => /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window.matchMedia?.('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone);
 
 const deB64u = (s: string) => {
