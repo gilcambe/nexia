@@ -20,12 +20,27 @@ export default function EscadaCard() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/escada');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // Obtém o token de autenticação atual do localStorage (ou sessionStorage/cookies conforme padrão da Central)
+      const token = localStorage.getItem('nexia_token') || localStorage.getItem('token') || '';
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const res = await fetch('/api/escada', { headers });
+      if (!res.ok) {
+        if (res.status === 401) {
+          throw new Error('Sessão expirada ou não autorizado.');
+        }
+        throw new Error('Não foi possível carregar os dados.');
+      }
       const json = await res.json();
       setData(json);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erro ao carregar');
+      // Mensagem genérica e segura para não expor detalhes internos
+      setError(err instanceof Error && err.message ? err.message : 'Erro ao carregar dados');
     } finally {
       setLoading(false);
     }
@@ -67,7 +82,7 @@ export default function EscadaCard() {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 p-4 rounded-xl bg-nexia-surface border border-nexia-border shadow-sm">
       {/* Header com título e selo condicional */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -110,10 +125,10 @@ export default function EscadaCard() {
       {/* Números da fila e Jules hoje */}
       <div className="pt-2 border-t border-nexia-border flex items-center justify-between text-sm">
         <div className="text-nexia-muted">
-          Fila: <span className="font-semibold text-white">{fila ?? 0}</span>
+          Fila: <span className="font-semibold text-white">{Number(fila) || 0}</span>
         </div>
         <div className="text-nexia-muted">
-          Jules hoje <span className="font-semibold text-white">{julesHoje ?? 0} / 15</span>
+          Jules hoje <span className="font-semibold text-white">{Number(julesHoje) || 0} / 15</span>
         </div>
       </div>
     </div>
