@@ -36,10 +36,14 @@ for dir in $DIRECTORIES; do
             # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
             sed -i \
                 -e 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' \
+                # Passo 2: Substituir <title> contendo NEXIA inteiramente por <title>Cortex</title>
+                -e "s/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/gi" \
+                # Passo 3: Remover apenas "NEXIA" de <title> mantendo o restante
                 -e "s/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/gi" \
-                -e "s/og:site_name='\([^']*\)NEXIA\([^']*\)'/og:site_name='\1\2'/gi" \
-                -e "s/og:site_name="\([^"]*\)NEXIA\([^"]*\)"/og:site_name="\1\2"/gi" \
-                -e "s/og:site_name=([^)]*NEXIA[^)]*)/og:site_name=\1/g" \
+                # Passo 4: Substituir og:site_name contendo NEXIA inteiramente por og:site_name="Cortex"
+                -e "s/og:site_name=['"]?[^'"]*NEXIA[^'"]*['"]?/og:site_name='Cortex'/gi" \
+                # Passo 5: Remover apenas "NEXIA" de og:site_name mantendo o restante
+                -e "s/og:site_name=['"]?\([^'"]*\)NEXIA\([^'"]*\)['"]?/og:site_name='\1\2'/gi" \
                 "$file"
         done
     else
