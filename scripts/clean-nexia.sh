@@ -46,7 +46,8 @@ process_file() {
     fi
 
     # (2) Substitui <title>.*NEXIA.*</title> por <title>Cortex</title>
-    # Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Cortex</title>
+# Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Cortex</title>
+#    OBS: Remove todo o conteúdo existente do título e substitui por 'Cortex'
     if sed -E -i 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
