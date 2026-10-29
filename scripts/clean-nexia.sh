@@ -13,7 +13,7 @@
 #    Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Meu Site "
 #
 # COMO EXECUTAR AO FINAL DA PR:
-#   1. Abra um terminal na raiz do repositório na branch nexia/criar-o-script-scripts-clean-nexia-sh-qu-6f1bd8
+#   1. Abra um terminal na raiz do repositório
 #   2. Rode: bash scripts/clean-nexia.sh
 #   3. Confirme que o script termina com 'Nenhuma ocorrência de NEXIA encontrada em títulos.'
 #   4. Se houver arquivos alterados, faça commit e abra a PR normalmente.
@@ -25,8 +25,7 @@ set -e
 # O script cria backup automático dos arquivos antes de modificá-los
 
 # Diretórios para processar conforme solicitado no pedido
-# Inclui viajante-pro/ conforme comando de verificação final
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 
 # --- FUNÇÃO DE PROCESSAMENTO DE ARQUIVO ---
 
@@ -46,12 +45,9 @@ process_file() {
         changes_made=1
     fi
 
-    # (2) Remove apenas a palavra NEXIA de <title> mantendo o restante do conteúdo
-    # Para <title>: remove apenas a palavra NEXIA mantendo o resto do conteúdo
-    # Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Meu Site Cortex — Plataforma de IA</title>
-    # Padrão: <title>(qualquer coisa que não seja <)NEXIA(qualquer coisa que não seja <)</title>
-    # Substitui por: <title>(qualquer coisa) + (qualquer coisa)</title>
-    if sed -E -i 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file" 2>/dev/null; then
+    # (2) Substitui <title>.*NEXIA.*</title> por <title>Cortex</title>
+    # Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Cortex</title>
+    if sed -E -i 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
     
