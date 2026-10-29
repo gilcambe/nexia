@@ -1,14 +1,15 @@
-const TIMEOUT_MS = 10000; // Timeout de 10 segundos para execução segura
+const DEFAULT_TIMEOUT_MS = 10000; // Timeout padrão de 10 segundos para execução segura
 
 /**
  * Executa um HTML dentro de um <iframe sandbox="allow-scripts">,
- * captura mensagens postMessage como stdout/erro, aplica timeout de 10s
+ * captura mensagens postMessage como stdout/erro, aplica timeout configurável
  * e remove o iframe ao terminar.
  *
  * @param {string} html - Código HTML a ser injetado no iframe.
+ * @param {number} [timeoutMs=DEFAULT_TIMEOUT_MS] - Timeout em milissegundos (padrão: 10000).
  * @returns {Promise<{stdout: string, error: string}>}
  */
-export default function runHTML(html) {
+export default function runHTML(html, timeoutMs = DEFAULT_TIMEOUT_MS) {
   return new Promise((resolve) => {
     let stdout = '';
     let error = '';
@@ -20,29 +21,41 @@ export default function runHTML(html) {
       if (resolved) return;
       resolved = true;
       clearTimeout(timer);
+      
+      // Remove o iframe com tratamento de erro robusto
       try {
         if (iframe && iframe.parentNode) {
           iframe.parentNode.removeChild(iframe);
         }
-      } catch (_) {
-        // ignora erro na remoção
+      } catch (removeError) {
+        // Registra erro mas continua a execução
+        console.warn('Erro ao remover iframe:', removeError.message);
       }
+      
+      // Remove o event listener com tratamento de erro robusto
       try {
         window.removeEventListener('message', handleMessage);
-      } catch (_) {
-        // ignora erro ao remover listener
+      } catch (removeListenerError) {
+        // Registra erro mas continua a execução
+        console.warn('Erro ao remover event listener:', removeListenerError.message);
       }
+      
       resolve(result);
     };
 
     const timer = setTimeout(() => {
-      finish({ stdout, error: 'timeout: iframe excedeu 10s' });
-    }, TIMEOUT_MS);
+      finish({ stdout, error: `timeout: iframe excedeu ${timeoutMs}ms` });
+    }, timeoutMs);
 
     const handleMessage = (event) => {
       try {
-        // Verifica se a mensagem vem do iframe atual
+        // Verifica se a mensagem vem do iframe atual (verificação de origem e source)
         if (event.origin !== window.location.origin && event.origin !== 'null') {
+          return;
+        }
+        
+        // Verifica se a mensagem vem do iframe correto (proteção contra spoofing)
+        if (event.source !== iframe.contentWindow) {
           return;
         }
         
@@ -95,28 +108,28 @@ export default function runHTML(html) {
         '  ' +
         '  console.log = function(...args) {' +
         '    originalLog.apply(console, args);' +
-        '    window.parent.postMessage({ iframeId: "' + iframeId + '", stdout: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
+        '    window.parent.postMessage({ iframeId: "' + iframeId + '", stdout: Array.isArray(args) ? args.join(" ") : String(args) }, window.location.origin);' +
         '  };' +
         '  ' +
         '  console.error = function(...args) {' +
         '    originalError.apply(console, args);' +
-        '    window.parent.postMessage({ iframeId: "' + iframeId + '", error: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
+        '    window.parent.postMessage({ iframeId: "' + iframeId + '", error: Array.isArray(args) ? args.join(" ") : String(args) }, window.location.origin);' +
         '  };' +
         '  ' +
         '  console.warn = function(...args) {' +
         '    originalWarn.apply(console, args);' +
-        '    window.parent.postMessage({ iframeId: "' + iframeId + '", stdout: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
+        '    window.parent.postMessage({ iframeId: "' + iframeId + '", stdout: Array.isArray(args) ? args.join(" ") : String(args) }, window.location.origin);' +
         '  };' +
         '  ' +
         '  console.info = function(...args) {' +
         '    originalInfo.apply(console, args);' +
-        '    window.parent.postMessage({ iframeId: "' + iframeId + '", stdout: Array.isArray(args) ? args.join(" ") : String(args) }, "*");' +
+        '    window.parent.postMessage({ iframeId: "' + iframeId + '", stdout: Array.isArray(args) ? args.join(" ") : String(args) }, window.location.origin);' +
         '  };' +
         '})();' +
         // Injeta o HTML recebido como conteúdo do body
         html +
         // Sinaliza que terminou
-        '<script>window.parent.postMessage({ iframeId: "' + iframeId + '", done: true }, "*");</script>' +
+        '<script>window.parent.postMessage({ iframeId: "' + iframeId + '", done: true }, window.location.origin);</script>' +
         '</body>' +
         '</html>'
       );
