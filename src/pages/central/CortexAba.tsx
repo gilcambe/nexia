@@ -4,6 +4,18 @@ import { useCentral, haQuanto } from "./api";
 import { Cartao, Numero, Botao, Carregando, Sinal } from "./ui";
 import ContasReserva from "../cortex/Reservas";
 
+// Tipo estendido para dados extras que podem vir da API
+interface CortexEstendido {
+  naFila: number;
+  fazendo: Tarefa[];
+  travadas: Tarefa[];
+  feitas7: number;
+  ultimas: Tarefa[];
+  proximas: Tarefa[];
+  porDia?: { dia: string; feitas: number }[];
+  divididos?: { numero: number; titulo: string; pct: number; prontas: number; total: number }[];
+}
+
 function Lista({ itens, vazio }: { itens: Tarefa[]; vazio: string }) {
   if (!itens.length) return <p className="text-sm text-nexia-muted">{vazio}</p>;
   return (
