@@ -68,7 +68,12 @@ async function main() {
   if (process.env.REVIEW_PR === '0') return console.log('REVIEW_PR=0: desligado.');
   const token = process.env.GITHUB_TOKEN;
   const prs = (await gh(token, 'GET', '/pulls?state=open&base=develop&per_page=100')).json || [];
-  const candidatos = escolher(prs);
+  // Filtrar PRs do Jules com branch 'nexia/' e CI verde
+  const candidatos = prs.filter(pr => {
+    return pr.author === 'Jules' && 
+           pr.branch.startsWith('nexia/') && 
+           ciVerde(((await gh(token, 'GET', `/commits/${pr.head.sha}/check-runs?per_page=100`)).json || {}).check_runs || []);
+  });
   const { getRouter } = require('../nexia-ai/model-router');
   const { listFor } = require('../nexia-ai/orchestrator/models');
   const router = getRouter();
