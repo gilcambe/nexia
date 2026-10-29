@@ -34,10 +34,14 @@ for dir in $DIRECTORIES; do
                 -e "s/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/gi" \\
                 # Passo 3: Qualquer og:site_name que contenha NEXIA vira og:site_name='Cortex'
                 -e "s/og:site_name=['"]?[^'"]*NEXIA[^'"]*['"]?/og:site_name='Cortex'/gi" \\
-                # Passo 4: Remover apenas "NEXIA" de <title> mantendo o restante (após substituição completa)
+                # Passo 4: Remover apenas "NEXIA" de <title> mantendo o restante (qualquer posição)
                 -e "s/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/gi" \\
-                # Passo 5: Remover apenas "NEXIA" de og:site_name mantendo o restante (após substituição completa)
+                -e "s/<title>NEXIA\([^<]*\)<\/title>/<title>\1<\/title>/gi" \\
+                -e "s/<title>\([^<]*\)NEXIA<\/title>/<title>\1<\/title>/gi" \\
+                # Passo 5: Remover apenas "NEXIA" de og:site_name mantendo o restante (qualquer posição)
                 -e "s/og:site_name=['"]?\([^'"]*\)NEXIA\([^'"]*\)['"]?/og:site_name='\1\2'/gi" \\
+                -e "s/og:site_name=['"]?NEXIA\([^'"]*\)['"]?/og:site_name='\1'/gi" \\
+                -e "s/og:site_name=['"]?\([^'"]*\)NEXIA['"]?/og:site_name='\1'/gi" \\
                 "$file"
         done
     else
