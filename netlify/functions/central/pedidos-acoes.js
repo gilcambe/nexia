@@ -4,6 +4,7 @@ let montarPedido = null;
 try { ({ montarPedido } = require('./pedidos-pedir')); } catch { /* sem o roteador por projeto, vale o pedido simples */ }
 
 const { publicar } = require('./pedidos-publicar');
+const pedidosJules = require('./pedidos-jules');
 const pedidos_jules = require('./pedidos-jules');
 const { robos } = require('./pedidos-gh');
 
@@ -36,6 +37,15 @@ async function anexar(p, b) {
   const caminho = 'cortex-anexos/' + new Date().toISOString().slice(0, 10) + '-' + Date.now().toString(36) + '-' + nome;
   await p.gh(repo + '/contents/' + caminho, { method: 'PUT', body: JSON.stringify({ message: 'Anexo do Cortex: ' + nome, content: dados, branch: RAMO_ANEXOS }) });
   return r(200, { ok: true, caminho, ramo: RAMO_ANEXOS, mensagem: 'Anexo guardado.' });
+}
+
+// Despacha um workflow do GitHub Actions (workflow_dispatch) pelo client GH do pedido.
+async function rodar(ghClient, workflowName, inputs) {
+  const repo = '/repos/gilcambe/nexia';
+  return await ghClient(repo + '/actions/workflows/' + encodeURIComponent(workflowName) + '/dispatches', {
+    method: 'POST',
+    body: JSON.stringify({ ref: 'develop', inputs: inputs || {} })
+  });
 }
 
 async function agir(p, b, quem) {
@@ -167,6 +177,61 @@ async function agir(p, b, quem) {
     await p.gh(issue(pr.number) + '/labels', { method: 'POST', body: JSON.stringify({ labels: ['automerge'] }) });
     return r(200, { ok: true, mensagem: 'PR #' + pr.number + ' aprovado. Entra sozinho quando os testes ficarem verdes.' });
   }
+  // Socorro: lista issues travadas e tenta reservar (cortex-reserva.yml) ou encaminhar para Jules (pedidos-jules).
+  if (b.acao === 'socorro') {
+    const maxJules = Number(b.maxJules) || 3;
+    let enviadosJules = 0;
+    const resultados = [];
+
+    try {
+      const issues = await p.gh('/repos/gilcambe/nexia/issues?state=open&labels=cortex-travado&per_page=30&sort=created&direction=asc', { method: 'GET' });
+
+      const lista = Array.isArray(issues) ? issues : [];
+
+      // Ordenar por prioridade (cortex-prioridade-X: menor X = mais alta) e depois por criação (mais antiga primeiro).
+      lista.sort((a, b) => {
+        const pa = (a.labels || []).find((l) => /^cortex-prioridade-(\d+)$/.test(l.name));
+        const pb = (b.labels || []).find((l) => /^cortex-prioridade-(\d+)$/.test(l.name));
+        const na = pa ? Number(pa.name.match(/^cortex-prioridade-(\d+)$/)[1]) : 999;
+        const nb = pb ? Number(pb.name.match(/^cortex-prioridade-(\d+)$/)[1]) : 999;
+        if (na !== nb) return na - nb;
+        return new Date(a.created_at) - new Date(b.created_at);
+      });
+
+      const agora = new Date();
+      const seisHorasAtras = new Date(agora.getTime() - 6 * 60 * 60 * 1000);
+
+      for (const i of lista.slice(0, 5)) {
+        const labels = (i.labels || []).map((l) => l.name);
+        const citouWorkflow = /\.github\/workflows\//.test(i.body || '');
+        const reservaTentouRecente = labels.includes('reserva-tentou') && new Date(i.updated_at) >= seisHorasAtras;
+        const reservas = labels.filter((l) => /^tentativa-\d+$/.test(l)).length;
+
+        // Chamar rodar para reservar via workflow cortex-reserva.yml.
+        await rodar(p.gh, 'cortex-reserva.yml', { numero: i.number });
+
+        let para = 'reserva';
+        let link = i.html_url || 'https://github.com/gilcambe/nexia/issues/' + i.number;
+
+        // Encaminhar para Jules se citar workflow ou já tiver 2 reservas (máximo 3 encaminhamentos).
+        if ((citouWorkflow || reservas >= 2) && enviadosJules < maxJules) {
+          const x = await pedidosJules.mandarParaJules(p, i.number, quem);
+          if (x.ok) {
+            para = 'jules';
+            link = x.corpo && x.corpo.link ? x.corpo.link : link;
+            enviadosJules++;
+          }
+        }
+
+        resultados.push({ numero: i.number, titulo: i.title, para, link });
+      }
+    } catch (e) {
+      return r(500, { error: 'Falha na ação socorro: ' + String(e.message || e) });
+    }
+
+    return r(200, resultados);
+  }
+
   return r(400, { error: 'Ação desconhecida.' });
 }
 
