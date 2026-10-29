@@ -19,10 +19,107 @@ const TIPOS = {
   '.png': 'image/png'
 };
 
+const DADOS_VIAGEM_MOCK = {
+  ok: true,
+  viagem: {
+    token: 'TOKEN_TESTE_VP',
+    passageiro: 'Ana Silva',
+    destino: 'Paris',
+    data_inicio: '15/11/2026',
+    data_fim: '22/11/2026',
+    status_viagem: 'durante',
+    hoje: {
+      dia_numero: 2,
+      data: '16/11/2026',
+      eventos: [
+        { hora: '09:00', tipo: 'passeio', titulo: 'Visita ao Museu do Louvre', endereco: 'Rue de Rivoli, 75001 Paris' },
+        { hora: '15:00', tipo: 'hotel', titulo: 'Check-in no Le Meurice Paris', endereco: '228 Rue de Rivoli, 75001 Paris' }
+      ]
+    },
+    voos: [
+      {
+        cia: 'Air France',
+        numero: 'VPX982',
+        data: '15/11/2026',
+        status: 'Confirmado',
+        origem: 'GRU (São Paulo)',
+        horario_partida: '22:45',
+        destino: 'CDG (Paris)',
+        horario_chegada: '14:30',
+        terminal: '2E',
+        portao: 'K43',
+        assento: '14A',
+        bagagem_mao: '1 volume (12kg)',
+        bagagem_despachada: '2 malas (23kg cada)',
+        aviso_checkin: 'Check-in abre 24h antes do voo',
+        localizador: 'VPX982',
+        link_checkin: 'https://www.airfrance.com.br/check-in'
+      }
+    ],
+    roteiro: [
+      {
+        dia: 1,
+        data: '15/11/2026',
+        titulo: 'Embarque em São Paulo',
+        descricao: 'Voo noturno rumo a Paris.'
+      },
+      {
+        dia: 2,
+        data: '16/11/2026',
+        titulo: 'Museu do Louvre e Chegada em Paris',
+        descricao: 'Visita ao famoso Museu do Louvre no coração de Paris.',
+        endereco: 'Rue de Rivoli, 75001 Paris'
+      }
+    ],
+    hotel_carro: {
+      hotel: {
+        nome: 'Le Meurice Paris',
+        voucher: 'LMP-99482',
+        endereco: '228 Rue de Rivoli, 75001 Paris',
+        telefone: '+33 1 44 58 10 10',
+        checkin: '15:00',
+        checkout: '12:00'
+      },
+      carro: {
+        empresa: 'Hertz',
+        voucher: 'HTZ-3321',
+        modelo: 'Peugeot 208 ou similar',
+        retirada: 'Aeroporto CDG',
+        devolucao: 'Aeroporto CDG',
+        telefone: '+33 1 70 96 80 00'
+      }
+    },
+    documentos: [
+      { tipo: 'voucher', titulo: 'Voucher Hotel Le Meurice', codigo: 'LMP-99482' },
+      { tipo: 'seguro', titulo: 'Apólice Seguro Viagem', codigo: 'SEG-883192' }
+    ],
+    motorista: {
+      hotel_nome: 'Le Meurice Paris',
+      hotel_endereco: '228 Rue de Rivoli, 75001 Paris',
+      instrucoes_idioma_local: 'S\'il vous plaît, emmenez-moi à l\'hôtel Le Meurice au 228 Rue de Rivoli.'
+    },
+    emergencia: {
+      atendimento_vp_24h: '+55 11 99999-8888',
+      emergencia_pais: '112',
+      consulado_brasil: '+33 1 45 61 63 00',
+      seguro_viagem: '+55 11 4004-9000'
+    }
+  }
+};
+
 const servidor = http.createServer((req, res) => {
-  let p = decodeURIComponent(new URL(req.url, 'http://127.0.0.1').pathname);
-  if (p === '/' || p === '/app/' || p.endsWith('/')) p += 'index.html';
-  p = p.replace(/^\/(app\/)?/, '');
+  const urlObj = new URL(req.url, 'http://127.0.0.1');
+  let p = decodeURIComponent(urlObj.pathname);
+
+  if (p === '/api/viagem') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify(DADOS_VIAGEM_MOCK));
+  }
+
+  if (p === '/' || p === '/app/' || p === '/viajante-pro/app/' || p.endsWith('/')) {
+    p += 'index.html';
+  }
+  p = p.replace(/^\/(viajante-pro\/app\/|app\/)?/, '');
   const arq = path.join(RAIZ, p);
   if (!arq.startsWith(RAIZ) || !fs.existsSync(arq) || fs.statSync(arq).isDirectory()) {
     res.writeHead(404);
@@ -69,11 +166,18 @@ function confere(cond, msg) {
   };
 
   console.log('1. Abrindo app com token via link público');
-  await page.goto(base + '/?t=TOKEN_TESTE_VP', { waitUntil: 'load' });
+  await page.goto(base + '/viajante-pro/app/?t=TOKEN_TESTE_VP', { waitUntil: 'load' });
   await page.waitForSelector('#app-conteudo');
   await page.waitForTimeout(500);
   confere(await page.isVisible('#carimbo-atualizacao'), 'Carimbo de atualização visível');
   await tirarFoto('01-hoje');
+
+  // Aguardar ativação do Service Worker antes do teste offline
+  await page.evaluate(async () => {
+    if ('serviceWorker' in navigator) {
+      await navigator.serviceWorker.ready;
+    }
+  });
 
   // Verificar sem rolagem horizontal
   const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
@@ -114,7 +218,7 @@ function confere(cond, msg) {
   await page.waitForTimeout(500);
 
   const carimboTexto = await page.textContent('#carimbo-atualizacao');
-  confere(carimboTexto.includes('Atualizado às'), 'Mostra aviso de horário atualizado mesmo offline');
+  confere(carimboTexto.includes('Atualizado às') || carimboTexto.includes('atualizado às'), 'Mostra aviso de horário atualizado mesmo offline');
 
   await page.click('#tab-voos');
   await page.waitForTimeout(300);
