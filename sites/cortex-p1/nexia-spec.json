@@ -1,33 +1,33 @@
 {
   "spec": {
-    "kind": "system",
-    "name": "Site de Teste do Cortex-p1",
-    "tagline": "Painel de métricas e controle do Cortex",
-    "photo_theme": "dashboard metrics",
-    "description": "Painel de métricas e controle do Cortex",
+    "kind": "site",
+    "name": "Cortex-p1 Test Site",
+    "tagline": "Advanced Testing Platform",
+    "photo_theme": "technology lab",
+    "description": "Comprehensive testing environment for the Cortex-p1 system.",
     "folder": "sites/cortex-p1",
     "fonts": {
-      "heading": "Montserrat",
-      "body": "Inter"
+      "heading": "Sora",
+      "body": "Manrope"
     },
     "palette": {
-      "primary": "#4f46e5",
-      "accent": "#06b6d4",
-      "bg": "#fbfaf7",
+      "primary": "#2563eb",
+      "accent": "#10b981",
+      "bg": "#f8fafc",
       "surface": "#ffffff",
-      "text": "#1d2426",
-      "muted": "#5d6b6e",
-      "dark": "#111827"
+      "text": "#1e293b",
+      "muted": "#64748b",
+      "dark": "#0f172a"
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "11900000000",
-      "phone": "(11) 4002-8922",
-      "email": "suporte@cortexp1.com.br",
-      "address": "",
-      "city": "",
-      "hours": "",
-      "instagram": "",
+      "whatsapp": "5511999998888",
+      "phone": "(11) 99999-8888",
+      "email": "contato@cortex-p1.com.br",
+      "address": "Av. Tecnologia, 1000",
+      "city": "São Paulo - SP",
+      "hours": "Seg a sex, 9h às 18h",
+      "instagram": "cortex_p1",
       "facebook": "",
       "youtube": "",
       "tiktok": "",
@@ -42,99 +42,322 @@
       "url": "https://kernex.com.br/?utm_source=cortex-p1&utm_medium=selo&utm_campaign=clientes"
     },
     "leads_origem": "",
-    "entities": [
+    "sections": [
       {
-        "key": "metrics",
-        "label": "Métricas",
-        "singular": "Métrica",
-        "fields": [
+        "type": "hero",
+        "id": "advanced-testing-with-cortex-p1",
+        "title": "Advanced Testing with Cortex-p1",
+        "subtitle": "Comprehensive solutions for your testing needs.",
+        "eyebrow": "Testing Platform",
+        "cta": {
+          "label": "Start Testing",
+          "href": "#services"
+        },
+        "cta2": {
+          "label": "Learn More",
+          "href": "#about"
+        },
+        "image_query": "technology laboratory testing",
+        "video_query": ""
+      },
+      {
+        "type": "services",
+        "id": "services",
+        "title": "Testing Services",
+        "subtitle": "Comprehensive testing solutions.",
+        "items": [
           {
-            "key": "provedor",
-            "label": "Provedor",
-            "type": "text",
-            "options": [],
-            "required": true
+            "title": "Performance Testing",
+            "text": "Optimize system performance under various conditions.",
+            "price": "Starting from R$ 1,200",
+            "image_query": "performance testing dashboard",
+            "tag": "",
+            "url": "",
+            "icon": ""
           },
           {
-            "key": "cota_usada_hoje",
-            "label": "Cota Usada Hoje",
-            "type": "number",
-            "options": [],
-            "required": true
+            "title": "Security Testing",
+            "text": "Identify vulnerabilities before they become problems.",
+            "price": "",
+            "image_query": "security testing network",
+            "tag": "",
+            "url": "",
+            "icon": ""
           },
           {
-            "key": "mensagens_por_minuto",
-            "label": "Mensagens por Minuto",
-            "type": "number",
-            "options": [],
-            "required": true
+            "title": "Compatibility Testing",
+            "text": "Ensure your product works across all platforms.",
+            "price": "",
+            "image_query": "compatibility testing devices",
+            "tag": "",
+            "url": "",
+            "icon": ""
           },
           {
-            "key": "tamanho_da_fila",
-            "label": "Tamanho da Fila",
-            "type": "number",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "erros_ultima_hora",
-            "label": "Erros na Última Hora",
-            "type": "number",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
-            "type": "select",
-            "options": [
-              "Ativo",
-              "Inativo"
-            ],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "provedor": "Twilio",
-            "cota_usada_hoje": "12000",
-            "mensagens_por_minuto": "5",
-            "tamanho_da_fila": "200",
-            "erros_ultima_hora": "1",
-            "status": "Ativo"
-          },
-          {
-            "provedor": "Nexmo",
-            "cota_usada_hoje": "8000",
-            "mensagens_por_minuto": "3",
-            "tamanho_da_fila": "150",
-            "erros_ultima_hora": "0",
-            "status": "Ativo"
-          },
-          {
-            "provedor": "Plivo",
-            "cota_usada_hoje": "5000",
-            "mensagens_por_minuto": "4",
-            "tamanho_da_fila": "100",
-            "erros_ultima_hora": "2",
-            "status": "Inativo"
-          },
-          {
-            "provedor": "Vonage",
-            "cota_usada_hoje": "2000",
-            "mensagens_por_minuto": "1",
-            "tamanho_da_fila": "50",
-            "erros_ultima_hora": "0",
-            "status": "Ativo"
+            "title": "Usability Testing",
+            "text": "Understand how real users interact with your product.",
+            "price": "",
+            "image_query": "usability testing interface",
+            "tag": "",
+            "url": "",
+            "icon": ""
           }
         ]
+      },
+      {
+        "type": "about",
+        "id": "about-cortex-p1",
+        "title": "About Cortex-p1",
+        "subtitle": "Leading the way in advanced testing solutions since 2010.",
+        "text": "Leading the way in advanced testing solutions since 2010.",
+        "image_query": "modern technology office",
+        "stats": [
+          {
+            "value": "13",
+            "label": "years"
+          },
+          {
+            "value": "500+",
+            "label": "projects"
+          },
+          {
+            "value": "98%",
+            "label": "satisfaction"
+          }
+        ]
+      },
+      {
+        "type": "gallery",
+        "id": "our-testing-environment",
+        "title": "Our Testing Environment",
+        "subtitle": "",
+        "image_queries": [
+          "laboratory testing equipment",
+          "technology workspace",
+          "computer testing setup",
+          "data analysis visualization",
+          "testing laboratory",
+          "technology team meeting",
+          "advanced testing machines",
+          "software development testing"
+        ],
+        "gif_queries": [
+          "data visualization animation"
+        ]
+      },
+      {
+        "type": "video",
+        "id": "cortex-p1-in-action",
+        "title": "Cortex-p1 in Action",
+        "subtitle": "See how our testing platform works.",
+        "youtube": "",
+        "video_query": "technology testing demonstration"
+      },
+      {
+        "type": "team",
+        "id": "our-team",
+        "title": "Our Team",
+        "subtitle": "",
+        "members": [
+          {
+            "name": "Dr. Carlos Silva",
+            "role": "Lead Engineer",
+            "image_query": "male engineer portrait"
+          },
+          {
+            "name": "Ana Paula Santos",
+            "role": "Testing Specialist",
+            "image_query": "female specialist portrait"
+          },
+          {
+            "name": "Marcos Oliveira",
+            "role": "Data Analyst",
+            "image_query": "male analyst portrait"
+          }
+        ]
+      },
+      {
+        "type": "testimonials",
+        "id": "client-testimonials",
+        "title": "Client Testimonials",
+        "subtitle": "",
+        "items": [
+          {
+            "name": "João Mendes",
+            "role": "",
+            "text": "The testing platform exceeded our expectations.",
+            "rating": 5
+          },
+          {
+            "name": "Maria Fernanda",
+            "role": "",
+            "text": "Comprehensive and detailed testing reports.",
+            "rating": 5
+          },
+          {
+            "name": "Roberto Alves",
+            "role": "",
+            "text": "Helped us identify critical issues before launch.",
+            "rating": 5
+          }
+        ]
+      },
+      {
+        "type": "links",
+        "id": "quick-links",
+        "title": "Quick Links",
+        "subtitle": "",
+        "items": [
+          {
+            "label": "Documentation",
+            "url": "https://docs.cortex-p1.com",
+            "icon": "link"
+          },
+          {
+            "label": "Support",
+            "url": "https://support.cortex-p1.com",
+            "icon": "link"
+          },
+          {
+            "label": "Contact Us",
+            "url": "mailto:contato@cortex-p1.com.br",
+            "icon": "mail"
+          }
+        ]
+      },
+      {
+        "type": "faq",
+        "id": "frequently-asked-questions",
+        "title": "Frequently Asked Questions",
+        "subtitle": "",
+        "items": [
+          {
+            "q": "How long does testing take?",
+            "a": "Depending on the scope, typically 1-2 weeks."
+          },
+          {
+            "q": "Do you provide support after testing?",
+            "a": "Yes, we offer ongoing support packages."
+          },
+          {
+            "q": "Can you test custom software?",
+            "a": "Yes, we specialize in custom testing solutions."
+          },
+          {
+            "q": "What formats do the reports come in?",
+            "a": "We provide detailed PDF and interactive online reports."
+          }
+        ]
+      },
+      {
+        "type": "cta",
+        "id": "start-your-testing-project",
+        "title": "Start Your Testing Project",
+        "subtitle": "Contact us today to discuss your testing needs.",
+        "cta": {
+          "label": "Get Started",
+          "href": "mailto:contato@cortex-p1.com.br"
+        }
+      },
+      {
+        "type": "contact",
+        "id": "contact-us",
+        "title": "Contact Us",
+        "subtitle": "",
+        "map": true,
+        "form": true
       }
-    ],
-    "modules": [
-      "Admin",
-      "Métricas",
-      "Relatórios"
     ]
   },
-  "media": {}
+  "media": {
+    "s0.hero": {
+      "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/Applications_Technology_Satellite_Testing_-_GPN-2000-001264.jpg/1280px-Applications_Technology_Satellite_Testing_-_GPN-2000-001264.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+      "width": 1280,
+      "height": 1009,
+      "alt": "A test model of the Applications Technology Satellite (ATS) is seen during check",
+      "credit": "NASA (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s2.about": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/8/82/Modern_offices_-_geograph.org.uk_-_9928.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 960,
+      "alt": "Modern offices. Aberdeen Technology Park Campus 3",
+      "credit": "Lizzie (CC BY-SA 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
+    "s3.g1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Close-up_view_of_computer_components_illuminated_by_blue_light_in_a_modern_technology_workspace.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "width": 6016,
+      "height": 4016,
+      "alt": "Close-up view of computer components illuminated by blue light in a modern techn",
+      "credit": "Close-up view of computer components illuminated by blue light in a modern technology workspace — Shixart1985 ",
+      "provider": "openverse"
+    },
+    "s4.clip": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/4c/KSC-04-S-00329_%28ksc_100504_dart_tech%29.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "width": 320,
+      "height": 212,
+      "alt": "DART, short for Demonstration of Autonomous Rendezvous technology is NASA's newe",
+      "credit": "NASA Kennedy Space Center (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia",
+      "mime": "video/webm"
+    },
+    "s1.item0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Information_and_Communication_Technology_Lab_.jpg/1280px-Information_and_Communication_Technology_Lab_.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "Information and Communication Technology Lab",
+      "credit": "Information and Communication Technology Lab — Akgideens (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/NUS_Concrete_Technology_Lab_20240205_104309.jpg/1280px-NUS_Concrete_Technology_Lab_20240205_104309.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "NUS Concrete Technology Lab 20240205 104309",
+      "credit": "NUS Concrete Technology Lab 20240205 104309 — ZKang123 (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s1.item2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Plaque_at_Material_Science_and_Laser_Technology_Lab_of_the_Bay_Zoltan_Ltd._for_Applied_Research%2C_2016_Budapest.jpg/1280px-Plaque_at_Material_Science_and_Laser_Technology_Lab_of_the_Bay_Zoltan_Ltd._for_Applied_Research%2C_2016_Budapest.jpg",
+      "width": 1280,
+      "height": 1707,
+      "alt": "Plaque at Material Science and Laser Technology Lab of the Bay Zoltan Ltd. for A",
+      "credit": "Plaque at Material Science and Laser Technology Lab of the Bay Zoltan Ltd. for Applied Research, 2016 Budapest",
+      "provider": "openverse"
+    },
+    "s1.item3": {
+      "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIzLTAzL2ZsNDgwODU5MTU2NzYtaW1hZ2UuanBn.jpg",
+      "width": 2848,
+      "height": 4288,
+      "alt": "National Energy &Technology Lab WV",
+      "credit": "National Energy &Technology Lab WV — usdoe (CC0 1.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g0": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/NUS_Concrete_Technology_Lab_20240205_104452.jpg/1280px-NUS_Concrete_Technology_Lab_20240205_104452.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "NUS Concrete Technology Lab 20240205 104452",
+      "credit": "NUS Concrete Technology Lab 20240205 104452 — ZKang123 (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g2": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/NUS_Concrete_Technology_Lab_20240419_084857.jpg/1280px-NUS_Concrete_Technology_Lab_20240419_084857.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "NUS Concrete Technology Lab 20240419 084857",
+      "credit": "NUS Concrete Technology Lab 20240419 084857 — ZKang123 (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g3": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/GIMPA_Technology_Lab_1.jpg/1280px-GIMPA_Technology_Lab_1.jpg",
+      "width": 1280,
+      "height": 960,
+      "alt": "GIMPA Technology Lab 1",
+      "credit": "GIMPA Technology Lab 1 — Manson04 (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    }
+  }
 }
