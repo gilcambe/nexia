@@ -84,7 +84,7 @@ echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 echo ""
 
 # Padrão solicitado para detectar NEXIA em <title>
-if grep -rnE "<title>[^<]*NEXIA" --include="*.html" $DIRECTORIES 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include="*.html" "$DIRECTORIES" 2>/dev/null; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos ou metadados:"
     echo ""
     grep -rnE "<title>[^<]*NEXIA" --include="*.html" $DIRECTORIES 2>/dev/null
