@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viajante Pro</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-48.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #1a1a1a;
+      color: #fff;
+    }
+    #app {
+      max-width: 360px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .tab {
+      display: none;
+    }
+    .tab.active {
+      display: block;
+    }
+    .card {
+      background-color: #2a2a2a;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 8px;
+    }
+    .button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="tabs">
+      <button class="tab-button" data-tab="hoje">Hoje</button>
+      <button class="tab-button" data-tab="voos">Voos</button>
+      <button class="tab-button" data-tab="roteiro">Roteiro</button>
+      <button class="tab-button" data-tab="hotel">Hotel e Carro</button>
+      <button class="tab-button" data-tab="documentos">Documentos</button>
+      <button class="tab-button" data-tab="motorista">Motorista</button>
+      <button class="tab-button" data-tab="emergencia">Emergência</button>
+    </div>
+    <div id="tab-content">
+      <div id="tab-hoje" class="tab active">
+        <!-- Conteúdo da aba Hoje -->
+      </div>
+      <div id="tab-voos" class="tab">
+        <!-- Conteúdo da aba Voos -->
+      </div>
+      <div id="tab-roteiro" class="tab">
+        <!-- Conteúdo da aba Roteiro -->
+      </div>
+      <div id="tab-hotel" class="tab">
+        <!-- Conteúdo da aba Hotel e Carro -->
+      </div>
+      <div id="tab-documentos" class="tab">
+        <!-- Conteúdo da aba Documentos -->
+      </div>
+      <div id="tab-motorista" class="tab">
+        <!-- Conteúdo da aba Motorista -->
+      </div>
+      <div id="tab-emergencia" class="tab">
+        <!-- Conteúdo da aba Emergência -->
+      </div>
+    </div>
+    <button id="install-button" style="display: none;">Instalar App</button>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
