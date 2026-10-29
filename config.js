@@ -1,13 +1,9 @@
 /**
  * config.js
- * Este arquivo foi esvaziado. A funcionalidade de "IA no meu aparelho"
- * (switch, verificação de WebGPU/memória, bloqueio e aviso de download)
- * está implementada e consolidada em src/frontend/pages/Settings/Memory.tsx
- * (parte 1, já na develop). Mantenha este arquivo vazio para evitar duplicação.
+ * Configurações da IA local (grátis, offline): verificação de WebGPU e memória,
+ * leitura e gravação da preferência no localStorage e utilitário de UI para o
+ * switch "IA no meu aparelho" nas configurações.
  */
-
-// Sem código aqui.
-
 
 /**
  * Verifica se o dispositivo/navegador possui suporte adequado a WebGPU e memória.
