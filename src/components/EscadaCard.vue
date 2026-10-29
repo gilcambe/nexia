@@ -69,9 +69,9 @@ onMounted(async () => {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     const data = await res.json();
-    cortex.value = data.cortex ?? data.progresso?.cortex ?? 0;
-    iasGratis.value = data.iasGratis ?? data.ias_gratis ?? data.progresso?.iasGratis ?? 0;
-    claude.value = data.claude ?? data.progresso?.claude ?? 0;
+    cortex.value = data.semana?.cortex ?? data.progresso?.cortex ?? 0;
+    iasGratis.value = data.semana?.iasGratis ?? data.ias_gratis ?? data.progresso?.iasGratis ?? 0;
+    claude.value = data.semana?.claude ?? data.progresso?.claude ?? 0;
     fila.value = data.fila ?? data.filaSemana ?? 0;
     julesToday.value = data.julesHoje ?? data.jules_hoje ?? data.julesToday ?? 0;
     faseB.value = data.faseB === true;
