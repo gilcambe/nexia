@@ -23,47 +23,8 @@ Regras do dono que o PR NÃO pode quebrar:
 Responda SOMENTE um JSON: {"aprovar": true|false, "nota": 0-10, "motivo": "uma frase", "problemas": ["..."]}.
 Aprove só se tiver certeza de que está correto, completo e seguro.`;
 
-// ---------- utils ----------
-
-// Devolve o número da issue citada no PR (fecha/closes/fixes/resolve #N).
-function issueDoPr(pr) {
-  const m = /(?:fecha|closes|fixes|resolve[sd]?|de)\s+#(\d+)/i.exec(`${pr.title || ''}\n${pr.body || ''}`) || /#(\d{3,})/.exec(`${pr.title || ''}\n${pr.body || ''}`);
-  return m ? Number(m[1]) : null;
-}
-
-// CI verde: todos os check-runs relevantes concluídos com sucesso.
-function ciVerde(runs) {
-  const r = (runs || []).filter(c => c.name !== 'Merge automático' && c.name !== 'Testar com login');
-  return r.some(c => c.name === 'Typecheck, testes e build')
-    && r.every(c => c.status === 'completed' && ['success', 'skipped', 'neutral'].includes(c.conclusion));
-}
-
-// Verifica se o PR altera arquivos restritos.
-function isRestrictedChange(pr) {
-  const nomes = (pr.files || []).map(f => f.filename);
-  return nomes.some(n => RESTritos.test(n));
-}
-
-// Verifica se o PR está vazio (sem arquivos alterados).
-function isEmptyPR(pr) {
-  return !(pr.files && pr.files.length > 0);
-}
-
-// Quais PRs revisar: autor Jules, branch nexia/, para develop, sem automerge/revisor-recusou.
-function escolher(prs) {
-  return (prs || []).filter(pr => pr.base && pr.base.ref === 'develop'
-    && pr.head && pr.head.repo && pr.head.repo.full_name === REPO && /^nexia\//.test(pr.head.ref || '')
-    && pr.user && pr.user.login === 'Jules'
-    && !(pr.labels || []).some(l => ['automerge', 'revisor-recusou', 'so-humano'].includes(l.name)));
-}
-
-// Verifica se a descrição menciona uma issue contendo 'cortex-fila'.
-function mencionaCortexFila(pr, issuesPorNumero) {
-  const n = issueDoPr(pr);
-  if (!n) return false;
-  const corpo = issuesPorNumero[n] || '';
-  return /cortex-fila/i.test(String(corpo));
-}
+// Importar funções utilitárias do módulo utils
+const { issueDoPr, ciVerde, isRestrictedChange, isEmptyPR, escolher, mencionaCortexFila } = require('./utils');
 
 function lerVeredito(texto) {
   const m = /\{[\s\S]*\}/.exec(String(texto || ''));
@@ -188,4 +149,4 @@ async function main() {
 }
 
 if (require.main === module) main().catch(e => { console.error(e); process.exit(1); });
-module.exports = { issueDoPr, ciVerde, escolher, isRestrictedChange, isEmptyPR, mencionaCortexFila, lerVeredito, decidir, MARCA, NOTA_MIN };
+module.exports = { lerVeredito, decidir, MARCA, NOTA_MIN };
