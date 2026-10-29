@@ -1,9 +1,27 @@
 <template>
   <div class="central-page">
     <h1>Central</h1>
-    <div class="cards-container">
-      <EscadaCard />
-      <!-- Other cards would go here -->
+    <nav class="tabs" role="tablist">
+      <button
+        v-for="aba in abas"
+        :key="aba.id"
+        role="tab"
+        :aria-selected="abaAtiva === aba.id"
+        :class="['tab-btn', 'tab-' + aba.id, { active: abaAtiva === aba.id }]"
+        :data-tab="aba.id"
+        :data-testid="'tab-' + aba.id"
+        @click="abaAtiva = aba.id"
+      >
+        {{ aba.nome }}
+      </button>
+    </nav>
+    <div class="tab-content">
+      <div v-if="abaAtiva === 'cortex'" class="cards-container cortex-tab" data-testid="aba-cortex">
+        <EscadaCard />
+      </div>
+      <div v-else class="cards-container geral-tab">
+        <!-- Other cards would go here -->
+      </div>
     </div>
   </div>
 </template>
@@ -15,6 +33,21 @@ export default {
   name: 'Central',
   components: {
     EscadaCard
+  },
+  props: {
+    abaInicial: {
+      type: String,
+      default: 'geral'
+    }
+  },
+  data() {
+    return {
+      abaAtiva: this.abaInicial,
+      abas: [
+        { id: 'geral', nome: 'Geral' },
+        { id: 'cortex', nome: '🧠 Cortex' }
+      ]
+    };
   }
 };
 </script>
@@ -22,6 +55,35 @@ export default {
 <style scoped>
 .central-page {
   padding: 20px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 20px;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.tab-btn:hover {
+  color: #333;
+}
+
+.tab-btn.active {
+  color: #1976d2;
+  border-bottom-color: #1976d2;
+  font-weight: 600;
 }
 
 .cards-container {
