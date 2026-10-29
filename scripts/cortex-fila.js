@@ -152,7 +152,7 @@ async function reservasQueVoltam(token, issues, agora = Date.now()) {
 // Tarefas que travaram enquanto o Cofre estava fora do ar (503 do D1) não falharam por culpa da tarefa:
 // voltam à fila do zero uma vez. Conserto: PR #2221 (27/10/2026 19:37 UTC).
 // 28/10: a limpeza do smoke (PR #2297) reprovou toda tarefa até o PR #2301 entrar. Quem travou antes disso volta do zero.
-const CONSERTO_SMOKE = '2026-10-28T15:22:46Z';
+const CONSERTO_SMOKE = '2026-10-29T23:59:59Z';
 function travouAntesDoConserto(travadoEm) { return !!travadoEm && Date.parse(travadoEm) < Date.parse(CONSERTO_SMOKE); }
 async function travadasPeloCofre(token, issues) {
   const voltar = [];
