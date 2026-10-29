@@ -1,106 +1,230 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" class="no-js">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Site de Teste do Cortex-p1 — Painel de métricas e controle do Cortex</title>
-  <meta name="description" content="Painel de métricas e controle do Cortex">
-  <meta name="theme-color" content="#4f46e5">
+  <title>Cortex-p1 Test Site — Advanced Testing Platform</title>
+  <meta name="description" content="Comprehensive testing environment for the Cortex-p1 system.">
+  <meta name="theme-color" content="#2563eb">
+  <meta property="og:title" content="Cortex-p1 Test Site">
+  <meta property="og:description" content="Comprehensive testing environment for the Cortex-p1 system.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/Applications_Technology_Satellite_Testing_-_GPN-2000-001264.jpg/1280px-Applications_Technology_Satellite_Testing_-_GPN-2000-001264.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=thumbnail">
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
-  <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
 </head>
 <body>
   <a class="skip" href="#conteudo">Pular para o conteúdo</a>
-  <div class="shell">
-    <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
-      <div class="sidebar__brand">
-        <span class="logo" aria-hidden="true">S</span>
-        <span>Site de Teste do Cortex-p1</span>
-      </div>
-      <nav class="sidebar__nav" aria-label="Seções">
-        <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
-        <a href="#/metrics" data-route="metrics"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Métricas</span></a>
+  <header class="topbar" id="topo">
+    <div class="container topbar__inner">
+      <a class="brand" href="#topo">Cortex-p1 Test Site</a>
+      <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu" aria-label="Abrir menu"><svg class="i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <nav id="menu" class="menu" aria-label="Menu principal">
+        <a href="#services">Testing Services</a>
+        <a href="#about-cortex-p1">About Cortex</a>
+        <a href="#our-testing-environment">Galeria</a>
+        <a href="#cortex-p1-in-action">Cortex</a>
+        <a href="#our-team">Our Team</a>
+        <a href="#client-testimonials">Depoimentos</a>
+        <a class="btn btn--primary btn--sm" href="https://wa.me/5511999998888?text=Ol%C3%A1!%20Vim%20pelo%20site%20da%20Cortex-p1%20Test%20Site." target="_blank" rel="noopener"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.6-4.8A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 10c0 3 2 5 5 5l1.2-1.2 2 .8-.4 1.6c-4 .6-8.5-3.9-7.9-7.9l1.6-.4.8 2z" fill="currentColor" stroke="none"/></svg> WhatsApp</a>
       </nav>
-      <div class="sidebar__foot">
-        <p>Suporte: suporte@cortexp1.com.br</p>
-        <p>Dados salvos neste navegador.</p>
-      </div>
-    </aside>
-    <div class="backdrop" data-close-menu hidden></div>
-    <div class="main">
-      <header class="topbar">
-        <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-        <div class="topbar__title">
-          <h1 id="view-title">Painel</h1>
-          <p id="view-sub">Painel de métricas e controle do Cortex</p>
-        </div>
-        <label class="search">
-          <span class="sr-only">Buscar</span>
-          <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-          <input id="search" type="search" placeholder="Buscar..." autocomplete="off">
-        </label>
-        <button class="icon-btn" type="button" id="theme" aria-label="Alternar modo escuro"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
-      </header>
-      <main id="conteudo" class="content">
-        <section id="view-painel" class="view" aria-labelledby="view-title">
-          <div class="kpis" id="kpis"></div>
-          <div class="grid2">
-            <article class="card">
-              <header class="card__head"><h2 id="chart-title">Resumo</h2></header>
-              <div class="chart-box"><canvas id="chart" aria-label="Gráfico do resumo" role="img"></canvas></div>
-            </article>
-            <article class="card">
-              <header class="card__head"><h2>Últimos cadastros</h2></header>
-              <ul class="recent" id="recent"></ul>
-            </article>
-          </div>
-        </section>
-        <section id="view-entity" class="view" hidden>
-          <div class="toolbar">
-            <p class="count" id="count"></p>
-            <div class="toolbar__actions">
-              <button class="btn btn--ghost" type="button" id="export"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Exportar CSV</button>
-              <button class="btn btn--primary" type="button" id="add"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> <span id="add-label">Novo</span></button>
-            </div>
-          </div>
-          <div class="card table-card">
-            <div class="table-wrap">
-              <table class="table">
-                <thead id="thead"></thead>
-                <tbody id="tbody"></tbody>
-              </table>
-            </div>
-            <div class="empty" id="empty" hidden>
-              <svg class="i" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg>
-              <h2>Nada por aqui ainda</h2>
-              <p>Clique em “Adicionar” para fazer o primeiro cadastro.</p>
-            </div>
-          </div>
-        </section>
-      </main>
+    </div>
+  </header>
+  <main id="conteudo">
+<section class="hero" id="advanced-testing-with-cortex-p1">
+  <div class="hero__media" aria-hidden="true"><img class="hero__img" src="https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/Applications_Technology_Satellite_Testing_-_GPN-2000-001264.jpg/1280px-Applications_Technology_Satellite_Testing_-_GPN-2000-001264.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=thumbnail" alt="A test model of the Applications Technology Satellite (ATS) is seen during check" width="1280" height="1009" fetchpriority="high" decoding="async"></div>
+  <div class="hero__overlay" aria-hidden="true"></div>
+  <div class="container hero__content">
+    
+    
+    <p class="eyebrow hero__in" style="--d:0s">Testing Platform</p>
+    <h1 class="hero__in" style="--d:.1s">Advanced Testing with Cortex-p1</h1>
+    <p class="hero__lead hero__in" style="--d:.2s">Comprehensive solutions for your testing needs.</p>
+    <div class="hero__actions hero__in" style="--d:.3s">
+      <a class="btn btn--primary" href="#services">Start Testing <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      <a class="btn btn--ghost" href="#about">Learn More</a>
     </div>
   </div>
-
-  <dialog class="modal" id="modal" aria-labelledby="modal-title">
-    <form id="form" novalidate>
-      <header class="modal__head">
-        <h2 id="modal-title">Novo</h2>
-        <button class="icon-btn" type="button" data-close aria-label="Fechar"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
-      </header>
-      <div class="modal__body" id="form-fields"></div>
-      <footer class="modal__foot">
-        <button class="btn btn--ghost" type="button" data-close>Cancelar</button>
-        <button class="btn btn--primary" type="submit">Salvar</button>
-      </footer>
+  <a class="hero__scroll" href="#services" aria-label="Rolar para a próxima seção"><span></span></a>
+</section>
+<section class="section" id="services">
+  <div class="container">
+    <header class="section__head reveal">
+      <h2>Testing Services</h2>
+      <p>Comprehensive testing solutions.</p>
+    </header>
+    <div class="cards">
+      <article class="card reveal" style="--d:0s">
+        <div class="card__media"><img class="card__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Information_and_Communication_Technology_Lab_.jpg/1280px-Information_and_Communication_Technology_Lab_.jpg" alt="Information and Communication Technology Lab" width="1280" height="960" loading="lazy" decoding="async" sizes="(max-width: 700px) 100vw, 33vw"></div>
+        <div class="card__body">
+          
+          <h3>Performance Testing</h3>
+          <p>Optimize system performance under various conditions.</p>
+          <p class="price">Starting from R$ 1,200</p>
+          
+        </div>
+      </article>
+      <article class="card reveal" style="--d:0.08s">
+        <div class="card__media"><img class="card__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/NUS_Concrete_Technology_Lab_20240205_104309.jpg/1280px-NUS_Concrete_Technology_Lab_20240205_104309.jpg" alt="NUS Concrete Technology Lab 20240205 104309" width="1280" height="960" loading="lazy" decoding="async" sizes="(max-width: 700px) 100vw, 33vw"></div>
+        <div class="card__body">
+          
+          <h3>Security Testing</h3>
+          <p>Identify vulnerabilities before they become problems.</p>
+          
+          
+        </div>
+      </article>
+      <article class="card reveal" style="--d:0.16s">
+        <div class="card__media"><img class="card__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Plaque_at_Material_Science_and_Laser_Technology_Lab_of_the_Bay_Zoltan_Ltd._for_Applied_Research%2C_2016_Budapest.jpg/1280px-Plaque_at_Material_Science_and_Laser_Technology_Lab_of_the_Bay_Zoltan_Ltd._for_Applied_Research%2C_2016_Budapest.jpg" alt="Plaque at Material Science and Laser Technology Lab of the Bay Zoltan Ltd. for A" width="1280" height="1707" loading="lazy" decoding="async" sizes="(max-width: 700px) 100vw, 33vw"></div>
+        <div class="card__body">
+          
+          <h3>Compatibility Testing</h3>
+          <p>Ensure your product works across all platforms.</p>
+          
+          
+        </div>
+      </article>
+      <article class="card reveal" style="--d:0s">
+        <div class="card__media"><img class="card__img" src="https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIzLTAzL2ZsNDgwODU5MTU2NzYtaW1hZ2UuanBn.jpg" alt="National Energy &amp;Technology Lab WV" width="2848" height="4288" loading="lazy" decoding="async" sizes="(max-width: 700px) 100vw, 33vw"></div>
+        <div class="card__body">
+          
+          <h3>Usability Testing</h3>
+          <p>Understand how real users interact with your product.</p>
+          
+          
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+<section class="section section--alt" id="about-cortex-p1">
+  <div class="container split">
+    <div class="split__media reveal"><img class="split__img" src="https://upload.wikimedia.org/wikipedia/commons/8/82/Modern_offices_-_geograph.org.uk_-_9928.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=thumbnail_unscaled" alt="Modern offices. Aberdeen Technology Park Campus 3" width="1280" height="960" loading="lazy" decoding="async" sizes="(max-width: 900px) 100vw, 50vw"><span class="split__badge"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg> Advanced Testing Platform</span></div>
+    <div class="split__text reveal" style="--d:.1s">
+      <p class="eyebrow">About Cortex-p1</p>
+      <h2>Leading the way in advanced testing solutions since 2010.</h2>
+      <p>Leading the way in advanced testing solutions since 2010.</p>
+      <dl class="stats"><div><dt><span class="count" data-to="13">13</span></dt><dd>years</dd></div><div><dt><span class="count" data-to="500+">500+</span></dt><dd>projects</dd></div><div><dt><span class="count" data-to="98%">98%</span></dt><dd>satisfaction</dd></div></dl>
+    </div>
+  </div>
+</section>
+<section class="section" id="our-testing-environment">
+  <div class="container">
+    <header class="section__head reveal">
+      <h2>Our Testing Environment</h2>
+      
+    </header>
+    <div class="gallery"><figure class="gallery__item reveal" style="--d:0s"><img class="gallery__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/NUS_Concrete_Technology_Lab_20240205_104452.jpg/1280px-NUS_Concrete_Technology_Lab_20240205_104452.jpg" alt="NUS Concrete Technology Lab 20240205 104452" width="1280" height="960" loading="lazy" decoding="async" sizes="(max-width: 700px) 50vw, 25vw"></figure><figure class="gallery__item reveal" style="--d:0.06s"><img class="gallery__img" src="https://upload.wikimedia.org/wikipedia/commons/9/9e/Close-up_view_of_computer_components_illuminated_by_blue_light_in_a_modern_technology_workspace.jpg?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=original" alt="Close-up view of computer components illuminated by blue light in a modern techn" width="6016" height="4016" loading="lazy" decoding="async" sizes="(max-width: 700px) 50vw, 25vw"></figure><figure class="gallery__item reveal" style="--d:0.12s"><img class="gallery__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/NUS_Concrete_Technology_Lab_20240419_084857.jpg/1280px-NUS_Concrete_Technology_Lab_20240419_084857.jpg" alt="NUS Concrete Technology Lab 20240419 084857" width="1280" height="960" loading="lazy" decoding="async" sizes="(max-width: 700px) 50vw, 25vw"></figure><figure class="gallery__item reveal" style="--d:0.18s"><img class="gallery__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/GIMPA_Technology_Lab_1.jpg/1280px-GIMPA_Technology_Lab_1.jpg" alt="GIMPA Technology Lab 1" width="1280" height="960" loading="lazy" decoding="async" sizes="(max-width: 700px) 50vw, 25vw"></figure></div>
+  </div>
+</section>
+<section class="section section--dark" id="cortex-p1-in-action">
+  <div class="container">
+    <header class="section__head reveal">
+      <h2>Cortex-p1 in Action</h2>
+      <p>See how our testing platform works.</p>
+    </header>
+    <div class="player reveal"><video controls preload="metadata" playsinline width="320" height="212"><source src="https://upload.wikimedia.org/wikipedia/commons/4/4c/KSC-04-S-00329_%28ksc_100504_dart_tech%29.webm?utm_source=commons.wikimedia.org&amp;utm_campaign=imageinfo&amp;utm_content=original" type="video/webm"></video></div>
+  </div>
+</section>
+<section class="section section--alt" id="our-team">
+  <div class="container">
+    <header class="section__head reveal">
+      <h2>Our Team</h2>
+      
+    </header>
+    <div class="team"><article class="person reveal" style="--d:0s">
+      <div class="person__avatar" aria-hidden="true">DC</div>
+      <h3>Dr. Carlos Silva</h3><p>Lead Engineer</p></article><article class="person reveal" style="--d:0.08s">
+      <div class="person__avatar" aria-hidden="true">AP</div>
+      <h3>Ana Paula Santos</h3><p>Testing Specialist</p></article><article class="person reveal" style="--d:0.16s">
+      <div class="person__avatar" aria-hidden="true">MO</div>
+      <h3>Marcos Oliveira</h3><p>Data Analyst</p></article></div>
+  </div>
+</section>
+<section class="section" id="client-testimonials">
+  <div class="container">
+    <header class="section__head reveal">
+      <h2>Client Testimonials</h2>
+      
+    </header>
+    <div class="quotes"><figure class="quote reveal" style="--d:0s">
+      <div class="stars" aria-label="5 de 5 estrelas"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg></div>
+      <blockquote><p>The testing platform exceeded our expectations.</p></blockquote>
+      <figcaption><span class="quote__avatar" aria-hidden="true">JM</span><span><strong>João Mendes</strong></span></figcaption>
+    </figure><figure class="quote reveal" style="--d:0.08s">
+      <div class="stars" aria-label="5 de 5 estrelas"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg></div>
+      <blockquote><p>Comprehensive and detailed testing reports.</p></blockquote>
+      <figcaption><span class="quote__avatar" aria-hidden="true">MF</span><span><strong>Maria Fernanda</strong></span></figcaption>
+    </figure><figure class="quote reveal" style="--d:0.16s">
+      <div class="stars" aria-label="5 de 5 estrelas"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg></div>
+      <blockquote><p>Helped us identify critical issues before launch.</p></blockquote>
+      <figcaption><span class="quote__avatar" aria-hidden="true">RA</span><span><strong>Roberto Alves</strong></span></figcaption>
+    </figure></div>
+  </div>
+</section>
+<section class="section" id="quick-links">
+  <div class="container container--narrow">
+    <header class="section__head reveal">
+      <h2>Quick Links</h2>
+      
+    </header>
+    <div class="links"><a class="links__item reveal" style="--d:0s" href="https://docs.cortex-p1.com" target="_blank" rel="noopener"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg><span>Documentation</span><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="links__item reveal" style="--d:0.05s" href="https://support.cortex-p1.com" target="_blank" rel="noopener"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg><span>Support</span><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="links__item reveal" style="--d:0.1s" href="mailto:contato@cortex-p1.com.br"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg><span>Contact Us</span><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+  </div>
+</section>
+<section class="section section--alt" id="frequently-asked-questions">
+  <div class="container container--narrow">
+    <header class="section__head reveal">
+      <h2>Frequently Asked Questions</h2>
+      
+    </header>
+    <div class="faq"><details class="faq__item reveal"><summary>How long does testing take?<span aria-hidden="true"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></summary><p>Depending on the scope, typically 1-2 weeks.</p></details><details class="faq__item reveal"><summary>Do you provide support after testing?<span aria-hidden="true"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></summary><p>Yes, we offer ongoing support packages.</p></details><details class="faq__item reveal"><summary>Can you test custom software?<span aria-hidden="true"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></summary><p>Yes, we specialize in custom testing solutions.</p></details><details class="faq__item reveal"><summary>What formats do the reports come in?<span aria-hidden="true"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></summary><p>We provide detailed PDF and interactive online reports.</p></details></div>
+  </div>
+</section>
+<section class="band" id="start-your-testing-project">
+  <div class="container band__inner reveal">
+    <div><h2>Start Your Testing Project</h2><p>Contact us today to discuss your testing needs.</p></div>
+    <a class="btn btn--light" href="mailto:contato@cortex-p1.com.br">Get Started <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+  </div>
+</section>
+<section class="section" id="contato">
+  <div class="container contact">
+    <div class="contact__info reveal">
+      <p class="eyebrow">Contato</p>
+      <h2>Contact Us</h2>
+      
+      <ul class="contact__list"><li><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.6-4.8A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 10c0 3 2 5 5 5l1.2-1.2 2 .8-.4 1.6c-4 .6-8.5-3.9-7.9-7.9l1.6-.4.8 2z" fill="currentColor" stroke="none"/></svg><a href="https://wa.me/5511999998888" target="_blank" rel="noopener">WhatsApp (11) 99999-8888</a></li><li><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg><a href="mailto:contato@cortex-p1.com.br">contato@cortex-p1.com.br</a></li><li><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Av. Tecnologia, 1000 — São Paulo - SP</span></li><li><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Seg a sex, 9h às 18h</span></li></ul>
+      <div class="map"><iframe title="Mapa: Av. Tecnologia, 1000 — São Paulo - SP" src="https://maps.google.com/maps?q=Av.%20Tecnologia%2C%201000%20%E2%80%94%20S%C3%A3o%20Paulo%20-%20SP&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+    </div>
+    <form class="form reveal" style="--d:.1s" novalidate data-whatsapp="5511999998888" data-email="contato@cortex-p1.com.br" data-name="Cortex-p1 Test Site" data-leads="https://nexia.gcbezerra.workers.dev/api/leads">
+      <div class="field"><label for="f-nome">Nome</label><input id="f-nome" name="nome" autocomplete="name" required minlength="2"><small class="field__err" aria-live="polite"></small></div>
+      <div class="field"><label for="f-tel">Telefone / WhatsApp</label><input id="f-tel" name="telefone" type="tel" autocomplete="tel" inputmode="tel" required pattern="[0-9()+\-\s]{10,}"><small class="field__err" aria-live="polite"></small></div>
+      <div class="field"><label for="f-email">E-mail <span class="opt">(opcional)</span></label><input id="f-email" name="email" type="email" autocomplete="email"><small class="field__err" aria-live="polite"></small></div>
+      <div class="field"><label for="f-msg">Mensagem</label><textarea id="f-msg" name="mensagem" rows="4" required minlength="10"></textarea><small class="field__err" aria-live="polite"></small></div>
+      <div class="field field--check"><input id="f-ok" type="checkbox" name="consentimento" required><label for="f-ok">Aceito receber contato sobre este assunto.</label><small class="field__err" aria-live="polite"></small></div>
+      <div class="hp" aria-hidden="true"><input name="site_url" tabindex="-1" autocomplete="off" aria-label="Não preencha"></div>
+      <button class="btn btn--primary btn--block" type="submit">Enviar mensagem <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+      <p class="form__ok" role="status" hidden><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Recebemos sua mensagem! Vamos responder em breve.</p>
     </form>
-  </dialog>
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-
-  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1","name":"Site de Teste do Cortex-p1","entities":[{"key":"metrics","label":"Métricas","singular":"Métrica","fields":[{"key":"provedor","label":"Provedor","type":"text","options":[],"required":true},{"key":"cota_usada_hoje","label":"Cota Usada Hoje","type":"number","options":[],"required":true},{"key":"mensagens_por_minuto","label":"Mensagens por Minuto","type":"number","options":[],"required":true},{"key":"tamanho_da_fila","label":"Tamanho da Fila","type":"number","options":[],"required":true},{"key":"erros_ultima_hora","label":"Erros na Última Hora","type":"number","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Ativo","Inativo"],"required":true}],"sample":[{"provedor":"Twilio","cota_usada_hoje":"12000","mensagens_por_minuto":"5","tamanho_da_fila":"200","erros_ultima_hora":"1","status":"Ativo"},{"provedor":"Nexmo","cota_usada_hoje":"8000","mensagens_por_minuto":"3","tamanho_da_fila":"150","erros_ultima_hora":"0","status":"Ativo"},{"provedor":"Plivo","cota_usada_hoje":"5000","mensagens_por_minuto":"4","tamanho_da_fila":"100","erros_ultima_hora":"2","status":"Inativo"},{"provedor":"Vonage","cota_usada_hoje":"2000","mensagens_por_minuto":"1","tamanho_da_fila":"50","erros_ultima_hora":"0","status":"Ativo"}]}]}</script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
-  <script src="app.js" defer></script>
+  </div>
+</section>
+  </main>
+  <footer class="footer">
+    <div class="container footer__grid">
+      <div><p class="brand brand--light">Cortex-p1 Test Site</p><p>Advanced Testing Platform</p></div>
+      <div><h3>Contato</h3><ul><li>(11) 99999-8888</li><li>contato@cortex-p1.com.br</li><li>Av. Tecnologia, 1000, São Paulo - SP</li><li>Seg a sex, 9h às 18h</li></ul></div>
+      <div><h3>Redes</h3><p class="social"><a href="https://instagram.com/cortex_p1" target="_blank" rel="noopener" aria-label="Instagram"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a><a href="https://wa.me/5511999998888" target="_blank" rel="noopener" aria-label="WhatsApp"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.6-4.8A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 10c0 3 2 5 5 5l1.2-1.2 2 .8-.4 1.6c-4 .6-8.5-3.9-7.9-7.9l1.6-.4.8 2z" fill="currentColor" stroke="none"/></svg></a></p></div>
+    </div>
+    <div class="container footer__bottom">
+      <p>© <span data-year>2026</span> Cortex-p1 Test Site. Todos os direitos reservados.</p>
+      <a class="selo-nexia" href="https://kernex.com.br/?utm_source=cortex-p1&amp;utm_medium=selo&amp;utm_campaign=clientes" target="_blank" rel="noopener">Feito com Kernex</a>
+      <details class="credits"><summary>Créditos das imagens</summary><ul><li>NASA (Public domain, via Wikimedia Commons)</li><li>Lizzie (CC BY-SA 2.0, via Wikimedia Commons)</li><li>Close-up view of computer components illuminated by blue light in a modern technology workspace — Shixart1985 </li><li>NASA Kennedy Space Center (Public domain, via Wikimedia Commons)</li><li>Information and Communication Technology Lab — Akgideens (BY-SA 4.0, via Openverse)</li><li>NUS Concrete Technology Lab 20240205 104309 — ZKang123 (BY-SA 4.0, via Openverse)</li><li>Plaque at Material Science and Laser Technology Lab of the Bay Zoltan Ltd. for Applied Research, 2016 Budapest</li><li>National Energy &amp;Technology Lab WV — usdoe (CC0 1.0, via Openverse)</li><li>NUS Concrete Technology Lab 20240205 104452 — ZKang123 (BY-SA 4.0, via Openverse)</li><li>NUS Concrete Technology Lab 20240419 084857 — ZKang123 (BY-SA 4.0, via Openverse)</li><li>GIMPA Technology Lab 1 — Manson04 (BY-SA 4.0, via Openverse)</li></ul></details>
+    </div>
+  </footer>
+  <a class="wa-float" href="https://wa.me/5511999998888?text=Ol%C3%A1!%20Vim%20pelo%20site%20da%20Cortex-p1%20Test%20Site." target="_blank" rel="noopener" aria-label="Falar no WhatsApp"><svg class="i" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.6-4.8A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 10c0 3 2 5 5 5l1.2-1.2 2 .8-.4 1.6c-4 .6-8.5-3.9-7.9-7.9l1.6-.4.8 2z" fill="currentColor" stroke="none"/></svg></a>
+  <a class="to-top" href="#topo" aria-label="Voltar ao topo"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></a>
+  <script src="script.js" defer></script>
 </body>
 </html>
