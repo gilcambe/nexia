@@ -1,0 +1,252 @@
+name: Lote de clientes (sites em paralelo)
+
+# Modo lote (issue 3/5): até 10 clientes ao mesmo tempo. Para cada slug:
+#   1. sem clientes/<slug>/site.json → gera pelo briefing (scripts/briefing-para-spec.js);
+#   2. briefing com site de referência e sem design.json → modo design do scripts/clonar-site.js (só o visual);
+#   3. renderiza o site (scripts/renderizar-site.js, igual ao novo-site-cliente.yml);
+#   4. checagem de qualidade (nexia-ai/site-kit/quality.js + WhatsApp + arquivos que o HTML cita);
+#   5. prints 375 e 1440 (scripts/preview-site.js);
+#   6. Cloudflare Pages: prévia (branch "previa", padrão) ou produção (branch "main").
+# Entradas chegam só por variável de ambiente e o slug é validado (nunca colado no comando).
+# Nada é publicado em produção sem escolher "producao" na hora de rodar.
+on:
+  workflow_dispatch:
+    inputs:
+      slugs:
+        description: 'Clientes separados por vírgula (de 1 a 10; cada um com letras minúsculas, números e hífen, 3 a 40)'
+        required: true
+      publicar:
+        description: 'previa (padrão, endereço previa.<slug>.pages.dev) ou producao (<slug>.pages.dev)'
+        required: true
+        default: previa
+        type: choice
+        options: [previa, producao]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lote-sites
+  cancel-in-progress: false
+
+jobs:
+  preparar:
+    name: Preparar a lista
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      slugs: ${{ steps.lista.outputs.slugs }}
+      data: ${{ steps.lista.outputs.data }}
+    steps:
+      - name: Validar e montar a lista
+        id: lista
+        env:
+          SLUGS: ${{ inputs.slugs }}
+        run: |
+          LISTA=$(printf '%s' "$SLUGS" | tr ',' '\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -v '^$' | sort -u || true)
+          [ -n "$LISTA" ] || { echo "::error::informe pelo menos um cliente em 'slugs'"; exit 1; }
+          N=$(printf '%s\n' "$LISTA" | wc -l)
+          [ "$N" -le 10 ] || { echo "::error::no máximo 10 clientes por lote (veio $N)"; exit 1; }
+          while IFS= read -r s; do
+            printf '%s' "$s" | grep -Eq '^[a-z0-9-]{3,40}$' || { echo "::error::slug inválido: use ^[a-z0-9-]{3,40}$"; exit 1; }
+          done <<< "$LISTA"
+          echo "slugs=$(printf '%s\n' "$LISTA" | jq -R . | jq -sc .)" >> "$GITHUB_OUTPUT"
+          echo "data=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
+
+  site:
+    name: Site ${{ matrix.slug }}
+    needs: preparar
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment: production
+    strategy:
+      fail-fast: false
+      max-parallel: 10
+      matrix:
+        slug: ${{ fromJson(needs.preparar.outputs.slugs) }}
+    env:
+      SLUG: ${{ matrix.slug }}
+      PUBLICAR: ${{ inputs.publicar }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+
+      - name: Preparar pastas
+        run: |
+          mkdir -p "$RUNNER_TEMP/site" "$RUNNER_TEMP/prints" "$RUNNER_TEMP/resultado"
+          echo "SITE_DIR=$RUNNER_TEMP/site" >> "$GITHUB_ENV"
+          echo "PRINTS_DIR=$RUNNER_TEMP/prints" >> "$GITHUB_ENV"
+          echo "RESULT_DIR=$RUNNER_TEMP/resultado" >> "$GITHUB_ENV"
+          echo "ETAPA=preparar" >> "$GITHUB_ENV"
+
+      - name: 1. Gerar o site.json pelo briefing (se não existir)
+        run: |
+          echo "ETAPA=briefing" >> "$GITHUB_ENV"
+          if [ -f "clientes/$SLUG/site.json" ]; then
+            echo "site.json já existe; segue."
+          else
+            [ -f "clientes/$SLUG/briefing.md" ] || { echo "::error::faltam clientes/$SLUG/site.json e clientes/$SLUG/briefing.md"; exit 1; }
+            [ -f scripts/briefing-para-spec.js ] || { echo "::error::scripts/briefing-para-spec.js ainda não existe neste ramo"; exit 1; }
+            node scripts/briefing-para-spec.js "$SLUG"
+            [ -f "clientes/$SLUG/site.json" ] || { echo "::error::o briefing não gerou clientes/$SLUG/site.json"; exit 1; }
+            mkdir -p "$RESULT_DIR/gerado/clientes/$SLUG"
+            cp "clientes/$SLUG/site.json" "$RESULT_DIR/gerado/clientes/$SLUG/site.json"
+            echo "Gerado clientes/$SLUG/site.json pelo briefing."
+          fi
+
+      - name: 2. Design do site de referência (se o briefing tiver e faltar design.json)
+        run: |
+          echo "ETAPA=design" >> "$GITHUB_ENV"
+          [ -f "clientes/$SLUG/design.json" ] && { echo "design.json já existe; segue."; exit 0; }
+          REF=""
+          [ -f "clientes/$SLUG/briefing.md" ] && REF=$(grep -iE -A2 'site de refer' "clientes/$SLUG/briefing.md" | grep -oE 'https://[^[:space:])>"]+' | head -1 || true)
+          [ -n "$REF" ] || { echo "Sem site de referência no briefing; segue."; exit 0; }
+          npm i --no-save --no-audit --no-fund playwright@1.59.1
+          npx playwright install --with-deps chromium
+          CLONE_URL="$REF" MODO=design SLUG="$SLUG" OUT="$RUNNER_TEMP/clone-out" node scripts/clonar-site.js || echo "::warning::não consegui capturar o design de referência; o site segue sem ele."
+          if [ -f "clientes/$SLUG/design.json" ]; then
+            mkdir -p "$RESULT_DIR/gerado/clientes/$SLUG"
+            cp "clientes/$SLUG/design.json" "$RESULT_DIR/gerado/clientes/$SLUG/design.json"
+          fi
+
+      - name: 3. Renderizar o site
+        run: |
+          echo "ETAPA=renderizar" >> "$GITHUB_ENV"
+          MIDIA="clientes/$SLUG/midia.json"
+          if [ -f "$MIDIA" ]; then node scripts/renderizar-site.js "clientes/$SLUG/site.json" "$SITE_DIR" "$MIDIA"
+          else node scripts/renderizar-site.js "clientes/$SLUG/site.json" "$SITE_DIR"; fi
+
+      - name: 4. Checagem de qualidade
+        run: |
+          echo "ETAPA=qualidade" >> "$GITHUB_ENV"
+          node -e '
+            const fs = require("fs"), path = require("path");
+            const slug = process.env.SLUG, dir = process.env.SITE_DIR;
+            const { qualityCheck } = require("./nexia-ai/site-kit/quality");
+            const spec = JSON.parse(fs.readFileSync(`clientes/${slug}/site.json`, "utf8"));
+            const midiaPath = `clientes/${slug}/midia.json`;
+            const media = fs.existsSync(midiaPath) ? JSON.parse(fs.readFileSync(midiaPath, "utf8")) : null;
+            const erros = [];
+            const q = qualityCheck(spec, media);
+            erros.push(...q.content, ...q.media);
+            const zap = String((spec.contact || {}).whatsapp || "").replace(/\D/g, "");
+            if ((spec.contact || {}).whatsapp && !/^\d{12,13}$/.test(zap)) erros.push(`WhatsApp inválido (${zap.length} dígitos; esperado 55 + DDD + número)`);
+            const ler = d => fs.readdirSync(d, { withFileTypes: true }).flatMap(e => e.isDirectory() ? ler(path.join(d, e.name)) : [path.join(d, e.name)]);
+            const html = ler(dir).filter(f => f.endsWith(".html"));
+            if (!html.length) erros.push("o site gerado não tem nenhum .html");
+            for (const f of html) {
+              const txt = fs.readFileSync(f, "utf8");
+              if (/\[TROCAR\]/.test(txt)) erros.push(`sobrou [TROCAR] em ${path.relative(dir, f)}`);
+              for (const m of txt.matchAll(/(?:src|href)="(?!https?:|\/\/|#|mailto:|tel:|data:|javascript:|whatsapp:)([^"?#]+)/g)) {
+                const alvo = path.join(m[1].startsWith("/") ? dir : path.dirname(f), m[1]);
+                if (!fs.existsSync(alvo)) erros.push(`arquivo citado que não existe: ${m[1]}`);
+              }
+            }
+            if (erros.length) { for (const e of [...new Set(erros)]) console.log(`::error::${e}`); process.exit(1); }
+            console.log("Qualidade ok.");
+          '
+
+      - name: 5. Prints 375 e 1440
+        run: |
+          echo "ETAPA=prints" >> "$GITHUB_ENV"
+          npm i --no-save --no-audit --no-fund playwright@1.59.1
+          npx playwright install --with-deps chromium
+          PREVIEW_DIR="$SITE_DIR" OUT="$PRINTS_DIR" node scripts/preview-site.js
+
+      - name: 6a. Criar o projeto no Cloudflare Pages (se ainda não existir)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          echo "ETAPA=publicar" >> "$GITHUB_ENV"
+          npx -y wrangler@3 pages project create "$SLUG" --production-branch main || true
+
+      - name: 6b. Publicar (prévia ou produção)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ "$PUBLICAR" = "producao" ]; then RAMO=main; URL="https://${SLUG}.pages.dev"; else RAMO=previa; URL="https://previa.${SLUG}.pages.dev"; fi
+          npx -y wrangler@3 pages deploy "$SITE_DIR" --project-name "$SLUG" --branch "$RAMO"
+          echo "URL_SITE=$URL" >> "$GITHUB_ENV"
+          echo "::notice::Publicado em $URL"
+
+      - name: Resultado deste cliente
+        if: always()
+        env:
+          STATUS: ${{ job.status }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          jq -n --arg slug "$SLUG" --arg status "$STATUS" --arg etapa "${ETAPA:-preparar}" --arg url "${URL_SITE:-}" --arg modo "$PUBLICAR" --arg run "$RUN_URL" \
+            '{slug:$slug,status:$status,etapa:$etapa,url:$url,modo:$modo,execucao:$run}' > "$RESULT_DIR/resultado.json"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: resultado-${{ matrix.slug }}
+          path: ${{ runner.temp }}/resultado
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: prints-${{ matrix.slug }}
+          path: ${{ runner.temp }}/prints
+          if-no-files-found: ignore
+          retention-days: 14
+
+  resumo:
+    name: Resumo do lote
+    needs: [preparar, site]
+    if: ${{ always() && needs.preparar.result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      DATA: ${{ needs.preparar.outputs.data }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: resultado-*
+          path: ${{ runner.temp }}/resultados
+
+      - name: Quadro-resumo e lote/<data>.json
+        run: |
+          mkdir -p lote
+          ARQS=$(find "$RUNNER_TEMP/resultados" -name resultado.json | sort)
+          if [ -n "$ARQS" ]; then jq -s --arg data "$DATA" '{data:$data,sites:.}' $ARQS > "lote/$DATA.json"
+          else jq -n --arg data "$DATA" '{data:$data,sites:[]}' > "lote/$DATA.json"; fi
+          {
+            echo "## Lote de clientes — $DATA"
+            echo
+            echo "| Cliente | Situação | Parou em | Endereço |"
+            echo "|---|---|---|---|"
+            jq -r '.sites[] | "| \(.slug) | \(if .status=="success" then "ok" else "falhou" end) | \(.etapa) | \(.url) |"' "lote/$DATA.json"
+            echo
+            echo "Prints (375 e 1440): artefatos \`prints-<cliente>\` desta execução."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: lote-${{ needs.preparar.outputs.data }}
+          path: lote/${{ needs.preparar.outputs.data }}.json
+          retention-days: 90
+
+      - name: Guardar o quadro e os arquivos gerados no ramo nexia/lote-<data>
+        run: |
+          for d in "$RUNNER_TEMP"/resultados/*/gerado; do
+            [ -d "$d" ] && cp -R "$d"/. .
+          done
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q -B "nexia/lote-$DATA"
+          git add lote clientes
+          if git diff --cached --quiet; then echo "Nada novo para guardar."; exit 0; fi
+          git commit -q -m "lote $DATA: quadro e arquivos gerados"
+          git push -q --force-with-lease origin "nexia/lote-$DATA" || git push -q origin "nexia/lote-$DATA"
+          echo "::notice::Guardado no ramo nexia/lote-$DATA (lote/$DATA.json)"
