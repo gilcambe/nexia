@@ -256,11 +256,11 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
         </div>
       </Cartao>
 
-      <Mais d={d} erro={erros.robos} />
-
       <Cartao titulo="🪜 Escada">
         <EscadaCard />
       </Cartao>
+
+      <Mais d={d} erro={erros.robos} />
     </div>
   );
 }
