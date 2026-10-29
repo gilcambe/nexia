@@ -1,10 +1,10 @@
 import { useState } from "react";
-import type { Dados, Fornecedor, Parte, Situacao, TesteIA } from "./api";
-import { useCentral, haQuanto } from "./api";
+import { useCentral, haQuanto, type Dados, type Fornecedor, type Parte, type Situacao, type TesteIA } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
 import type { Cor } from "./ui";
 import Mais from "./Mais";
 import SaudeHistorico from "./SaudeHistorico";
+
 import ConectarIAs from "./ConectarIAs";
 import UltimosErros from "./UltimosErros";
 import { Abre, useModo } from "./celular";
