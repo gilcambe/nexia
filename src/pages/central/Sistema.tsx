@@ -4,7 +4,8 @@ import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
 import type { Cor } from "./ui";
 import Mais from "./Mais";
-import SaudeHistorico from "./SaudeHistorico";\n
+import SaudeHistorico from "./SaudeHistorico";
+
 import ConectarIAs from "./ConectarIAs";
 import UltimosErros from "./UltimosErros";
 import { Abre, useModo } from "./celular";

@@ -64,7 +64,10 @@ const claudePct = computed(() => Math.min(100, Math.max(0, claude.value)));
 
 onMounted(async () => {
   try {
-    const res = await fetch('/escada');
+    const token = localStorage.getItem('nexia_token') || undefined;
+    const res = await fetch('/escada', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
     const data = await res.json();
     cortex.value = data.cortex ?? data.progresso?.cortex ?? 0;
     iasGratis.value = data.iasGratis ?? data.ias_gratis ?? data.progresso?.iasGratis ?? 0;

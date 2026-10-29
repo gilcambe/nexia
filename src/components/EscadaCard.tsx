@@ -47,9 +47,13 @@ export default function EscadaCard() {
   useEffect(() => {
     let ignorar = false;
     const controller = new AbortController();
+    const token = localStorage.getItem('nexia_token') || undefined;
     fetch('/escada', {
       signal: controller.signal,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
     })
       .then((res) => {
         if (!res.ok) throw new Error('Falha ao carregar escada');
