@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useMemory } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemType } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemComponent } from '../../components/MemoryItem';
-import { configurarSwitchIALocal, obterConfig, salvarConfig } from '../../../config.js';
+import { configurarSwitchIALocal, obterConfig, salvarConfig, verificarSuporteWebGPU } from '../../../config.js';
 
 type MemoryItemProps = MemoryItemType & {
   onDelete: (id: string) => void;
