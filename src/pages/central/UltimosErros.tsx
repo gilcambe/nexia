@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { ErroRecente } from "./api";
 import { useCentral } from "./api";
 import { Cartao, Botao, Carregando } from "./ui";
+import { IcErro } from "./icones";
 
 // Aba Sistema (#815): últimos erros do servidor (5xx), cada um com o rid. O mesmo rid aparece no
 // cabeçalho X-Request-Id da resposta e no log do Cloudflare: copie e procure lá para ver a causa.
@@ -22,7 +23,7 @@ export default function UltimosErros() {
   const copiar = (r: string) => { try { void navigator.clipboard.writeText(r); } catch { /* sem área de transferência */ } };
 
   return (
-    <Cartao titulo="Últimos erros do servidor" acao={<Botao onClick={ler} disabled={lendo} testid="ler-erros">{lendo ? "Lendo…" : "🔄 Atualizar"}</Botao>}>
+    <Cartao titulo="Últimos erros do servidor" resumo="Conferindo…" icone={<IcErro />} acao={<Botao onClick={ler} disabled={lendo} testid="ler-erros">{lendo ? "Lendo…" : "🔄 Atualizar"}</Botao>}>
       {!lista ? <Carregando erro={erro} /> : !lista.length ? (
         <p className="text-sm text-nexia-muted">Nenhum erro guardado. 🎉</p>
       ) : (
