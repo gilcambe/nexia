@@ -32,18 +32,25 @@ export function pedirAbrir(id: string) { pedido = id; }
 export function Folha({ titulo, fechar, acao, children }: { titulo: string; fechar: () => void; acao?: ReactNode; children: ReactNode }) {
   const fecharRef = useRef(fechar);
   fecharRef.current = fechar;
+  const fechouPorVoltar = useRef(false);
   useEffect(() => {
     history.pushState({ folha: titulo }, "");
     const voltar = () => fecharRef.current();
     window.addEventListener("popstate", voltar);
     const rolagem = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    return () => { window.removeEventListener("popstate", voltar); document.body.style.overflow = rolagem; };
+    return () => {
+      window.removeEventListener("popstate", voltar);
+      document.body.style.overflow = rolagem;
+      if (!fechouPorVoltar.current) {
+        history.back();
+      }
+    };
   }, [titulo]);
   return (
     <div className="fixed inset-0 z-50 bg-[#f5f7fb] flex flex-col" role="dialog" aria-modal="true" aria-label={titulo} data-testid="folha">
       <div className="flex items-center gap-1 h-14 px-2 bg-white border-b border-slate-200 shrink-0">
-        <button onClick={() => history.back()} className="p-2 text-indigo-600 cursor-pointer" aria-label="Voltar" data-testid="folha-voltar">
+        <button onClick={() => { fechouPorVoltar.current = true; history.back(); }} className="p-2 text-indigo-600 cursor-pointer" aria-label="Voltar" data-testid="folha-voltar">
           <Icone nome="seta" className="w-5 h-5 rotate-180" />
         </button>
         <h2 className="flex-1 min-w-0 font-semibold text-slate-900 truncate">{titulo}</h2>
