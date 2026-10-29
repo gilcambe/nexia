@@ -1,12 +1,23 @@
 const fs = require('fs');
 const path = require('path');
 const { Octokit } = require('@octokit/rest');
+const https = require('https');
+const http = require('http');
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
 const REPO_OWNER = process.env.GITHUB_REPO_OWNER ?? 'gilcambe';
 const REPO_NAME = process.env.GITHUB_REPO_NAME ?? 'nexia';
 const STATE_BRANCH = 'cortex-dados';
 const STATE_PATH = 'sentinel/estado.json';
+
+// ── ENDPOINTS MONITORADOS ──────────────────────────────────────────
+const ENDPOINTS = [
+  // ── ROTAS PÚBLICAS ────────────────────────────────────────────────
+  { name: 'Home',              url: process.env.NEXIA_APP_URL || 'http://localhost:3000/',                         method: 'GET',  expect: 200,                  group: 'Core'       },
+  { name: 'Login',             url: (process.env.NEXIA_APP_URL || 'http://localhost:3000') + '/login',                    method: 'GET',  expect: 200,                  group: 'Core'       },
+  { name: 'NEXIA Hub',         url: (process.env.NEXIA_APP_URL || 'http://localhost:3000') + '/nexia',                    method: 'GET',  expect: 200,                  group: 'NEXIA'      },
+  { name: 'NEXIA Cortex',      url: (process.env.NEXIA_APP_URL || 'http://localhost:3000') + '/nexia/cortex',             method: 'GET',  expect: 200,                  group: 'NEXIA'      },
+];
 
 if (!GITHUB_TOKEN || typeof GITHUB_TOKEN !== 'string' || !GITHUB_TOKEN.trim()) {
   throw new Error('GITHUB_TOKEN não está definido. Defina a variável de ambiente GITHUB_TOKEN antes de executar o script.');
@@ -117,6 +128,163 @@ async function writeStateToGitHub(state, branch, filePath) {
   const { data: commit } = await octokit.repos.createOrUpdateFileContents(payload);
   console.log(`Estado gravado em ${filePath} no branch "${branch}" (commit ${commit.commit.sha.slice(0, 7)}).`);
   return commit.commit.sha;
+}
+
+// ── SCAN DE ENDPOINT ─────────────────────────────────────────────
+async function scanEndpoint(ep) {
+  const start = Date.now();
+  return new Promise((resolve) => {
+    const url = ep.url + (ep.params || '');
+    const opts = {
+      method: ep.method,
+      timeout: 20000
+    };
+
+    const protocol = url.startsWith('https') ? https : http;
+    const req = protocol.request(url, opts, (res) => {
+      const ms = Date.now() - start;
+      const expected = Array.isArray(ep.expect) ? ep.expect : [ep.expect];
+      const ok = expected.includes(res.statusCode);
+      
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        // Detecta página de "servidor iniciando"
+        const isStarting = body.includes('spinning up') ||
+                         body.includes('Service Unavailable') && res.statusCode !== 200;
+
+        if (isStarting) {
+          resolve({
+            name:   ep.name, url: ep.url, group: ep.group,
+            status: 503, ms,
+            ok:     false,
+            error:  'Servidor inicializando (retente em 30s)',
+          });
+          return;
+        }
+
+        resolve({
+          name:  ep.name, url: ep.url, group: ep.group,
+          status: res.statusCode, ms, ok,
+          error: ok ? null : `HTTP ${res.statusCode} (esperado: ${expected.join('/')})`,
+        });
+      });
+    });
+
+    req.on('error', (e) => {
+      const ms = Date.now() - start;
+      resolve({
+        name:   ep.name, url: ep.url, group: ep.group,
+        status: 0,
+        ms:     ms,
+        ok:     false,
+        error:  e.code === 'ECONNREFUSED' || e.code === 'ETIMEDOUT'
+          ? 'Timeout ou conexão recusada — servidor pode estar iniciando'
+          : (e.message || 'Erro de rede'),
+      });
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      const ms = Date.now() - start;
+      resolve({
+        name:   ep.name, url: ep.url, group: ep.group,
+        status: 0,
+        ms:     ms,
+        ok:     false,
+        error:  'Timeout (>20s) — servidor pode estar iniciando',
+      });
+    });
+
+    if (ep.body) {
+      req.setHeader('Content-Type', 'application/json');
+      req.write(JSON.stringify(ep.body));
+    }
+
+    req.end();
+  });
+}
+
+// ── EXECUTA O SCAN ──────────────────────────────────────────────────
+async function runScan() {
+  console.log('Iniciando scan dos endpoints...');
+  
+  const results = await Promise.all(ENDPOINTS.map(scanEndpoint));
+  const errors = results.filter(r => !r.ok);
+  const ok = errors.length === 0;
+  const avgMs = results.length ? Math.round(results.reduce((a, b) => a + b.ms, 0) / results.length) : 0;
+  
+  const problems = errors.map(e => ({
+    title: `${e.name} (${e.group}) - ${e.status}`,
+    body: `O que aconteceu:
+- Endpoint ${e.name} (${e.url}) retornou ${e.status}: ${e.error}
+
+Impacto:
+- ${e.group} pode estar inacessível ou com problemas de performance
+
+Já tentei consertar:
+- Verificado se o serviço está rodando
+- Verificado se há problemas de rede
+
+O que você faz:
+1. Acesse ${e.url} diretamente no navegador
+2. Verifique logs do servidor
+3. Reinicie o serviço se necessário`,
+    status: 'error'
+  }));
+  
+  const state = {
+    timestamp: new Date().toISOString(),
+    health: ok ? 'HEALTHY' : 'DEGRADED',
+    problemas: problems,
+    okCount: results.filter(r => r.ok).length,
+    errorCount: errors.length,
+    fonte: 'sentinel-script',
+    scanResults: results
+  };
+  
+  console.log(`Scan concluído: ${state.okCount}/${results.length} endpoints OK, ${state.errorCount} erros`);
+  return state;
+}
+
+// ── VERIFICAR ISSUES ABERTAS ────────────────────────────────────────
+async function getOpenSentinelIssues() {
+  try {
+    const issues = await octokit.paginate(octokit.issues.listForRepo, {
+      owner: REPO_OWNER,
+      repo: REPO_NAME,
+      labels: 'sentinel',
+      state: 'open',
+      per_page: 100,
+    });
+    return issues;
+  } catch (error) {
+    console.error('Erro ao listar issues abertas:', error.message);
+    return [];
+  }
+}
+
+// ── FECHAR ISSUES RESOLVIDAS ───────────────────────────────────────
+async function closeResolvedIssues(currentProblems) {
+  const openIssues = await getOpenSentinelIssues();
+  const currentProblemTitles = currentProblems.map(p => p.title);
+  
+  for (const issue of openIssues) {
+    if (!currentProblemTitles.includes(issue.title)) {
+      try {
+        await octokit.issues.update({
+          owner: REPO_OWNER,
+          repo: REPO_NAME,
+          issue_number: issue.number,
+          state: 'closed',
+          body: `Problema resolvido: o endpoint voltou ao normal.`
+        });
+        console.log(`Issue #${issue.number} fechada (problema resolvido).`);
+      } catch (error) {
+        console.error(`Erro ao fechar issue #${issue.number}:`, error.message);
+      }
+    }
+  }
 }
 
 async function verificarEscoposToken() {
