@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCentral, PARTES, haQuanto } from "./api";
-import type { Dados, Parte } from "./api";
+import type { Dados, Parte, Tarefa, TarefaGratis } from "./api"; // Importar TarefaGratis
 import { calcularAvisos } from "./avisos";
 import type { Aba } from "./avisos";
 import Painel from "./Painel";
