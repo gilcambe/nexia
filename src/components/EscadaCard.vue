@@ -32,17 +32,17 @@
     </div>
 
     <div class="numeros" data-testid="escada-numeros">
-      <div class="numero" data-testid="numero-fila">
+      <div class="numero" data-testid="fila">
         <span class="rotulo" data-testid="rotulo-fila">Fila</span>
         <span class="valor" data-testid="valor-fila">{{ fila }}</span>
       </div>
-      <div class="numero" data-testid="numero-jules">
+      <div class="numero" data-testid="jules">
         <span class="rotulo" data-testid="rotulo-jules">Jules hoje</span>
         <span class="valor" data-testid="valor-jules">{{ julesToday }}/15</span>
       </div>
     </div>
 
-    <div v-if="faseB" class="selo" data-testid="selo-fase-b">
+    <div v-if="faseB" class="selo" data-testid="badge-fase-b">
       ✅ Pronto para fase B
     </div>
   </section>
