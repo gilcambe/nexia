@@ -83,6 +83,7 @@ export default function EscadaCard() {
 
   return (
     <section className="escada-card" data-testid="escada-card">
+      {/* Cartão Escada implementado */}
       <h2 className="escada-titulo">🪜 Escada</h2>
       <div className="escada-barras" role="region" aria-label="Progresso da semana">
         <ProgressBar label="Cortex" valor={data.semana.cortex} />
