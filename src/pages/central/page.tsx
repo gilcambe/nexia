@@ -11,7 +11,7 @@ import Clientes from "./Clientes";
 import Dinheiro from "./Dinheiro";
 import Divulgar from "./Divulgar";
 import CortexAba from "./CortexAba";
-import EscadaCard from "../../components/EscadaCard";
+import EscadaCard from "../../components/EscadaCard.tsx";
 import Sistema from "./Sistema";
 import PrsAba from "./PrsAba";
 import { Icone } from "./icones";
@@ -231,7 +231,7 @@ export default function CentralPage() {
                   {aba === "clientes" && <Clientes d={d} erros={erros} />}
                   {aba === "dinheiro" && <Dinheiro d={d} erro={erros.dinheiro} />}
                   {aba === "divulgar" && <Divulgar d={d} erro={erros.divulga} />}
-                  {aba === "cortex" && <div className="space-y-4"><div className="escada-card-wrapper"><EscadaCard /></div><CortexAba d={d} erro={erros.cortex} /></div>}
+                  {aba === "cortex" && <div className="space-y-4"><EscadaCard /><CortexAba d={d} erro={erros.cortex} /></div>}
                   {aba === "prs" && <PrsAba d={d} erro={erros.cortex} />}
                   {aba === "sistema" && <Sistema d={d} erros={erros} />}
                 </div>
