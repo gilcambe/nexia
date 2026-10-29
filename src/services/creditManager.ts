@@ -67,7 +67,7 @@ function verifyIntegrity(data: UserCredits): boolean {
     return false;
   }
   
-      return true;
+  return true;
 }
 
 // Função para adicionar assinatura aos dados do usuário
