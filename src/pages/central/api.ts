@@ -17,7 +17,16 @@ export interface Dinheiro {
   novosPorDia: { dia: string; n: number }[];
   ativosPorDia: { dia: string; n: number }[];
 }
-export interface Cortex { naFila: number; fazendo: Tarefa[]; travadas: Tarefa[]; feitas7: number; ultimas: Tarefa[]; proximas: Tarefa[]; gratuitas: TarefaGratis[] } // Adicionado gratuitas
+export interface Cortex { 
+  naFila: number; 
+  fazendo: Tarefa[]; 
+  travadas: Tarefa[]; 
+  feitas7: number; 
+  ultimas: Tarefa[]; 
+  proximas: Tarefa[]; 
+  gratuitas: TarefaGratis[]; // Adicionado gratuitas
+  tarefasPorConta: Record<string, TarefaGratis[]>; // Nova interface para tarefas por conta
+}
 export interface Divulga {
   naFila: number;
   proximos: { id: string; texto: string }[];

@@ -104,3 +104,24 @@ export const EmGrupo = createContext(false);
 export function useModo() {
   return { compacto: useContext(Compacto), naFolha: useContext(NaFolha), emGrupo: useContext(EmGrupo) };
 }
+
+// Nova seção para exibir tarefas por conta
+export function TarefasPorConta({ tarefas }: { tarefas: Record<string, TarefaGratis[]> }) {
+  return (
+    <div className="mt-4">
+      <h3 className="text-lg font-semibold mb-2">Tarefas por Conta</h3>
+      {Object.entries(tarefas).map(([conta, tarefasConta]) => (
+        <div key={conta} className="mb-4">
+          <h4 className="text-md font-medium mb-1">{conta}</h4>
+          <ul>
+            {tarefasConta.map((tarefa) => (
+              <li key={tarefa.numero} className="text-sm text-slate-600">
+                {tarefa.titulo}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </div>
+  );
+}
