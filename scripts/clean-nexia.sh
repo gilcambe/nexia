@@ -12,7 +12,7 @@
 
 set -euo pipefail
 
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 
 echo ""
 echo "=========================================="
@@ -28,18 +28,13 @@ for dir in $DIRECTORIES; do
             # (1) Substitui a string literal exata, mantendo o restante do texto
             sed -i 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
 
-            # (2) Substitui completamente o conteúdo de <title> que contenha NEXIA por "Cortex"
-            sed -i 's/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/gi' "$file"
+            # (2) Remove NEXIA do conteúdo de <title> mantendo o restante, ou substitui por "Cortex" se ficar vazio
+            sed -i 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
+            sed -i 's/<title>\s*<\/title>/<title>Cortex<\/title>/gi' "$file"
 
-            # (2b) Substitui completamente o valor de og:site_name que contenha NEXIA por "Cortex"
-            sed -i 's/og:site_name="[^"]*NEXIA[^"]*"/og:site_name="Cortex"/gi' "$file"
-
-            # (3) Remove apenas a palavra "NEXIA" de atributos dentro da tag de abertura <title ...>
-            #     mantendo o restante dos atributos e do conteúdo da tag
-            sed -i 's/<title \([^>]*\)NEXIA\([^>]*\)>/<title \1\2>/gi' "$file"
-
-            # (3b) Remove apenas a palavra "NEXIA" de og:site_name, mantendo o restante do valor
+            # (2b) Remove NEXIA do valor de og:site_name mantendo o restante
             sed -i 's/og:site_name="\([^"]*\)NEXIA\([^"]*\)"/og:site_name="\1\2"/gi' "$file"
+            sed -i 's/og:site_name="\s*"/og:site_name="Cortex"/gi' "$file"
         done
     else
         echo "Diretório não encontrado: $dir"
@@ -56,7 +51,7 @@ echo ""
 echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit viajante-pro 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
     echo ""
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
