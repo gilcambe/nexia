@@ -28,7 +28,10 @@ for dir in $DIRECTORIES; do
             # (1) Substitui a string literal exata, mantendo o restante do texto
             sed -i 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
 
-            # (2) Remove NEXIA do conteúdo de <title> mantendo o restante, ou substitui por "Cortex" se ficar vazio
+            # (2) Substitui <title>.*NEXIA.*</title> inteiramente por <title>Cortex</title>
+            sed -i 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/gi' "$file"
+            
+            # (3) Remove apenas a palavra NEXIA de outros casos em <title>, mantendo o restante
             sed -i 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
             sed -i 's/<title>\s*<\/title>/<title>Cortex<\/title>/gi' "$file"
 
@@ -55,7 +58,7 @@ if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 
     echo ""
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
-    grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit viajante-pro 2>/dev/null
+    grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null
     echo ""
     echo "Por favor, revise os arquivos e tente novamente."
     exit 1
