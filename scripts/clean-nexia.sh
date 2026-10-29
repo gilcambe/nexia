@@ -29,19 +29,11 @@ process_file() {
     # (1) Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
     sed -i 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
 
-    # (2) Substituir <title> contendo NEXIA por <title>Cortex</title>
-    # Se o título contiver NEXIA, substituir por Cortex
-    sed -E -i 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/g' "$file"
-    
-    # (3) Substituir og:site_name contendo NEXIA por og:site_name="Cortex"
-    # Se og:site_name contiver NEXIA, substituir por Cortex
-    sed -E -i 's/og:site_name=".*NEXIA.*"/og:site_name="Cortex"/g' "$file"
-    sed -E -i 's/property="og:site_name" content=".*NEXIA.*"/property="og:site_name" content="Cortex"/g' "$file"
-    
-    # (4) Remover NEXIA de outros atributos ou textos dentro de <title> ou og:site_name mantendo o restante
+    # (2) Remover NEXIA de <title> mantendo o resto do conteúdo
     # Para <title>: remover NEXIA mas manter o resto do conteúdo (ex: <title>Meu Projeto NEXIA</title> → <title>Meu Projeto</title>)
     sed -E -i 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file"
     
+    # (3) Remover NEXIA de og:site_name mantendo o resto do conteúdo
     # Para og:site_name: remover NEXIA mas manter o resto do conteúdo (ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site")
     sed -E -i 's/og:site_name="([^"]*)NEXIA([^"]*)"/og:site_name="\1\2"/g' "$file"
     sed -E -i 's/property="og:site_name" content="([^"]*)NEXIA([^"]*)"/property="og:site_name" content="\1\2"/g' "$file"
