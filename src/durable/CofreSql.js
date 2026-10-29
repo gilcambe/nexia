@@ -4,7 +4,7 @@
 // (lib/firebase-lite/d1-backend.js) serve igual. Cota própria, separada do D1 da conta.
 
 class CofreSql {
-      constructor(state) {
+  constructor(state) {
       this.sql = state?.storage?.sql || null;
       if (this.sql) {
         try {
