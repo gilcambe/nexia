@@ -168,7 +168,8 @@ export default function MemorySettings() {
           {mostrarAvisoDownload && (
             <div className="text-xs text-yellow-400 mt-4 bg-yellow-400/10 p-3 rounded-lg">
               <p>⚠️ O download da IA local requer aproximadamente 1 GB de armazenamento.</p>
-              <p className="mt-1">Recomendamos usar uma conexão Wi-Fi estável.</p>
+              <p className="mt-1">Recomendamos usar uma conexão Wi-Fi estável para evitar cobranças de dados móveis.</p>
+              <p className="mt-1">O download pode levar alguns minutos dependendo da velocidade da sua conexão.</p>
             </div>
           )}
         </div>
