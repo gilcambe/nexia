@@ -16,6 +16,17 @@
 #   em uma única passagem por arquivo, otimizando o desempenho.
 # - A verificação final usa grep para garantir que não restou nenhum NEXIA em
 #   <title> ou og:site_name nos diretórios processados.
+# - Usa find com -print0 e read -d '' para lidar com nomes de arquivo com espaços
+
+set -euo pipefail
+
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
+
+echo ""
+echo "=========================================="
+echo "Iniciando limpeza de referências NEXIA..."
+echo "=========================================="
+echo ""
 
 set -euo pipefail
 
@@ -33,7 +44,7 @@ for dir in $DIRECTORIES; do
         echo "Processando diretório: $dir"
         find "$dir" -type f \( -name "*.html" -o -name "*.htm" \) -print0 | while IFS= read -r -d '' file; do
             # Aplica todas as substituições em uma única passagem de sed para otimizar
-                # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
+            # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
             sed -i \\
                 -e 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' \\
                 # Passo 2: Qualquer <title> que contenha NEXIA vira <title>Cortex</title>
@@ -61,11 +72,12 @@ echo ""
 echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
+# Padrão mais abrangente para detectar NEXIA em títulos
+if grep -rnE "<title>[^<]*NEXIA[^<]*<\/title>|<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
     echo ""
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
-    grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null
+    grep -rnE "<title>[^<]*NEXIA[^<]*<\/title>|<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null
     echo ""
     echo "Por favor, revise os arquivos e tente novamente."
     exit 1
@@ -78,12 +90,12 @@ echo "=========================================="
 echo "Limpeza concluída!"
 echo "=========================================="
 echo ""
-# Verifica og:site_name restante
-if grep -rnE "og:site_name=[^>]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
+# Verifica og:site_name restante com padrão mais abrangente
+if grep -rnE "og:site_name=['"]?[^'">]*NEXIA[^'">]*['"]?|og:site_name=[^>]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
     echo ""
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em og:site_name:"
     echo ""
-    grep -rnE "og:site_name=[^>]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null
+    grep -rnE "og:site_name=['"]?[^'">]*NEXIA[^'">]*['"]?|og:site_name=[^>]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null
     exit 1
 else
     echo "✓ Nenhuma ocorrência de NEXIA encontrada em og:site_name."
