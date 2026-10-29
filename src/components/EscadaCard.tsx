@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface EscadaData {
   faseB: boolean;
@@ -11,97 +11,34 @@ interface EscadaData {
   };
 }
 
-const EscadaCard = () => {
-  const [data, setData] = useState<EscadaData>({
-    faseB: false,
-    fila: 0,
-    julesHoje: 0,
-    semana: {
-      cortex: 0,
-      iasGratis: 0,
-      claude: 0
-    }
-  });
-  const [error, setError] = useState<string | null>(null);
+export default function EscadaCard() {
+  const [data, setData] = useState<EscadaData | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const sanitizeNumber = (val: any): number => {
-    const num = Number(val);
-    return isNaN(num) ? 0 : num;
-  };
-
-  const validateData = (raw: any): EscadaData => {
-    if (!raw || typeof raw !== 'object') {
-      throw new Error('Resposta inválida da API');
-    }
-    
-    const required = ['faseB', 'fila', 'julesHoje', 'semana'];
-    for (const key of required) {
-      if (!(key in raw)) {
-        throw new Error(`Campo obrigatório ausente: ${key}`);
-      }
-    }
-    
-    if (typeof raw.faseB !== 'boolean') {
-      throw new Error('faseB deve ser booleano');
-    }
-    
-    ['fila', 'julesHoje'].forEach(key => {
-      const val = Number(raw[key]);
-      if (isNaN(val) || val < 0) {
-        throw new Error(`${key} deve ser número não negativo`);
-      }
-    });
-    
-    if (!raw.semana || typeof raw.semana !== 'object') {
-      throw new Error('semana deve ser objeto');
-    }
-    
-    ['cortex', 'iasGratis', 'claude'].forEach(key => {
-      const val = Number(raw.semana[key]);
-      if (isNaN(val) || val < 0 || val > 100) {
-        throw new Error(`semana.${key} deve ser número entre 0 e 100`);
-      }
-    });
-    
-    return {
-      faseB: raw.faseB,
-      fila: sanitizeNumber(raw.fila),
-      julesHoje: sanitizeNumber(raw.julesHoje),
-      semana: {
-        cortex: sanitizeNumber(raw.semana.cortex),
-        iasGratis: sanitizeNumber(raw.semana.iasGratis),
-        claude: sanitizeNumber(raw.semana.claude)
-      }
-    };
-  };
+  const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
     setError(null);
-    
     try {
-      const response = await fetch('/escada');
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
+      const res = await fetch('/escada');
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      const json = await res.json();
       
-      const raw = await response.json();
-      const validated = validateData(raw);
-      setData(validated);
-    } catch (err) {
-      console.error('[EscadaCard] Erro ao buscar dados:', err);
-      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      // Validação defensiva dos dados
+      if (!json || typeof json !== 'object') throw new Error('Resposta inválida');
+      
       setData({
-        faseB: false,
-        fila: 0,
-        julesHoje: 0,
+        faseB: Boolean(json.faseB),
+        fila: Number(json.fila) || 0,
+        julesHoje: Number(json.julesHoje) || 0,
         semana: {
-          cortex: 0,
-          iasGratis: 0,
-          claude: 0
+          cortex: Number(json.semana?.cortex) || 0,
+          iasGratis: Number(json.semana?.iasGratis) || 0,
+          claude: Number(json.semana?.claude) || 0,
         }
       });
+    } catch (err: any) {
+      setError(err?.message || 'Erro ao carregar dados');
     } finally {
       setLoading(false);
     }
@@ -111,52 +48,56 @@ const EscadaCard = () => {
     fetchData();
   }, []);
 
-  const progressItems = [
-    { label: 'Cortex', percent: data.semana.cortex },
-    { label: 'IAs grátis', percent: data.semana.iasGratis },
-    { label: 'Claude', percent: data.semana.claude }
-  ];
-
-  if (error) {
-    return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-900 shadow-sm">
-        <p className="text-sm">Erro ao carregar Escada: {error}</p>
-        <button onClick={fetchData} className="mt-2 text-xs font-semibold underline hover:opacity-80">Tentar novamente</button>
-      </div>
-    );
-  }
-
   if (loading) {
     return (
-      <div className="rounded-xl border border-nexia-border bg-nexia-surface p-4 shadow-sm flex flex-col items-center justify-center gap-2 min-h-[140px]">
-        <div className="w-6 h-6 border-2 border-nexia-border border-t-blue-600 rounded-full animate-spin"></div>
-        <p className="text-xs text-nexia-muted">Carregando dados da Escada...</p>
+      <div className="p-4 rounded-xl bg-nexia-surface2 text-sm text-nexia-muted flex items-center justify-center gap-2">
+        <div className="w-4 h-4 border-2 border-nexia-accent border-t-transparent rounded-full animate-spin"></div>
+        Carregando dados da Escada...
       </div>
     );
   }
 
+  if (error || !data) {
+    return (
+      <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400 space-y-2">
+        <p>Erro ao carregar Escada: {error || 'Dados indisponíveis'}</p>
+        <button onClick={fetchData} className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-xs font-semibold transition-colors">
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
+
+  const items = [
+    { label: 'Cortex', percent: data.semana.cortex },
+    { label: 'IAs grátis', percent: data.semana.iasGratis },
+    { label: 'Claude', percent: data.semana.claude },
+  ];
+
   return (
-    <div className="rounded-xl border border-nexia-border bg-nexia-surface p-4 shadow-sm space-y-4">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold text-white flex items-center gap-2">🪜 Escada</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="font-semibold text-white text-base">🪜 Escada</h3>
+        </div>
         {data.faseB && (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
             Pronto para fase B
           </span>
         )}
       </div>
 
       <div className="space-y-3">
-        {progressItems.map((item) => (
+        {items.map((item) => (
           <div key={item.label} className="space-y-1">
-            <div className="flex justify-between text-xs font-medium text-nexia-muted">
+            <div className="flex justify-between text-xs text-nexia-muted font-medium">
               <span>{item.label}</span>
               <span>{item.percent}%</span>
             </div>
-            <div className="h-2 w-full rounded-full bg-nexia-surface2 overflow-hidden">
+            <div className="h-2 w-full bg-nexia-surface2 rounded-full overflow-hidden">
               <div
-                className="h-full rounded-full bg-blue-600 transition-all duration-500"
-                style={{ width: `${item.percent}%` }}
+                className="h-full bg-nexia-accent rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, Math.max(0, item.percent))}%` }}
                 role="progressbar"
                 aria-valuenow={item.percent}
                 aria-valuemin={0}
@@ -168,12 +109,14 @@ const EscadaCard = () => {
         ))}
       </div>
 
-      <div className="pt-2 border-t border-nexia-border/50 flex items-center justify-between text-sm text-nexia-muted">
-        <div>Fila: <span className="font-semibold text-white">{data.fila}</span></div>
-        <div>Jules hoje <span className="font-semibold text-white">{data.julesHoje} / 15</span></div>
+      <div className="pt-2 border-t border-nexia-border flex items-center justify-between text-sm">
+        <div className="font-medium text-white">
+          Fila: <span className="text-nexia-muted font-normal">{data.fila}</span>
+        </div>
+        <div className="font-medium text-white">
+          Jules hoje <span className="text-nexia-muted font-normal">{data.julesHoje} / 15</span>
+        </div>
       </div>
     </div>
   );
-};
-
-export default EscadaCard;
+}
