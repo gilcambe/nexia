@@ -55,7 +55,7 @@
         },
         "cta2": {
           "label": "Learn More",
-          "href": "#about"
+          "href": "#about-cortex-p1"
         },
         "image_query": "technology laboratory testing",
         "video_query": ""
@@ -278,31 +278,6 @@
       "credit": "NASA (Public domain, via Wikimedia Commons)",
       "provider": "wikimedia"
     },
-    "s2.about": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/8/82/Modern_offices_-_geograph.org.uk_-_9928.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
-      "width": 1280,
-      "height": 960,
-      "alt": "Modern offices. Aberdeen Technology Park Campus 3",
-      "credit": "Lizzie (CC BY-SA 2.0, via Wikimedia Commons)",
-      "provider": "wikimedia"
-    },
-    "s3.g1": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Close-up_view_of_computer_components_illuminated_by_blue_light_in_a_modern_technology_workspace.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-      "width": 6016,
-      "height": 4016,
-      "alt": "Close-up view of computer components illuminated by blue light in a modern techn",
-      "credit": "Close-up view of computer components illuminated by blue light in a modern technology workspace — Shixart1985 ",
-      "provider": "openverse"
-    },
-    "s4.clip": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/4/4c/KSC-04-S-00329_%28ksc_100504_dart_tech%29.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
-      "width": 320,
-      "height": 212,
-      "alt": "DART, short for Demonstration of Autonomous Rendezvous technology is NASA's newe",
-      "credit": "NASA Kennedy Space Center (Public domain, via Wikimedia Commons)",
-      "provider": "wikimedia",
-      "mime": "video/webm"
-    },
     "s1.item0": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/ff/Information_and_Communication_Technology_Lab_.jpg/1280px-Information_and_Communication_Technology_Lab_.jpg",
       "width": 1280,
@@ -335,12 +310,28 @@
       "credit": "National Energy &Technology Lab WV — usdoe (CC0 1.0, via Openverse)",
       "provider": "openverse"
     },
+    "s2.about": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/8/82/Modern_offices_-_geograph.org.uk_-_9928.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+      "width": 1280,
+      "height": 960,
+      "alt": "Modern offices. Aberdeen Technology Park Campus 3",
+      "credit": "Lizzie (CC BY-SA 2.0, via Wikimedia Commons)",
+      "provider": "wikimedia"
+    },
     "s3.g0": {
       "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/NUS_Concrete_Technology_Lab_20240205_104452.jpg/1280px-NUS_Concrete_Technology_Lab_20240205_104452.jpg",
       "width": 1280,
       "height": 960,
       "alt": "NUS Concrete Technology Lab 20240205 104452",
       "credit": "NUS Concrete Technology Lab 20240205 104452 — ZKang123 (BY-SA 4.0, via Openverse)",
+      "provider": "openverse"
+    },
+    "s3.g1": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Close-up_view_of_computer_components_illuminated_by_blue_light_in_a_modern_technology_workspace.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "width": 6016,
+      "height": 4016,
+      "alt": "Close-up view of computer components illuminated by blue light in a modern techn",
+      "credit": "Close-up view of computer components illuminated by blue light in a modern technology workspace — Shixart1985 ",
       "provider": "openverse"
     },
     "s3.g2": {
@@ -358,6 +349,15 @@
       "alt": "GIMPA Technology Lab 1",
       "credit": "GIMPA Technology Lab 1 — Manson04 (BY-SA 4.0, via Openverse)",
       "provider": "openverse"
+    },
+    "s4.clip": {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/4/4c/KSC-04-S-00329_%28ksc_100504_dart_tech%29.webm?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "width": 320,
+      "height": 212,
+      "alt": "DART, short for Demonstration of Autonomous Rendezvous technology is NASA's newe",
+      "credit": "NASA Kennedy Space Center (Public domain, via Wikimedia Commons)",
+      "provider": "wikimedia",
+      "mime": "video/webm"
     }
   }
 }
