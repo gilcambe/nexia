@@ -10,6 +10,7 @@ patterns=(
     "og:site_name.*NEXIA.*" "og:site_name=\"Cortex\""
     "<title>.*NEXIA.*</title>" "<title>Cortex</title>"
     "og:site_name.*NEXIA.*" "og:site_name=\"Cortex\""
+    "NEXIA" "Cortex"
 )
 
 # Loop through each directory
