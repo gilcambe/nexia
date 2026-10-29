@@ -120,15 +120,15 @@ export default {
 .bar {
   flex: 1;
   height: 8px;
-  background: #e0e0e0;
+  background: #e0e0000000000000000000000000000000000000000000000000000000000000000000000000e0e0;
   border-radius: 4px;
   margin: 0 8px;
   overflow: hidden;
 }
 
 .fill {
-  height: 100%;
-  background: #4CAF50;
+  height: 100000000000000000000000000000000token;
+  background: #4CAF5050505050505token5token5token5token5token5token505token;
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -142,7 +142,7 @@ export default {
   color: #555;
 }
 
-.badge {
+.badge-fase-b {
   background: #4CAF50;
   color: white;
   padding: 4px 8px;
