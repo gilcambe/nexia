@@ -7,6 +7,7 @@ import Mais from "./Mais";
 import SaudeHistorico from "./SaudeHistorico";
 import ConectarIAs from "./ConectarIAs";
 import UltimosErros from "./UltimosErros";
+import Mapa from "./Mapa";
 import { Abre, useModo } from "./celular";
 import { buscarContextoIA, sanitizarTexto } from "@/lib/fetch-contexto-ia";
 
@@ -255,6 +256,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
         </div>
       </Cartao>
 
+      <Mapa />
       <Mais d={d} erro={erros.robos} />
     </div>
   );
