@@ -7,7 +7,7 @@
 
 set -e
 
-DIRECTORIES="public/ apps/ nexia-ai/ viajante-pro/"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 
 echo ""
 echo "========================================"
@@ -23,14 +23,13 @@ for dir in $DIRECTORIES; do
             # (1) Substitui a string literal, mantendo o restante do texto
             sed -i 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
 
-            # (2) Remove apenas a palavra NEXIA dentro de <title>, mantendo o restante
-            sed -i 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/g' "$file"
+            # (2) Qualquer ocorrência de <title> contendo a palavra NEXIA deve ser substituída por "Cortex"
+            sed -i 's/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/ig' "$file"
 
-            # (3) Remove apenas a palavra NEXIA dentro de og:site_name="...", mantendo o restante
-            sed -i 's/og:site_name="\([^"]*\)NEXIA\([^"]*\)"/og:site_name="\1\2"/g' "$file"
-
-            # (4) Remove apenas a palavra NEXIA dentro de property="og:site_name" content="...", mantendo o restante
-            sed -i 's/property="og:site_name" content="\([^"]*\)NEXIA\([^"]*\)"/property="og:site_name" content="\1\2"/g' "$file"
+            # (2b) Qualquer ocorrência de og:site_name contendo a palavra NEXIA deve ser substituída por "Cortex"
+            sed -i 's/og:site_name="[^"]*NEXIA[^"]*"/og:site_name="Cortex"/ig' "$file"
+            sed -i 's/content="[^"]*NEXIA[^"]*" *property="og:site_name"/content="Cortex" property="og:site_name"/ig' "$file"
+            sed -i 's/property="og:site_name" *content="[^"]*NEXIA[^"]*"/property="og:site_name" content="Cortex"/ig' "$file"
         done
     else
         echo "Diretório não encontrado: $dir"
