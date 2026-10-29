@@ -103,6 +103,18 @@ export async function configurarSwitchIALocal(checkboxElement, containerAvisoEle
   const configAtual = obterConfig();
   checkboxElement.checked = configAtual.ativo;
 
+  // Verifica suporte a WebGPU e memória; se não suportado, bloqueia o switch
+  const suporte = await verificarSuporteWebGPU();
+  if (!suporte.suportado) {
+    checkboxElement.disabled = true;
+    if (containerAvisoElement) {
+      containerAvisoElement.style.display = 'block';
+      containerAvisoElement.textContent = `Bloqueado: ${suporte.motivo}`;
+      containerAvisoElement.className = 'bg-red-50 border border-red-100 rounded-lg p-4 text-sm text-red-700';
+    }
+    return configAtual.ativo;
+  }
+
   const MEMORIA_MINIMA_GB = 2;
 
   const limparAviso = () => {
@@ -126,20 +138,37 @@ export async function configurarSwitchIALocal(checkboxElement, containerAvisoEle
     if (!containerAvisoElement) return;
     containerAvisoElement.className = 'bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-700';
     containerAvisoElement.style.display = 'block';
-    containerAvisoElement.innerHTML = '
-      <div class="font-semibold text-amber-800 mb-2">⚠ Download necessário</div>
-      <p class="text-sm text-amber-700 mb-3">
-        Será baixado aproximadamente 1 GB de dados para o modelo de IA local. Recomendado usar Wi-Fi.
-      </p>
-      <div class="flex gap-2">
-        <button id="ia-local-confirmar-download" class="px-3 py-1.5 text-sm bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors">Confirmar download</button>
-        <button id="ia-local-cancelar-download" class="px-3 py-1.5 text-sm border border-amber-200 text-amber-700 rounded hover:bg-amber-100 transition-colors">Cancelar</button>
-      </div>
-    ';
-    const btnConfirmar = containerAvisoElement.querySelector('#ia-local-confirmar-download');
-    const btnCancelar = containerAvisoElement.querySelector('#ia-local-cancelar-download');
-    if (btnConfirmar) btnConfirmar.onclick = () => { limparAviso(); onConfirmar(); };
-    if (btnCancelar) btnCancelar.onclick = () => { limparAviso(); onCancelar(); };
+    containerAvisoElement.textContent = '';
+
+    const titulo = document.createElement('div');
+    titulo.className = 'font-semibold text-amber-800 mb-2';
+    titulo.textContent = '⚠ Download necessário';
+
+    const texto = document.createElement('p');
+    texto.className = 'text-sm text-amber-700 mb-3';
+    texto.textContent = 'Será baixado aproximadamente 1 GB de dados para o modelo de IA local. Recomendado usar Wi-Fi.';
+
+    const botoes = document.createElement('div');
+    botoes.className = 'flex gap-2';
+
+    const btnConfirmar = document.createElement('button');
+    btnConfirmar.id = 'ia-local-confirmar-download';
+    btnConfirmar.className = 'px-3 py-1.5 text-sm bg-amber-500 text-white rounded hover:bg-amber-600 transition-colors';
+    btnConfirmar.textContent = 'Confirmar download';
+    btnConfirmar.onclick = () => { limparAviso(); onConfirmar(); };
+
+    const btnCancelar = document.createElement('button');
+    btnCancelar.id = 'ia-local-cancelar-download';
+    btnCancelar.className = 'px-3 py-1.5 text-sm border border-amber-200 text-amber-700 rounded hover:bg-amber-100 transition-colors';
+    btnCancelar.textContent = 'Cancelar';
+    btnCancelar.onclick = () => { limparAviso(); onCancelar(); };
+
+    botoes.appendChild(btnConfirmar);
+    botoes.appendChild(btnCancelar);
+
+    containerAvisoElement.appendChild(titulo);
+    containerAvisoElement.appendChild(texto);
+    containerAvisoElement.appendChild(botoes);
   };
 
   checkboxElement.onchange = async (e) => {
