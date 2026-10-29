@@ -1,22 +1,25 @@
 <template>
-  <div class="escada-card">
-    <h3>🪜 Escada</h3>
+  <div class="escada-card" data-testid="escada-card">
+    <div class="card-header">
+      <h3>🪜 Escada</h3>
+      <span class="periodo">Semana</span>
+    </div>
     <div class="progress-bars">
-      <div class="progress-bar">
+      <div class="progress-bar" data-testid="progresso-cortex">
         <span>Cortex</span>
         <div class="bar">
           <div class="fill" :style="{ width: cortexProgress + '%' }"></div>
         </div>
         <span>{{ cortexProgress }}%</span>
       </div>
-      <div class="progress-bar">
+      <div class="progress-bar" data-testid="progresso-ias-gratis">
         <span>IAs grátis</span>
         <div class="bar">
           <div class="fill" :style="{ width: freeIAsProgress + '%' }"></div>
         </div>
         <span>{{ freeIAsProgress }}%</span>
       </div>
-      <div class="progress-bar">
+      <div class="progress-bar" data-testid="progresso-claude">
         <span>Claude</span>
         <div class="bar">
           <div class="fill" :style="{ width: claudeProgress + '%' }"></div>
@@ -25,9 +28,9 @@
       </div>
     </div>
     <div class="queue-info">
-      <span v-if="fila !== null">Na fila: {{ fila }}</span>
-      <span>Jules hoje {{ julesToday }}/15</span>
-      <span v-if="faseB" class="badge">Pronto para fase B</span>
+      <span v-if="fila !== null && fila !== undefined" class="fila-info" data-testid="fila">Na fila: {{ fila }}</span>
+      <span class="jules-info" data-testid="jules">Jules hoje {{ julesToday }}/15</span>
+      <span v-if="faseB" class="badge badge-fase-b" data-testid="badge-fase-b">Pronto para fase B</span>
     </div>
   </div>
 </template>
@@ -42,22 +45,31 @@ export default {
       claudeProgress: 0,
       fila: 0,
       julesToday: 0,
-      faseB: false
+      faseB: false,
+      carregando: false
     };
   },
   async created() {
-    try {
-      const response = await fetch('/escada');
-      if (!response.ok) return;
-      const data = await response.json();
-      this.cortexProgress = data.cortexProgress ?? data.cortex ?? 0;
-      this.freeIAsProgress = data.freeIAsProgress ?? data.freeIAs ?? data.iasGratis ?? 0;
-      this.claudeProgress = data.claudeProgress ?? data.claude ?? 0;
-      this.fila = data.fila ?? data.queue ?? data.emFila ?? 0;
-      this.julesToday = data.julesToday ?? data.jules ?? 0;
-      this.faseB = Boolean(data.faseB);
-    } catch (error) {
-      console.error('Failed to fetch escada data:', error);
+    await this.carregar();
+  },
+  methods: {
+    async carregar() {
+      this.carregando = true;
+      try {
+        const response = await fetch('/escada');
+        if (!response.ok) return;
+        const data = await response.json();
+        this.cortexProgress = data.semana?.cortex ?? data.cortexProgress ?? data.cortex ?? 0;
+        this.freeIAsProgress = data.semana?.iasGratis ?? data.semana?.freeIAs ?? data.freeIAsProgress ?? data.freeIAs ?? data.iasGratis ?? 0;
+        this.claudeProgress = data.semana?.claude ?? data.claudeProgress ?? data.claude ?? 0;
+        this.fila = data.fila ?? data.queue ?? data.emFila ?? 0;
+        this.julesToday = data.julesHoje ?? data.julesToday ?? data.jules ?? 0;
+        this.faseB = Boolean(data.faseB ?? data.prontoFaseB ?? data.fase_b);
+      } catch (error) {
+        console.error('Failed to fetch escada data:', error);
+      } finally {
+        this.carregando = false;
+      }
     }
   }
 };
@@ -72,9 +84,22 @@ export default {
   margin-bottom: 20px;
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .escada-card h3 {
-  margin-top: 0;
+  margin: 0;
   color: #333;
+}
+
+.periodo {
+  font-size: 12px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .progress-bars {
