@@ -99,6 +99,35 @@ export function salvarConfig(novaConfig = {}) {
  * @param {HTMLElement} [containerAvisoElement] Elemento opcional para exibir mensagens/avisos
  * @returns {Promise<boolean>} Retorna o novo estado ativo do switch
  */
+export function criarSwitchIALocal(container) {
+  const containerAviso = container || document.createElement('div');
+  containerAviso.className = 'cx-ia-local-aviso';
+  containerAviso.style.display = 'none';
+
+  const wrapper = document.createElement('label');
+  wrapper.className = 'cx-ia-local-switch';
+  wrapper.style.display = 'flex';
+  wrapper.style.alignItems = 'center';
+  wrapper.style.gap = '0.75rem';
+  wrapper.style.cursor = 'pointer';
+
+  const input = document.createElement('input');
+  input.type = 'checkbox';
+  input.id = 'ia-local-switch';
+  input.checked = false;
+  input.disabled = false;
+  input.setAttribute('data-testid', 'cx-ia-local');
+
+  const texto = document.createElement('span');
+  texto.textContent = 'IA no meu aparelho (grátis, offline)';
+
+  wrapper.appendChild(input);
+  wrapper.appendChild(texto);
+  containerAviso.appendChild(wrapper);
+
+  return { input, containerAviso, wrapper };
+}
+
 export async function configurarSwitchIALocal(checkboxElement, containerAvisoElement) {
   if (!checkboxElement) return false;
 
