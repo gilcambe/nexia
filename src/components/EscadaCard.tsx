@@ -1,11 +1,9 @@
-import { useEffect, useState } from "react";
-import { apiPath } from "@/config/env";
-import { Cartao, Sinal } from "../pages/central/ui";
+import { useState, useEffect } from 'react';
 
-export interface EscadaData {
+interface EscadaData {
   faseB: boolean;
   fila: number;
-  julesHoje: string;
+  julesHoje: number;
   semana: {
     cortex: number;
     iasGratis: number;
@@ -13,102 +11,176 @@ export interface EscadaData {
   };
 }
 
-export default function EscadaCard() {
-  const [dados, setDados] = useState<EscadaData | null>(null);
-  const [carregando, setCarregando] = useState(true);
-  const [erro, setErro] = useState<string | null>(null);
+const EscadaCard = () => {
+  const [data, setData] = useState<EscadaData>({
+    faseB: false,
+    fila: 0,
+    julesHoje: 0,
+    semana: {
+      cortex: 0,
+      iasGratis: 0,
+      claude: 0
+    }
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const buscarDados = async () => {
-      try {
-        const resp = await fetch(apiPath("/escada"));
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const json = await resp.json();
-        setDados(json);
-      } catch (e) {
-        setErro((e as Error).message);
-      } finally {
-        setCarregando(false);
+  const sanitizeNumber = (val: any): number => {
+    const num = Number(val);
+    return isNaN(num) ? 0 : num;
+  };
+
+  const validateData = (raw: any): EscadaData => {
+    if (!raw || typeof raw !== 'object') {
+      throw new Error('Resposta inválida da API');
+    }
+    
+    // Validar campos obrigatórios
+    const required = ['faseB', 'fila', 'julesHoje', 'semana'];
+    for (const key of required) {
+      if (!(key in raw)) {
+        throw new Error(`Campo obrigatório ausente: ${key}`);
+      }
+    }
+    
+    // Validar faseB
+    if (typeof raw.faseB !== 'boolean') {
+      throw new Error('faseB deve ser booleano');
+    }
+    
+    // Validar números
+    ['fila', 'julesHoje'].forEach(key => {
+      const val = Number(raw[key]);
+      if (isNaN(val) || val < 0) {
+        throw new Error(`${key} deve ser número não negativo`);
+      }
+    });
+    
+    // Validar semana
+    if (!raw.sema || typeof raw.semana !== 'object') {
+      throw new Error('semana deve ser objeto');
+    }
+    
+    ['cortex', 'iasGratis', 'claude'].forEach(key => {
+      const val = Number(raw.semana[key]);
+      if (isNaN(val) || val < 0 || val > 100) {
+        throw new Error(`semana.${key} deve ser número entre 0 e 100`);
+      }
+    });
+    
+    return {
+      faseB: raw.faseB,
+      fila: sanitizeNumber(raw.fila),
+      julesHoje: sanitizeNumber(raw.julesHoje),
+      semana: {
+        cortex: sanitizeNumber(raw.semana.cortex),
+        iasGratis: sanitizeNumber(raw.semana.iasGratis),
+        claude: sanitizeNumber(raw.sema.claude)
       }
     };
-    buscarDados();
+  };
+
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('/escada');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const raw = await response.json();
+      const validated = validateData(raw);
+      setData(validated);
+    } catch (err) {
+      console.error('[EscadaCard] Erro ao buscar dados:', err);
+      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+      // Reset para valores seguros
+      setData({
+        faseB: false,
+        fila: 0,
+        julesHoje: 0,
+        semana: {
+          cortex: 0,
+          iasGratis: 0,
+          claude: 0
+        }
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
-  if (carregando) {
+  const progressItems = [
+    { label: 'Cortex', percent: data.semana.cortex },
+    { label: 'IAs grátis', percent: data.semana.iasGratis },
+    { label: 'Claude', percent: data.semana.claude }
+  ];
+
+  if (error) {
     return (
-      <Cartao titulo="🪜 Escada" icone="lista" resumo="Carregando...">
-        <div className="space-y-3">
-          <div className="h-2 bg-nexia-surface2 rounded animate-pulse" />
-          <div className="h-2 bg-nexia-surface2 rounded animate-pulse" />
-          <div className="h-2 bg-nexia-surface2 rounded animate-pulse" />
-        </div>
-      </Cartao>
+      <div className="escada-card error-state">
+        <p>Erro ao carregar Escada: {error}</p>
+        <button onClick={fetchData} className="retry-btn">Tentar novamente</button>
+      </div>
     );
   }
 
-  if (erro || !dados) {
+  if (loading) {
     return (
-      <Cartao titulo="🪜 Escada" icone="alerta" resumo="Erro ao carregar">
-        <p className="text-sm text-nexia-muted">Não foi possível buscar os dados da escada.</p>
-      </Cartao>
+      <div className="escada-card loading-state">
+        <div className="loading-spinner"></div>
+        <p>Carregando dados da Escada...</p>
+      </div>
     );
   }
-
-  const { faseB, fila, julesHoje, semana } = dados;
 
   return (
-    <Cartao titulo="🪜 Escada" icone="lista">
-      <div className="space-y-4">
-        {/* Barras de progresso da semana */}
-        <div className="space-y-3">
-          <ProgressBar label="Cortex" value={semana.cortex} cor="cyan" />
-          <ProgressBar label="IAs grátis" value={semana.iasGratis} cor="verde" />
-          <ProgressBar label="Claude" value={semana.claude} cor="roxo" />
-        </div>
-
-        {/* Números da fila e Jules */}
-        <div className="grid grid-cols-2 gap-3 text-center">
-          <div className="rounded-xl bg-nexia-surface2 p-3">
-            <p className="text-2xl font-bold text-white">{fila}</p>
-            <p className="text-xs text-nexia-muted">na fila</p>
-          </div>
-          <div className="rounded-xl bg-nexia-surface2 p-3">
-            <p className="text-2xl font-bold text-white">{julesHoje}</p>
-            <p className="text-xs text-nexia-muted">Jules hoje</p>
-          </div>
-        </div>
-
-        {/* Selo verde quando faseB for true */}
-        {faseB && (
-          <Sinal cor="verde" className="inline-flex items-center gap-1 text-sm font-medium" style={{ fontSize: "0.875rem" }}>
-            Pronto para fase B
-          </Sinal>
+    <div className="escada-card">
+      <div className="card-header">
+        <h2>🪜 Escada</h2>
+        {data.faseB && (
+          <span className="fase-badge">Pronto para fase B</span>
         )}
       </div>
-    </Cartao>
-  );
-}
 
-function ProgressBar({ label, value, cor }: { label: string; value: number; cor: "cyan" | "verde" | "roxo" }) {
-  const CORES = {
-    cyan: "bg-nexia-cyan",
-    verde: "bg-emerald-400",
-    roxo: "bg-purple-500",
-  };
-  return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-xs font-medium">
-        <span>{label}</span>
-        <span className="text-nexia-muted">{value}%</span>
+      <div className="progress-bars">
+        {progressItems.map((item) => (
+          <div key={item.label} className="progress-item">
+            <div className="progress-label">{item.label}</div>
+            <div className="progress-bar">
+              <div
+                className="progress-fill"
+                style={{ width: `${item.percent}%` }}
+                role="progressbar"
+                aria-valuenow={item.percent}
+                aria-valuemin="0"
+                aria-valuemax="100"
+                aria-label={`${item.label}: ${item.percent}%`}
+              >
+                <span className="progress-text">{item.percent}%</span>
+              </div>
+            </div>
+          </div>
+        ))}
       </div>
-      <div className="h-2 bg-nexia-surface2 rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${value}%` }}
-        >
-          <span className={`${CORES[cor]} h-full block rounded-full`} />
-        </div>
+
+      <div className="queue-info">
+        <div className="queue-item">Fila Cortex: {data.fila}</div>
+        <div className="queue-item">Fila IAs grátis: {data.fila}</div>
+        <div className="queue-item">Fila Claude: {data.fila}</div>
+      </div>
+
+      <div className="jules-info">
+        Jules hoje {data.julesHoje} / 15
       </div>
     </div>
   );
-}
+};
+
+export default EscadaCard;
