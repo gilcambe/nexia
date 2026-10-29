@@ -16,41 +16,27 @@ set -e
 # Recomenda-se fazer backup dos diretórios antes de executar.
 
 # Diretórios para processar conforme solicitado no pedido
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 
 # Função para processar um arquivo
 process_file() {
     local file="$1"
+    
+    # Criar backup do arquivo antes de modificar
+    cp "$file" "$file.bak"
+    echo "Backup criado: $file.bak"
 
     # (1) Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
     sed -i 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
 
-    # (2) Remover NEXIA de <title> mantendo o restante do conteúdo
-    # Remove NEXIA no início do título
-    sed -E -i 's/<title>NEXIA\s*([^<]*)<\/title>/<title>\1<\/title>/g' "$file"
-    # Remove NEXIA no meio do título
-    sed -E -i 's/<title>([^<]*)\s*NEXIA\s*([^<]*)<\/title>/<title>\1 \2<\/title>/g' "$file"
-    # Remove NEXIA no final do título
-    sed -E -i 's/<title>([^<]*)\s*NEXIA<\/title>/<title>\1<\/title>/g' "$file"
-
-    # Se o título ficou vazio (ou só espaços), preencher com "Cortex"
-    sed -E -i 's/<title>[[:space:]]*<\/title>/<title>Cortex<\/title>/g' "$file"
-
-    # (3) Remover NEXIA de og:site_name mantendo o restante do conteúdo
-    # Remove NEXIA de og:site_name (formato abreviado)
-    sed -E -i 's/og:site_name="([^"]*)NEXIA([^"]*)"/og:site_name="\1\2"/g' "$file"
-    # Remove NEXIA de og:site_name (formato completo)
-    sed -E -i 's/property="og:site_name" content="([^"]*)NEXIA([^"]*)"/property="og:site_name" content="\1\2"/g' "$file"
-    # Remove NEXIA no início de og:site_name
-    sed -E -i 's/og:site_name="NEXIA\s*([^"]*)"/og:site_name="\1"/g' "$file"
-    sed -E -i 's/property="og:site_name" content="NEXIA\s*([^"]*)"/property="og:site_name" content="\1"/g' "$file"
-    # Remove NEXIA no final de og:site_name
-    sed -E -i 's/og:site_name="([^"]*)\s*NEXIA"/og:site_name="\1"/g' "$file"
-    sed -E -i 's/property="og:site_name" content="([^"]*)\s*NEXIA"/property="og:site_name" content="\1"/g' "$file"
-
-    # Se o og:site_name ficou vazio, preencher com "Cortex"
-    sed -E -i 's/og:site_name=""/og:site_name="Cortex"/g' "$file"
-    sed -E -i 's/property="og:site_name" content=""/property="og:site_name" content="Cortex"/g' "$file"
+    # (2) Substituir <title> contendo NEXIA por <title>Cortex</title>
+    # Se o título contiver NEXIA, substituir por Cortex
+    sed -E -i 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/g' "$file"
+    
+    # (3) Substituir og:site_name contendo NEXIA por og:site_name="Cortex"
+    # Se og:site_name contiver NEXIA, substituir por Cortex
+    sed -E -i 's/og:site_name=".*NEXIA.*"/og:site_name="Cortex"/g' "$file"
+    sed -E -i 's/property="og:site_name" content=".*NEXIA.*"/property="og:site_name" content="Cortex"/g' "$file"
 }
 
 # Função para processar diretórios recursivamente
