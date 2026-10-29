@@ -57,7 +57,7 @@ const EscadaCard = () => {
     });
     
     // Validar semana
-    if (!raw.sema || typeof raw.semana !== 'object') {
+    if (!raw.semana || typeof raw.semana !== 'object') {
       throw new Error('semana deve ser objeto');
     }
     
@@ -75,7 +75,7 @@ const EscadaCard = () => {
       semana: {
         cortex: sanitizeNumber(raw.semana.cortex),
         iasGratis: sanitizeNumber(raw.semana.iasGratis),
-        claude: sanitizeNumber(raw.sema.claude)
+        claude: sanitizeNumber(raw.semana.claude)
       }
     };
   };
@@ -171,9 +171,7 @@ const EscadaCard = () => {
       </div>
 
       <div className="queue-info">
-        <div className="queue-item">Fila Cortex: {data.fila}</div>
-        <div className="queue-item">Fila IAs grátis: {data.fila}</div>
-        <div className="queue-item">Fila Claude: {data.fila}</div>
+        <div className="queue-item">Fila: {data.fila}</div>
       </div>
 
       <div className="jules-info">
