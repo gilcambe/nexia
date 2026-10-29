@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { Dados, Fornecedor, Parte, Situacao, TesteIA } from "./api";
 import { useCentral, haQuanto } from "./api";
 import { Cartao, Sinal, Botao, Carregando } from "./ui";
-import EscadaCard from "@/components/EscadaCard.tsx";
+import EscadaCard from "@/components/EscadaCard";
 import type { Cor } from "./ui";
 import Mais from "./Mais";
 import SaudeHistorico from "./SaudeHistorico";\n
