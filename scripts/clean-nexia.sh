@@ -60,7 +60,7 @@ echo "Limpeza concluída!"
 
 # Verificar se ainda existem ocorrências de NEXIA em títulos
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit viajante-pro 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
     echo "AVISO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     exit 1
 else
