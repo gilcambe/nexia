@@ -1,10 +1,13 @@
 /**
  * config.js
- * Configuração da IA local (WebGPU) - implementação mínima
- * Verifica suporte a WebGPU e memória, exibe avisos de download
+ * Este arquivo foi esvaziado. A funcionalidade de "IA no meu aparelho"
+ * (switch, verificação de WebGPU/memória, bloqueio e aviso de download)
+ * está implementada e consolidada em src/frontend/pages/Settings/Memory.tsx
+ * (parte 1, já na develop). Mantenha este arquivo vazio para evitar duplicação.
  */
 
-const LOCAL_STORAGE_KEY = 'nexia_ia_local_config';
+// Sem código aqui.
+
 
 /**
  * Verifica se o dispositivo/navegador possui suporte adequado a WebGPU e memória.

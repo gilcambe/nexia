@@ -243,5 +243,3 @@ export async function executarPromptComFallback(prompt, opcoes = {}) {
   }
 }
 
-export { MODELOS_SUPORTADOS, WEBLLM_CDN_URL };
-
