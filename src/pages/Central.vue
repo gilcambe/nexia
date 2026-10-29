@@ -1,16 +1,2 @@
-import React from 'react';
-import EscadaCard from '../components/EscadaCard';
-
-const Central = () => {
-  return (
-    <div className="central">
-      <h1>Central NEXIA</h1>
-      <section className="aba-cortex">
-        <h2>🧠 Cortex</h2>
-        <EscadaCard />
-      </section>
-    </div>
-  );
-};
-
-export default Central;
+// Este arquivo foi migrado para src/pages/central/page.tsx (Central real do router).
+// O .vue com conteúdo React/TSX não é válido neste projeto Vite + React e não é usado pelo roteador.
