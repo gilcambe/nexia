@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMemory } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemType } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemComponent } from '../../components/MemoryItem';
-import { obterConfig, salvarConfig, verificarSuporteWebGPU, inicializarEngine } from '../../../../ia-local';
+import ConfigLocalAI from '../../../../config';
 
 type MemoryItemProps = MemoryItemType & {
   onDelete: (id: string) => void;
@@ -21,78 +21,6 @@ export default function MemorySettings() {
   } = useMemory();
 
   const [isDeletingAll, setIsDeletingAll] = useState(false);
-
-  /* IA no meu aparelho (grátis, offline) */
-  const configIaLocal = obterConfig();
-  const [iaLocalAtivo, setIaLocalAtivo] = useState(configIaLocal.ativo);
-  const [bloqueado, setBloqueado] = useState(false);
-  const [motivoBloqueio, setMotivoBloqueio] = useState('');
-  const [baixando, setBaixando] = useState(false);
-  const [progresso, setProgresso] = useState(0);
-  const [confirmandoDownload, setConfirmandoDownload] = useState(false);
-  const [erroIaLocal, setErroIaLocal] = useState('');
-
-  useEffect(() => {
-    const cfg = obterConfig();
-    setIaLocalAtivo(cfg.ativo);
-  }, []);
-
-  const handleToggleIaLocal = async (querLigar: boolean) => {
-    if (!querLigar) {
-      salvarConfig({ ativo: false });
-      setIaLocalAtivo(false);
-      setBaixando(false);
-      setConfirmandoDownload(false);
-      setErroIaLocal('');
-      return;
-    }
-
-    const suporte = await verificarSuporteWebGPU();
-    if (!suporte.suportado) {
-      setBloqueado(true);
-      setMotivoBloqueio(suporte.motivo || 'WebGPU não suportado neste dispositivo.');
-      setIaLocalAtivo(false);
-      return;
-    }
-
-    const memoriaMinimaGb = 4;
-    if (typeof suporte.memoriaGb === 'number' && suporte.memoriaGb < memoriaMinimaGb) {
-      setBloqueado(true);
-      setMotivoBloqueio(`Memória insuficiente: são necessários pelo menos ${memoriaMinimaGb} GB de RAM para rodar a IA localmente. Seu dispositivo tem ${suporte.memoriaGb} GB.`);
-      setIaLocalAtivo(false);
-      return;
-    }
-
-    setBloqueado(false);
-    setMotivoBloqueio('');
-    setConfirmandoDownload(true);
-  };
-
-  const handleConfirmarDownload = async () => {
-    setBaixando(true);
-    setConfirmandoDownload(false);
-    setErroIaLocal('');
-    try {
-      const config = obterConfig();
-      await inicializarEngine(config.modelo, (report) => {
-        setProgresso(Math.round((report.progress || 0) * 100));
-      });
-      salvarConfig({ ativo: true });
-      setIaLocalAtivo(true);
-    } catch (err) {
-      setErroIaLocal(err?.message || 'Falha ao baixar o modelo de IA.');
-      setIaLocalAtivo(false);
-    } finally {
-      setBaixando(false);
-      setProgresso(0);
-    }
-  };
-
-  const handleCancelarDownload = () => {
-    setConfirmandoDownload(false);
-    setBloqueado(false);
-    setIaLocalAtivo(false);
-  };
 
   const handleDeleteItem = (id: string) => {
     deleteItem(id);
@@ -161,93 +89,9 @@ export default function MemorySettings() {
           </div>
         </div>
       </div>
-      {/* Seção IA no meu aparelho (grátis, offline) */}
-      <div className="mb-8">
-        <div className="bg-[var(--cx-card)] border border-[var(--cx-line)] rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-medium">IA no meu aparelho (grátis, offline)</h3>
-              <p className="text-sm text-[var(--cx-mut)] mt-1">
-                Roda a IA localmente no seu navegador, sem enviar dados para a nuvem. Requer navegador com WebGPU.
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-[var(--cx-mut)]">
-                {iaLocalAtivo ? 'Ativado' : 'Desativado'}
-              </span>
-              <button
-                onClick={() => handleToggleIaLocal(!iaLocalAtivo)}
-                disabled={bloqueado || baixando}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${iaLocalAtivo ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'} ${(bloqueado || baixando) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                data-testid="settings-ia-local-toggle"
-                role="switch"
-                aria-checked={iaLocalAtivo}
-                aria-label="IA no meu aparelho (grátis, offline)"
-                aria-disabled={bloqueado || baixando}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${iaLocalAtivo ? 'translate-x-6' : 'translate-x-1'}`}
-                />
-              </button>
-            </div>
-          </div>
 
-          {bloqueado && (
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
-              <p className="text-amber-800 text-sm font-medium">⚠️ Bloqueado</p>
-              <p className="text-amber-700 text-sm mt-1">{motivoBloqueio}</p>
-            </div>
-          )}
-
-          {!bloqueado && !iaLocalAtivo && !baixando && !confirmandoDownload && (
-            <p className="text-xs text-[var(--cx-mut)] mt-4">
-              Padrão: desligado. Ative para usar a IA localmente.
-            </p>
-          )}
-
-          {confirmandoDownload && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4" data-testid="settings-ia-local-download-alert">
-              <p className="text-blue-800 text-sm font-medium">📥 Download do modelo (~1 GB)</p>
-              <p className="text-blue-700 text-sm mt-1">
-                Recomendamos usar Wi-Fi para evitar consumo da franquia de dados móveis.
-              </p>
-              <div className="flex gap-2 mt-3">
-                <button
-                  onClick={handleConfirmarDownload}
-                  className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                >
-                  Iniciar download
-                </button>
-                <button
-                  onClick={handleCancelarDownload}
-                  className="px-3 py-1.5 text-sm border border-[var(--cx-line)] rounded hover:bg-[var(--cx-line)] transition-colors"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          )}
-
-          {baixando && (
-            <div className="bg-[var(--cx-card)] border border-[var(--cx-line)] rounded-lg p-4 mb-4">
-              <p className="text-sm text-[var(--cx-mut)] font-medium">Baixando modelo de IA...</p>
-              <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                <div
-                  className="bg-[var(--cx-ac)] h-2 rounded-full"
-                  style={{ width: `${Math.max(progresso, 0)}%` }}
-                />
-              </div>
-              <p className="text-xs text-[var(--cx-mut)] mt-1">{progresso}%</p>
-            </div>
-          )}
-
-          {erroIaLocal && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-800 text-sm">⚠️ {erroIaLocal}</p>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Seção IA no meu aparelho (grátis, offline) - usa ConfigLocalAI de config.js */}
+      <ConfigLocalAI />
 
       {/* Seção de fatos */}
       <div>
