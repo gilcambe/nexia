@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import ConfigLocalAI from "../../config.js";
 import { haQuanto } from "../central/api";
 import { NOME_SITUACAO, usePedidos } from "../meu-cortex/api";
 import type { Deploy, Filtro, Resumo } from "../meu-cortex/api";
@@ -182,7 +181,6 @@ export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema;
       <Cartao><p className="font-medium">App no celular</p>
         <p className="text-sm text-[var(--cx-mut)] mt-1">{instalar ? "Instale o Cortex na tela inicial." : "No Chrome do celular: menu ⋮ → Instalar app (ou Adicionar à tela inicial)."}</p>
         {instalar && <button onClick={instalar} className="mt-3 h-11 px-5 rounded-xl bg-[var(--cx-ac)] text-black font-semibold" data-testid="cx-instalar">Instalar app</button>}</Cartao>
-      <ConfigLocalAI />
       <AvisosCelular />
       <Cartao><a href="/central" className="block font-medium">Central KERNEX</a><p className="text-sm text-[var(--cx-mut)] mt-1">Vendas, produtos e divulgação.</p></Cartao>
       <button onClick={sair} className="w-full h-12 rounded-xl border border-[var(--cx-line)] text-red-400" data-testid="cx-sair">Sair</button>
