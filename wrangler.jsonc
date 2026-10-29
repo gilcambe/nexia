@@ -1,53 +1,36 @@
-// NEXIA — Cloudflare Worker com Durable Object de controle de vazao (#1662).
-// Deploy só pelo workflow manual "Deploy Cloudflare" ou por `npx wrangler deploy`.
-// Segredos: `npx wrangler secret put NOME` (lista em .env.example). Nada de valor real aqui.
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
+  "$schema": "https://json.schemastore.org/wrangler",
   "name": "nexia",
   "main": "cloudflare/worker.js",
+  "compatibility_date": "2024-03-20",
   "services": [{ "binding": "SELF", "service": "nexia" }],
-  "compatibility_date": "2026-09-01",
-  "compatibility_flags": ["nodejs_compat"],
-  "observability": { "enabled": true },
-  // Endereço público: https://nexia.gcbezerra.workers.dev. Sem URLs de prévia por versão.
-  "workers_dev": true,
-  // Não apagar variáveis de texto criadas no painel do Cloudflare a cada deploy (segredos já são mantidos).
-  "keep_vars": true,
-  "preview_urls": false,
-  // Site React (out/) e pastas públicas do legado, montados por scripts/build-worker-assets.js.
-  // Os arquivos com hash de /assets/* saem direto do Cloudflare (não contam como pedido ao Worker);
-  // o resto passa pelo Worker, que aplica as mesmas regras do server.js.
-  "build": { "command": "npm run build:worker" },
   "assets": {
-    "directory": "./.worker-assets",
-    "binding": "ASSETS",
-    "run_worker_first": ["/*", "!/assets/*"],
-    "html_handling": "none",
-    "not_found_handling": "none"
+    "directory": "dist",
+    "binding": "ASSETS"
   },
-  // Workers AI (plano grátis, 10 mil neurônios por dia): fotos do corpo realista do Body Coach.
-  "ai": { "binding": "AI" },
-  // Durable Object para controle de vazao e fila (#1662)
-  "durable_objects": {
-    "bindings": [
-      { "name": "VAZAO_CONTROLLER", "class_name": "VazaoController" },
-      { "name": "COFRE_SQL", "class_name": "CofreSql" }
+  "triggers": {
+    "crons": [
+      "*/5 * * * *"
     ]
   },
-  // ADR-FREE-02: tarefas longas (agentes, onboarding, retomada) rodam no GitHub Actions.
-  "vars": {
-    "NEXIA_JOBS": "github",
-    "NEXIA_JOBS_REPO": "gilcambe/nexia",
-    "NEXIA_JOBS_REF": "develop"
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "VAZAO_CONTROLLER",
+        "class_name": "VazaoController"
+      }
+    ]
   },
-  // ADR-AUTO-01: a cada 5 min procura Robôs NEXIA vencidos; execuções paradas continuam de hora
-  // em hora (ADR-F12-03). Cron é grátis no Worker; 288 tiques por dia, uma consulta cada.
-  "triggers": { "crons": ["*/5 * * * *"] },
-  // Migrações do Durable Object SQLite
   "migrations": [
-    { "tag": "v1", "new_sqlite_classes": ["NexiaBackend"] },
-    { "tag": "v2", "deleted_classes": ["NexiaBackend"] },
-    { "tag": "v3", "new_sqlite_classes": ["VazaoController"] },
-    { "tag": "v4", "new_sqlite_classes": ["CofreSql"] }
-  ]
+    {
+      "tag": "v1",
+      "new_classes": [
+        "VazaoController"
+      ]
+    }
+  ],
+  "vars": {
+    "NODE_ENV": "production"
+  },
+  "keep_vars": true
 }
