@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import EscadaCard from '../components/EscadaCard.tsx';
+import EscadaCard from '../components/EscadaCard.vue';
 
 export default function Central() {
   const [abaAtiva, setAbaAtiva] = useState<'geral' | 'cortex'>('geral');
