@@ -1,4 +1,5 @@
 'use strict';
+const { exec } = require('child_process');
 // Planejador do Cortex (pedido do dono, 25/10/2026): "se eu mandar um prompt grande, ele já identifica e quebra em
 // tarefas pequenas para nunca travar, com qualidade e rapidez, e executa mais de uma por vez".
 // Tudo aqui é função pura (sem rede): a fila (scripts/cortex-fila.js) usa para
@@ -178,8 +179,35 @@ function medirTempo(paiCriado, partes) {
 }
 const textoTempo = t => !t ? '' : `Tempo total: ${t.totalMin} min (somando as partes uma depois da outra seriam ${t.somaMin} min). Até ${t.pico} partes ao mesmo tempo. ${t.dur.map(d => `#${d.numero}: ${d.min} min`).join(' · ')}`;
 
+// Função principal: recebe um pedido de IA, obtém a lista real de arquivos do repositório e insere no campo adequado
+function gerarPlano(pedido, callback) {
+  if (!pedido || typeof pedido !== 'object') {
+    return callback(new Error('Pedido inválido: deve ser um objeto'));
+  }
+  
+  // Executa git ls-files para obter a lista real de arquivos do repositório
+  exec('git ls-files', (error, stdout, stderr) => {
+    if (error) {
+      return callback(new Error(`Erro ao executar git ls-files: ${stderr || error.message}`));
+    }
+    
+    // Processa a saída para criar um array de caminhos de arquivos
+    const arquivosReais = stdout
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0);
+    
+    // Adiciona a lista de arquivos reais ao pedido
+    pedido.arquivosReais = arquivosReais;
+    
+    // Retorna o pedido enriquecido via callback
+    callback(null, pedido);
+  });
+}
+
 module.exports = {
   ARQ_GRANDE, MAX_PARTES, MAX_ARQ_PARTE, MAX_LINHAS_PARTE, ESPERA_PR_MAX_H, JULES_DESISTE_MIN, SISTEMA_PLANO,
   arquivosCitados, classificar, validarPlano, planoSimples, planoDeTextos, vaiParaJules, cabecalho, lerPlano, corpoDaParte,
   dependenciasProntas, conflitaCom, revisarDiff, medirTempo, textoTempo,
+  gerarPlano,
 };
