@@ -27,8 +27,8 @@ export const suportaIAOffline = async (): Promise<{ suportado: boolean; motivo?:
   } catch (err: any) {
     return { suportado: false, motivo: `Falha ao solicitar WebGPU: ${err?.message || err}` };
   }
-  const memoriaGb = typeof navigator.deviceMemory === 'number' ? navigator.deviceMemory : 4;
-  const temMemoria = memoriaGb >= 4;
+  const memoriaGb = typeof navigator.deviceMemory === 'number' ? navigator.deviceMemory : 0;
+  const temMemoria = typeof navigator.deviceMemory === 'number' && memoriaGb >= 4;
   return { suportado: temMemoria, motivo: temMemoria ? undefined : `Memória insuficiente (${memoriaGb} GB).`, memoriaGb };
 };
 export const ehIphoneSemInstalar = () => /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window.matchMedia?.('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone);
