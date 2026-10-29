@@ -19,7 +19,7 @@
 
 set -euo pipefail
 
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 
 echo ""
 echo "=========================================="
@@ -61,11 +61,11 @@ echo ""
 echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit viajante-pro 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
     echo ""
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
-    grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit viajante-pro 2>/dev/null
+    grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null
     echo ""
     echo "Por favor, revise os arquivos e tente novamente."
     exit 1
@@ -79,11 +79,11 @@ echo "Limpeza concluída!"
 echo "=========================================="
 echo ""
 # Verifica og:site_name restante
-if grep -rnE "og:site_name=[^>]*NEXIA" --include=*.html public apps nexia-ai/site-kit viajante-pro 2>/dev/null; then
+if grep -rnE "og:site_name=[^>]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null; then
     echo ""
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em og:site_name:"
     echo ""
-    grep -rnE "og:site_name=[^>]*NEXIA" --include=*.html public apps nexia-ai/site-kit viajante-pro 2>/dev/null
+    grep -rnE "og:site_name=[^>]*NEXIA" --include=*.html public apps nexia-ai/site-kit 2>/dev/null
     exit 1
 else
     echo "✓ Nenhuma ocorrência de NEXIA encontrada em og:site_name."
