@@ -29,7 +29,7 @@
       <div class="queue-item" v-text="'Fila Claude: ' + sanitizeNumber(data.queueClaude)"></div>
     </div>
 
-    <div class="jules-info" v-text="'Jules hoje ' + sanitizeNumber(data.julesToday) + ' / 15'"></div>
+    <div class="jules-info" v-text="'Jules hoje ' + sanitizeNumber(data.julesToday) + '/15'"></div>
   </div>
 
   <div class="escada-card error-state" v-else>
