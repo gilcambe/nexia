@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { Icone } from "./icones";
+import { useCentral, TarefaGratis } from "./api";
 
 // Central no celular: cada assunto vira um cartão compacto (uma linha) que abre a sua própria tela.
 // No computador nada muda: os cartões aparecem abertos, como antes.
@@ -103,4 +104,41 @@ export const EmGrupo = createContext(false);
 
 export function useModo() {
   return { compacto: useContext(Compacto), naFolha: useContext(NaFolha), emGrupo: useContext(EmGrupo) };
+}
+
+// Componente para distribuir tarefas gratuitas
+export function DistribuirTarefas({ tarefas }: { tarefas: TarefaGratis[] }) {
+  const { distribuirTarefas } = useCentral();
+  const [distribuindo, setDistribuindo] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
+
+  const handleDistribuir = async () => {
+    setDistribuindo(true);
+    setErro(null);
+    try {
+      const resultado = await distribuirTarefas(tarefas);
+      if (resultado.ok) {
+        alert("Tarefas distribuídas com sucesso!");
+      } else {
+        setErro(resultado.mensagem);
+      }
+    } catch (error) {
+      setErro("Erro ao distribuir tarefas. Tente novamente.");
+    } finally {
+      setDistribuindo(false);
+    }
+  };
+
+  return (
+    <div className="p-4">
+      <button
+        onClick={handleDistribuir}
+        disabled={distribuindo}
+        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-300"
+      >
+        {distribuindo ? "Distribuindo..." : "Distribuir Tarefas Gratuitas"}
+      </button>
+      {erro && <p className="text-red-500 mt-2">{erro}</p>}
+    </div>
+  );
 }

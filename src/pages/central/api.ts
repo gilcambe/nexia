@@ -17,7 +17,16 @@ export interface Dinheiro {
   novosPorDia: { dia: string; n: number }[];
   ativosPorDia: { dia: string; n: number }[];
 }
-export interface Cortex { naFila: number; fazendo: Tarefa[]; travadas: Tarefa[]; feitas7: number; ultimas: Tarefa[]; proximas: Tarefa[]; gratuitas: TarefaGratis[] } // Adicionado gratuitas
+export interface Cortex { 
+  naFila: number; 
+  fazendo: Tarefa[]; 
+  travadas: Tarefa[]; 
+  feitas7: number; 
+  ultimas: Tarefa[]; 
+  proximas: Tarefa[]; 
+  gratuitas: TarefaGratis[]; // Adicionado gratuitas
+  distribuidas: number; // Novo campo para tarefas distribuídas
+}
 export interface Divulga {
   naFila: number;
   proximos: { id: string; texto: string }[];
@@ -102,7 +111,18 @@ export function useCentral() {
     if (!res.ok) throw new Error(body.error || `Erro ${res.status}`);
     return `${body.painel}#suporte=${body.token}`;
   }, [getToken]);
-  return { buscar, agir, entrarSuporte };
+  const distribuirTarefas = useCallback(async (tarefas: TarefaGratis[]) => {
+    const token = await getToken();
+    const res = await fetch(apiPath("/distribuir-tarefas"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ tarefas }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error || `Erro ${res.status}`);
+    return body as { ok: boolean; mensagem: string };
+  }, [getToken]);
+  return { buscar, agir, entrarSuporte, distribuirTarefas };
 }
 
 export const reais = (v: number) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
