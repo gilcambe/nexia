@@ -5,7 +5,7 @@ import { Cartao, Sinal, Botao, Carregando } from "./ui";
 import EscadaCard from "@/components/EscadaCard.tsx";
 import type { Cor } from "./ui";
 import Mais from "./Mais";
-import SaudeHistorico from "./SaudeHistorico";
+import SaudeHistorico from "./SaudeHistorico";\nimport EscadaCard from "@/components/EscadaCard";
 import ConectarIAs from "./ConectarIAs";
 import UltimosErros from "./UltimosErros";
 import { Abre, useModo } from "./celular";
@@ -164,7 +164,7 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
           <ConectarIAs inicial={d.vagas} />
         </Abre>
       ) : <ConectarIAs inicial={d.vagas} />}
-      <SaudeHistorico />
+      <SaudeHistorico />\n      <EscadaCard />
       <UltimosErros />
 
 
