@@ -69,10 +69,7 @@ process_file() {
     # Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Meu Site "
     # Padrão: property="og:site_name" content="(qualquer coisa)NEXIA(qualquer coisa)"
     # Substitui por: property="og:site_name" content="(qualquer coisa) + (qualquer coisa)"
-    if sed -E -i 's/(property="og:site_name" content="[^"]*)NEXIA([^"]*")/\1\2/g' "$file" 2>/dev/null; then
-        changes_made=1
-    fi
-    if sed -E -i 's/(property="og:site_name" content="[^"]*)NEXIA([^"]*")/\1\2/g' "$file" 2>/dev/null; then
+        if sed -E -i 's/(property="og:site_name" content="[^"]*)NEXIA([^"]*")/\1\2/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
     
