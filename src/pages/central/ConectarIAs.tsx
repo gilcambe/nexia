@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Vaga, Vagas, VagaTeste } from "./api";
 import { useCentral, haQuanto } from "./api";
 import Logo from "./Logo";
+import { useModo } from "./celular";
 
 // Conectar IAs (#1958): 10 vagas de chave grátis que ajudam o Cortex quando ele trava.
 // A chave é testada na hora e vira segredo criptografado do GitHub; nunca volta para esta página.
@@ -127,6 +128,7 @@ export default function ConectarIAs({ inicial }: { inicial?: Vagas }) {
   const [aviso, setAviso] = useState<string | null>(null);
   const [livresVisiveis, setLivresVisiveis] = useState(1);
   const [testando, setTestando] = useState(false);
+  const { naFolha } = useModo();
   const atual = dados || inicial;
   const recarregar = async () => { try { setDados(await buscar("vagas")); } catch { /* fica o que já tinha */ } };
   const testar = async () => {
@@ -141,7 +143,7 @@ export default function ConectarIAs({ inicial }: { inicial?: Vagas }) {
     <section id="conectar-ias" className="rounded-2xl bg-white border border-slate-200/80 shadow-[0_1px_3px_rgba(15,23,42,0.06)] p-5 space-y-4" data-testid="conectar-ias">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-semibold text-slate-900 text-lg">🔌 Conectar IAs</h2>
+          {!naFolha && <h2 className="font-semibold text-slate-900 text-lg">🔌 Conectar IAs</h2>}
           <p className="text-sm text-slate-500">IAs grátis que entram sozinhas quando o Cortex trava. {atual ? `${ligadas} de ${atual.vagas.length} conectadas, ${verdes} funcionando.` : ""}</p>
         </div>
         {ligadas > 0 && <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} onClick={testar} disabled={testando} data-testid="vagas-testar">{testando ? "Mandando…" : "🧪 Testar agora"}</button>}
