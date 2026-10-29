@@ -71,25 +71,25 @@ process_file() {
 
     # (1) Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
     # Esta substituição é direta e mantém o resto do texto intacto
-    if sed -i 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file" 2>/dev/null; then
+    if sed -i 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"; then
         changes_made=1
     fi
 
     # (2) Substitui todo o conteúdo de <title> por "Cortex" quando houver NEXIA
     # Ex: <title>Meu Site NEXIA CORTEX — Plataforma de IA</title> → <title>Cortex</title>
-    if sed -i 's/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/g' "$file" 2>/dev/null; then
+    if sed -i 's/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/g' "$file"; then
         changes_made=1
     fi
     
     # (3) Substitui todo og:site_name por "Cortex" quando houver NEXIA
     # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Cortex"
-    if sed -i 's/og:site_name="[^"]*NEXIA[^"]*"/og:site_name="Cortex"/g' "$file" 2>/dev/null; then
+    if sed -i 's/og:site_name="[^"]*NEXIA[^"]*"/og:site_name="Cortex"/g' "$file"; then
         changes_made=1
     fi
     
     # (4) Substitui todo content de property="og:site_name" por "Cortex" quando houver NEXIA
     # Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Cortex"
-    if sed -i 's/property="og:site_name" content="[^"]*NEXIA[^"]*"/property="og:site_name" content="Cortex"/g' "$file" 2>/dev/null; then
+    if sed -i 's/property="og:site_name" content="[^"]*NEXIA[^"]*"/property="og:site_name" content="Cortex"/g' "$file"; then
         changes_made=1
     fi
     
@@ -164,8 +164,8 @@ echo ""
 echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 
-# Comando exato conforme solicitado no pedido (incluindo viajante-pro)
-if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro 2>/dev/null; then
+# Comando exato conforme solicitado no pedido
+if grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit/ 2>/dev/null; then
     echo ""
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
