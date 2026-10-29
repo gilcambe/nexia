@@ -22,10 +22,11 @@ async function rodar(env = process.env, deps = {}) {
   });
   const em = new Date().toISOString();
   const resultados = {};
-  console.log('🪜 Degrau 1 – escrito por vaga-7-nvidia');
   for (const n of vagas.VAGAS) {
     const v = lerVaga(env[vagas.segredo(n)]);
     if (!v) continue;
+    const currentProvider = v.provedor;
+    console.log(`🪜 Degrau 1 – escrito por ${currentProvider}`);
     resultados[n] = { provedor: v.provedor, teste: { ...(await vagas.testarChave(v.provedor, v.chave, deps)), em, onde: 'robo' } };
     console.log(`Vaga ${n} (${v.provedor}): ${resultados[n].teste.situacao}`);
   }
