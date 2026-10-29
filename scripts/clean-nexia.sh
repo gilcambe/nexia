@@ -21,23 +21,23 @@ DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 # Função para processar um arquivo
 process_file() {
     local file="$1"
-    
-    # Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
+
+    # (1) Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
     sed -i 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
-    
-    # Substituir títulos completos contendo NEXIA por "Cortex" (várias ocorrências, início/fim)
-    perl -i -pe '1 while s/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/' "$file"
-    
-    # Remover NEXIA de títulos mantendo o restante (várias ocorrências no mesmo título)
-    perl -i -pe '1 while s/<title>(.*?)NEXIA(.*?)<\/title>/<title>$1$2<\/title>/' "$file"
-    
-    # Substituir og:site_name contendo NEXIA por "Cortex"
-    perl -i -pe 's/og:site_name="[^"]*NEXIA[^"]*"/og:site_name="Cortex"/g' "$file"
-    perl -i -pe 's/property="og:site_name" content="[^"]*NEXIA[^"]*"/property="og:site_name" content="Cortex"/g' "$file"
-    
-    # Remover NEXIA de outros atributos og:site_name mantendo o restante (várias ocorrências)
-    perl -i -pe '1 while s{og:site_name="([^"]*)NEXIA([^"]*)"}{og:site_name="$1$2"}g' "$file"
-    perl -i -pe '1 while s{property="og:site_name" content="([^"]*)NEXIA([^"]*)"}{property="og:site_name" content="$1$2"}g' "$file"
+
+    # (2) Remover NEXIA de <title> mantendo o restante do conteúdo
+    sed -E -i 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file"
+
+    # Se o título ficou vazio (ou só espaços), preencher com "Cortex"
+    sed -E -i 's/<title>[[:space:]]*<\/title>/<title>Cortex<\/title>/g' "$file"
+
+    # (3) Remover NEXIA de og:site_name mantendo o restante do conteúdo
+    sed -E -i 's/og:site_name="([^"]*)NEXIA([^"]*)"/og:site_name="\1\2"/g' "$file"
+    sed -E -i 's/property="og:site_name" content="([^"]*)NEXIA([^"]*)"/property="og:site_name" content="\1\2"/g' "$file"
+
+    # Se o og:site_name ficou vazio, preencher com "Cortex"
+    sed -E -i 's/og:site_name=""/og:site_name="Cortex"/g' "$file"
+    sed -E -i 's/property="og:site_name" content=""/property="og:site_name" content="Cortex"/g' "$file"
 }
 
 # Função para processar diretórios recursivamente
