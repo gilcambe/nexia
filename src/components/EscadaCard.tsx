@@ -22,25 +22,45 @@ export default function EscadaCard() {
     try {
       // Obtém o token de autenticação atual do localStorage (ou sessionStorage/cookies conforme padrão da Central)
       const token = localStorage.getItem('nexia_token') || localStorage.getItem('token') || '';
+      
+      // Validação básica do token (não vazio e formato esperado)
+      if (!token || token.length < 10) {
+        throw new Error('Sessão inválida. Por favor, faça login novamente.');
+      }
+      
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       };
+      
+      // Adiciona token se existir e for válido
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const res = await fetch('/api/escada', { headers });
+      const res = await fetch('/api/escada', { 
+        headers,
+        // Adiciona headers CORS para garantir compatibilidade
+        mode: 'cors',
+        credentials: 'same-origin'
+      });
+      
       if (!res.ok) {
+        // Tratamento genérico de erros para não expor detalhes sensíveis
         if (res.status === 401) {
-          throw new Error('Sessão expirada ou não autorizado.');
+          throw new Error('Sessão expirada. Por favor, faça login novamente.');
+        } else if (res.status >= 500) {
+          throw new Error('Serviço temporariamente indisponível. Tente novamente mais tarde.');
+        } else {
+          throw new Error('Não foi possível carregar os dados. Tente novamente.');
         }
-        throw new Error('Não foi possível carregar os dados.');
       }
+      
       const json = await res.json();
       setData(json);
     } catch (err) {
       // Mensagem genérica e segura para não expor detalhes internos
-      setError(err instanceof Error && err.message ? err.message : 'Erro ao carregar dados');
+      setError('Erro ao carregar dados. Tente novamente.');
     } finally {
       setLoading(false);
     }
@@ -62,7 +82,7 @@ export default function EscadaCard() {
   if (error || !data) {
     return (
       <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm space-y-2">
-        <p>Erro ao carregar Escada: {error || 'Dados indisponíveis'}</p>
+        <p>{error || 'Não foi possível carregar os dados da Escada.'}</p>
         <button
           onClick={fetchEscada}
           className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-xs font-semibold transition-colors"
