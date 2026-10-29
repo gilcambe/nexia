@@ -127,7 +127,7 @@ async function main() {
     if (d.acao === 'aprovar') {
       await gh(token, 'POST', `/issues/${pr.number}/labels`, { labels: ['automerge'] });
       await gh(token, 'DELETE', `/issues/${pr.number}/labels/revisao-manual`);
-      await gh(token, 'POST', `/issues/${pr.number}/comments`, { body: `${MARCA(pr.head.sha)}🪜 review-pr aprovado (${quem}). Entra sozinho com o CI verde.` });
+      await gh(token, 'POST', `/issues/${pr.number}/comments`, { body: `${MARCA(pr.head.sha)}🪜 review-pr aprovado (${quem}). Aprovado via IA grátis. Entra sozinho com o CI verde.` });
       console.log(`PR #${pr.number}: aprovado (${quem}).`);
     } else if (d.acao === 'recusar') {
       const v = d.voto;
