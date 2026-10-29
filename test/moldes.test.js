@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -17,7 +18,7 @@ test('existem exatamente 10 arquivos de molde em clientes/_moldes/', () => {
 });
 
 test('deve gerar index.html para cada molde sem erros', async () => {
-  const tempDir = path.join(__dirname, '../temp_test_output_moldes');
+  const tempDir = path.join(os.tmpdir(), 'test_output_moldes');
   if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir, { recursive: true });
   }
