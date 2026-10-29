@@ -164,7 +164,8 @@ export default function Sistema({ d, erros }: { d: Dados; erros: Partial<Record<
           <ConectarIAs inicial={d.vagas} />
         </Abre>
       ) : <ConectarIAs inicial={d.vagas} />}
-      <SaudeHistorico />\n      <EscadaCard />
+      <SaudeHistorico />
+      <EscadaCard />
       <UltimosErros />
 
 
