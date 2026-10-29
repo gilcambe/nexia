@@ -8,13 +8,7 @@ const pedidosJules = require('./pedidos-jules');
 const pedidos_jules = require('./pedidos-jules');
 const { robos } = require('./pedidos-gh');
 
-async function rodar(gh, workflowName, inputs = {}) {
-  const repo = '/repos/gilcambe/nexia';
-  return await gh(repo + '/actions/workflows/' + encodeURIComponent(workflowName) + '/dispatches', {
-    method: 'POST',
-    body: JSON.stringify({ ref: 'develop', inputs })
-  });
-}
+
 
 const issue = (c) => '/repos/gilcambe/nexia/issues/' + c;
 const r = (status, corpo) => ({ status, corpo });
