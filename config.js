@@ -5,6 +5,8 @@
  * switch "IA no meu aparelho" nas configurações.
  */
 
+const LOCAL_STORAGE_KEY = 'nexia_ia_local_config';
+
 /**
  * Verifica se o dispositivo/navegador possui suporte adequado a WebGPU e memória.
  * @returns {Promise<{suportado: boolean, motivo?: string, memoriaGb?: number}>}
