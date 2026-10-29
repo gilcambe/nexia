@@ -35,9 +35,9 @@ process_file() {
         changes_made=1
     fi
 
-    # (2) Remove apenas a palavra NEXIA de <title>, mantendo o restante
-    # Para <title>: remove somente NEXIA (ex: <title>Meu Projeto NEXIA</title> → <title>Meu Projeto </title>)
-    if sed -E -i 's/<title>([^<]*)NEXIA([^<]*)<\/title>/<title>\1\2<\/title>/g' "$file" 2>/dev/null; then
+    # (2) Substitui todo o conteúdo de <title> que contenha NEXIA por "Cortex"
+    # Para <title>: substitui todo o conteúdo (ex: <title>Meu Projeto NEXIA</title> → <title>Cortex</title>)
+    if sed -E -i 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/g' "$file" 2>/dev/null; then
         changes_made=1
     fi
     
