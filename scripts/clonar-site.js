@@ -11,6 +11,12 @@ const cloner = require('../nexia-ai/cloner');
 const { UA } = cloner;
 const MODO = (process.env.MODO || 'design').trim();
 const OUT = path.resolve(process.env.OUT || 'clone-out');
+// Modo lote: com SLUG válido, o design também vai para clientes/<slug>/design.json (só o visual, nunca texto nem imagem do site de origem).
+const SLUG_VALIDO = /^[a-z0-9-]{3,40}$/;
+function caminhoDesignDoCliente(slug, raiz = path.resolve(__dirname, '..')) {
+  const s = String(slug || '').trim();
+  return SLUG_VALIDO.test(s) ? path.join(raiz, 'clientes', s, 'design.json') : null;
+}
 const MAX_FILE = 15 * 1024 * 1024;
 const MAX_TOTAL = 150 * 1024 * 1024;
 const SAVE_TYPES = /^(text\/html|text\/css|(text|application)\/(x-)?javascript|application\/json|application\/manifest\+json|image\/|font\/|application\/(font|x-font)|video\/(mp4|webm))/;
@@ -197,6 +203,12 @@ async function design(target) {
     tokens: cloner.summarize(tokens), layout: live.blocks, spec_base: base,
   };
   fs.writeFileSync(path.join(dir, 'design.json'), `${JSON.stringify(report, null, 2)}\n`);
+  const destinoCliente = caminhoDesignDoCliente(process.env.SLUG);
+  if (destinoCliente) {
+    fs.mkdirSync(path.dirname(destinoCliente), { recursive: true });
+    fs.writeFileSync(destinoCliente, `${JSON.stringify(report, null, 2)}\n`);
+    console.log(`[clonar-site] design salvo em clientes/${String(process.env.SLUG).trim()}/design.json`);
+  } else if (process.env.SLUG) console.log('[clonar-site] SLUG ignorado (use letras minúsculas, números e hífen, 3 a 40)');
   fs.writeFileSync(path.join(dir, 'spec-base.json'), `${JSON.stringify({ style: base.style, fonts: base.fonts, palette: base.palette, sections: base.sections, design_source: base.source }, null, 2)}\n`);
   const summary = { modo: 'design', host: target.host, estilo: base.style, fontes: base.fonts, secoes: base.sections.map(s => s.type), cores: Object.keys(tokens.colors).length };
   fs.writeFileSync(path.join(OUT, 'resultado.json'), JSON.stringify(summary));
@@ -306,4 +318,4 @@ async function main() {
 }
 
 if (require.main === module) main().catch(e => { console.error('[clonar-site] falhou', e && e.name, e && e.message ? String(e.message).slice(0, 200) : ''); process.exit(1); });
-module.exports = { browserTokens, newContext, main };
+module.exports = { browserTokens, newContext, main, caminhoDesignDoCliente };
