@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface EscadaData {
   faseB: boolean;
@@ -16,105 +16,104 @@ export default function EscadaCard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchData = async () => {
+  const fetchEscada = async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await fetch('/escada');
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
-      
-      // Validação defensiva dos dados
-      if (!json || typeof json !== 'object') throw new Error('Resposta inválida');
-      
-      setData({
-        faseB: Boolean(json.faseB),
-        fila: Number(json.fila) || 0,
-        julesHoje: Number(json.julesHoje) || 0,
-        semana: {
-          cortex: Number(json.semana?.cortex) || 0,
-          iasGratis: Number(json.semana?.iasGratis) || 0,
-          claude: Number(json.semana?.claude) || 0,
-        }
-      });
-    } catch (err: any) {
-      setError(err?.message || 'Erro ao carregar dados');
+      setData(json);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao carregar');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
+    fetchEscada();
   }, []);
 
   if (loading) {
     return (
-      <div className="p-4 rounded-xl bg-nexia-surface2 text-sm text-nexia-muted flex items-center justify-center gap-2">
-        <div className="w-4 h-4 border-2 border-nexia-accent border-t-transparent rounded-full animate-spin"></div>
-        Carregando dados da Escada...
+      <div className="flex flex-col items-center justify-center p-6 text-sm text-nexia-muted space-y-2">
+        <div className="w-6 h-6 border-2 border-nexia-border border-t-blue-600 rounded-full animate-spin"></div>
+        <p>Carregando dados da Escada...</p>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400 space-y-2">
+      <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm space-y-2">
         <p>Erro ao carregar Escada: {error || 'Dados indisponíveis'}</p>
-        <button onClick={fetchData} className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-xs font-semibold transition-colors">
+        <button
+          onClick={fetchEscada}
+          className="px-3 py-1 bg-red-500/20 hover:bg-red-500/30 rounded-lg text-xs font-semibold transition-colors"
+        >
           Tentar novamente
         </button>
       </div>
     );
   }
 
+  const { faseB, fila, julesHoje, semana } = data;
+
   const items = [
-    { label: 'Cortex', percent: data.semana.cortex },
-    { label: 'IAs grátis', percent: data.semana.iasGratis },
-    { label: 'Claude', percent: data.semana.claude },
+    { label: 'Cortex', percent: semana?.cortex ?? 0 },
+    { label: 'IAs grátis', percent: semana?.iasGratis ?? 0 },
+    { label: 'Claude', percent: semana?.claude ?? 0 },
   ];
 
   return (
     <div className="space-y-4">
+      {/* Header com título e selo condicional */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h3 className="font-semibold text-white text-base">🪜 Escada</h3>
+          <span className="text-lg">🪜</span>
+          <span className="font-semibold text-white">Escada</span>
         </div>
-        {data.faseB && (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-500/20 text-green-400 border border-green-500/30">
+        {faseB && (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
             Pronto para fase B
           </span>
         )}
       </div>
 
+      {/* Três barras de progresso da semana */}
       <div className="space-y-3">
-        {items.map((item) => (
-          <div key={item.label} className="space-y-1">
-            <div className="flex justify-between text-xs text-nexia-muted font-medium">
-              <span>{item.label}</span>
-              <span>{item.percent}%</span>
+        {items.map((item) => {
+          const validPercent = Math.max(0, Math.min(100, Number(item.percent) || 0));
+          return (
+            <div key={item.label} className="space-y-1">
+              <div className="flex justify-between text-xs text-nexia-muted">
+                <span>{item.label}</span>
+                <span className="font-medium text-white">{validPercent}%</span>
+              </div>
+              <div className="h-2 w-full bg-nexia-surface2 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-600 rounded-full transition-all duration-500"
+                  style={{ width: `${validPercent}%` }}
+                  role="progressbar"
+                  aria-valuenow={validPercent}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-label={`${item.label}: ${validPercent}%`}
+                />
+              </div>
             </div>
-            <div className="h-2 w-full bg-nexia-surface2 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-nexia-accent rounded-full transition-all duration-500"
-                style={{ width: `${Math.min(100, Math.max(0, item.percent))}%` }}
-                role="progressbar"
-                aria-valuenow={item.percent}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label={`${item.label}: ${item.percent}%`}
-              />
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
+      {/* Números da fila e Jules hoje */}
       <div className="pt-2 border-t border-nexia-border flex items-center justify-between text-sm">
-        <div className="font-medium text-white">
-          Fila: <span className="text-nexia-muted font-normal">{data.fila}</span>
+        <div className="text-nexia-muted">
+          Fila: <span className="font-semibold text-white">{fila ?? 0}</span>
         </div>
-        <div className="font-medium text-white">
-          Jules hoje <span className="text-nexia-muted font-normal">{data.julesHoje} / 15</span>
+        <div className="text-nexia-muted">
+          Jules hoje <span className="font-semibold text-white">{julesHoje ?? 0} / 15</span>
         </div>
       </div>
     </div>
