@@ -31,7 +31,7 @@ export default function EscadaCard() {
   const [faseB, setFaseB] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('nexia_token') || undefined;
+    const token = sessionStorage.getItem('nexia_token') || undefined;
     fetch('/api/escada', {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
@@ -51,7 +51,8 @@ export default function EscadaCard() {
         );
         setFaseB(data.faseB === true);
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('[EscadaCard] falha ao carregar /api/escada:', err);
         // valores padrão já definidos (0 e false)
       });
   }, []);
