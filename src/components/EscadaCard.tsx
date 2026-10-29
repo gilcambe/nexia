@@ -20,7 +20,7 @@ export default function EscadaCard() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/escada');
+      const res = await fetch('/api/escada');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       setData(json);
