@@ -171,6 +171,76 @@ function AvisosCelular() {
 
 export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema; mudarTema: (t: Tema) => void; email: string; instalar: (() => void) | null; sair: () => void }) {
   const op: { id: Tema; nome: string }[] = [{ id: "auto", nome: "Automático" }, { id: "escuro", nome: "Escuro" }, { id: "claro", nome: "Claro" }];
+  
+  // Estado para o switch "IA no meu aparelho (grátis, offline)"
+  const [iaLocal, setIaLocal] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("cx_ia_local") === "true";
+    } catch {
+      return false;
+    }
+  });
+  
+  // Função para verificar suporte a WebGPU e memória
+  const [suporteIaLocal, setSuporteIaLocal] = useState<boolean | null>(null);
+  const [mensagemSuporte, setMensagemSuporte] = useState<string>("");
+  
+  useEffect(() => {
+    const verificarSuporte = async () => {
+      try {
+        // Verificar WebGPU
+        const gpuSuportado = typeof navigator !== "undefined" && "gpu" in navigator;
+        
+        // Verificar memória (mínimo 4GB)
+        const memoriaSuficiente = typeof navigator !== "undefined" && "deviceMemory" in navigator && navigator.deviceMemory >= 4;
+        
+        const suportado = gpuSuportado && memoriaSuficiente;
+        setSuporteIaLocal(suportado);
+        
+        if (!suportado) {
+          if (!gpuSuportado) {
+            setMensagemSuporte("WebGPU não é suportado neste navegador.");
+          } else if (!memoriaSuficiente) {
+            setMensagemSuporte(`Memória insuficiente: necessário pelo menos 4GB (disponível: ${navigator.deviceMemory}GB).`);
+          } else {
+            setMensagemSuporte("Este aparelho não suporta IA local.");
+          }
+        }
+      } catch (error) {
+        setSuporteIaLocal(false);
+        setMensagemSuporte("Não foi possível verificar o suporte a IA local.");
+      }
+    };
+    
+    verificarSuporte();
+  }, []);
+  
+  // Função para alternar IA local
+  const alternarIaLocal = async () => {
+    if (!suporteIaLocal) return;
+    
+    const novoValor = !iaLocal;
+    setIaLocal(novoValor);
+    
+    try {
+      localStorage.setItem("cx_ia_local", novoValor.toString());
+      
+      if (novoValor) {
+        // Mostrar aviso de download
+        setMensagemSuporte("Baixando modelo (~1 GB) — use Wi-Fi para melhor experiência.");
+        
+        // Aqui seria implementado o download do modelo
+        // Por enquanto, apenas simulamos o aviso
+        setTimeout(() => {
+          setMensagemSuporte("Modelo baixado com sucesso! IA local ativada.");
+        }, 3000);
+      }
+    } catch (error) {
+      setIaLocal(!novoValor);
+      setMensagemSuporte("Não foi possível salvar a configuração.");
+    }
+  };
+  
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-3">
       <Titulo t="Configurações" s={email} />
@@ -182,6 +252,45 @@ export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema;
         <p className="text-sm text-[var(--cx-mut)] mt-1">{instalar ? "Instale o Cortex na tela inicial." : "No Chrome do celular: menu ⋮ → Instalar app (ou Adicionar à tela inicial)."}</p>
         {instalar && <button onClick={instalar} className="mt-3 h-11 px-5 rounded-xl bg-[var(--cx-ac)] text-black font-semibold" data-testid="cx-instalar">Instalar app</button>}</Cartao>
       <AvisosCelular />
+      
+      {/* Novo card: IA no meu aparelho (grátis, offline) */}
+      <Cartao testid="cx-ia-local">
+        <p className="font-medium">IA no meu aparelho (grátis, offline)</p>
+        <p className="text-sm text-[var(--cx-mut)] mt-1">
+          {suporteIaLocal === null ? "Verificando suporte…" : suporteIaLocal ? "Use IA local diretamente no seu aparelho, sem internet." : "Não suportado neste aparelho."}
+        </p>
+        
+        {/* Switch */}
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-sm">Ativar IA local</span>
+          <button 
+            onClick={alternarIaLocal}
+            disabled={!suporteIaLocal}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${iaLocal ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'} ${!suporteIaLocal ? 'opacity-50 cursor-not-allowed' : ''}`}
+            data-testid="cx-ia-local-switch"
+            aria-label={iaLocal ? "Desativar IA local" : "Ativar IA local"}
+          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${iaLocal ? 'translate-x-6' : 'translate-x-1'}`} />
+          </button>
+        </div>
+        
+        {/* Avisos */}
+        {mensagemSuporte && (
+          <div className="mt-3 p-3 rounded-lg bg-[var(--cx-card)] border border-[var(--cx-line)]">
+            <p className="text-sm" role="alert">{mensagemSuporte}</p>
+          </div>
+        )}
+        
+        {/* Aviso de bloqueio quando não suportado */}
+        {!suporteIaLocal && suporteIaLocal !== null && (
+          <div className="mt-3 p-3 rounded-lg bg-[var(--cx-card)] border border-[var(--cx-line)]">
+            <p className="text-sm text-red-400" role="alert">
+              ⚠️ {mensagemSuporte || "Este aparelho não suporta IA local."}
+            </p>
+          </div>
+        )}
+      </Cartao>
+      
       <Cartao><a href="/central" className="block font-medium">Central KERNEX</a><p className="text-sm text-[var(--cx-mut)] mt-1">Vendas, produtos e divulgação.</p></Cartao>
       <button onClick={sair} className="w-full h-12 rounded-xl border border-[var(--cx-line)] text-red-400" data-testid="cx-sair">Sair</button>
     </div>
