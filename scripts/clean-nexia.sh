@@ -12,6 +12,9 @@
 
 set -e
 
+# Atenção: este script modifica os arquivos no local, sem criar backup.
+# Recomenda-se fazer backup dos diretórios antes de executar.
+
 # Diretórios para processar conforme solicitado no pedido
 DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 
@@ -22,21 +25,19 @@ process_file() {
     # Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
     sed -i 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
     
-    # Substituir títulos completos contendo NEXIA por "Cortex"
-    sed -i 's/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/g' "$file"
+    # Substituir títulos completos contendo NEXIA por "Cortex" (várias ocorrências, início/fim)
+    perl -i -pe '1 while s/<title>[^<]*NEXIA[^<]*<\/title>/<title>Cortex<\/title>/' "$file"
+    
+    # Remover NEXIA de títulos mantendo o restante (várias ocorrências no mesmo título)
+    perl -i -pe '1 while s/<title>(.*?)NEXIA(.*?)<\/title>/<title>$1$2<\/title>/' "$file"
     
     # Substituir og:site_name contendo NEXIA por "Cortex"
-    sed -i 's/og:site_name="[^"]*NEXIA[^"]*"/og:site_name="Cortex"/g' "$file"
-    sed -i 's/property="og:site_name" content="[^"]*NEXIA[^"]*"/property="og:site_name" content="Cortex"/g' "$file"
+    perl -i -pe 's/og:site_name="[^"]*NEXIA[^"]*"/og:site_name="Cortex"/g' "$file"
+    perl -i -pe 's/property="og:site_name" content="[^"]*NEXIA[^"]*"/property="og:site_name" content="Cortex"/g' "$file"
     
-    # Remover NEXIA de outros títulos mantendo o restante
-    sed -i 's/<title>NEXIA\([^<]*\)<\/title>/<title>\1<\/title>/g' "$file"
-    sed -i 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/g' "$file"
-    sed -i 's/<title>\([^<]*\)NEXIA<\/title>/<title>\1<\/title>/g' "$file"
-    
-    # Remover NEXIA de outros atributos og:site_name mantendo o restante
-    sed -i 's/og:site_name="\([^"]*\)NEXIA\([^"]*\)"/og:site_name="\1\2"/g' "$file"
-    sed -i 's/property="og:site_name" content="\([^"]*\)NEXIA\([^"]*\)"/property="og:site_name" content="\1\2"/g' "$file"
+    # Remover NEXIA de outros atributos og:site_name mantendo o restante (várias ocorrências)
+    perl -i -pe '1 while s/og:site_name="\([^"]*\)NEXIA\([^"]*\)"/og:site_name="\1\2"/g' "$file"
+    perl -i -pe '1 while s/property="og:site_name" content="\([^"]*\)NEXIA\([^"]*\)"/property="og:site_name" content="\1\2"/g' "$file"
 }
 
 # Função para processar diretórios recursivamente
