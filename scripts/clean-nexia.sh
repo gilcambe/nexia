@@ -2,8 +2,7 @@
 
 set -euo pipefail
 
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
-
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro"
 echo ""
 echo "=========================================="
 echo "Iniciando limpeza de referências NEXIA..."
@@ -19,10 +18,8 @@ for dir in $DIRECTORIES; do
             # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
             sed -i.bak 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
 
-            # Passo 2: Substituir <title> ou og:site_name contendo NEXIA por Cortex (ou remover a palavra NEXIA mantendo o restante)
-            # Para <title>...</title> ou <meta property="og:site_name" ...>
-            python3 -c '
-import sys, re
+# Passo 2: Substituir <title> ou og:site_name contendo NEXIA por Cortex (ou remover a palavra NEXIA mantendo o restante)
+            python3 -c '\nimport sys, re
 
 filepath = sys.argv[1]
 with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
@@ -31,26 +28,23 @@ with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
 # (1) Substituição específica de "NEXIA CORTEX — Plataforma de IA"
 content = content.replace("NEXIA CORTEX — Plataforma de IA", "Cortex — Plataforma de IA")
 
-# (2 e 3) Processar tags <title>...</title> e og:site_name
+# (2) Processar tags <title>...</title> - substituir NEXIA por Cortex mantendo o restante do conteúdo
 def clean_title(match):
     full_tag = match.group(0)
-    # Se contém NEXIA, vamos limpar ou substituir
-    inner = match.group(1)
+    inner = match.group(2)
     if "NEXIA" in inner:
-        # Se for basicamente NEXIA ou NEXIA CORTEX ou algo do tipo, ou remover NEXIA mantendo o restante
-        cleaned = re.sub(r"NEXIA(\s*[-—–]\s*)?", "", inner).strip()
-        if not cleaned or "Cortex" in inner:
-            cleaned = "Cortex"
-        else:
-            cleaned = re.sub(r"NEXIA", "Cortex", inner)
+        # Substituir NEXIA por Cortex mantendo o restante do texto
+        cleaned = inner.replace("NEXIA", "Cortex")
         return full_tag.replace(inner, cleaned)
     return full_tag
 
 content = re.sub(r"<title([^>]*)>(.*?)</title>", clean_title, content, flags=re.IGNORECASE | re.DOTALL)
 
+# (3) Processar tags og:site_name - substituir NEXIA por Cortex mantendo o restante
 def clean_og_site_name(match):
     full_tag = match.group(0)
     if "NEXIA" in full_tag:
+        # Substituir NEXIA por Cortex mantendo o restante dos atributos
         replaced = full_tag.replace("NEXIA", "Cortex")
         return replaced
     return full_tag
@@ -77,9 +71,10 @@ echo "=========================================="
 echo ""
 
 # VERIFICAÇÃO FINAL (critério de pronto)
-echo "Verificando se restaram ocorrências de NEXIA em títulos..."
+            echo "Verificando se restaram ocorrências de NEXIA em títulos e metadados..."
 echo ""
 
+# Verificação final: verificar se restaram ocorrências de NEXIA em títulos
 if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
@@ -91,7 +86,20 @@ else
     echo "OK: Nenhuma ocorrência de NEXIA encontrada em títulos nos diretórios especificados."
 fi
 
+# Verificação adicional: og:site_name
+if grep -rnE "og:site_name" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null | grep -i nexia; then
+    echo "AVISO: Ainda foram encontradas ocorrências de NEXIA em og:site_name (verificar manualmente):"
+    echo ""
+    grep -rnE "og:site_name" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null | grep -i nexia
+    echo ""
+    echo "Por favor, revise os arquivos."
+    exit 1
+else
+    echo "OK: Nenhuma ocorrência de NEXIA encontrada em og: nos diretórios especificados."
+fi
+
 echo ""
 echo "=========================================="
 echo "Script concluído com sucesso!"
 echo "=========================================="
+
