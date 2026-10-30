@@ -9,6 +9,12 @@ echo "Iniciando limpeza de referências NEXIA..."
 echo "=========================================="
 echo ""
 
+# Verificar se Python3 está disponível
+if ! command -v python3 &> /dev/null; then
+    echo "ERRO: Python3 não encontrado. Instale python3 para continuar."
+    exit 1
+fi
+
 # Verificar se os diretórios existem
 for dir in $DIRECTORIES; do
     if [ ! -d "$dir" ]; then
@@ -23,22 +29,37 @@ for dir in $DIRECTORIES; do
         find "$dir" -type f \( -name "*.html" -o -name "*.htm" \) -print0 | while IFS= read -r -d '' file; do
             echo "  Processando arquivo: $file"
             
+            # Criar backup do arquivo antes de processar
+            backup_file="$file.backup"
+            cp "$file" "$backup_file"
+            echo "  Backup criado: $backup_file"
+            
             # Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
-            sed -i 's/\bNEXIA CORTEX — Plataforma de IA\b/Cortex — Plataforma de IA/g' "$file"
+            if sed -i 's/\bNEXIA CORTEX — Plataforma de IA\b/Cortex — Plataforma de IA/g' "$file" 2>/dev/null; then
+                echo "  Substituição 1 concluída"
+            else
+                echo "  AVISO: Falha na substituição 1 - pulando"
+            fi
             
             # Substituir NEXIA por Cortex em títulos e og:site_name
-            python3 - "$file" << 'PYEOF'
+            if python3 - "$file" << 'PYEOF' 2>/dev/null; then
 import re, sys
 
 filepath = sys.argv[1]
-with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-    content = f.read()
-
-# Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
-content = re.sub(r'\bNEXIA CORTEX — Plataforma de IA\b', 'Cortex — Plataforma de IA', content)
-
-# Processar tags <title>...</title>
-# Se o título contém NEXIA, substituir por "Cortex" inteiro (regra 2)
+try:
+    with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+        content = f.read()
+    
+    # Verificar tamanho do arquivo (limite de 10MB)
+    if len(content) > 10 * 1024 * 1024:
+        print(f"AVISO: Arquivo muito grande: {filepath} - pulando processamento Python")
+        sys.exit(0)
+    
+    # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
+    content = re.sub(r'\bNEXIA CORTEX — Plataforma de IA\b', 'Cortex — Plataforma de IA', content)
+    
+    # Processar tags <title>...</title>
+    # Se o título contém NEXIA, substituir por "Cortex" inteiro (regra 2)
 def clean_title(match):
     full_tag = match.group(0)
     inner = match.group(2)
@@ -63,6 +84,20 @@ content = re.sub(r"<meta[^>]*og:site_name[^>]*>", clean_og_site_name, content, f
 with open(filepath, "w", encoding="utf-8") as f:
     f.write(content)
 PYEOF
+                echo "  Processamento Python concluído"
+            else
+                echo "  AVISO: Falha no processamento Python - tentando restaurar backup"
+                if [ -f "$backup_file" ]; then
+                    cp "$backup_file" "$file"
+                    echo "  Backup restaurado"
+                fi
+            fi
+            
+            # Remover backup se tudo deu certo
+            if [ -f "$backup_file" ]; then
+                rm "$backup_file"
+                echo "  Backup removido"
+            fi
             
             echo "  Processado: $file"
         done
@@ -85,10 +120,10 @@ echo ""
 
 # Verificação final: verificar se restaram ocorrências de NEXIA em títulos
 # Usando o comando exato solicitado no pedido (incluindo nexia-ai/site-kit/)
-if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
-    grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null
+    grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null
     echo ""
     echo "Por favor, revise os arquivos e tente novamente."
     exit 1
@@ -97,10 +132,10 @@ else
 fi
 
 # Verificação adicional: og:site_name
-if grep -rnE "og:site_name" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null | grep -i nexia; then
+if grep -rnE "og:site_name" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null | grep -i nexia; then
     echo "AVISO: Ainda foram encontradas ocorrências de NEXIA em og:site_name (verificar manualmente):"
     echo ""
-    grep -rnE "og:site_name" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null | grep -i nexia
+    grep -rnE "og:site_name" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null | grep -i nexia
     echo ""
     echo "Por favor, revise os arquivos."
     exit 1
