@@ -39,8 +39,8 @@
     
     <div class="stats-section">
       <div class="stat-item">
-        <div class="stat-label">Fila atual</div>
-        <div class="stat-value">{{ escadaData.filaAtual }}</div>
+        <div class="stat-label">Fila de pedidos</div>
+        <div class="stat-value">{{ escadaData.filaPedidos }}</div>
       </div>
       <div class="stat-item">
         <div class="stat-label">Jules hoje</div>
@@ -82,7 +82,7 @@ export default {
         loading.value = true;
         error.value = false;
         
-        const response = await fetch('/api/escada');
+        const response = await fetch('/escada');
         
         if (!response.ok) {
           throw new Error('Erro ao buscar dados da escada');
@@ -90,14 +90,23 @@ export default {
         
         const data = await response.json();
         
+        // Tratamento robusto: aceita dados planos (data.cortex) ou aninhados (data.semana.cortex)
+        const semana = data.semana || data;
+        const fila = semana.filaPedidos !== undefined ? semana.filaPedidos : semana.filaAtual;
+        
         escadaData.value = {
-          cortex: data.cortex || 0,
-          gratis: data.gratis || 0,
-          claude: data.claude || 0,
-          filaAtual: data.filaAtual || 0,
-          julesHoje: data.julesHoje || 0,
-          faseB: data.faseB || false
+          cortex: semana.cortex || 0,
+          gratis: semana.gratis || semana.iasGratis || 0,
+          claude: semana.claude || 0,
+          filaPedidos: fila || 0,
+          julesHoje: semana.julesHoje || 0,
+          faseB: semana.faseB || false
         };
+        
+        // Validação: se nenhum dado numérico veio, trata como erro
+        if (semana.cortex === undefined && semana.gratis === undefined && semana.claude === undefined) {
+          throw new Error('Estrutura de dados da escada inesperada');
+        }
         
       } catch (err) {
         console.error('Erro ao carregar dados da escada:', err);
