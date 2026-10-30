@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
+DIRECTORIES="public/ apps/ nexia-ai/ viajante-pro/"
 echo ""
 echo "=========================================="
 echo "Iniciando limpeza de referências NEXIA..."
@@ -23,8 +23,7 @@ for dir in $DIRECTORIES; do
         find "$dir" -type f \( -name "*.html" -o -name "*.htm" \) -print0 | while IFS= read -r -d '' file; do
             echo "  Processando arquivo: $file"
 
-            # Criar backup antes de modificar
-            cp "$file" "${file}.bak"
+
 
             # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
             # Substituição específica para evitar mudanças indevidas em outros contextos
@@ -69,51 +68,12 @@ content = re.sub(r"<meta[^>]*og:site_name[^>]*>", clean_og_site_name, content, f
 with open(filepath, "w", encoding="utf-8") as f:
     f.write(content)
 PYEOF
-            "$file"
 
-            # Passo 2: Processar tags <title>...</title>
-            # Substituir NEXIA por Cortex em <title>, mantendo o restante do conteúdo
-            # Se for apenas "NEXIA", substitui por "Cortex"
-            # Se tiver outros textos, remove apenas "NEXIA" mantendo o restante
-            python3 << 'PYEOF'
-import re, sys
 
-filepath = sys.argv[1]
-with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
-    content = f.read()
-
-# Processar tags <title> - substituir NEXIA por Cortex mantendo o restante
-def clean_title(match):
-    full_tag = match.group(0)
-    inner = match.group(2)
-    if "NEXIA" in inner:
-        # Remover apenas NEXIA mantendo o restante do texto
-        cleaned = re.sub(r"\bNEXIA\b", "Cortex", inner)
-        return full_tag.replace(inner, cleaned)
-    return full_tag
-
-content = re.sub(r"<title([^>]*)>(.*?)</title>", clean_title, content, flags=re.IGNORECASE | re.DOTALL)
-
-# Processar tags og:site_name - substituir NEXIA por Cortex mantendo o restante
-def clean_og_site_name(match):
-    full_tag = match.group(0)
-    if "NEXIA" in full_tag:
-        # Remover apenas NEXIA mantendo o restante dos atributos
-        replaced = re.sub(r"\bNEXIA\b", "Cortex", full_tag)
-        return replaced
-    return full_tag
-
-content = re.sub(r"<meta[^>]*og:site_name[^>]*>", clean_og_site_name, content, flags=re.IGNORECASE)
-
-with open(filepath, "w", encoding="utf-8") as f:
-    f.write(content)
-PYEOF
-            "$file"
 
             echo "  Processado: $file"
         done
-        # Remover backups após processamento bem-sucedido
-        find "$dir" -name "*.bak" -type f -delete
+
     else
         echo "ERRO: Diretório não encontrado: $dir"
         exit 1
