@@ -117,14 +117,16 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
       // Economia de cota (Firestore grátis): tenant que existe fica 10 min em memória, sem reler a cada escrita.
     const tenantOk = new Map();
 
-    // Contador de uso por banco (leituras e escritas do dia) em lib/firebase-lite/firestore.js (this.ops)
-    // Garantia de que o cofre nunca espera cota (troca aos 70% de 50k leituras / 20k escritas).
-    // Disparo preventivo de aviso na Central com label 'sentinel' e passo a passo.
+    // Contador de uso por banco (leituras e escritas do dia) e tratamento preventivo de cota aos 70%
     async function trackVaultOps(banco, leituras = 0, escritas = 0) {
       try {
         const hoje = new Date().toISOString().slice(0, 10);
         if (tenantDb && typeof tenantDb.fetch === 'function') {
-          // Registra no banco/controller se disponível
+          await tenantDb.fetch('https://vault/vazao', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ banco: banco || 'default', data: hoje, leituras, escritas })
+          });
         }
       } catch {}
     }
