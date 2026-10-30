@@ -97,6 +97,10 @@ export default {
   background-color: #f5f5f5;
 }
 
+.tab:hover {
+  background-color: #f5f5f5;
+}
+
 .tab.active {
   border-bottom-color: #007bff;
   color: #007bff;
