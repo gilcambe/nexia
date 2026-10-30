@@ -20,17 +20,15 @@ class CofreSql {
 
   _dispararAvisoSentinel(bancoKey, leituras, escritas) {
     try {
-      // Simula aviso na Central (label sentinel) com o passo a passo
       console.warn(`[SENTINEL ALERT] Banco ${bancoKey} atingiu 70% da cota! Leituras: ${leituras}, Escritas: ${escritas}. Alternando tráfego preventivamente.`);
     } catch {}
   }
 
   _checkLimits(banco, leituras, escritas) {
-    // Firestore: 50k leituras / 20k escritas; D1/CofreSql: 5M linhas / 100k escritas (ou limite padrão)
     const maxL = /firestore/i.test(banco) ? 50000 : 5000000;
     const maxE = /firestore/i.test(banco) ? 20000 : 100000;
     if (leituras >= maxL * 0.7 || escritas >= maxE * 0.7) {
-      return true; // quase cheio
+      return true;
     }
     return false;
   }
@@ -50,7 +48,6 @@ class CofreSql {
               ON CONFLICT(banco) DO UPDATE SET leituras = CASE WHEN data = ? THEN leituras + ? ELSE ? END, escritas = CASE WHEN data = ? THEN escritas + ? ELSE ? END, data = ?`,
               bancoKey, data, leituras, escritas, data, leituras, leituras, data, escritas, escritas, data);
             
-            // Verifica cota (70%) e marca se quase cheio
             const row = this.sql.exec(`SELECT leituras, escritas FROM vazaosql WHERE banco = ?`, bancoKey).toArray()[0];
             if (row && this._checkLimits(bancoKey, row.leituras, row.escritas)) {
               this._dispararAvisoSentinel(bancoKey, row.leituras, row.escritas);
@@ -78,8 +75,6 @@ class CofreSql {
   }
 }
 
-// Ponte para o GitHub Actions (jobs fora do Worker): POST /api/cofre-sql com o segredo NEXIA_CRON_SECRET
-// no cabeçalho x-nexia-cron. Sem o segredo (ou curto), a rota não existe.
 async function pontaCofre(request, env) {
   const secret = String((env && env.NEXIA_CRON_SECRET) || '');
   if (secret.length < 32 || !env.COFRE_SQL) return new Response('Not Found', { status: 404 });
