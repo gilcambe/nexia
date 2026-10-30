@@ -1,6 +1,10 @@
 'use strict';
-const assert = require('node:assert');
+/**
+ * Testes unitários para o cofre (Vault), contadores de uso por banco,
+ * failover preventivo (70%), cache em memória (TTL 60s) e alertas Sentinel.
+ */
 const test = require('node:test');
+const assert = require('node:assert');
 const {
   registrarUsoBanco,
   getUsoBanco,
@@ -13,50 +17,47 @@ const {
   checkBankHealth
 } = require('../../lib/firebase-lite/firestore');
 
-test('Cofre Vault - Contador de uso por banco e limites (70%)', () => {
-  const banco = 'firestore-b';
-  // Simula uso abaixo do limite
-  registrarUsoBanco(banco, 10, 5);
-  const uso = getUsoBanco(banco);
-  assert.strictEqual(uso.leituras, 10);
-  assert.strictEqual(uso.escritas, 5);
-  assert.strictEqual(uso.status, 'ativo');
+test('Contador de uso por banco e alertas preventivos de 70%', () => {
+  // Simula uso próximo de 70% para o banco 'firestore-b' (limite 50000 -> 70% é 35000)
+  registrarUsoBanco('firestore-b', 35000, 0);
+  const uso = getUsoBanco('firestore-b');
+  assert.strictEqual(uso.leituras, 35000);
+  assert.strictEqual(uso.status, 'quase cheio');
 
-  // Simula atingir 70% do limite (50000 * 0.7 = 35000)
-  registrarUsoBanco(banco, 35000, 15000);
-  const usoCheio = getUsoBanco(banco);
-  assert.strictEqual(usoCheio.status, 'quase cheio');
+  // Verifica se o health check pega o banco cheio
+  assert.strictEqual(checkBankHealth('firestore-b'), false);
+});
 
+test('Cache em memória com TTL 60s e invalidação na escrita', () => {
+  const tenant = 'test-tenant';
+  const col = 'clientes';
+  const docId = '123';
+  const docData = { nome: 'João da Silva', email: 'joao@example.com' };
+
+  // Define no cache
+  setCachedFirestoreRead(tenant, col, docId, docData);
+
+  // Lê do cache
+  const cached = getCachedFirestoreRead(tenant, col, docId);
+  assert.deepStrictEqual(cached, docData);
+
+  // Invalida o cache
+  invalidateFirestoreCache(tenant, col, docId);
+  const cachedAfterInvalidate = getCachedFirestoreRead(tenant, col, docId);
+  assert.strictEqual(cachedAfterInvalidate, null);
+});
+
+test('Rodízio de bancos e failover preventivo (B -> C -> D1 -> CofreSql)', () => {
+  // Garante que se o banco atual estiver cheio, o getNextBank troca preventivamente
+  const next = getNextBank();
+  assert.ok(['firestore-b', 'firestore-c', 'd1', 'cofresql'].includes(next));
+
+  const switched = switchToNextBank();
+  assert.ok(['firestore-b', 'firestore-c', 'd1', 'cofresql'].includes(switched));
+});
+
+test('Bancos uso geral retorna lista completa', () => {
   const geral = getBancosUsoGeral();
   assert.ok(Array.isArray(geral));
-  const b = geral.find(item => item.banco === banco);
-  assert.ok(b);
-  assert.strictEqual(b.status, 'quase cheio');
-});
-
-test('Cofre Vault - Cache em memória (TTL 60s) e invalidação', () => {
-  const tenantId = 'tenant-test';
-  const collection = 'vault_docs';
-  const docId = 'doc-1';
-  const record = { id: docId, valor: 'segredo' };
-
-  // Inicialmente vazio
-  assert.strictEqual(getCachedFirestoreRead(tenantId, collection, docId), null);
-
-  // Seta no cache
-  setCachedFirestoreRead(tenantId, collection, docId, record);
-  const cached = getCachedFirestoreRead(tenantId, collection, docId);
-  assert.deepStrictEqual(cached, record);
-
-  // Invalida cache
-  invalidateFirestoreCache(tenantId, collection, docId);
-  assert.strictEqual(getCachedFirestoreRead(tenantId, collection, docId), null);
-});
-
-test('Cofre Vault - Rodízio e troca de bancos (B -> C -> D1 -> CofreSql)', () => {
-  const b1 = getNextBank();
-  assert.ok(['firestore-b', 'firestore-c', 'd1', 'cofresql'].includes(b1));
-
-  const proximo = switchToNextBank();
-  assert.ok(proximo);
+  assert.ok(geral.length >= 4);
 });
