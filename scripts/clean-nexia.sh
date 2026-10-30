@@ -10,7 +10,8 @@ set -euo pipefail
 # NÃO faz substituição genérica de NEXIA → Cortex para evitar afetar textos não relacionados
 
 # Diretórios a serem processados
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
+
 echo ""
 echo "=========================================="
 echo "Iniciando limpeza de referências NEXIA..."
@@ -69,26 +70,24 @@ try:
     content = re.sub(r'\bNEXIA CORTEX — Plataforma de IA\b', 'Cortex — Plataforma de IA', content)
     
     # Processar tags <title>...</title>
-    # Se o título contém NEXIA, substituir por "Cortex" inteiro (regra 2)
+    # Se o título contém NEXIA, remover apenas a palavra NEXIA mantendo o restante (regra 2)
 def clean_title(match):
     full_tag = match.group(0)
     inner = match.group(2)
     if "NEXIA" in inner:
-        # Substituir o conteúdo inteiro por "Cortex"
-        return f"<title{match.group(1)}>Cortex</title>"
+        # Remover apenas a palavra NEXIA mantendo o restante
+        return re.sub(r'\bNEXIA\b', '', inner).strip()
     return full_tag
 
 content = re.sub(r"<title([^>]*)>(.*?)</title>", clean_title, content, flags=re.IGNORECASE | re.DOTALL)
 
-    # Processar tags og:site_name - se contém NEXIA, substituir o conteúdo por "Cortex" (regra 2)
+    # Processar tags og:site_name - se contém NEXIA, remover apenas a palavra NEXIA mantendo o restante (regra 2 e 3)
     # Usando padrões mais específicos para evitar falsos positivos
 def clean_og_site_name(match):
     full_tag = match.group(0)
     if "NEXIA" in full_tag:
-        # Substituir o valor do atributo content por "Cortex", mantendo os demais atributos
-        # Padrão específico: content="qualquer_coisa_NEXIA_qualquer_coisa" → content="Cortex"
-        replaced = re.sub(r'(content=["\'])[^"\']*NEXIA[^"\']*(["\'])', r'\1Cortex\2', full_tag, flags=re.IGNORECASE)
-        return replaced
+        # Remover apenas a palavra NEXIA mantendo o restante do conteúdo
+        return re.sub(r'\bNEXIA\b', '', full_tag).strip()
     return full_tag
 
 content = re.sub(r'<meta[^>]*og:site_name[^>]*>', clean_og_site_name, content, flags=re.IGNORECASE)
@@ -136,10 +135,10 @@ echo ""
 # Verificação final: verificar se restaram ocorrências de NEXIA em títulos
 # Usando o comando exato solicitado no pedido (apenas diretórios processados)
 echo "Executando verificação final como solicitado no pedido..."
-if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
-    grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null
+    grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null
     echo ""
     echo "Por favor, revise os arquivos e tente novamente."
     exit 1
@@ -148,10 +147,10 @@ else
 fi
 
 # Verificação adicional: og:site_name
-if grep -rnE "og:site_name" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null | grep -i nexia; then
+if grep -rnE "og:site_name" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null | grep -i nexia; then
     echo "AVISO: Ainda foram encontradas ocorrências de NEXIA em og:site_name (verificar manualmente):"
     echo ""
-    grep -rnE "og:site_name" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null | grep -i nexia
+    grep -rnE "og:site_name" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null | grep -i nexia
     echo ""
     echo "Por favor, revise os arquivos."
     exit 1
