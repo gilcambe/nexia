@@ -136,7 +136,19 @@ export function useCentral() {
     return body as { ok: boolean; mensagem: string };
   }, [getToken]);
 
-  return { buscar, agir, entrarSuporte, distribuirTarefas, enviarTarefasParaContas };
+  // Atualização para marcar todas as tarefas como gratuitas
+  const marcarTodasTarefasComoGratuitas = useCallback(async () => {
+    const token = await getToken();
+    const res = await fetch(apiPath("/marcar-tarefas-como-gratuitas"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error || `Erro ${res.status}`);
+    return body as { ok: boolean; mensagem: string };
+  }, [getToken]);
+
+  return { buscar, agir, entrarSuporte, distribuirTarefas, enviarTarefasParaContas, marcarTodasTarefasComoGratuitas };
 }
 
 export const reais = (v: number) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
