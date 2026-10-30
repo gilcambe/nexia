@@ -136,7 +136,7 @@ echo ""
 echo "Executando verificação final como solicitado no pedido..."
 
 # Verificar se restaram títulos com NEXIA
-titles_with_nexia=$(grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null || true)
+titles_with_nexia=$(grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null || true)
 if [ -n "$titles_with_nexia" ]; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
@@ -149,7 +149,7 @@ else
 fi
 
 # Verificar se restaram og:site_name com NEXIA
-og_with_nexia=$(grep -rnE "og:site_name" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null | grep -i nexia || true)
+og_with_nexia=$(grep -rnE "og:site_name" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null | grep -i nexia || true)
 if [ -n "$og_with_nexia" ]; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em og:site_name:"
     echo ""
