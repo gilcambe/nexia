@@ -331,6 +331,7 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         return { id };
       });
 
+      await trackVaultOps(schema.collection, 0, 1);
       invalidateVaultCache(ctx.tenantId, entity, outcome.replayedId || outcome.id);
       if (outcome.replayedId) return { record: await get(ctx, outcome.replayedId, { includeDeleted: true }), replayed: true };
       return { record: await get(ctx, outcome.id), replayed: false };
@@ -340,6 +341,7 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
     async function get(ctx, id, { includeDeleted = false } = {}) {
       assertContext(ctx);
       assertId(entity, id);
+      await trackVaultOps(schema.collection, 1, 0);
       if (!includeDeleted) {
         const cached = getCachedVaultRead(ctx.tenantId, entity, id);
         if (cached) return cached;
@@ -442,6 +444,7 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         });
         emitAudit(tx, auditEntry(ctx, { operation: 'update', entity, id, version, value, changed }));
       });
+      await trackVaultOps(schema.collection, 0, 1);
       invalidateVaultCache(ctx.tenantId, entity, id);
       return get(ctx, id);
     }
@@ -466,6 +469,7 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         });
         emitAudit(tx, auditEntry(ctx, { operation: 'soft_delete', entity, id, version, value: domainOf(schema, current), changed: ['deleted_at'] }));
       });
+      await trackVaultOps(schema.collection, 0, 1);
       invalidateVaultCache(ctx.tenantId, entity, id);
       return get(ctx, id, { includeDeleted: true });
     }
@@ -495,6 +499,7 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         });
         emitAudit(tx, auditEntry(ctx, { operation: 'restore', entity, id, version, value, changed: ['deleted_at'] }));
       });
+      await trackVaultOps(schema.collection, 0, 1);
       invalidateVaultCache(ctx.tenantId, entity, id);
       return get(ctx, id);
     }
