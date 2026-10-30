@@ -207,3 +207,31 @@ test('CF-852d. concluir leva o created_at da issue em acao.desde', () => {
   assert.equal(a[0].tipo, 'concluir');
   assert.equal(a[0].desde, '2026-10-18T10:00:00Z');
 });
+
+test('CF-sonda-esgotada. sonda com ok: false impede despachos na função decidir', () => {
+  const issues = [issue(1), issue(2)];
+  const a = decidir({ issues, runs: [], agora: AGORA, sonda: { ok: false, motivo: 'cota zerada' } });
+  assert.equal(a.filter(x => x.tipo === 'despachar').length, 0);
+});
+
+test('CF-sonda-alta. sonda com cota > 80% limita o despacho a no máximo 1 pista', () => {
+  const issues = [issue(1), issue(2), issue(3)];
+  const a = decidir({ issues, runs: [], agora: AGORA, pistas: 6, sonda: { ok: true, percentual: 85 } });
+  const despachos = a.filter(x => x.tipo === 'despachar');
+  assert.equal(despachos.length, 1);
+  assert.equal(despachos[0].pista, 1);
+});
+
+test('CF-erro-cota-infra. erros 429, RESOURCE_EXHAUSTED e free tier reenfileiram sem somar tentativa', () => {
+  const erros = [
+    'HTTP 429 Too Many Requests',
+    'RESOURCE_EXHAUSTED: Quota exceeded',
+    'free tier daily row read limit exceeded'
+  ];
+  for (const err of erros) {
+    const r = { ...run(1, 'completed', 'failure', 5), message: err };
+    const a = decidir({ issues: [issue(1, ['cortex-rodando', 'pista-1', 'tentativa-3'])], runs: [r], agora: AGORA });
+    assert.equal(a[0].tipo, 'reenfileirar');
+    assert.equal(a[0].tentativa, 3, `não incrementa tentativa para: ${err}`);
+  }
+});

@@ -34,6 +34,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
+          CORTEX_MODO: 'economico'
           NEXIA_JOBS_TOKEN: ${{ secrets.NEXIA_JOBS_TOKEN }}
           # GitHub App do NEXIA: abre os PRs da cópia exata (a chave da fila não consegue abrir PR).
           GITHUB_APP_ID: ${{ secrets.NEXIA_GITHUB_APP_ID }}
