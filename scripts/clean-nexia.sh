@@ -4,8 +4,8 @@
 #
 # Requisitos:
 #   (1) "NEXIA CORTEX — Plataforma de IA"  →  "Cortex — Plataforma de IA"
-# (2) Para <title> contendo "NEXIA": substituir completamente por <title>Cortex</title>
-#       (ex: <title>Meu Site NEXIA</title> → <title>Cortex</title>)
+#   (2) Para <title> contendo "NEXIA": remover NEXIA mantendo o restante do conteúdo
+#       (ex: <title>Meu Site NEXIA</title> → <title>Meu Site</title>)
 #   (3) Para og:site_name contendo "NEXIA": remover apenas a palavra "NEXIA"
 #       mantendo o restante do conteúdo (ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site")
 #
@@ -40,15 +40,18 @@ for dir in $DIRECTORIES; do
             # (substituição específica de frase, não genérica)
             sed -i.bak 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
             
-            # Passo 2: Substituir completamente <title> contendo NEXIA por <title>Cortex</title>
-            # Ex: <title>Meu Site NEXIA</title> → <title>Cortex</title>
-            sed -i.bak 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/gi' "$file"
+            # Passo 2: Remover NEXIA de <title> mantendo o restante do conteúdo
+            # Ex: <title>Meu Site NEXIA</title> → <title>Meu Site</title>
+            # Ex: <title>NEXIA Meu Site</title> → <title>Meu Site</title>
+            sed -i.bak 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
             
-            # Passo 3: Remover NEXIA de og:site_name mantendo o restante do conteúdo
+            # Passo 3: Remover NEXIA de og:site_name e property="og:site_name" mantendo o restante do conteúdo
             # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site"
             # Ex: og:site_name="NEXIA Site" → og:site_name="Site"
             # Ex: og:site_name="NEXIA" → og:site_name=""
-            sed -i.bak 's/og:site_name=["'\'']\(.*\)NEXIA\(.*\)['"'\']/og:site_name="\1\2"/gi' "$file"
+            # Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Meu Site"
+            sed -i.bak 's/og:site_name=["'\'']\([^"'\']*\)NEXIA\([^"'\']*\)['"'\']/og:site_name="\1\2"/gi' "$file"
+            sed -i.bak 's/property=["'\'']og:site_name["'\'] content=["'\'']\([^"'\']*\)NEXIA\([^"'\']*\)['"'\']/property="og:site_name" content="\1\2"/gi' "$file"
             
             # Remove backup temporário após processamento
             rm -f "$file.bak"
@@ -72,16 +75,16 @@ echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 echo ""
 
-# Padrão solicitado para detectar NEXIA em <title>
-if grep -rnE "<title>.*NEXIA.*</title>" --include="*.html" public apps "nexia-ai/site-kit" 2>/dev/null; then
-    echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos ou metadados:"
+# Padrão exato solicitado para detectar NEXIA em <title>
+if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai 2>/dev/null; then
+    echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
-    grep -rnE "<title>.*NEXIA.*</title>" --include="*.html" public apps "nexia-ai/site-kit" 2>/dev/null
+    grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai 2>/dev/null
     echo ""
     echo "Por favor, revise os arquivos e tente novamente."
     exit 1
 else
-    echo "✓ Nenhuma ocorrência de NEXIA encontrada em títulos ou metadatos."
+    echo "✓ Nenhuma ocorrência de NEXIA encontrada em títulos."
 fi
 
 echo ""
@@ -94,3 +97,6 @@ echo ""
 # e executar após merge para develop. Exemplo:
 # - name: Limpar referências NEXIA
 #   run: bash scripts/clean-nexia.sh
+#
+# Verificação final após execução (critério de pronto):
+#   bash scripts/clean-nexia.sh && grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai
