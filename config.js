@@ -6,6 +6,7 @@
  */
 
 const LOCAL_STORAGE_KEY = 'nexia_ia_local_config';
+const MEMORIA_MINIMA_GB = 2;
 
 /**
  * Verifica se o dispositivo/navegador possui suporte adequado a WebGPU e memória.
@@ -29,7 +30,6 @@ export async function verificarSuporteWebGPU() {
     return { suportado: false, motivo: `Erro ao solicitar adaptador WebGPU: ${err?.message || err}` };
   }
 
-  const MEMORIA_MINIMA_GB = 2;
   const memoriaGb = typeof navigator.deviceMemory === 'number' ? navigator.deviceMemory : 4;
 
   if (memoriaGb < MEMORIA_MINIMA_GB) {
@@ -146,7 +146,7 @@ export async function configurarSwitchIALocal(checkboxElement, containerAvisoEle
     return configAtual.ativo;
   }
 
-  const MEMORIA_MINIMA_GB = 2;
+  const memoriaGb = typeof navigator.deviceMemory === 'number' ? navigator.deviceMemory : 4;
 
   const limparAviso = () => {
     if (!containerAvisoElement) return;
