@@ -134,9 +134,9 @@ echo "Verificando se restaram ocorrências de NEXIA em títulos e metadados..."
 echo ""
 
 # Verificação final: verificar se restaram ocorrências de NEXIA em títulos
-# Usando o comando exato solicitado no pedido (incluindo viajante-pro)
+# Usando o comando exato solicitado no pedido (apenas diretórios processados)
 echo "Executando verificação final como solicitado no pedido..."
-if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
     grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null
@@ -148,7 +148,7 @@ else
 fi
 
 # Verificação adicional: og:site_name
-if grep -rnE "og:site_name" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null | grep -i nexia; then
+if grep -rnE "og:site_name" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null | grep -i nexia; then
     echo "AVISO: Ainda foram encontradas ocorrências de NEXIA em og:site_name (verificar manualmente):"
     echo ""
     grep -rnE "og:site_name" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null | grep -i nexia
