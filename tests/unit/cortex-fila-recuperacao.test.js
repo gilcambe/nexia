@@ -83,14 +83,19 @@ test('RF8. tarefa em outro degrau da escada (Jules, Claude, humano) não volta p
   assert.equal(gh.chamadas.length, 0, 'nem consulta a API para elas');
 });
 
-test('RF9. PR já integrado que cita a tarefa: não repete o trabalho e não fecha sozinha', async () => {
+test('RF9. PR integrado que DIZ fechar a tarefa: não repete o trabalho e não fecha sozinha; só citar o número não basta', async () => {
   const gh = githubFalso({
-    eventos: { 2145: historico({ rotulo: 'cortex-travado', em: ANTES, total: 114 }), 2144: historico({ rotulo: 'cortex-travado', em: ANTES, total: 114 }) },
-    prs: [{ number: 2506, merged_at: '2026-10-29T16:00:00Z', title: 'Cortex: para-spec.js', body: 'Parte 2/3 de #2133. Refs #2145' }, { number: 9, merged_at: null, title: 'rascunho', body: 'Refs #2144' }],
+    eventos: { 2145: historico({ rotulo: 'cortex-travado', em: ANTES, total: 114 }), 2144: historico({ rotulo: 'cortex-travado', em: ANTES, total: 114 }), 2141: historico({ rotulo: 'cortex-travado', em: ANTES, total: 114 }) },
+    prs: [
+      { number: 2469, merged_at: '2026-10-29T05:06:41Z', title: 'feat(clonar-site): design por slug', body: 'Antes: as partes #2144 e #2177 ficaram travadas.\n\nFecha: #2144, #2177.' },
+      { number: 2564, merged_at: '2026-10-30T20:39:00Z', title: 'fix(cortex-fila): recuperar travadas', body: 'Nenhuma das tarefas #2141–#2145 voltou, mesmo travadas desde 27/10.' },
+      { number: 9, merged_at: null, title: 'rascunho', body: 'Fecha #2145' },
+    ],
   });
-  const v = await travadasPeloCofre('t', [issue(2144, ['cortex-travado']), issue(2145, ['cortex-travado'])], { ghFn: gh });
-  assert.deepEqual(v.map(x => x.numero), [2144], 'a 2145 tem PR integrado; a 2144 só tem rascunho não mesclado');
-  assert.equal(entregaComprovada(2145, [{ number: 1, merged_at: 'x', title: '#21450', body: '' }]), null, '#21450 não é #2145');
+  const v = await travadasPeloCofre('t', [issue(2141, ['cortex-travado']), issue(2144, ['cortex-travado']), issue(2145, ['cortex-travado'])], { ghFn: gh });
+  assert.deepEqual(v.map(x => x.numero), [2141, 2145], '2144 tem PR que fecha; 2141 só é citada; 2145 só tem rascunho não mesclado');
+  assert.equal(entregaComprovada(2145, [{ number: 1, merged_at: 'x', title: 'Fecha #21450', body: '' }]), null, '#21450 não é #2145');
+  assert.ok(entregaComprovada(1976, [{ number: 2477, merged_at: 'x', title: 'Reserva: issue #1976', body: 'Aplicado pela conta vaga-4-mistral. Fecha #1976.' }]));
 });
 
 test('RF10. falha da API em uma tarefa não derruba as outras', async () => {
@@ -105,4 +110,24 @@ test('RF11. REGRESSÃO reservasQueVoltam: com mais de 100 eventos, a tarefa sem 
   const gh = githubFalso({ eventos: { 7: historico({ rotulo: 'cortex-reserva-sem-cota', em: '2026-10-30T12:00:00Z', total: 150 }), 8: historico({ rotulo: 'cortex-reserva-sem-cota', em: '2026-10-28T12:00:00Z', total: 150 }) } });
   const v = await reservasQueVoltam('t', [issue(7, ['cortex-reserva-sem-cota']), issue(8, ['cortex-reserva-sem-cota'])], hoje, gh);
   assert.deepEqual(v.map(x => x.numero), [8], 'a 7 foi rotulada hoje: espera o dia virar; a 8 é de anteontem: volta');
+});
+
+// ---- ordem em decidir(): dependência antes do desvio para o Jules ----
+const { decidir } = require('../../scripts/cortex-fila');
+const plano = (k, depende) => `<!-- cortex-plano ${JSON.stringify({ pai: 50, k, n: 2, depende, arquivos: [`a${k}.js`], antes: [], pronto: 'x', limite: 400 })} -->\n`;
+const parte = (n, k, depende, labels = [], corpo = 'Edite `.github/workflows/lote.yml`.') => ({ ...issue(n, ['cortex-parte', ...labels]), title: `[Parte ${k}/2 de #50] x`, body: plano(k, depende) + corpo });
+
+test('RF12. parte que mexe em workflow e ainda espera a parte 1 NÃO vai para o Jules (antes ia sem a dependência pronta)', () => {
+  const a = decidir({ issues: [parte(11, 1, [], [], 'Crie `scripts/salvar-molde.js`.'), parte(12, 2, [1])], runs: [], agora: Date.parse('2026-10-30T20:00:00Z'), pistas: 2 });
+  assert.deepEqual(a.map(x => [x.tipo, x.numero]), [['despachar', 11]], 'a parte 2 espera; só a parte 1 sai');
+});
+
+test('RF13. com a dependência entregue (feito), a parte de workflow segue para o Jules como antes', () => {
+  const a = decidir({ issues: [parte(12, 2, [1])], runs: [], agora: Date.parse('2026-10-30T20:00:00Z'), pistas: 2 });
+  assert.deepEqual(a.map(x => [x.tipo, x.numero]), [['para-jules', 12]]);
+});
+
+test('RF14. dependência reaberta (aberta e sem cortex-feito) volta a segurar a parte seguinte, sem gastar tentativas', () => {
+  const a = decidir({ issues: [parte(11, 1, [], ['tentativa-1'], 'Crie `scripts/salvar-molde.js`.'), parte(13, 2, [1], [], 'Edite `x.js`.')], runs: [], agora: Date.parse('2026-10-30T20:00:00Z'), pistas: 3 });
+  assert.deepEqual(a.map(x => x.numero), [11], 'só a parte 1 é despachada');
 });
