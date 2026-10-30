@@ -137,6 +137,8 @@ export function GerenciarTarefasGratuitas({ cortex }: { cortex: Cortex }) {
       const resultado = await enviarTarefasParaContas(cortex.gratuitas);
       if (resultado.ok) {
         alert("Tarefas enviadas para as contas com sucesso!");
+        // Atualizar o estado para refletir que as tarefas foram enviadas
+        cortex.enviadasParaContas = cortex.gratuitas.length;
       } else {
         setErro(resultado.mensagem);
       }
@@ -162,7 +164,7 @@ export function GerenciarTarefasGratuitas({ cortex }: { cortex: Cortex }) {
       </button>
       <button
         onClick={handleEnviarParaContas}
-        disabled={enviando || cortex.gratuitas.length === 0}
+        disabled={enviando || cortex.gratuitas.length === 0 || cortex.enviadasParaContas > 0}
         className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:bg-green-300"
       >
         {enviando ? "Enviando..." : "Enviar para Contas"}
