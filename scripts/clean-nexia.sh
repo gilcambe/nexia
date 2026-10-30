@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
 echo ""
 echo "=========================================="
 echo "Iniciando limpeza de referências NEXIA..."
@@ -38,16 +38,13 @@ with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
 content = re.sub(r'\bNEXIA CORTEX — Plataforma de IA\b', 'Cortex — Plataforma de IA', content)
 
 # Processar tags <title>...</title>
-# Se o título contém NEXIA, remover apenas a palavra NEXIA mantendo o restante (regra 3)
+# Se o título contém NEXIA, substituir por "Cortex" inteiro (regra 2)
 def clean_title(match):
     full_tag = match.group(0)
     inner = match.group(2)
     if "NEXIA" in inner:
-        # Remover apenas a palavra NEXIA mantendo o restante
-        cleaned_inner = re.sub(r'\bNEXIA\b', '', inner, flags=re.IGNORECASE)
-        # Remover espaços extras que possam ter ficado
-        cleaned_inner = re.sub(r'\s+', ' ', cleaned_inner).strip()
-        return f"<title{match.group(1)}>{cleaned_inner}</title>"
+        # Substituir o conteúdo inteiro por "Cortex"
+        return f"<title{match.group(1)}>Cortex</title>"
     return full_tag
 
 content = re.sub(r"<title([^>]*)>(.*?)</title>", clean_title, content, flags=re.IGNORECASE | re.DOTALL)
