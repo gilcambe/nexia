@@ -134,6 +134,7 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
     // Cache em memória (TTL 60 s) para leituras repetidas do mesmo documento no Vault (cliente, projeto, tenant), limpo em toda escrita.
     const vaultReadCache = new Map(); // key -> { expiresAt, record }
     function getCachedVaultRead(tenantId, entity, id) {
+      if (!['Client', 'Project', 'Tenant', 'client', 'project', 'tenant'].includes(entity)) return null;
       const k = `${tenantId}:${entity}:${id}`;
       const entry = vaultReadCache.get(k);
       if (entry && entry.expiresAt > Date.now()) return entry.record;
@@ -141,17 +142,17 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
       return null;
     }
     function setCachedVaultRead(tenantId, entity, id, record) {
+      if (!['Client', 'Project', 'Tenant', 'client', 'project', 'tenant'].includes(entity)) return;
       const k = `${tenantId}:${entity}:${id}`;
       vaultReadCache.set(k, { expiresAt: Date.now() + 60 * 1000, record });
     }
     function invalidateVaultCache(tenantId, entity, id) {
       if (id) {
         vaultReadCache.delete(`${tenantId}:${entity}:${id}`);
-      } else {
-        for (const k of vaultReadCache.keys()) {
-          if (k.startsWith(`${tenantId}:${entity}:`) || k.startsWith(`${tenantId}:`)) {
-            vaultReadCache.delete(k);
-          }
+      }
+      for (const k of vaultReadCache.keys()) {
+        if (k.startsWith(`${tenantId}:${entity}:`) || k.startsWith(`${tenantId}:`)) {
+          vaultReadCache.delete(k);
         }
       }
     }
