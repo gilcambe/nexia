@@ -70,41 +70,24 @@ try:
     content = re.sub(r'\bNEXIA CORTEX — Plataforma de IA\b', 'Cortex — Plataforma de IA', content)
     
     # Processar tags <title>...</title>
-    # Se o título contém NEXIA, remover apenas a palavra NEXIA mantendo o restante (regra 2)
+    # Se o título contém NEXIA, substituir TODO o conteúdo do título por 'Cortex'
 def clean_title(match):
     full_tag = match.group(0)
     inner = match.group(2)
     if "NEXIA" in inner:
-        # Remover apenas a palavra NEXIA mantendo o restante
-        cleaned_inner = re.sub(r'\bNEXIA\b', '', inner).strip()
-        # Garantir que o título não fique vazio
-        if not cleaned_inner:
-            cleaned_inner = "Cortex"
-        return f'<title{match.group(1)}>{cleaned_inner}</title>'
+        # Substituir TODO o conteúdo do título por 'Cortex'
+        return f'<title{match.group(1)}>Cortex</title>'
     return full_tag
 
 content = re.sub(r"<title([^>]*)>(.*?)</title>", clean_title, content, flags=re.IGNORECASE | re.DOTALL)
 
-    # Processar tags og:site_name - se contém NEXIA, remover apenas a palavra NEXIA mantendo o restante (regra 2 e 3)
+    # Processar tags og:site_name - se contém NEXIA, substituir conteúdo por 'Cortex'
     # Usando padrões mais específicos para evitar falsos positivos
 def clean_og_site_name(match):
     full_tag = match.group(0)
     if "NEXIA" in full_tag:
-        # Extrair o valor atual do og:site_name
-        import re
-        value_match = re.search(r'content=["\']([^"\']*)["\']', full_tag)
-        if value_match:
-            current_value = value_match.group(1)
-            # Remover apenas a palavra NEXIA mantendo o restante
-            new_value = re.sub(r'\bNEXIA\b', '', current_value).strip()
-            # Garantir que não fique vazio
-            if not new_value:
-                new_value = "Cortex"
-            # Recriar a tag com o novo valor
-            return re.sub(r'content=["\']([^"\']*)["\']', f'content="{new_value}"', full_tag)
-        else:
-            # Se não encontrar content, remover apenas a palavra NEXIA da tag
-            return re.sub(r'\bNEXIA\b', '', full_tag).strip()
+        # Substituir TODO o conteúdo do og:site_name por 'Cortex'
+        return re.sub(r'content=["\']([^"\']*)["\']', 'content="Cortex"', full_tag, flags=re.IGNORECASE)
     return full_tag
 
 content = re.sub(r'<meta[^>]*og:site_name[^>]*>', clean_og_site_name, content, flags=re.IGNORECASE)
@@ -149,13 +132,15 @@ echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos e metadados..."
 echo ""
 
-# Verificação final: verificar se restaram ocorrências de NEXIA em títulos
-# Usando o comando exato solicitado no pedido (apenas diretórios processados)
+# Verificação final: garantir que TODOS os títulos e og:site_name contendo NEXIA foram substituídos por 'Cortex'
 echo "Executando verificação final como solicitado no pedido..."
-if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null; then
+
+# Verificar se restaram títulos com NEXIA
+titles_with_nexia=$(grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null || true)
+if [ -n "$titles_with_nexia" ]; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
-    grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null
+    echo "$titles_with_nexia"
     echo ""
     echo "Por favor, revise os arquivos e tente novamente."
     exit 1
@@ -163,13 +148,14 @@ else
     echo "OK: Nenhuma ocorrência de NEXIA encontrada em títulos nos diretórios especificados."
 fi
 
-# Verificação adicional: og:site_name
-if grep -rnE "og:site_name" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null | grep -i nexia; then
-    echo "AVISO: Ainda foram encontradas ocorrências de NEXIA em og:site_name (verificar manualmente):"
+# Verificar se restaram og:site_name com NEXIA
+og_with_nexia=$(grep -rnE "og:site_name" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null | grep -i nexia || true)
+if [ -n "$og_with_nexia" ]; then
+    echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em og:site_name:"
     echo ""
-    grep -rnE "og:site_name" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null | grep -i nexia
+    echo "$og_with_nexia"
     echo ""
-    echo "Por favor, revise os arquivos."
+    echo "Por favor, revise os arquivos e tente novamente."
     exit 1
 else
     echo "OK: Nenhuma ocorrência de NEXIA encontrada em og:site_name nos diretórios especificados."
