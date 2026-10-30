@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
+DIRECTORIES="public/ apps/ nexia-ai/ viajante-pro/"
 echo ""
 echo "=========================================="
 echo "Iniciando limpeza de referências NEXIA..."
@@ -29,7 +29,7 @@ for dir in $DIRECTORIES; do
             sed -i 's/\bNEXIA CORTEX — Plataforma de IA\b/Cortex — Plataforma de IA/g' "$file"
             
             # Substituir NEXIA por Cortex em títulos e og:site_name
-            python3 << 'PYEOF'
+            python3 - "$file" << 'PYEOF'
 import re, sys
 
 filepath = sys.argv[1]
@@ -40,24 +40,22 @@ with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
 content = re.sub(r'\bNEXIA CORTEX — Plataforma de IA\b', 'Cortex — Plataforma de IA', content)
 
 # Processar tags <title>...</title>
-# Substituir NEXIA por Cortex em <title>, mantendo o restante do conteúdo
+# Se o título contém NEXIA, substituir todo o conteúdo por "Cortex" (regra 2)
 def clean_title(match):
     full_tag = match.group(0)
     inner = match.group(2)
     if "NEXIA" in inner:
-        # Remover apenas NEXIA mantendo o restante do texto
-        cleaned = re.sub(r"\bNEXIA\b", "Cortex", inner)
-        return full_tag.replace(inner, cleaned)
+        return f"<title{match.group(1)}>Cortex</title>"
     return full_tag
 
 content = re.sub(r"<title([^>]*)>(.*?)</title>", clean_title, content, flags=re.IGNORECASE | re.DOTALL)
 
-# Processar tags og:site_name - substituir NEXIA por Cortex mantendo o restante
+# Processar tags og:site_name - se contém NEXIA, substituir o conteúdo por "Cortex" (regra 2)
 def clean_og_site_name(match):
     full_tag = match.group(0)
     if "NEXIA" in full_tag:
-        # Remover apenas NEXIA mantendo o restante dos atributos
-        replaced = re.sub(r"\bNEXIA\b", "Cortex", full_tag)
+        # Substituir o valor do atributo content por "Cortex", mantendo os demais atributos
+        replaced = re.sub(r'(content=["\'])[^"\']*(["\'])', r'\1Cortex\2', full_tag, flags=re.IGNORECASE)
         return replaced
     return full_tag
 
