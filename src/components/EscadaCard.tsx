@@ -1,145 +1,145 @@
 import React, { useState, useEffect } from 'react';
 
 interface EscadaData {
-  cortex: number;
-  iasGratis: number;
-  claude: number;
-  fila: number;
+  semana: {
+    cortex: number;
+    iasGratis: number;
+    claude: number;
+  };
+  filaPedidos: number;
+  julesHoje: number;
   faseB: boolean;
-  julesHoje?: number;
 }
 
 const EscadaCard: React.FC = () => {
-  const [escadaData, setEscadaData] = useState<EscadaData>({
-    cortex: 0,
-    iasGratis: 0,
-    claude: 0,
-    fila: 0,
-    faseB: false
-  });
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const [julesHoje, setJulesHoje] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<EscadaData>({
+    semana: {
+      cortex: 0,
+      iasGratis: 0,
+      claude: 0,
+    },
+    filaPedidos: 0,
+    julesHoje: 0,
+    faseB: false,
+  });
 
   useEffect(() => {
-    const fetchEscadaData = async () => {
-      try {
-        const resposta = await fetch('/escada');
-        if (!resposta.ok) throw new Error('Erro ao buscar dados da escada');
-        const dados = await resposta.json();
-        setEscadaData({
-          cortex: dados.semana?.cortex ?? 0,
-          iasGratis: dados.semana?.iasGratis ?? 0,
-          claude: dados.semana?.claude ?? 0,
-          fila: dados.fila ?? 0,
-          faseB: dados.faseB ?? false
-        });
-        setJulesHoje(dados.julesHoje ?? 0);
-        setLoading(false);
-      } catch {
-        setError(true);
-        setLoading(false);
-      }
-    };
-
-    fetchEscadaData();
+    loadEscadaData();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-gray-800">🪜 Escada</h3>
-          <div className="animate-pulse bg-gray-200 px-3 py-1 rounded-full text-sm font-medium w-32"></div>
-        </div>
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse">
-              <div className="flex justify-between text-sm text-gray-600 mb-1">
-                <span className="bg-gray-200 h-4 w-20 rounded"></span>
-                <span className="bg-gray-200 h-4 w-8 rounded"></span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-gray-200 h-2 rounded-full w-3/4"></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-4">🪜 Escada</h3>
-        <p className="text-red-600 text-sm">Erro ao carregar dados da escada</p>
-      </div>
-    );
-  }
+  const loadEscadaData = async () => {
+    try {
+      const response = await fetch('/escada');
+      if (!response.ok) {
+        throw new Error('Erro ao buscar dados da escada');
+      }
+      
+      const result: EscadaData = await response.json();
+      setData(result);
+      
+    } catch (err) {
+      console.error('Erro ao carregar dados da escada:', err);
+      setError(err instanceof Error ? err.message : 'Erro desconhecido');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div 
+      className="bg-white rounded-lg shadow-md p-6 border border-gray-200" 
+      data-testid="escada-card"
+    >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold text-gray-800">🪜 Escada</h3>
-        {escadaData.faseB && (
-          <div className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+        <h3 className="text-lg font-semibold text-gray-800">🪜 Escada</h3>
+        {data.faseB && (
+          <div 
+            className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded"
+            data-testid="fase-b-selo"
+          >
             Pronto para fase B
           </div>
         )}
       </div>
-
-      <div className="space-y-4 mb-6">
-        <div>
+      
+      {/* Barras de progresso da semana */}
+      <div className="space-y-3 mb-6">
+        <div data-testid="barra-cortex">
           <div className="flex justify-between text-sm text-gray-600 mb-1">
             <span>Cortex</span>
-            <span>{escadaData.cortex}%</span>
+            <span>{data.semana.cortex}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
-              style={{ width: `${escadaData.cortex}%` }}
+              className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+              style={{ width: `${data.semana.cortex}%` }}
+              data-testid="progresso-cortex"
             ></div>
           </div>
         </div>
-
-        <div>
+        
+        <div data-testid="barra-ias-gratis">
           <div className="flex justify-between text-sm text-gray-600 mb-1">
             <span>IAs grátis</span>
-            <span>{escadaData.iasGratis}%</span>
+            <span>{data.semana.iasGratis}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-green-500 h-2 rounded-full transition-all duration-300" 
-              style={{ width: `${escadaData.iasGratis}%` }}
+              className="bg-green-600 h-2 rounded-full transition-all duration-300" 
+              style={{ width: `${data.semana.iasGratis}%` }}
+              data-testid="progresso-ias-gratis"
             ></div>
           </div>
         </div>
-
-        <div>
+        
+        <div data-testid="barra-claude">
           <div className="flex justify-between text-sm text-gray-600 mb-1">
             <span>Claude</span>
-            <span>{escadaData.claude}%</span>
+            <span>{data.semana.claude}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 
-              className="bg-purple-500 h-2 rounded-full transition-all duration-300" 
-              style={{ width: `${escadaData.claude}%` }}
+              className="bg-purple-600 h-2 rounded-full transition-all duration-300" 
+              style={{ width: `${data.semana.claude}%` }}
+              data-testid="progresso-claude"
             ></div>
           </div>
         </div>
       </div>
-
+      
+      {/* Números da fila e Jules hoje */}
       <div className="grid grid-cols-2 gap-4 mb-4">
-        <div className="bg-gray-50 p-3 rounded-lg">
-          <p className="text-sm text-gray-600">Fila</p>
-          <p className="text-2xl font-bold text-gray-800">{escadaData.fila}</p>
+        <div 
+          className="bg-gray-50 rounded-lg p-3" 
+          data-testid="fila-pedidos"
+        >
+          <div className="text-xs text-gray-500 mb-1">Fila de pedidos</div>
+          <div className="text-2xl font-bold text-gray-800">{data.filaPedidos}</div>
         </div>
-        <div className="bg-gray-50 p-3 rounded-lg">
-          <p className="text-sm text-gray-600">Jules hoje</p>
-          <p className="text-2xl font-bold text-gray-800">{julesHoje}/15</p>
+        <div 
+          className="bg-gray-50 rounded-lg p-3" 
+          data-testid="jules-hoje"
+        >
+          <div className="text-xs text-gray-500 mb-1">Jules hoje</div>
+          <div className="text-2xl font-bold text-gray-800">{data.julesHoje}/15</div>
         </div>
       </div>
+      
+      {/* Loading state */}
+      {loading && (
+        <div className="flex justify-center py-4" data-testid="loading">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600"></div>
+        </div>
+      )}
+      
+      {/* Error state */}
+      {error && (
+        <div className="text-center py-4 text-red-600 text-sm" data-testid="error">
+          Erro ao carregar dados da escada
+        </div>
+      )}
     </div>
   );
 };
