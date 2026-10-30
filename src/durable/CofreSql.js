@@ -25,12 +25,40 @@ class CofreSql {
   }
 
   _checkLimits(banco, leituras, escritas) {
-    const maxL = /firestore/i.test(banco) ? 50000 : 5000000;
-    const maxE = /firestore/i.test(banco) ? 20000 : 100000;
+    const isFs = /firestore/i.test(banco);
+    const maxL = isFs ? 50000 : (/cofresql/i.test(banco) ? 50000000 : 5000000);
+    const maxE = isFs ? 20000 : (/cofresql/i.test(banco) ? 10000000 : 100000);
     if (leituras >= maxL * 0.7 || escritas >= maxE * 0.7) {
       return true;
     }
     return false;
+  }
+
+  _dispararAvisoSentinel(bancoKey, leituras, escritas) {
+    try {
+      const isFs = /firestore/i.test(bancoKey);
+      const maxL = isFs ? 50000 : (/cofresql/i.test(bancoKey) ? 50000000 : 5000000);
+      const maxE = isFs ? 20000 : (/cofresql/i.test(bancoKey) ? 10000000 : 100000);
+      const alerta = {
+        tipo: 'sentinel',
+        banco: bancoKey,
+        leituras,
+        escritas,
+        limiteLeituras: maxL,
+        limiteEscritas: maxE,
+        percentualLeituras: Number(((leituras / maxL) * 100).toFixed(1)),
+        percentualEscritas: Number(((escritas / maxE) * 100).toFixed(1)),
+        timestamp: new Date().toISOString(),
+        acao: 'alternar_tráfego_preventivo_cofresql',
+        passoAPasso: [
+          `1. Banco do cofre/D1 ${bancoKey} atingiu o limite preventivo de 70%.`,
+          `2. O Vault ativou automaticamente o rodízio para o próximo banco na ordem B -> C -> D1 -> CofreSql.`,
+          `3. Verifique o consumo na Central e valide a integridade dos dados.`
+        ]
+      };
+      console.warn(`[SENTINEL ALERT] [sentinel] Banco ${bancoKey} atingiu 70% da cota! Leituras: ${leituras}/${maxL}, Escritas: ${escritas}/${maxE}.`);
+      console.log('[SENTINEL CENTRAL ALARM] [sentinel]', JSON.stringify(alerta));
+    } catch {}
   }
 
   async fetch(request) {
