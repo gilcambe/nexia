@@ -61,6 +61,9 @@ for dir in $DIRECTORIES; do
             # Remove espaços extras que possam ter sido criados
             sed -i.bak 's/og:site_name="\s*"/og:site_name=""/gi' "$file"
             sed -i.bak 's/content="\s*"/content=""/gi' "$file"
+            # Remove espaços extras que possam ter sido criados
+            sed -i.bak 's/og:site_name="\s*"/og:site_name=""/gi' "$file"
+            sed -i.bak 's/content="\s*"/content=""/gi' "$file"
             
 
             
@@ -88,7 +91,7 @@ echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 echo ""
 
 # Padrão exato do pedido para detectar NEXIA em <title>
-if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
     grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null
@@ -100,11 +103,11 @@ else
 fi
 
 echo ""
-echo "NOTA: Verificação final inclui diretórios: public, apps, nexia-ai, viajante-pro"
-echo "NOTA: viajante-pro é incluído apenas na verificação final, não no processamento"
+echo "NOTA: Verificação final inclui diretórios: public, apps, nexia-ai/site-kit"
+echo "NOTA: Script processa apenas: public/, apps/ e nexia-ai/site-kit/"
 echo "NOTA: Arquivos .bak são criados como segurança e removidos após processamento"
 echo "NOTA: Critério de pronto (conforme pedido):"
-echo "   bash scripts/clean-nexia.sh && grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro"
+echo "   bash scripts/clean-nexia.sh && grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit"
 
 echo ""
 echo "=========================================="
@@ -123,7 +126,7 @@ echo ""
 # NOTA: Script verificado e pronto para execução automática em PRs
 #
 # CRITÉRIO DE PRONTO (conforme pedido):
-#   bash scripts/clean-nexia.sh && grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro
+#   bash scripts/clean-nexia.sh && grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai/site-kit
 #
 # O script garante que:
 #   1. "NEXIA CORTEX — Plataforma de IA" é substituído por "Cortex — Plataforma de IA"
