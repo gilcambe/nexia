@@ -24,6 +24,11 @@ export class VazaoController {
   async fetch(request) {
     const url = new URL(request.url);
     if (url.pathname === '/marcar-cheio') {
+      const authHeader = request.headers.get('x-nexia-cron') || request.headers.get('authorization') || '';
+      const secret = String((this.env && this.env.NEXIA_CRON_SECRET) || '');
+      if (secret.length >= 32 && authHeader !== secret && authHeader !== `Bearer ${secret}`) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+      }
       const b = await request.json().catch(() => ({}));
       if (b.banco) this.bancosQuaseCheios.add(b.banco);
       return new Response(JSON.stringify({ ok: true, quaseCheios: Array.from(this.bancosQuaseCheios) }), { headers: { 'Content-Type': 'application/json' } });
