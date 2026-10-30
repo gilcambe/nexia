@@ -7,6 +7,7 @@ const REPO = process.env.REPO || 'gilcambe/nexia';
 const BASE_URL = process.env.NEXIA_URL || 'https://nexia.gcbezerra.workers.dev';
 // Repositório público: minutos do GitHub Actions são grátis e sem limite; 6 pistas dobram a vazão (CORTEX_PISTAS muda).
 const PISTAS = Math.max(1, Math.min(10, Number(process.env.CORTEX_PISTAS) || 6));
+const MODO = process.env.CORTEX_MODO || 'economico';
 const MAX_TENTATIVAS = 12;
 const TENTATIVAS_ATE_DIVIDIR = 3;
 // Rodada "verde" que não entrega o arquivo pedido (ex.: o Cortex não pode criar `.github/workflows/*`) abria um rascunho
@@ -189,13 +190,30 @@ async function chamarReserva(token, n) {
 
 // Função pura: recebe issues e execuções e devolve a lista de ações. Fácil de testar.
 // prs = PRs nexia/* abertos ({ arquivos, criadoEm }) e tamanhos = { caminho: bytes }: usados pelo planejador (opcionais).
-function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], tamanhos = {} }) {
+function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], tamanhos = {}, sonda = null }) {
   const acoes = [];
   const tamanhosDe = corpo => Object.fromEntries(plano.arquivosCitados(corpo).filter(a => tamanhos[a]).map(a => [a, tamanhos[a]]));
   const ultimaRun = n => runs.filter(r => r.name === `Cortex #${n}`).sort((a, b) => b.id - a.id)[0] || null;
   const validas = issues.filter(i => !i.pull_request && confiavel(i) && nomes(i).includes(L.fila));
   const pistasEmUso = new Set();
   let ativas = 0;
+
+  let pistasEfetivas = pistas;
+  if (sonda) {
+    if (sonda.ok === false) {
+      pistasEfetivas = 0;
+    } else if (
+      sonda.alta ||
+      sonda.cotaAlta ||
+      sonda.usoAcima80 ||
+      (typeof sonda.uso === 'number' && sonda.uso > 80) ||
+      (typeof sonda.percentual === 'number' && sonda.percentual > 80) ||
+      (typeof sonda.porcentagem === 'number' && sonda.porcentagem > 80) ||
+      (typeof sonda.cota === 'number' && sonda.cota > 80)
+    ) {
+      pistasEfetivas = Math.min(pistasEfetivas, 1);
+    }
+  }
 
   for (const i of validas) {
     const ls = nomes(i);
@@ -253,7 +271,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
     if (esperaAnterior(i)) continue;
     if (plano.conflitaCom(i, rodando)) continue;   // outra parte rodando mexe no mesmo arquivo: espera ela
     if (precisaDividir(i, tamanhos)) { acoes.push({ tipo: 'dividir', numero: i.number, titulo: i.title || '', tarefa: String(i.body || '').trim(), tamanhos: tamanhosDe(i.body) }); continue; }
-    if (ativas >= pistas) break;
+    if (ativas >= pistasEfetivas) break;
     let pista = 1; while (pistasEmUso.has(pista)) pista++;
     pistasEmUso.add(pista); ativas++; rodando.push(i);
     acoes.push({ tipo: 'despachar', numero: i.number, pista, tarefa: String(i.body || '').replace(/<!-- cortex-plano [\s\S]*?-->\n?/, '').trim() });
@@ -425,7 +443,7 @@ async function executar(token, acao, dividir) {
     await limparPistas(acao.pista);
     await addLabel(L.rodando); await addLabel(`pista-${acao.pista}`);
     const d = await gh(token, 'POST', '/actions/workflows/smoke-logado.yml/dispatches', {
-      ref: 'develop', inputs: { url: BASE_URL, task: acao.tarefa, autonomia: '3', pista: String(acao.pista), modo: 'economico', tarefa_id: String(n) },
+      ref: 'develop', inputs: { url: BASE_URL, task: acao.tarefa, autonomia: '3', pista: String(acao.pista), modo: MODO, tarefa_id: String(n) },
     });
     if (d.status !== 204) { await delLabel(L.rodando); await comentar(`Não consegui disparar o Cortex (${d.status}). Tento de novo no próximo ciclo.`); }
   } else if (acao.tipo === 'concluir') {
@@ -450,7 +468,7 @@ async function executar(token, acao, dividir) {
   } else if (acao.tipo === 'reenfileirar') {
     await delLabel(L.rodando); await limparPistas();
     for (const l of [`tentativa-${acao.tentativa - 1}`]) if (acao.tentativa > 1) await delLabel(l);
-    await addLabel(`tentativa-${acao.tentativa}`);
+    if (acao.tentativa > 0) await addLabel(`tentativa-${acao.tentativa}`);
     const lsR = nomes((await gh(token, 'GET', `/issues/${n}`)).json || {});
     if (devePedirReserva(acao, lsR)) await chamarReserva(token, n).catch(() => null);
   } else if (acao.tipo === 'fechar-feito') {
@@ -640,7 +658,7 @@ async function corrigirCiDosPrs(token, runs) {
     const erro = cc.ultimasLinhas(await logDoJob(token, falho.id)) || String((falho.output || {}).summary || 'sem log');
     const task = `${cc.pedidoDoPr(pr.body)}${cc.MARCA}${cc.feedbackCi(erro, d.rodada)}`;
     const r = await gh(token, 'POST', '/actions/workflows/smoke-logado.yml/dispatches', {
-      ref: 'develop', inputs: { url: BASE_URL, task, autonomia: '3', pista: '', modo: 'economico', tarefa_id: `PR${pr.number}` },
+      ref: 'develop', inputs: { url: BASE_URL, task, autonomia: '3', pista: '', modo: MODO, tarefa_id: `PR${pr.number}` },
     });
     await gh(escrita, 'POST', `/issues/${pr.number}/comments`, { body: `${cc.comentarioCi(pr.head.sha, d.rodada)}O CI falhou. O Cortex recebeu as últimas ${cc.LINHAS} linhas do erro e vai tentar corrigir (${d.rodada}/${cc.MAX_CORRECOES}).` });
     console.log(`CI do PR #${pr.number}: correção ${d.rodada} disparada (${r.status}).`);
@@ -709,6 +727,7 @@ async function main() {
     issues.push(...lote);
     if (lote.length < 100) break;
   }
+  const PADRAO_COTA = /429|RESOURCE_EXHAUSTED|free tier (?:daily )?(?:row )?read limit/i;
   const runs = ((await gh(token, 'GET', '/actions/workflows/smoke-logado.yml/runs?per_page=60')).json || {}).workflow_runs || [];
   // Marca as falhas causadas pela cota do banco (o resumo do smoke traz o código do Firestore).
   for (const r of runs.filter(x => x.status === 'completed' && x.conclusion !== 'success' && /^Cortex #/.test(x.name || '') && minutos(Date.now(), x.updated_at || x.created_at) <= 60).slice(0, 12)) {
@@ -716,9 +735,12 @@ async function main() {
       const jobs = ((await gh(token, 'GET', `/actions/runs/${r.id}/jobs`)).json || {}).jobs || [];
       for (const j of jobs) {
         const an = (await gh(token, 'GET', `/check-runs/${j.id}/annotations?per_page=50`)).json || [];
-        if (an.some(a => /RESOURCE_EXHAUSTED/.test(`${a.message || ''}`))) r.cota = true;
+        if (an.some(a => PADRAO_COTA.test(`${a.message || ''} ${a.title || ''}`))) r.cota = true;
         const resumo = an.find(a => a.title === 'Resumo do smoke');
-        if (resumo && !r.assinatura) r.assinatura = assinaturaDoSmoke(resumo.message);
+        if (resumo) {
+          if (PADRAO_COTA.test(resumo.message)) r.cota = true;
+          if (!r.assinatura) r.assinatura = assinaturaDoSmoke(resumo.message);
+        }
       }
     } catch { /* sem anotação: segue como falha comum */ }
   }
@@ -726,7 +748,9 @@ async function main() {
   const direto = await literalDireto(token, issues);
   const extra = await dadosDoPlanejador(token, issues);
   const alertas = errosDeAmbiente(runs);
-  let acoes = decidir({ issues: issues.filter(i => !direto.has(i.number)), runs, ...extra });
+  const sonda = await sondarCota();
+  if (sonda.motivo) console.log(`sonda: ${sonda.motivo}`);
+  let acoes = decidir({ issues: issues.filter(i => !direto.has(i.number)), runs, ...extra, sonda });
   if (alertas.length) {
     // Erro de ambiente: 1 alerta (não 12 tentativas em cada tarefa) e não despacha mais neste ciclo, para não queimar execuções.
     try { await abrirAlertaAmbiente(token, alertas); } catch (e) { console.log(`alerta de ambiente: ${e.message}`); }
@@ -735,12 +759,6 @@ async function main() {
   acoes.push(...(extra.julesFeitos || []));
   try { acoes.push(...(await reservasQueVoltam(token, issues) || [])); } catch (e) { console.log(`reserva sem cota: ${e.message}`); }
   try { acoes.push(...((await travadasPeloCofre(token, issues) || [])).filter(a => !acoes.some(x => x.numero === a.numero))); } catch (e) { console.log(`travadas pelo cofre: ${e.message}`); }
-  // Sem escrita disponível no banco, despachar só queima mais cota: segura as tarefas novas (o resto segue).
-  if (acoes.some(a => a.tipo === 'despachar')) {
-    const sonda = await sondarCota();
-    if (!sonda.ok) { console.log(`cota esgotada (${sonda.motivo}): ${acoes.filter(a => a.tipo === 'despachar').length} tarefa(s) esperam na fila sem despachar.`); acoes = acoes.filter(a => a.tipo !== 'despachar'); }
-    else if (sonda.motivo) console.log(`sonda: ${sonda.motivo}`);
-  }
   // Pais divididos: quando todas as partes terminam, o pai é concluído.
   const pais = issues.filter(i => !i.pull_request && nomes(i).includes(L.dividido));
   if (pais.length) {
