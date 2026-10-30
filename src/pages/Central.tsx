@@ -32,7 +32,7 @@
 </template>
 
 <script>
-import EscadaCard from '../components/EscadaCard.tsx'
+import EscadaCard from '../components/EscadaCard'
 
 export default {
   name: 'Central',
