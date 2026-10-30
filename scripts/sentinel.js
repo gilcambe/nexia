@@ -3,8 +3,8 @@ const path = require('path');
 const { Octokit } = require('@octokit/rest');
 
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-const REPO_OWNER = 'your-repo-owner';
-const REPO_NAME = 'your-repo-name';
+const REPO_OWNER = process.env.NEXIA_REPO_OWNER || 'gilcambe';
+const REPO_NAME = process.env.NEXIA_REPO_NAME || 'nexia';
 
 const octokit = new Octokit({ auth: GITHUB_TOKEN });
 
