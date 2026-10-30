@@ -1,0 +1,34 @@
+[
+  {
+    "cliente": "I'm having trouble logging into my account. I keep getting an error message.",
+    "palavras-chave": ["trouble", "logging", "account", "error", "message"]
+  },
+  {
+    "cliente": "My payment was declined, but I have enough funds in my bank account.",
+    "palavras-chave": ["payment", "declined", "funds", "bank", "account"]
+  },
+  {
+    "cliente": "I can't find the option to update my profile information.",
+    "palavras-chave": ["find", "option", "update", "profile", "information"]
+  },
+  {
+    "cliente": "The app keeps crashing when I try to open it.",
+    "palavras-chave": ["app", "crashing", "open"]
+  },
+  {
+    "cliente": "I received a notification about a security issue, but I didn't do anything suspicious.",
+    "palavras-chave": ["notification", "security", "issue", "suspicious"]
+  },
+  {
+    "cliente": "I need help with a refund for my recent purchase.",
+    "palavras-chave": ["help", "refund", "purchase"]
+  },
+  {
+    "cliente": "The customer support response was very slow, and I need an immediate solution.",
+    "palavras-chave": ["support", "response", "slow", "immediate", "solution"]
+  },
+  {
+    "cliente": "I'm having issues with the subscription renewal process.",
+    "palavras-chave": ["issues", "subscription", "renewal", "process"]
+  }
+]
