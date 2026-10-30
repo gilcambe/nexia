@@ -1,16 +1,20 @@
 # NEXIA — conferência do site no ar (só leitura, só curl; nunca Playwright contra produção).
-# Manual: informe o endereço do Worker. Não usa segredo nenhum.
+# Manual ou agendado (a cada hora). Não usa segredo nenhum.
 name: Smoke (site no ar)
 
 on:
+  schedule:
+    - cron: '0 * * * *'
   workflow_dispatch:
     inputs:
       url:
         description: 'Endereço do NEXIA (ex.: https://nexia.<conta>.workers.dev)'
-        required: true
+        required: false
+        default: 'https://nexia.gcbezerra.workers.dev'
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   smoke:
@@ -18,11 +22,25 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Conferir
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - name: Verificar idade da última execução
+        id: idade
         env:
-          BASE: ${{ inputs.url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: node scripts/central.js
+      - name: Conferir
+        if: steps.idade.outputs.pulado != 'true'
+        env:
+          BASE: ${{ inputs.url || 'https://nexia.gcbezerra.workers.dev' }}
         run: |
           set -u
+          BASE="${BASE:-https://nexia.gcbezerra.workers.dev}"
           case "$BASE" in https://*) ;; *) echo "use https://"; exit 2;; esac
           BASE="${BASE%/}"
           fail=0
