@@ -21,7 +21,7 @@ function lerConta(env, letra = 'B') {
 
 // Bancos grátis do Vault em ordem (B, C, D... H: cada um é um projeto Firebase grátis criado com scripts/criar-banco.bat): o primeiro é o ativo e, se a cota dele acabar, passa para o próximo.
 // Métricas de uso e cota (70% threshold) para o cofre
-const dbUsageCounters = {}; // { [projectId]: { reads: 0, writes: 0, day: 'YYYY-MM-DD', almostFull: false } }
+const dbUsageCounters = Object.create(null); // { [projectId]: { reads: 0, writes: 0, day: 'YYYY-MM-DD', almostFull: false } }
 function getUsageRecord(projectId) {
   const today = new Date().toISOString().slice(0, 10);
   if (!dbUsageCounters[projectId] || dbUsageCounters[projectId].day !== today) {
