@@ -29,12 +29,10 @@ echo ""
 
 # Processa cada diretório recursivamente
 for dir in $DIRECTORIES; do
-    if [ -d "$dir" ]; then
+            if [ -d "$dir" ]; then
         echo "Processando diretório: $dir"
         find "$dir" -type f \( -name "*.html" -o -name "*.htm" \) -print0 | while IFS= read -r -d '' file; do
-            # Cria backup do arquivo (cross-platform)
-            echo "  Criando backup de: $file"
-            cp "$file" "$file.bak"
+            echo "  Processando arquivo: $file"
             
             # Aplica substituições de forma organizada para evitar conflitos
             
@@ -42,11 +40,16 @@ for dir in $DIRECTORIES; do
             # (substituição específica de frase, não genérica)
             sed -i.bak 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
             
-            # Passo 2: Substituir <title> contendo NEXIA por <title>Cortex</title>
-            # Ex: <title>Meu Site NEXIA</title> → <title>Cortex</title>
-            # Ex: <title>NEXIA Meu Site</title> → <title>Cortex</title>
-            # Ex: <title>NEXIA CORTEX — Plataforma de IA</title> → <title>Cortex</title>
-            sed -i.bak 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/gi' "$file"
+            # Passo 2: Remover a palavra NEXIA de <title> mantendo o restante
+            # Ex: <title>Meu Site NEXIA</title> → <title>Meu Site</title>
+            # Ex: <title>NEXIA Meu Site</title> → <title>Meu Site</title>
+            # Ex: <title>NEXIA CORTEX — Plataforma de IA</title> → <title>Cortex — Plataforma de IA</title>
+            # Remove NEXIA no início do título
+            sed -i.bak 's/<title>NEXIA\s*\([^<]*\)<\/title>/<title>\1<\/title>/gi' "$file"
+            # Remove NEXIA no meio do título
+            sed -i.bak 's/<title>\([^<]*\)NEXIA\s*\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
+            # Remove NEXIA no final do título
+            sed -i.bak 's/<title>\([^<]*\)NEXIA<\/title>/<title>\1<\/title>/gi' "$file"
             
             # Passo 3: Remover a palavra NEXIA de og:site_name mantendo o restante
             # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site"
@@ -63,8 +66,7 @@ for dir in $DIRECTORIES; do
             sed -i.bak 's/og:site_name=["'\'']\([^"'\']*\)NEXIA['"'\']/og:site_name="\1"/gi' "$file"
             sed -i.bak 's/property=["'\'']og:site_name["'\'] content=["'\'']\([^"'\']*\)NEXIA['"'\']/property="og:site_name" content="\1"/gi' "$file"
             
-            # Remove backup temporário após processamento
-            rm -f "$file.bak"
+
             
             echo "  Processado: $file"
         done
@@ -86,7 +88,7 @@ echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 echo ""
 
 # Padrão exato solicitado para detectar NEXIA em <title>
-if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai 2>/dev/null; then
+if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
     grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai 2>/dev/null
@@ -96,6 +98,9 @@ if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai 2>/dev/
 else
     echo "✓ Nenhuma ocorrência de NEXIA encontrada em títulos."
 fi
+
+echo ""
+echo "NOTA: Verificação final inclui diretórios: public, apps, nexia-ai, viajante-pro"
 
 echo ""
 echo "=========================================="
