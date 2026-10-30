@@ -177,10 +177,12 @@ function travouAntesDoConserto(travadoEm) { return !!travadoEm && Date.parse(tra
 // cuidam delas, e devolvê-las ao Cortex abriria uma 2ª frente na mesma tarefa.
 const FORA_DA_RECUPERACAO = ['jules-enviado', 'vez-do-claude', 'so-humano', 'cortex-alerta', 'cortex-dividido'];
 const MAX_RECUPERAR_POR_CICLO = 6;   // igual ao nº de pistas: devolve só o que cabe a rodar, o resto vem no ciclo seguinte
-// PR já integrado que cita a tarefa = a entrega pode existir. A tarefa NÃO volta para a fila (não repete trabalho feito) e
-// NÃO é fechada sozinha: um PR que só cita o número não prova a entrega, então alguém confere.
+// PR já integrado que declara fechar a tarefa ("Fecha: #2144", "Closes #7") = a entrega pode existir. A tarefa NÃO volta para
+// a fila (não repete trabalho feito) e NÃO é fechada sozinha: quem confere o código é uma pessoa. Só citar o número não basta
+// (um PR de conserto da própria fila cita as tarefas que recupera). "Fecha" em português não fecha a issue sozinho no GitHub.
+const PALAVRA_FECHA = '(?:fecha|fechar|fechou|fechados?|closes?|closed|fix(?:es|ed)?|resolves?|resolved)';
 function entregaComprovada(numero, prsMesclados) {
-  const re = new RegExp(`#${numero}(?!\\d)`);
+  const re = new RegExp(`\\b${PALAVRA_FECHA}\\b[^\\n]*?#${numero}(?!\\d)`, 'i');
   return (prsMesclados || []).find(pr => pr && pr.merged_at && re.test(`${pr.title || ''}\n${pr.body || ''}`)) || null;
 }
 async function travadasPeloCofre(token, issues, { ghFn = gh } = {}) {
@@ -197,7 +199,7 @@ async function travadasPeloCofre(token, issues, { ghFn = gh } = {}) {
       if (!travouAntesDoConserto(quando)) continue;   // travou depois do conserto: a causa é da tarefa, não do ambiente
       if (mesclados === null) { const r = (await ghFn(token, 'GET', '/pulls?state=closed&sort=updated&direction=desc&per_page=100')).json; mesclados = Array.isArray(r) ? r : []; }
       const pr = entregaComprovada(i.number, mesclados);
-      if (pr) { console.log(`travada #${i.number}: o PR #${pr.number} já integrado cita a tarefa; não volta para a fila (precisa de conferência da entrega)`); continue; }
+      if (pr) { console.log(`travada #${i.number}: o PR #${pr.number} já integrado diz fechar a tarefa; não volta para a fila (precisa de conferência da entrega)`); continue; }
       voltar.push({ tipo: 'reserva-volta', numero: i.number, rotulos: nomes(i), motivo: 'cofre' });
     } catch (e) { console.log(`travada #${i.number}: ${e.message}`); }
   }
@@ -282,8 +284,9 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
       if (!nomes(i).includes('jules-enviado') && !mexeEmWorkflow(i) && minutos(agora, i.updated_at) > plano.JULES_DESISTE_MIN) acoes.push({ tipo: 'jules-volta', numero: i.number });
       continue;
     }
-    if (mexeEmWorkflow(i)) { acoes.push({ tipo: 'para-jules', numero: i.number }); continue; }
+    // A parte que ainda espera a anterior não vai para o Jules nem para o Cortex: antes ia ao Jules sem a dependência pronta.
     if (esperaAnterior(i)) continue;
+    if (mexeEmWorkflow(i)) { acoes.push({ tipo: 'para-jules', numero: i.number }); continue; }
     if (plano.conflitaCom(i, rodando)) continue;   // outra parte rodando mexe no mesmo arquivo: espera ela
     if (precisaDividir(i, tamanhos)) { acoes.push({ tipo: 'dividir', numero: i.number, titulo: i.title || '', tarefa: String(i.body || '').trim(), tamanhos: tamanhosDe(i.body) }); continue; }
     if (ativas >= pistas) break;
