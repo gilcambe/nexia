@@ -40,21 +40,27 @@ for dir in $DIRECTORIES; do
             # (substituição específica de frase, não genérica)
             sed -i.bak 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
             
-            # Passo 2: Substituir completamente <title> contendo NEXIA por <title>Cortex</title>
-            # Ex: <title>Meu Site NEXIA</title> → <title>Cortex</title>
-            # Ex: <title>NEXIA Meu Site</title> → <title>Cortex</title>
-            # Ex: <title>NEXIA CORTEX — Plataforma de IA</title> → <title>Cortex</title>
-            # Substitui qualquer <title> que contenha NEXIA por <title>Cortex</title>
-            sed -i.bak 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/gi' "$file"
+            # Passo 2: Remover NEXIA de <title> mantendo o restante do conteúdo
+            # Ex: <title>Meu Site NEXIA</title> → <title>Meu Site</title>
+            # Ex: <title>NEXIA Meu Site</title> → <title> Meu Site</title>
+            # Ex: <title>NEXIA CORTEX — Plataforma de IA</title> → <title>— Plataforma de IA</title>
+            # Remove apenas a palavra NEXIA do conteúdo do <title>
+            sed -i.bak 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
+            # Remove espaços extras que possam ter sido criados
+            sed -i.bak 's/<title>\s*<\/title>/<title><\/title>/gi' "$file"
+            sed -i.bak 's/<title>\([^<]*\)\s\+\([^<]*\)<\/title>/<title>\1 \2<\/title>/gi' "$file"
             
-            # Passo 3: Substituir completamente og:site_name contendo NEXIA por "Cortex"
-            # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Cortex"
-            # Ex: og:site_name="NEXIA Site" → og:site_name="Cortex"
-            # Ex: og:site_name="NEXIA" → og:site_name="Cortex"
-            # Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Cortex"
-            # Substitui qualquer og:site_name que contenha NEXIA por "Cortex"
-            sed -i.bak 's/og:site_name=["'\''][^"'\']*NEXIA[^"'\']*['"'\']/og:site_name="Cortex"/gi' "$file"
-            sed -i.bak 's/property=["'\'']og:site_name["'\'] content=["'\''][^"'\']*NEXIA[^"'\']*['"'\']/property="og:site_name" content="Cortex"/gi' "$file"
+            # Passo 3: Remover NEXIA de og:site_name mantendo o restante do conteúdo
+            # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site"
+            # Ex: og:site_name="NEXIA Site" → og:site_name=" Site"
+            # Ex: og:site_name="NEXIA" → og:site_name=""
+            # Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Meu Site"
+            # Remove apenas a palavra NEXIA do conteúdo do og:site_name
+            sed -i.bak 's/og:site_name=["'\'']\([^"'\']*\)NEXIA\([^"'\']*\)['"'\']/og:site_name="\1\2"/gi' "$file"
+            sed -i.bak 's/property=["'\'']og:site_name["'\'] content=["'\'']\([^"'\']*\)NEXIA\([^"'\']*\)['"'\']/property="og:site_name" content="\1\2"/gi' "$file"
+            # Remove espaços extras que possam ter sido criados
+            sed -i.bak 's/og:site_name="\s*"/og:site_name=""/gi' "$file"
+            sed -i.bak 's/content="\s*"/content=""/gi' "$file"
             
 
             
@@ -95,6 +101,7 @@ fi
 
 echo ""
 echo "NOTA: Verificação final inclui diretórios: public, apps, nexia-ai, viajante-pro"
+echo "NOTA: viajante-pro é incluído apenas na verificação final, não no processamento"
 echo "NOTA: Arquivos .bak são criados como segurança e removidos após processamento"
 echo "NOTA: Critério de pronto (conforme pedido):"
 echo "   bash scripts/clean-nexia.sh && grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro"
