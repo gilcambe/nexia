@@ -13,6 +13,8 @@ const ARQ_GRANDE = 40 * 1024;      // mesmo corte do get_file em partes (#1479):
 const MAX_PARTES = 8;
 const MAX_ARQ_PARTE = 3;
 const MAX_LINHAS_PARTE = 400;      // linhas acrescentadas + apagadas que uma parte pode mudar sem ir para revisão
+const MAX_JULES_PARALLEL = 3;       // máximo de tarefas do Jules rodando ao mesmo tempo
+const JULES_PRIORITY_WAIT = 30 * 60 * 1000;  // tempo de espera para tarefas de prioridade (30 min)
 // Pedido do dono (25/10/2026): nada pode ficar horas esperando. O Cortex roda a cada 15 min e o auto-merge a cada 30 min,
 // então 1 h e 20 min já são folga de sobra — nunca mais 3 h nem 6 h.
 const ESPERA_PR_MAX_H = 1;         // dependente espera o PR da parte anterior entrar no máximo isto (a fila nunca para)
