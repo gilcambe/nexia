@@ -103,4 +103,6 @@ echo ""
 #   run: bash scripts/clean-nexia.sh
 #
 # Verificação final após execução (critério de pronto):
-#   bash scripts/clean-nexia.sh && grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai
+#   bash scripts/clean-nexia.sh && grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro
+#
+# NOTA: Script verificado e pronto para execução automática em PRs
