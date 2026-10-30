@@ -171,26 +171,7 @@ function AvisosCelular() {
 
 export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema; mudarTema: (t: Tema) => void; email: string; instalar: (() => void) | null; sair: () => void }) {
   const op: { id: Tema; nome: string }[] = [{ id: "auto", nome: "Automático" }, { id: "escuro", nome: "Escuro" }, { id: "claro", nome: "Claro" }];
-  const [gpuOffline, setGpuOffline] = useState(false);
-  const [gpuStatus, setGpuStatus] = useState<"" | "bloqueado" | "download">("");
 
-  const ativarGpuOffline = () => {
-    setGpuStatus("");
-    if (typeof window === "undefined" || !("gpu" in navigator)) {
-      setGpuStatus("bloqueado");
-      return;
-    }
-    try {
-      const adapter = (navigator as unknown as { gpu?: { requestAdapter?: () => Promise<unknown> } }).gpu?.requestAdapter?.();
-      if (!adapter) {
-        setGpuStatus("bloqueado");
-        return;
-      }
-      setGpuStatus("download");
-    } catch {
-      setGpuStatus("bloqueado");
-    }
-  };
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-3">
