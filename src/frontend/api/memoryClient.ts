@@ -130,6 +130,76 @@ export const memoryClient = {
   },
 };
 
+// Interface para configuração da IA local
+export interface IALocalConfig {
+  ativo: boolean;
+}
+
+// Função para obter configuração da IA local do armazenamento local
+export const obterConfig = (): IALocalConfig => {
+  if (typeof window === 'undefined') {
+    return { ativo: false };
+  }
+  
+  try {
+    const configStr = localStorage.getItem('iaLocalConfig');
+    if (configStr) {
+      return JSON.parse(configStr);
+    }
+  } catch (err) {
+    console.error('Erro ao obter configuração da IA local:', err);
+  }
+  
+  return { ativo: false };
+};
+
+// Função para verificar suporte WebGPU
+export const verificarSuporteWebGPU = async (): Promise<{ suportado: boolean; motivo?: string }> => {
+  if (typeof window === 'undefined') {
+    return { suportado: false, motivo: 'Ambiente sem suporte a navegador' };
+  }
+  
+  try {
+    // Verificar se navigator.gpu existe
+    if (!navigator.gpu) {
+      return { suportado: false, motivo: 'WebGPU não suportado por este navegador' };
+    }
+    
+    // Tentar obter adaptador
+    const adapter = await navigator.gpu.requestAdapter();
+    if (!adapter) {
+      return { suportado: false, motivo: 'Nenhum adaptador GPU disponível' };
+    }
+    
+    // Verificar memória disponível (mínimo 1 GB)
+    const memoryMB = adapter.limits?.maxStorageBufferBindingSize ? 
+      adapter.limits.maxStorageBufferBindingSize / (1024 * 1024) : 0;
+    
+    if (memoryMB < 1024) { // Menos de 1 GB
+      return { suportado: false, motivo: 'Memória GPU insuficiente (mínimo 1 GB necessário)' };
+    }
+    
+    return { suportado: true };
+  } catch (err) {
+    return { 
+      suportado: false, 
+      motivo: err instanceof Error ? err.message : 'Erro ao verificar suporte WebGPU' 
+    };
+  }
+};
+
+// Função para salvar configuração da IA local
+export const salvarConfig = (config: IALocalConfig) => {
+  if (typeof window === 'undefined') return;
+  
+  try {
+    localStorage.setItem('iaLocalConfig', JSON.stringify(config));
+  } catch (err) {
+    console.error('Erro ao salvar configuração da IA local:', err);
+    throw new Error('Falha ao salvar configuração');
+  }
+};
+
 // Hook personalizado para gerenciar a memória do usuário
 export const useMemory = () => {
   const [memoryItems, setMemoryItems] = useState<MemoryItem[]>([]);
