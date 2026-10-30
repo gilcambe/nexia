@@ -16,7 +16,6 @@ export interface PrefsAvisos {
 export const suportaAvisos = () => typeof window !== 'undefined' && 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
 
 // WebGPU + memória mínima para IA local no aparelho.
-export const memoriarMinima = () => typeof navigator !== 'undefined' && typeof navigator.deviceMemory === 'number';
 
 export const ehIphoneSemInstalar = () => /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window.matchMedia?.('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone);
 
