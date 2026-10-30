@@ -1,0 +1,29 @@
+{
+  "free": {
+    "name": "Free",
+    "price": 0,
+    "features": {
+      "maxSites": 1,
+      "maxCredits": 100,
+      "support": "Community"
+    }
+  },
+  "plus": {
+    "name": "Plus",
+    "price": 19,
+    "features": {
+      "maxSites": 3,
+      "maxCredits": 500,
+      "support": "Priority"
+    }
+  },
+  "pro": {
+    "name": "Pro",
+    "price": 49,
+    "features": {
+      "maxSites": 10,
+      "maxCredits": 2000,
+      "support": "24/7"
+    }
+  }
+}
