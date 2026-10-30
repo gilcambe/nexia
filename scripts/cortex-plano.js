@@ -102,6 +102,7 @@ const planoDeTextos = textos => textos.map((t, k) => ({ titulo: `Parte ${k + 1}`
 const vaiParaJules = (parte, tamanhos = {}) => parte.grande === true || parte.arquivos.some(a => (tamanhos[a] || 0) > ARQ_GRANDE * 2);
 
 const MARCA = 'cortex-plano';
+// Prioridade: rótulo cortex-jules pega a frente na fila do Jules.
 function cabecalho(meta) { return `<!-- ${MARCA} ${JSON.stringify(meta)} -->`; }
 function lerPlano(corpo) {
   const m = new RegExp(`<!-- ${MARCA} (\\{[\\s\\S]*?\\}) -->`).exec(String(corpo || ''));
