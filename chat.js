@@ -1,5 +1,5 @@
 import { executarPromptComFallback, obterConfig } from './ia-local.js';
-import { atualizarPlacarTokens } from './placar-tokens.js'; // Supondo que exista um módulo para placar de tokens
+import { atualizarPlacarTokens } from './placar-tokens.js';
 
 // Função para classificar se a pergunta é simples
 function ehPerguntaSimples(mensagem) {
