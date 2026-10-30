@@ -90,23 +90,17 @@ export default {
         
         const data = await response.json();
         
-        // Tratamento robusto: aceita dados planos (data.cortex) ou aninhados (data.semana.cortex)
         const semana = data.semana || data;
-        const fila = semana.filaPedidos !== undefined ? semana.filaPedidos : semana.filaAtual;
+        const fila = semana.filaPedidos !== undefined ? semana.filaPedidos : (semana.filaAtual !== undefined ? semana.filaAtual : (data.fila || 0));
         
         escadaData.value = {
-          cortex: semana.cortex || 0,
-          gratis: semana.gratis || semana.iasGratis || 0,
-          claude: semana.claude || 0,
-          filaPedidos: fila || 0,
-          julesHoje: semana.julesHoje || 0,
-          faseB: semana.faseB || false
+          cortex: Number(semana.cortex ?? data.cortex ?? 0),
+          gratis: Number(semana.gratis ?? semana.iasGratis ?? data.gratis ?? 0),
+          claude: Number(semana.claude ?? data.claude ?? 0),
+          filaPedidos: Number(fila),
+          julesHoje: Number(semana.julesHoje ?? data.julesHoje ?? 0),
+          faseB: Boolean(semana.faseB ?? data.faseB ?? false)
         };
-        
-        // Validação: se nenhum dado numérico veio, trata como erro
-        if (semana.cortex === undefined && semana.gratis === undefined && semana.claude === undefined) {
-          throw new Error('Estrutura de dados da escada inesperada');
-        }
         
       } catch (err) {
         console.error('Erro ao carregar dados da escada:', err);
