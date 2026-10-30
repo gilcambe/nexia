@@ -47,10 +47,15 @@ export default function MemorySettings() {
     toggleRememberMe(enabled);
   };
 
-  // Verificar suporte WebGPU ao montar
+  // Verificar suporte WebGPU ao montar e carregar configuração
   useEffect(() => {
     (async () => {
       try {
+        // Carregar configuração salva
+        const config = obterConfig();
+        setIaLocalAtivo(config.ativo);
+        
+        // Verificar suporte WebGPU
         const suporte = await verificarSuporteWebGPU();
         if (!suporte.suportado) {
           setBloqueado(true);
@@ -71,13 +76,17 @@ export default function MemorySettings() {
     if (bloqueado) return;
 
     if (ativo) {
+      // Ao tentar ligar, exibe aviso de download
       setMostrarAvisoDownload(true);
+      
+      // Aguarda confirmação do usuário (o aviso é controlado pelo estado)
+      // A configuração só é salva quando o usuário confirmar no aviso
     } else {
+      // Desligar IA local
       setMostrarAvisoDownload(false);
+      setIaLocalAtivo(false);
+      salvarConfig({ ativo: false });
     }
-
-    setIaLocalAtivo(ativo);
-    salvarConfig({ ativo });
   };
 
     return (
@@ -148,11 +157,12 @@ export default function MemorySettings() {
               <button
                 onClick={() => handleToggleIaLocal(!iaLocalAtivo)}
                 disabled={bloqueado}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${iaLocalAtivo ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'}`}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${bloqueado ? 'opacity-50 cursor-not-allowed' : ''} ${iaLocalAtivo ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'}`}
                 data-testid="memory-ia-local-toggle"
                 role="switch"
                 aria-checked={iaLocalAtivo}
                 aria-label="IA local"
+                title={bloqueado ? `Desativado: ${motivoBloqueio}` : 'IA no meu aparelho (grátis, offline)'}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${iaLocalAtivo ? 'translate-x-6' : 'translate-x-1'}`}
@@ -170,6 +180,28 @@ export default function MemorySettings() {
               <p>⚠️ O download da IA local requer aproximadamente 1 GB de armazenamento.</p>
               <p className="mt-1">Recomendamos usar uma conexão Wi-Fi estável para evitar cobranças de dados móveis.</p>
               <p className="mt-1">O download pode levar alguns minutos dependendo da velocidade da sua conexão.</p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  onClick={() => {
+                    setIaLocalAtivo(true);
+                    setMostrarAvisoDownload(false);
+                    salvarConfig({ ativo: true });
+                  }}
+                  className="px-3 py-1 bg-[var(--cx-ac)] text-white rounded hover:bg-opacity-90 transition-colors text-sm"
+                >
+                  Confirmar download
+                </button>
+                <button
+                  onClick={() => {
+                    setIaLocalAtivo(false);
+                    setMostrarAvisoDownload(false);
+                    salvarConfig({ ativo: false });
+                  }}
+                  className="px-3 py-1 border border-[var(--cx-line)] rounded hover:border-[var(--cx-ac)] transition-colors text-sm"
+                >
+                  Cancelar
+                </button>
+              </div>
             </div>
           )}
         </div>
