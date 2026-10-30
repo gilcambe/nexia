@@ -117,11 +117,26 @@ jobs:
             done < <(git ls-files -m -o --exclude-standard)
             [ "$n" -gt 0 ]
           }
+          # Trava de estrago: a IA às vezes "resume" o arquivo (frases de preenchimento) ou apaga quase tudo.
+          # Reprova se uma linha ADICIONADA tiver frase de preenchimento, ou se um arquivo existente perder >= 30 linhas e mais que o dobro do que ganhou.
+          sem_estrago() {
+            if git diff -U0 | grep -E '^\+[^+]' | grep -qiE 'permanece inalterad|conteúdo existente|conteudo existente|resto (do arquivo|do código|igual)|rest of (the )?(file|code)|existing (code|content) (remains|here)|\.\.\. ?(existing|resto)|// \.\.\.|# \.\.\.'; then
+              echo "Estrago: frase de preenchimento no código novo."; return 1
+            fi
+            local add del f
+            while read -r add del f; do
+              [ "$add" = "-" ] && continue
+              if [ "$del" -ge 30 ] && [ "$del" -gt $((add*2)) ]; then
+                echo "Estrago: $f perdeu $del linhas (ganhou $add)."; return 1
+              fi
+            done < <(git diff --numstat)
+            return 0
+          }
           for c in "${contas[@]}"; do
             IFS='|' read -r nome modelo var chave <<< "$c"
             echo "Tentando conta: $nome"
             git reset -q --hard "origin/${GITHUB_REF_NAME}" || true
-            if env "$var=$chave" aider --yes-always --no-auto-commits --no-gitignore --no-detect-urls --no-check-update --no-analytics --model "$modelo" --message "$PROMPT" $(tr '\n' ' ' < "$RUNNER_TEMP/arquivos.txt") 2>&1 | tail -40; tem_conteudo; then
+            if env "$var=$chave" aider --yes-always --no-auto-commits --no-gitignore --no-detect-urls --no-check-update --no-analytics --model "$modelo" --message "$PROMPT" $(tr '\n' ' ' < "$RUNNER_TEMP/arquivos.txt") 2>&1 | tail -40; tem_conteudo && sem_estrago; then
               echo "ok=1" >> "$GITHUB_OUTPUT"; echo "conta=$nome" >> "$GITHUB_OUTPUT"; exit 0
             fi
             echo "Conta $nome sem resultado (cota/limite); próxima."
