@@ -18,6 +18,16 @@ class CofreSql {
       }
     }
 
+  _checkLimits(banco, leituras, escritas) {
+    // Firestore: 50k leituras / 20k escritas; D1/CofreSql: 5M linhas / 100k escritas (ou limite padrão)
+    const maxL = /firestore/i.test(banco) ? 50000 : 5000000;
+    const maxE = /firestore/i.test(banco) ? 20000 : 100000;
+    if (leituras >= maxL * 0.7 || escritas >= maxE * 0.7) {
+      return true; // quase cheio
+    }
+    return false;
+  }
+
   async fetch(request) {
     const resposta = (status, corpo) => new Response(JSON.stringify(corpo), { status, headers: { 'Content-Type': 'application/json' } });
     if (!this.sql) return resposta(500, { success: false, errors: [{ message: 'CofreSql: storage.sql indisponível.' }] });
@@ -29,12 +39,19 @@ class CofreSql {
           const { banco, data, leituras = 0, escritas = 0, projectId = '' } = body || {};
           const bancoKey = banco || projectId;
           if (bancoKey && data) {
-            // Se mudou de dia, reseta as contagens ou acumula. Aqui acumulamos por banco/data, ou limpamos se for data nova.
             this.sql.exec(`INSERT INTO vazaosql (banco, data, leituras, escritas) VALUES (?, ?, ?, ?)
               ON CONFLICT(banco) DO UPDATE SET leituras = CASE WHEN data = ? THEN leituras + ? ELSE ? END, escritas = CASE WHEN data = ? THEN escritas + ? ELSE ? END, data = ?`,
               bancoKey, data, leituras, escritas, data, leituras, leituras, data, escritas, escritas, data);
+            
+            // Verifica cota (70%) e marca se quase cheio
+            const row = this.sql.exec(`SELECT leituras, escritas FROM vazaosql WHERE banco = ?`, bancoKey).toArray()[0];
+            if (row && this._checkLimits(bancoKey, row.leituras, row.escritas)) {
+              // Dispara aviso na Central (label sentinel) se necessário
+            }
           }
-          return resposta(200, { success: true });
+          const rowNow = this.sql.exec(`SELECT leituras, escritas FROM vazaosql WHERE banco = ?`, bancoKey).toArray()[0] || { leituras: 0, escritas: 0 };
+          const quaseCheio = this._checkLimits(bancoKey, rowNow.leituras, rowNow.escritas);
+          return resposta(200, { success: true, quaseCheio, leituras: rowNow.leituras, escritas: rowNow.escritas });
         }
         if (path.includes('/vazao-get') && request.method === 'GET') {
           const rows = this.sql.exec(`SELECT banco, data, leituras, escritas FROM vazaosql`).toArray();
