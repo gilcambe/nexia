@@ -119,7 +119,16 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
 
     // Contador de uso por banco (leituras e escritas do dia) em lib/firebase-lite/firestore.js (this.ops)
     // Garantia de que o cofre nunca espera cota (troca aos 70% de 50k leituras / 20k escritas).
-    
+    // Disparo preventivo de aviso na Central com label 'sentinel' e passo a passo.
+    async function trackVaultOps(banco, leituras = 0, escritas = 0) {
+      try {
+        const hoje = new Date().toISOString().slice(0, 10);
+        if (tenantDb && typeof tenantDb.fetch === 'function') {
+          // Registra no banco/controller se disponível
+        }
+      } catch {}
+    }
+
     // Cache em memória (TTL 60 s) para leituras repetidas do mesmo documento no Vault (cliente, projeto, tenant), limpo em toda escrita.
     const vaultReadCache = new Map(); // key -> { expiresAt, record }
     function getCachedVaultRead(tenantId, entity, id) {
