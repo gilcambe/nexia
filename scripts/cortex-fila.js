@@ -182,7 +182,9 @@ const MAX_RECUPERAR_POR_CICLO = 6;   // igual ao nº de pistas: devolve só o qu
 // (um PR de conserto da própria fila cita as tarefas que recupera). "Fecha" em português não fecha a issue sozinho no GitHub.
 const PALAVRA_FECHA = '(?:fecha|fechar|fechou|fechados?|closes?|closed|fix(?:es|ed)?|resolves?|resolved)';
 function entregaComprovada(numero, prsMesclados) {
-  const re = new RegExp(`\\b${PALAVRA_FECHA}\\b[^\\n]*?#${numero}(?!\\d)`, 'i');
+  // A palavra de fechamento vem COLADA na lista de números ("Fecha: #2138, #2139 e #2141"). Frase corrida que só menciona a
+  // palavra e depois cita números ('"Fecha" em português não fecha..., #2477 (#1976)') não conta: o próprio PR de conserto caiu nisso.
+  const re = new RegExp(`\\b${PALAVRA_FECHA}\\b:?\\s*(?:#\\d+(?:\\s*,\\s*|\\s+e\\s+|\\s+and\\s+|\\s*&\\s*)?)*#${numero}(?!\\d)`, 'i');
   return (prsMesclados || []).find(pr => pr && pr.merged_at && re.test(`${pr.title || ''}\n${pr.body || ''}`)) || null;
 }
 async function travadasPeloCofre(token, issues, { ghFn = gh } = {}) {
