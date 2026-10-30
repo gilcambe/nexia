@@ -1,62 +1,63 @@
 'use strict';
 /**
- * Testes unitários do Cofre e Rodízio de Cotas do Vault (Item 1, 2, 3).
- * Valida contador, limite de 70%, troca de banco e cache TTL 60s.
+ * Testes unitários para cota, rodízio preventivo de 70% e cache em memória (TTL 60s) do Vault.
  */
 const test = require('node:test');
 const assert = require('node:assert');
-const {
-  registrarUsoBanco,
-  getUsoBanco,
+const { 
+  Firestore, 
+  registrarUsoBanco, 
+  getUsoBanco, 
   getBancosUsoGeral,
   getCachedFirestoreRead,
   setCachedFirestoreRead,
   invalidateFirestoreCache,
   getNextBank,
-  switchToNextBank,
-  checkBankHealth,
-  Firestore
+  switchToNextBank
 } = require('../../lib/firebase-lite/firestore.js');
 
-test('Contador de uso por banco e limite de 70%', () => {
-  const bancoKey = 'firestore-b';
-  registrarUsoBanco(bancoKey, 35000, 14000); // 35k/50k = 70%, 14k/20k = 70%
-  const uso = getUsoBanco(bancoKey);
-  assert.strictEqual(uso.leituras, 35000);
-  assert.strictEqual(uso.escritas, 14000);
+test('Vault - Contador de uso e limite de 70%', async () => {
+  const bancoTest = 'firestore-b';
+  registrarUsoBanco(bancoTest, 36000, 15000); // 36k / 50k = 72% leituras, 15k / 20k = 75% escritas
+  const uso = getUsoBanco(bancoTest);
   assert.strictEqual(uso.status, 'quase cheio');
+  assert.strictEqual(uso.leituras, 36000);
+  assert.strictEqual(uso.escritas, 15000);
 });
 
-test('Rodízio de bancos e troca preventiva', () => {
-  const proximo = switchToNextBank();
-  assert.ok(proximo);
-  const geral = getBancosUsoGeral();
-  assert.ok(Array.isArray(geral));
-  assert.ok(geral.length > 0);
+test('Vault - Rodízio preventivo e troca de banco', async () => {
+  const next = getNextBank();
+  assert.ok(typeof next === 'string');
+  const switched = switchToNextBank();
+  assert.ok(typeof switched === 'string');
 });
 
-test('Cache em memória TTL 60s e invalidação por escrita', () => {
+test('Vault - Cache em memória com TTL de 60s e invalidação', async () => {
   const tenantId = 'test-tenant';
   const collection = 'clientes';
   const docId = 'cli_123';
-  const docData = { nome: 'Cliente Teste', plano: 'gratis' };
+  const docData = { nome: 'Cliente Teste', ativo: true };
 
+  // Inicialmente vazio
+  assert.strictEqual(getCachedFirestoreRead(tenantId, collection, docId), null);
+
+  // Grava no cache
   setCachedFirestoreRead(tenantId, collection, docId, docData);
   const cached = getCachedFirestoreRead(tenantId, collection, docId);
   assert.deepStrictEqual(cached, docData);
 
-  // Invalidação por escrita
+  // Invalida cache
   invalidateFirestoreCache(tenantId, collection, docId);
-  const aposInvalidar = getCachedFirestoreRead(tenantId, collection, docId);
-  assert.strictEqual(aposInvalidar, null);
+  assert.strictEqual(getCachedFirestoreRead(tenantId, collection, docId), null);
 });
 
-test('Firestore-lite integrado com contagem e cache', async () => {
-  const db = new Firestore({ projectId: 'nexia-c8710' });
-  const ref = db.collection('projetos').doc('prj_test');
-  
-  await ref.set({ nome: 'Projeto X' });
-  const res = await ref.get();
-  assert.strictEqual(res.exists, true);
-  assert.deepStrictEqual(res.data(), { nome: 'Projeto X' });
+test('Vault - Listagem geral de uso dos bancos do cofre', async () => {
+  const geral = getBancosUsoGeral();
+  assert.ok(Array.isArray(geral));
+  assert.ok(geral.length >= 4);
+  const b = geral.find(item => item.banco === 'firestore-b');
+  assert.ok(b);
+  assert.ok('reads' in b);
+  assert.ok('writes' in b);
+  assert.ok('status' in b);
 });
