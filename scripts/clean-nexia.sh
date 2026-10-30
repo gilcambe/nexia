@@ -76,7 +76,11 @@ def clean_title(match):
     inner = match.group(2)
     if "NEXIA" in inner:
         # Remover apenas a palavra NEXIA mantendo o restante
-        return re.sub(r'\bNEXIA\b', '', inner).strip()
+        cleaned_inner = re.sub(r'\bNEXIA\b', '', inner).strip()
+        # Garantir que o título não fique vazio
+        if not cleaned_inner:
+            cleaned_inner = "Cortex"
+        return f'<title{match.group(1)}>{cleaned_inner}</title>'
     return full_tag
 
 content = re.sub(r"<title([^>]*)>(.*?)</title>", clean_title, content, flags=re.IGNORECASE | re.DOTALL)
@@ -86,8 +90,21 @@ content = re.sub(r"<title([^>]*)>(.*?)</title>", clean_title, content, flags=re.
 def clean_og_site_name(match):
     full_tag = match.group(0)
     if "NEXIA" in full_tag:
-        # Remover apenas a palavra NEXIA mantendo o restante do conteúdo
-        return re.sub(r'\bNEXIA\b', '', full_tag).strip()
+        # Extrair o valor atual do og:site_name
+        import re
+        value_match = re.search(r'content=["\']([^"\']*)["\']', full_tag)
+        if value_match:
+            current_value = value_match.group(1)
+            # Remover apenas a palavra NEXIA mantendo o restante
+            new_value = re.sub(r'\bNEXIA\b', '', current_value).strip()
+            # Garantir que não fique vazio
+            if not new_value:
+                new_value = "Cortex"
+            # Recriar a tag com o novo valor
+            return re.sub(r'content=["\']([^"\']*)["\']', f'content="{new_value}"', full_tag)
+        else:
+            # Se não encontrar content, remover apenas a palavra NEXIA da tag
+            return re.sub(r'\bNEXIA\b', '', full_tag).strip()
     return full_tag
 
 content = re.sub(r'<meta[^>]*og:site_name[^>]*>', clean_og_site_name, content, flags=re.IGNORECASE)
