@@ -207,3 +207,15 @@ test('CF-852d. concluir leva o created_at da issue em acao.desde', () => {
   assert.equal(a[0].tipo, 'concluir');
   assert.equal(a[0].desde, '2026-10-18T10:00:00Z');
 });
+
+test('CF-COTA-SONDA. sonda ok:false não despacha nada; cota > 80% usa no máximo 1 pista', () => {
+  const issues = [issue(1), issue(2), issue(3)];
+  const esgotada = decidir({ issues, runs: [], agora: AGORA, pistas: 3, sonda: { ok: false, motivo: 'limite atingido' } });
+  assert.deepEqual(esgotada.filter(x => x.tipo === 'despachar'), []);
+
+  const cotaAlta = decidir({ issues, runs: [], agora: AGORA, pistas: 3, sonda: { ok: true, percentual: 85 } });
+  const despachos = cotaAlta.filter(x => x.tipo === 'despachar');
+  assert.equal(despachos.length, 1);
+  assert.equal(despachos[0].numero, 1);
+  assert.equal(despachos[0].pista, 1);
+});
