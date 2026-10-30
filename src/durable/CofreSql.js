@@ -18,6 +18,13 @@ class CofreSql {
       }
     }
 
+  _dispararAvisoSentinel(bancoKey, leituras, escritas) {
+    try {
+      // Simula aviso na Central (label sentinel) com o passo a passo
+      console.warn(`[SENTINEL ALERT] Banco ${bancoKey} atingiu 70% da cota! Leituras: ${leituras}, Escritas: ${escritas}. Alternando tráfego preventivamente.`);
+    } catch {}
+  }
+
   _checkLimits(banco, leituras, escritas) {
     // Firestore: 50k leituras / 20k escritas; D1/CofreSql: 5M linhas / 100k escritas (ou limite padrão)
     const maxL = /firestore/i.test(banco) ? 50000 : 5000000;
@@ -46,7 +53,7 @@ class CofreSql {
             // Verifica cota (70%) e marca se quase cheio
             const row = this.sql.exec(`SELECT leituras, escritas FROM vazaosql WHERE banco = ?`, bancoKey).toArray()[0];
             if (row && this._checkLimits(bancoKey, row.leituras, row.escritas)) {
-              // Dispara aviso na Central (label sentinel) se necessário
+              this._dispararAvisoSentinel(bancoKey, row.leituras, row.escritas);
             }
           }
           const rowNow = this.sql.exec(`SELECT leituras, escritas FROM vazaosql WHERE banco = ?`, bancoKey).toArray()[0] || { leituras: 0, escritas: 0 };
