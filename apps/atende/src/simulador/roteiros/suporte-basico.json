@@ -1,0 +1,40 @@
+{
+  "title": "Suporte Básico - Inglês",
+  "description": "Simulação de conversas de suporte básico em inglês. O atendente deve responder usando as palavras‑chave indicadas.",n  "steps": [
+    {
+      "customer": "Hello, I have a problem with my internet connection.",
+      "expectedKeywords": ["internet", "connection", "problem"],
+      "translation": "Olá, tenho um problema com minha conexão de internet."
+    },
+    {
+      "customer": "My computer is not turning on.",
+      "expectedKeywords": ["computer", "turning on", "not"],
+      "translation": "Meu computador não liga."
+    },
+    {
+      "customer": "I forgot my password for the account.",
+      "expectedKeywords": ["forgot", "password", "account"],
+      "translation": "Esqueci minha senha da conta."
+    },
+    {
+      "customer": "The software keeps crashing on me.",
+      "expectedKeywords": ["software", "crashing", "keeps"],
+      "translation": "O software trava continuamente."
+    },
+    {
+      "customer": "Can you help me reset my router?",
+      "expectedKeywords": ["help", "reset", "router"],
+      "translation": "Você pode me ajudar a redefinir meu roteador?"
+    },
+    {
+      "customer": "I need to cancel my subscription.",
+      "expectedKeywords": ["need", "cancel", "subscription"],
+      "translation": "Preciso cancelar minha assinatura."
+    },
+    {
+      "customer": "My account has been suspended.",
+      "expectedKeywords": ["account", "suspended"],
+      "translation": "Minha conta foi suspensa."
+    }
+  ]
+}
