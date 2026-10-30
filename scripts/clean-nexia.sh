@@ -2,6 +2,7 @@
 
 set -euo pipefail
 
+# Diretórios a serem processados
 DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 echo ""
 echo "=========================================="
@@ -29,12 +30,13 @@ for dir in $DIRECTORIES; do
         find "$dir" -type f \( -name "*.html" -o -name "*.htm" \) -print0 | while IFS= read -r -d '' file; do
             echo "  Processando arquivo: $file"
             
-            # Criar backup do arquivo antes de processar
+            # Criar backup do arquivo antes de processar (opcional, pode ser removido se não necessário)
             backup_file="$file.backup"
             cp "$file" "$backup_file"
             echo "  Backup criado: $backup_file"
             
             # Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
+            # (Esta substituição específica é permitida pois é uma frase completa e específica)
             if sed -i 's/\bNEXIA CORTEX — Plataforma de IA\b/Cortex — Plataforma de IA/g' "$file" 2>/dev/null; then
                 echo "  Substituição 1 concluída"
             else
@@ -56,6 +58,7 @@ try:
         sys.exit(0)
     
     # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
+    # (Esta substituição específica é permitida pois é uma frase completa e específica)
     content = re.sub(r'\bNEXIA CORTEX — Plataforma de IA\b', 'Cortex — Plataforma de IA', content)
     
     # Processar tags <title>...</title>
@@ -71,15 +74,17 @@ def clean_title(match):
 content = re.sub(r"<title([^>]*)>(.*?)</title>", clean_title, content, flags=re.IGNORECASE | re.DOTALL)
 
 # Processar tags og:site_name - se contém NEXIA, substituir o conteúdo por "Cortex" (regra 2)
+# Usando padrões mais específicos para evitar falsos positivos
 def clean_og_site_name(match):
     full_tag = match.group(0)
     if "NEXIA" in full_tag:
         # Substituir o valor do atributo content por "Cortex", mantendo os demais atributos
-        replaced = re.sub(r'(content=["\'])[^"\']*(["\'])', r'\1Cortex\2', full_tag, flags=re.IGNORECASE)
+        # Padrão específico: content="qualquer_coisa_NEXIA_qualquer_coisa" → content="Cortex"
+        replaced = re.sub(r'(content=["\'])[^"\']*NEXIA[^"\']*(["\'])', r'\1Cortex\2', full_tag, flags=re.IGNORECASE)
         return replaced
     return full_tag
 
-content = re.sub(r"<meta[^>]*og:site_name[^>]*>", clean_og_site_name, content, flags=re.IGNORECASE)
+content = re.sub(r'<meta[^>]*og:site_name[^>]*>', clean_og_site_name, content, flags=re.IGNORECASE)
 
 with open(filepath, "w", encoding="utf-8") as f:
     f.write(content)
@@ -119,11 +124,12 @@ echo "Verificando se restaram ocorrências de NEXIA em títulos e metadados..."
 echo ""
 
 # Verificação final: verificar se restaram ocorrências de NEXIA em títulos
-# Usando o comando exato solicitado no pedido (incluindo nexia-ai/site-kit/)
-if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null; then
+# Usando o comando exato solicitado no pedido (incluindo viajante-pro)
+echo "Executando verificação final como solicitado no pedido..."
+if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
-    grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null
+    grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null
     echo ""
     echo "Por favor, revise os arquivos e tente novamente."
     exit 1
@@ -132,10 +138,10 @@ else
 fi
 
 # Verificação adicional: og:site_name
-if grep -rnE "og:site_name" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null | grep -i nexia; then
+if grep -rnE "og:site_name" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null | grep -i nexia; then
     echo "AVISO: Ainda foram encontradas ocorrências de NEXIA em og:site_name (verificar manualmente):"
     echo ""
-    grep -rnE "og:site_name" --include="*.html" public apps nexia-ai/site-kit 2>/dev/null | grep -i nexia
+    grep -rnE "og:site_name" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null | grep -i nexia
     echo ""
     echo "Por favor, revise os arquivos."
     exit 1
