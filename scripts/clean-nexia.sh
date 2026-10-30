@@ -171,4 +171,3 @@ echo "1. 'NEXIA CORTEX — Plataforma de IA' → 'Cortex — Plataforma de IA' (
 echo "2. <title> contendo NEXIA → <title>Cortex</title>"
 echo "3. og:site_name contendo NEXIA → conteúdo substituído por 'Cortex'"
 echo "4. NÃO foi feita substituição genérica de NEXIA → Cortex (para evitar afetar outros textos)"
-
