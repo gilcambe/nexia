@@ -6,21 +6,21 @@ test('Vault cota e cache unit tests', async (t) => {
   await t.test('Verifica se funções e rotinas de cota e cache estao presentes', () => {
     const fs = require('../../lib/firebase-lite/firestore.js');
     assert.ok(fs, 'Modulo firestore carregado com sucesso');
-    assert.typeof(fs.registrarUsoFirestore, 'function');
-    assert.typeof(fs.getUsoFirestore, 'function');
-    assert.typeof(fs.getCachedFirestoreRead, 'function');
-    assert.typeof(fs.setCachedFirestoreRead, 'function');
-    assert.typeof(fs.invalidateFirestoreCache, 'function');
-    assert.typeof(fs.getNextBank, 'function');
-    assert.typeof(fs.switchToNextBank, 'function');
-    assert.typeof(fs.checkBankHealth, 'function');
+    assert.strictEqual(typeof fs.registrarUsoBanco, 'function');
+    assert.strictEqual(typeof fs.getUsoBanco, 'function');
+    assert.strictEqual(typeof fs.getCachedFirestoreRead, 'function');
+    assert.strictEqual(typeof fs.setCachedFirestoreRead, 'function');
+    assert.strictEqual(typeof fs.invalidateFirestoreCache, 'function');
+    assert.strictEqual(typeof fs.getNextBank, 'function');
+    assert.strictEqual(typeof fs.switchToNextBank, 'function');
+    assert.strictEqual(typeof fs.checkBankHealth, 'function');
   });
 
   await t.test('Contador de uso por banco e alertas de 70%', () => {
     const fs = require('../../lib/firebase-lite/firestore.js');
-    const bancoTest = 'banco-teste-' + Date.now();
-    fs.registrarUsoFirestore(bancoTest, 35000, 0); // 35k leituras = 70% de 50k
-    const uso = fs.getUsoFirestore(bancoTest);
+    const bancoTest = 'firestore-default';
+    fs.registrarUsoBanco(bancoTest, 35000, 0); // 35k leituras = 70% de 50k
+    const uso = fs.getUsoBanco(bancoTest);
     assert.equal(uso.leituras, 35000);
     assert.equal(fs.checkBankHealth(bancoTest), false);
   });
