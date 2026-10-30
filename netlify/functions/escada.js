@@ -5,7 +5,7 @@ const ESCADA_DATA = {
   cortex: 75,
   gratis: 60,
   claude: 85,
-  filaAtual: 12,
+  filaPedidos: 12,
   julesHoje: 8,
   faseB: true
 };
@@ -13,7 +13,10 @@ const ESCADA_DATA = {
 exports.handler = async (event, context) => {
   try {
     // Em um ambiente real, você buscaria esses dados de um banco de dados ou outra fonte
-    const data = ESCADA_DATA;
+    const data = {
+      ...ESCADA_DATA,
+      filaPedidos: ESCADA_DATA.filaPedidos
+    };
     
     return {
       statusCode: 200,
