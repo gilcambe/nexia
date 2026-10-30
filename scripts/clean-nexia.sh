@@ -45,8 +45,10 @@ for dir in $DIRECTORIES; do
             sed -i.bak 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
             
             # Passo 3: Remover NEXIA de og:site_name mantendo o restante do conteúdo
-            # Expressão regular robusta para diferentes formatos de og:site_name
-            sed -i.bak 's/og:site_name=["'\''].*NEXIA.*['"'\']/og:site_name="Cortex"/gi' "$file"
+            # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site"
+            # Ex: og:site_name="NEXIA Site" → og:site_name="Site"
+            # Ex: og:site_name="NEXIA" → og:site_name=""
+            sed -i.bak 's/og:site_name=["'\'']\(.*\)NEXIA\(.*\)['"'\']/og:site_name="\1\2"/gi' "$file"
             
             # Remove backup temporário após processamento
             rm -f "$file.bak"
