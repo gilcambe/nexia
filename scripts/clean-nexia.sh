@@ -25,12 +25,10 @@ for dir in $DIRECTORIES; do
 
 
 
-            # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
-            # Substituição específica para evitar mudanças indevidas em outros contextos
+            # Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
             sed -i 's/\bNEXIA CORTEX — Plataforma de IA\b/Cortex — Plataforma de IA/g' "$file"
             
-            # Passo 1b: Substituir "NEXIA" por "Cortex" em contextos específicos de títulos e metadados
-            # Evita substituições em nomes de arquivos, comentários ou outros contextos não relevantes
+            # Substituir NEXIA por Cortex em títulos e og:site_name
             python3 << 'PYEOF'
 import re, sys
 
@@ -41,7 +39,7 @@ with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
 # Passo 1: Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
 content = re.sub(r'\bNEXIA CORTEX — Plataforma de IA\b', 'Cortex — Plataforma de IA', content)
 
-# Passo 2: Processar tags <title>...</title>
+# Processar tags <title>...</title>
 # Substituir NEXIA por Cortex em <title>, mantendo o restante do conteúdo
 def clean_title(match):
     full_tag = match.group(0)
@@ -54,7 +52,7 @@ def clean_title(match):
 
 content = re.sub(r"<title([^>]*)>(.*?)</title>", clean_title, content, flags=re.IGNORECASE | re.DOTALL)
 
-# Passo 3: Processar tags og:site_name - substituir NEXIA por Cortex mantendo o restante
+# Processar tags og:site_name - substituir NEXIA por Cortex mantendo o restante
 def clean_og_site_name(match):
     full_tag = match.group(0)
     if "NEXIA" in full_tag:
@@ -69,14 +67,6 @@ with open(filepath, "w", encoding="utf-8") as f:
     f.write(content)
 PYEOF
             
-            # Remover arquivo .bak se existir
-            if [ -f "$file.bak" ]; then
-                rm "$file.bak"
-                echo "  Removido backup: $file.bak"
-            fi
-
-
-
             echo "  Processado: $file"
         done
 
