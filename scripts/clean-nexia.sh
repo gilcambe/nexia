@@ -53,7 +53,7 @@ for dir in $DIRECTORIES; do
             # Passo 3: Remover NEXIA de og:site_name mantendo o restante do conteúdo
             # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site"
             # Ex: og:site_name="NEXIA Site" → og:site_name=" Site"
-            # Ex: og:site_name="NEXIA" → og:site_name=""
+            # Ex: og:site_name="NEXIA CORTEX — Plataforma de IA" → og:site_name="— Plataforma de IA"
             # Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Meu Site"
             # Remove apenas a palavra NEXIA do conteúdo do og:site_name
             sed -i.bak 's/og:site_name=["'\'']\([^"'\']*\)NEXIA\([^"'\']*\)['"'\']/og:site_name="\1\2"/gi' "$file"
