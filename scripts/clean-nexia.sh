@@ -40,9 +40,9 @@ for dir in $DIRECTORIES; do
             # (substituição específica de frase, não genérica)
             sed -i.bak 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
             
-            # Passo 2: Substituir completamente <title> contendo NEXIA por <title>Cortex</title>
-            # Qualquer título que contenha a palavra NEXIA será substituído por "Cortex"
-            sed -i.bak 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/gi' "$file"
+            # Passo 2: Remover apenas a palavra NEXIA de <title>, mantendo o restante
+            # Ex: <title>Meu Site NEXIA</title> → <title>Meu Site</title>
+            sed -i.bak 's/<title>\([^<]*\)NEXIA\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
             
             # Passo 3: Remover NEXIA de og:site_name mantendo o restante do conteúdo
             # Expressão regular robusta para diferentes formatos de og:site_name
