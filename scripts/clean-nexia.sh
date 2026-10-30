@@ -4,8 +4,8 @@
 #
 # Requisitos:
 #   (1) "NEXIA CORTEX — Plataforma de IA"  →  "Cortex — Plataforma de IA"
-#   (2) Para <title> contendo "NEXIA": substituir completamente por "Cortex"
-#       (ex: <title>Meu Site NEXIA</title> → <title>Cortex</title>)
+#   (2) Para <title> contendo "NEXIA": remover apenas a palavra "NEXIA"
+#       mantendo o restante (ex: <title>Meu Site NEXIA</title> → <title>Meu Site</title>)
 #   (3) Para og:site_name contendo "NEXIA": remover apenas a palavra "NEXIA"
 #       mantendo o restante do conteúdo (ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site")
 #
