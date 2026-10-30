@@ -50,13 +50,20 @@ for dir in $DIRECTORIES; do
             # Ex: <title>NEXIA CORTEX — Plataforma de IA</title> → <title>Cortex</title>
             sed -i.bak 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/gi' "$file"
             
-            # Passo 3: Substituir og:site_name contendo NEXIA por property="og:site_name" content="Cortex"
-            # Ex: og:site_name="Meu Site NEXIA" → property="og:site_name" content="Cortex"
-            # Ex: og:site_name="NEXIA Site" → property="og:site_name" content="Cortex"
-            # Ex: og:site_name="NEXIA" → property="og:site_name" content="Cortex"
-            # Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Cortex"
-            sed -i.bak 's/og:site_name=["'\''].*NEXIA.*['"'\']/property="og:site_name" content="Cortex"/gi' "$file"
-            sed -i.bak 's/property=["'\'']og:site_name["'\'] content=["'\''].*NEXIA.*['"'\']/property="og:site_name" content="Cortex"/gi' "$file"
+            # Passo 3: Remover a palavra NEXIA de og:site_name mantendo o restante
+            # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site"
+            # Ex: og:site_name="NEXIA Site" → og:site_name="Site"
+            # Ex: og:site_name="NEXIA" → og:site_name="" (remover completamente)
+            # Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Meu Site"
+            # Remove NEXIA no início do conteúdo
+            sed -i.bak 's/og:site_name=["'\'']NEXIA\s*\([^"'\']*\)['"'\']/og:site_name="\1"/gi' "$file"
+            sed -i.bak 's/property=["'\'']og:site_name["'\'] content=["'\'']NEXIA\s*\([^"'\']*\)['"'\']/property="og:site_name" content="\1"/gi' "$file"
+            # Remove NEXIA no meio do conteúdo
+            sed -i.bak 's/og:site_name=["'\'']\([^"'\']*\)NEXIA\s*\([^"'\']*\)['"'\']/og:site_name="\1\2"/gi' "$file"
+            sed -i.bak 's/property=["'\'']og:site_name["'\'] content=["'\'']\([^"'\']*\)NEXIA\s*\([^"'\']*\)['"'\']/property="og:site_name" content="\1\2"/gi' "$file"
+            # Remove NEXIA no final do conteúdo
+            sed -i.bak 's/og:site_name=["'\'']\([^"'\']*\)NEXIA['"'\']/og:site_name="\1"/gi' "$file"
+            sed -i.bak 's/property=["'\'']og:site_name["'\'] content=["'\'']\([^"'\']*\)NEXIA['"'\']/property="og:site_name" content="\1"/gi' "$file"
             
             # Remove backup temporário após processamento
             rm -f "$file.bak"
