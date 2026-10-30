@@ -145,12 +145,23 @@ function createHandler(deps = {}) {
       if (parte === 'banco') {
         const db = getDb();
         const uso = typeof db._getContadorGeral === 'function' ? db._getContadorGeral() : { reads: 0, writes: 0 };
-        const bancosUso = typeof db._getBancosUso === 'function' ? db._getBancosUso() : [
-          { banco: 'Firestore (B)', status: 'ativo', reads: uso.reads, writes: uso.writes, limiteReads: 50000, limiteWrites: 20000 },
-          { banco: 'Firestore (C)', status: 'reserva', reads: 0, writes: 0, limiteReads: 50000, limiteWrites: 20000 },
-          { banco: 'D1 (D1)', status: 'reserva', reads: 0, writes: 0, limiteReads: 5000000, limiteWrites: 100000 },
-          { banco: 'CofreSql', status: 'reserva', reads: 0, writes: 0, limiteReads: 10000000, limiteWrites: 500000 }
-        ];
+        let bancosUso = typeof db._getBancosUso === 'function' ? db._getBancosUso() : null;
+        if (!bancosUso || !bancosUso.length) {
+          try {
+            const fsLite = require('../../lib/firebase-lite/firestore');
+            if (fsLite && typeof fsLite.getBancosUsoGeral === 'function') {
+              bancosUso = fsLite.getBancosUsoGeral();
+            }
+          } catch {}
+        }
+        if (!bancosUso || !bancosUso.length) {
+          bancosUso = [
+            { banco: 'Firestore (B)', status: 'ativo', reads: uso.reads, writes: uso.writes, limiteReads: 50000, limiteWrites: 20000 },
+            { banco: 'Firestore (C)', status: 'reserva', reads: 0, writes: 0, limiteReads: 50000, limiteWrites: 20000 },
+            { banco: 'D1 (D1)', status: 'reserva', reads: 0, writes: 0, limiteReads: 5000000, limiteWrites: 100000 },
+            { banco: 'CofreSql', status: 'reserva', reads: 0, writes: 0, limiteReads: 10000000, limiteWrites: 500000 }
+          ];
+        }
         const t0 = Date.now();
         try { await getDb().collection('bc_uso').limit(1).get(); return res(200, { ok: true, bancos: bancosUso, tempo: Date.now() - t0 }); }
         catch (e) { return res(200, { ok: false, bancos: bancosUso, cheio: /RESOURCE_EXHAUSTED|quota/i.test(String(e.message)), tempo: Date.now() - t0 }); }
