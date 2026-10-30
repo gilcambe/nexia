@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -euo pipefail
+
+# ... (conteúdo já existente)
+
 # Script para limpar referências NEXIA nos diretórios public/, apps/ e nexia-ai/site-kit/
 #
 # Requisitos:
