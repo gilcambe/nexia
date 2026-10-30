@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useMemory } from '../../api/memoryClient';
+import { useMemory, obterConfig, verificarSuporteWebGPU, salvarConfig } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemType } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemComponent } from '../../components/MemoryItem';
 type MemoryItemProps = MemoryItemType & {
