@@ -2,6 +2,13 @@
 
 set -euo pipefail
 
+# Script para limpar referências NEXIA em arquivos HTML
+# Substituições realizadas:
+# 1. "NEXIA CORTEX — Plataforma de IA" → "Cortex — Plataforma de IA" (frase específica)
+# 2. <title> contendo NEXIA → <title>Cortex</title> (regra 2)
+# 3. og:site_name contendo NEXIA → conteúdo substituído por "Cortex" (regra 2 e 3)
+# NÃO faz substituição genérica de NEXIA → Cortex para evitar afetar textos não relacionados
+
 # Diretórios a serem processados
 DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 echo ""
@@ -73,8 +80,8 @@ def clean_title(match):
 
 content = re.sub(r"<title([^>]*)>(.*?)</title>", clean_title, content, flags=re.IGNORECASE | re.DOTALL)
 
-# Processar tags og:site_name - se contém NEXIA, substituir o conteúdo por "Cortex" (regra 2)
-# Usando padrões mais específicos para evitar falsos positivos
+    # Processar tags og:site_name - se contém NEXIA, substituir o conteúdo por "Cortex" (regra 2)
+    # Usando padrões mais específicos para evitar falsos positivos
 def clean_og_site_name(match):
     full_tag = match.group(0)
     if "NEXIA" in full_tag:
@@ -103,6 +110,9 @@ PYEOF
                 rm "$backup_file"
                 echo "  Backup removido"
             fi
+            
+            echo "  ATENÇÃO: Este script NÃO faz substituição genérica de 'NEXIA' → 'Cortex'"
+            echo "  para evitar afetar textos não relacionados a títulos ou metadados."
             
             echo "  Processado: $file"
         done
@@ -153,4 +163,10 @@ echo ""
 echo "=========================================="
 echo "Script concluído com sucesso!"
 echo "=========================================="
+echo ""
+echo "RESUMO DAS SUBSTITUIÇÕES REALIZADAS:"
+echo "1. 'NEXIA CORTEX — Plataforma de IA' → 'Cortex — Plataforma de IA' (frase específica)"
+echo "2. <title> contendo NEXIA → <title>Cortex</title>"
+echo "3. og:site_name contendo NEXIA → conteúdo substituído por 'Cortex'"
+echo "4. NÃO foi feita substituição genérica de NEXIA → Cortex (para evitar afetar outros textos)"
 
