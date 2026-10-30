@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useMemory, obterConfig, verificarSuporteWebGPU, salvarConfig } from '../../api/memoryClient';
+import { useMemory } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemType } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemComponent } from '../../components/MemoryItem';
+import { obterConfig, verificarSuporteWebGPU, salvarConfig } from '../../config';
 type MemoryItemProps = MemoryItemType & {
   onDelete: (id: string) => void;
 };
@@ -44,6 +45,12 @@ export default function MemorySettings() {
   const handleToggleRememberMe = (enabled: boolean) => {
     toggleRememberMe(enabled);
   };
+
+  // Carregar configuração ao montar
+  useEffect(() => {
+    const config = obterConfig();
+    setIaLocalAtivo(config.ativo);
+  }, []);
 
   // Verificar suporte WebGPU ao montar e carregar configuração
   useEffect(() => {
@@ -142,7 +149,7 @@ export default function MemorySettings() {
         <div className="bg-[var(--cx-card)] border border-[var(--cx-line)] rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-medium">IA Local</h3>
+              <h3 className="font-medium">IA no meu aparelho (grátis, offline)</h3>
               <p className="text-sm text-[var(--cx-mut)] mt-1">
                 Execute o Cortex offline no seu dispositivo. Requer WebGPU e ~1 GB de armazenamento.
                 Os dados são processados localmente, sem envio para a nuvem.
@@ -159,7 +166,7 @@ export default function MemorySettings() {
                 data-testid="memory-ia-local-toggle"
                 role="switch"
                 aria-checked={iaLocalAtivo}
-                aria-label="IA local"
+                aria-label="IA no meu aparelho (grátis, offline)"
                 title={bloqueado ? `Desativado: ${motivoBloqueio}` : 'IA no meu aparelho (grátis, offline)'}
               >
                 <span
