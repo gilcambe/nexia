@@ -98,6 +98,15 @@ test('RF9. PR integrado que DIZ fechar a tarefa: não repete o trabalho e não f
   assert.ok(entregaComprovada(1976, [{ number: 2477, merged_at: 'x', title: 'Reserva: issue #1976', body: 'Aplicado pela conta vaga-4-mistral. Fecha #1976.' }]));
 });
 
+test('RF9b. texto corrido que só menciona "Fecha" e depois cita números NÃO conta como PR que fecha (caso real do #2566)', () => {
+  const prosa = '"Fecha" em português não fecha a issue sozinho no GitHub, e é assim que #2468 (#2141–#2143), #2469 (#2144) e #2477 (#1976) ficaram abertas.';
+  for (const n of [2141, 2143, 2144, 1976]) assert.equal(entregaComprovada(n, [{ number: 2566, merged_at: 'x', title: 'fix', body: prosa }]), null, `#${n}`);
+  const lista = 'Fecha: #2138, #2139, #2141, #2142 e #2143.\nFixes #7, #8 & #9';
+  for (const n of [2138, 2141, 2143, 7, 9]) assert.ok(entregaComprovada(n, [{ number: 1, merged_at: 'x', title: 't', body: lista }]), `#${n}`);
+  assert.equal(entregaComprovada(2144, [{ number: 1, merged_at: 'x', title: 't', body: lista }]), null, 'fora da lista');
+  assert.equal(entregaComprovada(10, [{ number: 1, merged_at: 'x', title: 't', body: 'Closes #1 (toca também #10)' }]), null, 'parênteses encerram a lista');
+});
+
 test('RF10. falha da API em uma tarefa não derruba as outras', async () => {
   const bom = githubFalso({ eventos: { 2142: historico({ rotulo: 'cortex-travado', em: ANTES, total: 112 }) } });
   const gh = async (t, m, c) => { if (c.includes('/issues/2141/')) throw new Error('503'); return bom(t, m, c); };
