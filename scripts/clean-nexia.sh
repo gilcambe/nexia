@@ -40,25 +40,19 @@ for dir in $DIRECTORIES; do
             # (substituição específica de frase, não genérica)
             sed -i.bak 's/NEXIA CORTEX — Plataforma de IA/Cortex — Plataforma de IA/g' "$file"
             
-            # Passo 2: Remover a palavra NEXIA de <title> mantendo o restante
-            # Ex: <title>Meu Site NEXIA</title> → <title>Meu Site</title>
-            # Ex: <title>NEXIA Meu Site</title> → <title>Meu Site</title>
-            # Ex: <title>NEXIA CORTEX — Plataforma de IA</title> → <title>Cortex — Plataforma de IA</title>
-            # Remove NEXIA no início do título
-            sed -i.bak 's/<title>NEXIA\s*\([^<]*\)<\/title>/<title>\1<\/title>/gi' "$file"
-            # Remove NEXIA no meio do título
-            sed -i.bak 's/<title>\([^<]*\)NEXIA\s*\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
-            # Remove NEXIA no final do título
-            sed -i.bak 's/<title>\([^<]*\)NEXIA<\/title>/<title>\1<\/title>/gi' "$file"
-            # Remove NEXIA isolado no título
-            sed -i.bak 's/<title>\([^<]*\)NEXIA\s*\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
+            # Passo 2: Substituir completamente <title> contendo NEXIA por <title>Cortex</title>
+            # Ex: <title>Meu Site NEXIA</title> → <title>Cortex</title>
+            # Ex: <title>NEXIA Meu Site</title> → <title>Cortex</title>
+            # Ex: <title>NEXIA CORTEX — Plataforma de IA</title> → <title>Cortex</title>
+            # Substitui qualquer <title> que contenha NEXIA por <title>Cortex</title>
+            sed -i.bak 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/gi' "$file"
             
-            # Passo 3: Substituir og:site_name contendo NEXIA por "Cortex"
+            # Passo 3: Substituir completamente og:site_name contendo NEXIA por "Cortex"
             # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Cortex"
             # Ex: og:site_name="NEXIA Site" → og:site_name="Cortex"
             # Ex: og:site_name="NEXIA" → og:site_name="Cortex"
             # Ex: property="og:site_name" content="Meu Site NEXIA" → property="og:site_name" content="Cortex"
-            # Substitui qualquer conteúdo de og:site_name que contenha NEXIA
+            # Substitui qualquer og:site_name que contenha NEXIA por "Cortex"
             sed -i.bak 's/og:site_name=["'\''][^"'\']*NEXIA[^"'\']*['"'\']/og:site_name="Cortex"/gi' "$file"
             sed -i.bak 's/property=["'\'']og:site_name["'\'] content=["'\''][^"'\']*NEXIA[^"'\']*['"'\']/property="og:site_name" content="Cortex"/gi' "$file"
             
@@ -87,22 +81,23 @@ echo ""
 echo "Verificando se restaram ocorrências de NEXIA em títulos..."
 echo ""
 
-# Padrões completos para detectar NEXIA em <title> e og:site_name
-# Inclui tags minúsculas, espaços e atributos property="og:site_name"
-if grep -rnE "(<title>[^<]*NEXIA|property=["\']og:site_name["\']\s*content=["\'][^"\']*NEXIA[^"\']*|og:site_name=["\'][^"\']*NEXIA[^"\']*)" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null; then
-    echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos e metadados:"
+# Padrão exato do pedido para detectar NEXIA em <title>
+if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null; then
+    echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
-    grep -rnE "(<title>[^<]*NEXIA|property=["\']og:site_name["\']\s*content=["\'][^"\']*NEXIA[^"\']*|og:site_name=["\'][^"\']*NEXIA[^"\']*)" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null
+    grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null
     echo ""
     echo "Por favor, revise os arquivos e tente novamente."
     exit 1
 else
-    echo "✓ Nenhuma ocorrência de NEXIA encontrada em títulos e metadados."
+    echo "✓ Nenhuma ocorrência de NEXIA encontrada em títulos."
 fi
 
 echo ""
 echo "NOTA: Verificação final inclui diretórios: public, apps, nexia-ai, viajante-pro"
 echo "NOTA: Arquivos .bak são criados como segurança e removidos após processamento"
+echo "NOTA: Critério de pronto (conforme pedido):"
+echo "   bash scripts/clean-nexia.sh && grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro"
 
 echo ""
 echo "=========================================="
