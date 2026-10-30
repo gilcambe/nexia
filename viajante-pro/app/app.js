@@ -92,7 +92,16 @@
         errHttp.mensagem = 'erro_http';
         throw errHttp;
       }
-      return res.json();
+      return res.json().then(function (json) {
+        // O service worker devolve {offline:true} (status 200) quando não há rede: isso NÃO é uma viagem.
+        if (json && json.offline === true) {
+          var errOff = new Error('sem_rede');
+          errOff.codigo = 0;
+          errOff.mensagem = 'sem_rede';
+          throw errOff;
+        }
+        return json;
+      });
     });
   }
 
