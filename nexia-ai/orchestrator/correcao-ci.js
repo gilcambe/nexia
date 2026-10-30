@@ -3,7 +3,7 @@
 // 80 linhas do erro (até 2 vezes) antes de pedir ajuda. O pedido vem com a marca abaixo: o Orchestrator
 // separa o erro do pedido, então a branch e o PR continuam os mesmos (o nome da branch vem do pedido).
 const MARCA = '\n\n<<<CORRECAO-CI>>>\n';
-const LINHAS = 80;
+const LINHAS = 60;
 const MAX_CORRECOES = 2;
 const CHECK_CI = 'Typecheck, testes e build';
 
@@ -23,7 +23,7 @@ function ultimasLinhas(log, n = LINHAS) {
 }
 
 /** Texto que vai para o modelo na rodada de correção. */
-const feedbackCi = (erro, rodada) => `O CI do PR falhou (correção ${rodada} de ${MAX_CORRECOES}). Leia o erro, ache a causa e corrija na mesma branch, com um novo commit. Últimas linhas do log:\n${erro}`;
+const feedbackCi = (erro, rodada) => `conserte o CI deste PR; não abra PR novo (correção ${rodada} de ${MAX_CORRECOES}). Leia o erro, ache a causa e corrija no MESMO ramo, com um novo commit. Últimas linhas do log do CI:\n${erro}`;
 
 /** Pedido do PR aberto pelo NEXIA AI ("Pedido: ...\n\nExecution: ..."). */
 function pedidoDoPr(body) {
@@ -51,7 +51,16 @@ function decidirCorrecao({ pr, checks, comentarios }) {
   const sha = String((pr.head || {}).sha || '');
   const { n, shas } = correcoesFeitas(comentarios);
   if ([...shas].some(s => sha.startsWith(s))) return { tipo: 'esperar' };   // já pedimos correção deste commit
-  if (n >= MAX_CORRECOES) return /cortex-ajuda-ci/.test(JSON.stringify(comentarios || [])) ? null : { tipo: 'ajuda' };
+  if (n >= MAX_CORRECOES) {
+    const agora = Date.now();
+    const criadoEm = Date.parse((pr || {}).created_at || 0);
+    const m = /#(\d+)/.exec(String((pr || {}).body || ''));
+    const issueNum = m ? Number(m[1]) : null;
+    if (agora - criadoEm >= 24 * 3600e3) {
+      return { tipo: 'fechar', issueNum };
+    }
+    return /cortex-ajuda-ci/.test(JSON.stringify(comentarios || [])) ? null : { tipo: 'ajuda' };
+  }
   return { tipo: 'corrigir', rodada: n + 1 };
 }
 

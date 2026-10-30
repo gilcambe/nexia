@@ -631,6 +631,16 @@ async function corrigirCiDosPrs(token, runs) {
     const comentarios = (await gh(token, 'GET', `/issues/${pr.number}/comments?per_page=100`)).json || [];
     const d = cc.decidirCorrecao({ pr, checks, comentarios });
     if (!d || d.tipo === 'esperar') continue;
+    if (d.tipo === 'fechar') {
+      await gh(escrita, 'POST', `/issues/${pr.number}/comments`, { body: `PR vermelho há mais de 24 h após ${cc.MAX_CORRECOES} tentativas de correção. Fechando PR e enviando a tarefa para o Jules.` });
+      await gh(escrita, 'PATCH', `/pulls/${pr.number}`, { state: 'closed' });
+      if (d.issueNum) {
+        await gh(escrita, 'POST', `/issues/${d.issueNum}/labels`, { labels: ['cortex-jules'] });
+        await gh(escrita, 'POST', `/issues/${d.issueNum}/comments`, { body: `O PR #${pr.number} ficou vermelho por mais de 24 h após 2 tentativas. A tarefa foi redirecionada para o Jules (\`cortex-jules\`).` });
+      }
+      console.log(`CI do PR #${pr.number}: fechado após 24h e issue #${d.issueNum} marcada com cortex-jules.`);
+      return pr.number;
+    }
     if (d.tipo === 'ajuda') {
       await gh(escrita, 'POST', `/issues/${pr.number}/comments`, { body: `<!-- cortex-ajuda-ci -->O Cortex tentou corrigir o CI ${cc.MAX_CORRECOES} vezes e não conseguiu. Precisa de olhar humano.` });
       console.log(`CI do PR #${pr.number}: pediu ajuda.`);
