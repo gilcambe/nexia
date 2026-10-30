@@ -1,6 +1,7 @@
 import type { Dados } from "./api";
 import { haQuanto } from "./api";
 import { Cartao, Botao, Carregando } from "./ui";
+import { Icone } from "./icones";
 
 const REPO = "https://github.com/gilcambe/nexia";
 
@@ -9,7 +10,7 @@ export default function PrsAba({ d, erro }: { d: Dados; erro?: string }) {
   const x = d.cortex;
   return (
     <div className="space-y-4">
-      <Cartao titulo="PRs no GitHub">
+      <Cartao titulo="PRs no GitHub" resumo="Conferindo…" icone={<Icone nome="prs" />}>
         <div className="grid grid-cols-2 gap-2">
           <Botao href={`${REPO}/pulls?q=is%3Apr+is%3Aopen`}>Abertos</Botao>
           <Botao href={`${REPO}/pulls?q=is%3Apr+is%3Amerged`}>Juntados</Botao>
@@ -17,7 +18,7 @@ export default function PrsAba({ d, erro }: { d: Dados; erro?: string }) {
         <Botao href="/meu-cortex">Pedidos e aprovação</Botao>
       </Cartao>
       {!x ? <Carregando erro={erro} /> : (
-        <Cartao titulo="Últimas entregas do Cortex">
+        <Cartao titulo="Últimas entregas do Cortex" resumo="Conferindo…" icone={<Icone nome="cortex" />}>
           {!x.ultimas.length && <p className="text-sm text-nexia-muted">Nenhuma entrega nos últimos 7 dias.</p>}
           <ul className="space-y-2">
             {x.ultimas.map((t) => (
