@@ -13,6 +13,47 @@ const ARQ_GRANDE = 40 * 1024;      // mesmo corte do get_file em partes (#1479):
 const MAX_PARTES = 8;
 const MAX_ARQ_PARTE = 3;
 const MAX_LINHAS_PARTE = 400;      // linhas acrescentadas + apagadas que uma parte pode mudar sem ir para revisão
+const MAX_JULES_PARALLEL = 3;       // máximo de tarefas do Jules rodando ao mesmo tempo
+const JULES_PRIORITY_WAIT = 30 * 60 * 1000;  // tempo de espera para tarefas de prioridade (30 min)
+const JULES_NOTIFICATION_EMAIL = 'MASTER_EMAIL'; // email do dono para notificações
+const JULES_CI_PROOF_ENABLED = true;          // habilitar prova de CI na conclusão
+const JULES_MAX_RETRIES = 2;                 // máximo de tentativas do Jules por tarefa
+
+// Função para verificar se uma tarefa está na fila do Jules
+function isJulesQueue(issue) {
+  return (issue.labels || []).some(l => (l.name || l) === 'cortex-jules');
+}
+
+// Função para verificar se uma tarefa está sendo executada pelo Jules
+function isJulesRunning(issue) {
+  return (issue.labels || []).some(l => (l.name || l) === 'jules-enviado');
+}
+
+// Função para verificar se uma tarefa foi concluída com sucesso
+function isCompleted(issue) {
+  return (issue.labels || []).some(l => (l.name || l) === 'cortex-feito');
+}
+
+// Função para verificar se uma tarefa está travada
+function isBlocked(issue) {
+  return (issue.labels || []).some(l => (l.name || l) === 'cortex-travado');
+}
+
+// Função para verificar se uma tarefa está na retomada
+function isRetomada(issue) {
+  return (issue.labels || []).some(l => (l.name || l) === 'cortex-retomada');
+}
+
+// Função para verificar se uma tarefa tem prioridade
+function isPrioritaria(issue) {
+  return isJulesQueue(issue) && (issue.labels || []).some(l => (l.name || l) === 'cortex-prioritaria');
+}
+
+// Função para verificar se uma tarefa já está com o máximo de tentativas
+function maxTentativas(issue) {
+  const tentativas = (issue.labels || []).filter(l => /^(tentativa)-\d+$/.test(l.name || l)).length;
+  return tentativas >= JULES_MAX_RETRIES;
+}
 // Pedido do dono (25/10/2026): nada pode ficar horas esperando. O Cortex roda a cada 15 min e o auto-merge a cada 30 min,
 // então 1 h e 20 min já são folga de sobra — nunca mais 3 h nem 6 h.
 const ESPERA_PR_MAX_H = 1;         // dependente espera o PR da parte anterior entrar no máximo isto (a fila nunca para)
@@ -102,6 +143,7 @@ const planoDeTextos = textos => textos.map((t, k) => ({ titulo: `Parte ${k + 1}`
 const vaiParaJules = (parte, tamanhos = {}) => parte.grande === true || parte.arquivos.some(a => (tamanhos[a] || 0) > ARQ_GRANDE * 2);
 
 const MARCA = 'cortex-plano';
+// Prioridade: rótulo cortex-jules pega a frente na fila do Jules.
 function cabecalho(meta) { return `<!-- ${MARCA} ${JSON.stringify(meta)} -->`; }
 function lerPlano(corpo) {
   const m = new RegExp(`<!-- ${MARCA} (\\{[\\s\\S]*?\\}) -->`).exec(String(corpo || ''));
@@ -131,6 +173,31 @@ function corpoDaParte(parte, k, n, pai, partes = []) {
 function dependenciasProntas(i, irmas, prs = [], agora = Date.now(), nomes = x => (x.labels || []).map(l => l.name || l)) {
   const meta = lerPlano(i.body);
   if (!meta) return null;   // sem plano: a fila usa a regra antiga (parte k espera as anteriores)
+  
+  // Verifica se a tarefa é cortex-jules e se está no limite
+  if (isJulesQueue(i)) {
+    // Verifica o limite de tarefas do Jules rodando
+    const julesRodando = irmas.filter(issue => 
+      isJulesRunning(issue) && 
+      !isCompleted(issue) && 
+      !isBlocked(issue)
+    );
+    
+    if (julesRodando.length >= MAX_JULES_PARALLEL) {
+      // Se está no limite, verifica se é prioridade
+      if (isPrioritaria(i)) {
+        // Tarefa prioritária: verifica se pode esperar
+        const tempoEspera = agora - Date.parse(i.created_at || 0);
+        if (tempoEspera < JULES_PRIORITY_WAIT) {
+          return false; // Ainda não pode rodar
+        }
+      } else {
+        // Tarefa normal: não pode rodar enquanto o limite estiver cheio
+        return false;
+      }
+    }
+  }
+  
   for (const d of meta.depende) {
     const dep = irmas.find(o => o !== i && (m => m && m.pai === meta.pai && m.k === d)(lerPlano(o.body)));
     // Dependência aberta e não concluída segura. Travada não segura para sempre (regra do dono: a fila nunca para).
@@ -196,4 +263,5 @@ module.exports = {
   ARQ_GRANDE, MAX_PARTES, MAX_ARQ_PARTE, MAX_LINHAS_PARTE, ESPERA_PR_MAX_H, JULES_DESISTE_MIN, SISTEMA_PLANO,
   arquivosCitados, classificar, validarPlano, planoSimples, planoDeTextos, vaiParaJules, cabecalho, lerPlano, corpoDaParte,
   dependenciasProntas, conflitaCom, revisarDiff, medirTempo, textoTempo, gerarPlano,
+  isJulesQueue, isJulesRunning, isCompleted, isBlocked, isRetomada, isPrioritaria, maxTentativas,
 };
