@@ -24,7 +24,7 @@ const EscadaCard: React.FC = () => {
   useEffect(() => {
     const fetchEscadaData = async () => {
       try {
-        const resposta = await fetch('/api/escada');
+        const resposta = await fetch('/escada');
         if (!resposta.ok) throw new Error('Erro ao buscar dados da escada');
         const dados = await resposta.json();
         setEscadaData({
