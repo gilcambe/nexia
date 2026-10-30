@@ -41,7 +41,7 @@ export default function Financeiro() {
     <div className="mx-auto max-w-2xl space-y-3">
       <header className="flex items-baseline justify-between gap-2">
         <h1 className="font-heading text-xl font-bold text-foreground-950">Financeiro</h1>
-        <p className="text-xs text-foreground-500">{nomeMes(f.hoje.slice(0, 7))} · Pix sem taxa</p>
+        <p className="text-xs text-foreground-500">{nomeMes(f.hoje.slice(0, 7))}</p>
       </header>
       {msg && <p role="status" className="rounded-lg bg-accent-50 px-3 py-2 text-sm font-medium text-accent-800"><i className="ri-check-line mr-1"></i>{msg}</p>}
       {erro && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{erro}</p>}
