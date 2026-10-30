@@ -172,40 +172,9 @@ function AvisosCelular() {
 export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema; mudarTema: (t: Tema) => void; email: string; instalar: (() => void) | null; sair: () => void }) {
   const op: { id: Tema; nome: string }[] = [{ id: "auto", nome: "Automático" }, { id: "escuro", nome: "Escuro" }, { id: "claro", nome: "Claro" }];
   
-  // Estados para IA local
-  const [iaLocalAtivo, setIaLocalAtivo] = useState(false);
-  const [bloqueado, setBloqueado] = useState(false);
-  const [motivoBloqueio, setMotivoBloqueio] = useState('');
-  const [mostrarAvisoDownload, setMostrarAvisoDownload] = useState(false);
 
 
-  // Verificar suporte WebGPU ao montar
-  useEffect(() => {
-    (async () => {
-      try {
-        const suporte = await navigator.gpu?.requestAdapter();
-        if (!suporte) {
-          setBloqueado(true);
-          setMotivoBloqueio('Navegador não suporta WebGPU');
-        }
-      } catch (err) {
-        setBloqueado(true);
-        setMotivoBloqueio(err instanceof Error ? err.message : 'Erro ao verificar suporte WebGPU');
-      }
-    })();
-  }, []);
 
-  const handleToggleIaLocal = async (ativo: boolean) => {
-    if (bloqueado) return;
-
-    if (ativo) {
-      setMostrarAvisoDownload(true);
-    } else {
-      setMostrarAvisoDownload(false);
-    }
-
-    setIaLocalAtivo(ativo);
-  };
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-3">
@@ -218,47 +187,7 @@ export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema;
         <p className="text-sm text-[var(--cx-mut)] mt-1">{instalar ? "Instale o Cortex na tela inicial." : "No Chrome do celular: menu ⋮ → Instalar app (ou Adicionar à tela inicial)."}</p>
         {instalar && <button onClick={instalar} className="mt-3 h-11 px-5 rounded-xl bg-[var(--cx-ac)] text-black font-semibold" data-testid="cx-instalar">Instalar app</button>}</Cartao>
       
-      {/* Seção de IA local */}
-      <Cartao><p className="font-medium">IA no meu aparelho (grátis, offline)</p>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-sm text-[var(--cx-mut)] mt-1">
-              Execute o Cortex offline no seu dispositivo. Requer WebGPU e ~1 GB de armazenamento.
-              Os dados são processados localmente, sem envio para a nuvem.
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-[var(--cx-mut)]">
-              {iaLocalAtivo ? 'Ativado' : 'Desativado'}
-            </span>
-            <button
-              onClick={() => handleToggleIaLocal(!iaLocalAtivo)}
-              disabled={bloqueado}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${iaLocalAtivo ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'}`}
-              data-testid="cx-ia-local-toggle"
-              role="switch"
-              aria-checked={iaLocalAtivo}
-              aria-label="IA local"
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${iaLocalAtivo ? 'translate-x-6' : 'translate-x-1'}`}
-              />
-            </button>
-          </div>
-        </div>
-        {bloqueado && (
-          <div className="text-xs text-red-400 mt-4" role="alert" aria-live="assertive">
-            <p>⚠️ {motivoBloqueio}</p>
-          </div>
-        )}
-        {mostrarAvisoDownload && (
-          <div className="text-xs text-yellow-400 mt-4 bg-yellow-400/10 p-3 rounded-lg">
-            <p>⚠️ O download da IA local requer aproximadamente 1 GB de armazenamento.</p>
-            <p className="mt-1">Recomendamos usar uma conexão Wi-Fi estável para evitar cobranças de dados móveis.</p>
-            <p className="mt-1">O download pode levar alguns minutos dependendo da velocidade da sua conexão.</p>
-          </div>
-        )}
-      </Cartao>
+
       <AvisosCelular />
 
       <Cartao><a href="/central" className="block font-medium">Central KERNEX</a><p className="text-sm text-[var(--cx-mut)] mt-1">Vendas, produtos e divulgação.</p></Cartao>
