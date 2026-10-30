@@ -13,6 +13,28 @@ import { VazaoController } from '../src/durable/VazaoController.js';
 import { CofreSql, pontaCofre } from '../src/durable/CofreSql.js';
 
 // #1662: o Cloudflare só publica se a classe do Durable Object sair do arquivo de entrada.
+// #2221: VazaoController durable object para controle e rodízio de cotas do Vault
+export class VazaoController {
+  constructor(state, env) {
+    this.state = state;
+    this.env = env;
+    this.storage = state.storage;
+    this.bancosQuaseCheios = new Set();
+  }
+  async fetch(request) {
+    const url = new URL(request.url);
+    if (url.pathname === '/marcar-cheio') {
+      const b = await request.json().catch(() => ({}));
+      if (b.banco) this.bancosQuaseCheios.add(b.banco);
+      return new Response(JSON.stringify({ ok: true, quaseCheios: Array.from(this.bancosQuaseCheios) }), { headers: { 'Content-Type': 'application/json' } });
+    }
+    if (url.pathname === '/status') {
+      return new Response(JSON.stringify({ quaseCheios: Array.from(this.bancosQuaseCheios) }), { headers: { 'Content-Type': 'application/json' } });
+    }
+    return new Response('Not Found', { status: 404 });
+  }
+}
+
 export { VazaoController, CofreSql };
 
 export default {
