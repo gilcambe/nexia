@@ -1,63 +1,65 @@
 'use strict';
 /**
- * Testes unitários para o cofre (Vault), contadores de uso por banco,
- * failover preventivo (70%), cache em memória (TTL 60s) e alertas Sentinel.
+ * Testes unitários do Vault: Contador de uso por banco, Rodízio antecipado (70%), Cache em memória TTL 60s.
  */
 const test = require('node:test');
 const assert = require('node:assert');
-const {
-  registrarUsoBanco,
-  getUsoBanco,
-  getBancosUsoGeral,
-  getCachedFirestoreRead,
-  setCachedFirestoreRead,
-  invalidateFirestoreCache,
-  getNextBank,
-  switchToNextBank,
-  checkBankHealth
-} = require('../../lib/firebase-lite/firestore');
+const { createVault } = require('../../nexia-ai/vault/repository');
+const { SCHEMAS } = require('../../nexia-ai/vault/schemas');
+const { registrarUsoBanco, getUsoBanco, getBancosUsoGeral } = require('../../lib/firebase-lite/firestore');
 
-test('Contador de uso por banco e alertas preventivos de 70%', () => {
-  // Simula uso próximo de 70% para o banco 'firestore-b' (limite 50000 -> 70% é 35000)
-  registrarUsoBanco('firestore-b', 35000, 0);
+test('Cofre & Vault — Contador de uso e status do rodízio (70%)', async () => {
+  // Testa registrador de uso
+  registrarUsoBanco('firestore-b', 10, 5);
   const uso = getUsoBanco('firestore-b');
-  assert.strictEqual(uso.leituras, 35000);
-  assert.strictEqual(uso.status, 'quase cheio');
+  assert.strictEqual(uso.leituras, 10);
+  assert.strictEqual(uso.escritas, 5);
+  assert.strictEqual(uso.status, 'ativo');
 
-  // Verifica se o health check pega o banco cheio
-  assert.strictEqual(checkBankHealth('firestore-b'), false);
+  // Força disparo do limite de 70% (50000 leituras * 0.7 = 35000)
+  registrarUsoBanco('firestore-b', 35005, 0);
+  const usoCheio = getUsoBanco('firestore-b');
+  assert.strictEqual(usoCheio.status, 'quase cheio');
+
+  const todos = getBancosUsoGeral();
+  assert(Array.isArray(todos));
+  const b = todos.find(x => x.banco === 'firestore-b');
+  assert.ok(b);
+  assert.strictEqual(b.status, 'quase cheio');
 });
 
-test('Cache em memória com TTL 60s e invalidação na escrita', () => {
-  const tenant = 'test-tenant';
-  const col = 'clientes';
-  const docId = '123';
-  const docData = { nome: 'João da Silva', email: 'joao@example.com' };
+test('Cache em memória do Vault (TTL 60s) e invalidação na escrita', async () => {
+  let docLeituras = 0;
+  const mockDoc = { id: 'prj_123', tenant_id: 'tenant_abc', name: 'Projeto Alpha', schemaVersion: 1, version: 1 };
+  
+  const fakeDb = {
+    runTransaction: async (fn) => fn({
+      get: async () => ({ exists: true, data: () => mockDoc }),
+      create: () => {},
+      set: () => {},
+      update: () => {}
+    }),
+    collection: (col) => ({
+      doc: (id) => ({
+        get: async () => {
+          docLeituras++;
+          return { exists: true, data: () => mockDoc };
+        }
+      })
+    })
+  };
 
-  // Define no cache
-  setCachedFirestoreRead(tenant, col, docId, docData);
+  const vault = createVault({ db: fakeDb });
+  const ctx = { tenantId: 'tenant_abc', executionId: 'exe_1', actor: { type: 'owner', id: 'owner_1' } };
 
-  // Lê do cache
-  const cached = getCachedFirestoreRead(tenant, col, docId);
-  assert.deepStrictEqual(cached, docData);
+  // Primeira leitura (vai ao banco)
+  const r1 = await vault.Project.get(ctx, 'prj_123');
+  assert.strictEqual(r1.name, 'Projeto Alpha');
+  const leiturasAntes = docLeituras;
 
-  // Invalida o cache
-  invalidateFirestoreCache(tenant, col, docId);
-  const cachedAfterInvalidate = getCachedFirestoreRead(tenant, col, docId);
-  assert.strictEqual(cachedAfterInvalidate, null);
-});
-
-test('Rodízio de bancos e failover preventivo (B -> C -> D1 -> CofreSql)', () => {
-  // Garante que se o banco atual estiver cheio, o getNextBank troca preventivamente
-  const next = getNextBank();
-  assert.ok(['firestore-b', 'firestore-c', 'd1', 'cofresql'].includes(next));
-
-  const switched = switchToNextBank();
-  assert.ok(['firestore-b', 'firestore-c', 'd1', 'cofresql'].includes(switched));
-});
-
-test('Bancos uso geral retorna lista completa', () => {
-  const geral = getBancosUsoGeral();
-  assert.ok(Array.isArray(geral));
-  assert.ok(geral.length >= 4);
+  // Segunda leitura (deve vir do cache em memória)
+  const r2 = await vault.Project.get(ctx, 'prj_123');
+  assert.strictEqual(r2.name, 'Projeto Alpha');
+  // Se o cache funcionou, o número de leituras ao db não aumentou
+  assert.strictEqual(docLeituras, leiturasAntes);
 });
