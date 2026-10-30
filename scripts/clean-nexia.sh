@@ -50,6 +50,8 @@ for dir in $DIRECTORIES; do
             sed -i.bak 's/<title>\([^<]*\)NEXIA\s*\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
             # Remove NEXIA no final do título
             sed -i.bak 's/<title>\([^<]*\)NEXIA<\/title>/<title>\1<\/title>/gi' "$file"
+            # Remove NEXIA isolado no título
+            sed -i.bak 's/<title>\([^<]*\)NEXIA\s*\([^<]*\)<\/title>/<title>\1\2<\/title>/gi' "$file"
             
             # Passo 3: Remover a palavra NEXIA de og:site_name mantendo o restante
             # Ex: og:site_name="Meu Site NEXIA" → og:site_name="Meu Site"
@@ -91,7 +93,7 @@ echo ""
 if grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
     echo ""
-    grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai 2>/dev/null
+    grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null
     echo ""
     echo "Por favor, revise os arquivos e tente novamente."
     exit 1
@@ -101,6 +103,7 @@ fi
 
 echo ""
 echo "NOTA: Verificação final inclui diretórios: public, apps, nexia-ai, viajante-pro"
+echo "NOTA: Arquivos .bak são criados como segurança mas não utilizados nas substituições"
 
 echo ""
 echo "=========================================="
