@@ -15,7 +15,7 @@
       </button>
     </nav>
     <div class="tab-content">
-      <div v-if="abaAtiva === 'córtex'" class="cards-container cortex-tab">
+      <div v-if="abaAtiva === 'córtex' || abaAtiva === 'cortex'" class="cards-container cortex-tab">
         <EscadaCard />
       </div>
       <div v-else class="cards-container geral-tab">
