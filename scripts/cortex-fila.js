@@ -142,14 +142,28 @@ const parteDe = i => { const m = /^\[Parte (\d+)\/\d+ de #(\d+)\]/.exec(i.title 
 // #803: dia em Brasília (UTC-3). Tarefa que ficou sem cota da reserva volta à fila no dia seguinte, sem espera fixa.
 const diaBr = t => new Date(new Date(t).getTime() - 3 * 3600e3).toISOString().slice(0, 10);
 function reservaVolta(rotuladoEm, agora = Date.now()) { return !rotuladoEm || diaBr(rotuladoEm) < diaBr(agora); }
-async function reservasQueVoltam(token, issues, agora = Date.now()) {
+// Data em que a issue recebeu o rótulo pela última vez. A API devolve os eventos do mais antigo ao mais novo, 100 por página,
+// e cada tentativa do Cortex põe e tira 3 ou 4 rótulos: tarefa com 12 tentativas passa de 100 eventos e o evento de travar cai
+// fora da página 1 (#2141: evento 116 de 116; #2159: 309 de 309). Por isso lê todas as páginas (máx. 10 = 1000 eventos).
+// Falha de rede ou resposta estranha lança erro: quem chama tenta no próximo ciclo, nunca decide sem a data.
+async function ultimoRotuloEm(token, numero, nome, ghFn = gh) {
+  let quando = null;
+  for (let pag = 1; pag <= 10; pag++) {
+    const ev = (await ghFn(token, 'GET', `/issues/${numero}/events?per_page=100&page=${pag}`)).json;
+    if (!Array.isArray(ev)) throw new Error('resposta inesperada ao ler os eventos');
+    for (const e of ev) if (e.event === 'labeled' && e.label && e.label.name === nome) quando = e.created_at;
+    if (ev.length < 100) return quando;
+  }
+  throw new Error('mais de 1000 eventos: não dá para saber a data do último rótulo');
+}
+const MAX_VERIFICAR = 60;            // issues com rótulo de espera conferidas por ciclo (cada uma custa de 1 a 4 chamadas)
+async function reservasQueVoltam(token, issues, agora = Date.now(), ghFn = gh) {
   const voltar = [];
-  for (const i of issues.filter(x => !x.pull_request && nomes(x).includes(L.semCota)).slice(0, 20)) {
+  for (const i of issues.filter(x => !x.pull_request && nomes(x).includes(L.semCota)).slice(0, MAX_VERIFICAR)) {
     try {
-      const ev = (await gh(token, 'GET', `/issues/${i.number}/events?per_page=100`)).json || [];
-      const quando = ev.filter(e => e.event === 'labeled' && e.label && e.label.name === L.semCota).map(e => e.created_at).pop();
+      const quando = await ultimoRotuloEm(token, i.number, L.semCota, ghFn);
       if (reservaVolta(quando, agora)) voltar.push({ tipo: 'reserva-volta', numero: i.number, rotulos: nomes(i) });
-    } catch { /* tenta no próximo ciclo */ }
+    } catch (e) { console.log(`reserva sem cota #${i.number}: ${e.message}`); }
   }
   return voltar;
 }
@@ -159,14 +173,33 @@ async function reservasQueVoltam(token, issues, agora = Date.now()) {
 // 28/10: a limpeza do smoke (PR #2297) reprovou toda tarefa até o PR #2301 entrar. Quem travou antes disso volta do zero.
 const CONSERTO_SMOKE = '2026-10-29T23:59:59Z';
 function travouAntesDoConserto(travadoEm) { return !!travadoEm && Date.parse(travadoEm) < Date.parse(CONSERTO_SMOKE); }
-async function travadasPeloCofre(token, issues) {
+// Tarefas que já estão em outro degrau da escada (docs/ESCADA-IA.md) não voltam por aqui: o Jules, o Claude ou o dono
+// cuidam delas, e devolvê-las ao Cortex abriria uma 2ª frente na mesma tarefa.
+const FORA_DA_RECUPERACAO = ['jules-enviado', 'vez-do-claude', 'so-humano', 'cortex-alerta', 'cortex-dividido'];
+const MAX_RECUPERAR_POR_CICLO = 6;   // igual ao nº de pistas: devolve só o que cabe a rodar, o resto vem no ciclo seguinte
+// PR já integrado que cita a tarefa = a entrega pode existir. A tarefa NÃO volta para a fila (não repete trabalho feito) e
+// NÃO é fechada sozinha: um PR que só cita o número não prova a entrega, então alguém confere.
+function entregaComprovada(numero, prsMesclados) {
+  const re = new RegExp(`#${numero}(?!\\d)`);
+  return (prsMesclados || []).find(pr => pr && pr.merged_at && re.test(`${pr.title || ''}\n${pr.body || ''}`)) || null;
+}
+async function travadasPeloCofre(token, issues, { ghFn = gh } = {}) {
   const voltar = [];
-  for (const i of issues.filter(x => !x.pull_request && nomes(x).includes(L.travado)).slice(0, 15)) {
+  // Todas as travadas elegíveis, das mais antigas para as mais novas (antes só as 15 primeiras da lista, que vem da mais
+  // nova para a mais antiga: as antigas nunca entravam na janela).
+  const candidatas = issues.filter(x => !x.pull_request && nomes(x).includes(L.travado) && !nomes(x).some(l => FORA_DA_RECUPERACAO.includes(l)))
+    .sort((a, b) => a.number - b.number).slice(0, MAX_VERIFICAR);
+  let mesclados = null;
+  for (const i of candidatas) {
+    if (voltar.length >= MAX_RECUPERAR_POR_CICLO) break;
     try {
-      const ev = (await gh(token, 'GET', `/issues/${i.number}/events?per_page=100`)).json || [];
-      const quando = ev.filter(e => e.event === 'labeled' && e.label && e.label.name === L.travado).map(e => e.created_at).pop();
-      if (travouAntesDoConserto(quando)) voltar.push({ tipo: 'reserva-volta', numero: i.number, rotulos: nomes(i), motivo: 'cofre' });
-    } catch { /* tenta no próximo ciclo */ }
+      const quando = await ultimoRotuloEm(token, i.number, L.travado, ghFn);
+      if (!travouAntesDoConserto(quando)) continue;   // travou depois do conserto: a causa é da tarefa, não do ambiente
+      if (mesclados === null) { const r = (await ghFn(token, 'GET', '/pulls?state=closed&sort=updated&direction=desc&per_page=100')).json; mesclados = Array.isArray(r) ? r : []; }
+      const pr = entregaComprovada(i.number, mesclados);
+      if (pr) { console.log(`travada #${i.number}: o PR #${pr.number} já integrado cita a tarefa; não volta para a fila (precisa de conferência da entrega)`); continue; }
+      voltar.push({ tipo: 'reserva-volta', numero: i.number, rotulos: nomes(i), motivo: 'cofre' });
+    } catch (e) { console.log(`travada #${i.number}: ${e.message}`); }
   }
   return voltar;
 }
@@ -780,5 +813,5 @@ async function main() {
   }
 }
 
-module.exports = { soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
+module.exports = { ultimoRotuloEm, travadasPeloCofre, entregaComprovada, MAX_RECUPERAR_POR_CICLO, FORA_DA_RECUPERACAO, soPipelineModelo, assinaturaDoSmoke, errosDeAmbiente, mexeEmWorkflow, planejarComIA, revisarParte, dadosDoPlanejador, corrigirCiDosPrs, reservaVolta, reservasQueVoltam, travouAntesDoConserto, devePedirReserva, entregouAlgo, depoisSemEntrega, MAX_SEM_ENTREGA, rascunhosParados, candidatosRascunho, MSG_RASCUNHO_PARADO, tokenDaApp, TENTATIVAS_ATE_DIVIDIR, caminhosDoPedido, sondarCota, decidir, precisaTesteFinal, precisaDividir, paisConcluidos, dividirComIA, MAX_TENTATIVAS };
 if (require.main === module) main().catch(e => { console.error(e.message); process.exit(1); });
