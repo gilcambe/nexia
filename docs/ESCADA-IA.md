@@ -43,3 +43,9 @@ Fluxo de resgate: ao falhar, o Cortex tenta uma única vez com o modelo maior (N
 
 ## Regra final de aprendizado
 O Cortex deve aprender com cada tarefa que falhou, registrando a lição para reduzir chamadas a Jules/Claude.
+
+## Tarefas de escopo grande
+
+- Tarefas que modificam **mais de 1 arquivo** ou têm **mais de ~50 linhas** de código/markdown são classificadas como **`cortex-jules`**.
+- Essas tarefas **não passam pelas 12 tentativas automáticas** do Cortex (degrau 1). Elas sobem imediatamente para o degrau 2 (`degrau-gratis` + `jules-enviado` ou `gemini-cli`) ou para o degrau 3 (`vez-do-claude`), pulando a automação de tentativas múltiplas.
+- O rótulo `cortex-jules` deve ser adicionado automaticamente ou manualmente pelo Cortex quando o escopo for detectado como maior que o limite.
