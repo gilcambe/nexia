@@ -15,6 +15,34 @@ const MAX_ARQ_PARTE = 3;
 const MAX_LINHAS_PARTE = 400;      // linhas acrescentadas + apagadas que uma parte pode mudar sem ir para revisão
 const MAX_JULES_PARALLEL = 3;       // máximo de tarefas do Jules rodando ao mesmo tempo
 const JULES_PRIORITY_WAIT = 30 * 60 * 1000;  // tempo de espera para tarefas de prioridade (30 min)
+const JULES_NOTIFICATION_EMAIL = 'MASTER_EMAIL'; // email do dono para notificações
+const JULES_CI_PROOF_ENABLED = true;          // habilitar prova de CI na conclusão
+const JULES_MAX_RETRIES = 2;                 // máximo de tentativas do Jules por tarefa
+
+// Função para verificar se uma tarefa está na fila do Jules
+function isJulesQueue(issue) {
+  return (issue.labels || []).some(l => (l.name || l) === 'cortex-jules');
+}
+
+// Função para verificar se uma tarefa está sendo executada pelo Jules
+function isJulesRunning(issue) {
+  return (issue.labels || []).some(l => (l.name || l) === 'jules-enviado');
+}
+
+// Função para verificar se uma tarefa foi concluída com sucesso
+function isCompleted(issue) {
+  return (issue.labels || []).some(l => (l.name || l) === 'cortex-feito');
+}
+
+// Função para verificar se uma tarefa está travada
+function isBlocked(issue) {
+  return (issue.labels || []).some(l => (l.name || l) === 'cortex-travado');
+}
+
+// Função para verificar se uma tarefa está na retomada
+function isRetomada(issue) {
+  return (issue.labels || []).some(l => (l.name || l) === 'cortex-retomada');
+}
 // Pedido do dono (25/10/2026): nada pode ficar horas esperando. O Cortex roda a cada 15 min e o auto-merge a cada 30 min,
 // então 1 h e 20 min já são folga de sobra — nunca mais 3 h nem 6 h.
 const ESPERA_PR_MAX_H = 1;         // dependente espera o PR da parte anterior entrar no máximo isto (a fila nunca para)
