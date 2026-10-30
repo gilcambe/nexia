@@ -1,39 +1,41 @@
 'use strict';
 
-// Handler para a API /api/escada
-// Retorna dados da escada para o componente EscadaCard
+// Simulação de dados da escada - em um ambiente real, estes viriam de um banco de dados ou API
+const ESCADA_DATA = {
+  cortex: 75,
+  gratis: 60,
+  claude: 85,
+  filaAtual: 12,
+  julesHoje: 8,
+  faseB: true
+};
+
 exports.handler = async (event, context) => {
   try {
-    // Simulação de dados da API - em produção viria do banco de dados
-    const dados = {
-      semana: {
-        cortex: 75,
-        iasGratis: 60,
-        claude: 85
-      },
-      filaPedidos: 12,
-      faseB: true,
-      julesHoje: 8
-    };
+    // Em um ambiente real, você buscaria esses dados de um banco de dados ou outra fonte
+    const data = ESCADA_DATA;
     
     return {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type'
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
       },
-      body: JSON.stringify(dados)
+      body: JSON.stringify(data)
     };
   } catch (error) {
-    console.error('Erro na API escada:', error);
+    console.error('Erro no handler escada:', error);
     return {
       statusCode: 500,
       headers: {
         'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
       },
-      body: JSON.stringify({ error: 'Erro interno do servidor' })
+      body: JSON.stringify({ error: 'Erro ao buscar dados da escada' })
     };
   }
 };
