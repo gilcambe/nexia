@@ -189,13 +189,36 @@ async function chamarReserva(token, n) {
 
 // Função pura: recebe issues e execuções e devolve a lista de ações. Fácil de testar.
 // prs = PRs nexia/* abertos ({ arquivos, criadoEm }) e tamanhos = { caminho: bytes }: usados pelo planejador (opcionais).
-function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], tamanhos = {} }) {
+function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], tamanhos = {}, cota = null, sonda = null }) {
   const acoes = [];
   const tamanhosDe = corpo => Object.fromEntries(plano.arquivosCitados(corpo).filter(a => tamanhos[a]).map(a => [a, tamanhos[a]]));
   const ultimaRun = n => runs.filter(r => r.name === `Cortex #${n}`).sort((a, b) => b.id - a.id)[0] || null;
   const validas = issues.filter(i => !i.pull_request && confiavel(i) && nomes(i).includes(L.fila));
   const pistasEmUso = new Set();
   let ativas = 0;
+
+  const infoCota = sonda || cota;
+  let maxPistas = pistas;
+  if (infoCota !== null && infoCota !== undefined) {
+    if (typeof infoCota === 'boolean') {
+      if (!infoCota) maxPistas = 0;
+    } else if (typeof infoCota === 'object') {
+      if (infoCota.ok === false) {
+        maxPistas = 0;
+      } else {
+        const usoVal = infoCota.uso ?? infoCota.porcentagem ?? infoCota.cota ?? infoCota.pct;
+        const usoNum = typeof usoVal === 'number' ? (usoVal <= 1 && usoVal > 0 ? usoVal * 100 : usoVal) : 0;
+        if (usoNum > 80 || infoCota.alta) {
+          maxPistas = Math.min(maxPistas, 1);
+        }
+      }
+    } else if (typeof infoCota === 'number') {
+      const usoNum = infoCota <= 1 && infoCota > 0 ? infoCota * 100 : infoCota;
+      if (usoNum > 80) {
+        maxPistas = Math.min(maxPistas, 1);
+      }
+    }
+  }
 
   for (const i of validas) {
     const ls = nomes(i);
@@ -207,7 +230,8 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
     const pista = numeroDe(ls, 'pista');
     if (run && run.status === 'completed') {
       if (run.conclusion === 'success') { acoes.push({ tipo: 'concluir', numero: i.number, run: run.id, corpo: String(i.body || ''), titulo: String(i.title || ''), desde: i.created_at || null }); continue; }
-      if (run.cota) { acoes.push({ tipo: 'reenfileirar', numero: i.number, tentativa: numeroDe(ls, 'tentativa'), run: run.id, conclusao: 'cota do banco' }); continue; }
+      const eErroCota = Boolean(run.cota) || (typeof run.mensagem === 'string' && /429|RESOURCE_EXHAUSTED|free tier daily row read limit/i.test(run.mensagem)) || (typeof run.erro === 'string' && /429|RESOURCE_EXHAUSTED|free tier daily row read limit/i.test(run.erro));
+      if (eErroCota) { acoes.push({ tipo: 'reenfileirar', numero: i.number, tentativa: numeroDe(ls, 'tentativa'), run: run.id, conclusao: 'cota do banco' }); continue; }
       if (run.ambiente) { acoes.push({ tipo: 'reenfileirar', numero: i.number, tentativa: numeroDe(ls, 'tentativa'), run: run.id, conclusao: 'erro de ambiente' }); continue; }
       const t = numeroDe(ls, 'tentativa') + 1;
       // Falhou 3 vezes inteira: o modelo grátis não dá conta do tamanho. Divide em partes pequenas em vez de repetir até travar.
@@ -253,7 +277,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
     if (esperaAnterior(i)) continue;
     if (plano.conflitaCom(i, rodando)) continue;   // outra parte rodando mexe no mesmo arquivo: espera ela
     if (precisaDividir(i, tamanhos)) { acoes.push({ tipo: 'dividir', numero: i.number, titulo: i.title || '', tarefa: String(i.body || '').trim(), tamanhos: tamanhosDe(i.body) }); continue; }
-    if (ativas >= pistas) break;
+    if (ativas >= maxPistas) break;
     let pista = 1; while (pistasEmUso.has(pista)) pista++;
     pistasEmUso.add(pista); ativas++; rodando.push(i);
     acoes.push({ tipo: 'despachar', numero: i.number, pista, tarefa: String(i.body || '').replace(/<!-- cortex-plano [\s\S]*?-->\n?/, '').trim() });
@@ -425,7 +449,7 @@ async function executar(token, acao, dividir) {
     await limparPistas(acao.pista);
     await addLabel(L.rodando); await addLabel(`pista-${acao.pista}`);
     const d = await gh(token, 'POST', '/actions/workflows/smoke-logado.yml/dispatches', {
-      ref: 'develop', inputs: { url: BASE_URL, task: acao.tarefa, autonomia: '3', pista: String(acao.pista), modo: 'economico', tarefa_id: String(n) },
+      ref: 'develop', inputs: { url: BASE_URL, task: acao.tarefa, autonomia: '3', pista: String(acao.pista), modo: process.env.CORTEX_MODO || 'economico', tarefa_id: String(n) },
     });
     if (d.status !== 204) { await delLabel(L.rodando); await comentar(`Não consegui disparar o Cortex (${d.status}). Tento de novo no próximo ciclo.`); }
   } else if (acao.tipo === 'concluir') {
@@ -640,7 +664,7 @@ async function corrigirCiDosPrs(token, runs) {
     const erro = cc.ultimasLinhas(await logDoJob(token, falho.id)) || String((falho.output || {}).summary || 'sem log');
     const task = `${cc.pedidoDoPr(pr.body)}${cc.MARCA}${cc.feedbackCi(erro, d.rodada)}`;
     const r = await gh(token, 'POST', '/actions/workflows/smoke-logado.yml/dispatches', {
-      ref: 'develop', inputs: { url: BASE_URL, task, autonomia: '3', pista: '', modo: 'economico', tarefa_id: `PR${pr.number}` },
+      ref: 'develop', inputs: { url: BASE_URL, task, autonomia: '3', pista: '', modo: process.env.CORTEX_MODO || 'economico', tarefa_id: `PR${pr.number}` },
     });
     await gh(escrita, 'POST', `/issues/${pr.number}/comments`, { body: `${cc.comentarioCi(pr.head.sha, d.rodada)}O CI falhou. O Cortex recebeu as últimas ${cc.LINHAS} linhas do erro e vai tentar corrigir (${d.rodada}/${cc.MAX_CORRECOES}).` });
     console.log(`CI do PR #${pr.number}: correção ${d.rodada} disparada (${r.status}).`);
@@ -716,7 +740,7 @@ async function main() {
       const jobs = ((await gh(token, 'GET', `/actions/runs/${r.id}/jobs`)).json || {}).jobs || [];
       for (const j of jobs) {
         const an = (await gh(token, 'GET', `/check-runs/${j.id}/annotations?per_page=50`)).json || [];
-        if (an.some(a => /RESOURCE_EXHAUSTED/.test(`${a.message || ''}`))) r.cota = true;
+        if (an.some(a => /429|RESOURCE_EXHAUSTED|free tier daily row read limit/i.test(`${a.message || ''}`))) r.cota = true;
         const resumo = an.find(a => a.title === 'Resumo do smoke');
         if (resumo && !r.assinatura) r.assinatura = assinaturaDoSmoke(resumo.message);
       }
@@ -726,7 +750,8 @@ async function main() {
   const direto = await literalDireto(token, issues);
   const extra = await dadosDoPlanejador(token, issues);
   const alertas = errosDeAmbiente(runs);
-  let acoes = decidir({ issues: issues.filter(i => !direto.has(i.number)), runs, ...extra });
+  const sonda = await sondarCota();
+  let acoes = decidir({ issues: issues.filter(i => !direto.has(i.number)), runs, sonda, ...extra });
   if (alertas.length) {
     // Erro de ambiente: 1 alerta (não 12 tentativas em cada tarefa) e não despacha mais neste ciclo, para não queimar execuções.
     try { await abrirAlertaAmbiente(token, alertas); } catch (e) { console.log(`alerta de ambiente: ${e.message}`); }
@@ -737,7 +762,6 @@ async function main() {
   try { acoes.push(...((await travadasPeloCofre(token, issues) || [])).filter(a => !acoes.some(x => x.numero === a.numero))); } catch (e) { console.log(`travadas pelo cofre: ${e.message}`); }
   // Sem escrita disponível no banco, despachar só queima mais cota: segura as tarefas novas (o resto segue).
   if (acoes.some(a => a.tipo === 'despachar')) {
-    const sonda = await sondarCota();
     if (!sonda.ok) { console.log(`cota esgotada (${sonda.motivo}): ${acoes.filter(a => a.tipo === 'despachar').length} tarefa(s) esperam na fila sem despachar.`); acoes = acoes.filter(a => a.tipo !== 'despachar'); }
     else if (sonda.motivo) console.log(`sonda: ${sonda.motivo}`);
   }

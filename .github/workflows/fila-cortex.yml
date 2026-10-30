@@ -32,6 +32,7 @@ jobs:
       - name: Processar a fila
         run: node scripts/cortex-fila.js
         env:
+          CORTEX_MODO: economico
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
           NEXIA_JOBS_TOKEN: ${{ secrets.NEXIA_JOBS_TOKEN }}
