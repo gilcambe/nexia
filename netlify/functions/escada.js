@@ -11,7 +11,7 @@ exports.handler = async (event, context) => {
         iasGratis: 60,
         claude: 85
       },
-      fila: 12,
+      filaPedidos: 12,
       faseB: true,
       julesHoje: 8
     };
