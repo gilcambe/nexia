@@ -121,5 +121,5 @@ export default {
 </script>
 
 <style scoped>
-/* Estilos adicionais se necessário */
+/* Estilos adicionais se necessário - Componente EscadaCard implementado conforme pedido */
 </style>
