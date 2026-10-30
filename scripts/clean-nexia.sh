@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Script para limpar referências NEXIA nos diretórios public/, apps/, nexia-ai/site-kit/ e viajante-pro/
+# Script para limpar referências NEXIA nos diretórios public/, apps/ e nexia-ai/site-kit/
 #
 # Requisitos:
 #   (1) "NEXIA CORTEX — Plataforma de IA"  →  "Cortex — Plataforma de IA"
@@ -17,7 +17,7 @@
 
 set -euo pipefail
 
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 
 echo ""
 echo "=========================================="
@@ -45,8 +45,8 @@ for dir in $DIRECTORIES; do
             sed -i.bak 's/<title>.*NEXIA.*<\/title>/<title>Cortex<\/title>/gi' "$file"
             
             # Passo 3: Remover NEXIA de og:site_name (manter o restante do conteúdo)
-            # Usa expressão regular simplificada para lidar com diferentes formatos de aspas
-            sed -i.bak 's/og:site_name=["'\''].*NEXIA.*["'\'']/og:site_name="Cortex"/gi' "$file"
+            # Expressão regular mais robusta para capturar diferentes formatos de og:site_name
+            sed -i.bak 's/og:site_name=["'\''][^"'\']*NEXIA[^"'\']*['"'\']/og:site_name="Cortex"/gi' "$file"
             
             # Remove backup temporário após processamento
             rm -f "$file.bak"
