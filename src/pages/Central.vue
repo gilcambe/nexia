@@ -52,7 +52,7 @@
 
 <script>
 import { ref } from 'vue';
-import EscadaCard from '@/components/EscadaCard.vue'; // Cartão Escada adicionado na aba Cortex
+import EscadaCard from '../components/EscadaCard.vue'; // Cartão Escada adicionado na aba Cortex
 
 export default {
   name: 'Central',
