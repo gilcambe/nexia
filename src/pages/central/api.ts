@@ -122,7 +122,21 @@ export function useCentral() {
     if (!res.ok) throw new Error(body.error || `Erro ${res.status}`);
     return body as { ok: boolean; mensagem: string };
   }, [getToken]);
-  return { buscar, agir, entrarSuporte, distribuirTarefas };
+
+  // Nova função para enviar tarefas para as contas ajudarem a resolver
+  const enviarTarefasParaContas = useCallback(async (tarefas: TarefaGratis[]) => {
+    const token = await getToken();
+    const res = await fetch(apiPath("/enviar-tarefas-para-contas"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ tarefas }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(body.error || `Erro ${res.status}`);
+    return body as { ok: boolean; mensagem: string };
+  }, [getToken]);
+
+  return { buscar, agir, entrarSuporte, distribuirTarefas, enviarTarefasParaContas };
 }
 
 export const reais = (v: number) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });

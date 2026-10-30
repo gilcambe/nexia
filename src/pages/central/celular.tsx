@@ -108,8 +108,9 @@ export function useModo() {
 
 // Componente para exibir e distribuir tarefas gratuitas
 export function GerenciarTarefasGratuitas({ cortex }: { cortex: Cortex }) {
-  const { distribuirTarefas } = useCentral();
+  const { distribuirTarefas, enviarTarefasParaContas } = useCentral();
   const [distribuindo, setDistribuindo] = useState(false);
+  const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
   const handleDistribuir = async () => {
@@ -129,6 +130,23 @@ export function GerenciarTarefasGratuitas({ cortex }: { cortex: Cortex }) {
     }
   };
 
+  const handleEnviarParaContas = async () => {
+    setEnviando(true);
+    setErro(null);
+    try {
+      const resultado = await enviarTarefasParaContas(cortex.gratuitas);
+      if (resultado.ok) {
+        alert("Tarefas enviadas para as contas com sucesso!");
+      } else {
+        setErro(resultado.mensagem);
+      }
+    } catch (error) {
+      setErro("Erro ao enviar tarefas para as contas. Tente novamente.");
+    } finally {
+      setEnviando(false);
+    }
+  };
+
   return (
     <div className="p-4">
       <h3 className="text-lg font-semibold mb-4">Tarefas Gratuitas</h3>
@@ -138,9 +156,16 @@ export function GerenciarTarefasGratuitas({ cortex }: { cortex: Cortex }) {
       <button
         onClick={handleDistribuir}
         disabled={distribuindo || cortex.gratuitas.length === 0}
-        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-300"
+        className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-300 mb-2"
       >
         {distribuindo ? "Distribuindo..." : "Distribuir Tarefas Gratuitas"}
+      </button>
+      <button
+        onClick={handleEnviarParaContas}
+        disabled={enviando || cortex.gratuitas.length === 0}
+        className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:bg-green-300"
+      >
+        {enviando ? "Enviando..." : "Enviar para Contas"}
       </button>
       {erro && <p className="text-red-500 mt-2">{erro}</p>}
     </div>
