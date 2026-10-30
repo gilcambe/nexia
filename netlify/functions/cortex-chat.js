@@ -490,7 +490,9 @@ exports.handler = async (event) => {
       modelUsed = ai.label || ai.model;
 
       const systemPrompt = buildSystemPrompt(tenantId, usage.plan, ragCtx, learningCtx) + nexiaCortex.promptSection(projectCtx);
-      const tokLimit = maxTokens || (modo && modos.MODOS[modo].maxTokens) || 100000; // NEXIA: sem limite — máximo absoluto do modelo
+      // #2391: limite de tokens por modo (2000 para rápido, 6000 para normal)
+      const TOKEN_LIMITS = { fast: 2000, normal: 6000 };
+      const tokLimit = maxTokens || (modo && modos.MODOS[modo].maxTokens) || TOKEN_LIMITS[modo] || TOKEN_LIMITS.normal;
       const historyLen = (Array.isArray(context) ? context.length : 0) || (mem && Array.isArray(mem.history) ? mem.history.length : 0);
       const elegivelCache = podeUsarCache(message, { historyLength: historyLen, projectMode: projectCtx ? projectCtx.mode : 'none', learningCtx, ragEnabled });
 
