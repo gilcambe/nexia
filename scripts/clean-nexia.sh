@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-DIRECTORIES="public/ apps/ nexia-ai/ viajante-pro/"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 echo ""
 echo "=========================================="
 echo "Iniciando limpeza de referências NEXIA..."
@@ -68,6 +68,12 @@ content = re.sub(r"<meta[^>]*og:site_name[^>]*>", clean_og_site_name, content, f
 with open(filepath, "w", encoding="utf-8") as f:
     f.write(content)
 PYEOF
+            
+            # Remover arquivo .bak se existir
+            if [ -f "$file.bak" ]; then
+                rm "$file.bak"
+                echo "  Removido backup: $file.bak"
+            fi
 
 
 
