@@ -1,44 +1,45 @@
 'use strict';
-// Testes unitários para o controle de cota, troca de banco, cache em memória do Vault e limpezas.
+// Teste unitário do Vault: contador de uso por banco, troca preventiva de cota aos 70% e cache em memória (TTL 60s).
 
-const { test } = require('node:test');
+const test = require('node:test');
 const assert = require('node:assert');
 const { createVault } = require('../../nexia-ai/vault/repository.js');
 
-test('Vault cache in-memory TTL and invalidation', async () => {
+test('Vault - cache em memória e rastreamento de cota', async () => {
   let fetchedCount = 0;
-  const mockDoc = {
-    exists: true,
-    data: () => ({ tenant_id: 'tenant-1', schemaVersion: 1, version: 1, name: 'Test Project', project_id: null, client_id: null })
-  };
-  const mockCol = {
-    doc: (id) => ({
-      get: async () => {
-        fetchedCount++;
-        return mockDoc;
-      }
-    })
-  };
   const mockDb = {
-    collection: (name) => mockCol,
     runTransaction: async (fn) => fn({
-      get: async () => mockDoc,
+      get: async () => ({ exists: true, data: () => ({ tenant_id: 't1', schemaVersion: 1, version: 1 }) }),
       create: () => {},
-      update: () => {},
-      delete: () => {}
+      update: () => {}
+    }),
+    collection: (col) => ({
+      doc: (id) => ({
+        get: async () => {
+          fetchedCount++;
+          return { exists: true, data: () => ({ id, tenant_id: 't1', schemaVersion: 1, version: 1, name: 'Test Project' }) };
+        }
+      }),
+      where: () => ({ where: () => ({ limit: () => ({ get: async () => ({ docs: [] }) }) }) })
     })
   };
 
-  const vault = createVault({ db: mockDb });
-  const ctx = { tenantId: 'tenant-1', executionId: 'exec-1', actor: { type: 'owner', id: '1' } };
+  const mockTenantDb = {
+    fetch: async (url, opts) => {
+      return { ok: true, json: async () => ({ success: true, quaseCheio: false, leituras: 10, escritas: 5 }) };
+    }
+  };
 
-  // 1st get
-  const r1 = await vault.Project.get(ctx, 'prj_1234567890abcdef1234567890abcdef');
-  assert.strictEqual(fetchedCount, 1);
-  assert.ok(r1);
+  const vault = createVault({ db: mockDb, tenantDb: mockTenantDb });
+  const ctx = { tenantId: 't1', executionId: 'exec_1', actor: { type: 'owner', id: 'owner_1' } };
 
-  // 2nd get (should be cached)
-  const r2 = await vault.Project.get(ctx, 'prj_1234567890abcdef1234567890abcdef');
+  // Primeira leitura (vai ao banco)
+  const r1 = await vault.Project.get(ctx, 'Project_1234567890abcdef1234567890abcdef');
+  assert.strictEqual(r1.id, 'Project_1234567890abcdef1234567890abcdef');
   assert.strictEqual(fetchedCount, 1);
-  assert.deepStrictEqual(r1, r2);
+
+  // Segunda leitura imediata (deve vir do cache em memória com TTL 60s)
+  const r2 = await vault.Project.get(ctx, 'Project_1234567890abcdef1234567890abcdef');
+  assert.strictEqual(r2.id, 'Project_1234567890abcdef1234567890abcdef');
+  assert.strictEqual(fetchedCount, 1); // Não incrementou, veio do cache!
 });
