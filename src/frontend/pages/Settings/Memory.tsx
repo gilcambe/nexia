@@ -20,6 +20,38 @@ export default function MemorySettings() {
   } = useMemory();
 
   const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [offlineAiEnabled, setOfflineAiEnabled] = useState(false);
+  const [showOfflineModal, setShowOfflineModal] = useState(false);
+  const [offlineErrorModal, setOfflineErrorModal] = useState<string | null>(null);
+
+  const handleOfflineAiToggle = () => {
+    if (offlineAiEnabled) {
+      setOfflineAiEnabled(false);
+      return;
+    }
+
+    // Verificar suporte a WebGPU e memória
+    const hasWebGPU = typeof navigator !== 'undefined' && 'gpu' in navigator;
+    // @ts-ignore
+    const deviceMemory = typeof navigator !== 'undefined' && navigator.deviceMemory ? navigator.deviceMemory : 4;
+
+    if (!hasWebGPU || deviceMemory < 4) {
+      setOfflineErrorModal(
+        !hasWebGPU
+          ? 'Seu navegador ou dispositivo não suporta WebGPU, necessário para rodar a IA localmente.'
+          : 'Seu dispositivo possui menos de 4 GB de memória RAM, o que pode ser insuficiente para rodar o modelo local (~1 GB).'
+      );
+      return;
+    }
+
+    // Exibir aviso de download de ~1 GB com recomendação de Wi-Fi
+    setShowOfflineModal(true);
+  };
+
+  const confirmOfflineAi = () => {
+    setOfflineAiEnabled(true);
+    setShowOfflineModal(false);
+  };
 
 
 
