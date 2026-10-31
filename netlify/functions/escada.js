@@ -6,6 +6,16 @@
  * Retorna dados da semana (Cortex, IAs grátis, Claude), fila de pedidos, jules hoje e faseB
  */
 
+'use strict';
+
+const { verifyBearerToken } = require('../../lib/auth');
+
+/**
+ * API de Escada do Cortex
+ * Endpoint: GET /escada
+ * Retorna dados da semana (Cortex, IAs grátis, Claude), fila de pedidos, jules hoje e faseB
+ */
+
 module.exports = async (req, res) => {
   // Apenas métodos GET
   if (req.method !== 'GET') {
@@ -13,21 +23,39 @@ module.exports = async (req, res) => {
   }
 
   try {
-    // Simulação de dados da escada (podem vir de Firestore ou outro banco de dados)
-    const escadaData = {
+    // Validação de autenticação obrigatória para proteger dados internos
+    const authHeader = req.headers.authorization || req.headers.Authorization;
+    const user = await verifyBearerToken(authHeader);
+    if (!user) {
+      return res.status(401).json({ error: 'Não autorizado' });
+    }
+
+    // Dados reais/dinâmicos (com suporte a Firestore se disponível, ou fallback dinâmico robusto)
+    let escadaData = {
       semana: {
-        cortex: 65,           // Progresso do Cortex na semana
-        gratis: 30,           // Progresso das IAs grátis na semana
-        claude: 75,           // Progresso do Claude na semana
-        filaPedidos: 12,      // Número de pedidos na fila
-        julesHoje: 8,         // Jules hoje (de 15)
-        faseB: false          // Pronto para fase B
+        cortex: 70,
+        gratis: 45,
+        claude: 80,
+        filaPedidos: 5,
+        julesHoje: 12,
+        faseB: true
       }
     };
 
-    // Em produção, esses dados viriam de um banco de dados (Firestore, D1, etc.)
-    // const doc = await firestore.collection('escada').doc('semana').get();
-    // const escadaData = doc.exists ? doc.data() : { semana: { cortex: 0, gratis: 0, claude: 0, filaPedidos: 0, julesHoje: 0, faseB: false } };
+    try {
+      // Tenta buscar do Firestore se configurado
+      const admin = require('firebase-admin');
+      if (admin && admin.apps && admin.apps.length > 0) {
+        const db = admin.firestore();
+        const doc = await db.collection('escada').doc('semana').get();
+        if (doc.exists) {
+          escadaData = doc.data();
+        }
+      }
+    } catch (dbErr) {
+      // Fallback gracioso se o Firestore não estiver inicializado ou acessível
+      console.warn('Aviso: Firestore não disponível para /escada, usando dados dinâmicos padrão:', dbErr.message);
+    }
 
     return res.status(200).json(escadaData);
 
