@@ -41,11 +41,11 @@ class VazaoController {
 
   registrar(banco, leituras = 0, escritas = 0) {
     const hoje = new Date().toISOString().slice(0, 10);
-    const key = banco || this.bancos[this.bancoAtualIndex];
-    let entry = this.usoDiario.get(key);
+    const key = banco || this.bancoAtual;
+    let entry = this.usoDiarioBancos.get(key);
     if (!entry || entry.data !== hoje) {
       entry = { data: hoje, leituras: 0, escritas: 0, status: 'ativo' };
-      this.usoDiario.set(key, entry);
+      this.usoDiarioBancos.set(key, entry);
     }
     entry.leituras += leituras;
     entry.escritas += escritas;
@@ -53,43 +53,45 @@ class VazaoController {
     const limite = this.verificarLimite(key);
     if (limite.quaseCheio) {
       entry.status = 'quase cheio';
-      this.proximoBanco();
+      this.switchToNextBank();
     }
     return entry;
   }
 
   verificarLimite(banco) {
-    const key = banco || this.bancos[this.bancoAtualIndex];
+    const key = banco || this.bancoAtual;
     const u = this.obterContador(key);
     const isD1 = key === 'd1';
     const isCofre = key === 'cofresql';
     const isFs = /firestore/.test(key);
-    const maxL = isD1 ? 5000000 : (isCofre ? 50000000 : isFs ? 50000 : 50000);
-    const maxE = isD1 ? 100000 : (isCofre ? 10000000 : isFs ? 20000 : 20000);
-    const quaseCheio = u.leituras >= maxL * 0.7 || u.escritas >= maxE * 0.7;
+    const limite = this.BANK_LIMITS[key] || this.BANK_LIMITS['firestore-b'];
+    const maxL = limite.reads;
+    const maxE = limite.writes;
+    const quaseCheio = u.leituras >= maxL * limite.warnThreshold || u.escritas >= maxE * limite.warnThreshold;
     return { quaseCheio, leituras: u.leituras, escritas: u.escritas, maxL, maxE, status: u.status || 'ativo' };
   }
 
   obterContador(banco) {
-    const key = banco || this.bancos[this.bancoAtualIndex];
+    const key = banco || this.bancoAtual;
     const hoje = new Date().toISOString().slice(0, 10);
-    const entry = this.usoDiario.get(key);
+    const entry = this.usoDiarioBancos.get(key);
     if (!entry || entry.data !== hoje) return { leituras: 0, escritas: 0, status: 'ativo' };
     return { leituras: entry.leituras, escritas: entry.escritas, status: entry.status || 'ativo' };
   }
 
   proximoBanco() {
-    this.bancoAtualIndex = (this.bancoAtualIndex + 1) % this.bancos.length;
-    return this.bancos[this.bancoAtualIndex];
+    const i = this.ordemBancos.indexOf(this.bancoAtual);
+    this.bancoAtual = i >= 0 && i < this.ordemBancos.length - 1 ? this.ordemBancos[i + 1] : this.ordemBancos[0];
+    return this.bancoAtual;
   }
 
   obterBancoAtual() {
-    return this.bancos[this.bancoAtualIndex];
+    return this.bancoAtual;
   }
 
   obterResumoGeral() {
     const resumo = {};
-    for (const b of this.bancos) {
+    for (const b of this.ordemBancos) {
       resumo[b] = this.verificarLimite(b);
     }
     return resumo;
