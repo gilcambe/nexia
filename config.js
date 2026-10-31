@@ -32,7 +32,7 @@ export const configManager = {
       return false;
     }
   },
-  async setIAState(ativo: boolean) {
+  async setIAState(ativo) {
     try {
       localStorage.setItem('cortex_ia_local', String(ativo));
     } catch {}
