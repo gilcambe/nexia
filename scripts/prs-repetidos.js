@@ -4,16 +4,15 @@ const LIMITE_FECHAMENTOS = 15;
 const EXCECOES_ROTULOS = ['nao-fechar', 'manter'];
 
 function decidir(prs, agora) {
-  const grupos = new Map();
+  // Filtrar apenas PRs da branch nexia/
+  const prsNexia = prs.filter(pr => pr.headRef && pr.headRef.startsWith('nexia/'));
 
   // Agrupar PRs por número da issue
-  for (const pr of prs) {
+  const grupos = new Map();
+  for (const pr of prsNexia) {
     const issueNumber = pr.title.match(/#(\d+)/)?.[1];
     if (!issueNumber) continue;
-
-    if (!grupos.has(issueNumber)) {
-      grupos.set(issueNumber, []);
-    }
+    if (!grupos.has(issueNumber)) grupos.set(issueNumber, []);
     grupos.get(issueNumber).push(pr);
   }
 
@@ -23,33 +22,32 @@ function decidir(prs, agora) {
   for (const [issueNumber, grupo] of grupos) {
     if (grupo.length <= 1) continue;
 
-    // Ordenar por CI verde mais novo ou mais novo
+    // Ordenar: CI verde mais novo primeiro, depois mais novo
     grupo.sort((a, b) => {
       if (a.ciStatus === 'success' && b.ciStatus !== 'success') return -1;
       if (a.ciStatus !== 'success' && b.ciStatus === 'success') return 1;
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
 
-    // Selecionar PR a manter
     const manter = grupo[0];
 
-    // Adicionar PRs a fechar
     for (let i = 1; i < grupo.length; i++) {
       const pr = grupo[i];
 
-      // Verificar exceções de rótulos
-      if (pr.labels.some(label => EXCECOES_ROTULOS.includes(label.name))) continue;
+      // Respeitar exceções de rótulos
+      const temExcecao = pr.labels.some(l => EXCECOES_ROTULOS.includes(l.name));
+      if (temExcecao) continue;
 
-      // Verificar CI vermelho >48h
-      if (pr.ciStatus === 'failure' && (agora - new Date(pr.createdAt)) / (1000 * 60 * 60) > 48) {
-        fechar.push(pr);
+      // CI vermelho > 48h e issue fechada
+      const horas = (agora - new Date(pr.createdAt)) / (1000 * 60 * 60);
+      if (pr.ciStatus === 'failure' && horas > 48 && pr.issueFechada) {
+        fechar.push({ pr, motivo: 'ci-vermelho-issue-fechada' });
       } else {
-        fechar.push(pr);
+        fechar.push({ pr, motivo: 'duplicado' });
       }
     }
   }
 
-  // Limitar a 15 fechamentos por rodada
   return fechar.slice(0, LIMITE_FECHAMENTOS);
 }
 
@@ -61,23 +59,24 @@ async function rodar() {
     owner: 'seu-usuario',
     repo: 'seu-repositorio',
     state: 'open',
-    base: 'nexia/',
   });
 
-  // Preparar PRs para a função decidir
-  const prsParaDecidir = prs.map(pr => ({
-    number: pr.number,
-    title: pr.title,
-    createdAt: pr.created_at,
-    ciStatus: pr.mergeable_state,
-    labels: pr.labels,
-  }));
+  // Filtrar head.ref começando por nexia/ e mapear campos
+  const prsParaDecidir = prs
+    .filter(pr => pr.head.ref.startsWith('nexia/'))
+    .map(pr => ({
+      number: pr.number,
+      title: pr.title,
+      headRef: pr.head.ref,
+      createdAt: pr.created_at,
+      ciStatus: pr.ci_status || 'pending',
+      labels: pr.labels,
+      issueFechada: pr.issueFechada === true,
+    }));
 
-  // Chamar função decidir
   const fechar = decidir(prsParaDecidir, new Date());
 
-  // Executar fechamentos
-  for (const pr of fechar) {
+  for (const { pr, motivo } of fechar) {
     await octokit.pulls.update({
       owner: 'seu-usuario',
       repo: 'seu-repositorio',
@@ -85,11 +84,18 @@ async function rodar() {
       state: 'closed',
     });
 
+    let body;
+    if (motivo === 'ci-vermelho-issue-fechada') {
+      body = 'Este PR foi fechado automaticamente: CI vermelho há mais de 48h e a issue relacionada já está fechada.';
+    } else {
+      body = 'Este PR foi fechado automaticamente porque há outro PR mais recente para a mesma issue.';
+    }
+
     await octokit.issues.createComment({
       owner: 'seu-usuario',
       repo: 'seu-repositorio',
       issue_number: pr.number,
-      body: 'Este PR foi fechado automaticamente porque há outro PR mais recente para a mesma issue.',
+      body,
     });
   }
 
