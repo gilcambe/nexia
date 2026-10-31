@@ -540,6 +540,222 @@ exports.handler = async function (event, context) {
     return res(200, { ok: true, viagem });
   }
 
+  // ── Ação: pax-entrar (Login do passageiro) ──
+  if (acao === 'pax-entrar') {
+    const tokenViagem = str(body.v, 24); // Token da viagem para entrada sem senha
+    const email = str(body.email, 100);
+    const senha = String(body.senha || '');
+    
+    // Entrada via token da viagem (comportamento existente)
+    if (tokenViagem) {
+      const snaps = await contaRef.collection('viagens').where('codigoSecreto', '==', tokenViagem).get();
+      if (snaps.empty) return res(404, { error: 'Viagem não encontrada.' });
+      
+      const viagem = snaps.docs[0].data();
+      const paxId = body.paxId || 'default'; // ID do passageiro na viagem
+      
+      const sessaoToken = aleatorio(24);
+      const sessaoHash = await sha256(sessaoToken);
+      const expiraEm = new Date(now + SESSAO_DIAS * 86400000).toISOString();
+      
+      await contaRef.collection('sessoes').doc(sessaoHash).set({
+        criado_em: new Date(now).toISOString(),
+        expira_em: expiraEm,
+        perfil: 'passageiro',
+        viagemId: viagem.id,
+        passageiroId: paxId,
+      });
+      
+      return res(200, { ok: true, token: sessaoToken, expira_em: expiraEm, viagem });
+    }
+    
+    // Entrada via email + senha
+    if (!email || !senha) {
+      return res(400, { error: 'E-mail e senha são obrigatórios para login.' });
+    }
+    
+    // Buscar passageiro pelo email
+    const paxSnap = await contaRef.collection('passageiros').where('email', '==', email).get();
+    if (paxSnap.empty) {
+      return res(401, { error: 'E-mail não encontrado.' });
+    }
+    
+    const passageiro = paxSnap.docs[0].data();
+    
+    // Verificar se está bloqueado
+    if (passageiro.bloqueio_ate && new Date(passageiro.bloqueio_ate).getTime() > now) {
+      return res(403, { error: 'Conta temporariamente bloqueada. Tente novamente mais tarde.' });
+    }
+    
+    // Validar senha
+    const hashCalculado = await hashSenha(senha, passageiro.senha_salt);
+    if (!iguais(hashCalculado, passageiro.senha_hash)) {
+      // Incrementar tentativas erradas
+      const novasTentativas = (passageiro.tentativas_erradas || 0) + 1;
+      let bloqueioAte = null;
+      
+      if (novasTentativas >= 3) {
+        bloqueioAte = new Date(now + 15 * 60000).toISOString(); // 15 minutos
+      }
+      
+      await paxSnap.ref.update({
+        tentativas_erradas: novasTentativas,
+        bloqueio_ate: bloqueioAte
+      });
+      
+      return res(401, { error: bloqueioAte ? 'Conta bloqueada por 15 minutos.' : 'Senha incorreta.' });
+    }
+    
+    // Resetar tentativas erradas
+    await pSnap.ref.update({ tentativas_erradas: 0 });
+    
+    // Criar sessão
+    const sessaoToken = aleatorio(24);
+    const sessaoHash = await sha256(sessaoToken);
+    const expiraEm = new Date(now + SESSAO_DIAS * 86400000).toISOString();
+    
+    await contaRef.collection('sessoes').doc(sessaoHash).set({
+      criado_em: new Date(now).toISOString(),
+      expira_em: expiraEm,
+      perfil: 'passageiro',
+      passageiroId: passageiro.id,
+    });
+    
+    return res(200, { ok: true, token: sessaoToken, expira_em: expiraEm });
+  }
+
+  // ── Ação: pax-codigo (Login com código de 6 dígitos) ──
+  if (acao === 'pax-codigo') {
+    const email = str(body.email, 100);
+    const codigo = str(body.codigo, 6);
+    
+    if (!email || !codigo) {
+      return res(400, { error: 'E-mail e código são obrigatórios.' });
+    }
+    
+    // Buscar passageiro pelo email
+    const paxSnap = await contaRef.collection('passageiros').where('email', '==', email).get();
+    if (paxSnap.empty) {
+      return res(401, { error: 'E-mail não encontrado.' });
+    }
+    
+    const passageiro = paxSnap.docs[0].data();
+    
+    // Verificar se está bloqueado
+    if (passageiro.bloqueio_ate && new Date(passageiro.bloqueio_ate).getTime() > now) {
+      return res(403, { error: 'Conta temporariamente bloqueada. Tente novamente mais tarde.' });
+    }
+    
+    // Validar código
+    if (!passageiro.codigo_6d || passageiro.codigo_hash !== await sha256(codigo)) {
+      // Incrementar tentativas erradas
+      const novasTentativas = (passageiro.tentativas_erradas || 0) + 1;
+      let bloqueioAte = null;
+      
+      if (novasTentativas >= 3) {
+        bloqueioAte = new Date(now + 15 * 60000).toISOString(); // 15 minutos
+      }
+      
+      await paxSnap.ref.update({
+        tentativas_erradas: novasTentativas,
+        bloqueio_ate: bloqueioAte
+      });
+      
+      return res(401, { error: bloqueioAte ? 'Conta bloqueada por 15 minutos.' : 'Código incorreto.' });
+    }
+    
+    // Verificar expiração do código
+    if (new Date(passageiro.codigo_expira).getTime() < now) {
+      return res(401, { error: 'Código expirado. Solicite um novo.' });
+    }
+    
+    // Resetar tentativas erradas
+    await paxSnap.ref.update({ tentativas_erradas: 0 });
+    
+    // Criar sessão
+    const sessaoToken = aleatorio(24);
+    const sessaoHash = await sha256(sessaoToken);
+    const expiraEm = new Date(now + SESSAO_DIAS * 86400000).toISOString();
+    
+    await contaRef.collection('sessoes').doc(sessaoHash).set({
+      criado_em: new Date(now).toISOString(),
+      expira_em: expiraEm,
+      perfil: 'passageiro',
+      passageiroId: passageiro.id,
+    });
+    
+    return res(200, { ok: true, token: sessaoToken, expira_em: expiraEm });
+  }
+
+  // ── Ação: pax-solicitar-codigo (Solicitar código por e-mail) ──
+  if (acao === 'pax-solicitar-codigo') {
+    const email = str(body.email, 100);
+    
+    if (!email) {
+      return res(400, { error: 'E-mail é obrigatório.' });
+    }
+    
+    // Buscar passageiro pelo email
+    const paxSnap = await contaRef.collection('passageiros').where('email', '==', email).get();
+    if (paxSnap.empty) {
+      return res(401, { error: 'E-mail não encontrado.' });
+    }
+    
+    const passageiro = paxSnap.docs[0].data();
+    
+    // Gerar código de 6 dígitos
+    const codigo = Math.floor(100000 + Math.random() * 900000).toString();
+    const codigoHash = await sha256(codigo);
+    const codigoExpira = new Date(now + 10 * 60000).toISOString(); // 10 minutos
+    
+    // Atualizar passageiro com novo código
+    await paxSnap.ref.update({
+      codigo_6d: codigo,
+      codigo_hash: codigoHash,
+      codigo_expira: codigoExpira,
+      tentativas_erradas: 0
+    });
+    
+    // Enviar e-mail com código
+    const key = env.BREVO_API_KEY;
+    if (!key) {
+      return res(500, { error: 'Serviço de e-mail indisponível.' });
+    }
+    
+    try {
+      const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': key,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: 'Viajante Pro', email: 'no-reply@viajante.pro' },
+          to: [{ email: passageiro.email, name: passageiro.nome }],
+          subject: `Seu código de acesso ao Viajante Pro - ${passageiro.nome}`,
+          htmlContent: `
+            <h2>Olá, ${passageiro.nome}!</h2>
+            <p>Seu código de acesso ao Viajante Pro é:</p>
+            <div style="background: #f0f0f0; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+              <span style="font-size: 32px; font-weight: bold; color: #333;">${codigo}</span>
+            </div>
+            <p>Este código é válido por 10 minutos. Não compartilhe com ninguém.</p>
+            <p>Se não solicitou este código, ignore este e-mail.</p>
+          `,
+        }),
+      });
+      
+      if (!resp.ok) {
+        console.error('Erro ao enviar código:', resp.status);
+      }
+    } catch (e) {
+      console.error('Erro ao enviar código:', e);
+    }
+    
+    return res(200, { ok: true, message: 'Código enviado para seu e-mail.' });
+  }
+
   // ── Ação: chat-enviar ──
   if (acao === 'chat-enviar') {
     const vId = str(body.v, 64);
