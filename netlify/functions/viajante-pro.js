@@ -183,7 +183,7 @@ exports.handler = async function (event, context) {
 
     const cSnap = await contaRef.collection('site').doc('conteudo').get();
     const cData = cSnap.exists ? cSnap.data() : {};
-    
+
     const publico = { ...cData };
     if (!q.admin && publico.pagamento) {
       publico.pagamento = {

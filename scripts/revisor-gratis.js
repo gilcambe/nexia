@@ -47,7 +47,7 @@ function escolher(prs) {
   return (prs || []).filter(pr => pr.base && pr.base.ref === 'develop'
     && pr.head && pr.head.repo && pr.head.repo.full_name === REPO && /^nexia\//.test(pr.head.ref || '')
     && !/demo/i.test(pr.title || '')
-    && !(pr.labels || []).some(l => ['automerge', 'revisor-recusou', 'so-humano'].includes(l.name)));
+    && !(pr.labels || []).some(l => ['automerge', 'revisor-recusou', 'so-humano', 'dono-aprovou'].includes(l.name)));
 }
 
 // Barreiras objetivas antes de gastar IA. Devolve um motivo (string) ou null.
