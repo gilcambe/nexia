@@ -75,10 +75,10 @@
 
   // Buscar Viagem da API
   function buscarViagem(token) {
-    return fetch('/api/viagem?site=viajantepro', {
+    return fetch('/api/viajante-pro?site=viajantepro', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ acao: 'app_obter', token: token })
+      body: JSON.stringify({ acao: 'app-viagem', v: token })
     }).then(function (res) {
       if (res.status === 404) {
         var err = new Error('link_invalido');
