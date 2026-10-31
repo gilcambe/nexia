@@ -320,6 +320,81 @@ exports.handler = async function (event, context) {
 
   // ── Verificação de Token de Sessão para Ações Administrativas ──
   const token = body.token || event.headers.authorization?.replace(/^Bearer\s+/i, '') || '';
+  const v = body.v || q.v;
+
+  // ── Ação Pública: App do Viajante (requere código v) ──
+  if (acao === 'app-viagem') {
+    if (!v) return res(400, { error: 'Código da viagem (v) é obrigatório.' });
+    const vCod = str(v, 64);
+
+    const vDoc = await contaRef.collection('viagens').doc(vCod).get();
+    if (!vDoc.exists) return res(404, { error: 'Viagem não encontrada.' });
+
+    const vData = vDoc.data();
+    if (!vData || !vData.id) return res(404, { error: 'Dados da viagem inválidos.' });
+
+    // Verificar se viagem ainda é válida (opcional: data de expiração)
+    return res(200, {
+      ok: true,
+      viagem: {
+        id: vData.id,
+        nome: str(vData.nome, 200),
+        destino: str(vData.destino, 200),
+        datas: vData.datas || {},
+        passageiros: Array.isArray(vData.passageiros) ? vData.passageiros.map(p => ({ nome: str(p.nome, 100), email: str(p.email, 100), whatsapp: str(p.whatsapp, 30) })) : [],
+        roteiro: Array.isArray(vData.roteiro) ? vData.roteiro.map(r => ({ dia: str(r.dia, 50), titulo: str(r.titulo, 200), descricao: str(r.descricao, 500), endereco: str(r.endereco, 200) })) : [],
+      },
+    });
+  }
+
+  // ── Ação Pública: Chat do Viajante (requere código v) ──
+  if (acao === 'chat-enviar' || acao === 'chat-listar') {
+    if (!v) return res(400, { error: 'Código da viagem (v) é obrigatório.' });
+    const vCod = str(v, 64);
+
+    // Verificar se viagem existe
+    const vDoc = await contaRef.collection('viagens').doc(vCod).get();
+    if (!vDoc.exists) return res(404, { error: 'Viagem não encontrada.' });
+    const vId = vDoc.id;
+
+    const mensagensRef = contaRef.collection('viagens').doc(vId).collection('mensagens');
+
+    if (acao === 'chat-enviar') {
+      const texto = str(body.texto, 5000);
+      const autor = str(body.autor, 20) || 'viajante';
+
+      if (!texto) return res(400, { error: 'Texto da mensagem é obrigatório.' });
+
+      const msgId = aleatorio(24);
+      const msgData = {
+        id: msgId,
+        texto,
+        autor,
+        hora: new Date(now).toISOString(),
+      };
+
+      await mensagensRef.doc(msgId).set(msgData);
+
+      return res(200, { ok: true, mensagem: msgData });
+    }
+
+    if (acao === 'chat-listar') {
+      const desde = body.desde ? parseInt(body.desde, 10) : 0;
+      const snaps = await mensagensRef.orderBy('hora', 'desc').limit(50).get();
+
+      const mensagens = [];
+      snaps.docs.forEach(doc => mensagens.push(doc.data()));
+
+      return res(200, {
+        ok: true,
+        mensagens,
+        total: mensagens.length,
+        desde,
+      });
+    }
+  }
+
+  // ── Ações Administrativas Requerem Token de Sessão ──
   if (!token) return res(401, { error: 'Token de autenticação ausente.' });
 
   const tokenHash = await sha256(token);
@@ -332,7 +407,7 @@ exports.handler = async function (event, context) {
     return res(401, { error: 'Sessão expirada.' });
   }
 
-  // ── Ações Administrativas de Cotações ──
+  // ── Ações Administrativas de Viagens ── ──
   if (acao === 'cotacao-listar') {
     const snaps = await contaRef.collection('cotacoes').get();
     const cotacoes = [];
