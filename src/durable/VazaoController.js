@@ -71,6 +71,81 @@ class VazaoController {
     }
     return resumo;
   }
+
+  /**
+   * Obtém o uso diário de um banco específico.
+   * @param {string} banco - Nome do banco
+   * @returns {Object} { data, leituras, escritas, status }
+   */
+  obterUsoDiario(banco) {
+    const key = banco || this.obterBancoAtual();
+    const hoje = new Date().toISOString().slice(0, 10);
+    const entry = this.usoDiario.get(key);
+    if (!entry || entry.data !== hoje) {
+      return { data: hoje, leituras: 0, escritas: 0, status: 'ativo' };
+    }
+    return { data: entry.data, leituras: entry.leituras, escritas: entry.escritas, status: entry.status || 'ativo' };
+  }
+
+  /**
+   * Obtém o uso diário de todos os bancos.
+   * @returns {Object[]} Lista de { banco, data, leituras, escritas, status, limiteLeituras, limiteEscritas }
+   */
+  obterUsoTodosBancos() {
+    const res = [];
+    for (const b of this.bancos) {
+      const u = this.obterUsoDiario(b);
+      const limite = this.verificarLimite(b);
+      res.push({
+        banco: b,
+        data: u.data,
+        leituras: u.leituras,
+        escritas: u.escritas,
+        status: u.status || 'ativo',
+        limiteLeituras: limite.maxL,
+        limiteEscritas: limite.maxE,
+        percentualLeituras: limite.maxL ? Number(((u.leituras / limite.maxL) * 100).toFixed(1)) : 0,
+        percentualEscritas: limite.maxE ? Number(((u.escritas / limite.maxE) * 100).toFixed(1)) : 0
+      });
+    }
+    return res;
+  }
+
+  /**
+   * Verifica se algum banco está quase cheio (>= 70%) e retorna o banco para troca.
+   * @returns {Object|null} { bancoCheio, proximoBanco, alerta } ou null se nenhum banco estiver quase cheio
+   */
+  checarBancosQuaseCheios() {
+    for (const b of this.bancos) {
+      const u = this.obterUsoDiario(b);
+      const limite = this.verificarLimite(b);
+      if (limite.quaseCheio) {
+        const proximo = this.proximoBanco();
+        return {
+          bancoCheio: b,
+          proximoBanco: proximo,
+          alerta: {
+            tipo: 'sentinel',
+            banco: b,
+            leituras: u.leituras,
+            escritas: u.escritas,
+            limiteLeituras: limite.maxL,
+            limiteEscritas: limite.maxE,
+            percentualLeituras: limite.maxL ? Number(((u.leituras / limite.maxL) * 100).toFixed(1)) : 0,
+            percentualEscritas: limite.maxE ? Number(((u.escritas / limite.maxE) * 100).toFixed(1)) : 0,
+            timestamp: new Date().toISOString(),
+            acao: 'alternar_tráfego_preventivo',
+            passoAPasso: [
+              `1. Banco ${b} atingiu o limite preventivo de 70% da cota.`,
+              `2. O Vault ativou automaticamente o rodízio para o próximo banco disponível.`,
+              `3. Verifique o consumo na Central e valide a integridade dos dados.`
+            ]
+          }
+        };
+      }
+    }
+    return null;
+  }
 }
 
 
