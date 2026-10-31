@@ -1,11 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMemory } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemType } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemComponent } from '../../components/MemoryItem';
 import { obterConfig, verificarSuporteWebGPU, salvarConfig } from '../../config';
-type MemoryItemProps = MemoryItemType & {
-  onDelete: (id: string) => void;
-};
 
 export default function MemorySettings() {
   const { 
@@ -46,29 +43,21 @@ export default function MemorySettings() {
     toggleRememberMe(enabled);
   };
 
-  // Carregar configuração ao montar
-  useEffect(() => {
-    const config = obterConfig();
-    setIaLocalAtivo(config.ativo);
-  }, []);
-
-  // Verificar suporte WebGPU ao montar e carregar configuração
+  // Verificar suporte WebGPU e memória ao montar e carregar configuração
   useEffect(() => {
     (async () => {
       try {
-        // Carregar configuração salva
         const config = obterConfig();
         setIaLocalAtivo(config.ativo);
         
-        // Verificar suporte WebGPU
         const suporte = await verificarSuporteWebGPU();
         if (!suporte.suportado) {
           setBloqueado(true);
-          setMotivoBloqueio(suporte.motivo || 'Não suportado');
+          setMotivoBloqueio(suporte.motivo || 'WebGPU ou memória insuficiente não suportada.');
         }
       } catch (err) {
         setBloqueado(true);
-        setMotivoBloqueio(err instanceof Error ? err.message : 'Erro ao verificar suporte');
+        setMotivoBloqueio(err instanceof Error ? err.message : 'Erro ao verificar suporte do dispositivo.');
       }
     })();
   }, []);
@@ -81,20 +70,15 @@ export default function MemorySettings() {
     if (bloqueado) return;
 
     if (ativo) {
-      // Ao tentar ligar, exibe aviso de download
       setMostrarAvisoDownload(true);
-      
-      // Aguarda confirmação do usuário (o aviso é controlado pelo estado)
-      // A configuração só é salva quando o usuário confirmar no aviso
     } else {
-      // Desligar IA local
       setMostrarAvisoDownload(false);
       setIaLocalAtivo(false);
       salvarConfig({ ativo: false });
     }
   };
 
-    return (
+  return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Configurações de Memória</h1>
@@ -102,8 +86,6 @@ export default function MemorySettings() {
           Gerencie os fatos armazenados pelo Cortex e suas preferências de privacidade.
         </p>
       </div>
-
-
 
       {/* Seção de privacidade */}
       <div className="mb-8">
@@ -141,8 +123,6 @@ export default function MemorySettings() {
         </div>
       </div>
 
-
-
       {/* Seção de IA local */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">IA no meu aparelho (grátis, offline)</h2>
@@ -167,7 +147,7 @@ export default function MemorySettings() {
                 role="switch"
                 aria-checked={iaLocalAtivo}
                 aria-label="IA no meu aparelho (grátis, offline)"
-                title={bloqueado ? `Desativado: ${motivoBloqueio}` : 'IA no meu aparelho (grátis, offline)'}
+                title={bloqueado ? `Bloqueado: ${motivoBloqueio}` : 'IA no meu aparelho (grátis, offline)'}
               >
                 <span
                   className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${iaLocalAtivo ? 'translate-x-6' : 'translate-x-1'}`}
@@ -176,25 +156,25 @@ export default function MemorySettings() {
             </div>
           </div>
           {bloqueado && (
-            <div className="text-xs text-red-400 mt-4" role="alert" aria-live="assertive">
-              <p>⚠️ {motivoBloqueio}</p>
+            <div className="text-xs text-red-400 mt-4 bg-red-400/10 p-3 rounded-lg" role="alert" aria-live="assertive">
+              <p>🚫 <strong>Dispositivo não suportado:</strong> {motivoBloqueio}</p>
             </div>
           )}
           {mostrarAvisoDownload && (
-            <div className="text-xs text-yellow-400 mt-4 bg-yellow-400/10 p-3 rounded-lg">
-              <p>⚠️ O download da IA local requer aproximadamente 1 GB de armazenamento.</p>
-              <p className="mt-1">Recomendamos usar uma conexão Wi-Fi estável para evitar cobranças de dados móveis.</p>
-              <p className="mt-1">O download pode levar alguns minutos dependendo da velocidade da sua conexão.</p>
-              <div className="mt-3 flex gap-2">
+            <div className="text-xs text-amber-300 mt-4 bg-amber-400/10 p-4 rounded-lg border border-amber-400/20" role="alert">
+              <p className="font-semibold text-sm mb-1">⚠️ Aviso de Download (~1 GB)</p>
+              <p>A ativação da IA local fará o download de aproximadamente <strong>1 GB</strong> de dados de modelos para o seu dispositivo.</p>
+              <p className="mt-1">Recomendamos firmemente o uso de uma conexão <strong>Wi-Fi</strong> estável para evitar o consumo excedente de dados móveis.</p>
+              <div className="mt-4 flex gap-3">
                 <button
                   onClick={() => {
                     setIaLocalAtivo(true);
                     setMostrarAvisoDownload(false);
                     salvarConfig({ ativo: true });
                   }}
-                  className="px-3 py-1 bg-[var(--cx-ac)] text-white rounded hover:bg-opacity-90 transition-colors text-sm"
+                  className="px-4 py-2 bg-[var(--cx-ac)] text-white rounded-lg hover:opacity-90 transition-colors text-sm font-medium"
                 >
-                  Confirmar download
+                  Confirmar e Baixar (~1 GB)
                 </button>
                 <button
                   onClick={() => {
@@ -202,7 +182,7 @@ export default function MemorySettings() {
                     setMostrarAvisoDownload(false);
                     salvarConfig({ ativo: false });
                   }}
-                  className="px-3 py-1 border border-[var(--cx-line)] rounded hover:border-[var(--cx-ac)] transition-colors text-sm"
+                  className="px-4 py-2 border border-[var(--cx-line)] rounded-lg hover:border-[var(--cx-ac)] transition-colors text-sm font-medium"
                 >
                   Cancelar
                 </button>
@@ -211,8 +191,6 @@ export default function MemorySettings() {
           )}
         </div>
       </div>
-
-
 
       {/* Seção de fatos */}
       <div>
