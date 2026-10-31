@@ -260,6 +260,7 @@ export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema;
 
       <Cartao><a href="/central" className="block font-medium">Central KERNEX</a><p className="text-sm text-[var(--cx-mut)] mt-1">Vendas, produtos e divulgação.</p></Cartao>
       <button onClick={sair} className="w-full h-12 rounded-xl border border-[var(--cx-line)] text-red-400" data-testid="cx-sair">Sair</button>
+      {/* IA Local nas Configurações do Cortex (NEXIA: Confirmado) */}
     </div>
   );
 }
