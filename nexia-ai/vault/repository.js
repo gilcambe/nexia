@@ -121,6 +121,10 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
     async function trackVaultOps(banco, leituras = 0, escritas = 0) {
       try {
         const hoje = new Date().toISOString().slice(0, 10);
+        // Usa o VazaoController do firestore.js que já implementa o contador
+        require('./lib/firebase-lite/firestore.js').registrarUsoBanco(banco, leituras, escritas);
+        
+        // Se houver tenantDb (CofreSql), também registra lá
         if (tenantDb && typeof tenantDb.fetch === 'function') {
           await tenantDb.fetch('https://vault/vazao', {
             method: 'POST',
@@ -128,7 +132,9 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
             body: JSON.stringify({ banco: banco || 'default', data: hoje, leituras, escritas })
           });
         }
-      } catch {}
+      } catch (e) {
+        console.error('Erro ao registrar uso do Vault:', e);
+      }
     }
 
     // Cache em memória (TTL 60 s) para leituras repetidas do mesmo documento no Vault (cliente, projeto, tenant), limpo em toda escrita.
@@ -157,39 +163,30 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
       }
     }
     
-    // Métodos para gerenciamento de bancos do cofre
+    // Métodos para gerenciamento de bancos do cofre - integrados com firebase-lite/firestore.js
     function _getBanco(entity) {
-      return this._bancoAtual || 'firestore-default';
+      // Usa o banco atual do firestore.js que já implementa o rodízio
+      return require('./lib/firebase-lite/firestore.js').getNextBank();
     }
     
     function _isBancoQuaseCheio(banco) {
-      const uso = getUsoBanco(banco);
-      const limits = BANK_LIMITS[banco] || BANK_LIMITS['firestore-default'];
+      const uso = require('./lib/firebase-lite/firestore.js').getUsoBanco(banco);
+      const limits = require('./lib/firebase-lite/firestore.js').BANK_LIMITS[banco] || require('./lib/firebase-lite/firestore.js').BANK_LIMITS['firestore-default'];
       const pctLeituras = uso.leituras / limits.reads;
       const pctEscritas = uso.escritas / limits.writes;
       return pctLeituras >= limits.warnThreshold || pctEscritas >= limits.warnThreshold;
     }
     
     function _getProximoBanco(bancoAtual) {
-      const BANCO_RODIZIO = ['firestore-b', 'firestore-c', 'd1', 'cofresql'];
-      const currentIndex = BANCO_RODIZIO.indexOf(bancoAtual);
-      if (currentIndex === -1) return BANCO_RODIZIO[0];
-      
-      // Procurar próximo banco saudável
-      for (let i = 1; i <= BANCO_RODIZIO.length; i++) {
-        const idx = (currentIndex + i) % BANCO_RODIZIO.length;
-        const banco = BANCO_RODIZIO[idx];
-        if (!_isBancoQuaseCheio(banco)) {
-          return banco;
-        }
-      }
-      
-      // Se todos estiverem quase cheios, retorna o próximo na sequência
-      return BANCO_RODIZIO[(currentIndex + 1) % BANCO_RODIZIO.length];
+      // Usa a função implementada em firebase-lite/firestore.js
+      return require('./lib/firebase-lite/firestore.js').getNextBank();
     }
     
     function _setBancoAtivo(novoBanco) {
-      this._bancoAtual = novoBanco;
+      // Atualiza o banco atual no firestore.js
+      const firestoreModule = require('./lib/firebase-lite/firestore.js');
+      // A função switchToNextBank já atualiza o currentBancoIndex internamente
+      firestoreModule.switchToNextBank();
     }
 
     async function assertTenant(tx, tenantId) {
