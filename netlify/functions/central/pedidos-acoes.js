@@ -7,6 +7,18 @@ const { publicar } = require('./pedidos-publicar');
 const { mandarParaJules } = require('./pedidos-jules');
 const { rodar } = require('./github');
 
+// Helper da parte 1: valida se o usuário é admin da Central (master).
+// Recebe o email/identificador de quem chama e retorna true se for admin.
+function ehAdminDaCentral(quem) {
+  // O handler (pedidos.js) já validou que auth.role === 'master' antes de chamar agir.
+  // Aqui conferimos se o identificador passado corresponde ao dono configurado.
+  const donoLogin = (process.env.NEXIA_DONO_LOGIN || '').toLowerCase();
+  const quemLower = String(quem || '').toLowerCase();
+  if (donoLogin && quemLower === donoLogin) return true;
+  // Fallback: se não tem NEXIA_DONO_LOGIN, aceita 'dono' ou 'master' como identificadores legados.
+  return quemLower === 'dono' || quemLower === 'master';
+}
+
 const issue = (c) => '/repos/gilcambe/nexia/issues/' + c;
 const r = (status, corpo) => ({ status, corpo });
 
