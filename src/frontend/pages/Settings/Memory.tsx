@@ -126,6 +126,42 @@ export default function MemorySettings() {
         </div>
       </div>
 
+      {/* Seção de IA Offline */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">IA no meu aparelho (grátis, offline)</h2>
+        <div className="bg-[var(--cx-card)] border border-[var(--cx-line)] rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-medium">Rodar a IA localmente</h3>
+              <p className="text-sm text-[var(--cx-mut)] mt-1">
+                Execute o modelo localmente no seu navegador. Requer WebGPU e cerca de 4 GB de memória RAM. Modelo ~1 GB.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-[var(--cx-mut)]">
+                {offlineAiEnabled ? 'Ativado' : 'Desativado'}
+              </span>
+              <button
+                onClick={handleOfflineAiToggle}
+                disabled={offlineAiEnabled}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${offlineAiEnabled ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'}`}
+                data-testid="offline-ai-toggle"
+                role="switch"
+                aria-checked={offlineAiEnabled}
+                aria-label="IA no meu aparelho"
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${offlineAiEnabled ? 'translate-x-6' : 'translate-x-1'}`}
+                />
+              </button>
+            </div>
+          </div>
+          <div className="text-xs text-[var(--cx-mut)] mt-4">
+            <p>⚠️ Ao ativar, será necessário baixar o modelo (~1 GB). Recomendado fazer em Wi-Fi.</p>
+          </div>
+        </div>
+      </div>
+
       {/* Seção de fatos */}
       <div>
         <div className="flex items-center justify-between mb-4">
