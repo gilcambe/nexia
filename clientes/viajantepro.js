@@ -13,7 +13,7 @@ const VIAJANTE_PRO = {
     codigo_hash: 'e2d165583a27c742b72aff5b13db118428b7fb093222087a37692a24dfe75a38',
     config: {
       nome: 'Viajante Pro',
-      whatsapp: '5511999998888',
+      whatsapp: '5511941247074',
       email: 'contato@viajantepro.com.br',
       instagram: 'viajantepro.oficial',
       slogan: 'Sua viagem dos sonhos com consultoria sob medida e experiências exclusivas',

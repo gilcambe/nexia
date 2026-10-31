@@ -8,16 +8,18 @@
 
   var st = document.createElement('style');
   st.textContent =
+    'html,body{overflow-x:clip}' +
     '.vp-logo-anim{position:relative;display:inline-block;overflow:visible;line-height:0;border-radius:inherit}' +
     '.vp-logo-anim img{display:block;width:100%;height:100%;object-fit:cover}' +
     // camada 1: logo com o avião apagado (vp-sem-aviao.jpg); camada 2: só o avião, fundo transparente (vp-aviao.png)
     '.vp-logo-anim .vp-corpo{position:absolute;inset:0}' +
     '.vp-logo-anim .vp-aviao{position:absolute;inset:0;transform-origin:50% 39%;pointer-events:none}' +
-    '.vp-logo-anim.voando .vp-aviao{animation:vp-decola 2.8s cubic-bezier(.45,0,.2,1) both;z-index:5}' +
-    '@keyframes vp-decola{0%{transform:none;opacity:1}10%{transform:translateY(4%) scale(1.05)}'+
-    '22%{filter:none}35%{transform:translate(60%,-60%) scale(1.3) rotate(-14deg);opacity:1;filter:invert(1) drop-shadow(0 0 3px #d4af37)}'+
-    '58%{transform:translate(220%,-200%) scale(.5) rotate(-18deg);opacity:0;filter:invert(1)}'+
-    '59%{transform:translate(-60%,20%) scale(.8);opacity:0;filter:none}100%{transform:none;opacity:1;filter:none}}' +
+    '.vp-logo-anim.voando .vp-aviao{animation:vp-decola 3.6s cubic-bezier(.45,0,.2,1) both;z-index:5}' +
+    '@keyframes vp-decola{0%{transform:none;opacity:1;filter:none}8%{transform:translateX(6%) scale(1.05)}'+
+    '18%{transform:translate(40%,-8%) scale(1.6) rotate(-6deg);filter:invert(1) drop-shadow(0 0 4px #d4af37)}'+
+    '55%{transform:translate(780%,-30%) scale(2.2) rotate(-10deg);opacity:1;filter:invert(1) drop-shadow(0 0 6px #d4af37)}'+
+    '68%{transform:translate(1100%,-60%) scale(1.4) rotate(-14deg);opacity:0;filter:invert(1)}'+
+    '69%{transform:translateY(25%) scale(.8);opacity:0;filter:none}100%{transform:none;opacity:1;filter:none}}' +
     '.vp-logo-fixo{position:fixed;top:10px;right:10px;z-index:9000;width:48px;height:48px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.25);background:#ddd}';
   document.head.appendChild(st);
 
@@ -80,7 +82,7 @@
     // decola também quando o logo aparece na tela (ex.: depois de fechar um aviso ou rolar a página)
     if ('IntersectionObserver' in window) {
       var io = new IntersectionObserver(function (es) {
-        es.forEach(function (e) { if (e.isIntersecting && !calmo) { e.target.classList.remove('voando'); void e.target.offsetWidth; e.target.classList.add('voando'); } });
+        es.forEach(function (e) { if (e.isIntersecting && !calmo && !document.getElementById('nexia-abertura')) { e.target.classList.remove('voando'); void e.target.offsetWidth; e.target.classList.add('voando'); } });
       }, { threshold: 0.6 });
       setTimeout(function () { document.querySelectorAll('.vp-logo-anim').forEach(function (c) { io.observe(c); }); }, 300);
     }

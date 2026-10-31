@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cotações — Viajante Pro</title><meta name="robots" content="noindex">
+<style>
+:root{--bg:#0a0c14;--card:#12162a;--line:rgba(255,255,255,.08);--txt:#e8ecf4;--mut:#94a3b8;--gold:#d4af37;--ok:#22c55e;--err:#ef4444}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--txt);overflow-x:hidden}
+header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2}
+header img{width:40px;height:40px;border-radius:8px}header b{flex:1}
+main{max-width:900px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;overflow-wrap:anywhere}
+input,select,button{font:inherit;font-size:16px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:#0e1222;color:var(--txt);padding:8px 12px}
+button{background:var(--gold);color:#111;font-weight:700;border:0;cursor:pointer}button.sec{background:transparent;color:var(--txt);border:1px solid var(--line)}
+.linha{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.mut{color:var(--mut);font-size:.9rem}.erro{color:var(--err)}
+.st{display:inline-block;border-radius:6px;padding:2px 8px;font-size:.8rem;background:#3a2f12;color:#ffe2a8}.st.fechada{background:#123a26;color:#9be7b9}
+.oculto{display:none!important}
+</style>
+</head>
+<body>
+<header><img src="/viajante-pro/img/vp-oficial.jpg" alt="Viajante Pro"><b>Cotações</b><a class="mut" href="/viajante-pro/admin">Painel</a><button id="sair" class="sec oculto" type="button">Sair</button></header>
+<main>
+  <form id="login" class="card"><h2>Entrar</h2><div class="linha"><input id="senha" type="password" placeholder="Senha" required autocomplete="current-password"><button>Entrar</button></div><p id="erro" class="erro"></p></form>
+  <section id="lista" class="oculto"><div class="linha"><button id="atualizar" class="sec" type="button">Atualizar</button><span id="resumo" class="mut"></span></div><div id="itens"></div></section>
+</main>
+<script>
+(function () {
+  'use strict';
+  var API = '/api/viajante-pro?site=viajantepro';
+  var STATUS = ['nova', 'em atendimento', 'proposta enviada', 'fechada', 'perdida'];
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var token = ''; try { token = localStorage.getItem('vp_admin_token') || ''; } catch (e) {}
+  function api(corpo) {
+    return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ token: token }, corpo)) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (r.status === 401 && corpo.acao !== 'entrar') { sair(); } if (!r.ok) throw new Error(j.error || 'Erro ' + r.status); return j; }); });
+  }
+  function sair() { token = ''; try { localStorage.removeItem('vp_admin_token'); } catch (e) {} $('lista').classList.add('oculto'); $('sair').classList.add('oculto'); $('login').classList.remove('oculto'); }
+  function carregar() {
+    $('itens').innerHTML = '<p class="mut">Carregando…</p>';
+    return api({ acao: 'cotacao-listar' }).then(function (j) {
+      var c = j.cotacoes || [];
+      $('resumo').textContent = c.length + ' cotação(ões)';
+      $('itens').innerHTML = c.map(function (x) {
+        var wa = String(x.whatsapp || '').replace(/\D/g, ''); if (wa.length <= 11) wa = '55' + wa;
+        return '<div class="card"><div class="linha"><b>' + esc(x.codigo) + '</b><span class="st ' + (x.status === 'fechada' ? 'fechada' : '') + '">' + esc(x.status || 'nova') + '</span><span class="mut">' + esc(new Date(x.criado_em).toLocaleString('pt-BR')) + '</span></div>' +
+          '<p><b>' + esc(x.nome) + '</b> · ' + esc(x.email) + ' · ' + esc(x.whatsapp) + '</p>' +
+          '<p>' + esc(x.origem) + ' → <b>' + esc(x.destino) + '</b> ' + esc([x.periodo, x.dataIda, x.dataVolta].filter(Boolean).join(' ')) + ' · ' + esc(x.adultos || 1) + ' adulto(s)' + (x.criancas ? ', ' + esc(x.criancas) + ' criança(s)' : '') + '</p>' +
+          (x.observacoes ? '<p class="mut">' + esc(x.observacoes) + '</p>' : '') +
+          '<p class="mut">E-mail para a agência: ' + (x.emailNotificado ? 'enviado ✓' : 'não enviado' + (x.emailErro ? ' (' + esc(x.emailErro) + ')' : '')) + '</p>' +
+          '<div class="linha"><select data-id="' + esc(x.id) + '">' + STATUS.map(function (s) { return '<option ' + (s === (x.status || 'nova') ? 'selected' : '') + '>' + s + '</option>'; }).join('') + '</select>' +
+          '<a href="https://wa.me/' + esc(wa) + '?text=' + encodeURIComponent('Olá ' + (x.nome || '') + '! Aqui é da Viajante Pro sobre sua cotação ' + (x.codigo || '') + ' para ' + (x.destino || '') + '.') + '" target="_blank" rel="noopener"><button type="button" class="sec">WhatsApp</button></a></div></div>';
+      }).join('') || '<p class="mut">Nenhuma cotação ainda.</p>';
+    }).catch(function (e) { $('itens').innerHTML = '<p class="erro">' + esc(e.message) + '</p>'; });
+  }
+  function entrou() { $('login').classList.add('oculto'); $('lista').classList.remove('oculto'); $('sair').classList.remove('oculto'); carregar(); }
+  $('login').addEventListener('submit', function (ev) {
+    ev.preventDefault(); $('erro').textContent = '';
+    api({ acao: 'entrar', senha: $('senha').value }).then(function (j) { token = j.token; try { localStorage.setItem('vp_admin_token', token); } catch (e) {} entrou(); })
+      .catch(function (e) { $('erro').textContent = e.message; });
+  });
+  $('itens').addEventListener('change', function (ev) {
+    var s = ev.target; if (!s.dataset.id) return;
+    api({ acao: 'cotacao-atualizar-status', id: s.dataset.id, status: s.value }).then(carregar).catch(function (e) { alert(e.message); });
+  });
+  $('atualizar').addEventListener('click', carregar);
+  $('sair').addEventListener('click', sair);
+  if (token) entrou();
+})();
+</script>
+<script src="/viajante-pro/abertura-kernex.js?v=3" data-produto="VIAJANTE PRO" defer></script>
+<script src="/viajante-pro/vp-marca.js?v=3" defer></script>
+</body>
+</html>
