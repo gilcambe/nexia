@@ -4,35 +4,19 @@
 // (lib/firebase-lite/d1-backend.js) serve igual. Cota própria, separada do D1 da conta.
 
 class CofreSql {
-  constructor(state) {
-      this.sql = state?.storage?.sql || null;
-      if (this.sql) {
-        try {
-          this.sql.exec(`CREATE TABLE IF NOT EXISTS vazaosql (
-            banco TEXT PRIMARY KEY,
-            data TEXT NOT NULL,
-            leituras INTEGER NOT NULL DEFAULT 0,
-            escritas INTEGER NOT NULL DEFAULT 0
-          );`);
-        } catch {}
-      }
+    constructor(state) {
+        this.sql = state?.storage?.sql || null;
+        if (this.sql) {
+          try {
+            this.sql.exec(`CREATE TABLE IF NOT EXISTS vazaosql (
+              banco TEXT PRIMARY KEY,
+              data TEXT NOT NULL,
+              leituras INTEGER NOT NULL DEFAULT 0,
+              escritas INTEGER NOT NULL DEFAULT 0
+            );`);
+          } catch {}
+        }
     }
-
-  _dispararAvisoSentinel(bancoKey, leituras, escritas) {
-    try {
-      console.warn(`[SENTINEL ALERT] Banco ${bancoKey} atingiu 70% da cota! Leituras: ${leituras}, Escritas: ${escritas}. Alternando tráfego preventivamente.`);
-    } catch {}
-  }
-
-  _checkLimits(banco, leituras, escritas) {
-    const isFs = /firestore/i.test(banco);
-    const maxL = isFs ? 50000 : (/cofresql/i.test(banco) ? 50000000 : 5000000);
-    const maxE = isFs ? 20000 : (/cofresql/i.test(banco) ? 10000000 : 100000);
-    if (leituras >= maxL * 0.7 || escritas >= maxE * 0.7) {
-      return true;
-    }
-    return false;
-  }
 
   _dispararAvisoSentinel(bancoKey, leituras, escritas) {
     try {
@@ -61,6 +45,16 @@ class CofreSql {
     } catch {}
   }
 
+  _checkLimits(banco, leituras, escritas) {
+    const isFs = /firestore/i.test(banco);
+    const maxL = isFs ? 50000 : (/cofresql/i.test(banco) ? 50000000 : 5000000);
+    const maxE = isFs ? 20000 : (/cofresql/i.test(banco) ? 10000000 : 100000);
+    if (leituras >= maxL * 0.7 || escritas >= maxE * 0.7) {
+      return true;
+    }
+    return false;
+  }
+
   async fetch(request) {
     const resposta = (status, corpo) => new Response(JSON.stringify(corpo), { status, headers: { 'Content-Type': 'application/json' } });
     if (!this.sql) return resposta(500, { success: false, errors: [{ message: 'CofreSql: storage.sql indisponível.' }] });
@@ -76,12 +70,14 @@ class CofreSql {
               ON CONFLICT(banco) DO UPDATE SET leituras = CASE WHEN data = ? THEN leituras + ? ELSE ? END, escritas = CASE WHEN data = ? THEN escritas + ? ELSE ? END, data = ?`,
               bancoKey, data, leituras, escritas, data, leituras, leituras, data, escritas, escritas, data);
             
-            const row = this.sql.exec(`SELECT leituras, escritas FROM vazaosql WHERE banco = ?`, bancoKey).toArray()[0];
+            const rows = this.sql.exec(`SELECT leituras, escritas FROM vazaosql WHERE banco = ?`, bancoKey);
+            const row = rows.toArray ? rows.toArray()[0] : rows[0];
             if (row && this._checkLimits(bancoKey, row.leituras, row.escritas)) {
               this._dispararAvisoSentinel(bancoKey, row.leituras, row.escritas);
             }
           }
-          const rowNow = this.sql.exec(`SELECT leituras, escritas FROM vazaosql WHERE banco = ?`, bancoKey).toArray()[0] || { leituras: 0, escritas: 0 };
+          const rowsNow = this.sql.exec(`SELECT leituras, escritas FROM vazaosql WHERE banco = ?`, bancoKey);
+          const rowNow = rowsNow.toArray ? rowsNow.toArray()[0] : rowsNow[0] || { leituras: 0, escritas: 0 };
           const quaseCheio = this._checkLimits(bancoKey, rowNow.leituras, rowNow.escritas);
           return resposta(200, { success: true, quaseCheio, leituras: rowNow.leituras, escritas: rowNow.escritas });
         }
