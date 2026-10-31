@@ -5,6 +5,7 @@ export interface IALocalConfig {
   ativo: boolean;
 }
 
+
 // Função para obter configuração da IA local do armazenamento local
 export const obterConfig = (): IALocalConfig => {
   if (typeof window === 'undefined') {
