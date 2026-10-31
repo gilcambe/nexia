@@ -44,8 +44,8 @@
       <div class="hero__overlay" aria-hidden="true"></div>
       <div class="container hero__content">
         <p class="eyebrow hero__in" style="--d:0s">Viajante Pro · Agência de Viagens · Powered by Kernex</p>
-        <h1 class="hero__in" style="--d:.1s">Descubra o mundo com estilo & tranquilidade</h1>
-        <p class="hero__lead hero__in" style="--d:.2s">Pacotes exclusivos, passagens aéreas, hospedagens e consultoria de viagem personalizada sob medida.</p>
+        <h1 class="hero__in" style="--d:.1s" data-editar="hero_titulo">Descubra o mundo com estilo & tranquilidade</h1>
+        <p class="hero__lead hero__in" style="--d:.2s" data-editar="hero_texto">Pacotes exclusivos, passagens aéreas, hospedagens e consultoria de viagem personalizada sob medida.</p>
         <div class="hero__actions hero__in" style="--d:.3s">
           <a class="btn btn--primary" href="#contato">Falar com especialista <i class="ri-arrow-right-line"></i></a>
           <a class="btn btn--ghost" href="#destinos">Ver destinos</a>
@@ -92,8 +92,8 @@
         <div class="split__media reveal"><span class="split__badge"><i class="ri-shield-star-line"></i> Sua agência de viagens completa</span></div>
         <div class="split__text reveal" style="--d:.1s">
           <p class="eyebrow">Sobre a Viajante Pro</p>
-          <h2>Experiências inesquecíveis e atendimento humanizado.</h2>
-          <p>A Viajante Pro é uma agência comercial de viagens dedicada a transformar seu sonho de viagem em realidade. Integrada ao ecossistema Kernex, oferecemos curadoria, segurança e suporte dedicado em cada etapa.</p>
+          <h2 data-editar="sobre_titulo">Experiências inesquecíveis e atendimento humanizado.</h2>
+          <p data-editar="sobre_texto">A Viajante Pro é uma agência comercial de viagens dedicada a transformar seu sonho de viagem em realidade. Integrada ao ecossistema Kernex, oferecemos curadoria, segurança e suporte dedicado em cada etapa.</p>
           <dl class="stats">
             <div><dt><span class="count" data-to="100%">100%</span></dt><dd>suporte dedicado</dd></div>
             <div><dt><span class="count" data-to="24/7">24/7</span></dt><dd>atendimento</dd></div>
@@ -124,7 +124,7 @@
           <ul class="contact__list">
             <li><i class="ri-map-pin-line"></i><span>São Paulo - SP</span></li>
             <li><i class="ri-time-line"></i><span>Seg a sex, 9h às 18h</span></li>
-            <li><i class="ri-mail-line"></i><span>contato@viajantepro.com.br</span></li>
+            <li><i class="ri-mail-line"></i><span data-contato="email">contato@viajantepro.com.br</span></li>
           </ul>
         </div>
         <form class="form reveal" style="--d:.1s" id="siteContactForm" onsubmit="event.preventDefault(); submitLead(this);">
@@ -154,36 +154,6 @@
     </div>
   </footer>
 
-  <script>
-    async function submitLead(form) {
-      const btn = document.getElementById('btnSiteSubmit');
-      const okMsg = document.getElementById('siteFormOk');
-      const nome = form.nome.value;
-      const tel = form.telefone.value;
-      const email = form.email.value;
-      const msg = form.mensagem.value;
-
-      btn.disabled = true;
-      try {
-        await fetch('/api/leads', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            name: nome,
-            email: email,
-            phone: tel,
-            produto: 'viajante-pro',
-            mensagem: msg
-          })
-        });
-      } catch(e) {
-        console.warn(e);
-      } finally {
-        btn.disabled = false;
-        okMsg.hidden = false;
-        form.reset();
-      }
-    }
-  </script>
+  <script src="conteudo.js"></script>
 </body>
 </html>

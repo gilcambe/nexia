@@ -1,86 +1,58 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Viajante Pro</title>
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="icon" href="icons/icon-48.png" type="image/png">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #1a1a1a;
-      color: #fff;
-    }
-    #app {
-      max-width: 360px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    .tab {
-      display: none;
-    }
-    .tab.active {
-      display: block;
-    }
-    .card {
-      background-color: #2a2a2a;
-      padding: 15px;
-      margin-bottom: 10px;
-      border-radius: 8px;
-    }
-    .button {
-      background-color: #007bff;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .button:hover {
-      background-color: #0056b3;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Minha viagem — Viajante Pro</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0b1620">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icone-192.png">
+<link rel="stylesheet" href="app.css">
 </head>
 <body>
-  <div id="app">
-    <div id="tabs">
-      <button class="tab-button" data-tab="hoje">Hoje</button>
-      <button class="tab-button" data-tab="voos">Voos</button>
-      <button class="tab-button" data-tab="roteiro">Roteiro</button>
-      <button class="tab-button" data-tab="hotel">Hotel e Carro</button>
-      <button class="tab-button" data-tab="documentos">Documentos</button>
-      <button class="tab-button" data-tab="motorista">Motorista</button>
-      <button class="tab-button" data-tab="emergencia">Emergência</button>
+<header class="topo">
+  <div class="marca"><span class="logo">VP</span><div><strong id="agencia-nome">Viajante Pro</strong><small id="viagem-titulo">Sua viagem</small></div></div>
+  <button id="btn-instalar" class="btn-mini oculto" type="button">Instalar</button>
+</header>
+<div id="faixa-offline" class="faixa oculto" role="status"></div>
+<div id="faixa-alerta" class="alerta oculto" role="alert"></div>
+
+<main id="conteudo">
+  <section id="carregando" class="tela ativa"><p class="vazio">Carregando sua viagem…</p></section>
+  <section id="erro" class="tela"><div class="cartao"><h2>Não consegui abrir a viagem</h2><p id="erro-texto"></p><p>Peça para a agência mandar o link de novo.</p></div></section>
+
+  <section id="tela-hoje" class="tela" data-aba="hoje"></section>
+  <section id="tela-voos" class="tela" data-aba="voos"></section>
+  <section id="tela-roteiro" class="tela" data-aba="roteiro"></section>
+  <section id="tela-estadia" class="tela" data-aba="estadia"></section>
+  <section id="tela-docs" class="tela" data-aba="docs"></section>
+  <section id="tela-conversa" class="tela" data-aba="conversa">
+    <div id="msgs" class="msgs" aria-live="polite"></div>
+    <div id="sem-net-opcoes" class="cartao aviso oculto">
+      <p><strong>Sem internet há mais de 1 minuto.</strong> Suas mensagens ficam guardadas e vão sozinhas quando a rede voltar. Se for urgente:</p>
+      <div class="linha-btns"><a id="btn-sms" class="btn" href="#">Mandar por SMS</a><a id="btn-whats" class="btn verde" href="#" target="_blank" rel="noopener">WhatsApp</a></div>
     </div>
-    <div id="tab-content">
-      <div id="tab-hoje" class="tab active">
-        <!-- Conteúdo da aba Hoje -->
-      </div>
-      <div id="tab-voos" class="tab">
-        <!-- Conteúdo da aba Voos -->
-      </div>
-      <div id="tab-roteiro" class="tab">
-        <!-- Conteúdo da aba Roteiro -->
-      </div>
-      <div id="tab-hotel" class="tab">
-        <!-- Conteúdo da aba Hotel e Carro -->
-      </div>
-      <div id="tab-documentos" class="tab">
-        <!-- Conteúdo da aba Documentos -->
-      </div>
-      <div id="tab-motorista" class="tab">
-        <!-- Conteúdo da aba Motorista -->
-      </div>
-      <div id="tab-emergencia" class="tab">
-        <!-- Conteúdo da aba Emergência -->
-      </div>
-    </div>
-    <button id="install-button" style="display: none;">Instalar App</button>
-  </div>
-  <script src="app.js"></script>
+    <form id="form-msg" class="form-msg" autocomplete="off">
+      <input id="msg-texto" maxlength="2000" placeholder="Escreva para a agência…" aria-label="Mensagem">
+      <button class="btn" type="submit">Enviar</button>
+    </form>
+  </section>
+  <section id="tela-sos" class="tela" data-aba="sos"></section>
+  <section id="tela-motorista" class="tela" data-aba="motorista"></section>
+</main>
+
+<nav id="menu" class="menu oculto" aria-label="Menu">
+  <button data-ir="hoje" class="ativo">🏠<span>Hoje</span></button>
+  <button data-ir="voos">✈️<span>Voos</span></button>
+  <button data-ir="roteiro">🗺️<span>Roteiro</span></button>
+  <button data-ir="estadia">🏨<span>Hotel</span></button>
+  <button data-ir="docs">📄<span>Docs</span></button>
+  <button data-ir="conversa">💬<span>Conversa</span><b id="badge" class="badge oculto"></b></button>
+  <button data-ir="sos" class="sos">🆘<span>SOS</span></button>
+</nav>
+<script src="nucleo.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
