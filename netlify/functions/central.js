@@ -202,7 +202,15 @@ function createHandler(deps = {}) {
       }
       if (parte === 'cloudflare') return res(200, await usoCloudflare(env, fetchFn));
       if (parte === 'busca') return res(200, await require('../../lib/busca-web').buscar((event.queryStringParameters || {}).q, { fetchImpl: fetchFn }));
-      if (parte === 'cotas') return res(200, await require('../../lib/cotas').medir(env, { fetchImpl: fetchFn, getToken: deps.getCotasToken }));
+      if (parte === 'cotas') {
+        const cotasBase = await require('../../lib/cotas').medir(env, { fetchImpl: fetchFn, getToken: deps.getCotasToken }).catch(() => ({}));
+        let bancosUso = [];
+        try {
+          const { getBancosUsoGeral } = require('../../lib/firebase-lite/firestore.js');
+          bancosUso = getBancosUsoGeral();
+        } catch {}
+        return res(200, { ...cotasBase, bancosUso });
+      }
               if (parte === 'sentinel') return res(200, await bancoSentinel(env));
       if (parte === 'banco-cofre') return res(200, await lidarBancoCofre(event, env));
       if (parte === 'sentinel') return res(200, await bancoSentinel(env));
