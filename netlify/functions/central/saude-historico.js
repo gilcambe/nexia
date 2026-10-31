@@ -59,6 +59,16 @@ async function guardarAmostra(db, { at = Date.now(), medir, rotas = ROTAS } = {}
 
 /** Resumo dos últimos 30 dias por rota: disponibilidade %, quedas, tempo médio e erros. */
 async function resumo(db, { agora = Date.now(), rotas = ROTAS } = {}) {
+  // Integrar uso dos bancos do cofre (Vault) para a Central (label sentinel)
+  let bancosUso = [];
+  try {
+    const fsMod = require('../../../lib/firebase-lite/firestore.js');
+    if (fsMod && typeof fsMod.getBancosUsoGeral === 'function') {
+      bancosUso = fsMod.getBancosUsoGeral();
+    }
+  } catch (e) {
+    console.error('Erro ao buscar uso dos bancos no resumo de saúde:', e);
+  }
   const desde = horaDe(agora - DIAS * 24 * HORA);
   const snap = await db.collection(COLECAO).where('hora', '>=', desde).get();
   const horas = snap.docs.map((d) => d.data()).filter((h) => h && h.rotas).sort((a, b) => (a.hora < b.hora ? -1 : 1));
@@ -91,6 +101,7 @@ async function resumo(db, { agora = Date.now(), rotas = ROTAS } = {}) {
   return {
     dias: DIAS, amostras: horas.length, desde: horas.length ? horas[0].em || horas[0].hora : null,
     rotas: porRota,
+    bancosUso,
     porDia: Object.entries(dias).map(([dia, t]) => ({ dia, disponibilidade: t.total ? Math.round((t.ok / t.total) * 1000) / 10 : 0 })),
   };
 }
