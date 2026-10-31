@@ -26,13 +26,6 @@ const mockGh = async function(url, options = {}) {
     const base = await mockGh('/repos/gilcambe/nexia/issues');
     return base.find(i => i.number === n) || {};
   }
-  // getIssue: /repos/gilcambe/nexia/issues/N
-  const m = url.match(/\/repos\/gilcambe\/nexia\/issues\/(\d+)$/);
-  if (m) {
-    const n = Number(m[1]);
-    const base = await mockGh('/repos/gilcambe/nexia/issues');
-    return base.find(i => i.number === n) || {};
-  }
   // addLabels: POST /repos/gilcambe/nexia/issues/N/labels
   if (url.endsWith('/labels') && options.method === 'POST') {
     return { success: true };
