@@ -23,7 +23,8 @@ async function despacharMensagem(mensagem, opcoes = {}) {
       modelo: configIA.modelo,
     });
 
-    if (resultadoLocal.origem === 'local' && resultadoLocal.resposta) {
+    // Se a resposta for da IA local, não for vazia e não tiver erro, registrar como 'tokens no aparelho'
+    if (resultadoLocal.origem === 'local' && resultadoLocal.resposta && !resultadoLocal.erro) {
       // Registrar uso bem-sucedido no placar como 'tokens no aparelho' (sem descontar cota do plano)
       atualizarPlacarTokens({
         tipo: 'tokens no aparelho',
@@ -37,8 +38,14 @@ async function despacharMensagem(mensagem, opcoes = {}) {
     }
 
     // Se houve erro local, timeout ou resposta vazia, retorna o resultado do fallback da nuvem
+    // (que já foi processado com ehFallback=true, sem registrar no placar)
     if (resultadoLocal.origem === 'nuvem') {
       return resultadoLocal;
+    }
+    
+    // Se a resposta local foi vazia ou com erro, forçar fallback para nuvem
+    if (resultadoLocal.origem === 'local' && (!resultadoLocal.resposta || resultadoLocal.erro)) {
+      return await enviarParaNuvem(mensagem.texto, opcoes, true);
     }
   }
 
