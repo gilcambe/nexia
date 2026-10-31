@@ -20,12 +20,12 @@ button{background:var(--gold);color:#111;font-weight:700;border:0;cursor:pointer
 </style>
 </head>
 <body>
-  <header><img src="/viajante-pro/img/vp-oficial.jpg" alt="Viajante Pro"><b>Cotações</b><a class="mut" href="/viajante-pro/admin">Painel</a><button id="trocarSenha" class="sec oculto" type="button">Trocar senha</button><button id="sair" class="sec oculto" type="button">Sair</button></header>
+  <header><img src="/viajante-pro/img/vp-oficial.jpg" alt="Viajante Pro" width="40" height="40"><b>Cotações</b><a class="mut" href="/viajante-pro/admin">Painel</a><button id="trocarSenha" class="sec oculto" type="button">Trocar senha</button><button id="sair" class="sec oculto" type="button">Sair</button></header>
 <main>
-  <form id="login" class="card"><h2>Entrar</h2><div class="linha"><input id="senha" type="password" placeholder="Senha" required autocomplete="current-password"><button>Entrar</button></div><p id="erro" class="erro"></p></form>
+  <form id="login" class="card"><h2>Entrar</h2><div class="linha"><label for="senha" class="mut">Senha</label><input id="senha" type="password" placeholder="Senha" required autocomplete="current-password"><button>Entrar</button></div><p id="erro" class="erro"></p></form>
   <section id="lista" class="oculto"><div class="linha"><button id="atualizar" class="sec" type="button">Atualizar</button><span id="resumo" class="mut"></span></div><div id="itens"></div></section>
   <div id="trocar-senha-form" class="oculto">
-    <div class="linha"><input id="novaSenha" type="password" placeholder="Nova senha" minlength="6" required><button type="button">Trocar senha</button></div>
+    <div class="linha"><label for="novaSenha" class="mut">Nova senha</label><input id="novaSenha" type="password" placeholder="Nova senha" minlength="6" required><button type="button">Trocar senha</button></div>
     <p id="trocar-senha-erro" class="erro"></p>
     <p id="trocar-senha-sucesso" class="mut"></p>
   </div>
