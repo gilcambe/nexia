@@ -6,11 +6,8 @@ export const API_URL = import.meta.env.VITE_API_URL || '/api';
 export const APP_NAME = 'Cortex';
 export default { API_URL, APP_NAME };
 
-// Interface para configuração da IA local (tipagem removida para JS puro)
-// ativo: boolean;
-
 // Função para obter configuração da IA local do armazenamento local
-export const obterConfig = (): IALocalConfig => {
+export const obterConfig = () => {
   if (typeof window === 'undefined') {
     return { ativo: false };
   }
@@ -28,7 +25,7 @@ export const obterConfig = (): IALocalConfig => {
 };
 
 // Função para verificar suporte WebGPU
-export const verificarSuporteWebGPU = async (): Promise<{ suportado: boolean; motivo?: string }> => {
+export const verificarSuporteWebGPU = async () => {
   if (typeof window === 'undefined') {
     return { suportado: false, motivo: 'Ambiente sem suporte a navegador' };
   }
@@ -63,7 +60,7 @@ export const verificarSuporteWebGPU = async (): Promise<{ suportado: boolean; mo
 };
 
 // Função para salvar configuração da IA local
-export const salvarConfig = (config: IALocalConfig) => {
+export const salvarConfig = (config) => {
   if (typeof window === 'undefined') return;
   
   try {
@@ -75,7 +72,7 @@ export const salvarConfig = (config: IALocalConfig) => {
 };
 
 // Função para mostrar aviso de bloqueio (alerta simples)
-export const mostrarAvisoBloqueio = (motivo?: string) => {
+export const mostrarAvisoBloqueio = (motivo) => {
   alert(`WebGPU não suportado: ${motivo || 'Erro ao verificar suporte'}.
 
 Para usar IA local, use um navegador com WebGPU (Chrome 113+, Edge 113+, Firefox Nightly).`);
@@ -93,12 +90,12 @@ Os modelos ficam salvos no armazenamento local do navegador e funcionam offline.
 };
 
 // Função para obter configuração da IA local (wrapper compatível com código existente)
-export const getIAAtiva = (): boolean => {
+export const getIAAtiva = () => {
   return obterConfig().ativo;
 };
 
 // Função para salvar configuração da IA local (wrapper compatível)
-export const setIAAtiva = (ativo: boolean): boolean => {
+export const setIAAtiva = (ativo) => {
   try {
     salvarConfig({ ativo });
     return true;
