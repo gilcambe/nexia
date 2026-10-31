@@ -1,269 +1,124 @@
 'use strict';
+// Teste unitário do VazaoController (#2221, #2223, #2224)
+const { VazaoController } = require('../../src/durable/VazaoController');
 
-const test = require('node:test');
-const assert = require('node:assert');
-const { VazaoController, calcularPrioridade } = require('../../src/durable/VazaoController.js');
+describe('VazaoController', () => {
+  let controller;
 
-// Helper para criar mock de SQLite em memória para o test runner
-function criarMockSqlite() {
-  const tabelas = {
-    respostas_andamento: new Map(),
-    contadores_provedor: new Map(),
-    fila_espera: new Map(),
-  };
+  beforeEach(() => {
+    controller = new VazaoController();
+  });
 
-  return {
-    exec(query, ...params) {
-      const sql = query.trim().replace(/\s+/g, ' ');
+  describe('contador de uso por banco', () => {
+    it('registra leituras e escritas corretamente', () => {
+      controller.registrar('firestore-b', 100, 50);
+      const uso = controller.obter('firestore-b');
+      expect(uso.leituras).toBe(100);
+      expect(uso.escritas).toBe(50);
+      expect(uso.status).toBe('ativo');
+    });
 
-      if (sql.startsWith('CREATE TABLE')) {
-        return [];
-      }
+    it('reseta o contador diariamente', () => {
+      controller.registrar('firestore-b', 100, 50);
+      controller.registrar('firestore-b', 0, 0, '2025-01-02');
+      const uso = controller.obter('firestore-b', '2025-01-02');
+      expect(uso.leituras).toBe(0);
+      expect(uso.escritas).toBe(0);
+    });
 
-      // --- respostas_andamento ---
-      if (sql.includes('SELECT usuario_id, started_at, request_id FROM respostas_andamento WHERE usuario_id = ?')) {
-        const uId = params[0];
-        const row = tabelas.respostas_andamento.get(uId);
-        return row ? [row] : [];
-      }
+    it('usa o banco atual se não informado', () => {
+      controller.registrar(); // usa firestore-b
+      const uso = controller.obter();
+      expect(uso.banco).toBe('firestore-b');
+    });
+  });
 
-      if (sql.includes('INSERT INTO respostas_andamento')) {
-        const [usuario_id, started_at, request_id] = params;
-        tabelas.respostas_andamento.set(usuario_id, { usuario_id, started_at, request_id });
-        return [];
-      }
+  describe('verificação de limite (70%)', () => {
+    it('detecta quase cheio no Firestore (70% reads)', () => {
+      controller.registrar('firestore-b', 35000, 0); // 70% de 50000
+      const limite = controller.verificarLimite('firestore-b');
+      expect(limite.quaseCheio).toBe(true);
+      expect(limite.status).toBe('quase cheio');
+    });
 
-      if (sql.includes('DELETE FROM respostas_andamento WHERE usuario_id = ?')) {
-        const uId = params[0];
-        tabelas.respostas_andamento.delete(uId);
-        return [];
-      }
+    it('detecta quase cheio no Firestore (70% writes)', () => {
+      controller.registrar('firestore-b', 0, 14000); // 70% de 20000
+      const limite = controller.verificarLimite('firestore-b');
+      expect(limite.quaseCheio).toBe(true);
+      expect(limite.status).toBe('quase cheio');
+    });
 
-      // --- contadores_provedor ---
-      if (sql.includes('INSERT INTO contadores_provedor')) {
-        const [provedor, data, qtd] = params;
-        const chave = `${provedor}:${data}`;
-        const atual = (tabelas.contadores_provedor.get(chave) || { provedor, data, contagem: 0 }).contagem;
-        tabelas.contadores_provedor.set(chave, { provedor, data, contagem: atual + qtd });
-        return [];
-      }
+    it('detecta quase cheio no D1 (70% reads)', () => {
+      controller.registrar('d1', 3500000, 0); // 70% de 5M
+      const limite = controller.verificarLimite('d1');
+      expect(limite.quaseCheio).toBe(true);
+      expect(limite.status).toBe('quase cheio');
+    });
 
-      if (sql.includes('SELECT contagem FROM contadores_provedor WHERE provedor = ? AND data = ?')) {
-        const [provedor, data] = params;
-        const row = tabelas.contadores_provedor.get(`${provedor}:${data}`);
-        return row ? [{ contagem: row.contagem }] : [];
-      }
+    it('detecta quase cheio no D1 (70% writes)', () => {
+      controller.registrar('d1', 0, 70000); // 70% de 100k
+      const limite = controller.verificarLimite('d1');
+      expect(limite.quaseCheio).toBe(true);
+      expect(limite.status).toBe('quase cheio');
+    });
 
-      if (sql.includes('SELECT provedor, contagem FROM contadores_provedor WHERE data = ?')) {
-        const data = params[0];
-        const rows = [];
-        for (const row of tabelas.contadores_provedor.values()) {
-          if (row.data === data) rows.push({ provedor: row.provedor, contagem: row.contagem });
-        }
-        return rows;
-      }
+    it('detecta quase cheio no CofreSql (70% reads)', () => {
+      controller.registrar('cofresql', 35000000, 0); // 70% de 50M
+      const limite = controller.verificarLimite('cofresql');
+      expect(limite.quaseCheio).toBe(true);
+      expect(limite.status).toBe('quase cheio');
+    });
 
-      // --- fila_espera ---
-      if (sql.includes('INSERT INTO fila_espera')) {
-        const [id, usuario_id, plano, prioridade, chegada, payload] = params;
-        tabelas.fila_espera.set(id, { id, usuario_id, plano, prioridade, chegada, status: 'aguardando', payload });
-        return [];
-      }
+    it('detecta quase cheio no CofreSql (70% writes)', () => {
+      controller.registrar('cofresql', 0, 7000000); // 70% de 10M
+      const limite = controller.verificarLimite('cofresql');
+      expect(limite.quaseCheio).toBe(true);
+      expect(limite.status).toBe('quase cheio');
+    });
 
-      if (sql.includes('SELECT COUNT(*) as pos FROM fila_espera WHERE status = \'aguardando\'')) {
-        let count = 0;
-        for (const row of tabelas.fila_espera.values()) {
-          if (row.status === 'aguardando') count++;
-        }
-        return [{ pos: count }];
-      }
+    it('retorna status ativo quando abaixo de 70%', () => {
+      controller.registrar('firestore-b', 30000, 10000); // 60% reads, 50% writes
+      const limite = controller.verificarLimite('firestore-b');
+      expect(limite.quaseCheio).toBe(false);
+      expect(limite.status).toBe('ativo');
+    });
+  });
 
-      if (sql.includes('SELECT id, usuario_id, plano, prioridade, chegada, payload FROM fila_espera WHERE status = \'aguardando\' ORDER BY prioridade DESC, chegada ASC LIMIT 1')) {
-        const rows = Array.from(tabelas.fila_espera.values())
-          .filter(r => r.status === 'aguardando')
-          .sort((a, b) => b.prioridade - a.prioridade || a.chegada - b.chegada);
-        return rows.length > 0 ? [rows[0]] : [];
-      }
+  describe('troca automática de banco', () => {
+    it('troca para o próximo banco quando quase cheio', () => {
+      controller.registrar('firestore-b', 35000, 0); // 70% reads
+      expect(controller.obterBancoAtual()).toBe('firestore-b');
+      controller.registrar(); // deve trocar
+      expect(controller.obterBancoAtual()).toBe('firestore-c');
+    });
 
-      if (sql.includes('UPDATE fila_espera SET status = \'processando\' WHERE id = ?')) {
-        const id = params[0];
-        const row = tabelas.fila_espera.get(id);
-        if (row) row.status = 'processando';
-        return [];
-      }
+    it('circularidade do rodízio', () => {
+      controller.registrar('firestore-b', 35000, 0);
+      controller.registrar(); // firestore-b → firestore-c
+      controller.registrar(); // firestore-c → d1
+      controller.registrar(); // d1 → cofresql
+      controller.registrar(); // cofresql → firestore-b
+      expect(controller.obterBancoAtual()).toBe('firestore-b');
+    });
 
-      if (sql.includes('DELETE FROM fila_espera WHERE id = ?')) {
-        const id = params[0];
-        tabelas.fila_espera.delete(id);
-        return [];
-      }
+    it('troca apenas quando necessário (70%)', () => {
+      controller.registrar('firestore-b', 30000, 10000); // 60% - não troca
+      expect(controller.obterBancoAtual()).toBe('firestore-b');
+    });
+  });
 
-      if (sql.includes('SELECT id, usuario_id, plano, prioridade, chegada, status, payload FROM fila_espera WHERE status = ?')) {
-        const status = params[0];
-        return Array.from(tabelas.fila_espera.values())
-          .filter(r => r.status === status)
-          .sort((a, b) => b.prioridade - a.prioridade || a.chegada - b.chegada);
-      }
-
-      if (sql.includes('SELECT COUNT(*) as total FROM fila_espera WHERE status = ?')) {
-        const status = params[0];
-        const count = Array.from(tabelas.fila_espera.values()).filter(r => r.status === status).length;
-        return [{ total: count }];
-      }
-
-      return [];
-    },
-  };
-}
-
-test('VazaoController: prioridade por plano', () => {
-  assert.strictEqual(calcularPrioridade('enterprise'), 100);
-  assert.strictEqual(calcularPrioridade('pro'), 50);
-  assert.strictEqual(calcularPrioridade('pago'), 50);
-  assert.strictEqual(calcularPrioridade('gratis'), 10);
-  assert.strictEqual(calcularPrioridade('free'), 10);
-  assert.strictEqual(calcularPrioridade('desconhecido'), 10);
-  assert.strictEqual(calcularPrioridade(85), 85);
-});
-
-test('VazaoController: 1 resposta em andamento por usuário', () => {
-  const ctrl = new VazaoController();
-
-  const r1 = ctrl.iniciarResposta('usr-1', 'req-100');
-  assert.strictEqual(r1.ok, true);
-  assert.strictEqual(r1.usuario_id, 'usr-1');
-
-  // Segunda tentativa do mesmo usuário deve ser recusada
-  const r2 = ctrl.iniciarResposta('usr-1', 'req-101');
-  assert.strictEqual(r2.ok, false);
-  assert.strictEqual(r2.motivo, 'resposta_em_andamento');
-
-  // Consulta andamento
-  const andamento = ctrl.obterRespostaAndamento('usr-1');
-  assert.strictEqual(andamento.usuario_id, 'usr-1');
-  assert.strictEqual(andamento.request_id, 'req-100');
-
-  // Finaliza resposta
-  const r3 = ctrl.finalizarResposta('usr-1');
-  assert.strictEqual(r3.ok, true);
-  assert.strictEqual(ctrl.obterRespostaAndamento('usr-1'), null);
-
-  // Agora pode iniciar novamente
-  const r4 = ctrl.iniciarResposta('usr-1', 'req-102');
-  assert.strictEqual(r4.ok, true);
-});
-
-test('VazaoController: contadores por provedor e verificação de cotas', () => {
-  const ctrl = new VazaoController();
-  const hoje = new Date().toISOString().slice(0, 10);
-
-  const inc1 = ctrl.incrementarProvedor('openai', 500, hoje);
-  assert.strictEqual(inc1.ok, true);
-  assert.strictEqual(inc1.contagem, 500);
-
-  const inc2 = ctrl.incrementarProvedor('openai', 300, hoje);
-  assert.strictEqual(inc2.contagem, 800);
-
-  const contadores = ctrl.obterContadores(hoje);
-  assert.strictEqual(contadores.openai, 800);
-
-  const cota = ctrl.verificarCota('openai', 1000, hoje);
-  assert.strictEqual(cota.usado, 800);
-  assert.strictEqual(cota.perto, true); // 800 >= 80% de 1000
-  assert.strictEqual(cota.excedido, false);
-});
-
-test('VazaoController: fila de espera ordenada por plano e chegada', () => {
-  const ctrl = new VazaoController();
-  const t0 = 1000;
-
-  ctrl.enfileirar({ id: 'item-1', usuario_id: 'usr-gratis', plano: 'gratis' }, t0);
-  ctrl.enfileirar({ id: 'item-2', usuario_id: 'usr-enterprise', plano: 'enterprise' }, t0 + 10);
-  ctrl.enfileirar({ id: 'item-3', usuario_id: 'usr-pro', plano: 'pro' }, t0 + 5);
-
-  assert.strictEqual(ctrl.tamanhoFila(), 3);
-
-  // Primeiro a sair deve ser Enterprise (maior prioridade: 100)
-  const p1 = ctrl.proximoDaFila();
-  assert.strictEqual(p1.id, 'item-2');
-  assert.strictEqual(p1.plano, 'enterprise');
-
-  // Segundo a sair deve ser Pro (prioridade: 50)
-  const p2 = ctrl.proximoDaFila();
-  assert.strictEqual(p2.id, 'item-3');
-  assert.strictEqual(p2.plano, 'pro');
-
-  // Terceiro a sair deve ser Gratis (prioridade: 10)
-  const p3 = ctrl.proximoDaFila();
-  assert.strictEqual(p3.id, 'item-1');
-  assert.strictEqual(p3.plano, 'gratis');
-
-  assert.strictEqual(ctrl.proximoDaFila(), null);
-});
-
-test('VazaoController: persistência com SQLite mock', () => {
-  const state = { storage: { sql: criarMockSqlite() } };
-  const ctrl = new VazaoController(state);
-
-  // 1. Resposta em andamento com SQLite
-  assert.strictEqual(ctrl.iniciarResposta('u-sql', 'req-sql').ok, true);
-  assert.strictEqual(ctrl.iniciarResposta('u-sql').ok, false);
-  assert.strictEqual(ctrl.finalizarResposta('u-sql').ok, true);
-
-  // 2. Contadores com SQLite
-  ctrl.incrementarProvedor('anthropic', 100, '2026-10-26');
-  assert.strictEqual(ctrl.obterContadores('2026-10-26').anthropic, 100);
-
-  // 3. Fila com SQLite
-  ctrl.enfileirar({ id: 'sql-f1', usuario_id: 'u1', plano: 'gratis' }, 100);
-  ctrl.enfileirar({ id: 'sql-f2', usuario_id: 'u2', plano: 'enterprise' }, 105);
-
-  const prox = ctrl.proximoDaFila();
-  assert.strictEqual(prox.id, 'sql-f2');
-  assert.strictEqual(prox.plano, 'enterprise');
-});
-
-test('VazaoController: handler HTTP fetch', async () => {
-  const ctrl = new VazaoController();
-
-  // GET /status
-  const stRes = await ctrl.fetch(new Request('https://do.local/status'));
-  assert.strictEqual(stRes.status, 200);
-  const stData = await stRes.json();
-  assert.strictEqual(stData.durable, 'VazaoController');
-
-  // POST /iniciar
-  const iniRes = await ctrl.fetch(new Request('https://do.local/iniciar', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ usuario_id: 'u-fetch', request_id: 'r-fetch' }),
-  }));
-  assert.strictEqual(iniRes.status, 200);
-
-  // POST /iniciar conflito
-  const confRes = await ctrl.fetch(new Request('https://do.local/iniciar', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ usuario_id: 'u-fetch' }),
-  }));
-  assert.strictEqual(confRes.status, 409);
-
-  // POST /finalizar
-  const finRes = await ctrl.fetch(new Request('https://do.local/finalizar', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ usuario_id: 'u-fetch' }),
-  }));
-  assert.strictEqual(finRes.status, 200);
-
-  // POST /fila/enfileirar e /fila/proximo
-  await ctrl.fetch(new Request('https://do.local/fila/enfileirar', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id: 'fetch-f1', usuario_id: 'u-f', plano: 'pro' }),
-  }));
-
-  const proxRes = await ctrl.fetch(new Request('https://do.local/fila/proximo', { method: 'POST' }));
-  const proxData = await proxRes.json();
-  assert.strictEqual(proxData.item.id, 'fetch-f1');
+  describe('resumo geral', () => {
+    it('retorna status de todos os bancos', () => {
+      controller.registrar('firestore-b', 100, 50);
+      controller.registrar('d1', 200, 100);
+      controller.registrar('cofresql', 300, 150);
+      const resumo = controller.obterResumoGeral();
+      expect(resumo).toHaveProperty('firestore-b');
+      expect(resumo).toHaveProperty('d1');
+      expect(resumo).toHaveProperty('cofresql');
+      expect(resumo.firestore-b).toHaveProperty('leituras', 100);
+      expect(resumo.d1).toHaveProperty('leituras', 200);
+      expect(resumo.cofresql).toHaveProperty('leituras', 300);
+    });
+  });
 });
