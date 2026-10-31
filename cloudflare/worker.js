@@ -12,8 +12,6 @@ import cacheBorda from './cacheBorda.js';
 import { VazaoController } from '../src/durable/VazaoController.js';
 import { CofreSql, pontaCofre } from '../src/durable/CofreSql.js';
 
-// #1662: o Cloudflare só publica se a classe do Durable Object sair do arquivo de entrada.
-// #2221: VazaoController durable object para controle e rodízio de cotas do Vault
 export class VazaoController {
   constructor(state, env) {
     this.state = state;
@@ -26,16 +24,17 @@ export class VazaoController {
     if (url.pathname === '/marcar-cheio') {
       const authHeader = request.headers.get('x-nexia-cron') || '';
       const authBearer = request.headers.get('authorization') || '';
-      const secret = String((this.env && this.env.NEXIA_CRON_SECRET) || '');
+      const secret = String((this.env && this.env.NEXIA_CRON_SECRET) || '').trim();
       
-      // Validação segura do token Bearer
       let isValid = false;
-      if (authHeader === secret && secret.length >= 32) {
-        isValid = true;
-      } else if (authBearer.startsWith('Bearer ')) {
-        const token = authBearer.substring(7); // Remove 'Bearer '
-        if (token === secret && secret.length >= 32) {
+      if (secret && secret.length >= 32) {
+        if (authHeader && authHeader === secret && authHeader.length >= 32) {
           isValid = true;
+        } else if (authBearer.startsWith('Bearer ')) {
+          const token = authBearer.substring(7).trim();
+          if (token === secret && token.length >= 32) {
+            isValid = true;
+          }
         }
       }
       
@@ -43,7 +42,7 @@ export class VazaoController {
         return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
       }
       const b = await request.json().catch(() => ({}));
-      if (b.banco) this.bancosQuaseCheios.add(b.banco);
+      if (b.banco) this.bancosQuaseCheios.add(String(b.banco));
       return new Response(JSON.stringify({ ok: true, quaseCheios: Array.from(this.bancosQuaseCheios) }), { headers: { 'Content-Type': 'application/json' } });
     }
     if (url.pathname === '/status') {
@@ -53,9 +52,9 @@ export class VazaoController {
       if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405, headers: { 'Content-Type': 'application/json' } });
       const body = await request.json().catch(() => ({}));
       const { banco, data, leituras = 0, escritas = 0, projectId = '' } = body || {};
-      const bancoKey = banco || projectId;
-      if (bancoKey && data) {
-        this.storage.put(`vazao:${bancoKey}:${data}`, JSON.stringify({ leituras, escritas }));
+      const bancoKey = String(banco || projectId || '').replace(/[^a-zA-Z0-9_-]/g, '');
+      if (bancoKey && data && /^\d{4}-\d{2}-\d{2}$/.test(data)) {
+        this.storage.put(`vazao:${bancoKey}:${data}`, JSON.stringify({ leituras: Number(leituras) || 0, escritas: Number(escritas) || 0 }));
       }
       return new Response(JSON.stringify({ ok: true, banco: bancoKey, leituras, escritas }), { headers: { 'Content-Type': 'application/json' } });
     }
@@ -64,7 +63,7 @@ export class VazaoController {
       const entries = await this.storage.list({ prefix: 'vazao:' });
       const uso = {};
       for (const key of entries.keys) {
-        const match = key.name.match(/^vazao:(.+):(\d{4}-\d{2}-\d{2})$/);
+        const match = key.name.match(/^vazao:([a-zA-Z0-9_-]+):(\d{4}-\d{2}-\d{2})$/);
         if (match) {
           const banco = match[1];
           const data = match[2];
@@ -88,16 +87,11 @@ export { VazaoController, CofreSql };
 export default {
   async fetch(request, env, ctx) {
     if (new URL(request.url).pathname === '/api/corpo-ia') return corpoIa(request, env);
-    // #2188: jobs do GitHub Actions usam o banco do Worker do cofre por esta rota (com segredo).
     if (new URL(request.url).pathname === '/api/cofre-sql') return pontaCofre(request, env);
-    // #807: leituras públicas (config do Firebase etc.) passam pelo cache de borda (60 a 300 s).
     return cacheBorda.comCacheDeBorda(request, env, ctx,
       () => app.handleRequest(request, env, { getFunction: functions.getFunction }));
   },
 
-  // ADR-F12-03 + ADR-FREE-02 + ADR-AUTO-01: a cada 5 min procura Robôs NEXIA vencidos e, de hora
-  // em hora, execuções paradas; havendo algo, dispara a tarefa no GitHub Actions (sem processo
-  // longo dentro do Worker). Sem nada vencido, não dispara nada.
   async scheduled(controller, env, ctx) {
     app.populateProcessEnv(env);
     const at = Number(controller && controller.scheduledTime) || Date.now();
@@ -105,22 +99,18 @@ export default {
       r => console.log('[nexia-cron]', JSON.stringify(r).slice(0, 500)),
       e => console.error('[nexia-cron]', e && e.message),
     ));
-    // Body Coach: lembretes no celular (treino, água) de quem tem lembrete neste bloco de 5 min.
     ctx.waitUntil(lembretes.rodar(at).then(
       r => console.log('[bc-lembretes]', JSON.stringify(r)),
       e => console.error('[bc-lembretes]', e && e.message),
     ));
-    // Splash: lembretes de cliente (saldo e véspera da festa) avisam a dona no celular às 9h.
     ctx.waitUntil(lembretes.rodarSplash(at).then(
       r => console.log('[splash-lembretes]', JSON.stringify(r)),
       e => console.error('[splash-lembretes]', e && e.message),
     ));
-    // Cortex: escada para tarefa travada (Jules grátis, volta ao Cortex, por fim humano), a cada 15 min.
     ctx.waitUntil(julesAuto.rodar(at).then(
       r => console.log('[jules-auto]', JSON.stringify(r)),
       e => console.error('[jules-auto]', e && e.message),
     ));
-    // Central: histórico de saúde (1 amostra por hora por rota pública, 30 dias).
     ctx.waitUntil(saude.rodar(at).then(
       r => console.log('[saude-historico]', JSON.stringify(r)),
       e => console.error('[saude-historico]', e && e.message),
