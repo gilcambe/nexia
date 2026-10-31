@@ -122,7 +122,8 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
       try {
         const hoje = new Date().toISOString().slice(0, 10);
         // Usa o VazaoController do firestore.js que já implementa o contador
-        require('./lib/firebase-lite/firestore.js').registrarUsoBanco(banco, leituras, escritas);
+        const fsMod = require('../../lib/firebase-lite/firestore.js');
+        fsMod.registrarUsoBanco(banco, leituras, escritas);
         
         // Se houver tenantDb (CofreSql), também registra lá
         if (tenantDb && typeof tenantDb.fetch === 'function') {
@@ -166,12 +167,13 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
     // Métodos para gerenciamento de bancos do cofre - integrados com firebase-lite/firestore.js
     function _getBanco(entity) {
       // Usa o banco atual do firestore.js que já implementa o rodízio
-      return require('./lib/firebase-lite/firestore.js').getNextBank();
+      return require('../../lib/firebase-lite/firestore.js').getNextBank();
     }
     
     function _isBancoQuaseCheio(banco) {
-      const uso = require('./lib/firebase-lite/firestore.js').getUsoBanco(banco);
-      const limits = require('./lib/firebase-lite/firestore.js').BANK_LIMITS[banco] || require('./lib/firebase-lite/firestore.js').BANK_LIMITS['firestore-default'];
+      const fsMod = require('../../lib/firebase-lite/firestore.js');
+      const uso = fsMod.getUsoBanco(banco);
+      const limits = fsMod.BANK_LIMITS[banco] || fsMod.BANK_LIMITS['firestore-default'];
       const pctLeituras = uso.leituras / limits.reads;
       const pctEscritas = uso.escritas / limits.writes;
       return pctLeituras >= limits.warnThreshold || pctEscritas >= limits.warnThreshold;
@@ -179,13 +181,12 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
     
     function _getProximoBanco(bancoAtual) {
       // Usa a função implementada em firebase-lite/firestore.js
-      return require('./lib/firebase-lite/firestore.js').getNextBank();
+      return require('../../lib/firebase-lite/firestore.js').getNextBank();
     }
     
     function _setBancoAtivo(novoBanco) {
       // Atualiza o banco atual no firestore.js
-      const firestoreModule = require('./lib/firebase-lite/firestore.js');
-      // A função switchToNextBank já atualiza o currentBancoIndex internamente
+      const firestoreModule = require('../../lib/firebase-lite/firestore.js');
       firestoreModule.switchToNextBank();
     }
 
