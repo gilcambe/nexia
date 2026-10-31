@@ -9,6 +9,7 @@ type MemoryItemProps = MemoryItemType & {
   onDelete: (id: string) => void;
 };
 
+// Revertido para não tocar em arquivos fora de config.js
 export default function MemorySettings() {
   const { 
     memoryItems, 
