@@ -171,6 +171,38 @@ exports.handler = async function (event, context) {
   const slug = (q.site || 'viajantepro').toLowerCase();
   const cadastro = VIAJANTE_PRO[slug] || VIAJANTE_PRO.viajantepro;
 
+  // ── NOVOS ENDPOINTS REST COM VALIDAÇÃO DE TOKEN ──
+  const path = event.path || '';
+  const isViagensPath = path.includes('/api/viagens');
+  const isChatsPath = path.includes('/api/chats');
+  
+  // Validação de token vp_admin_token para endpoints REST
+  if (isViagensPath || isChatsPath) {
+    const authHeader = event.headers.authorization || '';
+    const vpToken = authHeader.replace(/^Bearer\s+/i, '');
+    
+    if (!vpToken) {
+      return res(401, { error: 'Token vp_admin_token ausente no header Authorization.' });
+    }
+    
+    // Verificar se o token é válido (mesma lógica de sessão existente)
+    const tokenHash = await sha256(vpToken);
+    const contaRef = db.collection(COLLECTION).doc(slug);
+    const sSnap = await contaRef.collection('sessoes').doc(tokenHash).get();
+    
+    if (!sSnap.exists) {
+      return res(401, { error: 'Token vp_admin_token inválido ou expirado.' });
+    }
+    
+    const sessao = sSnap.data();
+    const now = Date.now();
+    
+    if (new Date(sessao.expira_em).getTime() < now) {
+      await contaRef.collection('sessoes').doc(tokenHash).delete();
+      return res(401, { error: 'Token vp_admin_token expirado.' });
+    }
+  }
+
   const contaRef = db.collection(COLLECTION).doc(slug);
 
   // ── GET PÚBLICO: Conteúdo do Site ou Foto ──
