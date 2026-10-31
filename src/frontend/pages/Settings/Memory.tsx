@@ -53,6 +53,14 @@ export default function MemorySettings() {
     setShowOfflineModal(false);
   };
 
+  const closeOfflineErrorModal = () => {
+    setOfflineErrorModal(null);
+  };
+
+  const closeOfflineModal = () => {
+    setShowOfflineModal(false);
+  };
+
 
 
 
