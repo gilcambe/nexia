@@ -39,27 +39,39 @@ function decidir(prs, agora) {
 }
 
 async function rodar() {
-  const { data: prs } = await githubApi.pullsList('owner', 'repo', 'open');
-  const entrada = prs
-    .filter(p => p.head.ref.startsWith('nexia/'))
-    .map(p => ({
-      number: p.number,
-      title: p.title,
-      headRef: p.head.ref,
-      createdAt: p.created_at,
-      ciStatus: p.ci_status || 'pending',
-      labels: p.labels || [],
-      issueFechada: p.issueFechada === true,
-    }));
-  const fechar = decidir(entrada, new Date());
-  for (const { pr, motivo } of fechar) {
-    await githubApi.pullsUpdate('owner', 'repo', pr.number, 'closed');
-    const body = motivo === 'ci-vermelho-issue-fechada'
-      ? 'CI vermelho há mais de 48h e issue fechada.'
-      : 'PR duplicado: existe PR mais recente para a mesma issue.';
-    await githubApi.issuesCreateComment('owner', 'repo', pr.number, body);
+  try {
+    const { data: prs } = await githubApi.pullsList('owner', 'repo', 'open');
+    if (!prs) throw new Error('Falha ao listar PRs');
+    const entrada = prs
+      .filter(p => p.head.ref.startsWith('nexia/'))
+      .map(p => ({
+        number: p.number,
+        title: p.title,
+        headRef: p.head.ref,
+        createdAt: p.created_at,
+        ciStatus: p.ci_status || 'pending',
+        labels: p.labels || [],
+        issueFechada: p.issue?.closed_at === true || p.issueFechada === true,
+      }));
+    const fechar = decidir(entrada, new Date());
+    let fechados = 0;
+    for (const { pr, motivo } of fechar) {
+      try {
+        await githubApi.pullsUpdate('owner', 'repo', pr.number, 'closed');
+        const body = motivo === 'ci-vermelho-issue-fechada'
+          ? 'CI vermelho há mais de 48h e issue fechada.'
+          : 'PR duplicado: existe PR mais recente para a mesma issue.';
+        await githubApi.issuesCreateComment('owner', 'repo', pr.number, body);
+        fechados++;
+      } catch (e) {
+        console.error(`Falha ao fechar PR #${pr.number}:`, e.message);
+      }
+    }
+    return fechados;
+  } catch (e) {
+    console.error('Erro ao executar rodada:', e.message);
+    return 0;
   }
-  return fechar.length;
 }
 
 module.exports = { decidir, rodar };
