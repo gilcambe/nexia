@@ -171,11 +171,6 @@ function AvisosCelular() {
 
 export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema; mudarTema: (t: Tema) => void; email: string; instalar: (() => void) | null; sair: () => void }) {
   const op: { id: Tema; nome: string }[] = [{ id: "auto", nome: "Automático" }, { id: "escuro", nome: "Escuro" }, { id: "claro", nome: "Claro" }];
-  
-
-
-
-
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-3">
       <Titulo t="Configurações" s={email} />
