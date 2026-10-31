@@ -51,7 +51,6 @@ const LOADERS = {
   'tenant-admin': () => require('../netlify/functions/tenant-admin.js'),
   'tenant-domain': () => require('../netlify/functions/tenant-domain.js'),
   'usage': () => require('../netlify/functions/usage.js'),
-
   'viajante-pro': () => require('../netlify/functions/viajante-pro.js'),
   'whatsapp-business': () => require('../netlify/functions/whatsapp-business.js'),
   'central': () => require('../netlify/functions/central.js'),
