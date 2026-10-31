@@ -2,9 +2,9 @@
 const test = require('node:test');
 const assert = require('node:assert');
 
-const caminhoAcoes = '../../netlify/functions/central/pedidos-acoes.js';
-const caminhoJules = '../../netlify/functions/central/pedidos-jules.js';
-const caminhoGithub = '../../netlify/functions/central/github.js';
+const CAMINHO_ACOES = '../../netlify/functions/central/pedidos-acoes.js';
+const CAMINHO_JULES = '../../netlify/functions/central/pedidos-jules.js';
+const CAMINHO_GITHUB = '../../netlify/functions/central/github.js';
 
 // --- Mock do objeto p (com metodo gh) ---
 const chamadasGh = [];
@@ -20,7 +20,7 @@ const mockGh = async function(url, options = {}) {
     ];
   }
   // getIssue: /repos/gilcambe/nexia/issues/N
-  const m = url.match(//repos/gilcambe/nexia/issues/(\d+)$/);
+  const m = url.match(/\/repos\/gilcambe\/nexia\/issues\/(\d+)$/);
   if (m) {
     const n = Number(m[1]);
     const base = await mockGh('/repos/gilcambe/nexia/issues');
@@ -35,18 +35,21 @@ const mockGh = async function(url, options = {}) {
 
 const p = { gh: mockGh };
 
-// --- Mock de mandarParaJules e rodar injetado no require.cache ---
 let chamadasJules = 0;
 let chamadasRodar = 0;
 const mockMandarParaJules = async function() { chamadasJules++; return { status: 200, corpo: { ok: true } }; };
 const mockRodar = async function() { chamadasRodar++; return { success: true }; };
 
 function injetarMocks() {
-  require.cache[require.resolve(caminhoJules)] = { exports: { mandarParaJules: mockMandarParaJules, montarPrompt: () => {}, REGRAS: '' } };
-  require.cache[require.resolve(caminhoGithub)] = { exports: { rodar: mockRodar } };
+  require.cache[require.resolve(CAMINHO_JULES)] = { exports: { mandarParaJules: mockMandarParaJules, montarPrompt: () => {}, REGRAS: '' } };
+  require.cache[require.resolve(CAMINHO_GITHUB)] = { exports: { rodar: mockRodar } };
 }
 
-const { socorro } = require(caminhoAcoes);
+function limparCache() {
+  delete require.cache[require.resolve(CAMINHO_ACOES)];
+  delete require.cache[require.resolve(CAMINHO_JULES)];
+  delete require.cache[require.resolve(CAMINHO_GITHUB)];
+}
 
 function reset() {
   chamadasGh.length = 0;
@@ -56,7 +59,9 @@ function reset() {
 
 test('socorro: jules true - no maximo 3 para Jules, criterio restrito', async () => {
   reset();
+  limparCache();
   injetarMocks();
+  const { socorro } = require(CAMINHO_ACOES);
   const resultado = await socorro(p, { jules: true });
   const paraJules = resultado.filter(r => r.para === 'jules');
   const paraReserva = resultado.filter(r => r.para === 'reserva');
@@ -73,7 +78,9 @@ test('socorro: jules true - no maximo 3 para Jules, criterio restrito', async ()
 
 test('socorro: jules false - nenhuma vai ao Jules, criterio vai para reserva', async () => {
   reset();
+  limparCache();
   injetarMocks();
+  const { socorro } = require(CAMINHO_ACOES);
   const resultado = await socorro(p, { jules: false });
   const paraJules = resultado.filter(r => r.para === 'jules');
   const paraReserva = resultado.filter(r => r.para === 'reserva');
@@ -84,7 +91,9 @@ test('socorro: jules false - nenhuma vai ao Jules, criterio vai para reserva', a
 
 test('socorro: reserva-tentou nas ultimas 6h e ignorada', async () => {
   reset();
+  limparCache();
   injetarMocks();
+  const { socorro } = require(CAMINHO_ACOES);
   const resultado = await socorro(p, { jules: true });
   const numeros = resultado.map(r => r.numero);
   assert.ok(!numeros.includes(2), 'issue 2 com reserva-tentou nas 6h deve ser ignorada');
