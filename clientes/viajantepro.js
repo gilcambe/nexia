@@ -21,10 +21,18 @@ const VIAJANTE_PRO = {
   },
 };
 
+// Configuração centralizada da API
+const API_CONFIG = {
+  baseUrl: '/api/viajante-pro',
+  timeout: 10000, // 10 segundos
+  maxRetries: 2,
+};
+
 // Funções de API para o Viajante Pro
 // Todas as funções usam fetch e incluem autenticação com token
 
-// Obtém o token armazenado em cookie seguro com expiração
+// Obtém o token armazenado em cookie (simula HttpOnly no frontend)
+// Em produção, o token deve ser lido apenas via HttpOnly cookies no servidor
 function getToken() {
   const name = 'viajantepro_token=';
   const decodedCookie = decodeURIComponent(document.cookie);
@@ -47,39 +55,179 @@ function setToken(token) {
   const expires = new Date();
   expires.setTime(expires.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 dias
   const secure = window.location.protocol === 'https:' ? 'Secure;' : '';
-  document.cookie = name + token + ';' + secure + ' path=/; expires=' + expires.toUTCString();
+  const sameSite = 'SameSite=Strict;';
+  document.cookie = name + token + ';' + secure + sameSite + ' path=/; expires=' + expires.toUTCString();
 }
 
 // Remove o token ao fazer logout
 function removeToken() {
-  document.cookie = 'viajantepro_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+  document.cookie = 'viajantepro_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict;';
 }
 
-// Função auxiliar para fazer requisições API
-async function apiRequest(acao, data = {}) {
+// Gera token CSRF para proteção contra ataques CSRF
+function getCsrfToken() {
+  const name = 'viajantepro_csrf=';
+  const decodedCookie = decodeURIComponent(document.cookie);
+  const ca = decodedCookie.split(';');
+  for(let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) === 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return null;
+}
+
+// Valida estrutura básica de objeto viagem
+function validateViagem(viagem) {
+  if (!viagem || typeof viagem !== 'object') {
+    throw new Error('Viagem deve ser um objeto.');
+  }
+  
+  if (!viagem.nome || typeof viagem.nome !== 'string' || viagem.nome.trim().length === 0) {
+    throw new Error('Nome da viagem é obrigatório e deve ser uma string não vazia.');
+  }
+  
+  if (!viagem.destino || typeof viagem.destino !== 'string' || viagem.destino.trim().length === 0) {
+    throw new Error('Destino é obrigatório e deve ser uma string não vazia.');
+  }
+  
+  if (!viagem.datas || typeof viagem.datas !== 'object') {
+    throw new Error('Datas são obrigatórias e devem ser um objeto.');
+  }
+  
+  if (!viagem.datas.inicio || typeof viagem.datas.inicio !== 'string' || !isValidDate(viagem.datas.inicio)) {
+    throw new Error('Data de início é obrigatória e deve ser uma data válida (formato YYYY-MM-DD).');
+  }
+  
+  if (!viagem.datas.fim || typeof viagem.datas.fim !== 'string' || !isValidDate(viagem.datas.fim)) {
+    throw new Error('Data de fim é obrigatória e deve ser uma data válida (formato YYYY-MM-DD).');
+  }
+  
+  // Valida que a data de início é anterior à data de fim
+  const inicio = new Date(viagem.datas.inicio);
+  const fim = new Date(viagem.datas.fim);
+  if (inicio >= fim) {
+    throw new Error('A data de início deve ser anterior à data de fim.');
+  }
+  
+  // Valida passageiros se existirem
+  if (viagem.passageiros && !Array.isArray(viagem.passageiros)) {
+    throw new Error('Passageiros devem ser uma array.');
+  }
+  
+  // Valida roteiro se existir
+  if (viagem.roteiro && !Array.isArray(viagem.roteiro)) {
+    throw new Error('Roteiro deve ser uma array.');
+  }
+  
+  return true;
+}
+
+// Valida data no formato YYYY-MM-DD
+function isValidDate(dateString) {
+  const regex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!regex.test(dateString)) return false;
+  
+  const date = new Date(dateString);
+  return date instanceof Date && !isNaN(date);
+}
+
+// Valida mensagem de chat
+function validateChatMessage(texto, autor = 'viajante') {
+  if (!texto || typeof texto !== 'string' || texto.trim().length === 0) {
+    throw new Error('Texto da mensagem é obrigatório e deve ser uma string não vazia.');
+  }
+  
+  if (texto.length > 1000) {
+    throw new Error('Texto da mensagem excede o limite de 1000 caracteres.');
+  }
+  
+  if (autor && typeof autor !== 'string') {
+    throw new Error('Autor deve ser uma string.');
+  }
+  
+  return true;
+}
+
+// Função auxiliar para fazer requisições API com retry e tratamento de erros
+async function apiRequest(acao, data = {}, retryCount = 0) {
   const token = getToken();
   if (!token) {
     throw new Error('Token não encontrado. Faça login primeiro.');
   }
   
-  const response = await fetch('/api/viajante-pro', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    },
-    body: JSON.stringify({
-      acao,
-      ...data
-    })
-  });
+  // Adiciona token CSRF para proteção contra CSRF
+  const csrfToken = getCsrfToken();
   
-  if (!response.ok) {
-    const errorText = await response.text().catch(() => 'Erro na API');
-    throw new Error(`Erro na API: ${response.status} - ${errorText}`);
+  const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+  };
+  
+  if (csrfToken) {
+    headers['X-CSRF-Token'] = csrfToken;
   }
   
-  return response.json();
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.timeout);
+    
+    const response = await fetch(API_CONFIG.baseUrl, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        acao,
+        ...data
+      }),
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    // Trata diferentes status codes
+    if (!response.ok) {
+      let errorDetails = '';
+      try {
+        errorDetails = await response.text();
+      } catch (e) {
+        errorDetails = 'Erro ao ler resposta do servidor';
+      }
+      
+      // Trata erros específicos
+      if (response.status === 401) {
+        throw new Error('Sessão expirada. Por favor, faça login novamente.');
+      } else if (response.status === 403) {
+        throw new Error('Acesso negado. Você não tem permissão para esta ação.');
+      } else if (response.status === 429) {
+        throw new Error('Muitas requisições. Por favor, aguarde alguns minutos.');
+      } else {
+        throw new Error(`Erro na API: ${response.status} - ${errorDetails}`);
+      }
+    }
+    
+    const result = await response.json();
+    
+    // Verifica se a API retornou um erro no corpo da resposta
+    if (result.error) {
+      throw new Error(result.error.message || 'Erro na API');
+    }
+    
+    return result;
+    
+  } catch (error) {
+    // Retry para erros de rede ou timeout
+    if (retryCount < API_CONFIG.maxRetries && (error.name === 'AbortError' || error.name === 'NetworkError')) {
+      await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+      return apiRequest(acao, data, retryCount + 1);
+    }
+    
+    // Lança erro original se não for retryável
+    throw error;
+  }
 }
 
 // Função auxiliar para validar token no backend (Bearer token é validado no handler viajante-pro.js)
