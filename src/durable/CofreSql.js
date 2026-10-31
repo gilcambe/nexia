@@ -32,6 +32,8 @@ class CofreSql {
       const isFs = /firestore/i.test(bancoKey);
       const maxL = isFs ? 50000 : (/cofresql/i.test(bancoKey) ? 50000000 : 5000000);
       const maxE = isFs ? 20000 : (/cofresql/i.test(bancoKey) ? 10000000 : 100000);
+      const pctL = Number(((leituras / maxL) * 100).toFixed(1));
+      const pctE = Number(((escritas / maxE) * 100).toFixed(1));
       const alerta = {
         tipo: 'sentinel',
         banco: bancoKey,
@@ -39,19 +41,30 @@ class CofreSql {
         escritas,
         limiteLeituras: maxL,
         limiteEscritas: maxE,
-        percentualLeituras: Number(((leituras / maxL) * 100).toFixed(1)),
-        percentualEscritas: Number(((escritas / maxE) * 100).toFixed(1)),
+        percentualLeituras: pctL,
+        percentualEscritas: pctE,
         timestamp: new Date().toISOString(),
         acao: 'alternar_tráfego_preventivo_cofresql',
         passoAPasso: [
-          `1. Banco do cofre/D1 ${bancoKey} atingiu o limite preventivo de 70%.`,
+          `1. Banco ${bancoKey} atingiu o limite preventivo de 70% (leituras: ${pctL}%, escritas: ${pctE}%).`,
           `2. O Vault ativou automaticamente o rodízio para o próximo banco na ordem B -> C -> D1 -> CofreSql.`,
           `3. Verifique o consumo na Central e valide a integridade dos dados.`
         ]
       };
-      console.warn(`[SENTINEL ALERT] [sentinel] Banco ${bancoKey} atingiu 70% da cota! Leituras: ${leituras}/${maxL}, Escritas: ${escritas}/${maxE}.`);
+      console.warn(`[SENTINEL ALERT] [sentinel] Banco ${bancoKey} atingiu 70% da cota! Leituras: ${leituras}/${maxL} (${pctL}%), Escritas: ${escritas}/${maxE} (${pctE}%).`);
       console.log('[SENTINEL CENTRAL ALARM] [sentinel]', JSON.stringify(alerta));
-    } catch {}
+      
+      // Propagar métricas e sinal de quase cheio para o VazaoController / Worker via fetch local se disponível
+      if (typeof fetch === 'function') {
+        fetch('http://localhost:8787/marcar-cheio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ banco: bancoKey, leituras, escritas, limiteLeituras: maxL, limiteEscritas: maxE, percentualLeituras: pctL, percentualEscritas: pctE, status: 'quase cheio' })
+        }).catch(e => console.error('[CofreSql VazaoController] Erro ao notificar Worker:', e));
+      }
+    } catch (e) {
+      console.error('[CofreSql] Erro ao disparar aviso sentinel:', e);
+    }
   }
 
   _checkLimits(banco, leituras, escritas) {
