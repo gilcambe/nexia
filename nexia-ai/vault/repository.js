@@ -156,6 +156,41 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         }
       }
     }
+    
+    // Métodos para gerenciamento de bancos do cofre
+    function _getBanco(entity) {
+      return this._bancoAtual || 'firestore-default';
+    }
+    
+    function _isBancoQuaseCheio(banco) {
+      const uso = getUsoBanco(banco);
+      const limits = BANK_LIMITS[banco] || BANK_LIMITS['firestore-default'];
+      const pctLeituras = uso.leituras / limits.reads;
+      const pctEscritas = uso.escritas / limits.writes;
+      return pctLeituras >= limits.warnThreshold || pctEscritas >= limits.warnThreshold;
+    }
+    
+    function _getProximoBanco(bancoAtual) {
+      const BANCO_RODIZIO = ['firestore-b', 'firestore-c', 'd1', 'cofresql'];
+      const currentIndex = BANCO_RODIZIO.indexOf(bancoAtual);
+      if (currentIndex === -1) return BANCO_RODIZIO[0];
+      
+      // Procurar próximo banco saudável
+      for (let i = 1; i <= BANCO_RODIZIO.length; i++) {
+        const idx = (currentIndex + i) % BANCO_RODIZIO.length;
+        const banco = BANCO_RODIZIO[idx];
+        if (!_isBancoQuaseCheio(banco)) {
+          return banco;
+        }
+      }
+      
+      // Se todos estiverem quase cheios, retorna o próximo na sequência
+      return BANCO_RODIZIO[(currentIndex + 1) % BANCO_RODIZIO.length];
+    }
+    
+    function _setBancoAtivo(novoBanco) {
+      this._bancoAtual = novoBanco;
+    }
 
     async function assertTenant(tx, tenantId) {
       if ((tenantOk.get(tenantId) || 0) > Date.now()) return;
