@@ -123,23 +123,10 @@ export function useCentral() {
     return body as { ok: boolean; mensagem: string };
   }, [getToken]);
 
-  // Nova função para enviar tarefas para as contas ajudarem a resolver
-  const enviarTarefasParaContas = useCallback(async (tarefas: TarefaGratis[]) => {
+  // Nova função para enviar todas as tarefas para as contas ajudarem a resolver
+  const enviarTodasTarefasParaContas = useCallback(async () => {
     const token = await getToken();
-    const res = await fetch(apiPath("/enviar-tarefas-para-contas"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ tarefas }),
-    });
-    const body = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(body.error || `Erro ${res.status}`);
-    return body as { ok: boolean; mensagem: string };
-  }, [getToken]);
-
-  // Atualização para marcar todas as tarefas como gratuitas
-  const marcarTodasTarefasComoGratuitas = useCallback(async () => {
-    const token = await getToken();
-    const res = await fetch(apiPath("/marcar-tarefas-como-gratuitas"), {
+    const res = await fetch(apiPath("/enviar-todas-tarefas-para-contas"), {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     });
@@ -148,7 +135,7 @@ export function useCentral() {
     return body as { ok: boolean; mensagem: string };
   }, [getToken]);
 
-  return { buscar, agir, entrarSuporte, distribuirTarefas, enviarTarefasParaContas, marcarTodasTarefasComoGratuitas };
+  return { buscar, agir, entrarSuporte, distribuirTarefas, enviarTodasTarefasParaContas };
 }
 
 export const reais = (v: number) => (v || 0).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
