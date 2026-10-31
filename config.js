@@ -59,12 +59,11 @@ async function verificarSuporteWebGPU() {
       return { suportado: false, motivo: 'Nenhum adaptador GPU disponível' };
     }
     
-    // Verificar memória disponível (mínimo 1 GB)
-    const memoryMB = adapter.limits?.maxStorageBufferBindingSize ? 
-      adapter.limits.maxStorageBufferBindingSize / (1024 * 1024) : 0;
-    
-    if (memoryMB < 1024) { // Menos de 1 GB
-      return { suportado: false, motivo: 'Memória GPU insuficiente (mínimo 1 GB necessário)' };
+        // Verificar memória do sistema (mínimo 1 GB)
+    const memoriaSistema = typeof navigator.deviceMemory === 'number' ? navigator.deviceMemory : 0;
+
+    if (memoriaSistema < 1) { // Menos de 1 GB
+      return { suportado: false, motivo: 'Memória do sistema insuficiente (mínimo 1 GB necessário)' };
     }
     
     return { suportado: true };
