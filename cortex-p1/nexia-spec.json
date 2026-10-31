@@ -1,0 +1,334 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Cortex-p1",
+    "tagline": "Gerencie viagens, clientes e pagamentos em um só painel",
+    "photo_theme": "travel agency",
+    "description": "Gerencie viagens, clientes e pagamentos em um só painel",
+    "folder": "cortex-p1",
+    "fonts": {
+      "heading": "Sora",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2563eb",
+      "accent": "#0ea5e9",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "",
+      "email": "suporte@cortex-p1.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=cortex-p1&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "viagens",
+        "label": "Viagens",
+        "singular": "Viagem",
+        "fields": [
+          {
+            "key": "cliente",
+            "label": "Cliente",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "destino",
+            "label": "Destino",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_saida",
+            "label": "Data de Saída",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_volta",
+            "label": "Data de Volta",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Pendente",
+              "Confirmada",
+              "Em andamento",
+              "Concluída",
+              "Cancelada"
+            ],
+            "required": true
+          },
+          {
+            "key": "observacoes",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "cliente": "Ana Souza",
+            "destino": "Rio de Janeiro",
+            "data_saida": "2026-11-10",
+            "data_volta": "2026-11-15",
+            "valor": "3490",
+            "status": "Confirmada",
+            "observacoes": "Quarto com vista para o mar"
+          },
+          {
+            "cliente": "Bruno Lima",
+            "destino": "São Paulo",
+            "data_saida": "2026-11-12",
+            "data_volta": "2026-11-14",
+            "valor": "1250",
+            "status": "Pendente",
+            "observacoes": ""
+          },
+          {
+            "cliente": "Carla Dias",
+            "destino": "Salvador",
+            "data_saida": "2026-12-01",
+            "data_volta": "2026-12-07",
+            "valor": "2890",
+            "status": "Em andamento",
+            "observacoes": "Inclui passeio histórico"
+          },
+          {
+            "cliente": "Davi Reis",
+            "destino": "Florianópolis",
+            "data_saida": "2026-12-10",
+            "data_volta": "2026-12-13",
+            "valor": "1980",
+            "status": "Concluída",
+            "observacoes": ""
+          },
+          {
+            "cliente": "Elena Costa",
+            "destino": "Gramado",
+            "data_saida": "2027-01-05",
+            "data_volta": "2027-01-09",
+            "valor": "4120",
+            "status": "Cancelada",
+            "observacoes": "Motivo pessoal"
+          }
+        ]
+      },
+      {
+        "key": "clientes",
+        "label": "Clientes",
+        "singular": "Cliente",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cidade",
+            "label": "Cidade",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "estado",
+            "label": "Estado",
+            "type": "select",
+            "options": [
+              "SP",
+              "RJ",
+              "MG",
+              "RS",
+              "PR",
+              "SC",
+              "BA"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Ana Souza",
+            "email": "ana.souza@email.com",
+            "telefone": "(11) 98765-4321",
+            "cidade": "São Paulo",
+            "estado": "SP"
+          },
+          {
+            "nome": "Bruno Lima",
+            "email": "bruno.lima@email.com",
+            "telefone": "(21) 91234-5678",
+            "cidade": "Rio de Janeiro",
+            "estado": "RJ"
+          },
+          {
+            "nome": "Carla Dias",
+            "email": "carla.dias@email.com",
+            "telefone": "(31) 99876-5432",
+            "cidade": "Belo Horizonte",
+            "estado": "MG"
+          },
+          {
+            "nome": "Davi Reis",
+            "email": "davi.reis@email.com",
+            "telefone": "(51) 93456-7890",
+            "cidade": "Porto Alegre",
+            "estado": "RS"
+          },
+          {
+            "nome": "Elena Costa",
+            "email": "elena.costa@email.com",
+            "telefone": "(41) 98765-1234",
+            "cidade": "Curitiba",
+            "estado": "PR"
+          }
+        ]
+      },
+      {
+        "key": "pagamentos",
+        "label": "Pagamentos",
+        "singular": "Pagamento",
+        "fields": [
+          {
+            "key": "cliente",
+            "label": "Cliente",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "viagem",
+            "label": "Viagem",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "metodo",
+            "label": "Método",
+            "type": "select",
+            "options": [
+              "Pix",
+              "Cartão de Crédito",
+              "Boleto",
+              "Transferência"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "cliente": "Ana Souza",
+            "viagem": "Rio de Janeiro",
+            "valor": "3490",
+            "data": "2026-10-20",
+            "metodo": "Pix"
+          },
+          {
+            "cliente": "Bruno Lima",
+            "viagem": "São Paulo",
+            "valor": "1250",
+            "data": "2026-10-21",
+            "metodo": "Cartão de Crédito"
+          },
+          {
+            "cliente": "Carla Dias",
+            "viagem": "Salvador",
+            "valor": "2890",
+            "data": "2026-11-01",
+            "metodo": "Boleto"
+          },
+          {
+            "cliente": "Davi Reis",
+            "viagem": "Florianópolis",
+            "valor": "1980",
+            "data": "2026-10-25",
+            "metodo": "Transferência"
+          },
+          {
+            "cliente": "Elena Costa",
+            "viagem": "Gramado",
+            "valor": "4120",
+            "data": "2026-11-05",
+            "metodo": "Cartão de Crédito"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Viagens",
+      "Clientes",
+      "Pagamentos"
+    ]
+  },
+  "media": {}
+}

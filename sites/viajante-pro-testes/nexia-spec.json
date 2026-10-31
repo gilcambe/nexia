@@ -1,0 +1,284 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Suite Teste Cortex-p1",
+    "tagline": "Painel de controle e integrações para desenvolvedores",
+    "photo_theme": "",
+    "description": "Painel de controle e integrações para desenvolvedores",
+    "folder": "sites/viajante-pro-testes",
+    "fonts": {
+      "heading": "Sora",
+      "body": "Manrope"
+    },
+    "palette": {
+      "primary": "#312e81",
+      "accent": "#6366f1",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#020617"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "",
+      "email": "suporte@cortex-p1.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=viajante-pro-testes&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "viajantes",
+        "label": "Viajantes",
+        "singular": "Viajante",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "plano_premium",
+            "label": "Plano Premium",
+            "type": "select",
+            "options": [
+              "Sim",
+              "Não"
+            ],
+            "required": true
+          },
+          {
+            "key": "ultimo_login",
+            "label": "Último Login",
+            "type": "date",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Ana Souza",
+            "email": "ana.souza@email.com",
+            "telefone": "(11) 98765-4321",
+            "plano_premium": "Sim",
+            "ultimo_login": "2026-01-15"
+          },
+          {
+            "nome": "Bruno Lima",
+            "email": "bruno.lima@email.com",
+            "telefone": "(21) 98123-4567",
+            "plano_premium": "Não",
+            "ultimo_login": "2026-01-14"
+          },
+          {
+            "nome": "Carla Dias",
+            "email": "carla.dias@email.com",
+            "telefone": "(31) 99988-7766",
+            "plano_premium": "Sim",
+            "ultimo_login": "2026-01-12"
+          },
+          {
+            "nome": "Davi Reis",
+            "email": "davi.reis@email.com",
+            "telefone": "(41) 95544-3322",
+            "plano_premium": "Não",
+            "ultimo_login": "2026-01-10"
+          },
+          {
+            "nome": "Elena Costa",
+            "email": "elena.costa@email.com",
+            "telefone": "(51) 97766-5544",
+            "plano_premium": "Sim",
+            "ultimo_login": "2026-01-08"
+          }
+        ]
+      },
+      {
+        "key": "agencias",
+        "label": "Agências",
+        "singular": "Agência",
+        "fields": [
+          {
+            "key": "nome_agencia",
+            "label": "Nome da Agência",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cnpj",
+            "label": "CNPJ",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "responsavel",
+            "label": "Responsável",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "contato",
+            "label": "Contato",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativa",
+              "Pendente",
+              "Inativa"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome_agencia": "Viagens Globais",
+            "cnpj": "12.345.678/0001-90",
+            "responsavel": "Roberto Silva",
+            "contato": "(11) 3456-7890",
+            "status": "Ativa"
+          },
+          {
+            "nome_agencia": "Mundo Afora Tours",
+            "cnpj": "98.765.432/0001-10",
+            "responsavel": "Marta Oliveira",
+            "contato": "(21) 3344-5566",
+            "status": "Pendente"
+          },
+          {
+            "nome_agencia": "Turismo Eficiente",
+            "cnpj": "55.647.321/0001-81",
+            "responsavel": "Paulo Santos",
+            "contato": "(31) 3210-9876",
+            "status": "Ativa"
+          },
+          {
+            "nome_agencia": "Descobrir o Brasil",
+            "cnpj": "44.332.211/0001-52",
+            "responsavel": "Julia Ferreira",
+            "contato": "(41) 3015-4433",
+            "status": "Inativa"
+          },
+          {
+            "nome_agencia": "Rota Premium",
+            "cnpj": "11.223.344/0001-23",
+            "responsavel": "Ricardo Alves",
+            "contato": "(51) 3555-1122",
+            "status": "Ativa"
+          }
+        ]
+      },
+      {
+        "key": "configuracoes",
+        "label": "Configurações",
+        "singular": "Configuração",
+        "fields": [
+          {
+            "key": "nome_parametro",
+            "label": "Nome do Parâmetro",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "chave_api",
+            "label": "Chave API",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Funcional",
+              "Erro",
+              "Desativado"
+            ],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome_parametro": "Auth Token",
+            "chave_api": "eyJhbGciOi...",
+            "status": "Funcional",
+            "descricao": "Token de autenticação global para a API de viagens"
+          },
+          {
+            "nome_parametro": "Timeout de Link",
+            "chave_api": "30000",
+            "status": "Funcional",
+            "descricao": "Tempo máximo em ms para o carregamento de um link de viagem"
+          },
+          {
+            "nome_parametro": "Webhook Status",
+            "chave_api": "https://webhook.cortex...",
+            "status": "Erro",
+            "descricao": "Status do endpoint de notificações para agências parceiras"
+          },
+          {
+            "nome_parametro": "MODO MANUTENÇÃO",
+            "chave_api": "false",
+            "status": "Desativado",
+            "descricao": "Flag global para desativar o acesso de todos os usuários"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Painel de Usuários",
+      "Gerenciamento de Agências",
+      "Parâmetros do Sistema"
+    ]
+  },
+  "media": {}
+}

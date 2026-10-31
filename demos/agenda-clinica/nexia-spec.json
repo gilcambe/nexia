@@ -1,0 +1,142 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Agenda Clínica",
+    "tagline": "Consultas e pacientes num só lugar",
+    "photo_theme": "",
+    "description": "Consultas e pacientes num só lugar",
+    "folder": "demos/agenda-clinica",
+    "fonts": {
+      "heading": "Plus Jakarta Sans",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#4f46e5",
+      "accent": "#06b6d4",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#111827"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "",
+      "email": "suporte@clinica.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=agenda-clinica&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "consultas",
+        "label": "Consultas",
+        "singular": "Consulta",
+        "fields": [
+          {
+            "key": "paciente",
+            "label": "Paciente",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "hora",
+            "label": "Hora",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Agendada",
+              "Confirmada",
+              "Concluída",
+              "Cancelada"
+            ],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "obs",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "paciente": "Ana Souza",
+            "data": "2026-10-06",
+            "hora": "09:00",
+            "status": "Confirmada",
+            "valor": "250",
+            "obs": ""
+          },
+          {
+            "paciente": "Bruno Lima",
+            "data": "2026-10-06",
+            "hora": "10:30",
+            "status": "Agendada",
+            "valor": "180",
+            "obs": ""
+          },
+          {
+            "paciente": "Carla Dias",
+            "data": "2026-10-07",
+            "hora": "14:00",
+            "status": "Concluída",
+            "valor": "320",
+            "obs": ""
+          },
+          {
+            "paciente": "Davi Reis",
+            "data": "2026-10-08",
+            "hora": "16:15",
+            "status": "Cancelada",
+            "valor": "0",
+            "obs": ""
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Agenda",
+      "Pacientes",
+      "Financeiro"
+    ]
+  },
+  "media": {}
+}

@@ -1,0 +1,275 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Agência de Viagens",
+    "tagline": "Sua jornada começa aqui",
+    "photo_theme": "",
+    "description": "Sua jornada começa aqui",
+    "folder": "demos/agencia-viagens",
+    "fonts": {
+      "heading": "Plus Jakarta Sans",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#4f46e5",
+      "accent": "#06b6d4",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#111827"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "(11) 90000-0000",
+      "email": "contato@agenciaviagens.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=agencia-viagens&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "clientes",
+        "label": "Clientes",
+        "singular": "Cliente",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cpf",
+            "label": "CPF",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Ana Paula Silva",
+            "email": "ana.paula@email.com",
+            "telefone": "(11) 98765-4321",
+            "cpf": "123.456.789-00"
+          },
+          {
+            "nome": "Carlos Mendes",
+            "email": "carlos.mendes@email.com",
+            "telefone": "(21) 91234-5678",
+            "cpf": "987.654.321-00"
+          },
+          {
+            "nome": "Fernanda Oliveira",
+            "email": "fernanda.oliveira@email.com",
+            "telefone": "(31) 99876-5432",
+            "cpf": "456.789.012-34"
+          },
+          {
+            "nome": "Roberto Santos",
+            "email": "roberto.santos@email.com",
+            "telefone": "(41) 92345-6789",
+            "cpf": "890.123.456-78"
+          }
+        ]
+      },
+      {
+        "key": "destinos",
+        "label": "Destinos",
+        "singular": "Destino",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome do Destino",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "pais",
+            "label": "País",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "preco",
+            "label": "Preço",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "duracao",
+            "label": "Duração (dias)",
+            "type": "number",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Paris Romântica",
+            "pais": "França",
+            "descricao": "Cidade do amor, com Torre Eiffel, museus e charme francês",
+            "preco": "8500",
+            "duracao": "7"
+          },
+          {
+            "nome": "Nova York",
+            "pais": "Estados Unidos",
+            "descricao": "Cidade que nunca dorme, com Broadway, Central Park e Times Square",
+            "preco": "9200",
+            "duracao": "5"
+          },
+          {
+            "nome": "Bali",
+            "pais": "Indonésia",
+            "descricao": "Paraíso tropical com praias deslumbrantes e templos antigos",
+            "preco": "6500",
+            "duracao": "10"
+          },
+          {
+            "nome": "Cairo",
+            "pais": "Egito",
+            "descricao": "Cidade das pirâmides, com história milenar e cultura árabe",
+            "preco": "7800",
+            "duracao": "8"
+          }
+        ]
+      },
+      {
+        "key": "reservas",
+        "label": "Reservas",
+        "singular": "Reserva",
+        "fields": [
+          {
+            "key": "cliente",
+            "label": "Cliente",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "destino",
+            "label": "Destino",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_inicio",
+            "label": "Data de Início",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_fim",
+            "label": "Data de Fim",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "valor",
+            "label": "Valor",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Confirmada",
+              "Pendente",
+              "Cancelada",
+              "Concluída"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "cliente": "Ana Paula Silva",
+            "destino": "Paris Romântica",
+            "data_inicio": "2026-11-15",
+            "data_fim": "2026-11-22",
+            "valor": "8500",
+            "status": "Confirmada"
+          },
+          {
+            "cliente": "Carlos Mendes",
+            "destino": "Nova York",
+            "data_inicio": "2026-12-01",
+            "data_fim": "2026-12-06",
+            "valor": "9200",
+            "status": "Pendente"
+          },
+          {
+            "cliente": "Fernanda Oliveira",
+            "destino": "Bali",
+            "data_inicio": "2027-01-10",
+            "data_fim": "2027-01-20",
+            "valor": "6500",
+            "status": "Confirmada"
+          },
+          {
+            "cliente": "Roberto Santos",
+            "destino": "Cairo",
+            "data_inicio": "2026-10-05",
+            "data_fim": "2026-10-13",
+            "valor": "7800",
+            "status": "Concluída"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Clientes",
+      "Destinos",
+      "Reservas"
+    ]
+  },
+  "media": {}
+}
