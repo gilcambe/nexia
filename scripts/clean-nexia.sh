@@ -10,15 +10,16 @@ set -euo pipefail
 # 1. "NEXIA CORTEX — Plataforma de IA" → "Cortex — Plataforma de IA" (frase específica)
 #    - Esta substituição é permitida pois é uma frase completa e específica
 # 2. <title> contendo NEXIA → <title>Cortex</title> (regra 2)
-#    - Se o título contiver NEXIA, TODO o conteúdo do título será substituído por 'Cortex'
+#    - Se o título contiver apenas "NEXIA", substituir por "Cortex"
+#    - Se tiver outros textos além de "NEXIA", remover apenas "NEXIA" mantendo o restante (regra 3)
 # 3. og:site_name contendo NEXIA → conteúdo substituído por "Cortex" (regra 2 e 3)
 #    - Usando padrões específicos: content="*NEXIA*" → content="Cortex"
 # 
 # NÃO faz substituição genérica de NEXIA → Cortex para evitar afetar textos não relacionados
-# a títulos ou metadatos, como nomes de arquivos, textos de conteúdo, etc.
+# a títulos ou metadados, como nomes de arquivos, textos de conteúdo, etc.
 
-# Diretórios a serem processados
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
+# Diretórios a serem processados (requisito: apenas public/, apps/ e nexia-ai/site-kit/)
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
 
 echo ""
 echo "=========================================="
@@ -80,29 +81,62 @@ try:
     content = re.sub(r'\bNEXIA CORTEX — Plataforma de IA\b', 'Cortex — Plataforma de IA', content)
     
     # Processar tags <title>...</title>
-    # Se o título contém NEXIA, substituir TODO o conteúdo do título por 'Cortex'
+    # Regra 2: Se o título contiver apenas "NEXIA", substituir por "Cortex"
+    # Regra 3: Se tiver outros textos além de "NEXIA", remover apenas "NEXIA" mantendo o restante
 def clean_title(match):
     full_tag = match.group(0)
+    full_tag_lower = full_tag.lower()
+    
+    # Extrair o conteúdo entre as tags
     inner = match.group(2)
-    if "NEXIA" in inner:
-        # Substituir TODO o conteúdo do título por 'Cortex'
-        return f'<title{match.group(1)}>Cortex</title>'
+    
+    # Se o título contiver NEXIA, aplicar a regra (2 ou 3)
+    if "nexia" in inner.lower():
+        # Verificar se é apenas "NEXIA" ou se há outros textos
+        # Usar regex para remover NEXIA mantendo o restante (regra 3)
+        cleaned = re.sub(r'\bnexia\b', '', inner, flags=re.IGNORECASE).strip()
+        
+        # Se ficou vazio, usar "Cortex" (regra 2)
+        if not cleaned:
+            return f'<title{match.group(1)}>Cortex</title>'
+        else:
+            # Se restou texto, retornar com NEXIA removido
+            return f'<title{match.group(1)}>{cleaned}</title>'
+    
     return full_tag
 
 content = re.sub(r"<title([^>]*)>(.*?)</title>", clean_title, content, flags=re.IGNORECASE | re.DOTALL)
 
-    # Processar tags og:site_name - se contém NEXIA, substituir conteúdo por 'Cortex'
-    # Usando padrões mais específicos para evitar falsos positivos
+    # Processar tags og:site_name
+    # Regra 2: Se contiver apenas "NEXIA", substituir por "Cortex"
+    # Regra 3: Se tiver outros textos além de "NEXIA", remover apenas "NEXIA" mantendo o restante
 def clean_og_site_name(match):
     full_tag = match.group(0)
-    # Usar padrões mais específicos para og:site_name para evitar falsos positivos
-    if "NEXIA" in full_tag and "og:site_name" in full_tag:
-        # Substituir TODO o conteúdo do og:site_name por 'Cortex'
-        # Padrão específico: content="qualquer_coisa_contendo_NEXIA" -> content="Cortex"
-        return re.sub(r'(content=["\'])[^"\']*["\']', r'\1Cortex\2', full_tag, flags=re.IGNORECASE)
+    full_tag_lower = full_tag.lower()
+    
+    # Verificar se é uma tag og:site_name
+    if "og:site_name" in full_tag_lower:
+        # Extrair o atributo content
+        content_match = re.search(r'content=["\']([^"\']*)["\']', full_tag, re.IGNORECASE)
+        if content_match:
+            inner = content_match.group(1)
+            
+            # Se o conteúdo contiver NEXIA, aplicar a regra (2 ou 3)
+            if "nexia" in inner.lower():
+                # Verificar se é apenas "NEXIA" ou se há outros textos
+                # Usar regex para remover NEXIA mantendo o restante (regra 3)
+                cleaned = re.sub(r'\bnexia\b', '', inner, flags=re.IGNORECASE).strip()
+                
+                # Se ficou vazio, usar "Cortex" (regra 2)
+                if not cleaned:
+                    return re.sub(r'content=["\'][^"\']*["\']', 'content="Cortex"', full_tag, flags=re.IGNORECASE)
+                else:
+                    # Se restou texto, retornar com NEXIA removido
+                    return re.sub(r'content=["\'][^"\']*["\']', f'content="{cleaned}"', full_tag, flags=re.IGNORECASE)
+    
     return full_tag
 
-content = re.sub(r'<meta[^>]*og:site_name[^>]*content=["\'][^"\']*NEXIA[^"\']*[^>]*>', clean_og_site_name, content, flags=re.IGNORECASE)
+content = re.sub(r'<meta[^>]*og:site_name[^>]*>', clean_og_site_name, content, flags=re.IGNORECASE)
 
 with open(filepath, "w", encoding="utf-8") as f:
     f.write(content)
@@ -151,7 +185,7 @@ echo ""
 # O comando não deve retornar nenhum resultado
 echo "Executando verificação final como solicitado no pedido..."
 
-# Verificar se restaram títulos com NEXIA
+# Verificar se restaram títulos com NEXIA (comando exato do pedido)
 titles_with_nexia=$(grep -rnE "<title>[^<]*NEXIA" --include="*.html" public apps nexia-ai viajante-pro 2>/dev/null || true)
 if [ -n "$titles_with_nexia" ]; then
     echo "ERRO: Ainda foram encontradas ocorrências de NEXIA em títulos:"
@@ -184,9 +218,11 @@ echo "=========================================="
 echo ""
 echo "RESUMO DAS SUBSTITUIÇÕES REALIZADAS:"
 echo "1. 'NEXIA CORTEX — Plataforma de IA' → 'Cortex — Plataforma de IA' (frase específica)"
-echo "2. <title> contendo NEXIA → <title>Cortex</title>"
-echo "3. og:site_name contendo NEXIA → conteúdo substituído por 'Cortex'"
-echo "4. NÃO foi feita substituição genérica de NEXIA → Cortex (para evitar afetar outros textos)"
+echo "2. <title> contendo NEXIA → <title>Cortex</title> (se apenas NEXIA)"
+echo "3. <title> contendo NEXIA + outros textos → <title>outros textos</title> (removendo apenas NEXIA)"
+echo "4. og:site_name contendo NEXIA → conteúdo substituído por 'Cortex' (se apenas NEXIA)"
+echo "5. og:site_name contendo NEXIA + outros textos → conteúdo com NEXIA removido (regra 3)"
+echo "6. NÃO foi feita substituição genérica de NEXIA → Cortex (para evitar afetar outros textos)"
 echo ""
 echo "INSTRUÇÕES PARA USO:"
 echo "1. Execute: bash scripts/clean-nexia.sh"
