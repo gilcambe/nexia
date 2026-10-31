@@ -172,7 +172,7 @@ function AvisosCelular() {
 
 import { obterConfig, salvarConfig, verificarSuporteWebGPU } from "../../../ia-local";
 
-export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema; mudarTema: (t: Tema) => void; email: string; instalar: (() => void) | null; sair: () => void }) {
+export function config({ tema, mudarTema, email, instalar, sair }: { tema: Tema; mudarTema: (t: Tema) => void; email: string; instalar: (() => void) | null; sair: () => void }) {
   const op: { id: Tema; nome: string }[] = [{ id: "auto", nome: "Automático" }, { id: "escuro", nome: "Escuro" }, { id: "claro", nome: "Claro" }];
   const [isLocalIAEnabled, setIsLocalIAEnabled] = useState(() => {
     try {
