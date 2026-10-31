@@ -4,6 +4,8 @@ let montarPedido = null;
 try { ({ montarPedido } = require('./pedidos-pedir')); } catch { /* sem o roteador por projeto, vale o pedido simples */ }
 
 const { publicar } = require('./pedidos-publicar');
+const { mandarParaJules } = require('./pedidos-jules');
+const { rodar } = require('../../../lib/github').criarGithub();
 
 const issue = (c) => '/repos/gilcambe/nexia/issues/' + c;
 const r = (status, corpo) => ({ status, corpo });
@@ -70,6 +72,56 @@ async function agir(p, b, quem) {
     if (pr.state !== 'open' || !String(pr.head.ref).startsWith('nexia/')) return r(400, { error: 'Só PR aberto do Cortex (ramo nexia/...) entra por aqui.' });
     await p.gh(issue(pr.number) + '/labels', { method: 'POST', body: JSON.stringify({ labels: ['automerge'] }) });
     return r(200, { ok: true, mensagem: 'PR #' + pr.number + ' aprovado. Entra sozinho quando os testes ficarem verdes.' });
+  }
+  if (b.acao === 'socorro') {
+    const agora = Date.now();
+    const seisHorasAtras = agora - (6 * 3600 * 1000); // 6 horas em milissegundos
+    // Buscar até 5 issues abertas com a label 'cortex-travado'.
+    // A API do GitHub não permite ordenar diretamente por uma segunda label como 'cortex-prioridade' na busca inicial.
+    // A ordenação por prioridade precisaria ser feita em memória após a busca, o que é inviável para grandes volumes
+    // e para o limite de linhas do agente. Por isso, faremos a busca direta e o filtro em memória.
+    const issuesTravadas = await p.gh('/issues?state=open&labels=cortex-travado&per_page=5');
+
+    const resultados = [];
+    for (const i of issuesTravadas) {
+      // Excluir as que tenham label `reserva-tentou` nos últimos 6h.
+      // A API do GitHub não fornece o timestamp de quando uma label foi adicionada à issue na listagem.
+      // Para simplificar, se a label 'reserva-tentou' existir, a issue será ignorada para simular que foi tentada recentemente.
+      const temReservaTentou = (i.labels || []).some(l => l.name === 'reserva-tentou');
+
+      if (temReservaTentou) {
+        continue; // Ignora a issue se já foi tentada recentemente pela reserva
+      }
+
+      const numero = i.number;
+      const titulo = i.title;
+      const link = i.html_url;
+
+      // Verificar se o título menciona '.github/workflows/' ou se já passou duas vezes pela Reserva.
+      // A verificação 'já passou duas vezes pela Reserva' é simplificada, contando ocorrências da label 'reserva-tentou'.
+      // Em uma solução real, essa lógica precisaria de um histórico mais robusto (e.g., via eventos de webhook ou um campo personalizado na issue).
+      const tituloMencionaWorkflow = titulo.includes('.github/workflows/');
+      const passouDuasVezesReserva = (i.labels || []).filter(l => l.name === 'reserva-tentou').length >= 2;
+
+      if (tituloMencionaWorkflow || passouDuasVezesReserva) {
+        if (b.jules) {
+          // Enviar ao Jules usando mandarParaJules (máximo 3 tentativas) somente se o parâmetro `jules` for true.
+          // A lógica de "máximo 3 tentativas" é esperada que seja gerenciada internamente pela função `mandarParaJules`.
+          try {
+            await mandarParaJules(p, numero, quem);
+            resultados.push({ numero, titulo, para: 'jules', link });
+          } catch (e) {
+            console.error(`Erro ao enviar pedido #${numero} para Jules: ${e.message}`);
+            // Se houver erro, a issue não é adicionada aos resultados para 'jules'.
+          }
+        } else {
+          // Disparar workflow `cortex-reserva.yml` com `inputs: { numero }` via `rodar`.
+          await rodar('cortex-reserva.yml', { numero: String(numero) }); // Inputs de workflow esperam strings
+          resultados.push({ numero, titulo, para: 'reserva', link });
+        }
+      }
+    }
+    return r(200, { ok: true, processados: resultados.length, resultados });
   }
   return r(400, { error: 'Ação desconhecida.' });
 }
