@@ -50,7 +50,7 @@ const pr = (number, title, createdAt, ciStatus, labels = []) => ({
   title,
   createdAt,
   ciStatus,
-  labels: labels.map(name => ({ name }));
+  labels: labels.map(name => ({ name }))
 });
 
 test('PR1. decidir: 6 PRs da issue #2248 fecha 5 mantendo o mais novo com CI verde', () => {
