@@ -18,7 +18,7 @@ set -euo pipefail
 # a títulos ou metadatos, como nomes de arquivos, textos de conteúdo, etc.
 
 # Diretórios a serem processados
-DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
+DIRECTORIES="public/ apps/ nexia-ai/site-kit/ viajante-pro/"
 
 echo ""
 echo "=========================================="
