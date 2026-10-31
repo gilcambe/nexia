@@ -73,41 +73,6 @@ class VazaoController {
   }
 }
 
-  obter(banco) {
-    const key = banco || this.bancos[this.bancoAtualIndex];
-    const hoje = new Date().toISOString().slice(0, 10);
-    const entry = this.usoDiario.get(key);
-    if (!entry || entry.data !== hoje) return { data: hoje, leituras: 0, escritas: 0, status: 'ativo' };
-    return { ...entry };
-  }
 
-  verificarLimite(banco) {
-    const key = banco || this.bancos[this.bancoAtualIndex];
-    const u = this.obter(key);
-    const isD1 = key === 'd1';
-    const isCofre = key === 'cofresql';
-    const maxL = isD1 ? 5000000 : (isCofre ? 50000000 : 50000);
-    const maxE = isD1 ? 100000 : (isCofre ? 10000000 : 20000);
-    const quaseCheio = u.leituras >= maxL * 0.7 || u.escritas >= maxE * 0.7;
-    return { quaseCheio, ...u, maxL, maxE, status: quaseCheio ? 'quase cheio' : (u.status || 'ativo') };
-  }
-
-  proximoBanco() {
-    this.bancoAtualIndex = (this.bancoAtualIndex + 1) % this.bancos.length;
-    return this.bancos[this.bancoAtualIndex];
-  }
-
-  obterBancoAtual() {
-    return this.bancos[this.bancoAtualIndex];
-  }
-
-  obterResumoGeral() {
-    const resumo = {};
-    for (const b of this.bancos) {
-      resumo[b] = this.verificarLimite(b);
-    }
-    return resumo;
-  }
-}
 
 module.exports = { VazaoController };
