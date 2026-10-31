@@ -21,7 +21,14 @@ export default function MemorySettings() {
   } = useMemory();
 
   const [isDeletingAll, setIsDeletingAll] = useState(false);
-  const [isLocalIAEnabled, setIsLocalIAEnabled] = useState(() => obterConfig().ativo);
+  const [isLocalIAEnabled, setIsLocalIAEnabled] = useState(() => {
+    try {
+      const cfg = obterConfig();
+      return cfg ? !!cfg.ativo : false;
+    } catch {
+      return false;
+    }
+  });
   const [isWebGpuSupported, setIsWebGpuSupported] = useState(true);
   const [showDownloadWarning, setShowDownloadWarning] = useState(false);
 
