@@ -24,9 +24,35 @@ const VIAJANTE_PRO = {
 // Funções de API para o Viajante Pro
 // Todas as funções usam fetch e incluem autenticação com token
 
-// Obtém o token armazenado no localStorage
+// Obtém o token armazenado em cookie seguro com expiração
 function getToken() {
-  return localStorage.getItem('viajantepro_token');
+  const name = 'viajantepro_token=';
+  const decodedCookie = decodeURIComponent(document.cookie);
+  const ca = decodedCookie.split(';');
+  for(let i = 0; i < ca.length; i++) {
+    let c = ca[i];
+    while (c.charAt(0) === ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) === 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return null;
+}
+
+// Salva o token em cookie seguro com expiração de 30 dias
+function setToken(token) {
+  const name = 'viajantepro_token=';
+  const expires = new Date();
+  expires.setTime(expires.getTime() + (30 * 24 * 60 * 60 * 1000)); // 30 dias
+  const secure = window.location.protocol === 'https:' ? 'Secure;' : '';
+  document.cookie = name + token + ';' + secure + ' path=/; expires=' + expires.toUTCString();
+}
+
+// Remove o token ao fazer logout
+function removeToken() {
+  document.cookie = 'viajantepro_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
 }
 
 // Função auxiliar para fazer requisições API
@@ -55,6 +81,8 @@ async function apiRequest(acao, data = {}) {
   
   return response.json();
 }
+
+// Função auxiliar para validar token no backend (Bearer token é validado no handler viajante-pro.js)
 
 // Funções de Viagem
 
@@ -214,5 +242,7 @@ module.exports = {
   editarViagem,
   excluirViagem,
   getChats,
-  enviarChat
+  enviarChat,
+  setToken,
+  removeToken
 };
