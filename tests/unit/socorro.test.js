@@ -20,7 +20,7 @@ const mockGh = async function(url, options = {}) {
     ];
   }
   // getIssue: /repos/gilcambe/nexia/issues/N
-  const m = url.match(/\\/repos\\/gilcambe\\/nexia\\/issues\\/(\\d+)$/);
+  const m = url.match(/\/repos\/gilcambe\/nexia\/issues\/(\d+)$/);
   if (m) {
     const n = Number(m[1]);
     const base = await mockGh('/repos/gilcambe/nexia/issues');
@@ -85,8 +85,8 @@ test('socorro: jules false - nenhuma vai ao Jules, criterio vai para reserva', a
   const paraJules = resultado.filter(r => r.para === 'jules');
   const paraReserva = resultado.filter(r => r.para === 'reserva');
   assert.strictEqual(paraJules.length, 0, 'nenhuma issue deve ir ao Jules');
-  assert.strictEqual(chamadasRodar, 3, 'deve chamar rodar 3 vezes (issues 3, 4, 5)');
-  assert.strictEqual(paraReserva.length, 3, '3 issues devem ir para reserva');
+  assert.strictEqual(chamadasRodar, 3, 'deve chamar rodar 3 vezes (issues 3, 4, 5 com duas reservas ou workflow)');
+  assert.strictEqual(paraReserva.length, 3, '3 issues (3, 4, 5) devem ir para reserva');
 });
 
 test('socorro: reserva-tentou nas ultimas 6h e ignorada', async () => {
