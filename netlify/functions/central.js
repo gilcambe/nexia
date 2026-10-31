@@ -1,5 +1,39 @@
 'use strict';
-// Central NEXIA (/central): uma página para o dono cuidar de toda a NEXIA. Só o master entra.\n\nasync function lidarBancoCofre(req, env) {\n  try {\n    // Consultar uso dos bancos do Vault e CofreSql\n    const uso = {\n      firestoreB: global.getUsoBanco ? global.getUsoBanco('firestore-b') : { leituras: 0, escritas: 0, status: 'ativo' },\n      firestoreC: global.getUsoBanco ? global.getUsoBanco('firestore-c') : { leituras: 0, escritas: 0, status: 'ativo' },\n      d1: global.getUsoD1 ? global.getUsoD1('d1-default') : { leituras: 0, escritas: 0, status: 'ativo' },\n      cofresql: { leituras: 0, escritas: 0, status: 'ativo' }\n    };\n    \n    // Tentar buscar do CofreSql se disponível\n    if (env && env.COFRE_SQL) {\n      try {\n        const stub = env.COFRE_SQL.get(env.COFRE_SQL.idFromName('cofre'));\n        const res = await stub.fetch('https://cofre/vazao-get');\n        if (res.ok) {\n          const data = await res.json();\n          if (data && data.uso) {\n            Object.assign(uso, data.uso);\n          }\n        }\n      } => {} (e) {}\n    }\n    \n    return { success: true, uso, timestamp: new Date().toISOString() };\n  } catch (e) {\n    return { success: false, error: e.message };\n  }\n}\n\n// Central NEXIA (/central): uma página para o dono cuidar de toda a NEXIA. Só o master entra.
+// Central NEXIA (/central): uma página para o dono cuidar de toda a NEXIA. Só o master entra.
+
+async function lidarBancoCofre(req, env) {
+  try {
+    // Consultar uso dos bancos do Vault e CofreSql
+    const uso = {
+      firestoreB: global.getUsoBanco ? global.getUsoBanco('firestore-b') : { leituras: 0, escritas: 0, status: 'ativo' },
+      firestoreC: global.getUsoBanco ? global.getUsoBanco('firestore-c') : { leituras: 0, escritas: 0, status: 'ativo' },
+      d1: global.getUsoD1 ? global.getUsoD1('d1-default') : { leituras: 0, escritas: 0, status: 'ativo' },
+      cofresql: { leituras: 0, escritas: 0, status: 'ativo' }
+    };
+    
+    // Tentar buscar do CofreSql se disponível
+    if (env && env.COFRE_SQL) {
+      try {
+        const stub = env.COFRE_SQL.get(env.COFRE_SQL.idFromName('cofre'));
+        const res = await stub.fetch('https://cofre/vazao-get');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.uso) {
+            Object.assign(uso, data.uso);
+          }
+        }
+      } catch (e) {
+        console.error('Erro ao buscar uso do CofreSql:', e);
+      }
+    }
+    
+    return { success: true, uso, timestamp: new Date().toISOString() };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
+// Central NEXIA (/central): uma página para o dono cuidar de toda a NEXIA. Só o master entra.
 //   GET  /api/central?parte=busca&q=…|saude|historico|erros|cotas|dinheiro|cortex|robos|divulga|banco|cloudflare|lista|empresa|clientes|leads
 //   POST /api/central {acao:'rodar', arquivo, ensaio?} | {acao:'pedir', texto} | {acao:'testar-ias'} | {acao:'vaga-salvar'|'vaga-apagar'|'vaga-testar'}
 // Cada parte é um pedido separado: a página mostra o que já chegou sem esperar o resto.
