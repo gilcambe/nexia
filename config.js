@@ -158,6 +158,49 @@ function resetarConfiguracao() {
   salvarNoLocalStorage();
 }
 
+// --- Manipulação do Switch ---
+
+/**
+ * Manipula o clique no switch da IA no aparelho
+ * @returns {Promise<boolean>} true se a ativação foi bem sucedida
+ */
+async function handleSwitchIaAparelho() {
+  try {
+    // Verificar suporte WebGPU
+    const suporte = await verificarSuporteWebGPU();
+    
+    if (!suporte.suportado) {
+      mostrarAvisoBloqueio(suporte.motivo);
+      return false;
+    }
+    
+    // Mostrar aviso de download
+    mostrarAvisoDownload();
+    
+    // Ativar a IA local
+    const sucesso = setIAAtiva(true);
+    
+    if (sucesso) {
+      // Em um ambiente real, aqui iniciaria o download dos modelos
+      console.log('IA no aparelho ativada. Download dos modelos iniciado...');
+    }
+    
+    return sucesso;
+  } catch (err) {
+    console.error('Erro ao ativar IA no aparelho:', err);
+    mostrarAvisoBloqueio('Erro ao tentar ativar a IA no aparelho. Tente novamente.');
+    return false;
+  }
+}
+
+/**
+ * Manipula o desligamento do switch da IA no aparelho
+ */
+function handleDesligarIaAparelho() {
+  setIAAtiva(false);
+  mostrarAvisoDesativado();
+}
+
 // --- Inicialização ---
 
 // Carrega a configuração salva quando o módulo é carregado
