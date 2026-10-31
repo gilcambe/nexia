@@ -22,7 +22,7 @@ export default function MemorySettings() {
 
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [isLocalIAEnabled, setIsLocalIAEnabled] = useState(() => obterConfig().ativo);
-  const [isWebGpuSupported, setIsWebGpuSupported] = useState(false);
+  const [isWebGpuSupported, setIsWebGpuSupported] = useState(true);
   const [showDownloadWarning, setShowDownloadWarning] = useState(false);
 
   const handleReload = useCallback(() => {
