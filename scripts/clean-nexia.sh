@@ -85,12 +85,14 @@ content = re.sub(r"<title([^>]*)>(.*?)</title>", clean_title, content, flags=re.
     # Usando padrões mais específicos para evitar falsos positivos
 def clean_og_site_name(match):
     full_tag = match.group(0)
-    if "NEXIA" in full_tag:
+    # Usar padrões mais específicos para og:site_name para evitar falsos positivos
+    if "NEXIA" in full_tag and "og:site_name" in full_tag:
         # Substituir TODO o conteúdo do og:site_name por 'Cortex'
-        return re.sub(r'content=["\']([^"\']*)["\']', 'content="Cortex"', full_tag, flags=re.IGNORECASE)
+        # Padrão específico: content="qualquer_coisa_contendo_NEXIA" -> content="Cortex"
+        return re.sub(r'(content=["\'])[^"\']*["\']', r'\1Cortex\2', full_tag, flags=re.IGNORECASE)
     return full_tag
 
-content = re.sub(r'<meta[^>]*og:site_name[^>]*>', clean_og_site_name, content, flags=re.IGNORECASE)
+content = re.sub(r'<meta[^>]*og:site_name[^>]*content=["\'][^"\']*NEXIA[^"\']*[^>]*>', clean_og_site_name, content, flags=re.IGNORECASE)
 
 with open(filepath, "w", encoding="utf-8") as f:
     f.write(content)
