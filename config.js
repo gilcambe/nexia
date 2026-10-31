@@ -81,11 +81,16 @@ export const setIAAtiva = async (ativo: boolean): Promise<{ success: boolean; er
     if (ativo) {
       const suporte = await verificarSuporteWebGPU();
       if (!suporte.suportado) {
+        mostrarAvisoBloqueio(suporte.motivo || 'WebGPU indisponível');
         return { 
           success: false, 
           error: `Seu navegador ou dispositivo não suporta IA no aparelho (WebGPU/Memória insuficiente). Motivo: ${suporte.motivo || 'WebGPU indisponível'}` 
         };
       }
+      mostrarAvisoDownload();
+      const config = obterConfig();
+      config.ativo = true;
+      salvarConfig(config);
       return { 
         success: true, 
         avisoDownload: true 
