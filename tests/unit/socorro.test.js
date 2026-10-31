@@ -9,9 +9,9 @@ const github = {
     const base = [];
     if (state === 'open') {
       base.push(
-        { number: 1, title: 'Issue 1 travada', labels: [{ name: 'cortex-travado' }], updated_at: new Date(Date.now() - 2 * 36e5).toISOString() }, // 2h ago - dentro das 6h, tem reserva-tentou
-        { number: 2, title: 'Issue 2 travada', labels: [{ name: 'cortex-travado', name: 'reserva-tentou' }], updated_at: new Date(Date.now() - 2 * 36e5).toISOString() },
-        { number: 3, title: 'Issue 3 travada', labels: [{ name: 'cortex-travado', name: 'reserva-tentou' }], updated_at: new Date(Date.now() - 8 * 36e5).toISOString() }, // 8h ago - fora das 6h, sem reserva-tentou
+        { number: 1, title: 'Issue 1 travada', labels: [{ name: 'cortex-travado' }], updated_at: new Date(Date.now() - 2 * 36e5).toISOString() }, // 2h ago - dentro das 6h, sem reserva-tentou
+        { number: 2, title: 'Issue 2 travada', labels: [{ name: 'cortex-travado' }, { name: 'reserva-tentou' }], updated_at: new Date(Date.now() - 2 * 36e5).toISOString() },
+        { number: 3, title: 'Issue 3 travada', labels: [{ name: 'cortex-travado' }, { name: 'reserva-tentou' }], updated_at: new Date(Date.now() - 8 * 36e5).toISOString() }, // 8h ago - fora das 6h, reserva-tentou antiga
         { number: 4, title: 'Issue 4 travada', labels: [{ name: 'cortex-travado' }], updated_at: new Date(Date.now() - 1 * 36e5).toISOString() },
         { number: 5, title: 'Issue 5 com .github/workflows/', labels: [{ name: 'cortex-travado' }], updated_at: new Date(Date.now() - 1 * 36e5).toISOString() }
       );
