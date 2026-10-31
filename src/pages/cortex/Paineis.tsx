@@ -15,11 +15,20 @@ const Titulo = ({ t, s }: { t: string; s?: string }) => <header className="mb-5"
 // O que o Cortex usa de verdade: o estado de GitHub e Cloudflare vem das APIs; as IAs grátis são o rodízio fixo do Cortex.
 const IAS = ["Groq", "GitHub Models", "Gemini", "Workers AI", "Mistral", "OpenRouter"];
 
-export function Config() {
+export function Config({ tema, mudarTema, email }: { tema: Tema; mudarTema: (t: Tema) => void; email: string }) {
   const [offlineAiEnabled, setOfflineAiEnabled] = useState(false);
   const [showOfflineModal, setShowOfflineModal] = useState(false);
   const [offlineErrorModal, setOfflineErrorModal] = useState<string | null>(null);
   const [instalar, setInstalar] = useState<(() => void) | null>(null);
+
+  useEffect(() => {
+    const fn = (e: Event) => {
+      e.preventDefault();
+      setInstalar(() => () => (e as unknown as { prompt: () => void }).prompt());
+    };
+    window.addEventListener("beforeinstallprompt", fn);
+    return () => window.removeEventListener("beforeinstallprompt", fn);
+  }, []);
 
   const handleOfflineAiToggle = () => {
     if (offlineAiEnabled) {
@@ -79,6 +88,13 @@ export function Config() {
         </div>
       </Cartao>
 
+      <Cartao><p className="font-medium">Tema</p>
+        <div className="flex gap-2 mt-3">
+          {(["escuro", "claro", "auto"] as Tema[]).map((t) => (
+            <button key={t} onClick={() => mudarTema(t)} className={`px-4 h-10 rounded-xl border text-sm capitalize ${tema === t ? "border-[var(--cx-ac)] font-semibold" : "border-[var(--cx-line)] text-[var(--cx-mut)]"}`}>{t}</button>
+          ))}
+        </div></Cartao>
+
       {showOfflineModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-[var(--cx-card)] border border-[var(--cx-line)] p-6 rounded-2xl max-w-md w-full space-y-4">
@@ -126,6 +142,9 @@ export function Config() {
         {instalar && <button onClick={instalar} className="mt-3 h-11 px-5 rounded-xl bg-[var(--cx-ac)] text-black font-semibold" data-testid="cx-instalar">Instalar app</button>}</Cartao>
 
       <AvisosCelular />
+
+      <Cartao><p className="font-medium">Sessão</p>
+        <p className="text-sm text-[var(--cx-mut)] mt-1">Logado como: {email || "dono"}</p></Cartao>
 
       <Cartao><a href="/central" className="block font-medium">Central KERNEX</a><p className="text-sm text-[var(--cx-mut)] mt-1">Vendas, produtos e divulgação.</p></Cartao>
       <button onClick={sair} className="w-full h-12 rounded-xl border border-[var(--cx-line)] text-red-400" data-testid="cx-sair">Sair</button>
