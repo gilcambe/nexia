@@ -134,4 +134,66 @@ async function socorro(p, { jules }) {
   return resultado;
 }
 
-module.exports = { agir, socorro };
+async function precisaDono(p) {
+  // Lista PRs abertos para develop com rótulo revisor-recusou e comentário "regra nota 0",
+  // extrai #NNNN do título/corpo e mantém apenas o PR mais recente por issue.
+  const prs = await p.gh('/repos/gilcambe/nexia/pulls?state=open&base=develop&per_page=100');
+
+  const alvo = 'revisor-recusou';
+  const comentario = 'regra nota 0';
+
+  const comRotulo = prs.filter((pr) => (pr.labels || []).some((l) => l.name === alvo));
+  const comComentario = [];
+  for (const pr of comRotulo) {
+    try {
+      const comentarios = await p.gh('/repos/gilcambe/nexia/issues/' + pr.number + '/comments');
+      const tem = comentarios.some((c) => String(c.body || '').trim().toLowerCase() === comentario);
+      if (tem) comComentario.push(pr);
+    } catch { /* sem acesso aos comentários: ignora o PR */ }
+  }
+
+  const extrairIssue = (texto) => {
+    const m = String(texto || '').match(/#(\d+)/);
+    return m ? Number(m[1]) : null;
+  };
+
+  // Para cada número de issue, mantém o PR mais recente (por updated_at).
+  const porIssue = new Map();
+  for (const pr of comComentario) {
+    const num = extrairIssue(pr.title || '') || extrairIssue(pr.body || '');
+    if (num === null) continue;
+    const existente = porIssue.get(num);
+    if (!existente || new Date(pr.updated_at) > new Date(existente.updated_at)) {
+      porIssue.set(num, pr);
+    }
+  }
+
+  const resultado = [];
+  for (const [issue, pr] of porIssue.entries()) {
+    let arquivos = [];
+    let ci = 'rodando';
+    try {
+      const fs = await p.gh('/repos/gilcambe/nexia/pulls/' + pr.number + '/files');
+      arquivos = (fs || []).map((f) => f.filename || f.path || String(f)).filter(Boolean);
+    } catch { arquivos = []; }
+    try {
+      const checks = await p.gh('/repos/gilcambe/nexia/commits/' + pr.head.sha + '/check-runs');
+      const ultimo = (checks.check_runs || []).sort((a, b) => new Date(b.started_at || b.created_at) - new Date(a.started_at || a.created_at))[0];
+      if (!ultimo) ci = 'rodando';
+      else if (ultimo.status !== 'completed') ci = 'rodando';
+      else ci = ultimo.conclusion === 'success' ? 'verde' : 'vermelho';
+    } catch { ci = 'rodando'; }
+    resultado.push({
+      pr: pr.number,
+      titulo: String(pr.title || '').slice(0, 120),
+      issue,
+      arquivos,
+      ci,
+      link: pr.html_url,
+    });
+  }
+
+  return resultado;
+}
+
+module.exports = { agir, socorro, precisaDono };
