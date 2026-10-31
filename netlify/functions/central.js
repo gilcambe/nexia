@@ -169,6 +169,7 @@ function createHandler(deps = {}) {
       if (parte === 'cloudflare') return res(200, await usoCloudflare(env, fetchFn));
       if (parte === 'busca') return res(200, await require('../../lib/busca-web').buscar((event.queryStringParameters || {}).q, { fetchImpl: fetchFn }));
       if (parte === 'cotas') return res(200, await require('../../lib/cotas').medir(env, { fetchImpl: fetchFn, getToken: deps.getCotasToken }));
+      if (parte === 'sentinel') return res(200, await bancoSentinel(env));
       if (parte === 'clientes') return res(200, await empresa.clientes(getDb(), getAgendas()));
       if (parte === 'leads') return res(200, await empresa.leads(getDb()));
       if (parte === 'erros') {
