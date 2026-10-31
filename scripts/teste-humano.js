@@ -155,6 +155,21 @@ async function cenarioTreino(browser, base, viewport) {
       await ctx.close();
       return;
     }
+
+    // Adicionado: Verifica e preenche a nova tela "Como você está hoje?"
+    onde = 'tela de estado diário';
+    if (await page.getByText(/Como você está hoje\?/i).count()) {
+      // Preenche os sliders de sono, comida e energia
+      const sliders = await page.locator('.slider-container').all();
+      for (const slider of sliders) {
+        const input = await slider.locator('input[type="range"]').first();
+        await input.fill('5', { timeout: 2000 }).catch(() => {});
+      }
+      // Clica no botão "Salvar" ou equivalente
+      await page.getByRole('button', { name: /Salvar|Continuar|OK/i }).click({ timeout: 3000 }).catch(() => {});
+      await page.waitForTimeout(1000);
+    }
+
     onde = 'abrir o treino';
     await page.goto(base + 'workout', { waitUntil: 'load', timeout: 45000 });
     await page.getByRole('button', { name: /Montar Treino de Hoje|Come[cç]ar treino de hoje/i }).click({ timeout: 8000 });
