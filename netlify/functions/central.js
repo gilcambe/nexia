@@ -205,6 +205,7 @@ function createHandler(deps = {}) {
       if (parte === 'cotas') return res(200, await require('../../lib/cotas').medir(env, { fetchImpl: fetchFn, getToken: deps.getCotasToken }));
               if (parte === 'sentinel') return res(200, await bancoSentinel(env));
       if (parte === 'banco-cofre') return res(200, await lidarBancoCofre(event, env));
+      if (parte === 'sentinel') return res(200, await bancoSentinel(env));
       if (parte === 'clientes') return res(200, await empresa.clientes(getDb(), getAgendas()));
       if (parte === 'leads') return res(200, await empresa.leads(getDb()));
       if (parte === 'erros') {
