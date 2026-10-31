@@ -244,3 +244,60 @@ test('VIAGEM3. Gestão de Clientes e Viagens (CRUD de Equipe)', async () => {
   });
   assert.strictEqual(resVigApagar.statusCode, 200);
 });
+
+test('VIAGEM5. Link do app, conversa sem duplicar, site e senhas iniciais', async () => {
+  const db = criarDbMock();
+  const handler = createHandler({ getDb: () => db });
+  const post = async (b) => { const r = await handler({ httpMethod: 'POST', body: JSON.stringify({ site: 'viajantepro', ...b }) }); return { status: r.statusCode, ...JSON.parse(r.body) }; };
+
+  // senha inicial do cadastro (clientes/viagens.js)
+  assert.strictEqual((await post({ acao: 'login', senha: 'errada' })).status, 401);
+  const { token } = await post({ acao: 'login', senha: 'VIAJANTE01' });
+  assert.ok(token);
+
+  const salvo = await post({ acao: 'viagem_salvar', token, viagem: {
+    titulo: 'Lisboa', destino: 'Portugal', cliente_nome: 'Ana',
+    voos: [{ cia: 'TAP', numero: 'TP88', localizador: 'ABC123' }],
+    roteiro: [{ dia: '2026-12-01', itens: [{ hora: '10:00', titulo: 'Torre de Belém' }] }],
+    emergencia: { telefone_24h: '5511941247074' },
+  } });
+  assert.strictEqual(salvo.status, 200);
+  const t = salvo.viagem.token;
+  assert.match(t, /^[a-f0-9]{32}$/);
+
+  // editar não troca o link
+  const editado = await post({ acao: 'viagem_salvar', token, viagem: { id: salvo.id, titulo: 'Lisboa e Porto' } });
+  assert.strictEqual(editado.viagem.token, t);
+
+  // viajante abre pelo link (GET e POST)
+  const g = await handler({ httpMethod: 'GET', queryStringParameters: { site: 'viajantepro', t } });
+  const app = JSON.parse(g.body);
+  assert.strictEqual(g.statusCode, 200);
+  assert.strictEqual(app.viagem.titulo, 'Lisboa e Porto');
+  assert.strictEqual(app.viagem.token, undefined);
+  assert.strictEqual((await post({ acao: 'app_viagem', t: 'f'.repeat(32) })).status, 404);
+
+  // mensagem reenviada não duplica
+  assert.strictEqual((await post({ acao: 'msg_enviar', t, texto: 'Me perdi', id_local: 'a1' })).status, 201);
+  assert.strictEqual((await post({ acao: 'msg_enviar', t, texto: 'Me perdi', id_local: 'a1' })).repetida, true);
+  await post({ acao: 'msg_enviar', t, texto: 'Estou no metrô', id_local: 'a2' });
+  const conv = await post({ acao: 'conversas_listar', token });
+  assert.strictEqual(conv.conversas[0].nao_lidas, 2);
+  await post({ acao: 'msg_enviar', token, viagem_id: salvo.id, texto: 'Já te ligo' });
+  const lista = await post({ acao: 'msg_listar', t });
+  assert.deepStrictEqual(lista.mensagens.map(m => m.de), ['cliente', 'cliente', 'equipe']);
+  await post({ acao: 'msg_listar', token, viagem_id: salvo.id });
+  assert.strictEqual((await post({ acao: 'conversas_listar', token })).conversas[0].nao_lidas, 0);
+
+  // novo link invalida o antigo
+  const novo = await post({ acao: 'viagem_novo_token', token, id: salvo.id });
+  assert.strictEqual((await post({ acao: 'app_viagem', t })).status, 404);
+  assert.strictEqual((await post({ acao: 'app_viagem', t: novo.token })).status, 200);
+
+  // site editável
+  assert.strictEqual((await post({ acao: 'site_salvar', conteudo: { nome: 'X' } })).status, 401);
+  await post({ acao: 'site_salvar', token, conteudo: { nome: 'Viajante Pro', whatsapp: '(11) 94124-7074', textos: { hero_titulo: 'Viaje tranquilo' } } });
+  const site = await post({ acao: 'site_obter' });
+  assert.strictEqual(site.site.textos.hero_titulo, 'Viaje tranquilo');
+  assert.strictEqual(site.site.whatsapp, '11941247074');
+});

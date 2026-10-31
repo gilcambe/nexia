@@ -10,7 +10,7 @@ const VIAGENS = {
     // Senhas iniciais (só hash): ADMIN01 (dono do sistema) e VIAJANTE01 (o dono). Valem até alguém trocar a senha no painel ("Sua Conta").
     senhas_iniciais: [
       { salt: 'd3451e7f34a8549290d4cda5b069c80b', hash: '0752321472aaccfe5e23961d97417d85e6b25587c15a30b6f71e8a2ac650a35c' },
-      { salt: 'c7d54e0a28d81cf3d477ef61d83a438d', hash: '692ff6b63c04bd3227af63f93b72136ec186fe14f7938d5cbd157b85299318b9' },
+      { salt: '35fce0ac05eb77d81226cb448b58fc8c', hash: '3fce054c8c8429bbe1597656e9d715bbdfa0acb7fb2cb5f4291d2218e5cc3090' },
     ],
     versao: 1,
     codigo_salt: 'f880ae6ea10238de715a549b8abb05f2',

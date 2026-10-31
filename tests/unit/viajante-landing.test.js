@@ -41,11 +41,12 @@ test('Viajante Pro Site: vp-landing.html existe e contém estrutura comercial co
   assert.ok(html.includes('orcTelefone'), 'Formulário deve ter campo de telefone');
 });
 
-test('Viajante Pro Site: sites/viajantepro/index.html e rota /api/leads estao alinhados', (t) => {
+test('Viajante Pro Site: sites/viajantepro/index.html envia pedido para /api/viagem (lead_criar)', (t) => {
   assert.ok(fs.existsSync(SITE_INDEX_PATH), 'sites/viajantepro/index.html deve existir');
   const html = fs.readFileSync(SITE_INDEX_PATH, 'utf8');
 
   assert.ok(html.includes('Viajante Pro'), 'Deve conter nome Viajante Pro');
-  assert.ok(html.includes('/api/leads'), 'Deve ter integração com /api/leads');
+  assert.ok(html.includes('conteudo.js'), 'Deve carregar conteudo.js');
+  assert.ok(fs.readFileSync(path.join(path.dirname(SITE_INDEX_PATH), 'conteudo.js'), 'utf8').includes("acao: 'lead_criar'"), 'Pedido vai para /api/viagem lead_criar');
   assert.ok(html.includes('Feito com Kernex'), 'Deve conter o selo Feito com Kernex');
 });

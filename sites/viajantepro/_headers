@@ -1,0 +1,6 @@
+/app/*
+  Cache-Control: no-cache
+/painel/*
+  Cache-Control: no-cache
+/conteudo.js
+  Cache-Control: no-cache
