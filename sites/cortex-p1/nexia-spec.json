@@ -1,33 +1,33 @@
 {
   "spec": {
-    "kind": "site",
-    "name": "Cortex-p1",
-    "tagline": "Tecnologia que impulsiona o seu negócio",
-    "photo_theme": "technology office",
-    "description": "Institucional da Cortex-p1: soluções digitais, automação e consultoria para empresas que querem escalar com inteligência.",
+    "kind": "system",
+    "name": "Site de teste do Cortex-p1",
+    "tagline": "Painel de cadastros e versões do sistema",
+    "photo_theme": "",
+    "description": "Painel de cadastros e versões do sistema",
     "folder": "sites/cortex-p1",
     "fonts": {
-      "heading": "Outfit",
+      "heading": "Plus Jakarta Sans",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#1e3a8a",
-      "accent": "#38bdf8",
-      "bg": "#f8fafc",
+      "primary": "#4f46e5",
+      "accent": "#06b6d4",
+      "bg": "#fbfaf7",
       "surface": "#ffffff",
-      "text": "#0f172a",
-      "muted": "#64748b",
-      "dark": "#020617"
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#111827"
     },
     "style": "modern",
     "contact": {
-      "whatsapp": "5511900000000",
-      "phone": "(11) 90000-0000",
-      "email": "contato@cortexp1.com.br",
-      "address": "Av. Paulista, 1000",
-      "city": "São Paulo - SP",
-      "hours": "Seg a sex, 9h às 18h",
-      "instagram": "cortexp1",
+      "whatsapp": "",
+      "phone": "",
+      "email": "suporte@cortex-p1.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
       "facebook": "",
       "youtube": "",
       "tiktok": "",
@@ -42,295 +42,297 @@
       "url": "https://kernex.com.br/?utm_source=cortex-p1&utm_medium=selo&utm_campaign=clientes"
     },
     "leads_origem": "",
-    "sections": [
+    "entities": [
       {
-        "type": "hero",
-        "id": "sistemas-que-pensam-pelo-seu-negocio",
-        "title": "Sistemas que pensam pelo seu negócio",
-        "subtitle": "Desenvolvemos software sob medida, automação de processos e inteligência aplicada para times crescerem com menos esforço.",
-        "eyebrow": "Cortex-p1",
-        "cta": {
-          "label": "Falar com especialista",
-          "href": "whatsapp"
-        },
-        "cta2": {
-          "label": "Ver cases",
-          "href": "#servicos"
-        },
-        "image_query": "modern office team working laptops",
-        "video_query": "office technology"
-      },
-      {
-        "type": "services",
-        "id": "servicos",
-        "title": "Nossos serviços",
-        "subtitle": "Do diagnóstico à entrega em produção.",
-        "items": [
+        "key": "versoes_sistema",
+        "label": "Versões do Sistema",
+        "singular": "Versão",
+        "fields": [
           {
-            "title": "Desenvolvimento de Software",
-            "text": "Sistemas web e mobile feitos sob medida.",
-            "price": "a partir de R$ 15.000",
-            "image_query": "developer coding laptop",
-            "tag": "",
-            "url": "",
-            "icon": ""
+            "key": "versao",
+            "label": "Versão",
+            "type": "text",
+            "options": [],
+            "required": true
           },
           {
-            "title": "Automação de Processos",
-            "text": "Elimine tarefas repetitivas com bots e integrações.",
-            "price": "",
-            "image_query": "automation workflow dashboard",
-            "tag": "",
-            "url": "",
-            "icon": ""
+            "key": "data_lancamento",
+            "label": "Data de Lançamento",
+            "type": "date",
+            "options": [],
+            "required": true
           },
           {
-            "title": "Inteligência Artificial",
-            "text": "Modelos treinados para sua operação.",
-            "price": "",
-            "image_query": "ai robot brain digital",
-            "tag": "",
-            "url": "",
-            "icon": ""
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": true
           },
           {
-            "title": "Consultoria de TI",
-            "text": "Estratégia, arquitetura e governança de dados.",
-            "price": "",
-            "image_query": "consultant meeting whiteboard",
-            "tag": "",
-            "url": "",
-            "icon": ""
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Obsoleto",
+              "Em homologação"
+            ],
+            "required": true
           }
-        ]
-      },
-      {
-        "type": "about",
-        "id": "sobre-a-cortex-p1",
-        "title": "Sobre a Cortex-p1",
-        "subtitle": "Criada para transformar empresas com tecnologia acessível e entrega rápida.",
-        "text": "Criada para transformar empresas com tecnologia acessível e entrega rápida.",
-        "image_query": "modern tech office interior",
-        "stats": [
-          {
-            "value": "5+",
-            "label": "anos"
-          },
-          {
-            "value": "100+",
-            "label": "projetos"
-          },
-          {
-            "value": "98%",
-            "label": "retenção"
-          }
-        ]
-      },
-      {
-        "type": "gallery",
-        "id": "nosso-dia-a-dia",
-        "title": "Nosso dia a dia",
-        "subtitle": "",
-        "image_queries": [
-          "team brainstorming office",
-          "developers coding",
-          "server room rack",
-          "person using tablet",
-          "agile standup meeting",
-          "office coworking space",
-          "digital interface design",
-          "handshake business partnership"
         ],
-        "gif_queries": [
-          "coding animation"
-        ]
-      },
-      {
-        "type": "testimonials",
-        "id": "o-que-dizem-nossos-clientes",
-        "title": "O que dizem nossos clientes",
-        "subtitle": "",
-        "items": [
+        "sample": [
           {
-            "name": "Marina Souza",
-            "role": "",
-            "text": "Entregaram o sistema em tempo recorde.",
-            "rating": 5
+            "versao": "1.0.0",
+            "data_lancamento": "2026-01-15",
+            "descricao": "Versão inicial do painel de cadastros",
+            "status": "Obsoleto"
           },
           {
-            "name": "Lucas Almeida",
-            "role": "",
-            "text": "Automação que economizou horas por semana.",
-            "rating": 5
+            "versao": "1.1.0",
+            "data_lancamento": "2026-03-10",
+            "descricao": "Inclusão do módulo de usuários e permissões",
+            "status": "Obsoleto"
           },
           {
-            "name": "Fernanda Costa",
-            "role": "",
-            "text": "Suporte excelente e atendimento humano.",
-            "rating": 5
+            "versao": "1.2.0",
+            "data_lancamento": "2026-05-22",
+            "descricao": "Correção de validação de e-mails e relatórios de acesso",
+            "status": "Ativo"
+          },
+          {
+            "versao": "2.0.0",
+            "data_lancamento": "2026-08-05",
+            "descricao": "Reestruturação visual e novos filtros avançados",
+            "status": "Em homologação"
           }
         ]
       },
       {
-        "type": "faq",
-        "id": "perguntas-frequentes",
-        "title": "Perguntas frequentes",
-        "subtitle": "",
-        "items": [
+        "key": "usuarios",
+        "label": "Usuários",
+        "singular": "Usuário",
+        "fields": [
           {
-            "q": "Quanto tempo leva um projeto?",
-            "a": "Depende da complexidade, geralmente de 4 a 12 semanas."
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
           },
           {
-            "q": "Vocês dão suporte após a entrega?",
-            "a": "Sim, planos de manutenção mensal incluídos."
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
           },
           {
-            "q": "Trabalham com qual stack?",
-            "a": "React, Node.js, Python e tecnologias modernas de nuvem."
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
           },
           {
-            "q": "É possível integrar com meus sistemas atuais?",
-            "a": "Sim, conectamos via APIs com ERPs, CRMs e e-commerces."
+            "key": "perfil",
+            "label": "Perfil",
+            "type": "select",
+            "options": [
+              "Administrador",
+              "Operador",
+              "Visitante"
+            ],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Inativo"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Ana Souza",
+            "email": "ana.souza@cortex-p1.com.br",
+            "telefone": "(11) 91234-5678",
+            "perfil": "Administrador",
+            "status": "Ativo"
+          },
+          {
+            "nome": "Bruno Lima",
+            "email": "bruno.lima@cortex-p1.com.br",
+            "telefone": "(11) 92345-6789",
+            "perfil": "Operador",
+            "status": "Ativo"
+          },
+          {
+            "nome": "Carla Dias",
+            "email": "carla.dias@cortex-p1.com.br",
+            "telefone": "(11) 93456-7890",
+            "perfil": "Visitante",
+            "status": "Inativo"
+          },
+          {
+            "nome": "Davi Reis",
+            "email": "davi.reis@cortex-p1.com.br",
+            "telefone": "(11) 94567-8901",
+            "perfil": "Operador",
+            "status": "Ativo"
+          },
+          {
+            "nome": "Elena Costa",
+            "email": "elena.costa@cortex-p1.com.br",
+            "telefone": "(11) 95678-9012",
+            "perfil": "Visitante",
+            "status": "Ativo"
           }
         ]
       },
       {
-        "type": "cta",
-        "id": "quer-evoluir-sua-operacao",
-        "title": "Quer evoluir sua operação?",
-        "subtitle": "Agende uma conversa sem compromisso.",
-        "cta": {
-          "label": "Falar pelo WhatsApp",
-          "href": "whatsapp"
-        }
-      },
-      {
-        "type": "links",
-        "id": "acessos-rapidos",
-        "title": "Acessos rápidos",
-        "subtitle": "",
-        "items": [
+        "key": "modulos_sistema",
+        "label": "Módulos do Sistema",
+        "singular": "Módulo",
+        "fields": [
           {
-            "label": "WhatsApp",
-            "url": "https://wa.me/5511900000000",
-            "icon": "whatsapp"
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
           },
           {
-            "label": "Instagram",
-            "url": "https://instagram.com/cortexp1",
-            "icon": "instagram"
+            "key": "descricao",
+            "label": "Descrição",
+            "type": "textarea",
+            "options": [],
+            "required": true
           },
           {
-            "label": "LinkedIn",
-            "url": "https://linkedin.com/company/cortexp1",
-            "icon": "linkedin"
+            "key": "versao",
+            "label": "Versão",
+            "type": "text",
+            "options": [],
+            "required": true
           },
           {
-            "label": "YouTube",
-            "url": "https://youtube.com/@cortexp1",
-            "icon": "youtube"
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Em desenvolvimento",
+              "Descontinuado"
+            ],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Cadastro de Usuários",
+            "descricao": "Gestão de perfis e acessos dos colaboradores",
+            "versao": "1.2.0",
+            "status": "Ativo"
+          },
+          {
+            "nome": "Controle de Versões",
+            "descricao": "Histórico de lançamentos do sistema",
+            "versao": "2.0.0",
+            "status": "Em desenvolvimento"
+          },
+          {
+            "nome": "Relatórios de Acesso",
+            "descricao": "Emissão de logs e auditoria de uso",
+            "versao": "1.1.0",
+            "status": "Ativo"
+          },
+          {
+            "nome": "Backup Automático",
+            "descricao": "Agendamento de cópias de segurança",
+            "versao": "0.9.0",
+            "status": "Descontinuado"
           }
         ]
       },
       {
-        "type": "contact",
-        "id": "fale-com-a-gente",
-        "title": "Fale com a gente",
-        "subtitle": "",
-        "map": true,
-        "form": true
+        "key": "logs_acesso",
+        "label": "Logs de Acesso",
+        "singular": "Log de Acesso",
+        "fields": [
+          {
+            "key": "usuario",
+            "label": "Usuário",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_hora",
+            "label": "Data e Hora",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "ip",
+            "label": "IP",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "acao",
+            "label": "Ação",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "usuario": "ana.souza",
+            "data_hora": "2026-09-01 08:12",
+            "ip": "192.168.1.15",
+            "acao": "Login"
+          },
+          {
+            "usuario": "bruno.lima",
+            "data_hora": "2026-09-01 09:03",
+            "ip": "192.168.1.22",
+            "acao": "Cadastro de versão"
+          },
+          {
+            "usuario": "carla.dias",
+            "data_hora": "2026-09-02 10:45",
+            "ip": "192.168.1.30",
+            "acao": "Visualização de relatório"
+          },
+          {
+            "usuario": "davi.reis",
+            "data_hora": "2026-09-02 14:20",
+            "ip": "192.168.1.18",
+            "acao": "Logout"
+          },
+          {
+            "usuario": "elena.costa",
+            "data_hora": "2026-09-03 07:55",
+            "ip": "192.168.1.25",
+            "acao": "Login"
+          }
+        ]
       }
+    ],
+    "modules": [
+      "Versões do Sistema",
+      "Usuários",
+      "Módulos do Sistema",
+      "Logs de Acesso"
     ]
   },
-  "media": {
-    "s0.hero": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/TechnologyHub_2020_Office_Space_Cubicles.jpg/1280px-TechnologyHub_2020_Office_Space_Cubicles.jpg",
-      "width": 1280,
-      "height": 853,
-      "alt": "TechnologyHub 2020 Office Space Cubicles",
-      "credit": "TechnologyHub 2020 Office Space Cubicles — Missionedit (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s1.item0": {
-      "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTExL2ZsNTE5NTU5NzE5NzctaW1hZ2UuanBn.jpg",
-      "width": 4000,
-      "height": 2661,
-      "alt": "Greenville Police's Technology Officer A.F",
-      "credit": "Greenville Police's Technology Officer A.F — autor desconhecido (CC0 1.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s1.item1": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/S2S_Technologies_Office_-_Inside.jpg/1280px-S2S_Technologies_Office_-_Inside.jpg",
-      "width": 1280,
-      "height": 720,
-      "alt": "S2S Technologies Office - Inside",
-      "credit": "S2S Technologies Office - Inside — S2S Technologies (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s1.item2": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Gigaworkz_Technologies_Office_At_Sugbutel_Bldg.JPG/1280px-Gigaworkz_Technologies_Office_At_Sugbutel_Bldg.JPG",
-      "width": 1280,
-      "height": 960,
-      "alt": "Gigaworkz Technologies Office At Sugbutel Bldg",
-      "credit": "Gigaworkz Technologies Office At Sugbutel Bldg — Gibson Torreon C (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s1.item3": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/TVSR_Technologies_Office.jpg/1280px-TVSR_Technologies_Office.jpg",
-      "width": 1280,
-      "height": 843,
-      "alt": "TVSR Technologies Office",
-      "credit": "TVSR Technologies Office — Amarnathreddy528 (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s2.about": {
-      "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTExL2ZsNTE5NTU5NzI1NjItaW1hZ2UuanBn.jpg",
-      "width": 4000,
-      "height": 2665,
-      "alt": "Greenville Police's Technology Officer A.F",
-      "credit": "Greenville Police's Technology Officer A.F — autor desconhecido (CC0 1.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s3.g0": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Seagate_Technology_Office_-_Shakopee%2C_Minnesota.jpg/1280px-Seagate_Technology_Office_-_Shakopee%2C_Minnesota.jpg",
-      "width": 1280,
-      "height": 886,
-      "alt": "Seagate Technology Office - Shakopee, Minnesota",
-      "credit": "Seagate Technology Office - Shakopee, Minnesota — Tony Webster (BY-SA 2.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s3.g1": {
-      "url": "https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTExL2ZsNTE5NTY5NjExMzEtaW1hZ2UuanBn.jpg",
-      "width": 4000,
-      "height": 2661,
-      "alt": "Greenville Police's Technology Officer A.F",
-      "credit": "Greenville Police's Technology Officer A.F — autor desconhecido (CC0 1.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s3.g2": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Mayor_Eric_Garcetti_looks_on_as_Chief_Innovation_and_Technology_Officer%2C_Peter_Marx%2C_discusses_the_salience_of_the_TechLA_Initiative_to_the_future_prosperity_and_welfare_Los_Angeles_%2814197806270%29.jpg/1280px-Mayor_Eric_Garcetti_looks_on_as_Chief_Innovation_and_Technology_Officer%2C_Peter_Marx%2C_discusses_the_salience_of_the_TechLA_Initiative_to_the_future_prosperity_and_welfare_Los_Angeles_%2814197806270%29.jpg",
-      "width": 1280,
-      "height": 960,
-      "alt": "File:Mayor Eric Garcetti looks on as Chief Innovation and Technology Officer, Pe",
-      "credit": "File:Mayor Eric Garcetti looks on as Chief Innovation and Technology Officer, Peter Marx, discusses the salien",
-      "provider": "openverse"
-    },
-    "s3.g3": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/FUT.Minna_School_of_Agric_Technology_Offices.jpg/1280px-FUT.Minna_School_of_Agric_Technology_Offices.jpg",
-      "width": 1280,
-      "height": 853,
-      "alt": "FUT.Minna School of Agric Technology Offices",
-      "credit": "FUT.Minna School of Agric Technology Offices — Baleegraphy (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    },
-    "s3.g4": {
-      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/FUT.Minna_School_of_Innovative_Technology_Offices.jpg/1280px-FUT.Minna_School_of_Innovative_Technology_Offices.jpg",
-      "width": 1280,
-      "height": 853,
-      "alt": "FUT.Minna School of Innovative Technology Offices",
-      "credit": "FUT.Minna School of Innovative Technology Offices — Baleegraphy (BY-SA 4.0, via Openverse)",
-      "provider": "openverse"
-    }
-  }
+  "media": {}
 }
