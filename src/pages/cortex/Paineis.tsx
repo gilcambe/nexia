@@ -4,6 +4,7 @@ import { NOME_SITUACAO, usePedidos } from "../meu-cortex/api";
 import type { Deploy, Filtro, Resumo } from "../meu-cortex/api";
 import type { Tema } from "./page";
 import ContasReserva from "./Reservas";
+import config from "../../config.js";
 
 const Cartao = ({ children, testid }: { children: React.ReactNode; testid?: string }) => (
   <div className="rounded-2xl border border-[var(--cx-line)] bg-[var(--cx-card)] p-4" data-testid={testid}>{children}</div>
@@ -171,6 +172,50 @@ function AvisosCelular() {
 
 export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema; mudarTema: (t: Tema) => void; email: string; instalar: (() => void) | null; sair: () => void }) {
   const op: { id: Tema; nome: string }[] = [{ id: "auto", nome: "Automático" }, { id: "escuro", nome: "Escuro" }, { id: "claro", nome: "Claro" }];
+  const [iaAtiva, setIAAtiva] = useState(false);
+  const [carregandoIA, setCarregandoIA] = useState(false);
+  const [avisoBloqueio, setAvisoBloqueio] = useState(false);
+  const [avisoDownload, setAvisoDownload] = useState(false);
+
+  useEffect(() => {
+    const verificarIA = async () => {
+      const ativa = config.getIAAtiva();
+      setIAAtiva(ativa);
+    };
+    verificarIA();
+  }, []);
+
+  const toggleIA = async () => {
+    if (iaAtiva) {
+      // Desativar
+      const sucesso = config.setIAAtiva(false);
+      if (sucesso) {
+        config.mostrarAvisoDesativado();
+        setIAAtiva(false);
+      }
+    } else {
+      // Tentar ativar
+      setCarregandoIA(true);
+      try {
+        const suporte = await config.verificarSuporteWebGPU();
+        if (!suporte.suportado) {
+          config.mostrarAvisoBloqueio(suporte.motivo || "Erro ao verificar suporte");
+          setAvisoBloqueio(true);
+        } else {
+          config.mostrarAvisoDownload();
+          setAvisoDownload(true);
+          setIAAtiva(true);
+        }
+      } catch (err) {
+        console.error('Erro ao verificar suporte WebGPU:', err);
+        config.mostrarAvisoBloqueio(err instanceof Error ? err.message : 'Erro ao verificar suporte');
+        setAvisoBloqueio(true);
+      } finally {
+        setCarregandoIA(false);
+      }
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-3">
       <Titulo t="Configurações" s={email} />
@@ -181,7 +226,35 @@ export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema;
       <Cartao><p className="font-medium">App no celular</p>
         <p className="text-sm text-[var(--cx-mut)] mt-1">{instalar ? "Instale o Cortex na tela inicial." : "No Chrome do celular: menu ⋮ → Instalar app (ou Adicionar à tela inicial)."}</p>
         {instalar && <button onClick={instalar} className="mt-3 h-11 px-5 rounded-xl bg-[var(--cx-ac)] text-black font-semibold" data-testid="cx-instalar">Instalar app</button>}</Cartao>
-      
+
+      <Cartao>
+        <p className="font-medium mb-2">IA no meu aparelho (grátis, offline)</p>
+        <p className="text-sm text-[var(--cx-mut)] mt-1 mb-3">Ativa a IA local no seu navegador. O Cortex vai baixar os modelos (~1 GB) para funcionar offline.</p>
+        <button
+          onClick={toggleIA}
+          disabled={carregandoIA}
+          className={`w-full h-11 px-5 rounded-xl text-sm font-semibold ${iaAtiva ? "bg-[var(--cx-ac)] text-black" : "border border-[var(--cx-line)] text-[var(--cx-txt)]"}`}
+          data-testid="cx-ia-local"
+        >
+          {carregandoIA ? "Verificando…" : iaAtiva ? "IA local ativa" : "Ativar IA local"}
+        </button>
+        {avisoBloqueio && (
+          <button
+            onClick={() => setAvisoBloqueio(false)}
+            className="mt-2 text-sm text-[var(--cx-mut)] underline"
+          >
+            Entendi
+          </button>
+        )}
+        {avisoDownload && (
+          <button
+            onClick={() => setAvisoDownload(false)}
+            className="mt-2 text-sm text-[var(--cx-mut)] underline"
+          >
+            Entendi
+          </button>
+        )}
+      </Cartao>
 
       <AvisosCelular />
 
