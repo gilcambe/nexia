@@ -20,10 +20,15 @@ button{background:var(--gold);color:#111;font-weight:700;border:0;cursor:pointer
 </style>
 </head>
 <body>
-<header><img src="/viajante-pro/img/vp-oficial.jpg" alt="Viajante Pro"><b>Cotações</b><a class="mut" href="/viajante-pro/admin">Painel</a><button id="sair" class="sec oculto" type="button">Sair</button></header>
+  <header><img src="/viajante-pro/img/vp-oficial.jpg" alt="Viajante Pro"><b>Cotações</b><a class="mut" href="/viajante-pro/admin">Painel</a><button id="trocarSenha" class="sec oculto" type="button">Trocar senha</button><button id="sair" class="sec oculto" type="button">Sair</button></header>
 <main>
   <form id="login" class="card"><h2>Entrar</h2><div class="linha"><input id="senha" type="password" placeholder="Senha" required autocomplete="current-password"><button>Entrar</button></div><p id="erro" class="erro"></p></form>
   <section id="lista" class="oculto"><div class="linha"><button id="atualizar" class="sec" type="button">Atualizar</button><span id="resumo" class="mut"></span></div><div id="itens"></div></section>
+  <div id="trocar-senha-form" class="oculto">
+    <div class="linha"><input id="novaSenha" type="password" placeholder="Nova senha" minlength="6" required><button type="button">Trocar senha</button></div>
+    <p id="trocar-senha-erro" class="erro"></p>
+    <p id="trocar-senha-sucesso" class="mut"></p>
+  </div>
 </main>
 <script>
 (function () {
@@ -68,6 +73,33 @@ button{background:var(--gold);color:#111;font-weight:700;border:0;cursor:pointer
   $('atualizar').addEventListener('click', carregar);
   $('sair').addEventListener('click', sair);
   if (token) entrou();
+  
+  // Lógica de troca de senha
+  $('trocarSenha').addEventListener('click', function() {
+    $('trocar-senha-form').classList.toggle('show');
+    $('novaSenha').value = '';
+    $('trocar-senha-erro').textContent = '';
+    $('trocar-senha-sucesso').textContent = '';
+  });
+  
+  $('trocar-senha-form').addEventListener('submit', function(ev) {
+    ev.preventDefault();
+    $('trocar-senha-erro').textContent = '';
+    $('trocar-senha-sucesso').textContent = '';
+    
+    api({ acao: 'trocar-senha', senha_nova: $('novaSenha').value })
+      .then(function(j) {
+        if (j.ok) {
+          $('trocar-senha-sucesso').textContent = 'Senha trocada';
+          $('trocar-senha-form').classList.remove('show');
+        } else {
+          $('trocar-senha-erro').textContent = j.error || 'Erro ao trocar senha';
+        }
+      })
+      .catch(function(e) {
+        $('trocar-senha-erro').textContent = e.message || 'Erro ao trocar senha';
+      });
+  });
 })();
 </script>
 <script src="/viajante-pro/abertura-kernex.js?v=3" data-produto="VIAJANTE PRO" defer></script>
