@@ -26,6 +26,7 @@ export interface Cortex {
   proximas: Tarefa[]; 
   gratuitas: TarefaGratis[]; // Adicionado gratuitas
   distribuidas: number; // Novo campo para tarefas distribuídas
+  enviadasParaContas: number; // Novo campo para tarefas enviadas para contas
 }
 export interface Divulga {
   naFila: number;
@@ -80,7 +81,7 @@ export interface Dados {
   historico?: Historico; // só a aba Sistema pede (lê 30 dias; não entra no "conferir" de 5 em 5 min)
 }
 export type Parte = keyof Dados;
-export const PARTES: Parte[] = ["lista", "saude", "dinheiro", "cortex", "robos", "divulga", "banco", "cloudflare", "cotas", "empresa", "clientes", "leads", "vagas", "maquinas"];
+export const PARTES: Parte[] = ["lista", "saude", "dinheiro", "cortex", "robos", "divulga", "banco", "cloudflare", "cotas", "empresa", "clientas", "leads", "vagas", "maquinas"];
 
 export function useCentral() {
   const { getToken } = useAuth();
@@ -123,7 +124,6 @@ export function useCentral() {
     return body as { ok: boolean; mensagem: string };
   }, [getToken]);
 
-  // Nova função para enviar tarefas para as contas ajudarem a resolver
   const enviarTarefasParaContas = useCallback(async (tarefas: TarefaGratis[]) => {
     const token = await getToken();
     const res = await fetch(apiPath("/enviar-tarefas-para-contas"), {
@@ -136,7 +136,6 @@ export function useCentral() {
     return body as { ok: boolean; mensagem: string };
   }, [getToken]);
 
-  // Atualização para marcar todas as tarefas como gratuitas
   const marcarTodasTarefasComoGratuitas = useCallback(async () => {
     const token = await getToken();
     const res = await fetch(apiPath("/marcar-tarefas-como-gratuitas"), {
