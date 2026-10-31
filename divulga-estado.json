@@ -1,5 +1,5 @@
 {
-  "rodizio": 39,
+  "rodizio": 40,
   "feitos": [
     "body-coach-01",
     "body-coach-02",
@@ -835,6 +835,25 @@
       ],
       "formato": "reel",
       "serie": "mito-verdade"
+    },
+    {
+      "quando": "2026-10-31T15:45:39.700Z",
+      "id": null,
+      "cliente": "body-coach",
+      "resultados": [
+        {
+          "canal": "facebook",
+          "ok": true,
+          "ref": "1380111745183159_122107381227518156"
+        },
+        {
+          "canal": "instagram",
+          "ok": true,
+          "ref": "17937935622401283"
+        }
+      ],
+      "formato": "foto",
+      "serie": "bastidores"
     }
   ],
   "seguidores": [
@@ -880,6 +899,10 @@
     },
     {
       "dia": "2026-10-30",
+      "total": 3
+    },
+    {
+      "dia": "2026-10-31",
       "total": 3
     }
   ]
