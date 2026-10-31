@@ -171,6 +171,226 @@ exports.handler = async function (event, context) {
   const slug = (q.site || 'viajantepro').toLowerCase();
   const cadastro = VIAJANTE_PRO[slug] || VIAJANTE_PRO.viajantepro;
 
+  // ── ENDPOINTS REST COM VALIDAÇÃO DE TOKEN ──
+  const path = event.path || '';
+  const isViagensPath = path === '/api/viagens';
+  const isChatsPath = path === '/api/chats';
+  
+  // Validação de token vp_admin_token para endpoints REST
+  if (isViagensPath || isChatsPath) {
+    const authHeader = event.headers.authorization || '';
+    const vpToken = authHeader.replace(/^Bearer\s+/i, '');
+    
+    if (!vpToken) {
+      return res(401, { error: 'Token vp_admin_token ausente no header Authorization.' });
+    }
+    
+    // Verificar se o token é válido (mesma lógica de sessão existente)
+    const tokenHash = await sha256(vpToken);
+    const contaRef = db.collection(COLLECTION).doc(slug);
+    const sSnap = await contaRef.collection('sessoes').doc(tokenHash).get();
+    
+    if (!sSnap.exists) {
+      return res(401, { error: 'Token vp_admin_token inválido ou expirado.' });
+    }
+    
+    const sessao = sSnap.data();
+    const now = Date.now();
+    
+    if (new Date(sessao.expira_em).getTime() < now) {
+      await contaRef.collection('sessoes').doc(tokenHash).delete();
+      return res(401, { error: 'Token vp_admin_token expirado.' });
+    }
+  }
+
+  const contaRef = db.collection(COLLECTION).doc(slug);
+
+  // ── HANDLERS REST ──
+  // GET /api/viagens - Listar viagens
+  if (method === 'GET' && isViagensPath) {
+    const snaps = await contaRef.collection('viagens').get();
+    const viagens = [];
+    snaps.docs.forEach(doc => {
+      const data = doc.data();
+      viagens.push({
+        id: doc.id,
+        ...data,
+        criado_em: data.criado_em || new Date(Date.now()).toISOString(),
+      });
+    });
+    viagens.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+    return res(200, { ok: true, viagens });
+  }
+
+  // POST /api/viagens - Criar viagem
+  if (method === 'POST' && isViagensPath) {
+    let body = {};
+    try {
+      body = JSON.parse(event.body || '{}');
+    } catch {
+      return res(400, { error: 'JSON inválido.' });
+    }
+    
+    const titulo = str(body.titulo, 100);
+    const descricao = str(body.descricao, 1000);
+    const destino = str(body.destino, 100);
+    const dataInicio = str(body.dataInicio, 20);
+    const dataFim = str(body.dataFim, 20);
+    const preco = str(body.preco, 50);
+    const destaque = body.destaque === true;
+    const imagemUrl = str(body.imagemUrl, 500);
+    
+    if (!titulo || !destino) {
+      return res(400, { error: 'Título e Destino são obrigatórios.' });
+    }
+    
+    const id = aleatorio(8).toUpperCase();
+    const viagemData = {
+      id,
+      titulo,
+      descricao,
+      destino,
+      dataInicio,
+      dataFim,
+      preco,
+      destaque,
+      imagemUrl,
+      status: 'ativo',
+      criado_em: new Date(Date.now()).toISOString(),
+      atualizado_em: new Date(Date.now()).toISOString(),
+    };
+    
+    await contaRef.collection('viagens').doc(id).set(viagemData);
+    return res(201, { ok: true, viagem: viagemData });
+  }
+
+  // PUT /api/viagens - Atualizar viagem
+  if (method === 'PUT' && isViagensPath) {
+    let body = {};
+    try {
+      body = JSON.parse(event.body || '{}');
+    } catch {
+      return res(400, { error: 'JSON inválido.' });
+    }
+    
+    const vId = str(body.id, 64);
+    
+    if (!vId) {
+      return res(400, { error: 'ID da viagem é obrigatório.' });
+    }
+    
+    const vDocRef = contaRef.collection('viagens').doc(vId);
+    const snap = await vDocRef.get();
+    if (!snap.exists) {
+      return res(404, { error: 'Viagem não encontrada.' });
+    }
+    
+    const atual = snap.data();
+    const titulo = str(body.titulo, 100) || atual.titulo;
+    const descricao = str(body.descricao, 1000) || atual.descricao;
+    const destino = str(body.destino, 100) || atual.destino;
+    const dataInicio = str(body.dataInicio, 20) || atual.dataInicio;
+    const dataFim = str(body.dataFim, 20) || atual.dataFim;
+    const preco = str(body.preco, 50) || atual.preco;
+    const destaque = body.destaque !== undefined ? body.destaque : atual.destaque;
+    const imagemUrl = str(body.imagemUrl, 500) || atual.imagemUrl;
+    const status = str(body.status, 50) || atual.status;
+    
+    const payload = {
+      ...atual,
+      titulo,
+      descricao,
+      destino,
+      dataInicio,
+      dataFim,
+      preco,
+      destaque,
+      imagemUrl,
+      status,
+      atualizado_em: new Date(Date.now()).toISOString(),
+    };
+    
+    await vDocRef.update(payload);
+    return res(200, { ok: true, viagem: payload });
+  }
+
+  // DELETE /api/viagens - Deletar viagem
+  if (method === 'DELETE' && isViagensPath) {
+    let body = {};
+    try {
+      body = JSON.parse(event.body || '{}');
+    } catch {
+      return res(400, { error: 'JSON inválido.' });
+    }
+    
+    const vId = str(body.id, 64);
+    
+    if (!vId) {
+      return res(400, { error: 'ID da viagem é obrigatório.' });
+    }
+    
+    const vDocRef = contaRef.collection('viagens').doc(vId);
+    const snap = await vDocRef.get();
+    if (!snap.exists) {
+      return res(404, { error: 'Viagem não encontrada.' });
+    }
+    
+    await vDocRef.delete();
+    return res(200, { ok: true, id: vId, message: 'Viagem excluída com sucesso.' });
+  }
+
+  // GET /api/chats - Listar chats
+  if (method === 'GET' && isChatsPath) {
+    const snaps = await contaRef.collection('chats').get();
+    const chats = [];
+    snaps.docs.forEach(doc => {
+      const data = doc.data();
+      chats.push({
+        id: doc.id,
+        ...data,
+        criado_em: data.criado_em || new Date(Date.now()).toISOString(),
+      });
+    });
+    chats.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+    return res(200, { ok: true, chats });
+  }
+
+  // POST /api/chats - Criar chat
+  if (method === 'POST' && isChatsPath) {
+    let body = {};
+    try {
+      body = JSON.parse(event.body || '{}');
+    } catch {
+      return res(400, { error: 'JSON inválido.' });
+    }
+    
+    const nome = str(body.nome, 100);
+    const email = str(body.email, 100);
+    const telefone = str(body.telefone, 30);
+    const mensagem = str(body.mensagem, 1000);
+    const status = str(body.status, 50) || 'novo';
+    
+    if (!nome || !email || !mensagem) {
+      return res(400, { error: 'Nome, E-mail e Mensagem são obrigatórios.' });
+    }
+    
+    const id = aleatorio(8).toUpperCase();
+    const chatData = {
+      id,
+      nome,
+      email,
+      telefone,
+      mensagem,
+      status,
+      respondido: false,
+      criado_em: new Date(Date.now()).toISOString(),
+      atualizado_em: new Date(Date.now()).toISOString(),
+    };
+    
+    await contaRef.collection('chats').doc(id).set(chatData);
+    return res(201, { ok: true, chat: chatData });
+  }
+
   // ── NOVOS ENDPOINTS REST COM VALIDAÇÃO DE TOKEN ──
   const path = event.path || '';
   const isViagensPath = path.includes('/api/viagens');
