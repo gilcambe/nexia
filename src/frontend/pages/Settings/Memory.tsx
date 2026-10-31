@@ -137,6 +137,110 @@ export default function MemorySettings() {
         </div>
       </div>
 
+      {/* Seção de IA Local */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">IA Local</h2>
+        <div className="bg-[var(--cx-card)] border border-[var(--cx-line)] rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-medium">IA no meu aparelho (grátis, offline)</h3>
+              <p className="text-sm text-[var(--cx-mut)] mt-1">
+                Ative para usar IA diretamente no seu navegador, sem conexão com internet.
+                Processamento local para maior privacidade e velocidade.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-[var(--cx-mut)]">
+                {isLocalIAEnabled ? 'Ativado' : 'Desativado'}
+              </span>
+              <button
+                onClick={handleToggleLocalIA}
+                disabled={!webGPUSupported || !memoryAvailable}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isLocalIAEnabled ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'} ${!webGPUSupported || !memoryAvailable ? 'opacity-50 cursor-not-allowed' : ''}`}
+                data-testid="memory-local-ia-toggle"
+                role="switch"
+                aria-checked={isLocalIAEnabled}
+                aria-label="IA no meu aparelho (grátis, offline)"
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isLocalIAEnabled ? 'translate-x-6' : 'translate-x-1'}`}
+                />
+              </button>
+            </div>
+          </div>
+          
+          {/* Aviso de bloqueio quando não suportado */}
+          {!webGPUSupported && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-700">
+                    <strong>Bloqueado:</strong> Seu navegador não suporta WebGPU, necessário para IA local.
+                    Atualize seu navegador ou use um navegador compatível (Chrome, Edge, Firefox recente).
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {!memoryAvailable && webGPUSupported && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-700">
+                    <strong>Bloqueado:</strong> Memória insuficiente. São necessários pelo menos 1GB de RAM disponível.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Aviso de download ao ativar */}
+          {showDownloadWarning && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3 flex-1">
+                  <h4 className="text-sm font-medium text-blue-800 mb-1">Download necessário</h4>
+                  <p className="text-sm text-blue-700 mb-3">
+                    Para ativar a IA local, será necessário baixar aproximadamente 1GB de dados do modelo.
+                    Recomendamos realizar este download em uma rede Wi-Fi para evitar cobranças de dados móveis.
+                  </p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={confirmDownload}
+                      className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Confirmar e Baixar
+                    </button>
+                    <button
+                      onClick={cancelDownload}
+                      className="px-4 py-2 border border-[var(--cx-line)] text-sm rounded-lg hover:border-[var(--cx-ac)] transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Seção de fatos */}
       <div>
         <div className="flex items-center justify-between mb-4">
