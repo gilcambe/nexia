@@ -1,23 +1,23 @@
 {
   "spec": {
     "kind": "system",
-    "name": "Site de teste do Cortex-p1",
-    "tagline": "Painel de cadastros e versões do sistema",
+    "name": "Cortex-p1",
+    "tagline": "Painel de cadastros e gestão do sistema",
     "photo_theme": "",
-    "description": "Painel de cadastros e versões do sistema",
+    "description": "Painel de cadastros e gestão do sistema",
     "folder": "sites/cortex-p1",
     "fonts": {
       "heading": "Plus Jakarta Sans",
       "body": "Inter"
     },
     "palette": {
-      "primary": "#4f46e5",
-      "accent": "#06b6d4",
+      "primary": "#2563eb",
+      "accent": "#0ea5e9",
       "bg": "#fbfaf7",
       "surface": "#ffffff",
       "text": "#1d2426",
       "muted": "#5d6b6e",
-      "dark": "#111827"
+      "dark": "#0f172a"
     },
     "style": "modern",
     "contact": {
@@ -43,71 +43,6 @@
     },
     "leads_origem": "",
     "entities": [
-      {
-        "key": "versoes_sistema",
-        "label": "Versões do Sistema",
-        "singular": "Versão",
-        "fields": [
-          {
-            "key": "versao",
-            "label": "Versão",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "data_lancamento",
-            "label": "Data de Lançamento",
-            "type": "date",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "descricao",
-            "label": "Descrição",
-            "type": "textarea",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "status",
-            "label": "Status",
-            "type": "select",
-            "options": [
-              "Ativo",
-              "Obsoleto",
-              "Em homologação"
-            ],
-            "required": true
-          }
-        ],
-        "sample": [
-          {
-            "versao": "1.0.0",
-            "data_lancamento": "2026-01-15",
-            "descricao": "Versão inicial do painel de cadastros",
-            "status": "Obsoleto"
-          },
-          {
-            "versao": "1.1.0",
-            "data_lancamento": "2026-03-10",
-            "descricao": "Inclusão do módulo de usuários e permissões",
-            "status": "Obsoleto"
-          },
-          {
-            "versao": "1.2.0",
-            "data_lancamento": "2026-05-22",
-            "descricao": "Correção de validação de e-mails e relatórios de acesso",
-            "status": "Ativo"
-          },
-          {
-            "versao": "2.0.0",
-            "data_lancamento": "2026-08-05",
-            "descricao": "Reestruturação visual e novos filtros avançados",
-            "status": "Em homologação"
-          }
-        ]
-      },
       {
         "key": "usuarios",
         "label": "Usuários",
@@ -135,14 +70,21 @@
             "required": true
           },
           {
-            "key": "perfil",
-            "label": "Perfil",
+            "key": "papel",
+            "label": "Papel",
             "type": "select",
             "options": [
               "Administrador",
-              "Operador",
-              "Visitante"
+              "Gerente",
+              "Operador"
             ],
+            "required": true
+          },
+          {
+            "key": "data_admissao",
+            "label": "Data de Admissão",
+            "type": "date",
+            "options": [],
             "required": true
           },
           {
@@ -159,45 +101,50 @@
         "sample": [
           {
             "nome": "Ana Souza",
-            "email": "ana.souza@cortex-p1.com.br",
-            "telefone": "(11) 91234-5678",
-            "perfil": "Administrador",
+            "email": "ana.souza@cortex.com.br",
+            "telefone": "(11) 90000-0001",
+            "papel": "Administrador",
+            "data_admissao": "2026-01-10",
             "status": "Ativo"
           },
           {
             "nome": "Bruno Lima",
-            "email": "bruno.lima@cortex-p1.com.br",
-            "telefone": "(11) 92345-6789",
-            "perfil": "Operador",
+            "email": "bruno.lima@cortex.com.br",
+            "telefone": "(11) 90000-0002",
+            "papel": "Operador",
+            "data_admissao": "2026-02-15",
             "status": "Ativo"
           },
           {
             "nome": "Carla Dias",
-            "email": "carla.dias@cortex-p1.com.br",
-            "telefone": "(11) 93456-7890",
-            "perfil": "Visitante",
-            "status": "Inativo"
-          },
-          {
-            "nome": "Davi Reis",
-            "email": "davi.reis@cortex-p1.com.br",
-            "telefone": "(11) 94567-8901",
-            "perfil": "Operador",
+            "email": "carla.dias@cortex.com.br",
+            "telefone": "(11) 90000-0003",
+            "papel": "Gerente",
+            "data_admissao": "2026-03-05",
             "status": "Ativo"
           },
           {
+            "nome": "Davi Reis",
+            "email": "davi.reis@cortex.com.br",
+            "telefone": "(11) 90000-0004",
+            "papel": "Operador",
+            "data_admissao": "2026-04-20",
+            "status": "Inativo"
+          },
+          {
             "nome": "Elena Costa",
-            "email": "elena.costa@cortex-p1.com.br",
-            "telefone": "(11) 95678-9012",
-            "perfil": "Visitante",
+            "email": "elena.costa@cortex.com.br",
+            "telefone": "(11) 90000-0005",
+            "papel": "Operador",
+            "data_admissao": "2026-05-12",
             "status": "Ativo"
           }
         ]
       },
       {
-        "key": "modulos_sistema",
-        "label": "Módulos do Sistema",
-        "singular": "Módulo",
+        "key": "clientes",
+        "label": "Clientes",
+        "singular": "Cliente",
         "fields": [
           {
             "key": "nome",
@@ -207,16 +154,203 @@
             "required": true
           },
           {
+            "key": "cpf",
+            "label": "CPF",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cidade",
+            "label": "Cidade",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "limite_credito",
+            "label": "Limite de Crédito",
+            "type": "money",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Fernanda Alves",
+            "cpf": "123.456.789-00",
+            "email": "fernanda@email.com.br",
+            "telefone": "(11) 90000-0010",
+            "cidade": "São Paulo",
+            "limite_credito": "2500"
+          },
+          {
+            "nome": "Gustavo Martins",
+            "cpf": "987.654.321-00",
+            "email": "gustavo@email.com.br",
+            "telefone": "(11) 90000-0011",
+            "cidade": "Campinas",
+            "limite_credito": "1800"
+          },
+          {
+            "nome": "Helena Rocha",
+            "cpf": "456.789.123-00",
+            "email": "helena@email.com.br",
+            "telefone": "(11) 90000-0012",
+            "cidade": "São Paulo",
+            "limite_credito": "3200"
+          },
+          {
+            "nome": "Igor Mendes",
+            "cpf": "321.654.987-00",
+            "email": "igor@email.com.br",
+            "telefone": "(11) 90000-0013",
+            "cidade": "Santos",
+            "limite_credito": "900"
+          },
+          {
+            "nome": "Juliana Pinto",
+            "cpf": "654.321.987-00",
+            "email": "juliana@email.com.br",
+            "telefone": "(11) 90000-0014",
+            "cidade": "Ribeirão Preto",
+            "limite_credito": "2100"
+          }
+        ]
+      },
+      {
+        "key": "produtos",
+        "label": "Produtos",
+        "singular": "Produto",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "sku",
+            "label": "SKU",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "preco",
+            "label": "Preço",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "estoque",
+            "label": "Estoque",
+            "type": "number",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "categoria",
+            "label": "Categoria",
+            "type": "select",
+            "options": [
+              "Eletrônicos",
+              "Móveis",
+              "Vestuário",
+              "Alimentos"
+            ],
+            "required": true
+          },
+          {
             "key": "descricao",
             "label": "Descrição",
             "type": "textarea",
             "options": [],
             "required": true
+          }
+        ],
+        "sample": [
+          {
+            "nome": "Notebook Ultra 14",
+            "sku": "NOTE-001",
+            "preco": "4599",
+            "estoque": "12",
+            "categoria": "Eletrônicos",
+            "descricao": "Notebook leve com tela de 14 polegadas e 16 GB RAM."
           },
           {
-            "key": "versao",
-            "label": "Versão",
+            "nome": "Cadeira Ergonômica",
+            "sku": "MOVE-010",
+            "preco": "899",
+            "estoque": "8",
+            "categoria": "Móveis",
+            "descricao": "Cadeira de escritório com apoio lombar regulável."
+          },
+          {
+            "nome": "Camiseta Básica Preta",
+            "sku": "VEST-055",
+            "preco": "59",
+            "estoque": "40",
+            "categoria": "Vestuário",
+            "descricao": "Camiseta 100% algodão, corte clássico."
+          },
+          {
+            "nome": "Café Especial 500g",
+            "sku": "ALIM-020",
+            "preco": "35",
+            "estoque": "60",
+            "categoria": "Alimentos",
+            "descricao": "Café torrado e moído de origem controlada."
+          },
+          {
+            "nome": "Mouse Sem Fio",
+            "sku": "NOTE-030",
+            "preco": "129",
+            "estoque": "25",
+            "categoria": "Eletrônicos",
+            "descricao": "Mouse óptico sem fio com receptor USB."
+          }
+        ]
+      },
+      {
+        "key": "pedidos",
+        "label": "Pedidos",
+        "singular": "Pedido",
+        "fields": [
+          {
+            "key": "cliente",
+            "label": "Cliente",
             "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data",
+            "label": "Data",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "valor_total",
+            "label": "Valor Total",
+            "type": "money",
             "options": [],
             "required": true
           },
@@ -225,113 +359,65 @@
             "label": "Status",
             "type": "select",
             "options": [
-              "Ativo",
-              "Em desenvolvimento",
-              "Descontinuado"
+              "Novo",
+              "Pago",
+              "Enviado",
+              "Cancelado"
             ],
             "required": true
-          }
-        ],
-        "sample": [
-          {
-            "nome": "Cadastro de Usuários",
-            "descricao": "Gestão de perfis e acessos dos colaboradores",
-            "versao": "1.2.0",
-            "status": "Ativo"
           },
           {
-            "nome": "Controle de Versões",
-            "descricao": "Histórico de lançamentos do sistema",
-            "versao": "2.0.0",
-            "status": "Em desenvolvimento"
-          },
-          {
-            "nome": "Relatórios de Acesso",
-            "descricao": "Emissão de logs e auditoria de uso",
-            "versao": "1.1.0",
-            "status": "Ativo"
-          },
-          {
-            "nome": "Backup Automático",
-            "descricao": "Agendamento de cópias de segurança",
-            "versao": "0.9.0",
-            "status": "Descontinuado"
-          }
-        ]
-      },
-      {
-        "key": "logs_acesso",
-        "label": "Logs de Acesso",
-        "singular": "Log de Acesso",
-        "fields": [
-          {
-            "key": "usuario",
-            "label": "Usuário",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "data_hora",
-            "label": "Data e Hora",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "ip",
-            "label": "IP",
-            "type": "text",
-            "options": [],
-            "required": true
-          },
-          {
-            "key": "acao",
-            "label": "Ação",
-            "type": "text",
+            "key": "observacao",
+            "label": "Observação",
+            "type": "textarea",
             "options": [],
             "required": true
           }
         ],
         "sample": [
           {
-            "usuario": "ana.souza",
-            "data_hora": "2026-09-01 08:12",
-            "ip": "192.168.1.15",
-            "acao": "Login"
+            "cliente": "Fernanda Alves",
+            "data": "2026-10-01",
+            "valor_total": "4599",
+            "status": "Pago",
+            "observacao": "Entregar na portaria."
           },
           {
-            "usuario": "bruno.lima",
-            "data_hora": "2026-09-01 09:03",
-            "ip": "192.168.1.22",
-            "acao": "Cadastro de versão"
+            "cliente": "Gustavo Martins",
+            "data": "2026-10-03",
+            "valor_total": "958",
+            "status": "Enviado",
+            "observacao": ""
           },
           {
-            "usuario": "carla.dias",
-            "data_hora": "2026-09-02 10:45",
-            "ip": "192.168.1.30",
-            "acao": "Visualização de relatório"
+            "cliente": "Helena Rocha",
+            "data": "2026-10-05",
+            "valor_total": "35",
+            "status": "Novo",
+            "observacao": ""
           },
           {
-            "usuario": "davi.reis",
-            "data_hora": "2026-09-02 14:20",
-            "ip": "192.168.1.18",
-            "acao": "Logout"
+            "cliente": "Igor Mendes",
+            "data": "2026-10-06",
+            "valor_total": "59",
+            "status": "Cancelado",
+            "observacao": "Cliente desistiu da compra."
           },
           {
-            "usuario": "elena.costa",
-            "data_hora": "2026-09-03 07:55",
-            "ip": "192.168.1.25",
-            "acao": "Login"
+            "cliente": "Juliana Pinto",
+            "data": "2026-10-07",
+            "valor_total": "4728",
+            "status": "Pago",
+            "observacao": "Nota fiscal por e-mail."
           }
         ]
       }
     ],
     "modules": [
-      "Versões do Sistema",
-      "Usuários",
-      "Módulos do Sistema",
-      "Logs de Acesso"
+      "Cadastros",
+      "Vendas",
+      "Estoque",
+      "Relatórios"
     ]
   },
   "media": {}
