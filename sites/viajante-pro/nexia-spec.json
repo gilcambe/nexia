@@ -1,0 +1,141 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Sistema Viajante Pro",
+    "tagline": "Gestão de viagens e hospedagens com eficiência",
+    "photo_theme": "travel planning office",
+    "description": "Gestão de viagens e hospedagens com eficiência",
+    "folder": "sites/viajante-pro",
+    "fonts": {
+      "heading": "Plus Jakarta Sans",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#2563eb",
+      "accent": "#10b981",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#0f172a"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "",
+      "email": "suporte@viajante.pro",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=viajante-pro&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "viagens",
+        "label": "Viagens",
+        "singular": "Viagem",
+        "fields": [
+          {
+            "key": "destino",
+            "label": "Destino",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_partida",
+            "label": "Data de Partida",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "data_volta",
+            "label": "Data de Volta",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Aguardando",
+              "Confirmada",
+              "Em Andamento",
+              "Finalizada"
+            ],
+            "required": true
+          },
+          {
+            "key": "custo_total",
+            "label": "Custo Total",
+            "type": "money",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "link_acesso",
+            "label": "Link de Acesso",
+            "type": "text",
+            "options": [],
+            "required": true
+          }
+        ],
+        "sample": [
+          {
+            "destino": "Lisboa, Portugal",
+            "data_partida": "2026-09-10",
+            "data_volta": "2026-09-17",
+            "status": "Aguardando",
+            "custo_total": "R$ 12.500,00",
+            "link_acesso": ""
+          },
+          {
+            "destino": "Tokyo, Japão",
+            "data_partida": "2026-10-05",
+            "data_volta": "2026-10-20",
+            "status": "Confirmada",
+            "custo_total": "R$ 24.900,00",
+            "link_acesso": ""
+          },
+          {
+            "destino": "Paris, França",
+            "data_partida": "2026-11-12",
+            "data_volta": "2026-11-18",
+            "status": "Aguardando",
+            "custo_total": "R$ 9.800,00",
+            "link_acesso": ""
+          },
+          {
+            "destino": "Nova York, EUA",
+            "data_partida": "2026-06-15",
+            "data_volta": "2026-06-25",
+            "status": "Em Andamento",
+            "custo_total": "R$ 15.200,00",
+            "link_acesso": ""
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Viagens",
+      "Clientes"
+    ]
+  },
+  "media": {}
+}
