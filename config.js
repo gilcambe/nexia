@@ -76,14 +76,27 @@ export const getIAAtiva = (): boolean => {
   return obterConfig().ativo;
 };
 
-export const setIAAtiva = (ativo: boolean): boolean => {
+export const setIAAtiva = async (ativo: boolean): Promise<{ success: boolean; error?: string; avisoDownload?: boolean }> => {
   try {
+    if (ativo) {
+      const suporte = await verificarSuporteWebGPU();
+      if (!suporte.suportado) {
+        return { 
+          success: false, 
+          error: `Seu navegador ou dispositivo não suporta IA no aparelho (WebGPU/Memória insuficiente). Motivo: ${suporte.motivo || 'WebGPU indisponível'}` 
+        };
+      }
+      return { 
+        success: true, 
+        avisoDownload: true 
+      };
+    }
     const config = obterConfig();
-    config.ativo = ativo;
+    config.ativo = false;
     salvarConfig(config);
-    return true;
-  } catch {
-    return false;
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: err instanceof Error ? err.message : 'Erro ao alterar configuração' };
   }
 };
 
