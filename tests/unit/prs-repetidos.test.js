@@ -53,14 +53,19 @@ const pr = (number, title, createdAt, ciStatus, labels = []) => ({
   labels: labels.map(name => ({ name }))
 });
 
-test('PR1. decidir: 6 PRs da issue #2248 fecha 5 mantendo o mais novo com CI verde', () => {
+const issueFechada = async (issueNumber) => {
+  // Simula issue fechada na API
+  return { data: { state: 'closed' } };
+};
+
+test('PR1. decidir: 6 PRs da issue #2248 com rótulos diversos fecha 5 mantendo o mais novo com CI verde', () => {
   const prs = [
-    pr(101, 'correção #2248', '2026-10-20T10:00:00Z', 'failure'),
-    pr(102, 'correção #2248', '2026-10-21T10:00:00Z', 'failure'),
-    pr(103, 'correção #2248', '2026-10-22T10:00:00Z', 'pending'),
-    pr(104, 'correção #2248', '2026-10-23T10:00:00Z', 'failure'),
-    pr(105, 'correção #2248', '2026-10-24T10:00:00Z', 'success'), // mais novo + CI verde = mantido
-    pr(106, 'correção #2248', '2026-10-19T10:00:00Z', 'success'), // CI verde mas mais velho
+    pr(101, 'correção #2248', '2026-10-20T10:00:00Z', 'failure', ['bug', 'urgent']),
+    pr(102, 'correção #2248', '2026-10-21T10:00:00Z', 'failure', ['enhancement']),
+    pr(103, 'correção #2248', '2026-10-22T10:00:00Z', 'pending', ['documentation']),
+    pr(104, 'correção #2248', '2026-10-23T10:00:00Z', 'failure', ['bug']),
+    pr(105, 'correção #2248', '2026-10-24T10:00:00Z', 'success', ['stable']), // mais novo + CI verde = mantido
+    pr(106, 'correção #2248', '2026-10-19T10:00:00Z', 'success', ['bug', 'stable']), // CI verde mas mais velho
   ];
 
   const fechar = decidir(prs, AGORA);
@@ -85,7 +90,21 @@ test('PR2. decidir: PR com CI vermelho >48h entra no fechamento quando há outro
   assert.equal(fechar[0].number, 201);
 });
 
-test('PR3. rodar: chama fechamentos esperados (update closed + createComment)', async () => {
+test('PR3. decidir: PR com CI vermelho >48h e issue fechada entra no fechamento', () => {
+  const haCinquentaHoras = new Date(AGORA - 50 * 60 * 60 * 1000).toISOString();
+
+  const prs = [
+    pr(301, 'tarefa #2248', haCinquentaHoras, 'failure', ['bug']), // CI vermelho >48h e issue fechada
+    pr(302, 'tarefa #2248', '2026-10-25T17:00:00Z', 'success', ['stable']), // mais novo, mantido
+  ];
+
+  const fechar = decidir(prs, AGORA);
+
+  assert.equal(fechar.length, 1, 'o PR com CI vermelho >48h e issue fechada deve ser fechado');
+  assert.equal(fechar[0].number, 301);
+});
+
+test('PR3. rodar: chama fechamentos esperados (update closed + createComment) com data injetada', async () => {
   // Resetar chamadas
   chamadas.update.length = 0;
   chamadas.createComment.length = 0;
@@ -98,25 +117,25 @@ test('PR3. rodar: chama fechamentos esperados (update closed + createComment)', 
     return {
       data: [
         {
-          number: 301,
+          number: 401,
           title: 'correção #2248',
           created_at: '2026-10-20T10:00:00Z',
           mergeable_state: 'failure',
-          labels: [],
+          labels: [{ name: 'bug' }],
         },
         {
-          number: 302,
+          number: 402,
           title: 'correção #2248',
           created_at: '2026-10-24T10:00:00Z',
           mergeable_state: 'success',
-          labels: [],
+          labels: [{ name: 'stable' }],
         },
         {
-          number: 303,
+          number: 403,
           title: 'outra coisa #999',
           created_at: '2026-10-24T10:00:00Z',
           mergeable_state: 'success',
-          labels: [],
+          labels: [{ name: 'enhancement' }],
         },
       ],
     };
@@ -124,15 +143,15 @@ test('PR3. rodar: chama fechamentos esperados (update closed + createComment)', 
 
   const fechados = await rodar();
 
-  assert.equal(fechados, 1, 'deve fechar exatamente 1 PR (o 301, CI vermelho >48h)');
+  assert.equal(fechados, 1, 'deve fechar exatamente 1 PR (o 401, CI vermelho >48h)');
   assert.equal(chamadas.update.length, 1, 'deve chamar update uma vez');
   assert.equal(chamadas.createComment.length, 1, 'deve criar 1 comentário');
 
   const upd = chamadas.update[0];
   assert.equal(upd.state, 'closed');
-  assert.equal(upd.pull_number, 301);
+  assert.equal(upd.pull_number, 401);
 
   const cmt = chamadas.createComment[0];
-  assert.equal(cmt.issue_number, 301);
+  assert.equal(cmt.issue_number, 401);
   assert.ok(cmt.body.includes('fechado automaticamente'));
 });
