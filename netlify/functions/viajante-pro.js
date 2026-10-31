@@ -14,7 +14,7 @@ const COLLECTION = 'viajante_contas';
 const SESSAO_DIAS = 30;
 const PBKDF2_ITER = 100000;
 const CONTEUDO_MAX = 500 * 1024; // 500 KB máx para o JSON de conteúdo
-const DESTINATARIO_COTACAO = 'cotação.site@viajante.pro';
+const DESTINATARIO_COTACAO = 'cotacao.site@viajante.pro';
 
 const str = (v, max) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max) : '');
 const subtle = () => globalThis.crypto.subtle;

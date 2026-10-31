@@ -8,15 +8,16 @@
 
   var st = document.createElement('style');
   st.textContent =
-    '.vp-logo-anim{position:relative;display:inline-block;overflow:hidden;line-height:0;border-radius:inherit}' +
+    '.vp-logo-anim{position:relative;display:inline-block;overflow:visible;line-height:0;border-radius:inherit}' +
     '.vp-logo-anim img{display:block;width:100%;height:100%;object-fit:cover}' +
-    // camada 1: logo sem a faixa do avião; camada 2: só o avião
-    '.vp-logo-anim .vp-corpo{position:absolute;inset:0;clip-path:polygon(evenodd,0 0,100% 0,100% 100%,0 100%,0 0,18% 27%,82% 27%,82% 47%,18% 47%,18% 27%)}' +
-    '.vp-logo-anim .vp-aviao{position:absolute;inset:0;clip-path:inset(27% 18% 53% 18%);transform-origin:50% 37%}' +
-    '.vp-logo-anim.voando .vp-aviao{animation:vp-decola 2.6s cubic-bezier(.45,0,.2,1) both}' +
-    '@keyframes vp-decola{0%{transform:none;opacity:1}12%{transform:translateY(2%) scale(1.02)}' +
-    '55%{transform:translate(8%,-42%) scale(.55) rotate(-10deg);opacity:0}' +
-    '56%{transform:translate(-8%,30%) scale(.7);opacity:0}100%{transform:none;opacity:1}}' +
+    // camada 1: logo com o avião apagado (vp-sem-aviao.jpg); camada 2: só o avião, fundo transparente (vp-aviao.png)
+    '.vp-logo-anim .vp-corpo{position:absolute;inset:0}' +
+    '.vp-logo-anim .vp-aviao{position:absolute;inset:0;transform-origin:50% 39%;pointer-events:none}' +
+    '.vp-logo-anim.voando .vp-aviao{animation:vp-decola 2.8s cubic-bezier(.45,0,.2,1) both;z-index:5}' +
+    '@keyframes vp-decola{0%{transform:none;opacity:1}10%{transform:translateY(4%) scale(1.05)}'+
+    '22%{filter:none}35%{transform:translate(60%,-60%) scale(1.3) rotate(-14deg);opacity:1;filter:invert(1) drop-shadow(0 0 3px #d4af37)}'+
+    '58%{transform:translate(220%,-200%) scale(.5) rotate(-18deg);opacity:0;filter:invert(1)}'+
+    '59%{transform:translate(-60%,20%) scale(.8);opacity:0;filter:none}100%{transform:none;opacity:1;filter:none}}' +
     '.vp-logo-fixo{position:fixed;top:10px;right:10px;z-index:9000;width:48px;height:48px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.25);background:#ddd}';
   document.head.appendChild(st);
 
@@ -36,6 +37,11 @@
     img.alt = '';
     var aviao = img.cloneNode();
     aviao.className = 'vp-aviao';
+    aviao.removeAttribute('onerror');
+    img.removeAttribute('onerror');
+    img.src = '/viajante-pro/img/vp-sem-aviao.jpg';
+    aviao.src = '/viajante-pro/img/vp-aviao.png';
+    aviao.style.objectFit = getComputedStyle(img).objectFit || 'cover';
     caixa.appendChild(img);
     caixa.appendChild(aviao);
     img.style.position = 'absolute'; img.style.inset = '0';
@@ -50,6 +56,9 @@
   }
 
   function iniciar() {
+    [].forEach.call(document.images, function (img) {
+      if (img.complete && !img.naturalWidth && img.src && !img.dataset.vpFundo && !/vp-oficial|kernex|vp\.svg/.test(img.src)) { img.dataset.vpFundo = '1'; img.src = fundo(img.alt); }
+    });
     var logos = [].slice.call(document.querySelectorAll('img')).filter(function (i) { return /vp-oficial/.test(i.getAttribute('src') || ''); });
     if (!logos.length) {
       // página sem logo: põe o logo oficial no canto (volta para o início do site ao clicar)
@@ -68,7 +77,26 @@
     if (abertura) window.addEventListener('kernex-fim', function () { setTimeout(decolar, 150); }, { once: true });
     else setTimeout(decolar, 400);
     setInterval(decolar, 5 * 60 * 1000);
+    // decola também quando o logo aparece na tela (ex.: depois de fechar um aviso ou rolar a página)
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) { if (e.isIntersecting && !calmo) { e.target.classList.remove('voando'); void e.target.offsetWidth; e.target.classList.add('voando'); } });
+      }, { threshold: 0.6 });
+      setTimeout(function () { document.querySelectorAll('.vp-logo-anim').forEach(function (c) { io.observe(c); }); }, 300);
+    }
   }
+
+  // foto que não carregar vira um fundo bonito com o nome do lugar (nunca ícone de imagem quebrada)
+  function fundo(txt) {
+    var t = String(txt || 'Viajante Pro').replace(/[<>&"]/g, '').slice(0, 40);
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0b2a4a"/><stop offset="1" stop-color="#c9a227"/></linearGradient></defs><rect width="800" height="500" fill="url(#g)"/><text x="400" y="270" font-family="Georgia,serif" font-size="44" fill="#fff" text-anchor="middle">' + t + '</text></svg>');
+  }
+  document.addEventListener('error', function (e) {
+    var img = e.target;
+    if (!img || img.tagName !== 'IMG' || img.dataset.vpFundo || /vp-oficial|kernex|vp\.svg/.test(img.src)) return;
+    img.dataset.vpFundo = '1';
+    img.src = fundo(img.alt);
+  }, true);
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', iniciar);
   else iniciar();
