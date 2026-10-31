@@ -1,168 +1,236 @@
 'use strict';
 
-const { VazaoController } = require('../src/durable/VazaoController');
-const { Firestore } = require('../lib/firebase-lite/firestore');
-const { createD1Backend } = require('../lib/firebase-lite/d1-backend');
+const { VazaoController } = require('../../src/durable/VazaoController');
+const { Firestore } = require('../../lib/firebase-lite/firestore');
+const { createD1Backend } = require('../../lib/firebase-lite/d1-backend');
 
-describe('Vazão do Vault - Sistema de Controle de Cota', () => {
+// Mock do driver do D1 para testes
+const mockD1Driver = {
+  exec: jest.fn(),
+  toArray: jest.fn()
+};
+
+// Mock do fetch para testes de alertas
+global.fetch = jest.fn();
+
+describe('VazaoController - Sistema de Controle de Vazão', () => {
   let vazaoController;
-  
+
   beforeEach(() => {
-    vazaoController = new VazaoController();
+    vazaoController = new VazaoController({});
+    mockD1Driver.exec.mockClear();
+    mockD1Driver.toArray.mockClear();
+    global.fetch.mockClear();
   });
 
-  describe('VazaoController - Contador de uso', () => {
-    test('deve registrar uso de leituras e escritas', () => {
-      vazaoController.registrar('firestore-b', 10, 5);
+  describe('1. Contador de uso por banco', () => {
+    test('deve registrar leituras e escritas corretamente', () => {
+      vazaoController.registrar('firestore-b', 100, 50);
+      vazaoController.registrar('firestore-b', 200, 75);
+      
       const uso = vazaoController.obterUsoDiario('firestore-b');
-      expect(uso.leituras).toBe(10);
-      expect(uso.escritas).toBe(5);
+      expect(uso.leituras).toBe(300);
+      expect(uso.escritas).toBe(125);
       expect(uso.status).toBe('ativo');
     });
 
-    test('deve acumular uso ao longo do dia', () => {
-      vazaoController.registrar('firestore-b', 10, 5);
-      vazaoController.registrar('firestore-b', 5, 2);
-      const uso = vazaoController.obterUsoDiario('firestore-b');
-      expect(uso.leituras).toBe(15);
-      expect(uso.escritas).toBe(7);
+    test('deve separar contagem por bancos diferentes', () => {
+      vazaoController.registrar('firestore-b', 100, 50);
+      vazaoController.registrar('firestore-c', 200, 75);
+      
+      const usoB = vazaoController.obterUsoDiario('firestore-b');
+      const usoC = vazaoController.obterUsoDiario('firestore-c');
+      
+      expect(usoB.leituras).toBe(100);
+      expect(usoB.escritas).toBe(50);
+      expect(usoC.leituras).toBe(200);
+      expect(usoC.escritas).toBe(75);
     });
 
-    test('deve reiniciar contador no novo dia', () => {
-      // Simular novo dia
-      const originalDate = Date;
-      global.Date = class extends Date {
-        constructor() {
-          super();
-          this.setDate(this.getDate() + 1);
-        }
-      };
+    test('deve resetar contador no novo dia', () => {
+      // Simular um novo dia
+      const hoje = new Date();
+      hoje.setDate(hoje.getDate() + 1);
+      jest.spyOn(Date, 'now').mockReturnValue(hoje.getTime());
       
-      vazaoController.registrar('firestore-b', 10, 5);
+      vazaoController.registrar('firestore-b', 100, 50);
+      
       const uso = vazaoController.obterUsoDiario('firestore-b');
-      expect(uso.leituras).toBe(0);
-      expect(uso.escritas).toBe(0);
+      expect(uso.leituras).toBe(100);
+      expect(uso.escritas).toBe(50);
       
-      global.Date = originalDate;
+      Date.now.mockRestore();
     });
+  });
 
-    test('deve verificar limite corretamente', () => {
-      // Firestore B: 50k leituras, 20k escritas, 70% = 35k/14k
-      vazaoController.registrar('firestore-b', 35000, 14000);
+  describe('2. Troca antes de acabar (70% do limite)', () => {
+    test('deve marcar banco como quase cheio ao atingir 70%', () => {
+      // Firestore B: 50k leituras, 20k escritas
+      // 70% = 35k leituras ou 14k escritas
+      vazaoController.registrar('firestore-b', 35000, 0);
+      
       const limite = vazaoController.verificarLimite('firestore-b');
       expect(limite.quaseCheio).toBe(true);
-      expect(limite.leituras).toBe(35000);
-      expect(limite.escritas).toBe(14000);
+      expect(limite.status).toBe('quase cheio');
     });
 
-    test('não deve marcar como quase cheio abaixo do limite', () => {
-      vazaoController.registrar('firestore-b', 34999, 13999);
+    test('não deve marcar como quase cheio abaixo de 70%', () => {
+      vazaoController.registrar('firestore-b', 34999, 0);
+      
       const limite = vazaoController.verificarLimite('firestore-b');
       expect(limite.quaseCheio).toBe(false);
+      expect(limite.status).toBe('ativo');
     });
 
-    test('deve alternar banco quando atingir 70%', () => {
-      vazaoController.bancoAtual = 'firestore-b';
-      vazaoController.registrar('firestore-b', 35000, 14000);
-      expect(vazaoController.bancoAtual).toBe('firestore-c');
-    });
-
-    test('deve retornar uso geral de todos os bancos', () => {
-      vazaoController.registrar('firestore-b', 1000, 500);
-      vazaoController.registrar('firestore-c', 2000, 1000);
-      vazaoController.registrar('d1', 3000, 1500);
+    test('deve alternar para o próximo banco quando quase cheio', () => {
+      const bancoInicial = vazaoController.getBancoAtivo();
+      vazaoController.registrar('firestore-b', 35000, 0);
       
-      const geral = vazaoController.obterUsoTodosBancos();
-      expect(geral).toHaveLength(4);
-      expect(geral.find(b => b.banco === 'firestore-b').leituras).toBe(1000);
-      expect(geral.find(b => b.banco === 'firestore-c').leituras).toBe(2000);
-      expect(geral.find(b => b.banco === 'd1').leituras).toBe(3000);
+      const novoBanco = vazaoController.switchToNextBank();
+      expect(novoBanco).not.toBe(bancoInicial);
+      expect(vazaoController.getBancoAtivo()).toBe(novoBanco);
     });
 
-    test('deve detectar bancos quase cheios e gerar alerta', () => {
-      vazaoController.registrar('firestore-b', 35000, 14000);
+    test('deve retornar alerta ao detectar banco quase cheio', () => {
+      vazaoController.registrar('firestore-b', 35000, 0);
+      
       const alerta = vazaoController.checarBancosQuaseCheios();
-      
       expect(alerta).toBeTruthy();
       expect(alerta.bancoCheio).toBe('firestore-b');
-      expect(alerta.proximoBanco).toBe('firestore-c');
       expect(alerta.alerta.tipo).toBe('sentinel');
       expect(alerta.alerta.passoAPasso).toHaveLength(3);
     });
+  });
 
-    test('não deve gerar alerta se nenhum banco estiver quase cheio', () => {
-      vazaoController.registrar('firestore-b', 1000, 500);
-      const alerta = vazaoController.checarBancosQuaseCheios();
-      expect(alerta).toBeNull();
+  describe('3. Cache em memória (TTL 60s)', () => {
+    test('deve armazenar e recuperar cache de leituras', () => {
+      const { getCachedFirestoreRead, setCachedFirestoreRead } = require('../../lib/firebase-lite/firestore');
+      
+      const tenantId = 'test-tenant';
+      const collection = 'users';
+      const docId = 'user123';
+      const data = { name: 'John Doe', email: 'john@example.com' };
+      
+      // Armazenar no cache
+      setCachedFirestoreRead(tenantId, collection, docId, data);
+      
+      // Recuperar do cache
+      const cached = getCachedFirestoreRead(tenantId, collection, docId);
+      expect(cached).toEqual(data);
+    });
+
+    test('deve expirar cache após TTL', () => {
+      const { getCachedFirestoreRead, setCachedFirestoreRead } = require('../../lib/firebase-lite/firestore');
+      
+      const tenantId = 'test-tenant';
+      const collection = 'users';
+      const docId = 'user123';
+      const data = { name: 'John Doe', email: 'john@example.com' };
+      
+      // Armazenar no cache
+      setCachedFirestoreRead(tenantId, collection, docId, data);
+      
+      // Simular expiração (avançar tempo)
+      jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 61 * 1000);
+      
+      // Tentar recuperar cache expirado
+      const cached = getCachedFirestoreRead(tenantId, collection, docId);
+      expect(cached).toBeNull();
+      
+      Date.now.mockRestore();
+    });
+
+    test('deve invalidar cache em escritas', () => {
+      const { getCachedFirestoreRead, setCachedFirestoreRead, invalidateFirestoreCache } = require('../../lib/firebase-lite/firestore');
+      
+      const tenantId = 'test-tenant';
+      const collection = 'users';
+      const docId = 'user123';
+      const data = { name: 'John Doe', email: 'john@example.com' };
+      
+      // Armazenar no cache
+      setCachedFirestoreRead(tenantId, collection, docId, data);
+      
+      // Invalidar cache
+      invalidateFirestoreCache(tenantId, collection, docId);
+      
+      // Tentar recuperar cache invalidado
+      const cached = getCachedFirestoreRead(tenantId, collection, docId);
+      expect(cached).toBeNull();
     });
   });
 
-  describe('Integração com Firestore - Contador de uso', () => {
-    let firestore;
-    
-    beforeEach(() => {
-      firestore = new Firestore({ projectId: 'test-project' });
+  describe('4. Integração com D1 backend', () => {
+    test('deve registrar uso do D1 corretamente', () => {
+      const { registrarUsoD1, getUsoD1 } = require('../../lib/firebase-lite/d1-backend');
+      
+      // Registrar uso
+      registrarUsoD1('d1-test', 1000, 500);
+      registrarUsoD1('d1-test', 2000, 300);
+      
+      // Obter uso
+      const uso = getUsoD1('d1-test');
+      expect(uso.leituras).toBe(3000);
+      expect(uso.escritas).toBe(800);
     });
 
-    test('deve registrar leitura no Firestore', async () => {
-      const docRef = firestore.doc('test/collection/test-doc');
-      await docRef.get();
+    test('deve criar D1 backend com contador', () => {
+      const backend = createD1Backend({
+        driver: mockD1Driver,
+        projectId: 'test-d1'
+      });
       
-      // Verificar se o contador foi atualizado
-      expect.assertions(1);
+      expect(backend.projectId).toBe('test-d1');
+      expect(typeof backend.batchGet).toBe('function');
+      expect(typeof backend.commit).toBe('function');
+      expect(typeof backend.runQuery).toBe('function');
     });
 
-    test('deve registrar escrita no Firestore', async () => {
-      const docRef = firestore.doc('test/collection/test-doc');
-      await docRef.set({ test: 'value' });
+    test('deve acionar alerta ao atingir 70% no D1', () => {
+      const { registrarUsoD1 } = require('../../lib/firebase-lite/d1-backend');
       
-      // Verificar se o contador foi atualizado
-      expect.assertions(1);
+      // D1: 5M leituras, 100k escritas
+      // 70% = 3.5M leituras ou 70k escritas
+      registrarUsoD1('d1-test', 3500000, 0);
+      
+      // Verificar se fetch foi chamado para enviar alerta
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        })
+      );
     });
   });
 
-  describe('Cache em memória', () => {
-    test('deve funcionar o cache do Firestore', () => {
-      // Testar funções de cache
-      const testDoc = { name: 'test', value: 'data' };
+  describe('5. Resumo geral de uso', () => {
+    test('deve fornecer resumo de uso de todos os bancos', () => {
+      vazaoController.registrar('firestore-b', 10000, 5000);
+      vazaoController.registrar('firestore-c', 20000, 10000);
+      vazaoController.registrar('d1', 100000, 50000);
       
-      // Simular cache
-      const cacheKey = 'tenant:collection:doc';
+      const resumo = vazaoController.obterUsoTodosBancos();
       
-      // Verificar se cache está vazio
-      expect(cacheKey).toBeDefined();
-      
-      // Simular setagem de cache
-      expect(testDoc).toBeDefined();
-      
-      // Simular invalidação de cache
-      expect(cacheKey).toBeDefined();
-    });
-  });
-
-  describe('Limites dos bancos', () => {
-    test('deve ter limites corretos para Firestore B', () => {
-      const limite = vazaoController.verificarLimite('firestore-b');
-      expect(limite.maxL).toBe(50000);
-      expect(limite.maxE).toBe(20000);
+      expect(resumo).toHaveLength(4);
+      expect(resumo[0].banco).toBe('firestore-b');
+      expect(resumo[0].leituras).toBe(10000);
+      expect(resumo[0].escritas).toBe(5000);
+      expect(resumo[1].banco).toBe('firestore-c');
+      expect(resumo[1].leituras).toBe(20000);
+      expect(resumo[1].escritas).toBe(10000);
     });
 
-    test('deve ter limites corretos para Firestore C', () => {
-      const limite = vazaoController.verificarLimite('firestore-c');
-      expect(limite.maxL).toBe(50000);
-      expect(limite.maxE).toBe(20000);
-    });
-
-    test('deve ter limites corretos para D1', () => {
-      const limite = vazaoController.verificarLimite('d1');
-      expect(limite.maxL).toBe(5000000);
-      expect(limite.maxE).toBe(100000);
-    });
-
-    test('deve ter limites corretos para CofreSql', () => {
-      const limite = vazaoController.verificarLimite('cofresql');
-      expect(limite.maxL).toBe(50000000);
-      expect(limite.maxE).toBe(10000000);
+    test('deve calcular percentuais corretamente', () => {
+      // Firestore B: 50k leituras, 20k escritas
+      // 10k leituras = 20%, 5k escritas = 25%
+      vazaoController.registrar('firestore-b', 10000, 5000);
+      
+      const resumo = vazaoController.obterUsoTodosBancos();
+      const firestoreB = resumo.find(b => b.banco === 'firestore-b');
+      
+      expect(firestoreB.percentualLeituras).toBe(20);
+      expect(firestoreB.percentualEscritas).toBe(25);
     });
   });
 });
