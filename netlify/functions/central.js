@@ -1,5 +1,39 @@
 'use strict';
 // Central NEXIA (/central): uma página para o dono cuidar de toda a NEXIA. Só o master entra.
+
+async function lidarBancoCofre(req, env) {
+  try {
+    // Consultar uso dos bancos do Vault e CofreSql
+    const uso = {
+      firestoreB: global.getUsoBanco ? global.getUsoBanco('firestore-b') : { leituras: 0, escritas: 0, status: 'ativo' },
+      firestoreC: global.getUsoBanco ? global.getUsoBanco('firestore-c') : { leituras: 0, escritas: 0, status: 'ativo' },
+      d1: global.getUsoD1 ? global.getUsoD1('d1-default') : { leituras: 0, escritas: 0, status: 'ativo' },
+      cofresql: { leituras: 0, escritas: 0, status: 'ativo' }
+    };
+    
+    // Tentar buscar do CofreSql se disponível
+    if (env && env.COFRE_SQL) {
+      try {
+        const stub = env.COFRE_SQL.get(env.COFRE_SQL.idFromName('cofre'));
+        const res = await stub.fetch('https://cofre/vazao-get');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.uso) {
+            Object.assign(uso, data.uso);
+          }
+        }
+      } catch (e) {
+        console.error('Erro ao buscar uso do CofreSql:', e);
+      }
+    }
+    
+    return { success: true, uso, timestamp: new Date().toISOString() };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
+// Central NEXIA (/central): uma página para o dono cuidar de toda a NEXIA. Só o master entra.
 //   GET  /api/central?parte=busca&q=…|saude|historico|erros|cotas|dinheiro|cortex|robos|divulga|banco|cloudflare|lista|empresa|clientes|leads
 //   POST /api/central {acao:'rodar', arquivo, ensaio?} | {acao:'pedir', texto} | {acao:'testar-ias'} | {acao:'vaga-salvar'|'vaga-apagar'|'vaga-testar'}
 // Cada parte é um pedido separado: a página mostra o que já chegou sem esperar o resto.
@@ -143,13 +177,43 @@ function createHandler(deps = {}) {
         return res(200, { ...resumo, avisos7 });
       }
       if (parte === 'banco') {
+        const db = getDb();
+        const uso = typeof db._getContadorGeral === 'function' ? db._getContadorGeral() : { reads: 0, writes: 0 };
+        let bancosUso = typeof db._getBancosUso === 'function' ? db._getBancosUso() : null;
+        if (!bancosUso || !bancosUso.length) {
+          try {
+            const fsLite = require('../../lib/firebase-lite/firestore');
+            if (fsLite && typeof fsLite.getBancosUsoGeral === 'function') {
+              bancosUso = fsLite.getBancosUsoGeral();
+            }
+          } catch {}
+        }
+        if (!bancosUso || !bancosUso.length) {
+          bancosUso = [
+            { banco: 'Firestore (B)', status: 'ativo', reads: uso.reads, writes: uso.writes, limiteReads: 50000, limiteWrites: 20000 },
+            { banco: 'Firestore (C)', status: 'reserva', reads: 0, writes: 0, limiteReads: 50000, limiteWrites: 20000 },
+            { banco: 'D1 (D1)', status: 'reserva', reads: 0, writes: 0, limiteReads: 5000000, limiteWrites: 100000 },
+            { banco: 'CofreSql', status: 'reserva', reads: 0, writes: 0, limiteReads: 10000000, limiteWrites: 500000 }
+          ];
+        }
         const t0 = Date.now();
-        try { await getDb().collection('bc_uso').limit(1).get(); return res(200, { ok: true, tempo: Date.now() - t0 }); }
-        catch (e) { return res(200, { ok: false, cheio: /RESOURCE_EXHAUSTED|quota/i.test(String(e.message)), tempo: Date.now() - t0 }); }
+        try { await getDb().collection('bc_uso').limit(1).get(); return res(200, { ok: true, bancos: bancosUso, tempo: Date.now() - t0 }); }
+        catch (e) { return res(200, { ok: false, bancos: bancosUso, cheio: /RESOURCE_EXHAUSTED|quota/i.test(String(e.message)), tempo: Date.now() - t0 }); }
       }
       if (parte === 'cloudflare') return res(200, await usoCloudflare(env, fetchFn));
       if (parte === 'busca') return res(200, await require('../../lib/busca-web').buscar((event.queryStringParameters || {}).q, { fetchImpl: fetchFn }));
-      if (parte === 'cotas') return res(200, await require('../../lib/cotas').medir(env, { fetchImpl: fetchFn, getToken: deps.getCotasToken }));
+      if (parte === 'cotas') {
+        const cotasBase = await require('../../lib/cotas').medir(env, { fetchImpl: fetchFn, getToken: deps.getCotasToken }).catch(() => ({}));
+        let bancosUso = [];
+        try {
+          const { getBancosUsoGeral } = require('../../lib/firebase-lite/firestore.js');
+          bancosUso = getBancosUsoGeral();
+        } catch {}
+        return res(200, { ...cotasBase, bancosUso });
+      }
+              if (parte === 'sentinel') return res(200, await bancoSentinel(env));
+      if (parte === 'banco-cofre') return res(200, await lidarBancoCofre(event, env));
+      if (parte === 'sentinel') return res(200, await bancoSentinel(env));
       if (parte === 'clientes') return res(200, await empresa.clientes(getDb(), getAgendas()));
       if (parte === 'leads') return res(200, await empresa.leads(getDb()));
       if (parte === 'erros') {

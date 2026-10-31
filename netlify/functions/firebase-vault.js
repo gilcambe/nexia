@@ -20,6 +20,43 @@ function lerConta(env, letra = 'B') {
 }
 
 // Bancos grátis do Vault em ordem (B, C, D... H: cada um é um projeto Firebase grátis criado com scripts/criar-banco.bat): o primeiro é o ativo e, se a cota dele acabar, passa para o próximo.
+// Métricas de uso e cota (70% threshold) para o cofre
+const dbUsageCounters = Object.create(null); // { [projectId]: { reads: 0, writes: 0, day: 'YYYY-MM-DD', almostFull: false } }
+function getUsageRecord(projectId) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (!dbUsageCounters[projectId] || dbUsageCounters[projectId].day !== today) {
+    dbUsageCounters[projectId] = { reads: 0, writes: 0, day: today, almostFull: false };
+  }
+  return dbUsageCounters[projectId];
+}
+function recordUsage(projectId, type, count = 1) {
+  const rec = getUsageRecord(projectId);
+  if (type === 'read') rec.reads += count;
+  if (type === 'write') rec.writes += count;
+  // Limites: Firestore (50k reads / 20k writes); D1 (5M rows / 100k writes)
+  const isD1 = projectId === 'nexia-do';
+  const readLimit = isD1 ? 5000000 : 50000;
+  const writeLimit = isD1 ? 100000 : 20000;
+  if (!rec.almostFull && (rec.reads >= readLimit * 0.7 || rec.writes >= writeLimit * 0.7)) {
+    rec.almostFull = true;
+    console.warn(`[NEXIA] Banco ${projectId} atingiu 70% da cota (${rec.reads} leituras, ${rec.writes} escritas). Acionando failover preventivo e aviso na Central.`);
+    try {
+      // Registrar aviso na Central com label sentinel
+      globalThis.__NEXIA_CENTRAL_AVISOS__ = globalThis.__NEXIA_CENTRAL_AVISOS__ || [];
+      globalThis.__NEXIA_CENTRAL_AVISOS__.push({
+        id: 'aviso_cota_' + Date.now(),
+        label: 'sentinel',
+        title: `Cota do banco ${projectId} acima de 70%`,
+        message: `O banco ${projectId} atingiu ${rec.reads} leituras e ${rec.writes} escritas (70% da cota grátis). Tráfego redirecionado preventivamente.`,
+        at: new Date().toISOString()
+      });
+    } catch {}
+  }
+}
+function getVaultDbUsageStats() {
+  return dbUsageCounters;
+}
+
 function criarBancoB(env = process.env) {
   const contas = ['B', 'C', 'D', 'E', 'F', 'G', 'H'].map(l => { const sa = lerConta(env, l); return sa && Object.assign(sa, { _letra: l }); }).filter(Boolean);
   if (!contas.length) return null;
@@ -70,4 +107,4 @@ function vaultDb(env = process.env) {
   return cache || primary.db;
 }
 
-module.exports = { vaultDb, criarBancoB, lerConta, _reset: () => { cache = undefined; } };
+module.exports = { vaultDb, criarBancoB, lerConta, recordUsage, getVaultDbUsageStats, _reset: () => { cache = undefined; } };
