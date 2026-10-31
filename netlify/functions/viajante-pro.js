@@ -14,7 +14,8 @@ const COLLECTION = 'viajante_contas';
 const SESSAO_DIAS = 30;
 const PBKDF2_ITER = 100000;
 const CONTEUDO_MAX = 500 * 1024; // 500 KB máx para o JSON de conteúdo
-const DESTINATARIO_COTACAO = 'cotacao.site@viajante.pro'; // Updated email address
+const DESTINATARIO_COTACAO = 'cotacao.site@viajante.pro';
+const REMITENTE_VERIFICADO = process.env.REMITENTE_VERIFICADO || 'no-reply@viajante.pro';
 
 const str = (v, max) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max) : '');
 const subtle = () => globalThis.crypto.subtle;
@@ -87,7 +88,7 @@ async function enviarEmailBrevo(env, cotacao) {
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        sender: { name: 'Viajante Pro Cotações', email: 'no-reply@viajante.pro' },
+        sender: { name: 'Viajante Pro Cotações', email: REMITENTE_VERIFICADO },
         to: [{ email: to, name: 'Atendimento Viajante Pro' }],
         subject: `NOVA COTAÇÃO | ${cotacao.nome} | ${cotacao.destino || 'Geral'} | ${cotacao.codigo}`,
         htmlContent,
@@ -272,9 +273,11 @@ exports.handler = async function (event, context) {
 
     // Tenta enviar o e-mail via Brevo
     const emailRes = await enviarEmailBrevo(env, cotacaoData);
-    if (emailRes.ok) {
+    const emailOk = emailRes.status >= 200 && emailRes.status < 300;
+    if (emailOk) {
       cotacaoData.emailNotificado = true;
     } else {
+      cotacaoData.emailNotificado = false;
       cotacaoData.emailErro = emailRes.motivo || emailRes.error || 'Falha de envio';
     }
 
