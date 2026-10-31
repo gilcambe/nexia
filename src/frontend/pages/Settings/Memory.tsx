@@ -4,12 +4,10 @@ import { MemoryItem as MemoryItemType } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemComponent } from '../../components/MemoryItem';
 import { obterConfig, salvarConfig, verificarSuporteWebGPU } from '../../../../ia-local';
 
-
 type MemoryItemProps = MemoryItemType & {
   onDelete: (id: string) => void;
 };
 
-// Revertido para não tocar em arquivos fora de config.js
 export default function MemorySettings() {
   const { 
     memoryItems, 
@@ -23,12 +21,10 @@ export default function MemorySettings() {
   } = useMemory();
 
   const [isDeletingAll, setIsDeletingAll] = useState(false);
-  // Inicializa o estado com base na configuração salva
   const [isLocalIAEnabled, setIsLocalIAEnabled] = useState(() => obterConfig().ativo);
   const [isWebGpuSupported, setIsWebGpuSupported] = useState(false);
   const [showDownloadWarning, setShowDownloadWarning] = useState(false);
 
-  // Funções existentes para que o find/replace funcione sem reescrever tudo
   const handleReload = useCallback(() => {
     loadMemory();
   }, [loadMemory]);
@@ -51,9 +47,7 @@ export default function MemorySettings() {
     }
   }, [deleteItem]);
 
-
   useEffect(() => {
-    // Verifica suporte a WebGPU e memória usando a função centralizada
     const checkSupport = async () => {
       const { suportado, motivo } = await verificarSuporteWebGPU();
       setIsWebGpuSupported(suportado);
@@ -66,13 +60,12 @@ export default function MemorySettings() {
 
   const handleToggleLocalIA = useCallback(() => {
     if (!isWebGpuSupported) {
-      // O aviso de não suportado já é exibido abaixo do switch
       return;
     }
 
-    if (!isLocalIAEnabled) { // Tentando ativar
+    if (!isLocalIAEnabled) {
       setShowDownloadWarning(true);
-    } else { // Desativando
+    } else {
       setIsLocalIAEnabled(false);
       setShowDownloadWarning(false);
       salvarConfig({ ativo: false });
@@ -83,11 +76,7 @@ export default function MemorySettings() {
     setIsLocalIAEnabled(true);
     setShowDownloadWarning(false);
     salvarConfig({ ativo: true });
-    // TODO: Iniciar o processo de download/inicialização da IA local aqui.
-    // Isso pode envolver a chamada de `inicializarEngine` do `ia-local.js`
-    // e mostrar um feedback de progresso ao usuário.
   }, []);
-
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -114,9 +103,8 @@ export default function MemorySettings() {
               <span className="text-sm text-[var(--cx-mut)]">
                 {profile.rememberMe ? 'Ativado' : 'Desativado'}
               </span>
-                              <button
-                  onClick={() => handleToggleRememberMe(!profile.rememberMe)}
-                  aria-label="Toggle para lembrar de mim"
+              <button
+                onClick={() => handleToggleRememberMe(!profile.rememberMe)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${profile.rememberMe ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'}`}
                 data-testid="memory-remember-me-toggle"
                 role="switch"
@@ -135,8 +123,6 @@ export default function MemorySettings() {
         </div>
       </div>
 
-
-
       {/* Nova Seção de IA Local */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold mb-4">Inteligência Artificial Local</h2>
@@ -152,9 +138,8 @@ export default function MemorySettings() {
               <span className="text-sm text-[var(--cx-mut)]">
                 {isLocalIAEnabled ? 'Ativado' : 'Desativado'}
               </span>
-                              <button
-                  onClick={handleToggleLocalIA}
-                  aria-label="Toggle para IA no meu aparelho"
+              <button
+                onClick={handleToggleLocalIA}
                 disabled={!isWebGpuSupported}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isLocalIAEnabled ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'} ${!isWebGpuSupported ? 'opacity-40 cursor-not-allowed' : ''}`}
                 data-testid="local-ia-toggle"
@@ -169,12 +154,12 @@ export default function MemorySettings() {
             </div>
           </div>
           {!isWebGpuSupported && (
-            <div className="text-xs text-red-400 mt-4">
+            <div className="text-xs text-red-400 mt-4" data-testid="webgpu-blocked-warning">
               <p>⚠️ Seu navegador não suporta WebGPU ou não tem memória suficiente para esta funcionalidade. Atualize seu navegador ou use um dispositivo compatível.</p>
             </div>
           )}
           {showDownloadWarning && !isLocalIAEnabled && (
-            <div className="text-xs text-yellow-400 mt-4">
+            <div className="text-xs text-yellow-400 mt-4" data-testid="download-warning">
               <p>⬇️ Para ativar, será necessário baixar um modelo de IA de aproximadamente 1 GB. Recomendamos uma conexão Wi-Fi estável.</p>
               <div className="flex justify-end gap-2 mt-2">
                 <button
