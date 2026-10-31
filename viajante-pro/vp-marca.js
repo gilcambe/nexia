@@ -5,6 +5,8 @@
   'use strict';
   var LOGO = '/viajante-pro/img/vp-oficial.jpg';
   var calmo = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var ultimoVoo = 0;
+  var emVoo = false;
 
   var st = document.createElement('style');
   st.textContent =
@@ -14,7 +16,7 @@
     // camada 1: logo com o avião apagado (vp-sem-aviao.jpg); camada 2: só o avião, fundo transparente (vp-aviao.png)
     '.vp-logo-anim .vp-corpo{position:absolute;inset:0}' +
     '.vp-logo-anim .vp-aviao{position:absolute;inset:0;transform-origin:50% 39%;pointer-events:none}' +
-    '.vp-logo-anim.voando .vp-aviao{animation:vp-decola 3.6s cubic-bezier(.45,0,.2,1) both;z-index:5}' +
+    '.vp-logo-anim.voando .vp-aviao{animation:vp-decola 2.6s cubic-bezier(.45,0,.2,1) both;z-index:5}' +
     '@keyframes vp-decola{0%{transform:none;opacity:1;filter:none}8%{transform:translateX(6%) scale(1.05)}'+
     '18%{transform:translate(40%,-8%) scale(1.6) rotate(-6deg);filter:invert(1) drop-shadow(0 0 4px #d4af37)}'+
     '55%{transform:translate(780%,-30%) scale(2.2) rotate(-10deg);opacity:1;filter:invert(1) drop-shadow(0 0 6px #d4af37)}'+
@@ -51,10 +53,23 @@
   }
 
   function decolar() {
-    if (calmo) return;
+    if (calmo || emVoo || document.visibilityState !== 'visible') return;
+
+    var agora = Date.now();
+    if (agora - ultimoVoo < 5 * 60 * 1000) return;
+
+    emVoo = true;
+    ultimoVoo = agora;
+
     document.querySelectorAll('.vp-logo-anim').forEach(function (c) {
-      c.classList.remove('voando'); void c.offsetWidth; c.classList.add('voando');
+      c.classList.remove('voando');
+      void c.offsetWidth;
+      c.classList.add('voando');
     });
+
+    setTimeout(function() {
+      emVoo = false;
+    }, 2600);
   }
 
   function iniciar() {
@@ -78,7 +93,17 @@
     var abertura = document.getElementById('nexia-abertura');
     if (abertura) window.addEventListener('kernex-fim', function () { setTimeout(decolar, 150); }, { once: true });
     else setTimeout(decolar, 400);
+
+    // Configura o intervalo de 5 minutos para decolagem
     setInterval(decolar, 5 * 60 * 1000);
+
+    // Configura o listener para mudanças de visibilidade
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') {
+        decolar();
+      }
+    });
+
     // decola também quando o logo aparece na tela (ex.: depois de fechar um aviso ou rolar a página)
     if ('IntersectionObserver' in window) {
       var io = new IntersectionObserver(function (es) {
