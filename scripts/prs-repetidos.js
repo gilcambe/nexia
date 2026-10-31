@@ -30,7 +30,8 @@ function decidir(prs, agora) {
       const pr = grupo[i];
       if (pr.labels.some(l => EXCECOES.includes(l.name))) continue;
       const horas = (agora - new Date(pr.createdAt)) / 3600000;
-      const motivo = (pr.ciStatus === 'failure' && horas > 48 && pr.issueFechada) ? 'ci-vermelho-issue-fechada' : 'duplicado';
+      const issueFechada = pr.issueFechada === true || pr.issueFechada === 'true' || pr.issue?.closed_at;
+      const motivo = (pr.ciStatus === 'failure' && horas > 48 && issueFechada) ? 'ci-vermelho-issue-fechada' : 'duplicado';
       fechar.push({ pr, motivo });
     }
   }
