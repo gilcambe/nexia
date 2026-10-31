@@ -16,6 +16,8 @@ const PBKDF2_ITER = 100000;
 const CONTEUDO_MAX = 500 * 1024; // 500 KB máx para o JSON de conteúdo
 const DESTINATARIO_COTACAO = 'cotacao.site@viajante.pro';
 
+let memoriaSite = null;
+
 const str = (v, max) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f\u007f]/g, ' ').trim().slice(0, max) : '');
 const subtle = () => globalThis.crypto.subtle;
 const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
@@ -50,6 +52,7 @@ function res(statusCode, body, headers = {}) {
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       ...headers,
     },
@@ -164,8 +167,37 @@ function limparConteudoViajante(c) {
 exports.handler = async function (event, context) {
   if (event.httpMethod === 'OPTIONS') return res(204, null);
 
-  const q = event.queryStringParameters || {};
   const method = event.httpMethod;
+  const path = (event.path || event.rawPath || '').toLowerCase();
+
+  // Rotas diretas de persistência de conteúdo do site (memória simulada)
+  if (path.endsWith('/site-ler') && method === 'GET') {
+    if (!memoriaSite) return res(404, { error: 'Conteúdo não encontrado.' });
+    return res(200, { ok: true, conteudo: memoriaSite });
+  }
+
+  if (path.endsWith('/site-salvar') && method === 'POST') {
+    let body = {};
+    try {
+      body = JSON.parse(event.body || '{}');
+    } catch {
+      return res(400, { error: 'JSON inválido.' });
+    }
+    const conteudo = body.conteudo;
+    if (!conteudo || typeof conteudo !== 'object' || Array.isArray(conteudo)) {
+      return res(400, { error: 'Campo conteudo é obrigatório e deve ser um objeto JSON.' });
+    }
+    const salvo = limparConteudoViajante(conteudo);
+    if (JSON.stringify(salvo).length > CONTEUDO_MAX) {
+      return res(413, { error: 'Conteúdo excede o limite permitido (500 KB).' });
+    }
+    const agoraIso = new Date(Date.now()).toISOString();
+    memoriaSite = { ...salvo, atualizado_em: agoraIso };
+    console.log('[viajante-pro] site-salvar status 200');
+    return res(200, { ok: true, conteudo: memoriaSite });
+  }
+
+  const q = event.queryStringParameters || {};
   const env = (context && context.env) || process.env;
   const db = abrirBanco(env);
   const slug = (q.site || 'viajantepro').toLowerCase();
