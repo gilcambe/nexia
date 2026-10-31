@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Sistema Viajante Pro — Gestão de viagens e hospedagens com eficiência</title>
-  <meta name="description" content="Gestão de viagens e hospedagens com eficiência">
-  <meta name="theme-color" content="#2563eb">
+  <title>Viajante Pro — Painel de cadastros e gestão de viagens</title>
+  <meta name="description" content="Painel de cadastros e gestão de viagens">
+  <meta name="theme-color" content="#0f172a">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
@@ -17,15 +17,17 @@
   <div class="shell">
     <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
       <div class="sidebar__brand">
-        <span class="logo" aria-hidden="true">S</span>
-        <span>Sistema Viajante Pro</span>
+        <span class="logo" aria-hidden="true">V</span>
+        <span>Viajante Pro</span>
       </div>
       <nav class="sidebar__nav" aria-label="Seções">
         <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
         <a href="#/viagens" data-route="viagens"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Viagens</span></a>
+        <a href="#/clientes" data-route="clientes"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Clientes</span></a>
+        <a href="#/agencias" data-route="agencias"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Agências</span></a>
       </nav>
       <div class="sidebar__foot">
-        <p>Suporte: suporte@viajante.pro</p>
+        <p>Suporte: suporte@viajantepro.com.br</p>
         <p>Dados salvos neste navegador.</p>
       </div>
     </aside>
@@ -35,7 +37,7 @@
         <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
         <div class="topbar__title">
           <h1 id="view-title">Painel</h1>
-          <p id="view-sub">Gestão de viagens e hospedagens com eficiência</p>
+          <p id="view-sub">Painel de cadastros e gestão de viagens</p>
         </div>
         <label class="search">
           <span class="sr-only">Buscar</span>
@@ -99,7 +101,7 @@
   </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-  <script type="application/json" id="app-config">{"key":"nexia-app:sites/viajante-pro","name":"Sistema Viajante Pro","entities":[{"key":"viagens","label":"Viagens","singular":"Viagem","fields":[{"key":"destino","label":"Destino","type":"text","options":[],"required":true},{"key":"data_partida","label":"Data de Partida","type":"date","options":[],"required":true},{"key":"data_volta","label":"Data de Volta","type":"date","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Aguardando","Confirmada","Em Andamento","Finalizada"],"required":true},{"key":"custo_total","label":"Custo Total","type":"money","options":[],"required":true},{"key":"link_acesso","label":"Link de Acesso","type":"text","options":[],"required":true}],"sample":[{"destino":"Lisboa, Portugal","data_partida":"2026-09-10","data_volta":"2026-09-17","status":"Aguardando","custo_total":"R$ 12.500,00","link_acesso":""},{"destino":"Tokyo, Japão","data_partida":"2026-10-05","data_volta":"2026-10-20","status":"Confirmada","custo_total":"R$ 24.900,00","link_acesso":""},{"destino":"Paris, França","data_partida":"2026-11-12","data_volta":"2026-11-18","status":"Aguardando","custo_total":"R$ 9.800,00","link_acesso":""},{"destino":"Nova York, EUA","data_partida":"2026-06-15","data_volta":"2026-06-25","status":"Em Andamento","custo_total":"R$ 15.200,00","link_acesso":""}]}]}</script>
+  <script type="application/json" id="app-config">{"key":"nexia-app:sites/viajante-pro","name":"Viajante Pro","entities":[{"key":"viagens","label":"Viagens","singular":"Viagem","fields":[{"key":"destino","label":"Destino","type":"text","options":[],"required":true},{"key":"data_saida","label":"Data de Saída","type":"date","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Planejada","Confirmada","Em Andamento","Concluída","Cancelada"],"required":true},{"key":"valor","label":"Valor","type":"money","options":[],"required":true},{"key":"passageiros","label":"Passageiros","type":"number","options":[],"required":true},{"key":"observacoes","label":"Observações","type":"textarea","options":[],"required":false}],"sample":[{"destino":"Rio de Janeiro","data_saida":"2026-11-15","status":"Confirmada","valor":"2.450,00","passageiros":"2","observacoes":"Hotel frente à praia"},{"destino":"São Paulo","data_saida":"2026-11-20","status":"Planejada","valor":"1.120,00","passageiros":"1","observacoes":"Reunião corporativa"},{"destino":"Salvador","data_saida":"2026-12-01","status":"Em Andamento","valor":"1.890,00","passageiros":"4","observacoes":"Pacote família"},{"destino":"Porto Alegre","data_saida":"2026-12-10","status":"Cancelada","valor":"950,00","passageiros":"1","observacoes":""},{"destino":"Florianópolis","data_saida":"2027-01-05","status":"Concluída","valor":"3.200,00","passageiros":"3","observacoes":"Passeio completo"}]},{"key":"clientes","label":"Clientes","singular":"Cliente","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"email","label":"E-mail","type":"email","options":[],"required":true},{"key":"telefone","label":"Telefone","type":"phone","options":[],"required":true},{"key":"cidade","label":"Cidade","type":"text","options":[],"required":true},{"key":"cadastro","label":"Cadastro","type":"date","options":[],"required":true}],"sample":[{"nome":"Ana Silva","email":"ana.silva@email.com","telefone":"(11) 98765-4321","cidade":"São Paulo","cadastro":"2026-09-01"},{"nome":"Bruno Costa","email":"bruno.costa@email.com","telefone":"(21) 91234-5678","cidade":"Rio de Janeiro","cadastro":"2026-09-05"},{"nome":"Carla Mendes","email":"carla.mendes@email.com","telefone":"(31) 99876-5432","cidade":"Belo Horizonte","cadastro":"2026-09-10"},{"nome":"Daniel Souza","email":"daniel.souza@email.com","telefone":"(41) 98765-1234","cidade":"Curitiba","cadastro":"2026-09-12"},{"nome":"Fernanda Lima","email":"fernanda.lima@email.com","telefone":"(51) 91234-9876","cidade":"Porto Alegre","cadastro":"2026-09-15"}]},{"key":"agencias","label":"Agências","singular":"Agência","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"contato","label":"Contato","type":"text","options":[],"required":true},{"key":"email","label":"E-mail","type":"email","options":[],"required":true},{"key":"cidade","label":"Cidade","type":"text","options":[],"required":true},{"key":"tipo","label":"Tipo","type":"select","options":["Operadora","Receptivo","Corporativa","Online"],"required":true}],"sample":[{"nome":"Mundo Aberto Turismo","contato":"Carlos Almeida","email":"carlos@mundoaberto.com.br","cidade":"São Paulo","tipo":"Operadora"},{"nome":"Costa Sul Viagens","contato":"Mariana Rocha","email":"mariana@costasul.com.br","cidade":"Florianópolis","tipo":"Receptivo"},{"nome":"Executive Travel","contato":"Roberto Nunes","email":"roberto@executive.com.br","cidade":"São Paulo","tipo":"Corporativa"},{"nome":"Viaje Fácil Online","contato":"Juliana Dias","email":"juliana@viajefacil.com.br","cidade":"Rio de Janeiro","tipo":"Online"}]}]}</script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
   <script src="app.js" defer></script>
 </body>
