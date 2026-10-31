@@ -2,25 +2,25 @@
 
 export const verificarSuporteWebGPU = async () => {
   if (typeof navigator === 'undefined') {
-    return { suportado: false, motivo: 'Ambiente sem navegador' };
+    return { suportado: false, motivo: 'Ambiente sem navegador', memoriaGb: 0 };
   }
   const hasGpu = 'gpu' in navigator && navigator.gpu !== undefined;
-  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  const memoriaGb = typeof navigator.deviceMemory === 'number' ? navigator.deviceMemory : 4;
   if (!hasGpu) {
-    return { suportado: false, motivo: 'WebGPU não suportada neste navegador' };
+    return { suportado: false, motivo: 'WebGPU não suportada neste navegador', memoriaGb };
   }
-  if (memory !== undefined && memory < 4) {
-    return { suportado: false, motivo: 'Memória insuficiente (mínimo recomendado: 4 GB)' };
+  if (memoriaGb < 4) {
+    return { suportado: false, motivo: 'Memória insuficiente (mínimo recomendado: 4 GB)', memoriaGb };
   }
   try {
-    const adapter = await (navigator as Navigator & { gpu?: { requestAdapter: () => Promise<unknown> } }).gpu?.requestAdapter();
+    const adapter = await navigator.gpu?.requestAdapter();
     if (!adapter) {
-      return { suportado: false, motivo: 'Adaptador WebGPU não encontrado' };
+      return { suportado: false, motivo: 'Adaptador WebGPU não encontrado', memoriaGb };
     }
   } catch {
-    return { suportado: false, motivo: 'Falha ao solicitar adaptador WebGPU' };
+    return { suportado: false, motivo: 'Falha ao solicitar adaptador WebGPU', memoriaGb };
   }
-  return { suportado: true };
+  return { suportado: true, memoriaGb };
 };
 
 export const configManager = {
