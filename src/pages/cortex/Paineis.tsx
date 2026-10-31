@@ -227,50 +227,7 @@ export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema;
         <p className="text-sm text-[var(--cx-mut)] mt-1">{instalar ? "Instale o Cortex na tela inicial." : "No Chrome do celular: menu ⋮ → Instalar app (ou Adicionar à tela inicial)."}</p>
         {instalar && <button onClick={instalar} className="mt-3 h-11 px-5 rounded-xl bg-[var(--cx-ac)] text-black font-semibold" data-testid="cx-instalar">Instalar app</button>}</Cartao>
 
-      <Cartao>
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <p className="font-medium">IA no meu aparelho (grátis, offline)</p>
-            <p className="text-sm text-[var(--cx-mut)] mt-1">Ativa a IA local no seu navegador. O Cortex vai baixar os modelos (~1 GB) com recomendação de Wi-Fi para funcionar offline.</p>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-4">
-            <input
-              type="checkbox"
-              checked={iaAtiva}
-              onChange={toggleIA}
-              disabled={carregandoIA}
-              className="sr-only peer"
-              data-testid="cx-ia-local"
-            />
-            <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[var(--cx-ac)]"></div>
-          </label>
-        </div>
-        {carregandoIA && <p className="text-xs text-[var(--cx-mut)] mt-2">Verificando suporte WebGPU e memória…</p>}
-        {avisoBloqueio && (
-          <div className="mt-3 p-3 rounded-xl bg-red-950/40 border border-red-800/60 text-xs text-red-200" role="alert">
-            <p className="font-semibold mb-1">⚠️ Recurso não suportado</p>
-            <p>Seu navegador ou dispositivo não atende aos requisitos mínimos (WebGPU / memória insuficientes). A IA local não pode ser ativada.</p>
-            <button
-              onClick={() => setAvisoBloqueio(false)}
-              className="mt-2 px-3 py-1 bg-red-800/50 hover:bg-red-800 rounded text-white font-medium"
-            >
-              Entendi
-            </button>
-          </div>
-        )}
-        {avisoDownload && (
-          <div className="mt-3 p-3 rounded-xl bg-[var(--cx-card)] border border-[var(--cx-line)] text-xs text-[var(--cx-txt)]" role="status">
-            <p className="font-semibold mb-1">📥 Download de modelos (~1 GB)</p>
-            <p className="text-[var(--cx-mut)] mb-2">Recomendamos o uso de uma rede <strong>Wi-Fi</strong> para baixar os arquivos necessários sem consumir sua franquia móvel.</p>
-            <button
-              onClick={() => setAvisoDownload(false)}
-              className="px-3 py-1 bg-[var(--cx-ac)] text-black rounded font-medium"
-            >
-              Continuar com Wi-Fi
-            </button>
-          </div>
-        )}
-      </Cartao>
+      {/* IA Local nas Configurações do Cortex (NEXIA: Confirmado) */}
 
       <AvisosCelular />
 
