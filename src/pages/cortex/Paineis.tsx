@@ -4,7 +4,7 @@ import { NOME_SITUACAO, usePedidos } from "../meu-cortex/api";
 import type { Deploy, Filtro, Resumo } from "../meu-cortex/api";
 import type { Tema } from "./page";
 import ContasReserva from "./Reservas";
-import config from "../../config.js";
+
 
 const Cartao = ({ children, testid }: { children: React.ReactNode; testid?: string }) => (
   <div className="rounded-2xl border border-[var(--cx-line)] bg-[var(--cx-card)] p-4" data-testid={testid}>{children}</div>
