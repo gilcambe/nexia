@@ -243,4 +243,79 @@ export async function executarPromptComFallback(prompt, opcoes = {}) {
   }
 }
 
-export { MODELOS_SUPORTADOS, WEBLLM_CDN_URL };
+/**
+ * Renderiza o bloco de configurações da IA local com o switch e avisos.
+ * @param {HTMLElement|string} containerElement Elemento ou ID do container onde injetar o switch
+ */
+export async function renderizarConfiguracaoIALocal(containerElement) {
+  const container = typeof containerElement === 'string' 
+    ? document.getElementById(containerElement) 
+    : containerElement;
+
+  if (!container) return;
+
+  const config = obterConfig();
+  const suporte = await verificarSuporteWebGPU();
+
+  container.innerHTML = `
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 18px; margin: 12px 0; font-family: inherit;">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+        <div>
+          <h4 style="font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 4px; display: flex; align-items: center; gap: 8px;">
+            <i class="ri-cpu-line" style="color: #00e5ff;"></i> IA no meu aparelho (grátis, offline)
+          </h4>
+          <p style="font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.4; margin: 0;">
+            Execute modelos de IA diretamente no seu dispositivo usando WebGPU, sem enviar dados para a nuvem.
+          </p>
+        </div>
+        <label style="position: relative; display: inline-block; width: 50px; height: 26px; flex-shrink: 0; cursor: ${suporte.suportado ? 'pointer' : 'not-allowed'};">
+          <input type="checkbox" id="chk-ia-local" ${config.ativo ? 'checked' : ''} ${!suporte.suportado ? 'disabled' : ''} style="opacity: 0; width: 0; height: 0;">
+          <span style="position: absolute; cursor: ${suporte.suportado ? 'pointer' : 'not-allowed'}; inset: 0; background-color: ${suporte.suportado ? (config.ativo ? '#00e5ff' : 'rgba(255,255,255,0.2)') : 'rgba(255,255,255,0.1)'}; transition: .3s; border-radius: 34px;" id="slider-ia-local"></span>
+          <span style="position: absolute; content: ''; height: 20px; width: 20px; left: ${config.ativo && suporte.suportado ? '26px' : '3px'}; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%;" id="knob-ia-local"></span>
+        </label>
+      </div>
+
+      <div id="aviso-suporte-ia" style="margin-top: 12px; font-size: 12px; display: ${suporte.suportado ? 'none' : 'block'}; background: rgba(255,61,113,0.15); border: 1px solid rgba(255,61,113,0.3); border-radius: 8px; padding: 10px; color: #ff3d71;">
+        <strong>⚠️ Aparelho não compatível:</strong> ${suporte.motivo || 'WebGPU não suportado neste navegador ou dispositivo.'}
+      </div>
+
+      <div id="aviso-download-ia" style="margin-top: 12px; font-size: 12px; display: none; background: rgba(255,170,0,0.15); border: 1px solid rgba(255,170,0,0.3); border-radius: 8px; padding: 10px; color: #ffaa00;">
+        <strong>📥 Aviso de Download (~1 GB):</strong> Ao ativar a IA local, será feito o download de um modelo de aproximadamente 1 GB. Recomendamos o uso de conexão Wi-Fi para evitar custos de dados móveis.
+      </div>
+    </div>
+  `;
+
+  const chk = container.querySelector('#chk-ia-local');
+  const slider = container.querySelector('#slider-ia-local');
+  const knob = container.querySelector('#knob-ia-local');
+  const avisoDownload = container.querySelector('#aviso-download-ia');
+
+  if (chk && suporte.suportado) {
+    chk.addEventListener('change', async (e) => {
+      const ativado = e.target.checked;
+      
+      if (ativado) {
+        avisoDownload.style.display = 'block';
+        slider.style.backgroundColor = '#00e5ff';
+        knob.style.left = '26px';
+        salvarConfig({ ativo: true });
+      } else {
+        avisoDownload.style.display = 'none';
+        slider.style.backgroundColor = 'rgba(255,255,255,0.2)';
+        knob.style.left = '3px';
+        salvarConfig({ ativo: false });
+      }
+    });
+  } else if (chk && !suporte.suportado) {
+    chk.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (typeof window.nexiaToast === 'function') {
+        window.nexiaToast('A IA local está bloqueada pois seu navegador não suporta WebGPU.', 'err');
+      } else {
+        alert('A IA local está bloqueada pois seu navegador não suporta WebGPU.');
+      }
+    });
+  }
+}
+
+export { MODELOS_SUPORTADOS, WEBLLM_CDN_URL, renderizarConfiguracaoIALocal };
