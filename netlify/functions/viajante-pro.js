@@ -336,7 +336,7 @@ exports.handler = async function (event, context) {
   if (acao === 'cotacao-listar') {
     const snaps = await contaRef.collection('cotacoes').get();
     const cotacoes = [];
-    snaps.forEach(doc => cotacoes.push(doc.data()));
+    snaps.docs.forEach(doc => cotacoes.push(doc.data()));
     cotacoes.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
     return res(200, { ok: true, cotacoes });
   }

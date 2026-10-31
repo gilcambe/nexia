@@ -1901,30 +1901,26 @@
       };
 
       try {
-        const response = await fetch('/api/leads', {
+        // cotação vai para o backend do Viajante Pro (fica no painel e manda e-mail para cotacao.site@viajante.pro)
+        const response = await fetch('/api/viajante-pro?site=viajantepro', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(Object.assign({}, payload, {
+            acao: 'solicitar_cotacao', destino, origem, servico, periodo,
+            adultos: parseInt(viajantes, 10) || 1, orcamento: orcamentoEstimado, observacoes: obs,
+            modalidades: servico ? [servico] : []
+          }))
         });
-
-        if (response.ok || response.status === 200 || response.status === 201) {
-          formStatus.className = 'form-status success';
-          formStatus.innerHTML = '<i class="ri-checkbox-circle-line"></i> Solicitação enviada com sucesso! Em breve um de nossos consultores entrará em contato via WhatsApp ou e-mail.';
-          document.getElementById('orcamentoForm').reset();
-        } else {
-          // Fallback friendly message if backend endpoint returns soft response
-          formStatus.className = 'form-status success';
-          formStatus.innerHTML = '<i class="ri-checkbox-circle-line"></i> Recebemos sua mensagem! Nossa equipe entrará em contato em breve.';
-          document.getElementById('orcamentoForm').reset();
-        }
-      } catch (err) {
-        console.warn('Erro na requisição /api/leads:', err);
-        // Display friendly success/acknowledgment if offline/simulated
+        const j = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(j.error || ('Erro ' + response.status));
         formStatus.className = 'form-status success';
-        formStatus.innerHTML = '<i class="ri-checkbox-circle-line"></i> Solicitação de orçamento registrada com sucesso! Entraremos em contato.';
+        formStatus.innerHTML = '<i class="ri-checkbox-circle-line"></i> Cotação recebida! Seu código é <strong>' + (j.codigo || '') + '</strong>. Um consultor vai falar com você pelo WhatsApp ou e-mail.';
         document.getElementById('orcamentoForm').reset();
+      } catch (err) {
+        console.warn('Erro ao enviar cotação:', err);
+        const txt = encodeURIComponent('Olá! Quero uma cotação: ' + destino + ' saindo de ' + origem + ' (' + periodo + '), ' + viajantes + ' viajante(s). ' + nome);
+        formStatus.className = 'form-status error';
+        formStatus.innerHTML = 'Não consegui enviar agora (' + (err.message || 'sem internet') + '). <a href="https://wa.me/5511941247074?text=' + txt + '" target="_blank" rel="noopener">Mande pelo WhatsApp</a>.';
       } finally {
         btnSubmit.disabled = false;
         btnSubmit.innerHTML = '<i class="ri-send-plane-fill"></i> Enviar Solicitação de Orçamento';
@@ -1956,7 +1952,7 @@
 })();
 </script>
 
-<script src="/viajante-pro/abertura-kernex.js" data-produto="VIAJANTE PRO" defer></script>
-<script src="/viajante-pro/vp-marca.js" defer></script>
+<script src="/viajante-pro/abertura-kernex.js?v=3" data-produto="VIAJANTE PRO" defer></script>
+<script src="/viajante-pro/vp-marca.js?v=3" defer></script>
 </body>
 </html>
