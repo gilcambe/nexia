@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useMemory } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemType } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemComponent } from '../../components/MemoryItem';
+import { obterConfig, salvarConfig, verificarSuporteWebGPU } from '../../../../ia-local'; // Importar ia-local.js
 
 type MemoryItemProps = MemoryItemType & {
   onDelete: (id: string) => void;
@@ -20,9 +21,10 @@ export default function MemorySettings() {
   } = useMemory();
 
   const [isDeletingAll, setIsDeletingAll] = useState(false);
-  const [isLocalIAEnabled, setIsLocalIAEnabled] = useState(false); // Novo estado
-  const [isWebGpuSupported, setIsWebGpuSupported] = useState(false); // Novo estado
-  const [showDownloadWarning, setShowDownloadWarning] = useState(false); // Novo estado
+  // Inicializa o estado com base na configuração salva
+  const [isLocalIAEnabled, setIsLocalIAEnabled] = useState(() => obterConfig().ativo);
+  const [isWebGpuSupported, setIsWebGpuSupported] = useState(false);
+  const [showDownloadWarning, setShowDownloadWarning] = useState(false);
 
   // Funções existentes para que o find/replace funcione sem reescrever tudo
   const handleReload = useCallback(() => {
