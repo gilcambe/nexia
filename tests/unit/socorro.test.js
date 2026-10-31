@@ -40,6 +40,7 @@ const mandarParaJules = async function(pedido, n, quem, { env = process.env, fet
 mandarParaJules.chamadas = 0;
 
 const rodar = async function(data, { env = process.env, fetchFn = fetch } = {}) {
+  rodar.chamadas = (rodar.chamadas || 0) + 1;
   // Versão simplificada para teste
   const issues = await github.listIssues({ state: 'open' });
   const agora = Date.now();
