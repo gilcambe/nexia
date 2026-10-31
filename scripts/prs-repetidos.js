@@ -9,9 +9,9 @@ function decidir(prs, agora) {
     !pr.labels.some(l => ['dono-aprovou', 'revisao-manual', 'so-humano'].includes(l.name || l))
   );
   
-  // Extrai números de issue dos títulos e corpos
+  // Extrai números de issue dos títulos e corpos (melhor regex para capturar formatos como 'Reserva: issue #NNNN')
   const extrairNumeroIssue = (text) => {
-    const match = text.match(/#(\d+)/);
+    const match = text.match(/(?:issue|Reserva\s*:\s*issue)\s*#(\d+)/i);
     return match ? parseInt(match[1]) : null;
   };
   
@@ -73,7 +73,38 @@ function decidir(prs, agora) {
   });
   
   // 3. PR com CI vermelho há mais de 48 h cuja issue já está fechada: fecha com comentário
-  // (essa verificação será feita externamente, pois precisa de informações de issues)
+  const prsParaFecharPorIssueFechada = [];
+  
+  // Verifica se há issues fechadas correspondentes aos PRs
+  if (resultado.fechar.length > 0) {
+    // Busca informações das issues fechadas
+    const issuesFechadas = await fetchFn(`${REPO}/issues?state=closed&per_page=100`, { headers });
+    if (issuesFechadas.ok) {
+      const issuesFechadasData = await issuesFechadas.json();
+      const numerosIssuesFechadas = issuesFechadasData.map(issue => issue.number);
+      
+      // Verifica cada PR a ser fechado
+      for (const pr of resultado.fechar) {
+        const prInfo = prs.find(p => p.number === pr.number);
+        if (prInfo) {
+          // Verifica se o PR tem CI vermelho e a issue correspondente está fechada
+          const temCI = prInfo.status && prInfo.status.state === 'failure';
+          const issueEstaFechada = numerosIssuesFechadas.includes(pr.number);
+          const haMaisDe48h = new Date(prInfo.updated_at || prInfo.created_at) < new Date(Date.now() - 48 * 60 * 60 * 1000);
+          
+          if (temCI && issueEstaFechada && haMaisDe48h) {
+            prsParaFecharPorIssueFechada.push({
+              number: pr.number,
+              motivo: `CI vermelho há mais de 48h e issue #${pr.number} já fechada`
+            });
+          }
+        }
+      }
+    }
+  }
+  
+  // Adiciona PRs para fechar por issue fechada ao resultado
+  resultado.fechar.push(...prsParaFecharPorIssueFechada);
   
   // 4. Limita a 15 fechamentos por rodada
   const fecharLimitado = fechar.slice(0, 15);
@@ -82,7 +113,9 @@ function decidir(prs, agora) {
     manter: manter.map(pr => pr.number),
     fechar: fecharLimitado,
     totalFechar: fechar.length,
-    totalManter: manter.length
+    totalManter: manter.length,
+    // Adiciona informações sobre PRs fechados por issue fechada
+    fecharPorIssueFechada: prsParaFecharPorIssueFechada.length
   };
 }
 
