@@ -14,6 +14,15 @@ class CofreSql {
               leituras INTEGER NOT NULL DEFAULT 0,
               escritas INTEGER NOT NULL DEFAULT 0
             );`);
+            
+            // Criar tabela de contador de uso diário
+            this.sql.exec(`CREATE TABLE IF NOT EXISTS cofresql_usage (
+              banco TEXT NOT NULL,
+              data TEXT NOT NULL,
+              leituras INTEGER NOT NULL DEFAULT 0,
+              escritas INTEGER NOT NULL DEFAULT 0,
+              PRIMARY KEY (banco, data)
+            );`);
           } catch {}
         }
     }
@@ -70,6 +79,11 @@ class CofreSql {
               ON CONFLICT(banco) DO UPDATE SET leituras = CASE WHEN data = ? THEN leituras + ? ELSE ? END, escritas = CASE WHEN data = ? THEN escritas + ? ELSE ? END, data = ?`,
               bancoKey, data, leituras, escritas, data, leituras, leituras, data, escritas, escritas, data);
             
+            // Registrar uso diário na tabela de contador
+            this.sql.exec(`INSERT INTO cofresql_usage (banco, data, leituras, escritas) VALUES (?, ?, ?, ?)
+              ON CONFLICT(banco, data) DO UPDATE SET leituras = leituras + ?, escritas = escritas + ?`,
+              bancoKey, data, leituras, escritas, leituras, escritas);
+            
             const rows = this.sql.exec(`SELECT leituras, escritas FROM vazaosql WHERE banco = ?`, bancoKey);
             const row = rows.toArray ? rows.toArray()[0] : rows[0];
             if (row && this._checkLimits(bancoKey, row.leituras, row.escritas)) {
@@ -86,6 +100,17 @@ class CofreSql {
           const uso = {};
           for (const r of rows) {
             uso[r.banco] = { data: r.data, leituras: r.leituras, escritas: r.escritas };
+          }
+          return resposta(200, { success: true, uso });
+        }
+        
+        if (path.includes('/usage') && request.method === 'GET') {
+          const rows = this.sql.exec(`SELECT banco, data, leituras, escritas FROM cofresql_usage`).toArray();
+          const uso = {};
+          for (const r of rows) {
+            if (!uso[r.banco]) uso[r.banco] = { data: r.data, leituras: 0, escritas: 0 };
+            uso[r.banco].leituras += r.leituras;
+            uso[r.banco].escritas += r.escritas;
           }
           return resposta(200, { success: true, uso });
         }
