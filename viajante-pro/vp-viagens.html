@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Viagens — Viajante Pro</title>
+<meta name="description" content="Gestão e visualização de viagens — Viajante Pro">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090e;
+  --bg2: #0a0d16;
+  --bg3: #0e1220;
+  --line: rgba(255, 255, 255, 0.08);
+  --txt: #e8ecf4;
+  --mut: #94a3b8;
+  --cyan: #00e5ff;
+  --cbg: rgba(0, 229, 255, 0.08);
+  --cbrd: rgba(0, 229, 255, 0.25);
+  --gold: #d4af37;
+  --ok: #22c55e;
+  --err: #ef4444;
+  --ff: 'Sora', sans-serif;
+  --ffm: 'JetBrains Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--ff);
+  background: var(--bg);
+  color: var(--txt);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg2);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+header img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+header .logo-txt {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+header nav {
+  margin-left: auto;
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+header nav a {
+  color: var(--mut);
+  text-decoration: none;
+  font-size: 13px;
+  transition: color .15s;
+}
+header nav a:hover, header nav a.active {
+  color: var(--cyan);
+}
+main {
+  flex: 1;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 28px 20px;
+}
+.hero {
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.hero h1 {
+  font-size: 24px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hero h1 i {
+  color: var(--cyan);
+}
+.actions {
+  display: flex;
+  gap: 10px;
+}
+.btn {
+  background: var(--cbg);
+  color: var(--cyan);
+  border: 1px solid var(--cbrd);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn:hover {
+  background: rgba(0, 229, 255, 0.16);
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+  transition: border-color .15s;
+}
+.card:hover {
+  border-color: var(--cbrd);
+}
+.card h2 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+.card p {
+  color: var(--mut);
+  font-size: 13px;
+  line-height: 1.5;
+}
+#lista-viagens {
+  min-height: 200px;
+}
+footer {
+  border-top: 1px solid var(--line);
+  padding: 16px 20px;
+  text-align: center;
+  color: var(--mut);
+  font-size: 12px;
+  margin-top: auto;
+}
+</style>
+</head>
+<body>
+<header>
+  <img src="/viajante-pro/img/vp-oficial.jpg" alt="Viajante Pro" onerror="this.style.display='none'">
+  <div class="logo-txt">Viajante Pro</div>
+  <nav>
+    <a href="/viajante-pro/admin">Painel</a>
+    <a href="/viajante-pro/cotacoes">Cotações</a>
+    <a href="/viajante-pro/viagens" class="active">Viagens</a>
+  </nav>
+</header>
+<main>
+  <div class="hero">
+    <h1><i class="ri-calendar-line"></i> Viagens</h1>
+    <div class="actions">
+      <a href="/viajante-pro/admin" class="btn"><i class="ri-arrow-left-line"></i> Voltar ao Painel</a>
+    </div>
+  </div>
+  <section id="lista-viagens" class="grid">
+    <div class="card">
+      <h2>Próximas Viagens</h2>
+      <p>Gerenciamento e calendário operacional de grupos, saídas e roteiros ativos.</p>
+    </div>
+  </section>
+</main>
+<footer>
+  <p>&copy; Viajante Pro — Gestão de Turismo Inteligente</p>
+</footer>
+<script src="/viajante-pro/abertura-kernex.js?v=3" data-produto="VIAJANTE PRO" defer></script>
+<script src="/viajante-pro/vp-marca.js?v=3" defer></script>
+<script src="/viajante-pro/vp-viagens.js" defer></script>
+</body>
+</html>
