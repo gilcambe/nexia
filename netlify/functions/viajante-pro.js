@@ -625,6 +625,310 @@ exports.handler = async function (event, context) {
     return res(200, { ok: true, conversas });
   }
 
+  // ── Ações de Clientes ──
+  if (acao === 'cliente-salvar') {
+    const nome = str(body.nome, 100);
+    const email = str(body.email, 100);
+    const wpp = str(body.wpp, 30);
+    const nascimento = str(body.nascimento, 20);
+    const obs = str(body.observacoes, 500);
+    const consentimento = body.consentimento === true;
+    const consentimento_em = consentimento ? new Date(now).toISOString() : null;
+
+    if (!nome || !email || !wpp) {
+      return res(400, { error: 'Nome, e-mail e WhatsApp são obrigatórios.' });
+    }
+    if (!consentimento) {
+      return res(400, { error: 'Consentimento LGPD é obrigatório.' });
+    }
+
+    const id = aleatorio(12);
+    const clienteData = {
+      id,
+      nome,
+      email,
+      wpp,
+      nascimento,
+      observacoes: obs,
+      consentimento,
+      consentimento_em,
+      criado_em: new Date(now).toISOString(),
+      atualizado_em: new Date(now).toISOString(),
+    };
+
+    await contaRef.collection('clientes').doc(id).set(clienteData);
+    return res(200, { ok: true, cliente: clienteData });
+  }
+
+  if (acao === 'cliente-listar') {
+    const snaps = await contaRef.collection('clientes').get();
+    const clientes = [];
+    snaps.docs.forEach(doc => {
+      const data = doc.data();
+      // Mascara CPF se existir
+      const clienteMasked = { ...data };
+      if (clienteMasked.doc && clienteMasked.doc.length >= 4) {
+        clienteMasked.doc = '****-' + clienteMasked.doc.slice(-4);
+      }
+      clientes.push(clienteMasked);
+    });
+    clientes.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+    return res(200, { ok: true, clientes });
+  }
+
+  if (acao === 'cliente-obter') {
+    const cId = str(body.id, 64);
+    if (!cId) return res(400, { error: 'ID do cliente é obrigatório.' });
+
+    const cDocRef = contaRef.collection('clientes').doc(cId);
+    const snap = await cDocRef.get();
+    if (!snap.exists) return res(404, { error: 'Cliente não encontrado.' });
+
+    return res(200, { ok: true, cliente: snap.data() });
+  }
+
+  if (acao === 'cliente-excluir') {
+    const cId = str(body.id, 64);
+    if (!cId) return res(400, { error: 'ID do cliente é obrigatório.' });
+
+    const cDocRef = contaRef.collection('clientes').doc(cId);
+    const snap = await cDocRef.get();
+    if (!snap.exists) return res(404, { error: 'Cliente não encontrado.' });
+
+    await cDocRef.delete();
+    return res(200, { ok: true, id: cId });
+  }
+
+  // ── Ações de Passageiros ──
+  if (acao === 'passageiro-salvar') {
+    const clienteId = str(body.clienteId, 64);
+    const nome = str(body.nome, 100);
+    const doc = str(body.documento, 50);
+    const passaporte = str(body.passaporte, 50);
+    const validade = str(body.validade, 20);
+    const visto = str(body.visto, 100);
+    const contatoEmergencia = str(body.contatoEmergencia, 100);
+
+    if (!clienteId || !nome) {
+      return res(400, { error: 'ID do cliente e nome são obrigatórios.' });
+    }
+
+    const id = aleatorio(12);
+    const passageiroData = {
+      id,
+      clienteId,
+      nome,
+      documento: doc,
+      passaporte,
+      validade,
+      visto,
+      contatoEmergencia,
+      criado_em: new Date(now).toISOString(),
+      atualizado_em: new Date(now).toISOString(),
+    };
+
+    await contaRef.collection('passageiros').doc(id).set(passageiroData);
+    return res(200, { ok: true, passageiro: passageiroData });
+  }
+
+  if (acao === 'passageiro-listar') {
+    const cId = str(body.clienteId, 64);
+    if (!cId) return res(400, { error: 'ID do cliente é obrigatório.' });
+
+    const snaps = await contaRef.collection('passageiros').where('clienteId', '==', cId).get();
+    const passageiros = [];
+    snaps.docs.forEach(doc => passageiros.push(doc.data()));
+    passageiros.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+    return res(200, { ok: true, passageiros });
+  }
+
+  if (acao === 'passageiro-excluir') {
+    const pId = str(body.id, 64);
+    if (!pId) return res(400, { error: 'ID do passageiro é obrigatório.' });
+
+    const pDocRef = contaRef.collection('passageiros').doc(pId);
+    const snap = await pDocRef.get();
+    if (!snap.exists) return res(404, { error: 'Passageiro não encontrado.' });
+
+    await pDocRef.delete();
+    return res(200, { ok: true, id: pId });
+  }
+
+  // ── Ações de Reservas ──
+  if (acao === 'reserva-salvar') {
+    const clienteId = str(body.clienteId, 64);
+    const viagemId = str(body.viagemId, 64);
+    const passageiros = Array.isArray(body.passageiros) ? body.passageiros : [];
+    const itens = Array.isArray(body.itens) ? body.itens.map(i => ({
+      tipo: str(i.tipo, 50),
+      localizador: str(i.localizador, 100),
+      status: str(i.status, 50) || 'confirmado',
+      valor: parseFloat(i.valor) || 0,
+    })) : [];
+
+    if (!clienteId || !viagemId) {
+      return res(400, { error: 'ID do cliente e ID da viagem são obrigatórios.' });
+    }
+
+    const id = aleatorio(12);
+    const valorTotal = itens.reduce((sum, item) => sum + item.valor, 0);
+    const reservaData = {
+      id,
+      clienteId,
+      viagemId,
+      passageiros,
+      itens,
+      valorTotal,
+      status: 'confirmado',
+      criado_em: new Date(now).toISOString(),
+      atualizado_em: new Date(now).toISOString(),
+    };
+
+    await contaRef.collection('reservas').doc(id).set(reservaData);
+    return res(200, { ok: true, reserva: reservaData });
+  }
+
+  if (acao === 'reserva-listar') {
+    const snaps = await contaRef.collection('reservas').get();
+    const reservas = [];
+    snaps.docs.forEach(doc => reservas.push(doc.data()));
+    reservas.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+    return res(200, { ok: true, reservas });
+  }
+
+  if (acao === 'reserva-obter') {
+    const rId = str(body.id, 64);
+    if (!rId) return res(400, { error: 'ID da reserva é obrigatório.' });
+
+    const rDocRef = contaRef.collection('reservas').doc(rId);
+    const snap = await rDocRef.get();
+    if (!snap.exists) return res(404, { error: 'Reserva não encontrada.' });
+
+    return res(200, { ok: true, reserva: snap.data() });
+  }
+
+  if (acao === 'reserva-excluir') {
+    const rId = str(body.id, 64);
+    if (!rId) return res(400, { error: 'ID da reserva é obrigatório.' });
+
+    const rDocRef = contaRef.collection('reservas').doc(rId);
+    const snap = await rDocRef.get();
+    if (!snap.exists) return res(404, { error: 'Reserva não encontrada.' });
+
+    await rDocRef.delete();
+    return res(200, { ok: true, id: rId });
+  }
+
+  // ── Ações de Pagamentos ──
+  if (acao === 'pagamento-salvar') {
+    const reservaId = str(body.reservaId, 64);
+    const forma = str(body.forma, 50);
+    const parcelas = parseInt(body.parcelas, 10) || 1;
+    const valor = parseFloat(body.valor) || 0;
+    const vencimento = str(body.vencimento, 20);
+    const recebido_em = str(body.recebido_em, 20);
+
+    if (!reservaId || !forma) {
+      return res(400, { error: 'ID da reserva e forma de pagamento são obrigatórios.' });
+    }
+
+    const id = aleatorio(12);
+    const pagamentoData = {
+      id,
+      reservaId,
+      forma,
+      parcelas,
+      valor,
+      vencimento,
+      recebido_em,
+      status: 'pendente',
+      criado_em: new Date(now).toISOString(),
+      atualizado_em: new Date(now).toISOString(),
+    };
+
+    await contaRef.collection('pagamentos').doc(id).set(pagamentoData);
+    return res(200, { ok: true, pagamento: pagamentoData });
+  }
+
+  if (acao === 'pagamento-listar') {
+    const rId = str(body.reservaId, 64);
+    if (!rId) return res(400, { error: 'ID da reserva é obrigatório.' });
+
+    const snaps = await contaRef.collection('pagamentos').where('reservaId', '==', rId).get();
+    const pagamentos = [];
+    snaps.docs.forEach(doc => pagamentos.push(doc.data()));
+    pagamentos.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+    return res(200, { ok: true, pagamentos });
+  }
+
+  // ── Ação de Migração de Dados Antigos ──
+  if (acao === 'migrar-dados-antigos') {
+    const migradoEm = new Date(now).toISOString();
+    let migrados = 0;
+
+    // Migração de clientes
+    try {
+      const clientesSnap = await contaRef.collection('data').doc('viajante-pro').collection('clientes').get();
+      for (const doc of clientesSnap.docs) {
+        const data = doc.data();
+        await contaRef.collection('clientes').doc(doc.id).set({
+          ...data,
+          migrado_em: migradoEm,
+        });
+        migrados++;
+      }
+    } catch (e) {
+      console.warn('[MIGRAÇÃO] Erro ao migrar clientes:', e.message);
+    }
+
+    // Migração de passageiros
+    try {
+      const paxSnap = await contaRef.collection('data').doc('viajante-pro').collection('pax').get();
+      for (const doc of paxSnap.docs) {
+        const data = doc.data();
+        await contaRef.collection('passageiros').doc(doc.id).set({
+          ...data,
+          migrado_em: migradoEm,
+        });
+        migrados++;
+      }
+    } catch (e) {
+      console.warn('[MIGRAÇÃO] Erro ao migrar passageiros:', e.message);
+    }
+
+    // Migração de reservas
+    try {
+      const reservasSnap = await contaRef.collection('data').doc('viajante-pro').collection('reservas').get();
+      for (const doc of reservasSnap.docs) {
+        const data = doc.data();
+        await contaRef.collection('reservas').doc(doc.id).set({
+          ...data,
+          migrado_em: migradoEm,
+        });
+        migrados++;
+      }
+    } catch (e) {
+      console.warn('[MIGRAÇÃO] Erro ao migrar reservas:', e.message);
+    }
+
+    // Migração de pagamentos
+    try {
+      const pagamentosSnap = await contaRef.collection('data').doc('viajante-pro').collection('pagamentos').get();
+      for (const doc of pagamentosSnap.docs) {
+        const data = doc.data();
+        await contaRef.collection('pagamentos').doc(doc.id).set({
+          ...data,
+          migrado_em: migradoEm,
+        });
+        migrados++;
+      }
+    } catch (e) {
+      console.warn('[MIGRAÇÃO] Erro ao migrar pagamentos:', e.message);
+    }
+
+    return res(200, { ok: true, migrados, migrado_em });
+  }
+
   return res(400, { error: `Ação não reconhecida: ${acao}` });
 };
 
