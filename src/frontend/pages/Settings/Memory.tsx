@@ -60,23 +60,32 @@ export default function MemorySettings() {
 
   const handleToggleLocalIA = useCallback(() => {
     if (!isWebGpuSupported) {
-      return;
+      return; // Não faz nada se WebGPU não for suportado
     }
 
-    if (!isLocalIAEnabled) {
-      setShowDownloadWarning(true);
-    } else {
+    if (isLocalIAEnabled) {
+      // Se já estiver ativado, desativa
       setIsLocalIAEnabled(false);
-      setShowDownloadWarning(false);
       salvarConfig({ ativo: false });
+    } else {
+      // Se estiver desativado, mostra o aviso de download
+      setShowDownloadWarning(true);
     }
   }, [isLocalIAEnabled, isWebGpuSupported]);
 
   const handleConfirmDownload = useCallback(() => {
+    // Confirma o download e ativa a IA local
     setIsLocalIAEnabled(true);
     setShowDownloadWarning(false);
     salvarConfig({ ativo: true });
   }, []);
+
+  // Lógica para exibir o aviso de bloqueio se WebGPU não for suportado
+  useEffect(() => {
+    if (!isWebGpuSupported) {
+      setShowDownloadWarning(false); // Garante que o aviso de download não apareça se bloqueado
+    }
+  }, [isWebGpuSupported]);
 
   return (
     <div className="max-w-4xl mx-auto p-6">
