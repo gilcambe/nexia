@@ -6,10 +6,8 @@ export const API_URL = import.meta.env.VITE_API_URL || '/api';
 export const APP_NAME = 'Cortex';
 export default { API_URL, APP_NAME };
 
-// Interface para configuração da IA local
-export interface IALocalConfig {
-  ativo: boolean;
-}
+// Interface para configuração da IA local (tipagem removida para JS puro)
+// ativo: boolean;
 
 // Função para obter configuração da IA local do armazenamento local
 export const obterConfig = (): IALocalConfig => {
