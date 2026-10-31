@@ -66,9 +66,12 @@ test('JULES-AUTO3: escada: Jules sem PR no tempo volta ao Cortex do zero; 2ª ve
   ];
   // PR recusado pelo revisor grátis conta como "sem PR": a #15 sobe de degrau.
   const prs = [{ title: 'fix', body: 'Refs #13' }, { title: 'outro', body: 'Refs #130' }, { title: 'x', body: 'Fecha #15', labels: L('revisor-recusou') }];
+  // Se ainda houver cota do Gemini (geminiHoje: 0), a #17 vai para gemini antes de humano
   const d = decidir(issues, prs, agora, nomes);
-  // #1958: 2ª volta sem PR → IAs conectadas (reserva); reserva também sem PR → Claude.
-  assert.deepStrictEqual(d, { enviar: null, retomar: [10, 15], reserva: [11], humano: [17] });
+  assert.deepStrictEqual(d, { enviar: null, retomar: [10, 15], reserva: [11], humano: [], gemini: [17] });
+  // Se a cota do Gemini estiver esgotada (geminiHoje: 5), vai para humano (vez-do-claude)
+  const dSemGemini = decidir(issues, prs, agora, nomes, { geminiHoje: 5 });
+  assert.deepStrictEqual(dSemGemini, { enviar: null, retomar: [10, 15], reserva: [11], humano: [17] });
 });
 
 test('JULES-AUTO4: retomada tira travado, jules-enviado e tentativas e põe cortex-retomada', async () => {
@@ -89,4 +92,72 @@ test('JULES-AUTO-PLANO: parte grande do plano (cortex-jules) vai antes das trava
     { number: 9, labels: [{ name: 'cortex-fila' }, { name: 'cortex-parte' }, { name: 'cortex-jules' }] },
   ];
   assert.equal(decidir(issues, [], Date.now(), nomes).enviar, 9);
+});
+
+test('JULES-AUTO-GEMINI: quando o Jules fica sem cota, encaminha para Gemini CLI (máx 5 por dia)', () => {
+  const issues = [
+    { number: 30, labels: L('cortex-travado') },
+    { number: 31, labels: L('cortex-travado') }
+  ];
+  const d = decidir(issues, [], Date.now(), nomes, { julesSemCota: true, geminiHoje: 0 });
+  assert.deepStrictEqual(d.gemini, [30]);
+
+  // Se já atingiu 5 no dia, não manda mais
+  const dLimite = decidir(issues, [], Date.now(), nomes, { julesSemCota: true, geminiHoje: 5 });
+  assert.deepStrictEqual(dLimite.gemini, undefined);
+});
+
+test('JULES-AUTO-GEMINI-ANTES-CLAUDE: antes de mandar para vez-do-claude, encaminha para Gemini CLI se Jules sem cota', () => {
+  const agora = Date.UTC(2026, 9, 25, 12, 0);
+  const velho = new Date(agora - 3 * H).toISOString();
+  const issues = [
+    { number: 35, labels: L('cortex-travado', 'jules-enviado', 'cortex-retomada', 'reserva-tentou'), updated_at: velho },
+  ];
+  // Sem cota do Jules: a issue 35 vai para gemini em vez de humano
+  const d = decidir(issues, [], agora, nomes, { julesSemCota: true, geminiHoje: 0 });
+  assert.deepStrictEqual(d.gemini, [35]);
+  assert.deepStrictEqual(d.humano, []);
+
+  // Se cota diária do Gemini esgotada (5): vai para humano (vez-do-claude)
+  const dEsgotado = decidir(issues, [], agora, nomes, { julesSemCota: true, geminiHoje: 5 });
+  assert.deepStrictEqual(dEsgotado.gemini, undefined);
+  assert.deepStrictEqual(dEsgotado.humano, [35]);
+});
+
+test('JULES-AUTO-GEMINI-TIMEOUT: se em 2 h não houver PR no Gemini CLI, sobe para vez-do-claude', () => {
+  const agora = Date.UTC(2026, 9, 25, 12, 0);
+  const velho = new Date(agora - 2.5 * H).toISOString();
+  const novo = new Date(agora - 1 * H).toISOString();
+  const issues = [
+    { number: 40, labels: L('cortex-travado', 'gemini-cli'), updated_at: velho },
+    { number: 41, labels: L('cortex-travado', 'gemini-cli'), updated_at: novo },
+  ];
+  const prs = [];
+  const d = decidir(issues, prs, agora, nomes);
+  assert.deepStrictEqual(d.humano, [40]);
+});
+
+test('JULES-AUTO-GEMINI-RODAR: se o Jules recusa com 429, dispara gemini-ajudante.yml', async () => {
+  const issues = [
+    { number: 50, state: 'open', labels: L('cortex-travado') }
+  ];
+  const f = falso(issues);
+  // Sobrescreve jules.googleapis.com para simular 429 (cota esgotada)
+  const fetchJules429 = async (url, init = {}) => {
+    if (String(url).includes('jules.googleapis.com')) {
+      return { ok: false, status: 429, json: async () => ({ error: { message: 'Quota exceeded' } }) };
+    }
+    return f.fetchFn(url, init);
+  };
+  const r = await rodar(AS_20, { env, fetchFn: fetchJules429 });
+  assert.strictEqual(r.issue, 50);
+  assert.strictEqual(r.status, 502);
+  assert.deepStrictEqual(r.gemini, [50]);
+
+  const dispatch = f.chamadas.find(c => c.url.includes('gemini-ajudante.yml/dispatches'));
+  assert.ok(dispatch, 'workflow gemini-ajudante.yml deve ser despachado');
+  assert.match(dispatch.body, /"issue":"50"/);
+
+  const rotuloGemini = f.chamadas.find(c => c.url.endsWith('/issues/50/labels') && c.body.includes('gemini-cli'));
+  assert.ok(rotuloGemini, 'rótulo gemini-cli deve ser adicionado');
 });
