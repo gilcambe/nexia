@@ -36,7 +36,7 @@ export const verificarSuporteWebGPU = async () => {
   return { suportado: true };
 };
 
-export const mostrarAvisoBloqueio = (motivo: string) => {
+export const mostrarAvisoBloqueio = (motivo) => {
   console.warn('Aviso de bloqueio IA local:', motivo);
 };
 
