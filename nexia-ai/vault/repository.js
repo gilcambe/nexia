@@ -150,15 +150,6 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
     function setCachedVaultRead(tenantId, entity, id, record) {
       if (!['Client', 'Project', 'Tenant', 'client', 'project', 'tenant'].includes(entity)) return;
       const k = `${tenantId}:${entity}:${id}`;
-      vaultReadCache.set(k, { record, expiresAt: Date.now() + 60000 });
-    }
-    function invalidateVaultCache(tenantId, entity, id) {
-      if (!tenantId || !entity || !id) return;
-      const k = `${tenantId}:${entity}:${id}`;
-      vaultReadCache.delete(k);
-    }
-      if (!['Client', 'Project', 'Tenant', 'client', 'project', 'tenant'].includes(entity)) return;
-      const k = `${tenantId}:${entity}:${id}`;
       vaultReadCache.set(k, { expiresAt: Date.now() + 60 * 1000, record });
     }
     function invalidateVaultCache(tenantId, entity, id) {
