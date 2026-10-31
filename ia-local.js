@@ -65,7 +65,7 @@ export async function renderizarConfiguracaoIALocal(containerOuSeletor) {
         </div>
         <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 26px; flex-shrink: 0;">
           <input type="checkbox" id="ia-local-switch" ${config.ativo ? 'checked' : ''} ${!suporte.suportado ? 'disabled' : ''} style="opacity: 0; width: 0; height: 0;">
-          <span class="slider" style="position: cursor: pointer; position: absolute; inset: 0; background-color: ${!suporte.suportado ? '#444' : '#ccc'}; transition: .4s; border-radius: 34px;"></span>
+          <span class="slider" style="cursor: pointer; position: absolute; inset: 0; background-color: ${!suporte.suportado ? '#444' : '#ccc'}; transition: .4s; border-radius: 34px;"></span>
         </label>
       </div>
 
@@ -215,6 +215,11 @@ export async function verificarSuporteWebGPU() {
   }
 
   const memoriaGb = typeof navigator.deviceMemory === 'number' ? navigator.deviceMemory : 4;
+
+  // Bloqueia se a memória for insuficiente para rodar o modelo local (~1 GB + overhead WebGPU)
+  if (typeof navigator.deviceMemory === 'number' && memoriaGb < 4) {
+    return { suportado: false, motivo: `Memória insuficiente para IA local: ${memoriaGb} GB (mínimo recomendado: 4 GB).`, memoriaGb };
+  }
 
   return {
     suportado: true,
