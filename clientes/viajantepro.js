@@ -21,4 +21,85 @@ const VIAJANTE_PRO = {
   },
 };
 
-module.exports = { VIAJANTE_PRO };
+// Função para obter o token armazenado
+const getToken = () => {
+  return localStorage.getItem('token');
+};
+
+// Função para obter viagens
+const getViagens = async () => {
+  const token = getToken();
+  const response = await fetch('https://api.viajantepro.com.br/viagens', {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+};
+
+// Função para criar uma viagem
+const criarViagem = async (viagem) => {
+  const token = getToken();
+  const response = await fetch('https://api.viajantepro.com.br/viagens', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(viagem)
+  });
+  return response.json();
+};
+
+// Função para editar uma viagem
+const editarViagem = async (id, viagem) => {
+  const token = getToken();
+  const response = await fetch(`https://api.viajantepro.com.br/viagens/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(viagem)
+  });
+  return response.json();
+};
+
+// Função para excluir uma viagem
+const excluirViagem = async (id) => {
+  const token = getToken();
+  const response = await fetch(`https://api.viajantepro.com.br/viagens/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+};
+
+// Função para obter chats
+const getChats = async () => {
+  const token = getToken();
+  const response = await fetch('https://api.viajantepro.com.br/chats', {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  return response.json();
+};
+
+// Função para enviar um chat
+const enviarChat = async (chat) => {
+  const token = getToken();
+  const response = await fetch('https://api.viajantepro.com.br/chats', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(chat)
+  });
+  return response.json();
+};
+
+module.exports = { VIAJANTE_PRO, getViagens, criarViagem, editarViagem, excluirViagem, getChats, enviarChat };
