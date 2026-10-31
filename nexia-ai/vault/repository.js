@@ -388,6 +388,38 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         if (novoBanco !== banco) {
           console.log(`[VAULT] Alternando de ${banco} para ${novoBanco} por limite de cota`);
           this._setBancoAtivo(novoBanco);
+          
+          // Gerar aviso na Central (label sentinel) com passo a passo
+          try {
+            const aviso = {
+              tenant_id: ctx.tenantId,
+              title: 'Cofre Vault - Troca de Banco por Limite de Cota',
+              message: `Banco ${banco} atingiu 70% do limite gratuito. Tráfego automaticamente redirecionado para ${novoBanco}.`,
+              label: 'sentinel',
+              data: {
+                banco_anterior: banco,
+                banco_novo: novoBanco,
+                timestamp: new Date().toISOString(),
+                passo_a_passo: [
+                  '1. O cofre Vault monitora o uso diário de cada banco',
+                  '2. Ao atingir 70% do limite gratuito, o sistema é alertado',
+                  '3. O tráfego é automaticamente redirecionado para o próximo banco na ordem: B → C → D1 → CofreSql',
+                  '4. Um aviso é gerado na Central para monitoramento',
+                  '5. O banco anterior continua disponível para operações críticas'
+                ]
+              }
+            };
+            
+            // Enviar aviso para a Central
+            if (ctx.actor && ctx.actor.id) {
+              const centralModule = require('../../netlify/functions/central');
+              if (centralModule && centralModule.criarAviso) {
+                await centralModule.criarAviso(aviso);
+              }
+            }
+          } catch (e) {
+            console.error('Erro ao gerar aviso na Central:', e);
+          }
         }
       }
       
