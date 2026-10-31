@@ -43,6 +43,14 @@ export const verificarSuporteWebGPU = async () => {
       return { suportado: false, motivo: 'Nenhum adaptador GPU disponível' };
     }
 
+    const memoriaSistemaGB = typeof navigator.deviceMemory === 'number'
+      ? navigator.deviceMemory
+      : 4;
+
+    if (memoriaSistemaGB < 4) {
+      return { suportado: false, motivo: 'Memória RAM insuficiente (mínimo 4 GB recomendado para IA local)', memoriaSistemaGB };
+    }
+
     const memoryMB = adapter.limits?.maxStorageBufferBindingSize ?
       adapter.limits.maxStorageBufferBindingSize / (1024 * 1024) : 0;
 
@@ -50,7 +58,7 @@ export const verificarSuporteWebGPU = async () => {
       return { suportado: false, motivo: 'Memória GPU insuficiente (mínimo 1 GB necessário)' };
     }
 
-    return { suportado: true };
+    return { suportado: true, memoriaSistemaGB };
   } catch (err) {
     return {
       suportado: false,
