@@ -17,7 +17,7 @@ async function despacharMensagem(mensagem, opcoes = {}) {
     const resultadoLocal = await executarPromptComFallback(mensagem.texto, {
       fallbackNuvem: async (prompt) => {
         // Fallback transparente para nuvem se a IA local falhar
-        return await enviarParaNuvem(prompt, opcoes);
+        return await enviarParaNuvem(prompt, opcoes, true);
       },
       onProgress: opcoes.onProgress,
       modelo: configIA.modelo,
@@ -26,7 +26,7 @@ async function despacharMensagem(mensagem, opcoes = {}) {
     if (resultadoLocal.origem === 'local' && resultadoLocal.resposta) {
       // Registrar uso bem-sucedido no placar como 'tokens no aparelho' (sem descontar cota do plano)
       atualizarPlacarTokens({
-        tipo: 'local',
+        tipo: 'tokens no aparelho',
         tokens: calcularTokens(mensagem.texto, resultadoLocal.resposta),
       });
 
@@ -43,11 +43,11 @@ async function despacharMensagem(mensagem, opcoes = {}) {
   }
 
   // Se não é simples ou a IA local não está ativa, envia para a nuvem diretamente
-  return await enviarParaNuvem(mensagem.texto, opcoes);
+  return await enviarParaNuvem(mensagem.texto, opcoes, false);
 }
 
 // Função para enviar a mensagem para a nuvem
-async function enviarParaNuvem(texto, opcoes) {
+async function enviarParaNuvem(texto, opcoes, ehFallback = false) {
   const respostaNuvem = await fetch('/api/nuvem', {
     method: 'POST',
     body: JSON.stringify({ texto, ...opcoes }),
@@ -55,11 +55,13 @@ async function enviarParaNuvem(texto, opcoes) {
 
   const dados = await respostaNuvem.json();
 
-  // Registrar uso no placar de tokens (descontando cota do plano)
-  atualizarPlacarTokens({
-    tipo: 'nuvem',
-    tokens: calcularTokens(texto, dados.resposta),
-  });
+  // Registrar uso no placar de tokens (descontando cota do plano), a menos que seja um fallback
+  if (!ehFallback) {
+    atualizarPlacarTokens({
+      tipo: 'nuvem',
+      tokens: calcularTokens(texto, dados.resposta),
+    });
+  }
 
   return {
     resposta: dados.resposta,
