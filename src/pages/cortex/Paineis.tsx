@@ -170,70 +170,135 @@ function AvisosCelular() {
   );
 }
 
+import { obterConfig, salvarConfig, verificarSuporteWebGPU } from "../../../ia-local";
+
 export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema; mudarTema: (t: Tema) => void; email: string; instalar: (() => void) | null; sair: () => void }) {
   const op: { id: Tema; nome: string }[] = [{ id: "auto", nome: "Automático" }, { id: "escuro", nome: "Escuro" }, { id: "claro", nome: "Claro" }];
-  const [iaAtiva, setIAAtiva] = useState(false);
-  const [carregandoIA, setCarregandoIA] = useState(false);
-  const [avisoBloqueio, setAvisoBloqueio] = useState(false);
-  const [avisoDownload, setAvisoDownload] = useState(false);
+  const [isLocalIAEnabled, setIsLocalIAEnabled] = useState(() => {
+    try {
+      const cfg = obterConfig();
+      return cfg ? !!cfg.ativo : false;
+    } catch {
+      return false;
+    }
+  });
+  const [isWebGpuSupported, setIsWebGpuSupported] = useState(true);
+  const [showDownloadWarning, setShowDownloadWarning] = useState(false);
 
   useEffect(() => {
-    const verificarIA = async () => {
-      const ativa = config.getIAAtiva();
-      setIAAtiva(ativa);
-    };
-    verificarIA();
-  }, []);
-
-  const toggleIA = async () => {
-    if (iaAtiva) {
-      // Desativar
-      const sucesso = config.setIAAtiva(false);
-      if (sucesso) {
-        config.mostrarAvisoDesativado();
-        setIAAtiva(false);
-      }
-    } else {
-      // Tentar ativar
-      setCarregandoIA(true);
+    const checkSupport = async () => {
       try {
-        const suporte = await config.verificarSuporteWebGPU();
-        if (!suporte.suportado) {
-          config.mostrarAvisoBloqueio(suporte.motivo || "Erro ao verificar suporte");
-          setAvisoBloqueio(true);
-        } else {
-          config.mostrarAvisoDownload();
-          setAvisoDownload(true);
-          setIAAtiva(true);
+        const { suportado, motivo } = await verificarSuporteWebGPU();
+        setIsWebGpuSupported(suportado);
+        if (!suportado) {
+          console.warn('IA Local não suportada:', motivo);
         }
       } catch (err) {
         console.error('Erro ao verificar suporte WebGPU:', err);
-        config.mostrarAvisoBloqueio(err instanceof Error ? err.message : 'Erro ao verificar suporte');
-        setAvisoBloqueio(true);
-      } finally {
-        setCarregandoIA(false);
+        setIsWebGpuSupported(false);
       }
+    };
+    checkSupport();
+  }, []);
+
+  const handleToggleLocalIA = useCallback(() => {
+    if (!isWebGpuSupported) {
+      return; // Bloqueia clique se WebGPU não suportado
     }
-  };
+
+    if (isLocalIAEnabled) {
+      setIsLocalIAEnabled(false);
+      salvarConfig({ ativo: false });
+    } else {
+      setShowDownloadWarning(true);
+    }
+  }, [isLocalIAEnabled, isWebGpuSupported]);
+
+  const handleConfirmDownload = useCallback(() => {
+    setIsLocalIAEnabled(true);
+    setShowDownloadWarning(false);
+    salvarConfig({ ativo: true });
+  }, []);
+
+  useEffect(() => {
+    if (!isWebGpuSupported) {
+      setShowDownloadWarning(false);
+    }
+  }, [isWebGpuSupported]);
 
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-3">
       <Titulo t="Configurações" s={email} />
       <Cartao><p className="font-medium mb-3">Aparência</p>
-        <div className="flex gap-2">{op.map((o) => (
+        <div className="flex gap-2">{op.op ? op.map((o) => (
+          <button key={o.id} onClick={() => mudarTema(o.id)} data-testid={`cx-tema-${o.id}`}
+            className={`flex-1 h-11 rounded-xl border text-sm ${tema === o.id ? "border-[var(--cx-ac)] bg-[var(--cx-hover)] font-semibold" : "border-[var(--cx-line)]"}`}>{o.nome}</button>)) : op.map((o) => (
           <button key={o.id} onClick={() => mudarTema(o.id)} data-testid={`cx-tema-${o.id}`}
             className={`flex-1 h-11 rounded-xl border text-sm ${tema === o.id ? "border-[var(--cx-ac)] bg-[var(--cx-hover)] font-semibold" : "border-[var(--cx-line)]"}`}>{o.nome}</button>))}</div></Cartao>
+      
+      {/* IA no meu aparelho (grátis, offline) */}
+      <Cartao>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h3 className="font-medium">IA no meu aparelho (grátis, offline)</h3>
+            <p className="text-sm text-[var(--cx-mut)] mt-1">
+              Execute o Cortex diretamente no seu dispositivo para respostas mais rápidas e privacidade total.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-[var(--cx-mut)]">
+              {isLocalIAEnabled ? 'Ativado' : 'Desativado'}
+            </span>
+            <button
+              onClick={handleToggleLocalIA}
+              disabled={!isWebGpuSupported}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isLocalIAEnabled ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'} ${!isWebGpuSupported ? 'opacity-40 cursor-not-allowed' : ''}`}
+              data-testid="local-ia-toggle"
+              role="switch"
+              aria-checked={isLocalIAEnabled}
+              aria-label="IA no meu aparelho"
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isLocalIAEnabled ? 'translate-x-6' : 'translate-x-1'}`}
+              />
+            </button>
+          </div>
+        </div>
+        {!isWebGpuSupported && (
+          <div className="text-xs text-red-400 mt-2" data-testid="webgpu-blocked-warning">
+            <p>⚠️ Seu navegador não suporta WebGPU ou não tem memória suficiente. Funcionalidade bloqueada.</p>
+          </div>
+        )}
+        {showDownloadWarning && !isLocalIAEnabled && (
+          <div className="text-xs text-yellow-400 mt-2 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20" data-testid="download-warning">
+            <p className="font-medium mb-1">⬇️ Aviso de Download (~1 GB)</p>
+            <p>Para ativar a IA local, será feito o download de um modelo de aproximadamente 1 GB. Recomendamos o uso de uma conexão Wi-Fi estável.</p>
+            <div className="flex justify-end gap-2 mt-3">
+              <button
+                onClick={() => setShowDownloadWarning(false)}
+                className="px-3 py-1 text-xs border border-[var(--cx-line)] rounded-lg hover:border-[var(--cx-ac)] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmDownload}
+                className="px-3 py-1 text-xs bg-[var(--cx-ac)] text-black font-semibold rounded-lg hover:opacity-90 transition-opacity"
+              >
+                Confirmar Download
+              </button>
+            </div>
+          </div>
+        )}
+      </Cartao>
+
       <Cartao><p className="font-medium">App no celular</p>
         <p className="text-sm text-[var(--cx-mut)] mt-1">{instalar ? "Instale o Cortex na tela inicial." : "No Chrome do celular: menu ⋮ → Instalar app (ou Adicionar à tela inicial)."}</p>
         {instalar && <button onClick={instalar} className="mt-3 h-11 px-5 rounded-xl bg-[var(--cx-ac)] text-black font-semibold" data-testid="cx-instalar">Instalar app</button>}</Cartao>
-
-      {/* IA Local nas Configurações do Cortex (NEXIA: Confirmado) */}
 
       <AvisosCelular />
 
       <Cartao><a href="/central" className="block font-medium">Central KERNEX</a><p className="text-sm text-[var(--cx-mut)] mt-1">Vendas, produtos e divulgação.</p></Cartao>
       <button onClick={sair} className="w-full h-12 rounded-xl border border-[var(--cx-line)] text-red-400" data-testid="cx-sair">Sair</button>
-      {/* IA Local nas Configurações do Cortex (NEXIA: Confirmado) */}
     </div>
   );
 }
