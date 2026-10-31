@@ -11,26 +11,62 @@ const REPO = '/repos/gilcambe/nexia';
 // Pedido do dono (25 e 26/10/2026): nada de horas esperando. 1 h dá para o Jules codar e testar uma tarefa pequena;
 // passou disso, volta ao Cortex (pode ir ao Jules de novo depois).
 const ESPERA_JULES_H = 1;
+const ESPERA_GEMINI_H = 2;
+const MAX_GEMINI_DIA = 5;
 const IGNORAR = ['cortex-dividido', 'cortex-alerta', 'so-humano', 'vez-do-claude'];
 
 // Decide o que fazer com as issues travadas (função pura, testada).
-function decidir(issues, prs, agora, nomes) {
+function decidir(issues, prs, agora, nomes, opts = {}) {
   const recusado = (p) => (p.labels || []).some(l => (l.name || l) === 'revisor-recusou');
   const prDe = (n) => prs.some(p => !recusado(p) && new RegExp(`#${n}(?!\\d)`).test(`${p.title || ''}\n${p.body || ''}`));
   const travadas = issues.filter(i => !i.pull_request && nomes(i).includes('cortex-travado') && !nomes(i).some(n => IGNORAR.includes(n)));
+
+  // Gemini CLI em andamento: se em 2 h não houver PR citando #N, sobe para vez-do-claude
+  const geminiExpiradas = issues.filter(i => !i.pull_request && nomes(i).includes('gemini-cli') && !nomes(i).some(n => IGNORAR.includes(n))
+    && !prDe(i.number) && (agora - Date.parse(i.updated_at || 0)) / 36e5 >= ESPERA_GEMINI_H);
+
   // Parte grande do plano do Cortex (rótulo cortex-jules, scripts/cortex-plano.js) vai antes das travadas: ela nem tentou na IA grátis.
-  const planejada = issues.find(i => !i.pull_request && nomes(i).includes('cortex-jules') && !nomes(i).includes('jules-enviado') && !nomes(i).some(n => IGNORAR.includes(n)));
-  const enviar = planejada || travadas.find(i => !nomes(i).includes('jules-enviado'));
+  const planejada = issues.find(i => !i.pull_request && nomes(i).includes('cortex-jules') && !nomes(i).includes('jules-enviado') && !nomes(i).includes('gemini-cli') && !nomes(i).some(n => IGNORAR.includes(n)));
+  const enviar = planejada || travadas.find(i => !nomes(i).includes('jules-enviado') && !nomes(i).includes('gemini-cli'));
   const voltar = travadas.filter(i => nomes(i).includes('jules-enviado') && !prDe(i.number)
     && (agora - Date.parse(i.updated_at || 0)) / 36e5 >= ESPERA_JULES_H);
   const segunda = voltar.filter(i => nomes(i).includes('cortex-retomada'));
-  return {
-    enviar: enviar ? enviar.number : null,
+
+  // #2387: quando a tarefa falhou (segunda volta sem entrega da reserva), ANTES de mandar para vez-do-claude,
+  // tenta o Gemini CLI (rótulo gemini-cli) se ainda houver cota do dia (máx 5).
+  // Se a tarefa já tentou no Gemini CLI e em 2 h não houver PR, aí sim vai para vez-do-claude (humano).
+  const geminiHoje = opts.geminiHoje !== undefined ? opts.geminiHoje : issues.filter(i => nomes(i).includes('gemini-cli')).length;
+  const candidatosClaude = segunda.filter(i => nomes(i).includes('reserva-tentou') && !nomes(i).includes('gemini-cli'));
+
+  const geminiParaPromover = [];
+  const humano = [...geminiExpiradas.map(i => i.number)];
+
+  for (const c of candidatosClaude) {
+    if (geminiHoje + geminiParaPromover.length < MAX_GEMINI_DIA) {
+      geminiParaPromover.push(c.number);
+    } else {
+      humano.push(c.number);
+    }
+  }
+
+  // Se Jules estiver sem cota (flag explícita ou retorno de API) e há candidata inicial sem envio
+  let geminiEnviar = null;
+  if (opts.julesSemCota && (geminiHoje + geminiParaPromover.length) < MAX_GEMINI_DIA) {
+    const candidata = issues.find(i => !i.pull_request && (nomes(i).includes('cortex-travado') || nomes(i).includes('cortex-jules')) && !nomes(i).includes('gemini-cli') && !nomes(i).includes('jules-enviado') && !nomes(i).some(n => IGNORAR.includes(n)));
+    if (candidata) geminiEnviar = candidata.number;
+  }
+
+  const geminiLista = [...geminiParaPromover, ...(geminiEnviar && !geminiParaPromover.includes(geminiEnviar) ? [geminiEnviar] : [])];
+
+  const res = {
+    enviar: opts.julesSemCota ? null : (enviar ? enviar.number : null),
     retomar: voltar.filter(i => !nomes(i).includes('cortex-retomada')).map(i => i.number),
     // #1958: antes do Claude, as IAs conectadas na Central tentam uma vez (rótulo reserva-tentou).
     reserva: segunda.filter(i => !nomes(i).includes('reserva-tentou')).map(i => i.number),
-    humano: segunda.filter(i => nomes(i).includes('reserva-tentou')).map(i => i.number),
+    humano: [...new Set(humano)],
   };
+  if (geminiLista.length > 0 || opts.incluirGemini) res.gemini = geminiLista;
+  return res;
 }
 
 async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
@@ -46,8 +82,14 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
   const pl = Array.isArray(planejadas) ? planejadas : [];
   const issues = [...pl, ...(Array.isArray(travadas) ? travadas : []).filter(t => !pl.some(x => x.number === t.number))];
   const prs = await p.gh(`${REPO}/pulls?state=open&per_page=100`);
-  const d = decidir(issues || [], prs || [], at, nomes);
+
+  // Conta quantas issues foram despachadas para gemini-cli nas últimas 24h
+  const inicioDoDia = at - 24 * 36e5;
+  const geminiHoje = issues.filter(i => nomes(i).includes('gemini-cli') && Date.parse(i.updated_at || 0) >= inicioDoDia).length;
+
+  const d = decidir(issues || [], prs || [], at, nomes, { geminiHoje });
   const out = { retomadas: [], reserva: [], humano: [] };
+  if (d.gemini && d.gemini.length) out.gemini = [];
   const tirar = (n, l) => p.gh(`${REPO}/issues/${n}/labels/${encodeURIComponent(l)}`, { method: 'DELETE' }).catch(() => null);
   const por = (n, ls) => p.gh(`${REPO}/issues/${n}/labels`, { method: 'POST', body: JSON.stringify({ labels: ls }) }).catch(() => null);
   const comentar = (n, body) => p.gh(`${REPO}/issues/${n}/comments`, { method: 'POST', body: JSON.stringify({ body }) }).catch(() => null);
@@ -69,14 +111,36 @@ async function rodar(at, { env = process.env, fetchFn = fetch } = {}) {
   }
   for (const n of d.humano) {
     await por(n, ['vez-do-claude']);
-    await comentar(n, '🪜 Degrau 3: o Cortex e as IAs grátis (Jules) tentaram 2 vezes cada e não entregaram. Vez do Claude, que faz só esta tarefa e devolve a fila ao Cortex (docs/ESCADA-IA.md).');
+    await comentar(n, '🪜 Degrau 3: o Cortex e as IAs grátis tentaram e não entregaram. Vez do Claude, que faz só esta tarefa e devolve a fila ao Cortex (docs/ESCADA-IA.md).');
     out.humano.push(n);
   }
+
+  const dispararGemini = async (n) => {
+    await por(n, ['gemini-cli']);
+    const r = await p.gh(`${REPO}/actions/workflows/gemini-ajudante.yml/dispatches`, { method: 'POST', body: JSON.stringify({ ref: 'develop', inputs: { issue: String(n) } }) }).then(() => true).catch(() => false);
+    await comentar(n, r
+      ? '🪜 Degrau 2: Jules sem cota ou com limite excedido. Disparado Gemini CLI (workflow gemini-ajudante.yml). Se em 2 h não houver PR, vai para vez-do-claude.'
+      : 'Não consegui disparar o Gemini CLI agora; tento de novo no próximo ciclo.');
+    if (r) out.gemini.push(n);
+  };
+
+  for (const n of (d.gemini || [])) {
+    await dispararGemini(n);
+  }
+
   if (d.enviar) {
     const r = await mandarParaJules(p, d.enviar, 'o robô (automático, tarefa travada)', { env, fetchFn });
     Object.assign(out, { issue: d.enviar, status: r.status, ...(r.status === 200 ? { link: r.corpo.link } : { erro: r.corpo.error }) });
-  } else out.enviados = 0;
+    // Se o Jules recusou por cota/limite (ex: 429 ou 502 por limite diário), tenta Gemini CLI para a tarefa
+    const gLen = (out.gemini || []).length;
+    if ((r.status === 429 || r.status === 502) && (geminiHoje + gLen) < MAX_GEMINI_DIA) {
+      if (!out.gemini || !out.gemini.includes(d.enviar)) {
+        if (!out.gemini) out.gemini = [];
+        await dispararGemini(d.enviar);
+      }
+    }
+  } else if (!d.gemini || !d.gemini.length) out.enviados = 0;
   return out;
 }
 
-module.exports = { rodar, decidir, ESPERA_JULES_H };
+module.exports = { rodar, decidir, ESPERA_JULES_H, ESPERA_GEMINI_H, MAX_GEMINI_DIA };
