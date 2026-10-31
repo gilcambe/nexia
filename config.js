@@ -1,48 +1,30 @@
-/**
- * Configurações do Cortex - Tela de Configurações
- *
- * Esta módulo gerencia as preferências do usuário no Cortex,
- * incluindo o switch de IA no meu aparelho (grátis, offline).
- */
+// Configurações do Cortex
 
-// --- Estado Global ---
-let config = {
-  iaNoAparelho: false // Default desligado
+// Interface para configuração da IA local
+export interface IALocalConfig {
+  ativo: boolean;
+}
+
+// Função para obter configuração da IA local do armazenamento local
+export const obterConfig = (): IALocalConfig => {
+  if (typeof window === 'undefined') {
+    return { ativo: false };
+  }
+  
+  try {
+    const configStr = localStorage.getItem('iaLocalConfig');
+    if (configStr) {
+      return JSON.parse(configStr);
+    }
+  } catch (err) {
+    console.error('Erro ao obter configuração da IA local:', err);
+  }
+  
+  return { ativo: false };
 };
 
-// --- Funções de Acesso ---
-
-/**
- * Obtém a configuração atual da IA local
- * @returns {boolean} true se a IA local está ativa
- */
-function getIAAtiva() {
-  return config.iaNoAparelho;
-}
-
-/**
- * Define a configuração da IA local
- * @param {boolean} ativo - true para ativar, false para desativar
- * @returns {boolean} true se a configuração foi salva com sucesso
- */
-function setIAAtiva(ativo) {
-  try {
-    config.iaNoAparelho = ativo;
-    salvarNoLocalStorage();
-    return true;
-  } catch (err) {
-    console.error('Erro ao salvar configuração da IA local:', err);
-    return false;
-  }
-}
-
-// --- Verificação de WebGPU e Memória ---
-
-/**
- * Verifica se o navegador suporta WebGPU e tem memória suficiente
- * @returns {Promise<{suportado: boolean, motivo?: string}>}
- */
-async function verificarSuporteWebGPU() {
+// Função para verificar suporte WebGPU
+export const verificarSuporteWebGPU = async (): Promise<{ suportado: boolean; motivo?: string }> => {
   if (typeof window === 'undefined') {
     return { suportado: false, motivo: 'Ambiente sem suporte a navegador' };
   }
@@ -59,163 +41,60 @@ async function verificarSuporteWebGPU() {
       return { suportado: false, motivo: 'Nenhum adaptador GPU disponível' };
     }
     
-        // Verificar memória do sistema (mínimo 1 GB)
-    const memoriaSistema = typeof navigator.deviceMemory === 'number' ? navigator.deviceMemory : 0;
-
-    if (memoriaSistema < 1) { // Menos de 1 GB
-      return { suportado: false, motivo: 'Memória do sistema insuficiente (mínimo 1 GB necessário)' };
+    // Verificar memória disponível (mínimo 1 GB)
+    const memoryMB = adapter.limits?.maxStorageBufferBindingSize ? 
+      adapter.limits.maxStorageBufferBindingSize / (1024 * 1024) : 0;
+    
+    if (memoryMB < 1024) { // Menos de 1 GB
+      return { suportado: false, motivo: 'Memória GPU insuficiente (mínimo 1 GB necessário)' };
     }
     
     return { suportado: true };
   } catch (err) {
     return { 
       suportado: false, 
-      motivo: err.message || 'Erro ao verificar suporte WebGPU' 
+      motivo: err instanceof Error ? err.message : 'Erro ao verificar suporte WebGPU' 
     };
   }
-}
+};
 
-/**
- * Verifica se tem conexão Wi-Fi
- * @returns {boolean} true se está conectado a Wi-Fi
- */
-function verificarWiFi() {
-  if (typeof navigator === 'undefined' || !navigator.connection) {
-    return true; // Sem suporte, assume positivo
-  }
-  
-  const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-  return conn.type === 'wifi';
-}
-
-// --- Avisos e Mensagens ---
-
-/**
- * Mostra aviso de bloqueio por WebGPU/memória
- */
-function mostrarAvisoBloqueio(motivo) {
-  // Em um ambiente real, isso seria exibido na UI do Cortex
-  alert(`⚠️ ${motivo}\n\nA IA no seu aparelho não pode ser ativada porque:\n• Seu navegador não suporta WebGPU\n• Ou sua GPU não tem memória suficiente (mínimo 1 GB)\n\nSeu aparelho continuará usando as IAs grátis do Cortex, que funcionam online.`);
-}
-
-/**
- * Mostra aviso de download e recomendação de Wi-Fi
- */
-function mostrarAvisoDownload() {
-  // Em um ambiente real, isso seria exibido na UI do Cortex
-  const estaWiFi = verificarWiFi();
-  
-  alert(`💾 IA no meu aparelho (grátis, offline)\n\nAo ativar, o Cortex vai baixar os modelos de IA (~1 GB) para funcionar offline no seu aparelho.\n\n${estaWiFi ? '✅ Você está conectado a Wi-Fi.' : '⚠️ Você não está conectado a Wi-Fi.'}\n\nRecomendação: Conecte-se a uma rede Wi-Fi antes de ativar para evitar consumo de dados móveis.`);
-}
-
-/**
- * Mostra aviso de desativado
- */
-function mostrarAvisoDesativado() {
-  // Em um ambiente real, isso seria exibido na UI do Cortex
-  alert(`IA no meu aparelho está desativada.\n\nVocê continuará usando as IAs grátis do Cortex que funcionam online.`);
-}
-
-// --- Persistência ---
-
-/**
- * Salva a configuração no localStorage
- */
-function salvarNoLocalStorage() {
+// Função para salvar configuração da IA local
+export const salvarConfig = (config: IALocalConfig) => {
   if (typeof window === 'undefined') return;
   
   try {
     localStorage.setItem('iaLocalConfig', JSON.stringify(config));
   } catch (err) {
-    console.error('Erro ao salvar configuração no localStorage:', err);
+    console.error('Erro ao salvar configuração da IA local:', err);
+    throw new Error('Falha ao salvar configuração');
   }
-}
+};
 
-/**
- * Carrega a configuração do localStorage
- */
-function carregarDoLocalStorage() {
-  if (typeof window === 'undefined') return;
-  
+// Funções para gerenciar o estado da IA local
+export const getIAAtiva = (): boolean => {
+  return obterConfig().ativo;
+};
+
+export const setIAAtiva = (ativo: boolean): boolean => {
   try {
-    const configStr = localStorage.getItem('iaLocalConfig');
-    if (configStr) {
-      config = JSON.parse(configStr);
-    }
-  } catch (err) {
-    console.error('Erro ao carregar configuração do localStorage:', err);
-  }
-}
-
-/**
- * Reseta a configuração para o padrão
- */
-function resetarConfiguracao() {
-  config = {
-    iaNoAparelho: false
-  };
-  salvarNoLocalStorage();
-}
-
-// --- Manipulação do Switch ---
-
-/**
- * Manipula o clique no switch da IA no aparelho
- * @returns {Promise<boolean>} true se a ativação foi bem sucedida
- */
-async function handleSwitchIaAparelho() {
-  try {
-    // Verificar suporte WebGPU
-    const suporte = await verificarSuporteWebGPU();
-    
-    if (!suporte.suportado) {
-      mostrarAvisoBloqueio(suporte.motivo);
-      return false;
-    }
-    
-    // Mostrar aviso de download
-    mostrarAvisoDownload();
-    
-    // Ativar a IA local
-    const sucesso = setIAAtiva(true);
-    
-    if (sucesso) {
-      // Em um ambiente real, aqui iniciaria o download dos modelos
-      console.log('IA no aparelho ativada. Download dos modelos iniciado...');
-    }
-    
-    return sucesso;
-  } catch (err) {
-    console.error('Erro ao ativar IA no aparelho:', err);
-    mostrarAvisoBloqueio('Erro ao tentar ativar a IA no aparelho. Tente novamente.');
+    const config = obterConfig();
+    config.ativo = ativo;
+    salvarConfig(config);
+    return true;
+  } catch {
     return false;
   }
-}
+};
 
-/**
- * Manipula o desligamento do switch da IA no aparelho
- */
-function handleDesligarIaAparelho() {
-  setIAAtiva(false);
-  mostrarAvisoDesativado();
-}
+// Funções para mostrar avisos
+export const mostrarAvisoBloqueio = (motivo: string) => {
+  alert(`⚠️ Bloqueado: ${motivo}`);
+};
 
-// --- Inicialização ---
+export const mostrarAvisoDownload = () => {
+  alert('📥 Download necessário\n\nPara ativar a IA local, será necessário baixar aproximadamente 1GB de dados do modelo.\nRecomendamos realizar este download em uma rede Wi-Fi para evitar cobranças de dados móveis.');
+};
 
-// Carrega a configuração salva quando o módulo é carregado
-if (typeof window !== 'undefined') {
-  carregarDoLocalStorage();
-}
-
-// --- Exports ---
-
-export default {
-  getIAAtiva,
-  setIAAtiva,
-  verificarSuporteWebGPU,
-  verificarWiFi,
-  mostrarAvisoBloqueio,
-  mostrarAvisoDownload,
-  mostrarAvisoDesativado,
-  resetarConfiguracao
+export const mostrarAvisoDesativado = () => {
+  alert('✅ IA local desativada');
 };
