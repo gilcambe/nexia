@@ -2,12 +2,28 @@
 // Tela de Configuracoes do Cortex — preferencias do usuario.
 // Inclui o switch 'IA no meu aparelho (grátis, offline)' com verificacao de WebGPU,
 // aviso de bloqueio quando nao suportado e aviso de download (~1 GB, Wi-Fi) ao ativar.
-import {
-  obterConfig,
-  salvarConfig,
-  verificarSuporteWebGPU,
-  renderizarConfiguracaoIALocal,
-} from './ia-local.js';
+// Funções do módulo ia-local.js
+const obterConfig = () => {
+  const config = localStorage.getItem('cortex_config_ia_local');
+  return config ? JSON.parse(config) : { ativo: false };
+};
+
+const salvarConfig = (config) => {
+  localStorage.setItem('cortex_config_ia_local', JSON.stringify(config));
+};
+
+const verificarSuporteWebGPU = async () => {
+  if (typeof navigator === 'undefined' || !navigator.gpu) {
+    return { suportado: false, motivo: 'Navegador não suporta WebGPU' };
+  }
+  
+  try {
+    const adapter = await navigator.gpu.requestAdapter();
+    return { suportado: !!adapter };
+  } catch (err) {
+    return { suportado: false, motivo: 'Erro ao verificar WebGPU: ' + err.message };
+  }
+};
 
 /**
  * Renderiza a tela de Configuracoes do Cortex no container informado.
@@ -164,4 +180,5 @@ export async function renderizarConfiguracoesCortex(containerOuSeletor) {
   }
 }
 
+// Exportar funções
 export { obterConfig, salvarConfig, verificarSuporteWebGPU };
