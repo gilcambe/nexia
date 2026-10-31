@@ -29,12 +29,15 @@ const github = {
 
 // Mock das funções do projeto
 const mandarParaJules = async function(pedido, n, quem, { env = process.env, fetchFn = fetch } = {}) {
+  mandarParaJules.chamadas = (mandarParaJules.chamadas || 0) + 1;
+  mandarParaJules.ultimosArgumentos = { pedido, n, quem };
   // Versão simplificada para teste
   const chaves = [env.JULES_API_KEY, env.JULES_API_KEY1].filter(Boolean);
   if (!chaves.length) return { status: 500, corpo: { error: 'Falta a chave do Jules' } };
   // Simula sucesso
   return { status: 200, corpo: { ok: true, sessao: 'teste-sessao', link: 'https://jules.google.com', mensagem: 'Pedido #' + n + ' enviado ao Jules.' } };
 };
+mandarParaJules.chamadas = 0;
 
 const rodar = async function(data, { env = process.env, fetchFn = fetch } = {}) {
   // Versão simplificada para teste
