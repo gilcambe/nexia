@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useMemory } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemType } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemComponent } from '../../components/MemoryItem';
-import { obterConfig, verificarSuporteWebGPU, salvarConfig } from '../../config';
+
+type MemoryItemProps = MemoryItemType & {
+  onDelete: (id: string) => void;
+};
 
 export default function MemorySettings() {
   const { 
@@ -17,12 +20,6 @@ export default function MemorySettings() {
   } = useMemory();
 
   const [isDeletingAll, setIsDeletingAll] = useState(false);
-
-  // Estados para IA local
-  const [iaLocalAtivo, setIaLocalAtivo] = useState(false);
-  const [bloqueado, setBloqueado] = useState(false);
-  const [motivoBloqueio, setMotivoBloqueio] = useState('');
-  const [mostrarAvisoDownload, setMostrarAvisoDownload] = useState(false);
 
   const handleDeleteItem = (id: string) => {
     deleteItem(id);
@@ -43,39 +40,8 @@ export default function MemorySettings() {
     toggleRememberMe(enabled);
   };
 
-  // Verificar suporte WebGPU e memória ao montar e carregar configuração
-  useEffect(() => {
-    (async () => {
-      try {
-        const config = obterConfig();
-        setIaLocalAtivo(config.ativo);
-        
-        const suporte = await verificarSuporteWebGPU();
-        if (!suporte.suportado) {
-          setBloqueado(true);
-          setMotivoBloqueio(suporte.motivo || 'WebGPU ou memória insuficiente não suportada.');
-        }
-      } catch (err) {
-        setBloqueado(true);
-        setMotivoBloqueio(err instanceof Error ? err.message : 'Erro ao verificar suporte do dispositivo.');
-      }
-    })();
-  }, []);
-
   const handleReload = () => {
     loadMemory();
-  };
-
-  const handleToggleIaLocal = async (ativo: boolean) => {
-    if (bloqueado) return;
-
-    if (ativo) {
-      setMostrarAvisoDownload(true);
-    } else {
-      setMostrarAvisoDownload(false);
-      setIaLocalAtivo(false);
-      salvarConfig({ ativo: false });
-    }
   };
 
   return (
@@ -120,75 +86,6 @@ export default function MemorySettings() {
           <div className="text-xs text-[var(--cx-mut)] mt-4">
             <p>⚠️ Ao desativar, novos fatos não serão armazenados, mas os existentes permanecerão até serem excluídos manualmente.</p>
           </div>
-        </div>
-      </div>
-
-      {/* Seção de IA local */}
-      <div className="mb-8">
-        <h2 className="text-xl font-semibold mb-4">IA no meu aparelho (grátis, offline)</h2>
-        <div className="bg-[var(--cx-card)] border border-[var(--cx-line)] rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-medium">IA no meu aparelho (grátis, offline)</h3>
-              <p className="text-sm text-[var(--cx-mut)] mt-1">
-                Execute o Cortex offline no seu dispositivo. Requer WebGPU e ~1 GB de armazenamento.
-                Os dados são processados localmente, sem envio para a nuvem.
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-[var(--cx-mut)]">
-                {iaLocalAtivo ? 'Ativado' : 'Desativado'}
-              </span>
-              <button
-                onClick={() => handleToggleIaLocal(!iaLocalAtivo)}
-                disabled={bloqueado}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${bloqueado ? 'opacity-50 cursor-not-allowed' : ''} ${iaLocalAtivo ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'}`}
-                data-testid="memory-ia-local-toggle"
-                role="switch"
-                aria-checked={iaLocalAtivo}
-                aria-label="IA no meu aparelho (grátis, offline)"
-                title={bloqueado ? `Bloqueado: ${motivoBloqueio}` : 'IA no meu aparelho (grátis, offline)'}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${iaLocalAtivo ? 'translate-x-6' : 'translate-x-1'}`}
-                />
-              </button>
-            </div>
-          </div>
-          {bloqueado && (
-            <div className="text-xs text-red-400 mt-4 bg-red-400/10 p-3 rounded-lg" role="alert" aria-live="assertive">
-              <p>🚫 <strong>Dispositivo não suportado:</strong> {motivoBloqueio}</p>
-            </div>
-          )}
-          {mostrarAvisoDownload && (
-            <div className="text-xs text-amber-300 mt-4 bg-amber-400/10 p-4 rounded-lg border border-amber-400/20" role="alert">
-              <p className="font-semibold text-sm mb-1">⚠️ Aviso de Download (~1 GB)</p>
-              <p>A ativação da IA local fará o download de aproximadamente <strong>1 GB</strong> de dados de modelos para o seu dispositivo.</p>
-              <p className="mt-1">Recomendamos firmemente o uso de uma conexão <strong>Wi-Fi</strong> estável para evitar o consumo excedente de dados móveis.</p>
-              <div className="mt-4 flex gap-3">
-                <button
-                  onClick={() => {
-                    setIaLocalAtivo(true);
-                    setMostrarAvisoDownload(false);
-                    salvarConfig({ ativo: true });
-                  }}
-                  className="px-4 py-2 bg-[var(--cx-ac)] text-white rounded-lg hover:opacity-90 transition-colors text-sm font-medium"
-                >
-                  Confirmar e Baixar (~1 GB)
-                </button>
-                <button
-                  onClick={() => {
-                    setIaLocalAtivo(false);
-                    setMostrarAvisoDownload(false);
-                    salvarConfig({ ativo: false });
-                  }}
-                  className="px-4 py-2 border border-[var(--cx-line)] rounded-lg hover:border-[var(--cx-ac)] transition-colors text-sm font-medium"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
