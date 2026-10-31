@@ -48,6 +48,19 @@ export default function MemorySettings() {
     setShowOfflineModal(true);
   };
 
+  const hasWebGPUSupport = () => {
+    if (typeof navigator === 'undefined') return false;
+    // @ts-ignore
+    return 'gpu' in navigator;
+  };
+
+  const hasMemorySupport = () => {
+    if (typeof navigator === 'undefined') return false;
+    // @ts-ignore
+    const deviceMemory = navigator.deviceMemory || 4;
+    return deviceMemory >= 4;
+  };
+
   const confirmOfflineAi = () => {
     setOfflineAiEnabled(true);
     setShowOfflineModal(false);
