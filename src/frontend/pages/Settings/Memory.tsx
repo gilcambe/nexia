@@ -20,6 +20,42 @@ export default function MemorySettings() {
   } = useMemory();
 
   const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [localIAEnabled, setLocalIAEnabled] = useState(false);
+  const [webGpuSupported, setWebGpuSupported] = useState(true);
+  const [showDownloadWarning, setShowDownloadWarning] = useState(false);
+
+  useEffect(() => {
+    async function checkSupport() {
+      try {
+        const gpu = (navigator as Navigator & { gpu?: unknown }).gpu;
+        const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+        if (!gpu || (memory && memory < 4)) {
+          setWebGpuSupported(false);
+        }
+      } catch {
+        setWebGpuSupported(false);
+      }
+    }
+    checkSupport();
+  }, []);
+
+  const handleToggleLocalIA = () => {
+    if (!webGpuSupported) return;
+    if (localIAEnabled) {
+      setLocalIAEnabled(false);
+    } else {
+      setShowDownloadWarning(true);
+    }
+  };
+
+  const handleConfirmDownload = () => {
+    setLocalIAEnabled(true);
+    setShowDownloadWarning(false);
+  };
+
+  const handleCancelDownload = () => {
+    setShowDownloadWarning(false);
+  };
 
   const handleReload = useCallback(() => {
     loadMemory();
@@ -50,6 +86,68 @@ export default function MemorySettings() {
         <p className="text-[var(--cx-mut)]">
           Gerencie suas preferências de memória e privacidade.
         </p>
+      </div>
+
+      {/* Seção IA no meu aparelho */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold mb-4">IA Local</h2>
+        <div className="bg-[var(--cx-card)] border border-[var(--cx-line)] rounded-xl p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="font-medium">IA no meu aparelho (grátis, offline)</h3>
+              <p className="text-sm text-[var(--cx-mut)] mt-1">
+                Execute o Cortex diretamente no seu dispositivo para respostas mais rápidas e privacidade total.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-[var(--cx-mut)]">
+                {localIAEnabled ? 'Ativado' : 'Desativado'}
+              </span>
+              <button
+                onClick={handleToggleLocalIA}
+                disabled={!webGpuSupported}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${localIAEnabled ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'} ${!webGpuSupported ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                data-testid="local-ia-toggle"
+                role="switch"
+                aria-checked={localIAEnabled}
+                aria-label="IA no meu aparelho"
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${localIAEnabled ? 'translate-x-6' : 'translate-x-1'}`}
+                />
+              </button>
+            </div>
+          </div>
+
+          {!webGpuSupported && (
+            <div className="text-xs text-red-400 mt-2" data-testid="webgpu-blocked-warning">
+              <p>⚠️ Seu navegador não suporta WebGPU ou não tem memória suficiente. Funcionalidade bloqueada.</p>
+            </div>
+          )}
+
+          {showDownloadWarning && !localIAEnabled && (
+            <div className="text-xs text-yellow-400 mt-3 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20" data-testid="download-warning">
+              <p className="font-medium mb-1">⬇️ Aviso de Download (~1 GB)</p>
+              <p>Para ativar a IA local, será feito o download de um modelo de aproximadamente 1 GB. Recomendamos o uso de uma conexão Wi-Fi estável.</p>
+              <div className="flex justify-end gap-2 mt-3">
+                <button
+                  type="button"
+                  onClick={handleCancelDownload}
+                  className="px-3 py-1 text-xs border border-[var(--cx-line)] rounded-lg hover:border-[var(--cx-ac)] transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDownload}
+                  className="px-3 py-1 text-xs bg-[var(--cx-ac)] text-black font-semibold rounded-lg hover:opacity-90 transition-opacity cursor-pointer"
+                >
+                  Confirmar Download
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Seção de privacidade */}
