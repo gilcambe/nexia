@@ -5,6 +5,7 @@ import type { Deploy, Filtro, Resumo } from "../meu-cortex/api";
 import type { Tema } from "./page";
 import ContasReserva from "./Reservas";
 
+
 const Cartao = ({ children, testid }: { children: React.ReactNode; testid?: string }) => (
   <div className="rounded-2xl border border-[var(--cx-line)] bg-[var(--cx-card)] p-4" data-testid={testid}>{children}</div>
 );
@@ -13,8 +14,7 @@ const Titulo = ({ t, s }: { t: string; s?: string }) => <header className="mb-5"
 
 // O que o Cortex usa de verdade: o estado de GitHub e Cloudflare vem das APIs; as IAs grátis são o rodízio fixo do Cortex.
 const IAS = ["Groq", "GitHub Models", "Gemini", "Workers AI", "Mistral", "OpenRouter"];
-
-export function Conexoes({ email }: { email: string }) {
+\n\nexport function Conexoes({ email }: { email: string }) {
   const { listar, deploy } = usePedidos();
   const [gh, setGh] = useState<boolean | null>(null);
   const [d, setD] = useState<Deploy | null>(null);
@@ -262,21 +262,8 @@ function AvisosCelular() {
   );
 }
 
-export function Config({ tema, mudarTema, email, instalar, sair }: { tema: Tema; mudarTema: (t: Tema) => void; email: string; instalar: (() => void) | null; sair: () => void }) {
-  const op: { id: Tema; nome: string }[] = [{ id: "auto", nome: "Automático" }, { id: "escuro", nome: "Escuro" }, { id: "claro", nome: "Claro" }];
-  return (
-    <div className="max-w-3xl mx-auto p-6 space-y-3">
-      <Titulo t="Configurações" s={email} />
-      <Cartao><p className="font-medium mb-3">Aparência</p>
-        <div className="flex gap-2">{op.map((o) => (
-          <button key={o.id} onClick={() => mudarTema(o.id)} data-testid={`cx-tema-${o.id}`}
-            className={`flex-1 h-11 rounded-xl border text-sm ${tema === o.id ? "border-[var(--cx-ac)] bg-[var(--cx-hover)] font-semibold" : "border-[var(--cx-line)]"}`}>{o.nome}</button>))}</div></Cartao>
-      <Cartao><p className="font-medium">App no celular</p>
-        <p className="text-sm text-[var(--cx-mut)] mt-1">{instalar ? "Instale o Cortex na tela inicial." : "No Chrome do celular: menu ⋮ → Instalar app (ou Adicionar à tela inicial)."}</p>
-        {instalar && <button onClick={instalar} className="mt-3 h-11 px-5 rounded-xl bg-[var(--cx-ac)] text-black font-semibold" data-testid="cx-instalar">Instalar app</button>}</Cartao>
-      <AvisosCelular />
-      <Cartao><a href="/central" className="block font-medium">Central KERNEX</a><p className="text-sm text-[var(--cx-mut)] mt-1">Vendas, produtos e divulgação.</p></Cartao>
-      <button onClick={sair} className="w-full h-12 rounded-xl border border-[var(--cx-line)] text-red-400" data-testid="cx-sair">Sair</button>
+
+
     </div>
   );
 }

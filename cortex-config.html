@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurações — Cortex NEXIA</title>
+  <meta name="description" content="Tela de configurações do Cortex — IA no meu aparelho (grátis, offline)">
+  <style>
+    :root {
+      --bg: #0A0D08;
+      --cartao: #111408;
+      --linha: rgba(201,168,76,0.18);
+      --texto: #F8F4ED;
+      --suave: rgba(248,244,237,0.72);
+      --cor-destaque: #C9A84C;
+      --erro: #ff6b6b;
+      --erro-f: rgba(255,107,107,0.15);
+      --ok: #2A7A4E;
+      --ok-f: rgba(42,122,78,0.2);
+      --alerta: #e6a23c;
+      --alerta-f: rgba(230,162,60,0.15);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--texto); line-height: 1.5; padding: 20px;
+    }
+    .container { max-width: 600px; margin: 0 auto; }
+    header {
+      background: var(--cartao); border-bottom: 1px solid var(--linha);
+      padding: 16px; display: flex; align-items: center; gap: 12px;
+    }
+    header h1 { font-size: 20px; color: var(--cor-destaque); }
+    .content { padding: 24px; }
+    .card {
+      background: var(--cartao); border: 1px solid var(--linha);
+      border-radius: 12px; padding: 20px; margin-bottom: 16px;
+    }
+    .card h2 { font-size: 16px; color: var(--texto); margin-bottom: 16px; }
+    .switch-linha {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+    }
+    .switch { position: relative; width: 44px; height: 24px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+      background: #333; border-radius: 24px; transition: .3s; }
+    .slider:before { position: absolute; content: ''; height: 18px; width: 18px;
+      left: 3px; bottom: 3px; background: #fff; border-radius: 50%; transition: .3s; }
+    input:checked + .slider { background: var(--cor-destaque); }
+    input:checked + .slider:before { transform: translateX(20px); }
+    input:disabled + .slider { opacity: 0.5; cursor: not-allowed; }
+    .switch-label { font-size: 15px; font-weight: 600; color: var(--texto); }
+    .switch-ajuda { font-size: 12px; color: var(--suave); margin-left: 4px; }
+    .aviso {
+      border-radius: 10px; padding: 12px 16px; margin-top: 12px; font-size: 13px;
+      display: none; gap: 8px; align-items: flex-start;
+    }
+    .aviso.bloqueio { background: var(--erro-f); color: var(--erro); border: 1px solid var(--erro); }
+    .aviso.download { background: var(--alerta-f); color: var(--alerta); border: 1px solid var(--alerta); }
+    .aviso.desativado { background: var(--ok-f); color: var(--ok); border: 1px solid var(--ok); }
+    .aviso.mensagem { font-weight: 600; }
+    .icone-icone { font-size: 18px; flex-shrink: 0; }
+    .status-info {
+      font-size: 12px; color: var(--suave); margin-top: 8px; padding: 8px;
+      background: rgba(255,255,255,0.02); border-radius: 6px;
+    }
+    footer { margin-top: 32px; font-size: 12px; color: var(--suave); text-align: center; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <span style="font-size: 24px;">⚙️</span>
+      <h1>Configurações</h1>
+    </header>
+    <div class="content">
+      <div class="card">
+        <h2>IA no meu aparelho (grátis, offline)</h2>
+        <div class="switch-linha">
+          <label class="switch">
+            <input type="checkbox" id="switch-ia-aparelho" aria-label="IA no meu aparelho">
+            <span class="slider"></span>
+          </label>
+          <span class="switch-label">IA no meu aparelho</span>
+          <span class="switch-ajuda" title="Rodar IA offline no seu aparelho">(offline)</span>
+        </div>
+        <div id="aviso-bloqueio" class="aviso bloqueio">
+          <span class="icone-icone">⚠️</span>
+          <div>
+            <div class="mensagem">Não é possível ativar</div>
+            <div id="texto-bloqueio">Seu navegador não suporta WebGPU ou não tem memória suficiente.</div>
+          </div>
+        </div>
+        <div id="aviso-download" class="aviso download">
+          <span class="icone-icone">💾</span>
+          <div>
+            <div class="mensagem">Download dos modelos de IA (~1 GB)</div>
+            <div id="texto-download">Recomendação: conecte-se a Wi-Fi antes de ativar para evitar consumo de dados móveis.</div>
+          </div>
+        </div>
+        <div id="aviso-desativado" class="aviso desativado">
+          <span class="icone-icone">ℹ️</span>
+          <div>
+            <div class="mensagem">IA no aparelho desativada</div>
+            <div>Você continuará usando as IAs grátis do Cortex que funcionam online.</div>
+          </div>
+        </div>
+        <div id="status-info" class="status-info"></div>
+      </div>
+    </div>
+    <footer>
+      Feito com Kernex • NEXIA OS
+    </footer>
+  </div>
+
+  <script type="module">
+    import config from './config.js';
+
+    const switchEl = document.getElementById('switch-ia-aparelho');
+    const avisoBloqueio = document.getElementById('aviso-bloqueio');
+    const avisoDownload = document.getElementById('aviso-download');
+    const avisoDesativado = document.getElementById('aviso-desativado');
+    const textoBloqueio = document.getElementById('texto-bloqueio');
+    const textoDownload = document.getElementById('texto-download');
+    const statusInfo = document.getElementById('status-info');
+
+    function esconderTodosAvisos() {
+      avisoBloqueio.style.display = 'none';
+      avisoDownload.style.display = 'none';
+      avisoDesativado.style.display = 'none';
+    }
+
+    function atualizarEstado() {
+      const ativo = config.getIAAtiva();
+      switchEl.checked = ativo;
+      switchEl.disabled = false;
+
+      esconderTodosAvisos();
+
+      if (ativo) {
+        avisoDownload.style.display = 'flex';
+        statusInfo.textContent = 'IA local ativa — funcionando offline.';
+        statusInfo.style.color = 'var(--ok)';
+      } else {
+        avisoDesativado.style.display = 'flex';
+        statusInfo.textContent = 'IA local desativada — usando IAs online do Cortex.';
+        statusInfo.style.color = 'var(--suave)';
+      }
+    }
+
+    async function verificarESuporte() {
+      const suporte = await config.verificarSuporteWebGPU();
+      if (!suporte.suportado) {
+        switchEl.disabled = true;
+        avisoBloqueio.style.display = 'flex';
+        textoBloqueio.textContent = suporte.motivo;
+        statusInfo.textContent = 'Não suportado neste dispositivo.';
+        statusInfo.style.color = 'var(--erro)';
+      } else {
+        switchEl.disabled = false;
+      }
+      return suporte.suportado;
+    }
+
+    switchEl.addEventListener('change', async (e) => {
+      const querAtivar = e.target.checked;
+
+      if (querAtivar) {
+        const suportado = await verificarESuporte();
+        if (!suportado) {
+          e.target.checked = false;
+          return;
+        }
+
+        // Mostrar aviso de download antes de ativar
+        esconderTodosAvisos();
+        avisoDownload.style.display = 'flex';
+
+        const sucesso = await config.setIAAtiva(true);
+        if (sucesso) {
+          atualizarEstado();
+        } else {
+          e.target.checked = false;
+          avisoBloqueio.style.display = 'flex';
+          textoBloqueio.textContent = 'Erro ao ativar a IA local. Tente novamente.';
+        }
+      } else {
+        config.setIAAtiva(false);
+        atualizarEstado();
+      }
+    });
+
+    // Inicialização
+    carregarDoLocalStorage();
+    atualizarEstado();
+    verificarESuporte();
+
+    function carregarDoLocalStorage() {
+      // Reusa a lógica do config.js (já carrega automaticamente no import)
+    }
+  </script>
+</body>
+</html>
