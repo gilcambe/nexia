@@ -1,10 +1,8 @@
 const LIMITE_FECHAMENTOS = 15;
 const EXCECOES_ROTULOS = ['nao-fechar', 'manter'];
 
-// API simulada para testes
 const githubApi = {
   async pullsList(owner, repo, state) {
-    // Retorna dados simulados para testes
     return {
       data: [
         {
@@ -37,11 +35,9 @@ const githubApi = {
 };
 
 function decidir(prs, agora) {
-  // Filtrar apenas PRs da branch nexia/
   const prsNexia = prs.filter(pr => pr.headRef && pr.headRef.startsWith('nexia/'));
-
-  // Agrupar PRs por número da issue
   const grupos = new Map();
+  
   for (const pr of prsNexia) {
     const issueNumber = pr.title.match(/#(\d+)/)?.[1];
     if (!issueNumber) continue;
@@ -51,11 +47,9 @@ function decidir(prs, agora) {
 
   const fechar = [];
 
-  // Selecionar PRs a fechar
   for (const [issueNumber, grupo] of grupos) {
     if (grupo.length <= 1) continue;
 
-    // Ordenar: CI verde mais novo primeiro, depois mais novo
     grupo.sort((a, b) => {
       if (a.ciStatus === 'success' && b.ciStatus !== 'success') return -1;
       if (a.ciStatus !== 'success' && b.ciStatus === 'success') return 1;
@@ -66,12 +60,9 @@ function decidir(prs, agora) {
 
     for (let i = 1; i < grupo.length; i++) {
       const pr = grupo[i];
-
-      // Respeitar exceções de rótulos
       const temExcecao = pr.labels.some(l => EXCECOES_ROTULOS.includes(l.name));
       if (temExcecao) continue;
 
-      // CI vermelho > 48h e issue fechada
       const horas = (agora - new Date(pr.createdAt)) / (1000 * 60 * 60);
       if (pr.ciStatus === 'failure' && horas > 48 && pr.issueFechada) {
         fechar.push({ pr, motivo: 'ci-vermelho-issue-fechada' });
@@ -85,10 +76,8 @@ function decidir(prs, agora) {
 }
 
 async function rodar() {
-  // Buscar PRs abertos usando API simulada
   const { data: prs } = await githubApi.pullsList('seu-usuario', 'seu-repositorio', 'open');
-
-  // Filtrar e mapear campos
+  
   const prsParaDecidir = prs
     .filter(pr => pr.head.ref.startsWith('nexia/'))
     .map(pr => ({
@@ -105,11 +94,9 @@ async function rodar() {
 
   for (const { pr, motivo } of fechar) {
     await githubApi.pullsUpdate('seu-usuario', 'seu-repositorio', pr.number, 'closed');
-
     const body = motivo === 'ci-vermelho-issue-fechada' 
       ? 'Este PR foi fechado automaticamente: CI vermelho há mais de 48h e a issue relacionada já está fechada.'
       : 'Este PR foi fechado automaticamente porque há outro PR mais recente para a mesma issue.';
-
     await githubApi.issuesCreateComment('seu-usuario', 'seu-repositorio', pr.number, body);
   }
 
