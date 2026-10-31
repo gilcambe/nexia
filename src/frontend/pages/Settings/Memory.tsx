@@ -241,6 +241,55 @@ export default function MemorySettings() {
           </ul>
         </div>
       </div>
+
+      {/* Modal de erro para suporte insuficiente */}
+      {offlineErrorModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--cx-card)] border border-[var(--cx-line)] rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Não é possível ativar a IA offline</h3>
+            <p className="text-[var(--cx-text)] mb-6">{offlineErrorModal}</p>
+            <div className="flex justify-end">
+              <button
+                onClick={closeOfflineErrorModal}
+                className="px-4 py-2 bg-[var(--cx-ac)] text-white rounded-lg hover:bg-[var(--cx-ac)]/80 transition-colors"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de aviso de download */}
+      {showOfflineModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--cx-card)] border border-[var(--cx-line)] rounded-xl p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Ativar IA offline</h3>
+            <p className="text-[var(--cx-text)] mb-4">
+              Ao ativar a IA offline, será necessário baixar o modelo local (~1 GB) para seu dispositivo.
+            </p>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-yellow-800">
+                <strong>Recomendação:</strong> Faça o download em uma rede Wi-Fi para evitar o uso excessivo de dados móveis.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={closeOfflineModal}
+                className="flex-1 px-4 py-2 border border-[var(--cx-line)] rounded-lg hover:border-[var(--cx-ac)] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmOfflineAi}
+                className="flex-1 px-4 py-2 bg-[var(--cx-ac)] text-white rounded-lg hover:bg-[var(--cx-ac)]/80 transition-colors"
+              >
+                Confirmar e Baixar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
