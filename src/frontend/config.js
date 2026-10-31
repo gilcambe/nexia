@@ -1,9 +1,6 @@
 // src/frontend/config.js
 
 // Configurações globais do frontend do Cortex.
-// Mantido mínimo: exporta apenas constantes de ambiente.
-// src/frontend/config.js
-
 export const API_URL = import.meta.env.VITE_API_URL || '/api';
 export const APP_NAME = 'Cortex';
 
@@ -21,7 +18,7 @@ export const verificarSuporteWebGPU = async () => {
     return { suportado: false, motivo: 'Ambiente sem navegador' };
   }
   const hasGpu = 'gpu' in navigator && navigator.gpu !== undefined;
-  const memory = navigator.deviceMemory;
+  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
   if (!hasGpu) {
     return { suportado: false, motivo: 'WebGPU não suportada neste navegador' };
   }
@@ -29,7 +26,7 @@ export const verificarSuporteWebGPU = async () => {
     return { suportado: false, motivo: 'Memória insuficiente (mínimo recomendado: 4 GB)' };
   }
   try {
-    const adapter = await navigator.gpu.requestAdapter();
+    const adapter = await (navigator as Navigator & { gpu?: { requestAdapter: () => Promise<unknown> } }).gpu?.requestAdapter();
     if (!adapter) {
       return { suportado: false, motivo: 'Adaptador WebGPU não encontrado' };
     }
@@ -39,7 +36,7 @@ export const verificarSuporteWebGPU = async () => {
   return { suportado: true };
 };
 
-export const mostrarAvisoBloqueio = (motivo) => {
+export const mostrarAvisoBloqueio = (motivo: string) => {
   console.warn('Aviso de bloqueio IA local:', motivo);
 };
 
