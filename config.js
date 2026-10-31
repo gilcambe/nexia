@@ -61,7 +61,7 @@ export async function renderizarIALocal(containerOuSeletor) {
           <p style="font-size: 14px; color: rgba(255,255,255,0.7);">Execute modelos de IA diretamente no seu navegador com WebGPU.</p>
         </div>
         <label class="switch" style="position: relative; display: inline-block; width: 50px; height: 26px; flex-shrink: 0;">
-          <input type="checkbox" id="ia-local-switch" ${estadoAtual ? 'checked' : ''} ${!suporte.suportado ? 'disabled' : ''} style="opacity: 0; width: 0; height: 0;">
+          <input type="checkbox" id="ia-local-switch" aria-describedby="ia-local-status" ${estadoAtual ? 'checked' : ''} ${!suporte.suportado ? 'disabled' : ''} style="opacity: 0; width: 0; height: 0;">
           <span class="slider" style="position: absolute; cursor: pointer; inset: 0; background-color: ${!suporte.suportado ? '#444' : '#ccc'}; transition: .4s; border-radius: 34px;"></span>
         </label>
       </div>
