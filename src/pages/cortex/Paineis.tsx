@@ -77,6 +77,13 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
   const [itens, setItens] = useState<Resumo[]>([]);
   const [erro, setErro] = useState<string>();
   const [msg, setMsg] = useState<string | null>(null);
+  const [jules, setJules] = useState<boolean>(() => {
+    const saved = localStorage.getItem('cx-socorro-jules');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+  const [socorroMsg, setSocorroMsg] = useState<string | null>(null);
+  const [socorroLinks, setSocorroLinks] = useState<{ numero: number; titulo: string }[]>([]);
+  const [socorroStatus, setSocorroStatus] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => { setBuscaDebounced(busca); }, 300);
@@ -121,6 +128,39 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
     }
   };
 
+  const handleJulesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.checked;
+    setJules(newValue);
+    localStorage.setItem('cx-socorro-jules', JSON.stringify(newValue));
+  };
+
+  const socorro = async () => {
+    setSocorroMsg(null);
+    setSocorroLinks([]);
+    setSocorroStatus(null);
+    try {
+      const response = await fetch('/api/central/socorro', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jules }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setSocorroMsg(`Mandei ${data.total} tarefas: ${data.ias} para as IAs conectadas e ${data.jules} para o Jules`);
+        setSocorroLinks(data.links || []);
+        setSocorroStatus(`Travadas: ${data.travadas}, enviadas para o Jules: ${data.jules}, última execução: ${data.ultimaExecucao}`);
+      } else {
+        if (data.error && data.error.includes('quota')) {
+          setErro('A cota da Groq foi excedida. Tente novamente mais tarde.');
+        } else {
+          setErro(data.error || 'Erro ao processar o socorro.');
+        }
+      }
+    } catch (e) {
+      setErro((e as Error).message);
+    }
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-6">
       <Titulo t="Tarefas" s="A fila do Cortex, do jeito que ele enxerga." />
@@ -141,6 +181,29 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
           Tentar novamente todas as travadas
         </button>
       )}
+      <Cartao testid="cx-socorro">
+        <p className="font-medium">Socorro</p>
+        <button onClick={socorro} className="mt-3 w-full h-11 rounded-xl bg-[var(--cx-ac)] text-black font-semibold text-sm flex items-center justify-center gap-2">
+          ▶️ IAs grátis: continuar tudo agora
+        </button>
+        <div className="flex items-center gap-2 mt-3">
+          <label className="text-sm">Incluir o Jules</label>
+          <input type="checkbox" checked={jules} onChange={handleJulesChange} className="h-5 w-5" />
+        </div>
+        {socorroMsg && <p className="text-sm text-[var(--cx-ac)] mt-2">{socorroMsg}</p>}
+        {socorroLinks.length > 0 && (
+          <ul className="text-sm text-[var(--cx-mut)] list-disc pl-5 mt-2">
+            {socorroLinks.map((link) => (
+              <li key={link.numero}>
+                <a href={`#${link.numero}`} className="text-[var(--cx-ac)] hover:underline">
+                  #{link.numero} {link.titulo}
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+        {socorroStatus && <p className="text-xs text-[var(--cx-mut)] mt-2">{socorroStatus}</p>}
+      </Cartao>
       {erro && <p className="text-red-400 text-sm mb-2" role="alert">{erro}</p>}
       {msg && <p className="text-[var(--cx-ac)] text-sm mb-2" role="status">{msg}</p>}
       <ListaPedidos itens={itens} abrir={abrir} fazer={fazer} />
