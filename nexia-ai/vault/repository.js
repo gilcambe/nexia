@@ -347,6 +347,17 @@ function createVault({ db, FieldValue, auditSink, tenantDb } = {}) {
         const cached = getCachedVaultRead(ctx.tenantId, entity, id);
         if (cached) return cached;
       }
+      
+      // Verificar se o banco atual está quase cheio e alternar se necessário
+      const banco = this._getBanco(entity);
+      if (banco && this._isBancoQuaseCheio(banco)) {
+        const novoBanco = this._getProximoBanco(banco);
+        if (novoBanco !== banco) {
+          console.log(`[VAULT] Alternando de ${banco} para ${novoBanco} por limite de cota`);
+          this._setBancoAtivo(novoBanco);
+        }
+      }
+      
       const snap = await col.doc(id).get();
       if (!snap.exists || snap.data().tenant_id !== ctx.tenantId) throw new VaultError(CODES.NOT_FOUND, `${entity}: registro não encontrado.`);
       if (snap.data().deleted_at && !includeDeleted) throw new VaultError(CODES.NOT_FOUND, `${entity}: registro não encontrado.`, { deleted: true });
