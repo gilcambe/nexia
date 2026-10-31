@@ -1,0 +1,57 @@
+# NEXIA — Teste de carga do Cortex
+# Disparo manual para medir métricas de resposta e concorrência na rota /api/cortex.
+name: Teste de carga do Cortex
+
+on:
+  workflow_dispatch:
+    inputs:
+      pessoas:
+        description: 'Quantidade de pessoas concorrentes/requisições simuladas'
+        required: true
+        type: choice
+        options:
+          - '50'
+          - '200'
+          - '1000'
+        default: '50'
+      modo:
+        description: 'Modo de execução (falso para simulação interna, real contra API)'
+        required: true
+        type: choice
+        options:
+          - 'falso'
+          - 'real'
+        default: 'falso'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cortex-carga
+  cancel-in-progress: false
+
+jobs:
+  carga:
+    name: Carga Cortex
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Instalar dependências
+        run: npm ci
+      - name: Executar teste de carga
+        run: node scripts/cortex-carga.js --${{ inputs.modo }} --pessoas ${{ inputs.pessoas }}
+      - name: Publicar relatório de carga
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: relatorio-carga
+          path: carga-relatorio-*.json
+          retention-days: 7
+          if-no-files-found: ignore
