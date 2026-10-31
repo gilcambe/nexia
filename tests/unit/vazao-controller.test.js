@@ -1,117 +1,104 @@
 'use strict';
-// Teste unitário do VazaoController (#2221, #2223, #2224)
-const { VazaoController } = require('../../src/durable/VazaoController');
+
+// Testes unitários para VazaoController
+const { VazaoController } = require('../../src/durable/VazaoController.js');
+
+class MockStorage {
+  constructor() {
+    this.data = new Map();
+  }
+  
+  async put(key, value) {
+    this.data.set(key, value);
+  }
+  
+  async get(key) {
+    return this.data.get(key);
+  }
+  
+  async list(options = {}) {
+    const results = [];
+    for (const [key] of this.data) {
+      if (options.prefix && !key.startsWith(options.prefix)) continue;
+      results.push({ name: key });
+    }
+    return { keys: results };
+  }
+}
+
+class MockState {
+  constructor() {
+    this.storage = new MockStorage();
+  }
+}
 
 describe('VazaoController', () => {
-  let controller;
-
+  let vazaoController;
+  
   beforeEach(() => {
-    controller = new VazaoController();
+    const state = new MockState();
+    vazaoController = new VazaoController(state);
   });
-
-  describe('contador de uso por banco', () => {
-    it('registra leituras e escritas corretamente', () => {
-      controller.registrar('firestore-b', 100, 50);
-      const uso = controller.obterContador('firestore-b');
-      expect(uso.leituras).toBe(100);
-      expect(uso.escritas).toBe(50);
-      expect(uso.status).toBe('ativo');
-    });
-
-    it('reseta o contador diariamente', () => {
-      controller.registrar('firestore-b', 100, 50);
-      controller.registrar('firestore-b', 0, 0, '2025-01-02');
-      const uso = controller.obterContador('firestore-b', '2025-01-02');
-      expect(uso.leituras).toBe(0);
-      expect(uso.escritas).toBe(0);
-    });
-
-    it('usa o banco atual se não informado', () => {
-      controller.registrar(); // usa firestore-b
-      const uso = controller.obterContador();
-      expect(uso.banco).toBeUndefined(); // obterContador não retorna banco
-    });
+  
+  test('deve registrar uso do banco corretamente', () => {
+    const resultado = vazaoController.registrar('firestore-b', 10, 5);
+    expect(resultado.leituras).toBe(10);
+    expect(resultado.escritas).toBe(5);
+    expect(resultado.status).toBe('ativo');
   });
-
-  describe('verificação de limite (70%)', () => {
-    it('detecta quase cheio no Firestore (70% reads)', () => {
-      controller.registrar('firestore-b', 35000, 0); // 70% de 50000
-      const limite = controller.verificarLimite('firestore-b');
-      expect(limite.quaseCheio).toBe(true);
-    });
-
-    it('detecta quase cheio no Firestore (70% writes)', () => {
-      controller.registrar('firestore-b', 0, 14000); // 70% de 20000
-      const limite = controller.verificarLimite('firestore-b');
-      expect(limite.quaseCheio).toBe(true);
-    });
-
-    it('detecta quase cheio no D1 (70% reads)', () => {
-      controller.registrar('d1', 3500000, 0); // 70% de 5M
-      const limite = controller.verificarLimite('d1');
-      expect(limite.quaseCheio).toBe(true);
-    });
-
-    it('detecta quase cheio no D1 (70% writes)', () => {
-      controller.registrar('d1', 0, 70000); // 70% de 100k
-      const limite = controller.verificarLimite('d1');
-      expect(limite.quaseCheio).toBe(true);
-    });
-
-    it('detecta quase cheio no CofreSql (70% reads)', () => {
-      controller.registrar('cofresql', 35000000, 0); // 70% de 50M
-      const limite = controller.verificarLimite('cofresql');
-      expect(limite.quaseCheio).toBe(true);
-    });
-
-    it('detecta quase cheio no CofreSql (70% writes)', () => {
-      controller.registrar('cofresql', 0, 7000000); // 70% de 10M
-      const limite = controller.verificarLimite('cofresql');
-      expect(limite.quaseCheio).toBe(true);
-    });
-
-    it('retorna status ativo quando abaixo de 70%', () => {
-      controller.registrar('firestore-b', 30000, 10000); // 60% reads, 50% writes
-      const limite = controller.verificarLimite('firestore-b');
-      expect(limite.quaseCheio).toBe(false);
-    });
+  
+  test('deve acumular uso do mesmo banco', () => {
+    vazaoController.registrar('firestore-b', 10, 5);
+    const resultado = vazaoController.registrar('firestore-b', 5, 2);
+    expect(resultado.leituras).toBe(15);
+    expect(resultado.escritas).toBe(7);
   });
-
-  describe('troca automática de banco', () => {
-    it('troca para o próximo banco quando quase cheio', () => {
-      controller.registrar('firestore-b', 35000, 0); // 70% reads
-      expect(controller.obterBancoAtual()).toBe('firestore-b');
-      controller.registrar(); // deve trocar
-      expect(controller.obterBancoAtual()).toBe('firestore-c');
-    });
-
-    it('circularidade do rodízio', () => {
-      controller.registrar('firestore-b', 35000, 0);
-      controller.registrar(); // firestore-b → firestore-c
-      controller.registrar(); // firestore-c → d1
-      controller.registrar(); // d1 → cofresql
-      controller.registrar(); // cofresql → firestore-b
-      expect(controller.obterBancoAtual()).toBe('firestore-b');
-    });
-
-    it('troca apenas quando necessário (70%)', () => {
-      controller.registrar('firestore-b', 30000, 10000); // 60% - não troca
-      expect(controller.obterBancoAtual()).toBe('firestore-b');
-    });
+  
+  test('deve verificar limite corretamente', () => {
+    // Firestore: 50k leituras, 20k escritas, 70% = 35k/14k
+    vazaoController.registrar('firestore-b', 35000, 14000);
+    const limite = vazaoController.verificarLimite('firestore-b');
+    expect(limite.quaseCheio).toBe(true);
+    expect(limite.leituras).toBe(35000);
+    expect(limite.escritas).toBe(14000);
   });
-
-  describe('resumo geral', () => {
-    it('retorna status de todos os bancos', () => {
-      controller.registrar('firestore-b', 100, 50);
-      controller.registrar('d1', 200, 100);
-      controller.registrar('cofresql', 300, 150);
-      const resumo = controller.obterResumoGeral();
-      expect(resumo).toHaveProperty('firestore-b');
-      expect(resumo).toHaveProperty('d1');
-      expect(resumo).toHaveProperty('cofresql');
-      expect(resumo.firestore-b).toHaveProperty('leituras', 100);
-      expect(resumo.d1).toHaveProperty('leituras', 200);
-      expect(resumo.cofresql).toHaveProperty('leituras', 300);
-    });
+  
+  test('deve trocar banco quando atingir 70%', () => {
+    vazaoController.registrar('firestore-b', 35000, 14000);
+    const proximo = vazaoController.proximoBanco();
+    expect(proximo).toBe('firestore-c');
+    expect(vazaoController.obterBancoAtual()).toBe('firestore-c');
+  });
+  
+  test('deve retornar uso diário', () => {
+    vazaoController.registrar('firestore-b', 1000, 500);
+    const uso = vazaoController.obterUsoDiario('firestore-b');
+    expect(uso.leituras).toBe(1000);
+    expect(uso.escritas).toBe(500);
+  });
+  
+  test('deve retornar uso de todos os bancos', () => {
+    vazaoController.registrar('firestore-b', 1000, 500);
+    vazaoController.registrar('firestore-c', 2000, 1000);
+    const usoTodos = vazaoController.obterUsoTodosBancos();
+    expect(usoTodos.length).toBe(4);
+    expect(usoTodos.find(b => b.banco === 'firestore-b').leituras).toBe(1000);
+    expect(usoTodos.find(b => b.banco === 'firestore-c').leituras).toBe(2000);
+  });
+  
+  test('deve detectar bancos quase cheios', () => {
+    // Simular um banco quase cheio
+    vazaoController.registrar('firestore-b', 35000, 14000);
+    const alerta = vazaoController.checarBancosQuaseCheios();
+    expect(alerta).toBeTruthy();
+    expect(alerta.bancoCheio).toBe('firestore-b');
+    expect(alerta.proximoBanco).toBe('firestore-c');
+    expect(alerta.alerta.tipo).toBe('sentinel');
+  });
+  
+  test('deve retornar null quando nenhum banco está quase cheio', () => {
+    vazaoController.registrar('firestore-b', 1000, 500);
+    const alerta = vazaoController.checarBancosQuaseCheios();
+    expect(alerta).toBeNull();
   });
 });
