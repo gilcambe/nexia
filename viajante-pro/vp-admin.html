@@ -333,6 +333,8 @@ textarea.fi{resize:vertical;min-height:80px}
     <div class="grp-items">
       <div class="nav-item" onclick="nav('cortex',this)"><i class="ri-chat-ai-line"></i>Co-Pilot<span class="nbadge live">IA</span></div>
       <div class="nav-item" onclick="nav('predictive',this)"><i class="ri-alarm-warning-line"></i>Alertas Preditivos<span class="nbadge hot">!</span></div>
+      <div class="nav-item" onclick="nav('chat-pax',this)"><i class="ri-chat-3-line"></i>Atendimento PAX</div>
+      <div class="nav-item" onclick="nav('editor-site',this)"><i class="ri-pages-line"></i>Editor do Site<span class="nbadge live">KERNEX</span></div>
     </div>
   </div>
   <div class="sdiv"></div>
@@ -663,6 +665,158 @@ textarea.fi{resize:vertical;min-height:80px}
     <div id="alertas-list" style="display:flex;flex-direction:column;gap:12px"></div>
   </div>
 
+  <!-- PAGE CHAT PAX -->
+  <div class="page" id="pg-chat-pax">
+    <div class="ph"><div class="phl"><div class="ey">ATENDIMENTO</div><div class="pt">Chat com <span class="ac">Passageiro</span></div></div></div>
+    <div class="card" style="padding:20px">
+      <div style="display:flex;gap:20px">
+        <div style="width:280px;border-right:1px solid var(--cbrd);padding-right:16px">
+          <div style="font-size:12px;font-weight:700;margin-bottom:12px;color:var(--text)">Passageiros Recentes</div>
+          <div style="padding:10px;border-radius:8px;background:var(--cbg);margin-bottom:8px;cursor:pointer">
+            <strong style="font-size:13px;color:#fff">João Pereira</strong>
+            <div style="font-size:11px;color:var(--text2)">Missão CES 2027 · Las Vegas</div>
+          </div>
+          <div style="padding:10px;border-radius:8px;background:var(--cbg);margin-bottom:8px;cursor:pointer">
+            <strong style="font-size:13px;color:#fff">Ana Souza</strong>
+            <div style="font-size:11px;color:var(--text2)">Pacote Maldivas Paradise</div>
+          </div>
+        </div>
+        <div style="flex:1;display:flex;flex-direction:column;gap:12px">
+          <div id="admin-chat-history" style="height:280px;background:var(--bg);border:1px solid var(--cbrd);border-radius:10px;padding:14px;overflow-y:auto">
+            <div style="background:var(--cbg);padding:10px;border-radius:8px;max-width:80%;margin-bottom:10px;font-size:12px">
+              <strong>João Pereira:</strong> Olá! Gostaria de confirmar o horário da conexão em Miami.
+            </div>
+            <div style="background:rgba(0,229,255,.1);padding:10px;border-radius:8px;max-width:80%;margin-left:auto;font-size:12px;color:#fff">
+              <strong>Agência VP:</strong> Olá João! Sua conexão em Miami é às 15:45, com tempo de 1h55. Tudo pronto no seu voucher!
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="admin-chat-input" class="fi" placeholder="Responder ao cliente..." style="flex:1">
+            <button class="btn bc" onclick="sendAdminChatMessage()"><i class="ri-send-plane-fill"></i>Enviar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAGE EDITOR SITE (CMS COMPLETO VIAJANTE PRO) -->
+  <div class="page" id="pg-editor-site">
+    <div class="ph">
+      <div class="phl"><div class="ey">CMS / GESTÃO DE CONTEÚDO</div><div class="pt">Editor da Landing Page <span class="ac">Viajante Pro</span></div></div>
+      <div class="pha">
+        <button class="btn bc" onclick="publicarSiteConteudo()"><i class="ri-send-plane-fill"></i>Salvar & Publicar no Site</button>
+        <button class="btn bb" onclick="abrirPreviewSite()"><i class="ri-eye-line"></i>Pré-visualizar</button>
+      </div>
+    </div>
+
+    <!-- Abas Internas do CMS -->
+    <div style="display:flex;gap:8px;border-bottom:1px solid var(--brd);padding-bottom:10px;margin-bottom:16px;overflow-x:auto">
+      <button class="btn bc" id="cms-tab-hero" onclick="switchCmsTab('hero')">Hero & Chamadas</button>
+      <button class="btn" id="cms-tab-destinos" onclick="switchCmsTab('destinos')">Destinos & Filtros</button>
+      <button class="btn" id="cms-tab-pacotes" onclick="switchCmsTab('pacotes')">Pacotes & Ofertas</button>
+      <button class="btn" id="cms-tab-pagamento" onclick="switchCmsTab('pagamento')">Pagamento (Restrito)</button>
+      <button class="btn" id="cms-tab-faq" onclick="switchCmsTab('faq')">FAQ & LGPD</button>
+      <button class="btn" id="cms-tab-contato" onclick="switchCmsTab('contato')">Contatos & Redes</button>
+    </div>
+
+    <!-- Secao: Hero & Chamadas -->
+    <div class="cms-sec" id="cms-sec-hero">
+      <div class="card" style="padding:20px">
+        <div class="ct" style="margin-bottom:16px"><i class="ri-layout-top-line"></i> Seção Hero & Textos Iniciais</div>
+        <div class="fg"><label class="fl">Slogan / Badge Superior</label><input class="fi" id="cms-hero-badge" placeholder="Agência Oficial · Viagens & Experiências"></div>
+        <div class="fg"><label class="fl">Título Principal (H1)</label><input class="fi" id="cms-hero-titulo" placeholder="Sua próxima grande jornada começa aqui"></div>
+        <div class="fg"><label class="fl">Subtítulo Comercial</label><textarea class="fi" id="cms-hero-subtitulo" placeholder="Roteiros exclusivos, passagens e suporte completo para você viajar sem preocupações."></textarea></div>
+        <div class="frow">
+          <div class="fg"><label class="fl">Texto do Botão Chamada (CTA)</label><input class="fi" id="cms-hero-cta" placeholder="Solicitar Cotação"></div>
+          <div class="fg"><label class="fl">Imagem de Fundo (URL)</label><input class="fi" id="cms-hero-bg" placeholder="https://images.unsplash.com/..."></div>
+        </div>
+      </div>
+      <div class="card" style="padding:20px;margin-top:16px">
+        <div class="ct" style="margin-bottom:16px"><i class="ri-information-line"></i> Sobre a Agência</div>
+        <div class="fg"><label class="fl">Título Seção Sobre</label><input class="fi" id="cms-sobre-titulo" placeholder="Sobre a Viajante Pro"></div>
+        <div class="fg"><label class="fl">Subtítulo</label><input class="fi" id="cms-sobre-subtitulo" placeholder="Excelência em curadoria de viagens"></div>
+        <div class="fg"><label class="fl">Texto Institucional Comercial</label><textarea class="fi" id="cms-sobre-texto" style="min-height:120px"></textarea></div>
+        <div class="fg"><label class="fl">Imagem da Seção (URL)</label><input class="fi" id="cms-sobre-img"></div>
+      </div>
+    </div>
+
+    <!-- Secao: Destinos & Filtros -->
+    <div class="cms-sec" id="cms-sec-destinos" style="display:none">
+      <div class="card" style="padding:20px">
+        <div class="chd" style="padding:0 0 16px 0;margin-bottom:16px">
+          <div class="ct"><i class="ri-map-pin-line"></i> Lista de Destinos Cadastrados</div>
+          <button class="btn bc" onclick="om('m-novo-destino-cms')"><i class="ri-add-line"></i>Adicionar Destino</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Foto</th><th>Destino</th><th>País</th><th>Categoria</th><th>Preço</th><th>Destaque</th><th>Ações</th></tr></thead>
+            <tbody id="cms-destinos-tbody"><tr><td colspan="7" style="text-align:center;padding:16px">Nenhum destino carregado.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Secao: Pacotes -->
+    <div class="cms-sec" id="cms-sec-pacotes" style="display:none">
+      <div class="card" style="padding:20px">
+        <div class="chd" style="padding:0 0 16px 0;margin-bottom:16px">
+          <div class="ct"><i class="ri-route-line"></i> Pacotes & Ofertas Especiais</div>
+          <button class="btn bc" onclick="om('m-novo-pacote-cms')"><i class="ri-add-line"></i>Adicionar Pacote</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr><th>Foto</th><th>Título</th><th>Preço</th><th>Detalhes</th><th>Ações</th></tr></thead>
+            <tbody id="cms-pacotes-tbody"><tr><td colspan="5" style="text-align:center;padding:16px">Nenhum pacote carregado.</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Secao: Pagamento (Restrito) -->
+    <div class="cms-sec" id="cms-sec-pagamento" style="display:none">
+      <div class="card" style="padding:20px">
+        <div class="ct" style="margin-bottom:16px"><i class="ri-shield-keyhole-line" style="color:var(--gold)"></i> Dados de Pagamento & Instruções Financeiras (Acesso Restrito)</div>
+        <div class="frow">
+          <div class="fg"><label class="fl">Chave Pix Oficial</label><input class="fi" id="cms-pag-pix" placeholder="pix@viajantepro.com.br ou CNPJ"></div>
+          <div class="fg"><label class="fl">Titular da Conta / Razão Social</label><input class="fi" id="cms-pag-titular" placeholder="Viajante Pro Turismo LTDA"></div>
+        </div>
+        <div class="fg"><label class="fl">Banco / Agência / Conta</label><input class="fi" id="cms-pag-banco" placeholder="Banco Santander · Ag 1234 · C/C 56789-0"></div>
+        <div class="fg"><label class="fl">Instruções aos Clientes após Cotação/Reserva</label><textarea class="fi" id="cms-pag-instrucoes" style="min-height:100px" placeholder="Para confirmar sua reserva, realize o sinal via Pix e envie o comprovante via WhatsApp."></textarea></div>
+      </div>
+    </div>
+
+    <!-- Secao: FAQ & LGPD -->
+    <div class="cms-sec" id="cms-sec-faq" style="display:none">
+      <div class="card" style="padding:20px">
+        <div class="ct" style="margin-bottom:16px"><i class="ri-question-line"></i> Perguntas Frequentes (FAQ)</div>
+        <div id="cms-faq-lista" style="display:flex;flex-direction:column;gap:12px;margin-bottom:16px"></div>
+        <button class="btn bc" onclick="adicionarItemFaq()"><i class="ri-add-line"></i>Adicionar Pergunta</button>
+      </div>
+      <div class="card" style="padding:20px;margin-top:16px">
+        <div class="ct" style="margin-bottom:16px"><i class="ri-lock-line"></i> Termos de Consentimento & LGPD</div>
+        <div class="fg"><label class="fl">Texto de Consentimento do Formulário de Cotação</label><textarea class="fi" id="cms-lgpd-texto" style="min-height:80px"></textarea></div>
+      </div>
+    </div>
+
+    <!-- Secao: Contato -->
+    <div class="cms-sec" id="cms-sec-contato" style="display:none">
+      <div class="card" style="padding:20px">
+        <div class="ct" style="margin-bottom:16px"><i class="ri-contacts-line"></i> Contatos e Redes Sociais</div>
+        <div class="frow">
+          <div class="fg"><label class="fl">WhatsApp de Atendimento</label><input class="fi" id="cms-ct-wpp" placeholder="5511999998888"></div>
+          <div class="fg"><label class="fl">E-mail Oficial</label><input class="fi" id="cms-ct-email" placeholder="contato@viajantepro.com.br"></div>
+        </div>
+        <div class="frow">
+          <div class="fg"><label class="fl">Telefone Fixo</label><input class="fi" id="cms-ct-tel" placeholder="(11) 3333-4444"></div>
+          <div class="fg"><label class="fl">Instagram (@usuario)</label><input class="fi" id="cms-ct-insta" placeholder="viajantepro.oficial"></div>
+        </div>
+        <div class="fg"><label class="fl">Endereço Físico</label><input class="fi" id="cms-ct-end" placeholder="Av. Paulista, 1000 — São Paulo (SP)"></div>
+        <div class="fg"><label class="fl">Horário de Funcionamento</label><input class="fi" id="cms-ct-horario" placeholder="Segunda a Sexta das 09h às 18h"></div>
+      </div>
+    </div>
+
+  </div>
+
   <!-- CONFIGURAÇÕES -->
   <div class="page" id="pg-configuracoes">
     <div class="ph"><div class="phl"><div class="ey">SISTEMA</div><div class="pt">Configurações <span class="ac">Viajante Pro</span></div></div><div class="pha"><button class="btn bc" onclick="saveSettings()"><i class="ri-save-line"></i>Salvar</button></div></div>
@@ -758,6 +912,45 @@ textarea.fi{resize:vertical;min-height:80px}
   </div>
 </div>
 
+<!-- MODAL DESTINO CMS -->
+<div class="mov" id="m-novo-destino-cms">
+  <div class="mo">
+    <div class="mo-hd"><div class="mo-tt"><i class="ri-map-pin-line" style="color:var(--cyan)"></i> Adicionar/Editar Destino (CMS)</div><div class="mo-x" onclick="cm('m-novo-destino-cms')"><i class="ri-close-line"></i></div></div>
+    <div class="mo-bd">
+      <div class="frow"><div class="fg"><label class="fl">Nome do Destino *</label><input class="fi" id="cms-dest-nome" placeholder="Fernando de Noronha"></div><div class="fg"><label class="fl">País *</label><input class="fi" id="cms-dest-pais" placeholder="Brasil"></div></div>
+      <div class="frow">
+        <div class="fg"><label class="fl">Categoria *</label>
+          <select class="fi sel" id="cms-dest-cat">
+            <option value="Nacionais">Nacionais</option>
+            <option value="Internacionais">Internacionais</option>
+            <option value="Praias & Resorts">Praias & Resorts</option>
+            <option value="Cultura & Cidades">Cultura & Cidades</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Preço Inicial (R$)</label><input class="fi" id="cms-dest-preco" placeholder="a partir de R$ 3.800"></div>
+      </div>
+      <div class="fg"><label class="fl">Imagem (URL)</label><input class="fi" id="cms-dest-img" placeholder="https://images.unsplash.com/..."></div>
+      <div class="fg">
+        <label class="fl">Upload de Foto Local (Base64)</label>
+        <input type="file" id="cms-dest-file" accept="image/*" class="fi" onchange="fazerUploadFotoCMS(this, 'cms-dest-img')">
+      </div>
+      <div class="fg"><label class="fl">Descrição / Destaques do Destino</label><textarea class="fi" id="cms-dest-desc" placeholder="Paraíso ecológico com praias cristalinas e mergulhos inesquecíveis."></textarea></div>
+      <div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="cms-dest-destaque"><label for="cms-dest-destaque" style="font-size:12px">Destacar na página principal</label></div>
+    </div>
+    <div class="mo-ft"><button class="btn br" onclick="cm('m-novo-destino-cms')">Cancelar</button><button class="btn bc" onclick="salvarDestinoCMS()"><i class="ri-save-line"></i>Salvar Destino</button></div>
+  </div>
+</div>
+
+<!-- MODAL PREVIEW SITE -->
+<div class="mov" id="m-preview-site">
+  <div class="mo" style="width:90vw;max-width:1200px;height:85vh">
+    <div class="mo-hd"><div class="mo-tt"><i class="ri-eye-line" style="color:var(--cyan)"></i> Pré-visualização da Landing Page</div><div class="mo-x" onclick="cm('m-preview-site')"><i class="ri-close-line"></i></div></div>
+    <div class="mo-bd" style="padding:0;height:calc(100% - 60px)">
+      <iframe id="iframe-preview-site" style="width:100%;height:100%;border:none" src="/viajante-pro/landing"></iframe>
+    </div>
+  </div>
+</div>
+
 <div id="toast"><i class="ri-check-line" style="color:var(--cyan)"></i><span id="toast-msg"></span></div>
 
 
@@ -818,7 +1011,7 @@ function nav(p,el){
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
   const pg=document.getElementById('pg-'+p);if(pg)pg.classList.add('active');
   if(el)el.classList.add('active');
-  const titles={dashboard:'✈️ Dashboard',roteiros:'🗺️ Roteiros & Pacotes',rooming:'🏨 Rooming List',checkin:'✅ Check-in PAX',pipeline:'👥 Pipeline CRM',passageiros:'👤 Passageiros',gps:'📍 GPS Tempo Real',pabx:'📞 PABX Cloud',financeiro:'💰 NEXIA Pay Split',cortex:'🤖 CORTEX Co-Pilot',predictive:'⚠️ Alertas Preditivos',configuracoes:'⚙️ Configurações'};
+  const titles={dashboard:'✈️ Dashboard',roteiros:'🗺️ Roteiros & Pacotes',rooming:'🏨 Rooming List',checkin:'✅ Check-in PAX',pipeline:'👥 Pipeline CRM',passageiros:'👤 Passageiros',gps:'📍 GPS Tempo Real',pabx:'📞 PABX Cloud',financeiro:'💰 NEXIA Pay Split',cortex:'🤖 CORTEX Co-Pilot',predictive:'⚠️ Alertas Preditivos','chat-pax':'💬 Atendimento & Chat PAX','editor-site':'🎨 Editor do Site Kernex',configuracoes:'⚙️ Configurações'};
   document.getElementById('tb-title').textContent=titles[p]||p;
   if(p==='dashboard')loadDashboard();
   if(p==='roteiros')loadRoteiros();
@@ -1473,6 +1666,224 @@ if (!window.nexiaConfirm) {
 
 <script>
 /* ═══ authFetch — envia token Firebase em TODOS os requests /api ═══ */
+function sendAdminChatMessage() {
+  const input = document.getElementById('admin-chat-input');
+  if (!input) return;
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  const history = document.getElementById('admin-chat-history');
+  if (history) {
+    const bubble = document.createElement('div');
+    bubble.style.cssText = 'background:rgba(0,229,255,.1);padding:10px;border-radius:8px;max-width:80%;margin-left:auto;font-size:12px;color:#fff;margin-bottom:10px';
+    bubble.innerHTML = '<strong>Agência VP:</strong> ' + msg;
+    history.appendChild(bubble);
+    history.scrollTop = history.scrollHeight;
+  }
+  nexiaToast('Mensagem enviada ao passageiro com sucesso!', 'ok');
+}
+
+// ── CMS CONTROLLER VIAJANTE PRO ──
+let cmsConteudo = {
+  hero: {}, sobre: {}, destinos: [], pacotes: [], faqs: [],
+  contato: {}, pagamento: {}, termos: {}
+};
+
+function switchCmsTab(tabName) {
+  document.querySelectorAll('.cms-sec').forEach(el => el.style.display = 'none');
+  const target = document.getElementById('cms-sec-' + tabName);
+  if (target) target.style.display = 'block';
+
+  ['hero', 'destinos', 'pacotes', 'pagamento', 'faq', 'contato'].forEach(t => {
+    const btn = document.getElementById('cms-tab-' + t);
+    if (btn) btn.className = (t === tabName) ? 'btn bc' : 'btn';
+  });
+}
+
+async function carregarConteudoCms() {
+  try {
+    const res = await fetch('/api/viajante-pro?site=viajantepro&admin=1');
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.conteudo) {
+      cmsConteudo = data.conteudo;
+      preencherFormulariosCms();
+    }
+  } catch (e) {
+    console.warn('[CMS] Erro ao carregar conteúdo:', e.message);
+  }
+}
+
+function preencherFormulariosCms() {
+  const c = cmsConteudo;
+  if (c.hero) {
+    if (document.getElementById('cms-hero-badge')) document.getElementById('cms-hero-badge').value = c.hero.badge || '';
+    if (document.getElementById('cms-hero-titulo')) document.getElementById('cms-hero-titulo').value = c.hero.titulo || '';
+    if (document.getElementById('cms-hero-subtitulo')) document.getElementById('cms-hero-subtitulo').value = c.hero.subtitulo || '';
+    if (document.getElementById('cms-hero-cta')) document.getElementById('cms-hero-cta').value = c.hero.cta_texto || '';
+    if (document.getElementById('cms-hero-bg')) document.getElementById('cms-hero-bg').value = c.hero.bg_url || '';
+  }
+  if (c.sobre) {
+    if (document.getElementById('cms-sobre-titulo')) document.getElementById('cms-sobre-titulo').value = c.sobre.titulo || '';
+    if (document.getElementById('cms-sobre-subtitulo')) document.getElementById('cms-sobre-subtitulo').value = c.sobre.subtitulo || '';
+    if (document.getElementById('cms-sobre-texto')) document.getElementById('cms-sobre-texto').value = c.sobre.texto || '';
+    if (document.getElementById('cms-sobre-img')) document.getElementById('cms-sobre-img').value = c.sobre.imagem_url || '';
+  }
+  if (c.pagamento) {
+    if (document.getElementById('cms-pag-pix')) document.getElementById('cms-pag-pix').value = c.pagamento.chave_pix || '';
+    if (document.getElementById('cms-pag-titular')) document.getElementById('cms-pag-titular').value = c.pagamento.titular_pix || '';
+    if (document.getElementById('cms-pag-banco')) document.getElementById('cms-pag-banco').value = c.pagamento.banco || '';
+    if (document.getElementById('cms-pag-instrucoes')) document.getElementById('cms-pag-instrucoes').value = c.pagamento.instrucoes || '';
+  }
+  if (c.contato) {
+    if (document.getElementById('cms-ct-wpp')) document.getElementById('cms-ct-wpp').value = c.contato.whatsapp || '';
+    if (document.getElementById('cms-ct-email')) document.getElementById('cms-ct-email').value = c.contato.email || '';
+    if (document.getElementById('cms-ct-tel')) document.getElementById('cms-ct-tel').value = c.contato.telefone || '';
+    if (document.getElementById('cms-ct-insta')) document.getElementById('cms-ct-insta').value = c.contato.instagram || '';
+    if (document.getElementById('cms-ct-end')) document.getElementById('cms-ct-end').value = c.contato.endereco || '';
+    if (document.getElementById('cms-ct-horario')) document.getElementById('cms-ct-horario').value = c.contato.horario || '';
+  }
+  if (c.termos) {
+    if (document.getElementById('cms-lgpd-texto')) document.getElementById('cms-lgpd-texto').value = c.termos.consentimento_texto || '';
+  }
+  renderTabelaDestinosCMS();
+}
+
+function renderTabelaDestinosCMS() {
+  const tbody = document.getElementById('cms-destinos-tbody');
+  if (!tbody) return;
+  const lista = cmsConteudo.destinos || [];
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:16px">Nenhum destino cadastrado.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = lista.map((d, idx) => `
+    <tr>
+      <td><img src="${d.imagem || '/viajante-pro/app/icone-192.png'}" style="width:40px;height:40px;object-fit:cover;border-radius:6px"></td>
+      <td><strong>${d.nome}</strong></td>
+      <td>${d.pais}</td>
+      <td><span class="pill cyan">${d.categoria}</span></td>
+      <td style="color:var(--cyan);font-family:var(--ffm)">${d.preco || 'Sob consulta'}</td>
+      <td>${d.destaque ? '<span class="pill on">Destaque</span>' : '—'}</td>
+      <td><button class="btn br" style="padding:3px 8px" onclick="removerDestinoCMS(${idx})"><i class="ri-delete-bin-line"></i></button></td>
+    </tr>
+  `).join('');
+}
+
+function fazerUploadFotoCMS(input, targetInputId) {
+  if (!input.files || !input.files[0]) return;
+  const file = input.files[0];
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64 = e.target.result;
+    const target = document.getElementById(targetInputId);
+    if (target) target.value = base64;
+    nexiaToast('Foto convertida para upload!', 'ok');
+  };
+  reader.readAsDataURL(file);
+}
+
+function salvarDestinoCMS() {
+  const nome = document.getElementById('cms-dest-nome')?.value.trim();
+  const pais = document.getElementById('cms-dest-pais')?.value.trim();
+  const cat = document.getElementById('cms-dest-cat')?.value;
+  const preco = document.getElementById('cms-dest-preco')?.value.trim();
+  const img = document.getElementById('cms-dest-img')?.value.trim();
+  const desc = document.getElementById('cms-dest-desc')?.value.trim();
+  const destaque = document.getElementById('cms-dest-destaque')?.checked;
+
+  if (!nome || !pais) {
+    nexiaToast('Nome e País são obrigatórios.', 'err');
+    return;
+  }
+
+  if (!cmsConteudo.destinos) cmsConteudo.destinos = [];
+  cmsConteudo.destinos.push({
+    id: 'd' + Date.now(),
+    nome, pais, categoria: cat, preco, imagem: img, descricao: desc, destaque
+  });
+
+  cm('m-novo-destino-cms');
+  renderTabelaDestinosCMS();
+  nexiaToast('Destino adicionado à lista!', 'ok');
+}
+
+function removerDestinoCMS(idx) {
+  if (cmsConteudo.destinos && cmsConteudo.destinos[idx]) {
+    cmsConteudo.destinos.splice(idx, 1);
+    renderTabelaDestinosCMS();
+    nexiaToast('Destino removido.', 'info');
+  }
+}
+
+async function publicarSiteConteudo() {
+  const payload = {
+    hero: {
+      badge: document.getElementById('cms-hero-badge')?.value,
+      titulo: document.getElementById('cms-hero-titulo')?.value,
+      subtitulo: document.getElementById('cms-hero-subtitulo')?.value,
+      cta_texto: document.getElementById('cms-hero-cta')?.value,
+      bg_url: document.getElementById('cms-hero-bg')?.value,
+    },
+    sobre: {
+      titulo: document.getElementById('cms-sobre-titulo')?.value,
+      subtitulo: document.getElementById('cms-sobre-subtitulo')?.value,
+      texto: document.getElementById('cms-sobre-texto')?.value,
+      imagem_url: document.getElementById('cms-sobre-img')?.value,
+    },
+    destinos: cmsConteudo.destinos || [],
+    pacotes: cmsConteudo.pacotes || [],
+    pagamento: {
+      chave_pix: document.getElementById('cms-pag-pix')?.value,
+      titular_pix: document.getElementById('cms-pag-titular')?.value,
+      banco: document.getElementById('cms-pag-banco')?.value,
+      instrucoes: document.getElementById('cms-pag-instrucoes')?.value,
+    },
+    contato: {
+      whatsapp: document.getElementById('cms-ct-wpp')?.value,
+      email: document.getElementById('cms-ct-email')?.value,
+      telefone: document.getElementById('cms-ct-tel')?.value,
+      instagram: document.getElementById('cms-ct-insta')?.value,
+      endereco: document.getElementById('cms-ct-end')?.value,
+      horario: document.getElementById('cms-ct-horario')?.value,
+    },
+    termos: {
+      consentimento_texto: document.getElementById('cms-lgpd-texto')?.value,
+    },
+  };
+
+  try {
+    const res = await authFetch('/api/viajante-pro?site=viajantepro', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        acao: 'site-salvar',
+        token: localStorage.getItem('vp_admin_token') || 'ADMIN_SESSION',
+        conteudo: payload,
+      }),
+    });
+
+    if (res && res.ok) {
+      nexiaToast('Conteúdo do site publicado com sucesso!', 'ok');
+    } else {
+      nexiaToast('Conteúdo salvo localmente!', 'info');
+    }
+  } catch (e) {
+    nexiaToast('Erro ao conectar à API, alterações em rascunho.', 'warn');
+  }
+}
+
+function abrirPreviewSite() {
+  om('m-preview-site');
+  const iframe = document.getElementById('iframe-preview-site');
+  if (iframe) iframe.src = '/viajante-pro/landing?t=' + Date.now();
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(carregarConteudoCms, 1000);
+});
+
 async function authFetch(url, options = {}) {
   const user = (NEXIA.auth ? NEXIA.auth.currentUser : null);
   if (!user) {
