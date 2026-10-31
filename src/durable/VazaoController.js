@@ -3,17 +3,40 @@
 
 class VazaoController {
   constructor(state) {
-    this.usoDiario = new Map(); // banco -> { data, leituras, escritas }
-    this.bancos = ['firestore-b', 'firestore-c', 'd1', 'cofresql'];
-    this.bancoAtualIndex = 0;
-    this.limitesPadrao = {
-      firestore: { leiturasMax: 50000, escritasMax: 20000 },
-      d1: { leiturasMax: 5000000, escritasMax: 100000 },
-      cofresql: { leiturasMax: 50000000, escritasMax: 10000000 }
+    this.usoDiarioBancos = new Map(); // banco -> { data, leituras, escritas, status, limiteLeituras, limiteEscritas }
+    this.bancoAtual = 'firestore-b';
+    this.ordemBancos = ['firestore-b', 'firestore-c', 'd1', 'cofresql'];
+    this.BANK_LIMITS = {
+      'firestore-b': { reads: 50000, writes: 20000, warnThreshold: 0.7 },
+      'firestore-c': { reads: 50000, writes: 20000, warnThreshold: 0.7 },
+      'd1': { reads: 5000000, writes: 100000, warnThreshold: 0.7 },
+      'cofresql': { reads: 50000000, writes: 10000000, warnThreshold: 0.7 },
     };
     if (state?.storage?.sql) {
       this.sql = state.storage.sql;
     }
+  }
+  
+  getBancoAtivo() {
+    return this.bancoAtual;
+  }
+  
+  getNextBank() {
+    const i = this.ordemBancos.indexOf(this.bancoAtual);
+    if (i >= 0 && i < this.ordemBancos.length - 1) {
+      return this.ordemBancos[i + 1];
+    }
+    return this.ordemBancos[this.ordemBancos.length - 1];
+  }
+  
+  switchToNextBank() {
+    const i = this.ordemBancos.indexOf(this.bancoAtual);
+    const prox = i >= 0 && i < this.ordemBancos.length - 1 ? this.ordemBancos[i + 1] : this.ordemBancos[this.ordemBancos.length - 1];
+    if (prox !== this.bancoAtual) {
+      this.bancoAtual = prox;
+      return prox;
+    }
+    return this.bancoAtual;
   }
 
   registrar(banco, leituras = 0, escritas = 0) {
