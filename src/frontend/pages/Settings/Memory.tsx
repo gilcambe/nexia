@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMemory } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemType } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemComponent } from '../../components/MemoryItem';
@@ -20,6 +20,10 @@ export default function MemorySettings() {
   } = useMemory();
 
   const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [isLocalIAEnabled, setIsLocalIAEnabled] = useState(false);
+  const [webGPUSupported, setWebGPUSupported] = useState(false);
+  const [memoryAvailable, setMemoryAvailable] = useState(false);
+  const [showDownloadWarning, setShowDownloadWarning] = useState(false);
 
   const handleDeleteItem = (id: string) => {
     deleteItem(id);
@@ -42,6 +46,50 @@ export default function MemorySettings() {
 
   const handleReload = () => {
     loadMemory();
+  };
+
+  // Verificar suporte a WebGPU e memória
+  useEffect(() => {
+    const checkWebGPU = async () => {
+      try {
+        const gpu = await navigator.gpu;
+        setWebGPUSupported(!!gpu);
+      } catch {
+        setWebGPUSupported(false);
+      }
+    };
+
+    const checkMemory = () => {
+      // Estimativa de memória necessária (1GB)
+      const requiredMemory = 1024 * 1024 * 1024; // 1GB em bytes
+      const deviceMemory = navigator.deviceMemory || 4; // Padrão 4GB se não informado
+      setMemoryAvailable(deviceMemory * 1024 * 1024 * 1024 >= requiredMemory);
+    };
+
+    checkWebGPU();
+    checkMemory();
+  }, []);
+
+  const handleToggleLocalIA = () => {
+    if (!webGPUSupported || !memoryAvailable) {
+      return; // Não permite ativar se não suportado
+    }
+    
+    if (!isLocalIAEnabled) {
+      setShowDownloadWarning(true);
+    } else {
+      setIsLocalIAEnabled(false);
+      setShowDownloadWarning(false);
+    }
+  };
+
+  const confirmDownload = () => {
+    setIsLocalIAEnabled(true);
+    setShowDownloadWarning(false);
+  };
+
+  const cancelDownload = () => {
+    setShowDownloadWarning(false);
   };
 
   return (
