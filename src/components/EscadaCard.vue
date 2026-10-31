@@ -82,7 +82,13 @@ export default {
         loading.value = true;
         error.value = false;
         
-        const response = await fetch('/escada');
+        const token = localStorage.getItem('nexia_token') || sessionStorage.getItem('nexia_token') || '';
+        const headers = {};
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch('/escada', { headers });
         
         if (!response.ok) {
           throw new Error('Erro ao buscar dados da escada');
