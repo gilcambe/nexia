@@ -240,10 +240,6 @@ async function apiRequest(acao, data = {}, retryCount = 0) {
  * @throws {Error} Se o token não estiver disponível
  */
 async function getViagens() {
-  const token = getToken();
-  if (!token) {
-    throw new Error('Token não encontrado. Faça login primeiro.');
-  }
   const result = await apiRequest('viagem-listar');
   return result.viagens || [];
 }
@@ -262,28 +258,8 @@ async function getViagens() {
  * @throws {Error} Se o token não estiver disponível ou parâmetros inválidos
  */
 async function criarViagem(viagem) {
-  const token = getToken();
-  if (!token) {
-    throw new Error('Token não encontrado. Faça login primeiro.');
-  }
-  if (!viagem || typeof viagem !== 'object') {
-    throw new Error('Viagem deve ser um objeto.');
-  }
-  if (!viagem.nome || typeof viagem.nome !== 'string') {
-    throw new Error('Nome da viagem é obrigatório.');
-  }
-  if (!viagem.destino || typeof viagem.destino !== 'string') {
-    throw new Error('Destino é obrigatório.');
-  }
-  if (!viagem.datas || typeof viagem.datas !== 'object') {
-    throw new Error('Datas são obrigatórias.');
-  }
-  if (!viagem.datas.inicio || typeof viagem.datas.inicio !== 'string') {
-    throw new Error('Data de início é obrigatória.');
-  }
-  if (!viagem.datas.fim || typeof viagem.datas.fim !== 'string') {
-    throw new Error('Data de fim é obrigatória.');
-  }
+  // Valida os dados da viagem
+  validateViagem(viagem);
   const result = await apiRequest('viagem-criar', viagem);
   return result;
 }
@@ -296,16 +272,11 @@ async function criarViagem(viagem) {
  * @throws {Error} Se o token não estiver disponível ou parâmetros inválidos
  */
 async function editarViagem(id, viagem) {
-  const token = getToken();
-  if (!token) {
-    throw new Error('Token não encontrado. Faça login primeiro.');
-  }
   if (!id || typeof id !== 'string') {
     throw new Error('ID da viagem é obrigatório.');
   }
-  if (!viagem || typeof viagem !== 'object') {
-    throw new Error('Dados da viagem devem ser um objeto.');
-  }
+  // Valida os dados da viagem
+  validateViagem(viagem);
   const result = await apiRequest('viagem-editar', { id, ...viagem });
   return result.viagem;
 }
@@ -317,10 +288,6 @@ async function editarViagem(id, viagem) {
  * @throws {Error} Se o token não estiver disponível ou parâmetros inválidos
  */
 async function excluirViagem(id) {
-  const token = getToken();
-  if (!token) {
-    throw new Error('Token não encontrado. Faça login primeiro.');
-  }
   if (!id || typeof id !== 'string') {
     throw new Error('ID da viagem é obrigatório.');
   }
@@ -338,10 +305,6 @@ async function excluirViagem(id) {
  * @throws {Error} Se o token não estiver disponível ou parâmetros inválidos
  */
 async function getChats(viagemId, desde) {
-  const token = getToken();
-  if (!token) {
-    throw new Error('Token não encontrado. Faça login primeiro.');
-  }
   if (!viagemId || typeof viagemId !== 'string') {
     throw new Error('ID da viagem é obrigatório.');
   }
@@ -362,22 +325,11 @@ async function getChats(viagemId, desde) {
  * @throws {Error} Se o token não estiver disponível ou parâmetros inválidos
  */
 async function enviarChat(viagemId, texto, autor = 'viajante') {
-  const token = getToken();
-  if (!token) {
-    throw new Error('Token não encontrado. Faça login primeiro.');
-  }
   if (!viagemId || typeof viagemId !== 'string') {
     throw new Error('ID da viagem é obrigatório.');
   }
-  if (!texto || typeof texto !== 'string') {
-    throw new Error('Texto da mensagem é obrigatório.');
-  }
-  if (texto.length > 1000) {
-    throw new Error('Texto da mensagem excede o limite de 1000 caracteres.');
-  }
-  if (autor && typeof autor !== 'string') {
-    throw new Error('Autor deve ser uma string.');
-  }
+  // Valida a mensagem de chat
+  validateChatMessage(texto, autor);
   const result = await apiRequest('chat-enviar', { v: viagemId, texto, autor });
   return result.mensagem;
 }
