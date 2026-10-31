@@ -18,10 +18,6 @@ const github = {
     }
     return base.slice(0, limit);
   },
-  async getIssue(number) {
-    const issues = await this.listIssues({ state: 'open' });
-    return issues.find(i => i.number === number) || { number, title: 'não encontrada', labels: [], updated_at: new Date().toISOString() };
-  },
   async addLabels(number, labels) {
     return { success: true, number, labelsAdded: labels };
   }
@@ -31,92 +27,33 @@ const github = {
 const mandarParaJules = async function(pedido, n, quem, { env = process.env, fetchFn = fetch } = {}) {
   mandarParaJules.chamadas = (mandarParaJules.chamadas || 0) + 1;
   mandarParaJules.ultimosArgumentos = { pedido, n, quem };
-  // Versão simplificada para teste
-  const chaves = [env.JULES_API_KEY, env.JULES_API_KEY1].filter(Boolean);
-  if (!chaves.length) return { status: 500, corpo: { error: 'Falta a chave do Jules' } };
   // Simula sucesso
   return { status: 200, corpo: { ok: true, sessao: 'teste-sessao', link: 'https://jules.google.com', mensagem: 'Pedido #' + n + ' enviado ao Jules.' } };
 };
 mandarParaJules.chamadas = 0;
 
-const rodar = async function(data, { env = process.env, fetchFn = fetch } = {}) {
+const rodar = async function(workflow, { numero } = {}) {
   rodar.chamadas = (rodar.chamadas || 0) + 1;
-  // Versão simplificada para teste
-  const issues = await github.listIssues({ state: 'open' });
-  const agora = Date.now();
-  const seisHoras = 6 * 36e5;
-  
-  // Filtra issues travadas que NÃO têm label reserva-tentou nas últimas 6h
-  const issuesTravadas = issues.filter(i => {
-    const labels = i.labels || [];
-    const temReservaTentou = labels.some(l => l.name === 'reserva-tentou');
-    const atualizado = new Date(i.updated_at).getTime();
-    const tempoDesdeAtualizacao = agora - atualizado;
-    
-    // Ignora se tem label reserva-tentou E foi atualizado nas últimas 6h
-    if (temReservaTentou && tempoDesdeAtualizacao < seisHoras) {
-      return false; // Ignorada
+  rodar.ultimosArgumentos = { workflow, numero };
+  // Simula sucesso
+  return { success: true, numero };
+};
+rodar.chamadas = 0;
+
+// Mock do objeto p para a função socorro
+const mockP = {
+  gh: async function(url, options = {}) {
+    if (url === '/repos/gilcambe/nexia/issues') {
+      // Simula a chamada da função real
+      const issues = await github.listIssues({ state: 'open', limit: 5 });
+      return issues;
     }
-    return true; // Considerada
-  });
-  
-  // Separa por tipo
-  const julesIssues = issuesTravadas.filter((i, idx) => idx < 3); // máximo 3 para Jules
-  const reservaIssues = issuesTravadas.filter((i, idx) => idx >= 3); // resto para reserva
-  
-  // Se jules: false, nada vai para Jules
-  const resultado = {
-    enviadosJules: julesIssues.map(i => ({ number: i.number, title: i.title })),
-    enviadosReserva: reservaIssues.map(i => ({ number: i.number, title: i.title })),
-    total: issuesTravadas.length
-  };
-  
-  return resultado;
+    return {};
+  }
 };
 
-// Função socorro principal
-async function socorro({ jules = true } = {}) {
-  const issues = await github.listIssues({ state: 'open' });
-  const agora = Date.now();
-  const seisHoras = 6 * 36e5;
-  
-  // Filtra issues travadas que NÃO têm label reserva-tentou nas últimas 6h
-  const issuesTravadas = issues.filter(i => {
-    const labels = i.labels || [];
-    const temReservaTentou = labels.some(l => l.name === 'reserva-tentou');
-    const atualizado = new Date(i.updated_at).getTime();
-    const tempoDesdeAtualizacao = agora - atualizado;
-    
-    if (temReservaTentou && tempoDesdeAtualizacao < seisHoras) {
-      return false; // Ignorada
-    }
-    return true; // Considerada
-  });
-  
-  let enviadasJules = [];
-  let enviadasReserva = [];
-  
-  if (jules) {
-    // Máximo 3 issues para Jules
-    enviadasJules = issuesTravadas.slice(0, 3).map(i => ({ number: i.number, title: i.title }));
-    enviadasReserva = issuesTravadas.slice(3).map(i => ({ number: i.number, title: i.title }));
-  } else {
-    // Nenhuma vai para Jules
-    enviadasJules = [];
-    enviadasReserva = issuesTravadas.map(i => ({ number: i.number, title: i.title }));
-  }
-  
-  // Aplica mandarParaJules para as issues de Jules
-  for (const issue of enviadasJules) {
-    await mandarParaJules({}, issue.number, 'teste');
-  }
-  
-  return {
-    enviadasJules,
-    enviadasReserva,
-    totalIssuesTravadas: issuesTravadas.length
-  };
-}
+// Importa a função socorro real
+const { socorro } = require('../../netlify/functions/central/pedidos-acoes.js');
 
 test('socorro: jules true - 3 issues para Jules, 2 para reserva', async () => {
   const resultado = await socorro({ jules: true });
