@@ -1,206 +1,109 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="no-js">
+<html lang="pt-BR">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Cortex-p1 — Tecnologia que impulsiona o seu negócio</title>
-  <meta name="description" content="Institucional da Cortex-p1: soluções digitais, automação e consultoria para empresas que querem escalar com inteligência.">
-  <meta name="theme-color" content="#1e3a8a">
-  <meta property="og:title" content="Cortex-p1">
-  <meta property="og:description" content="Institucional da Cortex-p1: soluções digitais, automação e consultoria para empresas que querem escalar com inteligência.">
-  <meta property="og:type" content="website">
-  <meta property="og:image" content="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/TechnologyHub_2020_Office_Space_Cubicles.jpg/1280px-TechnologyHub_2020_Office_Space_Cubicles.jpg">
-  
+  <title>Site de teste do Cortex-p1 — Painel de cadastros e versões do sistema</title>
+  <meta name="description" content="Painel de cadastros e versões do sistema">
+  <meta name="theme-color" content="#4f46e5">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
 </head>
 <body>
   <a class="skip" href="#conteudo">Pular para o conteúdo</a>
-  <header class="topbar" id="topo">
-    <div class="container topbar__inner">
-      <a class="brand" href="#topo">Cortex-p1</a>
-      <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu" aria-label="Abrir menu"><svg class="i" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
-      <nav id="menu" class="menu" aria-label="Menu principal">
-        <a href="#servicos">Nossos serviços</a>
-        <a href="#sobre-a-cortex-p1">Sobre a Cortex</a>
-        <a href="#nosso-dia-a-dia">Nosso dia a dia</a>
-        <a href="#o-que-dizem-nossos-clientes">Depoimentos</a>
-        <a href="#perguntas-frequentes">Dúvidas</a>
-        <a href="#acessos-rapidos">Acessos rápidos</a>
-        <a class="btn btn--primary btn--sm" href="https://wa.me/5511900000000?text=Ol%C3%A1!%20Vim%20pelo%20site%20da%20Cortex-p1." target="_blank" rel="noopener"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.6-4.8A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 10c0 3 2 5 5 5l1.2-1.2 2 .8-.4 1.6c-4 .6-8.5-3.9-7.9-7.9l1.6-.4.8 2z" fill="currentColor" stroke="none"/></svg> WhatsApp</a>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
+      <div class="sidebar__brand">
+        <span class="logo" aria-hidden="true">S</span>
+        <span>Site de teste do Cortex-p1</span>
+      </div>
+      <nav class="sidebar__nav" aria-label="Seções">
+        <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
+        <a href="#/versoes_sistema" data-route="versoes_sistema"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Versões do Sistema</span></a>
+        <a href="#/usuarios" data-route="usuarios"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Usuários</span></a>
+        <a href="#/modulos_sistema" data-route="modulos_sistema"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Módulos do Sistema</span></a>
+        <a href="#/logs_acesso" data-route="logs_acesso"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Logs de Acesso</span></a>
       </nav>
-    </div>
-  </header>
-  <main id="conteudo">
-<section class="hero" id="sistemas-que-pensam-pelo-seu-negocio">
-  <div class="hero__media" aria-hidden="true"><img class="hero__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/TechnologyHub_2020_Office_Space_Cubicles.jpg/1280px-TechnologyHub_2020_Office_Space_Cubicles.jpg" alt="TechnologyHub 2020 Office Space Cubicles" width="1280" height="853" fetchpriority="high" decoding="async"></div>
-  <div class="hero__overlay" aria-hidden="true"></div>
-  <div class="container hero__content">
-    
-    
-    <p class="eyebrow hero__in" style="--d:0s">Cortex-p1</p>
-    <h1 class="hero__in" style="--d:.1s">Sistemas que pensam pelo seu negócio</h1>
-    <p class="hero__lead hero__in" style="--d:.2s">Desenvolvemos software sob medida, automação de processos e inteligência aplicada para times crescerem com menos esforço.</p>
-    <div class="hero__actions hero__in" style="--d:.3s">
-      <a class="btn btn--primary" href="https://wa.me/5511900000000?text=Ol%C3%A1!%20Vim%20pelo%20site%20da%20Cortex-p1.">Falar com especialista <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-      <a class="btn btn--ghost" href="#servicos">Ver cases</a>
-    </div>
-  </div>
-  <a class="hero__scroll" href="#servicos" aria-label="Rolar para a próxima seção"><span></span></a>
-</section>
-<section class="section" id="servicos">
-  <div class="container">
-    <header class="section__head reveal">
-      <h2>Nossos serviços</h2>
-      <p>Do diagnóstico à entrega em produção.</p>
-    </header>
-    <div class="cards">
-      <article class="card reveal" style="--d:0s">
-        <div class="card__media"><img class="card__img" src="https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTExL2ZsNTE5NTU5NzE5NzctaW1hZ2UuanBn.jpg" alt="Greenville Police&#39;s Technology Officer A.F" width="4000" height="2661" loading="lazy" decoding="async" sizes="(max-width: 700px) 100vw, 33vw"></div>
-        <div class="card__body">
-          
-          <h3>Desenvolvimento de Software</h3>
-          <p>Sistemas web e mobile feitos sob medida.</p>
-          <p class="price">a partir de R$ 15.000</p>
-          
+      <div class="sidebar__foot">
+        <p>Suporte: suporte@cortex-p1.com.br</p>
+        <p>Dados salvos neste navegador.</p>
+      </div>
+    </aside>
+    <div class="backdrop" data-close-menu hidden></div>
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="topbar__title">
+          <h1 id="view-title">Painel</h1>
+          <p id="view-sub">Painel de cadastros e versões do sistema</p>
         </div>
-      </article>
-      <article class="card reveal" style="--d:0.08s">
-        <div class="card__media"><img class="card__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/S2S_Technologies_Office_-_Inside.jpg/1280px-S2S_Technologies_Office_-_Inside.jpg" alt="S2S Technologies Office - Inside" width="1280" height="720" loading="lazy" decoding="async" sizes="(max-width: 700px) 100vw, 33vw"></div>
-        <div class="card__body">
-          
-          <h3>Automação de Processos</h3>
-          <p>Elimine tarefas repetitivas com bots e integrações.</p>
-          
-          
-        </div>
-      </article>
-      <article class="card reveal" style="--d:0.16s">
-        <div class="card__media"><img class="card__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Gigaworkz_Technologies_Office_At_Sugbutel_Bldg.JPG/1280px-Gigaworkz_Technologies_Office_At_Sugbutel_Bldg.JPG" alt="Gigaworkz Technologies Office At Sugbutel Bldg" width="1280" height="960" loading="lazy" decoding="async" sizes="(max-width: 700px) 100vw, 33vw"></div>
-        <div class="card__body">
-          
-          <h3>Inteligência Artificial</h3>
-          <p>Modelos treinados para sua operação.</p>
-          
-          
-        </div>
-      </article>
-      <article class="card reveal" style="--d:0s">
-        <div class="card__media"><img class="card__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/TVSR_Technologies_Office.jpg/1280px-TVSR_Technologies_Office.jpg" alt="TVSR Technologies Office" width="1280" height="843" loading="lazy" decoding="async" sizes="(max-width: 700px) 100vw, 33vw"></div>
-        <div class="card__body">
-          
-          <h3>Consultoria de TI</h3>
-          <p>Estratégia, arquitetura e governança de dados.</p>
-          
-          
-        </div>
-      </article>
+        <label class="search">
+          <span class="sr-only">Buscar</span>
+          <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search" type="search" placeholder="Buscar..." autocomplete="off">
+        </label>
+        <button class="icon-btn" type="button" id="theme" aria-label="Alternar modo escuro"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </header>
+      <main id="conteudo" class="content">
+        <section id="view-painel" class="view" aria-labelledby="view-title">
+          <div class="kpis" id="kpis"></div>
+          <div class="grid2">
+            <article class="card">
+              <header class="card__head"><h2 id="chart-title">Resumo</h2></header>
+              <div class="chart-box"><canvas id="chart" aria-label="Gráfico do resumo" role="img"></canvas></div>
+            </article>
+            <article class="card">
+              <header class="card__head"><h2>Últimos cadastros</h2></header>
+              <ul class="recent" id="recent"></ul>
+            </article>
+          </div>
+        </section>
+        <section id="view-entity" class="view" hidden>
+          <div class="toolbar">
+            <p class="count" id="count"></p>
+            <div class="toolbar__actions">
+              <button class="btn btn--ghost" type="button" id="export"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Exportar CSV</button>
+              <button class="btn btn--primary" type="button" id="add"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> <span id="add-label">Novo</span></button>
+            </div>
+          </div>
+          <div class="card table-card">
+            <div class="table-wrap">
+              <table class="table">
+                <thead id="thead"></thead>
+                <tbody id="tbody"></tbody>
+              </table>
+            </div>
+            <div class="empty" id="empty" hidden>
+              <svg class="i" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg>
+              <h2>Nada por aqui ainda</h2>
+              <p>Clique em “Adicionar” para fazer o primeiro cadastro.</p>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
   </div>
-</section>
-<section class="section section--alt" id="sobre-a-cortex-p1">
-  <div class="container split">
-    <div class="split__media reveal"><img class="split__img" src="https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTExL2ZsNTE5NTU5NzI1NjItaW1hZ2UuanBn.jpg" alt="Greenville Police&#39;s Technology Officer A.F" width="4000" height="2665" loading="lazy" decoding="async" sizes="(max-width: 900px) 100vw, 50vw"><span class="split__badge"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg> Tecnologia que impulsiona o seu negócio</span></div>
-    <div class="split__text reveal" style="--d:.1s">
-      <p class="eyebrow">Sobre a Cortex-p1</p>
-      <h2>Criada para transformar empresas com tecnologia acessível e entrega rápida.</h2>
-      <p>Criada para transformar empresas com tecnologia acessível e entrega rápida.</p>
-      <dl class="stats"><div><dt><span class="count" data-to="5+">5+</span></dt><dd>anos</dd></div><div><dt><span class="count" data-to="100+">100+</span></dt><dd>projetos</dd></div><div><dt><span class="count" data-to="98%">98%</span></dt><dd>retenção</dd></div></dl>
-    </div>
-  </div>
-</section>
-<section class="section" id="nosso-dia-a-dia">
-  <div class="container">
-    <header class="section__head reveal">
-      <h2>Nosso dia a dia</h2>
-      
-    </header>
-    <div class="gallery"><figure class="gallery__item reveal" style="--d:0s"><img class="gallery__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Seagate_Technology_Office_-_Shakopee%2C_Minnesota.jpg/1280px-Seagate_Technology_Office_-_Shakopee%2C_Minnesota.jpg" alt="Seagate Technology Office - Shakopee, Minnesota" width="1280" height="886" loading="lazy" decoding="async" sizes="(max-width: 700px) 50vw, 25vw"></figure><figure class="gallery__item reveal" style="--d:0.06s"><img class="gallery__img" src="https://images.rawpixel.com/editor_1024/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIyLTExL2ZsNTE5NTY5NjExMzEtaW1hZ2UuanBn.jpg" alt="Greenville Police&#39;s Technology Officer A.F" width="4000" height="2661" loading="lazy" decoding="async" sizes="(max-width: 700px) 50vw, 25vw"></figure><figure class="gallery__item reveal" style="--d:0.12s"><img class="gallery__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/Mayor_Eric_Garcetti_looks_on_as_Chief_Innovation_and_Technology_Officer%2C_Peter_Marx%2C_discusses_the_salience_of_the_TechLA_Initiative_to_the_future_prosperity_and_welfare_Los_Angeles_%2814197806270%29.jpg/1280px-Mayor_Eric_Garcetti_looks_on_as_Chief_Innovation_and_Technology_Officer%2C_Peter_Marx%2C_discusses_the_salience_of_the_TechLA_Initiative_to_the_future_prosperity_and_welfare_Los_Angeles_%2814197806270%29.jpg" alt="File:Mayor Eric Garcetti looks on as Chief Innovation and Technology Officer, Pe" width="1280" height="960" loading="lazy" decoding="async" sizes="(max-width: 700px) 50vw, 25vw"></figure><figure class="gallery__item reveal" style="--d:0.18s"><img class="gallery__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/FUT.Minna_School_of_Agric_Technology_Offices.jpg/1280px-FUT.Minna_School_of_Agric_Technology_Offices.jpg" alt="FUT.Minna School of Agric Technology Offices" width="1280" height="853" loading="lazy" decoding="async" sizes="(max-width: 700px) 50vw, 25vw"></figure><figure class="gallery__item reveal" style="--d:0s"><img class="gallery__img" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/FUT.Minna_School_of_Innovative_Technology_Offices.jpg/1280px-FUT.Minna_School_of_Innovative_Technology_Offices.jpg" alt="FUT.Minna School of Innovative Technology Offices" width="1280" height="853" loading="lazy" decoding="async" sizes="(max-width: 700px) 50vw, 25vw"></figure></div>
-  </div>
-</section>
-<section class="section" id="o-que-dizem-nossos-clientes">
-  <div class="container">
-    <header class="section__head reveal">
-      <h2>O que dizem nossos clientes</h2>
-      
-    </header>
-    <div class="quotes"><figure class="quote reveal" style="--d:0s">
-      <div class="stars" aria-label="5 de 5 estrelas"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg></div>
-      <blockquote><p>Entregaram o sistema em tempo recorde.</p></blockquote>
-      <figcaption><span class="quote__avatar" aria-hidden="true">MS</span><span><strong>Marina Souza</strong></span></figcaption>
-    </figure><figure class="quote reveal" style="--d:0.08s">
-      <div class="stars" aria-label="5 de 5 estrelas"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg></div>
-      <blockquote><p>Automação que economizou horas por semana.</p></blockquote>
-      <figcaption><span class="quote__avatar" aria-hidden="true">LA</span><span><strong>Lucas Almeida</strong></span></figcaption>
-    </figure><figure class="quote reveal" style="--d:0.16s">
-      <div class="stars" aria-label="5 de 5 estrelas"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1z" fill="currentColor"/></svg></div>
-      <blockquote><p>Suporte excelente e atendimento humano.</p></blockquote>
-      <figcaption><span class="quote__avatar" aria-hidden="true">FC</span><span><strong>Fernanda Costa</strong></span></figcaption>
-    </figure></div>
-  </div>
-</section>
-<section class="section section--alt" id="perguntas-frequentes">
-  <div class="container container--narrow">
-    <header class="section__head reveal">
-      <h2>Perguntas frequentes</h2>
-      
-    </header>
-    <div class="faq"><details class="faq__item reveal"><summary>Quanto tempo leva um projeto?<span aria-hidden="true"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></summary><p>Depende da complexidade, geralmente de 4 a 12 semanas.</p></details><details class="faq__item reveal"><summary>Vocês dão suporte após a entrega?<span aria-hidden="true"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></summary><p>Sim, planos de manutenção mensal incluídos.</p></details><details class="faq__item reveal"><summary>Trabalham com qual stack?<span aria-hidden="true"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></summary><p>React, Node.js, Python e tecnologias modernas de nuvem.</p></details><details class="faq__item reveal"><summary>É possível integrar com meus sistemas atuais?<span aria-hidden="true"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></span></summary><p>Sim, conectamos via APIs com ERPs, CRMs e e-commerces.</p></details></div>
-  </div>
-</section>
-<section class="band" id="quer-evoluir-sua-operacao">
-  <div class="container band__inner reveal">
-    <div><h2>Quer evoluir sua operação?</h2><p>Agende uma conversa sem compromisso.</p></div>
-    <a class="btn btn--light" href="https://wa.me/5511900000000?text=Ol%C3%A1!%20Vim%20pelo%20site%20da%20Cortex-p1.">Falar pelo WhatsApp <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-  </div>
-</section>
-<section class="section" id="acessos-rapidos">
-  <div class="container container--narrow">
-    <header class="section__head reveal">
-      <h2>Acessos rápidos</h2>
-      
-    </header>
-    <div class="links"><a class="links__item reveal" style="--d:0s" href="https://wa.me/5511900000000" target="_blank" rel="noopener"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.6-4.8A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 10c0 3 2 5 5 5l1.2-1.2 2 .8-.4 1.6c-4 .6-8.5-3.9-7.9-7.9l1.6-.4.8 2z" fill="currentColor" stroke="none"/></svg><span>WhatsApp</span><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="links__item reveal" style="--d:0.05s" href="https://instagram.com/cortexp1" target="_blank" rel="noopener"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg><span>Instagram</span><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="links__item reveal" style="--d:0.1s" href="https://linkedin.com/company/cortexp1" target="_blank" rel="noopener"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="3"/><path d="M7 10v7M7 7v.01M11 17v-4a2 2 0 0 1 4 0v4M11 10v7"/></svg><span>LinkedIn</span><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="links__item reveal" style="--d:0.15000000000000002s" href="https://youtube.com/@cortexp1" target="_blank" rel="noopener"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="4"/><path d="m10 9 5 3-5 3z" fill="currentColor"/></svg><span>YouTube</span><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
-  </div>
-</section>
-<section class="section" id="contato">
-  <div class="container contact">
-    <div class="contact__info reveal">
-      <p class="eyebrow">Contato</p>
-      <h2>Fale com a gente</h2>
-      
-      <ul class="contact__list"><li><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.6-4.8A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 10c0 3 2 5 5 5l1.2-1.2 2 .8-.4 1.6c-4 .6-8.5-3.9-7.9-7.9l1.6-.4.8 2z" fill="currentColor" stroke="none"/></svg><a href="https://wa.me/5511900000000" target="_blank" rel="noopener">WhatsApp (11) 90000-0000</a></li><li><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg><a href="mailto:contato@cortexp1.com.br">contato@cortexp1.com.br</a></li><li><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Av. Paulista, 1000 — São Paulo - SP</span></li><li><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Seg a sex, 9h às 18h</span></li></ul>
-      <div class="map"><iframe title="Mapa: Av. Paulista, 1000 — São Paulo - SP" src="https://maps.google.com/maps?q=Av.%20Paulista%2C%201000%20%E2%80%94%20S%C3%A3o%20Paulo%20-%20SP&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
-    </div>
-    <form class="form reveal" style="--d:.1s" novalidate data-whatsapp="5511900000000" data-email="contato@cortexp1.com.br" data-name="Cortex-p1" data-leads="https://nexia.gcbezerra.workers.dev/api/leads">
-      <div class="field"><label for="f-nome">Nome</label><input id="f-nome" name="nome" autocomplete="name" required minlength="2"><small class="field__err" aria-live="polite"></small></div>
-      <div class="field"><label for="f-tel">Telefone / WhatsApp</label><input id="f-tel" name="telefone" type="tel" autocomplete="tel" inputmode="tel" required pattern="[0-9()+\-\s]{10,}"><small class="field__err" aria-live="polite"></small></div>
-      <div class="field"><label for="f-email">E-mail <span class="opt">(opcional)</span></label><input id="f-email" name="email" type="email" autocomplete="email"><small class="field__err" aria-live="polite"></small></div>
-      <div class="field"><label for="f-msg">Mensagem</label><textarea id="f-msg" name="mensagem" rows="4" required minlength="10"></textarea><small class="field__err" aria-live="polite"></small></div>
-      <div class="field field--check"><input id="f-ok" type="checkbox" name="consentimento" required><label for="f-ok">Aceito receber contato sobre este assunto.</label><small class="field__err" aria-live="polite"></small></div>
-      <div class="hp" aria-hidden="true"><input name="site_url" tabindex="-1" autocomplete="off" aria-label="Não preencha"></div>
-      <button class="btn btn--primary btn--block" type="submit">Enviar mensagem <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
-      <p class="form__ok" role="status" hidden><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Recebemos sua mensagem! Vamos responder em breve.</p>
+
+  <dialog class="modal" id="modal" aria-labelledby="modal-title">
+    <form id="form" novalidate>
+      <header class="modal__head">
+        <h2 id="modal-title">Novo</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </header>
+      <div class="modal__body" id="form-fields"></div>
+      <footer class="modal__foot">
+        <button class="btn btn--ghost" type="button" data-close>Cancelar</button>
+        <button class="btn btn--primary" type="submit">Salvar</button>
+      </footer>
     </form>
-  </div>
-</section>
-  </main>
-  <footer class="footer">
-    <div class="container footer__grid">
-      <div><p class="brand brand--light">Cortex-p1</p><p>Tecnologia que impulsiona o seu negócio</p></div>
-      <div><h3>Contato</h3><ul><li>(11) 90000-0000</li><li>contato@cortexp1.com.br</li><li>Av. Paulista, 1000, São Paulo - SP</li><li>Seg a sex, 9h às 18h</li></ul></div>
-      <div><h3>Redes</h3><p class="social"><a href="https://instagram.com/cortexp1" target="_blank" rel="noopener" aria-label="Instagram"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg></a><a href="https://wa.me/5511900000000" target="_blank" rel="noopener" aria-label="WhatsApp"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.6-4.8A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 10c0 3 2 5 5 5l1.2-1.2 2 .8-.4 1.6c-4 .6-8.5-3.9-7.9-7.9l1.6-.4.8 2z" fill="currentColor" stroke="none"/></svg></a></p></div>
-    </div>
-    <div class="container footer__bottom">
-      <p>© <span data-year>2026</span> Cortex-p1. Todos os direitos reservados.</p>
-      <a class="selo-nexia" href="https://kernex.com.br/?utm_source=cortex-p1&amp;utm_medium=selo&amp;utm_campaign=clientes" target="_blank" rel="noopener">Feito com Kernex</a>
-      <details class="credits"><summary>Créditos das imagens</summary><ul><li>TechnologyHub 2020 Office Space Cubicles — Missionedit (BY-SA 4.0, via Openverse)</li><li>Greenville Police&#39;s Technology Officer A.F — autor desconhecido (CC0 1.0, via Openverse)</li><li>S2S Technologies Office - Inside — S2S Technologies (BY-SA 4.0, via Openverse)</li><li>Gigaworkz Technologies Office At Sugbutel Bldg — Gibson Torreon C (BY-SA 4.0, via Openverse)</li><li>TVSR Technologies Office — Amarnathreddy528 (BY-SA 4.0, via Openverse)</li><li>Greenville Police&#39;s Technology Officer A.F — autor desconhecido (CC0 1.0, via Openverse)</li><li>Seagate Technology Office - Shakopee, Minnesota — Tony Webster (BY-SA 2.0, via Openverse)</li><li>Greenville Police&#39;s Technology Officer A.F — autor desconhecido (CC0 1.0, via Openverse)</li><li>File:Mayor Eric Garcetti looks on as Chief Innovation and Technology Officer, Peter Marx, discusses the salien</li><li>FUT.Minna School of Agric Technology Offices — Baleegraphy (BY-SA 4.0, via Openverse)</li><li>FUT.Minna School of Innovative Technology Offices — Baleegraphy (BY-SA 4.0, via Openverse)</li></ul></details>
-    </div>
-  </footer>
-  <a class="wa-float" href="https://wa.me/5511900000000?text=Ol%C3%A1!%20Vim%20pelo%20site%20da%20Cortex-p1." target="_blank" rel="noopener" aria-label="Falar no WhatsApp"><svg class="i" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.6-4.8A8.5 8.5 0 1 1 8 19.6z"/><path d="M9 10c0 3 2 5 5 5l1.2-1.2 2 .8-.4 1.6c-4 .6-8.5-3.9-7.9-7.9l1.6-.4.8 2z" fill="currentColor" stroke="none"/></svg></a>
-  <a class="to-top" href="#topo" aria-label="Voltar ao topo"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></a>
-  <script src="script.js" defer></script>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortex-p1","name":"Site de teste do Cortex-p1","entities":[{"key":"versoes_sistema","label":"Versões do Sistema","singular":"Versão","fields":[{"key":"versao","label":"Versão","type":"text","options":[],"required":true},{"key":"data_lancamento","label":"Data de Lançamento","type":"date","options":[],"required":true},{"key":"descricao","label":"Descrição","type":"textarea","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Ativo","Obsoleto","Em homologação"],"required":true}],"sample":[{"versao":"1.0.0","data_lancamento":"2026-01-15","descricao":"Versão inicial do painel de cadastros","status":"Obsoleto"},{"versao":"1.1.0","data_lancamento":"2026-03-10","descricao":"Inclusão do módulo de usuários e permissões","status":"Obsoleto"},{"versao":"1.2.0","data_lancamento":"2026-05-22","descricao":"Correção de validação de e-mails e relatórios de acesso","status":"Ativo"},{"versao":"2.0.0","data_lancamento":"2026-08-05","descricao":"Reestruturação visual e novos filtros avançados","status":"Em homologação"}]},{"key":"usuarios","label":"Usuários","singular":"Usuário","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"email","label":"E-mail","type":"email","options":[],"required":true},{"key":"telefone","label":"Telefone","type":"phone","options":[],"required":true},{"key":"perfil","label":"Perfil","type":"select","options":["Administrador","Operador","Visitante"],"required":true},{"key":"status","label":"Status","type":"select","options":["Ativo","Inativo"],"required":true}],"sample":[{"nome":"Ana Souza","email":"ana.souza@cortex-p1.com.br","telefone":"(11) 91234-5678","perfil":"Administrador","status":"Ativo"},{"nome":"Bruno Lima","email":"bruno.lima@cortex-p1.com.br","telefone":"(11) 92345-6789","perfil":"Operador","status":"Ativo"},{"nome":"Carla Dias","email":"carla.dias@cortex-p1.com.br","telefone":"(11) 93456-7890","perfil":"Visitante","status":"Inativo"},{"nome":"Davi Reis","email":"davi.reis@cortex-p1.com.br","telefone":"(11) 94567-8901","perfil":"Operador","status":"Ativo"},{"nome":"Elena Costa","email":"elena.costa@cortex-p1.com.br","telefone":"(11) 95678-9012","perfil":"Visitante","status":"Ativo"}]},{"key":"modulos_sistema","label":"Módulos do Sistema","singular":"Módulo","fields":[{"key":"nome","label":"Nome","type":"text","options":[],"required":true},{"key":"descricao","label":"Descrição","type":"textarea","options":[],"required":true},{"key":"versao","label":"Versão","type":"text","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Ativo","Em desenvolvimento","Descontinuado"],"required":true}],"sample":[{"nome":"Cadastro de Usuários","descricao":"Gestão de perfis e acessos dos colaboradores","versao":"1.2.0","status":"Ativo"},{"nome":"Controle de Versões","descricao":"Histórico de lançamentos do sistema","versao":"2.0.0","status":"Em desenvolvimento"},{"nome":"Relatórios de Acesso","descricao":"Emissão de logs e auditoria de uso","versao":"1.1.0","status":"Ativo"},{"nome":"Backup Automático","descricao":"Agendamento de cópias de segurança","versao":"0.9.0","status":"Descontinuado"}]},{"key":"logs_acesso","label":"Logs de Acesso","singular":"Log de Acesso","fields":[{"key":"usuario","label":"Usuário","type":"text","options":[],"required":true},{"key":"data_hora","label":"Data e Hora","type":"text","options":[],"required":true},{"key":"ip","label":"IP","type":"text","options":[],"required":true},{"key":"acao","label":"Ação","type":"text","options":[],"required":true}],"sample":[{"usuario":"ana.souza","data_hora":"2026-09-01 08:12","ip":"192.168.1.15","acao":"Login"},{"usuario":"bruno.lima","data_hora":"2026-09-01 09:03","ip":"192.168.1.22","acao":"Cadastro de versão"},{"usuario":"carla.dias","data_hora":"2026-09-02 10:45","ip":"192.168.1.30","acao":"Visualização de relatório"},{"usuario":"davi.reis","data_hora":"2026-09-02 14:20","ip":"192.168.1.18","acao":"Logout"},{"usuario":"elena.costa","data_hora":"2026-09-03 07:55","ip":"192.168.1.25","acao":"Login"}]}]}</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
+  <script src="app.js" defer></script>
 </body>
 </html>
