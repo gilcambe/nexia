@@ -1,105 +1,63 @@
-const LIMITE_FECHAMENTOS = 15;
-const EXCECOES_ROTULOS = ['nao-fechar', 'manter'];
+const LIMITE = 15;
+const EXCECOES = ['nao-fechar', 'manter'];
 
 const githubApi = {
   async pullsList(owner, repo, state) {
-    return {
-      data: [
-        {
-          number: 1,
-          title: 'Teste PR #123',
-          head: { ref: 'nexia/feature-123' },
-          created_at: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
-          labels: [{ name: 'bug' }],
-          issueFechada: false,
-          ci_status: 'failure'
-        },
-        {
-          number: 2,
-          title: 'Teste PR #123',
-          head: { ref: 'nexia/feature-123-new' },
-          created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-          labels: [{ name: 'enhancement' }],
-          issueFechada: false,
-          ci_status: 'success'
-        }
-      ]
-    };
+    return { data: [] };
   },
-  async pullsUpdate(owner, repo, pull_number, state) {
-    console.log(`Fechando PR #${pull_number}`);
-  },
-  async issuesCreateComment(owner, repo, issue_number, body) {
-    console.log(`Comentário no PR #${issue_number}: ${body}`);
-  }
+  async pullsUpdate(owner, repo, number, state) {},
+  async issuesCreateComment(owner, repo, number, body) {}
 };
 
 function decidir(prs, agora) {
-  const prsNexia = prs.filter(pr => pr.headRef && pr.headRef.startsWith('nexia/'));
   const grupos = new Map();
-  
-  for (const pr of prsNexia) {
-    const issueNumber = pr.title.match(/#(\d+)/)?.[1];
-    if (!issueNumber) continue;
-    if (!grupos.has(issueNumber)) grupos.set(issueNumber, []);
-    grupos.get(issueNumber).push(pr);
+  for (const pr of prs.filter(p => p.headRef.startsWith('nexia/'))) {
+    const issue = pr.title.match(/#(\d+)/)?.[1];
+    if (!issue) continue;
+    if (!grupos.has(issue)) grupos.set(issue, []);
+    grupos.get(issue).push(pr);
   }
 
   const fechar = [];
-
-  for (const [issueNumber, grupo] of grupos) {
+  for (const grupo of grupos.values()) {
     if (grupo.length <= 1) continue;
-
     grupo.sort((a, b) => {
       if (a.ciStatus === 'success' && b.ciStatus !== 'success') return -1;
       if (a.ciStatus !== 'success' && b.ciStatus === 'success') return 1;
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
-
-    const manter = grupo[0];
-
     for (let i = 1; i < grupo.length; i++) {
       const pr = grupo[i];
-      const temExcecao = pr.labels.some(l => EXCECOES_ROTULOS.includes(l.name));
-      if (temExcecao) continue;
-
-      const horas = (agora - new Date(pr.createdAt)) / (1000 * 60 * 60);
-      if (pr.ciStatus === 'failure' && horas > 48 && pr.issueFechada) {
-        fechar.push({ pr, motivo: 'ci-vermelho-issue-fechada' });
-      } else {
-        fechar.push({ pr, motivo: 'duplicado' });
-      }
+      if (pr.labels.some(l => EXCECOES.includes(l.name))) continue;
+      const horas = (agora - new Date(pr.createdAt)) / 3600000;
+      const motivo = (pr.ciStatus === 'failure' && horas > 48 && pr.issueFechada) ? 'ci-vermelho-issue-fechada' : 'duplicado';
+      fechar.push({ pr, motivo });
     }
   }
-
-  return fechar.slice(0, LIMITE_FECHAMENTOS);
+  return fechar.slice(0, LIMITE);
 }
 
 async function rodar() {
-  const { data: prs } = await githubApi.pullsList('seu-usuario', 'seu-repositorio', 'open');
-  
-  const prsParaDecidir = prs
-    .filter(pr => pr.head.ref.startsWith('nexia/'))
-    .map(pr => ({
-      number: pr.number,
-      title: pr.title,
-      headRef: pr.head.ref,
-      createdAt: pr.created_at,
-      ciStatus: pr.ci_status || 'pending',
-      labels: pr.labels,
-      issueFechada: pr.issueFechada === true,
+  const { data: prs } = await githubApi.pullsList('owner', 'repo', 'open');
+  const entrada = prs
+    .filter(p => p.head.ref.startsWith('nexia/'))
+    .map(p => ({
+      number: p.number,
+      title: p.title,
+      headRef: p.head.ref,
+      createdAt: p.created_at,
+      ciStatus: p.ci_status || 'pending',
+      labels: p.labels || [],
+      issueFechada: p.issueFechada === true,
     }));
-
-  const fechar = decidir(prsParaDecidir, new Date());
-
+  const fechar = decidir(entrada, new Date());
   for (const { pr, motivo } of fechar) {
-    await githubApi.pullsUpdate('seu-usuario', 'seu-repositorio', pr.number, 'closed');
-    const body = motivo === 'ci-vermelho-issue-fechada' 
-      ? 'Este PR foi fechado automaticamente: CI vermelho há mais de 48h e a issue relacionada já está fechada.'
-      : 'Este PR foi fechado automaticamente porque há outro PR mais recente para a mesma issue.';
-    await githubApi.issuesCreateComment('seu-usuario', 'seu-repositorio', pr.number, body);
+    await githubApi.pullsUpdate('owner', 'repo', pr.number, 'closed');
+    const body = motivo === 'ci-vermelho-issue-fechada'
+      ? 'CI vermelho há mais de 48h e issue fechada.'
+      : 'PR duplicado: existe PR mais recente para a mesma issue.';
+    await githubApi.issuesCreateComment('owner', 'repo', pr.number, body);
   }
-
   return fechar.length;
 }
 
