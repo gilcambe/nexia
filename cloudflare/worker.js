@@ -36,6 +36,36 @@ export class VazaoController {
     if (url.pathname === '/status') {
       return new Response(JSON.stringify({ quaseCheios: Array.from(this.bancosQuaseCheios) }), { headers: { 'Content-Type': 'application/json' } });
     }
+    if (url.pathname === '/vazao') {
+      if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405, headers: { 'Content-Type': 'application/json' } });
+      const body = await request.json().catch(() => ({}));
+      const { banco, data, leituras = 0, escritas = 0, projectId = '' } = body || {};
+      const bancoKey = banco || projectId;
+      if (bancoKey && data) {
+        this.storage.put(`vazao:${bancoKey}:${data}`, JSON.stringify({ leituras, escritas }));
+      }
+      return new Response(JSON.stringify({ ok: true, banco: bancoKey, leituras, escritas }), { headers: { 'Content-Type': 'application/json' } });
+    }
+    if (url.pathname === '/vazao-get') {
+      if (request.method !== 'GET') return new Response('Method Not Allowed', { status: 405, headers: { 'Content-Type': 'application/json' } });
+      const entries = await this.storage.list({ prefix: 'vazao:' });
+      const uso = {};
+      for (const key of entries.keys) {
+        const match = key.name.match(/^vazao:(.+):(\d{4}-\d{2}-\d{2})$/);
+        if (match) {
+          const banco = match[1];
+          const data = match[2];
+          const val = await this.storage.get(key.name);
+          if (val) {
+            const parsed = JSON.parse(val);
+            if (!uso[banco]) uso[banco] = { data, leituras: 0, escritas: 0 };
+            uso[banco].leituras += parsed.leituras;
+            uso[banco].escritas += parsed.escritas;
+          }
+        }
+      }
+      return new Response(JSON.stringify({ ok: true, uso }), { headers: { 'Content-Type': 'application/json' } });
+    }
     return new Response('Not Found', { status: 404 });
   }
 }
