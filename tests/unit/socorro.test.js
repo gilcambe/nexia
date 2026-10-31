@@ -2,104 +2,100 @@
 const test = require('node:test');
 const assert = require('node:assert');
 
-// Mock do GitHub adapter
-const github = {
-  listIssues: async function({ state = 'open', limit = 30 } = {}) {
-    // Retorna issues mock baseadas no estado
-    const base = [];
-    if (state === 'open') {
-      base.push(
-        { number: 1, title: 'Issue 1 travada', labels: [{ name: 'cortex-travado' }], updated_at: new Date(Date.now() - 2 * 36e5).toISOString() }, // 2h ago - dentro das 6h, sem reserva-tentou
-        { number: 2, title: 'Issue 2 travada', labels: [{ name: 'cortex-travado' }, { name: 'reserva-tentou' }], updated_at: new Date(Date.now() - 2 * 36e5).toISOString() },
-        { number: 3, title: 'Issue 3 travada', labels: [{ name: 'cortex-travado' }, { name: 'reserva-tentou' }], updated_at: new Date(Date.now() - 8 * 36e5).toISOString() }, // 8h ago - fora das 6h, reserva-tentou antiga
-        { number: 4, title: 'Issue 4 travada', labels: [{ name: 'cortex-travado' }], updated_at: new Date(Date.now() - 1 * 36e5).toISOString() },
-        { number: 5, title: 'Issue 5 com .github/workflows/', labels: [{ name: 'cortex-travado' }], updated_at: new Date(Date.now() - 1 * 36e5).toISOString() }
-      );
-    }
-    return base.slice(0, limit);
-  },
-  async addLabels(number, labels) {
-    return { success: true, number, labelsAdded: labels };
+const caminhoAcoes = '../../netlify/functions/central/pedidos-acoes.js';
+const caminhoJules = '../../netlify/functions/central/pedidos-jules.js';
+const caminhoGithub = '../../netlify/functions/central/github.js';
+
+// --- Mock do objeto p (com metodo gh) ---
+const chamadasGh = [];
+const mockGh = async function(url, options = {}) {
+  chamadasGh.push({ url, options });
+  if (url === '/repos/gilcambe/nexia/issues') {
+    return [
+      { number: 1, title: 'Issue 1 travada', html_url: 'https://github.com/gilcambe/nexia/issues/1', labels: [{ name: 'cortex-travado' }], updated_at: new Date(Date.now() - 2 * 36e5).toISOString(), body: '' },
+      { number: 2, title: 'Issue 2 travada', html_url: 'https://github.com/gilcambe/nexia/issues/2', labels: [{ name: 'cortex-travado' }, { name: 'reserva-tentou' }], updated_at: new Date(Date.now() - 2 * 36e5).toISOString(), body: '' },
+      { number: 3, title: 'Issue 3 travada (duas reservas)', html_url: 'https://github.com/gilcambe/nexia/issues/3', labels: [{ name: 'cortex-travado' }, { name: 'reserva-tentativa-1' }, { name: 'reserva-tentativa-2' }], updated_at: new Date(Date.now() - 8 * 36e5).toISOString(), body: '' },
+      { number: 4, title: 'Issue 4 travada (duas reservas)', html_url: 'https://github.com/gilcambe/nexia/issues/4', labels: [{ name: 'cortex-travado' }, { name: 'reserva-tentativa-1' }, { name: 'reserva-tentativa-2' }], updated_at: new Date(Date.now() - 10 * 36e5).toISOString(), body: '' },
+      { number: 5, title: 'Issue 5 menciona .github/workflows/ no titulo', html_url: 'https://github.com/gilcambe/nexia/issues/5', labels: [{ name: 'cortex-travado' }], updated_at: new Date(Date.now() - 1 * 36e5).toISOString(), body: '' }
+    ];
   }
-};
-
-// Mock das funções do projeto
-const mandarParaJules = async function(pedido, n, quem, { env = process.env, fetchFn = fetch } = {}) {
-  mandarParaJules.chamadas = (mandarParaJules.chamadas || 0) + 1;
-  mandarParaJules.ultimosArgumentos = { pedido, n, quem };
-  // Simula sucesso
-  return { status: 200, corpo: { ok: true, sessao: 'teste-sessao', link: 'https://jules.google.com', mensagem: 'Pedido #' + n + ' enviado ao Jules.' } };
-};
-mandarParaJules.chamadas = 0;
-
-const rodar = async function(workflow, { numero } = {}) {
-  rodar.chamadas = (rodar.chamadas || 0) + 1;
-  rodar.ultimosArgumentos = { workflow, numero };
-  // Simula sucesso
-  return { success: true, numero };
-};
-rodar.chamadas = 0;
-
-// Mock do objeto p para a função socorro
-const mockP = {
-  gh: async function(url, options = {}) {
-    if (url === '/repos/gilcambe/nexia/issues') {
-      // Simula a chamada da função real
-      const issues = await github.listIssues({ state: 'open', limit: 5 });
-      return issues;
-    }
-    return {};
+  // getIssue: /repos/gilcambe/nexia/issues/N
+  const m = url.match(//repos/gilcambe/nexia/issues/(\d+)$/);
+  if (m) {
+    const n = Number(m[1]);
+    const base = await mockGh('/repos/gilcambe/nexia/issues');
+    return base.find(i => i.number === n) || {};
   }
+  // addLabels: POST /repos/gilcambe/nexia/issues/N/labels
+  if (url.endsWith('/labels') && options.method === 'POST') {
+    return { success: true };
+  }
+  return {};
 };
 
-// Importa a função socorro real
-const { socorro } = require('../../netlify/functions/central/pedidos-acoes.js');
+const p = { gh: mockGh };
 
-test('socorro: jules true - 3 issues para Jules, 2 para reserva', async () => {
-  const resultado = await socorro({ jules: true });
-  
-  // Deve ter 3 issues enviadas ao Jules
-  assert.strictEqual(resultado.enviadasJules.length, 3, 'Deve enviar máximo 3 issues ao Jules');
-  
-  // Deve ter 1 issue enviada ao reserva (issue 2 ignorada por reserva-tentou nas 6h)
-  assert.strictEqual(resultado.enviadasReserva.length, 1, 'Deve enviar 1 issue ao reserva workflow');
-  
-  // Verifica campos corretos
-  assert.ok(resultado.enviadasJules[0].number, 'Primeira issue deve ter number');
-  assert.ok(resultado.enviadasJules[0].title, 'Primeira issue deve ter title');
+// --- Mock de mandarParaJules e rodar injetado no require.cache ---
+let chamadasJules = 0;
+let chamadasRodar = 0;
+const mockMandarParaJules = async function() { chamadasJules++; return { status: 200, corpo: { ok: true } }; };
+const mockRodar = async function() { chamadasRodar++; return { success: true }; };
+
+function injetarMocks() {
+  require.cache[require.resolve(caminhoJules)] = { exports: { mandarParaJules: mockMandarParaJules, montarPrompt: () => {}, REGRAS: '' } };
+  require.cache[require.resolve(caminhoGithub)] = { exports: { rodar: mockRodar } };
+}
+
+const { socorro } = require(caminhoAcoes);
+
+function reset() {
+  chamadasGh.length = 0;
+  chamadasJules = 0;
+  chamadasRodar = 0;
+}
+
+test('socorro: jules true - no maximo 3 para Jules, criterio restrito', async () => {
+  reset();
+  injetarMocks();
+  const resultado = await socorro(p, { jules: true });
+  const paraJules = resultado.filter(r => r.para === 'jules');
+  const paraReserva = resultado.filter(r => r.para === 'reserva');
+  assert.strictEqual(paraJules.length, 3, 'deve enviar no maximo 3 ao Jules');
+  assert.strictEqual(chamadasJules, 3, 'deve chamar mandarParaJules 3 vezes');
+  assert.strictEqual(paraReserva.length, 0, 'com jules true nao deve enviar para reserva');
+  for (const r of resultado) {
+    assert.ok(typeof r.numero === 'number', 'numero deve existir');
+    assert.ok(typeof r.titulo === 'string', 'titulo deve existir');
+    assert.ok(typeof r.para === 'string', 'para deve existir');
+    assert.ok(typeof r.link === 'string', 'link deve existir');
+  }
 });
 
-test('socorro: jules false - nenhuma issue vai ao Jules', async () => {
-  const resultado = await socorro({ jules: false });
-  
-  // Nenhuma issue deve ir ao Jules
-  assert.strictEqual(resultado.enviadasJules.length, 0, 'Com jules: false, nenhuma issue deve ir ao Jules');
-  
-  // Todas as 4 issues (exceto issue 2 ignorada) devem ir para reserva
-  assert.strictEqual(resultado.enviadasReserva.length, 4, 'Com jules: false, as 4 issues devem ir para reserva');
+test('socorro: jules false - nenhuma vai ao Jules, criterio vai para reserva', async () => {
+  reset();
+  injetarMocks();
+  const resultado = await socorro(p, { jules: false });
+  const paraJules = resultado.filter(r => r.para === 'jules');
+  const paraReserva = resultado.filter(r => r.para === 'reserva');
+  assert.strictEqual(paraJules.length, 0, 'nenhuma issue deve ir ao Jules');
+  assert.strictEqual(chamadasRodar, 3, 'deve chamar rodar 3 vezes (issues 3, 4, 5)');
+  assert.strictEqual(paraReserva.length, 3, '3 issues devem ir para reserva');
 });
 
-test('socorro: label reserva-tentou nas últimas 6h é ignorada', async () => {
-  // Issue 2 tem reserva-tentou e está atualizada há 2h (dentro das 6h) → ignorada
-  // Issue 3 tem reserva-tentou e está atualizada há 8h (fora das 6h) → considerada
-  const resultado = await socorro({ jules: true });
-
-  // Issue 2 não deve aparecer em lugar nenhum (foi ignorada)
-  assert.strictEqual(resultado.enviadasJules.filter(i => i.number === 2).length, 0, 'Issue 2 não deve ir ao Jules');
-  assert.strictEqual(resultado.enviadasReserva.filter(i => i.number === 2).length, 0, 'Issue 2 com reserva-tentou nas 6h deve ser ignorada na reserva');
-
-  // Issue 3 deve aparecer na reserva (reserva-tentou há mais de 6h)
-  assert.ok(resultado.enviadasReserva.find(i => i.number === 3), 'Issue 3 com reserva-tentou há mais de 6h deve ser considerada');
-
-  // Com issue 2 ignorada, restam 4 issues: 3 Jules + 1 reserva
-  assert.strictEqual(resultado.enviadasJules.length, 3, 'Deve enviar 3 issues ao Jules');
-  assert.strictEqual(resultado.enviadasReserva.length, 1, 'Deve enviar 1 issue ao reserva');
+test('socorro: reserva-tentou nas ultimas 6h e ignorada', async () => {
+  reset();
+  injetarMocks();
+  const resultado = await socorro(p, { jules: true });
+  const numeros = resultado.map(r => r.numero);
+  assert.ok(!numeros.includes(2), 'issue 2 com reserva-tentou nas 6h deve ser ignorada');
+  assert.ok(numeros.includes(5), 'issue 5 (workflow) deve ser processada');
+  assert.ok(chamadasGh.some(c => c.url === '/repos/gilcambe/nexia/issues'), 'deve listar issues');
 });
 
-test('socorro: issue mencionando .github/workflows/ é considerada', async () => {
-  const resultado = await socorro({ jules: true });
-  
-  // Issue 5 menciona .github/workflows/ no título
-  const issue5 = resultado.enviadasJules.find(i => i.title.includes('.github/workflows/'));
-  assert.ok(issue5, 'Issue com .github/workflows/ no título deve ser considerada');
+test('socorro: getIssue e addLabels estao disponíveis no mock gh', async () => {
+  reset();
+  const issue5 = await p.gh('/repos/gilcambe/nexia/issues/5');
+  assert.strictEqual(issue5.number, 5, 'getIssue deve retornar a issue 5');
+  await p.gh('/repos/gilcambe/nexia/issues/5/labels', { method: 'POST', body: JSON.stringify({ labels: ['teste'] }) });
+  assert.ok(chamadasGh.some(c => c.url.endsWith('/labels') && c.options.method === 'POST'), 'addLabels deve ser chamada via gh');
 });
