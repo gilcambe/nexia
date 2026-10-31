@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viagem Pro - Orçamento</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        .progress-container {
+            margin-bottom: 20px;
+        }
+        .progress-bar {
+            height: 10px;
+        }
+        .form-step {
+            display: none;
+        }
+        .form-step.active {
+            display: block;
+        }
+        .navigation-buttons {
+            margin-top: 20px;
+        }
+        @media (max-width: 412px) {
+            .container {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Solicite um Orçamento</h1>
+        <div class="progress-container">
+            <div class="progress">
+                <div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+        <form id="quoteForm" onsubmit="submitQuoteForm(event)">
+            <!-- Step 1: Destino, Origem e Datas -->
+            <div class="form-step active" id="step1">
+                <h2>Etapa 1: Destino, Origem e Datas</h2>
+                <div class="mb-3">
+                    <label for="destino" class="form-label">Destino</label>
+                    <input type="text" class="form-control" id="destino" name="destino" required>
+                </div>
+                <div class="mb-3">
+                    <label for="origem" class="form-label">Origem</label>
+                    <input type="text" class="form-control" id="origem" name="origem" required>
+                </div>
+                <div class="mb-3">
+                    <label for="data_ida" class="form-label">Data de Ida</label>
+                    <input type="date" class="form-control" id="data_ida" name="data_ida" required>
+                </div>
+                <div class="mb-3">
+                    <label for="data_volta" class="form-label">Data de Volta</label>
+                    <input type="date" class="form-control" id="data_volta" name="data_volta" required>
+                </div>
+            </div>
+
+            <!-- Step 2: Pessoas e Orçamento -->
+            <div class="form-step" id="step2">
+                <h2>Etapa 2: Pessoas e Orçamento</h2>
+                <div class="mb-3">
+                    <label for="adultos" class="form-label">Número de Adultos</label>
+                    <input type="number" class="form-control" id="adultos" name="adultos" min="1" required>
+                </div>
+                <div class="mb-3">
+                    <label for="criancas" class="form-label">Número de Crianças</label>
+                    <input type="number" class="form-control" id="criancas" name="criancas" min="0" required>
+                </div>
+                <div class="mb-3">
+                    <label for="orcamento" class="form-label">Orçamento Estimado</label>
+                    <input type="number" class="form-control" id="orcamento" name="orcamento" min="0" required>
+                </div>
+            </div>
+
+            <!-- Step 3: Serviços e Observações -->
+            <div class="form-step" id="step3">
+                <h2>Etapa 3: Serviços e Observações</h2>
+                <div class="mb-3">
+                    <label class="form-label">Serviços Desejados</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="servico1" name="servicos" value="Passagens Aéreas">
+                        <label class="form-check-label" for="servico1">Passagens Aéreas</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="servico2" name="servicos" value="Hospedagem">
+                        <label class="form-check-label" for="servico2">Hospedagem</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="servico3" name="servicos" value="Translados">
+                        <label class="form-check-label" for="servico3">Translados</label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="observacoes" class="form-label">Observações</label>
+                    <textarea class="form-control" id="observacoes" name="observacoes" rows="3"></textarea>
+                </div>
+            </div>
+
+            <!-- Step 4: Contato -->
+            <div class="form-step" id="step4">
+                <h2>Etapa 4: Contato</h2>
+                <div class="mb-3">
+                    <label for="nome" class="form-label">Nome</label>
+                    <input type="text" class="form-control" id="nome" name="nome" required>
+                </div>
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input type="email" class="form-control" id="email" name="email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="telefone" class="form-label">Telefone</label>
+                    <input type="tel" class="form-control" id="telefone" name="telefone" required>
+                </div>
+            </div>
+
+            <div class="navigation-buttons d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary" id="prevBtn" onclick="prevStep()">Voltar</button>
+                <button type="button" class="btn btn-primary" id="nextBtn" onclick="nextStep()">Avançar</button>
+                <button type="submit" class="btn btn-success" id="submitBtn" style="display: none;">Enviar</button>
+            </div>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="quote-form.js"></script>
+</body>
+</html>
