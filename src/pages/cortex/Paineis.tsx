@@ -171,9 +171,46 @@ function AvisosCelular() {
 }
 
 import { obterConfig, salvarConfig, verificarSuporteWebGPU } from "../../../ia-local";
+import { useState, useEffect } from "react";
 
 export function config({ tema, mudarTema, email, instalar, sair }: { tema: Tema; mudarTema: (t: Tema) => void; email: string; instalar: (() => void) | null; sair: () => void }) {
   const op: { id: Tema; nome: string }[] = [{ id: "auto", nome: "Automático" }, { id: "escuro", nome: "Escuro" }, { id: "claro", nome: "Claro" }];
+  
+  const [isLocalIAEnabled, setIsLocalIAEnabled] = useState(() => {
+    try {
+      const cfg = obterConfig();
+      return cfg ? !!cfg.ativo : false;
+    } catch {
+      return false;
+    }
+  });
+  const [isWebGpuSupported, setIsWebGpuSupported] = useState(true);
+  const [showDownloadWarning, setShowDownloadWarning] = useState(false);
+
+  useEffect(() => {
+    const checkSupport = async () => {
+      const { suportado } = await verificarSuporteWebGPU();
+      setIsWebGpuSupported(suportado);
+    };
+    checkSupport();
+  }, []);
+
+  const handleToggleLocalIA = () => {
+    if (!isWebGpuSupported) return;
+    if (isLocalIAEnabled) {
+      setIsLocalIAEnabled(false);
+      salvarConfig({ ativo: false });
+    } else {
+      setShowDownloadWarning(true);
+    }
+  };
+
+  const handleConfirmDownload = () => {
+    setIsLocalIAEnabled(true);
+    setShowDownloadWarning(false);
+    salvarConfig({ ativo: true });
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-6 space-y-3">
       <Titulo t="Configurações" s={email} />
@@ -181,6 +218,37 @@ export function config({ tema, mudarTema, email, instalar, sair }: { tema: Tema;
         <div className="flex gap-2">{op.map((o) => (
           <button key={o.id} onClick={() => mudarTema(o.id)} data-testid={`cx-tema-${o.id}`}
             className={`flex-1 h-11 rounded-xl border text-sm ${tema === o.id ? "border-[var(--cx-ac)] bg-[var(--cx-hover)] font-semibold" : "border-[var(--cx-line)]"}`}>{o.nome}</button>))}</div></Cartao>
+
+      <Cartao>
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <p className="font-medium">IA no meu aparelho (grátis, offline)</p>
+            <p className="text-sm text-[var(--cx-mut)] mt-1">Execute o Cortex diretamente no seu dispositivo para respostas rápidas e privacidade total.</p>
+          </div>
+          <button
+            onClick={handleToggleLocalIA}
+            disabled={!isWebGpuSupported}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isLocalIAEnabled ? "bg-[var(--cx-ac)]" : "bg-[var(--cx-line)]"} ${!isWebGpuSupported ? "opacity-40 cursor-not-allowed" : ""}`}
+            data-testid="local-ia-toggle"
+            role="switch"
+            aria-checked={isLocalIAEnabled}
+            aria-label="IA no meu aparelho"\n          >
+            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isLocalIAEnabled ? "translate-x-6" : "translate-x-1"}`} />
+          </button>
+        </div>
+        {!isWebGpuSupported && (
+          <p className="text-xs text-red-400 mt-2" data-testid="webgpu-blocked-warning">⚠️ Seu navegador não suporta WebGPU ou não tem memória suficiente para esta funcionalidade.</p>
+        )}
+        {showDownloadWarning && !isLocalIAEnabled && (
+          <div className="text-xs text-yellow-400 mt-2" data-testid="download-warning">
+            <p>⬇️ Para ativar, será necessário baixar um modelo de IA de aproximadamente 1 GB. Recomendamos uma conexão Wi-Fi estável.</p>
+            <div className="flex justify-end gap-2 mt-2">
+              <button onClick={() => setShowDownloadWarning(false)} className="px-3 py-1 text-sm border border-[var(--cx-line)] rounded-lg">Cancelar</button>
+              <button onClick={handleConfirmDownload} className="px-3 py-1 text-sm bg-[var(--cx-ac)] text-black rounded-lg">Confirmar Download</button>
+            </div>
+          </div>
+        )}
+      </Cartao>
 
       <Cartao><p className="font-medium">App no celular</p>
         <p className="text-sm text-[var(--cx-mut)] mt-1">{instalar ? "Instale o Cortex na tela inicial." : "No Chrome do celular: menu ⋮ → Instalar app (ou Adicionar à tela inicial)."}</p>
