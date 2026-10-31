@@ -151,8 +151,8 @@ export default function MemorySettings() {
               </span>
               <button
                 onClick={handleOfflineAiToggle}
-                disabled={offlineAiEnabled}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${offlineAiEnabled ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'}`}
+                disabled={offlineAiEnabled || !hasWebGPUSupport() || !hasMemorySupport()}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${offlineAiEnabled ? 'bg-[var(--cx-ac)]' : !hasWebGPUSupport() || !hasMemorySupport() ? 'bg-[var(--cx-line)] opacity-50 cursor-not-allowed' : 'bg-[var(--cx-line)]'}`}
                 data-testid="offline-ai-toggle"
                 role="switch"
                 aria-checked={offlineAiEnabled}
