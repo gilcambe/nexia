@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useMemory } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemType } from '../../api/memoryClient';
 import { MemoryItem as MemoryItemComponent } from '../../components/MemoryItem';
-import { obterConfig, salvarConfig, verificarSuporteWebGPU } from '../../../../ia-local'; // Importar ia-local.js
+import { obterConfig, salvarConfig, verificarSuporteWebGPU } from '../../../../ia-local';
+
 
 type MemoryItemProps = MemoryItemType & {
   onDelete: (id: string) => void;
@@ -51,55 +52,48 @@ export default function MemorySettings() {
 
 
   useEffect(() => {
-    // Verifica suporte a WebGPU e memória
-    const checkWebGpuSupport = async () => {
-      if ('gpu' in navigator && 'requestAdapter' in (navigator as any).gpu) {
-        const adapter = await (navigator as any).gpu.requestAdapter();
-        if (adapter) {
-          // Exemplo de verificação de memória mínima (ajuste conforme a necessidade real)
-          // `deviceMemory` não é padrão WebGPU, mas é uma heurística comum para recursos
-          // Para um modelo de ~1GB, talvez 2GB ou 4GB de memória de dispositivo seja um bom mínimo.
-          const deviceMemory = (navigator as any).deviceMemory || 0;
-          // Considerando que um modelo de 1GB precisa de memória RAM e GPU,
-          // um mínimo de 2GB de RAM é um ponto de partida.
-          if (deviceMemory >= 2) { 
-            setIsWebGpuSupported(true);
-          } else {
-            console.warn('WebGPU é suportado, mas a memória do dispositivo é insuficiente (< 2GB).');
-          }
-        } else {
-          console.warn('WebGPU não conseguiu obter um adaptador.');
-        }
-      } else {
-        console.warn('WebGPU não é suportado neste navegador.');
+    // Verifica suporte a WebGPU e memória usando a função centralizada
+    const checkSupport = async () => {
+      const { suportado, motivo } = await verificarSuporteWebGPU();
+      setIsWebGpuSupported(suportado);
+      if (!suportado) {
+        console.warn('IA Local não suportada:', motivo);
       }
     };
-    checkWebGpuSupport();
+    checkSupport();
   }, []);
 
   const handleToggleLocalIA = useCallback(() => {
     if (!isWebGpuSupported) {
-      alert('Seu navegador não suporta WebGPU ou não tem memória suficiente para esta funcionalidade. Por favor, atualize seu navegador ou use um dispositivo compatível.');
+      // O aviso de não suportado já é exibido abaixo do switch
       return;
     }
 
     if (!isLocalIAEnabled) { // Tentando ativar
       setShowDownloadWarning(true);
-      // O usuário precisará confirmar o download no modal/alerta que será exibido por `showDownloadWarning`
-      // Por enquanto, apenas exibimos o aviso. A ativação real acontece após a confirmação.
     } else { // Desativando
       setIsLocalIAEnabled(false);
       setShowDownloadWarning(false);
+      salvarConfig({ ativo: false });
     }
   }, [isLocalIAEnabled, isWebGpuSupported]);
+
+  const handleConfirmDownload = useCallback(() => {
+    setIsLocalIAEnabled(true);
+    setShowDownloadWarning(false);
+    salvarConfig({ ativo: true });
+    // TODO: Iniciar o processo de download/inicialização da IA local aqui.
+    // Isso pode envolver a chamada de `inicializarEngine` do `ia-local.js`
+    // e mostrar um feedback de progresso ao usuário.
+  }, []);
 
 
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Configurações de Memória</h1>
+        <h1 className="text-3xl font-bold mb-2">Configurações</h1>
         <p className="text-[var(--cx-mut)]">
-          Gerencie os fatos armazenados pelo Cortex e suas preferências de privacidade.
+          Gerencie a IA local e suas preferências de memória e privacidade.
         </p>
       </div>
 
@@ -119,8 +113,9 @@ export default function MemorySettings() {
               <span className="text-sm text-[var(--cx-mut)]">
                 {profile.rememberMe ? 'Ativado' : 'Desativado'}
               </span>
-              <button
-                onClick={() => handleToggleRememberMe(!profile.rememberMe)}
+                              <button
+                  onClick={() => handleToggleRememberMe(!profile.rememberMe)}
+                  aria-label="Toggle para lembrar de mim"
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${profile.rememberMe ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'}`}
                 data-testid="memory-remember-me-toggle"
                 role="switch"
@@ -156,8 +151,9 @@ export default function MemorySettings() {
               <span className="text-sm text-[var(--cx-mut)]">
                 {isLocalIAEnabled ? 'Ativado' : 'Desativado'}
               </span>
-              <button
-                onClick={handleToggleLocalIA}
+                              <button
+                  onClick={handleToggleLocalIA}
+                  aria-label="Toggle para IA no meu aparelho"
                 disabled={!isWebGpuSupported}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isLocalIAEnabled ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'} ${!isWebGpuSupported ? 'opacity-40 cursor-not-allowed' : ''}`}
                 data-testid="local-ia-toggle"
@@ -187,7 +183,7 @@ export default function MemorySettings() {
                   Cancelar
                 </button>
                 <button
-                  onClick={() => { setIsLocalIAEnabled(true); setShowDownloadWarning(false); /* Iniciar download aqui */ }}
+                  onClick={handleConfirmDownload}
                   className="px-3 py-1 text-sm bg-[var(--cx-ac)] text-white rounded-lg hover:bg-[var(--cx-ac-hover)] transition-colors"
                 >
                   Confirmar Download
@@ -269,10 +265,11 @@ export default function MemorySettings() {
         <div className="text-sm text-[var(--cx-mut)] space-y-2">
           <p>📋 <strong>Informações de privacidade (LGPD):</strong></p>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Seus fatos são armazenados de forma segura e usados apenas para melhorar as interações com o Cortex</li>
-            <li>Você tem controle total sobre seus dados através desta página</li>
-            <li>A exclusão de fatos é irreversível e segue os princípios da LGPD</li>
-            <li>Os dados são processados no Brasil, conforme legislação vigente</li>
+            <li>A funcionalidade de IA local processa dados diretamente no seu aparelho, sem envio para a nuvem.</li>
+            <li>Seus fatos são armazenados de forma segura e usados apenas para melhorar as interações com o Cortex.</li>
+            <li>Você tem controle total sobre seus dados através desta página.</li>
+            <li>A exclusão de fatos é irreversível e segue os princípios da LGPD.</li>
+            <li>Os dados são processados no Brasil, conforme legislação vigente.</li>
           </ul>
         </div>
       </div>
