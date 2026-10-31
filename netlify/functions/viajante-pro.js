@@ -422,6 +422,209 @@ exports.handler = async function (event, context) {
     return res(200, { ok: true, id, url: `/api/viajante-pro?site=${slug}&foto=${id}` });
   }
 
+  // ── Ação: viagem-criar ──
+  if (acao === 'viagem-criar') {
+    const nome = str(body.nome, 100);
+    const destino = str(body.destino, 100);
+    const datas = {
+      inicio: str(body.datas?.inicio, 20),
+      fim: str(body.datas?.fim, 20),
+    };
+    const passageiros = Array.isArray(body.passageiros) ? body.passageiros.map(p => ({
+      nome: str(p.nome, 100),
+      tipo: str(p.tipo, 20) || 'adulto',
+    })) : [];
+    const roteiro = Array.isArray(body.roteiro) ? body.roteiro.map(r => ({
+      dia: parseInt(r.dia, 10) || 1,
+      descricao: str(r.descricao, 500),
+    })) : [];
+
+    if (!nome || !destino || !datas.inicio || !datas.fim) {
+      return res(400, { error: 'Nome, destino e datas são obrigatórios.' });
+    }
+
+    const id = aleatorio(12);
+    const codigoSecreto = aleatorio(24);
+    const viagemData = {
+      id,
+      nome,
+      destino,
+      datas,
+      passageiros,
+      roteiro,
+      codigoSecreto,
+      criado_em: new Date(now).toISOString(),
+      atualizado_em: new Date(now).toISOString(),
+    };
+
+    await contaRef.collection('viagens').doc(id).set(viagemData);
+
+    return res(200, {
+      ok: true,
+      id,
+      link: `/viajante-pro/app?v=${codigoSecreto}`,
+    });
+  }
+
+  // ── Ação: viagem-listar ──
+  if (acao === 'viagem-listar') {
+    const snaps = await contaRef.collection('viagens').get();
+    const viagens = [];
+    snaps.docs.forEach(doc => viagens.push(doc.data()));
+    viagens.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+    return res(200, { ok: true, viagens });
+  }
+
+  // ── Ação: viagem-editar ──
+  if (acao === 'viagem-editar') {
+    const vId = str(body.id, 64);
+    const nome = str(body.nome, 100);
+    const destino = str(body.destino, 100);
+    const datas = {
+      inicio: str(body.datas?.inicio, 20),
+      fim: str(body.datas?.fim, 20),
+    };
+    const passageiros = Array.isArray(body.passageiros) ? body.passageiros.map(p => ({
+      nome: str(p.nome, 100),
+      tipo: str(p.tipo, 20) || 'adulto',
+    })) : [];
+    const roteiro = Array.isArray(body.roteiro) ? body.roteiro.map(r => ({
+      dia: parseInt(r.dia, 10) || 1,
+      descricao: str(r.descricao, 500),
+    })) : [];
+
+    if (!vId) return res(400, { error: 'ID da viagem é obrigatório.' });
+
+    const vDocRef = contaRef.collection('viagens').doc(vId);
+    const snap = await vDocRef.get();
+    if (!snap.exists) return res(404, { error: 'Viagem não encontrada.' });
+
+    const atual = snap.data();
+    const viagemData = {
+      ...atual,
+      nome: nome || atual.nome,
+      destino: destino || atual.destino,
+      datas: datas.inicio || datas.fim ? { ...atual.datas, ...datas } : atual.datas,
+      passageiros: passageiros.length ? passageiros : atual.passageiros,
+      roteiro: roteiro.length ? roteiro : atual.roteiro,
+      atualizado_em: new Date(now).toISOString(),
+    };
+
+    await vDocRef.update(viagemData);
+
+    return res(200, { ok: true, viagem: viagemData });
+  }
+
+  // ── Ação: viagem-excluir ──
+  if (acao === 'viagem-excluir') {
+    const vId = str(body.id, 64);
+    if (!vId) return res(400, { error: 'ID da viagem é obrigatório.' });
+
+    const vDocRef = contaRef.collection('viagens').doc(vId);
+    const snap = await vDocRef.get();
+    if (!snap.exists) return res(404, { error: 'Viagem não encontrada.' });
+
+    await vDocRef.delete();
+    return res(200, { ok: true, id: vId });
+  }
+
+  // ── Ação: app-viagem (Pública) ──
+  if (acao === 'app-viagem') {
+    const codigo = str(body.v, 24);
+    if (!codigo) return res(400, { error: 'Código da viagem é obrigatório.' });
+
+    const snaps = await contaRef.collection('viagens').where('codigoSecreto', '==', codigo).get();
+    if (snaps.empty) return res(404, { error: 'Viagem não encontrada.' });
+
+    const viagem = snaps.docs[0].data();
+    return res(200, { ok: true, viagem });
+  }
+
+  // ── Ação: chat-enviar ──
+  if (acao === 'chat-enviar') {
+    const vId = str(body.v, 64);
+    const texto = str(body.texto, 1000);
+    const autor = str(body.autor, 20) || 'viajante';
+
+    if (!vId || !texto) return res(400, { error: 'ID da viagem e texto são obrigatórios.' });
+
+    const vDocRef = contaRef.collection('viagens').doc(vId);
+    const snap = await vDocRef.get();
+    if (!snap.exists) return res(404, { error: 'Viagem não encontrada.' });
+
+    const msgId = aleatorio(16);
+    const msgData = {
+      id: msgId,
+      autor,
+      texto,
+      lida: false,
+      criado_em: new Date(now).toISOString(),
+    };
+
+    await vDocRef.collection('mensagens').doc(msgId).set(msgData);
+
+    return res(200, { ok: true, mensagem: msgData });
+  }
+
+  // ── Ação: chat-listar ──
+  if (acao === 'chat-listar') {
+    const vId = str(body.v, 64);
+    const desde = str(body.desde, 24);
+
+    if (!vId) return res(400, { error: 'ID da viagem é obrigatório.' });
+
+    const vDocRef = contaRef.collection('viagens').doc(vId);
+    const snap = await vDocRef.get();
+    if (!snap.exists) return res(404, { error: 'Viagem não encontrada.' });
+
+    let query = vDocRef.collection('mensagens').orderBy('criado_em', 'desc');
+    if (desde) {
+      query = query.startAfter(desde);
+    }
+
+    const snaps = await query.get();
+    const mensagens = [];
+    snaps.docs.forEach(doc => mensagens.push(doc.data()));
+    mensagens.sort((a, b) => new Date(a.criado_em) - new Date(b.criado_em));
+
+    return res(200, { ok: true, mensagens });
+  }
+
+  // ── Ação: chat-conversas (Painel) ──
+  if (acao === 'chat-conversas') {
+    const snaps = await contaRef.collection('viagens').get();
+    const conversas = [];
+
+    for (const doc of snaps.docs) {
+      const viagem = doc.data();
+      const msgSnaps = await doc.ref.collection('mensagens').orderBy('criado_em', 'desc').limit(1).get();
+
+      let ultimaMsg = null;
+      let naoLidas = 0;
+
+      if (!msgSnaps.empty) {
+        ultimaMsg = msgSnaps.docs[0].data();
+        const todasMsg = await doc.ref.collection('mensagens').where('lida', '==', false).get();
+        naoLidas = todasMsg.size;
+      }
+
+      conversas.push({
+        viagemId: viagem.id,
+        viagemNome: viagem.nome,
+        ultimaMensagem: ultimaMsg,
+        naoLidas,
+      });
+    }
+
+    conversas.sort((a, b) => {
+      if (!a.ultimaMensagem) return 1;
+      if (!b.ultimaMensagem) return -1;
+      return new Date(b.ultimaMensagem.criado_em) - new Date(a.ultimaMensagem.criado_em);
+    });
+
+    return res(200, { ok: true, conversas });
+  }
+
   return res(400, { error: `Ação não reconhecida: ${acao}` });
 };
 
