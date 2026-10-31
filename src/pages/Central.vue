@@ -26,7 +26,7 @@
       <div v-if="activeTab === 'cortex'" class="tab-panel">
         <h2>🧠 Cortex</h2>
         <div class="cortex-content">
-          <EscadaCard />
+          <EscadaCard key="escada-card" />
           <!-- Outros componentes da aba Cortex podem ser adicionados aqui -->
         </div>
       </div>
