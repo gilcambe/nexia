@@ -26,6 +26,13 @@ const mockGh = async function(url, options = {}) {
     const base = await mockGh('/repos/gilcambe/nexia/issues');
     return base.find(i => i.number === n) || {};
   }
+  // getIssue: /repos/gilcambe/nexia/issues/N
+  const m = url.match(/\/repos\/gilcambe\/nexia\/issues\/(\d+)$/);
+  if (m) {
+    const n = Number(m[1]);
+    const base = await mockGh('/repos/gilcambe/nexia/issues');
+    return base.find(i => i.number === n) || {};
+  }
   // addLabels: POST /repos/gilcambe/nexia/issues/N/labels
   if (url.endsWith('/labels') && options.method === 'POST') {
     return { success: true };
@@ -57,7 +64,7 @@ function reset() {
   chamadasRodar = 0;
 }
 
-test('socorro: jules true - no maximo 3 para Jules, criterio restrito', async () => {
+test('socorro: jules true - 3 para Jules, 0 para reserva', async () => {
   reset();
   limparCache();
   injetarMocks();
@@ -65,9 +72,12 @@ test('socorro: jules true - no maximo 3 para Jules, criterio restrito', async ()
   const resultado = await socorro(p, { jules: true });
   const paraJules = resultado.filter(r => r.para === 'jules');
   const paraReserva = resultado.filter(r => r.para === 'reserva');
-  assert.strictEqual(paraJules.length, 3, 'deve enviar no maximo 3 ao Jules');
+  assert.strictEqual(paraJules.length, 3, 'deve enviar 3 ao Jules (issues 3, 4, 5)');
   assert.strictEqual(chamadasJules, 3, 'deve chamar mandarParaJules 3 vezes');
   assert.strictEqual(paraReserva.length, 0, 'com jules true nao deve enviar para reserva');
+  // Verificar quais issues foram para Jules (3, 4, 5)
+  const numerosJules = paraJules.map(r => r.numero).sort();
+  assert.deepStrictEqual(numerosJules, [3, 4, 5], 'issues 3, 4, 5 devem ir para Jules');
   for (const r of resultado) {
     assert.ok(typeof r.numero === 'number', 'numero deve existir');
     assert.ok(typeof r.titulo === 'string', 'titulo deve existir');
@@ -76,7 +86,7 @@ test('socorro: jules true - no maximo 3 para Jules, criterio restrito', async ()
   }
 });
 
-test('socorro: jules false - nenhuma vai ao Jules, criterio vai para reserva', async () => {
+test('socorro: jules false - 0 para Jules, 3 para reserva', async () => {
   reset();
   limparCache();
   injetarMocks();
@@ -85,8 +95,11 @@ test('socorro: jules false - nenhuma vai ao Jules, criterio vai para reserva', a
   const paraJules = resultado.filter(r => r.para === 'jules');
   const paraReserva = resultado.filter(r => r.para === 'reserva');
   assert.strictEqual(paraJules.length, 0, 'nenhuma issue deve ir ao Jules');
-  assert.strictEqual(chamadasRodar, 3, 'deve chamar rodar 3 vezes (issues 3, 4, 5 com duas reservas ou workflow)');
+  assert.strictEqual(chamadasRodar, 3, 'deve chamar rodar 3 vezes (uma para cada issue 3, 4, 5)');
   assert.strictEqual(paraReserva.length, 3, '3 issues (3, 4, 5) devem ir para reserva');
+  // Verificar quais issues foram para reserva (3, 4, 5)
+  const numerosReserva = paraReserva.map(r => r.numero).sort();
+  assert.deepStrictEqual(numerosReserva, [3, 4, 5], 'issues 3, 4, 5 devem ir para reserva');
 });
 
 test('socorro: reserva-tentou nas ultimas 6h e ignorada', async () => {
@@ -103,6 +116,9 @@ test('socorro: reserva-tentou nas ultimas 6h e ignorada', async () => {
 
 test('socorro: getIssue e addLabels estao disponíveis no mock gh', async () => {
   reset();
+  limparCache();
+  injetarMocks();
+  const { socorro } = require(CAMINHO_ACOES);
   const issue5 = await p.gh('/repos/gilcambe/nexia/issues/5');
   assert.strictEqual(issue5.number, 5, 'getIssue deve retornar a issue 5');
   await p.gh('/repos/gilcambe/nexia/issues/5/labels', { method: 'POST', body: JSON.stringify({ labels: ['teste'] }) });
