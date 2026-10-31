@@ -17,9 +17,17 @@ const verificarSuporteWebGPU = async () => {
     return { suportado: false, motivo: 'Navegador não suporta WebGPU' };
   }
   
+  const memoria = typeof navigator.deviceMemory === 'number' ? navigator.deviceMemory : undefined;
+  if (memoria !== undefined && memoria < 4) {
+    return { suportado: false, motivo: 'Memória insuficiente para IA local (mínimo recomendado: 4 GB)' };
+  }
+
   try {
     const adapter = await navigator.gpu.requestAdapter();
-    return { suportado: !!adapter };
+    if (!adapter) {
+      return { suportado: false, motivo: 'Adaptador WebGPU não encontrado' };
+    }
+    return { suportado: true };
   } catch (err) {
     return { suportado: false, motivo: 'Erro ao verificar WebGPU: ' + err.message };
   }
