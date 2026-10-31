@@ -62,6 +62,8 @@ jobs:
         env:
           FIREBASE_SERVICE_ACCOUNT_BASE64: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BASE64 }}
         run: node scripts/teste-humano-conta.js criar
+      - name: Validar fluxo do Body Coach (tela Como você está hoje)
+        run: node --test tests/e2e/body-coach.test.js
       - name: Testar
         env:
           ROOT: ${{ inputs.folder }}
