@@ -50,11 +50,30 @@
     return caixa;
   }
 
+  // Controle de estado para evitar múltiplas animações
+  var voando = false;
+  var ultimaAnimacao = 0;
+  
   function decolar() {
-    if (calmo) return;
+    if (calmo || voando) return;
+    
+    // Verifica se a aba está visível e se passaram 5 min desde a última animação
+    var agora = Date.now();
+    if (document.visibilityState !== 'visible' || (agora - ultimaAnimacao < 5 * 60 * 1000)) {
+      return;
+    }
+    
+    voando = true;
+    ultimaAnimacao = agora;
+    
     document.querySelectorAll('.vp-logo-anim').forEach(function (c) {
       c.classList.remove('voando'); void c.offsetWidth; c.classList.add('voando');
     });
+    
+    // Reseta o estado após a animação
+    setTimeout(function() {
+      voando = false;
+    }, 2500);
   }
 
   function iniciar() {
@@ -79,10 +98,17 @@
     if (abertura) window.addEventListener('kernex-fim', function () { setTimeout(decolar, 150); }, { once: true });
     else setTimeout(decolar, 400);
     setInterval(decolar, 5 * 60 * 1000);
+    
+    // Listener para visibility change - ao voltar da aba, tenta animar se passaram 5 min
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') {
+        decolar();
+      }
+    });
     // decola também quando o logo aparece na tela (ex.: depois de fechar um aviso ou rolar a página)
     if ('IntersectionObserver' in window) {
       var io = new IntersectionObserver(function (es) {
-        es.forEach(function (e) { if (e.isIntersecting && !calmo && !document.getElementById('nexia-abertura')) { e.target.classList.remove('voando'); void e.target.offsetWidth; e.target.classList.add('voando'); } });
+        es.forEach(function (e) { if (e.isIntersecting && !calmo && !document.getElementById('nexia-abertura') && !voando) { decolar(); } });
       }, { threshold: 0.6 });
       setTimeout(function () { document.querySelectorAll('.vp-logo-anim').forEach(function (c) { io.observe(c); }); }, 300);
     }
