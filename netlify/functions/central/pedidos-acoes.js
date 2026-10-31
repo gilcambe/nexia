@@ -76,6 +76,26 @@ async function agir(p, b, quem) {
     await p.gh(issue(pr.number) + '/labels', { method: 'POST', body: JSON.stringify({ labels: ['automerge'] }) });
     return r(200, { ok: true, mensagem: 'PR #' + pr.number + ' aprovado. Entra sozinho quando os testes ficarem verdes.' });
   }
+  if (b.acao === 'dono-aprova') {
+    if (!isAdmin) return r(403, { error: 'Ação restrita ao admin da Central.' });
+    if (!b.pr) return r(400, { error: 'Falta o número do PR.' });
+    
+    const prNumber = Number(b.pr);
+    const pr = await p.gh('/repos/gilcambe/nexia/pulls/' + prNumber);
+    if (pr.state !== 'open') return r(400, { error: 'Só PR aberto pode ser aprovado.' });
+    
+    // Adicionar rótulos 'dono-aprovado' e 'automerge'
+    await p.gh(issue(prNumber) + '/labels', { method: 'POST', body: JSON.stringify({ labels: ['dono-aprovou', 'automerge'] }) });
+    
+    // Remover rótulo 'revisor-recusou' (se existir)
+    try {
+      await p.gh(issue(prNumber) + '/labels/revisor-recusou', { method: 'DELETE' });
+    } catch (e) {
+      // Ignora se o rótulo não existir
+    }
+    
+    return r(200, { ok: true, mensagem: 'PR #' + prNumber + ' aprovado com rótulos dono-aprovou e automerge. Revisor-recusou removido.' });
+  }
   return r(400, { error: 'Ação desconhecida.' });
 }
 
