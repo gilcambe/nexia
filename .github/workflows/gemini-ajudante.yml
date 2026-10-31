@@ -1,0 +1,84 @@
+# NEXIA — Gemini CLI Ajudante: degrau 2 da escada de IA (docs/ESCADA-IA.md)
+# Roda quando o Cortex falha e a cota do Jules do dia acabou (ou erro de limite).
+# Disparo manual via workflow_dispatch com o número da issue.
+name: Gemini Ajudante
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue:
+        description: 'Número da issue a resolver'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: gemini-ajudante-${{ inputs.issue }}
+  cancel-in-progress: false
+
+jobs:
+  gemini:
+    name: Gemini #${{ inputs.issue }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    environment: production
+    env:
+      ISSUE: ${{ inputs.issue }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      NEXIA_JOBS_TOKEN: ${{ secrets.NEXIA_JOBS_TOKEN }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: develop
+          fetch-depth: 0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Ler a issue e montar instruções
+        run: |
+          gh issue view "$ISSUE" --json title,body --jq '"# " + .title + "\n\n" + .body' > "$RUNNER_TEMP/tarefa.md"
+          cat AGENTS.md > "$RUNNER_TEMP/instrucoes.md"
+          echo -e "\n\n---\n\n" >> "$RUNNER_TEMP/instrucoes.md"
+          cat docs/ESCADA-IA.md >> "$RUNNER_TEMP/instrucoes.md"
+          echo -e "\n\n---\n\n" >> "$RUNNER_TEMP/instrucoes.md"
+          cat "$RUNNER_TEMP/tarefa.md" >> "$RUNNER_TEMP/instrucoes.md"
+          echo -e "\n\nNo PR use 'Refs #$ISSUE'." >> "$RUNNER_TEMP/instrucoes.md"
+      - name: Rodar Gemini CLI
+        id: gemini_run
+        run: |
+          git config user.name "nexia-gemini"
+          git config user.email "gemini@users.noreply.github.com"
+          git checkout -q -b "nexia/gemini-$ISSUE"
+          PROMPT="Leia as instruções e resolva a tarefa respeitando as regras do repositório: $(cat "$RUNNER_TEMP/instrucoes.md")"
+          npx --yes @google/gemini-cli@0.66.0 -p "$PROMPT" -y --skip-trust || true
+      - name: Verificar se houve alteração
+        id: mudanca
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "tem_mudanca=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "tem_mudanca=0" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Testar
+        if: steps.mudanca.outputs.tem_mudanca == '1'
+        run: npm test
+      - name: Abrir PR
+        if: steps.mudanca.outputs.tem_mudanca == '1'
+        env:
+          GITHUB_APP_ID: ${{ secrets.NEXIA_GITHUB_APP_ID }}
+          GITHUB_APP_PRIVATE_KEY: ${{ secrets.NEXIA_GITHUB_APP_PRIVATE_KEY }}
+          REPO: ${{ github.repository }}
+        run: |
+          git add -A
+          git commit -q -m "Gemini CLI: resolve issue #$ISSUE"
+          git push -q -u origin "nexia/gemini-$ISSUE"
+          APP_TOKEN=$(node -e "require('./scripts/cortex-fila').tokenDaApp().then(t=>process.stdout.write(t||''))" 2>/dev/null || true)
+          [ -n "$APP_TOKEN" ] && export GH_TOKEN="$APP_TOKEN"
+          gh pr create --base develop --head "nexia/gemini-$ISSUE" --title "Gemini CLI: issue #$ISSUE" --body "Resolvido pelo Gemini CLI (degrau 2). Refs #$ISSUE."
