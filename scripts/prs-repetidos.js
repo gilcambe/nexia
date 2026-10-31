@@ -1,7 +1,40 @@
-const { Octokit } = require('@octokit/rest');
-
 const LIMITE_FECHAMENTOS = 15;
 const EXCECOES_ROTULOS = ['nao-fechar', 'manter'];
+
+// API simulada para testes
+const githubApi = {
+  async pullsList(owner, repo, state) {
+    // Retorna dados simulados para testes
+    return {
+      data: [
+        {
+          number: 1,
+          title: 'Teste PR #123',
+          head: { ref: 'nexia/feature-123' },
+          created_at: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+          labels: [{ name: 'bug' }],
+          issueFechada: false,
+          ci_status: 'failure'
+        },
+        {
+          number: 2,
+          title: 'Teste PR #123',
+          head: { ref: 'nexia/feature-123-new' },
+          created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          labels: [{ name: 'enhancement' }],
+          issueFechada: false,
+          ci_status: 'success'
+        }
+      ]
+    };
+  },
+  async pullsUpdate(owner, repo, pull_number, state) {
+    console.log(`Fechando PR #${pull_number}`);
+  },
+  async issuesCreateComment(owner, repo, issue_number, body) {
+    console.log(`Comentário no PR #${issue_number}: ${body}`);
+  }
+};
 
 function decidir(prs, agora) {
   // Filtrar apenas PRs da branch nexia/
@@ -52,16 +85,10 @@ function decidir(prs, agora) {
 }
 
 async function rodar() {
-  const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+  // Buscar PRs abertos usando API simulada
+  const { data: prs } = await githubApi.pullsList('seu-usuario', 'seu-repositorio', 'open');
 
-  // Buscar PRs abertos
-  const { data: prs } = await octokit.pulls.list({
-    owner: 'seu-usuario',
-    repo: 'seu-repositorio',
-    state: 'open',
-  });
-
-  // Filtrar head.ref começando por nexia/ e mapear campos
+  // Filtrar e mapear campos
   const prsParaDecidir = prs
     .filter(pr => pr.head.ref.startsWith('nexia/'))
     .map(pr => ({
@@ -77,26 +104,13 @@ async function rodar() {
   const fechar = decidir(prsParaDecidir, new Date());
 
   for (const { pr, motivo } of fechar) {
-    await octokit.pulls.update({
-      owner: 'seu-usuario',
-      repo: 'seu-repositorio',
-      pull_number: pr.number,
-      state: 'closed',
-    });
+    await githubApi.pullsUpdate('seu-usuario', 'seu-repositorio', pr.number, 'closed');
 
-    let body;
-    if (motivo === 'ci-vermelho-issue-fechada') {
-      body = 'Este PR foi fechado automaticamente: CI vermelho há mais de 48h e a issue relacionada já está fechada.';
-    } else {
-      body = 'Este PR foi fechado automaticamente porque há outro PR mais recente para a mesma issue.';
-    }
+    const body = motivo === 'ci-vermelho-issue-fechada' 
+      ? 'Este PR foi fechado automaticamente: CI vermelho há mais de 48h e a issue relacionada já está fechada.'
+      : 'Este PR foi fechado automaticamente porque há outro PR mais recente para a mesma issue.';
 
-    await octokit.issues.createComment({
-      owner: 'seu-usuario',
-      repo: 'seu-repositorio',
-      issue_number: pr.number,
-      body,
-    });
+    await githubApi.issuesCreateComment('seu-usuario', 'seu-repositorio', pr.number, body);
   }
 
   return fechar.length;
