@@ -454,6 +454,158 @@ exports.handler = async function (event, context) {
     return res(200, { ok: true, id, url: `/api/viajante-pro?site=${slug}&foto=${id}` });
   }
 
+  // ── Ações de Viagens ──
+  if (acao === 'viagem-listar') {
+    const snaps = await contaRef.collection('viagens').get();
+    const viagens = [];
+    snaps.docs.forEach(doc => {
+      const data = doc.data();
+      viagens.push({
+        id: doc.id,
+        ...data,
+        criado_em: data.criado_em || new Date(now).toISOString(),
+      });
+    });
+    viagens.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+    return res(200, { ok: true, viagens });
+  }
+
+  if (acao === 'viagem-criar') {
+    const titulo = str(body.titulo, 100);
+    const descricao = str(body.descricao, 1000);
+    const destino = str(body.destino, 100);
+    const dataInicio = str(body.dataInicio, 20);
+    const dataFim = str(body.dataFim, 20);
+    const preco = str(body.preco, 50);
+    const destaque = body.destaque === true;
+    const imagemUrl = str(body.imagemUrl, 500);
+    
+    if (!titulo || !destino) {
+      return res(400, { error: 'Título e Destino são obrigatórios.' });
+    }
+    
+    const id = aleatorio(8).toUpperCase();
+    const viagemData = {
+      id,
+      titulo,
+      descricao,
+      destino,
+      dataInicio,
+      dataFim,
+      preco,
+      destaque,
+      imagemUrl,
+      status: 'ativo',
+      criado_em: new Date(now).toISOString(),
+      atualizado_em: new Date(now).toISOString(),
+    };
+    
+    await contaRef.collection('viagens').doc(id).set(viagemData);
+    return res(200, { ok: true, viagem: viagemData });
+  }
+
+  if (acao === 'viagem-atualizar') {
+    const vId = str(body.id, 64);
+    const titulo = str(body.titulo, 100);
+    const descricao = str(body.descricao, 1000);
+    const destino = str(body.destino, 100);
+    const dataInicio = str(body.dataInicio, 20);
+    const dataFim = str(body.dataFim, 20);
+    const preco = str(body.preco, 50);
+    const destaque = body.destaque === true;
+    const imagemUrl = str(body.imagemUrl, 500);
+    const status = str(body.status, 50);
+    
+    if (!vId) {
+      return res(400, { error: 'ID da viagem é obrigatório.' });
+    }
+    
+    const vDocRef = contaRef.collection('viagens').doc(vId);
+    const snap = await vDocRef.get();
+    if (!snap.exists) {
+      return res(404, { error: 'Viagem não encontrada.' });
+    }
+    
+    const atual = snap.data();
+    const payload = {
+      ...atual,
+      titulo: titulo || atual.titulo,
+      descricao: descricao || atual.descricao,
+      destino: destino || atual.destino,
+      dataInicio: dataInicio || atual.dataInicio,
+      dataFim: dataFim || atual.dataFim,
+      preco: preco || atual.preco,
+      destaque: destaque !== undefined ? destaque : atual.destaque,
+      imagemUrl: imagemUrl || atual.imagemUrl,
+      status: status || atual.status,
+      atualizado_em: new Date(now).toISOString(),
+    };
+    
+    await vDocRef.update(payload);
+    return res(200, { ok: true, viagem: payload });
+  }
+
+  if (acao === 'viagem-deletar') {
+    const vId = str(body.id, 64);
+    
+    if (!vId) {
+      return res(400, { error: 'ID da viagem é obrigatório.' });
+    }
+    
+    const vDocRef = contaRef.collection('viagens').doc(vId);
+    const snap = await vDocRef.get();
+    if (!snap.exists) {
+      return res(404, { error: 'Viagem não encontrada.' });
+    }
+    
+    await vDocRef.delete();
+    return res(200, { ok: true, id: vId, message: 'Viagem excluída com sucesso.' });
+  }
+
+  // ── Ações de Chats ──
+  if (acao === 'chat-listar') {
+    const snaps = await contaRef.collection('chats').get();
+    const chats = [];
+    snaps.docs.forEach(doc => {
+      const data = doc.data();
+      chats.push({
+        id: doc.id,
+        ...data,
+        criado_em: data.criado_em || new Date(now).toISOString(),
+      });
+    });
+    chats.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
+    return res(200, { ok: true, chats });
+  }
+
+  if (acao === 'chat-criar') {
+    const nome = str(body.nome, 100);
+    const email = str(body.email, 100);
+    const telefone = str(body.telefone, 30);
+    const mensagem = str(body.mensagem, 1000);
+    const status = str(body.status, 50) || 'novo';
+    
+    if (!nome || !email || !mensagem) {
+      return res(400, { error: 'Nome, E-mail e Mensagem são obrigatórios.' });
+    }
+    
+    const id = aleatorio(8).toUpperCase();
+    const chatData = {
+      id,
+      nome,
+      email,
+      telefone,
+      mensagem,
+      status,
+      respondido: false,
+      criado_em: new Date(now).toISOString(),
+      atualizado_em: new Date(now).toISOString(),
+    };
+    
+    await contaRef.collection('chats').doc(id).set(chatData);
+    return res(200, { ok: true, chat: chatData });
+  }
+
   return res(400, { error: `Ação não reconhecida: ${acao}` });
 };
 
