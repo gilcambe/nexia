@@ -803,14 +803,96 @@
       };
     })();
   </script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="/core/nexia-boot.js"></script>
+  <script src="/core/auth.js"></script>
+  <script src="/core/bridge.js"></script>
+  <script src="/core/nav-guard.js"></script>
+<script>
+  window.NEXIA = window.NEXIA || {};
+  window.NEXIA._ready = true;
+  window.NEXIA.onReady = function(cb) { cb(); };
+</script>
+
+<style>
+/* Estilo do Logo Oficial e Animação de Decolagem */
+.brand-logo-img-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  overflow: visible;
+}
+.brand-logo-img {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+}
+@media (max-width: 768px) {
+  .brand-logo-img { height: 38px; }
+}
+
+@keyframes planeTakeoff {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    filter: drop-shadow(0 0 0px rgba(0, 229, 255, 0));
+  }
+  20% {
+    transform: translate(-2px, 2px) rotate(-3deg) scale(1.02);
+  }
+  45% {
+    transform: translate(10px, -12px) rotate(-6deg) scale(1.06);
+    filter: drop-shadow(-4px 8px 12px rgba(0, 229, 255, 0.4));
+  }
+  70% {
+    transform: translate(4px, -4px) rotate(-3deg) scale(1.03);
+    filter: drop-shadow(-2px 4px 6px rgba(0, 229, 255, 0.2));
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    filter: drop-shadow(0 0 0px rgba(0, 229, 255, 0));
+  }
+}
+
+.brand-logo-img.animating {
+  animation: planeTakeoff 2.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-logo-img.animating {
+    animation: none !important;
+  }
+}
+</style>
+
 </head>
 <body>
+
+  <!-- KERNEX INSTITUTIONAL PRESENTATION MODAL -->
+  <div id="kernexPresentationModal" class="modal-overlay active">
+    <div class="modal-container" style="text-align:center;">
+      <button class="modal-close" onclick="closeModal('kernexPresentationModal')"><i class="ri-close-line"></i></button>
+      <img src="/viajante-pro/img/kernex.svg" alt="Kernex OS" width="90" height="90" style="margin: 0 auto 16px; display:block;" onerror="this.onerror=null;this.src='/viajante-pro/img/vp.svg'">
+      <span class="card-tag" style="position:static;display:inline-block;margin-bottom:12px;">Ecossistema Kernex</span>
+      <h3 style="font-size: 24px; color: #FFF; margin-bottom: 12px;" class="font-serif">Viajante Pro · Powered by Kernex</h3>
+      <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px;">
+        Bem-vindo à Viajante Pro. Nossa agência combina curadoria humana personalizada de viagens com o ecossistema e tecnologia de inteligência de processos <strong>Kernex OS</strong>.
+      </p>
+      <button class="btn btn-gold" style="width: 100%;" onclick="closeModal('kernexPresentationModal')">Conhecer Destinos & Roteiros</button>
+    </div>
+  </div>
 
   <!-- HEADER / NAV -->
   <header id="vpNav">
     <div class="container nav-inner">
       <a href="#hero" class="brand-logo">
-        <div class="brand-icon">VP</div>
+        <div class="brand-logo-img-wrap"><img src="/viajante-pro/img/vp-oficial.jpg" alt="Viajante Pro Logo" class="brand-logo-img" onerror="this.onerror=null;this.src='/viajante-pro/img/vp.svg'"></div>
+        <span class="brand-icon-fallback" style="display:none; width:40px; height:40px; background:linear-gradient(135deg, #d4af37, #f3e5ab); border-radius:10px; align-items:center; justify-content:center;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0b0f19" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
+        </span>
         <div class="brand-text">
           <span class="brand-name">Viajante Pro</span>
           <span class="brand-sub">Agência de Viagens</span>
@@ -991,7 +1073,7 @@
         <!-- CARD 4 -->
         <div class="card dest-card" data-cat="nacional cultura">
           <div class="card-img-wrap">
-            <img src="https://images.unsplash.com/photo-1511527667028-356427a15964?w=800&q=80" alt="Gramado" class="card-img">
+            <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&auto=format&fit=crop&q=80" alt="Gramado" class="card-img">
             <span class="card-tag">Nacional · Serra</span>
           </div>
           <div class="card-body">
@@ -1259,10 +1341,10 @@
           <span class="section-subtitle">Sobre a Viajante Pro</span>
           <h2 class="section-title" style="text-align: left;">Sua Agência de Confiança para Conhecer o Mundo</h2>
           <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 15px;">
-            A **Viajante Pro** nasceu com o propósito de transformar o planejamento de viagens em uma experiência simples, prazerosa e segura. Entendemos que cada viajante possui expectativas únicas.
+            A <strong>Viajante Pro</strong> nasceu com o propósito de transformar o planejamento de viagens em uma experiência simples, prazerosa e segura. Entendemos que cada viajante possui expectativas únicas.
           </p>
           <p style="color: var(--text-muted); margin-bottom: 28px; font-size: 15px;">
-            Integrada ao ecossistema de tecnologia e inteligência comercial **Kernex**, a Viajante Pro combina curadoria humana qualificada com inovação para garantir as melhores condições e suporte contínuo aos nossos clientes.
+            Integrada ao ecossistema de tecnologia e inteligência comercial <strong>Kernex</strong>, a Viajante Pro combina curadoria humana qualificada com inovação para garantir as melhores condições e suporte contínuo aos nossos clientes.
           </p>
 
           <div style="display: flex; gap: 24px;">
@@ -1492,7 +1574,10 @@
       <div class="footer-grid">
         <div>
           <a href="#hero" class="brand-logo" style="margin-bottom: 16px;">
-            <div class="brand-icon">VP</div>
+            <div class="brand-logo-img-wrap"><img src="/viajante-pro/img/vp-oficial.jpg" alt="Viajante Pro Logo" class="brand-logo-img" onerror="this.onerror=null;this.src='/viajante-pro/img/vp.svg'"></div>
+            <span class="brand-icon-fallback" style="display:none; width:40px; height:40px; background:linear-gradient(135deg, #d4af37, #f3e5ab); border-radius:10px; align-items:center; justify-content:center;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0b0f19" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"></path><path d="M22 2l-7 20-4-9-9-4 20-7z"></path></svg>
+            </span>
             <div class="brand-text">
               <span class="brand-name">Viajante Pro</span>
               <span class="brand-sub">Agência de Viagens</span>
@@ -1579,6 +1664,83 @@
     // Set Year
     document.getElementById('yearVal').textContent = new Date().getFullYear();
 
+    // DYNAMIC CONTENT LOADING FROM CMS (/api/viajante-pro)
+    async function carregarConteudoCmsLanding() {
+      try {
+        const res = await fetch('/api/viajante-pro?site=viajantepro');
+        if (!res.ok) return;
+        const data = await res.json();
+        const c = data.conteudo;
+        if (!c) return;
+
+        if (c.hero) {
+          if (c.hero.titulo) {
+            const el = document.querySelector('.hero-title');
+            if (el) el.innerHTML = c.hero.titulo;
+          }
+          if (c.hero.subtitulo) {
+            const el = document.querySelector('.hero-subtitle');
+            if (el) el.textContent = c.hero.subtitulo;
+          }
+          if (c.hero.badge) {
+            const el = document.querySelector('.hero-badge');
+            if (el) el.innerHTML = `<i class="ri-sparkling-fill"></i> ${c.hero.badge}`;
+          }
+          if (c.hero.bg_url) {
+            const slide = document.querySelector('.hero-slide.active');
+            if (slide) slide.style.backgroundImage = `url('${c.hero.bg_url}')`;
+          }
+        }
+
+        if (c.sobre) {
+          const tEl = document.querySelector('#sobre .section-title');
+          if (tEl && c.sobre.titulo) tEl.textContent = c.sobre.titulo;
+        }
+
+        if (Array.isArray(c.destinos) && c.destinos.length > 0) {
+          renderizarDestinosCms(c.destinos);
+        }
+      } catch (e) {
+        console.warn('[Landing] Usando fallback local do site:', e.message);
+      }
+    }
+
+    function renderizarDestinosCms(destinos) {
+      const grid = document.getElementById('destinosGrid');
+      if (!grid) return;
+      grid.innerHTML = destinos.map(d => {
+        const catClean = (d.categoria || 'Nacionais').toLowerCase();
+        let catTag = 'nacional';
+        if (catClean.includes('internaciona')) catTag = 'internacional';
+        if (catClean.includes('praia')) catTag += ' praia';
+        if (catClean.includes('cultura')) catTag += ' cultura';
+
+        return `
+          <div class="card dest-card" data-cat="${catTag}">
+            <div class="card-img-wrap">
+              <img src="${d.imagem || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80'}" alt="${d.nome}" class="card-img" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80'">
+              <span class="card-tag">${d.pais || 'Destino'} · ${d.categoria || 'Exclusivo'}</span>
+            </div>
+            <div class="card-body">
+              <h3 class="card-title">${d.nome}</h3>
+              <p class="card-desc">${d.descricao || 'Conheça um dos destinos mais incríveis com suporte exclusivo Viajante Pro.'}</p>
+              <div class="card-footer">
+                <div>
+                  <span class="card-price-label">A partir de</span>
+                  <div class="card-price-val">${d.preco || 'Sob consulta'}</div>
+                </div>
+                <button class="btn btn-outline" onclick="openDetailsModal('${d.nome}', '${d.descricao || d.nome}')">
+                  Ver Detalhes
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.addEventListener('DOMContentLoaded', carregarConteudoCmsLanding);
+
     // Mobile Menu
     const menuBtn = document.getElementById('menuBtn');
     const mobileMenu = document.getElementById('mobileMenu');
@@ -1622,12 +1784,12 @@
     // Destination Filter
     function filterDestinations(category, btnEl) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-      btnEl.classList.add('active');
+      if (btnEl) btnEl.classList.add('active');
 
       const cards = document.querySelectorAll('.dest-card');
       cards.forEach(card => {
-        const cats = card.getAttribute('data-cat') || '';
-        if (category === 'all' || cats.includes(category)) {
+        const catList = (card.getAttribute('data-cat') || '').split(/\s+/);
+        if (category === 'all' || catList.includes(category)) {
           card.style.display = 'flex';
         } else {
           card.style.display = 'none';
@@ -1724,10 +1886,14 @@
       formStatus.style.display = 'none';
 
       const payload = {
+        nome: nome,
         name: nome,
         email: email,
+        whatsapp: telefone,
         phone: telefone,
+        site: 'viajante-pro',
         produto: 'viajante-pro',
+        consentimento: true,
         mensagem: `Solicitação de Orçamento - Viajante Pro:\n` +
                   `Destino: ${destino}\n` +
                   `Origem: ${origem}\n` +
@@ -1778,5 +1944,32 @@
       }
     }
   </script>
+
+<script>
+(function() {
+  function triggerLogoAnimation() {
+    if (document.hidden) return;
+    var logos = document.querySelectorAll('.brand-logo-img');
+    logos.forEach(function(img) {
+      img.classList.remove('animating');
+      void img.offsetWidth; // Force reflow
+      img.classList.add('animating');
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Executa a primeira vez ao carregar
+    setTimeout(triggerLogoAnimation, 800);
+
+    // Repete a cada 5 minutos (300.000 ms)
+    setInterval(function() {
+      triggerLogoAnimation();
+    }, 300000);
+  });
+})();
+</script>
+
+<script src="/viajante-pro/abertura-kernex.js" data-produto="VIAJANTE PRO" defer></script>
+<script src="/viajante-pro/vp-marca.js" defer></script>
 </body>
 </html>

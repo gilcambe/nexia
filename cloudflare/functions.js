@@ -52,6 +52,7 @@ const LOADERS = {
   'tenant-domain': () => require('../netlify/functions/tenant-domain.js'),
   'usage': () => require('../netlify/functions/usage.js'),
   'viagem': () => require('../netlify/functions/viagem.js'),
+  'viajante-pro': () => require('../netlify/functions/viajante-pro.js'),
   'whatsapp-business': () => require('../netlify/functions/whatsapp-business.js'),
   'central': () => require('../netlify/functions/central.js'),
   'conheca': () => require('../netlify/functions/conheca.js'),
