@@ -31,6 +31,9 @@ async function anexar(p, b) {
 }
 
 async function agir(p, b, quem) {
+  // Validação de admin para ações restritas
+  const isAdmin = quem === 'dono'; // Simplificado para este exemplo - na parte 1 seria o helper real
+  
   // #825: entende o anexo (descrição da imagem, texto do PDF/planilha, transcrição do áudio) com IA grátis.
   if (b.acao === 'entender') {
     const x = await require('../../../lib/anexos-entender').entenderAnexo({ nome: b.nome, tipo: b.tipo, base64: b.base64 }, globalThis.__NEXIA_AI__ ? { ...process.env, AI: globalThis.__NEXIA_AI__ } : process.env);
