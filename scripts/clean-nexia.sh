@@ -3,11 +3,19 @@
 set -euo pipefail
 
 # Script para limpar referências NEXIA em arquivos HTML
+# ATENÇÃO: Este script foi projetado para substituir apenas referências NEXIA em títulos e metadados
+# específicos, NÃO faz substituição genérica para evitar afetar outros textos
+# 
 # Substituições realizadas:
 # 1. "NEXIA CORTEX — Plataforma de IA" → "Cortex — Plataforma de IA" (frase específica)
+#    - Esta substituição é permitida pois é uma frase completa e específica
 # 2. <title> contendo NEXIA → <title>Cortex</title> (regra 2)
+#    - Se o título contiver NEXIA, TODO o conteúdo do título será substituído por 'Cortex'
 # 3. og:site_name contendo NEXIA → conteúdo substituído por "Cortex" (regra 2 e 3)
+#    - Usando padrões específicos: content="*NEXIA*" → content="Cortex"
+# 
 # NÃO faz substituição genérica de NEXIA → Cortex para evitar afetar textos não relacionados
+# a títulos ou metadatos, como nomes de arquivos, textos de conteúdo, etc.
 
 # Diretórios a serem processados
 DIRECTORIES="public/ apps/ nexia-ai/site-kit/"
@@ -38,10 +46,12 @@ for dir in $DIRECTORIES; do
         find "$dir" -type f \( -name "*.html" -o -name "*.htm" \) -print0 | while IFS= read -r -d '' file; do
             echo "  Processando arquivo: $file"
             
-            # Criar backup do arquivo antes de processar (opcional, pode ser removido se não necessário)
+            # Criar backup do arquivo antes de processar
+            # O backup é criado como medida de segurança para permitir restauração em caso de erro
             backup_file="$file.backup"
             cp "$file" "$backup_file"
             echo "  Backup criado: $backup_file"
+            echo "  OBS: O backup será removido automaticamente se o processamento for bem-sucedido"
             
             # Substituir "NEXIA CORTEX — Plataforma de IA" por "Cortex — Plataforma de IA"
             # (Esta substituição específica é permitida pois é uma frase completa e específica)
@@ -112,8 +122,9 @@ PYEOF
                 echo "  Backup removido"
             fi
             
-            echo "  ATENÇÃO: Este script NÃO faz substituição genérica de 'NEXIA' → 'Cortex'"
+            echo "  AVISO: Este script NÃO faz substituição genérica de 'NEXIA' → 'Cortex'"
             echo "  para evitar afetar textos não relacionados a títulos ou metadados."
+            echo "  Apenas títulos (<title>) e metadados (og:site_name) são processados."
             
             echo "  Processado: $file"
         done
@@ -135,6 +146,9 @@ echo "Verificando se restaram ocorrências de NEXIA em títulos e metadados..."
 echo ""
 
 # Verificação final: garantir que TODOS os títulos e og:site_name contendo NEXIA foram substituídos por 'Cortex'
+# Esta verificação é o CRITÉRIO DE PRONTO definido no pedido:
+# "Pronto quando: Rodar bash scripts/clean-nexia.sh e depois executar grep -rnE "<title>[^<]*NEXIA" --include=*.html public apps nexia-ai viajante-pro"
+# O comando não deve retornar nenhum resultado
 echo "Executando verificação final como solicitado no pedido..."
 
 # Verificar se restaram títulos com NEXIA
@@ -173,3 +187,8 @@ echo "1. 'NEXIA CORTEX — Plataforma de IA' → 'Cortex — Plataforma de IA' (
 echo "2. <title> contendo NEXIA → <title>Cortex</title>"
 echo "3. og:site_name contendo NEXIA → conteúdo substituído por 'Cortex'"
 echo "4. NÃO foi feita substituição genérica de NEXIA → Cortex (para evitar afetar outros textos)"
+echo ""
+echo "INSTRUÇÕES PARA USO:"
+echo "1. Execute: bash scripts/clean-nexia.sh"
+echo "2. Verifique se não há mais ocorrências: grep -rnE '<title>[^<]*NEXIA' --include=*.html public apps nexia-ai viajante-pro"
+echo "3. Se o comando acima não retornar nada, o script está pronto!"
