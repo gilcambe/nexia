@@ -120,8 +120,8 @@ test('socorro: jules true - 3 issues para Jules, 2 para reserva', async () => {
   // Deve ter 3 issues enviadas ao Jules
   assert.strictEqual(resultado.enviadasJules.length, 3, 'Deve enviar máximo 3 issues ao Jules');
   
-  // Deve ter 2 issues enviadas ao reserva
-  assert.strictEqual(resultado.enviadasReserva.length, 2, 'Deve enviar 2 issues ao reserva workflow');
+  // Deve ter 1 issue enviada ao reserva (issue 2 ignorada por reserva-tentou nas 6h)
+  assert.strictEqual(resultado.enviadasReserva.length, 1, 'Deve enviar 1 issue ao reserva workflow');
   
   // Verifica campos corretos
   assert.ok(resultado.enviadasJules[0].number, 'Primeira issue deve ter number');
@@ -134,25 +134,25 @@ test('socorro: jules false - nenhuma issue vai ao Jules', async () => {
   // Nenhuma issue deve ir ao Jules
   assert.strictEqual(resultado.enviadasJules.length, 0, 'Com jules: false, nenhuma issue deve ir ao Jules');
   
-  // Todas as 5 issues devem ir para reserva
-  assert.strictEqual(resultado.enviadasReserva.length, 5, 'Com jules: false, todas as 5 issues devem ir para reserva');
+  // Todas as 4 issues (exceto issue 2 ignorada) devem ir para reserva
+  assert.strictEqual(resultado.enviadasReserva.length, 4, 'Com jules: false, as 4 issues devem ir para reserva');
 });
 
 test('socorro: label reserva-tentou nas últimas 6h é ignorada', async () => {
-  // Issue 2 tem reserva-tentou e está atualizada há 2h (dentro das 6h)
-  // Issue 3 tem reserva-tentou e está atualizada há 8h (fora das 6h)
+  // Issue 2 tem reserva-tentou e está atualizada há 2h (dentro das 6h) → ignorada
+  // Issue 3 tem reserva-tentou e está atualizada há 8h (fora das 6h) → considerada
   const resultado = await socorro({ jules: true });
-  
-  // Issue 2 deve ser ignorada (reserva-tentou nas últimas 6h)
-  // Issue 3 deve ser considerada (reserva-tentou mas há mais de 6h)
-  const issue2 = resultado.enviadasReserva.find(i => i.number === 2);
-  const issue3 = resultado.enviadasReserva.find(i => i.number === 3);
-  
-  // Issue 2 não deve aparecer (foi ignorada)
-  assert.strictEqual(resultado.enviadasReserva.filter(i => i.number === 2).length, 0, 'Issue 2 com reserva-tentou nas 6h deve ser ignorada');
-  
-  // Issue 3 deve aparecer (reserva-tentou há mais de 6h)
-  assert.ok(issue3, 'Issue 3 com reserva-tentou há mais de 6h deve ser considerada');
+
+  // Issue 2 não deve aparecer em lugar nenhum (foi ignorada)
+  assert.strictEqual(resultado.enviadasJules.filter(i => i.number === 2).length, 0, 'Issue 2 não deve ir ao Jules');
+  assert.strictEqual(resultado.enviadasReserva.filter(i => i.number === 2).length, 0, 'Issue 2 com reserva-tentou nas 6h deve ser ignorada na reserva');
+
+  // Issue 3 deve aparecer na reserva (reserva-tentou há mais de 6h)
+  assert.ok(resultado.enviadasReserva.find(i => i.number === 3), 'Issue 3 com reserva-tentou há mais de 6h deve ser considerada');
+
+  // Com issue 2 ignorada, restam 4 issues: 3 Jules + 1 reserva
+  assert.strictEqual(resultado.enviadasJules.length, 3, 'Deve enviar 3 issues ao Jules');
+  assert.strictEqual(resultado.enviadasReserva.length, 1, 'Deve enviar 1 issue ao reserva');
 });
 
 test('socorro: issue mencionando .github/workflows/ é considerada', async () => {
