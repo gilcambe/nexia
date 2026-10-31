@@ -34,7 +34,6 @@ export default function MemorySettings() {
     const hasWebGPU = typeof navigator !== 'undefined' && 'gpu' in navigator;
     // @ts-ignore
     const deviceMemory = typeof navigator !== 'undefined' && navigator.deviceMemory ? navigator.deviceMemory : 4;
-    // Verificação para ativação da IA offline
 
     if (!hasWebGPU || deviceMemory < 4) {
       setOfflineErrorModal(
