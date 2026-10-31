@@ -4,6 +4,8 @@ let montarPedido = null;
 try { ({ montarPedido } = require('./pedidos-pedir')); } catch { /* sem o roteador por projeto, vale o pedido simples */ }
 
 const { publicar } = require('./pedidos-publicar');
+const { mandarParaJules } = require('./pedidos-jules');
+const { rodar } = require('./github');
 
 const issue = (c) => '/repos/gilcambe/nexia/issues/' + c;
 const r = (status, corpo) => ({ status, corpo });
@@ -74,4 +76,62 @@ async function agir(p, b, quem) {
   return r(400, { error: 'Ação desconhecida.' });
 }
 
-module.exports = { agir };
+async function socorro(p, { jules }) {
+  const issues = await p.gh('/repos/gilcambe/nexia/issues', {
+    method: 'GET',
+    body: JSON.stringify({
+      labels: 'cortex-travado',
+      state: 'open',
+      sort: 'updated',
+      direction: 'desc',
+      per_page: 5
+    })
+  });
+
+  const agora = new Date();
+  const seisHorasAtras = new Date(agora.getTime() - 6 * 60 * 60 * 1000);
+
+  const resultado = [];
+
+  for (const issue of issues) {
+    const labels = issue.labels.map(l => l.name);
+    const reservaTentou = labels.includes('reserva-tentou') && new Date(issue.updated_at) > seisHorasAtras;
+
+    if (reservaTentou) continue;
+
+    const tituloMencionaWorkflow = issue.title.includes('.github/workflows/');
+    const passouDuasVezesReserva = labels.filter(l => l.startsWith('reserva-tentativa-')).length >= 2;
+
+    if (tituloMencionaWorkflow || passouDuasVezesReserva) {
+      if (jules) {
+        let tentativas = 0;
+        let sucesso = false;
+        while (tentativas < 3 && !sucesso) {
+          const x = await mandarParaJules(p, issue.number, 'socorro');
+          if (x.status === 200) {
+            sucesso = true;
+            resultado.push({
+              numero: issue.number,
+              titulo: issue.title,
+              para: 'jules',
+              link: issue.html_url
+            });
+          }
+          tentativas++;
+        }
+      } else {
+        await rodar('cortex-reserva.yml', { numero: issue.number });
+        resultado.push({
+          numero: issue.number,
+          titulo: issue.title,
+          para: 'reserva',
+          link: issue.html_url
+        });
+      }
+    }
+  }
+
+  return resultado;
+}
+
+module.exports = { agir, socorro };
