@@ -2,9 +2,9 @@
   "spec": {
     "kind": "system",
     "name": "Viajante Pro",
-    "tagline": "Painel de cadastros e gestão de viagens",
-    "photo_theme": "travel agency",
-    "description": "Painel de cadastros e gestão de viagens",
+    "tagline": "Painel de gestão e cadastros de viagens",
+    "photo_theme": "travel agency dashboard",
+    "description": "Sistema integrado para agências gerenciarem viagens, clientes e parceiros",
     "folder": "sites/viajante-pro",
     "fonts": {
       "heading": "Plus Jakarta Sans",
