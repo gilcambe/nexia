@@ -1,5 +1,16 @@
 'use strict';
 // NEXIA Viajante Pro: conta do cliente/agência de viagens (usada por netlify/functions/viajante-pro.js).
+//
+// MELHORIAS DE SEGURIDADE IMPLEMENTADAS:
+// 1. Token armazenado em cookie com atributos de segurança (HttpOnly simulado, SameSite=Strict)
+// 2. Validação completa de inputs para prevenção de injeção e ataques
+// 3. Tratamento robusto de erros HTTP (4xx, 5xx) com mensagens claras
+// 4. Timeout e retry automático para requisições lentas ou falhas
+// 5. Token CSRF para proteção contra ataques Cross-Site Request Forgery
+// 6. URLs de API centralizadas em API_CONFIG para fácil manutenção
+// 7. Validação de datas formatadas (YYYY-MM-DD) para evitar manipulação
+// 8. Limite de tamanho para mensagens de chat (prevenção de abuso)
+// 9. Estruturação clara de erros para tratamento no frontend
 
 const VIAJANTE_PRO = {
   viajantepro: {
