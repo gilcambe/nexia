@@ -662,6 +662,119 @@
       color: #F87171;
     }
 
+    /* Multi-step form specific styles */
+    .step-indicator {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 30px;
+      position: relative;
+    }
+    .step-indicator::before {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.1);
+      z-index: 1;
+    }
+    .step-indicator::after {
+      content: '';
+      position: absolute;
+      top: 15px;
+      left: 0;
+      height: 2px;
+      background: var(--gold);
+      z-index: 2;
+      transition: width 0.3s ease;
+    }
+    .step-item {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 25%;
+    }
+    .step-number {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      transition: var(--transition);
+    }
+    .step-item.active .step-number {
+      background: var(--gold);
+      color: #07090E;
+    }
+    .step-item.completed .step-number {
+      background: var(--gold);
+      color: #07090E;
+    }
+    .step-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+    }
+    .step-item.completed .step-label {
+      color: var(--gold);
+    }
+    .form-step {
+      display: none;
+    }
+    .form-step.active {
+      display: block;
+    }
+    .step-navigation {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+    .step-btn {
+      padding: 12px 24px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+      font-family: inherit;
+    }
+    .step-btn.prev {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: #FFFFFF;
+    }
+    .step-btn.prev:hover {
+      border-color: var(--gold);
+      color: var(--gold);
+    }
+    .step-btn.next {
+      background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+      color: #07090E;
+      box-shadow: 0 6px 20px var(--gold-glow);
+    }
+    .step-btn.next:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(218, 165, 32, 0.4);
+    }
+    .step-btn.submit {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: white;
+      box-shadow: 0 6px 20px rgba(34, 197, 94, 0.3);
+    }
+    .step-btn.submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
+    }
+
     /* FOOTER */
     footer {
       background: #040508;
@@ -786,6 +899,15 @@
       .quick-search { grid-template-columns: 1fr; }
       .footer-grid { grid-template-columns: 1fr; }
       .quote-box { padding: 24px; }
+      .step-item {
+        width: 20%;
+        font-size: 10px;
+      }
+      .step-number {
+        width: 24px;
+        height: 24px;
+        font-size: 12px;
+      }
     }
   </style>
 
@@ -1441,84 +1563,126 @@
           <p class="section-desc">Preencha os dados abaixo e receba um atendimento personalizado com as melhores condições para o seu projeto de viagem.</p>
         </div>
 
+        <!-- Multi-step form -->
         <form id="orcamentoForm" onsubmit="submitQuoteForm(event)">
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="orcDestino">Destino Desejado *</label>
-              <input type="text" id="orcDestino" class="form-control" placeholder="Ex: Paris, Disney, Cancún, Gramado..." required>
+          <!-- Step Indicator -->
+          <div class="step-indicator" id="stepIndicator">
+            <div class="step-item active" data-step="1">
+              <div class="step-number">1</div>
+              <div class="step-label">Destino & Datas</div>
             </div>
-
-            <div class="form-group">
-              <label for="orcOrigem">Cidade de Partida *</label>
-              <input type="text" id="orcOrigem" class="form-control" placeholder="Ex: São Paulo, Rio de Janeiro, Brasília..." required>
+            <div class="step-item" data-step="2">
+              <div class="step-number">2</div>
+              <div class="step-label">Pessoas & Orçamento</div>
             </div>
-
-            <div class="form-group">
-              <label for="orcPeriodo">Período / Mês Aproximado *</label>
-              <input type="text" id="orcPeriodo" class="form-control" placeholder="Ex: Julho de 2026, Férias de Outubro..." required>
+            <div class="step-item" data-step="3">
+              <div class="step-number">3</div>
+              <div class="step-label">Serviços</div>
             </div>
-
-            <div class="form-group">
-              <label for="orcViajantes">Quantidade de Viajantes *</label>
-              <select id="orcViajantes" class="form-control" required>
-                <option value="1 Adulto">1 Adulto (Solo)</option>
-                <option value="2 Adultos (Casal)" selected>2 Adultos (Casal)</option>
-                <option value="2 Adultos + Crianças">2 Adultos + Criança(s)</option>
-                <option value="Grupo Familiar (4+ pessoas)">Grupo Familiar (4+ pessoas)</option>
-                <option value="Grupo Corporativo">Grupo Corporativo / B2B</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="orcServico">Serviço Principal *</label>
-              <select id="orcServico" class="form-control" required>
-                <option value="Pacote Completo (Voo + Hotel + Transfer)">Pacote Completo (Voo + Hotel + Transfer)</option>
-                <option value="Somente Passagens Aéreas">Somente Passagens Aéreas</option>
-                <option value="Somente Hospedagem / Resort">Somente Hospedagem / Resort</option>
-                <option value="Cruzeiro Marítimo">Cruzeiro Marítimo</option>
-                <option value="Viagem Corporativa">Viagem Corporativa</option>
-                <option value="Seguro-Viagem">Seguro-Viagem</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="orcOrcamento">Faixa de Orçamento Estimada (Opcional)</label>
-              <select id="orcOrcamento" class="form-control">
-                <option value="Flexível / Buscar Melhor Custo-Benefício">Flexível / Buscar Custo-Benefício</option>
-                <option value="Até R$ 5.000 por pessoa">Até R$ 5.000 por pessoa</option>
-                <option value="De R$ 5.000 a R$ 10.000 por pessoa">De R$ 5.000 a R$ 10.000 por pessoa</option>
-                <option value="Acima de R$ 10.000 por pessoa (Categoria Premium/Luxo)">Acima de R$ 10.000 por pessoa (Luxo)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="orcNome">Seu Nome Completo *</label>
-              <input type="text" id="orcNome" class="form-control" placeholder="Digite seu nome completo" required minlength="3">
-            </div>
-
-            <div class="form-group">
-              <label for="orcEmail">Seu E-mail *</label>
-              <input type="email" id="orcEmail" class="form-control" placeholder="seuemail@exemplo.com" required>
-            </div>
-
-            <div class="form-group form-full">
-              <label for="orcTelefone">Telefone / WhatsApp (com DDD) *</label>
-              <input type="tel" id="orcTelefone" class="form-control" placeholder="(11) 99999-9999" required pattern="[0-9()+\-\s]{10,}">
-            </div>
-
-            <div class="form-group form-full">
-              <label for="orcObs">Observações ou Preferências Especiais</label>
-              <textarea id="orcObs" class="form-control" placeholder="Conte-nos mais sobre o estilo de viagem que você busca, passeios desejados ou horários preferidos..."></textarea>
+            <div class="step-item" data-step="4">
+              <div class="step-number">4</div>
+              <div class="step-label">Contato</div>
             </div>
           </div>
 
-          <div id="formStatus" class="form-status"></div>
+          <!-- Step 1: Destino & Datas -->
+          <div class="form-step active" data-step="1">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="orcDestino">Destino Desejado *</label>
+                <input type="text" id="orcDestino" class="form-control" placeholder="Ex: Paris, Disney, Cancún, Gramado..." required>
+              </div>
 
-          <div style="margin-top: 28px; text-align: center;">
-            <button type="submit" id="btnSubmitForm" class="btn btn-gold" style="padding: 16px 40px; font-size: 16px;">
+              <div class="form-group">
+                <label for="orcOrigem">Cidade de Partida *</label>
+                <input type="text" id="orcOrigem" class="form-control" placeholder="Ex: São Paulo, Rio de Janeiro, Brasília..." required>
+              </div>
+
+              <div class="form-group">
+                <label for="orcPeriodo">Período / Mês Aproximado *</label>
+                <input type="text" id="orcPeriodo" class="form-control" placeholder="Ex: Julho de 2026, Férias de Outubro..." required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Pessoas & Orçamento -->
+          <div class="form-step" data-step="2">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="orcViajantes">Quantidade de Viajantes *</label>
+                <select id="orcViajantes" class="form-control" required>
+                  <option value="1 Adulto">1 Adulto (Solo)</option>
+                  <option value="2 Adultos (Casal)" selected>2 Adultos (Casal)</option>
+                  <option value="2 Adultos + Crianças">2 Adultos + Criança(s)</option>
+                  <option value="Grupo Familiar (4+ pessoas)">Grupo Familiar (4+ pessoas)</option>
+                  <option value="Grupo Corporativo">Grupo Corporativo / B2B</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="orcOrcamento">Faixa de Orçamento Estimada (Opcional)</label>
+                <select id="orcOrcamento" class="form-control">
+                  <option value="Flexível / Buscar Melhor Custo-Benefício">Flexível / Buscar Custo-Benefício</option>
+                  <option value="Até R$ 5.000 por pessoa">Até R$ 5.000 por pessoa</option>
+                  <option value="De R$ 5.000 a R$ 10.000 por pessoa">De R$ 5.000 a R$ 10.000 por pessoa</option>
+                  <option value="Acima de R$ 10.000 por pessoa (Categoria Premium/Luxo)">Acima de R$ 10.000 por pessoa (Luxo)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Serviços e Observações -->
+          <div class="form-step" data-step="3">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="orcServico">Serviço Principal *</label>
+                <select id="orcServico" class="form-control" required>
+                  <option value="Pacote Completo (Voo + Hotel + Transfer)">Pacote Completo (Voo + Hotel + Transfer)</option>
+                  <option value="Somente Passagens Aéreas">Somente Passagens Aéreas</option>
+                  <option value="Somente Hospedagem / Resort">Somente Hospedagem / Resort</option>
+                  <option value="Cruzeiro Marítimo">Cruzeiro Marítimo</option>
+                  <option value="Viagem Corporativa">Viagem Corporativa</option>
+                  <option value="Seguro-Viagem">Seguro-Viagem</option>
+                </select>
+              </div>
+
+              <div class="form-group form-full">
+                <label for="orcObs">Observações ou Preferências Especiais</label>
+                <textarea id="orcObs" class="form-control" placeholder="Conte-nos mais sobre o estilo de viagem que você busca, passeios desejados ou horários preferidos..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4: Contato -->
+          <div class="form-step" data-step="4">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="orcNome">Seu Nome Completo *</label>
+                <input type="text" id="orcNome" class="form-control" placeholder="Digite seu nome completo" required minlength="3">
+              </div>
+
+              <div class="form-group">
+                <label for="orcEmail">Seu E-mail *</label>
+                <input type="email" id="orcEmail" class="form-control" placeholder="seuemail@exemplo.com" required>
+              </div>
+
+              <div class="form-group form-full">
+                <label for="orcTelefone">Telefone / WhatsApp (com DDD) *</label>
+                <input type="tel" id="orcTelefone" class="form-control" placeholder="(11) 99999-9999" required pattern="[0-9()+\-\s]{10,}">
+              </div>
+            </div>
+          </div>
+
+          <!-- Navigation Buttons -->
+          <div class="step-navigation">
+            <button type="button" class="step-btn prev" id="prevBtn" onclick="prevStep()" style="display: none;">Voltar</button>
+            <button type="button" class="step-btn next" id="nextBtn" onclick="nextStep()">Avançar</button>
+            <button type="submit" id="btnSubmitForm" class="step-btn submit" style="display: none;">
               <i class="ri-send-plane-fill"></i> Enviar Solicitação de Orçamento
             </button>
           </div>
+
+          <div id="formStatus" class="form-status"></div>
         </form>
       </div>
     </div>
@@ -1844,9 +2008,110 @@
       }
     }
 
+    // Multi-step form logic
+    let currentStep = 1;
+    const totalSteps = 4;
+
+    function updateStepIndicator() {
+      const stepItems = document.querySelectorAll('.step-item');
+      const progressBar = document.querySelector('.step-indicator::after');
+
+      stepItems.forEach(item => {
+        const step = parseInt(item.getAttribute('data-step'));
+        if (step < currentStep) {
+          item.classList.add('completed');
+          item.classList.remove('active');
+        } else if (step === currentStep) {
+          item.classList.add('active');
+          item.classList.remove('completed');
+        } else {
+          item.classList.remove('active', 'completed');
+        }
+      });
+
+      // Update progress bar width
+      const progress = ((currentStep - 1) / (totalSteps - 1)) * 100;
+      if (progressBar) {
+        progressBar.style.width = `${progress}%`;
+      }
+    }
+
+    function showStep(step) {
+      document.querySelectorAll('.form-step').forEach(stepEl => {
+        stepEl.classList.remove('active');
+      });
+      document.querySelector(`.form-step[data-step="${step}"]`).classList.add('active');
+
+      // Update navigation buttons
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const submitBtn = document.getElementById('btnSubmitForm');
+
+      if (step === 1) {
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'inline-flex';
+        submitBtn.style.display = 'none';
+      } else if (step === totalSteps) {
+        prevBtn.style.display = 'inline-flex';
+        nextBtn.style.display = 'none';
+        submitBtn.style.display = 'inline-flex';
+      } else {
+        prevBtn.style.display = 'inline-flex';
+        nextBtn.style.display = 'inline-flex';
+        submitBtn.style.display = 'none';
+      }
+
+      updateStepIndicator();
+    }
+
+    function nextStep() {
+      if (currentStep < totalSteps) {
+        if (validateCurrentStep()) {
+          currentStep++;
+          showStep(currentStep);
+        }
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        showStep(currentStep);
+      }
+    }
+
+    function validateCurrentStep() {
+      const currentStepEl = document.querySelector(`.form-step[data-step="${currentStep}"]`);
+      const requiredFields = currentStepEl.querySelectorAll('[required]');
+      let isValid = true;
+
+      requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+          field.style.borderColor = 'var(--border-color)';
+          isValid = false;
+        } else {
+          field.style.borderColor = '';
+        }
+      });
+
+      if (!isValid) {
+        const formStatus = document.getElementById('formStatus');
+        formStatus.className = 'form-status error';
+        formStatus.textContent = 'Por favor, preencha todos os campos obrigatórios marcados com *.';
+        formStatus.style.display = 'block';
+      }
+
+      return isValid;
+    }
+
+    // Initialize the form
+    showStep(currentStep);
+
     // Submit Quote Form (/api/leads)
     async function submitQuoteForm(event) {
       event.preventDefault();
+
+      if (!validateCurrentStep()) return;
 
       const btnSubmit = document.getElementById('btnSubmitForm');
       const formStatus = document.getElementById('formStatus');
@@ -1916,6 +2181,8 @@
         formStatus.className = 'form-status success';
         formStatus.innerHTML = '<i class="ri-checkbox-circle-line"></i> Cotação recebida! Seu código é <strong>' + (j.codigo || '') + '</strong>. Um consultor vai falar com você pelo WhatsApp ou e-mail.';
         document.getElementById('orcamentoForm').reset();
+        currentStep = 1;
+        showStep(currentStep);
       } catch (err) {
         console.warn('Erro ao enviar cotação:', err);
         const txt = encodeURIComponent('Olá! Quero uma cotação: ' + destino + ' saindo de ' + origem + ' (' + periodo + '), ' + viajantes + ' viajante(s). ' + nome);
