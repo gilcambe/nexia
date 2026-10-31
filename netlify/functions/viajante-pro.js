@@ -45,11 +45,26 @@ function abrirBanco(env) {
 }
 
 function res(statusCode, body, headers = {}) {
+  // Restringe CORS apenas para domínios permitidos (evita '*' por segurança)
+  const allowedOrigins = [
+    'https://viajante.pro',
+    'https://www.viajante.pro',
+    'https://localhost:3000',
+    'https://127.0.0.1:3000',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000'
+  ];
+  
+  const origin = (event.headers && event.headers.origin) || '';
+  const isAllowedOrigin = allowedOrigins.includes(origin);
+  
   return {
     statusCode,
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Origin': isAllowedOrigin ? origin : '',
+      'Access-Control-Allow-Credentials': 'true',
       ...headers,
     },
     body: JSON.stringify(body),
