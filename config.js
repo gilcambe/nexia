@@ -38,7 +38,6 @@ export const configManager = {
     } catch {}
   }
 };
-
 /**
  * Renderiza o switch de IA local na tela de configurações
  * @param {string|HTMLElement} containerOuSeletor - Container onde inserir o controle
