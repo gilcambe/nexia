@@ -318,7 +318,8 @@ exports.handler = async function (event, context) {
   }
 
   // ── Verificação de Token de Sessão para Ações Administrativas ──
-  const token = body.token || event.headers.authorization?.replace(/^Bearer\s+/i, '') || '';
+  const authHeader = event.headers.authorization || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '');
   if (!token) return res(401, { error: 'Token de autenticação ausente.' });
 
   const tokenHash = await sha256(token);
@@ -469,7 +470,11 @@ exports.handler = async function (event, context) {
   if (acao === 'viagem-listar') {
     const snaps = await contaRef.collection('viagens').get();
     const viagens = [];
-    snaps.docs.forEach(doc => viagens.push(doc.data()));
+    snaps.docs.forEach(doc => {
+      const d = doc.data();
+      delete d.codigoSecreto;
+      viagens.push(d);
+    });
     viagens.sort((a, b) => new Date(b.criado_em) - new Date(a.criado_em));
     return res(200, { ok: true, viagens });
   }
@@ -578,7 +583,7 @@ exports.handler = async function (event, context) {
 
     let query = vDocRef.collection('mensagens').orderBy('criado_em', 'desc');
     if (desde) {
-      query = query.startAfter(desde);
+      query = query.where('criado_em', '>=', desde);
     }
 
     const snaps = await query.get();
