@@ -147,46 +147,46 @@ export default function MemorySettings() {
               <span className="text-sm text-[var(--cx-mut)]">
                 {isLocalIAEnabled ? 'Ativado' : 'Desativado'}
               </span>
+                          <button
+              onClick={handleToggleLocalIA}
+              disabled={!isWebGpuSupported}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isLocalIAEnabled ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'} ${!isWebGpuSupported ? 'opacity-40 cursor-not-allowed' : ''}`}
+              data-testid="local-ia-toggle"
+              role="switch"
+              aria-checked={isLocalIAEnabled}
+              aria-label="IA no meu aparelho"
+            >
+              <span
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isLocalIAEnabled ? 'translate-x-6' : 'translate-x-1'}`}
+              />
+            </button>
+          </div>
+        </div>
+        {!isWebGpuSupported && (
+          <div className="text-xs text-red-400 mt-4" data-testid="webgpu-blocked-warning">
+            <p>⚠️ Seu navegador não suporta WebGPU ou não tem memória suficiente para esta funcionalidade. Atualize seu navegador ou use um dispositivo compatível.</p>
+          </div>
+        )}
+        {showDownloadWarning && !isLocalIAEnabled && (
+          <div className="text-xs text-yellow-400 mt-4" data-testid="download-warning">
+            <p>⬇️ Para ativar, será necessário baixar um modelo de IA de aproximadamente 1 GB. Recomendamos uma conexão Wi-Fi estável.</p>
+            <div className="flex justify-end gap-2 mt-2">
               <button
-                onClick={handleToggleLocalIA}
-                disabled={!isWebGpuSupported}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isLocalIAEnabled ? 'bg-[var(--cx-ac)]' : 'bg-[var(--cx-line)]'} ${!isWebGpuSupported ? 'opacity-40 cursor-not-allowed' : ''}`}
-                data-testid="local-ia-toggle"
-                role="switch"
-                aria-checked={isLocalIAEnabled}
-                aria-label="IA no meu aparelho"
+                onClick={() => setShowDownloadWarning(false)}
+                className="px-3 py-1 text-sm border border-[var(--cx-line)] rounded-lg hover:border-[var(--cx-ac)] transition-colors"
               >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isLocalIAEnabled ? 'translate-x-6' : 'translate-x-1'}`}
-                />
+                Cancelar
+              </button>
+              <button
+                onClick={handleConfirmDownload}
+                className="px-3 py-1 text-sm bg-[var(--cx-ac)] text-white rounded-lg hover:bg-[var(--cx-ac-hover)] transition-colors"
+              >
+                Confirmar Download
               </button>
             </div>
           </div>
-          {!isWebGpuSupported && (
-            <div className="text-xs text-red-400 mt-4" data-testid="webgpu-blocked-warning">
-              <p>⚠️ Seu navegador não suporta WebGPU ou não tem memória suficiente para esta funcionalidade. Atualize seu navegador ou use um dispositivo compatível.</p>
-            </div>
-          )}
-          {showDownloadWarning && !isLocalIAEnabled && (
-            <div className="text-xs text-yellow-400 mt-4" data-testid="download-warning">
-              <p>⬇️ Para ativar, será necessário baixar um modelo de IA de aproximadamente 1 GB. Recomendamos uma conexão Wi-Fi estável.</p>
-              <div className="flex justify-end gap-2 mt-2">
-                <button
-                  onClick={() => setShowDownloadWarning(false)}
-                  className="px-3 py-1 text-sm border border-[var(--cx-line)] rounded-lg hover:border-[var(--cx-ac)] transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleConfirmDownload}
-                  className="px-3 py-1 text-sm bg-[var(--cx-ac)] text-white rounded-lg hover:bg-[var(--cx-ac-hover)] transition-colors"
-                >
-                  Confirmar Download
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
+      </div>
       </div>
 
       {/* Seção de fatos */}
