@@ -1,17 +1,17 @@
-/* Cortex-p1 — gerado pelo NEXIA Site Kit (ADR-Q-04) */
+/* Site de teste do Cortex-p1 — gerado pelo NEXIA Site Kit (ADR-Q-04) */
 :root {
-  --primary: #2563eb;
-  --accent: #0ea5e9;
+  --primary: #2c7da0;
+  --accent: #a6d75b;
   --bg: #f4f6f8;
   --surface: #ffffff;
   --surface-2: #f8fafb;
   --text: #17202a;
   --muted: #64707d;
   --line: #e3e8ee;
-  --sidebar: #0f172a;
+  --sidebar: #222222;
   --danger: #d64545;
   --ok: #1f9d67;
-  --font-head: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-head: "Sora", system-ui, sans-serif;
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --radius: 14px;
   --shadow: 0 1px 2px rgba(16,24,40,.06), 0 8px 24px -12px rgba(16,24,40,.14);
