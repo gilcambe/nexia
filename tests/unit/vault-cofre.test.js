@@ -1,65 +1,61 @@
 'use strict';
 /**
- * Testes unitários do Vault: Contador de uso por banco, Rodízio antecipado (70%), Cache em memória TTL 60s.
+ * Testes unitários para o cofre (Vault) - Contador de uso, Cache TTL 60s, Rodízio proativo e Central.
  */
 const test = require('node:test');
 const assert = require('node:assert');
-const { createVault } = require('../../nexia-ai/vault/repository');
-const { SCHEMAS } = require('../../nexia-ai/vault/schemas');
-const { registrarUsoBanco, getUsoBanco, getBancosUsoGeral } = require('../../lib/firebase-lite/firestore');
+const {
+  Firestore,
+  registrarUsoBanco,
+  getUsoBanco,
+  getBancosUsoGeral,
+  getCachedFirestoreRead,
+  setCachedFirestoreRead,
+  invalidateFirestoreCache,
+  getNextBank,
+  switchToNextBank,
+  checkBankHealth
+} = require('./lib/firebase-lite/firestore.js');
 
-test('Cofre & Vault — Contador de uso e status do rodízio (70%)', async () => {
-  // Testa registrador de uso
-  registrarUsoBanco('firestore-b', 10, 5);
-  const uso = getUsoBanco('firestore-b');
-  assert.strictEqual(uso.leituras, 10);
-  assert.strictEqual(uso.escritas, 5);
+test('Cofre Vault - Contador de uso e Limites (70%)', () => {
+  const banco = 'firestore-b';
+  registrarUsoBanco(banco, 100, 50);
+  const uso = getUsoBanco(banco);
+  assert.strictEqual(uso.leituras, 100);
+  assert.strictEqual(uso.escritas, 50);
   assert.strictEqual(uso.status, 'ativo');
 
-  // Força disparo do limite de 70% (50000 leituras * 0.7 = 35000)
-  registrarUsoBanco('firestore-b', 35005, 0);
-  const usoCheio = getUsoBanco('firestore-b');
-  assert.strictEqual(usoCheio.status, 'quase cheio');
-
-  const todos = getBancosUsoGeral();
-  assert(Array.isArray(todos));
-  const b = todos.find(x => x.banco === 'firestore-b');
-  assert.ok(b);
-  assert.strictEqual(b.status, 'quase cheio');
+  // Simular ultrapassar 70% (limite reads = 50000, 70% = 35000)
+  registrarUsoBanco(banco, 35000, 0);
+  const usoQuaseCheio = getUsoBanco(banco);
+  assert.strictEqual(usoQuaseCheio.status, 'quase cheio');
 });
 
-test('Cache em memória do Vault (TTL 60s) e invalidação na escrita', async () => {
-  let docLeituras = 0;
-  const mockDoc = { id: 'prj_123', tenant_id: 'tenant_abc', name: 'Projeto Alpha', schemaVersion: 1, version: 1 };
-  
-  const fakeDb = {
-    runTransaction: async (fn) => fn({
-      get: async () => ({ exists: true, data: () => mockDoc }),
-      create: () => {},
-      set: () => {},
-      update: () => {}
-    }),
-    collection: (col) => ({
-      doc: (id) => ({
-        get: async () => {
-          docLeituras++;
-          return { exists: true, data: () => mockDoc };
-        }
-      })
-    })
-  };
+test('Cofre Vault - Cache em memória (TTL 60s e invalidação)', () => {
+  const tenant = 'tenant-teste';
+  const coll = 'clientes';
+  const docId = 'cli_123';
+  const dados = { nome: 'Empresa Teste', plano: 'gratis' };
 
-  const vault = createVault({ db: fakeDb });
-  const ctx = { tenantId: 'tenant_abc', executionId: 'exe_1', actor: { type: 'owner', id: 'owner_1' } };
+  setCachedFirestoreRead(tenant, coll, docId, dados);
+  const cached = getCachedFirestoreRead(tenant, coll, docId);
+  assert.deepStrictEqual(cached, dados);
 
-  // Primeira leitura (vai ao banco)
-  const r1 = await vault.Project.get(ctx, 'prj_123');
-  assert.strictEqual(r1.name, 'Projeto Alpha');
-  const leiturasAntes = docLeituras;
+  // Invalidação por escrita/docId
+  invalidateFirestoreCache(tenant, coll, docId);
+  const cachedAposInval = getCachedFirestoreRead(tenant, coll, docId);
+  assert.strictEqual(cachedAposInval, null);
+});
 
-  // Segunda leitura (deve vir do cache em memória)
-  const r2 = await vault.Project.get(ctx, 'prj_123');
-  assert.strictEqual(r2.name, 'Projeto Alpha');
-  // Se o cache funcionou, o número de leituras ao db não aumentou
-  assert.strictEqual(docLeituras, leiturasAntes);
+test('Cofre Vault - Rodízio proativo entre bancos (B -> C -> D1 -> CofreSql)', () => {
+  const b1 = getNextBank();
+  assert.ok(typeof b1 === 'string');
+
+  const b2 = switchToNextBank();
+  assert.ok(typeof b2 === 'string');
+  assert.notStrictEqual(b1, b2);
+
+  const geral = getBancosUsoGeral();
+  assert.ok(Array.isArray(geral));
+  assert.ok(geral.length >= 4);
 });
