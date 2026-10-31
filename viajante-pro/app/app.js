@@ -75,7 +75,7 @@
 
   // Buscar Viagem da API
   function buscarViagem(token) {
-    return fetch('/api/viagem?site=viajantepro', {
+    return fetch('/api/viajante-pro', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ acao: 'app_obter', token: token })
@@ -453,7 +453,7 @@
 
     var params = new URLSearchParams(window.location.search);
     var tokenUrl = params.get('t');
-    
+
     if (tokenUrl) {
       localStorage.setItem('vp_token', tokenUrl);
     }
