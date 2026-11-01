@@ -1,0 +1,51 @@
+# Viajante Pro: prova de entrega do e-mail (Brevo grátis).
+# Pega o primeiro remetente ATIVO cadastrado no Brevo, manda um e-mail de teste para ele mesmo
+# (nunca para a caixa do cliente) e consulta os eventos do Brevo até ver "delivered".
+# Só passa (verde) com a prova de entrega. Endereços aparecem mascarados no log.
+name: Viajante Pro - testar e-mail
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Enviar e conferir entrega
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+        run: |
+          node - <<'JS'
+          const key = process.env.BREVO_API_KEY;
+          if (!key) { console.log('FALHOU: segredo BREVO_API_KEY não existe no GitHub.'); process.exit(1); }
+          const h = { 'api-key': key, 'content-type': 'application/json', accept: 'application/json' };
+          const mask = e => String(e).replace(/^(.).*(@.*)$/, '$1***$2');
+          const api = async (p, o = {}) => { const r = await fetch('https://api.brevo.com/v3' + p, { headers: h, ...o }); const t = await r.text(); let j; try { j = JSON.parse(t); } catch { j = { texto: t }; } return { status: r.status, j }; };
+          (async () => {
+            const s = await api('/senders');
+            if (s.status !== 200) { console.log('FALHOU: chave recusada pelo Brevo (HTTP ' + s.status + ').'); process.exit(1); }
+            const ativos = (s.j.senders || []).filter(x => x.active);
+            console.log('Remetentes no Brevo: ' + (s.j.senders || []).map(x => mask(x.email) + (x.active ? ' (ativo)' : ' (NÃO confirmado)')).join(', '));
+            if (!ativos.length) { console.log('FALHOU: nenhum remetente confirmado. Confirme o e-mail que o Brevo mandou.'); process.exit(1); }
+            const de = ativos[0].email;
+            console.log('BREVO_SENDER sugerido: ' + mask(de));
+            const env = await api('/smtp/email', { method: 'POST', body: JSON.stringify({
+              sender: { name: 'Viajante Pro Cotações', email: de }, to: [{ email: de }],
+              subject: 'Teste Viajante Pro - aviso de cotação', htmlContent: '<p>Teste de entrega do aviso de cotação da Viajante Pro. Pode apagar.</p>' }) });
+            if (env.status >= 300) { console.log('FALHOU no envio: HTTP ' + env.status + ' ' + JSON.stringify(env.j).slice(0, 300)); process.exit(1); }
+            const id = env.j.messageId; console.log('Enviado. messageId=' + id);
+            for (let k = 0; k < 18; k++) {
+              await new Promise(r => setTimeout(r, 10000));
+              const ev = await api('/smtp/statistics/events?limit=20&messageId=' + encodeURIComponent(id));
+              const tipos = (ev.j.events || []).map(e => e.event);
+              if (tipos.length) console.log('Eventos: ' + tipos.join(', '));
+              if (tipos.includes('delivered')) { console.log('OK: e-mail ENTREGUE (prova do Brevo: evento delivered).'); process.exit(0); }
+              if (tipos.some(t => /bounce|blocked|invalid|error/i.test(t))) { console.log('FALHOU: Brevo recusou/devolveu.'); process.exit(1); }
+            }
+            console.log('FALHOU: 3 minutos sem evento delivered.'); process.exit(1);
+          })().catch(e => { console.log('FALHOU: ' + e.message); process.exit(1); });
+          JS
