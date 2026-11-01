@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin</title>
+    <link rel="stylesheet" href="css/vp-admin.css">
+</head>
+<body>
+    <div class="tabs">
+        <button class="tab-button active" data-tab="equipe">Equipe</button>
+        <button class="tab-button" data-tab="historico">Histórico</button>
+        <button class="tab-button" data-tab="configuracoes">Configurações</button>
+    </div>
+
+    <div class="tab-content active" id="equipe">
+        <div class="content" id="equipe-content"></div>
+    </div>
+
+    <div class="tab-content" id="historico">
+        <div class="filters">
+            <input type="date" id="start-date">
+            <input type="date" id="end-date">
+            <button id="filter-button">Filtrar</button>
+        </div>
+        <div class="content" id="historico-content"></div>
+    </div>
+
+    <div class="tab-content" id="configuracoes">
+        <div class="content" id="configuracoes-content"></div>
+    </div>
+
+    <script src="js/vp-admin.js"></script>
+</body>
+</html>
