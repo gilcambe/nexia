@@ -44,10 +44,6 @@ const DestinoSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  atualizadoEm: {
-    type: Date,
-    default: Date.now
-  }
 }, {
   timestamps: true
 });
