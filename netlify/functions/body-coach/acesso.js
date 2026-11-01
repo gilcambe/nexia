@@ -6,7 +6,7 @@ const { meusAlunos } = require('./profissionais');
 // bc_config/acesso: { diasGratis, diasGratisCoach, isentos: [emails], pix, pixNome }.
 // bc_acesso/{uid}: { tipo, inicio, gratisAte, pagoAte, faixa, plano, cobertos, cobertoAte, fimDia, email, aparelhos, removidos }.
 const DIA = 86400000;
-const AVISO_DIAS = 5;
+const AVISO_DIAS = 3;
 const MAX_APARELHOS = 2;
 const SEMPRE_ISENTOS = ['gcbezerra@gmail.com']; // admin do NEXIA nunca fica bloqueado
 const diaBR = (t) => new Date(t - 3 * 3600000).toISOString().slice(0, 10);
@@ -14,7 +14,7 @@ const diaBR = (t) => new Date(t - 3 * 3600000).toISOString().slice(0, 10);
 async function configAcesso(db) {
   const c = (await db.collection('bc_config').doc('acesso').get()).data?.() || {};
   return {
-    diasGratis: Number(c.diasGratis) > 0 ? Math.round(Number(c.diasGratis)) : 14,
+    diasGratis: Number(c.diasGratis) > 0 ? Math.round(Number(c.diasGratis)) : 7,
     diasGratisCoach: Number(c.diasGratisCoach) > 0 ? Math.round(Number(c.diasGratisCoach)) : 30,
     isentos: [...SEMPRE_ISENTOS, ...(Array.isArray(c.isentos) ? c.isentos.map((e) => String(e).trim().toLowerCase()) : [])],
     pix: String(c.pix || ''),
@@ -35,7 +35,7 @@ function limiteDoCoach(a, isento, agora) {
 }
 
 // tipo: coach | aluno (de um coach) | independente (sem coach)
-// situacao: isento | equipe (o coach paga) | pago | gratis | aviso (faltam 5 dias ou menos) | bloqueado (sem Premium) | basico (coach sem pagar)
+// situacao: isento | equipe (o coach paga) | pago | gratis | aviso (faltam 3 dias ou menos) | bloqueado (sem Premium) | basico (coach sem pagar)
 async function acessoDe(db, uid, ctx = {}, agora = Date.now()) {
   const cfg = await configAcesso(db);
   const tipo = ctx.papel === 'coach' ? 'coach' : ctx.coachUid ? 'aluno' : 'independente';

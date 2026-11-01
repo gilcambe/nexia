@@ -22,14 +22,27 @@ function fakeDb() {
 }
 const DIA = 86400000;
 
-test('acesso: grátis, aviso nos últimos 5 dias e bloqueio quando acaba', async () => {
+test('acesso: grátis (7 dias), aviso nos últimos 3 dias, aviso de pagamento por Pix e liberação do plano', async () => {
   const db = fakeDb();
   const t0 = Date.UTC(2026, 9, 1, 12);
+  // Novo cadastro: 7 dias do plano Pro/Premium grátis
   assert.equal((await acessoDe(db, 'ana', { email: 'ana@x.com' }, t0)).situacao, 'gratis');
-  assert.equal((await acessoDe(db, 'ana', {}, t0 + 10 * DIA)).situacao, 'aviso');
-  assert.equal((await acessoDe(db, 'ana', {}, t0 + 15 * DIA)).situacao, 'bloqueado');
-  await liberarAcesso(db, 'ana', 30, t0 + 15 * DIA);
-  assert.equal((await acessoDe(db, 'ana', {}, t0 + 16 * DIA)).situacao, 'pago');
+  // Faltando 3 dias ou menos (dia 4 em diante): situacao 'aviso'
+  assert.equal((await acessoDe(db, 'ana', {}, t0 + 4 * DIA)).situacao, 'aviso');
+  // Ao expirar (7 dias depois): 'bloqueado'
+  assert.equal((await acessoDe(db, 'ana', {}, t0 + 7 * DIA)).situacao, 'bloqueado');
+
+  // Cliente clica "Já paguei" no app
+  const [stPaguei] = await acoesAcesso({ acao: 'acesso_paguei', plano: 'mensal', valor: 19.9 }, 'ana', db, { email: 'ana@x.com' });
+  assert.equal(stPaguei, 200);
+
+  // Pedido registrado para o dono confirmar
+  assert.equal(Object.values(db.dados.bc_acesso_pedidos).length, 1);
+  assert.equal(Object.values(db.dados.bc_acesso_pedidos)[0].uid, 'ana');
+
+  // Dono confirma Pix e libera 30 dias de acesso ativo
+  await liberarAcesso(db, 'ana', 30, t0 + 7 * DIA);
+  assert.equal((await acessoDe(db, 'ana', {}, t0 + 8 * DIA)).situacao, 'pago');
 });
 
 test('acesso: admin e e-mails isentos nunca bloqueiam; aluno de coach pago fica liberado', async () => {
