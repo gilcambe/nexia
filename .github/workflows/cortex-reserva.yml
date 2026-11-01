@@ -142,6 +142,7 @@ jobs:
                 contas+=("vaga-$N-custom|openai/$CMOD|OPENAI_API_KEY|$CKEY|$CURL") ;;
             esac
           done
+          sem_chave=()
           if [ -n "$RESERVA_GEMINI_KEY" ]; then
             # Modelo do Gemini muda com o tempo (o 2.0 foi desligado): pergunta ao Google qual "flash" está disponível agora.
             # Vários modelos candidatos: alguns não têm cota grátis (limit 0); o laço abaixo passa para o próximo.
@@ -149,14 +150,24 @@ jobs:
               echo "Modelo Gemini candidato: $GM"
               contas+=("gemini|gemini/$GM|GEMINI_API_KEY|$RESERVA_GEMINI_KEY")
             done
+          else
+            sem_chave+=("RESERVA_GEMINI_KEY")
           fi
-          [ -n "$GROQ_API_KEY" ] && contas+=("groq|groq/llama-3.3-70b-versatile|GROQ_API_KEY|$GROQ_API_KEY")
-          [ -n "$MISTRAL_API_KEY" ] && contas+=("mistral|mistral/codestral-latest|MISTRAL_API_KEY|$MISTRAL_API_KEY")
-          [ -n "$OPENROUTER_API_KEY" ] && contas+=("openrouter-cortex|openrouter/deepseek/deepseek-chat-v3-0324:free|OPENROUTER_API_KEY|$OPENROUTER_API_KEY")
-          [ -n "$RESERVA_OPENROUTER_KEY" ] && contas+=("openrouter|openrouter/deepseek/deepseek-chat-v3-0324:free|OPENROUTER_API_KEY|$RESERVA_OPENROUTER_KEY")
-          [ -n "$RESERVA_OPENAI_KEY" ] && contas+=("openai|gpt-4o-mini|OPENAI_API_KEY|$RESERVA_OPENAI_KEY")
-          [ -n "$RESERVA_ANTHROPIC_KEY" ] && contas+=("anthropic|claude-3-5-haiku-20241022|ANTHROPIC_API_KEY|$RESERVA_ANTHROPIC_KEY")
-          if [ ${#contas[@]} -eq 0 ]; then echo "Nenhuma conta de reserva ligada."; echo "ok=0" >> "$GITHUB_OUTPUT"; exit 0; fi
+          [ -n "$GROQ_API_KEY" ] && contas+=("groq|groq/llama-3.3-70b-versatile|GROQ_API_KEY|$GROQ_API_KEY") || sem_chave+=("GROQ_API_KEY")
+          [ -n "$MISTRAL_API_KEY" ] && contas+=("mistral|mistral/codestral-latest|MISTRAL_API_KEY|$MISTRAL_API_KEY") || sem_chave+=("MISTRAL_API_KEY")
+          [ -n "$OPENROUTER_API_KEY" ] && contas+=("openrouter-cortex|openrouter/deepseek/deepseek-chat-v3-0324:free|OPENROUTER_API_KEY|$OPENROUTER_API_KEY") || sem_chave+=("OPENROUTER_API_KEY")
+          [ -n "$RESERVA_OPENROUTER_KEY" ] && contas+=("openrouter|openrouter/deepseek/deepseek-chat-v3-0324:free|OPENROUTER_API_KEY|$RESERVA_OPENROUTER_KEY") || sem_chave+=("RESERVA_OPENROUTER_KEY")
+          [ -n "$RESERVA_OPENAI_KEY" ] && contas+=("openai|gpt-4o-mini|OPENAI_API_KEY|$RESERVA_OPENAI_KEY") || sem_chave+=("RESERVA_OPENAI_KEY")
+          [ -n "$RESERVA_ANTHROPIC_KEY" ] && contas+=("anthropic|claude-3-5-haiku-20241022|ANTHROPIC_API_KEY|$RESERVA_ANTHROPIC_KEY") || sem_chave+=("RESERVA_ANTHROPIC_KEY")
+
+          echo "sem_chave=$(IFS=, ; echo "${sem_chave[*]}")" >> "$GITHUB_OUTPUT"
+
+          if [ ${#contas[@]} -eq 0 ]; then
+            echo "Nenhuma conta de reserva ligada."
+            echo "ok=0" >> "$GITHUB_OUTPUT"
+            echo "tentadas=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
           # Só conta como resultado se houver linha de código de verdade: arquivo novo VAZIO (a IA "terminou" sem escrever) não vale.
           tem_conteudo() {
             local f n=0
@@ -181,16 +192,22 @@ jobs:
             done < <(git diff --numstat)
             return 0
           }
+          tentadas=()
           for c in "${contas[@]}"; do
             IFS='|' read -r nome modelo var chave base <<< "$c"
             echo "Tentando conta: $nome"
+            tentadas+=("$nome")
             git reset -q --hard "origin/${GITHUB_REF_NAME}" || true
             if env "$var=$chave" ${base:+"OPENAI_API_BASE=$base"} aider --yes-always --no-auto-commits --no-gitignore --no-detect-urls --no-check-update --no-analytics --read AGENTS.md --read docs/CONTEXTO-IA.md --model "$modelo" --message "$PROMPT" $(tr '\n' ' ' < "$RUNNER_TEMP/arquivos.txt") 2>&1 | tail -40; tem_conteudo && sem_estrago; then
-              echo "ok=1" >> "$GITHUB_OUTPUT"; echo "conta=$nome" >> "$GITHUB_OUTPUT"; exit 0
+              echo "ok=1" >> "$GITHUB_OUTPUT"
+              echo "conta=$nome" >> "$GITHUB_OUTPUT"
+              echo "tentadas=$(IFS=, ; echo "${tentadas[*]}")" >> "$GITHUB_OUTPUT"
+              exit 0
             fi
             echo "Conta $nome sem resultado (cota/limite); próxima."
           done
           echo "ok=0" >> "$GITHUB_OUTPUT"
+          echo "tentadas=$(IFS=, ; echo "${tentadas[*]}")" >> "$GITHUB_OUTPUT"
       - name: Testar
         if: steps.aplicar.outputs.ok == '1'
         run: npm test
@@ -204,7 +221,23 @@ jobs:
           git add -A
           git reset -q -- '.aider*' .gitignore 2>/dev/null || true
           git commit -q -m "Reserva (${{ steps.aplicar.outputs.conta }}): issue #$NUMERO"
-          git push -q origin "nexia/reserva-$NUMERO-$GITHUB_RUN_NUMBER"
+          mexe_wf=0
+          if git diff-tree --no-commit-id --name-only -r HEAD | grep -qE '^\.github/workflows/'; then
+            mexe_wf=1
+          fi
+          if ! git push origin "nexia/reserva-$NUMERO-$GITHUB_RUN_NUMBER"; then
+            echo "Push falhou."
+            if [ "$mexe_wf" -eq 1 ]; then
+              echo "Push falhou por conter alterações em .github/workflows/. Encaminhando para so-humano e espera-dono."
+              gh issue comment "$NUMERO" --body "Reserva (${{ steps.aplicar.outputs.conta }}): esta tarefa mexe em \`.github/workflows/\` e o token de automação não tem permissão de workflows para fazer push. Encaminhada para \`espera-dono\` / \`so-humano\`." || true
+              gh label create so-humano --color d73a4a --description "Só humano pode mexer (workflows ou aprovação)" 2>/dev/null || true
+              gh label create espera-dono --color d73a4a --description "Esperando intervenção do dono" 2>/dev/null || true
+              gh issue edit "$NUMERO" --add-label so-humano,espera-dono || true
+              exit 0
+            else
+              exit 1
+            fi
+          fi
           # PR aberto pela GitHub App do NEXIA: assim o CI roda nele (com o token padrão o GitHub não roda).
           APP_TOKEN=$(node -e "require('./scripts/cortex-fila').tokenDaApp().then(t=>process.stdout.write(t||''))" 2>/dev/null || true)
           [ -n "$APP_TOKEN" ] && export GH_TOKEN="$APP_TOKEN"
@@ -212,8 +245,17 @@ jobs:
       - name: Sem cota hoje
         if: steps.aplicar.outputs.ok != '1'
         run: |
-          gh issue comment "$NUMERO" --body "Reserva: nenhuma conta ligada respondeu (sem cota ou sem chave). A fila tenta de novo amanhã."
+          TENTADAS="${{ steps.aplicar.outputs.tentadas }}"
+          SEM_CHAVE="${{ steps.aplicar.outputs.sem_chave }}"
+          MSG="Reserva: nenhuma conta ligada respondeu."
+          if [ -n "$TENTADAS" ]; then
+            MSG="$MSG Contas tentadas (sem cota ou sem resultado): $TENTADAS."
+          fi
+          if [ -n "$SEM_CHAVE" ]; then
+            MSG="$MSG Contas sem chave configurada: $SEM_CHAVE."
+          fi
+          MSG="$MSG A fila tenta de novo amanhã."
+          gh issue comment "$NUMERO" --body "$MSG" || true
           # #803: o rótulo segura a tarefa até o dia virar; a Central mostra o aviso e a fila reenfileira do zero.
           gh label create cortex-reserva-sem-cota --color FBCA04 --description "Reserva sem cota hoje: volta amanhã" 2>/dev/null || true
           gh issue edit "$NUMERO" --add-label cortex-reserva-sem-cota || true
-          exit 1
