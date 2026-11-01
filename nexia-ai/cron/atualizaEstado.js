@@ -53,15 +53,3 @@ async function atualizaEstado() {
 }
 
 atualizaEstado();
-  } catch (error) {
-    console.error('Erro ao atualizar estado:', error);
-  }
-}
-
-atualizaEstado();
-  } catch (error) {
-    console.error('Erro ao atualizar estado:', error);
-  }
-}
-
-atualizaEstado();
