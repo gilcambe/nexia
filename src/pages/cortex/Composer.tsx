@@ -78,12 +78,11 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
     try {
       const r = await agir({ acao: "entender", nome: f.name, tipo: f.type, base64: await paraBase64(f) }) as { ok: boolean; texto?: string; tipo?: string };
       if (!r.ok || !r.texto) {
-        // Fallback para arquivos pequenos de texto/planilha
         const isTextoPequeno = ehArquivoTextoPequeno(f);
         if (isTextoPequeno) {
           try {
             const conteudo = await f.text();
-            return { ok: true, texto: conteudo, tipo: "texto" };
+            return { ok: true, texto: `Arquivo \`${f.name}\`:\n\`\`\`\n${conteudo}\n\`\`\``, tipo: "texto" };
           } catch {
             return { ok: false };
           }
@@ -93,12 +92,11 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
       const como = r.tipo === "imagem" ? "descrição da imagem" : r.tipo === "audio" ? "transcrição do áudio" : "texto do arquivo";
       return { ok: true, texto: `Anexo \`${f.name}\` (${como}, feita pela IA):\n\`\`\`\n${r.texto}\n\`\`\``, tipo: r.tipo };
     } catch { 
-      // Fallback para arquivos pequenos de texto/planilha
       const isTextoPequeno = ehArquivoTextoPequeno(f);
       if (isTextoPequeno) {
         try {
           const conteudo = await f.text();
-          return { ok: true, texto: conteudo, tipo: "texto" };
+          return { ok: true, texto: `Arquivo \`${f.name}\`:\n\`\`\`\n${conteudo}\n\`\`\``, tipo: "texto" };
         } catch {
           return { ok: false };
         }
@@ -141,9 +139,14 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
         if (f.type.startsWith('application/pdf') || f.name.toLowerCase().endsWith('.pdf')) {
           setAviso(`Não consegui ler o PDF \`${f.name}\`.`);
           return;
-        } else if (f.type.startsWith('text/') || /\.(txt|csv|xlsm|xls|ods)$/i.test(f.name)) {
-          setAviso(`Não consegui ler o arquivo de texto \`${f.name}\`.`);
-          return;
+        } else if (ehArquivoTextoPequeno(f) || f.type.startsWith('text/') || /\.(txt|csv|xlsm|xls|ods)$/i.test(f.name)) {
+          try {
+            const conteudoTxt = await f.text();
+            bloco = `Arquivo \`${f.name}\`:\n\`\`\`\n${conteudoTxt}\n\`\`\``;
+          } catch {
+            setAviso(`Não consegui ler o arquivo \`${f.name}\`.`);
+            return;
+          }
         } else {
           setAviso(`Não consegui ler o arquivo \`${f.name}\`.`);
           return;
