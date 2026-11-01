@@ -61,7 +61,7 @@ jobs:
           CLOUDFLARE_AI_TOKEN: ${{ secrets.CLOUDFLARE_AI_TOKEN }}
           CLOUDFLARE_AI_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_AI_ACCOUNT_ID }}
           NEXIA_MODELS_FAST: ${{ secrets.NEXIA_MODELS_FAST }}
-          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY1 || secrets.BREVO_API_KEY }}
           LEADS_NOTIFY_EMAIL: ${{ secrets.LEADS_NOTIFY_EMAIL }}
           IA_VAGA_1: ${{ secrets.IA_VAGA_1 }}
           IA_VAGA_2: ${{ secrets.IA_VAGA_2 }}
