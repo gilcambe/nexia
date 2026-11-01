@@ -406,7 +406,10 @@ async function runAgent(o) {
     for (;;) {
       desc = fo.desc;
       try {
-        out = await o.router.toolCall(desc, { system, messages: compact(messages, fo.shrink), tools, maxTokens: Math.max(2048, 8192 >> fo.shrink) });
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4000);
+        out = await o.router.toolCall(desc, { system, messages: compact(messages, fo.shrink), tools, maxTokens: Math.max(2048, 8192 >> fo.shrink), signal: controller.signal });
+        clearTimeout(timeout);
         fo.ok();
         break;
       } catch (e) {
@@ -494,7 +497,10 @@ async function askModel(o) {
     o.meter.check();
     const desc = fo.desc;
     try {
-      const out = await o.router.chat(desc, { system: o.system, messages: [{ role: 'user', content: o.prompt }], maxTokens: Math.max(2048, (o.maxTokens || 6144) >> fo.shrink) });
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 4000);
+      const out = await o.router.chat(desc, { system: o.system, messages: [{ role: 'user', content: o.prompt }], maxTokens: Math.max(2048, (o.maxTokens || 6144) >> fo.shrink), signal: controller.signal });
+      clearTimeout(timeout);
       const u = out.usage || {};
       o.meter.usage.steps++;
       o.meter.usage.input_tokens += u.input_tokens || 0;
