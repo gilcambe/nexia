@@ -1,4 +1,5 @@
 'use strict';
+const motivos = require('./motivos');
 // Central NEXIA: o que a página precisa do GitHub (fila do Cortex, robôs, posts do Divulga).
 // Usa o token da fila (NEXIA_JOBS_TOKEN) só no servidor; nada dele vai para a página.
 
@@ -63,7 +64,8 @@ function criarGithub(env = process.env, fetchFn = fetch) {
   }
 
   const temRotulo = (i, n) => (i.labels || []).some((l) => (l.name || l) === n);
-  const tarefa = (i) => ({ numero: i.number, titulo: String(i.title || '').slice(0, 120), link: i.html_url, quando: i.updated_at });
+  // #2717: cada tarefa leva o motivo (por que está parada ou esperando).
+  const tarefa = (i) => ({ numero: i.number, titulo: String(i.title || '').slice(0, 120), link: i.html_url, quando: i.updated_at, motivo: motivos.motivoDe(i).texto });
 
   async function cortex() {
     const semana = new Date(Date.now() - 7 * 864e5).toISOString();
@@ -79,6 +81,7 @@ function criarGithub(env = process.env, fetchFn = fetch) {
     return {
       naFila: naFila.length, fazendo: fazendo.map(tarefa), travadas: travadas.map(tarefa),
       feitas7: entregues.length, ultimas: entregues.slice(0, 8).map(tarefa), proximas: naFila.slice(0, 8).map(tarefa),
+      motivos: motivos.resumo(so),
     };
   }
 
