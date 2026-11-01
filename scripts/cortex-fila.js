@@ -23,7 +23,7 @@ function depoisSemEntrega(labels) {
   return { n, travar: n >= MAX_SEM_ENTREGA };
 }
 const CONFIAVEIS = ['OWNER', 'MEMBER', 'COLLABORATOR'];
-const L = { jules: 'cortex-jules', fila: 'cortex-fila', rodando: 'cortex-rodando', feito: 'cortex-feito', travado: 'cortex-travado', dividido: 'cortex-dividido', parte: 'cortex-parte', semDivisao: 'cortex-sem-divisao', prioridade: 'cortex-prioridade', semCota: 'cortex-reserva-sem-cota' };
+const L = { jules: 'cortex-jules', fila: 'cortex-fila', rodando: 'cortex-rodando', feito: 'cortex-feito', travado: 'cortex-travado', dividido: 'cortex-dividido', parte: 'cortex-parte', semDivisao: 'cortex-sem-divisao', prioridade: 'cortex-prioridade', urgente: 'cortex-urgente', semCota: 'cortex-reserva-sem-cota' };
 const MAX_CORPO = 2500;      // tarefa maior que isso é dividida em partes pequenas
 const MAX_ARQUIVOS = 4;      // ou que mexe em mais arquivos do que isso
 
@@ -345,10 +345,12 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
     if (pista) pistasEmUso.add(pista);
   }
 
+  const peso = i => (nomes(i).includes(L.urgente) ? 2 : 0) + (nomes(i).includes(L.prioridade) ? 1 : 0);
   const fila = validas
     .filter(i => { const ls = nomes(i); return !ls.includes(L.rodando) && !ls.includes(L.feito) && !ls.includes(L.travado) && !ls.includes(L.dividido) && !ls.includes(L.semCota); })   // #803: sem cota hoje espera o dia virar
-    // Rótulo cortex-prioridade passa na frente (ex.: correções que impedem o próprio Cortex de parar); depois, por número.
-    .sort((a, b) => (nomes(b).includes(L.prioridade) - nomes(a).includes(L.prioridade)) || a.number - b.number);
+    // cortex-urgente (o dono pediu agora) passa na frente de tudo; depois cortex-prioridade; depois, por número.
+    // Lição de 01/11: com dezenas de issues antigas com cortex-prioridade, o pedido novo do dono esperava a noite inteira.
+    .sort((a, b) => (peso(b) - peso(a)) || a.number - b.number);
   // Partes da mesma tarefa rodam em ordem: a parte 2 só sai quando a 1 terminou (uma costuma usar o arquivo da outra).
   // Parte com plano (cortex-plano) espera só as partes de que depende: as independentes rodam juntas, em pistas diferentes.
   const esperaAnterior = i => {
