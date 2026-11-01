@@ -20,6 +20,7 @@ export function ehPergunta(texto: string): boolean {
 }
 
 /** Função pura que retorna true apenas quando o texto contém palavras relacionadas a alterações de projeto/sistema. */
+/** Função pura que retorna true apenas quando o texto contém palavras relacionadas a alterações de projeto/sistema. */
 export function ehPedidoDeCodigo(texto: string): boolean {
   const t = sem(texto || "");
   return PALAVRAS_CODIGO.test(t);
