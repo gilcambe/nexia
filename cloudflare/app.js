@@ -45,6 +45,7 @@ function populateProcessEnv(env) {
   // #2188: banco extra do Vault (Durable Object SQLite grátis), usado no rodízio depois do D1.
   if (env && env.COFRE_SQL) globalThis.__NEXIA_COFRE__ = env.COFRE_SQL;
   if (env && env.SELF) globalThis.__NEXIA_SELF__ = env.SELF;
+  if (env && env.SELF) globalThis.__NEXIA_SELF__ = env.SELF;
 }
 
 async function readBody(request) {
