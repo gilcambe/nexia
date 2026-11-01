@@ -7,12 +7,12 @@ class Cofre {
     this.data = {};
   }
 
-  async save(key, value) {
+  async salvar(key, value) {
     this.data[key] = value;
     return true;
   }
 
-  async get(key) {
+  async recuperar(key) {
     return this.data[key];
   }
 }
