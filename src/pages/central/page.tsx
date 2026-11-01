@@ -32,6 +32,23 @@ const ACESSO_RAPIDO = [
   { nome: "Abrir GitHub", href: "https://github.com/gilcambe/nexia" },
   { nome: "Abrir Firebase", href: "https://console.firebase.google.com/project/nexia-c8710" },
 ];
+const ABAS: { id: Aba; nome: string; frase: string; icone: string }[] = [
+  { id: "inicio", nome: "Início", frase: "Visão geral", icone: "inicio" },
+  { id: "cortex", nome: "Cortex", frase: "Tarefas e IA", icone: "cortex" },
+  { id: "clientes", nome: "Tenants", frase: "Clientes e produtos", icone: "tenants" },
+  { id: "sistema", nome: "IA e Infraestrutura", frase: "IAs, chaves e robôs", icone: "ia" },
+  { id: "prs", nome: "Entregas", frase: "Código e testes", icone: "prs" },
+  { id: "dinheiro", nome: "Dinheiro", frase: "Assinaturas e Pix", icone: "dinheiro" },
+  { id: "divulgar", nome: "Divulgar", frase: "Posts e ofertas", icone: "divulgar" },
+];
+const NO_CELULAR: Aba[] = ["inicio", "cortex", "clientes", "sistema"];
+
+const ACESSO_RAPIDO = [
+  { nome: "Abrir Cortex", href: "/cortex-app" },
+  { nome: "Abrir Vault", href: "/projetos" },
+  { nome: "Abrir GitHub", href: "https://github.com/gilcambe/nexia" },
+  { nome: "Abrir Firebase", href: "https://console.firebase.google.com/project/nexia-c8710" },
+];
 
 export default function CentralPage() {
   const navigate = useNavigate();
