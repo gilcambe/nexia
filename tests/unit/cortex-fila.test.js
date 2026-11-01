@@ -2,7 +2,7 @@
 // Fila fixa do Cortex: decisões puras (sem rede).
 const test = require('node:test');
 const assert = require('node:assert');
-const { decidir, MAX_TENTATIVAS, precisaDividir, paisConcluidos, dividirComIA, sondarCota } = require('../../scripts/cortex-fila');
+const { decidir, MAX_TENTATIVAS, precisaDividir, paisConcluidos, dividirComIA, sondarCota, validarCortexFeito, reabrirFeitosInvalidos } = require('../../scripts/cortex-fila');
 
 const AGORA = Date.parse('2026-10-07T10:00:00Z');
 const issue = (n, labels = [], extra = {}) => ({ number: n, body: `tarefa ${n}`, author_association: 'OWNER', updated_at: '2026-10-07T09:59:00Z', labels: ['cortex-fila', ...labels].map(name => ({ name })), ...extra });
@@ -206,4 +206,70 @@ test('CF-852d. concluir leva o created_at da issue em acao.desde', () => {
   const a = decidir({ issues: [issue(1, ['cortex-rodando', 'pista-1'], { created_at: '2026-10-18T10:00:00Z' })], runs: [run(1, 'completed', 'success')], agora: AGORA });
   assert.equal(a[0].tipo, 'concluir');
   assert.equal(a[0].desde, '2026-10-18T10:00:00Z');
+});
+
+test('CF-VALIDACAO-FEITO. Valida as 3 condições para marcar/manter cortex-feito', async () => {
+  const issueValida = { number: 1853, body: 'Mudar `src/index.js` para adicionar logs' };
+
+  // Caso 1: Falha porque não há PR mesclado citando a issue
+  const mockGhSemPr = async (token, method, path) => {
+    if (path.includes('/pulls?state=closed')) return { status: 200, json: [] };
+    if (path.includes('/contents/')) return { status: 200, json: {} };
+    return { status: 200, json: [] };
+  };
+  const res1 = await validarCortexFeito('token', issueValida, mockGhSemPr);
+  assert.strictEqual(res1.ok, false);
+  assert.ok(res1.faltas.some(f => f.includes('Nenhum PR mesclado')));
+
+  // Caso 2: Falha porque o arquivo não existe na branch develop
+  const mockGhSemArquivo = async (token, method, path) => {
+    if (path.includes('/pulls?state=closed')) return { status: 200, json: [{ merged_at: '2026-10-27T10:00:00Z', title: 'Fix #1853', base: { ref: 'develop' }, head: { sha: 'sha123' } }] };
+    if (path.includes('/contents/src/index.js')) return { status: 404, json: {} };
+    if (path.includes('/actions/runs')) return { status: 200, json: { workflow_runs: [{ conclusion: 'success' }] } };
+    return { status: 200, json: [] };
+  };
+  const res2 = await validarCortexFeito('token', issueValida, mockGhSemArquivo);
+  assert.strictEqual(res2.ok, false);
+  assert.ok(res2.faltas.some(f => f.includes('Arquivo(s) não encontrado(s)')));
+
+  // Caso 3: Falha porque o CI do commit de merge falhou
+  const mockGhCiFalhou = async (token, method, path) => {
+    if (path.includes('/pulls?state=closed')) return { status: 200, json: [{ merged_at: '2026-10-27T10:00:00Z', title: 'Fix #1853', base: { ref: 'develop' }, head: { sha: 'sha123' } }] };
+    if (path.includes('/contents/src/index.js')) return { status: 200, json: {} };
+    if (path.includes('/actions/runs')) return { status: 200, json: { workflow_runs: [{ conclusion: 'failure' }] } };
+    return { status: 200, json: [] };
+  };
+  const res3 = await validarCortexFeito('token', issueValida, mockGhCiFalhou);
+  assert.strictEqual(res3.ok, false);
+  assert.ok(res3.faltas.some(f => f.includes('CI do commit sha123 falhou')));
+
+  // Sucesso: passa em todas as 3 condições
+  const mockGhSucesso = async (token, method, path) => {
+    if (path.includes('/pulls?state=closed')) return { status: 200, json: [{ merged_at: '2026-10-27T10:00:00Z', title: 'Fix #1853', base: { ref: 'develop' }, head: { sha: 'sha123' } }] };
+    if (path.includes('/contents/src/index.js')) return { status: 200, json: {} };
+    if (path.includes('/actions/runs')) return { status: 200, json: { workflow_runs: [{ conclusion: 'success' }] } };
+    return { status: 200, json: [] };
+  };
+  const resSucesso = await validarCortexFeito('token', issueValida, mockGhSucesso);
+  assert.strictEqual(resSucesso.ok, true);
+  assert.strictEqual(resSucesso.faltas.length, 0);
+});
+
+test('CF-AUDITORIA-7DIAS. Reabre issues dos últimos 7 dias que falharam na validação', async () => {
+  const chamadas = [];
+  const mockGhAuditoria = async (token, method, path, body) => {
+    chamadas.push({ method, path, body });
+    if (path.includes('/issues?state=closed')) {
+      return { status: 200, json: [{ number: 1853, body: 'Mudar `src/naoexiste.js`', labels: [{ name: 'cortex-feito' }] }] };
+    }
+    if (path.includes('/pulls?state=closed')) return { status: 200, json: [] };
+    return { status: 200, json: {} };
+  };
+
+  const reabertas = await reabrirFeitosInvalidos('token', mockGhAuditoria, AGORA);
+  assert.deepEqual(reabertas, [1853]);
+  assert.ok(chamadas.some(c => c.method === 'DELETE' && c.path.includes('/labels/cortex-feito')));
+  assert.ok(chamadas.some(c => c.method === 'POST' && c.path.includes('/labels') && c.body.labels.includes('cortex-fila')));
+  assert.ok(chamadas.some(c => c.method === 'PATCH' && c.path.includes('/issues/1853') && c.body.state === 'open'));
+  assert.ok(chamadas.some(c => c.method === 'POST' && c.path.includes('/comments') && c.body.body.includes('Reabrindo issue')));
 });
