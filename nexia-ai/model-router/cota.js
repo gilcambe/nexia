@@ -47,6 +47,19 @@ function parseReset(texto) {
   return SESSENTA_S;
 }
 
+async function incrementUsage(providerId, { requests = 0, tokens = 0, errors = 0 }) {
+  const date = new Date().toISOString().split('T')[0];
+  const key = `${providerId}:${date}`;
+  const d1Storage = require('../../src/utils/d1Storage').createD1Storage(process.env);
+  await d1Storage.incrementUsage(key, { requests, tokens, errors });
+}
+
+async function getUsage(providerId, date) {
+  const key = `${providerId}:${date}`;
+  const d1Storage = require('../../src/utils/d1Storage').createD1Storage(process.env);
+  return await d1Storage.getUsage(key);
+}
+
 function createPlacar({ agora = () => Date.now() } = {}) {
   const placar = {}; // chave -> { ate: number, motivo: string }
   const seguidas = {}; // chave -> falhas seguidas por instabilidade (disjuntor)
