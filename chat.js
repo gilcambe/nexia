@@ -55,14 +55,14 @@ async function despacharMensagem(mensagem, opcoes = {}) {
 
 // Função para enviar a mensagem para a nuvem
 async function enviarParaNuvem(texto, opcoes, ehFallback = false) {
-  const respostaNuvem = await fetch('/api/nuvem', {
+  const respostaNuvem = await fetch('/api/cortex', {
     method: 'POST',
     body: JSON.stringify({ texto, ...opcoes }),
   });
 
   const dados = await respostaNuvem.json();
 
-  // Registrar uso no placar de tokens (descontando cota do plano), a menos que seja um fallback
+  // Registrar uso no placar de tokens (descontando cota do plano), a menos que seja um fallback silencioso
   if (!ehFallback) {
     atualizarPlacarTokens({
       tipo: 'nuvem',
