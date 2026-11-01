@@ -54,6 +54,8 @@ const LOADERS = {
   'central': () => require('../netlify/functions/central.js'),
   'conheca': () => require('../netlify/functions/conheca.js'),
   'pedidos': () => require('../netlify/functions/pedidos.js'),
+  'pedidos-acoes': () => require('../netlify/functions/central/pedidos-acoes.js'),
+  'entender-anexo': () => require('../netlify/functions/central/entender-anexo.js'),
   'nexia-api': () => require('../nexia-ai/api/index.js'),
 };
 
