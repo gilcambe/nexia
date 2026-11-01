@@ -15,6 +15,7 @@ const { aplicarVagas, vagasCustom } = require('./vagas');
 const { createGeminiProvider } = require('./providers/gemini');
 const { createCohereProvider } = require('./providers/cohere');
 const { createCache, chave, cacheavel } = require('./cache');
+const { incrementUsage, getUsage } = require('./cota');
 
 const PROVIDER_IDS = Object.freeze(['anthropic', 'gemini', 'cohere', ...Object.keys(OPENAI_COMPATIBLE)]);
 
