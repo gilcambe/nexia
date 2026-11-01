@@ -1,6 +1,17 @@
 /* Viajante Pro — logo oficial em todas as páginas, com o avião do logo decolando
    (2,6 s ao abrir, depois da abertura Kernex, e de novo a cada 5 min). Respeita "reduzir movimento".
    Uso: <script src="/viajante-pro/vp-marca.js" defer></script> */
+
+// Função exportada para testes unitários com relógio falso
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    decolar: decolar,
+    emVoo: function() { return emVoo; },
+    ultimoVoo: function() { return ultimoVoo; },
+    setUltimoVoo: function(valor) { ultimoVoo = valor; },
+    setCalmo: function(valor) { calmo = valor; }
+  };
+}
 (function () {
   'use strict';
   var LOGO = '/viajante-pro/img/vp-oficial.jpg';
@@ -95,14 +106,17 @@
     else setTimeout(decolar, 400);
 
     // Configura o listener para mudanças de visibilidade
-    document.addEventListener('visibilitychange', function() {
+    // Garante que não dispare múltiplas vezes quando a aba volta para 'visible'
+    var visibilityChangeHandler = function() {
       if (document.visibilityState === 'visible') {
         var agora = Date.now();
-        if (agora - ultimoVoo >= 5 * 60 * 1000) {
+        if (agora - ultimoVoo >= 5 * 60 * 1000 && !emVoo) {
           decolar();
         }
       }
-    });
+    };
+    
+    document.addEventListener('visibilitychange', visibilityChangeHandler);
   }
 
   // foto que não carregar vira um fundo bonito com o nome do lugar (nunca ícone de imagem quebrada)
