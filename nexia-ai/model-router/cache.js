@@ -23,9 +23,9 @@ let economiaTokensTotal = 0;
 
 /** Map com ordem de uso: o mais antigo sai quando passa de `max`; item vencido é ignorado e removido. */
 // `arquivo` (opcional, desligado por padrão): guarda o cache em JSON para a próxima rodada reaproveitar.
-function createCache({ d1, max = 500, ttlMs = 7 * 24 * 3600e3, agora = () => Date.now(), arquivo = '' } = {}) {
+async function createCache({ d1, max = 500, ttlMs = 7 * 24 * 3600e3, agora = () => Date.now(), arquivo = '' } = {}) {
   if (d1) {
-    const d1Cache = createD1Cache({ d1 });
+    const d1Cache = await createD1Cache({ d1 });
 
     // Verifica se a tabela existe e cria se necessário
     await d1.prepare(`CREATE TABLE IF NOT EXISTS router_cache (chave TEXT PRIMARY KEY, valor TEXT, expires_at TEXT)`).run();

@@ -3,7 +3,7 @@
 const { createHash } = require('node:crypto');
 
 /** Cache no D1 para respostas sem ferramentas. */
-function createD1Cache({ d1, tableName = 'router_cache', ttlDays = 7 } = {}) {
+async function createD1Cache({ d1, tableName = 'router_cache', ttlDays = 7 } = {}) {
   if (!d1) throw new Error('D1 database required');
 
   // Cria a tabela se não existir
