@@ -21,7 +21,33 @@ let economiaTokensTotal = 0;
 
 /** Map com ordem de uso: o mais antigo sai quando passa de `max`; item vencido é ignorado e removido. */
 // `arquivo` (opcional, desligado por padrão): guarda o cache em JSON para a próxima rodada reaproveitar.
-function createCache({ d1, max = 500, ttlMs = 24 * 3600e3, agora = () => Date.now(), arquivo = '' } = {}) {
+function createCache({ d1, max = 500, ttlMs = 7 * 24 * 3600e3, agora = () => Date.now(), arquivo = '' } = {}) {
+  if (d1) {
+    const d1Cache = createD1Cache({ d1 });
+    return {
+      async get(k) {
+        const cached = await d1Cache.get(k);
+        if (cached) {
+          hitsCount++;
+          const tok = (cached.usage && cached.usage.total_tokens) || (cached.text ? Math.ceil(cached.text.length / 4) : 150);
+          economiaTokensTotal += tok;
+          return cached;
+        }
+        return undefined;
+      },
+      async set(k, valor) {
+        await d1Cache.set(k, valor);
+      },
+      size: async () => (await d1.prepare('SELECT COUNT(*) as count FROM router_cache').first()).count,
+      stats() {
+        return { hits: hitsCount, economiaTokens: economiaTokensTotal };
+      },
+      resetStats() {
+        hitsCount = 0;
+        economiaTokens = 0;
+      }
+    };
+  }
   if (d1) {
     const d1Cache = createD1Cache({ d1 });
     return {
@@ -92,6 +118,6 @@ function getSharedCache() {
 }
 
 /** Pode usar o cache? Só com req.cache === true e sem ferramentas. */
-const cacheavel = req => !!req && req.cache === true && !(Array.isArray(req.tools) ? req.tools.length : req.tools);
+const cacheavel = req => !!req && req.cache === true && !(Array.isArray(req.tools) ? req.tools.length : req.tools) && !req.clientData;
 
 module.exports = { createCache, getSharedCache, chave, cacheavel, normalizar };
