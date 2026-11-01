@@ -47,6 +47,8 @@ async function atualizaEstado() {
     fs.writeFileSync(filePath, resumo);
 
     console.log('Estado atualizado com sucesso!');
+
+atualizaEstado();
   } catch (error) {
     console.error('Erro ao atualizar estado:', error);
   }
