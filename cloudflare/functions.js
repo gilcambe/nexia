@@ -81,16 +81,35 @@ function getFunction(name) {
         return await handler(event, context, resolvedEnv);
       };
 
+      const wrapHandler = (fn) => {
+        if (typeof fn !== 'function') return fn;
+        return async function(event, context, env) {
+          const resolvedEnv = env || (context && context.env) || (event && event.env) || globalThis.env || {};
+          if (!resolvedEnv.AI) {
+            resolvedEnv.AI = {};
+          }
+          if (event && !event.env) event.env = resolvedEnv;
+          if (context && !context.env) context.env = resolvedEnv;
+          return await fn(event, context, resolvedEnv);
+        };
+      };
+
       if (typeof mod.createHandler === 'function') {
         const originalCreateHandler = mod.createHandler;
         mod.createHandler = function(deps = {}) {
           const handler = originalCreateHandler(deps);
-          return passEnvToHandler(handler);
+          return wrapHandler(handler);
         };
       }
       if (typeof mod.handler === 'function') {
-        mod.handler = passEnvToHandler(mod.handler);
+        mod.handler = wrapHandler(mod.handler);
       }
+      // Garante também exportações customizadas comuns (como run, handle, default, etc.) para cobrir pedidos-acoes / entenderAnexo
+      ['run', 'handle', 'default', 'entenderAnexo', 'executar'].forEach(method => {
+        if (typeof mod[method] === 'function') {
+          mod[method] = wrapHandler(mod[method]);
+        }
+      });
       loaded.set(name, mod);
     }
     catch (e) { console.warn('[FN] ✗', name, '-', e && e.message); loaded.set(name, null); }
