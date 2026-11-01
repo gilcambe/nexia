@@ -20,8 +20,8 @@ class OllamaEngine {
   async chat(prompt: string): Promise<{ response: string; engine: string }> {
     if (config.useWebLLM) {
       try {
-        const response = await webLLMChat.chat(prompt);
-        return { response, engine: 'WebLLM' };
+        const response = await chatWithWebLLM(prompt);
+        return response;
       } catch (error) {
         console.error('WebLLM failed, falling back to Ollama:', error);
         if (config.fallbackToOllama) {
