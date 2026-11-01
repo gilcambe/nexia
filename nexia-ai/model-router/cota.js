@@ -198,4 +198,74 @@ async function salvarNoD1(env = process.env, o = {}) {
   } catch (e) { console.warn('[cota] não salvei o placar no D1:', e && e.message); return false; }
 }
 
-module.exports = { CIRCUITO_FALHAS, createPlacar, getPlacar, parseReset, carregarDoD1, salvarNoD1 };
+// #2719 parte 2 (#2848): créditos internos = quanto cada IA gastou no dia (pedidos, tokens, respostas 429).
+// Chave "provedor:AAAA-MM-DD". "base" veio do D1; "delta" é o que este processo somou. Ao salvar, soma o delta
+// ao que está no D1 agora (dois jobs ao mesmo tempo não apagam a conta um do outro).
+const DOC_USO = 'ia_cota/uso';
+const DIAS_USO = 14;
+const dia = (t = Date.now()) => new Date(t).toISOString().slice(0, 10);
+const somar = (a = {}, b = {}) => ({ requests: (a.requests || 0) + (b.requests || 0), tokens: (a.tokens || 0) + (b.tokens || 0), errors: (a.errors || 0) + (b.errors || 0) });
+function createUso({ agora = () => Date.now() } = {}) {
+  let base = {}; let delta = {};
+  return {
+    /** Soma um uso. errors = respostas 429 (sem cota). */
+    incrementUsage(providerId, inc = {}) {
+      if (!providerId) return;
+      const k = `${providerId}:${dia(agora())}`;
+      delta[k] = somar(delta[k], { requests: Number(inc.requests) || 0, tokens: Math.max(0, Math.round(Number(inc.tokens) || 0)), errors: Number(inc.errors) || 0 });
+    },
+    /** Uso do provedor no dia (padrão: hoje). */
+    getUsage(providerId, date = dia(agora())) { const k = `${providerId}:${date}`; return somar(base[k], delta[k]); },
+    /** Tudo de um dia: { provedor: {requests,tokens,errors} }. */
+    doDia(date = dia(agora())) {
+      const out = {};
+      for (const k of new Set([...Object.keys(base), ...Object.keys(delta)])) {
+        const i = k.lastIndexOf(':'); if (k.slice(i + 1) === date) out[k.slice(0, i)] = somar(base[k], delta[k]);
+      }
+      return out;
+    },
+    importar(obj) { base = {}; if (obj && typeof obj === 'object') for (const [k, v] of Object.entries(obj)) if (v && typeof v === 'object') base[k] = somar(v); },
+    /** Junta o delta ao que veio do D1 agora, guarda só os últimos DIAS_USO dias e zera o delta. */
+    juntar(atualD1) {
+      const limite = dia(agora() - DIAS_USO * 864e5);
+      const out = {};
+      const fonte = atualD1 && typeof atualD1 === 'object' ? atualD1 : base;
+      for (const k of new Set([...Object.keys(fonte), ...Object.keys(delta)])) {
+        if (k.slice(k.lastIndexOf(':') + 1) < limite) continue;
+        out[k] = somar(fonte[k], delta[k]);
+      }
+      base = out; delta = {};
+      return out;
+    },
+    pendente() { return Object.keys(delta).length > 0; },
+  };
+}
+let usoCompartilhado = null;
+function getUso() { if (!usoCompartilhado) usoCompartilhado = createUso(); return usoCompartilhado; }
+const incrementUsage = (id, inc) => getUso().incrementUsage(id, inc);
+const getUsage = (id, date) => getUso().getUsage(id, date);
+
+async function carregarUsoDoD1(env = process.env, o = {}) {
+  try {
+    const d = driverD1(env, o);
+    if (!d) return false;
+    const doc = (await d.get([DOC_USO])).get(DOC_USO);
+    (o.uso || getUso()).importar(doc && doc.fields && doc.fields.uso);
+    return true;
+  } catch (e) { console.warn('[cota] não li o uso do D1:', e && e.message); return false; }
+}
+async function salvarUsoNoD1(env = process.env, o = {}) {
+  try {
+    const d = driverD1(env, o);
+    const u = o.uso || getUso();
+    if (!d || !u.pendente()) return false;
+    const atual = (await d.get([DOC_USO])).get(DOC_USO);
+    const uso = u.juntar((atual && atual.fields && atual.fields.uso) || {});
+    const agora = new Date().toISOString();
+    await d.apply([{ type: 'upsert', path: DOC_USO, fields: { uso }, create_time: (atual && atual.create_time) || agora, update_time: agora }]);
+    return true;
+  } catch (e) { console.warn('[cota] não salvei o uso no D1:', e && e.message); return false; }
+}
+
+module.exports = { CIRCUITO_FALHAS, createPlacar, getPlacar, parseReset, carregarDoD1, salvarNoD1,
+  DOC_USO, createUso, getUso, incrementUsage, getUsage, carregarUsoDoD1, salvarUsoNoD1 };
