@@ -18,6 +18,11 @@ const MAX = 60000;
 
 const paraBase64 = (f: Blob) => new Promise<string>((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result).split(",")[1] ?? ""); r.onerror = () => no(r.error); r.readAsDataURL(f); });
 
+// Função auxiliar para verificar se arquivo é pequeno e pode ser lido localmente
+const ehArquivoTextoPequeno = (f: File): boolean => {
+  return (f.type.startsWith("text/") || /\.(txt|csv|xlsm|xls|ods)$/i.test(f.name)) && f.size <= 100_000;
+};
+
 // Print ou foto: reduz até caber (~40 mil letras) para o pedido não passar do limite do GitHub.
 async function reduzirImagem(f: File): Promise<string> {
   const bmp = await createImageBitmap(f);
@@ -66,14 +71,38 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
   // Qualquer tipo de arquivo: texto/código entra como texto; print/foto é reduzido; o resto vai embutido se for pequeno.
   // #825: foto, PDF, planilha e áudio passam pela IA grátis do servidor (descrição, texto ou transcrição).
   const { agir } = usePedidos();
-  const entender = async (f: File): Promise<string | null> => {
-    if (f.size > 700_000 || !/^(image|audio)\//.test(f.type) && !/\.(pdf|xlsx|xlsm|xls|ods|docx|odt|csv|mp3|m4a|wav|ogg|opus|webm)$/i.test(f.name)) return null;
+  const entender = async (f: File): Promise<{ ok: boolean; texto?: string; tipo?: string }> => {
+    if (f.size > 700_000 || !/^(image|audio)\//.test(f.type) && !/\.(pdf|xlsx|xlsm|xls|ods|docx|odt|csv|mp3|m4a|wav|ogg|opus|webm)$/i.test(f.name)) 
+      return { ok: false };
+    
     try {
       const r = await agir({ acao: "entender", nome: f.name, tipo: f.type, base64: await paraBase64(f) }) as { ok: boolean; texto?: string; tipo?: string };
-      if (!r.ok || !r.texto) return null;
+      if (!r.ok || !r.texto) {
+        const isTextoPequeno = ehArquivoTextoPequeno(f);
+        if (isTextoPequeno) {
+          try {
+            const conteudo = await f.text();
+            return { ok: true, texto: `Arquivo \`${f.name}\`:\n\`\`\`\n${conteudo}\n\`\`\``, tipo: "texto" };
+          } catch {
+            return { ok: false };
+          }
+        }
+        return { ok: false };
+      }
       const como = r.tipo === "imagem" ? "descrição da imagem" : r.tipo === "audio" ? "transcrição do áudio" : "texto do arquivo";
-      return `Anexo \`${f.name}\` (${como}, feita pela IA):\n\`\`\`\n${r.texto}\n\`\`\``;
-    } catch { return null; }
+      return { ok: true, texto: `Anexo \`${f.name}\` (${como}, feita pela IA):\n\`\`\`\n${r.texto}\n\`\`\``, tipo: r.tipo };
+    } catch { 
+      const isTextoPequeno = ehArquivoTextoPequeno(f);
+      if (isTextoPequeno) {
+        try {
+          const conteudo = await f.text();
+          return { ok: true, texto: `Arquivo \`${f.name}\`:\n\`\`\`\n${conteudo}\n\`\`\``, tipo: "texto" };
+        } catch {
+          return { ok: false };
+        }
+      }
+      return { ok: false }; 
+    }
   };
   const anexar = async (f: File | undefined) => {
     if (!f) return;
@@ -81,14 +110,48 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
     try {
       let bloco: string;
       const entendido = await entender(f);
-      if (entendido && f.type.startsWith("image/")) bloco = `![${f.name}](${await reduzirImagem(f).catch(() => "")})\n\n${entendido}`;
-      else if (entendido) bloco = entendido;
-      else if (f.type.startsWith("image/")) bloco = `![${f.name}](${await reduzirImagem(f)})`;
-      else if (f.type.startsWith("text/") || /\.(txt|md|js|ts|tsx|jsx|json|css|html|yml|yaml|csv|log|sql|sh|py|xlsx|xls|ods)$/i.test(f.name)) {
-        if (f.size > 60_000) { setAviso("Esse arquivo de texto passa de 60 KB. Mande só o trecho que importa."); return; }
-        bloco = `Arquivo \`${f.name}\`:\n\`\`\`\n${await f.text()}\n\`\`\``;
+      if (entendido.ok && entendido.texto) {
+        if (f.type.startsWith("image/")) {
+          bloco = `![${f.name}](${await reduzirImagem(f).catch(() => "")})\n\n${entendido.texto}`;
+        } else {
+          bloco = entendido.texto;
+        }
+      } else if (f.type.startsWith("image/")) {
+        try {
+          bloco = `![${f.name}](${await reduzirImagem(f)})`;
+        } catch {
+          setAviso(`Não consegui ler a imagem \`${f.name}\`.`);
+          return;
+        }
+      } else if (ehArquivoTextoPequeno(f) || f.type.startsWith("text/") || /\.(txt|md|js|ts|tsx|jsx|json|css|html|yml|yaml|csv|log|sql|sh|py|xlsx|xls|ods)$/i.test(f.name)) {
+        if (f.size > 60_000) {
+          setAviso("Esse arquivo de texto passa de 60 KB. Mande só o trecho que importa.");
+          return;
+        }
+        try {
+          const conteudoTxt = await f.text();
+          bloco = `Arquivo \`${f.name}\`:\n\`\`\`\n${conteudoTxt}\n\`\`\``;
+        } catch {
+          setAviso(`Não consegui ler o arquivo \`${f.name}\`.`);
+          return;
+        }
       } else {
-        setAviso(`Não consegui ler o arquivo \`${f.name}\`.`); return;
+        const isPdf = f.type.startsWith('application/pdf') || f.name.toLowerCase().endsWith('.pdf');
+        if (isPdf) {
+          setAviso(`Não consegui ler o PDF \`${f.name}\`.`);
+          return;
+        } else if (ehArquivoTextoPequeno(f) || f.type.startsWith('text/') || /\.(txt|csv|xlsm|xls|ods)$/i.test(f.name)) {
+          try {
+            const conteudoTxt = await f.text();
+            bloco = `Arquivo \`${f.name}\`:\n\`\`\`\n${conteudoTxt}\n\`\`\``;
+          } catch {
+            setAviso(`Não consegui ler o arquivo \`${f.name}\`.`);
+            return;
+          }
+        } else {
+          setAviso(`Não consegui ler o arquivo \`${f.name}\`.`);
+          return;
+        }
       }
       setAnexos((a) => [...a, { nome: f.name, md: bloco }]);
     } catch { setAviso(`Não consegui ler o arquivo \`${f.name}\`.`); }
