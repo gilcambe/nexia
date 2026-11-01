@@ -146,6 +146,14 @@ test('CF-URGENTE. cortex-urgente (pedido do dono agora) passa na frente de corte
   assert.deepEqual(a.map(x => x.numero), [50, 1]);
 });
 
+test('CF-HERDA. tarefa urgente dividida passa cortex-urgente para as partes', () => {
+  const corpo = 'Faça algo em src/a.js. ' + 'z'.repeat(3000);
+  const a = decidir({ issues: [issue(70, ['cortex-fila', 'cortex-urgente'], { body: corpo })], runs: [], agora: AGORA });
+  const d = a.find(x => x.tipo === 'dividir');
+  assert.ok(d, 'deveria dividir');
+  assert.deepEqual(d.herdar, ['cortex-urgente']);
+});
+
 test('CF-VAZAO. padrão de 6 pistas; parte anterior travada não segura as seguintes', () => {
   const a = decidir({ issues: [1, 2, 3, 4, 5, 6, 7].map(n => issue(n)), runs: [], agora: AGORA });
   assert.strictEqual(a.filter(x => x.tipo === 'despachar').length, 6);
