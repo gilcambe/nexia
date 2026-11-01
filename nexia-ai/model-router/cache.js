@@ -4,7 +4,7 @@
 const { createHash } = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
-const { createD1Cache } = require('../../src/db/d1Cache');
+const { createD1Cache } = require('../../src/db/d1Cache'); // Cache permanente no Cloudflare D1
 
 // #830: chave "semântica" = texto normalizado (espaços, quebras de linha e maiúsculas não mudam a pergunta).
 const normalizar = t => String(t == null ? '' : typeof t === 'string' ? t : JSON.stringify(t)).replace(/\s+/g, ' ').trim().toLowerCase();
