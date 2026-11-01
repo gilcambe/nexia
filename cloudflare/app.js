@@ -46,6 +46,7 @@ function populateProcessEnv(env) {
   if (env && env.COFRE_SQL) globalThis.__NEXIA_COFRE__ = env.COFRE_SQL;
   if (env && env.SELF) globalThis.__NEXIA_SELF__ = env.SELF;
   if (env && env.SELF) globalThis.__NEXIA_SELF__ = env.SELF;
+  if (env && env.SELF) globalThis.__NEXIA_SELF__ = env.SELF;
 }
 
 async function readBody(request) {
