@@ -55,6 +55,9 @@ function ListaPedidos({ itens, abrir, fazer }: { itens: Resumo[]; abrir: (n: num
             {t.situacao === "travado" && (
               <button type="button" onClick={(e) => { e.stopPropagation(); fazer({ acao: "tentar", n: t.numero }); }} className="h-8 px-2.5 rounded-lg bg-[var(--cx-ac)] text-black text-xs font-semibold" data-testid="cx-lista-tentar">Tentar de novo</button>
             )}
+            {t.situacao === "travado" && (
+              <button type="button" onClick={(e) => { e.stopPropagation(); fazer({ acao: "reserva", n: t.numero }); }} className="h-8 px-2.5 rounded-lg border border-[var(--cx-ac)] text-xs font-semibold" data-testid="cx-lista-reserva">Ajuda das IAs conectadas</button>
+            )}
             {t.situacao !== "feito" && t.situacao !== "fechado" ? (
               <button type="button" onClick={(e) => { e.stopPropagation(); if (confirm("Cancelar este pedido?")) fazer({ acao: "cancelar", n: t.numero }); }} className="h-8 px-2.5 rounded-lg border border-[var(--cx-line)] text-xs" data-testid="cx-lista-cancelar">Cancelar</button>
             ) : (
@@ -134,31 +137,25 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
     localStorage.setItem('cx-socorro-jules', JSON.stringify(newValue));
   };
 
+  // #2718: o socorro passa pelo mesmo /api/pedidos (antes chamava /api/central/socorro, que não existe).
   const socorro = async () => {
     setSocorroMsg(null);
     setSocorroLinks([]);
     setSocorroStatus(null);
     try {
-      const response = await fetch('/api/central/socorro', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jules }),
-      });
-      const data = await response.json();
-      if (response.ok) {
-        setSocorroMsg(`Mandei ${data.total} tarefas: ${data.ias} para as IAs conectadas e ${data.jules} para o Jules`);
-        setSocorroLinks(data.links || []);
-        setSocorroStatus(`Travadas: ${data.travadas}, enviadas para o Jules: ${data.jules}, última execução: ${data.ultimaExecucao}`);
-      } else {
-        if (data.error && data.error.includes('quota')) {
-          setErro('A cota da Groq foi excedida. Tente novamente mais tarde.');
-        } else {
-          setErro(data.error || 'Erro ao processar o socorro.');
-        }
-      }
+      const data = (await agir({ acao: "socorro", jules })) as unknown as { total: number; ias: number; jules: number; travadas: number; links: { numero: number; titulo: string }[] };
+      setSocorroMsg(data.total ? `Mandei ${data.total} tarefa(s): ${data.ias} para as IAs conectadas e ${data.jules} para o Jules.` : "Nenhuma tarefa travada precisava de ajuda agora.");
+      setSocorroLinks(data.links || []);
+      setSocorroStatus(`Travadas olhadas: ${data.travadas}.`);
     } catch (e) {
       setErro((e as Error).message);
     }
+  };
+
+  // Botão de emergência: pausa a fila inteira (o que roda termina; nada novo começa).
+  const emergencia = async (pausar: boolean) => {
+    if (pausar && !confirm("Parar a fila do Cortex agora? O que já está rodando termina, mas nada novo começa.")) return;
+    try { const r = await agir({ acao: pausar ? "pausar-fila" : "voltar-fila" }); setMsg(r.mensagem); } catch (e) { setErro((e as Error).message); }
   };
 
   return (
@@ -189,6 +186,10 @@ export function Tarefas({ abrir }: { abrir: (n: number) => void }) {
         <div className="flex items-center gap-2 mt-3">
           <label className="text-sm">Incluir o Jules</label>
           <input type="checkbox" checked={jules} onChange={handleJulesChange} className="h-5 w-5" />
+        </div>
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          <button type="button" onClick={() => emergencia(true)} className="h-10 rounded-xl border border-red-400 text-red-500 text-sm font-semibold" data-testid="cx-parar-tudo">🛑 Parar tudo</button>
+          <button type="button" onClick={() => emergencia(false)} className="h-10 rounded-xl border border-[var(--cx-line)] text-sm" data-testid="cx-voltar-rodar">▶ Voltar a rodar</button>
         </div>
         {socorroMsg && <p className="text-sm text-[var(--cx-ac)] mt-2">{socorroMsg}</p>}
         {socorroLinks.length > 0 && (

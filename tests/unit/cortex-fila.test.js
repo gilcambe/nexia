@@ -146,6 +146,12 @@ test('CF-URGENTE. cortex-urgente (pedido do dono agora) passa na frente de corte
   assert.deepEqual(a.map(x => x.numero), [50, 1]);
 });
 
+test('CF-PAUSA. issue fila-pausada (botão de emergência) segura novos despachos', () => {
+  const a = decidir({ issues: [issue(1), issue(2), issue(99, ['cortex-fila', 'fila-pausada'])], runs: [], agora: AGORA });
+  assert.equal(a.filter(x => x.tipo === 'despachar').length, 0);
+  assert.equal(decidir({ issues: [issue(1)], runs: [], agora: AGORA }).filter(x => x.tipo === 'despachar').length, 1);
+});
+
 test('CF-HERDA. tarefa urgente dividida passa cortex-urgente para as partes', () => {
   const corpo = 'Faça algo em src/a.js. ' + 'z'.repeat(3000);
   const a = decidir({ issues: [issue(70, ['cortex-fila', 'cortex-urgente'], { body: corpo })], runs: [], agora: AGORA });

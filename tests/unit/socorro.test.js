@@ -1,119 +1,71 @@
 'use strict';
+// #2324 + #2718: socorro, botão de emergência e "ajuda das IAs conectadas" por tarefa.
+// (Antes este teste trocava um "rodar" de central/github.js que não existe; no servidor o socorro quebrava.)
 const test = require('node:test');
-const assert = require('node:assert');
+const assert = require('node:assert/strict');
 
 const CAMINHO_ACOES = '../../netlify/functions/central/pedidos-acoes.js';
 const CAMINHO_JULES = '../../netlify/functions/central/pedidos-jules.js';
-const CAMINHO_GITHUB = '../../netlify/functions/central/github.js';
 
-// --- Mock do objeto p (com metodo gh) ---
-const chamadasGh = [];
-const mockGh = async function(url, options = {}) {
-  chamadasGh.push({ url, options });
-  if (url === '/repos/gilcambe/nexia/issues') {
-    return [
-      { number: 1, title: 'Issue 1 travada', html_url: 'https://github.com/gilcambe/nexia/issues/1', labels: [{ name: 'cortex-travado' }], updated_at: new Date(Date.now() - 2 * 36e5).toISOString(), body: '' },
-      { number: 2, title: 'Issue 2 travada', html_url: 'https://github.com/gilcambe/nexia/issues/2', labels: [{ name: 'cortex-travado' }, { name: 'reserva-tentou' }], updated_at: new Date(Date.now() - 2 * 36e5).toISOString(), body: '' },
-      { number: 3, title: 'Issue 3 travada (duas reservas)', html_url: 'https://github.com/gilcambe/nexia/issues/3', labels: [{ name: 'cortex-travado' }, { name: 'reserva-tentativa-1' }, { name: 'reserva-tentativa-2' }], updated_at: new Date(Date.now() - 8 * 36e5).toISOString(), body: '' },
-      { number: 4, title: 'Issue 4 travada (duas reservas)', html_url: 'https://github.com/gilcambe/nexia/issues/4', labels: [{ name: 'cortex-travado' }, { name: 'reserva-tentativa-1' }, { name: 'reserva-tentativa-2' }], updated_at: new Date(Date.now() - 10 * 36e5).toISOString(), body: '' },
-      { number: 5, title: 'Issue 5 menciona .github/workflows/ no titulo', html_url: 'https://github.com/gilcambe/nexia/issues/5', labels: [{ name: 'cortex-travado' }], updated_at: new Date(Date.now() - 1 * 36e5).toISOString(), body: '' }
-    ];
-  }
-  // getIssue: /repos/gilcambe/nexia/issues/N
-  const m = url.match(/\/repos\/gilcambe\/nexia\/issues\/(\d+)$/);
-  if (m) {
-    const n = Number(m[1]);
-    const base = await mockGh('/repos/gilcambe/nexia/issues');
-    return base.find(i => i.number === n) || {};
-  }
-  // addLabels: POST /repos/gilcambe/nexia/issues/N/labels
-  if (url.endsWith('/labels') && options.method === 'POST') {
-    return { success: true };
-  }
-  return {};
-};
+const h = (n) => new Date(Date.now() - n * 36e5).toISOString();
+const TRAVADAS = [
+  { number: 1, title: 'Issue 1', html_url: 'u1', labels: [{ name: 'cortex-travado' }], updated_at: h(2) },
+  { number: 2, title: 'Issue 2 (reserva acabou de tentar)', html_url: 'u2', labels: [{ name: 'cortex-travado' }, { name: 'reserva-tentou' }], updated_at: h(2) },
+  { number: 3, title: 'Issue 3', html_url: 'u3', labels: [{ name: 'cortex-travado' }, { name: 'reserva-tentativa-1' }, { name: 'reserva-tentativa-2' }], updated_at: h(8) },
+  { number: 5, title: 'Mexe em .github/workflows/x.yml', html_url: 'u5', labels: [{ name: 'cortex-travado' }], updated_at: h(1) },
+];
 
-const p = { gh: mockGh };
-
-let chamadasJules = 0;
-let chamadasRodar = 0;
-const mockMandarParaJules = async function() { chamadasJules++; return { status: 200, corpo: { ok: true } }; };
-const mockRodar = async function() { chamadasRodar++; return { success: true }; };
-
-function injetarMocks() {
-  require.cache[require.resolve(CAMINHO_JULES)] = { exports: { mandarParaJules: mockMandarParaJules, montarPrompt: () => {}, REGRAS: '' } };
-  require.cache[require.resolve(CAMINHO_GITHUB)] = { exports: { rodar: mockRodar } };
-}
-
-function limparCache() {
+function montar() {
+  const chamadas = [];
+  let julesN = 0;
+  require.cache[require.resolve(CAMINHO_JULES)] = { exports: { mandarParaJules: async () => { julesN++; return { status: 200, corpo: { ok: true } }; } } };
   delete require.cache[require.resolve(CAMINHO_ACOES)];
-  delete require.cache[require.resolve(CAMINHO_JULES)];
-  delete require.cache[require.resolve(CAMINHO_GITHUB)];
+  const acoes = require(CAMINHO_ACOES);
+  const pausas = [];
+  const p = { gh: async (url, init = {}) => {
+    chamadas.push({ url, metodo: init.method || 'GET', corpo: init.body ? JSON.parse(init.body) : null });
+    if (url.includes('labels=cortex-travado')) return TRAVADAS;
+    if (url.includes('labels=fila-pausada')) return pausas;
+    if (url.endsWith('/issues') && init.method === 'POST') { pausas.push({ number: 77 }); return { number: 77 }; }
+    return {};
+  } };
+  return { acoes, p, chamadas, jules: () => julesN };
 }
+const despachos = (c) => c.filter((x) => x.url.endsWith('/actions/workflows/cortex-reserva.yml/dispatches'));
 
-function reset() {
-  chamadasGh.length = 0;
-  chamadasJules = 0;
-  chamadasRodar = 0;
-}
-
-test('socorro: jules true - 3 para Jules, 0 para reserva', async () => {
-  reset();
-  limparCache();
-  injetarMocks();
-  const { socorro } = require(CAMINHO_ACOES);
-  const resultado = await socorro(p, { jules: true });
-  const paraJules = resultado.filter(r => r.para === 'jules');
-  const paraReserva = resultado.filter(r => r.para === 'reserva');
-  assert.strictEqual(paraJules.length, 3, 'deve enviar 3 ao Jules (issues 3, 4, 5)');
-  assert.strictEqual(chamadasJules, 3, 'deve chamar mandarParaJules 3 vezes');
-  assert.strictEqual(paraReserva.length, 0, 'com jules true nao deve enviar para reserva');
-  // Verificar quais issues foram para Jules (3, 4, 5)
-  const numerosJules = paraJules.map(r => r.numero).sort();
-  assert.deepStrictEqual(numerosJules, [3, 4, 5], 'issues 3, 4, 5 devem ir para Jules');
-  for (const r of resultado) {
-    assert.ok(typeof r.numero === 'number', 'numero deve existir');
-    assert.ok(typeof r.titulo === 'string', 'titulo deve existir');
-    assert.ok(typeof r.para === 'string', 'para deve existir');
-    assert.ok(typeof r.link === 'string', 'link deve existir');
-  }
+test('SOS1. sem Jules: travadas vão para as IAs conectadas (pula a que a reserva acabou de tentar)', async () => {
+  const m = montar();
+  const r = await m.acoes.agir(m.p, { acao: 'socorro', jules: false }, 'dono');
+  assert.equal(r.status, 200);
+  assert.equal(r.corpo.ias, 3);
+  assert.equal(r.corpo.jules, 0);
+  assert.deepEqual(despachos(m.chamadas).map((x) => x.corpo.inputs.numero), ['1', '3', '5']);
+  assert.ok(m.chamadas[0].url.includes('?state=open&labels=cortex-travado'), 'lista por query string, não por corpo de GET');
 });
 
-test('socorro: jules false - 0 para Jules, 3 para reserva', async () => {
-  reset();
-  limparCache();
-  injetarMocks();
-  const { socorro } = require(CAMINHO_ACOES);
-  const resultado = await socorro(p, { jules: false });
-  const paraJules = resultado.filter(r => r.para === 'jules');
-  const paraReserva = resultado.filter(r => r.para === 'reserva');
-  assert.strictEqual(paraJules.length, 0, 'nenhuma issue deve ir ao Jules');
-  assert.strictEqual(chamadasRodar, 3, 'deve chamar rodar 3 vezes (uma para cada issue 3, 4, 5)');
-  assert.strictEqual(paraReserva.length, 3, '3 issues (3, 4, 5) devem ir para reserva');
-  // Verificar quais issues foram para reserva (3, 4, 5)
-  const numerosReserva = paraReserva.map(r => r.numero).sort();
-  assert.deepStrictEqual(numerosReserva, [3, 4, 5], 'issues 3, 4, 5 devem ir para reserva');
+test('SOS2. com Jules: workflow e 2x reserva vão ao Jules; o resto às IAs conectadas', async () => {
+  const m = montar();
+  const r = await m.acoes.agir(m.p, { acao: 'socorro', jules: true }, 'dono');
+  assert.equal(r.corpo.jules, 2);
+  assert.equal(r.corpo.ias, 1);
+  assert.equal(m.jules(), 2);
 });
 
-test('socorro: reserva-tentou nas ultimas 6h e ignorada', async () => {
-  reset();
-  limparCache();
-  injetarMocks();
-  const { socorro } = require(CAMINHO_ACOES);
-  const resultado = await socorro(p, { jules: true });
-  const numeros = resultado.map(r => r.numero);
-  assert.ok(!numeros.includes(2), 'issue 2 com reserva-tentou nas 6h deve ser ignorada');
-  assert.ok(numeros.includes(5), 'issue 5 (workflow) deve ser processada');
-  assert.ok(chamadasGh.some(c => c.url === '/repos/gilcambe/nexia/issues'), 'deve listar issues');
+test('SOS3. ajuda das IAs conectadas numa tarefa dispara a Reserva com o número', async () => {
+  const m = montar();
+  const r = await m.acoes.agir(m.p, { acao: 'reserva', n: 42 }, 'dono');
+  assert.equal(r.status, 200);
+  assert.deepEqual(despachos(m.chamadas)[0].corpo, { ref: 'develop', inputs: { numero: '42' } });
 });
 
-test('socorro: getIssue e addLabels estao disponíveis no mock gh', async () => {
-  reset();
-  limparCache();
-  injetarMocks();
-  const { socorro } = require(CAMINHO_ACOES);
-  const issue5 = await p.gh('/repos/gilcambe/nexia/issues/5');
-  assert.strictEqual(issue5.number, 5, 'getIssue deve retornar a issue 5');
-  await p.gh('/repos/gilcambe/nexia/issues/5/labels', { method: 'POST', body: JSON.stringify({ labels: ['teste'] }) });
-  assert.ok(chamadasGh.some(c => c.url.endsWith('/labels') && c.options.method === 'POST'), 'addLabels deve ser chamada via gh');
+test('SOS4. botão de emergência abre a issue fila-pausada uma vez e "voltar" fecha', async () => {
+  const m = montar();
+  await m.acoes.agir(m.p, { acao: 'pausar-fila' }, 'dono');
+  await m.acoes.agir(m.p, { acao: 'pausar-fila' }, 'dono');
+  const criadas = m.chamadas.filter((x) => x.url.endsWith('/issues') && x.metodo === 'POST');
+  assert.equal(criadas.length, 1);
+  assert.deepEqual(criadas[0].corpo.labels, ['cortex-fila', 'fila-pausada']);
+  const r = await m.acoes.agir(m.p, { acao: 'voltar-fila' }, 'dono');
+  assert.equal(r.corpo.pausada, false);
+  assert.ok(m.chamadas.some((x) => x.url.endsWith('/issues/77') && x.metodo === 'PATCH' && x.corpo.state === 'closed'));
 });
