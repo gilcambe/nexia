@@ -84,12 +84,14 @@ function getFunction(name) {
       const wrapHandler = (fn) => {
         if (typeof fn !== 'function') return fn;
         return async function(event, context, env) {
+          // Garante que o env e a binding AI estejam sempre presentes e injetados corretamente
           const resolvedEnv = env || (context && context.env) || (event && event.env) || globalThis.env || {};
           if (!resolvedEnv.AI) {
             resolvedEnv.AI = {};
           }
           if (event && !event.env) event.env = resolvedEnv;
           if (context && !context.env) context.env = resolvedEnv;
+          // Injeta explicitamente o env no escopo global ou em propriedades adicionais se necessário para garantir robustez em pedidos-acoes e entenderAnexo
           return await fn(event, context, resolvedEnv);
         };
       };
