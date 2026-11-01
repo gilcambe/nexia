@@ -53,8 +53,8 @@ const LOADERS = {
   'whatsapp-business': () => require('../netlify/functions/whatsapp-business.js'),
   'central': () => require('../netlify/functions/central.js'),
   'pedidos': () => require('../netlify/functions/pedidos.js'),
-  'pedidos-acoes': () => require('../netlify/functions/central/pedidos-acoes.js'),
-  'entender-anexo': () => require('../netlify/functions/central/entender-anexo.js'),
+  'pedidos-acoes': () => require('../netlify/functions/pedidos-acoes.js'),
+  'entender-anexo': () => require('../netlify/functions/entender-anexo.js'),
   'nexia-api': () => require('../nexia-ai/api/index.js'),
 };
 
