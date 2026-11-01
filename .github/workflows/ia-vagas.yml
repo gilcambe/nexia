@@ -39,4 +39,44 @@ jobs:
           IA_VAGA_8: ${{ secrets.IA_VAGA_8 }}
           IA_VAGA_9: ${{ secrets.IA_VAGA_9 }}
           IA_VAGA_10: ${{ secrets.IA_VAGA_10 }}
+          IA_VAGA_11: ${{ secrets.IA_VAGA_11 }}
+          IA_VAGA_12: ${{ secrets.IA_VAGA_12 }}
+          IA_VAGA_13: ${{ secrets.IA_VAGA_13 }}
+          IA_VAGA_14: ${{ secrets.IA_VAGA_14 }}
+          IA_VAGA_15: ${{ secrets.IA_VAGA_15 }}
+          IA_VAGA_16: ${{ secrets.IA_VAGA_16 }}
+          IA_VAGA_17: ${{ secrets.IA_VAGA_17 }}
+          IA_VAGA_18: ${{ secrets.IA_VAGA_18 }}
+          IA_VAGA_19: ${{ secrets.IA_VAGA_19 }}
+          IA_VAGA_20: ${{ secrets.IA_VAGA_20 }}
+          IA_VAGA_21: ${{ secrets.IA_VAGA_21 }}
+          IA_VAGA_22: ${{ secrets.IA_VAGA_22 }}
+          IA_VAGA_23: ${{ secrets.IA_VAGA_23 }}
+          IA_VAGA_24: ${{ secrets.IA_VAGA_24 }}
+          IA_VAGA_25: ${{ secrets.IA_VAGA_25 }}
+          IA_VAGA_26: ${{ secrets.IA_VAGA_26 }}
+          IA_VAGA_27: ${{ secrets.IA_VAGA_27 }}
+          IA_VAGA_28: ${{ secrets.IA_VAGA_28 }}
+          IA_VAGA_29: ${{ secrets.IA_VAGA_29 }}
+          IA_VAGA_30: ${{ secrets.IA_VAGA_30 }}
+          IA_VAGA_31: ${{ secrets.IA_VAGA_31 }}
+          IA_VAGA_32: ${{ secrets.IA_VAGA_32 }}
+          IA_VAGA_33: ${{ secrets.IA_VAGA_33 }}
+          IA_VAGA_34: ${{ secrets.IA_VAGA_34 }}
+          IA_VAGA_35: ${{ secrets.IA_VAGA_35 }}
+          IA_VAGA_36: ${{ secrets.IA_VAGA_36 }}
+          IA_VAGA_37: ${{ secrets.IA_VAGA_37 }}
+          IA_VAGA_38: ${{ secrets.IA_VAGA_38 }}
+          IA_VAGA_39: ${{ secrets.IA_VAGA_39 }}
+          IA_VAGA_40: ${{ secrets.IA_VAGA_40 }}
+          IA_VAGA_41: ${{ secrets.IA_VAGA_41 }}
+          IA_VAGA_42: ${{ secrets.IA_VAGA_42 }}
+          IA_VAGA_43: ${{ secrets.IA_VAGA_43 }}
+          IA_VAGA_44: ${{ secrets.IA_VAGA_44 }}
+          IA_VAGA_45: ${{ secrets.IA_VAGA_45 }}
+          IA_VAGA_46: ${{ secrets.IA_VAGA_46 }}
+          IA_VAGA_47: ${{ secrets.IA_VAGA_47 }}
+          IA_VAGA_48: ${{ secrets.IA_VAGA_48 }}
+          IA_VAGA_49: ${{ secrets.IA_VAGA_49 }}
+          IA_VAGA_50: ${{ secrets.IA_VAGA_50 }}
         run: node scripts/ia-vagas-teste.js
