@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCentral, PARTES, haQuanto } from "./api";
-import type { Dados, Parte, Tarefa, TarefaGratis } from "./api"; // Importar TarefaGratis
+import type { Dados, Parte, Tarefa, TarefaGratis } from "./api";
 import { calcularAvisos } from "./avisos";
 import type { Aba } from "./avisos";
 import Painel from "./Painel";
@@ -49,7 +49,7 @@ const ACESSO_RAPIDO = [
 export default function CentralPage() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { buscar } = useCentral();
+  const { buscar, enviarTarefasParaContas } = useCentral(); // Adicionado enviarTarefasParaContas
   const [aba, setAba] = useState<Aba>(() => ({ produtos: "clientes" } as Record<string, Aba>)[location.hash.slice(1)] || (location.hash.slice(1) as Aba) || "inicio");
   const [d, setD] = useState<Dados>({});
   const [erros, setErros] = useState<Partial<Record<Parte, string>>>({});
@@ -57,13 +57,11 @@ export default function CentralPage() {
   const [conferidoEm, setConferidoEm] = useState<string | null>(null);
   const celular = useCelular();
   const [busca, setBusca] = useState("");
-  // Alerta aberto: undefined = fechado; null = lista de todos; número = um alerta.
   const [alerta, setAlerta] = useState<number | null | undefined>(undefined);
   const [versaoNova, setVersaoNova] = useState(false);
 
   const conferir = useCallback(async () => {
     setCarregando(true); setErros({});
-    // No máximo 3 pedidos ao mesmo tempo: 11 de uma vez derrubavam as partes mais pesadas no celular ("Failed to fetch").
     const fila = [...PARTES];
     const trabalhador = async () => {
       for (let p = fila.shift(); p; p = fila.shift()) {
@@ -76,7 +74,6 @@ export default function CentralPage() {
     await Promise.all([trabalhador(), trabalhador(), trabalhador()]);
     setCarregando(false);
     setConferidoEm(new Date().toISOString());
-    // Aba aberta há muito tempo fica com a tela antiga: compara o script da página publicada com o desta aba.
     try {
       const html = await (await fetch(location.pathname, { cache: "no-store" })).text();
       const publicado = (html.match(/\/assets\/index-[\w-]+\.js/) || [])[0];
@@ -89,7 +86,14 @@ export default function CentralPage() {
   const ir = (a: Aba) => { setAba(a); history.replaceState(null, "", `#${a}`); window.scrollTo(0, 0); };
   const avisos = useMemo(() => calcularAvisos(d), [d]);
 
-  // Com a Central aberta, confere de novo a cada 5 minutos e avisa no aparelho quando algo novo fica vermelho.
+  // Nova função para enviar tarefas para contas
+  const enviarTarefas = async () => {
+    if (d.cortex?.gratuitas) {
+      await enviarTarefasParaContas(d.cortex.gratuitas);
+      conferir(); // Atualiza os dados após enviar as tarefas
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
     const t = setInterval(conferir, 5 * 60000);
@@ -223,6 +227,7 @@ export default function CentralPage() {
                     </div>
                   </Grupo>
                   <BotaoAvisar />
+                  <button onClick={enviarTarefas} className="w-full bg-indigo-600 text-white py-2 rounded-lg">Enviar Tarefas para Contas</button>
                 </div>
               )}
               {aba !== "inicio" && aba !== "mais" && (
@@ -256,13 +261,4 @@ export default function CentralPage() {
                   className={`relative pt-2 pb-1.5 flex flex-col items-center gap-1 text-[11px] cursor-pointer ${ativa ? "text-indigo-700 font-semibold" : "text-slate-500"}`}>
                   <span className={`flex items-center justify-center w-14 h-8 rounded-full transition-colors ${ativa ? "bg-indigo-100" : ""}`}><Icone nome={a.icone} className="w-6 h-6" /></span>
                   {a.nome}
-                  {a.id === "inicio" && avisos.length > 0 && <span className="absolute top-1.5 left-1/2 ml-3 w-2 h-2 rounded-full bg-amber-400 ring-2 ring-white" />}
-                </button>
-              );
-            })}
-          </div>
-        </nav>
-      )}
-    </div>
-  );
-}
+                  {
