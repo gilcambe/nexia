@@ -4,6 +4,10 @@
 // #1824: cache no D1 (7 dias) para respostas SEM ferramentas e SEM dados de cliente.
 const { D1Database } = require('@cloudflare/workers-types');
 const { createEmbedding } = require('@cf/baai/bge-small-en-v1.5');
+
+// #1824: cache no D1 (7 dias) para respostas SEM ferramentas e SEM dados de cliente.
+const { D1Database } = require('@cloudflare/workers-types');
+const { createEmbedding } = require('@cf/baai/bge-small-en-v1.5');
 =======
 const { createHash } = require('node:crypto');
 const fs = require('node:fs');
