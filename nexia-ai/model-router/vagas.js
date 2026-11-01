@@ -33,7 +33,21 @@ function valorCustom({ url, modelo, chave }) {
 }
 
 /** Todas as vagas preenchidas, em ordem de número. */
-function lerVagas(env = process.env) {
+function lerVagas(env = process.env, estado = {}) {
+  const out = [];
+  for (let n = 1; n <= MAX_VAGAS; n++) {
+    const v = String((env && env[`IA_VAGA_${n}`]) || '').trim();
+    const i = v.indexOf(':');
+    if (i < 1) continue;
+    const provedor = v.slice(0, i);
+    const resto = v.slice(i + 1);
+    const vagaEstado = estado[n] || {};
+    if (vagaEstado.pausada) continue;
+    if (provedor === 'custom') { const c = lerCustom(resto); if (c) out.push({ n, provedor, ...c, ordem: vagaEstado.ordem || 0 }); continue; }
+    if (ENV_DO_PROVEDOR[provedor] && resto) out.push({ n, provedor, chave: resto, ordem: vagaEstado.ordem || 0 });
+  }
+  return out.sort((a, b) => a.ordem - b.ordem);
+}
   const out = [];
   for (let n = 1; n <= MAX_VAGAS; n++) {
     const v = String((env && env[`IA_VAGA_${n}`]) || '').trim();
