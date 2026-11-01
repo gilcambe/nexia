@@ -42,3 +42,36 @@ test('C5c. "Pedir tarefa" manda pergunta para "Perguntar agora"; "Virar pedido" 
   assert.match(perg, /\?parte=cortex/);
   assert.match(perg, /primeira/);
 });
+
+test('C5d. ehPedidoDeCodigo detecta corretamente textos com palavras de código', async () => {
+  const { ehPedidoDeCodigo } = await carregar();
+  // Testes com palavras relacionadas a alterações de projeto/sistema
+  assert.equal(ehPedidoDeCodigo('criar uma nova tela de login'), true);
+  assert.equal(ehPedidoDeCodigo('corrigir bug no app'), true);
+  assert.equal(ehPedidoDeCodigo('mudar o botão do site'), true);
+  assert.equal(ehPedidoDeCodigo('deploy no repositório'), true);
+  assert.equal(ehPedidoDeCodigo('publicar nova versão'), true);
+  assert.equal(ehPedidoDeCodigo('issue no painel'), true);
+  assert.equal(ehPedidoDeCodigo('criar PR para o tenant'), true);
+  assert.equal(ehPedidoDeCodigo('ajustar Body Coach'), true);
+  assert.equal(ehPedidoDeCodigo('configurar Splash'), true);
+  assert.equal(ehPedidoDeCodigo('atualizar Central'), true);
+  assert.equal(ehPedidoDeCodigo('código com erro'), true);
+  assert.equal(ehPedidoDeCodigo('repositório git'), true);
+  
+  // Testes com textos que não são pedidos de código
+  assert.equal(ehPedidoDeCodigo('qual o clima hoje?'), false);
+  assert.equal(ehPedidoDeCodigo('como estão as coisas?'), false);
+  assert.equal(ehPedidoDeCodigo('quantas tarefas existem?'), false);
+  assert.equal(ehPedidoDeCodigo('o que é uma API?'), false);
+  assert.equal(ehPedidoDeCodigo(''), false);
+  assert.equal(ehPedidoDeCodigo(' '), false);
+  assert.equal(ehPedidoDeCodigo('texto sem palavras relacionadas'), false);
+});
+  const page = fs.readFileSync(path.join(DIR, 'page.tsx'), 'utf8');
+  assert.match(page, /!forcarPedido && !ehPedidoDeCodigo\(texto\)/);
+  assert.match(page, /setForcarPedido\(true\)/);
+  const perg = fs.readFileSync(path.join(DIR, 'Pergunta.tsx'), 'utf8');
+  assert.match(perg, /\?parte=cortex/);
+  assert.match(perg, /primeira/);
+});
