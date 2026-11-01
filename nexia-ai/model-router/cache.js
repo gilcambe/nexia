@@ -4,6 +4,7 @@
 const { createHash } = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const { createD1Cache } = require('../../src/db/d1Cache');
 
 // #830: chave "semântica" = texto normalizado (espaços, quebras de linha e maiúsculas não mudam a pergunta).
 const normalizar = t => String(t == null ? '' : typeof t === 'string' ? t : JSON.stringify(t)).replace(/\s+/g, ' ').trim().toLowerCase();
@@ -20,7 +21,34 @@ let economiaTokensTotal = 0;
 
 /** Map com ordem de uso: o mais antigo sai quando passa de `max`; item vencido é ignorado e removido. */
 // `arquivo` (opcional, desligado por padrão): guarda o cache em JSON para a próxima rodada reaproveitar.
-function createCache({ max = 500, ttlMs = 24 * 3600e3, agora = () => Date.now(), arquivo = '' } = {}) {
+function createCache({ d1, max = 500, ttlMs = 24 * 3600e3, agora = () => Date.now(), arquivo = '' } = {}) {
+  if (d1) {
+    const d1Cache = createD1Cache({ d1 });
+    return {
+      async get(k) {
+        const cached = await d1Cache.get(k);
+        if (cached) {
+          hitsCount++;
+          const tok = (cached.usage && cached.usage.total_tokens) || (cached.text ? Math.ceil(cached.text.length / 4) : 150);
+          economiaTokensTotal += tok;
+          return cached;
+        }
+        return undefined;
+      },
+      async set(k, valor) {
+        await d1Cache.set(k, valor);
+      },
+      size: async () => (await d1.prepare('SELECT COUNT(*) as count FROM router_cache').first()).count,
+      stats() {
+        return { hits: hitsCount, economiaTokens: economiaTokensTotal };
+      },
+      resetStats() {
+        hitsCount = 0;
+        economiaTokens = 0;
+      }
+    };
+  }
+=======
   const m = new Map();
   if (arquivo) {
     try { for (const [k, e] of Object.entries(JSON.parse(fs.readFileSync(arquivo, 'utf8')))) if (e && e.ate > agora()) m.set(k, e); } catch { /* sem arquivo ainda */ }
