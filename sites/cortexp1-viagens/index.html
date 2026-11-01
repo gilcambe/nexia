@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cortexp1 Painel de Viagens — Cadastre viagens, passageiros e pagamentos em um só painel</title>
+  <meta name="description" content="Cadastre viagens, passageiros e pagamentos em um só painel">
+  <meta name="theme-color" content="#0f4c81">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>try{if(localStorage.getItem('nexia-theme')==='dark')document.documentElement.dataset.theme='dark'}catch(e){}</script>
+</head>
+<body>
+  <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar" aria-label="Menu do sistema">
+      <div class="sidebar__brand">
+        <span class="logo" aria-hidden="true">C</span>
+        <span>Cortexp1 Painel de Viagens</span>
+      </div>
+      <nav class="sidebar__nav" aria-label="Seções">
+        <a href="#/painel" data-route="painel"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 3 3 5-6"/></svg><span>Painel</span></a>
+        <a href="#/passageiros" data-route="passageiros"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg><span>Passageiros</span></a>
+        <a href="#/viagens" data-route="viagens"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span>Viagens</span></a>
+        <a href="#/pagamentos" data-route="pagamentos"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg><span>Pagamentos</span></a>
+      </nav>
+      <div class="sidebar__foot">
+        <p>Suporte: suporte@cortexp1.com.br</p>
+        <p>Dados salvos neste navegador.</p>
+      </div>
+    </aside>
+    <div class="backdrop" data-close-menu hidden></div>
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn menu-btn" type="button" aria-label="Abrir menu" aria-expanded="false" aria-controls="sidebar"><svg class="i" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+        <div class="topbar__title">
+          <h1 id="view-title">Painel</h1>
+          <p id="view-sub">Cadastre viagens, passageiros e pagamentos em um só painel</p>
+        </div>
+        <label class="search">
+          <span class="sr-only">Buscar</span>
+          <svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input id="search" type="search" placeholder="Buscar..." autocomplete="off">
+        </label>
+        <button class="icon-btn" type="button" id="theme" aria-label="Alternar modo escuro"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+      </header>
+      <main id="conteudo" class="content">
+        <section id="view-painel" class="view" aria-labelledby="view-title">
+          <div class="kpis" id="kpis"></div>
+          <div class="grid2">
+            <article class="card">
+              <header class="card__head"><h2 id="chart-title">Resumo</h2></header>
+              <div class="chart-box"><canvas id="chart" aria-label="Gráfico do resumo" role="img"></canvas></div>
+            </article>
+            <article class="card">
+              <header class="card__head"><h2>Últimos cadastros</h2></header>
+              <ul class="recent" id="recent"></ul>
+            </article>
+          </div>
+        </section>
+        <section id="view-entity" class="view" hidden>
+          <div class="toolbar">
+            <p class="count" id="count"></p>
+            <div class="toolbar__actions">
+              <button class="btn btn--ghost" type="button" id="export"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg> Exportar CSV</button>
+              <button class="btn btn--primary" type="button" id="add"><svg class="i" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> <span id="add-label">Novo</span></button>
+            </div>
+          </div>
+          <div class="card table-card">
+            <div class="table-wrap">
+              <table class="table">
+                <thead id="thead"></thead>
+                <tbody id="tbody"></tbody>
+              </table>
+            </div>
+            <div class="empty" id="empty" hidden>
+              <svg class="i" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.8L20 11l-6.1 2.2L12 19l-1.9-5.8L4 11l6.1-2.2z"/></svg>
+              <h2>Nada por aqui ainda</h2>
+              <p>Clique em “Adicionar” para fazer o primeiro cadastro.</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog class="modal" id="modal" aria-labelledby="modal-title">
+    <form id="form" novalidate>
+      <header class="modal__head">
+        <h2 id="modal-title">Novo</h2>
+        <button class="icon-btn" type="button" data-close aria-label="Fechar"><svg class="i" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </header>
+      <div class="modal__body" id="form-fields"></div>
+      <footer class="modal__foot">
+        <button class="btn btn--ghost" type="button" data-close>Cancelar</button>
+        <button class="btn btn--primary" type="submit">Salvar</button>
+      </footer>
+    </form>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="application/json" id="app-config">{"key":"nexia-app:sites/cortexp1-viagens","name":"Cortexp1 Painel de Viagens","entities":[{"key":"passageiros","label":"Passageiros","singular":"Passageiro","fields":[{"key":"nome","label":"Nome completo","type":"text","options":[],"required":true},{"key":"documento","label":"Documento","type":"text","options":[],"required":true},{"key":"telefone","label":"Telefone","type":"phone","options":[],"required":true},{"key":"email","label":"E-mail","type":"email","options":[],"required":true},{"key":"nascimento","label":"Data de nascimento","type":"date","options":[],"required":true},{"key":"observacoes","label":"Observações","type":"textarea","options":[],"required":false}],"sample":[{"nome":"Fernanda Alves","documento":"512.889.002-31","telefone":"(11) 90000-0001","email":"fernanda.alves@example.com","nascimento":"1988-04-12","observacoes":"Assento corredor, não fuma."},{"nome":"Rodrigo Tavares","documento":"398.220.441-70","telefone":"(21) 90000-0002","email":"rodrigo.tavares@example.com","nascimento":"1992-11-03","observacoes":"Necessita cadeira extra pela bagagem de mão."},{"nome":"Camila Nunes","documento":"045.771.990-18","telefone":"(31) 90000-0003","email":"camila.nunes@example.com","nascimento":"1995-07-27","observacoes":"Alérgica a penicilina."},{"nome":"Eduardo Santos","documento":"220.664.118-55","telefone":"(41) 90000-0004","email":"eduardo.santos@example.com","nascimento":"1979-01-19","observacoes":"Viaja com malão de equipamento."},{"nome":"Larissa Prado","documento":"477.550.383-42","telefone":"(51) 90000-0005","email":"larissa.prado@example.com","nascimento":"2001-09-08","observacoes":"Bebê a bordo, reservar cunho."}]},{"key":"viagens","label":"Viagens","singular":"Viagem","fields":[{"key":"codigo","label":"Código da viagem","type":"text","options":[],"required":true},{"key":"destino","label":"Destino","type":"text","options":[],"required":true},{"key":"partida","label":"Data da partida","type":"date","options":[],"required":true},{"key":"agencia","label":"Agência responsável","type":"text","options":[],"required":true},{"key":"status","label":"Status","type":"select","options":["Não iniciada","Link gerado","Em andamento","Concluída","Cancelada"],"required":true},{"key":"valor","label":"Valor da viagem","type":"money","options":[],"required":true},{"key":"descricao","label":"Descrição","type":"textarea","options":[],"required":false}],"sample":[{"codigo":"VIA-2026-0001","destino":"Lisboa, Portugal","partida":"2026-10-15","agencia":"","status":"Link gerado","valor":"4280","descricao":"Pacote de 7 noites com passeios de dia inteiro."},{"codigo":"VIA-2026-0002","destino":"Oaxaca, México","partida":"2026-10-28","agencia":"","status":"Não iniciada","valor":"6150","descricao":""},{"codigo":"VIA-2026-0003","destino":"Buenos Aires, Argentina","partida":"2026-11-03","agencia":"","status":"Em andamento","valor":"1970","descricao":"Fim de semana cultural, hospedagem centro."},{"codigo":"VIA-2026-0004","destino":"Quito, Equador","partida":"2026-11-19","agencia":"","status":"Concluída","valor":"5400","descricao":""},{"codigo":"VIA-2026-0005","destino":"Porto, Portugal","partida":"2026-12-05","agencia":"","status":"Cancelada","valor":"0","descricao":"Cancelada a pedido do cliente, reembolso emitido."}]},{"key":"pagamentos","label":"Pagamentos","singular":"Pagamento","fields":[{"key":"viagem","label":"Viagem vinculada","type":"text","options":[],"required":true},{"key":"parcela","label":"Parcela","type":"text","options":[],"required":true},{"key":"vencimento","label":"Vencimento","type":"date","options":[],"required":true},{"key":"valor","label":"Valor","type":"money","options":[],"required":true},{"key":"status","label":"Situação","type":"select","options":["Pendente","Pagamento agendado","Pago","Estornado","Em atraso"],"required":true},{"key":"forma","label":"Forma de pagamento","type":"select","options":["Cartão de crédito","Pix","Boleto","Cartão de débito"],"required":true},{"key":"notas","label":"Notas","type":"textarea","options":[],"required":false}],"sample":[{"viagem":"VIA-2026-0001","parcela":"1/4","vencimento":"2026-09-20","valor":"1070","status":"Pago","forma":"Cartão de crédito","notas":""},{"viagem":"VIA-2026-0002","parcela":"1/5","vencimento":"2026-10-22","valor":"1230","status":"Pagamento agendado","forma":"Pix","notas":""},{"viagem":"VIA-2026-0003","parcela":"Única","vencimento":"2026-10-25","valor":"1970","status":"Pago","forma":"Boleto","notas":""},{"viagem":"VIA-2026-0004","parcela":"1/2","vencimento":"2026-10-01","valor":"2700","status":"Em atraso","forma":"Boleto","notas":"Ligar para renegociar datas."},{"viagem":"VIA-2026-0005","parcela":"Única","vencimento":"2026-10-10","valor":"2450","status":"Estornado","forma":"Cartão de crédito","notas":"Reembolso relativo ao cancelamento."}]}]}</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>

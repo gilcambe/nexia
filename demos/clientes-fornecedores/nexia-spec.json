@@ -1,0 +1,238 @@
+{
+  "spec": {
+    "kind": "system",
+    "name": "Sistema de Gestão de Clientes e Fornecedores",
+    "tagline": "Gerencie suas relações comerciais com facilidade",
+    "photo_theme": "",
+    "description": "Gerencie suas relações comerciais com facilidade",
+    "folder": "demos/clientes-fornecedores",
+    "fonts": {
+      "heading": "Plus Jakarta Sans",
+      "body": "Inter"
+    },
+    "palette": {
+      "primary": "#4f46e5",
+      "accent": "#06b6d4",
+      "bg": "#fbfaf7",
+      "surface": "#ffffff",
+      "text": "#1d2426",
+      "muted": "#5d6b6e",
+      "dark": "#111827"
+    },
+    "style": "modern",
+    "contact": {
+      "whatsapp": "",
+      "phone": "",
+      "email": "suporte@empresa.com.br",
+      "address": "",
+      "city": "",
+      "hours": "",
+      "instagram": "",
+      "facebook": "",
+      "youtube": "",
+      "tiktok": "",
+      "linkedin": ""
+    },
+    "logo": "",
+    "logo_scrolled": "",
+    "favicon": "",
+    "brand_text": false,
+    "selo": {
+      "label": "Feito com Kernex",
+      "url": "https://kernex.com.br/?utm_source=clientes-fornecedores&utm_medium=selo&utm_campaign=clientes"
+    },
+    "leads_origem": "",
+    "entities": [
+      {
+        "key": "clientes",
+        "label": "Clientes",
+        "singular": "Cliente",
+        "fields": [
+          {
+            "key": "nome",
+            "label": "Nome",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "telefone",
+            "label": "Telefone",
+            "type": "phone",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "datacadastro",
+            "label": "Data de Cadastro",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "status",
+            "label": "Status",
+            "type": "select",
+            "options": [
+              "Ativo",
+              "Inativo"
+            ],
+            "required": true
+          },
+          {
+            "key": "obs",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "nome": "João Silva",
+            "email": "joao.silva@email.com",
+            "telefone": "(11) 99999-1111",
+            "datacadastro": "",
+            "status": "Ativo",
+            "obs": "Cliente VIP"
+          },
+          {
+            "nome": "Maria Oliveira",
+            "email": "maria.oliveira@email.com",
+            "telefone": "(21) 88888-2222",
+            "datacadastro": "",
+            "status": "Ativo",
+            "obs": ""
+          },
+          {
+            "nome": "Carlos Pereira",
+            "email": "carlos.pereira@email.com",
+            "telefone": "(31) 77777-3333",
+            "datacadastro": "",
+            "status": "Inativo",
+            "obs": "Cancelou serviço"
+          },
+          {
+            "nome": "Ana Costa",
+            "email": "ana.costa@email.com",
+            "telefone": "(41) 66666-4444",
+            "datacadastro": "",
+            "status": "Ativo",
+            "obs": "Novo cliente"
+          }
+        ]
+      },
+      {
+        "key": "fornecedores",
+        "label": "Fornecedores",
+        "singular": "Fornecedor",
+        "fields": [
+          {
+            "key": "razaosocial",
+            "label": "Razão Social",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "cnpj",
+            "label": "CNPJ",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "contato",
+            "label": "Contato",
+            "type": "text",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "email",
+            "label": "E-mail",
+            "type": "email",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "datacontrato",
+            "label": "Data do Contrato",
+            "type": "date",
+            "options": [],
+            "required": true
+          },
+          {
+            "key": "categoria",
+            "label": "Categoria",
+            "type": "select",
+            "options": [
+              "Material",
+              "Serviço",
+              "Terceirizado"
+            ],
+            "required": true
+          },
+          {
+            "key": "obs",
+            "label": "Observações",
+            "type": "textarea",
+            "options": [],
+            "required": false
+          }
+        ],
+        "sample": [
+          {
+            "razaosocial": "",
+            "cnpj": "12.345.678/0001-99",
+            "contato": "José Santos",
+            "email": "contato@industriaabc.com.br",
+            "datacontrato": "",
+            "categoria": "Material",
+            "obs": "Fornecedor principal de matéria-prima"
+          },
+          {
+            "razaosocial": "",
+            "cnpj": "98.765.432/0001-88",
+            "contato": "Maria Fernandes",
+            "email": "servicos@rapidosservicos.com.br",
+            "datacontrato": "",
+            "categoria": "Serviço",
+            "obs": ""
+          },
+          {
+            "razaosocial": "",
+            "cnpj": "45.678.123/0001-77",
+            "contato": "Roberto Lima",
+            "email": "contato@logisticaexpress.com.br",
+            "datacontrato": "",
+            "categoria": "Terceirizado",
+            "obs": "Parceiro de entrega"
+          },
+          {
+            "razaosocial": "",
+            "cnpj": "23.456.789/0001-66",
+            "contato": "Patricia Almeida",
+            "email": "contato@tecnologiasolucoes.com.br",
+            "datacontrato": "",
+            "categoria": "Serviço",
+            "obs": "Manutenção de sistemas"
+          }
+        ]
+      }
+    ],
+    "modules": [
+      "Clientes",
+      "Fornecedores",
+      "Financeiro"
+    ]
+  },
+  "media": {}
+}
