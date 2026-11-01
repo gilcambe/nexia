@@ -6,6 +6,9 @@ const { createHash } = require('node:crypto');
 function createD1Cache({ d1, tableName = 'router_cache', ttlDays = 7 } = {}) {
   if (!d1) throw new Error('D1 database required');
 
+  // Cria a tabela se não existir
+  await d1.prepare(`CREATE TABLE IF NOT EXISTS ${tableName} (chave TEXT PRIMARY KEY, valor TEXT, expires_at TEXT)`).run();
+
   return {
   if (!d1) throw new Error('D1 database required');
 
