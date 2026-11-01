@@ -25,9 +25,6 @@ export const webLLMChat = new WebLLMChat();
 
 export async function chatWithFallback(prompt: string): Promise<{ response: string; engine: string }> {
   try {
-    if (!webLLMEnabled) {
-      throw new Error('WebLLM disabled');
-    }
     const response = await webLLMChat.chat(prompt);
     return { response, engine: 'WebLLM' };
   } catch (error) {
