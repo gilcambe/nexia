@@ -70,7 +70,7 @@ test('VAGAS4: cota acabou ainda salva (chave boa); provedor pago ou vaga 4 são 
   assert.strictEqual(r.corpo.ok, true);
   assert.strictEqual(r.corpo.teste.situacao, 'sem-cota');
   assert.strictEqual((await v.salvar(f.gh, { vaga: 1, provedor: 'openai', chave: CHAVE }, roteador())).status, 400);
-  assert.strictEqual((await v.salvar(f.gh, { vaga: 11, provedor: 'groq', chave: CHAVE }, roteador())).status, 400);
+  assert.strictEqual((await v.salvar(f.gh, { vaga: 51, provedor: 'groq', chave: CHAVE }, roteador())).status, 400);
 });
 
 test('VAGAS5: estado junta segredos, último teste e prova de uso dos PRs de reserva', async () => {
@@ -82,7 +82,7 @@ test('VAGAS5: estado junta segredos, último teste e prova de uso dos PRs de res
       { number: 8, head: { ref: 'nexia/outra' }, body: 'conta vaga-1-groq' }],
   });
   const e = await v.estado(f.gh);
-  assert.strictEqual(e.vagas.length, 10);
+  assert.strictEqual(e.vagas.length, 50);
   assert.deepStrictEqual(e.vagas.slice(0, 3).map((x) => [x.vaga, x.ligada, x.provedor]), [[1, true, 'groq'], [2, false, null], [3, false, null]]);
   assert.deepStrictEqual(e.vagas[0].usos.map((u) => [u.pr, u.tarefa, u.entrou]), [[7, 12, true]]);
   assert.ok(e.provedores.every((p) => !('env' in p) && p.passos.length));

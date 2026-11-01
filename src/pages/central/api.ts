@@ -58,7 +58,7 @@ export type VagaSituacao = "ok" | "sem-cota" | "recusada" | "erro";
 export interface VagaTeste { situacao: VagaSituacao; tempo: number; motivo?: string; resposta?: string; em: string; onde: "central" | "robo" }
 export interface VagaUso { vaga: number; provedor: string; pr: number; link: string; tarefa: number | null; quando: string; entrou: boolean }
 export interface Vaga { vaga: number; ligada: boolean; provedor: string | null; salvaEm: string | null; teste: VagaTeste | null; usos: VagaUso[] }
-export interface ProvedorVaga { id: string; nome: string; site: string; logo: string | null; passos: string[] }
+export interface ProvedorVaga { id: string; nome: string; site: string; logo: string | null; passos: string[]; custom?: boolean }
 export interface JulesEstado { ligado: boolean; comEle: number | null; prsHoje: number; ultimoPr: { numero: number; link: string; quando: string } | null }
 export interface Vagas { vagas: Vaga[]; provedores: ProvedorVaga[]; podeLerSegados: boolean; jules?: JulesEstado }
 export interface Dados {

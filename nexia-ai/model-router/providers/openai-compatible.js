@@ -56,8 +56,9 @@ function estimateInputTokens(b) {
   return Math.ceil(chars / 3.5);
 }
 
-function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (...a) => fetch(...a), baseUrl } = {}) {
-  const cfg = PROVIDERS[id];
+// cfg: provedor sem nome fixo (vaga "Outra IA" da Central, #2716): { url, env, max_output, tools }.
+function createOpenAICompatibleProvider(id, { env = process.env, fetchImpl = (...a) => fetch(...a), baseUrl, cfg: cfgExtra } = {}) {
+  const cfg = cfgExtra || PROVIDERS[id];
   if (!cfg) throw new ModelError(CODES.UNKNOWN_PROVIDER, `Provedor desconhecido: ${id}`);
   const urlFor = model => baseUrl || (typeof cfg.url === 'function' ? cfg.url(model, env) : cfg.url);
   const catalog = cfg.catalog ? createKiloCatalog({ fetchImpl, env, url: cfg.catalogUrl, ordem: cfg.catalogOrder }) : null;

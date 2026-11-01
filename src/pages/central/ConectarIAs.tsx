@@ -3,7 +3,7 @@ import type { Vaga, Vagas, VagaTeste } from "./api";
 import { useCentral, haQuanto } from "./api";
 import Logo from "./Logo";
 
-// Conectar IAs (#1958): 10 vagas de chave grátis que ajudam o Cortex quando ele trava.
+// Conectar IAs (#1958, #2716): 50 vagas de chave grátis que ajudam o Cortex quando ele trava.
 // A chave é testada na hora e vira segredo criptografado do GitHub; nunca volta para esta página.
 type Estado = "verde" | "amarelo" | "vermelho" | "cinza";
 const PILULA: Record<Estado, string> = {
@@ -34,6 +34,8 @@ function CartaoVaga({ v, dados, aoMudar }: { v: Vaga; dados: Vagas; aoMudar: () 
   const [editando, setEditando] = useState(!v.ligada);
   const [provedor, setProvedor] = useState(v.provedor || "");
   const [chave, setChave] = useState("");
+  const [url, setUrl] = useState("");
+  const [modelo, setModelo] = useState("");
   const [ocupado, setOcupado] = useState(false);
   const [msg, setMsg] = useState<{ ok: boolean; texto: string } | null>(null);
   const p = dados.provedores.find((x) => x.id === (editando ? provedor : v.provedor));
@@ -42,7 +44,7 @@ function CartaoVaga({ v, dados, aoMudar }: { v: Vaga; dados: Vagas; aoMudar: () 
   const salvar = async () => {
     setOcupado(true); setMsg(null);
     try {
-      const r = await agir<{ ok: boolean; mensagem: string }>({ acao: "vaga-salvar", vaga: v.vaga, provedor, chave });
+      const r = await agir<{ ok: boolean; mensagem: string }>({ acao: "vaga-salvar", vaga: v.vaga, provedor, chave, ...(p && p.custom ? { url, modelo } : {}) });
       setMsg({ ok: r.ok, texto: r.mensagem });
       if (r.ok) { setChave(""); setEditando(false); await aoMudar(); }
     } catch (e) { setMsg({ ok: false, texto: (e as Error).message }); }
@@ -105,11 +107,19 @@ function CartaoVaga({ v, dados, aoMudar }: { v: Vaga; dados: Vagas; aoMudar: () 
               <li>Cole a chave aqui embaixo e toque em "Testar e salvar".</li>
             </ol>
           )}
-          {p && <a className="text-xs font-medium text-indigo-600" href={p.site} target="_blank" rel="noopener noreferrer">Abrir {p.nome} para pegar a chave ↗</a>}
+          {p && p.custom && (
+            <div className="flex flex-col sm:flex-row gap-2" data-testid={`vaga-${v.vaga}-custom`}>
+              <input type="url" inputMode="url" autoComplete="off" spellCheck={false} value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Endereço da API (https://…/v1)"
+                className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 min-h-[40px]" aria-label={`Endereço da API da vaga ${v.vaga}`} data-testid={`vaga-${v.vaga}-url`} />
+              <input type="text" autoComplete="off" spellCheck={false} value={modelo} onChange={(e) => setModelo(e.target.value)} placeholder="Nome do modelo"
+                className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 min-h-[40px]" aria-label={`Modelo da vaga ${v.vaga}`} data-testid={`vaga-${v.vaga}-modelo`} />
+            </div>
+          )}
+          {p && p.site && <a className="text-xs font-medium text-indigo-600" href={p.site} target="_blank" rel="noopener noreferrer">Abrir {p.nome} para pegar a chave ↗</a>}
           <div className="flex flex-col sm:flex-row gap-2">
             <input type="password" autoComplete="off" spellCheck={false} value={chave} onChange={(e) => setChave(e.target.value)} placeholder="Cole a chave aqui"
               className="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 min-h-[40px]" aria-label={`Chave da vaga ${v.vaga}`} data-testid={`vaga-${v.vaga}-chave`} />
-            <button className={`${BOTAO} bg-indigo-600 text-[#fff]`} onClick={salvar} disabled={ocupado || !provedor || chave.trim().length < 16} data-testid={`vaga-${v.vaga}-salvar`}>
+            <button className={`${BOTAO} bg-indigo-600 text-[#fff]`} onClick={salvar} disabled={ocupado || !provedor || chave.trim().length < (p && p.custom ? 8 : 16) || (!!p && !!p.custom && (!/^https:\/\//.test(url.trim()) || !modelo.trim()))} data-testid={`vaga-${v.vaga}-salvar`}>
               {ocupado ? "Testando…" : "Testar e salvar"}
             </button>
             {v.ligada && <button className={`${BOTAO} border border-slate-200 bg-white text-slate-700`} onClick={() => { setEditando(false); setChave(""); }}>Cancelar</button>}
@@ -178,8 +188,9 @@ export default function ConectarIAs({ inicial }: { inicial?: Vagas }) {
         <summary className="font-medium cursor-pointer">Por que não dá para entrar com a conta do ChatGPT, Claude ou Gemini?</summary>
         <div className="mt-2 space-y-2 text-xs text-slate-600">
           <p><b>Conta de chat (site):</b> ChatGPT, Claude.ai e Gemini são para uma pessoa conversar. Um robô entrando nelas sozinho é proibido pelos termos e pode bloquear a conta. Para usar essas contas, toque em "Copiar contexto" no cartão "Usar outra IA" e cole na conversa você mesmo.</p>
-          <p><b>Chave de API (o que estas vagas usam):</b> é o "login" feito para robôs. Gemini, Groq, OpenRouter, Mistral, Codestral, NVIDIA, Cohere e Hugging Face dão chave grátis, sem cartão, com limite por dia. Quando o limite acaba, a vaga fica amarela e volta sozinha no dia seguinte.</p>
+          <p><b>Chave de API (o que estas vagas usam):</b> é o "login" feito para robôs. Gemini, Groq, OpenRouter, Mistral, Codestral, NVIDIA, Cohere, Hugging Face, Z.ai e SambaNova dão chave grátis, sem cartão, com limite por dia. Quando o limite acaba, a vaga fica amarela e volta sozinha no dia seguinte.</p>
           <p><b>GPT e Claude por API</b> cobram por uso. Pela regra "nada pago", não entram aqui.</p>
+          <p><b>Outra IA:</b> qualquer IA grátis com API no formato OpenAI (endereço + modelo + chave) entra em "Outra IA". Login de chat no site (ChatGPT, Gemini web) não dá para ligar: as regras desses sites proíbem robôs.</p>
           <p><b>3 iguais?</b> Pode pôr o mesmo serviço em mais de uma vaga se forem contas de verdade diferentes (por exemplo, de outra pessoa da equipe). Criar contas falsas só para fugir do limite vai contra os termos.</p>
           <p><b>Segurança:</b> a chave é testada, criptografada e guardada como segredo do GitHub. Ela nunca aparece de novo, nem aqui, nem no banco, nem nos registros.</p>
         </div>

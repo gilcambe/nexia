@@ -11,6 +11,7 @@ const { normalizeRequest } = require('./messages');
 const { costEstimate } = require('./pricing');
 const { createAnthropicProvider } = require('./providers/anthropic');
 const { createOpenAICompatibleProvider, PROVIDERS: OPENAI_COMPATIBLE } = require('./providers/openai-compatible');
+const { aplicarVagas, vagasCustom } = require('./vagas');
 const { createGeminiProvider } = require('./providers/gemini');
 const { createCohereProvider } = require('./providers/cohere');
 const { createCache, chave, cacheavel } = require('./cache');
@@ -22,7 +23,8 @@ const PROVIDER_IDS = Object.freeze(['anthropic', 'gemini', 'cohere', ...Object.k
  *   baseUrls/fetchImpl/providers servem para testes apontarem para servidores falsos.
  */
 function createRouter(o = {}) {
-  const env = o.env || process.env;
+  // #2716: chaves das vagas da Central (IA_VAGA_1..50) entram onde o provedor ainda não tem chave.
+  const env = aplicarVagas(o.env || process.env);
   const fetchImpl = o.fetchImpl;
   const base = o.baseUrls || {};
   const providers = {};
@@ -31,6 +33,10 @@ function createRouter(o = {}) {
   providers.cohere = createCohereProvider({ env, ...(fetchImpl ? { fetchImpl } : {}), ...(base.cohere ? { baseUrl: base.cohere } : {}) });
   for (const id of Object.keys(OPENAI_COMPATIBLE)) {
     providers[id] = createOpenAICompatibleProvider(id, { env, ...(fetchImpl ? { fetchImpl } : {}), ...(base[id] ? { baseUrl: base[id] } : {}) });
+  }
+  // Vagas "Outra IA (compatível com OpenAI)": cada uma vira o provedor vaga-N.
+  for (const c of vagasCustom(o.env || process.env)) {
+    providers[c.provider] = createOpenAICompatibleProvider(c.provider, { env: { [c.envKey]: c.chave }, ...(fetchImpl ? { fetchImpl } : {}), cfg: c.cfg });
   }
   Object.assign(providers, o.providers || {});
 

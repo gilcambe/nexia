@@ -1,5 +1,5 @@
 'use strict';
-// Central: "Conectar IAs" (#1958). 10 vagas para chaves grátis de IA que ajudam o Cortex quando ele trava.
+// Central: "Conectar IAs" (#1958, #2716). 50 vagas para chaves grátis de IA que ajudam o Cortex quando ele trava.
 // A chave passa pelo servidor só uma vez: é testada com uma pergunta curta e, se responder, vira segredo do
 // GitHub Actions (IA_VAGA_N, criptografado com a chave pública do repositório). Nunca volta para a página,
 // nunca vai para o Firestore nem para log. O que fica guardado (provedor, último teste) está numa issue de estado.
@@ -9,8 +9,10 @@ const nacl = require('tweetnacl');
 const { blake2b } = require('blakejs');
 const { redactSecrets } = require('../../../nexia-ai/vault/secrets');
 
-// 10 vagas: cada uma é um segredo listado um a um nos workflows (cortex-reserva.yml e ia-vagas.yml).
-const VAGAS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+// 50 vagas (#2716): cada uma é um segredo listado um a um nos workflows (fila-cortex, nexia-jobs, cortex-reserva, ia-vagas).
+// A fila usa as chaves pelo roteador (nexia-ai/model-router/vagas.js).
+const { MAX_VAGAS, lerCustom, valorCustom } = require('../../../nexia-ai/model-router/vagas');
+const VAGAS = Array.from({ length: MAX_VAGAS }, (_, i) => i + 1);
 const segredo = (n) => `IA_VAGA_${n}`;
 const ROTULO_ESTADO = 'ia-vagas-estado';
 
@@ -31,12 +33,19 @@ const PROVEDORES = {
     passos: ['Abra huggingface.co e crie a conta (sem cartão).', 'Em Settings → Access Tokens, crie um token "Read" e copie (crédito grátis pequeno por mês).'] },
   codestral: { nome: 'Codestral (Mistral, código)', router: 'codestral', modelo: 'codestral-latest', env: 'CODESTRAL_API_KEY', site: 'https://console.mistral.ai/codestral',
     passos: ['Abra console.mistral.ai/codestral e entre (grátis).', 'Gere a chave do Codestral e copie.'] },
+  zai: { nome: 'Z.ai (GLM grátis)', router: 'zai', modelo: 'glm-4.5-flash', env: 'ZAI_API_KEY', site: 'https://z.ai/manage-apikey/apikey-list',
+    passos: ['Abra z.ai, crie a conta com seu e-mail (sem cartão).', 'Em API Keys, toque em "Add new API key" e copie.'] },
+  sambanova: { nome: 'SambaNova Cloud', router: 'sambanova', modelo: 'Meta-Llama-3.3-70B-Instruct', env: 'SAMBANOVA_API_KEY', site: 'https://cloud.sambanova.ai/apis',
+    passos: ['Abra cloud.sambanova.ai e entre com o Google (plano grátis, sem cartão).', 'Em APIs, gere a chave e copie.'] },
+  // #2716: qualquer IA grátis que tenha API no formato OpenAI (endereço + modelo + chave). Só https.
+  custom: { nome: 'Outra IA (compatível com OpenAI)', custom: true, site: '',
+    passos: ['No site da IA, procure "API" ou "API Keys" e crie uma chave grátis.', 'Copie o endereço da API (termina em /v1), o nome do modelo e a chave, e cole aqui.'] },
   nvidia: { nome: 'NVIDIA', router: 'nvidia', modelo: 'meta/llama-3.3-70b-instruct', env: 'NVIDIA_API_KEY', site: 'https://build.nvidia.com/settings/api-keys', logo: '/central/logos/nvidia.svg',
     passos: ['Abra build.nvidia.com e entre (grátis).', 'Em API Keys, toque em "Generate API Key" e copie.'] },
 };
 
 /** Lista para a página: nada de chave aqui, só nome, site e passos. */
-const provedoresPublicos = () => Object.entries(PROVEDORES).map(([id, p]) => ({ id, nome: p.nome, site: p.site, logo: p.logo || null, passos: p.passos }));
+const provedoresPublicos = () => Object.entries(PROVEDORES).map(([id, p]) => ({ id, nome: p.nome, site: p.site, logo: p.logo || null, passos: p.passos, custom: !!p.custom }));
 
 const limpar = (t) => redactSecrets(String(t || '')).replace(/(key|token)=\S+/gi, '$1=***').slice(0, 140);
 
@@ -81,11 +90,34 @@ async function conferirDireto(provedor, chave, fetchImpl, ms) {
   } finally { clearTimeout(timer); }
 }
 
+/** Outra IA: chave = { url, modelo, chave }. Uma conversa de 1 palavra confere endereço, modelo e chave juntos. */
+async function testarCustom(c, f, ms) {
+  const ok = c && typeof c === 'object' && lerCustom(valorCustom(c));
+  if (!ok) return { situacao: 'recusada', tempo: 0, motivo: 'Endereço (https), modelo ou chave faltando.' };
+  const url = /\/chat\/completions$/.test(ok.url) ? ok.url : `${ok.url}/chat/completions`;
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), ms);
+  const t0 = Date.now();
+  try {
+    const r = await f(url, { method: 'POST', headers: { Authorization: 'Bearer ' + ok.chave, 'Content-Type': 'application/json', 'User-Agent': 'kernex-central' },
+      body: JSON.stringify({ model: ok.modelo, messages: [{ role: 'user', content: 'ok' }], max_tokens: 1 }), signal: ctl.signal });
+    const tempo = Date.now() - t0;
+    if (r.ok) return { situacao: 'ok', tempo };
+    if (r.status === 401 || r.status === 403) return { situacao: 'recusada', tempo, motivo: `A IA recusou a chave (${r.status}).` };
+    if (r.status === 429) return { situacao: 'sem-cota', tempo, motivo: 'Cota de hoje acabou (429).' };
+    if (r.status === 404) return { situacao: 'recusada', tempo, motivo: 'Endereço ou modelo não encontrado (404). Confira o endereço (termina em /v1) e o nome do modelo.' };
+    return { situacao: 'erro', tempo, motivo: `A IA respondeu ${r.status}.` };
+  } catch (e) {
+    return { situacao: 'erro', tempo: Date.now() - t0, motivo: ctl.signal.aborted ? `Demorou mais de ${ms / 1000} s.` : 'Sem conexão com essa IA agora.' };
+  } finally { clearTimeout(timer); }
+}
+
 /** Confere a chave (GET direto; NVIDIA manda "Responda só: ok"). Devolve { situacao: ok|sem-cota|recusada|erro, tempo, motivo? }. */
 async function testarChave(provedor, chave, { createRouter = require('../../../nexia-ai/model-router').createRouter, fetchImpl, ms = 15000 } = {}) {
   const p = PROVEDORES[provedor];
   if (!p) return { situacao: 'erro', tempo: 0, motivo: 'Provedor não aceito.' };
   const f = fetchImpl || ((...a) => fetch(...a));
+  if (p.custom) return testarCustom(chave, f, ms);
   if (CONFERIR[provedor]) {
     const r = await conferirDireto(provedor, chave, f, ms);
     return r.motivo ? { ...r, motivo: limpar(r.motivo).split(chave).join('***') } : r;
@@ -204,21 +236,24 @@ async function estado(gh, env = {}) {
 }
 
 /** POST vaga-salvar: testa e só grava se a IA respondeu (ou se só acabou a cota de hoje: a chave é boa). */
-async function salvar(gh, { vaga, provedor, chave }, deps = {}) {
+async function salvar(gh, { vaga, provedor, chave, url, modelo }, deps = {}) {
   const n = Number(vaga);
   const k = String(chave || '').trim();
-  if (!VAGAS.includes(n)) return { status: 400, corpo: { error: 'Vaga inválida (use de 1 a 10).' } };
+  if (!VAGAS.includes(n)) return { status: 400, corpo: { error: `Vaga inválida (use de 1 a ${VAGAS.length}).` } };
   if (!PROVEDORES[provedor]) return { status: 400, corpo: { error: 'Escolha uma das IAs grátis da lista.' } };
-  if (k.length < 16 || k.length > 300 || /\s/.test(k)) return { status: 400, corpo: { error: 'Essa chave não parece certa. Copie de novo, sem espaços.' } };
-  const teste = await testarChave(provedor, k, deps);
+  if (k.length < 8 || k.length > 300 || /\s/.test(k)) return { status: 400, corpo: { error: 'Essa chave não parece certa. Copie de novo, sem espaços.' } };
+  const custom = PROVEDORES[provedor].custom ? lerCustom(valorCustom({ url: String(url || '').trim(), modelo: String(modelo || '').trim(), chave: k })) : null;
+  if (PROVEDORES[provedor].custom && !custom) return { status: 400, corpo: { error: 'Confira o endereço (começa com https:// e termina em /v1) e o nome do modelo.' } };
+  if (!custom && k.length < 16) return { status: 400, corpo: { error: 'Essa chave não parece certa. Copie de novo, sem espaços.' } };
+  const teste = await testarChave(provedor, custom || k, deps);
   const em = new Date().toISOString();
   if (teste.situacao === 'recusada') {
     return { status: 200, corpo: { ok: false, teste, mensagem: `${teste.motivo} Confira se copiou a chave inteira, ou crie outra.` } };
   }
-  await gravarSegredo(gh, n, provedor, k, deps.nomeToken);
+  await gravarSegredo(gh, n, provedor, custom ? valorCustom(custom).slice('custom:'.length) : k, deps.nomeToken);
   // Sem conexão daqui (o servidor não alcançou o serviço): salva assim mesmo e o robô ia-vagas.yml testa pelo GitHub.
   const guardado = teste.situacao === 'erro' ? null : { ...teste, em, onde: 'central' };
-  await gravarEstado(gh, (v) => { v[n] = { provedor, salvaEm: em, teste: guardado }; }).catch(() => null);
+  await gravarEstado(gh, (v) => { v[n] = { provedor, salvaEm: em, teste: guardado, ...(custom ? { modelo: custom.modelo, site: new URL(custom.url).host } : {}) }; }).catch(() => null);
   if (!guardado && deps.rodarRobo) await deps.rodarRobo().catch(() => null);
   const nome = PROVEDORES[provedor].nome;
   const mensagem = teste.situacao === 'ok' ? `Vaga ${n} ligada: ${nome} aceitou a chave em ${(teste.tempo / 1000).toFixed(1)} s.`
