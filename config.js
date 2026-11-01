@@ -1,18 +1,19 @@
 // config.js - Configurações do Cortex e preferências de IA local
 import { verificarSuporteWebGPU } from './ia-local.js';
+import { salvarConfig, obterConfig } from './ia-local.js';
 
 export const configManager = {
   async getIAState() {
     try {
-      const val = localStorage.getItem('cortex_ia_local');
-      return val === 'true';
+      const config = obterConfig();
+      return config.iaAparelhoAtivo;
     } catch {
       return false;
     }
   },
   async setIAState(ativo) {
     try {
-      localStorage.setItem('cortex_ia_local', String(ativo));
+      salvarConfig({ iaAparelhoAtivo: ativo });
     } catch {}
   }
 };
