@@ -136,7 +136,8 @@ export default function Composer({ modo, enviar, inicial = "" }: Props) {
           return;
         }
       } else {
-        if (f.type.startsWith('application/pdf') || f.name.toLowerCase().endsWith('.pdf')) {
+        const isPdf = f.type.startsWith('application/pdf') || f.name.toLowerCase().endsWith('.pdf');
+        if (isPdf) {
           setAviso(`Não consegui ler o PDF \`${f.name}\`.`);
           return;
         } else if (ehArquivoTextoPequeno(f) || f.type.startsWith('text/') || /\.(txt|csv|xlsm|xls|ods)$/i.test(f.name)) {
