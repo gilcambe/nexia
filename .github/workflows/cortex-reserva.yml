@@ -185,7 +185,7 @@ jobs:
             IFS='|' read -r nome modelo var chave base <<< "$c"
             echo "Tentando conta: $nome"
             git reset -q --hard "origin/${GITHUB_REF_NAME}" || true
-            if env "$var=$chave" ${base:+"OPENAI_API_BASE=$base"} aider --yes-always --no-auto-commits --no-gitignore --no-detect-urls --no-check-update --no-analytics --model "$modelo" --message "$PROMPT" $(tr '\n' ' ' < "$RUNNER_TEMP/arquivos.txt") 2>&1 | tail -40; tem_conteudo && sem_estrago; then
+            if env "$var=$chave" ${base:+"OPENAI_API_BASE=$base"} aider --yes-always --no-auto-commits --no-gitignore --no-detect-urls --no-check-update --no-analytics --read AGENTS.md --read docs/CONTEXTO-IA.md --model "$modelo" --message "$PROMPT" $(tr '\n' ' ' < "$RUNNER_TEMP/arquivos.txt") 2>&1 | tail -40; tem_conteudo && sem_estrago; then
               echo "ok=1" >> "$GITHUB_OUTPUT"; echo "conta=$nome" >> "$GITHUB_OUTPUT"; exit 0
             fi
             echo "Conta $nome sem resultado (cota/limite); próxima."
