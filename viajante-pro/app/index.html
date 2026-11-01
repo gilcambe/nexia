@@ -80,6 +80,7 @@
   <script src="/viajante-pro/app/app.js"></script>
   <script src="/viajante-pro/abertura-kernex.js?v=3" data-produto="VIAJANTE PRO" defer></script>
   <script src="/viajante-pro/vp-marca.js?v=3" defer></script>
+  <script src="/clientes/viajantepro.js" defer></script>
   <script>
     // Adicionar funcionalidade para ler o código da viagem e carregar os dados
     document.addEventListener('DOMContentLoaded', function() {
@@ -87,34 +88,21 @@
       const codigoViagem = params.get('v');
 
       if (codigoViagem) {
-        // Carregar dados da viagem
-        fetch('/api/viajante-pro', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            acao: 'app-viagem',
-            v: codigoViagem,
-          }),
-        })
-        .then(response => response.json())
+        // Carregar dados da viagem usando obterViagemPublica
+        window.viajantePro = window.viajantePro || {};
+        window.viajantePro.obterViagemPublica(codigoViagem)
         .then(data => {
-          if (data.ok) {
-            // Armazenar os dados da viagem
-            window.viagemAtual = data.viagem;
+          // Armazenar os dados da viagem
+          window.viagemAtual = data;
 
-            // Atualizar a interface com os dados da viagem
-            atualizarInterfaceViagem(data.viagem);
+          // Atualizar a interface com os dados da viagem
+          atualizarInterfaceViagem(data);
 
-            // Configurar a aba de conversa
-            configurarAbaConversa(codigoViagem);
-          } else {
-            console.error('Erro ao carregar viagem:', data.error);
-          }
+          // Configurar a aba de conversa
+          configurarAbaConversa(codigoViagem);
         })
         .catch(error => {
-          console.error('Erro na requisição:', error);
+          console.error('Erro ao carregar viagem:', error.message || error);
         });
       }
 
@@ -174,59 +162,46 @@
 
         // Função para carregar mensagens
         function carregarMensagens() {
-          fetch('/api/viajante-pro', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              acao: 'app-chat-listar',
-              codigo: viagemId,
-              desde: ultimaMensagemId,
-            }),
-          })
-          .then(response => response.json())
+          window.viajantePro.listarChat(viagemId)
           .then(data => {
-            if (data.ok) {
-              const conversaContent = document.getElementById('conversa-content') || document.createElement('div');
-              conversaContent.id = 'conversa-content';
+            const conversaContent = document.getElementById('conversa-content') || document.createElement('div');
+            conversaContent.id = 'conversa-content';
 
-              if (!document.getElementById('conversa-content')) {
-                conversaContent.innerHTML = `
-                  <h2 class="text-lg font-bold mb-4">Conversa</h2>
-                  <div id="mensagens-container" class="space-y-3 mb-4 max-h-96 overflow-y-auto"></div>
-                  <div class="flex space-x-2">
-                    <input type="text" id="input-mensagem" class="flex-1 bg-brand-card/50 border border-brand-card/30 rounded-lg px-3 py-2 text-sm" placeholder="Digite sua mensagem...">
-                    <button id="btn-enviar-mensagem" class="bg-brand-accent text-brand-dark px-4 py-2 rounded-lg font-medium">Enviar</button>
-                  </div>
-                `;
-                document.getElementById('app-conteudo').appendChild(conversaContent);
+            if (!document.getElementById('conversa-content')) {
+              conversaContent.innerHTML = `
+                <h2 class="text-lg font-bold mb-4">Conversa</h2>
+                <div id="mensagens-container" class="space-y-3 mb-4 max-h-96 overflow-y-auto"></div>
+                <div class="flex space-x-2">
+                  <input type="text" id="input-mensagem" class="flex-1 bg-brand-card/50 border border-brand-card/30 rounded-lg px-3 py-2 text-sm" placeholder="Digite sua mensagem...">
+                  <button id="btn-enviar-mensagem" class="bg-brand-accent text-brand-dark px-4 py-2 rounded-lg font-medium">Enviar</button>
+                </div>
+              `;
+              document.getElementById('app-conteudo').appendChild(conversaContent);
 
-                // Configurar evento de envio de mensagem
-                document.getElementById('btn-enviar-mensagem').addEventListener('click', enviarMensagem);
-                document.getElementById('input-mensagem').addEventListener('keypress', function(e) {
-                  if (e.key === 'Enter') enviarMensagem();
-                });
-              }
-
-              const mensagensContainer = document.getElementById('mensagens-container');
-              data.mensagens.forEach(msg => {
-                const msgElement = document.createElement('div');
-                msgElement.className = `p-3 rounded-lg ${msg.autor === 'viajante' ? 'bg-brand-card/50 ml-auto max-w-[80%]' : 'bg-brand-accent/20 mr-auto max-w-[80%]'}`;
-                msgElement.innerHTML = `
-                  <p class="text-sm ${msg.autor === 'viajante' ? 'text-white' : 'text-brand-dark'}">${escHtml(msg.texto)}</p>
-                  <p class="text-[10px] text-brand-muted mt-1 text-right">${new Date(msg.criado_em).toLocaleString()}</p>
-                `;
-                mensagensContainer.appendChild(msgElement);
-                ultimaMensagemId = msg.id;
+              // Configurar evento de envio de mensagem
+              document.getElementById('btn-enviar-mensagem').addEventListener('click', enviarMensagem);
+              document.getElementById('input-mensagem').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') enviarMensagem();
               });
-
-              // Rolar para a última mensagem
-              mensagensContainer.scrollTop = mensagensContainer.scrollHeight;
             }
+
+            const mensagensContainer = document.getElementById('mensagens-container');
+            data.forEach(msg => {
+              const msgElement = document.createElement('div');
+              msgElement.className = `p-3 rounded-lg ${msg.autor === 'viajante' ? 'bg-brand-card/50 ml-auto max-w-[80%]' : 'bg-brand-accent/20 mr-auto max-w-[80%]'}`;
+              msgElement.innerHTML = `
+                <p class="text-sm ${msg.autor === 'viajante' ? 'text-white' : 'text-brand-dark'}">${escHtml(msg.texto)}</p>
+                <p class="text-[10px] text-brand-muted mt-1 text-right">${new Date(msg.criado_em).toLocaleString()}</p>
+              `;
+              mensagensContainer.appendChild(msgElement);
+              ultimaMensagemId = msg.id;
+            });
+
+            // Rolar para a última mensagem
+            mensagensContainer.scrollTop = mensagensContainer.scrollHeight;
           })
           .catch(error => {
-            console.error('Erro ao carregar mensagens:', error);
+            console.error('Erro ao carregar mensagens:', error.message || error);
           });
         }
 
@@ -236,28 +211,16 @@
           const texto = input.value.trim();
 
           if (texto) {
-            fetch('/api/viajante-pro', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                acao: 'app-chat-enviar',
-                codigo: viagemId,
-                texto: texto,
-                              }),
+            window.viajantePro.enviarChat({
+              codigo: viagemId,
+              texto: texto
             })
-            .then(response => response.json())
-            .then(data => {
-              if (data.ok) {
-                input.value = '';
-                carregarMensagens();
-              } else {
-                console.error('Erro ao enviar mensagem:', data.error);
-              }
+            .then(() => {
+              input.value = '';
+              carregarMensagens();
             })
             .catch(error => {
-              console.error('Erro na requisição:', error);
+              console.error('Erro ao enviar mensagem:', error.message || error);
             });
           }
         }
