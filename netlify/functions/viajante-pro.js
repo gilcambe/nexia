@@ -157,7 +157,7 @@ function limparConteudoViajante(c) {
     };
   }
   if (Array.isArray(c.destinos)) {
-    out.destinos = c.destinos.slice(0, 50).map(d => ({
+    out.destinos = c.destinos.slice(0, 500).map(d => ({
       id: str(d.id, 50) || aleatorio(6),
       nome: str(d.nome, 100),
       pais: str(d.pais, 80),
@@ -165,6 +165,7 @@ function limparConteudoViajante(c) {
       imagem: str(d.imagem, 500),
       descricao: str(d.descricao, 500),
       preco: str(d.preco, 50),
+      video: str(d.video, 300),
       destaque: d.destaque === true,
     }));
   }
@@ -199,10 +200,13 @@ function limparConteudoViajante(c) {
 }
 
 // Mensagens da conversa em ordem; com "desde" (id da última que o app já tem) devolve só as novas.
+let contadorMsg = 0;
+function ordemMsg() { contadorMsg = (contadorMsg + 1) % 1000; return Date.now() * 1000 + contadorMsg; }
+
 async function listarMensagens(vRef, desde) {
   const snaps = await vRef.collection('mensagens').get();
   const lista = snaps.docs.map(d => d.data());
-  lista.sort((a, b) => String(a.criado_em).localeCompare(String(b.criado_em)) || String(a.id).localeCompare(String(b.id)));
+  lista.sort((a, b) => String(a.criado_em).localeCompare(String(b.criado_em)) || (a.ordem || 0) - (b.ordem || 0));
   if (!desde) return lista;
   const i = lista.findIndex(m => m.id === desde);
   return i >= 0 ? lista.slice(i + 1) : lista;
@@ -225,7 +229,11 @@ exports.handler = async function (event, context) {
     if (q.foto) {
       const fSnap = await contaRef.collection('fotos').doc(str(q.foto, 64)).get();
       if (!fSnap.exists) return res(404, { error: 'Foto não encontrada.' });
-      return res(200, { ok: true, foto: fSnap.data() });
+      const foto = fSnap.data();
+      const m = /^data:(image\/[a-z+.-]+);base64,(.+)$/i.exec(String(foto.dados || ''));
+      if (!m) return res(200, { ok: true, foto });
+      return { statusCode: 200, isBase64Encoded: true, body: m[2],
+        headers: { 'Content-Type': m[1], 'Cache-Control': 'public, max-age=31536000, immutable', 'Access-Control-Allow-Origin': '*' } };
     }
 
     const cSnap = await contaRef.collection('site').doc('conteudo').get();
@@ -610,7 +618,7 @@ exports.handler = async function (event, context) {
     }
     const texto = str(body.texto, 1000);
     if (!texto) return res(400, { error: 'Escreva a mensagem.' });
-    const msgData = { id: aleatorio(16), autor: 'viajante', texto, lida: false, criado_em: new Date(now).toISOString() };
+    const msgData = { id: aleatorio(16), autor: 'viajante', texto, lida: false, criado_em: new Date(now).toISOString(), ordem: ordemMsg() };
     await vRef.collection('mensagens').doc(msgData.id).set(msgData);
     return res(200, { ok: true, mensagem: msgData });
   }
@@ -705,8 +713,9 @@ exports.handler = async function (event, context) {
   // ── Ação: foto-enviar (Upload Mídia Base64) ──
   if (acao === 'foto-enviar') {
     const dados = String(body.dados || '');
-    const tipo = str(body.tipo, 50) || 'imagem/jpeg';
-    if (!dados) return res(400, { error: 'Dados da imagem ausentes.' });
+    const tipo = str(body.tipo, 50) || 'image/jpeg';
+    if (!/^data:image\/(jpeg|png|webp|gif);base64,/i.test(dados)) return res(400, { error: 'Envie uma imagem JPG, PNG ou WEBP.' });
+    if (dados.length > 900 * 1024) return res(413, { error: 'Imagem grande demais (máx. ~650 KB).' });
 
     const id = aleatorio(12);
     await contaRef.collection('fotos').doc(id).set({
@@ -850,6 +859,7 @@ exports.handler = async function (event, context) {
       texto,
       lida: false,
       criado_em: new Date(now).toISOString(),
+      ordem: ordemMsg(),
     };
 
     await vDocRef.collection('mensagens').doc(msgId).set(msgData);

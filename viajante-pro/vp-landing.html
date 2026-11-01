@@ -1859,35 +1859,46 @@
     function renderizarDestinosCms(destinos) {
       const grid = document.getElementById('destinosGrid');
       if (!grid) return;
-      grid.innerHTML = destinos.map(d => {
-        const catClean = (d.categoria || 'Nacionais').toLowerCase();
-        let catTag = 'nacional';
-        if (catClean.includes('internaciona')) catTag = 'internacional';
-        if (catClean.includes('praia')) catTag += ' praia';
-        if (catClean.includes('cultura')) catTag += ' cultura';
-
+      const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      const slug = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const cats = [];
+      grid.innerHTML = destinos.filter(d => d && d.nome).map((d, i) => {
+        const cat = d.categoria || 'Outros';
+        if (!cats.some(c => c.slug === slug(cat))) cats.push({ slug: slug(cat), nome: cat });
+        const img = d.imagem || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80';
         return `
-          <div class="card dest-card" data-cat="${catTag}">
+          <div class="card dest-card" data-cat="${esc(slug(cat))}">
             <div class="card-img-wrap">
-              <img src="${d.imagem || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80'}" alt="${d.nome}" class="card-img" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80'">
-              <span class="card-tag">${d.pais || 'Destino'} · ${d.categoria || 'Exclusivo'}</span>
+              <img src="${esc(img)}" alt="${esc(d.nome)}" class="card-img" loading="lazy">
+              <span class="card-tag">${esc(d.pais || 'Destino')} · ${esc(cat)}</span>
             </div>
             <div class="card-body">
-              <h3 class="card-title">${d.nome}</h3>
-              <p class="card-desc">${d.descricao || 'Conheça um dos destinos mais incríveis com suporte exclusivo Viajante Pro.'}</p>
+              <h3 class="card-title">${esc(d.nome)}</h3>
+              <p class="card-desc">${esc(d.descricao || 'Conheça um dos destinos mais incríveis com suporte exclusivo Viajante Pro.')}</p>
               <div class="card-footer">
                 <div>
                   <span class="card-price-label">A partir de</span>
-                  <div class="card-price-val">${d.preco || 'Sob consulta'}</div>
+                  <div class="card-price-val">${esc(d.preco || 'Sob consulta')}</div>
                 </div>
-                <button class="btn btn-outline" onclick="openDetailsModal('${d.nome}', '${d.descricao || d.nome}')">
-                  Ver Detalhes
-                </button>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  ${/^https?:\/\//i.test(d.video || '') ? `<a class="btn btn-outline" href="${esc(d.video)}" target="_blank" rel="noopener">▶ Vídeo</a>` : ''}
+                  <button class="btn btn-outline" data-dest="${i}">Ver Detalhes</button>
+                </div>
               </div>
             </div>
           </div>
         `;
       }).join('');
+      grid.querySelectorAll('[data-dest]').forEach(btn => btn.addEventListener('click', () => {
+        const d = destinos[Number(btn.dataset.dest)];
+        openDetailsModal(d.nome, d.descricao || d.nome);
+      }));
+      const tabs = document.querySelector('#destinos .category-tabs');
+      if (tabs) {
+        tabs.innerHTML = '<li><button class="tab-btn active" data-filtro="all">Todos os Destinos</button></li>' +
+          cats.map(c => `<li><button class="tab-btn" data-filtro="${esc(c.slug)}">${esc(c.nome)}</button></li>`).join('');
+        tabs.querySelectorAll('[data-filtro]').forEach(b => b.addEventListener('click', () => filterDestinations(b.dataset.filtro, b)));
+      }
     }
 
     window.addEventListener('DOMContentLoaded', carregarConteudoCmsLanding);

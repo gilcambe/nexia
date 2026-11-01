@@ -1,120 +1,138 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Editar Destinos - Viajante Pro</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
-  <script src="/clientes/viajantepro.js" defer></script>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Editar site — Viajante Pro</title><meta name="robots" content="noindex">
+<style>
+:root{--bg:#0a0c14;--card:#12162a;--line:rgba(255,255,255,.08);--txt:#e8ecf4;--mut:#94a3b8;--gold:#d4af37;--ok:#22c55e;--err:#ef4444}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--txt);overflow-x:hidden}
+header{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2}
+header img{width:40px;height:40px;border-radius:8px}header b{flex:1}
+main{max-width:900px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;overflow-wrap:anywhere}
+input,select,button{font:inherit;font-size:16px;min-height:44px;border-radius:10px;border:1px solid var(--line);background:#0e1222;color:var(--txt);padding:8px 12px}
+button{background:var(--gold);color:#111;font-weight:700;border:0;cursor:pointer}button.sec{background:transparent;color:var(--txt);border:1px solid var(--line)}
+.linha{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.mut{color:var(--mut);font-size:.9rem}.erro{color:var(--err)}
+.st{display:inline-block;border-radius:6px;padding:2px 8px;font-size:.8rem;background:#3a2f12;color:#ffe2a8}.st.fechada{background:#123a26;color:#9be7b9}
+.oculto{display:none!important}
+textarea{font:inherit;font-size:16px;width:100%;min-height:70px;border-radius:10px;border:1px solid var(--line);background:#0e1222;color:var(--txt);padding:8px 12px}
+.grade{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px}.grade input,.grade select{width:100%}
+label{display:block;font-size:.85rem;color:var(--mut);margin:6px 0 2px}
+.dest{display:grid;grid-template-columns:96px 1fr;gap:12px}.dest img{width:96px;height:96px;object-fit:cover;border-radius:10px;background:#0e1222}
+@media(max-width:480px){.dest{grid-template-columns:1fr}.dest img{width:100%;height:160px}}
+.barra{position:sticky;bottom:0;background:var(--bg);padding:10px 0;border-top:1px solid var(--line);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.peq{min-height:36px;font-size:14px;padding:4px 10px}
+</style>
 </head>
-<body class="bg-gray-100 p-6">
-  <div class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md">
-    <h1 class="text-2xl font-bold mb-6">Editar Destinos</h1>
-
-    <!-- Verificação de Login -->
-    <div id="login-check" class="mb-6">
-      <p class="text-gray-600">Verificando login...</p>
+<body>
+<header><img src="/viajante-pro/img/vp-oficial.jpg" alt="Viajante Pro"><b>Editar site</b><a class="mut" href="/viajante-pro/landing" target="_blank" rel="noopener">Ver site</a><button id="sair" class="sec oculto" type="button">Sair</button></header>
+<main>
+  <form id="login" class="card"><h2>Entrar</h2><div class="linha"><input id="senha" type="password" placeholder="Senha" required autocomplete="current-password"><button>Entrar</button></div><p id="erro" class="erro"></p></form>
+  <section id="editor" class="oculto">
+    <div class="card"><h2>Topo do site</h2>
+      <label for="hTitulo">Título principal</label><input id="hTitulo" style="width:100%">
+      <label for="hSub">Frase abaixo do título</label><textarea id="hSub"></textarea>
+      <label for="sTitulo">Título da seção "Sobre"</label><input id="sTitulo" style="width:100%">
     </div>
-
-    <!-- Lista de Destinos -->
-    <div id="destinos-container" class="hidden">
-      <button id="adicionar-destino" class="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Adicionar Destino</button>
-      <div id="destinos-lista" class="space-y-4"></div>
-      <button id="salvar-destinos" class="mt-6 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Salvar</button>
-      <p id="mensagem-salvo" class="mt-4 text-green-600 hidden">Destinos salvos com sucesso!</p>
+    <div class="card"><h2>Destinos <span id="qtd" class="mut"></span></h2>
+      <p class="mut">Sem limite. A categoria vira um botão de filtro no site (ex.: Internacional, Nacional, Praia, Cruzeiro, Neve…).</p>
+      <div id="lista"></div>
+      <button id="novo" type="button">+ Adicionar destino</button>
     </div>
-  </div>
-
-  <script>
-    let destinos = [];
-    let proximoIdTemporario = 1;
-
-    // Verificação de Login
-    function verificarLogin() {
-      const usuario = obterUsuario();
-      if (!usuario) {
-        document.getElementById('login-check').innerHTML = '<p class="text-red-600">Acesso negado. Faça login para continuar.</p>';
-        return false;
-      }
-      document.getElementById('login-check').classList.add('hidden');
-      document.getElementById('destinos-container').classList.remove('hidden');
-      return true;
-    }
-
-    // Carregar Destinos
-    function lerConteudo() {
-      const conteudoSalvo = obterConteudo();
-      if (conteudoSalvo && conteudoSalvo.destinos) {
-        destinos = conteudoSalvo.destinos;
-      } else {
-        destinos = [];
-      }
-      renderizarDestinos();
-    }
-
-    // Renderizar Destinos
-    function renderizarDestinos() {
-      const lista = document.getElementById('destinos-lista');
-      lista.innerHTML = '';
-      destinos.forEach((destino, index) => {
-        const card = document.createElement('div');
-        card.className = 'p-4 border rounded-lg bg-gray-50';
-        card.innerHTML = `
-          <input type="text" placeholder="Título" class="w-full p-2 mb-2 border rounded" value="${destino.titulo || ''}">
-          <select class="w-full p-2 mb-2 border rounded">
-            <option value="praia" ${destino.categoria === 'praia' ? 'selected' : ''}>Praia</option>
-            <option value="montanha" ${destino.categoria === 'montanha' ? 'selected' : ''}>Montanha</option>
-            <option value="cidade" ${destino.categoria === 'cidade' ? 'selected' : ''}>Cidade</option>
-          </select>
-          <input type="number" placeholder="Preço" class="w-full p-2 mb-2 border rounded" value="${destino.preco || ''}">
-          <input type="file" accept="image/*" class="w-full p-2 mb-2 border rounded">
-          <input type="text" placeholder="URL do Vídeo" class="w-full p-2 mb-2 border rounded" value="${destino.video || ''}">
-          <button class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600" onclick="removerDestino(${index})">Remover</button>
-        `;
-        lista.appendChild(card);
+    <div class="barra"><button id="salvar" type="button">Salvar e publicar</button><a href="/viajante-pro/landing" target="_blank" rel="noopener"><button type="button" class="sec">Ver site</button></a><span id="msg" class="mut"></span></div>
+  </section>
+  <datalist id="cats"></datalist>
+</main>
+<script>
+(function () {
+  'use strict';
+  var API = '/api/viajante-pro?site=viajantepro';
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+  var token = ''; try { token = localStorage.getItem('vp_admin_token') || ''; } catch (e) {}
+  var destinos = [], alterado = false;
+  function api(corpo) {
+    return fetch(API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ token: token }, corpo)) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (r.status === 401 && corpo.acao !== 'entrar') sair(); if (!r.ok) throw new Error(j.error || 'Erro ' + r.status); return j; }); });
+  }
+  function sair() { token = ''; try { localStorage.removeItem('vp_admin_token'); } catch (e) {} $('editor').classList.add('oculto'); $('sair').classList.add('oculto'); $('login').classList.remove('oculto'); }
+  // Primeira vez: traz os destinos que já estão no site
+  function importarDoSite() {
+    return fetch('/viajante-pro/landing').then(function (r) { return r.text(); }).then(function (html) {
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      return Array.prototype.map.call(doc.querySelectorAll('#destinosGrid .dest-card'), function (c) {
+        var tag = (c.querySelector('.card-tag') || {}).textContent || '';
+        var cat = (c.getAttribute('data-cat') || '').split(/\s+/)[0] || 'Outros';
+        return { nome: (c.querySelector('.card-title') || {}).textContent || '', pais: tag.split('·')[0].trim(), categoria: cat.charAt(0).toUpperCase() + cat.slice(1),
+          descricao: (c.querySelector('.card-desc') || {}).textContent || '', preco: (c.querySelector('.card-price-val') || {}).textContent || '', imagem: (c.querySelector('img') || {}).src || '', video: '' };
       });
-    }
-
-    // Adicionar Destino
-    function adicionarDestino() {
-      const novoDestino = {
-        id: `temp-${proximoIdTemporario++}`,
-        titulo: '',
-        categoria: 'praia',
-        preco: 0,
-        foto: null,
-        video: ''
-      };
-      destinos.push(novoDestino);
-      renderizarDestinos();
-    }
-
-    // Remover Destino
-    function removerDestino(index) {
-      destinos.splice(index, 1);
-      renderizarDestinos();
-    }
-
-    // Salvar Destinos
-    function salvarDestinos() {
-      const destinosFormatados = destinos.map(destino => ({
-        titulo: destino.titulo,
-        categoria: destino.categoria,
-        preco: destino.preco,
-        foto: destino.foto,
-        video: destino.video
-      }));
-      salvarConteudo({ destinos: destinosFormatados });
-      document.getElementById('mensagem-salvo').classList.remove('hidden');
-      setTimeout(() => document.getElementById('mensagem-salvo').classList.add('hidden'), 3000);
-    }
-
-    // Inicialização
-    if (verificarLogin()) {
-      lerConteudo();
-      document.getElementById('adicionar-destino').addEventListener('click', adicionarDestino);
-      document.getElementById('salvar-destinos').addEventListener('click', salvarDestinos);
-    }
-  </script>
+    }).catch(function () { return []; });
+  }
+  function carregar() {
+    $('msg').textContent = 'Carregando…';
+    return fetch(API + '&admin=1').then(function (r) { return r.json(); }).then(function (j) {
+      var c = j.conteudo || {};
+      $('hTitulo').value = (c.hero && c.hero.titulo) || '';
+      $('hSub').value = (c.hero && c.hero.subtitulo) || '';
+      $('sTitulo').value = (c.sobre && c.sobre.titulo) || '';
+      if (Array.isArray(c.destinos) && c.destinos.length) return c.destinos;
+      return importarDoSite();
+    }).then(function (lista) { destinos = lista.map(function (d) { return Object.assign({ nome: '', pais: '', categoria: '', descricao: '', preco: '', imagem: '', video: '' }, d); }); desenhar(); $('msg').textContent = ''; })
+      .catch(function (e) { $('msg').textContent = e.message; });
+  }
+  function desenhar() {
+    $('qtd').textContent = '(' + destinos.length + ')';
+    var cats = {}; destinos.forEach(function (d) { if (d.categoria) cats[d.categoria] = 1; });
+    ['Internacional', 'Nacional', 'Praia', 'Cultura', 'Cruzeiro', 'Neve', 'Aventura'].forEach(function (c) { cats[c] = 1; });
+    $('cats').innerHTML = Object.keys(cats).map(function (c) { return '<option value="' + esc(c) + '">'; }).join('');
+    $('lista').innerHTML = destinos.map(function (d, i) {
+      return '<div class="card dest" data-i="' + i + '"><div><img src="' + esc(d.imagem) + '" alt=""><label class="sec" style="display:block;text-align:center;cursor:pointer;margin-top:6px">📷 Foto<input type="file" accept="image/*" data-campo="arquivo" hidden></label></div><div>' +
+        '<div class="grade"><div><label>Nome *</label><input data-campo="nome" value="' + esc(d.nome) + '"></div><div><label>País / região</label><input data-campo="pais" value="' + esc(d.pais) + '"></div>' +
+        '<div><label>Categoria</label><input data-campo="categoria" list="cats" value="' + esc(d.categoria) + '"></div><div><label>Preço</label><input data-campo="preco" placeholder="R$ 4.990 ou 7 dias" value="' + esc(d.preco) + '"></div></div>' +
+        '<label>Descrição</label><textarea data-campo="descricao">' + esc(d.descricao) + '</textarea>' +
+        '<div class="grade"><div><label>Link da foto (ou use 📷)</label><input data-campo="imagem" value="' + esc(d.imagem) + '"></div><div><label>Link do vídeo (YouTube, Vimeo…)</label><input data-campo="video" value="' + esc(d.video) + '"></div></div>' +
+        '<div class="linha" style="margin-top:8px"><button type="button" class="sec peq" data-acao="subir">↑</button><button type="button" class="sec peq" data-acao="descer">↓</button><button type="button" class="sec peq" data-acao="excluir">Excluir</button></div></div></div>';
+    }).join('') || '<p class="mut">Nenhum destino. Clique em "Adicionar destino".</p>';
+  }
+  function marcar() { alterado = true; $('msg').textContent = 'Alterações não salvas'; }
+  $('lista').addEventListener('input', function (ev) { var el = ev.target, card = el.closest('[data-i]'); if (!card || !el.dataset.campo || el.dataset.campo === 'arquivo') return;
+    destinos[+card.dataset.i][el.dataset.campo] = el.value; if (el.dataset.campo === 'imagem') card.querySelector('img').src = el.value; marcar(); });
+  $('lista').addEventListener('click', function (ev) { var b = ev.target.closest('[data-acao]'); if (!b) return; var i = +b.closest('[data-i]').dataset.i;
+    if (b.dataset.acao === 'excluir') { if (!confirm('Excluir o destino "' + (destinos[i].nome || 'sem nome') + '"?')) return; destinos.splice(i, 1); }
+    if (b.dataset.acao === 'subir' && i > 0) destinos.splice(i - 1, 0, destinos.splice(i, 1)[0]);
+    if (b.dataset.acao === 'descer' && i < destinos.length - 1) destinos.splice(i + 1, 0, destinos.splice(i, 1)[0]);
+    desenhar(); marcar(); });
+  // Foto: reduz no celular antes de enviar (máx. 1200 px, JPEG)
+  function reduzir(arquivo) {
+    return new Promise(function (ok, erro) { var img = new Image(); img.onload = function () { var e = Math.min(1, 1200 / Math.max(img.width, img.height)); var c = document.createElement('canvas');
+      c.width = Math.round(img.width * e); c.height = Math.round(img.height * e); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(img.src); ok(c.toDataURL('image/jpeg', 0.8)); };
+      img.onerror = function () { erro(new Error('Não consegui abrir essa imagem.')); }; img.src = URL.createObjectURL(arquivo); });
+  }
+  $('lista').addEventListener('change', function (ev) { var el = ev.target; if (el.dataset.campo !== 'arquivo' || !el.files[0]) return; var card = el.closest('[data-i]'), i = +card.dataset.i;
+    $('msg').textContent = 'Enviando foto…';
+    reduzir(el.files[0]).then(function (dados) { return api({ acao: 'foto-enviar', dados: dados, tipo: 'image/jpeg' }); })
+      .then(function (j) { destinos[i].imagem = j.url; desenhar(); marcar(); $('msg').textContent = 'Foto enviada. Clique em Salvar e publicar.'; })
+      .catch(function (e) { $('msg').textContent = e.message; }); });
+  $('novo').addEventListener('click', function () { destinos.push({ nome: '', pais: '', categoria: '', descricao: '', preco: '', imagem: '', video: '' }); desenhar(); marcar();
+    var ult = $('lista').lastElementChild; if (ult) { ult.scrollIntoView({ behavior: 'smooth' }); var n = ult.querySelector('[data-campo=nome]'); if (n) n.focus(); } });
+  ['hTitulo', 'hSub', 'sTitulo'].forEach(function (id) { $(id).addEventListener('input', marcar); });
+  $('salvar').addEventListener('click', function () {
+    var sem = destinos.filter(function (d) { return !d.nome.trim(); }).length; if (sem) { $('msg').textContent = sem + ' destino(s) sem nome. Preencha ou exclua.'; return; }
+    var conteudo = { destinos: destinos.map(function (d, i) { return Object.assign({}, d, { id: d.id || 'd' + Date.now().toString(36) + i }); }) };
+    if ($('hTitulo').value.trim() || $('hSub').value.trim()) conteudo.hero = { titulo: $('hTitulo').value.trim(), subtitulo: $('hSub').value.trim() };
+    if ($('sTitulo').value.trim()) conteudo.sobre = { titulo: $('sTitulo').value.trim() };
+    $('msg').textContent = 'Salvando…';
+    api({ acao: 'site-salvar', conteudo: conteudo }).then(function () { alterado = false; $('msg').textContent = 'Publicado ✓ Abra "Ver site" para conferir.'; }).catch(function (e) { $('msg').textContent = e.message; });
+  });
+  window.addEventListener('beforeunload', function (e) { if (alterado) { e.preventDefault(); e.returnValue = ''; } });
+  function entrou() { $('login').classList.add('oculto'); $('editor').classList.remove('oculto'); $('sair').classList.remove('oculto'); carregar(); }
+  $('login').addEventListener('submit', function (ev) { ev.preventDefault(); $('erro').textContent = '';
+    api({ acao: 'entrar', senha: $('senha').value }).then(function (j) { token = j.token; try { localStorage.setItem('vp_admin_token', token); } catch (e) {} entrou(); }).catch(function (e) { $('erro').textContent = e.message; }); });
+  $('sair').addEventListener('click', sair);
+  if (token) entrou();
+})();
+</script>
+<script src="/viajante-pro/abertura-kernex.js?v=3" data-produto="VIAJANTE PRO" defer></script>
+<script src="/viajante-pro/vp-marca.js?v=3" defer></script>
 </body>
 </html>
