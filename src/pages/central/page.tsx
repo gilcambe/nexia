@@ -65,6 +65,11 @@ export default function CentralPage() {
     try { sessionStorage.setItem("central-tema", tema.toString()); } catch { /* sem storage */ }
   }, [tema]);
 
+  useEffect(() => {
+    document.documentElement.classList.toggle("central-claro", tema);
+    try { sessionStorage.setItem("central-tema", tema.toString()); } catch { /* sem storage */ }
+  }, [tema]);
+
   const [aba, setAba] = useState<Aba>(() => {
     const savedChoice = sessionStorage.getItem("central-aba") as Aba | undefined;
     const hashAba = location.hash.slice(1) as Aba;
