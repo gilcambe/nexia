@@ -1,5 +1,5 @@
 import { Ollama } from 'ollama';
-import { webLLMEnabled } from '../config';
+import { config } from '../config';
 import { webLLMChat } from '../ui/webllm';
 
 class OllamaEngine {
@@ -17,17 +17,17 @@ class OllamaEngine {
     await this.model.init();
   }
 
-  async chat(prompt: string): Promise<string> {
-    if (webLLMEnabled) {
+  async chat(prompt: string): Promise<{ response: string; engine: string }> {
+    if (config.useWebLLM) {
       try {
         const response = await webLLMChat.chat(prompt);
-        return response;
+        return { response, engine: 'WebLLM' };
       } catch (error) {
         console.error('WebLLM failed, falling back to Ollama:', error);
       }
     }
     const response = await this.model.chat(prompt);
-    return response;
+    return { response, engine: 'Ollama' };
   }
 }
 
