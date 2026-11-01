@@ -82,6 +82,17 @@ function getFunction(name, env) {
         if (context && !context.env) context.env = resolvedEnv;
         return await handler(event, context, resolvedEnv);
       };
+      // Repassa o `env` do worker para os handlers se ele existir e tiver a binding AI
+      const passEnvToHandler = (handler) => async (event, context, env) => {
+        // Garante que o env e a binding AI estejam sempre presentes e repassados
+        const resolvedEnv = env || (context && context.env) || (event && event.env) || globalThis.env || {};
+        if (!resolvedEnv.AI) {
+          resolvedEnv.AI = {};
+        }
+        if (event && !event.env) event.env = resolvedEnv;
+        if (context && !context.env) context.env = resolvedEnv;
+        return await handler(event, context, resolvedEnv);
+      };
 
       const wrapHandler = (fn) => {
         if (typeof fn !== 'function') return fn;
