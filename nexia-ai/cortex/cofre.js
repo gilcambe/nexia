@@ -15,6 +15,11 @@ class Cofre {
   async recuperar(key) {
     return this.data[key];
   }
+
+  async sincronizar() {
+    // Implementação de sincronização
+    return true;
+  }
 }
 
 module.exports = Cofre;
