@@ -22,6 +22,19 @@ function chaveDe(desc) {
   return String(desc);
 }
 
+async function incrementUsage(providerId, { requests = 0, tokens = 0, errors = 0 }) {
+  const date = new Date().toISOString().split('T')[0];
+  const key = `${providerId}:${date}`;
+  const d1Storage = require('../../src/utils/d1Storage');
+  await d1Storage.incrementUsage(key, { requests, tokens, errors });
+}
+
+async function getUsage(providerId, date) {
+  const key = `${providerId}:${date}`;
+  const d1Storage = require('../../src/utils/d1Storage');
+  return await d1Storage.getUsage(key);
+}
+
 /** Converte um cabeçalho de reset (ex: "2m59.56s", "7.66s", "30") em ms. */
 function parseReset(texto) {
   if (texto == null || texto === '') return SESSENTA_S;
