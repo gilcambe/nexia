@@ -45,18 +45,13 @@ Grava `{ id, texto, ms, tokens }` (status `feito`) ou erro.
 ### `GET /nexia/maquinas` (só admin)
 Lista as máquinas para o card "Máquinas" da Central.
 
-## Provedor `local` no roteador
-Em vez de chamar URL externa, o roteador enfileira em `tarefas_locais` e espera até 90 s. Se nenhuma máquina teve pulso nos últimos 2 min, a tarefa é pulada na hora. Só para classes internas leves (classificar, resumir, título). Nunca chat de cliente, nunca código.
+## Testes
 
-## Instalação em cada PC
-
-1. Copie `tools/agente-maquina/` para o PC.
-2. Edite `agente.config.json` com `NEXIA_URL`, `NEXIA_MAQUINA_TOKEN`, `NEXIA_MAQUINA_NOME` e `NEXIA_MODELO`.
-3. Rode `instalar.ps1` (PowerShell como administrador).
-4. Confirme que o Ollama está rodando em `localhost:11434` com o modelo configurado.
-
-## Central — card "Máquinas"
-Lê `GET /nexia/maquinas` (só admin) e mostra: nome, online/offline, CPU, RAM livre, modelo, tarefas feitas hoje.
+- **401 sem token**: Provar que rotas `/nexia/maquinas/*` retornam 401 se `NEXIA_MAQUINA_TOKEN` ausente ou inválido.
+- **Provedor `local` pulado**: Sem máquina online nos últimos 2 min, provedor `local` pula a tarefa em até 90s sem travar.
+- **Tarefa para uma máquina**: Testar que a tarefa é atribuída a apenas uma máquina por vez.
+- **Agente funciona**: Testar o agente com um Ollama mockado.
 
 ---
 *Feito com Kernex — máquina do Cortex, sem túnel, sem domínio, sem porta aberta.*
+
