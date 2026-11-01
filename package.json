@@ -6,6 +6,7 @@
     "node": ">=20"
   },
   "scripts": {
+    "weekly-check": "node scripts/checkFreeIAModels.js",
     "dev": "vite",
     "build": "vite build",
     "build:body-coach": "npm ci --prefix apps/body-coach --no-audit --no-fund && npm run build --prefix apps/body-coach",
