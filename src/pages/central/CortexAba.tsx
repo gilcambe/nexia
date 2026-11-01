@@ -14,6 +14,7 @@ interface CortexEstendido {
   proximas: Tarefa[];
   porDia?: { dia: string; feitas: number }[];
   divididos?: { numero: number; titulo: string; pct: number; prontas: number; total: number }[];
+  motivos?: { codigo: string; texto: string; total: number }[];
 }
 
 function Lista({ itens, vazio }: { itens: Tarefa[]; vazio: string }) {
@@ -24,7 +25,7 @@ function Lista({ itens, vazio }: { itens: Tarefa[]; vazio: string }) {
         <li key={t.numero}>
           <a href={t.link} target="_blank" rel="noopener noreferrer" className="block rounded-xl bg-nexia-surface2 p-3 text-sm">
             <span className="text-nexia-muted">#{t.numero}</span> {t.titulo}
-            <span className="block text-xs text-nexia-muted mt-1">{haQuanto(t.quando)}</span>
+            <span className="block text-xs text-nexia-muted mt-1">{t.motivo ? `${t.motivo} · ` : ""}{haQuanto(t.quando)}</span>
           </a>
         </li>
       ))}
@@ -227,6 +228,13 @@ export default function CortexAba({ d, erro }: { d: Dados; erro?: string }) {
             <Numero valor={x.travadas.length} rotulo="travadas" />
             <Numero valor={x.feitas7} rotulo="feitas em 7 dias" destaque />
           </div>
+          {!!x.motivos?.length && (
+            <Cartao titulo="Fila agora: por que cada tarefa espera" icone="lista" resumo={`${x.motivos.length} motivo(s)`}>
+              <ul className="space-y-1 text-sm" data-testid="fila-motivos">
+                {x.motivos.map((m) => <li key={m.codigo} className="flex justify-between gap-2"><span>{m.texto}</span><b>{m.total}</b></li>)}
+              </ul>
+            </Cartao>
+          )}
           <Cartao titulo="Fazendo agora" icone="cortex" resumo={x.fazendo.length ? x.fazendo[0].titulo : "Nada rodando"}><Lista itens={x.fazendo} vazio="Nada rodando neste momento." /></Cartao>
           <Cartao titulo="Travadas (precisam de ajuda)" icone="alerta" resumo={x.travadas.length ? `${x.travadas.length} travada(s)` : "Nenhuma travada"}><Lista itens={x.travadas} vazio="Nenhuma travada. 🎉" /></Cartao>
           <Cartao titulo="Últimas entregas" icone="ok" resumo={`${x.feitas7} entregues em 7 dias`}><Lista itens={x.ultimas} vazio="Nenhuma entrega nos últimos 7 dias." /></Cartao>
