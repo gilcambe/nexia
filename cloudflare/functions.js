@@ -52,7 +52,6 @@ const LOADERS = {
   'usage': () => require('../netlify/functions/usage.js'),
   'whatsapp-business': () => require('../netlify/functions/whatsapp-business.js'),
   'central': () => require('../netlify/functions/central.js'),
-  'conheca': () => require('../netlify/functions/conheca.js'),
   'pedidos': () => require('../netlify/functions/pedidos.js'),
   'pedidos-acoes': () => require('../netlify/functions/central/pedidos-acoes.js'),
   'entender-anexo': () => require('../netlify/functions/central/entender-anexo.js'),
@@ -64,26 +63,26 @@ const loaded = new Map();
 /** Handler no formato Netlify, ou null se não existe ou falhou ao carregar (como no server.js). */
 function getFunction(name) {
   if (!Object.prototype.hasOwnProperty.call(LOADERS, name)) return null;
-  if (!loaded.has(name)) {
+      if (!loaded.has(name)) {
     try {
       const mod = LOADERS[name]();
-      // Assegura que o env do worker (com env.AI) seja repassado aos handlers criados via createHandler ou diretamente
-      if (mod && typeof mod.createHandler === 'function') {
+      // Repassa o `env` do worker para os handlers se ele existir e tiver a binding AI
+      const passEnvToHandler = (handler) => async (event, context, env) => {
+        if (env && env.AI) {
+          if (event) event.env = env;
+          if (context) context.env = env;
+        }
+        return await handler(event, context, env);
+      };
+
+      if (typeof mod.createHandler === 'function') {
         const originalCreateHandler = mod.createHandler;
         mod.createHandler = function(deps = {}) {
           const handler = originalCreateHandler(deps);
-          return async function(event, context, env) {
-            if (env && env.AI) {
-              if (event) event.env = env;
-              if (context) context.env = env;
-            }
-            return await handler(event, context, env);
-          };
+          return passEnvToHandler(handler);
         };
-        // Recria o handler padrão se já houver exports.handler
-        if (mod.handler) {
-          // Mantém compatibilidade ou deixa o worker injetar env
-        }
+      } else if (typeof mod.handler === 'function') {
+        mod.handler = passEnvToHandler(mod.handler);
       }
       loaded.set(name, mod);
     }
