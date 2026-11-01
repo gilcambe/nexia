@@ -14,7 +14,7 @@ const { createOpenAICompatibleProvider, PROVIDERS: OPENAI_COMPATIBLE } = require
 const { aplicarVagas, vagasCustom } = require('./vagas');
 const { createGeminiProvider } = require('./providers/gemini');
 const { createCohereProvider } = require('./providers/cohere');
-const { createCache, chave, cacheavel } = require('./cache');
+const { createCache, getSharedCache, chave, cacheavel } = require('./cache');
 
 const PROVIDER_IDS = Object.freeze(['anthropic', 'gemini', 'cohere', ...Object.keys(OPENAI_COMPATIBLE)]);
 
@@ -40,11 +40,40 @@ function createRouter(o = {}) {
   }
   Object.assign(providers, o.providers || {});
 
+  // #2848: todo pedido conta no crédito interno do provedor (pedidos, tokens, 429). Contar nunca quebra a resposta.
+  const uso = o.uso || require('./cota').getUso();
+  const contar = (id, inc) => { try { uso.incrementUsage(id, inc); } catch { /* sem conta, segue */ } };
+  const tokensDe = out => (out && out.usage && (out.usage.total_tokens || ((out.usage.input_tokens || 0) + (out.usage.output_tokens || 0)))) || (out && out.text ? Math.ceil(out.text.length / 4) : 0);
+  const e429 = e => (e && e.details && e.details.status === 429) ? 1 : 0;
+  const contados = new Map();
+  function contado(id, p) {
+    if (contados.has(id)) return contados.get(id);
+    const w = Object.create(p);
+    w.chat = async (model, req) => {
+      try { const out = await p.chat(model, req); contar(id, { requests: 1, tokens: tokensDe(out) }); return out; }
+      catch (e) { contar(id, { requests: 1, errors: e429(e) }); throw e; }
+    };
+    if (typeof p.stream === 'function') {
+      w.stream = async function* (model, req) {
+        let texto = 0; let usage = null;
+        try {
+          for await (const ev of p.stream(model, req)) {
+            if (ev && ev.type === 'text' && ev.text) texto += ev.text.length;
+            if (ev && ev.type === 'done' && ev.usage) usage = ev.usage;
+            yield ev;
+          }
+          contar(id, { requests: 1, tokens: tokensDe({ usage }) || Math.ceil(texto / 4) });
+        } catch (e) { contar(id, { requests: 1, errors: e429(e) }); throw e; }
+      };
+    }
+    contados.set(id, w);
+    return w;
+  }
   const providerFor = desc => {
     const p = desc && providers[desc.provider];
     if (!p) throw new ModelError(CODES.UNKNOWN_PROVIDER, `Provedor desconhecido: ${desc && desc.provider}`);
     if (!desc.model || typeof desc.model !== 'string') throw new ModelError(CODES.UNKNOWN_PROVIDER, 'Modelo não informado.');
-    return p;
+    return contado(desc.provider, p);
   };
 
   function capabilities(desc) {
@@ -54,7 +83,9 @@ function createRouter(o = {}) {
 
   // #956: respostas sem ferramentas pedidas com req.cache === true ficam 24 h em memória (sem req.cache, nada muda).
   // #830: NEXIA_CACHE_ARQUIVO (opcional) guarda o cache em disco entre rodadas.
-  const cache = o.cache || createCache({ arquivo: (o.env || process.env).NEXIA_CACHE_ARQUIVO || '' });
+  // #2853: sem arquivo, usa o cache compartilhado (7 dias), que o job carrega do D1 e salva no fim.
+  const arquivoCache = (o.env || process.env).NEXIA_CACHE_ARQUIVO || '';
+  const cache = o.cache || (arquivoCache ? createCache({ arquivo: arquivoCache }) : getSharedCache());
   async function chat(desc, req) {
     const p = providerFor(desc);
     if (!cacheavel(req)) return p.chat(desc.model, normalizeRequest(req));
