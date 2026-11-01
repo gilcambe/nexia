@@ -45,7 +45,7 @@ const PROVEDORES = {
 };
 
 /** Lista para a página: nada de chave aqui, só nome, site e passos. */
-const provedoresPublicos = () => Object.entries(PROVEDORES).map(([id, p]) => ({ id, nome: p.nome, site: p.site, logo: p.logo || null, passos: p.passos, custom: !!p.custom }));
+  const provedoresPublicos = () => Object.entries(PROVEDORES).map(([id, p]) => ({ id, nome: p.nome, site: p.site, logo: p.logo || null, passos: p.passos, custom: !!p.custom, pausada: p.pausada || false, ordem: p.ordem || 0 }));
 
 const limpar = (t) => redactSecrets(String(t || '')).replace(/(key|token)=\S+/gi, '$1=***').slice(0, 140);
 
