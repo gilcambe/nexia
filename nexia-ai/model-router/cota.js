@@ -47,7 +47,7 @@ function parseReset(texto) {
   return SESSENTA_S;
 }
 
-function createPlacar({ agora = () => Date.now() } = {)
+function createPlacar({ agora = () => Date.now() } = {})
   const placar = {}; // chave -> { ate: number, motivo: string }
   const seguidas = {}; // chave -> falhas seguidas por instabilidade (disjuntor)
 
