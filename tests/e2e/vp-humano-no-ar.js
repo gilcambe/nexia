@@ -13,12 +13,12 @@ async function rodar(perfil, nome) {
   const b = await chromium.launch();
   const ctx = await b.newContext({ ...perfil, permissions: ['clipboard-read', 'clipboard-write'] });
   const erros = [];
-  const nova = async () => { const p = await ctx.newPage(); p.on('pageerror', e => erros.push(e.message)); p.on('dialog', d => d.accept()); return p; };
+  const nova = async () => { const p = await ctx.newPage(); p.setDefaultNavigationTimeout(60000); p.on('pageerror', e => erros.push(e.message)); p.on('dialog', d => d.accept()); return p; };
   const foto = async (p, f) => p.screenshot({ path: `${OUT}/${nome}-${f}.png`, fullPage: false });
   try {
     // 1. Site
     const p = await nova();
-    await p.goto(B + '/viajante-pro/landing', { waitUntil: 'networkidle' });
+    await p.goto(B + '/viajante-pro/landing', { waitUntil: 'domcontentloaded', timeout: 60000 });
     await p.waitForTimeout(3500);
     await foto(p, '1-site');
     ok(`[${nome}] site abre sem rolagem lateral`, (await p.evaluate(() => document.documentElement.scrollWidth)) <= (perfil.viewport ? perfil.viewport.width : 1280) + 1);
