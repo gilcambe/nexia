@@ -1,4 +1,4 @@
-export function getBarColor(percent) {
+export function utilBarColor(percent) {
   if (percent > 90) {
     return "bg-red-500";
   } else if (percent > 70) {
