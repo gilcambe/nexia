@@ -26,6 +26,19 @@ export function ehPedidoDeCodigo(texto: string): boolean {
 }
 
 // Função pura exportada - retorna true quando texto contém palavras relacionadas a alterações de projeto/sistema
+  const t = sem(texto || "");
+  if (!t || t.length > 400 || t.includes("```") || /\n\s*\n/.test(t)) return false;
+  if (FAZER.test(t)) return false;
+  return t.endsWith("?") || INICIO.test(t);
+}
+
+/** Função pura que retorna true apenas quando o texto contém palavras relacionadas a alterações de projeto/sistema. */
+export function ehPedidoDeCodigo(texto: string): boolean {
+  const t = sem(texto || "");
+  return PALAVRAS_CODIGO.test(t);
+}
+
+// Função pura exportada - retorna true quando texto contém palavras relacionadas a alterações de projeto/sistema
 
 /** Pergunta sobre como andam as tarefas: a resposta lê a Central (fila do Cortex) antes. */
 export function ehSobreSituacao(texto: string): boolean {
