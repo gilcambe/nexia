@@ -86,4 +86,4 @@ async function montarPacote({ issue, arquivos, limiteTokens }) {
   return pacote;
 }
 
-module.exports = { montarPacote };
+export { montarPacote }; // Corrigido para CommonJS
