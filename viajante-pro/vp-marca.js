@@ -190,20 +190,20 @@ if (typeof module !== 'undefined' && module.exports) {
     if (abertura) window.addEventListener('kernex-fim', function () { setTimeout(decolar, 150); }, { once: true });
     else setTimeout(decolar, 400);
 
-      // Configura o listener para mudanças de visibilidade
-  // Garante que não dispare múltiplas vezes quando a aba volta para 'visible'
-  var visibilityChangeHandler = function() {
-    if (document.visibilityState === 'visible') {
-      var agora = Date.now();
-      // Só dispara se já passaram 5 minutos desde a última animação e não há animação em andamento
-      if (agora - ultimoVoo >= 5 * 60 * 1000 && !emVoo) {
-        decolar();
+    // Configura o listener para mudanças de visibilidade
+    // Garante que não dispare múltiplas vezes quando a aba volta para 'visible'
+    var visibilityChangeHandler = function() {
+      if (document.visibilityState === 'visible') {
+        var agora = Date.now();
+        // Só dispara se já passaram 5 minutos desde a última animação e não há animação em andamento
+        if (agora - ultimoVoo >= 5 * 60 * 1000 && !emVoo) {
+          decolar();
+        }
       }
-    }
-  };
-  
-  // Adiciona listener para mudanças de visibilidade
-  document.addEventListener('visibilitychange', visibilityChangeHandler);
+    };
+
+    // Adiciona listener para mudanças de visibilidade
+    document.addEventListener('visibilitychange', visibilityChangeHandler);
   }
 
   // foto que não carregar vira um fundo bonito com o nome do lugar (nunca ícone de imagem quebrada)
