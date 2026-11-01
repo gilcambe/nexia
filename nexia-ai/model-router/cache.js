@@ -1,6 +1,10 @@
 'use strict';
 // #956: cache em memória (24 h) para respostas SEM ferramentas. Dividir tarefa e revisões curtas repetem
 // pedidos iguais; responder do cache economiza a cota grátis. Só vale quando o chamador pede (req.cache === true).
+// #1824: cache no D1 (7 dias) para respostas SEM ferramentas e SEM dados de cliente.
+const { D1Database } = require('@cloudflare/workers-types');
+const { createEmbedding } = require('@cf/baai/bge-small-en-v1.5');
+=======
 const { createHash } = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
