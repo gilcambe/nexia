@@ -68,11 +68,13 @@ function getFunction(name) {
       const mod = LOADERS[name]();
       // Repassa o `env` do worker para os handlers se ele existir e tiver a binding AI
       const passEnvToHandler = (handler) => async (event, context, env) => {
-        if (env && env.AI) {
-          if (event) event.env = env;
-          if (context) context.env = env;
+        // Garante que o env e a binding AI estejam sempre presentes e repassados
+        const resolvedEnv = env || (context && context.env) || (event && event.env) || globalThis.env || {};
+        if (resolvedEnv) {
+          if (event && !event.env) event.env = resolvedEnv;
+          if (context && !context.env) context.env = resolvedEnv;
         }
-        return await handler(event, context, env);
+        return await handler(event, context, resolvedEnv);
       };
 
       if (typeof mod.createHandler === 'function') {
