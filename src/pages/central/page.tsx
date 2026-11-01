@@ -60,6 +60,22 @@ export default function CentralPage() {
   // Alerta aberto: undefined = fechado; null = lista de todos; número = um alerta.
   const [alerta, setAlerta] = useState<number | null | undefined>(undefined);
   const [versaoNova, setVersaoNova] = useState(false);
+  const [claro, setClaro] = useState<boolean>(() => {
+    try {
+      const v = localStorage.getItem("central-tema");
+      return v !== null ? v === "claro" : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const alternarTema = () => {
+    setClaro((antigo) => {
+      const proximo = !antigo;
+      try { localStorage.setItem("central-tema", proximo ? "claro" : "escuro"); } catch { /* sem storage */ }
+      return proximo;
+    });
+  };
 
   const conferir = useCallback(async () => {
     setCarregando(true); setErros({});
@@ -115,7 +131,7 @@ export default function CentralPage() {
   const MenuLateral = (
     <nav className="flex flex-col h-full" aria-label="Módulos da Central">
       <div className="flex items-center gap-3 px-5 py-5">
-        <img src="/central/logos/kernex.svg" alt="" className="w-10 h-10" />
+        <img src="/central-icon.svg" alt="" className="w-10 h-10" />
         <div className="leading-tight">
           <div className="text-xl font-bold text-slate-900">Kernex</div>
           <div className="text-sm text-slate-500">Central</div>
@@ -151,7 +167,7 @@ export default function CentralPage() {
   );
 
   return (
-    <div className="central-claro min-h-screen bg-[#f5f7fb] text-slate-900 font-display antialiased pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-0">
+    <div className={`${claro ? "central-claro bg-slate-50 text-slate-900" : "bg-[#0a0a0f] text-slate-100"} min-h-screen font-display antialiased pb-[calc(5.5rem+env(safe-area-inset-bottom))] lg:pb-0`}>
       <aside className="hidden lg:block fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 overflow-y-auto z-20">{MenuLateral}</aside>
       <div className="lg:pl-64">
         <header className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b border-slate-200">
@@ -161,7 +177,7 @@ export default function CentralPage() {
             )}
             <div className="lg:hidden flex items-center gap-2 flex-1 min-w-0" data-testid="central-title">
               {aba === "inicio"
-                ? <><img src="/central/logos/kernex.svg" alt="" className="w-7 h-7" /><span className="font-bold">Kernex</span></>
+                ? <><img src="/central-icon.svg" alt="" className="w-7 h-7" /><span className="font-bold">Kernex</span></>
                 : <span className="font-semibold text-lg truncate">{aba === "mais" ? "Mais" : ABAS.find((a) => a.id === aba)?.nome}</span>}
             </div>
             <label className="hidden md:flex flex-1 max-w-xl items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 h-10 text-slate-400">
@@ -176,9 +192,12 @@ export default function CentralPage() {
                 <span className="block text-[11px] text-slate-400">Atualizado {haQuanto(conferidoEm)}</span>
               </span>
             </div>
-            <button onClick={() => setAlerta(null)} className="relative p-2 text-slate-600 cursor-pointer lg:ml-0 ml-auto" aria-label={`${avisos.length} avisos`} data-testid="central-sino">
+            <button onClick={() => { setAlerta(null); ir("inicio"); }} className="relative p-2 text-slate-600 cursor-pointer lg:ml-0 ml-auto" aria-label={`${avisos.length} avisos`} data-testid="central-sino">
               <Icone nome="sino" className="w-6 h-6" />
               {avisos.length > 0 && <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-[#fff] text-[10px] leading-4 text-center">{avisos.length}</span>}
+            </button>
+            <button onClick={alternarTema} className="p-2 text-slate-600 hover:text-slate-900 cursor-pointer rounded-lg hover:bg-slate-100" aria-label={claro ? "Ativar tema escuro" : "Ativar tema claro"} data-testid="central-tema">
+              <span className="text-base leading-none">{claro ? "🌙" : "☀️"}</span>
             </button>
             <div className="hidden sm:flex items-center gap-2">
               <span className="w-9 h-9 rounded-full bg-slate-800 text-[#fff] flex items-center justify-center text-sm font-semibold">{(user?.email || "?").charAt(0).toUpperCase()}</span>
@@ -187,7 +206,7 @@ export default function CentralPage() {
           </div>
         </header>
 
-        <main className="px-4 lg:px-8 py-6 max-w-[1600px]">
+        <main className="px-4 lg:px-8 py-6 max-w-7xl">
           {!authLoading && !user && (
             <p className="text-slate-500">Faça <button className="text-indigo-600 underline cursor-pointer" onClick={() => navigate("/login")}>login</button> como administrador para abrir a Central.</p>
           )}
