@@ -60,14 +60,11 @@ test('App do Viajante (vp-passenger.html): acesso por token, itinerário e chat 
   assert.ok(html.includes('id="screen-panico"'), 'Deve conter tela de emergência SOS');
 });
 
-test('Central Administrativa (vp-admin.html): gestão de viagens, chat pax e editor do site', () => {
+test('Central Administrativa (vp-admin.html): só telas reais pela API oficial (#2837)', () => {
   assert.ok(fs.existsSync(ADMIN_HTML), 'vp-admin.html deve existir');
   const html = fs.readFileSync(ADMIN_HTML, 'utf8');
-
   assert.ok(html.includes('pg-dashboard'), 'Deve conter dashboard principal');
-  assert.ok(html.includes('pg-roteiros'), 'Deve conter gestão de roteiros e pacotes');
-  assert.ok(html.includes('pg-passageiros'), 'Deve conter base de passageiros');
-  assert.ok(html.includes('pg-financeiro'), 'Deve conter gestão financeira');
-  assert.ok(html.includes('pg-chat-pax'), 'Deve conter atendimento e chat com passageiro');
-  assert.ok(html.includes('pg-editor-site'), 'Deve conter editor de conteúdo do site');
+  for (const a of ['entrar', 'cotacao-listar', 'viagem-listar', 'chat-conversas', 'trocar-senha']) assert.ok(html.includes(`'${a}'`), `usa a ação real ${a}`);
+  for (const l of ['/viajante-pro/cotacoes', '/viajante-pro/viagens', '/viajante-pro/editar']) assert.ok(html.includes(l), `link real ${l}`);
+  for (const fake of ['COL(', "collection('data')", '/api/cortex', 'Simule', 'getDefault', 'simScan', 'pg-pabx']) assert.ok(!html.includes(fake), `sem tela de teste: ${fake}`);
 });
