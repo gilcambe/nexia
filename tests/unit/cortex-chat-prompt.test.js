@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
 const CONTEUDO = readFileSync(
-  new URL('../netlify/functions/cortex-chat.js', import.meta.url),
+  new URL('../../netlify/functions/cortex-chat.js', import.meta.url),
   'utf8'
 );
 
