@@ -102,4 +102,33 @@ const enviarChat = async (chat) => {
   return response.json();
 };
 
-module.exports = { VIAJANTE_PRO, getViagens, criarViagem, editarViagem, excluirViagem, getChats, enviarChat };
+// Função para salvar conteúdo do site
+const salvarConteudo = async (conteudo) => {
+  const token = getToken();
+  const response = await fetch('/.netlify/functions/viajante-pro/site-salvar', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(conteudo)
+  });
+  return response.json();
+};
+
+// Função para ler conteúdo do site
+const lerConteudo = async () => {
+  const token = getToken();
+  const response = await fetch('/.netlify/functions/viajante-pro/site-ler', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
+  if (!response.ok) {
+    return null;
+  }
+  return response.json();
+};
+
+module.exports = { VIAJANTE_PRO, getViagens, criarViagem, editarViagem, excluirViagem, getChats, enviarChat, salvarConteudo, lerConteudo };
