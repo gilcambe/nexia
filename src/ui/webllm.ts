@@ -22,3 +22,14 @@ class WebLLMChat {
 }
 
 export const webLLMChat = new WebLLMChat();
+
+export async function chatWithFallback(prompt: string): Promise<{ response: string; engine: string }> {
+  try {
+    const response = await webLLMChat.chat(prompt);
+    return { response, engine: 'WebLLM' };
+  } catch (error) {
+    console.error('WebLLM failed, falling back to Ollama:', error);
+    const ollamaResponse = await ollamaChat(prompt);
+    return { response: ollamaResponse, engine: 'Ollama' };
+  }
+}
