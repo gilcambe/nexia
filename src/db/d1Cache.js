@@ -7,6 +7,9 @@ function createD1Cache({ d1, tableName = 'router_cache', ttlDays = 7 } = {}) {
   if (!d1) throw new Error('D1 database required');
 
   return {
+  if (!d1) throw new Error('D1 database required');
+
+  return {
     async get(k) {
       const now = new Date();
       const result = await d1.prepare(`SELECT valor FROM ${tableName} WHERE chave = ? AND expires_at > ?`).bind(k, now.toISOString()).first();

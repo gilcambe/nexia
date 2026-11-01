@@ -25,6 +25,9 @@ function createCache({ d1, max = 500, ttlMs = 7 * 24 * 3600e3, agora = () => Dat
   if (d1) {
     const d1Cache = createD1Cache({ d1 });
     return {
+  if (d1) {
+    const d1Cache = createD1Cache({ d1 });
+    return {
       async get(k) {
         const cached = await d1Cache.get(k);
         if (cached) {
