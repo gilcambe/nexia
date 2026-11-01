@@ -70,14 +70,11 @@ function getFunction(name) {
       const passEnvToHandler = (handler) => async (event, context, env) => {
         // Garante que o env e a binding AI estejam sempre presentes e repassados
         const resolvedEnv = env || (context && context.env) || (event && event.env) || globalThis.env || {};
-        if (resolvedEnv && !resolvedEnv.AI) {
-          // Garante que env.AI esteja presente (mock ou stub seguro caso não venha nativo do runtime)
-          resolvedEnv.AI = resolvedEnv.AI || {};
+        if (!resolvedEnv.AI) {
+          resolvedEnv.AI = {};
         }
-        if (resolvedEnv) {
-          if (event && !event.env) event.env = resolvedEnv;
-          if (context && !context.env) context.env = resolvedEnv;
-        }
+        if (event && !event.env) event.env = resolvedEnv;
+        if (context && !context.env) context.env = resolvedEnv;
         return await handler(event, context, resolvedEnv);
       };
 
