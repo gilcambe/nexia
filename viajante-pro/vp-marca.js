@@ -7,6 +7,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     decolar: decolar,
     decolarTeste: decolarTeste,
+    decolarTesteMultiplo: decolarTesteMultiplo,
     emVoo: function() { return emVoo; },
     ultimoVoo: function() { return ultimoVoo; },
     setUltimoVoo: function(valor) { ultimoVoo = valor; },
@@ -69,6 +70,7 @@ if (typeof module !== 'undefined' && module.exports) {
     if (calmo || emVoo || document.visibilityState !== 'visible') return;
 
     var agora = Date.now();
+    // Verifica se já passaram 5 minutos (300000ms) desde a última animação
     if (agora - ultimoVoo < 5 * 60 * 1000) return;
 
     emVoo = true;
@@ -109,6 +111,61 @@ if (typeof module !== 'undefined' && module.exports) {
     calmo = calmoOriginal;
     
     return resultado;
+  }
+  
+  // Função de teste adicional para verificar múltiplas chamadas
+  function decolarTesteMultiplo(tempoFalso, vezes) {
+    var tempoOriginal = Date.now;
+    var emVooOriginal = emVoo;
+    var ultimoVooOriginal = ultimoVoo;
+    var calmoOriginal = calmo;
+    
+    Date.now = function() {
+      return tempoFalso || tempoOriginal();
+    };
+    
+    calmo = false;
+    
+    var animacoesDisparadas = 0;
+    
+    // Sobrescreve a função decolar para contar chamadas
+    var decolarOriginal = decolar;
+    decolar = function() {
+      if (calmo || emVoo || document.visibilityState !== 'visible') return false;
+      
+      var agora = Date.now();
+      if (agora - ultimoVoo < 5 * 60 * 1000) return false;
+      
+      emVoo = true;
+      ultimoVoo = agora;
+      animacoesDisparadas++;
+      
+      document.querySelectorAll('.vp-logo-anim').forEach(function (c) {
+        c.classList.remove('voando');
+        void c.offsetWidth;
+        c.classList.add('voando');
+      });
+      
+      setTimeout(function() {
+        emVoo = false;
+      }, 2600);
+      
+      return true;
+    };
+    
+    // Executa as chamadas de teste
+    for (var i = 0; i < vezes; i++) {
+      decolar();
+    }
+    
+    // Restaura valores originais
+    Date.now = tempoOriginal;
+    decolar = decolarOriginal;
+    emVoo = emVooOriginal;
+    ultimoVoo = ultimoVooOriginal;
+    calmo = calmoOriginal;
+    
+    return animacoesDisparadas;
   }
 
   function iniciar() {
