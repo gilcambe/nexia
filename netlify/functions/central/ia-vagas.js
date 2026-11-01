@@ -178,10 +178,14 @@ async function lerEstado(gh) {
 function corpoEstado(vagas) {
   return 'Estado das vagas de IA da Central (Conectar IAs, #1958). Escrito pela Central e pelo robô ia-vagas.yml. Sem chaves aqui.\n\n```json\n' + JSON.stringify({ vagas }, null, 1) + '\n```';
 }
-async function gravarEstado(gh, mudar) {
+async function gravarEstado(gh, mudar, acao) {
   const atual = await lerEstado(gh);
   const vagas = { ...atual.vagas };
-  mudar(vagas);
+  if (acao === 'vaga-pausar') {
+    mudar(vagas, { pausada: true });
+  } else {
+    mudar(vagas);
+  }
   const body = corpoEstado(vagas);
   if (atual.issue) await gh(`/issues/${atual.issue}`, { method: 'PATCH', body: JSON.stringify({ body }) });
   else {
