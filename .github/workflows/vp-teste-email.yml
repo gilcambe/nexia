@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Enviar e conferir entrega
         env:
-          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY1 || secrets.BREVO_API_KEY }}
         run: |
           node - <<'JS'
           const key = process.env.BREVO_API_KEY;

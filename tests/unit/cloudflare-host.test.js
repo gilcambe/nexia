@@ -190,7 +190,8 @@ test('CF10. workflows com segredos listam cada nome (sem toJSON(secrets), que o 
     assert.doesNotMatch(y, /toJSON\(secrets\)/, f);
     for (const n of NAMES) {
       if (f === 'nexia-jobs.yml' && n === 'NEXIA_JOBS_TOKEN') { assert.ok(!y.includes('secrets.NEXIA_JOBS_TOKEN'), 'jobs não dispara jobs'); continue; }
-      assert.ok(y.includes(`${n}: \${{ secrets.${src(n)} }}`), `${f}: ${n}`);
+      // aceita também chave nova com reserva: X: ${{ secrets.X1 || secrets.X }} (ex.: BREVO_API_KEY1)
+      assert.ok(y.includes(`${n}: \${{ secrets.${src(n)} }}`) || y.includes(`${n}: \${{ secrets.${src(n)}1 || secrets.${src(n)} }}`), `${f}: ${n}`);
     }
   }
 });
