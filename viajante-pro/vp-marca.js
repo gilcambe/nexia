@@ -94,23 +94,12 @@
     if (abertura) window.addEventListener('kernex-fim', function () { setTimeout(decolar, 150); }, { once: true });
     else setTimeout(decolar, 400);
 
-    // Configura o intervalo de 5 minutos para decolagem
-    setInterval(decolar, 5 * 60 * 1000);
-
     // Configura o listener para mudanças de visibilidade
     document.addEventListener('visibilitychange', function() {
       if (document.visibilityState === 'visible') {
         decolar();
       }
     });
-
-    // decola também quando o logo aparece na tela (ex.: depois de fechar um aviso ou rolar a página)
-    if ('IntersectionObserver' in window) {
-      var io = new IntersectionObserver(function (es) {
-        es.forEach(function (e) { if (e.isIntersecting && !calmo && !document.getElementById('nexia-abertura')) { e.target.classList.remove('voando'); void e.target.offsetWidth; e.target.classList.add('voando'); } });
-      }, { threshold: 0.6 });
-      setTimeout(function () { document.querySelectorAll('.vp-logo-anim').forEach(function (c) { io.observe(c); }); }, 300);
-    }
   }
 
   // foto que não carregar vira um fundo bonito com o nome do lugar (nunca ícone de imagem quebrada)
