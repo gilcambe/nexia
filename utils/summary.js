@@ -1,12 +1,23 @@
 const { encode } = require('gpt-3-encoder');
+const { Configuration, OpenAIApi } = require('openai');
 
 class Summary {
   static async summarize(text) {
-    // Implementação básica de resumo
-    // Em um cenário real, você usaria um modelo de linguagem para gerar um resumo
-    const sentences = text.split('. ');
-    const half = Math.ceil(sentences.length / 2);
-    return sentences.slice(0, half).join('. ') + '.';
+    // Configuração do cliente OpenAI
+    const configuration = new Configuration({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+    const openai = new OpenAIApi(configuration);
+
+    // Chamada ao modelo para gerar um resumo
+    const response = await openai.createCompletion({
+      model: 'text-davinci-003',
+      prompt: `Resuma o seguinte texto mantendo os pontos principais:\n\n${text}`,
+      max_tokens: 150,
+      temperature: 0.7,
+    });
+
+    return response.data.choices[0].text.trim();
   }
 }
 
