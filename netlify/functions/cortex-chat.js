@@ -308,7 +308,7 @@ async function cxLog(tenantId, userId, data) {
 // ═══════════════════════════════════════════════════════════════════════
 //  HANDLER PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════
-exports.handler = async (event) => {
+exports.handler = async (event, ctx) => {
   const headers = makeHeaders(event);
   if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method Not Allowed' }) };
@@ -537,7 +537,7 @@ exports.handler = async (event) => {
             // #1657: grava a memória ANTES do "done". O app para de ler no "done", e o código depois dele nunca rodava,
             // então a conversa não era salva e o Cortex esquecia o que a pessoa tinha dito.
             const nm = [{ role: 'user', content: message }, { role: 'assistant', content: fullText }];
-            if (typeof memModule.save === 'function') await memModule.save(effectiveUserId, [...(mem.history || []), ...nm], mem.summaries, tenantId, memModule.extractEntities ? memModule.extractEntities(nm, mem.entities) : {}, conversationId).catch(() => {});
+            if (typeof memModule.save === 'function') ctx.waitUntil(memModule.save(effectiveUserId, [...(mem.history || []), ...nm], mem.summaries, tenantId, memModule.extractEntities ? memModule.extractEntities(nm, mem.entities) : {}, conversationId).catch(() => {}));
             cxLog(tenantId, userId, { type: 'cortex_execution', conversationId, intent: decision.type, layer, ms: Date.now() - start, modelUsed: used, stream: true, plan: usage.plan, tokensBefore, tokensAfter }).catch(() => {});
             yield sse({ done: true, model: used, ...(buscaDiag ? { busca: buscaDiag } : {}), intent: decision.type, actions: execActions, swarm: swarmOut, usage: { calls: usage.calls, limit: usage.limit, unlimited: !!usage.unlimited, tokensBefore, tokensAfter }, ...(projectCtx.mode === 'context' ? { project: { project_id: projectCtx.project.project_id, confidence: projectCtx.project.confidence } } : {}) });
             yield 'data: [DONE]\n\n';
@@ -560,7 +560,7 @@ exports.handler = async (event) => {
     }
 
     const nm = [{ role: 'user', content: message }, { role: 'assistant', content: finalResponse }];
-    if (typeof memModule.save === 'function') await memModule.save(userId, [...(mem.history || []), ...nm], mem.summaries, tenantId, {}, conversationId).catch(() => {});
+    if (typeof memModule.save === 'function') ctx.waitUntil(memModule.save(userId, [...(mem.history || []), ...nm], mem.summaries, tenantId, {}, conversationId).catch(() => {}));
     if (typeof learnModule.saveExample === 'function') learnModule.saveExample(tenantId, userId, message, finalResponse, decision.type, conversationId).catch(() => {});
     await cxLog(tenantId, userId, { type: 'cortex_execution', conversationId, intent: decision.type, layer, ms: Date.now() - start, actionsCount: execActions.length, modelUsed, plan: usage.plan, tokensBefore, tokensAfter }).catch(() => {});
 
