@@ -22,4 +22,4 @@ function createD1Cache({ d1, tableName = 'router_cache', ttlDays = 7 } = {}) {
   };
 }
 
-module.exports = { createD1Cache }; // Cache permanente no Cloudflare D1
+module.exports = { createD1Cache }; // Cache permanente no Cloudflare D1 para respostas sem ferramentas
