@@ -10,7 +10,8 @@ if (typeof module !== 'undefined' && module.exports) {
     emVoo: function() { return emVoo; },
     ultimoVoo: function() { return ultimoVoo; },
     setUltimoVoo: function(valor) { ultimoVoo = valor; },
-    setCalmo: function(valor) { calmo = valor; }
+    setCalmo: function(valor) { calmo = valor; },
+    getCalmo: function() { return calmo; }
   };
 }
 (function () {
@@ -89,17 +90,15 @@ if (typeof module !== 'undefined' && module.exports) {
     var tempoOriginal = Date.now;
     var emVooOriginal = emVoo;
     var ultimoVooOriginal = ultimoVoo;
-    var visibilidadeOriginal = document.visibilityState;
+    var calmoOriginal = calmo;
     
     // Sobrescreve Date.now para usar tempo falso
     Date.now = function() {
       return tempoFalso || tempoOriginal();
     };
     
-    // Força visibilidade para 'visible' se não estiver
-    if (document.visibilityState !== 'visible') {
-      document.visibilityState = 'visible';
-    }
+    // Força visibilidade para 'visible' e desativa modo calmo
+    calmo = false;
     
     var resultado = decolar();
     
@@ -107,7 +106,7 @@ if (typeof module !== 'undefined' && module.exports) {
     Date.now = tempoOriginal;
     emVoo = emVooOriginal;
     ultimoVoo = ultimoVooOriginal;
-    document.visibilityState = visibilidadeOriginal;
+    calmo = calmoOriginal;
     
     return resultado;
   }
@@ -148,23 +147,6 @@ if (typeof module !== 'undefined' && module.exports) {
   
   // Adiciona listener para mudanças de visibilidade
   document.addEventListener('visibilitychange', visibilityChangeHandler);
-  
-  // Listener para garantir que quando a aba volta de inativa, não dispare múltiplas vezes
-  var ultimaVerificacao = 0;
-  var verificadorDeVisibilidade = function() {
-    var agora = Date.now();
-    if (document.visibilityState === 'visible' && !emVoo) {
-      // Verifica se já passaram 5 minutos desde a última verificação ou animação
-      if (agora - Math.max(ultimoVoo, ultimaVerificacao) >= 5 * 60 * 1000) {
-        decolar();
-        ultimaVerificacao = agora;
-      }
-    }
-  };
-  
-  // Usa setInterval para verificar a visibilidade a cada 30 segundos
-  // Isso garante que quando a aba volta de inativa, a verificação é feita
-  setInterval(verificadorDeVisibilidade, 30 * 1000);
   }
 
   // foto que não carregar vira um fundo bonito com o nome do lugar (nunca ícone de imagem quebrada)
