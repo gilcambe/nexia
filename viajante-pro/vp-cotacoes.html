@@ -48,7 +48,7 @@ button{background:var(--gold);color:#111;font-weight:700;border:0;cursor:pointer
           '<p><b>' + esc(x.nome) + '</b> · ' + esc(x.email) + ' · ' + esc(x.whatsapp) + '</p>' +
           '<p>' + esc(x.origem) + ' → <b>' + esc(x.destino) + '</b> ' + esc([x.periodo, x.dataIda, x.dataVolta].filter(Boolean).join(' ')) + ' · ' + esc(x.adultos || 1) + ' adulto(s)' + (x.criancas ? ', ' + esc(x.criancas) + ' criança(s)' : '') + '</p>' +
           (x.observacoes ? '<p class="mut">' + esc(x.observacoes) + '</p>' : '') +
-          '<p class="mut">E-mail para a agência: ' + (x.emailNotificado ? 'enviado ✓' : 'não enviado' + (x.emailErro ? ' (' + esc(x.emailErro) + ')' : '')) + '</p>' +
+          '<p class="mut">E-mail para a agência: ' + (x.emailNotificado ? 'enviado ✓' : (x.email_status === 'falhou' ? 'falhou' : 'não enviado') + (x.emailErro ? ' (' + esc(x.emailErro) + ')' : '')) + '</p>' +
           '<div class="linha"><select data-id="' + esc(x.id) + '">' + STATUS.map(function (s) { return '<option ' + (s === (x.status || 'nova') ? 'selected' : '') + '>' + s + '</option>'; }).join('') + '</select>' +
           '<a href="https://wa.me/' + esc(wa) + '?text=' + encodeURIComponent('Olá ' + (x.nome || '') + '! Aqui é da Viajante Pro sobre sua cotação ' + (x.codigo || '') + ' para ' + (x.destino || '') + '.') + '" target="_blank" rel="noopener"><button type="button" class="sec">WhatsApp</button></a></div></div>';
       }).join('') || '<p class="mut">Nenhuma cotação ainda.</p>';
