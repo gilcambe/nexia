@@ -83,6 +83,19 @@ if (typeof module !== 'undefined' && module.exports) {
     }, 2600);
   }
 
+  // Função de teste para simular relógio falso
+  function decolarTeste(tempoFalso) {
+    var tempoOriginal = Date.now;
+    Date.now = function() {
+      return tempoFalso || tempoOriginal();
+    };
+    
+    var resultado = decolar();
+    
+    Date.now = tempoOriginal;
+    return resultado;
+  }
+
   function iniciar() {
     [].forEach.call(document.images, function (img) {
       if (img.complete && !img.naturalWidth && img.src && !img.dataset.vpFundo && !/vp-oficial|kernex|vp\.svg/.test(img.src)) { img.dataset.vpFundo = '1'; img.src = fundo(img.alt); }
