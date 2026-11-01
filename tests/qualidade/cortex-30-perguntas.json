@@ -1,0 +1,118 @@
+[
+  {
+    "pergunta": "Como posso criar um post para o Instagram que promova meu negócio de roupas sustentáveis?",
+    "resposta_esperada": "A resposta deve incluir dicas sobre o que incluir no post, como usar hashtags relevantes e exemplos de legendas engajadoras."
+  },
+  {
+    "pergunta": "Como posso responder a um cliente no WhatsApp que está insatisfeito com a entrega do seu produto?",
+    "resposta_esperada": "A resposta deve ser educada, oferecer uma solução e incluir um convite para entrar em contato para mais informações."
+  },
+  {
+    "pergunta": "Como posso calcular o preço de um produto que custa R$ 50,00 para revender com 30% de lucro?",
+    "resposta_esperada": "A resposta deve incluir o cálculo do preço de revenda e uma explicação simples."
+  },
+  {
+    "pergunta": "Como posso criar um contrato simples para um serviço de limpeza residencial?",
+    "resposta_esperada": "A resposta deve incluir os elementos essenciais de um contrato, como as partes envolvidas, o escopo do serviço e as condições de pagamento."
+  },
+  {
+    "pergunta": "Como posso responder a uma dúvida de um MEI sobre como declarar impostos?",
+    "resposta_esperada": "A resposta deve incluir informações básicas sobre a declaração de impostos para MEIs e um convite para entrar em contato para mais informações."
+  },
+  {
+    "pergunta": "Como posso resumir um texto longo sobre os benefícios da meditação?",
+    "resposta_esperada": "A resposta deve incluir um resumo claro e conciso dos principais benefícios da meditação."
+  },
+  {
+    "pergunta": "Como posso criar um código simples em JavaScript para calcular a média de um array de números?",
+    "resposta_esperada": "A resposta deve incluir um exemplo de código em JavaScript que calcula a média de um array de números."
+  },
+  {
+    "pergunta": "Como posso criar um plano de treino para iniciantes que querem perder peso?",
+    "resposta_esperada": "A resposta deve incluir um plano de treino simples e eficaz para iniciantes que querem perder peso."
+  },
+  {
+    "pergunta": "Como posso criar uma receita simples de salada de frutas?",
+    "resposta_esperada": "A resposta deve incluir uma receita simples de salada de frutas com ingredientes comuns e instruções claras."
+  },
+  {
+    "pergunta": "Como posso criar um e-mail de cobrança educado para um cliente que está atrasado com o pagamento?",
+    "resposta_esperada": "A resposta deve incluir um modelo de e-mail de cobrança educado que lembra o cliente do pagamento pendente e oferece uma solução."
+  },
+  {
+    "pergunta": "Como posso criar um post para o Instagram que promova um evento de networking?",
+    "resposta_esperada": "A resposta deve incluir dicas sobre o que incluir no post, como usar hashtags relevantes e exemplos de legendas engajadoras."
+  },
+  {
+    "pergunta": "Como posso responder a um cliente no WhatsApp que está interessado em um produto que está fora de estoque?",
+    "resposta_esperada": "A resposta deve ser educada, oferecer uma solução e incluir um convite para entrar em contato para mais informações."
+  },
+  {
+    "pergunta": "Como posso calcular o preço de um produto que custa R$ 100,00 para revender com 40% de lucro?",
+    "resposta_esperada": "A resposta deve incluir o cálculo do preço de revenda e uma explicação simples."
+  },
+  {
+    "pergunta": "Como posso criar um contrato simples para um serviço de jardinagem?",
+    "resposta_esperada": "A resposta deve incluir os elementos essenciais de um contrato, como as partes envolvidas, o escopo do serviço e as condições de pagamento."
+  },
+  {
+    "pergunta": "Como posso responder a uma dúvida de um MEI sobre como emitir notas fiscais?",
+    "resposta_esperada": "A resposta deve incluir informações básicas sobre a emissão de notas fiscais para MEIs e um convite para entrar em contato para mais informações."
+  },
+  {
+    "pergunta": "Como posso resumir um texto longo sobre os benefícios do exercício físico?",
+    "resposta_esperada": "A resposta deve incluir um resumo claro e conciso dos principais benefícios do exercício físico."
+  },
+  {
+    "pergunta": "Como posso criar um código simples em Python para calcular a soma de um array de números?",
+    "resposta_esperada": "A resposta deve incluir um exemplo de código em Python que calcula a soma de um array de números."
+  },
+  {
+    "pergunta": "Como posso criar um plano de treino para iniciantes que querem ganhar massa muscular?",
+    "resposta_esperada": "A resposta deve incluir um plano de treino simples e eficaz para iniciantes que querem ganhar massa muscular."
+  },
+  {
+    "pergunta": "Como posso criar uma receita simples de sopa de legumes?",
+    "resposta_esperada": "A resposta deve incluir uma receita simples de sopa de legumes com ingredientes comuns e instruções claras."
+  },
+  {
+    "pergunta": "Como posso criar um e-mail de cobrança educado para um cliente que está atrasado com o pagamento de um serviço de consultoria?",
+    "resposta_esperada": "A resposta deve incluir um modelo de e-mail de cobrança educado que lembra o cliente do pagamento pendente e oferece uma solução."
+  },
+  {
+    "pergunta": "Como posso criar um post para o Instagram que promova um curso online?",
+    "resposta_esperada": "A resposta deve incluir dicas sobre o que incluir no post, como usar hashtags relevantes e exemplos de legendas engajadoras."
+  },
+  {
+    "pergunta": "Como posso responder a um cliente no WhatsApp que está interessado em um produto que está em promoção?",
+    "resposta_esperada": "A resposta deve ser educada, oferecer uma solução e incluir um convite para entrar em contato para mais informações."
+  },
+  {
+    "pergunta": "Como posso calcular o preço de um produto que custa R$ 75,00 para revender com 25% de lucro?",
+    "resposta_esperada": "A resposta deve incluir o cálculo do preço de revenda e uma explicação simples."
+  },
+  {
+    "pergunta": "Como posso criar um contrato simples para um serviço de pintura residencial?",
+    "resposta_esperada": "A resposta deve incluir os elementos essenciais de um contrato, como as partes envolvidas, o escopo do serviço e as condições de pagamento."
+  },
+  {
+    "pergunta": "Como posso responder a uma dúvida de um MEI sobre como contratar um contador?",
+    "resposta_esperada": "A resposta deve incluir informações básicas sobre como contratar um contador para MEIs e um convite para entrar em contato para mais informações."
+  },
+  {
+    "pergunta": "Como posso resumir um texto longo sobre os benefícios da alimentação saudável?",
+    "resposta_esperada": "A resposta deve incluir um resumo claro e conciso dos principais benefícios da alimentação saudável."
+  },
+  {
+    "pergunta": "Como posso criar um código simples em Java para calcular a média de um array de números?",
+    "resposta_esperada": "A resposta deve incluir um exemplo de código em Java que calcula a média de um array de números."
+  },
+  {
+    "pergunta": "Como posso criar um plano de treino para iniciantes que querem melhorar a resistência?",
+    "resposta_esperada": "A resposta deve incluir um plano de treino simples e eficaz para iniciantes que querem melhorar a resistência."
+  },
+  {
+    "pergunta": "Como posso criar uma receita simples de bolo de chocolate?",
+    "resposta_esperada": "A resposta deve incluir uma receita simples de bolo de chocolate com ingredientes comuns e instruções claras."
+  }
+]
