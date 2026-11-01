@@ -30,6 +30,9 @@ class OllamaEngine {
         }
         throw error;
       }
+    } else {
+      const response = await this.model.chat(prompt);
+      return { response, engine: 'Ollama' };
     }
     const response = await this.model.chat(prompt);
     return { response, engine: 'Ollama' };
