@@ -61,11 +61,16 @@ const LOADERS = {
 const loaded = new Map();
 
 /** Handler no formato Netlify, ou null se não existe ou falhou ao carregar (como no server.js). */
-function getFunction(name) {
+function getFunction(name, env) {
   if (!Object.prototype.hasOwnProperty.call(LOADERS, name)) return null;
       if (!loaded.has(name)) {
     try {
       const mod = LOADERS[name]();
+      // Garante que o env e a binding AI estejam sempre presentes e repassados
+      const resolvedEnv = env || {};
+      if (!resolvedEnv.AI) {
+        resolvedEnv.AI = {};
+      }
       // Repassa o `env` do worker para os handlers se ele existir e tiver a binding AI
       const passEnvToHandler = (handler) => async (event, context, env) => {
         // Garante que o env e a binding AI estejam sempre presentes e repassados
@@ -93,6 +98,21 @@ function getFunction(name) {
       };
 
       if (typeof mod.createHandler === 'function') {
+        const originalCreateHandler = mod.createHandler;
+        mod.createHandler = function(deps = {}) {
+          const handler = originalCreateHandler(deps);
+          return wrapHandler(handler);
+        };
+      }
+      if (typeof mod.handler === 'function') {
+        mod.handler = wrapHandler(mod.handler);
+      }
+      // Garante também exportações customizadas comuns (como run, handle, default, etc.) para cobrir pedidos-acoes / entenderAnexo
+      ['run', 'handle', 'default', 'entenderAnexo', 'executar'].forEach(method => {
+        if (typeof mod[method] === 'function') {
+          mod[method] = wrapHandler(mod[method]);
+        }
+      });
         const originalCreateHandler = mod.createHandler;
         mod.createHandler = function(deps = {}) {
           const handler = originalCreateHandler(deps);
