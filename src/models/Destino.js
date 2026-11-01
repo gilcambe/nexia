@@ -7,7 +7,7 @@ const DestinoSchema = new mongoose.Schema({
     trim: true,
     maxlength: [100, 'O nome não pode ter mais de 100 caracteres']
   },
-  pais: {
+  país: {
     type: String,
     required: [true, 'O país é obrigatório'],
     trim: true,
