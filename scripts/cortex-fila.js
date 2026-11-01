@@ -23,6 +23,8 @@ function depoisSemEntrega(labels) {
   return { n, travar: n >= MAX_SEM_ENTREGA };
 }
 const CONFIAVEIS = ['OWNER', 'MEMBER', 'COLLABORATOR'];
+// Partes herdam a pressa da tarefa-mãe (lição 01/11: partes sem cortex-urgente voltavam para o fim da fila).
+const herdados = i => (i.labels || []).map(l => l.name || l).filter(l => l === 'cortex-urgente' || l === 'cortex-prioridade');
 const L = { jules: 'cortex-jules', fila: 'cortex-fila', rodando: 'cortex-rodando', feito: 'cortex-feito', travado: 'cortex-travado', dividido: 'cortex-dividido', parte: 'cortex-parte', semDivisao: 'cortex-sem-divisao', prioridade: 'cortex-prioridade', urgente: 'cortex-urgente', pausada: 'fila-pausada', semCota: 'cortex-reserva-sem-cota' };
 const MAX_CORPO = 2500;      // tarefa maior que isso é dividida em partes pequenas
 const MAX_ARQUIVOS = 4;      // ou que mexe em mais arquivos do que isso
@@ -330,7 +332,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
       const t = numeroDe(ls, 'tentativa') + 1;
       // Falhou 3 vezes inteira: o modelo grátis não dá conta do tamanho. Divide em partes pequenas em vez de repetir até travar.
       if (t === TENTATIVAS_ATE_DIVIDIR && !parteDe(i) && !ls.includes(L.parte) && !ls.includes(L.dividido) && !ls.includes(L.semDivisao)) {
-        acoes.push({ tipo: 'dividir', numero: i.number, titulo: i.title || '', tarefa: String(i.body || '').trim(), limpar: true, tentativa: t, tamanhos: tamanhosDe(i.body) }); continue;
+        acoes.push({ tipo: 'dividir', numero: i.number, herdar: herdados(i), titulo: i.title || '', tarefa: String(i.body || '').trim(), limpar: true, tentativa: t, tamanhos: tamanhosDe(i.body) }); continue;
       }
       // Parte com plano que "falhou" pode já ter entregado (ex.: 2ª rodada termina em EMPTY_DIFF porque o arquivo da 1ª
       // já entrou na develop). A fila confere os arquivos do plano antes de gastar outra tentativa (teste real de #1538).
@@ -373,7 +375,7 @@ function decidir({ issues, runs, agora = Date.now(), pistas = PISTAS, prs = [], 
     if (esperaAnterior(i)) continue;
     if (mexeEmWorkflow(i)) { acoes.push({ tipo: 'para-jules', numero: i.number }); continue; }
     if (plano.conflitaCom(i, rodando)) continue;   // outra parte rodando mexe no mesmo arquivo: espera ela
-    if (precisaDividir(i, tamanhos)) { acoes.push({ tipo: 'dividir', numero: i.number, titulo: i.title || '', tarefa: String(i.body || '').trim(), tamanhos: tamanhosDe(i.body) }); continue; }
+    if (precisaDividir(i, tamanhos)) { acoes.push({ tipo: 'dividir', numero: i.number, herdar: herdados(i), titulo: i.title || '', tarefa: String(i.body || '').trim(), tamanhos: tamanhosDe(i.body) }); continue; }
     if (pausada || ativas >= pistas) break;
     let pista = 1; while (pistasEmUso.has(pista)) pista++;
     pistasEmUso.add(pista); ativas++; rodando.push(i);
@@ -527,7 +529,7 @@ async function executar(token, acao, dividir) {
     const criadas = [];
     for (let k = 0; k < partes.length; k++) {
       const p = partes[k];
-      const labels = [L.fila, L.parte];
+      const labels = [L.fila, L.parte, ...(acao.herdar || [])];
       if (plano.vaiParaJules(p, acao.tamanhos || {})) labels.push(L.jules);
       const r = await gh(token, 'POST', '/issues', { title: `[Parte ${k + 1}/${partes.length} de #${n}] ${String(p.titulo || acao.titulo).replace(/^NEXIA:\s*/, '').slice(0, 60)}`, body: plano.corpoDaParte(p, k + 1, partes.length, n, partes), labels });
       if (r.status === 201) criadas.push(r.json.number);

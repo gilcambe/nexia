@@ -62,78 +62,88 @@ function res(statusCode, body, headers = {}) {
   };
 }
 
-async function enviarEmailBrevo(env, cotacao) {
-  const key = env.BREVO_API_KEY;
-  const to = DESTINATARIO_COTACAO;
-  if (!key) return { ok: false, motivo: 'BREVO_API_KEY ausente nas variáveis de ambiente.' };
+// Remetente: BREVO_SENDER (e-mail confirmado no Brevo) ou o 1º remetente ATIVO da conta Brevo.
+// Nunca um endereço fixo não confirmado (o Brevo aceita e não entrega).
+let __remetenteCache = null;
+function __resetRemetenteCache() { __remetenteCache = null; }
 
-  const htmlContent = `
-    <h2>Nova Cotação de Viagem Recebida — Viajante Pro</h2>
-    <p><strong>Protocolo:</strong> ${cotacao.codigo}</p>
-    <p><strong>Cliente:</strong> ${cotacao.nome}</p>
-    <p><strong>E-mail:</strong> ${cotacao.email}</p>
-    <p><strong>WhatsApp:</strong> ${cotacao.whatsapp}</p>
-    <p><strong>Origem:</strong> ${cotacao.origem || 'Não informada'}</p>
-    <p><strong>Destino:</strong> ${cotacao.destino || 'A definir'}</p>
-    <p><strong>Modalidades:</strong> ${(cotacao.modalidades || []).join(', ')}</p>
-    <p><strong>Orçamento Estimado:</strong> ${cotacao.orcamento}</p>
-    <p><strong>Datas:</strong> ${cotacao.dataIda || 'A definir'} até ${cotacao.dataVolta || 'A definir'} (${cotacao.flexibilidade})</p>
-    <p><strong>Observações:</strong> ${cotacao.observacoes || 'Sem observações'}</p>
-    <hr>
-    <p><em>Este e-mail foi gerado automaticamente pelo sistema de cotações da Viajante Pro.</em></p>
-  `;
-
+async function remetenteBrevo(env, key) {
+  if (env.BREVO_SENDER) return { email: String(env.BREVO_SENDER).trim(), name: env.BREVO_SENDER_NAME || 'Viajante Pro' };
+  if (__remetenteCache) return __remetenteCache;
   try {
-    const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: {
-        'accept': 'application/json',
-        'api-key': key,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        sender: { name: 'Viajante Pro Cotações', email: 'no-reply@viajante.pro' },
-        to: [{ email: to, name: 'Atendimento Viajante Pro' }],
-        subject: `NOVA COTAÇÃO | ${cotacao.nome} | ${cotacao.destino || 'Geral'} | ${cotacao.codigo}`,
-        htmlContent,
-      }),
-    });
-    return { ok: resp.ok, status: resp.status };
+    const r = await fetch('https://api.brevo.com/v3/senders', { headers: { accept: 'application/json', 'api-key': key } });
+    if (!r.ok) return null;
+    const j = await r.json();
+    const ativo = (j && Array.isArray(j.senders) ? j.senders : []).find(x => x && x.active && x.email);
+    if (!ativo) return null;
+    __remetenteCache = { email: ativo.email, name: 'Viajante Pro' };
+    return __remetenteCache;
   } catch (e) {
-    return { ok: false, error: e && e.message };
+    return null;
   }
 }
 
-async function enviarCodigoBrevo(env, email, codigo) {
+const esc = v => String(v == null ? '' : v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+async function enviarBrevo(env, { to, subject, htmlContent, nomeRemetente, replyTo }) {
   const key = env.BREVO_API_KEY;
-  if (!key) return { ok: false, motivo: 'BREVO_API_KEY ausente.' };
-
-  const htmlContent = `
-    <h2>Código de Acesso — Viajante Pro</h2>
-    <p>Seu código de validação para entrar no aplicativo é:</p>
-    <h1 style="font-size: 32px; letter-spacing: 4px; color: #2563eb;">${codigo}</h1>
-    <p>Este código expira em 15 minutos.</p>
-  `;
-
+  if (!key) return { ok: false, motivo: 'BREVO_API_KEY ausente nas variáveis de ambiente.' };
+  const rem = await remetenteBrevo(env, key);
+  if (!rem) return { ok: false, motivo: 'Nenhum remetente confirmado no Brevo (defina BREVO_SENDER ou confirme um remetente).' };
+  const payload = { sender: { name: nomeRemetente || rem.name, email: rem.email }, to, subject, htmlContent };
+  if (replyTo) payload.replyTo = replyTo;
   try {
     const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
-      headers: {
-        'accept': 'application/json',
-        'api-key': key,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        sender: { name: 'Viajante Pro', email: 'no-reply@viajante.pro' },
-        to: [{ email }],
-        subject: `Seu código de acesso: ${codigo}`,
-        htmlContent,
-      }),
+      headers: { accept: 'application/json', 'api-key': key, 'content-type': 'application/json' },
+      body: JSON.stringify(payload),
     });
-    return { ok: resp.ok, status: resp.status };
+    let messageId = null;
+    try { const j = await resp.json(); messageId = (j && j.messageId) || null; } catch (e) { /* sem corpo */ }
+    if (!resp.ok) return { ok: false, status: resp.status, motivo: `Brevo respondeu ${resp.status}` };
+    return { ok: true, status: resp.status, messageId };
   } catch (e) {
-    return { ok: false, error: e && e.message };
+    return { ok: false, motivo: (e && e.message) || 'erro de rede' };
   }
+}
+
+async function enviarEmailBrevo(env, cotacao) {
+  const to = String(env.LEADS_NOTIFY_EMAIL || DESTINATARIO_COTACAO).trim();
+  const c = cotacao;
+  const htmlContent = `
+    <h2>Nova Cotação de Viagem Recebida — Viajante Pro</h2>
+    <p><strong>Protocolo:</strong> ${esc(c.codigo)}</p>
+    <p><strong>Cliente:</strong> ${esc(c.nome)}</p>
+    <p><strong>E-mail:</strong> ${esc(c.email)}</p>
+    <p><strong>WhatsApp:</strong> ${esc(c.whatsapp)}</p>
+    <p><strong>Origem:</strong> ${esc(c.origem || 'Não informada')}</p>
+    <p><strong>Destino:</strong> ${esc(c.destino || 'A definir')}</p>
+    <p><strong>Modalidades:</strong> ${esc((c.modalidades || []).join(', '))}</p>
+    <p><strong>Passageiros:</strong> ${esc(c.adultos)} adulto(s), ${esc(c.criancas)} criança(s)</p>
+    <p><strong>Orçamento Estimado:</strong> ${esc(c.orcamento)}</p>
+    <p><strong>Datas:</strong> ${esc(c.dataIda || 'A definir')} até ${esc(c.dataVolta || 'A definir')} (${esc(c.flexibilidade)})</p>
+    <p><strong>Observações:</strong> ${esc(c.observacoes || 'Sem observações')}</p>
+    <hr>
+    <p>Veja e responda no painel: https://nexia.gcbezerra.workers.dev/viajante-pro/cotacoes</p>
+    <p><em>Este e-mail foi gerado automaticamente pelo sistema de cotações da Viajante Pro.</em></p>
+  `;
+  return enviarBrevo(env, {
+    to: [{ email: to, name: 'Atendimento Viajante Pro' }],
+    subject: `NOVA COTAÇÃO | ${c.nome} | ${c.destino || 'Geral'} | ${c.codigo}`,
+    htmlContent,
+    nomeRemetente: 'Viajante Pro Cotações',
+    replyTo: c.email ? { email: c.email, name: c.nome || c.email } : null,
+  });
+}
+
+async function enviarCodigoBrevo(env, email, codigo) {
+  const htmlContent = `
+    <h2>Código de Acesso — Viajante Pro</h2>
+    <p>Seu código de validação para entrar no aplicativo é:</p>
+    <h1 style="font-size: 32px; letter-spacing: 4px; color: #2563eb;">${esc(codigo)}</h1>
+    <p>Este código expira em 15 minutos.</p>
+  `;
+  return enviarBrevo(env, { to: [{ email }], subject: `Seu código de acesso: ${codigo}`, htmlContent, nomeRemetente: 'Viajante Pro' });
 }
 
 function limparConteudoViajante(c) {
@@ -558,10 +568,14 @@ exports.handler = async function (event, context) {
 
     // Tenta enviar o e-mail via Brevo
     const emailRes = await enviarEmailBrevo(env, cotacaoData);
+    // "enviado" = o Brevo aceitou (messageId guardado); "entregue" só com prova do Brevo, nunca aqui.
     if (emailRes.ok) {
       cotacaoData.emailNotificado = true;
+      cotacaoData.email_status = 'enviado';
+      cotacaoData.email_message_id = emailRes.messageId || null;
     } else {
-      cotacaoData.emailErro = emailRes.motivo || emailRes.error || 'Falha de envio';
+      cotacaoData.email_status = 'falhou';
+      cotacaoData.emailErro = emailRes.motivo || 'Falha de envio';
     }
 
     // Salva no banco de dados Firestore
@@ -917,3 +931,4 @@ exports.handler = async function (event, context) {
 };
 
 exports.limparConteudoViajante = limparConteudoViajante;
+exports.__email = { enviarEmailBrevo, enviarCodigoBrevo, __resetRemetenteCache };
