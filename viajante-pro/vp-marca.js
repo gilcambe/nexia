@@ -6,6 +6,7 @@
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     decolar: decolar,
+    decolarTeste: decolarTeste,
     emVoo: function() { return emVoo; },
     ultimoVoo: function() { return ultimoVoo; },
     setUltimoVoo: function(valor) { ultimoVoo = valor; },
@@ -86,13 +87,28 @@ if (typeof module !== 'undefined' && module.exports) {
   // Função de teste para simular relógio falso
   function decolarTeste(tempoFalso) {
     var tempoOriginal = Date.now;
+    var emVooOriginal = emVoo;
+    var ultimoVooOriginal = ultimoVoo;
+    var visibilidadeOriginal = document.visibilityState;
+    
+    // Sobrescreve Date.now para usar tempo falso
     Date.now = function() {
       return tempoFalso || tempoOriginal();
     };
     
+    // Força visibilidade para 'visible' se não estiver
+    if (document.visibilityState !== 'visible') {
+      document.visibilityState = 'visible';
+    }
+    
     var resultado = decolar();
     
+    // Restaura valores originais
     Date.now = tempoOriginal;
+    emVoo = emVooOriginal;
+    ultimoVoo = ultimoVooOriginal;
+    document.visibilityState = visibilidadeOriginal;
+    
     return resultado;
   }
 
@@ -123,12 +139,14 @@ if (typeof module !== 'undefined' && module.exports) {
     var visibilityChangeHandler = function() {
       if (document.visibilityState === 'visible') {
         var agora = Date.now();
+        // Só dispara se já passaram 5 minutos desde a última animação e não há animação em andamento
         if (agora - ultimoVoo >= 5 * 60 * 1000 && !emVoo) {
           decolar();
         }
       }
     };
     
+    // Adiciona listener para mudanças de visibilidade
     document.addEventListener('visibilitychange', visibilityChangeHandler);
   }
 
