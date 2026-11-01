@@ -1,20 +1,20 @@
 'use strict';
 
-import { strict as assert } from 'node:test';
+import test from 'node:test';
+import assert from 'node:assert';
 import { readFileSync } from 'node:fs';
-import { test } from 'node:test';
 
 const CONTEUDO = readFileSync(
   new URL('../../netlify/functions/cortex-chat.js', import.meta.url),
   'utf8'
 );
 
-test('prompt não contém strings proibidas', () => {
-  assert.ok(!CONTEUDO.includes('IA Suprema'));
-  assert.ok(!CONTEUDO.includes('NEXIA OS'));
-  assert.ok(!CONTEUDO.includes('SEMPRE em português'));
+test('prompt do cortex-chat não contém "IA Suprema", "NEXIA OS" ou "SEMPRE em português"', () => {
+  assert.strictEqual(CONTEUDO.includes('IA Suprema'), false);
+  assert.strictEqual(CONTEUDO.includes('NEXIA OS'), false);
+  assert.strictEqual(CONTEUDO.includes('SEMPRE em português'), false);
 });
 
-test('prompt contém "Você é o Cortex"', () => {
-  assert.ok(CONTEUDO.includes('Você é o Cortex'));
+test('prompt do cortex-chat contém "Você é o Cortex"', () => {
+  assert.strictEqual(CONTEUDO.includes('Você é o Cortex'), true);
 });
