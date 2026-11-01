@@ -24,6 +24,11 @@ class OllamaEngine {
         return { response, engine: 'WebLLM' };
       } catch (error) {
         console.error('WebLLM failed, falling back to Ollama:', error);
+        if (config.fallbackToOllama) {
+          const response = await this.model.chat(prompt);
+          return { response, engine: 'Ollama' };
+        }
+        throw error;
       }
     }
     const response = await this.model.chat(prompt);
