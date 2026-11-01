@@ -141,6 +141,11 @@ test('CF-PRIO. rótulo cortex-prioridade passa na frente das tarefas antigas', (
   assert.deepEqual(a.map(x => x.numero), [9, 1, 2]);
 });
 
+test('CF-URGENTE. cortex-urgente (pedido do dono agora) passa na frente de cortex-prioridade antiga', () => {
+  const a = decidir({ issues: [issue(1, ['cortex-prioridade']), issue(2, ['cortex-prioridade']), issue(50, ['cortex-urgente']), issue(3)], runs: [], agora: AGORA, pistas: 2 });
+  assert.deepEqual(a.map(x => x.numero), [50, 1]);
+});
+
 test('CF-VAZAO. padrão de 6 pistas; parte anterior travada não segura as seguintes', () => {
   const a = decidir({ issues: [1, 2, 3, 4, 5, 6, 7].map(n => issue(n)), runs: [], agora: AGORA });
   assert.strictEqual(a.filter(x => x.tipo === 'despachar').length, 6);
