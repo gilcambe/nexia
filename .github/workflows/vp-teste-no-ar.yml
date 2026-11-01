@@ -1,0 +1,44 @@
+# Teste de pessoa no Viajante Pro no endereço real (cria e apaga dados marcados TESTE AUTOMATICO).
+name: Viajante Pro teste no ar
+on:
+  push:
+    branches: ['teste/vp-no-ar-*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  testar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+      - run: npm i --no-save --no-audit --no-fund playwright@1.59.1 && npx playwright install --with-deps chromium
+      - run: node tests/e2e/vp-humano-no-ar.js
+        env:
+          OUT: relatorio
+      - name: Prova no Brevo que o aviso da cotação foi ENTREGUE
+        if: always()
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY1 || secrets.BREVO_API_KEY }}
+        run: |
+          COD=$(cat relatorio/codigo.txt 2>/dev/null || true)
+          if [ -z "$COD" ]; then echo "sem código de cotação"; exit 1; fi
+          for i in $(seq 1 12); do
+            R=$(curl -s -H "api-key: $BREVO_API_KEY" -H 'accept: application/json' "https://api.brevo.com/v3/smtp/statistics/events?limit=100&days=1&email=cotacao.site%40viajante.pro")
+            EV=$(echo "$R" | jq -r --arg c "$COD" '[.events[]? | select((.subject // "") | contains($c)) | .event] | unique | join(",")')
+            echo "tentativa $i: eventos para $COD = ${EV:-nenhum}"
+            echo "$EV" > relatorio/brevo-eventos.txt
+            case ",$EV," in *,delivered,*) echo "ENTREGUE ao e-mail da agência"; exit 0;; *,hardBounces,*|*,softBounces,*|*,blocked,*|*,invalid,*) echo "NAO entregue: $EV"; exit 1;; esac
+            sleep 15
+          done
+          echo "sem confirmação de entrega em 3 min"; exit 1
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: vp-teste-no-ar
+          path: relatorio
